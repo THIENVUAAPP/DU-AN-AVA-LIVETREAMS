@@ -208,8 +208,8 @@ export default function EnterprisePayment() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
-                navigator.clipboard.writeText("https://avalive.pro/api/sepay-webhook");
-                alert("📋 Đã copy Link Webhook SePay: https://avalive.pro/api/sepay-webhook");
+                navigator.clipboard.writeText("https://avalivepro.vercel.app/api/sepay-webhook");
+                alert("📋 Đã copy Link Webhook SePay: https://avalivepro.vercel.app/api/sepay-webhook");
               }}
               className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-glow-emerald transition-all cursor-pointer flex items-center gap-1.5"
             >
@@ -224,7 +224,7 @@ export default function EnterprisePayment() {
           <div className="p-4 rounded-2xl bg-black/80 border border-emerald-500/30 space-y-2">
             <span className="text-[11px] font-black text-emerald-400 block uppercase">1. URL NHẬN WEBHOOK TỰ ĐỘNG (PRODUCTION):</span>
             <div className="p-2.5 rounded-xl bg-[#121218] border border-white/10 text-white break-all flex items-center justify-between select-all font-bold">
-              <span>https://avalive.pro/api/sepay-webhook</span>
+              <span>https://avalivepro.vercel.app/api/sepay-webhook</span>
               <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[9px] font-black">ACTIVE</span>
             </div>
             <p className="text-[10px] text-gray-400">Dán URL này vào ô <strong>"URL nhận Webhook"</strong> tại <strong>my.sepay.vn/webhooks</strong></p>
@@ -475,7 +475,7 @@ export default function EnterprisePayment() {
             <div className="p-3 rounded-2xl bg-emerald-950/30 border border-emerald-500/40 space-y-1.5 text-xs font-mono text-left">
               <span className="text-[11px] font-black text-emerald-400 block uppercase">🔗 LINK KẾT NỐI SEPAY WEBHOOK CHÍNH THỨC:</span>
               <div className="p-2 rounded-xl bg-black border border-emerald-500/30 text-white font-mono text-[11px] break-all select-all flex items-center justify-between">
-                <span>https://avalive.pro/api/sepay-webhook</span>
+                <span>https://avalivepro.vercel.app/api/sepay-webhook</span>
                 <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[9px] font-bold">READY</span>
               </div>
               <span className="text-[10px] text-gray-400 block">Dán URL trên vào mục <strong>URL nhận Webhook</strong> tại <strong>my.sepay.vn/webhooks</strong></span>
