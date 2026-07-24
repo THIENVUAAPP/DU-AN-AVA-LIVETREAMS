@@ -1,3 +1,4 @@
+import { syncUserToSupabase } from './lib/supabaseClient';
 import React, { useState } from 'react';
 import Header from './components/Header';
 import LandingHero from './components/LandingHero';
@@ -34,7 +35,7 @@ export default function App() {
 
   const [googleLoginModalOpen, setGoogleLoginModalOpen] = useState(false);
 
-  const handleSimulateGoogleLogin = (isAdminRole) => {
+  const handleSimulateGoogleLogin = async (isAdminRole) => {
     if (isAdminRole) {
       setCurrentUser({
         name: 'Quốc Thiên Admin',
@@ -43,7 +44,8 @@ export default function App() {
         isAdmin: true,
       });
       setActiveTab('avatars'); // Instantly move into Avatars Studio Workspace
-      alert("Đã kết nối thành công tài khoản Google Admin: quocthiencr90@gmail.com! Đã mở khóa trọn bộ Workspace Studio.");
+      syncUserToSupabase({ name: "Quốc Thiên Admin", email: "quocthiencr90@gmail.com", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80", isAdmin: true });
+      alert("Đã kết nối thành công tài khoản Google Admin: quocthiencr90@gmail.com! Đã đồng bộ với Cơ Sở Dữ Liệu Supabase.");
     } else {
       setCurrentUser({
         name: 'Trần Thị Mai',

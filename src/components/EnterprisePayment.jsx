@@ -1,3 +1,4 @@
+import { syncPaymentToSupabase } from '../lib/supabaseClient';
 import React, { useState, useEffect } from "react";
 import { 
   ShieldCheck, 
@@ -83,7 +84,13 @@ export default function EnterprisePayment({ setActiveTab }) {
 
   const currentPlan = plans.find(p => p.id === selectedPlan) || plans[1];
 
-  const handleActivatePaymentSuccess = () => {
+  const handleActivatePaymentSuccess = async () => {
+    await syncPaymentToSupabase({
+      plan: currentPlan.name,
+      amount: currentPlan.priceNum,
+      referenceCode: "AVALIVE8912",
+      status: "completed"
+    });
     const expiresDate = new Date(Date.now() + (billingCycle === "annual" ? 365 : 30) * 86400000).toLocaleDateString("vi-VN");
     const todayDate = new Date().toLocaleDateString("vi-VN");
 
