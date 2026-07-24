@@ -222,18 +222,29 @@ export default function EnterprisePayment({ setActiveTab }) {
                   <p className="text-base font-black text-emerald-400">{currentPlan.priceVnd} {currentPlan.period}</p>
                 </div>
 
+                <div className="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/50 space-y-2 text-xs">
+                  <span className="text-emerald-400 font-black flex items-center gap-1.5 uppercase text-[11px]">
+                    <QrCode className="w-4 h-4 text-emerald-400" />
+                    MÃ QR CODE ĐÃ TÍCH HỢP ĐẦY ĐỦ THÔNG TIN TÀI KHOẢN TỰ ĐỘNG
+                  </span>
+                  <p className="text-gray-300 text-[11px] leading-relaxed">
+                    Mã QR phía bên trái được trích xuất trực tiếp từ ảnh QR chính thức của bạn (chứa đầy đủ <strong>Số Tài Khoản Ngân Hàng, Ngân Hàng Thụ Hưởng & Cú Pháp Chuyển Khoản</strong>). 
+                    Khi khách quét mã bằng App Ngân Hàng, toàn bộ thông tin tài khoản sẽ được điền tự động chính xác 100%!
+                  </p>
+                </div>
+
                 <div className="space-y-2.5 bg-[#121216] p-4 rounded-2xl border border-white/10">
                   <div className="flex justify-between border-b border-white/10 pb-2">
                     <span className="text-gray-400">Ngân Hàng Thụ Hưởng:</span>
-                    <span className="text-white font-bold">MBBank (Ngân Hàng Quân Đội)</span>
+                    <span className="text-white font-bold">Trích xuất tự động từ Ảnh Mã QR</span>
                   </div>
                   <div className="flex justify-between border-b border-white/10 pb-2">
                     <span className="text-gray-400">Số Tài Khoản:</span>
-                    <span className="text-emerald-400 font-black text-base">0988123456</span>
+                    <span className="text-emerald-400 font-black text-sm">Quét Mã QR 1-Touch Auto Fill</span>
                   </div>
                   <div className="flex justify-between border-b border-white/10 pb-2">
                     <span className="text-gray-400">Chủ Tài Khoản:</span>
-                    <span className="text-white font-bold">CONG TY CỔ PHẦN AVA STUDIO</span>
+                    <span className="text-white font-bold">Tự Động Theo Mã QR Chính Thức</span>
                   </div>
                   <div className="flex justify-between border-b border-white/10 pb-2">
                     <span className="text-gray-400">Số Tiền Thanh Toán:</span>
