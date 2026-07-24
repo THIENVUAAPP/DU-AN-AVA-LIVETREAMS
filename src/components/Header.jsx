@@ -301,7 +301,7 @@ export default function Header({
           ) : (
             <button
               onClick={() => setGoogleLoginModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black bg-white text-black hover:bg-gray-200 transition-all shadow-glow-white cursor-pointer"
+              className="flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-black bg-white text-black hover:bg-gray-100 transition-all shadow-glow-white cursor-pointer scale-105"
             >
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
