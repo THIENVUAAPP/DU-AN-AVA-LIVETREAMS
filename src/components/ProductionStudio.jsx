@@ -468,13 +468,26 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
             maskCtx = maskC.getContext("2d");
           }
 
-          // 1. Prepare Ultra-Sharp 100% Solid Mask Threshold (No Blur/No Transparency Bleeding)
+          // 1. Prepare Ultra-Sharp 100% Hard Binary Mask (Zero Blur / Zero Transparency Bleeding)
           maskCtx.clearRect(0, 0, W, H);
-          maskCtx.imageSmoothingEnabled = true;
-          maskCtx.imageSmoothingQuality = "high";
-          maskCtx.filter = "contrast(300%) brightness(130%)";
           maskCtx.drawImage(results.segmentationMask, 0, 0, W, H);
-          maskCtx.filter = "none";
+
+          // Hard Binary Alpha Thresholding: Make all subject pixels 100% SOLID (alpha = 255)
+          const mData = maskCtx.getImageData(0, 0, W, H);
+          const pix = mData.data;
+          for (let i = 0; i < pix.length; i += 4) {
+            // Check red/alpha intensity of segmentation mask
+            const val = pix[i] || pix[i+3];
+            if (val > 30) {
+              pix[i] = 255;
+              pix[i+1] = 255;
+              pix[i+2] = 255;
+              pix[i+3] = 255; // 100% Solid 0% Transparency
+            } else {
+              pix[i+3] = 0; // Clean Background Removal
+            }
+          }
+          maskCtx.putImageData(mData, 0, 0);
 
           // 2. Render onto Active Double Buffer (Atomic 4K Ultra Sharp Sharpness)
           const targetBuf = bufferIndex === 0 ? personBufferA : personBufferB;
