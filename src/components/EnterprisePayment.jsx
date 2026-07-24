@@ -507,7 +507,26 @@ export default function EnterprisePayment() {
             {/* SePay Webhook Auto Confirmation Test Button */}
             <button
               onClick={() => {
-                alert("🎉 XÁC NHẬN THANH TOÁN TỰ ĐỘNG QUA SEPAY WEBHOOK THÀNH CÔNG! Gói cước " + selectedPlan.toUpperCase() + " đã được kích hoạt VIP trọn đời cho tài khoản!");
+                const planConfig = {
+                  starter: { name: "Starter Pro (490K/tháng hoặc 4.9M/năm)", hours: 200, channels: 3, res: "Full HD 1080p" },
+                  business: { name: "Business Growth (1.49M/tháng hoặc 14.9M/năm)", hours: 700, channels: 10, res: "4K 60fps Ultra HD" },
+                  enterprise: { name: "Enterprise VIP (4.9M/tháng hoặc 49M/năm)", hours: 4000, channels: 30, res: "4K Dedicated 10Gbps" }
+                }[selectedPlan] || { name: "Starter Pro", hours: 200, channels: 3, res: "1080p" };
+
+                const activatedPlanData = {
+                  planId: selectedPlan,
+                  planName: planConfig.name,
+                  billingCycle: billingCycle,
+                  maxLiveHours: planConfig.hours,
+                  maxChannels: planConfig.channels,
+                  resolution: planConfig.res,
+                  activatedAt: new Date().toLocaleDateString("vi-VN"),
+                  expiresAt: new Date(Date.now() + (billingCycle === "annual" ? 365 : 30) * 86400000).toLocaleDateString("vi-VN"),
+                  isPaid: true
+                };
+
+                localStorage.setItem("avalive_active_plan", JSON.stringify(activatedPlanData));
+                alert("🎉 XÁC NHẬN THANH TOÁN TỰ ĐỘNG SEPAY THÀNH CÔNG!\n\n✅ ĐÃ KÍCH HOẠT: " + planConfig.name + "\n⏰ HẠN SỬ DỤNG: ĐẾN NGHÀY " + activatedPlanData.expiresAt + "\n⚡ QUYỀN LỢI: " + planConfig.hours + " GIỜ LIVE/THÁNG · " + planConfig.channels + " KÊNH MULTISTREAM · ĐỘ PHÂN GIẢI " + planConfig.res + "\n\nToàn bộ chức năng của gói đã được mở khóa 100%!");
                 setQrModalOpen(false);
               }}
               className="w-full py-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 hover:opacity-95 text-white font-black text-xs rounded-2xl shadow-glow-emerald transition-all cursor-pointer flex items-center justify-center gap-2"

@@ -104,7 +104,7 @@ export default function LandingHero({ setActiveTab, setGoogleLoginModalOpen, aiA
         '🚀 Bán hàng tự động 24/7 - Tiết kiệm 100% chi phí MC/Studio',
         '⚡ Tự động bắt comment SĐT & nhắn tin chốt đơn khách hàng',
       ],
-      buttonText: heroBillingCycle === 'annual' ? 'ĐĂNG KÝ GÓI NĂM STARTER (4.9M)' : 'ĐĂNG KÝ GÓI STARTER (490K)',
+      buttonText: heroBillingCycle === "annual" ? "💳 SEPAY THANH TOÁN GÓI NĂM STARTER (4.9M)" : "💳 SEPAY THANH TOÁN GÓI STARTER (490K)",
       buttonBg: 'bg-[#3B82F6] hover:bg-blue-600 shadow-neon-blue',
     },
     {
@@ -124,7 +124,7 @@ export default function LandingHero({ setActiveTab, setGoogleLoginModalOpen, aiA
         '📈 Bán hàng đa kênh X3 doanh số - Phá đảo TikTok, FB, YT, Shopee',
         '📊 Báo cáo phân tích doanh số từng phiên live & sản phẩm',
       ],
-      buttonText: heroBillingCycle === 'annual' ? 'ĐĂNG KÝ GÓI NĂM BUSINESS (14.9M)' : 'ĐĂNG KÝ GÓI BUSINESS (1.49M)',
+      buttonText: heroBillingCycle === "annual" ? "💳 SEPAY THANH TOÁN GÓI NĂM BUSINESS (14.9M)" : "💳 SEPAY THANH TOÁN GÓI BUSINESS (1.49M)",
       buttonBg: 'bg-[#EF4444] hover:bg-red-600 shadow-neon-red',
     },
     {
@@ -143,7 +143,7 @@ export default function LandingHero({ setActiveTab, setGoogleLoginModalOpen, aiA
         '👑 Bật phát 24/7 Vô hạn không lo nghẽn mạng hay khóa luồng',
         '🔒 Cam kết Uptime 99.99% & Hỗ trợ kỹ thuật 1:1 24/7',
       ],
-      buttonText: heroBillingCycle === 'annual' ? 'ĐĂNG KÝ ENTERPRISE NĂM (49M)' : 'ĐĂNG KÝ ENTERPRISE VIP (4.9M)',
+      buttonText: heroBillingCycle === "annual" ? "💳 SEPAY THANH TOÁN GÓI ENTERPRISE NĂM (49M)" : "💳 SEPAY THANH TOÁN GÓI ENTERPRISE VIP (4.9M)",
       buttonBg: 'bg-[#8B5CF6] hover:bg-purple-600 shadow-neon-purple',
     },
   ];
