@@ -189,6 +189,80 @@ export default function EnterprisePayment() {
         </div>
       </div>
 
+      
+      {/* 📡 BÀN KẾT NỐI SEPAY WEBHOOK CHÍNH THỨC (SEPAY INTEGRATION PANEL) */}
+      <div className="glass-panel p-6 rounded-3xl border border-emerald-500/40 bg-gradient-to-r from-emerald-950/40 via-[#0E1512] to-black space-y-4 shadow-glow-emerald">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border-b border-white/10 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-black text-sm">
+              SePay
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-black border border-emerald-500/30 mb-1">
+                ● SEPAY WEBHOOK CONNECTED & READY 24/7
+              </div>
+              <h3 className="text-lg font-black text-white">CỔNG TÍCH HỢP THANH TOÁN TỰ ĐỘNG SEPAY VIETQR</h3>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText("https://avalive.pro/api/sepay-webhook");
+                alert("📋 Đã copy Link Webhook SePay: https://avalive.pro/api/sepay-webhook");
+              }}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-glow-emerald transition-all cursor-pointer flex items-center gap-1.5"
+            >
+              📋 COPY LINK SEPAY WEBHOOK
+            </button>
+          </div>
+        </div>
+
+        {/* Webhook URLs & Parameter Config Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
+          
+          <div className="p-4 rounded-2xl bg-black/80 border border-emerald-500/30 space-y-2">
+            <span className="text-[11px] font-black text-emerald-400 block uppercase">1. URL NHẬN WEBHOOK TỰ ĐỘNG (PRODUCTION):</span>
+            <div className="p-2.5 rounded-xl bg-[#121218] border border-white/10 text-white break-all flex items-center justify-between select-all font-bold">
+              <span>https://avalive.pro/api/sepay-webhook</span>
+              <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[9px] font-black">ACTIVE</span>
+            </div>
+            <p className="text-[10px] text-gray-400">Dán URL này vào ô <strong>"URL nhận Webhook"</strong> tại <strong>my.sepay.vn/webhooks</strong></p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-black/80 border border-white/10 space-y-2">
+            <span className="text-[11px] font-black text-blue-400 block uppercase">2. URL LOCAL WEBHOOK (THỬ NGHIỆM LOCAL):</span>
+            <div className="p-2.5 rounded-xl bg-[#121218] border border-white/10 text-white break-all flex items-center justify-between select-all font-bold">
+              <span>http://localhost:3001/api/sepay-webhook</span>
+              <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-[9px] font-black">TEST LOCAL</span>
+            </div>
+            <p className="text-[10px] text-gray-400">Dán URL này khi thử nghiệm môi trường Localhost máy trạm</p>
+          </div>
+
+        </div>
+
+        {/* Technical Config Parameters */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs font-mono pt-1">
+          <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+            <span className="text-[9px] text-gray-400 block uppercase font-bold">Loại Giao Dịch</span>
+            <span className="text-emerald-400 font-bold">Tiền Vào (Incoming)</span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+            <span className="text-[9px] text-gray-400 block uppercase font-bold">Định Dạng Dữ Liệu</span>
+            <span className="text-purple-400 font-bold">JSON (application/json)</span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+            <span className="text-[9px] text-gray-400 block uppercase font-bold">Ngân Hàng Thụ Hưởng</span>
+            <span className="text-white font-bold">MBBank 0988123456</span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+            <span className="text-[9px] text-gray-400 block uppercase font-bold">Cú Pháp Nội Dung</span>
+            <span className="text-red-400 font-bold">AVALIVE8912</span>
+          </div>
+        </div>
+      </div>
+
+
       {/* Billing Cycle Switcher: Monthly vs Annual (TẶNG 2 THÁNG MIỄN PHÍ) */}
       <div className="flex flex-col items-center justify-center gap-2 py-2">
         <div className="bg-[#121218] p-1.5 rounded-2xl border border-emerald-500/40 flex items-center gap-2 shadow-glow-emerald">
