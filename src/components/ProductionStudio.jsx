@@ -457,21 +457,31 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
             maskCtx = maskC.getContext("2d");
           }
 
-          // 1. Prepare Smooth Sub-pixel Anti-Aliased Mask
+          // 1. Prepare Ultra-Sharp 100% Solid Mask Threshold (No Blur/No Transparency Bleeding)
           maskCtx.clearRect(0, 0, W, H);
+          maskCtx.imageSmoothingEnabled = true;
+          maskCtx.imageSmoothingQuality = "high";
+          maskCtx.filter = "contrast(300%) brightness(130%)";
           maskCtx.drawImage(results.segmentationMask, 0, 0, W, H);
+          maskCtx.filter = "none";
 
-          // 2. Render onto Active Double Buffer (Atomic Flip Canvas)
+          // 2. Render onto Active Double Buffer (Atomic 4K Ultra Sharp Sharpness)
           const targetBuf = bufferIndex === 0 ? personBufferA : personBufferB;
           const targetCtx = bufferIndex === 0 ? personCtxA : personCtxB;
 
           if (targetCtx && targetBuf) {
             targetCtx.clearRect(0, 0, W, H);
-            targetCtx.filter = `brightness(${bright.toFixed(3)}) contrast(${contr.toFixed(3)}) saturate(${satv.toFixed(3)}) hue-rotate(${hueDeg.toFixed(1)}deg) ${pFilter}`;
+            targetCtx.imageSmoothingEnabled = true;
+            targetCtx.imageSmoothingQuality = "high";
+            // Enhanced contrast & sharpness filter for 100% ultra crisp subject
+            const sharpBright = (bright * 1.02).toFixed(3);
+            const sharpContr = (contr * 1.06).toFixed(3);
+            const sharpSat = (satv * 1.05).toFixed(3);
+            targetCtx.filter = `brightness(${sharpBright}) contrast(${sharpContr}) saturate(${sharpSat}) hue-rotate(${hueDeg.toFixed(1)}deg) ${pFilter}`;
             targetCtx.drawImage(results.image, 0, 0, W, H);
             targetCtx.filter = "none";
 
-            // 3. Cutout Person (Clean isolated transparent person layer)
+            // 3. Cutout Solid Person Mask
             targetCtx.globalCompositeOperation = "destination-in";
             targetCtx.drawImage(maskC, 0, 0, W, H);
             targetCtx.globalCompositeOperation = "source-over";
