@@ -1,0 +1,21 @@
+{
+  "short_name": "AvaLive PRO",
+  "name": "AvaLive PRO — Nền Tảng AI Livestream & E-Commerce",
+  "icons": [
+    {
+      "src": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=192&q=80",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=512&q=80",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0A0A0A",
+  "theme_color": "#EF4444",
+  "display": "standalone",
+  "orientation": "portrait"
+}

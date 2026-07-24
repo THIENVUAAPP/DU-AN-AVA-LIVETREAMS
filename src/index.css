@@ -1,0 +1,139 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-red: #EF4444;
+    --color-blue: #3B82F6;
+    --color-purple: #8B5CF6;
+    --color-dark: #0A0A0A;
+  }
+  
+  body {
+    background-color: #0A0A0A;
+    color: #F9FAFB;
+    font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', sans-serif;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0A0A0A; }
+::-webkit-scrollbar-thumb { background: #1F2937; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #EF4444; }
+
+/* Glassmorphism panels */
+.glass-panel {
+  background: rgba(18, 18, 22, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.glass-panel-red {
+  background: rgba(24, 14, 16, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* Gradient Text */
+.text-gradient-red { background: linear-gradient(135deg, #F87171 0%, #EF4444 50%, #B91C1C 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.text-gradient-blue { background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.text-gradient-purple { background: linear-gradient(135deg, #C084FC 0%, #8B5CF6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.text-gradient-white { background: linear-gradient(135deg, #FFFFFF 0%, #D1D5DB 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+/* Marquee */
+@keyframes marquee { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
+.animate-marquee { display: flex; width: 200%; animation: marquee 25s linear infinite; }
+.animate-marquee:hover { animation-play-state: paused; }
+
+/* ===== $10M PREMIUM ANIMATIONS ===== */
+
+/* Fade In Up */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(48px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up   { animation: fadeInUp 0.75s cubic-bezier(0.22,1,0.36,1) both; }
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
+.delay-500 { animation-delay: 0.5s; }
+.delay-600 { animation-delay: 0.6s; }
+
+/* Float */
+@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+.animate-float      { animation: float 4s ease-in-out infinite; }
+.animate-float-slow { animation: float 6s ease-in-out infinite; }
+
+/* Shimmer text */
+@keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+.animate-shimmer {
+  background: linear-gradient(90deg, #EF4444 0%, #F87171 20%, #fff 40%, #8B5CF6 60%, #3B82F6 80%, #EF4444 100%);
+  background-size: 400% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 4s linear infinite;
+}
+
+/* Orb pulse */
+@keyframes orbPulse { 0%,100% { opacity: 0.35; transform: scale(1); } 50% { opacity: 0.65; transform: scale(1.1); } }
+.animate-orb      { animation: orbPulse 5s ease-in-out infinite; }
+.animate-orb-slow { animation: orbPulse 8s ease-in-out infinite; }
+
+/* CTA glow pulse */
+@keyframes ctaPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.55); } 50% { box-shadow: 0 0 0 20px rgba(239,68,68,0); } }
+.animate-cta-pulse { animation: ctaPulse 2.5s ease-out infinite; }
+
+/* Border rotate */
+@keyframes borderRotate { 0% { background-position:0% 50%; } 50% { background-position:100% 50%; } 100% { background-position:0% 50%; } }
+.animate-border-rotate { background: linear-gradient(270deg,#EF4444,#8B5CF6,#3B82F6,#10B981); background-size:800% 800%; animation: borderRotate 5s ease infinite; }
+
+/* Zoom card */
+.zoom-card { transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.35s ease, border-color 0.25s ease; }
+.zoom-card:hover { transform: translateY(-8px) scale(1.04); }
+
+/* Scroll reveal */
+.reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.75s cubic-bezier(0.22,1,0.36,1), transform 0.75s cubic-bezier(0.22,1,0.36,1); }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* Grid background */
+.bg-grid-lines {
+  background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+/* Neon shadows */
+.shadow-neon-red    { box-shadow: 0 0 40px rgba(239,68,68,0.4),   0 0 80px rgba(239,68,68,0.15); }
+.shadow-neon-purple { box-shadow: 0 0 40px rgba(139,92,246,0.4),  0 0 80px rgba(139,92,246,0.15); }
+.shadow-neon-blue   { box-shadow: 0 0 40px rgba(59,130,246,0.4),  0 0 80px rgba(59,130,246,0.15); }
+.shadow-neon-green  { box-shadow: 0 0 40px rgba(16,185,129,0.4),  0 0 80px rgba(16,185,129,0.15); }
+
+/* Feature ring */
+@keyframes ringPulse { 0% { box-shadow:0 0 0 0 rgba(139,92,246,0.5); } 80% { box-shadow:0 0 0 18px rgba(139,92,246,0); } 100% { box-shadow:0 0 0 0 rgba(139,92,246,0); } }
+.animate-ring { animation: ringPulse 2s ease-out infinite; }
+
+/* Counter */
+@keyframes countUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+.animate-count-up { animation: countUp 0.8s ease-out both; }
+
+/* Spin slow */
+@keyframes spinSlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.animate-spin-slow { animation: spinSlow 12s linear infinite; }
+
+/* Blink cursor */
+@keyframes blink { 50% { opacity: 0; } }
+.typewriter-cursor::after { content: '|'; animation: blink 1s step-end infinite; color: #EF4444; }
+
+/* Gradient shift for hero background */
+@keyframes gradientShift { 0% { background-position:0% 50%; } 50% { background-position:100% 50%; } 100% { background-position:0% 50%; } }
+.animate-gradient { background-size: 400% 400%; animation: gradientShift 8s ease infinite; }
+
+/* Stagger helpers */
+.stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger > *:nth-child(2) { animation-delay: 0.15s; }
+.stagger > *:nth-child(3) { animation-delay: 0.25s; }
+.stagger > *:nth-child(4) { animation-delay: 0.35s; }
+.stagger > *:nth-child(5) { animation-delay: 0.45s; }
+.stagger > *:nth-child(6) { animation-delay: 0.55s; }
