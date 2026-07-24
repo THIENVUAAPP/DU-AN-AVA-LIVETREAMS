@@ -127,7 +127,12 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
       try {
         setWebcamActive(true);
         const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: cameraFacingMode, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 60, min: 30 } }, 
+          video: { 
+            facingMode: cameraFacingMode, 
+            width: { ideal: 3840, min: 1920 }, 
+            height: { ideal: 2160, min: 1080 }, 
+            frameRate: { ideal: 60, min: 30 } 
+          }, 
           audio: true 
         });
         if (webcamVideoRef.current) {
@@ -413,7 +418,13 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
           if (!canvas || !results.segmentationMask) return;
           const W = results.image.width;
           const H = results.image.height;
-          if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; }
+          // Double-buffer 4K Ultra High Density Resolution
+        const targetW = Math.max(3840, W * 2);
+        const targetH = Math.max(2160, H * 2);
+        if (canvas.width !== targetW || canvas.height !== targetH) { 
+          canvas.width = targetW; 
+          canvas.height = targetH; 
+        }
           const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
           if (!ctx) return;
 
