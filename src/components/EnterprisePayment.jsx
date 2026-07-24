@@ -251,7 +251,7 @@ export default function EnterprisePayment({ setActiveTab }) {
                   className="w-full py-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 hover:opacity-95 text-white font-black text-xs rounded-2xl shadow-glow-emerald transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
                   <Zap className="w-4 h-4 text-amber-300 animate-pulse" />
-                  <span>🚀 GIẢ LẬP SEPAY WEBHOOK CHUYỂN KHOẢN THÀNH CÔNG (XÁC NHẬN)</span>
+                  <span>⚡ XÁC NHẬN THANH TOÁN SEPAY WEBHOOK TỰ ĐỘNG REAL-TIME</span>
                 </button>
               </div>
 

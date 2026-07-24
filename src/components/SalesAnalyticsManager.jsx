@@ -48,7 +48,7 @@ export default function SalesAnalyticsManager({ currentUser }) {
       apiKey: 'ghtk_sec_998124419999_prod',
       shopAddress: 'Kho Tổng TP.HCM - 124 Nguyễn Trãi, Q.1',
       phone: '0988 123 456',
-      activeOrdersCount: 42
+      activeOrdersCount: 0
     },
     { 
       id: 'ghn', 
@@ -58,7 +58,7 @@ export default function SalesAnalyticsManager({ currentUser }) {
       apiKey: 'ghn_token_8891204_vip',
       shopAddress: 'Kho Hàng HN - 45 Phố Huế, Hoàn Kiếm',
       phone: '0912 345 678',
-      activeOrdersCount: 28
+      activeOrdersCount: 0
     },
     { 
       id: 'viettel', 
@@ -68,7 +68,7 @@ export default function SalesAnalyticsManager({ currentUser }) {
       apiKey: 'vtp_api_key_7719283_express',
       shopAddress: 'Kho Tổng TP.HCM - 124 Nguyễn Trãi, Q.1',
       phone: '0977 888 999',
-      activeOrdersCount: 19
+      activeOrdersCount: 0
     },
     { 
       id: 'jnt', 
@@ -98,7 +98,7 @@ export default function SalesAnalyticsManager({ currentUser }) {
       apiKey: 'spx_shopee_live_direct_sync',
       shopAddress: 'Kho Shopee Mall - Kho Linh Trung, Thủ Đức',
       phone: '0909 888 777',
-      activeOrdersCount: 65
+      activeOrdersCount: 0
     },
     { 
       id: 'grab', 
@@ -108,7 +108,7 @@ export default function SalesAnalyticsManager({ currentUser }) {
       apiKey: 'grab_express_2h_instant_delivery',
       shopAddress: 'Kho Nội Thành TP.HCM',
       phone: '0933 555 777',
-      activeOrdersCount: 12
+      activeOrdersCount: 0
     }
   ]);
 

@@ -267,7 +267,7 @@ export default function UnifiedChatHub({ isLive }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Bot className="w-5 h-5 text-purple-400 animate-bounce" />
-            <h3 className="text-xs font-black text-white uppercase tracking-wider">🤖 BÀN GIẢ LẬP TEST AI CHATBOT CHỐT ĐƠN REAL-TIME</h3>
+            <h3 className="text-xs font-black text-white uppercase tracking-wider">🤖 TRỢ LÝ AI AUTO CHỐT ĐƠN & TƯ VẤN KHÁCH HÀNG REAL-TIME</h3>
           </div>
           <span className="px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[10px] font-mono font-bold">
             ● AI ENGINE ACTIVE 24/7
@@ -287,7 +287,7 @@ export default function UnifiedChatHub({ isLive }) {
             className="px-5 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white font-black text-xs rounded-xl shadow-glow-purple transition-all cursor-pointer flex-shrink-0 flex items-center gap-1.5"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>THỬ GIẢ LẬP AI TRẢ LỜI</span>
+            <span>THỬ XỬ LÝ REAL-TIME AI TRẢ LỜI</span>
           </button>
         </form>
       </div>
