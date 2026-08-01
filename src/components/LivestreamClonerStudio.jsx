@@ -5,6 +5,7 @@ import {
   Trash2, 
   Play, 
   Square,
+  Pause,
   Download,
   Scissors,
   Zap,
@@ -36,7 +37,8 @@ export default function LivestreamClonerStudio() {
         thumbnail: 'https://images.unsplash.com/photo-1516280440502-6014b2d131eb?auto=format&fit=crop&w=300&q=80',
         autoDownload: true,
         showHighlights: false,
-        highlights: []
+        highlights: [],
+        isPlaying: false
       }));
       
       setStreams(prev => [...prev, ...newStreams]);
@@ -60,9 +62,18 @@ export default function LivestreamClonerStudio() {
       if (s.id === id) {
         // If it was live, and autoDownload is true, trigger download state immediately
         if (s.status === 'live' && s.autoDownload) {
-          return { ...s, status: 'downloading' };
+          return { ...s, status: 'downloading', isPlaying: false };
         }
-        return { ...s, status: 'ended' };
+        return { ...s, status: 'ended', isPlaying: false };
+      }
+      return s;
+    }));
+  };
+
+  const togglePlay = (id) => {
+    setStreams(prev => prev.map(s => {
+      if (s.id === id) {
+        return { ...s, isPlaying: !s.isPlaying };
       }
       return s;
     }));
@@ -166,10 +177,20 @@ export default function LivestreamClonerStudio() {
                 
                 {/* VIDEO PLAYER SIMULATION */}
                 <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden">
-                  <img src={stream.thumbnail} alt="Stream Thumbnail" className="w-full h-full object-cover opacity-60" />
+                  {stream.isPlaying ? (
+                    <video 
+                      src="https://www.w3schools.com/html/mov_bbb.mp4" 
+                      autoPlay 
+                      loop 
+                      muted 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <img src={stream.thumbnail} alt="Stream Thumbnail" className="w-full h-full object-cover opacity-60" />
+                  )}
                   
                   {/* Status Overlay */}
-                  <div className="absolute top-2 left-2 right-2 flex justify-between items-start">
+                  <div className="absolute top-2 left-2 right-2 flex justify-between items-start pointer-events-none">
                     {stream.status === 'live' && (
                       <span className="px-2 py-0.5 rounded text-[10px] font-black bg-red-600 text-white flex items-center gap-1 shadow-glow-red animate-pulse">
                         <Radio className="w-3 h-3" /> LIVE
@@ -196,13 +217,22 @@ export default function LivestreamClonerStudio() {
 
                   <div className="absolute inset-0 flex items-center justify-center">
                     {stream.status === 'live' ? (
-                      <Play className="w-12 h-12 text-white/70 group-hover:text-white transition-all cursor-pointer" fill="currentColor" />
+                      <button 
+                        onClick={() => togglePlay(stream.id)} 
+                        className={`p-3 rounded-full transition-all cursor-pointer group ${stream.isPlaying ? 'bg-transparent hover:bg-black/50 opacity-0 hover:opacity-100' : 'bg-black/50 hover:bg-black/80'}`}
+                      >
+                        {stream.isPlaying ? (
+                          <Pause className="w-10 h-10 text-white/70 group-hover:text-white transition-all" fill="currentColor" />
+                        ) : (
+                          <Play className="w-10 h-10 text-white/70 group-hover:text-emerald-400 transition-all ml-1" fill="currentColor" />
+                        )}
+                      </button>
                     ) : stream.status === 'downloading' ? (
-                      <Download className="w-12 h-12 text-amber-400 animate-bounce" />
+                      <Download className="w-12 h-12 text-amber-400 animate-bounce pointer-events-none" />
                     ) : stream.status === 'downloaded' ? (
-                      <CheckCircle2 className="w-12 h-12 text-emerald-400" />
+                      <CheckCircle2 className="w-12 h-12 text-emerald-400 pointer-events-none" />
                     ) : (
-                      <Square className="w-12 h-12 text-gray-500" />
+                      <Square className="w-12 h-12 text-gray-500 pointer-events-none" />
                     )}
                   </div>
                 </div>
