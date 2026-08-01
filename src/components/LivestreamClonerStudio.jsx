@@ -46,13 +46,12 @@ const getEmbedUrl = (url) => {
     return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&autoplay=true&mute=1`;
   }
   
-  // TikTok (Tích hợp Euler API & Player Endpoint V1)
+  // TikTok
   if (lowerUrl.includes('tiktok.com')) {
     const usernameMatch = url.match(/@([a-zA-Z0-9_.-]+)/);
     if (usernameMatch && usernameMatch[0]) {
-      // Phương án 1: Thử dùng endpoint player gốc của TikTok (tỉ lệ thành công cao hơn embed thường)
-      // Phương án 2 (tương lai): Truyền thẳng URL gốc cho HLS Player nếu gọi API Euler thành công lấy được file .m3u8
-      return `https://www.tiktok.com/player/v1/live?username=${usernameMatch[0].replace('@', '')}&autoplay=1&muted=1`;
+      // Bắt buộc dùng /embed/ vì /player/v1/live bị chặn X-Frame-Options / Cookie
+      return `https://www.tiktok.com/embed/${usernameMatch[0].replace('@', '')}/live?autoplay=1&muted=1`;
     }
   }
   
@@ -282,6 +281,7 @@ export default function LivestreamClonerStudio() {
                               allow="autoplay; encrypted-media; fullscreen"
                               className="w-full h-full object-cover border-0"
                               title="Real-time Livestream Player Fallback"
+                              sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                             />
                           </div>
                         </div>
@@ -292,7 +292,7 @@ export default function LivestreamClonerStudio() {
                         allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                         className="w-full h-full object-cover border-0 z-0 bg-[#121216]"
                         title="Real-time Livestream Player"
-                        referrerPolicy="no-referrer"
+                        sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                         allowFullScreen
                       />
                     )
