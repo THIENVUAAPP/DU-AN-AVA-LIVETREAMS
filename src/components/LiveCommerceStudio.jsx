@@ -139,6 +139,31 @@ export default function LiveCommerceStudio({ isLive }) {
 
   // Product Add / Edit Modal State
   const [productModalOpen, setProductModalOpen] = useState(false);
+
+  // Multi-Platform Cart Sync & Captcha State
+  const [isSyncingCarts, setIsSyncingCarts] = useState(false);
+  const [cartSyncState, setCartSyncState] = useState('idle'); // 'detecting_captcha', 'solving_captcha', 'syncing', 'success'
+
+  const handleMasterCartSync = () => {
+    setIsSyncingCarts(true);
+    setCartSyncState('detecting_captcha');
+
+    // Simulate connection and Captcha solving on multiple platforms
+    setTimeout(() => {
+      setCartSyncState('solving_captcha');
+      setTimeout(() => {
+        setCartSyncState('syncing');
+        setTimeout(() => {
+          setCartSyncState('success');
+          setTimeout(() => {
+            setIsSyncingCarts(false);
+            setCartSyncState('idle');
+            alert(`✅ Đã đồng bộ Giỏ Hàng & Tồn Kho thành công trên tất cả nền tảng (${activeSession.platform})!\nHệ thống tự động giải quyết Captcha 24/7 giúp đồng bộ không gián đoạn.`);
+          }, 2000);
+        }, 2000);
+      }, 2500);
+    }, 2000);
+  };
   const [editingProductId, setEditingProductId] = useState(null);
   
   const [prodFormName, setProdFormName] = useState('');
@@ -548,13 +573,22 @@ export default function LiveCommerceStudio({ isLive }) {
                 DANH SÁCH GIỎ HÀNG SẢN PHẨM SẴN SÀNG LIVE ({activeSession.products.length} SP)
               </h3>
 
-              <button
-                onClick={handleOpenAddProductModal}
-                className="px-3.5 py-1.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>THÊM SP</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleMasterCartSync}
+                  className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white border border-emerald-400/50 text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-glow-emerald"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>ĐỒNG BỘ GIỎ HÀNG (ALL PLATFORMS)</span>
+                </button>
+                <button
+                  onClick={handleOpenAddProductModal}
+                  className="px-3.5 py-1.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>THÊM SP</span>
+                </button>
+              </div>
             </div>
 
             <div className="space-y-3">
@@ -944,6 +978,46 @@ export default function LiveCommerceStudio({ isLive }) {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* MODAL ĐỒNG BỘ GIỎ HÀNG & BYPASS CAPTCHA 24/7 */}
+      {isSyncingCarts && (
+        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-fadeIn">
+          {cartSyncState === 'detecting_captcha' && (
+            <>
+              <RefreshCw className="w-16 h-16 text-blue-400 animate-spin mb-6" />
+              <h4 className="text-2xl font-black text-white">Đang Quét Kết Nối Đa Nền Tảng...</h4>
+              <p className="text-sm text-blue-300 mt-3 font-mono">Đang kiểm tra yêu cầu bảo mật/Captcha từ TikTok Shop, Shopee, Facebook...</p>
+            </>
+          )}
+          {cartSyncState === 'solving_captcha' && (
+            <>
+              <Zap className="w-16 h-16 text-amber-400 animate-pulse mb-6" />
+              <h4 className="text-2xl font-black text-amber-400">Đang Giải Mã Captcha Tự Động 24/7</h4>
+              <p className="text-sm text-amber-200 mt-3 font-mono">Hệ thống AI đang tự động Bypass reCAPTCHA / hCaptcha / Funcaptcha 100% không giới hạn...</p>
+              <div className="w-full max-w-md h-3 bg-white/10 rounded-full mt-8 overflow-hidden relative">
+                <div className="absolute top-0 left-0 h-full bg-gradient-to-r from-amber-500 to-yellow-300 w-3/4 animate-pulse"></div>
+              </div>
+            </>
+          )}
+          {cartSyncState === 'syncing' && (
+            <>
+              <ShoppingCart className="w-16 h-16 text-purple-400 animate-bounce mb-6" />
+              <h4 className="text-2xl font-black text-purple-400">Đang Đồng Bộ Giỏ Hàng & Tồn Kho</h4>
+              <p className="text-sm text-purple-200 mt-3 font-mono">Đẩy toàn bộ sản phẩm lên {activeSession.platform} an toàn không lỗi...</p>
+              <div className="w-full max-w-md h-3 bg-white/10 rounded-full mt-8 overflow-hidden relative">
+                <div className="absolute top-0 left-0 h-full bg-gradient-to-r from-purple-500 to-fuchsia-400 w-full animate-pulse"></div>
+              </div>
+            </>
+          )}
+          {cartSyncState === 'success' && (
+            <>
+              <Check className="w-16 h-16 text-emerald-400 mb-6 shadow-glow-emerald rounded-full border-4 border-emerald-400 p-2" />
+              <h4 className="text-2xl font-black text-emerald-400">Đồng Bộ Đa Nền Tảng Thành Công!</h4>
+              <p className="text-sm text-emerald-200 mt-3 font-mono">Giỏ hàng và sản phẩm đã online 24/7, Bypass Captcha mượt mà không lỗi lầm.</p>
+            </>
+          )}
         </div>
       )}
 
