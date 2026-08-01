@@ -267,21 +267,14 @@ export default function LivestreamClonerStudio() {
                           <span className="text-[9px] mt-1 uppercase text-gray-400">Người dùng này hiện không phát trực tiếp</span>
                         </div>
                       ) : (
-                        <div className="text-red-500 flex flex-col items-center justify-center p-4 text-center h-full w-full bg-[#121216] border border-red-500/20">
-                          <Zap className="w-8 h-8 mb-2 opacity-80" />
-                          <span className="text-[11px] font-bold uppercase">Luồng Chặn Hoặc Đã Tắt</span>
-                          <span className="text-[9px] text-gray-500 mt-1 uppercase">Hệ thống đang thử lại bằng iFrame...</span>
-                          {/* Fallback to iframe if API fails */}
-                          <div className="absolute inset-0 opacity-30 pointer-events-none filter blur-[2px]">
-                            <iframe 
-                              src={getEmbedUrl(stream.url)}
-                              allow="autoplay; encrypted-media; fullscreen"
-                              className="w-full h-full object-cover border-0"
-                              title="Real-time Livestream Player Fallback"
-                              sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-                            />
-                          </div>
-                        </div>
+                        <iframe 
+                          src={getEmbedUrl(stream.url)}
+                          allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                          className="w-full h-full object-cover border-0 z-0 bg-[#121216]"
+                          title="Real-time Livestream Player"
+                          sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                          allowFullScreen
+                        />
                       )
                     ) : (
                       <iframe 
