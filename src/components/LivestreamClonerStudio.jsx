@@ -16,6 +16,7 @@ import {
   Eye
 } from 'lucide-react';
 import LivePlayer from './LivePlayer';
+import ScaledIframe from './ScaledIframe';
 
 // Cấu hình API Euler để lách bản quyền TikTok Live
 const EULER_API_KEY = "euler_ZmE5ODQzZmM0MzZlMDNlODBkNWEzNTUwZGFhZjQxMjNmN2RjMTA3ZjU2YWE0ZGNlOGU2MTQ1";
@@ -267,21 +268,15 @@ export default function LivestreamClonerStudio() {
                           <span className="text-[9px] mt-1 uppercase text-gray-400">Người dùng này hiện không phát trực tiếp</span>
                         </div>
                       ) : (
-                        <iframe 
+                        <ScaledIframe 
                           src={getEmbedUrl(stream.url)}
-                          allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-                          className="w-full h-full object-cover border-0 z-0 bg-[#121216]"
                           title="Real-time Livestream Player"
-                          allowFullScreen
                         />
                       )
                     ) : (
-                      <iframe 
+                      <ScaledIframe 
                         src={getEmbedUrl(stream.url)}
-                        allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-                        className="w-full h-full object-cover border-0 z-0 bg-[#121216]"
                         title="Real-time Livestream Player"
-                        allowFullScreen
                       />
                     )
                   ) : (
