@@ -16,7 +16,6 @@ import {
   Eye
 } from 'lucide-react';
 import LivePlayer from './LivePlayer';
-import ScaledIframe from './ScaledIframe';
 
 // Cấu hình API Euler để lách bản quyền TikTok Live
 const EULER_API_KEY = "euler_ZmE5ODQzZmM0MzZlMDNlODBkNWEzNTUwZGFhZjQxMjNmN2RjMTA3ZjU2YWE0ZGNlOGU2MTQ1";
@@ -53,6 +52,8 @@ const getEmbedUrl = (url) => {
     if (usernameMatch && usernameMatch[0]) {
       // Bắt buộc dùng /embed/ vì /player/v1/live bị chặn X-Frame-Options / Cookie
       return `https://www.tiktok.com/embed/${usernameMatch[0]}/live?autoplay=1&muted=1`;
+    } else {
+      return 'INVALID_TIKTOK_URL';
     }
   }
   
@@ -267,16 +268,32 @@ export default function LivestreamClonerStudio() {
                           <span className="text-[12px] font-black uppercase text-white">TÀI KHOẢN ĐANG OFFLINE</span>
                           <span className="text-[9px] mt-1 uppercase text-gray-400">Người dùng này hiện không phát trực tiếp</span>
                         </div>
+                      ) : getEmbedUrl(stream.url) === 'INVALID_TIKTOK_URL' ? (
+                        <div className="text-gray-400 flex flex-col items-center justify-center p-4 text-center h-full w-full bg-[#121216] border border-orange-500/20">
+                          <span className="text-[12px] font-black uppercase text-orange-500 mb-2">LINK TIKTOK KHÔNG HỢP LỆ</span>
+                          <span className="text-[10px] text-gray-300">Vui lòng nhập link chứa tên người dùng (VD: tiktok.com/@user/live)</span>
+                        </div>
                       ) : (
-                        <ScaledIframe 
+                        <iframe 
                           src={getEmbedUrl(stream.url)}
+                          allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                          className="w-full h-full object-cover border-0 z-0 bg-[#121216]"
                           title="Real-time Livestream Player"
+                          allowFullScreen
                         />
                       )
+                    ) : getEmbedUrl(stream.url) === 'INVALID_TIKTOK_URL' ? (
+                      <div className="text-gray-400 flex flex-col items-center justify-center p-4 text-center h-full w-full bg-[#121216] border border-orange-500/20">
+                        <span className="text-[12px] font-black uppercase text-orange-500 mb-2">LINK TIKTOK KHÔNG HỢP LỆ</span>
+                        <span className="text-[10px] text-gray-300">Vui lòng nhập link chứa tên người dùng (VD: tiktok.com/@user/live)</span>
+                      </div>
                     ) : (
-                      <ScaledIframe 
+                      <iframe 
                         src={getEmbedUrl(stream.url)}
+                        allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                        className="w-full h-full object-cover border-0 z-0 bg-[#121216]"
                         title="Real-time Livestream Player"
+                        allowFullScreen
                       />
                     )
                   ) : (
