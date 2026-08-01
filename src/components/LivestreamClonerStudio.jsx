@@ -15,6 +15,7 @@ import {
   Radio,
   Eye
 } from 'lucide-react';
+import ReactPlayer from 'react-player';
 
 // Cấu hình API Euler để lách bản quyền TikTok Live
 const EULER_API_KEY = "euler_ZmE5ODQzZmM0MzZlMDNlODBkNWEzNTUwZGFhZjQxMjNmN2RjMTA3ZjU2YWE0ZGNlOGU2MTQ1";
@@ -69,9 +70,10 @@ export default function LivestreamClonerStudio() {
     if (!linksInput.trim()) return;
     setIsProcessing(true);
     
-    setTimeout(() => {
-      const links = linksInput.split('\n').filter(l => l.trim() !== '');
-      const newStreams = links.map((link, index) => ({
+    const links = linksInput.split('\n').filter(l => l.trim() !== '');
+    const newStreams = links.map((link, index) => {
+      const isApiRequired = link.includes('tiktok') || link.includes('shopee');
+      return {
         id: Date.now() + index,
         url: link.trim(),
         platform: link.includes('tiktok') ? 'TikTok' : link.includes('facebook') ? 'Facebook' : link.includes('shopee') ? 'Shopee' : 'Khác',
@@ -80,13 +82,36 @@ export default function LivestreamClonerStudio() {
         autoDownload: true,
         showHighlights: false,
         highlights: [],
-        isPlaying: true // Default to true to immediately load the real live stream
-      }));
-      
-      setStreams(prev => [...prev, ...newStreams]);
-      setLinksInput('');
-      setIsProcessing(false);
-    }, 1000);
+        isPlaying: true, // Default to true to immediately load the real live stream
+        isApiRequired,
+        extractionStatus: isApiRequired ? 'extracting' : 'idle',
+        streamUrl: '',
+        title: ''
+      };
+    });
+    
+    setStreams(prev => [...prev, ...newStreams]);
+    setLinksInput('');
+    setIsProcessing(false);
+
+    // Xử lý gọi API Serverless ngầm cho các luồng cần bóc tách (TikTok, Shopee)
+    newStreams.forEach(async (stream) => {
+      if (stream.isApiRequired) {
+        try {
+          const res = await fetch(`/api/extract?url=${encodeURIComponent(stream.url)}`);
+          if (!res.ok) throw new Error('API Error');
+          const data = await res.json();
+          if (data.streamUrl) {
+            setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'success', streamUrl: data.streamUrl, title: data.title } : s));
+          } else {
+            setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'error' } : s));
+          }
+        } catch (error) {
+          console.error("Extraction error:", error);
+          setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'error' } : s));
+        }
+      }
+    });
   };
 
   const handleClearAll = () => {
@@ -217,17 +242,52 @@ export default function LivestreamClonerStudio() {
             {streams.map((stream) => (
               <div key={stream.id} className="glass-panel rounded-2xl border border-white/10 bg-[#121216] overflow-hidden flex flex-col relative group transition-all hover:border-blue-500/50 hover:shadow-glow-blue-sm">
                 
-                {/* REAL-TIME VIDEO PLAYER IFRAME */}
+                {/* REAL-TIME VIDEO PLAYER IFRAME / NATIVE PLAYER */}
                 <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden group/player">
                   {stream.isPlaying ? (
-                    <iframe 
-                      src={getEmbedUrl(stream.url)}
-                      allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-                      className="w-full h-full object-cover border-0 z-0 bg-[#121216]"
-                      title="Real-time Livestream Player"
-                      referrerPolicy="no-referrer"
-                      allowFullScreen
-                    />
+                    stream.isApiRequired ? (
+                      stream.extractionStatus === 'extracting' ? (
+                        <div className="text-white flex flex-col items-center justify-center h-full w-full bg-[#121216]">
+                          <RefreshCw className="w-8 h-8 animate-spin text-blue-500 mb-3" />
+                          <span className="text-xs font-mono text-blue-400 font-bold uppercase">Đang Bóc Tách API...</span>
+                        </div>
+                      ) : stream.extractionStatus === 'success' && stream.streamUrl ? (
+                        <ReactPlayer 
+                          url={stream.streamUrl} 
+                          playing={true} 
+                          controls={true} 
+                          muted={true} 
+                          width="100%" 
+                          height="100%" 
+                          style={{ backgroundColor: '#000' }}
+                          config={{ file: { forceHLS: stream.streamUrl.includes('.m3u8'), forceFLV: stream.streamUrl.includes('.flv') } }}
+                        />
+                      ) : (
+                        <div className="text-red-500 flex flex-col items-center justify-center p-4 text-center h-full w-full bg-[#121216] border border-red-500/20">
+                          <Zap className="w-8 h-8 mb-2 opacity-80" />
+                          <span className="text-[11px] font-bold uppercase">Luồng Chặn Hoặc Đã Tắt</span>
+                          <span className="text-[9px] text-gray-500 mt-1 uppercase">Hệ thống đang thử lại bằng iFrame...</span>
+                          {/* Fallback to iframe if API fails */}
+                          <div className="absolute inset-0 opacity-30 pointer-events-none filter blur-[2px]">
+                            <iframe 
+                              src={getEmbedUrl(stream.url)}
+                              allow="autoplay; encrypted-media; fullscreen"
+                              className="w-full h-full object-cover border-0"
+                              title="Real-time Livestream Player Fallback"
+                            />
+                          </div>
+                        </div>
+                      )
+                    ) : (
+                      <iframe 
+                        src={getEmbedUrl(stream.url)}
+                        allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                        className="w-full h-full object-cover border-0 z-0 bg-[#121216]"
+                        title="Real-time Livestream Player"
+                        referrerPolicy="no-referrer"
+                        allowFullScreen
+                      />
+                    )
                   ) : (
                     <div className="relative w-full h-full">
                       <div className="absolute inset-0 bg-black/90 z-10 flex flex-col items-center justify-center text-white/70">
