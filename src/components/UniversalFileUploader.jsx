@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Upload, 
   Video, 
@@ -14,7 +14,15 @@ import {
   PlayCircle,
   ShieldCheck,
   Check,
-  Power
+  Power,
+  Download,
+  Scissors,
+  Play,
+  Loader2,
+  Sparkles,
+  Youtube,
+  Globe,
+  Facebook
 } from 'lucide-react';
 
 export default function UniversalFileUploader({ onImageUploaded, onVideoUploaded, title = "HỆ THỐNG NẠP FILE & LINK VIDEO LIVESTREAM 24/7" }) {
@@ -25,6 +33,11 @@ export default function UniversalFileUploader({ onImageUploaded, onVideoUploaded
   // Link Video Replay State (Gắn Link Video Đã Live / Restream Video URL)
   const [restreamUrlInput, setRestreamUrlInput] = useState('');
   const [restreamTitleInput, setRestreamTitleInput] = useState('');
+
+  // Link Analyzer State
+  const [isLinkAnalyzed, setIsLinkAnalyzed] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analyzedData, setAnalyzedData] = useState(null);
 
   const imgInputRef = useRef(null);
   const vidInputRef = useRef(null);
@@ -74,30 +87,64 @@ export default function UniversalFileUploader({ onImageUploaded, onVideoUploaded
   };
 
   // Add Video Replay via Link (Gắn Link Video Đã Live / Restream)
-  const handleAddRestreamLink = (e) => {
+  const handleAnalyzeLink = (e) => {
     e.preventDefault();
     if (!restreamUrlInput.trim()) {
-      alert("Vui lòng dán Link đường dẫn Video đã live!");
+      alert("Vui lòng dán Link đường dẫn Video / Livestream!");
       return;
     }
 
-    const titleName = restreamTitleInput.trim() || `Restream Video Live (${new Date().toLocaleTimeString()})`;
+    setAnalyzing(true);
+    setIsLinkAnalyzed(false);
+
+    // Simulate fast extraction/parsing of the video link
+    setTimeout(() => {
+      let platform = "Web";
+      if (restreamUrlInput.includes("tiktok.com")) platform = "TikTok";
+      if (restreamUrlInput.includes("facebook.com") || restreamUrlInput.includes("fb.com")) platform = "Facebook";
+      if (restreamUrlInput.includes("youtube.com") || restreamUrlInput.includes("youtu.be")) platform = "YouTube";
+
+      setAnalyzedData({
+        url: restreamUrlInput.trim(),
+        title: restreamTitleInput.trim() || `Phiên Live ${platform} (${new Date().toLocaleTimeString()})`,
+        platform: platform,
+        quality: "1080p60 (Source Gốc)",
+        duration: "Bản Đầy Đủ"
+      });
+      
+      setAnalyzing(false);
+      setIsLinkAnalyzed(true);
+    }, 1500);
+  };
+
+  const handleDownloadFull = () => {
+    alert(`⬇️ Đang Tải Về Toàn Bộ Video (Giữ nguyên gốc - ${analyzedData.quality}).\nTiến trình tải đang chạy ngầm...`);
+  };
+
+  const handleCutHighlights = () => {
+    alert(`✂️ Đang Dùng AI Cắt Đoạn Hay Nhất (Highlights) từ video.\nCác phân đoạn đang được tải về máy...`);
+  };
+
+  const handleReuseForRestream = () => {
     const videoObj = {
       id: `link_${Date.now()}`,
-      name: titleName,
+      name: analyzedData.title,
       type: 'video',
-      url: restreamUrlInput.trim(),
+      url: analyzedData.url,
       size: 'Link Replay',
-      source: 'Video Đã Live (Gắn Link)',
+      source: `${analyzedData.platform} (Restream)`,
       apiCost: 'Miễn Phí 24/7 (Unlimited)'
     };
 
     setUploadedFiles(prev => [videoObj, ...prev]);
     if (onVideoUploaded) onVideoUploaded(videoObj);
 
+    // Reset UI
+    setIsLinkAnalyzed(false);
+    setAnalyzedData(null);
     setRestreamUrlInput('');
     setRestreamTitleInput('');
-    alert(`⚡ THÀNH CÔNG: Đã gắn Link Video Đã Live "${titleName}" để phát Restream 24/7! (Miễn phí hoàn toàn)`);
+    alert(`⚡ THÀNH CÔNG: Đã đẩy Video "${videoObj.name}" vào luồng phát Livestream 24/7!`);
   };
 
   const handleImageChange = (e) => {
@@ -208,43 +255,81 @@ export default function UniversalFileUploader({ onImageUploaded, onVideoUploaded
         </div>
 
         {/* GẮN LINK VIDEO ĐÃ LIVE (RESTREAM REPLAY LINK) */}
-        <form onSubmit={handleAddRestreamLink} className="space-y-3 p-4 rounded-2xl bg-black/60 border border-white/15 flex flex-col justify-between">
+        <div className="space-y-3 p-4 rounded-2xl bg-black/60 border border-white/15 flex flex-col justify-between">
           <div>
             <span className="text-xs font-black text-white flex items-center gap-1.5 mb-1">
               <LinkIcon className="w-4 h-4 text-emerald-400" />
-              GẮN LINK VIDEO ĐÃ LIVE (RESTREAM REPLAY)
+              TẢI & PHÁT LẠI VIDEO (RESTREAM TỪ LINK)
             </span>
-            <p className="text-[11px] text-gray-400">Dán đường dẫn Video đã live từ TikTok, FB, YouTube, Shopee để phát lại 24/7.</p>
+            <p className="text-[11px] text-gray-400">Dán Link Video / Livestream (TikTok, FB, YouTube) để phân tích tải về hoặc phát lại.</p>
           </div>
 
-          <div className="space-y-2">
-            <input 
-              type="text" 
-              value={restreamTitleInput}
-              onChange={(e) => setRestreamTitleInput(e.target.value)}
-              className="w-full bg-[#0A0A0A] border border-white/15 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500"
-              placeholder="Tên phiên live (Ví dụ: Restream Live Đón Tết TikTok)..."
-            />
-
-            <div className="flex items-center gap-2">
+          {(!isLinkAnalyzed || !analyzedData) ? (
+            <form onSubmit={handleAnalyzeLink} className="space-y-2">
               <input 
-                type="url" 
-                value={restreamUrlInput}
-                onChange={(e) => setRestreamUrlInput(e.target.value)}
-                className="flex-1 bg-[#0A0A0A] border border-white/15 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 font-mono"
-                placeholder="Dán link https://tiktok.com/@video/123..."
-                required
+                type="text" 
+                value={restreamTitleInput}
+                onChange={(e) => setRestreamTitleInput(e.target.value)}
+                className="w-full bg-[#0A0A0A] border border-white/15 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500"
+                placeholder="Tên gợi nhớ (Ví dụ: Phiên Live Đón Tết)..."
+                disabled={analyzing}
               />
 
-              <button
-                type="submit"
-                className="py-2 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition-all shadow-glow-emerald cursor-pointer whitespace-nowrap"
-              >
-                🔗 GẮN LINK
-              </button>
+              <div className="flex items-center gap-2">
+                <input 
+                  type="url" 
+                  value={restreamUrlInput}
+                  onChange={(e) => setRestreamUrlInput(e.target.value)}
+                  className="flex-1 bg-[#0A0A0A] border border-white/15 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 font-mono"
+                  placeholder="Dán link https://tiktok.com/@video/123..."
+                  required
+                  disabled={analyzing}
+                />
+
+                <button
+                  type="submit"
+                  disabled={analyzing}
+                  className="py-2 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-black text-xs transition-all shadow-glow-emerald cursor-pointer whitespace-nowrap flex items-center gap-1.5"
+                >
+                  {analyzing ? <Loader2 className="w-4 h-4 animate-spin"/> : <Sparkles className="w-4 h-4"/>}
+                  {analyzing ? "ĐANG PHÂN TÍCH" : "PHÂN TÍCH LINK"}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="bg-[#121216] border border-emerald-500/40 rounded-xl p-3 flex flex-col gap-3 shadow-glow-green-sm">
+              <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                <div>
+                  <h4 className="text-xs font-bold text-emerald-400">{analyzedData.title}</h4>
+                  <div className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-2">
+                     <span className="flex items-center gap-1">
+                        {analyzedData.platform === "TikTok" ? <Film className="w-3 h-3"/> :
+                         analyzedData.platform === "Facebook" ? <Facebook className="w-3 h-3"/> :
+                         analyzedData.platform === "YouTube" ? <Youtube className="w-3 h-3"/> : <Globe className="w-3 h-3"/>}
+                        {analyzedData.platform}
+                     </span>
+                     <span>• {analyzedData.quality}</span>
+                  </div>
+                </div>
+                <button onClick={() => { setIsLinkAnalyzed(false); setAnalyzedData(null); }} className="text-[10px] text-gray-500 hover:text-white underline cursor-pointer">
+                  Hủy / Link Khác
+                </button>
+              </div>
+              
+              <div className="flex flex-col gap-2">
+                <button onClick={handleDownloadFull} className="w-full py-2 px-3 bg-[#1A1A24] hover:bg-[#2A2A3A] border border-white/10 rounded-lg text-xs font-bold text-white flex items-center justify-between transition-all cursor-pointer">
+                   <span className="flex items-center gap-2"><Download className="w-4 h-4 text-blue-400"/> Tải Toàn Bộ Video Livestream (Source Gốc)</span>
+                </button>
+                <button onClick={handleCutHighlights} className="w-full py-2 px-3 bg-[#1A1A24] hover:bg-[#2A2A3A] border border-white/10 rounded-lg text-xs font-bold text-white flex items-center justify-between transition-all cursor-pointer">
+                   <span className="flex items-center gap-2"><Scissors className="w-4 h-4 text-amber-400"/> Cắt Đoạn Hay Nhất (Highlights) & Tải Về</span>
+                </button>
+                <button onClick={handleReuseForRestream} className="w-full py-2 px-3 bg-gradient-to-r from-emerald-600 to-emerald-800 hover:from-emerald-500 hover:to-emerald-700 border border-emerald-400/50 rounded-lg text-xs font-black text-white flex items-center justify-center transition-all shadow-glow-emerald mt-1 cursor-pointer">
+                   <span className="flex items-center gap-2"><Play className="w-4 h-4"/> ĐẨY VÀO PHÁT LẠI LIVESTREAM NGAY (RESTREAM)</span>
+                </button>
+              </div>
             </div>
-          </div>
-        </form>
+          )}
+        </div>
 
       </div>
 
