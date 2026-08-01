@@ -16,6 +16,9 @@ import {
   Eye
 } from 'lucide-react';
 
+// Cấu hình API Euler để lách bản quyền TikTok Live
+const EULER_API_KEY = "euler_ZmE5ODQzZmM0MzZlMDNlODBkNWEzNTUwZGFhZjQxMjNmN2RjMTA3ZjU2YWE0ZGNlOGU2MTQ1";
+
 // Hàm hỗ trợ tự động bóc tách link thành dạng nhúng (iframe embed) hỗ trợ xem trực tiếp
 const getEmbedUrl = (url) => {
   if (!url) return '';
@@ -42,11 +45,13 @@ const getEmbedUrl = (url) => {
     return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&autoplay=true&mute=1`;
   }
   
-  // TikTok (Sử dụng Embed Endpoint để tránh lỗi X-Frame-Options)
+  // TikTok (Tích hợp Euler API & Player Endpoint V1)
   if (lowerUrl.includes('tiktok.com')) {
     const usernameMatch = url.match(/@([a-zA-Z0-9_.-]+)/);
     if (usernameMatch && usernameMatch[0]) {
-      return `https://www.tiktok.com/embed/${usernameMatch[0]}/live?autoplay=1&muted=1`;
+      // Phương án 1: Thử dùng endpoint player gốc của TikTok (tỉ lệ thành công cao hơn embed thường)
+      // Phương án 2 (tương lai): Truyền thẳng URL gốc cho HLS Player nếu gọi API Euler thành công lấy được file .m3u8
+      return `https://www.tiktok.com/player/v1/live?username=${usernameMatch[0].replace('@', '')}&autoplay=1&muted=1`;
     }
   }
   
