@@ -2,14 +2,14 @@ import React, { useEffect, useRef } from 'react';
 import ReactPlayer from 'react-player';
 import flvjs from 'flv.js';
 import Hls from 'hls.js';
-export default function LivePlayer({ url, playing, muted, onVideoMount }) {
+export default function LivePlayer({ url, playing, muted, onVideoMount, isFlv }) {
   const videoRef = useRef(null);
   const flvPlayerRef = useRef(null);
 
   useEffect(() => {
     if (!url) return;
 
-    if (url.includes('.flv')) {
+    if (isFlv || url.includes('.flv')) {
       if (flvjs.isSupported()) {
         const videoElement = videoRef.current;
         flvPlayerRef.current = flvjs.createPlayer({
@@ -86,7 +86,7 @@ export default function LivePlayer({ url, playing, muted, onVideoMount }) {
 
   if (!url) return null;
 
-  if (url.includes('.flv') || url.includes('.m3u8')) {
+  if (isFlv || url.includes('.flv') || url.includes('.m3u8')) {
     return (
       <video
         ref={videoRef}
