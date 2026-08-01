@@ -16,7 +16,7 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({'error': 'No URL provided'}).encode('utf-8'))
             return
             
-        ydl_opts = {'quiet': True, 'format': 'best[ext=flv]/best', 'no_warnings': True}
+        ydl_opts = {'quiet': True, 'format': 'best[protocol^=m3u8]/best', 'no_warnings': True}
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=False)
