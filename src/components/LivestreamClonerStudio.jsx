@@ -51,7 +51,7 @@ const getEmbedUrl = (url) => {
     const usernameMatch = url.match(/@([a-zA-Z0-9_.-]+)/);
     if (usernameMatch && usernameMatch[0]) {
       // Bắt buộc dùng /embed/ vì /player/v1/live bị chặn X-Frame-Options / Cookie
-      return `https://www.tiktok.com/embed/${usernameMatch[0].replace('@', '')}/live?autoplay=1&muted=1`;
+      return `https://www.tiktok.com/embed/${usernameMatch[0]}/live?autoplay=1&muted=1`;
     }
   }
   
