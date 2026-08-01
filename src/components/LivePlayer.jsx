@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import ReactPlayer from 'react-player';
 import flvjs from 'flv.js';
 import Hls from 'hls.js';
-export default function LivePlayer({ url, playing, muted }) {
+export default function LivePlayer({ url, playing, muted, onVideoMount }) {
   const videoRef = useRef(null);
   const flvPlayerRef = useRef(null);
 
@@ -19,6 +19,7 @@ export default function LivePlayer({ url, playing, muted }) {
         });
         flvPlayerRef.current.attachMediaElement(videoElement);
         flvPlayerRef.current.load();
+        if (onVideoMount) onVideoMount(videoElement);
         
         if (playing) {
           const playPromise = flvPlayerRef.current.play();
@@ -39,6 +40,7 @@ export default function LivePlayer({ url, playing, muted }) {
         
         hls.loadSource(url);
         hls.attachMedia(videoElement);
+        if (onVideoMount) onVideoMount(videoElement);
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           if (playing) {
             videoElement.play().catch(e => console.log('HLS Play error:', e));

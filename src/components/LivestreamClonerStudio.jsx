@@ -332,6 +332,7 @@ export default function LivestreamClonerStudio() {
                             url={stream.streamUrl} 
                             playing={true} 
                             muted={true} 
+                            onVideoMount={(v) => console.log('Video mounted for:', stream.id)}
                           />
                           {/* TIKTOK FAKE UI OVERLAY */}
                           <div className="absolute inset-0 pointer-events-none flex flex-col justify-between p-3">
