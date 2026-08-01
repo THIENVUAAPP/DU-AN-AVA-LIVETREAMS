@@ -16,6 +16,7 @@ import AffiliateLanding from "./components/AffiliateLanding";
 import AffiliateDashboard from "./components/AffiliateDashboard";
 import TeamPermissionsManager from "./components/TeamPermissionsManager";
 import SalesAnalyticsManager from "./components/SalesAnalyticsManager";
+import LivestreamClonerStudio from "./components/LivestreamClonerStudio";
 import { Lock, Sparkles, ShieldCheck, Mail, LogIn, ArrowRight } from "lucide-react";
 
 export default function App() {
@@ -164,6 +165,10 @@ export default function App() {
 
             {activeTab === "chat-hub" && (
               <UnifiedChatHub isLive={isLive} />
+            )}
+
+            {activeTab === "livestream-cloner" && (
+              <LivestreamClonerStudio />
             )}
 
             {activeTab === "team" && (

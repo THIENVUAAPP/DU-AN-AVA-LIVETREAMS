@@ -52,6 +52,7 @@ export default function Header({
         : 'Restream 24/7' 
     },
     { id: 'multistream', label: 'Đa Nền Tảng' },
+    { id: 'livestream-cloner', label: 'Sao Chép Live' },
     { id: 'chat-hub', label: 'Chat Hub AI' },
   ];
 
