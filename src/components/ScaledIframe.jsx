@@ -2,31 +2,31 @@ import React, { useRef, useEffect, useState } from 'react';
 
 export default function ScaledIframe({ src, title }) {
   const containerRef = useRef(null);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0, scale: 1 });
+  const [dimensions, setDimensions] = useState({ scale: 1, height: 0 });
+
+  // TikTok Desktop Embed Layout Constants
+  // When width is >= 1000px, it shows video on left, chat on right.
+  const TIKTOK_INTERNAL_WIDTH = 1000;
+  // The chat box takes about 320px on the right. 
+  // The video area is approximately 680px wide.
+  const TIKTOK_VIDEO_WIDTH = 680;
 
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
         const { width, height } = containerRef.current.getBoundingClientRect();
+        // Scale the 680px video area to fit the actual container width
+        const scale = width / TIKTOK_VIDEO_WIDTH;
         
-        // We want the internal iframe to be at least 800px wide to avoid the "Open App" mobile overlay
-        // But we want it to keep the EXACT same aspect ratio as the container to avoid black bars
-        const targetInternalWidth = 1000;
-        const targetInternalHeight = targetInternalWidth * (height / width);
-        const scale = width / targetInternalWidth;
-
-        setDimensions({
-          width: targetInternalWidth,
-          height: targetInternalHeight,
-          scale: scale
-        });
+        // We calculate how much internal height is needed to fill the container's height after scaling
+        const requiredInternalHeight = height / scale;
+        
+        setDimensions({ scale, height: requiredInternalHeight });
       }
     };
     
-    // Initial update
     updateDimensions();
 
-    // Use ResizeObserver for accurate container resizing
     const resizeObserver = new ResizeObserver(() => {
       updateDimensions();
     });
@@ -39,24 +39,38 @@ export default function ScaledIframe({ src, title }) {
   }, []);
 
   return (
-    <div ref={containerRef} className="w-full h-full relative overflow-hidden bg-[#121216]">
-      {dimensions.width > 0 && (
-        <iframe 
-          src={src}
-          title={title}
-          allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-          allowFullScreen
+    <div 
+      ref={containerRef} 
+      className="w-full h-full relative overflow-hidden bg-[#121216]"
+    >
+      {dimensions.height > 0 && (
+        <div 
           style={{
-            width: `${dimensions.width}px`,
+            width: `${TIKTOK_VIDEO_WIDTH}px`,
             height: `${dimensions.height}px`,
             transform: `scale(${dimensions.scale})`,
             transformOrigin: 'top left',
-            border: 'none',
             position: 'absolute',
             top: 0,
             left: 0,
+            overflow: 'hidden' // This hides the chat box!
           }}
-        />
+        >
+          <iframe 
+            src={src}
+            title={title}
+            allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+            allowFullScreen
+            style={{
+              width: `${TIKTOK_INTERNAL_WIDTH}px`,
+              height: `${dimensions.height}px`,
+              border: 'none',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+            }}
+          />
+        </div>
       )}
     </div>
   );
