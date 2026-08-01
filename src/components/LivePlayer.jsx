@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import ReactPlayer from 'react-player';
 import flvjs from 'flv.js';
-
+import Hls from 'hls.js';
 export default function LivePlayer({ url, playing, muted }) {
   const videoRef = useRef(null);
   const flvPlayerRef = useRef(null);
@@ -28,6 +28,33 @@ export default function LivePlayer({ url, playing, muted }) {
         }
       }
     }
+    if (url.includes('.m3u8')) {
+      if (Hls.isSupported()) {
+        const videoElement = videoRef.current;
+        const hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: true,
+        });
+        flvPlayerRef.current = hls; // Reuse the same ref variable for cleanup
+        
+        hls.loadSource(url);
+        hls.attachMedia(videoElement);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          if (playing) {
+            videoElement.play().catch(e => console.log('HLS Play error:', e));
+          }
+        });
+      } else if (videoRef.current && videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
+        // Fallback for Safari
+        const videoElement = videoRef.current;
+        videoElement.src = url;
+        videoElement.addEventListener('loadedmetadata', () => {
+          if (playing) {
+            videoElement.play().catch(e => console.log('Safari HLS Play error:', e));
+          }
+        });
+      }
+    }
 
     return () => {
       if (flvPlayerRef.current) {
@@ -38,18 +65,26 @@ export default function LivePlayer({ url, playing, muted }) {
   }, [url]);
 
   useEffect(() => {
-    if (flvPlayerRef.current) {
+    if (videoRef.current) {
       if (playing) {
-        flvPlayerRef.current.play().catch(e => console.log(e));
+        if (flvPlayerRef.current && typeof flvPlayerRef.current.play === 'function') {
+           flvPlayerRef.current.play().catch(e => console.log(e));
+        } else {
+           videoRef.current.play().catch(e => console.log(e));
+        }
       } else {
-        flvPlayerRef.current.pause();
+        if (flvPlayerRef.current && typeof flvPlayerRef.current.pause === 'function') {
+           flvPlayerRef.current.pause();
+        } else {
+           videoRef.current.pause();
+        }
       }
     }
   }, [playing]);
 
   if (!url) return null;
 
-  if (url.includes('.flv')) {
+  if (url.includes('.flv') || url.includes('.m3u8')) {
     return (
       <video
         ref={videoRef}
@@ -57,6 +92,7 @@ export default function LivePlayer({ url, playing, muted }) {
         controls={true}
         muted={muted}
         autoPlay={playing}
+        playsInline
       />
     );
   }
