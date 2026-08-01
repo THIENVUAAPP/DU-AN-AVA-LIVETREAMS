@@ -16,6 +16,31 @@ import {
   Eye
 } from 'lucide-react';
 
+// Hàm hỗ trợ tự động bóc tách link thành dạng nhúng (iframe embed) hỗ trợ xem trực tiếp
+const getEmbedUrl = (url) => {
+  if (!url) return '';
+  const lowerUrl = url.toLowerCase();
+  
+  if (lowerUrl.includes('youtube.com/watch?v=')) {
+    const videoId = url.split('v=')[1]?.split('&')[0];
+    return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+  }
+  if (lowerUrl.includes('youtube.com/live/')) {
+    const videoId = url.split('live/')[1]?.split('?')[0];
+    return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+  }
+  if (lowerUrl.includes('twitch.tv/')) {
+    const channel = url.split('twitch.tv/')[1]?.split('/')[0]?.split('?')[0];
+    return `https://player.twitch.tv/?channel=${channel}&parent=${window.location.hostname}&autoplay=true`;
+  }
+  if (lowerUrl.includes('facebook.com') && lowerUrl.includes('/videos/')) {
+    return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&autoplay=true`;
+  }
+  
+  // Với TikTok, Shopee và các link khác, sử dụng iframe trực tiếp link gốc (Real-time render)
+  return url;
+};
+
 export default function LivestreamClonerStudio() {
   const [linksInput, setLinksInput] = useState('');
   const [streams, setStreams] = useState([]);
@@ -176,17 +201,26 @@ export default function LivestreamClonerStudio() {
               <div key={stream.id} className="glass-panel rounded-2xl border border-white/10 bg-[#121216] overflow-hidden flex flex-col relative group transition-all hover:border-blue-500/50 hover:shadow-glow-blue-sm">
                 
                 {/* VIDEO PLAYER SIMULATION */}
-                <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden">
+                <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden group/player">
                   {stream.isPlaying ? (
-                    <video 
-                      src="https://www.w3schools.com/html/mov_bbb.mp4" 
-                      autoPlay 
-                      loop 
-                      muted 
-                      className="w-full h-full object-cover"
+                    <iframe 
+                      src={getEmbedUrl(stream.url)}
+                      allow="autoplay; encrypted-media; fullscreen"
+                      className="w-full h-full object-cover border-0"
+                      title="Real-time Livestream Player"
+                      sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                     />
                   ) : (
-                    <img src={stream.thumbnail} alt="Stream Thumbnail" className="w-full h-full object-cover opacity-60" />
+                    <div className="relative w-full h-full">
+                      <div className="absolute inset-0 bg-black/40 z-10"></div>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-white/50 z-20">
+                        <MonitorPlay className="w-12 h-12 mb-2 opacity-50" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-center px-4">
+                          Sẵn sàng hiển thị luồng trực tiếp<br/>
+                          <span className="text-[9px] text-gray-500 lowercase mt-1 block">{stream.url}</span>
+                        </span>
+                      </div>
+                    </div>
                   )}
                   
                   {/* Status Overlay */}
@@ -215,16 +249,17 @@ export default function LivestreamClonerStudio() {
                     </span>
                   </div>
 
-                  <div className="absolute inset-0 flex items-center justify-center">
+                  <div className={`absolute inset-0 flex items-center justify-center z-30 transition-all ${stream.isPlaying ? 'opacity-0 hover:opacity-100 bg-black/40' : ''}`}>
                     {stream.status === 'live' ? (
                       <button 
                         onClick={() => togglePlay(stream.id)} 
-                        className={`p-3 rounded-full transition-all cursor-pointer group ${stream.isPlaying ? 'bg-transparent hover:bg-black/50 opacity-0 hover:opacity-100' : 'bg-black/50 hover:bg-black/80'}`}
+                        className={`p-4 rounded-full transition-all cursor-pointer group hover:scale-110 shadow-2xl ${stream.isPlaying ? 'bg-red-500/80 hover:bg-red-500' : 'bg-emerald-500/80 hover:bg-emerald-500'}`}
+                        title={stream.isPlaying ? "Tạm dừng xem trực tiếp" : "Xem Live trực tiếp (Real-time)"}
                       >
                         {stream.isPlaying ? (
-                          <Pause className="w-10 h-10 text-white/70 group-hover:text-white transition-all" fill="currentColor" />
+                          <Pause className="w-8 h-8 text-white transition-all" fill="currentColor" />
                         ) : (
-                          <Play className="w-10 h-10 text-white/70 group-hover:text-emerald-400 transition-all ml-1" fill="currentColor" />
+                          <Play className="w-8 h-8 text-white transition-all ml-1" fill="currentColor" />
                         )}
                       </button>
                     ) : stream.status === 'downloading' ? (
