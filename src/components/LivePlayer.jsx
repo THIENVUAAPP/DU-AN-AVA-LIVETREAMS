@@ -16,7 +16,23 @@ export default function LivePlayer({ url, playing, muted, onVideoMount, isFlv, i
           type: 'flv',
           isLive: true,
           url: url
+        }, {
+          enableStashBuffer: false,
+          stashInitialSize: 128,
+          autoCleanupSourceBuffer: true,
+          fixAudioTimestampGap: false,
+          isLive: true
         });
+        
+        flvPlayerRef.current.on(flvjs.Events.ERROR, (errType, errDetail) => {
+            console.log("FLV Error, trying to reconnect...", errType, errDetail);
+            if (flvPlayerRef.current) {
+                flvPlayerRef.current.unload();
+                flvPlayerRef.current.load();
+                flvPlayerRef.current.play().catch(e => console.log(e));
+            }
+        });
+        
         flvPlayerRef.current.attachMediaElement(videoElement);
         flvPlayerRef.current.load();
         if (onVideoMount) onVideoMount(videoElement);

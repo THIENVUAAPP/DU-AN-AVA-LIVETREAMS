@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/proxy-video/:url*",
+      "destination": "https://:url*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
