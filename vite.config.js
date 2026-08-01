@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import { spawn } from 'child_process';
 
 export default defineConfig({
   server: {
@@ -19,10 +20,10 @@ export default defineConfig({
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
           if (req.url.startsWith('/api/extract')) {
-            const { spawn } = require('child_process');
-            const url = new URL('http://localhost' + req.url).searchParams.get('url');
+            // Fix for URL parsing in Vite dev server middleware
+            const queryUrl = new URL(req.url, 'http://localhost').searchParams.get('url');
             
-            if (!url) {
+            if (!queryUrl) {
               res.statusCode = 400;
               res.end(JSON.stringify({ error: 'No URL provided' }));
               return;
@@ -44,7 +45,7 @@ try:
 except Exception as e:
     print(json.dumps({'error': str(e)}))
               `,
-              url
+              queryUrl
             ]);
 
             let data = '';
