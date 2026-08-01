@@ -261,11 +261,11 @@ export default function LivestreamClonerStudio() {
                     </span>
                   </div>
 
-                  <div className={`absolute inset-0 flex items-center justify-center z-30 transition-all ${stream.isPlaying ? 'opacity-0 hover:opacity-100 bg-black/40' : ''}`}>
+                  <div className={`absolute inset-0 flex items-center justify-center z-30 transition-all ${stream.isPlaying ? 'opacity-0 group-hover/player:opacity-100 bg-black/40 pointer-events-none' : ''}`}>
                     {stream.status === 'live' ? (
                       <button 
                         onClick={() => togglePlay(stream.id)} 
-                        className={`p-4 rounded-full transition-all cursor-pointer group hover:scale-110 shadow-2xl ${stream.isPlaying ? 'bg-red-500/80 hover:bg-red-500' : 'bg-emerald-500/80 hover:bg-emerald-500'}`}
+                        className={`p-4 rounded-full transition-all cursor-pointer group hover:scale-110 shadow-2xl ${stream.isPlaying ? 'bg-red-500/80 hover:bg-red-500 pointer-events-auto' : 'bg-emerald-500/80 hover:bg-emerald-500'}`}
                         title={stream.isPlaying ? "Tạm dừng xem trực tiếp" : "Xem Live trực tiếp (Real-time)"}
                       >
                         {stream.isPlaying ? (
