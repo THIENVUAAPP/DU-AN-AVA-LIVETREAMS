@@ -528,6 +528,24 @@ export default function MultistreamStudio({ isLive, setIsLive }) {
                       </span>
                       <span className="text-emerald-400 font-mono text-[9px] flex-shrink-0">● 60 FPS</span>
                     </div>
+
+                    {/* Fullscreen Button */}
+                    <button
+                      onClick={(e) => {
+                        const container = e.currentTarget.closest('.aspect-video');
+                        if (container) {
+                          if (document.fullscreenElement) {
+                            document.exitFullscreen();
+                          } else {
+                            container.requestFullscreen();
+                          }
+                        }
+                      }}
+                      className="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/20 rounded-md text-white pointer-events-auto cursor-pointer transition-all z-20"
+                      title="Phóng to toàn màn hình"
+                    >
+                      <Maximize2 className="w-3 h-3" />
+                    </button>
                   </div>
                 ))}
               </div>
@@ -569,7 +587,7 @@ export default function MultistreamStudio({ isLive, setIsLive }) {
                         Stream Key: {activeMonitorChannelObj.streamKey ? "••••••••" + activeMonitorChannelObj.streamKey.slice(-4) : "••••2401"}
                       </span>
                       {/* Top overlay badge */}
-                      <div className="absolute top-4 left-4 flex items-center gap-2">
+                      <div className="absolute top-4 left-4 flex items-center gap-2 pointer-events-auto">
                         <span className="px-3 py-1 rounded-full bg-black/80 backdrop-blur-md text-white text-xs font-bold flex items-center gap-1.5 border border-white/20">
                           <span>{activeMonitorChannelObj.icon}</span>
                           <span>{activeMonitorChannelObj.name}</span>
@@ -580,6 +598,24 @@ export default function MultistreamStudio({ isLive, setIsLive }) {
                           <span>{activeMonitorChannelObj.viewers} ĐANG XEM</span>
                         </span>
                       </div>
+                      
+                      {/* Fullscreen Button */}
+                      <button
+                        onClick={(e) => {
+                          const container = e.currentTarget.closest('.aspect-video');
+                          if (container) {
+                            if (document.fullscreenElement) {
+                              document.exitFullscreen();
+                            } else {
+                              container.requestFullscreen();
+                            }
+                          }
+                        }}
+                        className="absolute top-4 right-4 p-2 bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/20 rounded-lg text-white pointer-events-auto cursor-pointer transition-all"
+                        title="Phóng to toàn màn hình"
+                      >
+                        <Maximize2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 )}
