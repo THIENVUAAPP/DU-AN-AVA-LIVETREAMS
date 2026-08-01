@@ -103,6 +103,8 @@ export default function LivestreamClonerStudio() {
           const data = await res.json();
           if (data.streamUrl) {
             setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'success', streamUrl: data.streamUrl, title: data.title } : s));
+          } else if (data.error === 'OFFLINE' || (data.error && data.error.includes('not currently live'))) {
+            setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'offline' } : s));
           } else {
             setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'error' } : s));
           }
@@ -262,6 +264,12 @@ export default function LivestreamClonerStudio() {
                           style={{ backgroundColor: '#000' }}
                           config={{ file: { forceHLS: stream.streamUrl.includes('.m3u8'), forceFLV: stream.streamUrl.includes('.flv') } }}
                         />
+                      ) : stream.extractionStatus === 'offline' ? (
+                        <div className="text-gray-400 flex flex-col items-center justify-center p-4 text-center h-full w-full bg-[#121216] border border-gray-500/20">
+                          <MonitorPlay className="w-10 h-10 mb-2 opacity-50 text-gray-500" />
+                          <span className="text-[12px] font-black uppercase text-white">TÀI KHOẢN ĐANG OFFLINE</span>
+                          <span className="text-[9px] mt-1 uppercase text-gray-400">Người dùng này hiện không phát trực tiếp</span>
+                        </div>
                       ) : (
                         <div className="text-red-500 flex flex-col items-center justify-center p-4 text-center h-full w-full bg-[#121216] border border-red-500/20">
                           <Zap className="w-8 h-8 mb-2 opacity-80" />
