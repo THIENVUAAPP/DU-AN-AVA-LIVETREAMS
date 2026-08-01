@@ -21,23 +21,36 @@ const getEmbedUrl = (url) => {
   if (!url) return '';
   const lowerUrl = url.toLowerCase();
   
-  if (lowerUrl.includes('youtube.com/watch?v=')) {
-    const videoId = url.split('v=')[1]?.split('&')[0];
-    return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-  }
-  if (lowerUrl.includes('youtube.com/live/')) {
-    const videoId = url.split('live/')[1]?.split('?')[0];
-    return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-  }
-  if (lowerUrl.includes('twitch.tv/')) {
-    const channel = url.split('twitch.tv/')[1]?.split('/')[0]?.split('?')[0];
-    return `https://player.twitch.tv/?channel=${channel}&parent=${window.location.hostname}&autoplay=true`;
-  }
-  if (lowerUrl.includes('facebook.com') && lowerUrl.includes('/videos/')) {
-    return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&autoplay=true`;
+  // YouTube
+  if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
+    let videoId = '';
+    if (lowerUrl.includes('watch?v=')) videoId = url.split('v=')[1]?.split('&')[0];
+    else if (lowerUrl.includes('youtu.be/')) videoId = url.split('youtu.be/')[1]?.split('?')[0];
+    else if (lowerUrl.includes('/live/')) videoId = url.split('/live/')[1]?.split('?')[0];
+    
+    if (videoId) return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1`;
   }
   
-  // Với TikTok, Shopee và các link khác, sử dụng iframe trực tiếp link gốc (Real-time render)
+  // Twitch
+  if (lowerUrl.includes('twitch.tv/')) {
+    const channel = url.split('twitch.tv/')[1]?.split('/')[0]?.split('?')[0];
+    if (channel) return `https://player.twitch.tv/?channel=${channel}&parent=${window.location.hostname}&autoplay=true&muted=true`;
+  }
+  
+  // Facebook
+  if (lowerUrl.includes('facebook.com')) {
+    return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&autoplay=true&mute=1`;
+  }
+  
+  // TikTok (Sử dụng Embed Endpoint để tránh lỗi X-Frame-Options)
+  if (lowerUrl.includes('tiktok.com')) {
+    const usernameMatch = url.match(/@([a-zA-Z0-9_.-]+)/);
+    if (usernameMatch && usernameMatch[0]) {
+      return `https://www.tiktok.com/embed/${usernameMatch[0]}/live?autoplay=1&muted=1`;
+    }
+  }
+  
+  // Mặc định trả về link gốc
   return url;
 };
 
