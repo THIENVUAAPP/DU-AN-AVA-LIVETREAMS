@@ -41,7 +41,7 @@ ydl_opts = {'quiet': True, 'format': 'best[ext=flv]/best', 'no_warnings': True}
 try:
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
-        print(json.dumps({'streamUrl': info.get('url'), 'title': info.get('title')}))
+        print(json.dumps({'streamUrl': info.get('url'), 'title': info.get('title'), 'viewers': info.get('view_count'), 'uploader': info.get('uploader'), 'thumbnail': info.get('thumbnail')}))
 except Exception as e:
     print(json.dumps({'error': str(e)}))
               `,
