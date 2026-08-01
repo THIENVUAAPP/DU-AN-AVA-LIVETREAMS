@@ -37,7 +37,7 @@ import json
 import sys
 
 url = sys.argv[1]
-ydl_opts = {'quiet': True, 'format': 'best', 'no_warnings': True}
+ydl_opts = {'quiet': True, 'format': 'best[ext=flv]/best', 'no_warnings': True}
 try:
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)

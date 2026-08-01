@@ -167,9 +167,9 @@ export default function App() {
               <UnifiedChatHub isLive={isLive} />
             )}
 
-            {activeTab === "livestream-cloner" && (
+            <div style={{ display: activeTab === "livestream-cloner" ? "block" : "none" }}>
               <LivestreamClonerStudio />
-            )}
+            </div>
 
             {activeTab === "team" && (
               <TeamPermissionsManager currentUser={currentUser} setCurrentUser={setCurrentUser} setActiveTab={setActiveTab} />

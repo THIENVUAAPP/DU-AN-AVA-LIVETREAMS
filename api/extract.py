@@ -6,8 +6,8 @@ from urllib import parse
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         s = self.path
-        dic = dict(parse.parse_qsl(parse.urlsplit(s).query))
-        url = dic.get('url')
+        query_components = dict(parse.parse_qsl(parse.urlsplit(s).query))
+        url = query_components.get('url', [''])[0]
         
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
@@ -16,14 +16,13 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
 
         if not url:
+            self.send_response(400)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
             self.wfile.write(json.dumps({'error': 'No URL provided'}).encode('utf-8'))
             return
             
-        ydl_opts = {
-            'quiet': True,
-            'format': 'best',
-            'no_warnings': True,
-        }
+        ydl_opts = {'quiet': True, 'format': 'best[ext=flv]/best', 'no_warnings': True}
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=False)

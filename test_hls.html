@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+</head>
+<body>
+  <video id="video" controls autoplay muted style="width: 100%; height: 500px;"></video>
+  <script>
+    var video = document.getElementById('video');
+    var url = "https://pull-hls-f77-sg01.tiktokcdn.com/stage/stream-1560980995629645893_hd/index.m3u8?expire=1786803272&sign=e0d433041cd719b276dc6d2c65705dd0";
+    if (Hls.isSupported()) {
+      var hls = new Hls({debug: true});
+      hls.loadSource(url);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, function() {
+        video.play();
+      });
+      hls.on(Hls.Events.ERROR, function(event, data) {
+         console.error("HLS Error:", data.type, data.details, data.fatal);
+      });
+    }
+  </script>
+</body>
+</html>
