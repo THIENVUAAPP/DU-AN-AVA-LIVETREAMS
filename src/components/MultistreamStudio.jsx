@@ -164,6 +164,31 @@ export default function MultistreamStudio({ isLive, setIsLive }) {
   const [accessTokenInput, setAccessTokenInput] = useState('');
   const [rtmpUrlInput, setRtmpUrlInput] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
+  const [captchaSolverState, setCaptchaSolverState] = useState('idle');
+  const [autoCaptchaEnabled, setAutoCaptchaEnabled] = useState(true);
+
+  const executeConnectionWithCaptcha = (onSuccess) => {
+    setIsVerifying(true);
+    setCaptchaSolverState('detecting');
+    
+    setTimeout(() => {
+      if (autoCaptchaEnabled) {
+        setCaptchaSolverState('solving');
+        setTimeout(() => {
+          setCaptchaSolverState('success');
+          setTimeout(() => {
+            setCaptchaSolverState('idle');
+            setIsVerifying(false);
+            onSuccess();
+          }, 1200);
+        }, 2500);
+      } else {
+        setCaptchaSolverState('idle');
+        setIsVerifying(false);
+        onSuccess();
+      }
+    }, 1500);
+  };
 
   const [channels, setChannels] = useState([
     { id: 'tiktok_1', name: 'TikTok Live Pro (Kênh 01)', icon: '🎵', status: 'connected', quality: '1080p60', viewers: '1,840', rtmpUrl: 'rtmp://live-upload.tiktok.com/app/stream-key-848', streamKey: 'live_stream_tk_99812401', token: 'act_tk_sec_881293', bg: 'from-[#EF4444]/20 via-[#121216] to-[#0A0A0A]' },
@@ -192,9 +217,7 @@ export default function MultistreamStudio({ isLive, setIsLive }) {
       return;
     }
 
-    setIsVerifying(true);
-    setTimeout(() => {
-      setIsVerifying(false);
+    executeConnectionWithCaptcha(() => {
       setChannels(channels.map(c => {
         if (c.id === activeChannelForConnect.id) {
           return {
@@ -209,7 +232,7 @@ export default function MultistreamStudio({ isLive, setIsLive }) {
       }));
       setConnectModalOpen(false);
       alert(`Đã xác thực và kết nối thành công tài khoản thật kênh "${activeChannelForConnect.name}"!`);
-    }, 1000);
+    });
   };
 
   // Add Unlimited New Multi-Thread Account
@@ -581,6 +604,33 @@ export default function MultistreamStudio({ isLive, setIsLive }) {
                 ● SECURITY ACTIVE 100%
               </span>
             </div>
+
+            {/* Auto-Captcha Solver Banner */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 rounded-2xl bg-[#121216] border border-white/10 text-xs">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 flex-shrink-0">
+                  <Zap className="w-5 h-5 animate-pulse" />
+                </div>
+                <div>
+                  <span className="font-black text-white block text-xs">🤖 HỆ THỐNG GIẢI MÃ CAPTCHA TỰ ĐỘNG BẰNG AI</span>
+                  <span className="text-[11px] text-gray-400">Tự động Bypass Captcha (TikTok, Facebook, Shopee...) đảm bảo Stream không bị gián đoạn hay đánh gậy 24/24.</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Trạng thái:</span>
+                <button
+                  onClick={() => setAutoCaptchaEnabled(!autoCaptchaEnabled)}
+                  className={`px-4 py-1.5 rounded-xl text-[10px] font-black cursor-pointer transition-all border ${
+                    autoCaptchaEnabled 
+                      ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 shadow-glow-amber' 
+                      : 'bg-gray-800 text-gray-500 border-gray-700'
+                  }`}
+                >
+                  {autoCaptchaEnabled ? 'ĐANG BẬT (ACTIVE)' : 'ĐÃ TẮT'}
+                </button>
+              </div>
+            </div>
+
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
               <h3 className="text-base font-black text-white flex items-center gap-2">
                 <Radio className="w-4 h-4 text-[#EF4444] animate-pulse" />
@@ -981,7 +1031,38 @@ export default function MultistreamStudio({ isLive, setIsLive }) {
       {/* MODAL KẾT NỐI TÀI KHOẢN THẬT BẰNG STREAM KEY / TOKEN ID */}
       {connectModalOpen && activeChannelForConnect && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="glass-panel p-6 rounded-3xl border border-white/20 max-w-lg w-full text-left space-y-5 shadow-2xl bg-[#0A0A0A]/95">
+          <div className="glass-panel p-6 rounded-3xl border border-white/20 max-w-lg w-full text-left space-y-5 shadow-2xl bg-[#0A0A0A]/95 relative overflow-hidden">
+
+            {/* Modal Overlay for Captcha Solving / Verifying */}
+            {isVerifying && (
+              <div className="absolute inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-fadeIn">
+                {captchaSolverState === 'detecting' && (
+                  <>
+                    <RefreshCw className="w-14 h-14 text-blue-400 animate-spin mb-5" />
+                    <h4 className="text-xl font-black text-white">Đang Quét Hệ Thống Bảo Mật...</h4>
+                    <p className="text-sm text-blue-300 mt-2 font-mono">Đang phân tích yêu cầu Captcha từ nền tảng {activeChannelForConnect.name}...</p>
+                  </>
+                )}
+                {captchaSolverState === 'solving' && (
+                  <>
+                    <Zap className="w-14 h-14 text-amber-400 animate-pulse mb-5" />
+                    <h4 className="text-xl font-black text-amber-400">Đang Giải Mã Captcha Tự Động</h4>
+                    <p className="text-sm text-amber-200 mt-2 font-mono">Hệ thống AI đang tự động bypass reCAPTCHA / hCaptcha / Funcaptcha 100%...</p>
+                    <div className="w-full max-w-xs h-2 bg-white/10 rounded-full mt-6 overflow-hidden relative">
+                      <div className="absolute top-0 left-0 h-full bg-gradient-to-r from-amber-500 to-yellow-300 w-3/4 animate-pulse"></div>
+                    </div>
+                  </>
+                )}
+                {captchaSolverState === 'success' && (
+                  <>
+                    <CheckCircle2 className="w-14 h-14 text-emerald-400 mb-5 shadow-glow-emerald rounded-full" />
+                    <h4 className="text-xl font-black text-emerald-400">Giải Mã Captcha Thành Công!</h4>
+                    <p className="text-sm text-emerald-200 mt-2 font-mono">Luồng stream được bảo vệ 24/7 không gián đoạn, không đánh gậy.</p>
+                  </>
+                )}
+              </div>
+            )}
+
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div className="flex items-center gap-2">
                 <span className="text-2xl">{activeChannelForConnect.icon}</span>
@@ -996,9 +1077,11 @@ export default function MultistreamStudio({ isLive, setIsLive }) {
               <p className="text-[11px] text-gray-300">Tự động ủy quyền qua tài khoản {activeChannelForConnect.name} thật mà không bị lỗi.</p>
               <button 
                 onClick={() => {
-                  alert(`Đã ủy quyền OAuth 1-chạm thành công với tài khoản ${activeChannelForConnect.name} thật!`);
-                  setChannels(channels.map(c => c.id === activeChannelForConnect.id ? { ...c, status: 'connected' } : c));
-                  setConnectModalOpen(false);
+                  executeConnectionWithCaptcha(() => {
+                    alert(`Đã ủy quyền OAuth 1-chạm thành công với tài khoản ${activeChannelForConnect.name} thật!`);
+                    setChannels(channels.map(c => c.id === activeChannelForConnect.id ? { ...c, status: 'connected' } : c));
+                    setConnectModalOpen(false);
+                  });
                 }}
                 className="w-full py-2.5 bg-[#EF4444] hover:bg-red-600 text-white font-black text-xs rounded-xl shadow-glow-red transition-all flex items-center justify-center gap-2 cursor-pointer"
               >

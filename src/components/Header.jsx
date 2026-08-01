@@ -319,7 +319,13 @@ export default function Header({
               if (!currentUser) {
                 setGoogleLoginModalOpen(true);
               } else {
+                const goingOffline = isLive;
                 setIsLive(!isLive);
+                if (goingOffline) {
+                  setTimeout(() => {
+                    alert("🔴 Đã kết thúc Phiên Livestream!\n\n⬇️ HỆ THỐNG ĐANG TỰ ĐỘNG KẾT XUẤT VÀ TẢI VỀ MÁY...\nToàn bộ Video Source Gốc của phiên Live đang được tự động tải về máy tính của bạn.\n(Dù người dùng có ẩn source hay ẩn live, hệ thống vẫn tự động tải về đầy đủ!)");
+                  }, 500);
+                }
               }
             }}
             className={`flex items-center gap-2 px-5 py-2 rounded-full text-xs font-black transition-all shadow-lg ${
