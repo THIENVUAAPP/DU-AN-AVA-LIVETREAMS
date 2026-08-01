@@ -329,10 +329,11 @@ export default function LivestreamClonerStudio() {
                       ) : stream.extractionStatus === 'success' && stream.streamUrl ? (
                         <div className="w-full h-full absolute inset-0 relative font-sans">
                           <LivePlayer 
-                            url={stream.streamUrl.includes('tiktokcdn') ? `https://corsproxy.io/?${encodeURIComponent(stream.streamUrl)}` : stream.streamUrl} 
+                            url={stream.streamUrl} 
                             playing={true} 
                             muted={true} 
-                            isFlv={true}
+                            isFlv={stream.ext === 'flv' || stream.streamUrl.includes('.flv')}
+                            isM3u8={stream.ext === 'm3u8' || stream.ext === 'mp4' || stream.streamUrl.includes('.m3u8')}
                             onVideoMount={(v) => console.log('Video mounted for:', stream.id)}
                           />
                           {/* TIKTOK FAKE UI OVERLAY */}

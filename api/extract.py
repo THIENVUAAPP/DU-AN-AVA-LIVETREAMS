@@ -22,6 +22,7 @@ class handler(BaseHTTPRequestHandler):
                 info = ydl.extract_info(url, download=False)
                 res = {
                     'streamUrl': info.get('url'), 
+                    'ext': info.get('ext'),
                     'title': info.get('title'), 
                     'viewers': info.get('view_count'), 
                     'uploader': info.get('uploader'), 
