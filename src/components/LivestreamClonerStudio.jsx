@@ -19,7 +19,6 @@ import {
   LayoutList
 } from 'lucide-react';
 import LivePlayer from './LivePlayer';
-import ScaledIframe from './ScaledIframe';
 
 // Cấu hình API Euler để lách bản quyền TikTok Live
 const EULER_API_KEY = "euler_ZmE5ODQzZmM0MzZlMDNlODBkNWEzNTUwZGFhZjQxMjNmN2RjMTA3ZjU2YWE0ZGNlOGU2MTQ1";
@@ -330,7 +329,11 @@ export default function LivestreamClonerStudio() {
                 </button>
 
                 {/* REAL-TIME VIDEO PLAYER IFRAME / NATIVE PLAYER */}
-                <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden group/player">
+                <div className={`relative bg-black flex items-center justify-center overflow-hidden group/player ${
+                  stream.url.toLowerCase().includes('tiktok.com') 
+                    ? (viewMode === 'tabs' ? 'h-[75vh] aspect-[9/16] mx-auto' : 'aspect-[9/16] w-full') 
+                    : 'aspect-video w-full'
+                }`}>
                   {stream.isPlaying ? (
                     stream.isApiRequired ? (
                       stream.extractionStatus === 'extracting' ? (
@@ -358,9 +361,12 @@ export default function LivestreamClonerStudio() {
                           <span className="text-[10px] text-gray-300">Vui lòng nhập link chứa tên người dùng (VD: tiktok.com/@user/live)</span>
                         </div>
                       ) : (
-                        <ScaledIframe 
+                        <iframe 
                           src={getEmbedUrl(stream.url)}
                           title="Real-time Livestream Player"
+                          className="w-full h-full border-none absolute inset-0"
+                          allowFullScreen
+                          allow="autoplay; encrypted-media; fullscreen"
                         />
                       )
                     ) : getEmbedUrl(stream.url) === 'INVALID_TIKTOK_URL' ? (
@@ -369,9 +375,12 @@ export default function LivestreamClonerStudio() {
                         <span className="text-[10px] text-gray-300">Vui lòng nhập link chứa tên người dùng (VD: tiktok.com/@user/live)</span>
                       </div>
                     ) : (
-                      <ScaledIframe 
+                      <iframe 
                         src={getEmbedUrl(stream.url)}
                         title="Real-time Livestream Player"
+                        className="w-full h-full border-none absolute inset-0"
+                        allowFullScreen
+                        allow="autoplay; encrypted-media; fullscreen"
                       />
                     )
                   ) : (
@@ -416,7 +425,7 @@ export default function LivestreamClonerStudio() {
                   <div className={`absolute inset-0 flex items-center justify-center z-30 transition-all ${stream.isPlaying ? 'opacity-0 group-hover/player:opacity-100 bg-black/40 pointer-events-none' : ''}`}>
                     <button
                       onClick={(e) => {
-                        const container = e.currentTarget.closest('.aspect-video');
+                        const container = e.currentTarget.closest('.group\\/player');
                         if (container) {
                           if (document.fullscreenElement) {
                             document.exitFullscreen();
