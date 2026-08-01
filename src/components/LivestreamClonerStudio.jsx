@@ -15,7 +15,7 @@ import {
   Radio,
   Eye
 } from 'lucide-react';
-import ReactPlayer from 'react-player';
+import LivePlayer from './LivePlayer';
 
 // Cấu hình API Euler để lách bản quyền TikTok Live
 const EULER_API_KEY = "euler_ZmE5ODQzZmM0MzZlMDNlODBkNWEzNTUwZGFhZjQxMjNmN2RjMTA3ZjU2YWE0ZGNlOGU2MTQ1";
@@ -253,16 +253,13 @@ export default function LivestreamClonerStudio() {
                           <span className="text-xs font-mono text-blue-400 font-bold uppercase">Đang Bóc Tách API...</span>
                         </div>
                       ) : stream.extractionStatus === 'success' && stream.streamUrl ? (
-                        <ReactPlayer 
-                          url={stream.streamUrl} 
-                          playing={true} 
-                          controls={true} 
-                          muted={true} 
-                          width="100%" 
-                          height="100%" 
-                          style={{ backgroundColor: '#000' }}
-                          config={{ file: { forceHLS: stream.streamUrl.includes('.m3u8'), forceFLV: stream.streamUrl.includes('.flv') } }}
-                        />
+                        <div className="w-full h-full absolute inset-0">
+                          <LivePlayer 
+                            url={stream.streamUrl} 
+                            playing={true} 
+                            muted={true} 
+                          />
+                        </div>
                       ) : stream.extractionStatus === 'offline' ? (
                         <div className="text-gray-400 flex flex-col items-center justify-center p-4 text-center h-full w-full bg-[#121216] border border-gray-500/20">
                           <MonitorPlay className="w-10 h-10 mb-2 opacity-50 text-gray-500" />
