@@ -272,7 +272,6 @@ export default function LivestreamClonerStudio() {
                           allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                           className="w-full h-full object-cover border-0 z-0 bg-[#121216]"
                           title="Real-time Livestream Player"
-                          sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                           allowFullScreen
                         />
                       )
@@ -282,7 +281,6 @@ export default function LivestreamClonerStudio() {
                         allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                         className="w-full h-full object-cover border-0 z-0 bg-[#121216]"
                         title="Real-time Livestream Player"
-                        sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                         allowFullScreen
                       />
                     )
