@@ -329,7 +329,7 @@ export default function LivestreamClonerStudio() {
                       ) : stream.extractionStatus === 'success' && stream.streamUrl ? (
                         <div className="w-full h-full absolute inset-0 relative font-sans">
                           <LivePlayer 
-                            url={stream.streamUrl.includes('tiktokcdn') ? `https://corsproxy.io/?${encodeURIComponent(stream.streamUrl)}` : stream.streamUrl} 
+                            url={stream.streamUrl.includes('tiktokcdn') ? `/proxy-hls?url=${encodeURIComponent(stream.streamUrl)}` : stream.streamUrl} 
                             playing={true} 
                             muted={true} 
                             isFlv={stream.ext === 'flv' || stream.streamUrl.includes('.flv')}
