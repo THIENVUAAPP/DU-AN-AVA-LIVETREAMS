@@ -59,11 +59,10 @@ export default function LivestreamClonerStudio() {
         platform: link.includes('tiktok') ? 'TikTok' : link.includes('facebook') ? 'Facebook' : link.includes('shopee') ? 'Shopee' : 'Khác',
         status: 'live', // 'live', 'ended', 'downloading', 'downloaded'
         viewers: Math.floor(Math.random() * 5000) + 100,
-        thumbnail: 'https://images.unsplash.com/photo-1516280440502-6014b2d131eb?auto=format&fit=crop&w=300&q=80',
         autoDownload: true,
         showHighlights: false,
         highlights: [],
-        isPlaying: false
+        isPlaying: true // Default to true to immediately load the real live stream
       }));
       
       setStreams(prev => [...prev, ...newStreams]);
@@ -200,23 +199,22 @@ export default function LivestreamClonerStudio() {
             {streams.map((stream) => (
               <div key={stream.id} className="glass-panel rounded-2xl border border-white/10 bg-[#121216] overflow-hidden flex flex-col relative group transition-all hover:border-blue-500/50 hover:shadow-glow-blue-sm">
                 
-                {/* VIDEO PLAYER SIMULATION */}
+                {/* REAL-TIME VIDEO PLAYER IFRAME */}
                 <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden group/player">
                   {stream.isPlaying ? (
                     <iframe 
                       src={getEmbedUrl(stream.url)}
                       allow="autoplay; encrypted-media; fullscreen"
-                      className="w-full h-full object-cover border-0"
+                      className="w-full h-full object-cover border-0 z-0"
                       title="Real-time Livestream Player"
                       sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                     />
                   ) : (
                     <div className="relative w-full h-full">
-                      <div className="absolute inset-0 bg-black/40 z-10"></div>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center text-white/50 z-20">
+                      <div className="absolute inset-0 bg-black/90 z-10 flex flex-col items-center justify-center text-white/70">
                         <MonitorPlay className="w-12 h-12 mb-2 opacity-50" />
                         <span className="text-xs font-bold uppercase tracking-wider text-center px-4">
-                          Sẵn sàng hiển thị luồng trực tiếp<br/>
+                          Đã tạm dừng xem luồng trực tiếp<br/>
                           <span className="text-[9px] text-gray-500 lowercase mt-1 block">{stream.url}</span>
                         </span>
                       </div>
