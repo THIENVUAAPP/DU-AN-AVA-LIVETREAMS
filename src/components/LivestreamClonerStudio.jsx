@@ -18,7 +18,6 @@ import {
   LayoutGrid,
   LayoutList
 } from 'lucide-react';
-import LivePlayer from './LivePlayer';
 
 // Cấu hình API Euler để lách bản quyền TikTok Live
 const EULER_API_KEY = "euler_ZmE5ODQzZmM0MzZlMDNlODBkNWEzNTUwZGFhZjQxMjNmN2RjMTA3ZjU2YWE0ZGNlOGU2MTQ1";
@@ -88,7 +87,7 @@ export default function LivestreamClonerStudio() {
     
     const links = linksInput.split('\n').filter(l => l.trim() !== '');
     const newStreams = links.map((link, index) => {
-      const isApiRequired = link.includes('tiktok') || link.includes('shopee');
+      
       return {
         id: Date.now() + index,
         url: link.trim(),
@@ -99,8 +98,6 @@ export default function LivestreamClonerStudio() {
         showHighlights: false,
         highlights: [],
         isPlaying: true, // Default to true to immediately load the real live stream
-        isApiRequired,
-        extractionStatus: isApiRequired ? 'extracting' : 'idle',
         streamUrl: '',
         title: ''
       };
@@ -335,41 +332,7 @@ export default function LivestreamClonerStudio() {
                     : 'aspect-video w-full'
                 }`}>
                   {stream.isPlaying ? (
-                    stream.isApiRequired ? (
-                      stream.extractionStatus === 'extracting' ? (
-                        <div className="text-white flex flex-col items-center justify-center h-full w-full bg-[#121216]">
-                          <RefreshCw className="w-8 h-8 animate-spin text-blue-500 mb-3" />
-                          <span className="text-xs font-mono text-blue-400 font-bold uppercase">Đang Bóc Tách API...</span>
-                        </div>
-                      ) : stream.extractionStatus === 'success' && stream.streamUrl ? (
-                        <div className="w-full h-full absolute inset-0">
-                          <LivePlayer 
-                            url={stream.streamUrl} 
-                            playing={true} 
-                            muted={true} 
-                          />
-                        </div>
-                      ) : stream.extractionStatus === 'offline' ? (
-                        <div className="text-gray-400 flex flex-col items-center justify-center p-4 text-center h-full w-full bg-[#121216] border border-gray-500/20">
-                          <MonitorPlay className="w-10 h-10 mb-2 opacity-50 text-gray-500" />
-                          <span className="text-[12px] font-black uppercase text-white">TÀI KHOẢN ĐANG OFFLINE</span>
-                          <span className="text-[9px] mt-1 uppercase text-gray-400">Người dùng này hiện không phát trực tiếp</span>
-                        </div>
-                      ) : getEmbedUrl(stream.url) === 'INVALID_TIKTOK_URL' ? (
-                        <div className="text-gray-400 flex flex-col items-center justify-center p-4 text-center h-full w-full bg-[#121216] border border-orange-500/20">
-                          <span className="text-[12px] font-black uppercase text-orange-500 mb-2">LINK TIKTOK KHÔNG HỢP LỆ</span>
-                          <span className="text-[10px] text-gray-300">Vui lòng nhập link chứa tên người dùng (VD: tiktok.com/@user/live)</span>
-                        </div>
-                      ) : (
-                        <iframe 
-                          src={getEmbedUrl(stream.url)}
-                          title="Real-time Livestream Player"
-                          className="w-full h-full border-none absolute inset-0"
-                          allowFullScreen
-                          allow="autoplay; encrypted-media; fullscreen"
-                        />
-                      )
-                    ) : getEmbedUrl(stream.url) === 'INVALID_TIKTOK_URL' ? (
+                    getEmbedUrl(stream.url) === 'INVALID_TIKTOK_URL' ? (
                       <div className="text-gray-400 flex flex-col items-center justify-center p-4 text-center h-full w-full bg-[#121216] border border-orange-500/20">
                         <span className="text-[12px] font-black uppercase text-orange-500 mb-2">LINK TIKTOK KHÔNG HỢP LỆ</span>
                         <span className="text-[10px] text-gray-300">Vui lòng nhập link chứa tên người dùng (VD: tiktok.com/@user/live)</span>
@@ -416,9 +379,7 @@ export default function LivestreamClonerStudio() {
                       </span>
                     )}
                     
-                    <span className="px-2 py-0.5 rounded bg-black/60 text-white text-[10px] font-mono border border-white/20 backdrop-blur-sm flex items-center gap-1">
-                      <Eye className="w-3 h-3" /> {stream.viewers}
-                    </span>
+
                   </div>
 
 
