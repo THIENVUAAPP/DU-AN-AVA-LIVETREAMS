@@ -1,24 +1,16 @@
-const https = require('https');
-const url = 'https://www.tiktok.com/@thoitrangmevabe/live';
-
-https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {
-  let data = '';
-  res.on('data', chunk => data += chunk);
-  res.on('end', () => {
-    const match = data.match(/"roomId":"(\d+)"/);
-    if (match) {
-      console.log('Room ID:', match[1]);
-      const roomUrl = `https://webcast.tiktok.com/webcast/room/info/?room_id=${match[1]}`;
-      https.get(roomUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (res2) => {
-        let data2 = '';
-        res2.on('data', chunk => data2 += chunk);
-        res2.on('end', () => {
-          console.log('Room Info Length:', data2.length);
-          if (data2.includes('stream_url')) console.log('Found stream_url!');
-        });
-      });
-    } else {
-      console.log('No roomId found');
-    }
-  });
-});
+const url = 'https://www.tiktok.com/@choosemee6666/live';
+fetch(url, {
+  headers: {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+  }
+}).then(res => res.text()).then(html => {
+  const match = html.match(/<script id="SIGI_STATE" type="application\/json">(.*?)<\/script>/s);
+  if (match) {
+    const data = JSON.parse(match[1]);
+    console.log(Object.keys(data));
+    console.log("Room data found!");
+  } else {
+    console.log("No SIGI_STATE found!");
+    console.log(html.substring(0, 500));
+  }
+}).catch(console.error);
