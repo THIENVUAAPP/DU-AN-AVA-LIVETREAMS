@@ -331,11 +331,17 @@ export default function LivestreamClonerStudio() {
                       ) : stream.extractionStatus === 'success' && stream.streamUrl ? (
                         <div className="w-full h-full absolute inset-0 relative font-sans">
                           <LivePlayer 
-                            url={stream.streamUrl.includes('tiktokcdn') ? `/proxy-hls?url=${encodeURIComponent(stream.streamUrl)}` : stream.streamUrl} 
+                            url={
+                              stream.streamUrl.includes('tiktokcdn') 
+                                ? (stream.protocol?.includes('m3u8') || stream.streamUrl.includes('.m3u8') 
+                                    ? `/proxy-hls?url=${encodeURIComponent(stream.streamUrl)}` 
+                                    : `/proxy-ts?url=${encodeURIComponent(stream.streamUrl)}`) 
+                                : stream.streamUrl
+                            } 
                             playing={true} 
                             muted={true} 
-                            isFlv={stream.ext === 'flv' || stream.streamUrl.includes('.flv')}
-                            isM3u8={stream.ext === 'm3u8' || stream.ext === 'mp4' || stream.streamUrl.includes('.m3u8')}
+                            isFlv={stream.ext === 'flv' || stream.protocol === 'http_dash_segments' || stream.streamUrl.includes('.flv')}
+                            isM3u8={stream.protocol?.includes('m3u8') || stream.streamUrl.includes('.m3u8')}
                             onVideoMount={(v) => console.log('Video mounted for:', stream.id)}
                           />
                           {/* TIKTOK FAKE UI OVERLAY */}

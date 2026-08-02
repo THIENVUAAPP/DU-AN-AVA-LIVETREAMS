@@ -100,8 +100,13 @@ export default defineConfig({
             ]);
 
             let data = '';
+            let errorData = '';
             pythonProcess.stdout.on('data', (chunk) => data += chunk);
-            pythonProcess.on('close', () => {
+            pythonProcess.stderr.on('data', (chunk) => errorData += chunk);
+            pythonProcess.on('close', (code) => {
+              if (code !== 0 && errorData) {
+                  console.error('yt-dlp error:', errorData);
+              }
               res.setHeader('Content-Type', 'application/json');
               try {
                 const parsed = JSON.parse(data);
@@ -111,13 +116,16 @@ export default defineConfig({
                         title: parsed.title,
                         viewers: parsed.view_count,
                         uploader: parsed.uploader,
-                        thumbnail: parsed.thumbnail
+                        thumbnail: parsed.thumbnail,
+                        ext: parsed.ext,
+                        protocol: parsed.protocol,
+                        isLive: parsed.is_live
                     }));
                 } else {
-                    res.end(JSON.stringify({ error: 'No URL found' }));
+                    res.end(JSON.stringify({ error: 'No URL found', stderr: errorData }));
                 }
               } catch (e) {
-                res.end(JSON.stringify({ error: e.toString() }));
+                res.end(JSON.stringify({ error: e.toString(), stderr: errorData }));
               }
             });
             return;

@@ -44,8 +44,7 @@ export default function LivePlayer({ url, playing, muted, onVideoMount, isFlv, i
           }
         }
       }
-    }
-    if (isM3u8 || url.includes('.m3u8')) {
+    } else if (isM3u8 || url.includes('.m3u8')) {
       if (Hls.isSupported()) {
         const videoElement = videoRef.current;
         const hls = new Hls({
