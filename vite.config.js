@@ -95,7 +95,7 @@ export default defineConfig({
               '--dump-json',
               '--quiet',
               '--no-warnings',
-              '-f', 'best[protocol^=m3u8]/best',
+              '-f', 'best[protocol*=m3u8]/best',
               queryUrl
             ]);
 

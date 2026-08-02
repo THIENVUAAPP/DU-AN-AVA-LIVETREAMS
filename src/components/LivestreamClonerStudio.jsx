@@ -331,13 +331,13 @@ export default function LivestreamClonerStudio() {
                       ) : stream.extractionStatus === 'success' && stream.streamUrl ? (
                         <div className="w-full h-full absolute inset-0 relative font-sans">
                           <LivePlayer 
-                            url={
-                              stream.streamUrl.includes('tiktokcdn') 
-                                ? (stream.protocol?.includes('m3u8') || stream.streamUrl.includes('.m3u8') 
-                                    ? `/proxy-hls?url=${encodeURIComponent(stream.streamUrl)}` 
-                                    : `/proxy-ts?url=${encodeURIComponent(stream.streamUrl)}`) 
-                                : stream.streamUrl
-                            } 
+                            url={(() => {
+                              if (!stream.streamUrl.includes('tiktokcdn')) return stream.streamUrl;
+                              const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                              const proxyBase = isLocal ? `http://s${stream.id % 15}.localhost:${window.location.port}` : '';
+                              const isM3u8 = stream.protocol?.includes('m3u8') || stream.streamUrl.includes('.m3u8');
+                              return `${proxyBase}/proxy-${isM3u8 ? 'hls' : 'ts'}?url=${encodeURIComponent(stream.streamUrl)}`;
+                            })()}
                             playing={true} 
                             muted={true} 
                             isFlv={stream.ext === 'flv' || stream.protocol === 'http_dash_segments' || stream.streamUrl.includes('.flv')}
