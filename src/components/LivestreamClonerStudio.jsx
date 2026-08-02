@@ -102,7 +102,7 @@ export default function LivestreamClonerStudio() {
           const data = await res.json();
           if (data.streamUrl) {
             setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'success', streamUrl: data.streamUrl, title: data.title } : s));
-          } else if (data.error === 'OFFLINE' || (data.error && data.error.includes('not currently live'))) {
+          } else if (data.error === 'OFFLINE' || (data.error && data.error.includes('not currently live')) || (data.stderr && data.stderr.includes('not currently live'))) {
             setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'offline' } : s));
           } else {
             setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'error' } : s));
