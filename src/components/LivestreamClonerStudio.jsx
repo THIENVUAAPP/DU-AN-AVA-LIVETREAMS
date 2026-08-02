@@ -93,26 +93,29 @@ export default function LivestreamClonerStudio() {
     setLinksInput('');
     setIsProcessing(false);
 
-    // Xử lý gọi API Serverless ngầm cho các luồng cần bóc tách (TikTok, Shopee)
-    newStreams.forEach(async (stream) => {
-      if (stream.isApiRequired) {
-        try {
-          const res = await fetch(`/api/extract?url=${encodeURIComponent(stream.url)}`);
-          if (!res.ok) throw new Error('API Error');
-          const data = await res.json();
-          if (data.streamUrl) {
-            setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'success', streamUrl: data.streamUrl, title: data.title } : s));
-          } else if (data.error === 'OFFLINE' || (data.error && data.error.includes('not currently live')) || (data.stderr && data.stderr.includes('not currently live'))) {
-            setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'offline' } : s));
-          } else {
+    // Xử lý gọi API Serverless tuần tự để tránh bị TikTok chặn IP do gửi quá nhiều request cùng lúc
+    const processExtractions = async () => {
+      for (const stream of newStreams) {
+        if (stream.isApiRequired) {
+          try {
+            const res = await fetch(`/api/extract?url=${encodeURIComponent(stream.url)}`);
+            if (!res.ok) throw new Error('API Error');
+            const data = await res.json();
+            if (data.streamUrl) {
+              setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'success', streamUrl: data.streamUrl, title: data.title } : s));
+            } else if (data.error === 'OFFLINE' || (data.error && data.error.includes('not currently live')) || (data.stderr && data.stderr.includes('not currently live'))) {
+              setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'offline' } : s));
+            } else {
+              setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'error' } : s));
+            }
+          } catch (error) {
+            console.error("Extraction error:", error);
             setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'error' } : s));
           }
-        } catch (error) {
-          console.error("Extraction error:", error);
-          setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'error' } : s));
         }
       }
-    });
+    };
+    processExtractions();
   };
 
   const handleClearAll = () => {
