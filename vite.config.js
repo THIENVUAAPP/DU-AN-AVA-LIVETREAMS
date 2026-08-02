@@ -23,7 +23,7 @@ export default defineConfig({
             const queryUrl = new URL(req.url, 'http://localhost').searchParams.get('url');
             if (!queryUrl) return next();
             try {
-              const fetch = (await import('node-fetch')).default || fetch;
+              const fetch = global.fetch;
               const response = await fetch(queryUrl, {
                 headers: {
                   'Origin': 'https://www.tiktok.com',
@@ -59,7 +59,7 @@ export default defineConfig({
             const queryUrl = new URL(req.url, 'http://localhost').searchParams.get('url');
             if (!queryUrl) return next();
             try {
-              const fetch = (await import('node-fetch')).default || fetch;
+              const fetch = global.fetch;
               const response = await fetch(queryUrl, {
                 headers: {
                   'Origin': 'https://www.tiktok.com',

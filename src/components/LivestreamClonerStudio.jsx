@@ -82,6 +82,8 @@ export default function LivestreamClonerStudio() {
         showHighlights: false,
         highlights: [],
         isPlaying: true, // Default to true to immediately load the real live stream
+        isApiRequired: link.includes('tiktok') || link.includes('shopee'),
+        extractionStatus: link.includes('tiktok') || link.includes('shopee') ? 'extracting' : undefined,
         streamUrl: '',
         title: ''
       };
