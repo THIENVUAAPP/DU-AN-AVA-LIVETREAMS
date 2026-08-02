@@ -91,22 +91,11 @@ export default defineConfig({
               return;
             }
 
-            const pythonProcess = spawn('python3', [
-              '-c',
-              `
-import yt_dlp
-import json
-import sys
-
-url = sys.argv[1]
-ydl_opts = {'quiet': True, 'format': 'best[protocol^=m3u8]/best', 'no_warnings': True}
-try:
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=False)
-        print(json.dumps({'streamUrl': info.get('url'), 'title': info.get('title'), 'viewers': info.get('view_count'), 'uploader': info.get('uploader'), 'thumbnail': info.get('thumbnail')}))
-except Exception as e:
-    print(json.dumps({'error': str(e)}))
-              `,
+            const pythonProcess = spawn('./yt-dlp', [
+              '--dump-json',
+              '--quiet',
+              '--no-warnings',
+              '-f', 'best[protocol^=m3u8]/best',
               queryUrl
             ]);
 
@@ -114,7 +103,22 @@ except Exception as e:
             pythonProcess.stdout.on('data', (chunk) => data += chunk);
             pythonProcess.on('close', () => {
               res.setHeader('Content-Type', 'application/json');
-              res.end(data);
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.url) {
+                    res.end(JSON.stringify({
+                        streamUrl: parsed.url,
+                        title: parsed.title,
+                        viewers: parsed.view_count,
+                        uploader: parsed.uploader,
+                        thumbnail: parsed.thumbnail
+                    }));
+                } else {
+                    res.end(JSON.stringify({ error: 'No URL found' }));
+                }
+              } catch (e) {
+                res.end(JSON.stringify({ error: e.toString() }));
+              }
             });
             return;
           }
