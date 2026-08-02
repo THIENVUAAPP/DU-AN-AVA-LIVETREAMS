@@ -1,22 +1,10 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import path from 'path';
-import { spawn } from 'child_process';
+with open('vite.config.js', 'r') as f:
+    content = f.read()
 
-export default defineConfig({
-  server: {
-    port: 3000,
-    open: true,
-  },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
-  plugins: [
-    react(),
-    {
-      name: 'local-vercel-api',
+import re
+
+# Find the middleware array or configureServer
+new_configure = """
       configureServer(server) {
         server.middlewares.use(async (req, res, next) => {
           if (req.url.startsWith('/proxy-hls')) {
@@ -33,7 +21,7 @@ export default defineConfig({
               });
               let text = await response.text();
               const baseUrl = queryUrl.substring(0, queryUrl.lastIndexOf('/') + 1);
-              text = text.split('\n').map(line => {
+              text = text.split('\\n').map(line => {
                 const trimmed = line.trim();
                 if (!trimmed) return line;
                 if (trimmed.startsWith('#')) {
@@ -47,7 +35,7 @@ export default defineConfig({
                 }
                 const absoluteUrl = trimmed.startsWith('http') ? trimmed : baseUrl + trimmed;
                 return `/proxy-ts?url=${encodeURIComponent(absoluteUrl)}`;
-              }).join('\n');
+              }).join('\\n');
               res.setHeader('Access-Control-Allow-Origin', '*');
               res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
               res.end(text);
@@ -69,58 +57,16 @@ export default defineConfig({
               });
               res.setHeader('Access-Control-Allow-Origin', '*');
               res.setHeader('Content-Type', 'video/MP2T');
-              
-              if (response.body.pipe) {
-                  response.body.pipe(res);
-              } else {
-                  const { Readable } = await import('stream');
-                  Readable.fromWeb(response.body).pipe(res);
-              }
-
+              response.body.pipe(res);
             } catch (e) { res.statusCode = 500; res.end(e.toString()); }
             return;
           }
+"""
 
-          if (req.url.startsWith('/api/extract')) {
-            // Fix for URL parsing in Vite dev server middleware
-            const queryUrl = new URL(req.url, 'http://localhost').searchParams.get('url');
-            
-            if (!queryUrl) {
-              res.statusCode = 400;
-              res.end(JSON.stringify({ error: 'No URL provided' }));
-              return;
-            }
+content = content.replace("configureServer(server) {", new_configure)
 
-            const pythonProcess = spawn('python3', [
-              '-c',
-              `
-import yt_dlp
-import json
-import sys
+# Also ensure yt-dlp in vite.config.js uses m3u8
+content = content.replace("ydl_opts = {'quiet': True, 'format': 'best[ext=flv]/best', 'no_warnings': True}", "ydl_opts = {'quiet': True, 'format': 'best[protocol^=m3u8]/best', 'no_warnings': True}")
 
-url = sys.argv[1]
-ydl_opts = {'quiet': True, 'format': 'best[protocol^=m3u8]/best', 'no_warnings': True}
-try:
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=False)
-        print(json.dumps({'streamUrl': info.get('url'), 'title': info.get('title'), 'viewers': info.get('view_count'), 'uploader': info.get('uploader'), 'thumbnail': info.get('thumbnail')}))
-except Exception as e:
-    print(json.dumps({'error': str(e)}))
-              `,
-              queryUrl
-            ]);
-
-            let data = '';
-            pythonProcess.stdout.on('data', (chunk) => data += chunk);
-            pythonProcess.on('close', () => {
-              res.setHeader('Content-Type', 'application/json');
-              res.end(data);
-            });
-            return;
-          }
-          next();
-        });
-      }
-    }
-  ],
-});
+with open('vite.config.js', 'w') as f:
+    f.write(content)
