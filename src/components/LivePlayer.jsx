@@ -61,6 +61,23 @@ export default function LivePlayer({ url, playing, muted, onVideoMount, isFlv, i
             videoElement.play().catch(e => console.log('HLS Play error:', e));
           }
         });
+        hls.on(Hls.Events.ERROR, (event, data) => {
+          if (data.fatal) {
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                console.log("fatal network error encountered, try to recover");
+                hls.startLoad();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                console.log("fatal media error encountered, try to recover");
+                hls.recoverMediaError();
+                break;
+              default:
+                hls.destroy();
+                break;
+            }
+          }
+        });
       } else if (videoRef.current && videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
         // Fallback for Safari
         const videoElement = videoRef.current;

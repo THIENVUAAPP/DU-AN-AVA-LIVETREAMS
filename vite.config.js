@@ -68,7 +68,13 @@ export default defineConfig({
                 }
               });
               res.setHeader('Access-Control-Allow-Origin', '*');
-              res.setHeader('Content-Type', 'video/MP2T');
+              
+              const contentType = response.headers.get('content-type');
+              if (contentType) {
+                  res.setHeader('Content-Type', contentType);
+              } else {
+                  res.setHeader('Content-Type', 'video/MP2T');
+              }
               
               if (response.body.pipe) {
                   response.body.pipe(res);
