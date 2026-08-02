@@ -49,6 +49,13 @@ export default defineConfig({
                 return `/proxy-ts?url=${encodeURIComponent(absoluteUrl)}`;
               }).join('\n');
               res.setHeader('Access-Control-Allow-Origin', '*');
+              if (req.method === 'OPTIONS') {
+                  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+                  res.setHeader('Access-Control-Allow-Headers', '*');
+                  res.statusCode = 200;
+                  res.end();
+                  return;
+              }
               res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
               res.end(text);
             } catch (e) { res.statusCode = 500; res.end(e.toString()); }
@@ -68,6 +75,13 @@ export default defineConfig({
                 }
               });
               res.setHeader('Access-Control-Allow-Origin', '*');
+              if (req.method === 'OPTIONS') {
+                  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+                  res.setHeader('Access-Control-Allow-Headers', '*');
+                  res.statusCode = 200;
+                  res.end();
+                  return;
+              }
               
               const contentType = response.headers.get('content-type');
               if (contentType) {

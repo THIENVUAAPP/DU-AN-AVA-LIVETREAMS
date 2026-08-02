@@ -337,7 +337,7 @@ export default function LivestreamClonerStudio() {
                             url={(() => {
                               if (!stream.streamUrl.includes('tiktokcdn')) return stream.streamUrl;
                               const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                              const proxyBase = isLocal ? `http://s${String(stream.id).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 15}.localhost:${window.location.port}` : '';
+                              const proxyBase = '';
                               const isM3u8 = stream.protocol?.includes('m3u8') || stream.streamUrl.includes('.m3u8');
                               return `${proxyBase}/proxy-${isM3u8 ? 'hls' : 'ts'}?url=${encodeURIComponent(stream.streamUrl)}`;
                             })()}
