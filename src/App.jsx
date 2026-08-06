@@ -19,6 +19,7 @@ import TeamPermissionsManager from "./components/TeamPermissionsManager";
 import SalesAnalyticsManager from "./components/SalesAnalyticsManager";
 import LivestreamClonerStudio from "./components/LivestreamClonerStudio";
 import UpgradePrompt from "./components/UpgradePrompt";
+import AutoCaptchaSolver from "./components/AutoCaptchaSolver";
 import { Lock, Sparkles, ShieldCheck, Mail, LogIn, ArrowRight } from "lucide-react";
 
 export default function App() {
