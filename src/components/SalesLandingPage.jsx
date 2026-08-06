@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, CheckCircle2, ArrowRight, Zap, ShieldCheck, 
   Tv, Users, CreditCard, ChevronRight, Crown, Star, 
-  BarChart2, Share2, Globe, HeartHandshake 
+  BarChart2, Share2, Globe, HeartHandshake, Building2
 } from 'lucide-react';
 import SePayModal from './SePayModal';
 
