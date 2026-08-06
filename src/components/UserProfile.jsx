@@ -62,67 +62,6 @@ export default function UserProfile({ currentUser, setActiveTab }) {
         </div>
       );
     }
-    
-    if (title === 'Lịch sử thanh toán') {
-      return (
-        <div className="animate-fade-in text-left space-y-6 w-full max-w-5xl mx-auto">
-          <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-4">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2"><FileText className="w-4 h-4 text-[#3B82F6]" /> LỊCH SỬ NẠP TIỀN & HÓA ĐƠN THANH TOÁN</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-white/10 bg-[#121216]">
-                    <th className="p-3 text-gray-300 font-bold">Mã Hóa Đơn</th>
-                    <th className="p-3 text-gray-300 font-bold">Gói Thanh Toán</th>
-                    <th className="p-3 text-gray-300 font-bold">Kênh Thanh Toán</th>
-                    <th className="p-3 text-gray-300 font-bold">Ngày Nạp</th>
-                    <th className="p-3 text-gray-300 font-bold">Trạng Thái</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5 font-mono">
-                  {userInvoices.map((inv) => (
-                    <tr key={inv.id} className="hover:bg-white/5 transition-all">
-                      <td className="p-3 font-bold text-[#EF4444]">{inv.id}</td>
-                      <td className="p-3 text-white font-sans font-bold">{inv.plan}</td>
-                      <td className="p-3 text-gray-300">{inv.method}</td>
-                      <td className="p-3 text-gray-400">{inv.date}</td>
-                      <td className="p-3"><span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400">{inv.status}</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    if (title === 'Phương thức thanh toán' || title === 'Rút tiền về ngân hàng') {
-      return (
-        <div className="animate-fade-in text-left space-y-6 w-full max-w-5xl mx-auto">
-          <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-4">
-             <h3 className="text-sm font-bold text-white flex items-center gap-2 pb-3"><CreditCard className="w-4 h-4 text-[#8B5CF6]" /> TÀI KHOẢN NGÂN HÀNG NHẬN HOA HỒNG RÚT (SEPAY VIETQR)</h3>
-            <div className="space-y-3 text-xs max-w-2xl">
-              <div className="space-y-1">
-                <label className="text-gray-300 font-bold block">Tên Ngân Hàng:</label>
-                <input type="text" value={profile.bankName} onChange={(e) => setProfile({ ...profile, bankName: e.target.value })} className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-3 py-2 text-white" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-gray-300 font-bold block">Số Tài Khoản Ngân Hàng:</label>
-                  <input type="text" value={profile.accountNumber} onChange={(e) => setProfile({ ...profile, accountNumber: e.target.value })} className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-3 py-2 text-white font-mono" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-gray-300 font-bold block">Tên Chủ Tài Khoản:</label>
-                  <input type="text" value={profile.accountHolder} onChange={(e) => setProfile({ ...profile, accountHolder: e.target.value })} className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-3 py-2 text-white font-bold" />
-                </div>
-              </div>
-            </div>
-            <button onClick={() => alert("Đã lưu thông tin tài khoản ngân hàng nhận tiền hoa hồng!")} className="mt-4 px-5 py-2 bg-[#8B5CF6] hover:bg-purple-600 text-white font-extrabold text-xs rounded-xl shadow-glow-purple transition-all">LƯU TÀI KHOẢN NGÂN HÀNG</button>
-          </div>
-        </div>
-      );
-    }
 
     // Default Placeholder
     return (
@@ -167,49 +106,9 @@ export default function UserProfile({ currentUser, setActiveTab }) {
           </div>
 
           <div>
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 px-4">TÀI KHOẢN</p>
-            <div className="space-y-1">
-              <button onClick={() => setActiveSidebarTab('Thông tin cá nhân')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><User className="w-4 h-4"/> Thông tin cá nhân</button>
-              <button onClick={() => setActiveSidebarTab('Bảo mật tài khoản')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><ShieldCheck className="w-4 h-4"/> Bảo mật tài khoản</button>
-              <button onClick={() => setActiveSidebarTab('Đổi mật khẩu')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Settings className="w-4 h-4"/> Đổi mật khẩu</button>
-              <button onClick={() => setActiveSidebarTab('Xác minh danh tính (KYC)')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><CheckCircle2 className="w-4 h-4"/> Xác minh danh tính</button>
-            </div>
-          </div>
-          
-          <div>
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 px-4">GÓI DỊCH VỤ</p>
-            <div className="space-y-1">
-              <button onClick={() => setActiveSidebarTab('Quản lý gói dịch vụ')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Package className="w-4 h-4"/> Gói của tôi</button>
-              <button onClick={() => setActiveTab("sales-analytics")} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><FileText className="w-4 h-4"/> Lịch sử giao dịch</button>
-              <button onClick={() => setActiveSidebarTab('Thanh toán tự động')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Zap className="w-4 h-4"/> Thanh toán tự động</button>
-            </div>
-          </div>
-          
-          <div>
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 px-4">VÍ & THANH TOÁN</p>
-            <div className="space-y-1">
-              <button onClick={() => setActiveSidebarTab('Số dư tài khoản')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Wallet className="w-4 h-4"/> Số dư tài khoản</button>
-              <button onClick={() => setActiveSidebarTab('Phương thức thanh toán')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><CreditCard className="w-4 h-4"/> Phương thức thanh toán</button>
-              <button onClick={() => setActiveSidebarTab('Lịch sử thanh toán')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Calendar className="w-4 h-4"/> Lịch sử thanh toán</button>
-              <button onClick={() => setActiveSidebarTab('Rút tiền về ngân hàng')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><DollarSign className="w-4 h-4"/> Rút tiền</button>
-            </div>
-          </div>
-
-          <div>
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 px-4">AFFILIATE</p>
+            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 px-4">TIẾP THỊ LIÊN KẾT</p>
             <div className="space-y-1">
               <button onClick={() => setActiveTab("affiliate-dashboard")} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Share2 className="w-4 h-4"/> Dashboard Affiliate</button>
-              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><LinkIcon className="w-4 h-4"/> Link giới thiệu</button>
-              <button onClick={() => setActiveTab("affiliate-dashboard")} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><DollarSign className="w-4 h-4"/> Hoa hồng của tôi</button>
-            </div>
-          </div>
-
-          <div>
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 px-4">HOẠT ĐỘNG</p>
-            <div className="space-y-1">
-              <button onClick={() => setActiveSidebarTab('Lịch sử đăng nhập')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Activity className="w-4 h-4"/> Lịch sử đăng nhập</button>
-              <button onClick={() => setActiveSidebarTab('Quản lý Thiết bị')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Monitor className="w-4 h-4"/> Thiết bị đăng nhập</button>
-              <button onClick={() => setActiveTab && setActiveTab('captcha')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-cyan-500/10 text-cyan-400 font-bold rounded-lg transition-colors"><ShieldCheck className="w-4 h-4"/> Bảng điều khiển Captcha</button>
             </div>
           </div>
           

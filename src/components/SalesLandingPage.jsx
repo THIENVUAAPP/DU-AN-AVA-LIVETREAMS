@@ -3,9 +3,31 @@ import {
   Sparkles, CheckCircle2, ArrowRight, Zap, ShieldCheck, 
   Tv, Users, CreditCard, ChevronRight, Crown, Star, 
   BarChart2, Share2, Globe, HeartHandshake, Building2,
-  Play, MousePointerClick, MessageSquare, Smartphone, Facebook
+  Play, MousePointerClick, MessageSquare, Smartphone, Facebook,
+  Bot, Clock, ShoppingCart, Lock, Headphones, Search, MonitorPlay
 } from 'lucide-react';
 import SePayModal from './SePayModal';
+
+const customStyles = `
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  @keyframes marquee-reverse {
+    0% { transform: translateX(-50%); }
+    100% { transform: translateX(0); }
+  }
+  .animate-marquee {
+    animation: marquee 40s linear infinite;
+  }
+  .animate-marquee-reverse {
+    animation: marquee-reverse 40s linear infinite;
+  }
+  .marquee-container:hover .animate-marquee,
+  .marquee-container:hover .animate-marquee-reverse {
+    animation-play-state: paused;
+  }
+`;
 
 // Intersection Observer Hook for Scroll Animations
 function useOnScreen(options) {
@@ -29,14 +51,14 @@ function useOnScreen(options) {
 const RevealOnScroll = ({ children, className = '' }) => {
   const [ref, isVisible] = useOnScreen({ threshold: 0.1 });
   return (
-    <div ref={ref} className={`reveal ${isVisible ? 'visible' : ''} ${className}`}>
+    <div ref={ref} className={`transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'} ${className}`}>
       {children}
     </div>
   );
 };
 
 export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser, setActiveTab }) {
-  const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' | 'yearly'
+  const [billingCycle, setBillingCycle] = useState('monthly');
   const [sepayModalOpen, setSepayModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
@@ -48,8 +70,8 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
       return;
     }
     
-    if (plan.name === 'Gói FREE') {
-       alert("Gói FREE đã được tự động áp dụng cho tài khoản của bạn.");
+    if (plan.monthly === 0 || plan.name.includes('MIỄN PHÍ')) {
+       alert(`Gói ${plan.name} đã được kích hoạt thành công cho tài khoản của bạn.`);
        setActiveTab('broadcast');
        return;
     }
@@ -60,480 +82,578 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
 
   const plans = [
     {
-      name: "Gói FREE",
-      desc: "Trải nghiệm sức mạnh của AI Livestream hoàn toàn miễn phí.",
+      name: "MIỄN PHÍ",
+      desc: "Trải nghiệm cơ bản, không giới hạn thời gian",
       monthly: 0,
+      oldMonthly: 0,
       yearly: 0,
       features: [
-        "Phát Live 1 luồng/tháng",
-        "Giới hạn 30 phút/phiên Live",
-        "Có Watermark (Logo AvaLive)",
-        "Chatbot AI cơ bản",
-        "Không hỗ trợ Auto Captcha"
+        "Livestream 1 nền tảng",
+        "Tự động chốt đơn (50 đơn/tháng)",
+        "Chatbot AI mẫu cơ bản",
+        "Hỗ trợ qua cộng đồng"
       ],
-      color: "from-gray-500 to-gray-600",
-      textColor: "text-gray-300",
+      color: "from-gray-400 to-gray-100",
+      borderColor: "border-gray-500/30",
       btnText: "BẮT ĐẦU MIỄN PHÍ",
-      icon: <Star className="w-5 h-5 text-gray-300" />
+      icon: <MonitorPlay className="w-5 h-5 text-gray-300" />
     },
     {
-      name: "Gói STARTER",
-      desc: "Phù hợp cho cá nhân bán hàng nhỏ lẻ, cần tự động hóa.",
-      monthly: 799000,
-      yearly: 799000 * 10,
+      name: "CHUYÊN NGHIỆP",
+      desc: "Dành cho shop bán hàng chuyên nghiệp",
+      monthly: 599000,
+      oldMonthly: 799000,
+      yearly: 599000 * 10,
       features: [
-        "Phát Live 5 luồng đồng thời",
-        "Tự động chốt 200 đơn/tháng",
-        "Quản lý trang thanh toán đơn",
-        "Bỏ Logo AvaLive Watermark",
-        "Bypass Captcha (Cơ bản)",
-        "Hỗ trợ kỹ thuật qua Email"
-      ],
-      color: "from-[#3B82F6] to-[#2563EB]",
-      textColor: "text-blue-400",
-      btnText: "MUA GÓI STARTER",
-      icon: <Zap className="w-5 h-5 text-blue-400" />
-    },
-    {
-      name: "Gói PRO",
-      desc: "Bùng nổ doanh số với công cụ Livestream Đa Kênh đỉnh cao.",
-      monthly: 1599000,
-      yearly: 1599000 * 10,
-      features: [
-        "Phát Live 15 luồng đồng thời",
-        "Tự động chốt 1000 đơn/tháng",
-        "Quản lý trang thanh toán đơn",
-        "Restream TikTok, FB, Shopee",
-        "Bypass Captcha Cao Cấp (100%)",
-        "Hỗ trợ ưu tiên qua Zalo"
+        "Livestream 5 nền tảng",
+        "Chatbot AI nâng cao",
+        "500 đơn hàng/tháng",
+        "Thanh toán tự động",
+        "Báo cáo doanh số chi tiết",
+        "Hỗ trợ ưu tiên 24/7",
+        "Tích hợp API"
       ],
       isPopular: true,
-      color: "from-[#8B5CF6] to-[#EF4444]",
-      textColor: "text-purple-400",
-      btnText: "NÂNG CẤP LÊN PRO",
-      icon: <Crown className="w-5 h-5 text-amber-400" />
+      color: "from-[#3B82F6] to-[#60A5FA]",
+      borderColor: "border-[#3B82F6]",
+      btnText: "MUA NGAY",
+      icon: <Zap className="w-5 h-5 text-blue-300" />
     },
     {
-      name: "Gói ENTERPRISE",
-      desc: "Giải pháp toàn diện cho Studio & Agency quy mô lớn.",
-      monthly: 3490000,
-      yearly: 3490000 * 10,
+      name: "DOANH NGHIỆP",
+      desc: "Dành cho doanh nghiệp vừa và lớn",
+      monthly: 1299000,
+      oldMonthly: 1699000,
+      yearly: 1299000 * 10,
       features: [
-        "Phát Live KHÔNG GIỚI HẠN luồng",
-        "Tự động chốt đơn KHÔNG GIỚI HẠN",
-        "Quản lý trang thanh toán ưu tiên",
-        "Tạo & Quản lý nhiều phiên độc lập",
-        "Hỗ trợ kỹ thuật 24/7 (1 kèm 1)",
-        "Tùy chỉnh giao diện theo Brand"
+        "Livestream không giới hạn",
+        "Chatbot AI thông minh",
+        "Không giới hạn đơn hàng",
+        "Thanh toán tự động nâng cao",
+        "Báo cáo nâng cao",
+        "Hỗ trợ VIP 24/7",
+        "Tích hợp API nâng cao"
       ],
-      color: "from-[#059669] to-[#047857]",
-      textColor: "text-emerald-400",
-      btnText: "LIÊN HỆ ENTERPRISE",
-      icon: <Building2 className="w-5 h-5 text-emerald-400" />
+      color: "from-[#10B981] to-[#34D399]",
+      borderColor: "border-[#10B981]/30",
+      btnText: "MUA NGAY",
+      icon: <Crown className="w-5 h-5 text-emerald-300" />
+    },
+    {
+      name: "TRỌN ĐỜI",
+      desc: "Sở hữu trọn đời - Không phí hằng tháng",
+      monthly: 9990000,
+      oldMonthly: 14990000,
+      yearly: 9990000,
+      features: [
+        "Tất cả tính năng cao cấp",
+        "Livestream không giới hạn",
+        "Không giới hạn đơn hàng",
+        "Hỗ trợ VIP trọn đời",
+        "Cập nhật miễn phí trọn đời",
+        "Tích hợp API nâng cao"
+      ],
+      color: "from-[#F59E0B] to-[#FCD34D]",
+      borderColor: "border-[#F59E0B]/50",
+      btnText: "MUA NGAY",
+      icon: <Building2 className="w-5 h-5 text-amber-300" />
     }
   ];
 
   return (
-    <div className="min-h-screen bg-[#050505] text-gray-100 font-sans overflow-x-hidden selection:bg-[#EF4444] selection:text-white pb-20 scroll-smooth">
+    <div className="min-h-screen bg-[#05050A] text-gray-100 font-sans overflow-x-hidden selection:bg-[#EF4444] selection:text-white">
+      <style>{customStyles}</style>
       
-      {/* STANDALONE WEBSITE HEADER */}
-      <header className="fixed top-0 left-0 right-0 z-[100] bg-[#050505]/80 backdrop-blur-xl border-b border-white/5 py-4 px-6 transition-all shadow-xl">
+      {/* HEADER */}
+      <header className="fixed top-0 left-0 right-0 z-[100] bg-[#05050A]/90 backdrop-blur-md border-b border-white/5 py-4 px-6 transition-all">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo(0, 0)}>
             <div className="relative">
-              <div className="absolute -inset-1 bg-gradient-to-r from-red-600 via-purple-600 to-cyan-500 rounded-2xl blur-md opacity-0 group-hover:opacity-100 transition duration-500" />
-              <div className="relative w-10 h-10 rounded-xl bg-gradient-to-tr from-[#EF4444] via-[#8B5CF6] to-[#06B6D4] p-0.5 shadow-2xl group-hover:scale-105 transition-all">
-                <img src="/official_logo.jpg" alt="AvaLive PRO" className="w-full h-full object-cover rounded-[10px] border border-white/40" />
+              <div className="absolute -inset-1 bg-gradient-to-r from-red-600 via-purple-600 to-cyan-500 rounded-2xl blur opacity-70 group-hover:opacity-100 transition duration-500"></div>
+              <div className="relative w-10 h-10 rounded-xl bg-[#111] p-0.5 shadow-2xl group-hover:scale-105 transition-all">
+                <img src="/official_logo.jpg" alt="AvaLive" className="w-full h-full object-cover rounded-[10px] border border-white/20" />
               </div>
             </div>
-            <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-1 group-hover:text-red-400 transition-colors">
-              AvaLive <span className="text-[#EF4444] drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]">PRO</span>
+            <h1 className="text-xl font-black text-white tracking-tight flex flex-col leading-none">
+              <span className="text-[#FBBF24] drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]">AVA</span>
+              <span className="text-[10px] text-purple-400 font-bold uppercase tracking-widest mt-1">Live</span>
             </h1>
           </div>
 
-          <nav className="hidden md:flex items-center gap-8">
-            <button onClick={() => window.scrollTo(0, 0)} className="text-sm font-bold text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.4)] hover:text-[#EF4444] transition-all">Trang Chủ</button>
-            <a href="#features-section" className="text-sm font-bold text-gray-400 hover:text-white transition-all">Tính Năng</a>
-            <a href="#pricing-section" className="text-sm font-bold text-gray-400 hover:text-white transition-all">Bảng Giá</a>
-            <button onClick={() => setActiveTab('affiliate-landing')} className="text-sm font-bold text-gray-400 hover:text-[#8B5CF6] transition-all flex items-center gap-1 hover:scale-105">
-              <HeartHandshake className="w-4 h-4" /> Tiếp Thị 30%
-            </button>
+          <nav className="hidden lg:flex items-center gap-6">
+            <button onClick={() => window.scrollTo(0, 0)} className="text-sm font-semibold text-white hover:text-[#FBBF24] transition-all">Trang chủ</button>
+            <a href="#features" className="text-sm font-semibold text-gray-300 hover:text-white transition-all">Tính năng</a>
+            <a href="#pricing" className="text-sm font-semibold text-gray-300 hover:text-white transition-all">Bảng giá</a>
+            <a href="#guide" className="text-sm font-semibold text-gray-300 hover:text-white transition-all">Hướng dẫn</a>
+            <button onClick={() => setActiveTab('affiliate-landing')} className="text-sm font-semibold text-gray-300 hover:text-[#FBBF24] transition-all">Affiliate</button>
+            <a href="#blog" className="text-sm font-semibold text-gray-300 hover:text-white transition-all">Blog</a>
+            <a href="#contact" className="text-sm font-semibold text-gray-300 hover:text-white transition-all">Liên hệ</a>
           </nav>
 
-          {!currentUser ? (
-            <button 
-              onClick={() => setGoogleLoginModalOpen(true)}
-              className="px-6 py-2.5 bg-white hover:bg-gray-200 text-black font-black rounded-xl text-sm shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all hover:scale-105 flex items-center gap-2 group"
-            >
-              ĐĂNG NHẬP <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-          ) : (
-            <button 
-              onClick={() => setActiveTab('broadcast')}
-              className="px-6 py-2.5 bg-gradient-to-r from-[#EF4444] to-[#8B5CF6] text-white font-black rounded-xl text-sm shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-all hover:scale-105 flex items-center gap-2 group"
-            >
-              VÀO STUDIO <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-          )}
+          <div className="flex items-center gap-4">
+            {!currentUser ? (
+              <>
+                <button 
+                  onClick={() => setGoogleLoginModalOpen(true)}
+                  className="px-5 py-2 rounded-full border border-white/20 text-white font-semibold text-sm hover:bg-white/10 transition-all"
+                >
+                  Đăng nhập
+                </button>
+                <button 
+                  onClick={() => setGoogleLoginModalOpen(true)}
+                  className="px-5 py-2 rounded-full bg-gradient-to-r from-[#F59E0B] to-[#F43F5E] text-white font-bold text-sm shadow-[0_0_15px_rgba(245,158,11,0.4)] hover:shadow-[0_0_25px_rgba(245,158,11,0.6)] transition-all hover:scale-105"
+                >
+                  Dùng thử miễn phí
+                </button>
+              </>
+            ) : (
+              <button 
+                onClick={() => setActiveTab('broadcast')}
+                className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#F59E0B] to-[#F43F5E] text-white font-bold text-sm shadow-[0_0_15px_rgba(245,158,11,0.4)] hover:scale-105 transition-all flex items-center gap-2"
+              >
+                VÀO STUDIO <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
-      {/* 1. HERO SECTION (Premium Redesign) */}
-      <section className="relative pt-40 pb-20 overflow-hidden flex flex-col items-center text-center px-4 bg-grid-lines">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-tr from-[#EF4444]/20 via-[#8B5CF6]/20 to-[#3B82F6]/20 blur-[120px] rounded-full pointer-events-none animate-pulse"></div>
-        
-        <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-md animate-fade-in-up hover:scale-105 transition-transform cursor-pointer">
-          <Sparkles className="w-4 h-4 text-amber-400 animate-spin-slow" />
-          <span className="text-xs font-bold text-gray-200 uppercase tracking-widest animate-shimmer">Nền Tảng Livestream Bán Hàng #1 Việt Nam</span>
-        </div>
-        
-        <h1 className="text-6xl md:text-[5.5rem] font-black text-white tracking-tight mb-8 leading-[1.05] max-w-5xl animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-          Đột Phá Doanh Thu <br className="hidden md:block"/>
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#EF4444] via-[#8B5CF6] to-[#06B6D4] animate-gradient">
-            Với Hệ Sinh Thái AvaLive
-          </span>
-        </h1>
-        
-        <p className="text-gray-400 text-lg md:text-xl max-w-3xl mb-12 animate-fade-in-up leading-relaxed" style={{ animationDelay: '200ms' }}>
-          Tự động hóa 100% quy trình bán hàng trên Livestream. Tích hợp <strong className="text-white">AI Chốt Đơn</strong>, <strong className="text-white">Bypass Captcha Siêu Tốc</strong>, và <strong className="text-white">Restream Đa Kênh</strong> (TikTok, Facebook, Shopee, YouTube) chỉ với 1 Click.
-        </p>
-        
-        <div className="flex flex-col sm:flex-row items-center gap-5 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
-          {!currentUser ? (
-            <button 
-              onClick={() => setGoogleLoginModalOpen(true)}
-              className="px-8 py-5 bg-white text-black font-black rounded-2xl hover:bg-gray-200 transition-all shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:scale-105 flex items-center gap-2 text-lg group"
-            >
-              KẾT NỐI GOOGLE BẮT ĐẦU NGAY <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-            </button>
-          ) : (
-            <button 
-              onClick={() => setActiveTab('broadcast')}
-              className="px-8 py-5 bg-gradient-to-r from-[#EF4444] to-[#8B5CF6] text-white font-black rounded-2xl transition-all shadow-[0_0_40px_rgba(239,68,68,0.4)] hover:scale-105 flex items-center gap-2 text-lg group animate-cta-pulse"
-            >
-              VÀO BẢNG ĐIỀU KHIỂN STUDIO <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-            </button>
-          )}
-          
-          <a href="#demo-section" className="px-8 py-5 glass-panel text-white font-bold rounded-2xl hover:bg-white/10 transition-all border border-white/20 flex items-center gap-2 text-lg hover:scale-105">
-            <Play className="w-6 h-6 text-[#06B6D4]" /> XEM VIDEO DEMO
-          </a>
-        </div>
-      </section>
+      {/* 1. HERO SECTION */}
+      <section className="relative pt-32 pb-16 overflow-hidden flex flex-col items-center px-4" style={{
+        backgroundImage: 'radial-gradient(circle at 50% 0%, #1c103f 0%, #05050A 50%)'
+      }}>
+        {/* Background Grid Lines */}
+        <div className="absolute inset-0 bg-[url('https://transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none"></div>
 
-      {/* 2. VIDEO DEMO SECTION (High-End Mockup) */}
-      <section id="demo-section" className="py-20 px-4 max-w-6xl mx-auto relative z-10">
-        <RevealOnScroll>
-          <div className="relative rounded-[2.5rem] overflow-hidden glass-panel border border-white/10 shadow-neon-purple group bg-black">
-            {/* macOS window top bar */}
-            <div className="h-8 bg-[#1a1a24] border-b border-white/5 flex items-center px-4 gap-2">
-               <div className="w-3 h-3 rounded-full bg-red-500"></div>
-               <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-               <div className="w-3 h-3 rounded-full bg-green-500"></div>
-               <div className="flex-1 text-center text-[10px] text-gray-500 font-mono tracking-widest">AVALIVE_STUDIO_DEMO.MP4</div>
+        <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
+          
+          {/* Left Text Content */}
+          <div className="flex flex-col items-start text-left space-y-6">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#8B5CF6]/40 bg-[#8B5CF6]/10 backdrop-blur-sm">
+              <span className="text-[10px] font-bold text-purple-300 uppercase tracking-widest">NỀN TẢNG LIVESTREAM & BÁN HÀNG AI #1 VIỆT NAM</span>
             </div>
             
-            {/* Video Placeholder */}
-            <div className="relative aspect-video bg-gradient-to-tr from-black via-[#111] to-[#1a1a24] flex items-center justify-center overflow-hidden cursor-pointer" onClick={() => setIsVideoPlaying(true)}>
-              {/* Animated abstract shapes behind video */}
-              <div className="absolute inset-0 opacity-30">
-                 <div className="absolute top-10 left-10 w-64 h-64 bg-red-500/20 rounded-full blur-3xl animate-float"></div>
-                 <div className="absolute bottom-10 right-10 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl animate-float-slow"></div>
+            <h1 className="text-5xl md:text-[4rem] font-black text-white leading-[1.1] tracking-tight">
+              LIVE STREAM ĐA NỀN TẢNG <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FBBF24] via-[#F59E0B] to-[#D97706]">
+                BÁN HÀNG TỰ ĐỘNG BẰNG AI 24/7
+              </span>
+            </h1>
+            
+            <p className="text-gray-400 text-lg leading-relaxed max-w-xl">
+              Công nghệ AI thông minh giúp bạn livestream đa nền tảng, chốt đơn tự động, chatbot AI chăm sóc khách hàng 24/7 và tối ưu doanh số vượt trội!
+            </p>
+            
+            <div className="flex flex-wrap items-center gap-4 pt-4">
+              <button 
+                onClick={() => currentUser ? setActiveTab('broadcast') : setGoogleLoginModalOpen(true)}
+                className="px-8 py-4 rounded-full bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] text-black font-black text-sm uppercase tracking-wider shadow-[0_0_30px_rgba(245,158,11,0.3)] hover:scale-105 transition-all"
+              >
+                DÙNG THỬ MIỄN PHÍ 7 NGÀY
+              </button>
+              <a href="#demo-section" className="px-8 py-4 rounded-full border border-white/20 text-white font-bold text-sm uppercase flex items-center gap-2 hover:bg-white/10 transition-all">
+                XEM VIDEO GIỚI THIỆU <Play className="w-4 h-4 text-[#FBBF24]" />
+              </a>
+            </div>
+
+            <div className="flex items-center gap-4 pt-6 text-sm text-gray-500 font-medium">
+              <span>Hỗ trợ:</span>
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1 text-blue-500"><Facebook className="w-4 h-4"/> Facebook</span>
+                <span className="flex items-center gap-1 text-white"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"/></svg> TikTok</span>
+                <span className="flex items-center gap-1 text-red-500"><Tv className="w-4 h-4"/> YouTube</span>
+                <span className="flex items-center gap-1 text-orange-500"><ShoppingCart className="w-4 h-4"/> Shopee</span>
               </div>
-              
-              {!isVideoPlaying ? (
-                <div className="relative z-10 flex flex-col items-center">
-                  <div className="w-24 h-24 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 hover:scale-110 transition-transform group-hover:shadow-[0_0_50px_rgba(255,255,255,0.3)] animate-orb">
-                    <Play className="w-10 h-10 text-white ml-2" />
-                  </div>
-                  <p className="mt-6 text-xl font-bold text-white tracking-widest uppercase">Click để xem cách tạo ra hàng nghìn đơn</p>
-                </div>
-              ) : (
-                <div className="absolute inset-0 bg-black flex items-center justify-center z-20">
-                   <p className="text-gray-400 font-mono animate-pulse">Loading Premium Video Demo...</p>
-                   {/* In a real scenario, this would be an iframe to YouTube/Vimeo */}
-                </div>
-              )}
             </div>
           </div>
-        </RevealOnScroll>
+
+          {/* Right AI Robot Illustration (CSS Based mockup) */}
+          <div className="relative h-[500px] flex items-center justify-center">
+            {/* Glowing Orbs */}
+            <div className="absolute w-64 h-64 bg-[#8B5CF6] rounded-full blur-[100px] opacity-40 animate-pulse"></div>
+            <div className="absolute w-48 h-48 bg-[#3B82F6] rounded-full blur-[80px] opacity-40 mix-blend-screen animate-pulse" style={{ animationDelay: '1s' }}></div>
+
+            {/* Central Robot Avatar */}
+            <div className="relative z-20 w-64 h-64 rounded-full border-4 border-white/10 bg-gradient-to-b from-[#1E1B4B] to-[#0F172A] p-2 shadow-[0_0_50px_rgba(139,92,246,0.5)] flex items-center justify-center flex-col overflow-hidden">
+               <div className="absolute inset-0 bg-[url('https://transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
+               <Bot className="w-24 h-24 text-blue-400 mb-2 drop-shadow-[0_0_15px_rgba(59,130,246,0.8)]" />
+               <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">AI</span>
+               <div className="mt-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/40 text-blue-300 text-xs font-black">24/7</div>
+            </div>
+
+            {/* Floating Badges */}
+            <div className="absolute top-10 left-0 px-4 py-3 rounded-2xl bg-[#111827]/80 backdrop-blur-md border border-purple-500/30 shadow-[0_0_20px_rgba(139,92,246,0.2)] flex flex-col items-center gap-1 animate-float">
+               <Globe className="w-6 h-6 text-purple-400" />
+               <span className="text-[10px] font-bold text-gray-200 uppercase text-center leading-tight">LIVE ĐA<br/>NỀN TẢNG</span>
+            </div>
+
+            <div className="absolute bottom-20 left-4 px-4 py-3 rounded-2xl bg-[#111827]/80 backdrop-blur-md border border-pink-500/30 shadow-[0_0_20px_rgba(236,72,153,0.2)] flex flex-col items-center gap-1 animate-float" style={{ animationDelay: '0.5s' }}>
+               <MessageSquare className="w-6 h-6 text-pink-400" />
+               <span className="text-[10px] font-bold text-gray-200 uppercase text-center leading-tight">CHATBOT AI<br/>24/7</span>
+            </div>
+
+            <div className="absolute top-20 right-0 px-4 py-3 rounded-2xl bg-[#111827]/80 backdrop-blur-md border border-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.2)] flex flex-col items-center gap-1 animate-float" style={{ animationDelay: '1s' }}>
+               <ShoppingBagIcon className="w-6 h-6 text-blue-400" />
+               <span className="text-[10px] font-bold text-gray-200 uppercase text-center leading-tight">BÁN HÀNG<br/>TỰ ĐỘNG</span>
+            </div>
+
+            <div className="absolute bottom-32 right-0 px-4 py-3 rounded-2xl bg-[#111827]/80 backdrop-blur-md border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.2)] flex flex-col items-center gap-1 animate-float" style={{ animationDelay: '1.5s' }}>
+               <CreditCard className="w-6 h-6 text-emerald-400" />
+               <span className="text-[10px] font-bold text-gray-200 uppercase text-center leading-tight">THANH TOÁN<br/>TỰ ĐỘNG</span>
+            </div>
+
+            {/* Bottom Podium Badge */}
+            <div className="absolute -bottom-8 px-6 py-2 rounded-full border border-[#FBBF24]/40 bg-[#FBBF24]/10 backdrop-blur-md z-30 shadow-[0_0_20px_rgba(251,191,36,0.3)]">
+              <span className="text-xs font-bold text-[#FBBF24] uppercase tracking-widest">HOẠT ĐỘNG LIÊN TỤC KHÔNG GIÁN ĐOẠN</span>
+            </div>
+          </div>
+        </div>
       </section>
 
-      {/* 3. VALUE PROPOSITION / RICH FEATURES */}
-      <section id="features-section" className="py-24 px-4 max-w-7xl mx-auto relative z-10">
-        <div className="text-center mb-20">
-          <RevealOnScroll>
-            <h2 className="text-4xl md:text-5xl font-black text-white mb-6">Tại Sao Chọn <span className="text-[#EF4444]">AvaLive?</span></h2>
-            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-              Không chỉ là công cụ Livestream, đây là Cỗ Máy In Tiền Tự Động. Chúng tôi cung cấp mọi tính năng tối tân nhất để bạn thống trị thị trường TMĐT.
-            </p>
-          </RevealOnScroll>
+      {/* 2. FEATURES RIBBON (MARQUEE) */}
+      <section className="border-y border-white/5 bg-[#0a0a10] py-8 relative z-20 overflow-hidden marquee-container">
+        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#0a0a10] to-transparent z-10 pointer-events-none"></div>
+        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#0a0a10] to-transparent z-10 pointer-events-none"></div>
+        
+        <div className="flex w-[200%] animate-marquee">
+          <div className="flex w-1/2 justify-around items-center px-4">
+            <RibbonItem icon={<Globe />} title="LIVESTREAM" subtitle="ĐA NỀN TẢNG" color="text-purple-400" borderCol="border-purple-500" />
+            <RibbonItem icon={<MessageSquare />} title="CHATBOT AI" subtitle="THÔNG MINH" color="text-cyan-400" borderCol="border-cyan-500" />
+            <RibbonItem icon={<ShoppingCart />} title="BÁN HÀNG" subtitle="TỰ ĐỘNG" color="text-amber-400" borderCol="border-amber-500" />
+            <RibbonItem icon={<CreditCard />} title="THANH TOÁN" subtitle="TỰ ĐỘNG" color="text-orange-400" borderCol="border-orange-500" />
+            <RibbonItem icon={<Users />} title="QUẢN LÝ" subtitle="TẬP TRUNG" color="text-emerald-400" borderCol="border-emerald-500" />
+            <RibbonItem icon={<BarChart2 />} title="BÁO CÁO" subtitle="DOANH SỐ" color="text-blue-400" borderCol="border-blue-500" />
+          </div>
+          <div className="flex w-1/2 justify-around items-center px-4">
+            <RibbonItem icon={<Globe />} title="LIVESTREAM" subtitle="ĐA NỀN TẢNG" color="text-purple-400" borderCol="border-purple-500" />
+            <RibbonItem icon={<MessageSquare />} title="CHATBOT AI" subtitle="THÔNG MINH" color="text-cyan-400" borderCol="border-cyan-500" />
+            <RibbonItem icon={<ShoppingCart />} title="BÁN HÀNG" subtitle="TỰ ĐỘNG" color="text-amber-400" borderCol="border-amber-500" />
+            <RibbonItem icon={<CreditCard />} title="THANH TOÁN" subtitle="TỰ ĐỘNG" color="text-orange-400" borderCol="border-orange-500" />
+            <RibbonItem icon={<Users />} title="QUẢN LÝ" subtitle="TẬP TRUNG" color="text-emerald-400" borderCol="border-emerald-500" />
+            <RibbonItem icon={<BarChart2 />} title="BÁO CÁO" subtitle="DOANH SỐ" color="text-blue-400" borderCol="border-blue-500" />
+          </div>
         </div>
+      </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {/* 2.5 PLATFORM LOGOS (MARQUEE REVERSE) */}
+      <section className="border-b border-white/5 bg-[#05050A] py-10 relative z-20 overflow-hidden marquee-container">
+        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#05050A] to-transparent z-10 pointer-events-none"></div>
+        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#05050A] to-transparent z-10 pointer-events-none"></div>
+        
+        <div className="flex w-[200%] animate-marquee-reverse">
+          <div className="flex w-1/2 justify-around items-center px-4">
+             <PlatformLogo text="TikTok" icon={<svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"/></svg>} hoverColor="hover:text-cyan-400" />
+             <PlatformLogo text="facebook" icon={<Facebook className="w-8 h-8"/>} hoverColor="hover:text-[#1877F2]" />
+             <PlatformLogo text="YouTube" icon={<Tv className="w-8 h-8"/>} hoverColor="hover:text-[#FF0000]" />
+             <PlatformLogo text="Shopee" icon={<ShoppingCart className="w-8 h-8"/>} hoverColor="hover:text-[#EE4D2D]" />
+             <PlatformLogo text="Lazada" icon={<Globe className="w-8 h-8"/>} hoverColor="hover:text-[#0A2647]" />
+          </div>
+          <div className="flex w-1/2 justify-around items-center px-4">
+             <PlatformLogo text="TikTok" icon={<svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"/></svg>} hoverColor="hover:text-cyan-400" />
+             <PlatformLogo text="facebook" icon={<Facebook className="w-8 h-8"/>} hoverColor="hover:text-[#1877F2]" />
+             <PlatformLogo text="YouTube" icon={<Tv className="w-8 h-8"/>} hoverColor="hover:text-[#FF0000]" />
+             <PlatformLogo text="Shopee" icon={<ShoppingCart className="w-8 h-8"/>} hoverColor="hover:text-[#EE4D2D]" />
+             <PlatformLogo text="Lazada" icon={<Globe className="w-8 h-8"/>} hoverColor="hover:text-[#0A2647]" />
+          </div>
+        </div>
+      </section>
+
+      {/* 3. VIDEO & WHY CHOOSE US */}
+      <section id="demo-section" className="py-20 px-4 max-w-7xl mx-auto relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
-          <RevealOnScroll className="zoom-card glass-panel p-10 rounded-[32px] border border-white/5 bg-gradient-to-b from-white/5 to-transparent relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all"></div>
-            <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-8 border border-blue-500/20 group-hover:rotate-12 transition-transform">
-              <Globe className="w-8 h-8 text-blue-400" />
+          {/* Left: Video Player */}
+          <RevealOnScroll className="rounded-3xl border border-white/10 bg-[#0d0d16] p-6 shadow-2xl relative overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-white uppercase tracking-wider">XEM VIDEO GIỚI THIỆU AVA LIVE</h3>
             </div>
-            <h3 className="text-2xl font-bold text-white mb-4">Restream Đa Kênh Cùng Lúc</h3>
-            <p className="text-gray-400 leading-relaxed text-sm mb-6">
-              Phát luồng trực tiếp đồng thời lên <strong className="text-white">TikTok Shop, Facebook, Shopee Live, YouTube</strong> chỉ với 1 cú click. Tối đa hóa lượt tiếp cận và bùng nổ doanh số bán hàng.
-            </p>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-white/10 p-1.5"><img src="https://www.tiktok.com/favicon.ico" alt="TikTok" className="w-full h-full rounded-full" /></div>
-              <div className="w-8 h-8 rounded-full bg-white/10 p-1.5"><img src="https://www.facebook.com/favicon.ico" alt="Facebook" className="w-full h-full rounded-full" /></div>
-              <div className="w-8 h-8 rounded-full bg-white/10 p-1.5"><img src="https://www.youtube.com/favicon.ico" alt="YouTube" className="w-full h-full rounded-full" /></div>
-            </div>
-          </RevealOnScroll>
-
-          <RevealOnScroll className="zoom-card glass-panel p-10 rounded-[32px] border border-white/5 bg-gradient-to-b from-white/5 to-transparent relative overflow-hidden group delay-100">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full blur-3xl group-hover:bg-red-500/20 transition-all"></div>
-            <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mb-8 border border-red-500/20 group-hover:-rotate-12 transition-transform">
-              <ShieldCheck className="w-8 h-8 text-red-400" />
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-4">AI Bypass Captcha Siêu Tốc</h3>
-            <p className="text-gray-400 leading-relaxed text-sm mb-6">
-              Tích hợp sẵn <strong className="text-white">Stealth AI</strong> thông minh. Tự động vượt qua mọi lớp bảo mật và WAF (Tường lửa) của TikTok và Shopee. Luồng Live của bạn sẽ cực kỳ ổn định, không bao giờ bị gián đoạn hay mất kết nối.
-            </p>
-          </RevealOnScroll>
-
-          <RevealOnScroll className="zoom-card glass-panel p-10 rounded-[32px] border border-white/5 bg-gradient-to-b from-white/5 to-transparent relative overflow-hidden group delay-200">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl group-hover:bg-purple-500/20 transition-all"></div>
-            <div className="w-16 h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-8 border border-purple-500/20 group-hover:scale-110 transition-transform">
-              <Users className="w-8 h-8 text-purple-400" />
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-4">Chốt Đơn Tự Động 24/7</h3>
-            <p className="text-gray-400 leading-relaxed text-sm mb-6">
-              Chatbot AI tự động phân tích hàng nghìn bình luận mỗi giây, lọc số điện thoại và <strong className="text-white">tạo đơn hàng thực tế</strong> gửi thẳng về hệ thống vận chuyển (GHTK, GHN, Viettel Post) hoàn toàn tự động.
-            </p>
-          </RevealOnScroll>
-
-          <RevealOnScroll className="zoom-card glass-panel p-10 rounded-[32px] border border-white/5 bg-gradient-to-b from-white/5 to-transparent relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all"></div>
-            <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-8 border border-emerald-500/20 group-hover:rotate-12 transition-transform">
-              <CreditCard className="w-8 h-8 text-emerald-400" />
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-4">Quản Lý Trang Thanh Toán</h3>
-            <p className="text-gray-400 leading-relaxed text-sm">
-              Cung cấp trang thanh toán đơn hàng thông minh cho khách hàng. Hệ thống tự động xác nhận khi có chuyển khoản qua mã QR và cập nhật trạng thái đơn hàng (đã thu tiền).
-            </p>
-          </RevealOnScroll>
-
-          <RevealOnScroll className="zoom-card glass-panel p-10 rounded-[32px] border border-white/5 bg-gradient-to-b from-white/5 to-transparent relative overflow-hidden group delay-100 lg:col-span-2">
-            <div className="flex flex-col md:flex-row items-center gap-8 h-full">
-              <div className="flex-1">
-                <div className="w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center mb-8 border border-amber-500/20 group-hover:scale-110 transition-transform">
-                  <MousePointerClick className="w-8 h-8 text-amber-400" />
+            
+            <div className="relative flex-1 rounded-2xl bg-black border border-white/5 overflow-hidden group cursor-pointer aspect-video flex items-center justify-center" onClick={() => setIsVideoPlaying(true)}>
+              {!isVideoPlaying ? (
+                <>
+                  <div className="absolute inset-0 bg-gradient-to-tr from-[#1a103c] via-[#05050A] to-[#121c33] opacity-80"></div>
+                  {/* Faux Thumbnails */}
+                  <div className="absolute bottom-4 left-4 right-4 flex gap-2 overflow-hidden opacity-50 blur-sm">
+                    {[1,2,3,4,5].map(i => (
+                      <div key={i} className="h-16 flex-1 bg-white/10 rounded-lg border border-white/5"></div>
+                    ))}
+                  </div>
+                  
+                  {/* Central Play Button */}
+                  <div className="relative z-10 w-20 h-20 rounded-full border border-purple-500/50 bg-purple-500/20 backdrop-blur-md flex items-center justify-center group-hover:scale-110 transition-transform shadow-[0_0_30px_rgba(139,92,246,0.4)]">
+                    <Play className="w-8 h-8 text-white ml-1" />
+                  </div>
+                  
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+                     <span className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 opacity-20 blur-[2px]">AVA</span>
+                     <span className="text-2xl font-bold text-white opacity-40">LIVE</span>
+                  </div>
+                </>
+              ) : (
+                <div className="absolute inset-0 bg-black flex items-center justify-center">
+                  <p className="text-gray-400 animate-pulse font-mono">Loading Demo Video...</p>
                 </div>
-                <h3 className="text-3xl font-bold text-white mb-4">Giao Diện Studio Đỉnh Cao</h3>
-                <p className="text-gray-400 leading-relaxed text-base mb-6">
-                  Chúng tôi thiết kế một không gian làm việc chuẩn điện ảnh. Thao tác kéo thả mượt mà, giám sát nhiều tài khoản mạng xã hội cùng lúc, và thống kê doanh thu theo thời gian thực (Real-time Analytics).
-                </p>
-              </div>
-              <div className="w-full md:w-1/2 rounded-2xl bg-black border border-white/10 shadow-2xl p-4 overflow-hidden relative">
-                 <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/5 to-purple-500/5 pointer-events-none"></div>
-                 <div className="flex items-center justify-between mb-4 pb-2 border-b border-white/5">
-                   <div className="flex items-center gap-2"><Smartphone className="w-4 h-4 text-gray-500"/> <span className="text-xs text-gray-400 font-bold">Live Preview</span></div>
-                   <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                 </div>
-                 <div className="space-y-3">
-                   <div className="h-2 w-3/4 bg-white/5 rounded-full"></div>
-                   <div className="h-2 w-1/2 bg-white/5 rounded-full"></div>
-                   <div className="h-20 w-full bg-blue-500/10 rounded-xl border border-blue-500/20 mt-4 flex items-center justify-center">
-                     <BarChart2 className="w-6 h-6 text-blue-500/50" />
-                   </div>
-                 </div>
-              </div>
+              )}
+            </div>
+            
+            <div className="mt-6 text-center">
+              <p className="text-[#FBBF24] font-bold text-sm uppercase tracking-widest">GIẢI PHÁP LIVESTREAM & BÁN HÀNG AI</p>
+              <p className="text-gray-400 text-xs tracking-widest">THÔNG MINH - TỰ ĐỘNG - HIỆU QUẢ</p>
+            </div>
+          </RevealOnScroll>
+
+          {/* Right: Why Choose Us */}
+          <RevealOnScroll className="rounded-3xl border border-white/10 bg-[#0d0d16] p-8 shadow-2xl">
+            <h3 className="text-xl font-bold text-white uppercase tracking-wider mb-8">VÌ SAO NÊN CHỌN AVA LIVE?</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FeatureCard icon={<Clock />} title="TIẾT KIỆM THỜI GIAN" desc="Tự động hóa toàn bộ quy trình bán hàng" color="text-purple-400" bg="bg-purple-500/10" border="border-purple-500/20" />
+              <FeatureCard icon={<BarChart2 />} title="TĂNG DOANH SỐ" desc="Chốt đơn nhanh hơn, tăng tỉ lệ chuyển đổi" color="text-blue-400" bg="bg-blue-500/10" border="border-blue-500/20" />
+              <FeatureCard icon={<Zap />} title="HOẠT ĐỘNG 24/7" desc="Không gián đoạn, không bỏ lỡ khách hàng" color="text-cyan-400" bg="bg-cyan-500/10" border="border-cyan-500/20" />
+              <FeatureCard icon={<MousePointerClick />} title="DỄ DÀNG SỬ DỤNG" desc="Giao diện thân thiện, dễ dùng cho mọi người" color="text-orange-400" bg="bg-orange-500/10" border="border-orange-500/20" />
+              <FeatureCard icon={<ShieldCheck />} title="BẢO MẬT TUYỆT ĐỐI" desc="Dữ liệu được mã hóa và bảo vệ an toàn" color="text-red-400" bg="bg-red-500/10" border="border-red-500/20" />
+              <FeatureCard icon={<Headphones />} title="HỖ TRỢ TẬN TÂM" desc="Đội ngũ hỗ trợ 24/7, đồng hành cùng bạn" color="text-emerald-400" bg="bg-emerald-500/10" border="border-emerald-500/20" />
             </div>
           </RevealOnScroll>
 
         </div>
       </section>
 
-      {/* 4. PRICING PACKAGES */}
-      <section id="pricing-section" className="py-24 px-4 max-w-7xl mx-auto relative z-10">
-        <div className="text-center mb-16">
-          <RevealOnScroll>
-            <h2 className="text-4xl md:text-5xl font-black text-white mb-6">Đầu Tư Sinh Lời Ngay Hôm Nay</h2>
-            <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-10">
-              Chọn gói cước phù hợp nhất với quy mô kinh doanh của bạn. Nâng cấp bất kỳ lúc nào, thanh toán siêu tốc hoàn toàn tự động qua <strong className="text-white">SePay VietQR</strong>.
-            </p>
-            
-            <div className="inline-flex items-center gap-2 p-1 bg-[#121216] border border-white/10 rounded-full mx-auto shadow-xl">
-              <button 
-                onClick={() => setBillingCycle('monthly')}
-                className={`px-8 py-3 rounded-full text-sm font-bold transition-all ${billingCycle === 'monthly' ? 'bg-gradient-to-r from-[#3B82F6] to-blue-600 text-white shadow-lg shadow-blue-500/30' : 'text-gray-400 hover:text-white'}`}
-              >
-                Trả Từng Tháng
-              </button>
-              <button 
-                onClick={() => setBillingCycle('yearly')}
-                className={`px-8 py-3 rounded-full text-sm font-bold transition-all flex items-center gap-2 ${billingCycle === 'yearly' ? 'bg-gradient-to-r from-[#8B5CF6] to-purple-600 text-white shadow-lg shadow-purple-500/30' : 'text-gray-400 hover:text-white'}`}
-              >
-                Trả Theo Năm <span className="px-2 py-0.5 rounded-full bg-emerald-400 text-black text-[10px] uppercase font-black animate-pulse">Tặng 2 Tháng</span>
-              </button>
-            </div>
-          </RevealOnScroll>
+      {/* 4. PRICING SECTION */}
+      <section id="pricing" className="py-20 px-4 max-w-7xl mx-auto relative z-10">
+        <div className="text-center mb-12 flex flex-col items-center">
+          <h2 className="text-3xl font-black text-white uppercase tracking-wider mb-8">BẢNG GIÁ AVA LIVE</h2>
+          
+          <div className="flex items-center gap-2 bg-[#0d0d16] p-1.5 rounded-full border border-white/10 relative">
+            <button 
+              onClick={() => setBillingCycle('monthly')}
+              className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${billingCycle === 'monthly' ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+            >
+              Thanh toán hàng tháng
+            </button>
+            <button 
+              onClick={() => setBillingCycle('yearly')}
+              className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all relative ${billingCycle === 'yearly' ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+            >
+              Thanh toán hàng năm
+              <div className="absolute -top-3 -right-3 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-[0_0_15px_rgba(239,68,68,0.6)] animate-pulse border border-white/20 whitespace-nowrap">
+                TẶNG 2 THÁNG
+              </div>
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           {plans.map((plan, i) => (
-            <RevealOnScroll key={i} className={`relative glass-panel rounded-3xl p-8 border flex flex-col transition-all duration-500 hover:scale-[1.03] transform-gpu hover:z-10 ${plan.isPopular ? 'border-[#8B5CF6]/50 shadow-[0_0_60px_rgba(139,92,246,0.3)] md:-translate-y-6 bg-[#1a1a24]' : 'border-white/10 hover:border-white/30 hover:shadow-[0_0_40px_rgba(255,255,255,0.1)]'}`}>
+            <RevealOnScroll key={i} className={`relative rounded-[2rem] border bg-[#0d0d16] overflow-hidden transition-all duration-300 hover:-translate-y-2 group ${plan.borderColor} ${plan.isPopular ? 'shadow-[0_0_40px_rgba(59,130,246,0.2)] md:-translate-y-4' : ''}`}>
               
               {plan.isPopular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 bg-gradient-to-r from-[#EF4444] to-[#8B5CF6] text-white text-[11px] font-black uppercase rounded-full tracking-widest shadow-neon-red animate-pulse">
-                  KHUYÊN DÙNG NHẤT
+                <div className="absolute top-0 right-0 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-[10px] font-bold uppercase tracking-widest py-1 px-4 rounded-bl-xl shadow-lg">
+                  Phổ Biến
                 </div>
               )}
 
-              <div className="mb-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="p-2 rounded-xl bg-white/5 border border-white/10">{plan.icon}</div>
-                  <h3 className={`text-2xl font-black ${plan.textColor}`}>{plan.name}</h3>
+              <div className="p-8 pb-6 text-center border-b border-white/5">
+                <h3 className="text-lg font-bold text-white mb-2 uppercase tracking-wide">{plan.name}</h3>
+                <p className="text-gray-400 text-xs mb-6 min-h-[32px]">{plan.desc}</p>
+                
+                <div className="flex flex-col items-center justify-center min-h-[85px]">
+                  {plan.monthly === 0 ? (
+                     <>
+                       <span className={`text-2xl lg:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r ${plan.color}`}>
+                         MIỄN PHÍ
+                       </span>
+                       <div className="flex items-center gap-2 mt-1 text-gray-400 text-xs">Mãi mãi</div>
+                     </>
+                  ) : plan.name === 'TRỌN ĐỜI' ? (
+                     <>
+                       <span className={`text-2xl lg:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r ${plan.color}`}>
+                         {plan.monthly.toLocaleString()}đ
+                       </span>
+                       <div className="flex items-center gap-2 mt-1">
+                         <span className="text-gray-500 text-xs line-through">{plan.oldMonthly.toLocaleString()}đ/tháng</span>
+                       </div>
+                     </>
+                  ) : billingCycle === 'monthly' ? (
+                     <>
+                       <span className={`text-2xl lg:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r ${plan.color}`}>
+                         {plan.oldMonthly.toLocaleString()}đ
+                       </span>
+                       <div className="flex items-center gap-2 mt-1 text-gray-400 text-xs">/tháng</div>
+                     </>
+                  ) : (
+                     <>
+                       <span className={`text-2xl lg:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r ${plan.color}`}>
+                         {plan.monthly.toLocaleString()}đ
+                       </span>
+                       <div className="flex items-center gap-2 mt-1">
+                         <span className="text-gray-500 text-xs line-through">{plan.oldMonthly.toLocaleString()}đ</span>
+                         <span className="text-gray-400 text-xs">/tháng</span>
+                       </div>
+                       <div className="text-emerald-400 text-[10px] font-bold mt-2 bg-emerald-500/10 px-2 lg:px-3 py-1 rounded-md border border-emerald-500/20 whitespace-nowrap">Thanh toán {plan.yearly.toLocaleString()}đ/năm</div>
+                     </>
+                  )}
                 </div>
-                <p className="text-gray-400 text-sm min-h-[50px] leading-relaxed">{plan.desc}</p>
-              </div>
-              
-              <div className="mb-8 p-4 rounded-2xl bg-black/50 border border-white/5">
-                <div className="flex items-end gap-1">
-                  <span className="text-4xl font-black text-white">
-                    {billingCycle === 'yearly' 
-                      ? plan.yearly === 0 ? 'Miễn phí' : `${(plan.yearly).toLocaleString()}₫` 
-                      : plan.monthly === 0 ? 'Miễn phí' : `${(plan.monthly).toLocaleString()}₫`}
-                  </span>
-                  {plan.monthly > 0 && <span className="text-gray-500 text-sm mb-1 font-medium">/ {billingCycle === 'yearly' ? 'Năm' : 'Tháng'}</span>}
-                </div>
-                {billingCycle === 'yearly' && plan.monthly > 0 && (
-                  <div className="inline-block mt-3 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold">
-                    Tiết kiệm {(plan.monthly * 12 - plan.yearly).toLocaleString()}₫
-                  </div>
-                )}
+
+                <button 
+                  onClick={() => handlePurchase(plan)}
+                  className={`w-full mt-6 py-3 rounded-full font-bold text-sm text-white bg-gradient-to-r ${plan.color} shadow-lg transition-transform group-hover:scale-105`}
+                >
+                  {plan.btnText}
+                </button>
               </div>
 
-              <div className="space-y-4 flex-1 mb-8">
+              <div className="p-8 space-y-4">
                 {plan.features.map((feat, j) => (
-                  <div key={j} className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                    <span className="text-sm text-gray-200 font-medium">{feat}</span>
+                  <div className="flex items-start gap-3" key={j}>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span className="text-xs text-gray-300">{feat}</span>
                   </div>
                 ))}
               </div>
-
-              <button 
-                onClick={() => handlePurchase(plan)}
-                className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider transition-all shadow-lg text-white bg-gradient-to-r ${plan.color} hover:opacity-90 hover:shadow-xl hover:-translate-y-1`}
-              >
-                {plan.btnText}
-              </button>
             </RevealOnScroll>
           ))}
         </div>
+
+        {/* Payment Methods */}
+        <div className="mt-12 rounded-2xl border border-white/10 bg-[#0d0d16] p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
+           <div>
+             <h4 className="text-white font-bold mb-1">THANH TOÁN AN TOÀN QUA SEPAY</h4>
+             <p className="text-gray-400 text-xs">Bảo mật tuyệt đối - Xử lý giao dịch nhanh chóng</p>
+           </div>
+           <div className="flex items-center gap-6">
+             <div className="flex items-center gap-2 bg-blue-500/10 px-4 py-2 rounded-lg border border-blue-500/20">
+               <span className="text-blue-400 font-black text-xl italic tracking-tighter">sepay</span>
+             </div>
+             <div className="flex items-center gap-3 grayscale opacity-60">
+               <span className="text-sm font-black border border-gray-500 px-2 rounded">VISA</span>
+               <div className="w-6 h-6 rounded-full bg-red-500/50 flex items-center justify-center -mr-4 z-10"></div>
+               <div className="w-6 h-6 rounded-full bg-orange-500/50"></div>
+             </div>
+           </div>
+        </div>
       </section>
 
-      {/* 5. AFFILIATE 30% PROMO */}
-      <section className="py-24 px-4 max-w-7xl mx-auto relative z-10">
-        <RevealOnScroll>
-          <div className="bg-gradient-to-tr from-[#121216] via-[#1A1A24] to-[#121216] border border-white/10 rounded-[40px] p-8 md:p-16 flex flex-col md:flex-row items-center justify-between gap-10 overflow-hidden relative shadow-2xl group">
-            
-            <div className="absolute -right-20 -top-20 w-96 h-96 bg-[#8B5CF6]/20 rounded-full blur-[100px] pointer-events-none group-hover:bg-[#EF4444]/20 transition-colors duration-1000"></div>
-
-            <div className="flex-1 space-y-6 relative z-10">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-black uppercase tracking-widest">
-                <HeartHandshake className="w-4 h-4" /> CHƯƠNG TRÌNH ĐỐI TÁC
-              </div>
-              <h2 className="text-4xl md:text-5xl font-black text-white leading-tight">
-                Tiếp Thị Liên Kết <br/>
-                Nhận Hoa Hồng <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">30% Trọn Đời</span>
-              </h2>
-              <p className="text-gray-400 text-lg leading-relaxed max-w-xl">
-                Giới thiệu bạn bè sử dụng AvaLive PRO. Nhận ngay 30% giá trị gói cước cho lần thanh toán đầu tiên. Rút tiền siêu tốc qua SePay về mọi ngân hàng trong 3s.
-              </p>
-              <button 
-                onClick={() => setActiveTab('affiliate-landing')}
-                className="px-8 py-4 rounded-xl font-black text-sm uppercase tracking-wider transition-all text-white bg-white/10 hover:bg-white/20 border border-white/20 flex items-center gap-2 w-max hover:scale-105"
-              >
-                TÌM HIỂU THÊM VỀ AFFILIATE <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="relative z-10 shrink-0">
-              <div className="w-64 h-64 md:w-80 md:h-80 relative">
-                <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/20 to-cyan-500/20 rounded-full blur-2xl animate-pulse"></div>
-                <div className="relative w-full h-full glass-panel rounded-full border border-white/20 flex items-center justify-center flex-col shadow-neon-green">
-                  <span className="text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-500 mb-2">30%</span>
-                  <span className="text-emerald-400 font-bold uppercase tracking-widest text-sm">HOA HỒNG CHIẾT KHẤU</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </RevealOnScroll>
-      </section>
-
-      {/* FOOTER SECTION */}
-      <footer className="mt-32 border-t border-white/5 bg-[#050505] pt-16 pb-8 relative z-10 overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
-        <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#EF4444] to-[#8B5CF6] p-0.5">
-                <img src="/official_logo.jpg" alt="AvaLive" className="w-full h-full object-cover rounded-md" />
-              </div>
-              <h4 className="text-xl font-black text-white">AvaLive <span className="text-[#EF4444]">PRO</span></h4>
-            </div>
-            <p className="text-gray-400 text-sm leading-relaxed">
-              Giải pháp Livestream Đa Nền Tảng hàng đầu Việt Nam. Tự động hóa quy trình chốt đơn, vượt tường lửa Captcha và giúp bạn tối đa hóa lợi nhuận.
-            </p>
-            <div className="flex gap-4 pt-2">
-              <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-[#8B5CF6]/20 hover:text-[#8B5CF6] transition-all"><Facebook className="w-4 h-4" /></a>
-              <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-red-500/20 hover:text-red-400 transition-all"><Tv className="w-4 h-4" /></a>
-            </div>
-          </div>
-          
-          <div>
-            <h4 className="text-white font-bold mb-6">Tính Năng</h4>
-            <ul className="space-y-3 text-sm text-gray-400">
-              <li><a href="#" className="hover:text-white transition-colors">Restream Đa Kênh</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Bypass Captcha Siêu Tốc</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Chốt Đơn Tự Động</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Trang Thanh Toán Đơn</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Quản Lý Đa Tài Khoản</a></li>
-            </ul>
-          </div>
-          
-          <div>
-            <h4 className="text-white font-bold mb-6">Hỗ Trợ</h4>
-            <ul className="space-y-3 text-sm text-gray-400">
-              <li><a href="#" className="hover:text-white transition-colors">Trung Tâm Trợ Giúp</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Hướng Dẫn Sử Dụng</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Cộng Đồng Zalo/FB</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Tài Liệu API</a></li>
-            </ul>
+      {/* 5. STATS & PARTNERS */}
+      <section className="py-12 border-y border-white/5 bg-[#0a0a10] relative z-10">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 mb-12">
+            <StatItem icon={<Crown />} value="10.000+" label="Khách hàng tin dùng" color="text-amber-400" />
+            <StatItem icon={<MonitorPlay />} value="50.000+" label="Livestream mỗi tháng" color="text-purple-400" />
+            <StatItem icon={<ShoppingBagIcon />} value="1.000.000+" label="Đơn hàng đã xử lý" color="text-blue-400" />
+            <StatItem icon={<ShieldCheck />} value="99.9%" label="Uptime hệ thống" color="text-emerald-400" />
+            <StatItem icon={<Users />} value="24/7" label="Hỗ trợ khách hàng" color="text-cyan-400" />
           </div>
 
-          <div>
-            <h4 className="text-white font-bold mb-6">Liên Hệ</h4>
-            <ul className="space-y-3 text-sm text-gray-400">
-              <li className="flex items-center gap-2"><Smartphone className="w-4 h-4 text-gray-500" /> 0981.244.812 (Zalo 24/7)</li>
-              <li className="flex items-center gap-2"><MessageSquare className="w-4 h-4 text-gray-500" /> contact@avalive.vn</li>
-              <li className="flex items-start gap-2"><Building2 className="w-4 h-4 text-gray-500 mt-1 shrink-0" /> 124 Nguyễn Trãi, Phường Bến Thành, Quận 1, TP.HCM</li>
-            </ul>
+          <div className="text-center">
+            <h4 className="text-gray-500 text-sm font-bold uppercase tracking-widest mb-6">ĐỐI TÁC TIN CẬY</h4>
+            <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+               <span className="flex items-center gap-2 text-white font-bold"><svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"/></svg> TikTok</span>
+               <span className="flex items-center gap-2 text-[#1877F2] font-bold"><Facebook className="w-6 h-6"/> facebook</span>
+               <span className="flex items-center gap-2 text-[#FF0000] font-bold"><Tv className="w-6 h-6"/> YouTube</span>
+               <span className="flex items-center gap-2 text-[#EE4D2D] font-bold"><ShoppingCart className="w-6 h-6"/> Shopee</span>
+               <span className="flex items-center gap-2 text-[#0A2647] font-bold">Lazada</span>
+            </div>
           </div>
         </div>
-        
-        <div className="max-w-7xl mx-auto px-4 pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-gray-500 text-xs">
-            &copy; {new Date().getFullYear()} AvaLive PRO. All rights reserved. Made with <span className="text-red-500">❤️</span> by Quoc Thien.
-          </p>
-          <div className="flex gap-4 text-xs text-gray-500">
-            <a href="#" className="hover:text-white transition-colors">Điều khoản Dịch vụ</a>
-            <a href="#" className="hover:text-white transition-colors">Chính sách Bảo mật</a>
-            <a href="#" className="hover:text-white transition-colors">Chính sách Hoàn tiền</a>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="bg-[#05050A] pt-16 pb-8 border-t border-white/5 relative z-10">
+        <div className="max-w-7xl mx-auto px-4">
+          
+          {/* Top Footer Banner Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
+            <div className="rounded-2xl border border-white/10 bg-[#0d0d16] p-8 flex items-center justify-between group cursor-pointer hover:border-purple-500/30 transition-colors">
+              <div>
+                <h4 className="text-xl font-bold text-white mb-2 uppercase">HƯỚNG DẪN SỬ DỤNG</h4>
+                <p className="text-gray-400 text-sm mb-4">Xem video hướng dẫn chi tiết để bắt đầu sử dụng AVA LIVE một cách dễ dàng</p>
+                <button className="px-5 py-2 rounded-lg border border-white/20 text-white text-xs font-bold hover:bg-white/10 transition-colors">XEM HƯỚNG DẪN <Play className="w-3 h-3 inline ml-1" /></button>
+              </div>
+              <div className="w-32 h-20 bg-black rounded-lg border border-white/10 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                <Play className="w-6 h-6 text-purple-400" />
+              </div>
+            </div>
+            
+            <div className="rounded-2xl border border-white/10 bg-[#0d0d16] p-8 flex items-center justify-between group cursor-pointer hover:border-blue-500/30 transition-colors">
+              <div>
+                <h4 className="text-xl font-bold text-white mb-2 uppercase">HỖ TRỢ 24/7</h4>
+                <p className="text-gray-400 text-sm mb-4">Đội ngũ hỗ trợ chuyên nghiệp luôn sẵn sàng giúp bạn thành công với AVA LIVE</p>
+                <button className="px-5 py-2 rounded-lg border border-white/20 text-white text-xs font-bold hover:bg-white/10 transition-colors">LIÊN HỆ NGAY</button>
+              </div>
+              <div className="w-24 h-24 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                <Headphones className="w-10 h-10 text-blue-400" />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+            <div className="space-y-4 md:col-span-1">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-[#111] p-0.5 border border-white/20">
+                  <img src="/official_logo.jpg" alt="AvaLive" className="w-full h-full object-cover rounded-[10px]" />
+                </div>
+                <h1 className="text-xl font-black text-white tracking-tight flex flex-col leading-none">
+                  <span className="text-[#FBBF24]">AVA</span>
+                  <span className="text-[10px] text-purple-400 font-bold uppercase tracking-widest mt-1">Live</span>
+                </h1>
+              </div>
+              <p className="text-gray-400 text-xs leading-relaxed">
+                Nền tảng livestream & bán hàng AI thông minh hàng đầu Việt Nam
+              </p>
+            </div>
+            
+            <div>
+              <h4 className="text-white font-bold mb-4 uppercase text-sm">SẢN PHẨM</h4>
+              <ul className="space-y-2 text-sm text-gray-400">
+                <li><a href="#" className="hover:text-white transition-colors">Tính năng</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Bảng giá</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Hướng dẫn</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Cập nhật</a></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="text-white font-bold mb-4 uppercase text-sm">CÔNG TY</h4>
+              <ul className="space-y-2 text-sm text-gray-400">
+                <li><a href="#" className="hover:text-white transition-colors">Về chúng tôi</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Tin tức</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Tuyển dụng</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Liên hệ</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-white font-bold mb-4 uppercase text-sm">HỖ TRỢ</h4>
+              <ul className="space-y-2 text-sm text-gray-400">
+                <li><a href="#" className="hover:text-white transition-colors">Trung tâm hỗ trợ</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Điều khoản</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Chính sách bảo mật</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Hướng dẫn thanh toán</a></li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-gray-500 text-xs">
+              &copy; {new Date().getFullYear()} AVA LIVE. Tất cả quyền được bảo lưu.
+            </p>
+            <div className="flex items-center gap-4">
+              <span className="text-xs text-gray-500">KẾT NỐI VỚI CHÚNG TÔI</span>
+              <div className="flex gap-2">
+                <div className="w-6 h-6 rounded-full bg-[#1877F2] flex items-center justify-center text-white"><Facebook className="w-3 h-3" /></div>
+                <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center text-white"><svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"/></svg></div>
+                <div className="w-6 h-6 rounded-full bg-[#FF0000] flex items-center justify-center text-white"><Play className="w-3 h-3" /></div>
+              </div>
+            </div>
           </div>
         </div>
       </footer>
+
+      {/* Floating Chat Button */}
+      <button className="fixed bottom-6 right-6 z-[100] px-5 py-3 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 text-white font-bold text-sm shadow-xl flex items-center gap-2 hover:scale-105 transition-transform">
+         <MessageSquare className="w-5 h-5" /> Chat với AI
+      </button>
 
       {/* Payment Modal */}
       {selectedPlan && (
@@ -552,5 +672,65 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
       )}
       
     </div>
+  );
+}
+
+// Subcomponents for cleaner code
+function RibbonItem({ icon, title, subtitle, color, borderCol }) {
+  return (
+    <div className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-all cursor-pointer group min-w-max mx-8 border border-transparent hover:border-white/10 hover:shadow-[0_0_30px_rgba(255,255,255,0.05)]">
+      <div className={`p-3 rounded-xl bg-[#111] border border-white/10 ${color} group-hover:scale-110 group-hover:border-[${borderCol.replace('border-', '')}] transition-transform shadow-lg`}>
+        {React.cloneElement(icon, { className: "w-6 h-6" })}
+      </div>
+      <div>
+        <h4 className="text-white text-sm font-black leading-tight uppercase tracking-wide">{title} <br/><span className="text-gray-400 font-bold">{subtitle}</span></h4>
+      </div>
+    </div>
+  );
+}
+
+function PlatformLogo({ icon, text, hoverColor }) {
+  return (
+    <div className={`flex items-center gap-3 opacity-50 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-300 cursor-pointer min-w-max mx-12 group text-white ${hoverColor}`}>
+      {React.cloneElement(icon, { className: "w-8 h-8 group-hover:scale-110 transition-transform" })}
+      <span className="text-2xl font-bold">{text}</span>
+    </div>
+  );
+}
+
+function FeatureCard({ icon, title, desc, color, bg, border }) {
+  return (
+    <div className={`p-5 rounded-2xl border ${border} ${bg} flex gap-4 hover:scale-[1.02] transition-transform`}>
+      <div className={`p-3 rounded-xl bg-black/50 backdrop-blur-md h-max border ${border} ${color}`}>
+        {React.cloneElement(icon, { className: "w-6 h-6" })}
+      </div>
+      <div>
+        <h4 className="text-white font-bold text-sm mb-1">{title}</h4>
+        <p className="text-gray-400 text-xs leading-relaxed">{desc}</p>
+      </div>
+    </div>
+  );
+}
+
+function StatItem({ icon, value, label, color }) {
+  return (
+    <div className="flex flex-col items-center justify-center p-4 rounded-2xl border border-white/5 bg-[#0d0d16] text-center hover:border-white/10 transition-colors">
+      <div className={`p-2 rounded-full bg-black border border-white/10 ${color} mb-3 shadow-[0_0_15px_currentColor]`}>
+        {React.cloneElement(icon, { className: "w-5 h-5 opacity-80" })}
+      </div>
+      <h4 className="text-xl font-black text-white mb-1">{value}</h4>
+      <p className="text-gray-500 text-[10px] uppercase font-bold tracking-wider">{label}</p>
+    </div>
+  );
+}
+
+// Shopping Bag Icon component since lucide-react ShoppingBag is not imported, let's use ShoppingCart or custom svg
+function ShoppingBagIcon(props) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+      <path d="M3 6h18"/>
+      <path d="M16 10a4 4 0 0 1-8 0"/>
+    </svg>
   );
 }
