@@ -60,32 +60,15 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
 
   const plans = [
     {
-      name: "Gói FREE",
-      desc: "Trải nghiệm sức mạnh của AI Livestream hoàn toàn miễn phí.",
-      monthly: 0,
-      yearly: 0,
-      features: [
-        "Phát Live 1 luồng/tháng",
-        "Giới hạn 30 phút/phiên Live",
-        "Có Watermark (Logo AvaLive)",
-        "Chatbot AI cơ bản",
-        "Không hỗ trợ Auto Captcha"
-      ],
-      color: "from-gray-500 to-gray-600",
-      textColor: "text-gray-300",
-      btnText: "BẮT ĐẦU MIỄN PHÍ",
-      icon: <Star className="w-5 h-5 text-gray-300" />
-    },
-    {
       name: "Gói STARTER",
-      desc: "Dành cho cá nhân bán hàng nhỏ lẻ, cần tăng tương tác.",
-      monthly: 299000,
-      yearly: 299000 * 10,
+      desc: "Phù hợp cho cá nhân bán hàng nhỏ lẻ, cần tự động hóa.",
+      monthly: 799000,
+      yearly: 799000 * 10,
       features: [
-        "Phát Live 3 luồng đồng thời",
-        "Không giới hạn thời gian Live",
+        "Phát Live 5 luồng đồng thời",
+        "Tự động chốt 200 đơn/tháng",
+        "Quản lý trang thanh toán đơn",
         "Bỏ Logo AvaLive Watermark",
-        "Tự động chốt đơn (50 đơn/tháng)",
         "Bypass Captcha (Cơ bản)"
       ],
       color: "from-[#3B82F6] to-[#2563EB]",
@@ -96,14 +79,14 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
     {
       name: "Gói PRO",
       desc: "Bùng nổ doanh số với công cụ Livestream Đa Kênh đỉnh cao.",
-      monthly: 799000,
-      yearly: 799000 * 10, // Tặng 2 tháng
+      monthly: 1599000,
+      yearly: 1599000 * 10,
       features: [
-        "Phát Live 10 luồng đồng thời",
+        "Phát Live 15 luồng đồng thời",
+        "Tự động chốt 1000 đơn/tháng",
+        "Quản lý trang thanh toán đơn",
         "Restream TikTok, FB, Shopee",
-        "Tự động chốt đơn không giới hạn",
-        "Bypass Captcha Cao Cấp (100%)",
-        "MC AI Ảo Lồng Tiếng Đa Ngôn Ngữ"
+        "Bypass Captcha Cao Cấp (100%)"
       ],
       isPopular: true,
       color: "from-[#8B5CF6] to-[#EF4444]",
@@ -114,13 +97,13 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
     {
       name: "Gói ENTERPRISE",
       desc: "Giải pháp toàn diện cho Studio & Agency quy mô lớn.",
-      monthly: 2490000,
-      yearly: 2490000 * 10,
+      monthly: 3490000,
+      yearly: 3490000 * 10,
       features: [
         "Phát Live KHÔNG GIỚI HẠN luồng",
+        "Tự động chốt đơn KHÔNG GIỚI HẠN",
+        "Quản lý trang thanh toán ưu tiên",
         "Tạo & Quản lý nhiều phiên độc lập",
-        "Phân quyền nhân viên (Sub-accounts)",
-        "API tích hợp riêng biệt",
         "Hỗ trợ kỹ thuật 24/7 (1 kèm 1)"
       ],
       color: "from-[#059669] to-[#047857]",
@@ -310,11 +293,11 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
           <RevealOnScroll className="zoom-card glass-panel p-10 rounded-[32px] border border-white/5 bg-gradient-to-b from-white/5 to-transparent relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all"></div>
             <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-8 border border-emerald-500/20 group-hover:rotate-12 transition-transform">
-              <Tv className="w-8 h-8 text-emerald-400" />
+              <CreditCard className="w-8 h-8 text-emerald-400" />
             </div>
-            <h3 className="text-2xl font-bold text-white mb-4">MC AI Ảo Đa Ngôn Ngữ</h3>
+            <h3 className="text-2xl font-bold text-white mb-4">Quản Lý Trang Thanh Toán</h3>
             <p className="text-gray-400 leading-relaxed text-sm">
-              Không cần thuê người thật. Sử dụng công nghệ Deepfake AI để tạo ra các MC Ảo Livestream 24/7, tự động nhép môi cực chuẩn xác theo văn bản hoặc giọng nói của bạn, hỗ trợ 50+ ngôn ngữ.
+              Cung cấp trang thanh toán đơn hàng thông minh cho khách hàng. Hệ thống tự động xác nhận khi có chuyển khoản qua mã QR và cập nhật trạng thái đơn hàng (đã thu tiền).
             </p>
           </RevealOnScroll>
 
@@ -375,7 +358,7 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
           </RevealOnScroll>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {plans.map((plan, i) => (
             <RevealOnScroll key={i} className={`relative glass-panel rounded-3xl p-8 border flex flex-col transition-all duration-300 hover:scale-105 ${plan.isPopular ? 'border-[#8B5CF6]/50 shadow-[0_0_40px_rgba(139,92,246,0.2)] md:-translate-y-6 bg-[#1a1a24]' : 'border-white/10 hover:border-white/30'}`}>
               
