@@ -231,16 +231,7 @@ export default function Header({
                       <span>Giải Mã Captcha</span>
                     </button>
 
-                    <button
-                      onClick={() => {
-                        setActiveTab("affiliate-dashboard");
-                        setProfileDropdownOpen(false);
-                      }}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-200 hover:text-white hover:bg-white/10 font-bold text-xs transition-all text-left cursor-pointer"
-                    >
-                      <TrendingUp className="w-4 h-4 text-[#8B5CF6]" />
-                      <span>Hoa Hồng Tiếp Thị (AFF)</span>
-                    </button>
+
 
                     {currentUser.isAdmin && (
                       <div className="space-y-2 pt-2 border-t border-white/10">

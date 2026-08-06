@@ -42,11 +42,7 @@ export default function AffiliateProgram({ currentUser, setGoogleLoginModalOpen 
     accountHolder: ''
   });
 
-  const withdrawalHistory = [
-    { id: '#WD-1092', amount: '2.500.000đ', bank: 'MBBank - 998124419999', date: '01/08/2025 14:30', status: 'HOÀN TẤT', color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
-    { id: '#WD-1085', amount: '1.250.000đ', bank: 'Vietcombank - 0011004123456', date: '15/07/2025 09:15', status: 'HOÀN TẤT', color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
-    { id: '#WD-1078', amount: '3.450.000đ', bank: 'Momo - 0988123456', date: '01/07/2025 10:20', status: 'ĐANG XỬ LÝ', color: 'text-amber-400', bg: 'bg-amber-500/20' }
-  ];
+  const withdrawalHistory = [];
 
   const copyRefLink = () => {
     navigator.clipboard.writeText(refLink);
@@ -230,30 +226,48 @@ export default function AffiliateProgram({ currentUser, setGoogleLoginModalOpen 
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Bank Account Info */}
-            <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-4">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2 pb-3 border-b border-white/10">
-                <CreditCard className="w-4 h-4 text-[#8B5CF6]" /> TÀI KHOẢN NGÂN HÀNG NHẬN HOA HỒNG (SEPAY)
-              </h3>
-              <div className="space-y-3 text-xs">
-                <div className="space-y-1">
-                  <label className="text-gray-300 font-bold block">Tên Ngân Hàng (VD: MBBank, Vietcombank):</label>
-                  <input type="text" value={bankInfo.bankName} onChange={(e) => setBankInfo({ ...bankInfo, bankName: e.target.value })} placeholder="Nhập tên ngân hàng..." className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-3 py-2 text-white focus:border-[#8B5CF6] focus:outline-none transition-colors" />
+
+
+          {/* Advanced Stats with Date Filter */}
+          <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-4">
+             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3 border-b border-white/10">
+               <div>
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-1">
+                     <TrendingUp className="w-4 h-4 text-blue-400" /> THỐNG KÊ CHI TIẾT THEO THỜI GIAN
+                  </h3>
+                  <p className="text-[10px] text-gray-400">Dữ liệu được cập nhật realtime từ cơ sở dữ liệu Supabase.</p>
+               </div>
+               <div className="flex items-center gap-2">
+                  <select className="bg-[#0A0A0A] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#8B5CF6]">
+                     <option>Hôm nay</option>
+                     <option>Tuần này</option>
+                     <option>Tháng này</option>
+                     <option>Năm nay</option>
+                     <option>Tất cả thời gian</option>
+                  </select>
+               </div>
+             </div>
+             
+             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-[#0A0A0A] p-4 rounded-xl border border-white/5 space-y-1">
+                   <p className="text-[10px] text-gray-400 font-bold">Tổng lượt Click Link</p>
+                   <p className="text-xl font-black text-white">0</p>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-gray-300 font-bold block">Số Tài Khoản:</label>
-                    <input type="text" value={bankInfo.accountNumber} onChange={(e) => setBankInfo({ ...bankInfo, accountNumber: e.target.value })} placeholder="VD: 998124419999" className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-3 py-2 text-white font-mono focus:border-[#8B5CF6] focus:outline-none transition-colors" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-gray-300 font-bold block">Tên Chủ Tài Khoản:</label>
-                    <input type="text" value={bankInfo.accountHolder} onChange={(e) => setBankInfo({ ...bankInfo, accountHolder: e.target.value })} placeholder="VD: NGUYEN VAN A" className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-3 py-2 text-white font-bold focus:border-[#8B5CF6] focus:outline-none transition-colors" />
-                  </div>
+                <div className="bg-[#0A0A0A] p-4 rounded-xl border border-white/5 space-y-1">
+                   <p className="text-[10px] text-gray-400 font-bold">Tổng người đăng ký</p>
+                   <p className="text-xl font-black text-white">0</p>
                 </div>
-              </div>
-              <button onClick={() => alert("Đã lưu thông tin tài khoản ngân hàng nhận tiền hoa hồng và đồng bộ với hệ thống Admin!")} className="w-full mt-2 px-5 py-2.5 bg-[#8B5CF6] hover:bg-purple-600 text-white font-extrabold text-xs rounded-xl shadow-glow-purple transition-all">LƯU TÀI KHOẢN NGÂN HÀNG & ĐỒNG BỘ</button>
-            </div>
+                <div className="bg-[#0A0A0A] p-4 rounded-xl border border-white/5 space-y-1">
+                   <p className="text-[10px] text-gray-400 font-bold">Khách hàng mua gói</p>
+                   <p className="text-xl font-black text-[#EF4444]">{affiliateStats.successfulOrders}</p>
+                </div>
+                <div className="bg-[#0A0A0A] p-4 rounded-xl border border-white/5 space-y-1">
+                   <p className="text-[10px] text-gray-400 font-bold">Tỷ lệ chuyển đổi</p>
+                   <p className="text-xl font-black text-emerald-400">0%</p>
+                </div>
+             </div>
+          </div>
+
 
             {/* Withdrawal History */}
             <div className="glass-panel p-5 rounded-2xl border border-white/10 flex flex-col">
@@ -261,7 +275,7 @@ export default function AffiliateProgram({ currentUser, setGoogleLoginModalOpen 
                 <FileText className="w-4 h-4 text-amber-400" /> LỊCH SỬ RÚT TIỀN HOA HỒNG
               </h3>
               <div className="flex-1 overflow-y-auto mt-4 pr-2 custom-scrollbar space-y-3">
-                {withdrawalHistory.map((wd, index) => (
+                {withdrawalHistory.length > 0 ? withdrawalHistory.map((wd, index) => (
                   <div key={index} className="bg-[#121216] border border-white/5 rounded-xl p-3 flex items-center justify-between">
                     <div>
                       <p className="font-bold text-white text-sm">{wd.amount}</p>
@@ -274,10 +288,14 @@ export default function AffiliateProgram({ currentUser, setGoogleLoginModalOpen 
                       </span>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <div className="flex flex-col items-center justify-center h-48 text-gray-500 opacity-50">
+                    <FileText className="w-8 h-8 mb-2" />
+                    <p className="text-[10px]">Chưa có giao dịch rút tiền nào.</p>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
 
           {/* Referrals List Table */}
           <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-4">
@@ -300,7 +318,7 @@ export default function AffiliateProgram({ currentUser, setGoogleLoginModalOpen 
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  {referrals.map((ref) => (
+                  {referrals.length > 0 ? referrals.map((ref) => (
                     <tr key={ref.id} className="hover:bg-white/5 transition-all">
                       <td className="p-3 font-bold text-white">{ref.name}</td>
                       <td className="p-3 text-[#EF4444] font-bold">{ref.package}</td>
@@ -314,7 +332,13 @@ export default function AffiliateProgram({ currentUser, setGoogleLoginModalOpen 
                         </span>
                       </td>
                     </tr>
-                  ))}
+                  )) : (
+                    <tr>
+                      <td colSpan="5" className="p-6 text-center text-gray-500 text-xs">
+                        Chưa có khách hàng nào mua gói qua link của bạn. Dữ liệu sẽ được cập nhật liên tục từ hệ thống.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -332,18 +356,18 @@ export default function AffiliateProgram({ currentUser, setGoogleLoginModalOpen 
               Tài khoản Gmail: <strong className="text-emerald-400 font-mono">{currentUser?.email}</strong>
             </p>
             <p className="text-xs text-gray-300">
-              Số tiền rút: <strong className="text-emerald-400 font-mono">7.494.000 VNĐ</strong>
+              Số tiền rút: <strong className="text-emerald-400 font-mono">{affiliateStats.pendingWithdrawal.toLocaleString()} VNĐ</strong>
             </p>
 
             <div className="p-3 bg-[#0A0A0A] rounded-xl border border-white/10 text-left font-mono text-xs space-y-1 text-gray-300">
-              <p>Ngân hàng nhận: <strong className="text-white">MBBank</strong></p>
-              <p>Số TK: <strong className="text-[#3B82F6]">998124419999</strong></p>
-              <p>Chủ TK: <strong className="text-white">QUOC THIEN</strong></p>
+              <p>Ngân hàng nhận: <strong className="text-white">{bankInfo.bankName || 'Chưa cập nhật'}</strong></p>
+              <p>Số TK: <strong className="text-[#3B82F6]">{bankInfo.accountNumber || 'Chưa cập nhật'}</strong></p>
+              <p>Chủ TK: <strong className="text-white">{bankInfo.accountHolder || 'Chưa cập nhật'}</strong></p>
             </div>
 
             <div className="flex gap-2">
               <button onClick={() => setPayoutModalOpen(false)} className="flex-1 py-2.5 bg-gray-800 text-gray-300 rounded-xl text-xs font-bold">HỦY</button>
-              <button onClick={handleRequestPayout} className="flex-1 py-2.5 bg-[#8B5CF6] text-white rounded-xl text-xs font-black hover:bg-purple-600 transition-all">XÁC NHẬN RÚT 7.494.000 VNĐ</button>
+              <button onClick={handleRequestPayout} className="flex-1 py-2.5 bg-[#8B5CF6] text-white rounded-xl text-xs font-black hover:bg-purple-600 transition-all">XÁC NHẬN RÚT TIỀN</button>
             </div>
           </div>
         </div>

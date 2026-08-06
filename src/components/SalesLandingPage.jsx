@@ -7,6 +7,7 @@ import {
   Bot, Clock, ShoppingCart, Lock, Headphones, Search, MonitorPlay
 } from 'lucide-react';
 import SePayModal from './SePayModal';
+import TechEcosystemMap from './TechEcosystemMap';
 
 const customStyles = `
   @keyframes marquee {
@@ -418,6 +419,9 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
 
         </div>
       </section>
+
+      {/* TECH ECOSYSTEM SECTION */}
+      <TechEcosystemMap />
 
       {/* 4. PRICING SECTION */}
       <section id="pricing" className="py-20 px-4 max-w-7xl mx-auto relative z-10">

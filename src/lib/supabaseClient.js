@@ -56,7 +56,7 @@ export async function syncUserToSupabase(user) {
 /**
  * Record SePay Payment Transaction to new Supabase payments table
  */
-export async function syncPaymentToSupabase({ plan, amount, referenceCode, status = 'completed', email }) {
+export async function syncPaymentToSupabase({ plan, amount, referenceCode, status = 'completed', email, billingCycle = 'monthly' }) {
   try {
     const { data, error } = await supabase
       .from('payments')
@@ -80,7 +80,25 @@ export async function syncPaymentToSupabase({ plan, amount, referenceCode, statu
     
     // Also upgrade the user's plan in users table
     if (email && status === 'completed') {
-       await supabase.from('users').update({ plan: plan ? plan.toUpperCase() : 'STARTER' }).eq('email', email);
+       const daysToAdd = billingCycle === 'annual' ? 365 : 30;
+       const expiresAt = new Date(Date.now() + daysToAdd * 86400000).toISOString();
+       await supabase.from('users').update({ 
+           plan: plan ? plan.toUpperCase() : 'STARTER',
+           plan_expires_at: expiresAt
+       }).eq('email', email);
+       
+       // Update local storage explicitly here so it updates instantly
+       try {
+           const saved = localStorage.getItem("avalive_current_user");
+           if (saved) {
+               let parsedUser = JSON.parse(saved);
+               if (parsedUser.email === email) {
+                   parsedUser.plan = plan ? plan.toUpperCase() : 'STARTER';
+                   parsedUser.plan_expires_at = expiresAt;
+                   localStorage.setItem("avalive_current_user", JSON.stringify(parsedUser));
+               }
+           }
+       } catch (e) {}
     }
 
     console.log('✅ New Supabase: Synced SePay payment record successfully', data);

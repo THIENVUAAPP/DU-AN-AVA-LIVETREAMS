@@ -1,104 +1,147 @@
-import React, { useState } from 'react';
-import { User, Mail, Phone, MapPin, CheckCircle2, Copy, Link as LinkIcon, Menu, Bell, Crown, ShieldCheck, Database, Calendar, Search, CreditCard, DollarSign, Wallet, FileText, Share2, Zap, Settings, Save, ArrowUpRight, ArrowDownRight, ChevronDown, Package, Activity, Monitor, LogOut, TrendingUp, Download, Eye, RefreshCw, BarChart2, Home, ShoppingCart, Users } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import { User, Mail, Phone, MapPin, CheckCircle2, Copy, Link as LinkIcon, Menu, Bell, Crown, ShieldCheck, Database, Calendar, Search, CreditCard, DollarSign, Wallet, FileText, Share2, Zap, Settings, Save, ArrowUpRight, ArrowDownRight, ChevronDown, Package, Activity, Monitor, LogOut, TrendingUp, Download, Eye, RefreshCw, BarChart2, Home, ShoppingCart, Users, ChevronLeft } from 'lucide-react';
 
 export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, setAiAvatarFeatureEnabled }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeSidebarTab, setActiveSidebarTab] = useState('overview');
 
-    const renderPlaceholder = (title) => {
-    if (title === 'Thống kê Doanh thu') {
-      return (
-        <div className="animate-fade-in text-left space-y-6 w-full max-w-6xl mx-auto h-full">
-          <div className="flex justify-between items-end mb-6">
-             <div>
-                <h2 className="text-2xl font-black text-white mb-2">Thống Kê Doanh Thu</h2>
-                <p className="text-gray-400 text-sm">Báo cáo tài chính chi tiết theo thời gian thực.</p>
-             </div>
-             <button className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white text-xs font-bold transition-colors border border-white/10">
-                <Download className="w-4 h-4" /> Xuất Báo Cáo
-             </button>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-             {[
-               { label: 'Tổng Doanh Thu (Tháng)', value: '145.500.000 đ', trend: '+12.5%', color: 'emerald' },
-               { label: 'Doanh Thu Hôm Nay', value: '8.250.000 đ', trend: '+5.2%', color: 'cyan' },
-               { label: 'Chờ Đối Soát (Hold)', value: '12.400.000 đ', trend: '-2.1%', color: 'amber' }
-             ].map((stat, i) => (
-               <div key={i} className="bg-[#141419] border border-white/5 rounded-2xl p-6 relative overflow-hidden group">
-                  <div className={"absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-500 " + (stat.color === 'emerald' ? 'from-emerald-500 to-transparent' : stat.color === 'cyan' ? 'from-cyan-500 to-transparent' : 'from-amber-500 to-transparent')}></div>
-                  <h4 className="text-gray-400 text-sm font-bold mb-2">{stat.label}</h4>
-                  <div className="text-3xl font-black text-white mb-2">{stat.value}</div>
-                  <div className={"text-xs font-bold " + (stat.trend.startsWith('+') ? 'text-emerald-400' : 'text-red-400')}>{stat.trend} so với kỳ trước</div>
-               </div>
-             ))}
-          </div>
-          
-          <div className="bg-[#141419] border border-white/5 rounded-2xl p-6 h-64 flex flex-col items-center justify-center relative overflow-hidden">
-             <Activity className="w-16 h-16 text-cyan-500/20 mb-4 animate-pulse" />
-             <p className="text-gray-500 font-bold text-sm">Biểu đồ doanh thu đang được đồng bộ dữ liệu...</p>
-          </div>
-        </div>
-      );
+  const [usersList, setUsersList] = useState([]);
+  const [paymentsList, setPaymentsList] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      setIsLoading(true);
+      // Fetch users
+      const { data: usersData } = await supabase.from('users').select('*').order('created_at', { ascending: false });
+      if (usersData) setUsersList(usersData);
+      
+      // Fetch payments
+      const { data: paymentsData } = await supabase.from('payments').select('*').order('created_at', { ascending: false });
+      if (paymentsData) setPaymentsList(paymentsData);
+      
+      setIsLoading(false);
+    }
+    fetchData();
+  }, []);
+
+  const handleUpdatePermission = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const email = form.email.value;
+    const role = form.role.value;
+    const plan = form.plan.value;
+    
+    if (!email) {
+      alert("Vui lòng nhập Email!");
+      return;
     }
     
-    if (title === 'Lịch sử nạp/rút') {
+    const updateData = {};
+    if (role !== "Không Thay Đổi") {
+      updateData.role = role === "Quản Trị Viên (Admin)" ? "admin" : (role === "Cộng Tác Viên (Affiliate)" ? "affiliate" : "user");
+    }
+    if (plan !== "Không Thay Đổi") {
+      updateData.plan = plan === "Gói STARTER" ? "STARTER" : (plan === "Gói PRO" ? "PRO" : (plan === "Gói VIP" || plan === "Gói SIÊU CẤP VIP PRO" ? "VIP PRO" : "FREE"));
+    }
+    
+    if (Object.keys(updateData).length > 0) {
+      const { error } = await supabase.from('users').update(updateData).eq('email', email);
+      if (error) {
+        alert("Lỗi cập nhật: " + error.message);
+      } else {
+        alert("Cập nhật quyền thành công!");
+        // Refresh users
+        const { data } = await supabase.from('users').select('*').order('created_at', { ascending: false });
+        if (data) setUsersList(data);
+      }
+    }
+  };
+
+
+    const renderPlaceholder = (title) => {
+    if (title === 'users') {
       return (
         <div className="animate-fade-in text-left space-y-6 w-full max-w-6xl mx-auto h-full">
            <div className="flex justify-between items-end mb-6">
              <div>
-                <h2 className="text-2xl font-black text-white mb-2">Giao Dịch Nạp / Rút</h2>
-                <p className="text-gray-400 text-sm">Quản lý và duyệt yêu cầu rút tiền của Affiliate.</p>
+                <h2 className="text-2xl font-black text-white mb-2">Quản Lý Người Dùng</h2>
+                <p className="text-gray-400 text-sm">Hiển thị người đã mua gói, chưa mua gói và người làm tiếp thị liên kết.</p>
              </div>
           </div>
-          
           <div className="bg-[#141419] border border-white/5 rounded-2xl overflow-hidden">
              <div className="p-4 border-b border-white/5 flex gap-4">
-                <input type="text" placeholder="Tìm mã giao dịch, username..." className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-white w-64 focus:outline-none focus:border-cyan-500" />
-                <select className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-gray-300 focus:outline-none focus:border-cyan-500">
-                   <option>Tất cả trạng thái</option>
-                   <option>Chờ xử lý</option>
-                   <option>Hoàn tất</option>
+                <input type="text" placeholder="Tìm tên, email..." className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-white w-64 focus:outline-none focus:border-purple-500" />
+                <select className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-gray-300 focus:outline-none focus:border-purple-500">
+                   <option>Tất cả người dùng</option>
+                   <option>Đã mua gói (VIP/PRO/STARTER)</option>
+                   <option>Chưa mua gói (Miễn phí)</option>
+                   <option>Đang làm Affiliate</option>
                 </select>
              </div>
              <table className="w-full text-left text-xs">
                 <thead className="bg-[#1A1A24] text-gray-400">
                    <tr>
+                      <th className="p-4 font-bold">Người Dùng</th>
+                      <th className="p-4 font-bold">Email</th>
+                      <th className="p-4 font-bold">Gói Hiện Tại</th>
+                      <th className="p-4 font-bold">Vai Trò</th>
+                      <th className="p-4 font-bold">Tham Gia AFF</th>
+                      <th className="p-4 font-bold text-right">Thao Tác</th>
+                   </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5 text-gray-300">
+                   {isLoading ? (
+                      <tr><td colSpan="6" className="p-8 text-center text-gray-500 font-bold">Đang tải dữ liệu...</td></tr>
+                   ) : usersList.length > 0 ? (
+                      usersList.map((u, i) => (
+                        <tr key={i} className="hover:bg-white/5">
+                           <td className="p-4 font-bold text-white">{u.name || 'Người dùng'}</td>
+                           <td className="p-4 text-gray-400">{u.email}</td>
+                           <td className="p-4"><span className="px-2 py-1 bg-white/5 rounded text-[10px] font-bold uppercase">{u.plan || 'FREE'}</span></td>
+                           <td className="p-4 text-emerald-400 font-bold">{u.role === 'admin' ? 'Admin' : (u.role === 'affiliate' ? 'Affiliate' : 'User')}</td>
+                           <td className="p-4 text-center">{u.role === 'affiliate' ? '✅' : '-'}</td>
+                           <td className="p-4 text-right"><button className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded font-bold transition-colors">Xem</button></td>
+                        </tr>
+                      ))
+                   ) : (
+                      <tr><td colSpan="6" className="p-8 text-center text-gray-500 font-bold">Chưa có dữ liệu người dùng</td></tr>
+                   )}
+                </tbody>
+             </table>
+          </div>
+        </div>
+      );
+    }
+    
+    if (title === 'withdrawals') {
+      return (
+        <div className="animate-fade-in text-left space-y-6 w-full max-w-6xl mx-auto h-full">
+           <div className="flex justify-between items-end mb-6">
+             <div>
+                <h2 className="text-2xl font-black text-white mb-2">Quản Lý Rút Tiền</h2>
+                <p className="text-gray-400 text-sm">Duyệt yêu cầu rút tiền hoa hồng của Affiliate.</p>
+             </div>
+          </div>
+          
+          <div className="bg-[#141419] border border-white/5 rounded-2xl overflow-hidden">
+             <table className="w-full text-left text-xs">
+                <thead className="bg-[#1A1A24] text-gray-400">
+                   <tr>
                       <th className="p-4 font-bold">Mã GD</th>
                       <th className="p-4 font-bold">Người Dùng</th>
-                      <th className="p-4 font-bold">Loại Giao Dịch</th>
-                      <th className="p-4 font-bold">Số Tiền</th>
+                      <th className="p-4 font-bold">Số Tiền Rút</th>
+                      <th className="p-4 font-bold">Ngân Hàng</th>
                       <th className="p-4 font-bold">Thời Gian</th>
                       <th className="p-4 font-bold">Trạng Thái</th>
                       <th className="p-4 font-bold text-right">Thao Tác</th>
                    </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5 text-gray-300">
-                   {[
-                     { id: 'WD-0921', user: 'Hoang Nam', type: 'Rút Tiền (Affiliate)', amount: '2.500.000 đ', date: 'Vừa xong', status: 'PENDING' },
-                     { id: 'DEP-8832', user: 'Minh Tuan', type: 'Nạp Credits', amount: '500.000 đ', date: '10 phút trước', status: 'SUCCESS' },
-                     { id: 'WD-0919', user: 'Thanh Huyen', type: 'Rút Tiền (Affiliate)', amount: '1.200.000 đ', date: '2 giờ trước', status: 'SUCCESS' },
-                   ].map(tx => (
-                     <tr key={tx.id} className="hover:bg-white/5 transition-colors">
-                        <td className="p-4 font-mono font-bold text-cyan-400">{tx.id}</td>
-                        <td className="p-4 font-bold text-white">{tx.user}</td>
-                        <td className="p-4">{tx.type}</td>
-                        <td className="p-4 font-bold text-emerald-400">{tx.amount}</td>
-                        <td className="p-4 text-gray-500">{tx.date}</td>
-                        <td className="p-4">
-                           <span className={"px-2 py-1 rounded text-[10px] font-black " + (tx.status === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400')}>
-                              {tx.status}
-                           </span>
-                        </td>
-                        <td className="p-4 text-right">
-                           {tx.status === 'PENDING' ? (
-                              <button className="px-3 py-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded font-bold transition-colors">Duyệt</button>
-                           ) : (
-                              <button className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded font-bold transition-colors">Chi Tiết</button>
-                           )}
-                        </td>
-                     </tr>
-                   ))}
+                   <tr>
+                      <td colSpan="7" className="p-8 text-center text-gray-500 font-bold">Chưa có giao dịch rút tiền</td>
+                   </tr>
                 </tbody>
              </table>
           </div>
@@ -106,13 +149,147 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
       );
     }
 
-    if (title === 'Cấu hình Website') {
+    if (title === 'affiliate') {
       return (
-        <div className="animate-fade-in text-left space-y-6 w-full max-w-4xl mx-auto h-full">
+        <div className="animate-fade-in text-left space-y-6 w-full max-w-6xl mx-auto h-full">
+           <div className="flex justify-between items-end mb-6">
+             <div>
+                <h2 className="text-2xl font-black text-white mb-2">Tổng Quan Hệ Thống Affiliate</h2>
+                <p className="text-gray-400 text-sm">Quản lý mạng lưới tiếp thị liên kết, hoa hồng và chiến dịch.</p>
+             </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+             {[
+               { label: 'Tổng Hoa Hồng Đã Duyệt', value: '0 đ', color: 'text-emerald-400' },
+               { label: 'Hoa Hồng Đang Chờ (Hold)', value: '0 đ', color: 'text-amber-400' },
+               { label: 'Tổng Affiliate Hoạt Động', value: '0 Người', color: 'text-purple-400' }
+             ].map((stat, i) => (
+               <div key={i} className="bg-[#141419] border border-white/5 rounded-2xl p-6 relative overflow-hidden group">
+                  <h4 className="text-gray-400 text-sm font-bold mb-2">{stat.label}</h4>
+                  <div className={"text-3xl font-black mb-2 " + stat.color}>{stat.value}</div>
+               </div>
+             ))}
+          </div>
+
+          <div className="bg-[#141419] border border-white/5 rounded-2xl overflow-hidden mb-6">
+             <div className="p-4 border-b border-white/5 flex gap-4">
+                <input type="text" placeholder="Tìm tên Affiliate..." className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-white w-64 focus:outline-none focus:border-purple-500" />
+             </div>
+             <table className="w-full text-left text-xs">
+                <thead className="bg-[#1A1A24] text-gray-400">
+                   <tr>
+                      <th className="p-4 font-bold">Người Dùng (Affiliate)</th>
+                      <th className="p-4 font-bold text-center">Số Thành Viên (F1)</th>
+                      <th className="p-4 font-bold text-center">Đơn Hàng Thành Công</th>
+                      <th className="p-4 font-bold text-right">Tổng Hoa Hồng Đã Nhận</th>
+                      <th className="p-4 font-bold text-right">Hoa Hồng Chờ Duyệt</th>
+                      <th className="p-4 font-bold text-right">Thao Tác</th>
+                   </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5 text-gray-300">
+                   <tr>
+                      <td colSpan="6" className="p-8 text-center text-gray-500 font-bold">Chưa có dữ liệu Affiliate</td>
+                   </tr>
+                </tbody>
+             </table>
+          </div>
+        </div>
+      );
+    }
+    
+    if (title === 'permissions') {
+      return (
+        <div className="animate-fade-in text-left space-y-6 w-full max-w-6xl mx-auto h-full pb-20">
+           <div className="flex justify-between items-end mb-6">
+             <div>
+                <h2 className="text-2xl font-black text-white mb-2">Phân Quyền & Cấp Gói</h2>
+                <p className="text-gray-400 text-sm">Cấp quyền Quản trị viên, Nâng cấp gói hoặc tùy chỉnh Hoa hồng cho từng tài khoản.</p>
+             </div>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+             <div className="lg:col-span-1 bg-[#141419] border border-white/5 rounded-2xl p-6">
+                <h3 className="text-sm font-bold text-white mb-4">Cấp Quyền Qua Email</h3>
+                <form onSubmit={handleUpdatePermission} className="space-y-4">
+                   <div>
+                      <label className="text-xs text-gray-400 font-bold block mb-2">Email Người Dùng</label>
+                      <input name="email" type="email" placeholder="VD: user@gmail.com" required className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:border-purple-500 focus:outline-none" />
+                   </div>
+                   <div>
+                      <label className="text-xs text-gray-400 font-bold block mb-2">Vai Trò Hệ Thống</label>
+                      <select name="role" className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:border-purple-500 focus:outline-none">
+                         <option>Không Thay Đổi</option>
+                         <option>Người Dùng (User)</option>
+                         <option>Quản Trị Viên (Admin)</option>
+                         <option>Cộng Tác Viên (Affiliate)</option>
+                      </select>
+                   </div>
+                   <div>
+                      <label className="text-xs text-gray-400 font-bold block mb-2">Cấp Gói Hệ Thống</label>
+                      <select name="plan" className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:border-purple-500 focus:outline-none">
+                         <option>Không Thay Đổi</option>
+                         <option>Gói STARTER</option>
+                         <option>Gói PRO</option>
+                         <option>Gói VIP</option>
+                         <option>Gói SIÊU CẤP VIP PRO</option>
+                      </select>
+                   </div>
+                   <div>
+                      <label className="text-xs text-gray-400 font-bold block mb-2">Hoa Hồng Tùy Chỉnh (%) - Để trống nếu dùng mặc định</label>
+                      <input name="commission" type="number" placeholder="VD: 40" className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:border-purple-500 focus:outline-none" />
+                   </div>
+                   <button type="submit" className="w-full py-3 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl text-xs font-bold text-white shadow-glow-purple mt-4 hover:scale-[1.02] transition-transform">
+                      CẬP NHẬT QUYỀN
+                   </button>
+                </form>
+             </div>
+
+             <div className="lg:col-span-2 bg-[#141419] border border-white/5 rounded-2xl overflow-hidden flex flex-col">
+                <div className="p-4 border-b border-white/5 flex gap-4 shrink-0">
+                   <h3 className="text-sm font-bold text-white">Danh Sách Tài Khoản Đặc Biệt</h3>
+                </div>
+                <div className="flex-1 overflow-auto">
+                   <table className="w-full text-left text-xs">
+                      <thead className="bg-[#1A1A24] text-gray-400">
+                         <tr>
+                            <th className="p-4 font-bold">Người Dùng</th>
+                            <th className="p-4 font-bold">Email</th>
+                            <th className="p-4 font-bold">Vai Trò</th>
+                            <th className="p-4 font-bold">Gói</th>
+                            <th className="p-4 font-bold">Hoa Hồng</th>
+                            <th className="p-4 font-bold text-right">Thao Tác</th>
+                         </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5 text-gray-300">
+                         {usersList.filter(u => u.role === 'admin' || u.role === 'affiliate' || u.plan?.includes('VIP')).map((u, i) => (
+                           <tr key={i} className="hover:bg-white/5 transition-colors">
+                              <td className="p-4 font-bold text-white">{u.name || 'User'}</td>
+                              <td className="p-4 text-gray-400">{u.email}</td>
+                              <td className="p-4 font-bold text-purple-400 uppercase">{u.role}</td>
+                              <td className="p-4 text-emerald-400 font-bold uppercase">{u.plan || 'FREE'}</td>
+                              <td className="p-4 text-gray-500">Mặc định</td>
+                              <td className="p-4 text-right">
+                                 <button className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded font-bold transition-colors">Sửa</button>
+                              </td>
+                           </tr>
+                         ))}
+                      </tbody>
+                   </table>
+                </div>
+             </div>
+          </div>
+        </div>
+      );
+    }
+    
+    if (title === 'settings') {
+      return (
+        <div className="animate-fade-in text-left space-y-6 w-full max-w-4xl mx-auto h-full pb-20">
            <h2 className="text-2xl font-black text-white mb-6">Cấu Hình & Cài Đặt Hệ Thống</h2>
            <div className="space-y-6">
               <div className="bg-[#141419] border border-white/5 rounded-2xl p-6 space-y-4">
-                 <h3 className="text-sm font-bold text-white flex items-center gap-2 border-b border-white/5 pb-4"><Settings className="w-4 h-4 text-cyan-400" /> Cấu Hình Chung</h3>
+                 <h3 className="text-sm font-bold text-white flex items-center gap-2 border-b border-white/5 pb-4"><Settings className="w-4 h-4 text-cyan-400" /> Cấu Hình Trang Chủ</h3>
                  <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
                        <label className="text-xs text-gray-400 font-bold block">Tên Trang Web</label>
@@ -121,6 +298,32 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
                     <div className="space-y-2">
                        <label className="text-xs text-gray-400 font-bold block">Email Hỗ Trợ</label>
                        <input type="text" defaultValue="support@avalive.vn" className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-2 text-white text-sm" />
+                    </div>
+                    <div className="space-y-2 col-span-2">
+                       <label className="text-xs text-gray-400 font-bold block">Logo Trang Web (URL)</label>
+                       <input type="text" defaultValue="https://avalive.vn/logo.png" className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-2 text-white text-sm" />
+                    </div>
+                    <div className="space-y-2 col-span-2">
+                       <label className="text-xs text-gray-400 font-bold block">Banner Trang Chủ (Mô Tả)</label>
+                       <textarea rows="3" defaultValue="Giải Pháp Chốt Đơn Hàng Tự Động Hoàn Toàn 100%!" className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-2 text-white text-sm"></textarea>
+                    </div>
+                 </div>
+              </div>
+
+              <div className="bg-[#141419] border border-white/5 rounded-2xl p-6 space-y-4">
+                 <h3 className="text-sm font-bold text-white flex items-center gap-2 border-b border-white/5 pb-4"><Share2 className="w-4 h-4 text-purple-400" /> Cấu Hình Chính Sách Affiliate</h3>
+                 <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                       <label className="text-xs text-gray-400 font-bold block">Hoa Hồng Cơ Bản (%)</label>
+                       <input type="number" defaultValue="20" className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-2 text-white text-sm font-bold" />
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-xs text-gray-400 font-bold block">Hoa Hồng VIP PRO (%)</label>
+                       <input type="number" defaultValue="35" className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-2 text-white text-sm font-bold text-emerald-400" />
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-xs text-gray-400 font-bold block">Minpay (Số Dư Tối Thiểu Được Rút)</label>
+                       <input type="number" defaultValue="100000" className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-2 text-white text-sm" />
                     </div>
                  </div>
               </div>
@@ -149,140 +352,98 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
       );
     }
 
-    if (title === 'Nhật ký Hoạt động') {
-      return (
-        <div className="animate-fade-in text-left space-y-6 w-full max-w-4xl mx-auto h-full">
-           <h2 className="text-2xl font-black text-white mb-6">Nhật Ký Hoạt Động (Audit Log)</h2>
-           <div className="bg-[#141419] border border-white/5 rounded-2xl p-6 relative">
-              <div className="absolute left-[39px] top-6 bottom-6 w-px bg-white/10"></div>
-              <div className="space-y-6 relative z-10">
-                 {[
-                   { time: '10:45 06/08/2026', user: 'Admin', action: 'Thay đổi cấu hình thanh toán SePay', type: 'warn' },
-                   { time: '09:20 06/08/2026', user: 'Admin', action: 'Duyệt lệnh rút tiền WD-0920 cho Hoang Nam', type: 'info' },
-                   { time: '08:15 06/08/2026', user: 'System', action: 'Backup cơ sở dữ liệu hàng ngày thành công', type: 'success' },
-                   { time: '23:50 05/08/2026', user: 'Security', action: 'Phát hiện đăng nhập bất thường từ IP lạ (103.14.x.x)', type: 'error' },
-                 ].map((log, i) => (
-                    <div key={i} className="flex gap-4">
-                       <div className={"w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-4 border-[#141419] z-10 " + (log.type==='warn'?'bg-amber-500 text-white':log.type==='error'?'bg-red-500 text-white':log.type==='success'?'bg-emerald-500 text-white':'bg-cyan-500 text-white')}>
-                          {log.type === 'error' ? <ShieldCheck className="w-3 h-3" /> : <Activity className="w-3 h-3" />}
-                       </div>
-                       <div className="pt-1.5 pb-4">
-                          <p className="text-sm text-white font-bold mb-1">{log.action}</p>
-                          <p className="text-xs text-gray-500 font-mono">{log.user} • {log.time}</p>
-                       </div>
-                    </div>
-                 ))}
-              </div>
-           </div>
-        </div>
-      );
-    }
-
     // Default Placeholder (fallback)
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-fade-in h-full">
          <div className="w-24 h-24 mb-6 rounded-3xl bg-[#141419] border-2 border-white/5 flex items-center justify-center shadow-glow-purple">
-            <svg className="w-10 h-10 text-purple-400 animate-spin-slow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            <Settings className="w-10 h-10 text-purple-400 animate-spin-slow" />
          </div>
-         <h2 className="text-2xl font-black text-white mb-3">Tính Năng Đang Phát Triển</h2>
+         <h2 className="text-2xl font-black text-white mb-3">Chức Năng Sắp Ra Mắt</h2>
          <p className="text-gray-400 max-w-md">Khu vực <span className="text-purple-400 font-bold">{title}</span> đang được nâng cấp để mang lại trải nghiệm tối ưu nhất.</p>
       </div>
     );
   };
-
+  
   // Stats mock data from design
+  const totalRevenue = paymentsList.filter(p => p.status === 'completed').reduce((sum, p) => sum + Number(p.amount), 0);
+  const totalOrders = paymentsList.length;
+  const totalUsers = usersList.length;
+  const totalAffiliates = usersList.filter(u => u.role === 'affiliate').length;
+
+  const formatVND = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+
   const stats = [
-    { label: 'TỔNG DOANH THU', value: '2.450.789.000đ', icon: <DollarSign className="w-5 h-5 text-amber-500"/>, change: '+ 18.6%', color: 'text-emerald-500' },
-    { label: 'LỢI NHUẬN RÒNG', value: '1.256.890.000đ', icon: <BarChart2 className="w-5 h-5 text-purple-500"/>, change: '+ 20.4%', color: 'text-emerald-500' },
-    { label: 'NGƯỜI DÙNG', value: '42.854', icon: <Users className="w-5 h-5 text-blue-500"/>, change: '+ 15.7%', color: 'text-emerald-500' },
-    { label: 'ĐƠN HÀNG', value: '8.746', icon: <ShoppingCart className="w-5 h-5 text-emerald-500"/>, change: '+ 12.3%', color: 'text-emerald-500' },
-    { label: 'TỶ LỆ CHUYỂN ĐỔI', value: '6.23%', icon: <Share2 className="w-5 h-5 text-orange-500"/>, change: '+ 9.5%', color: 'text-emerald-500' }
+    { label: 'TỔNG DOANH THU', value: formatVND(totalRevenue), icon: <DollarSign className="w-5 h-5 text-amber-500"/>, change: '+0%', color: 'text-gray-500' },
+    { label: 'LỢI NHUẬN RÒNG', value: formatVND(totalRevenue * 0.8), icon: <BarChart2 className="w-5 h-5 text-purple-500"/>, change: '+0%', color: 'text-gray-500' },
+    { label: 'NGƯỜI DÙNG', value: totalUsers, icon: <Users className="w-5 h-5 text-blue-500"/>, change: '+0%', color: 'text-gray-500' },
+    { label: 'ĐƠN HÀNG', value: totalOrders, icon: <ShoppingCart className="w-5 h-5 text-emerald-500"/>, change: '+0%', color: 'text-gray-500' },
+    { label: 'TỔNG AFFILIATE', value: totalAffiliates, icon: <Share2 className="w-5 h-5 text-orange-500"/>, change: '+0%', color: 'text-gray-500' }
   ];
 
   const miniStats = [
-    { label: 'TỔNG CREDITS ĐÃ DÙNG', value: '1.785.432', icon: <Zap className="w-5 h-5 text-purple-500" />, change: '+ 17.3%', isUp: true },
-    { label: 'KHÁCH HÀNG MỚI', value: '2.854', icon: <Users className="w-5 h-5 text-blue-500" />, change: '+ 16.1%', isUp: true },
-    { label: 'TỶ LỆ GIỮ CHÂN (7 NGÀY)', value: '72.6%', icon: <ShieldCheck className="w-5 h-5 text-emerald-500" />, change: '+ 8.6%', isUp: true },
-    { label: 'GIÁ TRỊ ĐƠN HÀNG TB', value: '280.320đ', icon: <Package className="w-5 h-5 text-amber-500" />, change: '+ 11.8%', isUp: true },
-    { label: 'HOA HỒNG ĐÃ TRẢ', value: '312.450.000đ', icon: <DollarSign className="w-5 h-5 text-pink-500" />, change: '+ 14.2%', isUp: true }
+    { label: 'TỔNG CREDITS ĐÃ DÙNG', value: '0', icon: <Zap className="w-5 h-5 text-purple-500" />, change: '0%', isUp: true },
+    { label: 'KHÁCH HÀNG MỚI', value: totalUsers, icon: <Users className="w-5 h-5 text-blue-500" />, change: '0%', isUp: true },
+    { label: 'TỶ LỆ GIỮ CHÂN (7 NGÀY)', value: '0%', icon: <ShieldCheck className="w-5 h-5 text-emerald-500" />, change: '0%', isUp: true },
+    { label: 'GIÁ TRỊ ĐƠN HÀNG TB', value: totalOrders ? formatVND(totalRevenue / totalOrders) : '0đ', icon: <Package className="w-5 h-5 text-amber-500" />, change: '0%', isUp: true },
+    { label: 'HOA HỒNG ĐÃ TRẢ', value: '0đ', icon: <DollarSign className="w-5 h-5 text-pink-500" />, change: '0%', isUp: true }
   ];
 
-  const recentTransactions = [
-    { id: '#48752', name: 'Nguyễn Văn A', product: 'Gói VIP PRO', amount: '799.000đ', method: 'MoMo', status: 'Thành công', statusColor: 'text-emerald-500' },
-    { id: '#48751', name: 'Trần Thị B', product: 'App Tết 2026', amount: '599.000đ', method: 'VNPay', status: 'Thành công', statusColor: 'text-emerald-500' },
-    { id: '#48750', name: 'Lê Văn C', product: 'Nạp 1.000 Credits', amount: '200.000đ', method: 'Thẻ ATM', status: 'Thành công', statusColor: 'text-emerald-500' },
-    { id: '#48749', name: 'Phạm Thị D', product: 'Gói KIM CƯƠNG', amount: '2.990.000đ', method: 'PayPal', status: 'Thành công', statusColor: 'text-emerald-500' },
-    { id: '#48748', name: 'Hoàng Văn E', product: 'App Noel 2025', amount: '599.000đ', method: 'MoMo', status: 'Thành công', statusColor: 'text-emerald-500' }
-  ];
+  const recentTransactions = [];
 
-  const topAffiliates = [
-    { rank: 1, name: 'NGUYENHUNG', commission: '124.560.000đ', clients: 256, conversion: '12.4%' },
-    { rank: 2, name: 'PHAMGIANG', commission: '98.750.000đ', clients: 198, conversion: '10.1%' },
-    { rank: 3, name: 'LANANH', commission: '72.430.000đ', clients: 156, conversion: '8.7%' },
-    { rank: 4, name: 'HOANGNAM', commission: '58.320.000đ', clients: 134, conversion: '7.2%' },
-    { rank: 5, name: 'MINHTUAN', commission: '45.210.000đ', clients: 112, conversion: '6.4%' }
-  ];
+  const topAffiliates = [];
 
   return (
     <div className="flex h-screen bg-[#0F0F13] text-gray-300 font-sans overflow-hidden fixed inset-0 z-[200]">
       
       {/* Sidebar */}
       <aside className={`w-64 bg-[#141419] border-r border-white/5 flex flex-col transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full absolute h-full z-20 shadow-2xl'}`}>
-        <div className="p-6 flex items-center gap-3 border-b border-white/5">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-tr from-amber-500 to-purple-600 flex items-center justify-center font-black text-white text-2xl shadow-glow-purple">C</div>
-          <div>
-            <h2 className="text-white font-black text-xl leading-none">CAPRO</h2>
-            <span className="text-[10px] text-gray-500 tracking-[0.3em] font-bold">— AUTO —</span>
+        <div onClick={() => window.location.href='/'} className="p-6 flex items-center gap-3 border-b border-white/5 cursor-pointer hover:bg-white/5 transition-colors group">
+          <div className="relative">
+            <div className="absolute -inset-1 bg-gradient-to-r from-red-600 via-purple-600 to-cyan-500 rounded-xl blur opacity-70 group-hover:opacity-100 transition duration-500 animate-pulse" />
+            <div className="relative w-10 h-10 rounded-xl bg-gradient-to-tr from-[#EF4444] via-[#8B5CF6] to-[#06B6D4] p-0.5 shadow-xl group-hover:scale-105 transition-all">
+              <img 
+                src="/official_logo.jpg" 
+                alt="AvaLive PRO" 
+                className="w-full h-full object-cover rounded-[10px] border border-white/40"
+              />
+            </div>
+          </div>
+          <div className="flex flex-col">
+            <h2 className="text-white font-black text-xl leading-none tracking-tight flex items-center gap-1 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]">
+              AvaLive <span className="text-[#EF4444] bg-gradient-to-r from-red-500 via-pink-500 to-purple-500 bg-clip-text text-transparent">PRO</span>
+            </h2>
           </div>
         </div>
         
         <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar text-sm font-medium">
           <div className="space-y-1">
-            <button onClick={() => setActiveSidebarTab('overview')} className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-purple-600/20 to-transparent text-purple-400 rounded-lg border-l-2 border-purple-500"><Home className="w-4 h-4"/> Tổng quan</button>
-            <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><BarChart2 className="w-4 h-4"/> Thống kê</button>
-            <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Users className="w-4 h-4"/> Người dùng</button>
-            <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center justify-between px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors">
-              <div className="flex items-center gap-3"><Package className="w-4 h-4"/> Sản phẩm / Ứng dụng</div>
-              <ChevronDown className="w-3 h-3" />
-            </button>
-            <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center justify-between px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors">
-              <div className="flex items-center gap-3"><ShoppingCart className="w-4 h-4"/> Đơn hàng</div>
-              <ChevronDown className="w-3 h-3" />
-            </button>
+            <button onClick={() => setActiveSidebarTab('overview')} className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${activeSidebarTab === 'overview' ? 'bg-gradient-to-r from-purple-600/20 to-transparent text-purple-400 border-l-2 border-purple-500 font-bold' : 'hover:bg-white/5 text-gray-400 hover:text-white font-medium'}`}><Home className="w-4 h-4"/> Tổng quan</button>
+            <button onClick={() => setActiveSidebarTab('users')} className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${activeSidebarTab === 'users' ? 'bg-gradient-to-r from-purple-600/20 to-transparent text-purple-400 border-l-2 border-purple-500 font-bold' : 'hover:bg-white/5 text-gray-400 hover:text-white font-medium'}`}><Users className="w-4 h-4"/> Người dùng</button>
           </div>
 
           <div>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 px-4">THANH TOÁN</p>
             <div className="space-y-1">
-              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><CreditCard className="w-4 h-4"/> Giao dịch</button>
-              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><DollarSign className="w-4 h-4"/> Doanh thu</button>
-              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Wallet className="w-4 h-4"/> Nạp tiền / Rút tiền</button>
-              <button onClick={() => setActiveSidebarTab('Phương thức thanh toán')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><FileText className="w-4 h-4"/> Phương thức thanh toán</button>
+              <button onClick={() => setActiveSidebarTab('withdrawals')} className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${activeSidebarTab === 'withdrawals' ? 'bg-gradient-to-r from-purple-600/20 to-transparent text-purple-400 border-l-2 border-purple-500 font-bold' : 'hover:bg-white/5 text-gray-400 hover:text-white font-medium'}`}><Wallet className="w-4 h-4"/> Rút tiền</button>
             </div>
           </div>
           
           <div>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 px-4">AFFILIATE</p>
             <div className="space-y-1">
-              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Share2 className="w-4 h-4"/> Tổng quan AFF</button>
+              <button onClick={() => setActiveSidebarTab('affiliate')} className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${activeSidebarTab === 'affiliate' ? 'bg-gradient-to-r from-purple-600/20 to-transparent text-purple-400 border-l-2 border-purple-500 font-bold' : 'hover:bg-white/5 text-gray-400 hover:text-white font-medium'}`}><Share2 className="w-4 h-4"/> Tổng quan AFF</button>
             </div>
           </div>
           
           <div>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 px-4">HỆ THỐNG</p>
             <div className="space-y-1">
-              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center justify-between px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors">
+              <button onClick={() => setActiveSidebarTab('permissions')} className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${activeSidebarTab === 'permissions' ? 'bg-gradient-to-r from-purple-600/20 to-transparent text-purple-400 border-l-2 border-purple-500 font-bold' : 'hover:bg-white/5 text-gray-400 hover:text-white font-medium'}`}><ShieldCheck className="w-4 h-4"/> Phân quyền</button>
+              <button onClick={() => setActiveSidebarTab('settings')} className={`flex items-center justify-between px-4 py-2.5 rounded-lg transition-colors ${activeSidebarTab === 'settings' ? 'bg-gradient-to-r from-purple-600/20 to-transparent text-purple-400 border-l-2 border-purple-500 font-bold' : 'hover:bg-white/5 text-gray-400 hover:text-white font-medium'}`}>
                 <div className="flex items-center gap-3"><Settings className="w-4 h-4"/> Cài đặt</div>
-                <ChevronDown className="w-3 h-3" />
+                <ChevronDown className={`w-3 h-3 transition-transform ${activeSidebarTab === 'settings' ? 'rotate-180' : ''}`} />
               </button>
             </div>
-          </div>
-          
-          <div className="p-4 bg-gradient-to-br from-[#1E1B4B] to-[#312E81] rounded-xl border border-purple-500/30 m-4 relative overflow-hidden group">
-             <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/20 blur-xl rounded-full"></div>
-             <h4 className="text-white font-bold flex items-center gap-2 mb-1"><Crown className="w-4 h-4 text-amber-400" /> GÓI SIÊU CẤP VIP PRO</h4>
-             <p className="text-[10px] text-purple-200 mb-3">Hiệu lực đến: 30/12/2026</p>
-             <button className="w-full py-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg text-xs font-bold text-white shadow-glow-purple">Nâng cấp ngay</button>
           </div>
           
         </div>
@@ -294,6 +455,9 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
         <header className="h-[72px] border-b border-white/5 flex items-center justify-between px-8 bg-[#111118]/50 backdrop-blur-md shrink-0">
           <div className="flex items-center gap-6">
             <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-gray-400 hover:text-white"><Menu className="w-6 h-6"/></button>
+            <button onClick={() => window.history.back()} className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-bold text-gray-300 transition-colors">
+               <ChevronLeft className="w-4 h-4" /> Quay Lại
+            </button>
             <div className="relative hidden md:block w-96">
               <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
               <input type="text" placeholder="Tìm kiếm nhanh..." className="w-full bg-[#1A1A24] border border-white/5 rounded-full pl-11 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500/50" />
@@ -301,8 +465,8 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
             </div>
           </div>
           <div className="flex items-center gap-6">
-            <div className="relative cursor-pointer"><Bell className="w-5 h-5 text-gray-400 hover:text-white transition-colors"/><span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 rounded-full text-[9px] flex items-center justify-center text-white font-bold border-2 border-[#111118]">12</span></div>
-            <div className="relative cursor-pointer"><Mail className="w-5 h-5 text-gray-400 hover:text-white transition-colors"/><span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-purple-500 rounded-full text-[9px] flex items-center justify-center text-white font-bold border-2 border-[#111118]">6</span></div>
+            <div className="relative cursor-pointer"><Bell className="w-5 h-5 text-gray-400 hover:text-white transition-colors"/><span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 rounded-full text-[9px] flex items-center justify-center text-white font-bold border-2 border-[#111118]">0</span></div>
+            <div className="relative cursor-pointer"><Mail className="w-5 h-5 text-gray-400 hover:text-white transition-colors"/><span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-purple-500 rounded-full text-[9px] flex items-center justify-center text-white font-bold border-2 border-[#111118]">0</span></div>
             <div className="flex items-center gap-3 pl-6 border-l border-white/10 cursor-pointer">
               <img src={currentUser?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=32&h=32"} className="w-9 h-9 rounded-full border border-white/10" alt="Admin" />
               <div className="hidden md:block text-sm">
@@ -314,27 +478,19 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
         </header>
 
         {/* Dashboard Content */}
-        {activeSidebarTab === 'overview' ? (
+        {(activeSidebarTab === 'overview') ? (
         <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar">
           
           <div className="flex items-end justify-between">
             <div className="flex items-center gap-4">
-              <button onClick={() => setActiveTab("overview")} className="flex items-center gap-3 group cursor-pointer mr-6">
-    <div className="w-10 h-10 rounded-lg bg-gradient-to-tr from-amber-500 to-red-600 flex items-center justify-center font-black text-white text-2xl shadow-[0_0_15px_rgba(245,158,11,0.5)] group-hover:scale-105 transition-transform">
-      C
-    </div>
-    <div className="text-left">
-      <h2 className="text-white font-black text-xl leading-none group-hover:text-amber-400 transition-colors">CAPRO</h2>
-      <span className="text-[10px] text-amber-500 tracking-[0.3em] font-bold">— TRANG CHỦ —</span>
-    </div>
-  </button>
+              
               <div>
                 <h1 className="text-3xl font-black text-white flex items-center gap-3 mb-1">Xin chào, Admin Master <span className="animate-wave inline-block origin-bottom-right">👋</span></h1>
                 <p className="text-sm text-gray-400">Đây là tổng quan hệ thống của bạn hôm nay.</p>
               </div>
             </div>
             <div className="flex items-center gap-2 bg-[#1A1A24] border border-white/5 rounded-xl px-4 py-2 text-sm text-gray-300 font-medium cursor-pointer hover:bg-white/5 transition-colors">
-              <Calendar className="w-4 h-4 text-gray-400" /> 20/07/2025 - 27/07/2025 <ChevronDown className="w-4 h-4 ml-2" />
+              <Calendar className="w-4 h-4 text-gray-400" /> 30/07/2026 - 06/08/2026 <ChevronDown className="w-4 h-4 ml-2" />
             </div>
           </div>
 
@@ -363,8 +519,8 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
                 <div>
                   <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">DOANH THU</span>
                   <div className="text-3xl font-black text-white flex items-end gap-3">
-                    2.450.789.000₫ 
-                    <span className="text-sm text-emerald-500 font-bold flex items-center mb-1"><ArrowUpRight className="w-4 h-4 mr-0.5"/> 18.6% so với kỳ trước</span>
+                    {formatVND(totalRevenue)} 
+                    <span className="text-sm text-emerald-500 font-bold flex items-center mb-1"><ArrowUpRight className="w-4 h-4 mr-0.5"/> +0% so với kỳ trước</span>
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-3">
@@ -401,7 +557,7 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
                  </div>
                  {/* X Axis labels */}
                  <div className="absolute -bottom-7 left-0 w-full flex justify-between text-[11px] text-gray-500 font-mono pr-2 pl-2">
-                    <span>20/07</span><span>21/07</span><span>22/07</span><span>23/07</span><span>24/07</span><span>25/07</span><span>26/07</span><span>27/07</span>
+                    <span>30/07</span><span>31/07</span><span>01/08</span><span>02/08</span><span>03/08</span><span>04/08</span><span>05/08</span><span>06/08</span>
                  </div>
               </div>
             </div>
@@ -424,20 +580,16 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
                  </div>
                  <div className="w-full mt-8 space-y-3">
                     <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-3"><div className="w-3 h-3 rounded-full bg-purple-500"></div><span className="text-gray-300 font-medium">Ứng dụng / Sản phẩm</span></div>
-                      <div className="text-right"><div className="font-bold text-white">45%</div><div className="text-[10px] text-gray-500">1.102.850.000đ</div></div>
+                      <div className="flex items-center gap-3"><div className="w-3 h-3 rounded-full bg-blue-500"></div><span className="text-gray-300 font-medium">Gói thành viên</span></div>
+                      <div className="text-right"><div className="font-bold text-white">{totalRevenue > 0 ? '100%' : '0%'}</div><div className="text-[10px] text-gray-500">{formatVND(totalRevenue)}</div></div>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-3"><div className="w-3 h-3 rounded-full bg-blue-500"></div><span className="text-gray-300 font-medium">Gói thành viên</span></div>
-                      <div className="text-right"><div className="font-bold text-white">25%</div><div className="text-[10px] text-gray-500">612.697.000đ</div></div>
+                      <div className="flex items-center gap-3"><div className="w-3 h-3 rounded-full bg-purple-500"></div><span className="text-gray-300 font-medium">Ứng dụng / Sản phẩm</span></div>
+                      <div className="text-right"><div className="font-bold text-white">0%</div><div className="text-[10px] text-gray-500">0đ</div></div>
                     </div>
                     <div className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-3"><div className="w-3 h-3 rounded-full bg-cyan-500"></div><span className="text-gray-300 font-medium">Nạp tiền / Credits</span></div>
-                      <div className="text-right"><div className="font-bold text-white">15%</div><div className="text-[10px] text-gray-500">367.618.000đ</div></div>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-3"><div className="w-3 h-3 rounded-full bg-emerald-500"></div><span className="text-gray-300 font-medium">Dịch vụ khác</span></div>
-                      <div className="text-right"><div className="font-bold text-white">10%</div><div className="text-[10px] text-gray-500">245.624.000đ</div></div>
+                      <div className="text-right"><div className="font-bold text-white">0%</div><div className="text-[10px] text-gray-500">0đ</div></div>
                     </div>
                  </div>
               </div>
@@ -551,23 +703,23 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
               </div>
               <div className="flex items-center gap-6">
                 <div className="flex-1 text-center">
-                  <div className="text-3xl font-black text-white mb-1">42.854</div>
+                  <div className="text-3xl font-black text-white mb-1">{totalUsers}</div>
                   <div className="text-xs text-gray-500 mb-2">Tổng người dùng</div>
-                  <div className="text-[11px] text-emerald-500 font-bold flex items-center justify-center gap-1"><ArrowUpRight className="w-3 h-3"/> 15.7% so với kỳ trước</div>
+                  <div className="text-[11px] text-emerald-500 font-bold flex items-center justify-center gap-1"><ArrowUpRight className="w-3 h-3"/> +0% so với kỳ trước</div>
                 </div>
                 <div className="relative w-28 h-28 rounded-full border-[10px] border-transparent flex-shrink-0" style={{background: 'conic-gradient(#8B5CF6 0% 65%, #06B6D4 65% 90%, #EC4899 90% 100%)', borderRadius: '50%', padding: '10px', WebkitMask: 'radial-gradient(transparent 62%, black 63%)'}}></div>
                 <div className="space-y-3 flex-1">
                    <div className="text-xs">
                      <div className="flex items-center gap-2 mb-0.5"><div className="w-2 h-2 rounded-full bg-purple-500"></div><span className="text-gray-300 font-bold text-[10px]">Hoạt động</span></div>
-                     <span className="text-gray-500 pl-4">65% (27.856)</span>
+                     <span className="text-gray-500 pl-4">{totalUsers > 0 ? '100%' : '0%'} ({totalUsers})</span>
                    </div>
                    <div className="text-xs">
                      <div className="flex items-center gap-2 mb-0.5"><div className="w-2 h-2 rounded-full bg-cyan-500"></div><span className="text-gray-300 font-bold text-[10px]">Mới</span></div>
-                     <span className="text-gray-500 pl-4">25% (10.713)</span>
+                     <span className="text-gray-500 pl-4">0% (0)</span>
                    </div>
                    <div className="text-xs">
                      <div className="flex items-center gap-2 mb-0.5"><div className="w-2 h-2 rounded-full bg-pink-500"></div><span className="text-gray-300 font-bold text-[10px]">Không hoạt động</span></div>
-                     <span className="text-gray-500 pl-4">10% (4.285)</span>
+                     <span className="text-gray-500 pl-4">0% (0)</span>
                    </div>
                 </div>
               </div>
@@ -578,16 +730,16 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
               <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-6">THÔNG TIN HỆ THỐNG</h3>
               <div className="space-y-5">
                 <div>
-                  <div className="flex justify-between text-xs mb-1.5"><span className="text-gray-400 font-medium">CPU Usage</span><span className="text-white font-bold">32%</span></div>
-                  <div className="w-full bg-white/5 rounded-full h-1.5"><div className="bg-purple-500 h-1.5 rounded-full w-[32%]"></div></div>
+                  <div className="flex justify-between text-xs mb-1.5"><span className="text-gray-400 font-medium">CPU Usage</span><span className="text-white font-bold">0%</span></div>
+                  <div className="w-full bg-white/5 rounded-full h-1.5"><div className="bg-purple-500 h-1.5 rounded-full w-[0%]"></div></div>
                 </div>
                 <div>
-                  <div className="flex justify-between text-xs mb-1.5"><span className="text-gray-400 font-medium">RAM Usage</span><span className="text-white font-bold">48%</span></div>
-                  <div className="w-full bg-white/5 rounded-full h-1.5"><div className="bg-blue-500 h-1.5 rounded-full w-[48%]"></div></div>
+                  <div className="flex justify-between text-xs mb-1.5"><span className="text-gray-400 font-medium">RAM Usage</span><span className="text-white font-bold">0%</span></div>
+                  <div className="w-full bg-white/5 rounded-full h-1.5"><div className="bg-blue-500 h-1.5 rounded-full w-[0%]"></div></div>
                 </div>
                 <div>
-                  <div className="flex justify-between text-xs mb-1.5"><span className="text-gray-400 font-medium">Disk Usage</span><span className="text-white font-bold">26%</span></div>
-                  <div className="w-full bg-white/5 rounded-full h-1.5"><div className="bg-emerald-500 h-1.5 rounded-full w-[26%]"></div></div>
+                  <div className="flex justify-between text-xs mb-1.5"><span className="text-gray-400 font-medium">Disk Usage</span><span className="text-white font-bold">0%</span></div>
+                  <div className="w-full bg-white/5 rounded-full h-1.5"><div className="bg-emerald-500 h-1.5 rounded-full w-[0%]"></div></div>
                 </div>
                 <div className="flex justify-between items-center text-xs pt-2 border-t border-white/5 mt-4">
                   <div className="flex items-center gap-4">
@@ -597,7 +749,7 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
                 </div>
                 <div className="flex justify-between items-center text-[11px] mt-2">
                    <span className="text-gray-500 text-[10px]">Backup</span>
-                   <span className="text-emerald-500 font-bold">Thành công <span className="text-gray-600 font-normal ml-1">27/07/2025 - 02:00 AM</span></span>
+                   <span className="text-emerald-500 font-bold">Thành công <span className="text-gray-600 font-normal ml-1">06/08/2026 - 08:15 PM</span></span>
                 </div>
               </div>
             </div>
@@ -609,58 +761,27 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
                 <button onClick={() => alert("Chức năng đang cập nhật")} className="text-xs text-purple-400 hover:text-purple-300">Xem tất cả</button>
               </div>
               <div className="space-y-4 flex-1">
-                
-                <div className="flex items-start justify-between">
-                  <div className="flex gap-3">
-                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=32&h=32" className="w-8 h-8 rounded-full" alt="avatar" />
-                    <div>
-                      <p className="text-xs font-bold text-white">Admin Master</p>
-                      <p className="text-[11px] text-gray-500">Đăng nhập hệ thống</p>
+                {paymentsList.length > 0 ? paymentsList.slice(0, 4).map((tx, i) => (
+                  <div key={i} className="flex items-start justify-between">
+                    <div className="flex gap-3">
+                      <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400"><CheckCircle2 className="w-4 h-4"/></div>
+                      <div>
+                        <p className="text-xs font-bold text-white">{tx.user_email || 'Người dùng'}</p>
+                        <p className="text-[11px] text-gray-500">Đã mua {tx.plan}</p>
+                      </div>
                     </div>
+                    <span className="text-[10px] text-gray-600">Vừa xong</span>
                   </div>
-                  <span className="text-[10px] text-gray-600">2 phút trước</span>
-                </div>
-
-                <div className="flex items-start justify-between">
-                  <div className="flex gap-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400"><Database className="w-4 h-4"/></div>
-                    <div>
-                      <p className="text-xs font-bold text-white">Hệ thống</p>
-                      <p className="text-[11px] text-gray-500">Sao lưu dữ liệu thành công</p>
-                    </div>
-                  </div>
-                  <span className="text-[10px] text-gray-600">30 phút trước</span>
-                </div>
-
-                <div className="flex items-start justify-between">
-                  <div className="flex gap-3">
-                    <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400"><Users className="w-4 h-4"/></div>
-                    <div>
-                      <p className="text-xs font-bold text-white">Nguyễn Văn A</p>
-                      <p className="text-[11px] text-gray-500">Đã mua Gói VIP PRO</p>
-                    </div>
-                  </div>
-                  <span className="text-[10px] text-gray-600">45 phút trước</span>
-                </div>
-
-                <div className="flex items-start justify-between">
-                  <div className="flex gap-3">
-                    <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400"><CheckCircle2 className="w-4 h-4"/></div>
-                    <div>
-                      <p className="text-xs font-bold text-white">Trần Thị B</p>
-                      <p className="text-[11px] text-gray-500">Đăng ký tài khoản mới</p>
-                    </div>
-                  </div>
-                  <span className="text-[10px] text-gray-600">1 giờ trước</span>
-                </div>
-                
+                )) : (
+                  <div className="text-center text-gray-500 text-xs py-8 font-bold">Chưa có hoạt động nào</div>
+                )}
               </div>
             </div>
 
           </div>
 
           <div className="text-center pt-8 border-t border-white/5 flex justify-between items-center text-xs text-gray-600">
-             <span>© 2025 CAPRO AUTO. All rights reserved.</span>
+             <span>© 2025 AvaLive PRO. All rights reserved.</span>
              <span className="flex items-center gap-2">Phiên bản 2.5.0 <span className="bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded font-bold">Ổn định</span></span>
           </div>
 

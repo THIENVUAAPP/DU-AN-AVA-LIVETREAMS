@@ -92,10 +92,11 @@ export default function EnterprisePayment({ setActiveTab }) {
 
   const handleActivatePaymentSuccess = async () => {
     await syncPaymentToSupabase({
-      plan: currentPlan.name,
+      plan: currentPlan.id.toUpperCase(), // Using ID to be precise (STARTER, PRO, VIP)
       amount: currentPlan.priceNum,
       referenceCode: currentPlan.orderCode,
-      status: "completed"
+      status: "completed",
+      billingCycle: billingCycle
     });
     const expiresDate = new Date(Date.now() + (billingCycle === "annual" ? 365 : 30) * 86400000).toLocaleDateString("vi-VN");
     const todayDate = new Date().toLocaleDateString("vi-VN");

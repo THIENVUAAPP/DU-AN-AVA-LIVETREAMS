@@ -1,5 +1,6 @@
 import { syncUserToSupabase, supabase } from "./lib/supabaseClient";
 import React, { useState, useEffect } from "react";
+import RecentPurchasePopup from "./components/RecentPurchasePopup";
 import Header from "./components/Header";
 import LandingHero from "./components/LandingHero";
 import SalesLandingPage from "./components/SalesLandingPage";
@@ -38,12 +39,28 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const saved = localStorage.getItem("avalive_current_user");
-      return saved ? JSON.parse(saved) : {
+      if (saved) {
+         let parsedUser = JSON.parse(saved);
+         // Realtime check plan expiration
+         if (parsedUser.plan !== 'FREE' && parsedUser.plan_expires_at) {
+             const expiresAt = new Date(parsedUser.plan_expires_at).getTime();
+             const now = new Date().getTime();
+             if (now > expiresAt) {
+                 // Downgrade to FREE
+                 parsedUser.plan = 'FREE';
+                 parsedUser.plan_expires_at = null;
+                 localStorage.setItem("avalive_current_user", JSON.stringify(parsedUser));
+             }
+         }
+         return parsedUser;
+      }
+      return {
         name: "Quốc Thiên Admin",
         email: "quocthiencr90@gmail.com",
         avatar: "https://lh3.googleusercontent.com/a/default-user",
         isAdmin: true,
-        plan: "STARTER"
+        plan: "FREE",
+        plan_expires_at: null
       };
     } catch (e) {
       return null;
@@ -166,7 +183,9 @@ export default function App() {
             )}
 
             {activeTab === "avatars" && (
-              <AIAvatarStudio isLive={isLive} aiAvatarFeatureEnabled={aiAvatarFeatureEnabled} />
+              (currentUser?.plan === 'FREE' || currentUser?.plan === 'STARTER')
+                ? <UpgradePrompt featureName="AI Avatar Studio" requiredPlan="Gói PRO" setActiveTab={setActiveTab} />
+                : <AIAvatarStudio isLive={isLive} aiAvatarFeatureEnabled={aiAvatarFeatureEnabled} />
             )}
 
             {activeTab === "commerce" && (
@@ -176,13 +195,15 @@ export default function App() {
             )}
 
             {activeTab === "multistream" && (
-              (currentUser?.plan === 'FREE' || currentUser?.plan === 'STARTER') 
-                ? <UpgradePrompt featureName="Phân Phối Luồng Restream Đa Kênh" requiredPlan="Gói PRO" setActiveTab={setActiveTab} />
+              (currentUser?.plan === 'FREE') 
+                ? <UpgradePrompt featureName="Phân Phối Luồng Restream Đa Kênh" requiredPlan="Gói STARTER" setActiveTab={setActiveTab} />
                 : <MultistreamStudio isLive={isLive} setIsLive={setIsLive} currentUser={currentUser} />
             )}
 
             {activeTab === "chat-hub" && (
-              <UnifiedChatHub isLive={isLive} />
+              (currentUser?.plan === 'FREE')
+                ? <UpgradePrompt featureName="Hộp Thư Đa Nền Tảng (Chat Hub)" requiredPlan="Gói STARTER" setActiveTab={setActiveTab} />
+                : <UnifiedChatHub isLive={isLive} />
             )}
 
             <div style={{ display: activeTab === "livestream-cloner" ? "block" : "none" }}>
@@ -193,11 +214,15 @@ export default function App() {
             </div>
 
             {activeTab === "team" && (
-              <TeamPermissionsManager currentUser={currentUser} setCurrentUser={setCurrentUser} setActiveTab={setActiveTab} />
+              (currentUser?.plan === 'FREE' || currentUser?.plan === 'STARTER')
+                ? <UpgradePrompt featureName="Quản Lý Phân Quyền Đội Ngũ" requiredPlan="Gói PRO" setActiveTab={setActiveTab} />
+                : <TeamPermissionsManager currentUser={currentUser} setCurrentUser={setCurrentUser} setActiveTab={setActiveTab} />
             )}
 
             {activeTab === "sales-analytics" && (
-              <SalesAnalyticsManager currentUser={currentUser} />
+              (currentUser?.plan === 'FREE' || currentUser?.plan === 'STARTER')
+                ? <UpgradePrompt featureName="Phân Tích Bán Hàng & Chuyển Đổi" requiredPlan="Gói PRO" setActiveTab={setActiveTab} />
+                : <SalesAnalyticsManager currentUser={currentUser} />
             )}
 
             {activeTab === "accounts" && (
@@ -233,6 +258,9 @@ export default function App() {
         )}
 
       </main>
+
+      {/* 🌐 OFFICIAL GOOGLE OAUTH AUTHENTICATION MODAL (CLEAN 1-BUTTON ONLY) */}
+      <RecentPurchasePopup />
 
       {/* 🌐 OFFICIAL GOOGLE OAUTH AUTHENTICATION MODAL (CLEAN 1-BUTTON ONLY) */}
       {googleLoginModalOpen && (
