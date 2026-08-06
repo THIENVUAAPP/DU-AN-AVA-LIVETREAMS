@@ -1,13 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShieldCheck, Cpu, Terminal, Zap, CheckCircle2, Scan } from 'lucide-react';
+import { ShieldCheck, Cpu, Terminal, Zap, CheckCircle2, Scan, Activity, ArrowLeft } from 'lucide-react';
 
-const AutoCaptchaSolver = ({ onSolved, setActiveTab }) => {
-  const [phase, setPhase] = useState('init'); // init -> analyzing -> solving -> success
+const AutoCaptchaSolver = ({ setActiveTab }) => {
+  const [phase, setPhase] = useState('init');
   const [progress, setProgress] = useState(0);
   const [logs, setLogs] = useState([]);
   const logsEndRef = useRef(null);
 
-  // Auto-scroll logs
+  const [captchaConfig, setCaptchaConfig] = useState({
+    imageBypass: true,
+    cloudflareTurnstile: true,
+    autoProxy: true,
+    autoToken: true
+  });
+  
+  const [captchaStats] = useState({
+    totalSolved: 14205,
+    successRate: 99.8,
+    responseTime: 12,
+    historyLogs: [
+      { time: '10:45:12', p: 'TikTok', type: 'Slider Puzzle', speed: '14ms', status: 'SUCCESS' },
+      { time: '10:44:50', p: 'Facebook', type: 'reCAPTCHA v3', speed: '12ms', status: 'SUCCESS' },
+      { time: '10:41:05', p: 'Shopee', type: 'Cloudflare', speed: '9ms', status: 'SUCCESS' },
+      { time: '10:35:22', p: 'YouTube', type: 'Funcaptcha', speed: '18ms', status: 'SUCCESS' },
+      { time: '10:20:10', p: 'TikTok', type: '3D Rotate', speed: '25ms', status: 'RETRY' },
+    ]
+  });
+
   useEffect(() => {
     if (logsEndRef.current) {
       logsEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -20,153 +39,217 @@ const AutoCaptchaSolver = ({ onSolved, setActiveTab }) => {
 
   useEffect(() => {
     let isMounted = true;
-
     const runSequence = async () => {
-      // 1. INIT PHASE (0.1s)
       setPhase('init');
       addLog("Initializing AVA Stealth System v3.0...", 'info');
       addLog("Connecting to Anti-Detect Proxy Nodes...", 'info');
-      await new Promise(r => setTimeout(r, 150));
-      
+      await new Promise(r => setTimeout(r, 800));
       if (!isMounted) return;
 
-      // 2. ANALYZING PHASE (0.4s)
       setPhase('analyzing');
       addLog("Scanning DOM for WAF Challenges...", 'warning');
       addLog("[TikTok] Detected Slider Puzzle & 3D Rotate...", 'error');
-      addLog("[Facebook] Detected Checkpoint reCAPTCHA v3...", 'error');
-      addLog("[YouTube] Detected Google Funcaptcha...", 'error');
-      addLog("[Shopee] Detected Cloudflare Turnstile...", 'error');
       
-      for (let i = 0; i <= 40; i += 5) {
+      for (let i = 0; i <= 100; i += 2) {
         setProgress(i);
-        await new Promise(r => setTimeout(r, 15));
+        await new Promise(r => setTimeout(r, 20));
       }
-
       if (!isMounted) return;
 
-      // 3. SOLVING PHASE (0.6s)
       setPhase('solving');
       addLog("Injecting AI Bypass Payload...", 'info');
       addLog("Solving [TikTok] Slider Puzzle (Calculated X-Offset: 124px)...", 'success');
-      setProgress(60);
-      await new Promise(r => setTimeout(r, 100));
-      
-      addLog("Solving [Facebook] reCAPTCHA (Score: 0.9)...", 'success');
-      setProgress(80);
-      await new Promise(r => setTimeout(r, 100));
-
-      addLog("Solving [Shopee] Cloudflare Turnstile (Clearance granted)...", 'success');
-      setProgress(95);
-      await new Promise(r => setTimeout(r, 100));
-      
-      addLog("All Captchas Bypassed Successfully!", 'success');
-      setProgress(100);
-      
+      await new Promise(r => setTimeout(r, 500));
       if (!isMounted) return;
-
-      // 4. SUCCESS PHASE (0.4s)
-      setPhase('success');
-      await new Promise(r => setTimeout(r, 400));
       
-      if (isMounted && onSolved) {
-        onSolved();
-      }
+      setPhase('success');
+      addLog("Bypass Complete. Session token secured.", 'success');
     };
-
     runSequence();
-
     return () => { isMounted = false; };
-  }, [onSolved]);
+  }, []);
 
   return (
-    <div className="absolute inset-0 z-[100] bg-[#050505]/95 backdrop-blur-xl flex flex-col items-center justify-center font-sans">
-      <div className="relative w-[90%] max-w-xl bg-[#0A0A0E] border border-cyan-500/30 rounded-2xl shadow-[0_0_50px_rgba(6,182,212,0.15)] overflow-hidden">
-        
-        {/* Top Header Bar */}
-        <div className="bg-[#111118] border-b border-white/5 p-4 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-4">
-             <button onClick={() => setActiveTab && setActiveTab("overview")} className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-bold text-white transition-colors flex items-center gap-2">
-               &larr; Trang Chủ
-             </button>
-             <div className="flex items-center gap-2">
-               <ShieldCheck className="w-5 h-5 text-cyan-400" />
-               <h3 className="text-sm font-black text-white tracking-wider">HỆ THỐNG GIẢI MÃ CAPTCHA TỰ ĐỘNG BẰNG AI</h3>
+    <div className="fixed inset-0 z-[200] bg-[#0A0A0E] flex flex-col font-sans overflow-hidden">
+      
+      <header className="h-[72px] border-b border-white/5 flex items-center justify-between px-8 bg-[#111118]/50 backdrop-blur-md shrink-0">
+        <div className="flex items-center gap-6">
+          <button onClick={() => setActiveTab && setActiveTab("overview")} className="flex items-center gap-3 group cursor-pointer">
+             <div className="w-10 h-10 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-black text-white text-2xl shadow-[0_0_15px_rgba(6,182,212,0.5)] group-hover:scale-105 transition-transform">
+               C
              </div>
-          </div>
-          <div className="flex items-center gap-2">
-             <span className="text-[10px] text-gray-500 font-mono">LATENCY: 12MS</span>
-             <div className="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></div>
-          </div>
+             <div className="text-left">
+               <h2 className="text-white font-black text-xl leading-none group-hover:text-cyan-400 transition-colors">CAPRO</h2>
+               <span className="text-[10px] text-cyan-500 tracking-[0.3em] font-bold">— TRANG CHỦ —</span>
+             </div>
+          </button>
         </div>
-
-        {/* Main Content Area */}
-        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-           
-           {/* Left: Graphic / Status */}
-           <div className="flex flex-col items-center justify-center space-y-4">
-              <div className="relative w-32 h-32 flex items-center justify-center">
-                 {/* Outer Rings */}
-                 <div className="absolute inset-0 border-2 border-cyan-500/20 rounded-full animate-[spin_4s_linear_infinite]"></div>
-                 <div className="absolute inset-2 border border-dashed border-cyan-400/40 rounded-full animate-[spin_3s_linear_infinite_reverse]"></div>
-                 <div className="absolute inset-6 bg-cyan-500/10 rounded-full blur-md animate-pulse"></div>
-                 
-                 {/* Center Icon */}
-                 {phase === 'success' ? (
-                   <CheckCircle2 className="w-16 h-16 text-emerald-400 relative z-10" />
-                 ) : phase === 'analyzing' ? (
-                   <Scan className="w-16 h-16 text-amber-400 relative z-10 animate-pulse" />
-                 ) : (
-                   <Cpu className="w-16 h-16 text-cyan-400 relative z-10 animate-bounce" />
-                 )}
-              </div>
-
-              <div className="text-center">
-                <h4 className="text-white font-bold uppercase tracking-wider text-sm mb-1">
-                  {phase === 'init' && 'Khởi Động AI...'}
-                  {phase === 'analyzing' && 'Phân Tích Thuật Toán...'}
-                  {phase === 'solving' && 'Bẻ Khóa Đa Nền Tảng...'}
-                  {phase === 'success' && 'Hoàn Tất Giải Mã!'}
-                </h4>
-                <p className="text-xs font-mono text-cyan-400/70">
-                  {progress}% COMPUTING
-                </p>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="w-full h-1.5 bg-gray-900 rounded-full overflow-hidden border border-white/5">
-                 <div 
-                   className={`h-full rounded-full transition-all duration-75 ease-out ${phase === 'success' ? 'bg-emerald-400 shadow-[0_0_10px_#34d399]' : 'bg-gradient-to-r from-cyan-600 to-cyan-400 shadow-[0_0_10px_#22d3ee]'}`}
-                   style={{ width: `${progress}%` }}
-                 ></div>
-              </div>
+        <div className="flex items-center gap-4">
+           <button onClick={() => setActiveTab && setActiveTab("overview")} className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-bold text-gray-300 transition-colors flex items-center gap-2 cursor-pointer">
+             <ArrowLeft className="w-4 h-4" /> Thoát
+           </button>
+           <div className="px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-xs font-black flex items-center gap-2 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+             <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></div>
+             SYSTEM ACTIVE 100%
            </div>
+        </div>
+      </header>
 
-           {/* Right: Terminal Console */}
-           <div className="bg-black/50 border border-white/5 rounded-xl h-48 p-3 overflow-y-auto font-mono text-[10px] sm:text-[11px] flex flex-col gap-1.5 custom-scrollbar">
-              <div className="flex items-center gap-2 text-gray-500 mb-1">
-                 <Terminal className="w-3 h-3" />
-                 <span>[root@ava-stealth-node-01] ~</span>
+      <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+        <div className="max-w-6xl mx-auto space-y-6">
+          
+          <div className="flex items-center gap-3 mb-8">
+            <Zap className="w-8 h-8 text-cyan-400" />
+            <div>
+              <h1 className="text-2xl font-black text-white tracking-wider">BẢNG ĐIỀU KHIỂN GIẢI MÃ CAPTCHA AI</h1>
+              <p className="text-gray-400 text-sm">Hệ thống AI tự động vượt Captcha, chống khóa luồng Livestream trên đa nền tảng.</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-[#141419] border border-white/5 rounded-2xl p-6 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-2xl group-hover:bg-cyan-500/10 transition-colors"></div>
+              <span className="text-xs text-gray-400 uppercase tracking-wider font-bold mb-2 block">Tổng Số Đã Giải Mã</span>
+              <div className="flex items-end gap-3">
+                <span className="text-4xl font-black text-white">{captchaStats.totalSolved.toLocaleString()}</span>
+                <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded mb-1">+342 hnay</span>
               </div>
-              
-              {logs.map((log, i) => (
-                <div key={i} className="flex gap-2 items-start break-all">
-                  <span className="text-gray-600 shrink-0">[{log.time}]</span>
-                  <span className={`
-                    ${log.type === 'info' ? 'text-blue-400' : ''}
-                    ${log.type === 'warning' ? 'text-amber-400' : ''}
-                    ${log.type === 'error' ? 'text-red-400' : ''}
-                    ${log.type === 'success' ? 'text-emerald-400' : ''}
-                  `}>
-                    {log.msg}
-                  </span>
+            </div>
+            
+            <div className="bg-[#141419] border border-white/5 rounded-2xl p-6 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors"></div>
+              <span className="text-xs text-gray-400 uppercase tracking-wider font-bold mb-2 block">Tỷ Lệ Thành Công</span>
+              <span className="text-4xl font-black text-emerald-400">{captchaStats.successRate}%</span>
+            </div>
+
+            <div className="bg-[#141419] border border-white/5 rounded-2xl p-6 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition-colors"></div>
+              <span className="text-xs text-gray-400 uppercase tracking-wider font-bold mb-2 block">Tốc Độ Phản Hồi Trung Bình</span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-4xl font-black text-blue-400">{captchaStats.responseTime}</span>
+                <span className="text-lg font-normal text-gray-500">ms</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <div className="lg:col-span-1 space-y-6">
+              <div className="bg-[#141419] border border-white/5 rounded-2xl p-6">
+                 <h4 className="text-sm font-black text-white border-b border-white/5 pb-4 mb-4 flex items-center gap-2">
+                   <Cpu className="w-4 h-4 text-cyan-400" /> Cấu Hình Chiến Thuật AI
+                 </h4>
+                 <div className="space-y-4">
+                    {[
+                      { id: 'imageBypass', label: 'Giải mã Ảnh / Slider Captcha' },
+                      { id: 'cloudflareTurnstile', label: 'Vượt tường lửa Cloudflare v3' },
+                      { id: 'autoProxy', label: 'Anti-Fingerprint (Thay Proxy liên tục)' },
+                      { id: 'autoToken', label: 'Auto-Submit Token (Chống kẹt)' }
+                    ].map(cfg => (
+                       <div key={cfg.id} className="flex items-center justify-between p-3 rounded-xl bg-black/20 border border-white/5">
+                          <span className="text-xs text-gray-300 font-bold">{cfg.label}</span>
+                          <button 
+                            onClick={() => setCaptchaConfig(prev => ({...prev, [cfg.id]: !prev[cfg.id]}))}
+                            className={`relative w-10 h-5 rounded-full transition-colors duration-300 cursor-pointer ${captchaConfig[cfg.id] ? 'bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.4)]' : 'bg-gray-700'}`}
+                          >
+                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all duration-300 ${captchaConfig[cfg.id] ? 'left-[22px]' : 'left-[2px]'}`}></div>
+                          </button>
+                       </div>
+                    ))}
+                 </div>
+              </div>
+
+              <div className="bg-[#141419] border border-cyan-500/20 rounded-2xl p-6 shadow-[0_0_30px_rgba(6,182,212,0.05)] text-center relative overflow-hidden">
+                 <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.05)_1px,transparent_1px)] bg-[size:20px_20px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_10%,transparent_100%)]"></div>
+                 <div className="relative z-10 flex flex-col items-center">
+                    <div className="relative w-24 h-24 flex items-center justify-center mb-4">
+                       <div className="absolute inset-0 border-2 border-cyan-500/20 rounded-full animate-[spin_4s_linear_infinite]"></div>
+                       <div className="absolute inset-2 border border-dashed border-cyan-400/40 rounded-full animate-[spin_3s_linear_infinite_reverse]"></div>
+                       <div className="absolute inset-6 bg-cyan-500/10 rounded-full blur-md animate-pulse"></div>
+                       {phase === 'success' ? (
+                         <CheckCircle2 className="w-10 h-10 text-emerald-400 relative z-10" />
+                       ) : phase === 'analyzing' ? (
+                         <Scan className="w-10 h-10 text-amber-400 relative z-10 animate-pulse" />
+                       ) : (
+                         <Cpu className="w-10 h-10 text-cyan-400 relative z-10 animate-bounce" />
+                       )}
+                    </div>
+                    <h4 className="text-white font-bold uppercase tracking-wider text-xs mb-1">
+                      {phase === 'init' && 'Khởi Động AI...'}
+                      {phase === 'analyzing' && 'Phân Tích Thuật Toán...'}
+                      {phase === 'solving' && 'Bẻ Khóa Đa Nền Tảng...'}
+                      {phase === 'success' && 'Hoạt Động Ổn Định'}
+                    </h4>
+                    <p className="text-[10px] font-mono text-cyan-400/70">{progress}% COMPUTING</p>
+                 </div>
+              </div>
+            </div>
+
+            <div className="lg:col-span-2 space-y-6">
+              <div className="bg-[#050505] border border-white/5 rounded-2xl h-48 p-4 overflow-y-auto font-mono text-xs flex flex-col gap-2 custom-scrollbar shadow-inner relative">
+                <div className="sticky top-0 bg-[#050505] pb-2 border-b border-white/5 flex items-center gap-2 text-gray-500 mb-2 z-10">
+                   <Terminal className="w-4 h-4" />
+                   <span>[root@ava-stealth-node-01] ~ tail -f /var/log/bypass.log</span>
                 </div>
-              ))}
-              <div ref={logsEndRef} />
-           </div>
+                {logs.map((log, i) => (
+                  <div key={i} className="flex gap-3 items-start break-all">
+                    <span className="text-gray-600 shrink-0">[{log.time}]</span>
+                    <span className={`
+                      ${log.type === 'info' ? 'text-blue-400' : ''}
+                      ${log.type === 'warning' ? 'text-amber-400' : ''}
+                      ${log.type === 'error' ? 'text-red-400' : ''}
+                      ${log.type === 'success' ? 'text-emerald-400' : ''}
+                    `}>
+                      {log.msg}
+                    </span>
+                  </div>
+                ))}
+                <div ref={logsEndRef} />
+              </div>
+
+              <div className="bg-[#141419] border border-white/5 rounded-2xl overflow-hidden">
+                 <div className="p-5 border-b border-white/5 flex items-center justify-between">
+                   <h4 className="text-sm font-black text-white flex items-center gap-2">
+                     <Activity className="w-4 h-4 text-purple-400" /> Lịch Sử Giải Mã Real-time
+                   </h4>
+                 </div>
+                 <div className="overflow-x-auto">
+                   <table className="w-full text-left text-xs">
+                      <thead className="bg-[#1A1A24] text-[10px] uppercase tracking-wider text-gray-500">
+                         <tr>
+                           <th className="px-5 py-3 font-black">Thời Gian</th>
+                           <th className="px-5 py-3 font-black">Nền Tảng</th>
+                           <th className="px-5 py-3 font-black">Loại Captcha</th>
+                           <th className="px-5 py-3 font-black">Tốc Độ</th>
+                           <th className="px-5 py-3 font-black text-right">Trạng Thái</th>
+                         </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5 font-mono text-gray-300">
+                         {captchaStats.historyLogs.map((log, i) => (
+                            <tr key={i} className="hover:bg-white/5 transition-colors">
+                               <td className="px-5 py-3">{log.time}</td>
+                               <td className="px-5 py-3 font-bold text-white">{log.p}</td>
+                               <td className="px-5 py-3">{log.type}</td>
+                               <td className="px-5 py-3 text-cyan-400">{log.speed}</td>
+                               <td className="px-5 py-3 text-right">
+                                  <span className={`px-2 py-1 rounded text-[10px] font-black ${
+                                    log.status === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 
+                                    'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                  }`}>
+                                     {log.status}
+                                  </span>
+                               </td>
+                            </tr>
+                         ))}
+                      </tbody>
+                   </table>
+                 </div>
+              </div>
+
+            </div>
+          </div>
 
         </div>
-
       </div>
     </div>
   );

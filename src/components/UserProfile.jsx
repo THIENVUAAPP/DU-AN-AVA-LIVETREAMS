@@ -37,52 +37,52 @@ export default function UserProfile({ currentUser }) {
         
         <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar text-sm font-medium">
           <div className="space-y-1">
-            <a href="#" className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-purple-600/20 to-transparent text-purple-400 rounded-lg border-l-2 border-purple-500"><User className="w-4 h-4"/> Hồ sơ của tôi</a>
+            <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-purple-600/20 to-transparent text-purple-400 rounded-lg border-l-2 border-purple-500"><User className="w-4 h-4"/> Hồ sơ của tôi</button>
           </div>
 
           <div>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 px-4">TÀI KHOẢN</p>
             <div className="space-y-1">
-              <a href="#" className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><User className="w-4 h-4"/> Thông tin cá nhân</a>
-              <a href="#" className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><ShieldCheck className="w-4 h-4"/> Bảo mật tài khoản</a>
-              <a href="#" className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Settings className="w-4 h-4"/> Đổi mật khẩu</a>
-              <a href="#" className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><CheckCircle2 className="w-4 h-4"/> Xác minh danh tính</a>
+              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><User className="w-4 h-4"/> Thông tin cá nhân</button>
+              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><ShieldCheck className="w-4 h-4"/> Bảo mật tài khoản</button>
+              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Settings className="w-4 h-4"/> Đổi mật khẩu</button>
+              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><CheckCircle2 className="w-4 h-4"/> Xác minh danh tính</button>
             </div>
           </div>
           
           <div>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 px-4">GÓI DỊCH VỤ</p>
             <div className="space-y-1">
-              <a href="#" className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Package className="w-4 h-4"/> Gói của tôi</a>
-              <a href="#" className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><FileText className="w-4 h-4"/> Lịch sử giao dịch</a>
-              <a href="#" className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Zap className="w-4 h-4"/> Thanh toán tự động</a>
+              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Package className="w-4 h-4"/> Gói của tôi</button>
+              <button onClick={() => setActiveTab("sales-analytics")} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><FileText className="w-4 h-4"/> Lịch sử giao dịch</button>
+              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Zap className="w-4 h-4"/> Thanh toán tự động</button>
             </div>
           </div>
           
           <div>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 px-4">VÍ & THANH TOÁN</p>
             <div className="space-y-1">
-              <a href="#" className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Wallet className="w-4 h-4"/> Số dư tài khoản</a>
-              <a href="#" className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><CreditCard className="w-4 h-4"/> Phương thức thanh toán</a>
-              <a href="#" className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Calendar className="w-4 h-4"/> Lịch sử thanh toán</a>
-              <a href="#" className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><DollarSign className="w-4 h-4"/> Rút tiền</a>
+              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Wallet className="w-4 h-4"/> Số dư tài khoản</button>
+              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><CreditCard className="w-4 h-4"/> Phương thức thanh toán</button>
+              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Calendar className="w-4 h-4"/> Lịch sử thanh toán</button>
+              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><DollarSign className="w-4 h-4"/> Rút tiền</button>
             </div>
           </div>
 
           <div>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 px-4">AFFILIATE</p>
             <div className="space-y-1">
-              <a href="#" className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Share2 className="w-4 h-4"/> Dashboard Affiliate</a>
-              <a href="#" className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><LinkIcon className="w-4 h-4"/> Link giới thiệu</a>
-              <a href="#" className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><DollarSign className="w-4 h-4"/> Hoa hồng của tôi</a>
+              <button onClick={() => setActiveTab("affiliate-dashboard")} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Share2 className="w-4 h-4"/> Dashboard Affiliate</button>
+              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><LinkIcon className="w-4 h-4"/> Link giới thiệu</button>
+              <button onClick={() => setActiveTab("affiliate-dashboard")} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><DollarSign className="w-4 h-4"/> Hoa hồng của tôi</button>
             </div>
           </div>
 
           <div>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 px-4">HOẠT ĐỘNG</p>
             <div className="space-y-1">
-              <a href="#" className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Activity className="w-4 h-4"/> Lịch sử đăng nhập</a>
-              <a href="#" className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Monitor className="w-4 h-4"/> Thiết bị đăng nhập</a>
+              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Activity className="w-4 h-4"/> Lịch sử đăng nhập</button>
+              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Monitor className="w-4 h-4"/> Thiết bị đăng nhập</button>
             </div>
           </div>
           
@@ -103,8 +103,15 @@ export default function UserProfile({ currentUser }) {
         <header className="h-[72px] border-b border-white/5 flex items-center justify-between px-8 bg-[#111118]/50 backdrop-blur-md shrink-0">
           <div className="flex items-center gap-6">
             <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-gray-400 hover:text-white"><Menu className="w-6 h-6"/></button>
-            <button onClick={() => setActiveTab("overview")} className="mr-4 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-bold text-white transition-colors flex items-center gap-2">&larr; Trang Chủ</button>
-            <h1 className="text-lg font-bold text-white hidden md:block">Hồ sơ người dùng <span className="text-xs text-gray-500 font-normal block">Quản lý thông tin tài khoản và hoạt động cá nhân</span></h1>
+            <button onClick={() => setActiveTab("overview")} className="flex items-center gap-3 group cursor-pointer ml-4">
+    <div className="w-10 h-10 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-black text-white text-2xl shadow-[0_0_15px_rgba(6,182,212,0.5)] group-hover:scale-105 transition-transform">
+      C
+    </div>
+    <div className="text-left">
+      <h2 className="text-white font-black text-xl leading-none group-hover:text-cyan-400 transition-colors">CAPRO</h2>
+      <span className="text-[10px] text-cyan-500 tracking-[0.3em] font-bold">— TRANG CHỦ —</span>
+    </div>
+  </button>
           </div>
           <div className="flex items-center gap-6">
             <button className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white border border-purple-500/30 rounded-lg text-xs font-bold transition-colors">
@@ -439,7 +446,7 @@ export default function UserProfile({ currentUser }) {
              <div className="bg-[#141419] border border-white/5 p-6 rounded-2xl shadow-lg flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">LỊCH SỬ HOA HỒNG</h3>
-                  <a href="#" className="text-[10px] text-purple-400 hover:text-purple-300">Xem tất cả</a>
+                  <button onClick={() => alert("Chức năng đang cập nhật")} className="text-[10px] text-purple-400 hover:text-purple-300">Xem tất cả</button>
                 </div>
                 <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-2">
                    {[
@@ -469,7 +476,7 @@ export default function UserProfile({ currentUser }) {
              <div className="bg-[#141419] border border-white/5 p-6 rounded-2xl shadow-lg">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">PHƯƠNG THỨC THANH TOÁN</h3>
-                  <a href="#" className="text-[10px] text-purple-400 hover:text-purple-300 flex items-center gap-1">+ Thêm mới</a>
+                  <button onClick={() => alert("Chức năng đang cập nhật")} className="text-[10px] text-purple-400 hover:text-purple-300 flex items-center gap-1">+ Thêm mới</button>
                 </div>
                 <div className="space-y-3">
                    <div className="bg-[#1A1A24] border border-purple-500/30 rounded-xl p-4 flex items-center justify-between relative overflow-hidden">
@@ -491,7 +498,7 @@ export default function UserProfile({ currentUser }) {
                            <span className="px-2 py-0.5 rounded bg-gray-600/30 text-gray-400 text-[8px] font-bold">Đã liên kết</span>
                          </div>
                       </div>
-                      <a href="#" className="text-[10px] text-red-400 hover:text-red-300">Hủy</a>
+                      <button onClick={() => alert("Chức năng đang cập nhật")} className="text-[10px] text-red-400 hover:text-red-300">Hủy</button>
                    </div>
                    <div className="bg-[#1A1A24] border border-white/5 rounded-xl p-4 flex items-center justify-between">
                       <div className="flex gap-4 items-center">
@@ -509,7 +516,7 @@ export default function UserProfile({ currentUser }) {
              <div className="bg-[#141419] border border-white/5 p-6 rounded-2xl shadow-lg">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">THIẾT BỊ ĐĂNG NHẬP</h3>
-                  <a href="#" className="text-[10px] text-purple-400 hover:text-purple-300">Xem tất cả</a>
+                  <button onClick={() => alert("Chức năng đang cập nhật")} className="text-[10px] text-purple-400 hover:text-purple-300">Xem tất cả</button>
                 </div>
                 <div className="space-y-4">
                    <div className="flex items-center justify-between">
@@ -548,7 +555,7 @@ export default function UserProfile({ currentUser }) {
              <div className="bg-[#141419] border border-white/5 p-6 rounded-2xl shadow-lg">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">HOẠT ĐỘNG GẦN ĐÂY</h3>
-                  <a href="#" className="text-[10px] text-purple-400 hover:text-purple-300">Xem tất cả</a>
+                  <button onClick={() => alert("Chức năng đang cập nhật")} className="text-[10px] text-purple-400 hover:text-purple-300">Xem tất cả</button>
                 </div>
                 <div className="space-y-4">
                    <div className="flex items-start justify-between">

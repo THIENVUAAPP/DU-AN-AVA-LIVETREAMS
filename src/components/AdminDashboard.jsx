@@ -56,43 +56,43 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
         
         <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar text-sm font-medium">
           <div className="space-y-1">
-            <a href="#" className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-purple-600/20 to-transparent text-purple-400 rounded-lg border-l-2 border-purple-500"><Home className="w-4 h-4"/> Tổng quan</a>
-            <a href="#" className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><BarChart2 className="w-4 h-4"/> Thống kê</a>
-            <a href="#" className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Users className="w-4 h-4"/> Người dùng</a>
-            <a href="#" className="flex items-center justify-between px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors">
+            <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-purple-600/20 to-transparent text-purple-400 rounded-lg border-l-2 border-purple-500"><Home className="w-4 h-4"/> Tổng quan</button>
+            <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><BarChart2 className="w-4 h-4"/> Thống kê</button>
+            <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Users className="w-4 h-4"/> Người dùng</button>
+            <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center justify-between px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors">
               <div className="flex items-center gap-3"><Package className="w-4 h-4"/> Sản phẩm / Ứng dụng</div>
               <ChevronDown className="w-3 h-3" />
-            </a>
-            <a href="#" className="flex items-center justify-between px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors">
+            </button>
+            <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center justify-between px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors">
               <div className="flex items-center gap-3"><ShoppingCart className="w-4 h-4"/> Đơn hàng</div>
               <ChevronDown className="w-3 h-3" />
-            </a>
+            </button>
           </div>
 
           <div>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 px-4">THANH TOÁN</p>
             <div className="space-y-1">
-              <a href="#" className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><CreditCard className="w-4 h-4"/> Giao dịch</a>
-              <a href="#" className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><DollarSign className="w-4 h-4"/> Doanh thu</a>
-              <a href="#" className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Wallet className="w-4 h-4"/> Nạp tiền / Rút tiền</a>
-              <a href="#" className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><FileText className="w-4 h-4"/> Phương thức thanh toán</a>
+              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><CreditCard className="w-4 h-4"/> Giao dịch</button>
+              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><DollarSign className="w-4 h-4"/> Doanh thu</button>
+              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Wallet className="w-4 h-4"/> Nạp tiền / Rút tiền</button>
+              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><FileText className="w-4 h-4"/> Phương thức thanh toán</button>
             </div>
           </div>
           
           <div>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 px-4">AFFILIATE</p>
             <div className="space-y-1">
-              <a href="#" className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Share2 className="w-4 h-4"/> Tổng quan AFF</a>
+              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Share2 className="w-4 h-4"/> Tổng quan AFF</button>
             </div>
           </div>
           
           <div>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 px-4">HỆ THỐNG</p>
             <div className="space-y-1">
-              <a href="#" className="flex items-center justify-between px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors">
+              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center justify-between px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors">
                 <div className="flex items-center gap-3"><Settings className="w-4 h-4"/> Cài đặt</div>
                 <ChevronDown className="w-3 h-3" />
-              </a>
+              </button>
             </div>
           </div>
           
@@ -136,7 +136,15 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
           
           <div className="flex items-end justify-between">
             <div className="flex items-center gap-4">
-              <button onClick={() => setActiveTab("overview")} className="mr-4 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-bold text-white transition-colors flex items-center gap-2">&larr; Trang Chủ</button>
+              <button onClick={() => setActiveTab("overview")} className="flex items-center gap-3 group cursor-pointer mr-6">
+    <div className="w-10 h-10 rounded-lg bg-gradient-to-tr from-amber-500 to-red-600 flex items-center justify-center font-black text-white text-2xl shadow-[0_0_15px_rgba(245,158,11,0.5)] group-hover:scale-105 transition-transform">
+      C
+    </div>
+    <div className="text-left">
+      <h2 className="text-white font-black text-xl leading-none group-hover:text-amber-400 transition-colors">CAPRO</h2>
+      <span className="text-[10px] text-amber-500 tracking-[0.3em] font-bold">— TRANG CHỦ —</span>
+    </div>
+  </button>
               <div>
                 <h1 className="text-3xl font-black text-white flex items-center gap-3 mb-1">Xin chào, Admin Master <span className="animate-wave inline-block origin-bottom-right">👋</span></h1>
                 <p className="text-sm text-gray-400">Đây là tổng quan hệ thống của bạn hôm nay.</p>
@@ -277,7 +285,7 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
             <div className="bg-[#141419] border border-white/5 p-6 rounded-2xl shadow-lg flex flex-col">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider">GIAO DỊCH GẦN NHẤT</h3>
-                <a href="#" className="text-xs text-purple-400 hover:text-purple-300 transition-colors">Xem tất cả</a>
+                <button onClick={() => alert("Chức năng đang cập nhật")} className="text-xs text-purple-400 hover:text-purple-300 transition-colors">Xem tất cả</button>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs whitespace-nowrap">
@@ -315,7 +323,7 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
             <div className="bg-[#141419] border border-white/5 p-6 rounded-2xl shadow-lg flex flex-col">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider">TOP AFFILIATE</h3>
-                <a href="#" className="text-xs text-purple-400 hover:text-purple-300 transition-colors">Xem tất cả</a>
+                <button onClick={() => alert("Chức năng đang cập nhật")} className="text-xs text-purple-400 hover:text-purple-300 transition-colors">Xem tất cả</button>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs whitespace-nowrap">
@@ -356,7 +364,7 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
             <div className="bg-[#141419] border border-white/5 p-6 rounded-2xl shadow-lg flex flex-col justify-between">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider">THỐNG KÊ NGƯỜI DÙNG</h3>
-                <a href="#" className="text-xs text-purple-400 hover:text-purple-300">Xem báo cáo</a>
+                <button onClick={() => alert("Chức năng đang cập nhật")} className="text-xs text-purple-400 hover:text-purple-300">Xem báo cáo</button>
               </div>
               <div className="flex items-center gap-6">
                 <div className="flex-1 text-center">
@@ -415,7 +423,7 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
             <div className="bg-[#141419] border border-white/5 p-6 rounded-2xl shadow-lg flex flex-col">
               <div className="flex items-center justify-between mb-5">
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider">HOẠT ĐỘNG GẦN ĐÂY</h3>
-                <a href="#" className="text-xs text-purple-400 hover:text-purple-300">Xem tất cả</a>
+                <button onClick={() => alert("Chức năng đang cập nhật")} className="text-xs text-purple-400 hover:text-purple-300">Xem tất cả</button>
               </div>
               <div className="space-y-4 flex-1">
                 
