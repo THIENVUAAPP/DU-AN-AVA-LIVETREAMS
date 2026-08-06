@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { supabase } from '../lib/supabaseClient';
 import { ShieldCheck, Cpu, Terminal, Zap, CheckCircle2, Scan, Activity, ArrowLeft } from 'lucide-react';
 
 const AutoCaptchaSolver = ({ setActiveTab }) => {
@@ -14,18 +15,61 @@ const AutoCaptchaSolver = ({ setActiveTab }) => {
     autoToken: true
   });
   
-  const [captchaStats] = useState({
+    const [captchaStats, setCaptchaStats] = useState({
     totalSolved: 14205,
     successRate: 99.8,
     responseTime: 12,
-    historyLogs: [
-      { time: '10:45:12', p: 'TikTok', type: 'Slider Puzzle', speed: '14ms', status: 'SUCCESS' },
-      { time: '10:44:50', p: 'Facebook', type: 'reCAPTCHA v3', speed: '12ms', status: 'SUCCESS' },
-      { time: '10:41:05', p: 'Shopee', type: 'Cloudflare', speed: '9ms', status: 'SUCCESS' },
-      { time: '10:35:22', p: 'YouTube', type: 'Funcaptcha', speed: '18ms', status: 'SUCCESS' },
-      { time: '10:20:10', p: 'TikTok', type: '3D Rotate', speed: '25ms', status: 'RETRY' },
-    ]
+    historyLogs: []
   });
+
+  const fetchLogs = async () => {
+    try {
+      const { data, error } = await supabase.from('captcha_logs').select('*').order('created_at', { ascending: false }).limit(10);
+      if (error) throw error;
+      if (data) {
+        setCaptchaStats(prev => ({
+          ...prev,
+          historyLogs: data.map(log => ({
+            time: new Date(log.created_at).toLocaleTimeString('vi-VN'),
+            p: log.platform,
+            type: log.captcha_type,
+            speed: log.speed_ms + 'ms',
+            status: log.status
+          }))
+        }));
+      }
+    } catch (e) {
+      console.warn("Could not fetch captcha logs (table might not exist yet):", e.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchLogs();
+    
+    // Subscribe to realtime updates
+    const channel = supabase.channel('captcha_realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'captcha_logs' }, payload => {
+         const log = payload.new;
+         setCaptchaStats(prev => ({
+           ...prev,
+           historyLogs: [
+             {
+               time: new Date(log.created_at).toLocaleTimeString('vi-VN'),
+               p: log.platform,
+               type: log.captcha_type,
+               speed: log.speed_ms + 'ms',
+               status: log.status
+             },
+             ...prev.historyLogs
+           ].slice(0, 10)
+         }));
+      })
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   useEffect(() => {
     if (logsEndRef.current) {
