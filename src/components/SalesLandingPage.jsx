@@ -175,9 +175,9 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
                 <img src="/official_logo.jpg" alt="AvaLive" className="w-full h-full object-cover rounded-[10px] border border-white/20" />
               </div>
             </div>
-            <h1 className="text-xl font-black text-white tracking-tight flex flex-col leading-none">
+            <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-1.5 leading-none">
               <span className="text-[#FBBF24] drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]">AVA</span>
-              <span className="text-[10px] text-purple-400 font-bold uppercase tracking-widest mt-1">Live</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 font-black drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]">LIVESTREAM</span>
             </h1>
           </div>
 
@@ -269,41 +269,9 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
           </div>
 
           {/* Right AI Robot Illustration (CSS Based mockup) */}
-          <div className="relative h-[500px] flex items-center justify-center">
-            {/* Glowing Orbs */}
-            <div className="absolute w-64 h-64 bg-[#8B5CF6] rounded-full blur-[100px] opacity-40 animate-pulse"></div>
-            <div className="absolute w-48 h-48 bg-[#3B82F6] rounded-full blur-[80px] opacity-40 mix-blend-screen animate-pulse" style={{ animationDelay: '1s' }}></div>
-
-            {/* Central Robot Avatar */}
-            <div className="relative z-20 w-64 h-64 rounded-full border-4 border-white/10 bg-gradient-to-b from-[#1E1B4B] to-[#0F172A] p-2 shadow-[0_0_50px_rgba(139,92,246,0.5)] flex items-center justify-center flex-col overflow-hidden">
-               <div className="absolute inset-0 bg-[url('https://transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
-               <Bot className="w-24 h-24 text-blue-400 mb-2 drop-shadow-[0_0_15px_rgba(59,130,246,0.8)]" />
-               <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">AI</span>
-               <div className="mt-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/40 text-blue-300 text-xs font-black">24/7</div>
-            </div>
-
-            {/* Floating Badges */}
-            <div className="absolute top-10 left-0 px-4 py-3 rounded-2xl bg-[#111827]/80 backdrop-blur-md border border-purple-500/30 shadow-[0_0_20px_rgba(139,92,246,0.2)] flex flex-col items-center gap-1 animate-float">
-               <Globe className="w-6 h-6 text-purple-400" />
-               <span className="text-[10px] font-bold text-gray-200 uppercase text-center leading-tight">LIVE ĐA<br/>NỀN TẢNG</span>
-            </div>
-
-            <div className="absolute bottom-20 left-4 px-4 py-3 rounded-2xl bg-[#111827]/80 backdrop-blur-md border border-pink-500/30 shadow-[0_0_20px_rgba(236,72,153,0.2)] flex flex-col items-center gap-1 animate-float" style={{ animationDelay: '0.5s' }}>
-               <MessageSquare className="w-6 h-6 text-pink-400" />
-               <span className="text-[10px] font-bold text-gray-200 uppercase text-center leading-tight">CHATBOT AI<br/>24/7</span>
-            </div>
-
-            <div className="absolute top-20 right-0 px-4 py-3 rounded-2xl bg-[#111827]/80 backdrop-blur-md border border-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.2)] flex flex-col items-center gap-1 animate-float" style={{ animationDelay: '1s' }}>
-               <ShoppingBagIcon className="w-6 h-6 text-blue-400" />
-               <span className="text-[10px] font-bold text-gray-200 uppercase text-center leading-tight">BÁN HÀNG<br/>TỰ ĐỘNG</span>
-            </div>
-
-            <div className="absolute bottom-32 right-0 px-4 py-3 rounded-2xl bg-[#111827]/80 backdrop-blur-md border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.2)] flex flex-col items-center gap-1 animate-float" style={{ animationDelay: '1.5s' }}>
-               <CreditCard className="w-6 h-6 text-emerald-400" />
-               <span className="text-[10px] font-bold text-gray-200 uppercase text-center leading-tight">THANH TOÁN<br/>TỰ ĐỘNG</span>
-            </div>
-
-            {/* Bottom Podium Badge */}
+          <div className="relative h-[600px] flex items-center justify-center">
+             <TechEcosystemMap />
+          {/* Bottom Podium Badge */}
             <div className="absolute -bottom-8 px-6 py-2 rounded-full border border-[#FBBF24]/40 bg-[#FBBF24]/10 backdrop-blur-md z-30 shadow-[0_0_20px_rgba(251,191,36,0.3)]">
               <span className="text-xs font-bold text-[#FBBF24] uppercase tracking-widest">HOẠT ĐỘNG LIÊN TỤC KHÔNG GIÁN ĐOẠN</span>
             </div>
@@ -420,8 +388,6 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
         </div>
       </section>
 
-      {/* TECH ECOSYSTEM SECTION */}
-      <TechEcosystemMap />
 
       {/* 4. PRICING SECTION */}
       <section id="pricing" className="py-20 px-4 max-w-7xl mx-auto relative z-10">
@@ -449,69 +415,77 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           {plans.map((plan, i) => (
-            <RevealOnScroll key={i} className={`relative rounded-[2rem] border bg-[#0d0d16] overflow-hidden transition-all duration-300 hover:-translate-y-2 group ${plan.borderColor} ${plan.isPopular ? 'shadow-[0_0_40px_rgba(59,130,246,0.2)] md:-translate-y-4' : ''}`}>
+            <RevealOnScroll key={i} className={`relative flex flex-col h-full rounded-[2rem] border bg-[#0B0B13]/80 backdrop-blur-xl overflow-hidden transition-all duration-500 hover:-translate-y-3 cursor-pointer active:scale-95 group ${plan.borderColor} ${plan.isPopular ? 'shadow-[0_0_40px_rgba(59,130,246,0.25)] hover:shadow-[0_0_60px_rgba(59,130,246,0.4)] ring-1 ring-blue-500/50 md:-translate-y-4' : 'hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] hover:border-white/20'}`} onClick={() => handlePurchase(plan)}>
               
+              {/* Glassmorphism shine effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+
               {plan.isPopular && (
-                <div className="absolute top-0 right-0 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-[10px] font-bold uppercase tracking-widest py-1 px-4 rounded-bl-xl shadow-lg">
+                <div className="absolute top-0 right-0 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-[10px] font-black uppercase tracking-widest py-1.5 px-5 rounded-bl-2xl shadow-[0_4px_15px_rgba(59,130,246,0.5)] z-10">
                   Phổ Biến
                 </div>
               )}
 
-              <div className="p-8 pb-6 text-center border-b border-white/5">
-                <h3 className="text-lg font-bold text-white mb-2 uppercase tracking-wide">{plan.name}</h3>
-                <p className="text-gray-400 text-xs mb-6 min-h-[32px]">{plan.desc}</p>
+              <div className="p-8 pb-6 text-center border-b border-white/5 relative z-10 flex flex-col items-center flex-shrink-0">
+                <div className={`w-12 h-12 rounded-xl mb-4 flex items-center justify-center bg-gradient-to-br ${plan.color} bg-opacity-10 shadow-lg group-hover:scale-110 transition-transform duration-500`}>
+                   {plan.icon}
+                </div>
+                <h3 className="text-lg font-black text-white mb-2 uppercase tracking-widest">{plan.name}</h3>
+                <p className="text-gray-400 text-xs mb-6 min-h-[32px] font-medium leading-relaxed">{plan.desc}</p>
                 
-                <div className="flex flex-col items-center justify-center min-h-[85px]">
+                <div className="flex flex-col items-center justify-center min-h-[85px] w-full">
                   {plan.monthly === 0 ? (
                      <>
-                       <span className={`text-2xl lg:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r ${plan.color}`}>
+                       <span className={`text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r ${plan.color} drop-shadow-sm`}>
                          MIỄN PHÍ
                        </span>
-                       <div className="flex items-center gap-2 mt-1 text-gray-400 text-xs">Mãi mãi</div>
+                       <div className="flex items-center gap-2 mt-1 text-gray-500 text-xs font-semibold uppercase tracking-wider">Mãi mãi</div>
                      </>
                   ) : plan.name === 'TRỌN ĐỜI' ? (
                      <>
-                       <span className={`text-2xl lg:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r ${plan.color}`}>
+                       <span className={`text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r ${plan.color} drop-shadow-sm`}>
                          {plan.monthly.toLocaleString()}đ
                        </span>
                        <div className="flex items-center gap-2 mt-1">
-                         <span className="text-gray-500 text-xs line-through">{plan.oldMonthly.toLocaleString()}đ/tháng</span>
+                         <span className="text-gray-600 text-[11px] line-through decoration-red-500/50">{plan.oldMonthly.toLocaleString()}đ/tháng</span>
                        </div>
                      </>
                   ) : billingCycle === 'monthly' ? (
                      <>
-                       <span className={`text-2xl lg:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r ${plan.color}`}>
-                         {plan.oldMonthly.toLocaleString()}đ
+                       <span className={`text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r ${plan.color} drop-shadow-sm`}>
+                         {plan.monthly.toLocaleString()}đ
                        </span>
-                       <div className="flex items-center gap-2 mt-1 text-gray-400 text-xs">/tháng</div>
+                       <div className="flex items-center gap-2 mt-1 text-gray-500 text-xs font-medium">/tháng</div>
                      </>
                   ) : (
                      <>
-                       <span className={`text-2xl lg:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r ${plan.color}`}>
+                       <span className={`text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r ${plan.color} drop-shadow-sm`}>
                          {plan.monthly.toLocaleString()}đ
                        </span>
                        <div className="flex items-center gap-2 mt-1">
-                         <span className="text-gray-500 text-xs line-through">{plan.oldMonthly.toLocaleString()}đ</span>
-                         <span className="text-gray-400 text-xs">/tháng</span>
+                         <span className="text-gray-600 text-[11px] line-through decoration-red-500/50">{plan.oldMonthly.toLocaleString()}đ</span>
+                         <span className="text-gray-500 text-xs font-medium">/tháng</span>
                        </div>
-                       <div className="text-emerald-400 text-[10px] font-bold mt-2 bg-emerald-500/10 px-2 lg:px-3 py-1 rounded-md border border-emerald-500/20 whitespace-nowrap">Thanh toán {plan.yearly.toLocaleString()}đ/năm</div>
+                       <div className="text-emerald-400 text-[10px] font-bold mt-2 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/30 whitespace-nowrap shadow-[0_0_10px_rgba(16,185,129,0.2)]">Thanh toán {plan.yearly.toLocaleString()}đ/năm</div>
                      </>
                   )}
                 </div>
 
                 <button 
-                  onClick={() => handlePurchase(plan)}
-                  className={`w-full mt-6 py-3 rounded-full font-bold text-sm text-white bg-gradient-to-r ${plan.color} shadow-lg transition-transform group-hover:scale-105`}
+                  onClick={(e) => { e.stopPropagation(); handlePurchase(plan); }}
+                  className={`w-full mt-6 py-3.5 rounded-xl font-black text-sm text-white bg-gradient-to-r ${plan.color} shadow-lg transition-all duration-300 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.2)] group-hover:scale-105 active:scale-95 uppercase tracking-wider`}
                 >
                   {plan.btnText}
                 </button>
               </div>
 
-              <div className="p-8 space-y-4">
+              <div className="p-8 space-y-4 bg-gradient-to-b from-transparent to-black/20 flex-1 relative z-10">
                 {plan.features.map((feat, j) => (
-                  <div className="flex items-start gap-3" key={j}>
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                    <span className="text-xs text-gray-300">{feat}</span>
+                  <div className="flex items-start gap-3 group/feat" key={j}>
+                    <div className={`mt-0.5 w-4 h-4 rounded-full flex items-center justify-center bg-gradient-to-br ${plan.color} shadow-sm group-hover/feat:scale-110 transition-transform`}>
+                       <CheckCircle2 className="w-3 h-3 text-white" />
+                    </div>
+                    <span className="text-sm font-medium text-gray-300 group-hover/feat:text-white transition-colors">{feat}</span>
                   </div>
                 ))}
               </div>

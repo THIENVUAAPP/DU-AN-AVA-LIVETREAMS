@@ -255,6 +255,7 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
   const skinBrightRef = useRef(skinBright);
   const rosyBlushRef = useRef(rosyBlush);
   const chromaToleranceRef = useRef(chromaTolerance);
+  const chromaSmoothnessRef = useRef(chromaSmoothness);
   const bgBlurPxRef = useRef(bgBlurPx);
   const eyeSparkleRef = useRef(eyeSparkle);
 
@@ -265,8 +266,37 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
   useEffect(() => { skinBrightRef.current = skinBright; }, [skinBright]);
   useEffect(() => { rosyBlushRef.current = rosyBlush; }, [rosyBlush]);
   useEffect(() => { chromaToleranceRef.current = chromaTolerance; }, [chromaTolerance]);
+  useEffect(() => { chromaSmoothnessRef.current = chromaSmoothness; }, [chromaSmoothness]);
   useEffect(() => { bgBlurPxRef.current = bgBlurPx; }, [bgBlurPx]);
   useEffect(() => { eyeSparkleRef.current = eyeSparkle; }, [eyeSparkle]);
+
+  // Shared filter-string builder — single source of truth for beauty/sharpness
+  // across every background mode (off / preset / blur / chroma), so cutout
+  // quality is consistent no matter which mode the user picks.
+  // sharp=true adds the extra micro-contrast/saturation boost used when the
+  // subject is being composited over a replaced/blurred background, where
+  // extra edge definition is needed to read as "sắc nét" against the new backdrop.
+  const buildLiveFilterCSS = (sharp = false) => {
+    const bVal = skinBrightRef.current;
+    const sVal = skinSmoothRef.current;
+    const rVal = rosyBlushRef.current;
+    const eVal = eyeSparkleRef.current || 40;
+    const presetObj = BEAUTY_PRESETS_30.find(p => p.id === activeBeautyPresetIdRef.current);
+    const pFilter = presetObj?.filter || "";
+
+    let bright = 1.0 + (bVal - 50) / 280;
+    let contr  = 1.0 + (eVal / 350) + (sVal - 50) / 500;
+    let satv   = 1.0 + (rVal / 280);
+    const hueDeg = -(rVal / 40);
+
+    if (sharp) {
+      bright *= 1.02;
+      contr  *= 1.07;
+      satv   *= 1.05;
+    }
+
+    return `brightness(${bright.toFixed(3)}) contrast(${contr.toFixed(3)}) saturate(${satv.toFixed(3)}) hue-rotate(${hueDeg.toFixed(1)}deg) ${pFilter}`;
+  };
 
   // Click handler for 30 Beauty Presets — immediately applies distinct VIP settings
   const handleSelectBeautyPreset = (preset) => {
@@ -454,16 +484,10 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
       }
       if (cancelled) return;
 
-      const MW = 256, MH = 144;
       let personBufferA = null, personCtxA = null;
       let personBufferB = null, personCtxB = null;
       let bufferIndex = 0;
       let maskC   = null, maskCtx   = null;
-      let rawMaskC = null, rawMaskCtx = null;
-      let smoothC = null, smoothCtx = null;
-      const confArr   = new Float32Array(MW * MH);
-      const erodedArr = new Float32Array(MW * MH);
-      const tempArr   = new Float32Array(MW * MH);
 
       try {
         const seg = new window.SelfieSegmentation({
@@ -484,24 +508,12 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
           if (!ctx) return;
 
           const mode = bgRemovalModeRef.current;
-          const bVal = skinBrightRef.current;
           const sVal = skinSmoothRef.current;
-          const rVal = rosyBlushRef.current;
-          const eVal = eyeSparkleRef.current || 40;
-
-          // Native 60FPS Hardware Accelerated GPU Filter Math
-          const bright = 1.0 + (bVal - 50) / 280;
-          const contr  = 1.0 + (eVal / 350) + (sVal - 50) / 500;
-          const satv   = 1.0 + (rVal / 280);
-          const hueDeg = -(rVal / 40);
-
-          const activePresetObj = BEAUTY_PRESETS_30.find(p => p.id === activeBeautyPresetIdRef.current);
-          const pFilter = activePresetObj && activePresetObj.filter ? activePresetObj.filter : "";
 
           // Mode = off (Phông gốc 60FPS Ultra Fast)
           if (mode === "off") {
             ctx.clearRect(0, 0, W, H);
-            ctx.filter = `brightness(${bright.toFixed(3)}) contrast(${contr.toFixed(3)}) saturate(${satv.toFixed(3)}) hue-rotate(${hueDeg.toFixed(1)}deg) ${pFilter}`;
+            ctx.filter = buildLiveFilterCSS(true);
             ctx.drawImage(results.image, 0, 0, W, H);
             ctx.filter = "none";
             return;
@@ -523,11 +535,15 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
             maskCtx = maskC.getContext("2d");
           }
 
-          // 1. GPU Accelerated Hardware Masking (Zero CPU Lag, Zero Screen Flicker, Smooth 60FPS)
+          // 1. GPU Accelerated Hardware Masking with Edge Feathering (Zero CPU Lag, Smooth 60FPS)
+          // Feather radius is driven by the "Làm Mịn Viền Tách" (Smoothness) slider and scaled
+          // to the live resolution, so the mask's upscaled edge is a soft anti-aliased ramp
+          // instead of a jagged/binary line before the contrast pass sharpens the core silhouette.
+          const featherPx = (0.5 + (chromaSmoothnessRef.current / 100) * 4) * (W / 1920);
           maskCtx.clearRect(0, 0, W, H);
           maskCtx.imageSmoothingEnabled = true;
           maskCtx.imageSmoothingQuality = "high";
-          maskCtx.filter = "contrast(180%) brightness(110%)";
+          maskCtx.filter = `blur(${featherPx.toFixed(2)}px) contrast(165%) brightness(108%)`;
           maskCtx.drawImage(results.segmentationMask, 0, 0, W, H);
           maskCtx.filter = "none";
 
@@ -540,12 +556,23 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
             targetCtx.imageSmoothingEnabled = true;
             targetCtx.imageSmoothingQuality = "high";
             // Enhanced contrast & sharpness filter for 100% ultra crisp subject
-            const sharpBright = (bright * 1.02).toFixed(3);
-            const sharpContr = (contr * 1.06).toFixed(3);
-            const sharpSat = (satv * 1.05).toFixed(3);
-            targetCtx.filter = `brightness(${sharpBright}) contrast(${sharpContr}) saturate(${sharpSat}) hue-rotate(${hueDeg.toFixed(1)}deg) ${pFilter}`;
+            targetCtx.filter = buildLiveFilterCSS(true);
             targetCtx.drawImage(results.image, 0, 0, W, H);
             targetCtx.filter = "none";
+
+            // 2b. Real soft-focus skin smoothing — blends a lightly blurred copy of the
+            // subject back over the sharp base, weighted by the Skin Smooth slider, so
+            // "smooth" actually softens skin texture instead of only nudging CSS contrast.
+            // Capped alpha keeps eyes/mouth/hair legible (no plastic/melted look).
+            const smoothAmt = Math.max(0, (sVal - 50) / 50); // 0..1 as slider goes 50→100
+            if (smoothAmt > 0.02) {
+              const softBlurPx = (2 + smoothAmt * 5) * (W / 1920);
+              targetCtx.save();
+              targetCtx.filter = `blur(${softBlurPx.toFixed(2)}px) ${buildLiveFilterCSS(true)}`;
+              targetCtx.globalAlpha = Math.min(0.55, smoothAmt * 0.6);
+              targetCtx.drawImage(results.image, 0, 0, W, H);
+              targetCtx.restore();
+            }
 
             // 3. Cutout Solid Person Mask
             targetCtx.globalCompositeOperation = "destination-in";
@@ -599,21 +626,12 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
 
         const ctx = canvas.getContext("2d");
         if (ctx) {
-          const bVal = skinBrightRef.current;
-          const sVal = skinSmoothRef.current;
-          const rVal = rosyBlushRef.current;
-          const eVal = eyeSparkleRef.current || 40;
-
-          const bright = 1.0 + (bVal - 50) / 280;
-          const contr  = 1.0 + (eVal / 350);
-          const satv   = 1.0 + (rVal / 280);
-          const hueDeg = -(rVal / 40);
-          const activePresetObjOff = BEAUTY_PRESETS_30.find(p => p.id === activeBeautyPresetIdRef.current);
-          const pFilterOff = activePresetObjOff && activePresetObjOff.filter ? activePresetObjOff.filter : "";
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
 
           if (mode === "off") {
             ctx.clearRect(0, 0, W, H);
-            ctx.filter = `brightness(${bright.toFixed(3)}) contrast(${contr.toFixed(3)}) saturate(${satv.toFixed(3)}) hue-rotate(${hueDeg.toFixed(1)}deg) ${pFilterOff}`;
+            ctx.filter = buildLiveFilterCSS(true);
             ctx.drawImage(video, 0, 0, W, H);
             ctx.filter = "none";
           } else if (mode === "preset") {
@@ -622,7 +640,7 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
             if (masterPersonCanvasRef.current) {
               ctx.drawImage(masterPersonCanvasRef.current, 0, 0);
             } else {
-              ctx.filter = `brightness(${bright.toFixed(3)}) contrast(${contr.toFixed(3)}) saturate(${satv.toFixed(3)}) hue-rotate(${hueDeg.toFixed(1)}deg) ${pFilterOff}`;
+              ctx.filter = buildLiveFilterCSS(true);
               ctx.drawImage(video, 0, 0, W, H);
               ctx.filter = "none";
             }
@@ -663,31 +681,43 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
             ctx.clearRect(0, 0, W, H);
             drawVirtualBg(ctx, W, H);
 
-            const CW = Math.min(640, W), CH = Math.min(360, H);
+            // Higher keying resolution (was 640x360) reduces upscaled block/stair-step
+            // edges around the subject when composited onto 4K canvases.
+            const CW = Math.min(960, W), CH = Math.min(540, H);
             if (!chromaC || chromaC.width !== CW || chromaC.height !== CH) {
               chromaC = document.createElement("canvas");
               chromaC.width = CW; chromaC.height = CH;
               chromaCtx = chromaC.getContext("2d", { willReadFrequently: true });
             }
 
+            chromaCtx.imageSmoothingEnabled = true;
+            chromaCtx.imageSmoothingQuality = "high";
             chromaCtx.clearRect(0, 0, CW, CH);
             chromaCtx.drawImage(video, 0, 0, CW, CH);
             const imgData = chromaCtx.getImageData(0, 0, CW, CH);
             const cd = imgData.data;
             const tol = chromaToleranceRef.current || 45;
             const greenThresh = 25 + tol * 0.4;
+            // Feather band width around the threshold — driven by the Smoothness slider —
+            // turns the old hard 0/255 alpha cutoff (jagged, aliased edge) into a soft
+            // gradient ramp so hair strands and silhouette edges key out cleanly.
+            const smoothPct = chromaSmoothnessRef.current || 30;
+            const band = 6 + smoothPct * 0.3;
 
             for (let i = 0; i < cd.length; i += 4) {
               const r = cd[i], g = cd[i+1], b = cd[i+2];
               const greenDiff = g - Math.max(r, b);
-              if (greenDiff > greenThresh) {
+              if (greenDiff > greenThresh + band) {
                 cd[i+3] = 0;
+              } else if (greenDiff > greenThresh - band) {
+                const t = (greenDiff - (greenThresh - band)) / (band * 2);
+                cd[i+3] = Math.round(cd[i+3] * (1 - t));
               }
             }
             chromaCtx.putImageData(imgData, 0, 0);
 
             ctx.save();
-            ctx.filter = `brightness(${bright.toFixed(3)}) contrast(${contr.toFixed(3)}) saturate(${satv.toFixed(3)}) ${pFilterOff}`;
+            ctx.filter = buildLiveFilterCSS(true);
             ctx.drawImage(chromaC, 0, 0, W, H);
             ctx.restore();
           }

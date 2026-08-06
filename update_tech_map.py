@@ -1,4 +1,9 @@
-import React from 'react';
+import re
+
+with open("src/components/TechEcosystemMap.jsx", "r", encoding="utf-8") as f:
+    content = f.read()
+
+new_content = """import React from 'react';
 import { Radio, MonitorPlay, ShoppingCart, MessageSquare, Copy, Users, BarChart3, Link, ShieldCheck, Zap } from 'lucide-react';
 
 const features = [
@@ -100,3 +105,9 @@ export default function TechEcosystemMap() {
     </div>
   );
 }
+"""
+
+with open("src/components/TechEcosystemMap.jsx", "w", encoding="utf-8") as f:
+    f.write(new_content)
+
+print("Updated TechEcosystemMap.jsx")

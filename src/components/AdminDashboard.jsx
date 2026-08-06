@@ -403,14 +403,14 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
             <div className="relative w-10 h-10 rounded-xl bg-gradient-to-tr from-[#EF4444] via-[#8B5CF6] to-[#06B6D4] p-0.5 shadow-xl group-hover:scale-105 transition-all">
               <img 
                 src="/official_logo.jpg" 
-                alt="AvaLive PRO" 
+                alt="AVA LIVESTREAM" 
                 className="w-full h-full object-cover rounded-[10px] border border-white/40"
               />
             </div>
           </div>
           <div className="flex flex-col">
             <h2 className="text-white font-black text-xl leading-none tracking-tight flex items-center gap-1 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]">
-              AvaLive <span className="text-[#EF4444] bg-gradient-to-r from-red-500 via-pink-500 to-purple-500 bg-clip-text text-transparent">PRO</span>
+              AVA <span className="text-[#EF4444] bg-gradient-to-r from-red-500 via-pink-500 to-purple-500 bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]">LIVESTREAM</span>
             </h2>
           </div>
         </div>

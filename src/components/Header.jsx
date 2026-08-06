@@ -86,7 +86,7 @@ export default function Header({
             <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#EF4444] via-[#8B5CF6] to-[#06B6D4] p-0.5 shadow-2xl group-hover:scale-105 transition-all">
               <img 
                 src="/official_logo.jpg" 
-                alt="AvaLive PRO Official Logo" 
+                alt="AVA LIVESTREAM Official Logo" 
                 className="w-full h-full object-cover rounded-[14px] border border-white/40 drop-shadow-[0_0_18px_rgba(239,68,68,0.9)]"
               />
             </div>
@@ -94,7 +94,7 @@ export default function Header({
 
           <div className="flex flex-col">
             <h1 className="text-2xl font-black tracking-tight text-white group-hover:text-red-400 transition-all flex items-center gap-1.5 drop-shadow-[0_0_20px_rgba(239,68,68,0.7)]">
-              AvaLive <span className="text-[#EF4444] bg-gradient-to-r from-red-500 via-pink-500 to-purple-500 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(239,68,68,1)]">PRO</span>
+              AVA <span className="text-[#EF4444] bg-gradient-to-r from-red-500 via-pink-500 to-purple-500 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(239,68,68,1)]">LIVESTREAM</span>
             </h1>
             
           </div>
