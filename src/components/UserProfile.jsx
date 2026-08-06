@@ -1,10 +1,5 @@
 import React, { useState } from 'react';
-import { 
-  User, Mail, Phone, MapPin, CheckCircle2, Copy, Link as LinkIcon, 
-  Menu, Bell, Crown, ShieldCheck, Database, Calendar, Search, 
-  CreditCard, DollarSign, Wallet, FileText, Share2, Zap, Settings, Save,
-  ArrowUpRight, ArrowDownRight, ChevronDown, Package, Activity, Monitor, LogOut
-} from 'lucide-react';
+import { User, Mail, Phone, MapPin, CheckCircle2, Copy, Link as LinkIcon, Menu, Bell, Crown, ShieldCheck, Database, Calendar, Search, CreditCard, DollarSign, Wallet, FileText, Share2, Zap, Settings, Save, ArrowUpRight, ArrowDownRight, ChevronDown, Package, Activity, Monitor, LogOut, TrendingUp, Download, Eye, RefreshCw, Smartphone, Laptop, History, LogIn, Lock } from 'lucide-react';
 import TeamPermissionsManager from './TeamPermissionsManager';
 import SalesAnalyticsManager from './SalesAnalyticsManager';
 
