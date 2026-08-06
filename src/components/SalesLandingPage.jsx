@@ -304,29 +304,6 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
         </div>
       </section>
 
-      {/* 2.5 PLATFORM LOGOS (MARQUEE REVERSE) */}
-      <section className="border-b border-white/5 bg-[#05050A] py-10 relative z-20 overflow-hidden marquee-container">
-        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#05050A] to-transparent z-10 pointer-events-none"></div>
-        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#05050A] to-transparent z-10 pointer-events-none"></div>
-        
-        <div className="flex w-[200%] animate-marquee-reverse">
-          <div className="flex w-1/2 justify-around items-center px-4">
-             <PlatformLogo text="TikTok" icon={<svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"/></svg>} hoverColor="hover:text-cyan-400" />
-             <PlatformLogo text="facebook" icon={<Facebook className="w-8 h-8"/>} hoverColor="hover:text-[#1877F2]" />
-             <PlatformLogo text="YouTube" icon={<Tv className="w-8 h-8"/>} hoverColor="hover:text-[#FF0000]" />
-             <PlatformLogo text="Shopee" icon={<ShoppingCart className="w-8 h-8"/>} hoverColor="hover:text-[#EE4D2D]" />
-             <PlatformLogo text="Lazada" icon={<Globe className="w-8 h-8"/>} hoverColor="hover:text-[#0A2647]" />
-          </div>
-          <div className="flex w-1/2 justify-around items-center px-4">
-             <PlatformLogo text="TikTok" icon={<svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"/></svg>} hoverColor="hover:text-cyan-400" />
-             <PlatformLogo text="facebook" icon={<Facebook className="w-8 h-8"/>} hoverColor="hover:text-[#1877F2]" />
-             <PlatformLogo text="YouTube" icon={<Tv className="w-8 h-8"/>} hoverColor="hover:text-[#FF0000]" />
-             <PlatformLogo text="Shopee" icon={<ShoppingCart className="w-8 h-8"/>} hoverColor="hover:text-[#EE4D2D]" />
-             <PlatformLogo text="Lazada" icon={<Globe className="w-8 h-8"/>} hoverColor="hover:text-[#0A2647]" />
-          </div>
-        </div>
-      </section>
-
       {/* 3. VIDEO & WHY CHOOSE US */}
       <section id="demo-section" className="py-20 px-4 max-w-7xl mx-auto relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -522,15 +499,28 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
             <StatItem icon={<ShieldCheck />} value="99.9%" label="Uptime hệ thống" color="text-emerald-400" />
             <StatItem icon={<Users />} value="24/7" label="Hỗ trợ khách hàng" color="text-cyan-400" />
           </div>
-
-          <div className="text-center">
+          <div className="text-center mt-8">
             <h4 className="text-gray-500 text-sm font-bold uppercase tracking-widest mb-6">ĐỐI TÁC TIN CẬY</h4>
-            <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
-               <span className="flex items-center gap-2 text-white font-bold"><svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"/></svg> TikTok</span>
-               <span className="flex items-center gap-2 text-[#1877F2] font-bold"><Facebook className="w-6 h-6"/> facebook</span>
-               <span className="flex items-center gap-2 text-[#FF0000] font-bold"><Tv className="w-6 h-6"/> YouTube</span>
-               <span className="flex items-center gap-2 text-[#EE4D2D] font-bold"><ShoppingCart className="w-6 h-6"/> Shopee</span>
-               <span className="flex items-center gap-2 text-[#0A2647] font-bold">Lazada</span>
+            <div className="relative z-20 overflow-hidden marquee-container py-4">
+              <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#0a0a10] to-transparent z-10 pointer-events-none"></div>
+              <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#0a0a10] to-transparent z-10 pointer-events-none"></div>
+              
+              <div className="flex w-[200%] animate-marquee-reverse">
+                <div className="flex w-1/2 justify-around items-center px-4">
+                   <PlatformLogo text="TikTok" icon={<svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"/></svg>} hoverColor="hover:text-cyan-400" />
+                   <PlatformLogo text="facebook" icon={<Facebook className="w-8 h-8"/>} hoverColor="hover:text-[#1877F2]" />
+                   <PlatformLogo text="YouTube" icon={<Tv className="w-8 h-8"/>} hoverColor="hover:text-[#FF0000]" />
+                   <PlatformLogo text="Shopee" icon={<ShoppingCart className="w-8 h-8"/>} hoverColor="hover:text-[#EE4D2D]" />
+                   <PlatformLogo text="Lazada" icon={<Globe className="w-8 h-8"/>} hoverColor="hover:text-[#0A2647]" />
+                </div>
+                <div className="flex w-1/2 justify-around items-center px-4">
+                   <PlatformLogo text="TikTok" icon={<svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"/></svg>} hoverColor="hover:text-cyan-400" />
+                   <PlatformLogo text="facebook" icon={<Facebook className="w-8 h-8"/>} hoverColor="hover:text-[#1877F2]" />
+                   <PlatformLogo text="YouTube" icon={<Tv className="w-8 h-8"/>} hoverColor="hover:text-[#FF0000]" />
+                   <PlatformLogo text="Shopee" icon={<ShoppingCart className="w-8 h-8"/>} hoverColor="hover:text-[#EE4D2D]" />
+                   <PlatformLogo text="Lazada" icon={<Globe className="w-8 h-8"/>} hoverColor="hover:text-[#0A2647]" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
