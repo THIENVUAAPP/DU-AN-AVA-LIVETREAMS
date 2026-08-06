@@ -390,9 +390,9 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 max-w-7xl mx-auto w-full">
           {plans.map((plan, i) => (
-            <RevealOnScroll key={i} className={`relative flex flex-col h-full rounded-[2rem] border bg-[#0B0B13]/80 backdrop-blur-xl overflow-hidden transition-all duration-500 hover:-translate-y-3 cursor-pointer active:scale-95 group ${plan.borderColor} ${plan.isPopular ? 'shadow-[0_0_40px_rgba(59,130,246,0.25)] hover:shadow-[0_0_60px_rgba(59,130,246,0.4)] ring-1 ring-blue-500/50 md:-translate-y-4' : 'hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] hover:border-white/20'}`} onClick={() => handlePurchase(plan)}>
+            <RevealOnScroll key={i} className={`relative flex flex-col h-full rounded-[2rem] border bg-[#0B0B13]/80 backdrop-blur-xl overflow-hidden transition-all duration-500 hover:-translate-y-3 cursor-pointer active:scale-90 group hover:border-blue-500/50 ${plan.borderColor} ${plan.isPopular ? 'shadow-[0_0_40px_rgba(59,130,246,0.25)] hover:shadow-[0_0_60px_rgba(59,130,246,0.4)] ring-1 ring-blue-500/50 md:-translate-y-4' : 'hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] hover:border-white/20'}`} onClick={() => handlePurchase(plan)}>
               
               {/* Glassmorphism shine effect */}
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
@@ -658,10 +658,11 @@ function RibbonItem({ icon, title, subtitle, color, borderCol }) {
 }
 
 function PlatformLogo({ icon, text, hoverColor }) {
+  const colorClass = hoverColor ? hoverColor.replace('hover:', '') : 'text-white';
   return (
-    <div className={`flex items-center gap-3 opacity-50 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-300 cursor-pointer min-w-max mx-12 group text-white ${hoverColor}`}>
-      {React.cloneElement(icon, { className: "w-8 h-8 group-hover:scale-110 transition-transform" })}
-      <span className="text-2xl font-bold">{text}</span>
+    <div className={`flex items-center gap-3 transition-all duration-500 cursor-pointer min-w-max mx-12 group drop-shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:drop-shadow-[0_0_30px_rgba(255,255,255,0.4)] hover:scale-110 active:scale-95 ${colorClass}`}>
+      {React.cloneElement(icon, { className: "w-9 h-9 group-hover:scale-110 transition-transform" })}
+      <span className="text-3xl font-black tracking-wider uppercase">{text}</span>
     </div>
   );
 }
