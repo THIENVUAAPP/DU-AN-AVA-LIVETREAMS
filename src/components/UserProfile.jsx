@@ -9,7 +9,19 @@ import TeamPermissionsManager from './TeamPermissionsManager';
 import SalesAnalyticsManager from './SalesAnalyticsManager';
 
 export default function UserProfile({ currentUser }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [activeSidebarTab, setActiveSidebarTab] = useState('overview');
+
+  const renderPlaceholder = (title) => (
+    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-fade-in h-full">
+       <div className="w-24 h-24 mb-6 rounded-3xl bg-[#141419] border-2 border-white/5 flex items-center justify-center shadow-glow-purple">
+          <svg className="w-10 h-10 text-purple-400 animate-spin-slow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+       </div>
+       <h2 className="text-2xl font-black text-white mb-3">Tính Năng Đang Phát Triển</h2>
+       <p className="text-gray-400 max-w-md">Khu vực <span className="text-purple-400 font-bold">{title}</span> đang được nâng cấp để mang lại trải nghiệm tối ưu nhất.</p>
+       <button onClick={() => setActiveSidebarTab('overview')} className="mt-8 px-6 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold text-white transition-all cursor-pointer hover:shadow-glow-purple">Quay Lại Tổng Quan</button>
+    </div>
+  );
 
   // Mock data for UI 
   const currentPlan = currentUser?.plan || 'VIP PRO';
@@ -37,35 +49,35 @@ export default function UserProfile({ currentUser }) {
         
         <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar text-sm font-medium">
           <div className="space-y-1">
-            <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-purple-600/20 to-transparent text-purple-400 rounded-lg border-l-2 border-purple-500"><User className="w-4 h-4"/> Hồ sơ của tôi</button>
+            <button onClick={() => setActiveSidebarTab('overview')} className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-purple-600/20 to-transparent text-purple-400 rounded-lg border-l-2 border-purple-500"><User className="w-4 h-4"/> Hồ sơ của tôi</button>
           </div>
 
           <div>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 px-4">TÀI KHOẢN</p>
             <div className="space-y-1">
-              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><User className="w-4 h-4"/> Thông tin cá nhân</button>
-              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><ShieldCheck className="w-4 h-4"/> Bảo mật tài khoản</button>
-              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Settings className="w-4 h-4"/> Đổi mật khẩu</button>
-              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><CheckCircle2 className="w-4 h-4"/> Xác minh danh tính</button>
+              <button onClick={() => setActiveSidebarTab('Thông tin cá nhân')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><User className="w-4 h-4"/> Thông tin cá nhân</button>
+              <button onClick={() => setActiveSidebarTab('Bảo mật tài khoản')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><ShieldCheck className="w-4 h-4"/> Bảo mật tài khoản</button>
+              <button onClick={() => setActiveSidebarTab('Đổi mật khẩu')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Settings className="w-4 h-4"/> Đổi mật khẩu</button>
+              <button onClick={() => setActiveSidebarTab('Xác minh danh tính (KYC)')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><CheckCircle2 className="w-4 h-4"/> Xác minh danh tính</button>
             </div>
           </div>
           
           <div>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 px-4">GÓI DỊCH VỤ</p>
             <div className="space-y-1">
-              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Package className="w-4 h-4"/> Gói của tôi</button>
+              <button onClick={() => setActiveSidebarTab('Quản lý gói dịch vụ')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Package className="w-4 h-4"/> Gói của tôi</button>
               <button onClick={() => setActiveTab("sales-analytics")} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><FileText className="w-4 h-4"/> Lịch sử giao dịch</button>
-              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Zap className="w-4 h-4"/> Thanh toán tự động</button>
+              <button onClick={() => setActiveSidebarTab('Thanh toán tự động')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Zap className="w-4 h-4"/> Thanh toán tự động</button>
             </div>
           </div>
           
           <div>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 px-4">VÍ & THANH TOÁN</p>
             <div className="space-y-1">
-              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Wallet className="w-4 h-4"/> Số dư tài khoản</button>
-              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><CreditCard className="w-4 h-4"/> Phương thức thanh toán</button>
-              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Calendar className="w-4 h-4"/> Lịch sử thanh toán</button>
-              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><DollarSign className="w-4 h-4"/> Rút tiền</button>
+              <button onClick={() => setActiveSidebarTab('Số dư tài khoản')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Wallet className="w-4 h-4"/> Số dư tài khoản</button>
+              <button onClick={() => setActiveSidebarTab('Phương thức thanh toán')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><CreditCard className="w-4 h-4"/> Phương thức thanh toán</button>
+              <button onClick={() => setActiveSidebarTab('Lịch sử thanh toán')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Calendar className="w-4 h-4"/> Lịch sử thanh toán</button>
+              <button onClick={() => setActiveSidebarTab('Rút tiền về ngân hàng')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><DollarSign className="w-4 h-4"/> Rút tiền</button>
             </div>
           </div>
 
@@ -81,8 +93,8 @@ export default function UserProfile({ currentUser }) {
           <div>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 px-4">HOẠT ĐỘNG</p>
             <div className="space-y-1">
-              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Activity className="w-4 h-4"/> Lịch sử đăng nhập</button>
-              <button onClick={() => alert("Chức năng đang cập nhật")} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Monitor className="w-4 h-4"/> Thiết bị đăng nhập</button>
+              <button onClick={() => setActiveSidebarTab('Lịch sử đăng nhập')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Activity className="w-4 h-4"/> Lịch sử đăng nhập</button>
+              <button onClick={() => setActiveSidebarTab('Quản lý Thiết bị')} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-gray-400 hover:text-white rounded-lg transition-colors"><Monitor className="w-4 h-4"/> Thiết bị đăng nhập</button>
             </div>
           </div>
           
@@ -129,6 +141,7 @@ export default function UserProfile({ currentUser }) {
         </header>
 
         {/* Dashboard Content */}
+        {activeSidebarTab === 'overview' ? (
         <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar">
           
           {/* Top Profile Header */}
@@ -603,6 +616,9 @@ export default function UserProfile({ currentUser }) {
           </div>
 
         </div>
+        ) : (
+          renderPlaceholder(activeSidebarTab)
+        )}
       </main>
     </div>
   );
