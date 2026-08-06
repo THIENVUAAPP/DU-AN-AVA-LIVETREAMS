@@ -202,8 +202,12 @@ export default function App() {
               <AffiliateDashboard currentUser={currentUser} />
             )}
 
+            {activeTab === "captcha" && (
+              <AutoCaptchaSolver setActiveTab={setActiveTab} />
+            )}
+
             {activeTab === "profile" && (
-              <UserProfile 
+              <UserProfile setActiveTab={setActiveTab} 
                 currentUser={currentUser} 
                 aiAvatarFeatureEnabled={aiAvatarFeatureEnabled}
                 setAiAvatarFeatureEnabled={setAiAvatarFeatureEnabled}
@@ -211,7 +215,7 @@ export default function App() {
             )}
 
             {activeTab === "admin" && currentUser?.isAdmin && (
-              <AdminDashboard 
+              <AdminDashboard setActiveTab={setActiveTab} 
                 currentUser={currentUser} 
                 aiAvatarFeatureEnabled={aiAvatarFeatureEnabled}
                 setAiAvatarFeatureEnabled={setAiAvatarFeatureEnabled}

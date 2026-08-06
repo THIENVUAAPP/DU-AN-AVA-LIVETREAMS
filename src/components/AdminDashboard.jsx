@@ -135,9 +135,12 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
         <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar">
           
           <div className="flex items-end justify-between">
-            <div>
-              <h1 className="text-3xl font-black text-white flex items-center gap-3 mb-1">Xin chào, Admin Master <span className="animate-wave inline-block origin-bottom-right">👋</span></h1>
-              <p className="text-sm text-gray-400">Đây là tổng quan hệ thống của bạn hôm nay.</p>
+            <div className="flex items-center gap-4">
+              <button onClick={() => setActiveTab("overview")} className="mr-4 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-bold text-white transition-colors flex items-center gap-2">&larr; Trang Chủ</button>
+              <div>
+                <h1 className="text-3xl font-black text-white flex items-center gap-3 mb-1">Xin chào, Admin Master <span className="animate-wave inline-block origin-bottom-right">👋</span></h1>
+                <p className="text-sm text-gray-400">Đây là tổng quan hệ thống của bạn hôm nay.</p>
+              </div>
             </div>
             <div className="flex items-center gap-2 bg-[#1A1A24] border border-white/5 rounded-xl px-4 py-2 text-sm text-gray-300 font-medium cursor-pointer hover:bg-white/5 transition-colors">
               <Calendar className="w-4 h-4 text-gray-400" /> 20/07/2025 - 27/07/2025 <ChevronDown className="w-4 h-4 ml-2" />

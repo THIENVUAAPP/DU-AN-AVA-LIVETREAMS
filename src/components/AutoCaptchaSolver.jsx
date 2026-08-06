@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ShieldCheck, Cpu, Terminal, Zap, CheckCircle2, Scan } from 'lucide-react';
 
-const AutoCaptchaSolver = ({ onSolved }) => {
+const AutoCaptchaSolver = ({ onSolved, setActiveTab }) => {
   const [phase, setPhase] = useState('init'); // init -> analyzing -> solving -> success
   const [progress, setProgress] = useState(0);
   const [logs, setLogs] = useState([]);
@@ -84,10 +84,15 @@ const AutoCaptchaSolver = ({ onSolved }) => {
       <div className="relative w-[90%] max-w-xl bg-[#0A0A0E] border border-cyan-500/30 rounded-2xl shadow-[0_0_50px_rgba(6,182,212,0.15)] overflow-hidden">
         
         {/* Top Header Bar */}
-        <div className="bg-[#121216] border-b border-cyan-500/20 p-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-cyan-400 animate-pulse" />
-            <h3 className="text-cyan-400 font-black text-sm tracking-widest uppercase">AVA AI Stealth Solver</h3>
+        <div className="bg-[#111118] border-b border-white/5 p-4 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-4">
+             <button onClick={() => setActiveTab && setActiveTab("overview")} className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-bold text-white transition-colors flex items-center gap-2">
+               &larr; Trang Chủ
+             </button>
+             <div className="flex items-center gap-2">
+               <ShieldCheck className="w-5 h-5 text-cyan-400" />
+               <h3 className="text-sm font-black text-white tracking-wider">HỆ THỐNG GIẢI MÃ CAPTCHA TỰ ĐỘNG BẰNG AI</h3>
+             </div>
           </div>
           <div className="flex items-center gap-2">
              <span className="text-[10px] text-gray-500 font-mono">LATENCY: 12MS</span>

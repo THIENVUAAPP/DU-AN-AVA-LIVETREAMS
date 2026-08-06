@@ -103,6 +103,7 @@ export default function UserProfile({ currentUser }) {
         <header className="h-[72px] border-b border-white/5 flex items-center justify-between px-8 bg-[#111118]/50 backdrop-blur-md shrink-0">
           <div className="flex items-center gap-6">
             <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-gray-400 hover:text-white"><Menu className="w-6 h-6"/></button>
+            <button onClick={() => setActiveTab("overview")} className="mr-4 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-bold text-white transition-colors flex items-center gap-2">&larr; Trang Chủ</button>
             <h1 className="text-lg font-bold text-white hidden md:block">Hồ sơ người dùng <span className="text-xs text-gray-500 font-normal block">Quản lý thông tin tài khoản và hoạt động cá nhân</span></h1>
           </div>
           <div className="flex items-center gap-6">

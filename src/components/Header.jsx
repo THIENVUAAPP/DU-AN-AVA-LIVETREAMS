@@ -222,6 +222,17 @@ export default function Header({
 
                     <button
                       onClick={() => {
+                        setActiveTab("captcha");
+                        setProfileDropdownOpen(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-200 hover:text-white hover:bg-white/10 font-bold text-xs transition-all text-left cursor-pointer"
+                    >
+                      <Bot className="w-4 h-4 text-cyan-400" />
+                      <span>Giải Mã Captcha</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
                         setActiveTab("affiliate-dashboard");
                         setProfileDropdownOpen(false);
                       }}
