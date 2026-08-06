@@ -323,25 +323,87 @@ export default function LandingHero({ setActiveTab, setGoogleLoginModalOpen, aiA
         </div>
       </header>
 
-      {/* ─── VALUE PROPOSITION ──────────────────────────────────────────── */}
-      <section className="py-24 px-6 bg-gradient-to-b from-[#0A0A0A] to-[#111116]">
-        <RevealSection className="text-center max-w-3xl mx-auto space-y-4 mb-14">
-          <span className="px-4 py-1.5 rounded-full bg-[#EF4444]/20 border border-[#EF4444]/40 text-[#EF4444] text-xs font-black tracking-wider uppercase">
-            💡 TẠI SAO CHỌN AVALIVE PRO?
+      {/* ─── VALUE PROPOSITION (BENTO GRID) ───────────────────────────────── */}
+      <section className="py-24 px-6 bg-[#05050A] relative overflow-hidden">
+        {/* Glow Effects */}
+        <div className="absolute top-1/4 left-0 w-[500px] h-[500px] bg-[#EF4444]/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-1/4 right-0 w-[500px] h-[500px] bg-[#3B82F6]/10 rounded-full blur-[120px] pointer-events-none" />
+        
+        <RevealSection className="text-center max-w-4xl mx-auto space-y-5 mb-16 relative z-10">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-[#EF4444]/20 to-[#8B5CF6]/20 border border-[#EF4444]/40 text-[#EF4444] text-xs font-black tracking-wider uppercase shadow-neon-red">
+            <Sparkles className="w-4 h-4" /> BƯỚC VÀO KỶ NGUYÊN CÔNG NGHỆ 4.0
           </span>
-          <h2 className="text-3xl md:text-5xl font-black text-white leading-tight">
-            X30 Doanh Số — Không Lo Kiệt Sức,<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#EF4444] to-[#8B5CF6]">Không Tốn Chi Phí Nhân Sự</span>
+          <h2 className="text-4xl md:text-6xl font-black text-white leading-tight">
+            X30 Doanh Số Với Cỗ Máy<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#EF4444] via-[#8B5CF6] to-[#3B82F6] animate-shimmer">
+              Bán Hàng Tự Động Trí Tuệ Nhân Tạo
+            </span>
           </h2>
-          <p className="text-gray-400 text-sm md:text-base leading-relaxed">
-            Mỗi đêm bạn phải ngủ, nhưng khách hàng mua sắm 24/7. AvaLive PRO giúp bạn có một dàn chuyên viên bán hàng AI làm việc miệt mài 365 ngày/năm không mệt mỏi, không xin nghỉ, không đòi tăng lương.
+          <p className="text-gray-400 text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
+            Hệ thống thay thế hoàn toàn một ekip livestream hàng chục người. Mang lại cho bạn giải pháp bán hàng thông minh, tối ưu chi phí và bùng nổ doanh thu chưa từng có.
           </p>
         </RevealSection>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto stagger">
-          <FeatureCard icon={Zap} color="red" delay={0} title="Bán Hàng Tự Động 24/7 Liên Tục" desc="Kích hoạt luồng phát AI liên tục cả ngày đêm. Không cần MC ngồi trực, không cần kỹ thuật viên, hệ thống tự vận hành và chốt đơn ngay cả khi bạn đang ngủ." />
-          <FeatureCard icon={DollarSign} color="blue" delay={150} title="Cắt Giảm 80% Chi Phí Vận Hành" desc="Thay vì chi hàng chục triệu/tháng cho MC, studio, phòng máy quay, AvaLive PRO gói gọn toàn bộ giải pháp trong 1 phần mềm với chi phí cực kỳ tiết kiệm." />
-          <FeatureCard icon={Globe} color="purple" delay={300} title="Phủ Đa Nền Tảng Chỉ 1-Chạm" desc="Phát đồng thời lên TikTok, Facebook, YouTube, Shopee chỉ với 1 cú nhấp chuột. Mở rộng tệp khách hàng tiềm năng gấp 10 lần, tăng doanh số đột phá." />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto relative z-10">
+          {/* Card 1: Livestream 24/7 (Spans 2 columns) */}
+          <RevealSection delay={0} className="md:col-span-2">
+            <div className="glass-panel p-8 rounded-3xl border border-white/10 hover:border-[#EF4444]/50 transition-all duration-500 h-full flex flex-col justify-center relative overflow-hidden group bg-gradient-to-br from-[#1A0A0A] to-[#0A0505]">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#EF4444]/10 rounded-full blur-[80px] group-hover:bg-[#EF4444]/20 transition-all duration-500" />
+              <div className="w-14 h-14 rounded-2xl bg-[#EF4444]/20 text-[#EF4444] flex items-center justify-center mb-6 ring-1 ring-[#EF4444]/50 shadow-neon-red">
+                <Clock className="w-7 h-7" />
+              </div>
+              <h3 className="text-2xl md:text-3xl font-black text-white mb-4">
+                Sử Dụng Công Nghệ Livestream 24/7
+              </h3>
+              <p className="text-gray-400 text-base leading-relaxed">
+                Đón đầu thời đại công nghệ AI, hệ thống tự động phát Livestream xuyên suốt ngày đêm. Bán hàng liên tục không gián đoạn, không cần MC ngồi trực, không cần ekip hậu cần. Khách hàng thức giờ nào, bạn bán hàng giờ đó!
+              </p>
+            </div>
+          </RevealSection>
+
+          {/* Card 2: Bán Hàng Đa Nền Tảng */}
+          <RevealSection delay={150}>
+            <div className="glass-panel p-8 rounded-3xl border border-white/10 hover:border-[#3B82F6]/50 transition-all duration-500 h-full relative overflow-hidden group bg-gradient-to-br from-[#0A0F1A] to-[#050A0F]">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#3B82F6]/10 rounded-full blur-[80px] group-hover:bg-[#3B82F6]/20 transition-all duration-500" />
+              <div className="w-14 h-14 rounded-2xl bg-[#3B82F6]/20 text-[#3B82F6] flex items-center justify-center mb-6 ring-1 ring-[#3B82F6]/50 shadow-neon-blue">
+                <Radio className="w-7 h-7" />
+              </div>
+              <h3 className="text-xl font-black text-white mb-3">Livestream Đa Luồng Đa Nền Tảng</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                Phát liên tục cùng lúc lên vô số kênh khác nhau (TikTok, Facebook, Shopee, YouTube) bằng công nghệ Multi-stream. Phủ sóng thương hiệu mọi mặt trận chỉ với 1 cú click chuột.
+              </p>
+            </div>
+          </RevealSection>
+
+          {/* Card 3: Bán Mọi Sản Phẩm */}
+          <RevealSection delay={200}>
+            <div className="glass-panel p-8 rounded-3xl border border-white/10 hover:border-emerald-400/50 transition-all duration-500 h-full relative overflow-hidden group bg-gradient-to-br from-[#0A1A0F] to-[#050F0A]">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-[80px] group-hover:bg-emerald-400/20 transition-all duration-500" />
+              <div className="w-14 h-14 rounded-2xl bg-emerald-400/20 text-emerald-400 flex items-center justify-center mb-6 ring-1 ring-emerald-400/50 shadow-neon-green">
+                <Package className="w-7 h-7" />
+              </div>
+              <h3 className="text-xl font-black text-white mb-3">Bán Bất Kỳ Sản Phẩm Gì</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                Dù bạn kinh doanh thời trang, mỹ phẩm, điện tử, gia dụng hay bất kỳ ngách nào. AI sẽ tự động điều chỉnh kịch bản hiển thị để chốt đơn hoàn hảo cho từng mặt hàng cụ thể.
+              </p>
+            </div>
+          </RevealSection>
+
+          {/* Card 4: Thu Nhập Thụ Động (Spans 2 columns) */}
+          <RevealSection delay={300} className="md:col-span-2">
+            <div className="glass-panel p-8 rounded-3xl border border-white/10 hover:border-[#8B5CF6]/50 transition-all duration-500 h-full flex flex-col justify-center relative overflow-hidden group bg-gradient-to-br from-[#120A1A] to-[#0A0512]">
+              <div className="absolute top-0 left-0 w-64 h-64 bg-[#8B5CF6]/10 rounded-full blur-[80px] group-hover:bg-[#8B5CF6]/20 transition-all duration-500" />
+              <div className="w-14 h-14 rounded-2xl bg-[#8B5CF6]/20 text-[#8B5CF6] flex items-center justify-center mb-6 ring-1 ring-[#8B5CF6]/50 shadow-neon-purple z-10 relative">
+                <DollarSign className="w-7 h-7" />
+              </div>
+              <h3 className="text-2xl md:text-3xl font-black text-white mb-4 z-10 relative">
+                Tạo Nguồn Thu Nhập Thụ Động Đột Phá
+              </h3>
+              <p className="text-gray-400 text-base leading-relaxed z-10 relative">
+                Bạn đi ngủ, đi chơi, đi du lịch? Không sao cả! Máy chủ AI vẫn miệt mài tương tác, tự động bắt bình luận chốt đơn, đóng gói dữ liệu và chuyển thẳng cho đơn vị vận chuyển. Tiền tự động chảy về túi bạn một cách hoàn toàn thụ động!
+              </p>
+            </div>
+          </RevealSection>
         </div>
       </section>
 
