@@ -571,9 +571,9 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
                 <div className="w-10 h-10 rounded-xl bg-[#111] p-0.5 border border-white/20">
                   <img src="/official_logo.jpg" alt="AvaLive" className="w-full h-full object-cover rounded-[10px]" />
                 </div>
-                <h1 className="text-xl font-black text-white tracking-tight flex flex-col leading-none">
-                  <span className="text-[#FBBF24]">AVA</span>
-                  <span className="text-[10px] text-purple-400 font-bold uppercase tracking-widest mt-1">Live</span>
+                <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-1.5 leading-none">
+                  <span className="text-[#FBBF24] drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]">AVA</span>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 font-black drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]">LIVESTREAM</span>
                 </h1>
               </div>
               <p className="text-gray-400 text-xs leading-relaxed">

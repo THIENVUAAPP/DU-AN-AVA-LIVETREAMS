@@ -28,7 +28,7 @@ export default function AffiliateLanding({ currentUser, setGoogleLoginModalOpen,
                 <img src="/official_logo.jpg" alt="AvaLive PRO" className="w-full h-full object-cover rounded-[10px] border border-white/40" />
               </div>
               <h1 className="text-xl font-black text-white tracking-tight">
-                AvaLive <span className="text-[#EF4444]">PRO</span>
+                AVA <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 font-black drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]">LIVESTREAM</span>
               </h1>
             </div>
 
