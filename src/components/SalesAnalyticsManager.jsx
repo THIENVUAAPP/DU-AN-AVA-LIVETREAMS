@@ -371,13 +371,21 @@ export default function SalesAnalyticsManager({ currentUser }) {
               QUẢN LÝ TẤT CẢ ĐƠN HÀNG BÁN ĐƯỢC TỪ LIVESTREAM
             </h3>
 
-            <div className="flex items-center gap-2 text-xs">
-              <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">
-                ● Đã Thanh Toán: 3 Đơn
-              </span>
-              <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold">
-                ● Chưa Thanh Toán (COD): 1 Đơn
-              </span>
+            <div className="flex flex-col gap-2 text-xs">
+              <div className="flex items-center gap-2 self-end">
+                <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">
+                  ● Đã Thanh Toán: 3 Đơn
+                </span>
+                <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold">
+                  ● Chưa Thanh Toán (COD): 1 Đơn
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="text-gray-400 font-bold">Giới hạn gói {currentUser?.plan || 'STARTER'}: </span>
+                <span className={`font-black ${currentUser?.plan === 'ENTERPRISE' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                  {orders.length} / {currentUser?.plan === 'STARTER' ? 200 : currentUser?.plan === 'PRO' ? 1000 : 'Không giới hạn'} đơn
+                </span>
+              </div>
             </div>
           </div>
 

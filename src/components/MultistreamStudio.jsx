@@ -91,10 +91,20 @@ function LiveCameraFeed({ className = "w-full h-full object-cover" }) {
 
 export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
 
+  const getMaxStreams = () => {
+    if (currentUser?.plan === 'STARTER') return 5;
+    if (currentUser?.plan === 'PRO') return 15;
+    return Infinity;
+  };
+
   const toggleIndividualLiveChannel = (channelId) => {
     if (liveChannelIds.includes(channelId)) {
       setLiveChannelIds(prev => prev.filter(id => id !== channelId));
     } else {
+      if (liveChannelIds.length >= getMaxStreams()) {
+        alert(`Bảo Mật Hệ Thống: Gói ${currentUser?.plan} của bạn chỉ cho phép tối đa ${getMaxStreams()} luồng Live đồng thời. Vui lòng nâng cấp gói cước để thêm luồng!`);
+        return;
+      }
       setLiveChannelIds(prev => [...prev, channelId]);
     }
   };
@@ -104,6 +114,11 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
       setIsLive(false);
       setLiveChannelIds([]);
     } else {
+      const maxStreams = getMaxStreams();
+      if (channels.length > maxStreams) {
+        alert(`Bảo Mật Hệ Thống: Bạn đang cố phát ${channels.length} luồng, nhưng gói ${currentUser?.plan} chỉ cho phép tối đa ${maxStreams} luồng. Vui lòng chọn phát từng kênh hoặc nâng cấp gói!`);
+        return;
+      }
       setIsLive(true);
       setLiveChannelIds(channels.map(c => c.id));
     }

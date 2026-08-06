@@ -35,6 +35,7 @@ export default function App() {
         email: "quocthiencr90@gmail.com",
         avatar: "https://lh3.googleusercontent.com/a/default-user",
         isAdmin: true,
+        plan: "STARTER"
       };
     } catch (e) {
       return null;
@@ -97,6 +98,7 @@ export default function App() {
       email: emailClean,
       avatar: avatarUrl,
       isAdmin: isAdmin,
+      plan: isAdmin ? "ENTERPRISE" : "STARTER"
     };
 
     setCurrentUser(newUser);

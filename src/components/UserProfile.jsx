@@ -17,7 +17,8 @@ import {
   DollarSign,
   Zap,
   Sparkles,
-  ShoppingBag
+  ShoppingBag,
+  Settings
 } from 'lucide-react';
 
 export default function UserProfile({ currentUser }) {
@@ -95,14 +96,14 @@ export default function UserProfile({ currentUser }) {
       </div>
 
       {/* Profile Sub-tabs */}
-      <div className="flex items-center gap-2 bg-[#121216] p-1.5 rounded-xl border border-white/10 overflow-x-auto text-xs font-bold">
+      <div className="flex flex-wrap items-center gap-2 bg-[#121216] p-1.5 rounded-xl border border-white/10 text-xs font-bold">
         <button
           onClick={() => setActiveTab('profile')}
           className={`px-4 py-2 rounded-lg transition-all ${
             activeTab === 'profile' ? 'bg-[#EF4444] text-white shadow-glow-red' : 'text-gray-400 hover:text-white'
           }`}
         >
-          👤 HỒ SƠ & GÓI ĐĂNG KÝ
+          👤 HỒ SƠ & GÓI CƯỚC
         </button>
 
         <button
@@ -111,46 +112,27 @@ export default function UserProfile({ currentUser }) {
             activeTab === 'finance' ? 'bg-[#3B82F6] text-white shadow-glow-blue' : 'text-gray-400 hover:text-white'
           }`}
         >
-          💳 LỊCH SỬ NẠP TIỀN & HÓA ĐƠN
-        </button>
-
-        <button
-          onClick={() => setActiveTab('bank')}
-          className={`px-4 py-2 rounded-lg transition-all ${
-            activeTab === 'bank' ? 'bg-[#8B5CF6] text-white shadow-glow-purple' : 'text-gray-400 hover:text-white'
-          }`}
-        >
-          🏦 NGÂN HÀNG NHẬN HOA HỒNG
+          💳 HỆ THỐNG THANH TOÁN (SEPAY/NGÂN HÀNG)
         </button>
 
         <button
           onClick={() => setActiveTab('sales-analytics')}
           className={`px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 ${
-            activeTab === 'sales-analytics' ? 'bg-[#EF4444] text-white shadow-glow-red' : 'text-gray-400 hover:text-white'
+            activeTab === 'sales-analytics' ? 'bg-[#10B981] text-white shadow-glow-green' : 'text-gray-400 hover:text-white'
           }`}
         >
           <ShoppingBag className="w-3.5 h-3.5" />
-          <span>🛍️ QUẢN TRỊ BÁN HÀNG & BÁO CÁO</span>
+          <span>📦 QUẢN LÝ ĐƠN HÀNG & THỐNG KÊ LIVE</span>
         </button>
 
         <button
-          onClick={() => setActiveTab('team')}
+          onClick={() => setActiveTab('advanced')}
           className={`px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 ${
-            activeTab === 'team' ? 'bg-emerald-600 text-white shadow-glow-emerald' : 'text-gray-400 hover:text-white'
+            activeTab === 'advanced' ? 'bg-amber-600 text-white shadow-glow-amber' : 'text-gray-400 hover:text-white'
           }`}
         >
-          <ShieldCheck className="w-3.5 h-3.5" />
-          <span>🛡️ PHÂN QUYỀN NHÂN VIÊN</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('captcha')}
-          className={`px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 ${
-            activeTab === 'captcha' ? 'bg-amber-600 text-white shadow-glow-amber' : 'text-gray-400 hover:text-white'
-          }`}
-        >
-          <Zap className="w-3.5 h-3.5" />
-          <span>🤖 GIẢI MÃ CAPTCHA AI</span>
+          <Settings className="w-3.5 h-3.5" />
+          <span>⚙️ CÀI ĐẶT NÂNG CAO (TEAM/CAPTCHA)</span>
         </button>
       </div>
 
@@ -283,7 +265,7 @@ export default function UserProfile({ currentUser }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 font-mono">
-                {userInvoices.map((inv) => (
+                {userInvoices.length > 0 ? userInvoices.map((inv) => (
                   <tr key={inv.id} className="hover:bg-white/5 transition-all">
                     <td className="p-3 font-bold text-[#EF4444]">{inv.id}</td>
                     <td className="p-3 text-white font-sans font-bold">{inv.plan}</td>
@@ -295,73 +277,68 @@ export default function UserProfile({ currentUser }) {
                       </span>
                     </td>
                   </tr>
-                ))}
+                )) : (
+                  <tr>
+                    <td colSpan="5" className="p-5 text-center text-gray-500 font-sans">Chưa có dữ liệu hóa đơn</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
-        </div>
-      )}
 
-      {/* Tab 3: Bank Account Settings */}
-      {activeTab === 'bank' && (
-        <div className="glass-panel p-6 rounded-2xl border border-white/10 space-y-4 max-w-2xl">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2 border-b border-white/10 pb-3">
-            <CreditCard className="w-4 h-4 text-[#8B5CF6]" /> TÀI KHOẢN NGÂN HÀNG NHẬN HOA HỒNG RÚT (SEPAY VIETQR)
-          </h3>
+          <div className="border-t border-white/10 pt-4 mt-4">
+             <h3 className="text-sm font-bold text-white flex items-center gap-2 pb-3">
+              <CreditCard className="w-4 h-4 text-[#8B5CF6]" /> TÀI KHOẢN NGÂN HÀNG NHẬN HOA HỒNG RÚT (SEPAY VIETQR)
+            </h3>
 
-          <div className="space-y-3 text-xs">
-            <div className="space-y-1">
-              <label className="text-gray-300 font-bold block">Tên Ngân Hàng:</label>
-              <input 
-                type="text" 
-                value={profile.bankName}
-                onChange={(e) => setProfile({ ...profile, bankName: e.target.value })}
-                className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-3 py-2 text-white"
-              />
+            <div className="space-y-3 text-xs max-w-2xl">
+              <div className="space-y-1">
+                <label className="text-gray-300 font-bold block">Tên Ngân Hàng:</label>
+                <input 
+                  type="text" 
+                  value={profile.bankName}
+                  onChange={(e) => setProfile({ ...profile, bankName: e.target.value })}
+                  className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-3 py-2 text-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-gray-300 font-bold block">Số Tài Khoản Ngân Hàng:</label>
+                  <input 
+                    type="text" 
+                    value={profile.accountNumber}
+                    onChange={(e) => setProfile({ ...profile, accountNumber: e.target.value })}
+                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-3 py-2 text-white font-mono"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-gray-300 font-bold block">Tên Chủ Tài Khoản:</label>
+                  <input 
+                    type="text" 
+                    value={profile.accountHolder}
+                    onChange={(e) => setProfile({ ...profile, accountHolder: e.target.value })}
+                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-3 py-2 text-white font-bold"
+                  />
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-gray-300 font-bold block">Số Tài Khoản Ngân Hàng:</label>
-              <input 
-                type="text" 
-                value={profile.accountNumber}
-                onChange={(e) => setProfile({ ...profile, accountNumber: e.target.value })}
-                className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-3 py-2 text-white font-mono"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-gray-300 font-bold block">Tên Chủ Tài Khoản:</label>
-              <input 
-                type="text" 
-                value={profile.accountHolder}
-                onChange={(e) => setProfile({ ...profile, accountHolder: e.target.value })}
-                className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-3 py-2 text-white font-bold"
-              />
-            </div>
+            <button 
+              onClick={() => alert("Đã lưu thông tin tài khoản ngân hàng nhận tiền hoa hồng!")}
+              className="mt-4 px-5 py-2 bg-[#8B5CF6] hover:bg-purple-600 text-white font-extrabold text-xs rounded-xl shadow-glow-purple transition-all"
+            >
+              LƯU TÀI KHOẢN NGÂN HÀNG
+            </button>
           </div>
-
-          <button 
-            onClick={() => alert("Đã lưu thông tin tài khoản ngân hàng nhận tiền hoa hồng!")}
-            className="px-5 py-2 bg-[#8B5CF6] hover:bg-purple-600 text-white font-extrabold text-xs rounded-xl shadow-glow-purple transition-all"
-          >
-            LƯU TÀI KHOẢN NGÂN HÀNG
-          </button>
         </div>
       )}
 
-      {/* Tab 4: Sales & Shipping Analytics Control Center */}
-      {activeTab === 'sales-analytics' && (
-        <SalesAnalyticsManager currentUser={currentUser} />
-      )}
-
-      {/* Tab 5: Team Permissions Management */}
-      {activeTab === 'team' && (
-        <TeamPermissionsManager currentUser={currentUser} />
-      )}
-
-      {/* Tab Captcha Solver */}
-      {activeTab === 'captcha' && (
+      {/* Tab 5: Advanced Settings */}
+      {activeTab === 'advanced' && (
+        <div className="space-y-6">
+          <TeamPermissionsManager currentUser={currentUser} />
         <div className="space-y-6 animate-fade-in pb-10">
           <div className="glass-panel p-6 rounded-2xl border border-amber-500/30 space-y-6">
             <div className="flex items-center justify-between">
