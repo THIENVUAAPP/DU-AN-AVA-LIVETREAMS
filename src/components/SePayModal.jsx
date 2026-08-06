@@ -24,7 +24,8 @@ export default function SePayModal({ isOpen, onClose, plan, billingCycle, curren
   // URL tạo mã QR VietQR (Cổng SePay / VietQR)
   const bankAccount = "19036789012345";
   const bankName = "Techcombank";
-  const qrUrl = `https://qr.sepay.vn/img?acc=${bankAccount}&bank=${bankName}&amount=${price}&des=${orderCode}`;
+  const accountName = "NGUYEN QUOC THIEN";
+  const qrUrl = `https://qr.sepay.vn/img?acc=${bankAccount}&bank=${bankName}&amount=${price}&des=${orderCode}&accountName=${encodeURIComponent(accountName)}`;
 
   const formatTimer = (sec) => {
     const m = Math.floor(sec / 60);
@@ -122,6 +123,12 @@ export default function SePayModal({ isOpen, onClose, plan, billingCycle, curren
               </div>
               <div className="flex justify-between items-center bg-[#1c1c22] p-3 rounded-xl border border-white/5">
                  <div className="flex flex-col">
+                   <span className="text-[10px] text-gray-500 font-bold uppercase">Chủ tài khoản</span>
+                   <span className="text-sm font-bold text-white uppercase">{accountName}</span>
+                 </div>
+              </div>
+              <div className="flex justify-between items-center bg-[#1c1c22] p-3 rounded-xl border border-white/5">
+                 <div className="flex flex-col">
                    <span className="text-[10px] text-gray-500 font-bold uppercase">Số tài khoản</span>
                    <span className="text-sm font-bold text-[#00f2fe]">{bankAccount}</span>
                  </div>
@@ -146,7 +153,7 @@ export default function SePayModal({ isOpen, onClose, plan, billingCycle, curren
              className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
            >
              {isVerifying ? <RefreshCw className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
-             {isVerifying ? 'ĐANG KIỂM TRA GIAO DỊCH...' : 'TÔI ĐÃ CHUYỂN KHOẢN (SIMULATE)'}
+             {isVerifying ? 'ĐANG KIỂM TRA GIAO DỊCH...' : 'TÔI ĐÃ CHUYỂN KHOẢN '}
            </button>
            
            <p className="text-center text-[10px] text-gray-500 mt-4 flex items-center justify-center gap-1">
