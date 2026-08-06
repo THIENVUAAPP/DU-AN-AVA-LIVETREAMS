@@ -105,13 +105,12 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
           </div>
 
           <nav className="hidden lg:flex items-center gap-6">
-            <button onClick={() => window.scrollTo(0, 0)} className="text-sm font-semibold text-white hover:text-[#FBBF24] transition-all">Trang chủ</button>
-            <a href="#features" className="text-sm font-semibold text-gray-300 hover:text-white transition-all">Tính năng</a>
-            <a href="#pricing" className="text-sm font-semibold text-gray-300 hover:text-white transition-all">Bảng giá</a>
-            <a href="#guide" className="text-sm font-semibold text-gray-300 hover:text-white transition-all">Hướng dẫn</a>
-            <button onClick={() => setActiveTab('affiliate-landing')} className="text-sm font-semibold text-gray-300 hover:text-[#FBBF24] transition-all">Affiliate</button>
-            <a href="#blog" className="text-sm font-semibold text-gray-300 hover:text-white transition-all">Blog</a>
-            <a href="#contact" className="text-sm font-semibold text-gray-300 hover:text-white transition-all">Liên hệ</a>
+            <button onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})} className="text-sm font-semibold text-white hover:text-[#FBBF24] transition-all cursor-pointer">Trang chủ</button>
+            <button onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-semibold text-gray-300 hover:text-white transition-all cursor-pointer">Tính năng</button>
+            <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-semibold text-gray-300 hover:text-white transition-all cursor-pointer">Bảng giá</button>
+            <button onClick={() => document.getElementById('guide')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-semibold text-gray-300 hover:text-white transition-all cursor-pointer">Hướng dẫn</button>
+            <button onClick={() => setActiveTab('affiliate-landing')} className="text-sm font-semibold text-gray-300 hover:text-[#FBBF24] transition-all cursor-pointer">Affiliate</button>
+            <button onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-semibold text-gray-300 hover:text-white transition-all cursor-pointer">Liên hệ</button>
           </nav>
 
           <div className="flex items-center gap-4">
@@ -434,11 +433,11 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-[#05050A] pt-16 pb-8 border-t border-white/5 relative z-10">
+      <footer id="contact" className="bg-[#05050A] pt-16 pb-8 border-t border-white/5 relative z-10">
         <div className="max-w-7xl mx-auto px-4">
           
           {/* Top Footer Banner Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
+          <div id="guide" className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
             <div className="rounded-2xl border border-white/10 bg-[#0d0d16] p-8 flex items-center justify-between group cursor-pointer hover:border-purple-500/30 transition-colors">
               <div>
                 <h4 className="text-xl font-bold text-white mb-2 uppercase">HƯỚNG DẪN SỬ DỤNG</h4>
@@ -481,20 +480,19 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
             <div>
               <h4 className="text-white font-bold mb-4 uppercase text-sm">SẢN PHẨM</h4>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Tính năng</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Bảng giá</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Hướng dẫn</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Cập nhật</a></li>
+                <li><button onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-white transition-colors">Tính năng</button></li>
+                <li><button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-white transition-colors">Bảng giá</button></li>
+                <li><button onClick={() => document.getElementById('guide')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-white transition-colors">Hướng dẫn</button></li>
+                <li><button onClick={() => setActiveTab('affiliate-landing')} className="hover:text-white transition-colors">Tiếp thị Affiliate</button></li>
               </ul>
             </div>
             
             <div>
-              <h4 className="text-white font-bold mb-4 uppercase text-sm">CÔNG TY</h4>
+              <h4 className="text-white font-bold mb-4 uppercase text-sm">LIÊN HỆ</h4>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Về chúng tôi</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Tin tức</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Tuyển dụng</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Liên hệ</a></li>
+                <li><a href="mailto:support@avalive.com" className="hover:text-white transition-colors">support@avalive.com</a></li>
+                <li><a href="tel:0909000000" className="hover:text-white transition-colors">0909 000 000</a></li>
+                <li><button onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-white transition-colors">Hỗ trợ 24/7</button></li>
               </ul>
             </div>
 

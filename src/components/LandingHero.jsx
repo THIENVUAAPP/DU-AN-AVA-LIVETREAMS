@@ -324,7 +324,7 @@ export default function LandingHero({ setActiveTab, setGoogleLoginModalOpen, aiA
       </header>
 
       {/* ─── VALUE PROPOSITION (BENTO GRID) ───────────────────────────────── */}
-      <section className="py-24 px-6 bg-[#05050A] relative overflow-hidden">
+      <section id="features" className="py-24 px-6 bg-[#05050A] relative overflow-hidden">
         {/* Glow Effects */}
         <div className="absolute top-1/4 left-0 w-[500px] h-[500px] bg-[#EF4444]/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-1/4 right-0 w-[500px] h-[500px] bg-[#3B82F6]/10 rounded-full blur-[120px] pointer-events-none" />
