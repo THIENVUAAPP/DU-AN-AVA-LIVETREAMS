@@ -3,7 +3,7 @@ import {
   Sparkles, CheckCircle2, ArrowRight, Zap, ShieldCheck, 
   Tv, Users, CreditCard, ChevronRight, Crown, Star, 
   BarChart2, Share2, Globe, HeartHandshake, Building2,
-  Play, MousePointerClick, MessageSquare, Smartphone
+  Play, MousePointerClick, MessageSquare, Smartphone, Facebook
 } from 'lucide-react';
 import SePayModal from './SePayModal';
 

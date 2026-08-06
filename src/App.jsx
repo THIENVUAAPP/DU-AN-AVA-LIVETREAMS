@@ -23,7 +23,14 @@ import AutoCaptchaSolver from "./components/AutoCaptchaSolver";
 import { Lock, Sparkles, ShieldCheck, Mail, LogIn, ArrowRight } from "lucide-react";
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState(() => { const saved = localStorage.getItem("avalive_current_user"); return saved ? "broadcast" : "overview"; }); // Default to Studio Workspace
+  const [activeTab, setActiveTab] = useState(() => { 
+    try {
+      const saved = localStorage.getItem("avalive_current_user"); 
+      return saved ? "broadcast" : "overview"; 
+    } catch (e) {
+      return "overview";
+    }
+  });
   const [isLive, setIsLive] = useState(false);
   const [aiAvatarFeatureEnabled, setAiAvatarFeatureEnabled] = useState(false);
 
