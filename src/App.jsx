@@ -112,19 +112,21 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-gray-100 flex flex-col font-sans selection:bg-[#EF4444] selection:text-white">
       
-      {/* Navigation Header */}
-      <Header 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
-        isLive={isLive} 
-        setIsLive={setIsLive} 
-        currentUser={currentUser}
-        setCurrentUser={setCurrentUser}
-        googleLoginModalOpen={googleLoginModalOpen}
-        setGoogleLoginModalOpen={setGoogleLoginModalOpen}
-        aiAvatarFeatureEnabled={aiAvatarFeatureEnabled}
-        setAiAvatarFeatureEnabled={setAiAvatarFeatureEnabled}
-      />
+      {/* Navigation Header (Chỉ hiển thị trong Giao Diện Chính Thức khi đã đăng nhập) */}
+      {currentUser && (
+        <Header 
+          activeTab={activeTab} 
+          setActiveTab={setActiveTab} 
+          isLive={isLive} 
+          setIsLive={setIsLive} 
+          currentUser={currentUser}
+          setCurrentUser={setCurrentUser}
+          googleLoginModalOpen={googleLoginModalOpen}
+          setGoogleLoginModalOpen={setGoogleLoginModalOpen}
+          aiAvatarFeatureEnabled={aiAvatarFeatureEnabled}
+          setAiAvatarFeatureEnabled={setAiAvatarFeatureEnabled}
+        />
+      )}
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6">

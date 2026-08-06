@@ -103,8 +103,39 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
   return (
     <div className="min-h-screen bg-[#050505] text-gray-100 font-sans overflow-x-hidden selection:bg-[#EF4444] selection:text-white pb-20">
       
+      {/* STANDALONE WEBSITE HEADER */}
+      <header className="fixed top-0 left-0 right-0 z-[100] bg-[#050505]/80 backdrop-blur-xl border-b border-white/5 py-4 px-6 transition-all">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setActiveTab('overview')}>
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#EF4444] via-[#8B5CF6] to-[#06B6D4] p-0.5 shadow-2xl group-hover:scale-105 transition-all">
+              <img src="/official_logo.jpg" alt="AvaLive PRO" className="w-full h-full object-cover rounded-[10px] border border-white/40" />
+            </div>
+            <h1 className="text-xl font-black text-white tracking-tight">
+              AvaLive <span className="text-[#EF4444]">PRO</span>
+            </h1>
+          </div>
+
+          <nav className="hidden md:flex items-center gap-8">
+            <button onClick={() => setActiveTab('overview')} className="text-sm font-bold text-white hover:text-[#EF4444] transition-colors">Trang Chủ</button>
+            <button onClick={() => {
+               document.getElementById('pricing-section')?.scrollIntoView({ behavior: 'smooth' });
+            }} className="text-sm font-bold text-gray-300 hover:text-white transition-colors">Bảng Giá</button>
+            <button onClick={() => setActiveTab('affiliate-landing')} className="text-sm font-bold text-gray-300 hover:text-[#8B5CF6] transition-colors flex items-center gap-1">
+              <HeartHandshake className="w-4 h-4" /> Tiếp Thị 30%
+            </button>
+          </nav>
+
+          <button 
+            onClick={() => setGoogleLoginModalOpen(true)}
+            className="px-5 py-2.5 bg-white hover:bg-gray-200 text-black font-black rounded-xl text-sm shadow-xl transition-all hover:scale-105 flex items-center gap-2"
+          >
+            ĐĂNG NHẬP <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </header>
+
       {/* 1. HERO SECTION */}
-      <section className="relative pt-20 pb-32 overflow-hidden flex flex-col items-center text-center px-4">
+      <section className="relative pt-32 pb-32 overflow-hidden flex flex-col items-center text-center px-4">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-tr from-[#EF4444]/20 via-[#8B5CF6]/20 to-[#3B82F6]/20 blur-[120px] rounded-full pointer-events-none"></div>
         
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-md animate-fade-in-up">
@@ -180,7 +211,7 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
       </section>
 
       {/* 3. PRICING PACKAGES */}
-      <section className="py-20 px-4 max-w-7xl mx-auto relative z-10">
+      <section id="pricing-section" className="py-20 px-4 max-w-7xl mx-auto relative z-10">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-black text-white mb-6">Bảng Giá Dịch Vụ</h2>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-8">

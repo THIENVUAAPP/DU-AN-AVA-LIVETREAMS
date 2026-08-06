@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, CheckCircle2, Lock, Copy, RefreshCw, Clock, X, Scan } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, Lock, Copy, RefreshCw, Clock, X, Scan, Check } from 'lucide-react';
 import { syncPaymentToSupabase, supabase } from '../lib/supabaseClient';
 
 export default function SePayModal({ isOpen, onClose, plan, billingCycle, currentUser, onSuccess }) {
