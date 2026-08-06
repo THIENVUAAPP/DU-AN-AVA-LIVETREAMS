@@ -470,23 +470,7 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
           ))}
         </div>
 
-        {/* Payment Methods */}
-        <div className="mt-12 rounded-2xl border border-white/10 bg-[#0d0d16] p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
-           <div>
-             <h4 className="text-white font-bold mb-1">THANH TOÁN AN TOÀN QUA SEPAY</h4>
-             <p className="text-gray-400 text-xs">Bảo mật tuyệt đối - Xử lý giao dịch nhanh chóng</p>
-           </div>
-           <div className="flex items-center gap-6">
-             <div className="flex items-center gap-2 bg-blue-500/10 px-4 py-2 rounded-lg border border-blue-500/20">
-               <span className="text-blue-400 font-black text-xl italic tracking-tighter">sepay</span>
-             </div>
-             <div className="flex items-center gap-3 grayscale opacity-60">
-               <span className="text-sm font-black border border-gray-500 px-2 rounded">VISA</span>
-               <div className="w-6 h-6 rounded-full bg-red-500/50 flex items-center justify-center -mr-4 z-10"></div>
-               <div className="w-6 h-6 rounded-full bg-orange-500/50"></div>
-             </div>
-           </div>
-        </div>
+
       </section>
 
       {/* 5. STATS & PARTNERS */}
