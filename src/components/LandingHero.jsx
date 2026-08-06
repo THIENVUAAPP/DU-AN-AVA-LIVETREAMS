@@ -717,7 +717,7 @@ export default function LandingHero({ setActiveTab, setGoogleLoginModalOpen, aiA
       </section>
 
       {/* ─── AFFILIATE PROGRAM ──────────────────────────────────────────── */}
-      <section className="py-24 px-6 bg-gradient-to-b from-[#0A0A0A] via-[#0D0D12] to-[#0A0A0A]">
+      <section id="affiliate-intro" className="py-24 px-6 bg-gradient-to-b from-[#0A0A0A] via-[#0D0D12] to-[#0A0A0A]">
         <RevealSection className="max-w-4xl mx-auto glass-panel rounded-3xl border border-[#EF4444]/30 p-10 md:p-14 text-center space-y-6 bg-gradient-to-br from-[#EF4444]/5 to-[#8B5CF6]/5 shadow-neon-red">
           <span className="px-4 py-1.5 rounded-full bg-[#EF4444]/20 border border-[#EF4444]/40 text-[#EF4444] text-xs font-black tracking-wider uppercase">
             💸 TIẾP THỊ LIÊN KẾT AFFILIATE
