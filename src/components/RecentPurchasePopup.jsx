@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, CheckCircle2, Crown, Sparkles, MapPin } from 'lucide-react';
 
+import { plans } from '../lib/plansConfig';
+
 const vietnameseNames = [
   "Nguyễn Văn An", "Trần Thị Bé", "Lê Hoàng Phúc", "Phạm Thu Thảo", "Hoàng Văn Thái",
   "Phan Thị Mai", "Vũ Đình Trọng", "Đặng Ngọc Duyên", "Bùi Tấn Phát", "Đỗ Hương Giang",
@@ -29,13 +31,6 @@ const provinces = [
   "Bà Rịa - Vũng Tàu", "Thanh Hóa", "Nghệ An", "Quảng Ninh", "Khánh Hòa", "Lâm Đồng"
 ];
 
-const packages = [
-  { name: "Gói VIP", color: "text-purple-400", bg: "bg-purple-500/20", icon: <Crown className="w-4 h-4 text-purple-400" /> },
-  { name: "Gói PRO", color: "text-blue-400", bg: "bg-blue-500/20", icon: <ShoppingCart className="w-4 h-4 text-blue-400" /> },
-  { name: "Gói SIÊU CẤP VIP PRO", color: "text-amber-400", bg: "bg-amber-500/20", icon: <Sparkles className="w-4 h-4 text-amber-400" /> },
-  { name: "Gói STARTER", color: "text-emerald-400", bg: "bg-emerald-500/20", icon: <CheckCircle2 className="w-4 h-4 text-emerald-400" /> }
-];
-
 export default function RecentPurchasePopup() {
   const [isVisible, setIsVisible] = useState(false);
   const [currentBuyer, setCurrentBuyer] = useState(null);
@@ -50,16 +45,24 @@ export default function RecentPurchasePopup() {
   }, []);
 
   const triggerPopup = () => {
+    // Get paid plans only
+    const paidPlans = plans.filter(p => p.monthly > 0 || p.yearly > 0);
+    
     // Pick random data
     const randomName = vietnameseNames[Math.floor(Math.random() * vietnameseNames.length)];
     const randomProvince = provinces[Math.floor(Math.random() * provinces.length)];
-    const randomPackage = packages[Math.floor(Math.random() * packages.length)];
-    const randomTime = Math.floor(Math.random() * 59) + 1; // 1-59 minutes ago (or we can just say "Vừa xong")
+    const randomPlan = paidPlans[Math.floor(Math.random() * paidPlans.length)];
+    
+    // Pick monthly vs yearly
+    const isYearly = Math.random() > 0.5;
+    const price = isYearly && randomPlan.yearly > 0 ? randomPlan.yearly : randomPlan.monthly;
+    const priceText = price.toLocaleString() + "₫";
 
     setCurrentBuyer({
       name: randomName,
       province: randomProvince,
-      pkg: randomPackage,
+      pkg: randomPlan,
+      priceDisplay: priceText,
       time: 'Vừa xong'
     });
 
@@ -106,10 +109,13 @@ export default function RecentPurchasePopup() {
         {/* Content */}
         <div className="flex-1 min-w-0">
           <p className="text-white font-bold text-sm truncate">{currentBuyer.name}</p>
-          <div className="flex items-center gap-1.5 mt-0.5">
+          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
             <span className="text-gray-400 text-[11px]">Vừa đăng ký</span>
-            <span className={`text-[11px] font-black ${currentBuyer.pkg.color} flex items-center gap-1 bg-white/5 px-1.5 py-0.5 rounded`}>
-              {currentBuyer.pkg.name}
+            <span className={`text-[11px] font-black ${currentBuyer.pkg.color || 'text-white'} flex items-center gap-1 bg-white/5 px-1.5 py-0.5 rounded`}>
+              GÓI {currentBuyer.pkg.name}
+            </span>
+            <span className="text-emerald-400 text-[11px] font-bold">
+              {currentBuyer.priceDisplay}
             </span>
           </div>
           <div className="flex items-center justify-between mt-1.5">
