@@ -32,6 +32,8 @@ export async function syncUserToSupabase(user) {
           name: user.name || user.email.split('@')[0],
           avatar_url: user.avatar,
           role: user.isAdmin ? 'admin' : 'user',
+          plan: 'FREE', // Default plan
+          used_live_sessions: 0,
           created_at: new Date().toISOString()
         }
       ])
@@ -54,7 +56,7 @@ export async function syncUserToSupabase(user) {
 /**
  * Record SePay Payment Transaction to new Supabase payments table
  */
-export async function syncPaymentToSupabase({ plan, amount, referenceCode, status = 'completed' }) {
+export async function syncPaymentToSupabase({ plan, amount, referenceCode, status = 'completed', email }) {
   try {
     const { data, error } = await supabase
       .from('payments')
@@ -64,6 +66,7 @@ export async function syncPaymentToSupabase({ plan, amount, referenceCode, statu
           amount: amount,
           reference_code: referenceCode || 'AVALIVE8912',
           status: status,
+          user_email: email,
           paid_at: new Date().toISOString(),
           created_at: new Date().toISOString()
         }
@@ -73,6 +76,11 @@ export async function syncPaymentToSupabase({ plan, amount, referenceCode, statu
     if (error) {
       console.log('Supabase payments table note:', error.message);
       return null;
+    }
+    
+    // Also upgrade the user's plan in users table
+    if (email && status === 'completed') {
+       await supabase.from('users').update({ plan: plan ? plan.toUpperCase() : 'STARTER' }).eq('email', email);
     }
 
     console.log('✅ New Supabase: Synced SePay payment record successfully', data);

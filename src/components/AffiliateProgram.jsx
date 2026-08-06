@@ -24,11 +24,15 @@ export default function AffiliateProgram({ currentUser, setGoogleLoginModalOpen 
   const [refLink] = useState(`https://avalive.pro/ref/${currentUser ? currentUser.email.split('@')[0] : 'quocthien90'}`);
   const [payoutModalOpen, setPayoutModalOpen] = useState(false);
 
-  const [referrals] = useState([
-    { id: 1, name: 'Shop Thời Trang Sài Gòn', package: 'Enterprise VIP (19.990.000₫)', commission: '5.997.000 VNĐ', date: '20/07/2026', status: 'ĐÃ DUYỆT 30%' },
-    { id: 2, name: 'Công Ty Mỹ Phẩm Skincare', package: 'Business Growth (4.990.000₫)', commission: '1.497.000 VNĐ', date: '21/07/2026', status: 'CHỜ DUYỆT SEPAY' },
-    { id: 3, name: 'KOL Linh Bi Studio', package: 'Enterprise VIP (19.990.000₫)', commission: '5.997.000 VNĐ', date: '22/07/2026', status: 'CHỜ DUYỆT SEPAY' },
-  ]);
+  const [referrals] = useState([]);
+  
+  // Affiliate Stats State
+  const [affiliateStats, setAffiliateStats] = useState({
+    totalEarnings: 0,
+    pendingWithdrawal: 0,
+    paidOut: 0,
+    successfulOrders: 0
+  });
 
   const copyRefLink = () => {
     navigator.clipboard.writeText(refLink);
@@ -190,13 +194,13 @@ export default function AffiliateProgram({ currentUser, setGoogleLoginModalOpen 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-1">
               <span className="text-xs text-gray-400 font-bold block">Tổng Hoa Hồng Tích Lũy (30%):</span>
-              <span className="text-2xl font-black text-[#EF4444]">13.491.000 VNĐ</span>
-              <p className="text-[10px] text-emerald-400 font-mono">3 Đơn Hàng Mua Gói Thành Công</p>
+              <span className="text-2xl font-black text-[#EF4444]">{affiliateStats.totalEarnings.toLocaleString()} VNĐ</span>
+              <p className="text-[10px] text-emerald-400 font-mono">{affiliateStats.successfulOrders} Đơn Hàng Mua Gói Thành Công</p>
             </div>
 
             <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-1">
               <span className="text-xs text-gray-400 font-bold block">Số Tiền Chờ Rút Về Ngân Hàng:</span>
-              <span className="text-2xl font-black text-amber-400">7.494.000 VNĐ</span>
+              <span className="text-2xl font-black text-amber-400">{affiliateStats.pendingWithdrawal.toLocaleString()} VNĐ</span>
               <button 
                 onClick={() => setPayoutModalOpen(true)}
                 className="mt-1 px-3 py-1 bg-amber-500 text-black font-extrabold text-[10px] rounded-lg shadow-md hover:bg-amber-400 block"
@@ -207,7 +211,7 @@ export default function AffiliateProgram({ currentUser, setGoogleLoginModalOpen 
 
             <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-1">
               <span className="text-xs text-gray-400 font-bold block">Đã Chuyển Về Tài Khoản:</span>
-              <span className="text-2xl font-black text-emerald-400">5.997.000 VNĐ</span>
+              <span className="text-2xl font-black text-emerald-400">{affiliateStats.paidOut.toLocaleString()} VNĐ</span>
               <p className="text-[10px] text-gray-400 font-mono">Chuyển khoản SePay thành công</p>
             </div>
           </div>

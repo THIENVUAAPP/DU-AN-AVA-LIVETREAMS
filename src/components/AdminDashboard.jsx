@@ -25,6 +25,16 @@ import {
 export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, setAiAvatarFeatureEnabled }) {
   const [activeSubTab, setActiveSubTab] = useState('users');
 
+  // Stats State
+  const [adminStats, setAdminStats] = useState({
+    revenue: 0,
+    users: 0,
+    streams: 0,
+    commission: 0,
+    pendingWithdrawals: 0
+  });
+
+
   // Admin Gmail quocthiencr90@gmail.com
   const adminGmail = currentUser?.email || 'quocthiencr90@gmail.com';
 
@@ -37,25 +47,13 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
   });
 
   // User Accounts State
-  const [users, setUsers] = useState([
-    { id: 1, name: 'Quốc Thiên Admin', email: 'quocthiencr90@gmail.com', plan: 'Super Admin VIP', status: 'HOẠT ĐỘNG', totalSpent: '19.990.000₫', date: '2026-07-20' },
-    { id: 2, name: 'Trần Thị Mai', email: 'mai.tran@yahoo.com', plan: 'Business Growth', status: 'HOẠT ĐỘNG', totalSpent: '4.990.000₫', date: '2026-07-21' },
-    { id: 3, name: 'Lê Hoàng Nam', email: 'nam.le@tech.vn', plan: 'Starter Pro', status: 'HOẠT ĐỘNG', totalSpent: '990.000₫', date: '2026-07-22' },
-    { id: 4, name: 'Phạm Thu Hà', email: 'ha.pham@shop.com', plan: 'Enterprise VIP', status: 'TẠM KHÓA', totalSpent: '19.990.000₫', date: '2026-07-18' },
-  ]);
+  const [users, setUsers] = useState([]);
 
   // SePay Payment Logs
-  const [sepayLogs, setSepayLogs] = useState([
-    { id: 'SP-9812', user: 'Quốc Thiên Admin', amount: '19.990.000 VNĐ', method: 'SePay VietQR', status: 'THÀNH CÔNG 3S', time: '10:45:22 22/07/2026' },
-    { id: 'SP-9811', user: 'Trần Thị Mai', amount: '4.990.000 VNĐ', method: 'SePay VietQR', status: 'THÀNH CÔNG 3S', time: '09:12:05 22/07/2026' },
-    { id: 'SP-9810', user: 'Lê Hoàng Nam', amount: '990.000 VNĐ', method: 'Stripe Visa', status: 'THÀNH CÔNG', time: '08:30:10 22/07/2026' },
-  ]);
+  const [sepayLogs, setSepayLogs] = useState([]);
 
   // Affiliate Payout Requests (30% Commission)
-  const [affiliatePayouts, setAffiliatePayouts] = useState([
-    { id: 1, name: 'Linh Bi Review', email: 'linhbi@affiliate.com', commission: '5.997.000 VNĐ', referrals: 3, bank: 'MBBank - 998124419 - LINH BI', status: 'CHỜ DUYỆT' },
-    { id: 2, name: 'Hoàng Tech', email: 'hoangtech@gmail.com', commission: '1.497.000 VNĐ', referrals: 1, bank: 'Techcombank - 190334812 - HOANG TECH', status: 'ĐÃ CHUYỂN SEPAY' },
-  ]);
+  const [affiliatePayouts, setAffiliatePayouts] = useState([]);
 
   const toggleUserStatus = (id) => {
     setUsers(users.map(u => u.id === id ? { ...u, status: u.status === 'HOẠT ĐỘNG' ? 'TẠM KHÓA' : 'HOẠT ĐỘNG' } : u));
@@ -85,7 +83,7 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
             🛡️ Trang Quản Trị Hệ Thống Super VIP (Admin Control Panel)
           </h2>
           <p className="text-xs text-gray-400 mt-0.5">
-            Tài khoản Gmail Admin: <strong className="text-emerald-400 font-mono">{adminGmail}</strong> • Giám sát real-time toàn bộ doanh thu, SePay VietQR, máy chủ & hoa hồng 30%.
+            Tài khoản Gmail Admin: <strong className="text-emerald-400 font-mono">{adminGmail}</strong> • Giám sát tổng quan hệ thống.
           </p>
         </div>
 
@@ -100,33 +98,33 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="glass-panel p-4 rounded-xl border border-white/10 space-y-1">
           <span className="text-xs text-gray-400 font-bold block">Tổng Doanh Thu Hóa Đơn:</span>
-          <span className="text-xl font-black text-[#EF4444]">45.960.000₫</span>
+          <span className="text-xl font-black text-[#EF4444]">{adminStats.revenue.toLocaleString()}₫</span>
           <p className="text-[10px] text-emerald-400 font-mono">Tự Động Nhận Tiền SePay 3s</p>
         </div>
 
         <div className="glass-panel p-4 rounded-xl border border-white/10 space-y-1">
           <span className="text-xs text-gray-400 font-bold block">Tổng Tài Khoản Đã Đăng Ký:</span>
-          <span className="text-xl font-black text-[#3B82F6]">1.280 Users</span>
+          <span className="text-xl font-black text-[#3B82F6]">{adminStats.users} Users</span>
           <p className="text-[10px] text-gray-400 font-mono">Xác thực Google Auth 100%</p>
         </div>
 
         <div className="glass-panel p-4 rounded-xl border border-white/10 space-y-1">
           <span className="text-xs text-gray-400 font-bold block">Luồng Multistream Live:</span>
-          <span className="text-xl font-black text-[#8B5CF6]">84 Streams</span>
+          <span className="text-xl font-black text-[#8B5CF6]">{adminStats.streams} Streams</span>
           <p className="text-[10px] text-emerald-400 font-mono">4 Cụm Máy Chủ Online</p>
         </div>
 
         <div className="glass-panel p-4 rounded-xl border border-white/10 space-y-1">
           <span className="text-xs text-gray-400 font-bold block">Quỹ Hoa Hồng Affiliate 30%:</span>
-          <span className="text-xl font-black text-amber-400">7.494.000₫</span>
-          <p className="text-[10px] text-amber-400 font-mono">1 Yêu cầu chờ chuyển tiền</p>
+          <span className="text-xl font-black text-amber-400">{adminStats.commission.toLocaleString()}₫</span>
+          <p className="text-[10px] text-amber-400 font-mono">{adminStats.pendingWithdrawals} Yêu cầu chờ chuyển tiền</p>
         </div>
       </div>
 
       {/* Admin Node Switches */}
       <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-3">
         <h3 className="text-xs font-bold text-white flex items-center gap-2">
-          <Power className="w-4 h-4 text-[#EF4444]" /> CÔNG TẮC BẬT/TẮT DỊCH VỤ HỆ THỐNG REAL-TIME
+          <Power className="w-4 h-4 text-[#EF4444]" /> Bật/Tắt Dịch Vụ Hệ Thống
         </h3>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
@@ -283,7 +281,7 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
               <DollarSign className="w-4 h-4 text-[#3B82F6]" /> NHẬT KÝ GIAO DỊCH SEPAY VIETQR & STRIPE
             </h3>
-            <span className="text-xs text-emerald-400 font-mono">Real-time Webhook Idempotency Active</span>
+            <span className="text-xs text-emerald-400 font-mono">Webhook Active</span>
           </div>
 
           <div className="overflow-x-auto">

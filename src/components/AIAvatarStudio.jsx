@@ -187,7 +187,7 @@ export default function AIAvatarStudio({ isLive, aiAvatarFeatureEnabled }) {
             {aiAvatarFeatureEnabled ? 'QUẢN LÝ AVATAR & VIDEO LIVE 4K' : 'BÀN PHÁT REPLAY VIDEO & LINK RESTREAM 24/7'}
           </div>
           <h2 className="text-xl font-black text-white">
-            {aiAvatarFeatureEnabled ? 'Bàn Điều Khiển AI Avatar & Video Live Stream' : 'Phát Replay Video & Restream Live 24/7 (Unlimited)'}
+            {aiAvatarFeatureEnabled ? 'Bàn Điều Khiển AI Avatar & Video Live Stream' : 'Phát Replay & Restream'}
           </h2>
         </div>
 
@@ -248,12 +248,12 @@ export default function AIAvatarStudio({ isLive, aiAvatarFeatureEnabled }) {
 
               <div className="p-3.5 rounded-2xl bg-black/60 border border-white/10 space-y-1">
                 <span className="font-black text-emerald-400 block text-xs">Bước 3: Phát Giọng Đọc AI</span>
-                <p className="text-[11px] text-gray-400">Nhấp nút <strong>"PHÁT GIỌNG ĐỌC MC AI THẬT"</strong>. Công nghệ AI (Lip-Sync Real-Time) sẽ tự động đồng bộ cử động môi chuẩn 100%.</p>
+                <p className="text-[11px] text-gray-400">Nhấp nút <strong>"PHÁT GIỌNG ĐỌC MC AI THẬT"</strong>. Công nghệ AI sẽ đồng bộ cử động môi tự động.</p>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-black/60 border border-white/10 space-y-1">
                 <span className="font-black text-red-400 block text-xs">Bước 4: Đẩy Luồng Live 4K</span>
-                <p className="text-[11px] text-gray-400">Sang tab <strong>"Kết Nối Đa Nền Tảng"</strong> ➔ Bấm <strong>"PHÁT MULTISTREAM UNLIMITED"</strong> để đẩy luồng live sang TikTok, FB, YT, Shopee cùng lúc!</p>
+                <p className="text-[11px] text-gray-400">Sang tab <strong>"Kết Nối Đa Nền Tảng"</strong> ➔ Bấm <strong>"Phát Tất Cả Kênh"</strong> để đẩy luồng live sang đa nền tảng.</p>
               </div>
             </div>
 
@@ -366,7 +366,7 @@ export default function AIAvatarStudio({ isLive, aiAvatarFeatureEnabled }) {
               </div>
 
               <span className="text-xs text-gray-400 font-mono hidden sm:block font-bold">
-                ● REAL-TIME LIP SYNC ACTIVE
+                ● LIP SYNC ACTIVE
               </span>
             </div>
 

@@ -137,3 +137,14 @@
 .stagger > *:nth-child(4) { animation-delay: 0.35s; }
 .stagger > *:nth-child(5) { animation-delay: 0.45s; }
 .stagger > *:nth-child(6) { animation-delay: 0.55s; }
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+

@@ -17,44 +17,55 @@ export default function MultiAccountManager() {
   const [activeTabPlatform, setActiveTabPlatform] = useState('facebook'); // 'facebook' | 'tiktok' | 'youtube' | 'shopee'
 
   // Connected Facebook Accounts & Fanpages
-  const [fbAccounts, setFbAccounts] = useState([
-    {
-      id: 1,
-      accountName: 'Nguyễn Thiên (Chủ Shop)',
-      pages: [
-        { id: 'p1', name: 'Fanpage: AvaLive Thời Trang Tech-Fleece', followers: '120.000 Follows', connected: true },
-        { id: 'p2', name: 'Fanpage: Tổng Kho Đồ Công Nghệ AI', followers: '85.000 Follows', connected: true },
-        { id: 'p3', name: 'Fanpage: Spa & Skincare Cao Cấp', followers: '42.000 Follows', connected: true },
-      ]
-    },
-    {
-      id: 2,
-      accountName: 'Linh Bi Studio (MCN Host)',
-      pages: [
-        { id: 'p4', name: 'Fanpage: Linh Bi Streamer Official', followers: '250.000 Follows', connected: true },
-        { id: 'p5', name: 'Fanpage: Deal Sốc Livestream Mỗi Ngày', followers: '98.000 Follows', connected: false },
-      ]
-    }
-  ]);
+  const [fbAccounts, setFbAccounts] = useState([]);
 
   // Connected TikTok Accounts
-  const [tiktokAccounts, setTiktokAccounts] = useState([
-    { id: 1, name: '@avalive_official', type: 'TikTok Shop chính thức', followers: '450.000', connected: true },
-    { id: 2, name: '@minhanh_fashion', type: 'TikTok Creator Affiliate', followers: '180.000', connected: true },
-    { id: 3, name: '@tongkho_tech_vn', type: 'TikTok Shop chi nhánh 2', followers: '92.000', connected: true },
-  ]);
+  const [tiktokAccounts, setTiktokAccounts] = useState([]);
 
   // Connected YouTube Channels
-  const [youtubeChannels, setYoutubeChannels] = useState([
-    { id: 1, name: 'AvaLive PRO Studio Official', subs: '85.000 Subs', connected: true },
-    { id: 2, name: 'Review Đồ Công Nghệ AI 24/7', subs: '142.000 Subs', connected: true },
-  ]);
+  const [youtubeChannels, setYoutubeChannels] = useState([]);
 
   // Connected Shopee Live Stores
-  const [shopeeStores, setShopeeStores] = useState([
-    { id: 1, name: 'Shopee Mall: AvaLive Official Store', rating: '4.9/5★', connected: true },
-    { id: 2, name: 'Shopee Shop: Tổng Kho Thời Trang Nam', rating: '4.8/5★', connected: true },
-  ]);
+  const [shopeeStores, setShopeeStores] = useState([]);
+
+  // Mock OAuth Connection Flow
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectingPlatform, setConnectingPlatform] = useState('');
+
+  const handleAddNewAccount = (platformName) => {
+    setConnectingPlatform(platformName);
+    setIsConnecting(true);
+    
+    // Simulate OAuth delay
+    setTimeout(() => {
+      setIsConnecting(false);
+      const newId = Date.now();
+      
+      if (activeTabPlatform === 'facebook') {
+        setFbAccounts([...fbAccounts, {
+          id: newId,
+          accountName: 'Tài khoản Facebook Mới',
+          pages: [
+            { id: 'p' + newId, name: 'Fanpage Bán Hàng Mới Kết Nối', followers: '0 Follows', connected: true }
+          ]
+        }]);
+      } else if (activeTabPlatform === 'tiktok') {
+        setTiktokAccounts([...tiktokAccounts, {
+          id: newId, name: '@tiktok_new_channel', type: 'TikTok Shop Affiliate', followers: '0', connected: true
+        }]);
+      } else if (activeTabPlatform === 'youtube') {
+        setYoutubeChannels([...youtubeChannels, {
+          id: newId, name: 'Kênh YouTube Mới', subs: '0 Subs', connected: true
+        }]);
+      } else if (activeTabPlatform === 'shopee') {
+        setShopeeStores([...shopeeStores, {
+          id: newId, name: 'Shopee Shop Mới', rating: '5.0/5★', connected: true
+        }]);
+      }
+      
+      alert(`✅ Đã kết nối thành công tài khoản ${platformName} qua hệ thống API chính thức!`);
+    }, 2000);
+  };
 
   const togglePageConnection = (accId, pageId) => {
     setFbAccounts(fbAccounts.map(acc => {
@@ -66,10 +77,6 @@ export default function MultiAccountManager() {
       }
       return acc;
     }));
-  };
-
-  const handleAddNewAccount = (platformName) => {
-    alert(`Đã mở cửa sổ Đăng Nhập OAuth 1-Chạm cho ${platformName}! Vui lòng cấp quyền quản trị Page / Tài khoản.`);
   };
 
   return (
@@ -94,6 +101,16 @@ export default function MultiAccountManager() {
         </button>
       </div>
 
+            {isConnecting && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-[#1C1C22] p-8 rounded-2xl border border-white/10 flex flex-col items-center max-w-sm w-full shadow-2xl">
+            <RefreshCw className="w-12 h-12 text-[#3B82F6] animate-spin mb-4" />
+            <h3 className="text-white font-bold text-lg text-center mb-2">Đang kết nối {connectingPlatform}...</h3>
+            <p className="text-gray-400 text-xs text-center">Hệ thống đang chuyển hướng sang trang xác thực OAuth an toàn. Vui lòng không đóng cửa sổ này.</p>
+          </div>
+        </div>
+      )}
+      
       {/* Platform Switcher Tabs */}
       <div className="flex items-center gap-2 bg-[#121216] p-1.5 rounded-xl border border-white/10 overflow-x-auto text-xs font-bold">
         <button

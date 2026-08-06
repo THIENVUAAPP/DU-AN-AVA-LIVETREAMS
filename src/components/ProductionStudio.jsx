@@ -86,13 +86,15 @@ export const BEAUTY_PRESETS_30 = [
   { id: "b30", category: "👑 Spa & Celebrity Care", name: "30. Super Star Celebrity Filter", smooth: 85, bright: 66, blush: 30, sparkle: 75, warmth: 0, slim: 30, image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80", filter: "brightness(1.06) contrast(1.04) saturate(1.06)" },
 ];
 
-export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setActiveTab }) {
+export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setActiveTab, currentUser }) {
   const [studioSubTab, setStudioSubTab] = useState('multicam');
   const [activeBgCategory, setActiveBgCategory] = useState('Tất Cả'); // 'multicam' | 'commerce'
   const [activeCam, setActiveCam] = useState('cam1');
   const [previewCam, setPreviewCam] = useState('cam2'); // Preview monitor
   const [virtualBg, setVirtualBg] = useState('modern-studio');
   const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const recordedChunksRef = useRef([]);
   const [lowerThirdText, setLowerThirdText] = useState('ƯU ĐÃI ĐẶC BIỆT — GIẢM 50% DUY NHẤT TRONG LIVESTREAM!');
   const [activeGraphic, setActiveGraphic] = useState('banner');
   const [showGuideModal, setShowGuideModal] = useState(false);
@@ -205,7 +207,7 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
     setGpuLoad(15);
     setCpuLoad(10);
     setUltraAntiLagMode(true);
-    alert("⚡ ĐÃ TỐI ƯU HÓA SIÊU MƯỢT 60FPS! Bitrate 24 Mbps (Tăng tốc GPU Hardware Engine, chống đứng hình giật lag).");
+    
   };
   
   // Custom Camera Add Form State
@@ -377,6 +379,62 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
     setIsOneTouchLiveActive(nextState);
     if (setIsLive) setIsLive(nextState);
     setShowMultistreamModal(true);
+  };
+
+  const handleToggleRecording = () => {
+    if (!isRecording) {
+      if (!canvasRef.current) {
+        alert("Lỗi: Không tìm thấy luồng Canvas để ghi hình.");
+        return;
+      }
+      
+      // Bắt đầu ghi hình Canvas
+      const stream = canvasRef.current.captureStream(60); // 60 FPS
+      try {
+        // Tối đa hóa chất lượng video bằng cách ép Bitrate rất cao (25-50 Mbps) để đảm bảo độ sắc nét 4K/FullHD
+        const options = { mimeType: 'video/webm; codecs=vp9', videoBitsPerSecond: 50000000 };
+        mediaRecorderRef.current = new MediaRecorder(stream, options);
+      } catch (e) {
+        try {
+          const fallbackOptions = { mimeType: 'video/webm', videoBitsPerSecond: 50000000 };
+          mediaRecorderRef.current = new MediaRecorder(stream, fallbackOptions);
+        } catch (e2) {
+          mediaRecorderRef.current = new MediaRecorder(stream);
+        }
+      }
+      
+      recordedChunksRef.current = [];
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+      
+      mediaRecorderRef.current.onstop = () => {
+        const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        document.body.appendChild(a);
+        a.style = 'display: none';
+        a.href = url;
+        const now = new Date();
+        const dateStr = now.toISOString().replace(/:/g, '-').slice(0, 19);
+        a.download = `AvaLive_Record_${dateStr}.webm`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        
+        alert(`💾 THÀNH CÔNG: Đã tự động lưu file video livestream (AvaLive_Record_${dateStr}.webm) vào máy của bạn!`);
+      };
+      
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+      alert("🔴 ĐÃ BẮT ĐẦU GHI HÌNH LIVESTREAM!\nVideo sẽ tự động tải xuống máy bạn khi ấn Dừng.");
+    } else {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+        mediaRecorderRef.current.stop();
+      }
+      setIsRecording(false);
+    }
   };
 
   // Async lock & timestamp cadence to guarantee 60FPS Zero-Lag
@@ -647,11 +705,7 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
   const [ringLight, setRingLight] = useState(90);
 
   // Custom Uploaded Avatar Models
-  const [customStudioAvatars, setCustomStudioAvatars] = useState([
-    { id: 'def1', name: 'Linh Anh (Model Nữ)', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80', isCustom: false },
-    { id: 'def2', name: 'Minh Đức (Model Nam)', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80', isCustom: false },
-    { id: 'def3', name: 'Mai Phương (Model Nữ)', image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80', isCustom: false },
-  ]);
+  const [customStudioAvatars, setCustomStudioAvatars] = useState([]);
 
   const [selectedStudioAvatar, setSelectedStudioAvatar] = useState(customStudioAvatars[0]);
   const [voiceCloneFile, setVoiceCloneFile] = useState('voice_clone_co_gai_goc.mp3');
@@ -672,7 +726,7 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
     e.stopPropagation();
     const remaining = customStudioAvatars.filter(a => a.id !== id);
     setCustomStudioAvatars(remaining);
-    if (selectedStudioAvatar.id === id && remaining.length > 0) {
+    if (selectedStudioAvatar?.id === id && remaining.length > 0) {
       setSelectedStudioAvatar(remaining[0]);
     }
   };
@@ -1194,7 +1248,7 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
                 </div>
                 <div>
                   <h3 className="text-lg font-black text-white flex items-center gap-2">
-                    <span>🚀 BÀN ĐIỀU KHIỂN LIVE ĐA LUỒNG UNLIMITED 1-CHẠM</span>
+                    <span>Bàn Điều Khiển Live Đa Luồng</span>
                   </h3>
                   <p className="text-xs text-emerald-400 font-bold">
                     Đã tự động phát trực tiếp đồng thời lên tất cả các kênh ({connectedChannelsCount} Kênh Active)
@@ -1322,7 +1376,7 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
                       height={1080}
                     />
                   ) : (
-                    <img src={selectedStudioAvatar.image} alt={selectedStudioAvatar.name} className="max-h-full object-contain rounded-2xl" />
+                    <img src={selectedStudioAvatar?.image} alt={selectedStudioAvatar?.name} className="max-h-full object-contain rounded-2xl" />
                   )}
                 </div>
               ) : (
@@ -1333,7 +1387,7 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
                   <p className="text-emerald-400 font-mono text-sm font-bold bg-emerald-950/60 px-4 py-2 rounded-full border border-emerald-500/40 mb-4">
                     {fullscreenCamItem.res || "4K 2160p60 Ultra HD"} • {fullscreenCamItem.role || "Góc Rộng Studio"}
                   </p>
-                  <p className="text-gray-400 text-xs text-center max-w-md">Đang nhận tín hiệu 0ms delay trực tiếp từ nguồn camera phần cứng với độ phân giải cao nhất 4K 60FPS.</p>
+                  <p className="text-gray-400 text-xs text-center max-w-md">Đang nhận tín hiệu camera trực tiếp.</p>
                 </div>
               )}
             </div>
@@ -1410,7 +1464,7 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
                 <button
                   onClick={() => {
                     setIsZoomLiveActive(true);
-                    alert(`🔴 ĐÃ KẾT NỐI PHÁT LIVE SANG ZOOM WEBINAR/MEETING!\n\nKhóa luồng: ${zoomStreamKey}\nTín hiệu: 4K Ultra HD 60fps (Bitrate: 12,000 Kbps - 0ms Delay)`);
+                    alert(`🔴 ĐÃ KẾT NỐI PHÁT LIVE SANG ZOOM WEBINAR/MEETING!\n\nKhóa luồng: ${zoomStreamKey}`);
                   }}
                   className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white font-black text-xs transition-all shadow-glow-purple cursor-pointer flex items-center justify-center gap-1.5"
                 >
@@ -1511,7 +1565,21 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
                 title="Tăng tốc GPU phần cứng 60fps chống đứng hình giật lag"
               >
                 <Zap className="w-3.5 h-3.5 text-yellow-300" />
-                <span>{ultraAntiLagMode ? '⚡ SIÊU MƯỢT 60FPS' : '⚪ MƯỢT THƯỜNG'}</span>
+                <span>{ultraAntiLagMode ? '60FPS' : '⚪ MƯỢT THƯỜNG'}</span>
+              </button>
+
+              {/* RECORD VIDEO BUTTON */}
+              <button
+                onClick={handleToggleRecording}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer border ${
+                  isRecording
+                    ? 'bg-red-600 text-white border-red-500 shadow-glow-red animate-pulse'
+                    : 'bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700'
+                }`}
+                title="Ghi hình luồng Live và tự động lưu vào máy"
+              >
+                <div className={`w-2.5 h-2.5 rounded-full ${isRecording ? 'bg-white' : 'bg-red-500'}`} />
+                <span>{isRecording ? 'ĐANG GHI HÌNH...' : 'GHI HÌNH (REC)'}</span>
               </button>
 
               {/* 1-TOUCH MASTER MULTISTREAM BROADCAST BUTTON */}
@@ -1525,7 +1593,7 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
                 title="Phát trực tiếp 1-Chạm đồng thời lên Facebook, Fanpage, TikTok, YouTube, Shopee..."
               >
                 <Radio className="w-4 h-4 text-white animate-spin" />
-                <span>{isOneTouchLiveActive ? '🔴 ĐANG LIVE ĐA LUỒNG UNLIMITED (FB/TIKTOK/YT/SHOPEE)' : '🚀 1-CHẠM KẾT NỐI LIVE ĐA NỀN TẢNG'}</span>
+                <span>{isOneTouchLiveActive ? 'Đang Phát Đa Kênh' : 'Kết Nối Live Đa Nền Tảng'}</span>
               </button>
 
               {/* 1-TOUCH ZOOM LIVE CONNECTION BUTTON */}
@@ -1567,8 +1635,8 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
               /* Active Studio Model View */
               <div className="relative w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#1E1E24] via-[#121216] to-[#0A0A0A]">
                 <img
-                  src={selectedStudioAvatar.image}
-                  alt={selectedStudioAvatar.name}
+                  src={selectedStudioAvatar?.image}
+                  alt={selectedStudioAvatar?.name}
                   className={`max-h-[85%] object-contain rounded-2xl drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] transition-all duration-300 ${
                     viewMode === 'full-body' ? 'scale-100' : 'scale-125 translate-y-6'
                   }`}
@@ -1576,7 +1644,7 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
                 />
                 <div className="absolute bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/80 backdrop-blur-md border border-white/20 text-white text-xs font-black flex items-center gap-1.5 whitespace-nowrap z-20">
                   <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  {selectedStudioAvatar.name}
+                  {selectedStudioAvatar?.name}
                 </div>
               </div>
             )}
@@ -1609,11 +1677,11 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
               <div className="absolute top-4 left-4 flex flex-wrap items-center gap-2">
               {isOneTouchLiveActive || isLive ? (
                 <span className="px-3 py-1 rounded-full bg-red-600 text-white text-xs font-black flex items-center gap-1.5 shadow-glow-red animate-pulse">
-                  <Radio className="w-3.5 h-3.5 animate-spin" /> 🔴 ĐANG PHÁT LIVE REAL-TIME (ON AIR)
+                  <Radio className="w-3.5 h-3.5 animate-spin" /> Đang phát sóng
                 </span>
               ) : (
                 <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-black flex items-center gap-1.5">
-                  <Eye className="w-3.5 h-3.5 text-emerald-400" /> 🟢 CHẾ ĐỘ XEM TRƯỚC (PREVIEW MODE) • CHƯA PHÁT SÓNG
+                  <Eye className="w-3.5 h-3.5 text-emerald-400" /> Chế độ xem trước (Preview)
                 </span>
               )}
               
@@ -1885,7 +1953,7 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
             </div>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5">
               {customStudioAvatars.map((av) => {
-                const isSelected = selectedStudioAvatar.id === av.id;
+                const isSelected = selectedStudioAvatar?.id === av.id;
                 return (
                   <div key={av.id} onClick={() => setSelectedStudioAvatar(av)}
                     className={`p-2 rounded-2xl border transition-all cursor-pointer relative group ${
@@ -1915,7 +1983,7 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
           <div className="glass-panel p-5 rounded-3xl border border-purple-500/30 space-y-4 bg-gradient-to-b from-[#14101A] to-[#0A0A0A]">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-black text-white uppercase tracking-wide flex items-center gap-2">
-                <Layers className="w-4 h-4 text-[#8B5CF6]" /> XÓA & THAY PHÔNG NỀN REAL-TIME
+                <Layers className="w-4 h-4 text-[#8B5CF6]" /> Thay phông nền
               </h3>
               
             </div>

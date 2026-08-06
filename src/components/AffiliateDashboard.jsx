@@ -24,11 +24,7 @@ export default function AffiliateDashboard({ currentUser }) {
   const [payoutStatus, setPayoutStatus] = useState('PENDING'); // 'PENDING' | 'REQUESTED' | 'PAID'
 
   // User's Referrals Table
-  const [referrals] = useState([
-    { id: 1, name: 'Shop Thời Trang Sài Gòn', package: 'Enterprise VIP (19.990.000₫)', commission: '5.997.000 VNĐ', date: '20/07/2026', status: 'ĐÃ CHUYỂN TIỀN SEPAY' },
-    { id: 2, name: 'Công Ty Mỹ Phẩm Skincare', package: 'Business Growth (4.990.000₫)', commission: '1.497.000 VNĐ', date: '21/07/2026', status: 'CHỜ DUYỆT SEPAY' },
-    { id: 3, name: 'KOL Linh Bi Studio', package: 'Enterprise VIP (19.990.000₫)', commission: '5.997.000 VNĐ', date: '22/07/2026', status: 'CHỜ DUYỆT SEPAY' },
-  ]);
+  const [referrals] = useState([]);
 
   const copyRefLink = () => {
     navigator.clipboard.writeText(refLink);
@@ -56,7 +52,7 @@ export default function AffiliateDashboard({ currentUser }) {
             📊 Bảng Điều Khiển Tiếp Thị Liên Kết (Affiliate Dashboard)
           </h2>
           <p className="text-xs text-gray-400 mt-0.5">
-            Tài khoản Gmail tiếp thị: <strong className="text-emerald-400 font-mono">{userGmail}</strong> • Đồng bộ real-time với hệ thống duyệt chi trả SePay VietQR 3s.
+            Tài khoản Gmail tiếp thị: <strong className="text-emerald-400 font-mono">{userGmail}</strong> • Đồng bộ thanh toán SePay.
           </p>
         </div>
 

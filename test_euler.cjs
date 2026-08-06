@@ -2,12 +2,12 @@ const { TikTokLiveConnection, fetchRoomInfoFromEulerRoute } = require('tiktok-li
 
 async function test() {
     try {
-        const connection = new TikTokLiveConnection('rcaeterna', { signApiKey: 'euler_ZmE5ODQzZmM0MzZlMDNlODBkNWEzNTUwZGFhZjQxMjNmN2RjMTA3ZjU2YWE0ZGNlOGU2MTQ1' });
+        const connection = new TikTokLiveConnection('phuonglenxx', { signApiKey: 'euler_ZmE5ODQzZmM0MzZlMDNlODBkNWEzNTUwZGFhZjQxMjNmN2RjMTA3ZjU2YWE0ZGNlOGU2MTQ1' });
         
         const res = await fetchRoomInfoFromEulerRoute({
             webClient: connection.webClient,
             apiClient: connection.apiClient,
-            uniqueId: "rcaeterna"
+            uniqueId: "phuonglenxx"
         });
         
         if (res.data && res.data.stream_url) {

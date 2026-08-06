@@ -23,56 +23,7 @@ import {
 
 export default function TeamPermissionsManager({ currentUser, setCurrentUser, setActiveTab }) {
   // Invited Employees List State
-  const [employees, setEmployees] = useState([
-    {
-      id: 'emp_1',
-      name: 'Nguyễn Văn Nam',
-      email: 'nam.nguyen@gmail.com',
-      role: 'manager',
-      roleName: 'Quản Lý Livestream',
-      badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
-      status: 'active',
-      addedAt: '2026-07-20',
-      permissions: {
-        canBroadcast: true,
-        canUploadFiles: true,
-        canManageProducts: true,
-        canConnectApi: true
-      }
-    },
-    {
-      id: 'emp_2',
-      name: 'Trần Thị Mai',
-      email: 'mai.tran@gmail.com',
-      role: 'operator',
-      roleName: 'Nhân Viên Vận Hành Live',
-      badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
-      status: 'active',
-      addedAt: '2026-07-21',
-      permissions: {
-        canBroadcast: true,
-        canUploadFiles: true,
-        canManageProducts: false,
-        canConnectApi: false
-      }
-    },
-    {
-      id: 'emp_3',
-      name: 'Lê Hoàng Long',
-      email: 'long.le@gmail.com',
-      role: 'sales',
-      roleName: 'Sale & CSKH Livestream',
-      badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-      status: 'active',
-      addedAt: '2026-07-22',
-      permissions: {
-        canBroadcast: false,
-        canUploadFiles: false,
-        canManageProducts: true,
-        canConnectApi: false
-      }
-    }
-  ]);
+  const [employees, setEmployees] = useState([]);
 
   // Form State for Adding New Employee
   const [newEmployeeName, setNewEmployeeName] = useState('');
@@ -99,7 +50,7 @@ export default function TeamPermissionsManager({ currentUser, setCurrentUser, se
     {
       id: 'sales',
       title: '🛒 Sale & Chăm Sóc Khách Hàng (CS & Sales Rep)',
-      desc: 'Ghim sản phẩm giỏ hàng, kích hoạt bảng điện Flash Sale, trả lời bình luận khán giả real-time.',
+      desc: 'Ghim sản phẩm giỏ hàng, kích hoạt bảng điện Flash Sale, trả lời bình luận khán giả.',
       badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
       defaultPerms: { canBroadcast: false, canUploadFiles: false, canManageProducts: true, canConnectApi: false }
     },

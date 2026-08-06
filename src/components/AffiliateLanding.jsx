@@ -89,7 +89,7 @@ export default function AffiliateLanding({ currentUser, setGoogleLoginModalOpen,
           <div className="w-12 h-12 rounded-2xl bg-[#8B5CF6]/20 text-[#8B5CF6] flex items-center justify-center font-black text-xl">
             📊
           </div>
-          <h3 className="text-sm font-extrabold text-white">Thống Kê Real-time</h3>
+          <h3 className="text-sm font-extrabold text-white">Thống Kê Trực Tuyến</h3>
           <p className="text-xs text-gray-400">
             Bảng điều khiển riêng theo dõi chính xác từng lượt click, đăng ký & số dư hoa hồng.
           </p>

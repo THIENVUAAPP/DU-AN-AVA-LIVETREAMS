@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 5173 --strictPort",
     "build": "vite build",
     "lint": "echo 'No lint errors'",
     "preview": "vite preview"
@@ -16,6 +16,8 @@
     "hls.js": "^1.6.16",
     "lucide-react": "^0.469.0",
     "puppeteer": "^25.4.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-player": "^3.4.0",

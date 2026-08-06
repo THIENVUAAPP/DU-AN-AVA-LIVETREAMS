@@ -71,7 +71,7 @@ export default function UniversalFileUploader({ onImageUploaded, onVideoUploaded
         url: instantUrl,
         size: (file.size / (1024 * 1024)).toFixed(1) + ' MB',
         source: isVid ? 'Video Quay Sẵn (SuperFast)' : 'Ảnh Avatar (SuperFast)',
-        apiCost: 'Miễn phí 24/7 (Unlimited)',
+        apiCost: 'Miễn phí',
         rawFile: file
       };
 
@@ -89,7 +89,7 @@ export default function UniversalFileUploader({ onImageUploaded, onVideoUploaded
     setIsProcessing(false);
     
     // Instant toast notification
-    alert(`⚡ TỐC ĐỘ SIÊU TỐC REAL-TIME: Đã nạp ${newItems.length} file video/ảnh tức thì (0ms độ trễ) sẵn sàng phát livestream!`);
+    alert(`Đã nạp ${newItems.length} file video/ảnh`);
   };
 
   // Add Video Replay via Link (Gắn Link Video Đã Live / Restream)
@@ -161,7 +161,7 @@ export default function UniversalFileUploader({ onImageUploaded, onVideoUploaded
       url: analyzedData.url,
       size: 'Link Replay',
       source: `${analyzedData.platform} (Restream)`,
-      apiCost: 'Miễn Phí 24/7 (Unlimited)'
+      apiCost: 'Miễn phí'
     };
 
     setUploadedFiles(prev => [videoObj, ...prev]);
@@ -248,10 +248,10 @@ export default function UniversalFileUploader({ onImageUploaded, onVideoUploaded
 
         <div className="flex flex-wrap items-center gap-2">
           <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40 text-xs font-black flex items-center gap-1.5 shadow-glow-purple">
-            <Zap className="w-3.5 h-3.5 text-yellow-400" /> ⚡ STREAMING VIDEO KHỦNG (HÀNG CHỤC GB & VÀI TIẾNG ĐỒNG HỒ SIÊU MƯỢT)
+            Quản lý luồng video
           </span>
           <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-xs font-black flex items-center gap-1.5 shadow-glow-emerald">
-            <Check className="w-3.5 h-3.5" /> 🟢 PHÁT LIVESTREAM 24/7 UNLIMITED (MIỄN PHÍ TẤT CẢ GÓI)
+            Live 24/7
           </span>
         </div>
       </div>

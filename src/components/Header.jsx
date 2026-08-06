@@ -45,13 +45,8 @@ export default function Header({
   // Navigation when LOGGED IN (Dynamic based on Admin AI Avatar Toggle)
   const workspaceNavItems = [
     { id: 'broadcast', label: 'Live Studio' },
-    { 
-      id: 'avatars', 
-      label: aiAvatarFeatureEnabled 
-        ? 'MC AI & Restream' 
-        : 'Restream 24/7' 
-    },
-    { id: 'multistream', label: 'Đa Nền Tảng' },
+    ...(aiAvatarFeatureEnabled ? [{ id: 'avatars', label: 'MC AI Studio' }] : []),
+    { id: 'multistream', label: 'Restream Đa Nền Tảng' },
     { id: 'livestream-cloner', label: 'Sao Chép Live' },
     { id: 'chat-hub', label: 'Chat Hub AI' },
   ];
@@ -76,7 +71,7 @@ export default function Header({
   };
 
   return (
-    <header className="sticky top-0 z-50 glass-panel border-b border-white/10 px-4 lg:px-8 py-3 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 bg-[#0D0D15]/80 px-4 lg:px-8 py-3 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-4">
         
         {/* High-End 3D Neon Official Studio Logo */}
@@ -110,14 +105,14 @@ export default function Header({
           
           {!currentUser ? (
             /* Public Nav Items */
-            <nav className="flex flex-row flex-nowrap items-center justify-center gap-6 lg:gap-10 whitespace-nowrap">
+            <nav className="flex flex-row flex-nowrap items-center justify-center gap-4 lg:gap-6 whitespace-nowrap">
               {publicNavItems.map((item) => {
                 const isActive = activeTab === item.id;
                 return (
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`relative px-2 py-1.5 text-base lg:text-xl font-black tracking-wide transition-all duration-200 cursor-pointer ${
+                    className={`relative px-3 py-1.5 text-sm lg:text-base font-bold tracking-wide transition-all duration-200 cursor-pointer ${
                       isActive
                         ? 'text-white drop-shadow-[0_0_12px_rgba(239,68,68,0.7)] scale-105'
                         : 'text-gray-400 hover:text-white hover:scale-102'
@@ -133,14 +128,14 @@ export default function Header({
             </nav>
           ) : (
             /* Workspace 1-Row Clean Navigation (No border, No icon, Big & Bold Text) */
-            <nav className="flex flex-row flex-nowrap items-center justify-center gap-6 lg:gap-10 whitespace-nowrap">
+            <nav className="flex flex-row flex-nowrap items-center justify-center gap-4 lg:gap-6 whitespace-nowrap">
               {workspaceNavItems.map((item) => {
                 const isActive = activeTab === item.id;
                 return (
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`relative px-2 py-1.5 text-base lg:text-xl font-black tracking-wide transition-all duration-200 cursor-pointer ${
+                    className={`relative px-3 py-1.5 text-sm lg:text-base font-bold tracking-wide transition-all duration-200 cursor-pointer ${
                       isActive
                         ? 'text-white drop-shadow-[0_0_14px_rgba(239,68,68,0.8)] scale-105'
                         : 'text-gray-400 hover:text-white hover:scale-102'

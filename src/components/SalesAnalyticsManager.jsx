@@ -122,106 +122,41 @@ export default function SalesAnalyticsManager({ currentUser }) {
   const [autoCreateOrder, setAutoCreateOrder] = useState(true);
 
   // Orders Inventory State
-  const [orders, setOrders] = useState([
-    {
-      id: 'ORD-9912',
-      customer: 'Nguyễn Văn Nam',
-      phone: '0988 123 456',
-      channel: '🎵 TikTok Shop Official',
-      liveSession: '⚡ Phiên Live 01: Flash Sale Đón Tết',
-      product: 'Áo Khoác Chống Nước AvaLive Pro',
-      quantity: 1,
-      totalAmount: '1.490.000₫',
-      paymentStatus: 'PAID',
-      paymentMethod: 'SePay VietQR 3s',
-      shippingStatus: 'SHIPPED',
-      courier: 'Giao Hàng Tiết Kiệm (GHTK)',
-      trackingCode: 'GHTK-9812401-VN',
-      date: '22/07/2026 17:30'
-    },
-    {
-      id: 'ORD-9913',
-      customer: 'Trần Thị Mai',
-      phone: '0912 345 678',
-      channel: '📘 FB Fanpage VIP 01',
-      liveSession: '⚡ Phiên Live 01: Flash Sale Đón Tết',
-      product: 'Tai Nghe Chống Ồn AI AvaTwin 2026',
-      quantity: 1,
-      totalAmount: '2.990.000₫',
-      paymentStatus: 'UNPAID',
-      paymentMethod: 'Thanh toán COD khi nhận hàng',
-      shippingStatus: 'PENDING_SHIP',
-      courier: 'Giao Hàng Nhanh (GHN)',
-      trackingCode: 'GHN-8819203-HN',
-      date: '22/07/2026 17:15'
-    },
-    {
-      id: 'ORD-9914',
-      customer: 'Lê Hoàng Long',
-      phone: '0977 888 999',
-      channel: '🛍️ Shopee Live Mall',
-      liveSession: '💄 Phiên Live 02: Mỹ Phẩm Skincare Hàn Quốc',
-      product: 'Bộ Serum Skincare Hàn Quốc Luxe 5in1',
-      quantity: 2,
-      totalAmount: '1.780.000₫',
-      paymentStatus: 'PAID',
-      paymentMethod: 'Ví ShopeePay',
-      shippingStatus: 'SHIPPED',
-      courier: 'Shopee Express (SPX)',
-      trackingCode: 'SPX-7719204-SG',
-      date: '22/07/2026 16:45'
-    },
-    {
-      id: 'ORD-9915',
-      customer: 'Phạm Minh Tuấn',
-      phone: '0933 555 777',
-      channel: '🔴 YouTube 4K Channel',
-      liveSession: '🏡 Phiên Live 03: Đồ Gia Dụng Smart Home',
-      product: 'Nồi Chiên Không Dầu SmartCook 12L',
-      quantity: 1,
-      totalAmount: '2.490.000₫',
-      paymentStatus: 'PAID',
-      paymentMethod: 'Thẻ Quốc Tế Stripe',
-      shippingStatus: 'DELIVERED',
-      courier: 'Viettel Post',
-      trackingCode: 'VTP-9912044-VT',
-      date: '22/07/2026 15:20'
-    }
-  ]);
+  const [orders, setOrders] = useState([]);
 
-  // Per-Live Session Analytics Data
-  const liveAnalytics = [
+  // Per-Live Session Analytics Data State
+  const [liveAnalytics, setLiveAnalytics] = useState([
     {
       session: '⚡ Phiên Live 01: Flash Sale Đón Tết',
       channel: 'TikTok Shop & FB Fanpage',
-      viewers: '12,450 lượt xem',
-      ordersCount: 86,
-      revenue: '128.490.000₫',
-      paidRevenue: '105.500.000₫',
-      codRevenue: '22.990.000₫',
-      topProduct: 'Áo Khoác Chống Nước AvaLive Pro'
+      viewers: 0,
+      ordersCount: 0,
+      revenue: 0,
+      paidRevenue: 0,
+      codRevenue: 0,
+      topProduct: 'Chưa có dữ liệu'
     },
     {
       session: '💄 Phiên Live 02: Mỹ Phẩm Skincare Hàn Quốc',
       channel: 'Shopee Live & Instagram',
-      viewers: '8,120 lượt xem',
-      ordersCount: 54,
-      revenue: '48.060.000₫',
-      paidRevenue: '42.000.000₫',
-      codRevenue: '6.060.000₫',
-      topProduct: 'Bộ Serum Skincare Luxe 5in1'
+      viewers: 0,
+      ordersCount: 0,
+      revenue: 0,
+      paidRevenue: 0,
+      codRevenue: 0,
+      topProduct: 'Chưa có dữ liệu'
     },
     {
       session: '🏡 Phiên Live 03: Đồ Gia Dụng Smart Home',
       channel: 'YouTube 4K Channel',
-      viewers: '5,900 lượt xem',
-      ordersCount: 32,
-      revenue: '79.680.000₫',
-      paidRevenue: '79.680.000₫',
-      codRevenue: '0₫',
-      topProduct: 'Nồi Chiên Không Dầu SmartCook 12L'
+      viewers: 0,
+      ordersCount: 0,
+      revenue: 0,
+      paidRevenue: 0,
+      codRevenue: 0,
+      topProduct: 'Chưa có dữ liệu'
     }
-  ];
+  ]);
 
   // Open Courier Connection Modal
   const handleOpenConnectModal = (courier) => {
@@ -511,7 +446,7 @@ export default function SalesAnalyticsManager({ currentUser }) {
               <BarChart3 className="w-5 h-5 text-[#EF4444]" />
               BÁO CÁO DOANH SỐ CHI TIẾT TỪNG PHIÊN LIVESTREAM & TỪNG KÊNH
             </h3>
-            <span className="text-xs text-emerald-400 font-mono font-bold">● CẬP NHẬT REAL-TIME</span>
+            <span className="text-xs text-emerald-400 font-mono font-bold">● Đã Cập Nhật</span>
           </div>
 
           <div className="space-y-4">

@@ -42,82 +42,19 @@ export default function LiveCommerceStudio({ isLive }) {
   // Independent Live Sessions State (Nhiều phiên live khác nhau độc lập)
   const [liveSessions, setLiveSessions] = useState([
     {
-      id: 'session_1',
-      title: '⚡ Phiên Live 01: Flash Sale Đón Tết (Kênh TikTok & FB)',
-      platform: 'TikTok Shop & FB Fanpage',
-      status: 'active',
-      viewers: '5,420',
-      bannerText: '🔥 MÃ GIẢM GIÁ 50% + FREESHIP TOÀN QUỐC DUY NHẤT TRÊN LIVE!',
-      countdown: '14:59',
-      pinnedProductId: 1,
-      products: [
-        { 
-          id: 1, 
-          name: 'Áo Khoác Chống Nước AvaLive Pro', 
-          price: '1.490.000₫', 
-          oldPrice: '2.500.000₫',
-          stock: 42,
-          sync: 'TikTok Shop & FB Fanpage',
-          image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=400&q=80',
-          badge: 'TOP 1 SELLER'
-        },
-        { 
-          id: 2, 
-          name: 'Tai Nghe Chống Ồn AI AvaTwin 2026', 
-          price: '2.990.000₫', 
-          oldPrice: '4.200.000₫',
-          stock: 18,
-          sync: 'Shopee Live Mall',
-          image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=400&q=80',
-          badge: 'HOT DEAL'
-        },
-        { 
-          id: 3, 
-          name: 'Đồng Hồ Thông Minh Quantum Pro', 
-          price: '4.990.000₫', 
-          oldPrice: '6.800.000₫',
-          stock: 9,
-          sync: 'TikTok + Shopee + FB',
-          image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80',
-          badge: 'LIMITED EDITION'
-        }
-      ]
-    },
-    {
-      id: 'session_2',
-      title: '💄 Phiên Live 02: Mỹ Phẩm Skincare Hàn Quốc (Shopee & IG)',
-      platform: 'Shopee Live & Instagram',
+      id: 'session_empty',
+      title: 'Phiên Live Trống (Vui lòng cấu hình)',
+      platform: 'Chưa kết nối nền tảng',
       status: 'idle',
-      viewers: '2,180',
-      bannerText: '💄 SẮM BỘ KEM DƯỠNG SKINCARE HÀN QUỐC TẶNG VOUCHER 200K!',
-      countdown: '29:59',
-      pinnedProductId: 4,
-      products: [
-        { 
-          id: 4, 
-          name: 'Bộ Serum Skincare Hàn Quốc Luxe 5in1', 
-          price: '890.000₫', 
-          oldPrice: '1.600.000₫',
-          stock: 65,
-          sync: 'Shopee Live & Instagram',
-          image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=400&q=80',
-          badge: 'BEST K-BEAUTY'
-        },
-        { 
-          id: 5, 
-          name: 'Son Kem Mịn Mượt Velvet Rose 2026', 
-          price: '350.000₫', 
-          oldPrice: '650.000₫',
-          stock: 120,
-          sync: 'Shopee Mall',
-          image: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=400&q=80',
-          badge: 'TRENDING'
-        }
-      ]
+      viewers: '0',
+      bannerText: 'SẴN SÀNG PHÁT LIVE - HÃY THÊM SẢN PHẨM VÀO GIỎ HÀNG!',
+      countdown: '00:00',
+      pinnedProductId: null,
+      products: []
     }
   ]);
 
-  const [activeSessionId, setActiveSessionId] = useState('session_1');
+  const [activeSessionId, setActiveSessionId] = useState('session_empty');
   const activeSession = liveSessions.find(s => s.id === activeSessionId) || liveSessions[0];
 
   // Active Pinned Product ID
@@ -159,10 +96,10 @@ export default function LiveCommerceStudio({ isLive }) {
             setIsSyncingCarts(false);
             setCartSyncState('idle');
             alert(`✅ Đã đồng bộ Giỏ Hàng & Tồn Kho thành công trên tất cả nền tảng (${activeSession.platform})!\nHệ thống tự động giải quyết Captcha 24/7 giúp đồng bộ không gián đoạn.`);
-          }, 2000);
-        }, 2000);
-      }, 2500);
-    }, 2000);
+          }, 0);
+        }, 0);
+      }, 0);
+    }, 0);
   };
   const [editingProductId, setEditingProductId] = useState(null);
   
@@ -180,44 +117,7 @@ export default function LiveCommerceStudio({ isLive }) {
   const [newSessionPlatform, setNewSessionPlatform] = useState('TikTok Shop & FB Fanpage');
 
   // Live Chat Comments Stream State (CLEAR PLATFORM + CLEAR PRODUCT CONTEXT)
-  const [chatMessages, setChatMessages] = useState([
-    { 
-      id: 1, 
-      user: 'Hùng Trần', 
-      platform: '🎵 TikTok Shop', 
-      productName: 'Áo Khoác Chống Nước AvaLive Pro', 
-      text: 'Đã đặt mua 1 áo khoác size L nhé shop!', 
-      time: '14:50', 
-      isAi: false 
-    },
-    { 
-      id: 2, 
-      user: 'Thu Hà', 
-      platform: '📘 FB Fanpage VIP 01', 
-      productName: 'Tai Nghe Chống Ồn AI AvaTwin 2026', 
-      text: 'Sản phẩm này có sẵn hàng giao ngay không ạ?', 
-      time: '14:51', 
-      isAi: false 
-    },
-    { 
-      id: 3, 
-      user: 'Khách Xem Live', 
-      platform: '🛍️ Shopee Live Mall', 
-      productName: 'Tai Nghe Chống Ồn AI AvaTwin 2026', 
-      text: 'Tai nghe chống ồn bảo hành bao lâu vậy MC ơi?', 
-      time: '14:52', 
-      isAi: false 
-    },
-    { 
-      id: 4, 
-      user: 'Trần Quốc Thiên - Expert', 
-      platform: '⚡ ĐỒNG BỘ 5 KÊNH', 
-      productName: 'Tai Nghe Chống Ồn AI AvaTwin 2026', 
-      text: 'Chào bạn! Tai nghe AI AvaTwin 2026 bảo hành 2 năm chính hãng 1 đổi 1. Hôm nay đang có voucher giảm 50% chỉ còn 2.990.000₫, bạn bấm vào giỏ hàng dưới màn hình MUA NGAY kẻo hết suất ưu đãi nhé!', 
-      time: '14:52', 
-      isAi: true 
-    },
-  ]);
+  const [chatMessages, setChatMessages] = useState([]);
   const [inputMsg, setInputMsg] = useState('');
 
   const languages = [
@@ -329,7 +229,7 @@ export default function LiveCommerceStudio({ isLive }) {
       platform: newSessionPlatform,
       status: 'idle',
       viewers: '1,000',
-      bannerText: '🔥 SỰ KIỆN LIVESTREAM BÁN HÀNG — GIẢM GIÁ KHỦNG HÔM NAY!',
+      bannerText: 'Sự Kiện Livestream Bán Hàng',
       countdown: '15:00',
       pinnedProductId: Date.now() + 1,
       products: [
@@ -722,7 +622,7 @@ export default function LiveCommerceStudio({ isLive }) {
             <div className="flex items-center justify-between border-b border-white/10 pb-2">
               <h3 className="text-xs font-black text-white flex items-center gap-2">
                 <Radio className="w-3.5 h-3.5 text-red-500 animate-spin" />
-                KHÁN GIẢ COMMENT REAL-TIME
+                Bình Luận Gần Đây
               </h3>
               <span className="text-[10px] text-emerald-400 font-mono font-bold">● CHAT MULTI-CHANNEL ACTIVE</span>
             </div>

@@ -2,6 +2,7 @@ import { syncUserToSupabase, supabase } from "./lib/supabaseClient";
 import React, { useState, useEffect } from "react";
 import Header from "./components/Header";
 import LandingHero from "./components/LandingHero";
+import SalesLandingPage from "./components/SalesLandingPage";
 import ProductionStudio from "./components/ProductionStudio";
 import AIAvatarStudio from "./components/AIAvatarStudio";
 import LiveCommerceStudio from "./components/LiveCommerceStudio";
@@ -17,10 +18,11 @@ import AffiliateDashboard from "./components/AffiliateDashboard";
 import TeamPermissionsManager from "./components/TeamPermissionsManager";
 import SalesAnalyticsManager from "./components/SalesAnalyticsManager";
 import LivestreamClonerStudio from "./components/LivestreamClonerStudio";
+import UpgradePrompt from "./components/UpgradePrompt";
 import { Lock, Sparkles, ShieldCheck, Mail, LogIn, ArrowRight } from "lucide-react";
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState("broadcast"); // Default to Studio Workspace
+  const [activeTab, setActiveTab] = useState(() => { const saved = localStorage.getItem("avalive_current_user"); return saved ? "broadcast" : "overview"; }); // Default to Studio Workspace
   const [isLive, setIsLive] = useState(false);
   const [aiAvatarFeatureEnabled, setAiAvatarFeatureEnabled] = useState(false);
 
@@ -129,7 +131,7 @@ export default function App() {
         
         {/* PUBLIC TABS & GENERAL TABS */}
         {activeTab === "overview" && (
-          <LandingHero setActiveTab={setActiveTab} setGoogleLoginModalOpen={setGoogleLoginModalOpen} />
+          <SalesLandingPage setActiveTab={setActiveTab} setGoogleLoginModalOpen={setGoogleLoginModalOpen} currentUser={currentUser} />
         )}
 
         {activeTab === "affiliate-landing" && (
@@ -148,7 +150,7 @@ export default function App() {
         {currentUser && (
           <>
             {activeTab === "broadcast" && (
-              <ProductionStudio isLive={isLive} aiAvatarFeatureEnabled={aiAvatarFeatureEnabled} setActiveTab={setActiveTab} />
+              <ProductionStudio isLive={isLive} aiAvatarFeatureEnabled={aiAvatarFeatureEnabled} setActiveTab={setActiveTab} currentUser={currentUser} />
             )}
 
             {activeTab === "avatars" && (
@@ -156,11 +158,15 @@ export default function App() {
             )}
 
             {activeTab === "commerce" && (
-              <LiveCommerceStudio isLive={isLive} />
+              (currentUser?.plan === 'FREE') 
+                ? <UpgradePrompt featureName="Live Commerce Chốt Đơn Đa Kênh" requiredPlan="Gói STARTER" setActiveTab={setActiveTab} />
+                : <LiveCommerceStudio isLive={isLive} />
             )}
 
             {activeTab === "multistream" && (
-              <MultistreamStudio isLive={isLive} setIsLive={setIsLive} />
+              (currentUser?.plan === 'FREE' || currentUser?.plan === 'STARTER') 
+                ? <UpgradePrompt featureName="Phân Phối Luồng Restream Đa Kênh" requiredPlan="Gói PRO" setActiveTab={setActiveTab} />
+                : <MultistreamStudio isLive={isLive} setIsLive={setIsLive} currentUser={currentUser} />
             )}
 
             {activeTab === "chat-hub" && (
@@ -168,7 +174,10 @@ export default function App() {
             )}
 
             <div style={{ display: activeTab === "livestream-cloner" ? "block" : "none" }}>
-              <LivestreamClonerStudio />
+              {(currentUser?.plan === 'FREE' || currentUser?.plan === 'STARTER') 
+                ? (activeTab === "livestream-cloner" && <UpgradePrompt featureName="Sao Chép Livestream Clone" requiredPlan="Gói PRO" setActiveTab={setActiveTab} />)
+                : <LivestreamClonerStudio />
+              }
             </div>
 
             {activeTab === "team" && (
@@ -180,7 +189,9 @@ export default function App() {
             )}
 
             {activeTab === "accounts" && (
-              <MultiAccountManager />
+              (currentUser?.plan === 'FREE')
+                ? <UpgradePrompt featureName="Quản Lý Đa Tài Khoản Mạng Xã Hội" requiredPlan="Gói STARTER" setActiveTab={setActiveTab} />
+                : <MultiAccountManager />
             )}
 
             {activeTab === "affiliate-dashboard" && (

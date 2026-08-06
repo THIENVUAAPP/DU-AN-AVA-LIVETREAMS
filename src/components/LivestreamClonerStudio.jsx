@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import LivePlayer from './LivePlayer';
-import { BarChart2, User, MonitorPlay, Plus, Trash2, Play, Square, Pause, Download, Scissors, Zap, CheckCircle2, RefreshCw, Globe, Radio, Eye, Maximize2, LayoutGrid, LayoutList } from 'lucide-react';
+import AutoCaptchaSolver from './AutoCaptchaSolver';
+import { BarChart2, User, MonitorPlay, Plus, Trash2, Play, Square, Pause, Download, Scissors, Zap, CheckCircle2, RefreshCw, Globe, Radio, Eye, Maximize2, LayoutGrid, LayoutList, AlertTriangle, AlertCircle, Settings, RotateCcw, X, LayoutTemplate, VolumeX, Volume2 } from 'lucide-react';
 
 
 // Cấu hình API Euler để lách bản quyền TikTok Live
@@ -36,8 +37,8 @@ const getEmbedUrl = (url) => {
   if (lowerUrl.includes('tiktok.com')) {
     const usernameMatch = url.match(/@([a-zA-Z0-9_.-]+)/);
     if (usernameMatch && usernameMatch[0]) {
-      // Bắt buộc dùng /embed/ vì /player/v1/live bị chặn X-Frame-Options / Cookie
-      return `https://www.tiktok.com/embed/${usernameMatch[0]}/live?autoplay=1&muted=1`;
+      const username = usernameMatch[0].replace('@', '');
+      return `https://www.tiktok.com/@${username}/live`;
     } else {
       return 'INVALID_TIKTOK_URL';
     }
@@ -52,6 +53,7 @@ export default function LivestreamClonerStudio() {
   const [streams, setStreams] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [viewMode, setViewMode] = useState('grid');
+  const [showAutoCaptcha, setShowAutoCaptcha] = useState({});
   const [activeTabId, setActiveTabId] = useState(null);
   
   // History State
@@ -64,28 +66,28 @@ export default function LivestreamClonerStudio() {
   });
   const [showHistoryModal, setShowHistoryModal] = useState(false);
 
-  // Parse pasted links
   const handleAddLinks = () => {
     if (!linksInput.trim()) return;
     setIsProcessing(true);
-    
     const links = linksInput.split('\n').filter(l => l.trim() !== '');
     const newStreams = links.map((link, index) => {
-      
+      const isApiRequired = link.includes('tiktok') || link.includes('shopee');
       return {
         id: Date.now() + index,
         url: link.trim(),
         platform: link.includes('tiktok') ? 'TikTok' : link.includes('facebook') ? 'Facebook' : link.includes('shopee') ? 'Shopee' : 'Khác',
-        status: 'live', // 'live', 'ended', 'downloading', 'downloaded'
+        status: 'live',
         viewers: Math.floor(Math.random() * 5000) + 100,
         autoDownload: true,
         showHighlights: false,
         highlights: [],
-        isPlaying: true, // Default to true to immediately load the real live stream
-        isApiRequired: link.includes('tiktok') || link.includes('shopee'),
-        extractionStatus: link.includes('tiktok') || link.includes('shopee') ? 'extracting' : undefined,
+        isPlaying: true, // Tự động phát khi trích xuất thành công
+        isApiRequired: isApiRequired,
+        extractionStatus: isApiRequired ? 'extracting' : 'success',
         streamUrl: '',
-        title: ''
+        title: '',
+        isRecording: false,
+        isMuted: true // Mặc định tắt tiếng để AutoPlay hoạt động
       };
     });
     
@@ -93,27 +95,33 @@ export default function LivestreamClonerStudio() {
     setLinksInput('');
     setIsProcessing(false);
 
-    // Xử lý gọi API Serverless tuần tự để tránh bị TikTok chặn IP do gửi quá nhiều request cùng lúc
+    // Xử lý song song để các luồng không phải chờ đợi nhau (giảm thiểu tình trạng load lâu)
     const processExtractions = async () => {
-      for (const stream of newStreams) {
-        if (stream.isApiRequired) {
-          try {
-            const res = await fetch(`/api/extract?url=${encodeURIComponent(stream.url)}`);
-            if (!res.ok) throw new Error('API Error');
-            const data = await res.json();
-            if (data.streamUrl) {
-              setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'success', streamUrl: data.streamUrl, title: data.title } : s));
-            } else if (data.error === 'OFFLINE' || (data.error && data.error.includes('not currently live')) || (data.stderr && data.stderr.includes('not currently live'))) {
-              setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'offline' } : s));
-            } else {
+      await Promise.allSettled(
+        newStreams.map(async (stream) => {
+          if (stream.isApiRequired) {
+            try {
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 60000); // Giảm timeout xuống 60s
+              const res = await fetch(`/api/extract?url=${encodeURIComponent(stream.url)}`, { signal: controller.signal });
+              clearTimeout(timeoutId);
+              
+              if (!res.ok) throw new Error('API Error');
+              const data = await res.json();
+              if (data.streamUrl) {
+                setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'success', streamUrl: data.streamUrl, title: data.title } : s));
+              } else if (data.error === 'OFFLINE' || (data.error && data.error.includes('not currently live')) || (data.stderr && data.stderr.includes('not currently live'))) {
+                setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'offline' } : s));
+              } else {
+                setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'error' } : s));
+              }
+            } catch (error) {
+              console.error("Extraction error:", error);
               setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'error' } : s));
             }
-          } catch (error) {
-            console.error("Extraction error:", error);
-            setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'error' } : s));
           }
-        }
-      }
+        })
+      );
     };
     processExtractions();
   };
@@ -132,74 +140,81 @@ export default function LivestreamClonerStudio() {
     setStreams(prev => prev.filter(s => s.id !== id));
   };
 
-  const simulateEndLive = (id) => {
-    setStreams(prev => prev.map(s => {
-      if (s.id === id) {
-        // If it was live, and autoDownload is true, trigger download state immediately
-        if (s.status === 'live' && s.autoDownload) {
-          return { ...s, status: 'downloading', isPlaying: false };
-        }
-        return { ...s, status: 'ended', isPlaying: false };
-      }
-      return s;
-    }));
+  const toggleMute = (id) => {
+    setStreams(prev => prev.map(s => s.id === id ? { ...s, isMuted: !s.isMuted } : s));
   };
 
-  const togglePlay = (id) => {
-    setStreams(prev => prev.map(s => {
-      if (s.id === id) {
-        return { ...s, isPlaying: !s.isPlaying };
+  const handleRetryExtraction = async (stream) => {
+    setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'extracting' } : s));
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 90000);
+      const res = await fetch(`/api/extract?url=${encodeURIComponent(stream.url)}`, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      
+      if (!res.ok) throw new Error('API Error');
+      const data = await res.json();
+      if (data.streamUrl) {
+        setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'success', streamUrl: data.streamUrl, title: data.title } : s));
+      } else if (data.error === 'OFFLINE' || (data.error && data.error.includes('not currently live')) || (data.stderr && data.stderr.includes('not currently live'))) {
+        setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'offline' } : s));
+      } else {
+        setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'error' } : s));
       }
-      return s;
-    }));
-  };
-
-  // Effect to handle auto-download progression
-  useEffect(() => {
-    const downloadingStreams = streams.filter(s => s.status === 'downloading');
-    
-    if (downloadingStreams.length > 0) {
-      downloadingStreams.forEach(stream => {
-        setTimeout(() => {
-          setStreams(prev => prev.map(s => {
-            if (s.id === stream.id) {
-              // SAVE TO HISTORY WHEN DOWNLOADED
-              const newHistoryItem = {
-                ...s,
-                status: 'downloaded',
-                savedAt: new Date().toISOString()
-              };
-              setHistory(prevHistory => {
-                // Prevent duplicate saves
-                if (prevHistory.some(h => h.id === s.id)) return prevHistory;
-                const updated = [newHistoryItem, ...prevHistory];
-                localStorage.setItem('avalive_stream_history', JSON.stringify(updated));
-                return updated;
-              });
-              return { ...s, status: 'downloaded' };
-            }
-            return s;
-          }));
-        }, 3000); // Simulate 3s download time
-      });
+    } catch (error) {
+      console.error("Retry Extraction error:", error);
+      setStreams(prev => prev.map(s => s.id === stream.id ? { ...s, extractionStatus: 'error' } : s));
     }
-  }, [streams]);
+  };
 
-  const extractHighlights = (id) => {
-    setStreams(prev => prev.map(s => {
-      if (s.id === id) {
-        return { 
-          ...s, 
-          showHighlights: true,
-          highlights: [
-            { id: 1, title: 'Chốt Sale Đỉnh Điểm', duration: '45s', time: '00:15:30' },
-            { id: 2, title: 'Tương tác cao nhất', duration: '60s', time: '01:05:10' },
-            { id: 3, title: 'Viral Moment', duration: '15s', time: '01:45:00' }
-          ]
-        };
+  const mediaRecorders = useRef({});
+  const recordedChunks = useRef({});
+
+  const handleManualRecord = (id, start) => {
+    setStreams(prev => {
+      const stream = prev.find(s => s.id === id);
+      if (!stream) return prev;
+
+      if (start) {
+        try {
+          const videoEl = document.getElementById(`video-${id}`);
+          if (!videoEl) throw new Error("Video element not found");
+          
+          const mediaStream = videoEl.captureStream();
+          const recorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm' });
+          
+          recordedChunks.current[id] = [];
+          recorder.ondataavailable = (e) => {
+            if (e.data.size > 0) recordedChunks.current[id].push(e.data);
+          };
+          
+          recorder.onstop = () => {
+            const blob = new Blob(recordedChunks.current[id], { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `recording-${id}-${new Date().getTime()}.webm`;
+            a.click();
+            URL.revokeObjectURL(url);
+          };
+          
+          recorder.start();
+          mediaRecorders.current[id] = recorder;
+          console.log(`🔴 Đã bắt đầu ghi hình luồng: ${stream.url}`);
+          return prev.map(s => s.id === id ? { ...s, isRecording: true } : s);
+        } catch (e) {
+          console.error(`Lỗi ghi hình: ${e.message}`);
+          return prev;
+        }
+      } else {
+        const recorder = mediaRecorders.current[id];
+        if (recorder && recorder.state !== 'inactive') {
+          recorder.stop();
+        }
+        console.log(`⏹️ Đã dừng ghi hình luồng: ${stream.url}. Video đang được lưu...`);
+        return prev.map(s => s.id === id ? { ...s, isRecording: false } : s);
       }
-      return s;
-    }));
+    });
   };
 
   return (
@@ -305,14 +320,27 @@ export default function LivestreamClonerStudio() {
               <div key={stream.id} className={`glass-panel rounded-2xl border border-white/10 bg-[#121216] overflow-hidden flex flex-col relative group transition-all hover:border-blue-500/50 hover:shadow-glow-blue-sm ${viewMode === 'tabs' && activeTabId !== stream.id ? 'hidden' : ''}`}>
 
                 
-                {/* DELETE INDIVIDUAL STREAM BUTTON */}
-                <button 
-                  onClick={() => handleRemoveStream(stream.id)}
-                  className="absolute top-2 right-2 z-50 p-1.5 bg-red-500/80 hover:bg-red-500 text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity shadow-lg backdrop-blur-sm"
-                  title="Xóa luồng này"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                {/* HEADER CONTROLS (MUTE & DELETE) */}
+                <div className="absolute top-2 right-2 z-50 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button 
+                    onClick={() => toggleMute(stream.id)}
+                    className={`p-1.5 rounded-md text-white transition-colors shadow-lg backdrop-blur-sm ${stream.isMuted !== false ? 'bg-gray-600/80 hover:bg-gray-500' : 'bg-blue-600/80 hover:bg-blue-500'}`}
+                    title={stream.isMuted !== false ? "Mở âm thanh" : "Tắt âm thanh"}
+                  >
+                    {stream.isMuted !== false ? (
+                      <VolumeX className="w-4 h-4" />
+                    ) : (
+                      <Volume2 className="w-4 h-4" />
+                    )}
+                  </button>
+                  <button 
+                    onClick={() => handleRemoveStream(stream.id)}
+                    className="p-1.5 bg-red-500/80 hover:bg-red-500 text-white rounded-md shadow-lg backdrop-blur-sm"
+                    title="Xóa luồng này"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
 
                 {/* REAL-TIME VIDEO PLAYER IFRAME / NATIVE PLAYER */}
                 <div className={`relative bg-black flex items-center justify-center overflow-hidden group/player ${
@@ -332,55 +360,76 @@ export default function LivestreamClonerStudio() {
                            <span className="text-[10px] text-gray-400">Đang kết nối luồng siêu tốc...</span>
                         </div>
                       ) : stream.extractionStatus === 'success' && stream.streamUrl ? (
-                        <div className="w-full h-full absolute inset-0 relative font-sans">
+                        <div className="w-full h-full absolute inset-0 font-sans group overflow-hidden">
                           <LivePlayer 
                             url={(() => {
-                              if (!stream.streamUrl.includes('tiktokcdn')) return stream.streamUrl;
-                              const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                              if (stream.ext === 'flv' || stream.protocol === 'http_dash_segments' || stream.streamUrl.includes('.flv')) {
+                                return stream.streamUrl;
+                              }
                               const proxyBase = '';
                               const isM3u8 = stream.protocol?.includes('m3u8') || stream.streamUrl.includes('.m3u8');
                               return `${proxyBase}/proxy-${isM3u8 ? 'hls' : 'ts'}?url=${encodeURIComponent(stream.streamUrl)}`;
                             })()}
                             playing={true} 
-                            muted={true} 
+                            muted={stream.isMuted !== false} 
+                            videoId={`video-${stream.id}`}
                             isFlv={stream.ext === 'flv' || stream.protocol === 'http_dash_segments' || stream.streamUrl.includes('.flv')}
                             isM3u8={stream.protocol?.includes('m3u8') || stream.streamUrl.includes('.m3u8')}
-                            onVideoMount={(v) => console.log('Video mounted for:', stream.id)}
+                            onVideoMount={(v) => {
+                              if (stream.autoDownload && !stream.isRecording) {
+                                setTimeout(() => handleManualRecord(stream.id, true), 2000);
+                              }
+                            }}
                           />
-                          {/* TIKTOK FAKE UI OVERLAY */}
-                          <div className="absolute inset-0 pointer-events-none flex flex-col justify-between p-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className="bg-[#fe2c55] text-white text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 shadow">
-                                  <Radio className="w-2.5 h-2.5" /> LIVE
-                                </span>
-                                <span className="text-white font-bold text-[14px] drop-shadow-md flex items-center gap-1">
-                                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M19.589 6.686a4.793 4.793 0 01-3.77-4.245V2h-3.445v13.672a2.896 2.896 0 01-5.201 1.743l-.002-.001.002.001a2.895 2.895 0 013.183-4.51v-3.5a6.329 6.329 0 00-5.394 10.692 6.33 6.33 0 0010.857-4.424V8.687a8.182 8.182 0 004.773 1.526V6.79a4.831 4.831 0 01-1.003-.104z"/></svg>
-                                  TikTok <span className="text-[#fe2c55] ml-0.5">LIVE</span>
-                                </span>
-                              </div>
-                              <div className="bg-[#fe2c55] text-white text-[11px] font-bold px-3 py-1.5 rounded pointer-events-auto cursor-pointer shadow-md">
-                                Open App
-                              </div>
-                            </div>
-                            
-                            <div className="flex flex-col items-end gap-2 mb-8">
-                               <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-full px-2 py-1 flex items-center gap-2 text-white text-[11px] font-bold">
-                                 <BarChart2 className="w-3 h-3 text-[#fe2c55]" />
-                                 <User className="w-3 h-3 text-white" />
-                                 <span>{stream.realViewers > 1000 ? (stream.realViewers/1000).toFixed(1) + 'K' : stream.realViewers}</span>
-                               </div>
-                            </div>
-                            
-                            <div className="absolute bottom-4 left-3 right-3">
-                               <div className="flex items-center gap-2 bg-black/30 backdrop-blur-md rounded-full p-1 border border-white/10">
-                                  <div className="w-6 h-6 rounded-full bg-gray-600 overflow-hidden flex items-center justify-center shrink-0">
-                                    <User className="w-4 h-4 text-gray-300" />
-                                  </div>
-                                  <div className="text-white text-[10px] font-semibold truncate flex-1">{stream.uploader}</div>
-                                  <div className="bg-[#fe2c55] text-white text-[9px] font-bold px-2 py-1 rounded-full mr-1 pointer-events-auto cursor-pointer">Follow</div>
-                               </div>
-                            </div>
+                          
+                          {/* Giao diện TikTok Mobile Ảo (Overlay) - Dùng % để tự co giãn theo mọi kích thước khung */}
+                          <div className="absolute inset-0 z-20 pointer-events-none flex flex-col justify-between p-[3%]" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 15%, transparent 70%, rgba(0,0,0,0.6) 100%)' }}>
+                             <div className="flex items-start justify-between">
+                                <div className="flex items-center bg-black/30 backdrop-blur-md rounded-full p-[1%] pr-[3%] border border-white/10 max-w-[60%]">
+                                   <div className="w-[15%] aspect-square min-w-[20px] rounded-full bg-gradient-to-br from-blue-400 to-pink-500 p-[2%]">
+                                      <div className="w-full h-full bg-gray-800 rounded-full overflow-hidden flex items-center justify-center">
+                                         <User className="w-[70%] h-[70%] text-white/50" />
+                                      </div>
+                                   </div>
+                                   <div className="ml-[4%] flex flex-col flex-1 overflow-hidden">
+                                      <span className="text-white text-[8px] sm:text-[10px] font-bold truncate">{stream.title || 'Host'}</span>
+                                      <span className="text-white/80 text-[6px] sm:text-[8px]">1.2K người xem</span>
+                                   </div>
+                                   <div className="ml-[4%] bg-[#fe2c55] text-white text-[7px] sm:text-[9px] font-bold px-[4%] py-[2%] rounded-full whitespace-nowrap">+ Theo dõi</div>
+                                </div>
+                                
+                             </div>
+                             
+                             {/* Right Icons */}
+                             <div className="absolute right-[3%] bottom-[15%] flex flex-col items-center gap-[10%] h-[40%] justify-end">
+                                <div className="flex flex-col items-center gap-[5%] mb-[20%]">
+                                   <div className="w-[8cqw] min-w-[24px] max-w-[40px] aspect-square rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10">
+                                      <User className="w-[50%] h-[50%] text-white" />
+                                   </div>
+                                </div>
+                                <div className="flex flex-col items-center gap-[5%] mb-[15%]">
+                                   <svg viewBox="0 0 24 24" className="w-[8cqw] min-w-[24px] max-w-[40px] aspect-square text-white drop-shadow-md" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                                   <span className="text-white text-[7px] sm:text-[9px] font-bold drop-shadow-md">14.5K</span>
+                                </div>
+                                <div className="flex flex-col items-center gap-[5%] mb-[15%]">
+                                   <svg viewBox="0 0 24 24" className="w-[8cqw] min-w-[24px] max-w-[40px] aspect-square text-white drop-shadow-md" fill="currentColor"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+                                   <span className="text-white text-[7px] sm:text-[9px] font-bold drop-shadow-md">324</span>
+                                </div>
+                                <div className="flex flex-col items-center gap-[5%]">
+                                   <svg viewBox="0 0 24 24" className="w-[8cqw] min-w-[24px] max-w-[40px] aspect-square text-white drop-shadow-md" fill="currentColor"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
+                                   <span className="text-white text-[7px] sm:text-[9px] font-bold drop-shadow-md">Share</span>
+                                </div>
+                             </div>
+                             
+                             {/* Bottom Chat */}
+                             <div className="absolute bottom-[3%] left-[3%] right-[15%]">
+                                <p className="text-white text-[8px] sm:text-xs font-medium mb-[2%] drop-shadow-md truncate">Cửa hàng TikTok chính hãng...</p>
+                                <div className="flex items-center gap-[2%]">
+                                   <div className="bg-black/20 backdrop-blur-md rounded-full px-[4%] py-[2%] text-[7px] sm:text-[10px] text-white/60 border border-white/10 flex-1 truncate">
+                                      Thêm bình luận...
+                                   </div>
+                                </div>
+                             </div>
                           </div>
                         </div>
                       ) : stream.extractionStatus === 'offline' ? (
@@ -389,18 +438,35 @@ export default function LivestreamClonerStudio() {
                           <span className="text-[12px] font-black uppercase text-white">TÀI KHOẢN ĐANG OFFLINE</span>
                           <span className="text-[9px] mt-1 uppercase text-gray-400">Người dùng này hiện không phát trực tiếp</span>
                         </div>
+                      ) : stream.extractionStatus === 'error' && getEmbedUrl(stream.url) !== 'INVALID_TIKTOK_URL' ? (
+                        <div className="w-full h-full absolute inset-0 font-sans bg-[#121216] flex flex-col items-center justify-center overflow-hidden border border-red-500/20">
+                          {showAutoCaptcha[stream.id] ? (
+                            <AutoCaptchaSolver onSolved={() => setShowAutoCaptcha(prev => ({ ...prev, [stream.id]: false }))} />
+                          ) : null}
+                          
+                          <div className="absolute inset-0 z-0 flex flex-col items-center justify-center p-4 text-center">
+                            <AlertTriangle className="w-12 h-12 mb-3 opacity-80 text-red-500" />
+                            <span className="text-[14px] font-black uppercase text-red-500">KHÔNG THỂ TRÍCH XUẤT</span>
+                            <span className="text-[10px] mt-2 text-gray-400 max-w-[80%]">Hệ thống mạng vừa bị TikTok chặn (Yêu cầu Captcha). Vui lòng thử lại để nhận video gốc chuẩn Mobile.</span>
+                            
+                            <button 
+                              onClick={() => handleRetryExtraction(stream)}
+                              className="mt-4 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-glow-blue cursor-pointer"
+                            >
+                              BẤM ĐỂ THỬ LẠI (RETRY)
+                            </button>
+                          </div>
+                        </div>
                       ) : getEmbedUrl(stream.url) === 'INVALID_TIKTOK_URL' ? (
                         <div className="text-gray-400 flex flex-col items-center justify-center p-4 text-center h-full w-full bg-[#121216] border border-orange-500/20">
                           <span className="text-[12px] font-black uppercase text-orange-500 mb-2">LINK TIKTOK KHÔNG HỢP LỆ</span>
                           <span className="text-[10px] text-gray-300">Vui lòng nhập link chứa tên người dùng (VD: tiktok.com/@user/live)</span>
                         </div>
                       ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900 text-white p-4 text-center">
-                          <svg className="w-12 h-12 text-red-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                          </svg>
-                          <h3 className="text-sm font-bold uppercase mb-1">LỖI KẾT NỐI (BỊ TIKTOK CHẶN CAPTCHA)</h3>
-                          <p className="text-xs text-gray-400">
+                        <div className="text-gray-400 flex flex-col items-center justify-center p-4 text-center h-full w-full bg-[#121216] border border-red-500/20">
+                          <AlertTriangle className="w-8 h-8 mb-2 opacity-70 text-red-500" />
+                          <span className="text-[12px] font-black uppercase text-red-500">LỖI KẾT NỐI API TRÍCH XUẤT</span>
+                          <p className="text-[9px] mt-2 text-gray-400 text-center px-4">
                             Hệ thống mạng của bạn vừa bị TikTok yêu cầu giải Captcha.<br/>
                             Vui lòng đổi IP mạng (Tắt bật lại Wifi/4G) rồi tải lại trang!
                           </p>
@@ -414,7 +480,7 @@ export default function LivestreamClonerStudio() {
                     ) : (
                       <iframe 
                         src={getEmbedUrl(stream.url)}
-                        title="Real-time Livestream Player"
+                        title="Livestream Player"
                         className="w-full h-full border-none absolute inset-0"
                         allowFullScreen
                         allow="autoplay; encrypted-media; fullscreen"
@@ -479,7 +545,7 @@ export default function LivestreamClonerStudio() {
                       <button 
                         onClick={() => togglePlay(stream.id)} 
                         className={`p-4 rounded-full transition-all cursor-pointer group hover:scale-110 shadow-2xl ${stream.isPlaying ? 'bg-red-500/80 hover:bg-red-500 pointer-events-auto' : 'bg-emerald-500/80 hover:bg-emerald-500'}`}
-                        title={stream.isPlaying ? "Tạm dừng xem trực tiếp" : "Xem Live trực tiếp (Real-time)"}
+                        title={stream.isPlaying ? "Tạm dừng xem trực tiếp" : "Xem trực tiếp"}
                       >
                         {stream.isPlaying ? (
                           <Pause className="w-8 h-8 text-white transition-all" fill="currentColor" />
@@ -503,62 +569,34 @@ export default function LivestreamClonerStudio() {
                     <p className="text-[10px] font-mono text-gray-400 truncate mb-1 bg-white/5 p-1 rounded" title={stream.url}>{stream.url}</p>
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-white">{stream.platform} Stream</span>
-                      <label className="flex items-center gap-1.5 cursor-pointer" title="Hệ thống sẽ tự động tải video ngay khi luồng live ngắt kết nối">
-                        <input 
-                          type="checkbox" 
-                          checked={stream.autoDownload} 
-                          onChange={() => toggleAutoDownload(stream.id)}
-                          className="accent-blue-500 w-3 h-3 cursor-pointer"
-                        />
-                        <span className="text-[10px] text-blue-300 font-bold">Tự Auto-Download khi Off</span>
-                      </label>
                     </div>
                   </div>
 
                   {/* ACTION BUTTONS */}
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
+                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/10">
                     <button 
-                      onClick={() => simulateEndLive(stream.id)}
-                      disabled={stream.status !== 'live'}
-                      className="py-1.5 px-2 bg-white/10 hover:bg-white/20 disabled:opacity-30 rounded-lg text-[10px] font-bold text-white transition-all flex items-center justify-center gap-1 cursor-pointer"
+                      onClick={() => toggleAutoDownload(stream.id)}
+                      className={`py-1.5 px-2 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${stream.autoDownload ? 'bg-blue-600/50 text-blue-200 border border-blue-500/50' : 'bg-white/10 text-gray-400 hover:bg-white/20'}`}
                     >
-                      <Square className="w-3 h-3" /> SIMULATE END LIVE
+                      <Zap className="w-3 h-3" /> AUTO REC
                     </button>
                     
                     <button 
-                      onClick={() => extractHighlights(stream.id)}
-                      disabled={stream.showHighlights || stream.status === 'downloading'}
-                      className="py-1.5 px-2 bg-blue-600/30 border border-blue-500/40 hover:bg-blue-600/50 disabled:opacity-30 rounded-lg text-[10px] font-black text-blue-300 transition-all flex items-center justify-center gap-1 cursor-pointer"
+                      onClick={() => handleManualRecord(stream.id, true)}
+                      disabled={stream.isRecording}
+                      className={`py-1.5 px-2 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${stream.isRecording ? 'bg-red-600/50 text-red-200 border border-red-500/50 animate-pulse' : 'bg-white/10 hover:bg-white/20 text-white'}`}
                     >
-                      <Scissors className="w-3 h-3" /> CẮT HIGHLIGHT (AI)
+                      <Play className="w-3 h-3" /> REC
+                    </button>
+
+                    <button 
+                      onClick={() => handleManualRecord(stream.id, false)}
+                      disabled={!stream.isRecording}
+                      className="py-1.5 px-2 bg-white/10 hover:bg-white/20 disabled:opacity-30 rounded-lg text-[10px] font-bold text-white transition-all flex items-center justify-center gap-1 cursor-pointer"
+                    >
+                      <Square className="w-3 h-3" /> STOP
                     </button>
                   </div>
-
-                  {/* HIGHLIGHTS SECTION */}
-                  {stream.showHighlights && (
-                    <div className="mt-2 space-y-2 pt-2 border-t border-white/10">
-                      <div className="text-[10px] font-bold text-amber-400 flex items-center gap-1">
-                        <Zap className="w-3 h-3" /> AI ĐỀ XUẤT CẮT (REUSE)
-                      </div>
-                      <div className="space-y-1.5">
-                        {stream.highlights.map(hl => (
-                          <div key={hl.id} className="bg-black/40 border border-white/5 p-1.5 rounded-lg flex items-center justify-between group/hl hover:border-amber-500/30">
-                            <div>
-                              <p className="text-[9px] font-bold text-white">{hl.title}</p>
-                              <p className="text-[8px] text-gray-400 font-mono">Tại: {hl.time} • Dài: {hl.duration}</p>
-                            </div>
-                            <button 
-                              className="p-1 rounded bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-black transition-all cursor-pointer" 
-                              title="Tải đoạn cắt này"
-                              onClick={() => alert(`✂️ Đã tải về đoạn cắt "${hl.title}" độ dài ${hl.duration}.`)}
-                            >
-                              <Download className="w-3 h-3" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
 
                 </div>
               </div>
