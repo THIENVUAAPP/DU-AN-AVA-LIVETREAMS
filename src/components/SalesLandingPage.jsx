@@ -60,6 +60,23 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
 
   const plans = [
     {
+      name: "Gói FREE",
+      desc: "Trải nghiệm sức mạnh của AI Livestream hoàn toàn miễn phí.",
+      monthly: 0,
+      yearly: 0,
+      features: [
+        "Phát Live 1 luồng/tháng",
+        "Giới hạn 30 phút/phiên Live",
+        "Có Watermark (Logo AvaLive)",
+        "Chatbot AI cơ bản",
+        "Không hỗ trợ Auto Captcha"
+      ],
+      color: "from-gray-500 to-gray-600",
+      textColor: "text-gray-300",
+      btnText: "BẮT ĐẦU MIỄN PHÍ",
+      icon: <Star className="w-5 h-5 text-gray-300" />
+    },
+    {
       name: "Gói STARTER",
       desc: "Phù hợp cho cá nhân bán hàng nhỏ lẻ, cần tự động hóa.",
       monthly: 799000,
@@ -69,7 +86,8 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
         "Tự động chốt 200 đơn/tháng",
         "Quản lý trang thanh toán đơn",
         "Bỏ Logo AvaLive Watermark",
-        "Bypass Captcha (Cơ bản)"
+        "Bypass Captcha (Cơ bản)",
+        "Hỗ trợ kỹ thuật qua Email"
       ],
       color: "from-[#3B82F6] to-[#2563EB]",
       textColor: "text-blue-400",
@@ -86,7 +104,8 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
         "Tự động chốt 1000 đơn/tháng",
         "Quản lý trang thanh toán đơn",
         "Restream TikTok, FB, Shopee",
-        "Bypass Captcha Cao Cấp (100%)"
+        "Bypass Captcha Cao Cấp (100%)",
+        "Hỗ trợ ưu tiên qua Zalo"
       ],
       isPopular: true,
       color: "from-[#8B5CF6] to-[#EF4444]",
@@ -104,7 +123,8 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
         "Tự động chốt đơn KHÔNG GIỚI HẠN",
         "Quản lý trang thanh toán ưu tiên",
         "Tạo & Quản lý nhiều phiên độc lập",
-        "Hỗ trợ kỹ thuật 24/7 (1 kèm 1)"
+        "Hỗ trợ kỹ thuật 24/7 (1 kèm 1)",
+        "Tùy chỉnh giao diện theo Brand"
       ],
       color: "from-[#059669] to-[#047857]",
       textColor: "text-emerald-400",
@@ -358,12 +378,12 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
           </RevealOnScroll>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {plans.map((plan, i) => (
-            <RevealOnScroll key={i} className={`relative glass-panel rounded-3xl p-8 border flex flex-col transition-all duration-300 hover:scale-105 ${plan.isPopular ? 'border-[#8B5CF6]/50 shadow-[0_0_40px_rgba(139,92,246,0.2)] md:-translate-y-6 bg-[#1a1a24]' : 'border-white/10 hover:border-white/30'}`}>
+            <RevealOnScroll key={i} className={`relative glass-panel rounded-3xl p-8 border flex flex-col transition-all duration-500 hover:scale-[1.03] transform-gpu hover:z-10 ${plan.isPopular ? 'border-[#8B5CF6]/50 shadow-[0_0_60px_rgba(139,92,246,0.3)] md:-translate-y-6 bg-[#1a1a24]' : 'border-white/10 hover:border-white/30 hover:shadow-[0_0_40px_rgba(255,255,255,0.1)]'}`}>
               
               {plan.isPopular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 bg-gradient-to-r from-[#EF4444] to-[#8B5CF6] text-white text-[11px] font-black uppercase rounded-full tracking-widest shadow-neon-red">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 bg-gradient-to-r from-[#EF4444] to-[#8B5CF6] text-white text-[11px] font-black uppercase rounded-full tracking-widest shadow-neon-red animate-pulse">
                   KHUYÊN DÙNG NHẤT
                 </div>
               )}
@@ -451,6 +471,69 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
           </div>
         </RevealOnScroll>
       </section>
+
+      {/* FOOTER SECTION */}
+      <footer className="mt-32 border-t border-white/5 bg-[#050505] pt-16 pb-8 relative z-10 overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
+        <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#EF4444] to-[#8B5CF6] p-0.5">
+                <img src="/official_logo.jpg" alt="AvaLive" className="w-full h-full object-cover rounded-md" />
+              </div>
+              <h4 className="text-xl font-black text-white">AvaLive <span className="text-[#EF4444]">PRO</span></h4>
+            </div>
+            <p className="text-gray-400 text-sm leading-relaxed">
+              Giải pháp Livestream Đa Nền Tảng hàng đầu Việt Nam. Tự động hóa quy trình chốt đơn, vượt tường lửa Captcha và giúp bạn tối đa hóa lợi nhuận.
+            </p>
+            <div className="flex gap-4 pt-2">
+              <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-[#8B5CF6]/20 hover:text-[#8B5CF6] transition-all"><Facebook className="w-4 h-4" /></a>
+              <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-red-500/20 hover:text-red-400 transition-all"><Tv className="w-4 h-4" /></a>
+            </div>
+          </div>
+          
+          <div>
+            <h4 className="text-white font-bold mb-6">Tính Năng</h4>
+            <ul className="space-y-3 text-sm text-gray-400">
+              <li><a href="#" className="hover:text-white transition-colors">Restream Đa Kênh</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Bypass Captcha Siêu Tốc</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Chốt Đơn Tự Động</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Trang Thanh Toán Đơn</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Quản Lý Đa Tài Khoản</a></li>
+            </ul>
+          </div>
+          
+          <div>
+            <h4 className="text-white font-bold mb-6">Hỗ Trợ</h4>
+            <ul className="space-y-3 text-sm text-gray-400">
+              <li><a href="#" className="hover:text-white transition-colors">Trung Tâm Trợ Giúp</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Hướng Dẫn Sử Dụng</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Cộng Đồng Zalo/FB</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Tài Liệu API</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-white font-bold mb-6">Liên Hệ</h4>
+            <ul className="space-y-3 text-sm text-gray-400">
+              <li className="flex items-center gap-2"><Smartphone className="w-4 h-4 text-gray-500" /> 0981.244.812 (Zalo 24/7)</li>
+              <li className="flex items-center gap-2"><MessageSquare className="w-4 h-4 text-gray-500" /> contact@avalive.vn</li>
+              <li className="flex items-start gap-2"><Building2 className="w-4 h-4 text-gray-500 mt-1 shrink-0" /> 124 Nguyễn Trãi, Phường Bến Thành, Quận 1, TP.HCM</li>
+            </ul>
+          </div>
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-4 pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-gray-500 text-xs">
+            &copy; {new Date().getFullYear()} AvaLive PRO. All rights reserved. Made with <span className="text-red-500">❤️</span> by Quoc Thien.
+          </p>
+          <div className="flex gap-4 text-xs text-gray-500">
+            <a href="#" className="hover:text-white transition-colors">Điều khoản Dịch vụ</a>
+            <a href="#" className="hover:text-white transition-colors">Chính sách Bảo mật</a>
+            <a href="#" className="hover:text-white transition-colors">Chính sách Hoàn tiền</a>
+          </div>
+        </div>
+      </footer>
 
       {/* Payment Modal */}
       {selectedPlan && (
