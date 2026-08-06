@@ -284,8 +284,8 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
         <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#0a0a10] to-transparent z-10 pointer-events-none"></div>
         <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#0a0a10] to-transparent z-10 pointer-events-none"></div>
         
-        <div className="flex w-[200%] animate-marquee">
-          <div className="flex w-1/2 justify-around items-center px-4">
+        <div className="flex w-max animate-marquee">
+          <div className="flex w-max justify-around items-center px-4 gap-8">
             <RibbonItem icon={<Globe />} title="LIVESTREAM" subtitle="ĐA NỀN TẢNG" color="text-purple-400" borderCol="border-purple-500" />
             <RibbonItem icon={<MessageSquare />} title="CHATBOT AI" subtitle="THÔNG MINH" color="text-cyan-400" borderCol="border-cyan-500" />
             <RibbonItem icon={<ShoppingCart />} title="BÁN HÀNG" subtitle="TỰ ĐỘNG" color="text-amber-400" borderCol="border-amber-500" />
@@ -293,7 +293,7 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
             <RibbonItem icon={<Users />} title="QUẢN LÝ" subtitle="TẬP TRUNG" color="text-emerald-400" borderCol="border-emerald-500" />
             <RibbonItem icon={<BarChart2 />} title="BÁO CÁO" subtitle="DOANH SỐ" color="text-blue-400" borderCol="border-blue-500" />
           </div>
-          <div className="flex w-1/2 justify-around items-center px-4">
+          <div className="flex w-max justify-around items-center px-4 gap-8">
             <RibbonItem icon={<Globe />} title="LIVESTREAM" subtitle="ĐA NỀN TẢNG" color="text-purple-400" borderCol="border-purple-500" />
             <RibbonItem icon={<MessageSquare />} title="CHATBOT AI" subtitle="THÔNG MINH" color="text-cyan-400" borderCol="border-cyan-500" />
             <RibbonItem icon={<ShoppingCart />} title="BÁN HÀNG" subtitle="TỰ ĐỘNG" color="text-amber-400" borderCol="border-amber-500" />
@@ -505,15 +505,15 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
               <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#0a0a10] to-transparent z-10 pointer-events-none"></div>
               <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#0a0a10] to-transparent z-10 pointer-events-none"></div>
               
-              <div className="flex w-[200%] animate-marquee-reverse">
-                <div className="flex w-1/2 justify-around items-center px-4">
+              <div className="flex w-max animate-marquee-reverse">
+                <div className="flex w-max justify-around items-center px-4 gap-8">
                    <PlatformLogo text="TikTok" icon={<svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"/></svg>} hoverColor="hover:text-cyan-400" />
                    <PlatformLogo text="facebook" icon={<Facebook className="w-8 h-8"/>} hoverColor="hover:text-[#1877F2]" />
                    <PlatformLogo text="YouTube" icon={<Tv className="w-8 h-8"/>} hoverColor="hover:text-[#FF0000]" />
                    <PlatformLogo text="Shopee" icon={<ShoppingCart className="w-8 h-8"/>} hoverColor="hover:text-[#EE4D2D]" />
                    <PlatformLogo text="Lazada" icon={<Globe className="w-8 h-8"/>} hoverColor="hover:text-[#0A2647]" />
                 </div>
-                <div className="flex w-1/2 justify-around items-center px-4">
+                <div className="flex w-max justify-around items-center px-4 gap-8">
                    <PlatformLogo text="TikTok" icon={<svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"/></svg>} hoverColor="hover:text-cyan-400" />
                    <PlatformLogo text="facebook" icon={<Facebook className="w-8 h-8"/>} hoverColor="hover:text-[#1877F2]" />
                    <PlatformLogo text="YouTube" icon={<Tv className="w-8 h-8"/>} hoverColor="hover:text-[#FF0000]" />
@@ -646,7 +646,7 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
 // Subcomponents for cleaner code
 function RibbonItem({ icon, title, subtitle, color, borderCol }) {
   return (
-    <div className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-all cursor-pointer group min-w-max mx-8 border border-transparent hover:border-white/10 hover:shadow-[0_0_30px_rgba(255,255,255,0.05)]">
+    <div className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-all cursor-pointer group min-w-max mx-8 border border-transparent hover:border-white/10 hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] shrink-0 min-w-max">
       <div className={`p-3 rounded-xl bg-[#111] border border-white/10 ${color} group-hover:scale-110 group-hover:border-[${borderCol.replace('border-', '')}] transition-transform shadow-lg`}>
         {React.cloneElement(icon, { className: "w-6 h-6" })}
       </div>

@@ -129,7 +129,7 @@ export default function App() {
     setCurrentUser(newUser);
     localStorage.setItem("avalive_current_user", JSON.stringify(newUser));
     setGoogleLoginModalOpen(false);
-    setActiveTab("broadcast");
+    setActiveTab("overview");
 
     // Sync directly to Supabase Database
     await syncUserToSupabase(newUser);
@@ -140,7 +140,7 @@ export default function App() {
     <div className="min-h-screen bg-[#0A0A0A] text-gray-100 flex flex-col font-sans selection:bg-[#EF4444] selection:text-white">
       
       {/* Navigation Header (Chỉ hiển thị trong Giao Diện Chính Thức khi đã đăng nhập) */}
-      {currentUser && (
+      {currentUser && activeTab !== 'overview' && activeTab !== 'affiliate-landing' && (
         <Header 
           activeTab={activeTab} 
           setActiveTab={setActiveTab} 

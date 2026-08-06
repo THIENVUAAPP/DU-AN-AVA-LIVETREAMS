@@ -63,11 +63,7 @@ export default function Header({
   }, []);
 
   const handleLogoClick = () => {
-    if (currentUser) {
-      setActiveTab('broadcast');
-    } else {
-      setActiveTab('overview');
-    }
+    setActiveTab('overview');
   };
 
   return (
