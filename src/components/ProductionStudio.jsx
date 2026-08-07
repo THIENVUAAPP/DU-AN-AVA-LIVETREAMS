@@ -139,12 +139,14 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
         });
         if (webcamVideoRef.current) {
           webcamVideoRef.current.srcObject = stream;
+          webcamVideoRef.current.play().catch(e => console.error(e));
         }
       } catch (err) {
         try {
           const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
           if (webcamVideoRef.current) {
             webcamVideoRef.current.srcObject = stream;
+            webcamVideoRef.current.play().catch(e => console.error(e));
           }
         } catch (err2) {
           setWebcamActive(false);
@@ -171,6 +173,7 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
         });
         if (webcamVideoRef.current) {
           webcamVideoRef.current.srcObject = stream;
+          webcamVideoRef.current.play().catch(e => console.error(e));
         }
         alert(`🔄 ĐÃ CHUYỂN SANG CAMERA ${nextFacing === 'user' ? 'TRƯỚC (SELFIE)' : 'SAU (GÓC RỘNG)'}!`);
       } catch (err) {

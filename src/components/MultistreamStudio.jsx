@@ -92,6 +92,41 @@ function LiveCameraFeed({ className = "w-full h-full object-cover" }) {
   );
 }
 
+const renderUrlVideo = (urlInput, isMuted = false, controls = true) => {
+  if (urlInput.includes('tiktok.com')) {
+    const match = urlInput.match(/\/video\/(\d+)/);
+    if (match && match[1]) {
+      return (
+        <iframe 
+          src={`https://www.tiktok.com/embed/v2/${match[1]}`} 
+          className="absolute inset-0 w-full h-full object-cover" 
+          frameBorder="0" 
+          allowFullScreen 
+          scrolling="no"
+        />
+      );
+    }
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-black/80 text-white font-bold text-xs text-center px-4 absolute inset-0">
+        ❌ Lỗi: Không thể lấy Video ID từ Link TikTok. Vui lòng nhập link dạng .../video/12345...
+      </div>
+    );
+  }
+  return (
+    <ReactPlayer 
+      url={urlInput} 
+      playing 
+      loop 
+      muted={isMuted} 
+      controls={controls}
+      width="100%" 
+      height="100%" 
+      className="absolute inset-0 object-cover" 
+      style={{ objectFit: 'cover' }}
+    />
+  );
+};
+
 
 export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
 
@@ -578,10 +613,10 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                 {channels.slice(0, 4).map((ch) => (
                   <div key={ch.id} className="relative aspect-video rounded-2xl overflow-hidden glass-panel border border-white/15 bg-black">
                     {streamSourceMode === "video" && activeVideo?.url ? (
-                      <video src={activeVideo.url} controls autoPlay loop muted className="w-full h-full object-cover" />
+                      <video src={activeVideo.url} controls autoPlay loop muted className="w-full h-full object-cover relative z-0" />
                     ) : streamSourceMode === "url" && videoUrlInput && isPreviewingUrl ? (
-                      <div className="w-full h-full relative pointer-events-none">
-                        <ReactPlayer url={videoUrlInput} playing loop muted width="100%" height="100%" className="absolute inset-0 object-cover" style={{ objectFit: 'cover' }} />
+                      <div className="w-full h-full relative pointer-events-none z-0">
+                        {renderUrlVideo(videoUrlInput, true, false)}
                       </div>
                     ) : streamSourceMode === "direct" && isPreviewingCamera ? (
                       <LiveCameraFeed className="w-full h-full object-cover" />
@@ -643,7 +678,7 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                   />
                 ) : streamSourceMode === "url" && videoUrlInput && isPreviewingUrl ? (
                   <div className="w-full h-full relative z-0">
-                    <ReactPlayer url={videoUrlInput} playing controls width="100%" height="100%" className="absolute inset-0" />
+                    {renderUrlVideo(videoUrlInput, false, true)}
                   </div>
                 ) : streamSourceMode === "direct" && isPreviewingCamera ? (
                   <div className="w-full h-full bg-black flex items-center justify-center relative z-0">
