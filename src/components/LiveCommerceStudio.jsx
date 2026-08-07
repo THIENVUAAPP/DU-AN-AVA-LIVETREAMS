@@ -118,6 +118,10 @@ export default function LiveCommerceStudio({ isLive }) {
 
   // Live Chat Comments Stream State (CLEAR PLATFORM + CLEAR PRODUCT CONTEXT)
   const [chatMessages, setChatMessages] = useState([]);
+  // Connection Guide Modal State
+  const [guideModalOpen, setGuideModalOpen] = useState(false);
+  const [activeGuideTab, setActiveGuideTab] = useState('tiktok');
+
   const [inputMsg, setInputMsg] = useState('');
 
   const languages = [
@@ -311,6 +315,14 @@ export default function LiveCommerceStudio({ isLive }) {
 
         {/* Global Action Buttons */}
         <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => setGuideModalOpen(true)}
+            className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-[#0A0A0E] border border-white/20 hover:bg-white/10 text-white font-black text-xs transition-all cursor-pointer"
+          >
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <span>📚 HƯỚNG DẪN KẾT NỐI</span>
+          </button>
+
           <button
             onClick={handleOpenAddProductModal}
             className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-[#EF4444] hover:bg-red-600 text-white font-black text-xs shadow-glow-red transition-all cursor-pointer"
@@ -966,6 +978,113 @@ export default function LiveCommerceStudio({ isLive }) {
         </div>
       )}
 
+      {/* Connection Guide Modal */}
+      {guideModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-[#121218] border border-white/15 rounded-3xl p-6 w-full max-w-2xl shadow-2xl relative">
+            <button 
+              onClick={() => setGuideModalOpen(false)}
+              className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-all cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            <h3 className="text-xl font-black text-white mb-6 flex items-center gap-2">
+              <ShieldCheck className="w-6 h-6 text-emerald-400" />
+              HƯỚNG DẪN KẾT NỐI 1 CHẠM ĐA NỀN TẢNG
+            </h3>
+
+            {/* Tabs */}
+            <div className="flex gap-2 mb-6 bg-black/40 p-1.5 rounded-2xl">
+              {['tiktok', 'youtube', 'facebook'].map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveGuideTab(tab)}
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-black capitalize transition-all cursor-pointer ${
+                    activeGuideTab === tab 
+                      ? 'bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-glow-emerald' 
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            {/* Content */}
+            <div className="space-y-4">
+              {activeGuideTab === 'tiktok' && (
+                <div className="bg-[#0A0A0E] p-5 rounded-2xl border border-white/5 border-l-4 border-l-[#00f2fe]">
+                  <h4 className="text-sm font-black text-white mb-4">Kết nối TikTok Shop / TikTok Live</h4>
+                  <ul className="space-y-3 text-xs text-gray-300">
+                    <li className="flex items-start gap-2">
+                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#00f2fe]/20 text-[#00f2fe] flex items-center justify-center font-bold">1</span>
+                      <p>Mở ứng dụng <strong>TikTok</strong> trên điện thoại, quét mã QR hiển thị trên màn hình hệ thống.</p>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#00f2fe]/20 text-[#00f2fe] flex items-center justify-center font-bold">2</span>
+                      <p>Bấm chọn nút <strong>"Ủy quyền (Authorize)"</strong> cho phép AVA Live đồng bộ luồng Stream và Giỏ hàng.</p>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#00f2fe]/20 text-[#00f2fe] flex items-center justify-center font-bold">3</span>
+                      <p>Đợi 2-3 giây để hệ thống Auto Captcha AI xử lý vượt rào bảo mật (không cần thao tác thêm) và báo <strong>Kết nối thành công</strong>.</p>
+                    </li>
+                  </ul>
+                </div>
+              )}
+
+              {activeGuideTab === 'youtube' && (
+                <div className="bg-[#0A0A0E] p-5 rounded-2xl border border-white/5 border-l-4 border-l-[#FF0000]">
+                  <h4 className="text-sm font-black text-white mb-4">Kết nối YouTube Channel</h4>
+                  <ul className="space-y-3 text-xs text-gray-300">
+                    <li className="flex items-start gap-2">
+                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#FF0000]/20 text-[#FF0000] flex items-center justify-center font-bold">1</span>
+                      <p>Bấm nút <strong>"Đăng nhập bằng Google/YouTube"</strong> trên màn hình liên kết.</p>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#FF0000]/20 text-[#FF0000] flex items-center justify-center font-bold">2</span>
+                      <p>Chọn Kênh (Channel) bạn muốn thực hiện Livestream.</p>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#FF0000]/20 text-[#FF0000] flex items-center justify-center font-bold">3</span>
+                      <p>Bấm nút <strong>Cho Phép (Allow)</strong> để hệ thống tự động thiết lập và đồng bộ Stream Key. Khởi chạy tức thì!</p>
+                    </li>
+                  </ul>
+                </div>
+              )}
+
+              {activeGuideTab === 'facebook' && (
+                <div className="bg-[#0A0A0E] p-5 rounded-2xl border border-white/5 border-l-4 border-l-[#1877F2]">
+                  <h4 className="text-sm font-black text-white mb-4">Kết nối Facebook Fanpage / Cá nhân</h4>
+                  <ul className="space-y-3 text-xs text-gray-300">
+                    <li className="flex items-start gap-2">
+                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#1877F2]/20 text-[#1877F2] flex items-center justify-center font-bold">1</span>
+                      <p>Bấm nút <strong>"Đăng nhập bằng Facebook"</strong>.</p>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#1877F2]/20 text-[#1877F2] flex items-center justify-center font-bold">2</span>
+                      <p>Chọn Fanpage cụ thể hoặc Profile cá nhân mà bạn sẽ phát trực tiếp.</p>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#1877F2]/20 text-[#1877F2] flex items-center justify-center font-bold">3</span>
+                      <p>Cấp quyền Đăng bài & Bình luận cho hệ thống AI của AVA Live. Vậy là xong!</p>
+                    </li>
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-end">
+               <button 
+                  onClick={() => setGuideModalOpen(false)}
+                  className="px-6 py-2.5 bg-[#0A0A0E] border border-white/20 hover:bg-white/10 text-white font-black text-xs rounded-xl transition-all cursor-pointer"
+               >
+                  ĐÃ HIỂU
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
