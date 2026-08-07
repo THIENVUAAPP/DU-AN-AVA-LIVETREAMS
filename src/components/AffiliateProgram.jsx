@@ -74,23 +74,10 @@ export default function AffiliateProgram({ currentUser, setGoogleLoginModalOpen 
         </div>
 
         {currentUser ? (
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={() => setActiveTab('dashboard')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'dashboard' ? 'bg-[#8B5CF6] text-white shadow-glow-purple' : 'bg-[#121216] text-gray-300'
-              }`}
-            >
-              BẢNG QUẢN TRỊ CỦA TÔI
-            </button>
-            <button 
-              onClick={() => setActiveTab('intro')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'intro' ? 'bg-[#8B5CF6] text-white shadow-glow-purple' : 'bg-[#121216] text-gray-300'
-              }`}
-            >
-              GIỚI THIỆU & ĐIỀU KHOẢN
-            </button>
+          <div className="flex items-center">
+            <div className="px-4 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-[#8B5CF6] to-[#6D28D9] text-white shadow-[0_0_15px_rgba(139,92,246,0.3)] flex items-center gap-2">
+              <UserCheck className="w-4 h-4" /> BẢNG QUẢN TRỊ CỦA TÔI
+            </div>
           </div>
         ) : (
           <button 
