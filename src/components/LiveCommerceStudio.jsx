@@ -1012,64 +1012,131 @@ export default function LiveCommerceStudio({ isLive }) {
             </div>
 
             {/* Content */}
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
               {activeGuideTab === 'tiktok' && (
-                <div className="bg-[#0A0A0E] p-5 rounded-2xl border border-white/5 border-l-4 border-l-[#00f2fe]">
-                  <h4 className="text-sm font-black text-white mb-4">Kết nối TikTok Shop / TikTok Live</h4>
-                  <ul className="space-y-3 text-xs text-gray-300">
-                    <li className="flex items-start gap-2">
-                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#00f2fe]/20 text-[#00f2fe] flex items-center justify-center font-bold">1</span>
-                      <p>Mở ứng dụng <strong>TikTok</strong> trên điện thoại, quét mã QR hiển thị trên màn hình hệ thống.</p>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#00f2fe]/20 text-[#00f2fe] flex items-center justify-center font-bold">2</span>
-                      <p>Bấm chọn nút <strong>"Ủy quyền (Authorize)"</strong> cho phép AVA Live đồng bộ luồng Stream và Giỏ hàng.</p>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#00f2fe]/20 text-[#00f2fe] flex items-center justify-center font-bold">3</span>
-                      <p>Đợi 2-3 giây để hệ thống Auto Captcha AI xử lý vượt rào bảo mật (không cần thao tác thêm) và báo <strong>Kết nối thành công</strong>.</p>
-                    </li>
-                  </ul>
+                <div className="bg-[#0A0A0E] p-5 rounded-2xl border border-white/5 border-l-4 border-l-[#00f2fe] space-y-6">
+                  <div>
+                    <h4 className="text-sm font-black text-white mb-3 flex items-center gap-2">
+                       <Zap className="w-4 h-4 text-amber-400" /> CÁCH 1: DÙNG OAUTH 1-CHẠM (Nhanh nhất)
+                    </h4>
+                    <ul className="space-y-3 text-xs text-gray-300 ml-1">
+                      <li className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#00f2fe]/20 text-[#00f2fe] flex items-center justify-center font-bold">1</span>
+                        <p>Tại Cổng kết nối, bấm vào nút đỏ <strong>"⚡ KẾT NỐI OAUTH 1-CHẠM TỨC THÌ"</strong>.</p>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#00f2fe]/20 text-[#00f2fe] flex items-center justify-center font-bold">2</span>
+                        <p>Hệ thống tự động chuyển đến TikTok. Bấm <strong>"Ủy quyền (Authorize)"</strong>.</p>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#00f2fe]/20 text-[#00f2fe] flex items-center justify-center font-bold">3</span>
+                        <p>Đợi 2 giây, hệ thống lấy toàn bộ Stream Key và tự điền. Hoàn tất!</p>
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="border-t border-white/10 pt-4">
+                    <h4 className="text-sm font-black text-white mb-3 text-gray-400">CÁCH 2: NHẬP THỦ CÔNG (Stream Key)</h4>
+                    <ul className="space-y-3 text-xs text-gray-400 ml-1">
+                      <li className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gray-800 text-gray-400 flex items-center justify-center font-bold">1</span>
+                        <p>Mở ứng dụng <strong>TikTok Live Studio</strong> (trên PC) hoặc truy cập TikTok Live Web (Live Center).</p>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gray-800 text-gray-400 flex items-center justify-center font-bold">2</span>
+                        <p>Nhấn nút <strong>"Phát LIVE (Go Live)"</strong>, hệ thống TikTok sẽ hiển thị bảng Cài đặt Máy chủ.</p>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gray-800 text-gray-400 flex items-center justify-center font-bold">3</span>
+                        <p>Copy <strong>URL Máy Chủ (Server URL)</strong> dán vào ô số 1, copy <strong>Khóa Luồng (Stream Key)</strong> dán vào ô số 2 trên cổng kết nối.</p>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gray-800 text-gray-400 flex items-center justify-center font-bold">4</span>
+                        <p>Bấm nút <strong>"Xác nhận kết nối"</strong> bên dưới. Xong!</p>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               )}
 
               {activeGuideTab === 'youtube' && (
-                <div className="bg-[#0A0A0E] p-5 rounded-2xl border border-white/5 border-l-4 border-l-[#FF0000]">
-                  <h4 className="text-sm font-black text-white mb-4">Kết nối YouTube Channel</h4>
-                  <ul className="space-y-3 text-xs text-gray-300">
-                    <li className="flex items-start gap-2">
-                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#FF0000]/20 text-[#FF0000] flex items-center justify-center font-bold">1</span>
-                      <p>Bấm nút <strong>"Đăng nhập bằng Google/YouTube"</strong> trên màn hình liên kết.</p>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#FF0000]/20 text-[#FF0000] flex items-center justify-center font-bold">2</span>
-                      <p>Chọn Kênh (Channel) bạn muốn thực hiện Livestream.</p>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#FF0000]/20 text-[#FF0000] flex items-center justify-center font-bold">3</span>
-                      <p>Bấm nút <strong>Cho Phép (Allow)</strong> để hệ thống tự động thiết lập và đồng bộ Stream Key. Khởi chạy tức thì!</p>
-                    </li>
-                  </ul>
+                <div className="bg-[#0A0A0E] p-5 rounded-2xl border border-white/5 border-l-4 border-l-[#FF0000] space-y-6">
+                  <div>
+                    <h4 className="text-sm font-black text-white mb-3 flex items-center gap-2">
+                       <Zap className="w-4 h-4 text-amber-400" /> CÁCH 1: DÙNG OAUTH 1-CHẠM (Nhanh nhất)
+                    </h4>
+                    <ul className="space-y-3 text-xs text-gray-300 ml-1">
+                      <li className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#FF0000]/20 text-[#FF0000] flex items-center justify-center font-bold">1</span>
+                        <p>Tại Cổng kết nối, bấm vào nút đỏ <strong>"⚡ KẾT NỐI OAUTH 1-CHẠM TỨC THÌ"</strong>.</p>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#FF0000]/20 text-[#FF0000] flex items-center justify-center font-bold">2</span>
+                        <p>Đăng nhập bằng tài khoản Google chứa kênh YouTube của bạn.</p>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#FF0000]/20 text-[#FF0000] flex items-center justify-center font-bold">3</span>
+                        <p>Bấm nút <strong>Cho Phép (Allow)</strong> để hệ thống tự thiết lập Stream Key.</p>
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="border-t border-white/10 pt-4">
+                    <h4 className="text-sm font-black text-white mb-3 text-gray-400">CÁCH 2: NHẬP THỦ CÔNG (Stream Key)</h4>
+                    <ul className="space-y-3 text-xs text-gray-400 ml-1">
+                      <li className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gray-800 text-gray-400 flex items-center justify-center font-bold">1</span>
+                        <p>Vào YouTube Studio, nhấn nút <strong>"Tạo" -&gt; "Phát trực tiếp"</strong>.</p>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gray-800 text-gray-400 flex items-center justify-center font-bold">2</span>
+                        <p>Tại thẻ "Sự kiện trực tiếp", kéo xuống phần <strong>Cài đặt luồng</strong>.</p>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gray-800 text-gray-400 flex items-center justify-center font-bold">3</span>
+                        <p>Copy <strong>URL luồng</strong> dán vào ô 1 và <strong>Mã sự kiện trực tiếp (Stream Key)</strong> dán vào ô 2 trên cổng kết nối.</p>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               )}
 
               {activeGuideTab === 'facebook' && (
-                <div className="bg-[#0A0A0E] p-5 rounded-2xl border border-white/5 border-l-4 border-l-[#1877F2]">
-                  <h4 className="text-sm font-black text-white mb-4">Kết nối Facebook Fanpage / Cá nhân</h4>
-                  <ul className="space-y-3 text-xs text-gray-300">
-                    <li className="flex items-start gap-2">
-                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#1877F2]/20 text-[#1877F2] flex items-center justify-center font-bold">1</span>
-                      <p>Bấm nút <strong>"Đăng nhập bằng Facebook"</strong>.</p>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#1877F2]/20 text-[#1877F2] flex items-center justify-center font-bold">2</span>
-                      <p>Chọn Fanpage cụ thể hoặc Profile cá nhân mà bạn sẽ phát trực tiếp.</p>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#1877F2]/20 text-[#1877F2] flex items-center justify-center font-bold">3</span>
-                      <p>Cấp quyền Đăng bài & Bình luận cho hệ thống AI của AVA Live. Vậy là xong!</p>
-                    </li>
-                  </ul>
+                <div className="bg-[#0A0A0E] p-5 rounded-2xl border border-white/5 border-l-4 border-l-[#1877F2] space-y-6">
+                  <div>
+                    <h4 className="text-sm font-black text-white mb-3 flex items-center gap-2">
+                       <Zap className="w-4 h-4 text-amber-400" /> CÁCH 1: DÙNG OAUTH 1-CHẠM (Nhanh nhất)
+                    </h4>
+                    <ul className="space-y-3 text-xs text-gray-300 ml-1">
+                      <li className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#1877F2]/20 text-[#1877F2] flex items-center justify-center font-bold">1</span>
+                        <p>Tại Cổng kết nối, bấm vào nút đỏ <strong>"⚡ KẾT NỐI OAUTH 1-CHẠM TỨC THÌ"</strong>.</p>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#1877F2]/20 text-[#1877F2] flex items-center justify-center font-bold">2</span>
+                        <p>Đăng nhập Facebook và chọn Fanpage hoặc Cá nhân muốn Live.</p>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#1877F2]/20 text-[#1877F2] flex items-center justify-center font-bold">3</span>
+                        <p>Cấp quyền Đăng bài & Bình luận cho hệ thống. Xong ngay!</p>
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="border-t border-white/10 pt-4">
+                    <h4 className="text-sm font-black text-white mb-3 text-gray-400">CÁCH 2: NHẬP THỦ CÔNG (Stream Key)</h4>
+                    <ul className="space-y-3 text-xs text-gray-400 ml-1">
+                      <li className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gray-800 text-gray-400 flex items-center justify-center font-bold">1</span>
+                        <p>Vào trang Facebook, bấm tạo <strong>"Video trực tiếp (Live Video)"</strong>.</p>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gray-800 text-gray-400 flex items-center justify-center font-bold">2</span>
+                        <p>Chọn mục <strong>"Phần mềm phát trực tiếp (Streaming Software)"</strong>.</p>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gray-800 text-gray-400 flex items-center justify-center font-bold">3</span>
+                        <p>Trong phần Cài đặt nâng cao, copy <strong>URL Máy Chủ</strong> dán vào ô 1 và <strong>Khóa luồng</strong> dán vào ô 2 trên cổng kết nối AVA Live.</p>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               )}
             </div>
