@@ -117,6 +117,19 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
   // Custom Uploaded Virtual Backgrounds List State
   const [customVirtualBgs, setCustomVirtualBgs] = useState([]);
 
+  useEffect(() => {
+    let isMounted = true;
+    if (isMounted && !webcamActive) {
+      setTimeout(() => {
+        if (!webcamActive) {
+           const fakeEvent = { preventDefault: () => {} };
+           toggleWebcam();
+        }
+      }, 500); // Wait a bit for UI to mount before requesting camera
+    }
+    return () => { isMounted = false; };
+  }, []);
+
   const toggleWebcam = async () => {
     if (webcamActive) {
       if (webcamVideoRef.current && webcamVideoRef.current.srcObject) {
