@@ -119,12 +119,11 @@ const AutoCaptchaSolver = ({ setActiveTab }) => {
       <header className="h-[72px] border-b border-white/5 flex items-center justify-between px-8 bg-[#111118]/50 backdrop-blur-md shrink-0">
         <div className="flex items-center gap-6">
           <button onClick={() => setActiveTab && setActiveTab("overview")} className="flex items-center gap-3 group cursor-pointer">
-             <div className="w-10 h-10 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-black text-white text-2xl shadow-[0_0_15px_rgba(6,182,212,0.5)] group-hover:scale-105 transition-transform">
-               C
+             <div className="w-10 h-10 rounded-xl bg-[#111] p-0.5 flex items-center justify-center shadow-[0_0_15px_rgba(239,68,68,0.3)] group-hover:scale-105 transition-transform">
+                <img src="/official_logo.jpg" alt="AVA LIVE" className="w-full h-full object-cover rounded-[10px] border border-white/20" />
              </div>
-             <div className="text-left">
-               <h2 className="text-white font-black text-xl leading-none group-hover:text-cyan-400 transition-colors">CAPRO</h2>
-               <span className="text-[10px] text-cyan-500 tracking-[0.3em] font-bold">— TRANG CHỦ —</span>
+             <div className="text-left flex flex-col justify-center">
+               <h2 className="text-white font-black text-xl leading-none group-hover:text-red-400 transition-colors">AVA LIVE</h2>
              </div>
           </button>
         </div>

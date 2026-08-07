@@ -70,11 +70,13 @@ export default function UserProfile({ currentUser, setActiveTab }) {
       
       {/* Sidebar */}
       <aside className={`w-64 bg-[#141419] border-r border-white/5 flex flex-col transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full absolute h-full z-20 shadow-2xl'}`}>
-        <div onClick={() => window.location.href='/'} className="p-6 flex items-center gap-3 border-b border-white/5 cursor-pointer hover:bg-white/5 transition-colors">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-tr from-amber-500 to-purple-600 flex items-center justify-center font-black text-white text-2xl shadow-glow-purple">C</div>
+        <div onClick={() => setActiveTab && setActiveTab('overview')} className="p-6 flex items-center gap-3 border-b border-white/5 cursor-pointer hover:bg-white/5 transition-colors group">
+          <div className="w-10 h-10 rounded-xl bg-[#111] p-0.5 shadow-glow-purple relative group-hover:scale-105 transition-all">
+            <img src="/official_logo.jpg" alt="AVA LIVE" className="w-full h-full object-cover rounded-[10px] border border-white/20" />
+          </div>
           <div>
-            <h2 className="text-white font-black text-xl leading-none">CAPRO</h2>
-            <span className="text-[10px] text-gray-500 tracking-[0.3em] font-bold">— AUTO —</span>
+            <h2 className="text-white font-black text-xl leading-none">AVA LIVE</h2>
+            <span className="text-[10px] text-[#EF4444] tracking-[0.3em] font-bold">— AUTO —</span>
           </div>
         </div>
         
@@ -100,26 +102,27 @@ export default function UserProfile({ currentUser, setActiveTab }) {
           <div className="flex items-center gap-6">
             <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-gray-400 hover:text-white"><Menu className="w-6 h-6"/></button>
             <button onClick={() => setActiveTab("overview")} className="flex items-center gap-3 group cursor-pointer ml-4">
-    <div className="w-10 h-10 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-black text-white text-2xl shadow-[0_0_15px_rgba(6,182,212,0.5)] group-hover:scale-105 transition-transform">
-      C
-    </div>
-    <div className="text-left">
-      <h2 className="text-white font-black text-xl leading-none group-hover:text-cyan-400 transition-colors">CAPRO</h2>
-      <span className="text-[10px] text-cyan-500 tracking-[0.3em] font-bold">— TRANG CHỦ —</span>
-    </div>
-  </button>
+              <div className="w-10 h-10 rounded-xl bg-[#111] p-0.5 flex items-center justify-center shadow-[0_0_15px_rgba(239,68,68,0.3)] group-hover:scale-105 transition-transform">
+                <img src="/official_logo.jpg" alt="AVA LIVE" className="w-full h-full object-cover rounded-[10px] border border-white/20" />
+              </div>
+              <div className="text-left flex flex-col justify-center">
+                <h2 className="text-white font-black text-xl leading-none group-hover:text-red-400 transition-colors">AVA LIVE</h2>
+              </div>
+            </button>
           </div>
           <div className="flex items-center gap-6">
             <button className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white border border-purple-500/30 rounded-lg text-xs font-bold transition-colors">
                <Crown className="w-4 h-4" /> Nâng cấp gói
             </button>
-            <div className="relative cursor-pointer"><Bell className="w-5 h-5 text-gray-400 hover:text-white transition-colors"/><span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 rounded-full text-[9px] flex items-center justify-center text-white font-bold border-2 border-[#111118]">12</span></div>
+            <div className="relative cursor-pointer">
+              <Bell className="w-5 h-5 text-gray-400 hover:text-white transition-colors"/>
+            </div>
             <div className="flex items-center gap-3 pl-6 border-l border-white/10 cursor-pointer">
               <div className="hidden md:block text-sm text-right">
-                <p className="font-bold text-white leading-tight">Nguyễn Văn A</p>
-                <p className="text-[10px] text-gray-500 leading-tight">ID: {userId}</p>
+                <p className="font-bold text-white leading-tight">{currentUser?.name || "Người dùng"}</p>
+                <p className="text-[10px] text-gray-500 leading-tight">ID: #{currentUser?.email?.split('@')[0] || "102938"}</p>
               </div>
-              <img src={currentUser?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=32&h=32"} className="w-9 h-9 rounded-full border border-white/10" alt="Avatar" />
+              <img src={currentUser?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=fallback"} className="w-9 h-9 rounded-full border border-white/10" alt="Avatar" />
             </div>
           </div>
         </header>
@@ -290,8 +293,8 @@ export default function UserProfile({ currentUser, setActiveTab }) {
                 <div>
                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2"><LinkIcon className="w-4 h-4 text-cyan-400"/> LINK GIỚI THIỆU CỦA BẠN</h3>
                    <div className="flex items-center gap-2 bg-[#0A0A0E] border border-white/10 rounded-lg p-1.5 mb-6">
-                      <input type="text" readOnly value="https://caproauto.com/ref/nguyenvana" className="flex-1 bg-transparent text-xs text-gray-300 pl-2 focus:outline-none" />
-                      <button onClick={() => { navigator.clipboard.writeText("https://caproauto.com/ref/nguyenvana"); alert("Đã copy link giới thiệu!"); }} className="p-2 rounded bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500 hover:text-white transition-colors"><Copy className="w-4 h-4"/></button>
+                      <input type="text" readOnly value={`https://avalive.pro/ref/${currentUser?.email?.split('@')[0] || 'user'}`} className="flex-1 bg-transparent text-xs text-gray-300 pl-2 focus:outline-none" />
+                      <button onClick={() => { navigator.clipboard.writeText(`https://avalive.pro/ref/${currentUser?.email?.split('@')[0] || 'user'}`); alert("Đã copy link giới thiệu!"); }} className="p-2 rounded bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500 hover:text-white transition-colors"><Copy className="w-4 h-4"/></button>
                    </div>
                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2"><Zap className="w-4 h-4 text-amber-400"/> CẤP BẬC AFFILIATE</h3>
                    <div className="flex items-center gap-4 bg-[#0A0A0E] border border-white/5 rounded-xl p-3">
