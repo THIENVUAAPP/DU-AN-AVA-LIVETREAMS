@@ -65,6 +65,11 @@ function LiveCameraFeed({ className = "w-full h-full object-cover" }) {
         }).catch((e) => {
           console.error("Error accessing camera: ", e);
           __global_stream_promise = null;
+          if (e.name === 'NotAllowedError' || (e.message && e.message.includes('Permission denied'))) {
+             alert("LỖI CẤP QUYỀN CAMERA: Trình duyệt đang chặn Camera ở trang này.\nVui lòng bấm vào biểu tượng 🔒 ở thanh địa chỉ URL, bật Cho Phép Camera/Micro, rồi Tải lại (F5) trang!");
+          } else {
+             alert("Không thể kết nối Camera thật: " + e.message);
+          }
         });
       }
     }

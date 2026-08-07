@@ -117,19 +117,6 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
   // Custom Uploaded Virtual Backgrounds List State
   const [customVirtualBgs, setCustomVirtualBgs] = useState([]);
 
-  useEffect(() => {
-    let isMounted = true;
-    if (isMounted && !webcamActive) {
-      setTimeout(() => {
-        if (!webcamActive) {
-           const fakeEvent = { preventDefault: () => {} };
-           toggleWebcam();
-        }
-      }, 500); // Wait a bit for UI to mount before requesting camera
-    }
-    return () => { isMounted = false; };
-  }, []);
-
   const toggleWebcam = async () => {
     if (webcamActive) {
       if (webcamVideoRef.current && webcamVideoRef.current.srcObject) {
@@ -144,9 +131,9 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
         const stream = await navigator.mediaDevices.getUserMedia({ 
           video: { 
             facingMode: cameraFacingMode, 
-            width: { ideal: 3840, min: 1920 }, 
-            height: { ideal: 2160, min: 1080 }, 
-            frameRate: { ideal: 60, min: 30 } 
+            width: { ideal: 1920 }, 
+            height: { ideal: 1080 }, 
+            frameRate: { ideal: 30 } 
           }, 
           audio: true 
         });
@@ -163,7 +150,11 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
           }
         } catch (err2) {
           setWebcamActive(false);
-          alert("Không thể kết nối Webcam/Camera thật: " + err2.message + "\nHệ thống tiếp tục chạy ở chế độ Mô phỏng Studio 4K.");
+          if (err2.name === 'NotAllowedError' || err2.message.includes('Permission denied')) {
+            alert("LỖI CẤP QUYỀN CAMERA: Trình duyệt của bạn đang chặn Camera.\nVui lòng bấm vào biểu tượng 🔒 hoặc 📹 trên thanh địa chỉ URL, chọn 'Allow' (Cho phép) Camera và Micro, sau đó F5 Tải lại trang!");
+          } else {
+            alert("Không thể kết nối Webcam/Camera thật: " + err2.message + "\nHệ thống tiếp tục chạy ở chế độ Mô phỏng Studio 4K.");
+          }
         }
       }
     }
