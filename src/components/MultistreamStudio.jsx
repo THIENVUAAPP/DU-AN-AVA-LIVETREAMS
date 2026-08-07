@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { 
+  Users,
   Share2, 
   Tv, 
   CheckCircle2, 
@@ -207,6 +208,46 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
   
   const [connectModalOpen, setConnectModalOpen] = useState(false);
   const [activeChannelForConnect, setActiveChannelForConnect] = useState(null);
+
+  // OAuth Account Selection State
+  const [oauthAccountSelectModalOpen, setOauthAccountSelectModalOpen] = useState(false);
+
+  const MOCK_OAUTH_ACCOUNTS = {
+    TikTok: [
+      { id: 'tt1', username: '@tiktok_seller_1', name: 'Shop Bán Hàng 01', followers: '1.2M', avatar: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=100&q=80' },
+      { id: 'tt2', username: '@ava_shop_pro', name: 'AVA Official', followers: '450K', avatar: 'https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=100&q=80' },
+      { id: 'tt3', username: '@livestream_pro', name: 'LiveStream Pro', followers: '20K', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80' },
+      { id: 'tt4', username: '@mypham_auth', name: 'Mỹ Phẩm Auth', followers: '89K', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&q=80' },
+      { id: 'tt5', username: '@thoitrang_nu', name: 'Thời Trang Nữ', followers: '500K', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&q=80' }
+    ],
+    Facebook: [
+      { id: 'fb1', username: 'Fanpage Mỹ Phẩm VIP', name: 'Mỹ Phẩm VIP', followers: '2.5M', avatar: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=100&q=80' },
+      { id: 'fb2', username: 'Kho Sỉ Quần Áo', name: 'Kho Sỉ Lẻ', followers: '100K', avatar: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=100&q=80' },
+      { id: 'fb3', username: 'Gia Dụng Smart', name: 'Gia Dụng Thông Minh', followers: '350K', avatar: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=100&q=80' }
+    ],
+    YouTube: [
+      { id: 'yt1', username: 'Công Nghệ 24h', name: 'Review Công Nghệ', followers: '1M', avatar: 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=100&q=80' },
+      { id: 'yt2', username: 'Gamer Pro VN', name: 'Gamer Pro', followers: '50K', avatar: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=100&q=80' }
+    ],
+    Shopee: [
+      { id: 'sh1', username: 'shopee_mall_ava', name: 'AVA Mall', followers: '5M', avatar: 'https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=100&q=80' },
+      { id: 'sh2', username: 'shopee_sile', name: 'Kho Sỉ Lẻ', followers: '20K', avatar: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=100&q=80' }
+    ],
+    Default: [
+      { id: 'df1', username: 'account_vip_01', name: 'Tài Khoản VIP 1', followers: '100K', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80' },
+      { id: 'df2', username: 'account_vip_02', name: 'Tài Khoản VIP 2', followers: '50K', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&q=80' }
+    ]
+  };
+
+  const getOauthAccountsForActiveChannel = () => {
+    if (!activeChannelForConnect) return MOCK_OAUTH_ACCOUNTS.Default;
+    const name = activeChannelForConnect.name.toLowerCase();
+    if (name.includes('tiktok')) return MOCK_OAUTH_ACCOUNTS.TikTok;
+    if (name.includes('facebook') || name.includes('fb')) return MOCK_OAUTH_ACCOUNTS.Facebook;
+    if (name.includes('youtube')) return MOCK_OAUTH_ACCOUNTS.YouTube;
+    if (name.includes('shopee')) return MOCK_OAUTH_ACCOUNTS.Shopee;
+    return MOCK_OAUTH_ACCOUNTS.Default;
+  };
 
   // New Account Modal State
   const [addAccountModalOpen, setAddAccountModalOpen] = useState(false);
@@ -1209,11 +1250,7 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
               <p className="text-[11px] text-gray-300">Tự động ủy quyền qua tài khoản {activeChannelForConnect.name} thật mà không bị lỗi.</p>
               <button 
                 onClick={() => {
-                  executeConnectionWithCaptcha(() => {
-                    alert(`Đã ủy quyền OAuth 1-chạm thành công với tài khoản ${activeChannelForConnect.name} thật!`);
-                    setChannels(channels.map(c => c.id === activeChannelForConnect.id ? { ...c, status: 'connected' } : c));
-                    setConnectModalOpen(false);
-                  });
+                  setOauthAccountSelectModalOpen(true);
                 }}
                 className="w-full py-2.5 bg-[#EF4444] hover:bg-red-600 text-white font-black text-xs rounded-xl shadow-glow-red transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
@@ -1288,6 +1325,48 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
               >
                 Hủy
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* OAUTH ACCOUNT SELECTION MODAL */}
+      {oauthAccountSelectModalOpen && activeChannelForConnect && (
+        <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="glass-panel p-6 rounded-3xl border border-white/20 max-w-md w-full text-left space-y-4 shadow-2xl bg-[#0A0A0A] relative overflow-hidden">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <h3 className="text-lg font-black text-white flex items-center gap-2">
+                <Users className="w-5 h-5 text-amber-400" /> CHỌN TÀI KHOẢN ĐỂ KẾT NỐI
+              </h3>
+              <button onClick={() => setOauthAccountSelectModalOpen(false)} className="text-gray-400 hover:text-white font-bold cursor-pointer">✕</button>
+            </div>
+            
+            <p className="text-[11px] text-gray-300">
+              Bạn đang có nhiều tài khoản <strong>{activeChannelForConnect.name.split(' ')[0]}</strong>. Vui lòng chọn tài khoản muốn liên kết để phát livestream đa luồng:
+            </p>
+
+            <div className="max-h-[300px] overflow-y-auto space-y-2 pr-1">
+              {getOauthAccountsForActiveChannel().map(acc => (
+                <div 
+                  key={acc.id}
+                  onClick={() => {
+                    setOauthAccountSelectModalOpen(false);
+                    executeConnectionWithCaptcha(() => {
+                      alert(`Đã ủy quyền OAuth 1-chạm thành công với tài khoản ${acc.username} (${acc.name})!`);
+                      setChannels(channels.map(c => c.id === activeChannelForConnect.id ? { ...c, status: 'connected', connectedAccount: acc.username } : c));
+                      setConnectModalOpen(false);
+                    });
+                  }}
+                  className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-amber-500/50 cursor-pointer transition-all"
+                >
+                  <img src={acc.avatar} alt="avatar" className="w-10 h-10 rounded-full object-cover border border-white/20" />
+                  <div className="flex-1">
+                    <h4 className="text-xs font-black text-white">{acc.name}</h4>
+                    <p className="text-[10px] text-gray-400">{acc.username} • {acc.followers} followers</p>
+                  </div>
+                  <Zap className="w-4 h-4 text-amber-500 opacity-50" />
+                </div>
+              ))}
             </div>
           </div>
         </div>
