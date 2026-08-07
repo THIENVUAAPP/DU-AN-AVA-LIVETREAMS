@@ -397,12 +397,6 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
       {subTab === "connect" && (
         <div className="space-y-6">
 
-          {/* EMBED UNIVERSAL FILE UPLOADER FOR MULTISTREAMING */}
-          <UniversalFileUploader 
-            onVideoUploaded={handleVideoUploaded}
-            title="Nguồn Phát Video"
-          />
-
           {/* FAST STREAM MODE SELECTOR BAR */}
           <div className="glass-panel p-5 rounded-3xl border border-white/10 space-y-3 bg-gradient-to-r from-[#8B5CF6]/15 via-[#121216] to-[#EF4444]/15">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -446,8 +440,17 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
               </div>
             </div>
 
+            {streamSourceMode === "video" && (
+              <div className="animate-fadeIn mt-4">
+                <UniversalFileUploader 
+                  onVideoUploaded={handleVideoUploaded}
+                  title="Nguồn Phát Video"
+                />
+              </div>
+            )}
+
             {streamSourceMode === "url" && (
-              <div className="p-3 rounded-2xl bg-amber-950/30 border border-amber-500/40 space-y-2 text-xs animate-fadeIn">
+              <div className="p-4 mt-4 rounded-2xl bg-amber-950/30 border border-amber-500/40 space-y-3 text-xs animate-fadeIn">
                 <label className="font-bold text-amber-300 block">DÁN LINK STREAM VIDEO HOẶC LUỒNG LIVE TRỰC TUYẾN (.m3u8, .mp4, RTSP, HLS Link):</label>
                 <div className="flex gap-2">
                   <input
@@ -455,15 +458,44 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                     value={videoUrlInput}
                     onChange={(e) => setVideoUrlInput(e.target.value)}
                     placeholder="https://server.com/live-stream.m3u8..."
-                    className="flex-1 bg-black/80 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-amber-400"
+                    className="flex-1 bg-black/80 border border-amber-500/30 rounded-xl px-4 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-amber-400"
                   />
                   <button
                     onClick={() => alert("🔗 ĐÃ ĐỒNG BỘ NGUỒN STREAM LINK VIDEO CHO TOÀN BỘ CÁC KÊNH LIVE!")}
-                    className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-black font-black text-xs rounded-xl transition-all cursor-pointer flex-shrink-0"
+                    className="px-5 py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-black font-black text-xs rounded-xl transition-all cursor-pointer flex-shrink-0 flex items-center gap-2"
                   >
                     🚀 ĐỒNG BỘ TẤT CẢ KÊNH
                   </button>
                 </div>
+                <div className="flex items-center gap-2 text-amber-400/80 mt-2">
+                  <CheckCircle2 className="w-4 h-4" /> <span>Hỗ trợ kéo luồng từ: M3U8, MP4, RTSP Camera, HLS Livestream.</span>
+                </div>
+              </div>
+            )}
+
+            {streamSourceMode === "direct" && (
+              <div className="p-4 mt-4 rounded-2xl bg-[#EF4444]/10 border border-[#EF4444]/30 space-y-3 animate-fadeIn">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-[#EF4444] block">KẾT NỐI CAMERA TRỰC TIẾP / NGUỒN STUDIO 4K:</label>
+                  <span className="flex items-center gap-1.5 px-2 py-1 bg-[#EF4444]/20 text-[#EF4444] text-[10px] rounded font-bold animate-pulse">
+                    <Radio className="w-3 h-3" /> ĐANG THU ÂM & GHI HÌNH
+                  </span>
+                </div>
+                <div className="w-full aspect-video rounded-xl overflow-hidden border-2 border-[#EF4444]/40 relative bg-black">
+                   <LiveCameraFeed className="w-full h-full object-cover" />
+                   <div className="absolute bottom-3 left-3 flex items-center gap-2">
+                      <div className="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg text-white font-mono text-xs border border-white/20 flex items-center gap-2">
+                         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                         CAMERA ĐANG HOẠT ĐỘNG
+                      </div>
+                   </div>
+                </div>
+                <button
+                    onClick={() => alert("📡 ĐÃ BẬT CHẾ ĐỘ PHÁT CAMERA TRỰC TIẾP CHO TẤT CẢ CÁC KÊNH!")}
+                    className="w-full px-5 py-3 mt-2 bg-gradient-to-r from-[#EF4444] to-red-600 hover:opacity-90 text-white font-black text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-glow-red"
+                  >
+                    <Zap className="w-4 h-4" /> BẮT ĐẦU PHÁT LIVE CAMERA CHO TẤT CẢ CÁC KÊNH
+                </button>
               </div>
             )}
           </div>
