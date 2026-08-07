@@ -717,38 +717,68 @@ export default function LandingHero({ setActiveTab, setGoogleLoginModalOpen, aiA
       </section>
 
       {/* ─── AFFILIATE PROGRAM ──────────────────────────────────────────── */}
-      <section id="affiliate-intro" className="py-24 px-6 bg-gradient-to-b from-[#0A0A0A] via-[#0D0D12] to-[#0A0A0A]">
-        <RevealSection className="max-w-4xl mx-auto glass-panel rounded-3xl border border-[#EF4444]/30 p-10 md:p-14 text-center space-y-6 bg-gradient-to-br from-[#EF4444]/5 to-[#8B5CF6]/5 shadow-neon-red">
-          <span className="px-4 py-1.5 rounded-full bg-[#EF4444]/20 border border-[#EF4444]/40 text-[#EF4444] text-xs font-black tracking-wider uppercase">
-            💸 TIẾP THỊ LIÊN KẾT AFFILIATE
-          </span>
-          <h2 className="text-3xl md:text-5xl font-black text-white">
-            Kiếm 30% Hoa Hồng Trọn Đời<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#EF4444] to-[#8B5CF6]">Rút Tiền Tự Động Qua SePay</span>
-          </h2>
-          <p className="text-gray-300 text-sm max-w-2xl mx-auto leading-relaxed">
-            Giới thiệu 1 khách mua gói Business (1.49M/tháng) — bạn nhận ngay <strong className="text-[#EF4444]">447.000₫/tháng</strong> hoa hồng trọn đời. Giới thiệu 10 khách = <strong className="text-emerald-400">4.470.000₫/tháng</strong> thụ động mãi mãi!
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { icon: HeartHandshake, label: 'Hoa hồng trọn đời', value: '30%', sub: 'Mỗi đơn thanh toán của KH bạn giới thiệu' },
-              { icon: QrCode,         label: 'Rút tiền qua SePay', value: '3s',   sub: 'Tự động về tài khoản ngân hàng tức thì' },
-              { icon: TrendingUp,     label: 'Thu nhập thụ động', value: '∞',    sub: 'Không giới hạn số lượng & thời gian' },
-            ].map((a, i) => (
-              <div key={i} className="p-5 rounded-2xl bg-black/40 border border-white/10 space-y-2 text-center zoom-card">
-                <a.icon className="w-8 h-8 text-[#EF4444] mx-auto" />
-                <p className="text-3xl font-black text-white">{a.value}</p>
-                <p className="text-xs font-black text-gray-200">{a.label}</p>
-                <p className="text-[10px] text-gray-500">{a.sub}</p>
-              </div>
-            ))}
+      <section id="affiliate-intro" className="py-24 px-6 bg-gradient-to-b from-[#0A0A0A] via-[#120A1A] to-[#0A0A0A]">
+        <RevealSection className="max-w-6xl mx-auto">
+          <div className="glass-panel rounded-3xl border border-[#8B5CF6]/30 p-8 md:p-14 bg-gradient-to-br from-[#8B5CF6]/10 to-[#EF4444]/5 shadow-neon-purple relative overflow-hidden">
+            {/* Background effects */}
+            <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#8B5CF6]/20 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#EF4444]/10 rounded-full blur-[100px] pointer-events-none" />
+
+            <div className="relative z-10 text-center space-y-6 mb-12">
+              <span className="px-5 py-2 rounded-full bg-[#8B5CF6]/20 border border-[#8B5CF6]/40 text-[#8B5CF6] text-xs font-black tracking-wider uppercase inline-flex items-center gap-2">
+                <HeartHandshake className="w-4 h-4" /> CHƯƠNG TRÌNH ĐỐI TÁC AFFILIATE
+              </span>
+              <h2 className="text-3xl md:text-5xl font-black text-white leading-tight">
+                Kiếm 30% Hoa Hồng Trọn Đời<br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#8B5CF6] to-[#EF4444]">Thu Nhập Thụ Động Không Giới Hạn</span>
+              </h2>
+              <p className="text-gray-300 text-sm md:text-base max-w-3xl mx-auto leading-relaxed">
+                Trở thành đối tác kinh doanh của AVA LIVESTREAM. Chia sẻ giải pháp bán hàng tự động đỉnh cao và xây dựng cho riêng mình một nguồn thu nhập thụ động bền vững, thanh toán cực kỳ chuẩn xác mỗi tuần.
+              </p>
+            </div>
+
+            <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+              {[
+                { 
+                  icon: DollarSign, color: 'text-emerald-400', bg: 'bg-emerald-400/20', border: 'border-emerald-400/30',
+                  title: 'Hoa Hồng 30% Trọn Đời', 
+                  desc: 'Nhận ngay 30% giá trị cho mọi giao dịch. Khách gia hạn tháng nào, bạn nhận tiền tháng đó trọn đời.' 
+                },
+                { 
+                  icon: Clock, color: 'text-[#3B82F6]', bg: 'bg-[#3B82F6]/20', border: 'border-[#3B82F6]/30',
+                  title: 'Nhận Tiền 10h Sáng Thứ 2', 
+                  desc: 'Hệ thống tự động chốt doanh thu và chuyển thẳng về tài khoản ngân hàng của bạn vào 10:00 sáng Thứ 2 hàng tuần.' 
+                },
+                { 
+                  icon: TrendingUp, color: 'text-[#EF4444]', bg: 'bg-[#EF4444]/20', border: 'border-[#EF4444]/30',
+                  title: 'Không Giới Hạn Thu Nhập', 
+                  desc: 'Giới thiệu 1 khách gói Business (1.49M) bạn có ~447K/tháng. 10 khách = 4.47M/tháng. Càng nhiều khách, tiền càng lớn!' 
+                },
+                { 
+                  icon: Layers, color: 'text-[#8B5CF6]', bg: 'bg-[#8B5CF6]/20', border: 'border-[#8B5CF6]/30',
+                  title: 'Hỗ Trợ Tài Liệu Sale', 
+                  desc: 'Cung cấp sẵn kho hình ảnh, video demo, kịch bản chốt sale chuyên nghiệp. Bạn chỉ cần copy và chia sẻ link.' 
+                },
+              ].map((item, idx) => (
+                <div key={idx} className={`p-6 rounded-2xl bg-black/40 border ${item.border} space-y-4 hover:scale-105 transition-transform duration-300 group`}>
+                  <div className={`w-12 h-12 rounded-xl ${item.bg} ${item.color} flex items-center justify-center`}>
+                    <item.icon className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-lg font-black text-white group-hover:text-gray-200 transition-colors">{item.title}</h3>
+                  <p className="text-sm text-gray-400 leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="relative z-10 flex justify-center">
+              <button
+                onClick={() => setActiveTab && setActiveTab('affiliate')}
+                className="px-10 py-5 bg-gradient-to-r from-[#8B5CF6] to-[#EF4444] text-white font-black text-base rounded-2xl animate-cta-pulse hover:scale-105 transition-all flex items-center gap-3 cursor-pointer shadow-[0_0_30px_rgba(139,92,246,0.5)]"
+              >
+                💸 ĐĂNG KÝ TRỞ THÀNH ĐỐI TÁC NGAY <ArrowRight className="w-6 h-6" />
+              </button>
+            </div>
           </div>
-          <button
-            onClick={() => setActiveTab && setActiveTab('affiliate')}
-            className="px-8 py-4 bg-gradient-to-r from-[#EF4444] to-[#8B5CF6] text-white font-black text-sm rounded-2xl animate-cta-pulse hover:opacity-90 transition-all flex items-center gap-2 mx-auto cursor-pointer"
-          >
-            💸 ĐĂNG KÝ AFFILIATE NGAY <ArrowRight className="w-5 h-5" />
-          </button>
         </RevealSection>
       </section>
 
