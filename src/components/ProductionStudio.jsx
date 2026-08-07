@@ -407,8 +407,11 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
   const [showMultistreamModal, setShowMultistreamModal] = useState(false);
   const [connectedChannelsCount, setConnectedChannelsCount] = useState(9);
 
-  const handleToggleOneTouchMultistream = () => {
+  const handleToggleOneTouchMultistream = async () => {
     const nextState = !isOneTouchLiveActive;
+    if (nextState && !webcamActive) {
+      await toggleWebcam();
+    }
     setIsOneTouchLiveActive(nextState);
     if (setIsLive) setIsLive(nextState);
     setShowMultistreamModal(true);

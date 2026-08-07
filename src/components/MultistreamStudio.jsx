@@ -137,6 +137,9 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
       }
       setIsLive(true);
       setLiveChannelIds(channels.map(c => c.id));
+      if (streamSourceMode === 'direct' && !isPreviewingCamera) {
+        setIsPreviewingCamera(true);
+      }
     }
   };
 
@@ -652,7 +655,7 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                   />
                 ) : streamSourceMode === "url" && videoUrlInput ? (
                   <div className="w-full h-full relative z-0">
-                    {renderUrlVideo(videoUrlInput, false, true)}
+                    {renderUrlVideo(videoUrlInput, true, true)}
                   </div>
                 ) : streamSourceMode === "direct" && isPreviewingCamera ? (
                   <div className="w-full h-full bg-black flex items-center justify-center relative z-0">
