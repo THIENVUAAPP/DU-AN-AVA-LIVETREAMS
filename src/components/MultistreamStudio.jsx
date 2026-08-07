@@ -167,6 +167,8 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
   // Stream Source Mode & Active Switcher Channel
   const [streamSourceMode, setStreamSourceMode] = useState('video');
   const [videoUrlInput, setVideoUrlInput] = useState('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
+  const [isPreviewingUrl, setIsPreviewingUrl] = useState(false);
+  const [isPreviewingCamera, setIsPreviewingCamera] = useState(false);
   const [liveChannelIds, setLiveChannelIds] = useState([]); // 'video' | 'direct'
   const [selectedMonitorChannel, setSelectedMonitorChannel] = useState('tiktok_1'); // 'tiktok_1' | 'facebook_1' | 'youtube_1' | 'shopee_1' | 'matrix'
   
@@ -452,23 +454,34 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
             {streamSourceMode === "url" && (
               <div className="p-4 mt-4 rounded-2xl bg-amber-950/30 border border-amber-500/40 space-y-3 text-xs animate-fadeIn">
                 <label className="font-bold text-amber-300 block">DÁN LINK STREAM VIDEO HOẶC LUỒNG LIVE TRỰC TUYẾN (.m3u8, .mp4, RTSP, HLS Link):</label>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="text"
                     value={videoUrlInput}
-                    onChange={(e) => setVideoUrlInput(e.target.value)}
+                    onChange={(e) => {
+                      setVideoUrlInput(e.target.value);
+                      setIsPreviewingUrl(false);
+                    }}
                     placeholder="https://server.com/live-stream.m3u8..."
                     className="flex-1 bg-black/80 border border-amber-500/30 rounded-xl px-4 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-amber-400"
                   />
-                  <button
-                    onClick={() => alert("🔗 ĐÃ ĐỒNG BỘ NGUỒN STREAM LINK VIDEO CHO TOÀN BỘ CÁC KÊNH LIVE!")}
-                    className="px-5 py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-black font-black text-xs rounded-xl transition-all cursor-pointer flex-shrink-0 flex items-center gap-2"
-                  >
-                    🚀 ĐỒNG BỘ TẤT CẢ KÊNH
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setIsPreviewingUrl(true)}
+                      className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-black text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-glow-amber"
+                    >
+                      ▶️ MỞ VIDEO
+                    </button>
+                    <button
+                      onClick={() => alert("🔗 ĐÃ ĐỒNG BỘ NGUỒN STREAM LINK VIDEO CHO TOÀN BỘ CÁC KÊNH LIVE!")}
+                      className="px-5 py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-black font-black text-xs rounded-xl transition-all cursor-pointer flex-shrink-0 flex items-center gap-2"
+                    >
+                      🚀 ĐỒNG BỘ
+                    </button>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 text-amber-400/80 mt-2">
-                  <CheckCircle2 className="w-4 h-4" /> <span>Hỗ trợ kéo luồng từ: M3U8, MP4, RTSP Camera, HLS Livestream.</span>
+                  <CheckCircle2 className="w-4 h-4" /> <span>Vui lòng bấm MỞ VIDEO trước, sau đó bấm ĐỒNG BỘ. (Hỗ trợ: M3U8, MP4, RTSP, HLS)</span>
                 </div>
               </div>
             )}
@@ -482,20 +495,32 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                   </span>
                 </div>
                 <div className="w-full aspect-video rounded-xl overflow-hidden border-2 border-[#EF4444]/40 relative bg-black">
-                   <LiveCameraFeed className="w-full h-full object-cover" />
+                   {isPreviewingCamera ? (
+                     <LiveCameraFeed className="w-full h-full object-cover" />
+                   ) : (
+                     <div className="w-full h-full flex items-center justify-center text-gray-500 font-bold text-xs">MÀN HÌNH CHỜ CAMERA</div>
+                   )}
                    <div className="absolute bottom-3 left-3 flex items-center gap-2">
                       <div className="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg text-white font-mono text-xs border border-white/20 flex items-center gap-2">
-                         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                         CAMERA ĐANG HOẠT ĐỘNG
+                         <div className={`w-2 h-2 rounded-full ${isPreviewingCamera ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+                         {isPreviewingCamera ? 'CAMERA ĐANG HOẠT ĐỘNG' : 'CAMERA ĐANG TẮT'}
                       </div>
                    </div>
                 </div>
-                <button
-                    onClick={() => alert("📡 ĐÃ BẬT CHẾ ĐỘ PHÁT CAMERA TRỰC TIẾP CHO TẤT CẢ CÁC KÊNH!")}
-                    className="w-full px-5 py-3 mt-2 bg-gradient-to-r from-[#EF4444] to-red-600 hover:opacity-90 text-white font-black text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-glow-red"
+                <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                  <button
+                      onClick={() => setIsPreviewingCamera(true)}
+                      className="flex-1 px-5 py-3 bg-red-500/20 hover:bg-red-500/40 text-red-500 font-black text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 border border-red-500/30"
                   >
-                    <Zap className="w-4 h-4" /> BẮT ĐẦU PHÁT LIVE CAMERA CHO TẤT CẢ CÁC KÊNH
-                </button>
+                      📹 MỞ CAMERA TỪ TRÌNH DUYỆT
+                  </button>
+                  <button
+                      onClick={() => alert("📡 ĐÃ BẬT CHẾ ĐỘ PHÁT CAMERA TRỰC TIẾP CHO TẤT CẢ CÁC KÊNH!")}
+                      className="flex-1 px-5 py-3 bg-gradient-to-r from-[#EF4444] to-red-600 hover:opacity-90 text-white font-black text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-glow-red"
+                    >
+                      <Zap className="w-4 h-4" /> ĐỒNG BỘ PHÁT LIVE
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -555,13 +580,15 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                   <div key={ch.id} className="relative aspect-video rounded-2xl overflow-hidden glass-panel border border-white/15 bg-black">
                     {streamSourceMode === "video" && activeVideo?.url ? (
                       <video src={activeVideo.url} controls autoPlay loop muted className="w-full h-full object-cover" />
-                    ) : streamSourceMode === "url" && videoUrlInput ? (
+                    ) : streamSourceMode === "url" && videoUrlInput && isPreviewingUrl ? (
                       <video src={videoUrlInput} controls autoPlay loop muted className="w-full h-full object-cover" />
-                    ) : streamSourceMode === "direct" ? (
+                    ) : streamSourceMode === "direct" && isPreviewingCamera ? (
                       <LiveCameraFeed className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gray-900 text-gray-500 font-bold text-xs text-center px-4">
-                        {streamSourceMode === "video" ? 'CHƯA TẢI LÊN VIDEO' : 'CHƯA CÓ LINK STREAM'}
+                        {streamSourceMode === "video" ? 'CHƯA TẢI LÊN VIDEO' : 
+                         streamSourceMode === "url" ? 'CHƯA MỞ LINK STREAM' : 
+                         'CHƯA MỞ CAMERA'}
                       </div>
                     )}
 
@@ -613,20 +640,22 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                     controls autoPlay loop muted
                     className="w-full h-full object-contain relative z-0"
                   />
-                ) : streamSourceMode === "url" && videoUrlInput ? (
+                ) : streamSourceMode === "url" && videoUrlInput && isPreviewingUrl ? (
                   <video
                     key={videoUrlInput}
                     src={videoUrlInput}
                     controls autoPlay loop muted
                     className="w-full h-full object-contain relative z-0"
                   />
-                ) : streamSourceMode === "direct" ? (
+                ) : streamSourceMode === "direct" && isPreviewingCamera ? (
                   <div className="w-full h-full bg-black flex items-center justify-center relative z-0">
                     <LiveCameraFeed className="w-full h-full object-cover" />
                   </div>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-900 text-gray-400 font-bold text-sm relative z-0">
-                    {streamSourceMode === 'video' ? 'CHƯA CÓ VIDEO ĐƯỢC CHỌN. VUI LÒNG TẢI LÊN.' : 'CHƯA NHẬP ĐƯỜNG LINK TRỰC TIẾP.'}
+                  <div className="w-full h-full flex items-center justify-center bg-gray-900 text-gray-400 font-bold text-sm relative z-0 text-center px-6">
+                    {streamSourceMode === 'video' ? 'CHƯA CÓ VIDEO ĐƯỢC CHỌN. VUI LÒNG TẢI LÊN.' : 
+                     streamSourceMode === 'url' ? 'CHƯA MỞ LINK VIDEO (Vui lòng bấm nút Mở Video).' : 
+                     'CHƯA MỞ CAMERA TỪ TRÌNH DUYỆT (Vui lòng bấm Mở Camera).'}
                   </div>
                 )}
 
