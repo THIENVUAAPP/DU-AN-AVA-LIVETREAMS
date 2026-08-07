@@ -36,33 +36,12 @@ import ReactPlayer from 'react-player';
 
 
 function LiveCameraFeed({ className = "w-full h-full object-cover" }) {
-  const canvasRef = React.useRef(null);
   const videoRef = React.useRef(null);
 
   React.useEffect(() => {
-    let animId;
     let localStream;
 
-    const renderLoop = () => {
-      const sourceCanvas = window.__AVA_LIVE_CANVAS__;
-      const targetCanvas = canvasRef.current;
-
-      if (sourceCanvas && targetCanvas) {
-        if (targetCanvas.width !== sourceCanvas.width || targetCanvas.height !== sourceCanvas.height) {
-          targetCanvas.width = sourceCanvas.width;
-          targetCanvas.height = sourceCanvas.height;
-        }
-        const ctx = targetCanvas.getContext("2d");
-        if (ctx) {
-          ctx.drawImage(sourceCanvas, 0, 0);
-        }
-      }
-      animId = requestAnimationFrame(renderLoop);
-    };
-
-    renderLoop();
-
-    if (!window.__AVA_LIVE_CANVAS__ && navigator.mediaDevices?.getUserMedia) {
+    if (navigator.mediaDevices?.getUserMedia) {
       navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false })
         .then(stream => {
           localStream = stream;
@@ -77,7 +56,6 @@ function LiveCameraFeed({ className = "w-full h-full object-cover" }) {
     }
 
     return () => {
-      cancelAnimationFrame(animId);
       if (localStream) {
         localStream.getTracks().forEach(t => t.stop());
       }
@@ -86,8 +64,7 @@ function LiveCameraFeed({ className = "w-full h-full object-cover" }) {
 
   return (
     <div className="relative w-full h-full bg-black overflow-hidden flex items-center justify-center">
-      <canvas ref={canvasRef} className={className} style={{ display: window.__AVA_LIVE_CANVAS__ ? "block" : "none" }} />
-      <video ref={videoRef} autoPlay playsInline muted className={className} style={{ display: !window.__AVA_LIVE_CANVAS__ ? "block" : "none" }} />
+      <video ref={videoRef} autoPlay playsInline muted className={className} />
     </div>
   );
 }
@@ -497,10 +474,7 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                   <input
                     type="text"
                     value={videoUrlInput}
-                    onChange={(e) => {
-                      setVideoUrlInput(e.target.value);
-                      setIsPreviewingUrl(false);
-                    }}
+                    onChange={(e) => setVideoUrlInput(e.target.value)}
                     placeholder="https://server.com/live-stream.m3u8..."
                     className="flex-1 bg-black/80 border border-amber-500/30 rounded-xl px-4 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-amber-400"
                   />
@@ -614,7 +588,7 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                   <div key={ch.id} className="relative aspect-video rounded-2xl overflow-hidden glass-panel border border-white/15 bg-black">
                     {streamSourceMode === "video" && activeVideo?.url ? (
                       <video src={activeVideo.url} controls autoPlay loop muted className="w-full h-full object-cover relative z-0" />
-                    ) : streamSourceMode === "url" && videoUrlInput && isPreviewingUrl ? (
+                    ) : streamSourceMode === "url" && videoUrlInput ? (
                       <div className="w-full h-full relative pointer-events-none z-0">
                         {renderUrlVideo(videoUrlInput, true, false)}
                       </div>
@@ -676,7 +650,7 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                     controls autoPlay loop muted
                     className="w-full h-full object-contain relative z-0"
                   />
-                ) : streamSourceMode === "url" && videoUrlInput && isPreviewingUrl ? (
+                ) : streamSourceMode === "url" && videoUrlInput ? (
                   <div className="w-full h-full relative z-0">
                     {renderUrlVideo(videoUrlInput, false, true)}
                   </div>
