@@ -91,11 +91,11 @@ const renderUrlVideo = (urlInput, isMuted = false, controls = true) => {
     const match = urlInput.match(/\/video\/(\d+)/);
     if (match && match[1]) {
       return (
-        <iframe 
-          src={`https://www.tiktok.com/embed/v2/${match[1]}`} 
-          className="absolute inset-0 w-full h-full object-cover" 
-          frameBorder="0" 
-          allowFullScreen 
+        <iframe
+          src={`https://www.tiktok.com/embed/v2/${match[1]}`}
+          className="absolute inset-0 w-full h-full object-cover"
+          frameBorder="0"
+          allowFullScreen
           allow="autoplay; encrypted-media"
           scrolling="no"
         />
@@ -107,17 +107,30 @@ const renderUrlVideo = (urlInput, isMuted = false, controls = true) => {
       </div>
     );
   }
+  if (urlInput.includes('facebook.com') || urlInput.includes('fb.watch')) {
+    return (
+      <iframe
+        src={`https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(urlInput)}&show_text=false&autoplay=true&mute=${isMuted ? '1' : '0'}`}
+        className="absolute inset-0 w-full h-full object-cover"
+        frameBorder="0"
+        allowFullScreen
+        allow="autoplay; encrypted-media; picture-in-picture; web-share"
+        scrolling="no"
+      />
+    );
+  }
   return (
-    <ReactPlayer 
-      url={urlInput} 
-      playing 
-      loop 
-      muted={isMuted} 
+    <ReactPlayer
+      src={urlInput}
+      playing
+      loop
+      muted={isMuted}
       controls={controls}
-      width="100%" 
-      height="100%" 
-      className="absolute inset-0 object-cover" 
+      width="100%"
+      height="100%"
+      className="absolute inset-0 object-cover"
       style={{ objectFit: 'cover' }}
+      onError={(e) => console.error('Lỗi phát video từ URL:', urlInput, e)}
     />
   );
 };

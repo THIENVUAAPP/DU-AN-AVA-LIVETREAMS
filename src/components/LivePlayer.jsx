@@ -161,14 +161,15 @@ export default function LivePlayer({ url, playing, muted, onVideoMount, isFlv, i
   }
 
   return (
-    <ReactPlayer 
-      url={url} 
-      playing={playing} 
-      controls={true} 
-      muted={muted} 
-      width="100%" 
-      height="100%" 
+    <ReactPlayer
+      src={url}
+      playing={playing}
+      controls={true}
+      muted={muted}
+      width="100%"
+      height="100%"
       style={{ backgroundColor: '#000' }}
+      onError={(e) => console.error('Lỗi phát video (LivePlayer):', url, e)}
     />
   );
 }
