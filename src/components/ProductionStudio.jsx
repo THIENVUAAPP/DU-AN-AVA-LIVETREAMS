@@ -1663,7 +1663,7 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
                   autoPlay
                   playsInline
                   muted
-                  className="hidden"
+                  style={{ opacity: 0, position: 'absolute', pointerEvents: 'none', width: '1px', height: '1px' }}
                 />
                 <canvas
                   ref={canvasRef}

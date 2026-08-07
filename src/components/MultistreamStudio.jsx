@@ -96,6 +96,7 @@ const renderUrlVideo = (urlInput, isMuted = false, controls = true) => {
           className="absolute inset-0 w-full h-full object-cover" 
           frameBorder="0" 
           allowFullScreen 
+          allow="autoplay; encrypted-media"
           scrolling="no"
         />
       );
@@ -516,8 +517,8 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                     </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-amber-400/80 mt-2">
-                  <CheckCircle2 className="w-4 h-4" /> <span>Vui lòng bấm MỞ VIDEO trước, sau đó bấm ĐỒNG BỘ. (Hỗ trợ: M3U8, MP4, RTSP, HLS)</span>
+                <div className="flex items-center gap-2 text-amber-400/80 mt-2 text-[10px]">
+                  <CheckCircle2 className="w-4 h-4" /> <span>Vui lòng bấm MỞ VIDEO trước, sau đó bấm ĐỒNG BỘ. (Chỉ hỗ trợ: MP4, M3U8, Youtube, Tiktok Video. KHÔNG hỗ trợ Tiktok Live/Shopee Live do nền tảng chặn)</span>
                 </div>
               </div>
             )}
@@ -612,7 +613,7 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                     {streamSourceMode === "video" && activeVideo?.url ? (
                       <video src={activeVideo.url} controls autoPlay loop muted className="w-full h-full object-cover relative z-0" />
                     ) : streamSourceMode === "url" && videoUrlInput && isPreviewingUrl ? (
-                      <div className="w-full h-full relative pointer-events-none z-0">
+                      <div className="w-full h-full relative z-0 overflow-hidden">
                         {renderUrlVideo(videoUrlInput, true, false)}
                       </div>
                     ) : streamSourceMode === "direct" && isPreviewingCamera ? (
