@@ -86,6 +86,22 @@ export default function App() {
         syncUserToSupabase(gUser);
       }
     });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const gUser = {
+          name: session.user.user_metadata?.full_name || session.user.email.split("@")[0],
+          email: session.user.email,
+          avatar: session.user.user_metadata?.avatar_url || "https://lh3.googleusercontent.com/a/default-user",
+          isAdmin: session.user.email === "quocthiencr90@gmail.com",
+        };
+        setCurrentUser(gUser);
+        localStorage.setItem("avalive_current_user", JSON.stringify(gUser));
+        syncUserToSupabase(gUser);
+      }
+    });
+
+    return () => subscription?.unsubscribe();
   }, []);
 
   // Handle Real Supabase Google OAuth Redirect
