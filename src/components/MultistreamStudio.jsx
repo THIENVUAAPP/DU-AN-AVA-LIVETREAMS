@@ -555,8 +555,14 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                   <div key={ch.id} className="relative aspect-video rounded-2xl overflow-hidden glass-panel border border-white/15 bg-black">
                     {streamSourceMode === "video" && activeVideo?.url ? (
                       <video src={activeVideo.url} controls autoPlay loop muted className="w-full h-full object-cover" />
-                    ) : (
+                    ) : streamSourceMode === "url" && videoUrlInput ? (
+                      <video src={videoUrlInput} controls autoPlay loop muted className="w-full h-full object-cover" />
+                    ) : streamSourceMode === "direct" ? (
                       <LiveCameraFeed className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-900 text-gray-500 font-bold text-xs text-center px-4">
+                        {streamSourceMode === "video" ? 'CHƯA TẢI LÊN VIDEO' : 'CHƯA CÓ LINK STREAM'}
+                      </div>
                     )}
 
                     <div className="absolute top-2 left-2 flex items-center gap-1.5 z-10">
@@ -599,71 +605,81 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
             ) : (
               /* SINGLE DETAILED CHANNEL LIVE MONITOR */
               <div className="relative aspect-video rounded-2xl overflow-hidden glass-panel border border-white/15 bg-black">
-                {(activeVideo && activeVideo.url && streamSourceMode === 'video') || streamSourceMode === 'url' ? (
+                {/* MEDIA SOURCE RENDERER */}
+                {streamSourceMode === "video" && activeVideo?.url ? (
                   <video
-                    key={streamSourceMode === "url" ? videoUrlInput : activeVideo?.id}
-                    src={streamSourceMode === "url" ? videoUrlInput : activeVideo?.url}
-                    controls
-                    autoPlay
-                    loop
-                    muted
-                    className="w-full h-full object-contain"
+                    key={activeVideo.id}
+                    src={activeVideo.url}
+                    controls autoPlay loop muted
+                    className="w-full h-full object-contain relative z-0"
                   />
-                ) : (
-                  <div className="relative w-full h-full bg-black flex items-center justify-center">
+                ) : streamSourceMode === "url" && videoUrlInput ? (
+                  <video
+                    key={videoUrlInput}
+                    src={videoUrlInput}
+                    controls autoPlay loop muted
+                    className="w-full h-full object-contain relative z-0"
+                  />
+                ) : streamSourceMode === "direct" ? (
+                  <div className="w-full h-full bg-black flex items-center justify-center relative z-0">
                     <LiveCameraFeed className="w-full h-full object-cover" />
-
-                    {/* Stream status overlay info */}
-                    <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-none">
-                      <div className="flex items-center gap-3">
-                        {isLive || liveChannelIds.includes(activeMonitorChannelObj?.id) ? (
-                          <span className="px-3 py-1 rounded-full bg-red-600 text-white text-xs font-black flex items-center gap-1.5 shadow-glow-red animate-pulse">
-                            <Radio className="w-3.5 h-3.5 animate-spin" /> Đang phát sóng
-                          </span>
-                        ) : (
-                          <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-black flex items-center gap-1.5">
-                            <Eye className="w-3.5 h-3.5 text-emerald-400" /> Chế độ xem trước (Preview)
-                          </span>
-                        )}
-                        <span className="px-3 py-1 rounded-full bg-black/80 backdrop-blur-md text-emerald-400 text-xs font-mono font-bold border border-emerald-500/40">
-                          FPS: 60 • BITRATE: 12.5 Mbps • 4K 2160p
-                        </span>
-                      </div>
-
-                      
-                      {/* Top overlay badge */}
-                      <div className="absolute top-4 left-4 flex items-center gap-2 pointer-events-auto">
-                        <span className="px-3 py-1 rounded-full bg-black/80 backdrop-blur-md text-white text-xs font-bold flex items-center gap-1.5 border border-white/20">
-                          <span>{activeMonitorChannelObj?.icon}</span>
-                          <span>{activeMonitorChannelObj?.name}</span>
-                        </span>
-
-                        <span className="px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-md text-emerald-400 text-xs font-mono font-bold flex items-center gap-1 border border-emerald-500/30">
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>{activeMonitorChannelObj?.viewers} ĐANG XEM</span>
-                        </span>
-                      </div>
-                      
-                      {/* Fullscreen Button */}
-                      <button
-                        onClick={(e) => {
-                          const container = e.currentTarget.closest('.aspect-video');
-                          if (container) {
-                            if (document.fullscreenElement) {
-                              document.exitFullscreen();
-                            } else {
-                              container.requestFullscreen();
-                            }
-                          }
-                        }}
-                        className="absolute top-4 right-4 p-2 bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/20 rounded-lg text-white pointer-events-auto cursor-pointer transition-all"
-                        title="Phóng to toàn màn hình"
-                      >
-                        <Maximize2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-900 text-gray-400 font-bold text-sm relative z-0">
+                    {streamSourceMode === 'video' ? 'CHƯA CÓ VIDEO ĐƯỢC CHỌN. VUI LÒNG TẢI LÊN.' : 'CHƯA NHẬP ĐƯỜNG LINK TRỰC TIẾP.'}
                   </div>
                 )}
+
+                {/* OVERLAYS (ALWAYS VISIBLE) */}
+                <div className="absolute inset-0 pointer-events-none z-10">
+                  {/* Stream status overlay info */}
+                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {isLive || liveChannelIds.includes(activeMonitorChannelObj?.id) ? (
+                        <span className="px-3 py-1 rounded-full bg-red-600 text-white text-xs font-black flex items-center gap-1.5 shadow-glow-red animate-pulse">
+                          <Radio className="w-3.5 h-3.5 animate-spin" /> Đang phát sóng
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-black flex items-center gap-1.5">
+                          <Eye className="w-3.5 h-3.5 text-emerald-400" /> Chế độ xem trước (Preview)
+                        </span>
+                      )}
+                      <span className="px-3 py-1 rounded-full bg-black/80 backdrop-blur-md text-emerald-400 text-xs font-mono font-bold border border-emerald-500/40 hidden md:block">
+                        FPS: 60 • BITRATE: 12.5 Mbps • 4K 2160p
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Top overlay badge */}
+                  <div className="absolute top-4 left-4 flex items-center gap-2 pointer-events-auto">
+                    <span className="px-3 py-1 rounded-full bg-black/80 backdrop-blur-md text-white text-xs font-bold flex items-center gap-1.5 border border-white/20">
+                      <span>{activeMonitorChannelObj?.icon}</span>
+                      <span>{activeMonitorChannelObj?.name}</span>
+                    </span>
+                    <span className="px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-md text-emerald-400 text-xs font-mono font-bold flex items-center gap-1 border border-emerald-500/30">
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>{activeMonitorChannelObj?.viewers} ĐANG XEM</span>
+                    </span>
+                  </div>
+
+                  {/* Fullscreen Button */}
+                  <button
+                    onClick={(e) => {
+                      const container = e.currentTarget.closest('.aspect-video');
+                      if (container) {
+                        if (document.fullscreenElement) {
+                          document.exitFullscreen();
+                        } else {
+                          container.requestFullscreen();
+                        }
+                      }
+                    }}
+                    className="absolute top-4 right-4 p-2.5 bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/20 rounded-lg text-white pointer-events-auto cursor-pointer transition-all hover:scale-110"
+                    title="Phóng to toàn màn hình"
+                  >
+                    <Maximize2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             )}
           </div>
