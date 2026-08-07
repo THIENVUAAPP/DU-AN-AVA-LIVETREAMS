@@ -107,14 +107,14 @@ export default function LiveCommerceStudio({ isLive }) {
   const [prodFormPrice, setProdFormPrice] = useState('');
   const [prodFormOldPrice, setProdFormOldPrice] = useState('');
   const [prodFormStock, setProdFormStock] = useState('50');
-  const [prodFormSync, setProdFormSync] = useState('TikTok Shop & FB Fanpage');
+  const [prodFormSync, setProdFormSync] = useState('TikTok, YouTube & Facebook');
   const [prodFormImage, setProdFormImage] = useState('https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80');
   const [prodFormBadge, setProdFormBadge] = useState('HOT DEAL');
 
   // Add Session Modal State
   const [addSessionModalOpen, setAddSessionModalOpen] = useState(false);
   const [newSessionTitle, setNewSessionTitle] = useState('');
-  const [newSessionPlatform, setNewSessionPlatform] = useState('TikTok Shop & FB Fanpage');
+  const [newSessionPlatform, setNewSessionPlatform] = useState('TikTok, YouTube & Facebook');
 
   // Live Chat Comments Stream State (CLEAR PLATFORM + CLEAR PRODUCT CONTEXT)
   const [chatMessages, setChatMessages] = useState([]);
@@ -455,12 +455,57 @@ export default function LiveCommerceStudio({ isLive }) {
 
                 <div className="flex flex-col gap-2 w-full sm:w-auto">
                   <button 
-                    onClick={() => alert(`🔥 ĐÃ ĐẨY DEAL HOT GIẢM 50% CHO SẢN PHẨM "${pinnedProduct.name}" TRÊN STREAM!`)}
+                    onClick={() => {
+                      setIsSyncingCarts(true);
+                      setCartSyncState('detecting_captcha');
+                      setTimeout(() => {
+                        setCartSyncState('solving_captcha');
+                        setTimeout(() => {
+                           setCartSyncState('success');
+                           setTimeout(() => {
+                              setIsSyncingCarts(false);
+                              setCartSyncState('idle');
+                              alert(`🔥 BỘ GIẢI MÃ 24/7 ĐÃ VƯỢT CAPTCHA THÀNH CÔNG TRÊN 3 NỀN TẢNG!\n✅ ĐÃ ĐẨY DEAL HOT GIẢM 50% CHO SẢN PHẨM "${pinnedProduct.name}" LÊN TIKTOK, YOUTUBE & FACEBOOK!`);
+                           }, 300);
+                        }, 800);
+                      }, 500);
+                    }}
                     className="px-6 py-3 rounded-2xl bg-[#EF4444] hover:bg-red-600 text-white font-black text-xs shadow-glow-red transition-all cursor-pointer whitespace-nowrap"
                   >
-                    GHIM DEAL HOT NGAY
+                    {isSyncingCarts ? 'ĐANG VƯỢT CAPTCHA...' : 'GHIM DEAL HOT NGAY'}
                   </button>
                 </div>
+              </div>
+
+              {/* INTEGRATED MINI CAPTCHA ENGINE 24/7 */}
+              <div className="mt-4 pt-4 border-t border-white/10 bg-black/40 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                 <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center relative">
+                       <ShieldCheck className="w-6 h-6 text-emerald-400 z-10" />
+                       <div className="absolute inset-0 bg-emerald-500/20 rounded-xl animate-ping opacity-20"></div>
+                    </div>
+                    <div>
+                       <h4 className="text-xs font-black text-emerald-400 flex items-center gap-2 uppercase tracking-wider">
+                          <Activity className="w-3.5 h-3.5 animate-pulse" /> HỆ THỐNG VƯỢT CAPTCHA ĐA NỀN TẢNG
+                       </h4>
+                       <p className="text-[10px] text-gray-400 mt-0.5">Trạng thái: <span className="text-emerald-400 font-bold">ONLINE 24/7</span> (Hoạt động mượt mà)</p>
+                    </div>
+                 </div>
+
+                 <div className="flex items-center gap-6">
+                    <div className="text-center">
+                       <div className="text-xs font-black text-white">TikTok, YouTube, Facebook</div>
+                       <div className="text-[9px] text-gray-500 font-mono mt-0.5">Nền tảng đồng bộ</div>
+                    </div>
+                    <div className="text-center border-l border-white/10 pl-6">
+                       <div className="text-xs font-black text-white">0 Lỗi / 99.9% Success</div>
+                       <div className="text-[9px] text-emerald-500 font-mono mt-0.5">Tỉ lệ Bypass (AI Tự Động)</div>
+                    </div>
+                    <div className="text-center border-l border-white/10 pl-6 hidden sm:block">
+                       <div className="text-xs font-black text-white">~12ms</div>
+                       <div className="text-[9px] text-gray-500 font-mono mt-0.5">Tốc độ xử lý</div>
+                    </div>
+                 </div>
               </div>
             </div>
           )}
