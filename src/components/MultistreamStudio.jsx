@@ -35,30 +35,42 @@ import UniversalFileUploader from './UniversalFileUploader';
 import ReactPlayer from 'react-player';
 
 
+let __global_local_stream = null;
+let __global_stream_promise = null;
+
 function LiveCameraFeed({ className = "w-full h-full object-cover" }) {
   const videoRef = React.useRef(null);
 
   React.useEffect(() => {
-    let localStream;
+    let active = true;
 
-    if (navigator.mediaDevices?.getUserMedia) {
-      navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false })
-        .then(stream => {
-          localStream = stream;
+    if (__global_local_stream) {
+      if (videoRef.current) {
+        videoRef.current.srcObject = __global_local_stream;
+        videoRef.current.play().catch(e => console.error("Error playing camera video:", e));
+      }
+    } else {
+      if (!__global_stream_promise && navigator.mediaDevices?.getUserMedia) {
+        __global_stream_promise = navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+      }
+      
+      if (__global_stream_promise) {
+        __global_stream_promise.then(stream => {
+          if (!active) return;
+          __global_local_stream = stream;
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
             videoRef.current.play().catch(e => console.error("Error playing camera video:", e));
           }
-        })
-        .catch((e) => {
-           console.error("Error accessing camera: ", e);
+        }).catch((e) => {
+          console.error("Error accessing camera: ", e);
+          __global_stream_promise = null;
         });
+      }
     }
 
     return () => {
-      if (localStream) {
-        localStream.getTracks().forEach(t => t.stop());
-      }
+      active = false;
     };
   }, []);
 
@@ -477,7 +489,10 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                   <input
                     type="text"
                     value={videoUrlInput}
-                    onChange={(e) => setVideoUrlInput(e.target.value)}
+                    onChange={(e) => {
+                      setVideoUrlInput(e.target.value);
+                      setIsPreviewingUrl(false);
+                    }}
                     placeholder="https://server.com/live-stream.m3u8..."
                     className="flex-1 bg-black/80 border border-amber-500/30 rounded-xl px-4 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-amber-400"
                   />
@@ -591,7 +606,7 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                   <div key={ch.id} className="relative aspect-video rounded-2xl overflow-hidden glass-panel border border-white/15 bg-black">
                     {streamSourceMode === "video" && activeVideo?.url ? (
                       <video src={activeVideo.url} controls autoPlay loop muted className="w-full h-full object-cover relative z-0" />
-                    ) : streamSourceMode === "url" && videoUrlInput ? (
+                    ) : streamSourceMode === "url" && videoUrlInput && isPreviewingUrl ? (
                       <div className="w-full h-full relative pointer-events-none z-0">
                         {renderUrlVideo(videoUrlInput, true, false)}
                       </div>
@@ -653,7 +668,7 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                     controls autoPlay loop muted
                     className="w-full h-full object-contain relative z-0"
                   />
-                ) : streamSourceMode === "url" && videoUrlInput ? (
+                ) : streamSourceMode === "url" && videoUrlInput && isPreviewingUrl ? (
                   <div className="w-full h-full relative z-0">
                     {renderUrlVideo(videoUrlInput, true, true)}
                   </div>
