@@ -111,7 +111,7 @@ export default function UserProfile({ currentUser, setActiveTab }) {
             </button>
           </div>
           <div className="flex items-center gap-6">
-            <button className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white border border-purple-500/30 rounded-lg text-xs font-bold transition-colors">
+            <button onClick={() => { setActiveTab && setActiveTab('overview'); setTimeout(() => { document.getElementById('pricing')?.scrollIntoView({behavior: 'smooth'}) }, 100); }} className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-purple-600/20 text-purple-400 hover:bg-purple-600 hover:text-white border border-purple-500/30 rounded-lg text-xs font-bold transition-colors cursor-pointer">
                <Crown className="w-4 h-4" /> Nâng cấp gói
             </button>
             <div className="relative cursor-pointer">
@@ -243,21 +243,6 @@ export default function UserProfile({ currentUser, setActiveTab }) {
                       </div>
                    </div>
                    
-                   {/* GÓI CƯỚC (Mini) */}
-                   <div className="flex items-center justify-between p-3 bg-[#0A0A0E] border border-white/10 rounded-xl mt-2">
-                      <div className="flex items-center gap-3">
-                         <div className="p-2 bg-white/5 rounded-lg border border-white/10"><Package className="w-4 h-4 text-gray-400" /></div>
-                         <div>
-                            <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Gói hiện tại</p>
-                            <p className="text-sm font-black text-white leading-tight">CƠ BẢN <span className="text-[8px] bg-white/10 text-gray-400 px-1.5 py-0.5 rounded font-normal ml-1">MIỄN PHÍ</span></p>
-                         </div>
-                      </div>
-                      <div className="text-right">
-                         <p className="text-[9px] text-gray-500 mb-0.5">0 / 1 Luồng Live</p>
-                         <button className="text-[9px] font-bold text-cyan-400 hover:text-cyan-300 uppercase tracking-wider">Nâng cấp</button>
-                      </div>
-                   </div>
-
                    <button onClick={handleSaveProfile} className="w-full mt-2 py-2.5 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-black text-xs rounded-xl shadow-glow-purple transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2">
                       <Save className="w-3.5 h-3.5" /> LƯU THÔNG TIN
                    </button>

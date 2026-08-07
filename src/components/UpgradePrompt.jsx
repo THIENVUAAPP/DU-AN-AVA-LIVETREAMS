@@ -14,7 +14,7 @@ export default function UpgradePrompt({ featureName, requiredPlan, setActiveTab 
       </p>
 
       <button 
-        onClick={() => setActiveTab('overview')}
+        onClick={() => { setActiveTab('overview'); setTimeout(() => { document.getElementById('pricing')?.scrollIntoView({behavior: 'smooth'}) }, 100); }}
         className="px-8 py-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black uppercase tracking-wider rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:scale-105 transition-all flex items-center gap-2"
       >
         <Crown className="w-5 h-5" />
