@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import MultiAccountManager from './MultiAccountManager';
 import UniversalFileUploader from './UniversalFileUploader';
+import ReactPlayer from 'react-player';
 
 
 function LiveCameraFeed({ className = "w-full h-full object-cover" }) {
@@ -67,9 +68,12 @@ function LiveCameraFeed({ className = "w-full h-full object-cover" }) {
           localStream = stream;
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
+            videoRef.current.play().catch(e => console.error("Error playing camera video:", e));
           }
         })
-        .catch(() => {});
+        .catch((e) => {
+           console.error("Error accessing camera: ", e);
+        });
     }
 
     return () => {
@@ -494,17 +498,12 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                     <Radio className="w-3 h-3" /> ĐANG THU ÂM & GHI HÌNH
                   </span>
                 </div>
-                <div className="w-full aspect-video rounded-xl overflow-hidden border-2 border-[#EF4444]/40 relative bg-black">
-                   {isPreviewingCamera ? (
-                     <LiveCameraFeed className="w-full h-full object-cover" />
-                   ) : (
-                     <div className="w-full h-full flex items-center justify-center text-gray-500 font-bold text-xs">MÀN HÌNH CHỜ CAMERA</div>
-                   )}
-                   <div className="absolute bottom-3 left-3 flex items-center gap-2">
-                      <div className="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg text-white font-mono text-xs border border-white/20 flex items-center gap-2">
-                         <div className={`w-2 h-2 rounded-full ${isPreviewingCamera ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
-                         {isPreviewingCamera ? 'CAMERA ĐANG HOẠT ĐỘNG' : 'CAMERA ĐANG TẮT'}
-                      </div>
+                <div className="w-full h-12 rounded-xl overflow-hidden border-2 border-[#EF4444]/40 relative bg-[#EF4444]/5 flex items-center justify-center">
+                   <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${isPreviewingCamera ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+                      <span className="font-mono text-xs text-[#EF4444] font-bold">
+                        {isPreviewingCamera ? 'ĐANG KẾT NỐI MÁY ẢNH VỚI MÀN HÌNH CHÍNH...' : 'SẴN SÀNG KẾT NỐI MÁY ẢNH'}
+                      </span>
                    </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2 mt-2">
@@ -581,7 +580,9 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                     {streamSourceMode === "video" && activeVideo?.url ? (
                       <video src={activeVideo.url} controls autoPlay loop muted className="w-full h-full object-cover" />
                     ) : streamSourceMode === "url" && videoUrlInput && isPreviewingUrl ? (
-                      <video src={videoUrlInput} controls autoPlay loop muted className="w-full h-full object-cover" />
+                      <div className="w-full h-full relative pointer-events-none">
+                        <ReactPlayer url={videoUrlInput} playing loop muted width="100%" height="100%" className="absolute inset-0 object-cover" style={{ objectFit: 'cover' }} />
+                      </div>
                     ) : streamSourceMode === "direct" && isPreviewingCamera ? (
                       <LiveCameraFeed className="w-full h-full object-cover" />
                     ) : (
@@ -641,12 +642,9 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                     className="w-full h-full object-contain relative z-0"
                   />
                 ) : streamSourceMode === "url" && videoUrlInput && isPreviewingUrl ? (
-                  <video
-                    key={videoUrlInput}
-                    src={videoUrlInput}
-                    controls autoPlay loop muted
-                    className="w-full h-full object-contain relative z-0"
-                  />
+                  <div className="w-full h-full relative z-0">
+                    <ReactPlayer url={videoUrlInput} playing controls width="100%" height="100%" className="absolute inset-0" />
+                  </div>
                 ) : streamSourceMode === "direct" && isPreviewingCamera ? (
                   <div className="w-full h-full bg-black flex items-center justify-center relative z-0">
                     <LiveCameraFeed className="w-full h-full object-cover" />
