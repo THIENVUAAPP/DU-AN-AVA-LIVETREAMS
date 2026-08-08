@@ -1297,6 +1297,25 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                               avatar: item.snippet.thumbnails?.default?.url || 'https://via.placeholder.com/100'
                             }));
                             setRealYouTubeAccounts(realAccounts);
+                            
+                            // 1-Touch Auto Connect Logic for YouTube
+                            // If user only has 1 channel (which is common since Google prompts to select ONE channel during OAuth)
+                            // We skip the modal and auto-connect instantly!
+                            if (realAccounts.length === 1) {
+                              const acc = realAccounts[0];
+                              executeConnectionWithCaptcha(() => {
+                                alert(`Đã ủy quyền OAuth 1-chạm thành công với kênh ${acc.name}!`);
+                                setChannels(prevChannels => prevChannels.map(c => c.id === activeChannelForConnect.id ? { 
+                                  ...c, 
+                                  status: 'connected', 
+                                  connectedAccount: acc.username,
+                                  connectedAccountName: acc.name,
+                                  connectedAccountAvatar: acc.avatar 
+                                } : c));
+                                setConnectModalOpen(false);
+                              });
+                              return; // Exit here, do not open the account selection modal
+                            }
                           }
                         } catch (err) {
                           console.error("Error fetching YouTube channels:", err);
