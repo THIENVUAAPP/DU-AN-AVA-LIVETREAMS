@@ -28,8 +28,8 @@ export const getTikTokAuthUrl = () => {
   // Standard TikTok OAuth v2 authorization endpoint
   const baseUrl = 'https://www.tiktok.com/v2/auth/authorize/';
   
-  // We use standard user.info.basic scope. (Live scopes are deprecated for public apps).
-  const scopes = ['user.info.basic'];
+  // Request basic info, advanced profile info, and stats (followers count)
+  const scopes = ['user.info.basic', 'user.info.profile', 'user.info.stats'];
   
   const params = new URLSearchParams({
     client_key: clientId,
