@@ -1288,23 +1288,41 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                             headers: { Authorization: `Bearer ${accessToken}` }
                           });
                           const data = await response.json();
+                          
+                          let realAccounts = [];
                           if (data.items && data.items.length > 0) {
-                            const realAccounts = data.items.map(item => ({
+                            realAccounts = data.items.map(item => ({
                               id: item.id,
                               username: item.snippet.customUrl || item.snippet.title,
                               name: item.snippet.title,
-                              followers: item.statistics.subscriberCount,
+                              followers: item.statistics?.subscriberCount || '0',
                               avatar: item.snippet.thumbnails?.default?.url || 'https://via.placeholder.com/100'
                             }));
+                          } else {
+                            // Fallback to Google User Profile if no YouTube channel is found
+                            const profileRes = await fetch('https://www.googleapis.com/oauth2/v1/userinfo?alt=json', {
+                              headers: { Authorization: `Bearer ${accessToken}` }
+                            });
+                            const profileData = await profileRes.json();
+                            if (profileData && profileData.id) {
+                              realAccounts = [{
+                                id: profileData.id,
+                                username: profileData.email,
+                                name: profileData.name,
+                                followers: 'Cá Nhân',
+                                avatar: profileData.picture || 'https://via.placeholder.com/100'
+                              }];
+                            }
+                          }
+                          
+                          if (realAccounts.length > 0) {
                             setRealYouTubeAccounts(realAccounts);
                             
                             // 1-Touch Auto Connect Logic for YouTube
-                            // If user only has 1 channel (which is common since Google prompts to select ONE channel during OAuth)
-                            // We skip the modal and auto-connect instantly!
                             if (realAccounts.length === 1) {
                               const acc = realAccounts[0];
                               executeConnectionWithCaptcha(() => {
-                                alert(`Đã ủy quyền OAuth 1-chạm thành công với kênh ${acc.name}!`);
+                                // Removed alert to make it instantly seamless
                                 setChannels(prevChannels => prevChannels.map(c => c.id === activeChannelForConnect.id ? { 
                                   ...c, 
                                   status: 'connected', 
@@ -1318,7 +1336,7 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                             }
                           }
                         } catch (err) {
-                          console.error("Error fetching YouTube channels:", err);
+                          console.error("Error fetching YouTube/Google profile:", err);
                         }
                       }
                       
