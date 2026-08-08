@@ -43,6 +43,59 @@ export const getTikTokAuthUrl = () => {
 };
 
 /**
+ * Generate Facebook OAuth URL
+ * Using the App ID provided by the user
+ */
+export const getFacebookAuthUrl = () => {
+  const clientId = '4491714814417984';
+  const baseUrl = 'https://www.facebook.com/v18.0/dialog/oauth';
+  
+  const scopes = [
+    'public_profile', 
+    'pages_show_list', 
+    'pages_manage_posts',
+    'pages_read_engagement',
+    'publish_video'
+  ];
+  
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: window.location.origin,
+    state: 'facebook_auth_' + Math.random().toString(36).substring(7),
+    scope: scopes.join(','),
+    response_type: 'code',
+  });
+
+  return `${baseUrl}?${params.toString()}`;
+};
+
+/**
+ * Generate YouTube (Google) OAuth URL
+ * Using the Client ID provided by the user
+ */
+export const getYouTubeAuthUrl = () => {
+  const clientId = '9359802346-f94491f7hmcl2jn9k7e6qvn25po33anc.apps.googleusercontent.com';
+  const baseUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
+  
+  const scopes = [
+    'https://www.googleapis.com/auth/youtube.readonly',
+    'https://www.googleapis.com/auth/youtube.force-ssl'
+  ];
+  
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: window.location.origin,
+    response_type: 'code',
+    scope: scopes.join(' '),
+    state: 'youtube_auth_' + Math.random().toString(36).substring(7),
+    access_type: 'offline',
+    prompt: 'consent'
+  });
+
+  return `${baseUrl}?${params.toString()}`;
+};
+
+/**
  * Listen for the OAuth code from the popup window
  * @param {string} platform - The platform we expect ('tiktok', 'facebook', etc)
  * @returns {Promise<string>} - Resolves with the authorization code

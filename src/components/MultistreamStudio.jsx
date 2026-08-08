@@ -34,7 +34,7 @@ import {
 import MultiAccountManager from './MultiAccountManager';
 import UniversalFileUploader from './UniversalFileUploader';
 import ReactPlayer from 'react-player';
-import { openOAuthPopup, getTikTokAuthUrl, listenForOAuthCode } from '../lib/oauthService';
+import { openOAuthPopup, getTikTokAuthUrl, getFacebookAuthUrl, getYouTubeAuthUrl, listenForOAuthCode } from '../lib/oauthService';
 
 let __global_local_stream = null;
 let __global_stream_promise = null;
@@ -1262,8 +1262,18 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                       openOAuthPopup(url, 'TikTok Login');
                       const code = await listenForOAuthCode('tiktok');
                       console.log("Received TikTok Auth Code:", code);
-                      // Once we have the code, we would normally send it to our backend to exchange for an access token.
-                      // Since we are mocking the backend, we just open the account selection modal.
+                      setOauthAccountSelectModalOpen(true);
+                    } else if (platform === 'facebook') {
+                      const url = getFacebookAuthUrl();
+                      openOAuthPopup(url, 'Facebook Login');
+                      const code = await listenForOAuthCode('facebook');
+                      console.log("Received Facebook Auth Code:", code);
+                      setOauthAccountSelectModalOpen(true);
+                    } else if (platform === 'youtube') {
+                      const url = getYouTubeAuthUrl();
+                      openOAuthPopup(url, 'YouTube Login');
+                      const code = await listenForOAuthCode('youtube');
+                      console.log("Received YouTube Auth Code:", code);
                       setOauthAccountSelectModalOpen(true);
                     } else {
                       // Other platforms just open the mock modal for now

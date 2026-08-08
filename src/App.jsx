@@ -82,6 +82,8 @@ export default function App() {
       // We are inside the popup window
       let platform = 'unknown';
       if (state?.startsWith('tiktok_auth_')) platform = 'tiktok';
+      else if (state?.startsWith('facebook_auth_')) platform = 'facebook';
+      else if (state?.startsWith('youtube_auth_')) platform = 'youtube';
       
       if (code) {
         window.opener.postMessage({ type: 'OAUTH_CODE', platform, code }, window.location.origin);
