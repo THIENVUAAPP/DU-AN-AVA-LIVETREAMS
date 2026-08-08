@@ -838,6 +838,12 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                     <div>
                       <div className="flex items-center gap-2">
                         <h4 className="text-sm font-bold text-white">{ch.name}</h4>
+                        {ch.status === 'connected' && ch.connectedAccountName && (
+                          <div className="flex items-center gap-1.5 ml-1 px-2 py-0.5 bg-white/10 rounded-full border border-white/20">
+                            <img src={ch.connectedAccountAvatar} alt="avatar" className="w-4 h-4 rounded-full object-cover" />
+                            <span className="text-[10px] text-gray-300 font-bold max-w-[100px] sm:max-w-[150px] truncate">{ch.connectedAccountName}</span>
+                          </div>
+                        )}
                         {(() => {
                           const hasKey = ch.streamKey && ch.streamKey.length >= 8;
                           const isChannelLive = (isLive || liveChannelIds.includes(ch.id)) && ch.status === 'connected' && hasKey;
@@ -1407,7 +1413,13 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                     setOauthAccountSelectModalOpen(false);
                     executeConnectionWithCaptcha(() => {
                       alert(`Đã ủy quyền OAuth 1-chạm thành công với tài khoản ${acc.username} (${acc.name})!`);
-                      setChannels(channels.map(c => c.id === activeChannelForConnect.id ? { ...c, status: 'connected', connectedAccount: acc.username } : c));
+                      setChannels(channels.map(c => c.id === activeChannelForConnect.id ? { 
+                        ...c, 
+                        status: 'connected', 
+                        connectedAccount: acc.username,
+                        connectedAccountName: acc.name,
+                        connectedAccountAvatar: acc.avatar 
+                      } : c));
                       setConnectModalOpen(false);
                     });
                   }}
