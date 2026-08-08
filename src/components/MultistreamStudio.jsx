@@ -905,10 +905,14 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
 
                     <button
                       onClick={() => handleOpenConnectModal(ch)}
-                      className="px-3 py-2 rounded-xl text-xs font-bold bg-white/10 text-white hover:bg-white/20 border border-white/15 flex items-center gap-1.5 cursor-pointer"
+                      className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer border ${
+                        ch.status === 'connected' 
+                          ? 'bg-blue-600/20 text-blue-300 hover:bg-blue-600/30 border-blue-500/30'
+                          : 'bg-white/10 text-white hover:bg-white/20 border-white/15'
+                      }`}
                     >
-                      <Key className="w-3.5 h-3.5 text-[#3B82F6]" />
-                      <span>KẾT NỐI KHÓA LUỒNG</span>
+                      <Key className={`w-3.5 h-3.5 ${ch.status === 'connected' ? 'text-blue-400' : 'text-[#3B82F6]'}`} />
+                      <span>{ch.status === 'connected' ? 'ĐỔI TÀI KHOẢN KẾT NỐI' : 'KẾT NỐI KHÓA LUỒNG'}</span>
                     </button>
 
                     <button
