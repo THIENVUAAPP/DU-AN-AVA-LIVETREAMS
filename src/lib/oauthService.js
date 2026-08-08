@@ -35,7 +35,7 @@ export const getTikTokAuthUrl = () => {
     client_key: clientId,
     response_type: 'code',
     scope: scopes.join(','),
-    redirect_uri: window.location.origin, // Redirect back to our root, where App.jsx intercepts it
+    redirect_uri: 'https://avalivepro.vercel.app/', // Must exactly match the TikTok Developer Portal configuration
     state: 'tiktok_auth_' + Math.random().toString(36).substring(7)
   });
 
