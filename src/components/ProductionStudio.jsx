@@ -43,7 +43,7 @@ import {
 } from 'lucide-react';
 import UniversalFileUploader from './UniversalFileUploader';
 import LiveCommerceStudio from './LiveCommerceStudio';
-import MultiCameraGrid from './MultiCameraGrid';
+
 import ScreenShareControls from './ScreenShareControls';
 import { listVideoInputDevices, openCameraStream, closeCameraStream } from '../lib/cameraDevices';
 import { startScreenShare, stopScreenShare, onScreenShareNativeStop } from '../lib/screenShare';
@@ -1909,16 +1909,6 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
               />
             </div>
           </div>
-
-          <MultiCameraGrid
-            active={multiCamGridActive}
-            onToggleActive={toggleMultiCamGrid}
-            devices={multiCamDevices}
-            slots={multiCamSlots}
-            onAssignSlot={assignMultiCamSlot}
-            onRefreshDevices={refreshMultiCamDevices}
-            videoRefsRef={multiCamVideoRefsRef}
-          />
 
           {/* Hidden video element feeding the shared-screen stream into processFrame() */}
           <video
