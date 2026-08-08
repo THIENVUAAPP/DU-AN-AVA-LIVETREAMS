@@ -1911,7 +1911,7 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
                 }`}
                 title="Bật chống quét AI (Bypass Algorithm) cho video phát lại"
               >
-                <Shield className={`w-3.5 h-3.5 ${isAntiScanActive ? 'text-white' : 'text-blue-400'}`} />
+                <ShieldCheck className={`w-3.5 h-3.5 ${isAntiScanActive ? 'text-white' : 'text-blue-400'}`} />
                 <span>{isAntiScanActive ? '🛡️ ĐANG BẢO VỆ' : '🛡️ CHỐNG QUÉT AI'}</span>
               </button>
 
