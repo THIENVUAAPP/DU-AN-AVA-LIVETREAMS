@@ -73,12 +73,16 @@ export default function App() {
 
   // Handle OAuth Popup Redirect Callback
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    const state = params.get('state');
-    const error = params.get('error');
+    // Some OAuth providers return data in the search query (?code=...), others in the hash fragment (#access_token=...)
+    const searchParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.substring(1)); // remove the '#'
 
-    if (window.opener && (code || error)) {
+    const code = searchParams.get('code');
+    const accessToken = hashParams.get('access_token');
+    const state = searchParams.get('state') || hashParams.get('state');
+    const error = searchParams.get('error') || hashParams.get('error');
+
+    if (window.opener && (code || accessToken || error)) {
       // We are inside the popup window
       let platform = 'unknown';
       if (state?.startsWith('tiktok_auth_')) platform = 'tiktok';
@@ -87,6 +91,8 @@ export default function App() {
       
       if (code) {
         window.opener.postMessage({ type: 'OAUTH_CODE', platform, code }, window.location.origin);
+      } else if (accessToken) {
+        window.opener.postMessage({ type: 'OAUTH_TOKEN', platform, accessToken }, window.location.origin);
       } else if (error) {
         window.opener.postMessage({ type: 'OAUTH_ERROR', platform, error }, window.location.origin);
       }

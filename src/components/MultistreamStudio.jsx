@@ -211,6 +211,7 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
 
   // OAuth Account Selection State
   const [oauthAccountSelectModalOpen, setOauthAccountSelectModalOpen] = useState(false);
+  const [realYouTubeAccounts, setRealYouTubeAccounts] = useState(null);
 
   const MOCK_OAUTH_ACCOUNTS = {
     TikTok: [
@@ -244,7 +245,7 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
     const name = activeChannelForConnect.name.toLowerCase();
     if (name.includes('tiktok')) return MOCK_OAUTH_ACCOUNTS.TikTok;
     if (name.includes('facebook') || name.includes('fb')) return MOCK_OAUTH_ACCOUNTS.Facebook;
-    if (name.includes('youtube')) return MOCK_OAUTH_ACCOUNTS.YouTube;
+    if (name.includes('youtube')) return realYouTubeAccounts || MOCK_OAUTH_ACCOUNTS.YouTube;
     if (name.includes('shopee')) return MOCK_OAUTH_ACCOUNTS.Shopee;
     return MOCK_OAUTH_ACCOUNTS.Default;
   };
@@ -1260,20 +1261,42 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                     if (platform === 'tiktok') {
                       const url = getTikTokAuthUrl();
                       openOAuthPopup(url, 'TikTok Login');
-                      const code = await listenForOAuthCode('tiktok');
+                      const { code } = await listenForOAuthCode('tiktok');
                       console.log("Received TikTok Auth Code:", code);
                       setOauthAccountSelectModalOpen(true);
                     } else if (platform === 'facebook') {
                       const url = getFacebookAuthUrl();
                       openOAuthPopup(url, 'Facebook Login');
-                      const code = await listenForOAuthCode('facebook');
+                      const { code } = await listenForOAuthCode('facebook');
                       console.log("Received Facebook Auth Code:", code);
                       setOauthAccountSelectModalOpen(true);
                     } else if (platform === 'youtube') {
                       const url = getYouTubeAuthUrl();
                       openOAuthPopup(url, 'YouTube Login');
-                      const code = await listenForOAuthCode('youtube');
-                      console.log("Received YouTube Auth Code:", code);
+                      const { accessToken } = await listenForOAuthCode('youtube');
+                      console.log("Received YouTube Access Token:", accessToken);
+                      
+                      if (accessToken) {
+                        try {
+                          const response = await fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&mine=true', {
+                            headers: { Authorization: `Bearer ${accessToken}` }
+                          });
+                          const data = await response.json();
+                          if (data.items && data.items.length > 0) {
+                            const realAccounts = data.items.map(item => ({
+                              id: item.id,
+                              username: item.snippet.customUrl || item.snippet.title,
+                              name: item.snippet.title,
+                              followers: item.statistics.subscriberCount,
+                              avatar: item.snippet.thumbnails?.default?.url || 'https://via.placeholder.com/100'
+                            }));
+                            setRealYouTubeAccounts(realAccounts);
+                          }
+                        } catch (err) {
+                          console.error("Error fetching YouTube channels:", err);
+                        }
+                      }
+                      
                       setOauthAccountSelectModalOpen(true);
                     } else {
                       // Other platforms just open the mock modal for now

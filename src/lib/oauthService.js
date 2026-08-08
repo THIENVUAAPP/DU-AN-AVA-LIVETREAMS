@@ -85,11 +85,11 @@ export const getYouTubeAuthUrl = () => {
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: window.location.origin,
-    response_type: 'code',
+    response_type: 'token', // Use implicit flow to get access token directly on frontend for YouTube
     scope: scopes.join(' '),
     state: 'youtube_auth_' + Math.random().toString(36).substring(7),
-    access_type: 'offline',
-    prompt: 'consent'
+    // access_type: 'offline', // Not supported in implicit flow
+    // prompt: 'consent'
   });
 
   return `${baseUrl}?${params.toString()}`;
@@ -108,7 +108,12 @@ export const listenForOAuthCode = (platform = 'tiktok') => {
 
       if (event.data?.type === 'OAUTH_CODE' && event.data?.platform === platform) {
         window.removeEventListener('message', messageListener);
-        resolve(event.data.code);
+        resolve({ code: event.data.code });
+      }
+
+      if (event.data?.type === 'OAUTH_TOKEN' && event.data?.platform === platform) {
+        window.removeEventListener('message', messageListener);
+        resolve({ accessToken: event.data.accessToken });
       }
       
       if (event.data?.type === 'OAUTH_ERROR') {
