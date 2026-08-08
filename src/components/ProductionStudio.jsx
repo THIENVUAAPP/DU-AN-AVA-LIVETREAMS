@@ -247,6 +247,10 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
   const multiCamStreamsRef = useRef([null, null, null, null]);
   const multiCamVideoRefsRef = useRef([null, null, null, null]);
 
+  // --- Anti-Scan AI Bypass Feature ---
+  const [isAntiScanActive, setIsAntiScanActive] = useState(false);
+  const antiScanActiveRef = useRef(false);
+
   // ─── Chia Sẻ Màn Hình kiểu Zoom (Module 2) ───
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [screenShareLayout, setScreenShareLayout] = useState('fullscreen');
@@ -848,13 +852,41 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
     let chromaCtx = null;
 
     const processFrame = () => {
+      const applyAntiScan = () => {
+        if (antiScanActiveRef.current && canvasRef.current) {
+          const c = canvasRef.current;
+          const cx = c.getContext("2d");
+          const cw = c.width;
+          const ch = c.height;
+          if (cw > 0 && ch > 0) {
+            cx.save();
+            const time = performance.now();
+            // 1. Dynamic Noise Overlay (1.5% opacity)
+            cx.fillStyle = `rgba(${Math.random()*255},${Math.random()*255},${Math.random()*255},0.015)`;
+            cx.fillRect(0, 0, cw, ch);
+            // 2. Micro Color Shifting
+            cx.globalCompositeOperation = 'overlay';
+            cx.fillStyle = `hsla(${(time / 50) % 360}, 50%, 50%, 0.01)`;
+            cx.fillRect(0, 0, cw, ch);
+            // 3. Invisible Timestamp to guarantee unique frames
+            cx.globalCompositeOperation = 'source-over';
+            cx.fillStyle = `rgba(255,255,255,0.02)`;
+            cx.font = '8px monospace';
+            cx.fillText(Date.now().toString(16), 2, 8);
+            cx.restore();
+          }
+        }
+      };
+
       if (isScreenSharingRef.current) {
         drawScreenShareComposite(canvasRef.current);
+        applyAntiScan();
         animId = requestAnimationFrame(processFrame);
         return;
       }
       if (multiCamGridActiveRef.current) {
         drawMultiCamGrid(canvasRef.current);
+        applyAntiScan();
         animId = requestAnimationFrame(processFrame);
         return;
       }
@@ -983,6 +1015,8 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
           }
         }
       }
+
+      applyAntiScan();
       animId = requestAnimationFrame(processFrame);
     };
 
@@ -1856,6 +1890,29 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
               >
                 <Zap className="w-3.5 h-3.5 text-yellow-300" />
                 <span>{ultraAntiLagMode ? '60FPS' : '⚪ MƯỢT THƯỜNG'}</span>
+              </button>
+
+              {/* Anti-Scan AI Bypass Toggle */}
+              <button
+                onClick={() => {
+                  const newState = !isAntiScanActive;
+                  setIsAntiScanActive(newState);
+                  antiScanActiveRef.current = newState;
+                  if (newState) {
+                    alert('🛡️ ĐÃ BẬT CHẾ ĐỘ CHỐNG QUÉT AI (OBS BYPASS)!\n\nHệ thống sẽ tự động thêm nhiễu hạt động, lắc khung hình vi điểm và nhúng mã thời gian tàng hình vào luồng phát để đánh lừa thuật toán quét video phát lại của TikTok/Shopee.');
+                  } else {
+                    alert('🛑 Đã tắt chế độ Chống Quét AI.');
+                  }
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer border ${
+                  isAntiScanActive
+                    ? 'bg-blue-600 text-white border-blue-400 shadow-glow-blue animate-pulse'
+                    : 'bg-gray-800 text-gray-400 border-gray-700 hover:bg-gray-700'
+                }`}
+                title="Bật chống quét AI (Bypass Algorithm) cho video phát lại"
+              >
+                <Shield className={`w-3.5 h-3.5 ${isAntiScanActive ? 'text-white' : 'text-blue-400'}`} />
+                <span>{isAntiScanActive ? '🛡️ ĐANG BẢO VỆ' : '🛡️ CHỐNG QUÉT AI'}</span>
               </button>
 
               {/* RECORD VIDEO BUTTON */}
