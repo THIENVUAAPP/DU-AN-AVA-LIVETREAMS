@@ -43,6 +43,11 @@ import {
 } from 'lucide-react';
 import UniversalFileUploader from './UniversalFileUploader';
 import LiveCommerceStudio from './LiveCommerceStudio';
+import MultiCameraGrid from './MultiCameraGrid';
+import ScreenShareControls from './ScreenShareControls';
+import { listVideoInputDevices, openCameraStream, closeCameraStream } from '../lib/cameraDevices';
+import { startScreenShare, stopScreenShare, onScreenShareNativeStop } from '../lib/screenShare';
+import { createBeautyEngine } from '../lib/beautyEngine/webglBeauty';
 
 export const BEAUTY_PRESETS_30 = [
   // Nhóm 1: Làn Da Rạng Rỡ & Căng Bóng (1-6)
@@ -234,6 +239,31 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
   );
   const [viewMode, setViewMode] = useState('full-body');
 
+  // ─── Lưới Đa Camera Thật (Module 1) ───
+  const [multiCamDevices, setMultiCamDevices] = useState([]);
+  const [multiCamSlots, setMultiCamSlots] = useState([null, null, null, null]);
+  const [multiCamGridActive, setMultiCamGridActive] = useState(false);
+  const multiCamGridActiveRef = useRef(false);
+  const multiCamStreamsRef = useRef([null, null, null, null]);
+  const multiCamVideoRefsRef = useRef([null, null, null, null]);
+
+  // ─── Chia Sẻ Màn Hình kiểu Zoom (Module 2) ───
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [screenShareLayout, setScreenShareLayout] = useState('fullscreen');
+  const isScreenSharingRef = useRef(false);
+  const screenShareLayoutRef = useRef('fullscreen');
+  const screenShareStreamRef = useRef(null);
+  const screenShareVideoRef = useRef(null);
+  const screenShareCleanupRef = useRef(null);
+
+  // ─── Beauty Engine v2 — WebGL + MediaPipe Face Landmarker (Module 3) ───
+  const [eyeEnlarge, setEyeEnlarge] = useState(0);
+  const [beautyEngineDegraded, setBeautyEngineDegraded] = useState(false);
+  const eyeEnlargeRef = useRef(0);
+  const faceSlimRef = useRef(0);
+  const beautyEngineRef = useRef(null);
+  const beautyEngineActiveThisFrameRef = useRef(false);
+
   // Live Beauty Controls — defaults are natural/neutral
   const [skinSmooth, setSkinSmooth] = useState(50);
   const [skinBright, setSkinBright] = useState(50);
@@ -276,6 +306,119 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
   useEffect(() => { chromaSmoothnessRef.current = chromaSmoothness; }, [chromaSmoothness]);
   useEffect(() => { bgBlurPxRef.current = bgBlurPx; }, [bgBlurPx]);
   useEffect(() => { eyeSparkleRef.current = eyeSparkle; }, [eyeSparkle]);
+  useEffect(() => { multiCamGridActiveRef.current = multiCamGridActive; }, [multiCamGridActive]);
+  useEffect(() => { isScreenSharingRef.current = isScreenSharing; }, [isScreenSharing]);
+  useEffect(() => { screenShareLayoutRef.current = screenShareLayout; }, [screenShareLayout]);
+  useEffect(() => { eyeEnlargeRef.current = eyeEnlarge; }, [eyeEnlarge]);
+  useEffect(() => { faceSlimRef.current = faceSlim; }, [faceSlim]);
+
+  // ─── Module 1: Lưới Đa Camera Thật — handlers ───
+  const refreshMultiCamDevices = async () => {
+    try {
+      const list = await listVideoInputDevices();
+      setMultiCamDevices(list);
+    } catch (err) {
+      console.error('Không thể liệt kê danh sách camera:', err);
+    }
+  };
+
+  useEffect(() => { refreshMultiCamDevices(); }, []);
+
+  const assignMultiCamSlot = async (slotIndex, deviceId) => {
+    const oldStream = multiCamStreamsRef.current[slotIndex];
+    if (oldStream) closeCameraStream(oldStream);
+    multiCamStreamsRef.current[slotIndex] = null;
+    const videoEl = multiCamVideoRefsRef.current[slotIndex];
+    if (videoEl) videoEl.srcObject = null;
+
+    setMultiCamSlots((prev) => {
+      const next = [...prev];
+      next[slotIndex] = deviceId;
+      return next;
+    });
+
+    if (!deviceId) return;
+
+    try {
+      const stream = await openCameraStream(deviceId);
+      multiCamStreamsRef.current[slotIndex] = stream;
+      const el = multiCamVideoRefsRef.current[slotIndex];
+      if (el) {
+        el.srcObject = stream;
+        el.play().catch((e) => console.error(`Lỗi phát camera ở ô ${slotIndex + 1}:`, e));
+      }
+      await refreshMultiCamDevices();
+    } catch (err) {
+      console.error(`Không thể mở camera cho ô ${slotIndex + 1}:`, err);
+      alert(`Không thể mở camera đã chọn cho ô ${slotIndex + 1}: ${err.message}`);
+      setMultiCamSlots((prev) => {
+        const next = [...prev];
+        next[slotIndex] = null;
+        return next;
+      });
+    }
+  };
+
+  const toggleMultiCamGrid = () => setMultiCamGridActive((v) => !v);
+
+  useEffect(() => {
+    return () => {
+      multiCamStreamsRef.current.forEach((s) => closeCameraStream(s));
+    };
+  }, []);
+
+  // ─── Module 2: Chia Sẻ Màn Hình — handlers ───
+  const handleStartScreenShare = async () => {
+    try {
+      const stream = await startScreenShare();
+      if (!stream) return; // user đã bấm Hủy ở popup chọn màn hình
+      screenShareStreamRef.current = stream;
+      if (screenShareVideoRef.current) {
+        screenShareVideoRef.current.srcObject = stream;
+        screenShareVideoRef.current.play().catch((e) => console.error('Lỗi phát màn hình chia sẻ:', e));
+      }
+      screenShareCleanupRef.current = onScreenShareNativeStop(stream, () => {
+        handleStopScreenShare();
+      });
+      setIsScreenSharing(true);
+    } catch (err) {
+      console.error('Lỗi chia sẻ màn hình:', err);
+      alert(`Không thể chia sẻ màn hình: ${err.message}`);
+    }
+  };
+
+  const handleStopScreenShare = () => {
+    if (screenShareCleanupRef.current) {
+      screenShareCleanupRef.current();
+      screenShareCleanupRef.current = null;
+    }
+    stopScreenShare(screenShareStreamRef.current);
+    screenShareStreamRef.current = null;
+    if (screenShareVideoRef.current) screenShareVideoRef.current.srcObject = null;
+    setIsScreenSharing(false);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (screenShareCleanupRef.current) screenShareCleanupRef.current();
+      stopScreenShare(screenShareStreamRef.current);
+    };
+  }, []);
+
+  // ─── Module 3: Beauty Engine v2 — khởi tạo 1 lần, tự fallback nếu lỗi ───
+  useEffect(() => {
+    const engine = createBeautyEngine({
+      onError: (err) => {
+        console.error('Beauty Engine v2 không khả dụng, dùng lại chế độ CSS cơ bản:', err);
+        setBeautyEngineDegraded(true);
+      },
+    });
+    beautyEngineRef.current = engine;
+    return () => {
+      engine.destroy();
+      beautyEngineRef.current = null;
+    };
+  }, []);
 
   // Shared filter-string builder — single source of truth for beauty/sharpness
   // across every background mode (off / preset / blur / chroma), so cutout
@@ -574,7 +717,9 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
             // subject back over the sharp base, weighted by the Skin Smooth slider, so
             // "smooth" actually softens skin texture instead of only nudging CSS contrast.
             // Capped alpha keeps eyes/mouth/hair legible (no plastic/melted look).
-            const smoothAmt = Math.max(0, (sVal - 50) / 50); // 0..1 as slider goes 50→100
+            // Bỏ qua bước này khi Beauty Engine v2 (WebGL) đang xử lý — results.image lúc
+            // đó đã là frame đã được làm mịn da theo landmark thật, tránh làm mịn 2 lần.
+            const smoothAmt = beautyEngineActiveThisFrameRef.current ? 0 : Math.max(0, (sVal - 50) / 50); // 0..1 as slider goes 50→100
             if (smoothAmt > 0.02) {
               const softBlurPx = (2 + smoothAmt * 5) * (W / 1920);
               targetCtx.save();
@@ -617,6 +762,85 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
   const chromaCanvasRef = useRef(null);
   const masterPersonCanvasRef = useRef(null);
 
+  // Vẽ lưới 2x2 từ các camera vật lý thật đã gán vào multiCamSlots (Module 1)
+  const drawMultiCamGrid = (canvas) => {
+    if (!canvas) return;
+    const W = 1280, H = 720;
+    if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; }
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, W, H);
+    const cellW = W / 2, cellH = H / 2;
+    multiCamVideoRefsRef.current.forEach((videoEl, i) => {
+      const col = i % 2, row = Math.floor(i / 2);
+      const x = col * cellW, y = row * cellH;
+      if (!videoEl || !videoEl.srcObject || videoEl.readyState < 2) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.strokeRect(x, y, cellW, cellH);
+        return;
+      }
+      ctx.save();
+      ctx.filter = buildLiveFilterCSS(false);
+      ctx.drawImage(videoEl, x, y, cellW, cellH);
+      ctx.restore();
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, cellW, cellH);
+    });
+  };
+
+  // Vẽ chia sẻ màn hình theo 1 trong 3 layout kiểu Zoom (Module 2)
+  const drawScreenShareComposite = (canvas) => {
+    const screenVideo = screenShareVideoRef.current;
+    if (!canvas || !screenVideo || screenVideo.readyState < 2 || screenVideo.videoWidth === 0) return;
+    const W = screenVideo.videoWidth, H = screenVideo.videoHeight;
+    if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; }
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, W, H);
+
+    const layout = screenShareLayoutRef.current;
+    const camVideo = webcamVideoRef.current;
+    const hasCam = webcamActive && camVideo && camVideo.readyState >= 2 && camVideo.videoWidth > 0;
+
+    if (layout === 'sidebyside') {
+      ctx.drawImage(screenVideo, 0, 0, W / 2, H);
+      if (hasCam) {
+        ctx.save();
+        ctx.filter = buildLiveFilterCSS(true);
+        ctx.drawImage(camVideo, W / 2, 0, W / 2, H);
+        ctx.restore();
+      }
+      return;
+    }
+
+    // fullscreen (mặc định) + pip đều vẽ màn hình phủ toàn khung trước
+    ctx.drawImage(screenVideo, 0, 0, W, H);
+
+    if (layout === 'pip' && hasCam) {
+      const bubbleW = W * 0.22;
+      const bubbleH = bubbleW * (camVideo.videoHeight / camVideo.videoWidth || 9 / 16);
+      const bx = W - bubbleW - 24;
+      const by = H - bubbleH - 24;
+      ctx.save();
+      ctx.filter = buildLiveFilterCSS(true);
+      ctx.beginPath();
+      ctx.roundRect(bx, by, bubbleW, bubbleH, 12);
+      ctx.clip();
+      ctx.drawImage(camVideo, bx, by, bubbleW, bubbleH);
+      ctx.restore();
+      ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(bx, by, bubbleW, bubbleH, 12);
+      ctx.stroke();
+    }
+  };
+
   // Smooth 60FPS Frame Loop with 33ms Non-Blocking Cadence
   useEffect(() => {
     let animId;
@@ -624,6 +848,17 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
     let chromaCtx = null;
 
     const processFrame = () => {
+      if (isScreenSharingRef.current) {
+        drawScreenShareComposite(canvasRef.current);
+        animId = requestAnimationFrame(processFrame);
+        return;
+      }
+      if (multiCamGridActiveRef.current) {
+        drawMultiCamGrid(canvasRef.current);
+        animId = requestAnimationFrame(processFrame);
+        return;
+      }
+
       const video = webcamVideoRef.current;
       const canvas = canvasRef.current;
       if (webcamActive && video && canvas && video.readyState >= 2 && video.videoWidth > 0) {
@@ -634,6 +869,21 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
         const mode = bgRemovalModeRef.current;
         const now = performance.now();
 
+        // Beauty Engine v2 (WebGL) — chạy trước, kết quả thay thế "video" làm nguồn
+        // cho mọi bước vẽ/tách nền phía sau. Nếu engine chưa sẵn sàng/lỗi, dùng
+        // thẳng video gốc (fallback về pipeline CSS filter hiện có, không đổi gì).
+        const engine = beautyEngineRef.current;
+        if (engine) {
+          engine.render(video, {
+            skinSmooth: Math.max(0, (skinSmoothRef.current - 50) / 50),
+            eyeEnlarge: eyeEnlargeRef.current / 100,
+            vline: faceSlimRef.current / 100,
+          });
+        }
+        const beautyActive = !!(engine && engine.isReady());
+        beautyEngineActiveThisFrameRef.current = beautyActive;
+        const beautySource = beautyActive ? engine.canvas : video;
+
         const ctx = canvas.getContext("2d");
         if (ctx) {
           ctx.imageSmoothingEnabled = true;
@@ -642,7 +892,7 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
           if (mode === "off") {
             ctx.clearRect(0, 0, W, H);
             ctx.filter = buildLiveFilterCSS(true);
-            ctx.drawImage(video, 0, 0, W, H);
+            ctx.drawImage(beautySource, 0, 0, W, H);
             ctx.filter = "none";
           } else if (mode === "preset") {
             ctx.clearRect(0, 0, W, H);
@@ -651,7 +901,7 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
               ctx.drawImage(masterPersonCanvasRef.current, 0, 0);
             } else {
               ctx.filter = buildLiveFilterCSS(true);
-              ctx.drawImage(video, 0, 0, W, H);
+              ctx.drawImage(beautySource, 0, 0, W, H);
               ctx.filter = "none";
             }
 
@@ -659,7 +909,7 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
               if (!isProcessingRef.current && (now - lastSendTimeRef.current >= 30)) {
                 isProcessingRef.current = true;
                 lastSendTimeRef.current = now;
-                selfieSegRef.current.send({ image: video })
+                selfieSegRef.current.send({ image: beautySource })
                   .catch(() => {})
                   .finally(() => { isProcessingRef.current = false; });
               }
@@ -670,7 +920,7 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
             ctx.clearRect(0, 0, W, H);
             ctx.save();
             ctx.filter = `blur(${blurPx}px) brightness(0.95)`;
-            ctx.drawImage(video, 0, 0, W, H);
+            ctx.drawImage(beautySource, 0, 0, W, H);
             ctx.restore();
 
             if (masterPersonCanvasRef.current) {
@@ -681,7 +931,7 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
               if (!isProcessingRef.current && (now - lastSendTimeRef.current >= 30)) {
                 isProcessingRef.current = true;
                 lastSendTimeRef.current = now;
-                selfieSegRef.current.send({ image: video })
+                selfieSegRef.current.send({ image: beautySource })
                   .catch(() => {})
                   .finally(() => { isProcessingRef.current = false; });
               }
@@ -703,7 +953,7 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
             chromaCtx.imageSmoothingEnabled = true;
             chromaCtx.imageSmoothingQuality = "high";
             chromaCtx.clearRect(0, 0, CW, CH);
-            chromaCtx.drawImage(video, 0, 0, CW, CH);
+            chromaCtx.drawImage(beautySource, 0, 0, CW, CH);
             const imgData = chromaCtx.getImageData(0, 0, CW, CH);
             const cd = imgData.data;
             const tol = chromaToleranceRef.current || 45;
@@ -1649,14 +1899,47 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
                 <Video className="w-4 h-4 text-white" />
                 <span>{isZoomLiveActive ? '🔴 ĐANG PHÁT LIVE TRÊN ZOOM (ACTIVE)' : '🎥 1-CHẠM KẾT NỐI LIVE ZOOM'}</span>
               </button>
+
+              <ScreenShareControls
+                isSharing={isScreenSharing}
+                layout={screenShareLayout}
+                onStart={handleStartScreenShare}
+                onStop={handleStopScreenShare}
+                onChangeLayout={setScreenShareLayout}
+              />
             </div>
           </div>
+
+          <MultiCameraGrid
+            active={multiCamGridActive}
+            onToggleActive={toggleMultiCamGrid}
+            devices={multiCamDevices}
+            slots={multiCamSlots}
+            onAssignSlot={assignMultiCamSlot}
+            onRefreshDevices={refreshMultiCamDevices}
+            videoRefsRef={multiCamVideoRefsRef}
+          />
+
+          {/* Hidden video element feeding the shared-screen stream into processFrame() */}
+          <video
+            ref={screenShareVideoRef}
+            autoPlay
+            playsInline
+            muted
+            style={{ display: 'none' }}
+          />
+
+          {beautyEngineDegraded && (
+            <div className="px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-bold">
+              ⚠️ Không tải được Beauty Engine v2 (WebGL) — đang dùng chế độ làm đẹp cơ bản (CSS Filter).
+            </div>
+          )}
 
           {/* MASTER STUDIO PRODUCTION STAGE */}
           <div className="relative aspect-video rounded-3xl overflow-hidden bg-black shadow-2xl transform-gpu border border-white/15">
 
             {/* Active Real-time Canvas Stage — full composite: BG + person + beauty */}
-            {webcamActive ? (
+            {(webcamActive || isScreenSharing || multiCamGridActive) ? (
               <>
                 <video
                   ref={webcamVideoRef}
@@ -2322,6 +2605,15 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
                 </div>
                 <input type="range" min="0" max="100" value={eyeSparkle}
                   onChange={(e) => setEyeSparkle(Number(e.target.value))} className="w-full accent-cyan-400" />
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center justify-between font-bold text-gray-300">
+                  <span>👀 To Mắt AI (Eye Enlarge — WebGL)</span>
+                  <span className="text-cyan-400 w-8 text-right">{eyeEnlarge}%</span>
+                </div>
+                <input type="range" min="0" max="100" value={eyeEnlarge}
+                  onChange={(e) => setEyeEnlarge(Number(e.target.value))} className="w-full accent-cyan-300" />
               </div>
 
               {/* GROUP 3: KHUÔN MẶT */}

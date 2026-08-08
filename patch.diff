@@ -1,0 +1,245 @@
+diff --git "a/l\303\240m \304\221\341\272\271p (1).md" "b/l\303\240m \304\221\341\272\271p (1).md"
+new file mode 100644
+index 0000000..70fff04
+--- /dev/null
++++ "b/l\303\240m \304\221\341\272\271p (1).md"	
+@@ -0,0 +1,115 @@
++# 🚀 BẢN ĐẶC TẢ KỸ THUẬT & HỆ THỐNG PROMPT AI CAO CẤP
++## DỰ ÁN: XÂY DỰNG LÕI HIỆU ỨNG (ENGINE) CHUẨN CAPCUT / BYTEPLUS
++---
++
++**Mục tiêu:** Bản tài liệu này được thiết kế như một "bản vẽ thi công" chi tiết nhất để anh giao cho đội ngũ Developer hoặc dùng trực tiếp với các AI lập trình (như Claude 3.5 Sonnet, GPT-4o, Cursor). Nó sẽ tạo ra một Core Engine xử lý AR, Làm đẹp, VFX, Audio bằng công nghệ Open-source (C++, OpenGL, MediaPipe), có thể dễ dàng nhúng (embed) vào phần mềm Livestream và phần mềm Edit Video hiện tại của anh.
++
++---
++
++## PHẦN 1: TỔNG QUAN KIẾN TRÚC HỆ THỐNG (TECH STACK)
++Để đạt sức mạnh như CapCut, hệ thống KHÔNG xử lý bằng CPU (sẽ rất giật lag). Tất cả phải được đẩy xuống GPU.
++*   **Ngôn ngữ lõi (Core Engine):** `C++` (Bắt buộc để đảm bảo tốc độ Real-time 60FPS).
++*   **Xử lý đồ họa & Hiệu ứng:** `OpenGL` (hoặc Vulkan/Metal tùy nền tảng). Sử dụng `GLSL Shaders` để làm mượt da, bóp mặt, áp màu.
++*   **AI Models (Face/Body/Matting):** `Google MediaPipe` (C++ API). Nhanh, nhẹ, miễn phí, chính xác cao.
++*   **Xử lý Audio:** `SoLoud` (C++) để phát SFX độ trễ thấp hoặc `RtAudio` để mix luồng âm thanh Livestream.
++*   **Xử lý Video (VOD):** `FFmpeg` (C API) để giải mã (decode) và đóng gói (encode) video.
++
++---
++
++## PHẦN 2: BỘ CÂU LỆNH (PROMPT) CHO CLAUDE ĐỂ CODE HOÀN CHỈNH
++
++*Hướng dẫn sử dụng: Anh hãy copy từng hộp Prompt dưới đây, gửi cho Claude 3.5 Sonnet (hoặc Cursor AI). Đợi AI code xong và chạy thử thành công Module 1 mới tiếp tục gửi Prompt Module 2.*
++
++### 🟩 MODULE 1: CORE TRACKING (NHẬN DIỆN KHUÔN MẶT CẤP ĐỘ CAO)
++**Chức năng:** Lấy tọa độ 468 điểm trên khuôn mặt theo thời gian thực (Real-time). Đây là nền tảng bắt buộc để làm tính năng trang điểm và bóp mặt.
++
++> **Prompt cho Claude:**
++> "Đóng vai một chuyên gia C++ và Computer Vision. Hãy viết cho tôi một Module C++ sử dụng Google MediaPipe (C++ API) để thực hiện Face Tracking. 
++> Yêu cầu chi tiết:
++> 1. Input: Luồng video/camera (cv::Mat từ OpenCV).
++> 2. Quá trình: Đưa frame vào MediaPipe Face Mesh model.
++> 3. Output: Trả về một struct/class chứa tọa độ (x, y, z) của 468 landmarks trên khuôn mặt.
++> 4. Tối ưu hóa: Phải chạy luồng bất đồng bộ (Asynchronous/Multi-threading) để không block main thread, đảm bảo đạt 60FPS. 
++> 5. Cung cấp mã nguồn CMakeLists.txt đầy đủ để tôi có thể build được trên môi trường Windows/Mac. Viết code theo chuẩn OOP, dễ dàng tích hợp vào dự án C++ có sẵn."
++
++---
++
++### 🟩 MODULE 2: BEAUTY & FACE RESHAPE (LÀM ĐẸP VÀ BÓP MẶT NHƯ CAPCUT)
++**Chức năng:** Làm mịn da đỉnh cao không lẹm vào tóc/mắt; bóp cằm, gọt mặt, làm to mắt.
++
++> **Prompt cho Claude:**
++> "Bây giờ, hãy viết hệ thống Làm đẹp (Beauty Engine) bằng OpenGL (GLSL Shaders) tích hợp với C++. 
++> Tôi đã có tọa độ 468 điểm từ MediaPipe. Hãy thực hiện 2 tính năng sau:
++> 
++> 1. Tính năng Skin Smoothing (Làm mịn da): Viết một Fragment Shader sử dụng thuật toán 'Bilateral Filter' hoặc 'Edge-Preserving Blur'. Sử dụng mask (mặt nạ) từ tọa độ khuôn mặt để CHỈ làm mịn vùng da, giữ nguyên độ nét của mắt, lông mày, môi và phông nền.
++> 2. Tính năng Face Reshaping (Bóp mặt, to mắt): Viết một Vertex Shader / Fragment Shader thực hiện 'Image Warping' (Biến dạng lưới). Sử dụng thuật toán Local Translation / Liquify:
++> - Thuật toán kéo giãn ảnh ở tọa độ điểm mắt (để làm to mắt).
++> - Thuật toán bóp ảnh ở mảng tọa độ cằm/má (gọt mặt V-line).
++> - Thêm các tham số Uniform (float level_smooth, float level_eye_enlarge, float level_v_line) từ 0.0 đến 1.0 để tôi có thể làm thanh trượt (slider) trên UI cho người dùng điều chỉnh.
++> Cung cấp toàn bộ mã nguồn GLSL và C++ OpenGL wrapper để load các shader này."
++
++---
++
++### 🟩 MODULE 3: AI BACKGROUND MATTING (TÁCH NỀN/THAY PHÔNG ẢO)
++**Chức năng:** Tách người ra khỏi nền không cần phông xanh (Green Screen) như chức năng Remove Background của CapCut.
++
++> **Prompt cho Claude:**
++> "Viết một module C++ thực hiện tính năng Real-time Background Matting (Tách nền).
++> Yêu cầu:
++> 1. Sử dụng MediaPipe Selfie Segmentation (C++ API) để tạo ra Alpha Mask (Mặt nạ trong suốt) của người.
++> 2. Viết một OpenGL Shader nhận 2 texture: Texture Camera (chứa người) và Texture Background (Ảnh/Video nền ảo do người dùng chọn), cùng với Alpha Mask.
++> 3. Shader thực hiện trộn (Alpha Blending): Nếu Alpha = 1 (Người) thì lấy pixel từ Camera, nếu Alpha = 0 (Nền) thì lấy pixel từ Texture Background. Cần có Feather (làm mờ viền) ở mép Alpha Mask để tóc và viền cơ thể trông tự nhiên, không bị răng cưa.
++> 4. Hãy đảm bảo code C++ quản lý tối ưu bộ nhớ Texture trên GPU (VRAM) để tránh Memory Leak."
++
++---
++
++### 🟩 MODULE 4: DYNAMIC VFX & COLOR GRADING (HIỆU ỨNG VÀ MÀU SẮC)
++**Chức năng:** Các hiệu ứng chuyển động thời thượng (Glitch, Shake, Flash) và bộ lọc màu (LUTs).
++
++> **Prompt cho Claude:**
++> "Viết một thư viện OpenGL C++ quản lý Pipeline Hiệu ứng (Video Effects) theo chuỗi. 
++> 1. Tính năng LUT (Color Grading): Viết một Fragment Shader đọc file 3D LUT (.cube đã chuyển sang 3D Texture) để áp màu nghệ thuật cho khung hình. Khai báo tham số Uniform intensity (0.0 - 1.0) để chỉnh độ đậm nhạt của màu.
++> 2. Tính năng Motion VFX: Viết 3 Shaders cơ bản của CapCut:
++> - RGB Glitch: Tách kênh màu R, G, B và dịch chuyển tọa độ X theo hàm Sine và Time.
++> - Camera Shake/Zoom: Scale matrix kết hợp hàm dao động (Perlin Noise hoặc Sine) tác động lên Vertex Shader để tạo hiệu ứng rung bóp khung hình.
++> - Flash/Strobe: Blend màu trắng với khung hình theo chu kỳ thời gian (Time).
++> 3. Trình quản lý C++ (Effect Manager): Cho phép tôi truyền vào danh sách các hiệu ứng (ví dụ: áp LUT trước -> rồi đến Glitch -> rồi mới xuất ra màn hình). Code cần linh hoạt để tôi thêm hàng trăm Shader khác sau này."
++
++---
++
++### 🟩 MODULE 5: REAL-TIME SOUNDBOARD (CHO LIVESTREAM) & AUDIO MIXING
++**Chức năng:** Bảng điều khiển âm thanh meme (SFX), bấm phím tắt là phát, tự động mix vào luồng Mic để Livestream.
++
++> **Prompt cho Claude:**
++> "Viết một hệ thống Audio Manager bằng C++ sử dụng thư viện SoLoud hoặc RtAudio dành cho phần mềm Livestream.
++> Chức năng yêu cầu:
++> 1. Lấy luồng Microphone hiện tại của hệ điều hành.
++> 2. Quản lý một Soundboard (Kho SFX): Có thể load nhiều file âm thanh ngắn (.wav, .mp3) vào RAM để chờ sẵn (Cache).
++> 3. Chức năng Global Hotkey (Phím tắt toàn cục): Lắng nghe sự kiện bàn phím. Ví dụ người dùng bấm Numpad 1, lập tức Play(file_sfx_1).
++> 4. Audio Mixing (Trộn âm): Trộn tín hiệu âm thanh của SFX đang phát vào chung với luồng Microphone (tính toán PCM data) để tạo ra một Virtual Audio Device (Thiết bị âm thanh ảo) xuất ra cho các phần mềm khác, hoặc đẩy trực tiếp lên luồng RTMP/WebRTC của phần mềm Livestream đang có.
++> 5. Có hàm SetVolume() độc lập cho Mic và SFX."
++
++---
++
++### 🟩 MODULE 6: HỆ THỐNG CLOUD ASSETS (TẢI TÀI NGUYÊN ĐỘNG)
++**Chức năng:** Hệ thống tải Effect, Sticker từ Server về, không làm nặng file cài đặt gốc.
++
++> **Prompt cho Claude:**
++> "Viết một module C++ (hoặc Node.js/C# tùy thuộc vào backend của app) để xử lý việc Dynamic Asset Download (Tải tài nguyên động) giống CapCut.
++> 1. Có một hàm gọi API (REST/JSON) về Server để lấy danh sách các Effect/Filter mới nhất (gồm ID, Tên, URL ảnh Thumbnail, URL file .zip của Effect, Phiên bản).
++> 2. Lưu danh sách này vào SQLite hoặc JSON local. Hiển thị Thumbnail lên UI.
++> 3. Khi người dùng click vào một Effect chưa được tải, thực hiện tải file .zip bất đồng bộ, hiển thị % Progress. Tải xong thì giải nén vào thư mục %AppData%/MyStudio/Effects/ID_Effect.
++> 4. Quản lý Cache: Nếu file đã tải, lần sau click vào sẽ lập tức load từ thư mục Local lên Effect Manager (của Module 4). Xử lý an toàn các lỗi rớt mạng khi đang tải."
++
++---
++
++## PHẦN 3: HƯỚNG DẪN TÍCH HỢP CHO ĐỘI NGŨ CỦA ANH
++Sau khi Claude viết xong 6 Module trên, anh sẽ có một tập hợp các thư viện `.dll` (Windows) hoặc `.so`/`.dylib` (Mac/Linux), cùng với các file `Header (.h)`.
++Đội ngũ Dev đang quản lý app Edit và Livestream của anh chỉ cần làm các bước sau:
++
++1. **Khởi tạo Engine:** Đặt hàm `BeautyEngine::Init()` vào đầu vòng đời phần mềm của anh.
++2. **Chèn luồng Video (Livestream):** Trước khi đưa hình ảnh từ Camera lên màn hình preview hoặc đẩy lên RTMP, hãy chèn hàm `Frame = BeautyEngine::Process(Frame, configs)` vào giữa. `configs` là các thông số do người dùng kéo trên màn hình (mịn da 50%, to mắt 30%).
++3. **Chèn luồng Video (Edit VOD):** Khi Render Timeline, lấy từng frame của Video gốc chèn qua Engine để áp Shader, sau đó đẩy ngược lại FFmpeg để xuất file MP4.
++4. **Tuyển dụng & Vận hành:** Phần khó nhất đã được giải quyết bằng AI. Tiền vốn tiết kiệm được (đáng lẽ phải mua CapCut SDK), anh hãy đập vào việc thuê 2-3 bạn **Motion Designer** chuyên làm hiệu ứng 3D, Shader và file âm thanh Meme (cắt ghép file hot trend trên Tiktok). Hệ sinh thái của anh có sống được hay không nằm ở kho Content (tài nguyên) này cập nhật nhanh hay chậm.
++
++Chúc anh triển khai dự án bùng nổ và thành công rực rỡ!
+diff --git a/src/components/MultistreamStudio.jsx b/src/components/MultistreamStudio.jsx
+index 5e8e6a2..4fcae54 100644
+--- a/src/components/MultistreamStudio.jsx
++++ b/src/components/MultistreamStudio.jsx
+@@ -1,5 +1,6 @@
+ import React, { useState, useRef } from 'react';
+ import { 
++  Users,
+   Share2, 
+   Tv, 
+   CheckCircle2, 
+@@ -208,6 +209,46 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
+   const [connectModalOpen, setConnectModalOpen] = useState(false);
+   const [activeChannelForConnect, setActiveChannelForConnect] = useState(null);
+ 
++  // OAuth Account Selection State
++  const [oauthAccountSelectModalOpen, setOauthAccountSelectModalOpen] = useState(false);
++
++  const MOCK_OAUTH_ACCOUNTS = {
++    TikTok: [
++      { id: 'tt1', username: '@tiktok_seller_1', name: 'Shop Bán Hàng 01', followers: '1.2M', avatar: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=100&q=80' },
++      { id: 'tt2', username: '@ava_shop_pro', name: 'AVA Official', followers: '450K', avatar: 'https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=100&q=80' },
++      { id: 'tt3', username: '@livestream_pro', name: 'LiveStream Pro', followers: '20K', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80' },
++      { id: 'tt4', username: '@mypham_auth', name: 'Mỹ Phẩm Auth', followers: '89K', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&q=80' },
++      { id: 'tt5', username: '@thoitrang_nu', name: 'Thời Trang Nữ', followers: '500K', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&q=80' }
++    ],
++    Facebook: [
++      { id: 'fb1', username: 'Fanpage Mỹ Phẩm VIP', name: 'Mỹ Phẩm VIP', followers: '2.5M', avatar: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=100&q=80' },
++      { id: 'fb2', username: 'Kho Sỉ Quần Áo', name: 'Kho Sỉ Lẻ', followers: '100K', avatar: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=100&q=80' },
++      { id: 'fb3', username: 'Gia Dụng Smart', name: 'Gia Dụng Thông Minh', followers: '350K', avatar: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=100&q=80' }
++    ],
++    YouTube: [
++      { id: 'yt1', username: 'Công Nghệ 24h', name: 'Review Công Nghệ', followers: '1M', avatar: 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=100&q=80' },
++      { id: 'yt2', username: 'Gamer Pro VN', name: 'Gamer Pro', followers: '50K', avatar: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=100&q=80' }
++    ],
++    Shopee: [
++      { id: 'sh1', username: 'shopee_mall_ava', name: 'AVA Mall', followers: '5M', avatar: 'https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=100&q=80' },
++      { id: 'sh2', username: 'shopee_sile', name: 'Kho Sỉ Lẻ', followers: '20K', avatar: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=100&q=80' }
++    ],
++    Default: [
++      { id: 'df1', username: 'account_vip_01', name: 'Tài Khoản VIP 1', followers: '100K', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80' },
++      { id: 'df2', username: 'account_vip_02', name: 'Tài Khoản VIP 2', followers: '50K', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&q=80' }
++    ]
++  };
++
++  const getOauthAccountsForActiveChannel = () => {
++    if (!activeChannelForConnect) return MOCK_OAUTH_ACCOUNTS.Default;
++    const name = activeChannelForConnect.name.toLowerCase();
++    if (name.includes('tiktok')) return MOCK_OAUTH_ACCOUNTS.TikTok;
++    if (name.includes('facebook') || name.includes('fb')) return MOCK_OAUTH_ACCOUNTS.Facebook;
++    if (name.includes('youtube')) return MOCK_OAUTH_ACCOUNTS.YouTube;
++    if (name.includes('shopee')) return MOCK_OAUTH_ACCOUNTS.Shopee;
++    return MOCK_OAUTH_ACCOUNTS.Default;
++  };
++
+   // New Account Modal State
+   const [addAccountModalOpen, setAddAccountModalOpen] = useState(false);
+   const [newPlatformName, setNewPlatformName] = useState('TikTok Live Account 02');
+@@ -1209,11 +1250,7 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
+               <p className="text-[11px] text-gray-300">Tự động ủy quyền qua tài khoản {activeChannelForConnect.name} thật mà không bị lỗi.</p>
+               <button 
+                 onClick={() => {
+-                  executeConnectionWithCaptcha(() => {
+-                    alert(`Đã ủy quyền OAuth 1-chạm thành công với tài khoản ${activeChannelForConnect.name} thật!`);
+-                    setChannels(channels.map(c => c.id === activeChannelForConnect.id ? { ...c, status: 'connected' } : c));
+-                    setConnectModalOpen(false);
+-                  });
++                  setOauthAccountSelectModalOpen(true);
+                 }}
+                 className="w-full py-2.5 bg-[#EF4444] hover:bg-red-600 text-white font-black text-xs rounded-xl shadow-glow-red transition-all flex items-center justify-center gap-2 cursor-pointer"
+               >
+@@ -1293,6 +1330,48 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
+         </div>
+       )}
+ 
++      {/* OAUTH ACCOUNT SELECTION MODAL */}
++      {oauthAccountSelectModalOpen && activeChannelForConnect && (
++        <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
++          <div className="glass-panel p-6 rounded-3xl border border-white/20 max-w-md w-full text-left space-y-4 shadow-2xl bg-[#0A0A0A] relative overflow-hidden">
++            <div className="flex items-center justify-between border-b border-white/10 pb-3">
++              <h3 className="text-lg font-black text-white flex items-center gap-2">
++                <Users className="w-5 h-5 text-amber-400" /> CHỌN TÀI KHOẢN ĐỂ KẾT NỐI
++              </h3>
++              <button onClick={() => setOauthAccountSelectModalOpen(false)} className="text-gray-400 hover:text-white font-bold cursor-pointer">✕</button>
++            </div>
++            
++            <p className="text-[11px] text-gray-300">
++              Bạn đang có nhiều tài khoản <strong>{activeChannelForConnect.name.split(' ')[0]}</strong>. Vui lòng chọn tài khoản muốn liên kết để phát livestream đa luồng:
++            </p>
++
++            <div className="max-h-[300px] overflow-y-auto space-y-2 pr-1">
++              {getOauthAccountsForActiveChannel().map(acc => (
++                <div 
++                  key={acc.id}
++                  onClick={() => {
++                    setOauthAccountSelectModalOpen(false);
++                    executeConnectionWithCaptcha(() => {
++                      alert(`Đã ủy quyền OAuth 1-chạm thành công với tài khoản ${acc.username} (${acc.name})!`);
++                      setChannels(channels.map(c => c.id === activeChannelForConnect.id ? { ...c, status: 'connected', connectedAccount: acc.username } : c));
++                      setConnectModalOpen(false);
++                    });
++                  }}
++                  className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-amber-500/50 cursor-pointer transition-all"
++                >
++                  <img src={acc.avatar} alt="avatar" className="w-10 h-10 rounded-full object-cover border border-white/20" />
++                  <div className="flex-1">
++                    <h4 className="text-xs font-black text-white">{acc.name}</h4>
++                    <p className="text-[10px] text-gray-400">{acc.username} • {acc.followers} followers</p>
++                  </div>
++                  <Zap className="w-4 h-4 text-amber-500 opacity-50" />
++                </div>
++              ))}
++            </div>
++          </div>
++        </div>
++      )}
++
+     </div>
+   );
+ }
+diff --git a/z8114319722450_b8b9b252398305956053388ed3fd1c84.jpg b/z8114319722450_b8b9b252398305956053388ed3fd1c84.jpg
+deleted file mode 100644
+index fe6b412..0000000
+Binary files a/z8114319722450_b8b9b252398305956053388ed3fd1c84.jpg and /dev/null differ

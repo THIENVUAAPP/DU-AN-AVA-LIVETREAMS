@@ -71,6 +71,29 @@ export default function App() {
   const [realGmailInput, setRealGmailInput] = useState("");
   const [realNameInput, setRealNameInput] = useState("");
 
+  // Handle OAuth Popup Redirect Callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const state = params.get('state');
+    const error = params.get('error');
+
+    if (window.opener && (code || error)) {
+      // We are inside the popup window
+      let platform = 'unknown';
+      if (state?.startsWith('tiktok_auth_')) platform = 'tiktok';
+      
+      if (code) {
+        window.opener.postMessage({ type: 'OAUTH_CODE', platform, code }, window.location.origin);
+      } else if (error) {
+        window.opener.postMessage({ type: 'OAUTH_ERROR', platform, error }, window.location.origin);
+      }
+      
+      // Close the popup window after sending message
+      window.close();
+    }
+  }, []);
+
   // Check Supabase Auth Session on mount
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {

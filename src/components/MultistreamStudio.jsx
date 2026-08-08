@@ -34,7 +34,7 @@ import {
 import MultiAccountManager from './MultiAccountManager';
 import UniversalFileUploader from './UniversalFileUploader';
 import ReactPlayer from 'react-player';
-
+import { openOAuthPopup, getTikTokAuthUrl, listenForOAuthCode } from '../lib/oauthService';
 
 let __global_local_stream = null;
 let __global_stream_promise = null;
@@ -1249,8 +1249,29 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
               <span className="text-xs font-black text-white block">CÁCH 1: ĐĂNG NHẬP OAUTH 1-CHẠM DỄ DÀNG</span>
               <p className="text-[11px] text-gray-300">Tự động ủy quyền qua tài khoản {activeChannelForConnect.name} thật mà không bị lỗi.</p>
               <button 
-                onClick={() => {
-                  setOauthAccountSelectModalOpen(true);
+                onClick={async () => {
+                  try {
+                    let platform = 'unknown';
+                    const name = activeChannelForConnect?.name?.toLowerCase() || '';
+                    if (name.includes('tiktok')) platform = 'tiktok';
+                    else if (name.includes('facebook') || name.includes('fb')) platform = 'facebook';
+                    else if (name.includes('youtube')) platform = 'youtube';
+
+                    if (platform === 'tiktok') {
+                      const url = getTikTokAuthUrl();
+                      openOAuthPopup(url, 'TikTok Login');
+                      const code = await listenForOAuthCode('tiktok');
+                      console.log("Received TikTok Auth Code:", code);
+                      // Once we have the code, we would normally send it to our backend to exchange for an access token.
+                      // Since we are mocking the backend, we just open the account selection modal.
+                      setOauthAccountSelectModalOpen(true);
+                    } else {
+                      // Other platforms just open the mock modal for now
+                      setOauthAccountSelectModalOpen(true);
+                    }
+                  } catch (err) {
+                    alert('Lỗi đăng nhập OAuth: ' + err.message);
+                  }
                 }}
                 className="w-full py-2.5 bg-[#EF4444] hover:bg-red-600 text-white font-black text-xs rounded-xl shadow-glow-red transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
