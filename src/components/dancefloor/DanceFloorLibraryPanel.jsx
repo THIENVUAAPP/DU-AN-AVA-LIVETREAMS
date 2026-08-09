@@ -3,6 +3,7 @@ import { Volume2, Gem, Music4, Sparkles as SparklesIcon, Trash2, Image as ImageI
 import { SCENE_BACKGROUNDS, DANCE_MODE_LABELS, OUTFITS } from '../../lib/danceFloorData';
 import DanceFloorCharacterLibraryGrid from './DanceFloorCharacterLibraryGrid';
 import DanceFloorMotionCaptureUploader from './DanceFloorMotionCaptureUploader';
+import DanceFloorBackgroundVideoPanel from './DanceFloorBackgroundVideoPanel';
 
 const TIER_STYLES = [
   { border: 'border-gray-500/30', badge: 'bg-gray-500/20 text-gray-300' },
@@ -41,6 +42,7 @@ export default function DanceFloorLibraryPanel({
   giftTiers, setGiftTiers, onPreviewSound,
   disabledCharacterIds, disabledDanceIds, disabledEffectIds, disabledSceneIds, disabledSoundIds, disabledOutfitIds, onToggleLibraryItem,
   customBackgroundImage, onSetCustomBackgroundImage,
+  backgroundVideos, activeBackgroundVideoId, onAddBackgroundVideo, onDeleteBackgroundVideo, onSetActiveBackgroundVideoId,
 }) {
   const bgInputRef = useRef(null);
   const soundInputRef = useRef(null);
@@ -189,6 +191,16 @@ export default function DanceFloorLibraryPanel({
           )}
         </div>
         <p className="text-[9px] text-gray-500 mt-1">Tải ảnh nền riêng sẽ thay toàn bộ bối cảnh gradient có sẵn cho sàn diễn.</p>
+      </section>
+
+      <section>
+        <DanceFloorBackgroundVideoPanel
+          videos={backgroundVideos}
+          activeId={activeBackgroundVideoId}
+          onAdd={onAddBackgroundVideo}
+          onDelete={onDeleteBackgroundVideo}
+          onSetActive={onSetActiveBackgroundVideoId}
+        />
       </section>
 
       <section>

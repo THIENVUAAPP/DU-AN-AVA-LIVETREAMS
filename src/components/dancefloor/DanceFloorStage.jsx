@@ -71,7 +71,7 @@ function CharacterAvatar({ character, danceClass }) {
 
 // Sàn diễn Render Engine — Canvas 2D particle system tự viết (nhẹ, không phụ thuộc PixiJS/Three.js
 // vì dự án hiện chưa cài các thư viện này). Nhân vật hiển thị bằng CSS animation (index.css).
-export default function DanceFloorStage({ instances, maxSlots, effectTriggers, sceneId, connectionLabel, isConnected, characters, effects, customBackgroundImage, transparent }) {
+export default function DanceFloorStage({ instances, maxSlots, effectTriggers, sceneId, connectionLabel, isConnected, characters, effects, customBackgroundImage, backgroundVideoUrl, transparent }) {
   const canvasRef = useRef(null);
   const particlesRef = useRef([]);
   const rafRef = useRef(null);
@@ -144,15 +144,28 @@ export default function DanceFloorStage({ instances, maxSlots, effectTriggers, s
   const slots = Array.from({ length: maxSlots });
   const now = Date.now();
 
+  const hasCustomBackdrop = !transparent && (customBackgroundImage || backgroundVideoUrl);
   const containerClass = transparent
     ? 'relative w-full h-full min-h-screen overflow-hidden'
-    : `relative rounded-3xl border border-white/10 overflow-hidden min-h-[440px] ${customBackgroundImage ? '' : `bg-gradient-to-br ${scene.gradient}`}`;
-  const containerStyle = !transparent && customBackgroundImage
+    : `relative rounded-3xl border border-white/10 overflow-hidden min-h-[440px] ${hasCustomBackdrop ? '' : `bg-gradient-to-br ${scene.gradient}`}`;
+  const containerStyle = !transparent && customBackgroundImage && !backgroundVideoUrl
     ? { backgroundImage: `url(${customBackgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
     : undefined;
 
   return (
     <div className={containerClass} style={containerStyle}>
+      {/* Video Nền Vũ Trường — phát lặp liên tục phía sau nhân vật, ưu tiên cao hơn ảnh nền tĩnh. */}
+      {!transparent && backgroundVideoUrl && (
+        <video
+          key={backgroundVideoUrl}
+          src={backgroundVideoUrl}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover z-0"
+        />
+      )}
       {!transparent && <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/70 to-transparent animate-tile-glow" />}
 
       {!transparent && (

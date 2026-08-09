@@ -8,6 +8,7 @@ export default function DanceFloorAutomationPanel({
   voiceEnabled, onToggleVoice,
   commentaryStyleId, onChangeCommentaryStyle,
   onRunAutoShuffle,
+  autoShuffleIntervalEnabled, autoShuffleIntervalMinutes, onUpdateAutoShuffleInterval,
   scheduleEnabled, scheduleStartHour, scheduleEndHour, onUpdateSchedule,
 }) {
   return (
@@ -63,6 +64,35 @@ export default function DanceFloorAutomationPanel({
       >
         <Shuffle className="w-3.5 h-3.5" /> AUTO 1-CHẠM (Đổi Nhân Vật + Nhạc + Điệu Nhảy + Sàn Ngẫu Nhiên)
       </button>
+
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs font-bold text-gray-300">Tự Đổi Định Kỳ Theo Phút</p>
+          <p className="text-[9px] text-gray-500 max-w-xs">Bật thì cứ hết mỗi khoảng phút này lại tự chạy AUTO 1-CHẠM + đổi luôn Video Nền/Sàn 3D ngẫu nhiên, chạy liên tục đến khi tắt.</p>
+        </div>
+        <button
+          onClick={() => onUpdateAutoShuffleInterval({ autoShuffleIntervalEnabled: !autoShuffleIntervalEnabled })}
+          className={`px-3 py-1.5 rounded-full text-[10px] font-black shrink-0 cursor-pointer transition-all ${
+            autoShuffleIntervalEnabled ? 'bg-emerald-600 text-white' : 'bg-white/10 text-gray-400'
+          }`}
+        >
+          {autoShuffleIntervalEnabled ? '● ĐANG TỰ ĐỘNG' : 'BẬT'}
+        </button>
+      </div>
+      {autoShuffleIntervalEnabled && (
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-gray-400">Mỗi</span>
+          <input
+            type="number"
+            min={1}
+            max={120}
+            value={autoShuffleIntervalMinutes}
+            onChange={(e) => onUpdateAutoShuffleInterval({ autoShuffleIntervalMinutes: Math.max(1, Number(e.target.value) || 1) })}
+            className="w-16 px-2 py-1.5 rounded-lg bg-black/40 border border-white/10 text-white text-xs font-bold outline-none text-center"
+          />
+          <span className="text-[10px] text-gray-400">phút</span>
+        </div>
+      )}
 
       <div className="flex items-center justify-between pt-1">
         <span className="text-xs font-bold text-gray-300 flex items-center gap-1.5">

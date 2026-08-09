@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Video, Loader2, UploadCloud, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { captureMotionFromVideo } from '../../lib/dance3d/motionCapture';
+import { captureVideoThumbnail } from '../../lib/videoThumbnail';
 
 // Tải video nhảy mẫu (chọn được NHIỀU video cùng lúc) → trích chuyển động thật bằng AI Pose (chạy ngay
 // trên trình duyệt, KHÔNG upload server nào) → mỗi video lưu thành 1 điệu nhảy mới để nhân vật 3D
@@ -18,6 +19,7 @@ export default function DanceFloorMotionCaptureUploader({ onCaptured }) {
       name: file.name,
       status: 'pending',
       progress: 0,
+      thumbnail: null,
       file,
     }));
     setQueue(items);
@@ -25,6 +27,9 @@ export default function DanceFloorMotionCaptureUploader({ onCaptured }) {
 
     for (const item of items) {
       setQueue((prev) => prev.map((q) => (q.id === item.id ? { ...q, status: 'processing' } : q)));
+      captureVideoThumbnail(item.file)
+        .then((thumbnail) => setQueue((prev) => prev.map((q) => (q.id === item.id ? { ...q, thumbnail } : q))))
+        .catch((err) => console.error(`Tạo thumbnail video mẫu "${item.name}" lỗi:`, err));
       try {
         // eslint-disable-next-line no-await-in-loop
         const { frames, durationSeconds } = await captureMotionFromVideo(item.file, (pct) => {
@@ -69,9 +74,14 @@ export default function DanceFloorMotionCaptureUploader({ onCaptured }) {
       </label>
 
       {queue.length > 0 && (
-        <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
+        <div className="mt-2 space-y-1 max-h-48 overflow-y-auto">
           {queue.map((q) => (
-            <div key={q.id} className="flex items-center justify-between gap-2 px-2 py-1 rounded-lg bg-black/30 text-[10px] text-gray-300">
+            <div key={q.id} className="flex items-center gap-2 px-2 py-1 rounded-lg bg-black/30 text-[10px] text-gray-300">
+              {q.thumbnail ? (
+                <img src={q.thumbnail} alt={q.name} className="w-8 h-8 rounded object-cover shrink-0" />
+              ) : (
+                <div className="w-8 h-8 rounded bg-white/5 shrink-0" />
+              )}
               <span className="truncate flex-1">{q.name}</span>
               {q.status === 'pending' && <Clock className="w-3.5 h-3.5 text-gray-500 shrink-0" />}
               {q.status === 'processing' && <span className="text-fuchsia-300 font-bold shrink-0">{q.progress}%</span>}

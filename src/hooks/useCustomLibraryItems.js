@@ -29,6 +29,8 @@ export function useCustomLibraryItems() {
   const [customEffects, setCustomEffects] = useState(() => loadJSON(CUSTOM_EFFECTS_KEY, []));
   const [customSounds, setCustomSounds] = useState([]);
   const [customDanceStyles, setCustomDanceStyles] = useState([]);
+  const [backgroundVideos, setBackgroundVideos] = useState([]);
+  const [activeBackgroundVideoId, setActiveBackgroundVideoId] = useState(null);
 
   useEffect(() => saveJSON(CUSTOM_CHARACTERS_KEY, customCharacters.filter((c) => !c.isSessionOnly)), [customCharacters]);
   useEffect(() => saveJSON(CUSTOM_EFFECTS_KEY, customEffects), [customEffects]);
@@ -56,10 +58,23 @@ export function useCustomLibraryItems() {
   const addCustomDanceStyle = useCallback((clip) => setCustomDanceStyles((prev) => [...prev, clip]), []);
   const deleteCustomDanceStyle = useCallback((id) => setCustomDanceStyles((prev) => prev.filter((d) => d.id !== id)), []);
 
+  // Video Nền Vũ Trường — tải hàng loạt, giữ đúng thứ tự tải lên, chọn 1 video làm nền đang phát trực
+  // tiếp (lặp liên tục) cho cả Sàn 2D lẫn Sàn 3D. Chỉ giữ trong phiên (blob URL, dung lượng lớn).
+  const addBackgroundVideo = useCallback((video) => {
+    setBackgroundVideos((prev) => [...prev, video]);
+    setActiveBackgroundVideoId((prev) => prev || video.id);
+  }, []);
+  const deleteBackgroundVideo = useCallback((id) => {
+    setBackgroundVideos((prev) => prev.filter((v) => v.id !== id));
+    setActiveBackgroundVideoId((prev) => (prev === id ? null : prev));
+  }, []);
+
   return {
     customCharacters, allCharacters, addCustomCharacter, deleteCustomCharacter, editCustomCharacter,
     customEffects, allEffects, addCustomEffect, deleteCustomEffect,
     customSounds, allSounds, addCustomSound, deleteCustomSound,
     customDanceStyles, allDanceStyles, addCustomDanceStyle, deleteCustomDanceStyle,
+    backgroundVideos, addBackgroundVideo, deleteBackgroundVideo,
+    activeBackgroundVideoId, setActiveBackgroundVideoId,
   };
 }

@@ -85,6 +85,8 @@ export function useDanceFloorEngine() {
     customEffects, allEffects, addCustomEffect, deleteCustomEffect,
     customSounds, allSounds, addCustomSound, deleteCustomSound,
     customDanceStyles, allDanceStyles, addCustomDanceStyle, deleteCustomDanceStyle,
+    backgroundVideos, addBackgroundVideo, deleteBackgroundVideo,
+    activeBackgroundVideoId, setActiveBackgroundVideoId,
   } = useCustomLibraryItems();
 
   const enabledCharacters = useMemo(
@@ -445,6 +447,7 @@ export function useDanceFloorEngine() {
     allEffects, customEffects, addCustomEffect, deleteCustomEffect,
     allSounds, addCustomSound, deleteCustomSound,
     allDanceStyles, customDanceStyles, addCustomDanceStyle, deleteCustomDanceStyle,
+    backgroundVideos, addBackgroundVideo, deleteBackgroundVideo, activeBackgroundVideoId, setActiveBackgroundVideoId,
     setCustomBackgroundImage,
     instances, effectTriggers, sceneId, leaderboard, reactionFeed, commentFeed,
     connectedChannelList: connectedChannels.filter((c) => c.status === 'connected'),

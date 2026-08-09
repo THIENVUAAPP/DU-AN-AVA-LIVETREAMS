@@ -25,7 +25,7 @@ const LABEL_STYLE = `position:absolute;left:0;top:0;pointer-events:none;text-ali
 // ánh sáng, camera, sương mù, trail ánh sáng tay/chân đều là 3D thật, xem được từ mọi góc.
 const backgroundTextureLoader = new THREE.TextureLoader();
 
-export default function Dance3DStage({ instances, characters, effects, effectTriggers, stagePresetId, isConnected, connectionLabel, danceStyles, customBackgroundImage }) {
+export default function Dance3DStage({ instances, characters, effects, effectTriggers, stagePresetId, isConnected, connectionLabel, danceStyles, customBackgroundImage, backgroundVideoUrl }) {
   const mountRef = useRef(null);
   const labelsContainerRef = useRef(null);
   const sceneRef = useRef(null);
@@ -35,6 +35,7 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
   const particlesRef = useRef([]);
   const processedEffectIdsRef = useRef(new Set());
   const danceStylesRef = useRef([]);
+  const backgroundVideoRef = useRef(null); // { video, texture, url }
   const clockRef = useRef(new THREE.Clock());
   const cameraTargetRef = useRef(new THREE.Vector3(0, 1.2, 0));
   const cameraModeRef = useRef('wide');
@@ -148,21 +149,52 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
         entry.labelEl?.remove();
       });
       instancesMapRef.current.clear();
+      if (backgroundVideoRef.current) {
+        backgroundVideoRef.current.video.pause();
+        backgroundVideoRef.current.texture.dispose();
+        backgroundVideoRef.current = null;
+      }
       renderer.dispose();
       if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
     };
   }, []);
 
-  // Đổi preset sàn 3D (nền/đèn/sương) — nếu admin đã tải ảnh nền riêng (customBackgroundImage, dùng
-  // chung setting với Sàn 2D) thì phông nền dùng đúng ảnh đó thay vì màu preset, sương mù vẫn giữ theo
-  // preset để không che mất ảnh nền.
+  // Đổi preset sàn 3D (nền/đèn/sương). Thứ tự ưu tiên phông nền: Video Nền Vũ Trường đang chọn (phát
+  // lặp liên tục, nhân vật nhảy đè lên trên) > ảnh nền tuỳ chỉnh (dùng chung setting với Sàn 2D) > màu
+  // preset. Sương mù vẫn giữ theo preset để không che mất video/ảnh nền.
   useEffect(() => {
     const scene = sceneRef.current;
     if (!scene) return;
     const prevEnv = scene.getObjectByName('stage_env');
     if (prevEnv) scene.remove(prevEnv);
     const preset = STAGE_PRESETS_3D.find((p) => p.id === stagePresetId) || STAGE_PRESETS_3D[0];
-    if (customBackgroundImage) {
+
+    if (backgroundVideoRef.current && backgroundVideoRef.current.url !== backgroundVideoUrl) {
+      backgroundVideoRef.current.video.pause();
+      backgroundVideoRef.current.texture.dispose();
+      backgroundVideoRef.current = null;
+    }
+
+    if (backgroundVideoUrl) {
+      if (!backgroundVideoRef.current) {
+        const video = document.createElement('video');
+        // BẮT BUỘC gán muted/playsInline TRƯỚC khi gọi play() — trình duyệt chặn autoplay có tiếng nếu
+        // gọi play() trước khi muted=true, khiến video đứng yên ở khung hình đen mà không báo lỗi rõ.
+        video.loop = true;
+        video.muted = true;
+        video.playsInline = true;
+        video.src = backgroundVideoUrl;
+        // AbortError xảy ra khi đổi video nền liên tục quá nhanh (play() bị pause() chen ngang) — vô
+        // hại, không cần báo lỗi; chỉ log các lỗi thật (file hỏng, không đọc được...).
+        video.play().catch((err) => {
+          if (err?.name !== 'AbortError') console.error('Phát video nền lỗi:', err);
+        });
+        const texture = new THREE.VideoTexture(video);
+        texture.colorSpace = THREE.SRGBColorSpace;
+        backgroundVideoRef.current = { video, texture, url: backgroundVideoUrl };
+      }
+      scene.background = backgroundVideoRef.current.texture;
+    } else if (customBackgroundImage) {
       backgroundTextureLoader.load(customBackgroundImage, (texture) => {
         texture.colorSpace = THREE.SRGBColorSpace;
         if (sceneRef.current === scene) scene.background = texture;
@@ -175,7 +207,7 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
     env.group.name = 'stage_env';
     scene.add(env.group);
     envRef.current = env;
-  }, [stagePresetId, customBackgroundImage]);
+  }, [stagePresetId, customBackgroundImage, backgroundVideoUrl]);
 
   // Đồng bộ nhân vật đang hiển thị (thêm/xoá) — dựng hình nhân 3D + nhãn tên/level HTML nổi trên canvas.
   useEffect(() => {
@@ -220,9 +252,10 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
       const featured = inst.priority >= 10;
       const labelEl = document.createElement('div');
       labelEl.style.cssText = LABEL_STYLE;
+      // Chỉ hiện tên nhân vật trên đầu — KHÔNG hiện lại dòng bình luận/phản hồi ở đây nữa (đã có sẵn
+      // ở khối "Bình Luận Trực Tiếp" + "Nhật Ký Phản Hồi Trực Tiếp" bên dưới sàn, tránh che khuất sàn diễn).
       labelEl.innerHTML = `
         <div style="display:inline-block;padding:2px 8px;border-radius:9999px;background:${featured ? 'linear-gradient(90deg,#facc15,#f59e0b)' : 'rgba(0,0,0,0.7)'};color:${featured ? '#000' : '#fff'};font-size:10px;font-weight:900;">${inst.username}</div>
-        ${inst.reactionLine ? `<div style="margin-top:2px;max-width:150px;font-size:9px;color:#fff;background:rgba(0,0,0,0.75);border-radius:8px;padding:2px 6px;">${inst.reactionLine}</div>` : ''}
       `;
       labelsContainerRef.current?.appendChild(labelEl);
 

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, Zap, BookOpen, MessageSquareText, TrendingUp, Users, Trophy, Volume2, VolumeX, Radio, MessagesSquare, Layers, Move3d } from 'lucide-react';
 
 import DanceFloorStage from './dancefloor/DanceFloorStage';
@@ -17,6 +17,7 @@ import DanceFloorManualComboPanel from './dancefloor/DanceFloorManualComboPanel'
 import DanceFloorAutoReplyPanel from './dancefloor/DanceFloorAutoReplyPanel';
 import { useDanceFloorEngine } from '../hooks/useDanceFloorEngine';
 import { STAGE_PRESETS_3D } from '../lib/dance3d/stagePresets3D';
+import { platformFromChannelId } from '../lib/danceFloorEngine';
 
 const SECTIONS = [
   { id: 'stage', label: 'Sàn Diễn', icon: Sparkles },
@@ -44,12 +45,32 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
     allEffects, customEffects, addCustomEffect, deleteCustomEffect,
     allSounds, addCustomSound, deleteCustomSound, setCustomBackgroundImage,
     allDanceStyles, customDanceStyles, addCustomDanceStyle, deleteCustomDanceStyle,
+    backgroundVideos, addBackgroundVideo, deleteBackgroundVideo, activeBackgroundVideoId, setActiveBackgroundVideoId,
     instances, effectTriggers, sceneId, leaderboard, reactionFeed, commentFeed,
     connectedChannelList, selectedChannelIds, toggleChannel,
     commentsPerMin, triggersPerMin,
     handleManualTrigger, handleManualGift, handleManualCombo,
     playSound, runAutoShuffle, toggleLibraryItem, suggestDance,
   } = engine;
+
+  const activeBackgroundVideoUrl = backgroundVideos.find((v) => v.id === activeBackgroundVideoId)?.url || null;
+
+  // Tự đổi định kỳ theo phút — kết hợp AUTO 1-CHẠM (nhân vật/nhạc/điệu nhảy/hiệu ứng) với đổi luôn
+  // Video Nền Vũ Trường + Sàn 3D ngẫu nhiên (nếu có nhiều lựa chọn), chạy liên tục đến khi tắt.
+  useEffect(() => {
+    if (!settings.autoShuffleIntervalEnabled) return undefined;
+    const ms = Math.max(1, settings.autoShuffleIntervalMinutes) * 60000;
+    const interval = setInterval(() => {
+      runAutoShuffle();
+      if (STAGE_PRESETS_3D.length > 1) {
+        setStagePresetId(STAGE_PRESETS_3D[Math.floor(Math.random() * STAGE_PRESETS_3D.length)].id);
+      }
+      if (backgroundVideos.length > 1) {
+        setActiveBackgroundVideoId(backgroundVideos[Math.floor(Math.random() * backgroundVideos.length)].id);
+      }
+    }, ms);
+    return () => clearInterval(interval);
+  }, [settings.autoShuffleIntervalEnabled, settings.autoShuffleIntervalMinutes, runAutoShuffle, backgroundVideos, setActiveBackgroundVideoId]);
 
   // Phát Live Đa Kênh — dùng đúng các kênh TikTok/YouTube/Facebook đã kết nối sẵn từ Restream Đa Nền
   // Tảng (streamKey/token đã lưu), không yêu cầu đăng nhập lại. Dùng chung state isLive toàn cục để
@@ -153,6 +174,7 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
                     characters={allCharacters}
                     effects={allEffects}
                     customBackgroundImage={settings.customBackgroundImage}
+                    backgroundVideoUrl={activeBackgroundVideoUrl}
                     isConnected={isLive || connectedChannelList.length > 0}
                     connectionLabel={
                       isLive
@@ -171,6 +193,7 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
                     effectTriggers={effectTriggers}
                     stagePresetId={stagePresetId}
                     customBackgroundImage={settings.customBackgroundImage}
+                    backgroundVideoUrl={activeBackgroundVideoUrl}
                     isConnected={isLive || connectedChannelList.length > 0}
                     connectionLabel={
                       isLive
@@ -197,7 +220,7 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
           </div>
 
           {/* Bình luận trực tiếp — siêu vui, hiển thị mọi comment thô đổ về, không chỉ comment trúng luật */}
-          <DanceFloorCommentFeed feed={commentFeed} />
+          <DanceFloorCommentFeed feed={commentFeed} activePlatforms={[...new Set(selectedChannelIds.map(platformFromChannelId))]} />
 
           {/* Hàng dưới: ít dùng hơn — bảng xếp hạng, nhật ký phản hồi, tự động hoá, tổ hợp thủ công */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -232,6 +255,9 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
               commentaryStyleId={settings.commentaryStyleId}
               onChangeCommentaryStyle={(id) => setSettings((s) => ({ ...s, commentaryStyleId: id }))}
               onRunAutoShuffle={runAutoShuffle}
+              autoShuffleIntervalEnabled={settings.autoShuffleIntervalEnabled}
+              autoShuffleIntervalMinutes={settings.autoShuffleIntervalMinutes}
+              onUpdateAutoShuffleInterval={(patch) => setSettings((s) => ({ ...s, ...patch }))}
               scheduleEnabled={settings.scheduleEnabled}
               scheduleStartHour={settings.scheduleStartHour}
               scheduleEndHour={settings.scheduleEndHour}
@@ -300,6 +326,11 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
           onToggleLibraryItem={toggleLibraryItem}
           customBackgroundImage={settings.customBackgroundImage}
           onSetCustomBackgroundImage={setCustomBackgroundImage}
+          backgroundVideos={backgroundVideos}
+          activeBackgroundVideoId={activeBackgroundVideoId}
+          onAddBackgroundVideo={addBackgroundVideo}
+          onDeleteBackgroundVideo={deleteBackgroundVideo}
+          onSetActiveBackgroundVideoId={setActiveBackgroundVideoId}
         />
       )}
     </div>

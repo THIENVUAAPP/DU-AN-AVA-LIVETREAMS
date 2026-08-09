@@ -332,6 +332,8 @@ export const DEFAULT_SETTINGS = {
   disabledSceneIds: [],
   disabledSoundIds: [],
   disabledOutfitIds: [],
+  autoShuffleIntervalEnabled: false,
+  autoShuffleIntervalMinutes: 5,
 };
 
 // Kho câu bình luận phản hồi theo "giọng" tính cách nhân vật — hài hước, đa dạng, không cần gọi AI
