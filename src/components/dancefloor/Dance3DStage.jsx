@@ -8,6 +8,7 @@ import { ParticleBurst3D } from '../../lib/dance3d/particles3D';
 import { LightTrail } from '../../lib/dance3d/lightTrail';
 import { STAGE_PRESETS_3D } from '../../lib/dance3d/stagePresets3D';
 import { buildStageEnvironment, animateStageLights } from '../../lib/dance3d/stageEnvironment3D';
+import { OUTFITS } from '../../lib/danceFloorData';
 
 const CAMERA_MODES = [
   { id: 'wide', label: 'Toàn Cảnh', position: [0, 7, 14] },
@@ -22,7 +23,9 @@ const LABEL_STYLE = `position:absolute;left:0;top:0;pointer-events:none;text-ali
 // Sàn Nhảy 3D thật (WebGL/Three.js) — nhân vật procedural thấp-poly (không phải mô hình anime rig sẵn
 // thương mại như AUMIX3D, vì đó là asset mỹ thuật 3D không thể tự sinh bằng code) nhưng chuyển động,
 // ánh sáng, camera, sương mù, trail ánh sáng tay/chân đều là 3D thật, xem được từ mọi góc.
-export default function Dance3DStage({ instances, characters, effects, effectTriggers, stagePresetId, isConnected, connectionLabel, danceStyles }) {
+const backgroundTextureLoader = new THREE.TextureLoader();
+
+export default function Dance3DStage({ instances, characters, effects, effectTriggers, stagePresetId, isConnected, connectionLabel, danceStyles, customBackgroundImage }) {
   const mountRef = useRef(null);
   const labelsContainerRef = useRef(null);
   const sceneRef = useRef(null);
@@ -88,6 +91,7 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
       const width2 = mount.clientWidth;
       const height2 = mount.clientHeight;
       instancesMapRef.current.forEach((entry) => {
+        if (entry.videoTexture) entry.videoTexture.needsUpdate = true;
         if (entry.trail) {
           const tipWorld = new THREE.Vector3();
           entry.parts.rightArm.tip.getWorldPosition(tipWorld);
@@ -138,25 +142,40 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener('resize', handleResize);
+      instancesMapRef.current.forEach((entry) => {
+        entry.stopVideo?.();
+        disposeHumanoidFigure(entry.group);
+        entry.labelEl?.remove();
+      });
+      instancesMapRef.current.clear();
       renderer.dispose();
       if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
     };
   }, []);
 
-  // Đổi preset sàn 3D (nền/đèn/sương)
+  // Đổi preset sàn 3D (nền/đèn/sương) — nếu admin đã tải ảnh nền riêng (customBackgroundImage, dùng
+  // chung setting với Sàn 2D) thì phông nền dùng đúng ảnh đó thay vì màu preset, sương mù vẫn giữ theo
+  // preset để không che mất ảnh nền.
   useEffect(() => {
     const scene = sceneRef.current;
     if (!scene) return;
     const prevEnv = scene.getObjectByName('stage_env');
     if (prevEnv) scene.remove(prevEnv);
     const preset = STAGE_PRESETS_3D.find((p) => p.id === stagePresetId) || STAGE_PRESETS_3D[0];
-    scene.background = new THREE.Color(preset.backdropColor);
+    if (customBackgroundImage) {
+      backgroundTextureLoader.load(customBackgroundImage, (texture) => {
+        texture.colorSpace = THREE.SRGBColorSpace;
+        if (sceneRef.current === scene) scene.background = texture;
+      });
+    } else {
+      scene.background = new THREE.Color(preset.backdropColor);
+    }
     scene.fog = new THREE.FogExp2(preset.fogColor, 0.045);
     const env = buildStageEnvironment(preset);
     env.group.name = 'stage_env';
     scene.add(env.group);
     envRef.current = env;
-  }, [stagePresetId]);
+  }, [stagePresetId, customBackgroundImage]);
 
   // Đồng bộ nhân vật đang hiển thị (thêm/xoá) — dựng hình nhân 3D + nhãn tên/level HTML nổi trên canvas.
   useEffect(() => {
@@ -167,6 +186,7 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
     instancesMapRef.current.forEach((entry, id) => {
       if (!currentIds.has(id)) {
         scene.remove(entry.group);
+        entry.stopVideo?.();
         disposeHumanoidFigure(entry.group);
         if (entry.trail) scene.remove(entry.trail.line);
         entry.labelEl?.remove();
@@ -184,7 +204,8 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
       if (instancesMapRef.current.has(inst.instanceId)) return;
       const character = characters.find((c) => c.id === inst.characterId);
       if (!character) return;
-      const { group, parts } = buildHumanoidFigure(character);
+      const outfitHex = OUTFITS.find((o) => o.id === inst.outfitId)?.hex;
+      const { group, parts, videoTexture, stopVideo } = buildHumanoidFigure(character, outfitHex);
 
       const base = spiralPosition(idx, instances.length);
       let pos = base;
@@ -214,7 +235,7 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
       }
 
       instancesMapRef.current.set(inst.instanceId, {
-        group, parts, labelEl, trail, featured,
+        group, parts, labelEl, trail, featured, videoTexture, stopVideo,
         danceId: inst.danceId || 'dance_bounce',
         phase: inst.groupId ? 0 : Math.random() * 10,
       });

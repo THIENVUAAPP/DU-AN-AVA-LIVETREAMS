@@ -67,6 +67,7 @@ const LIBRARY_SETTING_KEY = {
   effect: 'disabledEffectIds',
   scene: 'disabledSceneIds',
   sound: 'disabledSoundIds',
+  outfit: 'disabledOutfitIds',
 };
 
 // Toàn bộ orchestration của "Sàn Nhảy TikTok": state, pipeline Ingestion→Gọi Tên/Rule→Auto-Reply→
@@ -230,6 +231,8 @@ export function useDanceFloorEngine() {
         // để Sàn 3D xếp đội hình gần nhau + đồng bộ pha nhảy, tạo hiệu ứng nhảy nhóm thật.
         const groupId = count > 1 ? `group_${now}_${Math.random().toString(36).slice(2, 6)}` : null;
         const sharedDanceId = danceIds && danceIds.length > 0 ? danceIds[Math.floor(Math.random() * danceIds.length)] : null;
+        const enabledOutfits = filterEnabled(OUTFITS, settings.disabledOutfitIds);
+        const outfitPool = enabledOutfits.length > 0 ? enabledOutfits : OUTFITS;
         const newInstances = Array.from({ length: count }).map((_, i) => {
           const characterId = characterIds[Math.floor(Math.random() * characterIds.length)];
           return {
@@ -237,7 +240,9 @@ export function useDanceFloorEngine() {
             characterId,
             danceId: groupId ? sharedDanceId : (danceIds && danceIds.length > 0 ? danceIds[Math.floor(Math.random() * danceIds.length)] : null),
             groupId,
-            outfitId: outfitId || OUTFITS[Math.floor(Math.random() * OUTFITS.length)].id,
+            // Trang phục đổi ngẫu nhiên mỗi lần lên sàn (trừ khi có outfitId chỉ định sẵn) — nhân vật
+            // càng được gọi tên/tặng quà nhiều thì càng thấy nhiều bộ trang phục khác nhau.
+            outfitId: outfitId || outfitPool[Math.floor(Math.random() * outfitPool.length)].id,
             username,
             startTime: now,
             durationMs: durationSeconds * 1000,
@@ -260,7 +265,7 @@ export function useDanceFloorEngine() {
       if (sceneIdToApply) setSceneId(sceneIdToApply);
       if (resolvedSoundId) playSound(resolvedSoundId);
     },
-    [settings.maxSlots, playSound, allCharacters]
+    [settings.maxSlots, settings.disabledOutfitIds, playSound, allCharacters]
   );
 
   const processEvent = useCallback(

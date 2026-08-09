@@ -124,18 +124,41 @@ export const DANCE_EFFECTS = [
   { id: "fx_skull", name: "Hài Hước Đen", emoji: "💀", particle: "burst", color: "#9CA3AF" },
 ];
 
-// Trang phục dạng "khung màu" phủ lên nhân vật — vì không dựng lại y phục thật trên ảnh/video tải lên
-// (cần AI tạo ảnh chuyên biệt, ngoài phạm vi frontend hiện tại), nên biểu thị bằng viền màu + nhãn.
-export const OUTFITS = [
-  { id: "outfit_red", name: "Đỏ Rực", ringClass: "ring-red-500" },
-  { id: "outfit_gold", name: "Vàng Ánh Kim", ringClass: "ring-amber-400" },
-  { id: "outfit_blue", name: "Xanh Biển", ringClass: "ring-blue-500" },
-  { id: "outfit_purple", name: "Tím Sang", ringClass: "ring-purple-500" },
-  { id: "outfit_pink", name: "Hồng Pastel", ringClass: "ring-pink-400" },
-  { id: "outfit_black", name: "Đen Huyền Bí", ringClass: "ring-neutral-700" },
-  { id: "outfit_white", name: "Trắng Tinh Khôi", ringClass: "ring-white" },
-  { id: "outfit_green", name: "Xanh Lá", ringClass: "ring-emerald-500" },
+const OUTFIT_COLORS = [
+  { token: "red", label: "Đỏ Rực", ringClass: "ring-red-500", hex: "#EF4444" },
+  { token: "amber", label: "Vàng Ánh Kim", ringClass: "ring-amber-400", hex: "#FBBF24" },
+  { token: "blue", label: "Xanh Biển", ringClass: "ring-blue-500", hex: "#3B82F6" },
+  { token: "purple", label: "Tím Sang", ringClass: "ring-purple-500", hex: "#A855F7" },
+  { token: "pink", label: "Hồng Pastel", ringClass: "ring-pink-400", hex: "#F472B6" },
+  { token: "black", label: "Đen Huyền Bí", ringClass: "ring-neutral-700", hex: "#404040" },
+  { token: "white", label: "Trắng Tinh Khôi", ringClass: "ring-white", hex: "#F5F5F5" },
+  { token: "green", label: "Xanh Lá", ringClass: "ring-emerald-500", hex: "#10B981" },
+  { token: "cyan", label: "Xanh Ngọc", ringClass: "ring-cyan-400", hex: "#22D3EE" },
+  { token: "orange", label: "Cam Rực", ringClass: "ring-orange-500", hex: "#F97316" },
 ];
+
+const OUTFIT_STYLES = [
+  "Dạ Hội", "Đường Phố", "Thể Thao", "Sang Trọng", "Cá Tính",
+  "Cổ Điển", "Tương Lai", "Dễ Thương", "Vũ Hội", "Tối Giản",
+];
+
+function slugifyOutfitStyle(style) {
+  return style.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, "").toLowerCase();
+}
+
+// Trang phục dạng "khung màu + phong cách" phủ lên nhân vật — vì không dựng lại y phục thật trên
+// ảnh/video tải lên (cần AI tạo ảnh chuyên biệt, ngoài phạm vi frontend hiện tại), nên biểu thị bằng
+// viền màu (Sàn 2D) / khăn choàng màu (Sàn 3D) + nhãn phong cách. 10 màu × 10 phong cách = 100 trang
+// phục THẬT SỰ khác nhau (không phải danh sách giả lặp lại tên), tự động đổi ngẫu nhiên mỗi lần nhân
+// vật lên sàn — gọi tên/tặng quà càng nhiều thì càng thấy nhiều bộ khác nhau.
+export const OUTFITS = OUTFIT_COLORS.flatMap((color) =>
+  OUTFIT_STYLES.map((style) => ({
+    id: `outfit_${color.token}_${slugifyOutfitStyle(style)}`,
+    name: `${style} ${color.label}`,
+    ringClass: color.ringClass,
+    hex: color.hex,
+  }))
+);
 
 // Phong cách bình luận riêng cho từng phiên live — chỉ chi phối "giọng người dẫn" (auto-reply Q&A +
 // lời cảm ơn quà tặng), KHÔNG đổi tính cách gốc của từng nhân vật để giữ bản sắc riêng ổn định.
@@ -308,6 +331,7 @@ export const DEFAULT_SETTINGS = {
   disabledEffectIds: [],
   disabledSceneIds: [],
   disabledSoundIds: [],
+  disabledOutfitIds: [],
 };
 
 // Kho câu bình luận phản hồi theo "giọng" tính cách nhân vật — hài hước, đa dạng, không cần gọi AI

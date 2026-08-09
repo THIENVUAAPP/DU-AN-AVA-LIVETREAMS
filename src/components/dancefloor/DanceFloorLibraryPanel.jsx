@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { Volume2, Gem, Music4, Sparkles as SparklesIcon, Trash2, Image as ImageIcon, CheckCircle2, XCircle, Plus } from 'lucide-react';
-import { SCENE_BACKGROUNDS, DANCE_MODE_LABELS } from '../../lib/danceFloorData';
+import { Volume2, Gem, Music4, Sparkles as SparklesIcon, Trash2, Image as ImageIcon, CheckCircle2, XCircle, Plus, Shirt } from 'lucide-react';
+import { SCENE_BACKGROUNDS, DANCE_MODE_LABELS, OUTFITS } from '../../lib/danceFloorData';
 import DanceFloorCharacterLibraryGrid from './DanceFloorCharacterLibraryGrid';
 import DanceFloorMotionCaptureUploader from './DanceFloorMotionCaptureUploader';
 
@@ -39,17 +39,18 @@ export default function DanceFloorLibraryPanel({
   effects, customEffects, onAddCustomEffect, onDeleteCustomEffect,
   sounds, onAddCustomSound, onDeleteCustomSound,
   giftTiers, setGiftTiers, onPreviewSound,
-  disabledCharacterIds, disabledDanceIds, disabledEffectIds, disabledSceneIds, disabledSoundIds, onToggleLibraryItem,
+  disabledCharacterIds, disabledDanceIds, disabledEffectIds, disabledSceneIds, disabledSoundIds, disabledOutfitIds, onToggleLibraryItem,
   customBackgroundImage, onSetCustomBackgroundImage,
 }) {
   const bgInputRef = useRef(null);
   const soundInputRef = useRef(null);
   const [effectForm, setEffectForm] = useState(EMPTY_EFFECT_FORM);
 
+  // Cho phép chọn nhiều file nhạc cùng lúc — thêm hàng loạt, mỗi file 1 mục trong Thư Viện Âm Thanh.
   const handleSoundUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    onAddCustomSound(file);
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    files.forEach((file) => onAddCustomSound(file));
     if (soundInputRef.current) soundInputRef.current.value = '';
   };
 
@@ -110,6 +111,26 @@ export default function DanceFloorLibraryPanel({
           })}
         </div>
         <DanceFloorMotionCaptureUploader onCaptured={onAddCustomDanceStyle} />
+      </section>
+
+      <section>
+        <h3 className="text-lg font-black text-white flex items-center gap-2 mb-3">
+          <Shirt className="w-5 h-5 text-cyan-400" /> Thư Viện Trang Phục ({OUTFITS.length})
+        </h3>
+        <p className="text-xs text-gray-400 mb-3">
+          10 màu × 10 phong cách = 100 bộ trang phục thật sự khác nhau. Nhân vật tự đổi ngẫu nhiên bộ
+          trang phục mỗi lần được gọi tên/trúng luật/nhận quà lên sàn — hiển thị bằng viền màu (Sàn 2D)
+          và khăn choàng phát sáng cùng màu (Sàn 3D).
+        </p>
+        <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-10 gap-2 max-h-56 overflow-y-auto p-1">
+          {OUTFITS.map((o) => (
+            <div key={o.id} className="glass-panel p-2 rounded-xl border border-white/10 text-center relative">
+              <ToggleBadge enabled={!disabledOutfitIds.includes(o.id)} onClick={() => onToggleLibraryItem('outfit', o.id)} />
+              <div className={`w-7 h-7 mx-auto mt-3 mb-1 rounded-full ring-2 ${o.ringClass}`} style={{ backgroundColor: o.hex }} />
+              <p className="text-[8px] font-bold text-gray-300 truncate">{o.name}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section>
@@ -191,8 +212,8 @@ export default function DanceFloorLibraryPanel({
             </div>
           ))}
         </div>
-        <input ref={soundInputRef} type="file" accept="audio/*" onChange={handleSoundUpload} className="text-xs text-gray-300" />
-        <p className="text-[9px] text-gray-500 mt-1">Tải nhạc trend thật (mp3, cả bài — có lời/không lời/nhạc sàn) để dùng làm nhạc nền riêng cho luật/nhân vật — chỉ dùng trong phiên hiện tại.</p>
+        <input ref={soundInputRef} type="file" accept="audio/*" multiple onChange={handleSoundUpload} className="text-xs text-gray-300" />
+        <p className="text-[9px] text-gray-500 mt-1">Tải nhạc trend thật (mp3, cả bài — có lời/không lời/nhạc sàn), chọn được NHIỀU file cùng lúc để thêm hàng loạt, dùng làm nhạc nền riêng cho luật/nhân vật — chỉ dùng trong phiên hiện tại.</p>
       </section>
 
       <section>

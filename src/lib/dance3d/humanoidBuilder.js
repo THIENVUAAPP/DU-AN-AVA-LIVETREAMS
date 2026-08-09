@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { gradientToHexPair } from "./colorPalette";
+import { startChromaKeyLoop } from "../mediaSegmentation";
 
 const textureLoader = new THREE.TextureLoader();
 const textureCache = new Map();
@@ -13,11 +14,37 @@ function loadHeadTexture(url) {
   return texture;
 }
 
+// Nhân vật dựng từ video (phông xanh) — dùng đúng kỹ thuật chroma-key canvas đã có ở Sàn 2D
+// (mediaSegmentation.js) rồi phát canvas đó làm texture video thật cho mặt nhân vật 3D, thay vì chỉ
+// hiện quả cầu màu trơn như trước (video KHÔNG hiển thị gì trên Sàn 3D là lỗi đã xác nhận).
+function createChromaKeyVideoTexture(mediaUrl, chromaKeyColor) {
+  const video = document.createElement("video");
+  video.src = mediaUrl;
+  video.loop = true;
+  video.muted = true;
+  video.playsInline = true;
+  video.play().catch(() => {});
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 256;
+  const stopLoop = startChromaKeyLoop(video, canvas, chromaKeyColor || "#00FF00");
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return {
+    texture,
+    stop: () => {
+      stopLoop();
+      video.pause();
+      video.src = "";
+    },
+  };
+}
+
 // Dựng 1 hình nhân 3D dạng khối thấp-poly (phong cách kiểu Roblox) từ nguyên khối THREE.js — không
 // cần asset 3D rig sẵn (mô hình anime cao cấp như ảnh mẫu AUMIX3D là asset thương mại riêng, không
 // tự tạo bằng code được). Đủ để xoay/di chuyển tay chân thật theo 3 chiều, nhìn được từ mọi góc camera.
 // Trả về { group, parts } — parts chứa các khớp (hips/head/arm/leg) để hàm điệu nhảy điều khiển.
-export function buildHumanoidFigure(character) {
+export function buildHumanoidFigure(character, outfitHex) {
   const { from, to } = gradientToHexPair(character.gradient || "from-pink-500 to-purple-600");
   const bodyColor = new THREE.Color(from);
   const limbColor = new THREE.Color(to);
@@ -37,17 +64,47 @@ export function buildHumanoidFigure(character) {
   torso.position.y = 0.28;
   hips.add(torso);
 
-  // Đầu — có thể dán ảnh thật do người dùng tải lên (mediaType: 'image') làm mặt nhân vật
+  // Trang phục — khăn choàng màu quanh ngực đại diện cho outfit đang chọn (đồng bộ với viền màu ở
+  // Sàn 2D), phát sáng nhẹ để nổi bật khi nhân vật được gọi tên/tặng quà đổi trang phục.
+  if (outfitHex) {
+    const sash = new THREE.Mesh(
+      new THREE.TorusGeometry(0.27, 0.035, 8, 24),
+      new THREE.MeshStandardMaterial({
+        color: new THREE.Color(outfitHex), roughness: 0.35, metalness: 0.4,
+        emissive: new THREE.Color(outfitHex), emissiveIntensity: 0.3,
+      })
+    );
+    sash.rotation.x = Math.PI / 2;
+    sash.position.y = 0.42;
+    hips.add(sash);
+  }
+
+  // Đầu — có thể dán ảnh thật (mediaType: 'image') hoặc video phông xanh (mediaType: 'video') do người
+  // dùng tải lên làm mặt nhân vật.
   const headGroup = new THREE.Group();
   headGroup.position.y = 0.72;
   hips.add(headGroup);
 
-  const headTexture = character.mediaType === "image" ? loadHeadTexture(character.mediaUrl) : null;
-  const headMat = headTexture
-    ? new THREE.MeshStandardMaterial({ map: headTexture, roughness: 0.6 })
-    : new THREE.MeshStandardMaterial({ color: bodyColor.clone().lerp(new THREE.Color("#ffffff"), 0.3), roughness: 0.6 });
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), headMat);
-  headGroup.add(head);
+  let videoTexture = null;
+  let stopVideo = null;
+
+  if (character.mediaType === "video" && character.mediaUrl) {
+    const videoResult = createChromaKeyVideoTexture(character.mediaUrl, character.chromaKeyColor);
+    videoTexture = videoResult.texture;
+    stopVideo = videoResult.stop;
+    const videoPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.42, 0.42),
+      new THREE.MeshBasicMaterial({ map: videoTexture, transparent: true, side: THREE.DoubleSide })
+    );
+    headGroup.add(videoPlane);
+  } else {
+    const headTexture = character.mediaType === "image" ? loadHeadTexture(character.mediaUrl) : null;
+    const headMat = headTexture
+      ? new THREE.MeshStandardMaterial({ map: headTexture, roughness: 0.6 })
+      : new THREE.MeshStandardMaterial({ color: bodyColor.clone().lerp(new THREE.Color("#ffffff"), 0.3), roughness: 0.6 });
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), headMat);
+    headGroup.add(head);
+  }
 
   function buildLimb(isArm, side) {
     const pivot = new THREE.Group();
@@ -83,6 +140,8 @@ export function buildHumanoidFigure(character) {
   return {
     group,
     parts: { hips, headGroup, leftArm, rightArm, leftLeg, rightLeg },
+    videoTexture,
+    stopVideo,
   };
 }
 

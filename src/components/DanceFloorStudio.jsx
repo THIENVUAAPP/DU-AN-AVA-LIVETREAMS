@@ -170,6 +170,7 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
                     danceStyles={allDanceStyles}
                     effectTriggers={effectTriggers}
                     stagePresetId={stagePresetId}
+                    customBackgroundImage={settings.customBackgroundImage}
                     isConnected={isLive || connectedChannelList.length > 0}
                     connectionLabel={
                       isLive
@@ -295,6 +296,7 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
           disabledEffectIds={settings.disabledEffectIds}
           disabledSceneIds={settings.disabledSceneIds}
           disabledSoundIds={settings.disabledSoundIds}
+          disabledOutfitIds={settings.disabledOutfitIds}
           onToggleLibraryItem={toggleLibraryItem}
           customBackgroundImage={settings.customBackgroundImage}
           onSetCustomBackgroundImage={setCustomBackgroundImage}

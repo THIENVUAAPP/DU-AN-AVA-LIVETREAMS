@@ -61,7 +61,7 @@ export function useDanceFloorManualActions({ processEvent, spawnCharacters, push
       danceStyles: filterEnabled(DANCE_STYLES, settings.disabledDanceIds),
       effects: filterEnabled(allEffects, settings.disabledEffectIds),
       scenes: filterEnabled(SCENE_BACKGROUNDS, settings.disabledSceneIds),
-      outfits: OUTFITS,
+      outfits: filterEnabled(OUTFITS, settings.disabledOutfitIds),
     });
     if (!combo.character) return;
     const line = pickReactionLine(combo.character.personality, 'Khán Giả', REACTION_LINES, REACTION_LINES.funny);
