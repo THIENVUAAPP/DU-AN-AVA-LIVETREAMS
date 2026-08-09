@@ -48,7 +48,7 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
     allSounds, addCustomSound, deleteCustomSound, setCustomBackgroundImage,
     allDanceStyles, customDanceStyles, addCustomDanceStyle, deleteCustomDanceStyle,
     backgroundVideos, addBackgroundVideo, deleteBackgroundVideo, activeBackgroundVideoId, setActiveBackgroundVideoId,
-    instances, effectTriggers, sceneId, leaderboard, reactionFeed, commentFeed, giftShowcase,
+    instances, setInstances, effectTriggers, sceneId, leaderboard, reactionFeed, commentFeed, giftShowcase,
     connectedChannelList, selectedChannelIds, toggleChannel,
     commentsPerMin, triggersPerMin,
     handleManualTrigger, handleManualGift, handleManualCombo, handleManualHighlight,
@@ -275,8 +275,27 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
 
             <DanceFloorAnimateDiffPanel 
               onApplyAiEffect={(config) => {
-                // Future integration to pass AI effect configurations to the canvas renderer
-                console.log('Applied AI Effect:', config);
+                if (config.type === 'animatediff' && config.imageUrl) {
+                  const now = Date.now();
+                  const cloneCount = 50;
+                  const newClones = Array.from({ length: cloneCount }).map((_, i) => ({
+                    instanceId: `ai_clone_${now}_${i}`,
+                    characterId: 'char_default', // Use default character base
+                    danceId: allDanceStyles[Math.floor(Math.random() * allDanceStyles.length)]?.id || 'dance_basic',
+                    sizeScale: config.scale || 1.0,
+                    username: `AI Clone ${i + 1}`,
+                    startTime: now,
+                    durationMs: 6 * 60 * 60 * 1000,
+                    customTexture: config.imageUrl, // Inject DataURL
+                    groupId: `ai_army_${now}`,
+                    phase: Math.random() * Math.PI * 2, // Random starting phase for organic look
+                  }));
+                  
+                  setInstances(prev => [...prev, ...newClones]);
+                  
+                  // Also add a global screen effect to make it look "AI generated"
+                  setSettings(s => ({ ...s, autoCameraEnabled: true }));
+                }
               }} 
             />
 

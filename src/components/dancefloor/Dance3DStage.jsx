@@ -270,7 +270,9 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
       if (instancesMapRef.current.has(inst.instanceId)) return;
       const character = characters.find((c) => c.id === inst.characterId);
       if (!character) return;
-      const { group, parts, videoTexture, stopVideo } = buildHumanoidFigure(character);
+      
+      const mergedCharacter = { ...character, customTexture: inst.customTexture };
+      const { group, parts, videoTexture, stopVideo } = buildHumanoidFigure(mergedCharacter);
 
       const base = spiralPosition(idx, instances.length);
       let pos = base;

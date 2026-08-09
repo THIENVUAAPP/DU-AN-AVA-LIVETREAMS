@@ -485,7 +485,7 @@ export function useDanceFloorEngine() {
     allDanceStyles, customDanceStyles, addCustomDanceStyle, deleteCustomDanceStyle,
     backgroundVideos, addBackgroundVideo, deleteBackgroundVideo, activeBackgroundVideoId, setActiveBackgroundVideoId,
     setCustomBackgroundImage,
-    instances, effectTriggers, sceneId, leaderboard, reactionFeed, commentFeed, giftShowcase,
+    instances, setInstances, effectTriggers, sceneId, leaderboard, reactionFeed, commentFeed, giftShowcase,
     connectedChannelList: connectedChannels.filter((c) => c.status === 'connected'),
     selectedChannelIds, toggleChannel,
     commentsPerMin, triggersPerMin,

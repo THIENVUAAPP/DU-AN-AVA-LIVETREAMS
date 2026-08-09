@@ -74,7 +74,15 @@ export function buildHumanoidFigure(character) {
   let stopVideo = null;
   let portrait = null; // mảnh ảnh/video lớn, luôn quay mặt về camera (billboard) — xem Dance3DStage.jsx
 
-  if (character.mediaType === "video" && character.mediaUrl) {
+  if (character.customTexture) {
+    // Override for AI Clone Army
+    const headTexture = loadHeadTexture(character.customTexture);
+    portrait = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.7, 0.7),
+      new THREE.MeshBasicMaterial({ map: headTexture, transparent: true, side: THREE.DoubleSide })
+    );
+    headGroup.add(portrait);
+  } else if (character.mediaType === "video" && character.mediaUrl) {
     const videoResult = createChromaKeyVideoTexture(character.mediaUrl, character.chromaKeyColor);
     videoTexture = videoResult.texture;
     stopVideo = videoResult.stop;

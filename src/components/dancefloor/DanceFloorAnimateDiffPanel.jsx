@@ -5,12 +5,13 @@ export default function DanceFloorAnimateDiffPanel({ onApplyAiEffect }) {
   const [prompt, setPrompt] = useState('1girl, cyberpunk style, dancing perfectly to the beat, neon lights, 4k resolution, masterpiece');
   const [motionModule, setMotionModule] = useState('mm_sd_v15_v2');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [modelType, setModelType] = useState('3d'); // '3d' (Three.js/Babylon) or 'ai' (AnimateDiff)
+  const [modelType, setModelType] = useState('3d');
   const [scale, setScale] = useState(1.0);
   
   // File upload states
   const [vrmFile, setVrmFile] = useState(null);
   const [startImage, setStartImage] = useState(null);
+  const [startImageDataUrl, setStartImageDataUrl] = useState(null);
   const [poseVideo, setPoseVideo] = useState(null);
 
   const fileInputRef3D = useRef(null);
@@ -22,9 +23,9 @@ export default function DanceFloorAnimateDiffPanel({ onApplyAiEffect }) {
     // Simulate AI generation delay
     setTimeout(() => {
       setIsGenerating(false);
-      alert(`🎉 Đã render xong video nhảy bằng AnimateDiff AI!\n\nPrompt: ${prompt}\nModule: ${motionModule}\n\nHiệu ứng đã được áp dụng trực tiếp lên luồng Live siêu thực.`);
-      if (onApplyAiEffect) onApplyAiEffect({ type: 'animatediff', prompt, scale });
-    }, 2500);
+      alert(`🎉 Đã nhận lệnh AI AnimateDiff!\n\nHệ thống đang sinh sản (Clone) Quân Đoàn 3D với hình ảnh của bạn...`);
+      if (onApplyAiEffect) onApplyAiEffect({ type: 'animatediff', prompt, scale, imageUrl: startImageDataUrl });
+    }, 1000);
   };
 
   const handleFileUpload = (e, type) => {
@@ -36,7 +37,15 @@ export default function DanceFloorAnimateDiffPanel({ onApplyAiEffect }) {
       alert(`✅ Đã tải lên mô hình 3D: ${file.name}\n\nHệ thống Three.js/Babylon đang phân tích bộ xương (rigging) để chuẩn bị nhảy...`);
     } else if (type === 'image') {
       setStartImage(file.name);
-      alert(`✅ Đã tải lên Ảnh bắt đầu: ${file.name}`);
+      
+      // Read image as Data URL for texture mapping
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setStartImageDataUrl(event.target.result);
+        alert(`✅ Đã phân tích xong Ảnh Bắt Đầu! Hãy bấm PHÁT LỆNH ANIMATEDIFF để tạo Quân Đoàn 3D.`);
+      };
+      reader.readAsDataURL(file);
+
     } else if (type === 'video') {
       setPoseVideo(file.name);
       alert(`✅ Đã tải lên Video Pose mẫu: ${file.name}`);
