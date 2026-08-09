@@ -48,6 +48,8 @@ export const DANCE_STYLES = [
   { id: "dance_jump", name: "Nhảy Cao (Jump)", animationClass: "animate-dance-jump", durationSeconds: 6 },
   { id: "dance_wave", name: "Sóng Sánh (Wave)", animationClass: "animate-dance-wave", durationSeconds: 8 },
   { id: "dance_victory", name: "Điệu Chiến Thắng", animationClass: "animate-dance-spin", durationSeconds: 12 },
+  { id: "dance_shuffle", name: "Shuffle Dance (Trend)", animationClass: "animate-dance-shuffle", durationSeconds: 8 },
+  { id: "dance_floss", name: "Floss Dance (Trend)", animationClass: "animate-dance-floss", durationSeconds: 8 },
 ];
 
 export const DANCE_EFFECTS = [
@@ -63,6 +65,87 @@ export const DANCE_EFFECTS = [
   { id: "fx_stars", name: "Ngôi Sao", emoji: "⭐", particle: "rise", color: "#FACC15" },
   { id: "fx_magic", name: "Ma Thuật", emoji: "🪄", particle: "burst", color: "#A855F7" },
   { id: "fx_smoke", name: "Khói", emoji: "💨", particle: "rise", color: "#9CA3AF" },
+  { id: "fx_lightning", name: "Sét Đánh", emoji: "⚡", particle: "burst", color: "#FACC15" },
+  { id: "fx_bubbles", name: "Bong Bóng", emoji: "🫧", particle: "rise", color: "#38BDF8" },
+  { id: "fx_petals", name: "Cánh Hoa Rơi", emoji: "🌸", particle: "fall", color: "#F472B6" },
+  { id: "fx_money", name: "Mưa Tiền", emoji: "💵", particle: "fall", color: "#22C55E" },
+  { id: "fx_diamond_rain", name: "Mưa Kim Cương", emoji: "💠", particle: "burst", color: "#22D3EE" },
+  { id: "fx_laugh", name: "Cười Sảng Khoái", emoji: "😂", particle: "rise", color: "#FBBF24" },
+  { id: "fx_clap", name: "Vỗ Tay", emoji: "👏", particle: "rise", color: "#F59E0B" },
+  { id: "fx_skull", name: "Hài Hước Đen", emoji: "💀", particle: "burst", color: "#9CA3AF" },
+];
+
+// Trang phục dạng "khung màu" phủ lên nhân vật — vì không dựng lại y phục thật trên ảnh/video tải lên
+// (cần AI tạo ảnh chuyên biệt, ngoài phạm vi frontend hiện tại), nên biểu thị bằng viền màu + nhãn.
+export const OUTFITS = [
+  { id: "outfit_red", name: "Đỏ Rực", ringClass: "ring-red-500" },
+  { id: "outfit_gold", name: "Vàng Ánh Kim", ringClass: "ring-amber-400" },
+  { id: "outfit_blue", name: "Xanh Biển", ringClass: "ring-blue-500" },
+  { id: "outfit_purple", name: "Tím Sang", ringClass: "ring-purple-500" },
+  { id: "outfit_pink", name: "Hồng Pastel", ringClass: "ring-pink-400" },
+  { id: "outfit_black", name: "Đen Huyền Bí", ringClass: "ring-neutral-700" },
+  { id: "outfit_white", name: "Trắng Tinh Khôi", ringClass: "ring-white" },
+  { id: "outfit_green", name: "Xanh Lá", ringClass: "ring-emerald-500" },
+];
+
+// Phong cách bình luận riêng cho từng phiên live — chỉ chi phối "giọng người dẫn" (auto-reply Q&A +
+// lời cảm ơn quà tặng), KHÔNG đổi tính cách gốc của từng nhân vật để giữ bản sắc riêng ổn định.
+export const COMMENTARY_STYLES = [
+  { id: "balanced", name: "Cân Bằng Tự Nhiên", biasPersonalities: null },
+  { id: "funny_show", name: "Hài Hước Tấu Hài", biasPersonalities: ["funny", "sassy"] },
+  { id: "sweet_cute", name: "Ngọt Ngào Dễ Thương", biasPersonalities: ["cute"] },
+  { id: "luxury_high", name: "Sang Chảnh Cao Cấp", biasPersonalities: ["luxury", "cool"] },
+  { id: "genz_energetic", name: "Nhí Nhảnh Gen Z", biasPersonalities: ["energetic", "sassy"] },
+];
+
+// Tông giọng đọc (Web Speech API) theo tính cách — miễn phí, chạy ngay trong trình duyệt, không cần API key.
+export const VOICE_PROFILES = {
+  cute: { pitch: 1.7, rate: 1.05 },
+  cool: { pitch: 0.75, rate: 0.92 },
+  funny: { pitch: 1.5, rate: 1.15 },
+  luxury: { pitch: 0.85, rate: 0.85 },
+  energetic: { pitch: 1.4, rate: 1.25 },
+  sassy: { pitch: 1.25, rate: 1.05 },
+};
+
+// Câu trả lời tự động theo mẫu câu hỏi thường gặp — admin thêm/sửa/xoá được qua Auto-Reply Panel,
+// không phải luật từ khoá sinh nhân vật mà là lớp "trò chuyện" độc lập, phản hồi MỌI bình luận phù hợp.
+export const AUTO_REPLY_RULES = [
+  {
+    id: "qa_price", matchKeywords: ["gia bao nhieu", "bao nhieu tien", "gia the nao"], enabled: true,
+    replyTemplates: [
+      "Dạ {username} ơi, giá thì để MC AI xuống sàn tiết lộ sau, spam tim lẹ lên nào! 😄",
+      "{username} hỏi giá hả? Rẻ bất ngờ, nhưng phải xem hết clip mới biết nha!",
+    ],
+  },
+  {
+    id: "qa_how_to_call", matchKeywords: ["lam sao goi", "goi nhan vat the nao", "cach choi"], enabled: true,
+    replyTemplates: [
+      "{username} chỉ cần gõ đúng tên nhân vật là gọi được liền, dễ ợt luôn!",
+      "Gõ tên nhân vật ra là auto nhảy cho {username} xem ngay!",
+    ],
+  },
+  {
+    id: "qa_gift_how", matchKeywords: ["tang qua the nao", "gift la gi", "tang gi"], enabled: true,
+    replyTemplates: [
+      "{username} tặng quà càng lớn, nhân vật càng xịn xuất hiện lâu hơn đó nha!",
+      "Quà nhỏ cũng vui rồi, {username} tặng phát là sàn nhảy nổ tung liền!",
+    ],
+  },
+  {
+    id: "qa_greeting", matchKeywords: ["chao ca nha", "hello", "hi ca nha", "chao shop"], enabled: true,
+    replyTemplates: [
+      "Chào {username} đã ghé sàn nhảy, quẩy cùng tụi mình luôn nha!",
+      "{username} đến rồi kìa, mở nhạc lên chào đón nào!",
+    ],
+  },
+  {
+    id: "qa_bored", matchKeywords: ["chan qua", "buon ngu", "chan the"], enabled: true,
+    replyTemplates: [
+      "{username} đang chán hả, để tụi mình quẩy cho hết chán liền!",
+      "Buồn gì buồn, {username} gõ tên nhân vật lên là hết chán ngay!",
+    ],
+  },
 ];
 
 // Không có file âm thanh thật (chưa có asset) — dùng Web Audio API sinh tone ngắn, phân biệt theo tần số/dạng sóng.
@@ -83,6 +166,10 @@ export const SCENE_BACKGROUNDS = [
   { id: "scene_gold_room", name: "Phòng VIP Vàng", gradient: "from-amber-950 via-[#0A0A0A] to-yellow-900" },
   { id: "scene_rain_night", name: "Đêm Mưa", gradient: "from-slate-900 via-[#0A0A0A] to-blue-950" },
   { id: "scene_fire_stage", name: "Sân Khấu Lửa", gradient: "from-red-950 via-[#0A0A0A] to-orange-950" },
+  { id: "scene_pink_dream", name: "Mộng Hồng", gradient: "from-pink-900 via-[#0A0A0A] to-fuchsia-950" },
+  { id: "scene_cyber_city", name: "Cyber City", gradient: "from-cyan-950 via-[#0A0A0A] to-indigo-950" },
+  { id: "scene_beach_sunset", name: "Hoàng Hôn Biển", gradient: "from-orange-900 via-[#0A0A0A] to-rose-950" },
+  { id: "scene_starry_night", name: "Đêm Sao Băng", gradient: "from-indigo-950 via-[#0A0A0A] to-slate-950" },
 ];
 
 // Bảng luật từ khoá mặc định — admin chỉnh sửa được qua Rule Builder, không cần sửa code.
@@ -151,8 +238,18 @@ export const DEFAULT_SETTINGS = {
   maxTriggersPerUserPerMinute: 5,
   cooldownSecondsDefault: 3,
   soundEnabled: true,
+  voiceEnabled: true,
   simulationEnabled: true,
   simulationIntervalMs: 2500,
+  commentaryStyleId: "balanced",
+  scheduleEnabled: false,
+  scheduleStartHour: 0,
+  scheduleEndHour: 23,
+  customBackgroundImage: null,
+  disabledCharacterIds: [],
+  disabledDanceIds: [],
+  disabledEffectIds: [],
+  disabledSceneIds: [],
 };
 
 // Kho câu bình luận phản hồi theo "giọng" tính cách nhân vật — hài hước, đa dạng, không cần gọi AI

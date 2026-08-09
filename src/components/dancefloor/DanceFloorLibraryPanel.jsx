@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Volume2, Gem, Users, Music4, Sparkles as SparklesIcon, Plus, Trash2 } from 'lucide-react';
-import { DANCE_STYLES, DANCE_EFFECTS, DANCE_SOUNDS } from '../../lib/danceFloorData';
+import React, { useRef } from 'react';
+import { Volume2, Gem, Users, Music4, Sparkles as SparklesIcon, Trash2, Image as ImageIcon, CheckCircle2, XCircle } from 'lucide-react';
+import { DANCE_STYLES, DANCE_EFFECTS, SCENE_BACKGROUNDS } from '../../lib/danceFloorData';
+import DanceFloorCharacterUploader from './DanceFloorCharacterUploader';
 
 const TIER_STYLES = [
   { border: 'border-gray-500/30', badge: 'bg-gray-500/20 text-gray-300' },
@@ -10,140 +11,98 @@ const TIER_STYLES = [
 ];
 
 const PERSONALITY_LABELS = {
-  cute: '🥰 Dễ Thương',
-  cool: '😎 Ngầu',
-  funny: '😂 Hài Hước',
-  luxury: '👑 Sang Chảnh',
-  energetic: '⚡ Sôi Động',
-  sassy: '💅 Cá Tính',
+  cute: '🥰 Dễ Thương', cool: '😎 Ngầu', funny: '😂 Hài Hước',
+  luxury: '👑 Sang Chảnh', energetic: '⚡ Sôi Động', sassy: '💅 Cá Tính',
 };
 
-const GRADIENT_POOL = [
-  'from-pink-500 to-purple-600', 'from-blue-500 to-cyan-500', 'from-emerald-500 to-teal-500',
-  'from-amber-500 to-yellow-500', 'from-red-500 to-orange-500', 'from-fuchsia-500 to-pink-500',
-  'from-indigo-500 to-purple-700', 'from-slate-500 to-cyan-700',
-];
+function ToggleBadge({ enabled, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      title={enabled ? 'Đang dùng — bấm để tắt' : 'Đã tắt — bấm để bật lại'}
+      className={`absolute top-1.5 left-1.5 p-1 rounded-lg cursor-pointer ${enabled ? 'text-emerald-400' : 'text-gray-600'}`}
+    >
+      {enabled ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+    </button>
+  );
+}
 
-const PERSONALITY_SOUND_MAP = {
-  cute: 'sfx_cute', cool: 'sfx_default', funny: 'sfx_funny', luxury: 'sfx_gold', energetic: 'sfx_energy', sassy: 'sfx_energy',
-};
+// Thư viện Nhân Vật / Điệu Nhảy / Hiệu Ứng / Âm Thanh / Bối Cảnh + Cấu Hình Gift-Tier. Mỗi item có
+// nút tick BẬT/TẮT — tắt thì không xuất hiện trong mô phỏng, Auto-Shuffle hay gọi tên tự động nữa.
+export default function DanceFloorLibraryPanel({
+  characters, customCharacters, onAddCustomCharacter, onDeleteCustomCharacter,
+  sounds, onAddCustomSound,
+  giftTiers, setGiftTiers, onPreviewSound,
+  disabledCharacterIds, disabledDanceIds, disabledEffectIds, disabledSceneIds, onToggleLibraryItem,
+  customBackgroundImage, onSetCustomBackgroundImage,
+}) {
+  const bgInputRef = useRef(null);
+  const soundInputRef = useRef(null);
 
-const EMPTY_CUSTOM_CHARACTER = { name: '', emoji: '⭐', personality: 'funny', callNamesText: '' };
-
-// Thư viện Nhân Vật / Điệu Nhảy / Hiệu Ứng / Âm Thanh + Cấu Hình Gift-Tier + Tạo Nhân Vật Tuỳ Chỉnh
-// (viewer/admin có thể "gọi tên" bất kỳ nhân vật nào lên sàn qua callNames — kể cả tên do admin tự đặt).
-export default function DanceFloorLibraryPanel({ characters, customCharacters, onAddCustomCharacter, onDeleteCustomCharacter, giftTiers, setGiftTiers, onPreviewSound }) {
-  const [form, setForm] = useState(EMPTY_CUSTOM_CHARACTER);
+  const handleSoundUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    onAddCustomSound(file);
+    if (soundInputRef.current) soundInputRef.current.value = '';
+  };
 
   const updateTierField = (level, field, value) => {
     setGiftTiers((prev) => prev.map((t) => (t.level === level ? { ...t, [field]: value } : t)));
   };
 
-  const handleAddCustom = (e) => {
-    e.preventDefault();
-    const name = form.name.trim();
-    if (!name) {
-      alert('Vui lòng nhập tên nhân vật!');
-      return;
-    }
-    const callNames = form.callNamesText
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
-    onAddCustomCharacter({
-      id: `custom_${Date.now()}`,
-      name,
-      emoji: form.emoji || '⭐',
-      gender: 'neutral',
-      style: 'custom',
-      gradient: GRADIENT_POOL[Math.floor(Math.random() * GRADIENT_POOL.length)],
-      personality: form.personality,
-      signatureSoundId: PERSONALITY_SOUND_MAP[form.personality] || 'sfx_default',
-      callNames,
-    });
-    setForm(EMPTY_CUSTOM_CHARACTER);
+  const handleBackgroundUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => onSetCustomBackgroundImage(reader.result);
+    reader.readAsDataURL(file);
   };
 
   return (
     <div className="space-y-8">
       <section>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-black text-white flex items-center gap-2">
-            <Users className="w-5 h-5 text-[#EF4444]" /> Thư Viện Nhân Vật ({characters.length})
-          </h3>
-        </div>
+        <h3 className="text-lg font-black text-white flex items-center gap-2 mb-1">
+          <Users className="w-5 h-5 text-[#EF4444]" /> Thư Viện Nhân Vật ({characters.length})
+        </h3>
         <p className="text-xs text-gray-400 mb-3">
-          Gõ đúng tên hoặc biệt danh (vd: "hot girl", "cun", "messi") trong bình luận để triệu hồi thẳng nhân vật đó lên sàn, không cần đợi luật từ khoá.
+          Gõ đúng tên hoặc biệt danh (vd: "hot girl", "cun", "messi") trong bình luận để triệu hồi thẳng nhân vật đó lên sàn. Nhân vật ảnh/video người thật tải lên sẽ tự động tách nền + nhảy theo điệu đã chọn.
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {characters.map((c) => (
-            <div key={c.id} className="glass-panel p-3 rounded-2xl border border-white/10 text-center relative group">
-              {customCharacters.some((cc) => cc.id === c.id) && (
-                <button
-                  onClick={() => onDeleteCustomCharacter(c.id)}
-                  className="absolute top-1.5 right-1.5 p-1 rounded-lg bg-red-500/20 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                >
-                  <Trash2 className="w-3 h-3" />
-                </button>
-              )}
-              <div className={`w-14 h-14 mx-auto rounded-xl bg-gradient-to-br ${c.gradient} flex items-center justify-center text-2xl mb-2`}>
-                {c.emoji}
+          {characters.map((c) => {
+            const enabled = !disabledCharacterIds.includes(c.id);
+            return (
+              <div key={c.id} className="glass-panel p-3 rounded-2xl border border-white/10 text-center relative group">
+                <ToggleBadge enabled={enabled} onClick={() => onToggleLibraryItem('character', c.id)} />
+                {customCharacters.some((cc) => cc.id === c.id) && (
+                  <button
+                    onClick={() => onDeleteCustomCharacter(c.id)}
+                    className="absolute top-1.5 right-1.5 p-1 rounded-lg bg-red-500/20 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                )}
+                {c.mediaType === 'image' && c.mediaUrl ? (
+                  <img src={c.mediaUrl} alt={c.name} className="w-14 h-14 mx-auto rounded-xl object-cover mb-2" />
+                ) : (
+                  <div className={`w-14 h-14 mx-auto rounded-xl bg-gradient-to-br ${c.gradient} flex items-center justify-center text-2xl mb-2`}>
+                    {c.emoji}
+                  </div>
+                )}
+                <p className="text-xs font-black text-white truncate">{c.name}</p>
+                <span className="text-[9px] text-gray-400 font-bold block">{PERSONALITY_LABELS[c.personality] || c.style}</span>
+                {c.callNames?.length > 0 && (
+                  <span className="text-[8px] text-gray-600 truncate block mt-0.5" title={c.callNames.join(', ')}>
+                    Gọi: {c.callNames[0]}
+                  </span>
+                )}
               </div>
-              <p className="text-xs font-black text-white truncate">{c.name}</p>
-              <span className="text-[9px] text-gray-400 font-bold block">{PERSONALITY_LABELS[c.personality] || c.style}</span>
-              {c.callNames?.length > 0 && (
-                <span className="text-[8px] text-gray-600 truncate block mt-0.5" title={c.callNames.join(', ')}>
-                  Gọi: {c.callNames[0]}
-                </span>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        <form onSubmit={handleAddCustom} className="glass-panel p-4 rounded-2xl border border-dashed border-white/20 mt-3 grid grid-cols-2 lg:grid-cols-5 gap-2 items-end">
-          <div>
-            <label className="text-[9px] font-black text-gray-500 uppercase block mb-1">Tên Nhân Vật</label>
-            <input
-              value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              placeholder="vd: Bé Sữa"
-              className="w-full px-2.5 py-2 rounded-xl bg-black/40 border border-white/10 text-white text-xs font-bold outline-none"
-            />
-          </div>
-          <div>
-            <label className="text-[9px] font-black text-gray-500 uppercase block mb-1">Emoji</label>
-            <input
-              value={form.emoji}
-              onChange={(e) => setForm((f) => ({ ...f, emoji: e.target.value }))}
-              className="w-full px-2.5 py-2 rounded-xl bg-black/40 border border-white/10 text-white text-sm text-center outline-none"
-              maxLength={4}
-            />
-          </div>
-          <div>
-            <label className="text-[9px] font-black text-gray-500 uppercase block mb-1">Tính Cách</label>
-            <select
-              value={form.personality}
-              onChange={(e) => setForm((f) => ({ ...f, personality: e.target.value }))}
-              className="w-full px-2.5 py-2 rounded-xl bg-black/40 border border-white/10 text-white text-xs font-bold outline-none"
-            >
-              {Object.entries(PERSONALITY_LABELS).map(([key, label]) => (
-                <option key={key} value={key}>{label}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-[9px] font-black text-gray-500 uppercase block mb-1">Biệt Danh (cách nhau dấu phẩy)</label>
-            <input
-              value={form.callNamesText}
-              onChange={(e) => setForm((f) => ({ ...f, callNamesText: e.target.value }))}
-              placeholder="vd: be sua, bs"
-              className="w-full px-2.5 py-2 rounded-xl bg-black/40 border border-white/10 text-white text-xs font-bold outline-none"
-            />
-          </div>
-          <button type="submit" className="px-3 py-2 rounded-xl bg-[#EF4444] hover:bg-red-600 text-white text-xs font-black cursor-pointer flex items-center justify-center gap-1.5">
-            <Plus className="w-3.5 h-3.5" /> Thêm
-          </button>
-        </form>
+        <div className="mt-3">
+          <DanceFloorCharacterUploader onAddCustomCharacter={onAddCustomCharacter} />
+        </div>
       </section>
 
       <section>
@@ -152,7 +111,8 @@ export default function DanceFloorLibraryPanel({ characters, customCharacters, o
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {DANCE_STYLES.map((d) => (
-            <div key={d.id} className="glass-panel p-3 rounded-2xl border border-white/10 text-center">
+            <div key={d.id} className="glass-panel p-3 rounded-2xl border border-white/10 text-center relative">
+              <ToggleBadge enabled={!disabledDanceIds.includes(d.id)} onClick={() => onToggleLibraryItem('dance', d.id)} />
               <div className={`text-2xl mb-1 ${d.animationClass}`}>🕺</div>
               <p className="text-[11px] font-black text-white">{d.name}</p>
               <span className="text-[9px] text-gray-500">{d.durationSeconds}s mặc định</span>
@@ -167,7 +127,8 @@ export default function DanceFloorLibraryPanel({ characters, customCharacters, o
         </h3>
         <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
           {DANCE_EFFECTS.map((f) => (
-            <div key={f.id} className="glass-panel p-3 rounded-2xl border border-white/10 text-center">
+            <div key={f.id} className="glass-panel p-3 rounded-2xl border border-white/10 text-center relative">
+              <ToggleBadge enabled={!disabledEffectIds.includes(f.id)} onClick={() => onToggleLibraryItem('effect', f.id)} />
               <div className="text-2xl mb-1">{f.emoji}</div>
               <p className="text-[11px] font-black text-white">{f.name}</p>
               <span className="text-[9px] text-gray-500 uppercase">{f.particle}</span>
@@ -178,21 +139,47 @@ export default function DanceFloorLibraryPanel({ characters, customCharacters, o
 
       <section>
         <h3 className="text-lg font-black text-white flex items-center gap-2 mb-3">
-          <Music4 className="w-5 h-5 text-emerald-400" /> Thư Viện Âm Thanh ({DANCE_SOUNDS.length})
+          <ImageIcon className="w-5 h-5 text-pink-400" /> Bối Cảnh Sàn Nhảy ({SCENE_BACKGROUNDS.length})
         </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {DANCE_SOUNDS.map((s) => (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+          {SCENE_BACKGROUNDS.map((s) => (
+            <div key={s.id} className={`relative h-16 rounded-2xl bg-gradient-to-br ${s.gradient} border border-white/10 flex items-end p-2`}>
+              <ToggleBadge enabled={!disabledSceneIds.includes(s.id)} onClick={() => onToggleLibraryItem('scene', s.id)} />
+              <span className="text-[10px] font-black text-white">{s.name}</span>
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center gap-3">
+          <input ref={bgInputRef} type="file" accept="image/*" onChange={handleBackgroundUpload} className="text-xs text-gray-300" />
+          {customBackgroundImage && (
+            <>
+              <img src={customBackgroundImage} alt="bg" className="w-12 h-12 rounded-lg object-cover border border-white/20" />
+              <button onClick={() => onSetCustomBackgroundImage(null)} className="text-[10px] text-red-400 font-bold cursor-pointer">Bỏ ảnh nền tuỳ chỉnh</button>
+            </>
+          )}
+        </div>
+        <p className="text-[9px] text-gray-500 mt-1">Tải ảnh nền riêng sẽ thay toàn bộ bối cảnh gradient có sẵn cho sàn diễn.</p>
+      </section>
+
+      <section>
+        <h3 className="text-lg font-black text-white flex items-center gap-2 mb-3">
+          <Music4 className="w-5 h-5 text-emerald-400" /> Thư Viện Âm Thanh ({sounds.length})
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-3">
+          {sounds.map((s) => (
             <button
               key={s.id}
               onClick={() => onPreviewSound(s.id)}
               className="glass-panel p-3 rounded-2xl border border-white/10 text-center hover:border-emerald-500/40 transition-all cursor-pointer"
             >
               <Volume2 className="w-5 h-5 mx-auto mb-1 text-emerald-400" />
-              <p className="text-[11px] font-black text-white">{s.name}</p>
-              <span className="text-[9px] text-gray-500">Nghe Thử</span>
+              <p className="text-[11px] font-black text-white truncate">{s.name}</p>
+              <span className="text-[9px] text-gray-500">{s.isSessionOnly ? 'Nhạc Đã Tải Lên' : 'Nghe Thử'}</span>
             </button>
           ))}
         </div>
+        <input ref={soundInputRef} type="file" accept="audio/*" onChange={handleSoundUpload} className="text-xs text-gray-300" />
+        <p className="text-[9px] text-gray-500 mt-1">Tải nhạc trend thật (mp3, cả bài) để dùng làm nhạc nền riêng cho luật/nhân vật — chỉ dùng trong phiên hiện tại.</p>
       </section>
 
       <section>

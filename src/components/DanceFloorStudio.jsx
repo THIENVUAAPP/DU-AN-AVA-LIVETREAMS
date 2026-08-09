@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import { Sparkles, Zap, BookOpen, MessageSquareText, TrendingUp, Users, Trophy, Volume2, VolumeX, Radio } from 'lucide-react';
+import { Sparkles, Zap, BookOpen, MessageSquareText, TrendingUp, Users, Trophy, Volume2, VolumeX, Radio, MessagesSquare } from 'lucide-react';
 
 import DanceFloorStage from './dancefloor/DanceFloorStage';
 import DanceFloorRuleBuilder from './dancefloor/DanceFloorRuleBuilder';
 import DanceFloorLibraryPanel from './dancefloor/DanceFloorLibraryPanel';
 import DanceFloorTestPanel from './dancefloor/DanceFloorTestPanel';
 import DanceFloorReactionFeed from './dancefloor/DanceFloorReactionFeed';
+import DanceFloorAutoReplyPanel from './dancefloor/DanceFloorAutoReplyPanel';
 import { useDanceFloorEngine } from '../hooks/useDanceFloorEngine';
 
 const SECTIONS = [
   { id: 'stage', label: 'Sàn Diễn', icon: Sparkles },
   { id: 'rules', label: 'Luật Từ Khoá', icon: Zap },
+  { id: 'autoreply', label: 'Trả Lời Tự Động', icon: MessagesSquare },
   { id: 'library', label: 'Thư Viện & Gift-Tier', icon: BookOpen },
 ];
 
@@ -18,19 +20,32 @@ const SECTIONS = [
 // Pipeline: Ingestion (mô phỏng + cầu nối YouTube thật) → Gọi Tên/Rule Engine → Gift-Tier Resolver
 // → State Manager (slot/priority queue) → Render Engine (DanceFloorStage). Logic điều phối nằm trong
 // useDanceFloorEngine — file này chỉ lo hiển thị.
-export default function DanceFloorStudio({ isLive }) {
+export default function DanceFloorStudio({ isLive, setIsLive }) {
   const [activeSection, setActiveSection] = useState('stage');
   const engine = useDanceFloorEngine();
 
   const {
     rules, setRules, giftTiers, setGiftTiers, settings, setSettings,
+    autoReplyRules, setAutoReplyRules,
     allCharacters, customCharacters, addCustomCharacter, deleteCustomCharacter,
+    allSounds, addCustomSound, setCustomBackgroundImage,
     instances, effectTriggers, sceneId, leaderboard, reactionFeed,
     connectedChannelList, selectedChannelIds, toggleChannel,
     ytBridge, handleYtConnect, handleYtDisconnect,
     commentsPerMin, triggersPerMin,
-    handleManualTrigger, handleManualGift, playSound,
+    handleManualTrigger, handleManualGift, playSound, runAutoShuffle, toggleLibraryItem,
   } = engine;
+
+  // Phát Live Đa Kênh — dùng đúng các kênh TikTok/YouTube/Facebook đã kết nối sẵn từ Restream Đa Nền
+  // Tảng (streamKey/token đã lưu), không yêu cầu đăng nhập lại. Dùng chung state isLive toàn cục để
+  // đồng bộ với badge "PHÁT LIVE" trên Header và các module khác.
+  const handleToggleLive = () => {
+    if (!isLive && selectedChannelIds.length === 0) {
+      alert('Vui lòng chọn ít nhất 1 kênh đã kết nối (TikTok/YouTube/Facebook...) trước khi phát live!');
+      return;
+    }
+    setIsLive(!isLive);
+  };
 
   return (
     <div className="space-y-6">
@@ -89,8 +104,15 @@ export default function DanceFloorStudio({ isLive }) {
               effectTriggers={effectTriggers}
               sceneId={sceneId}
               characters={allCharacters}
-              isConnected={connectedChannelList.length > 0}
-              connectionLabel={connectedChannelList.length > 0 ? `${connectedChannelList.length} Kênh Đang Live` : 'Chưa Kết Nối Kênh'}
+              customBackgroundImage={settings.customBackgroundImage}
+              isConnected={isLive || connectedChannelList.length > 0}
+              connectionLabel={
+                isLive
+                  ? `🔴 ĐANG LIVE TRÊN ${selectedChannelIds.length} KÊNH`
+                  : connectedChannelList.length > 0
+                  ? `${connectedChannelList.length} Kênh Sẵn Sàng`
+                  : 'Chưa Kết Nối Kênh'
+              }
             />
 
             <div className="glass-panel p-4 rounded-2xl border border-white/10">
@@ -120,6 +142,8 @@ export default function DanceFloorStudio({ isLive }) {
             connectedChannels={connectedChannelList}
             selectedChannelIds={selectedChannelIds}
             onToggleChannel={toggleChannel}
+            isLive={isLive}
+            onToggleLive={handleToggleLive}
             simulationEnabled={settings.simulationEnabled}
             onToggleSimulation={() => setSettings((s) => ({ ...s, simulationEnabled: !s.simulationEnabled }))}
             onManualTrigger={handleManualTrigger}
@@ -128,12 +152,25 @@ export default function DanceFloorStudio({ isLive }) {
             onYtConnect={handleYtConnect}
             onYtDisconnect={handleYtDisconnect}
             characters={allCharacters}
+            voiceEnabled={settings.voiceEnabled}
+            onToggleVoice={() => setSettings((s) => ({ ...s, voiceEnabled: !s.voiceEnabled }))}
+            commentaryStyleId={settings.commentaryStyleId}
+            onChangeCommentaryStyle={(id) => setSettings((s) => ({ ...s, commentaryStyleId: id }))}
+            onRunAutoShuffle={runAutoShuffle}
+            scheduleEnabled={settings.scheduleEnabled}
+            scheduleStartHour={settings.scheduleStartHour}
+            scheduleEndHour={settings.scheduleEndHour}
+            onUpdateSchedule={(patch) => setSettings((s) => ({ ...s, ...patch }))}
           />
         </div>
       )}
 
       {activeSection === 'rules' && (
-        <DanceFloorRuleBuilder rules={rules} setRules={setRules} characters={allCharacters} onTestRule={(rule) => handleManualTrigger(rule.keyword)} />
+        <DanceFloorRuleBuilder rules={rules} setRules={setRules} characters={allCharacters} sounds={allSounds} onTestRule={(rule) => handleManualTrigger(rule.keyword)} />
+      )}
+
+      {activeSection === 'autoreply' && (
+        <DanceFloorAutoReplyPanel autoReplyRules={autoReplyRules} setAutoReplyRules={setAutoReplyRules} />
       )}
 
       {activeSection === 'library' && (
@@ -142,9 +179,18 @@ export default function DanceFloorStudio({ isLive }) {
           customCharacters={customCharacters}
           onAddCustomCharacter={addCustomCharacter}
           onDeleteCustomCharacter={deleteCustomCharacter}
+          sounds={allSounds}
+          onAddCustomSound={addCustomSound}
           giftTiers={giftTiers}
           setGiftTiers={setGiftTiers}
           onPreviewSound={playSound}
+          disabledCharacterIds={settings.disabledCharacterIds}
+          disabledDanceIds={settings.disabledDanceIds}
+          disabledEffectIds={settings.disabledEffectIds}
+          disabledSceneIds={settings.disabledSceneIds}
+          onToggleLibraryItem={toggleLibraryItem}
+          customBackgroundImage={settings.customBackgroundImage}
+          onSetCustomBackgroundImage={setCustomBackgroundImage}
         />
       )}
     </div>

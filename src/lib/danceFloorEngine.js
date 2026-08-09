@@ -66,6 +66,22 @@ export function pickReactionLine(personality, username, linesByPersonality, fall
   return template.replace(/\{username\}/g, username || "bạn");
 }
 
+// Trò chuyện tự động theo mẫu câu hỏi — lớp phản hồi độc lập với việc sinh nhân vật, áp dụng cho MỌI
+// bình luận khớp mẫu (kể cả khi không trigger từ khoá/gọi tên nào). Không phải AI sinh mới theo từng
+// câu, mà khớp theo danh sách mẫu câu admin cấu hình được (xem AUTO_REPLY_RULES / Auto-Reply Panel).
+export function matchAutoReply(message, autoReplyRules) {
+  const normalizedMessage = normalizeText(message);
+  if (!normalizedMessage) return null;
+
+  const matched = autoReplyRules.find((rule) => {
+    if (!rule.enabled) return false;
+    return (rule.matchKeywords || []).some((kw) => normalizedMessage.includes(normalizeText(kw)));
+  });
+  if (!matched || matched.replyTemplates.length === 0) return null;
+
+  return matched.replyTemplates[Math.floor(Math.random() * matched.replyTemplates.length)];
+}
+
 // Quy đổi 1 sự kiện quà tặng của nền tảng bất kỳ về "điểm sàn nhảy" nội bộ.
 export function convertGiftToPoints(platform, giftName, rawValue, mapping) {
   const found = mapping.find(
@@ -145,6 +161,33 @@ export function admitQueueToStage(queue, currentInstances, maxSlots, now) {
   }
 
   return { instances: working, admitted, evicted };
+}
+
+// --- Trợ giúp cho Auto-Shuffle / Lịch 24-7 / Tick kích hoạt thư viện ---
+
+// Có đang trong khung giờ hoạt động cho phép không (hỗ trợ khung qua đêm, vd 22h → 6h sáng).
+export function isWithinSchedule(now, startHour, endHour) {
+  const hour = new Date(now).getHours();
+  if (startHour <= endHour) return hour >= startHour && hour <= endHour;
+  return hour >= startHour || hour <= endHour;
+}
+
+// Lọc bỏ các item admin đã tick TẮT khỏi thư viện (không dùng trong mô phỏng/auto-shuffle/gọi tên).
+export function filterEnabled(list, disabledIds) {
+  if (!disabledIds || disabledIds.length === 0) return list;
+  return list.filter((item) => !disabledIds.includes(item.id));
+}
+
+// Sinh 1 tổ hợp ngẫu nhiên (nhân vật/điệu nhảy/hiệu ứng/bối cảnh/trang phục) cho Auto-Shuffle 1-chạm.
+export function buildRandomCombo({ characters, danceStyles, effects, scenes, outfits }) {
+  const pick = (arr) => (arr && arr.length > 0 ? arr[Math.floor(Math.random() * arr.length)] : null);
+  return {
+    character: pick(characters),
+    dance: pick(danceStyles),
+    effect: pick(effects),
+    scene: pick(scenes),
+    outfit: pick(outfits),
+  };
 }
 
 // Xây dựng 1 UnifiedLiveEvent chuẩn hoá từ dữ liệu thô của adapter bất kỳ.

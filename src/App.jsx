@@ -10,6 +10,7 @@ import LiveCommerceStudio from "./components/LiveCommerceStudio";
 import MultistreamStudio from "./components/MultistreamStudio";
 import UnifiedChatHub from "./components/UnifiedChatHub";
 import DanceFloorStudio from "./components/DanceFloorStudio";
+import DanceFloorOverlay from "./components/DanceFloorOverlay";
 import MultiAccountManager from "./components/MultiAccountManager";
 import AISellerOps from "./components/AISellerOps";
 import EnterprisePayment from "./components/EnterprisePayment";
@@ -184,6 +185,14 @@ export default function App() {
     alert(`⚡ ĐÃ KẾT NỐI THÀNH CÔNG TÀI KHOẢN GOOGLE REAL-TIME!\n\n👤 Email: ${emailClean}\n👑 Quyền hạn: ${isAdmin ? "SUPER ADMIN VIP" : "THÀNH VIÊN GÓI CHÍNH THỨC"}\n\nHồ sơ đã được đồng bộ với Cơ sở dữ liệu Supabase!`);
   };
 
+  // Cửa Sổ Overlay Trong Suốt cho Sàn Nhảy TikTok — bỏ qua toàn bộ Header/đăng nhập, chỉ render sàn
+  // diễn nền trong suốt để OBS/TikTok LIVE Studio/YouTube Studio Capture Cửa Sổ đưa lên live thật.
+  const isDanceFloorOverlay =
+    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("overlay") === "dancefloor";
+  if (isDanceFloorOverlay) {
+    return <DanceFloorOverlay />;
+  }
+
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-gray-100 flex flex-col font-sans selection:bg-[#EF4444] selection:text-white">
       
@@ -257,7 +266,7 @@ export default function App() {
             {activeTab === "dance-floor" && (
               (currentUser?.plan === 'FREE')
                 ? <UpgradePrompt featureName="Sàn Nhảy TikTok Tương Tác" requiredPlan="Gói STARTER" setActiveTab={setActiveTab} />
-                : <DanceFloorStudio isLive={isLive} />
+                : <DanceFloorStudio isLive={isLive} setIsLive={setIsLive} />
             )}
 
             <div style={{ display: activeTab === "livestream-cloner" ? "block" : "none" }}>

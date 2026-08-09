@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Wifi, WifiOff } from 'lucide-react';
-import { DANCE_STYLES, DANCE_EFFECTS, SCENE_BACKGROUNDS } from '../../lib/danceFloorData';
+import { DANCE_STYLES, DANCE_EFFECTS, SCENE_BACKGROUNDS, OUTFITS } from '../../lib/danceFloorData';
+import { startChromaKeyLoop } from '../../lib/mediaSegmentation';
 
 function getById(list, id) {
   return list.find((x) => x.id === id) || null;
@@ -27,9 +28,50 @@ function createParticle(effect, x, y) {
   };
 }
 
+// Khung hiển thị nhân vật: emoji minh hoạ (mặc định) hoặc ảnh/video người thật do admin tải lên.
+// Ảnh đã tách nền sẵn (PNG trong suốt) nên chỉ cần <img>; video chạy chroma-key theo thời gian thực
+// bằng canvas riêng — chỉ xử lý khi thực sự đang hiển thị trên sàn (giới hạn bởi maxSlots).
+function CharacterAvatar({ character, danceClass }) {
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    if (character.mediaType !== 'video') return undefined;
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return undefined;
+    video.play().catch(() => {});
+    const stop = startChromaKeyLoop(video, canvas, character.chromaKeyColor || '#00FF00');
+    return () => stop();
+  }, [character.mediaType, character.mediaUrl, character.chromaKeyColor]);
+
+  if (character.mediaType === 'image' && character.mediaUrl) {
+    return (
+      <div className={`w-16 h-16 rounded-2xl overflow-hidden shadow-xl border-2 border-white/30 ${danceClass}`}>
+        <img src={character.mediaUrl} alt={character.name} className="w-full h-full object-cover" />
+      </div>
+    );
+  }
+
+  if (character.mediaType === 'video' && character.mediaUrl) {
+    return (
+      <div className={`w-16 h-16 rounded-2xl overflow-hidden shadow-xl border-2 border-white/30 ${danceClass}`}>
+        <video ref={videoRef} src={character.mediaUrl} muted loop playsInline className="hidden" />
+        <canvas ref={canvasRef} className="w-full h-full object-cover" />
+      </div>
+    );
+  }
+
+  return (
+    <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${character.gradient} flex items-center justify-center text-3xl shadow-xl border-2 border-white/30 ${danceClass}`}>
+      {character.emoji}
+    </div>
+  );
+}
+
 // Sàn diễn Render Engine — Canvas 2D particle system tự viết (nhẹ, không phụ thuộc PixiJS/Three.js
 // vì dự án hiện chưa cài các thư viện này). Nhân vật hiển thị bằng CSS animation (index.css).
-export default function DanceFloorStage({ instances, maxSlots, effectTriggers, sceneId, connectionLabel, isConnected, characters }) {
+export default function DanceFloorStage({ instances, maxSlots, effectTriggers, sceneId, connectionLabel, isConnected, characters, customBackgroundImage, transparent }) {
   const canvasRef = useRef(null);
   const particlesRef = useRef([]);
   const rafRef = useRef(null);
@@ -102,26 +144,37 @@ export default function DanceFloorStage({ instances, maxSlots, effectTriggers, s
   const slots = Array.from({ length: maxSlots });
   const now = Date.now();
 
+  const containerClass = transparent
+    ? 'relative w-full h-full min-h-screen overflow-hidden'
+    : `relative rounded-3xl border border-white/10 overflow-hidden min-h-[440px] ${customBackgroundImage ? '' : `bg-gradient-to-br ${scene.gradient}`}`;
+  const containerStyle = !transparent && customBackgroundImage
+    ? { backgroundImage: `url(${customBackgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+    : undefined;
+
   return (
-    <div className={`relative rounded-3xl border border-white/10 overflow-hidden bg-gradient-to-br ${scene.gradient} min-h-[440px]`}>
-      <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/70 to-transparent animate-tile-glow" />
+    <div className={containerClass} style={containerStyle}>
+      {!transparent && <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/70 to-transparent animate-tile-glow" />}
 
-      <div className="absolute top-3 left-3 flex items-center gap-2">
-        <div
-          className={`px-3 py-1 rounded-full border text-[10px] font-black flex items-center gap-1.5 ${
-            isConnected
-              ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
-              : 'bg-gray-500/20 border-gray-500/40 text-gray-400'
-          }`}
-        >
-          {isConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-          {connectionLabel}
+      {!transparent && (
+        <div className="absolute top-3 left-3 flex items-center gap-2">
+          <div
+            className={`px-3 py-1 rounded-full border text-[10px] font-black flex items-center gap-1.5 ${
+              isConnected
+                ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
+                : 'bg-gray-500/20 border-gray-500/40 text-gray-400'
+            }`}
+          >
+            {isConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+            {connectionLabel}
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-black/50 border border-white/20 text-[10px] font-black text-white">
-        🕺 {instances.length}/{maxSlots} SLOT
-      </div>
+      {!transparent && (
+        <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-black/50 border border-white/20 text-[10px] font-black text-white">
+          🕺 {instances.length}/{maxSlots} SLOT
+        </div>
+      )}
 
       <div className="relative z-10 h-full min-h-[440px] grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3 p-5 content-end">
         {slots.map((_, idx) => {
@@ -129,6 +182,7 @@ export default function DanceFloorStage({ instances, maxSlots, effectTriggers, s
           if (!inst) return <div key={idx} className="h-28" />;
           const character = getById(characters, inst.characterId);
           const dance = getById(DANCE_STYLES, inst.danceId);
+          const outfit = getById(OUTFITS, inst.outfitId);
           if (!character) return <div key={idx} className="h-28" />;
           const remainingPct = Math.max(0, 1 - (now - inst.startTime) / inst.durationMs);
           return (
@@ -138,12 +192,8 @@ export default function DanceFloorStage({ instances, maxSlots, effectTriggers, s
                   {inst.reactionLine}
                 </div>
               )}
-              <div
-                className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${character.gradient} flex items-center justify-center text-3xl shadow-xl border-2 border-white/30 ${
-                  dance ? dance.animationClass : ''
-                }`}
-              >
-                {character.emoji}
+              <div className={outfit ? `rounded-2xl ring-2 ${outfit.ringClass}` : ''}>
+                <CharacterAvatar character={character} danceClass={dance ? dance.animationClass : ''} />
               </div>
               <span className="mt-1 text-[10px] font-black text-white bg-black/60 px-2 py-0.5 rounded-full truncate max-w-[92px]">
                 {inst.username}

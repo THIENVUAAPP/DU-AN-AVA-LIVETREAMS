@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, Zap, Power, Sparkles } from 'lucide-react';
-import { DANCE_STYLES, DANCE_EFFECTS, DANCE_SOUNDS, SCENE_BACKGROUNDS } from '../../lib/danceFloorData';
+import { DANCE_STYLES, DANCE_EFFECTS, SCENE_BACKGROUNDS } from '../../lib/danceFloorData';
 
-function buildEmptyRule(characters) {
+function buildEmptyRule(characters, sounds) {
   return {
     keyword: '',
     platform: 'all',
     characterId: characters[0]?.id || null,
     danceId: DANCE_STYLES[0].id,
     effectId: DANCE_EFFECTS[0].id,
-    soundId: DANCE_SOUNDS[0].id,
+    soundId: sounds[0].id,
     sceneId: '',
     spawnsCharacter: true,
     spawnCount: 1,
@@ -21,8 +21,8 @@ function buildEmptyRule(characters) {
 }
 
 // Rule Builder — bảng "trigger_rules" no-code: admin tạo/sửa/xoá luật từ khoá không cần code lại (Mục 26/28 kế hoạch).
-export default function DanceFloorRuleBuilder({ rules, setRules, characters, onTestRule }) {
-  const [form, setForm] = useState(() => buildEmptyRule(characters));
+export default function DanceFloorRuleBuilder({ rules, setRules, characters, sounds, onTestRule }) {
+  const [form, setForm] = useState(() => buildEmptyRule(characters, sounds));
   const [showForm, setShowForm] = useState(false);
 
   const updateField = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
@@ -43,7 +43,7 @@ export default function DanceFloorRuleBuilder({ rules, setRules, characters, onT
       danceId: form.spawnsCharacter ? form.danceId : null,
     };
     setRules((prev) => [...prev, newRule]);
-    setForm(buildEmptyRule(characters));
+    setForm(buildEmptyRule(characters, sounds));
     setShowForm(false);
   };
 
@@ -189,7 +189,7 @@ export default function DanceFloorRuleBuilder({ rules, setRules, characters, onT
                 onChange={(e) => updateField('soundId', e.target.value)}
                 className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-white text-sm font-bold outline-none"
               >
-                {DANCE_SOUNDS.map((s) => (
+                {sounds.map((s) => (
                   <option key={s.id} value={s.id}>{s.name}</option>
                 ))}
               </select>
