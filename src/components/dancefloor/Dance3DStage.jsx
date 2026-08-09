@@ -268,7 +268,13 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
 
     instances.forEach((inst, idx) => {
       if (instancesMapRef.current.has(inst.instanceId)) return;
-      const character = characters.find((c) => c.id === inst.characterId);
+      let character = characters.find((c) => c.id === inst.characterId);
+      
+      // Fallback for AI Clone Army
+      if (!character && inst.characterId === 'char_default') {
+        character = { id: 'char_default', name: 'AI Clone', mediaType: 'image' };
+      }
+      
       if (!character) return;
       
       const mergedCharacter = { ...character, customTexture: inst.customTexture };
