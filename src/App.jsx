@@ -9,6 +9,7 @@ import AIAvatarStudio from "./components/AIAvatarStudio";
 import LiveCommerceStudio from "./components/LiveCommerceStudio";
 import MultistreamStudio from "./components/MultistreamStudio";
 import UnifiedChatHub from "./components/UnifiedChatHub";
+import DanceFloorStudio from "./components/DanceFloorStudio";
 import MultiAccountManager from "./components/MultiAccountManager";
 import AISellerOps from "./components/AISellerOps";
 import EnterprisePayment from "./components/EnterprisePayment";
@@ -251,6 +252,12 @@ export default function App() {
               (currentUser?.plan === 'FREE')
                 ? <UpgradePrompt featureName="Hộp Thư Đa Nền Tảng (Chat Hub)" requiredPlan="Gói STARTER" setActiveTab={setActiveTab} />
                 : <UnifiedChatHub isLive={isLive} />
+            )}
+
+            {activeTab === "dance-floor" && (
+              (currentUser?.plan === 'FREE')
+                ? <UpgradePrompt featureName="Sàn Nhảy TikTok Tương Tác" requiredPlan="Gói STARTER" setActiveTab={setActiveTab} />
+                : <DanceFloorStudio isLive={isLive} />
             )}
 
             <div style={{ display: activeTab === "livestream-cloner" ? "block" : "none" }}>

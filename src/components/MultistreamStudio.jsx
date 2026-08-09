@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Users,
   Share2, 
@@ -35,6 +35,7 @@ import MultiAccountManager from './MultiAccountManager';
 import UniversalFileUploader from './UniversalFileUploader';
 import ReactPlayer from 'react-player';
 import { openOAuthPopup, getTikTokAuthUrl, getFacebookAuthUrl, getYouTubeAuthUrl, listenForOAuthCode } from '../lib/oauthService';
+import { loadLiveChannels, saveLiveChannels } from '../lib/platformChannels';
 
 let __global_local_stream = null;
 let __global_stream_promise = null;
@@ -299,15 +300,13 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
     }, 1500);
   };
 
-  const [channels, setChannels] = useState([
-    { id: 'tiktok_1', name: 'TikTok Live Pro (Kênh 01)', icon: '🎵', status: 'connected', quality: '1080p60', viewers: '1,840', rtmpUrl: 'rtmp://live-upload.tiktok.com/app/stream-key-848', streamKey: 'live_stream_tk_99812401', token: 'act_tk_sec_881293', bg: 'from-[#EF4444]/20 via-[#121216] to-[#0A0A0A]' },
-    { id: 'tiktok_2', name: 'TikTok Shop Mall (Kênh 02)', icon: '🎵', status: 'connected', quality: '1080p60', viewers: '3,290', rtmpUrl: 'rtmp://live-upload.tiktok.com/app/stream-key-991', streamKey: 'live_stream_tk_7761829', token: 'act_tk_sec_991823', bg: 'from-pink-900/30 via-[#121216] to-black' },
-    { id: 'facebook_1', name: 'Facebook Fanpage VIP 01', icon: '📘', status: 'connected', quality: '1080p60', viewers: '4,120', rtmpUrl: 'rtmps://live-api-s.facebook.com:443/rtmp/', streamKey: 'FB-1928301923091', token: 'EAAG192038102381290312093', bg: 'from-[#3B82F6]/20 via-[#121216] to-black' },
-    { id: 'facebook_2', name: 'Facebook Trang Cá Nhân', icon: '📘', status: 'connected', quality: '1080p60', viewers: '1,150', rtmpUrl: 'rtmps://live-api-s.facebook.com:443/rtmp/', streamKey: 'FB-889123019283', token: 'EAAG889123819203810293', bg: 'from-blue-900/20 via-[#121216] to-black' },
-    { id: 'youtube_1', name: 'YouTube Channel 4K', icon: '🔴', status: 'connected', quality: '4K Ultra HD', viewers: '890', rtmpUrl: 'rtmp://a.rtmp.youtube.com/live2', streamKey: 'abcd-1234-efgh-5678-ijkl', token: 'yt_oauth_token_991823', bg: 'from-red-950/30 via-[#121216] to-black' },
-    { id: 'shopee_1', name: 'Shopee Live Mall', icon: '🛍️', status: 'connected', quality: '1080p', viewers: '2,450', rtmpUrl: 'rtmp://live.shopee.vn/live/app', streamKey: 'shopee_live_key_77123', token: 'shopee_token_88129', bg: 'from-amber-950/30 via-[#121216] to-black' },
-    { id: 'instagram_1', name: 'Instagram Live Pro', icon: '📸', status: 'connected', quality: '1080p', viewers: '620', rtmpUrl: 'rtmps://live-upload.instagram.com:443/rtmp/', streamKey: 'ig_live_key_99812', token: 'ig_access_token_66128', bg: 'from-purple-950/30 via-[#121216] to-black' },
-  ]);
+  const [channels, setChannels] = useState(() => loadLiveChannels());
+
+  // Đồng bộ danh sách kênh đã kết nối sang localStorage để các module khác (vd: Sàn Nhảy TikTok)
+  // đọc lại được trạng thái kết nối TikTok/YouTube/Facebook thật đang có, không cần khai báo lại.
+  useEffect(() => {
+    saveLiveChannels(channels);
+  }, [channels]);
 
   const activeMonitorChannelObj = channels.find(c => c.id === selectedMonitorChannel) || (channels.length > 0 ? channels[0] : { id: "fallback", name: "Chưa kết nối", streamKey: "", viewers: 0 });
   const activeVideo = videoList.find(v => v.id === activeVideoId);

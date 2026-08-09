@@ -49,6 +49,7 @@ export default function Header({
     { id: 'multistream', label: 'Restream Đa Nền Tảng' },
     { id: 'livestream-cloner', label: 'Sao Chép Live' },
     { id: 'chat-hub', label: 'Chat Hub AI' },
+    { id: 'dance-floor', label: 'Sàn Nhảy TikTok' },
   ];
 
   // Close dropdown on click outside
