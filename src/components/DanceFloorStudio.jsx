@@ -5,6 +5,7 @@ import DanceFloorStage from './dancefloor/DanceFloorStage';
 import Dance3DStage from './dancefloor/Dance3DStage';
 import DanceFloorGiftPinPanel from './dancefloor/DanceFloorGiftPinPanel';
 import DanceFloorVideoOverlay from './dancefloor/DanceFloorVideoOverlay';
+import DanceFloorGiftShowcase from './dancefloor/DanceFloorGiftShowcase';
 import DanceFloorRuleBuilder from './dancefloor/DanceFloorRuleBuilder';
 import DanceFloorLibraryPanel from './dancefloor/DanceFloorLibraryPanel';
 import DanceFloorChannelLivePanel from './dancefloor/DanceFloorChannelLivePanel';
@@ -46,7 +47,7 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
     allSounds, addCustomSound, deleteCustomSound, setCustomBackgroundImage,
     allDanceStyles, customDanceStyles, addCustomDanceStyle, deleteCustomDanceStyle,
     backgroundVideos, addBackgroundVideo, deleteBackgroundVideo, activeBackgroundVideoId, setActiveBackgroundVideoId,
-    instances, effectTriggers, sceneId, leaderboard, reactionFeed, commentFeed,
+    instances, effectTriggers, sceneId, leaderboard, reactionFeed, commentFeed, giftShowcase,
     connectedChannelList, selectedChannelIds, toggleChannel,
     commentsPerMin, triggersPerMin,
     handleManualTrigger, handleManualGift, handleManualCombo, handleManualHighlight,
@@ -165,9 +166,27 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
                     </button>
                   ))}
                 </div>
+
+                <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/5 border border-white/10">
+                  {[{ id: '16:9', label: '16:9 Ngang' }, { id: '9:16', label: '9:16 Dọc' }].map((r) => (
+                    <button
+                      key={r.id}
+                      onClick={() => setSettings((prev) => ({ ...prev, stageAspectRatio: r.id }))}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-black cursor-pointer ${
+                        settings.stageAspectRatio === r.id ? 'bg-amber-500 text-black' : 'text-gray-400'
+                      }`}
+                    >
+                      {r.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <div ref={stageContainerRef} className="relative">
+              <div
+                ref={stageContainerRef}
+                className={`relative mx-auto ${settings.stageAspectRatio === '9:16' ? 'max-w-md' : 'w-full'}`}
+                style={{ aspectRatio: settings.stageAspectRatio === '9:16' ? '9 / 16' : '16 / 9' }}
+              >
                 {renderMode === '2d' ? (
                   <DanceFloorStage
                     instances={instances}
@@ -209,6 +228,7 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
                 )}
                 <DanceFloorGiftPinPanel rules={rules} giftTiers={giftTiers} characters={allCharacters} />
                 <DanceFloorVideoOverlay containerRef={stageContainerRef} />
+                <DanceFloorGiftShowcase giftShowcase={giftShowcase} />
               </div>
             </div>
 
@@ -260,6 +280,8 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
               onChangeCommentaryStyle={(id) => setSettings((s) => ({ ...s, commentaryStyleId: id }))}
               onRunAutoShuffle={runAutoShuffle}
               musicPlaylist={musicPlaylist}
+              musicLoopMode={settings.musicLoopMode}
+              onUpdateMusicLoopMode={(mode) => setSettings((s) => ({ ...s, musicLoopMode: mode }))}
               autoShuffleIntervalEnabled={settings.autoShuffleIntervalEnabled}
               autoShuffleIntervalMinutes={settings.autoShuffleIntervalMinutes}
               onUpdateAutoShuffleInterval={(patch) => setSettings((s) => ({ ...s, ...patch }))}

@@ -5,6 +5,7 @@ dist-ssr
 *.local
 .env
 .env.*
+!.env.example
 .vscode
 .idea
 *.log

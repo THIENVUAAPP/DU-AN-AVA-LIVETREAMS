@@ -123,7 +123,10 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
       const now = performance.now();
       const activeMode = now < focusUntilRef.current ? 'close' : cameraModeRef.current;
       const modeConf = CAMERA_MODES.find((m) => m.id === activeMode) || CAMERA_MODES[0];
-      const desired = new THREE.Vector3(...modeConf.position).add(cameraTargetRef.current.clone().multiplyScalar(activeMode === 'close' ? 1 : 0));
+      // Đông nhân vật hơn thì camera Toàn Cảnh tự lùi xa hơn — "tự động mở rộng màn hình sàn" để vẫn
+      // nhìn thấy hết mọi người thay vì bị cắt khung khi sàn đông.
+      const crowdZoomOut = activeMode === 'wide' ? 1 + Math.min(1.6, Math.max(0, (instancesMapRef.current.size - 10) / 40)) : 1;
+      const desired = new THREE.Vector3(...modeConf.position).multiplyScalar(crowdZoomOut).add(cameraTargetRef.current.clone().multiplyScalar(activeMode === 'close' ? 1 : 0));
       camera.position.lerp(desired, 0.03);
       camera.lookAt(activeMode === 'close' ? cameraTargetRef.current : new THREE.Vector3(0, 1.2, 0));
 
@@ -134,15 +137,21 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
     const handleResize = () => {
       const w = mount.clientWidth;
       const h = mount.clientHeight;
+      if (w === 0 || h === 0) return;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
     };
     window.addEventListener('resize', handleResize);
+    // Bắt cả trường hợp đổi khung hình 9:16/16:9 hay đổi bố cục layout — không chỉ resize cửa sổ trình
+    // duyệt — để camera/renderer luôn khớp đúng kích thước khung sàn diễn thật.
+    const resizeObserver = new ResizeObserver(handleResize);
+    resizeObserver.observe(mount);
 
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
       instancesMapRef.current.forEach((entry) => {
         entry.stopVideo?.();
         disposeHumanoidFigure(entry.group);
@@ -297,7 +306,7 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
   }, [effectTriggers, effects]);
 
   return (
-    <div className="relative rounded-3xl border border-white/10 overflow-hidden min-h-[520px] bg-black">
+    <div className="relative rounded-3xl border border-white/10 overflow-hidden h-full min-h-[360px] bg-black">
       <div ref={mountRef} className="absolute inset-0" />
       <div ref={labelsContainerRef} className="absolute inset-0 pointer-events-none overflow-hidden" />
 

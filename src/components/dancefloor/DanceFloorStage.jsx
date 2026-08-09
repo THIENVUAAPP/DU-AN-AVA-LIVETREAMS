@@ -89,7 +89,13 @@ export default function DanceFloorStage({ instances, maxSlots, effectTriggers, s
     }
     resize();
     window.addEventListener('resize', resize);
-    return () => window.removeEventListener('resize', resize);
+    // Bắt cả trường hợp đổi khung hình 9:16/16:9 — canvas hiệu ứng hạt phải luôn khớp đúng kích thước.
+    const resizeObserver = new ResizeObserver(resize);
+    if (canvas.parentElement) resizeObserver.observe(canvas.parentElement);
+    return () => {
+      window.removeEventListener('resize', resize);
+      resizeObserver.disconnect();
+    };
   }, []);
 
   useEffect(() => {
@@ -149,7 +155,7 @@ export default function DanceFloorStage({ instances, maxSlots, effectTriggers, s
   const hasCustomBackdrop = !transparent && (customBackgroundImage || backgroundVideoUrl);
   const containerClass = transparent
     ? 'relative w-full h-full min-h-screen overflow-hidden'
-    : `relative rounded-3xl border border-white/10 overflow-hidden min-h-[440px] ${hasCustomBackdrop ? '' : `bg-gradient-to-br ${scene.gradient}`}`;
+    : `relative rounded-3xl border border-white/10 overflow-hidden h-full min-h-[360px] ${hasCustomBackdrop ? '' : `bg-gradient-to-br ${scene.gradient}`}`;
   const containerStyle = !transparent && customBackgroundImage && !backgroundVideoUrl
     ? { backgroundImage: `url(${customBackgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
     : undefined;
@@ -191,7 +197,7 @@ export default function DanceFloorStage({ instances, maxSlots, effectTriggers, s
         </div>
       )}
 
-      <div className="relative z-10 h-full min-h-[440px] grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3 p-5 content-end">
+      <div className="relative z-10 h-full grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3 p-5 content-end">
         {slots.map((_, idx) => {
           const inst = instances[idx];
           if (!inst) return <div key={idx} className="h-28" />;

@@ -10,7 +10,7 @@ export default function DanceFloorAutomationPanel({
   onRunAutoShuffle,
   autoShuffleIntervalEnabled, autoShuffleIntervalMinutes, onUpdateAutoShuffleInterval,
   scheduleEnabled, scheduleStartHour, scheduleEndHour, onUpdateSchedule,
-  musicPlaylist,
+  musicPlaylist, musicLoopMode, onUpdateMusicLoopMode,
 }) {
   return (
     <div className="glass-panel p-4 rounded-2xl border border-white/10 space-y-3">
@@ -65,11 +65,25 @@ export default function DanceFloorAutomationPanel({
               </button>
             </div>
           </div>
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <button
+              onClick={() => onUpdateMusicLoopMode('playlist')}
+              className={`px-2 py-0.5 rounded-full text-[9px] font-black cursor-pointer ${musicLoopMode === 'playlist' ? 'bg-emerald-600 text-white' : 'bg-white/10 text-gray-400'}`}
+            >
+              Tuần Tự Hết Bài
+            </button>
+            <button
+              onClick={() => onUpdateMusicLoopMode('single')}
+              className={`px-2 py-0.5 rounded-full text-[9px] font-black cursor-pointer ${musicLoopMode === 'single' ? 'bg-emerald-600 text-white' : 'bg-white/10 text-gray-400'}`}
+            >
+              Lặp Lại 1 Bài
+            </button>
+          </div>
           <p className="text-[9px] text-gray-500 truncate">
             {musicPlaylist.trackCount === 0
               ? 'Chưa có bài nào — tải nhạc/video ở Thư Viện Âm Thanh và bật tick dùng.'
               : musicPlaylist.isPlaying
-              ? `Đang phát: ${musicPlaylist.currentTrackName} — hết bài tự động qua bài kế tiếp, chạy đến khi tắt.`
+              ? `Đang phát: ${musicPlaylist.currentTrackName} — ${musicLoopMode === 'single' ? 'lặp lại đúng bài này liên tục' : 'hết bài tự động qua bài kế tiếp'}, chạy đến khi tắt.`
               : 'Đã tạm dừng — bấm PHÁT để chạy playlist nền cho nhân vật nhảy.'}
           </p>
         </div>

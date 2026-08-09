@@ -161,7 +161,10 @@ export default function DanceFloorCharacterUploader({ onAddCustomCharacter }) {
     if (mode === 'video') {
       base.mediaUrl = URL.createObjectURL(videoFile);
       base.chromaKeyColor = keyColor;
-      base.isSessionOnly = true; // video không lưu bền vào localStorage (dung lượng quá lớn)
+      // Video không lưu bền vào localStorage (dung lượng quá lớn cho JSON) — lưu bền qua IndexedDB
+      // thay thế (xem useCustomLibraryItems.js), vẫn sống sót qua lần tải lại trang.
+      base.isSessionOnly = true;
+      base.mediaFile = videoFile;
     }
 
     onAddCustomCharacter(base);

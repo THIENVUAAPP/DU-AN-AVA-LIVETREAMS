@@ -25,6 +25,7 @@ export default function DanceFloorBackgroundVideoPanel({ videos, activeId, onAdd
           name: file.name.replace(/\.[^.]+$/, '').slice(0, 40),
           url: URL.createObjectURL(file),
           thumbnail,
+          file, // giữ lại file gốc để lưu bền vào IndexedDB, sống sót qua lần tải lại trang
         });
       } catch (err) {
         console.error(`Tạo thumbnail video nền "${file.name}" lỗi:`, err);

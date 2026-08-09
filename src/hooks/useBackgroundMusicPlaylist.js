@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 
-// Playlist nhạc nền tự động chuyển bài — phát liên tục các bài nhạc đã tải lên (mp3 hoặc audio trích từ
-// video), hết bài tự động qua bài kế tiếp, hết danh sách quay lại từ đầu. Độc lập với hiệu ứng âm thanh
-// ngắn (playSound) — đây là kênh nhạc nền chạy xuyên suốt phiên live, làm nền cho nhân vật nhảy.
-export function useBackgroundMusicPlaylist(playlist) {
+// Playlist nhạc nền — 2 chế độ: 'playlist' (hết bài tự động qua bài kế tiếp, hết danh sách quay lại từ
+// đầu) hoặc 'single' (lặp lại đúng 1 bài đang phát liên tục). Độc lập với hiệu ứng âm thanh ngắn
+// (playSound) — đây là kênh nhạc nền chạy xuyên suốt phiên live, làm nền cho nhân vật nhảy.
+export function useBackgroundMusicPlaylist(playlist, loopMode = 'playlist') {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const audioRef = useRef(null);
@@ -11,10 +11,19 @@ export function useBackgroundMusicPlaylist(playlist) {
   useEffect(() => {
     if (!audioRef.current) audioRef.current = new Audio();
     const audio = audioRef.current;
-    const handleEnded = () => setCurrentIndex((i) => (playlist.length > 0 ? (i + 1) % playlist.length : 0));
+    const handleEnded = () => {
+      if (loopMode === 'single') return; // audio.loop=true đã tự lặp, không cần xử lý thêm ở đây
+      setCurrentIndex((i) => (playlist.length > 0 ? (i + 1) % playlist.length : 0));
+    };
     audio.addEventListener('ended', handleEnded);
     return () => audio.removeEventListener('ended', handleEnded);
-  }, [playlist.length]);
+  }, [playlist.length, loopMode]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.loop = loopMode === 'single';
+  }, [loopMode]);
 
   useEffect(() => {
     const audio = audioRef.current;

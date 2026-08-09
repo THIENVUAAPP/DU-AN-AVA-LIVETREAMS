@@ -216,7 +216,10 @@ export const GIFT_POINT_MAPPING = [
 ];
 
 export const DEFAULT_SETTINGS = {
-  maxSlots: 10,
+  // Giới hạn kỹ thuật thật: hàng chục nghìn nhân vật cùng lúc là bất khả thi cho render 3D thời gian
+  // thực trên trình duyệt (đã thống nhất với admin ở vòng trước: tối đa 50-80 nhân vật cùng lúc, tránh
+  // giật lag) — 60 là mức cân bằng giữa "đông vui" và mượt mà.
+  maxSlots: 60,
   maxTriggersPerUserPerMinute: 5,
   cooldownSecondsDefault: 3,
   soundEnabled: true,
@@ -236,6 +239,8 @@ export const DEFAULT_SETTINGS = {
   autoShuffleIntervalEnabled: false,
   autoShuffleIntervalMinutes: 5,
   characterSizeScale: "medium", // 'small' | 'medium' | 'large' — cỡ hiển thị mặc định cho nhân vật mới lên sàn
+  stageAspectRatio: "16:9", // '16:9' (ngang, YouTube/Facebook) | '9:16' (dọc, TikTok/Reels)
+  musicLoopMode: "playlist", // 'playlist' (tự qua bài) | 'single' (lặp lại đúng 1 bài đang phát)
 };
 
 // Hệ số phóng to/nhỏ nhân vật dùng chung cho Sàn 2D (kích thước khung ảnh) và Sàn 3D (scale mô hình).

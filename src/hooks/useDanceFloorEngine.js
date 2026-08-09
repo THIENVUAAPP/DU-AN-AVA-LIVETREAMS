@@ -34,33 +34,18 @@ import {
 } from '../lib/danceFloorEngine';
 import { loadLiveChannels } from '../lib/platformChannels';
 import { speakLine } from '../lib/voiceEngine';
+import { useAiReplyTrigger } from './useAiReplyTrigger';
 import { simulatedCustomers, simulatedAvatars, simulatedQuestions } from '../lib/aiSimulationData';
 import { useCustomLibraryItems } from './useCustomLibraryItems';
 import { useDanceFloorManualActions } from './useDanceFloorManualActions';
 import { useBackgroundMusicPlaylist } from './useBackgroundMusicPlaylist';
+import { loadJSON, saveJSON } from '../lib/localStorageJson';
 
 const RULES_KEY = 'avalive_dancefloor_rules';
 const TIERS_KEY = 'avalive_dancefloor_tiers';
 const SETTINGS_KEY = 'avalive_dancefloor_settings';
 const AUTO_REPLY_KEY = 'avalive_dancefloor_auto_replies';
 const BROADCAST_CHANNEL_NAME = 'avalive_dancefloor_stage';
-
-function loadJSON(key, fallback) {
-  try {
-    const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {
-    console.error(`loadJSON(${key}) lỗi:`, e);
-  }
-  return fallback;
-}
-function saveJSON(key, value) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch (e) {
-    console.error(`saveJSON(${key}) lỗi:`, e);
-  }
-}
 const LIBRARY_SETTING_KEY = {
   character: 'disabledCharacterIds',
   dance: 'disabledDanceIds',
@@ -101,13 +86,14 @@ export function useDanceFloorEngine() {
     () => filterEnabled(customSounds, settings.disabledSoundIds),
     [customSounds, settings.disabledSoundIds]
   );
-  const musicPlaylist = useBackgroundMusicPlaylist(enabledCustomSounds);
+  const musicPlaylist = useBackgroundMusicPlaylist(enabledCustomSounds, settings.musicLoopMode);
 
   const [instances, setInstances] = useState([]);
   const [effectTriggers, setEffectTriggers] = useState([]);
   const [sceneId, setSceneId] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
   const [reactionFeed, setReactionFeed] = useState([]);
+  const [giftShowcase, setGiftShowcase] = useState(null);
   const [commentFeed, setCommentFeed] = useState([]);
 
   const [connectedChannels, setConnectedChannels] = useState(() => loadLiveChannels());
@@ -124,11 +110,20 @@ export function useDanceFloorEngine() {
   // Nhân vật đại diện cố định cho từng người xem trong phiên (Thường mặc định, nâng VIP khi tặng quà).
   const userCharacterAssignmentsRef = useRef(new Map());
   const userTiersRef = useRef(new Map());
+  // Người xem đã từng bình luận trong phiên — dùng để nhận biết "người mới vào" (chỉ chào 1 lần/người).
+  const seenUserIdsRef = useRef(new Set());
 
   useEffect(() => saveJSON(RULES_KEY, rules), [rules]);
   useEffect(() => saveJSON(TIERS_KEY, giftTiers), [giftTiers]);
   useEffect(() => saveJSON(SETTINGS_KEY, settings), [settings]);
   useEffect(() => saveJSON(AUTO_REPLY_KEY, autoReplyRules), [autoReplyRules]);
+
+  // Bảng "WOW" siêu to hiện vài giây rồi tự tắt mỗi khi có quà tặng — không cần dọn thủ công.
+  useEffect(() => {
+    if (!giftShowcase) return undefined;
+    const timer = setTimeout(() => setGiftShowcase(null), 5000);
+    return () => clearTimeout(timer);
+  }, [giftShowcase]);
 
   // Đồng bộ kênh đã kết nối từ tab "Restream Đa Nền Tảng" — cùng 1 SPA nên localStorage không tự bắn
   // sự kiện 'storage' cùng tab, phải poll định kỳ để bắt trạng thái kết nối mới nhất.
@@ -211,10 +206,22 @@ export function useDanceFloorEngine() {
       setReactionFeed((prev) =>
         [{ id: `rx_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, timestamp: Date.now(), ...entry }, ...prev].slice(0, 30)
       );
-      if (settings.voiceEnabled && entry.line) speakLine(entry.line, entry.personality || 'funny');
+      if (!settings.voiceEnabled || !entry.line) return;
+      // Có giọng đọc AI riêng (Gemini TTS) thì phát đúng file đó; không thì dùng Web Speech API như cũ.
+      if (entry.audioUrl) {
+        new Audio(entry.audioUrl).play().catch((err) => console.error('Phát giọng đọc AI lỗi:', err));
+      } else {
+        speakLine(entry.line, entry.personality || 'funny');
+      }
     },
     [settings.voiceEnabled]
   );
+
+  // Gọi Gemini AI để có câu thoại "siêu tự nhiên, hài hước" — CHỈ dùng cho quà tặng & người bình luận
+  // mới (đúng phạm vi yêu cầu, không tốn hạn mức miễn phí cho mọi bình luận thường). Luôn có fallback:
+  // nếu API lỗi/hết hạn mức/chưa cấu hình key, câu thoại local (REACTION_LINES/GIFT_THANK_LINES) đã
+  // hiện ngay từ trước đó vẫn đứng vững — đây chỉ là 1 lời chào/cảm ơn AI "cộng thêm" đến sau vài giây.
+  const triggerAiReply = useAiReplyTrigger(pushReaction);
 
   // Chọn câu "giọng người dẫn" (auto-reply/gift-thank) — chịu ảnh hưởng của Phong Cách Bình Luận
   // phiên hiện tại, KHÔNG đổi tính cách gốc của từng nhân vật cụ thể.
@@ -307,6 +314,8 @@ export function useDanceFloorEngine() {
         const { line: thankLine, personality: thankPersonality } = pickAnnouncerLine(GIFT_THANK_LINES, event.username);
         triggerTimestampsRef.current.push(now);
         pushReaction({ username: event.username, characterName: guessedCharacter?.name || tier.name, line: thankLine, platform: event.platform, personality: thankPersonality });
+        triggerAiReply({ kind: 'gift', username: event.username, characterName: guessedCharacter?.name || tier.name, giftName: tier.name, personality: thankPersonality });
+        setGiftShowcase({ id: now, username: event.username, giftName: tier.name, characterName: guessedCharacter?.name || tier.name, character: guessedCharacter || null });
 
         spawnCharacters({
           characterIds: finalCharacterIds,
@@ -339,12 +348,19 @@ export function useDanceFloorEngine() {
       recordUserTrigger(cooldownStateRef.current, event.userId, now);
       triggerTimestampsRef.current.push(now);
 
+      // Người mới vào lần đầu bình luận trong phiên — chào mừng bằng AI (chỉ 1 lần/người, không tính
+      // cooldown vì đây là câu chào riêng biệt, không phải trigger sinh nhân vật).
+      const isNewViewer = !seenUserIdsRef.current.has(event.userId);
+      seenUserIdsRef.current.add(event.userId);
+
       // 1) Gọi tên nhân vật trực tiếp — ưu tiên trước bảng luật từ khoá tâm trạng
       const calledCharacter = matchCharacterByCallName(event.message, enabledCharacters);
       // 2) Bảng luật từ khoá tâm trạng (hey/fire/vip...) — chỉ xét khi không gọi tên trực tiếp
       const rule = !calledCharacter ? matchTriggerRule(event.message, rules, event.platform) : null;
+      let welcomeCharacterName = null;
 
       if (calledCharacter) {
+        welcomeCharacterName = calledCharacter.name;
         const line = pickReactionLine(calledCharacter.personality, event.username, REACTION_LINES, REACTION_LINES.funny);
         pushReaction({ username: event.username, characterName: calledCharacter.name, line, platform: event.platform, personality: calledCharacter.personality });
         spawnCharacters({
@@ -359,6 +375,7 @@ export function useDanceFloorEngine() {
           ruleCharacter = enabledCharacters[Math.floor(Math.random() * enabledCharacters.length)];
         }
         const willSpawn = rule.spawnsCharacter && !!ruleCharacter;
+        welcomeCharacterName = ruleCharacter?.name || null;
         const ruleLine = pickReactionLine(ruleCharacter?.personality || 'funny', event.username, REACTION_LINES, REACTION_LINES.funny);
         pushReaction({ username: event.username, characterName: ruleCharacter?.name || `Hiệu ứng "${rule.keyword.toUpperCase()}"`, line: ruleLine, platform: event.platform, personality: ruleCharacter?.personality || 'funny' });
         spawnCharacters({
@@ -374,6 +391,7 @@ export function useDanceFloorEngine() {
         // suốt phiên (Thường mặc định, tự nâng lên nhóm VIP ngay khi họ tặng quà).
         const assigned = assignCharacterForUser(event.userId, userCharacterAssignmentsRef.current, userTiersRef.current, enabledNormalCharacters, enabledVipCharacters);
         if (assigned) {
+          welcomeCharacterName = assigned.name;
           const line = pickReactionLine(assigned.personality, event.username, REACTION_LINES, REACTION_LINES.funny);
           pushReaction({ username: event.username, characterName: assigned.name, line, platform: event.platform, personality: assigned.personality });
           spawnCharacters({
@@ -383,6 +401,10 @@ export function useDanceFloorEngine() {
         }
       }
 
+      if (isNewViewer) {
+        triggerAiReply({ kind: 'welcome', username: event.username, characterName: welcomeCharacterName, personality: 'funny' });
+      }
+
       // 4) Trò chuyện tự động theo mẫu câu hỏi — lớp phản hồi độc lập, cộng thêm dù đã xử lý ở trên
       const autoReply = matchAutoReply(event.message, autoReplyRules);
       if (autoReply) {
@@ -390,7 +412,7 @@ export function useDanceFloorEngine() {
         pushReaction({ username: event.username, characterName: 'MC AI Dẫn Chương Trình', line, platform: event.platform, personality });
       }
     },
-    [rules, giftTiers, autoReplyRules, settings.maxTriggersPerUserPerMinute, settings.cooldownSecondsDefault, settings.disabledCharacterIds, spawnCharacters, allCharacters, enabledCharacters, enabledNormalCharacters, enabledVipCharacters, pushReaction, pickAnnouncerLine]
+    [rules, giftTiers, autoReplyRules, settings.maxTriggersPerUserPerMinute, settings.cooldownSecondsDefault, settings.disabledCharacterIds, spawnCharacters, allCharacters, enabledCharacters, enabledNormalCharacters, enabledVipCharacters, pushReaction, pickAnnouncerLine, triggerAiReply]
   );
 
   const { handleManualTrigger, handleManualGift, handleManualCombo, handleManualHighlight, runAutoShuffle } = useDanceFloorManualActions({
@@ -467,7 +489,7 @@ export function useDanceFloorEngine() {
     allDanceStyles, customDanceStyles, addCustomDanceStyle, deleteCustomDanceStyle,
     backgroundVideos, addBackgroundVideo, deleteBackgroundVideo, activeBackgroundVideoId, setActiveBackgroundVideoId,
     setCustomBackgroundImage,
-    instances, effectTriggers, sceneId, leaderboard, reactionFeed, commentFeed,
+    instances, effectTriggers, sceneId, leaderboard, reactionFeed, commentFeed, giftShowcase,
     connectedChannelList: connectedChannels.filter((c) => c.status === 'connected'),
     selectedChannelIds, toggleChannel,
     commentsPerMin, triggersPerMin,
