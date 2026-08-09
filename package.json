@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^1.0.1",
+    "@react-three/drei": "^9.122.0",
+    "@react-three/fiber": "^8.18.0",
     "@supabase/supabase-js": "^2.110.8",
     "clsx": "^2.1.1",
     "flv.js": "^1.6.2",

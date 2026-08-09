@@ -16,6 +16,7 @@ import DanceFloorReactionFeed from './dancefloor/DanceFloorReactionFeed';
 import DanceFloorCommentFeed from './dancefloor/DanceFloorCommentFeed';
 import DanceFloorManualComboPanel from './dancefloor/DanceFloorManualComboPanel';
 import DanceFloorAutoReplyPanel from './dancefloor/DanceFloorAutoReplyPanel';
+import DanceFloorAnimateDiffPanel from './dancefloor/DanceFloorAnimateDiffPanel';
 import { useDanceFloorEngine } from '../hooks/useDanceFloorEngine';
 import { STAGE_PRESETS_3D } from '../lib/dance3d/stagePresets3D';
 import { platformFromChannelId } from '../lib/danceFloorEngine';
@@ -271,6 +272,13 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
               </div>
               <DanceFloorReactionFeed feed={reactionFeed} />
             </div>
+
+            <DanceFloorAnimateDiffPanel 
+              onApplyAiEffect={(config) => {
+                // Future integration to pass AI effect configurations to the canvas renderer
+                console.log('Applied AI Effect:', config);
+              }} 
+            />
 
             <DanceFloorAutomationPanel
               simulationEnabled={settings.simulationEnabled}
