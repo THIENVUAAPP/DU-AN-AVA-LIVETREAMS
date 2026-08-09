@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { Wifi, WifiOff } from 'lucide-react';
-import { DANCE_STYLES, DANCE_EFFECTS, SCENE_BACKGROUNDS, OUTFITS } from '../../lib/danceFloorData';
+import { DANCE_STYLES, SCENE_BACKGROUNDS, OUTFITS } from '../../lib/danceFloorData';
 import { startChromaKeyLoop } from '../../lib/mediaSegmentation';
 
 function getById(list, id) {
@@ -71,7 +71,7 @@ function CharacterAvatar({ character, danceClass }) {
 
 // Sàn diễn Render Engine — Canvas 2D particle system tự viết (nhẹ, không phụ thuộc PixiJS/Three.js
 // vì dự án hiện chưa cài các thư viện này). Nhân vật hiển thị bằng CSS animation (index.css).
-export default function DanceFloorStage({ instances, maxSlots, effectTriggers, sceneId, connectionLabel, isConnected, characters, customBackgroundImage, transparent }) {
+export default function DanceFloorStage({ instances, maxSlots, effectTriggers, sceneId, connectionLabel, isConnected, characters, effects, customBackgroundImage, transparent }) {
   const canvasRef = useRef(null);
   const particlesRef = useRef([]);
   const rafRef = useRef(null);
@@ -99,7 +99,7 @@ export default function DanceFloorStage({ instances, maxSlots, effectTriggers, s
     effectTriggers.forEach((trigger) => {
       if (processedTriggerIdsRef.current.has(trigger.id)) return;
       processedTriggerIdsRef.current.add(trigger.id);
-      const effect = getById(DANCE_EFFECTS, trigger.effectId);
+      const effect = getById(effects, trigger.effectId);
       if (!effect) return;
       const count = effect.particle === 'burst' ? 34 : 20;
       const originX = trigger.x != null ? trigger.x * w : w / 2 + (Math.random() - 0.5) * w * 0.4;
@@ -112,7 +112,7 @@ export default function DanceFloorStage({ instances, maxSlots, effectTriggers, s
     if (processedTriggerIdsRef.current.size > 300) {
       processedTriggerIdsRef.current = new Set(effectTriggers.slice(-80).map((t) => t.id));
     }
-  }, [effectTriggers]);
+  }, [effectTriggers, effects]);
 
   useEffect(() => {
     const canvas = canvasRef.current;

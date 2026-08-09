@@ -4,7 +4,11 @@ import { Sparkles, Zap, BookOpen, MessageSquareText, TrendingUp, Users, Trophy, 
 import DanceFloorStage from './dancefloor/DanceFloorStage';
 import DanceFloorRuleBuilder from './dancefloor/DanceFloorRuleBuilder';
 import DanceFloorLibraryPanel from './dancefloor/DanceFloorLibraryPanel';
-import DanceFloorTestPanel from './dancefloor/DanceFloorTestPanel';
+import DanceFloorChannelLivePanel from './dancefloor/DanceFloorChannelLivePanel';
+import DanceFloorCallPanel from './dancefloor/DanceFloorCallPanel';
+import DanceFloorQuickTestPanel from './dancefloor/DanceFloorQuickTestPanel';
+import DanceFloorAutomationPanel from './dancefloor/DanceFloorAutomationPanel';
+import DanceFloorYoutubeBridgePanel from './dancefloor/DanceFloorYoutubeBridgePanel';
 import DanceFloorReactionFeed from './dancefloor/DanceFloorReactionFeed';
 import DanceFloorAutoReplyPanel from './dancefloor/DanceFloorAutoReplyPanel';
 import { useDanceFloorEngine } from '../hooks/useDanceFloorEngine';
@@ -17,9 +21,9 @@ const SECTIONS = [
 ];
 
 // "Sàn Nhảy TikTok" — Realtime Comment-Driven Animation Engine.
-// Pipeline: Ingestion (mô phỏng + cầu nối YouTube thật) → Gọi Tên/Rule Engine → Gift-Tier Resolver
-// → State Manager (slot/priority queue) → Render Engine (DanceFloorStage). Logic điều phối nằm trong
-// useDanceFloorEngine — file này chỉ lo hiển thị.
+// Bố cục tab Sàn Diễn: khung canvas nằm GIỮA làm trọng tâm; chức năng hay dùng (kênh+phát live, gọi
+// tên, test 1-chạm) nằm 2 BÊN; chức năng ít dùng hơn (tự động hoá, YouTube bridge) nằm PHÍA DƯỚI.
+// Logic điều phối nằm trong useDanceFloorEngine — file này chỉ lo hiển thị.
 export default function DanceFloorStudio({ isLive, setIsLive }) {
   const [activeSection, setActiveSection] = useState('stage');
   const engine = useDanceFloorEngine();
@@ -27,13 +31,15 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
   const {
     rules, setRules, giftTiers, setGiftTiers, settings, setSettings,
     autoReplyRules, setAutoReplyRules,
-    allCharacters, customCharacters, addCustomCharacter, deleteCustomCharacter,
-    allSounds, addCustomSound, setCustomBackgroundImage,
+    allCharacters, customCharacters, addCustomCharacter, deleteCustomCharacter, editCustomCharacter,
+    enabledNormalCharacters, enabledVipCharacters,
+    allEffects, customEffects, addCustomEffect, deleteCustomEffect,
+    allSounds, addCustomSound, deleteCustomSound, setCustomBackgroundImage,
     instances, effectTriggers, sceneId, leaderboard, reactionFeed,
     connectedChannelList, selectedChannelIds, toggleChannel,
     ytBridge, handleYtConnect, handleYtDisconnect,
     commentsPerMin, triggersPerMin,
-    handleManualTrigger, handleManualGift, playSound, runAutoShuffle, toggleLibraryItem,
+    handleManualTrigger, handleManualGift, playSound, runAutoShuffle, toggleLibraryItem, suggestDance,
   } = engine;
 
   // Phát Live Đa Kênh — dùng đúng các kênh TikTok/YouTube/Facebook đã kết nối sẵn từ Restream Đa Nền
@@ -96,77 +102,95 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
       </div>
 
       {activeSection === 'stage' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          <div className="lg:col-span-2 space-y-4">
-            <DanceFloorStage
-              instances={instances}
-              maxSlots={settings.maxSlots}
-              effectTriggers={effectTriggers}
-              sceneId={sceneId}
-              characters={allCharacters}
-              customBackgroundImage={settings.customBackgroundImage}
-              isConnected={isLive || connectedChannelList.length > 0}
-              connectionLabel={
-                isLive
-                  ? `🔴 ĐANG LIVE TRÊN ${selectedChannelIds.length} KÊNH`
-                  : connectedChannelList.length > 0
-                  ? `${connectedChannelList.length} Kênh Sẵn Sàng`
-                  : 'Chưa Kết Nối Kênh'
-              }
-            />
-
-            <div className="glass-panel p-4 rounded-2xl border border-white/10">
-              <h4 className="text-sm font-black text-white mb-3 flex items-center gap-2">
-                <Trophy className="w-4 h-4 text-amber-400" /> Bảng Xếp Hạng Người Tặng Quà (Phiên Hiện Tại)
-              </h4>
-              {leaderboard.length === 0 ? (
-                <p className="text-xs text-gray-500">Chưa có dữ liệu quà tặng trong phiên này.</p>
-              ) : (
-                <div className="space-y-1.5">
-                  {leaderboard.map((l, idx) => (
-                    <div key={l.userId} className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-white/5">
-                      <span className="text-xs font-bold text-white">
-                        {idx === 0 ? '👑' : `#${idx + 1}`} {l.username}
-                      </span>
-                      <span className="text-xs font-black text-amber-400">{l.points.toLocaleString('vi-VN')} điểm</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+        <div className="space-y-5">
+          {/* Hàng chính: chức năng hay dùng bên trái/phải, canvas sàn diễn ở giữa */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
+            <div className="lg:col-span-1 space-y-4">
+              <DanceFloorChannelLivePanel
+                connectedChannels={connectedChannelList}
+                selectedChannelIds={selectedChannelIds}
+                onToggleChannel={toggleChannel}
+                isLive={isLive}
+                onToggleLive={handleToggleLive}
+              />
+              <DanceFloorCallPanel
+                normalCharacters={enabledNormalCharacters}
+                vipCharacters={enabledVipCharacters}
+                onManualTrigger={handleManualTrigger}
+              />
             </div>
 
-            <DanceFloorReactionFeed feed={reactionFeed} />
+            <div className="lg:col-span-2">
+              <DanceFloorStage
+                instances={instances}
+                maxSlots={settings.maxSlots}
+                effectTriggers={effectTriggers}
+                sceneId={sceneId}
+                characters={allCharacters}
+                effects={allEffects}
+                customBackgroundImage={settings.customBackgroundImage}
+                isConnected={isLive || connectedChannelList.length > 0}
+                connectionLabel={
+                  isLive
+                    ? `🔴 ĐANG LIVE TRÊN ${selectedChannelIds.length} KÊNH`
+                    : connectedChannelList.length > 0
+                    ? `${connectedChannelList.length} Kênh Sẵn Sàng`
+                    : 'Chưa Kết Nối Kênh'
+                }
+              />
+            </div>
+
+            <div className="lg:col-span-1">
+              <DanceFloorQuickTestPanel onManualTrigger={handleManualTrigger} onManualGift={handleManualGift} />
+            </div>
           </div>
 
-          <DanceFloorTestPanel
-            connectedChannels={connectedChannelList}
-            selectedChannelIds={selectedChannelIds}
-            onToggleChannel={toggleChannel}
-            isLive={isLive}
-            onToggleLive={handleToggleLive}
-            simulationEnabled={settings.simulationEnabled}
-            onToggleSimulation={() => setSettings((s) => ({ ...s, simulationEnabled: !s.simulationEnabled }))}
-            onManualTrigger={handleManualTrigger}
-            onManualGift={handleManualGift}
-            ytBridge={ytBridge}
-            onYtConnect={handleYtConnect}
-            onYtDisconnect={handleYtDisconnect}
-            characters={allCharacters}
-            voiceEnabled={settings.voiceEnabled}
-            onToggleVoice={() => setSettings((s) => ({ ...s, voiceEnabled: !s.voiceEnabled }))}
-            commentaryStyleId={settings.commentaryStyleId}
-            onChangeCommentaryStyle={(id) => setSettings((s) => ({ ...s, commentaryStyleId: id }))}
-            onRunAutoShuffle={runAutoShuffle}
-            scheduleEnabled={settings.scheduleEnabled}
-            scheduleStartHour={settings.scheduleStartHour}
-            scheduleEndHour={settings.scheduleEndHour}
-            onUpdateSchedule={(patch) => setSettings((s) => ({ ...s, ...patch }))}
-          />
+          {/* Hàng dưới: ít dùng hơn — bảng xếp hạng, nhật ký phản hồi, tự động hoá, YouTube bridge */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <div className="space-y-4">
+              <div className="glass-panel p-4 rounded-2xl border border-white/10">
+                <h4 className="text-sm font-black text-white mb-3 flex items-center gap-2">
+                  <Trophy className="w-4 h-4 text-amber-400" /> Bảng Xếp Hạng Người Tặng Quà (Phiên Hiện Tại)
+                </h4>
+                {leaderboard.length === 0 ? (
+                  <p className="text-xs text-gray-500">Chưa có dữ liệu quà tặng trong phiên này.</p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {leaderboard.map((l, idx) => (
+                      <div key={l.userId} className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-white/5">
+                        <span className="text-xs font-bold text-white">
+                          {idx === 0 ? '👑' : `#${idx + 1}`} {l.username}
+                        </span>
+                        <span className="text-xs font-black text-amber-400">{l.points.toLocaleString('vi-VN')} điểm</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <DanceFloorReactionFeed feed={reactionFeed} />
+            </div>
+
+            <DanceFloorAutomationPanel
+              simulationEnabled={settings.simulationEnabled}
+              onToggleSimulation={() => setSettings((s) => ({ ...s, simulationEnabled: !s.simulationEnabled }))}
+              voiceEnabled={settings.voiceEnabled}
+              onToggleVoice={() => setSettings((s) => ({ ...s, voiceEnabled: !s.voiceEnabled }))}
+              commentaryStyleId={settings.commentaryStyleId}
+              onChangeCommentaryStyle={(id) => setSettings((s) => ({ ...s, commentaryStyleId: id }))}
+              onRunAutoShuffle={runAutoShuffle}
+              scheduleEnabled={settings.scheduleEnabled}
+              scheduleStartHour={settings.scheduleStartHour}
+              scheduleEndHour={settings.scheduleEndHour}
+              onUpdateSchedule={(patch) => setSettings((s) => ({ ...s, ...patch }))}
+            />
+
+            <DanceFloorYoutubeBridgePanel ytBridge={ytBridge} onYtConnect={handleYtConnect} onYtDisconnect={handleYtDisconnect} />
+          </div>
         </div>
       )}
 
       {activeSection === 'rules' && (
-        <DanceFloorRuleBuilder rules={rules} setRules={setRules} characters={allCharacters} sounds={allSounds} onTestRule={(rule) => handleManualTrigger(rule.keyword)} />
+        <DanceFloorRuleBuilder rules={rules} setRules={setRules} characters={allCharacters} sounds={allSounds} onTestRule={(rule) => handleManualTrigger(rule.keyword)} onSuggestDance={suggestDance} />
       )}
 
       {activeSection === 'autoreply' && (
@@ -179,8 +203,14 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
           customCharacters={customCharacters}
           onAddCustomCharacter={addCustomCharacter}
           onDeleteCustomCharacter={deleteCustomCharacter}
+          onEditCustomCharacter={editCustomCharacter}
+          effects={allEffects}
+          customEffects={customEffects}
+          onAddCustomEffect={addCustomEffect}
+          onDeleteCustomEffect={deleteCustomEffect}
           sounds={allSounds}
           onAddCustomSound={addCustomSound}
+          onDeleteCustomSound={deleteCustomSound}
           giftTiers={giftTiers}
           setGiftTiers={setGiftTiers}
           onPreviewSound={playSound}
@@ -188,6 +218,7 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
           disabledDanceIds={settings.disabledDanceIds}
           disabledEffectIds={settings.disabledEffectIds}
           disabledSceneIds={settings.disabledSceneIds}
+          disabledSoundIds={settings.disabledSoundIds}
           onToggleLibraryItem={toggleLibraryItem}
           customBackgroundImage={settings.customBackgroundImage}
           onSetCustomBackgroundImage={setCustomBackgroundImage}

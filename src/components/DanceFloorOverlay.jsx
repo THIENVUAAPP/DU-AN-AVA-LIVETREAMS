@@ -9,7 +9,7 @@ const CHANNEL_NAME = 'avalive_dancefloor_stage';
 // không cần backend/WebSocket riêng).
 export default function DanceFloorOverlay() {
   const [stageState, setStageState] = useState({
-    instances: [], effectTriggers: [], sceneId: null, maxSlots: 10, customBackgroundImage: null, allCharacters: [],
+    instances: [], effectTriggers: [], sceneId: null, maxSlots: 10, customBackgroundImage: null, allCharacters: [], allEffects: [],
   });
   const [connected, setConnected] = useState(false);
 
@@ -40,6 +40,7 @@ export default function DanceFloorOverlay() {
         effectTriggers={stageState.effectTriggers}
         sceneId={stageState.sceneId}
         characters={stageState.allCharacters}
+        effects={stageState.allEffects}
         customBackgroundImage={stageState.customBackgroundImage}
         isConnected={connected}
         connectionLabel="OVERLAY"

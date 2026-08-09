@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
-  DANCE_CHARACTERS,
   DANCE_STYLES,
-  DANCE_EFFECTS,
   SCENE_BACKGROUNDS,
   OUTFITS,
   DEFAULT_KEYWORD_RULES,
@@ -14,6 +12,7 @@ import {
   GIFT_THANK_LINES,
   AUTO_REPLY_RULES,
   COMMENTARY_STYLES,
+  SOUND_DANCE_SUGGESTIONS,
 } from '../lib/danceFloorData';
 import {
   matchTriggerRule,
@@ -30,16 +29,18 @@ import {
   isWithinSchedule,
   filterEnabled,
   buildRandomCombo,
+  assignCharacterForUser,
+  suggestDanceForSound,
 } from '../lib/danceFloorEngine';
 import { loadLiveChannels } from '../lib/platformChannels';
 import { speakLine } from '../lib/voiceEngine';
 import { simulatedCustomers, simulatedAvatars, simulatedQuestions } from '../lib/aiSimulationData';
 import { useYouTubeLiveChatBridge } from './useYouTubeLiveChatBridge';
+import { useCustomLibraryItems } from './useCustomLibraryItems';
 
 const RULES_KEY = 'avalive_dancefloor_rules';
 const TIERS_KEY = 'avalive_dancefloor_tiers';
 const SETTINGS_KEY = 'avalive_dancefloor_settings';
-const CUSTOM_CHARACTERS_KEY = 'avalive_dancefloor_custom_characters';
 const AUTO_REPLY_KEY = 'avalive_dancefloor_auto_replies';
 const BROADCAST_CHANNEL_NAME = 'avalive_dancefloor_stage';
 
@@ -71,27 +72,31 @@ const LIBRARY_SETTING_KEY = {
   dance: 'disabledDanceIds',
   effect: 'disabledEffectIds',
   scene: 'disabledSceneIds',
+  sound: 'disabledSoundIds',
 };
 
 // Toàn bộ orchestration của "Sàn Nhảy TikTok": state, pipeline Ingestion→Gọi Tên/Rule→Auto-Reply→
 // Gift-Tier→Queue→Render, mô phỏng realtime, cầu nối YouTube thật, giọng đọc, Auto-Shuffle, lịch 24/7,
 // và đồng bộ sang cửa sổ Overlay qua BroadcastChannel. Tách khỏi JSX để mỗi file dưới 500 dòng.
+// Nhân vật/hiệu ứng/âm thanh tuỳ chỉnh nằm trong useCustomLibraryItems (tách riêng cùng lý do).
 export function useDanceFloorEngine() {
   const [rules, setRules] = useState(() => loadJSON(RULES_KEY, DEFAULT_KEYWORD_RULES));
   const [giftTiers, setGiftTiers] = useState(() => loadJSON(TIERS_KEY, GIFT_TIERS));
   const [settings, setSettings] = useState(() => ({ ...DEFAULT_SETTINGS, ...loadJSON(SETTINGS_KEY, {}) }));
-  const [customCharacters, setCustomCharacters] = useState(() => loadJSON(CUSTOM_CHARACTERS_KEY, []));
   const [autoReplyRules, setAutoReplyRules] = useState(() => loadJSON(AUTO_REPLY_KEY, AUTO_REPLY_RULES));
-  // Nhạc thật do admin tải lên (mp3 trend, cả bài) — chỉ giữ trong phiên hiện tại (blob URL không
-  // sống sót qua lần tải lại trang và file nhạc quá lớn để lưu localStorage).
-  const [customSounds, setCustomSounds] = useState([]);
 
-  const allCharacters = useMemo(() => [...DANCE_CHARACTERS, ...customCharacters], [customCharacters]);
-  const allSounds = useMemo(() => [...DANCE_SOUNDS, ...customSounds], [customSounds]);
+  const {
+    customCharacters, allCharacters, addCustomCharacter, deleteCustomCharacter, editCustomCharacter,
+    customEffects, allEffects, addCustomEffect, deleteCustomEffect,
+    customSounds, allSounds, addCustomSound, deleteCustomSound,
+  } = useCustomLibraryItems();
+
   const enabledCharacters = useMemo(
     () => filterEnabled(allCharacters, settings.disabledCharacterIds),
     [allCharacters, settings.disabledCharacterIds]
   );
+  const enabledNormalCharacters = useMemo(() => enabledCharacters.filter((c) => c.tier !== 'vip'), [enabledCharacters]);
+  const enabledVipCharacters = useMemo(() => enabledCharacters.filter((c) => c.tier === 'vip'), [enabledCharacters]);
 
   const [instances, setInstances] = useState([]);
   const [effectTriggers, setEffectTriggers] = useState([]);
@@ -110,13 +115,14 @@ export function useDanceFloorEngine() {
   const triggerTimestampsRef = useRef([]);
   const audioCtxRef = useRef(null);
   const broadcastChannelRef = useRef(null);
+  // Nhân vật đại diện cố định cho từng người xem trong phiên (Thường mặc định, nâng VIP khi tặng quà).
+  const userCharacterAssignmentsRef = useRef(new Map());
+  const userTiersRef = useRef(new Map());
 
   useEffect(() => saveJSON(RULES_KEY, rules), [rules]);
   useEffect(() => saveJSON(TIERS_KEY, giftTiers), [giftTiers]);
   useEffect(() => saveJSON(SETTINGS_KEY, settings), [settings]);
   useEffect(() => saveJSON(AUTO_REPLY_KEY, autoReplyRules), [autoReplyRules]);
-  // Video nhân vật (isSessionOnly) dùng blob URL, không sống sót qua lần tải lại trang → không lưu.
-  useEffect(() => saveJSON(CUSTOM_CHARACTERS_KEY, customCharacters.filter((c) => !c.isSessionOnly)), [customCharacters]);
 
   // Đồng bộ kênh đã kết nối từ tab "Restream Đa Nền Tảng" — cùng 1 SPA nên localStorage không tự bắn
   // sự kiện 'storage' cùng tab, phải poll định kỳ để bắt trạng thái kết nối mới nhất.
@@ -155,9 +161,9 @@ export function useDanceFloorEngine() {
   useEffect(() => {
     broadcastChannelRef.current?.postMessage({
       instances, effectTriggers, sceneId, maxSlots: settings.maxSlots,
-      customBackgroundImage: settings.customBackgroundImage, allCharacters,
+      customBackgroundImage: settings.customBackgroundImage, allCharacters, allEffects,
     });
-  }, [instances, effectTriggers, sceneId, settings.maxSlots, settings.customBackgroundImage, allCharacters]);
+  }, [instances, effectTriggers, sceneId, settings.maxSlots, settings.customBackgroundImage, allCharacters, allEffects]);
 
   const playSound = useCallback(
     (soundId) => {
@@ -193,10 +199,6 @@ export function useDanceFloorEngine() {
     },
     [settings.soundEnabled, customSounds]
   );
-
-  const addCustomSound = useCallback((file) => {
-    setCustomSounds((prev) => [...prev, { id: `custom_sound_${Date.now()}`, name: file.name, audioUrl: URL.createObjectURL(file), isSessionOnly: true }]);
-  }, []);
 
   const pushReaction = useCallback(
     (entry) => {
@@ -265,6 +267,10 @@ export function useDanceFloorEngine() {
       const now = Date.now();
 
       if (event.type === 'gift') {
+        // Tặng quà là điều kiện DUY NHẤT để mở khoá nhóm nhân vật VIP cho người xem này (áp dụng
+        // từ lần bình luận kế tiếp trở đi thông qua assignCharacterForUser).
+        userTiersRef.current.set(event.userId, 'vip');
+
         const points = convertGiftToPoints(event.platform, event.message, event.value, GIFT_POINT_MAPPING);
         setLeaderboard((prev) => {
           const existing = prev.find((l) => l.userId === event.userId);
@@ -300,36 +306,29 @@ export function useDanceFloorEngine() {
       if (event.type !== 'comment') return;
       commentTimestampsRef.current.push(now);
 
+      // Một lượt cooldown duy nhất cho mỗi bình luận — dù đường xử lý nào được chọn bên dưới, người
+      // spam vẫn bị chặn đều, tránh vừa gọi tên vừa được gán nhân vật mặc định trong cùng 1 giây.
+      const cooldownCheck = canUserTrigger(cooldownStateRef.current, event.userId, now, settings.cooldownSecondsDefault, settings.maxTriggersPerUserPerMinute);
+      if (!cooldownCheck.allowed) return;
+      recordUserTrigger(cooldownStateRef.current, event.userId, now);
+      triggerTimestampsRef.current.push(now);
+
       // 1) Gọi tên nhân vật trực tiếp — ưu tiên trước bảng luật từ khoá tâm trạng
       const calledCharacter = matchCharacterByCallName(event.message, enabledCharacters);
-      if (calledCharacter) {
-        const cooldownCheck = canUserTrigger(cooldownStateRef.current, event.userId, now, settings.cooldownSecondsDefault, settings.maxTriggersPerUserPerMinute);
-        if (!cooldownCheck.allowed) return;
-        recordUserTrigger(cooldownStateRef.current, event.userId, now);
-        triggerTimestampsRef.current.push(now);
+      // 2) Bảng luật từ khoá tâm trạng (hey/fire/vip...) — chỉ xét khi không gọi tên trực tiếp
+      const rule = !calledCharacter ? matchTriggerRule(event.message, rules, event.platform) : null;
 
+      if (calledCharacter) {
         const line = pickReactionLine(calledCharacter.personality, event.username, REACTION_LINES, REACTION_LINES.funny);
         pushReaction({ username: event.username, characterName: calledCharacter.name, line, platform: event.platform, personality: calledCharacter.personality });
-
         spawnCharacters({
           characterIds: [calledCharacter.id], danceIds: null, effectId: null, soundId: null, sceneIdToApply: null,
           durationSeconds: 8, priority: 3, username: event.username, count: 1, reactionLine: line,
         });
-        return;
-      }
-
-      // 2) Bảng luật từ khoá tâm trạng (hey/fire/vip...)
-      const rule = matchTriggerRule(event.message, rules, event.platform);
-      if (rule) {
-        const cooldownCheck = canUserTrigger(cooldownStateRef.current, event.userId, now, rule.cooldownSec, settings.maxTriggersPerUserPerMinute);
-        if (!cooldownCheck.allowed) return;
-        recordUserTrigger(cooldownStateRef.current, event.userId, now);
-        triggerTimestampsRef.current.push(now);
-
+      } else if (rule) {
         const ruleCharacter = allCharacters.find((c) => c.id === rule.characterId);
         const ruleLine = pickReactionLine(ruleCharacter?.personality || 'funny', event.username, REACTION_LINES, REACTION_LINES.funny);
         pushReaction({ username: event.username, characterName: ruleCharacter?.name || `Hiệu ứng "${rule.keyword.toUpperCase()}"`, line: ruleLine, platform: event.platform, personality: ruleCharacter?.personality || 'funny' });
-
         spawnCharacters({
           characterIds: rule.spawnsCharacter && rule.characterId ? [rule.characterId] : [],
           danceIds: rule.danceId ? [rule.danceId] : [],
@@ -338,20 +337,28 @@ export function useDanceFloorEngine() {
           count: rule.spawnsCharacter ? rule.spawnCount || 1 : 0,
           reactionLine: rule.spawnsCharacter ? ruleLine : '',
         });
-        return;
+      } else {
+        // 3) Không khớp gì đặc biệt → mỗi người bình luận vẫn có 1 nhân vật đại diện riêng, cố định
+        // suốt phiên (Thường mặc định, tự nâng lên nhóm VIP ngay khi họ tặng quà).
+        const assigned = assignCharacterForUser(event.userId, userCharacterAssignmentsRef.current, userTiersRef.current, enabledNormalCharacters, enabledVipCharacters);
+        if (assigned) {
+          const line = pickReactionLine(assigned.personality, event.username, REACTION_LINES, REACTION_LINES.funny);
+          pushReaction({ username: event.username, characterName: assigned.name, line, platform: event.platform, personality: assigned.personality });
+          spawnCharacters({
+            characterIds: [assigned.id], danceIds: null, effectId: null, soundId: null, sceneIdToApply: null,
+            durationSeconds: 8, priority: 1, username: event.username, count: 1, reactionLine: line,
+          });
+        }
       }
 
-      // 3) Trò chuyện tự động theo mẫu câu hỏi — không sinh nhân vật, chỉ trả lời
+      // 4) Trò chuyện tự động theo mẫu câu hỏi — lớp phản hồi độc lập, cộng thêm dù đã xử lý ở trên
       const autoReply = matchAutoReply(event.message, autoReplyRules);
       if (autoReply) {
-        const cooldownCheck = canUserTrigger(cooldownStateRef.current, event.userId, now, settings.cooldownSecondsDefault, settings.maxTriggersPerUserPerMinute);
-        if (!cooldownCheck.allowed) return;
-        recordUserTrigger(cooldownStateRef.current, event.userId, now);
         const { line, personality } = pickAnnouncerLine([autoReply], event.username);
         pushReaction({ username: event.username, characterName: 'MC AI Dẫn Chương Trình', line, platform: event.platform, personality });
       }
     },
-    [rules, giftTiers, autoReplyRules, settings.maxTriggersPerUserPerMinute, settings.cooldownSecondsDefault, settings.disabledCharacterIds, spawnCharacters, allCharacters, enabledCharacters, pushReaction, pickAnnouncerLine]
+    [rules, giftTiers, autoReplyRules, settings.maxTriggersPerUserPerMinute, settings.cooldownSecondsDefault, settings.disabledCharacterIds, spawnCharacters, allCharacters, enabledCharacters, enabledNormalCharacters, enabledVipCharacters, pushReaction, pickAnnouncerLine]
   );
 
   const handleManualTrigger = useCallback(
@@ -382,7 +389,7 @@ export function useDanceFloorEngine() {
     const combo = buildRandomCombo({
       characters: enabledCharacters,
       danceStyles: filterEnabled(DANCE_STYLES, settings.disabledDanceIds),
-      effects: filterEnabled(DANCE_EFFECTS, settings.disabledEffectIds),
+      effects: filterEnabled(allEffects, settings.disabledEffectIds),
       scenes: filterEnabled(SCENE_BACKGROUNDS, settings.disabledSceneIds),
       outfits: OUTFITS,
     });
@@ -394,7 +401,7 @@ export function useDanceFloorEngine() {
       effectId: combo.effect?.id, soundId: null, sceneIdToApply: combo.scene?.id,
       durationSeconds: 10, priority: 3, username: 'Tự Động', count: 1, reactionLine: line, outfitId: combo.outfit?.id,
     });
-  }, [enabledCharacters, settings.disabledDanceIds, settings.disabledEffectIds, settings.disabledSceneIds, spawnCharacters, pushReaction]);
+  }, [enabledCharacters, allEffects, settings.disabledDanceIds, settings.disabledEffectIds, settings.disabledSceneIds, spawnCharacters, pushReaction]);
 
   // Chế độ mô phỏng — chạy full pipeline thật trên dữ liệu giả lập cho TikTok/Facebook (chưa có API
   // công khai). Tôn trọng Lịch Hoạt Động 24/7 nếu admin bật giới hạn khung giờ.
@@ -435,8 +442,13 @@ export function useDanceFloorEngine() {
     setSelectedChannelIds((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
   }, []);
 
-  const addCustomCharacter = useCallback((character) => setCustomCharacters((prev) => [...prev, character]), []);
-  const deleteCustomCharacter = useCallback((id) => setCustomCharacters((prev) => prev.filter((c) => c.id !== id)), []);
+  const suggestDance = useCallback(
+    (soundId) => {
+      const enabledDanceStyles = filterEnabled(DANCE_STYLES, settings.disabledDanceIds);
+      return suggestDanceForSound(soundId, SOUND_DANCE_SUGGESTIONS, enabledDanceStyles.length > 0 ? enabledDanceStyles : DANCE_STYLES);
+    },
+    [settings.disabledDanceIds]
+  );
 
   const toggleLibraryItem = useCallback((category, id) => {
     const key = LIBRARY_SETTING_KEY[category];
@@ -456,8 +468,10 @@ export function useDanceFloorEngine() {
     giftTiers, setGiftTiers,
     settings, setSettings,
     autoReplyRules, setAutoReplyRules,
-    allCharacters, customCharacters, addCustomCharacter, deleteCustomCharacter,
-    allSounds, addCustomSound,
+    allCharacters, customCharacters, addCustomCharacter, deleteCustomCharacter, editCustomCharacter,
+    enabledNormalCharacters, enabledVipCharacters,
+    allEffects, customEffects, addCustomEffect, deleteCustomEffect,
+    allSounds, addCustomSound, deleteCustomSound,
     setCustomBackgroundImage,
     instances, effectTriggers, sceneId, leaderboard, reactionFeed,
     connectedChannelList: connectedChannels.filter((c) => c.status === 'connected'),
@@ -465,6 +479,6 @@ export function useDanceFloorEngine() {
     ytBridge, handleYtConnect, handleYtDisconnect,
     commentsPerMin, triggersPerMin,
     handleManualTrigger, handleManualGift,
-    playSound, runAutoShuffle, toggleLibraryItem,
+    playSound, runAutoShuffle, toggleLibraryItem, suggestDance,
   };
 }

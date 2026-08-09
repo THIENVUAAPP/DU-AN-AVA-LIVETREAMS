@@ -1,7 +1,7 @@
-import React, { useRef } from 'react';
-import { Volume2, Gem, Users, Music4, Sparkles as SparklesIcon, Trash2, Image as ImageIcon, CheckCircle2, XCircle } from 'lucide-react';
-import { DANCE_STYLES, DANCE_EFFECTS, SCENE_BACKGROUNDS } from '../../lib/danceFloorData';
-import DanceFloorCharacterUploader from './DanceFloorCharacterUploader';
+import React, { useRef, useState } from 'react';
+import { Volume2, Gem, Music4, Sparkles as SparklesIcon, Trash2, Image as ImageIcon, CheckCircle2, XCircle, Plus } from 'lucide-react';
+import { DANCE_STYLES, SCENE_BACKGROUNDS } from '../../lib/danceFloorData';
+import DanceFloorCharacterLibraryGrid from './DanceFloorCharacterLibraryGrid';
 
 const TIER_STYLES = [
   { border: 'border-gray-500/30', badge: 'bg-gray-500/20 text-gray-300' },
@@ -10,10 +10,13 @@ const TIER_STYLES = [
   { border: 'border-cyan-400/50', badge: 'bg-cyan-400/20 text-cyan-200' },
 ];
 
-const PERSONALITY_LABELS = {
-  cute: '🥰 Dễ Thương', cool: '😎 Ngầu', funny: '😂 Hài Hước',
-  luxury: '👑 Sang Chảnh', energetic: '⚡ Sôi Động', sassy: '💅 Cá Tính',
-};
+const PARTICLE_TYPES = [
+  { id: 'burst', label: 'Nổ Tung (burst)' },
+  { id: 'fall', label: 'Rơi Xuống (fall)' },
+  { id: 'rise', label: 'Bay Lên (rise)' },
+];
+
+const EMPTY_EFFECT_FORM = { name: '', emoji: '✨', particle: 'burst', color: '#EF4444' };
 
 function ToggleBadge({ enabled, onClick }) {
   return (
@@ -30,20 +33,32 @@ function ToggleBadge({ enabled, onClick }) {
 // Thư viện Nhân Vật / Điệu Nhảy / Hiệu Ứng / Âm Thanh / Bối Cảnh + Cấu Hình Gift-Tier. Mỗi item có
 // nút tick BẬT/TẮT — tắt thì không xuất hiện trong mô phỏng, Auto-Shuffle hay gọi tên tự động nữa.
 export default function DanceFloorLibraryPanel({
-  characters, customCharacters, onAddCustomCharacter, onDeleteCustomCharacter,
-  sounds, onAddCustomSound,
+  characters, customCharacters, onAddCustomCharacter, onDeleteCustomCharacter, onEditCustomCharacter,
+  effects, customEffects, onAddCustomEffect, onDeleteCustomEffect,
+  sounds, onAddCustomSound, onDeleteCustomSound,
   giftTiers, setGiftTiers, onPreviewSound,
-  disabledCharacterIds, disabledDanceIds, disabledEffectIds, disabledSceneIds, onToggleLibraryItem,
+  disabledCharacterIds, disabledDanceIds, disabledEffectIds, disabledSceneIds, disabledSoundIds, onToggleLibraryItem,
   customBackgroundImage, onSetCustomBackgroundImage,
 }) {
   const bgInputRef = useRef(null);
   const soundInputRef = useRef(null);
+  const [effectForm, setEffectForm] = useState(EMPTY_EFFECT_FORM);
 
   const handleSoundUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     onAddCustomSound(file);
     if (soundInputRef.current) soundInputRef.current.value = '';
+  };
+
+  const handleAddEffect = (e) => {
+    e.preventDefault();
+    if (!effectForm.name.trim()) {
+      alert('Vui lòng nhập tên hiệu ứng!');
+      return;
+    }
+    onAddCustomEffect({ id: `custom_fx_${Date.now()}`, name: effectForm.name.trim(), emoji: effectForm.emoji || '✨', particle: effectForm.particle, color: effectForm.color });
+    setEffectForm(EMPTY_EFFECT_FORM);
   };
 
   const updateTierField = (level, field, value) => {
@@ -60,50 +75,15 @@ export default function DanceFloorLibraryPanel({
 
   return (
     <div className="space-y-8">
-      <section>
-        <h3 className="text-lg font-black text-white flex items-center gap-2 mb-1">
-          <Users className="w-5 h-5 text-[#EF4444]" /> Thư Viện Nhân Vật ({characters.length})
-        </h3>
-        <p className="text-xs text-gray-400 mb-3">
-          Gõ đúng tên hoặc biệt danh (vd: "hot girl", "cun", "messi") trong bình luận để triệu hồi thẳng nhân vật đó lên sàn. Nhân vật ảnh/video người thật tải lên sẽ tự động tách nền + nhảy theo điệu đã chọn.
-        </p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {characters.map((c) => {
-            const enabled = !disabledCharacterIds.includes(c.id);
-            return (
-              <div key={c.id} className="glass-panel p-3 rounded-2xl border border-white/10 text-center relative group">
-                <ToggleBadge enabled={enabled} onClick={() => onToggleLibraryItem('character', c.id)} />
-                {customCharacters.some((cc) => cc.id === c.id) && (
-                  <button
-                    onClick={() => onDeleteCustomCharacter(c.id)}
-                    className="absolute top-1.5 right-1.5 p-1 rounded-lg bg-red-500/20 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
-                )}
-                {c.mediaType === 'image' && c.mediaUrl ? (
-                  <img src={c.mediaUrl} alt={c.name} className="w-14 h-14 mx-auto rounded-xl object-cover mb-2" />
-                ) : (
-                  <div className={`w-14 h-14 mx-auto rounded-xl bg-gradient-to-br ${c.gradient} flex items-center justify-center text-2xl mb-2`}>
-                    {c.emoji}
-                  </div>
-                )}
-                <p className="text-xs font-black text-white truncate">{c.name}</p>
-                <span className="text-[9px] text-gray-400 font-bold block">{PERSONALITY_LABELS[c.personality] || c.style}</span>
-                {c.callNames?.length > 0 && (
-                  <span className="text-[8px] text-gray-600 truncate block mt-0.5" title={c.callNames.join(', ')}>
-                    Gọi: {c.callNames[0]}
-                  </span>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="mt-3">
-          <DanceFloorCharacterUploader onAddCustomCharacter={onAddCustomCharacter} />
-        </div>
-      </section>
+      <DanceFloorCharacterLibraryGrid
+        characters={characters}
+        customCharacters={customCharacters}
+        disabledCharacterIds={disabledCharacterIds}
+        onToggleLibraryItem={onToggleLibraryItem}
+        onDeleteCustomCharacter={onDeleteCustomCharacter}
+        onEditCustomCharacter={onEditCustomCharacter}
+        onAddCustomCharacter={onAddCustomCharacter}
+      />
 
       <section>
         <h3 className="text-lg font-black text-white flex items-center gap-2 mb-3">
@@ -122,19 +102,37 @@ export default function DanceFloorLibraryPanel({
       </section>
 
       <section>
-        <h3 className="text-lg font-black text-white flex items-center gap-2 mb-3">
-          <SparklesIcon className="w-5 h-5 text-[#3B82F6]" /> Thư Viện Hiệu Ứng ({DANCE_EFFECTS.length})
-        </h3>
-        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-          {DANCE_EFFECTS.map((f) => (
-            <div key={f.id} className="glass-panel p-3 rounded-2xl border border-white/10 text-center relative">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-black text-white flex items-center gap-2">
+            <SparklesIcon className="w-5 h-5 text-[#3B82F6]" /> Thư Viện Hiệu Ứng ({effects.length})
+          </h3>
+        </div>
+        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3 mb-3">
+          {effects.map((f) => (
+            <div key={f.id} className="glass-panel p-3 rounded-2xl border border-white/10 text-center relative group">
               <ToggleBadge enabled={!disabledEffectIds.includes(f.id)} onClick={() => onToggleLibraryItem('effect', f.id)} />
+              {customEffects.some((ce) => ce.id === f.id) && (
+                <button onClick={() => onDeleteCustomEffect(f.id)} className="absolute top-1.5 right-1.5 p-1 rounded-lg bg-red-500/20 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              )}
               <div className="text-2xl mb-1">{f.emoji}</div>
-              <p className="text-[11px] font-black text-white">{f.name}</p>
+              <p className="text-[11px] font-black text-white truncate">{f.name}</p>
               <span className="text-[9px] text-gray-500 uppercase">{f.particle}</span>
             </div>
           ))}
         </div>
+        <form onSubmit={handleAddEffect} className="glass-panel p-3 rounded-2xl border border-dashed border-white/20 grid grid-cols-2 lg:grid-cols-5 gap-2 items-end">
+          <input value={effectForm.name} onChange={(e) => setEffectForm((f) => ({ ...f, name: e.target.value }))} placeholder="Tên hiệu ứng" className="px-2.5 py-2 rounded-xl bg-black/40 border border-white/10 text-white text-xs font-bold outline-none" />
+          <input value={effectForm.emoji} onChange={(e) => setEffectForm((f) => ({ ...f, emoji: e.target.value }))} maxLength={4} className="px-2.5 py-2 rounded-xl bg-black/40 border border-white/10 text-white text-sm text-center outline-none" />
+          <select value={effectForm.particle} onChange={(e) => setEffectForm((f) => ({ ...f, particle: e.target.value }))} className="px-2.5 py-2 rounded-xl bg-black/40 border border-white/10 text-white text-xs font-bold outline-none">
+            {PARTICLE_TYPES.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+          </select>
+          <input type="color" value={effectForm.color} onChange={(e) => setEffectForm((f) => ({ ...f, color: e.target.value }))} className="w-full h-9 rounded-xl bg-black/40 border border-white/10 cursor-pointer" />
+          <button type="submit" className="px-3 py-2 rounded-xl bg-[#3B82F6] hover:bg-blue-600 text-white text-xs font-black cursor-pointer flex items-center justify-center gap-1.5">
+            <Plus className="w-3.5 h-3.5" /> Thêm
+          </button>
+        </form>
       </section>
 
       <section>
@@ -167,19 +165,23 @@ export default function DanceFloorLibraryPanel({
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-3">
           {sounds.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => onPreviewSound(s.id)}
-              className="glass-panel p-3 rounded-2xl border border-white/10 text-center hover:border-emerald-500/40 transition-all cursor-pointer"
-            >
-              <Volume2 className="w-5 h-5 mx-auto mb-1 text-emerald-400" />
-              <p className="text-[11px] font-black text-white truncate">{s.name}</p>
-              <span className="text-[9px] text-gray-500">{s.isSessionOnly ? 'Nhạc Đã Tải Lên' : 'Nghe Thử'}</span>
-            </button>
+            <div key={s.id} className="glass-panel p-3 rounded-2xl border border-white/10 text-center relative group">
+              <ToggleBadge enabled={!disabledSoundIds.includes(s.id)} onClick={() => onToggleLibraryItem('sound', s.id)} />
+              {s.isSessionOnly && (
+                <button onClick={() => onDeleteCustomSound(s.id)} className="absolute top-1.5 right-1.5 p-1 rounded-lg bg-red-500/20 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              )}
+              <button onClick={() => onPreviewSound(s.id)} className="w-full cursor-pointer">
+                <Volume2 className="w-5 h-5 mx-auto mb-1 mt-2 text-emerald-400" />
+                <p className="text-[11px] font-black text-white truncate">{s.name}</p>
+                <span className="text-[9px] text-gray-500">{s.isSessionOnly ? 'Nhạc Đã Tải Lên' : 'Nghe Thử'}</span>
+              </button>
+            </div>
           ))}
         </div>
         <input ref={soundInputRef} type="file" accept="audio/*" onChange={handleSoundUpload} className="text-xs text-gray-300" />
-        <p className="text-[9px] text-gray-500 mt-1">Tải nhạc trend thật (mp3, cả bài) để dùng làm nhạc nền riêng cho luật/nhân vật — chỉ dùng trong phiên hiện tại.</p>
+        <p className="text-[9px] text-gray-500 mt-1">Tải nhạc trend thật (mp3, cả bài — có lời/không lời/nhạc sàn) để dùng làm nhạc nền riêng cho luật/nhân vật — chỉ dùng trong phiên hiện tại.</p>
       </section>
 
       <section>

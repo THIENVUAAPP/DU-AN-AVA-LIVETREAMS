@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Zap, Power, Sparkles } from 'lucide-react';
+import { Plus, Trash2, Zap, Power, Sparkles, Wand2 } from 'lucide-react';
 import { DANCE_STYLES, DANCE_EFFECTS, SCENE_BACKGROUNDS } from '../../lib/danceFloorData';
 
 function buildEmptyRule(characters, sounds) {
@@ -21,7 +21,7 @@ function buildEmptyRule(characters, sounds) {
 }
 
 // Rule Builder — bảng "trigger_rules" no-code: admin tạo/sửa/xoá luật từ khoá không cần code lại (Mục 26/28 kế hoạch).
-export default function DanceFloorRuleBuilder({ rules, setRules, characters, sounds, onTestRule }) {
+export default function DanceFloorRuleBuilder({ rules, setRules, characters, sounds, onTestRule, onSuggestDance }) {
   const [form, setForm] = useState(() => buildEmptyRule(characters, sounds));
   const [showForm, setShowForm] = useState(false);
 
@@ -147,15 +147,30 @@ export default function DanceFloorRuleBuilder({ rules, setRules, characters, sou
                 </div>
                 <div>
                   <label className="text-[10px] font-black text-gray-400 uppercase block mb-1">Điệu Nhảy</label>
-                  <select
-                    value={form.danceId}
-                    onChange={(e) => updateField('danceId', e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-white text-sm font-bold outline-none"
-                  >
-                    {DANCE_STYLES.map((d) => (
-                      <option key={d.id} value={d.id}>{d.name}</option>
-                    ))}
-                  </select>
+                  <div className="flex gap-1.5">
+                    <select
+                      value={form.danceId}
+                      onChange={(e) => updateField('danceId', e.target.value)}
+                      className="flex-1 px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-white text-sm font-bold outline-none"
+                    >
+                      {DANCE_STYLES.map((d) => (
+                        <option key={d.id} value={d.id}>{d.name}</option>
+                      ))}
+                    </select>
+                    {onSuggestDance && (
+                      <button
+                        type="button"
+                        title="Auto gợi ý điệu nhảy hợp với nhạc đã chọn"
+                        onClick={() => {
+                          const suggested = onSuggestDance(form.soundId);
+                          if (suggested) updateField('danceId', suggested.id);
+                        }}
+                        className="px-2.5 rounded-xl bg-[#8B5CF6]/20 border border-[#8B5CF6]/40 text-[#8B5CF6] hover:bg-[#8B5CF6]/30 cursor-pointer shrink-0"
+                      >
+                        <Wand2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="text-[10px] font-black text-gray-400 uppercase block mb-1">Số Lượng Sinh</label>

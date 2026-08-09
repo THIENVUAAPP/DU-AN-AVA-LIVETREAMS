@@ -185,3 +185,21 @@
 
 @keyframes danceFloss { 0%,100% { transform: skewY(-8deg) translateX(-6px); } 50% { transform: skewY(8deg) translateX(6px); } }
 .animate-dance-floss { animation: danceFloss 0.5s ease-in-out infinite; }
+
+@keyframes danceLock { 0%,20% { transform: translateY(0) rotate(0deg); } 25% { transform: translateY(-10px) rotate(-8deg); } 50% { transform: translateY(0) rotate(0deg); } 55% { transform: translateY(-6px) rotate(8deg); } 100% { transform: translateY(0) rotate(0deg); } }
+.animate-dance-lock { animation: danceLock 0.9s steps(4) infinite; }
+
+@keyframes danceSalsa { 0%,100% { transform: translateX(-10px) rotate(-5deg); } 50% { transform: translateX(10px) rotate(5deg); } }
+.animate-dance-salsa { animation: danceSalsa 0.6s ease-in-out infinite; }
+
+@keyframes danceBreakdance { 0% { transform: rotate(0deg) scale(0.9) translateY(6px); } 50% { transform: rotate(180deg) scale(1) translateY(0); } 100% { transform: rotate(360deg) scale(0.9) translateY(6px); } }
+.animate-dance-breakdance { animation: danceBreakdance 0.5s linear infinite; }
+
+@keyframes danceMoonwalk { 0% { transform: translateX(15px); } 100% { transform: translateX(-15px); } }
+.animate-dance-moonwalk { animation: danceMoonwalk 1.2s ease-in-out infinite alternate; }
+
+@keyframes danceClap { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-14px) scale(1.1); } }
+.animate-dance-clap { animation: danceClap 0.4s ease-in-out infinite; }
+
+@keyframes danceWaveArms { 0%,100% { transform: skewX(-10deg); } 50% { transform: skewX(10deg); } }
+.animate-dance-wavearms { animation: danceWaveArms 0.7s ease-in-out infinite; }

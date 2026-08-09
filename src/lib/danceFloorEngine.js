@@ -190,6 +190,35 @@ export function buildRandomCombo({ characters, danceStyles, effects, scenes, out
   };
 }
 
+// --- Gán nhân vật đại diện cố định cho từng người xem (Thường mặc định, nâng VIP khi tặng quà) ---
+// assignments: Map<userId, characterId>  |  tierByUser: Map<userId, 'normal'|'vip'>
+// Cùng 1 user luôn nhận lại đúng nhân vật cũ nếu vẫn thuộc đúng hạng; đổi hạng (tặng quà) sẽ tự động
+// gán lại nhân vật mới từ nhóm VIP vì nhân vật cũ không còn nằm trong nhóm tương ứng.
+export function assignCharacterForUser(userId, assignments, tierByUser, normalPool, vipPool) {
+  const tier = tierByUser.get(userId) || "normal";
+  const pool = tier === "vip" && vipPool.length > 0 ? vipPool : normalPool;
+  if (pool.length === 0) return null;
+
+  const existingId = assignments.get(userId);
+  const existingCharacter = existingId ? pool.find((c) => c.id === existingId) : null;
+  if (existingCharacter) return existingCharacter;
+
+  const character = pool[Math.floor(Math.random() * pool.length)];
+  assignments.set(userId, character.id);
+  return character;
+}
+
+// Gợi ý 1 điệu nhảy hợp với bản nhạc đang chọn (xem SOUND_DANCE_SUGGESTIONS) — nhạc chưa có gợi ý
+// sẵn (vd nhạc admin tự tải lên) sẽ chọn ngẫu nhiên trong toàn bộ thư viện điệu nhảy.
+export function suggestDanceForSound(soundId, suggestionsMap, allDanceStyles) {
+  const suggestedIds = suggestionsMap[soundId];
+  if (suggestedIds && suggestedIds.length > 0) {
+    const id = suggestedIds[Math.floor(Math.random() * suggestedIds.length)];
+    return allDanceStyles.find((d) => d.id === id) || allDanceStyles[0];
+  }
+  return allDanceStyles[Math.floor(Math.random() * allDanceStyles.length)];
+}
+
 // Xây dựng 1 UnifiedLiveEvent chuẩn hoá từ dữ liệu thô của adapter bất kỳ.
 export function buildUnifiedEvent({ platform, type, userId, username, avatar, message, value, timestamp }) {
   return {
