@@ -241,31 +241,39 @@ export const DEFAULT_KEYWORD_RULES = [
   { id: "rule_rain", keyword: "rain", platform: "all", characterId: null, danceId: null, effectId: "fx_rain", soundId: "sfx_default", spawnsCharacter: false, spawnCount: 0, sceneId: "scene_rain_night", duration: 10, priority: 2, cooldownSec: 6, enabled: true },
 ];
 
+// Chế độ nhảy theo số lượng nhân vật cùng lúc — quy đổi số người thật khi 1 lượt quà kích hoạt nhảy
+// đôi/3/nhóm (các nhân vật cùng lượt sẽ đứng gần nhau + đồng bộ pha nhảy trên Sàn 3D).
+export const DANCE_MODE_SIZES = { solo: 1, duo: 2, trio: 3, group: 5, all: 8 };
+export const DANCE_MODE_LABELS = {
+  solo: "Nhảy Đơn", duo: "Nhảy Đôi", trio: "Nhảy Bộ 3", group: "Nhảy Nhóm (5)", all: "Cả Sàn Nhảy (8)",
+};
+
 // Bảng cấp bậc quà tặng — quy đổi giá trị quà (đã quy về điểm chung nội bộ) sang đặc quyền hiển thị.
-// Mỗi cấp có nhóm nhân vật + nhạc hiệu riêng để "quà khác nhau → nhân vật & nhạc khác nhau".
+// Mỗi cấp có nhóm nhân vật + nhạc hiệu + chế độ nhảy riêng để "quà khác nhau → nhân vật, nhạc & đội
+// hình nhảy khác nhau".
 export const GIFT_TIERS = [
   {
     level: 1, name: "Cơ Bản", minPoints: 0,
     characterIds: ["girl_neon", "boy_street", "pet_dog", "pet_chick", "pet_bunny"], danceIds: ["dance_bounce"], effectIds: ["fx_neon"],
-    soundId: null, durationSeconds: 15,
+    soundId: null, durationSeconds: 15, danceMode: "solo",
     customization: { outfitColor: false, danceStyleChoice: false },
   },
   {
     level: 2, name: "Bạc", minPoints: 100,
     characterIds: ["anime_girl", "robot", "hot_girl", "hot_boy", "pet_cat2"], danceIds: ["dance_bounce", "dance_groove"], effectIds: ["fx_confetti"],
-    soundId: null, durationSeconds: 30,
+    soundId: null, durationSeconds: 30, danceMode: "duo",
     customization: { outfitColor: true, danceStyleChoice: false },
   },
   {
     level: 3, name: "Vàng", minPoints: 500,
     characterIds: ["king_gold", "queen_gold", "superhero", "diva_music", "rapper_star", "football_star", "kpop_idol", "boxing_champion", "animal_lion", "dj_master", "singer_tre"], danceIds: ["dance_groove", "dance_spin", "dance_lock"], effectIds: ["fx_gold", "fx_fireworks"],
-    soundId: null, durationSeconds: 60,
+    soundId: null, durationSeconds: 60, danceMode: "trio",
     customization: { outfitColor: true, danceStyleChoice: true, vfxChoice: ["fx_confetti", "fx_gold"] },
   },
   {
     level: 4, name: "Kim Cương / VIP", minPoints: 2000,
     characterIds: ["diamond_vip", "beauty_queen", "tech_billionaire", "mega_streamer", "dragon_vip", "unicorn_vip", "phoenix_vip"], danceIds: ["dance_victory", "dance_spin", "dance_breakdance"], effectIds: ["fx_explosion", "fx_gold", "fx_magic", "fx_diamond_rain"],
-    soundId: null, durationSeconds: 120,
+    soundId: null, durationSeconds: 120, danceMode: "group",
     customization: { outfitColor: true, danceStyleChoice: true, vfxChoice: ["fx_confetti", "fx_explosion", "fx_gold"], sceneChoice: true, priorityStageSlot: true },
   },
 ];

@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
-import { Sparkles, Zap, BookOpen, MessageSquareText, TrendingUp, Users, Trophy, Volume2, VolumeX, Radio, MessagesSquare } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Sparkles, Zap, BookOpen, MessageSquareText, TrendingUp, Users, Trophy, Volume2, VolumeX, Radio, MessagesSquare, Layers, Move3d } from 'lucide-react';
 
 import DanceFloorStage from './dancefloor/DanceFloorStage';
+import Dance3DStage from './dancefloor/Dance3DStage';
+import DanceFloorGiftPinPanel from './dancefloor/DanceFloorGiftPinPanel';
+import DanceFloorVideoOverlay from './dancefloor/DanceFloorVideoOverlay';
 import DanceFloorRuleBuilder from './dancefloor/DanceFloorRuleBuilder';
 import DanceFloorLibraryPanel from './dancefloor/DanceFloorLibraryPanel';
 import DanceFloorChannelLivePanel from './dancefloor/DanceFloorChannelLivePanel';
@@ -12,6 +15,7 @@ import DanceFloorYoutubeBridgePanel from './dancefloor/DanceFloorYoutubeBridgePa
 import DanceFloorReactionFeed from './dancefloor/DanceFloorReactionFeed';
 import DanceFloorAutoReplyPanel from './dancefloor/DanceFloorAutoReplyPanel';
 import { useDanceFloorEngine } from '../hooks/useDanceFloorEngine';
+import { STAGE_PRESETS_3D } from '../lib/dance3d/stagePresets3D';
 
 const SECTIONS = [
   { id: 'stage', label: 'Sàn Diễn', icon: Sparkles },
@@ -26,6 +30,9 @@ const SECTIONS = [
 // Logic điều phối nằm trong useDanceFloorEngine — file này chỉ lo hiển thị.
 export default function DanceFloorStudio({ isLive, setIsLive }) {
   const [activeSection, setActiveSection] = useState('stage');
+  const [renderMode, setRenderMode] = useState('2d'); // '2d' | '3d'
+  const [stagePresetId, setStagePresetId] = useState(STAGE_PRESETS_3D[0].id);
+  const stageContainerRef = useRef(null);
   const engine = useDanceFloorEngine();
 
   const {
@@ -120,24 +127,74 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
               />
             </div>
 
-            <div className="lg:col-span-2">
-              <DanceFloorStage
-                instances={instances}
-                maxSlots={settings.maxSlots}
-                effectTriggers={effectTriggers}
-                sceneId={sceneId}
-                characters={allCharacters}
-                effects={allEffects}
-                customBackgroundImage={settings.customBackgroundImage}
-                isConnected={isLive || connectedChannelList.length > 0}
-                connectionLabel={
-                  isLive
-                    ? `🔴 ĐANG LIVE TRÊN ${selectedChannelIds.length} KÊNH`
-                    : connectedChannelList.length > 0
-                    ? `${connectedChannelList.length} Kênh Sẵn Sàng`
-                    : 'Chưa Kết Nối Kênh'
-                }
-              />
+            <div className="lg:col-span-2 space-y-2">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/5 border border-white/10">
+                  <button
+                    onClick={() => setRenderMode('2d')}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black cursor-pointer flex items-center gap-1 ${renderMode === '2d' ? 'bg-[#EF4444] text-white' : 'text-gray-400'}`}
+                  >
+                    <Layers className="w-3 h-3" /> Sàn 2D
+                  </button>
+                  <button
+                    onClick={() => setRenderMode('3d')}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black cursor-pointer flex items-center gap-1 ${renderMode === '3d' ? 'bg-[#8B5CF6] text-white' : 'text-gray-400'}`}
+                  >
+                    <Move3d className="w-3 h-3" /> Sàn 3D
+                  </button>
+                </div>
+                {renderMode === '3d' && (
+                  <select
+                    value={stagePresetId}
+                    onChange={(e) => setStagePresetId(e.target.value)}
+                    className="px-2.5 py-1.5 rounded-lg bg-black/40 border border-white/10 text-white text-[10px] font-bold outline-none"
+                  >
+                    {STAGE_PRESETS_3D.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              <div ref={stageContainerRef} className="relative">
+                {renderMode === '2d' ? (
+                  <DanceFloorStage
+                    instances={instances}
+                    maxSlots={settings.maxSlots}
+                    effectTriggers={effectTriggers}
+                    sceneId={sceneId}
+                    characters={allCharacters}
+                    effects={allEffects}
+                    customBackgroundImage={settings.customBackgroundImage}
+                    isConnected={isLive || connectedChannelList.length > 0}
+                    connectionLabel={
+                      isLive
+                        ? `🔴 ĐANG LIVE TRÊN ${selectedChannelIds.length} KÊNH`
+                        : connectedChannelList.length > 0
+                        ? `${connectedChannelList.length} Kênh Sẵn Sàng`
+                        : 'Chưa Kết Nối Kênh'
+                    }
+                  />
+                ) : (
+                  <Dance3DStage
+                    instances={instances}
+                    characters={allCharacters}
+                    effects={allEffects}
+                    effectTriggers={effectTriggers}
+                    stagePresetId={stagePresetId}
+                    isConnected={isLive || connectedChannelList.length > 0}
+                    connectionLabel={
+                      isLive
+                        ? `🔴 ĐANG LIVE TRÊN ${selectedChannelIds.length} KÊNH`
+                        : connectedChannelList.length > 0
+                        ? `${connectedChannelList.length} Kênh Sẵn Sàng`
+                        : 'Chưa Kết Nối Kênh'
+                    }
+                  />
+                )}
+                <DanceFloorGiftPinPanel rules={rules} giftTiers={giftTiers} characters={allCharacters} />
+                <DanceFloorVideoOverlay containerRef={stageContainerRef} />
+              </div>
             </div>
 
             <div className="lg:col-span-1">

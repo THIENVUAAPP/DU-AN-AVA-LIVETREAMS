@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Volume2, Gem, Music4, Sparkles as SparklesIcon, Trash2, Image as ImageIcon, CheckCircle2, XCircle, Plus } from 'lucide-react';
-import { DANCE_STYLES, SCENE_BACKGROUNDS } from '../../lib/danceFloorData';
+import { DANCE_STYLES, SCENE_BACKGROUNDS, DANCE_MODE_LABELS } from '../../lib/danceFloorData';
 import DanceFloorCharacterLibraryGrid from './DanceFloorCharacterLibraryGrid';
 
 const TIER_STYLES = [
@@ -219,6 +219,18 @@ export default function DanceFloorLibraryPanel({
                     onChange={(e) => updateTierField(tier.level, 'durationSeconds', Number(e.target.value))}
                     className="w-full px-2 py-1.5 rounded-lg bg-black/40 border border-white/10 text-white text-sm font-bold outline-none"
                   />
+                </div>
+                <div>
+                  <label className="text-[9px] font-black text-gray-500 uppercase block">Chế Độ Nhảy</label>
+                  <select
+                    value={tier.danceMode || 'solo'}
+                    onChange={(e) => updateTierField(tier.level, 'danceMode', e.target.value)}
+                    className="w-full px-2 py-1.5 rounded-lg bg-black/40 border border-white/10 text-white text-xs font-bold outline-none"
+                  >
+                    {Object.entries(DANCE_MODE_LABELS).map(([id, label]) => (
+                      <option key={id} value={id}>{label}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="flex flex-wrap gap-1 pt-1">
                   {tier.customization?.outfitColor && (

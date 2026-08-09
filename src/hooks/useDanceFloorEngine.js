@@ -13,6 +13,7 @@ import {
   AUTO_REPLY_RULES,
   COMMENTARY_STYLES,
   SOUND_DANCE_SUGGESTIONS,
+  DANCE_MODE_SIZES,
 } from '../lib/danceFloorData';
 import {
   matchTriggerRule,
@@ -230,12 +231,17 @@ export function useDanceFloorEngine() {
       let resolvedSoundId = soundId;
 
       if (count > 0 && characterIds && characterIds.length > 0) {
+        // Nhiều nhân vật sinh cùng lượt (spawnCount>1 hoặc chế độ nhảy đôi/3/nhóm) → gán chung groupId
+        // để Sàn 3D xếp đội hình gần nhau + đồng bộ pha nhảy, tạo hiệu ứng nhảy nhóm thật.
+        const groupId = count > 1 ? `group_${now}_${Math.random().toString(36).slice(2, 6)}` : null;
+        const sharedDanceId = danceIds && danceIds.length > 0 ? danceIds[Math.floor(Math.random() * danceIds.length)] : null;
         const newInstances = Array.from({ length: count }).map((_, i) => {
           const characterId = characterIds[Math.floor(Math.random() * characterIds.length)];
           return {
             instanceId: `inst_${now}_${Math.random().toString(36).slice(2, 8)}_${i}`,
             characterId,
-            danceId: danceIds && danceIds.length > 0 ? danceIds[Math.floor(Math.random() * danceIds.length)] : null,
+            danceId: groupId ? sharedDanceId : (danceIds && danceIds.length > 0 ? danceIds[Math.floor(Math.random() * danceIds.length)] : null),
+            groupId,
             outfitId: outfitId || OUTFITS[Math.floor(Math.random() * OUTFITS.length)].id,
             username,
             startTime: now,
@@ -297,7 +303,7 @@ export function useDanceFloorEngine() {
           durationSeconds: tier.durationSeconds,
           priority: 10, // Gift luôn có độ ưu tiên cao nhất, thắng mọi comment thường
           username: event.username,
-          count: 1,
+          count: DANCE_MODE_SIZES[tier.danceMode] || 1,
           reactionLine: thankLine,
         });
         return;
