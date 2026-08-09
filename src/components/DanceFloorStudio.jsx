@@ -216,6 +216,7 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
                     stagePresetId={stagePresetId}
                     customBackgroundImage={settings.customBackgroundImage}
                     backgroundVideoUrl={activeBackgroundVideoUrl}
+                    autoCameraEnabled={settings.autoCameraEnabled}
                     isConnected={isLive || connectedChannelList.length > 0}
                     connectionLabel={
                       isLive
@@ -282,6 +283,10 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
               musicPlaylist={musicPlaylist}
               musicLoopMode={settings.musicLoopMode}
               onUpdateMusicLoopMode={(mode) => setSettings((s) => ({ ...s, musicLoopMode: mode }))}
+              keepCharactersPermanently={settings.keepCharactersPermanently}
+              onToggleKeepCharacters={() => setSettings((s) => ({ ...s, keepCharactersPermanently: !s.keepCharactersPermanently }))}
+              autoCameraEnabled={settings.autoCameraEnabled}
+              onToggleAutoCamera={() => setSettings((s) => ({ ...s, autoCameraEnabled: !s.autoCameraEnabled }))}
               autoShuffleIntervalEnabled={settings.autoShuffleIntervalEnabled}
               autoShuffleIntervalMinutes={settings.autoShuffleIntervalMinutes}
               onUpdateAutoShuffleInterval={(patch) => setSettings((s) => ({ ...s, ...patch }))}

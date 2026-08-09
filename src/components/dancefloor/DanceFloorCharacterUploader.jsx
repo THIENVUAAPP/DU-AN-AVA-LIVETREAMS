@@ -154,7 +154,10 @@ export default function DanceFloorCharacterUploader({ onAddCustomCharacter }) {
       personality: form.personality,
       signatureSoundId: PERSONALITY_SOUND_MAP[form.personality] || 'sfx_default',
       callNames,
-      mediaType: mode,
+      // LỖI ĐÃ SỬA: mode ở đây là 'photo'|'video'|'emoji' (tên state nội bộ), nhưng mọi nơi hiển thị
+      // (Sàn 2D/3D, thẻ thư viện) kiểm tra mediaType === 'image' — dùng thẳng "mode" khiến nhân vật tải
+      // 1 ảnh luôn rơi về emoji mặc định, KHÔNG BAO GIỜ hiện đúng ảnh đã tải lên.
+      mediaType: mode === 'photo' ? 'image' : mode,
     };
 
     if (mode === 'photo') base.mediaUrl = photoPreview;

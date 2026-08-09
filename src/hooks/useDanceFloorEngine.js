@@ -5,7 +5,6 @@ import {
   DEFAULT_KEYWORD_RULES,
   GIFT_TIERS,
   GIFT_POINT_MAPPING,
-  DANCE_SOUNDS,
   DEFAULT_SETTINGS,
   REACTION_LINES,
   GIFT_THANK_LINES,
@@ -105,7 +104,6 @@ export function useDanceFloorEngine() {
   const cooldownStateRef = useRef(createCooldownState());
   const commentTimestampsRef = useRef([]);
   const triggerTimestampsRef = useRef([]);
-  const audioCtxRef = useRef(null);
   const broadcastChannelRef = useRef(null);
   // Nhân vật đại diện cố định cho từng người xem trong phiên (Thường mặc định, nâng VIP khi tặng quà).
   const userCharacterAssignmentsRef = useRef(new Map());
@@ -153,6 +151,22 @@ export function useDanceFloorEngine() {
     return () => clearInterval(interval);
   }, []);
 
+  // Nhân vật giữ trên sàn lâu (mục trên) vẫn phải "nhảy tự do nhiều điệu" chứ không đứng yên 1 kiểu suốt
+  // — cứ mỗi ~14s đổi ngẫu nhiên điệu nhảy khác cho từng nhân vật đang có mặt (trừ nhân vật trong 1
+  // nhóm nhảy chung — groupId — để đội hình không lệch pha giữa chừng).
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const enabledStyles = filterEnabled(allDanceStyles, settings.disabledDanceIds);
+      if (enabledStyles.length === 0) return;
+      setInstances((prev) =>
+        prev.map((inst) =>
+          inst.groupId ? inst : { ...inst, danceId: enabledStyles[Math.floor(Math.random() * enabledStyles.length)].id }
+        )
+      );
+    }, 14000);
+    return () => clearInterval(interval);
+  }, [allDanceStyles, settings.disabledDanceIds]);
+
   // Cửa Sổ Overlay Trong Suốt lắng nghe kênh này để phản chiếu đúng sàn diễn thời gian thực.
   useEffect(() => {
     if (typeof BroadcastChannel === 'undefined') return undefined;
@@ -166,34 +180,14 @@ export function useDanceFloorEngine() {
     });
   }, [instances, effectTriggers, sceneId, settings.maxSlots, settings.customBackgroundImage, allCharacters, allEffects]);
 
+  // Chỉ phát âm thanh THẬT admin đã tải lên — đã xoá bộ tone bíp demo tự sinh (không phải nhạc thật).
   const playSound = useCallback(
     (soundId) => {
-      if (!settings.soundEnabled) return;
+      if (!settings.soundEnabled || !soundId) return;
       const customSound = customSounds.find((s) => s.id === soundId);
-      if (customSound) {
-        try {
-          new Audio(customSound.audioUrl).play().catch((e) => console.error('Phát nhạc tải lên lỗi:', e));
-        } catch (e) {
-          console.error('playSound (custom) lỗi:', e);
-        }
-        return;
-      }
-      const sound = DANCE_SOUNDS.find((s) => s.id === soundId);
-      if (!sound) return;
+      if (!customSound) return;
       try {
-        if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-        const ctx = audioCtxRef.current;
-        if (ctx.state === 'suspended') ctx.resume();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = sound.waveform;
-        osc.frequency.value = sound.frequency;
-        gain.gain.setValueAtTime(0.15, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.4);
+        new Audio(customSound.audioUrl).play().catch((e) => console.error('Phát nhạc tải lên lỗi:', e));
       } catch (e) {
         console.error('playSound lỗi:', e);
       }
@@ -257,7 +251,9 @@ export function useDanceFloorEngine() {
             sizeScale: sizeScale || settings.characterSizeScale,
             username,
             startTime: now,
-            durationMs: durationSeconds * 1000,
+            // Giữ nhân vật trên sàn xuyên suốt phiên live (mặc định BẬT theo yêu cầu) thay vì biến mất
+            // sau vài giây — 6 tiếng đủ dài cho 1 phiên live bình thường, vẫn tự dọn khi tắt trình duyệt.
+            durationMs: (settings.keepCharactersPermanently ? 6 * 60 * 60 : durationSeconds) * 1000,
             priority,
             enqueuedAt: now + i,
             reactionLine: reactionLine || '',
@@ -277,7 +273,7 @@ export function useDanceFloorEngine() {
       if (sceneIdToApply) setSceneId(sceneIdToApply);
       if (resolvedSoundId) playSound(resolvedSoundId);
     },
-    [settings.maxSlots, settings.characterSizeScale, playSound, allCharacters]
+    [settings.maxSlots, settings.characterSizeScale, settings.keepCharactersPermanently, playSound, allCharacters]
   );
 
   const processEvent = useCallback(

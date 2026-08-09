@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shuffle, Volume2, VolumeX, Clock, MonitorPlay, Music4, SkipForward } from 'lucide-react';
+import { Shuffle, Volume2, VolumeX, Clock, MonitorPlay, Music4, SkipForward, Users, Video } from 'lucide-react';
 import { COMMENTARY_STYLES } from '../../lib/danceFloorData';
 
 // Cấu hình tự động hoá — ít bấm lại hơn sau khi setup xong, đặt ở khu vực phía dưới sàn diễn.
@@ -11,6 +11,8 @@ export default function DanceFloorAutomationPanel({
   autoShuffleIntervalEnabled, autoShuffleIntervalMinutes, onUpdateAutoShuffleInterval,
   scheduleEnabled, scheduleStartHour, scheduleEndHour, onUpdateSchedule,
   musicPlaylist, musicLoopMode, onUpdateMusicLoopMode,
+  keepCharactersPermanently, onToggleKeepCharacters,
+  autoCameraEnabled, onToggleAutoCamera,
 }) {
   return (
     <div className="glass-panel p-4 rounded-2xl border border-white/10 space-y-3">
@@ -43,6 +45,30 @@ export default function DanceFloorAutomationPanel({
           className={`px-3 py-1 rounded-full text-[10px] font-black cursor-pointer ${voiceEnabled ? 'bg-emerald-600 text-white' : 'bg-white/10 text-gray-400'}`}
         >
           {voiceEnabled ? 'ĐANG BẬT' : 'ĐANG TẮT'}
+        </button>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-bold text-gray-300 flex items-center gap-1.5">
+          <Users className="w-3.5 h-3.5 text-cyan-400" /> Giữ Nhân Vật Trên Sàn Suốt Phiên
+        </span>
+        <button
+          onClick={onToggleKeepCharacters}
+          className={`px-3 py-1 rounded-full text-[10px] font-black cursor-pointer ${keepCharactersPermanently ? 'bg-emerald-600 text-white' : 'bg-white/10 text-gray-400'}`}
+        >
+          {keepCharactersPermanently ? 'ĐANG BẬT' : 'ĐANG TẮT'}
+        </button>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-bold text-gray-300 flex items-center gap-1.5">
+          <Video className="w-3.5 h-3.5 text-purple-400" /> Camera Tự Xoay Góc Quay (Sàn 3D)
+        </span>
+        <button
+          onClick={onToggleAutoCamera}
+          className={`px-3 py-1 rounded-full text-[10px] font-black cursor-pointer ${autoCameraEnabled ? 'bg-emerald-600 text-white' : 'bg-white/10 text-gray-400'}`}
+        >
+          {autoCameraEnabled ? 'ĐANG BẬT' : 'ĐANG TẮT'}
         </button>
       </div>
 

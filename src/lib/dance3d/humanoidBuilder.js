@@ -72,21 +72,28 @@ export function buildHumanoidFigure(character) {
 
   let videoTexture = null;
   let stopVideo = null;
+  let portrait = null; // mảnh ảnh/video lớn, luôn quay mặt về camera (billboard) — xem Dance3DStage.jsx
 
   if (character.mediaType === "video" && character.mediaUrl) {
     const videoResult = createChromaKeyVideoTexture(character.mediaUrl, character.chromaKeyColor);
     videoTexture = videoResult.texture;
     stopVideo = videoResult.stop;
-    const videoPlane = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.42, 0.42),
+    // Ảnh/video PHÓNG TO thành mảng chân dung thật lớn (không phải quả cầu bé tí như trước — lý do
+    // chính khiến "không thấy rõ nhân vật") + luôn xoay mặt về camera để nhìn rõ từ mọi góc quay.
+    portrait = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.62, 0.62),
       new THREE.MeshBasicMaterial({ map: videoTexture, transparent: true, side: THREE.DoubleSide })
     );
-    headGroup.add(videoPlane);
+    headGroup.add(portrait);
+  } else if (character.mediaType === "image" && character.mediaUrl) {
+    const headTexture = loadHeadTexture(character.mediaUrl);
+    portrait = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.62, 0.62),
+      new THREE.MeshBasicMaterial({ map: headTexture, transparent: true, side: THREE.DoubleSide })
+    );
+    headGroup.add(portrait);
   } else {
-    const headTexture = character.mediaType === "image" ? loadHeadTexture(character.mediaUrl) : null;
-    const headMat = headTexture
-      ? new THREE.MeshStandardMaterial({ map: headTexture, roughness: 0.6 })
-      : new THREE.MeshStandardMaterial({ color: bodyColor.clone().lerp(new THREE.Color("#ffffff"), 0.3), roughness: 0.6 });
+    const headMat = new THREE.MeshStandardMaterial({ color: bodyColor.clone().lerp(new THREE.Color("#ffffff"), 0.3), roughness: 0.6 });
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), headMat);
     headGroup.add(head);
   }
@@ -124,7 +131,7 @@ export function buildHumanoidFigure(character) {
 
   return {
     group,
-    parts: { hips, headGroup, leftArm, rightArm, leftLeg, rightLeg },
+    parts: { hips, headGroup, leftArm, rightArm, leftLeg, rightLeg, portrait },
     videoTexture,
     stopVideo,
   };

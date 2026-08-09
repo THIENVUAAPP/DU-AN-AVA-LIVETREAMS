@@ -122,18 +122,8 @@ export const AUTO_REPLY_RULES = [
   },
 ];
 
-// Không có file âm thanh thật (chưa có asset) — dùng Web Audio API sinh tone ngắn, phân biệt theo tần số/dạng sóng.
-export const DANCE_SOUNDS = [
-  { id: "sfx_default", name: "Nhạc Nền Cơ Bản", frequency: 440, waveform: "sine" },
-  { id: "sfx_silver", name: "Nhạc Nền Bạc", frequency: 523, waveform: "triangle" },
-  { id: "sfx_gold", name: "Nhạc Nền Vàng", frequency: 659, waveform: "square" },
-  { id: "sfx_vip", name: "Nhạc Nền VIP Kim Cương", frequency: 784, waveform: "sawtooth" },
-  { id: "sfx_fire", name: "SFX Lửa", frequency: 220, waveform: "sawtooth" },
-  { id: "sfx_bell", name: "Chuông Quà Tặng", frequency: 988, waveform: "sine" },
-  { id: "sfx_cute", name: "Nhạc Hiệu Dễ Thương", frequency: 880, waveform: "triangle" },
-  { id: "sfx_funny", name: "Nhạc Hiệu Hài Hước", frequency: 330, waveform: "square" },
-  { id: "sfx_energy", name: "Nhạc Hiệu Sôi Động", frequency: 740, waveform: "sawtooth" },
-];
+// Đã xoá bộ "âm thanh demo" (tone bíp tự sinh bằng Web Audio API, không phải nhạc thật) theo yêu cầu —
+// chỉ dùng nhạc/âm thanh THẬT do admin tải lên (xem Thư Viện Âm Thanh trong DanceFloorLibraryPanel).
 
 export const SCENE_BACKGROUNDS = [
   { id: "scene_neon_club", name: "Neon Club", gradient: "from-purple-950 via-[#0A0A0A] to-blue-950" },
@@ -241,6 +231,8 @@ export const DEFAULT_SETTINGS = {
   characterSizeScale: "medium", // 'small' | 'medium' | 'large' — cỡ hiển thị mặc định cho nhân vật mới lên sàn
   stageAspectRatio: "16:9", // '16:9' (ngang, YouTube/Facebook) | '9:16' (dọc, TikTok/Reels)
   musicLoopMode: "playlist", // 'playlist' (tự qua bài) | 'single' (lặp lại đúng 1 bài đang phát)
+  keepCharactersPermanently: true, // giữ nhân vật trên sàn suốt phiên live thay vì tự biến mất
+  autoCameraEnabled: true, // Sàn 3D tự xoay vòng các góc máy quay theo chu kỳ
 };
 
 // Hệ số phóng to/nhỏ nhân vật dùng chung cho Sàn 2D (kích thước khung ảnh) và Sàn 3D (scale mô hình).

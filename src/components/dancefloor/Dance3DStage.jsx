@@ -25,7 +25,7 @@ const LABEL_STYLE = `position:absolute;left:0;top:0;pointer-events:none;text-ali
 // ánh sáng, camera, sương mù, trail ánh sáng tay/chân đều là 3D thật, xem được từ mọi góc.
 const backgroundTextureLoader = new THREE.TextureLoader();
 
-export default function Dance3DStage({ instances, characters, effects, effectTriggers, stagePresetId, isConnected, connectionLabel, danceStyles, customBackgroundImage, backgroundVideoUrl }) {
+export default function Dance3DStage({ instances, characters, effects, effectTriggers, stagePresetId, isConnected, connectionLabel, danceStyles, customBackgroundImage, backgroundVideoUrl, autoCameraEnabled }) {
   const mountRef = useRef(null);
   const labelsContainerRef = useRef(null);
   const sceneRef = useRef(null);
@@ -41,6 +41,19 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
   const cameraModeRef = useRef('wide');
   const focusUntilRef = useRef(0);
   const [cameraMode, setCameraModeState] = useState('wide');
+
+  // "Tự động điều chỉnh góc máy" — xoay vòng các góc quay theo chu kỳ như quay đa camera thật, để luôn
+  // thấy nhân vật từ nhiều hướng đẹp mắt thay vì đứng yên 1 góc suốt phiên live.
+  useEffect(() => {
+    if (!autoCameraEnabled) return undefined;
+    const interval = setInterval(() => {
+      const idx = CAMERA_MODES.findIndex((m) => m.id === cameraModeRef.current);
+      const next = CAMERA_MODES[(idx + 1) % CAMERA_MODES.length];
+      cameraModeRef.current = next.id;
+      setCameraModeState(next.id);
+    }, 7000);
+    return () => clearInterval(interval);
+  }, [autoCameraEnabled]);
 
   const setCameraMode = (mode) => {
     cameraModeRef.current = mode;
@@ -89,6 +102,16 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
       });
       scene.updateMatrixWorld(true);
 
+      // Ảnh/video chân dung luôn quay mặt về camera (billboard) bất kể thân/đầu đang xoay theo điệu
+      // nhảy — nếu không sẽ có lúc nhìn thấy mảng ảnh từ cạnh bên (gần như biến mất). Phải quy đổi
+      // quaternion camera sang không gian LOCAL của headGroup (vì headGroup lồng trong hips đang xoay).
+      instancesMapRef.current.forEach((entry) => {
+        if (!entry.parts.portrait) return;
+        const parentWorldQuat = new THREE.Quaternion();
+        entry.parts.headGroup.getWorldQuaternion(parentWorldQuat);
+        entry.parts.portrait.quaternion.copy(parentWorldQuat.invert().multiply(camera.quaternion));
+      });
+
       const width2 = mount.clientWidth;
       const height2 = mount.clientHeight;
       instancesMapRef.current.forEach((entry) => {
@@ -101,7 +124,9 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
         if (entry.labelEl) {
           const worldPos = new THREE.Vector3();
           entry.group.getWorldPosition(worldPos);
-          worldPos.y += 1.3 * entry.sizeScale;
+          // 2.1 (không phải 1.3 như trước) để tên luôn nằm HẲN phía trên mảng ảnh chân dung lớn mới —
+          // giá trị cũ khiến tên đè lên giữa ảnh nhân vật, đúng cảm giác "không thấy rõ nhân vật".
+          worldPos.y += 2.1 * entry.sizeScale;
           worldPos.project(camera);
           const x = (worldPos.x * 0.5 + 0.5) * width2;
           const y = (-worldPos.y * 0.5 + 0.5) * height2;
@@ -321,6 +346,11 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
       </div>
 
       <div className="absolute top-3 right-3 flex items-center gap-1.5 z-30">
+        {autoCameraEnabled && (
+          <span className="px-2 py-1 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse">
+            🔄 TỰ ĐỘNG
+          </span>
+        )}
         {CAMERA_MODES.map((m) => (
           <button
             key={m.id}

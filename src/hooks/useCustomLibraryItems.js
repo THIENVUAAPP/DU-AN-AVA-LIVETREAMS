@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { DANCE_EFFECTS, DANCE_SOUNDS, DANCE_STYLES } from '../lib/danceFloorData';
+import { DANCE_EFFECTS, DANCE_STYLES } from '../lib/danceFloorData';
 import { saveMediaBlob, deleteMediaBlob, loadMediaBlobsByCategory } from '../lib/mediaDb';
 import { loadJSON, saveJSON } from '../lib/localStorageJson';
 
@@ -70,7 +70,8 @@ export function useCustomLibraryItems() {
     [customCharacters]
   );
   const allEffects = useMemo(() => [...DANCE_EFFECTS, ...customEffects], [customEffects]);
-  const allSounds = useMemo(() => [...DANCE_SOUNDS, ...customSounds], [customSounds]);
+  // KHÔNG còn âm thanh demo — chỉ dùng nhạc/âm thanh thật admin đã tải lên.
+  const allSounds = customSounds;
   const allDanceStyles = useMemo(() => [...DANCE_STYLES, ...customDanceStyles], [customDanceStyles]);
 
   const addCustomCharacter = useCallback((character) => {
