@@ -97,19 +97,19 @@ void main() {
     offsets[4]=vec2(0.7,0.7); offsets[5]=vec2(-0.7,0.7); offsets[6]=vec2(0.7,-0.7); offsets[7]=vec2(-0.7,-0.7);
     offsets[8]=vec2(1.4,0.4); offsets[9]=vec2(-1.4,0.4); offsets[10]=vec2(0.4,1.4); offsets[11]=vec2(-0.4,-1.4);
 
-    float radiusPx = 2.5 + u_skinSmooth * 4.0;
+    float radiusPx = 3.0 + u_skinSmooth * 7.5;
     vec3 accum = baseColor;
     float weightSum = 1.0;
     for (int i = 0; i < 12; i++) {
       vec2 sampleUv = uv + offsets[i] * u_texel * radiusPx;
       vec3 c = texture(u_tex, sampleUv).rgb;
       float colorDist = distance(c, baseColor);
-      float w = exp(-colorDist * colorDist * 30.0);
+      float w = exp(-colorDist * colorDist * 22.0);
       accum += c * w;
       weightSum += w;
     }
     vec3 blurred = accum / weightSum;
-    finalColor = mix(baseColor, blurred, clamp(u_skinSmooth * skinMask, 0.0, 0.9));
+    finalColor = mix(baseColor, blurred, clamp(u_skinSmooth * skinMask * 1.15, 0.0, 0.95));
   }
 
   outColor = vec4(finalColor, 1.0);

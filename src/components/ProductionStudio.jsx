@@ -650,7 +650,10 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
         const seg = new window.SelfieSegmentation({
           locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
         });
-        seg.setOptions({ modelSelection: 1, selfieMode: true });
+        // modelSelection: 0 = model "general" (chính xác hơn ở viền tóc/vai so với
+        // model "landscape" nhẹ mặc định trước đây) — ưu tiên biên cắt sạch/nét
+        // hơn tốc độ vì đây là mục tiêu chính người dùng yêu cầu.
+        seg.setOptions({ modelSelection: 0, selfieMode: true });
 
         seg.onResults((results) => {
           const canvas = canvasRef.current;
@@ -693,14 +696,15 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
           }
 
           // 1. GPU Accelerated Hardware Masking with Edge Feathering (Zero CPU Lag, Smooth 60FPS)
-          // Feather radius is driven by the "Làm Mịn Viền Tách" (Smoothness) slider and scaled
-          // to the live resolution, so the mask's upscaled edge is a soft anti-aliased ramp
-          // instead of a jagged/binary line before the contrast pass sharpens the core silhouette.
-          const featherPx = (0.5 + (chromaSmoothnessRef.current / 100) * 4) * (W / 1920);
+          // Feather radius is driven by the "Làm Mịn Viền Tách" (Smoothness) slider, in absolute
+          // pixels (KHÔNG chia theo W/1920 như bản cũ — công thức cũ khiến biên gần như = 0px ở
+          // độ phân giải webcam thường dùng 720p/1080p, gây răng cưa). Contrast/brightness được
+          // giảm nhẹ so với bản cũ để giữ dải chuyển alpha mượt thay vì ép về nhị phân cứng.
+          const featherPx = 2.5 + (chromaSmoothnessRef.current / 100) * 9;
           maskCtx.clearRect(0, 0, W, H);
           maskCtx.imageSmoothingEnabled = true;
           maskCtx.imageSmoothingQuality = "high";
-          maskCtx.filter = `blur(${featherPx.toFixed(2)}px) contrast(165%) brightness(108%)`;
+          maskCtx.filter = `blur(${featherPx.toFixed(2)}px) contrast(135%) brightness(104%)`;
           maskCtx.drawImage(results.segmentationMask, 0, 0, W, H);
           maskCtx.filter = "none";
 
@@ -725,10 +729,10 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
             // đó đã là frame đã được làm mịn da theo landmark thật, tránh làm mịn 2 lần.
             const smoothAmt = beautyEngineActiveThisFrameRef.current ? 0 : Math.max(0, (sVal - 50) / 50); // 0..1 as slider goes 50→100
             if (smoothAmt > 0.02) {
-              const softBlurPx = (2 + smoothAmt * 5) * (W / 1920);
+              const softBlurPx = 3 + smoothAmt * 9;
               targetCtx.save();
               targetCtx.filter = `blur(${softBlurPx.toFixed(2)}px) ${buildLiveFilterCSS(true)}`;
-              targetCtx.globalAlpha = Math.min(0.55, smoothAmt * 0.6);
+              targetCtx.globalAlpha = Math.min(0.7, smoothAmt * 0.75);
               targetCtx.drawImage(results.image, 0, 0, W, H);
               targetCtx.restore();
             }
@@ -913,7 +917,10 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
           });
         }
         const beautyActive = !!(engine && engine.isReady());
-        beautyEngineActiveThisFrameRef.current = beautyActive;
+        // Chỉ coi là "đã làm mịn da frame này" khi engine thực sự có landmark khuôn
+        // mặt để xử lý — nếu không, để lớp CSS soft-focus fallback phía dưới tự
+        // chạy bù, tránh trường hợp cả 2 lớp cùng tắt và làm đẹp = 0% (bug cũ).
+        beautyEngineActiveThisFrameRef.current = beautyActive && !!engine.hasFace?.();
         const beautySource = beautyActive ? engine.canvas : video;
 
         const ctx = canvas.getContext("2d");
@@ -973,9 +980,11 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
             ctx.clearRect(0, 0, W, H);
             drawVirtualBg(ctx, W, H);
 
-            // Higher keying resolution (was 640x360) reduces upscaled block/stair-step
-            // edges around the subject when composited onto 4K canvases.
-            const CW = Math.min(960, W), CH = Math.min(540, H);
+            // Higher keying resolution (was 640x360, then 960x540) further reduces
+            // upscaled block/stair-step edges around the subject when composited
+            // onto 4K canvases — 1280x720 balances sharpness vs CPU cost since this
+            // path runs a per-pixel getImageData loop on the CPU every frame.
+            const CW = Math.min(1280, W), CH = Math.min(720, H);
             if (!chromaC || chromaC.width !== CW || chromaC.height !== CH) {
               chromaC = document.createElement("canvas");
               chromaC.width = CW; chromaC.height = CH;
@@ -995,14 +1004,19 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
             // gradient ramp so hair strands and silhouette edges key out cleanly.
             const smoothPct = chromaSmoothnessRef.current || 30;
             const band = 6 + smoothPct * 0.3;
+            // Trước đây thuật toán chỉ nhận diện phông XANH LÁ (greenDiff) dù UI có sẵn
+            // preset "🔵 Phông Xanh Dương (Blue Key)" — chọn preset đó sẽ không tách được
+            // gì cả. Giờ tự đổi kênh khoá theo màu nền ảo đang chọn.
+            const isBlueKey = (currentVbgRef.current?.id === 'minimal-blue-screen') ||
+              (currentVbgRef.current?.cat === 'Chroma Key' && /blue|xanh d/i.test(currentVbgRef.current?.name || ''));
 
             for (let i = 0; i < cd.length; i += 4) {
               const r = cd[i], g = cd[i+1], b = cd[i+2];
-              const greenDiff = g - Math.max(r, b);
-              if (greenDiff > greenThresh + band) {
+              const keyDiff = isBlueKey ? (b - Math.max(r, g)) : (g - Math.max(r, b));
+              if (keyDiff > greenThresh + band) {
                 cd[i+3] = 0;
-              } else if (greenDiff > greenThresh - band) {
-                const t = (greenDiff - (greenThresh - band)) / (band * 2);
+              } else if (keyDiff > greenThresh - band) {
+                const t = (keyDiff - (greenThresh - band)) / (band * 2);
                 cd[i+3] = Math.round(cd[i+3] * (1 - t));
               }
             }

@@ -179,6 +179,11 @@ export function createBeautyEngine({ onError } = {}) {
     canvas,
     render,
     isReady: () => ready && !landmarkerFailed && !destroyed,
+    // true chỉ khi frame gần nhất THỰC SỰ có landmark khuôn mặt để warp/mịn da —
+    // isReady() chỉ nói lên WebGL context còn sống, không nói lên đã làm mịn da
+    // frame này hay chưa (VD: chưa detect được mặt do góc nghiêng/thiếu sáng).
+    // Bên gọi cần phân biệt 2 trạng thái này để không tắt nhầm fallback CSS.
+    hasFace: () => !!lastLandmarks,
     hasFailed: () => landmarkerFailed,
     destroy: () => {
       destroyed = true;
