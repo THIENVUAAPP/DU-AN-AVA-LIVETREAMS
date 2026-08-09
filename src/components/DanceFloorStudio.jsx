@@ -11,8 +11,9 @@ import DanceFloorChannelLivePanel from './dancefloor/DanceFloorChannelLivePanel'
 import DanceFloorCallPanel from './dancefloor/DanceFloorCallPanel';
 import DanceFloorQuickTestPanel from './dancefloor/DanceFloorQuickTestPanel';
 import DanceFloorAutomationPanel from './dancefloor/DanceFloorAutomationPanel';
-import DanceFloorYoutubeBridgePanel from './dancefloor/DanceFloorYoutubeBridgePanel';
 import DanceFloorReactionFeed from './dancefloor/DanceFloorReactionFeed';
+import DanceFloorCommentFeed from './dancefloor/DanceFloorCommentFeed';
+import DanceFloorManualComboPanel from './dancefloor/DanceFloorManualComboPanel';
 import DanceFloorAutoReplyPanel from './dancefloor/DanceFloorAutoReplyPanel';
 import { useDanceFloorEngine } from '../hooks/useDanceFloorEngine';
 import { STAGE_PRESETS_3D } from '../lib/dance3d/stagePresets3D';
@@ -42,11 +43,12 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
     enabledNormalCharacters, enabledVipCharacters,
     allEffects, customEffects, addCustomEffect, deleteCustomEffect,
     allSounds, addCustomSound, deleteCustomSound, setCustomBackgroundImage,
-    instances, effectTriggers, sceneId, leaderboard, reactionFeed,
+    allDanceStyles, customDanceStyles, addCustomDanceStyle, deleteCustomDanceStyle,
+    instances, effectTriggers, sceneId, leaderboard, reactionFeed, commentFeed,
     connectedChannelList, selectedChannelIds, toggleChannel,
-    ytBridge, handleYtConnect, handleYtDisconnect,
     commentsPerMin, triggersPerMin,
-    handleManualTrigger, handleManualGift, playSound, runAutoShuffle, toggleLibraryItem, suggestDance,
+    handleManualTrigger, handleManualGift, handleManualCombo,
+    playSound, runAutoShuffle, toggleLibraryItem, suggestDance,
   } = engine;
 
   // Phát Live Đa Kênh — dùng đúng các kênh TikTok/YouTube/Facebook đã kết nối sẵn từ Restream Đa Nền
@@ -110,24 +112,9 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
 
       {activeSection === 'stage' && (
         <div className="space-y-5">
-          {/* Hàng chính: chức năng hay dùng bên trái/phải, canvas sàn diễn ở giữa */}
+          {/* Hàng chính: canvas sàn diễn rộng, cột phải gom Gọi Tên + Test Nhanh */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
-            <div className="lg:col-span-1 space-y-4">
-              <DanceFloorChannelLivePanel
-                connectedChannels={connectedChannelList}
-                selectedChannelIds={selectedChannelIds}
-                onToggleChannel={toggleChannel}
-                isLive={isLive}
-                onToggleLive={handleToggleLive}
-              />
-              <DanceFloorCallPanel
-                normalCharacters={enabledNormalCharacters}
-                vipCharacters={enabledVipCharacters}
-                onManualTrigger={handleManualTrigger}
-              />
-            </div>
-
-            <div className="lg:col-span-2 space-y-2">
+            <div className="lg:col-span-3 space-y-2">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/5 border border-white/10">
                   <button
@@ -180,6 +167,7 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
                     instances={instances}
                     characters={allCharacters}
                     effects={allEffects}
+                    danceStyles={allDanceStyles}
                     effectTriggers={effectTriggers}
                     stagePresetId={stagePresetId}
                     isConnected={isLive || connectedChannelList.length > 0}
@@ -197,12 +185,20 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
               </div>
             </div>
 
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 space-y-4">
+              <DanceFloorCallPanel
+                normalCharacters={enabledNormalCharacters}
+                vipCharacters={enabledVipCharacters}
+                onManualTrigger={handleManualTrigger}
+              />
               <DanceFloorQuickTestPanel onManualTrigger={handleManualTrigger} onManualGift={handleManualGift} />
             </div>
           </div>
 
-          {/* Hàng dưới: ít dùng hơn — bảng xếp hạng, nhật ký phản hồi, tự động hoá, YouTube bridge */}
+          {/* Bình luận trực tiếp — siêu vui, hiển thị mọi comment thô đổ về, không chỉ comment trúng luật */}
+          <DanceFloorCommentFeed feed={commentFeed} />
+
+          {/* Hàng dưới: ít dùng hơn — bảng xếp hạng, nhật ký phản hồi, tự động hoá, tổ hợp thủ công */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             <div className="space-y-4">
               <div className="glass-panel p-4 rounded-2xl border border-white/10">
@@ -241,7 +237,26 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
               onUpdateSchedule={(patch) => setSettings((s) => ({ ...s, ...patch }))}
             />
 
-            <DanceFloorYoutubeBridgePanel ytBridge={ytBridge} onYtConnect={handleYtConnect} onYtDisconnect={handleYtDisconnect} />
+            <DanceFloorManualComboPanel
+              characters={allCharacters}
+              danceStyles={allDanceStyles}
+              sounds={allSounds}
+              stagePresets={STAGE_PRESETS_3D}
+              currentStagePresetId={stagePresetId}
+              onChangeStagePreset={setStagePresetId}
+              onApplyCombo={handleManualCombo}
+            />
+          </div>
+
+          {/* Xuống dưới cùng: Nguồn Kênh Live + Phát Live Đa Kênh — ít thao tác nhất trong phiên live */}
+          <div className="max-w-3xl mx-auto w-full">
+            <DanceFloorChannelLivePanel
+              connectedChannels={connectedChannelList}
+              selectedChannelIds={selectedChannelIds}
+              onToggleChannel={toggleChannel}
+              isLive={isLive}
+              onToggleLive={handleToggleLive}
+            />
           </div>
         </div>
       )}
@@ -261,6 +276,10 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
           onAddCustomCharacter={addCustomCharacter}
           onDeleteCustomCharacter={deleteCustomCharacter}
           onEditCustomCharacter={editCustomCharacter}
+          danceStyles={allDanceStyles}
+          customDanceStyles={customDanceStyles}
+          onAddCustomDanceStyle={addCustomDanceStyle}
+          onDeleteCustomDanceStyle={deleteCustomDanceStyle}
           effects={allEffects}
           customEffects={customEffects}
           onAddCustomEffect={addCustomEffect}

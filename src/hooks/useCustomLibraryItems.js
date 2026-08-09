@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { DANCE_CHARACTERS, DANCE_EFFECTS, DANCE_SOUNDS } from '../lib/danceFloorData';
+import { DANCE_CHARACTERS, DANCE_EFFECTS, DANCE_SOUNDS, DANCE_STYLES } from '../lib/danceFloorData';
 
 const CUSTOM_CHARACTERS_KEY = 'avalive_dancefloor_custom_characters';
 const CUSTOM_EFFECTS_KEY = 'avalive_dancefloor_custom_effects';
@@ -21,13 +21,14 @@ function saveJSON(key, value) {
   }
 }
 
-// Quản lý nhân vật / hiệu ứng / âm thanh do admin tự thêm — tách khỏi useDanceFloorEngine.js để giữ
-// mỗi file dưới 500 dòng. Nhân vật + hiệu ứng lưu bền (JSON nhỏ gọn); âm thanh tải lên chỉ giữ trong
-// phiên (blob URL không sống sót qua lần tải lại trang và file nhạc quá lớn để lưu localStorage).
+// Quản lý nhân vật / hiệu ứng / âm thanh / điệu nhảy do admin tự thêm — tách khỏi useDanceFloorEngine.js
+// để giữ mỗi file dưới 500 dòng. Nhân vật + hiệu ứng lưu bền (JSON nhỏ gọn); âm thanh & điệu nhảy sao
+// chép từ video (mocap) chỉ giữ trong phiên (blob URL / mảng khung hình quá lớn để lưu localStorage).
 export function useCustomLibraryItems() {
   const [customCharacters, setCustomCharacters] = useState(() => loadJSON(CUSTOM_CHARACTERS_KEY, []));
   const [customEffects, setCustomEffects] = useState(() => loadJSON(CUSTOM_EFFECTS_KEY, []));
   const [customSounds, setCustomSounds] = useState([]);
+  const [customDanceStyles, setCustomDanceStyles] = useState([]);
 
   useEffect(() => saveJSON(CUSTOM_CHARACTERS_KEY, customCharacters.filter((c) => !c.isSessionOnly)), [customCharacters]);
   useEffect(() => saveJSON(CUSTOM_EFFECTS_KEY, customEffects), [customEffects]);
@@ -35,6 +36,7 @@ export function useCustomLibraryItems() {
   const allCharacters = useMemo(() => [...DANCE_CHARACTERS, ...customCharacters], [customCharacters]);
   const allEffects = useMemo(() => [...DANCE_EFFECTS, ...customEffects], [customEffects]);
   const allSounds = useMemo(() => [...DANCE_SOUNDS, ...customSounds], [customSounds]);
+  const allDanceStyles = useMemo(() => [...DANCE_STYLES, ...customDanceStyles], [customDanceStyles]);
 
   const addCustomCharacter = useCallback((character) => setCustomCharacters((prev) => [...prev, character]), []);
   const deleteCustomCharacter = useCallback((id) => setCustomCharacters((prev) => prev.filter((c) => c.id !== id)), []);
@@ -50,9 +52,14 @@ export function useCustomLibraryItems() {
   }, []);
   const deleteCustomSound = useCallback((id) => setCustomSounds((prev) => prev.filter((s) => s.id !== id)), []);
 
+  // Điệu nhảy "sao chép" từ video mẫu (motion capture) — mảng khung hình góc-khớp trích từ PoseLandmarker.
+  const addCustomDanceStyle = useCallback((clip) => setCustomDanceStyles((prev) => [...prev, clip]), []);
+  const deleteCustomDanceStyle = useCallback((id) => setCustomDanceStyles((prev) => prev.filter((d) => d.id !== id)), []);
+
   return {
     customCharacters, allCharacters, addCustomCharacter, deleteCustomCharacter, editCustomCharacter,
     customEffects, allEffects, addCustomEffect, deleteCustomEffect,
     customSounds, allSounds, addCustomSound, deleteCustomSound,
+    customDanceStyles, allDanceStyles, addCustomDanceStyle, deleteCustomDanceStyle,
   };
 }

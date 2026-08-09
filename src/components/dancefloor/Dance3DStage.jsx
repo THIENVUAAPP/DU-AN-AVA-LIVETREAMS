@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { Wifi, WifiOff, Video, Move3d } from 'lucide-react';
 import { buildHumanoidFigure, disposeHumanoidFigure } from '../../lib/dance3d/humanoidBuilder';
-import { applyDanceMotion } from '../../lib/dance3d/danceMotions3D';
+import { applyDanceMotion, applyCapturedMotion } from '../../lib/dance3d/danceMotions3D';
 import { spiralPosition, groupClusterPosition } from '../../lib/dance3d/layout3D';
 import { ParticleBurst3D } from '../../lib/dance3d/particles3D';
 import { LightTrail } from '../../lib/dance3d/lightTrail';
@@ -10,10 +10,10 @@ import { STAGE_PRESETS_3D } from '../../lib/dance3d/stagePresets3D';
 import { buildStageEnvironment, animateStageLights } from '../../lib/dance3d/stageEnvironment3D';
 
 const CAMERA_MODES = [
-  { id: 'wide', label: 'Toàn Cảnh', position: [0, 5.2, 9.5] },
+  { id: 'wide', label: 'Toàn Cảnh', position: [0, 7, 14] },
   { id: 'close', label: 'Cận Cảnh', position: [0, 2, 4.2] },
-  { id: 'top', label: 'Trên Cao', position: [0.01, 9.2, 2.4] },
-  { id: 'side', label: 'Bên Hông', position: [8.5, 3, 0] },
+  { id: 'top', label: 'Trên Cao', position: [0.01, 13, 3.2] },
+  { id: 'side', label: 'Bên Hông', position: [12.5, 4, 0] },
 ];
 
 const LABEL_STYLE = `position:absolute;left:0;top:0;pointer-events:none;text-align:center;white-space:nowrap;
@@ -22,7 +22,7 @@ const LABEL_STYLE = `position:absolute;left:0;top:0;pointer-events:none;text-ali
 // Sàn Nhảy 3D thật (WebGL/Three.js) — nhân vật procedural thấp-poly (không phải mô hình anime rig sẵn
 // thương mại như AUMIX3D, vì đó là asset mỹ thuật 3D không thể tự sinh bằng code) nhưng chuyển động,
 // ánh sáng, camera, sương mù, trail ánh sáng tay/chân đều là 3D thật, xem được từ mọi góc.
-export default function Dance3DStage({ instances, characters, effects, effectTriggers, stagePresetId, isConnected, connectionLabel }) {
+export default function Dance3DStage({ instances, characters, effects, effectTriggers, stagePresetId, isConnected, connectionLabel, danceStyles }) {
   const mountRef = useRef(null);
   const labelsContainerRef = useRef(null);
   const sceneRef = useRef(null);
@@ -31,6 +31,7 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
   const instancesMapRef = useRef(new Map());
   const particlesRef = useRef([]);
   const processedEffectIdsRef = useRef(new Set());
+  const danceStylesRef = useRef([]);
   const clockRef = useRef(new THREE.Clock());
   const cameraTargetRef = useRef(new THREE.Vector3(0, 1.2, 0));
   const cameraModeRef = useRef('wide');
@@ -41,6 +42,12 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
     cameraModeRef.current = mode;
     setCameraModeState(mode);
   };
+
+  // Danh sách điệu nhảy (gồm điệu "sao chép" mocap từ video mẫu) — giữ trong ref vì vòng lặp render
+  // chỉ khởi tạo 1 lần, không đọc lại prop trực tiếp được.
+  useEffect(() => {
+    danceStylesRef.current = danceStyles || [];
+  }, [danceStyles]);
 
   // Khởi tạo scene 1 lần — renderer, camera, vòng lặp render.
   useEffect(() => {
@@ -69,7 +76,12 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
       if (envRef.current) animateStageLights(envRef.current, elapsed);
 
       instancesMapRef.current.forEach((entry) => {
-        applyDanceMotion(entry.danceId, entry.parts, elapsed, entry.phase);
+        const style = danceStylesRef.current.find((d) => d.id === entry.danceId);
+        if (style?.type === 'mocap') {
+          applyCapturedMotion(style, entry.parts, elapsed + entry.phase);
+        } else {
+          applyDanceMotion(entry.danceId, entry.parts, elapsed, entry.phase);
+        }
       });
       scene.updateMatrixWorld(true);
 

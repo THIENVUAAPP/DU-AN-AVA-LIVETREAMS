@@ -233,3 +233,12 @@ export function buildUnifiedEvent({ platform, type, userId, username, avatar, me
     timestamp: timestamp || Date.now(),
   };
 }
+
+// Suy ra nền tảng (tiktok/youtube/facebook) từ id kênh đã kết nối — dùng chung cho mô phỏng lẫn test thủ công.
+export function platformFromChannelId(id) {
+  if (!id) return "tiktok";
+  if (id.startsWith("tiktok")) return "tiktok";
+  if (id.startsWith("youtube")) return "youtube";
+  if (id.startsWith("facebook")) return "facebook";
+  return "tiktok";
+}

@@ -29,15 +29,15 @@ import {
   buildUnifiedEvent,
   isWithinSchedule,
   filterEnabled,
-  buildRandomCombo,
   assignCharacterForUser,
   suggestDanceForSound,
+  platformFromChannelId,
 } from '../lib/danceFloorEngine';
 import { loadLiveChannels } from '../lib/platformChannels';
 import { speakLine } from '../lib/voiceEngine';
 import { simulatedCustomers, simulatedAvatars, simulatedQuestions } from '../lib/aiSimulationData';
-import { useYouTubeLiveChatBridge } from './useYouTubeLiveChatBridge';
 import { useCustomLibraryItems } from './useCustomLibraryItems';
+import { useDanceFloorManualActions } from './useDanceFloorManualActions';
 
 const RULES_KEY = 'avalive_dancefloor_rules';
 const TIERS_KEY = 'avalive_dancefloor_tiers';
@@ -61,13 +61,6 @@ function saveJSON(key, value) {
     console.error(`saveJSON(${key}) lỗi:`, e);
   }
 }
-function platformFromChannelId(id) {
-  if (!id) return 'tiktok';
-  if (id.startsWith('tiktok')) return 'tiktok';
-  if (id.startsWith('youtube')) return 'youtube';
-  if (id.startsWith('facebook')) return 'facebook';
-  return 'tiktok';
-}
 const LIBRARY_SETTING_KEY = {
   character: 'disabledCharacterIds',
   dance: 'disabledDanceIds',
@@ -90,6 +83,7 @@ export function useDanceFloorEngine() {
     customCharacters, allCharacters, addCustomCharacter, deleteCustomCharacter, editCustomCharacter,
     customEffects, allEffects, addCustomEffect, deleteCustomEffect,
     customSounds, allSounds, addCustomSound, deleteCustomSound,
+    customDanceStyles, allDanceStyles, addCustomDanceStyle, deleteCustomDanceStyle,
   } = useCustomLibraryItems();
 
   const enabledCharacters = useMemo(
@@ -104,6 +98,7 @@ export function useDanceFloorEngine() {
   const [sceneId, setSceneId] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
   const [reactionFeed, setReactionFeed] = useState([]);
+  const [commentFeed, setCommentFeed] = useState([]);
 
   const [connectedChannels, setConnectedChannels] = useState(() => loadLiveChannels());
   const [selectedChannelIds, setSelectedChannelIds] = useState([]);
@@ -312,6 +307,12 @@ export function useDanceFloorEngine() {
       if (event.type !== 'comment') return;
       commentTimestampsRef.current.push(now);
 
+      // Đổ MỌI bình luận thô về đây, kể cả bình luận không trúng luật/bị cooldown chặn — người dùng
+      // cần thấy dòng chat thật đang chảy trên sàn, không chỉ những dòng sinh ra nhân vật.
+      setCommentFeed((prev) =>
+        [{ id: `cmt_${now}_${Math.random().toString(36).slice(2, 8)}`, timestamp: now, username: event.username, avatar: event.avatar, message: event.message, platform: event.platform }, ...prev].slice(0, 40)
+      );
+
       // Một lượt cooldown duy nhất cho mỗi bình luận — dù đường xử lý nào được chọn bên dưới, người
       // spam vẫn bị chặn đều, tránh vừa gọi tên vừa được gán nhân vật mặc định trong cùng 1 giây.
       const cooldownCheck = canUserTrigger(cooldownStateRef.current, event.userId, now, settings.cooldownSecondsDefault, settings.maxTriggersPerUserPerMinute);
@@ -367,47 +368,9 @@ export function useDanceFloorEngine() {
     [rules, giftTiers, autoReplyRules, settings.maxTriggersPerUserPerMinute, settings.cooldownSecondsDefault, settings.disabledCharacterIds, spawnCharacters, allCharacters, enabledCharacters, enabledNormalCharacters, enabledVipCharacters, pushReaction, pickAnnouncerLine]
   );
 
-  const handleManualTrigger = useCallback(
-    (text) => {
-      const idx = Math.floor(Math.random() * simulatedCustomers.length);
-      processEvent(buildUnifiedEvent({
-        platform: platformFromChannelId(selectedChannelIds[0]), type: 'comment',
-        userId: `test_${simulatedCustomers[idx]}`, username: simulatedCustomers[idx],
-        avatar: simulatedAvatars[idx % simulatedAvatars.length], message: text,
-      }));
-    },
-    [selectedChannelIds, processEvent]
-  );
-
-  const handleManualGift = useCallback(
-    (points) => {
-      const idx = Math.floor(Math.random() * simulatedCustomers.length);
-      processEvent(buildUnifiedEvent({
-        platform: platformFromChannelId(selectedChannelIds[0]), type: 'gift',
-        userId: `test_gift_${simulatedCustomers[idx]}`, username: simulatedCustomers[idx],
-        avatar: simulatedAvatars[idx % simulatedAvatars.length], message: '__test_gift__', value: points,
-      }));
-    },
-    [selectedChannelIds, processEvent]
-  );
-
-  const runAutoShuffle = useCallback(() => {
-    const combo = buildRandomCombo({
-      characters: enabledCharacters,
-      danceStyles: filterEnabled(DANCE_STYLES, settings.disabledDanceIds),
-      effects: filterEnabled(allEffects, settings.disabledEffectIds),
-      scenes: filterEnabled(SCENE_BACKGROUNDS, settings.disabledSceneIds),
-      outfits: OUTFITS,
-    });
-    if (!combo.character) return;
-    const line = pickReactionLine(combo.character.personality, 'Khán Giả', REACTION_LINES, REACTION_LINES.funny);
-    pushReaction({ username: 'Auto Shuffle', characterName: combo.character.name, line, platform: 'system', personality: combo.character.personality });
-    spawnCharacters({
-      characterIds: [combo.character.id], danceIds: combo.dance ? [combo.dance.id] : [],
-      effectId: combo.effect?.id, soundId: null, sceneIdToApply: combo.scene?.id,
-      durationSeconds: 10, priority: 3, username: 'Tự Động', count: 1, reactionLine: line, outfitId: combo.outfit?.id,
-    });
-  }, [enabledCharacters, allEffects, settings.disabledDanceIds, settings.disabledEffectIds, settings.disabledSceneIds, spawnCharacters, pushReaction]);
+  const { handleManualTrigger, handleManualGift, handleManualCombo, runAutoShuffle } = useDanceFloorManualActions({
+    processEvent, spawnCharacters, pushReaction, allCharacters, enabledCharacters, allEffects, settings, selectedChannelIds,
+  });
 
   // Chế độ mô phỏng — chạy full pipeline thật trên dữ liệu giả lập cho TikTok/Facebook (chưa có API
   // công khai). Tôn trọng Lịch Hoạt Động 24/7 nếu admin bật giới hạn khung giờ.
@@ -441,8 +404,6 @@ export function useDanceFloorEngine() {
     }, settings.simulationIntervalMs);
     return () => clearInterval(interval);
   }, [settings.simulationEnabled, settings.simulationIntervalMs, settings.scheduleEnabled, settings.scheduleStartHour, settings.scheduleEndHour, selectedChannelIds, rules, enabledCharacters, processEvent]);
-
-  const { ytBridge, handleYtConnect, handleYtDisconnect } = useYouTubeLiveChatBridge(processEvent);
 
   const toggleChannel = useCallback((id) => {
     setSelectedChannelIds((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
@@ -478,13 +439,13 @@ export function useDanceFloorEngine() {
     enabledNormalCharacters, enabledVipCharacters,
     allEffects, customEffects, addCustomEffect, deleteCustomEffect,
     allSounds, addCustomSound, deleteCustomSound,
+    allDanceStyles, customDanceStyles, addCustomDanceStyle, deleteCustomDanceStyle,
     setCustomBackgroundImage,
-    instances, effectTriggers, sceneId, leaderboard, reactionFeed,
+    instances, effectTriggers, sceneId, leaderboard, reactionFeed, commentFeed,
     connectedChannelList: connectedChannels.filter((c) => c.status === 'connected'),
     selectedChannelIds, toggleChannel,
-    ytBridge, handleYtConnect, handleYtDisconnect,
     commentsPerMin, triggersPerMin,
-    handleManualTrigger, handleManualGift,
+    handleManualTrigger, handleManualGift, handleManualCombo,
     playSound, runAutoShuffle, toggleLibraryItem, suggestDance,
   };
 }

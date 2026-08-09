@@ -1,6 +1,6 @@
 // Tính vị trí 3D cho từng nhân vật trên sàn — dàn theo lưới xoắn ốc để chứa được tới 50-80 nhân vật
 // mà không chồng lấn, và dàn đội hình cụm cho chế độ nhảy đôi/3/nhóm (Ghi ở Mục "danceMode").
-const FLOOR_RADIUS = 5.2;
+const FLOOR_RADIUS = 7;
 
 // Lưới xoắn ốc kiểu hoa hướng dương — phân bố đều trong hình tròn sàn diễn, người đầu tiên luôn ở gần
 // tâm sàn (dễ thấy nhất), càng đông thì tự giãn dần ra ngoài, không chồng lấn.

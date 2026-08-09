@@ -122,3 +122,31 @@ export function applyDanceMotion(danceId, parts, elapsedSeconds, phase = 0) {
       hips.position.y = 0.95 + Math.sin(t) * 0.04;
   }
 }
+
+// Phát lại điệu nhảy "sao chép" trích từ video mẫu (xem lib/dance3d/motionCapture.js) — nội suy mượt
+// giữa 2 khung hình gần nhất rồi lặp vòng theo durationSeconds của clip đã ghi.
+export function applyCapturedMotion(clip, parts, elapsedSeconds) {
+  const { hips, headGroup, leftArm, rightArm, leftLeg, rightLeg } = parts;
+  hips.rotation.set(0, 0, 0);
+  hips.position.y = 0.95;
+  headGroup.rotation.set(0, 0, 0);
+  [leftArm, rightArm, leftLeg, rightLeg].forEach(({ pivot }) => pivot.rotation.set(0, 0, 0));
+
+  const { frames, durationSeconds } = clip;
+  if (!frames || frames.length === 0 || !durationSeconds) return;
+
+  const loopTime = ((elapsedSeconds % durationSeconds) + durationSeconds) % durationSeconds;
+  let nextIdx = frames.findIndex((f) => f.t >= loopTime);
+  if (nextIdx <= 0) nextIdx = frames.length > 1 ? 1 : 0;
+  const prev = frames[nextIdx - 1] || frames[0];
+  const next = frames[nextIdx];
+  const span = Math.max(0.0001, next.t - prev.t);
+  const ratio = Math.min(1, Math.max(0, (loopTime - prev.t) / span));
+  const lerp = (a, b) => a + (b - a) * ratio;
+
+  leftArm.pivot.rotation.z = lerp(prev.leftArmZ, next.leftArmZ);
+  rightArm.pivot.rotation.z = lerp(prev.rightArmZ, next.rightArmZ);
+  leftLeg.pivot.rotation.x = lerp(prev.leftLegX, next.leftLegX);
+  rightLeg.pivot.rotation.x = lerp(prev.rightLegX, next.rightLegX);
+  hips.position.y = 0.95 + lerp(prev.hipsBounceY, next.hipsBounceY);
+}

@@ -1,7 +1,8 @@
 import React, { useRef, useState } from 'react';
 import { Volume2, Gem, Music4, Sparkles as SparklesIcon, Trash2, Image as ImageIcon, CheckCircle2, XCircle, Plus } from 'lucide-react';
-import { DANCE_STYLES, SCENE_BACKGROUNDS, DANCE_MODE_LABELS } from '../../lib/danceFloorData';
+import { SCENE_BACKGROUNDS, DANCE_MODE_LABELS } from '../../lib/danceFloorData';
 import DanceFloorCharacterLibraryGrid from './DanceFloorCharacterLibraryGrid';
+import DanceFloorMotionCaptureUploader from './DanceFloorMotionCaptureUploader';
 
 const TIER_STYLES = [
   { border: 'border-gray-500/30', badge: 'bg-gray-500/20 text-gray-300' },
@@ -34,6 +35,7 @@ function ToggleBadge({ enabled, onClick }) {
 // nút tick BẬT/TẮT — tắt thì không xuất hiện trong mô phỏng, Auto-Shuffle hay gọi tên tự động nữa.
 export default function DanceFloorLibraryPanel({
   characters, customCharacters, onAddCustomCharacter, onDeleteCustomCharacter, onEditCustomCharacter,
+  danceStyles, customDanceStyles, onAddCustomDanceStyle, onDeleteCustomDanceStyle,
   effects, customEffects, onAddCustomEffect, onDeleteCustomEffect,
   sounds, onAddCustomSound, onDeleteCustomSound,
   giftTiers, setGiftTiers, onPreviewSound,
@@ -87,18 +89,27 @@ export default function DanceFloorLibraryPanel({
 
       <section>
         <h3 className="text-lg font-black text-white flex items-center gap-2 mb-3">
-          <SparklesIcon className="w-5 h-5 text-[#8B5CF6]" /> Thư Viện Điệu Nhảy ({DANCE_STYLES.length})
+          <SparklesIcon className="w-5 h-5 text-[#8B5CF6]" /> Thư Viện Điệu Nhảy ({danceStyles.length})
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {DANCE_STYLES.map((d) => (
-            <div key={d.id} className="glass-panel p-3 rounded-2xl border border-white/10 text-center relative">
-              <ToggleBadge enabled={!disabledDanceIds.includes(d.id)} onClick={() => onToggleLibraryItem('dance', d.id)} />
-              <div className={`text-2xl mb-1 ${d.animationClass}`}>🕺</div>
-              <p className="text-[11px] font-black text-white">{d.name}</p>
-              <span className="text-[9px] text-gray-500">{d.durationSeconds}s mặc định</span>
-            </div>
-          ))}
+          {danceStyles.map((d) => {
+            const isMocap = customDanceStyles.some((c) => c.id === d.id);
+            return (
+              <div key={d.id} className="glass-panel p-3 rounded-2xl border border-white/10 text-center relative group">
+                <ToggleBadge enabled={!disabledDanceIds.includes(d.id)} onClick={() => onToggleLibraryItem('dance', d.id)} />
+                {isMocap && (
+                  <button onClick={() => onDeleteCustomDanceStyle(d.id)} className="absolute top-1.5 right-1.5 p-1 rounded-lg bg-red-500/20 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                )}
+                <div className={`text-2xl mb-1 ${d.animationClass || ''}`}>{isMocap ? '🎥' : '🕺'}</div>
+                <p className="text-[11px] font-black text-white truncate">{d.name}</p>
+                <span className="text-[9px] text-gray-500">{isMocap ? 'Sao Chép Video' : `${d.durationSeconds}s mặc định`}</span>
+              </div>
+            );
+          })}
         </div>
+        <DanceFloorMotionCaptureUploader onCaptured={onAddCustomDanceStyle} />
       </section>
 
       <section>
