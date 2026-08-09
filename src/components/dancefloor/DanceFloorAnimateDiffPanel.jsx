@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Wand2, Zap, Upload, Sliders, Image as ImageIcon, Video, Box, Maximize2, Minimize2 } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Wand2, Zap, Upload, Sliders, Image as ImageIcon, Video, Box, Maximize2, Minimize2, CheckCircle2 } from 'lucide-react';
 
 export default function DanceFloorAnimateDiffPanel({ onApplyAiEffect }) {
   const [prompt, setPrompt] = useState('1girl, cyberpunk style, dancing perfectly to the beat, neon lights, 4k resolution, masterpiece');
@@ -7,6 +7,15 @@ export default function DanceFloorAnimateDiffPanel({ onApplyAiEffect }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [modelType, setModelType] = useState('3d'); // '3d' (Three.js/Babylon) or 'ai' (AnimateDiff)
   const [scale, setScale] = useState(1.0);
+  
+  // File upload states
+  const [vrmFile, setVrmFile] = useState(null);
+  const [startImage, setStartImage] = useState(null);
+  const [poseVideo, setPoseVideo] = useState(null);
+
+  const fileInputRef3D = useRef(null);
+  const fileInputRefImage = useRef(null);
+  const fileInputRefVideo = useRef(null);
   
   const handleGenerate = () => {
     setIsGenerating(true);
@@ -16,6 +25,22 @@ export default function DanceFloorAnimateDiffPanel({ onApplyAiEffect }) {
       alert(`🎉 Đã render xong video nhảy bằng AnimateDiff AI!\n\nPrompt: ${prompt}\nModule: ${motionModule}\n\nHiệu ứng đã được áp dụng trực tiếp lên luồng Live siêu thực.`);
       if (onApplyAiEffect) onApplyAiEffect({ type: 'animatediff', prompt, scale });
     }, 2500);
+  };
+
+  const handleFileUpload = (e, type) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (type === '3d') {
+      setVrmFile(file.name);
+      alert(`✅ Đã tải lên mô hình 3D: ${file.name}\n\nHệ thống Three.js/Babylon đang phân tích bộ xương (rigging) để chuẩn bị nhảy...`);
+    } else if (type === 'image') {
+      setStartImage(file.name);
+      alert(`✅ Đã tải lên Ảnh bắt đầu: ${file.name}`);
+    } else if (type === 'video') {
+      setPoseVideo(file.name);
+      alert(`✅ Đã tải lên Video Pose mẫu: ${file.name}`);
+    }
   };
 
   return (
@@ -62,12 +87,32 @@ export default function DanceFloorAnimateDiffPanel({ onApplyAiEffect }) {
             <label className="text-[10px] font-bold text-blue-300 uppercase tracking-wider block">
               Mô hình 3D (VRM/GLTF)
             </label>
-            <div className="flex items-center justify-center w-full h-24 border-2 border-dashed border-blue-500/30 rounded-lg bg-black/30 hover:bg-blue-500/10 transition-colors cursor-pointer group">
-              <div className="text-center space-y-1">
-                <Upload className="w-5 h-5 text-blue-400 mx-auto group-hover:scale-110 transition-transform" />
-                <p className="text-xs font-bold text-gray-300">Tải lên file .VRM / .GLB</p>
-                <p className="text-[9px] text-gray-500">Hỗ trợ rigging tiêu chuẩn</p>
-              </div>
+            <input 
+              type="file" 
+              accept=".vrm,.glb,.gltf" 
+              className="hidden" 
+              ref={fileInputRef3D} 
+              onChange={(e) => handleFileUpload(e, '3d')} 
+            />
+            <div 
+              onClick={() => fileInputRef3D.current?.click()}
+              className={`flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-lg transition-colors cursor-pointer group ${
+                vrmFile ? 'border-emerald-500/50 bg-emerald-500/10 hover:bg-emerald-500/20' : 'border-blue-500/30 bg-black/30 hover:bg-blue-500/10'
+              }`}
+            >
+              {vrmFile ? (
+                <div className="text-center space-y-1">
+                  <CheckCircle2 className="w-6 h-6 text-emerald-400 mx-auto" />
+                  <p className="text-xs font-bold text-emerald-300 line-clamp-1 px-2">{vrmFile}</p>
+                  <p className="text-[9px] text-emerald-500">Đã sẵn sàng nhảy</p>
+                </div>
+              ) : (
+                <div className="text-center space-y-1">
+                  <Upload className="w-5 h-5 text-blue-400 mx-auto group-hover:scale-110 transition-transform" />
+                  <p className="text-xs font-bold text-gray-300">Tải lên file .VRM / .GLB</p>
+                  <p className="text-[9px] text-gray-500">Hỗ trợ rigging tiêu chuẩn</p>
+                </div>
+              )}
             </div>
           </div>
           
@@ -95,13 +140,27 @@ export default function DanceFloorAnimateDiffPanel({ onApplyAiEffect }) {
       ) : (
         <div className="space-y-4 animate-fade-in">
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 bg-purple-900/20 border border-purple-500/30 rounded-xl space-y-2 text-center cursor-pointer hover:bg-purple-900/40 transition-colors">
-              <ImageIcon className="w-5 h-5 text-purple-400 mx-auto" />
-              <p className="text-xs font-bold text-gray-300">Ảnh Bắt Đầu</p>
+            <input type="file" accept="image/*" className="hidden" ref={fileInputRefImage} onChange={(e) => handleFileUpload(e, 'image')} />
+            <input type="file" accept="video/*" className="hidden" ref={fileInputRefVideo} onChange={(e) => handleFileUpload(e, 'video')} />
+            
+            <div 
+              onClick={() => fileInputRefImage.current?.click()}
+              className={`p-3 rounded-xl space-y-1.5 text-center cursor-pointer transition-colors border ${
+                startImage ? 'bg-emerald-900/20 border-emerald-500/30 hover:bg-emerald-900/40' : 'bg-purple-900/20 border-purple-500/30 hover:bg-purple-900/40'
+              }`}
+            >
+              {startImage ? <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto" /> : <ImageIcon className="w-5 h-5 text-purple-400 mx-auto" />}
+              <p className="text-xs font-bold text-gray-300 line-clamp-1">{startImage || 'Ảnh Bắt Đầu'}</p>
             </div>
-            <div className="p-3 bg-purple-900/20 border border-purple-500/30 rounded-xl space-y-2 text-center cursor-pointer hover:bg-purple-900/40 transition-colors">
-              <Video className="w-5 h-5 text-purple-400 mx-auto" />
-              <p className="text-xs font-bold text-gray-300">Video Pose Mẫu</p>
+            
+            <div 
+              onClick={() => fileInputRefVideo.current?.click()}
+              className={`p-3 rounded-xl space-y-1.5 text-center cursor-pointer transition-colors border ${
+                poseVideo ? 'bg-emerald-900/20 border-emerald-500/30 hover:bg-emerald-900/40' : 'bg-purple-900/20 border-purple-500/30 hover:bg-purple-900/40'
+              }`}
+            >
+              {poseVideo ? <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto" /> : <Video className="w-5 h-5 text-purple-400 mx-auto" />}
+              <p className="text-xs font-bold text-gray-300 line-clamp-1">{poseVideo || 'Video Pose Mẫu'}</p>
             </div>
           </div>
 
