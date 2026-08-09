@@ -6,33 +6,38 @@ const FLOOR_RADIUS = 9;
 // thấy được) cho 1 preset sàn 3D — tách khỏi component chính để dễ đọc. Sàn rộng (bán kính 9) để đủ chỗ
 // cho đội hình nhảy nhóm đông người mà vẫn thoáng, đúng yêu cầu "sàn sân khấu rộng, có ánh sáng, đèn
 // sân khấu, hiệu ứng 3d siêu đẹp".
-export function buildStageEnvironment(preset) {
+export function buildStageEnvironment(preset, hideFloor = false) {
   const group = new THREE.Group();
 
-  const floor = new THREE.Mesh(
-    new THREE.CircleGeometry(FLOOR_RADIUS, 64),
-    new THREE.MeshStandardMaterial({ color: preset.floorColor, roughness: 0.3, metalness: 0.5 })
-  );
-  floor.rotation.x = -Math.PI / 2;
-  floor.receiveShadow = true;
-  group.add(floor);
+  // Khi có Video Nền Vũ Trường đang phát, ẨN sàn đĩa + viền LED "ảo" để video hiện rõ làm mặt sàn thật
+  // — không dựng sàn giả đè lên video nữa (theo yêu cầu "không dùng sàn nhảy ảo, lấy nền video làm sàn").
+  let led = null;
+  if (!hideFloor) {
+    const floor = new THREE.Mesh(
+      new THREE.CircleGeometry(FLOOR_RADIUS, 64),
+      new THREE.MeshStandardMaterial({ color: preset.floorColor, roughness: 0.3, metalness: 0.5 })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    group.add(floor);
 
-  const led = new THREE.Mesh(
-    new THREE.TorusGeometry(FLOOR_RADIUS, 0.07, 8, 64),
-    new THREE.MeshBasicMaterial({ color: preset.lightColors[0] })
-  );
-  led.rotation.x = -Math.PI / 2;
-  led.position.y = 0.02;
-  group.add(led);
+    led = new THREE.Mesh(
+      new THREE.TorusGeometry(FLOOR_RADIUS, 0.07, 8, 64),
+      new THREE.MeshBasicMaterial({ color: preset.lightColors[0] })
+    );
+    led.rotation.x = -Math.PI / 2;
+    led.position.y = 0.02;
+    group.add(led);
 
-  // Vòng LED phụ bên trong tạo chiều sâu sàn — thay vì 1 vòng viền đơn điệu.
-  const led2 = new THREE.Mesh(
-    new THREE.TorusGeometry(FLOOR_RADIUS * 0.6, 0.04, 8, 48),
-    new THREE.MeshBasicMaterial({ color: preset.lightColors[1] || preset.lightColors[0] })
-  );
-  led2.rotation.x = -Math.PI / 2;
-  led2.position.y = 0.02;
-  group.add(led2);
+    // Vòng LED phụ bên trong tạo chiều sâu sàn — thay vì 1 vòng viền đơn điệu.
+    const led2 = new THREE.Mesh(
+      new THREE.TorusGeometry(FLOOR_RADIUS * 0.6, 0.04, 8, 48),
+      new THREE.MeshBasicMaterial({ color: preset.lightColors[1] || preset.lightColors[0] })
+    );
+    led2.rotation.x = -Math.PI / 2;
+    led2.position.y = 0.02;
+    group.add(led2);
+  }
 
   group.add(new THREE.AmbientLight("#ffffff", 0.35));
   group.add(new THREE.HemisphereLight(preset.lightColors[0], "#050505", 0.5));
@@ -93,7 +98,7 @@ export function animateStageLights(env, elapsedSeconds) {
     light.position.z = Math.sin(angle) * 4.2;
     light.position.y = 3.4 + Math.sin(elapsedSeconds * 2 + i) * 0.6;
   });
-  env.led.rotation.z = elapsedSeconds * 0.15;
+  if (env.led) env.led.rotation.z = elapsedSeconds * 0.15;
 
   env.spotlights?.forEach((s, i) => {
     const sweepX = Math.sin(elapsedSeconds * 0.5 + i * 1.3) * env.trussRadius * 0.65;

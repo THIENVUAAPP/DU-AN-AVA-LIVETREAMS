@@ -8,68 +8,6 @@
 // thuộc qua callNames. Nếu admin muốn gắn đúng tên một người cụ thể, dùng mục "Nhân Vật Tuỳ Chỉnh"
 // trong Thư Viện để tự đặt tên theo trách nhiệm của admin.
 
-// tier: "normal" (mặc định người xem mới vào có ngay) | "vip" (chỉ mở khoá khi được tặng quà nâng cấp).
-export const DANCE_CHARACTERS = [
-  { id: "girl_neon", name: "Neon Girl", emoji: "💃", gender: "female", style: "cartoon", tier: "normal", gradient: "from-pink-500 to-purple-600", personality: "cute", signatureSoundId: "sfx_cute", callNames: ["neon girl", "gai neon"] },
-  { id: "boy_street", name: "Street Boy", emoji: "🕺", gender: "male", style: "cartoon", tier: "normal", gradient: "from-blue-500 to-cyan-500", personality: "cool", signatureSoundId: "sfx_default", callNames: ["street boy", "trai pho"] },
-  { id: "robot", name: "Robot Dancer", emoji: "🤖", gender: "neutral", style: "robot", tier: "normal", gradient: "from-gray-500 to-slate-700", personality: "funny", signatureSoundId: "sfx_funny", callNames: ["robot", "robo"] },
-  { id: "anime_girl", name: "Anime Star", emoji: "🎀", gender: "female", style: "anime", tier: "normal", gradient: "from-fuchsia-500 to-pink-500", personality: "energetic", signatureSoundId: "sfx_energy", callNames: ["anime star", "waifu"] },
-  { id: "superhero", name: "Superhero", emoji: "🦸", gender: "male", style: "superhero", tier: "normal", gradient: "from-red-500 to-orange-500", personality: "cool", signatureSoundId: "sfx_energy", callNames: ["superhero", "sieu nhan"] },
-  { id: "animal_cat", name: "Cat Idol", emoji: "🐱", gender: "neutral", style: "animal", tier: "normal", gradient: "from-amber-500 to-yellow-500", personality: "funny", signatureSoundId: "sfx_cute", callNames: ["cat idol", "meo idol"] },
-  { id: "fantasy_fairy", name: "Fantasy Fairy", emoji: "🧚", gender: "female", style: "fantasy", tier: "normal", gradient: "from-emerald-500 to-teal-500", personality: "cute", signatureSoundId: "sfx_cute", callNames: ["fairy", "tien nu"] },
-  { id: "king_gold", name: "Gold King", emoji: "🤴", gender: "male", style: "vip", tier: "vip", gradient: "from-yellow-400 to-amber-600", personality: "luxury", signatureSoundId: "sfx_gold", callNames: ["gold king", "vua vang"] },
-  { id: "queen_gold", name: "Gold Queen", emoji: "👸", gender: "female", style: "vip", tier: "vip", gradient: "from-yellow-300 to-amber-500", personality: "luxury", signatureSoundId: "sfx_gold", callNames: ["gold queen", "nu hoang vang"] },
-  { id: "diamond_vip", name: "Diamond VIP", emoji: "💎", gender: "neutral", style: "vip", tier: "vip", gradient: "from-cyan-300 to-blue-500", personality: "luxury", signatureSoundId: "sfx_vip", callNames: ["diamond vip", "kim cuong"] },
-
-  // Gái xinh / trai xinh
-  { id: "hot_girl", name: "Hot Girl Sành Điệu", emoji: "💅", gender: "female", style: "human", tier: "normal", gradient: "from-pink-400 to-rose-600", personality: "sassy", signatureSoundId: "sfx_energy", callNames: ["hot girl", "gai xinh", "chi dep"] },
-  { id: "hot_boy", name: "Trai Xinh Soái Ca", emoji: "😎", gender: "male", style: "human", tier: "normal", gradient: "from-sky-400 to-indigo-600", personality: "cool", signatureSoundId: "sfx_default", callNames: ["hot boy", "trai xinh", "soai ca"] },
-  { id: "pro_dancer", name: "Vũ Công Chuyên Nghiệp", emoji: "🩰", gender: "female", style: "human", tier: "normal", gradient: "from-rose-400 to-pink-700", personality: "energetic", signatureSoundId: "sfx_energy", callNames: ["vu cong", "dancer"] },
-  { id: "fashion_model", name: "Người Mẫu Sàn Diễn", emoji: "👗", gender: "female", style: "human", tier: "normal", gradient: "from-fuchsia-400 to-purple-600", personality: "luxury", signatureSoundId: "sfx_silver", callNames: ["nguoi mau", "model"] },
-  { id: "gentleman", name: "Quý Ông Lịch Lãm", emoji: "🎩", gender: "male", style: "human", tier: "normal", gradient: "from-slate-600 to-gray-800", personality: "cool", signatureSoundId: "sfx_default", callNames: ["quy ong", "gentleman"] },
-  { id: "elegant_lady", name: "Quý Cô Thanh Lịch", emoji: "👒", gender: "female", style: "human", tier: "normal", gradient: "from-rose-300 to-pink-500", personality: "luxury", signatureSoundId: "sfx_silver", callNames: ["quy co", "lady"] },
-
-  // Thú cưng
-  { id: "pet_dog", name: "Cún Cưng Đáng Yêu", emoji: "🐶", gender: "neutral", style: "animal", tier: "normal", gradient: "from-orange-300 to-amber-600", personality: "cute", signatureSoundId: "sfx_cute", callNames: ["cho", "cun", "dog"] },
-  { id: "pet_cat2", name: "Mèo Cưng Ngầu Lòi", emoji: "😼", gender: "neutral", style: "animal", tier: "normal", gradient: "from-slate-400 to-zinc-600", personality: "funny", signatureSoundId: "sfx_funny", callNames: ["meo", "cat"] },
-  { id: "pet_chick", name: "Gà Con Bung Xoã", emoji: "🐥", gender: "neutral", style: "animal", tier: "normal", gradient: "from-yellow-300 to-orange-500", personality: "funny", signatureSoundId: "sfx_funny", callNames: ["ga con", "chick"] },
-  { id: "pet_bunny", name: "Thỏ Con Nhảy Disco", emoji: "🐰", gender: "neutral", style: "animal", tier: "normal", gradient: "from-pink-300 to-fuchsia-500", personality: "cute", signatureSoundId: "sfx_cute", callNames: ["tho", "bunny"] },
-
-  // Thú rừng biết nhảy
-  { id: "animal_lion", name: "Sư Tử Chúa Sàn Nhảy", emoji: "🦁", gender: "neutral", style: "animal", tier: "vip", gradient: "from-amber-500 to-orange-700", personality: "luxury", signatureSoundId: "sfx_gold", callNames: ["su tu", "lion", "vua su tu"] },
-  { id: "animal_tiger", name: "Hổ Vằn Quẩy Sung", emoji: "🐯", gender: "neutral", style: "animal", tier: "normal", gradient: "from-orange-400 to-red-600", personality: "energetic", signatureSoundId: "sfx_energy", callNames: ["ho", "tiger", "cop"] },
-  { id: "animal_monkey", name: "Khỉ Nghịch Ngợm", emoji: "🐒", gender: "neutral", style: "animal", tier: "normal", gradient: "from-amber-600 to-yellow-700", personality: "funny", signatureSoundId: "sfx_funny", callNames: ["khi", "monkey"] },
-  { id: "animal_chimp", name: "Tinh Tinh Breakdance", emoji: "🦍", gender: "neutral", style: "animal", tier: "normal", gradient: "from-neutral-700 to-stone-900", personality: "funny", signatureSoundId: "sfx_funny", callNames: ["tinh tinh", "chimp", "gorilla"] },
-  { id: "animal_panda", name: "Gấu Trúc Mập Mạp", emoji: "🐼", gender: "neutral", style: "animal", tier: "normal", gradient: "from-slate-200 to-slate-500", personality: "cute", signatureSoundId: "sfx_cute", callNames: ["gau truc", "panda"] },
-  { id: "animal_fox", name: "Cáo Tinh Ranh", emoji: "🦊", gender: "neutral", style: "animal", tier: "normal", gradient: "from-orange-500 to-red-700", personality: "sassy", signatureSoundId: "sfx_energy", callNames: ["cao", "fox"] },
-  { id: "animal_wolf", name: "Sói Hoang Ngầu Lòi", emoji: "🐺", gender: "neutral", style: "animal", tier: "normal", gradient: "from-slate-500 to-slate-800", personality: "cool", signatureSoundId: "sfx_default", callNames: ["soi", "wolf"] },
-  { id: "animal_elephant", name: "Voi Con Vui Vẻ", emoji: "🐘", gender: "neutral", style: "animal", tier: "normal", gradient: "from-slate-400 to-gray-600", personality: "funny", signatureSoundId: "sfx_funny", callNames: ["voi", "elephant"] },
-  { id: "animal_penguin", name: "Chim Cánh Cụt Lắc Lư", emoji: "🐧", gender: "neutral", style: "animal", tier: "normal", gradient: "from-slate-700 to-black", personality: "cute", signatureSoundId: "sfx_cute", callNames: ["canh cut", "penguin"] },
-  { id: "animal_koala", name: "Gấu Koala Lười Nhảy", emoji: "🐨", gender: "neutral", style: "animal", tier: "normal", gradient: "from-gray-400 to-slate-600", personality: "cute", signatureSoundId: "sfx_cute", callNames: ["koala"] },
-  { id: "animal_deer", name: "Nai Tơ Nhí Nhảnh", emoji: "🦌", gender: "neutral", style: "animal", tier: "normal", gradient: "from-amber-400 to-orange-600", personality: "energetic", signatureSoundId: "sfx_energy", callNames: ["nai", "deer"] },
-
-  // Người nổi tiếng — danh xưng nghề nghiệp chung, gọi tên qua biệt danh quen thuộc
-  { id: "diva_music", name: "Diva Nhạc Việt", emoji: "🎤", gender: "female", style: "artist", tier: "vip", gradient: "from-purple-400 to-pink-600", personality: "luxury", signatureSoundId: "sfx_gold", callNames: ["diva", "ca si", "nu hoang nhac viet"] },
-  { id: "rapper_star", name: "Rapper Underground", emoji: "🎧", gender: "male", style: "artist", tier: "normal", gradient: "from-neutral-600 to-black", personality: "cool", signatureSoundId: "sfx_funny", callNames: ["rapper", "mc"] },
-  { id: "football_star", name: "Cầu Thủ Ngôi Sao", emoji: "⚽", gender: "male", style: "celebrity", tier: "normal", gradient: "from-green-500 to-emerald-700", personality: "energetic", signatureSoundId: "sfx_energy", callNames: ["cau thu", "messi", "ronaldo", "vua bong da"] },
-  { id: "beauty_queen", name: "Hoa Hậu Hoàn Vũ", emoji: "👑", gender: "female", style: "celebrity", tier: "vip", gradient: "from-rose-300 to-amber-500", personality: "luxury", signatureSoundId: "sfx_gold", callNames: ["hoa hau", "hh"] },
-  { id: "kpop_idol", name: "Idol Kpop Đa Sắc", emoji: "✨", gender: "neutral", style: "artist", tier: "normal", gradient: "from-violet-400 to-blue-500", personality: "energetic", signatureSoundId: "sfx_energy", callNames: ["idol", "kpop"] },
-  { id: "tech_billionaire", name: "Tỷ Phú Công Nghệ", emoji: "🚀", gender: "male", style: "celebrity", tier: "vip", gradient: "from-slate-500 to-cyan-700", personality: "cool", signatureSoundId: "sfx_vip", callNames: ["ty phu", "elon"] },
-  { id: "boxing_champion", name: "Võ Sĩ Vô Địch", emoji: "🥊", gender: "male", style: "celebrity", tier: "normal", gradient: "from-red-600 to-rose-800", personality: "energetic", signatureSoundId: "sfx_energy", callNames: ["vo si", "boxing"] },
-  { id: "mega_streamer", name: "Streamer Triệu View", emoji: "🎮", gender: "neutral", style: "celebrity", tier: "normal", gradient: "from-indigo-500 to-purple-700", personality: "funny", signatureSoundId: "sfx_funny", callNames: ["streamer", "trieu view"] },
-
-  // Nghệ sĩ / ca sĩ thêm
-  { id: "singer_tre", name: "Ca Sĩ Nhạc Trẻ", emoji: "🎙️", gender: "neutral", style: "artist", tier: "normal", gradient: "from-pink-500 to-rose-600", personality: "energetic", signatureSoundId: "sfx_energy", callNames: ["ca si nhac tre", "idol tre"] },
-  { id: "singer_bolero", name: "Ca Sĩ Bolero", emoji: "🎶", gender: "neutral", style: "artist", tier: "normal", gradient: "from-amber-600 to-yellow-800", personality: "luxury", signatureSoundId: "sfx_silver", callNames: ["bolero"] },
-  { id: "guitarist", name: "Nghệ Sĩ Guitar", emoji: "🎸", gender: "neutral", style: "artist", tier: "normal", gradient: "from-orange-500 to-red-700", personality: "cool", signatureSoundId: "sfx_default", callNames: ["guitar"] },
-  { id: "dj_master", name: "DJ Phối Nhạc Cực Cháy", emoji: "🎚️", gender: "neutral", style: "artist", tier: "vip", gradient: "from-fuchsia-500 to-indigo-700", personality: "energetic", signatureSoundId: "sfx_vip", callNames: ["dj"] },
-
-  // Sinh vật huyền thoại — dành riêng cho khách VIP
-  { id: "dragon_vip", name: "Rồng Vàng Thần Thoại", emoji: "🐉", gender: "neutral", style: "mythical", tier: "vip", gradient: "from-yellow-500 to-red-700", personality: "luxury", signatureSoundId: "sfx_vip", callNames: ["rong vang", "dragon"] },
-  { id: "unicorn_vip", name: "Kỳ Lân Ánh Sáng", emoji: "🦄", gender: "neutral", style: "mythical", tier: "vip", gradient: "from-pink-300 to-purple-400", personality: "cute", signatureSoundId: "sfx_vip", callNames: ["ky lan", "unicorn"] },
-  { id: "phoenix_vip", name: "Phượng Hoàng Huyền Thoại", emoji: "🦅", gender: "neutral", style: "mythical", tier: "vip", gradient: "from-red-500 to-orange-600", personality: "luxury", signatureSoundId: "sfx_vip", callNames: ["phuong hoang", "phoenix"] },
-];
-
 export const DANCE_STYLES = [
   { id: "dance_bounce", name: "Dance Cơ Bản", animationClass: "animate-dance-bounce", durationSeconds: 8 },
   { id: "dance_groove", name: "Hiphop Groove", animationClass: "animate-dance-groove", durationSeconds: 8 },
@@ -123,42 +61,6 @@ export const DANCE_EFFECTS = [
   { id: "fx_clap", name: "Vỗ Tay", emoji: "👏", particle: "rise", color: "#F59E0B" },
   { id: "fx_skull", name: "Hài Hước Đen", emoji: "💀", particle: "burst", color: "#9CA3AF" },
 ];
-
-const OUTFIT_COLORS = [
-  { token: "red", label: "Đỏ Rực", ringClass: "ring-red-500", hex: "#EF4444" },
-  { token: "amber", label: "Vàng Ánh Kim", ringClass: "ring-amber-400", hex: "#FBBF24" },
-  { token: "blue", label: "Xanh Biển", ringClass: "ring-blue-500", hex: "#3B82F6" },
-  { token: "purple", label: "Tím Sang", ringClass: "ring-purple-500", hex: "#A855F7" },
-  { token: "pink", label: "Hồng Pastel", ringClass: "ring-pink-400", hex: "#F472B6" },
-  { token: "black", label: "Đen Huyền Bí", ringClass: "ring-neutral-700", hex: "#404040" },
-  { token: "white", label: "Trắng Tinh Khôi", ringClass: "ring-white", hex: "#F5F5F5" },
-  { token: "green", label: "Xanh Lá", ringClass: "ring-emerald-500", hex: "#10B981" },
-  { token: "cyan", label: "Xanh Ngọc", ringClass: "ring-cyan-400", hex: "#22D3EE" },
-  { token: "orange", label: "Cam Rực", ringClass: "ring-orange-500", hex: "#F97316" },
-];
-
-const OUTFIT_STYLES = [
-  "Dạ Hội", "Đường Phố", "Thể Thao", "Sang Trọng", "Cá Tính",
-  "Cổ Điển", "Tương Lai", "Dễ Thương", "Vũ Hội", "Tối Giản",
-];
-
-function slugifyOutfitStyle(style) {
-  return style.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, "").toLowerCase();
-}
-
-// Trang phục dạng "khung màu + phong cách" phủ lên nhân vật — vì không dựng lại y phục thật trên
-// ảnh/video tải lên (cần AI tạo ảnh chuyên biệt, ngoài phạm vi frontend hiện tại), nên biểu thị bằng
-// viền màu (Sàn 2D) / khăn choàng màu (Sàn 3D) + nhãn phong cách. 10 màu × 10 phong cách = 100 trang
-// phục THẬT SỰ khác nhau (không phải danh sách giả lặp lại tên), tự động đổi ngẫu nhiên mỗi lần nhân
-// vật lên sàn — gọi tên/tặng quà càng nhiều thì càng thấy nhiều bộ khác nhau.
-export const OUTFITS = OUTFIT_COLORS.flatMap((color) =>
-  OUTFIT_STYLES.map((style) => ({
-    id: `outfit_${color.token}_${slugifyOutfitStyle(style)}`,
-    name: `${style} ${color.label}`,
-    ringClass: color.ringClass,
-    hex: color.hex,
-  }))
-);
 
 // Phong cách bình luận riêng cho từng phiên live — chỉ chi phối "giọng người dẫn" (auto-reply Q&A +
 // lời cảm ơn quà tặng), KHÔNG đổi tính cách gốc của từng nhân vật để giữ bản sắc riêng ổn định.
@@ -279,25 +181,25 @@ export const GIFT_TIERS = [
     level: 1, name: "Cơ Bản", minPoints: 0,
     characterIds: ["girl_neon", "boy_street", "pet_dog", "pet_chick", "pet_bunny"], danceIds: ["dance_bounce"], effectIds: ["fx_neon"],
     soundId: null, durationSeconds: 15, danceMode: "solo",
-    customization: { outfitColor: false, danceStyleChoice: false },
+    customization: { danceStyleChoice: false },
   },
   {
     level: 2, name: "Bạc", minPoints: 100,
     characterIds: ["anime_girl", "robot", "hot_girl", "hot_boy", "pet_cat2"], danceIds: ["dance_bounce", "dance_groove"], effectIds: ["fx_confetti"],
     soundId: null, durationSeconds: 30, danceMode: "duo",
-    customization: { outfitColor: true, danceStyleChoice: false },
+    customization: { danceStyleChoice: false },
   },
   {
     level: 3, name: "Vàng", minPoints: 500,
     characterIds: ["king_gold", "queen_gold", "superhero", "diva_music", "rapper_star", "football_star", "kpop_idol", "boxing_champion", "animal_lion", "dj_master", "singer_tre"], danceIds: ["dance_groove", "dance_spin", "dance_lock"], effectIds: ["fx_gold", "fx_fireworks"],
     soundId: null, durationSeconds: 60, danceMode: "trio",
-    customization: { outfitColor: true, danceStyleChoice: true, vfxChoice: ["fx_confetti", "fx_gold"] },
+    customization: { danceStyleChoice: true, vfxChoice: ["fx_confetti", "fx_gold"] },
   },
   {
     level: 4, name: "Kim Cương / VIP", minPoints: 2000,
     characterIds: ["diamond_vip", "beauty_queen", "tech_billionaire", "mega_streamer", "dragon_vip", "unicorn_vip", "phoenix_vip"], danceIds: ["dance_victory", "dance_spin", "dance_breakdance"], effectIds: ["fx_explosion", "fx_gold", "fx_magic", "fx_diamond_rain"],
     soundId: null, durationSeconds: 120, danceMode: "group",
-    customization: { outfitColor: true, danceStyleChoice: true, vfxChoice: ["fx_confetti", "fx_explosion", "fx_gold"], sceneChoice: true, priorityStageSlot: true },
+    customization: { danceStyleChoice: true, vfxChoice: ["fx_confetti", "fx_explosion", "fx_gold"], sceneChoice: true, priorityStageSlot: true },
   },
 ];
 
@@ -331,10 +233,13 @@ export const DEFAULT_SETTINGS = {
   disabledEffectIds: [],
   disabledSceneIds: [],
   disabledSoundIds: [],
-  disabledOutfitIds: [],
   autoShuffleIntervalEnabled: false,
   autoShuffleIntervalMinutes: 5,
+  characterSizeScale: "medium", // 'small' | 'medium' | 'large' — cỡ hiển thị mặc định cho nhân vật mới lên sàn
 };
+
+// Hệ số phóng to/nhỏ nhân vật dùng chung cho Sàn 2D (kích thước khung ảnh) và Sàn 3D (scale mô hình).
+export const CHARACTER_SIZE_SCALE = { small: 0.65, medium: 1, large: 1.5 };
 
 // Kho câu bình luận phản hồi theo "giọng" tính cách nhân vật — hài hước, đa dạng, không cần gọi AI
 // (đúng khuyến nghị "AI không nằm trên realtime critical path" trong bản kế hoạch gốc). Câu có dấu

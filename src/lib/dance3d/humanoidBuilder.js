@@ -44,7 +44,7 @@ function createChromaKeyVideoTexture(mediaUrl, chromaKeyColor) {
 // cần asset 3D rig sẵn (mô hình anime cao cấp như ảnh mẫu AUMIX3D là asset thương mại riêng, không
 // tự tạo bằng code được). Đủ để xoay/di chuyển tay chân thật theo 3 chiều, nhìn được từ mọi góc camera.
 // Trả về { group, parts } — parts chứa các khớp (hips/head/arm/leg) để hàm điệu nhảy điều khiển.
-export function buildHumanoidFigure(character, outfitHex) {
+export function buildHumanoidFigure(character) {
   const { from, to } = gradientToHexPair(character.gradient || "from-pink-500 to-purple-600");
   const bodyColor = new THREE.Color(from);
   const limbColor = new THREE.Color(to);
@@ -63,21 +63,6 @@ export function buildHumanoidFigure(character, outfitHex) {
   const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.24, 0.42, 4, 8), bodyMat);
   torso.position.y = 0.28;
   hips.add(torso);
-
-  // Trang phục — khăn choàng màu quanh ngực đại diện cho outfit đang chọn (đồng bộ với viền màu ở
-  // Sàn 2D), phát sáng nhẹ để nổi bật khi nhân vật được gọi tên/tặng quà đổi trang phục.
-  if (outfitHex) {
-    const sash = new THREE.Mesh(
-      new THREE.TorusGeometry(0.27, 0.035, 8, 24),
-      new THREE.MeshStandardMaterial({
-        color: new THREE.Color(outfitHex), roughness: 0.35, metalness: 0.4,
-        emissive: new THREE.Color(outfitHex), emissiveIntensity: 0.3,
-      })
-    );
-    sash.rotation.x = Math.PI / 2;
-    sash.position.y = 0.42;
-    hips.add(sash);
-  }
 
   // Đầu — có thể dán ảnh thật (mediaType: 'image') hoặc video phông xanh (mediaType: 'video') do người
   // dùng tải lên làm mặt nhân vật.

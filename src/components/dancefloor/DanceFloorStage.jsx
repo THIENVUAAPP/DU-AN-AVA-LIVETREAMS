@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { Wifi, WifiOff } from 'lucide-react';
-import { DANCE_STYLES, SCENE_BACKGROUNDS, OUTFITS } from '../../lib/danceFloorData';
+import { DANCE_STYLES, SCENE_BACKGROUNDS } from '../../lib/danceFloorData';
 import { startChromaKeyLoop } from '../../lib/mediaSegmentation';
 
 function getById(list, id) {
@@ -31,7 +31,9 @@ function createParticle(effect, x, y) {
 // Khung hiển thị nhân vật: emoji minh hoạ (mặc định) hoặc ảnh/video người thật do admin tải lên.
 // Ảnh đã tách nền sẵn (PNG trong suốt) nên chỉ cần <img>; video chạy chroma-key theo thời gian thực
 // bằng canvas riêng — chỉ xử lý khi thực sự đang hiển thị trên sàn (giới hạn bởi maxSlots).
-function CharacterAvatar({ character, danceClass }) {
+const SIZE_CLASS = { small: 'w-12 h-12', medium: 'w-16 h-16', large: 'w-24 h-24' };
+
+function CharacterAvatar({ character, danceClass, sizeClass }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
@@ -47,7 +49,7 @@ function CharacterAvatar({ character, danceClass }) {
 
   if (character.mediaType === 'image' && character.mediaUrl) {
     return (
-      <div className={`w-16 h-16 rounded-2xl overflow-hidden shadow-xl border-2 border-white/30 ${danceClass}`}>
+      <div className={`${sizeClass} rounded-2xl overflow-hidden shadow-xl border-2 border-white/30 ${danceClass}`}>
         <img src={character.mediaUrl} alt={character.name} className="w-full h-full object-cover" />
       </div>
     );
@@ -55,7 +57,7 @@ function CharacterAvatar({ character, danceClass }) {
 
   if (character.mediaType === 'video' && character.mediaUrl) {
     return (
-      <div className={`w-16 h-16 rounded-2xl overflow-hidden shadow-xl border-2 border-white/30 ${danceClass}`}>
+      <div className={`${sizeClass} rounded-2xl overflow-hidden shadow-xl border-2 border-white/30 ${danceClass}`}>
         <video ref={videoRef} src={character.mediaUrl} muted loop playsInline className="hidden" />
         <canvas ref={canvasRef} className="w-full h-full object-cover" />
       </div>
@@ -63,7 +65,7 @@ function CharacterAvatar({ character, danceClass }) {
   }
 
   return (
-    <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${character.gradient} flex items-center justify-center text-3xl shadow-xl border-2 border-white/30 ${danceClass}`}>
+    <div className={`${sizeClass} rounded-2xl bg-gradient-to-br ${character.gradient} flex items-center justify-center text-3xl shadow-xl border-2 border-white/30 ${danceClass}`}>
       {character.emoji}
     </div>
   );
@@ -195,9 +197,9 @@ export default function DanceFloorStage({ instances, maxSlots, effectTriggers, s
           if (!inst) return <div key={idx} className="h-28" />;
           const character = getById(characters, inst.characterId);
           const dance = getById(DANCE_STYLES, inst.danceId);
-          const outfit = getById(OUTFITS, inst.outfitId);
           if (!character) return <div key={idx} className="h-28" />;
           const remainingPct = Math.max(0, 1 - (now - inst.startTime) / inst.durationMs);
+          const featured = inst.priority >= 10;
           return (
             <div key={inst.instanceId} className="relative flex flex-col items-center justify-end h-28 animate-character-spawn">
               {inst.reactionLine && (
@@ -205,11 +207,13 @@ export default function DanceFloorStage({ instances, maxSlots, effectTriggers, s
                   {inst.reactionLine}
                 </div>
               )}
-              <div className={outfit ? `rounded-2xl ring-2 ${outfit.ringClass}` : ''}>
-                <CharacterAvatar character={character} danceClass={dance ? dance.animationClass : ''} />
-              </div>
-              <span className="mt-1 text-[10px] font-black text-white bg-black/60 px-2 py-0.5 rounded-full truncate max-w-[92px]">
-                {inst.username}
+              <CharacterAvatar character={character} danceClass={dance ? dance.animationClass : ''} sizeClass={SIZE_CLASS[inst.sizeScale] || SIZE_CLASS.medium} />
+              <span
+                className={`mt-1 text-[11px] font-black px-2.5 py-0.5 rounded-full truncate max-w-[110px] ${
+                  featured ? 'bg-gradient-to-r from-amber-400 to-yellow-600 text-black shadow-[0_0_12px_3px_rgba(250,204,21,0.6)]' : 'bg-black/60 text-white'
+                }`}
+              >
+                {featured ? '👑 ' : ''}{inst.username}
               </span>
               <div className="w-14 h-1 rounded-full bg-white/20 mt-1 overflow-hidden">
                 <div

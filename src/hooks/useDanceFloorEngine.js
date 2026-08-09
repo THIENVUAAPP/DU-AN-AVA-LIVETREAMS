@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   DANCE_STYLES,
   SCENE_BACKGROUNDS,
-  OUTFITS,
   DEFAULT_KEYWORD_RULES,
   GIFT_TIERS,
   GIFT_POINT_MAPPING,
@@ -38,6 +37,7 @@ import { speakLine } from '../lib/voiceEngine';
 import { simulatedCustomers, simulatedAvatars, simulatedQuestions } from '../lib/aiSimulationData';
 import { useCustomLibraryItems } from './useCustomLibraryItems';
 import { useDanceFloorManualActions } from './useDanceFloorManualActions';
+import { useBackgroundMusicPlaylist } from './useBackgroundMusicPlaylist';
 
 const RULES_KEY = 'avalive_dancefloor_rules';
 const TIERS_KEY = 'avalive_dancefloor_tiers';
@@ -67,7 +67,6 @@ const LIBRARY_SETTING_KEY = {
   effect: 'disabledEffectIds',
   scene: 'disabledSceneIds',
   sound: 'disabledSoundIds',
-  outfit: 'disabledOutfitIds',
 };
 
 // Toàn bộ orchestration của "Sàn Nhảy TikTok": state, pipeline Ingestion→Gọi Tên/Rule→Auto-Reply→
@@ -95,6 +94,14 @@ export function useDanceFloorEngine() {
   );
   const enabledNormalCharacters = useMemo(() => enabledCharacters.filter((c) => c.tier !== 'vip'), [enabledCharacters]);
   const enabledVipCharacters = useMemo(() => enabledCharacters.filter((c) => c.tier === 'vip'), [enabledCharacters]);
+
+  // Playlist nhạc nền — chỉ gồm bài nhạc THẬT đã tải lên (mp3 hoặc audio trích từ video), đang bật tick
+  // dùng; hết bài tự động qua bài kế tiếp, làm nhạc nền xuyên suốt phiên live cho nhân vật nhảy theo.
+  const enabledCustomSounds = useMemo(
+    () => filterEnabled(customSounds, settings.disabledSoundIds),
+    [customSounds, settings.disabledSoundIds]
+  );
+  const musicPlaylist = useBackgroundMusicPlaylist(enabledCustomSounds);
 
   const [instances, setInstances] = useState([]);
   const [effectTriggers, setEffectTriggers] = useState([]);
@@ -224,7 +231,7 @@ export function useDanceFloorEngine() {
   );
 
   const spawnCharacters = useCallback(
-    ({ characterIds, danceIds, effectId, soundId, sceneIdToApply, durationSeconds, priority, username, count, reactionLine, outfitId }) => {
+    ({ characterIds, danceIds, effectId, soundId, sceneIdToApply, durationSeconds, priority, username, count, reactionLine, sizeScale }) => {
       const now = Date.now();
       let resolvedSoundId = soundId;
 
@@ -233,8 +240,6 @@ export function useDanceFloorEngine() {
         // để Sàn 3D xếp đội hình gần nhau + đồng bộ pha nhảy, tạo hiệu ứng nhảy nhóm thật.
         const groupId = count > 1 ? `group_${now}_${Math.random().toString(36).slice(2, 6)}` : null;
         const sharedDanceId = danceIds && danceIds.length > 0 ? danceIds[Math.floor(Math.random() * danceIds.length)] : null;
-        const enabledOutfits = filterEnabled(OUTFITS, settings.disabledOutfitIds);
-        const outfitPool = enabledOutfits.length > 0 ? enabledOutfits : OUTFITS;
         const newInstances = Array.from({ length: count }).map((_, i) => {
           const characterId = characterIds[Math.floor(Math.random() * characterIds.length)];
           return {
@@ -242,9 +247,7 @@ export function useDanceFloorEngine() {
             characterId,
             danceId: groupId ? sharedDanceId : (danceIds && danceIds.length > 0 ? danceIds[Math.floor(Math.random() * danceIds.length)] : null),
             groupId,
-            // Trang phục đổi ngẫu nhiên mỗi lần lên sàn (trừ khi có outfitId chỉ định sẵn) — nhân vật
-            // càng được gọi tên/tặng quà nhiều thì càng thấy nhiều bộ trang phục khác nhau.
-            outfitId: outfitId || outfitPool[Math.floor(Math.random() * outfitPool.length)].id,
+            sizeScale: sizeScale || settings.characterSizeScale,
             username,
             startTime: now,
             durationMs: durationSeconds * 1000,
@@ -267,7 +270,7 @@ export function useDanceFloorEngine() {
       if (sceneIdToApply) setSceneId(sceneIdToApply);
       if (resolvedSoundId) playSound(resolvedSoundId);
     },
-    [settings.maxSlots, settings.disabledOutfitIds, playSound, allCharacters]
+    [settings.maxSlots, settings.characterSizeScale, playSound, allCharacters]
   );
 
   const processEvent = useCallback(
@@ -289,8 +292,17 @@ export function useDanceFloorEngine() {
         });
 
         const tier = resolveGiftTier(points, giftTiers);
-        const tierCharacterIds = tier.characterIds.filter((id) => !settings.disabledCharacterIds.includes(id));
-        const finalCharacterIds = tierCharacterIds.length > 0 ? tierCharacterIds : tier.characterIds;
+        // Chỉ dùng characterIds cấu hình sẵn nếu nhân vật đó THẬT SỰ còn tồn tại (đã tải lên) — nếu
+        // không (vd sau khi xoá hết nhân vật demo, hoặc admin chưa gán nhân vật cho cấp quà này) thì
+        // tự lấy từ đúng hạng nhân vật admin đã tải lên (cấp quà cao → ưu tiên nhóm VIP).
+        const validTierCharacterIds = tier.characterIds.filter(
+          (id) => !settings.disabledCharacterIds.includes(id) && allCharacters.some((c) => c.id === id)
+        );
+        const fallbackPool = (tier.level >= 3 ? enabledVipCharacters : enabledNormalCharacters);
+        const finalCharacterIds =
+          validTierCharacterIds.length > 0
+            ? validTierCharacterIds
+            : (fallbackPool.length > 0 ? fallbackPool : enabledCharacters).map((c) => c.id);
         const guessedCharacter = allCharacters.find((c) => c.id === finalCharacterIds[0]);
         const { line: thankLine, personality: thankPersonality } = pickAnnouncerLine(GIFT_THANK_LINES, event.username);
         triggerTimestampsRef.current.push(now);
@@ -340,16 +352,22 @@ export function useDanceFloorEngine() {
           durationSeconds: 8, priority: 3, username: event.username, count: 1, reactionLine: line,
         });
       } else if (rule) {
-        const ruleCharacter = allCharacters.find((c) => c.id === rule.characterId);
+        // Nhân vật cấu hình sẵn cho luật này có thể không còn tồn tại (đã xoá/chưa được gán) — tự thay
+        // bằng 1 nhân vật admin đã tải lên bất kỳ để luật vẫn hoạt động thay vì lặng lẽ không hiện gì.
+        let ruleCharacter = allCharacters.find((c) => c.id === rule.characterId);
+        if (!ruleCharacter && rule.spawnsCharacter && enabledCharacters.length > 0) {
+          ruleCharacter = enabledCharacters[Math.floor(Math.random() * enabledCharacters.length)];
+        }
+        const willSpawn = rule.spawnsCharacter && !!ruleCharacter;
         const ruleLine = pickReactionLine(ruleCharacter?.personality || 'funny', event.username, REACTION_LINES, REACTION_LINES.funny);
         pushReaction({ username: event.username, characterName: ruleCharacter?.name || `Hiệu ứng "${rule.keyword.toUpperCase()}"`, line: ruleLine, platform: event.platform, personality: ruleCharacter?.personality || 'funny' });
         spawnCharacters({
-          characterIds: rule.spawnsCharacter && rule.characterId ? [rule.characterId] : [],
+          characterIds: willSpawn ? [ruleCharacter.id] : [],
           danceIds: rule.danceId ? [rule.danceId] : [],
           effectId: rule.effectId, soundId: rule.soundId, sceneIdToApply: rule.sceneId,
           durationSeconds: rule.duration, priority: rule.priority, username: event.username,
-          count: rule.spawnsCharacter ? rule.spawnCount || 1 : 0,
-          reactionLine: rule.spawnsCharacter ? ruleLine : '',
+          count: willSpawn ? rule.spawnCount || 1 : 0,
+          reactionLine: willSpawn ? ruleLine : '',
         });
       } else {
         // 3) Không khớp gì đặc biệt → mỗi người bình luận vẫn có 1 nhân vật đại diện riêng, cố định
@@ -375,7 +393,7 @@ export function useDanceFloorEngine() {
     [rules, giftTiers, autoReplyRules, settings.maxTriggersPerUserPerMinute, settings.cooldownSecondsDefault, settings.disabledCharacterIds, spawnCharacters, allCharacters, enabledCharacters, enabledNormalCharacters, enabledVipCharacters, pushReaction, pickAnnouncerLine]
   );
 
-  const { handleManualTrigger, handleManualGift, handleManualCombo, runAutoShuffle } = useDanceFloorManualActions({
+  const { handleManualTrigger, handleManualGift, handleManualCombo, handleManualHighlight, runAutoShuffle } = useDanceFloorManualActions({
     processEvent, spawnCharacters, pushReaction, allCharacters, enabledCharacters, allEffects, settings, selectedChannelIds,
   });
 
@@ -453,7 +471,7 @@ export function useDanceFloorEngine() {
     connectedChannelList: connectedChannels.filter((c) => c.status === 'connected'),
     selectedChannelIds, toggleChannel,
     commentsPerMin, triggersPerMin,
-    handleManualTrigger, handleManualGift, handleManualCombo,
-    playSound, runAutoShuffle, toggleLibraryItem, suggestDance,
+    handleManualTrigger, handleManualGift, handleManualCombo, handleManualHighlight,
+    playSound, runAutoShuffle, toggleLibraryItem, suggestDance, musicPlaylist,
   };
 }

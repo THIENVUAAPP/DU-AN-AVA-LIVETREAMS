@@ -8,7 +8,7 @@ import { ParticleBurst3D } from '../../lib/dance3d/particles3D';
 import { LightTrail } from '../../lib/dance3d/lightTrail';
 import { STAGE_PRESETS_3D } from '../../lib/dance3d/stagePresets3D';
 import { buildStageEnvironment, animateStageLights } from '../../lib/dance3d/stageEnvironment3D';
-import { OUTFITS } from '../../lib/danceFloorData';
+import { CHARACTER_SIZE_SCALE } from '../../lib/danceFloorData';
 
 const CAMERA_MODES = [
   { id: 'wide', label: 'Toàn Cảnh', position: [0, 7, 14] },
@@ -101,7 +101,7 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
         if (entry.labelEl) {
           const worldPos = new THREE.Vector3();
           entry.group.getWorldPosition(worldPos);
-          worldPos.y += 1.3;
+          worldPos.y += 1.3 * entry.sizeScale;
           worldPos.project(camera);
           const x = (worldPos.x * 0.5 + 0.5) * width2;
           const y = (-worldPos.y * 0.5 + 0.5) * height2;
@@ -203,7 +203,7 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
       scene.background = new THREE.Color(preset.backdropColor);
     }
     scene.fog = new THREE.FogExp2(preset.fogColor, 0.045);
-    const env = buildStageEnvironment(preset);
+    const env = buildStageEnvironment(preset, !!backgroundVideoUrl);
     env.group.name = 'stage_env';
     scene.add(env.group);
     envRef.current = env;
@@ -236,8 +236,7 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
       if (instancesMapRef.current.has(inst.instanceId)) return;
       const character = characters.find((c) => c.id === inst.characterId);
       if (!character) return;
-      const outfitHex = OUTFITS.find((o) => o.id === inst.outfitId)?.hex;
-      const { group, parts, videoTexture, stopVideo } = buildHumanoidFigure(character, outfitHex);
+      const { group, parts, videoTexture, stopVideo } = buildHumanoidFigure(character);
 
       const base = spiralPosition(idx, instances.length);
       let pos = base;
@@ -247,15 +246,17 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
         pos = groupClusterPosition(base.x, base.z, memberIndex, groupCounts[inst.groupId]);
       }
       group.position.set(pos.x, 0, pos.z);
+      group.scale.setScalar(CHARACTER_SIZE_SCALE[inst.sizeScale] || 1);
       scene.add(group);
 
       const featured = inst.priority >= 10;
       const labelEl = document.createElement('div');
       labelEl.style.cssText = LABEL_STYLE;
-      // Chỉ hiện tên nhân vật trên đầu — KHÔNG hiện lại dòng bình luận/phản hồi ở đây nữa (đã có sẵn
-      // ở khối "Bình Luận Trực Tiếp" + "Nhật Ký Phản Hồi Trực Tiếp" bên dưới sàn, tránh che khuất sàn diễn).
+      // Chỉ hiện tên nhân vật trên đầu (đặt cao, chữ to hơn, có hào quang khi nổi bật) — KHÔNG hiện lại
+      // dòng bình luận/phản hồi ở đây nữa (đã có sẵn ở "Bình Luận Trực Tiếp" + "Nhật Ký Phản Hồi Trực
+      // Tiếp" bên dưới sàn, tránh che khuất sàn diễn).
       labelEl.innerHTML = `
-        <div style="display:inline-block;padding:2px 8px;border-radius:9999px;background:${featured ? 'linear-gradient(90deg,#facc15,#f59e0b)' : 'rgba(0,0,0,0.7)'};color:${featured ? '#000' : '#fff'};font-size:10px;font-weight:900;">${inst.username}</div>
+        <div style="display:inline-block;padding:3px 10px;border-radius:9999px;background:${featured ? 'linear-gradient(90deg,#facc15,#f59e0b)' : 'rgba(0,0,0,0.7)'};color:${featured ? '#000' : '#fff'};font-size:12px;font-weight:900;letter-spacing:0.3px;${featured ? 'box-shadow:0 0 16px 4px rgba(250,204,21,0.7);' : ''}">${featured ? '👑 ' : ''}${inst.username}</div>
       `;
       labelsContainerRef.current?.appendChild(labelEl);
 
@@ -271,6 +272,7 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
         group, parts, labelEl, trail, featured, videoTexture, stopVideo,
         danceId: inst.danceId || 'dance_bounce',
         phase: inst.groupId ? 0 : Math.random() * 10,
+        sizeScale: CHARACTER_SIZE_SCALE[inst.sizeScale] || 1,
       });
     });
   }, [instances, characters]);

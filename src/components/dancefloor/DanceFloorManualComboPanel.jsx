@@ -1,17 +1,24 @@
 import React, { useState } from 'react';
 import { Shuffle, Wand2 } from 'lucide-react';
 
+const SIZE_OPTIONS = [
+  { value: 'small', label: 'Nhỏ' },
+  { value: 'medium', label: 'Vừa' },
+  { value: 'large', label: 'To' },
+];
+
 // Tổ hợp thủ công — chọn tay từng thành phần (nhân vật / điệu nhảy kể cả điệu "sao chép" từ video mẫu /
-// nhạc / sàn 3D) rồi áp dụng ngay bằng 1 nút, thay vì chỉ trông chờ luật tự động hoặc Auto-Shuffle ngẫu
-// nhiên. Mọi thành phần kết hợp tự do với nhau — đúng yêu cầu "tất cả kết hợp được hết với nhau".
-export default function DanceFloorManualComboPanel({ characters, danceStyles, sounds, stagePresets, currentStagePresetId, onChangeStagePreset, onApplyCombo }) {
+// nhạc / cỡ hiển thị) rồi áp dụng ngay bằng 1 nút, thay vì chỉ trông chờ luật tự động hoặc Auto-Shuffle
+// ngẫu nhiên. Mọi thành phần kết hợp tự do với nhau — đúng yêu cầu "tất cả kết hợp được hết với nhau".
+export default function DanceFloorManualComboPanel({ characters, danceStyles, sounds, onApplyCombo }) {
   const [characterId, setCharacterId] = useState(characters[0]?.id || '');
   const [danceId, setDanceId] = useState('');
   const [soundId, setSoundId] = useState('');
+  const [sizeScale, setSizeScale] = useState('medium');
 
   const handleApply = () => {
     if (!characterId) return;
-    onApplyCombo({ characterId, danceId: danceId || null, soundId: soundId || null });
+    onApplyCombo({ characterId, danceId: danceId || null, soundId: soundId || null, sizeScale });
   };
 
   return (
@@ -41,12 +48,7 @@ export default function DanceFloorManualComboPanel({ characters, danceStyles, so
           onChange={setSoundId}
           options={[{ value: '', label: 'Không phát nhạc riêng' }, ...sounds.map((s) => ({ value: s.id, label: s.name }))]}
         />
-        <ComboSelect
-          label="Sàn 3D"
-          value={currentStagePresetId}
-          onChange={onChangeStagePreset}
-          options={stagePresets.map((p) => ({ value: p.id, label: p.name }))}
-        />
+        <ComboSelect label="Cỡ Nhân Vật" value={sizeScale} onChange={setSizeScale} options={SIZE_OPTIONS} />
       </div>
       <button
         onClick={handleApply}

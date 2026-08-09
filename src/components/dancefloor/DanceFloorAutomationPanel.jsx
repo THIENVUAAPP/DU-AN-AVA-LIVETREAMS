@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shuffle, Volume2, VolumeX, Clock, MonitorPlay } from 'lucide-react';
+import { Shuffle, Volume2, VolumeX, Clock, MonitorPlay, Music4, SkipForward } from 'lucide-react';
 import { COMMENTARY_STYLES } from '../../lib/danceFloorData';
 
 // Cấu hình tự động hoá — ít bấm lại hơn sau khi setup xong, đặt ở khu vực phía dưới sàn diễn.
@@ -10,6 +10,7 @@ export default function DanceFloorAutomationPanel({
   onRunAutoShuffle,
   autoShuffleIntervalEnabled, autoShuffleIntervalMinutes, onUpdateAutoShuffleInterval,
   scheduleEnabled, scheduleStartHour, scheduleEndHour, onUpdateSchedule,
+  musicPlaylist,
 }) {
   return (
     <div className="glass-panel p-4 rounded-2xl border border-white/10 space-y-3">
@@ -44,6 +45,35 @@ export default function DanceFloorAutomationPanel({
           {voiceEnabled ? 'ĐANG BẬT' : 'ĐANG TẮT'}
         </button>
       </div>
+
+      {musicPlaylist && (
+        <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs font-bold text-gray-300 flex items-center gap-1.5">
+              <Music4 className="w-3.5 h-3.5 text-emerald-400" /> Playlist Nhạc Nền ({musicPlaylist.trackCount} bài)
+            </span>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={musicPlaylist.toggle}
+                disabled={musicPlaylist.trackCount === 0}
+                className={`px-2.5 py-1 rounded-full text-[10px] font-black cursor-pointer disabled:opacity-30 ${musicPlaylist.isPlaying ? 'bg-emerald-600 text-white' : 'bg-white/10 text-gray-400'}`}
+              >
+                {musicPlaylist.isPlaying ? '● ĐANG PHÁT' : 'PHÁT'}
+              </button>
+              <button onClick={musicPlaylist.skipNext} disabled={musicPlaylist.trackCount === 0} className="p-1.5 rounded-full bg-white/10 text-gray-300 cursor-pointer disabled:opacity-30" title="Qua bài kế tiếp">
+                <SkipForward className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+          <p className="text-[9px] text-gray-500 truncate">
+            {musicPlaylist.trackCount === 0
+              ? 'Chưa có bài nào — tải nhạc/video ở Thư Viện Âm Thanh và bật tick dùng.'
+              : musicPlaylist.isPlaying
+              ? `Đang phát: ${musicPlaylist.currentTrackName} — hết bài tự động qua bài kế tiếp, chạy đến khi tắt.`
+              : 'Đã tạm dừng — bấm PHÁT để chạy playlist nền cho nhân vật nhảy.'}
+          </p>
+        </div>
+      )}
 
       <div>
         <label className="text-[10px] font-black text-gray-400 uppercase block mb-1">Phong Cách Bình Luận Phiên Này</label>

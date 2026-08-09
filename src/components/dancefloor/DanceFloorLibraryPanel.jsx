@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { Volume2, Gem, Music4, Sparkles as SparklesIcon, Trash2, Image as ImageIcon, CheckCircle2, XCircle, Plus, Shirt } from 'lucide-react';
-import { SCENE_BACKGROUNDS, DANCE_MODE_LABELS, OUTFITS } from '../../lib/danceFloorData';
+import { Volume2, Gem, Music4, Sparkles as SparklesIcon, Trash2, Image as ImageIcon, CheckCircle2, XCircle, Plus } from 'lucide-react';
+import { DANCE_MODE_LABELS } from '../../lib/danceFloorData';
 import DanceFloorCharacterLibraryGrid from './DanceFloorCharacterLibraryGrid';
 import DanceFloorMotionCaptureUploader from './DanceFloorMotionCaptureUploader';
 import DanceFloorBackgroundVideoPanel from './DanceFloorBackgroundVideoPanel';
@@ -36,11 +36,11 @@ function ToggleBadge({ enabled, onClick }) {
 // nút tick BẬT/TẮT — tắt thì không xuất hiện trong mô phỏng, Auto-Shuffle hay gọi tên tự động nữa.
 export default function DanceFloorLibraryPanel({
   characters, customCharacters, onAddCustomCharacter, onDeleteCustomCharacter, onEditCustomCharacter,
-  danceStyles, customDanceStyles, onAddCustomDanceStyle, onDeleteCustomDanceStyle,
+  danceStyles, customDanceStyles, onAddCustomDanceStyle, onDeleteCustomDanceStyle, onPreviewDance,
   effects, customEffects, onAddCustomEffect, onDeleteCustomEffect,
   sounds, onAddCustomSound, onDeleteCustomSound,
   giftTiers, setGiftTiers, onPreviewSound,
-  disabledCharacterIds, disabledDanceIds, disabledEffectIds, disabledSceneIds, disabledSoundIds, disabledOutfitIds, onToggleLibraryItem,
+  disabledCharacterIds, disabledDanceIds, disabledEffectIds, disabledSceneIds, disabledSoundIds, onToggleLibraryItem,
   customBackgroundImage, onSetCustomBackgroundImage,
   backgroundVideos, activeBackgroundVideoId, onAddBackgroundVideo, onDeleteBackgroundVideo, onSetActiveBackgroundVideoId,
 }) {
@@ -108,31 +108,19 @@ export default function DanceFloorLibraryPanel({
                 <div className={`text-2xl mb-1 ${d.animationClass || ''}`}>{isMocap ? '🎥' : '🕺'}</div>
                 <p className="text-[11px] font-black text-white truncate">{d.name}</p>
                 <span className="text-[9px] text-gray-500">{isMocap ? 'Sao Chép Video' : `${d.durationSeconds}s mặc định`}</span>
+                {onPreviewDance && (
+                  <button
+                    onClick={() => onPreviewDance(d.id)}
+                    className="mt-1.5 w-full py-1 rounded-lg bg-[#8B5CF6]/20 text-[#8B5CF6] text-[9px] font-black cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    ▶ Nhảy Thử Ngay
+                  </button>
+                )}
               </div>
             );
           })}
         </div>
         <DanceFloorMotionCaptureUploader onCaptured={onAddCustomDanceStyle} />
-      </section>
-
-      <section>
-        <h3 className="text-lg font-black text-white flex items-center gap-2 mb-3">
-          <Shirt className="w-5 h-5 text-cyan-400" /> Thư Viện Trang Phục ({OUTFITS.length})
-        </h3>
-        <p className="text-xs text-gray-400 mb-3">
-          10 màu × 10 phong cách = 100 bộ trang phục thật sự khác nhau. Nhân vật tự đổi ngẫu nhiên bộ
-          trang phục mỗi lần được gọi tên/trúng luật/nhận quà lên sàn — hiển thị bằng viền màu (Sàn 2D)
-          và khăn choàng phát sáng cùng màu (Sàn 3D).
-        </p>
-        <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-10 gap-2 max-h-56 overflow-y-auto p-1">
-          {OUTFITS.map((o) => (
-            <div key={o.id} className="glass-panel p-2 rounded-xl border border-white/10 text-center relative">
-              <ToggleBadge enabled={!disabledOutfitIds.includes(o.id)} onClick={() => onToggleLibraryItem('outfit', o.id)} />
-              <div className={`w-7 h-7 mx-auto mt-3 mb-1 rounded-full ring-2 ${o.ringClass}`} style={{ backgroundColor: o.hex }} />
-              <p className="text-[8px] font-bold text-gray-300 truncate">{o.name}</p>
-            </div>
-          ))}
-        </div>
       </section>
 
       <section>
@@ -171,16 +159,8 @@ export default function DanceFloorLibraryPanel({
 
       <section>
         <h3 className="text-lg font-black text-white flex items-center gap-2 mb-3">
-          <ImageIcon className="w-5 h-5 text-pink-400" /> Bối Cảnh Sàn Nhảy ({SCENE_BACKGROUNDS.length})
+          <ImageIcon className="w-5 h-5 text-pink-400" /> Ảnh Nền Dự Phòng
         </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
-          {SCENE_BACKGROUNDS.map((s) => (
-            <div key={s.id} className={`relative h-16 rounded-2xl bg-gradient-to-br ${s.gradient} border border-white/10 flex items-end p-2`}>
-              <ToggleBadge enabled={!disabledSceneIds.includes(s.id)} onClick={() => onToggleLibraryItem('scene', s.id)} />
-              <span className="text-[10px] font-black text-white">{s.name}</span>
-            </div>
-          ))}
-        </div>
         <div className="flex items-center gap-3">
           <input ref={bgInputRef} type="file" accept="image/*" onChange={handleBackgroundUpload} className="text-xs text-gray-300" />
           {customBackgroundImage && (
@@ -190,7 +170,7 @@ export default function DanceFloorLibraryPanel({
             </>
           )}
         </div>
-        <p className="text-[9px] text-gray-500 mt-1">Tải ảnh nền riêng sẽ thay toàn bộ bối cảnh gradient có sẵn cho sàn diễn.</p>
+        <p className="text-[9px] text-gray-500 mt-1">Chỉ hiện khi CHƯA chọn Video Nền Vũ Trường bên dưới — Video Nền luôn được ưu tiên làm sàn diễn khi đã chọn.</p>
       </section>
 
       <section>
@@ -224,8 +204,8 @@ export default function DanceFloorLibraryPanel({
             </div>
           ))}
         </div>
-        <input ref={soundInputRef} type="file" accept="audio/*" multiple onChange={handleSoundUpload} className="text-xs text-gray-300" />
-        <p className="text-[9px] text-gray-500 mt-1">Tải nhạc trend thật (mp3, cả bài — có lời/không lời/nhạc sàn), chọn được NHIỀU file cùng lúc để thêm hàng loạt, dùng làm nhạc nền riêng cho luật/nhân vật — chỉ dùng trong phiên hiện tại.</p>
+        <input ref={soundInputRef} type="file" accept="audio/*,video/*" multiple onChange={handleSoundUpload} className="text-xs text-gray-300" />
+        <p className="text-[9px] text-gray-500 mt-1">Tải nhạc trend thật (mp3, cả bài — có lời/không lời/nhạc sàn) HOẶC lấy luôn âm thanh từ file video, chọn được NHIỀU file cùng lúc để thêm hàng loạt. Bài nào đang bật tick sẽ nằm trong Playlist Nhạc Nền (tự động qua bài) — chỉ dùng trong phiên hiện tại.</p>
       </section>
 
       <section>
@@ -277,9 +257,6 @@ export default function DanceFloorLibraryPanel({
                   </select>
                 </div>
                 <div className="flex flex-wrap gap-1 pt-1">
-                  {tier.customization?.outfitColor && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-gray-300">🎨 Chọn màu trang phục</span>
-                  )}
                   {tier.customization?.danceStyleChoice && (
                     <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-gray-300">💃 Chọn điệu nhảy</span>
                   )}

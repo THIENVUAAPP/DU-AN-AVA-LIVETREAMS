@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { DANCE_STYLES, SCENE_BACKGROUNDS, OUTFITS, REACTION_LINES } from '../lib/danceFloorData';
+import { DANCE_STYLES, SCENE_BACKGROUNDS, REACTION_LINES } from '../lib/danceFloorData';
 import { pickReactionLine, buildUnifiedEvent, filterEnabled, buildRandomCombo, platformFromChannelId } from '../lib/danceFloorEngine';
 import { simulatedCustomers, simulatedAvatars } from '../lib/aiSimulationData';
 
@@ -50,6 +50,24 @@ export function useDanceFloorManualActions({ processEvent, spawnCharacters, push
         username: 'Điều Khiển Viên',
         count: 1,
         reactionLine: line,
+        sizeScale: combo.sizeScale,
+      });
+    },
+    [allCharacters, spawnCharacters, pushReaction]
+  );
+
+  // Làm nổi bật thủ công — admin ép 1 nhân vật cụ thể lên ưu tiên hiển thị đầu sàn ngay lập tức
+  // (giống hiệu ứng khi có quà lớn: tên vàng, hào quang, camera zoom vào), không cần chờ khán giả
+  // tặng quà thật.
+  const handleManualHighlight = useCallback(
+    (characterId) => {
+      const character = allCharacters.find((c) => c.id === characterId);
+      if (!character) return;
+      const line = pickReactionLine(character.personality, 'Điều Khiển Viên', REACTION_LINES, REACTION_LINES.funny);
+      pushReaction({ username: 'Điều Khiển Viên', characterName: character.name, line, platform: 'system', personality: character.personality });
+      spawnCharacters({
+        characterIds: [characterId], danceIds: null, effectId: 'fx_gold', soundId: character.signatureSoundId,
+        sceneIdToApply: null, durationSeconds: 20, priority: 10, username: 'Điều Khiển Viên', count: 1, reactionLine: line,
       });
     },
     [allCharacters, spawnCharacters, pushReaction]
@@ -61,7 +79,6 @@ export function useDanceFloorManualActions({ processEvent, spawnCharacters, push
       danceStyles: filterEnabled(DANCE_STYLES, settings.disabledDanceIds),
       effects: filterEnabled(allEffects, settings.disabledEffectIds),
       scenes: filterEnabled(SCENE_BACKGROUNDS, settings.disabledSceneIds),
-      outfits: filterEnabled(OUTFITS, settings.disabledOutfitIds),
     });
     if (!combo.character) return;
     const line = pickReactionLine(combo.character.personality, 'Khán Giả', REACTION_LINES, REACTION_LINES.funny);
@@ -69,9 +86,9 @@ export function useDanceFloorManualActions({ processEvent, spawnCharacters, push
     spawnCharacters({
       characterIds: [combo.character.id], danceIds: combo.dance ? [combo.dance.id] : [],
       effectId: combo.effect?.id, soundId: null, sceneIdToApply: combo.scene?.id,
-      durationSeconds: 10, priority: 3, username: 'Tự Động', count: 1, reactionLine: line, outfitId: combo.outfit?.id,
+      durationSeconds: 10, priority: 3, username: 'Tự Động', count: 1, reactionLine: line,
     });
   }, [enabledCharacters, allEffects, settings.disabledDanceIds, settings.disabledEffectIds, settings.disabledSceneIds, spawnCharacters, pushReaction]);
 
-  return { handleManualTrigger, handleManualGift, handleManualCombo, runAutoShuffle };
+  return { handleManualTrigger, handleManualGift, handleManualCombo, handleManualHighlight, runAutoShuffle };
 }

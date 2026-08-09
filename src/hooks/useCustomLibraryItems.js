@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { DANCE_CHARACTERS, DANCE_EFFECTS, DANCE_SOUNDS, DANCE_STYLES } from '../lib/danceFloorData';
+import { DANCE_EFFECTS, DANCE_SOUNDS, DANCE_STYLES } from '../lib/danceFloorData';
 
 const CUSTOM_CHARACTERS_KEY = 'avalive_dancefloor_custom_characters';
 const CUSTOM_EFFECTS_KEY = 'avalive_dancefloor_custom_effects';
@@ -35,7 +35,17 @@ export function useCustomLibraryItems() {
   useEffect(() => saveJSON(CUSTOM_CHARACTERS_KEY, customCharacters.filter((c) => !c.isSessionOnly)), [customCharacters]);
   useEffect(() => saveJSON(CUSTOM_EFFECTS_KEY, customEffects), [customEffects]);
 
-  const allCharacters = useMemo(() => [...DANCE_CHARACTERS, ...customCharacters], [customCharacters]);
+  // KHÔNG còn nhân vật mẫu demo — chỉ dùng nhân vật admin tự tải ảnh/video lên. Sắp xếp theo tên, nhóm
+  // Thường trước rồi tới VIP (VIP chỉ mở khi được nâng cấp bằng quà tặng giá trị).
+  const allCharacters = useMemo(
+    () =>
+      [...customCharacters].sort((a, b) => {
+        const tierRank = (c) => (c.tier === 'vip' ? 1 : 0);
+        const rankDiff = tierRank(a) - tierRank(b);
+        return rankDiff !== 0 ? rankDiff : a.name.localeCompare(b.name, 'vi');
+      }),
+    [customCharacters]
+  );
   const allEffects = useMemo(() => [...DANCE_EFFECTS, ...customEffects], [customEffects]);
   const allSounds = useMemo(() => [...DANCE_SOUNDS, ...customSounds], [customSounds]);
   const allDanceStyles = useMemo(() => [...DANCE_STYLES, ...customDanceStyles], [customDanceStyles]);
@@ -50,7 +60,12 @@ export function useCustomLibraryItems() {
   const deleteCustomEffect = useCallback((id) => setCustomEffects((prev) => prev.filter((e) => e.id !== id)), []);
 
   const addCustomSound = useCallback((file) => {
-    setCustomSounds((prev) => [...prev, { id: `custom_sound_${Date.now()}`, name: file.name, audioUrl: URL.createObjectURL(file), isSessionOnly: true }]);
+    // Random suffix (không chỉ dựa vào Date.now()) — tải hàng loạt nhiều file cùng lúc có thể rơi vào
+    // cùng 1 mili-giây, trùng id nếu chỉ dùng timestamp.
+    setCustomSounds((prev) => [
+      ...prev,
+      { id: `custom_sound_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, name: file.name, audioUrl: URL.createObjectURL(file), isSessionOnly: true },
+    ]);
   }, []);
   const deleteCustomSound = useCallback((id) => setCustomSounds((prev) => prev.filter((s) => s.id !== id)), []);
 

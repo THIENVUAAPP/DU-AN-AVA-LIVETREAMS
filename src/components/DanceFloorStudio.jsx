@@ -49,8 +49,8 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
     instances, effectTriggers, sceneId, leaderboard, reactionFeed, commentFeed,
     connectedChannelList, selectedChannelIds, toggleChannel,
     commentsPerMin, triggersPerMin,
-    handleManualTrigger, handleManualGift, handleManualCombo,
-    playSound, runAutoShuffle, toggleLibraryItem, suggestDance,
+    handleManualTrigger, handleManualGift, handleManualCombo, handleManualHighlight,
+    playSound, runAutoShuffle, toggleLibraryItem, suggestDance, musicPlaylist,
   } = engine;
 
   const activeBackgroundVideoUrl = backgroundVideos.find((v) => v.id === activeBackgroundVideoId)?.url || null;
@@ -151,17 +151,20 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
                     <Move3d className="w-3 h-3" /> Sàn 3D
                   </button>
                 </div>
-                {renderMode === '3d' && (
-                  <select
-                    value={stagePresetId}
-                    onChange={(e) => setStagePresetId(e.target.value)}
-                    className="px-2.5 py-1.5 rounded-lg bg-black/40 border border-white/10 text-white text-[10px] font-bold outline-none"
-                  >
-                    {STAGE_PRESETS_3D.map((p) => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
-                )}
+
+                <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/5 border border-white/10">
+                  {[{ id: 'small', label: 'Nhỏ' }, { id: 'medium', label: 'Vừa' }, { id: 'large', label: 'To' }].map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => setSettings((prev) => ({ ...prev, characterSizeScale: s.id }))}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-black cursor-pointer ${
+                        settings.characterSizeScale === s.id ? 'bg-cyan-500 text-white' : 'text-gray-400'
+                      }`}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div ref={stageContainerRef} className="relative">
@@ -214,6 +217,7 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
                 normalCharacters={enabledNormalCharacters}
                 vipCharacters={enabledVipCharacters}
                 onManualTrigger={handleManualTrigger}
+                onManualHighlight={handleManualHighlight}
               />
               <DanceFloorQuickTestPanel onManualTrigger={handleManualTrigger} onManualGift={handleManualGift} />
             </div>
@@ -255,6 +259,7 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
               commentaryStyleId={settings.commentaryStyleId}
               onChangeCommentaryStyle={(id) => setSettings((s) => ({ ...s, commentaryStyleId: id }))}
               onRunAutoShuffle={runAutoShuffle}
+              musicPlaylist={musicPlaylist}
               autoShuffleIntervalEnabled={settings.autoShuffleIntervalEnabled}
               autoShuffleIntervalMinutes={settings.autoShuffleIntervalMinutes}
               onUpdateAutoShuffleInterval={(patch) => setSettings((s) => ({ ...s, ...patch }))}
@@ -268,9 +273,6 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
               characters={allCharacters}
               danceStyles={allDanceStyles}
               sounds={allSounds}
-              stagePresets={STAGE_PRESETS_3D}
-              currentStagePresetId={stagePresetId}
-              onChangeStagePreset={setStagePresetId}
               onApplyCombo={handleManualCombo}
             />
           </div>
@@ -306,6 +308,7 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
           danceStyles={allDanceStyles}
           customDanceStyles={customDanceStyles}
           onAddCustomDanceStyle={addCustomDanceStyle}
+          onPreviewDance={(danceId) => allCharacters.length > 0 && handleManualCombo({ characterId: allCharacters[Math.floor(Math.random() * allCharacters.length)].id, danceId })}
           onDeleteCustomDanceStyle={deleteCustomDanceStyle}
           effects={allEffects}
           customEffects={customEffects}
@@ -322,7 +325,6 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
           disabledEffectIds={settings.disabledEffectIds}
           disabledSceneIds={settings.disabledSceneIds}
           disabledSoundIds={settings.disabledSoundIds}
-          disabledOutfitIds={settings.disabledOutfitIds}
           onToggleLibraryItem={toggleLibraryItem}
           customBackgroundImage={settings.customBackgroundImage}
           onSetCustomBackgroundImage={setCustomBackgroundImage}

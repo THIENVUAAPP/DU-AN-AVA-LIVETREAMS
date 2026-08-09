@@ -15,7 +15,12 @@ const CATEGORY_LABELS = {
 
 function CharacterCard({ character, isCustom, isEnabled, onToggle, onDelete, onEdit }) {
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState({ name: character.name, personality: character.personality, callNamesText: (character.callNames || []).join(', ') });
+  const [draft, setDraft] = useState({
+    name: character.name,
+    personality: character.personality,
+    callNamesText: (character.callNames || []).join(', '),
+    tier: character.tier === 'vip' ? 'vip' : 'normal',
+  });
 
   const saveEdit = () => {
     if (!draft.name.trim()) return;
@@ -23,6 +28,7 @@ function CharacterCard({ character, isCustom, isEnabled, onToggle, onDelete, onE
       name: draft.name.trim(),
       personality: draft.personality,
       callNames: draft.callNamesText.split(',').map((s) => s.trim()).filter(Boolean),
+      tier: draft.tier,
     });
     setEditing(false);
   };
@@ -35,6 +41,10 @@ function CharacterCard({ character, isCustom, isEnabled, onToggle, onDelete, onE
           {Object.entries(PERSONALITY_LABELS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
         </select>
         <input value={draft.callNamesText} onChange={(e) => setDraft((d) => ({ ...d, callNamesText: e.target.value }))} placeholder="biệt danh, cách nhau dấu phẩy" className="w-full px-2 py-1 rounded-lg bg-black/40 border border-white/10 text-white text-[10px] outline-none" />
+        <select value={draft.tier} onChange={(e) => setDraft((d) => ({ ...d, tier: e.target.value }))} className="w-full px-2 py-1 rounded-lg bg-black/40 border border-white/10 text-white text-[10px] outline-none">
+          <option value="normal">Cấp Thường</option>
+          <option value="vip">Cấp VIP (mở khi tặng quà giá trị)</option>
+        </select>
         <div className="flex gap-1.5 justify-end">
           <button onClick={saveEdit} className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 cursor-pointer"><Check className="w-3.5 h-3.5" /></button>
           <button onClick={() => setEditing(false)} className="p-1.5 rounded-lg bg-gray-500/20 text-gray-400 cursor-pointer"><X className="w-3.5 h-3.5" /></button>
@@ -118,7 +128,9 @@ export default function DanceFloorCharacterLibraryGrid({ characters, customChara
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 max-h-[560px] overflow-y-auto pr-1">
-        {filtered.length === 0 ? (
+        {characters.length === 0 ? (
+          <p className="col-span-full text-xs text-gray-500 py-4 text-center">Chưa có nhân vật nào — tải ảnh/video lên ở khung bên dưới để bắt đầu.</p>
+        ) : filtered.length === 0 ? (
           <p className="col-span-full text-xs text-gray-500 py-4 text-center">Không tìm thấy nhân vật phù hợp.</p>
         ) : (
           filtered.map((c) => (
