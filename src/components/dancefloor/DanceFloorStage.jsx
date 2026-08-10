@@ -208,15 +208,12 @@ export default function DanceFloorStage({ instances, maxSlots, effectTriggers, s
           const featured = inst.priority >= 10;
           return (
             <div key={inst.instanceId} className="relative flex flex-col items-center justify-end h-28 animate-character-spawn">
-              <div className="absolute -top-6 flex flex-col items-center z-30 pointer-events-none">
+              <div className="absolute -top-6 flex flex-row items-center gap-1.5 px-2 py-0.5 rounded-full z-30 pointer-events-none w-max max-w-[140px]"
+                   style={{ background: featured ? 'linear-gradient(90deg,#facc15,#f59e0b)' : 'rgba(0,0,0,0.6)', boxShadow: featured ? '0 0 12px 3px rgba(250,204,21,0.6)' : 'none' }}>
                 {inst.avatar && (
-                  <img src={inst.avatar} alt="avatar" className="w-5 h-5 rounded-full border border-white/50 mb-0.5 object-cover" />
+                  <img src={inst.avatar} alt="avatar" className="w-4 h-4 rounded-full border border-white/80 object-cover flex-shrink-0" />
                 )}
-                <span
-                  className={`text-[11px] font-black px-2.5 py-0.5 rounded-full truncate max-w-[110px] ${
-                    featured ? 'bg-gradient-to-r from-amber-400 to-yellow-600 text-black shadow-[0_0_12px_3px_rgba(250,204,21,0.6)]' : 'bg-black/60 text-white'
-                  }`}
-                >
+                <span className={`text-[11px] font-black truncate ${featured ? 'text-black' : 'text-white'}`}>
                   {featured ? '👑 ' : ''}{inst.username}
                 </span>
               </div>
