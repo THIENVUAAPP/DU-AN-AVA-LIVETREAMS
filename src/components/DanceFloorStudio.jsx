@@ -135,8 +135,27 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
         })}
       </div>
 
-      {activeSection === 'stage' && (
+      {/* LUÔN HIỂN THỊ SÀN DIỄN KHI Ở TAB STAGE HOẶC TIKTOK */}
+      {(activeSection === 'stage' || activeSection === 'tiktok') && (
         <div className="space-y-5">
+          {activeSection === 'tiktok' && (
+            <div className="w-full bg-white/5 border border-red-500/30 rounded-2xl p-1 mb-4">
+              <DanceFloorTikTokConnection 
+                onEvent={(type, data) => {
+                  if (type === 'chat') {
+                    handleManualTrigger('__generic__', 1, data.nickname, data.comment);
+                  } else if (type === 'gift') {
+                    handleManualGift(data.giftId || 'gift_rose', data.repeatCount || 1, data.nickname);
+                  } else if (type === 'like') {
+                    handleManualTrigger('__generic__', 1, data.nickname, 'Đã thả tim');
+                  } else if (type === 'member') {
+                    handleManualTrigger('__generic__', 1, data.nickname, 'Vừa tham gia phòng');
+                  }
+                }} 
+              />
+            </div>
+          )}
+
           {/* Hàng chính: canvas sàn diễn rộng, cột phải gom Gọi Tên + Test Nhanh */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
             <div className="lg:col-span-3 space-y-2">
@@ -346,27 +365,7 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
         </div>
       )}
 
-      {activeSection === 'tiktok' && (
-        <div className="max-w-4xl mx-auto space-y-6">
-          <DanceFloorTikTokConnection 
-            onEvent={(type, data) => {
-              if (type === 'chat') {
-                // Giả lập 1 trigger từ comment
-                handleManualTrigger('__generic__', 1, data.nickname, data.comment);
-              } else if (type === 'gift') {
-                // Quà tặng
-                handleManualGift(data.giftId || 'gift_rose', data.repeatCount || 1, data.nickname);
-              } else if (type === 'like') {
-                // Thả tim
-                handleManualTrigger('__generic__', 1, data.nickname, 'Đã thả tim');
-              } else if (type === 'member') {
-                // Người xem vào phòng
-                handleManualTrigger('__generic__', 1, data.nickname, 'Vừa tham gia phòng');
-              }
-            }} 
-          />
-        </div>
-      )}
+
 
       {activeSection === 'rules' && (
         <DanceFloorRuleBuilder rules={rules} setRules={setRules} characters={allCharacters} sounds={allSounds} onTestRule={(rule) => handleManualTrigger(rule.keyword)} onSuggestDance={suggestDance} />

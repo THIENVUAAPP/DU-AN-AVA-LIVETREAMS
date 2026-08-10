@@ -25,7 +25,18 @@ export function applyDanceMotion(danceId, parts, elapsedSeconds, phase = 0) {
   }
 
 
-  switch (danceId) {
+  const BASE_DANCES = [
+    "dance_bounce", "dance_groove", "dance_spin", "dance_jump", "dance_wave",
+    "dance_victory", "dance_shuffle", "dance_floss", "dance_lock", "dance_salsa",
+    "dance_breakdance", "dance_moonwalk", "dance_clap", "dance_wavearms"
+  ];
+  let actualDanceId = danceId;
+  if (danceId && danceId.startsWith("dance_auto_")) {
+    const num = parseInt(danceId.replace("dance_auto_", ""), 10) || 1;
+    actualDanceId = BASE_DANCES[num % BASE_DANCES.length];
+  }
+
+  switch (actualDanceId) {
     case "dance_bounce":
       hips.position.y = 0.95 + Math.abs(Math.sin(t)) * 0.08;
       leftArm.pivot.rotation.z = Math.sin(t) * 0.5 + 0.3;
