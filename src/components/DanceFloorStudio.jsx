@@ -53,7 +53,7 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
     instances, setInstances, effectTriggers, sceneId, leaderboard, reactionFeed, commentFeed, giftShowcase,
     connectedChannelList, selectedChannelIds, toggleChannel,
     commentsPerMin, triggersPerMin,
-    handleManualTrigger, handleManualGift, handleManualCombo, handleManualHighlight,
+    handleManualTrigger, handleManualGift, handleManualCombo, handleManualHighlight, handleManualCrowdTest,
     playSound, runAutoShuffle, toggleLibraryItem, suggestDance, musicPlaylist,
   } = engine;
 
