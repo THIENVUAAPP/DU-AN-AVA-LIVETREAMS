@@ -55,30 +55,37 @@ export function buildHumanoidFigure(character) {
   const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.5, metalness: 0.15 });
   const limbMat = new THREE.MeshStandardMaterial({ color: limbColor, roughness: 0.5, metalness: 0.15 });
 
+  const hasMedia = character.customTexture || (character.mediaType === "video" && character.mediaUrl) || (character.mediaType === "image" && character.mediaUrl);
+
   // Hông — gốc xoay cho cả người (nhún/xoay thân)
   const hips = new THREE.Group();
-  hips.position.y = 0.95;
+  hips.position.y = hasMedia ? 0.8 : 0.95; // Hạ thấp nếu là ảnh để ảnh chạm sàn
   group.add(hips);
 
-  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.24, 0.42, 4, 8), bodyMat);
-  torso.position.y = 0.28;
-  hips.add(torso);
+  let torso = null;
+  if (!hasMedia) {
+    torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.24, 0.42, 4, 8), bodyMat);
+    torso.position.y = 0.28;
+    hips.add(torso);
+  }
 
-  // Đầu — có thể dán ảnh thật (mediaType: 'image') hoặc video phông xanh (mediaType: 'video') do người
-  // dùng tải lên làm mặt nhân vật.
+  // Đầu/Chân dung
   const headGroup = new THREE.Group();
-  headGroup.position.y = 0.72;
+  headGroup.position.y = hasMedia ? 0 : 0.72; // Đặt ảnh chính giữa hips thay vì bệ lên trên
   hips.add(headGroup);
 
   let videoTexture = null;
   let stopVideo = null;
-  let portrait = null; // mảnh ảnh/video lớn, luôn quay mặt về camera (billboard) — xem Dance3DStage.jsx
+  let portrait = null; // mảnh ảnh/video lớn, luôn quay mặt về camera (billboard)
+
+  const planeWidth = 1.2;
+  const planeHeight = 1.6;
 
   if (character.customTexture) {
     // Override for AI Clone Army
     const headTexture = loadHeadTexture(character.customTexture);
     portrait = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.7, 0.7),
+      new THREE.PlaneGeometry(planeWidth, planeHeight),
       new THREE.MeshBasicMaterial({ map: headTexture, transparent: true, side: THREE.DoubleSide })
     );
     headGroup.add(portrait);
@@ -86,17 +93,15 @@ export function buildHumanoidFigure(character) {
     const videoResult = createChromaKeyVideoTexture(character.mediaUrl, character.chromaKeyColor);
     videoTexture = videoResult.texture;
     stopVideo = videoResult.stop;
-    // Ảnh/video PHÓNG TO thành mảng chân dung thật lớn (không phải quả cầu bé tí như trước — lý do
-    // chính khiến "không thấy rõ nhân vật") + luôn xoay mặt về camera để nhìn rõ từ mọi góc quay.
     portrait = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.62, 0.62),
+      new THREE.PlaneGeometry(planeWidth, planeHeight),
       new THREE.MeshBasicMaterial({ map: videoTexture, transparent: true, side: THREE.DoubleSide })
     );
     headGroup.add(portrait);
   } else if (character.mediaType === "image" && character.mediaUrl) {
     const headTexture = loadHeadTexture(character.mediaUrl);
     portrait = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.62, 0.62),
+      new THREE.PlaneGeometry(planeWidth, planeHeight),
       new THREE.MeshBasicMaterial({ map: headTexture, transparent: true, side: THREE.DoubleSide })
     );
     headGroup.add(portrait);
@@ -111,9 +116,13 @@ export function buildHumanoidFigure(character) {
     const x = side === "left" ? -1 : 1;
     pivot.position.set(x * (isArm ? 0.28 : 0.12), isArm ? 0.5 : 0, 0);
     const length = isArm ? 0.36 : 0.42;
-    const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(isArm ? 0.07 : 0.09, length, 4, 8), limbMat);
-    mesh.position.y = -length / 2 - 0.07;
-    pivot.add(mesh);
+    
+    if (!hasMedia) {
+      const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(isArm ? 0.07 : 0.09, length, 4, 8), limbMat);
+      mesh.position.y = -length / 2 - 0.07;
+      pivot.add(mesh);
+    }
+    
     // Điểm cuối chi (bàn tay/bàn chân) — dùng để vẽ trail ánh sáng chạy theo chuyển động.
     const tip = new THREE.Object3D();
     tip.position.y = -length - 0.14;
