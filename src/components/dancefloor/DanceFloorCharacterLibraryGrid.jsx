@@ -68,9 +68,11 @@ function CharacterCard({ character, isCustom, isEnabled, onToggle, onDelete, onE
         <span className="absolute -top-1.5 -right-1.5 text-[9px] px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-600 text-black font-black shadow">VIP</span>
       )}
       {character.mediaType === 'image' && character.mediaUrl ? (
-        <img src={character.mediaUrl} alt={character.name} className="w-14 h-14 mx-auto rounded-xl object-cover mb-2 mt-2" />
+        <img src={character.mediaUrl} alt={character.name} className="w-14 h-14 mx-auto rounded-xl object-cover mb-2 mt-2 border border-white/20 shadow-md" />
+      ) : character.avatar ? (
+        <img src={character.avatar} alt={character.name} className="w-14 h-14 mx-auto rounded-xl object-cover mb-2 mt-2 border border-white/20 shadow-md bg-[#1a1a2e]" />
       ) : (
-        <div className={`w-14 h-14 mx-auto rounded-xl bg-gradient-to-br ${character.gradient} flex items-center justify-center text-2xl mb-2 mt-2`}>
+        <div className={`w-14 h-14 mx-auto rounded-xl bg-gradient-to-br ${character.gradient} flex items-center justify-center text-2xl mb-2 mt-2 shadow-inner border border-white/10`}>
           {character.emoji}
         </div>
       )}
