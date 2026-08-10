@@ -8,7 +8,7 @@ import { ParticleBurst3D } from '../../lib/dance3d/particles3D';
 import { LightTrail } from '../../lib/dance3d/lightTrail';
 import { STAGE_PRESETS_3D } from '../../lib/dance3d/stagePresets3D';
 import { buildStageEnvironment, animateStageLights } from '../../lib/dance3d/stageEnvironment3D';
-import { CHARACTER_SIZE_SCALE } from '../../lib/danceFloorData';
+import { CHARACTER_SIZE_SCALE, DANCE_STYLES } from '../../lib/danceFloorData';
 
 const CAMERA_MODES = [
   { id: 'wide', label: 'Trực Diện', position: [0, 1.5, 12] },
@@ -274,7 +274,8 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
       
       if (!character) return;
       
-      const mergedCharacter = { ...character, customTexture: inst.customTexture };
+      // Chìa khoá tạo 100 nhân vật: Lấy luôn Avatar của Tiktok gán vào làm khuôn mặt (customTexture)
+      const mergedCharacter = { ...character, customTexture: inst.avatar || inst.customTexture };
       const { group, parts, videoTexture, stopVideo } = buildHumanoidFigure(mergedCharacter);
 
       const base = spiralPosition(idx, instances.length);
@@ -314,7 +315,7 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
 
       instancesMapRef.current.set(inst.instanceId, {
         group, parts, labelEl, trail, featured, videoTexture, stopVideo,
-        danceId: inst.danceId || 'dance_bounce',
+        danceId: inst.danceId || DANCE_STYLES[Math.floor(Math.random() * DANCE_STYLES.length)].id,
         phase: inst.groupId ? 0 : Math.random() * 10,
         sizeScale: CHARACTER_SIZE_SCALE[inst.sizeScale] || 1,
       });
