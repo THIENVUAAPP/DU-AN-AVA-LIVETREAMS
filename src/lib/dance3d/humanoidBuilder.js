@@ -45,7 +45,17 @@ function createChromaKeyVideoTexture(mediaUrl, chromaKeyColor) {
 // tự tạo bằng code được). Đủ để xoay/di chuyển tay chân thật theo 3 chiều, nhìn được từ mọi góc camera.
 // Trả về { group, parts } — parts chứa các khớp (hips/head/arm/leg) để hàm điệu nhảy điều khiển.
 export function buildHumanoidFigure(character) {
-  const { from, to } = gradientToHexPair(character.gradient || "from-pink-500 to-purple-600");
+  let gradientStr = character.gradient || "from-pink-500 to-purple-600";
+  
+  // Nâng cấp: Đa dạng hóa màu sắc cho nhân vật AI Clone (Đám đông)
+  if (character.id === 'char_default' || character.randomizeColor) {
+    const colors = ['pink', 'purple', 'blue', 'emerald', 'red', 'orange', 'amber', 'cyan', 'fuchsia', 'indigo', 'rose', 'teal'];
+    const c1 = colors[Math.floor(Math.random() * colors.length)];
+    const c2 = colors[Math.floor(Math.random() * colors.length)];
+    gradientStr = `from-${c1}-500 to-${c2}-600`;
+  }
+  
+  const { from, to } = gradientToHexPair(gradientStr);
   const bodyColor = new THREE.Color(from);
   const limbColor = new THREE.Color(to);
 

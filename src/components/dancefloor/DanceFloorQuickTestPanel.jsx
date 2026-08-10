@@ -18,7 +18,7 @@ const GIFT_TESTS = [
 ];
 
 // Test Panel 1-chạm — chức năng dùng thường xuyên khi setup/kiểm tra sàn nhảy trước khi lên live thật.
-export default function DanceFloorQuickTestPanel({ onManualTrigger, onManualGift }) {
+export default function DanceFloorQuickTestPanel({ onManualTrigger, onManualGift, onManualCrowdTest }) {
   const [customText, setCustomText] = useState('');
 
   const handleCustomSubmit = (e) => {
@@ -54,6 +54,14 @@ export default function DanceFloorQuickTestPanel({ onManualTrigger, onManualGift
             <Gift className="w-3.5 h-3.5 text-pink-400" /> {g.label}
           </button>
         ))}
+        {onManualCrowdTest && (
+          <button
+            onClick={onManualCrowdTest}
+            className="py-2 col-span-2 lg:col-span-4 rounded-xl bg-gradient-to-r from-red-600 to-amber-500 hover:opacity-90 text-white text-xs font-black flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_15px_rgba(239,68,68,0.4)]"
+          >
+            <PlayCircle className="w-4 h-4" /> TEST CROWD (100 BOTS ĐA DẠNG)
+          </button>
+        )}
       </div>
       <form onSubmit={handleCustomSubmit} className="flex gap-2">
         <input

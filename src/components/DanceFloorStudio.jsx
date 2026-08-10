@@ -243,7 +243,7 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
                 onManualTrigger={handleManualTrigger}
                 onManualHighlight={handleManualHighlight}
               />
-              <DanceFloorQuickTestPanel onManualTrigger={handleManualTrigger} onManualGift={handleManualGift} />
+              <DanceFloorQuickTestPanel onManualTrigger={handleManualTrigger} onManualGift={handleManualGift} onManualCrowdTest={handleManualCrowdTest} />
             </div>
           </div>
 

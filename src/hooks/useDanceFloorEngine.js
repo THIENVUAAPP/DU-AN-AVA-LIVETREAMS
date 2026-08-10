@@ -418,6 +418,37 @@ export function useDanceFloorEngine() {
     processEvent, spawnCharacters, pushReaction, allCharacters, enabledCharacters, allEffects, settings, selectedChannelIds,
   });
 
+  const handleManualCrowdTest = useCallback(() => {
+    const enabledDanceStyles = filterEnabled(DANCE_STYLES, settings.disabledDanceIds);
+    const now = Date.now();
+    const newInstances = Array.from({ length: 100 }).map((_, i) => {
+      const randomDance = enabledDanceStyles.length > 0 
+        ? enabledDanceStyles[Math.floor(Math.random() * enabledDanceStyles.length)].id 
+        : 'hiphop_01';
+      const randomAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=crowd_${now}_${i}`;
+      return {
+        instanceId: `crowd_${now}_${i}`,
+        characterId: 'char_default',
+        danceId: randomDance,
+        groupId: null,
+        sizeScale: 'md',
+        username: `Bot ${i + 1}`,
+        avatar: randomAvatar,
+        startTime: now,
+        durationMs: 6 * 60 * 60 * 1000,
+        priority: 1,
+        enqueuedAt: now + i,
+        reactionLine: '',
+      };
+    });
+    
+    setInstances((prev) => {
+      // Tạm thời nới lỏng maxSlots lên 200 để chứa đủ 100 con bot
+      const { instances: next } = admitQueueToStage(newInstances, prev, Math.max(200, settings.maxSlots), now);
+      return next;
+    });
+  }, [settings.disabledDanceIds, settings.maxSlots]);
+
   // Chế độ mô phỏng — chạy full pipeline thật trên dữ liệu giả lập cho TikTok/Facebook (chưa có API
   // công khai). Tôn trọng Lịch Hoạt Động 24/7 nếu admin bật giới hạn khung giờ.
   useEffect(() => {
@@ -492,7 +523,7 @@ export function useDanceFloorEngine() {
     connectedChannelList: connectedChannels.filter((c) => c.status === 'connected'),
     selectedChannelIds, toggleChannel,
     commentsPerMin, triggersPerMin,
-    handleManualTrigger, handleManualGift, handleManualCombo, handleManualHighlight,
+    handleManualTrigger, handleManualGift, handleManualCombo, handleManualHighlight, handleManualCrowdTest,
     playSound, runAutoShuffle, toggleLibraryItem, suggestDance, musicPlaylist,
   };
 }

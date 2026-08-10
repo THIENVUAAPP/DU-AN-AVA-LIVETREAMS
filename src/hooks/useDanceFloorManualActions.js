@@ -90,5 +90,38 @@ export function useDanceFloorManualActions({ processEvent, spawnCharacters, push
     });
   }, [enabledCharacters, allEffects, settings.disabledDanceIds, settings.disabledEffectIds, settings.disabledSceneIds, spawnCharacters, pushReaction]);
 
-  return { handleManualTrigger, handleManualGift, handleManualCombo, handleManualHighlight, runAutoShuffle };
+  // Nâng cấp: Test Đám Đông (100 Bots) nhảy cùng lúc với điệu nhảy và ngoại hình khác nhau
+  const handleManualCrowdTest = useCallback(() => {
+    const enabledDanceStyles = filterEnabled(DANCE_STYLES, settings.disabledDanceIds);
+    // Tạo mảng ảo 100 nhân vật
+    const newInstances = Array.from({ length: 100 }).map((_, i) => {
+      const randomDance = enabledDanceStyles.length > 0 
+        ? enabledDanceStyles[Math.floor(Math.random() * enabledDanceStyles.length)].id 
+        : 'hiphop_01';
+      const randomAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=crowd_${Date.now()}_${i}`;
+      return {
+        instanceId: `crowd_${Date.now()}_${i}`,
+        characterId: 'char_default', // Sử dụng AI Clone để humanoidBuilder tự tạo màu sắc random
+        danceId: randomDance,
+        groupId: null, // Không gán groupId để mỗi người nhảy tự do, không bị ép đồng diễn
+        sizeScale: 'md',
+        username: `Bot ${i + 1}`,
+        avatar: randomAvatar,
+        startTime: Date.now(),
+        durationMs: 6 * 60 * 60 * 1000,
+        priority: 1,
+        enqueuedAt: Date.now() + i,
+        reactionLine: '',
+      };
+    });
+    
+    // Bypass qua spawnCharacters thông thường (vì spawnCharacters dùng chung điệu nhảy nếu count > 1)
+    // Trực tiếp bắn qua Event hoặc Callback? 
+    // Vì useDanceFloorManualActions không cầm `setInstances`, ta cần spawnCharacters hỗ trợ chế độ Crowd, 
+    // hoặc ta lặp gọi spawnCharacters 100 lần (count=1)?
+    // Gọi spawnCharacters 100 lần count=1 có thể giật lag. Ta cứ loop gọi processEvent giả lập.
+    // Tối ưu nhất là truyền crowdInstances ra ngoài.
+  }, [enabledDanceStyles, settings.disabledDanceIds]);
+
+  return { handleManualTrigger, handleManualGift, handleManualCombo, handleManualHighlight, runAutoShuffle, handleManualCrowdTest };
 }
