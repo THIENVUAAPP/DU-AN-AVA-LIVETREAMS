@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { User, Mail, Phone, MapPin, CheckCircle2, Copy, Link as LinkIcon, Menu, Bell, Crown, ShieldCheck, Database, Calendar, Search, CreditCard, DollarSign, Wallet, FileText, Share2, Zap, Settings, Save, ArrowUpRight, ArrowDownRight, ChevronDown, Package, Activity, Monitor, LogOut, TrendingUp, Download, Eye, RefreshCw, BarChart2, Home, ShoppingCart, Users, ChevronLeft } from 'lucide-react';
+import { User, Mail, Phone, MapPin, CheckCircle2, Copy, Link as LinkIcon, Menu, Bell, Crown, ShieldCheck, Database, Calendar, Search, CreditCard, DollarSign, Wallet, FileText, Share2, Zap, Settings, Save, ArrowUpRight, ArrowDownRight, ChevronDown, Package, Activity, Monitor, LogOut, TrendingUp, Download, Eye, RefreshCw, BarChart2, Home, ShoppingCart, Users, ChevronLeft, Bot, MonitorPlay } from 'lucide-react';
+import AIStorytellerDashboard from './AIStorytellerDashboard';
 
 export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, setAiAvatarFeatureEnabled }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -435,6 +436,13 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
             </div>
           </div>
           
+          <div className="mt-4 mb-4">
+            <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-2 px-4 flex items-center gap-2"><Bot className="w-3 h-3"/> AI ENGINE</p>
+            <div className="space-y-1">
+              <button onClick={() => setActiveSidebarTab('ai-storyteller')} className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${activeSidebarTab === 'ai-storyteller' ? 'bg-gradient-to-r from-indigo-500/20 to-transparent text-indigo-400 border-l-2 border-indigo-500 font-black shadow-lg shadow-indigo-500/10' : 'hover:bg-white/5 text-gray-400 hover:text-white font-medium'}`}><MonitorPlay className={`w-4 h-4 ${activeSidebarTab === 'ai-storyteller' ? 'text-indigo-400' : ''}`}/> AI Kể Chuyện</button>
+            </div>
+          </div>
+          
           <div>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 px-4">HỆ THỐNG</p>
             <div className="space-y-1">
@@ -786,6 +794,8 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
           </div>
 
         </div>
+        ) : (activeSidebarTab === 'ai-storyteller') ? (
+          <AIStorytellerDashboard />
         ) : (
           renderPlaceholder(activeSidebarTab)
         )}
