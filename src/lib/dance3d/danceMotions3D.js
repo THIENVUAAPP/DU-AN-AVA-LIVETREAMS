@@ -11,6 +11,20 @@ export function applyDanceMotion(danceId, parts, elapsedSeconds, phase = 0) {
   headGroup.rotation.set(0, 0, 0);
   [leftArm, rightArm, leftLeg, rightLeg].forEach(({ pivot }) => pivot.rotation.set(0, 0, 0));
 
+  // Nếu là Ảnh Phẳng 2D (Cutout) -> Chuyển động riêng biệt tránh lật xoay làm biến mất ảnh
+  if (parts.portrait) {
+    const bounce = Math.abs(Math.sin(t * 1.5)) * 0.15;
+    const wobble = Math.sin(t * 0.8) * 0.15;
+    hips.position.y = 0.8 + bounce;
+    headGroup.rotation.z = wobble;
+    
+    // Scale hơi nhún theo điệu nhạc
+    const scale = 1 + Math.sin(t * 3) * 0.05;
+    headGroup.scale.set(scale, scale, 1);
+    return;
+  }
+
+
   switch (danceId) {
     case "dance_bounce":
       hips.position.y = 0.95 + Math.abs(Math.sin(t)) * 0.08;
@@ -131,6 +145,15 @@ export function applyCapturedMotion(clip, parts, elapsedSeconds) {
   hips.position.y = 0.95;
   headGroup.rotation.set(0, 0, 0);
   [leftArm, rightArm, leftLeg, rightLeg].forEach(({ pivot }) => pivot.rotation.set(0, 0, 0));
+
+  if (parts.portrait) {
+    const t = elapsedSeconds * 4;
+    const bounce = Math.abs(Math.sin(t * 2)) * 0.1;
+    const wobble = Math.sin(t) * 0.1;
+    hips.position.y = 0.8 + bounce;
+    headGroup.rotation.z = wobble;
+    return;
+  }
 
   const { frames, durationSeconds } = clip;
   if (!frames || frames.length === 0 || !durationSeconds) return;
