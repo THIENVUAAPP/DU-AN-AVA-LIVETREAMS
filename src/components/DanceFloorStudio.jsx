@@ -17,12 +17,14 @@ import DanceFloorCommentFeed from './dancefloor/DanceFloorCommentFeed';
 import DanceFloorManualComboPanel from './dancefloor/DanceFloorManualComboPanel';
 import DanceFloorAutoReplyPanel from './dancefloor/DanceFloorAutoReplyPanel';
 import DanceFloorAnimateDiffPanel from './dancefloor/DanceFloorAnimateDiffPanel';
+import DanceFloorTikTokConnection from './dancefloor/DanceFloorTikTokConnection';
 import { useDanceFloorEngine } from '../hooks/useDanceFloorEngine';
 import { STAGE_PRESETS_3D } from '../lib/dance3d/stagePresets3D';
 import { platformFromChannelId } from '../lib/danceFloorEngine';
 
 const SECTIONS = [
   { id: 'stage', label: 'Sàn Diễn', icon: Sparkles },
+  { id: 'tiktok', label: 'Kết Nối TikTok Live', icon: Radio },
   { id: 'rules', label: 'Luật Từ Khoá', icon: Zap },
   { id: 'autoreply', label: 'Trả Lời Tự Động', icon: MessagesSquare },
   { id: 'library', label: 'Thư Viện & Gift-Tier', icon: BookOpen },
@@ -341,6 +343,28 @@ export default function DanceFloorStudio({ isLive, setIsLive }) {
               onToggleLive={handleToggleLive}
             />
           </div>
+        </div>
+      )}
+
+      {activeSection === 'tiktok' && (
+        <div className="max-w-4xl mx-auto space-y-6">
+          <DanceFloorTikTokConnection 
+            onEvent={(type, data) => {
+              if (type === 'chat') {
+                // Giả lập 1 trigger từ comment
+                handleManualTrigger('__generic__', 1, data.nickname, data.comment);
+              } else if (type === 'gift') {
+                // Quà tặng
+                handleManualGift(data.giftId || 'gift_rose', data.repeatCount || 1, data.nickname);
+              } else if (type === 'like') {
+                // Thả tim
+                handleManualTrigger('__generic__', 1, data.nickname, 'Đã thả tim');
+              } else if (type === 'member') {
+                // Người xem vào phòng
+                handleManualTrigger('__generic__', 1, data.nickname, 'Vừa tham gia phòng');
+              }
+            }} 
+          />
         </div>
       )}
 
