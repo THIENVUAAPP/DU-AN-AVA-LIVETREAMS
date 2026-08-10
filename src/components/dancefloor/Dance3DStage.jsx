@@ -11,10 +11,8 @@ import { buildStageEnvironment, animateStageLights } from '../../lib/dance3d/sta
 import { CHARACTER_SIZE_SCALE } from '../../lib/danceFloorData';
 
 const CAMERA_MODES = [
-  { id: 'wide', label: 'Toàn Cảnh', position: [0, 7, 14] },
-  { id: 'close', label: 'Cận Cảnh', position: [0, 2, 4.2] },
-  { id: 'top', label: 'Trên Cao', position: [0.01, 13, 3.2] },
-  { id: 'side', label: 'Bên Hông', position: [12.5, 4, 0] },
+  { id: 'wide', label: 'Trực Diện', position: [0, 5, 12] },
+  { id: 'side', label: 'Bên Hông', position: [10, 3, 0] },
 ];
 
 const LABEL_STYLE = `position:absolute;left:0;top:0;pointer-events:none;text-align:center;white-space:nowrap;
@@ -51,7 +49,7 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
       const next = CAMERA_MODES[(idx + 1) % CAMERA_MODES.length];
       cameraModeRef.current = next.id;
       setCameraModeState(next.id);
-    }, 7000);
+    }, 15000);
     return () => clearInterval(interval);
   }, [autoCameraEnabled]);
 
@@ -124,9 +122,8 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
         if (entry.labelEl) {
           const worldPos = new THREE.Vector3();
           entry.group.getWorldPosition(worldPos);
-          // 2.1 (không phải 1.3 như trước) để tên luôn nằm HẲN phía trên mảng ảnh chân dung lớn mới —
-          // giá trị cũ khiến tên đè lên giữa ảnh nhân vật, đúng cảm giác "không thấy rõ nhân vật".
-          worldPos.y += 2.1 * entry.sizeScale;
+          // Đẩy tên lên cao hẳn để không che mặt nhân vật (mút lên đầu)
+          worldPos.y += 3.5 * entry.sizeScale;
           worldPos.project(camera);
           const x = (worldPos.x * 0.5 + 0.5) * width2;
           const y = (-worldPos.y * 0.5 + 0.5) * height2;
@@ -306,9 +303,11 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
       if (featured) {
         trail = new LightTrail('#facc15');
         scene.add(trail.line);
-        focusUntilRef.current = performance.now() + 3200;
-        cameraTargetRef.current.set(pos.x, 1.2, pos.z);
       }
+      
+      // Ưu tiên camera focus mượt mà vào nhân vật mới trong 3-4 giây
+      focusUntilRef.current = performance.now() + 3800;
+      cameraTargetRef.current.set(pos.x, 1.2, pos.z);
 
       instancesMapRef.current.set(inst.instanceId, {
         group, parts, labelEl, trail, featured, videoTexture, stopVideo,
