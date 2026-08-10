@@ -232,7 +232,7 @@ export function useDanceFloorEngine() {
   );
 
   const spawnCharacters = useCallback(
-    ({ characterIds, danceIds, effectId, soundId, sceneIdToApply, durationSeconds, priority, username, count, reactionLine, sizeScale }) => {
+    ({ characterIds, danceIds, effectId, soundId, sceneIdToApply, durationSeconds, priority, username, avatar, count, reactionLine, sizeScale }) => {
       const now = Date.now();
       let resolvedSoundId = soundId;
 
@@ -250,6 +250,7 @@ export function useDanceFloorEngine() {
             groupId,
             sizeScale: sizeScale || settings.characterSizeScale,
             username,
+            avatar,
             startTime: now,
             // Giữ nhân vật trên sàn xuyên suốt phiên live (mặc định BẬT theo yêu cầu) thay vì biến mất
             // sau vài giây — 6 tiếng đủ dài cho 1 phiên live bình thường, vẫn tự dọn khi tắt trình duyệt.
@@ -322,6 +323,7 @@ export function useDanceFloorEngine() {
           durationSeconds: tier.durationSeconds,
           priority: 10, // Gift luôn có độ ưu tiên cao nhất, thắng mọi comment thường
           username: event.username,
+          avatar: event.avatar,
           count: DANCE_MODE_SIZES[tier.danceMode] || 1,
           reactionLine: thankLine,
         });
@@ -361,7 +363,7 @@ export function useDanceFloorEngine() {
         pushReaction({ username: event.username, characterName: calledCharacter.name, line, platform: event.platform, personality: calledCharacter.personality });
         spawnCharacters({
           characterIds: [calledCharacter.id], danceIds: null, effectId: null, soundId: null, sceneIdToApply: null,
-          durationSeconds: 8, priority: 3, username: event.username, count: 1, reactionLine: line,
+          durationSeconds: 8, priority: 3, username: event.username, avatar: event.avatar, count: 1, reactionLine: line,
         });
       } else if (rule) {
         // Nhân vật cấu hình sẵn cho luật này có thể không còn tồn tại (đã xoá/chưa được gán) — tự thay
@@ -378,9 +380,10 @@ export function useDanceFloorEngine() {
           characterIds: willSpawn ? [ruleCharacter.id] : [],
           danceIds: rule.danceId ? [rule.danceId] : [],
           effectId: rule.effectId, soundId: rule.soundId, sceneIdToApply: rule.sceneId,
-          durationSeconds: rule.duration, priority: rule.priority, username: event.username,
+          durationSeconds: rule.duration, priority: rule.priority, username: event.username, avatar: event.avatar,
           count: willSpawn ? rule.spawnCount || 1 : 0,
           reactionLine: willSpawn ? ruleLine : '',
+          sizeScale: rule.sizeScale,
         });
       } else {
         // 3) Không khớp gì đặc biệt → mỗi người bình luận vẫn có 1 nhân vật đại diện riêng, cố định
@@ -392,7 +395,7 @@ export function useDanceFloorEngine() {
           pushReaction({ username: event.username, characterName: assigned.name, line, platform: event.platform, personality: assigned.personality });
           spawnCharacters({
             characterIds: [assigned.id], danceIds: null, effectId: null, soundId: null, sceneIdToApply: null,
-            durationSeconds: 8, priority: 1, username: event.username, count: 1, reactionLine: line,
+            durationSeconds: 8, priority: 1, username: event.username, avatar: event.avatar, count: 1, reactionLine: line,
           });
         }
       }

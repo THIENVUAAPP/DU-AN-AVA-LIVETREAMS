@@ -208,19 +208,20 @@ export default function DanceFloorStage({ instances, maxSlots, effectTriggers, s
           const featured = inst.priority >= 10;
           return (
             <div key={inst.instanceId} className="relative flex flex-col items-center justify-end h-28 animate-character-spawn">
-              {inst.reactionLine && (
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-32 px-2 py-1 rounded-xl bg-black/80 border border-white/20 text-[9px] text-white text-center leading-tight z-30">
-                  {inst.reactionLine}
-                </div>
-              )}
+              <div className="absolute -top-6 flex flex-col items-center z-30 pointer-events-none">
+                {inst.avatar && (
+                  <img src={inst.avatar} alt="avatar" className="w-5 h-5 rounded-full border border-white/50 mb-0.5 object-cover" />
+                )}
+                <span
+                  className={`text-[11px] font-black px-2.5 py-0.5 rounded-full truncate max-w-[110px] ${
+                    featured ? 'bg-gradient-to-r from-amber-400 to-yellow-600 text-black shadow-[0_0_12px_3px_rgba(250,204,21,0.6)]' : 'bg-black/60 text-white'
+                  }`}
+                >
+                  {featured ? '👑 ' : ''}{inst.username}
+                </span>
+              </div>
+              
               <CharacterAvatar character={character} danceClass={dance ? dance.animationClass : ''} sizeClass={SIZE_CLASS[inst.sizeScale] || SIZE_CLASS.medium} />
-              <span
-                className={`mt-1 text-[11px] font-black px-2.5 py-0.5 rounded-full truncate max-w-[110px] ${
-                  featured ? 'bg-gradient-to-r from-amber-400 to-yellow-600 text-black shadow-[0_0_12px_3px_rgba(250,204,21,0.6)]' : 'bg-black/60 text-white'
-                }`}
-              >
-                {featured ? '👑 ' : ''}{inst.username}
-              </span>
               <div className="w-14 h-1 rounded-full bg-white/20 mt-1 overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-[#EF4444] to-[#8B5CF6] transition-all duration-500"

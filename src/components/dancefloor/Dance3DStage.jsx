@@ -295,7 +295,10 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
       // dòng bình luận/phản hồi ở đây nữa (đã có sẵn ở "Bình Luận Trực Tiếp" + "Nhật Ký Phản Hồi Trực
       // Tiếp" bên dưới sàn, tránh che khuất sàn diễn).
       labelEl.innerHTML = `
-        <div style="display:inline-block;padding:3px 10px;border-radius:9999px;background:${featured ? 'linear-gradient(90deg,#facc15,#f59e0b)' : 'rgba(0,0,0,0.7)'};color:${featured ? '#000' : '#fff'};font-size:12px;font-weight:900;letter-spacing:0.3px;${featured ? 'box-shadow:0 0 16px 4px rgba(250,204,21,0.7);' : ''}">${featured ? '👑 ' : ''}${inst.username}</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          ${inst.avatar ? `<img src="${inst.avatar}" style="width:24px;height:24px;border-radius:50%;border:2px solid rgba(255,255,255,0.5);object-fit:cover;" />` : ''}
+          <div style="display:inline-block;padding:3px 10px;border-radius:9999px;background:${featured ? 'linear-gradient(90deg,#facc15,#f59e0b)' : 'rgba(0,0,0,0.7)'};color:${featured ? '#000' : '#fff'};font-size:12px;font-weight:900;letter-spacing:0.3px;${featured ? 'box-shadow:0 0 16px 4px rgba(250,204,21,0.7);' : ''}">${featured ? '👑 ' : ''}${inst.username}</div>
+        </div>
       `;
       labelsContainerRef.current?.appendChild(labelEl);
 
