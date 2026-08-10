@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"vite --port 5173 --strictPort\" \"node backend/server.js\"",
+    "dev": "concurrently \"vite --port 5173 --strictPort\" \"node backend/server.cjs\"",
     "build": "vite build",
     "lint": "echo 'No lint errors'",
     "preview": "vite preview"
