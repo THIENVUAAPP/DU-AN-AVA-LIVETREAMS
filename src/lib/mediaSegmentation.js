@@ -74,38 +74,84 @@ function hexToRgb(hex) {
   return { r: (bigint >> 16) & 255, g: (bigint >> 8) & 255, b: bigint & 255 };
 }
 
-// Vòng lặp chroma-key thời gian thực: vẽ video vào canvas mỗi khung hình, xoá alpha các pixel gần màu
-// khoá (mặc định xanh lá #00FF00). Trả về hàm cleanup() để dừng khi nhân vật rời sàn/component unmount.
+// Chế độ tách nền Video theo thời gian thực (Xử lý nặng - Cảnh báo Performance)
+// Dùng MediaPipe Selfie Segmentation trên từng khung hình video.
 export function startChromaKeyLoop(videoEl, canvasEl, keyColorHex = "#00FF00", tolerance = 70) {
   const ctx = canvasEl.getContext("2d", { willReadFrequently: true });
   const keyRgb = hexToRgb(keyColorHex);
   let rafId = null;
   let stopped = false;
+  let isMediaPipeReady = false;
+  let selfieSegmentation = null;
+  let isProcessingFrame = false;
 
-  function frame() {
-    if (stopped) return;
-    if (videoEl.readyState >= 2 && videoEl.videoWidth > 0) {
+  // Khởi tạo AI nếu có
+  if (window.SelfieSegmentation) {
+    selfieSegmentation = new window.SelfieSegmentation({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`,
+    });
+    selfieSegmentation.setOptions({ modelSelection: 1, selfieMode: false }); // modelSelection 1 nhẹ hơn cho video
+    
+    selfieSegmentation.onResults((results) => {
+      if (stopped) return;
       if (canvasEl.width !== videoEl.videoWidth || canvasEl.height !== videoEl.videoHeight) {
         canvasEl.width = videoEl.videoWidth;
         canvasEl.height = videoEl.videoHeight;
       }
-      ctx.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
-      const frameData = ctx.getImageData(0, 0, canvasEl.width, canvasEl.height);
-      const data = frameData.data;
-      for (let i = 0; i < data.length; i += 4) {
-        const dr = data[i] - keyRgb.r;
-        const dg = data[i + 1] - keyRgb.g;
-        const db = data[i + 2] - keyRgb.b;
-        if (Math.sqrt(dr * dr + dg * dg + db * db) < tolerance) data[i + 3] = 0;
+      ctx.save();
+      ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+      ctx.drawImage(results.segmentationMask, 0, 0, canvasEl.width, canvasEl.height);
+      ctx.globalCompositeOperation = "source-in";
+      ctx.drawImage(results.image, 0, 0, canvasEl.width, canvasEl.height);
+      ctx.restore();
+      isProcessingFrame = false;
+    });
+
+    selfieSegmentation.initialize().then(() => {
+      isMediaPipeReady = true;
+    }).catch(e => console.error("MediaPipe Init Error (Video):", e));
+  }
+
+  async function frame() {
+    if (stopped) return;
+    
+    if (videoEl.readyState >= 2 && videoEl.videoWidth > 0 && !videoEl.paused && !videoEl.ended) {
+      if (isMediaPipeReady && !isProcessingFrame) {
+        // Dùng AI
+        isProcessingFrame = true;
+        try {
+          await selfieSegmentation.send({ image: videoEl });
+        } catch (e) {
+          isProcessingFrame = false;
+        }
+      } else if (!isMediaPipeReady) {
+        // Fallback Chroma Key (Màu phông)
+        if (canvasEl.width !== videoEl.videoWidth || canvasEl.height !== videoEl.videoHeight) {
+          canvasEl.width = videoEl.videoWidth;
+          canvasEl.height = videoEl.videoHeight;
+        }
+        ctx.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
+        const frameData = ctx.getImageData(0, 0, canvasEl.width, canvasEl.height);
+        const data = frameData.data;
+        for (let i = 0; i < data.length; i += 4) {
+          const dr = data[i] - keyRgb.r;
+          const dg = data[i + 1] - keyRgb.g;
+          const db = data[i + 2] - keyRgb.b;
+          if (Math.sqrt(dr * dr + dg * dg + db * db) < tolerance) data[i + 3] = 0; // Transparent
+        }
+        ctx.putImageData(frameData, 0, 0);
       }
-      ctx.putImageData(frameData, 0, 0);
     }
     rafId = requestAnimationFrame(frame);
   }
 
   rafId = requestAnimationFrame(frame);
+  
   return () => {
     stopped = true;
     if (rafId) cancelAnimationFrame(rafId);
+    if (selfieSegmentation) {
+      selfieSegmentation.close();
+    }
   };
 }

@@ -66,47 +66,54 @@ export function buildHumanoidFigure(character) {
   const limbMat = new THREE.MeshStandardMaterial({ color: limbColor, roughness: 0.5, metalness: 0.15 });
 
   const hasMedia = character.customTexture || (character.mediaType === "video" && character.mediaUrl) || (character.mediaType === "image" && character.mediaUrl);
+  const isVideo = character.mediaType === "video" && character.mediaUrl;
 
   // Hông — gốc xoay cho cả người (nhún/xoay thân)
   const hips = new THREE.Group();
-  hips.position.y = 0.95; 
+  hips.position.y = isVideo ? 0.8 : 0.95; 
   group.add(hips);
 
-  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.24, 0.42, 4, 8), bodyMat);
-  torso.position.y = 0.28;
-  hips.add(torso);
+  let torso = null;
+  if (!isVideo) {
+    torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.24, 0.42, 4, 8), bodyMat);
+    torso.position.y = 0.28;
+    hips.add(torso);
+  }
 
   // Đầu/Chân dung
   const headGroup = new THREE.Group();
-  headGroup.position.y = 0.72; 
+  headGroup.position.y = isVideo ? 0 : 0.72; 
   hips.add(headGroup);
 
-  const headMat = new THREE.MeshStandardMaterial({ color: bodyColor.clone().lerp(new THREE.Color("#ffffff"), 0.3), roughness: 0.6 });
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), headMat);
-  headGroup.add(head);
+  if (!isVideo) {
+    const headMat = new THREE.MeshStandardMaterial({ color: bodyColor.clone().lerp(new THREE.Color("#ffffff"), 0.3), roughness: 0.6 });
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), headMat);
+    headGroup.add(head);
+  }
 
   let videoTexture = null;
   let stopVideo = null;
-  let portrait = null; // Mặt nạ (Face mask)
+  let portrait = null; // Mặt nạ (Face mask) hoặc Billboard (Full Body)
 
   const faceWidth = 0.35;
   const faceHeight = 0.35;
+  const billboardWidth = 1.2;
+  const billboardHeight = 1.6;
 
-  if (character.customTexture) {
-    const headTexture = loadHeadTexture(character.customTexture);
-    portrait = new THREE.Mesh(
-      new THREE.PlaneGeometry(faceWidth, faceHeight),
-      new THREE.MeshBasicMaterial({ map: headTexture, transparent: true, side: THREE.DoubleSide })
-    );
-    portrait.position.z = 0.2;
-    headGroup.add(portrait);
-  } else if (character.mediaType === "video" && character.mediaUrl) {
+  if (isVideo) {
     const videoResult = createChromaKeyVideoTexture(character.mediaUrl, character.chromaKeyColor);
     videoTexture = videoResult.texture;
     stopVideo = videoResult.stop;
     portrait = new THREE.Mesh(
-      new THREE.PlaneGeometry(faceWidth, faceHeight),
+      new THREE.PlaneGeometry(billboardWidth, billboardHeight),
       new THREE.MeshBasicMaterial({ map: videoTexture, transparent: true, side: THREE.DoubleSide })
+    );
+    headGroup.add(portrait);
+  } else if (character.customTexture) {
+    const headTexture = loadHeadTexture(character.customTexture);
+    portrait = new THREE.Mesh(
+      new THREE.PlaneGeometry(faceWidth, faceHeight),
+      new THREE.MeshBasicMaterial({ map: headTexture, transparent: true, side: THREE.DoubleSide })
     );
     portrait.position.z = 0.2;
     headGroup.add(portrait);
@@ -126,9 +133,11 @@ export function buildHumanoidFigure(character) {
     pivot.position.set(x * (isArm ? 0.28 : 0.12), isArm ? 0.5 : 0, 0);
     const length = isArm ? 0.36 : 0.42;
     
-    const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(isArm ? 0.07 : 0.09, length, 4, 8), limbMat);
-    mesh.position.y = -length / 2 - 0.07;
-    pivot.add(mesh);
+    if (!isVideo) {
+      const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(isArm ? 0.07 : 0.09, length, 4, 8), limbMat);
+      mesh.position.y = -length / 2 - 0.07;
+      pivot.add(mesh);
+    }
     
     // Điểm cuối chi (bàn tay/bàn chân) — dùng để vẽ trail ánh sáng chạy theo chuyển động.
     const tip = new THREE.Object3D();

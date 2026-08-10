@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { DANCE_EFFECTS, DANCE_STYLES } from '../lib/danceFloorData';
+import { DANCE_EFFECTS, DANCE_STYLES, DEFAULT_CHARACTERS } from '../lib/danceFloorData';
 import { saveMediaBlob, deleteMediaBlob, loadMediaBlobsByCategory } from '../lib/mediaDb';
 import { loadJSON, saveJSON } from '../lib/localStorageJson';
 
@@ -62,7 +62,7 @@ export function useCustomLibraryItems() {
   // Thường trước rồi tới VIP (VIP chỉ mở khi được nâng cấp bằng quà tặng giá trị).
   const allCharacters = useMemo(
     () =>
-      [...customCharacters].sort((a, b) => {
+      [...DEFAULT_CHARACTERS, ...customCharacters].sort((a, b) => {
         const tierRank = (c) => (c.tier === 'vip' ? 1 : 0);
         const rankDiff = tierRank(a) - tierRank(b);
         return rankDiff !== 0 ? rankDiff : a.name.localeCompare(b.name, 'vi');
