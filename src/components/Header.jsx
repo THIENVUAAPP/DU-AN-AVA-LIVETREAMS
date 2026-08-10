@@ -45,11 +45,12 @@ export default function Header({
   // Navigation when LOGGED IN (Dynamic based on Admin AI Avatar Toggle)
   const workspaceNavItems = [
     { id: 'broadcast', label: 'Live Studio' },
-    ...(aiAvatarFeatureEnabled ? [{ id: 'avatars', label: 'MC AI Studio' }] : []),
-    { id: 'multistream', label: 'Restream Đa Nền Tảng' },
-    { id: 'livestream-cloner', label: 'Sao Chép Live' },
-    { id: 'chat-hub', label: 'Chat Hub AI' },
-    { id: 'dance-floor', label: 'Sàn Nhảy TikTok' },
+    ...(aiAvatarFeatureEnabled ? [{ id: 'avatars', label: 'MC AI' }] : []),
+    { id: 'multistream', label: 'Restream' },
+    { id: 'livestream-cloner', label: 'Clone Live' },
+    { id: 'chat-hub', label: 'Chat Hub' },
+    { id: 'dance-floor', label: 'Sàn Nhảy' },
+    { id: 'ai-storyteller', label: 'AI Kể Chuyện' },
   ];
 
   // Close dropdown on click outside
