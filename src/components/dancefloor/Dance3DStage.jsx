@@ -11,8 +11,8 @@ import { buildStageEnvironment, animateStageLights } from '../../lib/dance3d/sta
 import { CHARACTER_SIZE_SCALE } from '../../lib/danceFloorData';
 
 const CAMERA_MODES = [
-  { id: 'wide', label: 'Trực Diện', position: [0, 5, 12] },
-  { id: 'side', label: 'Bên Hông', position: [10, 3, 0] },
+  { id: 'wide', label: 'Trực Diện', position: [0, 1.5, 12] },
+  { id: 'side', label: 'Bên Hông', position: [10, 1.5, 0] },
 ];
 
 const LABEL_STYLE = `position:absolute;left:0;top:0;pointer-events:none;text-align:center;white-space:nowrap;
