@@ -11,6 +11,7 @@ import ThanhToanCoin from './genaidol/ThanhToanCoin';
 import ThuVienAIDOL from './genaidol/ThuVienAIDOL';
 import LivestreamAISetup from './genaidol/LivestreamAISetup';
 import AIDOLLiveConsole from './genaidol/AIDOLLiveConsole';
+import TrangChu from './genaidol/TrangChu';
 
 // --- PLACEHOLDER COMPONENTS FOR PAGES ---
 const PlaceholderPage = ({ title }) => (
@@ -180,7 +181,7 @@ export default function KOLLiveDashboard() {
       {/* MAIN CONTENT AREA */}
       <main className="flex-1 relative z-10 overflow-y-auto">
         <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-          {activeTab === 'home' && <PlaceholderPage title="Trang chủ (Dashboard)" />}
+          {activeTab === 'home' && <TrangChu />}
           {activeTab === 'my-aidol' && <ThuVienAIDOL />}
           {activeTab === 'livestream-ai' && <LivestreamAISetup />}
           {activeTab === 'history' && <LichSuTao />}
