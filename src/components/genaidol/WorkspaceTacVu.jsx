@@ -47,11 +47,27 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
   const handleGenerateScript = async () => {
     if (!scriptTopic) return alert("Vui lòng nhập chủ đề kịch bản!");
     setIsGenerating(true);
-    // Giả lập gọi API sinh kịch bản
-    setTimeout(() => {
-      setScriptContent(`[Kịch bản Livestream ${scriptDuration} Phút - Sinh bởi ${AI_BRAINS[aiBrain].name}]\n[Model: ${aiModel}]\n[Chủ đề: ${scriptTopic}]\n\nKịch bản mẫu:\n- Xin chào các bạn đang xem live...\n- Hôm nay chúng ta có deal cực hời cho sản phẩm này...\n- Nhanh tay chốt đơn nào mọi người ơi!`);
+    
+    try {
+      const res = await fetch('http://localhost:3001/api/generate-script', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          brain: aiBrain,
+          model: aiModel,
+          duration: scriptDuration,
+          topic: scriptTopic
+        })
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      
+      setScriptContent(`[Kịch bản Livestream ${scriptDuration} Phút - Sinh bởi ${AI_BRAINS[aiBrain].name}]\n[Model: ${aiModel}]\n[Chủ đề: ${scriptTopic}]\n\n${data.script}`);
+    } catch (err) {
+      alert("Lỗi khi tạo kịch bản: " + err.message);
+    } finally {
       setIsGenerating(false);
-    }, 1500);
+    }
   };
   
   const [voiceProvider, setVoiceProvider] = useState('vbee');
