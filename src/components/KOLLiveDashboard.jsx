@@ -11,7 +11,6 @@ import ThanhToanCoin from './genaidol/ThanhToanCoin';
 import ThuVienAIDOL from './genaidol/ThuVienAIDOL';
 import LivestreamAISetup from './genaidol/LivestreamAISetup';
 import AIDOLLiveConsole from './genaidol/AIDOLLiveConsole';
-import TaoAIDOLMoi from './genaidol/TaoAIDOLMoi';
 import WorkspaceTacVu from './genaidol/WorkspaceTacVu';
 
 // --- PLACEHOLDER COMPONENTS FOR PAGES ---
@@ -34,7 +33,6 @@ export default function KOLLiveDashboard() {
 
   const NAVIGATION = [
     { id: 'my-aidol', label: 'AIDOL của tôi', icon: UserSquare2 },
-    { id: 'create-aidol', label: 'Tạo AIDOL', icon: Sparkles },
     { id: 'voice', label: 'Giọng nói', icon: Mic },
     { id: 'lipsync', label: 'Nhép môi', icon: PlayCircle },
     { id: 'video', label: 'Tạo video', icon: Video },
@@ -90,7 +88,6 @@ export default function KOLLiveDashboard() {
       {/* MAIN CONTENT AREA */}
       <main className="flex-1 relative z-10 overflow-y-auto">
         <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-          {activeTab === 'create-aidol' && <TaoAIDOLMoi />}
           {activeTab === 'voice' && <WorkspaceTacVu defaultTab="voice" />}
           {activeTab === 'lipsync' && <WorkspaceTacVu defaultTab="lipsync" />}
           {activeTab === 'video' && <WorkspaceTacVu defaultTab="image-video" />}

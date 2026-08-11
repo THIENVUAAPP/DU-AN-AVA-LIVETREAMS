@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, Clock, Mic, UserSquare2, Image as ImageIcon, Play, Upload, Check, Zap, Lock, Brain, Sparkles, FileText, ChevronDown, MonitorUp, Video } from 'lucide-react';
+import { Settings, Clock, Mic, UserSquare2, Image as ImageIcon, Play, Upload, Check, Zap, Lock, Brain, Sparkles, FileText, ChevronDown, Monitor, Video } from 'lucide-react';
 
 const MOCK_HISTORY = {
   voice: [
@@ -186,7 +186,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                     onClick={() => setShowBroadcastModal(true)}
                     className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 text-purple-400 border border-purple-500/50 rounded-lg text-xs font-bold hover:bg-purple-500/30 transition-all shadow-glow-purple animate-pulse"
                   >
-                    <MonitorUp className="w-4 h-4" /> Truyền Live Studio
+                    <Monitor className="w-4 h-4" /> Truyền Live Studio
                   </button>
                 </div>
 
@@ -391,7 +391,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                                       onClick={() => setShowBroadcastModal(true)}
                                       className="w-full py-2 bg-purple-500/20 hover:bg-purple-500/40 text-purple-400 border border-purple-500/30 rounded-lg text-xs font-bold transition-all shadow-glow-purple flex items-center justify-center gap-2"
                                    >
-                                      <MonitorUp className="w-3 h-3" /> Truyền sang Live Studio
+                                      <Monitor className="w-3 h-3" /> Truyền sang Live Studio
                                    </button>
                                 </div>
                              )}
@@ -414,7 +414,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
               <div className="p-4 border-b border-white/10 flex justify-between items-center bg-[#0B0E14]">
                  <div className="flex items-center gap-3">
                    <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center border border-purple-500/50 shadow-glow-purple">
-                     <MonitorUp className="w-4 h-4 text-purple-400 animate-pulse" />
+                     <Monitor className="w-4 h-4 text-purple-400 animate-pulse" />
                    </div>
                    <div>
                      <h3 className="text-sm font-black text-white">Chế độ Truyền (Broadcast Mode)</h3>
