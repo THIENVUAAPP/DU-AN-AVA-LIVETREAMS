@@ -98,8 +98,10 @@ export default function ThuVienAIDOL() {
            </button>
         </div>
       </div>
-
-                <div className="bg-black/40 border border-white/10 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-lg relative overflow-hidden">
+      {/* --- LIBRARY MODE --- */}
+      {viewMode === 'library' && (
+        <div className="flex flex-col gap-6">
+          <div className="bg-black/40 border border-white/10 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-lg relative overflow-hidden">
              <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[#00FF66]/5 rounded-full blur-[80px] pointer-events-none"></div>
              <div className="relative z-10">
                 <div className="flex items-center gap-2 mb-2">
@@ -265,7 +267,7 @@ export default function ThuVienAIDOL() {
                            <button onClick={() => setNewAidolMedia(null)} className="absolute top-4 right-4 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white">X</button>
                          </div>
                       ) : (
-                        <>
+                        <React.Fragment>
                           <div className="w-12 h-12 rounded-full bg-[#00FF66]/10 flex items-center justify-center text-[#00FF66] mb-3 shadow-glow-green border border-[#00FF66]/30">
                             <Sparkles className="w-5 h-5" />
                           </div>
@@ -273,7 +275,7 @@ export default function ThuVienAIDOL() {
                           <p className="text-[11px] text-gray-500 max-w-xs text-center font-medium">
                             Hãy tải lên Ảnh tĩnh hoặc Video mẫu để tạo nhân vật
                           </p>
-                        </>
+                        </React.Fragment>
                       )}
                    </div>
                 </div>
