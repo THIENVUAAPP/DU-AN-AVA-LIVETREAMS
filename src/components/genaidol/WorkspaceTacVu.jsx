@@ -298,8 +298,6 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                              <ImageIcon className="w-8 h-8 text-gray-600 mx-auto mb-2" />
                              <p className="text-xs text-gray-500 font-medium">Bản xem trước video nhép miệng sẽ hiển thị tại đây.</p>
                            </div>
-                             <p className="text-xs text-gray-500 font-medium">Kết quả sẽ hiển thị tại đây.</p>
-                           </div>
                         )}
                       </div>
 
