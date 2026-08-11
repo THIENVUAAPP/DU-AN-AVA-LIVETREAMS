@@ -284,6 +284,9 @@ export default function LivestreamAISetup() {
                     <button onClick={() => setStep3Tab('lipsync')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${step3Tab === 'lipsync' ? 'bg-[#00FF66]/20 text-[#00FF66]' : 'text-gray-400 hover:text-white'}`}>
                       <Video className="w-4 h-4" /> Tạo Video
                     </button>
+                    <button onClick={() => setStep3Tab('library')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${step3Tab === 'library' ? 'bg-[#00FF66]/20 text-[#00FF66]' : 'text-gray-400 hover:text-white'}`}>
+                      <ImageIcon className="w-4 h-4" /> Kho Lưu Trữ
+                    </button>
                     <button onClick={() => setStep3Tab('priority')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${step3Tab === 'priority' ? 'bg-[#00FF66]/20 text-[#00FF66]' : 'text-gray-400 hover:text-white'}`}>
                       <ListOrdered className="w-4 h-4" /> Luật Event
                     </button>
@@ -430,6 +433,26 @@ export default function LivestreamAISetup() {
                   </div>
                 )}
 
+                {step3Tab === 'library' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {VIDEO_CATEGORIES.map(cat => (
+                      <div key={cat.id} className="bg-black/40 border border-white/10 rounded-2xl p-5 flex flex-col h-full hover:border-[#00FF66]/30 transition-colors group">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h4 className="font-bold text-white text-sm group-hover:text-[#00FF66] transition-colors">{cat.name}</h4>
+                            <p className="text-[10px] text-gray-500 mt-1">{cat.desc}</p>
+                          </div>
+                          <span className="text-[10px] font-black bg-white/10 text-white px-2 py-1 rounded">0 video</span>
+                        </div>
+                        <div className="mt-auto pt-4 border-t border-white/5">
+                          <button className="w-full py-2.5 rounded-lg border border-dashed border-white/20 text-gray-400 text-xs font-bold hover:border-[#00FF66] hover:text-[#00FF66] hover:bg-[#00FF66]/5 transition-all flex items-center justify-center gap-2">
+                            <Upload className="w-4 h-4" /> Tải lên thư mục này
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {step3Tab === 'priority' && (
                   <div className="bg-black/40 border border-white/10 rounded-2xl overflow-hidden">
