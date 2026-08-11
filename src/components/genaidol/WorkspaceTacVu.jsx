@@ -19,11 +19,11 @@ const MOCK_HISTORY = {
 const AI_BRAINS = {
   chatgpt: {
     name: 'OpenAI ChatGPT',
-    models: ['GPT-4o (Khuyên dùng)', 'GPT-4 Turbo', 'GPT-3.5']
+    models: ['GPT-4o-mini (Siêu rẻ, Tối ưu)', 'GPT-4o (Siêu mạnh, Đắt)']
   },
   gemini: {
     name: 'Google Gemini',
-    models: ['Gemini 1.5 Pro', 'Gemini 1.5 Flash']
+    models: ['Gemini 1.5 Flash (Miễn phí, Nhanh)', 'Gemini 1.5 Pro (Nâng cao)']
   }
 };
 
@@ -37,8 +37,22 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
   const [rightTab, setRightTab] = useState('settings'); // 'settings', 'history'
   const [speed, setSpeed] = useState(1.0);
   const [aiBrain, setAiBrain] = useState('chatgpt');
+  const [scriptDuration, setScriptDuration] = useState('1'); // Phút
+  const [scriptTopic, setScriptTopic] = useState('');
+  const [scriptContent, setScriptContent] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
   // aiModel is now automatically inferred from the selected brain platform as the first element (the strongest)
   const aiModel = AI_BRAINS[aiBrain].models[0];
+  
+  const handleGenerateScript = async () => {
+    if (!scriptTopic) return alert("Vui lòng nhập chủ đề kịch bản!");
+    setIsGenerating(true);
+    // Giả lập gọi API sinh kịch bản
+    setTimeout(() => {
+      setScriptContent(`[Kịch bản Livestream ${scriptDuration} Phút - Sinh bởi ${AI_BRAINS[aiBrain].name}]\n[Model: ${aiModel}]\n[Chủ đề: ${scriptTopic}]\n\nKịch bản mẫu:\n- Xin chào các bạn đang xem live...\n- Hôm nay chúng ta có deal cực hời cho sản phẩm này...\n- Nhanh tay chốt đơn nào mọi người ơi!`);
+      setIsGenerating(false);
+    }, 1500);
+  };
   
   const [voiceProvider, setVoiceProvider] = useState('vbee');
   const [selectedVoice, setSelectedVoice] = useState('vbee_f_n_1');
@@ -150,10 +164,33 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                       Model thông minh: <span className="text-white">{aiModel}</span> (Mặc định cấu hình cao nhất)
                    </div>
 
-                   <div className="flex gap-2">
-                     <input type="text" placeholder={`Nhập chủ đề để ${AI_BRAINS[aiBrain].name} tự động viết kịch bản...`} className="flex-1 px-4 py-2 bg-black/60 border border-white/10 rounded-lg text-sm text-white outline-none focus:border-[#00FF66]" />
-                     <button className="px-4 py-2 bg-[#00FF66]/20 border border-[#00FF66]/50 text-[#00FF66] rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-[#00FF66]/30 shadow-glow-green">
-                       <Sparkles className="w-4 h-4"/> Tạo kịch bản
+                   <div className="flex flex-col md:flex-row gap-2">
+                     <select 
+                       value={scriptDuration} 
+                       onChange={(e) => setScriptDuration(e.target.value)}
+                       className="px-3 py-2 bg-black/60 border border-white/10 rounded-lg text-sm text-gray-300 font-bold outline-none focus:border-[#00FF66] w-full md:w-32"
+                     >
+                       <option value="1">1 Phút</option>
+                       <option value="5">5 Phút</option>
+                       <option value="10">10 Phút</option>
+                       <option value="30">30 Phút</option>
+                       <option value="60">60 Phút</option>
+                       <option value="120">120 Phút</option>
+                     </select>
+                     <input 
+                       type="text" 
+                       value={scriptTopic}
+                       onChange={(e) => setScriptTopic(e.target.value)}
+                       placeholder={`Chủ đề kịch bản ${AI_BRAINS[aiBrain].name}...`} 
+                       className="flex-1 px-4 py-2 bg-black/60 border border-white/10 rounded-lg text-sm text-white outline-none focus:border-[#00FF66]" 
+                     />
+                     <button 
+                       onClick={handleGenerateScript}
+                       disabled={isGenerating}
+                       className="px-4 py-2 bg-[#00FF66]/20 border border-[#00FF66]/50 text-[#00FF66] rounded-lg font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#00FF66]/30 shadow-glow-green whitespace-nowrap w-full md:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                     >
+                       {isGenerating ? <div className="w-4 h-4 border-2 border-t-[#00FF66] border-[#00FF66]/30 rounded-full animate-spin"></div> : <Sparkles className="w-4 h-4"/>} 
+                       {isGenerating ? 'Đang tạo...' : 'Tạo'}
                      </button>
                    </div>
                 </div>
@@ -166,6 +203,8 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                 <div className="flex-1 flex flex-col mb-6">
                   <label className="block text-xs font-bold text-gray-300 mb-2">Nội dung (Text to Speech)</label>
                   <textarea 
+                    value={scriptContent}
+                    onChange={(e) => setScriptContent(e.target.value)}
                     placeholder="Dán nội dung tiếng Việt có dấu hoặc không dấu..." 
                     className="w-full flex-1 min-h-[200px] p-4 bg-black/40 border border-white/10 rounded-lg text-sm text-gray-300 focus:border-[#00FF66] outline-none resize-none custom-scrollbar"
                   ></textarea>

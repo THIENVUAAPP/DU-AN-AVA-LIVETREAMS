@@ -130,7 +130,7 @@ export default function ThuVienAIDOL() {
           <div className="py-24 flex flex-col items-center justify-center text-center bg-[#121216]/60 rounded-2xl border border-white/10">
             <h3 className="text-xl font-black text-white mb-3">Chưa có AIDOL nào</h3>
             <p className="text-sm text-gray-400 font-medium max-w-sm mb-6">
-              Tạo một ảnh AIDOL trước, rồi lưu thành hồ sơ nhân vật để dùng lại cho video, giọng và lipsync.
+              Tạo một hồ sơ AIDOL (từ Ảnh tĩnh hoặc Video mẫu) trước, rồi lưu để dùng lại cho mọi chức năng Lipsync và Livestream.
             </p>
             <button 
               onClick={() => setViewMode('create')}
@@ -166,8 +166,10 @@ export default function ThuVienAIDOL() {
                 {/* Settings Card */}
                 <div className="bg-[#121216]/80 backdrop-blur-md rounded-2xl border border-white/10 p-6 shadow-lg">
                    <span className="text-[10px] font-black text-[#00FF66] uppercase tracking-widest mb-2 block">BƯỚC 1 • AVATAR & GIỌNG</span>
-                   <h2 className="text-2xl font-black text-white mb-2">Chọn 1 ảnh làm avatar của AIDOL</h2>
-                   <p className="text-[11px] text-gray-400 mb-6 font-medium max-w-sm">Tải ảnh vào, hoặc tạo nhiều phương án bằng AI. Chỉ khi bạn chọn một ảnh, ảnh đó mới trở thành nhân vật AIDOL của bạn.</p>
+                   <h2 className="text-2xl font-black text-white mb-2">Tải lên Ảnh tĩnh hoặc Video mẫu của AIDOL</h2>
+                   <p className="text-[11px] text-gray-400 mb-6 font-medium max-w-md">
+                      Bạn có thể dùng <strong>Ảnh tĩnh</strong> (Hệ thống tự tạo chuyển động mượt mà) hoặc <strong>Video mẫu</strong> (Có sẵn cử chỉ tay chân y như người thật). Chỉ khi bạn lưu, hồ sơ này mới được nạp vào Cache Live.
+                   </p>
                    
                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div>
@@ -213,13 +215,13 @@ export default function ThuVienAIDOL() {
                 <div className="bg-[#121216]/80 backdrop-blur-md rounded-2xl border border-white/10 p-6 shadow-lg flex flex-col min-h-[400px]">
                    <div className="flex justify-between items-center mb-4">
                       <div>
-                        <span className="text-[10px] font-black text-[#00FF66] uppercase tracking-widest block mb-1">THƯ VIỆN ẢNH AVATAR</span>
-                        <h3 className="font-bold text-white text-sm">Ảnh đã thêm và lịch sử tạo ảnh</h3>
+                        <span className="text-[10px] font-black text-[#00FF66] uppercase tracking-widest block mb-1">THƯ VIỆN ẢNH / VIDEO</span>
+                        <h3 className="font-bold text-white text-sm">Media đã thêm và lịch sử tạo</h3>
                       </div>
                       <button className="flex items-center gap-2 px-4 py-2 border border-white/10 bg-white/5 rounded-lg shadow-sm hover:border-[#00FF66] hover:text-[#00FF66] transition-colors">
                          <div className="w-6 h-6 rounded bg-[#00FF66]/20 text-[#00FF66] flex items-center justify-center border border-[#00FF66]/50"><Plus className="w-4 h-4"/></div>
                          <div className="text-left">
-                           <div className="text-[10px] font-bold">Thêm ảnh</div>
+                           <div className="text-[10px] font-bold">Thêm File (Media)</div>
                          </div>
                       </button>
                    </div>
@@ -228,9 +230,9 @@ export default function ThuVienAIDOL() {
                       <div className="w-12 h-12 rounded-full bg-[#00FF66]/10 flex items-center justify-center text-[#00FF66] mb-3 shadow-glow-green border border-[#00FF66]/30">
                         <Sparkles className="w-5 h-5" />
                       </div>
-                      <h4 className="font-bold text-white text-sm mb-1">Chưa có ảnh avatar nào</h4>
+                      <h4 className="font-bold text-white text-sm mb-1">Chưa có File (Ảnh/Video) nào</h4>
                       <p className="text-[11px] text-gray-500 max-w-xs text-center font-medium">
-                        Kéo ảnh từ máy vào đây, hoặc nhập mô tả để tạo bằng AI.
+                        Kéo thả ảnh hoặc video vào đây, hoặc dùng AI để gen ra ảnh.
                       </p>
                    </div>
 
