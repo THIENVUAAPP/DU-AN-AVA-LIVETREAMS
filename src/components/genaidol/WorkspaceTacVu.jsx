@@ -541,6 +541,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
               </div>
            </div>
         </div>
+      )}
       {/* VIDEO LIBRARY MODAL (Chọn theo chủ đề) */}
       {showVideoLibraryModal && (
         <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
