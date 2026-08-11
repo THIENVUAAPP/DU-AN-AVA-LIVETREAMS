@@ -11,7 +11,6 @@ import ThanhToanCoin from './genaidol/ThanhToanCoin';
 import ThuVienAIDOL from './genaidol/ThuVienAIDOL';
 import LivestreamAISetup from './genaidol/LivestreamAISetup';
 import AIDOLLiveConsole from './genaidol/AIDOLLiveConsole';
-import TrangChu from './genaidol/TrangChu';
 import TaoAIDOLMoi from './genaidol/TaoAIDOLMoi';
 import WorkspaceTacVu from './genaidol/WorkspaceTacVu';
 
@@ -31,7 +30,7 @@ const PlaceholderPage = ({ title }) => (
 
 // --- MAIN DASHBOARD (TOP NAV LAYOUT - DARK THEME) ---
 export default function KOLLiveDashboard() {
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useState('my-aidol');
   const [showTaskDropdown, setShowTaskDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -47,7 +46,6 @@ export default function KOLLiveDashboard() {
   }, []);
 
   const NAVIGATION = [
-    { id: 'home', label: 'Trang chủ', icon: Home },
     { id: 'tasks', label: 'Tác vụ', suffix: 'Chọn nhanh', hasDropdown: true },
     { id: 'my-aidol', label: 'AIDOL của tôi', icon: UserSquare2 },
     { id: 'livestream-ai', label: 'Livestream AI', icon: Radio },
@@ -77,7 +75,7 @@ export default function KOLLiveDashboard() {
       <header className="h-16 bg-[#121216]/80 backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-4 sm:px-6 relative z-50 shadow-lg">
         
         {/* LOGO: KOL LIVE */}
-        <div className="flex items-center gap-3 mr-8 cursor-pointer" onClick={() => setActiveTab('home')}>
+        <div className="flex items-center gap-3 mr-8 cursor-pointer" onClick={() => setActiveTab('my-aidol')}>
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00FF66] to-[#00CC52] flex items-center justify-center shadow-glow-green">
             <Radio className="w-6 h-6 text-black" />
           </div>
@@ -171,7 +169,6 @@ export default function KOLLiveDashboard() {
       {/* MAIN CONTENT AREA */}
       <main className="flex-1 relative z-10 overflow-y-auto">
         <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-          {activeTab === 'home' && <TrangChu />}
           {activeTab === 'create-aidol' && <TaoAIDOLMoi />}
           {activeTab === 'voice' && <WorkspaceTacVu defaultTab="voice" />}
           {activeTab === 'lipsync' && <WorkspaceTacVu defaultTab="lipsync" />}
