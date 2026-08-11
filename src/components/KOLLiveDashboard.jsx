@@ -53,8 +53,6 @@ export default function KOLLiveDashboard() {
     { id: 'livestream-ai', label: 'Livestream AI', icon: Radio },
     { id: 'history', label: 'Lịch sử', icon: Clock },
     { id: 'guide', label: 'Hướng dẫn', icon: BookOpen },
-    { id: 'api', label: 'API', badge: 'Beta', icon: Code2 },
-    { id: 'payment', label: 'Thanh toán', icon: CreditCard },
   ];
 
   const QUICK_TASKS = [
@@ -168,23 +166,6 @@ export default function KOLLiveDashboard() {
           ))}
         </nav>
 
-        {/* ACCOUNT / SETTINGS */}
-        <div className="flex items-center gap-3">
-          <button className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full border border-blue-200 text-blue-600 text-sm font-bold hover:bg-blue-50 transition-colors">
-            Thanh toán
-          </button>
-          <button className="flex items-center gap-2 px-1 pl-1 pr-4 py-1 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors border border-slate-200">
-            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
-              AI
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xs font-bold text-slate-800">Tài khoản</span>
-              <span className="text-[9px] text-slate-500 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Online
-              </span>
-            </div>
-          </button>
-        </div>
       </header>
 
       {/* MAIN CONTENT AREA */}
@@ -199,8 +180,6 @@ export default function KOLLiveDashboard() {
           {activeTab === 'livestream-ai' && <LivestreamAISetup />}
           {activeTab === 'history' && <LichSuTao />}
           {activeTab === 'guide' && <HuongDanAcademy />}
-          {activeTab === 'payment' && <ThanhToanCoin />}
-          {activeTab === 'api' && <AIDOLLiveConsole />}
         </div>
       </main>
 
