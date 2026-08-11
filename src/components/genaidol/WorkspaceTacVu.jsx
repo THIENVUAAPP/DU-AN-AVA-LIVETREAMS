@@ -48,6 +48,8 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
   const [selectedVoice, setSelectedVoice] = useState('vbee_f_n_1');
   const [lipsyncModel, setLipsyncModel] = useState('synclabs');
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
+  const [lipsyncAudioType, setLipsyncAudioType] = useState('text'); // 'text' or 'voice'
+  const [showPreviewPlayer, setShowPreviewPlayer] = useState(false);
 
   // Generate Mock Voices
   const generateVoices = (region, prefix) => {
@@ -180,7 +182,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                 <div className="mb-6 flex justify-between items-start">
                   <div>
                     <h2 className="text-xl font-black text-white mb-1">Nhép miệng AI & Phát Live</h2>
-                    <p className="text-xs text-gray-400 font-medium">Chọn video, ghép giọng và có thể truyền thẳng sang TikTok Live Studio / OBS.</p>
+                    <p className="text-xs text-gray-400 font-medium">Ghép lời thoại hoặc âm thanh vào video mẫu, xem trước và phát trực tiếp.</p>
                   </div>
                   <button 
                     onClick={() => setShowBroadcastModal(true)}
@@ -190,47 +192,109 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                   </button>
                 </div>
 
-                <div className="mb-6">
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="block text-[10px] font-black text-[#00FF66] uppercase tracking-widest">MODEL NHÉP MIỆNG</label>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                     {LIPSYNC_MODELS.map(model => (
-                       <div 
-                         key={model.id}
-                         onClick={() => setLipsyncModel(model.id)}
-                         className={`border border-white/10 rounded-xl p-4 relative cursor-pointer transition-all ${lipsyncModel === model.id ? 'bg-[#00FF66]/10 border-[#00FF66]/50 shadow-glow-green' : 'bg-black/40 hover:border-white/20'}`}
-                       >
-                          {lipsyncModel === model.id && <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-[#00FF66] flex items-center justify-center text-black"><Check className="w-3 h-3" /></div>}
-                          <h4 className={`font-bold text-sm mb-1 ${lipsyncModel === model.id ? 'text-[#00FF66]' : 'text-gray-200'}`}>{model.name}</h4>
-                          <p className="text-[10px] text-gray-400 font-medium">{model.desc}</p>
-                       </div>
-                     ))}
-                  </div>
-                </div>
-                
-                <div className="mb-6">
-                  <label className="block text-xs font-bold text-gray-300 mb-2">Tên job</label>
-                  <input type="text" defaultValue="KOL LIVE lipsync" className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-sm font-bold text-white focus:border-[#00FF66] outline-none" />
-                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 mb-6">
+                   {/* LEFT COLUMN: Input settings */}
+                   <div className="flex flex-col gap-5 border-r border-white/10 pr-6">
+                      
+                      {/* 1. Source Video Selection */}
+                      <div>
+                         <label className="block text-xs font-bold text-gray-300 mb-2 flex items-center gap-2">
+                           <Video className="w-4 h-4 text-[#00FF66]" /> 1. Video Gốc (Mẫu)
+                         </label>
+                         <div className="flex border border-white/10 rounded-lg overflow-hidden bg-black/40 hover:border-[#00FF66]/50 transition-colors">
+                           <button className="px-4 py-2.5 bg-white/5 border-r border-white/10 text-xs font-bold text-gray-300 hover:bg-white/10">Tải lên / Chọn kho</button>
+                           <div className="px-4 py-2.5 text-xs text-gray-500 font-medium flex-1 flex items-center">Chưa có video mẫu nào...</div>
+                         </div>
+                      </div>
 
-                <div className="flex-1 flex flex-col mb-6">
-                  <label className="block text-xs font-bold text-gray-300 mb-2">Lời thoại</label>
-                  <textarea 
-                    placeholder="Nhập lời thoại để nhép môi hoặc dùng kịch bản đã tạo sẵn." 
-                    className="w-full flex-1 min-h-[150px] p-4 bg-black/40 border border-white/10 rounded-lg text-sm text-gray-300 focus:border-[#00FF66] outline-none resize-none custom-scrollbar"
-                  ></textarea>
-                </div>
+                      {/* 2. Audio Source (Text / Voice) */}
+                      <div className="flex-1 flex flex-col">
+                         <label className="block text-xs font-bold text-gray-300 mb-2 flex items-center gap-2">
+                           <Mic className="w-4 h-4 text-[#00FF66]" /> 2. Âm thanh đầu vào
+                         </label>
+                         <div className="flex bg-black/40 rounded-lg border border-white/10 p-1 mb-3">
+                            <button 
+                              onClick={() => setLipsyncAudioType('text')} 
+                              className={`flex-1 py-2 rounded text-xs font-bold transition-all ${lipsyncAudioType === 'text' ? 'bg-[#00FF66]/20 text-[#00FF66]' : 'text-gray-400 hover:text-white'}`}
+                            >
+                              Nhập Văn Bản (AI đọc)
+                            </button>
+                            <button 
+                              onClick={() => setLipsyncAudioType('voice')} 
+                              className={`flex-1 py-2 rounded text-xs font-bold transition-all ${lipsyncAudioType === 'voice' ? 'bg-[#00FF66]/20 text-[#00FF66]' : 'text-gray-400 hover:text-white'}`}
+                            >
+                              Tải Tệp Thu Âm
+                            </button>
+                         </div>
 
-                <div className="border-t border-white/10 pt-4 mt-auto flex justify-between items-end">
-                   <div>
-                     <h4 className="text-xs font-bold text-gray-300 mb-1">Quyền riêng tư</h4>
-                     <p className="text-[10px] text-gray-500">Video nhép môi của bạn là riêng tư và chỉ hiện trong thư viện của bạn.</p>
+                         {lipsyncAudioType === 'text' ? (
+                            <textarea 
+                              placeholder="Nhập kịch bản để AI đọc và nhép môi tự động..." 
+                              className="w-full flex-1 min-h-[100px] p-3 bg-black/40 border border-white/10 rounded-lg text-xs text-gray-300 focus:border-[#00FF66] outline-none resize-none custom-scrollbar mb-2"
+                            ></textarea>
+                         ) : (
+                            <div className="flex-1 border-2 border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center p-6 bg-black/20 hover:border-white/30 transition-colors mb-2 cursor-pointer">
+                               <Upload className="w-6 h-6 text-gray-400 mb-2" />
+                               <span className="text-xs text-gray-400 font-bold">Kéo thả hoặc click tải file âm thanh (.mp3, .wav)</span>
+                            </div>
+                         )}
+
+                         {lipsyncAudioType === 'text' && (
+                            <div className="text-[10px] text-gray-500 font-medium px-1">
+                               Giọng đọc đang chọn: <span className="text-[#00FF66] font-bold">VBee - Miền Bắc (Nữ)</span> (Đổi ở tab Cài đặt)
+                            </div>
+                         )}
+                      </div>
+
                    </div>
-                   <button className="px-6 py-3 bg-[#00FF66] hover:bg-[#00CC52] text-black rounded-xl font-black transition-colors shadow-glow-green">
-                     Tạo video nhép miệng
-                   </button>
+
+                   {/* RIGHT COLUMN: Output / Preview */}
+                   <div className="flex flex-col">
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="block text-[10px] font-black text-[#00FF66] uppercase tracking-widest">TRÌNH XEM TRƯỚC (PREVIEW)</label>
+                        {showPreviewPlayer && (
+                          <span className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded font-bold border border-green-500/30">
+                            Đã Render xong
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="w-full aspect-video bg-black/60 border border-white/10 rounded-xl overflow-hidden flex flex-col items-center justify-center relative shadow-lg group">
+                        {showPreviewPlayer ? (
+                           <>
+                             {/* Mock Preview Video Player */}
+                             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80')] bg-cover bg-center opacity-50 mix-blend-luminosity"></div>
+                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                             
+                             <button className="w-12 h-12 rounded-full bg-[#00FF66]/20 border border-[#00FF66]/50 flex items-center justify-center text-[#00FF66] hover:bg-[#00FF66] hover:text-black hover:scale-110 transition-all z-10 shadow-glow-green">
+                               <Play className="w-5 h-5 ml-1" />
+                             </button>
+                             
+                             <div className="absolute bottom-0 left-0 right-0 p-3 flex justify-between items-center z-10">
+                               <div className="text-[10px] font-bold text-white bg-black/40 px-2 py-1 rounded">00:00 / 00:30</div>
+                               <button className="text-[10px] font-bold bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded transition-colors border border-white/10">Tải về máy</button>
+                             </div>
+                           </>
+                        ) : (
+                           <div className="text-center p-6">
+                             <ImageIcon className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+                             <p className="text-xs text-gray-500 font-medium">Bản xem trước video nhép miệng sẽ hiển thị tại đây.</p>
+                           </div>
+                        )}
+                      </div>
+
+                      {/* Generate Button Container */}
+                      <div className="mt-auto pt-6 flex flex-col gap-3">
+                         <button 
+                           onClick={() => setShowPreviewPlayer(true)}
+                           className="w-full py-3 bg-[#00FF66] hover:bg-[#00CC52] text-black rounded-xl font-black transition-all shadow-glow-green flex items-center justify-center gap-2"
+                         >
+                           <Zap className="w-4 h-4" /> Bắt đầu Ghép (Tạo Video)
+                         </button>
+                      </div>
+                   </div>
                 </div>
+
               </div>
             )}
 
@@ -331,24 +395,28 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                    {defaultTab === 'lipsync' && (
                      <>
                        <div className="mb-6">
-                         <h3 className="font-black text-white text-lg mb-1">Cấu hình đầu vào</h3>
-                         <p className="text-[11px] text-gray-400 font-medium leading-relaxed">Chọn video đã DONE, hoặc upload video mới, rồi chọn giọng KOL Coin.</p>
+                         <h3 className="font-black text-white text-lg mb-1">Cài đặt Model</h3>
+                         <p className="text-[11px] text-gray-400 font-medium leading-relaxed">Chọn Model AI xử lý nhép môi theo nhu cầu: Cao cấp nhất (SyncLabs) hoặc nhanh nhất (Wav2Lip).</p>
                        </div>
 
                        <div className="space-y-6">
                          <div>
-                           <label className="block text-[11px] font-bold text-gray-300 mb-2">Video đã DONE</label>
-                           <select className="w-full px-4 py-2.5 bg-black/60 border border-white/10 rounded-lg text-sm font-bold text-gray-200 outline-none focus:border-[#00FF66]">
-                             <option>Upload video mới hoặc chọn video DONE</option>
-                           </select>
-                         </div>
-
-                         <div>
-                           <label className="block text-[11px] font-bold text-gray-300 mb-2">Hoặc upload video đầu vào</label>
-                           <div className="flex border border-white/10 rounded-lg overflow-hidden bg-black/40 focus-within:border-[#00FF66]">
-                             <button className="px-4 py-2.5 bg-white/5 border-r border-white/10 text-xs font-bold text-gray-300 hover:bg-white/10">Chọn tệp</button>
-                             <div className="px-4 py-2.5 text-xs text-gray-500 font-medium flex-1 flex items-center">Không có tệp nào được chọn</div>
-                           </div>
+                            <label className="block text-[11px] font-bold text-gray-300 mb-2">Chọn thuật toán (Model)</label>
+                            <div className="space-y-2">
+                               {LIPSYNC_MODELS.map(model => (
+                                 <button 
+                                   key={model.id}
+                                   onClick={() => setLipsyncModel(model.id)}
+                                   className={`w-full text-left p-3 rounded-lg border transition-all ${lipsyncModel === model.id ? 'bg-[#00FF66]/10 border-[#00FF66]/50 shadow-glow-green' : 'bg-black/40 border-white/10 hover:border-white/30'}`}
+                                 >
+                                    <h4 className={`font-bold text-xs mb-1 flex items-center justify-between ${lipsyncModel === model.id ? 'text-[#00FF66]' : 'text-gray-200'}`}>
+                                      {model.name}
+                                      {lipsyncModel === model.id && <Check className="w-3 h-3" />}
+                                    </h4>
+                                    <p className="text-[10px] text-gray-400 font-medium">{model.desc}</p>
+                                 </button>
+                               ))}
+                            </div>
                          </div>
                        </div>
                      </>
