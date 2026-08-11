@@ -49,7 +49,7 @@ export default function Header({
     { id: 'multistream', label: 'Restream' },
     { id: 'livestream-cloner', label: 'Clone Live' },
     { id: 'chat-hub', label: 'Chat Hub' },
-    { id: 'dance-floor', label: 'Sàn Nhảy' },
+    ...(currentUser?.role === 'admin' ? [{ id: 'dance-floor', label: 'Sàn Nhảy' }] : []),
     { id: 'ai-storyteller', label: 'KOL LIVE' },
   ];
 
@@ -249,27 +249,7 @@ export default function Header({
                           </span>
                         </button>
 
-                        <div className="p-3 rounded-2xl bg-[#121218] border border-purple-500/30 flex items-center justify-between gap-2 text-left">
-                          <div>
-                            <span className="text-xs font-bold text-white block">TÍNH NĂNG MC AI AVATAR</span>
-                            <span className={`text-[10px] font-black block ${aiAvatarFeatureEnabled ? "text-emerald-400" : "text-amber-400"}`}>
-                              {aiAvatarFeatureEnabled ? "● Đang Hoạt Động" : "🔒 Tạm Khóa / Ẩn"}
-                            </span>
-                          </div>
-                          <button
-                            onClick={() => {
-                              setAiAvatarFeatureEnabled(!aiAvatarFeatureEnabled);
-                              alert(aiAvatarFeatureEnabled ? "🔒 Đã TẠM KHÓA tính năng MC AI Avatar!" : "⚡ Đã MỞ BẬT LẠI tính năng MC AI Avatar!");
-                            }}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-black cursor-pointer transition-all ${
-                              aiAvatarFeatureEnabled
-                                ? "bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30"
-                                : "bg-emerald-600 text-white shadow-glow-emerald hover:bg-emerald-700"
-                            }`}
-                          >
-                            {aiAvatarFeatureEnabled ? "TẮT" : "MỞ BẬT"}
-                          </button>
-                        </div>
+
                       </div>
                     )}
                   </div>
