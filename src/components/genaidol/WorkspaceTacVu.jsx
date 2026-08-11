@@ -15,38 +15,69 @@ const MOCK_HISTORY = {
   ]
 };
 
+const AI_BRAINS = {
+  chatgpt: {
+    name: 'OpenAI ChatGPT',
+    models: ['GPT-4o (Khuyên dùng)', 'GPT-4 Turbo', 'GPT-3.5']
+  },
+  claude: {
+    name: 'Claude AI',
+    models: ['Claude 3.5 Sonnet (Mạnh nhất)', 'Claude 3 Opus', 'Claude 3 Haiku']
+  },
+  gemini: {
+    name: 'Google Gemini',
+    models: ['Gemini 1.5 Pro', 'Gemini 1.5 Flash']
+  }
+};
+
+const LIPSYNC_MODELS = [
+  { id: 'synclabs', name: 'SyncLabs AI (Ultra Realistic)', desc: 'Chất lượng cao nhất, siêu thực' },
+  { id: 'sadtalker', name: 'SadTalker (Tiêu chuẩn)', desc: 'Nhép môi từ ảnh tĩnh tiêu chuẩn' },
+  { id: 'wav2lip', name: 'Wav2Lip (Nhanh)', desc: 'Xử lý video nhép môi cực nhanh' },
+];
+
 export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
   const [activeTab, setActiveTab] = useState(defaultTab); // 'voice', 'lipsync', 'image-video'
   const [rightTab, setRightTab] = useState('settings'); // 'settings', 'history'
   const [speed, setSpeed] = useState(1.0);
   const [aiBrain, setAiBrain] = useState('chatgpt');
+  const [aiModel, setAiModel] = useState(AI_BRAINS['chatgpt'].models[0]);
+  
   const [voiceProvider, setVoiceProvider] = useState('vbee');
-  const [selectedVoice, setSelectedVoice] = useState('hn_ngoc_huyen');
+  const [selectedVoice, setSelectedVoice] = useState('vbee_f_n_1');
+  const [lipsyncModel, setLipsyncModel] = useState('synclabs');
 
   // Generate Mock Voices
   const generateVoices = (region, prefix) => {
     return Array(10).fill(0).map((_, i) => ({ id: `${prefix}_${i+1}`, name: `${region} - Giọng ${i+1}` }));
+  };
+  const generateLangs = (prefix) => {
+    return Array(50).fill(0).map((_, i) => ({ id: `${prefix}_${i+1}`, name: `Ngôn ngữ Quốc tế ${i+1}` }));
   };
 
   const VOICES = {
     vbee: [
       { group: 'Nữ Miền Bắc', options: generateVoices('Nữ HN', 'vbee_f_n') },
       { group: 'Nam Miền Bắc', options: generateVoices('Nam HN', 'vbee_m_n') },
+      { group: 'Nữ Miền Trung', options: generateVoices('Nữ Huế', 'vbee_f_c') },
+      { group: 'Nam Miền Trung', options: generateVoices('Nam Đà Nẵng', 'vbee_m_c') },
       { group: 'Nữ Miền Nam', options: generateVoices('Nữ HCM', 'vbee_f_s') },
       { group: 'Nam Miền Nam', options: generateVoices('Nam HCM', 'vbee_m_s') },
-      { group: 'Miền Trung', options: generateVoices('MT', 'vbee_c') },
-      { group: 'Miền Tây', options: generateVoices('M.Tây', 'vbee_w') },
+      { group: 'Nữ Miền Tây', options: generateVoices('Nữ Cần Thơ', 'vbee_f_w') },
+      { group: 'Nam Miền Tây', options: generateVoices('Nam Cần Thơ', 'vbee_m_w') },
     ],
     elevenlabs: [
-      { group: 'English (US)', options: generateVoices('US', 'el_us') },
-      { group: 'English (UK)', options: generateVoices('UK', 'el_uk') },
-      { group: 'Other Languages (50+)', options: [{ id: 'el_multi', name: 'Đa ngôn ngữ tự động' }] }
+      { group: 'English (US)', options: generateVoices('US English', 'el_us') },
+      { group: 'English (UK)', options: generateVoices('UK English', 'el_uk') },
+      { group: 'Other Languages (50+)', options: generateLangs('el_multi') }
     ],
     gemini: [
-      { group: 'Giọng đọc Google', options: generateVoices('Google', 'gg') }
+      { group: 'Giọng đọc Google Nữ', options: generateVoices('Google Nữ', 'gg_f') },
+      { group: 'Giọng đọc Google Nam', options: generateVoices('Google Nam', 'gg_m') },
     ],
     free: [
-      { group: 'Miễn phí', options: generateVoices('Free', 'fr') }
+      { group: 'API Miễn phí Nữ', options: generateVoices('Free Nữ', 'fr_f') },
+      { group: 'API Miễn phí Nam', options: generateVoices('Free Nam', 'fr_m') },
     ]
   };
 
@@ -102,21 +133,38 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                 {/* AI Brain Selection */}
                 <div className="mb-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
                    <label className="flex items-center gap-2 text-xs font-bold text-slate-800 mb-3">
-                     <Brain className="w-4 h-4 text-blue-500" /> Chọn Bộ Não Model (API)
+                     <Brain className="w-4 h-4 text-blue-500" /> Chọn Bộ Não Kịch Bản
                    </label>
                    <div className="grid grid-cols-3 gap-2 mb-3">
-                      <button onClick={() => setAiBrain('chatgpt')} className={`p-3 rounded-lg border text-xs font-bold transition-all ${aiBrain === 'chatgpt' ? 'bg-white border-blue-500 text-blue-600 shadow-sm' : 'border-slate-200 text-slate-500 hover:bg-white'}`}>
-                        OpenAI ChatGPT
-                      </button>
-                      <button onClick={() => setAiBrain('claude')} className={`p-3 rounded-lg border text-xs font-bold transition-all ${aiBrain === 'claude' ? 'bg-white border-blue-500 text-blue-600 shadow-sm' : 'border-slate-200 text-slate-500 hover:bg-white'}`}>
-                        Claude AI
-                      </button>
-                      <button onClick={() => setAiBrain('gemini')} className={`p-3 rounded-lg border text-xs font-bold transition-all ${aiBrain === 'gemini' ? 'bg-white border-blue-500 text-blue-600 shadow-sm' : 'border-slate-200 text-slate-500 hover:bg-white'}`}>
-                        Google Gemini
-                      </button>
+                      {Object.keys(AI_BRAINS).map(brainKey => (
+                         <button 
+                           key={brainKey}
+                           onClick={() => {
+                             setAiBrain(brainKey);
+                             setAiModel(AI_BRAINS[brainKey].models[0]);
+                           }} 
+                           className={`p-3 rounded-lg border text-xs font-bold transition-all ${aiBrain === brainKey ? 'bg-white border-blue-500 text-blue-600 shadow-sm' : 'border-slate-200 text-slate-500 hover:bg-white'}`}
+                         >
+                           {AI_BRAINS[brainKey].name}
+                         </button>
+                      ))}
                    </div>
+                   
+                   {/* Model Selection */}
+                   <div className="mb-4">
+                     <select 
+                       value={aiModel} 
+                       onChange={(e) => setAiModel(e.target.value)}
+                       className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 outline-none shadow-sm focus:border-blue-500"
+                     >
+                        {AI_BRAINS[aiBrain].models.map(m => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                     </select>
+                   </div>
+
                    <div className="flex gap-2">
-                     <input type="text" placeholder="Nhập chủ đề để AI tự động viết kịch bản..." className="flex-1 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-500" />
+                     <input type="text" placeholder={`Nhập chủ đề để ${AI_BRAINS[aiBrain].name} tự động viết kịch bản...`} className="flex-1 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-500" />
                      <button className="px-4 py-2 bg-blue-100 text-blue-600 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-blue-200">
                        <Sparkles className="w-4 h-4"/> Tạo kịch bản
                      </button>
@@ -140,7 +188,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                    <div>
                       <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Chi phí dự kiến</div>
                       <div className="text-xl font-black text-blue-600">0 KOL Coin</div>
-                      <div className="text-[10px] text-slate-500 mt-1">Giá giọng đang chọn: Phụ thuộc vào nền tảng.</div>
+                      <div className="text-[10px] text-slate-500 mt-1">Giá giọng đang chọn: Phụ thuộc vào nền tảng API.</div>
                    </div>
                    <button className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold transition-colors shadow-md">
                      Tạo giọng nói
@@ -152,27 +200,26 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
             {activeTab === 'lipsync' && (
               <>
                 <div className="mb-6">
-                  <h2 className="text-xl font-black text-slate-800 mb-1">Nhép miệng</h2>
+                  <h2 className="text-xl font-black text-slate-800 mb-1">Nhép miệng AI</h2>
                   <p className="text-xs text-slate-500 font-medium">Chọn video DONE hoặc upload video đầu vào rồi ghép với giọng đã chọn.</p>
                 </div>
 
                 <div className="mb-6">
                   <div className="flex justify-between items-center mb-2">
                     <label className="block text-[10px] font-black text-blue-500 uppercase tracking-widest">MODEL NHÉP MIỆNG</label>
-                    <span className="text-[10px] text-slate-400 font-bold">Đăng nhập để kiểm tra quyền truy cập.</span>
                   </div>
-                  <h3 className="text-sm font-bold text-slate-800 mb-3">Chọn chất lượng xử lý</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                     <div className="bg-blue-50 border-2 border-blue-500 rounded-xl p-4 relative cursor-pointer">
-                        <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white"><Check className="w-3 h-3" /></div>
-                        <h4 className="font-bold text-slate-800 text-sm mb-1">Tiêu chuẩn</h4>
-                        <p className="text-[11px] text-slate-500 font-medium">Xử lý ổn định cho video nhép miệng thông thường.</p>
-                     </div>
-                     <div className="bg-white border border-slate-200 rounded-xl p-4 relative cursor-not-allowed opacity-70">
-                        <div className="absolute top-4 right-4 px-2 py-1 bg-amber-100 text-amber-700 text-[9px] font-bold rounded flex items-center gap-1"><Lock className="w-3 h-3"/> Fast</div>
-                        <h4 className="font-bold text-slate-800 text-sm mb-1 flex items-center gap-2"><Zap className="w-4 h-4 text-amber-500"/> KOLLipsync Fast</h4>
-                        <p className="text-[11px] text-slate-500 font-medium">Đăng nhập để kiểm tra quyền truy cập.</p>
-                     </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                     {LIPSYNC_MODELS.map(model => (
+                       <div 
+                         key={model.id}
+                         onClick={() => setLipsyncModel(model.id)}
+                         className={`border-2 rounded-xl p-4 relative cursor-pointer transition-all ${lipsyncModel === model.id ? 'bg-blue-50 border-blue-500 shadow-sm' : 'bg-white border-slate-200 hover:border-blue-300'}`}
+                       >
+                          {lipsyncModel === model.id && <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white"><Check className="w-3 h-3" /></div>}
+                          <h4 className={`font-bold text-sm mb-1 ${lipsyncModel === model.id ? 'text-blue-700' : 'text-slate-800'}`}>{model.name}</h4>
+                          <p className="text-[10px] text-slate-500 font-medium">{model.desc}</p>
+                       </div>
+                     ))}
                   </div>
                 </div>
                 
@@ -253,7 +300,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
 
                          <div>
                            <label className="block text-[11px] font-bold text-slate-800 mb-2">Chọn Giọng đọc ({VOICES[voiceProvider].reduce((acc, g) => acc + g.options.length, 0)} giọng)</label>
-                           <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 max-h-48 overflow-y-auto custom-scrollbar">
+                           <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 max-h-[300px] overflow-y-auto custom-scrollbar">
                              {VOICES[voiceProvider].map((group, idx) => (
                                <div key={idx} className="mb-3 last:mb-0">
                                   <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 px-2">{group.group}</div>
@@ -262,7 +309,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                                       <button 
                                         key={voice.id} 
                                         onClick={() => setSelectedVoice(voice.id)}
-                                        className={`w-full text-left px-3 py-2 rounded-md text-xs font-bold transition-colors flex justify-between items-center ${selectedVoice === voice.id ? 'bg-blue-100 text-blue-700' : 'text-slate-600 hover:bg-slate-200'}`}
+                                        className={`w-full text-left px-3 py-2 rounded-md text-[11px] font-bold transition-colors flex justify-between items-center ${selectedVoice === voice.id ? 'bg-blue-100 text-blue-700' : 'text-slate-600 hover:bg-slate-200'}`}
                                       >
                                         <span>{voice.name}</span>
                                         {selectedVoice === voice.id && <Check className="w-3 h-3" />}
