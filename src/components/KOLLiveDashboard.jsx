@@ -34,8 +34,7 @@ export default function KOLLiveDashboard() {
   const NAVIGATION = [
     { id: 'my-aidol', label: 'AIDOL của tôi', icon: UserSquare2 },
     { id: 'voice', label: 'Giọng nói', icon: Mic },
-    { id: 'lipsync', label: 'Nhép môi', icon: PlayCircle },
-    { id: 'video', label: 'Tạo video', icon: Video },
+    { id: 'lipsync', label: 'Tạo Video', icon: Video },
     { id: 'livestream-ai', label: 'Livestream AI', icon: Radio },
     { id: 'history', label: 'Lịch sử', icon: Clock },
     { id: 'guide', label: 'Hướng dẫn', icon: BookOpen },
@@ -90,7 +89,6 @@ export default function KOLLiveDashboard() {
         <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
           {activeTab === 'voice' && <WorkspaceTacVu defaultTab="voice" />}
           {activeTab === 'lipsync' && <WorkspaceTacVu defaultTab="lipsync" />}
-          {activeTab === 'video' && <WorkspaceTacVu defaultTab="image-video" />}
           {activeTab === 'my-aidol' && <ThuVienAIDOL />}
           {activeTab === 'livestream-ai' && <LivestreamAISetup />}
           {activeTab === 'history' && <LichSuTao />}

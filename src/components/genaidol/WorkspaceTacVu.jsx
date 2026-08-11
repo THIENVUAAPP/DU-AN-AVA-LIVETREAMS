@@ -93,13 +93,11 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
          <div>
             <h1 className="text-4xl lg:text-5xl font-black text-white mb-3 tracking-tight">
                {defaultTab === 'voice' && 'Soạn Kịch Bản & Giọng Nói'}
-               {defaultTab === 'lipsync' && 'Nhép Môi & Truyền Live'}
-               {defaultTab === 'image-video' && 'Tạo Video Bằng AIDOL'}
+               {defaultTab === 'lipsync' && 'Tạo Video & Truyền Live'}
             </h1>
             <p className="text-sm text-gray-400 font-medium max-w-2xl">
                {defaultTab === 'voice' && 'Tạo kịch bản với bộ não AI và chuyển đổi thành giọng nói mượt mà.'}
-               {defaultTab === 'lipsync' && 'Chọn video, ghép giọng và truyền thẳng sang nền tảng Live.'}
-               {defaultTab === 'image-video' && 'Xử lý video chuyên nghiệp với các AI model hàng đầu.'}
+               {defaultTab === 'lipsync' && 'Lồng ghép video mẫu và lời thoại/âm thanh để tạo thành video hoàn chỉnh.'}
             </p>
          </div>
          <button className="px-5 py-2.5 bg-[#121216] border border-white/10 hover:border-[#00FF66] text-[#00FF66] rounded-xl font-bold shadow-glow-green transition-all text-sm whitespace-nowrap">
@@ -181,7 +179,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
               <div className="relative z-10 flex flex-col h-full">
                 <div className="mb-6 flex justify-between items-start">
                   <div>
-                    <h2 className="text-xl font-black text-white mb-1">Nhép miệng AI & Phát Live</h2>
+                    <h2 className="text-xl font-black text-white mb-1">Tạo Video & Phát Live</h2>
                     <p className="text-xs text-gray-400 font-medium">Ghép lời thoại hoặc âm thanh vào video mẫu, xem trước và phát trực tiếp.</p>
                   </div>
                   <button 
@@ -201,9 +199,17 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                          <label className="block text-xs font-bold text-gray-300 mb-2 flex items-center gap-2">
                            <Video className="w-4 h-4 text-[#00FF66]" /> 1. Video Gốc (Mẫu)
                          </label>
-                         <div className="flex border border-white/10 rounded-lg overflow-hidden bg-black/40 hover:border-[#00FF66]/50 transition-colors">
-                           <button className="px-4 py-2.5 bg-white/5 border-r border-white/10 text-xs font-bold text-gray-300 hover:bg-white/10">Tải lên / Chọn kho</button>
-                           <div className="px-4 py-2.5 text-xs text-gray-500 font-medium flex-1 flex items-center">Chưa có video mẫu nào...</div>
+                         <div className="flex bg-black/40 rounded-lg border border-white/10 p-1 mb-3">
+                            <button className="flex-1 py-2 rounded text-xs font-bold transition-all bg-[#00FF66]/20 text-[#00FF66]">
+                              Tải từ máy lên
+                            </button>
+                            <button className="flex-1 py-2 rounded text-xs font-bold transition-all text-gray-400 hover:text-white">
+                              Chọn theo chủ đề
+                            </button>
+                         </div>
+                         <div className="flex border border-white/10 rounded-lg overflow-hidden bg-black/40 hover:border-[#00FF66]/50 transition-colors cursor-pointer">
+                           <button className="px-4 py-2.5 bg-white/5 border-r border-white/10 text-xs font-bold text-gray-300 hover:bg-white/10">Chọn Tệp</button>
+                           <div className="px-4 py-2.5 text-xs text-gray-500 font-medium flex-1 flex items-center">Kéo thả video vào đây...</div>
                          </div>
                       </div>
 
@@ -214,29 +220,41 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                          </label>
                          <div className="flex bg-black/40 rounded-lg border border-white/10 p-1 mb-3">
                             <button 
-                              onClick={() => setLipsyncAudioType('text')} 
-                              className={`flex-1 py-2 rounded text-xs font-bold transition-all ${lipsyncAudioType === 'text' ? 'bg-[#00FF66]/20 text-[#00FF66]' : 'text-gray-400 hover:text-white'}`}
-                            >
-                              Nhập Văn Bản (AI đọc)
-                            </button>
-                            <button 
                               onClick={() => setLipsyncAudioType('voice')} 
                               className={`flex-1 py-2 rounded text-xs font-bold transition-all ${lipsyncAudioType === 'voice' ? 'bg-[#00FF66]/20 text-[#00FF66]' : 'text-gray-400 hover:text-white'}`}
                             >
-                              Tải Tệp Thu Âm
+                              Tải từ máy lên
+                            </button>
+                            <button 
+                              onClick={() => setLipsyncAudioType('text')} 
+                              className={`flex-1 py-2 rounded text-xs font-bold transition-all ${lipsyncAudioType === 'text' ? 'bg-[#00FF66]/20 text-[#00FF66]' : 'text-gray-400 hover:text-white'}`}
+                            >
+                              Tải từ Kịch Bản AI
                             </button>
                          </div>
 
                          {lipsyncAudioType === 'text' ? (
-                            <textarea 
-                              placeholder="Nhập kịch bản để AI đọc và nhép môi tự động..." 
-                              className="w-full flex-1 min-h-[100px] p-3 bg-black/40 border border-white/10 rounded-lg text-xs text-gray-300 focus:border-[#00FF66] outline-none resize-none custom-scrollbar mb-2"
-                            ></textarea>
+                            <>
+                              <div className="mb-2">
+                                <label className="block text-[10px] font-bold text-gray-400 mb-1">Tiêu đề Video</label>
+                                <input type="text" placeholder="Nhập tiêu đề..." className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-xs text-white focus:border-[#00FF66] outline-none" />
+                              </div>
+                              <textarea 
+                                placeholder="Nội dung kịch bản AI sẽ hiển thị ở đây để tự động tạo giọng đọc..." 
+                                className="w-full flex-1 min-h-[80px] p-3 bg-black/40 border border-white/10 rounded-lg text-xs text-gray-300 focus:border-[#00FF66] outline-none resize-none custom-scrollbar mb-2"
+                              ></textarea>
+                            </>
                          ) : (
-                            <div className="flex-1 border-2 border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center p-6 bg-black/20 hover:border-white/30 transition-colors mb-2 cursor-pointer">
-                               <Upload className="w-6 h-6 text-gray-400 mb-2" />
-                               <span className="text-xs text-gray-400 font-bold">Kéo thả hoặc click tải file âm thanh (.mp3, .wav)</span>
-                            </div>
+                            <>
+                              <div className="mb-2">
+                                <label className="block text-[10px] font-bold text-gray-400 mb-1">Tiêu đề Video</label>
+                                <input type="text" placeholder="Nhập tiêu đề..." className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-xs text-white focus:border-[#00FF66] outline-none" />
+                              </div>
+                              <div className="flex-1 border-2 border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center p-4 bg-black/20 hover:border-white/30 transition-colors mb-2 cursor-pointer">
+                                 <Upload className="w-6 h-6 text-gray-400 mb-2" />
+                                 <span className="text-xs text-gray-400 font-bold">Kéo thả file âm thanh vào đây</span>
+                              </div>
+                            </>
                          )}
 
                          {lipsyncAudioType === 'text' && (
@@ -280,10 +298,11 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                              <ImageIcon className="w-8 h-8 text-gray-600 mx-auto mb-2" />
                              <p className="text-xs text-gray-500 font-medium">Bản xem trước video nhép miệng sẽ hiển thị tại đây.</p>
                            </div>
+                             <p className="text-xs text-gray-500 font-medium">Kết quả sẽ hiển thị tại đây.</p>
+                           </div>
                         )}
                       </div>
 
-                      {/* Generate Button Container */}
                       <div className="mt-auto pt-6 flex flex-col gap-3">
                          <button 
                            onClick={() => setShowPreviewPlayer(true)}
@@ -295,16 +314,6 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                    </div>
                 </div>
 
-              </div>
-            )}
-
-            {defaultTab === 'image-video' && (
-              <div className="flex-1 flex flex-col items-center justify-center text-center relative z-10">
-                 <div className="w-16 h-16 rounded-full bg-[#00FF66]/10 border border-[#00FF66]/30 flex items-center justify-center text-[#00FF66] mb-4 shadow-glow-green">
-                   <ImageIcon className="w-8 h-8" />
-                 </div>
-                 <h2 className="text-xl font-black text-white mb-2">Công cụ Tạo Ảnh & Video</h2>
-                 <p className="text-sm text-gray-400 max-w-md">Khu vực Flow canvas đang được nâng cấp để tích hợp các model tạo hình mới nhất. Lịch sử tạo vẫn được ghi nhận ở Tab bên phải.</p>
               </div>
             )}
          </div>
@@ -421,22 +430,15 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                        </div>
                      </>
                    )}
-                   
-                   {defaultTab === 'image-video' && (
-                     <div className="flex-1 flex items-center justify-center">
-                       <p className="text-sm text-gray-500 text-center">Cài đặt Flow canvas</p>
-                     </div>
-                   )}
                  </div>
                )}
 
-               {/* HISTORY VIEW */}
                {rightTab === 'history' && (
                  <div className="flex flex-col h-full relative z-10">
                     <div className="mb-4 flex items-center justify-between">
                       <h3 className="font-black text-white text-sm">Lịch sử tác vụ</h3>
                       <span className="text-[10px] bg-white/10 text-gray-300 px-2 py-0.5 rounded font-bold border border-white/5">
-                        {defaultTab === 'voice' ? 'Giọng & Kịch bản' : defaultTab === 'lipsync' ? 'Nhép môi' : 'Ảnh & Video'}
+                        {defaultTab === 'voice' ? 'Giọng & Kịch bản' : 'Video & Nhép môi'}
                       </span>
                     </div>
                     <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-2">
