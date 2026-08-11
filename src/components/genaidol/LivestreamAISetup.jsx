@@ -1,17 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Download, Monitor, ArrowRight, UserSquare2, Cpu, Package, Plus, 
   BookOpen, MessageCircle, Music, ShoppingCart, GraduationCap, Gamepad2,
-  Settings2, Upload, Video, ListOrdered
+  Settings2, Upload, Video, ListOrdered, Radio, FileText,
+  PlaySquare, Heart, Mic2, Tv, Headphones,
+  Camera, Zap, Smile, Info, Search
 } from 'lucide-react';
 
+const SYSTEM_PROMPT_TEMPLATE = `Bạn là AI Director điều khiển toàn bộ idol AI trong một phiên livestream đa nền tảng.
+Nhiệm vụ của bạn không chỉ là trả lời bình luận, mà còn là đạo diễn chương trình.
+Bạn phải điều khiển: Bộ não AI, Avatar, Giọng nói, Biểu cảm, Chuyển động, Video dựng sẵn, Hiệu ứng, Nội dung.
+
+[MỤC TIÊU]
+- Giữ không khí sôi động, tương tác tự nhiên.
+- Tăng thời gian xem, bình luận, follow, share, quà tặng.
+
+`;
+
 const BRAIN_PACKS = [
-  { id: 'story', name: 'Story Brain', desc: 'Kể chuyện, phân tích nội dung, trả lời câu hỏi liên quan đến câu chuyện.', icon: BookOpen, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/30' },
-  { id: 'talk', name: 'Talk Brain', desc: 'Giao lưu, trò chuyện, hỏi đáp tự do với người xem.', icon: MessageCircle, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/30' },
-  { id: 'entertainment', name: 'Entertainment Brain', desc: 'Nhảy, hát, tạo không khí vui vẻ năng động.', icon: Music, color: 'text-pink-400', bg: 'bg-pink-500/10', border: 'border-pink-500/30' },
-  { id: 'sales', name: 'Sales Brain', desc: 'Giới thiệu sản phẩm, xử lý phản đối, chốt đơn.', icon: ShoppingCart, color: 'text-[#00FF66]', bg: 'bg-[#00FF66]/10', border: 'border-[#00FF66]/30' },
-  { id: 'education', name: 'Education Brain', desc: 'Chia sẻ kiến thức, hướng dẫn, đào tạo bài bản.', icon: GraduationCap, color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/30' },
-  { id: 'game', name: 'Game Brain', desc: 'Tổ chức trò chơi, đố vui, tương tác giữ chân người xem.', icon: Gamepad2, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30' },
+  { id: 'story', name: 'Story Mode', desc: 'Kể chuyện theo chương (Cổ tích, ma, ngôn tình...)', icon: BookOpen, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/30', prompt: 'AI đọc truyện theo từng chương. Điều chỉnh cảm xúc. Khi có bình luận liên quan: Tạm dừng -> Trả lời -> Quay lại đúng đoạn đang kể. Không làm mất mạch câu chuyện.' },
+  { id: 'talk', name: 'Talk Mode', desc: 'Giao lưu, trò chuyện, hỏi đáp tự do với người xem', icon: MessageCircle, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/30', prompt: 'Không có kịch bản cố định. Đọc comment -> Hiểu -> Trả lời -> Hỏi ngược. Nếu không có comment: Chủ động đặt câu hỏi, mời người xem chia sẻ, nhắc follow kênh.' },
+  { id: 'knowledge', name: 'Knowledge Mode', desc: 'Chia sẻ kiến thức chuyên môn (AI, Marketing, Tài chính)', icon: FileText, color: 'text-indigo-400', bg: 'bg-indigo-500/10', border: 'border-indigo-500/30', prompt: 'Đọc bài -> Giải thích ngắn gọn, dễ hiểu, có ví dụ -> Viewer hỏi -> AI trả lời -> Tiếp tục bài học.' },
+  { id: 'sales', name: 'Product/Sales Mode', desc: 'Giới thiệu sản phẩm, xử lý phản đối, chốt đơn', icon: ShoppingCart, color: 'text-[#00FF66]', bg: 'bg-[#00FF66]/10', border: 'border-[#00FF66]/30', prompt: 'Giới thiệu sản phẩm -> Công dụng -> Trả lời câu hỏi -> CTA -> Pin sản phẩm -> Nhắc Voucher -> Chốt đơn. Dừng để cảm ơn quà nếu cần.' },
+  { id: 'game', name: 'Game Mode', desc: 'Đố vui, đoán số, đuổi hình bắt chữ', icon: Gamepad2, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', prompt: 'AI hỏi -> Viewer trả lời -> AI chấm đúng/sai -> Trao thưởng (Video Happy/Funny) -> Tiếp tục Game mới.' },
+  { id: 'music', name: 'Music Mode', desc: 'Hát, chọn bài theo yêu cầu của viewer', icon: Music, color: 'text-pink-400', bg: 'bg-pink-500/10', border: 'border-pink-500/30', prompt: 'AI Hát -> Viewer yêu cầu bài -> AI chọn bài hát tiếp theo -> Tiếp tục.' },
+  { id: 'dance', name: 'Dance Mode', desc: 'Thực hiện vũ đạo, nhảy theo quà tặng', icon: Zap, color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/30', prompt: 'Thực hiện điệu nhảy (Idle Dance). Có Gift -> Chuyển Dance khác. Có Gift lớn -> Dance VIP. Không nói nhiều.' },
+  { id: 'news', name: 'News Mode', desc: 'Đọc tin tức, phân tích sự kiện', icon: Radio, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/30', prompt: 'Đọc tin -> Giải thích/Phân tích -> Viewer hỏi -> Phân tích sâu hơn -> Tin tiếp theo.' },
+  { id: 'review', name: 'Review Mode', desc: 'Đánh giá phim, game, sản phẩm công nghệ', icon: PlaySquare, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', prompt: 'Review chi tiết từng phần -> Viewer hỏi -> Trả lời khách quan -> Tiếp tục Review.' },
+  { id: 'podcast', name: 'Podcast Mode', desc: 'Nói chuyện triết lý, tâm sự sâu lắng', icon: Mic2, color: 'text-fuchsia-400', bg: 'bg-fuchsia-500/10', border: 'border-fuchsia-500/30', prompt: 'Nói chuyện chậm rãi, tâm sự triết lý -> Đọc comment -> Trò chuyện sâu sắc -> Tiếp tục tâm sự.' },
+  { id: 'education', name: 'Education Mode', desc: 'Dạy học chuyên ngành, hướng dẫn step-by-step', icon: GraduationCap, color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/30', prompt: 'Dạy học bài bản (Toán, Tiếng Anh, Lập trình). Hướng dẫn từng bước. Yêu cầu viewer tương tác để kiểm tra bài.' },
+  { id: 'meditation', name: 'Meditation Mode', desc: 'Đọc lời thiền định, nhạc thư giãn', icon: Heart, color: 'text-teal-400', bg: 'bg-teal-500/10', border: 'border-teal-500/30', prompt: 'Giọng nói nhẹ nhàng, chậm rãi. Đọc lời dẫn thiền định -> Nhạc thư giãn -> Trả lời nhẹ nhàng nếu có người hỏi.' },
+  { id: 'horror', name: 'Horror Mode', desc: 'Kể truyện ma giật gân, hiệu ứng kinh dị', icon: Camera, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/30', prompt: 'Kể truyện ma. Gọi hiệu ứng âm thanh/hình ảnh tối. Khi có người comment sợ hãi -> AI phản hồi rùng rợn hoặc trấn an -> Tiếp tục.' },
+  { id: 'motivation', name: 'Motivation Mode', desc: 'Truyền động lực, đọc Quote, kể chuyện thành công', icon: Zap, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/30', prompt: 'Đọc Quote truyền cảm hứng -> Kể chuyện thành công vượt khó -> Truyền động lực mạnh mẽ -> Trả lời câu hỏi của Viewer.' },
+  { id: 'qa', name: 'Q&A Mode', desc: 'Chỉ tập trung trả lời câu hỏi của viewer', icon: Info, color: 'text-lime-400', bg: 'bg-lime-500/10', border: 'border-lime-500/30', prompt: 'Chế độ Hỏi-Đáp liên tục. Đọc comment -> Trả lời. Không có kịch bản chính.' },
+  { id: 'roleplay', name: 'Roleplay Mode', desc: 'Nhập vai (Bác sĩ, giáo viên, nhân viên...)', icon: Smile, color: 'text-sky-400', bg: 'bg-sky-500/10', border: 'border-sky-500/30', prompt: 'Nhập vai hoàn toàn vào nhân vật (Ví dụ: Bác sĩ). Xưng hô và giao tiếp chuẩn theo vai trò được giao trong suốt phiên Live.' },
 ];
 
 const VIDEO_CATEGORIES = [
@@ -33,13 +55,22 @@ const EVENT_PRIORITIES = [
 ];
 
 export default function LivestreamAISetup() {
-  const [activeStep, setActiveStep] = useState(2); // Default to step 2 for demo purposes
-  const [selectedBrain, setSelectedBrain] = useState('sales');
-  const [step3Tab, setStep3Tab] = useState('library'); // 'library' | 'priority'
+  const [activeStep, setActiveStep] = useState(2); // Default to step 2
+  const [selectedBrain, setSelectedBrain] = useState('story');
+  const [systemPrompt, setSystemPrompt] = useState('');
+  const [step3Tab, setStep3Tab] = useState('library');
   const [emotion, setEmotion] = useState(70);
 
+  // Update System Prompt when selected brain changes
+  useEffect(() => {
+    const pack = BRAIN_PACKS.find(p => p.id === selectedBrain);
+    if (pack) {
+      setSystemPrompt(SYSTEM_PROMPT_TEMPLATE + `\n[LUỒNG HOẠT ĐỘNG: ${pack.name}]\n` + pack.prompt);
+    }
+  }, [selectedBrain]);
+
   return (
-    <div className="w-full max-w-6xl mx-auto flex flex-col gap-6 text-white pb-24">
+    <div className="w-full max-w-7xl mx-auto flex flex-col gap-6 text-white pb-24">
       
       {/* Hero Banner */}
       <div className="bg-[#121216]/80 backdrop-blur-md rounded-2xl p-8 flex flex-col md:flex-row gap-8 justify-between relative overflow-hidden border border-white/10 shadow-lg">
@@ -114,7 +145,7 @@ export default function LivestreamAISetup() {
          {/* Step Content */}
          <div className="bg-[#121216]/60 backdrop-blur-md rounded-2xl border border-white/10 p-6 md:p-8 shadow-lg">
             
-            {/* STEP 1: NHÂN VẬT */}
+            {/* STEP 1 */}
             {activeStep === 1 && (
               <div>
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
@@ -135,67 +166,90 @@ export default function LivestreamAISetup() {
               </div>
             )}
             
-            {/* STEP 2: BỘ NÃO AI */}
+            {/* STEP 2: BỘ NÃO AI VÀ MASTER PROMPT */}
             {activeStep === 2 && (
-              <div>
-                <div className="mb-8">
-                  <span className="inline-block px-3 py-1 bg-[#00FF66]/10 text-[#00FF66] rounded-full text-[10px] font-bold mb-3 border border-[#00FF66]/20">Bước 2 • Chủ đề & Tư duy</span>
-                  <h3 className="text-2xl font-black text-white mb-2">Hệ thống bộ não theo chủ đề (Brain Pack)</h3>
-                  <p className="text-sm text-gray-400 font-medium max-w-2xl">
-                    Mỗi phiên Live sẽ nạp một "Brain Pack" riêng biệt để AI biết cách ứng xử, trả lời comment và điều hướng kịch bản. Chọn bộ não phù hợp nhất với mục tiêu của bạn hôm nay.
-                  </p>
+              <div className="flex flex-col xl:flex-row gap-8">
+                {/* Left Side: Mode Selection (Grid) */}
+                <div className="flex-1">
+                  <div className="mb-6">
+                    <span className="inline-block px-3 py-1 bg-[#00FF66]/10 text-[#00FF66] rounded-full text-[10px] font-bold mb-3 border border-[#00FF66]/20">Bước 2 • Chủ đề & Master Prompt</span>
+                    <h3 className="text-2xl font-black text-white mb-2">Hệ thống 16 Live Modes</h3>
+                    <p className="text-sm text-gray-400 font-medium max-w-2xl">
+                      Chọn chế độ phù hợp. AI sẽ tự động load kịch bản (Master Prompt) để điều hướng toàn bộ hành động, biểu cảm, video và ưu tiên trả lời comment trong suốt phiên.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8 h-[500px] overflow-y-auto custom-scrollbar pr-2 pb-4">
+                    {BRAIN_PACKS.map(pack => (
+                      <button 
+                        key={pack.id}
+                        onClick={() => setSelectedBrain(pack.id)}
+                        className={`text-left p-4 rounded-xl border transition-all ${
+                          selectedBrain === pack.id 
+                            ? `bg-black/60 border-[#00FF66] shadow-[0_0_15px_rgba(0,255,102,0.15)]` 
+                            : 'bg-black/20 border-white/5 hover:border-white/20'
+                        }`}
+                      >
+                        <div className="flex gap-4 items-center">
+                          <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center ${pack.bg} ${pack.border} border`}>
+                            <pack.icon className={`w-5 h-5 ${pack.color}`} />
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                              {pack.name}
+                              {selectedBrain === pack.id && <span className="w-1.5 h-1.5 rounded-full bg-[#00FF66] shadow-glow-green"></span>}
+                            </h4>
+                            <p className="text-[10px] text-gray-400 mt-1 line-clamp-1">{pack.desc}</p>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                  {BRAIN_PACKS.map(pack => (
-                    <button 
-                      key={pack.id}
-                      onClick={() => setSelectedBrain(pack.id)}
-                      className={`text-left p-5 rounded-2xl border transition-all ${
-                        selectedBrain === pack.id 
-                          ? `bg-black/60 border-[#00FF66] shadow-[0_0_15px_rgba(0,255,102,0.15)]` 
-                          : 'bg-black/20 border-white/5 hover:border-white/20'
-                      }`}
-                    >
-                      <div className={`w-10 h-10 rounded-xl mb-4 flex items-center justify-center ${pack.bg} ${pack.border} border`}>
-                        <pack.icon className={`w-5 h-5 ${pack.color}`} />
+                {/* Right Side: System Prompt Editor & Options */}
+                <div className="w-full xl:w-[450px] flex flex-col gap-4">
+                  <div className="bg-black/40 rounded-2xl border border-white/10 p-5 flex flex-col h-[400px]">
+                     <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                       <FileText className="w-4 h-4 text-[#00FF66]" /> System Prompt (Chỉnh sửa)
+                     </h4>
+                     <p className="text-[10px] text-gray-400 mb-3">
+                       Khung này chứa "Master Prompt" điều khiển não bộ AI. Bạn có thể tự do thêm thắt quy tắc, thông tin hoặc luật cấm ngôn tùy ý.
+                     </p>
+                     <textarea 
+                       value={systemPrompt}
+                       onChange={(e) => setSystemPrompt(e.target.value)}
+                       className="w-full flex-1 bg-[#121216] border border-white/10 rounded-xl p-4 text-xs font-mono text-gray-300 focus:border-[#00FF66] outline-none resize-none custom-scrollbar leading-relaxed"
+                     ></textarea>
+                  </div>
+
+                  <div className="p-5 bg-black/40 rounded-2xl border border-white/10">
+                    <h4 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                      <Settings2 className="w-4 h-4 text-[#00FF66]" /> Tuỳ chỉnh Mở rộng
+                    </h4>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-300 mb-2">Phong cách giao tiếp bổ sung</label>
+                        <select className="w-full bg-[#121216] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#00FF66] outline-none">
+                          <option>Chuẩn theo Master Prompt</option>
+                          <option>Trang trọng, lịch sự hơn</option>
+                          <option>Lầy lội, hài hước hơn</option>
+                        </select>
                       </div>
-                      <h4 className="text-base font-bold text-white mb-1.5 flex items-center justify-between">
-                        {pack.name}
-                        {selectedBrain === pack.id && <span className="w-2 h-2 rounded-full bg-[#00FF66] shadow-glow-green"></span>}
-                      </h4>
-                      <p className="text-[11px] text-gray-400 leading-relaxed font-medium line-clamp-2">{pack.desc}</p>
-                    </button>
-                  ))}
-                </div>
-
-                <div className="p-6 bg-black/40 rounded-2xl border border-white/10">
-                  <h4 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                    <Settings2 className="w-4 h-4 text-[#00FF66]" /> Tuỳ chỉnh Brain Pack
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-300 mb-2">Phong cách nói</label>
-                      <select className="w-full bg-[#121216] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#00FF66] outline-none">
-                        <option>Vui vẻ, năng động (Mặc định)</option>
-                        <option>Trang trọng, chuyên nghiệp</option>
-                        <option>Nhẹ nhàng, tâm tình</option>
-                        <option>Hài hước, lầy lội</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-300 mb-2">
-                        Độ cảm xúc (Emotion: {emotion}%)
-                      </label>
-                      <input 
-                         type="range" min="0" max="100" step="10" value={emotion} 
-                         onChange={(e) => setEmotion(parseInt(e.target.value))}
-                         className="w-full accent-[#00FF66] mb-2 h-2 bg-white/20 rounded-lg appearance-none cursor-pointer mt-2" 
-                       />
-                       <div className="flex justify-between text-[10px] text-gray-500 font-bold">
-                         <span>Bình tĩnh</span>
-                         <span>Cảm xúc mạnh</span>
-                       </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-300 mb-2">
+                          Mức độ Cảm xúc (Emotion: {emotion}%)
+                        </label>
+                        <input 
+                           type="range" min="0" max="100" step="10" value={emotion} 
+                           onChange={(e) => setEmotion(parseInt(e.target.value))}
+                           className="w-full accent-[#00FF66] mb-1 h-2 bg-white/20 rounded-lg appearance-none cursor-pointer mt-1" 
+                         />
+                         <div className="flex justify-between text-[10px] text-gray-500 font-bold mt-1">
+                           <span>Bình tĩnh tĩnh tâm</span>
+                           <span>Sôi nổi năng động</span>
+                         </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -226,10 +280,10 @@ export default function LivestreamAISetup() {
                 {step3Tab === 'library' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {VIDEO_CATEGORIES.map(cat => (
-                      <div key={cat.id} className="bg-black/40 border border-white/10 rounded-2xl p-5 flex flex-col h-full">
+                      <div key={cat.id} className="bg-black/40 border border-white/10 rounded-2xl p-5 flex flex-col h-full hover:border-[#00FF66]/30 transition-colors group">
                         <div className="flex justify-between items-start mb-4">
                           <div>
-                            <h4 className="font-bold text-white text-sm">{cat.name}</h4>
+                            <h4 className="font-bold text-white text-sm group-hover:text-[#00FF66] transition-colors">{cat.name}</h4>
                             <p className="text-[10px] text-gray-500 mt-1">{cat.desc}</p>
                           </div>
                           <span className="text-[10px] font-black bg-white/10 text-white px-2 py-1 rounded">0 video</span>
@@ -279,7 +333,7 @@ export default function LivestreamAISetup() {
               </div>
             )}
 
-            {/* STEP 4: CHỐT ĐƠN */}
+            {/* STEP 4 */}
             {activeStep === 4 && (
               <div className="py-24 text-center">
                  <div className="w-16 h-16 rounded-2xl bg-[#00FF66]/10 border border-[#00FF66]/30 shadow-glow-green flex items-center justify-center mx-auto mb-4">
