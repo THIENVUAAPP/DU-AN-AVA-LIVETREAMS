@@ -255,7 +255,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                     <Settings className="w-4 h-4"/> Cài đặt
                   </button>
                   <button onClick={() => setRightTab('history')} className={`flex-1 flex items-center justify-center gap-2 py-2 rounded font-bold text-xs transition-colors ${rightTab === 'history' ? 'bg-[#00FF66]/20 text-[#00FF66] border border-[#00FF66]/30 shadow-glow-green' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                    <Clock className="w-4 h-4"/> Lịch sử <span className="bg-[#00FF66] text-black px-1.5 py-0.5 rounded-full text-[9px]">{MOCK_HISTORY[activeTab]?.length || 0}</span>
+                    <Clock className="w-4 h-4"/> Lịch sử <span className="bg-[#00FF66] text-black px-1.5 py-0.5 rounded-full text-[9px]">{MOCK_HISTORY[defaultTab]?.length || 0}</span>
                   </button>
                </div>
 
