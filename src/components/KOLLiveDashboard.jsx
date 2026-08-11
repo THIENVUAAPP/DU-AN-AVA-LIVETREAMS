@@ -11,6 +11,13 @@ import AIVoiceModule from './kol-live/AIVoiceModule';
 import AIAvatarModule from './kol-live/AIAvatarModule';
 import LivestreamModule from './kol-live/LivestreamModule';
 import DashboardModule from './kol-live/DashboardModule';
+import ProductsModule from './kol-live/ProductsModule';
+import SalesModule from './kol-live/SalesModule';
+import CommentsModule from './kol-live/CommentsModule';
+import CRMModule from './kol-live/CRMModule';
+import OrdersModule from './kol-live/OrdersModule';
+import InventoryModule from './kol-live/InventoryModule';
+import PaymentModule from './kol-live/PaymentModule';
 
 const MODULES = [
   { id: 'dashboard', icon: LayoutDashboard, label: '① Dashboard', category: 'CORE' },
@@ -146,6 +153,34 @@ export default function KOLLiveDashboard() {
             // MODULE 5: Renders the migrated AI Kể Chuyện UI
             <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
               <AIBrainModule />
+            </div>
+          ) : activeModule === 'products' ? (
+            <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
+              <ProductsModule />
+            </div>
+          ) : activeModule === 'sales' ? (
+            <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
+              <SalesModule />
+            </div>
+          ) : activeModule === 'comments' ? (
+            <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
+              <CommentsModule />
+            </div>
+          ) : activeModule === 'crm' ? (
+            <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
+              <CRMModule />
+            </div>
+          ) : activeModule === 'orders' ? (
+            <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
+              <OrdersModule />
+            </div>
+          ) : activeModule === 'inventory' ? (
+            <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
+              <InventoryModule />
+            </div>
+          ) : activeModule === 'payment' ? (
+            <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
+              <PaymentModule />
             </div>
           ) : (
             <PlaceholderModule module={activeModData} />
