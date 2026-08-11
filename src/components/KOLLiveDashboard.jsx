@@ -12,6 +12,8 @@ import ThuVienAIDOL from './genaidol/ThuVienAIDOL';
 import LivestreamAISetup from './genaidol/LivestreamAISetup';
 import AIDOLLiveConsole from './genaidol/AIDOLLiveConsole';
 import TrangChu from './genaidol/TrangChu';
+import TaoAIDOLMoi from './genaidol/TaoAIDOLMoi';
+import WorkspaceTacVu from './genaidol/WorkspaceTacVu';
 
 // --- PLACEHOLDER COMPONENTS FOR PAGES ---
 const PlaceholderPage = ({ title }) => (
@@ -125,7 +127,10 @@ export default function KOLLiveDashboard() {
                   
                   <div className="grid grid-cols-2 gap-3">
                     {/* Primary Big Card */}
-                    <button className="col-span-2 flex items-center p-5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:shadow-lg hover:shadow-blue-500/30 transition-all text-left group">
+                    <button 
+                      onClick={() => { setActiveTab('create-aidol'); setShowTaskDropdown(false); }}
+                      className="col-span-2 flex items-center p-5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:shadow-lg hover:shadow-blue-500/30 transition-all text-left group"
+                    >
                       <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mr-4 backdrop-blur-sm">
                         <Sparkles className="w-6 h-6" />
                       </div>
@@ -141,7 +146,11 @@ export default function KOLLiveDashboard() {
 
                     {/* Secondary Cards */}
                     {QUICK_TASKS.slice(1).map((task) => (
-                      <button key={task.id} className="flex items-start p-4 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/50 transition-colors text-left group">
+                      <button 
+                        key={task.id} 
+                        onClick={() => { setActiveTab(task.id); setShowTaskDropdown(false); }}
+                        className="flex items-start p-4 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/50 transition-colors text-left group"
+                      >
                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0 ${task.color}`}>
                            <task.icon className="w-5 h-5" />
                          </div>
@@ -182,6 +191,10 @@ export default function KOLLiveDashboard() {
       <main className="flex-1 relative z-10 overflow-y-auto">
         <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
           {activeTab === 'home' && <TrangChu />}
+          {activeTab === 'create-aidol' && <TaoAIDOLMoi />}
+          {activeTab === 'voice' && <WorkspaceTacVu defaultTab="voice" />}
+          {activeTab === 'lipsync' && <WorkspaceTacVu defaultTab="lipsync" />}
+          {(activeTab === 'video' || activeTab === 'image' || activeTab === 'studio') && <WorkspaceTacVu defaultTab="image-video" />}
           {activeTab === 'my-aidol' && <ThuVienAIDOL />}
           {activeTab === 'livestream-ai' && <LivestreamAISetup />}
           {activeTab === 'history' && <LichSuTao />}
