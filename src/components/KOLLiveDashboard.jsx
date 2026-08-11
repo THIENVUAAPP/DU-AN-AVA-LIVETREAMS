@@ -7,6 +7,10 @@ import {
 } from 'lucide-react';
 
 import AIBrainModule from './kol-live/AIBrainModule';
+import AIVoiceModule from './kol-live/AIVoiceModule';
+import AIAvatarModule from './kol-live/AIAvatarModule';
+import LivestreamModule from './kol-live/LivestreamModule';
+import DashboardModule from './kol-live/DashboardModule';
 
 const MODULES = [
   { id: 'dashboard', icon: LayoutDashboard, label: '① Dashboard', category: 'CORE' },
@@ -122,7 +126,23 @@ export default function KOLLiveDashboard() {
 
         {/* Module Content */}
         <div className="flex-1 overflow-auto custom-scrollbar p-6 relative z-10 flex">
-          {activeModule === 'ai-brain' ? (
+          {activeModule === 'dashboard' ? (
+            <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
+              <DashboardModule />
+            </div>
+          ) : activeModule === 'livestream' ? (
+            <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
+              <LivestreamModule />
+            </div>
+          ) : activeModule === 'ai-avatar' ? (
+            <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
+              <AIAvatarModule />
+            </div>
+          ) : activeModule === 'ai-voice' ? (
+            <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
+              <AIVoiceModule />
+            </div>
+          ) : activeModule === 'ai-brain' ? (
             // MODULE 5: Renders the migrated AI Kể Chuyện UI
             <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
               <AIBrainModule />
