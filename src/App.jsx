@@ -10,7 +10,7 @@ import LiveCommerceStudio from "./components/LiveCommerceStudio";
 import MultistreamStudio from "./components/MultistreamStudio";
 import UnifiedChatHub from "./components/UnifiedChatHub";
 import DanceFloorStudio from "./components/DanceFloorStudio";
-import AIStorytellerDashboard from "./components/AIStorytellerDashboard";
+import KOLLiveDashboard from "./components/KOLLiveDashboard";
 import DanceFloorOverlay from "./components/DanceFloorOverlay";
 import MultiAccountManager from "./components/MultiAccountManager";
 import AISellerOps from "./components/AISellerOps";
@@ -271,9 +271,7 @@ export default function App() {
             )}
 
             {activeTab === "ai-storyteller" && (
-              (currentUser?.plan === 'FREE' || currentUser?.plan === 'STARTER')
-                ? <UpgradePrompt featureName="AI Kể Chuyện (Character Engine)" requiredPlan="Gói PRO" setActiveTab={setActiveTab} />
-                : <AIStorytellerDashboard />
+              <KOLLiveDashboard />
             )}
 
             <div style={{ display: activeTab === "livestream-cloner" ? "block" : "none" }}>

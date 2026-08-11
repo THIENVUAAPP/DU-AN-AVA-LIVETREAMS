@@ -50,7 +50,7 @@ export default function Header({
     { id: 'livestream-cloner', label: 'Clone Live' },
     { id: 'chat-hub', label: 'Chat Hub' },
     { id: 'dance-floor', label: 'Sàn Nhảy' },
-    { id: 'ai-storyteller', label: 'AI Kể Chuyện' },
+    { id: 'ai-storyteller', label: 'KOL LIVE' },
   ];
 
   // Close dropdown on click outside

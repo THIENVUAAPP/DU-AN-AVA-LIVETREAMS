@@ -7,7 +7,7 @@ import {
   Upload, Trash2, Edit2, Share2, Facebook, Youtube, Radio, Power
 } from 'lucide-react';
 
-export default function AIStorytellerDashboard() {
+export default function AIBrainModule() {
   const [activeTab, setActiveTab] = useState('character');
   const [isRunning, setIsRunning] = useState(false);
   const [currentState, setCurrentState] = useState('IDLE');
