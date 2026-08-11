@@ -118,10 +118,6 @@ export default function ThuVienAIDOL() {
                    <div className="text-[10px] font-bold text-gray-500">đang lưu</div>
                 </div>
              </div>
-          </div>font-black text-[#00FF66] mb-1">0</div>
-                   <div className="text-[10px] font-bold text-gray-500">có video DONE</div>
-                </div>
-             </div>
           </div>
 
           {/* Filters */}
