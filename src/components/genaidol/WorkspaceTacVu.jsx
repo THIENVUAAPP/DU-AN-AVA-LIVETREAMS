@@ -49,7 +49,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
     setIsGenerating(true);
     
     try {
-      const res = await fetch('http://localhost:3001/api/generate-script', {
+      const res = await fetch('/api/generate-script', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -99,27 +99,67 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
 
   const VOICES = {
     vbee: [
-      { group: 'Nữ Miền Bắc', options: generateVoices('Nữ HN', 'vbee_f_n') },
-      { group: 'Nam Miền Bắc', options: generateVoices('Nam HN', 'vbee_m_n') },
-      { group: 'Nữ Miền Trung', options: generateVoices('Nữ Huế', 'vbee_f_c') },
-      { group: 'Nam Miền Trung', options: generateVoices('Nam Đà Nẵng', 'vbee_m_c') },
-      { group: 'Nữ Miền Nam', options: generateVoices('Nữ HCM', 'vbee_f_s') },
-      { group: 'Nam Miền Nam', options: generateVoices('Nam HCM', 'vbee_m_s') },
-      { group: 'Nữ Miền Tây', options: generateVoices('Nữ Cần Thơ', 'vbee_f_w') },
-      { group: 'Nam Miền Tây', options: generateVoices('Nam Cần Thơ', 'vbee_m_w') },
+      { group: 'Nữ Miền Bắc', options: [
+        { id: 'vbee_f_n_1', name: 'Ngọc Huyền (MC, Truyền cảm)' },
+        { id: 'vbee_f_n_2', name: 'Mai Phương (Trẻ trung, Sôi động)' },
+        { id: 'vbee_f_n_3', name: 'Thu Hương (Bản tin, Nghiêm túc)' }
+      ]},
+      { group: 'Nam Miền Bắc', options: [
+        { id: 'vbee_m_n_1', name: 'Mạnh Dũng (Mạnh mẽ, Dứt khoát)' },
+        { id: 'vbee_m_n_2', name: 'Hoàng Bách (Trầm ấm, Kể chuyện)' }
+      ]},
+      { group: 'Nữ Miền Nam', options: [
+        { id: 'vbee_f_s_1', name: 'Thảo Chi (Nhí nhảnh, Dễ thương)' },
+        { id: 'vbee_f_s_2', name: 'Lan Trinh (Tự nhiên, Bán hàng)' }
+      ]},
+      { group: 'Nam Miền Nam', options: [
+        { id: 'vbee_m_s_1', name: 'Minh Hoàng (Reviewer, Hiện đại)' }
+      ]},
+      { group: 'Nữ Miền Trung', options: [
+        { id: 'vbee_f_c_1', name: 'Trúc Quỳnh (Ngọt ngào, Nhẹ nhàng)' }
+      ]}
     ],
     elevenlabs: [
-      { group: 'English (US)', options: generateVoices('US English', 'el_us') },
-      { group: 'English (UK)', options: generateVoices('UK English', 'el_uk') },
-      { group: 'Other Languages (50+)', options: generateLangs('el_multi') }
+      { group: 'Tiếng Anh (Bản ngữ)', options: [
+        { id: 'el_rachel', name: 'Rachel (Calm, Soft)' },
+        { id: 'el_drew', name: 'Drew (News, Authoritative)' },
+        { id: 'el_clyde', name: 'Clyde (War veteran, Husky)' },
+        { id: 'el_paul', name: 'Paul (Documentary, Deep)' },
+        { id: 'el_domi', name: 'Domi (Strong, Narrative)' },
+        { id: 'el_bella', name: 'Bella (Soft, ASMR)' },
+        { id: 'el_antoni', name: 'Antoni (Friendly, Bright)' },
+        { id: 'el_charlie', name: 'Charlie (Conversational)' }
+      ]},
+      { group: 'Tiếng Việt (Đa ngôn ngữ)', options: [
+        { id: 'el_vi_1', name: 'Tiếng Việt (Multilingual v2 - Mặc định 1)' },
+        { id: 'el_vi_2', name: 'Tiếng Việt (Multilingual v2 - Mặc định 2)' }
+      ]}
     ],
     gemini: [
-      { group: 'Giọng đọc Google Nữ', options: generateVoices('Google Nữ', 'gg_f') },
-      { group: 'Giọng đọc Google Nam', options: generateVoices('Google Nam', 'gg_m') },
+      { group: 'Google Cloud TTS (Tiếng Việt)', options: [
+        { id: 'vi-VN-Standard-A', name: 'vi-VN-Standard-A (Nữ - Tiêu chuẩn)' },
+        { id: 'vi-VN-Standard-B', name: 'vi-VN-Standard-B (Nam - Tiêu chuẩn)' },
+        { id: 'vi-VN-Standard-C', name: 'vi-VN-Standard-C (Nữ - Tiêu chuẩn)' },
+        { id: 'vi-VN-Standard-D', name: 'vi-VN-Standard-D (Nam - Tiêu chuẩn)' },
+        { id: 'vi-VN-Neural2-A', name: 'vi-VN-Neural2-A (Nữ - Cao cấp)' },
+        { id: 'vi-VN-Neural2-D', name: 'vi-VN-Neural2-D (Nam - Cao cấp)' },
+        { id: 'vi-VN-Wavenet-A', name: 'vi-VN-Wavenet-A (Nữ - Tự nhiên)' },
+        { id: 'vi-VN-Wavenet-B', name: 'vi-VN-Wavenet-B (Nam - Tự nhiên)' },
+        { id: 'vi-VN-Wavenet-C', name: 'vi-VN-Wavenet-C (Nữ - Tự nhiên)' },
+        { id: 'vi-VN-Wavenet-D', name: 'vi-VN-Wavenet-D (Nam - Tự nhiên)' }
+      ]}
     ],
-    free: [
-      { group: 'API Miễn phí Nữ', options: generateVoices('Free Nữ', 'fr_f') },
-      { group: 'API Miễn phí Nam', options: generateVoices('Free Nam', 'fr_m') },
+    minimax: [
+      { group: 'Giọng Nam MiniMax', options: [
+        { id: 'mm_male_1', name: 'Nam Thanh Niên (Năng động)' },
+        { id: 'mm_male_2', name: 'Nam Trung Niên (Trầm ấm)' },
+        { id: 'mm_male_3', name: 'Bé Trai (Đáng yêu)' }
+      ]},
+      { group: 'Giọng Nữ MiniMax', options: [
+        { id: 'mm_female_1', name: 'Nữ Thanh Niên (Ngọt ngào)' },
+        { id: 'mm_female_2', name: 'Nữ Trưởng Thành (Chuyên nghiệp)' },
+        { id: 'mm_female_3', name: 'Bé Gái (Hoạt hình/Anime)' }
+      ]}
     ]
   };
 
@@ -271,7 +311,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                              <option value="vbee">VBee (Việt Nam)</option>
                              <option value="elevenlabs">ElevenLabs (Cao cấp)</option>
                              <option value="gemini">Google Gemini Voice</option>
-                             <option value="free">Miễn phí / API Rẻ</option>
+                             <option value="minimax">MiniMax (Giọng tự nhiên)</option>
                            </select>
                          </div>
 
