@@ -35,8 +35,8 @@ export default function ThuVienAIDOL() {
       id: Date.now().toString(),
       name: newAidolName,
       category: newAidolCategory,
-      mediaUrl: newAidolMedia,
-      type: newAidolMedia.includes('video') ? 'video' : 'image',
+      mediaUrl: newAidolMedia.url,
+      type: newAidolMedia.type,
       createdAt: new Date().toISOString()
     };
     
@@ -170,9 +170,7 @@ export default function ThuVienAIDOL() {
                  <div key={item.id} className="bg-[#121216] border border-white/10 rounded-xl overflow-hidden hover:border-[#00FF66]/50 transition-colors group relative">
                     <div className="aspect-[3/4] bg-black/40 relative">
                        {item.type === 'video' ? (
-                          <div className="w-full h-full flex items-center justify-center bg-gray-900 text-gray-500">
-                             <PlayCircle className="w-12 h-12" />
-                          </div>
+                          <video src={item.mediaUrl} className="w-full h-full object-cover" muted loop autoPlay />
                        ) : (
                           <img src={item.mediaUrl} alt={item.name} className="w-full h-full object-cover" />
                        )}
@@ -247,8 +245,10 @@ export default function ThuVienAIDOL() {
                            accept="image/*,video/*"
                            onChange={(e) => {
                              if(e.target.files[0]) {
-                               const url = URL.createObjectURL(e.target.files[0]);
-                               setNewAidolMedia(url);
+                               const file = e.target.files[0];
+                               const url = URL.createObjectURL(file);
+                               const type = file.type.includes('video') ? 'video' : 'image';
+                               setNewAidolMedia({ url, type });
                              }
                            }}
                            className="hidden" 
@@ -259,10 +259,10 @@ export default function ThuVienAIDOL() {
                    <div className="flex-1 border-2 border-dashed border-white/10 rounded-xl flex flex-col items-center justify-center bg-black/40 relative hover:border-[#00FF66]/30 transition-colors overflow-hidden">
                       {newAidolMedia ? (
                          <div className="w-full h-full p-2 flex justify-center items-center relative">
-                           {newAidolMedia.includes('video') ? (
-                             <video src={newAidolMedia} className="max-h-[250px] rounded-lg" controls />
+                           {newAidolMedia.type === 'video' ? (
+                             <video src={newAidolMedia.url} className="max-h-[250px] rounded-lg" controls />
                            ) : (
-                             <img src={newAidolMedia} className="max-h-[250px] rounded-lg object-contain" />
+                             <img src={newAidolMedia.url} className="max-h-[250px] rounded-lg object-contain" />
                            )}
                            <button onClick={() => setNewAidolMedia(null)} className="absolute top-4 right-4 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white">X</button>
                          </div>
