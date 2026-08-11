@@ -280,7 +280,6 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                             </div>
                          )}
                          <input type="file" accept="audio/*" className="hidden" ref={audioInputRef} onChange={(e) => { if(e.target.files[0]) { setSelectedAudioFile(e.target.files[0]); setSelectedAILibraryInfo(null); } }} />
-                      </div>
 
                          {lipsyncAudioType === 'text' && (
                             <div className="text-[10px] text-gray-500 font-medium px-1">
