@@ -1,192 +1,195 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
-  LayoutDashboard, Video, UserSquare2, Mic, BrainCircuit, Package, 
-  ShoppingCart, MessageSquareText, Users, Receipt, Boxes, CreditCard, 
-  Image as ImageIcon, Zap, LineChart, Globe, Cloud, ShieldCheck, 
-  Code2, Settings, ChevronRight
+  Home, Wand2, UserSquare2, Radio, Clock, BookOpen, Code2, 
+  CreditCard, User, ChevronDown, Plus, Mic, Video, Image as ImageIcon,
+  Sparkles, PlayCircle, Settings
 } from 'lucide-react';
 
-import AIBrainModule from './kol-live/AIBrainModule';
-import AIVoiceModule from './kol-live/AIVoiceModule';
-import AIAvatarModule from './kol-live/AIAvatarModule';
-import LivestreamModule from './kol-live/LivestreamModule';
-import DashboardModule from './kol-live/DashboardModule';
-import ProductsModule from './kol-live/ProductsModule';
-import SalesModule from './kol-live/SalesModule';
-import CommentsModule from './kol-live/CommentsModule';
-import CRMModule from './kol-live/CRMModule';
-import OrdersModule from './kol-live/OrdersModule';
-import InventoryModule from './kol-live/InventoryModule';
-import PaymentModule from './kol-live/PaymentModule';
+import LichSuTao from './genaidol/LichSuTao';
+import HuongDanAcademy from './genaidol/HuongDanAcademy';
+import ThanhToanCoin from './genaidol/ThanhToanCoin';
+import ThuVienAIDOL from './genaidol/ThuVienAIDOL';
+import LivestreamAISetup from './genaidol/LivestreamAISetup';
+import AIDOLLiveConsole from './genaidol/AIDOLLiveConsole';
 
-const MODULES = [
-  { id: 'dashboard', icon: LayoutDashboard, label: '① Dashboard', category: 'CORE' },
-  { id: 'livestream', icon: Video, label: '② Livestream', category: 'CORE' },
-  { id: 'ai-avatar', icon: UserSquare2, label: '③ AI Avatar', category: 'AI ENGINE' },
-  { id: 'ai-voice', icon: Mic, label: '④ AI Voice', category: 'AI ENGINE' },
-  { id: 'ai-brain', icon: BrainCircuit, label: '⑤ AI Brain', category: 'AI ENGINE', isSpecial: true },
-  { id: 'products', icon: Package, label: '⑥ Sản phẩm', category: 'E-COMMERCE' },
-  { id: 'sales', icon: ShoppingCart, label: '⑦ Bán hàng', category: 'E-COMMERCE' },
-  { id: 'comments', icon: MessageSquareText, label: '⑧ Bình luận', category: 'E-COMMERCE' },
-  { id: 'crm', icon: Users, label: '⑨ CRM', category: 'E-COMMERCE' },
-  { id: 'orders', icon: Receipt, label: '⑩ Đơn hàng', category: 'E-COMMERCE' },
-  { id: 'inventory', icon: Boxes, label: '⑪ Kho hàng', category: 'E-COMMERCE' },
-  { id: 'payment', icon: CreditCard, label: '⑫ Thanh toán', category: 'E-COMMERCE' },
-  { id: 'media', icon: ImageIcon, label: '⑬ Media', category: 'RESOURCES' },
-  { id: 'automation', icon: Zap, label: '⑭ Automation', category: 'SYSTEM' },
-  { id: 'reports', icon: LineChart, label: '⑮ Báo cáo', category: 'SYSTEM' },
-  { id: 'platforms', icon: Globe, label: '⑯ Đa nền tảng', category: 'SYSTEM' },
-  { id: 'cloud', icon: Cloud, label: '⑰ Cloud', category: 'INFRA' },
-  { id: 'security', icon: ShieldCheck, label: '十八 Bảo mật', category: 'INFRA' },
-  { id: 'api', icon: Code2, label: '⑲ API & SDK', category: 'INFRA' },
-  { id: 'settings', icon: Settings, label: '⑳ Cài đặt', category: 'INFRA' }
-];
-
-const PlaceholderModule = ({ module }) => (
-  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-black/20 rounded-2xl border border-white/5 animate-pulse">
-    <module.icon className="w-24 h-24 text-gray-700 mb-6" />
-    <h2 className="text-3xl font-black text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
-      {module.label} Module
-    </h2>
-    <p className="text-gray-400 max-w-lg mb-8 text-lg">
-      Hệ thống đang chuẩn bị kết nối dữ liệu Backend và UI cho phân hệ này. 
-      Vui lòng quay lại sau khi bản cập nhật hệ sinh thái KOL LIVE hoàn tất!
-    </p>
-    <div className="px-6 py-3 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 text-sm font-bold shadow-[0_0_15px_rgba(59,130,246,0.3)]">
-      Đang Khởi Tạo...
+// --- PLACEHOLDER COMPONENTS FOR PAGES ---
+const PlaceholderPage = ({ title }) => (
+  <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
+    <div className="w-24 h-24 rounded-full bg-blue-50 flex items-center justify-center mb-6">
+      <Sparkles className="w-12 h-12 text-blue-500" />
     </div>
+    <h2 className="text-2xl font-bold text-gray-800 mb-4">{title}</h2>
+    <p className="text-gray-500 max-w-md">
+      Hệ thống đang được nâng cấp luồng và kết nối backend cho module này. 
+      Vui lòng quay lại sau!
+    </p>
   </div>
 );
 
+// --- MAIN DASHBOARD (TOP NAV LAYOUT) ---
 export default function KOLLiveDashboard() {
-  const [activeModule, setActiveModule] = useState('ai-brain');
+  const [activeTab, setActiveTab] = useState('home');
+  const [showTaskDropdown, setShowTaskDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
-  const categories = Array.from(new Set(MODULES.map(m => m.category)));
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowTaskDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-  const activeModData = MODULES.find(m => m.id === activeModule);
+  const NAVIGATION = [
+    { id: 'home', label: 'Trang chủ', icon: Home },
+    { id: 'tasks', label: 'Tác vụ', suffix: 'Chọn nhanh', hasDropdown: true },
+    { id: 'my-aidol', label: 'AIDOL của tôi', icon: UserSquare2 },
+    { id: 'livestream-ai', label: 'Livestream AI', icon: Radio },
+    { id: 'history', label: 'Lịch sử', icon: Clock },
+    { id: 'guide', label: 'Hướng dẫn', icon: BookOpen },
+    { id: 'api', label: 'API', badge: 'Beta', icon: Code2 },
+    { id: 'payment', label: 'Thanh toán', icon: CreditCard },
+  ];
+
+  const QUICK_TASKS = [
+    { id: 'create-aidol', label: 'Tạo AIDOL mới', desc: 'Từ ảnh nhân vật, ảnh mẫu và thiết lập thương hiệu của bạn.', icon: Sparkles, color: 'bg-blue-500' },
+    { id: 'studio', label: 'Sáng tạo bằng AIDOL', desc: 'Chọn công cụ và dựng video cho nhân vật.', icon: PlayCircle, color: 'bg-purple-100 text-purple-600' },
+    { id: 'voice', label: 'Tạo giọng nói', desc: 'Tạo lời đọc, chọn giọng hoặc dùng giọng nhân bản.', icon: Mic, color: 'bg-pink-100 text-pink-600' },
+    { id: 'lipsync', label: 'Tạo nhép môi', desc: 'Đồng bộ giọng nói và khẩu hình cho video.', icon: UserSquare2, color: 'bg-emerald-100 text-emerald-600' },
+    { id: 'video', label: 'Tạo video', desc: 'Tạo video AI từ ý tưởng hoặc từ ảnh nguồn.', icon: Video, color: 'bg-cyan-100 text-cyan-600' },
+    { id: 'image', label: 'Tạo ảnh riêng lẻ', desc: 'Tạo ảnh mới để dùng cho nội dung và chiến dịch.', icon: ImageIcon, color: 'bg-orange-100 text-orange-600' },
+  ];
 
   return (
-    <div className="flex h-screen bg-[#0B0B14] text-white font-sans overflow-hidden">
-      {/* SIDEBAR: 20 Modules Navigation */}
-      <aside className="w-64 flex-shrink-0 bg-black/40 border-r border-white/10 flex flex-col backdrop-blur-md overflow-y-auto custom-scrollbar relative z-10">
-        <div className="p-5 border-b border-white/10 sticky top-0 bg-black/80 backdrop-blur-xl z-20">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.4)]">
-              <BrainCircuit className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
-                KOL LIVE
-              </h1>
-              <p className="text-[10px] text-emerald-400 font-bold tracking-wider uppercase">Control Center</p>
-            </div>
+    // LIGHT THEME BACKGROUND with faint network pattern (CSS pattern)
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-800 font-sans flex flex-col relative overflow-hidden">
+      
+      {/* Network Background Pattern */}
+      <div className="absolute inset-0 z-0 opacity-40 pointer-events-none" 
+           style={{ backgroundImage: 'radial-gradient(#CBD5E1 1px, transparent 1px)', backgroundSize: '30px 30px' }}>
+      </div>
+
+      {/* TOP NAVIGATION BAR */}
+      <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 relative z-50 shadow-sm">
+        
+        {/* LOGO: KOL LIVE */}
+        <div className="flex items-center gap-3 mr-8 cursor-pointer" onClick={() => setActiveTab('home')}>
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-md">
+            <Radio className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-800">
+              KOL LIVE
+            </h1>
           </div>
         </div>
 
-        <div className="p-3 space-y-6">
-          {categories.map(category => (
-            <div key={category} className="space-y-1">
-              <h3 className="px-3 text-[10px] font-black text-gray-500 tracking-widest mb-2">{category}</h3>
-              <div className="space-y-0.5">
-                {MODULES.filter(m => m.category === category).map(module => (
-                  <button
-                    key={module.id}
-                    onClick={() => setActiveModule(module.id)}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-300 group ${
-                      activeModule === module.id 
-                        ? (module.isSpecial ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/20 border border-purple-400/30' : 'bg-white/10 text-white border border-white/5')
-                        : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <module.icon className={`w-4 h-4 ${activeModule === module.id ? 'text-white' : 'text-gray-500 group-hover:text-gray-300'}`} />
-                      <span className="text-xs font-bold">{module.label}</span>
-                    </div>
-                    {activeModule === module.id && <ChevronRight className="w-3.5 h-3.5 text-white/50" />}
-                  </button>
-                ))}
-              </div>
+        {/* MAIN MENU */}
+        <nav className="hidden lg:flex flex-1 items-center justify-center gap-1">
+          {NAVIGATION.map((item) => (
+            <div key={item.id} className="relative" ref={item.hasDropdown ? dropdownRef : null}>
+              <button
+                onClick={() => {
+                  if (item.hasDropdown) {
+                    setShowTaskDropdown(!showTaskDropdown);
+                  } else {
+                    setActiveTab(item.id);
+                    setShowTaskDropdown(false);
+                  }
+                }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 ${
+                  (activeTab === item.id || (item.hasDropdown && showTaskDropdown))
+                    ? 'text-blue-600 bg-blue-50' 
+                    : 'text-slate-600 hover:text-blue-600 hover:bg-slate-100'
+                }`}
+              >
+                {item.label}
+                {item.suffix && <span className="text-[10px] font-normal text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">{item.suffix}</span>}
+                {item.badge && <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">{item.badge}</span>}
+                {item.hasDropdown && <ChevronDown className={`w-4 h-4 transition-transform ${showTaskDropdown ? 'rotate-180' : ''}`} />}
+              </button>
+
+              {/* DROPDOWN MENU - TÁC VỤ */}
+              {item.hasDropdown && showTaskDropdown && (
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-[600px] bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-slate-100 p-4 z-50">
+                  <div className="flex items-center justify-between mb-4 px-2">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-blue-500"></span> TÁC VỤ NHANH
+                    </span>
+                    <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-full">Hôm nay bạn muốn tạo gì?</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Primary Big Card */}
+                    <button className="col-span-2 flex items-center p-5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:shadow-lg hover:shadow-blue-500/30 transition-all text-left group">
+                      <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mr-4 backdrop-blur-sm">
+                        <Sparkles className="w-6 h-6" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-[10px] uppercase font-bold text-blue-100 tracking-wider mb-0.5">Bắt đầu nhân vật</div>
+                        <div className="text-lg font-black mb-1">Tạo AIDOL mới</div>
+                        <div className="text-xs text-blue-50">Từ ảnh nhân vật, ảnh mẫu và thiết lập thương hiệu của bạn.</div>
+                      </div>
+                      <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-blue-600 transition-colors">
+                        <Plus className="w-4 h-4" />
+                      </div>
+                    </button>
+
+                    {/* Secondary Cards */}
+                    {QUICK_TASKS.slice(1).map((task) => (
+                      <button key={task.id} className="flex items-start p-4 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/50 transition-colors text-left group">
+                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0 ${task.color}`}>
+                           <task.icon className="w-5 h-5" />
+                         </div>
+                         <div>
+                           <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{task.id}</div>
+                           <div className="text-sm font-bold text-slate-800 mb-1 group-hover:text-blue-600">{task.label}</div>
+                           <div className="text-[10px] text-slate-500 leading-tight">{task.desc}</div>
+                         </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
+        </nav>
+
+        {/* ACCOUNT / SETTINGS */}
+        <div className="flex items-center gap-3">
+          <button className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full border border-blue-200 text-blue-600 text-sm font-bold hover:bg-blue-50 transition-colors">
+            Thanh toán
+          </button>
+          <button className="flex items-center gap-2 px-1 pl-1 pr-4 py-1 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors border border-slate-200">
+            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
+              AI
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-bold text-slate-800">Tài khoản</span>
+              <span className="text-[9px] text-slate-500 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Online
+              </span>
+            </div>
+          </button>
         </div>
-      </aside>
+      </header>
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 flex flex-col overflow-hidden relative bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-900/20 via-black to-black">
-        {/* Glow Effects */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-600/10 blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[30rem] h-[30rem] bg-blue-600/5 blur-[120px] pointer-events-none" />
-
-        {/* Dynamic Header */}
-        <header className="h-16 flex-shrink-0 flex items-center justify-between px-6 border-b border-white/10 bg-black/30 backdrop-blur-md relative z-10">
-          <div className="flex items-center gap-3">
-            {activeModData && <activeModData.icon className="w-5 h-5 text-gray-400" />}
-            <h2 className="text-lg font-bold text-white">{activeModData?.label}</h2>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              SYSTEM ONLINE
-            </span>
-          </div>
-        </header>
-
-        {/* Module Content */}
-        <div className="flex-1 overflow-auto custom-scrollbar p-6 relative z-10 flex">
-          {activeModule === 'dashboard' ? (
-            <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
-              <DashboardModule />
-            </div>
-          ) : activeModule === 'livestream' ? (
-            <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
-              <LivestreamModule />
-            </div>
-          ) : activeModule === 'ai-avatar' ? (
-            <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
-              <AIAvatarModule />
-            </div>
-          ) : activeModule === 'ai-voice' ? (
-            <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
-              <AIVoiceModule />
-            </div>
-          ) : activeModule === 'ai-brain' ? (
-            // MODULE 5: Renders the migrated AI Kể Chuyện UI
-            <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
-              <AIBrainModule />
-            </div>
-          ) : activeModule === 'products' ? (
-            <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
-              <ProductsModule />
-            </div>
-          ) : activeModule === 'sales' ? (
-            <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
-              <SalesModule />
-            </div>
-          ) : activeModule === 'comments' ? (
-            <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
-              <CommentsModule />
-            </div>
-          ) : activeModule === 'crm' ? (
-            <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
-              <CRMModule />
-            </div>
-          ) : activeModule === 'orders' ? (
-            <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
-              <OrdersModule />
-            </div>
-          ) : activeModule === 'inventory' ? (
-            <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
-              <InventoryModule />
-            </div>
-          ) : activeModule === 'payment' ? (
-            <div className="flex-1 w-full h-full bg-[#0B0B14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl relative">
-              <PaymentModule />
-            </div>
-          ) : (
-            <PlaceholderModule module={activeModData} />
-          )}
+      <main className="flex-1 relative z-10 overflow-y-auto">
+        <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+          {activeTab === 'home' && <PlaceholderPage title="Trang chủ (Dashboard)" />}
+          {activeTab === 'my-aidol' && <ThuVienAIDOL />}
+          {activeTab === 'livestream-ai' && <LivestreamAISetup />}
+          {activeTab === 'history' && <LichSuTao />}
+          {activeTab === 'guide' && <HuongDanAcademy />}
+          {activeTab === 'payment' && <ThanhToanCoin />}
+          {activeTab === 'api' && <AIDOLLiveConsole />}
         </div>
       </main>
+
     </div>
   );
 }
