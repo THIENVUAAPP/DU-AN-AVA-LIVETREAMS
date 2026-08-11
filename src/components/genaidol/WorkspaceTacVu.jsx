@@ -21,10 +21,6 @@ const AI_BRAINS = {
     name: 'OpenAI ChatGPT',
     models: ['GPT-4o (Khuyên dùng)', 'GPT-4 Turbo', 'GPT-3.5']
   },
-  claude: {
-    name: 'Claude AI',
-    models: ['Claude 3.5 Sonnet (Mạnh nhất)', 'Claude 3 Opus', 'Claude 3 Haiku']
-  },
   gemini: {
     name: 'Google Gemini',
     models: ['Gemini 1.5 Pro', 'Gemini 1.5 Flash']

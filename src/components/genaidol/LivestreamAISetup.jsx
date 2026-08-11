@@ -643,7 +643,7 @@ export default function LivestreamAISetup() {
                    </div>
                    <div>
                      <h3 className="text-sm font-black text-white">Lựa chọn Kịch Bản từ Não Bộ AI</h3>
-                     <p className="text-[10px] text-gray-400">Chọn kịch bản / audio đã được Gen bằng ChatGPT, Claude hoặc Gemini</p>
+                     <p className="text-[10px] text-gray-400">Chọn kịch bản / audio đã được Gen bằng ChatGPT hoặc Gemini</p>
                    </div>
                  </div>
                  <button onClick={() => setShowAILibraryModal(false)} className="p-2 text-gray-400 hover:text-white bg-white/5 rounded-lg">Đóng</button>
@@ -664,8 +664,8 @@ export default function LivestreamAISetup() {
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                  {[
                    { id: 1, name: 'Kịch bản khai trương cửa hàng', type: 'audio', duration: '01:20', ai: 'ChatGPT 4o', time: '10 phút trước' },
-                   { id: 2, name: 'Bản tin Crypto cập nhật tối', type: 'text', chars: '1200 từ', ai: 'Claude 3.5 Sonnet', time: '1 giờ trước' },
-                   { id: 3, name: 'Review Son môi Mac 2026', type: 'audio', duration: '00:45', ai: 'Gemini 1.5 Pro', time: 'Hôm qua' },
+                   { id: 2, name: 'Bản tin Crypto cập nhật tối', type: 'text', chars: '1200 từ', ai: 'Gemini 1.5 Pro', time: '1 giờ trước' },
+                   { id: 3, name: 'Review Son môi Mac 2026', type: 'audio', duration: '00:45', ai: 'Gemini 1.5 Flash', time: 'Hôm qua' },
                    { id: 4, name: 'Livestream kể chuyện ma', type: 'text', chars: '4500 từ', ai: 'ChatGPT 4o', time: '2 ngày trước' },
                  ].map(item => (
                    <div 
