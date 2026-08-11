@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Settings, Clock, Mic, UserSquare2, Image as ImageIcon, Play, Upload, Check, Zap, Lock, Brain, Sparkles, FileText, ChevronDown, Monitor, Video } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Settings, Clock, Mic, UserSquare2, Image as ImageIcon, Play, Upload, Check, Zap, Lock, Brain, Sparkles, FileText, ChevronDown, Monitor, Video, Search, FileAudio } from 'lucide-react';
 
 const MOCK_HISTORY = {
   voice: [
@@ -50,6 +50,18 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
   const [lipsyncAudioType, setLipsyncAudioType] = useState('text'); // 'text' or 'voice'
   const [showPreviewPlayer, setShowPreviewPlayer] = useState(false);
+  
+  // File References & Selection states
+  const videoInputRef = useRef(null);
+  const audioInputRef = useRef(null);
+  const [selectedVideoFile, setSelectedVideoFile] = useState(null);
+  const [selectedAudioFile, setSelectedAudioFile] = useState(null);
+  const [selectedVideoLibraryInfo, setSelectedVideoLibraryInfo] = useState(null);
+  const [selectedAILibraryInfo, setSelectedAILibraryInfo] = useState(null);
+
+  // Modals state
+  const [showVideoLibraryModal, setShowVideoLibraryModal] = useState(false);
+  const [showAILibraryModal, setShowAILibraryModal] = useState(false);
 
   // Generate Mock Voices
   const generateVoices = (region, prefix) => {
@@ -200,17 +212,22 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                            <Video className="w-4 h-4 text-[#00FF66]" /> 1. Video Gốc (Mẫu)
                          </label>
                          <div className="flex bg-black/40 rounded-lg border border-white/10 p-1 mb-3">
-                            <button className="flex-1 py-2 rounded text-xs font-bold transition-all bg-[#00FF66]/20 text-[#00FF66]">
+                            <button onClick={() => { setSelectedVideoLibraryInfo(null); videoInputRef.current?.click(); }} className={`flex-1 py-2 rounded text-xs font-bold transition-all ${!selectedVideoLibraryInfo ? 'bg-[#00FF66]/20 text-[#00FF66]' : 'text-gray-400 hover:text-white'}`}>
                               Tải từ máy lên
                             </button>
-                            <button className="flex-1 py-2 rounded text-xs font-bold transition-all text-gray-400 hover:text-white">
+                            <button onClick={() => setShowVideoLibraryModal(true)} className={`flex-1 py-2 rounded text-xs font-bold transition-all ${selectedVideoLibraryInfo ? 'bg-[#00FF66]/20 text-[#00FF66]' : 'text-gray-400 hover:text-white'}`}>
                               Chọn theo chủ đề
                             </button>
                          </div>
-                         <div className="flex border border-white/10 rounded-lg overflow-hidden bg-black/40 hover:border-[#00FF66]/50 transition-colors cursor-pointer">
-                           <button className="px-4 py-2.5 bg-white/5 border-r border-white/10 text-xs font-bold text-gray-300 hover:bg-white/10">Chọn Tệp</button>
-                           <div className="px-4 py-2.5 text-xs text-gray-500 font-medium flex-1 flex items-center">Kéo thả video vào đây...</div>
+                         <div onClick={() => !selectedVideoLibraryInfo && videoInputRef.current?.click()} className="flex border border-white/10 rounded-lg overflow-hidden bg-black/40 hover:border-[#00FF66]/50 transition-colors cursor-pointer">
+                           <button className="px-4 py-2.5 bg-white/5 border-r border-white/10 text-xs font-bold text-gray-300 hover:bg-white/10 flex-shrink-0">
+                              {selectedVideoLibraryInfo ? 'Thay đổi từ Kho' : 'Chọn Tệp'}
+                           </button>
+                           <div className="px-4 py-2.5 text-xs text-[#00FF66] font-medium flex-1 flex items-center truncate">
+                              {selectedVideoLibraryInfo ? selectedVideoLibraryInfo : (selectedVideoFile ? selectedVideoFile.name : 'Chưa có file hoặc chưa chọn từ Kho...')}
+                           </div>
                          </div>
+                         <input type="file" accept="video/*" className="hidden" ref={videoInputRef} onChange={(e) => { if(e.target.files[0]) { setSelectedVideoFile(e.target.files[0]); setSelectedVideoLibraryInfo(null); } }} />
                       </div>
 
                       {/* 2. Audio Source (Text / Voice) */}
@@ -220,42 +237,50 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                          </label>
                          <div className="flex bg-black/40 rounded-lg border border-white/10 p-1 mb-3">
                             <button 
-                              onClick={() => setLipsyncAudioType('voice')} 
-                              className={`flex-1 py-2 rounded text-xs font-bold transition-all ${lipsyncAudioType === 'voice' ? 'bg-[#00FF66]/20 text-[#00FF66]' : 'text-gray-400 hover:text-white'}`}
+                              onClick={() => { setLipsyncAudioType('voice'); setSelectedAILibraryInfo(null); audioInputRef.current?.click(); }} 
+                              className={`flex-1 py-2 rounded text-xs font-bold transition-all ${lipsyncAudioType === 'voice' && !selectedAILibraryInfo ? 'bg-[#00FF66]/20 text-[#00FF66]' : 'text-gray-400 hover:text-white'}`}
                             >
                               Tải từ máy lên
                             </button>
                             <button 
-                              onClick={() => setLipsyncAudioType('text')} 
-                              className={`flex-1 py-2 rounded text-xs font-bold transition-all ${lipsyncAudioType === 'text' ? 'bg-[#00FF66]/20 text-[#00FF66]' : 'text-gray-400 hover:text-white'}`}
+                              onClick={() => { setLipsyncAudioType('text'); setShowAILibraryModal(true); }} 
+                              className={`flex-1 py-2 rounded text-xs font-bold transition-all ${lipsyncAudioType === 'text' || selectedAILibraryInfo ? 'bg-[#00FF66]/20 text-[#00FF66]' : 'text-gray-400 hover:text-white'}`}
                             >
                               Tải từ Kịch Bản AI
                             </button>
                          </div>
 
-                         {lipsyncAudioType === 'text' ? (
-                            <>
-                              <div className="mb-2">
-                                <label className="block text-[10px] font-bold text-gray-400 mb-1">Tiêu đề Video</label>
-                                <input type="text" placeholder="Nhập tiêu đề..." className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-xs text-white focus:border-[#00FF66] outline-none" />
-                              </div>
-                              <textarea 
-                                placeholder="Nội dung kịch bản AI sẽ hiển thị ở đây để tự động tạo giọng đọc..." 
-                                className="w-full flex-1 min-h-[80px] p-3 bg-black/40 border border-white/10 rounded-lg text-xs text-gray-300 focus:border-[#00FF66] outline-none resize-none custom-scrollbar mb-2"
-                              ></textarea>
-                            </>
+                         <div className="mb-2">
+                           <label className="block text-[10px] font-bold text-gray-400 mb-1">Tiêu đề Video</label>
+                           <input type="text" placeholder="Nhập tiêu đề..." className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-xs text-white focus:border-[#00FF66] outline-none" />
+                         </div>
+
+                         {lipsyncAudioType === 'text' || selectedAILibraryInfo ? (
+                            <div className="flex-1 bg-black/40 border border-[#00FF66]/30 rounded-lg p-4 flex flex-col justify-center items-center text-center cursor-pointer hover:bg-black/60 transition-colors" onClick={() => setShowAILibraryModal(true)}>
+                               <Brain className="w-8 h-8 text-[#00FF66] mb-2 opacity-80" />
+                               {selectedAILibraryInfo ? (
+                                  <>
+                                    <div className="text-xs font-bold text-white mb-1">Đã chọn: {selectedAILibraryInfo}</div>
+                                    <div className="text-[10px] text-gray-400">Click để đổi kịch bản AI khác</div>
+                                  </>
+                               ) : (
+                                  <>
+                                    <div className="text-xs font-bold text-white mb-1">Chưa chọn Kịch Bản từ Não Bộ AI</div>
+                                    <div className="text-[10px] text-[#00FF66]">Nhấn vào đây để mở Kho kịch bản AI</div>
+                                  </>
+                               )}
+                            </div>
                          ) : (
-                            <>
-                              <div className="mb-2">
-                                <label className="block text-[10px] font-bold text-gray-400 mb-1">Tiêu đề Video</label>
-                                <input type="text" placeholder="Nhập tiêu đề..." className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-xs text-white focus:border-[#00FF66] outline-none" />
-                              </div>
-                              <div className="flex-1 border-2 border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center p-4 bg-black/20 hover:border-white/30 transition-colors mb-2 cursor-pointer">
-                                 <Upload className="w-6 h-6 text-gray-400 mb-2" />
-                                 <span className="text-xs text-gray-400 font-bold">Kéo thả file âm thanh vào đây</span>
-                              </div>
-                            </>
+                            <div onClick={() => audioInputRef.current?.click()} className="flex-1 border-2 border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center p-4 bg-black/20 hover:border-[#00FF66]/50 hover:bg-[#00FF66]/5 transition-all mb-2 cursor-pointer relative overflow-hidden group">
+                               <Upload className={`w-6 h-6 mb-2 ${selectedAudioFile ? 'text-[#00FF66]' : 'text-gray-400'} group-hover:text-[#00FF66] transition-colors`} />
+                               <span className={`text-xs font-bold truncate px-4 text-center max-w-full ${selectedAudioFile ? 'text-[#00FF66]' : 'text-gray-400'}`}>
+                                  {selectedAudioFile ? `Đã chọn: ${selectedAudioFile.name}` : 'Kéo thả file âm thanh (hoặc Click)'}
+                               </span>
+                               {selectedAudioFile && <div className="absolute top-2 right-2 bg-black/60 rounded px-2 py-1 text-[9px] text-gray-300">Nhấp để thay đổi</div>}
+                            </div>
                          )}
+                         <input type="file" accept="audio/*" className="hidden" ref={audioInputRef} onChange={(e) => { if(e.target.files[0]) { setSelectedAudioFile(e.target.files[0]); setSelectedAILibraryInfo(null); } }} />
+                      </div>
 
                          {lipsyncAudioType === 'text' && (
                             <div className="text-[10px] text-gray-500 font-medium px-1">
@@ -514,6 +539,133 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                       <Play className="w-4 h-4" /> Bắt đầu Auto Phát
                    </button>
                  </div>
+              </div>
+           </div>
+        </div>
+      {/* VIDEO LIBRARY MODAL (Chọn theo chủ đề) */}
+      {showVideoLibraryModal && (
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+           <div className="bg-[#121216] border border-white/10 rounded-2xl w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col h-[80vh]">
+              <div className="p-4 border-b border-white/10 flex justify-between items-center bg-[#0B0E14]">
+                 <div className="flex items-center gap-3">
+                   <div className="w-8 h-8 rounded-full bg-[#00FF66]/20 flex items-center justify-center border border-[#00FF66]/50">
+                     <Video className="w-4 h-4 text-[#00FF66]" />
+                   </div>
+                   <div>
+                     <h3 className="text-sm font-black text-white">Kho Video Mẫu Nhép Miệng</h3>
+                     <p className="text-[10px] text-gray-400">Chọn một video mẫu từ các chủ đề hot nhất</p>
+                   </div>
+                 </div>
+                 <button onClick={() => setShowVideoLibraryModal(false)} className="p-2 text-gray-400 hover:text-white bg-white/5 rounded-lg">Đóng</button>
+              </div>
+              
+              <div className="flex-1 flex overflow-hidden">
+                {/* Categories Sidebar */}
+                <div className="w-48 bg-black/30 border-r border-white/10 flex flex-col">
+                  <div className="p-3 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-white/10">Chủ Đề</div>
+                  <div className="overflow-y-auto flex-1 p-2 space-y-1">
+                    {['Bán hàng TikTok', 'Livestream Game', 'Bản tin AI', 'Kể chuyện / Podcast', 'Giải trí / Hài', 'Review sản phẩm'].map((cat, idx) => (
+                      <button key={idx} className={`w-full text-left px-3 py-2 text-xs font-bold rounded-lg transition-colors ${idx === 0 ? 'bg-[#00FF66]/20 text-[#00FF66]' : 'text-gray-300 hover:bg-white/5'}`}>
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Video Grid */}
+                <div className="flex-1 overflow-y-auto p-6 bg-black/20">
+                  <div className="grid grid-cols-3 md:grid-cols-4 gap-4">
+                     {[1,2,3,4,5,6,7,8,9,10,11,12].map(item => (
+                       <div 
+                         key={item} 
+                         onClick={() => {
+                           setSelectedVideoLibraryInfo(`Mẫu bán hàng ${item} - 1080p`);
+                           setSelectedVideoFile(null); // Clear local file if any
+                           setShowVideoLibraryModal(false);
+                         }}
+                         className="group cursor-pointer"
+                       >
+                         <div className="aspect-[9/16] bg-gray-800 rounded-xl overflow-hidden mb-2 relative border-2 border-transparent group-hover:border-[#00FF66] transition-all">
+                            <div className="absolute inset-0 bg-cover bg-center opacity-70 group-hover:opacity-100 transition-opacity" style={{backgroundImage: `url('https://images.unsplash.com/photo-1594751543129-6701ad444259?w=300&q=80')`}}></div>
+                            <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-all flex items-center justify-center">
+                              <div className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100">
+                                <Play className="w-4 h-4 text-white ml-1" />
+                              </div>
+                            </div>
+                            <div className="absolute bottom-2 right-2 bg-black/70 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">00:15</div>
+                         </div>
+                         <h4 className="text-xs font-bold text-gray-200 group-hover:text-[#00FF66] truncate">Video Bán Hàng {item}</h4>
+                         <p className="text-[10px] text-gray-500">Người thật - Đứng</p>
+                       </div>
+                     ))}
+                  </div>
+                </div>
+              </div>
+           </div>
+        </div>
+      )}
+
+      {/* AI BRAIN SCRIPT/AUDIO MODAL (Từ Bộ Não AI) */}
+      {showAILibraryModal && (
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+           <div className="bg-[#121216] border border-white/10 rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+              <div className="p-4 border-b border-white/10 flex justify-between items-center bg-[#0B0E14]">
+                 <div className="flex items-center gap-3">
+                   <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/50">
+                     <Brain className="w-4 h-4 text-blue-400" />
+                   </div>
+                   <div>
+                     <h3 className="text-sm font-black text-white">Lựa chọn Kịch Bản từ Não Bộ AI</h3>
+                     <p className="text-[10px] text-gray-400">Chọn kịch bản / audio đã được Gen bằng ChatGPT, Claude hoặc Gemini</p>
+                   </div>
+                 </div>
+                 <button onClick={() => setShowAILibraryModal(false)} className="p-2 text-gray-400 hover:text-white bg-white/5 rounded-lg">Đóng</button>
+              </div>
+              
+              <div className="p-4 flex gap-2">
+                 <div className="flex-1 relative">
+                    <Search className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input type="text" placeholder="Tìm kiếm kịch bản, âm thanh đã tạo..." className="w-full bg-black/60 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:border-[#00FF66] outline-none" />
+                 </div>
+                 <select className="bg-black/60 border border-white/10 rounded-lg px-4 py-2 text-sm text-gray-300 outline-none">
+                    <option>Mới nhất</option>
+                    <option>Kịch bản Bán hàng</option>
+                    <option>Kịch bản Tin tức</option>
+                 </select>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                 {[
+                   { id: 1, name: 'Kịch bản khai trương cửa hàng', type: 'audio', duration: '01:20', ai: 'ChatGPT 4o', time: '10 phút trước' },
+                   { id: 2, name: 'Bản tin Crypto cập nhật tối', type: 'text', chars: '1200 từ', ai: 'Claude 3.5 Sonnet', time: '1 giờ trước' },
+                   { id: 3, name: 'Review Son môi Mac 2026', type: 'audio', duration: '00:45', ai: 'Gemini 1.5 Pro', time: 'Hôm qua' },
+                   { id: 4, name: 'Livestream kể chuyện ma', type: 'text', chars: '4500 từ', ai: 'ChatGPT 4o', time: '2 ngày trước' },
+                 ].map(item => (
+                   <div 
+                     key={item.id} 
+                     onClick={() => {
+                        setSelectedAILibraryInfo(`${item.name} (${item.type === 'audio' ? 'File Âm thanh AI' : 'Kịch bản Chữ'})`);
+                        setSelectedAudioFile(null); // Clear local file if any
+                        setShowAILibraryModal(false);
+                     }}
+                     className="flex items-center p-4 bg-black/40 border border-white/5 rounded-xl hover:bg-white/5 hover:border-[#00FF66]/50 cursor-pointer transition-all group"
+                   >
+                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-4 ${item.type === 'audio' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'}`}>
+                        {item.type === 'audio' ? <FileAudio className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
+                     </div>
+                     <div className="flex-1">
+                        <h4 className="font-bold text-white text-sm group-hover:text-[#00FF66] transition-colors">{item.name}</h4>
+                        <div className="flex items-center gap-3 mt-1 text-[11px] text-gray-400">
+                           <span className="flex items-center gap-1"><Brain className="w-3 h-3" /> {item.ai}</span>
+                           <span>•</span>
+                           <span>{item.type === 'audio' ? item.duration : item.chars}</span>
+                           <span>•</span>
+                           <span>{item.time}</span>
+                        </div>
+                     </div>
+                     <button className="px-4 py-1.5 bg-[#00FF66]/10 text-[#00FF66] rounded text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">Chọn</button>
+                   </div>
+                 ))}
               </div>
            </div>
         </div>
