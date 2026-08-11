@@ -38,11 +38,11 @@ const LIPSYNC_MODELS = [
 ];
 
 export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
-  const [activeTab, setActiveTab] = useState(defaultTab); // 'voice', 'lipsync', 'image-video'
   const [rightTab, setRightTab] = useState('settings'); // 'settings', 'history'
   const [speed, setSpeed] = useState(1.0);
   const [aiBrain, setAiBrain] = useState('chatgpt');
-  const [aiModel, setAiModel] = useState(AI_BRAINS['chatgpt'].models[0]);
+  // aiModel is now automatically inferred from the selected brain platform as the first element (the strongest)
+  const aiModel = AI_BRAINS[aiBrain].models[0];
   
   const [voiceProvider, setVoiceProvider] = useState('vbee');
   const [selectedVoice, setSelectedVoice] = useState('vbee_f_n_1');
@@ -89,35 +89,19 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-2">
          <div>
-            <h1 className="text-4xl lg:text-5xl font-black text-white mb-3 tracking-tight">Workspace Tác vụ</h1>
+            <h1 className="text-4xl lg:text-5xl font-black text-white mb-3 tracking-tight">
+               {defaultTab === 'voice' && 'Soạn Kịch Bản & Giọng Nói'}
+               {defaultTab === 'lipsync' && 'Nhép Môi & Truyền Live'}
+               {defaultTab === 'image-video' && 'Tạo Video Bằng AIDOL'}
+            </h1>
             <p className="text-sm text-gray-400 font-medium max-w-2xl">
-              Tạo ảnh, kịch bản, giọng nói và nhép miệng với sức mạnh của các model AI hàng đầu.
+               {defaultTab === 'voice' && 'Tạo kịch bản với bộ não AI và chuyển đổi thành giọng nói mượt mà.'}
+               {defaultTab === 'lipsync' && 'Chọn video, ghép giọng và truyền thẳng sang nền tảng Live.'}
+               {defaultTab === 'image-video' && 'Xử lý video chuyên nghiệp với các AI model hàng đầu.'}
             </p>
          </div>
          <button className="px-5 py-2.5 bg-[#121216] border border-white/10 hover:border-[#00FF66] text-[#00FF66] rounded-xl font-bold shadow-glow-green transition-all text-sm whitespace-nowrap">
             Quản lý AIDOL
-         </button>
-      </div>
-
-      {/* Main Tabs */}
-      <div className="flex gap-2 border-b border-white/10 pb-4 mb-2">
-         <button 
-           onClick={() => setActiveTab('voice')}
-           className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'voice' ? 'bg-[#00FF66]/20 text-[#00FF66] shadow-glow-green border border-[#00FF66]/40' : 'bg-[#121216] border border-white/5 text-gray-400 hover:text-white hover:border-white/20'}`}
-         >
-           Kịch bản & Giọng nói
-         </button>
-         <button 
-           onClick={() => setActiveTab('lipsync')}
-           className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'lipsync' ? 'bg-[#00FF66]/20 text-[#00FF66] shadow-glow-green border border-[#00FF66]/40' : 'bg-[#121216] border border-white/5 text-gray-400 hover:text-white hover:border-white/20'}`}
-         >
-           Tạo video nhép miệng
-         </button>
-         <button 
-           onClick={() => setActiveTab('image-video')}
-           className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'image-video' ? 'bg-[#00FF66]/20 text-[#00FF66] shadow-glow-green border border-[#00FF66]/40' : 'bg-[#121216] border border-white/5 text-gray-400 hover:text-white hover:border-white/20'}`}
-         >
-           Tạo ảnh & Video
          </button>
       </div>
 
@@ -127,7 +111,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
             {/* Subtle glow effect behind */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#00FF66]/5 rounded-full blur-[100px] pointer-events-none"></div>
 
-            {activeTab === 'voice' && (
+            {defaultTab === 'voice' && (
               <div className="relative z-10 flex flex-col h-full">
                 <div className="mb-6">
                   <h2 className="text-xl font-black text-white mb-1">Bộ não AI & Soạn nội dung</h2>
@@ -143,10 +127,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                       {Object.keys(AI_BRAINS).map(brainKey => (
                          <button 
                            key={brainKey}
-                           onClick={() => {
-                             setAiBrain(brainKey);
-                             setAiModel(AI_BRAINS[brainKey].models[0]);
-                           }} 
+                           onClick={() => setAiBrain(brainKey)} 
                            className={`p-3 rounded-lg border text-xs font-bold transition-all ${aiBrain === brainKey ? 'bg-[#00FF66]/10 border-[#00FF66]/50 text-[#00FF66] shadow-glow-green' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'}`}
                          >
                            {AI_BRAINS[brainKey].name}
@@ -154,17 +135,10 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                       ))}
                    </div>
                    
-                   {/* Model Selection */}
-                   <div className="mb-4">
-                     <select 
-                       value={aiModel} 
-                       onChange={(e) => setAiModel(e.target.value)}
-                       className="w-full px-3 py-2 bg-black/60 border border-white/10 rounded-lg text-xs font-bold text-gray-300 outline-none focus:border-[#00FF66]"
-                     >
-                        {AI_BRAINS[aiBrain].models.map(m => (
-                          <option key={m} value={m}>{m}</option>
-                        ))}
-                     </select>
+                   {/* Model Info (Hidden explicit selection, shows strongest default) */}
+                   <div className="mb-4 text-[11px] font-bold text-gray-400 bg-white/5 py-1.5 px-3 rounded-md inline-flex items-center gap-2 border border-white/5">
+                      <Sparkles className="w-3 h-3 text-[#00FF66]" />
+                      Model thông minh: <span className="text-white">{aiModel}</span> (Mặc định cấu hình cao nhất)
                    </div>
 
                    <div className="flex gap-2">
@@ -201,7 +175,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
               </div>
             )}
 
-            {activeTab === 'lipsync' && (
+            {defaultTab === 'lipsync' && (
               <div className="relative z-10 flex flex-col h-full">
                 <div className="mb-6 flex justify-between items-start">
                   <div>
@@ -260,7 +234,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
               </div>
             )}
 
-            {activeTab === 'image-video' && (
+            {defaultTab === 'image-video' && (
               <div className="flex-1 flex flex-col items-center justify-center text-center relative z-10">
                  <div className="w-16 h-16 rounded-full bg-[#00FF66]/10 border border-[#00FF66]/30 flex items-center justify-center text-[#00FF66] mb-4 shadow-glow-green">
                    <ImageIcon className="w-8 h-8" />
@@ -288,7 +262,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                {/* SETTINGS VIEW */}
                {rightTab === 'settings' && (
                  <div className="relative z-10 flex-1 flex flex-col">
-                   {activeTab === 'voice' && (
+                   {defaultTab === 'voice' && (
                      <>
                        <div className="mb-6">
                          <h3 className="font-black text-white text-lg mb-1">Cấu hình API Giọng</h3>
@@ -354,7 +328,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                      </>
                    )}
 
-                   {activeTab === 'lipsync' && (
+                   {defaultTab === 'lipsync' && (
                      <>
                        <div className="mb-6">
                          <h3 className="font-black text-white text-lg mb-1">Cấu hình đầu vào</h3>
@@ -380,7 +354,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                      </>
                    )}
                    
-                   {activeTab === 'image-video' && (
+                   {defaultTab === 'image-video' && (
                      <div className="flex-1 flex items-center justify-center">
                        <p className="text-sm text-gray-500 text-center">Cài đặt Flow canvas</p>
                      </div>
@@ -394,11 +368,11 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                     <div className="mb-4 flex items-center justify-between">
                       <h3 className="font-black text-white text-sm">Lịch sử tác vụ</h3>
                       <span className="text-[10px] bg-white/10 text-gray-300 px-2 py-0.5 rounded font-bold border border-white/5">
-                        {activeTab === 'voice' ? 'Giọng & Kịch bản' : activeTab === 'lipsync' ? 'Nhép môi' : 'Ảnh & Video'}
+                        {defaultTab === 'voice' ? 'Giọng & Kịch bản' : defaultTab === 'lipsync' ? 'Nhép môi' : 'Ảnh & Video'}
                       </span>
                     </div>
                     <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-2">
-                       {MOCK_HISTORY[activeTab]?.map(job => (
+                       {MOCK_HISTORY[defaultTab]?.map(job => (
                           <div key={job.id} className="p-4 border border-white/10 rounded-xl hover:border-[#00FF66]/50 transition-colors bg-black/40 group cursor-pointer">
                              <div className="flex justify-between items-start mb-2">
                                 <div className="font-bold text-white text-xs truncate mr-2 group-hover:text-[#00FF66] transition-colors">{job.name}</div>
@@ -411,7 +385,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                                    {job.status === 'completed' ? 'Hoàn thành' : 'Đang xử lý'}
                                 </span>
                              </div>
-                             {activeTab === 'lipsync' && job.status === 'completed' && (
+                             {defaultTab === 'lipsync' && job.status === 'completed' && (
                                 <div className="mt-3 pt-3 border-t border-white/10">
                                    <button 
                                       onClick={() => setShowBroadcastModal(true)}
@@ -423,7 +397,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                              )}
                           </div>
                        ))}
-                       {(!MOCK_HISTORY[activeTab] || MOCK_HISTORY[activeTab].length === 0) && (
+                       {(!MOCK_HISTORY[defaultTab] || MOCK_HISTORY[defaultTab].length === 0) && (
                           <div className="text-center p-8 text-gray-500 text-xs">Không có lịch sử nào.</div>
                        )}
                     </div>

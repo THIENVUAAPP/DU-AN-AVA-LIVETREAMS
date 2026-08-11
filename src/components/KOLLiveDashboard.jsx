@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Home, Wand2, UserSquare2, Radio, Clock, BookOpen, Code2, 
   CreditCard, User, ChevronDown, Plus, Mic, Video, Image as ImageIcon,
@@ -31,35 +31,16 @@ const PlaceholderPage = ({ title }) => (
 // --- MAIN DASHBOARD (TOP NAV LAYOUT - DARK THEME) ---
 export default function KOLLiveDashboard() {
   const [activeTab, setActiveTab] = useState('my-aidol');
-  const [showTaskDropdown, setShowTaskDropdown] = useState(false);
-  const dropdownRef = useRef(null);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowTaskDropdown(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const NAVIGATION = [
-    { id: 'tasks', label: 'Tác vụ', suffix: 'Chọn nhanh', hasDropdown: true },
     { id: 'my-aidol', label: 'AIDOL của tôi', icon: UserSquare2 },
+    { id: 'create-aidol', label: 'Tạo AIDOL', icon: Sparkles },
+    { id: 'voice', label: 'Giọng nói', icon: Mic },
+    { id: 'lipsync', label: 'Nhép môi', icon: PlayCircle },
+    { id: 'video', label: 'Tạo video', icon: Video },
     { id: 'livestream-ai', label: 'Livestream AI', icon: Radio },
     { id: 'history', label: 'Lịch sử', icon: Clock },
     { id: 'guide', label: 'Hướng dẫn', icon: BookOpen },
-  ];
-
-  const QUICK_TASKS = [
-    { id: 'create-aidol', label: 'Tạo AIDOL mới', desc: 'Từ ảnh nhân vật, ảnh mẫu và thiết lập thương hiệu của bạn.', icon: Sparkles, color: 'bg-[#00FF66]/20 text-[#00FF66] border border-[#00FF66]/50' },
-    { id: 'studio', label: 'Sáng tạo bằng AIDOL', desc: 'Chọn công cụ và dựng video cho nhân vật.', icon: PlayCircle, color: 'bg-purple-500/20 text-purple-400 border border-purple-500/50' },
-    { id: 'voice', label: 'Tạo giọng nói', desc: 'Tạo lời đọc, chọn giọng hoặc dùng giọng nhân bản.', icon: Mic, color: 'bg-pink-500/20 text-pink-400 border border-pink-500/50' },
-    { id: 'lipsync', label: 'Tạo nhép môi', desc: 'Đồng bộ giọng nói và khẩu hình cho video.', icon: UserSquare2, color: 'bg-[#00FF66]/20 text-[#00FF66] border border-[#00FF66]/50' },
-    { id: 'video', label: 'Tạo video', desc: 'Tạo video AI từ ý tưởng hoặc từ ảnh nguồn.', icon: Video, color: 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50' },
-    { id: 'image', label: 'Tạo ảnh riêng lẻ', desc: 'Tạo ảnh mới để dùng cho nội dung và chiến dịch.', icon: ImageIcon, color: 'bg-orange-500/20 text-orange-400 border border-orange-500/50' },
   ];
 
   return (
@@ -75,92 +56,32 @@ export default function KOLLiveDashboard() {
       <header className="h-16 bg-[#121216]/80 backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-4 sm:px-6 relative z-50 shadow-lg">
         
         {/* LOGO: KOL LIVE */}
-        <div className="flex items-center gap-3 mr-8 cursor-pointer" onClick={() => setActiveTab('my-aidol')}>
+        <div className="flex items-center gap-3 mr-4 cursor-pointer" onClick={() => setActiveTab('my-aidol')}>
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00FF66] to-[#00CC52] flex items-center justify-center shadow-glow-green">
             <Radio className="w-6 h-6 text-black" />
           </div>
           <div>
-            <h1 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-[#00FF66] to-white tracking-wider uppercase">
+            <h1 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-[#00FF66] to-white tracking-wider uppercase hidden xl:block">
               AVA LIVE
             </h1>
           </div>
         </div>
 
         {/* MAIN MENU */}
-        <nav className="hidden lg:flex flex-1 items-center justify-center gap-1">
+        <nav className="flex flex-1 items-center justify-center gap-1 overflow-x-auto custom-scrollbar px-2">
           {NAVIGATION.map((item) => (
-            <div key={item.id} className="relative" ref={item.hasDropdown ? dropdownRef : null}>
-              <button
-                onClick={() => {
-                  if (item.hasDropdown) {
-                    setShowTaskDropdown(!showTaskDropdown);
-                  } else {
-                    setActiveTab(item.id);
-                    setShowTaskDropdown(false);
-                  }
-                }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 ${
-                  (activeTab === item.id || (item.hasDropdown && showTaskDropdown))
-                    ? 'text-[#00FF66] bg-[#00FF66]/10 shadow-[inset_0_0_10px_rgba(0,255,102,0.1)] border border-[#00FF66]/30' 
-                    : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
-                }`}
-              >
-                {item.label}
-                {item.suffix && <span className="text-[10px] font-normal text-black bg-[#00FF66] px-1.5 py-0.5 rounded shadow-glow-green">{item.suffix}</span>}
-                {item.badge && <span className="text-[10px] font-bold text-black bg-amber-400 px-1.5 py-0.5 rounded shadow-glow-yellow">{item.badge}</span>}
-                {item.hasDropdown && <ChevronDown className={`w-4 h-4 transition-transform ${showTaskDropdown ? 'rotate-180' : ''}`} />}
-              </button>
-
-              {/* DROPDOWN MENU - TÁC VỤ */}
-              {item.hasDropdown && showTaskDropdown && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-[600px] bg-[#1A1F2B] rounded-2xl shadow-[0_20px_50px_-10px_rgba(0,0,0,0.5)] border border-white/10 p-4 z-50 backdrop-blur-xl">
-                  <div className="flex items-center justify-between mb-4 px-2">
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-[#00FF66] animate-pulse shadow-glow-green"></span> TÁC VỤ NHANH
-                    </span>
-                    <span className="text-xs font-bold text-gray-300 bg-white/10 px-2 py-1 rounded-full border border-white/5">Hôm nay bạn muốn tạo gì?</span>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* Primary Big Card */}
-                    <button 
-                      onClick={() => { setActiveTab('create-aidol'); setShowTaskDropdown(false); }}
-                      className="col-span-2 flex items-center p-5 rounded-xl bg-gradient-to-r from-[#00FF66]/20 to-transparent border border-[#00FF66]/30 hover:border-[#00FF66] hover:shadow-glow-green transition-all text-left group"
-                    >
-                      <div className="w-12 h-12 rounded-xl bg-[#00FF66]/20 flex items-center justify-center mr-4 backdrop-blur-sm border border-[#00FF66]/50 group-hover:bg-[#00FF66] transition-colors">
-                        <Sparkles className="w-6 h-6 text-[#00FF66] group-hover:text-black transition-colors" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-[10px] uppercase font-bold text-[#00FF66] tracking-wider mb-0.5">Bắt đầu nhân vật</div>
-                        <div className="text-lg font-black text-white mb-1">Tạo AIDOL mới</div>
-                        <div className="text-xs text-gray-400">Từ ảnh nhân vật, ảnh mẫu và thiết lập thương hiệu của bạn.</div>
-                      </div>
-                      <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#00FF66] group-hover:text-black transition-colors text-white border border-white/20">
-                        <Plus className="w-4 h-4" />
-                      </div>
-                    </button>
-
-                    {/* Secondary Cards */}
-                    {QUICK_TASKS.slice(1).map((task) => (
-                      <button 
-                        key={task.id} 
-                        onClick={() => { setActiveTab(task.id); setShowTaskDropdown(false); }}
-                        className="flex items-start p-4 rounded-xl border border-white/5 hover:border-white/20 hover:bg-white/5 transition-colors text-left group bg-[#121216]"
-                      >
-                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0 ${task.color}`}>
-                           <task.icon className="w-5 h-5" />
-                         </div>
-                         <div>
-                           <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">{task.id}</div>
-                           <div className="text-sm font-bold text-gray-200 mb-1 group-hover:text-white">{task.label}</div>
-                           <div className="text-[10px] text-gray-500 leading-tight group-hover:text-gray-400 transition-colors">{task.desc}</div>
-                         </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`flex items-center gap-2 px-3 lg:px-4 py-2 rounded-full text-[11px] lg:text-sm font-bold transition-all duration-200 whitespace-nowrap ${
+                activeTab === item.id
+                  ? 'text-[#00FF66] bg-[#00FF66]/10 shadow-[inset_0_0_10px_rgba(0,255,102,0.1)] border border-[#00FF66]/30' 
+                  : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+              }`}
+            >
+              <item.icon className="w-4 h-4 hidden sm:block" />
+              {item.label}
+            </button>
           ))}
         </nav>
 
@@ -172,7 +93,7 @@ export default function KOLLiveDashboard() {
           {activeTab === 'create-aidol' && <TaoAIDOLMoi />}
           {activeTab === 'voice' && <WorkspaceTacVu defaultTab="voice" />}
           {activeTab === 'lipsync' && <WorkspaceTacVu defaultTab="lipsync" />}
-          {(activeTab === 'video' || activeTab === 'image' || activeTab === 'studio') && <WorkspaceTacVu defaultTab="image-video" />}
+          {activeTab === 'video' && <WorkspaceTacVu defaultTab="image-video" />}
           {activeTab === 'my-aidol' && <ThuVienAIDOL />}
           {activeTab === 'livestream-ai' && <LivestreamAISetup />}
           {activeTab === 'history' && <LichSuTao />}
