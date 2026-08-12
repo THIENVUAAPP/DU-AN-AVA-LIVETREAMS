@@ -56,7 +56,7 @@ export default function ThuVienAIDOL() {
   
   const [speed, setSpeed] = useState(1.0);
 
-  const CATEGORIES = [
+  const DEFAULT_CATEGORIES = [
     { id: 'all', name: 'Tất cả' },
     { id: 'livestream', name: 'Chuyên Livestream' },
     { id: 'sales', name: 'Tư Vấn Bán Hàng' },
@@ -65,6 +65,37 @@ export default function ThuVienAIDOL() {
     { id: 'dance', name: 'Chuyên Nhảy (Dance)' },
     { id: 'story', name: 'Kể Chuyện / Tâm Sự' },
   ];
+
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('aidol_custom_categories');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setCategories([...DEFAULT_CATEGORIES, ...parsed]);
+      } catch(e) {}
+    }
+  }, []);
+
+  const handleAddCategory = () => {
+    const name = window.prompt("Nhập tên chủ đề mới:");
+    if (!name || !name.trim()) return;
+    
+    const newCat = {
+      id: 'custom_' + Date.now(),
+      name: name.trim()
+    };
+    
+    const saved = localStorage.getItem('aidol_custom_categories');
+    let parsed = [];
+    if (saved) {
+      try { parsed = JSON.parse(saved); } catch(e) {}
+    }
+    parsed.push(newCat);
+    localStorage.setItem('aidol_custom_categories', JSON.stringify(parsed));
+    setCategories([...DEFAULT_CATEGORIES, ...parsed]);
+  };
 
   const handleSaveAidol = async () => {
     if (!newAidolMedia || !newAidolFile) return alert("Vui lòng tải lên Ảnh tĩnh, Video hoặc Âm thanh!");
@@ -181,8 +212,8 @@ export default function ThuVienAIDOL() {
           </div>
 
           {/* Filters */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            {CATEGORIES.map(cat => (
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            {categories.map(cat => (
                <button 
                  key={cat.id} 
                  onClick={() => setSelectedCategory(cat.id)}
@@ -191,6 +222,12 @@ export default function ThuVienAIDOL() {
                  {cat.name}
                </button>
             ))}
+            <button 
+              onClick={handleAddCategory}
+              className="px-4 py-2 rounded-lg text-sm font-bold transition-colors bg-white/5 text-gray-300 hover:text-white border border-white/10 border-dashed hover:border-[#00FF66]/50 flex items-center gap-1"
+            >
+              <Plus className="w-4 h-4" /> Thêm chủ đề
+            </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -238,7 +275,7 @@ export default function ThuVienAIDOL() {
                           <img src={item.mediaUrl} alt={item.name} className="w-full h-full object-cover" />
                        )}
                        <div className="absolute top-0 left-0 right-0 p-3 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
-                         <span className="text-[10px] font-bold text-[#00FF66] bg-black/50 px-2 py-1 rounded-full">{CATEGORIES.find(c => c.id === item.category)?.name}</span>
+                         <span className="text-[10px] font-bold text-[#00FF66] bg-black/50 px-2 py-1 rounded-full">{categories.find(c => c.id === item.category)?.name || item.category}</span>
                        </div>
                        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent pointer-events-none">
                          <h3 className="font-bold text-white text-sm truncate">{item.name}</h3>
@@ -288,7 +325,7 @@ export default function ThuVienAIDOL() {
                           onChange={(e) => setNewAidolCategory(e.target.value)}
                           className="w-full px-4 py-3 bg-black/60 border border-white/10 rounded-xl text-sm font-bold text-white focus:border-[#00FF66] outline-none shadow-sm appearance-none"
                         >
-                          {CATEGORIES.filter(c => c.id !== 'all').map(cat => (
+                          {categories.filter(c => c.id !== 'all').map(cat => (
                             <option key={cat.id} value={cat.id}>{cat.name}</option>
                           ))}
                         </select>
