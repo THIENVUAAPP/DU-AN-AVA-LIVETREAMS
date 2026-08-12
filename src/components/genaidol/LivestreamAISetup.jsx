@@ -358,39 +358,22 @@ export default function LivestreamAISetup() {
                            </div>
                            <div className="flex border border-white/10 rounded-lg overflow-hidden bg-black/40 hover:border-[#00FF66]/50 transition-colors cursor-pointer" onClick={() => !selectedVideoLibraryInfo && videoInputRef.current?.click()}>
                              <div className="px-4 py-2.5 bg-white/5 border-r border-white/10 text-xs font-bold text-gray-300 whitespace-nowrap">{selectedVideoLibraryInfo ? 'Thay đổi' : 'Chọn Tệp'}</div>
-                             <div className="px-4 py-2.5 text-xs text-[#00FF66] font-medium flex-1 truncate">{selectedVideoLibraryInfo || (selectedVideoFile ? selectedVideoFile.name : 'Chưa chọn video...')}</div>
+                             <div className="px-4 py-2.5 text-xs text-[#00FF66] font-medium flex-1 truncate">{selectedVideoLibraryInfo ? selectedVideoLibraryInfo.name : (selectedVideoFile ? selectedVideoFile.name : 'Chưa chọn video...')}</div>
                            </div>
                            <input type="file" accept="video/*" className="hidden" ref={videoInputRef} onChange={(e) => { if(e.target.files[0]) { setSelectedVideoFile(e.target.files[0]); setSelectedVideoLibraryInfo(null); } }} />
                         </div>
 
-                        <div className="flex-1 flex flex-col">
-                           <label className="block text-xs font-bold text-gray-300 mb-2 flex items-center gap-2"><Mic2 className="w-4 h-4 text-[#00FF66]" /> 2. Âm thanh / Kịch bản AI</label>
-                           <div className="flex bg-black/40 rounded-lg border border-white/10 p-1 mb-3">
-                              <button onClick={() => { setLipsyncAudioType('voice'); setSelectedAILibraryInfo(null); audioInputRef.current?.click(); }}
-                                className={`flex-1 py-2 rounded text-xs font-bold transition-all ${lipsyncAudioType === 'voice' && !selectedAILibraryInfo ? 'bg-[#00FF66]/20 text-[#00FF66]' : 'text-gray-400 hover:text-white'}`}>Tải từ máy</button>
-                              <button onClick={() => { setLipsyncAudioType('text'); setShowAILibraryModal(true); }}
-                                className={`flex-1 py-2 rounded text-xs font-bold transition-all ${lipsyncAudioType === 'text' || selectedAILibraryInfo ? 'bg-[#00FF66]/20 text-[#00FF66]' : 'text-gray-400 hover:text-white'}`}>Từ Kịch Bản AI đã lưu</button>
+                        <div className="flex-1 flex flex-col mt-4">
+                           <label className="block text-xs font-bold text-gray-300 mb-2 flex items-center gap-2"><Mic2 className="w-4 h-4 text-[#00FF66]" /> 2. Âm thanh (Voice)</label>
+                           
+                           <div onClick={() => audioInputRef.current?.click()} className="flex-1 border-2 border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center p-4 bg-black/20 hover:border-[#00FF66]/50 transition-all cursor-pointer min-h-[120px]">
+                              <Upload className={`w-6 h-6 mb-2 ${selectedAudioFile ? 'text-[#00FF66]' : 'text-gray-400'}`} />
+                              <span className={`text-xs font-bold ${selectedAudioFile ? 'text-[#00FF66]' : 'text-gray-400'}`}>{selectedAudioFile ? '✅ ' + selectedAudioFile.name : 'Click chọn file âm thanh từ máy'}</span>
                            </div>
-                           <input type="text" placeholder="Tiêu đề video..." className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-xs text-white focus:border-[#00FF66] outline-none mb-3" />
-                           {lipsyncAudioType === 'text' || selectedAILibraryInfo ? (
-                              <div className="flex-1 bg-black/40 border border-[#00FF66]/30 rounded-lg p-4 flex flex-col justify-center items-center text-center cursor-pointer hover:bg-black/60 transition-colors" onClick={() => setShowAILibraryModal(true)}>
-                                 <Brain className="w-8 h-8 text-[#00FF66] mb-2 opacity-80" />
-                                 {selectedAILibraryInfo ? (
-                                    <><div className="text-xs font-bold text-white mb-1">✅ {selectedAILibraryInfo}</div><div className="text-[10px] text-gray-400">Click để đổi kịch bản khác</div></>
-                                 ) : (
-                                    <><div className="text-xs font-bold text-white mb-1">Chưa chọn Kịch Bản AI</div><div className="text-[10px] text-[#00FF66]">Nhấn vào để mở Kho Kịch Bản</div></>
-                                 )}
-                              </div>
-                           ) : (
-                              <div onClick={() => audioInputRef.current?.click()} className="flex-1 border-2 border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center p-4 bg-black/20 hover:border-[#00FF66]/50 transition-all cursor-pointer">
-                                 <Upload className={`w-6 h-6 mb-2 ${selectedAudioFile ? 'text-[#00FF66]' : 'text-gray-400'}`} />
-                                 <span className={`text-xs font-bold ${selectedAudioFile ? 'text-[#00FF66]' : 'text-gray-400'}`}>{selectedAudioFile ? '✅ ' + selectedAudioFile.name : 'Kéo thả hoặc click chọn audio'}</span>
-                              </div>
-                           )}
+                           
                            <input type="file" accept="audio/*" className="hidden" ref={audioInputRef} onChange={(e) => { if(e.target.files[0]) { setSelectedAudioFile(e.target.files[0]); setSelectedAILibraryInfo(null); } }} />
                            <div className="mt-2 flex items-center justify-between">
-                             <div className="text-[10px] text-gray-500">Giọng: <span className="text-[#00FF66] font-bold">Web Speech API</span></div>
-                             <button onClick={() => setShowVoiceModal(true)} className="text-[10px] text-purple-400 hover:text-purple-300 font-bold flex items-center gap-1 cursor-pointer"><Volume2 className="w-3 h-3"/> Thay đổi giọng</button>
+                             <div className="text-[10px] text-gray-500">Giọng: <span className="text-[#00FF66] font-bold">File của bạn</span></div>
                            </div>
                         </div>
                      </div>
@@ -403,8 +386,10 @@ export default function LivestreamAISetup() {
                                  <div className="flex-1 bg-black relative flex items-center justify-center">
                                    {selectedVideoFile ? (
                                      <video src={URL.createObjectURL(selectedVideoFile)} className="w-full h-full object-contain max-h-[280px]" controls muted/>
+                                   ) : selectedVideoLibraryInfo ? (
+                                     <video src={selectedVideoLibraryInfo.mediaUrl} className="w-full h-full object-contain max-h-[280px]" controls muted/>
                                    ) : (
-                                     <div className="text-center"><div className="text-[#00FF66] text-sm font-bold mb-1">{selectedVideoLibraryInfo || 'Video mẫu'}</div><div className="text-gray-400 text-xs">Sẵn sàng phát</div></div>
+                                     <div className="text-center"><div className="text-[#00FF66] text-sm font-bold mb-1">Video mẫu</div><div className="text-gray-400 text-xs">Sẵn sàng phát</div></div>
                                    )}
                                  </div>
                                  <div className="p-3 bg-[#0B0E14] border-t border-white/10 flex justify-between items-center">
@@ -561,7 +546,7 @@ export default function LivestreamAISetup() {
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     {filteredVideoItems.map(item => (
-                      <div key={item.id} onClick={() => { setSelectedVideoLibraryInfo(item.name + ' (' + (CATEGORY_LABELS[item.category] || item.category) + ')'); setSelectedVideoFile(null); setShowVideoLibraryModal(false); }}
+                      <div key={item.id} onClick={() => { setSelectedVideoLibraryInfo(item); setSelectedVideoFile(null); setShowVideoLibraryModal(false); }}
                         className="group cursor-pointer bg-black/40 border border-white/10 rounded-xl overflow-hidden hover:border-[#00FF66] transition-all hover:shadow-[0_0_15px_rgba(0,255,102,0.2)]">
                         <div className="aspect-[3/4] bg-gray-900 relative flex items-center justify-center overflow-hidden">
                           {item.type === 'video' ? (<video src={item.mediaUrl} className="w-full h-full object-cover" muted/>)
