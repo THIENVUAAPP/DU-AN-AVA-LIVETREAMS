@@ -43,9 +43,18 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [showApiModal, setShowApiModal] = useState(false);
+  
+  // API Keys
   const [localGeminiKey, setLocalGeminiKey] = useState('');
   const [localOpenAIKey, setLocalOpenAIKey] = useState('');
+  const [localElevenLabsKey, setLocalElevenLabsKey] = useState('');
+  const [localMiniMaxKey, setLocalMiniMaxKey] = useState('');
+  const [localMiniMaxGroupId, setLocalMiniMaxGroupId] = useState('');
   
+  // Audio Generation
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
+  const [generatedAudioUrl, setGeneratedAudioUrl] = useState(null);
+
   const [aiModel, setAiModel] = useState(AI_BRAINS[aiBrain].models[0]);
   
   // Update model when brain changes
@@ -56,15 +65,24 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
   React.useEffect(() => {
     const gem = localStorage.getItem('gemini_api_key') || '';
     const oai = localStorage.getItem('openai_api_key') || '';
+    const el = localStorage.getItem('elevenlabs_api_key') || '';
+    const mm = localStorage.getItem('minimax_api_key') || '';
+    const mmg = localStorage.getItem('minimax_group_id') || '';
     setLocalGeminiKey(gem);
     setLocalOpenAIKey(oai);
-    if (gem || oai) setIsAdmin(true);
+    setLocalElevenLabsKey(el);
+    setLocalMiniMaxKey(mm);
+    setLocalMiniMaxGroupId(mmg);
+    if (gem || oai || el || mm) setIsAdmin(true);
   }, []);
 
   const handleSaveApiKeys = () => {
     localStorage.setItem('gemini_api_key', localGeminiKey);
     localStorage.setItem('openai_api_key', localOpenAIKey);
-    setIsAdmin(!!(localGeminiKey || localOpenAIKey));
+    localStorage.setItem('elevenlabs_api_key', localElevenLabsKey);
+    localStorage.setItem('minimax_api_key', localMiniMaxKey);
+    localStorage.setItem('minimax_group_id', localMiniMaxGroupId);
+    setIsAdmin(!!(localGeminiKey || localOpenAIKey || localElevenLabsKey || localMiniMaxKey));
     setShowApiModal(false);
     alert('Đã lưu cấu hình API!');
   };
@@ -117,15 +135,59 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
       return;
     }
     const jobData = {
-      jobName,
+      id: Date.now().toString(),
+      name: jobName,
       scriptContent,
       voiceProvider,
       selectedVoice,
       lipsyncModel,
+      generatedAudioUrl,
       createdAt: new Date().toISOString()
     };
     localStorage.setItem('aidol_active_job', JSON.stringify(jobData));
     alert('Đã đẩy Job kịch bản sang Đạo Diễn AI (Phiên Live) thành công!');
+  };
+  
+  const handleGenerateAudio = async () => {
+    if (!scriptContent) return alert("Vui lòng nhập kịch bản trước khi tạo giọng đọc!");
+    setIsGeneratingAudio(true);
+    try {
+      let apiKey = '';
+      let groupId = '';
+      if (voiceProvider === 'elevenlabs') {
+        apiKey = localStorage.getItem('elevenlabs_api_key') || import.meta.env.VITE_ELEVENLABS_API_KEY;
+        if (!apiKey) throw new Error("Chưa cài đặt ElevenLabs API Key!");
+      } else if (voiceProvider === 'minimax') {
+        apiKey = localStorage.getItem('minimax_api_key') || import.meta.env.VITE_MINIMAX_API_KEY;
+        groupId = localStorage.getItem('minimax_group_id') || import.meta.env.VITE_MINIMAX_GROUP_ID || '';
+        if (!apiKey) throw new Error("Chưa cài đặt MiniMax API Key!");
+      }
+
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: scriptContent,
+          platform: voiceProvider,
+          voiceId: selectedVoice,
+          apiKey,
+          groupId,
+          speed,
+          volume: 1.0,
+          pitch: 0
+        })
+      });
+      
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || 'Lỗi không xác định từ API TTS');
+      if (data.audioBase64) {
+        setGeneratedAudioUrl(`data:audio/mpeg;base64,${data.audioBase64}`);
+      }
+    } catch (err) {
+      alert("Lỗi khi tạo giọng đọc: " + err.message);
+    } finally {
+      setIsGeneratingAudio(false);
+    }
   };
   
   // File References & Selection states
@@ -171,19 +233,22 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
       ]}
     ],
     elevenlabs: [
-      { group: 'Tiếng Anh (Bản ngữ)', options: [
-        { id: 'el_rachel', name: 'Rachel (Calm, Soft)' },
-        { id: 'el_drew', name: 'Drew (News, Authoritative)' },
-        { id: 'el_clyde', name: 'Clyde (War veteran, Husky)' },
-        { id: 'el_paul', name: 'Paul (Documentary, Deep)' },
-        { id: 'el_domi', name: 'Domi (Strong, Narrative)' },
-        { id: 'el_bella', name: 'Bella (Soft, ASMR)' },
-        { id: 'el_antoni', name: 'Antoni (Friendly, Bright)' },
-        { id: 'el_charlie', name: 'Charlie (Conversational)' }
-      ]},
-      { group: 'Tiếng Việt (Đa ngôn ngữ)', options: [
-        { id: 'el_vi_1', name: 'Tiếng Việt (Multilingual v2 - Mặc định 1)' },
-        { id: 'el_vi_2', name: 'Tiếng Việt (Multilingual v2 - Mặc định 2)' }
+      { group: 'Tiếng Anh (Bản ngữ & Siêu thực)', options: [
+        { id: '21m00Tcm4TlvDq8ikWAM', name: 'Rachel (Nữ, Bình tĩnh, Mềm mại)' },
+        { id: '29vD33N1CtxCmqQRPOHJ', name: 'Drew (Nam, Thời sự, Nghiêm túc)' },
+        { id: '2EiwWnXFnvU5JabPnv8n', name: 'Clyde (Nam, Phong trần, Khàn)' },
+        { id: '5Q0t7uMcjvnagumLfvZi', name: 'Paul (Nam, Phóng sự, Sâu lắng)' },
+        { id: 'AZnzlk1XvdvUeBnXmlld', name: 'Domi (Nữ, Mạnh mẽ, Kể chuyện)' },
+        { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah (Nữ, Tự nhiên, Mềm mại)' },
+        { id: 'ErXwobaYiN019PkySvjV', name: 'Antoni (Nam, Thân thiện, Sáng sủa)' },
+        { id: 'GBv7mTt0atIp3Br8iCZE', name: 'Thomas (Nam, Kể chuyện, Truyền cảm)' },
+        { id: 'IKne3meq5aSn9XLyUdCD', name: 'Charlie (Nam, Tự nhiên, Giao tiếp)' },
+        { id: 'JBFqnCBsd6RMkjVDRZzb', name: 'George (Nam, Ấm áp, Rõ ràng)' },
+        { id: 'LcfcDJNUP1GQjkvn1xUw', name: 'Emily (Nữ, Trẻ trung, Năng động)' },
+        { id: 'MF3mGyEYCl7XYWbV9V6O', name: 'Elli (Nữ, Truyền cảm, Nhẹ nhàng)' },
+        { id: 'N2lVS1w4EtoT3dr4eOWO', name: 'Callum (Nam, Kể chuyện, Anh)' },
+        { id: 'ODq5zmih8GrVes3RoWEZ', name: 'Patrick (Nam, Quyền lực, Trang trọng)' },
+        { id: 'SOYHL32BrMac43zF2B5G', name: 'Harry (Nam, Sôi động, Lôi cuốn)' }
       ]}
     ],
     gemini: [
@@ -202,14 +267,17 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
     ],
     minimax: [
       { group: 'Giọng Nam MiniMax', options: [
-        { id: 'mm_male_1', name: 'Nam Thanh Niên (Năng động)' },
-        { id: 'mm_male_2', name: 'Nam Trung Niên (Trầm ấm)' },
-        { id: 'mm_male_3', name: 'Bé Trai (Đáng yêu)' }
+        { id: 'male-qn-qingse', name: 'Thanh Niên (Năng động, Thanh xuân)' },
+        { id: 'male-qn-jingying', name: 'Trung Niên (Doanh nhân, Tự tin)' },
+        { id: 'male-qn-badao', name: 'Tổng Tài (Trầm ấm, Quyền lực)' },
+        { id: 'male-qn-daxuesheng', name: 'Sinh Viên (Vui vẻ, Thân thiện)' }
       ]},
       { group: 'Giọng Nữ MiniMax', options: [
-        { id: 'mm_female_1', name: 'Nữ Thanh Niên (Ngọt ngào)' },
-        { id: 'mm_female_2', name: 'Nữ Trưởng Thành (Chuyên nghiệp)' },
-        { id: 'mm_female_3', name: 'Bé Gái (Hoạt hình/Anime)' }
+        { id: 'female-shaonv', name: 'Thiếu Nữ (Nhí nhảnh, Đáng yêu)' },
+        { id: 'female-yujie', name: 'Ngự Tỷ (Quyến rũ, Sắc sảo)' },
+        { id: 'female-chengshu', name: 'Trưởng Thành (Chuyên nghiệp, MC)' },
+        { id: 'female-tianmei', name: 'Ngọt Ngào (Bán hàng, Dịu dàng)' },
+        { id: 'female-zhixing', name: 'Trí Thức (Bản tin, Rõ ràng)' }
       ]}
     ]
   };
@@ -401,9 +469,20 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                                </div>
                              ))}
                            </div>
-                           <button className="w-full mt-3 py-2.5 bg-white/5 text-white hover:bg-white/10 border border-white/10 rounded-lg font-bold text-xs transition-colors">
-                              Nghe thử giọng đang chọn
+                           <button 
+                             onClick={handleGenerateAudio}
+                             disabled={isGeneratingAudio || !scriptContent || (voiceProvider !== 'elevenlabs' && voiceProvider !== 'minimax' && voiceProvider !== 'gemini')}
+                             className="w-full mt-3 py-2.5 bg-[#00FF66]/20 text-[#00FF66] border border-[#00FF66]/30 hover:bg-[#00FF66]/30 shadow-glow-green rounded-lg font-bold text-xs transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                           >
+                             {isGeneratingAudio ? <div className="w-4 h-4 border-2 border-t-[#00FF66] border-[#00FF66]/30 rounded-full animate-spin"></div> : <Mic2 className="w-4 h-4"/>}
+                             {isGeneratingAudio ? 'Đang tạo âm thanh...' : 'Tạo Giọng Đọc (TTS API)'}
                            </button>
+                           {generatedAudioUrl && (
+                             <div className="mt-3 p-3 bg-white/5 border border-white/10 rounded-lg">
+                               <p className="text-[10px] text-gray-400 mb-2 font-bold flex items-center gap-1"><CheckCircle className="w-3 h-3 text-[#00FF66]" /> Xem trước Audio</p>
+                               <audio controls src={generatedAudioUrl} className="w-full h-8" />
+                             </div>
+                           )}
                          </div>
 
                          <div className="mt-auto">
@@ -474,15 +553,36 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                  <button onClick={() => setShowApiModal(false)} className="p-2 text-gray-400 hover:text-white bg-white/5 rounded-lg">Đóng</button>
               </div>
               <div className="p-6 space-y-6">
-                <div>
-                  <label className="text-xs font-bold text-white mb-2 block">Gemini API Key</label>
-                  <input type="password" value={localGeminiKey} onChange={e => setLocalGeminiKey(e.target.value)}
-                    placeholder="AIzaSy..." className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-yellow-500 outline-none" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold text-white mb-2 flex items-center gap-1"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Google_Gemini_logo.svg/512px-Google_Gemini_logo.svg.png" className="w-4 h-4" alt=""/> Gemini API Key</label>
+                    <input type="password" value={localGeminiKey} onChange={e => setLocalGeminiKey(e.target.value)}
+                      placeholder="AIzaSy..." className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-yellow-500 outline-none" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-white mb-2 flex items-center gap-1"><span className="w-4 h-4 bg-white rounded-full flex items-center justify-center text-black font-black text-[8px]">OAI</span> OpenAI API Key</label>
+                    <input type="password" value={localOpenAIKey} onChange={e => setLocalOpenAIKey(e.target.value)}
+                      placeholder="sk-proj-..." className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-yellow-500 outline-none" />
+                  </div>
                 </div>
-                <div>
-                  <label className="text-xs font-bold text-white mb-2 block">OpenAI API Key</label>
-                  <input type="password" value={localOpenAIKey} onChange={e => setLocalOpenAIKey(e.target.value)}
-                    placeholder="sk-proj-..." className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-yellow-500 outline-none" />
+                <div className="border-t border-white/10 pt-4 grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold text-white mb-2 block">ElevenLabs API Key</label>
+                    <input type="password" value={localElevenLabsKey} onChange={e => setLocalElevenLabsKey(e.target.value)}
+                      placeholder="sk_..." className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-yellow-500 outline-none" />
+                  </div>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs font-bold text-white mb-2 block">MiniMax API Key</label>
+                      <input type="password" value={localMiniMaxKey} onChange={e => setLocalMiniMaxKey(e.target.value)}
+                        placeholder="sk-api-..." className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-yellow-500 outline-none" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-white mb-2 block">MiniMax Group ID <span className="text-gray-500 font-normal">(Tuỳ chọn)</span></label>
+                      <input type="text" value={localMiniMaxGroupId} onChange={e => setLocalMiniMaxGroupId(e.target.value)}
+                        placeholder="Để trống nếu không có..." className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-yellow-500 outline-none" />
+                    </div>
+                  </div>
                 </div>
               </div>
               <div className="p-4 bg-[#0B0E14] border-t border-white/10 flex justify-end">
