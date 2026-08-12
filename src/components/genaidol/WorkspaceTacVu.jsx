@@ -41,16 +41,6 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
   const [scriptTopic, setScriptTopic] = useState('');
   const [scriptContent, setScriptContent] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [showApiModal, setShowApiModal] = useState(false);
-  
-  // API Keys
-  const [localGeminiKey, setLocalGeminiKey] = useState('');
-  const [localOpenAIKey, setLocalOpenAIKey] = useState('');
-  const [localElevenLabsKey, setLocalElevenLabsKey] = useState('');
-  const [localMiniMaxKey, setLocalMiniMaxKey] = useState('');
-  const [localMiniMaxGroupId, setLocalMiniMaxGroupId] = useState('');
-  
   // Audio Generation
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
   const [generatedAudioUrl, setGeneratedAudioUrl] = useState(null);
@@ -61,31 +51,6 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
   React.useEffect(() => {
     setAiModel(AI_BRAINS[aiBrain].models[0]);
   }, [aiBrain]);
-
-  React.useEffect(() => {
-    const gem = localStorage.getItem('gemini_api_key') || '';
-    const oai = localStorage.getItem('openai_api_key') || '';
-    const el = localStorage.getItem('elevenlabs_api_key') || '';
-    const mm = localStorage.getItem('minimax_api_key') || '';
-    const mmg = localStorage.getItem('minimax_group_id') || '';
-    setLocalGeminiKey(gem);
-    setLocalOpenAIKey(oai);
-    setLocalElevenLabsKey(el);
-    setLocalMiniMaxKey(mm);
-    setLocalMiniMaxGroupId(mmg);
-    if (gem || oai || el || mm) setIsAdmin(true);
-  }, []);
-
-  const handleSaveApiKeys = () => {
-    localStorage.setItem('gemini_api_key', localGeminiKey);
-    localStorage.setItem('openai_api_key', localOpenAIKey);
-    localStorage.setItem('elevenlabs_api_key', localElevenLabsKey);
-    localStorage.setItem('minimax_api_key', localMiniMaxKey);
-    localStorage.setItem('minimax_group_id', localMiniMaxGroupId);
-    setIsAdmin(!!(localGeminiKey || localOpenAIKey || localElevenLabsKey || localMiniMaxKey));
-    setShowApiModal(false);
-    alert('Đã lưu cấu hình API!');
-  };
   
   const handleGenerateScript = async () => {
     if (!scriptTopic) return alert("Vui lòng nhập chủ đề kịch bản!");
@@ -94,9 +59,9 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
     try {
       let apiKey = '';
       if (aiBrain === 'gemini') {
-        apiKey = localStorage.getItem('gemini_api_key') || import.meta.env.VITE_GEMINI_API_KEY || '';
+        apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
       } else if (aiBrain === 'chatgpt') {
-        apiKey = localStorage.getItem('openai_api_key') || import.meta.env.VITE_OPENAI_API_KEY || '';
+        apiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
       }
 
       const res = await fetch('/api/generate-script', {
@@ -155,10 +120,10 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
       let apiKey = '';
       let groupId = '';
       if (voiceProvider === 'elevenlabs') {
-        apiKey = localStorage.getItem('elevenlabs_api_key') || import.meta.env.VITE_ELEVENLABS_API_KEY || '';
+        apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY || '';
       } else if (voiceProvider === 'minimax') {
-        apiKey = localStorage.getItem('minimax_api_key') || import.meta.env.VITE_MINIMAX_API_KEY || '';
-        groupId = localStorage.getItem('minimax_group_id') || import.meta.env.VITE_MINIMAX_GROUP_ID || '';
+        apiKey = import.meta.env.VITE_MINIMAX_API_KEY || '';
+        groupId = import.meta.env.VITE_MINIMAX_GROUP_ID || '';
       }
 
       const res = await fetch('/api/tts', {
@@ -345,10 +310,11 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                 {/* AI Brain Selection */}
                 <div className="mb-6 p-4 bg-black/40 rounded-xl border border-white/5">
                    <label className="flex items-center justify-between text-xs font-bold text-gray-200 mb-3">
+                     <div className="flex items-center gap-4 text-xs font-bold text-gray-400">
+                      <div>1 / 1 Job</div>
+                      <div>50 KOL Coin / Job</div>
+                    </div>
                      <div className="flex items-center gap-2"><Brain className="w-4 h-4 text-[#00FF66]" /> Chọn Bộ Não Kịch Bản</div>
-                     <button onClick={() => setShowApiModal(true)} className="text-[10px] text-gray-400 hover:text-yellow-400 flex items-center gap-1 transition-colors">
-                       <Settings className="w-3 h-3"/> Cài đặt API
-                     </button>
                    </label>
                    <div className="grid grid-cols-3 gap-2 mb-3">
                       {Object.keys(AI_BRAINS).map(brainKey => (
@@ -362,21 +328,19 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                       ))}
                    </div>
                    
-                   {isAdmin && (
-                     <div className="mb-4 text-[11px] font-bold text-gray-400 bg-white/5 py-1.5 px-3 rounded-md inline-flex items-center gap-2 border border-white/5">
-                        <Sparkles className="w-3 h-3 text-[#00FF66]" />
-                        <span className="text-white">Model:</span>
-                        <select 
-                          value={aiModel} 
-                          onChange={e => setAiModel(e.target.value)}
-                          className="bg-transparent text-white outline-none font-bold"
-                        >
-                          {AI_BRAINS[aiBrain].models.map(m => (
-                            <option key={m} value={m} className="bg-black text-white">{m}</option>
-                          ))}
-                        </select>
-                     </div>
-                   )}
+                    <div className="mb-4 text-[11px] font-bold text-gray-400 bg-white/5 py-1.5 px-3 rounded-md inline-flex items-center gap-2 border border-white/5">
+                       <Sparkles className="w-3 h-3 text-[#00FF66]" />
+                       <span className="text-white">Model:</span>
+                       <select 
+                         value={aiModel} 
+                         onChange={e => setAiModel(e.target.value)}
+                         className="bg-transparent text-white outline-none font-bold"
+                       >
+                         {AI_BRAINS[aiBrain].models.map(m => (
+                           <option key={m} value={m} className="bg-black text-white">{m}</option>
+                         ))}
+                       </select>
+                    </div>
 
                    <div className="flex flex-col md:flex-row gap-2">
                      <select 
@@ -588,60 +552,6 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
             </div>
          </div>
       </div>
-
-
-      {showApiModal && (
-        <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-           <div className="bg-[#121216] border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
-              <div className="p-4 border-b border-white/10 flex justify-between items-center bg-[#0B0E14]">
-                 <div className="flex items-center gap-3">
-                   <Settings className="w-5 h-5 text-yellow-500" />
-                   <div>
-                     <h3 className="text-sm font-black text-white">Cấu hình API Keys (Admin)</h3>
-                     <p className="text-[10px] text-gray-400">Thiết lập bộ não AI riêng cho hệ thống</p>
-                   </div>
-                 </div>
-                 <button onClick={() => setShowApiModal(false)} className="p-2 text-gray-400 hover:text-white bg-white/5 rounded-lg">Đóng</button>
-              </div>
-              <div className="p-6 space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-bold text-white mb-2 flex items-center gap-1"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Google_Gemini_logo.svg/512px-Google_Gemini_logo.svg.png" className="w-4 h-4" alt=""/> Gemini API Key</label>
-                    <input type="password" value={localGeminiKey} onChange={e => setLocalGeminiKey(e.target.value)}
-                      placeholder="AIzaSy..." className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-yellow-500 outline-none" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-white mb-2 flex items-center gap-1"><span className="w-4 h-4 bg-white rounded-full flex items-center justify-center text-black font-black text-[8px]">OAI</span> OpenAI API Key</label>
-                    <input type="password" value={localOpenAIKey} onChange={e => setLocalOpenAIKey(e.target.value)}
-                      placeholder="sk-proj-..." className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-yellow-500 outline-none" />
-                  </div>
-                </div>
-                <div className="border-t border-white/10 pt-4 grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-bold text-white mb-2 block">ElevenLabs API Key</label>
-                    <input type="password" value={localElevenLabsKey} onChange={e => setLocalElevenLabsKey(e.target.value)}
-                      placeholder="sk_..." className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-yellow-500 outline-none" />
-                  </div>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-xs font-bold text-white mb-2 block">MiniMax API Key</label>
-                      <input type="password" value={localMiniMaxKey} onChange={e => setLocalMiniMaxKey(e.target.value)}
-                        placeholder="sk-api-..." className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-yellow-500 outline-none" />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-white mb-2 block">MiniMax Group ID <span className="text-gray-500 font-normal">(Tuỳ chọn)</span></label>
-                      <input type="text" value={localMiniMaxGroupId} onChange={e => setLocalMiniMaxGroupId(e.target.value)}
-                        placeholder="Để trống nếu không có..." className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-yellow-500 outline-none" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 bg-[#0B0E14] border-t border-white/10 flex justify-end">
-                 <button onClick={handleSaveApiKeys} className="px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-lg text-xs font-black">Lưu & Bật Admin</button>
-              </div>
-           </div>
-        </div>
-      )}
 
     </div>
   );
