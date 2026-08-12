@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles, Plus, Search, UserSquare2, PlayCircle, Mic, ChevronDown, ChevronRight, Music, Play, Image as ImageIcon, Check } from 'lucide-react';
 
 // Cấu hình IndexedDB để lưu trữ Video/Audio (Local Storage giới hạn 5MB)
