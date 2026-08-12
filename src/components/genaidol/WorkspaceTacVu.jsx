@@ -94,19 +94,9 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
     try {
       let apiKey = '';
       if (aiBrain === 'gemini') {
-        apiKey = localStorage.getItem('gemini_api_key') || import.meta.env.VITE_GEMINI_API_KEY;
-        if (!apiKey) {
-          alert('Vui lòng vào Cài đặt API (Góc phải) để nhập Gemini API Key của bạn trước khi tạo kịch bản!');
-          setIsGenerating(false);
-          return;
-        }
+        apiKey = localStorage.getItem('gemini_api_key') || import.meta.env.VITE_GEMINI_API_KEY || '';
       } else if (aiBrain === 'chatgpt') {
-        apiKey = localStorage.getItem('openai_api_key') || import.meta.env.VITE_OPENAI_API_KEY;
-        if (!apiKey) {
-          alert('Vui lòng vào Cài đặt API (Góc phải) để nhập OpenAI API Key của bạn trước khi tạo kịch bản!');
-          setIsGenerating(false);
-          return;
-        }
+        apiKey = localStorage.getItem('openai_api_key') || import.meta.env.VITE_OPENAI_API_KEY || '';
       }
 
       const res = await fetch('/api/generate-script', {
@@ -165,12 +155,10 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
       let apiKey = '';
       let groupId = '';
       if (voiceProvider === 'elevenlabs') {
-        apiKey = localStorage.getItem('elevenlabs_api_key') || import.meta.env.VITE_ELEVENLABS_API_KEY;
-        if (!apiKey) throw new Error("Chưa cài đặt ElevenLabs API Key!");
+        apiKey = localStorage.getItem('elevenlabs_api_key') || import.meta.env.VITE_ELEVENLABS_API_KEY || '';
       } else if (voiceProvider === 'minimax') {
-        apiKey = localStorage.getItem('minimax_api_key') || import.meta.env.VITE_MINIMAX_API_KEY;
+        apiKey = localStorage.getItem('minimax_api_key') || import.meta.env.VITE_MINIMAX_API_KEY || '';
         groupId = localStorage.getItem('minimax_group_id') || import.meta.env.VITE_MINIMAX_GROUP_ID || '';
-        if (!apiKey) throw new Error("Chưa cài đặt MiniMax API Key!");
       }
 
       const res = await fetch('/api/tts', {

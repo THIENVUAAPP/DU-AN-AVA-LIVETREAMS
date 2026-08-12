@@ -14,7 +14,7 @@ export default async function handler(req, res) {
 
     if (platform === 'openai_tts' || platform === 'openai') {
       const apiKey = process.env.OPENAI_API_KEY || clientApiKey;
-      if (!apiKey) return res.status(503).json({ error: 'OPENAI_API_KEY is not set' });
+      if (!apiKey) return res.status(503).json({ error: 'Vui lòng vào Cài đặt API (Góc phải) để nhập OpenAI API Key trước khi tạo giọng đọc!' });
       
       const response = await fetch('https://api.openai.com/v1/audio/speech', {
         method: 'POST',
@@ -36,7 +36,7 @@ export default async function handler(req, res) {
     } 
     else if (platform === 'gemini') {
       const apiKey = process.env.GEMINI_API_KEY || clientApiKey;
-      if (!apiKey) return res.status(503).json({ error: 'GEMINI_API_KEY is not set' });
+      if (!apiKey) return res.status(503).json({ error: 'Vui lòng vào Cài đặt API (Góc phải) để nhập Gemini API Key trước khi tạo giọng đọc!' });
       
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent`, {
         method: 'POST',
@@ -57,7 +57,7 @@ export default async function handler(req, res) {
     } 
     else if (platform === 'elevenlabs') {
       const apiKey = process.env.ELEVENLABS_API_KEY || clientApiKey;
-      if (!apiKey) return res.status(503).json({ error: 'ELEVENLABS_API_KEY is not set' });
+      if (!apiKey) return res.status(503).json({ error: 'Vui lòng vào Cài đặt API (Góc phải) để nhập ElevenLabs API Key trước khi tạo giọng đọc!' });
       
       const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${req.body.voiceId}`, {
         method: 'POST',
@@ -78,8 +78,8 @@ export default async function handler(req, res) {
     }
     else if (platform === 'minimax') {
       const apiKey = process.env.MINIMAX_API_KEY || clientApiKey;
-      const groupId = process.env.MINIMAX_GROUP_ID || req.body.groupId || '';
-      if (!apiKey) return res.status(503).json({ error: 'MINIMAX_API_KEY is not set' });
+      const groupId = process.env.MINIMAX_GROUP_ID || req.body.groupId;
+      if (!apiKey) return res.status(503).json({ error: 'Vui lòng vào Cài đặt API (Góc phải) để nhập MiniMax API Key trước khi tạo giọng đọc!' });
       
       let url = 'https://api.minimaxi.chat/v1/t2a_v2';
       if (groupId) {
