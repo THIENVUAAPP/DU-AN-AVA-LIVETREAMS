@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Play, Pause, FastForward, Settings, Mic, Volume2 } from 'lucide-react';
 
-export default function AIAudioPlayer({ isLive, onAudioPlayStateChange }) {
+const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTriggered }, ref) => {
   const [job, setJob] = useState(null);
   const [queue, setQueue] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -123,22 +123,19 @@ export default function AIAudioPlayer({ isLive, onAudioPlayStateChange }) {
     }
   };
 
-  // 3. Hàm Bắn Sự Kiện (Bình luận, Quà) -> Chen ngang kịch bản
-  const handleSimulateEvent = (type) => {
-    let text = "";
-    if (type === 'gift') text = "Cảm ơn bạn đã tặng quà nhé! Trân trọng cảm ơn.";
-    if (type === 'comment') text = "Xin chào bạn mới vào phòng live, có câu hỏi gì cứ bình luận nhé!";
-    
-    // Tạm dừng phát hiện tại
-    speechSynthesis.cancel();
-    
-    // Chèn vào đầu hàng đợi chưa phát
-    const newQueue = [...queue];
-    newQueue.splice(currentIndex, 0, { type: 'event', text });
-    setQueue(newQueue);
-    
-    setIsPlaying(true);
-  };
+  // Expose methods to parent
+  useImperativeHandle(ref, () => ({
+    enqueueItem: (text, action) => {
+      // Dừng phát hiện tại nếu là sự kiện khẩn cấp (vd: gift) hoặc chỉ đơn giản thêm vào hàng đợi
+      const newItem = { type: 'dynamic', text, action };
+      setQueue(prev => {
+        const next = [...prev];
+        next.splice(currentIndex + 1, 0, newItem); // Chèn vào ngay sau câu hiện tại
+        return next;
+      });
+      setIsPlaying(true);
+    }
+  }));
 
   return (
     <div className="bg-[#121216] border border-white/10 rounded-xl p-4 shadow-lg mb-4">
@@ -166,10 +163,8 @@ export default function AIAudioPlayer({ isLive, onAudioPlayStateChange }) {
         </button>
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-2">
-         <button onClick={() => handleSimulateEvent('gift')} className="py-1.5 bg-pink-500/20 text-pink-500 border border-pink-500/30 rounded text-[10px] font-bold hover:bg-pink-500/30">Giả lập: Nhận quà</button>
-         <button onClick={() => handleSimulateEvent('comment')} className="py-1.5 bg-blue-500/20 text-blue-500 border border-blue-500/30 rounded text-[10px] font-bold hover:bg-blue-500/30">Giả lập: Có Comment</button>
-      </div>
     </div>
   );
-}
+});
+
+export default AIAudioPlayer;

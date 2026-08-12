@@ -79,6 +79,51 @@ export default function AIDOLLiveConsole() {
   const [videoQueue, setVideoQueue] = useState([]);
   const [currentVideoIdx, setCurrentVideoIdx] = useState(0);
 
+  // ── Simulator State ──
+  const [simName, setSimName] = useState('Minh');
+  const [simComment, setSimComment] = useState('');
+  const [simGift, setSimGift] = useState('Hoa hồng (Rose)');
+  const [isProcessingEvent, setIsProcessingEvent] = useState(false);
+  const audioPlayerRef = useRef(null);
+  const [viewerHistory, setViewerHistory] = useState([]); // Lịch sử 10 tương tác gần nhất
+
+  const handleLiveEvent = async (type, payload) => {
+    if (!isAILive) return alert('Vui lòng Bắt đầu AI Live trước!');
+    setIsProcessingEvent(true);
+    try {
+      const res = await fetch('/api/process-live-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          brain: 'gemini',
+          apiKey: localStorage.getItem('gemini_api_key'),
+          eventType: type,
+          payload,
+          viewerHistory
+        })
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      setViewerHistory(prev => [...prev, { time: new Date().toLocaleTimeString(), type, payload, ai_intent: data.intent, ai_reply: data.replyText }].slice(-10));
+
+      if (audioPlayerRef.current && data.replyText) {
+        audioPlayerRef.current.enqueueItem(data.replyText, data.shouldTriggerAction);
+      }
+
+      if (data.shouldTriggerAction === 'dance' || data.shouldTriggerAction === 'gift_reaction') {
+        const cat = data.shouldTriggerAction === 'dance' ? 'dance' : 'reaction';
+        const items = liveMedia.filter(i => i.category === cat);
+        if (items.length > 0) handlePlayFromKho(items[0]);
+      }
+
+    } catch (err) {
+      alert('Lỗi xử lý sự kiện: ' + err.message);
+    } finally {
+      setIsProcessingEvent(false);
+    }
+  };
+
   // ── Load Live Kho ──
   const loadLiveKho = useCallback(async () => {
     try {
@@ -502,27 +547,55 @@ export default function AIDOLLiveConsole() {
                   </div>
                 </div>
 
-                <AIAudioPlayer isLive={isAILive} onAudioPlayStateChange={setIsAudioPlaying} />
+                <AIAudioPlayer ref={audioPlayerRef} isLive={isAILive} onAudioPlayStateChange={setIsAudioPlaying} />
 
-                {/* Quick event buttons */}
+                {/* ── LIVE INTERACTION SIMULATOR ── */}
                 <div className="bg-[#1a1b26] border border-slate-700 rounded-xl p-4">
-                  <div className="text-xs font-black text-white mb-3">⚡ Giả lập Sự kiện Live</div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      ['👋 Follow mới', 'greeting', 'bg-blue-500/20 text-blue-400 border-blue-500/40'],
-                      ['🎁 Nhận quà', 'gift', 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40'],
-                      ['💃 Quà lớn → Dance', 'dance', 'bg-pink-500/20 text-pink-400 border-pink-500/40'],
-                      ['😄 Reaction vui', 'reaction', 'bg-purple-500/20 text-purple-400 border-purple-500/40'],
-                    ].map(([label, cat, style]) => (
-                      <button key={cat} onClick={() => {
-                          const items = catMedia(cat);
-                          if (items.length > 0) handlePlayFromKho(items[0]);
-                          else alert('Chưa có video ' + cat + ' trong kho! Hãy upload trước.');
-                        }}
-                        className={`px-3 py-2 border rounded-lg text-xs font-bold transition-all hover:scale-105 ${style}`}>
-                        {label}
-                      </button>
-                    ))}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-xs font-black text-white flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-yellow-400" />
+                      Giả lập Tương tác Người xem
+                    </div>
+                    {isProcessingEvent && <span className="text-[10px] text-yellow-400 animate-pulse">Đang phân tích...</span>}
+                  </div>
+                  
+                  <div className="flex gap-2 mb-3">
+                    <input type="text" value={simName} onChange={e => setSimName(e.target.value)} placeholder="Tên người xem..." className="w-1/3 bg-[#0D0F1A] border border-slate-700 rounded px-3 py-1.5 text-xs text-white outline-none focus:border-[#00FF66]" />
+                    <button onClick={() => handleLiveEvent('VIEWER_JOIN', { name: simName })} className="flex-1 bg-blue-500/20 text-blue-400 border border-blue-500/40 rounded text-xs font-bold hover:bg-blue-500/30 transition-colors">
+                      👋 {simName} vào phòng
+                    </button>
+                  </div>
+
+                  <div className="flex gap-2 mb-3">
+                    <input type="text" value={simComment} onChange={e => setSimComment(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLiveEvent('COMMENT', { name: simName, text: simComment })} placeholder="Nhập comment..." className="flex-1 bg-[#0D0F1A] border border-slate-700 rounded px-3 py-1.5 text-xs text-white outline-none focus:border-[#00FF66]" />
+                    <button onClick={() => handleLiveEvent('COMMENT', { name: simName, text: simComment })} className="px-4 bg-[#00FF66]/20 text-[#00FF66] border border-[#00FF66]/40 rounded text-xs font-bold hover:bg-[#00FF66]/30 transition-colors">Gửi</button>
+                  </div>
+
+                  <div className="flex gap-2 mb-4">
+                    <select value={simGift} onChange={e => setSimGift(e.target.value)} className="flex-1 bg-[#0D0F1A] border border-slate-700 rounded px-3 py-1.5 text-xs text-white outline-none focus:border-pink-500">
+                      <option value="Hoa hồng (Rose)">🌹 Hoa hồng (1 xu)</option>
+                      <option value="Trái tim (Heart)">❤️ Trái tim (10 xu)</option>
+                      <option value="Kính râm (Sunglasses)">🕶️ Kính râm (199 xu)</option>
+                      <option value="Sư tử (Lion)">🦁 Sư tử (29999 xu)</option>
+                      <option value="Siêu xe (Sports Car)">🏎️ Siêu xe (39999 xu)</option>
+                    </select>
+                    <button onClick={() => handleLiveEvent('GIFT', { name: simName, gift: simGift })} className="px-4 bg-pink-500/20 text-pink-400 border border-pink-500/40 rounded text-xs font-bold hover:bg-pink-500/30 transition-colors">Tặng Quà</button>
+                  </div>
+
+                  <div className="bg-[#0D0F1A] border border-slate-700 rounded p-2 h-32 overflow-y-auto custom-scrollbar flex flex-col-reverse">
+                    {viewerHistory.length === 0 ? <div className="text-[10px] text-slate-600 text-center py-4">Chưa có sự kiện nào</div> : (
+                      viewerHistory.slice().reverse().map((h, i) => (
+                        <div key={i} className="mb-2 text-[10px] border-b border-slate-800 pb-2">
+                          <div className="text-slate-400">[{h.time}] <span className="font-bold text-white">{h.payload.name}</span> {h.type === 'GIFT' ? <span className="text-pink-400">đã tặng {h.payload.gift}</span> : h.type === 'COMMENT' ? <span className="text-blue-400">đã bình luận: "{h.payload.text}"</span> : 'đã tham gia Live'}</div>
+                          {h.ai_reply && (
+                            <div className="mt-1 flex gap-2 items-start">
+                              <span className="text-[#00FF66] font-bold">↳ AI ({h.ai_intent}):</span>
+                              <span className="text-slate-300">"{h.ai_reply}"</span>
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
