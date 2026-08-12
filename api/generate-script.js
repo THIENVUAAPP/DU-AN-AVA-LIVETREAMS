@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     let generatedText = '';
 
     if (brain === 'gemini') {
-      const apiKey = process.env.GEMINI_API_KEY || req.body.apiKey;
+      const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || req.body.apiKey;
       if (!apiKey) return res.status(500).json({ error: 'Vui lòng vào phần Cài đặt API (Góc phải) để nhập mã Gemini API Key của bạn trước khi tạo kịch bản.' });
 
       let apiModel = 'gemini-1.5-flash';
@@ -33,7 +33,7 @@ export default async function handler(req, res) {
       generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     } 
     else if (brain === 'chatgpt') {
-      const apiKey = process.env.OPENAI_API_KEY || req.body.apiKey;
+      const apiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY || req.body.apiKey;
       if (!apiKey) return res.status(500).json({ error: 'Vui lòng vào phần Cài đặt API (Góc phải) để nhập mã OpenAI API Key của bạn trước khi tạo kịch bản.' });
 
       // Clean up model name

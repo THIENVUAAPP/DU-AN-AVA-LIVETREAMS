@@ -85,7 +85,11 @@ export default function LivestreamAISetup() {
   const [selectedAILibraryInfo, setSelectedAILibraryInfo] = useState(null);
   const [showVideoLibraryModal, setShowVideoLibraryModal] = useState(false);
   const [showAILibraryModal, setShowAILibraryModal] = useState(false);
-  const [lipsyncAudioType, setLipsyncAudioType] = useState('text');
+  const [lipsyncAudioType, setLipsyncAudioType] = useState('file'); // 'file' or 'script'
+  const [lipsyncScript, setLipsyncScript] = useState('');
+  const [isGeneratingTTS, setIsGeneratingTTS] = useState(false);
+  const [lipsyncAudioUrl, setLipsyncAudioUrl] = useState(null);
+  
   const [showPreviewPlayer, setShowPreviewPlayer] = useState(false);
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
 
@@ -366,15 +370,47 @@ export default function LivestreamAISetup() {
                         <div className="flex-1 flex flex-col mt-4">
                            <label className="block text-xs font-bold text-gray-300 mb-2 flex items-center gap-2"><Mic2 className="w-4 h-4 text-[#00FF66]" /> 2. Âm thanh (Voice)</label>
                            
-                           <div onClick={() => audioInputRef.current?.click()} className="flex-1 border-2 border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center p-4 bg-black/20 hover:border-[#00FF66]/50 transition-all cursor-pointer min-h-[120px]">
-                              <Upload className={`w-6 h-6 mb-2 ${selectedAudioFile ? 'text-[#00FF66]' : 'text-gray-400'}`} />
-                              <span className={`text-xs font-bold ${selectedAudioFile ? 'text-[#00FF66]' : 'text-gray-400'}`}>{selectedAudioFile ? '✅ ' + selectedAudioFile.name : 'Click chọn file âm thanh từ máy'}</span>
+                           <div className="flex bg-black/40 rounded-lg border border-white/10 p-1 mb-3">
+                              <button onClick={() => setLipsyncAudioType('file')}
+                                className={`flex-1 py-2 rounded text-xs font-bold transition-all ${lipsyncAudioType === 'file' ? 'bg-[#00FF66]/20 text-[#00FF66]' : 'text-gray-400 hover:text-white'}`}>Tải từ máy</button>
+                              <button onClick={() => setLipsyncAudioType('script')}
+                                className={`flex-1 py-2 rounded text-xs font-bold transition-all ${lipsyncAudioType === 'script' ? 'bg-[#00FF66]/20 text-[#00FF66]' : 'text-gray-400 hover:text-white'}`}>Dán Kịch Bản AI</button>
                            </div>
-                           
-                           <input type="file" accept="audio/*" className="hidden" ref={audioInputRef} onChange={(e) => { if(e.target.files[0]) { setSelectedAudioFile(e.target.files[0]); setSelectedAILibraryInfo(null); } }} />
-                           <div className="mt-2 flex items-center justify-between">
-                             <div className="text-[10px] text-gray-500">Giọng: <span className="text-[#00FF66] font-bold">File của bạn</span></div>
-                           </div>
+
+                           {lipsyncAudioType === 'script' ? (
+                              <div className="flex-1 flex flex-col min-h-[120px]">
+                                <textarea 
+                                  value={lipsyncScript}
+                                  onChange={(e) => setLipsyncScript(e.target.value)}
+                                  placeholder="Dán kịch bản vào đây để AI tự động chuyển thành giọng đọc..." 
+                                  className="flex-1 w-full p-3 bg-black/40 border border-white/10 rounded-lg text-xs text-white focus:border-[#00FF66] outline-none resize-none mb-2"
+                                />
+                                {lipsyncAudioUrl ? (
+                                  <div className="flex items-center gap-2 justify-between">
+                                    <audio src={lipsyncAudioUrl} controls className="flex-1 h-8 max-w-[200px]" />
+                                    <button onClick={() => setLipsyncAudioUrl(null)} className="text-xs text-red-400 hover:text-red-300 font-bold">Xóa Voice</button>
+                                  </div>
+                                ) : (
+                                  <button onClick={handleGenerateTTSFromScript} disabled={isGeneratingTTS || !lipsyncScript} className="w-full py-2 bg-[#00FF66]/20 text-[#00FF66] hover:bg-[#00FF66]/30 border border-[#00FF66]/50 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                                    <Volume2 className="w-4 h-4" /> {isGeneratingTTS ? 'Đang tạo Voice...' : 'Test (Nghe thử Voice)'}
+                                  </button>
+                                )}
+                                <div className="mt-2 flex items-center justify-between">
+                                 <div className="text-[10px] text-gray-500">Giọng: <span className="text-[#00FF66] font-bold">OpenAI TTS (Mặc định)</span></div>
+                               </div>
+                              </div>
+                           ) : (
+                              <>
+                                 <div onClick={() => audioInputRef.current?.click()} className="flex-1 border-2 border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center p-4 bg-black/20 hover:border-[#00FF66]/50 transition-all cursor-pointer min-h-[120px]">
+                                    <Upload className={`w-6 h-6 mb-2 ${selectedAudioFile ? 'text-[#00FF66]' : 'text-gray-400'}`} />
+                                    <span className={`text-xs font-bold ${selectedAudioFile ? 'text-[#00FF66]' : 'text-gray-400'}`}>{selectedAudioFile ? '✅ ' + selectedAudioFile.name : 'Click chọn file âm thanh từ máy'}</span>
+                                 </div>
+                                 <input type="file" accept="audio/*" className="hidden" ref={audioInputRef} onChange={(e) => { if(e.target.files[0]) { setSelectedAudioFile(e.target.files[0]); setSelectedAILibraryInfo(null); } }} />
+                                 <div className="mt-2 flex items-center justify-between">
+                                   <div className="text-[10px] text-gray-500">Giọng: <span className="text-[#00FF66] font-bold">File của bạn</span></div>
+                                 </div>
+                              </>
+                           )}
                         </div>
                      </div>
 
@@ -415,7 +451,7 @@ export default function LivestreamAISetup() {
                            )}
                         </div>
                         <div className="mt-4 flex flex-col gap-3">
-                           <button onClick={() => setShowPreviewPlayer(true)} className="w-full py-3 bg-[#00FF66] hover:bg-[#00CC52] text-black rounded-xl font-black transition-all shadow-glow-green flex items-center justify-center gap-2">
+                           <button onClick={handleStartLipsync} disabled={isGeneratingTTS} className="w-full py-3 bg-[#00FF66] hover:bg-[#00CC52] text-black rounded-xl font-black transition-all shadow-glow-green flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                              <Zap className="w-4 h-4" /> Bắt đầu Ghép (Tạo Video)
                            </button>
                            <button onClick={() => setActiveStep(4)} className="w-full py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2">

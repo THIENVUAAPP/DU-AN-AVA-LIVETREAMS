@@ -13,8 +13,8 @@ export default async function handler(req, res) {
     let audioBase64 = null;
 
     if (platform === 'openai_tts' || platform === 'openai') {
-      const apiKey = process.env.OPENAI_API_KEY || clientApiKey;
-      if (!apiKey) return res.status(503).json({ error: 'Vui lòng vào Cài đặt API (Góc phải) để nhập OpenAI API Key trước khi tạo giọng đọc!' });
+      const apiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY || clientApiKey;
+      if (!apiKey) return res.status(503).json({ error: 'Vui lòng kiểm tra lại cấu hình OPENAI_API_KEY trên Vercel.' });
       
       const response = await fetch('https://api.openai.com/v1/audio/speech', {
         method: 'POST',
@@ -35,8 +35,8 @@ export default async function handler(req, res) {
       audioBase64 = Buffer.from(buffer).toString('base64');
     } 
     else if (platform === 'gemini') {
-      const apiKey = process.env.GEMINI_API_KEY || clientApiKey;
-      if (!apiKey) return res.status(503).json({ error: 'Vui lòng vào Cài đặt API (Góc phải) để nhập Gemini API Key trước khi tạo giọng đọc!' });
+      const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || clientApiKey;
+      if (!apiKey) return res.status(503).json({ error: 'Vui lòng kiểm tra lại cấu hình GEMINI_API_KEY trên Vercel.' });
       
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent`, {
         method: 'POST',
@@ -56,8 +56,8 @@ export default async function handler(req, res) {
       if (!audioBase64) throw new Error('No audio returned from Gemini');
     } 
     else if (platform === 'elevenlabs') {
-      const apiKey = process.env.ELEVENLABS_API_KEY || clientApiKey;
-      if (!apiKey) return res.status(503).json({ error: 'Vui lòng vào Cài đặt API (Góc phải) để nhập ElevenLabs API Key trước khi tạo giọng đọc!' });
+      const apiKey = process.env.ELEVENLABS_API_KEY || process.env.VITE_ELEVENLABS_API_KEY || clientApiKey;
+      if (!apiKey) return res.status(503).json({ error: 'Vui lòng kiểm tra lại cấu hình ELEVENLABS_API_KEY trên Vercel.' });
       
       const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${req.body.voiceId}`, {
         method: 'POST',
@@ -77,9 +77,9 @@ export default async function handler(req, res) {
       audioBase64 = Buffer.from(buffer).toString('base64');
     }
     else if (platform === 'minimax') {
-      const apiKey = process.env.MINIMAX_API_KEY || clientApiKey;
-      const groupId = process.env.MINIMAX_GROUP_ID || req.body.groupId;
-      if (!apiKey) return res.status(503).json({ error: 'Vui lòng vào Cài đặt API (Góc phải) để nhập MiniMax API Key trước khi tạo giọng đọc!' });
+      const apiKey = process.env.MINIMAX_API_KEY || process.env.VITE_MINIMAX_API_KEY || clientApiKey;
+      const groupId = process.env.MINIMAX_GROUP_ID || process.env.VITE_MINIMAX_GROUP_ID || req.body.groupId;
+      if (!apiKey) return res.status(503).json({ error: 'Vui lòng kiểm tra lại cấu hình MINIMAX_API_KEY trên Vercel.' });
       
       let url = 'https://api.minimaxi.chat/v1/t2a_v2';
       if (groupId) {
