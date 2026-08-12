@@ -96,7 +96,25 @@ export default function LivestreamAISetup() {
 
   const [savedJobs, setSavedJobs] = useState([]);
   const [showVoiceModal, setShowVoiceModal] = useState(false);
-  const [selectedVoicePlatform, setSelectedVoicePlatform] = useState('browser');
+  const [selectedVoicePlatform, setSelectedVoicePlatform] = useState('vbee');
+  
+  // API Keys state
+  const [showApiKeysModal, setShowApiKeysModal] = useState(false);
+  const [localGeminiKey, setLocalGeminiKey] = useState('');
+  const [localOpenAIKey, setLocalOpenAIKey] = useState('');
+
+  useEffect(() => {
+    setLocalGeminiKey(localStorage.getItem('gemini_api_key') || '');
+    setLocalOpenAIKey(localStorage.getItem('openai_api_key') || '');
+  }, []);
+
+  const saveApiKeys = () => {
+    localStorage.setItem('gemini_api_key', localGeminiKey);
+    localStorage.setItem('openai_api_key', localOpenAIKey);
+    setShowApiKeysModal(false);
+    alert('Đã lưu API Keys vào trình duyệt!');
+  };
+
   const [testText, setTestText] = useState('Xin chào! Đây là giọng đọc thử nghiệm cho hệ thống AVA Live.');
   const [isTesting, setIsTesting] = useState(false);
   const [browserVoices, setBrowserVoices] = useState([]);
@@ -197,8 +215,18 @@ export default function LivestreamAISetup() {
             </div>
          </div>
          <div className="w-full md:w-[320px] relative z-10 flex flex-col gap-3">
-            <span className="text-xs font-bold text-white">Ứng dụng desktop</span>
-            <button className="flex items-center gap-4 p-4 rounded-xl bg-black/40 border border-white/10 hover:border-[#00FF66]/50 transition-all group text-left">
+            <span className="text-xs font-bold text-white">Quản lý</span>
+            
+            <button onClick={() => setShowApiKeysModal(true)} className="flex items-center gap-4 p-4 rounded-xl bg-black/40 border border-white/10 hover:border-yellow-500/50 transition-all group text-left">
+               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center shadow-lg"><Settings2 className="w-5 h-5 text-white" /></div>
+               <div className="flex-1">
+                 <div className="text-sm font-bold text-white group-hover:text-yellow-400 transition-colors">Cấu hình API Keys</div>
+                 <div className="text-[10px] text-gray-400">Gemini, OpenAI, Voice (Lưu tại trình duyệt)</div>
+               </div>
+               <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-yellow-400 transition-colors" />
+            </button>
+
+            <button className="flex items-center gap-4 p-4 rounded-xl bg-black/40 border border-white/10 hover:border-[#00FF66]/50 transition-all group text-left mt-2">
                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg"><Monitor className="w-5 h-5 text-white" /></div>
                <div className="flex-1">
                  <div className="text-sm font-bold text-white group-hover:text-blue-400 transition-colors">Tải AIDOL Live</div>
@@ -782,6 +810,39 @@ export default function LivestreamAISetup() {
            </div>
         </div>
       )}
+      {/* API KEYS MODAL */}
+      {showApiKeysModal && (
+        <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+           <div className="bg-[#121216] border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
+              <div className="p-4 border-b border-white/10 flex justify-between items-center bg-[#0B0E14]">
+                 <div className="flex items-center gap-3">
+                   <Settings2 className="w-5 h-5 text-yellow-500" />
+                   <div>
+                     <h3 className="text-sm font-black text-white">Cấu hình API Keys</h3>
+                     <p className="text-[10px] text-gray-400">Được lưu an toàn vào trình duyệt (localStorage)</p>
+                   </div>
+                 </div>
+                 <button onClick={() => setShowApiKeysModal(false)} className="p-2 text-gray-400 hover:text-white bg-white/5 rounded-lg">Đóng</button>
+              </div>
+              <div className="p-6 space-y-6">
+                <div>
+                  <label className="text-xs font-bold text-white mb-2 block">Gemini API Key (Dùng cho tạo kịch bản, AI chat, TTS)</label>
+                  <input type="password" value={localGeminiKey} onChange={e => setLocalGeminiKey(e.target.value)}
+                    placeholder="AIzaSy..." className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-yellow-500 outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-white mb-2 block">OpenAI API Key (Dùng cho ChatGPT)</label>
+                  <input type="password" value={localOpenAIKey} onChange={e => setLocalOpenAIKey(e.target.value)}
+                    placeholder="sk-proj-..." className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-yellow-500 outline-none" />
+                </div>
+              </div>
+              <div className="p-4 bg-[#0B0E14] border-t border-white/10 flex justify-end">
+                 <button onClick={saveApiKeys} className="px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-lg text-xs font-black">Lưu lại</button>
+              </div>
+           </div>
+        </div>
+      )}
+
     </div>
   );
 }

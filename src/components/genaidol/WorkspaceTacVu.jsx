@@ -49,6 +49,13 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
     setIsGenerating(true);
     
     try {
+      let apiKey = '';
+      if (aiBrain === 'gemini') {
+        apiKey = localStorage.getItem('gemini_api_key') || import.meta.env.VITE_GEMINI_API_KEY;
+      } else if (aiBrain === 'chatgpt') {
+        apiKey = localStorage.getItem('openai_api_key') || import.meta.env.VITE_OPENAI_API_KEY;
+      }
+
       const res = await fetch('/api/generate-script', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -56,7 +63,8 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
           brain: aiBrain,
           model: aiModel,
           duration: scriptDuration,
-          topic: scriptTopic
+          topic: scriptTopic,
+          apiKey
         })
       });
       const data = await res.json();

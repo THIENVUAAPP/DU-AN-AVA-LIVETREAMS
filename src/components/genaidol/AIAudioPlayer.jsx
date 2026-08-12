@@ -42,25 +42,84 @@ export default function AIAudioPlayer({ isLive, onAudioPlayStateChange }) {
     try {
       if (onAudioPlayStateChange) onAudioPlayStateChange(true);
       
-      // GIẢ LẬP GỌI API TTS (Text to Speech)
-      // Trong thực tế sẽ fetch tới /api/tts?text=...&voice=...
-      // Ở đây ta dùng SpeechSynthesis (Giọng đọc trình duyệt) để giả lập ngay lập tức cho anh Thùy test
+      const provider = job?.voiceProvider || 'gemini';
+      const apiKey = provider === 'openai_tts' ? localStorage.getItem('openai_api_key') : localStorage.getItem('gemini_api_key');
+
+      // GỌI API TTS THẬT
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: item.text,
+          platform: provider.includes('openai') ? 'openai' : 'gemini',
+          apiKey
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error('TTS API failed');
+      }
       
-      const utterance = new SpeechSynthesisUtterance(item.text);
-      utterance.lang = 'vi-VN';
-      utterance.rate = 1.0;
+      const data = await res.json();
+      if (!data.audioBase64) throw new Error('No audio returned');
+
+      // Chuyển base64 thành Blob URL
+      const isPcm = provider === 'gemini';
+      let audioUrl = '';
+      if (isPcm) {
+        // Hàm này mượn logic từ geminiClient (pcmToWav)
+        const binaryStr = atob(data.audioBase64);
+        const len = binaryStr.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) bytes[i] = binaryStr.charCodeAt(i);
+        
+        // Thêm WAV header cho 24kHz mono 16-bit PCM (Gemini)
+        const wavBuffer = new ArrayBuffer(44 + bytes.length);
+        const view = new DataView(wavBuffer);
+        const writeString = (offset, string) => { for(let i=0; i<string.length; i++) view.setUint8(offset+i, string.charCodeAt(i)); };
+        writeString(0, 'RIFF');
+        view.setUint32(4, 36 + bytes.length, true);
+        writeString(8, 'WAVE');
+        writeString(12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, 1, true); // mono
+        view.setUint32(24, 24000, true); // 24kHz
+        view.setUint32(28, 24000 * 2, true);
+        view.setUint16(32, 2, true);
+        view.setUint16(34, 16, true);
+        writeString(36, 'data');
+        view.setUint32(40, bytes.length, true);
+        new Uint8Array(wavBuffer, 44).set(bytes);
+        
+        const blob = new Blob([wavBuffer], { type: 'audio/wav' });
+        audioUrl = URL.createObjectURL(blob);
+      } else {
+        // Định dạng MP3 cho OpenAI
+        const blob = await fetch(`data:audio/mp3;base64,${data.audioBase64}`).then(r => r.blob());
+        audioUrl = URL.createObjectURL(blob);
+      }
+
+      audioRef.current.src = audioUrl;
       
-      utterance.onend = () => {
+      audioRef.current.onended = () => {
+        URL.revokeObjectURL(audioUrl); // Dọn dẹp bộ nhớ
         if (isPlaying) {
           setCurrentIndex(prev => prev + 1);
         }
       };
-      
-      speechSynthesis.speak(utterance);
-      
+
+      await audioRef.current.play();
+
     } catch (err) {
-      console.error("Lỗi phát audio:", err);
-      setCurrentIndex(prev => prev + 1);
+      console.error('Audio play error, falling back to Web Speech:', err);
+      // Fallback nếu API lỗi hoặc thiếu Key
+      const utterance = new SpeechSynthesisUtterance(item.text);
+      utterance.lang = 'vi-VN';
+      utterance.onend = () => {
+        if (isPlaying) setCurrentIndex(prev => prev + 1);
+      };
+      speechSynthesis.speak(utterance);
     }
   };
 

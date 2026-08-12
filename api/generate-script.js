@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     let generatedText = '';
 
     if (brain === 'gemini') {
-      const apiKey = process.env.GEMINI_API_KEY;
+      const apiKey = process.env.GEMINI_API_KEY || req.body.apiKey;
       if (!apiKey) return res.status(500).json({ error: 'GEMINI_API_KEY is not set on server' });
       
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
       generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     } 
     else if (brain === 'chatgpt') {
-      const apiKey = process.env.OPENAI_API_KEY;
+      const apiKey = process.env.OPENAI_API_KEY || req.body.apiKey;
       if (!apiKey) return res.status(500).json({ error: 'OPENAI_API_KEY is not set on server' });
 
       // Clean up model name
@@ -51,7 +51,13 @@ export default async function handler(req, res) {
       });
       const data = await response.json();
       if (data.error) throw new Error(data.error.message || 'OpenAI API Error');
-      generatedText = data.choices?.[0]?.message?.content || '';
+      let responseText = '';
+      if (data.choices && data.choices.length > 0) {
+        responseText = data.choices[0].message.content;
+      } else {
+        throw new Error('Invalid OpenAI response');
+      }
+      generatedText = responseText;
     }
     else {
       return res.status(400).json({ error: 'Unsupported AI Brain' });

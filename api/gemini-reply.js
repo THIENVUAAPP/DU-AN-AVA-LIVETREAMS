@@ -4,7 +4,7 @@
 //
 // Model: gemini-2.5-flash (sinh câu thoại) + gemini-2.5-flash-preview-tts (đọc giọng, cả 2 đều nằm
 // trong hạn mức miễn phí của Google AI Studio tại thời điểm viết — xem ai.google.dev/gemini-api/docs).
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+// trong hạn mức miễn phí của Google AI Studio tại thời điểm viết — xem ai.google.dev/gemini-api/docs).
 const TEXT_MODEL = 'gemini-2.5-flash';
 const TTS_MODEL = 'gemini-2.5-flash-preview-tts';
 const API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
@@ -28,10 +28,10 @@ function buildPrompt({ kind, username, characterName, giftName, personality }) {
   return `Bạn là MC dẫn chương trình livestream trên TikTok tại Việt Nam, giọng điệu ${tone}. Một khán giả tên "${safeUsername}" vừa vào xem và bình luận lần đầu, nhân vật đại diện của họ trên sàn nhảy là "${characterName || 'một vũ công'}". Viết 1 câu chào mừng thật tự nhiên, dí dỏm, có duyên, nhắc tên khán giả, KHÔNG quá 25 từ, KHÔNG dùng dấu ngoặc kép, chỉ trả về đúng 1 câu thoại tiếng Việt, không giải thích gì thêm.`;
 }
 
-async function generateText(prompt) {
+async function generateText(prompt, apiKey) {
   const res = await fetch(`${API_BASE}/${TEXT_MODEL}:generateContent`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
     body: JSON.stringify({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: { temperature: 1, maxOutputTokens: 100 },
@@ -44,10 +44,10 @@ async function generateText(prompt) {
   return text.replace(/^["“]|["”]$/g, '');
 }
 
-async function generateSpeech(text) {
+async function generateSpeech(text, apiKey) {
   const res = await fetch(`${API_BASE}/${TTS_MODEL}:generateContent`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
     body: JSON.stringify({
       contents: [{ role: 'user', parts: [{ text }] }],
       generationConfig: {
@@ -71,22 +71,24 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
-  if (!GEMINI_API_KEY) {
-    return res.status(503).json({ error: 'Chưa cấu hình GEMINI_API_KEY trên server.' });
-  }
-
   try {
-    const { kind, username, characterName, giftName, personality } = req.body || {};
+    const { kind, username, characterName, giftName, personality, apiKey: clientApiKey } = req.body || {};
+    const apiKey = process.env.GEMINI_API_KEY || clientApiKey;
+
+    if (!apiKey) {
+      return res.status(503).json({ error: 'Chưa cấu hình GEMINI_API_KEY trên server hoặc client.' });
+    }
+
     if (kind !== 'gift' && kind !== 'welcome') {
       return res.status(400).json({ error: 'Thiếu hoặc sai "kind" (chỉ nhận "gift" hoặc "welcome").' });
     }
 
     const prompt = buildPrompt({ kind, username, characterName, giftName, personality });
-    const text = await generateText(prompt);
+    const text = await generateText(prompt, apiKey);
 
     let audioBase64 = null;
     try {
-      audioBase64 = await generateSpeech(text);
+      audioBase64 = await generateSpeech(text, apiKey);
     } catch (ttsError) {
       // Có câu thoại vẫn hữu ích dù giọng đọc AI lỗi — client sẽ tự đọc bằng Web Speech API thay thế.
       console.error('Gemini TTS lỗi (dùng giọng đọc dự phòng ở client):', ttsError.message);
