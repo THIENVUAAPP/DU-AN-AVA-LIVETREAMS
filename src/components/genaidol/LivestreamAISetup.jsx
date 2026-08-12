@@ -100,7 +100,8 @@ export default function LivestreamAISetup() {
 
   const [savedJobs, setSavedJobs] = useState([]);
   const [showVoiceModal, setShowVoiceModal] = useState(false);
-  const [selectedVoicePlatform, setSelectedVoicePlatform] = useState('vbee');
+  const [selectedVoicePlatform, setSelectedVoicePlatform] = useState('openai_tts');
+  const [selectedVoiceId, setSelectedVoiceId] = useState('alloy');
   
   // API Keys state
   const [showApiKeysModal, setShowApiKeysModal] = useState(false);
@@ -189,6 +190,40 @@ export default function LivestreamAISetup() {
     const matchSearch = item.name.toLowerCase().includes(videoSearchTerm.toLowerCase());
     return matchCat && matchSearch;
   });
+
+  const handleGenerateTTSFromScript = async () => {
+    if (!lipsyncScript.trim()) return;
+    setIsGeneratingTTS(true);
+    try {
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: lipsyncScript,
+          platform: selectedVoicePlatform,
+          voiceId: selectedVoiceId
+        })
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      if (data.audioBase64) {
+        setLipsyncAudioUrl(`data:audio/mp3;base64,${data.audioBase64}`);
+      }
+    } catch (err) {
+      alert("Lỗi khi tạo Voice từ kịch bản: " + err.message);
+    } finally {
+      setIsGeneratingTTS(false);
+    }
+  };
+
+  const handleStartLipsync = async () => {
+    if (lipsyncAudioType === 'script' && lipsyncScript && !lipsyncAudioUrl) {
+      await handleGenerateTTSFromScript();
+      setShowPreviewPlayer(true);
+    } else {
+      setShowPreviewPlayer(true);
+    }
+  };
 
   return (
     <div className="w-full max-w-7xl mx-auto flex flex-col gap-6 text-white pb-24">
@@ -396,7 +431,7 @@ export default function LivestreamAISetup() {
                                   </button>
                                 )}
                                 <div className="mt-2 flex items-center justify-between">
-                                 <div className="text-[10px] text-gray-500">Giọng: <span className="text-[#00FF66] font-bold">OpenAI TTS (Mặc định)</span></div>
+                                 <div className="text-[10px] text-gray-500">Giọng: <span className="text-[#00FF66] font-bold cursor-pointer hover:underline" onClick={() => setShowVoiceModal(true)}>{selectedVoicePlatform.toUpperCase()} - {selectedVoiceId}</span></div>
                                </div>
                               </div>
                            ) : (
@@ -429,7 +464,15 @@ export default function LivestreamAISetup() {
                                      </>
                                    ) : selectedVideoLibraryInfo ? (
                                      <>
-                                        <video src={selectedVideoLibraryInfo.mediaUrl} className="w-full h-full object-contain max-h-[280px] scale-[1.05]" controls muted/>
+                                        <video src={selectedVideoLibraryInfo.mediaUrl} className="w-full h-full object-contain max-h-[280px] scale-[1.05]" controls muted playsInline onError={(e) => {
+                                          e.target.onerror = null;
+                                          e.target.src = '/assets/sample-video.mp4';
+                                          // Hiển thị thông báo nếu lỗi load video từ thư viện (blob hết hạn, hoặc file chưa có thật)
+                                          if (!e.target.dataset.failed) {
+                                            e.target.dataset.failed = true;
+                                            console.warn('Lỗi load video, chuyển sang video mẫu fallback.');
+                                          }
+                                        }} />
                                         <div className="absolute bottom-10 right-2 w-16 h-16 backdrop-blur-2xl bg-black/30 rounded-lg pointer-events-none flex items-center justify-center opacity-90 border border-white/5" title="AI Watermark Remover">
                                            <Sparkles className="w-4 h-4 text-[#00FF66]/50" />
                                         </div>
@@ -722,8 +765,8 @@ export default function LivestreamAISetup() {
                       <a href="https://vbee.vn" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-blue-400 text-[11px] font-bold"><ExternalLink className="w-3 h-3"/> vbee.vn</a>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      {['Ngọc Huyền — Nữ Bắc, MC Truyền cảm','Mai Phương — Nữ Bắc, Trẻ trung Sôi động','Thu Hương — Nữ Bắc, Bản tin Nghiêm túc','Thanh Mai — Nữ Bắc, Thân thiện Giao tiếp','Mạnh Dũng — Nam Bắc, Mạnh mẽ Dứt khoát','Hoàng Bách — Nam Bắc, Trầm ấm Kể chuyện','Minh Đức — Nam Bắc, Chuyên nghiệp','Tuấn Anh — Nam Bắc, Trầm sâu Nghiêm trang','Thảo Chi — Nữ Nam, Nhí nhảnh Dễ thương','Lan Trinh — Nữ Nam, Tự nhiên Bán hàng','Khánh Linh — Nữ Nam, Livestream Năng động','Minh Hoàng — Nam Nam, Reviewer Hiện đại','Trúc Quỳnh — Nữ Trung, Ngọt ngào Nhẹ nhàng','Bảo Trân — Nữ Trung, Ấm áp Tâm sự'].map((v,i) => (
-                        <div key={i} className="p-3 bg-black/40 border border-white/10 rounded-lg text-[11px] text-gray-300 hover:border-blue-500/40 hover:text-white transition-colors">{v}</div>
+                      {['Ngọc Huyền','Mai Phương','Thu Hương','Thanh Mai','Mạnh Dũng','Hoàng Bách','Minh Đức','Tuấn Anh','Thảo Chi','Lan Trinh','Khánh Linh','Minh Hoàng','Trúc Quỳnh','Bảo Trân'].map((v,i) => (
+                        <div key={i} onClick={() => { setSelectedVoiceId(v); setShowVoiceModal(false); }} className={`p-3 bg-black/40 border ${selectedVoiceId === v ? 'border-blue-500 text-blue-400' : 'border-white/10 text-gray-300'} rounded-lg text-[11px] hover:border-blue-500/40 hover:text-white transition-colors cursor-pointer`}>{v}</div>
                       ))}
                     </div>
                   </div>
@@ -737,8 +780,8 @@ export default function LivestreamAISetup() {
                       <a href="https://elevenlabs.io" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-yellow-400 text-[11px] font-bold"><ExternalLink className="w-3 h-3"/> elevenlabs.io — Đăng ký miễn phí</a>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      {['Rachel — Calm, Soft (Kể chuyện)','Drew — News, Authoritative (Tin tức)','Clyde — War veteran, Husky (Hào hùng)','Paul — Documentary, Deep (Phim tài liệu)','Domi — Strong, Narrative (Tường thuật)','Bella — Soft, ASMR (Thư giãn)','Antoni — Friendly, Bright (Giao tiếp)','Charlie — Conversational (Tự nhiên)','Emily — Calm, Warm (Coaching)','Elli — Young, Emotional (Cảm xúc)','Fin — Irish, Friendly (Tự nhiên vui)','Harry — Anxious, Urgent (Khẩn cấp)','Vietnamese Multilingual Nữ — Tiếng Việt tốt nhất','Vietnamese Multilingual Nam — Tiếng Việt tự nhiên'].map((v,i) => (
-                        <div key={i} className="p-3 bg-black/40 border border-white/10 rounded-lg text-[11px] text-gray-300 hover:border-yellow-500/40 hover:text-white transition-colors">{v}</div>
+                      {['Rachel','Drew','Clyde','Paul','Domi','Bella','Antoni','Charlie','Emily','Elli','Fin','Harry'].map((v,i) => (
+                        <div key={i} onClick={() => { setSelectedVoiceId(v); setShowVoiceModal(false); }} className={`p-3 bg-black/40 border ${selectedVoiceId === v ? 'border-yellow-500 text-yellow-400' : 'border-white/10 text-gray-300'} rounded-lg text-[11px] hover:border-yellow-500/40 hover:text-white transition-colors cursor-pointer`}>{v}</div>
                       ))}
                     </div>
                   </div>
@@ -752,8 +795,8 @@ export default function LivestreamAISetup() {
                       <a href="https://cloud.google.com/text-to-speech" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-blue-400 text-[11px] font-bold"><ExternalLink className="w-3 h-3"/> Google Cloud TTS</a>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      {['vi-VN-Standard-A — Nữ Tiêu chuẩn','vi-VN-Standard-B — Nam Tiêu chuẩn','vi-VN-Standard-C — Nữ Tiêu chuẩn 2','vi-VN-Standard-D — Nam Tiêu chuẩn 2','vi-VN-Neural2-A — Nữ Neural2 (Tự nhiên)','vi-VN-Neural2-D — Nam Neural2 (Tự nhiên)','vi-VN-Wavenet-A — Nữ WaveNet (Cao cấp)','vi-VN-Wavenet-B — Nam WaveNet (Cao cấp)','vi-VN-Wavenet-C — Nữ WaveNet 2 (Cao cấp)','vi-VN-Wavenet-D — Nam WaveNet 2 (Cao cấp)'].map((v,i) => (
-                        <div key={i} className="p-2.5 bg-black/40 border border-white/10 rounded-lg text-[11px] text-gray-300 hover:border-blue-500/40 hover:text-white transition-colors">{v}</div>
+                      {['vi-VN-Standard-A','vi-VN-Standard-B','vi-VN-Standard-C','vi-VN-Standard-D','vi-VN-Neural2-A','vi-VN-Neural2-D','vi-VN-Wavenet-A','vi-VN-Wavenet-B','vi-VN-Wavenet-C','vi-VN-Wavenet-D'].map((v,i) => (
+                        <div key={i} onClick={() => { setSelectedVoiceId(v); setShowVoiceModal(false); }} className={`p-2.5 bg-black/40 border ${selectedVoiceId === v ? 'border-blue-500 text-blue-400' : 'border-white/10 text-gray-300'} rounded-lg text-[11px] hover:border-blue-500/40 hover:text-white transition-colors cursor-pointer`}>{v}</div>
                       ))}
                     </div>
                   </div>
@@ -767,8 +810,8 @@ export default function LivestreamAISetup() {
                       <a href="https://platform.minimaxi.com" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-purple-400 text-[11px] font-bold"><ExternalLink className="w-3 h-3"/> platform.minimaxi.com</a>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      {['Nữ Thanh Niên VN — Ngọt ngào, tươi trẻ','Nữ Trưởng Thành VN — Chuyên nghiệp','Nữ ASMR VN — Thì thầm, êm dịu','Bé Gái Anime — Đáng yêu, vui vẻ','Nam Thanh Niên VN — Năng động','Nam Trung Niên VN — Trầm ấm đáng tin','Nam Nghiêm Túc — Trang trọng chuyên môn','Bé Trai — Hồn nhiên vui vẻ'].map((v,i) => (
-                        <div key={i} className="p-3 bg-black/40 border border-white/10 rounded-lg text-[11px] text-gray-300 hover:border-purple-500/40 hover:text-white transition-colors">{v}</div>
+                      {['male-qn-qingse','female-shaonv','female-yujie','male-qn-jingying'].map((v,i) => (
+                        <div key={i} onClick={() => { setSelectedVoiceId(v); setShowVoiceModal(false); }} className={`p-3 bg-black/40 border ${selectedVoiceId === v ? 'border-purple-500 text-purple-400' : 'border-white/10 text-gray-300'} rounded-lg text-[11px] hover:border-purple-500/40 hover:text-white transition-colors cursor-pointer`}>{v}</div>
                       ))}
                     </div>
                   </div>
@@ -782,8 +825,8 @@ export default function LivestreamAISetup() {
                       <a href="https://zalo.ai" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-blue-300 text-[11px] font-bold"><ExternalLink className="w-3 h-3"/> zalo.ai</a>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      {['Nữ Bắc — Tự nhiên giao tiếp','Nam Bắc — Tự nhiên nghiêm túc','Nữ Nam — Nhẹ nhàng dễ thương','Nam Nam — Trầm ấm thân thiện','Nữ Trung — Ngọt ngào','Nam Nghiêm Túc — Chuyên nghiệp','Nữ ASMR Việt — Thư giãn','Nam Trẻ Trung — Năng động'].map((v,i) => (
-                        <div key={i} className="p-3 bg-black/40 border border-white/10 rounded-lg text-[11px] text-white hover:border-blue-400/40 transition-colors">{v}</div>
+                      {['zalo-south-women','zalo-south-men','zalo-north-women','zalo-north-men'].map((v,i) => (
+                        <div key={i} onClick={() => { setSelectedVoiceId(v); setShowVoiceModal(false); }} className={`p-3 bg-black/40 border ${selectedVoiceId === v ? 'border-blue-400 text-blue-300' : 'border-white/10 text-white'} rounded-lg text-[11px] hover:border-blue-400/40 transition-colors cursor-pointer`}>{v}</div>
                       ))}
                     </div>
                   </div>
@@ -796,8 +839,8 @@ export default function LivestreamAISetup() {
                       <div className="text-[11px] text-gray-300 mb-2"><b className="text-yellow-400">Trả phí: $15/1M ký tự (tts-1), $30/1M ký tự (tts-1-hd).</b> API key đã được cài, dùng được ngay.</div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      {['Alloy — Trung tính, cân bằng','Echo — Nam ấm áp tự nhiên','Fable — Kể chuyện, dễ chịu','Onyx — Nam sâu, trầm','Nova — Nữ trẻ, sôi nổi','Shimmer — Nữ mềm mại, dịu dàng','Alloy HD — Chất lượng cao nhất','Echo HD — Nam HD premium'].map((v,i) => (
-                        <div key={i} className="p-3 bg-black/40 border border-white/10 rounded-lg text-[11px] text-gray-300 hover:border-emerald-500/40 hover:text-white transition-colors">{v}</div>
+                      {['alloy','echo','fable','onyx','nova','shimmer'].map((v,i) => (
+                        <div key={i} onClick={() => { setSelectedVoiceId(v); setShowVoiceModal(false); }} className={`p-3 bg-black/40 border ${selectedVoiceId === v ? 'border-emerald-500 text-emerald-400' : 'border-white/10 text-gray-300'} rounded-lg text-[11px] hover:border-emerald-500/40 hover:text-white transition-colors cursor-pointer`}>{v}</div>
                       ))}
                     </div>
                   </div>
