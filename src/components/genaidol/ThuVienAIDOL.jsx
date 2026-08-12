@@ -1,21 +1,58 @@
 import React, { useState } from 'react';
 import { Sparkles, Plus, Search, UserSquare2, PlayCircle, Mic, ChevronDown, ChevronRight, Music, Play, Image as ImageIcon, Check } from 'lucide-react';
 
+// Cấu hình IndexedDB để lưu trữ Video/Audio (Local Storage giới hạn 5MB)
+const DB_NAME = 'AIDOL_DB';
+const STORE_NAME = 'library_items';
+
+const initDB = () => {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+};
+
 export default function ThuVienAIDOL() {
-  const [viewMode, setViewMode] = useState('library'); // 'library' | 'create'
+  const [viewMode, setViewMode] = useState('library'); 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   
-  // Local Storage State for AIDOL Library
-  const [libraryItems, setLibraryItems] = useState(() => {
-    const saved = localStorage.getItem('aidol_library');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [libraryItems, setLibraryItems] = useState([]);
   
-  // Create Mode States
+  // Tải dữ liệu từ IndexedDB khi component mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const db = await initDB();
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const req = tx.objectStore(STORE_NAME).getAll();
+        req.onsuccess = () => {
+          const items = req.result.map(item => ({
+            ...item,
+            // Tạo lại URL cho file Blob khi tải lại trang
+            mediaUrl: item.fileBlob ? URL.createObjectURL(item.fileBlob) : item.mediaUrl
+          }));
+          // Sắp xếp mới nhất lên đầu
+          setLibraryItems(items.sort((a,b) => b.createdAt.localeCompare(a.createdAt)));
+        };
+      } catch (err) {
+        console.error("Lỗi tải IndexedDB:", err);
+      }
+    };
+    loadData();
+  }, []);
+  
   const [newAidolName, setNewAidolName] = useState('AIDOL của tôi');
   const [newAidolCategory, setNewAidolCategory] = useState('livestream');
   const [newAidolMedia, setNewAidolMedia] = useState(null);
+  const [newAidolFile, setNewAidolFile] = useState(null);
   
   const [speed, setSpeed] = useState(1.0);
 
@@ -23,35 +60,56 @@ export default function ThuVienAIDOL() {
     { id: 'all', name: 'Tất cả' },
     { id: 'livestream', name: 'Chuyên Livestream' },
     { id: 'sales', name: 'Tư Vấn Bán Hàng' },
+    { id: 'thankyou', name: 'Kho Video Cảm Ơn' },
+    { id: 'audio', name: 'Kho Âm Thanh' },
     { id: 'dance', name: 'Chuyên Nhảy (Dance)' },
     { id: 'story', name: 'Kể Chuyện / Tâm Sự' },
   ];
 
-  const handleSaveAidol = () => {
-    if (!newAidolMedia) return alert("Vui lòng tải lên Ảnh tĩnh hoặc Video mẫu!");
+  const handleSaveAidol = async () => {
+    if (!newAidolMedia || !newAidolFile) return alert("Vui lòng tải lên Ảnh tĩnh, Video hoặc Âm thanh!");
     if (!newAidolName.trim()) return alert("Vui lòng nhập tên AIDOL!");
     
     const newItem = {
       id: Date.now().toString(),
       name: newAidolName,
       category: newAidolCategory,
-      mediaUrl: newAidolMedia.url,
       type: newAidolMedia.type,
+      fileBlob: newAidolFile, // Lưu trực tiếp File (Blob) vào IndexedDB
       createdAt: new Date().toISOString()
     };
     
-    const updated = [newItem, ...libraryItems];
-    setLibraryItems(updated);
-    localStorage.setItem('aidol_library', JSON.stringify(updated));
-    alert("Lưu AIDOL thành công!");
-    setViewMode('library');
+    try {
+      const db = await initDB();
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      tx.objectStore(STORE_NAME).put(newItem);
+      tx.oncomplete = () => {
+        // Cập nhật State để hiển thị liền
+        newItem.mediaUrl = newAidolMedia.url;
+        setLibraryItems(prev => [newItem, ...prev]);
+        setNewAidolName('');
+        setNewAidolMedia(null);
+        setNewAidolFile(null);
+        setViewMode('library');
+        alert("Lưu AIDOL/File thành công vào Kho!");
+      };
+    } catch (err) {
+      alert("Lỗi khi lưu vào cơ sở dữ liệu: " + err.message);
+    }
   };
 
-  const handleDelete = (id) => {
-    if(confirm("Bạn có chắc muốn xóa AIDOL này?")) {
-      const updated = libraryItems.filter(item => item.id !== id);
-      setLibraryItems(updated);
-      localStorage.setItem('aidol_library', JSON.stringify(updated));
+  const handleDelete = async (id) => {
+    if(confirm("Bạn có chắc muốn xóa File này khỏi Kho?")) {
+      try {
+        const db = await initDB();
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).delete(id);
+        tx.oncomplete = () => {
+          setLibraryItems(prev => prev.filter(item => item.id !== id));
+        };
+      } catch (err) {
+        alert("Lỗi khi xóa: " + err.message);
+      }
     }
   };
 
@@ -167,21 +225,28 @@ export default function ThuVienAIDOL() {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {filteredLibrary.map(item => (
-                 <div key={item.id} className="bg-[#121216] border border-white/10 rounded-xl overflow-hidden hover:border-[#00FF66]/50 transition-colors group relative">
-                    <div className="aspect-[3/4] bg-black/40 relative">
+                 <div key={item.id} className="bg-[#121216] border border-white/10 rounded-xl overflow-hidden hover:border-[#00FF66]/50 transition-colors group relative flex flex-col">
+                    <div className="aspect-[3/4] bg-black/40 relative flex items-center justify-center">
                        {item.type === 'video' ? (
-                          <video src={item.mediaUrl} className="w-full h-full object-cover" muted loop autoPlay />
+                          <video src={item.mediaUrl} className="w-full h-full object-contain" controls />
+                       ) : item.type === 'audio' ? (
+                          <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900 p-4">
+                            <Mic className="w-12 h-12 text-[#00FF66] mb-4" />
+                            <audio src={item.mediaUrl} controls className="w-full h-10" />
+                          </div>
                        ) : (
                           <img src={item.mediaUrl} alt={item.name} className="w-full h-full object-cover" />
                        )}
-                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-4">
-                         <span className="text-[10px] font-bold text-[#00FF66] mb-1">{CATEGORIES.find(c => c.id === item.category)?.name}</span>
+                       <div className="absolute top-0 left-0 right-0 p-3 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+                         <span className="text-[10px] font-bold text-[#00FF66] bg-black/50 px-2 py-1 rounded-full">{CATEGORIES.find(c => c.id === item.category)?.name}</span>
+                       </div>
+                       <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent pointer-events-none">
                          <h3 className="font-bold text-white text-sm truncate">{item.name}</h3>
                        </div>
                     </div>
                     <button 
                       onClick={() => handleDelete(item.id)}
-                      className="absolute top-2 right-2 w-8 h-8 rounded-lg bg-red-500/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                      className="absolute top-2 right-2 w-8 h-8 rounded-lg bg-red-500/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10 shadow-lg"
                     >
                       X
                     </button>
@@ -235,20 +300,23 @@ export default function ThuVienAIDOL() {
                 <div className="bg-[#121216]/80 backdrop-blur-md rounded-2xl border border-white/10 p-6 shadow-lg flex flex-col min-h-[300px]">
                    <div className="flex justify-between items-center mb-4">
                       <div>
-                        <h3 className="font-bold text-white text-sm">Tải lên File Media (Ảnh tĩnh hoặc Video)</h3>
+                        <h3 className="font-bold text-white text-sm">Tải lên File Media (Ảnh, Video, Âm thanh)</h3>
                       </div>
                       <label className="flex items-center gap-2 px-4 py-2 border border-[#00FF66]/50 bg-[#00FF66]/10 text-[#00FF66] rounded-lg shadow-sm hover:bg-[#00FF66]/20 transition-colors cursor-pointer">
                          <Plus className="w-4 h-4"/>
                          <div className="text-[10px] font-bold">Chọn File từ máy</div>
                          <input 
                            type="file" 
-                           accept="image/*,video/*"
+                           accept="image/*,video/*,audio/*"
                            onChange={(e) => {
                              if(e.target.files[0]) {
                                const file = e.target.files[0];
                                const url = URL.createObjectURL(file);
-                               const type = file.type.includes('video') ? 'video' : 'image';
+                               let type = 'image';
+                               if (file.type.includes('video')) type = 'video';
+                               else if (file.type.includes('audio')) type = 'audio';
                                setNewAidolMedia({ url, type });
+                               setNewAidolFile(file);
                              }
                            }}
                            className="hidden" 
@@ -258,13 +326,21 @@ export default function ThuVienAIDOL() {
 
                    <div className="flex-1 border-2 border-dashed border-white/10 rounded-xl flex flex-col items-center justify-center bg-black/40 relative hover:border-[#00FF66]/30 transition-colors overflow-hidden">
                       {newAidolMedia ? (
-                         <div className="w-full h-full p-2 flex justify-center items-center relative">
+                         <div className="w-full h-full p-4 flex justify-center items-center relative">
                            {newAidolMedia.type === 'video' ? (
-                             <video src={newAidolMedia.url} className="max-h-[250px] rounded-lg" controls />
+                             <video src={newAidolMedia.url} className="max-h-[250px] rounded-lg shadow-lg" controls autoPlay />
+                           ) : newAidolMedia.type === 'audio' ? (
+                             <div className="flex flex-col items-center">
+                                <Mic className="w-16 h-16 text-[#00FF66] mb-4" />
+                                <audio src={newAidolMedia.url} controls className="w-full max-w-[300px]" autoPlay />
+                             </div>
                            ) : (
-                             <img src={newAidolMedia.url} className="max-h-[250px] rounded-lg object-contain" />
+                             <img src={newAidolMedia.url} className="max-h-[250px] rounded-lg object-contain shadow-lg" />
                            )}
-                           <button onClick={() => setNewAidolMedia(null)} className="absolute top-4 right-4 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white">X</button>
+                           <button onClick={() => {
+                             setNewAidolMedia(null);
+                             setNewAidolFile(null);
+                           }} className="absolute top-4 right-4 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white font-bold hover:bg-red-600 shadow-lg z-20">X</button>
                          </div>
                       ) : (
                         <React.Fragment>
