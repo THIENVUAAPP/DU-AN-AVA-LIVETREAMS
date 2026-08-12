@@ -11,6 +11,8 @@ const MENU_ITEMS = [
   'Tạo nhân vật để livestream',
   'Hướng dẫn TikTok Live',
   'Hướng dẫn Shopee Live',
+  'Hướng dẫn Facebook Live',
+  'Hướng dẫn YouTube Live',
   'Concert livestream thú vị',
   'Tạo phiên live nhận quà'
 ];
@@ -72,14 +74,14 @@ export default function HuongDanAcademy() {
         <div className="relative z-10 max-w-4xl">
           <div className="mb-8 bg-blue-900/20 p-8 rounded-2xl border border-blue-500/30">
              <div className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2 flex justify-between items-center">
-               <span>PLAYBOOK NỀN TẢNG • TIKTOK LIVE</span>
+               <span>PLAYBOOK NỀN TẢNG • {MENU_ITEMS[activeTab].toUpperCase()}</span>
                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center shadow-glow-blue border border-blue-500/50 text-blue-400">
                   <PlayCircle className="w-4 h-4" />
                </div>
              </div>
-             <h1 className="text-3xl font-black text-white mb-3 tracking-tight">Vận hành AI livestream trên TikTok theo luồng an toàn</h1>
+             <h1 className="text-3xl font-black text-white mb-3 tracking-tight">Vận hành AI livestream an toàn</h1>
              <p className="text-sm text-gray-300 leading-relaxed font-medium">
-               Hệ thống giúp chuẩn bị AIDOL, giọng, kịch bản và nguồn media. Việc đăng nhập, mở phiên LIVE và phát lên TikTok vẫn thực hiện trong TikTok Live Studio, OBS hoặc công cụ mà TikTok cho phép tại thời điểm bạn sử dụng.
+               Hệ thống hoạt động dưới dạng Web. Bạn chỉ cần dùng ứng dụng Livestream (như TikTok Studio hoặc OBS) để Capture màn hình (Window Capture) cửa sổ AI, sau đó phát lên nền tảng mà không cần cung cấp tài khoản mật khẩu cho hệ thống.
              </p>
           </div>
 
@@ -89,24 +91,30 @@ export default function HuongDanAcademy() {
                <div className="flex gap-4 p-5 rounded-2xl border border-white/10 bg-black/40 shadow-sm hover:border-white/20 transition-colors">
                  <div className="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 font-bold flex items-center justify-center text-xs flex-shrink-0 border border-blue-500/30">1</div>
                  <div>
-                   <h3 className="font-bold text-gray-200 text-sm mb-1">Xác nhận quyền livestream</h3>
-                   <p className="text-[11px] text-gray-400 leading-relaxed">Kiểm tra tài khoản TikTok đáp ứng điều kiện LIVE và rà soát quy định nội dung, thương mại, gắn nhãn AI hiện hành của nền tảng.</p>
+                   <h3 className="font-bold text-gray-200 text-sm mb-1">Thiết lập AVA Live Console</h3>
+                   <p className="text-[11px] text-gray-400 leading-relaxed">Vào bảng điều khiển Live, tải video/audio lên Kho Media, nhập Kịch bản, và bấm nút <b className="text-[#00FF66]">"Bắt đầu AI Live"</b> để hệ thống AI chạy.</p>
                  </div>
                </div>
                {/* Step 2 */}
                <div className="flex gap-4 p-5 rounded-2xl border border-white/10 bg-black/40 shadow-sm hover:border-white/20 transition-colors">
                  <div className="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 font-bold flex items-center justify-center text-xs flex-shrink-0 border border-blue-500/30">2</div>
                  <div>
-                   <h3 className="font-bold text-gray-200 text-sm mb-1">Dựng phòng điều khiển</h3>
-                   <p className="text-[11px] text-gray-400 leading-relaxed">Chuẩn bị TikTok Live Studio hoặc OBS, kết nối mạng ổn định, thiết lập cảnh chờ, khung chat và cảnh dự phòng.</p>
+                   <h3 className="font-bold text-gray-200 text-sm mb-1">Mở ứng dụng Live (Studio/OBS)</h3>
+                   <p className="text-[11px] text-gray-400 leading-relaxed">
+                     {activeTab === 7 ? "Mở TikTok Live Studio trên máy tính." : 
+                      activeTab === 8 ? "Mở OBS Studio (Thiết lập Stream Key từ Shopee Seller Center)." :
+                      activeTab === 9 ? "Mở OBS Studio (Thiết lập Stream Key từ Facebook Live Producer)." :
+                      activeTab === 10 ? "Mở OBS Studio (Thiết lập Stream Key từ YouTube Studio)." :
+                      "Mở OBS Studio hoặc ứng dụng Live tương ứng."}
+                   </p>
                  </div>
                </div>
                {/* Step 3 */}
                <div className="flex gap-4 p-5 rounded-2xl border border-white/10 bg-black/40 shadow-sm hover:border-white/20 transition-colors">
                  <div className="w-8 h-8 rounded-full bg-[#00FF66]/20 text-[#00FF66] font-bold flex items-center justify-center text-xs flex-shrink-0 border border-[#00FF66]/50 shadow-glow-green">3</div>
                  <div>
-                   <h3 className="font-bold text-gray-200 text-sm mb-1">Chuẩn bị AIDOL trong Studio</h3>
-                   <p className="text-[11px] text-gray-400 leading-relaxed">Chọn đúng nhân vật, giọng, tốc độ đọc, video/chuyển động và các câu chào đầu phiên. Nội dung bán hàng cần có người duyệt.</p>
+                   <h3 className="font-bold text-gray-200 text-sm mb-1">Capture Cửa Sổ & Phát</h3>
+                   <p className="text-[11px] text-gray-400 leading-relaxed">Trong Studio/OBS: <b>Thêm Nguồn → Window Capture (Quay Cửa sổ) → Chọn cửa sổ AVA Live</b>. Bấm Go Live / Start Streaming để bắt đầu phát lên nền tảng.</p>
                  </div>
                </div>
              </div>
@@ -116,15 +124,13 @@ export default function HuongDanAcademy() {
                 <div className="p-6 rounded-2xl border border-white/10 bg-black/60">
                    <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Luồng hình và âm thanh</h4>
                    <div className="flex items-center gap-2 mb-4">
-                     <div className="flex-1 bg-white/5 border border-white/10 rounded-lg p-2 text-center text-[10px] font-bold text-gray-300 shadow-sm">Trang Web</div>
+                     <div className="flex-1 bg-white/5 border border-white/10 rounded-lg p-2 text-center text-[10px] font-bold text-[#00FF66] shadow-sm shadow-glow-green/10">AVA Live Console</div>
                      <span className="text-gray-600 text-xs">→</span>
-                     <div className="flex-1 bg-white/5 border border-white/10 rounded-lg p-2 text-center text-[10px] font-bold text-[#00FF66] shadow-sm shadow-glow-green/10">AIDOL Live<br/><span className="text-[8px] font-normal text-gray-400">/ media</span></div>
+                     <div className="flex-1 bg-white/5 border border-white/10 rounded-lg p-2 text-center text-[10px] font-bold text-gray-300 shadow-sm">{activeTab === 7 ? 'TikTok Live Studio' : 'OBS Studio'}</div>
                      <span className="text-gray-600 text-xs">→</span>
-                     <div className="flex-1 bg-white/5 border border-white/10 rounded-lg p-2 text-center text-[10px] font-bold text-gray-300 shadow-sm">OBS /<br/>Live Studio</div>
-                     <span className="text-gray-600 text-xs">→</span>
-                     <div className="flex-1 bg-white/5 border border-white/10 rounded-lg p-2 text-center text-[10px] font-bold text-gray-300 shadow-sm">TikTok LIVE</div>
+                     <div className="flex-1 bg-white/5 border border-white/10 rounded-lg p-2 text-center text-[10px] font-bold text-gray-300 shadow-sm">Nền tảng LIVE</div>
                    </div>
-                   <p className="text-[10px] text-gray-500 leading-relaxed font-medium">Đây là luồng vận hành tham khảo, không yêu cầu bạn cung cấp mật khẩu hay mã xác thực TikTok cho hệ thống.</p>
+                   <p className="text-[10px] text-gray-500 leading-relaxed font-medium">Bạn hoàn toàn nắm quyền kiểm soát phiên live. Hệ thống chỉ đóng vai trò cung cấp màn hình AI (Video + Voice) để bạn phát lên.</p>
                 </div>
 
                 {/* Warning Alert */}
