@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Settings, Clock, Mic, UserSquare2, Image as ImageIcon, Play, Upload, Check, Zap, Lock, Brain, Sparkles, FileText, ChevronDown, Monitor, Video, Search, FileAudio } from 'lucide-react';
+import { Settings, Clock, Mic, Mic2, CheckCircle, UserSquare2, Image as ImageIcon, Play, Upload, Check, Zap, Lock, Brain, Sparkles, FileText, ChevronDown, Monitor, Video, Search, FileAudio } from 'lucide-react';
 
 const MOCK_HISTORY = {
   voice: [
