@@ -16,7 +16,7 @@ export default async function handler(req, res) {
 
     if (brain === 'gemini') {
       const apiKey = process.env.GEMINI_API_KEY || req.body.apiKey;
-      if (!apiKey) return res.status(500).json({ error: 'GEMINI_API_KEY is not set on server' });
+      if (!apiKey) return res.status(500).json({ error: 'Vui lòng vào phần Cài đặt API (Góc phải) để nhập mã Gemini API Key của bạn trước khi tạo kịch bản.' });
 
       let apiModel = 'gemini-1.5-flash';
       if (model && model.includes('Pro')) apiModel = 'gemini-1.5-pro';
@@ -34,7 +34,7 @@ export default async function handler(req, res) {
     } 
     else if (brain === 'chatgpt') {
       const apiKey = process.env.OPENAI_API_KEY || req.body.apiKey;
-      if (!apiKey) return res.status(500).json({ error: 'OPENAI_API_KEY is not set on server' });
+      if (!apiKey) return res.status(500).json({ error: 'Vui lòng vào phần Cài đặt API (Góc phải) để nhập mã OpenAI API Key của bạn trước khi tạo kịch bản.' });
 
       // Clean up model name
       let apiModel = 'gpt-4o-mini';

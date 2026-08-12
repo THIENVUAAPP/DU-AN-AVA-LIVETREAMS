@@ -95,8 +95,18 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
       let apiKey = '';
       if (aiBrain === 'gemini') {
         apiKey = localStorage.getItem('gemini_api_key') || import.meta.env.VITE_GEMINI_API_KEY;
+        if (!apiKey) {
+          alert('Vui lòng vào Cài đặt API (Góc phải) để nhập Gemini API Key của bạn trước khi tạo kịch bản!');
+          setIsGenerating(false);
+          return;
+        }
       } else if (aiBrain === 'chatgpt') {
         apiKey = localStorage.getItem('openai_api_key') || import.meta.env.VITE_OPENAI_API_KEY;
+        if (!apiKey) {
+          alert('Vui lòng vào Cài đặt API (Góc phải) để nhập OpenAI API Key của bạn trước khi tạo kịch bản!');
+          setIsGenerating(false);
+          return;
+        }
       }
 
       const res = await fetch('/api/generate-script', {
@@ -193,6 +203,33 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
   // File References & Selection states
   const videoInputRef = useRef(null);
   const audioInputRef = useRef(null);
+  const scriptFileInputRef = useRef(null);
+  const audioFileInputRef = useRef(null);
+
+  const handleScriptFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setScriptContent(event.target.result);
+      alert('Tải file kịch bản thành công!');
+    };
+    reader.onerror = () => alert('Không thể đọc file. Vui lòng thử lại với định dạng .txt.');
+    reader.readAsText(file);
+  };
+
+  const handleAudioFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setGeneratedAudioUrl(event.target.result);
+      alert('Tải file âm thanh thành công!');
+    };
+    reader.onerror = () => alert('Không thể đọc file âm thanh.');
+    reader.readAsDataURL(file); // This gives us a base64 Data URL string
+  };
+
   const [selectedVideoFile, setSelectedVideoFile] = useState(null);
   const [selectedAudioFile, setSelectedAudioFile] = useState(null);
   const [selectedVideoLibraryInfo, setSelectedVideoLibraryInfo] = useState(null);
@@ -389,12 +426,21 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                   <input type="text" value={jobName} onChange={e => setJobName(e.target.value)} className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-sm font-bold text-white focus:border-[#00FF66] outline-none" />
                 </div>
 
-                <div className="flex-1 flex flex-col mb-6">
-                  <label className="block text-xs font-bold text-gray-300 mb-2">Nội dung (Text to Speech)</label>
+                <div className="flex-1 flex flex-col mb-6 relative">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-xs font-bold text-gray-300">Nội dung (Text to Speech)</label>
+                    <button 
+                      onClick={() => scriptFileInputRef.current?.click()}
+                      className="text-[11px] px-2 py-1 bg-white/10 hover:bg-white/20 text-white rounded font-bold transition-colors flex items-center gap-1 border border-white/10"
+                    >
+                      <Upload className="w-3 h-3"/> Tải lên kịch bản (.txt)
+                    </button>
+                    <input type="file" ref={scriptFileInputRef} accept=".txt" className="hidden" onChange={handleScriptFileUpload} />
+                  </div>
                   <textarea 
                     value={scriptContent}
                     onChange={(e) => setScriptContent(e.target.value)}
-                    placeholder="Dán nội dung tiếng Việt có dấu hoặc không dấu..." 
+                    placeholder="Dán nội dung tiếng Việt có dấu hoặc không dấu, hoặc tải lên từ file .txt..." 
                     className="w-full flex-1 min-h-[200px] p-4 bg-black/40 border border-white/10 rounded-lg text-sm text-gray-300 focus:border-[#00FF66] outline-none resize-none custom-scrollbar"
                   ></textarea>
                 </div>
@@ -469,21 +515,38 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                                </div>
                              ))}
                            </div>
-                           <button 
-                             onClick={handleGenerateAudio}
-                             disabled={isGeneratingAudio || !scriptContent || (voiceProvider !== 'elevenlabs' && voiceProvider !== 'minimax' && voiceProvider !== 'gemini')}
-                             className="w-full mt-3 py-2.5 bg-[#00FF66]/20 text-[#00FF66] border border-[#00FF66]/30 hover:bg-[#00FF66]/30 shadow-glow-green rounded-lg font-bold text-xs transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                           >
-                             {isGeneratingAudio ? <div className="w-4 h-4 border-2 border-t-[#00FF66] border-[#00FF66]/30 rounded-full animate-spin"></div> : <Mic2 className="w-4 h-4"/>}
-                             {isGeneratingAudio ? 'Đang tạo âm thanh...' : 'Tạo Giọng Đọc (TTS API)'}
-                           </button>
-                           {generatedAudioUrl && (
-                             <div className="mt-3 p-3 bg-white/5 border border-white/10 rounded-lg">
-                               <p className="text-[10px] text-gray-400 mb-2 font-bold flex items-center gap-1"><CheckCircle className="w-3 h-3 text-[#00FF66]" /> Xem trước Audio</p>
-                               <audio controls src={generatedAudioUrl} className="w-full h-8" />
-                             </div>
-                           )}
-                         </div>
+                            <div className="flex flex-col gap-2 mt-3">
+                              <button 
+                                onClick={handleGenerateAudio}
+                                disabled={isGeneratingAudio || !scriptContent || (voiceProvider !== 'elevenlabs' && voiceProvider !== 'minimax' && voiceProvider !== 'gemini')}
+                                className="w-full py-2.5 bg-[#00FF66]/20 text-[#00FF66] border border-[#00FF66]/30 hover:bg-[#00FF66]/30 shadow-glow-green rounded-lg font-bold text-xs transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {isGeneratingAudio ? <div className="w-4 h-4 border-2 border-t-[#00FF66] border-[#00FF66]/30 rounded-full animate-spin"></div> : <Mic2 className="w-4 h-4"/>}
+                                {isGeneratingAudio ? 'Đang tạo âm thanh...' : 'Tạo Giọng Đọc (TTS API)'}
+                              </button>
+                              
+                              <div className="flex items-center gap-2">
+                                <div className="h-px bg-white/10 flex-1"></div>
+                                <span className="text-[10px] text-gray-500 font-bold uppercase">Hoặc</span>
+                                <div className="h-px bg-white/10 flex-1"></div>
+                              </div>
+                              
+                              <button 
+                                onClick={() => audioFileInputRef.current?.click()}
+                                className="w-full py-2.5 bg-white/5 text-white border border-white/10 hover:bg-white/10 rounded-lg font-bold text-xs transition-colors flex items-center justify-center gap-2"
+                              >
+                                <Upload className="w-4 h-4"/> Tải file Audio của bạn (.mp3, .wav)
+                              </button>
+                              <input type="file" ref={audioFileInputRef} accept="audio/*" className="hidden" onChange={handleAudioFileUpload} />
+                            </div>
+
+                            {generatedAudioUrl && (
+                              <div className="mt-3 p-3 bg-white/5 border border-white/10 rounded-lg">
+                                <p className="text-[10px] text-gray-400 mb-2 font-bold flex items-center gap-1"><CheckCircle className="w-3 h-3 text-[#00FF66]" /> Xem trước Audio</p>
+                                <audio controls src={generatedAudioUrl} className="w-full h-8" />
+                              </div>
+                            )}
+                          </div>
 
                          <div className="mt-auto">
                            <label className="block text-[11px] font-bold text-gray-300 mb-2">Tốc độ: {speed.toFixed(2)}</label>
