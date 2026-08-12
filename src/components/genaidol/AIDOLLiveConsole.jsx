@@ -1,200 +1,679 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Settings, Eye, CreditCard, HelpCircle, Phone, Globe, DownloadCloud, FileBox, Play, CheckCircle, Video, MessageSquare, Plus, Save, RefreshCw, Square } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import {
+  Settings, Eye, Play, Square, RefreshCw, Download, Upload, Trash2,
+  Video, Mic2, Volume2, Wifi, WifiOff, Radio, CheckCircle, AlertCircle,
+  Plus, Search, X, ChevronDown, Monitor, Zap, SkipForward, Pause
+} from 'lucide-react';
 import AIAudioPlayer from './AIAudioPlayer';
+import {
+  LIVE_CATEGORIES, initLiveDB, addLiveMedia, getAllLiveMedia, deleteLiveMedia, importFromAIDOLDB
+} from '../../lib/liveKhoDB';
+
+// ──────────────────────────────────────────────
+// AIDOL_DB (dùng lại kho AIDOL của tôi)
+// ──────────────────────────────────────────────
+const AIDOL_DB_NAME = 'AIDOL_DB';
+const AIDOL_STORE = 'library_items';
+const initAIDOLDB = () => new Promise((resolve, reject) => {
+  const req = indexedDB.open(AIDOL_DB_NAME, 1);
+  req.onupgradeneeded = (e) => {
+    const db = e.target.result;
+    if (!db.objectStoreNames.contains(AIDOL_STORE)) db.createObjectStore(AIDOL_STORE, { keyPath: 'id' });
+  };
+  req.onsuccess = () => resolve(req.result);
+  req.onerror = () => reject(req.error);
+});
+const getAllAIDOL = async () => {
+  const db = await initAIDOLDB();
+  return new Promise((resolve, reject) => {
+    const req = db.transaction(AIDOL_STORE, 'readonly').objectStore(AIDOL_STORE).getAll();
+    req.onsuccess = () => {
+      resolve(req.result.map(i => ({ ...i, mediaUrl: i.fileBlob ? URL.createObjectURL(i.fileBlob) : i.mediaUrl })));
+    };
+    req.onerror = () => reject(req.error);
+  });
+};
+
+// ──────────────────────────────────────────────
+// SAVED JOBS từ localStorage
+// ──────────────────────────────────────────────
+const getSavedJobs = () => {
+  const jobs = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('aidol_')) {
+      try { jobs.push({ key, ...JSON.parse(localStorage.getItem(key)) }); } catch(e) {}
+    }
+  }
+  return jobs.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+};
 
 export default function AIDOLLiveConsole() {
   const [activeSource, setActiveSource] = useState('tiktok');
-  const [activeTab, setActiveTab] = useState('cai-dat-chung');
-  const [activeInnerTab, setActiveInnerTab] = useState('bat-dau');
-  
-  // Trạng thái cho AI Director
+  const [activeTab, setActiveTab] = useState('kho');
   const [isAILive, setIsAILive] = useState(false);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
 
+  // ── Live Kho state ──
+  const [liveMedia, setLiveMedia] = useState([]);
+  const [khoLoaded, setKhoLoaded] = useState(false);
+  const [activeKhoCat, setActiveKhoCat] = useState('story');
+  const [uploadingCat, setUploadingCat] = useState(null);
+  const uploadRefs = useRef({});
+  LIVE_CATEGORIES.forEach(c => { if (!uploadRefs.current[c.id]) uploadRefs.current[c.id] = React.createRef(); });
+
+  // ── Import from AIDOL ──
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importTargetCat, setImportTargetCat] = useState('story');
+  const [aidolItems, setAidolItems] = useState([]);
+
+  // ── Saved Jobs state ──
+  const [savedJobs, setSavedJobs] = useState([]);
+
+  // ── Live Stream state ──
+  const [rtmpKey, setRtmpKey] = useState('');
+  const [streamStatus, setStreamStatus] = useState('idle'); // idle | connecting | live | error
+  const videoRef = useRef(null);
+  const [activeVideoItem, setActiveVideoItem] = useState(null);
+  const [activeJobItem, setActiveJobItem] = useState(null);
+  const [videoQueue, setVideoQueue] = useState([]);
+  const [currentVideoIdx, setCurrentVideoIdx] = useState(0);
+
+  // ── Load Live Kho ──
+  const loadLiveKho = useCallback(async () => {
+    try {
+      const items = await getAllLiveMedia();
+      setLiveMedia(items);
+      setKhoLoaded(true);
+    } catch (err) { console.error('Load Live Kho error:', err); }
+  }, []);
+
+  useEffect(() => { loadLiveKho(); }, [loadLiveKho]);
+  useEffect(() => { setSavedJobs(getSavedJobs()); }, []);
+
+  // ── Upload video/audio to kho ──
+  const handleUploadToKho = async (e, category) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    setUploadingCat(category);
+    try {
+      for (const file of files) {
+        let type = 'video';
+        if (file.type.startsWith('audio')) type = 'audio';
+        else if (file.type.startsWith('image')) type = 'image';
+        const item = {
+          id: 'live_' + Date.now() + '_' + Math.random().toString(36).slice(2),
+          name: file.name.replace(/\.[^/.]+$/, ''),
+          category,
+          type,
+          fileBlob: file,
+          mediaUrl: URL.createObjectURL(file),
+          createdAt: new Date().toISOString(),
+          size: file.size
+        };
+        await addLiveMedia(item);
+      }
+      await loadLiveKho();
+    } catch (err) { alert('Lỗi upload: ' + err.message); }
+    setUploadingCat(null);
+    e.target.value = '';
+  };
+
+  // ── Delete from kho ──
+  const handleDeleteMedia = async (id) => {
+    if (!confirm('Xóa file này khỏi Kho Live?')) return;
+    await deleteLiveMedia(id);
+    await loadLiveKho();
+    if (activeVideoItem?.id === id) setActiveVideoItem(null);
+  };
+
+  // ── Import từ AIDOL ──
+  const handleOpenImport = async (cat) => {
+    setImportTargetCat(cat);
+    const items = await getAllAIDOL();
+    setAidolItems(items);
+    setShowImportModal(true);
+  };
+  const handleImportAIDOL = async (item) => {
+    try {
+      await importFromAIDOLDB(item, importTargetCat);
+      await loadLiveKho();
+      setShowImportModal(false);
+      alert('✅ Đã import "' + item.name + '" vào kho ' + importTargetCat + '!');
+    } catch (err) { alert('Lỗi import: ' + err.message); }
+  };
+
+  // ── Play video from kho ──
+  const handlePlayFromKho = (item) => {
+    setActiveVideoItem(item);
+    if (videoRef.current && item.mediaUrl) {
+      videoRef.current.src = item.mediaUrl;
+      videoRef.current.play().catch(() => {});
+    }
+  };
+
+  // ── Build video queue for live ──
+  const handleStartLive = () => {
+    const storyItems = liveMedia.filter(i => i.category === 'story' && (i.type === 'video' || i.type === 'audio'));
+    if (storyItems.length > 0) {
+      setVideoQueue(storyItems);
+      setCurrentVideoIdx(0);
+      handlePlayFromKho(storyItems[0]);
+    }
+    setIsAILive(true);
+  };
+
+  // ── Auto-next video in queue ──
+  const handleVideoEnded = () => {
+    const nextIdx = (currentVideoIdx + 1) % videoQueue.length;
+    if (videoQueue.length > 0) {
+      setCurrentVideoIdx(nextIdx);
+      handlePlayFromKho(videoQueue[nextIdx]);
+    }
+  };
+
+  const handleSkipVideo = () => {
+    const nextIdx = (currentVideoIdx + 1) % videoQueue.length;
+    if (videoQueue.length > 0) {
+      setCurrentVideoIdx(nextIdx);
+      handlePlayFromKho(videoQueue[nextIdx]);
+    }
+  };
+
+  const catMedia = (cat) => liveMedia.filter(i => i.category === cat);
+  const formatSize = (bytes) => bytes ? (bytes > 1024 * 1024 ? (bytes / 1024 / 1024).toFixed(1) + ' MB' : (bytes / 1024).toFixed(0) + ' KB') : '';
+
   return (
-    <div className="w-full min-h-[calc(100vh-8rem)] bg-[#1a1b26] text-slate-300 font-sans flex flex-col rounded-2xl overflow-hidden border border-slate-700 shadow-2xl relative">
+    <div className="w-full min-h-[calc(100vh-8rem)] bg-[#0D0F1A] text-slate-300 font-sans flex flex-col rounded-2xl overflow-hidden border border-slate-700/60 shadow-2xl">
       
-      {/* Top Header */}
-      <div className="h-14 bg-[#1f2335]/80 backdrop-blur-md border-b border-slate-700/50 flex items-center justify-between px-4 flex-shrink-0">
-         <div className="flex items-center gap-2">
-            <button className="px-3 py-1.5 bg-[#24283b] hover:bg-[#2f354d] border border-slate-700 rounded text-xs flex items-center gap-2 transition-colors"><Settings className="w-3.5 h-3.5"/> Cài đặt</button>
-            <button className="px-3 py-1.5 bg-[#24283b] hover:bg-[#2f354d] border border-slate-700 rounded text-xs flex items-center gap-2 transition-colors"><Eye className="w-3.5 h-3.5"/> Theo dõi</button>
-            <button className="px-3 py-1.5 bg-[#24283b] hover:bg-[#2f354d] border border-slate-700 rounded text-xs flex items-center gap-2 transition-colors"><CreditCard className="w-3.5 h-3.5"/> Thanh toán</button>
-         </div>
-
-         <div className="flex items-center gap-4">
-            <button className="px-6 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-bold transition-colors shadow-[0_0_10px_rgba(37,99,235,0.3)]">
-              KOL-LIVE.com
-            </button>
-            <div className="flex items-center gap-3">
-               <button className="text-xs flex items-center gap-1.5 hover:text-white"><HelpCircle className="w-3.5 h-3.5"/> Hỗ trợ</button>
-               <button className="text-xs flex items-center gap-1.5 hover:text-white"><Phone className="w-3.5 h-3.5"/> Điện thoại / QR</button>
+      {/* ── TOP HEADER ── */}
+      <div className="h-14 bg-[#1a1b26]/90 backdrop-blur-md border-b border-slate-700/50 flex items-center justify-between px-5 flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-[#00FF66]/20 to-blue-500/20 border border-[#00FF66]/30 rounded-lg">
+            <span className="w-2 h-2 rounded-full bg-[#00FF66] animate-pulse"></span>
+            <span className="text-xs font-black text-[#00FF66] uppercase tracking-wider">AVA AI LIVE CONSOLE</span>
+          </div>
+          <button onClick={() => setIsAILive(!isAILive)}
+            className={`px-5 py-2 rounded-lg text-xs font-black flex items-center gap-2 transition-all shadow-lg ${isAILive ? 'bg-red-500 hover:bg-red-400 text-white shadow-red-500/30' : 'bg-[#00FF66] hover:bg-[#00DD55] text-black shadow-[#00FF66]/30'}`}>
+            {isAILive ? <><Square className="w-3.5 h-3.5"/> Dừng Live AI</> : <><Play className="w-3.5 h-3.5"/> Bắt đầu Live AI</>}
+          </button>
+          {isAILive && (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 border border-red-500/40 rounded-lg">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+              <span className="text-[10px] font-black text-red-400">ĐANG LIVE</span>
             </div>
-         </div>
-
-         <div className="flex items-center gap-2">
-            <button className="px-3 py-1.5 bg-[#24283b] hover:bg-[#2f354d] border border-slate-700 rounded text-xs flex items-center gap-2 transition-colors">Tiếng Việt v</button>
-            <button className="px-3 py-1.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded text-xs font-bold flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5"/> Mới nhất</button>
-            <div className="px-3 py-1.5 border border-slate-700 rounded text-xs">Số dư KOL Coin: <span className="font-bold text-amber-400">1200</span></div>
-         </div>
-      </div>
-
-      <div className="flex flex-1 overflow-hidden">
-        {/* LEFT PANEL */}
-        <div className="w-[280px] bg-[#1a1b26] border-r border-slate-700/50 flex flex-col p-4 overflow-y-auto custom-scrollbar">
-           
-           <div className="bg-[#24283b] rounded-lg border border-slate-700 p-6 mb-4 h-[200px] flex items-center justify-center text-center relative overflow-hidden">
-             <div className="absolute inset-0 bg-blue-500/5"></div>
-             <div>
-               <h3 className="text-sm font-bold text-white mb-1">Nhân vật mẫu</h3>
-               <p className="text-xs text-slate-500">(danh tính đã ẩn)</p>
-             </div>
-           </div>
-
-           <div className="flex gap-2 mb-2">
-             <button className="flex-1 py-2 bg-[#24283b] hover:bg-[#2f354d] border border-slate-700 rounded text-xs flex items-center justify-center gap-2 transition-colors"><Video className="w-3.5 h-3.5"/> Camera ảo</button>
-             <button className="flex-1 py-2 bg-[#24283b] hover:bg-[#2f354d] border border-slate-700 rounded text-xs flex items-center justify-center gap-2 transition-colors"><MessageSquare className="w-3.5 h-3.5"/> Giao tiếp</button>
-           </div>
-           <button className="w-full py-2 bg-[#24283b] hover:bg-[#2f354d] border border-slate-700 rounded text-xs flex items-center justify-center gap-2 transition-colors mb-4"><Globe className="w-3.5 h-3.5"/> Mở web ghim</button>
-
-           <div className="bg-[#1f2335] rounded-lg border border-slate-700 p-3 mb-4">
-              <div className="flex items-center justify-between mb-3 border-b border-slate-700 pb-2">
-                <span className="text-xs font-bold text-blue-400">Nguồn live</span>
-                <button className="text-[10px] text-slate-500 hover:text-white flex items-center gap-1">Popup • Link <Settings className="w-3 h-3"/></button>
-              </div>
-              <div className="flex gap-1 mb-3">
-                <button onClick={() => setActiveSource('tiktok')} className={`flex-1 py-1.5 text-[10px] font-bold rounded ${activeSource === 'tiktok' ? 'bg-amber-600 text-white' : 'bg-[#24283b] text-slate-400 border border-slate-700'}`}>TikTok</button>
-                <button onClick={() => setActiveSource('shopee')} className={`flex-1 py-1.5 text-[10px] font-bold rounded ${activeSource === 'shopee' ? 'bg-orange-500 text-white' : 'bg-[#24283b] text-slate-400 border border-slate-700'}`}>Shopee</button>
-                <button onClick={() => setActiveSource('facebook')} className={`flex-1 py-1.5 text-[10px] font-bold rounded ${activeSource === 'facebook' ? 'bg-[#24283b] text-slate-400 border border-slate-700' : 'bg-[#24283b] text-slate-400 border border-slate-700'}`}>Facebook</button>
-              </div>
-              <div className="text-[10px] text-emerald-400 font-bold mb-3">Nguồn live mẫu (đã ẩn tài khoản)</div>
-              
-              <div className="flex gap-2">
-                <button className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-bold flex items-center justify-center gap-1.5 shadow-[0_0_10px_rgba(5,150,105,0.3)]"><Play className="w-3 h-3"/> Kiểm tra</button>
-                <button 
-                  onClick={() => setIsAILive(!isAILive)}
-                  className={`flex-1 py-2 rounded text-xs font-bold flex items-center justify-center gap-1.5 shadow-[0_0_10px_rgba(16,185,129,0.3)] ${isAILive ? 'bg-red-500 hover:bg-red-400 text-white' : 'bg-emerald-500 hover:bg-emerald-400 text-white'}`}
-                >
-                  {isAILive ? <Square className="w-3 h-3"/> : <Play className="w-3 h-3"/>} 
-                  {isAILive ? 'Dừng AI' : 'Bắt đầu AI'}
-                </button>
-              </div>
-           </div>
-
-           <div className="space-y-1">
-             <div className="p-2 hover:bg-[#24283b] rounded text-xs text-slate-400 flex items-center justify-between cursor-pointer border-l-2 border-blue-500">Ảnh / link TikTok mẫu</div>
-             <div className="p-2 hover:bg-[#24283b] rounded text-xs text-slate-400 flex items-center justify-between cursor-pointer">Trạng thái phiên mẫu</div>
-           </div>
+          )}
         </div>
 
-        {/* MIDDLE PANEL */}
-        <div className="flex-1 flex flex-col min-w-[300px] border-r border-slate-700/50 bg-[#1a1b26]">
-           {/* Tabs */}
-           <div className="flex border-b border-slate-700/50 pt-2 px-2 bg-[#1f2335]">
-              <button onClick={() => setActiveTab('kiem-thu')} className={`px-4 py-2 text-xs font-bold rounded-t-lg ${activeTab === 'kiem-thu' ? 'bg-[#1a1b26] text-blue-400 border-t border-l border-r border-slate-700/50' : 'text-slate-500 hover:text-slate-300'}`}>Kiểm thử phản hồi</button>
-              <button onClick={() => setActiveTab('cai-dat-chung')} className={`px-4 py-2 text-xs font-bold rounded-t-lg flex items-center gap-2 ${activeTab === 'cai-dat-chung' ? 'bg-[#1a1b26] text-white border-t border-l border-r border-slate-700/50' : 'text-slate-500 hover:text-slate-300'}`}><Settings className="w-3.5 h-3.5"/> Cài đặt chung</button>
-              <button onClick={() => setActiveTab('quan-ly')} className={`px-4 py-2 text-xs font-bold rounded-t-lg ${activeTab === 'quan-ly' ? 'bg-[#1a1b26] text-white border-t border-l border-r border-slate-700/50' : 'text-slate-500 hover:text-slate-300'}`}>Quản lý Sự kiện</button>
-              <button onClick={() => setActiveTab('video')} className={`px-4 py-2 text-xs font-bold rounded-t-lg ${activeTab === 'video' ? 'bg-[#1a1b26] text-white border-t border-l border-r border-slate-700/50' : 'text-slate-500 hover:text-slate-300'}`}>Video</button>
-           </div>
-           
-           <div className="p-4 flex-1 overflow-y-auto custom-scrollbar">
-             <p className="text-xs text-slate-400 mb-4 border-b border-slate-700 pb-3">Đây là bảng Cài đặt chung thật. Bạn có thể chỉnh trực tiếp các tab cấu hình bên dưới mà không cần mở thêm popup.</p>
-             
-             {/* Inner Tabs */}
-             <div className="flex gap-1 mb-4 flex-wrap border-b border-slate-700 pb-2">
-                <button onClick={() => setActiveInnerTab('bat-dau')} className={`px-3 py-1.5 text-[10px] font-bold rounded flex items-center gap-1.5 ${activeInnerTab === 'bat-dau' ? 'text-white' : 'text-slate-500'}`}><FileBox className="w-3.5 h-3.5"/> Bắt đầu</button>
-                <button onClick={() => setActiveInnerTab('thong-tin')} className={`px-3 py-1.5 text-[10px] font-bold rounded flex items-center gap-1.5 ${activeInnerTab === 'thong-tin' ? 'text-purple-400' : 'text-slate-500'}`}><UserSquare2 className="w-3.5 h-3.5"/> Thông tin nhân vật</button>
-                <button onClick={() => setActiveInnerTab('api')} className={`px-3 py-1.5 text-[10px] font-bold rounded flex items-center gap-1.5 ${activeInnerTab === 'api' ? 'text-amber-400' : 'text-slate-500'}`}><Settings className="w-3.5 h-3.5"/> API VAD</button>
-                <button onClick={() => setActiveInnerTab('chinh')} className={`px-3 py-1.5 text-[10px] font-bold rounded flex items-center gap-1.5 ${activeInnerTab === 'chinh' ? 'text-blue-400' : 'text-slate-500'}`}><UserSquare2 className="w-3.5 h-3.5"/> Nhân vật Chính</button>
-                <button onClick={() => setActiveInnerTab('tro-ly')} className={`px-3 py-1.5 text-[10px] font-bold rounded flex items-center gap-1.5 ${activeInnerTab === 'tro-ly' ? 'text-pink-400' : 'text-slate-500'}`}><Mic className="w-3.5 h-3.5"/> Trợ lý</button>
-             </div>
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1">
+            {['tiktok','shopee','youtube','facebook'].map(src => (
+              <button key={src} onClick={() => setActiveSource(src)}
+                className={`px-3 py-1.5 rounded text-[10px] font-bold transition-all ${activeSource === src
+                  ? src === 'tiktok' ? 'bg-[#ff0050] text-white' : src === 'shopee' ? 'bg-orange-500 text-white' : src === 'youtube' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'
+                  : 'bg-[#24283b] text-slate-400 border border-slate-700 hover:text-white'}`}>
+                {src === 'tiktok' ? '♪ TikTok' : src === 'shopee' ? '🛒 Shopee' : src === 'youtube' ? '▶ YouTube' : '📘 Facebook'}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+            <span className="text-[10px] text-amber-400 font-bold">💰 1,200 KOL Coin</span>
+          </div>
+        </div>
+      </div>
 
-             <h4 className="text-xs font-bold text-white mb-2">Trạng thái nhân vật mẫu</h4>
-             <div className="bg-[#1f2335] border border-slate-700 rounded-lg p-4 mb-4">
-                <div className="text-[10px] text-blue-400 font-bold mb-2 uppercase text-center">Thao tác</div>
-                <button className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 mb-3 hover:shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-shadow">
-                  <DownloadCloud className="w-4 h-4"/> Import nhân vật từ KOL-LIVE.com
-                </button>
-                <p className="text-[10px] text-slate-500 mb-3 text-center leading-relaxed">Tạo ảnh, chọn giọng và tạo chuyển động ở KOL-LIVE.com. AIDOL Live chỉ tải video DONE về hai thư mục phát live: Im lặng và Nói chuyện.</p>
-                <button className="w-full py-2 bg-[#24283b] hover:bg-[#2f354d] border border-slate-600 rounded-lg text-xs flex items-center justify-center gap-2 transition-colors">
-                  <FileBox className="w-4 h-4 text-amber-500"/> Nhập pack .zip cũ
-                </button>
-             </div>
+      {/* ── MAIN BODY ── */}
+      <div className="flex flex-1 overflow-hidden">
 
-             <div className="bg-[#1f2335] border border-slate-700 rounded-lg overflow-hidden flex flex-col h-[250px]">
-                <div className="flex-1 flex items-center justify-center">
-                   <div className="text-slate-500 text-sm font-bold">Thư viện AIDOL mẫu</div>
+        {/* ═══ LEFT: VIDEO PLAYER + CONTROLS ═══ */}
+        <div className="w-[320px] flex-shrink-0 bg-[#0D0F1A] border-r border-slate-700/50 flex flex-col">
+          {/* Video Screen */}
+          <div className="relative bg-black flex-shrink-0" style={{aspectRatio:'9/16', maxHeight:'380px'}}>
+            {activeVideoItem ? (
+              activeVideoItem.type === 'video' ? (
+                <video ref={videoRef} className="w-full h-full object-cover" autoPlay loop={videoQueue.length <= 1} onEnded={handleVideoEnded}
+                  src={activeVideoItem.mediaUrl}/>
+              ) : activeVideoItem.type === 'audio' ? (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-purple-900/40 to-[#0D0F1A]">
+                  <div className="w-20 h-20 rounded-full bg-purple-500/20 border-2 border-purple-500/50 flex items-center justify-center mb-3 animate-pulse">
+                    <Volume2 className="w-10 h-10 text-purple-400" />
+                  </div>
+                  <div className="text-xs font-bold text-white">{activeVideoItem.name}</div>
+                  <audio ref={videoRef} autoPlay loop={videoQueue.length <= 1} onEnded={handleVideoEnded} src={activeVideoItem.mediaUrl} className="w-full mt-3 px-4"/>
                 </div>
-                <div className="p-2 border-t border-slate-700">
-                  <button className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-bold flex items-center justify-center gap-2 mb-2">
-                    <CheckCircle className="w-4 h-4"/> Chọn Dùng ngay
+              ) : (
+                <img src={activeVideoItem.mediaUrl} alt={activeVideoItem.name} className="w-full h-full object-cover"/>
+              )
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-[#1a1b26] to-[#0D0F1A]">
+                <div className="w-16 h-16 rounded-2xl bg-[#00FF66]/10 border border-[#00FF66]/30 flex items-center justify-center mb-3">
+                  <Video className="w-8 h-8 text-[#00FF66]" />
+                </div>
+                <p className="text-xs text-slate-500 font-medium text-center px-4">Chọn video từ Kho<br/>hoặc bấm Bắt đầu Live</p>
+              </div>
+            )}
+
+            {/* Overlay status */}
+            {isAILive && (
+              <div className="absolute top-2 left-2 flex items-center gap-1.5 px-2 py-1 bg-red-500/90 backdrop-blur-sm rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+                <span className="text-[9px] font-black text-white">LIVE</span>
+              </div>
+            )}
+            {isAudioPlaying && (
+              <div className="absolute bottom-2 left-2 right-2 flex items-center gap-1">
+                {[3,5,4,6,3,5,4,3].map((h,i) => (
+                  <div key={i} className="flex-1 bg-[#00FF66] rounded-full animate-pulse" style={{height: h * 2 + 'px', animationDelay: i * 0.1 + 's'}}/>
+                ))}
+              </div>
+            )}
+            {activeVideoItem && (
+              <div className="absolute bottom-2 right-2 text-[9px] bg-black/70 text-white px-1.5 py-0.5 rounded font-mono truncate max-w-[120px]">
+                {activeVideoItem.name}
+              </div>
+            )}
+          </div>
+
+          {/* Video Controls */}
+          <div className="p-3 bg-[#1a1b26] border-b border-slate-700/50 flex gap-2">
+            {!isAILive ? (
+              <button onClick={handleStartLive}
+                className="flex-1 py-2 bg-[#00FF66] hover:bg-[#00DD55] text-black rounded-lg text-xs font-black flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(0,255,102,0.3)] transition-all">
+                <Play className="w-3.5 h-3.5"/> Bắt đầu AI Live
+              </button>
+            ) : (
+              <button onClick={() => setIsAILive(false)}
+                className="flex-1 py-2 bg-red-500 hover:bg-red-400 text-white rounded-lg text-xs font-black flex items-center justify-center gap-1.5 transition-all">
+                <Square className="w-3.5 h-3.5"/> Dừng AI Live
+              </button>
+            )}
+            <button onClick={handleSkipVideo} disabled={videoQueue.length === 0}
+              className="px-3 py-2 bg-[#24283b] border border-slate-700 hover:bg-[#2f354d] rounded-lg text-xs transition-colors disabled:opacity-40">
+              <SkipForward className="w-4 h-4"/>
+            </button>
+          </div>
+
+          {/* Platform Connection */}
+          <div className="p-3 bg-[#1a1b26] flex-1 overflow-y-auto custom-scrollbar">
+            <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Kết nối {activeSource.toUpperCase()}</div>
+
+            {activeSource === 'tiktok' && (
+              <div className="space-y-2">
+                <div className="p-3 bg-[#ff0050]/10 border border-[#ff0050]/30 rounded-xl">
+                  <div className="text-[10px] font-black text-[#ff0050] mb-2 flex items-center gap-1.5">
+                    <Radio className="w-3 h-3"/> TikTok Live Studio (RTMP)
+                  </div>
+                  <div className="text-[10px] text-slate-400 mb-3 leading-relaxed">
+                    Kết nối qua TikTok Live Studio app. Dùng RTMP URL + Stream Key từ TikTok Studio.
+                  </div>
+                  <input type="text" placeholder="Stream Key từ TikTok Studio..." value={rtmpKey} onChange={e => setRtmpKey(e.target.value)}
+                    className="w-full bg-black/40 border border-slate-600 rounded-lg px-3 py-2 text-xs text-white mb-2 outline-none focus:border-[#ff0050]"/>
+                  <div className="text-[9px] text-slate-500 mb-2">RTMP URL: <span className="text-[#ff0050] font-mono">rtmp://live.tiktok.com/live/</span></div>
+                  <button className={`w-full py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all ${rtmpKey ? 'bg-[#ff0050] hover:bg-[#cc0040] text-white' : 'bg-white/5 text-slate-500 border border-slate-700'}`}>
+                    {rtmpKey ? <><Wifi className="w-3.5 h-3.5"/> Kết nối TikTok Live</> : <><WifiOff className="w-3.5 h-3.5"/> Nhập Stream Key để kết nối</>}
                   </button>
-                  <div className="flex gap-2">
-                    <button className="flex-1 py-1.5 bg-[#24283b] text-blue-400 border border-slate-600 rounded text-xs flex items-center justify-center gap-1.5 hover:bg-[#2f354d]">
-                      <DownloadCloud className="w-3 h-3"/> Xuất (.zip)
+                </div>
+
+                <div className="p-3 bg-[#24283b] border border-slate-700 rounded-xl">
+                  <div className="text-[10px] font-black text-blue-400 mb-2">📋 Cách lấy Stream Key TikTok:</div>
+                  <ol className="text-[10px] text-slate-400 space-y-1 leading-relaxed list-decimal list-inside">
+                    <li>Mở TikTok Live Studio app trên máy tính</li>
+                    <li>Đăng nhập tài khoản TikTok của bạn</li>
+                    <li>Vào Settings → Stream Key</li>
+                    <li>Copy Stream Key và dán vào ô trên</li>
+                    <li>Bấm "Kết nối TikTok Live" để bắt đầu</li>
+                  </ol>
+                </div>
+              </div>
+            )}
+
+            {activeSource === 'shopee' && (
+              <div className="p-3 bg-orange-500/10 border border-orange-500/30 rounded-xl">
+                <div className="text-[10px] font-black text-orange-400 mb-2">🛒 Shopee Live</div>
+                <p className="text-[10px] text-slate-400 mb-3">Kết nối qua Shopee Seller Center → Live → RTMP Key.</p>
+                <input type="text" placeholder="Shopee Stream Key..." className="w-full bg-black/40 border border-slate-600 rounded-lg px-3 py-2 text-xs text-white mb-2 outline-none focus:border-orange-500"/>
+                <button className="w-full py-2 bg-orange-500 hover:bg-orange-400 text-white rounded-lg text-xs font-bold">Kết nối Shopee Live</button>
+              </div>
+            )}
+
+            {(activeSource === 'youtube' || activeSource === 'facebook') && (
+              <div className="p-3 bg-white/5 border border-slate-700 rounded-xl">
+                <div className="text-[10px] font-black text-white mb-2">{activeSource === 'youtube' ? '▶ YouTube Live' : '📘 Facebook Live'}</div>
+                <p className="text-[10px] text-slate-400 mb-3">Lấy Stream Key từ {activeSource === 'youtube' ? 'YouTube Studio → Go Live → Stream' : 'Facebook → Live Producer → Thiết lập Live'}.</p>
+                <input type="text" placeholder="Stream Key..." className="w-full bg-black/40 border border-slate-600 rounded-lg px-3 py-2 text-xs text-white mb-2 outline-none focus:border-blue-500"/>
+                <button className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold">Kết nối</button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ═══ CENTER + RIGHT: KHO + AI CONTROLS ═══ */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Tab Navigation */}
+          <div className="flex border-b border-slate-700/50 bg-[#1a1b26]/80 px-4 pt-2 flex-shrink-0">
+            {[['kho','📦 Kho Video Live'],['ai-player','🤖 AI Director'],['scripts','📄 Kịch bản'],['stream','📡 Stream Setup']].map(([id, label]) => (
+              <button key={id} onClick={() => setActiveTab(id)}
+                className={`px-4 py-2.5 text-xs font-bold rounded-t-lg mr-1 transition-all ${activeTab === id ? 'bg-[#0D0F1A] text-[#00FF66] border-t border-l border-r border-slate-700/50' : 'text-slate-500 hover:text-slate-300'}`}>
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
+
+            {/* ══ TAB: KHO VIDEO LIVE ══ */}
+            {activeTab === 'kho' && (
+              <div className="p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-black text-white">📦 Kho Video Live</h3>
+                    <p className="text-[10px] text-slate-500">Upload video/audio vào từng loại. AI sẽ tự phát đúng loại khi có sự kiện.</p>
+                  </div>
+                  <div className="text-[10px] text-[#00FF66] font-bold">{liveMedia.length} file trong kho</div>
+                </div>
+
+                {/* Category tabs */}
+                <div className="flex gap-2 flex-wrap">
+                  {LIVE_CATEGORIES.map(cat => (
+                    <button key={cat.id} onClick={() => setActiveKhoCat(cat.id)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${activeKhoCat === cat.id ? 'bg-[#00FF66]/20 text-[#00FF66] border border-[#00FF66]/40' : 'bg-[#24283b] text-slate-400 border border-slate-700 hover:text-white'}`}>
+                      {cat.emoji} {cat.name}
+                      <span className="bg-white/10 px-1.5 rounded-full text-[9px]">{catMedia(cat.id).length}</span>
                     </button>
-                    <button className="flex-1 py-1.5 bg-[#24283b] text-red-400 border border-slate-600 rounded text-xs hover:bg-[#2f354d]">Xóa</button>
+                  ))}
+                </div>
+
+                {/* Active category panel */}
+                {LIVE_CATEGORIES.filter(c => c.id === activeKhoCat).map(cat => (
+                  <div key={cat.id} className={`border ${cat.border} rounded-2xl overflow-hidden`}>
+                    <div className={`px-5 py-3 ${cat.bg} flex items-center justify-between`}>
+                      <div>
+                        <div className={`text-sm font-black ${cat.color} flex items-center gap-2`}>{cat.emoji} {cat.name}</div>
+                        <div className="text-[10px] text-slate-400">{cat.desc}</div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => handleOpenImport(cat.id)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/20 border border-blue-500/40 text-blue-400 rounded-lg text-[10px] font-bold hover:bg-blue-500/30 transition-colors">
+                          <Download className="w-3 h-3"/> Import từ AIDOL
+                        </button>
+                        <label className={`flex items-center gap-1.5 px-3 py-1.5 bg-[#00FF66]/20 border border-[#00FF66]/40 text-[#00FF66] rounded-lg text-[10px] font-bold hover:bg-[#00FF66]/30 transition-colors cursor-pointer ${uploadingCat === cat.id ? 'opacity-50 pointer-events-none' : ''}`}>
+                          {uploadingCat === cat.id ? <><RefreshCw className="w-3 h-3 animate-spin"/> Đang upload...</> : <><Upload className="w-3 h-3"/> Tải lên</>}
+                          <input type="file" multiple accept="video/*,audio/*,image/*" className="hidden"
+                            onChange={(e) => handleUploadToKho(e, cat.id)}/>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-[#0D0F1A]">
+                      {catMedia(cat.id).length === 0 ? (
+                        <label className="block border-2 border-dashed border-slate-700 rounded-xl p-8 text-center cursor-pointer hover:border-[#00FF66]/50 hover:bg-[#00FF66]/5 transition-all">
+                          <div className="text-3xl mb-2">{cat.emoji}</div>
+                          <div className="text-xs font-bold text-slate-400 mb-1">Kéo thả hoặc bấm để tải lên</div>
+                          <div className="text-[10px] text-slate-600">Hỗ trợ: MP4, WebM, MOV, MP3, WAV, JPG, PNG</div>
+                          <input type="file" multiple accept="video/*,audio/*,image/*" className="hidden"
+                            onChange={(e) => handleUploadToKho(e, cat.id)}/>
+                        </label>
+                      ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                          {catMedia(cat.id).map(item => (
+                            <div key={item.id} className="bg-[#1a1b26] border border-slate-700 rounded-xl overflow-hidden group hover:border-[#00FF66]/50 transition-all">
+                              <div className="aspect-video relative bg-black flex items-center justify-center overflow-hidden">
+                                {item.type === 'video' ? (
+                                  <video src={item.mediaUrl} className="w-full h-full object-cover" muted/>
+                                ) : item.type === 'audio' ? (
+                                  <div className="w-full h-full flex items-center justify-center bg-purple-900/30">
+                                    <Mic2 className="w-8 h-8 text-purple-400"/>
+                                  </div>
+                                ) : (
+                                  <img src={item.mediaUrl} alt={item.name} className="w-full h-full object-cover"/>
+                                )}
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all flex items-center justify-center gap-2">
+                                  <button onClick={() => handlePlayFromKho(item)}
+                                    className="opacity-0 group-hover:opacity-100 transition-all w-8 h-8 rounded-full bg-[#00FF66] flex items-center justify-center hover:scale-110">
+                                    <Play className="w-3.5 h-3.5 text-black ml-0.5"/>
+                                  </button>
+                                  <button onClick={() => handleDeleteMedia(item.id)}
+                                    className="opacity-0 group-hover:opacity-100 transition-all w-8 h-8 rounded-full bg-red-500 flex items-center justify-center hover:scale-110">
+                                    <Trash2 className="w-3.5 h-3.5 text-white"/>
+                                  </button>
+                                </div>
+                                {activeVideoItem?.id === item.id && (
+                                  <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-[#00FF66] text-black text-[8px] font-black rounded-full">▶ PLAYING</div>
+                                )}
+                              </div>
+                              <div className="p-2">
+                                <div className="text-[10px] font-bold text-white truncate">{item.name}</div>
+                                <div className="text-[9px] text-slate-500 flex justify-between">
+                                  <span className="capitalize">{item.type}</span>
+                                  <span>{formatSize(item.size)}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          {/* Add more button */}
+                          <label className="aspect-video rounded-xl border-2 border-dashed border-slate-700 flex flex-col items-center justify-center cursor-pointer hover:border-[#00FF66]/50 hover:bg-[#00FF66]/5 transition-all">
+                            <Plus className="w-6 h-6 text-slate-600 mb-1"/>
+                            <span className="text-[9px] text-slate-600">Thêm</span>
+                            <input type="file" multiple accept="video/*,audio/*,image/*" className="hidden"
+                              onChange={(e) => handleUploadToKho(e, cat.id)}/>
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* ══ TAB: AI DIRECTOR ══ */}
+            {activeTab === 'ai-player' && (
+              <div className="p-5 space-y-4">
+                <div>
+                  <h3 className="text-sm font-black text-white mb-1">🤖 AI Director</h3>
+                  <p className="text-[10px] text-slate-500">Điều phối hàng đợi TTS, xen kẽ bình luận và tặng quà tự động.</p>
+                </div>
+
+                {/* Avatar + Speaking indicator */}
+                <div className="bg-[#1a1b26] border border-slate-700 rounded-2xl p-4 flex items-center gap-4">
+                  <div className="w-20 h-20 rounded-xl overflow-hidden border-2 border-[#00FF66]/50 relative flex-shrink-0">
+                    {activeVideoItem && activeVideoItem.type === 'image' ? (
+                      <img src={activeVideoItem.mediaUrl} alt="Avatar" className="w-full h-full object-cover"/>
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-b from-[#1f2335] to-[#0D0F1A] flex items-center justify-center">
+                        <span className="text-2xl">🤖</span>
+                      </div>
+                    )}
+                    {isAudioPlaying && (
+                      <div className="absolute bottom-1 inset-x-0 flex justify-center gap-0.5">
+                        {[2,4,3,5,2].map((h,i) => (
+                          <div key={i} className="w-1 bg-[#00FF66] rounded-full animate-pulse" style={{height: h*3+'px', animationDelay: i*0.1+'s'}}/>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <div className="text-sm font-black text-white mb-1">AI AIDOL</div>
+                    <div className={`text-xs font-bold ${isAILive ? 'text-[#00FF66]' : 'text-slate-500'}`}>
+                      {isAILive ? (isAudioPlaying ? '🔊 Đang đọc kịch bản...' : '⏳ Chờ lượt đọc tiếp...') : '⏹ AI chưa bắt đầu'}
+                    </div>
+                    <div className="text-[10px] text-slate-500 mt-1">
+                      {videoQueue.length > 0 ? `📹 Hàng đợi: ${videoQueue.length} video • Đang phát: ${currentVideoIdx + 1}/${videoQueue.length}` : 'Chưa có video trong hàng đợi'}
+                    </div>
                   </div>
                 </div>
-             </div>
-           </div>
-        </div>
 
-        {/* RIGHT PANEL - BỘ NÃO */}
-        <div className="flex-1 flex flex-col bg-[#1a1b26] p-4 relative">
-           <div className="flex items-center gap-3 mb-4">
-             <div className="text-sm font-bold text-blue-400">Bộ não</div>
-             <div className="text-sm font-bold text-blue-400">Ngữ cảnh tổng quát</div>
-           </div>
-           
-           <div className="flex-1 bg-[#1f2335] rounded-xl border border-slate-700 p-4 relative overflow-hidden flex flex-col">
-              <div className="absolute top-4 right-4 w-32 h-32 bg-slate-800 rounded-lg border-2 border-dashed border-slate-600 flex items-center justify-center overflow-hidden">
-                 {/* Video Nhép Miệng Giả lập */}
-                 <div className="w-full h-full relative">
-                    <img src="https://i.pinimg.com/736x/8f/a0/78/8fa0782e44f83693e5066dc1337c87de.jpg" alt="AI Avatar" className="w-full h-full object-cover" />
-                    <div className={`absolute bottom-2 left-1/2 -translate-x-1/2 w-4 h-1 bg-white rounded-full transition-all duration-75 ${isAudioPlaying ? 'scale-y-[2.5]' : 'scale-y-100'}`}></div>
-                 </div>
-                 {isAudioPlaying && (
-                    <div className="absolute top-2 left-2 text-[8px] font-bold text-white bg-green-500/80 px-1.5 rounded-full animate-pulse">
-                      ĐANG NÓI...
+                <AIAudioPlayer isLive={isAILive} onAudioPlayStateChange={setIsAudioPlaying} />
+
+                {/* Quick event buttons */}
+                <div className="bg-[#1a1b26] border border-slate-700 rounded-xl p-4">
+                  <div className="text-xs font-black text-white mb-3">⚡ Giả lập Sự kiện Live</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      ['👋 Follow mới', 'greeting', 'bg-blue-500/20 text-blue-400 border-blue-500/40'],
+                      ['🎁 Nhận quà', 'gift', 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40'],
+                      ['💃 Quà lớn → Dance', 'dance', 'bg-pink-500/20 text-pink-400 border-pink-500/40'],
+                      ['😄 Reaction vui', 'reaction', 'bg-purple-500/20 text-purple-400 border-purple-500/40'],
+                    ].map(([label, cat, style]) => (
+                      <button key={cat} onClick={() => {
+                          const items = catMedia(cat);
+                          if (items.length > 0) handlePlayFromKho(items[0]);
+                          else alert('Chưa có video ' + cat + ' trong kho! Hãy upload trước.');
+                        }}
+                        className={`px-3 py-2 border rounded-lg text-xs font-bold transition-all hover:scale-105 ${style}`}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ══ TAB: KỊCH BẢN ══ */}
+            {activeTab === 'scripts' && (
+              <div className="p-5 space-y-3">
+                <div>
+                  <h3 className="text-sm font-black text-white mb-1">📄 Kịch bản đã lưu</h3>
+                  <p className="text-[10px] text-slate-500">Các kịch bản được tạo từ ChatGPT/Gemini trong tab "Giọng nói".</p>
+                </div>
+
+                {savedJobs.length === 0 ? (
+                  <div className="text-center py-12 border-2 border-dashed border-slate-700 rounded-xl">
+                    <div className="text-3xl mb-3">📄</div>
+                    <div className="text-sm font-bold text-slate-400 mb-2">Chưa có kịch bản nào</div>
+                    <p className="text-xs text-slate-600 max-w-xs mx-auto">Vào tab "Giọng nói" → Soạn kịch bản AI → Bấm "Lưu Kịch Bản & Giọng (Đẩy lên Live)"</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {savedJobs.map((job, idx) => (
+                      <div key={idx} className={`p-4 border rounded-xl transition-all cursor-pointer hover:border-[#00FF66]/50 ${activeJobItem?.key === job.key ? 'border-[#00FF66] bg-[#00FF66]/5' : 'border-slate-700 bg-[#1a1b26] hover:bg-[#1f2335]'}`}
+                        onClick={() => setActiveJobItem(job)}>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="text-xs font-bold text-white truncate">{job.jobName || 'Kịch bản AI'}</div>
+                          {activeJobItem?.key === job.key && <span className="text-[9px] text-[#00FF66] font-black px-2 py-0.5 bg-[#00FF66]/20 rounded-full">✓ Đang dùng</span>}
+                        </div>
+                        <div className="text-[10px] text-slate-500">🎙️ {job.voiceProvider || 'TTS'} • {job.createdAt ? new Date(job.createdAt).toLocaleDateString('vi-VN') : ''}</div>
+                        {job.scriptContent && <p className="text-[10px] text-slate-600 mt-1 line-clamp-2">{job.scriptContent.slice(0, 150)}...</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ══ TAB: STREAM SETUP ══ */}
+            {activeTab === 'stream' && (
+              <div className="p-5 space-y-4">
+                <div>
+                  <h3 className="text-sm font-black text-white mb-1">📡 Hướng dẫn Kết nối Live Studio</h3>
+                  <p className="text-[10px] text-slate-500">Kết nối phiên live với TikTok, YouTube, Facebook qua RTMP.</p>
+                </div>
+
+                {/* TikTok guide */}
+                <div className="bg-[#ff0050]/10 border border-[#ff0050]/30 rounded-2xl p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-[#ff0050] flex items-center justify-center"><Radio className="w-4 h-4 text-white"/></div>
+                    <div>
+                      <div className="text-sm font-black text-[#ff0050]">TikTok Live Studio</div>
+                      <div className="text-[10px] text-slate-400">Kết nối trực tiếp qua RTMP</div>
                     </div>
-                 )}
+                  </div>
+                  <div className="space-y-3">
+                    {[
+                      {step:'1', title:'Tải TikTok Live Studio', desc:'Tải app tại livestudio.tiktok.com → Cài đặt và đăng nhập TikTok'},
+                      {step:'2', title:'Lấy Stream Key', desc:'Vào TikTok Live Studio → Settings → "Go Live" → Copy Stream Key'},
+                      {step:'3', title:'Cấu hình RTMP', desc:'RTMP URL: rtmp://live.tiktok.com/live/ + Stream Key của bạn'},
+                      {step:'4', title:'Chọn Camera nguồn', desc:'Trong TikTok Studio: Thêm nguồn → Window Capture → Chọn cửa sổ AVA Live Console'},
+                      {step:'5', title:'Bắt đầu Live', desc:'Bấm "Bắt đầu AI Live" ở AVA Console → Bấm "Go Live" trong TikTok Studio'},
+                    ].map(item => (
+                      <div key={item.step} className="flex gap-3">
+                        <div className="w-5 h-5 rounded-full bg-[#ff0050]/30 border border-[#ff0050]/50 flex items-center justify-center text-[9px] font-black text-[#ff0050] flex-shrink-0">{item.step}</div>
+                        <div>
+                          <div className="text-xs font-bold text-white">{item.title}</div>
+                          <div className="text-[10px] text-slate-400 leading-relaxed">{item.desc}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4">
+                    <div className="text-[10px] font-bold text-slate-300 mb-1">RTMP Server URL:</div>
+                    <div className="flex items-center gap-2 bg-black/40 border border-slate-600 rounded-lg px-3 py-2">
+                      <code className="text-[10px] text-[#ff0050] font-mono flex-1">rtmp://live.tiktok.com/live/</code>
+                      <button onClick={() => { navigator.clipboard.writeText('rtmp://live.tiktok.com/live/'); }} className="text-[9px] text-slate-400 hover:text-white font-bold">COPY</button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* OBS guide */}
+                <div className="bg-white/5 border border-slate-700 rounded-2xl p-5">
+                  <div className="text-sm font-black text-white mb-3 flex items-center gap-2">
+                    <Monitor className="w-4 h-4 text-blue-400"/> OBS Studio (Nâng cao)
+                  </div>
+                  <div className="text-[10px] text-slate-400 leading-relaxed mb-3">
+                    Dùng OBS Studio để stream đến nhiều nền tảng cùng lúc (TikTok + YouTube + Facebook).
+                  </div>
+                  <div className="space-y-2">
+                    {[
+                      'Thêm nguồn Window Capture → Chọn cửa sổ trình duyệt AVA Live',
+                      'Vào Settings → Stream → Service: Custom RTMP',
+                      'Server: rtmp://live.tiktok.com/live/ + Stream Key',
+                      'Bật Virtual Camera (Tools → Start Virtual Camera) nếu cần',
+                      'Bấm "Start Streaming" trong OBS để bắt đầu phát'
+                    ].map((s, i) => (
+                      <div key={i} className="flex gap-2 text-[10px] text-slate-400">
+                        <CheckCircle className="w-3 h-3 text-[#00FF66] flex-shrink-0 mt-0.5"/>
+                        <span>{s}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10 opacity-30">
-                 <h2 className="text-3xl font-black text-white drop-shadow-lg text-center max-w-sm">Bộ não / ngữ cảnh phiên live<br/><span className="text-sm">(đã che dữ liệu riêng tư)</span></h2>
-              </div>
-
-              <div className="flex-1 pr-40 mt-16 text-slate-400 text-xs leading-relaxed opacity-50">
-                 <p className="mb-2">Đây là khu vực nhập prompt cấu hình cho bộ não AI.</p>
-                 <p className="mb-2">Hệ thống sẽ dựa vào nội dung ở đây để tự động trả lời bình luận, chốt đơn, và điều hướng phiên live theo đúng kịch bản của người dùng cài đặt.</p>
-                 <p>... Nội dung đã bị ẩn ...</p>
-              </div>
-           </div>
-
-           {/* CHÈN COMPONENT AIAudioPlayer VÀO ĐÂY */}
-           <div className="mt-4">
-              <AIAudioPlayer 
-                isLive={isAILive} 
-                onAudioPlayStateChange={(playing) => setIsAudioPlaying(playing)} 
-              />
-           </div>
-
-           <div className="mt-4 text-[10px] text-slate-500 leading-relaxed mb-3">
-             Dữ liệu này thuộc về nhân vật. Với nhân vật import từ KOL-LIVE.com, bấm Lưu nhân vật sẽ đồng bộ Bộ não và Ngữ cảnh tổng quát.<br/>
-             Chỉnh xong bấm "Lưu nhân vật" để cập nhật.
-           </div>
-           
-           <div className="flex items-center justify-between">
-              <button className="px-4 py-2 bg-[#24283b] hover:bg-[#2f354d] border border-slate-600 text-blue-400 rounded text-xs font-bold flex items-center gap-2 transition-colors">
-                <RefreshCw className="w-3.5 h-3.5"/> Cập nhật Bộ não / ngữ cảnh từ KOL-LIVE.com
-              </button>
-              <button className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-bold shadow-[0_0_10px_rgba(37,99,235,0.3)] transition-colors">
-                Lưu nhân vật
-              </button>
-           </div>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* ══ MODAL: IMPORT TỪ AIDOL ══ */}
+      {showImportModal && (
+        <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#1a1b26] border border-slate-700 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="p-4 border-b border-slate-700 flex justify-between items-center bg-[#0D0F1A]">
+              <div>
+                <h3 className="text-sm font-black text-white">Import từ AIDOL của tôi → Kho {importTargetCat}</h3>
+                <p className="text-[10px] text-slate-400">{aidolItems.length} file có sẵn trong AIDOL Library</p>
+              </div>
+              <button onClick={() => setShowImportModal(false)} className="p-2 text-slate-400 hover:text-white bg-white/5 rounded-lg"><X className="w-4 h-4"/></button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+              {aidolItems.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-slate-400 text-sm mb-2">Chưa có file trong AIDOL Library</p>
+                  <p className="text-slate-600 text-xs">Vào tab "AIDOL của tôi" → "Tạo mới" để upload file trước</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {aidolItems.map(item => (
+                    <div key={item.id} onClick={() => handleImportAIDOL(item)}
+                      className="bg-[#0D0F1A] border border-slate-700 rounded-xl overflow-hidden cursor-pointer hover:border-[#00FF66] transition-all group">
+                      <div className="aspect-video relative bg-black flex items-center justify-center">
+                        {item.type === 'video' ? <video src={item.mediaUrl} className="w-full h-full object-cover" muted/>
+                        : item.type === 'audio' ? <div className="w-full h-full flex items-center justify-center bg-purple-900/30"><Mic2 className="w-8 h-8 text-purple-400"/></div>
+                        : <img src={item.mediaUrl} alt={item.name} className="w-full h-full object-cover"/>}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-[#00FF66]/20 transition-all flex items-center justify-center">
+                          <div className="opacity-0 group-hover:opacity-100 text-xs font-bold text-white bg-[#00FF66] text-black px-3 py-1.5 rounded-lg">Import →</div>
+                        </div>
+                      </div>
+                      <div className="p-2">
+                        <div className="text-[10px] font-bold text-white truncate">{item.name}</div>
+                        <div className="text-[9px] text-slate-500 capitalize">{item.type}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

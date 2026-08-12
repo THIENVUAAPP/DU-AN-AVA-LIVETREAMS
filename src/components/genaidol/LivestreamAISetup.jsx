@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { LIVE_CATEGORIES, addLiveMedia, getAllLiveMedia, deleteLiveMedia } from '../../lib/liveKhoDB';
 import { 
   Download, Monitor, ArrowRight, UserSquare2, Cpu, Package, Plus, 
   BookOpen, MessageCircle, Music, ShoppingCart, GraduationCap, Gamepad2,
@@ -404,31 +405,49 @@ export default function LivestreamAISetup() {
 
                 {step3Tab === 'library' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {VIDEO_CATEGORIES.map(cat => (
-                      <div key={cat.id} className="bg-black/40 border border-white/10 rounded-2xl p-5 flex flex-col hover:border-[#00FF66]/30 transition-colors group">
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <h4 className="font-bold text-white text-sm group-hover:text-[#00FF66] transition-colors">{cat.name}</h4>
-                            <p className="text-[10px] text-gray-500 mt-1">{cat.desc}</p>
+                    {LIVE_CATEGORIES.map(cat => {
+                      const catItems = liveMedia.filter(i => i.category === cat.id);
+                      return (
+                        <div key={cat.id} className={`bg-black/40 border rounded-2xl p-5 flex flex-col hover:border-[#00FF66]/30 transition-colors group ${cat.border} border-opacity-30`}>
+                          <div className="flex justify-between items-start mb-3">
+                            <div>
+                              <h4 className={`font-bold text-white text-sm group-hover:text-[#00FF66] transition-colors flex items-center gap-1.5`}>
+                                {cat.emoji} {cat.name}
+                              </h4>
+                              <p className="text-[10px] text-gray-500 mt-1">{cat.desc}</p>
+                            </div>
+                            <span className={`text-[10px] font-black px-2 py-1 rounded ${cat.bg} ${cat.color}`}>
+                              {catItems.length} file
+                            </span>
                           </div>
-                          <span className="text-[10px] font-black bg-white/10 text-white px-2 py-1 rounded">
-                            {libraryItems.filter(i => i.category === cat.id).length} file
-                          </span>
+
+                          {/* File list preview */}
+                          <div className="flex-1 min-h-[70px] space-y-1 mb-3 max-h-[100px] overflow-y-auto custom-scrollbar">
+                            {catItems.slice(0, 5).map(item => (
+                              <div key={item.id} className="flex items-center justify-between text-[10px] text-gray-400 px-2 py-1 bg-white/5 rounded group/item hover:bg-white/10">
+                                <span className="truncate flex-1">{item.type === 'video' ? '🎬' : item.type === 'audio' ? '🎵' : '🖼️'} {item.name}</span>
+                                <button onClick={() => deleteLiveMedia(item.id).then(loadLiveMedia)}
+                                  className="ml-2 text-red-400/50 hover:text-red-400 opacity-0 group-hover/item:opacity-100 transition-all flex-shrink-0">
+                                  ✕
+                                </button>
+                              </div>
+                            ))}
+                            {catItems.length === 0 && (
+                              <div className="text-[10px] text-gray-600 text-center py-3">Chưa có file nào — hãy tải lên bên dưới</div>
+                            )}
+                          </div>
+
+                          {/* Upload button */}
+                          <label className={`w-full py-2.5 rounded-lg border border-dashed text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${uploadingCat === cat.id ? 'opacity-50 pointer-events-none border-white/20 text-gray-400' : 'border-white/20 text-gray-400 hover:border-[#00FF66] hover:text-[#00FF66] hover:bg-[#00FF66]/5'}`}>
+                            {uploadingCat === cat.id
+                              ? <><span className="animate-spin">⟳</span> Đang upload...</>
+                              : <><Upload className="w-4 h-4" /> Tải lên thư mục này</>}
+                            <input type="file" multiple accept="video/*,audio/*,image/*" className="hidden"
+                              onChange={(e) => handleUploadToKho(e, cat.id)} />
+                          </label>
                         </div>
-                        <div className="flex-1 min-h-[60px] space-y-1 mb-3">
-                          {libraryItems.filter(i => i.category === cat.id).slice(0,3).map(item => (
-                            <div key={item.id} className="text-[10px] text-gray-400 px-2 py-1 bg-white/5 rounded truncate">📁 {item.name}</div>
-                          ))}
-                          {libraryItems.filter(i => i.category === cat.id).length === 0 && (
-                            <div className="text-[10px] text-gray-600 text-center py-2">Chưa có file nào trong kho này</div>
-                          )}
-                        </div>
-                        <button onClick={() => { setShowVideoLibraryModal(true); setVideoSelectedCategory(cat.id); }}
-                          className="w-full py-2 rounded-lg border border-dashed border-white/20 text-gray-400 text-xs font-bold hover:border-[#00FF66] hover:text-[#00FF66] hover:bg-[#00FF66]/5 transition-all flex items-center justify-center gap-2">
-                          <Upload className="w-4 h-4" /> Xem & Quản lý
-                        </button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
 
