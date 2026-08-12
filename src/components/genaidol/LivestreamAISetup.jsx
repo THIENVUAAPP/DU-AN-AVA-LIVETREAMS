@@ -383,11 +383,21 @@ export default function LivestreamAISetup() {
                         <div className="flex-1 border border-white/10 rounded-xl overflow-hidden bg-black/40 flex flex-col min-h-[250px]">
                            {showPreviewPlayer ? (
                               <>
-                                 <div className="flex-1 bg-black relative flex items-center justify-center">
+                                 <div className="flex-1 bg-black relative flex items-center justify-center overflow-hidden">
                                    {selectedVideoFile ? (
-                                     <video src={URL.createObjectURL(selectedVideoFile)} className="w-full h-full object-contain max-h-[280px]" controls muted/>
+                                     <>
+                                        <video src={URL.createObjectURL(selectedVideoFile)} className="w-full h-full object-contain max-h-[280px] scale-[1.05]" controls muted/>
+                                        <div className="absolute bottom-10 right-2 w-16 h-16 backdrop-blur-2xl bg-black/30 rounded-lg pointer-events-none flex items-center justify-center opacity-90 border border-white/5" title="AI Watermark Remover">
+                                           <Sparkles className="w-4 h-4 text-[#00FF66]/50" />
+                                        </div>
+                                     </>
                                    ) : selectedVideoLibraryInfo ? (
-                                     <video src={selectedVideoLibraryInfo.mediaUrl} className="w-full h-full object-contain max-h-[280px]" controls muted/>
+                                     <>
+                                        <video src={selectedVideoLibraryInfo.mediaUrl} className="w-full h-full object-contain max-h-[280px] scale-[1.05]" controls muted/>
+                                        <div className="absolute bottom-10 right-2 w-16 h-16 backdrop-blur-2xl bg-black/30 rounded-lg pointer-events-none flex items-center justify-center opacity-90 border border-white/5" title="AI Watermark Remover">
+                                           <Sparkles className="w-4 h-4 text-[#00FF66]/50" />
+                                        </div>
+                                     </>
                                    ) : (
                                      <div className="text-center"><div className="text-[#00FF66] text-sm font-bold mb-1">Video mẫu</div><div className="text-gray-400 text-xs">Sẵn sàng phát</div></div>
                                    )}
