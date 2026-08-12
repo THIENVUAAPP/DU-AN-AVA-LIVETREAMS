@@ -76,6 +76,24 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
   const [lipsyncAudioType, setLipsyncAudioType] = useState('text'); // 'text' or 'voice'
   const [showPreviewPlayer, setShowPreviewPlayer] = useState(false);
+  const [jobName, setJobName] = useState('Kịch bản & Giọng nói');
+  
+  const handleSaveJob = () => {
+    if (!scriptContent.trim()) {
+      alert('Vui lòng tạo hoặc nhập kịch bản trước khi lưu Job!');
+      return;
+    }
+    const jobData = {
+      jobName,
+      scriptContent,
+      voiceProvider,
+      selectedVoice,
+      lipsyncModel,
+      createdAt: new Date().toISOString()
+    };
+    localStorage.setItem('aidol_active_job', JSON.stringify(jobData));
+    alert('Đã đẩy Job kịch bản sang Đạo Diễn AI (Phiên Live) thành công!');
+  };
   
   // File References & Selection states
   const videoInputRef = useRef(null);
@@ -253,7 +271,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                 
                 <div className="mb-4">
                   <label className="block text-xs font-bold text-gray-300 mb-2">Tên job</label>
-                  <input type="text" defaultValue="Kịch bản & Giọng nói" className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-sm font-bold text-white focus:border-[#00FF66] outline-none" />
+                  <input type="text" value={jobName} onChange={e => setJobName(e.target.value)} className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-sm font-bold text-white focus:border-[#00FF66] outline-none" />
                 </div>
 
                 <div className="flex-1 flex flex-col mb-6">
@@ -272,8 +290,8 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                       <div className="text-xl font-black text-white">0 KOL Coin</div>
                       <div className="text-[10px] text-gray-400 mt-1">Giá giọng đang chọn: Phụ thuộc vào nền tảng API.</div>
                    </div>
-                   <button className="px-6 py-3 bg-[#00FF66] text-black hover:bg-[#00CC52] rounded-xl font-black transition-colors shadow-glow-green">
-                     Tạo giọng nói
+                   <button onClick={handleSaveJob} className="px-6 py-3 bg-[#00FF66] text-black hover:bg-[#00CC52] rounded-xl font-black transition-colors shadow-glow-green">
+                     Lưu Kịch Bản & Giọng (Đẩy lên Live)
                    </button>
                 </div>
               </div>

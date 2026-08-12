@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
-import { Settings, Eye, CreditCard, HelpCircle, Phone, Globe, DownloadCloud, FileBox, Play, CheckCircle, Video, MessageSquare, Plus, Save, RefreshCw } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Settings, Eye, CreditCard, HelpCircle, Phone, Globe, DownloadCloud, FileBox, Play, CheckCircle, Video, MessageSquare, Plus, Save, RefreshCw, Square } from 'lucide-react';
+import AIAudioPlayer from './AIAudioPlayer';
 
 export default function AIDOLLiveConsole() {
   const [activeSource, setActiveSource] = useState('tiktok');
   const [activeTab, setActiveTab] = useState('cai-dat-chung');
   const [activeInnerTab, setActiveInnerTab] = useState('bat-dau');
+  
+  // Trạng thái cho AI Director
+  const [isAILive, setIsAILive] = useState(false);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
 
   return (
     <div className="w-full min-h-[calc(100vh-8rem)] bg-[#1a1b26] text-slate-300 font-sans flex flex-col rounded-2xl overflow-hidden border border-slate-700 shadow-2xl relative">
@@ -66,7 +71,13 @@ export default function AIDOLLiveConsole() {
               
               <div className="flex gap-2">
                 <button className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-bold flex items-center justify-center gap-1.5 shadow-[0_0_10px_rgba(5,150,105,0.3)]"><Play className="w-3 h-3"/> Kiểm tra</button>
-                <button className="flex-1 py-2 bg-emerald-500 hover:bg-emerald-400 text-white rounded text-xs font-bold flex items-center justify-center gap-1.5 shadow-[0_0_10px_rgba(16,185,129,0.3)]"><Sparkles className="w-3 h-3"/> Bắt đầu AI</button>
+                <button 
+                  onClick={() => setIsAILive(!isAILive)}
+                  className={`flex-1 py-2 rounded text-xs font-bold flex items-center justify-center gap-1.5 shadow-[0_0_10px_rgba(16,185,129,0.3)] ${isAILive ? 'bg-red-500 hover:bg-red-400 text-white' : 'bg-emerald-500 hover:bg-emerald-400 text-white'}`}
+                >
+                  {isAILive ? <Square className="w-3 h-3"/> : <Play className="w-3 h-3"/>} 
+                  {isAILive ? 'Dừng AI' : 'Bắt đầu AI'}
+                </button>
               </div>
            </div>
 
@@ -138,7 +149,16 @@ export default function AIDOLLiveConsole() {
            
            <div className="flex-1 bg-[#1f2335] rounded-xl border border-slate-700 p-4 relative overflow-hidden flex flex-col">
               <div className="absolute top-4 right-4 w-32 h-32 bg-slate-800 rounded-lg border-2 border-dashed border-slate-600 flex items-center justify-center overflow-hidden">
-                 <div className="text-[10px] text-slate-500">Avatar Image</div>
+                 {/* Video Nhép Miệng Giả lập */}
+                 <div className="w-full h-full relative">
+                    <img src="https://i.pinimg.com/736x/8f/a0/78/8fa0782e44f83693e5066dc1337c87de.jpg" alt="AI Avatar" className="w-full h-full object-cover" />
+                    <div className={`absolute bottom-2 left-1/2 -translate-x-1/2 w-4 h-1 bg-white rounded-full transition-all duration-75 ${isAudioPlaying ? 'scale-y-[2.5]' : 'scale-y-100'}`}></div>
+                 </div>
+                 {isAudioPlaying && (
+                    <div className="absolute top-2 left-2 text-[8px] font-bold text-white bg-green-500/80 px-1.5 rounded-full animate-pulse">
+                      ĐANG NÓI...
+                    </div>
+                 )}
               </div>
 
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10 opacity-30">
@@ -150,6 +170,14 @@ export default function AIDOLLiveConsole() {
                  <p className="mb-2">Hệ thống sẽ dựa vào nội dung ở đây để tự động trả lời bình luận, chốt đơn, và điều hướng phiên live theo đúng kịch bản của người dùng cài đặt.</p>
                  <p>... Nội dung đã bị ẩn ...</p>
               </div>
+           </div>
+
+           {/* CHÈN COMPONENT AIAudioPlayer VÀO ĐÂY */}
+           <div className="mt-4">
+              <AIAudioPlayer 
+                isLive={isAILive} 
+                onAudioPlayStateChange={(playing) => setIsAudioPlaying(playing)} 
+              />
            </div>
 
            <div className="mt-4 text-[10px] text-slate-500 leading-relaxed mb-3">
