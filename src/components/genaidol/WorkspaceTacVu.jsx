@@ -41,8 +41,33 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
   const [scriptTopic, setScriptTopic] = useState('');
   const [scriptContent, setScriptContent] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  // aiModel is now automatically inferred from the selected brain platform as the first element (the strongest)
-  const aiModel = AI_BRAINS[aiBrain].models[0];
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showApiModal, setShowApiModal] = useState(false);
+  const [localGeminiKey, setLocalGeminiKey] = useState('');
+  const [localOpenAIKey, setLocalOpenAIKey] = useState('');
+  
+  const [aiModel, setAiModel] = useState(AI_BRAINS[aiBrain].models[0]);
+  
+  // Update model when brain changes
+  React.useEffect(() => {
+    setAiModel(AI_BRAINS[aiBrain].models[0]);
+  }, [aiBrain]);
+
+  React.useEffect(() => {
+    const gem = localStorage.getItem('gemini_api_key') || '';
+    const oai = localStorage.getItem('openai_api_key') || '';
+    setLocalGeminiKey(gem);
+    setLocalOpenAIKey(oai);
+    if (gem || oai) setIsAdmin(true);
+  }, []);
+
+  const handleSaveApiKeys = () => {
+    localStorage.setItem('gemini_api_key', localGeminiKey);
+    localStorage.setItem('openai_api_key', localOpenAIKey);
+    setIsAdmin(!!(localGeminiKey || localOpenAIKey));
+    setShowApiModal(false);
+    alert('Đã lưu cấu hình API!');
+  };
   
   const handleGenerateScript = async () => {
     if (!scriptTopic) return alert("Vui lòng nhập chủ đề kịch bản!");
@@ -226,8 +251,11 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
 
                 {/* AI Brain Selection */}
                 <div className="mb-6 p-4 bg-black/40 rounded-xl border border-white/5">
-                   <label className="flex items-center gap-2 text-xs font-bold text-gray-200 mb-3">
-                     <Brain className="w-4 h-4 text-[#00FF66]" /> Chọn Bộ Não Kịch Bản
+                   <label className="flex items-center justify-between text-xs font-bold text-gray-200 mb-3">
+                     <div className="flex items-center gap-2"><Brain className="w-4 h-4 text-[#00FF66]" /> Chọn Bộ Não Kịch Bản</div>
+                     <button onClick={() => setShowApiModal(true)} className="text-[10px] text-gray-400 hover:text-yellow-400 flex items-center gap-1 transition-colors">
+                       <Settings className="w-3 h-3"/> Cài đặt API
+                     </button>
                    </label>
                    <div className="grid grid-cols-3 gap-2 mb-3">
                       {Object.keys(AI_BRAINS).map(brainKey => (
@@ -241,10 +269,21 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                       ))}
                    </div>
                    
-                   <div className="mb-4 text-[11px] font-bold text-gray-400 bg-white/5 py-1.5 px-3 rounded-md inline-flex items-center gap-2 border border-white/5">
-                      <Sparkles className="w-3 h-3 text-[#00FF66]" />
-                      Model thông minh: <span className="text-white">{aiModel}</span> (Mặc định cấu hình cao nhất)
-                   </div>
+                   {isAdmin && (
+                     <div className="mb-4 text-[11px] font-bold text-gray-400 bg-white/5 py-1.5 px-3 rounded-md inline-flex items-center gap-2 border border-white/5">
+                        <Sparkles className="w-3 h-3 text-[#00FF66]" />
+                        <span className="text-white">Model:</span>
+                        <select 
+                          value={aiModel} 
+                          onChange={e => setAiModel(e.target.value)}
+                          className="bg-transparent text-white outline-none font-bold"
+                        >
+                          {AI_BRAINS[aiBrain].models.map(m => (
+                            <option key={m} value={m} className="bg-black text-white">{m}</option>
+                          ))}
+                        </select>
+                     </div>
+                   )}
 
                    <div className="flex flex-col md:flex-row gap-2">
                      <select 
@@ -420,6 +459,38 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
          </div>
       </div>
 
+
+      {showApiModal && (
+        <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+           <div className="bg-[#121216] border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
+              <div className="p-4 border-b border-white/10 flex justify-between items-center bg-[#0B0E14]">
+                 <div className="flex items-center gap-3">
+                   <Settings className="w-5 h-5 text-yellow-500" />
+                   <div>
+                     <h3 className="text-sm font-black text-white">Cấu hình API Keys (Admin)</h3>
+                     <p className="text-[10px] text-gray-400">Thiết lập bộ não AI riêng cho hệ thống</p>
+                   </div>
+                 </div>
+                 <button onClick={() => setShowApiModal(false)} className="p-2 text-gray-400 hover:text-white bg-white/5 rounded-lg">Đóng</button>
+              </div>
+              <div className="p-6 space-y-6">
+                <div>
+                  <label className="text-xs font-bold text-white mb-2 block">Gemini API Key</label>
+                  <input type="password" value={localGeminiKey} onChange={e => setLocalGeminiKey(e.target.value)}
+                    placeholder="AIzaSy..." className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-yellow-500 outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-white mb-2 block">OpenAI API Key</label>
+                  <input type="password" value={localOpenAIKey} onChange={e => setLocalOpenAIKey(e.target.value)}
+                    placeholder="sk-proj-..." className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-yellow-500 outline-none" />
+                </div>
+              </div>
+              <div className="p-4 bg-[#0B0E14] border-t border-white/10 flex justify-end">
+                 <button onClick={handleSaveApiKeys} className="px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-lg text-xs font-black">Lưu & Bật Admin</button>
+              </div>
+           </div>
+        </div>
+      )}
 
     </div>
   );

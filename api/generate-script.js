@@ -17,8 +17,11 @@ export default async function handler(req, res) {
     if (brain === 'gemini') {
       const apiKey = process.env.GEMINI_API_KEY || req.body.apiKey;
       if (!apiKey) return res.status(500).json({ error: 'GEMINI_API_KEY is not set on server' });
+
+      let apiModel = 'gemini-1.5-flash';
+      if (model && model.includes('Pro')) apiModel = 'gemini-1.5-pro';
       
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${apiModel}:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -35,8 +38,8 @@ export default async function handler(req, res) {
 
       // Clean up model name
       let apiModel = 'gpt-4o-mini';
-      if (model.includes('GPT-4o (')) apiModel = 'gpt-4o';
-      if (model.toLowerCase().includes('gpt-3.5')) apiModel = 'gpt-3.5-turbo';
+      if (model && model.includes('GPT-4o (')) apiModel = 'gpt-4o';
+      if (model && model.toLowerCase().includes('gpt-3.5')) apiModel = 'gpt-3.5-turbo';
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
