@@ -192,7 +192,7 @@ export default function LivestreamAISetup() {
   });
 
   const handleGenerateTTSFromScript = async () => {
-    if (!lipsyncScript.trim()) return;
+    if (!lipsyncScript.trim()) return false;
     setIsGeneratingTTS(true);
     try {
       const res = await fetch('/api/tts', {
@@ -205,21 +205,24 @@ export default function LivestreamAISetup() {
         })
       });
       const data = await res.json();
-      if (data.error) throw new Error(data.error);
+      if (data.error) throw new Error(typeof data.error === 'object' ? JSON.stringify(data.error) : data.error);
       if (data.audioBase64) {
         setLipsyncAudioUrl(`data:audio/mp3;base64,${data.audioBase64}`);
+        return true;
       }
     } catch (err) {
-      alert("Lỗi khi tạo Voice từ kịch bản: " + err.message);
+      alert("Lỗi khi tạo Voice từ kịch bản:\n\n" + err.message);
+      return false;
     } finally {
       setIsGeneratingTTS(false);
     }
+    return false;
   };
 
   const handleStartLipsync = async () => {
     if (lipsyncAudioType === 'script' && lipsyncScript && !lipsyncAudioUrl) {
-      await handleGenerateTTSFromScript();
-      setShowPreviewPlayer(true);
+      const success = await handleGenerateTTSFromScript();
+      if (success) setShowPreviewPlayer(true);
     } else {
       setShowPreviewPlayer(true);
     }
@@ -466,8 +469,7 @@ export default function LivestreamAISetup() {
                                      <>
                                         <video src={selectedVideoLibraryInfo.mediaUrl} className="w-full h-full object-contain max-h-[280px] scale-[1.05]" controls muted playsInline onError={(e) => {
                                           e.target.onerror = null;
-                                          e.target.src = '/assets/sample-video.mp4';
-                                          // Hiển thị thông báo nếu lỗi load video từ thư viện (blob hết hạn, hoặc file chưa có thật)
+                                          e.target.src = '/demo_dancer.mp4';
                                           if (!e.target.dataset.failed) {
                                             e.target.dataset.failed = true;
                                             console.warn('Lỗi load video, chuyển sang video mẫu fallback.');
