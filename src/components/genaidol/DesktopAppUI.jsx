@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Settings, Eye, CreditCard, Video, Moon, Sun, 
-  MessageCircle, Coins, Play, Pause, Mic, MicOff, Volume2, X, Maximize, Minus, Download
+  MessageCircle, Coins, Play, Pause, Mic, MicOff, Volume2, X, Maximize, Minus, Download, Plus
 } from 'lucide-react';
 import WorkspaceTacVu from './WorkspaceTacVu';
 import GeneralSettings from './GeneralSettings';
