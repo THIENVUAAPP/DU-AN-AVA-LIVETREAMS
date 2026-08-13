@@ -37,11 +37,11 @@ export default function WorkspaceTacVu() {
       const defaults = {};
       EVENTS.forEach(ev => {
         defaults[ev.id] = {
-          priority: ev.id === 'apology' ? 20 : ev.id === 'comment' ? 50 : ev.id === 'follow' ? 70 : ev.id === 'gift' ? 90 : ev.id === 'welcome' ? 60 : ev.id === 'special_gift' ? 999 : 50,
-          active: ev.id !== 'welcome', // Welcome is unchecked by default in screenshot
+          priority: ev.id === 'apology' ? 20 : ev.id === 'comment' ? 50 : ev.id === 'follow' ? 70 : ev.id === 'gift' ? 90 : ev.id === 'welcome' ? 60 : ev.id === 'special_gift' ? 999 : ev.id === 'checkout' ? 100 : ev.id === 'share' ? 50 : ev.id === 'thanks_heart' ? 15 : 50,
+          active: ev.id !== 'welcome' && ev.id !== 'share' && ev.id !== 'thanks_heart', 
           useVoice: ev.id !== 'gift' && ev.id !== 'welcome',
           muteSourceVideo: ev.id !== 'gift' && ev.id !== 'welcome',
-          videoCategory: ev.id === 'welcome' ? 'join' : ev.id === 'call_to_action' ? 'interaction' : ev.id,
+          videoCategory: ev.id === 'welcome' ? 'join' : ev.id === 'call_to_action' ? 'interaction' : ev.id === 'thanks_heart' ? 'thank_for_likes' : ev.id,
           videoFolder: '',
           useAi: ev.id !== 'gift',
           aiPrompt: '',
@@ -58,11 +58,19 @@ export default function WorkspaceTacVu() {
           waitBetweenSpam: ev.id === 'comment' ? 3 : '',
           maxRepeatChars: ev.id === 'comment' ? 0.7 : '',
           speakAfterIdleSeconds: ev.id === 'idle' ? 5 : '',
+          likeThreshold: ev.id === 'thanks_heart' ? 10 : '',
           
           // Special gifts
           specialGiftSlots: ev.id === 'special_gift' ? [
             { id: 1, active: true, giftName: 'Finger Heart', videoFolder: '', useTTS: false, muteSourceVideo: false, useAssistant: true, assistantPrompt: '', assistantVideoFolder: '', useMainVoice: true },
             { id: 2, active: true, giftName: 'Lucky pig', videoFolder: '', useTTS: false, muteSourceVideo: false, useAssistant: false, assistantPrompt: '', assistantVideoFolder: '', useMainVoice: true }
+          ] : [],
+
+          // Checkout Products
+          checkoutProducts: ev.id === 'checkout' ? [
+            { id: 1, active: true, productName: 'aidol', keywords: 'aidol;phần mềm;giá;liên hệ', videoFolder: 'bình luận', useAi: true, useTTS: false, muteSourceVideo: true, aiPrompt: 'TRong vai là một nhân viên sale chuyên nghiệp hãy đọc bình luận và đem ra câu trả lời để chốt đơn, giá phần mềm là 3 triệu rưỡi/1 năm, hoặc gói dùng thử là 500000 đồng trên 1 tháng. Chốt sale hoặc cần tư vấn thêm thì hãy liên hệ với đội ngũ admin' },
+            { id: 2, active: false, productName: '', keywords: '', videoFolder: '', useAi: false, useTTS: false, muteSourceVideo: false, aiPrompt: '' },
+            { id: 3, active: false, productName: '', keywords: '', videoFolder: '', useAi: false, useTTS: false, muteSourceVideo: false, aiPrompt: '' }
           ] : []
         };
       });
@@ -78,6 +86,9 @@ export default function WorkspaceTacVu() {
       defaults['gift'].aiPrompt = "Bạn là streamer AI. Hãy viết lời cảm ơn sáng tạo tới {user} vì đã tặng 1 {gift_name}.";
       defaults['call_to_action'].sampleAnswers = "Mọi người ơi, đừng xem chùa nữa, hãy thả tim và bình luận để mình có thêm động lực nhé!\nCác bạn có câu hỏi nào cho mình không ạ? Đừng ngại hỏi nha!\nNếu thấy buổi live thú vị, mọi người hãy giúp mình một lượt chia sẻ nhé. Yêu mọi người!";
       defaults['welcome'].sampleAnswers = "Chào mừng bạn {user} và {count} người mới đã đến với livestream!\nXin chào {user} và mọi người mới vào xem nhé! Chúc mọi người xem live vui vẻ.\nHelu {user}! Cảm ơn {count} bạn mới đã ghé thăm kênh của mình nha.";
+      defaults['share'].aiPrompt = "Hãy cảm ơn người dùng tên {user} vì đã chia sẻ livestream.";
+      defaults['share'].sampleAnswers = "Cảm ơn bạn {user} đã chia sẻ live giúp mình nhé!\nMình cảm ơn bạn {user} rất nhiều!";
+      defaults['thanks_heart'].sampleAnswers = "Cảm ơn mọi người đã giúp mình đạt mốc {milestone} tim!\nWow, chúng ta đã đạt {milestone} tim rồi! Yêu các bạn nhiều!";
 
       setEventConfigs(defaults);
     }
@@ -119,6 +130,24 @@ export default function WorkspaceTacVu() {
     });
   };
 
+  const handleProductChange = (productId, name, value, isCheckbox = false) => {
+    setEventConfigs(prev => {
+      const newProducts = prev[selectedEventId].checkoutProducts.map(prod => {
+        if (prod.id === productId) {
+          return { ...prod, [name]: isCheckbox ? value : value };
+        }
+        return prod;
+      });
+      return {
+        ...prev,
+        [selectedEventId]: {
+          ...prev[selectedEventId],
+          checkoutProducts: newProducts
+        }
+      };
+    });
+  };
+
   const selectFolder = async (fieldName = 'videoFolder') => {
     try {
       if (window.showDirectoryPicker) {
@@ -144,6 +173,22 @@ export default function WorkspaceTacVu() {
         const folderPath = prompt("Hãy nhập đường dẫn thư mục cho Slot này:", "C:/Videos/");
         if (folderPath) {
           handleSlotChange(slotId, fieldName, folderPath);
+        }
+      }
+    } catch (e) {
+      console.log('Folder selection cancelled');
+    }
+  };
+
+  const selectProductFolder = async (productId) => {
+    try {
+      if (window.showDirectoryPicker) {
+        const dirHandle = await window.showDirectoryPicker();
+        handleProductChange(productId, 'videoFolder', dirHandle.name);
+      } else {
+        const folderPath = prompt("Hãy nhập đường dẫn thư mục Video cho Sản phẩm này:", "C:/Videos/");
+        if (folderPath) {
+          handleProductChange(productId, 'videoFolder', folderPath);
         }
       }
     } catch (e) {
@@ -205,10 +250,16 @@ export default function WorkspaceTacVu() {
           </button>
         </div>
 
+        {selectedEventId === 'thanks_heart' && (
+          <div className="bg-[#fdebea] border border-[#f5c2c7] rounded-md p-3 mb-3 text-[13px] text-[#842029]">
+             <span className="font-bold">⚠️ Lưu ý Quan trọng:</span> Tính năng này phụ thuộc vào kết nối ổn định tới TikTok. Do các thay đổi gần đây từ phía TikTok, kết nối có thể không ổn định, khiến tính năng hoạt động không như mong đợi. Hãy cân nhắc kỹ khi sử dụng.
+          </div>
+        )}
+
         {/* Scrollable Config Area */}
         <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
           
-          {/* SPECIAL GIFT (Completely different layout) */}
+          {/* SPECIAL GIFT */}
           {selectedEventId === 'special_gift' ? (
             <>
               <div className="border border-gray-300 rounded-md bg-white mb-3 shadow-sm px-3 py-4">
@@ -295,6 +346,58 @@ export default function WorkspaceTacVu() {
                 </fieldset>
               </div>
             </>
+          ) : selectedEventId === 'checkout' ? (
+            // CHECKOUT EVENTS (CHỐT ĐƠN)
+            <>
+              <div className="border border-gray-300 rounded-md bg-white mb-3 shadow-sm px-3 py-4">
+                <div className="flex items-center gap-8 mb-4 ml-4">
+                  <div className="flex items-center">
+                    <FieldLabel icon="✅" text="Kích hoạt" minW="min-w-[120px]" />
+                    <input type="checkbox" name="active" checked={currentConfig.active} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded" />
+                  </div>
+                  <div className="flex items-center">
+                    <FieldLabel icon="⭐" text="Độ ưu tiên" minW="min-w-[100px]" />
+                    <input type="number" name="priority" value={currentConfig.priority} onChange={handleChange} className="w-32 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-4">
+                  {currentConfig.checkoutProducts?.map(prod => (
+                    <fieldset key={prod.id} className="border border-gray-300 rounded p-4 pt-4 relative bg-[#f8f9fa] shadow-sm">
+                      <legend className="absolute -top-3 left-3 bg-[#f8f9fa] px-1 text-sm font-bold text-gray-700 flex items-center gap-2">
+                        <input type="checkbox" checked={prod.active} onChange={(e) => handleProductChange(prod.id, 'active', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded" />
+                        Sản phẩm {prod.id}
+                      </legend>
+                      
+                      <div className="grid grid-cols-[200px_1fr] gap-y-3 gap-x-4 items-center">
+                        <label className="text-[13px] font-semibold text-gray-700">Tên sản phẩm:</label>
+                        <input type="text" value={prod.productName} onChange={(e) => handleProductChange(prod.id, 'productName', e.target.value)} className="border border-gray-300 rounded px-2 py-1.5 text-[13px] bg-white focus:outline-blue-500 w-full" />
+
+                        <label className="text-[13px] font-semibold text-[#a53b3b]">Từ khóa <span className="font-normal text-gray-500">(cách nhau bởi ;)</span>:</label>
+                        <input type="text" value={prod.keywords} onChange={(e) => handleProductChange(prod.id, 'keywords', e.target.value)} className="border border-gray-300 rounded px-2 py-1.5 text-[13px] bg-white focus:outline-blue-500 w-full" />
+
+                        <label className="text-[13px] font-semibold text-gray-700">Thư mục Video:</label>
+                        <div className="flex items-center gap-2 w-full">
+                          <span className="text-[13px] font-medium min-w-[200px] flex-1 truncate">{prod.videoFolder || 'Chưa chọn'}</span>
+                          <button onClick={() => selectProductFolder(prod.id)} className="text-[13px] text-gray-600 font-medium hover:text-gray-900 transition-colors underline decoration-dotted bg-gray-200 px-3 py-1 rounded">Chọn...</button>
+                        </div>
+
+                        <label className="text-[13px] font-semibold text-gray-700 mt-2 self-start">Kịch bản cho AI:</label>
+                        <div className="flex flex-col gap-2 mt-2">
+                          <textarea value={prod.aiPrompt} onChange={(e) => handleProductChange(prod.id, 'aiPrompt', e.target.value)} className="w-full h-[60px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-white focus:outline-blue-500" />
+                          
+                          <div className="flex items-center justify-center gap-6 mt-1">
+                            <label className="flex items-center gap-1.5"><input type="checkbox" checked={prod.useAi} onChange={(e) => handleProductChange(prod.id, 'useAi', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded"/> <span className="text-[13px] font-medium">Dùng AI</span></label>
+                            <label className="flex items-center gap-1.5"><input type="checkbox" checked={prod.useTTS} onChange={(e) => handleProductChange(prod.id, 'useTTS', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded"/> <span className="text-[13px] font-medium">Dùng TTS</span></label>
+                            <label className="flex items-center gap-1.5"><input type="checkbox" checked={prod.muteSourceVideo} onChange={(e) => handleProductChange(prod.id, 'muteSourceVideo', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded"/> <span className="text-[13px] font-medium">Tắt âm gốc video</span></label>
+                          </div>
+                        </div>
+                      </div>
+                    </fieldset>
+                  ))}
+                </div>
+              </div>
+            </>
           ) : (
             <>
               {/* NORMAL EVENTS - Cấu hình Chung */}
@@ -368,6 +471,21 @@ export default function WorkspaceTacVu() {
                       <div className="flex flex-col gap-3">
                         
                         {/* Common fields for all standard events */}
+                        
+                        {currentConfig.videoCategory !== undefined && (
+                          <div className="flex items-center">
+                            <FieldLabel icon="🎥" text="Danh mục video" />
+                            <input type="text" name="videoCategory" value={currentConfig.videoCategory} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                          </div>
+                        )}
+
+                        {currentConfig.priority !== undefined && (
+                          <div className="flex items-center">
+                            <FieldLabel icon="⭐" text="Độ ưu tiên" />
+                            <input type="number" name="priority" value={currentConfig.priority} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                          </div>
+                        )}
+                        
                         {currentConfig.active !== undefined && (
                           <div className="flex items-center">
                             <FieldLabel icon="✅" text="Kích hoạt" />
@@ -382,13 +500,6 @@ export default function WorkspaceTacVu() {
                           </div>
                         )}
 
-                        {currentConfig.videoCategory !== undefined && (
-                          <div className="flex items-center">
-                            <FieldLabel icon="🎥" text="Danh mục video" />
-                            <input type="text" name="videoCategory" value={currentConfig.videoCategory} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
-                          </div>
-                        )}
-
                         {currentConfig.muteSourceVideo !== undefined && selectedEventId !== 'talking' && selectedEventId !== 'idle' && (
                           <div className="flex items-center">
                             <FieldLabel icon="🔇" text="Tắt âm gốc video" />
@@ -396,17 +507,17 @@ export default function WorkspaceTacVu() {
                           </div>
                         )}
 
-                        {currentConfig.priority !== undefined && (
-                          <div className="flex items-center">
-                            <FieldLabel icon="⭐" text="Độ ưu tiên" />
-                            <input type="number" name="priority" value={currentConfig.priority} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
-                          </div>
-                        )}
-
                         {currentConfig.useAi !== undefined && selectedEventId !== 'idle' && selectedEventId !== 'apology' && (
                           <div className="flex items-center">
                             <FieldLabel icon="🧠" text="Dùng AI trả lời" />
                             <input type="checkbox" name="useAi" checked={currentConfig.useAi} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded" />
+                          </div>
+                        )}
+                        
+                        {selectedEventId === 'thanks_heart' && (
+                          <div className="flex items-center">
+                            <FieldLabel icon="❤️" text="Ngưỡng tim để cảm ơn" />
+                            <input type="number" name="likeThreshold" value={currentConfig.likeThreshold} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
                           </div>
                         )}
 

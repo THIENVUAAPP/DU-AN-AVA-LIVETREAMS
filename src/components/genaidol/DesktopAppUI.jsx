@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import WorkspaceTacVu from './WorkspaceTacVu';
 import GeneralSettings from './GeneralSettings';
+import ThanhToanCoin from './ThanhToanCoin';
 
 export default function DesktopAppUI() {
   const [activeSettingsModal, setActiveSettingsModal] = useState(null); // 'general' | 'workspace' | null
@@ -15,6 +16,7 @@ export default function DesktopAppUI() {
   const [tiktokId, setTiktokId] = useState('tungroup.vn');
   const [volume, setVolume] = useState(80);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [selectedCharacter, setSelectedCharacter] = useState('aidol_lan_huong');
   
   // Connection state
   const [isConnected, setIsConnected] = useState(false);
@@ -124,7 +126,7 @@ export default function DesktopAppUI() {
               Theo dõi ▼
             </button>
 
-            <button className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}>
+            <button onClick={() => setActiveSettingsModal('payment')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}>
               <CreditCard size={16} />
               Thanh toán
             </button>
@@ -197,6 +199,39 @@ export default function DesktopAppUI() {
             {isCommMode ? <Mic size={16} /> : <MicOff size={16} />}
             Bật Chế độ Giao tiếp
           </button>
+
+          {/* Character Selector */}
+          <div className="flex items-center gap-2 ml-4">
+            <span className="text-sm font-medium text-gray-400">Chọn Nhân vật:</span>
+            <div className="flex gap-2">
+              <img 
+                src="https://images.unsplash.com/photo-1627885408985-618d2ff36c64?q=80&w=100&auto=format&fit=crop" 
+                className={`w-8 h-8 rounded object-cover cursor-pointer ${selectedCharacter === 'aidol_lan_huong' ? 'border-2 border-blue-500' : 'border border-gray-600 opacity-50 hover:opacity-100'}`} 
+                onClick={() => setSelectedCharacter('aidol_lan_huong')}
+                title="aidol_lan_huong" 
+                alt="aidol_lan_huong" 
+              />
+              <img 
+                src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=100&auto=format&fit=crop" 
+                className={`w-8 h-8 rounded object-cover cursor-pointer ${selectedCharacter === 'aidol_ngoc_trinh' ? 'border-2 border-blue-500' : 'border border-gray-600 opacity-50 hover:opacity-100'}`} 
+                onClick={() => setSelectedCharacter('aidol_ngoc_trinh')}
+                title="aidol_ngoc_trinh" 
+                alt="aidol_ngoc_trinh" 
+              />
+              <button 
+                className="w-8 h-8 rounded border border-dashed border-gray-500 flex items-center justify-center text-gray-400 hover:text-white cursor-pointer transition-colors hover:bg-gray-700/50" 
+                title="Tải lên nhân vật mới..."
+                onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = 'video/*,image/*';
+                  input.click();
+                }}
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+          </div>
 
           <div className="flex-1 flex items-center justify-end gap-3 mr-2">
             <span className="text-sm font-medium text-gray-400">Âm lượng:</span>
@@ -284,6 +319,23 @@ export default function DesktopAppUI() {
               <WorkspaceTacVu />
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Payment Modal */}
+      {activeSettingsModal === 'payment' && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in zoom-in duration-200">
+          <div className="w-full max-w-5xl h-[90vh] flex flex-col rounded-xl overflow-hidden shadow-2xl bg-white relative">
+            <button 
+              onClick={() => setActiveSettingsModal(null)}
+              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors"
+            >
+              <X size={20} />
+            </button>
+            <div className="flex-1 overflow-y-auto">
+              <ThanhToanCoin />
+            </div>
           </div>
         </div>
       )}
