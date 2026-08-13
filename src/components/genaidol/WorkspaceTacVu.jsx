@@ -283,12 +283,12 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
               <Mic className="w-6 h-6 text-[#00FF66]" />
            </div>
            <div className="relative z-10">
-              <h1 className="text-lg font-black text-white">
-                 Soạn Kịch Bản & Giọng Nói
-              </h1>
-              <p className="text-xs text-gray-400 font-medium mt-0.5">
-                 Sử dụng công nghệ AI Voice để tạo ra giọng đọc siêu thực.
-              </p>
+               <h1 className="text-lg font-black text-white">
+                  Cấu hình Nội dung & Giọng Nói
+               </h1>
+               <p className="text-xs text-gray-400 font-medium mt-0.5">
+                  Nạp nội dung Bán Hàng (Knowledge Base) và chọn Giọng Đọc cho AI.
+               </p>
            </div>
         </div>
          <button className="px-5 py-2.5 bg-[#121216] border border-white/10 hover:border-[#00FF66] text-[#00FF66] rounded-xl font-bold shadow-glow-green transition-all text-sm whitespace-nowrap">
@@ -303,89 +303,18 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
 
             <div className="relative z-10 flex flex-col h-full">
                 <div className="mb-6">
-                  <h2 className="text-xl font-black text-white mb-1">Bộ não AI & Soạn nội dung</h2>
-                  <p className="text-xs text-gray-400 font-medium">Viết kịch bản bằng AI hoặc dán nội dung của bạn vào.</p>
-                </div>
-
-                {/* AI Brain Selection */}
-                <div className="mb-6 p-4 bg-black/40 rounded-xl border border-white/5">
-                   <label className="flex items-center justify-between text-xs font-bold text-gray-200 mb-3">
-                     <div className="flex items-center gap-4 text-xs font-bold text-gray-400">
-                      <div>1 / 1 Job</div>
-                      <div>50 KOL Coin / Job</div>
-                    </div>
-                     <div className="flex items-center gap-2"><Brain className="w-4 h-4 text-[#00FF66]" /> Chọn Bộ Não Kịch Bản</div>
-                   </label>
-                   <div className="grid grid-cols-3 gap-2 mb-3">
-                      {Object.keys(AI_BRAINS).map(brainKey => (
-                         <button 
-                           key={brainKey}
-                           onClick={() => setAiBrain(brainKey)} 
-                           className={`p-3 rounded-lg border text-xs font-bold transition-all ${aiBrain === brainKey ? 'bg-[#00FF66]/10 border-[#00FF66]/50 text-[#00FF66] shadow-glow-green' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'}`}
-                         >
-                           {AI_BRAINS[brainKey].name}
-                         </button>
-                      ))}
-                   </div>
-                   
-                    <div className="mb-4 text-[11px] font-bold text-gray-400 bg-white/5 py-1.5 px-3 rounded-md inline-flex items-center gap-2 border border-white/5">
-                       <Sparkles className="w-3 h-3 text-[#00FF66]" />
-                       <span className="text-white">Model:</span>
-                       <select 
-                         value={aiModel} 
-                         onChange={e => setAiModel(e.target.value)}
-                         className="bg-transparent text-white outline-none font-bold"
-                       >
-                         {AI_BRAINS[aiBrain].models.map(m => (
-                           <option key={m} value={m} className="bg-black text-white">{m}</option>
-                         ))}
-                       </select>
-                    </div>
-
-                   <div className="flex flex-col md:flex-row gap-2">
-                     <select 
-                       value={scriptDuration} 
-                       onChange={(e) => setScriptDuration(e.target.value)}
-                       className="px-3 py-2 bg-black/60 border border-white/10 rounded-lg text-sm text-gray-300 font-bold outline-none focus:border-[#00FF66] w-full md:w-32"
-                     >
-                       <option value="1">1 Phút</option>
-                       <option value="5">5 Phút</option>
-                       <option value="10">10 Phút</option>
-                       <option value="30">30 Phút</option>
-                       <option value="60">60 Phút</option>
-                       <option value="120">120 Phút</option>
-                     </select>
-                     <input 
-                       type="text" 
-                       value={scriptTopic}
-                       onChange={(e) => setScriptTopic(e.target.value)}
-                       placeholder={`Chủ đề kịch bản ${AI_BRAINS[aiBrain].name}...`} 
-                       className="flex-1 px-4 py-2 bg-black/60 border border-white/10 rounded-lg text-sm text-white outline-none focus:border-[#00FF66]" 
-                     />
-                     <button 
-                       onClick={handleGenerateScript}
-                       disabled={isGenerating}
-                       className="px-4 py-2 bg-[#00FF66]/20 border border-[#00FF66]/50 text-[#00FF66] rounded-lg font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#00FF66]/30 shadow-glow-green whitespace-nowrap w-full md:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
-                     >
-                       {isGenerating ? <div className="w-4 h-4 border-2 border-t-[#00FF66] border-[#00FF66]/30 rounded-full animate-spin"></div> : <Sparkles className="w-4 h-4"/>} 
-                       {isGenerating ? 'Đang tạo...' : 'Tạo'}
-                     </button>
-                   </div>
-                </div>
-                
-                <div className="mb-4">
-                  <label className="block text-xs font-bold text-gray-300 mb-2">Tên job</label>
-                  <input type="text" value={jobName} onChange={e => setJobName(e.target.value)} className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-sm font-bold text-white focus:border-[#00FF66] outline-none" />
+                  <h2 className="text-xl font-black text-white mb-1">Nạp nội dung Bán Hàng (Knowledge Base)</h2>
+                  <p className="text-xs text-gray-400 font-medium">Dán nội dung sản phẩm hoặc tải lên file .txt để AI học và trả lời siêu thông minh trên Live.</p>
                 </div>
 
                 <div className="flex-1 flex flex-col mb-6 relative">
                   <div className="flex items-center justify-between mb-2">
-                    <label className="block text-xs font-bold text-gray-300">Nội dung (Text to Speech)</label>
+                    <label className="block text-xs font-bold text-gray-300">Nội dung sản phẩm / Kịch bản nền</label>
                     <button 
                       onClick={() => scriptFileInputRef.current?.click()}
                       className="text-[11px] px-2 py-1 bg-white/10 hover:bg-white/20 text-white rounded font-bold transition-colors flex items-center gap-1 border border-white/10"
                     >
-                      <Upload className="w-3 h-3"/> Tải lên kịch bản (.txt)
+                      <Upload className="w-3 h-3"/> Tải lên file (.txt)
                     </button>
                     <input type="file" ref={scriptFileInputRef} accept=".txt" className="hidden" onChange={handleScriptFileUpload} />
                   </div>
@@ -404,7 +333,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                       <div className="text-[10px] text-gray-400 mt-1">Giá giọng đang chọn: Phụ thuộc vào nền tảng API.</div>
                    </div>
                    <button onClick={handleSaveJob} className="px-6 py-3 bg-[#00FF66] text-black hover:bg-[#00CC52] rounded-xl font-black transition-colors shadow-glow-green">
-                     Lưu Kịch Bản & Giọng (Đẩy lên Live)
+                     Lưu Cấu Hình (Đẩy lên Live)
                    </button>
                 </div>
               </div>
