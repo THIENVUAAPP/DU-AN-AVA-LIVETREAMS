@@ -904,12 +904,14 @@ export default function DesktopAppUI() {
               </h2>
               <button onClick={() => setActiveMonitorModal(null)} className="p-1 hover:bg-gray-300 rounded transition-colors"><X size={16} className="text-gray-600" /></button>
             </div>
-            <div className="flex-1 overflow-auto bg-black text-green-400 p-4 font-mono text-xs">
+            <div className="flex-1 overflow-auto bg-white text-gray-800 p-4 text-sm">
               {systemLogs.length === 0 ? (
-                <div className="text-gray-500">Chưa ghi nhận lỗi hệ thống nào.</div>
+                <div className="text-gray-500 italic flex items-center justify-center h-full">Hệ thống đang hoạt động ổn định. Chưa ghi nhận lỗi nào.</div>
               ) : (
                 systemLogs.map((log, idx) => (
-                  <div key={idx} className="mb-1"><span className="text-gray-400">[{log.time}]</span> <span className="text-red-400">ERROR:</span> {log.message}</div>
+                  <div key={idx} className="mb-2 p-2 bg-red-50 border border-red-200 rounded">
+                    <span className="text-gray-500 text-xs font-mono">[{log.time}]</span> <span className="font-bold text-red-600">ERROR:</span> <span className="text-red-800">{log.message}</span>
+                  </div>
                 ))
               )}
             </div>
@@ -926,14 +928,14 @@ export default function DesktopAppUI() {
               </h2>
               <button onClick={() => setActiveMonitorModal(null)} className="p-1 hover:bg-gray-300 rounded transition-colors"><X size={16} className="text-gray-600" /></button>
             </div>
-            <div className="flex-1 overflow-auto bg-gray-900 text-gray-300 p-4 font-mono text-xs">
+            <div className="flex-1 overflow-auto bg-white text-gray-800 p-4 text-sm">
               {tiktokLogs.length === 0 ? (
-                <div className="text-gray-500">Chưa có sự kiện thô nào từ TikTok.</div>
+                <div className="text-gray-500 italic flex items-center justify-center h-full">Đang chờ sự kiện thô từ TikTok...</div>
               ) : (
                 tiktokLogs.map((log, idx) => (
-                  <div key={idx} className="mb-2 border-b border-gray-800 pb-1">
-                    <div className="text-blue-400 font-bold">[{log.time}] {log.type}</div>
-                    <pre className="text-gray-400 overflow-x-auto mt-1">{JSON.stringify(log.payload, null, 2)}</pre>
+                  <div key={idx} className="mb-3 border border-gray-200 rounded bg-gray-50 p-2">
+                    <div className="text-blue-600 font-bold mb-1 border-b border-gray-200 pb-1">[{log.time}] {log.type}</div>
+                    <pre className="text-gray-600 overflow-x-auto font-mono text-xs">{JSON.stringify(log.payload, null, 2)}</pre>
                   </div>
                 ))
               )}
