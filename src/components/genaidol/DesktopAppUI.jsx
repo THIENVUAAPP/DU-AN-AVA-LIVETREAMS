@@ -9,6 +9,8 @@ import GeneralSettings from './GeneralSettings';
 import ThanhToanCoin from './ThanhToanCoin';
 import TokenHistoryModal from './TokenHistoryModal';
 import { useToken, TOKEN_RATES } from './TokenContext';
+import { useLiveCoordinator } from '../../hooks/useLiveCoordinator';
+import AIAudioPlayer from './AIAudioPlayer';
 
 export default function DesktopAppUI() {
   const [activeSettingsModal, setActiveSettingsModal] = useState(null); 
@@ -19,6 +21,7 @@ export default function DesktopAppUI() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState('aidol_lan_huong');
   const [showTokenHistory, setShowTokenHistory] = useState(false);
+  const [showSimulator, setShowSimulator] = useState(false);
   const [toast, setToast] = useState(null);
   
   const [customCharacters, setCustomCharacters] = useState([]);
@@ -26,10 +29,40 @@ export default function DesktopAppUI() {
   const fileInputRef = useRef(null);
 
   const { balance, deductToken, setNotifyCallback } = useToken();
+  
+  // Audio Player Ref
+  const audioPlayerRef = useRef(null);
 
   // Connection state (phải khai báo trước useEffect)
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState('');
+
+  // Tích hợp Live Coordinator (Xử lý AI, Video, Idle Timer)
+  const {
+    activeVideoItem,
+    lipSyncVideoUrl,
+    viewerHistory,
+    isProcessingEvent,
+    handleLiveEvent,
+    handleVideoEnded,
+    handleActionVideoReady,
+    setLipSyncVideoUrl,
+    setActiveVideoItem
+  } = useLiveCoordinator({
+    isConnected,
+    activeBrainPack: 'talk', // mặc định
+    onVoiceReply: ({ text, action, baseVideoItem, preRecordedCat }) => {
+      // Gọi AIAudioPlayer để phát giọng nói
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.enqueueItem(text, action);
+      }
+      
+      // Nếu có video reaction quay sẵn thì đổi video nền ngay
+      if (preRecordedCat && baseVideoItem) {
+        // Tạm thời bỏ qua logic tìm video reaction (AIAudioPlayer sẽ gọi handleActionVideoReady sau khi LipSync xong)
+      }
+    }
+  });
 
   // Toast helper
   const showToast = (msg, type = 'warn') => {
@@ -134,6 +167,9 @@ export default function DesktopAppUI() {
       setIsConnecting(false);
       setIsConnected(true);
       setConnectionError('');
+      
+      // Bắt đầu sự kiện chào mừng
+      handleLiveEvent('VIEWER_JOIN', { name: 'Mọi người' });
     }, 1500);
   };
 
@@ -217,6 +253,37 @@ export default function DesktopAppUI() {
   };
 
   const renderCharacterContent = () => {
+    // 1. Ưu tiên phát Video LipSync từ AI (chạy đè lên tất cả)
+    if (lipSyncVideoUrl) {
+      return (
+        <video 
+          src={lipSyncVideoUrl} 
+          className="w-full h-full object-contain bg-black"
+          autoPlay 
+          controls={false}
+          onEnded={handleVideoEnded}
+          playsInline 
+        />
+      );
+    }
+    
+    // 2. Nếu đang kết nối Live và có video nền (Story/Idle/Reaction)
+    if (isConnected && activeVideoItem) {
+      return (
+        <video 
+          key={activeVideoItem.id}
+          src={activeVideoItem.mediaUrl} 
+          className="w-full h-full object-contain bg-black"
+          autoPlay 
+          loop={!isProcessingEvent} // Nếu ko bận thì loop
+          controls={false}
+          onEnded={handleVideoEnded}
+          playsInline 
+        />
+      );
+    }
+
+    // 3. Mặc định: Hiển thị nhân vật được chọn từ Topbar
     const selected = CHARACTERS[selectedCharacter];
     if (!selected) {
       return (
@@ -415,6 +482,13 @@ export default function DesktopAppUI() {
             <MessageCircle size={16} />
             Zalo
           </button>
+
+          <button 
+            onClick={() => setShowSimulator(!showSimulator)} 
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${showSimulator ? 'bg-purple-600 text-white' : (isDarkMode ? 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30' : 'bg-purple-100 text-purple-700 hover:bg-purple-200')}`}>
+            <Brain size={16} />
+            Công cụ Test
+          </button>
         </div>
         
       </div>
@@ -428,8 +502,21 @@ export default function DesktopAppUI() {
         <div className="absolute bottom-6 left-6 flex flex-col pointer-events-none z-10">
           <h2 className="text-4xl font-bold text-white mb-1 drop-shadow-lg">AIDOL</h2>
           <p className="text-white drop-shadow-md font-medium px-2 py-1 bg-black/40 rounded inline-block backdrop-blur-sm">
-             {CHARACTERS[selectedCharacter]?.name || 'Không xác định'} - Sẵn sàng Livestream
+             {isConnected ? (lipSyncVideoUrl ? 'Đang trả lời (Lip-sync)...' : 'Chế độ chờ (Sẵn sàng)') : (CHARACTERS[selectedCharacter]?.name || 'Không xác định')} 
           </p>
+        </div>
+
+        {/* Ẩn AIAudioPlayer đi, chỉ dùng nó để quản lý logic giọng nói ngầm */}
+        <div className="hidden">
+          <AIAudioPlayer 
+            ref={audioPlayerRef} 
+            isLive={isConnected} 
+            currentVideoUrl={isConnected && activeVideoItem ? activeVideoItem.mediaUrl : null}
+            onActionTriggered={(e) => {
+              if (e.type === 'LIPSYNC_READY') handleActionVideoReady(e.videoUrl, true);
+              if (e.type === 'LIPSYNC_ENDED') setLipSyncVideoUrl(null);
+            }} 
+          />
         </div>
 
         {/* Cửa sổ nổi hiển thị Webcam từ Studio (Draggable & Resizable) */}
@@ -468,6 +555,43 @@ export default function DesktopAppUI() {
               muted 
               className="w-full h-full object-cover pointer-events-none" 
             />
+          </div>
+        )}
+
+        {/* Cửa sổ Nổi: Công cụ Simulator */}
+        {showSimulator && (
+          <div className="absolute right-6 top-6 w-80 bg-[#1c1c23] border border-gray-700 rounded-xl shadow-2xl p-4 z-40 animate-in fade-in slide-in-from-right-4">
+            <div className="flex items-center justify-between mb-3 border-b border-gray-700 pb-2">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2"><Brain size={14} className="text-purple-400" /> Công cụ Giả lập Live</h3>
+              <button onClick={() => setShowSimulator(false)} className="text-gray-400 hover:text-white"><X size={14} /></button>
+            </div>
+            {!isConnected ? (
+              <div className="text-xs text-red-400 p-2 bg-red-500/10 rounded border border-red-500/20">Vui lòng bấm "Kết nối" ở thanh trên để test sự kiện!</div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <button onClick={() => handleLiveEvent('VIEWER_JOIN', { name: 'Thanh Nhàn' })} className="flex-1 py-1.5 bg-blue-500/20 hover:bg-blue-500/40 text-blue-400 rounded text-xs font-medium border border-blue-500/30">👋 Có người vào</button>
+                  <button onClick={() => handleLiveEvent('GIFT', { name: 'Đại Gia', gift: 'Hoa hồng (Rose)' })} className="flex-1 py-1.5 bg-pink-500/20 hover:bg-pink-500/40 text-pink-400 rounded text-xs font-medium border border-pink-500/30">🌹 Tặng quà</button>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => handleLiveEvent('COMMENT', { name: 'Fan Cứng', text: 'Chào idol, hôm nay xinh quá!' })} className="w-full py-1.5 bg-[#00FF66]/20 hover:bg-[#00FF66]/40 text-[#00FF66] rounded text-xs font-medium border border-[#00FF66]/30">💬 Comment: Xinh quá</button>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => handleLiveEvent('COMMENT', { name: 'Khách', text: 'Sản phẩm này dùng thế nào?' })} className="w-full py-1.5 bg-purple-500/20 hover:bg-purple-500/40 text-purple-400 rounded text-xs font-medium border border-purple-500/30">🛒 Hỏi mua hàng</button>
+                </div>
+                {isProcessingEvent && <div className="text-[10px] text-yellow-400 animate-pulse text-center pt-2">AI đang suy nghĩ...</div>}
+              </div>
+            )}
+            
+            <div className="mt-4 pt-2 border-t border-gray-700 h-32 overflow-y-auto">
+              <div className="text-[10px] font-medium text-gray-400 mb-1">Lịch sử sự kiện:</div>
+              {viewerHistory.slice().reverse().map((h, i) => (
+                 <div key={i} className="mb-2 text-[10px] bg-black/30 p-1.5 rounded border border-gray-800">
+                    <span className="text-gray-300">[{h.time}] <strong className="text-white">{h.payload.name}</strong> {h.type === 'COMMENT' ? `bình luận: ${h.payload.text}` : h.type === 'GIFT' ? `tặng: ${h.payload.gift}` : 'vào phòng'}</span>
+                    {h.ai_reply && <div className="text-[#00FF66] mt-0.5 ml-2 border-l border-[#00FF66]/30 pl-1">↳ AI: {h.ai_reply}</div>}
+                 </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

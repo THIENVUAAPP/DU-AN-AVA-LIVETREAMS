@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Play, Pause, FastForward, Settings, Mic, Volume2 } from 'lucide-react';
 
-const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTriggered }, ref) => {
+const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTriggered, currentVideoUrl }, ref) => {
   const [job, setJob] = useState(null);
   const [queue, setQueue] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(new Audio());
+
   
   // 1. Lấy Job từ LocalStorage khi Live bắt đầu
   useEffect(() => {
@@ -63,17 +64,15 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
       const data = await res.json();
       if (!data.audioBase64) throw new Error('No audio returned');
 
-      // Chuyển base64 thành Blob URL
+      // Chuyển base64 thành Blob URL cho Audio
       const isPcm = provider === 'gemini';
       let audioUrl = '';
       if (isPcm) {
-        // Hàm này mượn logic từ geminiClient (pcmToWav)
         const binaryStr = atob(data.audioBase64);
         const len = binaryStr.length;
         const bytes = new Uint8Array(len);
         for (let i = 0; i < len; i++) bytes[i] = binaryStr.charCodeAt(i);
         
-        // Thêm WAV header cho 24kHz mono 16-bit PCM (Gemini)
         const wavBuffer = new ArrayBuffer(44 + bytes.length);
         const view = new DataView(wavBuffer);
         const writeString = (offset, string) => { for(let i=0; i<string.length; i++) view.setUint8(offset+i, string.charCodeAt(i)); };
@@ -83,8 +82,8 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
         writeString(12, 'fmt ');
         view.setUint32(16, 16, true);
         view.setUint16(20, 1, true);
-        view.setUint16(22, 1, true); // mono
-        view.setUint32(24, 24000, true); // 24kHz
+        view.setUint16(22, 1, true);
+        view.setUint32(24, 24000, true);
         view.setUint32(28, 24000 * 2, true);
         view.setUint16(32, 2, true);
         view.setUint16(34, 16, true);
@@ -95,15 +94,37 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
         const blob = new Blob([wavBuffer], { type: 'audio/wav' });
         audioUrl = URL.createObjectURL(blob);
       } else {
-        // Định dạng MP3 cho OpenAI
         const blob = await fetch(`data:audio/mp3;base64,${data.audioBase64}`).then(r => r.blob());
         audioUrl = URL.createObjectURL(blob);
+      }
+
+      // --- GỌI API LIP-SYNC ĐỂ TẠO VIDEO NHÉP MIỆNG KHỚP AUDIO ---
+      if (currentVideoUrl && onActionTriggered) {
+        try {
+          const lipSyncRes = await fetch('/api/lip-sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              audioBase64: data.audioBase64,
+              videoUrl: currentVideoUrl,
+              platform: 'synclabs' // hoặc heygen
+            })
+          });
+          const lipSyncData = await lipSyncRes.json();
+          if (lipSyncData.success && lipSyncData.lipSyncVideoUrl) {
+            // Gửi URL video đã nhép miệng lên UI chính để phát
+            onActionTriggered({ type: 'LIPSYNC_READY', videoUrl: lipSyncData.lipSyncVideoUrl });
+          }
+        } catch (e) {
+          console.warn('LipSync API Error (falling back to audio only):', e);
+        }
       }
 
       audioRef.current.src = audioUrl;
       
       audioRef.current.onended = () => {
-        URL.revokeObjectURL(audioUrl); // Dọn dẹp bộ nhớ
+        URL.revokeObjectURL(audioUrl);
+        if (onActionTriggered) onActionTriggered({ type: 'LIPSYNC_ENDED' });
         if (isPlaying) {
           setCurrentIndex(prev => prev + 1);
         }
