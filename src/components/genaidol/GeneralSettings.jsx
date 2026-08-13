@@ -36,9 +36,7 @@ export default function GeneralSettings({ onClose }) {
     
     // Tab 4: Cấu hình Nhanh
     selectedPreset: 'fast', // 'fast' | 'notification' | 'custom_LanHuong'
-    userPresets: [
-      { id: 'custom_LanHuong', name: 'Lan Hương', desc: 'Cấu hình tùy chỉnh do bạn lưu.' }
-    ],
+    userPresets: [],
     newPresetName: ''
   });
 
@@ -47,7 +45,11 @@ export default function GeneralSettings({ onClose }) {
     const savedSettings = localStorage.getItem('aidol_general_settings');
     if (savedSettings) {
       try {
-        setSettings(prev => ({ ...prev, ...JSON.parse(savedSettings) }));
+        const parsed = JSON.parse(savedSettings);
+        if (parsed.userPresets) {
+          parsed.userPresets = parsed.userPresets.filter(p => p.id !== 'custom_LanHuong');
+        }
+        setSettings(prev => ({ ...prev, ...parsed }));
       } catch (e) {
         console.error("Failed to parse settings", e);
       }
