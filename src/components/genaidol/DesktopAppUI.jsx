@@ -33,9 +33,24 @@ export default function DesktopAppUI() {
 
   const [toast, setToast] = useState(null);
   
-  const [customCharacters, setCustomCharacters] = useState([]);
-  const [hiddenBuiltins, setHiddenBuiltins] = useState([]);
+  const [customCharacters, setCustomCharacters] = useState(() => {
+    const saved = localStorage.getItem('aidol_custom_chars');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [hiddenBuiltins, setHiddenBuiltins] = useState(() => {
+    const saved = localStorage.getItem('aidol_hidden_builtins');
+    return saved ? JSON.parse(saved) : [];
+  });
   const fileInputRef = useRef(null);
+
+  // Lưu trạng thái mỗi khi thay đổi
+  useEffect(() => {
+    localStorage.setItem('aidol_custom_chars', JSON.stringify(customCharacters));
+  }, [customCharacters]);
+
+  useEffect(() => {
+    localStorage.setItem('aidol_hidden_builtins', JSON.stringify(hiddenBuiltins));
+  }, [hiddenBuiltins]);
 
   const { balance, deductToken, setNotifyCallback } = useToken();
   
