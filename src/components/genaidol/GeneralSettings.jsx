@@ -1,10 +1,49 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Search, CheckCircle2, FolderOpen, Brain } from 'lucide-react';
 
-const MAIN_VOICES = [];
+const ELEVENLABS_VOICES = [
+  { id: 'el_rachel', name: 'Rachel (Trầm ấm, Tự tin)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
+  { id: 'el_drew', name: 'Drew (Tin tức, Trịnh trọng)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
+  { id: 'el_clyde', name: 'Clyde (Chiến binh, Trầm)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
+  { id: 'el_paul', name: 'Paul (Phóng viên, Ấm áp)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
+  { id: 'el_domi', name: 'Domi (Trẻ trung, Năng động)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
+  { id: 'el_fin', name: 'Fin (Lão thành, Thông thái)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
+  { id: 'el_bella', name: 'Bella (Nhẹ nhàng, Mềm mại)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
+  { id: 'el_antoni', name: 'Antoni (Chuyên nghiệp, Rõ ràng)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
+  { id: 'el_thomas', name: 'Thomas (Kể chuyện, Cuốn hút)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
+  { id: 'el_charlie', name: 'Charlie (Tự nhiên, Thân thiện)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
+  { id: 'el_emily', name: 'Emily (Trong trẻo, Thanh lịch)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
+  { id: 'el_elli', name: 'Elli (Cảm xúc, Truyền cảm)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
+  { id: 'el_callum', name: 'Callum (Nam tính, Mạnh mẽ)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
+  { id: 'el_patrick', name: 'Patrick (Thuyết phục, Uy lực)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
+  { id: 'el_harry', name: 'Harry (Hồi hộp, Kịch tính)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
+  { id: 'el_liam', name: 'Liam (Gần gũi, Hài hước)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
+  { id: 'el_dorothy', name: 'Dorothy (Người kể chuyện nhí)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
+  { id: 'el_josh', name: 'Josh (Năng lượng, Nhanh nhẹn)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
+  { id: 'el_arnold', name: 'Arnold (Cứng rắn, Uy nghiêm)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
+  { id: 'el_charlotte', name: 'Charlotte (Duyên dáng, Tinh tế)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
+  { id: 'el_matilda', name: 'Matilda (Ấm áp, Chân thành)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
+  { id: 'el_matthew', name: 'Matthew (Điềm tĩnh, Đáng tin)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
+  { id: 'el_james', name: 'James (Phát thanh viên)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
+  { id: 'el_joseph', name: 'Joseph (Kể chuyện cổ tích)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
+  { id: 'el_jeremy', name: 'Jeremy (Sôi nổi, Hoạt náo)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
+  { id: 'el_michael', name: 'Michael (Giáo sư, Thông thái)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
+  { id: 'el_ethan', name: 'Ethan (Bí ẩn, Trầm tĩnh)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
+  { id: 'el_gigi', name: 'Gigi (Hoạt hình, Dễ thương)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
+  { id: 'el_freya', name: 'Freya (Phép thuật, Lôi cuốn)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
+  { id: 'el_grace', name: 'Grace (Sang trọng, Nhã nhặn)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
+  { id: 'el_daniel', name: 'Daniel (Quyết đoán, Mạnh mẽ)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
+  { id: 'el_lily', name: 'Lily (Hồn nhiên, Trong sáng)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
+  { id: 'el_serena', name: 'Serena (Quyến rũ, Mượt mà)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
+  { id: 'el_adam', name: 'Adam (Mộc mạc, Giản dị)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
+  { id: 'el_nicole', name: 'Nicole (Năng động, Hiện đại)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' }
+];
+
+const MAIN_VOICES = [...ELEVENLABS_VOICES];
 
 const ASSISTANT_VOICES = [
-  { id: '1', name: 'Giọng Google (Miễn phí)', type: 'Miễn phí', gender: 'Female', cost: '0' }
+  { id: '1', name: 'Giọng Google (Miễn phí)', type: 'Miễn phí', gender: 'Female', cost: '0 token' },
+  ...ELEVENLABS_VOICES
 ];
 
 export default function GeneralSettings({ onClose }) {
@@ -18,10 +57,10 @@ export default function GeneralSettings({ onClose }) {
     backgroundContext: "Bối cảnh: Bạn đang livestream bán phần mềm AIDOL một phần mềm dùng để live stream bằng trí tuệ nhân tạo. Người dùng có thể tự tạo ra nhân vật của chính họ bằng các chỉ từ 1 ảnh, tạo ra video, cho video đó vào phần mềm AIDOL thì phần mềm AIDOL sẽ tự đóng gói lại và tạo thành 1 nhân vật live stream đồng nhất, có thể dùng nhân vật đó live stream kiếm xu nhận quà trên tiktok, bán hàng tiếp thị liên kết, hoặc xuất hiện trên live cùng với người thật. Giá phần mềm là 3 triệu 5 trăm ngàn đồng / 1 năm hoặc có thể dùng gói dùng thử 500000 trên 1 tháng.\nKĩ thuật phần mềm: Công dụng: dùng để live stream bằng nhân vật ảo hoặc nhân bản chính bản thân mình, live stream phản hồi theo thời gian thực tất cả các sự kiện trong khi live tiktok. Phần mềm có hơn 500 giọng nói khác nhau. Nhân vật live stream có thể là bất cứ ai tùy vào người dùng tự tạo và tưởng tượng ra.\nChốt đơn bằng cách khuyến khích mọi người nhấn tin vào link bio.",
     
     // Tab 2: Nhân vật Chính
-    llmChoice: 'api', // 'aidol' | 'api'
-    apiModel: 'Aidol V1 (Kinh tế) (3.84 coin/in, 11.44 coin/out)',
+    llmChoice: 'avalive', 
+    apiModel: 'Model AvaLive',
     mainVoiceFilter: 'all', // 'all' | 'male' | 'female'
-    mainVoiceId: '148',
+    mainVoiceId: 'el_rachel',
     
     // Tab 3: Trợ lý
     assistantEnabled: true,
@@ -114,7 +153,7 @@ export default function GeneralSettings({ onClose }) {
               <th className="px-4 py-2">Tên Giọng Nói</th>
               <th className="px-4 py-2">Loại</th>
               <th className="px-4 py-2">Giới Tính</th>
-              <th className="px-4 py-2">Chi Phí (Coin/ký tự)</th>
+              <th className="px-4 py-2">Chi Phí</th>
               <th className="px-4 py-2 w-16 text-center"></th>
             </tr>
           </thead>
@@ -184,15 +223,6 @@ export default function GeneralSettings({ onClose }) {
           {/* TAB 1: BỘ NÃO IDOL */}
           {activeTab === 'prompt' && (
             <>
-              {/* Box 1: Status */}
-              <div className="bg-green-50 border border-green-200 rounded-lg shadow-sm overflow-hidden p-4 flex items-center gap-3">
-                <CheckCircle2 className="text-green-600" size={24} />
-                <div className="flex-1">
-                  <h4 className="font-bold text-green-800">Đã kết nối API Thành Công</h4>
-                  <p className="text-sm text-green-700">Hệ thống đang sử dụng BỘ NÃO API được cấu hình an toàn trên Biến Môi Trường (Environment Variables).</p>
-                </div>
-              </div>
-
               {/* Box 2: Queue Settings */}
               <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
                 <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm">
@@ -238,39 +268,19 @@ export default function GeneralSettings({ onClose }) {
                   Thiết lập AI (LLM - 'Bộ Não')
                 </div>
                 <div className="p-4 space-y-4">
-                  <p className="text-sm font-semibold text-gray-800">Hãy chọn 'bộ não' cho Aidol:</p>
+                  <p className="text-sm font-semibold text-gray-800">Cấu hình Bộ não AI cho Nhân vật:</p>
                   
-                  <div className="grid grid-cols-2 gap-4">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input 
-                        type="radio" name="llmChoice" value="aidol" 
-                        checked={settings.llmChoice === 'aidol'} onChange={handleChange} 
-                        className="w-4 h-4 text-blue-600 focus:ring-blue-500" 
-                      />
-                      <span className="text-sm font-medium text-gray-700">Dùng Aidol Models (trừ Tun Coin)</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input 
-                        type="radio" name="llmChoice" value="api" 
-                        checked={settings.llmChoice === 'api'} onChange={handleChange} 
-                        className="w-4 h-4 text-blue-600 focus:ring-blue-500" 
-                      />
-                      <span className="text-sm font-medium text-[#a53b3b]">Dùng API Key Cá nhân (không tốn Tun Coin)</span>
-                    </label>
-                  </div>
-
                   <div className="flex items-center gap-4 mt-2">
-                    <label className="text-sm font-semibold text-[#a53b3b]">Chọn Model Aidol:</label>
+                    <label className="text-sm font-semibold text-[#a53b3b]">Chọn Model AI:</label>
                     <select 
                       name="apiModel" value={settings.apiModel} onChange={handleChange}
                       className="flex-1 max-w-md border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500 text-gray-700"
                     >
-                      <option value="Aidol V1 (Kinh tế) (3.84 coin/in, 11.44 coin/out)">Aidol V1 (Kinh tế) (3.84 coin/in, 11.44 coin/out)</option>
-                      <option value="Aidol V2 (Thông minh) (8.00 coin/in, 20.00 coin/out)">Aidol V2 (Thông minh) (8.00 coin/in, 20.00 coin/out)</option>
+                      <option value="Model AvaLive">Model AvaLive</option>
                     </select>
                   </div>
                   <p className="text-xs text-gray-500 italic flex items-center gap-1">
-                    ⓘ Việc tạo ra câu trả lời sẽ trừ Tun Coin từ tài khoản của bạn.
+                    ⓘ Việc tạo ra câu trả lời sẽ trừ token từ tài khoản của bạn.
                   </p>
                 </div>
               </div>
