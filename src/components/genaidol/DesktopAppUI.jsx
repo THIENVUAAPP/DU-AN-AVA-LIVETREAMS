@@ -27,6 +27,10 @@ export default function DesktopAppUI() {
 
   const { balance, deductToken, setNotifyCallback } = useToken();
 
+  // Connection state (phải khai báo trước useEffect)
+  const [isConnected, setIsConnected] = useState(false);
+  const [connectionError, setConnectionError] = useState('');
+
   // Toast helper
   const showToast = (msg, type = 'warn') => {
     setToast({ msg, type });
@@ -55,9 +59,7 @@ export default function DesktopAppUI() {
     }
   }, [balance, isConnected]);
 
-  // Connection state
-  const [isConnected, setIsConnected] = useState(false);
-  const [connectionError, setConnectionError] = useState('');
+  // Connection state đã khai báo ở trên
   
   // Webcam state
   const [isWebcamActive, setIsWebcamActive] = useState(false);
