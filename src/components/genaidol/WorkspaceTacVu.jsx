@@ -30,7 +30,8 @@ const DEFAULT_EVENT_CONFIG = {
   prompt: 'Bạn là một streamer AI. Hãy phản hồi thật tự nhiên.',
   sample: '',
   useVoice: true,
-  muteVideo: true
+  muteVideo: true,
+  delaySeconds: 0
 };
 
 export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
@@ -320,6 +321,13 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
                                   <input type="checkbox" checked={currentEventConfig.muteVideo} onChange={(e) => updateEventConfig('muteVideo', e.target.checked)} className="w-4 h-4 accent-[#00FF66]" />
                                   <span className="text-xs font-bold text-gray-200">Tắt âm thanh gốc của Video</span>
                                 </label>
+                            </div>
+                            <div className="col-span-2 flex items-center justify-between bg-black/40 border border-white/10 rounded-lg p-3 mt-2">
+                                <span className="text-[11px] font-bold text-gray-400">Độ trễ phản hồi (Bao lâu thì AI mới trả lời?)</span>
+                                <div className="flex items-center gap-2">
+                                   <input type="number" min="0" max="60" value={currentEventConfig.delaySeconds || 0} onChange={(e) => updateEventConfig('delaySeconds', parseInt(e.target.value) || 0)} className="w-16 bg-black/60 border border-white/10 rounded px-2 py-1 text-xs text-white outline-none focus:border-[#00FF66] text-center" />
+                                   <span className="text-xs font-bold text-gray-500">giây</span>
+                                </div>
                             </div>
                         </div>
 

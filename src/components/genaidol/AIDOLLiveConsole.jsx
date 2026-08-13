@@ -5,6 +5,7 @@ import {
   Plus, Search, X, ChevronDown, Monitor, Zap, SkipForward, Pause
 } from 'lucide-react';
 import AIAudioPlayer from './AIAudioPlayer';
+import WorkspaceTacVu from './WorkspaceTacVu';
 import {
   LIVE_CATEGORIES, initLiveDB, addLiveMedia, getAllLiveMedia, deleteLiveMedia, importFromAIDOLDB
 } from '../../lib/liveKhoDB';
@@ -428,7 +429,7 @@ export default function AIDOLLiveConsole() {
         <div className="flex-1 flex flex-col min-w-0">
           {/* Tab Navigation */}
           <div className="flex border-b border-slate-700/50 bg-[#1a1b26]/80 px-4 pt-2 flex-shrink-0">
-            {[['kho','📦 Kho Video Live'],['ai-player','🤖 AI Director'],['scripts','📄 Kịch bản'],['stream','📡 Stream Setup']].map(([id, label]) => (
+            {[['kho','📦 Kho Video Live'],['ai-player','🤖 AI Director'],['ai-setup','⚙️ Cài đặt Sự kiện AI'],['stream','📡 Stream Setup']].map(([id, label]) => (
               <button key={id} onClick={() => setActiveTab(id)}
                 className={`px-4 py-2.5 text-xs font-bold rounded-t-lg mr-1 transition-all ${activeTab === id ? 'bg-[#0D0F1A] text-[#00FF66] border-t border-l border-r border-slate-700/50' : 'text-slate-500 hover:text-slate-300'}`}>
                 {label}
@@ -650,35 +651,10 @@ export default function AIDOLLiveConsole() {
               </div>
             )}
 
-            {/* ══ TAB: KỊCH BẢN ══ */}
-            {activeTab === 'scripts' && (
-              <div className="p-5 space-y-3">
-                <div>
-                  <h3 className="text-sm font-black text-white mb-1">📄 Kịch bản đã lưu</h3>
-                  <p className="text-[10px] text-slate-500">Các kịch bản được tạo từ ChatGPT/Gemini trong tab "Giọng nói".</p>
-                </div>
-
-                {savedJobs.length === 0 ? (
-                  <div className="text-center py-12 border-2 border-dashed border-slate-700 rounded-xl">
-                    <div className="text-3xl mb-3">📄</div>
-                    <div className="text-sm font-bold text-slate-400 mb-2">Chưa có kịch bản nào</div>
-                    <p className="text-xs text-slate-600 max-w-xs mx-auto">Vào tab "Giọng nói" → Soạn kịch bản AI → Bấm "Lưu Kịch Bản & Giọng (Đẩy lên Live)"</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {savedJobs.map((job, idx) => (
-                      <div key={idx} className={`p-4 border rounded-xl transition-all cursor-pointer hover:border-[#00FF66]/50 ${activeJobItem?.key === job.key ? 'border-[#00FF66] bg-[#00FF66]/5' : 'border-slate-700 bg-[#1a1b26] hover:bg-[#1f2335]'}`}
-                        onClick={() => setActiveJobItem(job)}>
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="text-xs font-bold text-white truncate">{job.jobName || 'Kịch bản AI'}</div>
-                          {activeJobItem?.key === job.key && <span className="text-[9px] text-[#00FF66] font-black px-2 py-0.5 bg-[#00FF66]/20 rounded-full">✓ Đang dùng</span>}
-                        </div>
-                        <div className="text-[10px] text-slate-500">🎙️ {job.voiceProvider || 'TTS'} • {job.createdAt ? new Date(job.createdAt).toLocaleDateString('vi-VN') : ''}</div>
-                        {job.scriptContent && <p className="text-[10px] text-slate-600 mt-1 line-clamp-2">{job.scriptContent.slice(0, 150)}...</p>}
-                      </div>
-                    ))}
-                  </div>
-                )}
+            {/* ══ TAB: KỊCH BẢN (NAY LÀ EVENT MANAGER) ══ */}
+            {activeTab === 'ai-setup' && (
+              <div className="h-full overflow-y-auto">
+                 <WorkspaceTacVu />
               </div>
             )}
 
