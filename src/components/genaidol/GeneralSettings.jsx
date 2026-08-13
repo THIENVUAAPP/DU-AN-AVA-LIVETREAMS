@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Search, CheckCircle2, FolderOpen } from 'lucide-react';
+import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Search, CheckCircle2, FolderOpen, Brain } from 'lucide-react';
 
 const MAIN_VOICES = [];
 
@@ -12,12 +12,7 @@ export default function GeneralSettings({ onClose }) {
   
   // State for all settings
   const [settings, setSettings] = useState({
-    // Tab 1: API Prompt
-    openaiKey: '',
-    googleKey: '',
-    elevenlabsKey: '',
-    minimaxGroupId: '',
-    minimaxKey: '',
+    // Tab 1: BỘ NÃO IDOL
     queueTimeout: '1',
     systemPrompt: "Bạn là một nhân vật ảo AI tên là 'Lan Hương', bạn nữ, thân thiện, hài hước và thông minh. Bạn là một nhân viên live stream siêu đáng yêu, đang bán phần mềm AIDOL live stream bằng trí tuệ nhân tạo. Bạn có một ông chủ tên là Tun Tử Tế rất giỏi trong lĩnh vực trí tuệ nhân tạo, thỉnh thoảng có thể trêu trọc ông chủ.",
     backgroundContext: "Bối cảnh: Bạn đang livestream bán phần mềm AIDOL một phần mềm dùng để live stream bằng trí tuệ nhân tạo. Người dùng có thể tự tạo ra nhân vật của chính họ bằng các chỉ từ 1 ảnh, tạo ra video, cho video đó vào phần mềm AIDOL thì phần mềm AIDOL sẽ tự đóng gói lại và tạo thành 1 nhân vật live stream đồng nhất, có thể dùng nhân vật đó live stream kiếm xu nhận quà trên tiktok, bán hàng tiếp thị liên kết, hoặc xuất hiện trên live cùng với người thật. Giá phần mềm là 3 triệu 5 trăm ngàn đồng / 1 năm hoặc có thể dùng gói dùng thử 500000 trên 1 tháng.\nKĩ thuật phần mềm: Công dụng: dùng để live stream bằng nhân vật ảo hoặc nhân bản chính bản thân mình, live stream phản hồi theo thời gian thực tất cả các sự kiện trong khi live tiktok. Phần mềm có hơn 500 giọng nói khác nhau. Nhân vật live stream có thể là bất cứ ai tùy vào người dùng tự tạo và tưởng tượng ra.\nChốt đơn bằng cách khuyến khích mọi người nhấn tin vào link bio.",
@@ -160,7 +155,7 @@ export default function GeneralSettings({ onClose }) {
           onClick={() => setActiveTab('prompt')}
           className={`flex items-center gap-2 px-6 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'prompt' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
         >
-          <Key size={16} /> API Prompt
+          <Brain size={16} /> BỘ NÃO IDOL
         </button>
         <button 
           onClick={() => setActiveTab('main-character')}
@@ -186,38 +181,15 @@ export default function GeneralSettings({ onClose }) {
       <div className="flex-1 overflow-y-auto p-4 bg-[#f8f9fa] scroll-smooth overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="max-w-5xl mx-auto space-y-4 pb-10">
           
-          {/* TAB 1: API PROMPT */}
+          {/* TAB 1: BỘ NÃO IDOL */}
           {activeTab === 'prompt' && (
             <>
-              {/* Box 1: API Keys */}
-              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
-                <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm">
-                  API Keys Cá nhân (Nhập vào nếu bạn chọn chế độ 'Dùng API Key Cá nhân')
-                </div>
-                <div className="p-4 space-y-3">
-                  <div className="flex items-center gap-4">
-                    <label className="w-40 text-sm font-medium text-gray-700">OpenAI API Key:</label>
-                    <input type="text" name="openaiKey" value={settings.openaiKey} onChange={handleChange} placeholder="Nhập API Key nếu muốn dùng ChatGPT hoặc giọng nói OpenAI" className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500" />
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <label className="w-40 text-sm font-medium text-gray-700">Google AI API Key:</label>
-                    <input type="text" name="googleKey" value={settings.googleKey} onChange={handleChange} placeholder="Nhập API Key nếu muốn dùng các model Gemini của Google" className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500" />
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <label className="w-40 text-sm font-medium text-gray-700">ElevenLabs API Key:</label>
-                    <input type="password" name="elevenlabsKey" value={settings.elevenlabsKey} onChange={handleChange} placeholder="Nhập API Key của bạn từ ElevenLabs" className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500 font-mono tracking-widest" />
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <label className="w-40 text-sm font-medium text-gray-700">Minimax Group ID:</label>
-                    <input type="text" name="minimaxGroupId" value={settings.minimaxGroupId} onChange={handleChange} placeholder="Nhập Group ID của bạn từ Minimax" className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500" />
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <label className="w-40 text-sm font-medium text-gray-700">Minimax API Key:</label>
-                    <input type="password" name="minimaxKey" value={settings.minimaxKey} onChange={handleChange} placeholder="Nhập API Key của bạn từ Minimax" className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500 font-mono tracking-widest" />
-                  </div>
-                  <button className="w-full mt-2 flex items-center justify-center gap-2 bg-[#1a73e8] hover:bg-blue-700 text-white font-medium py-2 rounded shadow-sm text-sm transition-colors">
-                    <Download size={16} /> Tải danh sách giọng nói từ API Keys đã nhập
-                  </button>
+              {/* Box 1: Status */}
+              <div className="bg-green-50 border border-green-200 rounded-lg shadow-sm overflow-hidden p-4 flex items-center gap-3">
+                <CheckCircle2 className="text-green-600" size={24} />
+                <div className="flex-1">
+                  <h4 className="font-bold text-green-800">Đã kết nối API Thành Công</h4>
+                  <p className="text-sm text-green-700">Hệ thống đang sử dụng BỘ NÃO API được cấu hình an toàn trên Biến Môi Trường (Environment Variables).</p>
                 </div>
               </div>
 
