@@ -1,19 +1,76 @@
-import React, { useState, useEffect } from 'react';
-import { Key, User, Mic, Settings2, Download, Save, X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Search, CheckCircle2, FolderOpen } from 'lucide-react';
+
+const MAIN_VOICES = [
+  { id: '135', name: 'Aidol Giọng Nữ Trầm (Ả Rập)', type: 'Aidol', gender: 'Female', cost: '520.00' },
+  { id: '136', name: 'Aidol Giọng Robot', type: 'Aidol', gender: 'Female', cost: '520.00' },
+  { id: '137', name: 'Aidol Hiệp Sĩ Trung Thành (NB)', type: 'Aidol', gender: 'Female', cost: '520.00' },
+  { id: '138', name: 'Aidol Hoài Nam (Trầm ấm)', type: 'Aidol', gender: 'Male', cost: '114.00' },
+  { id: '139', name: 'Aidol Hùng Biện', type: 'Aidol', gender: 'Female', cost: '520.00' },
+  { id: '140', name: 'Aidol Hậu Bối Vui Tính (HQ)', type: 'Aidol', gender: 'Female', cost: '520.00' },
+  { id: '141', name: 'Aidol Học Giả (BĐN)', type: 'Aidol', gender: 'Female', cost: '520.00' },
+  { id: '142', name: 'Aidol Học Giả (TBN)', type: 'Aidol', gender: 'Female', cost: '520.00' },
+  { id: '143', name: 'Aidol Học Giả (Ukraina)', type: 'Aidol', gender: 'Female', cost: '520.00' },
+  { id: '144', name: 'Aidol Học Giả Uyên Bác', type: 'Aidol', gender: 'Female', cost: '520.00' },
+  { id: '145', name: 'Aidol Học Sinh Năng Động (NB)', type: 'Aidol', gender: 'Female', cost: '520.00' },
+  { id: '146', name: 'Aidol Kim Oanh (Lạc quan)', type: 'Aidol', gender: 'Female', cost: '520.00' },
+  { id: '147', name: 'Aidol Lan Chi (Truyền cảm)', type: 'Aidol', gender: 'Female', cost: '520.00' },
+  { id: '148', name: 'Aidol Lan Hương HD (Cao cấp)', type: 'Aidol', gender: 'Female', cost: '231.00' },
+  { id: '149', name: 'Aidol Linh Hồn Dễ Thương (TQ)', type: 'Aidol', gender: 'Female', cost: '520.00' }
+];
+
+const ASSISTANT_VOICES = [
+  { id: '1', name: 'Giọng Google (Miễn phí)', type: 'Miễn phí', gender: 'Female', cost: '0' },
+  { id: '2', name: 'Aidol An Nhiên (Điềm tĩnh)', type: 'Aidol', gender: 'Female', cost: '520.00' },
+  { id: '3', name: 'Aidol Anh Chàng Hài Hước', type: 'Aidol', gender: 'Male', cost: '520.00' },
+  { id: '4', name: 'Aidol Bà Cụ Nhân Từ (TQ)', type: 'Aidol', gender: 'Female', cost: '520.00' },
+  { id: '5', name: 'Aidol Bé My (Đáng yêu)', type: 'Aidol', gender: 'Female', cost: '520.00' },
+  { id: '6', name: 'Aidol Bé Tinh Nghịch', type: 'Aidol', gender: 'Female', cost: '520.00' },
+  { id: '7', name: 'Aidol Bạn Gái Chu Đáo (BĐN)', type: 'Aidol', gender: 'Female', cost: '520.00' },
+  { id: '8', name: 'Aidol Bạn Gái Chu Đáo (TBN)', type: 'Aidol', gender: 'Female', cost: '520.00' },
+  { id: '9', name: 'Aidol Bạn Thân Thời Thơ Ấu (HQ)', type: 'Aidol', gender: 'Female', cost: '520.00' },
+  { id: '10', name: 'Aidol Bạn Thân Đẹp Trai (Nga)', type: 'Aidol', gender: 'Male', cost: '520.00' },
+  { id: '11', name: 'Aidol Bạn Thân Ấm Áp (TQ)', type: 'Aidol', gender: 'Female', cost: '520.00' },
+  { id: '12', name: 'Aidol Bạn Trai Vui Vẻ (HQ)', type: 'Aidol', gender: 'Male', cost: '520.00' },
+  { id: '13', name: 'Aidol Bạn Đời Trưởng Thành (BĐN)', type: 'Aidol', gender: 'Female', cost: '520.00' },
+  { id: '14', name: 'Aidol Bạn Đời Trưởng Thành (TBN)', type: 'Aidol', gender: 'Female', cost: '520.00' },
+  { id: '15', name: 'Aidol Bảo Vy (Tươi tắn)', type: 'Aidol', gender: 'Female', cost: '114.00' },
+  { id: '16', name: 'Aidol Bảo Vy HD (Cao cấp)', type: 'Aidol', gender: 'Female', cost: '231.00' }
+];
 
 export default function GeneralSettings({ onClose }) {
   const [activeTab, setActiveTab] = useState('prompt');
   
-  // State for settings
+  // State for all settings
   const [settings, setSettings] = useState({
+    // Tab 1: API Prompt
     openaiKey: '',
     googleKey: '',
     elevenlabsKey: '',
     minimaxGroupId: '',
     minimaxKey: '',
     queueTimeout: '1',
-    systemPrompt: '',
-    backgroundContext: ''
+    systemPrompt: "Bạn là một nhân vật ảo AI tên là 'Lan Hương', bạn nữ, thân thiện, hài hước và thông minh. Bạn là một nhân viên live stream siêu đáng yêu, đang bán phần mềm AIDOL live stream bằng trí tuệ nhân tạo. Bạn có một ông chủ tên là Tun Tử Tế rất giỏi trong lĩnh vực trí tuệ nhân tạo, thỉnh thoảng có thể trêu trọc ông chủ.",
+    backgroundContext: "Bối cảnh: Bạn đang livestream bán phần mềm AIDOL một phần mềm dùng để live stream bằng trí tuệ nhân tạo. Người dùng có thể tự tạo ra nhân vật của chính họ bằng các chỉ từ 1 ảnh, tạo ra video, cho video đó vào phần mềm AIDOL thì phần mềm AIDOL sẽ tự đóng gói lại và tạo thành 1 nhân vật live stream đồng nhất, có thể dùng nhân vật đó live stream kiếm xu nhận quà trên tiktok, bán hàng tiếp thị liên kết, hoặc xuất hiện trên live cùng với người thật. Giá phần mềm là 3 triệu 5 trăm ngàn đồng / 1 năm hoặc có thể dùng gói dùng thử 500000 trên 1 tháng.\nKĩ thuật phần mềm: Công dụng: dùng để live stream bằng nhân vật ảo hoặc nhân bản chính bản thân mình, live stream phản hồi theo thời gian thực tất cả các sự kiện trong khi live tiktok. Phần mềm có hơn 500 giọng nói khác nhau. Nhân vật live stream có thể là bất cứ ai tùy vào người dùng tự tạo và tưởng tượng ra.\nChốt đơn bằng cách khuyến khích mọi người nhấn tin vào link bio.",
+    
+    // Tab 2: Nhân vật Chính
+    llmChoice: 'api', // 'aidol' | 'api'
+    apiModel: 'Aidol V1 (Kinh tế) (3.84 coin/in, 11.44 coin/out)',
+    mainVoiceFilter: 'all', // 'all' | 'male' | 'female'
+    mainVoiceId: '148',
+    
+    // Tab 3: Trợ lý
+    assistantEnabled: true,
+    assistantVideoFolder: 'im lặng (2 video)',
+    assistantVoiceFilter: 'all',
+    assistantVoiceId: '1',
+    
+    // Tab 4: Cấu hình Nhanh
+    selectedPreset: 'fast', // 'fast' | 'notification' | 'custom_LanHuong'
+    userPresets: [
+      { id: 'custom_LanHuong', name: 'Lan Hương', desc: 'Cấu hình tùy chỉnh do bạn lưu.' }
+    ],
+    newPresetName: ''
   });
 
   // Load from localStorage on mount
@@ -21,17 +78,10 @@ export default function GeneralSettings({ onClose }) {
     const savedSettings = localStorage.getItem('aidol_general_settings');
     if (savedSettings) {
       try {
-        setSettings(JSON.parse(savedSettings));
+        setSettings(prev => ({ ...prev, ...JSON.parse(savedSettings) }));
       } catch (e) {
         console.error("Failed to parse settings", e);
       }
-    } else {
-      // Default dummy data matching screenshot
-      setSettings(prev => ({
-        ...prev,
-        systemPrompt: "Bạn là một nhân vật ảo AI tên là 'Lan Hương', bạn nữ, thân thiện, hài hước và thông minh. Bạn là một nhân viên live stream siêu đáng yêu, đang bán phần mềm AIDOL live stream bằng trí tuệ nhân tạo. Bạn có một ông chủ tên là Tun Tử Tế rất giỏi trong lĩnh vực trí tuệ nhân tạo, thỉnh thoảng có thể trêu trọc ông chủ.",
-        backgroundContext: "Bối cảnh: Bạn đang livestream bán phần mềm AIDOL một phần mềm dùng để live stream bằng trí tuệ nhân tạo. Người dùng có thể tự tạo ra nhân vật của chính họ bằng các chỉ từ 1 ảnh, tạo ra video, cho video đó vào phần mềm AIDOL thì phần mềm AIDOL sẽ tự đóng gói lại và tạo thành 1 nhân vật live stream đồng nhất, có thể dùng nhân vật đó live stream kiếm xu nhận quà trên tiktok, bán hàng tiếp thị liên kết, hoặc xuất hiện trên live cùng với người thật. Giá phần mềm là 3 triệu 5 trăm ngàn đồng / 1 năm hoặc có thể dùng gói dùng thử 500000 trên 1 tháng.\nKĩ thuật phần mềm: Công dụng: dùng để live stream bằng nhân vật ảo hoặc nhân bản chính bản thân mình, live stream phản hồi theo thời gian thực tất cả các sự kiện trong khi live tiktok. Phần mềm có hơn 500 giọng nói khác nhau. Nhân vật live stream có thể là bất cứ ai tùy vào người dùng tự tạo và tưởng tượng ra.\nChốt đơn bằng cách khuyến khích mọi người nhấn tin vào link bio."
-      }));
     }
   }, []);
 
@@ -41,8 +91,93 @@ export default function GeneralSettings({ onClose }) {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setSettings(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setSettings(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  };
+
+  const handleMainVoiceFilter = (filter) => setSettings(prev => ({ ...prev, mainVoiceFilter: filter }));
+  const handleAssistantVoiceFilter = (filter) => setSettings(prev => ({ ...prev, assistantVoiceFilter: filter }));
+
+  const selectFolder = async () => {
+    try {
+      // Dùng window.showDirectoryPicker nếu hỗ trợ (Chromium)
+      if (window.showDirectoryPicker) {
+        const dirHandle = await window.showDirectoryPicker();
+        setSettings(prev => ({ ...prev, assistantVideoFolder: dirHandle.name }));
+      } else {
+        // Fallback giả lập chọn thư mục
+        const folderPath = prompt("Hãy nhập đường dẫn thư mục Video Trợ lý (VD: C:/Videos/ImLang/):", "C:/Videos/ImLang/");
+        if (folderPath) {
+          setSettings(prev => ({ ...prev, assistantVideoFolder: folderPath }));
+        }
+      }
+    } catch (e) {
+      console.log('Folder selection cancelled or failed:', e);
+    }
+  };
+
+  const savePreset = () => {
+    if (!settings.newPresetName.trim()) return;
+    const newPreset = {
+      id: `custom_${Date.now()}`,
+      name: settings.newPresetName,
+      desc: 'Cấu hình tùy chỉnh do bạn lưu.'
+    };
+    setSettings(prev => ({
+      ...prev,
+      userPresets: [...prev.userPresets, newPreset],
+      selectedPreset: newPreset.id,
+      newPresetName: ''
+    }));
+  };
+
+  // Helper renderers for Tables
+  const renderVoiceTable = (voices, currentFilter, selectedId, onSelect) => {
+    const filtered = voices.filter(v => {
+      if (currentFilter === 'male') return v.gender === 'Male';
+      if (currentFilter === 'female') return v.gender === 'Female';
+      return true;
+    });
+
+    return (
+      <div className="border border-gray-300 rounded overflow-hidden">
+        <table className="w-full text-sm text-left">
+          <thead className="bg-gray-100 text-gray-700 font-semibold border-b border-gray-300">
+            <tr>
+              <th className="px-4 py-2 w-12 text-center">ID</th>
+              <th className="px-4 py-2">Tên Giọng Nói</th>
+              <th className="px-4 py-2">Loại</th>
+              <th className="px-4 py-2">Giới Tính</th>
+              <th className="px-4 py-2">Chi Phí (Coin/ký tự)</th>
+              <th className="px-4 py-2 w-16 text-center"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {filtered.map((v, i) => {
+              const isSelected = selectedId === v.id;
+              return (
+                <tr 
+                  key={v.id} 
+                  onClick={() => onSelect(v.id)}
+                  className={`cursor-pointer hover:bg-green-50 transition-colors ${isSelected ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-white text-gray-800'}`}
+                >
+                  <td className="px-4 py-2 text-center font-medium">{v.id}</td>
+                  <td className="px-4 py-2 font-medium">{v.name}</td>
+                  <td className={`px-4 py-2 ${isSelected ? 'text-white' : 'text-blue-600'}`}>{v.type}</td>
+                  <td className="px-4 py-2">{v.gender}</td>
+                  <td className="px-4 py-2">{v.cost}</td>
+                  <td className="px-4 py-2 text-center">
+                    <button className={`p-1.5 rounded-full ${isSelected ? 'bg-green-400 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'} transition-colors`}>
+                      <Volume2 size={14} />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    );
   };
 
   return (
@@ -60,7 +195,7 @@ export default function GeneralSettings({ onClose }) {
           onClick={() => setActiveTab('main-character')}
           className={`flex items-center gap-2 px-6 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'main-character' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
         >
-          <User size={16} /> Nhân vật Chính
+          <User size={16} className={activeTab === 'main-character' ? 'text-blue-600' : 'text-blue-500'} /> Nhân vật Chính
         </button>
         <button 
           onClick={() => setActiveTab('assistant')}
@@ -72,104 +207,306 @@ export default function GeneralSettings({ onClose }) {
           onClick={() => setActiveTab('quick-config')}
           className={`flex items-center gap-2 px-6 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'quick-config' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
         >
-          <Settings2 size={16} /> Cấu hình Nhanh
+          <Settings2 size={16} className="text-gray-400" /> Cấu hình Nhanh
         </button>
       </div>
 
       {/* CONTENT AREA */}
       <div className="flex-1 overflow-y-auto p-4 bg-[#f8f9fa]">
-        
-        {activeTab === 'prompt' && (
-          <div className="max-w-4xl mx-auto space-y-4">
-            
-            {/* Box 1: API Keys */}
-            <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
-              <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm">
-                API Keys Cá nhân (Nhập vào nếu bạn chọn chế độ 'Dùng API Key Cá nhân')
+        <div className="max-w-5xl mx-auto space-y-4">
+          
+          {/* TAB 1: API PROMPT */}
+          {activeTab === 'prompt' && (
+            <>
+              {/* Box 1: API Keys */}
+              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
+                <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm">
+                  API Keys Cá nhân (Nhập vào nếu bạn chọn chế độ 'Dùng API Key Cá nhân')
+                </div>
+                <div className="p-4 space-y-3">
+                  <div className="flex items-center gap-4">
+                    <label className="w-40 text-sm font-medium text-gray-700">OpenAI API Key:</label>
+                    <input type="text" name="openaiKey" value={settings.openaiKey} onChange={handleChange} placeholder="Nhập API Key nếu muốn dùng ChatGPT hoặc giọng nói OpenAI" className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500" />
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <label className="w-40 text-sm font-medium text-gray-700">Google AI API Key:</label>
+                    <input type="text" name="googleKey" value={settings.googleKey} onChange={handleChange} placeholder="Nhập API Key nếu muốn dùng các model Gemini của Google" className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500" />
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <label className="w-40 text-sm font-medium text-gray-700">ElevenLabs API Key:</label>
+                    <input type="password" name="elevenlabsKey" value={settings.elevenlabsKey} onChange={handleChange} placeholder="Nhập API Key của bạn từ ElevenLabs" className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500 font-mono tracking-widest" />
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <label className="w-40 text-sm font-medium text-gray-700">Minimax Group ID:</label>
+                    <input type="text" name="minimaxGroupId" value={settings.minimaxGroupId} onChange={handleChange} placeholder="Nhập Group ID của bạn từ Minimax" className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500" />
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <label className="w-40 text-sm font-medium text-gray-700">Minimax API Key:</label>
+                    <input type="password" name="minimaxKey" value={settings.minimaxKey} onChange={handleChange} placeholder="Nhập API Key của bạn từ Minimax" className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500 font-mono tracking-widest" />
+                  </div>
+                  <button className="w-full mt-2 flex items-center justify-center gap-2 bg-[#1a73e8] hover:bg-blue-700 text-white font-medium py-2 rounded shadow-sm text-sm transition-colors">
+                    <Download size={16} /> Tải danh sách giọng nói từ API Keys đã nhập
+                  </button>
+                </div>
               </div>
-              <div className="p-4 space-y-3">
+
+              {/* Box 2: Queue Settings */}
+              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
+                <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm">
+                  Cài đặt Hàng đợi
+                </div>
+                <div className="p-4 flex items-center gap-4">
+                  <label className="text-sm font-medium text-gray-700">Tự động xóa sự kiện sau (phút):</label>
+                  <input type="number" name="queueTimeout" value={settings.queueTimeout} onChange={handleChange} className="w-24 border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:border-blue-500 text-center text-red-500 font-medium" />
+                </div>
+              </div>
+
+              {/* Box 3: Prompt Config */}
+              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden flex flex-col min-h-[400px]">
+                <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm">
+                  Cấu hình Prompt
+                </div>
+                <div className="p-4 flex-1 flex flex-col gap-4">
+                  <div className="flex flex-col gap-1.5 flex-1">
+                    <label className="text-sm font-semibold text-[#a53b3b]">Tính cách (System Prompt):</label>
+                    <textarea 
+                      name="systemPrompt" value={settings.systemPrompt} onChange={handleChange}
+                      className="w-full flex-1 min-h-[120px] border border-gray-300 rounded p-3 text-sm focus:outline-none focus:border-blue-500 resize-none"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5 flex-1">
+                    <label className="text-sm font-semibold text-[#a53b3b]">Kiến thức nền / Bối cảnh:</label>
+                    <textarea 
+                      name="backgroundContext" value={settings.backgroundContext} onChange={handleChange}
+                      className="w-full flex-1 min-h-[120px] border border-gray-300 rounded p-3 text-sm focus:outline-none focus:border-blue-500 resize-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* TAB 2: NHÂN VẬT CHÍNH */}
+          {activeTab === 'main-character' && (
+            <>
+              {/* Thiết lập LLM */}
+              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
+                <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm">
+                  Thiết lập AI (LLM - 'Bộ Não')
+                </div>
+                <div className="p-4 space-y-4">
+                  <p className="text-sm font-semibold text-gray-800">Hãy chọn 'bộ não' cho Aidol:</p>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input 
+                        type="radio" name="llmChoice" value="aidol" 
+                        checked={settings.llmChoice === 'aidol'} onChange={handleChange} 
+                        className="w-4 h-4 text-blue-600 focus:ring-blue-500" 
+                      />
+                      <span className="text-sm font-medium text-gray-700">Dùng Aidol Models (trừ Tun Coin)</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input 
+                        type="radio" name="llmChoice" value="api" 
+                        checked={settings.llmChoice === 'api'} onChange={handleChange} 
+                        className="w-4 h-4 text-blue-600 focus:ring-blue-500" 
+                      />
+                      <span className="text-sm font-medium text-[#a53b3b]">Dùng API Key Cá nhân (không tốn Tun Coin)</span>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center gap-4 mt-2">
+                    <label className="text-sm font-semibold text-[#a53b3b]">Chọn Model Aidol:</label>
+                    <select 
+                      name="apiModel" value={settings.apiModel} onChange={handleChange}
+                      className="flex-1 max-w-md border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500 text-gray-700"
+                    >
+                      <option value="Aidol V1 (Kinh tế) (3.84 coin/in, 11.44 coin/out)">Aidol V1 (Kinh tế) (3.84 coin/in, 11.44 coin/out)</option>
+                      <option value="Aidol V2 (Thông minh) (8.00 coin/in, 20.00 coin/out)">Aidol V2 (Thông minh) (8.00 coin/in, 20.00 coin/out)</option>
+                    </select>
+                  </div>
+                  <p className="text-xs text-gray-500 italic flex items-center gap-1">
+                    ⓘ Việc tạo ra câu trả lời sẽ trừ Tun Coin từ tài khoản của bạn.
+                  </p>
+                </div>
+              </div>
+
+              {/* Bảng Giọng nói */}
+              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden flex flex-col h-[480px]">
+                <div className="px-4 py-3 border-b border-gray-300 bg-white">
+                  <h3 className="font-bold text-gray-800 text-sm mb-2">Chọn Giọng Nói Cho Nhân vật Chính</h3>
+                  <div className="flex items-center gap-6">
+                    <span className="text-sm font-semibold text-[#a53b3b]">Lọc theo:</span>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="radio" checked={settings.mainVoiceFilter === 'all'} onChange={() => handleMainVoiceFilter('all')} className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm font-medium text-gray-700">Tất cả</span>
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="radio" checked={settings.mainVoiceFilter === 'male'} onChange={() => handleMainVoiceFilter('male')} className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm font-medium text-gray-700">Giọng Nam</span>
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="radio" checked={settings.mainVoiceFilter === 'female'} onChange={() => handleMainVoiceFilter('female')} className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm font-medium text-gray-700">Giọng Nữ</span>
+                    </label>
+                  </div>
+                </div>
                 
-                <div className="flex items-center gap-4">
-                  <label className="w-40 text-sm font-medium text-gray-700">OpenAI API Key:</label>
-                  <input type="text" name="openaiKey" value={settings.openaiKey} onChange={handleChange} placeholder="Nhập API Key nếu muốn dùng ChatGPT hoặc giọng nói OpenAI" className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500" />
+                <div className="flex-1 overflow-auto p-4">
+                  {renderVoiceTable(MAIN_VOICES, settings.mainVoiceFilter, settings.mainVoiceId, (id) => setSettings(prev => ({...prev, mainVoiceId: id})))}
                 </div>
-
-                <div className="flex items-center gap-4">
-                  <label className="w-40 text-sm font-medium text-gray-700">Google AI API Key:</label>
-                  <input type="text" name="googleKey" value={settings.googleKey} onChange={handleChange} placeholder="Nhập API Key nếu muốn dùng các model Gemini của Google" className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500" />
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <label className="w-40 text-sm font-medium text-gray-700">ElevenLabs API Key:</label>
-                  <input type="password" name="elevenlabsKey" value={settings.elevenlabsKey} onChange={handleChange} placeholder="Nhập API Key của bạn từ ElevenLabs" className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500 font-mono tracking-widest" />
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <label className="w-40 text-sm font-medium text-gray-700">Minimax Group ID:</label>
-                  <input type="text" name="minimaxGroupId" value={settings.minimaxGroupId} onChange={handleChange} placeholder="Nhập Group ID của bạn từ Minimax" className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500" />
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <label className="w-40 text-sm font-medium text-gray-700">Minimax API Key:</label>
-                  <input type="password" name="minimaxKey" value={settings.minimaxKey} onChange={handleChange} placeholder="Nhập API Key của bạn từ Minimax" className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500 font-mono tracking-widest" />
-                </div>
-
-                <button className="w-full mt-2 flex items-center justify-center gap-2 bg-[#1a73e8] hover:bg-blue-700 text-white font-medium py-2 rounded shadow-sm text-sm transition-colors">
-                  <Download size={16} /> Tải danh sách giọng nói từ API Keys đã nhập
-                </button>
-              </div>
-            </div>
-
-            {/* Box 2: Queue Settings */}
-            <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
-              <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm">
-                Cài đặt Hàng đợi
-              </div>
-              <div className="p-4 flex items-center gap-4">
-                <label className="text-sm font-medium text-gray-700">Tự động xóa sự kiện sau (phút):</label>
-                <input type="number" name="queueTimeout" value={settings.queueTimeout} onChange={handleChange} className="w-24 border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:border-blue-500 text-center text-red-500 font-medium" />
-              </div>
-            </div>
-
-            {/* Box 3: Prompt Config */}
-            <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden flex flex-col min-h-[400px]">
-              <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm">
-                Cấu hình Prompt
-              </div>
-              <div className="p-4 flex-1 flex flex-col gap-4">
                 
-                <div className="flex flex-col gap-1.5 flex-1">
-                  <label className="text-sm font-semibold text-[#a53b3b]">Tính cách (System Prompt):</label>
-                  <textarea 
-                    name="systemPrompt"
-                    value={settings.systemPrompt}
-                    onChange={handleChange}
-                    className="w-full flex-1 min-h-[120px] border border-gray-300 rounded p-3 text-sm focus:outline-none focus:border-blue-500 resize-none"
-                  />
+                <div className="px-4 py-2 bg-gray-50 border-t border-gray-300 text-xs text-gray-500 italic">
+                  ⓘ Vui lòng bấm vào nút 'Nghe thử' 🔊 để kiểm tra giọng nói trước khi chọn để tránh lỗi giọng nói từ server.
                 </div>
-
-                <div className="flex flex-col gap-1.5 flex-1">
-                  <label className="text-sm font-semibold text-[#a53b3b]">Kiến thức nền / Bối cảnh:</label>
-                  <textarea 
-                    name="backgroundContext"
-                    value={settings.backgroundContext}
-                    onChange={handleChange}
-                    className="w-full flex-1 min-h-[120px] border border-gray-300 rounded p-3 text-sm focus:outline-none focus:border-blue-500 resize-none"
-                  />
-                </div>
-
               </div>
+            </>
+          )}
+
+          {/* TAB 3: TRỢ LÝ */}
+          {activeTab === 'assistant' && (
+            <>
+              {/* Cài đặt chung cho Trợ lý */}
+              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
+                <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm">
+                  Cài đặt chung cho Trợ lý
+                </div>
+                <div className="p-4 space-y-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="checkbox" name="assistantEnabled" 
+                      checked={settings.assistantEnabled} onChange={handleChange}
+                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" 
+                    />
+                    <span className="text-sm font-bold text-gray-800">Bật Trợ lý</span>
+                  </label>
+
+                  <div className="flex items-center justify-between border-t border-gray-200 pt-3">
+                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <span>Thư mục Video Trợ lý (cho video 'listening'):</span>
+                      <span className="font-semibold text-gray-900">{settings.assistantVideoFolder}</span>
+                    </div>
+                    <button 
+                      onClick={selectFolder}
+                      className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-100 text-sm font-medium transition-colors"
+                    >
+                      <FolderOpen size={16} /> Chọn thư mục...
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bảng Giọng nói Trợ lý */}
+              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden flex flex-col h-[480px]">
+                <div className="px-4 py-3 border-b border-gray-300 bg-white">
+                  <h3 className="font-bold text-gray-800 text-sm mb-2">Chọn Giọng Nói cho Trợ lý</h3>
+                  <div className="flex items-center gap-6">
+                    <span className="text-sm font-semibold text-gray-700">Lọc theo:</span>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="radio" checked={settings.assistantVoiceFilter === 'all'} onChange={() => handleAssistantVoiceFilter('all')} className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm font-medium text-gray-700">Tất cả</span>
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="radio" checked={settings.assistantVoiceFilter === 'male'} onChange={() => handleAssistantVoiceFilter('male')} className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm font-medium text-gray-700">Giọng Nam</span>
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="radio" checked={settings.assistantVoiceFilter === 'female'} onChange={() => handleAssistantVoiceFilter('female')} className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm font-medium text-gray-700">Giọng Nữ</span>
+                    </label>
+                  </div>
+                </div>
+                
+                <div className="flex-1 overflow-auto p-4">
+                  {renderVoiceTable(ASSISTANT_VOICES, settings.assistantVoiceFilter, settings.assistantVoiceId, (id) => setSettings(prev => ({...prev, assistantVoiceId: id})))}
+                </div>
+
+                <div className="px-4 py-2 bg-gray-50 border-t border-gray-300 text-xs text-gray-500 italic">
+                  ⓘ Vui lòng bấm vào nút 'Nghe thử' 🔊 để kiểm tra giọng nói trước khi chọn để tránh lỗi giọng nói từ server.
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* TAB 4: CẤU HÌNH NHANH */}
+          {activeTab === 'quick-config' && (
+            <div className="space-y-4 max-w-4xl mx-auto">
+              {/* Chọn cấu hình có sẵn */}
+              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
+                <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm">
+                  Chọn một cấu hình có sẵn để áp dụng
+                </div>
+                <div className="p-4 space-y-4">
+                  
+                  <label className="flex flex-col gap-1 cursor-pointer">
+                    <div className="flex items-center gap-2">
+                      <input type="radio" name="selectedPreset" value="fast" checked={settings.selectedPreset === 'fast'} onChange={handleChange} className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
+                      <span className="text-sm font-bold text-gray-800">AI Phản ứng Nhanh (Khuyên dùng)</span>
+                    </div>
+                    <span className="text-sm text-gray-600 ml-6">AI sẽ chủ động giao lưu, trả lời bình luận và quà tặng một cách sáng tạo.</span>
+                  </label>
+
+                  <label className="flex flex-col gap-1 cursor-pointer">
+                    <div className="flex items-center gap-2">
+                      <input type="radio" name="selectedPreset" value="notification" checked={settings.selectedPreset === 'notification'} onChange={handleChange} className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
+                      <span className="text-sm font-bold text-gray-800">Trợ lý Thông báo (Không dùng AI)</span>
+                    </div>
+                    <span className="text-sm text-gray-600 ml-6">Nhân vật chỉ đọc các thông báo có sẵn. Tiết kiệm chi phí API.</span>
+                  </label>
+
+                  {/* User Presets */}
+                  <div className="pt-4 border-t border-gray-200">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-3">Preset của bạn:</h4>
+                    <div className="space-y-3">
+                      {settings.userPresets.map(preset => (
+                        <label key={preset.id} className="flex flex-col gap-1 cursor-pointer">
+                          <div className="flex items-center gap-2">
+                            <input type="radio" name="selectedPreset" value={preset.id} checked={settings.selectedPreset === preset.id} onChange={handleChange} className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
+                            <span className="text-sm font-bold text-[#a53b3b]">{preset.name}</span>
+                          </div>
+                          <span className="text-sm text-gray-600 ml-6">{preset.desc}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Áp dụng button */}
+              <button className="w-full py-3 bg-[#6ab04c] hover:bg-green-600 text-white font-bold rounded-lg shadow-md transition-colors flex items-center justify-center gap-2 text-lg">
+                ✨ Áp dụng Cấu hình đã chọn
+              </button>
+
+              {/* Lưu Cài đặt Hiện tại */}
+              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
+                <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm">
+                  Lưu Cài đặt Hiện tại thành Preset mới
+                </div>
+                <div className="p-4 flex items-center gap-4">
+                  <label className="text-sm font-bold text-gray-800 w-32">Đặt tên cho Preset:</label>
+                  <div className="flex-1 flex flex-col gap-2">
+                    <input 
+                      type="text" name="newPresetName" value={settings.newPresetName} onChange={handleChange}
+                      placeholder="Ví dụ: Cấu hình livestream bán hàng"
+                      className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500"
+                    />
+                    <button 
+                      onClick={savePreset}
+                      disabled={!settings.newPresetName.trim()}
+                      className="w-full py-1.5 border border-[#a53b3b] text-[#a53b3b] hover:bg-[#a53b3b] hover:text-white rounded font-medium text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Save size={16} /> Lưu Preset
+                    </button>
+                  </div>
+                </div>
+              </div>
+
             </div>
+          )}
 
-          </div>
-        )}
-
-        {activeTab !== 'prompt' && (
-          <div className="flex items-center justify-center h-full text-gray-500 font-medium text-lg">
-            (Tính năng {activeTab} đang được phát triển...)
-          </div>
-        )}
-
+        </div>
       </div>
 
       {/* FOOTER ACTIONS */}
