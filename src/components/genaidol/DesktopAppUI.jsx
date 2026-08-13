@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Settings, CreditCard, Video, Moon, Sun, 
-  MessageCircle, Play, Pause, Mic, MicOff, X, Download, Plus
+  MessageCircle, Play, Pause, Mic, MicOff, X, Download, Plus,
+  Brain, Radio
 } from 'lucide-react';
 import WorkspaceTacVu from './WorkspaceTacVu';
 import GeneralSettings from './GeneralSettings';
@@ -242,18 +243,24 @@ export default function DesktopAppUI() {
             </button>
             
             {isSettingsDropdownOpen && (
-              <div className={`absolute top-full left-0 mt-1 w-64 rounded-md shadow-xl border z-50 py-1 ${isDarkMode ? 'bg-[#1c1c23] border-gray-700' : 'bg-white border-gray-200'}`}>
+              <div className={`absolute top-full left-0 mt-2 w-72 rounded-xl shadow-2xl border z-50 p-2 overflow-hidden ${isDarkMode ? 'bg-[#1c1c23] border-gray-700' : 'bg-white border-gray-200'} animate-in fade-in slide-in-from-top-2 duration-200`}>
                 <button 
                   onClick={() => { setActiveSettingsModal('general'); setIsSettingsDropdownOpen(false); }}
-                  className={`w-full text-left px-4 py-2 text-sm transition-colors ${isDarkMode ? 'hover:bg-blue-600/20 text-gray-200' : 'hover:bg-blue-50 text-gray-700'}`}
+                  className={`w-full text-left px-4 py-3 mb-2 rounded-lg text-sm font-bold transition-all flex items-center gap-3 ${isDarkMode ? 'bg-gradient-to-r from-blue-900/40 to-blue-800/20 hover:from-blue-600 hover:to-blue-500 text-blue-100 hover:text-white border border-blue-800/50 hover:border-blue-400 hover:shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-500 hover:to-blue-600 text-blue-800 hover:text-white border border-blue-200 hover:border-blue-500 hover:shadow-lg'}`}
                 >
-                  Cấu hình Chung (AI, Giọng nói...)
+                  <div className={`p-2 rounded-md transition-colors ${isDarkMode ? 'bg-blue-900/50 text-blue-400 group-hover:text-white' : 'bg-white/80 text-blue-600'}`}>
+                    <Brain size={20} />
+                  </div>
+                  BỘ NÃO AI
                 </button>
                 <button 
                   onClick={() => { setActiveSettingsModal('workspace'); setIsSettingsDropdownOpen(false); }}
-                  className={`w-full text-left px-4 py-2 text-sm transition-colors ${isDarkMode ? 'hover:bg-blue-600/20 text-gray-200' : 'hover:bg-blue-50 text-gray-700'}`}
+                  className={`w-full text-left px-4 py-3 rounded-lg text-sm font-bold transition-all flex items-center gap-3 ${isDarkMode ? 'bg-gradient-to-r from-purple-900/40 to-purple-800/20 hover:from-purple-600 hover:to-purple-500 text-purple-100 hover:text-white border border-purple-800/50 hover:border-purple-400 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)]' : 'bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-500 hover:to-purple-600 text-purple-800 hover:text-white border border-purple-200 hover:border-purple-500 hover:shadow-lg'}`}
                 >
-                  Quản lý Sự kiện Video
+                  <div className={`p-2 rounded-md transition-colors ${isDarkMode ? 'bg-purple-900/50 text-purple-400 group-hover:text-white' : 'bg-white/80 text-purple-600'}`}>
+                    <Radio size={20} />
+                  </div>
+                  KẾT NỐI IDOL
                 </button>
               </div>
             )}
