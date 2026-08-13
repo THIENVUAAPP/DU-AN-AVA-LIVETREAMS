@@ -4,9 +4,11 @@ import {
   MessageCircle, Coins, Play, Pause, Mic, MicOff, Volume2, X, Maximize, Minus, Download
 } from 'lucide-react';
 import WorkspaceTacVu from './WorkspaceTacVu';
+import GeneralSettings from './GeneralSettings';
 
 export default function DesktopAppUI() {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [activeSettingsModal, setActiveSettingsModal] = useState(null); // 'general' | 'workspace' | null
+  const [isSettingsDropdownOpen, setIsSettingsDropdownOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isAiPaused, setIsAiPaused] = useState(false);
   const [isCommMode, setIsCommMode] = useState(false);
@@ -85,17 +87,37 @@ export default function DesktopAppUI() {
       <div className={`flex flex-col gap-2 p-3 ${isDarkMode ? 'bg-[#1a1a24]' : 'bg-gray-200'} border-t ${isDarkMode ? 'border-gray-800' : 'border-gray-300'}`}>
         
         {/* Row 1 */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between relative">
           <div className="flex items-center gap-2">
             
-            {/* Cài đặt Button (Opens Event Manager) */}
-            <button 
-              onClick={() => setIsSettingsOpen(true)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
-            >
-              <Settings size={16} />
-              Cài đặt ▼
-            </button>
+            {/* Cài đặt Dropdown */}
+            <div className="relative">
+              <button 
+                onClick={() => setIsSettingsDropdownOpen(!isSettingsDropdownOpen)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
+              >
+                <Settings size={16} />
+                Cài đặt ▼
+              </button>
+              
+              {/* Dropdown Menu */}
+              {isSettingsDropdownOpen && (
+                <div className={`absolute top-full left-0 mt-1 w-64 rounded-md shadow-xl border z-20 py-1 ${isDarkMode ? 'bg-[#1c1c23] border-gray-700' : 'bg-white border-gray-200'}`}>
+                  <button 
+                    onClick={() => { setActiveSettingsModal('general'); setIsSettingsDropdownOpen(false); }}
+                    className={`w-full text-left px-4 py-2 text-sm transition-colors ${isDarkMode ? 'hover:bg-blue-600/20 text-gray-200' : 'hover:bg-blue-50 text-gray-700'}`}
+                  >
+                    Cấu hình Chung (AI, Giọng nói...)
+                  </button>
+                  <button 
+                    onClick={() => { setActiveSettingsModal('workspace'); setIsSettingsDropdownOpen(false); }}
+                    className={`w-full text-left px-4 py-2 text-sm transition-colors ${isDarkMode ? 'hover:bg-blue-600/20 text-gray-200' : 'hover:bg-blue-50 text-gray-700'}`}
+                  >
+                    Quản lý Sự kiện Video
+                  </button>
+                </div>
+              )}
+            </div>
 
             <button className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-[#00d2ff]/20 text-[#00d2ff] hover:bg-[#00d2ff]/30' : 'bg-cyan-100 text-cyan-700 hover:bg-cyan-200'}`}>
               <Eye size={16} />
@@ -205,8 +227,33 @@ export default function DesktopAppUI() {
 
       </div>
 
+      {/* General Settings Modal */}
+      {activeSettingsModal === 'general' && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in zoom-in duration-200">
+          <div className={`w-[900px] h-[700px] flex flex-col rounded-lg overflow-hidden shadow-2xl border bg-[#f0f2f5] border-gray-300`}>
+            {/* Modal Header */}
+            <div className={`flex items-center justify-between px-4 py-2 border-b bg-gray-200 border-gray-300`}>
+              <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                <Settings size={14} className="text-gray-600" />
+                Cấu hình AI, Giọng nói & API
+              </h2>
+              <button 
+                onClick={() => setActiveSettingsModal(null)}
+                className="hover:bg-gray-300 p-1 rounded transition-colors text-gray-600"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            
+            <div className="flex-1 relative">
+              <GeneralSettings onClose={() => setActiveSettingsModal(null)} />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Settings Modal (WorkspaceTacVu / Event Manager) */}
-      {isSettingsOpen && (
+      {activeSettingsModal === 'workspace' && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in zoom-in duration-200">
           <div className={`w-full max-w-6xl h-[95vh] flex flex-col rounded-xl overflow-hidden shadow-2xl border ${isDarkMode ? 'bg-[#141419] border-gray-700' : 'bg-white border-gray-200'}`}>
             
@@ -224,7 +271,7 @@ export default function DesktopAppUI() {
                   Kiểm tra cập nhật
                 </button>
                 <button 
-                  onClick={() => setIsSettingsOpen(false)}
+                  onClick={() => setActiveSettingsModal(null)}
                   className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-gray-800 text-gray-400 hover:text-white' : 'hover:bg-gray-100 text-gray-500 hover:text-gray-900'}`}
                 >
                   <X size={24} />
