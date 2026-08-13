@@ -87,7 +87,12 @@ export default function DesktopAppUI() {
   }, []);
 
   const handleDownload = () => {
-    alert("Bắt đầu tải bộ cài đặt phần mềm Livestream AI (ZIP)...");
+    const link = document.createElement('a');
+    link.href = '/Livestream_AI_Software.zip';
+    link.download = 'Livestream_AI_Software.zip';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleFileUpload = (e) => {
