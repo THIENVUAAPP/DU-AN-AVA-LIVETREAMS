@@ -1,497 +1,369 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Settings, Clock, Mic, Mic2, CheckCircle, UserSquare2, Image as ImageIcon, Play, Upload, Check, Zap, Lock, Brain, Sparkles, FileText, ChevronDown, Monitor, Video, Search, FileAudio, Plus, Trash2, Film, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { 
+  CheckSquare, MessageCircle, Plus, Gift, Clock, Megaphone, 
+  Hand, ShoppingCart, Share, Sparkles, Mic, Heart, Play, HelpCircle
+} from 'lucide-react';
 
-const DEFAULT_BRAINS = [
-  { id: 'sales', name: 'Product/Sales Mode', icon: '🛒', isDefault: true, desc: 'Giới thiệu sản phẩm, chốt sale' },
-  { id: 'talk', name: 'Talk Mode', icon: '💬', isDefault: true, desc: 'Giao lưu, trò chuyện, hỏi đáp' },
-  { id: 'dance', name: 'Dance Mode', icon: '💃', isDefault: true, desc: 'Vũ đạo, nhảy theo quà tặng' },
-  { id: 'sing', name: 'Music Mode', icon: '🎤', isDefault: true, desc: 'Hát, chọn bài theo yêu cầu' }
+const EVENTS = [
+  { id: 'apology', label: 'Xin lỗi', icon: CheckSquare, color: 'text-green-500', desc: 'Cấu hình phản ứng của Aldol khi nó không hiểu một bình luận hoặc gặp phải lỗi không mong muốn.' },
+  { id: 'comment', label: 'Bình luận', icon: MessageCircle, color: 'text-gray-400', desc: 'Aldol sẽ tự động đọc và trả lời các bình luận của người xem trên phiên live.' },
+  { id: 'follow', label: 'Theo dõi', icon: Plus, color: 'text-purple-600', desc: 'Aldol sẽ gửi lời cảm ơn đặc biệt mỗi khi có người xem mới nhấn theo dõi kênh của bạn, giúp tăng tỷ lệ chuyển đổi người xem thành người theo dõi.' },
+  { id: 'gift', label: 'Quà tặng (Thường)', icon: Gift, color: 'text-yellow-500', desc: 'Aldol gửi lời cảm ơn khi nhận được quà tặng từ người xem.' },
+  { id: 'idle', label: 'Im lặng (Chờ)', icon: Clock, color: 'text-orange-500', desc: 'Cấu hình các hành động của Aldol khi ở trạng thái chờ, không có sự kiện nào cần xử lý.' },
+  { id: 'call_to_action', label: 'Kêu gọi tương tác', icon: Megaphone, color: 'text-red-500', desc: 'Aldol chủ động kêu gọi mọi người thả tim, share, follow.' },
+  { id: 'welcome', label: 'Chào người mới', icon: Hand, color: 'text-yellow-500', desc: 'Chào mừng những người xem mới tham gia vào phiên live.' },
+  { id: 'checkout', label: 'Chốt đơn', icon: ShoppingCart, color: 'text-blue-500', desc: 'Aldol sẽ thực hiện các câu kêu gọi mua hàng, chốt đơn khi có người hỏi mua.' },
+  { id: 'share', label: 'Chia sẻ', icon: Share, color: 'text-blue-400', desc: 'Cảm ơn người xem đã chia sẻ phiên live.' },
+  { id: 'special_gift', label: 'Quà tặng Đặc biệt', icon: Sparkles, color: 'text-yellow-500', desc: 'Phản ứng đặc biệt khi nhận được các món quà có giá trị cao.' },
+  { id: 'talking', label: 'Nói chuyện (AI)', icon: Mic, color: 'text-gray-500', desc: 'Giúp livestream không bị "chết". Aldol sẽ tự động bắt chuyện khi không có sự kiện nào xảy ra trong một khoảng thời gian dài.' },
+  { id: 'thanks_heart', label: 'Cảm ơn Tim', icon: Heart, color: 'text-red-500', desc: 'Cảm ơn khi người xem thả tim cho phiên live.' }
 ];
 
-const EVENTS_LIST = [
-  { id: 'xin_loi', name: 'Xin lỗi' },
-  { id: 'binh_luan', name: 'Bình luận' },
-  { id: 'theo_doi', name: 'Theo dõi' },
-  { id: 'qua_tang', name: 'Quà tặng (Thường)' },
-  { id: 'im_lang', name: 'Im lặng (Chờ)' },
-  { id: 'keu_goi', name: 'Kêu gọi tương tác' },
-  { id: 'chao_moi', name: 'Chào người mới' },
-  { id: 'chot_don', name: 'Chốt đơn' },
-  { id: 'chia_se', name: 'Chia sẻ' },
-  { id: 'qua_dac_biet', name: 'Quà tặng Đặc biệt' },
-  { id: 'noi_chuyen', name: 'Nói chuyện (AI)' },
-  { id: 'cam_on_tim', name: 'Cảm ơn Tim' }
-];
-
-const DEFAULT_EVENT_CONFIG = {
-  videoCategory: 'talking',
-  enabled: true,
-  useAI: true,
-  prompt: 'Bạn là một streamer AI. Hãy phản hồi thật tự nhiên.',
-  sample: '',
-  useVoice: true,
-  muteVideo: true,
-  delaySeconds: 0
-};
-
-export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
-  const [rightTab, setRightTab] = useState('settings'); 
+export default function WorkspaceTacVu() {
+  const [selectedEventId, setSelectedEventId] = useState('apology');
   
-  // States for Custom Brains
-  const [customBrains, setCustomBrains] = useState([]);
-  const [selectedBrainId, setSelectedBrainId] = useState('sales');
-  
-  // Event Manager State
-  const [selectedEventId, setSelectedEventId] = useState('noi_chuyen');
-  const [eventsConfig, setEventsConfig] = useState({}); // { [eventId]: config }
-  
-  // Voice Settings (Per Brain)
-  const [voiceProvider, setVoiceProvider] = useState('vbee');
-  const [selectedVoice, setSelectedVoice] = useState('vbee_f_n_1');
-  const [speed, setSpeed] = useState(1.0);
-
-  // Video Library State
-  const [showVideoLibrary, setShowVideoLibrary] = useState(false);
-  const [videoCategories, setVideoCategories] = useState(['talking', 'dancing', 'waiting', 'sad', 'happy']);
-  const [videos, setVideos] = useState([]);
+  // State to hold configuration for all events
+  const [eventConfigs, setEventConfigs] = useState({});
 
   useEffect(() => {
-    const saved = localStorage.getItem('aidol_custom_brains');
-    if (saved && saved !== 'null') {
-      try { setCustomBrains(JSON.parse(saved) || []); } catch(e) {}
-    }
-    const savedVideos = localStorage.getItem('aidol_video_library');
-    if (savedVideos && savedVideos !== 'null') {
-      try { setVideos(JSON.parse(savedVideos) || []); } catch(e) {}
+    const saved = localStorage.getItem('aidol_event_configs');
+    if (saved) {
+      try {
+        setEventConfigs(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to parse event configs", e);
+      }
+    } else {
+      // Default initial states
+      const defaults = {};
+      EVENTS.forEach(ev => {
+        defaults[ev.id] = {
+          priority: ev.id === 'apology' ? 20 : ev.id === 'comment' ? 50 : ev.id === 'follow' ? 70 : 50,
+          active: true,
+          useVoice: true,
+          muteSourceVideo: true,
+          videoCategory: ev.id,
+          videoFolder: '',
+          useAi: true,
+          aiPrompt: '',
+          sampleAnswers: '',
+          assistantPrompt: '',
+          assistantUseMainVoice: false,
+          
+          // Specific fields
+          greetMinutes: ev.id === 'apology' ? 15 : '',
+          waitBetweenEvents: ev.id === 'comment' ? 1 : ev.id === 'follow' ? 60 : '',
+          replyRate: ev.id === 'comment' ? 70 : '',
+          bannedWords: ev.id === 'comment' ? 'scam\ngiả' : '',
+          priorityWords: ev.id === 'comment' ? 'mua\nbán' : '',
+          smartSpamFilter: ev.id === 'comment' ? true : false,
+          waitBetweenSpam: ev.id === 'comment' ? 3 : '',
+          maxRepeatChars: ev.id === 'comment' ? 0.7 : '',
+          speakAfterIdleSeconds: ev.id === 'idle' ? 5 : ''
+        };
+      });
+      
+      // Some hardcoded defaults based on screenshots
+      defaults['apology'].sampleAnswers = "Cả nhà ơi, đôi khi bình luận và người tham gia mới đông quá em không chào hết được, có bỏ sót ai thì mọi người thông cảm cho em nhé. Yêu mọi người nhiều!\nMọi người thông cảm nha, nếu em có lỡ bỏ qua bình luận của ai thì nhắn lại giúp em với nhé, do nhiều tin nhắn quá em không xem kịp ạ.";
+      defaults['comment'].aiPrompt = "### NHIỆM VỤ: Trả lời bình luận của người dùng tên {user}.";
+      defaults['comment'].sampleAnswers = "Cảm ơn bạn {user} đã bình luận nhé!\nMình đã nhận được bình luận của {user} rồi ạ.";
+      defaults['follow'].aiPrompt = "Hãy nói một câu cảm ơn bạn {user} đã theo dõi kênh.";
+      defaults['follow'].sampleAnswers = "A, cảm ơn bạn {user} đã theo dõi mình. Yêu bạn!\nCảm ơn {user} đã follow kênh của mình nhé!";
+      defaults['talking'].aiPrompt = "Bạn là một streamer AI, đang không có ai tương tác. Hãy chủ động nói một điều gì đó thật thú vị, đặt một câu hỏi mở, nói một cách hài hước...";
+      defaults['talking'].sampleAnswers = "xin chào các bn\ncác bạn ơi nói chuyện đi";
+      defaults['comment'].assistantPrompt = "A, có bạn {user} vừa mới bình luận là: {comment}";
+
+      setEventConfigs(defaults);
     }
   }, []);
 
-  const allBrains = [...DEFAULT_BRAINS, ...customBrains];
-  const activeBrain = allBrains.find(b => b.id === selectedBrainId) || DEFAULT_BRAINS[0];
+  const currentConfig = eventConfigs[selectedEventId] || {};
 
-  useEffect(() => {
-    // Load config when brain changes
-    const savedPrompt = localStorage.getItem(`aidol_prompt_${selectedBrainId}`);
-    if (savedPrompt) {
-      try {
-        const parsed = JSON.parse(savedPrompt);
-        if (parsed && typeof parsed === 'object') {
-           setEventsConfig(parsed);
-        } else {
-           // Fallback for old string prompt
-           setEventsConfig({ 'noi_chuyen': { ...DEFAULT_EVENT_CONFIG, prompt: savedPrompt } });
-        }
-      } catch(e) {
-        setEventsConfig({ 'noi_chuyen': { ...DEFAULT_EVENT_CONFIG, prompt: savedPrompt } });
-      }
-    } else {
-      setEventsConfig({}); 
-    }
-
-    const savedVoice = localStorage.getItem(`aidol_voice_${selectedBrainId}`);
-    if (savedVoice) {
-      try {
-        const parsed = JSON.parse(savedVoice);
-        if (parsed) {
-          setVoiceProvider(parsed.voiceProvider || 'vbee');
-          setSelectedVoice(parsed.selectedVoice || 'vbee_f_n_1');
-          setSpeed(parsed.speed || 1.0);
-        }
-      } catch(e) {}
-    }
-  }, [selectedBrainId]);
-
-  const handleAddCustomBrain = () => {
-    const newId = 'custom_' + Date.now();
-    const newBrain = { id: newId, name: 'Chế độ mới ' + (customBrains.length + 1), icon: '🧠', isDefault: false, desc: 'Mô tả cấu hình AI mới' };
-    const updated = [...customBrains, newBrain];
-    setCustomBrains(updated);
-    localStorage.setItem('aidol_custom_brains', JSON.stringify(updated));
-    setSelectedBrainId(newId);
+  const handleSave = () => {
+    localStorage.setItem('aidol_event_configs', JSON.stringify(eventConfigs));
+    alert('Đã lưu cấu hình sự kiện thành công!');
   };
 
-  const handleDeleteCustomBrain = (id, e) => {
-    e.stopPropagation();
-    if (!confirm('Bạn có chắc chắn muốn xóa bộ não này?')) return;
-    const updated = customBrains.filter(b => b.id !== id);
-    setCustomBrains(updated);
-    localStorage.setItem('aidol_custom_brains', JSON.stringify(updated));
-    localStorage.removeItem(`aidol_prompt_${id}`);
-    localStorage.removeItem(`aidol_voice_${id}`);
-    if (selectedBrainId === id) setSelectedBrainId('sales');
-  };
-
-  const handleUpdateBrainName = (e) => {
-    const newName = e.target.value;
-    const updated = customBrains.map(b => b.id === selectedBrainId ? { ...b, name: newName } : b);
-    setCustomBrains(updated);
-    localStorage.setItem('aidol_custom_brains', JSON.stringify(updated));
-  };
-
-  const handleSaveJob = () => {
-    localStorage.setItem(`aidol_prompt_${selectedBrainId}`, JSON.stringify(eventsConfig));
-    const jobData = {
-      voiceProvider,
-      selectedVoice,
-      speed
-    };
-    localStorage.setItem(`aidol_voice_${selectedBrainId}`, JSON.stringify(jobData));
-    alert(`Đã lưu cấu hình Bộ não [${activeBrain.name}] thành công!`);
-  };
-
-  const updateEventConfig = (key, value) => {
-    setEventsConfig(prev => ({
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setEventConfigs(prev => ({
       ...prev,
       [selectedEventId]: {
-        ...(prev[selectedEventId] || DEFAULT_EVENT_CONFIG),
-        [key]: value
+        ...prev[selectedEventId],
+        [name]: type === 'checkbox' ? checked : value
       }
     }));
   };
 
-  const currentEventConfig = eventsConfig[selectedEventId] || DEFAULT_EVENT_CONFIG;
-  const currentEventName = EVENTS_LIST.find(e => e.id === selectedEventId)?.name;
-
-  const handleVideoUpload = (e) => {
-     const files = Array.from(e.target.files);
-     if (files.length === 0) return;
-     const newVideos = files.map(f => ({
-        id: Date.now() + Math.random().toString(),
-        name: f.name,
-        category: 'talking',
-        url: URL.createObjectURL(f)
-     }));
-     const updated = [...videos, ...newVideos];
-     setVideos(updated);
-     // Note: URL.createObjectURL is temporary, in real app upload to server
-     alert('Tải lên ' + files.length + ' video thành công!');
+  const selectFolder = async () => {
+    try {
+      if (window.showDirectoryPicker) {
+        const dirHandle = await window.showDirectoryPicker();
+        handleChange({ target: { name: 'videoFolder', value: dirHandle.name } });
+      } else {
+        const folderPath = prompt("Hãy nhập đường dẫn thư mục Video (VD: C:/Videos/):", "C:/Videos/");
+        if (folderPath) {
+          handleChange({ target: { name: 'videoFolder', value: folderPath } });
+        }
+      }
+    } catch (e) {
+      console.log('Folder selection cancelled or failed');
+    }
   };
 
-  const VOICES = {
-    vbee: [
-      { group: 'Nữ Miền Bắc', options: [
-        { id: 'vbee_f_n_1', name: 'Ngọc Huyền (MC, Truyền cảm)' },
-        { id: 'vbee_f_n_2', name: 'Mai Phương (Trẻ trung, Sôi động)' }
-      ]},
-      { group: 'Nam Miền Bắc', options: [
-        { id: 'vbee_m_n_1', name: 'Mạnh Dũng (Mạnh mẽ, Dứt khoát)' }
-      ]}
-    ],
-    elevenlabs: [
-      { group: 'Tiếng Anh', options: [
-        { id: '21m00Tcm4TlvDq8ikWAM', name: 'Rachel (Nữ, Bình tĩnh)' }
-      ]}
-    ]
-  };
+  const selectedEventInfo = EVENTS.find(e => e.id === selectedEventId);
+
+  // Helper component for fields
+  const FieldLabel = ({ icon, text, hasHelp = true }) => (
+    <div className="flex items-center gap-1.5 text-[13px] font-semibold text-gray-700 min-w-[220px]">
+      {icon && <span className="text-[#a53b3b]">{icon}</span>}
+      <span>{text}:</span>
+      {hasHelp && <HelpCircle size={14} className="text-blue-500 cursor-pointer ml-1" />}
+    </div>
+  );
 
   return (
-    <div className="w-full h-[calc(100vh-80px)] overflow-hidden flex flex-col gap-4 text-white">
+    <div className="flex w-full h-[95vh] bg-[#f0f2f5] font-sans text-gray-800 overflow-hidden">
       
-      {/* Header */}
-      <div className="flex justify-between items-end gap-4 pb-2 border-b border-white/10 shrink-0">
-         <div>
-             <h1 className="text-xl font-black text-white flex items-center gap-2">
-                <Brain className="w-6 h-6 text-[#00FF66]" />
-                Hệ thống Quản lý Live Modes (Bộ Não AI)
-             </h1>
-             <p className="text-xs text-gray-400 font-medium mt-1">
-                Tạo và tùy chỉnh cấu hình cho từng sự kiện, thiết lập kịch bản và giọng nói.
-             </p>
-         </div>
-         <div className="flex items-center gap-3">
-             <button onClick={() => setShowVideoLibrary(true)} className="px-5 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
-                <Film className="w-4 h-4 text-blue-400" />
-                Kho Video
-             </button>
-             <button onClick={handleSaveJob} className="px-6 py-2.5 bg-[#00FF66] text-black hover:bg-[#00CC52] rounded-xl font-black shadow-glow-green transition-all text-sm whitespace-nowrap">
-                Lưu Cấu Hình
-             </button>
-         </div>
-      </div>
-
-      <div className="flex flex-1 gap-4 overflow-hidden">
-         {/* LEFT PANEL - MODES LIST */}
-         <div className="w-[260px] bg-[#121216]/80 backdrop-blur-md rounded-2xl border border-white/10 shadow-lg p-4 flex flex-col relative overflow-hidden shrink-0">
-             <div className="flex items-center justify-between mb-4">
-                 <h2 className="text-sm font-black text-white uppercase tracking-wide">Live Modes</h2>
-                 <button onClick={handleAddCustomBrain} className="p-1.5 bg-[#00FF66]/20 text-[#00FF66] rounded hover:bg-[#00FF66]/40 transition-colors" title="Thêm Chế độ mới">
-                     <Plus className="w-4 h-4" />
-                 </button>
-             </div>
-             <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1">
-                {allBrains.map(brain => (
-                    <div 
-                      key={brain.id} 
-                      onClick={() => setSelectedBrainId(brain.id)}
-                      className={`p-3 rounded-xl border transition-all cursor-pointer group flex items-center justify-between ${selectedBrainId === brain.id ? 'bg-[#00FF66]/10 border-[#00FF66]/50 text-[#00FF66] shadow-glow-green' : 'bg-black/40 border-white/5 text-gray-300 hover:bg-white/5'}`}
-                    >
-                        <div className="flex items-center gap-3 overflow-hidden">
-                           <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
-                              <span className="text-base">{brain.icon}</span>
-                           </div>
-                           <div className="truncate">
-                               <div className={`text-xs font-bold truncate ${selectedBrainId === brain.id ? 'text-[#00FF66]' : 'text-white'}`}>{brain.name}</div>
-                               <div className="text-[9px] text-gray-500 truncate">{brain.desc}</div>
-                           </div>
-                        </div>
-                        {!brain.isDefault && (
-                            <button onClick={(e) => handleDeleteCustomBrain(brain.id, e)} className="opacity-0 group-hover:opacity-100 p-1 text-red-400 hover:text-red-500 transition-all shrink-0">
-                                <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                        )}
-                    </div>
-                ))}
-             </div>
-         </div>
-
-         {/* MIDDLE PANEL - EVENT MANAGER */}
-         <div className="flex-1 bg-[#121216]/80 backdrop-blur-md rounded-2xl border border-white/10 shadow-lg flex flex-col relative overflow-hidden min-w-[500px]">
-             <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between bg-black/20">
-                 {activeBrain.isDefault ? (
-                     <h2 className="text-base font-black text-white">{activeBrain.name} - Trình quản lý Sự kiện & Video</h2>
-                 ) : (
-                     <input 
-                       type="text" 
-                       value={activeBrain.name} 
-                       onChange={handleUpdateBrainName}
-                       className="text-base font-black text-white bg-transparent outline-none border-b border-transparent focus:border-[#00FF66] w-64"
-                       placeholder="Nhập tên chế độ..."
-                     />
-                 )}
-             </div>
-
-             <div className="flex flex-1 overflow-hidden">
-                 {/* Events List */}
-                 <div className="w-[180px] border-r border-white/10 bg-black/20 overflow-y-auto custom-scrollbar p-2">
-                     <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-2 mt-2">Sự kiện có sẵn</div>
-                     <div className="space-y-0.5">
-                         {EVENTS_LIST.map(ev => (
-                             <button
-                                key={ev.id}
-                                onClick={() => setSelectedEventId(ev.id)}
-                                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-colors ${selectedEventId === ev.id ? 'bg-[#00FF66]/20 text-[#00FF66]' : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}
-                             >
-                                 <span className="flex items-center gap-2">
-                                     {eventsConfig[ev.id]?.enabled ? <CheckCircle className="w-3 h-3 text-[#00FF66]" /> : <div className="w-3 h-3 rounded-full border border-gray-500" />}
-                                     {ev.name}
-                                 </span>
-                             </button>
-                         ))}
-                     </div>
-                 </div>
-
-                 {/* Event Configuration */}
-                 <div className="flex-1 overflow-y-auto custom-scrollbar p-5">
-                    <div className="bg-blue-500/10 border border-blue-500/20 text-blue-200 text-xs p-3 rounded-lg mb-5 flex items-start gap-2">
-                        <Sparkles className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
-                        <div>
-                           <strong>{currentEventName}:</strong> Tùy chỉnh cách Idol AI phản ứng khi sự kiện này xảy ra. 
-                           Nếu chọn "Dùng AI trả lời", AI sẽ đọc Kịch bản bên dưới để tạo ra phản hồi thông minh.
-                        </div>
-                    </div>
-
-                    <div className="space-y-5">
-                        <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                           <span className="text-sm font-bold text-white">Kích hoạt sự kiện này</span>
-                           <label className="relative inline-flex items-center cursor-pointer">
-                              <input type="checkbox" className="sr-only peer" checked={currentEventConfig.enabled} onChange={(e) => updateEventConfig('enabled', e.target.checked)} />
-                              <div className="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#00FF66]"></div>
-                           </label>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-[11px] font-bold text-gray-400 mb-2">Danh mục video (Kho Video)</label>
-                                <select 
-                                  value={currentEventConfig.videoCategory}
-                                  onChange={(e) => updateEventConfig('videoCategory', e.target.value)}
-                                  className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-xs font-bold text-white outline-none focus:border-[#00FF66]"
-                                >
-                                   {videoCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                                </select>
-                            </div>
-                            <div className="flex flex-col gap-3 pt-6">
-                                <label className="flex items-center gap-3 cursor-pointer">
-                                  <input type="checkbox" checked={currentEventConfig.useAI} onChange={(e) => updateEventConfig('useAI', e.target.checked)} className="w-4 h-4 accent-[#00FF66]" />
-                                  <span className="text-xs font-bold text-gray-200">Dùng AI sinh câu trả lời</span>
-                                </label>
-                                <label className="flex items-center gap-3 cursor-pointer">
-                                  <input type="checkbox" checked={currentEventConfig.useVoice} onChange={(e) => updateEventConfig('useVoice', e.target.checked)} className="w-4 h-4 accent-[#00FF66]" />
-                                  <span className="text-xs font-bold text-gray-200">Phát giọng nói (TTS)</span>
-                                </label>
-                                <label className="flex items-center gap-3 cursor-pointer">
-                                  <input type="checkbox" checked={currentEventConfig.muteVideo} onChange={(e) => updateEventConfig('muteVideo', e.target.checked)} className="w-4 h-4 accent-[#00FF66]" />
-                                  <span className="text-xs font-bold text-gray-200">Tắt âm thanh gốc của Video</span>
-                                </label>
-                            </div>
-                            <div className="col-span-2 flex items-center justify-between bg-black/40 border border-white/10 rounded-lg p-3 mt-2">
-                                <span className="text-[11px] font-bold text-gray-400">Độ trễ phản hồi (Bao lâu thì AI mới trả lời?)</span>
-                                <div className="flex items-center gap-2">
-                                   <input type="number" min="0" max="60" value={currentEventConfig.delaySeconds || 0} onChange={(e) => updateEventConfig('delaySeconds', parseInt(e.target.value) || 0)} className="w-16 bg-black/60 border border-white/10 rounded px-2 py-1 text-xs text-white outline-none focus:border-[#00FF66] text-center" />
-                                   <span className="text-xs font-bold text-gray-500">giây</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {currentEventConfig.useAI && (
-                            <div>
-                                <label className="block text-[11px] font-bold text-gray-400 mb-2">Kịch bản cho AI (System Prompt) - Dành riêng cho sự kiện này</label>
-                                <textarea 
-                                  value={currentEventConfig.prompt}
-                                  onChange={(e) => updateEventConfig('prompt', e.target.value)}
-                                  placeholder="Nhập hướng dẫn cho AI khi sự kiện này xảy ra..."
-                                  className="w-full h-32 p-3 bg-black/40 border border-white/10 rounded-lg text-xs text-gray-200 focus:border-[#00FF66] outline-none resize-none custom-scrollbar"
-                                />
-                            </div>
-                        )}
-
-                        <div>
-                            <label className="block text-[11px] font-bold text-gray-400 mb-2">Câu trả lời mẫu (mỗi câu 1 dòng)</label>
-                            <textarea 
-                              value={currentEventConfig.sample}
-                              onChange={(e) => updateEventConfig('sample', e.target.value)}
-                              placeholder="Xin chào các bạn
-Cảm ơn bạn đã theo dõi..."
-                              className="w-full h-24 p-3 bg-black/40 border border-white/10 rounded-lg text-xs text-gray-200 focus:border-[#00FF66] outline-none resize-none custom-scrollbar"
-                            />
-                        </div>
-
-                        <button onClick={handleSaveJob} className="w-full py-3 bg-[#00FF66]/10 text-[#00FF66] hover:bg-[#00FF66]/20 border border-[#00FF66]/30 rounded-xl font-black transition-colors text-sm">
-                           Lưu thay đổi cho sự kiện này
-                        </button>
-                    </div>
-                 </div>
-             </div>
-         </div>
-
-         {/* RIGHT PANEL - VOICE */}
-         <div className="w-[280px] bg-[#121216]/80 backdrop-blur-md rounded-2xl border border-white/10 p-5 shadow-lg flex flex-col relative overflow-hidden shrink-0">
-            <div className="relative z-10 flex-1 flex flex-col min-h-0">
-                <div className="mb-4">
-                  <h3 className="font-black text-white text-sm mb-1">Cấu hình Giọng nói</h3>
-                  <p className="text-[9px] text-gray-400 font-medium">Áp dụng chung cho bộ não này.</p>
-                </div>
-
-                <div className="space-y-4 flex-1 flex flex-col min-h-0">
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-300 mb-1.5">Nền tảng API</label>
-                    <select 
-                      value={voiceProvider}
-                      onChange={(e) => setVoiceProvider(e.target.value)}
-                      className="w-full px-3 py-2 bg-black/60 border border-white/10 rounded-lg text-xs font-bold text-gray-200 outline-none focus:border-[#00FF66]"
-                    >
-                      <option value="vbee">VBee (Việt Nam)</option>
-                      <option value="elevenlabs">ElevenLabs (Cao cấp)</option>
-                    </select>
-                  </div>
-
-                  <div className="flex-1 flex flex-col min-h-0">
-                    <label className="block text-[10px] font-bold text-gray-300 mb-1.5">Chọn Giọng đọc</label>
-                    <div className="bg-black/40 border border-white/10 rounded-lg p-2 flex-1 overflow-y-auto custom-scrollbar">
-                      {(VOICES[voiceProvider] || []).map((group, idx) => (
-                        <div key={idx} className="mb-2 last:mb-0">
-                           <div className="text-[9px] font-bold text-[#00FF66] uppercase tracking-wider mb-1 px-2">{group.group}</div>
-                           <div className="space-y-1">
-                             {group.options.map(voice => (
-                               <button 
-                                 key={voice.id} 
-                                 onClick={() => setSelectedVoice(voice.id)}
-                                 className={`w-full text-left px-2 py-1.5 rounded-md text-[10px] font-bold transition-colors flex justify-between items-center ${selectedVoice === voice.id ? 'bg-[#00FF66]/20 text-[#00FF66] border border-[#00FF66]/30' : 'text-gray-400 hover:bg-white/5 hover:text-white border border-transparent'}`}
-                               >
-                                 <span className="truncate pr-2">{voice.name}</span>
-                                 {selectedVoice === voice.id && <Check className="w-3 h-3 flex-shrink-0" />}
-                               </button>
-                             ))}
-                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="shrink-0 mt-2">
-                    <label className="block text-[10px] font-bold text-gray-300 mb-1">Mức độ Cảm xúc: {speed.toFixed(1)}</label>
-                    <div className="bg-black/40 border border-white/10 rounded-lg p-3">
-                       <input 
-                         type="range" min="0.5" max="2.0" step="0.1" value={speed} 
-                         onChange={(e) => setSpeed(parseFloat(e.target.value))}
-                         className="w-full accent-[#00FF66] mb-1.5 h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer" 
-                       />
-                       <div className="flex justify-between text-[9px] text-gray-500 font-bold">
-                         <span>Bình tĩnh</span>
-                         <span>Sôi nổi</span>
-                       </div>
-                    </div>
-                  </div>
-                </div>
+      {/* SIDEBAR */}
+      <div className="w-[240px] bg-[#f0f2f5] border-r border-gray-300 flex flex-col h-full">
+        <div className="p-3 border-b border-gray-300">
+          <div className="border border-gray-300 rounded bg-white overflow-hidden shadow-sm h-[calc(95vh-24px)]">
+            <div className="px-3 py-1.5 bg-[#e0e3e8] border-b border-gray-300 text-xs font-semibold text-gray-700 uppercase tracking-wide">
+              Sự kiện có sẵn
             </div>
-         </div>
+            <div className="overflow-y-auto h-full pb-8">
+              {EVENTS.map(ev => {
+                const Icon = ev.icon;
+                const isSelected = selectedEventId === ev.id;
+                return (
+                  <button
+                    key={ev.id}
+                    onClick={() => setSelectedEventId(ev.id)}
+                    className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm transition-colors ${isSelected ? 'bg-[#d5e2f2]' : 'hover:bg-gray-100'}`}
+                  >
+                    <Icon size={16} className={`${ev.color}`} />
+                    <span className={`font-medium ${isSelected ? 'text-gray-900' : 'text-gray-700'}`}>{ev.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* VIDEO LIBRARY MODAL */}
-      {showVideoLibrary && (
-         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-             <div className="bg-[#121216] border border-white/10 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden">
-                 <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
-                     <h2 className="text-lg font-black text-white flex items-center gap-2">
-                        <Film className="w-5 h-5 text-blue-400" /> Quản lý Kho Video
-                     </h2>
-                     <button onClick={() => setShowVideoLibrary(false)} className="text-gray-400 hover:text-white p-1"><X className="w-5 h-5"/></button>
-                 </div>
-                 
-                 <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
-                     <div className="flex items-center justify-between mb-6">
-                         <div className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-lg p-1">
-                             {videoCategories.map(cat => (
-                                 <button key={cat} className="px-4 py-1.5 text-xs font-bold rounded-md bg-white/10 text-white hover:bg-white/20 transition-colors">
-                                     {cat}
-                                 </button>
-                             ))}
-                         </div>
-                         <div className="flex items-center gap-2">
-                             <input type="file" multiple accept="video/*" className="hidden" id="video-upload" onChange={handleVideoUpload} />
-                             <label htmlFor="video-upload" className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-bold text-xs cursor-pointer flex items-center gap-2 transition-colors">
-                                <Upload className="w-4 h-4" /> Tải Video Lên
-                             </label>
-                         </div>
-                     </div>
+      {/* MAIN CONTENT */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#f0f2f5] p-3">
+        
+        {/* Header Info Box */}
+        <div className="bg-[#e6f0fa] border border-[#b3d4f5] rounded-md p-3 mb-3">
+          <p className="text-[13px] text-gray-800 mb-2">
+            <span className="font-bold">{selectedEventInfo?.label}: </span>
+            {selectedEventInfo?.desc}
+          </p>
+          <button className="flex items-center gap-1.5 text-[13px] font-bold text-[#14539a] hover:underline">
+            <Play size={14} fill="currentColor" /> Xem video hướng dẫn cấu hình
+          </button>
+        </div>
 
-                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                         {videos.map(vid => (
-                             <div key={vid.id} className="group relative bg-black/60 border border-white/10 rounded-xl overflow-hidden aspect-[9/16]">
-                                 <video src={vid.url} className="w-full h-full object-cover" />
-                                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3">
-                                     <div className="flex justify-end">
-                                         <button onClick={() => setVideos(videos.filter(v => v.id !== vid.id))} className="w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors">
-                                             <Trash2 className="w-3 h-3" />
-                                         </button>
-                                     </div>
-                                     <div>
-                                         <div className="text-[10px] font-bold bg-blue-500 text-white px-2 py-0.5 rounded inline-block mb-1">{vid.category}</div>
-                                         <div className="text-xs font-bold text-white truncate">{vid.name}</div>
-                                     </div>
-                                 </div>
-                             </div>
-                         ))}
-                         {videos.length === 0 && (
-                             <div className="col-span-full py-20 flex flex-col items-center justify-center text-gray-500">
-                                 <Film className="w-12 h-12 mb-3 opacity-20" />
-                                 <p className="text-sm font-bold">Kho video đang trống</p>
-                                 <p className="text-xs mt-1">Bấm "Tải Video Lên" để thêm các video nền (nhảy, nói chuyện...)</p>
-                             </div>
-                         )}
-                     </div>
-                 </div>
-                 <div className="px-6 py-4 border-t border-white/10 flex justify-end">
-                     <button onClick={() => {
-                        localStorage.setItem('aidol_video_library', JSON.stringify(videos));
-                        setShowVideoLibrary(false);
-                     }} className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-bold text-sm transition-colors">
-                         Lưu & Đóng
-                     </button>
-                 </div>
-             </div>
-         </div>
-      )}
+        {/* Scrollable Config Area */}
+        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+          
+          {/* Cấu hình Chung */}
+          <div className="border border-gray-300 rounded-md bg-white mb-3 shadow-sm">
+            <div className="relative px-3 py-4">
+              <fieldset className="border border-gray-300 rounded p-4 pt-6 mt-2 relative">
+                <legend className="absolute -top-3 left-3 bg-white px-1 text-sm font-semibold text-gray-700 flex items-center gap-1">
+                  Cấu hình Chung - <span className="text-[#a53b3b]"><selectedEventInfo.icon size={14} className={selectedEventInfo.color} /></span> {selectedEventInfo?.label}
+                </legend>
+                
+                <div className="flex flex-col gap-3">
+                  
+                  {/* Common fields for all events */}
+                  {currentConfig.videoCategory !== undefined && (
+                    <div className="flex items-center">
+                      <FieldLabel icon="🎥" text="Danh mục video" />
+                      <input type="text" name="videoCategory" value={currentConfig.videoCategory} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                    </div>
+                  )}
+
+                  {currentConfig.priority !== undefined && (
+                    <div className="flex items-center">
+                      <FieldLabel icon="⭐" text="Độ ưu tiên" />
+                      <input type="number" name="priority" value={currentConfig.priority} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                    </div>
+                  )}
+
+                  {currentConfig.active !== undefined && (
+                    <div className="flex items-center">
+                      <FieldLabel icon="✅" text="Kích hoạt" />
+                      <input type="checkbox" name="active" checked={currentConfig.active} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded" />
+                    </div>
+                  )}
+
+                  {currentConfig.useVoice !== undefined && selectedEventId !== 'talking' && selectedEventId !== 'idle' && (
+                    <div className="flex items-center">
+                      <FieldLabel icon="🗣️" text="Dùng giọng nói" />
+                      <input type="checkbox" name="useVoice" checked={currentConfig.useVoice} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded" />
+                    </div>
+                  )}
+
+                  {currentConfig.muteSourceVideo !== undefined && selectedEventId !== 'talking' && selectedEventId !== 'idle' && (
+                    <div className="flex items-center">
+                      <FieldLabel icon="🔇" text="Tắt âm gốc video" />
+                      <input type="checkbox" name="muteSourceVideo" checked={currentConfig.muteSourceVideo} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded" />
+                    </div>
+                  )}
+
+                  {currentConfig.useAi !== undefined && selectedEventId !== 'idle' && selectedEventId !== 'apology' && (
+                    <div className="flex items-center">
+                      <FieldLabel icon="🧠" text="Dùng AI trả lời" />
+                      <input type="checkbox" name="useAi" checked={currentConfig.useAi} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded" />
+                    </div>
+                  )}
+
+                  {/* Specific fields */}
+                  {selectedEventId === 'apology' && (
+                    <div className="flex items-center">
+                      <FieldLabel icon="⏱️" text="Số phút để chào" />
+                      <input type="number" name="greetMinutes" value={currentConfig.greetMinutes} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                    </div>
+                  )}
+
+                  {(selectedEventId === 'comment' || selectedEventId === 'follow') && (
+                    <div className="flex items-center">
+                      <FieldLabel icon="⏳" text={`Chờ giữa các ${selectedEventId === 'comment' ? 'comment' : 'follow'} (giây)`} />
+                      <input type="number" name="waitBetweenEvents" value={currentConfig.waitBetweenEvents} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                    </div>
+                  )}
+
+                  {selectedEventId === 'comment' && (
+                    <>
+                      <div className="flex items-center">
+                        <FieldLabel icon="📊" text="Tỷ lệ trả lời (%)" />
+                        <input type="number" name="replyRate" value={currentConfig.replyRate} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                      </div>
+                      <div className="flex items-start mt-1">
+                        <FieldLabel icon="🚫" text="Từ khóa cấm" />
+                        <textarea name="bannedWords" value={currentConfig.bannedWords} onChange={handleChange} className="flex-1 h-[60px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                      </div>
+                      <div className="flex items-start mt-1">
+                        <FieldLabel icon="⭐" text="Từ khóa ưu tiên" />
+                        <textarea name="priorityWords" value={currentConfig.priorityWords} onChange={handleChange} className="flex-1 h-[60px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                      </div>
+                      <div className="flex items-center mt-1">
+                        <FieldLabel icon="🛡️" text="Bật bộ lọc spam thông minh" />
+                        <input type="checkbox" name="smartSpamFilter" checked={currentConfig.smartSpamFilter} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded" />
+                      </div>
+                      <div className="flex items-center">
+                        <FieldLabel icon="⏱️" text="Chờ giữa các comment spam (giây)" />
+                        <input type="number" name="waitBetweenSpam" value={currentConfig.waitBetweenSpam} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                      </div>
+                      <div className="flex items-center">
+                        <FieldLabel icon="🔤" text="Tỷ lệ ký tự lặp lại tối đa (0.0-1.0)" />
+                        <input type="number" step="0.1" name="maxRepeatChars" value={currentConfig.maxRepeatChars} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                      </div>
+                    </>
+                  )}
+
+                  {selectedEventId === 'idle' && (
+                    <div className="flex items-center">
+                      <FieldLabel icon="⏱️" text="Tự nói sau (giây) im lặng" />
+                      <input type="number" name="speakAfterIdleSeconds" value={currentConfig.speakAfterIdleSeconds} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                    </div>
+                  )}
+
+                  {currentConfig.aiPrompt !== undefined && selectedEventId !== 'idle' && selectedEventId !== 'apology' && (
+                    <div className="flex items-start mt-2">
+                      <FieldLabel icon="✍️" text="Kịch bản cho AI" />
+                      <textarea name="aiPrompt" value={currentConfig.aiPrompt} onChange={handleChange} className="flex-1 min-h-[120px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                    </div>
+                  )}
+
+                  {currentConfig.sampleAnswers !== undefined && selectedEventId !== 'idle' && (
+                    <div className="flex items-start mt-2">
+                      <FieldLabel icon="📄" text="Câu trả lời mẫu (mỗi câu 1 dòng)" />
+                      <textarea name="sampleAnswers" value={currentConfig.sampleAnswers} onChange={handleChange} className="flex-1 min-h-[100px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                    </div>
+                  )}
+                  
+                  {selectedEventId === 'talking' && (
+                    <>
+                      <div className="flex items-center mt-2">
+                        <FieldLabel icon="🗣️" text="Dùng giọng nói" />
+                        <input type="checkbox" name="useVoice" checked={currentConfig.useVoice} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded" />
+                      </div>
+                      <div className="flex items-center">
+                        <FieldLabel icon="🔇" text="Tắt âm gốc video" />
+                        <input type="checkbox" name="muteSourceVideo" checked={currentConfig.muteSourceVideo} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded" />
+                      </div>
+                    </>
+                  )}
+
+                </div>
+              </fieldset>
+            </div>
+          </div>
+
+          {/* Cấu hình Video Chung */}
+          <div className="border border-gray-300 rounded-md bg-white mb-3 shadow-sm px-3 py-4">
+            <fieldset className="border border-gray-300 rounded p-4 pt-4 mt-2 relative">
+              <legend className="absolute -top-3 left-3 bg-white px-1 text-sm font-semibold text-gray-700">
+                Cấu hình Video Chung (Dự phòng)
+              </legend>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-4">
+                  <span className="text-[13px] text-[#a53b3b] font-semibold min-w-[200px]">Danh mục video cho sự kiện này:</span>
+                  <select name="videoCategory" value={currentConfig.videoCategory} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-white focus:outline-blue-500">
+                    <option value={selectedEventId}>{selectedEventId}</option>
+                  </select>
+                </div>
+                <div className="flex items-center justify-between border-t border-gray-200 pt-3">
+                  <div className="flex items-center gap-4">
+                    <span className="text-[13px] text-[#a53b3b] font-semibold min-w-[200px]">Thư mục video tương ứng:</span>
+                    <span className="text-[13px] text-gray-800 font-medium">{currentConfig.videoFolder || 'Chưa chọn thư mục'}</span>
+                  </div>
+                  <button onClick={selectFolder} className="text-[13px] text-gray-600 font-medium hover:text-gray-900 transition-colors underline decoration-dotted">
+                    Chọn thư mục...
+                  </button>
+                </div>
+              </div>
+            </fieldset>
+          </div>
+
+          {/* Cài đặt Trợ lý */}
+          <div className="border border-gray-300 rounded-md bg-white shadow-sm px-3 py-4 mb-4">
+            <fieldset className="border border-gray-300 rounded p-4 pt-4 mt-2 relative">
+              <legend className="absolute -top-3 left-3 bg-white px-1 text-sm font-semibold text-gray-700 flex items-center gap-2">
+                <input type="checkbox" className="w-3.5 h-3.5" checked readOnly />
+                Cài đặt Trợ lý
+              </legend>
+              <div className="flex flex-col gap-2">
+                <label className="text-[13px] text-gray-700 font-semibold">Câu mẫu của Trợ lý:</label>
+                <textarea 
+                  name="assistantPrompt" value={currentConfig.assistantPrompt} onChange={handleChange}
+                  className="w-full h-[80px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-gray-50 focus:bg-white focus:outline-blue-500" 
+                />
+                <label className="flex items-center gap-2 justify-center mt-2">
+                  <input type="checkbox" name="assistantUseMainVoice" checked={currentConfig.assistantUseMainVoice} onChange={handleChange} className="w-4 h-4 rounded" />
+                  <span className="text-[13px] text-gray-600 font-medium">Dùng giọng của nhân vật chính</span>
+                </label>
+              </div>
+            </fieldset>
+          </div>
+        </div>
+
+        {/* Footer Save Button */}
+        <div className="mt-3">
+          <button 
+            onClick={handleSave}
+            className="w-full py-3 bg-[#4caf50] hover:bg-[#43a047] text-white font-bold rounded shadow transition-colors text-[14px] uppercase tracking-wide"
+          >
+            Lưu thay đổi cho sự kiện này
+          </button>
+        </div>
+
+      </div>
     </div>
   );
 }
