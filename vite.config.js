@@ -2,7 +2,6 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { spawn } from 'child_process';
-import puppeteer from 'puppeteer';
 
 export default defineConfig({
   server: {
