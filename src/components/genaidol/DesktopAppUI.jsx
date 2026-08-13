@@ -9,6 +9,7 @@ import ThanhToanCoin from './ThanhToanCoin';
 
 export default function DesktopAppUI() {
   const [activeSettingsModal, setActiveSettingsModal] = useState(null); 
+  const [isSettingsDropdownOpen, setIsSettingsDropdownOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isCommMode, setIsCommMode] = useState(false);
   const [tiktokId, setTiktokId] = useState('');
@@ -165,7 +166,7 @@ export default function DesktopAppUI() {
           <div className="w-5 h-5 rounded bg-blue-500 flex items-center justify-center">
             <Video size={12} className="text-white" />
           </div>
-          <span className="text-sm font-medium">Livestream AI (Clone) - Profile: NhanVatB</span>
+          <span className="text-sm font-medium">Livestream AI (Clone) - Profile: {CHARACTERS[selectedCharacter]?.name || 'Không xác định'}</span>
         </div>
         
         <div className="flex items-center gap-4">
@@ -183,6 +184,34 @@ export default function DesktopAppUI() {
       {/* 2. Top Control Bar (Single Row) */}
       <div className={`flex items-center gap-3 p-3 ${isDarkMode ? 'bg-[#1a1a24]' : 'bg-gray-200'} border-b ${isDarkMode ? 'border-gray-800' : 'border-gray-300'} z-20 shadow-sm overflow-x-auto whitespace-nowrap custom-scrollbar`}>
         
+        {/* Cài đặt Dropdown */}
+        <div className="relative shrink-0">
+          <button 
+            onClick={() => setIsSettingsDropdownOpen(!isSettingsDropdownOpen)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
+          >
+            <Settings size={16} />
+            Cài đặt ▼
+          </button>
+          
+          {isSettingsDropdownOpen && (
+            <div className={`absolute top-full left-0 mt-1 w-64 rounded-md shadow-xl border z-30 py-1 ${isDarkMode ? 'bg-[#1c1c23] border-gray-700' : 'bg-white border-gray-200'}`}>
+              <button 
+                onClick={() => { setActiveSettingsModal('general'); setIsSettingsDropdownOpen(false); }}
+                className={`w-full text-left px-4 py-2 text-sm transition-colors ${isDarkMode ? 'hover:bg-blue-600/20 text-gray-200' : 'hover:bg-blue-50 text-gray-700'}`}
+              >
+                Cấu hình Chung (AI, Giọng nói...)
+              </button>
+              <button 
+                onClick={() => { setActiveSettingsModal('workspace'); setIsSettingsDropdownOpen(false); }}
+                className={`w-full text-left px-4 py-2 text-sm transition-colors ${isDarkMode ? 'hover:bg-blue-600/20 text-gray-200' : 'hover:bg-blue-50 text-gray-700'}`}
+              >
+                Quản lý Sự kiện Video
+              </button>
+            </div>
+          )}
+        </div>
+
         <button onClick={() => setActiveSettingsModal('payment')} className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}>
           <CreditCard size={16} />
           Thanh toán
@@ -287,16 +316,6 @@ export default function DesktopAppUI() {
           Zalo
         </button>
         
-        {/* Nút Cài đặt (Bánh răng nhỏ) thay thế cho nút Cài đặt bự đã bị gỡ */}
-        <button 
-          onClick={() => setActiveSettingsModal('workspace')} 
-          className={`shrink-0 flex items-center gap-1.5 p-1.5 rounded transition-colors ${isDarkMode ? 'bg-blue-600/20 text-blue-400 hover:bg-blue-600/40' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
-          title="Quản lý Sự kiện Video (Cài đặt chính)"
-        >
-          <Settings size={16} />
-        </button>
-        
-        {/* Có thể giữ một bánh răng nhỏ thứ 2 cho Cài đặt chung nếu muốn, hoặc dùng 1 cái. */}
       </div>
 
       {/* 3. Main Video Area */}
