@@ -86,6 +86,8 @@ export default function AIDOLLiveConsole() {
   const [isProcessingEvent, setIsProcessingEvent] = useState(false);
   const audioPlayerRef = useRef(null);
   const [viewerHistory, setViewerHistory] = useState([]); // Lịch sử 10 tương tác gần nhất
+  const [activeBrainPack, setActiveBrainPack] = useState('talk'); // Bộ não chủ đề
+  const [previousVideoItem, setPreviousVideoItem] = useState(null); // Lưu video nền trước khi có sự kiện
 
   const handleLiveEvent = async (type, payload) => {
     if (!isAILive) return alert('Vui lòng Bắt đầu AI Live trước!');
@@ -99,7 +101,8 @@ export default function AIDOLLiveConsole() {
           apiKey: localStorage.getItem('gemini_api_key'),
           eventType: type,
           payload,
-          viewerHistory
+          viewerHistory,
+          brainPack: activeBrainPack
         })
       });
       const data = await res.json();
@@ -114,7 +117,11 @@ export default function AIDOLLiveConsole() {
       if (data.shouldTriggerAction === 'dance' || data.shouldTriggerAction === 'gift_reaction') {
         const cat = data.shouldTriggerAction === 'dance' ? 'dance' : 'reaction';
         const items = liveMedia.filter(i => i.category === cat);
-        if (items.length > 0) handlePlayFromKho(items[0]);
+        if (items.length > 0) {
+          // Lưu lại video nền hiện tại để quay về sau khi hết reaction
+          setPreviousVideoItem(activeVideoItem);
+          handlePlayFromKho(items[0]);
+        }
       }
 
     } catch (err) {
@@ -208,8 +215,14 @@ export default function AIDOLLiveConsole() {
     setIsAILive(true);
   };
 
-  // ── Auto-next video in queue ──
+  // ── Auto-next video in queue or resume previous ──
   const handleVideoEnded = () => {
+    if (previousVideoItem) {
+      // Quay lại video nền trước đó (Story/Idle)
+      handlePlayFromKho(previousVideoItem);
+      setPreviousVideoItem(null);
+      return;
+    }
     const nextIdx = (currentVideoIdx + 1) % videoQueue.length;
     if (videoQueue.length > 0) {
       setCurrentVideoIdx(nextIdx);
@@ -516,6 +529,27 @@ export default function AIDOLLiveConsole() {
                 <div>
                   <h3 className="text-sm font-black text-white mb-1">🤖 AI Director</h3>
                   <p className="text-[10px] text-slate-500">Điều phối hàng đợi TTS, xen kẽ bình luận và tặng quà tự động.</p>
+                </div>
+
+                {/* ── CHỌN BRAIN PACK ── */}
+                <div className="bg-[#1a1b26] border border-slate-700 rounded-xl p-4">
+                  <div className="text-xs font-black text-white mb-3">🧠 Bộ não Chủ đề (Brain Pack)</div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {[
+                      { id: 'talk', label: 'Giao lưu (Talk)', icon: '💬' },
+                      { id: 'story', label: 'Kể chuyện (Story)', icon: '📖' },
+                      { id: 'entertainment', label: 'Giải trí (Entertain)', icon: '💃' },
+                      { id: 'sales', label: 'Bán hàng (Sales)', icon: '🛒' },
+                      { id: 'education', label: 'Đào tạo (Education)', icon: '🎓' },
+                      { id: 'game', label: 'Trò chơi (Game)', icon: '🎮' }
+                    ].map(pack => (
+                      <button key={pack.id} onClick={() => setActiveBrainPack(pack.id)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-[10px] font-bold transition-all border ${activeBrainPack === pack.id ? 'bg-[#00FF66]/20 text-[#00FF66] border-[#00FF66]/50 shadow-glow-green' : 'bg-[#0D0F1A] text-slate-400 border-slate-700 hover:text-white'}`}>
+                        <span className="text-sm">{pack.icon}</span>
+                        {pack.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Avatar + Speaking indicator */}

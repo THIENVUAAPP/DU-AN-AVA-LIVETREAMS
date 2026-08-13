@@ -7,13 +7,32 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   try {
-    const { brain, apiKey, eventType, payload, viewerHistory, systemPrompt } = req.body;
+    const { brain, apiKey, eventType, payload, viewerHistory, systemPrompt, brainPack } = req.body;
     if (!eventType) return res.status(400).json({ error: 'Missing eventType' });
 
     let finalPrompt = `
 Mục tiêu: Đóng vai một Idol ảo đang livestream trên TikTok. Dựa vào sự kiện từ người xem, hãy phản hồi theo đúng nguyên tắc.
 `;
     if (systemPrompt) finalPrompt += `\nNguyên tắc Persona:\n${systemPrompt}\n`;
+
+    // Add brainPack logic
+    if (brainPack) {
+      finalPrompt += `\nĐẶC BIỆT LƯU Ý - Đang hoạt động ở chế độ: ${brainPack.toUpperCase()}
+`;
+      if (brainPack === 'story') {
+        finalPrompt += `- Idol đang kể chuyện/đọc sách. AI cần trả lời câu hỏi liên quan đến câu chuyện, và có thể khéo léo đưa người xem quay lại mạch truyện chính.\n`;
+      } else if (brainPack === 'talk') {
+        finalPrompt += `- Idol đang giao lưu trò chuyện thân mật. Tập trung hỏi han, tương tác sâu với người xem.\n`;
+      } else if (brainPack === 'entertainment') {
+        finalPrompt += `- Idol đang ở chế độ giải trí (nhảy, hát). Phản ứng mạnh mẽ với quà tặng, tạo không khí sôi động.\n`;
+      } else if (brainPack === 'sales') {
+        finalPrompt += `- Idol đang bán hàng. Trả lời khéo léo để hướng người xem chú ý vào sản phẩm đang ghim, thuyết phục mua hàng nhưng không quá lố.\n`;
+      } else if (brainPack === 'education') {
+        finalPrompt += `- Idol đang chia sẻ kiến thức. Phản hồi mang tính xây dựng, giải thích rõ ràng, tông giọng chuyên nghiệp nhưng gần gũi.\n`;
+      } else if (brainPack === 'game') {
+        finalPrompt += `- Idol đang tổ chức mini-game. Hãy tập trung vào việc công bố kết quả, khuyến khích mọi người tham gia đoán đáp án.\n`;
+      }
+    }
 
     finalPrompt += `
 Sự kiện hiện tại: [${eventType}]
