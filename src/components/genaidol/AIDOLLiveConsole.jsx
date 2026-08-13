@@ -625,14 +625,17 @@ export default function AIDOLLiveConsole() {
                       <option value="Sư tử (Lion)">🦁 Sư tử (29999 xu)</option>
                       <option value="Siêu xe (Sports Car)">🏎️ Siêu xe (39999 xu)</option>
                     </select>
-                    <button onClick={() => handleLiveEvent('GIFT', { name: simName, gift: simGift })} className="px-4 bg-pink-500/20 text-pink-400 border border-pink-500/40 rounded text-xs font-bold hover:bg-pink-500/30 transition-colors">Tặng Quà</button>
+                    <button onClick={() => {
+                      const isSpecial = simGift.includes('Sư tử') || simGift.includes('Siêu xe');
+                      handleLiveEvent(isSpecial ? 'SPECIAL_GIFT' : 'GIFT', { name: simName, gift: simGift });
+                    }} className="px-4 bg-pink-500/20 text-pink-400 border border-pink-500/40 rounded text-xs font-bold hover:bg-pink-500/30 transition-colors">Tặng Quà</button>
                   </div>
 
                   <div className="bg-[#0D0F1A] border border-slate-700 rounded p-2 h-32 overflow-y-auto custom-scrollbar flex flex-col-reverse">
                     {viewerHistory.length === 0 ? <div className="text-[10px] text-slate-600 text-center py-4">Chưa có sự kiện nào</div> : (
                       viewerHistory.slice().reverse().map((h, i) => (
                         <div key={i} className="mb-2 text-[10px] border-b border-slate-800 pb-2">
-                          <div className="text-slate-400">[{h.time}] <span className="font-bold text-white">{h.payload.name}</span> {h.type === 'GIFT' ? <span className="text-pink-400">đã tặng {h.payload.gift}</span> : h.type === 'COMMENT' ? <span className="text-blue-400">đã bình luận: "{h.payload.text}"</span> : 'đã tham gia Live'}</div>
+                          <div className="text-slate-400">[{h.time}] <span className="font-bold text-white">{h.payload.name}</span> {(h.type === 'GIFT' || h.type === 'SPECIAL_GIFT') ? <span className="text-pink-400">đã tặng {h.payload.gift}</span> : h.type === 'COMMENT' ? <span className="text-blue-400">đã bình luận: "{h.payload.text}"</span> : 'đã tham gia Live'}</div>
                           {h.ai_reply && (
                             <div className="mt-1 flex gap-2 items-start">
                               <span className="text-[#00FF66] font-bold">↳ AI ({h.ai_intent}):</span>

@@ -3,10 +3,13 @@ export const getCustomPrompt = (systemPrompt, eventType, payload, viewerHistory)
   const eventMap = {
     'chat': 'binh_luan',
     'gift': 'qua_tang',
+    'SPECIAL_GIFT': 'qua_dac_biet',
     'like': 'cam_on_tim',
     'follow': 'theo_doi',
     'share': 'chia_se',
-    'join': 'chao_moi'
+    'join': 'chao_moi',
+    'VIEWER_JOIN': 'chao_moi',
+    'COMMENT': 'binh_luan'
   };
   const eventId = eventMap[eventType] || 'noi_chuyen';
   
