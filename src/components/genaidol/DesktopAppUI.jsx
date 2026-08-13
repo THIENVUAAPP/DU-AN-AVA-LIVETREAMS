@@ -71,8 +71,8 @@ export default function DesktopAppUI() {
   };
 
   const CHARACTERS = {
-    'aidol_lan_huong': { name: 'Lan Hương', url: 'https://images.unsplash.com/photo-1627885408985-618d2ff36c64?q=80&w=600&auto=format&fit=crop', type: 'image' },
-    'aidol_ngoc_trinh': { name: 'Ngọc Trinh', url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=600&auto=format&fit=crop', type: 'image' }
+    'aidol_lan_huong': { name: 'Lan Hương', url: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=600&h=900&fit=crop', type: 'image' },
+    'aidol_ngoc_trinh': { name: 'Ngọc Trinh', url: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=600&h=900&fit=crop', type: 'image' }
   };
   customCharacters.forEach(c => {
     CHARACTERS[c.id] = { name: c.name, url: c.url, type: c.type };
