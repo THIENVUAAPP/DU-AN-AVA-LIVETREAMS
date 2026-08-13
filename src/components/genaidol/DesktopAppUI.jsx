@@ -241,8 +241,9 @@ export default function DesktopAppUI() {
       return (
         <img 
           src={selected.url} 
-          className="w-full h-full object-cover opacity-90"
+          className="w-full h-full object-contain"
           alt={selected.name} 
+          style={{ background: '#0f0f13' }}
         />
       );
     }
@@ -487,7 +488,7 @@ export default function DesktopAppUI() {
                 <X size={16} />
               </button>
             </div>
-            <div className="flex-1 relative">
+            <div className="flex-1 overflow-hidden">
               <GeneralSettings onClose={() => setActiveSettingsModal(null)} />
             </div>
           </div>
