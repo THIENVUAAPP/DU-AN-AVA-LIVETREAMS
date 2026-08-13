@@ -830,6 +830,14 @@ export default function LivestreamAISetup() {
                     <Video className="w-12 h-12 mb-2" /><span className="font-bold text-sm">Video Nhép Miệng 1080p</span><span className="text-xs">Sẵn sàng capture</span>
                  </div>
               </div>
+              <div className="p-3 bg-[#0B0E14] border-t border-white/10">
+                 <div className="text-[11px] font-bold text-yellow-400 mb-1">📌 Cách kết nối với TikTok Live Studio:</div>
+                 <ol className="text-[10px] text-gray-400 list-decimal list-inside">
+                   <li>Mở phần mềm <b>TikTok Live Studio</b> trên máy tính.</li>
+                   <li>Bấm Thêm nguồn (Add Source) ➔ Chọn <b>Cửa sổ (Window Capture)</b>.</li>
+                   <li>Chọn cửa sổ trình duyệt đang mở trang này. Khung hình sẽ tự động xoá phông xanh (Chroma Key) trên TikTok.</li>
+                 </ol>
+              </div>
               <div className="p-4 bg-[#0B0E14] border-t border-white/10 flex justify-between items-center">
                  <div className="text-xs text-gray-400 font-mono">Trạng thái: <span className="text-[#00FF66] font-bold">Sẵn sàng phát video...</span></div>
                  <div className="flex gap-2">

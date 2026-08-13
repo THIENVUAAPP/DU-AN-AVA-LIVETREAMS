@@ -1,3 +1,8 @@
+import { getSalesPrompt } from './brains/sales.js';
+import { getTalkPrompt } from './brains/talk.js';
+import { getDancePrompt } from './brains/dance.js';
+import { getSingPrompt } from './brains/sing.js';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -10,48 +15,18 @@ export default async function handler(req, res) {
     const { brain, apiKey, eventType, payload, viewerHistory, systemPrompt, brainPack } = req.body;
     if (!eventType) return res.status(400).json({ error: 'Missing eventType' });
 
-    let finalPrompt = `
-Mục tiêu: Đóng vai một Idol ảo đang livestream trên TikTok. Dựa vào sự kiện từ người xem, hãy phản hồi theo đúng nguyên tắc.
-`;
-    if (systemPrompt) finalPrompt += `\nNguyên tắc Persona:\n${systemPrompt}\n`;
+    let finalPrompt = '';
 
-    // Add brainPack logic
-    if (brainPack) {
-      finalPrompt += `\nĐẶC BIỆT LƯU Ý - Đang hoạt động ở chế độ: ${brainPack.toUpperCase()}
-`;
-      if (brainPack === 'story') {
-        finalPrompt += `- Idol đang kể chuyện/đọc sách. AI cần trả lời câu hỏi liên quan đến câu chuyện, và có thể khéo léo đưa người xem quay lại mạch truyện chính.\n`;
-      } else if (brainPack === 'talk') {
-        finalPrompt += `- Idol đang giao lưu trò chuyện thân mật. Tập trung hỏi han, tương tác sâu với người xem.\n`;
-      } else if (brainPack === 'entertainment') {
-        finalPrompt += `- Idol đang ở chế độ giải trí (nhảy, hát). Phản ứng mạnh mẽ với quà tặng, tạo không khí sôi động.\n`;
-      } else if (brainPack === 'sales') {
-        finalPrompt += `- Idol đang bán hàng. Trả lời khéo léo để hướng người xem chú ý vào sản phẩm đang ghim, thuyết phục mua hàng nhưng không quá lố.\n`;
-      } else if (brainPack === 'education') {
-        finalPrompt += `- Idol đang chia sẻ kiến thức. Phản hồi mang tính xây dựng, giải thích rõ ràng, tông giọng chuyên nghiệp nhưng gần gũi.\n`;
-      } else if (brainPack === 'game') {
-        finalPrompt += `- Idol đang tổ chức mini-game. Hãy tập trung vào việc công bố kết quả, khuyến khích mọi người tham gia đoán đáp án.\n`;
-      }
+    if (brainPack === 'sales') {
+      finalPrompt = getSalesPrompt(systemPrompt, eventType, payload, viewerHistory);
+    } else if (brainPack === 'dance') {
+      finalPrompt = getDancePrompt(systemPrompt, eventType, payload, viewerHistory);
+    } else if (brainPack === 'sing') {
+      finalPrompt = getSingPrompt(systemPrompt, eventType, payload, viewerHistory);
+    } else {
+      // Default fallback to talk
+      finalPrompt = getTalkPrompt(systemPrompt, eventType, payload, viewerHistory);
     }
-
-    finalPrompt += `
-Sự kiện hiện tại: [${eventType}]
-Nội dung: ${JSON.stringify(payload)}
-
-Lịch sử tương tác của người xem này (nếu có): ${JSON.stringify(viewerHistory)}
-
-Quy định trả lời:
-- Nếu là Gift: Cảm ơn chân thành, ngắn gọn (3-12 từ), có cảm xúc phù hợp với giá trị quà. Nếu là siêu to khổng lồ thì bùng nổ cảm xúc.
-- Nếu là Comment: Trả lời ngắn gọn (10-30 từ), áp dụng công thức Answer -> Emotion -> Return Question nếu phù hợp.
-- KHÔNG BAO GIỜ yêu cầu hay đòi hỏi quà tặng. Không lặp lại y nguyên câu nói cũ.
-- Trả về CHỈ một chuỗi JSON chuẩn với định dạng sau (không markdown, không backtick, không giải thích thêm):
-{
-  "intent": "Tên loại ý định (VD: GREETING, GIFT, CASUAL_CHAT, COMPLIMENT, QUESTION)",
-  "replyText": "Câu nói của Idol (để chuyển thành giọng nói)",
-  "emotion": "Cảm xúc (VD: happy, surprised, relaxed, excited)",
-  "shouldTriggerAction": "none hoặc gift_reaction hoặc dance (nếu quà siêu lớn)"
-}
-`;
 
     let generatedText = '';
 

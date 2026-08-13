@@ -536,12 +536,10 @@ export default function AIDOLLiveConsole() {
                   <div className="text-xs font-black text-white mb-3">🧠 Bộ não Chủ đề (Brain Pack)</div>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                     {[
-                      { id: 'talk', label: 'Giao lưu (Talk)', icon: '💬' },
-                      { id: 'story', label: 'Kể chuyện (Story)', icon: '📖' },
-                      { id: 'entertainment', label: 'Giải trí (Entertain)', icon: '💃' },
-                      { id: 'sales', label: 'Bán hàng (Sales)', icon: '🛒' },
-                      { id: 'education', label: 'Đào tạo (Education)', icon: '🎓' },
-                      { id: 'game', label: 'Trò chơi (Game)', icon: '🎮' }
+                      { id: 'talk', label: 'Tương tác', icon: '💬' },
+                      { id: 'sales', label: 'Bán hàng', icon: '🛒' },
+                      { id: 'dance', label: 'Idol Nhảy', icon: '💃' },
+                      { id: 'sing', label: 'Idol Hát', icon: '🎤' }
                     ].map(pack => (
                       <button key={pack.id} onClick={() => setActiveBrainPack(pack.id)}
                         className={`flex items-center gap-2 px-3 py-2 rounded-lg text-[10px] font-bold transition-all border ${activeBrainPack === pack.id ? 'bg-[#00FF66]/20 text-[#00FF66] border-[#00FF66]/50 shadow-glow-green' : 'bg-[#0D0F1A] text-slate-400 border-slate-700 hover:text-white'}`}>
