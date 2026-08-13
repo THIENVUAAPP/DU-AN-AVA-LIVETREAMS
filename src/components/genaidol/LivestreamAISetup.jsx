@@ -231,53 +231,7 @@ export default function LivestreamAISetup() {
   return (
     <div className="w-full max-w-7xl mx-auto flex flex-col gap-6 text-white pb-24">
 
-      {/* Hero Banner */}
-      <div className="bg-[#121216]/80 backdrop-blur-md rounded-2xl p-8 flex flex-col md:flex-row gap-8 justify-between relative overflow-hidden border border-white/10 shadow-lg">
-         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#00FF66]/5 rounded-full blur-[100px] pointer-events-none"></div>
-         <div className="flex-1 relative z-10">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="w-2 h-2 rounded-full bg-[#00FF66] animate-pulse"></span>
-              <span className="text-[10px] font-black text-[#00FF66] uppercase tracking-widest">LIVE PRODUCTION HUB</span>
-            </div>
-            <h1 className="text-4xl lg:text-5xl font-black text-white mb-4 tracking-tight">Setup phiên <span className="text-[#00FF66]">Live</span></h1>
-            <p className="text-sm text-gray-400 font-medium max-w-lg leading-relaxed mb-4">Chuẩn bị nhân vật, bộ não và kịch bản. Kho video kết nối trực tiếp với AIDOL của bạn.</p>
-            <div className="flex flex-wrap gap-2">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 border border-green-500/30 rounded-lg">
-                <CheckCircle className="w-3 h-3 text-green-400"/>
-                <span className="text-[10px] font-bold text-green-400">Gemini AI ✓ Miễn phí (15 req/phút)</span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                <CheckCircle className="w-3 h-3 text-blue-400"/>
-                <span className="text-[10px] font-bold text-blue-400">ChatGPT ✓ Cần nạp tiền ($0.15/1M token)</span>
-              </div>
-              <button onClick={() => setShowVoiceModal(true)} className="flex items-center gap-2 px-3 py-1.5 bg-purple-500/10 border border-purple-500/30 rounded-lg hover:bg-purple-500/20 transition-colors cursor-pointer">
-                <Volume2 className="w-3 h-3 text-purple-400"/>
-                <span className="text-[10px] font-bold text-purple-400">🎙️ Test Voice ngay (Miễn phí)</span>
-              </button>
-            </div>
-         </div>
-         <div className="w-full md:w-[320px] relative z-10 flex flex-col gap-3">
-            <span className="text-xs font-bold text-white">Quản lý</span>
-            
-            <button onClick={() => setShowApiKeysModal(true)} className="flex items-center gap-4 p-4 rounded-xl bg-black/40 border border-white/10 hover:border-yellow-500/50 transition-all group text-left">
-               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center shadow-lg"><Settings2 className="w-5 h-5 text-white" /></div>
-               <div className="flex-1">
-                 <div className="text-sm font-bold text-white group-hover:text-yellow-400 transition-colors">Cấu hình API Keys</div>
-                 <div className="text-[10px] text-gray-400">Gemini, OpenAI, Voice (Lưu tại trình duyệt)</div>
-               </div>
-               <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-yellow-400 transition-colors" />
-            </button>
 
-            <button className="flex items-center gap-4 p-4 rounded-xl bg-black/40 border border-white/10 hover:border-[#00FF66]/50 transition-all group text-left mt-2">
-               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg"><Monitor className="w-5 h-5 text-white" /></div>
-               <div className="flex-1">
-                 <div className="text-sm font-bold text-white group-hover:text-blue-400 transition-colors">Tải AIDOL Live</div>
-                 <div className="text-[10px] text-gray-400">Phát nhân vật và nội dung đã đồng bộ</div>
-               </div>
-               <Download className="w-4 h-4 text-gray-400 group-hover:text-blue-400 transition-colors" />
-            </button>
-         </div>
-      </div>
 
       {/* Stepper */}
       <div>
