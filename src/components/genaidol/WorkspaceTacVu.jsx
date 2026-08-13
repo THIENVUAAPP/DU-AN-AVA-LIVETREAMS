@@ -57,12 +57,12 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
 
   useEffect(() => {
     const saved = localStorage.getItem('aidol_custom_brains');
-    if (saved) {
-      try { setCustomBrains(JSON.parse(saved)); } catch(e) {}
+    if (saved && saved !== 'null') {
+      try { setCustomBrains(JSON.parse(saved) || []); } catch(e) {}
     }
     const savedVideos = localStorage.getItem('aidol_video_library');
-    if (savedVideos) {
-      try { setVideos(JSON.parse(savedVideos)); } catch(e) {}
+    if (savedVideos && savedVideos !== 'null') {
+      try { setVideos(JSON.parse(savedVideos) || []); } catch(e) {}
     }
   }, []);
 
@@ -75,7 +75,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
     if (savedPrompt) {
       try {
         const parsed = JSON.parse(savedPrompt);
-        if (typeof parsed === 'object') {
+        if (parsed && typeof parsed === 'object') {
            setEventsConfig(parsed);
         } else {
            // Fallback for old string prompt
@@ -92,9 +92,11 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
     if (savedVoice) {
       try {
         const parsed = JSON.parse(savedVoice);
-        setVoiceProvider(parsed.voiceProvider || 'vbee');
-        setSelectedVoice(parsed.selectedVoice || 'vbee_f_n_1');
-        setSpeed(parsed.speed || 1.0);
+        if (parsed) {
+          setVoiceProvider(parsed.voiceProvider || 'vbee');
+          setSelectedVoice(parsed.selectedVoice || 'vbee_f_n_1');
+          setSpeed(parsed.speed || 1.0);
+        }
       } catch(e) {}
     }
   }, [selectedBrainId]);

@@ -93,8 +93,8 @@ export default function AIDOLLiveConsole() {
   
   useEffect(() => {
     const saved = localStorage.getItem('aidol_custom_brains');
-    if (saved) {
-      try { setCustomBrains(JSON.parse(saved)); } catch(e) {}
+    if (saved && saved !== 'null') {
+      try { setCustomBrains(JSON.parse(saved) || []); } catch(e) {}
     }
   }, []);
   
