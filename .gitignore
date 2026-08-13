@@ -9,3 +9,5 @@ dist-ssr
 .vscode
 .idea
 *.log
+release/
+release/

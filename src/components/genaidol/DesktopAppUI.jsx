@@ -27,6 +27,47 @@ export default function DesktopAppUI() {
   const [isWebcamActive, setIsWebcamActive] = useState(false);
   const videoRef = useRef(null);
   const streamRef = useRef(null);
+  
+  // Draggable Webcam State
+  const [webcamPos, setWebcamPos] = useState({ x: 800, y: 80 });
+  const [isDraggingWebcam, setIsDraggingWebcam] = useState(false);
+  const dragStartPos = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    // Set initial position based on window width to place it on the right side
+    setWebcamPos({ x: window.innerWidth - 300, y: 80 });
+  }, []);
+
+  useEffect(() => {
+    const handleDrag = (e) => {
+      if (isDraggingWebcam) {
+        setWebcamPos({
+          x: e.clientX - dragStartPos.current.x,
+          y: e.clientY - dragStartPos.current.y
+        });
+      }
+    };
+    const handleDragEnd = () => setIsDraggingWebcam(false);
+    
+    if (isDraggingWebcam) {
+      window.addEventListener('mousemove', handleDrag);
+      window.addEventListener('mouseup', handleDragEnd);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleDrag);
+      window.removeEventListener('mouseup', handleDragEnd);
+    };
+  }, [isDraggingWebcam]);
+
+  const handleDragStart = (e) => {
+    // Prevent drag if clicking on the close button or resize handle
+    if (e.target.closest('button') || e.target.closest('.resize-handle')) return;
+    setIsDraggingWebcam(true);
+    dragStartPos.current = {
+      x: e.clientX - webcamPos.x,
+      y: e.clientY - webcamPos.y
+    };
+  };
 
   const CHARACTERS = {
     'aidol_lan_huong': { name: 'Lan Hương', url: 'https://images.unsplash.com/photo-1627885408985-618d2ff36c64?q=80&w=600&auto=format&fit=crop', type: 'image' },
@@ -189,137 +230,108 @@ export default function DesktopAppUI() {
       {/* 2. Top Control Bar (Single Row) */}
       <div className={`flex items-center gap-3 p-3 ${isDarkMode ? 'bg-[#1a1a24]' : 'bg-gray-200'} border-b ${isDarkMode ? 'border-gray-800' : 'border-gray-300'} z-40 shadow-sm overflow-visible whitespace-nowrap`}>
         
-        {/* Cài đặt Dropdown */}
-        <div className="relative shrink-0">
-          <button 
-            onClick={() => setIsSettingsDropdownOpen(!isSettingsDropdownOpen)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
-          >
-            <Settings size={16} />
-            Cài đặt ▼
-          </button>
-          
-          {isSettingsDropdownOpen && (
-            <div className={`absolute top-full left-0 mt-1 w-64 rounded-md shadow-xl border z-50 py-1 ${isDarkMode ? 'bg-[#1c1c23] border-gray-700' : 'bg-white border-gray-200'}`}>
-              <button 
-                onClick={() => { setActiveSettingsModal('general'); setIsSettingsDropdownOpen(false); }}
-                className={`w-full text-left px-4 py-2 text-sm transition-colors ${isDarkMode ? 'hover:bg-blue-600/20 text-gray-200' : 'hover:bg-blue-50 text-gray-700'}`}
-              >
-                Cấu hình Chung (AI, Giọng nói...)
-              </button>
-              <button 
-                onClick={() => { setActiveSettingsModal('workspace'); setIsSettingsDropdownOpen(false); }}
-                className={`w-full text-left px-4 py-2 text-sm transition-colors ${isDarkMode ? 'hover:bg-blue-600/20 text-gray-200' : 'hover:bg-blue-50 text-gray-700'}`}
-              >
-                Quản lý Sự kiện Video
-              </button>
-            </div>
-          )}
-        </div>
-
-        <button onClick={() => setActiveSettingsModal('payment')} className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}>
-          <CreditCard size={16} />
-          Thanh toán
-        </button>
-
-        <button 
-          onClick={toggleWebcam}
-          className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isWebcamActive ? 'bg-pink-600 text-white hover:bg-pink-500' : isDarkMode ? 'bg-pink-500/20 text-pink-400 hover:bg-pink-500/30' : 'bg-pink-100 text-pink-700 hover:bg-pink-200'}`}
-        >
-          <Video size={16} />
-          Tun Studio
-        </button>
-
-        {/* Connection Group (Đã gộp nút Tạm Dừng AI vào Kết nối) */}
-        <div className="flex items-center gap-2 border-l border-r border-gray-500/30 px-2 shrink-0">
-          <input 
-            type="text" 
-            value={tiktokId}
-            onChange={(e) => setTiktokId(e.target.value)}
-            className={`w-32 px-3 py-1.5 rounded text-sm outline-none border ${isDarkMode ? 'bg-[#2a2a35] border-gray-700 text-white focus:border-blue-500' : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'}`}
-            placeholder="ID TikTok..."
-          />
-          <button 
-            onClick={handleConnect}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isConnected ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-blue-600 hover:bg-blue-500 text-white'}`}
-          >
-            {isConnecting ? <span className="animate-spin text-lg leading-none">↻</span> : (isConnected ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />)}
-            {isConnecting ? 'Đang xử lý...' : (isConnected ? 'Dừng AI' : 'Kết nối')}
-          </button>
-        </div>
-
-        <button 
-          onClick={() => setIsCommMode(!isCommMode)}
-          className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isCommMode ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-red-500/20 text-red-500 hover:bg-red-500/30'}`}
-        >
-          {isCommMode ? <Mic size={16} /> : <MicOff size={16} />}
-          Giao tiếp
-        </button>
-
-        {/* Character Selector */}
-        <div className="flex items-center gap-2 shrink-0 border-l border-gray-500/30 pl-3">
-          <span className="text-sm font-medium text-gray-400">Nhân vật:</span>
-          <div className="flex gap-2">
-            {Object.keys(CHARACTERS).map((charId) => (
-              <div 
-                key={charId}
-                onClick={() => setSelectedCharacter(charId)}
-                className={`w-8 h-8 rounded overflow-hidden cursor-pointer flex-shrink-0 relative group ${selectedCharacter === charId ? 'border-2 border-blue-500' : 'border border-gray-600 opacity-50 hover:opacity-100'}`}
-                title={CHARACTERS[charId].name}
-              >
-                {CHARACTERS[charId].type === 'video' ? (
-                  <video src={CHARACTERS[charId].url} className="w-full h-full object-cover" muted />
-                ) : (
-                  <img src={CHARACTERS[charId].url} className="w-full h-full object-cover" alt={CHARACTERS[charId].name} />
-                )}
-                
-                {charId.startsWith('custom_') && (
-                  <button 
-                    onClick={(e) => removeCustomCharacter(e, charId)}
-                    className="absolute top-0 right-0 p-0.5 bg-red-600 hover:bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-bl"
-                    title="Xóa nhân vật này"
-                  >
-                    <X size={10} />
-                  </button>
-                )}
-              </div>
-            ))}
-            
+        {/* Left Side: Settings & Payment */}
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="relative shrink-0">
             <button 
-              className="w-8 h-8 rounded border border-dashed border-gray-500 flex items-center justify-center text-gray-400 hover:text-white cursor-pointer transition-colors hover:bg-gray-700/50 shrink-0" 
-              title="Tải lên nhân vật mới (Ảnh/Video)..."
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => setIsSettingsDropdownOpen(!isSettingsDropdownOpen)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
             >
-              <Plus size={16} />
+              <Settings size={16} />
+              Cài đặt ▼
             </button>
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              style={{ display: 'none' }} 
-              accept="video/*,image/*" 
-              onChange={handleFileUpload} 
-            />
+            
+            {isSettingsDropdownOpen && (
+              <div className={`absolute top-full left-0 mt-1 w-64 rounded-md shadow-xl border z-50 py-1 ${isDarkMode ? 'bg-[#1c1c23] border-gray-700' : 'bg-white border-gray-200'}`}>
+                <button 
+                  onClick={() => { setActiveSettingsModal('general'); setIsSettingsDropdownOpen(false); }}
+                  className={`w-full text-left px-4 py-2 text-sm transition-colors ${isDarkMode ? 'hover:bg-blue-600/20 text-gray-200' : 'hover:bg-blue-50 text-gray-700'}`}
+                >
+                  Cấu hình Chung (AI, Giọng nói...)
+                </button>
+                <button 
+                  onClick={() => { setActiveSettingsModal('workspace'); setIsSettingsDropdownOpen(false); }}
+                  className={`w-full text-left px-4 py-2 text-sm transition-colors ${isDarkMode ? 'hover:bg-blue-600/20 text-gray-200' : 'hover:bg-blue-50 text-gray-700'}`}
+                >
+                  Quản lý Sự kiện Video
+                </button>
+              </div>
+            )}
           </div>
+
+          <button onClick={() => setActiveSettingsModal('payment')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}>
+            <CreditCard size={16} />
+            Thanh toán
+          </button>
         </div>
 
-        {/* Right Aligned Items */}
-        <div className="flex-1 min-w-[20px]"></div>
+        <div className="flex-1"></div>
 
-        <button 
-          onClick={() => setIsDarkMode(!isDarkMode)}
-          className={`shrink-0 p-1.5 rounded transition-colors ${isDarkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-300 text-gray-700 hover:bg-gray-400'}`}
-          title="Giao diện sáng/tối"
-        >
-          {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
-        </button>
+        {/* Middle: Controls */}
+        <div className="flex items-center justify-center gap-3 shrink-0">
+          
+          <div className="flex items-center gap-2 border-r border-gray-500/30 pr-3">
+            <span className="text-sm font-medium text-gray-400">Nhân vật:</span>
+            <div className="flex gap-2">
+              {Object.keys(CHARACTERS).map((charId) => (
+                <div 
+                  key={charId}
+                  onClick={() => setSelectedCharacter(charId)}
+                  className={`w-8 h-8 rounded overflow-hidden cursor-pointer flex-shrink-0 relative group ${selectedCharacter === charId ? 'border-2 border-blue-500' : 'border border-gray-600 opacity-50 hover:opacity-100'}`}
+                  title={CHARACTERS[charId].name}
+                >
+                  {CHARACTERS[charId].type === 'video' ? (
+                    <video src={CHARACTERS[charId].url} className="w-full h-full object-cover" muted />
+                  ) : (
+                    <img src={CHARACTERS[charId].url} className="w-full h-full object-cover" alt={CHARACTERS[charId].name} />
+                  )}
+                  {charId.startsWith('custom_') && (
+                    <button onClick={(e) => removeCustomCharacter(e, charId)} className="absolute top-0 right-0 p-0.5 bg-red-600 hover:bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-bl">
+                      <X size={10} />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button className="w-8 h-8 rounded border border-dashed border-gray-500 flex items-center justify-center text-gray-400 hover:text-white cursor-pointer transition-colors hover:bg-gray-700/50 shrink-0" onClick={() => fileInputRef.current?.click()}>
+                <Plus size={16} />
+              </button>
+              <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="video/*,image/*" onChange={handleFileUpload} />
+            </div>
+          </div>
 
-        <button 
-          className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-[#0088cc]/20 text-[#0088cc] hover:bg-[#0088cc]/30' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
-          title="Hỗ trợ Zalo"
-        >
-          <MessageCircle size={16} />
-          Zalo
-        </button>
+          <button onClick={toggleWebcam} className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isWebcamActive ? 'bg-pink-600 text-white hover:bg-pink-500' : isDarkMode ? 'bg-pink-500/20 text-pink-400 hover:bg-pink-500/30' : 'bg-pink-100 text-pink-700 hover:bg-pink-200'}`}>
+            <Video size={16} />
+            Studio
+          </button>
+
+          <div className="flex items-center gap-2 px-2 shrink-0">
+            <input type="text" value={tiktokId} onChange={(e) => setTiktokId(e.target.value)} className={`w-32 px-3 py-1.5 rounded text-sm outline-none border ${isDarkMode ? 'bg-[#2a2a35] border-gray-700 text-white focus:border-blue-500' : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'}`} placeholder="ID TikTok..." />
+            <button onClick={handleConnect} className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isConnected ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-blue-600 hover:bg-blue-500 text-white'}`}>
+              {isConnecting ? <span className="animate-spin text-lg leading-none">↻</span> : (isConnected ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />)}
+              {isConnecting ? 'Đang xử lý...' : (isConnected ? 'Dừng AI' : 'Kết nối')}
+            </button>
+          </div>
+
+          <button onClick={() => setIsCommMode(!isCommMode)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isCommMode ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-red-500/20 text-red-500 hover:bg-red-500/30'}`} title="Bật/Tắt Giao tiếp bằng Giọng nói 2 chiều với AI">
+            {isCommMode ? <Mic size={16} /> : <MicOff size={16} />}
+            Giao tiếp
+          </button>
+
+        </div>
+
+        <div className="flex-1"></div>
+
+        {/* Right Side: Toggles */}
+        <div className="flex items-center gap-3 shrink-0">
+          <button onClick={() => setIsDarkMode(!isDarkMode)} className={`p-1.5 rounded transition-colors ${isDarkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-300 text-gray-700 hover:bg-gray-400'}`}>
+            {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+
+          <button className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-[#0088cc]/20 text-[#0088cc] hover:bg-[#0088cc]/30' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}>
+            <MessageCircle size={16} />
+            Zalo
+          </button>
+        </div>
         
       </div>
 
@@ -336,25 +348,42 @@ export default function DesktopAppUI() {
           </p>
         </div>
 
-        {/* Cửa sổ nổi hiển thị Webcam từ Tun Studio (Góc phải trên) */}
+        {/* Cửa sổ nổi hiển thị Webcam từ Studio (Draggable & Resizable) */}
         {isWebcamActive && (
-          <div className="absolute top-4 right-4 w-48 aspect-video rounded-lg overflow-hidden shadow-2xl border-[2px] border-green-500 bg-black z-30 group">
+          <div 
+            className="absolute rounded-lg overflow-hidden shadow-2xl border-[2px] border-green-500 bg-black z-30 group"
+            style={{ 
+              left: webcamPos.x, 
+              top: webcamPos.y, 
+              width: '200px', 
+              minWidth: '150px',
+              minHeight: '100px',
+              aspectRatio: '16/9',
+              resize: 'both',
+              position: 'absolute'
+            }}
+          >
+            {/* Thanh tiêu đề để kéo thả */}
+            <div 
+              onMouseDown={handleDragStart}
+              className={`w-full h-6 bg-gradient-to-r from-gray-800 to-gray-900 cursor-move flex items-center justify-between px-2 ${isDraggingWebcam ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity absolute top-0 left-0 z-40`}
+            >
+              <span className="text-white text-[10px] font-medium flex items-center gap-1 pointer-events-none">
+                <Video size={10} />
+                Studio
+              </span>
+              <button onClick={toggleWebcam} className="text-gray-300 hover:text-white p-0.5 hover:bg-red-500 rounded">
+                <X size={12} />
+              </button>
+            </div>
+
             <video 
               ref={videoRef} 
               autoPlay 
               playsInline 
               muted 
-              className="w-full h-full object-cover" 
+              className="w-full h-full object-cover pointer-events-none" 
             />
-            <div className="absolute top-1.5 right-1.5 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded backdrop-blur">
-              Tun Studio
-            </div>
-            <button 
-              onClick={toggleWebcam} 
-              className="absolute top-1 left-1 p-1 bg-red-600/80 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <X size={12} />
-            </button>
           </div>
         )}
       </div>

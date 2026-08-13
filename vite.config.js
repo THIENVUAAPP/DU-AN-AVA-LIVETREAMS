@@ -4,6 +4,7 @@ import path from 'path';
 import { spawn } from 'child_process';
 
 export default defineConfig({
+  base: './',
   server: {
     port: 3000,
     open: true,

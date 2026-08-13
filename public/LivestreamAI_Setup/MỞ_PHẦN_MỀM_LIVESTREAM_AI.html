@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Livestream AI Launcher</title>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background-color: #0f0f13; color: white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; flex-direction: column; }
+        .loader { width: 50px; height: 50px; border: 4px solid rgba(255, 255, 255, 0.3); border-top: 4px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        h1 { font-size: 24px; font-weight: 600; margin-bottom: 10px; }
+        p { color: #9ca3af; }
+    </style>
+</head>
+<body>
+    <div class="loader"></div>
+    <h1>Khởi động Livestream AI...</h1>
+    <p>Vui lòng chờ trong giây lát...</p>
+    <script>
+        setTimeout(() => {
+            // Because we don't know the exact production URL, 
+            // and this is just a local demo file, we alert the user
+            // or redirect to the actual domain.
+            alert("Đã kết nối thành công! (Đây là file Launcher Demo trên Web). Trong thực tế, hệ thống sẽ mở ứng dụng hoặc điều hướng tới đường dẫn đăng nhập chính thức của anh.");
+        }, 1500);
+    </script>
+</body>
+</html>
