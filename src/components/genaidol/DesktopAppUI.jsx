@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Settings, CreditCard, Video, Moon, Sun, 
-  MessageCircle, Play, Pause, Mic, MicOff, X, Maximize, Minus, Download, Plus
+  MessageCircle, Play, Pause, Mic, MicOff, X, Download, Plus
 } from 'lucide-react';
 import WorkspaceTacVu from './WorkspaceTacVu';
 import GeneralSettings from './GeneralSettings';
@@ -9,9 +9,7 @@ import ThanhToanCoin from './ThanhToanCoin';
 
 export default function DesktopAppUI() {
   const [activeSettingsModal, setActiveSettingsModal] = useState(null); 
-  const [isSettingsDropdownOpen, setIsSettingsDropdownOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
-  const [isAiPaused, setIsAiPaused] = useState(false);
   const [isCommMode, setIsCommMode] = useState(false);
   const [tiktokId, setTiktokId] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
@@ -30,15 +28,16 @@ export default function DesktopAppUI() {
   const streamRef = useRef(null);
 
   const CHARACTERS = {
-    'aidol_lan_huong': { url: 'https://images.unsplash.com/photo-1627885408985-618d2ff36c64?q=80&w=600&auto=format&fit=crop', type: 'image' },
-    'aidol_ngoc_trinh': { url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=600&auto=format&fit=crop', type: 'image' }
+    'aidol_lan_huong': { name: 'Lan Hương', url: 'https://images.unsplash.com/photo-1627885408985-618d2ff36c64?q=80&w=600&auto=format&fit=crop', type: 'image' },
+    'aidol_ngoc_trinh': { name: 'Ngọc Trinh', url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=600&auto=format&fit=crop', type: 'image' }
   };
   customCharacters.forEach(c => {
-    CHARACTERS[c.id] = { url: c.url, type: c.type };
+    CHARACTERS[c.id] = { name: c.name, url: c.url, type: c.type };
   });
 
   const handleConnect = async () => {
     if (isConnected) {
+      // Dừng AI & Ngắt kết nối
       setIsConnected(false);
       return;
     }
@@ -93,10 +92,18 @@ export default function DesktopAppUI() {
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      const charName = prompt("Nhập tên cho nhân vật (để dễ quản lý):");
+      if (!charName) {
+        // Hủy bỏ nếu người dùng không nhập tên
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        return;
+      }
+
       const url = URL.createObjectURL(file);
       const isVideo = file.type.startsWith('video/');
       const newChar = {
         id: `custom_${Date.now()}`,
+        name: charName,
         url,
         type: isVideo ? 'video' : 'image'
       };
@@ -106,6 +113,14 @@ export default function DesktopAppUI() {
     // clear input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  const removeCustomCharacter = (e, id) => {
+    e.stopPropagation();
+    setCustomCharacters(prev => prev.filter(c => c.id !== id));
+    if (selectedCharacter === id) {
+      setSelectedCharacter('aidol_lan_huong');
     }
   };
 
@@ -135,7 +150,7 @@ export default function DesktopAppUI() {
         <img 
           src={selected.url} 
           className="w-full h-full object-cover opacity-90"
-          alt="Character Stream Background" 
+          alt={selected.name} 
         />
       );
     }
@@ -144,7 +159,7 @@ export default function DesktopAppUI() {
   return (
     <div className={`w-full h-screen flex flex-col font-sans ${isDarkMode ? 'bg-[#0f0f13] text-white' : 'bg-gray-100 text-gray-900'}`}>
       
-      {/* 1. Fake Window Title Bar */}
+      {/* 1. Fake Window Title Bar (Đã gộp nút Tải ZIP lên đây) */}
       <div className={`flex items-center justify-between px-4 py-2 ${isDarkMode ? 'bg-[#1c1c23]' : 'bg-gray-300'} select-none z-30`}>
         <div className="flex items-center gap-2">
           <div className="w-5 h-5 rounded bg-blue-500 flex items-center justify-center">
@@ -152,44 +167,22 @@ export default function DesktopAppUI() {
           </div>
           <span className="text-sm font-medium">Livestream AI (Clone) - Profile: NhanVatB</span>
         </div>
-        <div className="flex items-center gap-4 text-gray-400">
-          <Minus size={16} className="cursor-pointer hover:text-white" />
-          <Maximize size={14} className="cursor-pointer hover:text-white" />
-          <X size={18} className="cursor-pointer hover:text-red-500" />
+        
+        <div className="flex items-center gap-4">
+          {/* Nút Tải phần mềm (ZIP) đã được đưa lên góc này */}
+          <button 
+            onClick={handleDownload}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 text-xs rounded shadow-sm flex items-center gap-1.5 transition-colors"
+          >
+            <Download size={14} />
+            <span>Tải phần mềm (ZIP)</span>
+          </button>
         </div>
       </div>
 
       {/* 2. Top Control Bar (Single Row) */}
       <div className={`flex items-center gap-3 p-3 ${isDarkMode ? 'bg-[#1a1a24]' : 'bg-gray-200'} border-b ${isDarkMode ? 'border-gray-800' : 'border-gray-300'} z-20 shadow-sm overflow-x-auto whitespace-nowrap custom-scrollbar`}>
         
-        {/* Cài đặt Dropdown */}
-        <div className="relative shrink-0">
-          <button 
-            onClick={() => setIsSettingsDropdownOpen(!isSettingsDropdownOpen)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
-          >
-            <Settings size={16} />
-            Cài đặt ▼
-          </button>
-          
-          {isSettingsDropdownOpen && (
-            <div className={`absolute top-full left-0 mt-1 w-64 rounded-md shadow-xl border z-30 py-1 ${isDarkMode ? 'bg-[#1c1c23] border-gray-700' : 'bg-white border-gray-200'}`}>
-              <button 
-                onClick={() => { setActiveSettingsModal('general'); setIsSettingsDropdownOpen(false); }}
-                className={`w-full text-left px-4 py-2 text-sm transition-colors ${isDarkMode ? 'hover:bg-blue-600/20 text-gray-200' : 'hover:bg-blue-50 text-gray-700'}`}
-              >
-                Cấu hình Chung (AI, Giọng nói...)
-              </button>
-              <button 
-                onClick={() => { setActiveSettingsModal('workspace'); setIsSettingsDropdownOpen(false); }}
-                className={`w-full text-left px-4 py-2 text-sm transition-colors ${isDarkMode ? 'hover:bg-blue-600/20 text-gray-200' : 'hover:bg-blue-50 text-gray-700'}`}
-              >
-                Quản lý Sự kiện Video
-              </button>
-            </div>
-          )}
-        </div>
-
         <button onClick={() => setActiveSettingsModal('payment')} className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}>
           <CreditCard size={16} />
           Thanh toán
@@ -203,7 +196,7 @@ export default function DesktopAppUI() {
           Tun Studio
         </button>
 
-        {/* Connection Group */}
+        {/* Connection Group (Đã gộp nút Tạm Dừng AI vào Kết nối) */}
         <div className="flex items-center gap-2 border-l border-r border-gray-500/30 px-2 shrink-0">
           <input 
             type="text" 
@@ -214,21 +207,12 @@ export default function DesktopAppUI() {
           />
           <button 
             onClick={handleConnect}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isConnected ? 'bg-green-600 hover:bg-green-500 text-white' : 'bg-blue-600 hover:bg-blue-500 text-white'}`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isConnected ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-blue-600 hover:bg-blue-500 text-white'}`}
           >
-            {isConnecting ? <span className="animate-spin text-lg leading-none">↻</span> : <Play size={16} fill="currentColor" />}
-            {isConnecting ? 'Đang...' : (isConnected ? 'Ngắt' : 'Kết nối')}
+            {isConnecting ? <span className="animate-spin text-lg leading-none">↻</span> : (isConnected ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />)}
+            {isConnecting ? 'Đang xử lý...' : (isConnected ? 'Dừng AI' : 'Kết nối')}
           </button>
         </div>
-
-        {/* AI Controls */}
-        <button 
-          onClick={() => setIsAiPaused(!isAiPaused)}
-          className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isAiPaused ? 'bg-orange-600 hover:bg-orange-500 text-white' : 'bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30'}`}
-        >
-          <Pause size={16} fill={isAiPaused ? "currentColor" : "none"} />
-          Dừng AI
-        </button>
 
         <button 
           onClick={() => setIsCommMode(!isCommMode)}
@@ -246,20 +230,30 @@ export default function DesktopAppUI() {
               <div 
                 key={charId}
                 onClick={() => setSelectedCharacter(charId)}
-                className={`w-8 h-8 rounded overflow-hidden cursor-pointer flex-shrink-0 ${selectedCharacter === charId ? 'border-2 border-blue-500' : 'border border-gray-600 opacity-50 hover:opacity-100'}`}
-                title={charId}
+                className={`w-8 h-8 rounded overflow-hidden cursor-pointer flex-shrink-0 relative group ${selectedCharacter === charId ? 'border-2 border-blue-500' : 'border border-gray-600 opacity-50 hover:opacity-100'}`}
+                title={CHARACTERS[charId].name}
               >
                 {CHARACTERS[charId].type === 'video' ? (
                   <video src={CHARACTERS[charId].url} className="w-full h-full object-cover" muted />
                 ) : (
-                  <img src={CHARACTERS[charId].url} className="w-full h-full object-cover" alt={charId} />
+                  <img src={CHARACTERS[charId].url} className="w-full h-full object-cover" alt={CHARACTERS[charId].name} />
+                )}
+                
+                {charId.startsWith('custom_') && (
+                  <button 
+                    onClick={(e) => removeCustomCharacter(e, charId)}
+                    className="absolute top-0 right-0 p-0.5 bg-red-600 hover:bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-bl"
+                    title="Xóa nhân vật này"
+                  >
+                    <X size={10} />
+                  </button>
                 )}
               </div>
             ))}
             
             <button 
               className="w-8 h-8 rounded border border-dashed border-gray-500 flex items-center justify-center text-gray-400 hover:text-white cursor-pointer transition-colors hover:bg-gray-700/50 shrink-0" 
-              title="Tải lên nhân vật (Ảnh/Video)..."
+              title="Tải lên nhân vật mới (Ảnh/Video)..."
               onClick={() => fileInputRef.current?.click()}
             >
               <Plus size={16} />
@@ -279,21 +273,30 @@ export default function DesktopAppUI() {
 
         <button 
           onClick={() => setIsDarkMode(!isDarkMode)}
-          className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-300 text-gray-700 hover:bg-gray-400'}`}
+          className={`shrink-0 p-1.5 rounded transition-colors ${isDarkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-300 text-gray-700 hover:bg-gray-400'}`}
+          title="Giao diện sáng/tối"
         >
           {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
-          Giao diện tối
         </button>
 
-        <button className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-[#0088cc]/20 text-[#0088cc] hover:bg-[#0088cc]/30' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}>
+        <button 
+          className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-[#0088cc]/20 text-[#0088cc] hover:bg-[#0088cc]/30' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
+          title="Hỗ trợ Zalo"
+        >
           <MessageCircle size={16} />
-          Hỗ trợ (Zalo)
+          Zalo
         </button>
         
-        <button className={`shrink-0 p-1.5 rounded transition-colors ${isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-300 text-gray-700 hover:bg-gray-400'}`}>
+        {/* Nút Cài đặt (Bánh răng nhỏ) thay thế cho nút Cài đặt bự đã bị gỡ */}
+        <button 
+          onClick={() => setActiveSettingsModal('workspace')} 
+          className={`shrink-0 flex items-center gap-1.5 p-1.5 rounded transition-colors ${isDarkMode ? 'bg-blue-600/20 text-blue-400 hover:bg-blue-600/40' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
+          title="Quản lý Sự kiện Video (Cài đặt chính)"
+        >
           <Settings size={16} />
         </button>
-
+        
+        {/* Có thể giữ một bánh răng nhỏ thứ 2 cho Cài đặt chung nếu muốn, hoặc dùng 1 cái. */}
       </div>
 
       {/* 3. Main Video Area */}
@@ -302,14 +305,14 @@ export default function DesktopAppUI() {
         {renderCharacterContent()}
         
         {/* Lớp phủ phụ thêm */}
-        <div className="absolute bottom-6 left-6 flex flex-col pointer-events-none">
+        <div className="absolute bottom-6 left-6 flex flex-col pointer-events-none z-10">
           <h2 className="text-4xl font-bold text-white mb-1 drop-shadow-lg">AIDOL</h2>
           <p className="text-white drop-shadow-md font-medium px-2 py-1 bg-black/40 rounded inline-block backdrop-blur-sm">
-             {selectedCharacter} - Sẵn sàng Livestream
+             {CHARACTERS[selectedCharacter]?.name || 'Không xác định'} - Sẵn sàng Livestream
           </p>
         </div>
 
-        {/* Cửa sổ nổi hiển thị Webcam từ Tun Studio (Nhỏ gọn, góc phải trên) */}
+        {/* Cửa sổ nổi hiển thị Webcam từ Tun Studio (Góc phải trên) */}
         {isWebcamActive && (
           <div className="absolute top-4 right-4 w-48 aspect-video rounded-lg overflow-hidden shadow-2xl border-[2px] border-green-500 bg-black z-30 group">
             <video 
@@ -330,15 +333,6 @@ export default function DesktopAppUI() {
             </button>
           </div>
         )}
-
-        {/* Floating Download Button (Small in corner) */}
-        <button 
-          onClick={handleDownload}
-          className="absolute bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-xs rounded shadow-lg flex items-center gap-1.5 transition-colors z-10"
-        >
-          <Download size={14} />
-          <span>Tải phần mềm (ZIP)</span>
-        </button>
       </div>
 
       {/* General Settings Modal */}
