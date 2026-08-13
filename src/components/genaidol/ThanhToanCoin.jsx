@@ -1,141 +1,170 @@
 import React, { useState } from 'react';
-import { Check, Coins, ShieldCheck, Zap, AlertCircle } from 'lucide-react';
+import { Check, Coins, Zap, AlertCircle, Sparkles, Crown, Rocket } from 'lucide-react';
+import { useToken } from './TokenContext';
+import SepayQRModal from './SepayQRModal';
 
-export default function ThanhToanCoin() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [activeTab, setActiveTab] = useState('gia-han');
+// ============================================================
+// CÁC GÓI TOKEN (Anh chỉnh giá & số token ở đây)
+// ============================================================
+const TOKEN_PACKAGES = [
+  {
+    id: 'starter',
+    name: 'Gói Khởi Đầu',
+    tokens: 1000,
+    price: 99000,
+    icon: Zap,
+    color: 'blue',
+    desc: 'Phù hợp để trải nghiệm AvaLive AI',
+    features: ['1.000 Token AvaLive', 'Dùng AI Gemini ~200 phiên', 'Dùng ElevenLabs TTS ~50.000 ký tự'],
+    highlight: false,
+  },
+  {
+    id: 'pro',
+    name: 'Gói Pro',
+    tokens: 5000,
+    price: 399000,
+    icon: Rocket,
+    color: 'indigo',
+    desc: 'Livestream không giới hạn cả tuần',
+    features: ['5.000 Token AvaLive', 'Dùng AI Gemini ~1.000 phiên', 'Dùng ElevenLabs TTS ~250.000 ký tự', 'Tặng thêm 10% Token'],
+    highlight: true,
+    badge: 'PHỔ BIẾN',
+  },
+  {
+    id: 'vip',
+    name: 'Gói VIP',
+    tokens: 15000,
+    price: 999000,
+    icon: Crown,
+    color: 'amber',
+    desc: 'Dành cho streamer chuyên nghiệp',
+    features: ['15.000 Token AvaLive', 'Dùng AI Gemini ~3.000 phiên', 'Dùng ElevenLabs TTS ~750.000 ký tự', 'Tặng thêm 20% Token', 'Hỗ trợ kỹ thuật ưu tiên'],
+    highlight: false,
+  },
+];
+
+const colorMap = {
+  blue: { bg: 'from-blue-500 to-blue-600', light: 'bg-blue-50 text-blue-700 border-blue-200', btn: 'bg-blue-600 hover:bg-blue-500', icon: 'text-blue-500' },
+  indigo: { bg: 'from-indigo-500 to-purple-600', light: 'bg-indigo-50 text-indigo-700 border-indigo-200', btn: 'bg-indigo-600 hover:bg-indigo-500', icon: 'text-indigo-500' },
+  amber: { bg: 'from-amber-500 to-orange-500', light: 'bg-amber-50 text-amber-700 border-amber-200', btn: 'bg-amber-500 hover:bg-amber-400', icon: 'text-amber-500' },
+};
+
+export default function ThanhToanCoin({ onClose }) {
+  const { balance } = useToken();
+  const [selectedPkg, setSelectedPkg] = useState(null);
+
+  const balanceColor = balance === 0 ? 'text-red-400' : balance < 200 ? 'text-orange-400' : 'text-emerald-400';
 
   return (
-    <div className="w-full">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-br from-[#E8F2FA] to-[#F1F5F9] w-full rounded-2xl overflow-hidden mb-8 border border-slate-200">
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 p-8 lg:p-12">
-          
+    <div className="w-full min-h-full bg-gradient-to-br from-[#0f0f1a] to-[#1a1a2e] text-white p-6 overflow-y-auto">
+      
+      {/* Hero */}
+      <div className="max-w-4xl mx-auto">
+        <div className="flex flex-col lg:flex-row items-start gap-8 mb-10">
           <div className="flex-1">
-            <span className="inline-block px-3 py-1 bg-white text-blue-600 rounded-full text-[10px] font-bold mb-6 border border-blue-100 uppercase tracking-widest shadow-sm">
-              Thanh toán an toàn • Kích hoạt tự động
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-400 rounded-full text-[10px] font-black mb-4 border border-amber-500/20 uppercase tracking-widest">
+              <Sparkles size={10} /> AvaLive Token System
             </span>
-            <h1 className="text-4xl lg:text-5xl font-black text-slate-800 mb-6 tracking-tight leading-tight">
-              Sẵn sàng để AIDOL Live <br className="hidden lg:block"/>bán hàng cùng bạn?
+            <h1 className="text-4xl font-black text-white mb-3 leading-tight">
+              Nạp Token để<br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400">Livestream không ngừng</span>
             </h1>
-            <p className="text-slate-600 font-medium mb-8 max-w-xl text-lg leading-relaxed">
-              Chọn gói phù hợp để mở lại đầy đủ công cụ livestream, phản hồi khách và hỗ trợ chốt đơn. Sau khi thanh toán xác nhận, hệ thống tự kích hoạt cho đúng tài khoản của bạn.
+            <p className="text-gray-400 font-medium leading-relaxed max-w-md">
+              Token được sử dụng khi AI Gemini và ElevenLabs xử lý phiên live. Mua một lần, dùng mãi không hết hạn theo gói.
             </p>
-            
-            <div className="flex flex-wrap gap-3">
-              <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm">
-                <Check className="w-4 h-4 text-emerald-500" />
-                <span className="text-xs font-bold text-slate-700">Thanh toán qua cổng bảo mật</span>
+            <div className="flex flex-wrap gap-2 mt-4">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded-full border border-white/10 text-xs font-bold text-gray-300">
+                <Check size={12} className="text-emerald-400" /> Thanh toán qua SePay
               </div>
-              <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm">
-                <Check className="w-4 h-4 text-emerald-500" />
-                <span className="text-xs font-bold text-slate-700">Tự cộng KOL Coin / thời hạn</span>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded-full border border-white/10 text-xs font-bold text-gray-300">
+                <Check size={12} className="text-emerald-400" /> Cộng token tự động
               </div>
-              <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm">
-                <Check className="w-4 h-4 text-emerald-500" />
-                <span className="text-xs font-bold text-slate-700">Dùng ngay sau khi xác nhận</span>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded-full border border-white/10 text-xs font-bold text-gray-300">
+                <Check size={12} className="text-emerald-400" /> Token không hết hạn
               </div>
             </div>
           </div>
 
-          {/* Coin Balance Card */}
-          <div className="w-full lg:w-[400px]">
-            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-8 text-white shadow-xl shadow-blue-900/20 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3 blur-2xl"></div>
-              
-              <div className="relative z-10">
-                <h3 className="text-sm font-bold text-blue-100 mb-2">Số dư KOL Coin hiện có</h3>
-                <div className="text-6xl font-black mb-4 flex items-center gap-3">
-                  0 <Coins className="w-8 h-8 text-amber-400" />
+          {/* Balance card */}
+          <div className="w-full lg:w-72 bg-gradient-to-br from-blue-600/20 to-indigo-600/20 border border-blue-500/30 rounded-2xl p-6 backdrop-blur-sm">
+            <p className="text-sm font-bold text-blue-300 mb-2">💎 Số dư Token hiện tại</p>
+            <div className={`text-5xl font-black mb-1 ${balanceColor}`}>{balance.toLocaleString()}</div>
+            <p className="text-xs text-gray-500">Token AvaLive</p>
+            {balance < 200 && (
+              <div className="mt-3 flex items-center gap-2 text-xs text-orange-400 bg-orange-500/10 rounded-lg px-3 py-2 border border-orange-500/20">
+                <AlertCircle size={13} /> Số dư sắp hết, hãy nạp thêm!
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Packages */}
+        <h2 className="text-xl font-black text-white mb-5">Chọn gói Token phù hợp</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {TOKEN_PACKAGES.map(pkg => {
+            const c = colorMap[pkg.color];
+            const Icon = pkg.icon;
+            return (
+              <div
+                key={pkg.id}
+                className={`relative rounded-2xl p-6 border transition-all cursor-pointer group ${
+                  pkg.highlight
+                    ? 'bg-gradient-to-b from-indigo-900/60 to-purple-900/40 border-indigo-500/50 shadow-xl shadow-indigo-900/30'
+                    : 'bg-white/5 border-white/10 hover:border-white/30 hover:bg-white/8'
+                }`}
+              >
+                {pkg.badge && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-black rounded-full shadow-lg">
+                    {pkg.badge}
+                  </div>
+                )}
+
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${c.bg} flex items-center justify-center mb-4 shadow-lg`}>
+                  <Icon size={22} className="text-white" />
                 </div>
-                <p className="text-xs text-blue-100/80 leading-relaxed font-medium">
-                  KOL Coin cộng dồn, không bị đặt lại mỗi tháng và dùng chung cho toàn bộ hệ sinh thái KOL LIVE.
-                </p>
-              </div>
-            </div>
-          </div>
-          
-        </div>
-      </div>
 
-      {/* Pricing Section */}
-      <div className="max-w-4xl mx-auto px-4">
-        <span className="inline-block px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold mb-4 border border-blue-100 uppercase tracking-widest">
-          Chọn gói phù hợp
-        </span>
-        
-        <div className="flex flex-col lg:flex-row justify-between items-end gap-6 mb-8">
-          <div>
-            <h2 className="text-3xl font-black text-slate-800 mb-2">Đầu tư đúng công cụ để phiên live chốt đơn mượt hơn</h2>
-            <p className="text-sm text-slate-500 font-medium">Chọn một gói bên dưới. Bạn chỉ chuyển sang PayOS sau khi bấm nút thanh toán an toàn.</p>
-          </div>
-          
-          <div className="bg-white p-1 rounded-xl border border-slate-200 flex shadow-sm flex-shrink-0">
-            <button 
-              onClick={() => setActiveTab('gia-han')}
-              className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'gia-han' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-50'}`}
-            >
-              Gia hạn AIDOL Live
-            </button>
-            <button 
-              onClick={() => setActiveTab('nap-coin')}
-              className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'nap-coin' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-50'}`}
-            >
-              Nạp KOL Coin
-            </button>
-          </div>
+                <h3 className="text-lg font-black text-white mb-1">{pkg.name}</h3>
+                <p className="text-xs text-gray-400 mb-4">{pkg.desc}</p>
+
+                <div className="mb-4">
+                  <span className="text-3xl font-black text-white">{pkg.price.toLocaleString()}</span>
+                  <span className="text-gray-400 text-sm">đ</span>
+                  <div className="text-sm font-bold text-amber-400 mt-1">+{pkg.tokens.toLocaleString()} Token</div>
+                </div>
+
+                <ul className="space-y-2 mb-5">
+                  {pkg.features.map((f, i) => (
+                    <li key={i} className="flex items-start gap-2 text-xs text-gray-300">
+                      <Check size={13} className="text-emerald-400 mt-0.5 shrink-0" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+
+                <button
+                  onClick={() => setSelectedPkg(pkg)}
+                  className={`w-full py-3 bg-gradient-to-r ${c.bg} hover:opacity-90 text-white font-black rounded-xl shadow-md transition-all text-sm`}
+                >
+                  Mua ngay • {pkg.price.toLocaleString()}đ
+                </button>
+              </div>
+            );
+          })}
         </div>
 
-        {!isLoggedIn && (
-          <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-center gap-3 mb-8">
-            <div className="w-8 h-8 rounded-full bg-red-100 text-red-500 flex items-center justify-center flex-shrink-0">
-              <AlertCircle className="w-4 h-4" />
-            </div>
-            <p className="text-sm text-red-700 font-medium">
-              Đăng nhập để xem đúng gói và thanh toán cho tài khoản KOL LIVE của bạn.
-            </p>
-          </div>
-        )}
-
-        {/* Pricing Cards Placeholder based on tab */}
-        {activeTab === 'gia-han' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-               <div className="absolute top-0 right-0 bg-amber-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg">PHỔ BIẾN</div>
-               <h3 className="text-lg font-black text-slate-800 mb-1">Gói Pro 1 Tháng</h3>
-               <div className="text-3xl font-black text-blue-600 mb-4">499.000đ</div>
-               <ul className="space-y-3 mb-6">
-                 <li className="flex items-center gap-2 text-sm text-slate-600"><Check className="w-4 h-4 text-emerald-500" /> Không giới hạn thời gian Live</li>
-                 <li className="flex items-center gap-2 text-sm text-slate-600"><Check className="w-4 h-4 text-emerald-500" /> Kịch bản AI Auto-reply</li>
-                 <li className="flex items-center gap-2 text-sm text-slate-600"><Check className="w-4 h-4 text-emerald-500" /> Tặng kèm 100 KOL Coin</li>
-               </ul>
-               <button className="w-full py-3 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-xl font-bold transition-colors">Chọn gói này</button>
-            </div>
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-               <h3 className="text-lg font-black text-slate-800 mb-1">Gói VIP 6 Tháng</h3>
-               <div className="text-3xl font-black text-blue-600 mb-4">2.490.000đ</div>
-               <ul className="space-y-3 mb-6">
-                 <li className="flex items-center gap-2 text-sm text-slate-600"><Check className="w-4 h-4 text-emerald-500" /> Tất cả tính năng của gói Pro</li>
-                 <li className="flex items-center gap-2 text-sm text-slate-600"><Check className="w-4 h-4 text-emerald-500" /> Nhân bản giọng nói miễn phí</li>
-                 <li className="flex items-center gap-2 text-sm text-slate-600"><Check className="w-4 h-4 text-emerald-500" /> Hỗ trợ kỹ thuật 24/7</li>
-               </ul>
-               <button className="w-full py-3 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-xl font-bold transition-colors">Chọn gói này</button>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[100, 500, 1000].map(amount => (
-              <div key={amount} className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm text-center hover:border-blue-300 transition-colors cursor-pointer group">
-                <Coins className="w-12 h-12 text-amber-400 mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                <div className="text-2xl font-black text-slate-800 mb-1">{amount} Coin</div>
-                <div className="text-sm font-bold text-blue-600 mb-4">{amount * 10}.000đ</div>
-                <button className="w-full py-2 bg-slate-100 text-slate-700 group-hover:bg-blue-600 group-hover:text-white rounded-lg font-bold transition-colors">Mua ngay</button>
-              </div>
-            ))}
-          </div>
-        )}
-
+        <p className="text-center text-xs text-gray-600 mt-8">
+          🔒 Thanh toán được bảo mật qua cổng SePay • VietQR • Hỗ trợ tất cả ngân hàng Việt Nam
+        </p>
       </div>
+
+      {/* SePay Modal */}
+      {selectedPkg && (
+        <SepayQRModal
+          pkg={selectedPkg}
+          onClose={() => setSelectedPkg(null)}
+          onSuccess={() => setSelectedPkg(null)}
+        />
+      )}
     </div>
   );
 }

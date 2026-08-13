@@ -2,11 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Settings, CreditCard, Video, Moon, Sun, 
   MessageCircle, Play, Pause, Mic, MicOff, X, Download, Plus,
-  Brain, Radio
+  Brain, Radio, Coins, AlertTriangle
 } from 'lucide-react';
 import WorkspaceTacVu from './WorkspaceTacVu';
 import GeneralSettings from './GeneralSettings';
 import ThanhToanCoin from './ThanhToanCoin';
+import TokenHistoryModal from './TokenHistoryModal';
+import { useToken, TOKEN_RATES } from './TokenContext';
 
 export default function DesktopAppUI() {
   const [activeSettingsModal, setActiveSettingsModal] = useState(null); 
@@ -16,10 +18,42 @@ export default function DesktopAppUI() {
   const [tiktokId, setTiktokId] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState('aidol_lan_huong');
+  const [showTokenHistory, setShowTokenHistory] = useState(false);
+  const [toast, setToast] = useState(null);
   
   const [customCharacters, setCustomCharacters] = useState([]);
   const [hiddenBuiltins, setHiddenBuiltins] = useState([]);
   const fileInputRef = useRef(null);
+
+  const { balance, deductToken, setNotifyCallback } = useToken();
+
+  // Toast helper
+  const showToast = (msg, type = 'warn') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  // Register low-balance callback
+  useEffect(() => {
+    setNotifyCallback(({ message }) => showToast(message, 'warn'));
+  }, [setNotifyCallback]);
+
+  // Auto-deduct tokens when live session is active
+  useEffect(() => {
+    if (!isConnected) return;
+    const timer = setInterval(() => {
+      deductToken(TOKEN_RATES.AI_PER_30S, 'AI Gemini (phiên live)');
+    }, 30000);
+    return () => clearInterval(timer);
+  }, [isConnected, deductToken]);
+
+  // Stop session when tokens run out
+  useEffect(() => {
+    if (isConnected && balance === 0) {
+      setIsConnected(false);
+      showToast('🔴 Hết token! Phiên live đã tự động dừng. Vui lòng nạp thêm token.', 'error');
+    }
+  }, [balance, isConnected]);
 
   // Connection state
   const [isConnected, setIsConnected] = useState(false);
@@ -357,6 +391,23 @@ export default function DesktopAppUI() {
             {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
           </button>
 
+          {/* Token Widget */}
+          <button
+            onClick={() => setShowTokenHistory(true)}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-all border ${
+              balance === 0
+                ? 'bg-red-500/20 border-red-500/40 text-red-400 hover:bg-red-500/30'
+                : balance < TOKEN_RATES.LOW_BALANCE_WARN
+                ? 'bg-orange-500/20 border-orange-500/40 text-orange-400 hover:bg-orange-500/30'
+                : 'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20'
+            }`}
+            title="Xem lịch sử Token"
+          >
+            {balance < TOKEN_RATES.LOW_BALANCE_WARN && <AlertTriangle size={13} />}
+            <Coins size={14} />
+            <span>{balance.toLocaleString()}</span>
+          </button>
+
           <button className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-[#0088cc]/20 text-[#0088cc] hover:bg-[#0088cc]/30' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}>
             <MessageCircle size={16} />
             Zalo
@@ -475,17 +526,38 @@ export default function DesktopAppUI() {
       {/* Payment Modal */}
       {activeSettingsModal === 'payment' && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in zoom-in duration-200">
-          <div className="w-full max-w-5xl h-[90vh] flex flex-col rounded-xl overflow-hidden shadow-2xl bg-white relative">
+          <div className="w-full max-w-5xl h-[90vh] flex flex-col rounded-xl overflow-hidden shadow-2xl bg-[#0f0f1a] relative">
             <button 
               onClick={() => setActiveSettingsModal(null)}
-              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors"
+              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 text-white/60 hover:bg-white/20 hover:text-white transition-colors"
             >
               <X size={20} />
             </button>
             <div className="flex-1 overflow-y-auto">
-              <ThanhToanCoin />
+              <ThanhToanCoin onClose={() => setActiveSettingsModal(null)} />
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Token History Modal */}
+      {showTokenHistory && (
+        <TokenHistoryModal
+          onClose={() => setShowTokenHistory(false)}
+          onOpenPayment={() => { setShowTokenHistory(false); setActiveSettingsModal('payment'); }}
+        />
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[99999] px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-bold animate-in slide-in-from-bottom-4 duration-300 max-w-sm ${
+          toast.type === 'error' ? 'bg-red-600 text-white' : 'bg-orange-500 text-white'
+        }`}>
+          <AlertTriangle size={18} />
+          <span>{toast.msg}</span>
+          <button onClick={() => setToast(null)} className="ml-2 opacity-70 hover:opacity-100">
+            <X size={14} />
+          </button>
         </div>
       )}
 
