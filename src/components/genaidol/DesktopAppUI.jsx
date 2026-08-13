@@ -187,7 +187,7 @@ export default function DesktopAppUI() {
       </div>
 
       {/* 2. Top Control Bar (Single Row) */}
-      <div className={`flex items-center gap-3 p-3 ${isDarkMode ? 'bg-[#1a1a24]' : 'bg-gray-200'} border-b ${isDarkMode ? 'border-gray-800' : 'border-gray-300'} z-20 shadow-sm overflow-x-auto whitespace-nowrap custom-scrollbar`}>
+      <div className={`flex items-center gap-3 p-3 ${isDarkMode ? 'bg-[#1a1a24]' : 'bg-gray-200'} border-b ${isDarkMode ? 'border-gray-800' : 'border-gray-300'} z-40 shadow-sm overflow-visible whitespace-nowrap`}>
         
         {/* Cài đặt Dropdown */}
         <div className="relative shrink-0">
@@ -200,7 +200,7 @@ export default function DesktopAppUI() {
           </button>
           
           {isSettingsDropdownOpen && (
-            <div className={`absolute top-full left-0 mt-1 w-64 rounded-md shadow-xl border z-30 py-1 ${isDarkMode ? 'bg-[#1c1c23] border-gray-700' : 'bg-white border-gray-200'}`}>
+            <div className={`absolute top-full left-0 mt-1 w-64 rounded-md shadow-xl border z-50 py-1 ${isDarkMode ? 'bg-[#1c1c23] border-gray-700' : 'bg-white border-gray-200'}`}>
               <button 
                 onClick={() => { setActiveSettingsModal('general'); setIsSettingsDropdownOpen(false); }}
                 className={`w-full text-left px-4 py-2 text-sm transition-colors ${isDarkMode ? 'hover:bg-blue-600/20 text-gray-200' : 'hover:bg-blue-50 text-gray-700'}`}
