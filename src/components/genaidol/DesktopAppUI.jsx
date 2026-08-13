@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Settings, CreditCard, Video, Moon, Sun, 
   MessageCircle, Play, Pause, Mic, MicOff, X, Download, Plus,
-  Brain, Radio, Coins, AlertTriangle
+  Brain, Radio, Coins, AlertTriangle, Eye, Clock, List, Zap, AlertCircle, FileText, CheckSquare
 } from 'lucide-react';
 import WorkspaceTacVu from './WorkspaceTacVu';
 import GeneralSettings from './GeneralSettings';
@@ -23,6 +23,14 @@ export default function DesktopAppUI() {
   const [showTokenHistory, setShowTokenHistory] = useState(false);
   const [showSimulator, setShowSimulator] = useState(false);
   const [assistantPrompt, setAssistantPrompt] = useState('');
+  
+  // States cho Menu Theo dõi
+  const [isMonitorDropdownOpen, setIsMonitorDropdownOpen] = useState(false);
+  const [activeMonitorModal, setActiveMonitorModal] = useState(null);
+  const [quickResponseText, setQuickResponseText] = useState('');
+  const [quickResponseOriginalAudio, setQuickResponseOriginalAudio] = useState(false);
+  const quickResponseVideoRef = useRef(null);
+
   const [toast, setToast] = useState(null);
   
   const [customCharacters, setCustomCharacters] = useState([]);
@@ -213,6 +221,27 @@ export default function DesktopAppUI() {
     const link = document.createElement('a');
     link.href = '/Livestream_AI_Software.zip';
     link.download = 'Livestream_AI_Software.zip';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportTimelineCSV = () => {
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFFThời gian,Tên Sự kiện,Nội dung Sự kiện,Phản ứng của AI\n";
+    viewerHistory.slice().reverse().forEach(row => {
+      let time = row.time || '';
+      let type = row.type === 'COMMENT' ? 'Bình luận' : row.type === 'GIFT' ? 'Tặng quà' : 'Vào phòng';
+      let content = row.type === 'COMMENT' ? row.payload.text : row.type === 'GIFT' ? row.payload.gift : row.payload.name;
+      let ai = row.ai_reply || '';
+      // escape quotes
+      content = content.replace(/"/g, '""');
+      ai = ai.replace(/"/g, '""');
+      csvContent += `"${time}","${type}","${content}","${ai}"\n`;
+    });
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "Dong_thoi_gian_su_kien.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -484,6 +513,24 @@ export default function DesktopAppUI() {
             Zalo
           </button>
 
+          <div className="relative">
+            <button 
+              onClick={() => setIsMonitorDropdownOpen(!isMonitorDropdownOpen)} 
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isMonitorDropdownOpen ? 'bg-orange-600 text-white' : (isDarkMode ? 'bg-orange-500/20 text-orange-400 hover:bg-orange-500/30' : 'bg-orange-100 text-orange-700 hover:bg-orange-200')}`}>
+              <Eye size={16} />
+              Theo dõi ▼
+            </button>
+            {isMonitorDropdownOpen && (
+              <div className={`absolute top-full right-0 mt-2 w-64 rounded-xl shadow-2xl border z-50 p-2 overflow-hidden ${isDarkMode ? 'bg-[#1c1c23] border-gray-700' : 'bg-white border-gray-200'} animate-in fade-in slide-in-from-top-2 duration-200`}>
+                <button onClick={() => { setActiveMonitorModal('timeline'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-3 py-2 mb-1 rounded text-sm font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}><Clock size={16} className="text-blue-400" /> Dòng thời gian Sự kiện</button>
+                <button onClick={() => { setActiveMonitorModal('queue'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-3 py-2 mb-1 rounded text-sm font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}><List size={16} className="text-gray-400" /> Giám sát Hàng đợi</button>
+                <button onClick={() => { setActiveMonitorModal('quick_response'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-3 py-2 mb-1 rounded text-sm font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}><Zap size={16} className="text-yellow-500" /> Phản hồi Nhanh</button>
+                <button onClick={() => { setActiveMonitorModal('sys_log'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-3 py-2 mb-1 rounded text-sm font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}><AlertCircle size={16} className="text-orange-400" /> Log Hệ thống Lỗi</button>
+                <button onClick={() => { setActiveMonitorModal('tiktok_log'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-3 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}><FileText size={16} className="text-pink-400" /> Log Sự kiện TikTok</button>
+              </div>
+            )}
+          </div>
+
           <button 
             onClick={() => setShowSimulator(!showSimulator)} 
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${showSimulator ? 'bg-purple-600 text-white' : (isDarkMode ? 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30' : 'bg-purple-100 text-purple-700 hover:bg-purple-200')}`}>
@@ -702,10 +749,124 @@ export default function DesktopAppUI() {
 
       {/* Token History Modal */}
       {showTokenHistory && (
-        <TokenHistoryModal
-          onClose={() => setShowTokenHistory(false)}
-          onOpenPayment={() => { setShowTokenHistory(false); setActiveSettingsModal('payment'); }}
-        />
+        <TokenHistoryModal onClose={() => setShowTokenHistory(false)} />
+      )}
+
+      {/* ---------------- MONITOR MODALS ---------------- */}
+      {activeMonitorModal === 'timeline' && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-200">
+          <div className="bg-[#e5e5e5] rounded shadow-2xl w-full max-w-5xl h-[80vh] flex flex-col border border-gray-400">
+            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-300 bg-[#f0f0f0]">
+              <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2"><Clock size={16} className="text-blue-800" /> Dòng thời gian Sự kiện & Phản ứng</h2>
+              <button onClick={() => setActiveMonitorModal(null)} className="p-1 hover:bg-gray-300 rounded transition-colors"><X size={16} className="text-gray-600" /></button>
+            </div>
+            <div className="flex-1 overflow-auto bg-white">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-[#f0f0f0] text-gray-700 font-semibold border-b border-gray-300 sticky top-0">
+                  <tr>
+                    <th className="px-4 py-2 w-32 text-center text-[#a53b3b]">Thời gian</th>
+                    <th className="px-4 py-2 w-48 text-[#a53b3b]">Tên Sự kiện</th>
+                    <th className="px-4 py-2 w-1/3 text-[#a53b3b]">Nội dung Sự kiện</th>
+                    <th className="px-4 py-2 text-[#a53b3b]">Phản ứng của AI</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {viewerHistory.slice().reverse().map((h, i) => (
+                    <tr key={i} className="hover:bg-blue-50 transition-colors">
+                      <td className="px-4 py-2 text-center text-gray-500">{h.time}</td>
+                      <td className="px-4 py-2 font-medium text-gray-700">{h.type === 'COMMENT' ? 'Bình luận' : h.type === 'GIFT' ? 'Tặng quà' : 'Vào phòng'}</td>
+                      <td className="px-4 py-2 text-gray-800">{h.type === 'COMMENT' ? h.payload.text : h.type === 'GIFT' ? h.payload.gift : h.payload.name}</td>
+                      <td className="px-4 py-2 text-green-700">{h.ai_reply || ''}</td>
+                    </tr>
+                  ))}
+                  {viewerHistory.length === 0 && (
+                    <tr>
+                      <td colSpan="4" className="px-4 py-8 text-center text-gray-400">Chưa có sự kiện nào trong phiên live này.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="px-4 py-2 bg-[#f0f0f0] border-t border-gray-300 flex justify-center">
+              <button onClick={exportTimelineCSV} className="flex items-center gap-1.5 px-4 py-1.5 bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 rounded text-sm font-medium transition-colors shadow-sm">
+                <Download size={14} className="text-purple-600" /> Xuất ra file CSV...
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeMonitorModal === 'quick_response' && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-200">
+          <div className="bg-[#e5e5e5] rounded shadow-2xl w-[500px] flex flex-col border border-gray-400">
+            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-300 bg-[#f0f0f0]">
+              <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2"><Zap size={16} className="text-blue-800" /> Phản hồi Nhanh</h2>
+              <button onClick={() => setActiveMonitorModal(null)} className="p-1 hover:bg-gray-300 rounded transition-colors"><X size={16} className="text-gray-600" /></button>
+            </div>
+            <div className="p-4 bg-white space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-[#a53b3b] mb-1 block">Nhập nội dung cần nói (bỏ trống nếu chỉ muốn phát video):</label>
+                <textarea 
+                  value={quickResponseText}
+                  onChange={(e) => setQuickResponseText(e.target.value)}
+                  className="w-full h-40 border border-gray-300 rounded p-2 text-sm focus:outline-none focus:border-blue-500 resize-none"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => quickResponseVideoRef.current?.click()} className="px-3 py-1 bg-white border border-gray-400 rounded text-xs text-green-700 hover:bg-gray-50 flex-shrink-0">
+                  Chọn Video (Bắt buộc)...
+                </button>
+                <input type="file" accept="video/*" ref={quickResponseVideoRef} className="hidden" onChange={(e) => setQuickResponseVideo(e.target.files[0])} />
+                <span className="text-xs text-gray-500 truncate">{quickResponseVideo ? quickResponseVideo.name : 'Chưa chọn video.'}</span>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={quickResponseOriginalAudio}
+                  onChange={(e) => setQuickResponseOriginalAudio(e.target.checked)}
+                  className="w-3.5 h-3.5"
+                />
+                <span className="text-xs text-[#a53b3b] font-medium">Phát âm thanh gốc của video (không dùng TTS)</span>
+              </label>
+            </div>
+            <div className="p-3 bg-white border-t border-gray-200">
+              <button 
+                onClick={() => {
+                  if (audioPlayerRef.current && quickResponseText.trim()) {
+                     audioPlayerRef.current.enqueueItem(quickResponseText.trim(), 'QUICK_RESPONSE');
+                     setToast({ msg: 'Đã gửi lệnh phản hồi nhanh!', type: 'success' });
+                     setQuickResponseText('');
+                     setActiveMonitorModal(null);
+                  } else {
+                     setToast({ msg: 'Tính năng upload video thay thế đang hoàn thiện, vui lòng nhập nội dung TTS.', type: 'warn' });
+                  }
+                }}
+                className="w-full py-2 bg-[#ef4444] hover:bg-red-600 text-white rounded font-bold text-sm shadow-md transition-colors flex items-center justify-center gap-2"
+              >
+                <Play size={16} /> PHÁT NGAY
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {(activeMonitorModal === 'queue' || activeMonitorModal === 'sys_log' || activeMonitorModal === 'tiktok_log') && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-200">
+          <div className="bg-[#e5e5e5] rounded shadow-2xl w-[600px] h-[400px] flex flex-col border border-gray-400">
+            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-300 bg-[#f0f0f0]">
+              <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                {activeMonitorModal === 'queue' ? <List size={16} className="text-blue-800" /> : activeMonitorModal === 'sys_log' ? <AlertCircle size={16} className="text-orange-600" /> : <FileText size={16} className="text-blue-800" />}
+                {activeMonitorModal === 'queue' ? 'Giám sát Hàng đợi' : activeMonitorModal === 'sys_log' ? 'Log Hệ thống Lỗi' : 'Log Sự kiện TikTok'}
+              </h2>
+              <button onClick={() => setActiveMonitorModal(null)} className="p-1 hover:bg-gray-300 rounded transition-colors"><X size={16} className="text-gray-600" /></button>
+            </div>
+            <div className="flex-1 flex flex-col items-center justify-center bg-white p-6 text-center space-y-4">
+              <CheckSquare size={48} className="text-gray-300" />
+              <h3 className="text-lg font-bold text-gray-700">Tính năng đang hoàn thiện</h3>
+              <p className="text-sm text-gray-500">Cửa sổ này đang trong quá trình nâng cấp, vui lòng quay lại sau.</p>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Toast Notification */}
