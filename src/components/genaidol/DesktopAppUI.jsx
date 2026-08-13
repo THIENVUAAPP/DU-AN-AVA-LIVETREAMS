@@ -576,8 +576,8 @@ export default function DesktopAppUI() {
         <div className="hidden">
           <AIAudioPlayer 
             ref={audioPlayerRef} 
-            isLive={isConnected} 
-            currentVideoUrl={isConnected && activeVideoItem ? activeVideoItem.mediaUrl : null}
+            isLive={isConnected || showSimulator} 
+            currentVideoUrl={(isConnected || showSimulator) && activeVideoItem ? activeVideoItem.mediaUrl : null}
             onActionTriggered={(e) => {
               if (e.type === 'LIPSYNC_READY') handleActionVideoReady(e.videoUrl, true);
               if (e.type === 'LIPSYNC_ENDED') setLipSyncVideoUrl(null);
