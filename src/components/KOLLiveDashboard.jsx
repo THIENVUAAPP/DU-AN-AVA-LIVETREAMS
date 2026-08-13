@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Home, Wand2, UserSquare2, Radio, Clock, BookOpen, Code2, 
   CreditCard, User, ChevronDown, Plus, Mic, Video, Image as ImageIcon,
-  Sparkles, PlayCircle, Settings
+  Sparkles, PlayCircle, Settings, Download
 } from 'lucide-react';
 
 import LichSuTao from './genaidol/LichSuTao';
@@ -80,6 +80,17 @@ export default function KOLLiveDashboard() {
             </button>
           ))}
         </nav>
+
+        {/* RIGHT ACTION */}
+        <div className="flex items-center">
+          <button 
+            onClick={() => window.open('/desktop', '_blank')}
+            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-4 py-2 rounded-full text-sm font-bold shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all cursor-pointer whitespace-nowrap hidden lg:flex"
+          >
+            <Download className="w-4 h-4" />
+            Tải Phần Mềm (ZIP)
+          </button>
+        </div>
 
       </header>
 
