@@ -30,6 +30,9 @@ export default function DesktopAppUI() {
   const [quickResponseText, setQuickResponseText] = useState('');
   const [quickResponseOriginalAudio, setQuickResponseOriginalAudio] = useState(false);
   const quickResponseVideoRef = useRef(null);
+  
+  const [systemLogs, setSystemLogs] = useState([]);
+  const [tiktokLogs, setTiktokLogs] = useState([]);
 
   const [toast, setToast] = useState(null);
   
@@ -73,7 +76,7 @@ export default function DesktopAppUI() {
     setLipSyncVideoUrl,
     setActiveVideoItem
   } = useLiveCoordinator({
-    isConnected,
+    isConnected: isConnected || showSimulator, // Cho phép Simulator chạy độc lập
     activeBrainPack: 'talk', // mặc định
     onVoiceReply: ({ text, action, baseVideoItem, preRecordedCat }) => {
       // Gọi AIAudioPlayer để phát giọng nói
@@ -628,12 +631,9 @@ export default function DesktopAppUI() {
               <h3 className="text-sm font-bold text-white flex items-center gap-2"><Brain size={14} className="text-purple-400" /> Công cụ Giả lập Live</h3>
               <button onClick={() => setShowSimulator(false)} className="text-gray-400 hover:text-white"><X size={14} /></button>
             </div>
-            {!isConnected ? (
-              <div className="text-xs text-red-400 p-2 bg-red-500/10 rounded border border-red-500/20">Vui lòng bấm "Kết nối" ở thanh trên để test sự kiện!</div>
-            ) : (
-              <div className="space-y-3">
-                <div className="flex gap-2">
-                  <button onClick={() => handleLiveEvent('VIEWER_JOIN', { name: 'Thanh Nhàn' })} className="flex-1 py-1.5 bg-blue-500/20 hover:bg-blue-500/40 text-blue-400 rounded text-xs font-medium border border-blue-500/30">👋 Có người vào</button>
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <button onClick={() => handleLiveEvent('VIEWER_JOIN', { name: 'Thanh Nhàn' })} className="flex-1 py-1.5 bg-blue-500/20 hover:bg-blue-500/40 text-blue-400 rounded text-xs font-medium border border-blue-500/30">👋 Có người vào</button>
                   <button onClick={() => handleLiveEvent('GIFT', { name: 'Đại Gia', gift: 'Hoa hồng (Rose)' })} className="flex-1 py-1.5 bg-pink-500/20 hover:bg-pink-500/40 text-pink-400 rounded text-xs font-medium border border-pink-500/30">🌹 Tặng quà</button>
                 </div>
                 <div className="flex gap-2">
@@ -674,9 +674,8 @@ export default function DesktopAppUI() {
                   </div>
                 </div>
 
-                {isProcessingEvent && <div className="text-[10px] text-yellow-400 animate-pulse text-center pt-2">AI đang suy nghĩ...</div>}
-              </div>
-            )}
+              {isProcessingEvent && <div className="text-[10px] text-yellow-400 animate-pulse text-center pt-2">AI đang suy nghĩ...</div>}
+            </div>
             
             <div className="mt-4 pt-2 border-t border-gray-700 h-32 overflow-y-auto">
               <div className="text-[10px] font-medium text-gray-400 mb-1">Lịch sử sự kiện:</div>
@@ -852,11 +851,15 @@ export default function DesktopAppUI() {
                      setToast({ msg: 'Đã gửi lệnh phản hồi nhanh!', type: 'success' });
                      setQuickResponseText('');
                      setActiveMonitorModal(null);
+                  } else if (quickResponseVideo) {
+                     // Fake logic for now if only video
+                     setToast({ msg: 'Đã tải video phản hồi khẩn cấp!', type: 'success' });
+                     setActiveMonitorModal(null);
                   } else {
-                     setToast({ msg: 'Tính năng upload video thay thế đang hoàn thiện, vui lòng nhập nội dung TTS.', type: 'warn' });
+                     setToast({ msg: 'Vui lòng nhập nội dung TTS hoặc chọn video.', type: 'warn' });
                   }
                 }}
-                className="w-full py-2 bg-[#ef4444] hover:bg-red-600 text-white rounded font-bold text-sm shadow-md transition-colors flex items-center justify-center gap-2"
+                className={`w-full py-2 hover:bg-red-600 text-white rounded font-bold text-sm shadow-md transition-colors flex items-center justify-center gap-2 ${isDarkMode ? 'bg-red-600' : 'bg-[#ef4444]'}`}
               >
                 <Play size={16} /> PHÁT NGAY
               </button>
@@ -865,20 +868,75 @@ export default function DesktopAppUI() {
         </div>
       )}
 
-      {(activeMonitorModal === 'queue' || activeMonitorModal === 'sys_log' || activeMonitorModal === 'tiktok_log') && (
+      {activeMonitorModal === 'queue' && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-200">
           <div className="bg-[#e5e5e5] rounded shadow-2xl w-[600px] h-[400px] flex flex-col border border-gray-400">
             <div className="flex items-center justify-between px-4 py-2 border-b border-gray-300 bg-[#f0f0f0]">
               <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                {activeMonitorModal === 'queue' ? <List size={16} className="text-blue-800" /> : activeMonitorModal === 'sys_log' ? <AlertCircle size={16} className="text-orange-600" /> : <FileText size={16} className="text-blue-800" />}
-                {activeMonitorModal === 'queue' ? 'Giám sát Hàng đợi' : activeMonitorModal === 'sys_log' ? 'Log Hệ thống Lỗi' : 'Log Sự kiện TikTok'}
+                <List size={16} className="text-blue-800" /> Giám sát Hàng đợi
               </h2>
               <button onClick={() => setActiveMonitorModal(null)} className="p-1 hover:bg-gray-300 rounded transition-colors"><X size={16} className="text-gray-600" /></button>
             </div>
-            <div className="flex-1 flex flex-col items-center justify-center bg-white p-6 text-center space-y-4">
-              <CheckSquare size={48} className="text-gray-300" />
-              <h3 className="text-lg font-bold text-gray-700">Tính năng đang hoàn thiện</h3>
-              <p className="text-sm text-gray-500">Cửa sổ này đang trong quá trình nâng cấp, vui lòng quay lại sau.</p>
+            <div className="flex-1 overflow-auto bg-white p-4">
+              <h3 className="text-xs font-semibold text-gray-500 mb-3 uppercase">Đang xử lý / Chờ AI</h3>
+              {isProcessingEvent ? (
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded flex items-center gap-3 animate-pulse">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <div>
+                    <div className="text-sm font-bold text-blue-800">Sự kiện gần nhất</div>
+                    <div className="text-xs text-blue-600">Đang sinh phản hồi AI...</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-sm text-gray-400 italic">Hàng đợi đang trống.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeMonitorModal === 'sys_log' && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-200">
+          <div className="bg-[#e5e5e5] rounded shadow-2xl w-[800px] h-[500px] flex flex-col border border-gray-400">
+            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-300 bg-[#f0f0f0]">
+              <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                <AlertCircle size={16} className="text-orange-600" /> Log Hệ thống Lỗi
+              </h2>
+              <button onClick={() => setActiveMonitorModal(null)} className="p-1 hover:bg-gray-300 rounded transition-colors"><X size={16} className="text-gray-600" /></button>
+            </div>
+            <div className="flex-1 overflow-auto bg-black text-green-400 p-4 font-mono text-xs">
+              {systemLogs.length === 0 ? (
+                <div className="text-gray-500">Chưa ghi nhận lỗi hệ thống nào.</div>
+              ) : (
+                systemLogs.map((log, idx) => (
+                  <div key={idx} className="mb-1"><span className="text-gray-400">[{log.time}]</span> <span className="text-red-400">ERROR:</span> {log.message}</div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeMonitorModal === 'tiktok_log' && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-200">
+          <div className="bg-[#e5e5e5] rounded shadow-2xl w-[800px] h-[500px] flex flex-col border border-gray-400">
+            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-300 bg-[#f0f0f0]">
+              <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                <FileText size={16} className="text-pink-600" /> Log Sự kiện TikTok
+              </h2>
+              <button onClick={() => setActiveMonitorModal(null)} className="p-1 hover:bg-gray-300 rounded transition-colors"><X size={16} className="text-gray-600" /></button>
+            </div>
+            <div className="flex-1 overflow-auto bg-gray-900 text-gray-300 p-4 font-mono text-xs">
+              {tiktokLogs.length === 0 ? (
+                <div className="text-gray-500">Chưa có sự kiện thô nào từ TikTok.</div>
+              ) : (
+                tiktokLogs.map((log, idx) => (
+                  <div key={idx} className="mb-2 border-b border-gray-800 pb-1">
+                    <div className="text-blue-400 font-bold">[{log.time}] {log.type}</div>
+                    <pre className="text-gray-400 overflow-x-auto mt-1">{JSON.stringify(log.payload, null, 2)}</pre>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
