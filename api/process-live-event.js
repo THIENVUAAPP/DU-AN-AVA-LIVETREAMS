@@ -2,6 +2,7 @@ import { getSalesPrompt } from './brains/sales.js';
 import { getTalkPrompt } from './brains/talk.js';
 import { getDancePrompt } from './brains/dance.js';
 import { getSingPrompt } from './brains/sing.js';
+import { getCustomPrompt } from './brains/custom.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -23,9 +24,11 @@ export default async function handler(req, res) {
       finalPrompt = getDancePrompt(systemPrompt, eventType, payload, viewerHistory);
     } else if (brainPack === 'sing') {
       finalPrompt = getSingPrompt(systemPrompt, eventType, payload, viewerHistory);
-    } else {
-      // Default fallback to talk
+    } else if (brainPack === 'talk') {
       finalPrompt = getTalkPrompt(systemPrompt, eventType, payload, viewerHistory);
+    } else {
+      // For any custom brain Pack created by user
+      finalPrompt = getCustomPrompt(systemPrompt, eventType, payload, viewerHistory);
     }
 
     let generatedText = '';

@@ -1,4 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import json
+
+code = """import React, { useState, useRef, useEffect } from 'react';
 import { Settings, Clock, Mic, Mic2, CheckCircle, UserSquare2, Image as ImageIcon, Play, Upload, Check, Zap, Lock, Brain, Sparkles, FileText, ChevronDown, Monitor, Video, Search, FileAudio, Plus, Trash2 } from 'lucide-react';
 
 const DEFAULT_BRAINS = [
@@ -323,3 +325,7 @@ export default function WorkspaceTacVu({ defaultTab = 'voice' }) {
     </div>
   );
 }
+"""
+
+with open("src/components/genaidol/WorkspaceTacVu.jsx", "w") as f:
+    f.write(code)
