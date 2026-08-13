@@ -1,41 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Search, CheckCircle2, FolderOpen } from 'lucide-react';
 
-const MAIN_VOICES = [
-  { id: '135', name: 'Aidol Giọng Nữ Trầm (Ả Rập)', type: 'Aidol', gender: 'Female', cost: '520.00' },
-  { id: '136', name: 'Aidol Giọng Robot', type: 'Aidol', gender: 'Female', cost: '520.00' },
-  { id: '137', name: 'Aidol Hiệp Sĩ Trung Thành (NB)', type: 'Aidol', gender: 'Female', cost: '520.00' },
-  { id: '138', name: 'Aidol Hoài Nam (Trầm ấm)', type: 'Aidol', gender: 'Male', cost: '114.00' },
-  { id: '139', name: 'Aidol Hùng Biện', type: 'Aidol', gender: 'Female', cost: '520.00' },
-  { id: '140', name: 'Aidol Hậu Bối Vui Tính (HQ)', type: 'Aidol', gender: 'Female', cost: '520.00' },
-  { id: '141', name: 'Aidol Học Giả (BĐN)', type: 'Aidol', gender: 'Female', cost: '520.00' },
-  { id: '142', name: 'Aidol Học Giả (TBN)', type: 'Aidol', gender: 'Female', cost: '520.00' },
-  { id: '143', name: 'Aidol Học Giả (Ukraina)', type: 'Aidol', gender: 'Female', cost: '520.00' },
-  { id: '144', name: 'Aidol Học Giả Uyên Bác', type: 'Aidol', gender: 'Female', cost: '520.00' },
-  { id: '145', name: 'Aidol Học Sinh Năng Động (NB)', type: 'Aidol', gender: 'Female', cost: '520.00' },
-  { id: '146', name: 'Aidol Kim Oanh (Lạc quan)', type: 'Aidol', gender: 'Female', cost: '520.00' },
-  { id: '147', name: 'Aidol Lan Chi (Truyền cảm)', type: 'Aidol', gender: 'Female', cost: '520.00' },
-  { id: '148', name: 'Aidol Lan Hương HD (Cao cấp)', type: 'Aidol', gender: 'Female', cost: '231.00' },
-  { id: '149', name: 'Aidol Linh Hồn Dễ Thương (TQ)', type: 'Aidol', gender: 'Female', cost: '520.00' }
-];
+const MAIN_VOICES = [];
 
 const ASSISTANT_VOICES = [
-  { id: '1', name: 'Giọng Google (Miễn phí)', type: 'Miễn phí', gender: 'Female', cost: '0' },
-  { id: '2', name: 'Aidol An Nhiên (Điềm tĩnh)', type: 'Aidol', gender: 'Female', cost: '520.00' },
-  { id: '3', name: 'Aidol Anh Chàng Hài Hước', type: 'Aidol', gender: 'Male', cost: '520.00' },
-  { id: '4', name: 'Aidol Bà Cụ Nhân Từ (TQ)', type: 'Aidol', gender: 'Female', cost: '520.00' },
-  { id: '5', name: 'Aidol Bé My (Đáng yêu)', type: 'Aidol', gender: 'Female', cost: '520.00' },
-  { id: '6', name: 'Aidol Bé Tinh Nghịch', type: 'Aidol', gender: 'Female', cost: '520.00' },
-  { id: '7', name: 'Aidol Bạn Gái Chu Đáo (BĐN)', type: 'Aidol', gender: 'Female', cost: '520.00' },
-  { id: '8', name: 'Aidol Bạn Gái Chu Đáo (TBN)', type: 'Aidol', gender: 'Female', cost: '520.00' },
-  { id: '9', name: 'Aidol Bạn Thân Thời Thơ Ấu (HQ)', type: 'Aidol', gender: 'Female', cost: '520.00' },
-  { id: '10', name: 'Aidol Bạn Thân Đẹp Trai (Nga)', type: 'Aidol', gender: 'Male', cost: '520.00' },
-  { id: '11', name: 'Aidol Bạn Thân Ấm Áp (TQ)', type: 'Aidol', gender: 'Female', cost: '520.00' },
-  { id: '12', name: 'Aidol Bạn Trai Vui Vẻ (HQ)', type: 'Aidol', gender: 'Male', cost: '520.00' },
-  { id: '13', name: 'Aidol Bạn Đời Trưởng Thành (BĐN)', type: 'Aidol', gender: 'Female', cost: '520.00' },
-  { id: '14', name: 'Aidol Bạn Đời Trưởng Thành (TBN)', type: 'Aidol', gender: 'Female', cost: '520.00' },
-  { id: '15', name: 'Aidol Bảo Vy (Tươi tắn)', type: 'Aidol', gender: 'Female', cost: '114.00' },
-  { id: '16', name: 'Aidol Bảo Vy HD (Cao cấp)', type: 'Aidol', gender: 'Female', cost: '231.00' }
+  { id: '1', name: 'Giọng Google (Miễn phí)', type: 'Miễn phí', gender: 'Female', cost: '0' }
 ];
 
 export default function GeneralSettings({ onClose }) {
@@ -212,8 +181,8 @@ export default function GeneralSettings({ onClose }) {
       </div>
 
       {/* CONTENT AREA */}
-      <div className="flex-1 overflow-y-auto p-4 bg-[#f8f9fa]">
-        <div className="max-w-5xl mx-auto space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 bg-[#f8f9fa] scroll-smooth overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="max-w-5xl mx-auto space-y-4 pb-10">
           
           {/* TAB 1: API PROMPT */}
           {activeTab === 'prompt' && (
