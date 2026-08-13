@@ -1,10 +1,39 @@
 export const getCustomPrompt = (systemPrompt, eventType, payload, viewerHistory) => {
+  // Map frontend eventType to config eventId
+  const eventMap = {
+    'chat': 'binh_luan',
+    'gift': 'qua_tang',
+    'like': 'cam_on_tim',
+    'follow': 'theo_doi',
+    'share': 'chia_se',
+    'join': 'chao_moi'
+  };
+  const eventId = eventMap[eventType] || 'noi_chuyen';
+  
+  let specificPrompt = 'Bạn là một Idol vui vẻ, thông minh.';
+  let specificSample = '';
+  
+  try {
+    const configObj = JSON.parse(systemPrompt);
+    if (configObj && configObj[eventId]) {
+      specificPrompt = configObj[eventId].prompt || specificPrompt;
+      specificSample = configObj[eventId].sample || '';
+    }
+  } catch (e) {
+    // Fallback if systemPrompt is just a plain string (old config)
+    if (systemPrompt && !systemPrompt.startsWith('{')) {
+      specificPrompt = systemPrompt;
+    }
+  }
+
   return `
 [VAI TRÒ - AI DIRECTOR & IDOL ÁO]
 Nhiệm vụ của bạn là đóng vai một Idol ảo trên livestream TikTok theo đúng định hướng sau đây.
 
-[CẤU HÌNH BỘ NÃO & TÍNH CÁCH (DO NGƯỜI DÙNG TÙY CHỈNH)]
-${systemPrompt || 'Bạn là một Idol vui vẻ, thông minh.'}
+[CẤU HÌNH BỘ NÃO - Sự kiện: ${eventId}]
+${specificPrompt}
+
+${specificSample ? `[CÂU TRẢ LỜI MẪU (THAM KHẢO TỪ NGƯỜI DÙNG)]\n${specificSample}` : ''}
 
 [HỆ THỐNG XỬ LÝ NGỮ CẢNH]
 - Lịch sử tương tác của viewer này: ${JSON.stringify(viewerHistory)}
