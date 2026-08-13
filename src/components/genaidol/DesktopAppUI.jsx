@@ -18,6 +18,7 @@ export default function DesktopAppUI() {
   const [selectedCharacter, setSelectedCharacter] = useState('aidol_lan_huong');
   
   const [customCharacters, setCustomCharacters] = useState([]);
+  const [hiddenBuiltins, setHiddenBuiltins] = useState([]);
   const fileInputRef = useRef(null);
 
   // Connection state
@@ -70,13 +71,20 @@ export default function DesktopAppUI() {
     };
   };
 
-  const CHARACTERS = {
+  const ALL_CHARACTERS = {
     'aidol_lan_huong': { name: 'Lan Hương', url: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=600&h=900&fit=crop', type: 'image' },
     'aidol_ngoc_trinh': { name: 'Ngọc Trinh', url: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=600&h=900&fit=crop', type: 'image' }
   };
+
+  // Lọc bỏ các nhân vật đã bị ẩn và gộp nhân vật tuỳ chỉnh
+  const CHARACTERS = {};
+  Object.keys(ALL_CHARACTERS).forEach(id => {
+    if (!hiddenBuiltins.includes(id)) CHARACTERS[id] = ALL_CHARACTERS[id];
+  });
   customCharacters.forEach(c => {
     CHARACTERS[c.id] = { name: c.name, url: c.url, type: c.type };
   });
+
 
   const handleConnect = async () => {
     if (isConnected) {
@@ -284,7 +292,7 @@ export default function DesktopAppUI() {
                 <div 
                   key={charId}
                   onClick={() => setSelectedCharacter(charId)}
-                  className={`w-8 h-8 rounded overflow-hidden cursor-pointer flex-shrink-0 relative group ${selectedCharacter === charId ? 'border-2 border-blue-500' : 'border border-gray-600 opacity-50 hover:opacity-100'}`}
+                  className={`w-10 h-10 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 relative group ${selectedCharacter === charId ? 'border-2 border-blue-500 shadow-lg shadow-blue-500/30' : 'border border-gray-600 opacity-60 hover:opacity-100'}`}
                   title={CHARACTERS[charId].name}
                 >
                   {CHARACTERS[charId].type === 'video' ? (
@@ -292,11 +300,26 @@ export default function DesktopAppUI() {
                   ) : (
                     <img src={CHARACTERS[charId].url} className="w-full h-full object-cover" alt={CHARACTERS[charId].name} />
                   )}
-                  {charId.startsWith('custom_') && (
-                    <button onClick={(e) => removeCustomCharacter(e, charId)} className="absolute top-0 right-0 p-0.5 bg-red-600 hover:bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-bl">
-                      <X size={10} />
-                    </button>
-                  )}
+                  {/* Nút Xoá – hiển thị khi hover cho TẤT CẢ nhân vật */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (charId.startsWith('custom_')) {
+                        removeCustomCharacter(e, charId);
+                      } else {
+                        // Xoá nhân vật mẫu bằng cách lọc ra khỏi danh sách
+                        const allKeys = Object.keys(CHARACTERS);
+                        const remaining = allKeys.filter(k => k !== charId);
+                        if (remaining.length > 0) setSelectedCharacter(remaining[0]);
+                        // Đánh dấu ẩn built-in char
+                        setHiddenBuiltins(prev => [...(prev || []), charId]);
+                      }
+                    }}
+                    className="absolute top-0 right-0 p-0.5 bg-red-600 hover:bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-all duration-150 rounded-bl"
+                    title={`Xoá ${CHARACTERS[charId].name}`}
+                  >
+                    <X size={10} />
+                  </button>
                 </div>
               ))}
               <button className="w-8 h-8 rounded border border-dashed border-gray-500 flex items-center justify-center text-gray-400 hover:text-white cursor-pointer transition-colors hover:bg-gray-700/50 shrink-0" onClick={() => fileInputRef.current?.click()}>
