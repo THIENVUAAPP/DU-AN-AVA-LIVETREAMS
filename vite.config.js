@@ -185,56 +185,7 @@ export default defineConfig({
             return;
           }
 
-          if (req.url.startsWith('/api/extract')) {
-            // Fix for URL parsing in Vite dev server middleware
-            const queryUrl = new URL(req.url, 'http://localhost').searchParams.get('url');
-            
-            if (!queryUrl) {
-              res.statusCode = 400;
-              res.end(JSON.stringify({ error: 'No URL provided' }));
-              return;
-            }
-
-            // Fallback to yt-dlp for all URLs
-            const pythonProcess = spawn('./yt-dlp', [
-              '--dump-json',
-              '--quiet',
-              '--no-warnings',
-              '-f', 'best[protocol*=m3u8]/best',
-              queryUrl
-            ]);
-
-            let data = '';
-            let errorData = '';
-            pythonProcess.stdout.on('data', (chunk) => data += chunk);
-            pythonProcess.stderr.on('data', (chunk) => errorData += chunk);
-            pythonProcess.on('close', (code) => {
-              if (code !== 0 && errorData) {
-                  console.error('yt-dlp error:', errorData);
-              }
-              res.setHeader('Content-Type', 'application/json');
-              try {
-                const parsed = JSON.parse(data);
-                if (parsed.url) {
-                    res.end(JSON.stringify({
-                        streamUrl: parsed.url,
-                        title: parsed.title,
-                        viewers: parsed.view_count,
-                        uploader: parsed.uploader,
-                        thumbnail: parsed.thumbnail,
-                        ext: parsed.ext,
-                        protocol: parsed.protocol,
-                        isLive: parsed.is_live
-                    }));
-                } else {
-                    res.end(JSON.stringify({ error: 'No URL found', stderr: errorData }));
-                }
-              } catch (e) {
-                res.end(JSON.stringify({ error: e.toString(), stderr: errorData }));
-              }
-            });
-            return;
-          }
+          // /api/extract has been completely removed to avoid yt-dlp dependencies
           next();
         });
       }
