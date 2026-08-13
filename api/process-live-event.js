@@ -18,7 +18,28 @@ export default async function handler(req, res) {
 
     let finalPrompt = '';
 
-    if (brainPack === 'sales') {
+    if (eventType === 'ASSISTANT_PROMPT') {
+      finalPrompt = `
+SYSTEM PROMPT (Cấu hình nhân vật):
+${systemPrompt}
+
+LỊCH SỬ TƯƠNG TÁC GẦN ĐÂY:
+${JSON.stringify(viewerHistory)}
+
+====================
+LỆNH TỪ TRỢ LÝ/ĐẠO DIỄN: 
+${payload.prompt}
+
+Yêu cầu: Bạn HÃY LÀM THEO lệnh trên của trợ lý một cách tự nhiên nhất với tư cách là nhân vật của bạn. Không được nói lộ ra là "trợ lý bảo tôi...".
+Trả về ĐÚNG định dạng JSON sau:
+{
+  "intent": "ASSISTANT_DIRECTIVE",
+  "replyText": "[Câu nói tự nhiên của bạn để thực hiện lệnh trợ lý]",
+  "emotion": "happy",
+  "shouldTriggerAction": "none"
+}
+`;
+    } else if (brainPack === 'sales') {
       finalPrompt = getSalesPrompt(systemPrompt, eventType, payload, viewerHistory);
     } else if (brainPack === 'dance') {
       finalPrompt = getDancePrompt(systemPrompt, eventType, payload, viewerHistory);

@@ -22,6 +22,7 @@ export default function DesktopAppUI() {
   const [selectedCharacter, setSelectedCharacter] = useState('aidol_lan_huong');
   const [showTokenHistory, setShowTokenHistory] = useState(false);
   const [showSimulator, setShowSimulator] = useState(false);
+  const [assistantPrompt, setAssistantPrompt] = useState('');
   const [toast, setToast] = useState(null);
   
   const [customCharacters, setCustomCharacters] = useState([]);
@@ -579,6 +580,38 @@ export default function DesktopAppUI() {
                 <div className="flex gap-2">
                   <button onClick={() => handleLiveEvent('COMMENT', { name: 'Khách', text: 'Sản phẩm này dùng thế nào?' })} className="w-full py-1.5 bg-purple-500/20 hover:bg-purple-500/40 text-purple-400 rounded text-xs font-medium border border-purple-500/30">🛒 Hỏi mua hàng</button>
                 </div>
+                
+                {/* Trợ lý ngầm nhắc nhở */}
+                <div className="flex flex-col gap-1 mt-2 pt-2 border-t border-gray-700">
+                  <label className="text-[10px] text-gray-400 font-medium flex items-center gap-1"><Mic size={12} className="text-red-400" /> Trợ lý nhắc nhở (Đạo diễn):</label>
+                  <div className="flex gap-1.5">
+                    <input 
+                      type="text" 
+                      value={assistantPrompt}
+                      onChange={(e) => setAssistantPrompt(e.target.value)}
+                      placeholder="VD: Nhắc idol cảm ơn user..."
+                      className="flex-1 bg-black/40 border border-gray-700 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-red-500"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && assistantPrompt.trim()) {
+                          handleLiveEvent('ASSISTANT_PROMPT', { prompt: assistantPrompt.trim() });
+                          setAssistantPrompt('');
+                        }
+                      }}
+                    />
+                    <button 
+                      onClick={() => {
+                        if (assistantPrompt.trim()) {
+                          handleLiveEvent('ASSISTANT_PROMPT', { prompt: assistantPrompt.trim() });
+                          setAssistantPrompt('');
+                        }
+                      }}
+                      className="px-2.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium"
+                    >
+                      Gửi lệnh
+                    </button>
+                  </div>
+                </div>
+
                 {isProcessingEvent && <div className="text-[10px] text-yellow-400 animate-pulse text-center pt-2">AI đang suy nghĩ...</div>}
               </div>
             )}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Search, CheckCircle2, FolderOpen, Brain } from 'lucide-react';
+import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Search, CheckCircle2, FolderOpen, Brain, Upload } from 'lucide-react';
+import { getLiveMediaByCategory } from '../../lib/liveKhoDB';
 
 const ELEVENLABS_VOICES = [
   { id: 'el_rachel', name: 'Rachel (Trầm ấm, Tự tin)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
@@ -48,6 +49,8 @@ const ASSISTANT_VOICES = [
 
 export default function GeneralSettings({ onClose }) {
   const [activeTab, setActiveTab] = useState('prompt');
+  const [idleVideoCount, setIdleVideoCount] = useState(0);
+  const fileInputRef = useRef(null);
   
   // State for all settings
   const [settings, setSettings] = useState({
@@ -71,7 +74,10 @@ export default function GeneralSettings({ onClose }) {
     // Tab 4: Cấu hình Nhanh
     selectedPreset: 'fast', // 'fast' | 'notification' | 'custom_LanHuong'
     userPresets: [],
-    newPresetName: ''
+    newPresetName: '',
+    
+    // Custom Voices
+    customVoices: []
   });
 
   // Load from localStorage on mount
@@ -88,6 +94,11 @@ export default function GeneralSettings({ onClose }) {
         console.error("Failed to parse settings", e);
       }
     }
+    
+    // Fetch count of idle videos
+    getLiveMediaByCategory('idle').then(items => {
+      setIdleVideoCount(items.length);
+    }).catch(console.error);
   }, []);
 
   const handleSave = () => {
@@ -134,6 +145,35 @@ export default function GeneralSettings({ onClose }) {
       selectedPreset: newPreset.id,
       newPresetName: ''
     }));
+  };
+
+  const handleUploadVoiceClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleVoiceFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const voiceName = prompt("Nhập tên cho giọng đọc mới của bạn:", "Giọng cá nhân " + (settings.customVoices.length + 1));
+    if (voiceName) {
+      const newVoice = {
+        id: `custom_${Date.now()}`,
+        name: voiceName,
+        type: 'Custom Clone',
+        gender: 'Bản sao',
+        cost: '1 token/ký tự'
+      };
+      setSettings(prev => ({
+        ...prev,
+        customVoices: [newVoice, ...prev.customVoices],
+        mainVoiceId: newVoice.id
+      }));
+      alert(`Đã tải lên và tạo bản sao giọng đọc "${voiceName}" thành công!`);
+    }
+    e.target.value = null; // reset
   };
 
   // Helper renderers for Tables
@@ -304,10 +344,16 @@ export default function GeneralSettings({ onClose }) {
                       <span className="text-sm font-medium text-gray-700">Giọng Nữ</span>
                     </label>
                   </div>
+                  <button 
+                    onClick={handleUploadVoiceClick}
+                    className="ml-auto flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 rounded text-sm font-medium transition-colors"
+                  >
+                    <Upload size={16} /> Tải lên Giọng đọc (Clone)
+                  </button>
                 </div>
                 
                 <div className="flex-1 overflow-auto p-4">
-                  {renderVoiceTable(MAIN_VOICES, settings.mainVoiceFilter, settings.mainVoiceId, (id) => setSettings(prev => ({...prev, mainVoiceId: id})))}
+                  {renderVoiceTable([...settings.customVoices, ...MAIN_VOICES], settings.mainVoiceFilter, settings.mainVoiceId, (id) => setSettings(prev => ({...prev, mainVoiceId: id})))}
                 </div>
                 
                 <div className="px-4 py-2 bg-gray-50 border-t border-gray-300 text-xs text-gray-500 italic">
@@ -338,7 +384,7 @@ export default function GeneralSettings({ onClose }) {
                   <div className="flex items-center justify-between border-t border-gray-200 pt-3">
                     <div className="flex items-center gap-2 text-sm text-gray-700">
                       <span>Thư mục Video Trợ lý (cho video 'listening'):</span>
-                      <span className="font-semibold text-gray-900">{settings.assistantVideoFolder}</span>
+                      <span className="font-semibold text-gray-900">{idleVideoCount === 0 ? 'im lặng (0 video)' : `im lặng (${idleVideoCount} video)`}</span>
                     </div>
                     <button 
                       onClick={selectFolder}
@@ -369,10 +415,16 @@ export default function GeneralSettings({ onClose }) {
                       <span className="text-sm font-medium text-gray-700">Giọng Nữ</span>
                     </label>
                   </div>
+                  <button 
+                    onClick={handleUploadVoiceClick}
+                    className="ml-auto flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 rounded text-sm font-medium transition-colors"
+                  >
+                    <Upload size={16} /> Tải lên Giọng đọc (Clone)
+                  </button>
                 </div>
                 
                 <div className="flex-1 overflow-auto p-4">
-                  {renderVoiceTable(ASSISTANT_VOICES, settings.assistantVoiceFilter, settings.assistantVoiceId, (id) => setSettings(prev => ({...prev, assistantVoiceId: id})))}
+                  {renderVoiceTable([...settings.customVoices, ...ASSISTANT_VOICES], settings.assistantVoiceFilter, settings.assistantVoiceId, (id) => setSettings(prev => ({...prev, assistantVoiceId: id})))}
                 </div>
 
                 <div className="px-4 py-2 bg-gray-50 border-t border-gray-300 text-xs text-gray-500 italic">
@@ -478,6 +530,14 @@ export default function GeneralSettings({ onClose }) {
         </button>
       </div>
 
+      {/* Ẩn thẻ input file */}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleVoiceFileChange} 
+        accept="audio/mp3, audio/wav, audio/m4a" 
+        className="hidden" 
+      />
     </div>
   );
 }
