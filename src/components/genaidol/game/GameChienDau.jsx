@@ -754,7 +754,6 @@ export default function GameChienDau({
         canvas.style.height = `${h}px`;
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         updateFormation(w, h);
-        updateDanceSlots(w, h);
       }
     };
 
@@ -1440,7 +1439,7 @@ export default function GameChienDau({
       window.removeEventListener('resize', handleResize);
       if (engineRef.current.rAfId) cancelAnimationFrame(engineRef.current.rAfId);
     };
-  }, [config, updateFormation, updateDanceSlots]);
+  }, [config, updateFormation]);
 
   // Calculate HP Percentages
   const blueHpPct = Math.max(0, Math.min(100, (gameState.hp.blue / gameState.maxHp) * 100));
