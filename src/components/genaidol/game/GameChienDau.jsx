@@ -169,11 +169,11 @@ export default function GameChienDau({
   }, [config.soundEnabled, config.sfxVolume, soundMuted]);
 
   // Recalculate formation slots with 2-Tier Center Arena Architecture (Zero Overlap):
-  // 1) Upper VIP Champions Stage: Tier 3, 4, 5 stand prominently with x3.0-3.4 scale and wide clearance.
-  // 2) Lower Army Battlefield: Tier 1, 2 troops gather with ample row/column spacing and dedicated reserve lane for fallen fighters.
+  // 1) Upper VIP Champions Stage: Tier 3, 4, 5 stand prominently with x3.0-3.4 scale and wide 220px center separation.
+  // 2) Lower Army Battlefield: Tier 1, 2 troops gather with 180px center clash zone and dedicated reserve lane for fallen fighters.
   const updateFormation = useCallback((canvasWidth, canvasHeight) => {
     const centerX = canvasWidth / 2;
-    const vipStageY = canvasHeight * 0.38;
+    const vipStageY = canvasHeight * 0.36;
     const armyStageY = canvasHeight * 0.68;
 
     ['blue', 'red'].forEach(factionId => {
@@ -198,10 +198,9 @@ export default function GameChienDau({
         }
       });
 
-      // Position VIPs in Upper Center Champions Arena (Tập trung ở giữa màn hình)
-      const vipStepX = 85;
-      const vipStepY = 55;
-      const vipFrontGap = 80;
+      // Position VIPs in Upper Center Champions Arena (Rộng rãi, không đè nhau)
+      const vipStepX = 95;
+      const vipFrontGap = 110;
 
       vips.forEach((f, vIdx) => {
         const vRow = vIdx % 2;
@@ -212,10 +211,8 @@ export default function GameChienDau({
       });
 
       // Position Active Regular Army in Lower Center Battlefield
-      const regStepX = 58;
-      const regStepY = 50;
-      const frontGap = 70;
-      const maxCols = 3;
+      const regStepX = 65;
+      const frontGap = 90;
 
       activeRegulars.forEach((f, rIdx) => {
         const row = rIdx % 2;
@@ -223,7 +220,7 @@ export default function GameChienDau({
         const rowStagger = (row % 2 === 1) ? 22 : 0;
         f.isVipStage = false;
         f.targetX = centerX + dir * (frontGap + col * regStepX + rowStagger);
-        f.targetY = armyStageY + (row === 0 ? -22 : 22);
+        f.targetY = armyStageY + (row === 0 ? -24 : 24);
       });
 
       // Position Fallen Regulars neatly in the back reserve rank (Không đè lên quân đang chiến đấu)
@@ -231,27 +228,8 @@ export default function GameChienDau({
         const col = fIdx % 4;
         const row = Math.floor(fIdx / 4);
         f.isVipStage = false;
-        f.targetX = centerX + dir * (150 + col * 38);
-        f.targetY = armyStageY + 65 + row * 26;
-      });
-    });
-  }, []);
-
-  // Recalculate dance stage slots (Tập trung tuyệt đối ở sân khấu trung tâm)
-  const updateDanceSlots = useCallback((canvasWidth, canvasHeight) => {
-    const DANCE_SLOT_GAP_X = 52;
-    const DANCE_STAGE_Y_RATIO = 0.44;
-    const DANCE_STAGE_CENTER_GAP = 55;
-    const centerX = canvasWidth / 2;
-    const y = canvasHeight * DANCE_STAGE_Y_RATIO;
-
-    ['blue', 'red'].forEach(factionId => {
-      const dir = factionId === 'blue' ? -1 : 1;
-      const list = engineRef.current.dancers[factionId];
-      list.forEach((d, index) => {
-        d.targetX = centerX + dir * (DANCE_STAGE_CENTER_GAP + index * DANCE_SLOT_GAP_X);
-        d.targetY = y;
-        d.targetScale = 2.0;
+        f.targetX = centerX + dir * (170 + col * 40);
+        f.targetY = armyStageY + 70 + row * 26;
       });
     });
   }, []);
@@ -279,14 +257,13 @@ export default function GameChienDau({
       fighter.maxHp = calcMaxHp(fighter.score);
       if (preferredGender) fighter.gender = preferredGender;
 
-      // Respawn Mechanic (Hồi Sinh ngay khi Bình Luận hoặc Tặng Quà)
+      // Respawn Mechanic
       if (wasKnockedOut) {
         fighter.isKnockedOut = false;
         fighter.currentHp = fighter.maxHp;
         fighter.revivedAt = performance.now();
         fighter.knockbackVx = 0;
 
-        // Holy Divine Light Beam Particles
         for (let p = 0; p < 22; p++) {
           engineRef.current.particles.push({
             x: fighter.x + (Math.random() - 0.5) * 30,
@@ -325,15 +302,13 @@ export default function GameChienDau({
           ...prev.slice(0, 7)
         ]);
       } else {
-        // Normal HP boost
         fighter.currentHp = Math.min(fighter.maxHp, (fighter.currentHp || fighter.maxHp) + Math.floor(pointsToAdd * 0.4));
       }
     } else {
       const centerX = (engineRef.current.w || canvas.width) / 2;
-      const startX = factionId === 'blue' ? (centerX - 60) : (centerX + 60);
+      const startX = factionId === 'blue' ? (centerX - 90) : (centerX + 90);
       const startY = (engineRef.current.h || canvas.height) * 0.68;
       
-      // Auto balance male & female warriors across Blue & Red teams
       let gender = preferredGender;
       if (!gender) {
         const maleCount = list.filter(f => f.gender === 'male').length;
@@ -365,11 +340,9 @@ export default function GameChienDau({
       list.push(fighter);
     }
 
-    // Sort descending by score
     list.sort((a, b) => b.score - a.score);
     updateFormation(engineRef.current.w || canvas.width, engineRef.current.h || canvas.height);
 
-    // Apply Damage / Healing to Team Total HP
     setGameState(prev => {
       if (prev.winner) return prev;
       const oppFaction = factionId === 'blue' ? 'red' : 'blue';
@@ -383,10 +356,9 @@ export default function GameChienDau({
         playSfx('victory');
       }
 
-      // Leaderboard calculation
       const allFighters = [
-        ...engineRef.current.fighters.blue.map(f => ({ ...f, faction: 'blue' })),
-        ...engineRef.current.fighters.red.map(f => ({ ...f, faction: 'red' }))
+        ...engineRef.current.fighters.blue.map(f => ({ ...f, factionId: 'blue' })),
+        ...engineRef.current.fighters.red.map(f => ({ ...f, factionId: 'red' }))
       ].sort((a, b) => b.score - a.score).slice(0, 5);
 
       return {
@@ -401,45 +373,16 @@ export default function GameChienDau({
   }, [updateFormation, playSfx]);
 
   const triggerDance = useCallback((factionId, nickname, danceStyleId = null, durationMs = 6000) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    addOrUpdateFighter(factionId, nickname, 60);
     const userId = `user_${nickname.toLowerCase().replace(/\s+/g, '_')}`;
-    const list = engineRef.current.dancers[factionId];
-    if (list.length >= 6) return;
-
-    const styleId = danceStyleId || Math.floor(Math.random() * 20) + 1;
-    const existing = list.find(d => d.userId === userId);
-    if (existing) {
-      existing.danceStyleId = styleId;
-      existing.durationMs = Math.max(existing.durationMs, durationMs);
-      existing.startedAt = performance.now();
-      return;
+    const fighter = engineRef.current.fighters[factionId].find(f => f.userId === userId);
+    if (fighter) {
+      fighter.pulseUntil = performance.now() + durationMs;
+      fighter.isDancing = true;
+      fighter.danceUntil = performance.now() + durationMs;
     }
-
-    const centerX = (engineRef.current.w || canvas.width) / 2;
-    const dir = factionId === 'blue' ? -1 : 1;
-    const slotIdx = list.length;
-    const startX = centerX + dir * (55 + slotIdx * 52);
-    const startY = (engineRef.current.h || canvas.height) * 0.44;
-
-    list.push({
-      userId,
-      nickname,
-      factionId,
-      danceStyleId: styleId,
-      startedAt: performance.now(),
-      durationMs,
-      x: startX,
-      y: startY,
-      scale: 2.0,
-      targetX: startX,
-      targetY: startY,
-      targetScale: 2.0
-    });
-
-    updateDanceSlots(engineRef.current.w || canvas.width, engineRef.current.h || canvas.height);
-    playSfx('dance');
-  }, [updateDanceSlots, playSfx]);
+    playSfx('level_up');
+  }, [addOrUpdateFighter, playSfx]);
 
   const triggerAoeSkill = useCallback((factionId, donorName = 'VIP Player', power = 80) => {
     const canvas = canvasRef.current;
@@ -1112,20 +1055,17 @@ export default function GameChienDau({
           animState = SKELETON_STATES.DEFEATED;
         } else if (f.revivedAt && (performance.now() - f.revivedAt < 1800)) {
           animState = SKELETON_STATES.REVIVE;
+        } else if (f.isDancing && performance.now() < f.danceUntil) {
+          animState = SKELETON_STATES.DANCE;
         } else if (isPulsing) {
           animState = (tier >= 4 || isTopRank) ? SKELETON_STATES.ATTACK_SPIN : SKELETON_STATES.ATTACK_SLASH;
         } else if (isClashing && isFrontDuelist) {
           animState = SKELETON_STATES.ATTACK_SLASH;
         }
 
-        // Compute 3D facing angle
-        const baseFacing = factionId === 'blue' ? (Math.PI * 0.45) : (-Math.PI * 0.45);
-        const yawAngle = baseFacing + Math.sin(time * 0.002 + (f.bobPhase || 0)) * 0.18;
-
         const skeletonData = computeSkeletalJoints({
           gender: fighterGender,
           animState: animState,
-          yawAngle: yawAngle,
           time: time,
           phase: f.bobPhase || 0,
           tier: tier,
@@ -1135,8 +1075,7 @@ export default function GameChienDau({
         render3DWarriorSkeleton(ctx, skeletonData, {
           factionId,
           scale: 1.0,
-          isPulsing,
-          warriorImages: warriorImagesRef.current
+          isPulsing
         });
 
         // Orbiting Qi Swords for Tier 4 & 5
@@ -1473,74 +1412,7 @@ export default function GameChienDau({
         ctx.restore();
       }
 
-      // 4. Update & Draw Dancers (Vũ công đối kháng aerobic/sân khấu sôi động, có 2 chân nhảy đẹp mắt, KHÔNG nhào lộn)
-      ['blue', 'red'].forEach(factionId => {
-        const dancers = engineRef.current.dancers[factionId];
-        const color = factionId === 'blue' ? config.blueColor : config.redColor;
 
-        for (let i = dancers.length - 1; i >= 0; i--) {
-          const d = dancers[i];
-          d.x += (d.targetX - d.x) * lerpFactor;
-          d.y += (d.targetY - d.y) * lerpFactor;
-          d.scale += (d.targetScale - d.scale) * lerpFactor;
-
-          const elapsedSec = (performance.now() - d.startedAt) / 1000;
-          const style = DANCE_STYLES.find(s => s.id === d.danceStyleId) || DANCE_STYLES[0];
-
-          // Compute smooth dance motions (nhún nhảy, đá chân nhịp nhàng, lắc hông, KHÔNG nhào lộn)
-          const bounce = Math.sin(elapsedSec * style.bounceFreq * Math.PI * 2) * style.bounceAmp;
-          const sway = Math.sin(elapsedSec * style.swayFreq * Math.PI * 2) * style.swayAmp;
-          const armSwing = Math.sin(elapsedSec * style.armFreq * Math.PI * 2) * style.armAmp;
-          const legKick = Math.sin(elapsedSec * (style.legFreq || 2.5) * Math.PI * 2) * (style.legAmp || 12);
-          const jump = style.jumpFreq ? Math.max(0, Math.sin(elapsedSec * style.jumpFreq * Math.PI * 2)) * Math.min(style.jumpHeight, 14) : 0;
-
-          ctx.save();
-          ctx.translate(d.x + sway, d.y + bounce - jump);
-          ctx.scale(d.scale, d.scale);
-
-          // Golden stage podium glow
-          ctx.beginPath();
-          ctx.ellipse(0, 18, 18, 6, 0, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(255, 215, 0, 0.6)';
-          ctx.fill();
-
-          // Crown & Name on top
-          ctx.font = 'bold 9px sans-serif';
-          ctx.fillStyle = '#ffcc00';
-          ctx.strokeStyle = '#000000';
-          ctx.lineWidth = 2;
-          ctx.textAlign = 'center';
-          const dName = d.nickname.length > 8 ? d.nickname.slice(0, 7) + '…' : d.nickname;
-          ctx.strokeText('👑 ' + dName, 0, -22);
-          ctx.fillText('👑 ' + dName, 0, -22);
-
-          // Dancer 3D Skeletal Model with 360° Continuous Rotation & Articulated Limbs
-          const dancerGender = d.gender || (d.danceStyleId % 2 === 0 ? 'female' : 'male');
-          const dancerSkeleton = computeSkeletalJoints({
-            gender: dancerGender,
-            animState: SKELETON_STATES.DANCE,
-            yawAngle: (elapsedSec * 0.7 + d.danceStyleId) % (Math.PI * 2), // 360-degree rotating dance stage
-            time: elapsedSec * 1000,
-            phase: d.danceStyleId,
-            tier: 3,
-            animSpeed: config.animSpeed || 0.55
-          });
-
-          render3DWarriorSkeleton(ctx, dancerSkeleton, {
-            factionId,
-            scale: 1.0,
-            isPulsing: false,
-            warriorImages: warriorImagesRef.current
-          });
-
-          ctx.restore();
-
-          if (performance.now() - d.startedAt >= d.durationMs) {
-            dancers.splice(i, 1);
-            updateDanceSlots(canvas.width, canvas.height);
-          }
-        }
-      });
 
       // 5. Update & Draw Particles
       const particles = engineRef.current.particles;

@@ -1,6 +1,6 @@
-// 3D Human Warrior & Skeletal Combat Engine for Game Chien Dau
-// Renders ultra high-end Tripo 3D Warrior Models (Male Golden Dragon Warrior & Female Platinum Goddess)
-// with realistic physics, dynamic sword slashes, martial arts poses, team aura, and particle trails.
+// 3D Articulated Skeletal Humanoid Warrior Engine for Game Chien Dau
+// Provides full anatomical forward kinematics for all joints (head, hair, neck, shoulders, elbows, wrists, hips, knees, ankles, feet, cloak, sword),
+// with high-definition volumetric shaded 3D dragon/valkyrie armor, martial arts slashing, and fluid combat movements.
 
 export const SKELETON_STATES = {
   IDLE: 'idle',
@@ -14,12 +14,11 @@ export const SKELETON_STATES = {
 };
 
 /**
- * Computes 3D motion kinematics for characters
+ * Computes 3D Forward Kinematics for every human joint and limb
  */
 export function computeSkeletalJoints({
   gender = 'male',
   animState = SKELETON_STATES.WALK,
-  yawAngle = 0,
   time = 0,
   phase = 0,
   tier = 1,
@@ -29,87 +28,199 @@ export function computeSkeletalJoints({
   const t = time * 0.003 * speed + phase;
   const isFemale = gender === 'female';
 
+  // Body proportions
+  const headSize = isFemale ? 6.5 : 7.5;
+  const chestW = isFemale ? 12 : 15;
+  const chestH = isFemale ? 14 : 16;
+  const armLen = isFemale ? 10 : 12;
+  const forearmLen = isFemale ? 9 : 11;
+  const thighLen = isFemale ? 13 : 15;
+  const shinLen = isFemale ? 12 : 14;
+
+  // Root offsets
   let rootY = 0;
   let rootTiltZ = 0;
-  let rootScaleX = 1.0;
-  let rootScaleY = 1.0;
-  let swordSlashAngle = 0;
-  let swordSlashAlpha = 0;
+  let chestTwist = 0;
+  let headTilt = 0;
+
+  // Arm joint angles (radians)
+  let lShoulderAngle = 0.3;
+  let lElbowAngle = 0.5;
+  let rShoulderAngle = -0.3;
+  let rElbowAngle = 0.5;
+  let rWristAngle = 0;
+
+  // Leg joint angles (radians)
+  let lHipAngle = 0;
+  let lKneeAngle = 0.15;
+  let rHipAngle = 0;
+  let rKneeAngle = 0.15;
+
+  // Cloak and hair physics
+  const hairWave = Math.sin(t * 4.0) * 0.3;
+  const capeWave = Math.sin(t * 3.5) * 8;
   let eyeGlow = 1.0;
-  let auraIntensity = 1.0;
+  let slashArc = 0;
 
   if (animState === SKELETON_STATES.IDLE) {
-    // Natural martial arts breathing & floating stance
+    // Combat Ready Martial Stance (Thế thủ võ thuật, thở sâu, tay giữ kiếm sẵn sàng)
     const breath = Math.sin(t * 2.2);
-    rootY = breath * 2.5;
-    rootTiltZ = Math.sin(t * 1.1) * 0.03;
-    rootScaleY = 1.0 + breath * 0.02;
-    rootScaleX = 1.0 - breath * 0.015;
-    eyeGlow = 0.8 + breath * 0.3;
-    auraIntensity = 0.8;
+    rootY = breath * 2.0;
+    chestTwist = Math.sin(t * 1.1) * 0.04;
+    headTilt = -chestTwist * 0.6;
+
+    // Guarding arm posture
+    lShoulderAngle = 0.45 + breath * 0.03;
+    lElbowAngle = 0.85 + breath * 0.04;
+    rShoulderAngle = -0.6 - breath * 0.04;
+    rElbowAngle = 1.1 + breath * 0.05;
+    rWristAngle = -0.3;
+
+    // Solid wide martial arts stance
+    lHipAngle = -0.18;
+    lKneeAngle = 0.35;
+    rHipAngle = 0.22;
+    rKneeAngle = 0.3;
+    eyeGlow = 0.9 + breath * 0.3;
   } else if (animState === SKELETON_STATES.WALK) {
-    // Dynamic martial arts advance stride
+    // Fluid Human Walk Cycle (Bước tiến linh hoạt, co duỗi khớp tự nhiên)
     const walkFreq = 3.6;
     const stride = Math.sin(t * walkFreq);
-    rootY = Math.abs(stride) * 3.5;
+    const cosStride = Math.cos(t * walkFreq);
+
+    rootY = Math.abs(stride) * 3.2;
     rootTiltZ = stride * 0.05;
-    rootScaleY = 1.0 + Math.abs(stride) * 0.04;
+    chestTwist = -stride * 0.12;
+    headTilt = stride * 0.06;
+
+    // Leg stride with realistic knee lifting & extension
+    lHipAngle = stride * 0.65;
+    lKneeAngle = Math.max(0.1, -cosStride * 0.9);
+    rHipAngle = -stride * 0.65;
+    rKneeAngle = Math.max(0.1, cosStride * 0.9);
+
+    // Arms counter-swinging in sync with strides
+    lShoulderAngle = -stride * 0.55;
+    lElbowAngle = 0.4 + Math.max(0, stride * 0.4);
+    rShoulderAngle = stride * 0.55;
+    rElbowAngle = 0.6 + Math.max(0, -stride * 0.4);
+    rWristAngle = 0.2;
     eyeGlow = 1.0;
-    auraIntensity = 1.0;
   } else if (animState === SKELETON_STATES.ATTACK_SLASH) {
-    // Fierce forward sword lunge & heavy horizontal slash
-    const attackPhase = (t * 5.5) % (Math.PI * 2);
+    // Powerful Forward Sword Lunge & Heavy Slash (Lao người chém kiếm dứt khoát)
+    const attackPhase = (t * 5.0) % (Math.PI * 2);
     const slash = Math.sin(attackPhase);
-    rootY = 2.0 + slash * 3.0;
-    rootTiltZ = slash * 0.15;
-    rootScaleX = 1.08;
-    rootScaleY = 0.96;
-    swordSlashAngle = -0.6 + (slash + 1) * 0.8;
-    swordSlashAlpha = Math.max(0, slash);
-    eyeGlow = 1.8;
-    auraIntensity = 1.8;
+    const lunge = Math.max(0, slash);
+
+    rootY = 2.0 + slash * 3.5;
+    rootTiltZ = slash * 0.18;
+    chestTwist = slash * 0.45;
+    headTilt = -chestTwist * 0.5;
+
+    // Sword arm swings full 140° arc
+    rShoulderAngle = -1.4 + (slash + 1) * 1.3;
+    rElbowAngle = 0.3 + (1 - slash) * 0.7;
+    rWristAngle = slash * 0.6;
+    slashArc = slash;
+
+    // Left arm guards chest
+    lShoulderAngle = 0.7 - slash * 0.3;
+    lElbowAngle = 1.2;
+
+    // Deep martial lunge stance: Front leg bends deep, back leg stretches
+    lHipAngle = 0.55 * lunge + 0.1;
+    lKneeAngle = 0.75 * lunge + 0.2;
+    rHipAngle = -0.65 * lunge - 0.1;
+    rKneeAngle = 0.3;
+    eyeGlow = 2.2;
   } else if (animState === SKELETON_STATES.ATTACK_SPIN) {
-    // 360-degree Whirlwind Blade Hurricane
+    // 360-degree Whirlwind Blade Tempest (Xoay tròn trảm phong 360 độ)
     const spinPhase = t * 7.5;
     rootY = Math.sin(spinPhase) * 3.0;
-    rootTiltZ = Math.cos(spinPhase) * 0.1;
-    swordSlashAngle = spinPhase;
-    swordSlashAlpha = 1.0;
-    eyeGlow = 2.2;
-    auraIntensity = 2.2;
+    rootTiltZ = Math.cos(spinPhase) * 0.12;
+    chestTwist = Math.sin(spinPhase) * 0.4;
+
+    rShoulderAngle = -1.5;
+    rElbowAngle = 0.25;
+    lShoulderAngle = 1.5;
+    lElbowAngle = 0.25;
+    slashArc = 1.0;
+
+    lHipAngle = Math.sin(spinPhase) * 0.4;
+    lKneeAngle = 0.35;
+    rHipAngle = -Math.sin(spinPhase) * 0.4;
+    rKneeAngle = 0.35;
+    eyeGlow = 2.5;
   } else if (animState === SKELETON_STATES.DANCE) {
     // Graceful martial arts dance
-    const dancePhase = t * 3.2;
+    const danceFreq = 3.2;
+    const dancePhase = t * danceFreq;
     const bounce = Math.abs(Math.sin(dancePhase));
-    const sway = Math.sin(dancePhase * 0.5);
-    rootY = bounce * 5.0;
-    rootTiltZ = sway * 0.08;
-    rootScaleY = 1.0 + bounce * 0.05;
-    rootScaleX = 1.0 - bounce * 0.03;
-    eyeGlow = 1.3;
-    auraIntensity = 1.3;
+    const hipSway = Math.sin(dancePhase * 0.5);
+
+    rootY = bounce * 4.5;
+    rootTiltZ = hipSway * 0.1;
+    chestTwist = hipSway * 0.2;
+    headTilt = -hipSway * 0.15;
+
+    lShoulderAngle = 0.8 + Math.sin(dancePhase) * 0.6;
+    lElbowAngle = 0.6 + Math.cos(dancePhase * 1.2) * 0.4;
+    rShoulderAngle = -0.8 - Math.cos(dancePhase) * 0.6;
+    rElbowAngle = 0.6 - Math.sin(dancePhase * 1.2) * 0.4;
+
+    lHipAngle = hipSway * 0.4;
+    lKneeAngle = Math.max(0.15, bounce * 0.6);
+    rHipAngle = -hipSway * 0.4;
+    rKneeAngle = Math.max(0.15, (1 - bounce) * 0.6);
+    eyeGlow = 1.4;
   } else if (animState === SKELETON_STATES.VICTORY) {
-    // Victory celebration stance
-    const vPhase = t * 3.0;
-    rootY = Math.abs(Math.sin(vPhase)) * 4.0;
-    rootTiltZ = Math.sin(vPhase * 0.5) * 0.05;
+    // Triumphant double-sword raise
+    const vPhase = t * 2.8;
+    rootY = Math.abs(Math.sin(vPhase)) * 3.5;
+    headTilt = -0.25;
+
+    lShoulderAngle = 1.9 + Math.sin(vPhase) * 0.15;
+    lElbowAngle = 0.3;
+    rShoulderAngle = -1.9 - Math.sin(vPhase) * 0.15;
+    rElbowAngle = 0.3;
+
+    lHipAngle = 0.15;
+    lKneeAngle = 0.25;
+    rHipAngle = -0.15;
+    rKneeAngle = 0.25;
     eyeGlow = 1.8;
-    auraIntensity = 2.0;
   } else if (animState === SKELETON_STATES.DEFEATED) {
-    // Fallen defeated posture
-    rootY = 14.0;
-    rootTiltZ = 0.35;
-    rootScaleY = 0.75;
-    rootScaleX = 1.1;
+    // Kneeling on one knee, sword planted
+    rootY = 12.0;
+    rootTiltZ = 0.25;
+    headTilt = 0.4;
+    chestTwist = 0.1;
+
+    lShoulderAngle = 0.4;
+    lElbowAngle = 0.9;
+    rShoulderAngle = -0.3;
+    rElbowAngle = 0.8;
+    rWristAngle = 0.5;
+
+    lHipAngle = 0.9;
+    lKneeAngle = 1.4;
+    rHipAngle = 0.4;
+    rKneeAngle = 1.2;
     eyeGlow = 0.0;
-    auraIntensity = 0.1;
   } else if (animState === SKELETON_STATES.REVIVE) {
-    // Golden holy ascension
-    const rPhase = t * 6.5;
-    rootY = -6.0 + Math.sin(rPhase) * 2.5;
-    rootTiltZ = 0;
-    eyeGlow = 2.5;
-    auraIntensity = 2.5;
+    // Holy ascension
+    const rPhase = t * 6.0;
+    rootY = -6.0 + Math.sin(rPhase) * 2.0;
+    headTilt = -0.35;
+    lShoulderAngle = -1.3;
+    lElbowAngle = 0.2;
+    rShoulderAngle = -1.3;
+    rElbowAngle = 0.2;
+    lHipAngle = 0.08;
+    lKneeAngle = 0.12;
+    rHipAngle = -0.08;
+    rKneeAngle = 0.12;
+    eyeGlow = 2.8;
   }
 
   return {
@@ -117,179 +228,465 @@ export function computeSkeletalJoints({
     isFemale,
     tier,
     animState,
+    headSize,
+    chestW,
+    chestH,
+    armLen,
+    forearmLen,
+    thighLen,
+    shinLen,
     rootY,
     rootTiltZ,
-    rootScaleX,
-    rootScaleY,
-    swordSlashAngle,
-    swordSlashAlpha,
+    chestTwist,
+    headTilt,
+    lShoulderAngle,
+    lElbowAngle,
+    rShoulderAngle,
+    rElbowAngle,
+    rWristAngle,
+    lHipAngle,
+    lKneeAngle,
+    rHipAngle,
+    rKneeAngle,
+    hairWave,
+    capeWave,
     eyeGlow,
-    auraIntensity,
+    slashArc,
     time
   };
 }
 
 /**
- * Master 3D Human Warrior Renderer
- * Renders the full 3D Tripo models with dynamic lighting, glowing energy, sword slash trails, and aura
+ * Draws a 3D Armored Segment with realistic metallic shading, highlights, and gold trim
+ */
+function drawArmoredSegment(ctx, length, widthTop, widthBottom, colorPrimary, colorHighlight, colorDark, goldTrim = true) {
+  ctx.save();
+
+  // Armor plate gradient
+  const grad = ctx.createLinearGradient(-widthTop / 2, 0, widthTop / 2, 0);
+  grad.addColorStop(0, colorHighlight);
+  grad.addColorStop(0.35, colorPrimary);
+  grad.addColorStop(1, colorDark);
+
+  ctx.beginPath();
+  ctx.moveTo(-widthTop / 2, 0);
+  ctx.lineTo(widthTop / 2, 0);
+  ctx.lineTo(widthBottom / 2, length);
+  ctx.lineTo(-widthBottom / 2, length);
+  ctx.closePath();
+
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  ctx.strokeStyle = goldTrim ? '#facc15' : 'rgba(15, 23, 42, 0.8)';
+  ctx.lineWidth = goldTrim ? 1.0 : 0.8;
+  ctx.stroke();
+
+  // Central highlight ridge
+  ctx.beginPath();
+  ctx.moveTo(0, 1);
+  ctx.lineTo(0, length - 1);
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
+
+  // Joint pivot sphere
+  ctx.beginPath();
+  ctx.arc(0, 0, widthTop * 0.44, 0, Math.PI * 2);
+  ctx.fillStyle = colorHighlight;
+  ctx.fill();
+  ctx.strokeStyle = goldTrim ? '#ca8a04' : '#334155';
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+/**
+ * Master Humanoid 3D Skeletal Warrior Renderer
+ * Renders all joints (Head, Helm, Hair, Eyes, Cloak, Shoulders, Arms, Gauntlets, Cuirass, Faulds, Legs, Sabatons, Glowing Sword)
  */
 export function render3DWarriorSkeleton(ctx, skeletonData, options = {}) {
   const {
     factionId = 'blue',
     scale = 1.0,
-    isPulsing = false,
-    warriorImages = null
+    isPulsing = false
   } = options;
 
   const {
-    gender,
     isFemale,
     tier,
     animState,
+    headSize,
+    chestW,
+    chestH,
+    armLen,
+    forearmLen,
+    thighLen,
+    shinLen,
     rootY,
     rootTiltZ,
-    rootScaleX,
-    rootScaleY,
-    swordSlashAngle,
-    swordSlashAlpha,
+    chestTwist,
+    headTilt,
+    lShoulderAngle,
+    lElbowAngle,
+    rShoulderAngle,
+    rElbowAngle,
+    rWristAngle,
+    lHipAngle,
+    lKneeAngle,
+    rHipAngle,
+    rKneeAngle,
+    hairWave,
+    capeWave,
     eyeGlow,
-    auraIntensity,
+    slashArc,
     time
   } = skeletonData;
 
   const isGoldTier = tier >= 3;
   const isDefeated = animState === SKELETON_STATES.DEFEATED;
-  const teamAccent = factionId === 'blue' ? '#38bdf8' : '#fb7185';
-  const glowColor = isGoldTier ? '#facc15' : teamAccent;
+
+  // Dynamic Palettes
+  const skinColor = isFemale ? '#ffe4d6' : '#fcd3b2';
+  const skinShadow = isFemale ? '#fca5a5' : '#e28f68';
+
+  const teamColor = factionId === 'blue' ? '#38bdf8' : '#fb7185';
+  const primaryColor = isGoldTier ? '#eab308' : (factionId === 'blue' ? '#2563eb' : '#dc2626');
+  const highlightColor = isGoldTier ? '#fef08a' : (factionId === 'blue' ? '#93c5fd' : '#fca5a5');
+  const darkColor = isGoldTier ? '#713f12' : '#0f172a';
+  const glowColor = isGoldTier ? '#facc15' : teamColor;
 
   ctx.save();
 
-  // Root translation & bobbing
+  // Root translation & tilt
   ctx.translate(0, rootY);
   ctx.rotate(rootTiltZ);
-  ctx.scale(rootScaleX, rootScaleY);
 
-  // Directional facing: Blue looks Right, Red looks Left
+  // Directional facing: Blue looks Right (+1), Red looks Left (-1)
   const dir = factionId === 'blue' ? 1 : -1;
   ctx.scale(dir, 1.0);
 
-  // 1. Soft Dynamic Ground Shadow
+  // 1. Dynamic Ground Shadow
   ctx.save();
   ctx.beginPath();
-  ctx.ellipse(0, 24, 22 * (isDefeated ? 1.3 : 1.0), 6, 0, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+  ctx.ellipse(0, (thighLen + shinLen) * 0.95 + 4, 18, 5, 0, 0, Math.PI * 2);
+  ctx.fillStyle = isDefeated ? 'rgba(0,0,0,0.25)' : 'rgba(0,0,0,0.45)';
   ctx.fill();
   ctx.restore();
 
-  // 2. Divine Battle Aura Glow (for active combatants & VIPs)
+  // 2. Billowing Dragon Mantle / Cloak (Behind body)
   if (!isDefeated) {
     ctx.save();
-    const auraPulse = (Math.sin(time * 0.006) + 1) * 0.5;
-    const auraRad = (isGoldTier ? 38 : 28) + auraPulse * 6;
-
-    const auraGrad = ctx.createRadialGradient(0, -6, 5, 0, -6, auraRad);
-    if (isGoldTier) {
-      auraGrad.addColorStop(0, 'rgba(250, 204, 21, 0.45)');
-      auraGrad.addColorStop(0.6, 'rgba(234, 179, 8, 0.2)');
-      auraGrad.addColorStop(1, 'rgba(250, 204, 21, 0)');
-    } else if (factionId === 'blue') {
-      auraGrad.addColorStop(0, 'rgba(56, 189, 248, 0.4)');
-      auraGrad.addColorStop(0.6, 'rgba(37, 99, 235, 0.18)');
-      auraGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
-    } else {
-      auraGrad.addColorStop(0, 'rgba(251, 113, 133, 0.4)');
-      auraGrad.addColorStop(0.6, 'rgba(225, 29, 72, 0.18)');
-      auraGrad.addColorStop(1, 'rgba(251, 113, 133, 0)');
-    }
-
-    ctx.fillStyle = auraGrad;
     ctx.beginPath();
-    ctx.arc(0, -6, auraRad, 0, Math.PI * 2);
+    ctx.moveTo(-chestW * 0.4, -chestH);
+    ctx.lineTo(-chestW * 0.8 + capeWave, thighLen * 1.15);
+    ctx.quadraticCurveTo(capeWave, thighLen * 1.15 + 7, chestW * 0.8 + capeWave, thighLen * 1.15);
+    ctx.lineTo(chestW * 0.4, -chestH);
+    ctx.closePath();
+
+    const capeGrad = ctx.createLinearGradient(0, -chestH, 0, thighLen);
+    capeGrad.addColorStop(0, isGoldTier ? '#78350f' : (factionId === 'blue' ? '#1e3a8a' : '#881337'));
+    capeGrad.addColorStop(1, isGoldTier ? '#ca8a04' : (factionId === 'blue' ? '#2563eb' : '#e11d48'));
+    ctx.fillStyle = capeGrad;
     ctx.fill();
+    ctx.strokeStyle = isGoldTier ? '#facc15' : '#ffffff';
+    ctx.lineWidth = 1.0;
+    ctx.stroke();
     ctx.restore();
   }
 
-  // 3. Render 3D High-End Warrior Image (Tripo 3D Model Asset)
-  const warriorImg = isFemale ? warriorImages?.female : warriorImages?.male;
+  // 3. LEFT LEG (Back leg: Hip -> Thigh -> Knee -> Shin -> Sabaton/Boot)
+  ctx.save();
+  ctx.translate(-chestW * 0.28, 0);
+  ctx.rotate(lHipAngle);
+  drawArmoredSegment(ctx, thighLen, 6.5, 5.0, primaryColor, highlightColor, darkColor, isGoldTier);
 
-  if (warriorImg && warriorImg.complete && warriorImg.naturalWidth > 0) {
+  ctx.translate(0, thighLen);
+  ctx.rotate(lKneeAngle);
+  drawArmoredSegment(ctx, shinLen, 5.0, 4.0, primaryColor, highlightColor, darkColor, isGoldTier);
+
+  // Left Sabaton / Armored Boot
+  ctx.translate(0, shinLen);
+  ctx.beginPath();
+  ctx.moveTo(-3, 0);
+  ctx.lineTo(6, 0);
+  ctx.lineTo(8, 4);
+  ctx.lineTo(-4, 4);
+  ctx.closePath();
+  ctx.fillStyle = isGoldTier ? '#ca8a04' : '#1e293b';
+  ctx.fill();
+  ctx.restore();
+
+  // 4. RIGHT LEG (Front leg: Hip -> Thigh -> Knee -> Shin -> Sabaton/Boot)
+  ctx.save();
+  ctx.translate(chestW * 0.28, 0);
+  ctx.rotate(rHipAngle);
+  drawArmoredSegment(ctx, thighLen, 6.8, 5.2, primaryColor, highlightColor, darkColor, isGoldTier);
+
+  ctx.translate(0, thighLen);
+  ctx.rotate(rKneeAngle);
+  drawArmoredSegment(ctx, shinLen, 5.2, 4.2, primaryColor, highlightColor, darkColor, isGoldTier);
+
+  // Right Sabaton / Armored Boot
+  ctx.translate(0, shinLen);
+  ctx.beginPath();
+  ctx.moveTo(-3, 0);
+  ctx.lineTo(7, 0);
+  ctx.lineTo(9, 4);
+  ctx.lineTo(-4, 4);
+  ctx.closePath();
+  ctx.fillStyle = isGoldTier ? '#ca8a04' : '#1e293b';
+  ctx.fill();
+  ctx.restore();
+
+  // 5. PELVIS & ARMORED FAULDS / TASSETS (Hông giáp & Đai lưng)
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(-chestW * 0.45, -4, chestW * 0.9, 7, 2);
+  ctx.fillStyle = isGoldTier ? '#ca8a04' : '#334155';
+  ctx.fill();
+  ctx.strokeStyle = isGoldTier ? '#fde047' : '#ffffff';
+  ctx.lineWidth = 1.0;
+  ctx.stroke();
+
+  // Tasset central badge / dragon buckle
+  ctx.beginPath();
+  ctx.arc(0, -0.5, 3.2, 0, Math.PI * 2);
+  ctx.fillStyle = glowColor;
+  ctx.fill();
+  ctx.restore();
+
+  // 6. TORSO / ARMORED CUIRASS & BREASTPLATE (Thân giáp & Lồng ngực)
+  ctx.save();
+  ctx.rotate(chestTwist);
+
+  ctx.beginPath();
+  ctx.moveTo(-chestW * 0.45, 0);
+  ctx.lineTo(chestW * 0.45, 0);
+  ctx.lineTo(chestW * 0.55, -chestH);
+  ctx.lineTo(-chestW * 0.55, -chestH);
+  ctx.closePath();
+
+  const cuirassGrad = ctx.createLinearGradient(-chestW * 0.55, 0, chestW * 0.55, 0);
+  cuirassGrad.addColorStop(0, highlightColor);
+  cuirassGrad.addColorStop(0.35, primaryColor);
+  cuirassGrad.addColorStop(1, darkColor);
+  ctx.fillStyle = cuirassGrad;
+  ctx.fill();
+  ctx.strokeStyle = isGoldTier ? '#facc15' : 'rgba(15, 23, 42, 0.9)';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  // Glowing Qi Energy Core in center of chest
+  ctx.beginPath();
+  ctx.arc(0, -chestH * 0.6, 3.5, 0, Math.PI * 2);
+  ctx.fillStyle = isGoldTier ? '#fef08a' : glowColor;
+  ctx.shadowColor = glowColor;
+  ctx.shadowBlur = 12 * eyeGlow;
+  ctx.fill();
+  ctx.restore();
+
+  // 7. LEFT ARM (Back Arm: Shoulder Pauldron -> Bicep -> Elbow -> Forearm -> Gauntlet)
+  ctx.save();
+  ctx.translate(-chestW * 0.48, -chestH * 0.9);
+  ctx.rotate(lShoulderAngle);
+
+  // Left 3D Shoulder Pauldron
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(0, 0, 5.8, Math.PI, Math.PI * 2);
+  ctx.fillStyle = isGoldTier ? '#fde047' : highlightColor;
+  ctx.fill();
+  ctx.strokeStyle = isGoldTier ? '#ca8a04' : '#0f172a';
+  ctx.lineWidth = 1.0;
+  ctx.stroke();
+  ctx.restore();
+
+  drawArmoredSegment(ctx, armLen, 5.0, 4.0, primaryColor, highlightColor, darkColor, isGoldTier);
+
+  ctx.translate(0, armLen);
+  ctx.rotate(lElbowAngle);
+  drawArmoredSegment(ctx, forearmLen, 4.0, 3.2, primaryColor, highlightColor, darkColor, isGoldTier);
+
+  // Left Gauntlet
+  ctx.translate(0, forearmLen);
+  ctx.beginPath();
+  ctx.arc(0, 0, 3.2, 0, Math.PI * 2);
+  ctx.fillStyle = isGoldTier ? '#ca8a04' : '#334155';
+  ctx.fill();
+  ctx.restore();
+
+  // 8. RIGHT ARM & MASSIVE GLOWING SWORD (Front Arm: Shoulder -> Arm -> Forearm -> Gauntlet -> Sword)
+  ctx.save();
+  ctx.translate(chestW * 0.48, -chestH * 0.9);
+  ctx.rotate(rShoulderAngle);
+
+  // Right 3D Shoulder Pauldron
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(0, 0, 6.2, Math.PI, Math.PI * 2);
+  ctx.fillStyle = isGoldTier ? '#fde047' : highlightColor;
+  ctx.fill();
+  ctx.strokeStyle = isGoldTier ? '#ca8a04' : '#0f172a';
+  ctx.lineWidth = 1.0;
+  ctx.stroke();
+  ctx.restore();
+
+  drawArmoredSegment(ctx, armLen, 5.2, 4.2, primaryColor, highlightColor, darkColor, isGoldTier);
+
+  ctx.translate(0, armLen);
+  ctx.rotate(rElbowAngle);
+  drawArmoredSegment(ctx, forearmLen, 4.2, 3.5, primaryColor, highlightColor, darkColor, isGoldTier);
+
+  // Right Gauntlet holding the Great Sword
+  ctx.translate(0, forearmLen);
+  ctx.rotate(rWristAngle);
+  ctx.beginPath();
+  ctx.arc(0, 0, 3.6, 0, Math.PI * 2);
+  ctx.fillStyle = isGoldTier ? '#ca8a04' : '#334155';
+  ctx.fill();
+
+  // 9. THE LEGENDARY ENCHANTED SWORD / DRAGON BLADE
+  if (!isDefeated) {
     ctx.save();
-    
-    if (isDefeated) {
-      ctx.filter = 'grayscale(100%) opacity(45%)';
-    } else if (isPulsing) {
-      ctx.shadowColor = '#facc15';
-      ctx.shadowBlur = 24;
-    } else if (isGoldTier) {
-      ctx.shadowColor = '#facc15';
-      ctx.shadowBlur = 18;
-    } else {
-      ctx.shadowColor = teamAccent;
-      ctx.shadowBlur = 10;
-    }
+    ctx.rotate(Math.PI * 0.75); // Natural grip angle pointing upward/forward
 
-    // High-Resolution Proportions
-    // Target height ~ 60px in base scale
-    const targetHeight = isFemale ? 56 : 60;
-    const aspect = warriorImg.naturalWidth / warriorImg.naturalHeight;
-    const targetWidth = targetHeight * aspect;
-
-    // Draw centered on warrior origin
-    ctx.drawImage(
-      warriorImg,
-      -targetWidth / 2,
-      -targetHeight + 22,
-      targetWidth,
-      targetHeight
-    );
-    ctx.restore();
-  } else {
-    // Fallback if image is still loading: Render stylized heroic silhouette
-    ctx.save();
-    const heroGrad = ctx.createLinearGradient(0, -35, 0, 15);
-    heroGrad.addColorStop(0, isGoldTier ? '#fde047' : (factionId === 'blue' ? '#93c5fd' : '#fca5a5'));
-    heroGrad.addColorStop(1, isGoldTier ? '#ca8a04' : (factionId === 'blue' ? '#1d4ed8' : '#be123c'));
-    
-    ctx.fillStyle = heroGrad;
+    // Sword Blade (Volumetric Glowing Steel)
     ctx.beginPath();
-    ctx.roundRect(-10, -32, 20, 48, 6);
+    ctx.moveTo(-3.5, 0);
+    ctx.lineTo(3.5, 0);
+    ctx.lineTo(2.5, -36);
+    ctx.lineTo(0, -42); // Sharp Tip
+    ctx.lineTo(-2.5, -36);
+    ctx.closePath();
+
+    const bladeGrad = ctx.createLinearGradient(0, -42, 0, 0);
+    bladeGrad.addColorStop(0, '#ffffff');
+    bladeGrad.addColorStop(0.3, isGoldTier ? '#fde047' : '#93c5fd');
+    bladeGrad.addColorStop(1, isGoldTier ? '#ca8a04' : '#1e3a8a');
+    ctx.fillStyle = bladeGrad;
     ctx.fill();
-    ctx.restore();
-  }
 
-  // 4. Dynamic Sword Slash VFX & Glowing Blade Arc
-  if (!isDefeated && (animState === SKELETON_STATES.ATTACK_SLASH || animState === SKELETON_STATES.ATTACK_SPIN || isPulsing)) {
-    ctx.save();
-    ctx.translate(14, -8);
-    ctx.rotate(swordSlashAngle);
-
-    // Glowing Slash Crescent Wave
-    ctx.beginPath();
-    ctx.arc(0, 0, 24, -Math.PI * 0.4, Math.PI * 0.4);
-    ctx.strokeStyle = isGoldTier ? 'rgba(254, 240, 138, 0.95)' : (factionId === 'blue' ? 'rgba(186, 230, 253, 0.95)' : 'rgba(254, 205, 211, 0.95)');
-    ctx.lineWidth = 3.5;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.2;
     ctx.shadowColor = glowColor;
-    ctx.shadowBlur = 18;
+    ctx.shadowBlur = 16 * eyeGlow;
     ctx.stroke();
 
-    // Spark Particles along slash trail
-    for (let sp = 0; sp < 3; sp++) {
-      const spAngle = -Math.PI * 0.3 + sp * 0.3;
-      const spX = Math.cos(spAngle) * 25;
-      const spY = Math.sin(spAngle) * 25;
+    // Dragon Crossguard & Pommel
+    ctx.beginPath();
+    ctx.roundRect(-6.5, -3, 13, 4, 1.5);
+    ctx.fillStyle = '#ca8a04';
+    ctx.fill();
+    ctx.strokeStyle = '#fde047';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  ctx.restore();
+
+  // 10. Dynamic Sword Slash Crescent Energy Arc (When attacking/clashing)
+  if (!isDefeated && (animState === SKELETON_STATES.ATTACK_SLASH || animState === SKELETON_STATES.ATTACK_SPIN || isPulsing)) {
+    ctx.save();
+    ctx.translate(16, -10);
+    ctx.rotate(slashArc * 1.2);
+
+    ctx.beginPath();
+    ctx.arc(0, 0, 30, -Math.PI * 0.45, Math.PI * 0.45);
+    ctx.strokeStyle = isGoldTier ? 'rgba(254, 240, 138, 0.95)' : 'rgba(186, 230, 253, 0.95)';
+    ctx.lineWidth = 4.0;
+    ctx.shadowColor = glowColor;
+    ctx.shadowBlur = 20;
+    ctx.stroke();
+
+    // Sparks along slash arc
+    for (let sp = 0; sp < 4; sp++) {
+      const spA = -Math.PI * 0.35 + sp * 0.25;
       ctx.beginPath();
-      ctx.arc(spX, spY, 2.0, 0, Math.PI * 2);
+      ctx.arc(Math.cos(spA) * 31, Math.sin(spA) * 31, 2.2, 0, Math.PI * 2);
       ctx.fillStyle = '#ffffff';
       ctx.fill();
     }
-
     ctx.restore();
   }
 
-  // 5. VIP Glowing Dragon / Valkyrie Head Crown & Rank Star
+  // 11. HEAD, FACE, HELMET / TIARA & FLOWING HAIR
+  ctx.save();
+  ctx.translate(0, -chestH - 3);
+  ctx.rotate(headTilt);
+
+  // Neck
+  ctx.beginPath();
+  ctx.rect(-2.2, 0, 4.4, 4);
+  ctx.fillStyle = skinColor;
+  ctx.fill();
+
+  // Face Oval
+  ctx.beginPath();
+  ctx.ellipse(0, -headSize * 0.75, headSize * 0.85, headSize * 1.05, 0, 0, Math.PI * 2);
+  const faceGrad = ctx.createRadialGradient(-1, -headSize * 0.75, 1, 0, -headSize * 0.75, headSize);
+  faceGrad.addColorStop(0, skinColor);
+  faceGrad.addColorStop(1, skinShadow);
+  ctx.fillStyle = faceGrad;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(15, 23, 42, 0.7)';
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
+
+  // Dynamic Flowing Hair in Wind (Tóc bay theo chuyển động võ thuật)
+  ctx.save();
+  ctx.fillStyle = isFemale ? (isGoldTier ? '#fbbf24' : '#1e1b4b') : '#0f172a';
+  ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+  ctx.lineWidth = 0.8;
+
+  // Front Bangs
+  ctx.beginPath();
+  ctx.moveTo(-headSize * 0.85, -headSize * 0.9);
+  ctx.quadraticCurveTo(0, -headSize * 1.35, headSize * 0.85, -headSize * 0.9);
+  ctx.lineTo(headSize * 0.55, -headSize * 0.4);
+  ctx.lineTo(0, -headSize * 0.65);
+  ctx.lineTo(-headSize * 0.55, -headSize * 0.4);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Long Mane / Flowing Ponytail waving behind head
+  ctx.beginPath();
+  ctx.moveTo(-headSize * 0.5, -headSize * 1.2);
+  ctx.quadraticCurveTo(-headSize * 1.6 + hairWave * 4, -headSize * 0.4, -headSize * 1.9 + hairWave * 6, headSize * 0.9);
+  ctx.quadraticCurveTo(-headSize * 1.3 + hairWave * 3, headSize * 0.3, -headSize * 0.2, -headSize * 0.8);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+
+  // Helmet / Tiara Crown (Mũ giáp Thần Long hoặc Vương miện Valkyrie)
+  ctx.beginPath();
+  ctx.roundRect(-headSize * 0.9, -headSize * 1.25, headSize * 1.8, 3.8, 1.5);
+  ctx.fillStyle = isGoldTier ? '#ca8a04' : '#475569';
+  ctx.fill();
+  ctx.strokeStyle = isGoldTier ? '#fde047' : '#ffffff';
+  ctx.lineWidth = 0.9;
+  ctx.stroke();
+
+  // Glowing Visor / Warrior Eyes (Mắt kiếm thần rực sáng)
+  if (!isDefeated) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(2.6, -headSize * 0.7, 3.2, 1.6, 0.1, 0, Math.PI * 2);
+    ctx.fillStyle = isGoldTier ? '#fffbeb' : glowColor;
+    ctx.shadowColor = glowColor;
+    ctx.shadowBlur = 14 * eyeGlow;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // VIP Crown on top
   if (isGoldTier && !isDefeated) {
     ctx.save();
-    ctx.translate(0, -42);
+    ctx.translate(0, -headSize * 1.6);
     ctx.fillStyle = '#fde047';
     ctx.shadowColor = '#facc15';
     ctx.shadowBlur = 12;
@@ -298,6 +695,8 @@ export function render3DWarriorSkeleton(ctx, skeletonData, options = {}) {
     ctx.fillText('👑', 0, 0);
     ctx.restore();
   }
+
+  ctx.restore();
 
   ctx.restore();
 }
