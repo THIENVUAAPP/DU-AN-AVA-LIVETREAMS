@@ -904,7 +904,12 @@ export default function GameChienDau({
             tier: tier
           });
 
-          render3DWarriorSkeleton(ctx, skeletonData, { factionId, scale: 1.0, isPulsing });
+          render3DWarriorSkeleton(ctx, skeletonData, {
+            factionId,
+            scale: 1.0,
+            isPulsing,
+            warriorImages: warriorImagesRef.current
+          });
 
           // Orbiting Qi Swords for Tier 4 & 5
           if (tier >= 4) {
@@ -1140,7 +1145,12 @@ export default function GameChienDau({
             tier: 3
           });
 
-          render3DWarriorSkeleton(ctx, dancerSkeleton, { factionId, scale: 1.0, isPulsing: false });
+          render3DWarriorSkeleton(ctx, dancerSkeleton, {
+            factionId,
+            scale: 1.0,
+            isPulsing: false,
+            warriorImages: warriorImagesRef.current
+          });
 
           ctx.restore();
 
