@@ -52,7 +52,8 @@ export default function GameChienDau({
       redColor: '#ff3b4e',
       maxHp: 1000,
       comebackThreshold: 30,
-      charScale: 1.0,
+      charScale: 1.15,
+      animSpeed: 0.55,
       musicVolume: 0.4,
       sfxVolume: 0.7,
       soundEnabled: true,
@@ -208,7 +209,7 @@ export default function GameChienDau({
       list.forEach((d, index) => {
         d.targetX = centerX + dir * (DANCE_STAGE_CENTER_GAP + index * DANCE_SLOT_GAP_X);
         d.targetY = y;
-        d.targetScale = 2.8;
+        d.targetScale = 1.4;
       });
     });
   }, []);
@@ -753,7 +754,7 @@ export default function GameChienDau({
           const isPulsing = performance.now() < f.pulseUntil;
           const bob = Math.sin(f.bobPhase) * (tier >= 3 ? 3.5 : 2.5);
           const stride = Math.sin(f.bobPhase); // Bước chân di chuyển nhịp nhàng
-          const scale = (config.charScale || 1.8) * (isPulsing ? 1.3 : 1.0) * (tier >= 4 ? 1.35 : tier === 3 ? 1.2 : 1.0);
+          const scale = (config.charScale || 1.15) * (isPulsing ? 1.2 : 1.0) * (tier >= 4 ? 1.25 : tier === 3 ? 1.15 : 1.0);
           const isTopRank = f.rank === 0;
 
           // Ground Aura / Tai Chi Ring for Tier 4 & 5
@@ -802,50 +803,32 @@ export default function GameChienDau({
           ctx.fillRect(f.x - 14 * scale, f.y - (20 + (tier >= 3 ? 4 : 0)) * scale, Math.min(28 * scale, Math.max(5 * scale, (f.score / 300) * 28 * scale)), 3.5 * scale);
           ctx.restore();
 
-          // Draw 3D Warrior Body & Layered Armor
+          // Draw 3D Articulated Warrior Body & Skeletal Limbs
           ctx.save();
-          ctx.translate(f.x, f.y + bob);
+          ctx.translate(f.x, f.y);
           ctx.scale(scale, scale);
 
-          // 1.0 PERSISTENT LINGERING AURA (Hào Quang 3D Tỏa Sáng Kéo Dài 1-2 Giây)
+          // 1.0 PERSISTENT LINGERING AURA
           if (isPulsing || tier >= 4) {
-            const auraScale = 1 + Math.sin(time * 0.006) * 0.15;
+            const auraScale = 1 + Math.sin(time * 0.004) * 0.15;
             ctx.save();
             ctx.shadowColor = tier === 5 ? '#facc15' : (tier === 4 ? '#38bdf8' : '#fbbf24');
             ctx.shadowBlur = 24;
 
-            // Outer Divine Halo
             ctx.strokeStyle = tier === 5 ? 'rgba(250, 204, 21, 0.7)' : 'rgba(56, 189, 248, 0.7)';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.ellipse(0, 0, 26 * auraScale, 30 * auraScale, 0, 0, Math.PI * 2);
             ctx.stroke();
 
-            // Inner Radiant Flame Glow
             ctx.fillStyle = tier === 5 ? 'rgba(250, 204, 21, 0.22)' : 'rgba(56, 189, 248, 0.18)';
             ctx.fill();
             ctx.restore();
           }
 
-          // 1.1 FLUTTERING 3D CAPE / MANTLE (Áo Choàng Chiến Binh 3D Bay Trong Gió)
-          const capeSway = Math.sin(time * 0.005 + (f.bobPhase || 0)) * 4;
-          ctx.save();
-          ctx.fillStyle = tier >= 3 ? '#991b1b' : (factionId === 'blue' ? '#1e3a8a' : '#7f1d1d');
-          ctx.strokeStyle = tier >= 3 ? '#fbbf24' : '#ffffff';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(-5, -4);
-          ctx.lineTo(-10 + capeSway, 16);
-          ctx.quadraticCurveTo(0 + capeSway, 19, 10 + capeSway, 16);
-          ctx.lineTo(5, -4);
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
-          ctx.restore();
-
           // 2.0 WINGS OF LIGHT (Cánh Hào Quang Thần Thánh 3D for Tier 3, 4, 5)
           if (tier >= 3) {
-            const wingFlap = Math.sin(time * 0.008) * 7;
+            const wingFlap = Math.sin(time * 0.005) * 6;
             ctx.save();
             ctx.shadowColor = tier === 5 ? '#fbbf24' : (tier === 4 ? '#38bdf8' : '#fde047');
             ctx.shadowBlur = 18;
@@ -882,18 +865,17 @@ export default function GameChienDau({
             ctx.restore();
           }
 
-          // 2.1 3D SKELETAL WARRIOR (Nam & Nữ Có Xương Cử Động 360°, Khớp Tay Chân, Khuỷu Tay, Đầu Tóc)
+          // 2.1 3D ARTICULATED SKELETAL WARRIOR
           const fighterGender = f.gender || (f.rank % 2 === 0 ? 'male' : 'female');
           
-          // Determine 360 rotation & combat animation state
           let animState = SKELETON_STATES.WALK;
           if (isPulsing) {
             animState = (tier >= 4 || f.rank === 1) ? SKELETON_STATES.ATTACK_SPIN : SKELETON_STATES.ATTACK_SLASH;
           }
 
-          // Compute 3D yaw angle: Red faces left, Blue faces right, plus subtle dynamic combat stance oscillation
+          // Compute 3D facing angle
           const baseFacing = factionId === 'blue' ? (Math.PI * 0.45) : (-Math.PI * 0.45);
-          const yawAngle = baseFacing + Math.sin(time * 0.003 + (f.bobPhase || 0)) * 0.25;
+          const yawAngle = baseFacing + Math.sin(time * 0.002 + (f.bobPhase || 0)) * 0.18;
 
           const skeletonData = computeSkeletalJoints({
             gender: fighterGender,
@@ -901,7 +883,8 @@ export default function GameChienDau({
             yawAngle: yawAngle,
             time: time,
             phase: f.bobPhase || 0,
-            tier: tier
+            tier: tier,
+            animSpeed: config.animSpeed || 0.55
           });
 
           render3DWarriorSkeleton(ctx, skeletonData, {
@@ -1139,10 +1122,11 @@ export default function GameChienDau({
           const dancerSkeleton = computeSkeletalJoints({
             gender: dancerGender,
             animState: SKELETON_STATES.DANCE,
-            yawAngle: (elapsedSec * 0.9 + d.danceStyleId) % (Math.PI * 2), // 360-degree rotating dance stage
+            yawAngle: (elapsedSec * 0.7 + d.danceStyleId) % (Math.PI * 2), // 360-degree rotating dance stage
             time: elapsedSec * 1000,
             phase: d.danceStyleId,
-            tier: 3
+            tier: 3,
+            animSpeed: config.animSpeed || 0.55
           });
 
           render3DWarriorSkeleton(ctx, dancerSkeleton, {
@@ -1382,6 +1366,42 @@ export default function GameChienDau({
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-md border border-white/15 px-4 py-1.5 rounded-full text-xs font-medium text-gray-200 z-20 pointer-events-none shadow-lg flex items-center gap-2">
         <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
         Bình luận <span className="text-blue-400 font-bold">"xanh"</span> hoặc <span className="text-red-400 font-bold">"đỏ"</span> để vào trận & tặng quà trợ chiến!
+      </div>
+
+      {/* QUICK LIVE SPEED & AUDIO CONTROLS (Bottom Right) */}
+      <div className="absolute bottom-4 right-4 z-20 flex items-center gap-2.5 bg-black/85 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/15 shadow-2xl text-white pointer-events-auto">
+        <div className="flex items-center gap-1.5 text-[11px] text-amber-300 font-bold">
+          <span>⚡ Tốc độ:</span>
+          <input
+            type="range"
+            min="0.2"
+            max="1.5"
+            step="0.05"
+            value={config.animSpeed || 0.55}
+            onChange={(e) => setConfig(prev => ({ ...prev, animSpeed: parseFloat(e.target.value) }))}
+            className="w-16 h-1.5 accent-amber-400 cursor-pointer"
+            title={`Tốc độ cử động: ${(config.animSpeed || 0.55).toFixed(2)}x`}
+          />
+          <span className="font-mono text-[10px] text-gray-300 w-7">{((config.animSpeed || 0.55)).toFixed(1)}x</span>
+        </div>
+
+        <div className="w-[1px] h-3.5 bg-white/20" />
+
+        <button
+          onClick={() => setSoundMuted(!soundMuted)}
+          className="p-1 rounded-lg hover:bg-white/10 text-gray-300 hover:text-white transition-colors"
+          title={soundMuted ? "Bật âm thanh" : "Tắt âm thanh"}
+        >
+          {soundMuted ? <VolumeX size={14} className="text-red-400" /> : <Volume2 size={14} className="text-emerald-400" />}
+        </button>
+
+        <button
+          onClick={resetMatch}
+          className="p-1 rounded-lg hover:bg-white/10 text-gray-300 hover:text-amber-400 transition-colors"
+          title="Làm mới trận đấu"
+        >
+          <RotateCcw size={14} />
+        </button>
       </div>
 
       {/* VICTORY CEREMONY / RESULTS PODIUM */}
