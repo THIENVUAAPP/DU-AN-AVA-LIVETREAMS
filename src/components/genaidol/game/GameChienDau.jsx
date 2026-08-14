@@ -168,32 +168,60 @@ export default function GameChienDau({
     else if (type === 'level_up') battleAudio.playLevelUp(vol);
   }, [config.soundEnabled, config.sfxVolume, soundMuted]);
 
-  // Recalculate formation slots for UNLIMITED fighters (hỗ trợ hàng ngàn người tham gia)
+  // Recalculate formation slots with 2-Tier Architecture:
+  // 1) Upper VIP Champions Stage (Tầng Thượng Đỉnh): Tier 3, 4, 5 stand prominently above the crowd, scaled 3.0x - 3.4x in epic face-to-face duel!
+  // 2) Lower Army Battlefield (Tầng Chiến Trường): Tier 1, 2 troops widely spaced across the battlefield, scaled 1.65x so every warrior is clear and distinct.
   const updateFormation = useCallback((canvasWidth, canvasHeight) => {
     const centerX = canvasWidth / 2;
-    const baseY = canvasHeight * 0.62;
+    const vipStageY = canvasHeight * 0.38;
+    const armyStageY = canvasHeight * 0.72;
 
     ['blue', 'red'].forEach(factionId => {
       const dir = factionId === 'blue' ? -1 : 1;
       const list = engineRef.current.fighters[factionId];
-      const count = list.length;
-      if (count === 0) return;
+      if (!list || list.length === 0) return;
 
-      // Dynamic grid sizing based on total count
-      // Scales seamlessly from 1 to 2,000+ fighters
-      const dynamicRows = Math.min(12, Math.max(4, Math.ceil(Math.sqrt(count * 0.8))));
-      const dynamicRowGap = Math.max(12, 24 - dynamicRows * 0.8);
-      const dynamicStepX = Math.max(14, 26 - Math.min(12, count / 50));
-      const frontGap = Math.max(38, 48 - Math.min(10, count / 100));
+      // Classify VIPs vs Regular Troops
+      const vips = [];
+      const regulars = [];
 
-      list.forEach((f, rank) => {
-        const row = rank % dynamicRows;
-        const col = Math.floor(rank / dynamicRows);
+      list.forEach((f, idx) => {
+        f.rank = idx;
+        const tier = f.score >= 5000 ? 5 : f.score >= 2000 ? 4 : f.score >= 500 ? 3 : f.score >= 100 ? 2 : 1;
+        if (tier >= 3 || idx === 0) {
+          vips.push(f);
+        } else {
+          regulars.push(f);
+        }
+      });
+
+      // Position VIPs in Upper Champions Arena (To gấp 3 lần, đứng trên cao đối kháng)
+      const vipStepX = 110;
+      const vipStepY = 55;
+      const vipFrontGap = 90;
+
+      vips.forEach((f, vIdx) => {
+        const vRow = vIdx % 2;
+        const vCol = Math.floor(vIdx / 2);
+        f.isVipStage = true;
+        f.targetX = centerX + dir * (vipFrontGap + vCol * vipStepX);
+        f.targetY = vipStageY + (vRow - 0.5) * vipStepY;
+      });
+
+      // Position Regular Army in Lower Battlefield (Rộng rãi, thoáng đãng, không chồng chéo)
+      const regCount = regulars.length;
+      const dynamicRows = Math.min(5, Math.max(3, Math.ceil(Math.sqrt(regCount * 0.6))));
+      const dynamicRowGap = Math.max(38, 48 - dynamicRows * 2);
+      const dynamicStepX = Math.max(50, 68 - Math.min(18, regCount / 20));
+      const frontGap = Math.max(65, 80 - Math.min(15, regCount / 50));
+
+      regulars.forEach((f, rIdx) => {
+        const row = rIdx % dynamicRows;
+        const col = Math.floor(rIdx / dynamicRows);
         const rowStagger = (row % 2 === 1) ? (dynamicStepX * 0.5) : 0;
-        
+        f.isVipStage = false;
         f.targetX = centerX + dir * (frontGap + col * dynamicStepX + rowStagger);
-        f.targetY = baseY + (row - (dynamicRows - 1) / 2) * dynamicRowGap;
-        f.rank = rank;
+        f.targetY = armyStageY + (row - (dynamicRows - 1) / 2) * dynamicRowGap;
       });
     });
   }, []);
@@ -807,7 +835,7 @@ export default function GameChienDau({
       ctx.stroke();
       ctx.restore();
 
-      // Faction Base Auras
+      // Faction Base Auras & VIP Dais Platforms
       const blueBaseGrad = ctx.createRadialGradient(centerX - 180, h * 0.65, 10, centerX - 180, h * 0.65, 240);
       blueBaseGrad.addColorStop(0, 'rgba(47, 107, 255, 0.22)');
       blueBaseGrad.addColorStop(1, 'rgba(47, 107, 255, 0)');
@@ -820,225 +848,262 @@ export default function GameChienDau({
       ctx.fillStyle = redBaseGrad;
       ctx.fillRect(centerX, h * 0.35, centerX, h * 0.65);
 
-      // 2. Update & Draw Fighters (Chiến binh Kiếm Hiệp 3D 5 Cấp Bậc Trang Bị Siêu Thực)
+      // Upper VIP Champions Duel Dais (Bệ đài Thư Hùng Đỉnh Cao cho Tướng VIP)
+      ctx.save();
+      // Blue VIP Dais
+      ctx.beginPath();
+      ctx.ellipse(centerX - 150, h * 0.40, 110, 24, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.12)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Red VIP Dais
+      ctx.beginPath();
+      ctx.ellipse(centerX + 150, h * 0.40, 110, 24, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(244, 63, 94, 0.12)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(244, 63, 94, 0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
+
+      // 2. Update & Draw Fighters (Chiến binh Kiếm Hiệp 3D: Tướng VIP to gấp 3 lần ở tầng trên + Đội hình thoáng đãng)
       const lerpFactor = Math.min(1, dt * 5);
-      ['blue', 'red'].forEach(factionId => {
+      
+      // Collect and sort all fighters for back-to-front rendering
+      const allFighters = [
+        ...engineRef.current.fighters.blue.map(f => ({ ...f, factionId: 'blue' })),
+        ...engineRef.current.fighters.red.map(f => ({ ...f, factionId: 'red' }))
+      ].sort((a, b) => {
+        // Render lower stage before VIPs, and sort by y
+        if (a.isVipStage !== b.isVipStage) return a.isVipStage ? 1 : -1;
+        return a.y - b.y;
+      });
+
+      allFighters.forEach(f => {
+        const factionId = f.factionId;
         const color = factionId === 'blue' ? config.blueColor : config.redColor;
-        const fighters = engineRef.current.fighters[factionId];
 
-        fighters.forEach(f => {
-          f.x += (f.targetX - f.x) * lerpFactor;
-          f.y += (f.targetY - f.y) * lerpFactor;
-          f.bobPhase += dt * 4.5;
+        f.x += (f.targetX - f.x) * lerpFactor;
+        f.y += (f.targetY - f.y) * lerpFactor;
+        f.bobPhase += dt * 4.5;
 
-          // Calculate Character Tier based on score
-          const tier = f.score >= 5000 ? 5 : f.score >= 2000 ? 4 : f.score >= 500 ? 3 : f.score >= 100 ? 2 : 1;
-          const isPulsing = performance.now() < f.pulseUntil;
-          const scale = (config.charScale || 1.15) * (isPulsing ? 1.2 : 1.0) * (tier >= 4 ? 1.25 : tier === 3 ? 1.15 : 1.0);
-          const isTopRank = f.rank === 0;
+        // Calculate Character Tier based on score
+        const tier = f.score >= 5000 ? 5 : f.score >= 2000 ? 4 : f.score >= 500 ? 3 : f.score >= 100 ? 2 : 1;
+        const isPulsing = performance.now() < f.pulseUntil;
+        const isTopRank = f.rank === 0;
 
-          // Physics for Knockout / Revive
-          if (f.isKnockedOut) {
-            f.knockbackVx = (f.knockbackVx || 0) * 0.94;
-            f.x += (f.knockbackVx || 0) * dt;
-          }
+        // VIP Scale: 3.0x - 3.4x (To gấp 3 lần nhân vật thường theo yêu cầu!)
+        // Regular Scale: 1.65x - 1.85x (To rõ như người thật, không phải dấu chấm!)
+        let baseScale = 1.65;
+        if (tier >= 5) baseScale = 3.4;
+        else if (tier === 4) baseScale = 3.1;
+        else if (tier === 3 || isTopRank) baseScale = 2.6;
+        else if (tier === 2) baseScale = 1.85;
 
-          // Ground shadow (sleek & natural, replacing clunky geometric circles)
+        const scale = baseScale * (isPulsing ? 1.15 : 1.0);
+
+        // Physics for Knockout
+        if (f.isKnockedOut) {
+          f.knockbackVx = (f.knockbackVx || 0) * 0.94;
+          f.x += (f.knockbackVx || 0) * dt;
+        }
+
+        // Ground shadow (sleek & natural)
+        ctx.save();
+        ctx.beginPath();
+        ctx.ellipse(f.x, f.y + 20 * scale, (12 + tier * 2) * scale, (4 + tier) * scale, 0, 0, Math.PI * 2);
+        ctx.fillStyle = f.isKnockedOut ? 'rgba(0, 0, 0, 0.22)' : (isPulsing ? 'rgba(250, 204, 21, 0.45)' : 'rgba(0, 0, 0, 0.35)');
+        ctx.fill();
+        ctx.restore();
+
+        // Name tag, Title & Health Bar (Tạo khoảng cách thông thoáng, không che khuất nhân vật)
+        ctx.save();
+        const tagDist = (28 + (tier >= 3 ? 6 : 0)) * scale;
+        const isVip = tier >= 3 || isTopRank;
+
+        ctx.font = `${isVip ? 'bold 12px' : 'bold 10px'} 'Be Vietnam Pro', sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.lineWidth = 2.8;
+        ctx.strokeStyle = 'rgba(0,0,0,0.95)';
+        
+        let tierBadge = '';
+        if (f.isKnockedOut) {
+          tierBadge = '✝️ ';
+          ctx.fillStyle = '#f87171';
+        } else if (tier === 5) {
+          tierBadge = '👑 [CHÍ TÔN] ';
+          ctx.fillStyle = '#fef08a';
+        } else if (tier === 4) {
+          tierBadge = '⚡ [CHIẾN THẦN] ';
+          ctx.fillStyle = '#38bdf8';
+        } else if (tier === 3) {
+          tierBadge = '✨ [THẦN TƯỚNG] ';
+          ctx.fillStyle = '#fde047';
+        } else if (tier === 2) {
+          tierBadge = '🛡️ ';
+          ctx.fillStyle = '#cbd5e1';
+        } else {
+          tierBadge = isTopRank ? '👑 ' : '';
+          ctx.fillStyle = '#ffffff';
+        }
+
+        const nameText = f.nickname.length > 9 ? f.nickname.slice(0, 8) + '…' : f.nickname;
+        ctx.strokeText(tierBadge + nameText, f.x, f.y - tagDist);
+        ctx.fillText(tierBadge + nameText, f.x, f.y - tagDist);
+
+        // Individual Health Bar (Máu riêng của từng chiến sĩ)
+        const barW = (isVip ? 36 : 24) * scale;
+        const barH = 3.5 * scale;
+        const barX = f.x - barW / 2;
+        const barY = f.y - (tagDist - 5 * scale);
+
+        ctx.fillStyle = 'rgba(0,0,0,0.75)';
+        ctx.fillRect(barX, barY, barW, barH);
+        
+        if (!f.isKnockedOut) {
+          const currentHp = f.currentHp !== undefined ? f.currentHp : (f.maxHp || 280);
+          const maxHp = f.maxHp || 280;
+          const hpRatio = Math.max(0, Math.min(1, currentHp / maxHp));
+          ctx.fillStyle = hpRatio > 0.5 ? (tier >= 4 ? '#eab308' : color) : '#ef4444';
+          ctx.fillRect(barX, barY, barW * hpRatio, barH);
+        }
+        ctx.restore();
+
+        // Holy Revive Light Pillar
+        if (f.revivedAt && (performance.now() - f.revivedAt < 1800)) {
+          const reviveAlpha = 1 - (performance.now() - f.revivedAt) / 1800;
           ctx.save();
+          ctx.fillStyle = `rgba(250, 204, 21, ${reviveAlpha * 0.4})`;
+          ctx.fillRect(f.x - 14 * scale, 0, 28 * scale, f.y + 20 * scale);
+          ctx.strokeStyle = `rgba(255, 255, 255, ${reviveAlpha * 0.8})`;
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(f.x - 14 * scale, 0, 28 * scale, f.y + 20 * scale);
+          ctx.restore();
+        }
+
+        // Draw 3D Articulated Warrior Body & Skeletal Limbs
+        ctx.save();
+        ctx.translate(f.x, f.y);
+        ctx.scale(scale, scale);
+
+        if (f.isKnockedOut) {
+          ctx.globalAlpha = 0.55;
+        }
+
+        // Persistent Lingering Aura for Tier 4 & 5
+        if ((isPulsing || tier >= 4) && !f.isKnockedOut) {
+          const auraScale = 1 + Math.sin(time * 0.004) * 0.15;
+          ctx.save();
+          ctx.shadowColor = tier === 5 ? '#facc15' : (tier === 4 ? '#38bdf8' : '#fbbf24');
+          ctx.shadowBlur = 24;
+
+          ctx.strokeStyle = tier === 5 ? 'rgba(250, 204, 21, 0.7)' : 'rgba(56, 189, 248, 0.7)';
+          ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.ellipse(f.x, f.y + 18 * scale, (12 + tier * 2) * scale, (4 + tier) * scale, 0, 0, Math.PI * 2);
-          ctx.fillStyle = f.isKnockedOut ? 'rgba(0, 0, 0, 0.25)' : (isPulsing ? 'rgba(250, 204, 21, 0.45)' : 'rgba(0, 0, 0, 0.35)');
+          ctx.ellipse(0, 0, 26 * auraScale, 30 * auraScale, 0, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.fillStyle = tier === 5 ? 'rgba(250, 204, 21, 0.22)' : 'rgba(56, 189, 248, 0.18)';
           ctx.fill();
           ctx.restore();
+        }
 
-          // Name tag, Title & Health Bar
+        // Wings of Light for Tier 3, 4, 5
+        if (tier >= 3 && !f.isKnockedOut) {
+          const wingFlap = Math.sin(time * 0.005) * 6;
           ctx.save();
-          ctx.font = `${isTopRank || tier >= 3 ? 'bold ' : ''}${tier >= 4 ? '11px' : '10px'} 'Be Vietnam Pro', sans-serif`;
-          ctx.textAlign = 'center';
-          ctx.lineWidth = 2.5;
-          ctx.strokeStyle = 'rgba(0,0,0,0.95)';
-          
-          let tierBadge = '';
-          if (f.isKnockedOut) {
-            tierBadge = '✝️ [HẠ GỤC] ';
-            ctx.fillStyle = '#f87171';
-          } else if (tier === 5) {
-            tierBadge = '👑 [CHÍ TÔN] ';
-            ctx.fillStyle = '#fef08a';
-          } else if (tier === 4) {
-            tierBadge = '⚡ [CHIẾN THẦN] ';
-            ctx.fillStyle = '#38bdf8';
-          } else if (tier === 3) {
-            tierBadge = '✨ [THẦN TƯỚNG] ';
-            ctx.fillStyle = '#fde047';
-          } else if (tier === 2) {
-            tierBadge = '🛡️ ';
-            ctx.fillStyle = '#cbd5e1';
-          } else {
-            tierBadge = isTopRank ? '👑 ' : '';
-            ctx.fillStyle = '#ffffff';
-          }
+          ctx.shadowColor = tier === 5 ? '#fbbf24' : (tier === 4 ? '#38bdf8' : '#fde047');
+          ctx.shadowBlur = 18;
 
-          const nameText = f.nickname.length > 9 ? f.nickname.slice(0, 8) + '…' : f.nickname;
-          ctx.strokeText(tierBadge + nameText, f.x, f.y - (24 + (tier >= 3 ? 6 : 0)) * scale);
-          ctx.fillText(tierBadge + nameText, f.x, f.y - (24 + (tier >= 3 ? 6 : 0)) * scale);
+          // Left Wing
+          const leftWingGrad = ctx.createLinearGradient(-4, 0, -28, -14);
+          leftWingGrad.addColorStop(0, tier === 5 ? '#facc15' : '#38bdf8');
+          leftWingGrad.addColorStop(1, 'rgba(255, 255, 255, 0.2)');
+          ctx.fillStyle = leftWingGrad;
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.5;
 
-          // Individual Health Bar (Máu riêng của từng chiến sĩ)
-          const barW = 28 * scale;
-          const barH = 3.5 * scale;
-          const barX = f.x - barW / 2;
-          const barY = f.y - (20 + (tier >= 3 ? 4 : 0)) * scale;
+          ctx.beginPath();
+          ctx.moveTo(-4, -2);
+          ctx.quadraticCurveTo(-18, -18 + wingFlap, -28, -10 + wingFlap);
+          ctx.quadraticCurveTo(-16, 2 + wingFlap, -4, 5);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
 
-          ctx.fillStyle = 'rgba(0,0,0,0.75)';
-          ctx.fillRect(barX, barY, barW, barH);
-          
-          if (!f.isKnockedOut) {
-            const currentHp = f.currentHp !== undefined ? f.currentHp : (f.maxHp || 280);
-            const maxHp = f.maxHp || 280;
-            const hpRatio = Math.max(0, Math.min(1, currentHp / maxHp));
-            ctx.fillStyle = hpRatio > 0.5 ? (tier >= 4 ? '#eab308' : color) : '#ef4444';
-            ctx.fillRect(barX, barY, barW * hpRatio, barH);
-          } else {
-            // Defeated empty bar + Revive prompt
-            ctx.font = "8px 'Be Vietnam Pro', sans-serif";
-            ctx.fillStyle = '#fca5a5';
-            ctx.fillText(`BL "${factionId === 'blue' ? 'xanh' : 'đỏ'}" để hồi sinh`, f.x, barY + 11);
-          }
+          // Right Wing
+          const rightWingGrad = ctx.createLinearGradient(4, 0, 28, -14);
+          rightWingGrad.addColorStop(0, tier === 5 ? '#facc15' : '#38bdf8');
+          rightWingGrad.addColorStop(1, 'rgba(255, 255, 255, 0.2)');
+          ctx.fillStyle = rightWingGrad;
+
+          ctx.beginPath();
+          ctx.moveTo(4, -2);
+          ctx.quadraticCurveTo(18, -18 - wingFlap, 28, -10 - wingFlap);
+          ctx.quadraticCurveTo(16, 2 - wingFlap, 4, 5);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
           ctx.restore();
+        }
 
-          // Holy Revive Light Pillar
-          if (f.revivedAt && (performance.now() - f.revivedAt < 1800)) {
-            const reviveAlpha = 1 - (performance.now() - f.revivedAt) / 1800;
+        // 3D Articulated Skeletal Kinematics
+        const fighterGender = f.gender || (f.rank % 2 === 0 ? 'male' : 'female');
+        
+        let animState = SKELETON_STATES.WALK;
+        if (f.isKnockedOut) {
+          animState = SKELETON_STATES.DEFEATED;
+        } else if (f.revivedAt && (performance.now() - f.revivedAt < 1800)) {
+          animState = SKELETON_STATES.REVIVE;
+        } else if (isPulsing) {
+          animState = (tier >= 4 || isTopRank) ? SKELETON_STATES.ATTACK_SPIN : SKELETON_STATES.ATTACK_SLASH;
+        }
+
+        // Compute 3D facing angle
+        const baseFacing = factionId === 'blue' ? (Math.PI * 0.45) : (-Math.PI * 0.45);
+        const yawAngle = baseFacing + Math.sin(time * 0.002 + (f.bobPhase || 0)) * 0.18;
+
+        const skeletonData = computeSkeletalJoints({
+          gender: fighterGender,
+          animState: animState,
+          yawAngle: yawAngle,
+          time: time,
+          phase: f.bobPhase || 0,
+          tier: tier,
+          animSpeed: config.animSpeed || 0.55
+        });
+
+        render3DWarriorSkeleton(ctx, skeletonData, {
+          factionId,
+          scale: 1.0,
+          isPulsing,
+          warriorImages: warriorImagesRef.current
+        });
+
+        // Orbiting Qi Swords for Tier 4 & 5
+        if (tier >= 4 && !f.isKnockedOut) {
+          const orbitSwords = tier === 5 ? 4 : 3;
+          for (let s = 0; s < orbitSwords; s++) {
+            const angle = time * 0.004 + (s * (Math.PI * 2 / orbitSwords));
+            const ox = Math.cos(angle) * 18;
+            const oy = Math.sin(angle) * 11;
             ctx.save();
-            ctx.fillStyle = `rgba(250, 204, 21, ${reviveAlpha * 0.4})`;
-            ctx.fillRect(f.x - 14 * scale, 0, 28 * scale, f.y + 20 * scale);
-            ctx.strokeStyle = `rgba(255, 255, 255, ${reviveAlpha * 0.8})`;
-            ctx.lineWidth = 1.5;
-            ctx.strokeRect(f.x - 14 * scale, 0, 28 * scale, f.y + 20 * scale);
-            ctx.restore();
-          }
-
-          // Draw 3D Articulated Warrior Body & Skeletal Limbs
-          ctx.save();
-          ctx.translate(f.x, f.y);
-          ctx.scale(scale, scale);
-
-          if (f.isKnockedOut) {
-            ctx.globalAlpha = 0.55;
-          }
-
-          // Persistent Lingering Aura for Tier 4 & 5
-          if ((isPulsing || tier >= 4) && !f.isKnockedOut) {
-            const auraScale = 1 + Math.sin(time * 0.004) * 0.15;
-            ctx.save();
-            ctx.shadowColor = tier === 5 ? '#facc15' : (tier === 4 ? '#38bdf8' : '#fbbf24');
-            ctx.shadowBlur = 24;
-
-            ctx.strokeStyle = tier === 5 ? 'rgba(250, 204, 21, 0.7)' : 'rgba(56, 189, 248, 0.7)';
+            ctx.translate(ox, oy);
+            ctx.rotate(angle + Math.PI / 2);
+            ctx.strokeStyle = tier === 5 ? '#facc15' : '#38bdf8';
             ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.ellipse(0, 0, 26 * auraScale, 30 * auraScale, 0, 0, Math.PI * 2);
-            ctx.stroke();
-
-            ctx.fillStyle = tier === 5 ? 'rgba(250, 204, 21, 0.22)' : 'rgba(56, 189, 248, 0.18)';
-            ctx.fill();
-            ctx.restore();
-          }
-
-          // Wings of Light for Tier 3, 4, 5
-          if (tier >= 3 && !f.isKnockedOut) {
-            const wingFlap = Math.sin(time * 0.005) * 6;
-            ctx.save();
-            ctx.shadowColor = tier === 5 ? '#fbbf24' : (tier === 4 ? '#38bdf8' : '#fde047');
-            ctx.shadowBlur = 18;
-
-            // Left Wing
-            const leftWingGrad = ctx.createLinearGradient(-4, 0, -28, -14);
-            leftWingGrad.addColorStop(0, tier === 5 ? '#facc15' : '#38bdf8');
-            leftWingGrad.addColorStop(1, 'rgba(255, 255, 255, 0.2)');
-            ctx.fillStyle = leftWingGrad;
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 1.5;
-
-            ctx.beginPath();
-            ctx.moveTo(-4, -2);
-            ctx.quadraticCurveTo(-18, -18 + wingFlap, -28, -10 + wingFlap);
-            ctx.quadraticCurveTo(-16, 2 + wingFlap, -4, 5);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-
-            // Right Wing
-            const rightWingGrad = ctx.createLinearGradient(4, 0, 28, -14);
-            rightWingGrad.addColorStop(0, tier === 5 ? '#facc15' : '#38bdf8');
-            rightWingGrad.addColorStop(1, 'rgba(255, 255, 255, 0.2)');
-            ctx.fillStyle = rightWingGrad;
-
-            ctx.beginPath();
-            ctx.moveTo(4, -2);
-            ctx.quadraticCurveTo(18, -18 - wingFlap, 28, -10 - wingFlap);
-            ctx.quadraticCurveTo(16, 2 - wingFlap, 4, 5);
-            ctx.closePath();
-            ctx.fill();
+            ctx.moveTo(0, -7);
+            ctx.lineTo(0, 7);
             ctx.stroke();
             ctx.restore();
           }
+        }
 
-          // 3D Articulated Skeletal Kinematics
-          const fighterGender = f.gender || (f.rank % 2 === 0 ? 'male' : 'female');
-          
-          let animState = SKELETON_STATES.WALK;
-          if (f.isKnockedOut) {
-            animState = SKELETON_STATES.DEFEATED;
-          } else if (f.revivedAt && (performance.now() - f.revivedAt < 1800)) {
-            animState = SKELETON_STATES.REVIVE;
-          } else if (isPulsing) {
-            animState = (tier >= 4 || f.rank === 1) ? SKELETON_STATES.ATTACK_SPIN : SKELETON_STATES.ATTACK_SLASH;
-          }
-
-          // Compute 3D facing angle
-          const baseFacing = factionId === 'blue' ? (Math.PI * 0.45) : (-Math.PI * 0.45);
-          const yawAngle = baseFacing + Math.sin(time * 0.002 + (f.bobPhase || 0)) * 0.18;
-
-          const skeletonData = computeSkeletalJoints({
-            gender: fighterGender,
-            animState: animState,
-            yawAngle: yawAngle,
-            time: time,
-            phase: f.bobPhase || 0,
-            tier: tier,
-            animSpeed: config.animSpeed || 0.55
-          });
-
-          render3DWarriorSkeleton(ctx, skeletonData, {
-            factionId,
-            scale: 1.0,
-            isPulsing,
-            warriorImages: warriorImagesRef.current
-          });
-
-          // Orbiting Qi Swords for Tier 4 & 5
-          if (tier >= 4 && !f.isKnockedOut) {
-            const orbitSwords = tier === 5 ? 4 : 3;
-            for (let s = 0; s < orbitSwords; s++) {
-              const angle = time * 0.004 + (s * (Math.PI * 2 / orbitSwords));
-              const ox = Math.cos(angle) * 18;
-              const oy = Math.sin(angle) * 11;
-              ctx.save();
-              ctx.translate(ox, oy);
-              ctx.rotate(angle + Math.PI / 2);
-              ctx.strokeStyle = tier === 5 ? '#facc15' : '#38bdf8';
-              ctx.lineWidth = 2;
-              ctx.beginPath();
-              ctx.moveTo(0, -7);
-              ctx.lineTo(0, 7);
-              ctx.stroke();
-              ctx.restore();
-            }
-          }
-
-          ctx.restore();
-        });
+        ctx.restore();
       });
 
       // 3. Update & Draw Flying Swords (Tuyệt Kỹ VẠN KIẾM QUY TÔNG - Sát Thương Đám Đông & Hạ Gục)
