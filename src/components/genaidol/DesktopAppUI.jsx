@@ -546,7 +546,7 @@ export default function DesktopAppUI() {
   return (
     <div className={`w-full h-screen flex flex-col font-sans ${isDarkMode ? 'bg-[#0f0f13] text-white' : 'bg-gray-100 text-gray-900'}`}>
       
-      {/* 1. Fake Window Title Bar (Đã gộp nút Tải ZIP lên đây) */}
+      {/* 1. Fake Window Title Bar (Đã gộp nút Tải ZIP và Game Chiến Đấu lên đây) */}
       <div className={`flex items-center justify-between px-4 py-2 ${isDarkMode ? 'bg-[#1c1c23]' : 'bg-gray-300'} select-none z-30`}>
         <div className="flex items-center gap-2">
           <div className="w-5 h-5 rounded bg-blue-500 flex items-center justify-center">
@@ -555,7 +555,36 @@ export default function DesktopAppUI() {
           <span className="text-sm font-medium">Livestream AI (Clone) - Profile: {CHARACTERS[selectedCharacter]?.name || 'Không xác định'}</span>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          {/* Nút Kích hoạt Game Chiến Đấu (Đã chuyển lên thanh tiêu đề trên cùng) */}
+          <button 
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border shadow-sm ${
+              isGameBattleActive 
+                ? 'bg-gradient-to-r from-red-600 via-purple-600 to-indigo-600 text-white border-purple-400 shadow-purple-500/40 ring-2 ring-purple-400/50 animate-pulse' 
+                : (isDarkMode ? 'border-indigo-500/50 bg-indigo-950/40 text-indigo-300 hover:bg-indigo-900/60' : 'border-indigo-300 bg-indigo-50 text-indigo-700 hover:bg-indigo-100')
+            }`}
+            onClick={() => setIsGameBattleActive(!isGameBattleActive)}
+            title="Bật/Tắt chế độ Game Chiến Đấu (TikTok LIVE Battle Game) trên màn hình chính"
+          >
+            <Swords size={14} className={isGameBattleActive ? 'text-yellow-300' : 'text-indigo-400'} />
+            <span>Game Chiến Đấu</span>
+            {isGameBattleActive && (
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            )}
+          </button>
+
+          {/* Nút Bảng Quản trị Admin của Game Chiến Đấu */}
+          {isGameBattleActive && (
+            <button 
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 border border-purple-500/40 transition-colors"
+              onClick={() => setIsGameAdminOpen(true)}
+              title="Mở Bảng Quản trị Admin của Game Chiến Đấu (Tách biệt hoàn toàn với Live Stream)"
+            >
+              <Shield size={13} className="text-purple-400" />
+              <span>Admin</span>
+            </button>
+          )}
+
           <button onClick={() => setIsDarkMode(!isDarkMode)} className={`p-1.5 rounded transition-colors ${isDarkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-400 text-gray-800 hover:bg-gray-500'}`}>
             {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
           </button>
@@ -696,36 +725,6 @@ export default function DesktopAppUI() {
               >
                 Thư viện Mẫu
               </button>
-
-              {/* Nút Kích hoạt Game Chiến Đấu */}
-              <button 
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-bold transition-all border shadow-sm ${
-                  isGameBattleActive 
-                    ? 'bg-gradient-to-r from-red-600 via-purple-600 to-indigo-600 text-white border-purple-400 shadow-purple-500/30 ring-2 ring-purple-400/50' 
-                    : (isDarkMode ? 'border-indigo-500/50 bg-indigo-950/40 text-indigo-300 hover:bg-indigo-900/60' : 'border-indigo-300 bg-indigo-50 text-indigo-700 hover:bg-indigo-100')
-                }`}
-                onClick={() => setIsGameBattleActive(!isGameBattleActive)}
-                title="Bật/Tắt chế độ Game Chiến Đấu (TikTok LIVE Battle Game) trên màn hình chính"
-              >
-                <Swords size={16} className={isGameBattleActive ? 'text-yellow-300' : 'text-indigo-400'} />
-                <span>Game Chiến Đấu</span>
-                {isGameBattleActive && (
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                )}
-              </button>
-
-              {/* Nút Bảng Quản trị Admin của Game Chiến Đấu */}
-              {isGameBattleActive && (
-                <button 
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-bold bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 border border-purple-500/40 transition-colors"
-                  onClick={() => setIsGameAdminOpen(true)}
-                  title="Mở Bảng Quản trị Admin của Game Chiến Đấu (Tách biệt hoàn toàn với Live Stream)"
-                >
-                  <Shield size={13} className="text-purple-400" />
-                  <span>Admin</span>
-                </button>
-              )}
-
               <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="video/*,image/*" onChange={handleFileUpload} />
             </div>
           </div>
@@ -841,14 +840,6 @@ export default function DesktopAppUI() {
       <div className={`flex-1 relative overflow-hidden flex items-center justify-center ${isDarkMode ? 'bg-[#0f0f13]' : 'bg-white'}`}>
         
         {renderCharacterContent()}
-        
-        {/* Lớp phủ phụ thêm */}
-        <div className="absolute bottom-6 left-6 flex flex-col pointer-events-none z-10">
-          <h2 className="text-4xl font-bold text-white mb-1 drop-shadow-lg">AIDOL</h2>
-          <p className="text-white drop-shadow-md font-medium px-2 py-1 bg-black/40 rounded inline-block backdrop-blur-sm">
-             {isConnected ? (lipSyncVideoUrl ? 'Đang trả lời (Lip-sync)...' : 'Chế độ chờ (Sẵn sàng)') : (CHARACTERS[selectedCharacter]?.name || 'Không xác định')} 
-          </p>
-        </div>
 
         {/* Ẩn AIAudioPlayer đi, chỉ dùng nó để quản lý logic giọng nói ngầm */}
         <div className="hidden">
@@ -1485,18 +1476,26 @@ export default function DesktopAppUI() {
         onTriggerRefereeAction={(action) => {
           if (action === 'RESET_MATCH') {
             setLastGameEvent({ type: 'ADMIN_RESET', data: {}, timestamp: Date.now() });
-          } else if (action === 'FINISH_MATCH_BLUE') {
-            setLastGameEvent({ type: 'GIFT', data: { name: 'Admin Trọng Tài', coins: 99999 }, timestamp: Date.now() });
-          } else if (action === 'FINISH_MATCH_RED') {
-            setLastGameEvent({ type: 'GIFT', data: { name: 'Admin Trọng Tài', coins: 99999 }, timestamp: Date.now() });
+          } else if (action === 'ADD_BLUE_20') {
+            setLastGameEvent({ type: 'COMMENT', data: { nickname: 'Admin Trợ Lực', comment: 'xanh', score: 20 }, timestamp: Date.now() });
+          } else if (action === 'ADD_RED_20') {
+            setLastGameEvent({ type: 'COMMENT', data: { nickname: 'Admin Trợ Lực', comment: 'đỏ', score: 20 }, timestamp: Date.now() });
           } else if (action === 'ADD_BLUE_50') {
-            setLastGameEvent({ type: 'COMMENT', data: { nickname: 'Admin Trợ Lực', comment: 'xanh' }, timestamp: Date.now() });
+            setLastGameEvent({ type: 'COMMENT', data: { nickname: 'Admin Trợ Lực', comment: 'xanh', score: 50 }, timestamp: Date.now() });
           } else if (action === 'ADD_RED_50') {
-            setLastGameEvent({ type: 'COMMENT', data: { nickname: 'Admin Trợ Lực', comment: 'đỏ' }, timestamp: Date.now() });
+            setLastGameEvent({ type: 'COMMENT', data: { nickname: 'Admin Trợ Lực', comment: 'đỏ', score: 50 }, timestamp: Date.now() });
+          } else if (action === 'TRIGGER_AOE_BLUE') {
+            setLastGameEvent({ type: 'GIFT', data: { nickname: 'Admin Bão Sét', diamondCount: 500, faction: 'blue' }, timestamp: Date.now() });
+          } else if (action === 'TRIGGER_AOE_RED') {
+            setLastGameEvent({ type: 'GIFT', data: { nickname: 'Admin Bão Lửa', diamondCount: 500, faction: 'red' }, timestamp: Date.now() });
           } else if (action === 'SUMMON_BOSS_BLUE') {
-            setLastGameEvent({ type: 'GIFT', data: { nickname: 'Rồng Thần Admin', diamondCount: 5000 }, timestamp: Date.now() });
+            setLastGameEvent({ type: 'GIFT', data: { nickname: 'Rồng Thần Admin', diamondCount: 5000, faction: 'blue' }, timestamp: Date.now() });
           } else if (action === 'SUMMON_BOSS_RED') {
-            setLastGameEvent({ type: 'GIFT', data: { nickname: 'Bạch Hổ Admin', diamondCount: 5000 }, timestamp: Date.now() });
+            setLastGameEvent({ type: 'GIFT', data: { nickname: 'Bạch Hổ Admin', diamondCount: 5000, faction: 'red' }, timestamp: Date.now() });
+          } else if (action === 'FINISH_MATCH_BLUE') {
+            setLastGameEvent({ type: 'GIFT', data: { name: 'Admin Trọng Tài', coins: 99999, faction: 'blue' }, timestamp: Date.now() });
+          } else if (action === 'FINISH_MATCH_RED') {
+            setLastGameEvent({ type: 'GIFT', data: { name: 'Admin Trọng Tài', coins: 99999, faction: 'red' }, timestamp: Date.now() });
           }
         }}
       />

@@ -386,34 +386,79 @@ export default function GameChienDauAdminModal({
                 <div className="space-y-4">
                   <div className="p-4 bg-gradient-to-br from-amber-950/20 to-orange-950/20 border border-amber-500/30 rounded-xl space-y-3">
                     <h4 className="text-xs font-bold text-amber-400 uppercase flex items-center gap-1.5">
-                      <Flame size={14} /> Công cụ Trọng tài Thủ công
+                      <Flame size={14} /> Công cụ Trọng tài & Trợ lực Trực tiếp
                     </h4>
                     <div className="grid grid-cols-2 gap-2.5">
                       <button
-                        onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('ADD_BLUE_50')}
-                        className="py-2 px-3 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 border border-blue-500/30 rounded-lg text-xs font-bold transition-all text-left"
+                        onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('ADD_BLUE_20')}
+                        className="py-2 px-3 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 border border-blue-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
                       >
-                        🛡️ +50 Điểm Phe Xanh
+                        <span>🛡️ +20 Phe Xanh</span>
+                        <span className="text-[10px] bg-blue-500/30 px-1.5 py-0.5 rounded text-blue-200">+20 HP</span>
+                      </button>
+                      <button
+                        onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('ADD_RED_20')}
+                        className="py-2 px-3 bg-red-600/20 hover:bg-red-600/40 text-red-300 border border-red-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                      >
+                        <span>🗡️ +20 Phe Đỏ</span>
+                        <span className="text-[10px] bg-red-500/30 px-1.5 py-0.5 rounded text-red-200">+20 HP</span>
+                      </button>
+
+                      <button
+                        onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('ADD_BLUE_50')}
+                        className="py-2 px-3 bg-blue-600/30 hover:bg-blue-600/50 text-blue-200 border border-blue-400/40 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                      >
+                        <span>🛡️ +50 Phe Xanh</span>
+                        <span className="text-[10px] bg-blue-500/40 px-1.5 py-0.5 rounded text-blue-100">+50 HP</span>
                       </button>
                       <button
                         onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('ADD_RED_50')}
-                        className="py-2 px-3 bg-red-600/20 hover:bg-red-600/40 text-red-300 border border-red-500/30 rounded-lg text-xs font-bold transition-all text-left"
+                        className="py-2 px-3 bg-red-600/30 hover:bg-red-600/50 text-red-200 border border-red-400/40 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
                       >
-                        🗡️ +50 Điểm Phe Đỏ
+                        <span>🗡️ +50 Phe Đỏ</span>
+                        <span className="text-[10px] bg-red-500/40 px-1.5 py-0.5 rounded text-red-100">+50 HP</span>
+                      </button>
+
+                      <button
+                        onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('TRIGGER_AOE_BLUE')}
+                        className="py-2 px-3 bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-300 border border-cyan-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                      >
+                        <span>⚡ Bão AoE Phe Xanh</span>
+                        <span className="text-[10px] bg-cyan-500/30 px-1.5 py-0.5 rounded text-cyan-200">Sát thương</span>
                       </button>
                       <button
-                        onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('SUMMON_BOSS_BLUE')}
-                        className="py-2 px-3 bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-300 border border-cyan-500/30 rounded-lg text-xs font-bold transition-all text-left"
+                        onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('TRIGGER_AOE_RED')}
+                        className="py-2 px-3 bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
                       >
-                        🐉 Thả Boss Rồng Xanh (+250)
+                        <span>⚡ Bão AoE Phe Đỏ</span>
+                        <span className="text-[10px] bg-rose-500/30 px-1.5 py-0.5 rounded text-rose-200">Sát thương</span>
+                      </button>
+
+                      <button
+                        onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('SUMMON_BOSS_BLUE')}
+                        className="py-2 px-3 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 border border-indigo-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                      >
+                        <span>🐉 Thả Boss Rồng Xanh</span>
+                        <span className="text-[10px] bg-indigo-500/30 px-1.5 py-0.5 rounded text-indigo-200">+250 HP</span>
                       </button>
                       <button
                         onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('SUMMON_BOSS_RED')}
-                        className="py-2 px-3 bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold transition-all text-left"
+                        className="py-2 px-3 bg-orange-600/20 hover:bg-orange-600/40 text-orange-300 border border-orange-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
                       >
-                        🐅 Thả Boss Hổ Đỏ (+250)
+                        <span>🐅 Thả Boss Hổ Đỏ</span>
+                        <span className="text-[10px] bg-orange-500/30 px-1.5 py-0.5 rounded text-orange-200">+250 HP</span>
                       </button>
                     </div>
+                  </div>
+
+                  <div className="p-3 bg-black/40 border border-white/10 rounded-xl flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-300">Khởi động lại toàn bộ trận đấu (Reset):</span>
+                    <button
+                      onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('RESET_MATCH')}
+                      className="px-4 py-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-md shadow-red-900/30"
+                    >
+                      <RotateCcw size={13} /> Reset Trận Mới
+                    </button>
                   </div>
                 </div>
               )}

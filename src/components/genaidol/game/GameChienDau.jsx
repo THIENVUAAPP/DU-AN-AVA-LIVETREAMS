@@ -373,18 +373,24 @@ export default function GameChienDau({
     if (!externalLiveEvent) return;
     const { type, data } = externalLiveEvent;
     
+    if (type === 'ADMIN_RESET') {
+      resetMatch();
+      return;
+    }
+
     if (type === 'COMMENT') {
       const commentText = (data.comment || '').toLowerCase().trim();
       const nickname = data.nickname || data.name || 'Khán giả';
+      const score = data.score || 15;
       if (commentText.includes('xanh') || commentText.includes('blue') || commentText.includes('1')) {
-        addOrUpdateFighter('blue', nickname, 15);
+        addOrUpdateFighter('blue', nickname, score);
       } else if (commentText.includes('đỏ') || commentText.includes('do') || commentText.includes('red') || commentText.includes('2')) {
-        addOrUpdateFighter('red', nickname, 15);
+        addOrUpdateFighter('red', nickname, score);
       }
     } else if (type === 'GIFT') {
       const nickname = data.nickname || data.name || 'VIP Supporter';
       const diamondCount = data.diamondCount || data.coins || 1;
-      const assignedFaction = Math.random() < 0.5 ? 'blue' : 'red';
+      const assignedFaction = data.faction || (Math.random() < 0.5 ? 'blue' : 'red');
 
       if (diamondCount >= 1000) {
         triggerBossSummon(assignedFaction, nickname);
@@ -395,7 +401,7 @@ export default function GameChienDau({
         triggerDance(assignedFaction, nickname);
       }
     }
-  }, [externalLiveEvent, addOrUpdateFighter, triggerDance, triggerAoeSkill, triggerBossSummon]);
+  }, [externalLiveEvent, addOrUpdateFighter, triggerDance, triggerAoeSkill, triggerBossSummon, resetMatch]);
 
   // Main Canvas Rendering Loop
   useEffect(() => {
@@ -456,7 +462,7 @@ export default function GameChienDau({
       ctx.fillStyle = redBaseGrad;
       ctx.fillRect(centerX, canvas.height * 0.35, centerX, canvas.height * 0.65);
 
-      // 2. Update & Draw Fighters
+      // 2. Update & Draw Fighters (Chiến binh dũng sĩ có chân bước đi & giáp trụ sắc nét)
       const lerpFactor = Math.min(1, dt * 5);
       ['blue', 'red'].forEach(factionId => {
         const color = factionId === 'blue' ? config.blueColor : config.redColor;
@@ -465,65 +471,169 @@ export default function GameChienDau({
         fighters.forEach(f => {
           f.x += (f.targetX - f.x) * lerpFactor;
           f.y += (f.targetY - f.y) * lerpFactor;
-          f.bobPhase += dt * 3.5;
+          f.bobPhase += dt * 4.5;
 
           const isPulsing = performance.now() < f.pulseUntil;
-          const bob = Math.sin(f.bobPhase) * 2;
-          const scale = (config.charScale || 1.0) * (isPulsing ? 1.3 : 1.0);
+          const bob = Math.sin(f.bobPhase) * 2.5;
+          const stride = Math.sin(f.bobPhase); // Bước chân di chuyển nhịp nhàng
+          const scale = (config.charScale || 1.0) * (isPulsing ? 1.35 : 1.0);
           const isTopRank = f.rank === 0;
+          const weaponDir = factionId === 'blue' ? 1 : -1;
 
           // Shadow / Ground aura
           ctx.save();
           ctx.beginPath();
-          ctx.ellipse(f.x, f.y + 14 * scale, 12 * scale, 5 * scale, 0, 0, Math.PI * 2);
-          ctx.fillStyle = isPulsing ? 'rgba(255, 215, 0, 0.4)' : `${color}33`;
+          ctx.ellipse(f.x, f.y + 18 * scale, 14 * scale, 5 * scale, 0, 0, Math.PI * 2);
+          ctx.fillStyle = isPulsing ? 'rgba(255, 215, 0, 0.5)' : `${color}40`;
           ctx.fill();
 
-          // Name tag
+          // Name tag & Rank badge
           ctx.font = `${isTopRank ? 'bold ' : ''}10px 'Be Vietnam Pro', sans-serif`;
           ctx.textAlign = 'center';
           ctx.lineWidth = 2.5;
-          ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+          ctx.strokeStyle = 'rgba(0,0,0,0.9)';
           ctx.fillStyle = isTopRank ? '#ffcc00' : '#ffffff';
           const nameText = f.nickname.length > 10 ? f.nickname.slice(0, 9) + '…' : f.nickname;
-          ctx.strokeText(nameText, f.x, f.y - 18 * scale);
-          ctx.fillText(nameText, f.x, f.y - 18 * scale);
+          ctx.strokeText((isTopRank ? '👑 ' : '') + nameText, f.x, f.y - 22 * scale);
+          ctx.fillText((isTopRank ? '👑 ' : '') + nameText, f.x, f.y - 22 * scale);
 
-          // Body
+          // Health / Contribution Mini Bar
+          ctx.fillStyle = 'rgba(0,0,0,0.6)';
+          ctx.fillRect(f.x - 12 * scale, f.y - 18 * scale, 24 * scale, 3 * scale);
+          ctx.fillStyle = isTopRank ? '#eab308' : color;
+          ctx.fillRect(f.x - 12 * scale, f.y - 18 * scale, Math.min(24 * scale, Math.max(4 * scale, (f.score / 200) * 24 * scale)), 3 * scale);
+
+          // Draw Character Body & Armor
           ctx.translate(f.x, f.y + bob);
           ctx.scale(scale, scale);
 
+          // 2.1. LEGS & BOOTS (Đôi chân chiến binh bước đi chiến đấu nhịp nhàng)
+          ctx.lineWidth = 3;
+          ctx.lineCap = 'round';
+          
+          // Left Leg (Chân trái)
+          ctx.strokeStyle = factionId === 'blue' ? '#1e3a8a' : '#7f1d1d';
+          ctx.beginPath();
+          ctx.moveTo(-3, 6);
+          ctx.lineTo(-4 + stride * 3.5, 14);
+          ctx.stroke();
+          // Left Boot (Giày giáp trái)
+          ctx.fillStyle = isTopRank ? '#f59e0b' : '#334155';
+          ctx.fillRect(-6 + stride * 3.5, 13, 5, 3.5);
+
+          // Right Leg (Chân phải)
+          ctx.strokeStyle = factionId === 'blue' ? '#1d4ed8' : '#991b1b';
+          ctx.beginPath();
+          ctx.moveTo(3, 6);
+          ctx.lineTo(4 - stride * 3.5, 14);
+          ctx.stroke();
+          // Right Boot (Giày giáp phải)
+          ctx.fillStyle = isTopRank ? '#fbbf24' : '#475569';
+          ctx.fillRect(2 - stride * 3.5, 13, 5, 3.5);
+
+          // 2.2. TORSO & CHEST ARMOR (Áo giáp chiến binh)
           ctx.shadowColor = isPulsing ? '#ffcc00' : color;
-          ctx.shadowBlur = isPulsing ? 15 : 8;
-          ctx.fillStyle = color;
-          ctx.strokeStyle = isTopRank ? '#ffcc00' : 'rgba(255,255,255,0.7)';
+          ctx.shadowBlur = isPulsing ? 18 : 8;
+
+          // Armor Plate Gradient
+          const armorGrad = ctx.createLinearGradient(-6, -4, 6, 8);
+          armorGrad.addColorStop(0, factionId === 'blue' ? '#3b82f6' : '#ef4444');
+          armorGrad.addColorStop(1, factionId === 'blue' ? '#1d4ed8' : '#b91c1c');
+          ctx.fillStyle = armorGrad;
+          ctx.strokeStyle = isTopRank ? '#ffd700' : '#ffffff';
           ctx.lineWidth = 1.2;
 
-          // Armor torso
           ctx.beginPath();
-          ctx.moveTo(-5, 12);
-          ctx.lineTo(5, 12);
-          ctx.lineTo(3.5, -4);
-          ctx.lineTo(-3.5, -4);
+          ctx.moveTo(-5.5, 6);
+          ctx.lineTo(5.5, 6);
+          ctx.lineTo(4.5, -4);
+          ctx.lineTo(-4.5, -4);
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
 
-          // Head / Helmet
+          // Golden Belt / Energy Core
+          ctx.fillStyle = isTopRank ? '#facc15' : '#e2e8f0';
+          ctx.fillRect(-4, 4, 8, 2);
+
+          // Shoulder Pauldrons (Giáp vai chiến đấu)
+          ctx.fillStyle = isTopRank ? '#eab308' : (factionId === 'blue' ? '#60a5fa' : '#f87171');
           ctx.beginPath();
-          ctx.arc(0, -9, 4.5, 0, Math.PI * 2);
+          ctx.arc(-5.5, -3, 2.5, 0, Math.PI * 2);
+          ctx.arc(5.5, -3, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 2.3. HELMET & VISOR (Mũ giáp & Kính phát quang)
+          ctx.fillStyle = isTopRank ? '#ca8a04' : (factionId === 'blue' ? '#1e40af' : '#991b1b');
+          ctx.beginPath();
+          ctx.arc(0, -9, 5, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
 
-          // Weapon (Sword / Spear)
-          ctx.shadowBlur = 0;
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 1.5;
-          const weaponDir = factionId === 'blue' ? 1 : -1;
+          // Glowing Visor / Eyes
+          ctx.fillStyle = isPulsing ? '#ffffff' : (factionId === 'blue' ? '#67e8f9' : '#fef08a');
+          ctx.fillRect(-2.5, -9.5, 5, 1.8);
+
+          // Helmet Plume / Crest (Lông vũ trên mũ giáp)
+          ctx.fillStyle = isTopRank ? '#ef4444' : (factionId === 'blue' ? '#38bdf8' : '#fb7185');
           ctx.beginPath();
-          ctx.moveTo(3 * weaponDir, 2);
-          ctx.lineTo(9 * weaponDir, -8);
-          ctx.stroke();
+          ctx.moveTo(0, -14);
+          ctx.lineTo(2.5, -10);
+          ctx.lineTo(-2.5, -10);
+          ctx.closePath();
+          ctx.fill();
+
+          // 2.4. WEAPONS & SHIELDS (Vũ khí kiếm khiên phát sáng)
+          ctx.shadowBlur = 0;
+          if (factionId === 'blue') {
+            // Blue: Radiant Sword & Crest Shield
+            // Shield on back/left hand
+            ctx.fillStyle = '#1e3a8a';
+            ctx.strokeStyle = '#60a5fa';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.ellipse(-7, 1, 3.5, 5.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Glowing Azure Sword in main hand
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(4, 2);
+            ctx.lineTo(11, -7 - stride * 2);
+            ctx.stroke();
+            // Sword Guard
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(2, 4);
+            ctx.lineTo(6, 0);
+            ctx.stroke();
+          } else {
+            // Red: Flaming Battle Axe & Combat Shield
+            // Combat Shield on right hand
+            ctx.fillStyle = '#7f1d1d';
+            ctx.strokeStyle = '#f87171';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.ellipse(7, 1, 3.5, 5.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Glowing Crimson Spear / Axe in main hand
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(-4, 2);
+            ctx.lineTo(-11, -7 + stride * 2);
+            ctx.stroke();
+            // Axe Blade Head
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.arc(-11, -7 + stride * 2, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
 
           ctx.restore();
         });
@@ -566,7 +676,7 @@ export default function GameChienDau({
         }
       }
 
-      // 4. Update & Draw Dancers (Stage center)
+      // 4. Update & Draw Dancers (Vũ công đối kháng aerobic/sân khấu sôi động, có 2 chân nhảy đẹp mắt, KHÔNG nhào lộn)
       ['blue', 'red'].forEach(factionId => {
         const dancers = engineRef.current.dancers[factionId];
         const color = factionId === 'blue' ? config.blueColor : config.redColor;
@@ -580,58 +690,91 @@ export default function GameChienDau({
           const elapsedSec = (performance.now() - d.startedAt) / 1000;
           const style = DANCE_STYLES.find(s => s.id === d.danceStyleId) || DANCE_STYLES[0];
 
-          // Compute dance motions
+          // Compute smooth dance motions (nhún nhảy, đá chân nhịp nhàng, lắc hông, KHÔNG nhào lộn)
           const bounce = Math.sin(elapsedSec * style.bounceFreq * Math.PI * 2) * style.bounceAmp;
           const sway = Math.sin(elapsedSec * style.swayFreq * Math.PI * 2) * style.swayAmp;
           const armSwing = Math.sin(elapsedSec * style.armFreq * Math.PI * 2) * style.armAmp;
-          const jump = style.jumpFreq ? Math.max(0, Math.sin(elapsedSec * style.jumpFreq * Math.PI * 2)) * style.jumpHeight : 0;
+          const legKick = Math.sin(elapsedSec * (style.legFreq || 2.5) * Math.PI * 2) * (style.legAmp || 12);
+          const jump = style.jumpFreq ? Math.max(0, Math.sin(elapsedSec * style.jumpFreq * Math.PI * 2)) * Math.min(style.jumpHeight, 14) : 0;
 
           ctx.save();
           ctx.translate(d.x + sway, d.y + bounce - jump);
           ctx.scale(d.scale, d.scale);
 
-          // Golden stage glow underneath
+          // Golden stage podium glow
           ctx.beginPath();
-          ctx.ellipse(0, 16, 16, 6, 0, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(255, 215, 0, 0.5)';
+          ctx.ellipse(0, 18, 18, 6, 0, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255, 215, 0, 0.6)';
           ctx.fill();
 
           // Crown & Name on top
-          ctx.font = 'bold 5px sans-serif';
+          ctx.font = 'bold 9px sans-serif';
           ctx.fillStyle = '#ffcc00';
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 2;
           ctx.textAlign = 'center';
-          ctx.fillText('👑 ' + (d.nickname.length > 8 ? d.nickname.slice(0, 7) + '…' : d.nickname), 0, -18);
+          const dName = d.nickname.length > 8 ? d.nickname.slice(0, 7) + '…' : d.nickname;
+          ctx.strokeText('👑 ' + dName, 0, -22);
+          ctx.fillText('👑 ' + dName, 0, -22);
 
-          // Dancer Body
+          // Dancer Legs (2 chân nhún nhảy, đá chân thể dục aerobic)
+          ctx.lineWidth = 3;
+          ctx.lineCap = 'round';
+          
+          // Left Leg
+          ctx.strokeStyle = factionId === 'blue' ? '#2563eb' : '#dc2626';
+          ctx.beginPath();
+          ctx.moveTo(-3, 6);
+          ctx.lineTo(-4 - legKick * 0.3, 16 - Math.max(0, legKick * 0.3));
+          ctx.stroke();
+          // Left Dance Shoe
+          ctx.fillStyle = '#ffd700';
+          ctx.fillRect(-6 - legKick * 0.3, 15 - Math.max(0, legKick * 0.3), 5, 3);
+
+          // Right Leg
+          ctx.strokeStyle = factionId === 'blue' ? '#3b82f6' : '#ef4444';
+          ctx.beginPath();
+          ctx.moveTo(3, 6);
+          ctx.lineTo(4 + legKick * 0.3, 16 - Math.max(0, -legKick * 0.3));
+          ctx.stroke();
+          // Right Dance Shoe
+          ctx.fillStyle = '#ffd700';
+          ctx.fillRect(2 + legKick * 0.3, 15 - Math.max(0, -legKick * 0.3), 5, 3);
+
+          // Dancer Body (Áo biểu diễn lấp lánh hào quang)
           ctx.shadowColor = '#ffcc00';
-          ctx.shadowBlur = 16;
+          ctx.shadowBlur = 18;
           ctx.fillStyle = color;
           ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 1;
+          ctx.lineWidth = 1.2;
 
-          // Body
           ctx.beginPath();
-          ctx.moveTo(-4, 12);
-          ctx.lineTo(4, 12);
-          ctx.lineTo(3, -4);
-          ctx.lineTo(-3, -4);
+          ctx.moveTo(-4.5, 6);
+          ctx.lineTo(4.5, 6);
+          ctx.lineTo(3.5, -4);
+          ctx.lineTo(-3.5, -4);
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
 
-          // Head
+          // Golden Belt
+          ctx.fillStyle = '#ffcc00';
+          ctx.fillRect(-4, 4, 8, 2);
+
+          // Head & Hair
           ctx.beginPath();
-          ctx.arc(0, -8, 4, 0, Math.PI * 2);
+          ctx.arc(0, -9, 4.5, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
 
-          // Arms swinging
-          ctx.lineWidth = 1.5;
+          // Dancing Arms (Vung tay, vẫy chào theo điệu nhạc)
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = '#ffffff';
           ctx.beginPath();
-          ctx.moveTo(-3, -2);
-          ctx.lineTo(-7 - armSwing * 0.2, 4 + armSwing * 0.3);
-          ctx.moveTo(3, -2);
-          ctx.lineTo(7 + armSwing * 0.2, 4 - armSwing * 0.3);
+          ctx.moveTo(-3.5, -2);
+          ctx.lineTo(-8 - armSwing * 0.25, 2 - armSwing * 0.35);
+          ctx.moveTo(3.5, -2);
+          ctx.lineTo(8 + armSwing * 0.25, 2 + armSwing * 0.35);
           ctx.stroke();
 
           ctx.restore();
@@ -794,66 +937,6 @@ export default function GameChienDau({
         <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
         Bình luận <span className="text-blue-400 font-bold">"xanh"</span> hoặc <span className="text-red-400 font-bold">"đỏ"</span> để vào trận & tặng quà trợ chiến!
       </div>
-
-      {/* INTERACTIVE CONTROLS (Bottom Right) */}
-      <div className="absolute bottom-4 right-4 flex items-center gap-2 z-30 pointer-events-auto">
-        {/* Toggle Sound */}
-        <button 
-          onClick={() => setSoundMuted(!soundMuted)}
-          className="p-2 rounded-xl bg-black/70 hover:bg-black/90 border border-white/15 text-white transition-colors backdrop-blur-md shadow-lg"
-          title={soundMuted ? 'Bật âm thanh' : 'Tắt âm thanh'}
-        >
-          {soundMuted ? <VolumeX size={16} className="text-red-400" /> : <Volume2 size={16} className="text-emerald-400" />}
-        </button>
-
-        {/* Admin Panel Button */}
-        {onOpenAdmin && (
-          <button 
-            onClick={onOpenAdmin}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-purple-600/30 transition-all border border-purple-400/30"
-          >
-            <Settings size={14} />
-            <span>Quản trị Game</span>
-          </button>
-        )}
-      </div>
-
-      {/* QUICK TEST DEMO CONTROLS (Bottom Left, visible only if not popout) */}
-      {!isPopout && (
-        <div className="absolute bottom-4 left-4 flex items-center gap-1.5 z-30 bg-black/75 backdrop-blur-md p-1.5 rounded-xl border border-white/10 shadow-xl pointer-events-auto">
-          <button 
-            onClick={() => addOrUpdateFighter('blue', 'Demo_Xanh', 20)}
-            className="px-2 py-1 bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 border border-blue-500/40 rounded text-[10px] font-bold transition-all"
-          >
-            +20 Xanh
-          </button>
-          <button 
-            onClick={() => addOrUpdateFighter('red', 'Demo_Đỏ', 20)}
-            className="px-2 py-1 bg-red-600/30 hover:bg-red-600/50 text-red-300 border border-red-500/40 rounded text-[10px] font-bold transition-all"
-          >
-            +20 Đỏ
-          </button>
-          <button 
-            onClick={() => triggerAoeSkill('blue', 'VIP_Dragon')}
-            className="px-2 py-1 bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 border border-purple-500/40 rounded text-[10px] font-bold transition-all"
-          >
-            ⚡ Bão AoE
-          </button>
-          <button 
-            onClick={() => triggerBossSummon('red', 'Tiger_King')}
-            className="px-2 py-1 bg-amber-600/30 hover:bg-amber-600/50 text-amber-300 border border-amber-500/40 rounded text-[10px] font-bold transition-all"
-          >
-            🐲 Thả Boss
-          </button>
-          <button 
-            onClick={resetMatch}
-            className="p-1 text-gray-400 hover:text-white rounded hover:bg-white/10 transition-colors"
-            title="Reset Trận đấu"
-          >
-            <RotateCcw size={13} />
-          </button>
-        </div>
-      )}
 
       {/* VICTORY CEREMONY / RESULTS PODIUM */}
       {gameState.winner && (
