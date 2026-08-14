@@ -603,6 +603,12 @@ export default function DesktopAppUI() {
               </div>
             )}
           </div>
+
+          {/* Nút Studio đặt cạnh MENU */}
+          <button onClick={toggleWebcam} className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isWebcamActive ? 'bg-pink-600 text-white hover:bg-pink-500' : isDarkMode ? 'bg-pink-500/20 text-pink-400 hover:bg-pink-500/30' : 'bg-pink-100 text-pink-700 hover:bg-pink-200'}`}>
+            <Video size={16} />
+            Studio
+          </button>
         </div>
 
         <div className="flex-1"></div>
@@ -661,11 +667,6 @@ export default function DesktopAppUI() {
               <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="video/*,image/*" onChange={handleFileUpload} />
             </div>
           </div>
-
-          <button onClick={toggleWebcam} className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isWebcamActive ? 'bg-pink-600 text-white hover:bg-pink-500' : isDarkMode ? 'bg-pink-500/20 text-pink-400 hover:bg-pink-500/30' : 'bg-pink-100 text-pink-700 hover:bg-pink-200'}`}>
-            <Video size={16} />
-            Studio
-          </button>
 
           <div className="flex items-center gap-2 px-2 shrink-0">
             <input type="text" value={tiktokId} onChange={(e) => setTiktokId(e.target.value)} className={`w-32 px-3 py-1.5 rounded text-sm outline-none border ${isDarkMode ? 'bg-[#2a2a35] border-gray-700 text-white focus:border-blue-500' : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'}`} placeholder="ID TikTok..." />
