@@ -146,15 +146,61 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
 
   // Expose methods to parent
   useImperativeHandle(ref, () => ({
-    enqueueItem: (text, action) => {
-      // Dừng phát hiện tại nếu là sự kiện khẩn cấp (vd: gift) hoặc chỉ đơn giản thêm vào hàng đợi
+    enqueueItem: (text, action, isImmediate = false) => {
       const newItem = { type: 'dynamic', text, action };
-      setQueue(prev => {
-        const next = [...prev];
-        next.splice(currentIndex + 1, 0, newItem); // Chèn vào ngay sau câu hiện tại
-        return next;
-      });
-      setIsPlaying(true);
+      if (isImmediate) {
+        if (audioRef.current) {
+          audioRef.current.pause();
+        }
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
+        setQueue(prev => {
+          const next = [...prev];
+          next.splice(currentIndex, 0, newItem);
+          return next;
+        });
+        setIsPlaying(true);
+        playItem(newItem);
+      } else {
+        setQueue(prev => {
+          const next = [...prev];
+          next.splice(currentIndex + 1, 0, newItem);
+          return next;
+        });
+        setIsPlaying(true);
+      }
+    },
+    playDirectAudio: (audioSrc, onEndedCallback) => {
+      try {
+        if (audioRef.current) {
+          audioRef.current.pause();
+        }
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
+        if (onAudioPlayStateChange) onAudioPlayStateChange(true);
+        audioRef.current.src = audioSrc;
+        audioRef.current.onended = () => {
+          if (onActionTriggered) onActionTriggered({ type: 'LIPSYNC_ENDED' });
+          if (onAudioPlayStateChange) onAudioPlayStateChange(false);
+          if (onEndedCallback) onEndedCallback();
+        };
+        audioRef.current.play().catch(e => console.warn('Direct audio play error:', e));
+      } catch (e) {
+        console.error('playDirectAudio failed:', e);
+      }
+    },
+    stopCurrent: () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      setIsPlaying(false);
+      if (onAudioPlayStateChange) onAudioPlayStateChange(false);
+      if (onActionTriggered) onActionTriggered({ type: 'LIPSYNC_ENDED' });
     }
   }));
 

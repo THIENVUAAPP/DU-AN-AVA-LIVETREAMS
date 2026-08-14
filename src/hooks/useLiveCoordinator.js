@@ -143,6 +143,7 @@ export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack 
     handleActionVideoReady,
     setLipSyncVideoUrl,
     setActiveVideoItem,
-    setPreviousVideoItem
+    setPreviousVideoItem,
+    setViewerHistory
   };
 }

@@ -11,6 +11,7 @@ import TokenHistoryModal from './TokenHistoryModal';
 import { useToken, TOKEN_RATES } from './TokenContext';
 import { useLiveCoordinator } from '../../hooks/useLiveCoordinator';
 import AIAudioPlayer from './AIAudioPlayer';
+import QuickResponseModal from './QuickResponseModal';
 
 export default function DesktopAppUI() {
   const [activeSettingsModal, setActiveSettingsModal] = useState(null); 
@@ -27,9 +28,7 @@ export default function DesktopAppUI() {
   // States cho Menu Theo dõi
   const [isMonitorDropdownOpen, setIsMonitorDropdownOpen] = useState(false);
   const [activeMonitorModal, setActiveMonitorModal] = useState(null);
-  const [quickResponseText, setQuickResponseText] = useState('');
-  const [quickResponseOriginalAudio, setQuickResponseOriginalAudio] = useState(false);
-  const quickResponseVideoRef = useRef(null);
+  const [quickResponseActiveVideo, setQuickResponseActiveVideo] = useState(null);
   
   const [systemLogs, setSystemLogs] = useState([]);
   const [tiktokLogs, setTiktokLogs] = useState([]);
@@ -74,7 +73,8 @@ export default function DesktopAppUI() {
     handleVideoEnded,
     handleActionVideoReady,
     setLipSyncVideoUrl,
-    setActiveVideoItem
+    setActiveVideoItem,
+    setViewerHistory
   } = useLiveCoordinator({
     isConnected: isConnected || showSimulator, // Cho phép Simulator chạy độc lập
     activeBrainPack: 'talk', // mặc định
@@ -301,6 +301,42 @@ export default function DesktopAppUI() {
   };
 
   const renderCharacterContent = () => {
+    // 0. Ưu tiên phát Video Phản hồi Nhanh khẩn cấp (Override Live Screen)
+    if (quickResponseActiveVideo) {
+      return (
+        <div className="relative w-full h-full">
+          <video 
+            key={quickResponseActiveVideo.url}
+            src={quickResponseActiveVideo.url} 
+            className="w-full h-full object-contain bg-black"
+            autoPlay 
+            loop={quickResponseActiveVideo.loop}
+            muted={quickResponseActiveVideo.muted}
+            controls={false}
+            onEnded={() => {
+              if (!quickResponseActiveVideo.loop) {
+                setQuickResponseActiveVideo(null);
+                showToast('Đã phát xong video phản hồi nhanh!', 'info');
+              }
+            }}
+            playsInline 
+          />
+          <div className="absolute top-4 left-4 bg-red-600/90 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-2 animate-pulse z-20">
+            <Zap size={14} /> ĐANG PHÁT VIDEO PHẢN HỒI: {quickResponseActiveVideo.name || 'Video Khẩn cấp'}
+            <button 
+              onClick={() => {
+                setQuickResponseActiveVideo(null);
+                showToast('Đã dừng video phản hồi!', 'warn');
+              }}
+              className="ml-2 bg-black/40 hover:bg-black/60 px-2 py-0.5 rounded text-[10px] text-white"
+            >
+              Dừng phát ✕
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     // 1. Ưu tiên phát Video LipSync từ AI (chạy đè lên tất cả)
     if (lipSyncVideoUrl) {
       return (
@@ -810,63 +846,28 @@ export default function DesktopAppUI() {
         </div>
       )}
 
-      {activeMonitorModal === 'quick_response' && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-200">
-          <div className="bg-[#e5e5e5] rounded shadow-2xl w-[500px] flex flex-col border border-gray-400">
-            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-300 bg-[#f0f0f0]">
-              <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2"><Zap size={16} className="text-blue-800" /> Phản hồi Nhanh</h2>
-              <button onClick={() => setActiveMonitorModal(null)} className="p-1 hover:bg-gray-300 rounded transition-colors"><X size={16} className="text-gray-600" /></button>
-            </div>
-            <div className="p-4 bg-white space-y-3">
-              <div>
-                <label className="text-xs font-semibold text-[#a53b3b] mb-1 block">Nhập nội dung cần nói (bỏ trống nếu chỉ muốn phát video):</label>
-                <textarea 
-                  value={quickResponseText}
-                  onChange={(e) => setQuickResponseText(e.target.value)}
-                  className="w-full h-40 border border-gray-300 rounded p-2 text-sm focus:outline-none focus:border-blue-500 resize-none"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <button onClick={() => quickResponseVideoRef.current?.click()} className="px-3 py-1 bg-white border border-gray-400 rounded text-xs text-green-700 hover:bg-gray-50 flex-shrink-0">
-                  Chọn Video (Bắt buộc)...
-                </button>
-                <input type="file" accept="video/*" ref={quickResponseVideoRef} className="hidden" onChange={(e) => setQuickResponseVideo(e.target.files[0])} />
-                <span className="text-xs text-gray-500 truncate">{quickResponseVideo ? quickResponseVideo.name : 'Chưa chọn video.'}</span>
-              </div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  checked={quickResponseOriginalAudio}
-                  onChange={(e) => setQuickResponseOriginalAudio(e.target.checked)}
-                  className="w-3.5 h-3.5"
-                />
-                <span className="text-xs text-[#a53b3b] font-medium">Phát âm thanh gốc của video (không dùng TTS)</span>
-              </label>
-            </div>
-            <div className="p-3 bg-white border-t border-gray-200">
-              <button 
-                onClick={() => {
-                  if (audioPlayerRef.current && quickResponseText.trim()) {
-                     audioPlayerRef.current.enqueueItem(quickResponseText.trim(), 'QUICK_RESPONSE');
-                     setToast({ msg: 'Đã gửi lệnh phản hồi nhanh!', type: 'success' });
-                     setQuickResponseText('');
-                     setActiveMonitorModal(null);
-                  } else if (quickResponseVideo) {
-                     // Fake logic for now if only video
-                     setToast({ msg: 'Đã tải video phản hồi khẩn cấp!', type: 'success' });
-                     setActiveMonitorModal(null);
-                  } else {
-                     setToast({ msg: 'Vui lòng nhập nội dung TTS hoặc chọn video.', type: 'warn' });
-                  }
-                }}
-                className={`w-full py-2 hover:bg-red-600 text-white rounded font-bold text-sm shadow-md transition-colors flex items-center justify-center gap-2 ${isDarkMode ? 'bg-red-600' : 'bg-[#ef4444]'}`}
-              >
-                <Play size={16} /> PHÁT NGAY
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal Phản hồi Nhanh Trực Tiếp Trên Live */}
+      <QuickResponseModal 
+        isOpen={activeMonitorModal === 'quick_response'}
+        onClose={() => setActiveMonitorModal(null)}
+        isDarkMode={isDarkMode}
+        isConnected={isConnected || showSimulator}
+        audioPlayerRef={audioPlayerRef}
+        handleLiveEvent={handleLiveEvent}
+        onPlayLiveVideo={(videoData) => {
+          setQuickResponseActiveVideo(videoData);
+        }}
+        onStopLiveVideo={() => {
+          setQuickResponseActiveVideo(null);
+        }}
+        activeQuickVideo={quickResponseActiveVideo}
+        showToast={showToast}
+        addViewerHistory={(item) => {
+          if (setViewerHistory) {
+            setViewerHistory(prev => [...prev, item].slice(-10));
+          }
+        }}
+      />
 
       {activeMonitorModal === 'queue' && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-200">
