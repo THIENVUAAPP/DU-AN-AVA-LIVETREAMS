@@ -168,13 +168,13 @@ export default function GameChienDau({
     else if (type === 'level_up') battleAudio.playLevelUp(vol);
   }, [config.soundEnabled, config.sfxVolume, soundMuted]);
 
-  // Recalculate formation slots with 2-Tier Architecture:
-  // 1) Upper VIP Champions Stage (Tầng Thượng Đỉnh): Tier 3, 4, 5 stand prominently above the crowd, scaled 3.0x - 3.4x in epic face-to-face duel!
-  // 2) Lower Army Battlefield (Tầng Chiến Trường): Tier 1, 2 troops widely spaced across the battlefield, scaled 1.65x so every warrior is clear and distinct.
+  // Recalculate formation slots with 2-Tier Center Arena Architecture:
+  // 1) Upper VIP Champions Stage (Tầng Thượng Đỉnh): Tier 3, 4, 5 stand prominently in the center, scaled 3.0x - 3.4x facing each other!
+  // 2) Lower Army Battlefield (Tầng Chiến Trường): Tier 1, 2 troops gather in the center arena, scaled 1.65x - 1.85x, perfectly clear and visible.
   const updateFormation = useCallback((canvasWidth, canvasHeight) => {
     const centerX = canvasWidth / 2;
     const vipStageY = canvasHeight * 0.38;
-    const armyStageY = canvasHeight * 0.72;
+    const armyStageY = canvasHeight * 0.68;
 
     ['blue', 'red'].forEach(factionId => {
       const dir = factionId === 'blue' ? -1 : 1;
@@ -195,10 +195,10 @@ export default function GameChienDau({
         }
       });
 
-      // Position VIPs in Upper Champions Arena (To gấp 3 lần, đứng trên cao đối kháng)
-      const vipStepX = 110;
-      const vipStepY = 55;
-      const vipFrontGap = 90;
+      // Position VIPs in Upper Center Champions Arena (Tập trung ngay giữa màn hình)
+      const vipStepX = 75;
+      const vipStepY = 50;
+      const vipFrontGap = 65;
 
       vips.forEach((f, vIdx) => {
         const vRow = vIdx % 2;
@@ -208,12 +208,12 @@ export default function GameChienDau({
         f.targetY = vipStageY + (vRow - 0.5) * vipStepY;
       });
 
-      // Position Regular Army in Lower Battlefield (Rộng rãi, thoáng đãng, không chồng chéo)
+      // Position Regular Army in Lower Center Battlefield (Tập trung ở giữa màn hình)
       const regCount = regulars.length;
-      const dynamicRows = Math.min(5, Math.max(3, Math.ceil(Math.sqrt(regCount * 0.6))));
-      const dynamicRowGap = Math.max(38, 48 - dynamicRows * 2);
-      const dynamicStepX = Math.max(50, 68 - Math.min(18, regCount / 20));
-      const frontGap = Math.max(65, 80 - Math.min(15, regCount / 50));
+      const dynamicRows = Math.min(4, Math.max(2, Math.ceil(Math.sqrt(regCount * 0.5))));
+      const dynamicRowGap = Math.max(34, 44 - dynamicRows * 2);
+      const dynamicStepX = Math.max(42, 52 - Math.min(10, regCount / 20));
+      const frontGap = 45;
 
       regulars.forEach((f, rIdx) => {
         const row = rIdx % dynamicRows;
@@ -226,11 +226,11 @@ export default function GameChienDau({
     });
   }, []);
 
-  // Recalculate dance stage slots
+  // Recalculate dance stage slots (Tập trung ở khu vực sân khấu trung tâm)
   const updateDanceSlots = useCallback((canvasWidth, canvasHeight) => {
-    const DANCE_SLOT_GAP_X = 85;
-    const DANCE_STAGE_Y_RATIO = 0.46;
-    const DANCE_STAGE_CENTER_GAP = 70;
+    const DANCE_SLOT_GAP_X = 60;
+    const DANCE_STAGE_Y_RATIO = 0.44;
+    const DANCE_STAGE_CENTER_GAP = 50;
     const centerX = canvasWidth / 2;
     const y = canvasHeight * DANCE_STAGE_Y_RATIO;
 
@@ -240,7 +240,7 @@ export default function GameChienDau({
       list.forEach((d, index) => {
         d.targetX = centerX + dir * (DANCE_STAGE_CENTER_GAP + index * DANCE_SLOT_GAP_X);
         d.targetY = y;
-        d.targetScale = 1.4;
+        d.targetScale = 2.0;
       });
     });
   }, []);
@@ -318,8 +318,9 @@ export default function GameChienDau({
         fighter.currentHp = Math.min(fighter.maxHp, (fighter.currentHp || fighter.maxHp) + Math.floor(pointsToAdd * 0.4));
       }
     } else {
-      const startX = factionId === 'blue' ? 0 : (engineRef.current.w || canvas.width);
-      const startY = (engineRef.current.h || canvas.height) * 0.62;
+      const centerX = (engineRef.current.w || canvas.width) / 2;
+      const startX = factionId === 'blue' ? (centerX - 60) : (centerX + 60);
+      const startY = (engineRef.current.h || canvas.height) * 0.68;
       
       // Auto balance male & female warriors across Blue & Red teams
       let gender = preferredGender;
@@ -404,9 +405,10 @@ export default function GameChienDau({
       return;
     }
 
+    const centerX = (engineRef.current.w || canvas.width) / 2;
     const formationFighter = engineRef.current.fighters[factionId].find(f => f.userId === userId);
-    const startX = formationFighter ? formationFighter.x : (factionId === 'blue' ? 0 : canvas.width);
-    const startY = formationFighter ? formationFighter.y : canvas.height * 0.62;
+    const startX = formationFighter ? formationFighter.x : (factionId === 'blue' ? (centerX - 50) : (centerX + 50));
+    const startY = formationFighter ? formationFighter.y : (engineRef.current.h || canvas.height) * 0.44;
 
     list.push({
       userId,
@@ -420,10 +422,10 @@ export default function GameChienDau({
       scale: 1,
       targetX: startX,
       targetY: startY,
-      targetScale: 2.8
+      targetScale: 2.0
     });
 
-    updateDanceSlots(canvas.width, canvas.height);
+    updateDanceSlots(engineRef.current.w || canvas.width, engineRef.current.h || canvas.height);
     playSfx('dance');
   }, [updateDanceSlots, playSfx]);
 
@@ -848,23 +850,23 @@ export default function GameChienDau({
       ctx.fillStyle = redBaseGrad;
       ctx.fillRect(centerX, h * 0.35, centerX, h * 0.65);
 
-      // Upper VIP Champions Duel Dais (Bệ đài Thư Hùng Đỉnh Cao cho Tướng VIP)
+      // Upper VIP Champions Duel Dais (Bệ đài Thư Hùng Đỉnh Cao cho Tướng VIP ngay trung tâm)
       ctx.save();
       // Blue VIP Dais
       ctx.beginPath();
-      ctx.ellipse(centerX - 150, h * 0.40, 110, 24, 0, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(56, 189, 248, 0.12)';
+      ctx.ellipse(centerX - 95, h * 0.38, 85, 20, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.15)';
       ctx.fill();
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
       // Red VIP Dais
       ctx.beginPath();
-      ctx.ellipse(centerX + 150, h * 0.40, 110, 24, 0, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(244, 63, 94, 0.12)';
+      ctx.ellipse(centerX + 95, h * 0.38, 85, 20, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(244, 63, 94, 0.15)';
       ctx.fill();
-      ctx.strokeStyle = 'rgba(244, 63, 94, 0.35)';
+      ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)';
       ctx.lineWidth = 1.5;
       ctx.stroke();
       ctx.restore();
