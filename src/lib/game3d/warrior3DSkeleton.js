@@ -262,41 +262,46 @@ export function computeSkeletalJoints({
 function drawArmoredSegment(ctx, length, widthTop, widthBottom, colorPrimary, colorHighlight, colorDark, goldTrim = true) {
   ctx.save();
 
-  // Armor plate gradient
-  const grad = ctx.createLinearGradient(-widthTop / 2, 0, widthTop / 2, 0);
+  // Anatomical curved plate polygon
+  const halfTop = widthTop / 2;
+  const halfBottom = widthBottom / 2;
+
+  // Base metallic gradient
+  const grad = ctx.createLinearGradient(-halfTop, 0, halfTop, 0);
   grad.addColorStop(0, colorHighlight);
-  grad.addColorStop(0.35, colorPrimary);
-  grad.addColorStop(1, colorDark);
+  grad.addColorStop(0.3, colorPrimary);
+  grad.addColorStop(0.85, colorDark);
+  grad.addColorStop(1.0, colorHighlight);
 
   ctx.beginPath();
-  ctx.moveTo(-widthTop / 2, 0);
-  ctx.lineTo(widthTop / 2, 0);
-  ctx.lineTo(widthBottom / 2, length);
-  ctx.lineTo(-widthBottom / 2, length);
+  ctx.moveTo(-halfTop, 0);
+  ctx.lineTo(halfTop, 0);
+  ctx.quadraticCurveTo(halfBottom * 1.1, length * 0.5, halfBottom, length);
+  ctx.lineTo(-halfBottom, length);
+  ctx.quadraticCurveTo(-halfBottom * 1.1, length * 0.5, -halfTop, 0);
   ctx.closePath();
 
   ctx.fillStyle = grad;
   ctx.fill();
 
-  ctx.strokeStyle = goldTrim ? '#facc15' : 'rgba(15, 23, 42, 0.8)';
-  ctx.lineWidth = goldTrim ? 1.0 : 0.8;
+  ctx.strokeStyle = goldTrim ? '#facc15' : 'rgba(15, 23, 42, 0.7)';
+  ctx.lineWidth = goldTrim ? 0.9 : 0.6;
   ctx.stroke();
 
-  // Central highlight ridge
+  // Central metallic specular sheen
   ctx.beginPath();
   ctx.moveTo(0, 1);
   ctx.lineTo(0, length - 1);
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
   ctx.lineWidth = 0.8;
   ctx.stroke();
 
-  // Joint pivot sphere
+  // Soft muscle/bevel edge shadow
   ctx.beginPath();
-  ctx.arc(0, 0, widthTop * 0.44, 0, Math.PI * 2);
-  ctx.fillStyle = colorHighlight;
-  ctx.fill();
-  ctx.strokeStyle = goldTrim ? '#ca8a04' : '#334155';
-  ctx.lineWidth = 0.8;
+  ctx.moveTo(-halfTop * 0.7, 2);
+  ctx.lineTo(-halfBottom * 0.7, length - 2);
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.25)';
+  ctx.lineWidth = 0.6;
   ctx.stroke();
 
   ctx.restore();
@@ -351,11 +356,21 @@ export function render3DWarriorSkeleton(ctx, skeletonData, options = {}) {
   const skinColor = isFemale ? '#ffe4d6' : '#fcd3b2';
   const skinShadow = isFemale ? '#fca5a5' : '#e28f68';
 
-  const teamColor = factionId === 'blue' ? '#38bdf8' : '#fb7185';
-  const primaryColor = isGoldTier ? '#eab308' : (factionId === 'blue' ? '#2563eb' : '#dc2626');
-  const highlightColor = isGoldTier ? '#fef08a' : (factionId === 'blue' ? '#93c5fd' : '#fca5a5');
-  const darkColor = isGoldTier ? '#713f12' : '#0f172a';
-  const glowColor = isGoldTier ? '#facc15' : teamColor;
+  // Dynamic Palettes with distinct faction identity even when VIP/Gold Tier
+  const isBlue = factionId === 'blue';
+  const teamColor = isBlue ? '#38bdf8' : '#fb7185';
+  
+  // VIP gets gold filigree + their distinct team crystal colors (Sapphire Blue vs Ruby Red)
+  const primaryColor = isGoldTier 
+    ? (isBlue ? '#1d4ed8' : '#b91c1c') 
+    : (isBlue ? '#2563eb' : '#dc2626');
+  const highlightColor = isGoldTier 
+    ? '#fef08a' 
+    : (isBlue ? '#93c5fd' : '#fca5a5');
+  const darkColor = isGoldTier 
+    ? (isBlue ? '#0f172a' : '#450a0a') 
+    : '#0f172a';
+  const glowColor = isBlue ? '#38bdf8' : '#f43f5e';
 
   ctx.save();
 

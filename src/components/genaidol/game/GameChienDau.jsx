@@ -171,65 +171,63 @@ export default function GameChienDau({
   // Recalculate formation slots with 2-Tier Center Arena Architecture (Zero Overlap):
   // 1) Upper VIP Champions Stage: Tier 3, 4, 5 stand prominently with x3.0-3.4 scale and wide 220px center separation.
   // 2) Lower Army Battlefield: Tier 1, 2 troops gather with 180px center clash zone and dedicated reserve lane for fallen fighters.
+  // Recalculate formation slots with 2-Tier Architecture (Zero Overlap & Mass Army Grid):
+  // 1) Upper VIP Champions Stage: Tier 3, 4, 5 stand elevated with x2.4-3.2 scale and wide clearance.
+  // 2) Lower Regular Army Battlefield: Tier 1, 2 troops scaled to 1/3 (~0.58) in clean 4-row Spartan grid.
+  // 3) Dead Fighters: Disappear immediately upon death (no shadow or ghost).
   const updateFormation = useCallback((canvasWidth, canvasHeight) => {
     const centerX = canvasWidth / 2;
-    const vipStageY = canvasHeight * 0.36;
-    const armyStageY = canvasHeight * 0.68;
+    const vipStageY = canvasHeight * 0.28;
+    const armyStageY = canvasHeight * 0.67;
 
     ['blue', 'red'].forEach(factionId => {
       const dir = factionId === 'blue' ? -1 : 1;
       const list = engineRef.current.fighters[factionId];
       if (!list || list.length === 0) return;
 
-      // Classify VIPs vs Regular Troops
+      // Classify VIPs vs Regular Troops (Skip dead fighters immediately)
       const vips = [];
       const activeRegulars = [];
-      const fallenRegulars = [];
 
       list.forEach((f, idx) => {
         f.rank = idx;
         const tier = f.score >= 5000 ? 5 : f.score >= 2000 ? 4 : f.score >= 500 ? 3 : f.score >= 100 ? 2 : 1;
+        if (f.isKnockedOut) {
+          // Dead character vanishes immediately
+          return;
+        }
         if (tier >= 3 || idx === 0) {
           vips.push(f);
-        } else if (f.isKnockedOut) {
-          fallenRegulars.push(f);
         } else {
           activeRegulars.push(f);
         }
       });
 
-      // Position VIPs in Upper Center Champions Arena (Rộng rãi, không đè nhau)
-      const vipStepX = 95;
-      const vipFrontGap = 110;
+      // 1. Position VIP Champions in Upper Elevated Dais (Thông thoáng tuyệt đối)
+      const vipStepX = 115;
+      const vipFrontGap = 135;
 
       vips.forEach((f, vIdx) => {
         const vRow = vIdx % 2;
         const vCol = Math.floor(vIdx / 2);
         f.isVipStage = true;
         f.targetX = centerX + dir * (vipFrontGap + vCol * vipStepX);
-        f.targetY = vipStageY + (vRow === 0 ? -18 : 22);
+        f.targetY = vipStageY + (vRow === 0 ? -16 : 22);
       });
 
-      // Position Active Regular Army in Lower Center Battlefield
-      const regStepX = 65;
-      const frontGap = 90;
+      // 2. Position Regular Army in Clean Multi-Row Phalanx (Hàng trăm, hàng ngàn quân không đè nhau)
+      const ROWS_COUNT = 4;
+      const colStepX = 38;
+      const rowStepY = 24;
+      const frontGap = 55;
 
       activeRegulars.forEach((f, rIdx) => {
-        const row = rIdx % 2;
-        const col = Math.floor(rIdx / 2);
-        const rowStagger = (row % 2 === 1) ? 22 : 0;
+        const row = rIdx % ROWS_COUNT;
+        const col = Math.floor(rIdx / ROWS_COUNT);
+        const rowStagger = (row % 2 === 1) ? 18 : 0;
         f.isVipStage = false;
-        f.targetX = centerX + dir * (frontGap + col * regStepX + rowStagger);
-        f.targetY = armyStageY + (row === 0 ? -24 : 24);
-      });
-
-      // Position Fallen Regulars neatly in the back reserve rank (Không đè lên quân đang chiến đấu)
-      fallenRegulars.forEach((f, fIdx) => {
-        const col = fIdx % 4;
-        const row = Math.floor(fIdx / 4);
-        f.isVipStage = false;
-        f.targetX = centerX + dir * (170 + col * 40);
-        f.targetY = armyStageY + 70 + row * 26;
+        f.targetX = centerX + dir * (frontGap + col * colStepX + rowStagger);
+        f.targetY = armyStageY + (row - 1.5) * rowStepY;
       });
     });
   }, []);
@@ -869,6 +867,8 @@ export default function GameChienDau({
       });
 
       allFighters.forEach(f => {
+        if (f.isKnockedOut) return; // Disappear immediately upon death as requested by user
+
         const factionId = f.factionId;
         const color = factionId === 'blue' ? config.blueColor : config.redColor;
         const dir = factionId === 'blue' ? -1 : 1;
@@ -879,7 +879,8 @@ export default function GameChienDau({
         
         let targetX = f.targetX;
         if (isClashing && isFrontDuelist) {
-          targetX = centerX + dir * 28;
+          // VIP stays elevated on its dais with safe clearance; regular troops clash in lower center
+          targetX = f.isVipStage ? (centerX + dir * 120) : (centerX + dir * 28);
         }
 
         f.x += (targetX - f.x) * lerpFactor;
@@ -891,21 +892,15 @@ export default function GameChienDau({
         const isPulsing = performance.now() < f.pulseUntil;
         const isTopRank = f.rank === 0;
 
-        // VIP Scale: 3.0x - 3.4x (To gấp 3 lần nhân vật thường theo yêu cầu!)
-        // Regular Scale: 1.65x - 1.85x (To rõ như người thật, không phải dấu chấm!)
-        let baseScale = 1.65;
-        if (tier >= 5) baseScale = 3.4;
-        else if (tier === 4) baseScale = 3.1;
-        else if (tier === 3 || isTopRank) baseScale = 2.6;
-        else if (tier === 2) baseScale = 1.85;
+        // Scale: Regular Army is 1/3 size (~0.58 - 0.72) to accommodate hundreds/thousands without crowding.
+        // VIP Champions (Tướng khi được tặng quà) are scaled x3.0 (~2.4 - 3.2) on the elevated dais.
+        let baseScale = 0.58;
+        if (tier >= 5) baseScale = 3.2;
+        else if (tier === 4) baseScale = 2.8;
+        else if (tier === 3 || isTopRank) baseScale = 2.4;
+        else if (tier === 2) baseScale = 0.72;
 
         const scale = baseScale * (isPulsing ? 1.15 : 1.0);
-
-        // Physics for Knockout
-        if (f.isKnockedOut) {
-          f.knockbackVx = (f.knockbackVx || 0) * 0.94;
-          f.x += (f.knockbackVx || 0) * dt;
-        }
 
         // Ground shadow (sleek & natural)
         ctx.save();
@@ -1007,19 +1002,23 @@ export default function GameChienDau({
           ctx.restore();
         }
 
-        // Wings of Light for Tier 3, 4, 5
+        // Wings of Light for Tier 3, 4, 5 (Strictly differentiated by Blue vs Red faction)
         if (tier >= 3 && !f.isKnockedOut) {
           const wingFlap = Math.sin(time * 0.005) * 6;
+          const isBlueTeam = factionId === 'blue';
+          const wingColor = tier === 5 ? '#facc15' : (isBlueTeam ? '#38bdf8' : '#f43f5e');
+          const wingGlow = isBlueTeam ? '#0284c7' : '#e11d48';
+
           ctx.save();
-          ctx.shadowColor = tier === 5 ? '#fbbf24' : (tier === 4 ? '#38bdf8' : '#fde047');
+          ctx.shadowColor = tier === 5 ? '#fbbf24' : wingGlow;
           ctx.shadowBlur = 18;
 
           // Left Wing
           const leftWingGrad = ctx.createLinearGradient(-4, 0, -28, -14);
-          leftWingGrad.addColorStop(0, tier === 5 ? '#facc15' : '#38bdf8');
-          leftWingGrad.addColorStop(1, 'rgba(255, 255, 255, 0.2)');
+          leftWingGrad.addColorStop(0, wingColor);
+          leftWingGrad.addColorStop(1, 'rgba(255, 255, 255, 0.25)');
           ctx.fillStyle = leftWingGrad;
-          ctx.strokeStyle = '#ffffff';
+          ctx.strokeStyle = tier === 5 ? '#fef08a' : '#ffffff';
           ctx.lineWidth = 1.5;
 
           ctx.beginPath();
@@ -1032,8 +1031,8 @@ export default function GameChienDau({
 
           // Right Wing
           const rightWingGrad = ctx.createLinearGradient(4, 0, 28, -14);
-          rightWingGrad.addColorStop(0, tier === 5 ? '#facc15' : '#38bdf8');
-          rightWingGrad.addColorStop(1, 'rgba(255, 255, 255, 0.2)');
+          rightWingGrad.addColorStop(0, wingColor);
+          rightWingGrad.addColorStop(1, 'rgba(255, 255, 255, 0.25)');
           ctx.fillStyle = rightWingGrad;
 
           ctx.beginPath();
