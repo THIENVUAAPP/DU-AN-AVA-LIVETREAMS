@@ -23,12 +23,23 @@ class ErrorBoundary extends Component {
           <div style={{ padding: '24px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '16px', maxWidth: '500px' }}>
             <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#ef4444', marginBottom: '8px' }}>Khôi phục giao diện AvaLive</h2>
             <p style={{ fontSize: '13px', color: '#9ca3af', marginBottom: '16px' }}>Đã phát hiện xung đột dữ liệu phiên cũ. Bấm nút bên dưới để khôi phục ngay.</p>
+            {this.state.error && (
+              <pre style={{ fontSize: '11px', color: '#f87171', background: 'rgba(0,0,0,0.5)', padding: '8px', borderRadius: '8px', overflowX: 'auto', marginBottom: '12px', textAlign: 'left' }}>
+                {this.state.error.toString()}
+              </pre>
+            )}
             <button 
               onClick={() => {
                 try {
                   localStorage.removeItem('aidol_custom_chars');
                   localStorage.removeItem('aidol_hidden_builtins');
                   localStorage.removeItem('aidol_active_job');
+                  localStorage.removeItem('aidol_general_settings');
+                  localStorage.removeItem('aidol_quick_recent_actions');
+                  localStorage.removeItem('aidol_event_configs');
+                  localStorage.removeItem('aidol_custom_categories');
+                  localStorage.removeItem('aidol_custom_brains');
+                  localStorage.removeItem('avalive_token_data');
                 } catch(e) {}
                 window.location.reload();
               }}

@@ -40,8 +40,15 @@ export default function QuickResponseModal({
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const recordingTimerRef = useRef(null);
-  const audioPreviewRef = useRef(new Audio());
+  const audioPreviewRef = useRef(null);
   const audioFileInputRef = useRef(null);
+
+  const getAudioPreview = () => {
+    if (!audioPreviewRef.current && typeof window !== 'undefined' && typeof Audio !== 'undefined') {
+      audioPreviewRef.current = new Audio();
+    }
+    return audioPreviewRef.current;
+  };
 
   // 3. STATE VIDEO
   const [videoFile, setVideoFile] = useState(null);
@@ -249,12 +256,14 @@ export default function QuickResponseModal({
 
   const playAudioPreview = (src) => {
     if (!src) return;
+    const aud = getAudioPreview();
+    if (!aud) return;
     if (isPlayingAudioPreview) {
-      audioPreviewRef.current.pause();
+      aud.pause();
       setIsPlayingAudioPreview(false);
     } else {
-      audioPreviewRef.current.src = src;
-      audioPreviewRef.current.play();
+      aud.src = src;
+      aud.play().catch(e => console.warn('Audio preview error:', e));
       setAudioPreviewSrc(src);
       setIsPlayingAudioPreview(true);
     }

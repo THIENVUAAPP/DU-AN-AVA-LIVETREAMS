@@ -574,38 +574,40 @@ export default function DesktopAppUI() {
             <span className="text-sm font-medium text-gray-400">Nhân vật:</span>
             <div className="flex gap-2">
               {Object.keys(CHARACTERS).map((charId) => (
-                <div 
-                  key={charId}
-                  onClick={() => setSelectedCharacter(charId)}
-                  className={`w-10 h-10 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 relative group ${selectedCharacter === charId ? 'border-2 border-blue-500 shadow-lg shadow-blue-500/30' : 'border border-gray-600 opacity-60 hover:opacity-100'}`}
-                  title={CHARACTERS[charId].name}
-                >
-                  {CHARACTERS[charId].type === 'video' ? (
-                    <video src={CHARACTERS[charId].url} className="w-full h-full object-cover" muted />
-                  ) : (
-                    <img src={CHARACTERS[charId].url} className="w-full h-full object-cover" alt={CHARACTERS[charId].name} />
-                  )}
-                  {/* Nút Xoá – hiển thị khi hover cho TẤT CẢ nhân vật */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (charId.startsWith('custom_')) {
-                        removeCustomCharacter(e, charId);
-                      } else {
-                        // Xoá nhân vật mẫu bằng cách lọc ra khỏi danh sách
-                        const allKeys = Object.keys(CHARACTERS);
-                        const remaining = allKeys.filter(k => k !== charId);
-                        if (remaining.length > 0) setSelectedCharacter(remaining[0]);
-                        // Đánh dấu ẩn built-in char
-                        setHiddenBuiltins(prev => [...(prev || []), charId]);
-                      }
-                    }}
-                    className="absolute top-0 right-0 p-0.5 bg-red-600 hover:bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-all duration-150 rounded-bl"
-                    title={`Xoá ${CHARACTERS[charId].name}`}
+                CHARACTERS[charId] ? (
+                  <div 
+                    key={charId}
+                    onClick={() => setSelectedCharacter(charId)}
+                    className={`w-10 h-10 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 relative group ${selectedCharacter === charId ? 'border-2 border-blue-500 shadow-lg shadow-blue-500/30' : 'border border-gray-600 opacity-60 hover:opacity-100'}`}
+                    title={CHARACTERS[charId]?.name || ''}
                   >
-                    <X size={10} />
-                  </button>
-                </div>
+                    {CHARACTERS[charId]?.type === 'video' ? (
+                      <video src={CHARACTERS[charId]?.url} className="w-full h-full object-cover" muted />
+                    ) : (
+                      <img src={CHARACTERS[charId]?.url} className="w-full h-full object-cover" alt={CHARACTERS[charId]?.name || ''} />
+                    )}
+                    {/* Nút Xoá – hiển thị khi hover cho TẤT CẢ nhân vật */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (charId.startsWith('custom_')) {
+                          removeCustomCharacter(e, charId);
+                        } else {
+                          // Xoá nhân vật mẫu bằng cách lọc ra khỏi danh sách
+                          const allKeys = Object.keys(CHARACTERS);
+                          const remaining = allKeys.filter(k => k !== charId);
+                          if (remaining.length > 0) setSelectedCharacter(remaining[0]);
+                          // Đánh dấu ẩn built-in char
+                          setHiddenBuiltins(prev => [...(prev || []), charId]);
+                        }
+                      }}
+                      className="absolute top-0 right-0 p-0.5 bg-red-600 hover:bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-all duration-150 rounded-bl"
+                      title={`Xoá ${CHARACTERS[charId]?.name || ''}`}
+                    >
+                      <X size={10} />
+                    </button>
+                  </div>
+                ) : null
               ))}
               <button className="w-8 h-8 rounded border border-dashed border-gray-500 flex items-center justify-center text-gray-400 hover:text-white cursor-pointer transition-colors hover:bg-gray-700/50 shrink-0" onClick={() => fileInputRef.current?.click()}>
                 <Plus size={16} />
