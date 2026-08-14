@@ -13,7 +13,8 @@ import { useToken, TOKEN_RATES } from './TokenContext';
 import { useLiveCoordinator } from '../../hooks/useLiveCoordinator';
 import AIAudioPlayer from './AIAudioPlayer';
 import QuickResponseModal from './QuickResponseModal';
-
+import TemplateLibraryModal from './TemplateLibraryModal';
+import { saveCharacterToIDB, loadAllCharactersFromIDB, deleteCharacterFromIDB } from '../../utils/idbHelper';
 export default function DesktopAppUI() {
   const [activeSettingsModal, setActiveSettingsModal] = useState(null); 
   const [isSettingsDropdownOpen, setIsSettingsDropdownOpen] = useState(false);
@@ -38,14 +39,7 @@ export default function DesktopAppUI() {
 
   const [toast, setToast] = useState(null);
   
-  const [customCharacters, setCustomCharacters] = useState(() => {
-    try {
-      const saved = localStorage.getItem('aidol_custom_chars');
-      return saved ? JSON.parse(saved) : [];
-    } catch (e) {
-      return [];
-    }
-  });
+  const [customCharacters, setCustomCharacters] = useState([]);
   const [hiddenBuiltins, setHiddenBuiltins] = useState(() => {
     try {
       const saved = localStorage.getItem('aidol_hidden_builtins');
@@ -55,13 +49,23 @@ export default function DesktopAppUI() {
     }
   });
   const fileInputRef = useRef(null);
+  const [isTemplateLibraryOpen, setIsTemplateLibraryOpen] = useState(false);
 
-  // Lưu trạng thái mỗi khi thay đổi
+  // Load custom characters from IndexedDB
   useEffect(() => {
-    try {
-      localStorage.setItem('aidol_custom_chars', JSON.stringify(customCharacters));
-    } catch (e) {}
-  }, [customCharacters]);
+    loadAllCharactersFromIDB().then(chars => {
+      const loadedChars = chars.map(c => {
+        const url = URL.createObjectURL(c.fileData);
+        return {
+          id: c.id,
+          name: c.name,
+          type: c.type,
+          url
+        };
+      });
+      setCustomCharacters(loadedChars);
+    });
+  }, []);
 
   useEffect(() => {
     try {
@@ -332,12 +336,11 @@ export default function DesktopAppUI() {
     document.body.removeChild(link);
   };
 
-  const handleFileUpload = (e) => {
+  const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
       const charName = prompt("Nhập tên cho nhân vật (để dễ quản lý):");
       if (!charName) {
-        // Hủy bỏ nếu người dùng không nhập tên
         if (fileInputRef.current) fileInputRef.current.value = '';
         return;
       }
@@ -350,21 +353,31 @@ export default function DesktopAppUI() {
         url,
         type: isVideo ? 'video' : 'image'
       };
+      
+      // Update UI first
       setCustomCharacters(prev => [...prev, newChar]);
       setSelectedCharacter(newChar.id);
+
+      // Save to IDB
+      await saveCharacterToIDB({
+        id: newChar.id,
+        name: newChar.name,
+        type: newChar.type,
+        fileData: file
+      });
     }
-    // clear input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
-  const removeCustomCharacter = (e, id) => {
+  const removeCustomCharacter = async (e, id) => {
     e.stopPropagation();
     setCustomCharacters(prev => prev.filter(c => c.id !== id));
     if (selectedCharacter === id) {
       setSelectedCharacter('aidol_lan_huong');
     }
+    await deleteCharacterFromIDB(id);
   };
 
   const renderCharacterContent = () => {
@@ -564,7 +577,7 @@ export default function DesktopAppUI() {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
             >
               <Settings size={16} />
-              Cài đặt ▼
+              MENU ▼
             </button>
             
             {isSettingsDropdownOpen && (
@@ -639,6 +652,12 @@ export default function DesktopAppUI() {
               <button className="w-8 h-8 rounded border border-dashed border-gray-500 flex items-center justify-center text-gray-400 hover:text-white cursor-pointer transition-colors hover:bg-gray-700/50 shrink-0" onClick={() => fileInputRef.current?.click()}>
                 <Plus size={16} />
               </button>
+              <button 
+                className={`px-3 py-1.5 rounded text-sm font-medium transition-colors border ${isDarkMode ? 'border-purple-500/50 bg-purple-900/30 text-purple-300 hover:bg-purple-800/50' : 'border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100'}`}
+                onClick={() => setIsTemplateLibraryOpen(true)}
+              >
+                Thư viện Mẫu
+              </button>
               <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="video/*,image/*" onChange={handleFileUpload} />
             </div>
           </div>
@@ -655,12 +674,6 @@ export default function DesktopAppUI() {
               {isConnecting ? 'Đang xử lý...' : (isConnected ? 'Dừng AI' : 'Kết nối')}
             </button>
           </div>
-
-          <button onClick={() => setIsCommMode(!isCommMode)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isCommMode ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-red-500/20 text-red-500 hover:bg-red-500/30'}`} title="Bật/Tắt Giao tiếp bằng Giọng nói 2 chiều với AI">
-            {isCommMode ? <Mic size={16} /> : <MicOff size={16} />}
-            Giao tiếp
-          </button>
-
         </div>
 
         <div className="flex-1"></div>
@@ -690,6 +703,11 @@ export default function DesktopAppUI() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${showSimulator ? 'bg-purple-600 text-white' : (isDarkMode ? 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30' : 'bg-purple-100 text-purple-700 hover:bg-purple-200')}`}>
             <Brain size={16} />
             Công cụ Test
+          </button>
+          
+          <button onClick={() => setIsCommMode(!isCommMode)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isCommMode ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-red-500/20 text-red-500 hover:bg-red-500/30'}`} title="Bật/Tắt Giao tiếp bằng Giọng nói 2 chiều với AI">
+            {isCommMode ? <Mic size={16} /> : <MicOff size={16} />}
+            Giao tiếp
           </button>
         </div>
         
@@ -1325,6 +1343,16 @@ export default function DesktopAppUI() {
           </div>
         </div>
       )}
+
+      {/* Template Library Modal */}
+      <TemplateLibraryModal 
+        isOpen={isTemplateLibraryOpen}
+        onClose={() => setIsTemplateLibraryOpen(false)}
+        onAddTemplate={(newChar) => {
+          setCustomCharacters(prev => [...prev, newChar]);
+          setSelectedCharacter(newChar.id);
+        }}
+      />
 
       {/* Toast Notification */}
       {toast && (
