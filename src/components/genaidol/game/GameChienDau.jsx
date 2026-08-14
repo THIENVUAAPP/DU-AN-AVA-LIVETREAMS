@@ -3,6 +3,7 @@ import {
   Trophy, Volume2, VolumeX, Shield, Swords, Sparkles, 
   Crown, Play, Pause, RotateCcw, Settings, Flame, Zap, CheckCircle2 
 } from 'lucide-react';
+import { battleAudio } from './battleAudioEngine';
 
 // 20 Dance styles
 export const DANCE_STYLES = [
@@ -69,7 +70,6 @@ export default function GameChienDau({
   });
 
   const [soundMuted, setSoundMuted] = useState(false);
-  const [demoComment, setDemoComment] = useState('');
   const [flashSide, setFlashSide] = useState(null);
 
   // Refs for Game Engine Loop
@@ -80,89 +80,45 @@ export default function GameChienDau({
     particles: [],                   // { x, y, vx, vy, size, color, isFlash, lifespanMs, spawnedAt }
     rAfId: null,
     lastTime: performance.now(),
-    audio: {
-      bgm: null,
-      sfxJoin: null,
-      sfxAoe: null,
-      sfxBoss: null,
-      sfxVictory: null
-    }
+    lastClashSoundTime: 0
   });
-
-  // Initialize Audio
-  useEffect(() => {
-    const bgm = new Audio('/game-battle/audio/background-music.wav');
-    bgm.loop = true;
-    bgm.volume = config.soundEnabled && !soundMuted ? config.musicVolume : 0;
-
-    const sfxJoin = new Audio('/game-battle/audio/sfx-join.wav');
-    const sfxAoe = new Audio('/game-battle/audio/sfx-aoe.wav');
-    const sfxBoss = new Audio('/game-battle/audio/sfx-boss.wav');
-    const sfxVictory = new Audio('/game-battle/audio/victory-fanfare.wav');
-
-    engineRef.current.audio = { bgm, sfxJoin, sfxAoe, sfxBoss, sfxVictory };
-
-    // Try autoplay BGM if permitted
-    const playPromise = bgm.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(() => {
-        // Autoplay blocked until user interaction
-      });
-    }
-
-    return () => {
-      bgm.pause();
-    };
-  }, []);
-
-  // Update Audio Volume when config or mute changes
-  useEffect(() => {
-    const { bgm } = engineRef.current.audio;
-    if (bgm) {
-      bgm.volume = config.soundEnabled && !soundMuted ? config.musicVolume : 0;
-      if (config.soundEnabled && !soundMuted && bgm.paused) {
-        bgm.play().catch(() => {});
-      } else if ((!config.soundEnabled || soundMuted) && !bgm.paused) {
-        bgm.pause();
-      }
-    }
-  }, [config.soundEnabled, config.musicVolume, soundMuted]);
 
   const playSfx = useCallback((type) => {
     if (!config.soundEnabled || soundMuted) return;
-    const audios = engineRef.current.audio;
-    let sfx = null;
-    if (type === 'join') sfx = audios.sfxJoin;
-    else if (type === 'aoe') sfx = audios.sfxAoe;
-    else if (type === 'boss') sfx = audios.sfxBoss;
-    else if (type === 'victory') sfx = audios.sfxVictory;
-
-    if (sfx) {
-      try {
-        sfx.currentTime = 0;
-        sfx.volume = config.sfxVolume || 0.7;
-        sfx.play().catch(() => {});
-      } catch (e) {}
-    }
+    const vol = config.sfxVolume !== undefined ? config.sfxVolume : 0.7;
+    if (type === 'join') battleAudio.playJoin(vol);
+    else if (type === 'hit') battleAudio.playHit(vol);
+    else if (type === 'aoe') battleAudio.playAoe(vol);
+    else if (type === 'boss') battleAudio.playBoss(vol);
+    else if (type === 'victory') battleAudio.playVictory(vol);
+    else if (type === 'dance') battleAudio.playDanceBeat(vol);
   }, [config.soundEnabled, config.sfxVolume, soundMuted]);
 
-  // Recalculate formation slots for fighters
+  // Recalculate formation slots for UNLIMITED fighters (hỗ trợ hàng ngàn người tham gia)
   const updateFormation = useCallback((canvasWidth, canvasHeight) => {
-    const FORMATION_ROWS = 4;
-    const FORMATION_STEP_X = 24;
-    const FORMATION_ROW_GAP = 22;
-    const FORMATION_FRONT_GAP = 46;
     const centerX = canvasWidth / 2;
     const baseY = canvasHeight * 0.62;
 
     ['blue', 'red'].forEach(factionId => {
       const dir = factionId === 'blue' ? -1 : 1;
       const list = engineRef.current.fighters[factionId];
+      const count = list.length;
+      if (count === 0) return;
+
+      // Dynamic grid sizing based on total count
+      // Scales seamlessly from 1 to 2,000+ fighters
+      const dynamicRows = Math.min(12, Math.max(4, Math.ceil(Math.sqrt(count * 0.8))));
+      const dynamicRowGap = Math.max(12, 24 - dynamicRows * 0.8);
+      const dynamicStepX = Math.max(14, 26 - Math.min(12, count / 50));
+      const frontGap = Math.max(38, 48 - Math.min(10, count / 100));
+
       list.forEach((f, rank) => {
-        const row = rank % FORMATION_ROWS;
-        const col = Math.floor(rank / FORMATION_ROWS);
-        f.targetX = centerX + dir * (FORMATION_FRONT_GAP + col * FORMATION_STEP_X);
-        f.targetY = baseY + (row - (FORMATION_ROWS - 1) / 2) * FORMATION_ROW_GAP;
+        const row = rank % dynamicRows;
+        const col = Math.floor(rank / dynamicRows);
+        const rowStagger = (row % 2 === 1) ? (dynamicStepX * 0.5) : 0;
+        
+        f.targetX = centerX + dir * (frontGap + col * dynamicStepX + rowStagger);
+        f.targetY = baseY + (row - (dynamicRows - 1) / 2) * dynamicRowGap;
         f.rank = rank;
       });
     });
@@ -287,7 +243,8 @@ export default function GameChienDau({
     });
 
     updateDanceSlots(canvas.width, canvas.height);
-  }, [updateDanceSlots]);
+    playSfx('dance');
+  }, [updateDanceSlots, playSfx]);
 
   const triggerAoeSkill = useCallback((factionId, donorName = 'VIP Player', power = 80) => {
     const canvas = canvasRef.current;
@@ -378,6 +335,28 @@ export default function GameChienDau({
       return;
     }
 
+    if (type === 'PAUSE_TOGGLE') {
+      setGameState(prev => ({ ...prev, isPaused: !prev.isPaused }));
+      return;
+    }
+
+    if (type === 'FORCE_WIN') {
+      const winner = data.faction || 'blue';
+      const loser = winner === 'blue' ? 'red' : 'blue';
+      setGameState(prev => ({
+        ...prev,
+        winner,
+        hp: { ...prev.hp, [loser]: 0 }
+      }));
+      playSfx('victory');
+      return;
+    }
+
+    if (type === 'DANCE') {
+      triggerDance(data.faction || 'blue', data.nickname || 'Idol Sân Khấu');
+      return;
+    }
+
     if (type === 'COMMENT') {
       const commentText = (data.comment || '').toLowerCase().trim();
       const nickname = data.nickname || data.name || 'Khán giả';
@@ -401,7 +380,7 @@ export default function GameChienDau({
         triggerDance(assignedFaction, nickname);
       }
     }
-  }, [externalLiveEvent, addOrUpdateFighter, triggerDance, triggerAoeSkill, triggerBossSummon, resetMatch]);
+  }, [externalLiveEvent, addOrUpdateFighter, triggerDance, triggerAoeSkill, triggerBossSummon, resetMatch, playSfx]);
 
   // Main Canvas Rendering Loop
   useEffect(() => {

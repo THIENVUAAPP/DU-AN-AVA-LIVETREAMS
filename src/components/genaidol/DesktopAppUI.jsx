@@ -1492,10 +1492,16 @@ export default function DesktopAppUI() {
             setLastGameEvent({ type: 'GIFT', data: { nickname: 'Rồng Thần Admin', diamondCount: 5000, faction: 'blue' }, timestamp: Date.now() });
           } else if (action === 'SUMMON_BOSS_RED') {
             setLastGameEvent({ type: 'GIFT', data: { nickname: 'Bạch Hổ Admin', diamondCount: 5000, faction: 'red' }, timestamp: Date.now() });
+          } else if (action === 'TRIGGER_DANCE_BLUE') {
+            setLastGameEvent({ type: 'DANCE', data: { nickname: 'Idol Rồng Xanh', faction: 'blue' }, timestamp: Date.now() });
+          } else if (action === 'TRIGGER_DANCE_RED') {
+            setLastGameEvent({ type: 'DANCE', data: { nickname: 'Idol Hổ Đỏ', faction: 'red' }, timestamp: Date.now() });
+          } else if (action === 'TOGGLE_PAUSE') {
+            setLastGameEvent({ type: 'PAUSE_TOGGLE', data: {}, timestamp: Date.now() });
           } else if (action === 'FINISH_MATCH_BLUE') {
-            setLastGameEvent({ type: 'GIFT', data: { name: 'Admin Trọng Tài', coins: 99999, faction: 'blue' }, timestamp: Date.now() });
+            setLastGameEvent({ type: 'FORCE_WIN', data: { faction: 'blue' }, timestamp: Date.now() });
           } else if (action === 'FINISH_MATCH_RED') {
-            setLastGameEvent({ type: 'GIFT', data: { name: 'Admin Trọng Tài', coins: 99999, faction: 'red' }, timestamp: Date.now() });
+            setLastGameEvent({ type: 'FORCE_WIN', data: { faction: 'red' }, timestamp: Date.now() });
           }
         }}
       />
