@@ -510,11 +510,42 @@ export default function DesktopAppUI() {
           <span className="text-sm font-medium">Livestream AI (Clone) - Profile: {CHARACTERS[selectedCharacter]?.name || 'Không xác định'}</span>
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <button onClick={() => setIsDarkMode(!isDarkMode)} className={`p-1.5 rounded transition-colors ${isDarkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-400 text-gray-800 hover:bg-gray-500'}`}>
+            {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+
+          {/* Token Widget */}
+          <button
+            onClick={() => setShowTokenHistory(true)}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-all border ${
+              balance === 0
+                ? 'bg-red-500/20 border-red-500/40 text-red-400 hover:bg-red-500/30'
+                : balance < TOKEN_RATES.LOW_BALANCE_WARN
+                ? 'bg-orange-500/20 border-orange-500/40 text-orange-400 hover:bg-orange-500/30'
+                : 'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20'
+            }`}
+            title="Xem lịch sử Token"
+          >
+            {balance < TOKEN_RATES.LOW_BALANCE_WARN && <AlertTriangle size={13} />}
+            <Coins size={14} />
+            <span>{balance.toLocaleString()}</span>
+          </button>
+
+          <button className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-[#0088cc]/20 text-[#0088cc] hover:bg-[#0088cc]/30' : 'bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20'}`}>
+            <MessageCircle size={16} />
+            Zalo
+          </button>
+
+          <button onClick={() => setActiveSettingsModal('payment')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-green-500/10 text-green-700 hover:bg-green-500/20'}`}>
+            <CreditCard size={16} />
+            Thanh toán
+          </button>
+
           {/* Nút Tải phần mềm (ZIP) đã được đưa lên góc này */}
           <button 
             onClick={handleDownload}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 text-xs rounded shadow-sm flex items-center gap-1.5 transition-colors"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-xs rounded shadow-sm flex items-center gap-1.5 transition-colors"
           >
             <Download size={14} />
             <span>Tải phần mềm (ZIP)</span>
@@ -559,11 +590,6 @@ export default function DesktopAppUI() {
               </div>
             )}
           </div>
-
-          <button onClick={() => setActiveSettingsModal('payment')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}>
-            <CreditCard size={16} />
-            Thanh toán
-          </button>
         </div>
 
         <div className="flex-1"></div>
@@ -641,32 +667,6 @@ export default function DesktopAppUI() {
 
         {/* Right Side: Toggles */}
         <div className="flex items-center gap-3 shrink-0">
-          <button onClick={() => setIsDarkMode(!isDarkMode)} className={`p-1.5 rounded transition-colors ${isDarkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-300 text-gray-700 hover:bg-gray-400'}`}>
-            {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
-
-          {/* Token Widget */}
-          <button
-            onClick={() => setShowTokenHistory(true)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-all border ${
-              balance === 0
-                ? 'bg-red-500/20 border-red-500/40 text-red-400 hover:bg-red-500/30'
-                : balance < TOKEN_RATES.LOW_BALANCE_WARN
-                ? 'bg-orange-500/20 border-orange-500/40 text-orange-400 hover:bg-orange-500/30'
-                : 'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20'
-            }`}
-            title="Xem lịch sử Token"
-          >
-            {balance < TOKEN_RATES.LOW_BALANCE_WARN && <AlertTriangle size={13} />}
-            <Coins size={14} />
-            <span>{balance.toLocaleString()}</span>
-          </button>
-
-          <button className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-[#0088cc]/20 text-[#0088cc] hover:bg-[#0088cc]/30' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}>
-            <MessageCircle size={16} />
-            Zalo
-          </button>
-
           <div className="relative">
             <button 
               onClick={() => setIsMonitorDropdownOpen(!isMonitorDropdownOpen)} 
