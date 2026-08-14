@@ -106,20 +106,31 @@ export default function GameChienDau({
     setLiveFeed(prev => [...prev.slice(-4), newItem]);
   }, []);
 
-  // Preload 3D Dragon Warrior Asset (Tripo 3D Model)
-  const dragonWarriorImgRef = useRef(null);
+  // Preload 3D Male & Female Warrior Assets (Tripo 3D Models)
+  const warriorImagesRef = useRef({
+    male: null,
+    female: null
+  });
+
   useEffect(() => {
-    const img = new Image();
-    img.src = '/game-battle/models/dragon_warrior_transparent.png';
-    img.onload = () => {
-      dragonWarriorImgRef.current = img;
+    // 1. Nam Chiến Binh 3D (Rồng Hoàng Kim)
+    const maleImg = new Image();
+    maleImg.src = '/game-battle/models/male_warrior_transparent.png';
+    maleImg.onload = () => { warriorImagesRef.current.male = maleImg; };
+    maleImg.onerror = () => {
+      const fb = new Image();
+      fb.src = '/game-battle/models/dragon_warrior.webp';
+      fb.onload = () => { warriorImagesRef.current.male = fb; };
     };
-    img.onerror = () => {
-      const fallback = new Image();
-      fallback.src = '/game-battle/models/dragon_warrior.webp';
-      fallback.onload = () => {
-        dragonWarriorImgRef.current = fallback;
-      };
+
+    // 2. Nữ Chiến Binh 3D (Bạch Kim Nữ Thần)
+    const femaleImg = new Image();
+    femaleImg.src = '/game-battle/models/female_warrior_transparent.png';
+    femaleImg.onload = () => { warriorImagesRef.current.female = femaleImg; };
+    femaleImg.onerror = () => {
+      const fb = new Image();
+      fb.src = '/game-battle/models/female_warrior.webp';
+      fb.onload = () => { warriorImagesRef.current.female = fb; };
     };
   }, []);
 
@@ -202,7 +213,7 @@ export default function GameChienDau({
   }, []);
 
   // Action Dispatchers
-  const addOrUpdateFighter = useCallback((factionId, nickname, pointsToAdd = 10) => {
+  const addOrUpdateFighter = useCallback((factionId, nickname, pointsToAdd = 10, preferredGender = null) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const userId = `user_${nickname.toLowerCase().replace(/\s+/g, '_')}`;
@@ -212,14 +223,25 @@ export default function GameChienDau({
     if (fighter) {
       fighter.score += pointsToAdd;
       fighter.pulseUntil = performance.now() + 600;
+      if (preferredGender) fighter.gender = preferredGender;
     } else {
       const startX = factionId === 'blue' ? 0 : canvas.width;
       const startY = canvas.height * 0.62;
+      
+      // Auto balance male & female warriors across Blue & Red teams
+      let gender = preferredGender;
+      if (!gender) {
+        const maleCount = list.filter(f => f.gender === 'male').length;
+        const femaleCount = list.filter(f => f.gender === 'female').length;
+        gender = maleCount <= femaleCount ? 'male' : 'female';
+      }
+
       fighter = {
         userId,
         nickname,
         score: pointsToAdd,
         rank: list.length,
+        gender,
         x: startX,
         y: startY,
         targetX: startX,
@@ -859,31 +881,46 @@ export default function GameChienDau({
             ctx.restore();
           }
 
-          // 2.1 3D DRAGON WARRIOR (Chiến Binh Rồng Nhí 3D Giáp Vàng Tinh Xảo - Tripo 3D)
-          if (dragonWarriorImgRef.current && dragonWarriorImgRef.current.complete) {
+          // 2.1 3D WARRIORS (Nam & Nữ Chiến Binh 3D Tripo3D - Đầy Đủ Chân, Siêu Sắc Nét)
+          const fighterGender = f.gender || (f.rank % 2 === 0 ? 'male' : 'female');
+          const spriteImg = warriorImagesRef.current[fighterGender] || warriorImagesRef.current.male || warriorImagesRef.current.female;
+
+          if (spriteImg && spriteImg.complete) {
             ctx.save();
-            const dw = 30;
-            const dh = 39;
+            const dw = fighterGender === 'female' ? 29 : 32;
+            const dh = fighterGender === 'female' ? 42 : 40;
             
-            // Faction Direction Orientation
+            // Faction Facing Direction Orientation (Red faces left, Blue faces right)
             if (factionId === 'red') {
               ctx.scale(-1, 1);
             }
             
-            // Draw 3D Dragon Warrior
-            ctx.drawImage(dragonWarriorImgRef.current, -dw / 2, -dh / 2 - 3, dw, dh);
+            // Draw full-body 3D warrior with complete legs and boots grounded at y = 14
+            ctx.drawImage(spriteImg, -dw / 2, -dh + 14, dw, dh);
 
-            // Glowing Dragon Eyes / Energy Visor
-            ctx.fillStyle = factionId === 'blue' ? '#38bdf8' : '#facc15';
+            // Glowing Energy Eyes / Crystal Crown / Visor
+            ctx.save();
+            ctx.fillStyle = factionId === 'blue' ? '#38bdf8' : (fighterGender === 'female' ? '#fb7185' : '#facc15');
             ctx.shadowColor = ctx.fillStyle;
-            ctx.shadowBlur = 10;
-            ctx.fillRect(-3, -13, 6, 2.5);
+            ctx.shadowBlur = 12;
+            if (fighterGender === 'female') {
+              // Radiant Goddess Crown / Eyes
+              ctx.fillRect(-3, -dh + 20, 6, 2.2);
+            } else {
+              // Dragon Golden Eyes / Visor
+              ctx.fillRect(-3.5, -dh + 21, 7, 2.5);
+            }
+            ctx.restore();
 
             // Gift upgrade power flash
             if (isPulsing) {
+              ctx.save();
               ctx.strokeStyle = '#facc15';
-              ctx.lineWidth = 1.5;
-              ctx.strokeRect(-dw / 2 + 2, -dh / 2 - 1, dw - 4, dh - 2);
+              ctx.lineWidth = 1.8;
+              ctx.shadowColor = '#facc15';
+              ctx.shadowBlur = 15;
+              ctx.strokeRect(-dw / 2 + 1, -dh + 14, dw - 2, dh);
+              ctx.restore();
             }
 
             ctx.restore();
@@ -1200,65 +1237,95 @@ export default function GameChienDau({
           ctx.strokeText('👑 ' + dName, 0, -22);
           ctx.fillText('👑 ' + dName, 0, -22);
 
-          // Dancer Legs (2 chân nhún nhảy, đá chân thể dục aerobic)
-          ctx.lineWidth = 3;
-          ctx.lineCap = 'round';
-          
-          // Left Leg
-          ctx.strokeStyle = factionId === 'blue' ? '#2563eb' : '#dc2626';
-          ctx.beginPath();
-          ctx.moveTo(-3, 6);
-          ctx.lineTo(-4 - legKick * 0.3, 16 - Math.max(0, legKick * 0.3));
-          ctx.stroke();
-          // Left Dance Shoe
-          ctx.fillStyle = '#ffd700';
-          ctx.fillRect(-6 - legKick * 0.3, 15 - Math.max(0, legKick * 0.3), 5, 3);
+          // Dancer 3D Model with dancing movement
+          const dancerGender = d.gender || (d.danceStyleId % 2 === 0 ? 'female' : 'male');
+          const dSprite = warriorImagesRef.current[dancerGender] || warriorImagesRef.current.male || warriorImagesRef.current.female;
 
-          // Right Leg
-          ctx.strokeStyle = factionId === 'blue' ? '#3b82f6' : '#ef4444';
-          ctx.beginPath();
-          ctx.moveTo(3, 6);
-          ctx.lineTo(4 + legKick * 0.3, 16 - Math.max(0, -legKick * 0.3));
-          ctx.stroke();
-          // Right Dance Shoe
-          ctx.fillStyle = '#ffd700';
-          ctx.fillRect(2 + legKick * 0.3, 15 - Math.max(0, -legKick * 0.3), 5, 3);
+          if (dSprite && dSprite.complete) {
+            ctx.save();
+            const dw = dancerGender === 'female' ? 29 : 32;
+            const dh = dancerGender === 'female' ? 42 : 40;
+            // Face center stage
+            if (factionId === 'red') {
+              ctx.scale(-1, 1);
+            }
+            // Gentle dancing tilt
+            ctx.rotate(sway * 0.04);
+            ctx.drawImage(dSprite, -dw / 2, -dh + 14, dw, dh);
+            
+            // Glowing eyes
+            ctx.save();
+            ctx.fillStyle = factionId === 'blue' ? '#38bdf8' : (dancerGender === 'female' ? '#fb7185' : '#facc15');
+            ctx.shadowColor = ctx.fillStyle;
+            ctx.shadowBlur = 10;
+            if (dancerGender === 'female') {
+              ctx.fillRect(-3, -dh + 20, 6, 2.2);
+            } else {
+              ctx.fillRect(-3.5, -dh + 21, 7, 2.5);
+            }
+            ctx.restore();
+            ctx.restore();
+          } else {
+            // Dancer Legs (2 chân nhún nhảy, đá chân thể dục aerobic)
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            
+            // Left Leg
+            ctx.strokeStyle = factionId === 'blue' ? '#2563eb' : '#dc2626';
+            ctx.beginPath();
+            ctx.moveTo(-3, 6);
+            ctx.lineTo(-4 - legKick * 0.3, 16 - Math.max(0, legKick * 0.3));
+            ctx.stroke();
+            // Left Dance Shoe
+            ctx.fillStyle = '#ffd700';
+            ctx.fillRect(-6 - legKick * 0.3, 15 - Math.max(0, legKick * 0.3), 5, 3);
 
-          // Dancer Body (Áo biểu diễn lấp lánh hào quang)
-          ctx.shadowColor = '#ffcc00';
-          ctx.shadowBlur = 18;
-          ctx.fillStyle = color;
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 1.2;
+            // Right Leg
+            ctx.strokeStyle = factionId === 'blue' ? '#3b82f6' : '#ef4444';
+            ctx.beginPath();
+            ctx.moveTo(3, 6);
+            ctx.lineTo(4 + legKick * 0.3, 16 - Math.max(0, -legKick * 0.3));
+            ctx.stroke();
+            // Right Dance Shoe
+            ctx.fillStyle = '#ffd700';
+            ctx.fillRect(2 + legKick * 0.3, 15 - Math.max(0, -legKick * 0.3), 5, 3);
 
-          ctx.beginPath();
-          ctx.moveTo(-4.5, 6);
-          ctx.lineTo(4.5, 6);
-          ctx.lineTo(3.5, -4);
-          ctx.lineTo(-3.5, -4);
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
+            // Dancer Body (Áo biểu diễn lấp lánh hào quang)
+            ctx.shadowColor = '#ffcc00';
+            ctx.shadowBlur = 18;
+            ctx.fillStyle = color;
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.2;
 
-          // Golden Belt
-          ctx.fillStyle = '#ffcc00';
-          ctx.fillRect(-4, 4, 8, 2);
+            ctx.beginPath();
+            ctx.moveTo(-4.5, 6);
+            ctx.lineTo(4.5, 6);
+            ctx.lineTo(3.5, -4);
+            ctx.lineTo(-3.5, -4);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
 
-          // Head & Hair
-          ctx.beginPath();
-          ctx.arc(0, -9, 4.5, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
+            // Golden Belt
+            ctx.fillStyle = '#ffcc00';
+            ctx.fillRect(-4, 4, 8, 2);
 
-          // Dancing Arms (Vung tay, vẫy chào theo điệu nhạc)
-          ctx.lineWidth = 2;
-          ctx.strokeStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.moveTo(-3.5, -2);
-          ctx.lineTo(-8 - armSwing * 0.25, 2 - armSwing * 0.35);
-          ctx.moveTo(3.5, -2);
-          ctx.lineTo(8 + armSwing * 0.25, 2 + armSwing * 0.35);
-          ctx.stroke();
+            // Head & Hair
+            ctx.beginPath();
+            ctx.arc(0, -9, 4.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Dancing Arms (Vung tay, vẫy chào theo điệu nhạc)
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.moveTo(-3.5, -2);
+            ctx.lineTo(-8 - armSwing * 0.25, 2 - armSwing * 0.35);
+            ctx.moveTo(3.5, -2);
+            ctx.lineTo(8 + armSwing * 0.25, 2 + armSwing * 0.35);
+            ctx.stroke();
+          }
 
           ctx.restore();
 
