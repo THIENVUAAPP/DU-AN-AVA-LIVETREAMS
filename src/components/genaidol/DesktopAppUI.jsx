@@ -723,11 +723,11 @@ export default function DesktopAppUI() {
                 streamWin.document.close();
               }
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-all bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md hover:scale-105"
-            title="Mở cửa sổ video sạch độc lập chỉ chứa hình ảnh/video nhân vật để TikTok Live Studio / OBS bắt hình trực tiếp (Không dính menu quản trị)"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}`}
+            title="Mở cửa sổ video sạch độc lập chỉ chứa nhân vật để TikTok Live Studio / OBS bắt hình trực tiếp"
           >
             <Video size={16} />
-            Cửa Sổ Live Sạch (TikTok Studio)
+            Live Sạch
           </button>
 
           {/* Menu Theo dõi: Sắp xếp theo thứ tự ưu tiên hay dùng nhất lên đầu */}
