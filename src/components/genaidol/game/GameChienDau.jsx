@@ -54,7 +54,15 @@ export default function GameChienDau({
       charScale: 1.0,
       musicVolume: 0.4,
       sfxVolume: 0.7,
-      soundEnabled: true
+      soundEnabled: true,
+      showGiftHud: true,
+      gifts: [
+        { id: 1, name: 'Hoa Hồng / Tim', icon: '🌸', coins: 1, tier: 'Tân Binh', buff: '+10 HP Xung Trận', skill: 'Vào Trận' },
+        { id: 2, name: 'Nước Hoa / Mũ', icon: '🛡️', coins: 50, tier: 'Thiết Giáp Hiệp', buff: '+150 HP + Giáp Bạc', skill: 'Kiếm Thép' },
+        { id: 3, name: 'Vương Miện / Cánh', icon: '👑', coins: 200, tier: 'Kim Khải Thần Tướng', buff: '+600 HP + Cánh Vàng', skill: 'Thái Cực Trận' },
+        { id: 4, name: 'Xe Thể Thao / Sét', icon: '⚡', coins: 500, tier: 'Chiến Thần Vạn Kiếm', buff: '+1500 HP + Thần Binh', skill: 'Vạn Kiếm Quy Tông' },
+        { id: 5, name: 'Thần Long / Vũ Trụ', icon: '🐉', coins: 1000, tier: 'Chí Tôn Thiên Tôn', buff: '+3500 HP + Rồng Thần', skill: 'Giáng Long Chưởng' }
+      ]
     };
   });
 
@@ -72,12 +80,13 @@ export default function GameChienDau({
   const [soundMuted, setSoundMuted] = useState(false);
   const [flashSide, setFlashSide] = useState(null);
   const [liveFeed, setLiveFeed] = useState([]); // Array of recent live comments & gifts
+  const [isGiftHudMinimized, setIsGiftHudMinimized] = useState(false);
 
   // Sync config from local storage or custom event instantly
   useEffect(() => {
     const handleConfigUpdate = (e) => {
       if (e.detail) {
-        setConfig(e.detail);
+        setConfig(prev => ({ ...prev, ...e.detail }));
         setGameState(prev => ({
           ...prev,
           maxHp: e.detail.maxHp || prev.maxHp,
@@ -99,10 +108,13 @@ export default function GameChienDau({
 
   // Refs for Game Engine Loop
   const engineRef = useRef({
-    fighters: { blue: [], red: [] }, // { userId, nickname, score, rank, x, y, targetX, targetY, bobPhase, pulseUntil }
+    fighters: { blue: [], red: [] }, // { userId, nickname, score, rank, x, y, targetX, targetY, bobPhase, pulseUntil, tier }
     dancers: { blue: [], red: [] },   // { userId, nickname, factionId, danceStyleId, startedAt, durationMs, x, y, scale, targetX, targetY, targetScale }
     bosses: [],                      // { id, factionId, x, y, targetX, spawnedAt }
     particles: [],                   // { x, y, vx, vy, size, color, isFlash, lifespanMs, spawnedAt }
+    flyingSwords: [],                // { id, x, y, targetX, targetY, color, progress, spawnedAt }
+    dragonBeasts: [],                // { id, factionId, x, y, targetX, progress, spawnedAt }
+    taiChiShields: [],               // { id, factionId, x, y, radius, lifespanMs, spawnedAt }
     rAfId: null,
     lastTime: performance.now(),
     lastClashSoundTime: 0
@@ -117,6 +129,10 @@ export default function GameChienDau({
     else if (type === 'boss') battleAudio.playBoss(vol);
     else if (type === 'victory') battleAudio.playVictory(vol);
     else if (type === 'dance') battleAudio.playDanceBeat(vol);
+    else if (type === 'van_kiem') battleAudio.playVanKiemQuyTong(vol);
+    else if (type === 'giang_long') battleAudio.playGiangLongChuong(vol);
+    else if (type === 'thai_cuc') battleAudio.playThaiCucKiemTran(vol);
+    else if (type === 'level_up') battleAudio.playLevelUp(vol);
   }, [config.soundEnabled, config.sfxVolume, soundMuted]);
 
   // Recalculate formation slots for UNLIMITED fighters (hỗ trợ hàng ngàn người tham gia)
@@ -334,11 +350,114 @@ export default function GameChienDau({
     setTimeout(() => setGameState(prev => ({ ...prev, recentSpotlight: null })), 5000);
   }, [addOrUpdateFighter, triggerDance, playSfx]);
 
+  const triggerVanKiem = useCallback((factionId, donorName = 'VIP Kiếm Khách') => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const isBlue = factionId === 'blue';
+    const targetSideX = isBlue ? canvas.width * 0.75 : canvas.width * 0.25;
+
+    for (let i = 0; i < 16; i++) {
+      engineRef.current.flyingSwords.push({
+        id: Date.now() + Math.random(),
+        x: (isBlue ? canvas.width * 0.2 : canvas.width * 0.8) + (Math.random() - 0.5) * 120,
+        y: canvas.height * 0.1 + (Math.random() - 0.5) * 80,
+        targetX: targetSideX + (Math.random() - 0.5) * 200,
+        targetY: canvas.height * 0.62 + (Math.random() - 0.5) * 100,
+        color: isBlue ? '#38bdf8' : '#f87171',
+        progress: -i * 0.05,
+        speed: 1.8 + Math.random() * 0.6,
+        spawnedAt: performance.now()
+      });
+    }
+
+    addOrUpdateFighter(factionId, donorName, 150);
+    playSfx('van_kiem');
+    setGameState(prev => ({
+      ...prev,
+      recentSpotlight: { name: donorName, gift: 'Tuyệt Kỹ VẠN KIẾM QUY TÔNG ⚔️', faction: factionId }
+    }));
+    setTimeout(() => setGameState(prev => ({ ...prev, recentSpotlight: null })), 4500);
+  }, [addOrUpdateFighter, playSfx]);
+
+  const triggerGiangLong = useCallback((factionId, donorName = 'VIP Thần Long') => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const isBlue = factionId === 'blue';
+
+    engineRef.current.dragonBeasts.push({
+      id: Date.now(),
+      factionId,
+      x: isBlue ? 0 : canvas.width,
+      y: canvas.height * 0.55,
+      targetX: isBlue ? canvas.width * 1.1 : -canvas.width * 0.1,
+      progress: 0,
+      spawnedAt: performance.now()
+    });
+
+    addOrUpdateFighter(factionId, donorName, 350);
+    triggerDance(factionId, donorName, 20, 9000);
+    playSfx('giang_long');
+
+    setGameState(prev => ({
+      ...prev,
+      recentSpotlight: { name: donorName, gift: 'Tuyệt Kỹ GIÁNG LONG THẬP BÁT CHƯỞNG 🐉', faction: factionId }
+    }));
+    setTimeout(() => setGameState(prev => ({ ...prev, recentSpotlight: null })), 5000);
+  }, [addOrUpdateFighter, triggerDance, playSfx]);
+
+  const triggerThaiCuc = useCallback((factionId, donorName = 'VIP Hộ Pháp') => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const isBlue = factionId === 'blue';
+
+    engineRef.current.taiChiShields.push({
+      id: Date.now(),
+      factionId,
+      x: isBlue ? canvas.width * 0.25 : canvas.width * 0.75,
+      y: canvas.height * 0.62,
+      radius: 20,
+      maxRadius: 180,
+      lifespanMs: 3000,
+      spawnedAt: performance.now()
+    });
+
+    addOrUpdateFighter(factionId, donorName, 80);
+    playSfx('thai_cuc');
+
+    setGameState(prev => ({
+      ...prev,
+      recentSpotlight: { name: donorName, gift: 'Tuyệt Kỹ THÁI CỰC KIẾM TRẬN ☯️', faction: factionId }
+    }));
+    setTimeout(() => setGameState(prev => ({ ...prev, recentSpotlight: null })), 4000);
+  }, [addOrUpdateFighter, playSfx]);
+
+  const triggerHeroUpgrade = useCallback((factionId, donorName = 'VIP Chiến Thần', tierLevel = 3) => {
+    const bonus = tierLevel === 5 ? 500 : tierLevel === 4 ? 250 : 100;
+    addOrUpdateFighter(factionId, donorName, bonus);
+    playSfx('level_up');
+
+    const tierTitles = {
+      2: 'THIẾT GIÁP KIẾM HIỆP 🛡️',
+      3: 'KIM KHẢI THẦN TƯỚNG 👑',
+      4: 'CHIẾN THẦN VẠN KIẾM ⚡',
+      5: 'CHÍ TÔN THIÊN TÔN 🐉'
+    };
+
+    setGameState(prev => ({
+      ...prev,
+      recentSpotlight: { name: donorName, gift: `Thăng Cấp ${tierTitles[tierLevel] || 'HOÀNG KIM'}`, faction: factionId }
+    }));
+    setTimeout(() => setGameState(prev => ({ ...prev, recentSpotlight: null })), 4000);
+  }, [addOrUpdateFighter, playSfx]);
+
   const resetMatch = useCallback(() => {
     engineRef.current.fighters = { blue: [], red: [] };
     engineRef.current.dancers = { blue: [], red: [] };
     engineRef.current.bosses = [];
     engineRef.current.particles = [];
+    engineRef.current.flyingSwords = [];
+    engineRef.current.dragonBeasts = [];
+    engineRef.current.taiChiShields = [];
     setGameState({
       hp: { blue: config.maxHp, red: config.maxHp },
       maxHp: config.maxHp,
@@ -385,6 +504,39 @@ export default function GameChienDau({
       return;
     }
 
+    if (type === 'TRIGGER_VAN_KIEM') {
+      const fac = data.faction || 'blue';
+      const name = data.nickname || 'Kiếm Khách';
+      triggerVanKiem(fac, name);
+      addLiveFeedItem(name, 'thi triển tuyệt kỹ VẠN KIẾM QUY TÔNG! ⚔️', fac);
+      return;
+    }
+
+    if (type === 'TRIGGER_GIANG_LONG') {
+      const fac = data.faction || 'blue';
+      const name = data.nickname || 'Thần Long';
+      triggerGiangLong(fac, name);
+      addLiveFeedItem(name, 'thi triển tuyệt kỹ GIÁNG LONG CHƯỞNG! 🐉', fac);
+      return;
+    }
+
+    if (type === 'TRIGGER_THAI_CUC') {
+      const fac = data.faction || 'blue';
+      const name = data.nickname || 'Hộ Pháp';
+      triggerThaiCuc(fac, name);
+      addLiveFeedItem(name, 'kích hoạt THÁI CỰC KIẾM TRẬN HỘ THÂN! ☯️', fac);
+      return;
+    }
+
+    if (type === 'UPGRADE_HERO') {
+      const fac = data.faction || 'blue';
+      const name = data.nickname || 'Chiến Binh';
+      const tier = data.tier || 3;
+      triggerHeroUpgrade(fac, name, tier);
+      addLiveFeedItem(name, `nâng cấp trang bị cấp ${tier}! 🛡️✨`, fac);
+      return;
+    }
+
     if (type === 'COMMENT') {
       const commentText = (data.comment || data.text || '').toLowerCase().trim();
       const nickname = data.nickname || data.name || 'Khán giả';
@@ -405,18 +557,25 @@ export default function GameChienDau({
       const assignedFaction = data.faction || (Math.random() < 0.5 ? 'blue' : 'red');
 
       if (diamondCount >= 1000) {
-        triggerBossSummon(assignedFaction, nickname);
-        addLiveFeedItem(nickname, `triệu hồi BOSS THẦN THÚ ${assignedFaction === 'blue' ? 'RỒNG' : 'HỔ'}! 🐉`, assignedFaction);
-      } else if (diamondCount >= 100) {
-        triggerAoeSkill(assignedFaction, nickname, diamondCount);
-        addLiveFeedItem(nickname, `kích hoạt BÃO SẤM SÉT AOE (${diamondCount} quà)! ⚡`, assignedFaction);
+        triggerGiangLong(assignedFaction, nickname);
+        addLiveFeedItem(nickname, `tặng quà lớn triệu hồi GIÁNG LONG CHƯỞNG (${diamondCount} xu)! 🐉`, assignedFaction);
+      } else if (diamondCount >= 500) {
+        triggerVanKiem(assignedFaction, nickname);
+        addLiveFeedItem(nickname, `tặng quà kích hoạt VẠN KIẾM QUY TÔNG (${diamondCount} xu)! ⚔️`, assignedFaction);
+      } else if (diamondCount >= 200) {
+        triggerHeroUpgrade(assignedFaction, nickname, 3);
+        triggerThaiCuc(assignedFaction, nickname);
+        addLiveFeedItem(nickname, `thăng cấp KIM KHẢI THẦN TƯỚNG + THÁI CỰC TRẬN (${diamondCount} xu)! 👑`, assignedFaction);
+      } else if (diamondCount >= 50) {
+        triggerHeroUpgrade(assignedFaction, nickname, 2);
+        addLiveFeedItem(nickname, `thăng cấp THIẾT GIÁP KIẾM HIỆP (${diamondCount} xu)! 🛡️`, assignedFaction);
       } else {
         addOrUpdateFighter(assignedFaction, nickname, Math.max(20, diamondCount * 2));
         triggerDance(assignedFaction, nickname);
         addLiveFeedItem(nickname, `tặng quà tiếp sức & mở vũ điệu! 🎁`, assignedFaction);
       }
     }
-  }, [externalLiveEvent, config.blueName, config.redName, addOrUpdateFighter, triggerDance, triggerAoeSkill, triggerBossSummon, resetMatch, playSfx, addLiveFeedItem]);
+  }, [externalLiveEvent, config.blueName, config.redName, addOrUpdateFighter, triggerDance, triggerAoeSkill, triggerBossSummon, triggerVanKiem, triggerGiangLong, triggerThaiCuc, triggerHeroUpgrade, resetMatch, playSfx, addLiveFeedItem]);
 
   // Main Canvas Rendering Loop
   useEffect(() => {
@@ -477,7 +636,7 @@ export default function GameChienDau({
       ctx.fillStyle = redBaseGrad;
       ctx.fillRect(centerX, canvas.height * 0.35, centerX, canvas.height * 0.65);
 
-      // 2. Update & Draw Fighters (Chiến binh dũng sĩ có chân bước đi & giáp trụ sắc nét)
+      // 2. Update & Draw Fighters (Chiến binh Kiếm Hiệp 3D 5 Cấp Bậc Trang Bị Siêu Thực)
       const lerpFactor = Math.min(1, dt * 5);
       ['blue', 'red'].forEach(factionId => {
         const color = factionId === 'blue' ? config.blueColor : config.redColor;
@@ -488,137 +647,229 @@ export default function GameChienDau({
           f.y += (f.targetY - f.y) * lerpFactor;
           f.bobPhase += dt * 4.5;
 
+          // Calculate Character Tier based on donated score/gift value
+          // Tier 1: Tân Binh (<100) | Tier 2: Thiết Giáp Hiệp (100-499) | Tier 3: Kim Khải Thần Tướng (500-1999) | Tier 4: Chiến Thần (2000-4999) | Tier 5: Chí Tôn (>=5000)
+          const tier = f.score >= 5000 ? 5 : f.score >= 2000 ? 4 : f.score >= 500 ? 3 : f.score >= 100 ? 2 : 1;
           const isPulsing = performance.now() < f.pulseUntil;
-          const bob = Math.sin(f.bobPhase) * 2.5;
+          const bob = Math.sin(f.bobPhase) * (tier >= 3 ? 3.5 : 2.5);
           const stride = Math.sin(f.bobPhase); // Bước chân di chuyển nhịp nhàng
-          const scale = (config.charScale || 1.0) * (isPulsing ? 1.35 : 1.0);
+          const scale = (config.charScale || 1.0) * (isPulsing ? 1.4 : 1.0) * (tier >= 4 ? 1.25 : tier === 3 ? 1.15 : 1.0);
           const isTopRank = f.rank === 0;
-          const weaponDir = factionId === 'blue' ? 1 : -1;
 
-          // Shadow / Ground aura
+          // Ground Aura / Tai Chi Ring for Tier 4 & 5
           ctx.save();
-          ctx.beginPath();
-          ctx.ellipse(f.x, f.y + 18 * scale, 14 * scale, 5 * scale, 0, 0, Math.PI * 2);
-          ctx.fillStyle = isPulsing ? 'rgba(255, 215, 0, 0.5)' : `${color}40`;
-          ctx.fill();
+          if (tier >= 4) {
+            // Spinning Tai Chi / Divine Energy Circle
+            ctx.translate(f.x, f.y + 18 * scale);
+            ctx.rotate(time * 0.002);
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 22 * scale, 8 * scale, 0, 0, Math.PI * 2);
+            ctx.strokeStyle = tier === 5 ? '#facc15' : color;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.fillStyle = tier === 5 ? 'rgba(250, 204, 21, 0.35)' : `${color}35`;
+            ctx.fill();
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+          } else {
+            ctx.beginPath();
+            ctx.ellipse(f.x, f.y + 18 * scale, (14 + tier * 2) * scale, (5 + tier) * scale, 0, 0, Math.PI * 2);
+            ctx.fillStyle = isPulsing ? 'rgba(255, 215, 0, 0.5)' : (tier === 3 ? 'rgba(250, 204, 21, 0.4)' : `${color}40`);
+            ctx.fill();
+          }
+          ctx.restore();
 
-          // Name tag & Rank badge
-          ctx.font = `${isTopRank ? 'bold ' : ''}10px 'Be Vietnam Pro', sans-serif`;
+          // Name tag, Title & Rank Badge
+          ctx.save();
+          ctx.font = `${isTopRank || tier >= 3 ? 'bold ' : ''}${tier >= 4 ? '11px' : '10px'} 'Be Vietnam Pro', sans-serif`;
           ctx.textAlign = 'center';
           ctx.lineWidth = 2.5;
-          ctx.strokeStyle = 'rgba(0,0,0,0.9)';
-          ctx.fillStyle = isTopRank ? '#ffcc00' : '#ffffff';
-          const nameText = f.nickname.length > 10 ? f.nickname.slice(0, 9) + '…' : f.nickname;
-          ctx.strokeText((isTopRank ? '👑 ' : '') + nameText, f.x, f.y - 22 * scale);
-          ctx.fillText((isTopRank ? '👑 ' : '') + nameText, f.x, f.y - 22 * scale);
+          ctx.strokeStyle = 'rgba(0,0,0,0.95)';
+          
+          let tierBadge = '';
+          if (tier === 5) { tierBadge = '👑 [CHÍ TÔN] '; ctx.fillStyle = '#fef08a'; }
+          else if (tier === 4) { tierBadge = '⚡ [CHIẾN THẦN] '; ctx.fillStyle = '#38bdf8'; }
+          else if (tier === 3) { tierBadge = '✨ [THẦN TƯỚNG] '; ctx.fillStyle = '#fde047'; }
+          else if (tier === 2) { tierBadge = '🛡️ '; ctx.fillStyle = '#cbd5e1'; }
+          else { tierBadge = isTopRank ? '👑 ' : ''; ctx.fillStyle = '#ffffff'; }
 
-          // Health / Contribution Mini Bar
-          ctx.fillStyle = 'rgba(0,0,0,0.6)';
-          ctx.fillRect(f.x - 12 * scale, f.y - 18 * scale, 24 * scale, 3 * scale);
-          ctx.fillStyle = isTopRank ? '#eab308' : color;
-          ctx.fillRect(f.x - 12 * scale, f.y - 18 * scale, Math.min(24 * scale, Math.max(4 * scale, (f.score / 200) * 24 * scale)), 3 * scale);
+          const nameText = f.nickname.length > 9 ? f.nickname.slice(0, 8) + '…' : f.nickname;
+          ctx.strokeText(tierBadge + nameText, f.x, f.y - (24 + (tier >= 3 ? 6 : 0)) * scale);
+          ctx.fillText(tierBadge + nameText, f.x, f.y - (24 + (tier >= 3 ? 6 : 0)) * scale);
 
-          // Draw Character Body & Armor
+          // Health & Score Mini Bar
+          ctx.fillStyle = 'rgba(0,0,0,0.7)';
+          ctx.fillRect(f.x - 14 * scale, f.y - (20 + (tier >= 3 ? 4 : 0)) * scale, 28 * scale, 3.5 * scale);
+          ctx.fillStyle = tier >= 4 ? '#eab308' : tier === 3 ? '#fbbf24' : color;
+          ctx.fillRect(f.x - 14 * scale, f.y - (20 + (tier >= 3 ? 4 : 0)) * scale, Math.min(28 * scale, Math.max(5 * scale, (f.score / 300) * 28 * scale)), 3.5 * scale);
+          ctx.restore();
+
+          // Draw Character Body & 3D Wuxia Armor
+          ctx.save();
           ctx.translate(f.x, f.y + bob);
           ctx.scale(scale, scale);
 
-          // 2.1. LEGS & BOOTS (Đôi chân chiến binh bước đi chiến đấu nhịp nhàng)
-          ctx.lineWidth = 3;
+          // 2.0 WINGS OF LIGHT (Cánh Hào Quang Thần Thánh for Tier 3, 4, 5)
+          if (tier >= 3) {
+            const wingFlap = Math.sin(time * 0.008) * 6;
+            ctx.save();
+            ctx.shadowColor = tier === 5 ? '#fbbf24' : (tier === 4 ? '#38bdf8' : '#fde047');
+            ctx.shadowBlur = 14;
+            ctx.strokeStyle = tier === 5 ? '#facc15' : '#ffffff';
+            ctx.fillStyle = tier === 5 ? 'rgba(250, 204, 21, 0.6)' : 'rgba(255, 255, 255, 0.45)';
+            ctx.lineWidth = 1.5;
+
+            // Left Wing
+            ctx.beginPath();
+            ctx.moveTo(-4, -2);
+            ctx.quadraticCurveTo(-18, -16 + wingFlap, -24, -8 + wingFlap);
+            ctx.quadraticCurveTo(-14, 0 + wingFlap, -4, 4);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Right Wing
+            ctx.beginPath();
+            ctx.moveTo(4, -2);
+            ctx.quadraticCurveTo(18, -16 - wingFlap, 24, -8 - wingFlap);
+            ctx.quadraticCurveTo(14, 0 - wingFlap, 4, 4);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+          }
+
+          // 2.1 LEGS & GREAVES (Chân & Giáp Ống Chân)
+          ctx.lineWidth = tier >= 3 ? 3.5 : 3;
           ctx.lineCap = 'round';
           
-          // Left Leg (Chân trái)
-          ctx.strokeStyle = factionId === 'blue' ? '#1e3a8a' : '#7f1d1d';
+          // Left Leg
+          ctx.strokeStyle = tier >= 3 ? '#ca8a04' : (factionId === 'blue' ? '#1e3a8a' : '#7f1d1d');
           ctx.beginPath();
           ctx.moveTo(-3, 6);
           ctx.lineTo(-4 + stride * 3.5, 14);
           ctx.stroke();
-          // Left Boot (Giày giáp trái)
-          ctx.fillStyle = isTopRank ? '#f59e0b' : '#334155';
+          // Left Boot
+          ctx.fillStyle = tier >= 3 ? '#facc15' : (tier === 2 ? '#94a3b8' : '#334155');
           ctx.fillRect(-6 + stride * 3.5, 13, 5, 3.5);
 
-          // Right Leg (Chân phải)
-          ctx.strokeStyle = factionId === 'blue' ? '#1d4ed8' : '#991b1b';
+          // Right Leg
+          ctx.strokeStyle = tier >= 3 ? '#eab308' : (factionId === 'blue' ? '#1d4ed8' : '#991b1b');
           ctx.beginPath();
           ctx.moveTo(3, 6);
           ctx.lineTo(4 - stride * 3.5, 14);
           ctx.stroke();
-          // Right Boot (Giày giáp phải)
-          ctx.fillStyle = isTopRank ? '#fbbf24' : '#475569';
+          // Right Boot
+          ctx.fillStyle = tier >= 3 ? '#fde047' : (tier === 2 ? '#cbd5e1' : '#475569');
           ctx.fillRect(2 - stride * 3.5, 13, 5, 3.5);
 
-          // 2.2. TORSO & CHEST ARMOR (Áo giáp chiến binh)
-          ctx.shadowColor = isPulsing ? '#ffcc00' : color;
-          ctx.shadowBlur = isPulsing ? 18 : 8;
+          // 2.2 CHEST ARMOR & ROBES (Áo Giáp Hoàng Kim / Ngự Lâm / Hiệp Khách)
+          ctx.shadowColor = tier >= 4 ? '#facc15' : (isPulsing ? '#ffcc00' : color);
+          ctx.shadowBlur = tier >= 4 ? 20 : (isPulsing ? 18 : 8);
 
           // Armor Plate Gradient
           const armorGrad = ctx.createLinearGradient(-6, -4, 6, 8);
-          armorGrad.addColorStop(0, factionId === 'blue' ? '#3b82f6' : '#ef4444');
-          armorGrad.addColorStop(1, factionId === 'blue' ? '#1d4ed8' : '#b91c1c');
+          if (tier >= 3) {
+            // Golden Divine Armor (Kim Khải)
+            armorGrad.addColorStop(0, '#fef08a');
+            armorGrad.addColorStop(0.5, '#facc15');
+            armorGrad.addColorStop(1, '#ca8a04');
+          } else if (tier === 2) {
+            // Silver Knight Armor (Thiết Giáp Bạc)
+            armorGrad.addColorStop(0, '#f8fafc');
+            armorGrad.addColorStop(0.5, '#94a3b8');
+            armorGrad.addColorStop(1, '#475569');
+          } else {
+            // Tier 1: Faction Robe
+            armorGrad.addColorStop(0, factionId === 'blue' ? '#3b82f6' : '#ef4444');
+            armorGrad.addColorStop(1, factionId === 'blue' ? '#1d4ed8' : '#b91c1c');
+          }
+
           ctx.fillStyle = armorGrad;
-          ctx.strokeStyle = isTopRank ? '#ffd700' : '#ffffff';
-          ctx.lineWidth = 1.2;
+          ctx.strokeStyle = tier >= 3 ? '#ffffff' : (isTopRank ? '#ffd700' : '#ffffff');
+          ctx.lineWidth = 1.3;
 
           ctx.beginPath();
-          ctx.moveTo(-5.5, 6);
-          ctx.lineTo(5.5, 6);
-          ctx.lineTo(4.5, -4);
-          ctx.lineTo(-4.5, -4);
+          ctx.moveTo(-6, 6);
+          ctx.lineTo(6, 6);
+          ctx.lineTo(5, -4);
+          ctx.lineTo(-5, -4);
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
 
-          // Golden Belt / Energy Core
-          ctx.fillStyle = isTopRank ? '#facc15' : '#e2e8f0';
-          ctx.fillRect(-4, 4, 8, 2);
+          // Energy Gem / Core
+          ctx.fillStyle = tier >= 3 ? '#38bdf8' : (isTopRank ? '#facc15' : '#e2e8f0');
+          ctx.fillRect(-3.5, 3.5, 7, 2.5);
 
           // Shoulder Pauldrons (Giáp vai chiến đấu)
-          ctx.fillStyle = isTopRank ? '#eab308' : (factionId === 'blue' ? '#60a5fa' : '#f87171');
+          ctx.fillStyle = tier >= 3 ? '#eab308' : (tier === 2 ? '#cbd5e1' : (factionId === 'blue' ? '#60a5fa' : '#f87171'));
           ctx.beginPath();
-          ctx.arc(-5.5, -3, 2.5, 0, Math.PI * 2);
-          ctx.arc(5.5, -3, 2.5, 0, Math.PI * 2);
+          ctx.arc(-6, -3, 3, 0, Math.PI * 2);
+          ctx.arc(6, -3, 3, 0, Math.PI * 2);
           ctx.fill();
 
-          // 2.3. HELMET & VISOR (Mũ giáp & Kính phát quang)
-          ctx.fillStyle = isTopRank ? '#ca8a04' : (factionId === 'blue' ? '#1e40af' : '#991b1b');
+          // 2.3 HELMET & DIVINE CREST (Mũ Giáp, Vương Miện Phượng Hoàng, Sừng Thần Long)
+          ctx.fillStyle = tier >= 3 ? '#eab308' : (tier === 2 ? '#64748b' : (factionId === 'blue' ? '#1e40af' : '#991b1b'));
           ctx.beginPath();
-          ctx.arc(0, -9, 5, 0, Math.PI * 2);
+          ctx.arc(0, -9, 5.5, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
 
           // Glowing Visor / Eyes
-          ctx.fillStyle = isPulsing ? '#ffffff' : (factionId === 'blue' ? '#67e8f9' : '#fef08a');
+          ctx.fillStyle = tier >= 3 ? '#ffffff' : (factionId === 'blue' ? '#67e8f9' : '#fef08a');
           ctx.fillRect(-2.5, -9.5, 5, 1.8);
 
-          // Helmet Plume / Crest (Lông vũ trên mũ giáp)
-          ctx.fillStyle = isTopRank ? '#ef4444' : (factionId === 'blue' ? '#38bdf8' : '#fb7185');
-          ctx.beginPath();
-          ctx.moveTo(0, -14);
-          ctx.lineTo(2.5, -10);
-          ctx.lineTo(-2.5, -10);
-          ctx.closePath();
-          ctx.fill();
+          // Crown / Dragon Horns / Feather Crest
+          if (tier === 5) {
+            // Dragon Horns
+            ctx.fillStyle = '#fde047';
+            ctx.beginPath();
+            ctx.moveTo(-3, -13);
+            ctx.lineTo(-6, -18);
+            ctx.lineTo(-1, -14);
+            ctx.moveTo(3, -13);
+            ctx.lineTo(6, -18);
+            ctx.lineTo(1, -14);
+            ctx.fill();
+          } else if (tier >= 3) {
+            // Golden Phoenix Crown
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.moveTo(0, -17);
+            ctx.lineTo(3, -11);
+            ctx.lineTo(-3, -11);
+            ctx.closePath();
+            ctx.fill();
+          } else {
+            ctx.fillStyle = factionId === 'blue' ? '#38bdf8' : '#fb7185';
+            ctx.beginPath();
+            ctx.moveTo(0, -14);
+            ctx.lineTo(2.5, -10);
+            ctx.lineTo(-2.5, -10);
+            ctx.closePath();
+            ctx.fill();
+          }
 
-          // 2.4. WEAPONS & SHIELDS (Vũ khí kiếm khiên phát sáng)
+          // 2.4 WEAPONS & ORBITING QI SWORDS (Thần Binh Ỷ Thiên, Đồ Long & Kiếm Khí Xoay Vòng)
           ctx.shadowBlur = 0;
           if (factionId === 'blue') {
-            // Blue: Radiant Sword & Crest Shield
-            // Shield on back/left hand
-            ctx.fillStyle = '#1e3a8a';
-            ctx.strokeStyle = '#60a5fa';
+            // Blue: Azure Dragon Divine Sword & Radiant Shield
+            ctx.fillStyle = tier >= 3 ? '#ca8a04' : '#1e3a8a';
+            ctx.strokeStyle = tier >= 3 ? '#facc15' : '#60a5fa';
             ctx.lineWidth = 1.5;
             ctx.beginPath();
-            ctx.ellipse(-7, 1, 3.5, 5.5, 0, 0, Math.PI * 2);
+            ctx.ellipse(-7, 1, 4, 6, 0, 0, Math.PI * 2);
             ctx.fill();
             ctx.stroke();
 
-            // Glowing Azure Sword in main hand
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 2;
+            // Radiant Sword Blade
+            ctx.strokeStyle = tier >= 4 ? '#38bdf8' : '#ffffff';
+            ctx.lineWidth = tier >= 3 ? 2.8 : 2;
             ctx.beginPath();
             ctx.moveTo(4, 2);
-            ctx.lineTo(11, -7 - stride * 2);
+            ctx.lineTo(12 + (tier >= 3 ? 3 : 0), -8 - stride * 2);
             ctx.stroke();
-            // Sword Guard
+            // Golden Guard
             ctx.strokeStyle = '#fbbf24';
             ctx.lineWidth = 2.5;
             ctx.beginPath();
@@ -626,33 +877,173 @@ export default function GameChienDau({
             ctx.lineTo(6, 0);
             ctx.stroke();
           } else {
-            // Red: Flaming Battle Axe & Combat Shield
-            // Combat Shield on right hand
-            ctx.fillStyle = '#7f1d1d';
-            ctx.strokeStyle = '#f87171';
+            // Red: Crimson Flame Battle Blade & Shield
+            ctx.fillStyle = tier >= 3 ? '#991b1b' : '#7f1d1d';
+            ctx.strokeStyle = tier >= 3 ? '#fbbf24' : '#f87171';
             ctx.lineWidth = 1.5;
             ctx.beginPath();
-            ctx.ellipse(7, 1, 3.5, 5.5, 0, 0, Math.PI * 2);
+            ctx.ellipse(7, 1, 4, 6, 0, 0, Math.PI * 2);
             ctx.fill();
             ctx.stroke();
 
-            // Glowing Crimson Spear / Axe in main hand
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 2;
+            // Flaming Blade
+            ctx.strokeStyle = tier >= 4 ? '#fb7185' : '#ffffff';
+            ctx.lineWidth = tier >= 3 ? 2.8 : 2;
             ctx.beginPath();
             ctx.moveTo(-4, 2);
-            ctx.lineTo(-11, -7 + stride * 2);
+            ctx.lineTo(-12 - (tier >= 3 ? 3 : 0), -8 + stride * 2);
             ctx.stroke();
-            // Axe Blade Head
+            // Blade Guard
             ctx.fillStyle = '#ef4444';
             ctx.beginPath();
-            ctx.arc(-11, -7 + stride * 2, 3.5, 0, Math.PI * 2);
+            ctx.arc(-12 - (tier >= 3 ? 3 : 0), -8 + stride * 2, tier >= 3 ? 4.5 : 3.5, 0, Math.PI * 2);
             ctx.fill();
+          }
+
+          // Orbiting Qi Swords for Tier 4 & 5
+          if (tier >= 4) {
+            const orbitSwords = tier === 5 ? 4 : 3;
+            for (let s = 0; s < orbitSwords; s++) {
+              const angle = time * 0.004 + (s * (Math.PI * 2 / orbitSwords));
+              const ox = Math.cos(angle) * 16;
+              const oy = Math.sin(angle) * 10;
+              ctx.save();
+              ctx.translate(ox, oy);
+              ctx.rotate(angle + Math.PI / 2);
+              ctx.strokeStyle = tier === 5 ? '#facc15' : '#38bdf8';
+              ctx.lineWidth = 1.8;
+              ctx.beginPath();
+              ctx.moveTo(0, -6);
+              ctx.lineTo(0, 6);
+              ctx.stroke();
+              ctx.restore();
+            }
           }
 
           ctx.restore();
         });
       });
+
+      // 3. Update & Draw Flying Swords (Tuyệt Kỹ VẠN KIẾM QUY TÔNG)
+      for (let i = engineRef.current.flyingSwords.length - 1; i >= 0; i--) {
+        const sw = engineRef.current.flyingSwords[i];
+        sw.progress += dt * sw.speed;
+
+        if (sw.progress > 0) {
+          const curX = sw.x + (sw.targetX - sw.x) * Math.min(1, sw.progress);
+          const curY = sw.y + (sw.targetY - sw.y) * Math.min(1, sw.progress);
+          const angle = Math.atan2(sw.targetY - sw.y, sw.targetX - sw.x);
+
+          ctx.save();
+          ctx.translate(curX, curY);
+          ctx.rotate(angle);
+          ctx.shadowColor = sw.color;
+          ctx.shadowBlur = 12;
+
+          // Glowing Sword Trail
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(-18, 0);
+          ctx.lineTo(14, 0);
+          ctx.stroke();
+
+          // Sword Hilt
+          ctx.strokeStyle = '#facc15';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(-12, -4);
+          ctx.lineTo(-12, 4);
+          ctx.stroke();
+
+          ctx.restore();
+
+          // On Hit Sparkles
+          if (sw.progress >= 1) {
+            for (let p = 0; p < 4; p++) {
+              engineRef.current.particles.push({
+                x: sw.targetX,
+                y: sw.targetY,
+                vx: (Math.random() - 0.5) * 80,
+                vy: (Math.random() - 0.5) * 80,
+                size: 2.5,
+                color: sw.color,
+                isFlash: true,
+                lifespanMs: 400,
+                spawnedAt: performance.now()
+              });
+            }
+            engineRef.current.flyingSwords.splice(i, 1);
+          }
+        }
+      }
+
+      // 4. Update & Draw Dragon Beasts (Tuyệt Kỹ GIÁNG LONG THẬP BÁT CHƯỞNG)
+      for (let i = engineRef.current.dragonBeasts.length - 1; i >= 0; i--) {
+        const dBeast = engineRef.current.dragonBeasts[i];
+        const isBlue = dBeast.factionId === 'blue';
+        dBeast.x += (isBlue ? 1 : -1) * 320 * dt;
+        const waveY = Math.sin((dBeast.x / canvas.width) * Math.PI * 4) * 25;
+
+        ctx.save();
+        ctx.translate(dBeast.x, dBeast.y + waveY);
+        ctx.scale(isBlue ? 2.8 : -2.8, 2.8);
+        ctx.shadowColor = '#facc15';
+        ctx.shadowBlur = 28;
+
+        // Golden Dragon Head & Body
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.arc(0, 0, 18, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        ctx.font = 'bold 8px sans-serif';
+        ctx.fillStyle = '#000000';
+        ctx.textAlign = 'center';
+        ctx.fillText('🐉 THẦN LONG', 0, 3);
+        ctx.restore();
+
+        if (performance.now() - dBeast.spawnedAt > 4000) {
+          engineRef.current.dragonBeasts.splice(i, 1);
+        }
+      }
+
+      // 5. Update & Draw Tai Chi Shields (Tuyệt Kỹ THÁI CỰC KIẾM TRẬN)
+      for (let i = engineRef.current.taiChiShields.length - 1; i >= 0; i--) {
+        const tc = engineRef.current.taiChiShields[i];
+        const elapsed = performance.now() - tc.spawnedAt;
+        const progress = elapsed / tc.lifespanMs;
+
+        if (progress < 1) {
+          tc.radius += (tc.maxRadius - tc.radius) * dt * 3;
+          ctx.save();
+          ctx.translate(tc.x, tc.y);
+          ctx.rotate(time * 0.003);
+          ctx.shadowColor = '#38bdf8';
+          ctx.shadowBlur = 20;
+
+          // Yin Yang Outer Ring
+          ctx.strokeStyle = `rgba(56, 189, 248, ${1 - progress})`;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(0, 0, tc.radius, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Yin Yang symbols
+          ctx.fillStyle = `rgba(255, 255, 255, ${(1 - progress) * 0.35})`;
+          ctx.beginPath();
+          ctx.arc(0, 0, tc.radius, 0, Math.PI);
+          ctx.fill();
+
+          ctx.restore();
+        } else {
+          engineRef.current.taiChiShields.splice(i, 1);
+        }
+      }
 
       // 3. Update & Draw Bosses
       for (let i = engineRef.current.bosses.length - 1; i >= 0; i--) {
@@ -934,13 +1325,72 @@ export default function GameChienDau({
         </div>
       </div>
 
+      {/* PINNED GIFT & EQUIPMENT SHOWCASE HUD (Ghim Cây Trang Bị & Quà Tặng Trên Màn Hình Live) */}
+      {config.showGiftHud !== false && (
+        <div className={`absolute top-28 right-4 z-20 transition-all duration-300 pointer-events-auto ${
+          isGiftHudMinimized ? 'w-10 overflow-hidden' : 'w-60'
+        }`}>
+          <div className="bg-black/85 backdrop-blur-xl border border-purple-500/40 rounded-2xl shadow-2xl overflow-hidden text-white">
+            {/* HUD Header */}
+            <div className="px-3 py-2 bg-gradient-to-r from-purple-950/80 to-indigo-950/80 border-b border-purple-500/30 flex items-center justify-between">
+              {!isGiftHudMinimized ? (
+                <div className="flex items-center gap-1.5">
+                  <Sparkles size={14} className="text-yellow-400 animate-spin" />
+                  <span className="text-[11px] font-black uppercase tracking-wider text-purple-200">
+                    CÂY TRANG BỊ & QUÀ
+                  </span>
+                </div>
+              ) : null}
+              <button
+                onClick={() => setIsGiftHudMinimized(!isGiftHudMinimized)}
+                className="p-1 rounded text-gray-400 hover:text-white hover:bg-white/10 transition-colors ml-auto"
+                title={isGiftHudMinimized ? "Mở rộng bảng quà" : "Thu nhỏ bảng quà"}
+              >
+                <span className="text-xs font-bold">{isGiftHudMinimized ? '🎁' : '−'}</span>
+              </button>
+            </div>
+
+            {/* HUD Items List */}
+            {!isGiftHudMinimized && (
+              <div className="p-2 space-y-1.5 max-h-60 overflow-y-auto">
+                {(config.gifts || [
+                  { id: 1, name: 'Hoa Hồng / Tim', icon: '🌸', coins: 1, tier: 'Tân Binh', buff: '+10 HP Xung Trận' },
+                  { id: 2, name: 'Nước Hoa / Mũ', icon: '🛡️', coins: 50, tier: 'Thiết Giáp Hiệp', buff: '+150 HP + Giáp Bạc' },
+                  { id: 3, name: 'Vương Miện / Cánh', icon: '👑', coins: 200, tier: 'Kim Khải Thần Tướng', buff: '+600 HP + Cánh Vàng' },
+                  { id: 4, name: 'Xe Thể Thao / Sét', icon: '⚡', coins: 500, tier: 'Chiến Thần Vạn Kiếm', buff: '+1500 HP + Thần Binh' },
+                  { id: 5, name: 'Thần Long / Vũ Trụ', icon: '🐉', coins: 1000, tier: 'Chí Tôn Thiên Tôn', buff: '+3500 HP + Rồng Thần' }
+                ]).map((g, i) => (
+                  <div 
+                    key={g.id || i}
+                    className="flex items-center justify-between p-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all text-xs"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">{g.icon}</span>
+                      <div>
+                        <div className="text-[11px] font-bold text-gray-200">{g.tier || g.name}</div>
+                        <div className="text-[9px] text-purple-300">{g.buff}</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] font-mono font-black text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+                        {g.coins} xu
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* DONOR SPOTLIGHT (Popup Banner) */}
       {gameState.recentSpotlight && (
-        <div className="absolute top-28 right-4 bg-gradient-to-r from-amber-600/90 to-orange-600/90 text-white px-4 py-2 rounded-xl shadow-2xl border border-amber-300/40 z-30 animate-in fade-in slide-in-from-right-4 duration-200">
-          <div className="flex items-center gap-2">
-            <Sparkles size={16} className="text-yellow-200 animate-spin" />
+        <div className="absolute top-28 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-600/90 via-orange-600/90 to-amber-700/90 text-white px-5 py-2.5 rounded-2xl shadow-2xl border border-amber-300/50 z-30 animate-in fade-in zoom-in-95 duration-200">
+          <div className="flex items-center gap-2.5">
+            <Sparkles size={18} className="text-yellow-200 animate-spin" />
             <div>
-              <p className="text-[10px] text-yellow-200 font-bold uppercase">Cảm ơn Nhà Tài Trợ!</p>
+              <p className="text-[10px] text-yellow-200 font-bold uppercase tracking-wider">Cảm ơn Nhà Tài Trợ Trợ Lực!</p>
               <p className="text-xs font-black">{gameState.recentSpotlight.name} đã tặng {gameState.recentSpotlight.gift}</p>
             </div>
           </div>

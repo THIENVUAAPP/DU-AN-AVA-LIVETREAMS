@@ -195,5 +195,110 @@ export const battleAudio = {
     steps.forEach((freq, idx) => {
       playHarmonicTone(ctx, freq, now + idx * 0.09, 0.22, 0.38, masterGain);
     });
+  },
+
+  // 7. Tuyệt kỹ Kiếm Hiệp: VẠN KIẾM QUY TÔNG (Flying Swords Swarm - Phi kiếm xé gió ngân vang)
+  playVanKiemQuyTong(volume = 0.7) {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(volume * 0.55, now);
+    masterGain.connect(ctx.destination);
+
+    // Chuỗi phi kiếm xé gió vút cao liên hoàn (Sword whooshes & rings)
+    const swordPitches = [880, 1108.73, 1318.51, 1567.98, 1760, 2093, 2349.32];
+    swordPitches.forEach((freq, i) => {
+      const startTime = now + i * 0.06;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq * 0.8, startTime);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.6, startTime + 0.18);
+
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(0.4, startTime + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.22);
+
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(startTime);
+      osc.stop(startTime + 0.23);
+    });
+
+    // Đại kiếm chém xuống chấn động hào quang (Final Divine Blade Strike)
+    setTimeout(() => {
+      const strikeCtx = getAudioContext();
+      if (!strikeCtx) return;
+      const t = strikeCtx.currentTime;
+      playHarmonicTone(strikeCtx, 1046.50, t, 0.6, 0.5, masterGain);
+      playHarmonicTone(strikeCtx, 2093.00, t + 0.05, 0.4, 0.35, masterGain);
+    }, 450);
+  },
+
+  // 8. Tuyệt kỹ Kiếm Hiệp: GIÁNG LONG THẬP BÁT CHƯỞNG (Dragon Palm Roar & Shockwave)
+  playGiangLongChuong(volume = 0.7) {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(volume * 0.65, now);
+    masterGain.connect(ctx.destination);
+
+    // Tiếng rồng gầm trầm hùng uy lực (Deep Harmonic Dragon Roar)
+    const roarTones = [110, 164.81, 220, 329.63, 440];
+    roarTones.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.linearRampToValueAtTime(freq * 1.4, now + 0.3);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.6, now + 0.8);
+
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.linearRampToValueAtTime(0.45 / (idx + 1), now + 0.2);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
+
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.95);
+    });
+
+    // Sóng chấn khí bùng nổ (Energy Shockwave)
+    playHarmonicTone(ctx, 523.25, now + 0.25, 0.6, 0.5, masterGain);
+    playHarmonicTone(ctx, 783.99, now + 0.4, 0.5, 0.4, masterGain);
+  },
+
+  // 9. Tuyệt kỹ Kiếm Hiệp: THÁI CỰC KIẾM TRẬN & HÀO QUANG KIM THẦN KHẢI (Tai Chi Shield & Gold Armor)
+  playThaiCucKiemTran(volume = 0.7) {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(volume * 0.55, now);
+    masterGain.connect(ctx.destination);
+
+    // Chuông tiên gia đạo giáo thanh tịnh ngân vang (Zen temple energy bell)
+    const zenPitches = [659.25, 880, 1046.50, 1318.51];
+    zenPitches.forEach((freq, i) => {
+      playHarmonicTone(ctx, freq, now + i * 0.08, 0.8, 0.4, masterGain);
+    });
+  },
+
+  // 10. Nâng cấp Trang bị & Thăng Cấp Thần Binh (Level Up & Golden Armor Upgrade)
+  playLevelUp(volume = 0.7) {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(volume * 0.6, now);
+    masterGain.connect(ctx.destination);
+
+    // Thăng cấp 5 âm cao lấp lánh (Sparkling Level-Up Strum: C5, E5, G5, B5, C6, E6)
+    const arpeggio = [523.25, 659.25, 783.99, 987.77, 1046.50, 1318.51];
+    arpeggio.forEach((freq, idx) => {
+      playHarmonicTone(ctx, freq, now + idx * 0.06, 0.45, 0.45, masterGain);
+    });
   }
 };

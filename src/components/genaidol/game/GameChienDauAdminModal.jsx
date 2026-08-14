@@ -3,7 +3,7 @@ import {
   Shield, Lock, Unlock, LogOut, CheckCircle2, RotateCcw, 
   Volume2, VolumeX, Sliders, Play, Pause, Swords, Flame, 
   Zap, Trophy, AlertCircle, X, Sparkles, UserCheck, PlayCircle, StopCircle, 
-  Minimize2, Maximize2, Move
+  Minimize2, Maximize2, Gift, Plus, Trash2
 } from 'lucide-react';
 import { battleAudio } from './battleAudioEngine';
 
@@ -13,6 +13,14 @@ const SIMULATED_USERS = [
   'Khánh Linh', 'Gia Bảo', 'Phương Thảo', 'Đức Anh', 
   'Hải Yến', 'Thành Đạt', 'Ngọc Ánh', 'Việt Hoàng',
   'Thanh Tùng', 'Mỹ Duyên', 'Quốc Bảo', 'Lan Anh'
+];
+
+const DEFAULT_GIFTS = [
+  { id: 1, name: 'Hoa Hồng / Tim', icon: '🌸', coins: 1, tier: 'Tân Binh', buff: '+10 HP Xung Trận', skill: 'Vào Trận' },
+  { id: 2, name: 'Nước Hoa / Mũ', icon: '🛡️', coins: 50, tier: 'Thiết Giáp Hiệp', buff: '+150 HP + Giáp Bạc', skill: 'Kiếm Thép' },
+  { id: 3, name: 'Vương Miện / Cánh', icon: '👑', coins: 200, tier: 'Kim Khải Thần Tướng', buff: '+600 HP + Cánh Vàng', skill: 'Thái Cực Trận' },
+  { id: 4, name: 'Xe Thể Thao / Sét', icon: '⚡', coins: 500, tier: 'Chiến Thần Vạn Kiếm', buff: '+1500 HP + Thần Binh', skill: 'Vạn Kiếm Quy Tông' },
+  { id: 5, name: 'Thần Long / Vũ Trụ', icon: '🐉', coins: 1000, tier: 'Chí Tôn Thiên Tôn', buff: '+3500 HP + Rồng Thần', skill: 'Giáng Long Chưởng' }
 ];
 
 export default function GameChienDauAdminModal({ 
@@ -26,7 +34,7 @@ export default function GameChienDauAdminModal({
   });
   const [passwordInput, setPasswordInput] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [activeTab, setActiveTab] = useState('referee'); // 'referee' | 'audio' | 'settings' | 'match'
+  const [activeTab, setActiveTab] = useState('referee'); // 'referee' | 'gifts' | 'audio' | 'settings' | 'match'
   const [isMinimized, setIsMinimized] = useState(false);
 
   // Auto simulation state
@@ -37,7 +45,14 @@ export default function GameChienDauAdminModal({
   const [config, setConfig] = useState(() => {
     const saved = localStorage.getItem('GAME_BATTLE_CONFIG');
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) {}
+      try { 
+        const parsed = JSON.parse(saved);
+        return {
+          ...parsed,
+          gifts: parsed.gifts || DEFAULT_GIFTS,
+          showGiftHud: parsed.showGiftHud !== undefined ? parsed.showGiftHud : true
+        };
+      } catch (e) {}
     }
     return {
       title: 'Kingdom Clash: Ultimate War',
@@ -50,7 +65,9 @@ export default function GameChienDauAdminModal({
       charScale: 1.0,
       musicVolume: 0.4,
       sfxVolume: 0.7,
-      soundEnabled: true
+      soundEnabled: true,
+      showGiftHud: true,
+      gifts: DEFAULT_GIFTS
     };
   });
 
@@ -60,7 +77,15 @@ export default function GameChienDauAdminModal({
     if (isOpen) {
       const saved = localStorage.getItem('GAME_BATTLE_CONFIG');
       if (saved) {
-        try { setConfig(JSON.parse(saved)); } catch (e) {}
+        try { 
+          const parsed = JSON.parse(saved);
+          setConfig(prev => ({
+            ...prev,
+            ...parsed,
+            gifts: parsed.gifts || DEFAULT_GIFTS,
+            showGiftHud: parsed.showGiftHud !== undefined ? parsed.showGiftHud : true
+          }));
+        } catch (e) {}
       }
     }
   }, [isOpen]);
@@ -81,30 +106,34 @@ export default function GameChienDauAdminModal({
       let tick = 0;
       simTimerRef.current = setInterval(() => {
         tick++;
-        const randomUser = SIMULATED_USERS[Math.floor(Math.random() * SIMULATED_USERS.length)];
         const isBlue = Math.random() < 0.5;
-        const faction = isBlue ? 'blue' : 'red';
         const randChoice = Math.random();
 
-        if (randChoice < 0.65) {
-          // 65%: Regular comment joining battle
+        if (randChoice < 0.45) {
+          // 45%: Regular comment joining battle
           if (onTriggerRefereeAction) {
             onTriggerRefereeAction(isBlue ? 'ADD_BLUE_20' : 'ADD_RED_20');
           }
-        } else if (randChoice < 0.82) {
-          // 17%: Stage Dance celebration gift
+        } else if (randChoice < 0.60) {
+          // 15%: Stage Dance celebration gift
           if (onTriggerRefereeAction) {
             onTriggerRefereeAction(isBlue ? 'TRIGGER_DANCE_BLUE' : 'TRIGGER_DANCE_RED');
           }
-        } else if (randChoice < 0.94) {
-          // 12%: AoE Thunderstorm Strike
+        } else if (randChoice < 0.75) {
+          // 15%: Tuyệt kỹ Vạn Kiếm Quy Tông
           if (onTriggerRefereeAction) {
-            onTriggerRefereeAction(isBlue ? 'TRIGGER_AOE_BLUE' : 'TRIGGER_AOE_RED');
+            onTriggerRefereeAction(isBlue ? 'TRIGGER_VAN_KIEM_BLUE' : 'TRIGGER_VAN_KIEM_RED');
+          }
+        } else if (randChoice < 0.88) {
+          // 13%: Thăng cấp Kim Khải Thần Tướng + Thái Cực Trận
+          if (onTriggerRefereeAction) {
+            onTriggerRefereeAction(isBlue ? 'UPGRADE_HERO_BLUE' : 'UPGRADE_HERO_RED');
+            onTriggerRefereeAction(isBlue ? 'TRIGGER_THAI_CUC_BLUE' : 'TRIGGER_THAI_CUC_RED');
           }
         } else {
-          // 6%: Mighty Boss Summon
+          // 12%: Tuyệt Kỹ Giáng Long Thập Bát Chưởng
           if (onTriggerRefereeAction) {
-            onTriggerRefereeAction(isBlue ? 'SUMMON_BOSS_BLUE' : 'SUMMON_BOSS_RED');
+            onTriggerRefereeAction(isBlue ? 'TRIGGER_GIANG_LONG_BLUE' : 'TRIGGER_GIANG_LONG_RED');
           }
         }
       }, 1400);
@@ -143,11 +172,37 @@ export default function GameChienDauAdminModal({
     setTimeout(() => setSavedSuccess(false), 2000);
   };
 
+  const updateGiftItem = (index, field, value) => {
+    const updatedGifts = [...(config.gifts || DEFAULT_GIFTS)];
+    updatedGifts[index] = { ...updatedGifts[index], [field]: value };
+    setConfig({ ...config, gifts: updatedGifts });
+  };
+
+  const addGiftItem = () => {
+    const updatedGifts = [...(config.gifts || DEFAULT_GIFTS)];
+    updatedGifts.push({
+      id: Date.now(),
+      name: 'Vật Phẩm Mới',
+      icon: '✨',
+      coins: 100,
+      tier: 'Hiệp Khách VIP',
+      buff: '+300 HP + Hào Quang',
+      skill: 'Tuyệt Chiêu'
+    });
+    setConfig({ ...config, gifts: updatedGifts });
+  };
+
+  const deleteGiftItem = (index) => {
+    const updatedGifts = [...(config.gifts || DEFAULT_GIFTS)];
+    updatedGifts.splice(index, 1);
+    setConfig({ ...config, gifts: updatedGifts });
+  };
+
   return (
     <div className={`fixed z-50 transition-all duration-300 ${
       isMinimized 
         ? 'bottom-6 right-6 w-80 shadow-2xl' 
-        : 'bottom-4 right-4 md:bottom-6 md:right-6 w-full max-w-xl max-h-[85vh] shadow-2xl shadow-purple-950/70'
+        : 'bottom-4 right-4 md:bottom-6 md:right-6 w-full max-w-2xl max-h-[88vh] shadow-2xl shadow-purple-950/70'
     }`}>
       <div className="relative w-full bg-[#11131c]/95 backdrop-blur-xl border border-purple-500/40 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         
@@ -275,7 +330,17 @@ export default function GameChienDauAdminModal({
                         : 'border-transparent text-gray-400 hover:text-gray-200'
                     }`}
                   >
-                    <Flame size={13} /> Trọng tài / Chạy Thử
+                    <Flame size={13} /> Trọng tài & Chạy Thử
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('gifts')}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-t-lg text-xs font-bold transition-all border-t border-x ${
+                      activeTab === 'gifts'
+                        ? 'bg-[#11131c] border-purple-500/40 text-purple-300'
+                        : 'border-transparent text-gray-400 hover:text-gray-200'
+                    }`}
+                  >
+                    <Gift size={13} /> Quà & Cây Trang Bị
                   </button>
                   <button
                     onClick={() => setActiveTab('audio')}
@@ -310,7 +375,7 @@ export default function GameChienDauAdminModal({
                 </div>
 
                 {/* Tab Contents */}
-                <div className="p-4 overflow-y-auto max-h-[50vh] space-y-4">
+                <div className="p-4 overflow-y-auto max-h-[52vh] space-y-4">
                   
                   {/* TAB 1: TRỌNG TÀI & CHẠY THỬ TỰ ĐỘNG */}
                   {activeTab === 'referee' && (
@@ -323,7 +388,7 @@ export default function GameChienDauAdminModal({
                               <PlayCircle size={14} className="text-purple-400" /> Chế độ Chạy Thử Tự Động
                             </h4>
                             <p className="text-[10px] text-gray-400 mt-0.5">
-                              Tự động giả lập comment dồn dập (Xanh/Đỏ), tặng quà, múa và thả Boss
+                              Tự động giả lập comment dồn dập, nâng cấp trang bị, thi triển Vạn Kiếm Quy Tông & Giáng Long Chưởng
                             </p>
                           </div>
                           <button
@@ -353,10 +418,78 @@ export default function GameChienDauAdminModal({
                         )}
                       </div>
 
+                      {/* WUXIA SKILL CONTROLS */}
+                      <div className="p-3.5 bg-gradient-to-br from-indigo-950/30 to-purple-950/30 border border-indigo-500/30 rounded-xl space-y-2.5">
+                        <h4 className="text-xs font-bold text-indigo-300 uppercase flex items-center gap-1.5">
+                          <Zap size={13} /> Thử Nghiệm Tuyệt Kỹ Kiếm Hiệp & Nâng Cấp Trang Bị
+                        </h4>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('TRIGGER_VAN_KIEM_BLUE')}
+                            className="py-2 px-2.5 bg-sky-600/20 hover:bg-sky-600/40 text-sky-300 border border-sky-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                          >
+                            <span>⚔️ Vạn Kiếm (Xanh)</span>
+                            <span className="text-[9px] bg-sky-500/30 px-1 py-0.5 rounded text-sky-200">+150 HP</span>
+                          </button>
+                          <button
+                            onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('TRIGGER_VAN_KIEM_RED')}
+                            className="py-2 px-2.5 bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                          >
+                            <span>⚔️ Vạn Kiếm (Đỏ)</span>
+                            <span className="text-[9px] bg-rose-500/30 px-1 py-0.5 rounded text-rose-200">+150 HP</span>
+                          </button>
+
+                          <button
+                            onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('TRIGGER_GIANG_LONG_BLUE')}
+                            className="py-2 px-2.5 bg-amber-600/20 hover:bg-amber-600/40 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                          >
+                            <span>🐉 Giáng Long (Xanh)</span>
+                            <span className="text-[9px] bg-amber-500/30 px-1 py-0.5 rounded text-amber-200">+350 HP</span>
+                          </button>
+                          <button
+                            onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('TRIGGER_GIANG_LONG_RED')}
+                            className="py-2 px-2.5 bg-orange-600/20 hover:bg-orange-600/40 text-orange-300 border border-orange-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                          >
+                            <span>🐉 Giáng Long (Đỏ)</span>
+                            <span className="text-[9px] bg-orange-500/30 px-1 py-0.5 rounded text-orange-200">+350 HP</span>
+                          </button>
+
+                          <button
+                            onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('TRIGGER_THAI_CUC_BLUE')}
+                            className="py-2 px-2.5 bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-300 border border-cyan-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                          >
+                            <span>☯️ Thái Cực Trận (Xanh)</span>
+                            <span className="text-[9px] bg-cyan-500/30 px-1 py-0.5 rounded text-cyan-200">Hộ thân</span>
+                          </button>
+                          <button
+                            onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('TRIGGER_THAI_CUC_RED')}
+                            className="py-2 px-2.5 bg-pink-600/20 hover:bg-pink-600/40 text-pink-300 border border-pink-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                          >
+                            <span>☯️ Thái Cực Trận (Đỏ)</span>
+                            <span className="text-[9px] bg-pink-500/30 px-1 py-0.5 rounded text-pink-200">Hộ thân</span>
+                          </button>
+
+                          <button
+                            onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('UPGRADE_HERO_BLUE')}
+                            className="py-2 px-2.5 bg-yellow-600/30 hover:bg-yellow-600/50 text-yellow-200 border border-yellow-400/40 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                          >
+                            <span>👑 Nâng Cấp Giáp Vàng (Xanh)</span>
+                            <span className="text-[9px] bg-yellow-500/40 px-1 py-0.5 rounded text-yellow-100">+250 HP</span>
+                          </button>
+                          <button
+                            onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('UPGRADE_HERO_RED')}
+                            className="py-2 px-2.5 bg-yellow-600/30 hover:bg-yellow-600/50 text-yellow-200 border border-yellow-400/40 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                          >
+                            <span>👑 Nâng Cấp Giáp Vàng (Đỏ)</span>
+                            <span className="text-[9px] bg-yellow-500/40 px-1 py-0.5 rounded text-yellow-100">+250 HP</span>
+                          </button>
+                        </div>
+                      </div>
+
                       {/* DIRECT REFEREE CONTROLS */}
                       <div className="p-3.5 bg-gradient-to-br from-amber-950/20 to-orange-950/20 border border-amber-500/30 rounded-xl space-y-2.5">
                         <h4 className="text-xs font-bold text-amber-400 uppercase flex items-center gap-1.5">
-                          <Flame size={13} /> Thao tác Trọng tài Tức thì
+                          <Flame size={13} /> Bổ Sung Quân Số & Vũ Điệu
                         </h4>
                         <div className="grid grid-cols-2 gap-2">
                           <button
@@ -388,42 +521,97 @@ export default function GameChienDauAdminModal({
                             <span>💃 Vũ Điệu Phe Đỏ</span>
                             <span className="text-[9px] bg-pink-500/30 px-1 py-0.5 rounded text-pink-200">Sân khấu</span>
                           </button>
-
-                          <button
-                            onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('TRIGGER_AOE_BLUE')}
-                            className="py-2 px-2.5 bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-300 border border-cyan-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
-                          >
-                            <span>⚡ Sét AoE Phe Xanh</span>
-                            <span className="text-[9px] bg-cyan-500/30 px-1 py-0.5 rounded text-cyan-200">Bão sét</span>
-                          </button>
-                          <button
-                            onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('TRIGGER_AOE_RED')}
-                            className="py-2 px-2.5 bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
-                          >
-                            <span>⚡ Sét AoE Phe Đỏ</span>
-                            <span className="text-[9px] bg-rose-500/30 px-1 py-0.5 rounded text-rose-200">Bão lửa</span>
-                          </button>
-
-                          <button
-                            onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('SUMMON_BOSS_BLUE')}
-                            className="py-2 px-2.5 bg-blue-600/30 hover:bg-blue-600/50 text-blue-200 border border-blue-400/40 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
-                          >
-                            <span>🐉 Thả Boss Rồng Xanh</span>
-                            <span className="text-[9px] bg-blue-500/40 px-1 py-0.5 rounded text-blue-100">+250 HP</span>
-                          </button>
-                          <button
-                            onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('SUMMON_BOSS_RED')}
-                            className="py-2 px-2.5 bg-red-600/30 hover:bg-red-600/50 text-red-200 border border-red-400/40 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
-                          >
-                            <span>🐅 Thả Boss Hổ Đỏ</span>
-                            <span className="text-[9px] bg-red-500/40 px-1 py-0.5 rounded text-red-100">+250 HP</span>
-                          </button>
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {/* TAB 2: ÂM THANH & NGHE THỬ HIỆU ỨNG */}
+                  {/* TAB 2: QUẢN LÝ QUÀ & CÂY TRANG BỊ */}
+                  {activeTab === 'gifts' && (
+                    <div className="space-y-3">
+                      <div className="p-3.5 bg-black/40 border border-white/10 rounded-xl space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-bold text-gray-200 block">Ghim Bảng Cây Trang Bị Trên Màn Hình Live:</span>
+                            <span className="text-[10px] text-gray-400">Hiển thị danh sách quà tương ứng cấp bậc để khán giả donate</span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              const updated = { ...config, showGiftHud: !config.showGiftHud };
+                              setConfig(updated);
+                            }}
+                            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                              config.showGiftHud !== false ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-red-500/20 text-red-400 border border-red-500/40'
+                            }`}
+                          >
+                            {config.showGiftHud !== false ? 'ĐANG BẬT' : 'ĐANG TẮT'}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Gift Items Table */}
+                      <div className="p-3.5 bg-purple-950/20 border border-purple-500/30 rounded-xl space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-xs font-bold text-purple-300 uppercase flex items-center gap-1.5">
+                            <Gift size={13} /> Danh Sách Cấp Bậc Quà & Trang Bị Nhân Vật
+                          </h4>
+                          <button
+                            onClick={addGiftItem}
+                            className="px-2 py-1 rounded bg-purple-600 hover:bg-purple-500 text-white text-[10px] font-bold flex items-center gap-1 shadow"
+                          >
+                            <Plus size={12} /> Thêm Quà
+                          </button>
+                        </div>
+
+                        <div className="space-y-2">
+                          {(config.gifts || DEFAULT_GIFTS).map((gift, idx) => (
+                            <div key={gift.id || idx} className="p-2 bg-black/50 border border-white/10 rounded-xl flex items-center gap-2 text-xs">
+                              <input
+                                type="text"
+                                value={gift.icon}
+                                onChange={(e) => updateGiftItem(idx, 'icon', e.target.value)}
+                                className="w-9 text-center py-1 bg-black/60 border border-white/20 rounded text-sm"
+                                title="Icon vật phẩm"
+                              />
+                              <input
+                                type="text"
+                                value={gift.tier}
+                                onChange={(e) => updateGiftItem(idx, 'tier', e.target.value)}
+                                placeholder="Cấp bậc nhân vật..."
+                                className="w-32 px-2 py-1 bg-black/60 border border-white/20 rounded font-bold text-amber-300 text-xs"
+                              />
+                              <input
+                                type="text"
+                                value={gift.buff}
+                                onChange={(e) => updateGiftItem(idx, 'buff', e.target.value)}
+                                placeholder="Hiệu ứng buff..."
+                                className="flex-1 px-2 py-1 bg-black/60 border border-white/20 rounded text-gray-300 text-[11px]"
+                              />
+                              <div className="flex items-center gap-1">
+                                <input
+                                  type="number"
+                                  value={gift.coins}
+                                  onChange={(e) => updateGiftItem(idx, 'coins', parseInt(e.target.value) || 0)}
+                                  className="w-16 px-1.5 py-1 bg-black/60 border border-amber-500/30 rounded text-amber-400 font-mono font-bold text-right text-xs"
+                                  title="Số xu tương ứng"
+                                />
+                                <span className="text-[10px] text-gray-400">xu</span>
+                              </div>
+                              <button
+                                onClick={() => deleteGiftItem(idx)}
+                                className="p-1 rounded text-red-400 hover:bg-red-500/20"
+                                title="Xóa quà"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 3: ÂM THANH & NGHE THỬ HIỆU ỨNG */}
                   {activeTab === 'audio' && (
                     <div className="space-y-3">
                       <div className="p-3.5 bg-black/40 border border-white/10 rounded-xl space-y-3">
@@ -463,41 +651,38 @@ export default function GameChienDauAdminModal({
                       {/* Sound Effect Previews */}
                       <div className="p-3.5 bg-purple-950/20 border border-purple-500/30 rounded-xl space-y-2.5">
                         <h4 className="text-xs font-bold text-purple-300 uppercase flex items-center gap-1.5">
-                          <Volume2 size={13} /> Nghe Thử Các Âm Sắc Du Dương / Hào Hùng
+                          <Volume2 size={13} /> Nghe Thử Âm Sắc Kiếm Hiệp Chuẩn Điện Ảnh
                         </h4>
-                        <p className="text-[10px] text-gray-400">
-                          Toàn bộ âm sắc đã được tái tạo bằng bộ hòa âm thuần khiết, 100% không bị rè rè:
-                        </p>
                         <div className="grid grid-cols-3 gap-2">
                           <button
-                            onClick={() => battleAudio.playJoin(config.sfxVolume)}
-                            className="py-2 px-2 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 border border-blue-500/30 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1"
+                            onClick={() => battleAudio.playVanKiemQuyTong(config.sfxVolume)}
+                            className="py-2 px-2 bg-sky-600/20 hover:bg-sky-600/40 text-sky-300 border border-sky-500/30 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1"
                           >
-                            <span>🎺 Vào Trận</span>
+                            <span>⚔️ Vạn Kiếm</span>
                           </button>
                           <button
-                            onClick={() => battleAudio.playHit(config.sfxVolume)}
+                            onClick={() => battleAudio.playGiangLongChuong(config.sfxVolume)}
                             className="py-2 px-2 bg-amber-600/20 hover:bg-amber-600/40 text-amber-300 border border-amber-500/30 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1"
                           >
-                            <span>⚔️ Va Kiếm</span>
+                            <span>🐉 Giáng Long</span>
                           </button>
                           <button
-                            onClick={() => battleAudio.playAoe(config.sfxVolume)}
+                            onClick={() => battleAudio.playThaiCucKiemTran(config.sfxVolume)}
                             className="py-2 px-2 bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-300 border border-cyan-500/30 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1"
                           >
-                            <span>⚡ Sét AoE</span>
+                            <span>☯️ Thái Cực</span>
                           </button>
                           <button
-                            onClick={() => battleAudio.playBoss(config.sfxVolume)}
-                            className="py-2 px-2 bg-red-600/20 hover:bg-red-600/40 text-red-300 border border-red-500/30 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1"
+                            onClick={() => battleAudio.playLevelUp(config.sfxVolume)}
+                            className="py-2 px-2 bg-yellow-600/20 hover:bg-yellow-600/40 text-yellow-300 border border-yellow-500/30 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1"
                           >
-                            <span>🐉 Thần Thú</span>
+                            <span>👑 Nâng Cấp Giáp</span>
                           </button>
                           <button
                             onClick={() => battleAudio.playDanceBeat(config.sfxVolume)}
                             className="py-2 px-2 bg-pink-600/20 hover:bg-pink-600/40 text-pink-300 border border-pink-500/30 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1"
                           >
-                            <span>💃 Nhịp Vũ Điệu</span>
+                            <span>💃 Vũ Đạo</span>
                           </button>
                           <button
                             onClick={() => battleAudio.playVictory(config.sfxVolume)}
@@ -510,7 +695,7 @@ export default function GameChienDauAdminModal({
                     </div>
                   )}
 
-                  {/* TAB 3: CẤU HÌNH PHE & MÁU */}
+                  {/* TAB 4: CẤU HÌNH PHE & MÁU */}
                   {activeTab === 'settings' && (
                     <div className="space-y-3">
                       <div className="grid grid-cols-2 gap-3">
@@ -595,7 +780,7 @@ export default function GameChienDauAdminModal({
                     </div>
                   )}
 
-                  {/* TAB 4: ĐIỀU KHIỂN TRẬN ĐẤU */}
+                  {/* TAB 5: ĐIỀU KHIỂN TRẬN ĐẤU */}
                   {activeTab === 'match' && (
                     <div className="space-y-3">
                       <div className="p-3 bg-purple-900/20 border border-purple-500/30 rounded-xl">

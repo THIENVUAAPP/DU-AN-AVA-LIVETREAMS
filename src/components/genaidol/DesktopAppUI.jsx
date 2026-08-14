@@ -1474,7 +1474,7 @@ export default function DesktopAppUI() {
         isOpen={isGameAdminOpen}
         onClose={() => setIsGameAdminOpen(false)}
         onTriggerRefereeAction={(action) => {
-          const names = ['Hoàng Long', 'Bảo Trâm', 'Tuấn Kiệt', 'Minh Quân', 'Khánh Linh', 'Hồng Hạnh', 'Trần Mai', 'Gia Bảo', 'Phương Thảo', 'Quang Huy'];
+          const names = ['Hoàng Long', 'Bảo Trâm', 'Tuấn Kiệt', 'Minh Quân', 'Khánh Linh', 'Hồng Hạnh', 'Trần Mai', 'Gia Bảo', 'Phương Thảo', 'Quang Huy', 'Thành Đạt', 'Ngọc Ánh'];
           const randName = names[Math.floor(Math.random() * names.length)];
           const t = Date.now() + Math.random();
 
@@ -1484,10 +1484,22 @@ export default function DesktopAppUI() {
             setLastGameEvent({ type: 'COMMENT', data: { nickname: randName, comment: 'xanh', score: 20 }, timestamp: t });
           } else if (action === 'ADD_RED_20') {
             setLastGameEvent({ type: 'COMMENT', data: { nickname: randName, comment: 'đỏ', score: 20 }, timestamp: t });
-          } else if (action === 'ADD_BLUE_50') {
-            setLastGameEvent({ type: 'COMMENT', data: { nickname: randName, comment: 'xanh', score: 50 }, timestamp: t });
-          } else if (action === 'ADD_RED_50') {
-            setLastGameEvent({ type: 'COMMENT', data: { nickname: randName, comment: 'đỏ', score: 50 }, timestamp: t });
+          } else if (action === 'TRIGGER_VAN_KIEM_BLUE') {
+            setLastGameEvent({ type: 'TRIGGER_VAN_KIEM', data: { nickname: randName, faction: 'blue' }, timestamp: t });
+          } else if (action === 'TRIGGER_VAN_KIEM_RED') {
+            setLastGameEvent({ type: 'TRIGGER_VAN_KIEM', data: { nickname: randName, faction: 'red' }, timestamp: t });
+          } else if (action === 'TRIGGER_GIANG_LONG_BLUE') {
+            setLastGameEvent({ type: 'TRIGGER_GIANG_LONG', data: { nickname: randName, faction: 'blue' }, timestamp: t });
+          } else if (action === 'TRIGGER_GIANG_LONG_RED') {
+            setLastGameEvent({ type: 'TRIGGER_GIANG_LONG', data: { nickname: randName, faction: 'red' }, timestamp: t });
+          } else if (action === 'TRIGGER_THAI_CUC_BLUE') {
+            setLastGameEvent({ type: 'TRIGGER_THAI_CUC', data: { nickname: randName, faction: 'blue' }, timestamp: t });
+          } else if (action === 'TRIGGER_THAI_CUC_RED') {
+            setLastGameEvent({ type: 'TRIGGER_THAI_CUC', data: { nickname: randName, faction: 'red' }, timestamp: t });
+          } else if (action === 'UPGRADE_HERO_BLUE') {
+            setLastGameEvent({ type: 'UPGRADE_HERO', data: { nickname: randName, faction: 'blue', tier: 3 }, timestamp: t });
+          } else if (action === 'UPGRADE_HERO_RED') {
+            setLastGameEvent({ type: 'UPGRADE_HERO', data: { nickname: randName, faction: 'red', tier: 3 }, timestamp: t });
           } else if (action === 'TRIGGER_AOE_BLUE') {
             setLastGameEvent({ type: 'GIFT', data: { nickname: randName, diamondCount: 300, faction: 'blue' }, timestamp: t });
           } else if (action === 'TRIGGER_AOE_RED') {
