@@ -101,7 +101,47 @@ export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack 
       // Nhưng thường LipSync sẽ đè lên reaction. Tuỳ logic bên AIAudioPlayer.
       
     } catch (err) {
-      console.error('Lỗi xử lý sự kiện:', err);
+      console.warn('Lỗi gọi API Live Event, kích hoạt phản hồi mô phỏng thông minh:', err);
+      // Xử lý phản hồi giả lập thông minh khi chưa có API Key hoặc mạng chập chờn
+      let fallbackReply = '';
+      let shouldAction = 'none';
+
+      if (type === 'VIEWER_JOIN') {
+        fallbackReply = `Dạ em chào anh/chị ${payload?.name || 'bạn'} mới vào xem live nha! Chúc bạn có buổi tối xem live vui vẻ ạ!`;
+      } else if (type === 'GIFT') {
+        fallbackReply = `Ôi em cảm ơn ${payload?.name || 'bạn'} đã tặng ${payload?.gift || 'quà'} cho em nha! Yêu bạn nhiều lắm luôn ạ!`;
+        shouldAction = 'gift_reaction';
+      } else if (type === 'COMMENT') {
+        const text = payload?.text || '';
+        if (text.toLowerCase().includes('giá') || text.toLowerCase().includes('mua') || text.toLowerCase().includes('size') || text.toLowerCase().includes('hàng')) {
+          fallbackReply = `Dạ ${payload?.name || 'bạn'} ơi, mẫu này đang có giá cực ưu đãi trong giỏ hàng góc trái màn hình, bạn bấm vào xem chi tiết ngay nhé!`;
+        } else if (text.toLowerCase().includes('xinh') || text.toLowerCase().includes('đẹp') || text.toLowerCase().includes('chào')) {
+          fallbackReply = `Dạ em cảm ơn ${payload?.name || 'bạn'} nhiều nha! Bạn comment làm em có thêm bao nhiêu năng lượng luôn á!`;
+        } else {
+          fallbackReply = `Dạ em chào ${payload?.name || 'bạn'}, em đã thấy bình luận của bạn rồi nha!`;
+        }
+      } else if (type === 'PURCHASE') {
+        fallbackReply = `Chúc mừng và cảm ơn ${payload?.name || 'quý khách'} đã chốt đơn thành công ${payload?.item || 'sản phẩm'} nha! Đơn hàng sẽ được đóng gói gửi đi sớm nhất ạ!`;
+        shouldAction = 'gift_reaction';
+      } else if (type === 'LIKE') {
+        fallbackReply = `Em cảm ơn mọi người đã thả tim nhiệt tình cho em nha! Cả nhà bấm liên tục vào màn hình giúp em đạt mục tiêu hôm nay nhé!`;
+      } else if (type === 'FOLLOW') {
+        fallbackReply = `Dạ em cảm ơn ${payload?.name || 'bạn'} vừa bấm theo dõi kênh của em nha! Nhớ bật thông báo để đón xem các phiên live tiếp theo nhé!`;
+      } else if (type === 'SHARE') {
+        fallbackReply = `Cảm ơn ${payload?.name || 'bạn'} đã chia sẻ phiên livestream này đến bạn bè nha!`;
+      } else if (type === 'ASSISTANT_PROMPT') {
+        fallbackReply = payload?.prompt || 'Dạ vâng, em cảm ơn tất cả các anh chị đang theo dõi phiên live ạ!';
+      }
+
+      if (fallbackReply) {
+        setViewerHistory(prev => [...prev, { time: new Date().toLocaleTimeString(), type, payload, ai_intent: 'SIMULATED', ai_reply: fallbackReply }].slice(-10));
+        onVoiceReply({
+          text: fallbackReply,
+          action: shouldAction,
+          baseVideoItem: activeVideoItem,
+          preRecordedCat: shouldAction === 'gift_reaction' ? 'reaction' : null
+        });
+      }
     } finally {
       setIsProcessingEvent(false);
     }

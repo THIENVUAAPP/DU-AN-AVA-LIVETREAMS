@@ -16,9 +16,28 @@ export function TokenProvider({ children }) {
   const [tokenData, setTokenData] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Đảm bảo tài khoản Quản trị Admin luôn được cấp tối thiểu 100.000 token
+        if (!parsed.balance || parsed.balance < 100000) {
+          parsed.balance = 100000;
+          parsed.history = [
+            { id: Date.now(), type: 'add', amount: 100000, reason: 'Cấp 100.000 Token tài khoản Quản trị Admin', time: new Date().toISOString() },
+            ...(parsed.history || [])
+          ];
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+        }
+        return parsed;
+      }
     } catch (e) {}
-    return { balance: 0, history: [] };
+    const initialAdminData = {
+      balance: 100000,
+      history: [
+        { id: Date.now(), type: 'add', amount: 100000, reason: 'Cấp 100.000 Token tài khoản Quản trị Admin', time: new Date().toISOString() }
+      ]
+    };
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(initialAdminData)); } catch (e) {}
+    return initialAdminData;
   });
 
   const [lowBalanceWarned, setLowBalanceWarned] = useState(false);

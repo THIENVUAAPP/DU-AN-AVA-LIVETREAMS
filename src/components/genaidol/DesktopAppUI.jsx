@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Settings, CreditCard, Video, Moon, Sun, 
   MessageCircle, Play, Pause, Mic, MicOff, X, Download, Plus,
-  Brain, Radio, Coins, AlertTriangle, Eye, Clock, List, Zap, AlertCircle, FileText, CheckSquare
+  Brain, Radio, Coins, AlertTriangle, Eye, Clock, List, Zap, AlertCircle, FileText, CheckSquare,
+  Gift, ShoppingBag, Sparkles, RotateCcw, Send, Trash2, Heart, Share2, UserPlus, Users
 } from 'lucide-react';
 import WorkspaceTacVu from './WorkspaceTacVu';
 import GeneralSettings from './GeneralSettings';
@@ -19,11 +20,13 @@ export default function DesktopAppUI() {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isCommMode, setIsCommMode] = useState(false);
   const [tiktokId, setTiktokId] = useState('');
-  const [isConnecting, setIsConnecting] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState('aidol_lan_huong');
   const [showTokenHistory, setShowTokenHistory] = useState(false);
   const [showSimulator, setShowSimulator] = useState(false);
   const [assistantPrompt, setAssistantPrompt] = useState('');
+  const [autoSimActive, setAutoSimActive] = useState(false);
+  const [simTab, setSimTab] = useState('quick');
+  const autoSimTimerRef = useRef(null);
   
   // States cho Menu Theo dõi
   const [isMonitorDropdownOpen, setIsMonitorDropdownOpen] = useState(false);
@@ -90,6 +93,36 @@ export default function DesktopAppUI() {
       }
     }
   });
+
+  // Danh sách sự kiện giả lập đa dạng
+  const SIMULATION_EVENTS = [
+    { type: 'VIEWER_JOIN', payload: { name: 'Thanh Nhàn (Khách mới)' } },
+    { type: 'VIEWER_JOIN', payload: { name: 'Vip_HoangNam (VIP)' } },
+    { type: 'GIFT', payload: { name: 'Bảo Trâm', gift: 'Hoa hồng 🌹 (1 xu)' } },
+    { type: 'GIFT', payload: { name: 'Đại Gia Phố Cổ', gift: 'Tên lửa vũ trụ 🚀' } },
+    { type: 'COMMENT', payload: { name: 'Minh Thảo', text: 'Chào idol, hôm nay xinh và năng lượng quá!' } },
+    { type: 'COMMENT', payload: { name: 'Hải Đăng', text: 'Mẫu áo này chất liệu gì và còn size L không shop?' } },
+    { type: 'COMMENT', payload: { name: 'Ngọc Mai', text: 'Sản phẩm này có voucher freeship hôm nay không ạ?' } },
+    { type: 'PURCHASE', payload: { name: 'Quốc Cường', item: 'Combo 2 Áo Thun Cao Cấp' } },
+    { type: 'LIKE', payload: { count: '10.000 tim' } },
+    { type: 'FOLLOW', payload: { name: 'Hồng Ánh' } },
+    { type: 'SHARE', payload: { name: 'Thu Hằng' } }
+  ];
+
+  // Auto-simulation timer
+  useEffect(() => {
+    if (autoSimActive && showSimulator) {
+      autoSimTimerRef.current = setInterval(() => {
+        const randomEvent = SIMULATION_EVENTS[Math.floor(Math.random() * SIMULATION_EVENTS.length)];
+        handleLiveEvent(randomEvent.type, randomEvent.payload);
+      }, 9000);
+    } else {
+      if (autoSimTimerRef.current) clearInterval(autoSimTimerRef.current);
+    }
+    return () => {
+      if (autoSimTimerRef.current) clearInterval(autoSimTimerRef.current);
+    };
+  }, [autoSimActive, showSimulator]);
 
   // Toast helper
   const showToast = (msg, type = 'warn') => {
@@ -660,67 +693,348 @@ export default function DesktopAppUI() {
           </div>
         )}
 
-        {/* Cửa sổ Nổi: Công cụ Simulator */}
+        {/* Cửa sổ Nổi: Công cụ Giả lập Live (Pre-Live Simulator) */}
         {showSimulator && (
-          <div className="absolute right-6 top-6 w-80 bg-[#1c1c23] border border-gray-700 rounded-xl shadow-2xl p-4 z-40 animate-in fade-in slide-in-from-right-4">
-            <div className="flex items-center justify-between mb-3 border-b border-gray-700 pb-2">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2"><Brain size={14} className="text-purple-400" /> Công cụ Giả lập Live</h3>
-              <button onClick={() => setShowSimulator(false)} className="text-gray-400 hover:text-white"><X size={14} /></button>
+          <div className="absolute right-6 top-4 w-[420px] max-h-[90vh] flex flex-col bg-[#16161e] border border-purple-500/40 rounded-2xl shadow-2xl z-40 animate-in fade-in slide-in-from-right-4 overflow-hidden backdrop-blur-md">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-purple-900/60 to-indigo-900/60 border-b border-purple-500/30">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-purple-500/20 rounded-lg border border-purple-400/30 text-purple-300">
+                  <Brain size={16} />
+                </div>
+                <div>
+                  <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+                    Công cụ Giả lập Live
+                  </h3>
+                  <p className="text-[10px] text-purple-200/70">Test phản hồi AI, âm thanh & video trước khi Live</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {/* Nút bật tắt Auto Simulate */}
+                <button
+                  onClick={() => setAutoSimActive(!autoSimActive)}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all border ${
+                    autoSimActive 
+                      ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-sm shadow-emerald-500/20 animate-pulse' 
+                      : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'
+                  }`}
+                  title="Tự động phát sinh người vào, bình luận, tặng quà mỗi 9s"
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${autoSimActive ? 'bg-emerald-400' : 'bg-gray-500'}`}></span>
+                  Auto Test: {autoSimActive ? 'BẬT' : 'TẮT'}
+                </button>
+                <button onClick={() => setShowSimulator(false)} className="text-gray-400 hover:text-white p-1 hover:bg-white/10 rounded-lg transition-colors">
+                  <X size={15} />
+                </button>
+              </div>
             </div>
-            <div className="space-y-3">
-              <div className="flex gap-2">
-                <button onClick={() => handleLiveEvent('VIEWER_JOIN', { name: 'Thanh Nhàn' })} className="flex-1 py-1.5 bg-blue-500/20 hover:bg-blue-500/40 text-blue-400 rounded text-xs font-medium border border-blue-500/30">👋 Có người vào</button>
-                  <button onClick={() => handleLiveEvent('GIFT', { name: 'Đại Gia', gift: 'Hoa hồng (Rose)' })} className="flex-1 py-1.5 bg-pink-500/20 hover:bg-pink-500/40 text-pink-400 rounded text-xs font-medium border border-pink-500/30">🌹 Tặng quà</button>
+
+            {/* Navigation Tabs */}
+            <div className="flex bg-black/40 border-b border-white/10 p-1 gap-1 text-[11px] font-semibold">
+              <button
+                onClick={() => setSimTab('quick')}
+                className={`flex-1 py-1.5 rounded-lg text-center transition-all flex items-center justify-center gap-1 ${
+                  simTab === 'quick' ? 'bg-purple-600 text-white shadow-md' : 'text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                <Zap size={12} /> Tương tác
+              </button>
+              <button
+                onClick={() => setSimTab('comments')}
+                className={`flex-1 py-1.5 rounded-lg text-center transition-all flex items-center justify-center gap-1 ${
+                  simTab === 'comments' ? 'bg-purple-600 text-white shadow-md' : 'text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                <MessageCircle size={12} /> Bình luận
+              </button>
+              <button
+                onClick={() => setSimTab('orders')}
+                className={`flex-1 py-1.5 rounded-lg text-center transition-all flex items-center justify-center gap-1 ${
+                  simTab === 'orders' ? 'bg-purple-600 text-white shadow-md' : 'text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                <ShoppingBag size={12} /> Chốt đơn
+              </button>
+              <button
+                onClick={() => setSimTab('director')}
+                className={`flex-1 py-1.5 rounded-lg text-center transition-all flex items-center justify-center gap-1 ${
+                  simTab === 'director' ? 'bg-purple-600 text-white shadow-md' : 'text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                <Mic size={12} /> Đạo diễn
+              </button>
+            </div>
+
+            {/* Tab Contents */}
+            <div className="p-3 space-y-3 overflow-y-auto max-h-[300px]">
+              {/* TAB 1: TƯƠNG TÁC (Khán giả, Quà, Thả tim, Follow) */}
+              {simTab === 'quick' && (
+                <div className="space-y-2.5">
+                  <div>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5 flex items-center gap-1">
+                      <Users size={11} className="text-blue-400" /> Khán giả vào phòng:
+                    </span>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      <button 
+                        onClick={() => handleLiveEvent('VIEWER_JOIN', { name: 'Thanh Nhàn' })}
+                        className="py-1.5 px-2 bg-blue-500/10 hover:bg-blue-500/25 text-blue-300 border border-blue-500/30 rounded-lg text-[11px] font-medium transition-all text-center truncate"
+                      >
+                        👋 Khách mới vào
+                      </button>
+                      <button 
+                        onClick={() => handleLiveEvent('VIEWER_JOIN', { name: 'Vip_HoàngNam 👑' })}
+                        className="py-1.5 px-2 bg-indigo-500/10 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 rounded-lg text-[11px] font-medium transition-all text-center truncate"
+                      >
+                        ⭐ VIP vào phòng
+                      </button>
+                      <button 
+                        onClick={() => handleLiveEvent('VIEWER_JOIN', { name: 'Bảo Trâm ❤️' })}
+                        className="py-1.5 px-2 bg-purple-500/10 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 rounded-lg text-[11px] font-medium transition-all text-center truncate"
+                      >
+                        ❤️ Fan Cứng vào
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5 flex items-center gap-1">
+                      <Gift size={11} className="text-pink-400" /> Tặng quà Live:
+                    </span>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      <button 
+                        onClick={() => handleLiveEvent('GIFT', { name: 'Tuấn Anh', gift: 'Hoa hồng 🌹 (1 xu)' })}
+                        className="py-1.5 bg-pink-500/10 hover:bg-pink-500/25 text-pink-300 border border-pink-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate"
+                      >
+                        🌹 Hoa hồng
+                      </button>
+                      <button 
+                        onClick={() => handleLiveEvent('GIFT', { name: 'Lan Anh', gift: 'Du thuyền 🛥️' })}
+                        className="py-1.5 bg-cyan-500/10 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate"
+                      >
+                        🛥️ Du thuyền
+                      </button>
+                      <button 
+                        onClick={() => handleLiveEvent('GIFT', { name: 'Đại Gia Phố Cổ', gift: 'Tên lửa vũ trụ 🚀' })}
+                        className="py-1.5 bg-amber-500/10 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate"
+                      >
+                        🚀 Tên lửa
+                      </button>
+                      <button 
+                        onClick={() => handleLiveEvent('GIFT', { name: 'Chủ Tịch VIP', gift: 'Sư tử hoàng gia 🦁' })}
+                        className="py-1.5 bg-orange-500/10 hover:bg-orange-500/25 text-orange-300 border border-orange-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate"
+                      >
+                        🦁 Sư tử VIP
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5 flex items-center gap-1">
+                      <Heart size={11} className="text-red-400" /> Tương tác kênh:
+                    </span>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      <button 
+                        onClick={() => handleLiveEvent('LIKE', { count: '10.000 tim' })}
+                        className="py-1.5 bg-red-500/10 hover:bg-red-500/25 text-red-300 border border-red-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate"
+                      >
+                        💖 Đạt 10.000 Tim
+                      </button>
+                      <button 
+                        onClick={() => handleLiveEvent('FOLLOW', { name: 'Khánh Vy' })}
+                        className="py-1.5 bg-emerald-500/10 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate"
+                      >
+                        ➕ Follow kênh
+                      </button>
+                      <button 
+                        onClick={() => handleLiveEvent('SHARE', { name: 'Minh Trang' })}
+                        className="py-1.5 bg-violet-500/10 hover:bg-violet-500/25 text-violet-300 border border-violet-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate"
+                      >
+                        ↗️ Chia sẻ live
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={() => handleLiveEvent('COMMENT', { name: 'Fan Cứng', text: 'Chào idol, hôm nay xinh quá!' })} className="w-full py-1.5 bg-[#00FF66]/20 hover:bg-[#00FF66]/40 text-[#00FF66] rounded text-xs font-medium border border-[#00FF66]/30">💬 Comment: Xinh quá</button>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => handleLiveEvent('COMMENT', { name: 'Khách', text: 'Sản phẩm này dùng thế nào?' })} className="w-full py-1.5 bg-purple-500/20 hover:bg-purple-500/40 text-purple-400 rounded text-xs font-medium border border-purple-500/30">🛒 Hỏi mua hàng</button>
-                </div>
-                
-                {/* Trợ lý ngầm nhắc nhở */}
-                <div className="flex flex-col gap-1 mt-2 pt-2 border-t border-gray-700">
-                  <label className="text-[10px] text-gray-400 font-medium flex items-center gap-1"><Mic size={12} className="text-red-400" /> Trợ lý nhắc nhở (Đạo diễn):</label>
-                  <div className="flex gap-1.5">
-                    <input 
-                      type="text" 
-                      value={assistantPrompt}
-                      onChange={(e) => setAssistantPrompt(e.target.value)}
-                      placeholder="VD: Nhắc idol cảm ơn user..."
-                      className="flex-1 bg-black/40 border border-gray-700 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-red-500"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && assistantPrompt.trim()) {
-                          handleLiveEvent('ASSISTANT_PROMPT', { prompt: assistantPrompt.trim() });
-                          setAssistantPrompt('');
-                        }
-                      }}
-                    />
+              )}
+
+              {/* TAB 2: BÌNH LUẬN */}
+              {simTab === 'comments' && (
+                <div className="space-y-2">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Bình luận mẫu thường gặp:</span>
+                  <div className="space-y-1.5">
                     <button 
-                      onClick={() => {
-                        if (assistantPrompt.trim()) {
-                          handleLiveEvent('ASSISTANT_PROMPT', { prompt: assistantPrompt.trim() });
-                          setAssistantPrompt('');
-                        }
-                      }}
-                      className="px-2.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium"
+                      onClick={() => handleLiveEvent('COMMENT', { name: 'Minh Thảo', text: 'Chào idol, hôm nay xinh và dễ thương quá!' })}
+                      className="w-full text-left p-2 bg-[#00FF66]/10 hover:bg-[#00FF66]/20 text-[#00FF66] border border-[#00FF66]/20 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between"
                     >
-                      Gửi lệnh
+                      <span>💬 "Chào idol, hôm nay xinh và dễ thương quá!"</span>
+                      <span className="text-[9px] bg-[#00FF66]/20 px-1.5 py-0.5 rounded text-white">Khen</span>
+                    </button>
+                    <button 
+                      onClick={() => handleLiveEvent('COMMENT', { name: 'Hải Đăng', text: 'Mẫu này chất liệu gì và còn size L không shop?' })}
+                      className="w-full text-left p-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border border-blue-500/20 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between"
+                    >
+                      <span>🛒 "Mẫu này chất liệu gì và còn size L không shop?"</span>
+                      <span className="text-[9px] bg-blue-500/20 px-1.5 py-0.5 rounded text-white">Hỏi Size</span>
+                    </button>
+                    <button 
+                      onClick={() => handleLiveEvent('COMMENT', { name: 'Quỳnh Như', text: 'Sản phẩm này giá bao nhiêu và có freeship không ạ?' })}
+                      className="w-full text-left p-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between"
+                    >
+                      <span>💰 "Giá bao nhiêu và có freeship không ạ?"</span>
+                      <span className="text-[9px] bg-amber-500/20 px-1.5 py-0.5 rounded text-white">Hỏi Giá</span>
+                    </button>
+                    <button 
+                      onClick={() => handleLiveEvent('COMMENT', { name: 'Bảo Long', text: 'Mình 1m70 nặng 65kg mặc size nào vừa chuẩn bạn ơi?' })}
+                      className="w-full text-left p-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between"
+                    >
+                      <span>📏 "Mình 1m70 nặng 65kg mặc size nào chuẩn?"</span>
+                      <span className="text-[9px] bg-purple-500/20 px-1.5 py-0.5 rounded text-white">Tư Vấn</span>
                     </button>
                   </div>
                 </div>
+              )}
 
-              {isProcessingEvent && <div className="text-[10px] text-yellow-400 animate-pulse text-center pt-2">AI đang suy nghĩ...</div>}
+              {/* TAB 3: CHỐT ĐƠN */}
+              {simTab === 'orders' && (
+                <div className="space-y-2">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Sự kiện chốt đơn mua hàng:</span>
+                  <div className="space-y-1.5">
+                    <button 
+                      onClick={() => handleLiveEvent('PURCHASE', { name: 'Hoàng Nam', item: '1 Áo Polo Cao Cấp' })}
+                      className="w-full text-left p-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between"
+                    >
+                      <span>🎉 Khách Hoàng Nam vừa chốt 1 Áo Polo</span>
+                      <span className="text-[9px] bg-emerald-500/30 px-1.5 py-0.5 rounded text-white font-bold">1 Đơn</span>
+                    </button>
+                    <button 
+                      onClick={() => handleLiveEvent('PURCHASE', { name: 'Thanh Thảo VIP', item: 'Combo 2 Váy Thiết Kế Dạ Hội' })}
+                      className="w-full text-left p-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between"
+                    >
+                      <span>🎁 Khách Thanh Thảo vừa chốt Combo 2 Váy</span>
+                      <span className="text-[9px] bg-purple-500/30 px-1.5 py-0.5 rounded text-white font-bold">Combo VIP</span>
+                    </button>
+                    <button 
+                      onClick={() => handleLiveEvent('PURCHASE', { name: 'Đoàn Khách Sỉ', item: 'Set 5 Áo Sơ Mi Hàn Quốc' })}
+                      className="w-full text-left p-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between"
+                    >
+                      <span>🔥 Khách Sỉ vừa chốt Set 5 Áo Sơ Mi</span>
+                      <span className="text-[9px] bg-amber-500/30 px-1.5 py-0.5 rounded text-white font-bold">Đơn Sỉ</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: ĐẠO DIỄN NHẮC THOẠI */}
+              {simTab === 'director' && (
+                <div className="space-y-2.5">
+                  <div>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Lệnh nhanh 1-chạm:</span>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <button 
+                        onClick={() => handleLiveEvent('ASSISTANT_PROMPT', { prompt: 'Nhắc mọi người bấm vào giỏ hàng góc trái đang có ưu đãi lớn!' })}
+                        className="p-1.5 bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 rounded-lg text-[10px] font-medium text-left truncate"
+                      >
+                        🛒 Giục xem giỏ hàng
+                      </button>
+                      <button 
+                        onClick={() => handleLiveEvent('ASSISTANT_PROMPT', { prompt: 'Nhắc voucher giảm 50k chỉ còn 3 suất duy nhất!' })}
+                        className="p-1.5 bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 rounded-lg text-[10px] font-medium text-left truncate"
+                      >
+                        🔥 Nhắc mã còn 3 suất
+                      </button>
+                      <button 
+                        onClick={() => handleLiveEvent('ASSISTANT_PROMPT', { prompt: 'Cảm ơn toàn thể khán giả đang theo dõi và kêu gọi thả tim!' })}
+                        className="p-1.5 bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 rounded-lg text-[10px] font-medium text-left truncate"
+                      >
+                        🙏 Cảm ơn khán giả
+                      </button>
+                      <button 
+                        onClick={() => handleLiveEvent('ASSISTANT_PROMPT', { prompt: 'Kể một câu chuyện vui hoặc hát một đoạn ngắn giao lưu!' })}
+                        className="p-1.5 bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 rounded-lg text-[10px] font-medium text-left truncate"
+                      >
+                        🎶 Hát / Kể chuyện vui
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-white/10">
+                    <label className="text-[10px] text-gray-400 font-medium flex items-center gap-1 mb-1.5">
+                      <Mic size={11} className="text-red-400" /> Nhập lệnh Đạo diễn bất kỳ:
+                    </label>
+                    <div className="flex gap-1.5">
+                      <input 
+                        type="text" 
+                        value={assistantPrompt}
+                        onChange={(e) => setAssistantPrompt(e.target.value)}
+                        placeholder="VD: Nhắc idol giới thiệu áo sơ mi trắng..."
+                        className="flex-1 bg-black/50 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-red-500"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && assistantPrompt.trim()) {
+                            handleLiveEvent('ASSISTANT_PROMPT', { prompt: assistantPrompt.trim() });
+                            setAssistantPrompt('');
+                          }
+                        }}
+                      />
+                      <button 
+                        onClick={() => {
+                          if (assistantPrompt.trim()) {
+                            handleLiveEvent('ASSISTANT_PROMPT', { prompt: assistantPrompt.trim() });
+                            setAssistantPrompt('');
+                          }
+                        }}
+                        className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-red-600/30 flex items-center gap-1"
+                      >
+                        <Send size={11} /> Gửi
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Status processing indicator */}
+              {isProcessingEvent && (
+                <div className="flex items-center justify-center gap-2 py-1.5 bg-purple-500/10 border border-purple-500/20 rounded-lg text-purple-300 text-[11px] font-semibold animate-pulse">
+                  <Sparkles size={12} className="text-purple-400 animate-spin" /> AI đang suy nghĩ & chuẩn bị phản hồi...
+                </div>
+              )}
             </div>
             
-            <div className="mt-4 pt-2 border-t border-gray-700 h-32 overflow-y-auto">
-              <div className="text-[10px] font-medium text-gray-400 mb-1">Lịch sử sự kiện:</div>
-              {viewerHistory.slice().reverse().map((h, i) => (
-                 <div key={i} className="mb-2 text-[10px] bg-black/30 p-1.5 rounded border border-gray-800">
-                    <span className="text-gray-300">[{h.time}] <strong className="text-white">{h.payload.name}</strong> {h.type === 'COMMENT' ? `bình luận: ${h.payload.text}` : h.type === 'GIFT' ? `tặng: ${h.payload.gift}` : 'vào phòng'}</span>
-                    {h.ai_reply && <div className="text-[#00FF66] mt-0.5 ml-2 border-l border-[#00FF66]/30 pl-1">↳ AI: {h.ai_reply}</div>}
-                 </div>
-              ))}
+            {/* Lịch sử sự kiện */}
+            <div className="border-t border-white/10 bg-black/30 p-3 flex flex-col">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                  <List size={11} /> Lịch sử giả lập ({viewerHistory.length})
+                </span>
+                {viewerHistory.length > 0 && (
+                  <button 
+                    onClick={() => setViewerHistory([])}
+                    className="text-[9px] text-gray-400 hover:text-red-400 flex items-center gap-1 transition-colors"
+                  >
+                    <Trash2 size={10} /> Xoá log
+                  </button>
+                )}
+              </div>
+              <div className="h-28 overflow-y-auto space-y-1.5 pr-1 text-[10px]">
+                {viewerHistory.length === 0 ? (
+                  <div className="text-gray-500 text-center py-4 italic text-[11px]">
+                    Chưa có sự kiện nào. Hãy bấm một nút ở trên để thử nghiệm!
+                  </div>
+                ) : (
+                  viewerHistory.slice().reverse().map((h, i) => (
+                    <div key={i} className="bg-black/50 p-2 rounded-lg border border-white/5 space-y-1">
+                      <div className="flex items-center justify-between text-gray-400">
+                        <span className="font-semibold text-white">
+                          [{h.time}] {h.payload?.name || 'Hệ thống'}: {h.type === 'COMMENT' ? `"${h.payload.text}"` : h.type === 'GIFT' ? `tặng ${h.payload.gift}` : h.type === 'PURCHASE' ? `đã mua ${h.payload.item}` : h.type === 'LIKE' ? 'thả tim' : h.type === 'FOLLOW' ? 'theo dõi' : h.type === 'ASSISTANT_PROMPT' ? `[Lệnh Đạo diễn]: ${h.payload.prompt}` : 'vào phòng live'}
+                        </span>
+                      </div>
+                      {h.ai_reply && (
+                        <div className="text-[#00FF66] pl-2 border-l-2 border-[#00FF66]/40 leading-relaxed font-medium">
+                          ↳ AI: {h.ai_reply}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         )}
