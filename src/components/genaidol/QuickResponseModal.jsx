@@ -142,10 +142,11 @@ export default function QuickResponseModal({
 
   // Dọn dẹp audio preview khi unmount
   useEffect(() => {
-    const audioEl = audioPreviewRef.current;
-    audioEl.onended = () => setIsPlayingAudioPreview(false);
     return () => {
-      audioEl.pause();
+      const audioEl = audioPreviewRef.current;
+      if (audioEl) {
+        audioEl.pause();
+      }
       if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
     };
   }, []);
@@ -263,6 +264,7 @@ export default function QuickResponseModal({
       setIsPlayingAudioPreview(false);
     } else {
       aud.src = src;
+      aud.onended = () => setIsPlayingAudioPreview(false);
       aud.play().catch(e => console.warn('Audio preview error:', e));
       setAudioPreviewSrc(src);
       setIsPlayingAudioPreview(true);
