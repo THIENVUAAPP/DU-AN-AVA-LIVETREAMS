@@ -4,6 +4,7 @@ import {
   Crown, Play, Pause, RotateCcw, Settings, Flame, Zap, CheckCircle2 
 } from 'lucide-react';
 import { battleAudio } from './battleAudioEngine';
+import { computeSkeletalJoints, render3DWarriorSkeleton, SKELETON_STATES } from '../../../lib/game3d/warrior3DSkeleton';
 
 // 20 Dance styles
 export const DANCE_STYLES = [
@@ -881,138 +882,29 @@ export default function GameChienDau({
             ctx.restore();
           }
 
-          // 2.1 3D WARRIORS (Nam & Nữ Chiến Binh 3D Tripo3D - Đầy Đủ Chân, Siêu Sắc Nét)
+          // 2.1 3D SKELETAL WARRIOR (Nam & Nữ Có Xương Cử Động 360°, Khớp Tay Chân, Khuỷu Tay, Đầu Tóc)
           const fighterGender = f.gender || (f.rank % 2 === 0 ? 'male' : 'female');
-          const spriteImg = warriorImagesRef.current[fighterGender] || warriorImagesRef.current.male || warriorImagesRef.current.female;
-
-          if (spriteImg && spriteImg.complete) {
-            ctx.save();
-            const dw = fighterGender === 'female' ? 29 : 32;
-            const dh = fighterGender === 'female' ? 42 : 40;
-            
-            // Faction Facing Direction Orientation (Red faces left, Blue faces right)
-            if (factionId === 'red') {
-              ctx.scale(-1, 1);
-            }
-            
-            // Draw full-body 3D warrior with complete legs and boots grounded at y = 14
-            ctx.drawImage(spriteImg, -dw / 2, -dh + 14, dw, dh);
-
-            // Glowing Energy Eyes / Crystal Crown / Visor
-            ctx.save();
-            ctx.fillStyle = factionId === 'blue' ? '#38bdf8' : (fighterGender === 'female' ? '#fb7185' : '#facc15');
-            ctx.shadowColor = ctx.fillStyle;
-            ctx.shadowBlur = 12;
-            if (fighterGender === 'female') {
-              // Radiant Goddess Crown / Eyes
-              ctx.fillRect(-3, -dh + 20, 6, 2.2);
-            } else {
-              // Dragon Golden Eyes / Visor
-              ctx.fillRect(-3.5, -dh + 21, 7, 2.5);
-            }
-            ctx.restore();
-
-            // Gift upgrade power flash
-            if (isPulsing) {
-              ctx.save();
-              ctx.strokeStyle = '#facc15';
-              ctx.lineWidth = 1.8;
-              ctx.shadowColor = '#facc15';
-              ctx.shadowBlur = 15;
-              ctx.strokeRect(-dw / 2 + 1, -dh + 14, dw - 2, dh);
-              ctx.restore();
-            }
-
-            ctx.restore();
-          } else {
-            // Procedural Fallback 3D Warrior Body & Layered Armor
-            // Left Leg
-            ctx.lineWidth = tier >= 3 ? 3.8 : 3.2;
-            ctx.lineCap = 'round';
-            ctx.strokeStyle = tier >= 3 ? '#ca8a04' : (tier === 2 ? '#64748b' : (factionId === 'blue' ? '#1e3a8a' : '#7f1d1d'));
-            ctx.beginPath();
-            ctx.moveTo(-3, 6);
-            ctx.lineTo(-4 + stride * 3.5, 14);
-            ctx.stroke();
-            // Left Armored Boot
-            ctx.fillStyle = tier >= 3 ? '#facc15' : (tier === 2 ? '#94a3b8' : '#334155');
-            ctx.fillRect(-6 + stride * 3.5, 13, 5.5, 3.8);
-
-            // Right Leg
-            ctx.strokeStyle = tier >= 3 ? '#eab308' : (tier === 2 ? '#94a3b8' : (factionId === 'blue' ? '#1d4ed8' : '#991b1b'));
-            ctx.beginPath();
-            ctx.moveTo(3, 6);
-            ctx.lineTo(4 - stride * 3.5, 14);
-            ctx.stroke();
-            // Right Armored Boot
-            ctx.fillStyle = tier >= 3 ? '#fde047' : (tier === 2 ? '#cbd5e1' : '#475569');
-            ctx.fillRect(2 - stride * 3.5, 13, 5.5, 3.8);
-
-            // Chestplate
-            ctx.save();
-            ctx.shadowColor = tier >= 4 ? '#facc15' : (isPulsing ? '#ffcc00' : color);
-            ctx.shadowBlur = tier >= 4 ? 22 : (isPulsing ? 18 : 8);
-            const armorGrad = ctx.createLinearGradient(-7, -5, 7, 7);
-            if (tier >= 3) {
-              armorGrad.addColorStop(0, '#fef08a');
-              armorGrad.addColorStop(0.4, '#facc15');
-              armorGrad.addColorStop(0.8, '#eab308');
-              armorGrad.addColorStop(1, '#a16207');
-            } else if (tier === 2) {
-              armorGrad.addColorStop(0, '#ffffff');
-              armorGrad.addColorStop(0.4, '#cbd5e1');
-              armorGrad.addColorStop(0.8, '#94a3b8');
-              armorGrad.addColorStop(1, '#475569');
-            } else {
-              armorGrad.addColorStop(0, factionId === 'blue' ? '#60a5fa' : '#f87171');
-              armorGrad.addColorStop(0.5, factionId === 'blue' ? '#2563eb' : '#dc2626');
-              armorGrad.addColorStop(1, factionId === 'blue' ? '#1e3a8a' : '#7f1d1d');
-            }
-            ctx.fillStyle = armorGrad;
-            ctx.strokeStyle = tier >= 3 ? '#ffffff' : (tier === 2 ? '#ffffff' : (isTopRank ? '#ffd700' : '#ffffff'));
-            ctx.lineWidth = 1.4;
-            ctx.beginPath();
-            ctx.moveTo(-6, 6);
-            ctx.lineTo(6, 6);
-            ctx.lineTo(5.5, -4);
-            ctx.lineTo(-5.5, -4);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-
-            // Core Gem
-            ctx.fillStyle = tier >= 3 ? '#38bdf8' : (tier === 2 ? '#67e8f9' : (isTopRank ? '#facc15' : '#e2e8f0'));
-            ctx.fillRect(-3, 2, 6, 3);
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 0.8;
-            ctx.strokeRect(-3, 2, 6, 3);
-
-            // Shoulder Pauldrons
-            ctx.fillStyle = tier >= 3 ? '#eab308' : (tier === 2 ? '#cbd5e1' : (factionId === 'blue' ? '#60a5fa' : '#f87171'));
-            ctx.beginPath();
-            ctx.arc(-6.5, -3, 3.5, 0, Math.PI * 2);
-            ctx.arc(6.5, -3, 3.5, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-            ctx.restore();
-
-            // Helmet & Crest
-            ctx.save();
-            ctx.fillStyle = tier >= 3 ? '#eab308' : (tier === 2 ? '#64748b' : (factionId === 'blue' ? '#1e40af' : '#991b1b'));
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 1.2;
-            ctx.beginPath();
-            ctx.arc(0, -9, 5.8, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Visor
-            ctx.fillStyle = tier >= 3 ? '#ffffff' : (factionId === 'blue' ? '#67e8f9' : '#fef08a');
-            ctx.shadowColor = ctx.fillStyle;
-            ctx.shadowBlur = 8;
-            ctx.fillRect(-3, -9.5, 6, 2);
-            ctx.restore();
+          
+          // Determine 360 rotation & combat animation state
+          let animState = SKELETON_STATES.WALK;
+          if (isPulsing) {
+            animState = (tier >= 4 || f.rank === 1) ? SKELETON_STATES.ATTACK_SPIN : SKELETON_STATES.ATTACK_SLASH;
           }
+
+          // Compute 3D yaw angle: Red faces left, Blue faces right, plus subtle dynamic combat stance oscillation
+          const baseFacing = factionId === 'blue' ? (Math.PI * 0.45) : (-Math.PI * 0.45);
+          const yawAngle = baseFacing + Math.sin(time * 0.003 + (f.bobPhase || 0)) * 0.25;
+
+          const skeletonData = computeSkeletalJoints({
+            gender: fighterGender,
+            animState: animState,
+            yawAngle: yawAngle,
+            time: time,
+            phase: f.bobPhase || 0,
+            tier: tier
+          });
+
+          render3DWarriorSkeleton(ctx, skeletonData, { factionId, scale: 1.0, isPulsing });
 
           // Orbiting Qi Swords for Tier 4 & 5
           if (tier >= 4) {
@@ -1237,95 +1129,18 @@ export default function GameChienDau({
           ctx.strokeText('👑 ' + dName, 0, -22);
           ctx.fillText('👑 ' + dName, 0, -22);
 
-          // Dancer 3D Model with dancing movement
+          // Dancer 3D Skeletal Model with 360° Continuous Rotation & Articulated Limbs
           const dancerGender = d.gender || (d.danceStyleId % 2 === 0 ? 'female' : 'male');
-          const dSprite = warriorImagesRef.current[dancerGender] || warriorImagesRef.current.male || warriorImagesRef.current.female;
+          const dancerSkeleton = computeSkeletalJoints({
+            gender: dancerGender,
+            animState: SKELETON_STATES.DANCE,
+            yawAngle: (elapsedSec * 0.9 + d.danceStyleId) % (Math.PI * 2), // 360-degree rotating dance stage
+            time: elapsedSec * 1000,
+            phase: d.danceStyleId,
+            tier: 3
+          });
 
-          if (dSprite && dSprite.complete) {
-            ctx.save();
-            const dw = dancerGender === 'female' ? 29 : 32;
-            const dh = dancerGender === 'female' ? 42 : 40;
-            // Face center stage
-            if (factionId === 'red') {
-              ctx.scale(-1, 1);
-            }
-            // Gentle dancing tilt
-            ctx.rotate(sway * 0.04);
-            ctx.drawImage(dSprite, -dw / 2, -dh + 14, dw, dh);
-            
-            // Glowing eyes
-            ctx.save();
-            ctx.fillStyle = factionId === 'blue' ? '#38bdf8' : (dancerGender === 'female' ? '#fb7185' : '#facc15');
-            ctx.shadowColor = ctx.fillStyle;
-            ctx.shadowBlur = 10;
-            if (dancerGender === 'female') {
-              ctx.fillRect(-3, -dh + 20, 6, 2.2);
-            } else {
-              ctx.fillRect(-3.5, -dh + 21, 7, 2.5);
-            }
-            ctx.restore();
-            ctx.restore();
-          } else {
-            // Dancer Legs (2 chân nhún nhảy, đá chân thể dục aerobic)
-            ctx.lineWidth = 3;
-            ctx.lineCap = 'round';
-            
-            // Left Leg
-            ctx.strokeStyle = factionId === 'blue' ? '#2563eb' : '#dc2626';
-            ctx.beginPath();
-            ctx.moveTo(-3, 6);
-            ctx.lineTo(-4 - legKick * 0.3, 16 - Math.max(0, legKick * 0.3));
-            ctx.stroke();
-            // Left Dance Shoe
-            ctx.fillStyle = '#ffd700';
-            ctx.fillRect(-6 - legKick * 0.3, 15 - Math.max(0, legKick * 0.3), 5, 3);
-
-            // Right Leg
-            ctx.strokeStyle = factionId === 'blue' ? '#3b82f6' : '#ef4444';
-            ctx.beginPath();
-            ctx.moveTo(3, 6);
-            ctx.lineTo(4 + legKick * 0.3, 16 - Math.max(0, -legKick * 0.3));
-            ctx.stroke();
-            // Right Dance Shoe
-            ctx.fillStyle = '#ffd700';
-            ctx.fillRect(2 + legKick * 0.3, 15 - Math.max(0, -legKick * 0.3), 5, 3);
-
-            // Dancer Body (Áo biểu diễn lấp lánh hào quang)
-            ctx.shadowColor = '#ffcc00';
-            ctx.shadowBlur = 18;
-            ctx.fillStyle = color;
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 1.2;
-
-            ctx.beginPath();
-            ctx.moveTo(-4.5, 6);
-            ctx.lineTo(4.5, 6);
-            ctx.lineTo(3.5, -4);
-            ctx.lineTo(-3.5, -4);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-
-            // Golden Belt
-            ctx.fillStyle = '#ffcc00';
-            ctx.fillRect(-4, 4, 8, 2);
-
-            // Head & Hair
-            ctx.beginPath();
-            ctx.arc(0, -9, 4.5, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Dancing Arms (Vung tay, vẫy chào theo điệu nhạc)
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.moveTo(-3.5, -2);
-            ctx.lineTo(-8 - armSwing * 0.25, 2 - armSwing * 0.35);
-            ctx.moveTo(3.5, -2);
-            ctx.lineTo(8 + armSwing * 0.25, 2 + armSwing * 0.35);
-            ctx.stroke();
-          }
+          render3DWarriorSkeleton(ctx, dancerSkeleton, { factionId, scale: 1.0, isPulsing: false });
 
           ctx.restore();
 
