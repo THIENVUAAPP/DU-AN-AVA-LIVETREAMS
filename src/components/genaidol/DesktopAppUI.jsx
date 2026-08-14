@@ -76,6 +76,7 @@ export default function DesktopAppUI() {
 
   // Connection state (phải khai báo trước useEffect)
   const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState('');
 
   // Tích hợp Live Coordinator (Xử lý AI, Video, Idle Timer)
