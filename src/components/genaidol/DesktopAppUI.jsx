@@ -51,20 +51,34 @@ export default function DesktopAppUI() {
   const fileInputRef = useRef(null);
   const [isTemplateLibraryOpen, setIsTemplateLibraryOpen] = useState(false);
 
-  // Load custom characters from IndexedDB
-  useEffect(() => {
+  // Load & Sync custom characters from Unified AIDOL_DB
+  const reloadCharacters = () => {
     loadAllCharactersFromIDB().then(chars => {
       const loadedChars = chars.map(c => {
-        const url = URL.createObjectURL(c.fileData);
+        let url = c.url || c.mediaUrl;
+        if (c.fileData) {
+          try {
+            url = URL.createObjectURL(c.fileData);
+          } catch (e) {
+            url = c.url || c.mediaUrl;
+          }
+        }
         return {
           id: c.id,
-          name: c.name,
-          type: c.type,
+          name: c.name || 'AIDOL của tôi',
+          type: c.type || 'image',
           url
         };
       });
       setCustomCharacters(loadedChars);
     });
+  };
+
+  useEffect(() => {
+    reloadCharacters();
+    const handleUpdate = () => reloadCharacters();
+    window.addEventListener('aidol_db_updated', handleUpdate);
+    return () => window.removeEventListener('aidol_db_updated', handleUpdate);
   }, []);
 
   useEffect(() => {
