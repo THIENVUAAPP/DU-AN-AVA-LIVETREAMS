@@ -9,7 +9,9 @@ export const SKELETON_STATES = {
   ATTACK_SLASH: 'attack_slash',
   ATTACK_SPIN: 'attack_spin',
   DANCE: 'dance',
-  VICTORY: 'victory'
+  VICTORY: 'victory',
+  DEFEATED: 'defeated',
+  REVIVE: 'revive'
 };
 
 /**
@@ -190,6 +192,36 @@ export function computeSkeletalJoints({
     rKneeAngle = 0.2;
 
     eyeGlow = 1.6;
+  } else if (animState === SKELETON_STATES.DEFEATED) {
+    // Defeated / Fallen pose: slumped kneeling posture, head lowered
+    rootY = 12.0;
+    rootTiltZ = 0.25;
+    chestTwist = 0.1;
+    headTilt = 0.45;
+    lShoulderAngle = 0.4;
+    lElbowAngle = 0.8;
+    rShoulderAngle = 0.3;
+    rElbowAngle = 0.8;
+    lHipAngle = 0.8;
+    lKneeAngle = 1.3;
+    rHipAngle = 0.6;
+    rKneeAngle = 1.2;
+    eyeGlow = 0.0;
+  } else if (animState === SKELETON_STATES.REVIVE) {
+    // Holy Ascension Revive pose: chest raised, arms lifting, radiant glow
+    const rPhase = t * 6.0;
+    rootY = -6.0 + Math.sin(rPhase) * 2.0;
+    chestTwist = 0;
+    headTilt = -0.35;
+    lShoulderAngle = -1.3;
+    lElbowAngle = 0.3;
+    rShoulderAngle = -1.3;
+    rElbowAngle = 0.3;
+    lHipAngle = 0.1;
+    lKneeAngle = 0.15;
+    rHipAngle = -0.1;
+    rKneeAngle = 0.15;
+    eyeGlow = 2.5;
   }
 
   return {

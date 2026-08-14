@@ -138,13 +138,16 @@ export default function GameChienDau({
 
   // Refs for Game Engine Loop
   const engineRef = useRef({
-    fighters: { blue: [], red: [] }, // { userId, nickname, score, rank, x, y, targetX, targetY, bobPhase, pulseUntil, tier }
+    fighters: { blue: [], red: [] }, // { userId, nickname, score, rank, x, y, targetX, targetY, bobPhase, pulseUntil, tier, currentHp, maxHp, isKnockedOut, knockoutTime, knockbackVx, revivedAt }
     dancers: { blue: [], red: [] },   // { userId, nickname, factionId, danceStyleId, startedAt, durationMs, x, y, scale, targetX, targetY, targetScale }
     bosses: [],                      // { id, factionId, x, y, targetX, spawnedAt }
     particles: [],                   // { x, y, vx, vy, size, color, isFlash, lifespanMs, spawnedAt }
-    flyingSwords: [],                // { id, x, y, targetX, targetY, color, progress, spawnedAt }
+    flyingSwords: [],                // { id, factionId, x, y, targetX, targetY, color, progress, speed, spawnedAt }
     dragonBeasts: [],                // { id, factionId, x, y, targetX, progress, spawnedAt }
-    taiChiShields: [],               // { id, factionId, x, y, radius, lifespanMs, spawnedAt }
+    taiChiShields: [],               // { id, factionId, x, y, radius, maxRadius, lifespanMs, spawnedAt }
+    floatingTexts: [],               // { id, text, x, y, vy, color, font, spawnedAt, lifespanMs }
+    w: 1280,
+    h: 720,
     rAfId: null,
     lastTime: performance.now(),
     lastClashSoundTime: 0
@@ -214,7 +217,7 @@ export default function GameChienDau({
     });
   }, []);
 
-  // Action Dispatchers
+  // Action Dispatchers: Add / Update / Revive Fighters
   const addOrUpdateFighter = useCallback((factionId, nickname, pointsToAdd = 10, preferredGender = null) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -222,13 +225,73 @@ export default function GameChienDau({
     const list = engineRef.current.fighters[factionId];
     let fighter = list.find(f => f.userId === userId);
 
+    const calcMaxHp = (score) => {
+      if (score >= 5000) return 3500;
+      if (score >= 2000) return 2200;
+      if (score >= 500) return 1200;
+      if (score >= 100) return 600;
+      return 280;
+    };
+
     if (fighter) {
+      const wasKnockedOut = fighter.isKnockedOut;
       fighter.score += pointsToAdd;
       fighter.pulseUntil = performance.now() + 600;
+      fighter.maxHp = calcMaxHp(fighter.score);
       if (preferredGender) fighter.gender = preferredGender;
+
+      // Respawn Mechanic (Hồi Sinh ngay khi Bình Luận hoặc Tặng Quà)
+      if (wasKnockedOut) {
+        fighter.isKnockedOut = false;
+        fighter.currentHp = fighter.maxHp;
+        fighter.revivedAt = performance.now();
+        fighter.knockbackVx = 0;
+
+        // Holy Divine Light Beam Particles
+        for (let p = 0; p < 22; p++) {
+          engineRef.current.particles.push({
+            x: fighter.x + (Math.random() - 0.5) * 30,
+            y: fighter.y + 20,
+            vx: (Math.random() - 0.5) * 25,
+            vy: -120 - Math.random() * 80,
+            size: 4,
+            color: '#facc15',
+            isFlash: true,
+            lifespanMs: 1600,
+            spawnedAt: performance.now()
+          });
+        }
+
+        const isSuperGift = pointsToAdd >= 50;
+        engineRef.current.floatingTexts.push({
+          text: isSuperGift ? '🔥 HỒI SINH THẦN TỐC & TĂNG CẤP!' : '✨ HỒI SINH!',
+          x: fighter.x,
+          y: fighter.y - 45,
+          vy: -30,
+          color: isSuperGift ? '#facc15' : '#38bdf8',
+          font: 'bold 14px sans-serif',
+          spawnedAt: performance.now(),
+          lifespanMs: 2200
+        });
+
+        playSfx(isSuperGift ? 'level_up' : 'join');
+
+        setLiveFeed(prev => [
+          {
+            id: `revive_${Date.now()}_${Math.random()}`,
+            name: nickname,
+            text: isSuperGift ? '🔥 HỒI SINH THẦN TỐC & TĂNG CẤP VÀO TRẬN!' : '✨ Đã HỒI SINH trở lại chiến trường!',
+            faction: factionId
+          },
+          ...prev.slice(0, 7)
+        ]);
+      } else {
+        // Normal HP boost
+        fighter.currentHp = Math.min(fighter.maxHp, (fighter.currentHp || fighter.maxHp) + Math.floor(pointsToAdd * 0.4));
+      }
     } else {
-      const startX = factionId === 'blue' ? 0 : canvas.width;
-      const startY = canvas.height * 0.62;
+      const startX = factionId === 'blue' ? 0 : (engineRef.current.w || canvas.width);
+      const startY = (engineRef.current.h || canvas.height) * 0.62;
       
       // Auto balance male & female warriors across Blue & Red teams
       let gender = preferredGender;
@@ -238,27 +301,35 @@ export default function GameChienDau({
         gender = maleCount <= femaleCount ? 'male' : 'female';
       }
 
+      const initialHp = calcMaxHp(pointsToAdd);
       fighter = {
         userId,
         nickname,
         score: pointsToAdd,
         rank: list.length,
         gender,
+        factionId,
         x: startX,
         y: startY,
         targetX: startX,
         targetY: startY,
         bobPhase: Math.random() * Math.PI * 2,
-        pulseUntil: performance.now() + 600
+        pulseUntil: performance.now() + 600,
+        maxHp: initialHp,
+        currentHp: initialHp,
+        isKnockedOut: false,
+        knockoutTime: 0,
+        knockbackVx: 0,
+        revivedAt: 0
       };
       list.push(fighter);
     }
 
     // Sort descending by score
     list.sort((a, b) => b.score - a.score);
-    updateFormation(canvas.width, canvas.height);
+    updateFormation(engineRef.current.w || canvas.width, engineRef.current.h || canvas.height);
 
-    // Apply Damage / Healing
+    // Apply Damage / Healing to Team Total HP
     setGameState(prev => {
       if (prev.winner) return prev;
       const oppFaction = factionId === 'blue' ? 'red' : 'blue';
@@ -406,6 +477,7 @@ export default function GameChienDau({
     for (let i = 0; i < 18; i++) {
       engineRef.current.flyingSwords.push({
         id: Date.now() + Math.random(),
+        factionId,
         x: (isBlue ? canvas.width * 0.2 : canvas.width * 0.8) + (Math.random() - 0.5) * 140,
         y: canvas.height * 0.08 + (Math.random() - 0.5) * 60,
         targetX: targetX + (Math.random() - 0.5) * 60,
@@ -686,10 +758,18 @@ export default function GameChienDau({
 
     const handleResize = () => {
       if (containerRef.current) {
-        canvas.width = containerRef.current.clientWidth || 1280;
-        canvas.height = containerRef.current.clientHeight || 720;
-        updateFormation(canvas.width, canvas.height);
-        updateDanceSlots(canvas.width, canvas.height);
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const w = containerRef.current.clientWidth || window.innerWidth || 1280;
+        const h = containerRef.current.clientHeight || window.innerHeight || 720;
+        engineRef.current.w = w;
+        engineRef.current.h = h;
+        canvas.width = w * dpr;
+        canvas.height = h * dpr;
+        canvas.style.width = `${w}px`;
+        canvas.style.height = `${h}px`;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        updateFormation(w, h);
+        updateDanceSlots(w, h);
       }
     };
 
@@ -700,18 +780,21 @@ export default function GameChienDau({
       const dt = Math.min(0.05, (time - engineRef.current.lastTime) / 1000);
       engineRef.current.lastTime = time;
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const w = engineRef.current.w || (canvas.width / (window.devicePixelRatio || 1));
+      const h = engineRef.current.h || (canvas.height / (window.devicePixelRatio || 1));
+
+      ctx.clearRect(0, 0, w, h);
 
       // 1. Draw Battlefield Background Grid & Central Rift
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
+      const centerX = w / 2;
+      const centerY = h / 2;
 
       // Ground plane glow
-      const groundGrad = ctx.createLinearGradient(0, canvas.height * 0.4, 0, canvas.height);
+      const groundGrad = ctx.createLinearGradient(0, h * 0.4, 0, h);
       groundGrad.addColorStop(0, 'rgba(15, 18, 30, 0)');
       groundGrad.addColorStop(1, 'rgba(8, 10, 18, 0.85)');
       ctx.fillStyle = groundGrad;
-      ctx.fillRect(0, canvas.height * 0.4, canvas.width, canvas.height * 0.6);
+      ctx.fillRect(0, h * 0.4, w, h * 0.6);
 
       // Central divider energy line
       ctx.save();
@@ -719,23 +802,23 @@ export default function GameChienDau({
       ctx.setLineDash([6, 6]);
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(centerX, canvas.height * 0.2);
-      ctx.lineTo(centerX, canvas.height * 0.85);
+      ctx.moveTo(centerX, h * 0.2);
+      ctx.lineTo(centerX, h * 0.85);
       ctx.stroke();
       ctx.restore();
 
       // Faction Base Auras
-      const blueBaseGrad = ctx.createRadialGradient(centerX - 180, canvas.height * 0.65, 10, centerX - 180, canvas.height * 0.65, 240);
-      blueBaseGrad.addColorStop(0, 'rgba(47, 107, 255, 0.25)');
+      const blueBaseGrad = ctx.createRadialGradient(centerX - 180, h * 0.65, 10, centerX - 180, h * 0.65, 240);
+      blueBaseGrad.addColorStop(0, 'rgba(47, 107, 255, 0.22)');
       blueBaseGrad.addColorStop(1, 'rgba(47, 107, 255, 0)');
       ctx.fillStyle = blueBaseGrad;
-      ctx.fillRect(0, canvas.height * 0.35, centerX, canvas.height * 0.65);
+      ctx.fillRect(0, h * 0.35, centerX, h * 0.65);
 
-      const redBaseGrad = ctx.createRadialGradient(centerX + 180, canvas.height * 0.65, 10, centerX + 180, canvas.height * 0.65, 240);
-      redBaseGrad.addColorStop(0, 'rgba(255, 59, 78, 0.25)');
+      const redBaseGrad = ctx.createRadialGradient(centerX + 180, h * 0.65, 10, centerX + 180, h * 0.65, 240);
+      redBaseGrad.addColorStop(0, 'rgba(255, 59, 78, 0.22)');
       redBaseGrad.addColorStop(1, 'rgba(255, 59, 78, 0)');
       ctx.fillStyle = redBaseGrad;
-      ctx.fillRect(centerX, canvas.height * 0.35, centerX, canvas.height * 0.65);
+      ctx.fillRect(centerX, h * 0.35, centerX, h * 0.65);
 
       // 2. Update & Draw Fighters (Chiến binh Kiếm Hiệp 3D 5 Cấp Bậc Trang Bị Siêu Thực)
       const lerpFactor = Math.min(1, dt * 5);
@@ -748,37 +831,27 @@ export default function GameChienDau({
           f.y += (f.targetY - f.y) * lerpFactor;
           f.bobPhase += dt * 4.5;
 
-          // Calculate Character Tier based on donated score/gift value
-          // Tier 1: Tân Binh (<100) | Tier 2: Thiết Giáp Hiệp (100-499) | Tier 3: Kim Khải Thần Tướng (500-1999) | Tier 4: Chiến Thần (2000-4999) | Tier 5: Chí Tôn (>=5000)
+          // Calculate Character Tier based on score
           const tier = f.score >= 5000 ? 5 : f.score >= 2000 ? 4 : f.score >= 500 ? 3 : f.score >= 100 ? 2 : 1;
           const isPulsing = performance.now() < f.pulseUntil;
-          const bob = Math.sin(f.bobPhase) * (tier >= 3 ? 3.5 : 2.5);
-          const stride = Math.sin(f.bobPhase); // Bước chân di chuyển nhịp nhàng
           const scale = (config.charScale || 1.15) * (isPulsing ? 1.2 : 1.0) * (tier >= 4 ? 1.25 : tier === 3 ? 1.15 : 1.0);
           const isTopRank = f.rank === 0;
 
-          // Ground Aura / Tai Chi Ring for Tier 4 & 5
-          ctx.save();
-          if (tier >= 4) {
-            // Spinning Tai Chi / Divine Energy Circle
-            ctx.translate(f.x, f.y + 18 * scale);
-            ctx.rotate(time * 0.002);
-            ctx.beginPath();
-            ctx.ellipse(0, 0, 22 * scale, 8 * scale, 0, 0, Math.PI * 2);
-            ctx.strokeStyle = tier === 5 ? '#facc15' : color;
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-            ctx.fillStyle = tier === 5 ? 'rgba(250, 204, 21, 0.35)' : `${color}35`;
-            ctx.fill();
-          } else {
-            ctx.beginPath();
-            ctx.ellipse(f.x, f.y + 18 * scale, (14 + tier * 2) * scale, (5 + tier) * scale, 0, 0, Math.PI * 2);
-            ctx.fillStyle = isPulsing ? 'rgba(255, 215, 0, 0.5)' : (tier === 3 ? 'rgba(250, 204, 21, 0.4)' : `${color}40`);
-            ctx.fill();
+          // Physics for Knockout / Revive
+          if (f.isKnockedOut) {
+            f.knockbackVx = (f.knockbackVx || 0) * 0.94;
+            f.x += (f.knockbackVx || 0) * dt;
           }
+
+          // Ground shadow (sleek & natural, replacing clunky geometric circles)
+          ctx.save();
+          ctx.beginPath();
+          ctx.ellipse(f.x, f.y + 18 * scale, (12 + tier * 2) * scale, (4 + tier) * scale, 0, 0, Math.PI * 2);
+          ctx.fillStyle = f.isKnockedOut ? 'rgba(0, 0, 0, 0.25)' : (isPulsing ? 'rgba(250, 204, 21, 0.45)' : 'rgba(0, 0, 0, 0.35)');
+          ctx.fill();
           ctx.restore();
 
-          // Name tag, Title & Rank Badge
+          // Name tag, Title & Health Bar
           ctx.save();
           ctx.font = `${isTopRank || tier >= 3 ? 'bold ' : ''}${tier >= 4 ? '11px' : '10px'} 'Be Vietnam Pro', sans-serif`;
           ctx.textAlign = 'center';
@@ -786,30 +859,76 @@ export default function GameChienDau({
           ctx.strokeStyle = 'rgba(0,0,0,0.95)';
           
           let tierBadge = '';
-          if (tier === 5) { tierBadge = '👑 [CHÍ TÔN] '; ctx.fillStyle = '#fef08a'; }
-          else if (tier === 4) { tierBadge = '⚡ [CHIẾN THẦN] '; ctx.fillStyle = '#38bdf8'; }
-          else if (tier === 3) { tierBadge = '✨ [THẦN TƯỚNG] '; ctx.fillStyle = '#fde047'; }
-          else if (tier === 2) { tierBadge = '🛡️ '; ctx.fillStyle = '#cbd5e1'; }
-          else { tierBadge = isTopRank ? '👑 ' : ''; ctx.fillStyle = '#ffffff'; }
+          if (f.isKnockedOut) {
+            tierBadge = '✝️ [HẠ GỤC] ';
+            ctx.fillStyle = '#f87171';
+          } else if (tier === 5) {
+            tierBadge = '👑 [CHÍ TÔN] ';
+            ctx.fillStyle = '#fef08a';
+          } else if (tier === 4) {
+            tierBadge = '⚡ [CHIẾN THẦN] ';
+            ctx.fillStyle = '#38bdf8';
+          } else if (tier === 3) {
+            tierBadge = '✨ [THẦN TƯỚNG] ';
+            ctx.fillStyle = '#fde047';
+          } else if (tier === 2) {
+            tierBadge = '🛡️ ';
+            ctx.fillStyle = '#cbd5e1';
+          } else {
+            tierBadge = isTopRank ? '👑 ' : '';
+            ctx.fillStyle = '#ffffff';
+          }
 
           const nameText = f.nickname.length > 9 ? f.nickname.slice(0, 8) + '…' : f.nickname;
           ctx.strokeText(tierBadge + nameText, f.x, f.y - (24 + (tier >= 3 ? 6 : 0)) * scale);
           ctx.fillText(tierBadge + nameText, f.x, f.y - (24 + (tier >= 3 ? 6 : 0)) * scale);
 
-          // Health & Score Mini Bar
-          ctx.fillStyle = 'rgba(0,0,0,0.7)';
-          ctx.fillRect(f.x - 14 * scale, f.y - (20 + (tier >= 3 ? 4 : 0)) * scale, 28 * scale, 3.5 * scale);
-          ctx.fillStyle = tier >= 4 ? '#eab308' : tier === 3 ? '#fbbf24' : color;
-          ctx.fillRect(f.x - 14 * scale, f.y - (20 + (tier >= 3 ? 4 : 0)) * scale, Math.min(28 * scale, Math.max(5 * scale, (f.score / 300) * 28 * scale)), 3.5 * scale);
+          // Individual Health Bar (Máu riêng của từng chiến sĩ)
+          const barW = 28 * scale;
+          const barH = 3.5 * scale;
+          const barX = f.x - barW / 2;
+          const barY = f.y - (20 + (tier >= 3 ? 4 : 0)) * scale;
+
+          ctx.fillStyle = 'rgba(0,0,0,0.75)';
+          ctx.fillRect(barX, barY, barW, barH);
+          
+          if (!f.isKnockedOut) {
+            const currentHp = f.currentHp !== undefined ? f.currentHp : (f.maxHp || 280);
+            const maxHp = f.maxHp || 280;
+            const hpRatio = Math.max(0, Math.min(1, currentHp / maxHp));
+            ctx.fillStyle = hpRatio > 0.5 ? (tier >= 4 ? '#eab308' : color) : '#ef4444';
+            ctx.fillRect(barX, barY, barW * hpRatio, barH);
+          } else {
+            // Defeated empty bar + Revive prompt
+            ctx.font = "8px 'Be Vietnam Pro', sans-serif";
+            ctx.fillStyle = '#fca5a5';
+            ctx.fillText(`BL "${factionId === 'blue' ? 'xanh' : 'đỏ'}" để hồi sinh`, f.x, barY + 11);
+          }
           ctx.restore();
+
+          // Holy Revive Light Pillar
+          if (f.revivedAt && (performance.now() - f.revivedAt < 1800)) {
+            const reviveAlpha = 1 - (performance.now() - f.revivedAt) / 1800;
+            ctx.save();
+            ctx.fillStyle = `rgba(250, 204, 21, ${reviveAlpha * 0.4})`;
+            ctx.fillRect(f.x - 14 * scale, 0, 28 * scale, f.y + 20 * scale);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${reviveAlpha * 0.8})`;
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(f.x - 14 * scale, 0, 28 * scale, f.y + 20 * scale);
+            ctx.restore();
+          }
 
           // Draw 3D Articulated Warrior Body & Skeletal Limbs
           ctx.save();
           ctx.translate(f.x, f.y);
           ctx.scale(scale, scale);
 
-          // 1.0 PERSISTENT LINGERING AURA
-          if (isPulsing || tier >= 4) {
+          if (f.isKnockedOut) {
+            ctx.globalAlpha = 0.55;
+          }
+
+          // Persistent Lingering Aura for Tier 4 & 5
+          if ((isPulsing || tier >= 4) && !f.isKnockedOut) {
             const auraScale = 1 + Math.sin(time * 0.004) * 0.15;
             ctx.save();
             ctx.shadowColor = tier === 5 ? '#facc15' : (tier === 4 ? '#38bdf8' : '#fbbf24');
@@ -826,8 +945,8 @@ export default function GameChienDau({
             ctx.restore();
           }
 
-          // 2.0 WINGS OF LIGHT (Cánh Hào Quang Thần Thánh 3D for Tier 3, 4, 5)
-          if (tier >= 3) {
+          // Wings of Light for Tier 3, 4, 5
+          if (tier >= 3 && !f.isKnockedOut) {
             const wingFlap = Math.sin(time * 0.005) * 6;
             ctx.save();
             ctx.shadowColor = tier === 5 ? '#fbbf24' : (tier === 4 ? '#38bdf8' : '#fde047');
@@ -865,11 +984,15 @@ export default function GameChienDau({
             ctx.restore();
           }
 
-          // 2.1 3D ARTICULATED SKELETAL WARRIOR
+          // 3D Articulated Skeletal Kinematics
           const fighterGender = f.gender || (f.rank % 2 === 0 ? 'male' : 'female');
           
           let animState = SKELETON_STATES.WALK;
-          if (isPulsing) {
+          if (f.isKnockedOut) {
+            animState = SKELETON_STATES.DEFEATED;
+          } else if (f.revivedAt && (performance.now() - f.revivedAt < 1800)) {
+            animState = SKELETON_STATES.REVIVE;
+          } else if (isPulsing) {
             animState = (tier >= 4 || f.rank === 1) ? SKELETON_STATES.ATTACK_SPIN : SKELETON_STATES.ATTACK_SLASH;
           }
 
@@ -895,7 +1018,7 @@ export default function GameChienDau({
           });
 
           // Orbiting Qi Swords for Tier 4 & 5
-          if (tier >= 4) {
+          if (tier >= 4 && !f.isKnockedOut) {
             const orbitSwords = tier === 5 ? 4 : 3;
             for (let s = 0; s < orbitSwords; s++) {
               const angle = time * 0.004 + (s * (Math.PI * 2 / orbitSwords));
@@ -918,7 +1041,7 @@ export default function GameChienDau({
         });
       });
 
-      // 3. Update & Draw Flying Swords (Tuyệt Kỹ VẠN KIẾM QUY TÔNG - Khóa Mục Tiêu & Nổ Hào Quang)
+      // 3. Update & Draw Flying Swords (Tuyệt Kỹ VẠN KIẾM QUY TÔNG - Sát Thương Đám Đông & Hạ Gục)
       for (let i = engineRef.current.flyingSwords.length - 1; i >= 0; i--) {
         const sw = engineRef.current.flyingSwords[i];
         sw.progress += dt * sw.speed;
@@ -952,8 +1075,55 @@ export default function GameChienDau({
 
           ctx.restore();
 
-          // On Hit: Massive 3D Explosion & Lingering Aura
+          // On Hit: AoE Explosion & Enemy Knockout Calculation
           if (sw.progress >= 1) {
+            const oppFaction = (sw.factionId || (sw.color === '#38bdf8' ? 'blue' : 'red')) === 'blue' ? 'red' : 'blue';
+            const oppList = engineRef.current.fighters[oppFaction];
+
+            oppList.forEach(f => {
+              if (f.isKnockedOut) return;
+              const dist = Math.hypot(f.x - sw.targetX, f.y - sw.targetY);
+              if (dist < 80) {
+                const dmg = Math.floor(160 + Math.random() * 100);
+                f.currentHp = Math.max(0, (f.currentHp || f.maxHp || 280) - dmg);
+                engineRef.current.floatingTexts.push({
+                  text: `-${dmg}`,
+                  x: f.x + (Math.random() - 0.5) * 16,
+                  y: f.y - 30,
+                  vy: -40,
+                  color: '#ef4444',
+                  font: 'bold 12px sans-serif',
+                  spawnedAt: performance.now(),
+                  lifespanMs: 900
+                });
+
+                if (f.currentHp <= 0) {
+                  f.isKnockedOut = true;
+                  f.knockoutTime = performance.now();
+                  f.knockbackVx = (oppFaction === 'red' ? 1 : -1) * 75;
+                  engineRef.current.floatingTexts.push({
+                    text: '💥 HẠ GỤC!',
+                    x: f.x,
+                    y: f.y - 42,
+                    vy: -30,
+                    color: '#f87171',
+                    font: 'bold 14px sans-serif',
+                    spawnedAt: performance.now(),
+                    lifespanMs: 1800
+                  });
+                  setLiveFeed(prev => [
+                    {
+                      id: `ko_sw_${Date.now()}_${Math.random()}`,
+                      name: f.nickname,
+                      text: `💥 Bị Vạn Kiếm hạ gục! (BL "${oppFaction === 'blue' ? 'xanh' : 'đỏ'}" để hồi sinh)`,
+                      faction: oppFaction
+                    },
+                    ...prev.slice(0, 7)
+                  ]);
+                }
+              }
+            });
+
             for (let p = 0; p < 8; p++) {
               engineRef.current.particles.push({
                 x: sw.targetX + (Math.random() - 0.5) * 20,
@@ -972,12 +1142,12 @@ export default function GameChienDau({
         }
       }
 
-      // 4. Update & Draw Dragon Beasts (Tuyệt Kỹ GIÁNG LONG THẬP BÁT CHƯỞNG)
+      // 4. Update & Draw Dragon Beasts (Tuyệt Kỹ GIÁNG LONG THẬP BÁT CHƯỞNG - Quét Sạch Đám Đông)
       for (let i = engineRef.current.dragonBeasts.length - 1; i >= 0; i--) {
         const dBeast = engineRef.current.dragonBeasts[i];
         const isBlue = dBeast.factionId === 'blue';
         dBeast.x += (isBlue ? 1 : -1) * 340 * dt;
-        const waveY = Math.sin((dBeast.x / canvas.width) * Math.PI * 4) * 28;
+        const waveY = Math.sin((dBeast.x / w) * Math.PI * 4) * 28;
 
         ctx.save();
         ctx.translate(dBeast.x, dBeast.y + waveY);
@@ -1000,6 +1170,54 @@ export default function GameChienDau({
         ctx.textAlign = 'center';
         ctx.fillText('🐉 THẦN LONG', 0, 3);
         ctx.restore();
+
+        // AoE Sweep Damage to Enemy Line
+        const oppFaction = isBlue ? 'red' : 'blue';
+        const oppList = engineRef.current.fighters[oppFaction];
+        oppList.forEach(f => {
+          if (f.isKnockedOut) return;
+          const dist = Math.hypot(f.x - dBeast.x, f.y - (dBeast.y + waveY));
+          if (dist < 90 && (!f.lastDragonHit || performance.now() - f.lastDragonHit > 500)) {
+            f.lastDragonHit = performance.now();
+            const dmg = Math.floor(400 + Math.random() * 250);
+            f.currentHp = Math.max(0, (f.currentHp || f.maxHp || 280) - dmg);
+            engineRef.current.floatingTexts.push({
+              text: `⚡ RỒNG QUÉT -${dmg}`,
+              x: f.x,
+              y: f.y - 30,
+              vy: -50,
+              color: '#facc15',
+              font: 'bold 13px sans-serif',
+              spawnedAt: performance.now(),
+              lifespanMs: 1100
+            });
+
+            if (f.currentHp <= 0) {
+              f.isKnockedOut = true;
+              f.knockoutTime = performance.now();
+              f.knockbackVx = (isBlue ? 1 : -1) * 105;
+              engineRef.current.floatingTexts.push({
+                text: '🐉 QUÉT SẠCH!',
+                x: f.x,
+                y: f.y - 45,
+                vy: -35,
+                color: '#f59e0b',
+                font: 'bold 15px sans-serif',
+                spawnedAt: performance.now(),
+                lifespanMs: 1900
+              });
+              setLiveFeed(prev => [
+                {
+                  id: `ko_dr_${Date.now()}_${Math.random()}`,
+                  name: f.nickname,
+                  text: `🐉 Bị Thần Long quét sạch! (BL "${oppFaction === 'blue' ? 'xanh' : 'đỏ'}" để hồi sinh)`,
+                  faction: oppFaction
+                },
+                ...prev.slice(0, 7)
+              ]);
+            }
+          }
+        });
 
         if (performance.now() - dBeast.spawnedAt > 4000) {
           engineRef.current.dragonBeasts.splice(i, 1);
@@ -1039,7 +1257,7 @@ export default function GameChienDau({
         }
       }
 
-      // 3. Update & Draw Bosses
+      // 6. Update & Draw Bosses (Thần Thú Càn Quét)
       for (let i = engineRef.current.bosses.length - 1; i >= 0; i--) {
         const boss = engineRef.current.bosses[i];
         const dir = boss.factionId === 'blue' ? 1 : -1;
@@ -1049,13 +1267,11 @@ export default function GameChienDau({
         ctx.translate(boss.x, boss.y);
         ctx.scale(boss.factionId === 'blue' ? 2.5 : -2.5, 2.5);
 
-        // Boss Aura
         const bossColor = boss.factionId === 'blue' ? '#38bdf8' : '#fb7185';
         ctx.shadowColor = bossColor;
         ctx.shadowBlur = 24;
         ctx.fillStyle = bossColor;
 
-        // Dragon / Tiger Shape
         ctx.beginPath();
         ctx.arc(0, 0, 16, 0, Math.PI * 2);
         ctx.fill();
@@ -1071,9 +1287,69 @@ export default function GameChienDau({
 
         ctx.restore();
 
+        // Boss Crush Damage
+        const oppFaction = boss.factionId === 'blue' ? 'red' : 'blue';
+        const oppList = engineRef.current.fighters[oppFaction];
+        oppList.forEach(f => {
+          if (f.isKnockedOut) return;
+          const dist = Math.hypot(f.x - boss.x, f.y - boss.y);
+          if (dist < 80 && (!f.lastBossHit || performance.now() - f.lastBossHit > 700)) {
+            f.lastBossHit = performance.now();
+            const dmg = Math.floor(260 + Math.random() * 160);
+            f.currentHp = Math.max(0, (f.currentHp || f.maxHp || 280) - dmg);
+            engineRef.current.floatingTexts.push({
+              text: `💥 -${dmg}`,
+              x: f.x,
+              y: f.y - 28,
+              vy: -40,
+              color: '#f87171',
+              font: 'bold 12px sans-serif',
+              spawnedAt: performance.now(),
+              lifespanMs: 1000
+            });
+            if (f.currentHp <= 0) {
+              f.isKnockedOut = true;
+              f.knockoutTime = performance.now();
+              f.knockbackVx = (boss.factionId === 'blue' ? 1 : -1) * 80;
+              engineRef.current.floatingTexts.push({
+                text: '💥 HẠ GỤC!',
+                x: f.x,
+                y: f.y - 42,
+                vy: -30,
+                color: '#ef4444',
+                font: 'bold 14px sans-serif',
+                spawnedAt: performance.now(),
+                lifespanMs: 1800
+              });
+            }
+          }
+        });
+
         if (performance.now() - boss.spawnedAt > 4500) {
           engineRef.current.bosses.splice(i, 1);
         }
+      }
+
+      // 7. Update & Draw Floating Combat Damage & Status Numbers
+      for (let i = engineRef.current.floatingTexts.length - 1; i >= 0; i--) {
+        const ft = engineRef.current.floatingTexts[i];
+        ft.y += (ft.vy || -35) * dt;
+        const elapsed = performance.now() - ft.spawnedAt;
+        const alpha = Math.max(0, 1 - elapsed / ft.lifespanMs);
+        if (alpha <= 0) {
+          engineRef.current.floatingTexts.splice(i, 1);
+          continue;
+        }
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.font = ft.font || 'bold 13px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'rgba(0,0,0,0.9)';
+        ctx.fillStyle = ft.color || '#facc15';
+        ctx.strokeText(ft.text, ft.x, ft.y);
+        ctx.fillText(ft.text, ft.x, ft.y);
+        ctx.restore();
       }
 
       // 4. Update & Draw Dancers (Vũ công đối kháng aerobic/sân khấu sôi động, có 2 chân nhảy đẹp mắt, KHÔNG nhào lộn)
@@ -1220,9 +1496,9 @@ export default function GameChienDau({
           </div>
 
           {/* Symmetrical Dual HP Bar */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Blue Side */}
-            <div className="flex-1 h-5 bg-black/60 rounded-l-full overflow-hidden p-0.5 border border-blue-500/40">
+            <div className="flex-1 h-4 sm:h-5 bg-black/60 rounded-l-full overflow-hidden p-0.5 border border-blue-500/40">
               <div 
                 className="h-full bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-400 rounded-l-full transition-all duration-300 ml-auto shadow-inner"
                 style={{ width: `${blueHpPct}%` }}
@@ -1230,12 +1506,12 @@ export default function GameChienDau({
             </div>
 
             {/* VS Badge */}
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-black font-black text-[11px] flex items-center justify-center shadow-lg shadow-orange-500/40 shrink-0 border border-white/40">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-black font-black text-[10px] sm:text-[11px] flex items-center justify-center shadow-lg shadow-orange-500/40 shrink-0 border border-white/40">
               VS
             </div>
 
             {/* Red Side */}
-            <div className="flex-1 h-5 bg-black/60 rounded-r-full overflow-hidden p-0.5 border border-red-500/40">
+            <div className="flex-1 h-4 sm:h-5 bg-black/60 rounded-r-full overflow-hidden p-0.5 border border-red-500/40">
               <div 
                 className="h-full bg-gradient-to-r from-rose-400 via-red-500 to-red-600 rounded-r-full transition-all duration-300 shadow-inner"
                 style={{ width: `${redHpPct}%` }}
@@ -1244,26 +1520,26 @@ export default function GameChienDau({
           </div>
 
           {/* HP Numbers */}
-          <div className="flex justify-between items-center px-3 mt-1 text-[11px] font-mono font-bold text-gray-300">
+          <div className="flex justify-between items-center px-2 sm:px-3 mt-1 text-[10px] sm:text-[11px] font-mono font-bold text-gray-300">
             <span className="text-blue-300">{gameState.hp.blue} / {gameState.maxHp} HP ({Math.round(blueHpPct)}%)</span>
             <span className="text-red-300">{gameState.hp.red} / {gameState.maxHp} HP ({Math.round(redHpPct)}%)</span>
           </div>
         </div>
       </div>
 
-      {/* TOP SUPPORTERS LEADERBOARD (Top Left) */}
-      <div className="absolute top-28 left-4 w-48 bg-black/65 backdrop-blur-md border border-white/10 rounded-xl p-2.5 z-20 pointer-events-none shadow-xl">
-        <div className="flex items-center gap-1.5 text-xs font-bold text-amber-300 mb-2 border-b border-white/10 pb-1.5">
-          <Trophy size={13} className="text-amber-400" />
+      {/* TOP SUPPORTERS LEADERBOARD (Top Left - Responsive) */}
+      <div className="absolute top-20 sm:top-28 left-2 sm:left-4 w-36 sm:w-48 bg-black/75 backdrop-blur-md border border-white/15 rounded-xl p-2 sm:p-2.5 z-20 pointer-events-none shadow-xl">
+        <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-amber-300 mb-1.5 border-b border-white/10 pb-1">
+          <Trophy size={13} className="text-amber-400 shrink-0" />
           <span>Bảng Xếp Hạng</span>
         </div>
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           {gameState.leaderboard.length === 0 ? (
-            <p className="text-[10px] text-gray-400 text-center py-2 italic">Chưa có người ủng hộ</p>
+            <p className="text-[9px] sm:text-[10px] text-gray-400 text-center py-1.5 italic">Chưa có người ủng hộ</p>
           ) : (
             gameState.leaderboard.map((player, idx) => (
-              <div key={player.userId + idx} className="flex items-center justify-between text-[10px] bg-white/5 px-2 py-1 rounded">
-                <span className="flex items-center gap-1 font-medium truncate max-w-[100px]">
+              <div key={player.userId + idx} className="flex items-center justify-between text-[9px] sm:text-[10px] bg-white/5 px-1.5 py-0.5 sm:py-1 rounded">
+                <span className="flex items-center gap-1 font-medium truncate max-w-[80px] sm:max-w-[100px]">
                   <span className={idx === 0 ? 'text-amber-400 font-bold' : idx === 1 ? 'text-gray-300' : 'text-amber-600'}>
                     #{idx + 1}
                   </span>
@@ -1278,18 +1554,18 @@ export default function GameChienDau({
         </div>
       </div>
 
-      {/* PINNED GIFT & EQUIPMENT SHOWCASE HUD (Ghim Cây Trang Bị & Quà Tặng Trên Màn Hình Live) */}
+      {/* PINNED GIFT & EQUIPMENT SHOWCASE HUD (Top Right - Responsive) */}
       {config.showGiftHud !== false && (
-        <div className={`absolute top-28 right-4 z-20 transition-all duration-300 pointer-events-auto ${
-          isGiftHudMinimized ? 'w-10 overflow-hidden' : 'w-60'
+        <div className={`absolute top-20 sm:top-28 right-2 sm:right-4 z-20 transition-all duration-300 pointer-events-auto ${
+          isGiftHudMinimized ? 'w-9 sm:w-10 overflow-hidden' : 'w-48 sm:w-60'
         }`}>
           <div className="bg-black/85 backdrop-blur-xl border border-purple-500/40 rounded-2xl shadow-2xl overflow-hidden text-white">
             {/* HUD Header */}
-            <div className="px-3 py-2 bg-gradient-to-r from-purple-950/80 to-indigo-950/80 border-b border-purple-500/30 flex items-center justify-between">
+            <div className="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-gradient-to-r from-purple-950/80 to-indigo-950/80 border-b border-purple-500/30 flex items-center justify-between">
               {!isGiftHudMinimized ? (
                 <div className="flex items-center gap-1.5">
-                  <Sparkles size={14} className="text-yellow-400 animate-spin" />
-                  <span className="text-[11px] font-black uppercase tracking-wider text-purple-200">
+                  <Sparkles size={13} className="text-yellow-400 animate-spin" />
+                  <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-purple-200">
                     CÂY TRANG BỊ & QUÀ
                   </span>
                 </div>
@@ -1305,7 +1581,7 @@ export default function GameChienDau({
 
             {/* HUD Items List */}
             {!isGiftHudMinimized && (
-              <div className="p-2 space-y-1.5 max-h-60 overflow-y-auto">
+              <div className="p-1.5 sm:p-2 space-y-1 sm:space-y-1.5 max-h-52 sm:max-h-60 overflow-y-auto">
                 {(config.gifts || [
                   { id: 1, name: 'Hoa Hồng / Tim', icon: '🌸', coins: 1, tier: 'Tân Binh', buff: '+10 HP Xung Trận' },
                   { id: 2, name: 'Nước Hoa / Mũ', icon: '🛡️', coins: 50, tier: 'Thiết Giáp Hiệp', buff: '+150 HP + Giáp Bạc' },
@@ -1315,17 +1591,17 @@ export default function GameChienDau({
                 ]).map((g, i) => (
                   <div 
                     key={g.id || i}
-                    className="flex items-center justify-between p-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all text-xs"
+                    className="flex items-center justify-between p-1 sm:p-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all text-xs"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="text-base">{g.icon}</span>
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <span className="text-sm sm:text-base">{g.icon}</span>
                       <div>
-                        <div className="text-[11px] font-bold text-gray-200">{g.tier || g.name}</div>
-                        <div className="text-[9px] text-purple-300">{g.buff}</div>
+                        <div className="text-[10px] sm:text-[11px] font-bold text-gray-200">{g.tier || g.name}</div>
+                        <div className="text-[8px] sm:text-[9px] text-purple-300">{g.buff}</div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <span className="text-[10px] font-mono font-black text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+                    <div className="text-right shrink-0">
+                      <span className="text-[9px] sm:text-[10px] font-mono font-black text-amber-400 bg-amber-500/10 px-1 sm:px-1.5 py-0.5 rounded border border-amber-500/20">
                         {g.coins} xu
                       </span>
                     </div>
@@ -1339,22 +1615,22 @@ export default function GameChienDau({
 
       {/* DONOR SPOTLIGHT (Popup Banner) */}
       {gameState.recentSpotlight && (
-        <div className="absolute top-28 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-600/90 via-orange-600/90 to-amber-700/90 text-white px-5 py-2.5 rounded-2xl shadow-2xl border border-amber-300/50 z-30 animate-in fade-in zoom-in-95 duration-200">
-          <div className="flex items-center gap-2.5">
-            <Sparkles size={18} className="text-yellow-200 animate-spin" />
+        <div className="absolute top-20 sm:top-28 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-600/95 via-orange-600/95 to-amber-700/95 text-white px-3.5 sm:px-5 py-1.5 sm:py-2.5 rounded-2xl shadow-2xl border border-amber-300/50 z-30 animate-in fade-in zoom-in-95 duration-200 max-w-[90vw]">
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <Sparkles size={16} className="text-yellow-200 animate-spin shrink-0" />
             <div>
-              <p className="text-[10px] text-yellow-200 font-bold uppercase tracking-wider">Cảm ơn Nhà Tài Trợ Trợ Lực!</p>
-              <p className="text-xs font-black">{gameState.recentSpotlight.name} đã tặng {gameState.recentSpotlight.gift}</p>
+              <p className="text-[9px] sm:text-[10px] text-yellow-200 font-bold uppercase tracking-wider">Cảm ơn Nhà Tài Trợ Trợ Lực!</p>
+              <p className="text-[11px] sm:text-xs font-black truncate">{gameState.recentSpotlight.name} đã tặng {gameState.recentSpotlight.gift}</p>
             </div>
           </div>
         </div>
       )}
 
-      {/* LIVE COMMENT & GIFT STREAM (Bottom Left) */}
-      <div className="absolute bottom-14 left-4 max-w-xs space-y-1.5 z-20 pointer-events-none">
+      {/* LIVE COMMENT & GIFT STREAM (Bottom Left - Responsive) */}
+      <div className="absolute bottom-12 sm:bottom-14 left-2 sm:left-4 max-w-[190px] sm:max-w-xs space-y-1 sm:space-y-1.5 z-20 pointer-events-none">
         {liveFeed.map(item => (
-          <div key={item.id} className="flex items-center gap-1.5 bg-black/75 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-[11px] text-white shadow-xl animate-in slide-in-from-left-4 fade-in duration-200">
-            <span className="font-bold text-yellow-300 truncate max-w-[90px]">{item.name}</span>:
+          <div key={item.id} className="flex items-center gap-1.5 bg-black/80 backdrop-blur-md px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl border border-white/10 text-[10px] sm:text-[11px] text-white shadow-xl animate-in slide-in-from-left-4 fade-in duration-200">
+            <span className="font-bold text-yellow-300 truncate max-w-[75px] sm:max-w-[90px]">{item.name}</span>:
             <span className={item.faction === 'blue' ? 'text-blue-300 font-semibold' : item.faction === 'red' ? 'text-red-300 font-semibold' : 'text-gray-200'}>
               {item.text}
             </span>
@@ -1362,16 +1638,16 @@ export default function GameChienDau({
         ))}
       </div>
 
-      {/* BOTTOM HINT BANNER */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-md border border-white/15 px-4 py-1.5 rounded-full text-xs font-medium text-gray-200 z-20 pointer-events-none shadow-lg flex items-center gap-2">
-        <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-        Bình luận <span className="text-blue-400 font-bold">"xanh"</span> hoặc <span className="text-red-400 font-bold">"đỏ"</span> để vào trận & tặng quà trợ chiến!
+      {/* BOTTOM HINT BANNER (Responsive) */}
+      <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-md border border-white/20 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-medium text-gray-200 z-20 pointer-events-none shadow-lg flex items-center gap-1.5 sm:gap-2 max-w-[92vw] truncate">
+        <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
+        <span className="truncate">BL <strong className="text-blue-400 font-bold">"xanh"</strong> / <strong className="text-red-400 font-bold">"đỏ"</strong> Vào Trận & Hồi Sinh | Tặng Quà Nâng Cấp!</span>
       </div>
 
-      {/* QUICK LIVE SPEED & AUDIO CONTROLS (Bottom Right) */}
-      <div className="absolute bottom-4 right-4 z-20 flex items-center gap-2.5 bg-black/85 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/15 shadow-2xl text-white pointer-events-auto">
-        <div className="flex items-center gap-1.5 text-[11px] text-amber-300 font-bold">
-          <span>⚡ Tốc độ:</span>
+      {/* QUICK LIVE SPEED & AUDIO CONTROLS (Bottom Right - Responsive) */}
+      <div className="absolute bottom-3 sm:bottom-4 right-2 sm:right-4 z-20 flex items-center gap-1.5 sm:gap-2.5 bg-black/85 backdrop-blur-md px-2 sm:px-3 py-1 sm:py-1.5 rounded-2xl border border-white/15 shadow-2xl text-white pointer-events-auto">
+        <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] text-amber-300 font-bold">
+          <span>⚡</span>
           <input
             type="range"
             min="0.2"
@@ -1379,10 +1655,10 @@ export default function GameChienDau({
             step="0.05"
             value={config.animSpeed || 0.55}
             onChange={(e) => setConfig(prev => ({ ...prev, animSpeed: parseFloat(e.target.value) }))}
-            className="w-16 h-1.5 accent-amber-400 cursor-pointer"
+            className="w-12 sm:w-16 h-1.5 accent-amber-400 cursor-pointer"
             title={`Tốc độ cử động: ${(config.animSpeed || 0.55).toFixed(2)}x`}
           />
-          <span className="font-mono text-[10px] text-gray-300 w-7">{((config.animSpeed || 0.55)).toFixed(1)}x</span>
+          <span className="font-mono text-[9px] sm:text-[10px] text-gray-300 w-6 sm:w-7">{((config.animSpeed || 0.55)).toFixed(1)}x</span>
         </div>
 
         <div className="w-[1px] h-3.5 bg-white/20" />
