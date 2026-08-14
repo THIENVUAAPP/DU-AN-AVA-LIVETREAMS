@@ -168,9 +168,9 @@ export default function GameChienDau({
     else if (type === 'level_up') battleAudio.playLevelUp(vol);
   }, [config.soundEnabled, config.sfxVolume, soundMuted]);
 
-  // Recalculate formation slots with 2-Tier Center Arena Architecture:
-  // 1) Upper VIP Champions Stage (Tầng Thượng Đỉnh): Tier 3, 4, 5 stand prominently in the center, scaled 3.0x - 3.4x facing each other!
-  // 2) Lower Army Battlefield (Tầng Chiến Trường): Tier 1, 2 troops gather in the center arena, scaled 1.65x - 1.85x, perfectly clear and visible.
+  // Recalculate formation slots with 2-Tier Center Arena Architecture (Zero Overlap):
+  // 1) Upper VIP Champions Stage: Tier 3, 4, 5 stand prominently with x3.0-3.4 scale and wide clearance.
+  // 2) Lower Army Battlefield: Tier 1, 2 troops gather with ample row/column spacing and dedicated reserve lane for fallen fighters.
   const updateFormation = useCallback((canvasWidth, canvasHeight) => {
     const centerX = canvasWidth / 2;
     const vipStageY = canvasHeight * 0.38;
@@ -183,54 +183,65 @@ export default function GameChienDau({
 
       // Classify VIPs vs Regular Troops
       const vips = [];
-      const regulars = [];
+      const activeRegulars = [];
+      const fallenRegulars = [];
 
       list.forEach((f, idx) => {
         f.rank = idx;
         const tier = f.score >= 5000 ? 5 : f.score >= 2000 ? 4 : f.score >= 500 ? 3 : f.score >= 100 ? 2 : 1;
         if (tier >= 3 || idx === 0) {
           vips.push(f);
+        } else if (f.isKnockedOut) {
+          fallenRegulars.push(f);
         } else {
-          regulars.push(f);
+          activeRegulars.push(f);
         }
       });
 
-      // Position VIPs in Upper Center Champions Arena (Tập trung ngay giữa màn hình)
-      const vipStepX = 75;
-      const vipStepY = 50;
-      const vipFrontGap = 65;
+      // Position VIPs in Upper Center Champions Arena (Tập trung ở giữa màn hình)
+      const vipStepX = 85;
+      const vipStepY = 55;
+      const vipFrontGap = 80;
 
       vips.forEach((f, vIdx) => {
         const vRow = vIdx % 2;
         const vCol = Math.floor(vIdx / 2);
         f.isVipStage = true;
         f.targetX = centerX + dir * (vipFrontGap + vCol * vipStepX);
-        f.targetY = vipStageY + (vRow - 0.5) * vipStepY;
+        f.targetY = vipStageY + (vRow === 0 ? -18 : 22);
       });
 
-      // Position Regular Army in Lower Center Battlefield (Tập trung ở giữa màn hình)
-      const regCount = regulars.length;
-      const dynamicRows = Math.min(4, Math.max(2, Math.ceil(Math.sqrt(regCount * 0.5))));
-      const dynamicRowGap = Math.max(34, 44 - dynamicRows * 2);
-      const dynamicStepX = Math.max(42, 52 - Math.min(10, regCount / 20));
-      const frontGap = 45;
+      // Position Active Regular Army in Lower Center Battlefield
+      const regStepX = 58;
+      const regStepY = 50;
+      const frontGap = 70;
+      const maxCols = 3;
 
-      regulars.forEach((f, rIdx) => {
-        const row = rIdx % dynamicRows;
-        const col = Math.floor(rIdx / dynamicRows);
-        const rowStagger = (row % 2 === 1) ? (dynamicStepX * 0.5) : 0;
+      activeRegulars.forEach((f, rIdx) => {
+        const row = rIdx % 2;
+        const col = Math.floor(rIdx / 2);
+        const rowStagger = (row % 2 === 1) ? 22 : 0;
         f.isVipStage = false;
-        f.targetX = centerX + dir * (frontGap + col * dynamicStepX + rowStagger);
-        f.targetY = armyStageY + (row - (dynamicRows - 1) / 2) * dynamicRowGap;
+        f.targetX = centerX + dir * (frontGap + col * regStepX + rowStagger);
+        f.targetY = armyStageY + (row === 0 ? -22 : 22);
+      });
+
+      // Position Fallen Regulars neatly in the back reserve rank (Không đè lên quân đang chiến đấu)
+      fallenRegulars.forEach((f, fIdx) => {
+        const col = fIdx % 4;
+        const row = Math.floor(fIdx / 4);
+        f.isVipStage = false;
+        f.targetX = centerX + dir * (150 + col * 38);
+        f.targetY = armyStageY + 65 + row * 26;
       });
     });
   }, []);
 
-  // Recalculate dance stage slots (Tập trung ở khu vực sân khấu trung tâm)
+  // Recalculate dance stage slots (Tập trung tuyệt đối ở sân khấu trung tâm)
   const updateDanceSlots = useCallback((canvasWidth, canvasHeight) => {
-    const DANCE_SLOT_GAP_X = 60;
+    const DANCE_SLOT_GAP_X = 52;
     const DANCE_STAGE_Y_RATIO = 0.44;
-    const DANCE_STAGE_CENTER_GAP = 50;
+    const DANCE_STAGE_CENTER_GAP = 55;
     const centerX = canvasWidth / 2;
     const y = canvasHeight * DANCE_STAGE_Y_RATIO;
 
@@ -406,9 +417,10 @@ export default function GameChienDau({
     }
 
     const centerX = (engineRef.current.w || canvas.width) / 2;
-    const formationFighter = engineRef.current.fighters[factionId].find(f => f.userId === userId);
-    const startX = formationFighter ? formationFighter.x : (factionId === 'blue' ? (centerX - 50) : (centerX + 50));
-    const startY = formationFighter ? formationFighter.y : (engineRef.current.h || canvas.height) * 0.44;
+    const dir = factionId === 'blue' ? -1 : 1;
+    const slotIdx = list.length;
+    const startX = centerX + dir * (55 + slotIdx * 52);
+    const startY = (engineRef.current.h || canvas.height) * 0.44;
 
     list.push({
       userId,
@@ -419,7 +431,7 @@ export default function GameChienDau({
       durationMs,
       x: startX,
       y: startY,
-      scale: 1,
+      scale: 2.0,
       targetX: startX,
       targetY: startY,
       targetScale: 2.0
@@ -874,6 +886,36 @@ export default function GameChienDau({
       // 2. Update & Draw Fighters (Chiến binh Kiếm Hiệp 3D: Tướng VIP to gấp 3 lần ở tầng trên + Đội hình thoáng đãng)
       const lerpFactor = Math.min(1, dt * 5);
       
+      // Real-time Active Sword Clash Simulation between Blue and Red frontlines
+      const activeBlue = engineRef.current.fighters.blue.filter(f => !f.isKnockedOut);
+      const activeRed = engineRef.current.fighters.red.filter(f => !f.isKnockedOut);
+      const hasDuel = activeBlue.length > 0 && activeRed.length > 0;
+      const duelCycle = (time * 0.001) % 2.5; // 2.5s combat rhythm
+      const isClashing = hasDuel && duelCycle < 1.0;
+
+      // Spawn Sword Clash Sparks at the center collision point
+      if (isClashing && Math.random() < 0.4) {
+        const clashY = h * 0.65;
+        for (let sp = 0; sp < 3; sp++) {
+          engineRef.current.particles.push({
+            x: centerX + (Math.random() - 0.5) * 14,
+            y: clashY + (Math.random() - 0.5) * 20,
+            vx: (Math.random() - 0.5) * 90,
+            vy: (Math.random() - 0.5) * 90 - 20,
+            size: 2.5 + Math.random() * 2.5,
+            color: Math.random() < 0.5 ? '#fde047' : '#ffffff',
+            isFlash: true,
+            lifespanMs: 380,
+            spawnedAt: performance.now()
+          });
+        }
+
+        if (time - (engineRef.current.lastClashSoundTime || 0) > 1300) {
+          engineRef.current.lastClashSoundTime = time;
+          playSfx('hit');
+        }
+      }
+
       // Collect and sort all fighters for back-to-front rendering
       const allFighters = [
         ...engineRef.current.fighters.blue.map(f => ({ ...f, factionId: 'blue' })),
@@ -887,8 +929,18 @@ export default function GameChienDau({
       allFighters.forEach(f => {
         const factionId = f.factionId;
         const color = factionId === 'blue' ? config.blueColor : config.redColor;
+        const dir = factionId === 'blue' ? -1 : 1;
 
-        f.x += (f.targetX - f.x) * lerpFactor;
+        // Dynamic combat lunge if this is the front duelist
+        const isFrontDuelist = (factionId === 'blue' && activeBlue[0] && f.userId === activeBlue[0].userId) ||
+                               (factionId === 'red' && activeRed[0] && f.userId === activeRed[0].userId);
+        
+        let targetX = f.targetX;
+        if (isClashing && isFrontDuelist) {
+          targetX = centerX + dir * 28;
+        }
+
+        f.x += (targetX - f.x) * lerpFactor;
         f.y += (f.targetY - f.y) * lerpFactor;
         f.bobPhase += dt * 4.5;
 
@@ -1062,6 +1114,8 @@ export default function GameChienDau({
           animState = SKELETON_STATES.REVIVE;
         } else if (isPulsing) {
           animState = (tier >= 4 || isTopRank) ? SKELETON_STATES.ATTACK_SPIN : SKELETON_STATES.ATTACK_SLASH;
+        } else if (isClashing && isFrontDuelist) {
+          animState = SKELETON_STATES.ATTACK_SLASH;
         }
 
         // Compute 3D facing angle
