@@ -693,8 +693,44 @@ export default function DesktopAppUI() {
 
         <div className="flex-1"></div>
 
-        {/* Right Side: Toggles */}
+        {/* Right Side: Toggles & Stream Window */}
         <div className="flex items-center gap-3 shrink-0">
+          
+          {/* Nút Mở Cửa Sổ Live Sạch Dành Riêng Cho TikTok Live Studio / OBS */}
+          <button 
+            onClick={() => {
+              const streamWin = window.open('', 'AvaliveCleanStream', 'width=720,height=1280,menubar=no,toolbar=no,location=no,status=no');
+              if (streamWin) {
+                const char = CHARACTERS[selectedCharacter] || { url: '', type: 'image' };
+                const currentMedia = (isConnected || showSimulator) && activeVideoItem ? activeVideoItem.mediaUrl : char.url;
+                const isVid = char.type === 'video' || (activeVideoItem && activeVideoItem.type === 'video');
+                
+                streamWin.document.write(`
+                  <!DOCTYPE html>
+                  <html>
+                  <head>
+                    <title>TikTok Live Studio - Clean Video Output</title>
+                    <style>
+                      body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; display: flex; align-items: center; justify-content: center; }
+                      video, img { width: 100%; height: 100%; object-fit: cover; }
+                    </style>
+                  </head>
+                  <body>
+                    ${isVid ? `<video id="clean-stream-video" src="${currentMedia}" autoplay loop muted playsinline></video>` : `<img id="clean-stream-img" src="${currentMedia}" />`}
+                  </body>
+                  </html>
+                `);
+                streamWin.document.close();
+              }
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-all bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md hover:scale-105"
+            title="Mở cửa sổ video sạch độc lập chỉ chứa hình ảnh/video nhân vật để TikTok Live Studio / OBS bắt hình trực tiếp (Không dính menu quản trị)"
+          >
+            <Video size={16} />
+            Cửa Sổ Live Sạch (TikTok Studio)
+          </button>
+
+          {/* Menu Theo dõi: Sắp xếp theo thứ tự ưu tiên hay dùng nhất lên đầu */}
           <div className="relative">
             <button 
               onClick={() => setIsMonitorDropdownOpen(!isMonitorDropdownOpen)} 
@@ -704,11 +740,36 @@ export default function DesktopAppUI() {
             </button>
             {isMonitorDropdownOpen && (
               <div className={`absolute top-full right-0 mt-2 w-64 rounded-xl shadow-2xl border z-50 p-2 overflow-hidden ${isDarkMode ? 'bg-[#1c1c23] border-gray-700' : 'bg-white border-gray-200'} animate-in fade-in slide-in-from-top-2 duration-200`}>
-                <button onClick={() => { setActiveMonitorModal('timeline'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-3 py-2 mb-1 rounded text-sm font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}><Clock size={16} className="text-blue-400" /> Dòng thời gian Sự kiện</button>
-                <button onClick={() => { setActiveMonitorModal('queue'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-3 py-2 mb-1 rounded text-sm font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}><List size={16} className="text-gray-400" /> Giám sát Hàng đợi</button>
-                <button onClick={() => { setActiveMonitorModal('quick_response'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-3 py-2 mb-1 rounded text-sm font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}><Zap size={16} className="text-yellow-500" /> Phản hồi Nhanh</button>
-                <button onClick={() => { setActiveMonitorModal('sys_log'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-3 py-2 mb-1 rounded text-sm font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}><AlertCircle size={16} className="text-orange-400" /> Log Hệ thống Lỗi</button>
-                <button onClick={() => { setActiveMonitorModal('tiktok_log'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-3 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}><FileText size={16} className="text-pink-400" /> Log Sự kiện TikTok</button>
+                {/* 1. Ưu tiên hàng đầu khi live: Phản hồi nhanh */}
+                <button onClick={() => { setActiveMonitorModal('quick_response'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-3 py-2 mb-1 rounded text-sm font-bold transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-yellow-500/20 text-yellow-400' : 'hover:bg-yellow-100 text-yellow-800'}`}>
+                  <Zap size={16} className="text-yellow-500" /> 
+                  <span>Phản hồi Nhanh</span>
+                  <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-yellow-500/30 text-yellow-300 font-mono">Ưu tiên #1</span>
+                </button>
+
+                {/* 2. Dòng thời gian sự kiện (xem quà & cmt) */}
+                <button onClick={() => { setActiveMonitorModal('timeline'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-3 py-2 mb-1 rounded text-sm font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}>
+                  <Clock size={16} className="text-blue-400" /> 
+                  <span>Dòng thời gian Sự kiện</span>
+                </button>
+
+                {/* 3. Giám sát hàng đợi AI */}
+                <button onClick={() => { setActiveMonitorModal('queue'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-3 py-2 mb-1 rounded text-sm font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}>
+                  <List size={16} className="text-purple-400" /> 
+                  <span>Giám sát Hàng đợi</span>
+                </button>
+
+                {/* 4. Log sự kiện TikTok */}
+                <button onClick={() => { setActiveMonitorModal('tiktok_log'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-3 py-2 mb-1 rounded text-sm font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}>
+                  <FileText size={16} className="text-pink-400" /> 
+                  <span>Log Sự kiện TikTok</span>
+                </button>
+
+                {/* 5. Log hệ thống lỗi (khi có sự cố) */}
+                <button onClick={() => { setActiveMonitorModal('sys_log'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-3 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}>
+                  <AlertCircle size={16} className="text-orange-400" /> 
+                  <span>Log Hệ thống Lỗi</span>
+                </button>
               </div>
             )}
           </div>

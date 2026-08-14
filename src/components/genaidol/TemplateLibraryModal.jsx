@@ -13,6 +13,7 @@ import {
 
 export default function TemplateLibraryModal({ isOpen, onClose, onAddTemplate }) {
   const [activeCategory, setActiveCategory] = useState('all');
+  const [activeMediaType, setActiveMediaType] = useState('all'); // 'all' | 'video' | 'image' | 'audio'
   const [searchQuery, setSearchQuery] = useState('');
   const [isVIPUser, setIsVIPUser] = useState(false);
   const [toastMsg, setToastMsg] = useState(null);
@@ -26,8 +27,10 @@ export default function TemplateLibraryModal({ isOpen, onClose, onAddTemplate })
       const saved = localStorage.getItem('aidol_custom_categories');
       if (saved) {
         const parsed = JSON.parse(saved);
-        setCategories([...DEFAULT_AIDOL_CATEGORIES, ...parsed]);
+        setCategories(parsed);
       } else {
+        // Khởi tạo mặc định nếu chưa có
+        localStorage.setItem('aidol_custom_categories', JSON.stringify(DEFAULT_AIDOL_CATEGORIES));
         setCategories(DEFAULT_AIDOL_CATEGORIES);
       }
     } catch (e) {
@@ -74,19 +77,38 @@ export default function TemplateLibraryModal({ isOpen, onClose, onAddTemplate })
       name: name.trim()
     };
     
-    try {
-      const saved = localStorage.getItem('aidol_custom_categories');
-      let parsed = [];
-      if (saved) {
-        parsed = JSON.parse(saved);
-      }
-      parsed.push(newCat);
-      localStorage.setItem('aidol_custom_categories', JSON.stringify(parsed));
-      setCategories([...DEFAULT_AIDOL_CATEGORIES, ...parsed]);
-      setActiveCategory(newCat.id);
-      showToast(`✅ Đã tạo thêm chủ đề "${name.trim()}"!`);
-    } catch (e) {
-      console.error(e);
+    const updated = [...categories, newCat];
+    setCategories(updated);
+    localStorage.setItem('aidol_custom_categories', JSON.stringify(updated));
+    setActiveCategory(newCat.id);
+    showToast(`✅ Đã tạo thêm chủ đề "${name.trim()}"!`);
+  };
+
+  // Sửa / Đổi tên chủ đề
+  const handleEditCategory = (e, cat) => {
+    e.stopPropagation();
+    const newName = window.prompt(`Đổi tên chủ đề "${cat.name}" thành:`, cat.name);
+    if (!newName || !newName.trim() || newName.trim() === cat.name) return;
+
+    const updated = categories.map(c => c.id === cat.id ? { ...c, name: newName.trim() } : c);
+    setCategories(updated);
+    localStorage.setItem('aidol_custom_categories', JSON.stringify(updated));
+    showToast(`✏️ Đã đổi tên chủ đề thành "${newName.trim()}"!`);
+  };
+
+  // Xoá chủ đề
+  const handleDeleteCategory = (e, cat) => {
+    e.stopPropagation();
+    if (categories.length <= 1) {
+      showToast('⚠️ Cần giữ lại ít nhất 1 chủ đề!');
+      return;
+    }
+    if (window.confirm(`Bạn có chắc muốn xoá chủ đề "${cat.name}" không?`)) {
+      const updated = categories.filter(c => c.id !== cat.id);
+      setCategories(updated);
+      localStorage.setItem('aidol_custom_categories', JSON.stringify(updated));
+      if (activeCategory === cat.id) setActiveCategory(updated[0]?.id || 'all');
+      showToast(`🗑️ Đã xoá chủ đề "${cat.name}"!`);
     }
   };
 
@@ -148,10 +170,12 @@ export default function TemplateLibraryModal({ isOpen, onClose, onAddTemplate })
   // Gộp danh sách: Template cá nhân (tải từ web/app) + Template mẫu mặc định hệ thống
   const allTemplates = [...personalTemplates, ...DEFAULT_SYSTEM_TEMPLATES];
 
+  // Lọc theo Category + Media Type (Video / Hình ảnh) + Search
   const filteredTemplates = allTemplates.filter(tpl => {
     const matchCat = activeCategory === 'all' || tpl.category === activeCategory;
+    const matchType = activeMediaType === 'all' || tpl.type === activeMediaType;
     const matchSearch = (tpl.name || '').toLowerCase().includes(searchQuery.toLowerCase());
-    return matchCat && matchSearch;
+    return matchCat && matchType && matchSearch;
   });
 
   const handleDownload = (tpl) => {
@@ -218,28 +242,47 @@ export default function TemplateLibraryModal({ isOpen, onClose, onAddTemplate })
           </button>
         </div>
 
-        {/* Top Controls: Categories, Upload & Search */}
-        <div className="p-4 border-b border-gray-800 flex flex-col gap-4 bg-[#111623]">
+        {/* Top Controls: Categories, Media Type Filter, Upload & Search */}
+        <div className="p-4 border-b border-gray-800 flex flex-col gap-3 bg-[#111623]">
           {/* Categories & Actions */}
           <div className="flex items-center justify-between gap-3 overflow-x-auto pb-1 scrollbar-thin">
             <div className="flex items-center gap-2">
               {categories.map(cat => (
-                <button
-                  key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-bold whitespace-nowrap transition-all ${
-                    activeCategory === cat.id 
-                      ? 'bg-[#00FF66] text-black shadow-[0_0_15px_rgba(0,255,102,0.4)]' 
-                      : 'bg-[#1a202c] border border-gray-700 text-gray-400 hover:text-white hover:border-gray-500'
-                  }`}
-                >
-                  {cat.name}
-                </button>
+                <div key={cat.id} className="relative group/cat shrink-0 flex items-center">
+                  <button
+                    onClick={() => setActiveCategory(cat.id)}
+                    className={`px-4 py-1.5 rounded-full text-sm font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                      activeCategory === cat.id 
+                        ? 'bg-[#00FF66] text-black shadow-[0_0_15px_rgba(0,255,102,0.4)]' 
+                        : 'bg-[#1a202c] border border-gray-700 text-gray-400 hover:text-white hover:border-gray-500'
+                    }`}
+                  >
+                    <span>{cat.name}</span>
+                  </button>
+
+                  {/* Nút Sửa & Xoá Chủ Đề */}
+                  <div className="absolute -top-2 -right-1 flex items-center gap-0.5 opacity-0 group-hover/cat:opacity-100 transition-opacity z-20 bg-gray-900 border border-gray-700 rounded-full px-1 py-0.5 shadow-lg">
+                    <button
+                      onClick={(e) => handleEditCategory(e, cat)}
+                      className="p-1 hover:text-yellow-400 text-gray-400 transition-colors"
+                      title={`Đổi tên chủ đề "${cat.name}"`}
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={(e) => handleDeleteCategory(e, cat)}
+                      className="p-1 hover:text-red-400 text-gray-400 transition-colors"
+                      title={`Xoá chủ đề "${cat.name}"`}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
               ))}
 
               <button 
                 onClick={handleAddCategory}
-                className="px-3.5 py-1.5 rounded-full text-sm font-bold whitespace-nowrap bg-white/5 text-gray-300 hover:text-white border border-gray-700 border-dashed hover:border-[#00FF66]/50 flex items-center gap-1 transition-colors"
+                className="px-3.5 py-1.5 rounded-full text-sm font-bold whitespace-nowrap bg-white/5 text-gray-300 hover:text-white border border-gray-700 border-dashed hover:border-[#00FF66]/50 flex items-center gap-1 transition-colors shrink-0"
               >
                 <Plus size={14} /> Thêm chủ đề
               </button>
@@ -265,16 +308,47 @@ export default function TemplateLibraryModal({ isOpen, onClose, onAddTemplate })
             </div>
           </div>
 
-          {/* Search */}
-          <div className="relative w-96 max-w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
-            <input 
-              type="text"
-              placeholder="Tìm theo tên AIDOL hoặc Template..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#1c2233] border border-gray-700 text-white pl-9 pr-4 py-2 rounded-xl text-sm focus:outline-none focus:border-[#00FF66] transition-colors"
-            />
+          {/* Row 2: Media Type Tabs (Tách biệt Video & Hình ảnh) + Search */}
+          <div className="flex flex-wrap items-center justify-between gap-4 pt-1 border-t border-gray-800/60">
+            {/* Bộ lọc tách biệt Video & Hình Ảnh */}
+            <div className="flex items-center gap-1.5 bg-[#0b0f19] p-1 rounded-xl border border-gray-800">
+              <button 
+                onClick={() => setActiveMediaType('all')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${activeMediaType === 'all' ? 'bg-[#00FF66]/20 text-[#00FF66] border border-[#00FF66]/40 shadow-sm' : 'text-gray-400 hover:text-white'}`}
+              >
+                🎬 Tất cả Media
+              </button>
+              <button 
+                onClick={() => setActiveMediaType('video')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${activeMediaType === 'video' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40 shadow-sm' : 'text-gray-400 hover:text-white'}`}
+              >
+                🎥 Chỉ Video Mẫu
+              </button>
+              <button 
+                onClick={() => setActiveMediaType('image')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${activeMediaType === 'image' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40 shadow-sm' : 'text-gray-400 hover:text-white'}`}
+              >
+                🖼️ Chỉ Hình Ảnh Mẫu
+              </button>
+              <button 
+                onClick={() => setActiveMediaType('audio')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${activeMediaType === 'audio' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40 shadow-sm' : 'text-gray-400 hover:text-white'}`}
+              >
+                🎵 Âm Thanh
+              </button>
+            </div>
+
+            {/* Search */}
+            <div className="relative w-80 max-w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+              <input 
+                type="text"
+                placeholder="Tìm theo tên AIDOL hoặc Template..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-[#1c2233] border border-gray-700 text-white pl-9 pr-4 py-1.5 rounded-xl text-sm focus:outline-none focus:border-[#00FF66] transition-colors"
+              />
+            </div>
           </div>
         </div>
 

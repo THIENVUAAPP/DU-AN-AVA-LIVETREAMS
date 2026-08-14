@@ -67,15 +67,25 @@ export default function ThuVienAIDOL() {
   ];
 
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+  const [activeMediaType, setActiveMediaType] = useState('all'); // 'all' | 'video' | 'image' | 'audio'
 
-  useEffect(() => {
+  const refreshCategories = () => {
     const saved = localStorage.getItem('aidol_custom_categories');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        setCategories([...DEFAULT_CATEGORIES, ...parsed]);
-      } catch(e) {}
+        setCategories(parsed);
+      } catch(e) {
+        setCategories(DEFAULT_CATEGORIES);
+      }
+    } else {
+      localStorage.setItem('aidol_custom_categories', JSON.stringify(DEFAULT_CATEGORIES));
+      setCategories(DEFAULT_CATEGORIES);
     }
+  };
+
+  useEffect(() => {
+    refreshCategories();
   }, []);
 
   const handleAddCategory = () => {
@@ -87,14 +97,34 @@ export default function ThuVienAIDOL() {
       name: name.trim()
     };
     
-    const saved = localStorage.getItem('aidol_custom_categories');
-    let parsed = [];
-    if (saved) {
-      try { parsed = JSON.parse(saved); } catch(e) {}
+    const updated = [...categories, newCat];
+    setCategories(updated);
+    localStorage.setItem('aidol_custom_categories', JSON.stringify(updated));
+    setSelectedCategory(newCat.id);
+  };
+
+  const handleEditCategory = (e, cat) => {
+    e.stopPropagation();
+    const newName = window.prompt(`Đổi tên chủ đề "${cat.name}" thành:`, cat.name);
+    if (!newName || !newName.trim() || newName.trim() === cat.name) return;
+
+    const updated = categories.map(c => c.id === cat.id ? { ...c, name: newName.trim() } : c);
+    setCategories(updated);
+    localStorage.setItem('aidol_custom_categories', JSON.stringify(updated));
+  };
+
+  const handleDeleteCategory = (e, cat) => {
+    e.stopPropagation();
+    if (categories.length <= 1) {
+      alert('Cần giữ lại ít nhất 1 chủ đề!');
+      return;
     }
-    parsed.push(newCat);
-    localStorage.setItem('aidol_custom_categories', JSON.stringify(parsed));
-    setCategories([...DEFAULT_CATEGORIES, ...parsed]);
+    if (window.confirm(`Bạn có chắc muốn xoá chủ đề "${cat.name}" không?`)) {
+      const updated = categories.filter(c => c.id !== cat.id);
+      setCategories(updated);
+      localStorage.setItem('aidol_custom_categories', JSON.stringify(updated));
+      if (selectedCategory === cat.id) setSelectedCategory(updated[0]?.id || 'all');
+    }
   };
 
   const handleSaveAidol = async () => {
@@ -144,11 +174,12 @@ export default function ThuVienAIDOL() {
     }
   };
 
-  // Lọc danh sách theo Category và Search
+  // Lọc danh sách theo Category, Media Type và Search
   const filteredLibrary = libraryItems.filter(item => {
     const matchCat = selectedCategory === 'all' || item.category === selectedCategory;
+    const matchType = activeMediaType === 'all' || item.type === activeMediaType;
     const matchSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchCat && matchSearch;
+    return matchCat && matchType && matchSearch;
   });
 
   return (
@@ -211,16 +242,34 @@ export default function ThuVienAIDOL() {
              </div>
           </div>
 
-          {/* Filters */}
-          <div className="flex flex-wrap items-center gap-2 mb-4">
+          {/* Filters: Category with Edit/Delete */}
+          <div className="flex flex-wrap items-center gap-2 mb-2">
             {categories.map(cat => (
-               <button 
-                 key={cat.id} 
-                 onClick={() => setSelectedCategory(cat.id)}
-                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${selectedCategory === cat.id ? 'bg-[#00FF66] text-black shadow-glow-green' : 'bg-black/60 text-gray-400 hover:text-white border border-white/10'}`}
-               >
-                 {cat.name}
-               </button>
+              <div key={cat.id} className="relative group/cat flex items-center">
+                <button 
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-1.5 ${selectedCategory === cat.id ? 'bg-[#00FF66] text-black shadow-glow-green' : 'bg-black/60 text-gray-400 hover:text-white border border-white/10'}`}
+                >
+                  <span>{cat.name}</span>
+                </button>
+                {/* Nút Sửa & Xoá Chủ Đề */}
+                <div className="absolute -top-2 -right-1 flex items-center gap-0.5 opacity-0 group-hover/cat:opacity-100 transition-opacity z-20 bg-gray-900 border border-gray-700 rounded-full px-1 py-0.5 shadow-lg">
+                  <button
+                    onClick={(e) => handleEditCategory(e, cat)}
+                    className="p-1 hover:text-yellow-400 text-gray-400 text-xs transition-colors"
+                    title={`Đổi tên chủ đề "${cat.name}"`}
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    onClick={(e) => handleDeleteCategory(e, cat)}
+                    className="p-1 hover:text-red-400 text-gray-400 text-xs transition-colors"
+                    title={`Xoá chủ đề "${cat.name}"`}
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
             ))}
             <button 
               onClick={handleAddCategory}
@@ -230,18 +279,44 @@ export default function ThuVienAIDOL() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
-                <input 
-                  type="text" 
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Tìm theo tên AIDOL..." 
-                  className="w-full pl-9 pr-4 py-2 bg-black/60 border border-white/10 rounded-lg text-sm text-white focus:border-[#00FF66] outline-none transition-all shadow-sm"
-                />
-              </div>
+          {/* Row 2: Media Type Filter (Tách biệt Video & Hình ảnh) + Search */}
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-4 bg-black/30 p-2 rounded-xl border border-white/10">
+            <div className="flex items-center gap-1.5">
+              <button 
+                onClick={() => setActiveMediaType('all')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${activeMediaType === 'all' ? 'bg-[#00FF66]/20 text-[#00FF66] border border-[#00FF66]/40 shadow-sm' : 'text-gray-400 hover:text-white'}`}
+              >
+                🎬 Tất cả Media
+              </button>
+              <button 
+                onClick={() => setActiveMediaType('video')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${activeMediaType === 'video' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40 shadow-sm' : 'text-gray-400 hover:text-white'}`}
+              >
+                🎥 Chỉ Video Mẫu
+              </button>
+              <button 
+                onClick={() => setActiveMediaType('image')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${activeMediaType === 'image' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40 shadow-sm' : 'text-gray-400 hover:text-white'}`}
+              >
+                🖼️ Chỉ Hình Ảnh Mẫu
+              </button>
+              <button 
+                onClick={() => setActiveMediaType('audio')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${activeMediaType === 'audio' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40 shadow-sm' : 'text-gray-400 hover:text-white'}`}
+              >
+                🎵 Âm Thanh
+              </button>
+            </div>
+
+            <div className="relative w-72 max-w-full">
+              <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
+              <input 
+                type="text" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Tìm theo tên AIDOL..." 
+                className="w-full pl-9 pr-4 py-1.5 bg-black/60 border border-white/10 rounded-lg text-sm text-white focus:border-[#00FF66] outline-none transition-all shadow-sm"
+              />
             </div>
           </div>
 
