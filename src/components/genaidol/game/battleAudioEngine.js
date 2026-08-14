@@ -1,7 +1,9 @@
-// Studio-grade Web Audio Engine for TikTok LIVE Battle Game
-// Zero-latency, zero droning noise, crystal-clear hype sound effects
+// Melodic & Studio-Grade Web Audio Engine for TikTok LIVE Battle Game
+// Zero-noise, Zero-buzzing ("è è" completely eliminated), Pure Harmonic Musical Tones
 
 let audioCtx = null;
+let bgmIntervalId = null;
+let isBgmPlaying = false;
 
 function getAudioContext() {
   if (typeof window === 'undefined') return null;
@@ -17,8 +19,39 @@ function getAudioContext() {
   return audioCtx;
 }
 
+// Helper to create a warm, smooth musical tone (sine + harmonic overtone)
+function playHarmonicTone(ctx, freq, startTime, duration, gainValue = 0.3, master) {
+  // Fundamental
+  const osc1 = ctx.createOscillator();
+  const gain1 = ctx.createGain();
+  osc1.type = 'sine';
+  osc1.frequency.setValueAtTime(freq, startTime);
+  gain1.gain.setValueAtTime(0, startTime);
+  gain1.gain.linearRampToValueAtTime(gainValue, startTime + 0.02);
+  gain1.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+  // 2nd Harmonic (sweetness)
+  const osc2 = ctx.createOscillator();
+  const gain2 = ctx.createGain();
+  osc2.type = 'sine';
+  osc2.frequency.setValueAtTime(freq * 2, startTime);
+  gain2.gain.setValueAtTime(0, startTime);
+  gain2.gain.linearRampToValueAtTime(gainValue * 0.25, startTime + 0.02);
+  gain2.gain.exponentialRampToValueAtTime(0.0001, startTime + duration * 0.7);
+
+  osc1.connect(gain1);
+  osc2.connect(gain2);
+  gain1.connect(master);
+  gain2.connect(master);
+
+  osc1.start(startTime);
+  osc1.stop(startTime + duration + 0.05);
+  osc2.start(startTime);
+  osc2.stop(startTime + duration + 0.05);
+}
+
 export const battleAudio = {
-  // 1. Tham chiến (Kèn xung trận + Keng dũng sĩ)
+  // 1. Tham chiến (Âm sắc Kèn Chuông Xung Trận - Melodic Chime Fanfare)
   playJoin(volume = 0.7) {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -27,41 +60,43 @@ export const battleAudio = {
     masterGain.gain.setValueAtTime(volume * 0.4, now);
     masterGain.connect(ctx.destination);
 
-    // Fanfare Notes: C5 -> E5 -> G5
-    const notes = [523.25, 659.25, 783.99];
+    // C5 -> E5 -> G5 -> C6 (Joyful Fanfare)
+    const notes = [523.25, 659.25, 783.99, 1046.50];
     notes.forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, now + i * 0.08);
-
-      gain.gain.setValueAtTime(0, now + i * 0.08);
-      gain.gain.linearRampToValueAtTime(0.6, now + i * 0.08 + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.35);
-
-      osc.connect(gain);
-      gain.connect(masterGain);
-
-      osc.start(now + i * 0.08);
-      osc.stop(now + i * 0.08 + 0.36);
+      playHarmonicTone(ctx, freq, now + i * 0.07, 0.4, 0.45, masterGain);
     });
-
-    // Metallic Sword Shimmer
-    const oscMetal = ctx.createOscillator();
-    const gainMetal = ctx.createGain();
-    oscMetal.type = 'sine';
-    oscMetal.frequency.setValueAtTime(1200, now + 0.2);
-    oscMetal.frequency.exponentialRampToValueAtTime(800, now + 0.4);
-    gainMetal.gain.setValueAtTime(0.3, now + 0.2);
-    gainMetal.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-    oscMetal.connect(gainMetal);
-    gainMetal.connect(masterGain);
-    oscMetal.start(now + 0.2);
-    oscMetal.stop(now + 0.51);
   },
 
-  // 2. Va chạm Gươm Đao / Đánh đòn (Crisp Metallic Sword Clash)
+  // 2. Va chạm Gươm Đao / Đòn Đánh (Crisp Steel Clash - Sắc bén, không rè)
   playHit(volume = 0.7) {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(volume * 0.45, now);
+    masterGain.connect(ctx.destination);
+
+    // High metal strike
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1600, now);
+    osc.frequency.exponentialRampToValueAtTime(400, now + 0.12);
+
+    gain.gain.setValueAtTime(0.6, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start(now);
+    osc.stop(now + 0.14);
+
+    // Secondary strike ring
+    playHarmonicTone(ctx, 1200, now + 0.02, 0.18, 0.25, masterGain);
+  },
+
+  // 3. Bão Sét / Kỹ Năng AoE (Âm Thanh Ma Thuật Huyền Ảo - Magic Energy Sweep)
+  playAoe(volume = 0.7) {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
@@ -69,48 +104,30 @@ export const battleAudio = {
     masterGain.gain.setValueAtTime(volume * 0.5, now);
     masterGain.connect(ctx.destination);
 
-    // High metallic strike
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(2400, now);
-    osc.frequency.exponentialRampToValueAtTime(450, now + 0.12);
+    // Rapid harmonic arpeggio (C-Major pentatonic: C5, D5, E5, G5, A5, C6)
+    const arpeggio = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50];
+    arpeggio.forEach((freq, idx) => {
+      playHarmonicTone(ctx, freq, now + idx * 0.05, 0.45, 0.4, masterGain);
+    });
 
-    gain.gain.setValueAtTime(0.8, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.14);
+    // Warm deep sub-impact (zero buzz)
+    const oscBass = ctx.createOscillator();
+    const gainBass = ctx.createGain();
+    oscBass.type = 'sine';
+    oscBass.frequency.setValueAtTime(180, now);
+    oscBass.frequency.exponentialRampToValueAtTime(50, now + 0.5);
 
-    osc.connect(gain);
-    gain.connect(masterGain);
-    osc.start(now);
-    osc.stop(now + 0.15);
+    gainBass.gain.setValueAtTime(0.6, now);
+    gainBass.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
 
-    // Noise burst for clash friction
-    const bufferSize = ctx.sampleRate * 0.08;
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.02));
-    }
-    const noise = ctx.createBufferSource();
-    noise.buffer = buffer;
-
-    const noiseFilter = ctx.createBiquadFilter();
-    noiseFilter.type = 'bandpass';
-    noiseFilter.frequency.value = 3500;
-    noiseFilter.Q.value = 3;
-
-    const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.5, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-
-    noise.connect(noiseFilter);
-    noiseFilter.connect(noiseGain);
-    noiseGain.connect(masterGain);
-    noise.start(now);
+    oscBass.connect(gainBass);
+    gainBass.connect(masterGain);
+    oscBass.start(now);
+    oscBass.stop(now + 0.56);
   },
 
-  // 3. Bão Sét / Lửa AoE (Thunderous Lightning Storm)
-  playAoe(volume = 0.7) {
+  // 4. Thả Boss Thần Thú Rồng / Hổ (Âm Sắc Đại Hùng Trầm Uy - Mighty Brass Fanfare)
+  playBoss(volume = 0.7) {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
@@ -118,179 +135,65 @@ export const battleAudio = {
     masterGain.gain.setValueAtTime(volume * 0.6, now);
     masterGain.connect(ctx.destination);
 
-    // Electrical Zap Sweeps
-    for (let i = 0; i < 3; i++) {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sawtooth';
-      const startTime = now + i * 0.09;
-      osc.frequency.setValueAtTime(1800 - i * 300, startTime);
-      osc.frequency.exponentialRampToValueAtTime(120, startTime + 0.2);
-
-      gain.gain.setValueAtTime(0.5, startTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.22);
-
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.value = 2500;
-
-      osc.connect(filter);
-      filter.connect(gain);
-      gain.connect(masterGain);
-
-      osc.start(startTime);
-      osc.stop(startTime + 0.23);
-    }
-
-    // Thunder Explosion Rumble (No continuous drone, decays quickly)
-    const oscBoom = ctx.createOscillator();
-    const gainBoom = ctx.createGain();
-    oscBoom.type = 'triangle';
-    oscBoom.frequency.setValueAtTime(140, now + 0.1);
-    oscBoom.frequency.exponentialRampToValueAtTime(35, now + 0.6);
-    gainBoom.gain.setValueAtTime(0.7, now + 0.1);
-    gainBoom.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
-    oscBoom.connect(gainBoom);
-    gainBoom.connect(masterGain);
-    oscBoom.start(now + 0.1);
-    oscBoom.stop(now + 0.66);
-  },
-
-  // 4. Thả Boss Thần Thú Rồng / Hổ (Epic Beast Roar & Grand Horn)
-  playBoss(volume = 0.7) {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const now = ctx.currentTime;
-    const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(volume * 0.7, now);
-    masterGain.connect(ctx.destination);
-
-    // Mighty Warhorn Chords (Low & Powerful brass)
-    const hornNotes = [220, 277.18, 329.63, 440];
-    hornNotes.forEach((freq) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(freq, now);
-
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(600, now);
-      filter.frequency.exponentialRampToValueAtTime(2200, now + 0.4);
-      filter.frequency.exponentialRampToValueAtTime(400, now + 1.2);
-
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(0.4, now + 0.15);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
-
-      osc.connect(filter);
-      filter.connect(gain);
-      gain.connect(masterGain);
-
-      osc.start(now);
-      osc.stop(now + 1.25);
+    // Majestic brass chord fanfare: C4 + G4 + C5 -> E5 -> G5
+    const chord1 = [261.63, 392.00, 523.25];
+    chord1.forEach(freq => {
+      playHarmonicTone(ctx, freq, now, 0.5, 0.4, masterGain);
     });
 
-    // Dragon / Tiger Whoosh Surge
-    const oscWhoosh = ctx.createOscillator();
-    const gainWhoosh = ctx.createGain();
-    oscWhoosh.type = 'triangle';
-    oscWhoosh.frequency.setValueAtTime(100, now + 0.2);
-    oscWhoosh.frequency.linearRampToValueAtTime(380, now + 0.5);
-    oscWhoosh.frequency.exponentialRampToValueAtTime(60, now + 1.0);
-    gainWhoosh.gain.setValueAtTime(0.5, now + 0.2);
-    gainWhoosh.gain.exponentialRampToValueAtTime(0.001, now + 1.1);
-    oscWhoosh.connect(gainWhoosh);
-    gainWhoosh.connect(masterGain);
-    oscWhoosh.start(now + 0.2);
-    oscWhoosh.stop(now + 1.15);
+    const chord2 = [329.63, 493.88, 659.25];
+    chord2.forEach(freq => {
+      playHarmonicTone(ctx, freq, now + 0.25, 0.5, 0.45, masterGain);
+    });
+
+    const chord3 = [392.00, 587.33, 783.99, 1046.50];
+    chord3.forEach(freq => {
+      playHarmonicTone(ctx, freq, now + 0.5, 0.9, 0.5, masterGain);
+    });
   },
 
-  // 5. Khúc Khải Hoàn Chiến Thắng (Victory Fanfare & Gold Coins Shower)
+  // 5. Khúc Khải Hoàn Chiến Thắng (Grand Victory Triumphal Symphony)
   playVictory(volume = 0.7) {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(volume * 0.7, now);
+    masterGain.gain.setValueAtTime(volume * 0.65, now);
     masterGain.connect(ctx.destination);
 
-    // Grand Triumphal Melody: G4 -> C5 -> E5 -> G5 -> C6 (Held)
+    // Grand Melody: G4 -> C5 -> E5 -> G5 -> C6 (Held Chime)
     const melody = [
-      { note: 392.00, time: 0.0,  dur: 0.18 },
-      { note: 523.25, time: 0.18, dur: 0.18 },
-      { note: 659.25, time: 0.36, dur: 0.18 },
-      { note: 783.99, time: 0.54, dur: 0.30 },
-      { note: 1046.50, time: 0.84, dur: 1.10 }
+      { note: 392.00, time: 0.0,  dur: 0.2 },
+      { note: 523.25, time: 0.18, dur: 0.2 },
+      { note: 659.25, time: 0.36, dur: 0.2 },
+      { note: 783.99, time: 0.54, dur: 0.35 },
+      { note: 1046.50, time: 0.85, dur: 1.4 }
     ];
 
     melody.forEach(({ note, time, dur }) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(note, now + time);
-
-      gain.gain.setValueAtTime(0, now + time);
-      gain.gain.linearRampToValueAtTime(0.7, now + time + 0.03);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + time + dur);
-
-      osc.connect(gain);
-      gain.connect(masterGain);
-
-      osc.start(now + time);
-      osc.stop(now + time + dur + 0.05);
+      playHarmonicTone(ctx, note, now + time, dur, 0.5, masterGain);
     });
 
-    // Gold Coin Shimmer Sparkles
+    // Sparkling bell overtone cascades
     for (let i = 0; i < 6; i++) {
-      const oscCoin = ctx.createOscillator();
-      const gainCoin = ctx.createGain();
-      const coinTime = now + 0.9 + i * 0.08;
-      oscCoin.type = 'sine';
-      oscCoin.frequency.setValueAtTime(2000 + i * 250, coinTime);
-
-      gainCoin.gain.setValueAtTime(0.3, coinTime);
-      gainCoin.gain.exponentialRampToValueAtTime(0.001, coinTime + 0.25);
-
-      oscCoin.connect(gainCoin);
-      gainCoin.connect(masterGain);
-
-      oscCoin.start(coinTime);
-      oscCoin.stop(coinTime + 0.26);
+      const bellFreq = 1500 + i * 200;
+      playHarmonicTone(ctx, bellFreq, now + 0.9 + i * 0.09, 0.35, 0.25, masterGain);
     }
   },
 
-  // 6. Nhạc Điệu Nhảy Sôi Động (Rhythmic Aerobic Dance Beat)
+  // 6. Nhịp Điệu Vũ Đạo Sân Khấu (Rhythmic Dance Melody)
   playDanceBeat(volume = 0.7) {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(volume * 0.5, now);
+    masterGain.gain.setValueAtTime(volume * 0.45, now);
     masterGain.connect(ctx.destination);
 
-    // 4 Upbeat funky synth notes
-    const chords = [440, 554.37, 659.25, 880];
-    chords.forEach((freq, idx) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sawtooth';
-      const t = now + idx * 0.1;
-      osc.frequency.setValueAtTime(freq, t);
-
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.value = 1800;
-
-      gain.gain.setValueAtTime(0.4, t);
-      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.16);
-
-      osc.connect(filter);
-      filter.connect(gain);
-      gain.connect(masterGain);
-
-      osc.start(t);
-      osc.stop(t + 0.18);
+    // Melodic synth pop motif: A4 -> C5 -> E5 -> G5 -> A5
+    const steps = [440, 523.25, 659.25, 783.99, 880];
+    steps.forEach((freq, idx) => {
+      playHarmonicTone(ctx, freq, now + idx * 0.09, 0.22, 0.38, masterGain);
     });
   }
 };

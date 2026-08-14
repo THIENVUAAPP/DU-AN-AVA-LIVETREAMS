@@ -1474,34 +1474,38 @@ export default function DesktopAppUI() {
         isOpen={isGameAdminOpen}
         onClose={() => setIsGameAdminOpen(false)}
         onTriggerRefereeAction={(action) => {
+          const names = ['Hoàng Long', 'Bảo Trâm', 'Tuấn Kiệt', 'Minh Quân', 'Khánh Linh', 'Hồng Hạnh', 'Trần Mai', 'Gia Bảo', 'Phương Thảo', 'Quang Huy'];
+          const randName = names[Math.floor(Math.random() * names.length)];
+          const t = Date.now() + Math.random();
+
           if (action === 'RESET_MATCH') {
-            setLastGameEvent({ type: 'ADMIN_RESET', data: {}, timestamp: Date.now() });
+            setLastGameEvent({ type: 'ADMIN_RESET', data: {}, timestamp: t });
           } else if (action === 'ADD_BLUE_20') {
-            setLastGameEvent({ type: 'COMMENT', data: { nickname: 'Admin Trợ Lực', comment: 'xanh', score: 20 }, timestamp: Date.now() });
+            setLastGameEvent({ type: 'COMMENT', data: { nickname: randName, comment: 'xanh', score: 20 }, timestamp: t });
           } else if (action === 'ADD_RED_20') {
-            setLastGameEvent({ type: 'COMMENT', data: { nickname: 'Admin Trợ Lực', comment: 'đỏ', score: 20 }, timestamp: Date.now() });
+            setLastGameEvent({ type: 'COMMENT', data: { nickname: randName, comment: 'đỏ', score: 20 }, timestamp: t });
           } else if (action === 'ADD_BLUE_50') {
-            setLastGameEvent({ type: 'COMMENT', data: { nickname: 'Admin Trợ Lực', comment: 'xanh', score: 50 }, timestamp: Date.now() });
+            setLastGameEvent({ type: 'COMMENT', data: { nickname: randName, comment: 'xanh', score: 50 }, timestamp: t });
           } else if (action === 'ADD_RED_50') {
-            setLastGameEvent({ type: 'COMMENT', data: { nickname: 'Admin Trợ Lực', comment: 'đỏ', score: 50 }, timestamp: Date.now() });
+            setLastGameEvent({ type: 'COMMENT', data: { nickname: randName, comment: 'đỏ', score: 50 }, timestamp: t });
           } else if (action === 'TRIGGER_AOE_BLUE') {
-            setLastGameEvent({ type: 'GIFT', data: { nickname: 'Admin Bão Sét', diamondCount: 500, faction: 'blue' }, timestamp: Date.now() });
+            setLastGameEvent({ type: 'GIFT', data: { nickname: randName, diamondCount: 300, faction: 'blue' }, timestamp: t });
           } else if (action === 'TRIGGER_AOE_RED') {
-            setLastGameEvent({ type: 'GIFT', data: { nickname: 'Admin Bão Lửa', diamondCount: 500, faction: 'red' }, timestamp: Date.now() });
+            setLastGameEvent({ type: 'GIFT', data: { nickname: randName, diamondCount: 300, faction: 'red' }, timestamp: t });
           } else if (action === 'SUMMON_BOSS_BLUE') {
-            setLastGameEvent({ type: 'GIFT', data: { nickname: 'Rồng Thần Admin', diamondCount: 5000, faction: 'blue' }, timestamp: Date.now() });
+            setLastGameEvent({ type: 'GIFT', data: { nickname: randName, diamondCount: 1500, faction: 'blue' }, timestamp: t });
           } else if (action === 'SUMMON_BOSS_RED') {
-            setLastGameEvent({ type: 'GIFT', data: { nickname: 'Bạch Hổ Admin', diamondCount: 5000, faction: 'red' }, timestamp: Date.now() });
+            setLastGameEvent({ type: 'GIFT', data: { nickname: randName, diamondCount: 1500, faction: 'red' }, timestamp: t });
           } else if (action === 'TRIGGER_DANCE_BLUE') {
-            setLastGameEvent({ type: 'DANCE', data: { nickname: 'Idol Rồng Xanh', faction: 'blue' }, timestamp: Date.now() });
+            setLastGameEvent({ type: 'DANCE', data: { nickname: randName, faction: 'blue' }, timestamp: t });
           } else if (action === 'TRIGGER_DANCE_RED') {
-            setLastGameEvent({ type: 'DANCE', data: { nickname: 'Idol Hổ Đỏ', faction: 'red' }, timestamp: Date.now() });
+            setLastGameEvent({ type: 'DANCE', data: { nickname: randName, faction: 'red' }, timestamp: t });
           } else if (action === 'TOGGLE_PAUSE') {
-            setLastGameEvent({ type: 'PAUSE_TOGGLE', data: {}, timestamp: Date.now() });
+            setLastGameEvent({ type: 'PAUSE_TOGGLE', data: {}, timestamp: t });
           } else if (action === 'FINISH_MATCH_BLUE') {
-            setLastGameEvent({ type: 'FORCE_WIN', data: { faction: 'blue' }, timestamp: Date.now() });
+            setLastGameEvent({ type: 'FORCE_WIN', data: { faction: 'blue' }, timestamp: t });
           } else if (action === 'FINISH_MATCH_RED') {
-            setLastGameEvent({ type: 'FORCE_WIN', data: { faction: 'red' }, timestamp: Date.now() });
+            setLastGameEvent({ type: 'FORCE_WIN', data: { faction: 'red' }, timestamp: t });
           }
         }}
       />

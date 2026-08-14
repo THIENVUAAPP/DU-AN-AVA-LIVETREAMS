@@ -71,6 +71,31 @@ export default function GameChienDau({
 
   const [soundMuted, setSoundMuted] = useState(false);
   const [flashSide, setFlashSide] = useState(null);
+  const [liveFeed, setLiveFeed] = useState([]); // Array of recent live comments & gifts
+
+  // Sync config from local storage or custom event instantly
+  useEffect(() => {
+    const handleConfigUpdate = (e) => {
+      if (e.detail) {
+        setConfig(e.detail);
+        setGameState(prev => ({
+          ...prev,
+          maxHp: e.detail.maxHp || prev.maxHp,
+          hp: {
+            blue: Math.min(e.detail.maxHp || prev.maxHp, prev.hp.blue),
+            red: Math.min(e.detail.maxHp || prev.maxHp, prev.hp.red)
+          }
+        }));
+      }
+    };
+    window.addEventListener('GAME_BATTLE_CONFIG_UPDATE', handleConfigUpdate);
+    return () => window.removeEventListener('GAME_BATTLE_CONFIG_UPDATE', handleConfigUpdate);
+  }, []);
+
+  const addLiveFeedItem = useCallback((name, text, faction = 'neutral') => {
+    const newItem = { id: Date.now() + Math.random(), name, text, faction };
+    setLiveFeed(prev => [...prev.slice(-4), newItem]);
+  }, []);
 
   // Refs for Game Engine Loop
   const engineRef = useRef({
@@ -353,18 +378,26 @@ export default function GameChienDau({
     }
 
     if (type === 'DANCE') {
-      triggerDance(data.faction || 'blue', data.nickname || 'Idol Sân Khấu');
+      const fac = data.faction || 'blue';
+      const name = data.nickname || 'Idol Sân Khấu';
+      triggerDance(fac, name);
+      addLiveFeedItem(name, 'đang biểu diễn vũ điệu sân khấu! 💃', fac);
       return;
     }
 
     if (type === 'COMMENT') {
-      const commentText = (data.comment || '').toLowerCase().trim();
+      const commentText = (data.comment || data.text || '').toLowerCase().trim();
       const nickname = data.nickname || data.name || 'Khán giả';
       const score = data.score || 15;
       if (commentText.includes('xanh') || commentText.includes('blue') || commentText.includes('1')) {
         addOrUpdateFighter('blue', nickname, score);
+        addLiveFeedItem(nickname, `chọn ${config.blueName} (Xanh 🔵)`, 'blue');
       } else if (commentText.includes('đỏ') || commentText.includes('do') || commentText.includes('red') || commentText.includes('2')) {
         addOrUpdateFighter('red', nickname, score);
+        addLiveFeedItem(nickname, `chọn ${config.redName} (Đỏ 🔴)`, 'red');
+      } else {
+        // Generic comment
+        addLiveFeedItem(nickname, commentText || 'cổ vũ trận đấu 🔥', 'neutral');
       }
     } else if (type === 'GIFT') {
       const nickname = data.nickname || data.name || 'VIP Supporter';
@@ -373,14 +406,17 @@ export default function GameChienDau({
 
       if (diamondCount >= 1000) {
         triggerBossSummon(assignedFaction, nickname);
+        addLiveFeedItem(nickname, `triệu hồi BOSS THẦN THÚ ${assignedFaction === 'blue' ? 'RỒNG' : 'HỔ'}! 🐉`, assignedFaction);
       } else if (diamondCount >= 100) {
         triggerAoeSkill(assignedFaction, nickname, diamondCount);
+        addLiveFeedItem(nickname, `kích hoạt BÃO SẤM SÉT AOE (${diamondCount} quà)! ⚡`, assignedFaction);
       } else {
         addOrUpdateFighter(assignedFaction, nickname, Math.max(20, diamondCount * 2));
         triggerDance(assignedFaction, nickname);
+        addLiveFeedItem(nickname, `tặng quà tiếp sức & mở vũ điệu! 🎁`, assignedFaction);
       }
     }
-  }, [externalLiveEvent, addOrUpdateFighter, triggerDance, triggerAoeSkill, triggerBossSummon, resetMatch, playSfx]);
+  }, [externalLiveEvent, config.blueName, config.redName, addOrUpdateFighter, triggerDance, triggerAoeSkill, triggerBossSummon, resetMatch, playSfx, addLiveFeedItem]);
 
   // Main Canvas Rendering Loop
   useEffect(() => {
@@ -910,6 +946,18 @@ export default function GameChienDau({
           </div>
         </div>
       )}
+
+      {/* LIVE COMMENT & GIFT STREAM (Bottom Left) */}
+      <div className="absolute bottom-14 left-4 max-w-xs space-y-1.5 z-20 pointer-events-none">
+        {liveFeed.map(item => (
+          <div key={item.id} className="flex items-center gap-1.5 bg-black/75 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-[11px] text-white shadow-xl animate-in slide-in-from-left-4 fade-in duration-200">
+            <span className="font-bold text-yellow-300 truncate max-w-[90px]">{item.name}</span>:
+            <span className={item.faction === 'blue' ? 'text-blue-300 font-semibold' : item.faction === 'red' ? 'text-red-300 font-semibold' : 'text-gray-200'}>
+              {item.text}
+            </span>
+          </div>
+        ))}
+      </div>
 
       {/* BOTTOM HINT BANNER */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-md border border-white/15 px-4 py-1.5 rounded-full text-xs font-medium text-gray-200 z-20 pointer-events-none shadow-lg flex items-center gap-2">
