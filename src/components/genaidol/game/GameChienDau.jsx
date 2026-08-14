@@ -106,6 +106,23 @@ export default function GameChienDau({
     setLiveFeed(prev => [...prev.slice(-4), newItem]);
   }, []);
 
+  // Preload 3D Dragon Warrior Asset (Tripo 3D Model)
+  const dragonWarriorImgRef = useRef(null);
+  useEffect(() => {
+    const img = new Image();
+    img.src = '/game-battle/models/dragon_warrior_transparent.png';
+    img.onload = () => {
+      dragonWarriorImgRef.current = img;
+    };
+    img.onerror = () => {
+      const fallback = new Image();
+      fallback.src = '/game-battle/models/dragon_warrior.webp';
+      fallback.onload = () => {
+        dragonWarriorImgRef.current = fallback;
+      };
+    };
+  }, []);
+
   // Refs for Game Engine Loop
   const engineRef = useRef({
     fighters: { blue: [], red: [] }, // { userId, nickname, score, rank, x, y, targetX, targetY, bobPhase, pulseUntil, tier }
@@ -842,189 +859,122 @@ export default function GameChienDau({
             ctx.restore();
           }
 
-          // 2.1 LEGS & GREAVES (Chân & Giáp Ống Chân Chiến Binh 3D)
-          ctx.lineWidth = tier >= 3 ? 3.8 : 3.2;
-          ctx.lineCap = 'round';
-          
-          // Left Leg
-          ctx.strokeStyle = tier >= 3 ? '#ca8a04' : (tier === 2 ? '#64748b' : (factionId === 'blue' ? '#1e3a8a' : '#7f1d1d'));
-          ctx.beginPath();
-          ctx.moveTo(-3, 6);
-          ctx.lineTo(-4 + stride * 3.5, 14);
-          ctx.stroke();
-          // Left Armored Boot
-          ctx.fillStyle = tier >= 3 ? '#facc15' : (tier === 2 ? '#94a3b8' : '#334155');
-          ctx.fillRect(-6 + stride * 3.5, 13, 5.5, 3.8);
+          // 2.1 3D DRAGON WARRIOR (Chiến Binh Rồng Nhí 3D Giáp Vàng Tinh Xảo - Tripo 3D)
+          if (dragonWarriorImgRef.current && dragonWarriorImgRef.current.complete) {
+            ctx.save();
+            const dw = 30;
+            const dh = 39;
+            
+            // Faction Direction Orientation
+            if (factionId === 'red') {
+              ctx.scale(-1, 1);
+            }
+            
+            // Draw 3D Dragon Warrior
+            ctx.drawImage(dragonWarriorImgRef.current, -dw / 2, -dh / 2 - 3, dw, dh);
 
-          // Right Leg
-          ctx.strokeStyle = tier >= 3 ? '#eab308' : (tier === 2 ? '#94a3b8' : (factionId === 'blue' ? '#1d4ed8' : '#991b1b'));
-          ctx.beginPath();
-          ctx.moveTo(3, 6);
-          ctx.lineTo(4 - stride * 3.5, 14);
-          ctx.stroke();
-          // Right Armored Boot
-          ctx.fillStyle = tier >= 3 ? '#fde047' : (tier === 2 ? '#cbd5e1' : '#475569');
-          ctx.fillRect(2 - stride * 3.5, 13, 5.5, 3.8);
+            // Glowing Dragon Eyes / Energy Visor
+            ctx.fillStyle = factionId === 'blue' ? '#38bdf8' : '#facc15';
+            ctx.shadowColor = ctx.fillStyle;
+            ctx.shadowBlur = 10;
+            ctx.fillRect(-3, -13, 6, 2.5);
 
-          // 2.2 CHEST ARMOR & ROBES (Áo Giáp 3D Tấm Kim Loại Đúc Nổi)
-          ctx.save();
-          ctx.shadowColor = tier >= 4 ? '#facc15' : (isPulsing ? '#ffcc00' : color);
-          ctx.shadowBlur = tier >= 4 ? 22 : (isPulsing ? 18 : 8);
+            // Gift upgrade power flash
+            if (isPulsing) {
+              ctx.strokeStyle = '#facc15';
+              ctx.lineWidth = 1.5;
+              ctx.strokeRect(-dw / 2 + 2, -dh / 2 - 1, dw - 4, dh - 2);
+            }
 
-          const armorGrad = ctx.createLinearGradient(-7, -5, 7, 7);
-          if (tier >= 3) {
-            // Golden Sun Divine Armor
-            armorGrad.addColorStop(0, '#fef08a');
-            armorGrad.addColorStop(0.4, '#facc15');
-            armorGrad.addColorStop(0.8, '#eab308');
-            armorGrad.addColorStop(1, '#a16207');
-          } else if (tier === 2) {
-            // Silver Knight Steel Plate Armor
-            armorGrad.addColorStop(0, '#ffffff');
-            armorGrad.addColorStop(0.4, '#cbd5e1');
-            armorGrad.addColorStop(0.8, '#94a3b8');
-            armorGrad.addColorStop(1, '#475569');
+            ctx.restore();
           } else {
-            // Tier 1: Faction Robe
-            armorGrad.addColorStop(0, factionId === 'blue' ? '#60a5fa' : '#f87171');
-            armorGrad.addColorStop(0.5, factionId === 'blue' ? '#2563eb' : '#dc2626');
-            armorGrad.addColorStop(1, factionId === 'blue' ? '#1e3a8a' : '#7f1d1d');
-          }
-
-          ctx.fillStyle = armorGrad;
-          ctx.strokeStyle = tier >= 3 ? '#ffffff' : (tier === 2 ? '#ffffff' : (isTopRank ? '#ffd700' : '#ffffff'));
-          ctx.lineWidth = 1.4;
-
-          // Breastplate polygon
-          ctx.beginPath();
-          ctx.moveTo(-6, 6);
-          ctx.lineTo(6, 6);
-          ctx.lineTo(5.5, -4);
-          ctx.lineTo(-5.5, -4);
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
-
-          // Luminous Core Crystal / Energy Gem
-          ctx.fillStyle = tier >= 3 ? '#38bdf8' : (tier === 2 ? '#67e8f9' : (isTopRank ? '#facc15' : '#e2e8f0'));
-          ctx.fillRect(-3, 2, 6, 3);
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 0.8;
-          ctx.strokeRect(-3, 2, 6, 3);
-
-          // 3D Shoulder Pauldrons (Giáp Vai Chiến Binh Đúc Nổi 2 Bên)
-          ctx.fillStyle = tier >= 3 ? '#eab308' : (tier === 2 ? '#cbd5e1' : (factionId === 'blue' ? '#60a5fa' : '#f87171'));
-          ctx.beginPath();
-          ctx.arc(-6.5, -3, 3.5, 0, Math.PI * 2);
-          ctx.arc(6.5, -3, 3.5, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
-          ctx.restore();
-
-          // 2.3 HELMET & DIVINE CREST (Mũ Giáp Chiến Binh 3D, Vương Miện Phượng Hoàng, Sừng Thần Long)
-          ctx.save();
-          ctx.fillStyle = tier >= 3 ? '#eab308' : (tier === 2 ? '#64748b' : (factionId === 'blue' ? '#1e40af' : '#991b1b'));
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 1.2;
-          ctx.beginPath();
-          ctx.arc(0, -9, 5.8, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
-
-          // Glowing Visor / Eyes (Kính Mắt Năng Lượng 3D Phát Sáng)
-          ctx.fillStyle = tier >= 3 ? '#ffffff' : (factionId === 'blue' ? '#67e8f9' : '#fef08a');
-          ctx.shadowColor = ctx.fillStyle;
-          ctx.shadowBlur = 8;
-          ctx.fillRect(-3, -9.5, 6, 2);
-
-          // Helmet Crest / Dragon Horns / Feather Plume
-          if (tier === 5) {
-            // Royal Dragon Horns
-            ctx.fillStyle = '#fde047';
+            // Procedural Fallback 3D Warrior Body & Layered Armor
+            // Left Leg
+            ctx.lineWidth = tier >= 3 ? 3.8 : 3.2;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = tier >= 3 ? '#ca8a04' : (tier === 2 ? '#64748b' : (factionId === 'blue' ? '#1e3a8a' : '#7f1d1d'));
             ctx.beginPath();
-            ctx.moveTo(-3, -13);
-            ctx.lineTo(-7, -20);
-            ctx.lineTo(-1, -14);
-            ctx.moveTo(3, -13);
-            ctx.lineTo(7, -20);
-            ctx.lineTo(1, -14);
-            ctx.fill();
-          } else if (tier >= 3) {
-            // Golden Phoenix Crown Plume
-            ctx.fillStyle = '#ef4444';
+            ctx.moveTo(-3, 6);
+            ctx.lineTo(-4 + stride * 3.5, 14);
+            ctx.stroke();
+            // Left Armored Boot
+            ctx.fillStyle = tier >= 3 ? '#facc15' : (tier === 2 ? '#94a3b8' : '#334155');
+            ctx.fillRect(-6 + stride * 3.5, 13, 5.5, 3.8);
+
+            // Right Leg
+            ctx.strokeStyle = tier >= 3 ? '#eab308' : (tier === 2 ? '#94a3b8' : (factionId === 'blue' ? '#1d4ed8' : '#991b1b'));
             ctx.beginPath();
-            ctx.moveTo(0, -18);
-            ctx.lineTo(3.5, -11);
-            ctx.lineTo(-3.5, -11);
+            ctx.moveTo(3, 6);
+            ctx.lineTo(4 - stride * 3.5, 14);
+            ctx.stroke();
+            // Right Armored Boot
+            ctx.fillStyle = tier >= 3 ? '#fde047' : (tier === 2 ? '#cbd5e1' : '#475569');
+            ctx.fillRect(2 - stride * 3.5, 13, 5.5, 3.8);
+
+            // Chestplate
+            ctx.save();
+            ctx.shadowColor = tier >= 4 ? '#facc15' : (isPulsing ? '#ffcc00' : color);
+            ctx.shadowBlur = tier >= 4 ? 22 : (isPulsing ? 18 : 8);
+            const armorGrad = ctx.createLinearGradient(-7, -5, 7, 7);
+            if (tier >= 3) {
+              armorGrad.addColorStop(0, '#fef08a');
+              armorGrad.addColorStop(0.4, '#facc15');
+              armorGrad.addColorStop(0.8, '#eab308');
+              armorGrad.addColorStop(1, '#a16207');
+            } else if (tier === 2) {
+              armorGrad.addColorStop(0, '#ffffff');
+              armorGrad.addColorStop(0.4, '#cbd5e1');
+              armorGrad.addColorStop(0.8, '#94a3b8');
+              armorGrad.addColorStop(1, '#475569');
+            } else {
+              armorGrad.addColorStop(0, factionId === 'blue' ? '#60a5fa' : '#f87171');
+              armorGrad.addColorStop(0.5, factionId === 'blue' ? '#2563eb' : '#dc2626');
+              armorGrad.addColorStop(1, factionId === 'blue' ? '#1e3a8a' : '#7f1d1d');
+            }
+            ctx.fillStyle = armorGrad;
+            ctx.strokeStyle = tier >= 3 ? '#ffffff' : (tier === 2 ? '#ffffff' : (isTopRank ? '#ffd700' : '#ffffff'));
+            ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.moveTo(-6, 6);
+            ctx.lineTo(6, 6);
+            ctx.lineTo(5.5, -4);
+            ctx.lineTo(-5.5, -4);
             ctx.closePath();
             ctx.fill();
-          } else if (tier === 2) {
-            // Steel Warrior Crest
-            ctx.fillStyle = '#cbd5e1';
-            ctx.beginPath();
-            ctx.moveTo(0, -15);
-            ctx.lineTo(2.5, -11);
-            ctx.lineTo(-2.5, -11);
-            ctx.closePath();
-            ctx.fill();
-          } else {
-            ctx.fillStyle = factionId === 'blue' ? '#38bdf8' : '#fb7185';
-            ctx.beginPath();
-            ctx.moveTo(0, -14);
-            ctx.lineTo(2.5, -10);
-            ctx.lineTo(-2.5, -10);
-            ctx.closePath();
-            ctx.fill();
-          }
-          ctx.restore();
+            ctx.stroke();
 
-          // 2.4 3D WEAPONS & DIVINE SWORD (Thần Binh Ỷ Thiên, Đồ Long, Khiên Năng Lượng)
-          if (factionId === 'blue') {
-            // Blue: Azure Dragon Divine Sword & Radiant Shield
-            ctx.fillStyle = tier >= 3 ? '#ca8a04' : '#1e3a8a';
-            ctx.strokeStyle = tier >= 3 ? '#facc15' : '#60a5fa';
-            ctx.lineWidth = 1.5;
+            // Core Gem
+            ctx.fillStyle = tier >= 3 ? '#38bdf8' : (tier === 2 ? '#67e8f9' : (isTopRank ? '#facc15' : '#e2e8f0'));
+            ctx.fillRect(-3, 2, 6, 3);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 0.8;
+            ctx.strokeRect(-3, 2, 6, 3);
+
+            // Shoulder Pauldrons
+            ctx.fillStyle = tier >= 3 ? '#eab308' : (tier === 2 ? '#cbd5e1' : (factionId === 'blue' ? '#60a5fa' : '#f87171'));
             ctx.beginPath();
-            ctx.ellipse(-7, 1, 4, 6, 0, 0, Math.PI * 2);
+            ctx.arc(-6.5, -3, 3.5, 0, Math.PI * 2);
+            ctx.arc(6.5, -3, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+
+            // Helmet & Crest
+            ctx.save();
+            ctx.fillStyle = tier >= 3 ? '#eab308' : (tier === 2 ? '#64748b' : (factionId === 'blue' ? '#1e40af' : '#991b1b'));
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.arc(0, -9, 5.8, 0, Math.PI * 2);
             ctx.fill();
             ctx.stroke();
 
-            // Radiant Sword Blade
-            ctx.strokeStyle = tier >= 4 ? '#38bdf8' : '#ffffff';
-            ctx.lineWidth = tier >= 3 ? 3 : 2;
-            ctx.beginPath();
-            ctx.moveTo(4, 2);
-            ctx.lineTo(13 + (tier >= 3 ? 3 : 0), -9 - stride * 2);
-            ctx.stroke();
-            // Golden Guard
-            ctx.strokeStyle = '#fbbf24';
-            ctx.lineWidth = 2.5;
-            ctx.beginPath();
-            ctx.moveTo(2, 4);
-            ctx.lineTo(6, 0);
-            ctx.stroke();
-          } else {
-            // Red: Crimson Flame Battle Blade & Shield
-            ctx.fillStyle = tier >= 3 ? '#991b1b' : '#7f1d1d';
-            ctx.strokeStyle = tier >= 3 ? '#fbbf24' : '#f87171';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.ellipse(7, 1, 4, 6, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            // Flaming Blade
-            ctx.strokeStyle = tier >= 4 ? '#fb7185' : '#ffffff';
-            ctx.lineWidth = tier >= 3 ? 3 : 2;
-            ctx.beginPath();
-            ctx.moveTo(-4, 2);
-            ctx.lineTo(-13 - (tier >= 3 ? 3 : 0), -9 + stride * 2);
-            ctx.stroke();
-            // Blade Guard
-            ctx.fillStyle = '#ef4444';
-            ctx.beginPath();
-            ctx.arc(-13 - (tier >= 3 ? 3 : 0), -9 + stride * 2, tier >= 3 ? 4.5 : 3.5, 0, Math.PI * 2);
-            ctx.fill();
+            // Visor
+            ctx.fillStyle = tier >= 3 ? '#ffffff' : (factionId === 'blue' ? '#67e8f9' : '#fef08a');
+            ctx.shadowColor = ctx.fillStyle;
+            ctx.shadowBlur = 8;
+            ctx.fillRect(-3, -9.5, 6, 2);
+            ctx.restore();
           }
 
           // Orbiting Qi Swords for Tier 4 & 5
