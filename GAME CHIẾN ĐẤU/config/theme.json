@@ -1,0 +1,29 @@
+{
+  "gameTitle": "Kingdom Clash: Ultimate War",
+  "factions": {
+    "blue": {
+      "id": "blue",
+      "name": { "vi": "Rồng Xanh", "en": "Blue Dragon" },
+      "color": "#2f6bff",
+      "commentKeywords": ["xanh", "blue"]
+    },
+    "red": {
+      "id": "red",
+      "name": { "vi": "Hổ Đỏ", "en": "Red Tiger" },
+      "color": "#ff3b4e",
+      "commentKeywords": ["do", "đỏ", "red"]
+    }
+  },
+  "battle": {
+    "maxHpPerFaction": 1000,
+    "comebackHpPercentThreshold": 30,
+    "comebackDamageMultiplier": 1.15,
+    "comebackHealMultiplier": 1.15,
+    "matchResetDelayMs": 12000,
+    "leaderboardTopCount": 3,
+    "resultsTopSupportersCount": 3,
+    "maxVisibleFightersPerFaction": 24,
+    "maxCeremonyNames": 16,
+    "characterScale": 1
+  }
+}

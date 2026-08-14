@@ -1,0 +1,809 @@
+/* Dark glassmorphism / sci-fi luxury theme — Kingdom Clash: Ultimate War
+   Bảng màu: Đỏ - Vàng - Trắng - Đen - Xanh biển - Tím (CLAUDE.md Mục 13) */
+
+:root {
+  --color-black: #0b0b12;
+  --color-white: #f5f5f7;
+  --color-yellow: #ffcc33;
+  --color-purple: #8b5cf6;
+  --faction-blue-color: #2f6bff;
+  --faction-red-color: #ff3b4e;
+
+  --glass-bg: rgba(10, 10, 20, 0.55);
+  --glass-bg-strong: rgba(8, 8, 16, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-blur: 18px;
+
+  --font-display: 'Unbounded', sans-serif;
+  --font-body: 'Sora', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --shadow-glow-blue: 0 0 24px rgba(47, 107, 255, 0.45);
+  --shadow-glow-red: 0 0 24px rgba(255, 59, 78, 0.45);
+  --shadow-glow-gold: 0 0 28px rgba(255, 204, 51, 0.55);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  color: var(--color-white);
+  font-family: var(--font-body);
+}
+
+#app {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: transparent;
+}
+
+.glass-panel {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+/* === Canvas trận chiến === */
+#battlefield-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* === Trạng thái kết nối === */
+#connection-status {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  padding: 6px 14px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  border-radius: 999px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#connection-status .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-yellow);
+  box-shadow: 0 0 8px var(--color-yellow);
+}
+
+#connection-status[data-status='connected'] .status-dot,
+#connection-status[data-status='demo'] .status-dot {
+  background: #4ade80;
+  box-shadow: 0 0 8px #4ade80;
+}
+
+#connection-status[data-status='paused'] .status-dot,
+#connection-status[data-status='outsideSchedule'] .status-dot {
+  background: var(--color-purple);
+  box-shadow: 0 0 8px var(--color-purple);
+}
+
+#connection-status[data-status='reconnecting'] .status-dot {
+  background: var(--color-red);
+  box-shadow: 0 0 8px var(--color-red);
+  animation: pulse-dot 1s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+/* === Thanh HP tổng, trung tâm trên cùng === */
+#hp-bar-panel {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(78vw, 1100px);
+  padding: 14px 22px;
+  z-index: 40;
+}
+
+.hp-bar-title {
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  color: var(--color-yellow);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.hp-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.faction-label {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  min-width: 90px;
+}
+
+.faction-label--blue {
+  color: var(--faction-blue-color);
+  text-align: right;
+}
+
+.faction-label--red {
+  color: var(--faction-red-color);
+  text-align: left;
+}
+
+.hp-bar-track {
+  flex: 1;
+  display: flex;
+  height: 22px;
+  border-radius: 11px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-border);
+  position: relative;
+}
+
+.hp-bar-half {
+  flex: 1;
+  display: flex;
+  height: 100%;
+}
+
+.hp-bar-half--blue {
+  justify-content: flex-end;
+}
+
+.hp-bar-half--red {
+  justify-content: flex-start;
+}
+
+.hp-bar-fill {
+  height: 100%;
+  transition: width 0.4s ease;
+}
+
+.hp-bar-fill--blue {
+  background: linear-gradient(90deg, rgba(47, 107, 255, 0.35), var(--faction-blue-color));
+  box-shadow: var(--shadow-glow-blue);
+}
+
+.hp-bar-fill--red {
+  background: linear-gradient(270deg, rgba(255, 59, 78, 0.35), var(--faction-red-color));
+  box-shadow: var(--shadow-glow-red);
+}
+
+.hp-bar-fill.flash {
+  filter: brightness(1.6);
+}
+
+.hp-bar-center-divider {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--color-black);
+  border: 2px solid var(--color-yellow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--color-yellow);
+  z-index: 2;
+}
+
+.hp-values {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: rgba(245, 245, 247, 0.7);
+}
+
+/* === Comeback badge === */
+.comeback-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  border-radius: 999px;
+  background: rgba(139, 92, 246, 0.25);
+  color: var(--color-purple);
+  border: 1px solid rgba(139, 92, 246, 0.5);
+  vertical-align: middle;
+}
+
+/* === Leaderboard === */
+#leaderboard-panel {
+  position: absolute;
+  bottom: 22px;
+  left: 18px;
+  width: min(46vw, 240px);
+  max-height: 34vh;
+  overflow: hidden;
+  padding: 14px;
+  z-index: 40;
+}
+
+.leaderboard-title {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--color-yellow);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.leaderboard-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.leaderboard-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.leaderboard-rank {
+  font-family: var(--font-mono);
+  color: var(--color-yellow);
+  width: 16px;
+}
+
+.leaderboard-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* === Avatar dùng chung (leaderboard + màn vinh danh) === */
+.avatar-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-black);
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.leaderboard-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leaderboard-score {
+  font-family: var(--font-mono);
+  color: rgba(245, 245, 247, 0.7);
+  font-size: 11px;
+}
+
+.leaderboard-empty {
+  font-size: 12px;
+  color: rgba(245, 245, 247, 0.5);
+}
+
+/* === Hint chọn phe === */
+#pick-side-hint {
+  position: absolute;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 20px;
+  font-size: 13px;
+  z-index: 40;
+  color: rgba(245, 245, 247, 0.85);
+}
+
+/* === Panel test comment (chỉ demo mode) === */
+#debug-comment-panel {
+  position: absolute;
+  bottom: 22px;
+  right: 18px;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 204, 51, 0.4);
+}
+
+#debug-comment-panel[hidden] {
+  display: none;
+}
+
+#debug-comment-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-yellow);
+  white-space: nowrap;
+}
+
+#debug-comment-input {
+  width: 150px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-white);
+  font-family: var(--font-body);
+  font-size: 13px;
+}
+
+#debug-comment-input:focus {
+  outline: 1px solid var(--color-yellow);
+}
+
+#debug-comment-submit {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+  background: var(--color-yellow);
+  color: var(--color-black);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+#debug-comment-submit:hover {
+  filter: brightness(1.1);
+}
+
+#debug-comment-feedback {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgba(245, 245, 247, 0.75);
+  white-space: nowrap;
+}
+
+/* === Donor spotlight (quà lớn) === */
+#donor-spotlight {
+  position: absolute;
+  top: 90px;
+  left: 50%;
+  transform: translateX(-50%) scale(0.9);
+  padding: 14px 28px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(255, 204, 51, 0.5);
+  box-shadow: var(--shadow-glow-gold);
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+
+#donor-spotlight.visible {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+.donor-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-black);
+  border: 2px solid var(--color-yellow);
+  object-fit: cover;
+}
+
+.donor-text {
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--color-yellow);
+}
+
+/* === Màn kết quả === */
+#results-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 80;
+  background: rgba(5, 5, 10, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+#results-screen.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ceremony-podium {
+  width: min(80vw, 780px);
+  padding: 36px 44px;
+  text-align: center;
+  border: 1px solid rgba(255, 204, 51, 0.4);
+  box-shadow: var(--shadow-glow-gold);
+  animation: ceremonyPodiumIn 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+@keyframes ceremonyPodiumIn {
+  from { opacity: 0; transform: scale(0.85) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.ceremony-winner-badge {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 22px;
+  text-shadow: 0 0 18px currentColor;
+}
+
+.ceremony-mvp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 24px;
+  padding: 16px 0;
+  border-top: 1px solid rgba(255, 204, 51, 0.25);
+  border-bottom: 1px solid rgba(255, 204, 51, 0.25);
+}
+
+.mvp-trophy {
+  font-size: 44px;
+  line-height: 1;
+  filter: drop-shadow(0 0 14px rgba(255, 204, 51, 0.8));
+  animation: mvpTrophyBounce 1.4s ease-in-out infinite;
+}
+
+@keyframes mvpTrophyBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.mvp-avatar-slot {
+  margin-top: 8px;
+}
+
+.mvp-avatar-slot .avatar-circle {
+  width: 64px;
+  height: 64px;
+  border-width: 3px;
+  border-color: var(--color-yellow);
+  box-shadow: var(--shadow-glow-gold);
+}
+
+.ceremony-member-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mvp-name {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-yellow);
+  margin-top: 6px;
+}
+
+.mvp-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(245, 245, 247, 0.6);
+  margin-top: 2px;
+}
+
+.mvp-score {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-yellow);
+  margin-top: 4px;
+}
+
+.ceremony-team-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  max-height: 140px;
+  overflow: hidden;
+}
+
+.ceremony-member-pill {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--color-white);
+}
+
+.ceremony-member-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgba(245, 245, 247, 0.55);
+  margin-bottom: 14px;
+}
+
+.ceremony-losing-note {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgba(245, 245, 247, 0.4);
+}
+
+.results-countdown {
+  margin-top: 26px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: rgba(245, 245, 247, 0.7);
+}
+
+.results-countdown strong {
+  color: var(--color-yellow);
+}
+
+/* === Hoạt ảnh xuất hiện chung === */
+.fade-in {
+  animation: fadeIn 0.35s ease both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* === Responsive: máy tính bảng (≤900px) ===
+   Toàn bộ panel HUD chỉ neo ở 4 góc màn hình — khu vực giữa (nơi nhân vật
+   chiến đấu) luôn được chừa trống, không panel nào phủ lên. */
+@media (max-width: 900px) {
+  #connection-status {
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+
+  #hp-bar-panel {
+    width: min(92vw, 900px);
+    padding: 10px 14px;
+    top: 46px;
+  }
+
+  .hp-bar-title {
+    font-size: 11px;
+    margin-bottom: 5px;
+  }
+
+  .faction-label {
+    font-size: 12px;
+    min-width: 56px;
+  }
+
+  .hp-bar-track {
+    height: 16px;
+  }
+
+  .hp-values {
+    font-size: 10px;
+  }
+
+  #donor-spotlight {
+    top: 120px;
+    padding: 8px 16px;
+  }
+
+  .donor-avatar {
+    width: 34px;
+    height: 34px;
+  }
+
+  .donor-text {
+    font-size: 12px;
+  }
+
+  #leaderboard-panel {
+    width: min(50vw, 200px);
+    padding: 10px;
+    bottom: 14px;
+    left: 10px;
+  }
+
+  .leaderboard-title {
+    font-size: 10px;
+    margin-bottom: 6px;
+  }
+
+  .leaderboard-item {
+    font-size: 11px;
+  }
+
+  #pick-side-hint {
+    bottom: auto;
+    top: 172px;
+    padding: 6px 12px;
+    font-size: 11px;
+    max-width: 70vw;
+    white-space: normal;
+    text-align: center;
+  }
+
+  #debug-comment-panel {
+    bottom: 14px;
+    right: 10px;
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  #debug-comment-input {
+    width: 90px;
+  }
+
+  #debug-comment-feedback {
+    display: none;
+  }
+
+  .ceremony-podium {
+    padding: 22px 20px;
+    width: min(92vw, 780px);
+  }
+
+  .ceremony-winner-badge {
+    font-size: 18px;
+  }
+}
+
+/* === Responsive: điện thoại (≤560px) — thu gọn tối đa, ưu tiên chừa
+   trống toàn bộ khu vực giữa cho nhân vật chiến đấu === */
+@media (max-width: 560px) {
+  #connection-status {
+    top: 8px;
+    left: 8px;
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+
+  #hp-bar-panel {
+    top: 40px;
+    padding: 8px 10px;
+  }
+
+  .hp-bar-title {
+    font-size: 9px;
+  }
+
+  .faction-label {
+    font-size: 10px;
+    min-width: 40px;
+  }
+
+  #donor-spotlight {
+    top: 114px;
+    padding: 6px 12px;
+    gap: 8px;
+  }
+
+  .donor-avatar {
+    width: 28px;
+    height: 28px;
+  }
+
+  .donor-text {
+    font-size: 10px;
+  }
+
+  #leaderboard-panel {
+    width: 42vw;
+    padding: 8px;
+    bottom: 8px;
+    left: 8px;
+    max-height: 28vh;
+  }
+
+  .leaderboard-rank,
+  .leaderboard-score {
+    font-size: 9px;
+  }
+
+  .leaderboard-name {
+    font-size: 10px;
+  }
+
+  #pick-side-hint {
+    bottom: auto;
+    top: 158px;
+    max-width: 80vw;
+    font-size: 9px;
+    padding: 5px 8px;
+  }
+
+  #debug-comment-panel {
+    bottom: 8px;
+    right: 8px;
+    padding: 6px 8px;
+  }
+
+  #debug-comment-title {
+    display: none;
+  }
+
+  #debug-comment-input {
+    width: 70px;
+    font-size: 11px;
+  }
+
+  .ceremony-mvp {
+    padding: 10px 0;
+  }
+
+  .mvp-trophy {
+    font-size: 32px;
+  }
+
+  .mvp-name {
+    font-size: 18px;
+  }
+
+  .ceremony-team-list {
+    max-height: 90px;
+  }
+}

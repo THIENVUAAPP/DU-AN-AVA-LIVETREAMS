@@ -1,0 +1,25 @@
+{
+  "ui": {
+    "vsLabel": "ĐỐI ĐẦU",
+    "leaderboardTitle": "Top Ủng Hộ",
+    "noSupportersYet": "Chưa có người ủng hộ",
+    "resultsTitle": "Kết Thúc Trận",
+    "winnerLabel": "Chiến Thắng",
+    "topSupportersLabel": "Top Ủng Hộ Trận Này",
+    "nextMatchPrefix": "Trận mới bắt đầu sau",
+    "secondsSuffix": "giây",
+    "connectingStatus": "Đang kết nối TikTok LIVE...",
+    "connectedStatus": "Đã kết nối",
+    "reconnectingStatus": "Mất kết nối, đang thử lại...",
+    "demoModeStatus": "Chế độ Demo",
+    "pausedStatus": "Tạm dừng",
+    "outsideScheduleStatus": "Ngoài giờ hoạt động",
+    "pickSideHint": "Bình luận \"xanh\" hoặc \"đỏ\" để chọn phe!",
+    "donorSpotlightThanks": "Cảm ơn",
+    "comebackBadge": "Tăng Lực",
+    "ceremonyWinnerTitle": "ĐỘI CHIẾN THẮNG",
+    "ceremonyMvpLabel": "Người Ủng Hộ Số 1",
+    "ceremonyMemberCountSuffix": "thành viên",
+    "ceremonyLosingSideLabel": "Đối thủ"
+  }
+}

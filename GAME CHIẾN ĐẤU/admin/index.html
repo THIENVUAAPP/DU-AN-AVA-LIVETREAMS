@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Kingdom Clash: Ultimate War</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600&family=Unbounded:wght@600;800&family=JetBrains+Mono:wght@400;600&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="/admin/admin.css" />
+</head>
+<body>
+  <div id="login-screen" class="screen">
+    <form id="login-form" class="login-card">
+      <h1>🔒 Admin — Kingdom Clash</h1>
+      <p class="hint">Mật khẩu nằm trong console log khi khởi động server, hoặc trong <code>.env</code> (ADMIN_PASSWORD).</p>
+      <input type="password" id="login-password" placeholder="Mật khẩu Admin" autocomplete="current-password" required />
+      <button type="submit">Đăng nhập</button>
+      <div id="login-error" class="error-text"></div>
+    </form>
+  </div>
+
+  <div id="dashboard-screen" hidden>
+    <header class="dashboard-header">
+      <h1>🎮 Bảng Điều Khiển</h1>
+      <div id="live-status" class="live-status">—</div>
+      <button id="logout-btn" class="btn-ghost">Đăng xuất</button>
+    </header>
+
+    <main class="dashboard-grid">
+      <section class="panel">
+        <h2>Điều khiển trận đấu</h2>
+        <div class="btn-row">
+          <button id="btn-start" class="btn-primary">▶ Bắt đầu trận mới</button>
+          <button id="btn-pause" class="btn-warn">⏸ Tạm dừng</button>
+          <button id="btn-resume" class="btn-primary">▶ Tiếp tục</button>
+          <button id="btn-end" class="btn-danger">⏹ Kết thúc trận ngay</button>
+        </div>
+        <p class="note">Tạm dừng: gift/comment không có tác dụng, không ngắt kết nối TikTok LIVE.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Cỡ nhân vật</h2>
+        <div class="slider-row">
+          <input type="range" id="character-scale" min="0.5" max="2" step="0.1" value="1" />
+          <span id="character-scale-value">1.0x</span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Thông số trận đấu</h2>
+        <label>Máu tối đa mỗi phe
+          <input type="number" id="setting-max-hp" min="100" step="50" />
+        </label>
+        <label>Ngưỡng comeback (% HP)
+          <input type="number" id="setting-comeback" min="0" max="100" step="5" />
+        </label>
+        <label>Thời gian nghỉ giữa trận (giây)
+          <input type="number" id="setting-reset-delay" min="1" max="120" step="1" />
+        </label>
+        <button id="btn-save-match-settings" class="btn-primary">Lưu thông số</button>
+      </section>
+
+      <section class="panel">
+        <h2>Âm thanh</h2>
+        <label>Nhạc nền
+          <input type="range" id="setting-music-volume" min="0" max="1" step="0.05" value="0.35" />
+        </label>
+        <label>Hiệu ứng âm thanh
+          <input type="range" id="setting-sfx-volume" min="0" max="1" step="0.05" value="0.6" />
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="setting-muted" /> Tắt tiếng toàn bộ
+        </label>
+      </section>
+
+      <section class="panel">
+        <h2>Tên & màu phe</h2>
+        <label>Tên phe Xanh
+          <input type="text" id="setting-blue-name" maxlength="30" />
+        </label>
+        <label>Màu phe Xanh
+          <input type="color" id="setting-blue-color" />
+        </label>
+        <label>Tên phe Đỏ
+          <input type="text" id="setting-red-name" maxlength="30" />
+        </label>
+        <label>Màu phe Đỏ
+          <input type="color" id="setting-red-color" />
+        </label>
+        <button id="btn-save-faction-blue" class="btn-primary">Lưu phe Xanh</button>
+        <button id="btn-save-faction-red" class="btn-primary">Lưu phe Đỏ</button>
+      </section>
+
+      <section class="panel">
+        <h2>Hiệu ứng thêm cho hấp dẫn</h2>
+        <label class="checkbox-label">
+          <input type="checkbox" id="flag-boss" /> Hiệu ứng Boss (quà lớn)
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="flag-aoe" /> Hiệu ứng diện rộng (quà trung)
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="flag-confetti" /> Pháo giấy khi chiến thắng
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="flag-dance" /> Nhân vật nhảy khi được tặng quà (20 kiểu)
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="flag-announcer" /> Xướng tên người tặng bằng giọng AI (ElevenLabs)
+        </label>
+        <p class="note" id="tts-status-note">Đang kiểm tra trạng thái ElevenLabs...</p>
+        <p class="note">Áp dụng ngay cho hiệu ứng tiếp theo, không ảnh hưởng sát thương/hồi máu — chỉ tắt/bật phần hình ảnh.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Lịch tự động</h2>
+        <label class="checkbox-label">
+          <input type="checkbox" id="schedule-enabled" /> Bật lịch tự động
+        </label>
+        <label>Giờ bắt đầu
+          <input type="time" id="schedule-start" />
+        </label>
+        <label>Giờ kết thúc
+          <input type="time" id="schedule-end" />
+        </label>
+        <button id="btn-save-schedule" class="btn-primary">Lưu lịch</button>
+        <p class="note">Ngoài giờ hoạt động, game tự tạm dừng (không ngắt TikTok LIVE). Thay đổi lịch áp dụng ngay, không cần khởi động lại server.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Overlay</h2>
+        <p class="note">Thêm URL này vào OBS Browser Source (1920x1080, nền trong suốt):</p>
+        <code id="overlay-url-display"></code>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" hidden></div>
+  </div>
+
+  <script src="/admin/admin.js"></script>
+</body>
+</html>

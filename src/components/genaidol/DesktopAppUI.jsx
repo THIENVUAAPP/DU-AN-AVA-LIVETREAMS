@@ -3,7 +3,7 @@ import {
   Settings, CreditCard, Video, Moon, Sun, 
   MessageCircle, Play, Pause, Mic, MicOff, X, Download, Plus,
   Brain, Radio, Coins, AlertTriangle, Eye, Clock, List, Zap, AlertCircle, FileText, CheckSquare,
-  Gift, ShoppingBag, Sparkles, RotateCcw, Send, Trash2, Heart, Share2, UserPlus, Users
+  Gift, ShoppingBag, Sparkles, RotateCcw, Send, Trash2, Heart, Share2, UserPlus, Users, Swords, Shield, Gamepad2
 } from 'lucide-react';
 import WorkspaceTacVu from './WorkspaceTacVu';
 import GeneralSettings from './GeneralSettings';
@@ -14,6 +14,8 @@ import { useLiveCoordinator } from '../../hooks/useLiveCoordinator';
 import AIAudioPlayer from './AIAudioPlayer';
 import QuickResponseModal from './QuickResponseModal';
 import TemplateLibraryModal from './TemplateLibraryModal';
+import GameChienDau from './game/GameChienDau';
+import GameChienDauAdminModal from './game/GameChienDauAdminModal';
 import { saveCharacterToIDB, loadAllCharactersFromIDB, deleteCharacterFromIDB } from '../../utils/idbHelper';
 export default function DesktopAppUI() {
   const [activeSettingsModal, setActiveSettingsModal] = useState(null); 
@@ -29,6 +31,11 @@ export default function DesktopAppUI() {
   const [simTab, setSimTab] = useState('quick');
   const autoSimTimerRef = useRef(null);
   
+  // Game Chiến Đấu States
+  const [isGameBattleActive, setIsGameBattleActive] = useState(false);
+  const [isGameAdminOpen, setIsGameAdminOpen] = useState(false);
+  const [lastGameEvent, setLastGameEvent] = useState(null);
+
   // States cho Menu Theo dõi
   const [isMonitorDropdownOpen, setIsMonitorDropdownOpen] = useState(false);
   const [activeMonitorModal, setActiveMonitorModal] = useState(null);
@@ -395,6 +402,17 @@ export default function DesktopAppUI() {
   };
 
   const renderCharacterContent = () => {
+    // -1. Chế độ Game Chiến Đấu (TikTok LIVE Battle Overlay)
+    if (isGameBattleActive) {
+      return (
+        <GameChienDau 
+          isPopout={false}
+          onOpenAdmin={() => setIsGameAdminOpen(true)}
+          externalLiveEvent={lastGameEvent}
+        />
+      );
+    }
+
     // 0. Ưu tiên phát Video Phản hồi Nhanh khẩn cấp (Override Live Screen)
     if (quickResponseActiveVideo) {
       return (
@@ -678,6 +696,36 @@ export default function DesktopAppUI() {
               >
                 Thư viện Mẫu
               </button>
+
+              {/* Nút Kích hoạt Game Chiến Đấu */}
+              <button 
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-bold transition-all border shadow-sm ${
+                  isGameBattleActive 
+                    ? 'bg-gradient-to-r from-red-600 via-purple-600 to-indigo-600 text-white border-purple-400 shadow-purple-500/30 ring-2 ring-purple-400/50' 
+                    : (isDarkMode ? 'border-indigo-500/50 bg-indigo-950/40 text-indigo-300 hover:bg-indigo-900/60' : 'border-indigo-300 bg-indigo-50 text-indigo-700 hover:bg-indigo-100')
+                }`}
+                onClick={() => setIsGameBattleActive(!isGameBattleActive)}
+                title="Bật/Tắt chế độ Game Chiến Đấu (TikTok LIVE Battle Game) trên màn hình chính"
+              >
+                <Swords size={16} className={isGameBattleActive ? 'text-yellow-300' : 'text-indigo-400'} />
+                <span>Game Chiến Đấu</span>
+                {isGameBattleActive && (
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                )}
+              </button>
+
+              {/* Nút Bảng Quản trị Admin của Game Chiến Đấu */}
+              {isGameBattleActive && (
+                <button 
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-bold bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 border border-purple-500/40 transition-colors"
+                  onClick={() => setIsGameAdminOpen(true)}
+                  title="Mở Bảng Quản trị Admin của Game Chiến Đấu (Tách biệt hoàn toàn với Live Stream)"
+                >
+                  <Shield size={13} className="text-purple-400" />
+                  <span>Admin</span>
+                </button>
+              )}
+
               <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="video/*,image/*" onChange={handleFileUpload} />
             </div>
           </div>
@@ -1427,6 +1475,29 @@ export default function DesktopAppUI() {
         onAddTemplate={(newChar) => {
           setCustomCharacters(prev => [...prev, newChar]);
           setSelectedCharacter(newChar.id);
+        }}
+      />
+
+      {/* Game Chiến Đấu Admin Control Modal */}
+      <GameChienDauAdminModal
+        isOpen={isGameAdminOpen}
+        onClose={() => setIsGameAdminOpen(false)}
+        onTriggerRefereeAction={(action) => {
+          if (action === 'RESET_MATCH') {
+            setLastGameEvent({ type: 'ADMIN_RESET', data: {}, timestamp: Date.now() });
+          } else if (action === 'FINISH_MATCH_BLUE') {
+            setLastGameEvent({ type: 'GIFT', data: { name: 'Admin Trọng Tài', coins: 99999 }, timestamp: Date.now() });
+          } else if (action === 'FINISH_MATCH_RED') {
+            setLastGameEvent({ type: 'GIFT', data: { name: 'Admin Trọng Tài', coins: 99999 }, timestamp: Date.now() });
+          } else if (action === 'ADD_BLUE_50') {
+            setLastGameEvent({ type: 'COMMENT', data: { nickname: 'Admin Trợ Lực', comment: 'xanh' }, timestamp: Date.now() });
+          } else if (action === 'ADD_RED_50') {
+            setLastGameEvent({ type: 'COMMENT', data: { nickname: 'Admin Trợ Lực', comment: 'đỏ' }, timestamp: Date.now() });
+          } else if (action === 'SUMMON_BOSS_BLUE') {
+            setLastGameEvent({ type: 'GIFT', data: { nickname: 'Rồng Thần Admin', diamondCount: 5000 }, timestamp: Date.now() });
+          } else if (action === 'SUMMON_BOSS_RED') {
+            setLastGameEvent({ type: 'GIFT', data: { nickname: 'Bạch Hổ Admin', diamondCount: 5000 }, timestamp: Date.now() });
+          }
         }}
       />
 

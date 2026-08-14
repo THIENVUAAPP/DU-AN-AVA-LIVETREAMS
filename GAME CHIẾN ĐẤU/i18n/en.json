@@ -1,0 +1,25 @@
+{
+  "ui": {
+    "vsLabel": "VERSUS",
+    "leaderboardTitle": "Top Supporters",
+    "noSupportersYet": "No supporters yet",
+    "resultsTitle": "Match Over",
+    "winnerLabel": "Winner",
+    "topSupportersLabel": "Top Supporters This Match",
+    "nextMatchPrefix": "Next match starting in",
+    "secondsSuffix": "s",
+    "connectingStatus": "Connecting to TikTok LIVE...",
+    "connectedStatus": "Connected",
+    "reconnectingStatus": "Disconnected, retrying...",
+    "demoModeStatus": "Demo Mode",
+    "pausedStatus": "Paused",
+    "outsideScheduleStatus": "Outside schedule",
+    "pickSideHint": "Comment \"blue\" or \"red\" to pick your side!",
+    "donorSpotlightThanks": "Thank you",
+    "comebackBadge": "Power Up",
+    "ceremonyWinnerTitle": "WINNING TEAM",
+    "ceremonyMvpLabel": "Top Supporter",
+    "ceremonyMemberCountSuffix": "members",
+    "ceremonyLosingSideLabel": "Opponent"
+  }
+}

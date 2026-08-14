@@ -1,0 +1,26 @@
+name: Deploy lên VPS (tự động khi push nhánh main)
+
+# Mỗi lần push code lên nhánh main, workflow này SSH vào VPS, kéo code mới
+# nhất về và khởi động lại server bằng pm2 — không cần vào tay VPS mỗi lần
+# cập nhật. Cần khai báo 4 secret trong GitHub repo Settings → Secrets and
+# variables → Actions trước khi chạy được (xem README mục "Deploy tự động").
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH vào VPS và cập nhật code
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd ${{ secrets.VPS_PROJECT_PATH }}
+            git pull origin main
+            npm install --omit=dev
+            pm2 restart ecosystem.config.cjs --update-env

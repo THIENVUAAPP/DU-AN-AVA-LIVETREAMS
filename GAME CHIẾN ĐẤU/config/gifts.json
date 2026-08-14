@@ -1,0 +1,41 @@
+{
+  "fallbackTierId": "small",
+  "tiers": [
+    {
+      "id": "small",
+      "label": { "vi": "Nhỏ", "en": "Small" },
+      "minCoins": 1,
+      "maxCoins": 99,
+      "exampleGiftNames": ["Rose", "Finger Heart", "Ice Cream Cone"],
+      "effect": "summonSoldier",
+      "opponentDamage": 0,
+      "ownFactionHeal": 20,
+      "summonCount": 1,
+      "spotlightDurationMs": 0
+    },
+    {
+      "id": "medium",
+      "label": { "vi": "Trung", "en": "Medium" },
+      "minCoins": 100,
+      "maxCoins": 5000,
+      "exampleGiftNames": ["Confetti", "GG", "Sunglasses"],
+      "effect": "aoeSkill",
+      "opponentDamage": 80,
+      "ownFactionHeal": 0,
+      "summonCount": 0,
+      "spotlightDurationMs": 0
+    },
+    {
+      "id": "large",
+      "label": { "vi": "Lớn", "en": "Large" },
+      "minCoins": 5001,
+      "maxCoins": null,
+      "exampleGiftNames": ["Lion", "Universe", "TikTok Shoes"],
+      "effect": "summonBoss",
+      "opponentDamage": 250,
+      "ownFactionHeal": 0,
+      "summonCount": 1,
+      "spotlightDurationMs": 5000
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kingdom Clash: Ultimate War — TikTok LIVE Overlay</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600&family=JetBrains+Mono:wght@400;600&family=Sora:wght@400;600&family=Unbounded:wght@600;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="/css/theme.css" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="battlefield-canvas"></canvas>
+
+    <div id="connection-status" data-status="connecting" class="glass-panel">
+      <span class="status-dot"></span>
+      <span id="connection-status-text">Đang kết nối...</span>
+    </div>
+
+    <div id="hp-bar-panel" class="glass-panel">
+      <div class="hp-bar-title" id="game-title-text">Kingdom Clash: Ultimate War</div>
+      <div class="hp-bar-row">
+        <div class="faction-label faction-label--blue" id="faction-name-blue">Rồng Xanh</div>
+        <div class="hp-bar-track">
+          <div class="hp-bar-half hp-bar-half--blue">
+            <div class="hp-bar-fill hp-bar-fill--blue" id="hp-fill-blue" style="width: 100%"></div>
+          </div>
+          <div class="hp-bar-center-divider" id="vs-label">VS</div>
+          <div class="hp-bar-half hp-bar-half--red">
+            <div class="hp-bar-fill hp-bar-fill--red" id="hp-fill-red" style="width: 100%"></div>
+          </div>
+        </div>
+        <div class="faction-label faction-label--red" id="faction-name-red">Hổ Đỏ</div>
+      </div>
+      <div class="hp-values">
+        <span id="hp-value-blue">1000 / 1000</span>
+        <span id="hp-value-red">1000 / 1000</span>
+      </div>
+    </div>
+
+    <div id="leaderboard-panel" class="glass-panel">
+      <div class="leaderboard-title" id="leaderboard-title-text">Top Ủng Hộ</div>
+      <ul class="leaderboard-list" id="leaderboard-list">
+        <li class="leaderboard-empty" id="leaderboard-empty-text">Chưa có người ủng hộ</li>
+      </ul>
+    </div>
+
+    <div id="donor-spotlight" class="glass-panel">
+      <img class="donor-avatar" id="donor-spotlight-avatar" alt="" />
+      <div class="donor-text">
+        <span id="donor-spotlight-thanks-text">Cảm ơn</span>
+        <strong id="donor-spotlight-name"></strong>
+      </div>
+    </div>
+
+    <div id="pick-side-hint" class="glass-panel">
+      <span id="pick-side-hint-text">Bình luận "xanh" hoặc "đỏ" để chọn phe!</span>
+    </div>
+
+    <!-- Chỉ hiện khi DEMO_MODE=true — tự gõ comment thử, không xuất hiện khi live thật -->
+    <form id="debug-comment-panel" class="glass-panel" hidden>
+      <span id="debug-comment-title">Test comment (chỉ demo mode)</span>
+      <input type="text" id="debug-comment-input" placeholder="Gõ xanh hoặc đỏ..." maxlength="200" autocomplete="off" />
+      <button type="submit" id="debug-comment-submit">Gửi</button>
+      <span id="debug-comment-feedback"></span>
+    </form>
+
+    <div id="results-screen">
+      <div class="ceremony-podium glass-panel">
+        <div class="ceremony-winner-badge" id="ceremony-winner-badge">🏆 ĐỘI CHIẾN THẮNG: RỒNG XANH</div>
+
+        <div class="ceremony-mvp" id="ceremony-mvp-block">
+          <div class="mvp-trophy">🏆</div>
+          <div class="mvp-avatar-slot" id="ceremony-mvp-avatar-slot"></div>
+          <div class="mvp-name" id="ceremony-mvp-name">—</div>
+          <div class="mvp-label" id="ceremony-mvp-label-text">Người Ủng Hộ Số 1</div>
+          <div class="mvp-score" id="ceremony-mvp-score"></div>
+        </div>
+
+        <div class="ceremony-team-list" id="ceremony-team-list"></div>
+        <div class="ceremony-member-count" id="ceremony-member-count"></div>
+        <div class="ceremony-losing-note" id="ceremony-losing-note"></div>
+
+        <div class="results-countdown">
+          <span id="results-countdown-prefix-text">Trận mới bắt đầu sau</span>
+          <strong id="results-countdown-seconds">10</strong>
+          <span id="results-countdown-suffix-text">giây</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/game.js"></script>
+</body>
+</html>
