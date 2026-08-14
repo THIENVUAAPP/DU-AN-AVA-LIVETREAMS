@@ -727,7 +727,7 @@ export default function DesktopAppUI() {
             title="Mở cửa sổ video sạch độc lập chỉ chứa nhân vật để TikTok Live Studio / OBS bắt hình trực tiếp"
           >
             <Video size={16} />
-            Live Sạch
+            Live TikTok
           </button>
 
           {/* Menu Theo dõi: Sắp xếp theo thứ tự ưu tiên hay dùng nhất lên đầu */}
