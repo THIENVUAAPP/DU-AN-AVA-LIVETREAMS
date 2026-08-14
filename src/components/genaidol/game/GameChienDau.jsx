@@ -713,7 +713,7 @@ export default function GameChienDau({
           const isPulsing = performance.now() < f.pulseUntil;
           const bob = Math.sin(f.bobPhase) * (tier >= 3 ? 3.5 : 2.5);
           const stride = Math.sin(f.bobPhase); // Bước chân di chuyển nhịp nhàng
-          const scale = (config.charScale || 1.0) * (isPulsing ? 1.4 : 1.0) * (tier >= 4 ? 1.25 : tier === 3 ? 1.15 : 1.0);
+          const scale = (config.charScale || 1.8) * (isPulsing ? 1.3 : 1.0) * (tier >= 4 ? 1.35 : tier === 3 ? 1.2 : 1.0);
           const isTopRank = f.rank === 0;
 
           // Ground Aura / Tai Chi Ring for Tier 4 & 5
@@ -729,7 +729,6 @@ export default function GameChienDau({
             ctx.stroke();
             ctx.fillStyle = tier === 5 ? 'rgba(250, 204, 21, 0.35)' : `${color}35`;
             ctx.fill();
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
           } else {
             ctx.beginPath();
             ctx.ellipse(f.x, f.y + 18 * scale, (14 + tier * 2) * scale, (5 + tier) * scale, 0, 0, Math.PI * 2);
@@ -762,41 +761,6 @@ export default function GameChienDau({
           ctx.fillStyle = tier >= 4 ? '#eab308' : tier === 3 ? '#fbbf24' : color;
           ctx.fillRect(f.x - 14 * scale, f.y - (20 + (tier >= 3 ? 4 : 0)) * scale, Math.min(28 * scale, Math.max(5 * scale, (f.score / 300) * 28 * scale)), 3.5 * scale);
           ctx.restore();
-
-          // Draw Character Body & 3D Wuxia Armor
-          ctx.save();
-          ctx.translate(f.x, f.y + bob);
-          ctx.scale(scale, scale);
-
-          // 2.0 WINGS OF LIGHT (Cánh Hào Quang Thần Thánh for Tier 3, 4, 5)
-          if (tier >= 3) {
-            const wingFlap = Math.sin(time * 0.008) * 6;
-            ctx.save();
-            ctx.shadowColor = tier === 5 ? '#fbbf24' : (tier === 4 ? '#38bdf8' : '#fde047');
-            ctx.shadowBlur = 14;
-            ctx.strokeStyle = tier === 5 ? '#facc15' : '#ffffff';
-            ctx.fillStyle = tier === 5 ? 'rgba(250, 204, 21, 0.6)' : 'rgba(255, 255, 255, 0.45)';
-            ctx.lineWidth = 1.5;
-
-            // Left Wing
-            ctx.beginPath();
-            ctx.moveTo(-4, -2);
-            ctx.quadraticCurveTo(-18, -16 + wingFlap, -24, -8 + wingFlap);
-            ctx.quadraticCurveTo(-14, 0 + wingFlap, -4, 4);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-
-            // Right Wing
-            ctx.beginPath();
-            ctx.moveTo(4, -2);
-            ctx.quadraticCurveTo(18, -16 - wingFlap, 24, -8 - wingFlap);
-            ctx.quadraticCurveTo(14, 0 - wingFlap, 4, 4);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-            ctx.restore();
-          }
 
           // Draw 3D Warrior Body & Layered Armor
           ctx.save();
