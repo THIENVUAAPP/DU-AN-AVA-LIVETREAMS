@@ -201,8 +201,21 @@ export default function DesktopAppUI() {
   };
 
   const ALL_CHARACTERS = {
-    'aidol_lan_huong': { name: 'Lan Hương', url: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=600&h=900&fit=crop', type: 'image' },
-    'aidol_ngoc_trinh': { name: 'Ngọc Trinh', url: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=600&h=900&fit=crop', type: 'image' }
+    'aidol_lan_huong': { 
+      name: 'Lan Hương (AI)', 
+      url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=80', 
+      type: 'image' 
+    },
+    'aidol_ngoc_trinh': { 
+      name: 'Ngọc Trinh (AI)', 
+      url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1200&q=80', 
+      type: 'image' 
+    },
+    'aidol_mai_anh': { 
+      name: 'Mai Anh (KOL)', 
+      url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1200&q=80', 
+      type: 'image' 
+    }
   };
 
   // Lọc bỏ các nhân vật đã bị ẩn và gộp nhân vật tuỳ chỉnh
@@ -210,9 +223,17 @@ export default function DesktopAppUI() {
   Object.keys(ALL_CHARACTERS).forEach(id => {
     if (!hiddenBuiltins.includes(id)) CHARACTERS[id] = ALL_CHARACTERS[id];
   });
-  customCharacters.forEach(c => {
-    CHARACTERS[c.id] = { name: c.name, url: c.url, type: c.type };
-  });
+  if (Array.isArray(customCharacters)) {
+    customCharacters.forEach(c => {
+      if (c && c.id) {
+        CHARACTERS[c.id] = { name: c.name || 'Custom AI', url: c.url, type: c.type || 'image' };
+      }
+    });
+  }
+  // Đảm bảo luôn có ít nhất 1 nhân vật hiển thị
+  if (Object.keys(CHARACTERS).length === 0) {
+    CHARACTERS['aidol_lan_huong'] = ALL_CHARACTERS['aidol_lan_huong'];
+  }
 
 
   const handleConnect = async () => {
@@ -352,6 +373,10 @@ export default function DesktopAppUI() {
                 showToast('Đã phát xong video phản hồi nhanh!', 'info');
               }
             }}
+            onError={() => {
+              setQuickResponseActiveVideo(null);
+              showToast('Lỗi tải video phản hồi nhanh!', 'warn');
+            }}
             playsInline 
           />
           <div className="absolute top-4 left-4 bg-red-600/90 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-2 animate-pulse z-20">
@@ -379,33 +404,48 @@ export default function DesktopAppUI() {
           autoPlay 
           controls={false}
           onEnded={handleVideoEnded}
+          onError={() => {
+            setLipSyncVideoUrl(null);
+            handleVideoEnded();
+          }}
           playsInline 
         />
       );
     }
     
     // 2. Nếu đang kết nối Live và có video nền (Story/Idle/Reaction)
-    if (isConnected && activeVideoItem) {
+    if (isConnected && activeVideoItem && activeVideoItem.mediaUrl) {
       return (
         <video 
-          key={activeVideoItem.id}
+          key={activeVideoItem.id || activeVideoItem.mediaUrl}
           src={activeVideoItem.mediaUrl} 
           className="w-full h-full object-contain bg-black"
           autoPlay 
           loop={!isProcessingEvent} // Nếu ko bận thì loop
           controls={false}
           onEnded={handleVideoEnded}
+          onError={() => {
+            console.warn('Lỗi tải video nền live, chuyển về nhân vật mặc định');
+            setActiveVideoItem(null);
+          }}
           playsInline 
         />
       );
     }
 
-    // 3. Mặc định: Hiển thị nhân vật được chọn từ Topbar
-    const selected = CHARACTERS[selectedCharacter];
+    // 3. Mặc định: Hiển thị nhân vật được chọn từ Topbar với fallback an toàn
+    const selected = CHARACTERS[selectedCharacter] 
+      || Object.values(CHARACTERS)[0] 
+      || ALL_CHARACTERS['aidol_lan_huong'];
+
     if (!selected) {
       return (
-        <div className="w-full h-full flex items-center justify-center bg-gray-200">
-           <span className="text-gray-500 font-medium text-lg">Vui lòng chọn nhân vật</span>
+        <div className="w-full h-full flex flex-col items-center justify-center bg-[#121218] text-white p-6">
+           <div className="w-16 h-16 rounded-2xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center mb-3 text-purple-400">
+             <Video size={32} />
+           </div>
+           <h3 className="text-base font-bold text-white mb-1">AIDOL Livestream Studio</h3>
+           <p className="text-xs text-gray-400">Vui lòng chọn hoặc tải nhân vật từ thanh công cụ bên trên.</p>
         </div>
       );
     }
@@ -413,22 +453,34 @@ export default function DesktopAppUI() {
     if (selected.type === 'video') {
       return (
         <video 
+          key={selected.url}
           src={selected.url} 
           className="w-full h-full object-contain bg-black"
           autoPlay 
           loop 
+          muted 
           controls 
           playsInline 
+          onError={(e) => {
+            console.warn("Video failed to load, fallback to default character image");
+          }}
         />
       );
     } else {
       return (
-        <img 
-          src={selected.url} 
-          className="w-full h-full object-contain"
-          alt={selected.name} 
-          style={{ background: '#0f0f13' }}
-        />
+        <div className="relative w-full h-full flex items-center justify-center bg-[#0d0d12] overflow-hidden select-none">
+          <img 
+            src={selected.url} 
+            className="w-full h-full object-contain drop-shadow-2xl transition-all"
+            alt={selected.name}
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=80';
+            }}
+          />
+          {/* Subtle gradient vignette to blend naturally */}
+          <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/60 via-transparent to-black/20" />
+        </div>
       );
     }
   };

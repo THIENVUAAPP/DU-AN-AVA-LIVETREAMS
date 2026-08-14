@@ -12,19 +12,27 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
   // 1. Lấy Job từ LocalStorage khi Live bắt đầu
   useEffect(() => {
     if (isLive) {
-      const savedJob = localStorage.getItem('aidol_active_job');
-      if (savedJob) {
-        const parsed = JSON.parse(savedJob);
-        setJob(parsed);
-        // Tách kịch bản thành từng câu ngắn
-        const sentences = parsed.scriptContent.split(/[.?!]/).filter(s => s.trim().length > 0);
-        setQueue(sentences.map(s => ({ type: 'script', text: s.trim() })));
-        setCurrentIndex(0);
-        setIsPlaying(true);
+      try {
+        const savedJob = localStorage.getItem('aidol_active_job');
+        if (savedJob) {
+          const parsed = JSON.parse(savedJob);
+          setJob(parsed);
+          // Tách kịch bản thành từng câu ngắn an toàn
+          if (parsed && typeof parsed.scriptContent === 'string' && parsed.scriptContent.trim()) {
+            const sentences = parsed.scriptContent.split(/[.?!]/).filter(s => s.trim().length > 0);
+            setQueue(sentences.map(s => ({ type: 'script', text: s.trim() })));
+            setCurrentIndex(0);
+            setIsPlaying(true);
+          }
+        }
+      } catch (err) {
+        console.warn("AIAudioPlayer failed to parse active job:", err);
       }
     } else {
       setIsPlaying(false);
-      audioRef.current.pause();
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
     }
   }, [isLive]);
 
