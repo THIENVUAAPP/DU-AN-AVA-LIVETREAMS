@@ -354,27 +354,33 @@ export default function GameChienDau({
     const canvas = canvasRef.current;
     if (!canvas) return;
     const isBlue = factionId === 'blue';
-    const targetSideX = isBlue ? canvas.width * 0.75 : canvas.width * 0.25;
+    const oppFaction = isBlue ? 'red' : 'blue';
+    const oppFighters = engineRef.current.fighters[oppFaction];
+    
+    // Target the highest ranking or leading enemy fighter directly
+    const targetFighter = oppFighters.length > 0 ? oppFighters[0] : null;
+    const targetX = targetFighter ? targetFighter.x : (isBlue ? canvas.width * 0.75 : canvas.width * 0.25);
+    const targetY = targetFighter ? targetFighter.y : canvas.height * 0.62;
 
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 18; i++) {
       engineRef.current.flyingSwords.push({
         id: Date.now() + Math.random(),
-        x: (isBlue ? canvas.width * 0.2 : canvas.width * 0.8) + (Math.random() - 0.5) * 120,
-        y: canvas.height * 0.1 + (Math.random() - 0.5) * 80,
-        targetX: targetSideX + (Math.random() - 0.5) * 200,
-        targetY: canvas.height * 0.62 + (Math.random() - 0.5) * 100,
+        x: (isBlue ? canvas.width * 0.2 : canvas.width * 0.8) + (Math.random() - 0.5) * 140,
+        y: canvas.height * 0.08 + (Math.random() - 0.5) * 60,
+        targetX: targetX + (Math.random() - 0.5) * 60,
+        targetY: targetY + (Math.random() - 0.5) * 50,
         color: isBlue ? '#38bdf8' : '#f87171',
-        progress: -i * 0.05,
-        speed: 1.8 + Math.random() * 0.6,
+        progress: -i * 0.04,
+        speed: 2.2 + Math.random() * 0.8,
         spawnedAt: performance.now()
       });
     }
 
-    addOrUpdateFighter(factionId, donorName, 150);
+    addOrUpdateFighter(factionId, donorName, 180);
     playSfx('van_kiem');
     setGameState(prev => ({
       ...prev,
-      recentSpotlight: { name: donorName, gift: 'Tuyệt Kỹ VẠN KIẾM QUY TÔNG ⚔️', faction: factionId }
+      recentSpotlight: { name: donorName, gift: 'Tuyệt Kỹ VẠN KIẾM QUY TÔNG (Khóa Mục Tiêu) ⚔️', faction: factionId }
     }));
     setTimeout(() => setGameState(prev => ({ ...prev, recentSpotlight: null })), 4500);
   }, [addOrUpdateFighter, playSfx]);
@@ -383,13 +389,17 @@ export default function GameChienDau({
     const canvas = canvasRef.current;
     if (!canvas) return;
     const isBlue = factionId === 'blue';
+    const oppFaction = isBlue ? 'red' : 'blue';
+    const oppFighters = engineRef.current.fighters[oppFaction];
+    const targetFighter = oppFighters.length > 0 ? oppFighters[0] : null;
 
     engineRef.current.dragonBeasts.push({
       id: Date.now(),
       factionId,
       x: isBlue ? 0 : canvas.width,
       y: canvas.height * 0.55,
-      targetX: isBlue ? canvas.width * 1.1 : -canvas.width * 0.1,
+      targetX: targetFighter ? targetFighter.x : (isBlue ? canvas.width * 0.85 : canvas.width * 0.15),
+      targetY: targetFighter ? targetFighter.y : canvas.height * 0.62,
       progress: 0,
       spawnedAt: performance.now()
     });
@@ -409,46 +419,96 @@ export default function GameChienDau({
     const canvas = canvasRef.current;
     if (!canvas) return;
     const isBlue = factionId === 'blue';
+    const ownFighters = engineRef.current.fighters[factionId];
+    const leadFighter = ownFighters.length > 0 ? ownFighters[0] : null;
 
     engineRef.current.taiChiShields.push({
       id: Date.now(),
       factionId,
-      x: isBlue ? canvas.width * 0.25 : canvas.width * 0.75,
-      y: canvas.height * 0.62,
+      x: leadFighter ? leadFighter.x : (isBlue ? canvas.width * 0.25 : canvas.width * 0.75),
+      y: leadFighter ? leadFighter.y : canvas.height * 0.62,
       radius: 20,
-      maxRadius: 180,
-      lifespanMs: 3000,
+      maxRadius: 160,
+      lifespanMs: 3500,
       spawnedAt: performance.now()
     });
 
-    addOrUpdateFighter(factionId, donorName, 80);
+    addOrUpdateFighter(factionId, donorName, 100);
     playSfx('thai_cuc');
 
     setGameState(prev => ({
       ...prev,
-      recentSpotlight: { name: donorName, gift: 'Tuyệt Kỹ THÁI CỰC KIẾM TRẬN ☯️', faction: factionId }
+      recentSpotlight: { name: donorName, gift: 'Tuyệt Kỹ THÁI CỰC KIẾM TRẬN HỘ THÂN ☯️', faction: factionId }
     }));
     setTimeout(() => setGameState(prev => ({ ...prev, recentSpotlight: null })), 4000);
   }, [addOrUpdateFighter, playSfx]);
 
-  const triggerHeroUpgrade = useCallback((factionId, donorName = 'VIP Chiến Thần', tierLevel = 3) => {
-    const bonus = tierLevel === 5 ? 500 : tierLevel === 4 ? 250 : 100;
-    addOrUpdateFighter(factionId, donorName, bonus);
+  const triggerHeroUpgrade = useCallback((factionId, donorName = 'VIP Chiến Binh 3D', tierLevel = 3) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    // Set score to guarantee exact tier
+    const tierScores = { 1: 50, 2: 250, 3: 1000, 4: 3000, 5: 7500 };
+    const targetScore = tierScores[tierLevel] || 1000;
+    
+    const userId = `user_${donorName.toLowerCase().replace(/\s+/g, '_')}`;
+    const list = engineRef.current.fighters[factionId];
+    let fighter = list.find(f => f.userId === userId);
+
+    if (fighter) {
+      fighter.score = Math.max(fighter.score, targetScore);
+      fighter.pulseUntil = performance.now() + 2500;
+    } else {
+      const startX = factionId === 'blue' ? canvas.width * 0.35 : canvas.width * 0.65;
+      const startY = canvas.height * 0.62;
+      fighter = {
+        userId,
+        nickname: donorName,
+        score: targetScore,
+        rank: 0,
+        x: startX,
+        y: startY,
+        targetX: startX,
+        targetY: startY,
+        bobPhase: 0,
+        pulseUntil: performance.now() + 2500
+      };
+      list.unshift(fighter);
+    }
+
+    list.sort((a, b) => b.score - a.score);
+    updateFormation(canvas.width, canvas.height);
     playSfx('level_up');
 
+    // Spawn golden upward rays
+    for (let p = 0; p < 24; p++) {
+      engineRef.current.particles.push({
+        x: fighter.x + (Math.random() - 0.5) * 40,
+        y: fighter.y + 20,
+        vx: (Math.random() - 0.5) * 30,
+        vy: -120 - Math.random() * 80,
+        size: 3.5,
+        color: '#facc15',
+        isFlash: true,
+        lifespanMs: 1800,
+        spawnedAt: performance.now()
+      });
+    }
+
     const tierTitles = {
-      2: 'THIẾT GIÁP KIẾM HIỆP 🛡️',
-      3: 'KIM KHẢI THẦN TƯỚNG 👑',
-      4: 'CHIẾN THẦN VẠN KIẾM ⚡',
-      5: 'CHÍ TÔN THIÊN TÔN 🐉'
+      1: 'TÂN BINH HIỆP KHÁCH 3D ⚔️',
+      2: 'THIẾT GIÁP KIẾM HIỆP 3D 🛡️',
+      3: 'KIM KHẢI THẦN TƯỚNG 3D (CÁNH VÀNG) 👑',
+      4: 'CHIẾN THẦN VẠN KIẾM 3D (KIẾM KHÍ) ⚡',
+      5: 'CHÍ TÔN THIÊN TÔN 3D (THẦN LONG) 🐉'
     };
 
     setGameState(prev => ({
       ...prev,
-      recentSpotlight: { name: donorName, gift: `Thăng Cấp ${tierTitles[tierLevel] || 'HOÀNG KIM'}`, faction: factionId }
+      recentSpotlight: { name: donorName, gift: `Trang Bị: ${tierTitles[tierLevel] || 'HOÀNG KIM 3D'}`, faction: factionId }
     }));
-    setTimeout(() => setGameState(prev => ({ ...prev, recentSpotlight: null })), 4000);
-  }, [addOrUpdateFighter, playSfx]);
+    setTimeout(() => setGameState(prev => ({ ...prev, recentSpotlight: null })), 4500);
+  }, [updateFormation, playSfx]);
 
   const resetMatch = useCallback(() => {
     engineRef.current.fighters = { blue: [], red: [] };
@@ -738,106 +798,209 @@ export default function GameChienDau({
             ctx.restore();
           }
 
-          // 2.1 LEGS & GREAVES (Chân & Giáp Ống Chân)
-          ctx.lineWidth = tier >= 3 ? 3.5 : 3;
+          // Draw 3D Warrior Body & Layered Armor
+          ctx.save();
+          ctx.translate(f.x, f.y + bob);
+          ctx.scale(scale, scale);
+
+          // 1.0 PERSISTENT LINGERING AURA (Hào Quang 3D Tỏa Sáng Kéo Dài 1-2 Giây)
+          if (isPulsing || tier >= 4) {
+            const auraScale = 1 + Math.sin(time * 0.006) * 0.15;
+            ctx.save();
+            ctx.shadowColor = tier === 5 ? '#facc15' : (tier === 4 ? '#38bdf8' : '#fbbf24');
+            ctx.shadowBlur = 24;
+
+            // Outer Divine Halo
+            ctx.strokeStyle = tier === 5 ? 'rgba(250, 204, 21, 0.7)' : 'rgba(56, 189, 248, 0.7)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 26 * auraScale, 30 * auraScale, 0, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Inner Radiant Flame Glow
+            ctx.fillStyle = tier === 5 ? 'rgba(250, 204, 21, 0.22)' : 'rgba(56, 189, 248, 0.18)';
+            ctx.fill();
+            ctx.restore();
+          }
+
+          // 1.1 FLUTTERING 3D CAPE / MANTLE (Áo Choàng Chiến Binh 3D Bay Trong Gió)
+          const capeSway = Math.sin(time * 0.005 + (f.bobPhase || 0)) * 4;
+          ctx.save();
+          ctx.fillStyle = tier >= 3 ? '#991b1b' : (factionId === 'blue' ? '#1e3a8a' : '#7f1d1d');
+          ctx.strokeStyle = tier >= 3 ? '#fbbf24' : '#ffffff';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(-5, -4);
+          ctx.lineTo(-10 + capeSway, 16);
+          ctx.quadraticCurveTo(0 + capeSway, 19, 10 + capeSway, 16);
+          ctx.lineTo(5, -4);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
+
+          // 2.0 WINGS OF LIGHT (Cánh Hào Quang Thần Thánh 3D for Tier 3, 4, 5)
+          if (tier >= 3) {
+            const wingFlap = Math.sin(time * 0.008) * 7;
+            ctx.save();
+            ctx.shadowColor = tier === 5 ? '#fbbf24' : (tier === 4 ? '#38bdf8' : '#fde047');
+            ctx.shadowBlur = 18;
+
+            // Left Wing
+            const leftWingGrad = ctx.createLinearGradient(-4, 0, -28, -14);
+            leftWingGrad.addColorStop(0, tier === 5 ? '#facc15' : '#38bdf8');
+            leftWingGrad.addColorStop(1, 'rgba(255, 255, 255, 0.2)');
+            ctx.fillStyle = leftWingGrad;
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+
+            ctx.beginPath();
+            ctx.moveTo(-4, -2);
+            ctx.quadraticCurveTo(-18, -18 + wingFlap, -28, -10 + wingFlap);
+            ctx.quadraticCurveTo(-16, 2 + wingFlap, -4, 5);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Right Wing
+            const rightWingGrad = ctx.createLinearGradient(4, 0, 28, -14);
+            rightWingGrad.addColorStop(0, tier === 5 ? '#facc15' : '#38bdf8');
+            rightWingGrad.addColorStop(1, 'rgba(255, 255, 255, 0.2)');
+            ctx.fillStyle = rightWingGrad;
+
+            ctx.beginPath();
+            ctx.moveTo(4, -2);
+            ctx.quadraticCurveTo(18, -18 - wingFlap, 28, -10 - wingFlap);
+            ctx.quadraticCurveTo(16, 2 - wingFlap, 4, 5);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+          }
+
+          // 2.1 LEGS & GREAVES (Chân & Giáp Ống Chân Chiến Binh 3D)
+          ctx.lineWidth = tier >= 3 ? 3.8 : 3.2;
           ctx.lineCap = 'round';
           
           // Left Leg
-          ctx.strokeStyle = tier >= 3 ? '#ca8a04' : (factionId === 'blue' ? '#1e3a8a' : '#7f1d1d');
+          ctx.strokeStyle = tier >= 3 ? '#ca8a04' : (tier === 2 ? '#64748b' : (factionId === 'blue' ? '#1e3a8a' : '#7f1d1d'));
           ctx.beginPath();
           ctx.moveTo(-3, 6);
           ctx.lineTo(-4 + stride * 3.5, 14);
           ctx.stroke();
-          // Left Boot
+          // Left Armored Boot
           ctx.fillStyle = tier >= 3 ? '#facc15' : (tier === 2 ? '#94a3b8' : '#334155');
-          ctx.fillRect(-6 + stride * 3.5, 13, 5, 3.5);
+          ctx.fillRect(-6 + stride * 3.5, 13, 5.5, 3.8);
 
           // Right Leg
-          ctx.strokeStyle = tier >= 3 ? '#eab308' : (factionId === 'blue' ? '#1d4ed8' : '#991b1b');
+          ctx.strokeStyle = tier >= 3 ? '#eab308' : (tier === 2 ? '#94a3b8' : (factionId === 'blue' ? '#1d4ed8' : '#991b1b'));
           ctx.beginPath();
           ctx.moveTo(3, 6);
           ctx.lineTo(4 - stride * 3.5, 14);
           ctx.stroke();
-          // Right Boot
+          // Right Armored Boot
           ctx.fillStyle = tier >= 3 ? '#fde047' : (tier === 2 ? '#cbd5e1' : '#475569');
-          ctx.fillRect(2 - stride * 3.5, 13, 5, 3.5);
+          ctx.fillRect(2 - stride * 3.5, 13, 5.5, 3.8);
 
-          // 2.2 CHEST ARMOR & ROBES (Áo Giáp Hoàng Kim / Ngự Lâm / Hiệp Khách)
+          // 2.2 CHEST ARMOR & ROBES (Áo Giáp 3D Tấm Kim Loại Đúc Nổi)
+          ctx.save();
           ctx.shadowColor = tier >= 4 ? '#facc15' : (isPulsing ? '#ffcc00' : color);
-          ctx.shadowBlur = tier >= 4 ? 20 : (isPulsing ? 18 : 8);
+          ctx.shadowBlur = tier >= 4 ? 22 : (isPulsing ? 18 : 8);
 
-          // Armor Plate Gradient
-          const armorGrad = ctx.createLinearGradient(-6, -4, 6, 8);
+          const armorGrad = ctx.createLinearGradient(-7, -5, 7, 7);
           if (tier >= 3) {
-            // Golden Divine Armor (Kim Khải)
+            // Golden Sun Divine Armor
             armorGrad.addColorStop(0, '#fef08a');
-            armorGrad.addColorStop(0.5, '#facc15');
-            armorGrad.addColorStop(1, '#ca8a04');
+            armorGrad.addColorStop(0.4, '#facc15');
+            armorGrad.addColorStop(0.8, '#eab308');
+            armorGrad.addColorStop(1, '#a16207');
           } else if (tier === 2) {
-            // Silver Knight Armor (Thiết Giáp Bạc)
-            armorGrad.addColorStop(0, '#f8fafc');
-            armorGrad.addColorStop(0.5, '#94a3b8');
+            // Silver Knight Steel Plate Armor
+            armorGrad.addColorStop(0, '#ffffff');
+            armorGrad.addColorStop(0.4, '#cbd5e1');
+            armorGrad.addColorStop(0.8, '#94a3b8');
             armorGrad.addColorStop(1, '#475569');
           } else {
             // Tier 1: Faction Robe
-            armorGrad.addColorStop(0, factionId === 'blue' ? '#3b82f6' : '#ef4444');
-            armorGrad.addColorStop(1, factionId === 'blue' ? '#1d4ed8' : '#b91c1c');
+            armorGrad.addColorStop(0, factionId === 'blue' ? '#60a5fa' : '#f87171');
+            armorGrad.addColorStop(0.5, factionId === 'blue' ? '#2563eb' : '#dc2626');
+            armorGrad.addColorStop(1, factionId === 'blue' ? '#1e3a8a' : '#7f1d1d');
           }
 
           ctx.fillStyle = armorGrad;
-          ctx.strokeStyle = tier >= 3 ? '#ffffff' : (isTopRank ? '#ffd700' : '#ffffff');
-          ctx.lineWidth = 1.3;
+          ctx.strokeStyle = tier >= 3 ? '#ffffff' : (tier === 2 ? '#ffffff' : (isTopRank ? '#ffd700' : '#ffffff'));
+          ctx.lineWidth = 1.4;
 
+          // Breastplate polygon
           ctx.beginPath();
           ctx.moveTo(-6, 6);
           ctx.lineTo(6, 6);
-          ctx.lineTo(5, -4);
-          ctx.lineTo(-5, -4);
+          ctx.lineTo(5.5, -4);
+          ctx.lineTo(-5.5, -4);
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
 
-          // Energy Gem / Core
-          ctx.fillStyle = tier >= 3 ? '#38bdf8' : (isTopRank ? '#facc15' : '#e2e8f0');
-          ctx.fillRect(-3.5, 3.5, 7, 2.5);
+          // Luminous Core Crystal / Energy Gem
+          ctx.fillStyle = tier >= 3 ? '#38bdf8' : (tier === 2 ? '#67e8f9' : (isTopRank ? '#facc15' : '#e2e8f0'));
+          ctx.fillRect(-3, 2, 6, 3);
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 0.8;
+          ctx.strokeRect(-3, 2, 6, 3);
 
-          // Shoulder Pauldrons (Giáp vai chiến đấu)
+          // 3D Shoulder Pauldrons (Giáp Vai Chiến Binh Đúc Nổi 2 Bên)
           ctx.fillStyle = tier >= 3 ? '#eab308' : (tier === 2 ? '#cbd5e1' : (factionId === 'blue' ? '#60a5fa' : '#f87171'));
           ctx.beginPath();
-          ctx.arc(-6, -3, 3, 0, Math.PI * 2);
-          ctx.arc(6, -3, 3, 0, Math.PI * 2);
+          ctx.arc(-6.5, -3, 3.5, 0, Math.PI * 2);
+          ctx.arc(6.5, -3, 3.5, 0, Math.PI * 2);
           ctx.fill();
+          ctx.stroke();
+          ctx.restore();
 
-          // 2.3 HELMET & DIVINE CREST (Mũ Giáp, Vương Miện Phượng Hoàng, Sừng Thần Long)
+          // 2.3 HELMET & DIVINE CREST (Mũ Giáp Chiến Binh 3D, Vương Miện Phượng Hoàng, Sừng Thần Long)
+          ctx.save();
           ctx.fillStyle = tier >= 3 ? '#eab308' : (tier === 2 ? '#64748b' : (factionId === 'blue' ? '#1e40af' : '#991b1b'));
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.2;
           ctx.beginPath();
-          ctx.arc(0, -9, 5.5, 0, Math.PI * 2);
+          ctx.arc(0, -9, 5.8, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
 
-          // Glowing Visor / Eyes
+          // Glowing Visor / Eyes (Kính Mắt Năng Lượng 3D Phát Sáng)
           ctx.fillStyle = tier >= 3 ? '#ffffff' : (factionId === 'blue' ? '#67e8f9' : '#fef08a');
-          ctx.fillRect(-2.5, -9.5, 5, 1.8);
+          ctx.shadowColor = ctx.fillStyle;
+          ctx.shadowBlur = 8;
+          ctx.fillRect(-3, -9.5, 6, 2);
 
-          // Crown / Dragon Horns / Feather Crest
+          // Helmet Crest / Dragon Horns / Feather Plume
           if (tier === 5) {
-            // Dragon Horns
+            // Royal Dragon Horns
             ctx.fillStyle = '#fde047';
             ctx.beginPath();
             ctx.moveTo(-3, -13);
-            ctx.lineTo(-6, -18);
+            ctx.lineTo(-7, -20);
             ctx.lineTo(-1, -14);
             ctx.moveTo(3, -13);
-            ctx.lineTo(6, -18);
+            ctx.lineTo(7, -20);
             ctx.lineTo(1, -14);
             ctx.fill();
           } else if (tier >= 3) {
-            // Golden Phoenix Crown
+            // Golden Phoenix Crown Plume
             ctx.fillStyle = '#ef4444';
             ctx.beginPath();
-            ctx.moveTo(0, -17);
-            ctx.lineTo(3, -11);
-            ctx.lineTo(-3, -11);
+            ctx.moveTo(0, -18);
+            ctx.lineTo(3.5, -11);
+            ctx.lineTo(-3.5, -11);
+            ctx.closePath();
+            ctx.fill();
+          } else if (tier === 2) {
+            // Steel Warrior Crest
+            ctx.fillStyle = '#cbd5e1';
+            ctx.beginPath();
+            ctx.moveTo(0, -15);
+            ctx.lineTo(2.5, -11);
+            ctx.lineTo(-2.5, -11);
             ctx.closePath();
             ctx.fill();
           } else {
@@ -849,9 +1012,9 @@ export default function GameChienDau({
             ctx.closePath();
             ctx.fill();
           }
+          ctx.restore();
 
-          // 2.4 WEAPONS & ORBITING QI SWORDS (Thần Binh Ỷ Thiên, Đồ Long & Kiếm Khí Xoay Vòng)
-          ctx.shadowBlur = 0;
+          // 2.4 3D WEAPONS & DIVINE SWORD (Thần Binh Ỷ Thiên, Đồ Long, Khiên Năng Lượng)
           if (factionId === 'blue') {
             // Blue: Azure Dragon Divine Sword & Radiant Shield
             ctx.fillStyle = tier >= 3 ? '#ca8a04' : '#1e3a8a';
@@ -864,10 +1027,10 @@ export default function GameChienDau({
 
             // Radiant Sword Blade
             ctx.strokeStyle = tier >= 4 ? '#38bdf8' : '#ffffff';
-            ctx.lineWidth = tier >= 3 ? 2.8 : 2;
+            ctx.lineWidth = tier >= 3 ? 3 : 2;
             ctx.beginPath();
             ctx.moveTo(4, 2);
-            ctx.lineTo(12 + (tier >= 3 ? 3 : 0), -8 - stride * 2);
+            ctx.lineTo(13 + (tier >= 3 ? 3 : 0), -9 - stride * 2);
             ctx.stroke();
             // Golden Guard
             ctx.strokeStyle = '#fbbf24';
@@ -888,15 +1051,15 @@ export default function GameChienDau({
 
             // Flaming Blade
             ctx.strokeStyle = tier >= 4 ? '#fb7185' : '#ffffff';
-            ctx.lineWidth = tier >= 3 ? 2.8 : 2;
+            ctx.lineWidth = tier >= 3 ? 3 : 2;
             ctx.beginPath();
             ctx.moveTo(-4, 2);
-            ctx.lineTo(-12 - (tier >= 3 ? 3 : 0), -8 + stride * 2);
+            ctx.lineTo(-13 - (tier >= 3 ? 3 : 0), -9 + stride * 2);
             ctx.stroke();
             // Blade Guard
             ctx.fillStyle = '#ef4444';
             ctx.beginPath();
-            ctx.arc(-12 - (tier >= 3 ? 3 : 0), -8 + stride * 2, tier >= 3 ? 4.5 : 3.5, 0, Math.PI * 2);
+            ctx.arc(-13 - (tier >= 3 ? 3 : 0), -9 + stride * 2, tier >= 3 ? 4.5 : 3.5, 0, Math.PI * 2);
             ctx.fill();
           }
 
@@ -905,16 +1068,16 @@ export default function GameChienDau({
             const orbitSwords = tier === 5 ? 4 : 3;
             for (let s = 0; s < orbitSwords; s++) {
               const angle = time * 0.004 + (s * (Math.PI * 2 / orbitSwords));
-              const ox = Math.cos(angle) * 16;
-              const oy = Math.sin(angle) * 10;
+              const ox = Math.cos(angle) * 18;
+              const oy = Math.sin(angle) * 11;
               ctx.save();
               ctx.translate(ox, oy);
               ctx.rotate(angle + Math.PI / 2);
               ctx.strokeStyle = tier === 5 ? '#facc15' : '#38bdf8';
-              ctx.lineWidth = 1.8;
+              ctx.lineWidth = 2;
               ctx.beginPath();
-              ctx.moveTo(0, -6);
-              ctx.lineTo(0, 6);
+              ctx.moveTo(0, -7);
+              ctx.lineTo(0, 7);
               ctx.stroke();
               ctx.restore();
             }
@@ -924,7 +1087,7 @@ export default function GameChienDau({
         });
       });
 
-      // 3. Update & Draw Flying Swords (Tuyệt Kỹ VẠN KIẾM QUY TÔNG)
+      // 3. Update & Draw Flying Swords (Tuyệt Kỹ VẠN KIẾM QUY TÔNG - Khóa Mục Tiêu & Nổ Hào Quang)
       for (let i = engineRef.current.flyingSwords.length - 1; i >= 0; i--) {
         const sw = engineRef.current.flyingSwords[i];
         sw.progress += dt * sw.speed;
@@ -938,38 +1101,38 @@ export default function GameChienDau({
           ctx.translate(curX, curY);
           ctx.rotate(angle);
           ctx.shadowColor = sw.color;
-          ctx.shadowBlur = 12;
+          ctx.shadowBlur = 16;
 
-          // Glowing Sword Trail
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-          ctx.lineWidth = 2.5;
+          // Glowing Sword Laser Body
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+          ctx.lineWidth = 3;
           ctx.beginPath();
-          ctx.moveTo(-18, 0);
-          ctx.lineTo(14, 0);
+          ctx.moveTo(-20, 0);
+          ctx.lineTo(16, 0);
           ctx.stroke();
 
           // Sword Hilt
           ctx.strokeStyle = '#facc15';
-          ctx.lineWidth = 3;
+          ctx.lineWidth = 3.5;
           ctx.beginPath();
-          ctx.moveTo(-12, -4);
-          ctx.lineTo(-12, 4);
+          ctx.moveTo(-14, -4.5);
+          ctx.lineTo(-14, 4.5);
           ctx.stroke();
 
           ctx.restore();
 
-          // On Hit Sparkles
+          // On Hit: Massive 3D Explosion & Lingering Aura
           if (sw.progress >= 1) {
-            for (let p = 0; p < 4; p++) {
+            for (let p = 0; p < 8; p++) {
               engineRef.current.particles.push({
-                x: sw.targetX,
-                y: sw.targetY,
-                vx: (Math.random() - 0.5) * 80,
-                vy: (Math.random() - 0.5) * 80,
-                size: 2.5,
+                x: sw.targetX + (Math.random() - 0.5) * 20,
+                y: sw.targetY + (Math.random() - 0.5) * 20,
+                vx: (Math.random() - 0.5) * 140,
+                vy: (Math.random() - 0.5) * 140,
+                size: 3.5,
                 color: sw.color,
                 isFlash: true,
-                lifespanMs: 400,
+                lifespanMs: 1200,
                 spawnedAt: performance.now()
               });
             }
@@ -982,14 +1145,14 @@ export default function GameChienDau({
       for (let i = engineRef.current.dragonBeasts.length - 1; i >= 0; i--) {
         const dBeast = engineRef.current.dragonBeasts[i];
         const isBlue = dBeast.factionId === 'blue';
-        dBeast.x += (isBlue ? 1 : -1) * 320 * dt;
-        const waveY = Math.sin((dBeast.x / canvas.width) * Math.PI * 4) * 25;
+        dBeast.x += (isBlue ? 1 : -1) * 340 * dt;
+        const waveY = Math.sin((dBeast.x / canvas.width) * Math.PI * 4) * 28;
 
         ctx.save();
         ctx.translate(dBeast.x, dBeast.y + waveY);
-        ctx.scale(isBlue ? 2.8 : -2.8, 2.8);
+        ctx.scale(isBlue ? 3.0 : -3.0, 3.0);
         ctx.shadowColor = '#facc15';
-        ctx.shadowBlur = 28;
+        ctx.shadowBlur = 32;
 
         // Golden Dragon Head & Body
         ctx.fillStyle = '#facc15';

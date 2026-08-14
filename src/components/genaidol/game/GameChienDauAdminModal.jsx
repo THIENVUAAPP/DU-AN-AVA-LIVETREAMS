@@ -418,10 +418,149 @@ export default function GameChienDauAdminModal({
                         )}
                       </div>
 
+                      {/* 5-TIER 3D ARMOR & CHARACTER EQUIPMENT TEST CONTROLS */}
+                      <div className="p-3.5 bg-gradient-to-br from-amber-950/30 to-yellow-950/30 border border-amber-500/40 rounded-xl space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-xs font-bold text-amber-300 uppercase flex items-center gap-1.5">
+                            <Shield size={13} className="text-amber-400" /> Thử Nghiệm Trang Bị & Nhân Vật 3D (5 Cấp Bậc)
+                          </h4>
+                          <span className="text-[9px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">
+                            Bấm để trang bị trực tiếp
+                          </span>
+                        </div>
+                        
+                        <div className="space-y-1.5">
+                          {/* Tier 1 */}
+                          <div className="flex items-center justify-between p-2 bg-black/40 border border-white/5 rounded-lg text-xs">
+                            <div className="flex items-center gap-1.5">
+                              <span>⚔️</span>
+                              <div>
+                                <span className="font-bold text-gray-200">Cấp 1: Tân Binh Hiệp Khách 3D</span>
+                                <p className="text-[9px] text-gray-400">Áo hiệp khách + Thanh kiếm thép</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('TEST_TIER_1_BLUE')}
+                                className="px-2 py-1 bg-blue-600/30 hover:bg-blue-600/50 text-blue-200 border border-blue-500/30 rounded text-[10px] font-bold"
+                              >
+                                Test Xanh
+                              </button>
+                              <button
+                                onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('TEST_TIER_1_RED')}
+                                className="px-2 py-1 bg-red-600/30 hover:bg-red-600/50 text-red-200 border border-red-500/30 rounded text-[10px] font-bold"
+                              >
+                                Test Đỏ
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Tier 2 */}
+                          <div className="flex items-center justify-between p-2 bg-black/40 border border-white/5 rounded-lg text-xs">
+                            <div className="flex items-center gap-1.5">
+                              <span>🛡️</span>
+                              <div>
+                                <span className="font-bold text-slate-200">Cấp 2: Thiết Giáp Kiếm Hiệp 3D</span>
+                                <p className="text-[9px] text-slate-400">Áo Giáp Bạc (Steel Plate) + Mũ Giáp Sắt</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('TEST_TIER_2_BLUE')}
+                                className="px-2 py-1 bg-blue-600/30 hover:bg-blue-600/50 text-blue-200 border border-blue-500/30 rounded text-[10px] font-bold"
+                              >
+                                Test Xanh
+                              </button>
+                              <button
+                                onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('TEST_TIER_2_RED')}
+                                className="px-2 py-1 bg-red-600/30 hover:bg-red-600/50 text-red-200 border border-red-500/30 rounded text-[10px] font-bold"
+                              >
+                                Test Đỏ
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Tier 3 */}
+                          <div className="flex items-center justify-between p-2 bg-amber-950/20 border border-amber-500/20 rounded-lg text-xs">
+                            <div className="flex items-center gap-1.5">
+                              <span>👑</span>
+                              <div>
+                                <span className="font-bold text-yellow-300">Cấp 3: Kim Khải Thần Tướng 3D</span>
+                                <p className="text-[9px] text-yellow-400/80">Áo Giáp Hoàng Kim + Cặp Cánh Vàng Phát Sáng</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('TEST_TIER_3_BLUE')}
+                                className="px-2 py-1 bg-blue-600/40 hover:bg-blue-600/60 text-blue-100 border border-blue-400/40 rounded text-[10px] font-bold"
+                              >
+                                Test Xanh
+                              </button>
+                              <button
+                                onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('TEST_TIER_3_RED')}
+                                className="px-2 py-1 bg-red-600/40 hover:bg-red-600/60 text-red-100 border border-red-400/40 rounded text-[10px] font-bold"
+                              >
+                                Test Đỏ
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Tier 4 */}
+                          <div className="flex items-center justify-between p-2 bg-sky-950/20 border border-sky-500/20 rounded-lg text-xs">
+                            <div className="flex items-center gap-1.5">
+                              <span>⚡</span>
+                              <div>
+                                <span className="font-bold text-sky-300">Cấp 4: Chiến Thần Vạn Kiếm 3D</span>
+                                <p className="text-[9px] text-sky-400/80">3 Phi Kiếm Hộ Thể + Trận Đồ Bát Quái Xoay Dưới Chân</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('TEST_TIER_4_BLUE')}
+                                className="px-2 py-1 bg-sky-600/40 hover:bg-sky-600/60 text-sky-100 border border-sky-400/40 rounded text-[10px] font-bold"
+                              >
+                                Test Xanh
+                              </button>
+                              <button
+                                onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('TEST_TIER_4_RED')}
+                                className="px-2 py-1 bg-rose-600/40 hover:bg-rose-600/60 text-rose-100 border border-rose-400/40 rounded text-[10px] font-bold"
+                              >
+                                Test Đỏ
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Tier 5 */}
+                          <div className="flex items-center justify-between p-2 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-yellow-400/40 rounded-lg text-xs">
+                            <div className="flex items-center gap-1.5">
+                              <span>🐉</span>
+                              <div>
+                                <span className="font-black text-amber-300">Cấp 5: Chí Tôn Thiên Tôn 3D</span>
+                                <p className="text-[9px] text-amber-200">Hào Quang Hoàng Kim + Sừng Rồng + Khí Rồng Vây Quanh</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('TEST_TIER_5_BLUE')}
+                                className="px-2.5 py-1 bg-yellow-500 hover:bg-yellow-400 text-black rounded text-[10px] font-black shadow-md shadow-yellow-500/30"
+                              >
+                                Test Xanh
+                              </button>
+                              <button
+                                onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('TEST_TIER_5_RED')}
+                                className="px-2.5 py-1 bg-yellow-500 hover:bg-yellow-400 text-black rounded text-[10px] font-black shadow-md shadow-yellow-500/30"
+                              >
+                                Test Đỏ
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
                       {/* WUXIA SKILL CONTROLS */}
                       <div className="p-3.5 bg-gradient-to-br from-indigo-950/30 to-purple-950/30 border border-indigo-500/30 rounded-xl space-y-2.5">
                         <h4 className="text-xs font-bold text-indigo-300 uppercase flex items-center gap-1.5">
-                          <Zap size={13} /> Thử Nghiệm Tuyệt Kỹ Kiếm Hiệp & Nâng Cấp Trang Bị
+                          <Zap size={13} /> Thử Nghiệm Tuyệt Kỹ Kiếm Hiệp (Khóa Mục Tiêu & Nổ Hào Quang)
                         </h4>
                         <div className="grid grid-cols-2 gap-2">
                           <button
@@ -429,14 +568,14 @@ export default function GameChienDauAdminModal({
                             className="py-2 px-2.5 bg-sky-600/20 hover:bg-sky-600/40 text-sky-300 border border-sky-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
                           >
                             <span>⚔️ Vạn Kiếm (Xanh)</span>
-                            <span className="text-[9px] bg-sky-500/30 px-1 py-0.5 rounded text-sky-200">+150 HP</span>
+                            <span className="text-[9px] bg-sky-500/30 px-1 py-0.5 rounded text-sky-200">Khóa mục tiêu</span>
                           </button>
                           <button
                             onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('TRIGGER_VAN_KIEM_RED')}
                             className="py-2 px-2.5 bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
                           >
                             <span>⚔️ Vạn Kiếm (Đỏ)</span>
-                            <span className="text-[9px] bg-rose-500/30 px-1 py-0.5 rounded text-rose-200">+150 HP</span>
+                            <span className="text-[9px] bg-rose-500/30 px-1 py-0.5 rounded text-rose-200">Khóa mục tiêu</span>
                           </button>
 
                           <button
@@ -467,21 +606,6 @@ export default function GameChienDauAdminModal({
                           >
                             <span>☯️ Thái Cực Trận (Đỏ)</span>
                             <span className="text-[9px] bg-pink-500/30 px-1 py-0.5 rounded text-pink-200">Hộ thân</span>
-                          </button>
-
-                          <button
-                            onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('UPGRADE_HERO_BLUE')}
-                            className="py-2 px-2.5 bg-yellow-600/30 hover:bg-yellow-600/50 text-yellow-200 border border-yellow-400/40 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
-                          >
-                            <span>👑 Nâng Cấp Giáp Vàng (Xanh)</span>
-                            <span className="text-[9px] bg-yellow-500/40 px-1 py-0.5 rounded text-yellow-100">+250 HP</span>
-                          </button>
-                          <button
-                            onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('UPGRADE_HERO_RED')}
-                            className="py-2 px-2.5 bg-yellow-600/30 hover:bg-yellow-600/50 text-yellow-200 border border-yellow-400/40 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
-                          >
-                            <span>👑 Nâng Cấp Giáp Vàng (Đỏ)</span>
-                            <span className="text-[9px] bg-yellow-500/40 px-1 py-0.5 rounded text-yellow-100">+250 HP</span>
                           </button>
                         </div>
                       </div>

@@ -1496,10 +1496,26 @@ export default function DesktopAppUI() {
             setLastGameEvent({ type: 'TRIGGER_THAI_CUC', data: { nickname: randName, faction: 'blue' }, timestamp: t });
           } else if (action === 'TRIGGER_THAI_CUC_RED') {
             setLastGameEvent({ type: 'TRIGGER_THAI_CUC', data: { nickname: randName, faction: 'red' }, timestamp: t });
-          } else if (action === 'UPGRADE_HERO_BLUE') {
+          } else if (action === 'TEST_TIER_1_BLUE') {
+            setLastGameEvent({ type: 'UPGRADE_HERO', data: { nickname: randName, faction: 'blue', tier: 1 }, timestamp: t });
+          } else if (action === 'TEST_TIER_1_RED') {
+            setLastGameEvent({ type: 'UPGRADE_HERO', data: { nickname: randName, faction: 'red', tier: 1 }, timestamp: t });
+          } else if (action === 'TEST_TIER_2_BLUE') {
+            setLastGameEvent({ type: 'UPGRADE_HERO', data: { nickname: randName, faction: 'blue', tier: 2 }, timestamp: t });
+          } else if (action === 'TEST_TIER_2_RED') {
+            setLastGameEvent({ type: 'UPGRADE_HERO', data: { nickname: randName, faction: 'red', tier: 2 }, timestamp: t });
+          } else if (action === 'TEST_TIER_3_BLUE' || action === 'UPGRADE_HERO_BLUE') {
             setLastGameEvent({ type: 'UPGRADE_HERO', data: { nickname: randName, faction: 'blue', tier: 3 }, timestamp: t });
-          } else if (action === 'UPGRADE_HERO_RED') {
+          } else if (action === 'TEST_TIER_3_RED' || action === 'UPGRADE_HERO_RED') {
             setLastGameEvent({ type: 'UPGRADE_HERO', data: { nickname: randName, faction: 'red', tier: 3 }, timestamp: t });
+          } else if (action === 'TEST_TIER_4_BLUE') {
+            setLastGameEvent({ type: 'UPGRADE_HERO', data: { nickname: randName, faction: 'blue', tier: 4 }, timestamp: t });
+          } else if (action === 'TEST_TIER_4_RED') {
+            setLastGameEvent({ type: 'UPGRADE_HERO', data: { nickname: randName, faction: 'red', tier: 4 }, timestamp: t });
+          } else if (action === 'TEST_TIER_5_BLUE') {
+            setLastGameEvent({ type: 'UPGRADE_HERO', data: { nickname: randName, faction: 'blue', tier: 5 }, timestamp: t });
+          } else if (action === 'TEST_TIER_5_RED') {
+            setLastGameEvent({ type: 'UPGRADE_HERO', data: { nickname: randName, faction: 'red', tier: 5 }, timestamp: t });
           } else if (action === 'TRIGGER_AOE_BLUE') {
             setLastGameEvent({ type: 'GIFT', data: { nickname: randName, diamondCount: 300, faction: 'blue' }, timestamp: t });
           } else if (action === 'TRIGGER_AOE_RED') {
