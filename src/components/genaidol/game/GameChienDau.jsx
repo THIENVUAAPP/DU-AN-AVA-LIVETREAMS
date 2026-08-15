@@ -168,73 +168,121 @@ export default function GameChienDau({
     else if (type === 'level_up') battleAudio.playLevelUp(vol);
   }, [config.soundEnabled, config.sfxVolume, soundMuted]);
 
-  // Recalculate formation slots with 2-Tier Arena Architecture:
-  // 1) Upper VIP Champions Circular Dais Rings (Ảnh 3): Tier 3, 4, 5 stand strictly on the top glowing dais rings (y = h * 0.17).
-  // 2) Lower Regular Army Anti-Clump Staggered Formation (Ảnh 2): Clear lane separation with 96px center clearance and checkerboard columns.
-  // 3) Dead Fighters: Disappear immediately upon death (no shadow or ghost).
+  // Recalculate formation slots with Distributed 1v1 Full-Screen Arena Architecture:
+  // 1) Upper VIP Champions Grand Dais Rings: Tier 3, 4, 5 & Gifted giants stand on glowing circular dais rings (daisY = h * 0.28).
+  // 2) Distributed 1v1 Regular Army Pair-Duels: Each Blue vs Red pair is assigned an independent duel spot distributed across the ENTIRE battlefield.
+  // 3) Unpaired Reinforcements: Stand in ready martial formations on their faction side until an opponent joins.
+  // 4) Dead Fighters: Disappear immediately upon knockout.
   const updateFormation = useCallback((canvasWidth, canvasHeight) => {
     const centerX = canvasWidth / 2;
-    const vipStageY = canvasHeight * 0.17; // Top circular dais height
-    const duelStartY = canvasHeight * 0.38; // Lower troops battlefield
+    const daisY = canvasHeight * 0.28; // Grand dais rings height (lowered down for optimal viewing)
 
-    ['blue', 'red'].forEach(factionId => {
-      const dir = factionId === 'blue' ? -1 : 1;
-      const list = engineRef.current.fighters[factionId];
-      if (!list || list.length === 0) return;
+    const listBlue = engineRef.current.fighters.blue || [];
+    const listRed = engineRef.current.fighters.red || [];
 
-      // Classify VIPs vs Regular Troops (Skip dead fighters immediately)
-      const vips = [];
-      const activeRegulars = [];
+    const activeBlue = listBlue.filter(f => !f.isKnockedOut);
+    const activeRed = listRed.filter(f => !f.isKnockedOut);
 
-      list.forEach((f, idx) => {
-        f.rank = idx;
-        const tier = f.score >= 5000 ? 5 : f.score >= 2000 ? 4 : f.score >= 500 ? 3 : f.score >= 100 ? 2 : 1;
-        if (f.isKnockedOut) {
-          return;
-        }
-        // VIPs are champions that received gifts (Tier >= 3 / score >= 500)
-        if (tier >= 3) {
-          vips.push(f);
-        } else {
-          activeRegulars.push(f);
-        }
-      });
+    const isVipFighter = (f) => {
+      const tier = f.score >= 5000 ? 5 : f.score >= 2000 ? 4 : f.score >= 500 ? 3 : f.score >= 100 ? 2 : 1;
+      return tier >= 3 || f.isSuperVip;
+    };
 
-      // 1. Position VIP Champions Directly on the Upper Dais Rings (Ô vòng tròn trên - Ảnh 3)
-      // Blue VIPs placed in Blue ring (centerX - 130), Red VIPs in Red ring (centerX + 130)
-      const daisCenterX = centerX + dir * 130;
-      const vipStepX = 58;
+    // 1. Separate VIPs vs Regular Troops
+    const blueVips = activeBlue.filter(f => isVipFighter(f));
+    const redVips = activeRed.filter(f => isVipFighter(f));
+    const blueRegulars = activeBlue.filter(f => !isVipFighter(f));
+    const redRegulars = activeRed.filter(f => !isVipFighter(f));
 
-      vips.forEach((f, vIdx) => {
-        f.isVipStage = true;
-        f.duelLane = -1;
-        f.isDuelFront = true;
-        // Primary VIP at dais center, additional VIPs spaced outward
-        f.targetX = daisCenterX + dir * (vIdx * vipStepX);
-        f.targetY = vipStageY;
-      });
-
-      // 2. Position Regular Troops into Anti-Clumping Formation (Dàn hàng rõ ràng - Ảnh 2)
-      // Frontline duelists stand at centerX ± 48 (96px center clearance)
-      // Backline columns are staggered in a checkerboard matrix to prevent any overlapping
-      const duelRowGap = 52;
-      const colBackStep = 52;
-      const lanesCount = 6;
-
-      activeRegulars.forEach((f, rIdx) => {
-        const lane = rIdx % lanesCount;
-        const col = Math.floor(rIdx / lanesCount);
-        f.isVipStage = false;
-        f.duelLane = lane;
-        f.isDuelFront = (col === 0);
-        
-        // Stagger odd columns vertically by half a row for checkerboard visibility
-        const rowYOffset = (col % 2 === 1) ? 26 : 0;
-
-        f.targetX = centerX + dir * (48 + col * colBackStep);
-        f.targetY = duelStartY + lane * duelRowGap + rowYOffset;
-      });
+    // 2. Position VIP Champions strictly on their Grand Dais Rings (daisY = h * 0.28)
+    const daisSpacingX = 54;
+    blueVips.forEach((f, vIdx) => {
+      f.isVipStage = true;
+      f.isDuelFront = true;
+      f.duelPairIdx = -1;
+      f.targetX = centerX - 135 - (vIdx * daisSpacingX);
+      f.targetY = daisY;
     });
+
+    redVips.forEach((f, vIdx) => {
+      f.isVipStage = true;
+      f.isDuelFront = true;
+      f.duelPairIdx = -1;
+      f.targetX = centerX + 135 + (vIdx * daisSpacingX);
+      f.targetY = daisY;
+    });
+
+    // 3. Distributed 1v1 Duel Spot Generator across the ENTIRE Battlefield Area
+    const getDuelSpot = (pairIdx) => {
+      const spots = [
+        { x: canvasWidth * 0.50, y: canvasHeight * 0.52 }, // Center duel 0
+        { x: canvasWidth * 0.26, y: canvasHeight * 0.58 }, // Left duel 1
+        { x: canvasWidth * 0.74, y: canvasHeight * 0.58 }, // Right duel 2
+        { x: canvasWidth * 0.38, y: canvasHeight * 0.72 }, // Mid-left duel 3
+        { x: canvasWidth * 0.62, y: canvasHeight * 0.72 }, // Mid-right duel 4
+        { x: canvasWidth * 0.18, y: canvasHeight * 0.82 }, // Bottom-left duel 5
+        { x: canvasWidth * 0.82, y: canvasHeight * 0.82 }, // Bottom-right duel 6
+        { x: canvasWidth * 0.50, y: canvasHeight * 0.86 }, // Bottom-center duel 7
+        { x: canvasWidth * 0.18, y: canvasHeight * 0.44 }, // Top-left duel 8
+        { x: canvasWidth * 0.82, y: canvasHeight * 0.44 }, // Top-right duel 9
+        { x: canvasWidth * 0.36, y: canvasHeight * 0.43 }, // Mid-top-left duel 10
+        { x: canvasWidth * 0.64, y: canvasHeight * 0.43 }, // Mid-top-right duel 11
+      ];
+      if (pairIdx < spots.length) return spots[pairIdx];
+      const col = pairIdx % 4;
+      const row = Math.floor(pairIdx / 4);
+      return {
+        x: canvasWidth * (0.16 + col * 0.23),
+        y: canvasHeight * (0.44 + (row % 4) * 0.13)
+      };
+    };
+
+    const pairCount = Math.min(blueRegulars.length, redRegulars.length);
+
+    // Pair up 1v1 Duels
+    for (let p = 0; p < pairCount; p++) {
+      const spot = getDuelSpot(p);
+      const bFighter = blueRegulars[p];
+      const rFighter = redRegulars[p];
+
+      bFighter.isVipStage = false;
+      bFighter.isDuelFront = true;
+      bFighter.duelPairIdx = p;
+      bFighter.duelSpotX = spot.x;
+      bFighter.duelSpotY = spot.y;
+      bFighter.targetX = spot.x - 30;
+      bFighter.targetY = spot.y;
+
+      rFighter.isVipStage = false;
+      rFighter.isDuelFront = true;
+      rFighter.duelPairIdx = p;
+      rFighter.duelSpotX = spot.x;
+      rFighter.duelSpotY = spot.y;
+      rFighter.targetX = spot.x + 30;
+      rFighter.targetY = spot.y;
+    }
+
+    // Unpaired Blue fighters (ready/patrol formation on left zone)
+    for (let u = pairCount; u < blueRegulars.length; u++) {
+      const uFighter = blueRegulars[u];
+      const uIdx = u - pairCount;
+      uFighter.isVipStage = false;
+      uFighter.isDuelFront = false;
+      uFighter.duelPairIdx = -1;
+      uFighter.targetX = canvasWidth * (0.14 + (uIdx % 2) * 0.10);
+      uFighter.targetY = canvasHeight * (0.48 + Math.floor(uIdx / 2) * 0.14);
+    }
+
+    // Unpaired Red fighters (ready/patrol formation on right zone)
+    for (let u = pairCount; u < redRegulars.length; u++) {
+      const uFighter = redRegulars[u];
+      const uIdx = u - pairCount;
+      uFighter.isVipStage = false;
+      uFighter.isDuelFront = false;
+      uFighter.duelPairIdx = -1;
+      uFighter.targetX = canvasWidth * (0.86 - (uIdx % 2) * 0.10);
+      uFighter.targetY = canvasHeight * (0.48 + Math.floor(uIdx / 2) * 0.14);
+    }
   }, []);
 
   // Action Dispatchers: Add / Update / Revive Fighters
@@ -807,67 +855,67 @@ export default function GameChienDau({
       ctx.fillStyle = redBaseGrad;
       ctx.fillRect(centerX, h * 0.35, centerX, h * 0.65);
 
-      // Upper VIP Champions Circular Dais Rings (Ô Vòng Tròn Thư Hùng Đỉnh Cao cho Tướng VIP - Ảnh 3)
+      // Upper VIP Champions Circular Dais Rings (Ô Vòng Tròn Thư Hùng Đỉnh Cao cho Tướng VIP)
       ctx.save();
-      const daisY = h * 0.17;
+      const daisY = h * 0.28;
       
       // Blue VIP Circular Dais
       ctx.beginPath();
-      ctx.ellipse(centerX - 130, daisY, 85, 24, 0, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(56, 189, 248, 0.2)';
+      ctx.ellipse(centerX - 135, daisY, 85, 24, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.22)';
       ctx.fill();
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.75)';
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.85)';
       ctx.lineWidth = 2.5;
       ctx.shadowColor = '#38bdf8';
-      ctx.shadowBlur = 16;
+      ctx.shadowBlur = 18;
       ctx.stroke();
 
       // Inner Blue Dais Runic Ring
       ctx.beginPath();
-      ctx.ellipse(centerX - 130, daisY, 60, 16, 0, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(186, 230, 253, 0.45)';
-      ctx.lineWidth = 1;
+      ctx.ellipse(centerX - 135, daisY, 60, 16, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(186, 230, 253, 0.55)';
+      ctx.lineWidth = 1.2;
       ctx.stroke();
 
       // Red VIP Circular Dais
       ctx.beginPath();
-      ctx.ellipse(centerX + 130, daisY, 85, 24, 0, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(244, 63, 94, 0.2)';
+      ctx.ellipse(centerX + 135, daisY, 85, 24, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(244, 63, 94, 0.22)';
       ctx.fill();
-      ctx.strokeStyle = 'rgba(244, 63, 94, 0.75)';
+      ctx.strokeStyle = 'rgba(244, 63, 94, 0.85)';
       ctx.lineWidth = 2.5;
       ctx.shadowColor = '#f43f5e';
-      ctx.shadowBlur = 16;
+      ctx.shadowBlur = 18;
       ctx.stroke();
 
       // Inner Red Dais Runic Ring
       ctx.beginPath();
-      ctx.ellipse(centerX + 130, daisY, 60, 16, 0, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(254, 205, 211, 0.45)';
-      ctx.lineWidth = 1;
+      ctx.ellipse(centerX + 135, daisY, 60, 16, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(254, 205, 211, 0.55)';
+      ctx.lineWidth = 1.2;
       ctx.stroke();
       ctx.restore();
 
-      // 2. Update & Draw Fighters (Chiến binh Kiếm Hiệp 3D: Tướng VIP trên vòng tròn + Song đấu 1v1 cận chiến bên dưới)
+      // 2. Update & Draw Fighters (Chiến binh Kiếm Hiệp 3D: Tướng VIP trên vòng tròn + Song đấu 1v1 phân bố toàn màn hình)
       const lerpFactor = Math.min(1, dt * 5);
       
-      // Real-time Active 1v1 Pair-Duels Sword Clashing across all active rows
+      // Real-time Active 1v1 Pair-Duels Sword Clashing across all distributed duel spots
       const activeBlue = engineRef.current.fighters.blue.filter(f => !f.isKnockedOut);
       const activeRed = engineRef.current.fighters.red.filter(f => !f.isKnockedOut);
-      const activeDuelLanes = Math.min(
-        activeBlue.filter(f => !f.isVipStage).length,
-        activeRed.filter(f => !f.isVipStage).length
-      );
-      const duelStartY = h * 0.38;
-      const duelRowGap = 52;
+      const blueRegulars = activeBlue.filter(f => !f.isVipStage);
+      const redRegulars = activeRed.filter(f => !f.isVipStage);
+      const pairCount = Math.min(blueRegulars.length, redRegulars.length);
 
-      // Spawn sparks for active dueling pairs
-      if (activeDuelLanes > 0 && Math.random() < 0.6) {
-        const randomLane = Math.floor(Math.random() * Math.min(activeDuelLanes, 6));
-        const clashY = duelStartY + randomLane * duelRowGap;
+      // Spawn sparks for active dueling pairs across the screen
+      if (pairCount > 0 && Math.random() < 0.65) {
+        const randPair = Math.floor(Math.random() * pairCount);
+        const fPair = blueRegulars[randPair];
+        const clashX = fPair.duelSpotX || (fPair.x + 30);
+        const clashY = fPair.duelSpotY || fPair.y;
+
         for (let sp = 0; sp < 3; sp++) {
           engineRef.current.particles.push({
-            x: centerX + (Math.random() - 0.5) * 16,
+            x: clashX + (Math.random() - 0.5) * 16,
             y: clashY + (Math.random() - 0.5) * 18,
             vx: (Math.random() - 0.5) * 110,
             vy: (Math.random() - 0.5) * 90 - 20,
@@ -879,7 +927,7 @@ export default function GameChienDau({
           });
         }
 
-        if (time - (engineRef.current.lastClashSoundTime || 0) > 900) {
+        if (time - (engineRef.current.lastClashSoundTime || 0) > 850) {
           engineRef.current.lastClashSoundTime = time;
           playSfx('hit');
         }
@@ -887,7 +935,7 @@ export default function GameChienDau({
 
       // Also VIP clash sparks between top rings
       const hasVipDuel = activeBlue.some(f => f.isVipStage) && activeRed.some(f => f.isVipStage);
-      if (hasVipDuel && Math.random() < 0.3) {
+      if (hasVipDuel && Math.random() < 0.35) {
         engineRef.current.particles.push({
           x: centerX + (Math.random() - 0.5) * 40,
           y: daisY + (Math.random() - 0.5) * 20,
@@ -1086,6 +1134,9 @@ export default function GameChienDau({
         const fighterGender = f.gender || (f.rank % 2 === 0 ? 'male' : 'female');
         
         let animState = SKELETON_STATES.WALK;
+        const distToTarget = Math.hypot(f.targetX - f.x, f.targetY - f.y);
+        const isArrived = distToTarget < 20;
+
         if (f.isKnockedOut) {
           animState = SKELETON_STATES.DEFEATED;
         } else if (f.revivedAt && (performance.now() - f.revivedAt < 1800)) {
@@ -1094,17 +1145,31 @@ export default function GameChienDau({
           animState = SKELETON_STATES.DANCE;
         } else if (isPulsing) {
           animState = (tier >= 4 || isTopRank) ? SKELETON_STATES.ATTACK_SPIN : SKELETON_STATES.ATTACK_SLASH;
-        } else if (f.isDuelFront || f.isVipStage) {
-          // Dynamic combat rhythm per lane: alternating heavy slashes, whirlwind strikes, and martial stances
-          const laneOffset = (f.duelLane >= 0 ? f.duelLane : 3) * 1.4;
-          const combatCycle = ((time * 0.0022) + laneOffset) % 3.0;
-          if (combatCycle < 1.4) {
-            animState = SKELETON_STATES.ATTACK_SLASH;
-          } else if (combatCycle < 2.1 && (tier >= 2 || f.isVipStage)) {
-            animState = SKELETON_STATES.ATTACK_SPIN;
+        } else if (f.isVipStage) {
+          if (hasVipDuel) {
+            const combatCycle = (time * 0.0025 + (f.rank || 0) * 1.2) % 3.0;
+            animState = combatCycle < 1.6 ? SKELETON_STATES.ATTACK_SLASH : SKELETON_STATES.ATTACK_SPIN;
+          } else {
+            // VIP stands proudly on the dais waiting for a challenger
+            animState = isArrived ? SKELETON_STATES.IDLE : SKELETON_STATES.WALK;
+          }
+        } else if (f.isDuelFront && f.duelPairIdx !== undefined && f.duelPairIdx >= 0) {
+          if (isArrived) {
+            const pairOffset = (f.duelPairIdx || 0) * 1.6;
+            const combatCycle = ((time * 0.0024) + pairOffset) % 3.2;
+            if (combatCycle < 1.5) {
+              animState = SKELETON_STATES.ATTACK_SLASH;
+            } else if (combatCycle < 2.3 && tier >= 2) {
+              animState = SKELETON_STATES.ATTACK_SPIN;
+            } else {
+              animState = SKELETON_STATES.IDLE;
+            }
           } else {
             animState = SKELETON_STATES.WALK;
           }
+        } else {
+          // Unpaired fighters waiting in ready martial stance
+          animState = isArrived ? SKELETON_STATES.IDLE : SKELETON_STATES.WALK;
         }
 
         const skeletonData = computeSkeletalJoints({
