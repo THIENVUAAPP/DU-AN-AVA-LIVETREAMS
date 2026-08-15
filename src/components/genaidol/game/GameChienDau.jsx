@@ -169,13 +169,13 @@ export default function GameChienDau({
   }, [config.soundEnabled, config.sfxVolume, soundMuted]);
 
   // Recalculate formation slots with 2-Tier Arena Architecture:
-  // 1) Upper VIP Champions Dais Rings: Tier 3, 4, 5 stand on the top circular rings (y = h * 0.20).
-  // 2) Lower Regular Army 1v1 Pair-Duels: Tier 1, 2 troops scaled x2 (~1.15 - 1.35) paired directly opposite at center line (centerX ± 24).
+  // 1) Upper VIP Champions Circular Dais Rings (Ảnh 3): Tier 3, 4, 5 stand strictly on the top glowing dais rings (y = h * 0.17).
+  // 2) Lower Regular Army Anti-Clump Staggered Formation (Ảnh 2): Clear lane separation with 96px center clearance and checkerboard columns.
   // 3) Dead Fighters: Disappear immediately upon death (no shadow or ghost).
   const updateFormation = useCallback((canvasWidth, canvasHeight) => {
     const centerX = canvasWidth / 2;
-    const vipStageY = canvasHeight * 0.20; // Exact top circular dais height
-    const duelStartY = canvasHeight * 0.38; // Lower 1v1 pair duels battlefield
+    const vipStageY = canvasHeight * 0.17; // Top circular dais height
+    const duelStartY = canvasHeight * 0.38; // Lower troops battlefield
 
     ['blue', 'red'].forEach(factionId => {
       const dir = factionId === 'blue' ? -1 : 1;
@@ -190,43 +190,49 @@ export default function GameChienDau({
         f.rank = idx;
         const tier = f.score >= 5000 ? 5 : f.score >= 2000 ? 4 : f.score >= 500 ? 3 : f.score >= 100 ? 2 : 1;
         if (f.isKnockedOut) {
-          // Dead character vanishes immediately
           return;
         }
-        if (tier >= 3 || idx === 0) {
+        // VIPs are champions that received gifts (Tier >= 3 / score >= 500)
+        if (tier >= 3) {
           vips.push(f);
         } else {
           activeRegulars.push(f);
         }
       });
 
-      // 1. Position VIP Champions Directly on the Upper Dais Rings (Ô vòng tròn trên)
-      const vipStepX = 80;
-      const vipFrontGap = 100;
+      // 1. Position VIP Champions Directly on the Upper Dais Rings (Ô vòng tròn trên - Ảnh 3)
+      // Blue VIPs placed in Blue ring (centerX - 130), Red VIPs in Red ring (centerX + 130)
+      const daisCenterX = centerX + dir * 130;
+      const vipStepX = 58;
 
       vips.forEach((f, vIdx) => {
-        const vRow = vIdx % 2;
-        const vCol = Math.floor(vIdx / 2);
         f.isVipStage = true;
         f.duelLane = -1;
         f.isDuelFront = true;
-        f.targetX = centerX + dir * (vipFrontGap + vCol * vipStepX);
-        f.targetY = vipStageY + (vRow === 0 ? 0 : 25);
+        // Primary VIP at dais center, additional VIPs spaced outward
+        f.targetX = daisCenterX + dir * (vIdx * vipStepX);
+        f.targetY = vipStageY;
       });
 
-      // 2. Position Regular Troops into 1v1 Pair-Duels Formation (Đấu đôi 2 bên đứng cạnh nhau ở giữa)
-      // Primary duelists in col 0 stand at (centerX - 24) and (centerX + 24) - only 48px apart!
-      const duelRowGap = 58;
-      const colBackStep = 45;
+      // 2. Position Regular Troops into Anti-Clumping Formation (Dàn hàng rõ ràng - Ảnh 2)
+      // Frontline duelists stand at centerX ± 48 (96px center clearance)
+      // Backline columns are staggered in a checkerboard matrix to prevent any overlapping
+      const duelRowGap = 52;
+      const colBackStep = 52;
+      const lanesCount = 6;
 
       activeRegulars.forEach((f, rIdx) => {
-        const lane = rIdx % 7;
-        const col = Math.floor(rIdx / 7);
+        const lane = rIdx % lanesCount;
+        const col = Math.floor(rIdx / lanesCount);
         f.isVipStage = false;
         f.duelLane = lane;
         f.isDuelFront = (col === 0);
-        f.targetX = centerX + dir * (24 + col * colBackStep);
-        f.targetY = duelStartY + lane * duelRowGap;
+        
+        // Stagger odd columns vertically by half a row for checkerboard visibility
+        const rowYOffset = (col % 2 === 1) ? 26 : 0;
+
+        f.targetX = centerX + dir * (48 + col * colBackStep);
+        f.targetY = duelStartY + lane * duelRowGap + rowYOffset;
       });
     });
   }, []);
@@ -801,28 +807,44 @@ export default function GameChienDau({
       ctx.fillStyle = redBaseGrad;
       ctx.fillRect(centerX, h * 0.35, centerX, h * 0.65);
 
-      // Upper VIP Champions Circular Dais Rings (Ô Vòng Tròn Thư Hùng Đỉnh Cao cho Tướng VIP)
+      // Upper VIP Champions Circular Dais Rings (Ô Vòng Tròn Thư Hùng Đỉnh Cao cho Tướng VIP - Ảnh 3)
       ctx.save();
+      const daisY = h * 0.17;
+      
       // Blue VIP Circular Dais
       ctx.beginPath();
-      ctx.ellipse(centerX - 100, h * 0.20, 80, 22, 0, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(56, 189, 248, 0.18)';
+      ctx.ellipse(centerX - 130, daisY, 85, 24, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.2)';
       ctx.fill();
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.65)';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.75)';
+      ctx.lineWidth = 2.5;
       ctx.shadowColor = '#38bdf8';
-      ctx.shadowBlur = 12;
+      ctx.shadowBlur = 16;
+      ctx.stroke();
+
+      // Inner Blue Dais Runic Ring
+      ctx.beginPath();
+      ctx.ellipse(centerX - 130, daisY, 60, 16, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(186, 230, 253, 0.45)';
+      ctx.lineWidth = 1;
       ctx.stroke();
 
       // Red VIP Circular Dais
       ctx.beginPath();
-      ctx.ellipse(centerX + 100, h * 0.20, 80, 22, 0, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(244, 63, 94, 0.18)';
+      ctx.ellipse(centerX + 130, daisY, 85, 24, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(244, 63, 94, 0.2)';
       ctx.fill();
-      ctx.strokeStyle = 'rgba(244, 63, 94, 0.65)';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(244, 63, 94, 0.75)';
+      ctx.lineWidth = 2.5;
       ctx.shadowColor = '#f43f5e';
-      ctx.shadowBlur = 12;
+      ctx.shadowBlur = 16;
+      ctx.stroke();
+
+      // Inner Red Dais Runic Ring
+      ctx.beginPath();
+      ctx.ellipse(centerX + 130, daisY, 60, 16, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(254, 205, 211, 0.45)';
+      ctx.lineWidth = 1;
       ctx.stroke();
       ctx.restore();
 
@@ -837,11 +859,11 @@ export default function GameChienDau({
         activeRed.filter(f => !f.isVipStage).length
       );
       const duelStartY = h * 0.38;
-      const duelRowGap = 58;
+      const duelRowGap = 52;
 
       // Spawn sparks for active dueling pairs
       if (activeDuelLanes > 0 && Math.random() < 0.6) {
-        const randomLane = Math.floor(Math.random() * Math.min(activeDuelLanes, 7));
+        const randomLane = Math.floor(Math.random() * Math.min(activeDuelLanes, 6));
         const clashY = duelStartY + randomLane * duelRowGap;
         for (let sp = 0; sp < 3; sp++) {
           engineRef.current.particles.push({
@@ -868,7 +890,7 @@ export default function GameChienDau({
       if (hasVipDuel && Math.random() < 0.3) {
         engineRef.current.particles.push({
           x: centerX + (Math.random() - 0.5) * 40,
-          y: h * 0.20 + (Math.random() - 0.5) * 20,
+          y: daisY + (Math.random() - 0.5) * 20,
           vx: (Math.random() - 0.5) * 130,
           vy: (Math.random() - 0.5) * 100 - 30,
           size: 3.5 + Math.random() * 3.5,
@@ -1488,32 +1510,32 @@ export default function GameChienDau({
         />
       )}
 
-      {/* TOP HP BAR HUD */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[850px] z-20 pointer-events-none">
-        <div className="bg-black/75 backdrop-blur-md border border-white/15 rounded-2xl p-2.5 shadow-2xl">
+      {/* TOP HP BAR HUD - SLEEK & COMPACT (Ảnh 1) */}
+      <div className="absolute top-2 sm:top-3 left-1/2 -translate-x-1/2 w-[95%] max-w-[560px] z-20 pointer-events-none">
+        <div className="bg-black/80 backdrop-blur-md border border-white/15 rounded-xl px-2.5 py-1.5 sm:px-3.5 sm:py-2 shadow-2xl">
           {/* Game Title & VS Indicator */}
-          <div className="flex items-center justify-between px-2 mb-1">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-md shadow-blue-500/50 animate-pulse" />
-              <span className="text-xs font-black tracking-wider text-blue-400 uppercase">
+          <div className="flex items-center justify-between px-1 mb-1">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-blue-500 shadow-sm shadow-blue-500/50 animate-pulse shrink-0" />
+              <span className="text-[11px] sm:text-xs font-black tracking-wider text-blue-400 uppercase truncate">
                 {config.blueName}
               </span>
             </div>
-            <div className="text-[11px] font-black tracking-widest text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-full border border-amber-400/30 uppercase">
+            <div className="text-[9px] sm:text-[10px] font-black tracking-wider text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/30 uppercase shrink-0">
               ⚔️ {config.title}
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-black tracking-wider text-red-400 uppercase">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="text-[11px] sm:text-xs font-black tracking-wider text-red-400 uppercase truncate">
                 {config.redName}
               </span>
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-md shadow-red-500/50 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-red-500 shadow-sm shadow-red-500/50 animate-pulse shrink-0" />
             </div>
           </div>
 
-          {/* Symmetrical Dual HP Bar */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Symmetrical Dual HP Bar (Slim & Streamlined) */}
+          <div className="flex items-center gap-1.5">
             {/* Blue Side */}
-            <div className="flex-1 h-4 sm:h-5 bg-black/60 rounded-l-full overflow-hidden p-0.5 border border-blue-500/40">
+            <div className="flex-1 h-2.5 sm:h-3 bg-black/60 rounded-l-full overflow-hidden p-0.5 border border-blue-500/40">
               <div 
                 className="h-full bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-400 rounded-l-full transition-all duration-300 ml-auto shadow-inner"
                 style={{ width: `${blueHpPct}%` }}
@@ -1521,12 +1543,12 @@ export default function GameChienDau({
             </div>
 
             {/* VS Badge */}
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-black font-black text-[10px] sm:text-[11px] flex items-center justify-center shadow-lg shadow-orange-500/40 shrink-0 border border-white/40">
+            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-black font-black text-[8px] sm:text-[9px] flex items-center justify-center shadow-md shadow-orange-500/40 shrink-0 border border-white/40">
               VS
             </div>
 
             {/* Red Side */}
-            <div className="flex-1 h-4 sm:h-5 bg-black/60 rounded-r-full overflow-hidden p-0.5 border border-red-500/40">
+            <div className="flex-1 h-2.5 sm:h-3 bg-black/60 rounded-r-full overflow-hidden p-0.5 border border-red-500/40">
               <div 
                 className="h-full bg-gradient-to-r from-rose-400 via-red-500 to-red-600 rounded-r-full transition-all duration-300 shadow-inner"
                 style={{ width: `${redHpPct}%` }}
@@ -1535,7 +1557,7 @@ export default function GameChienDau({
           </div>
 
           {/* HP Numbers */}
-          <div className="flex justify-between items-center px-2 sm:px-3 mt-1 text-[10px] sm:text-[11px] font-mono font-bold text-gray-300">
+          <div className="flex justify-between items-center px-1 mt-0.5 text-[9px] sm:text-[10px] font-mono font-bold text-gray-300">
             <span className="text-blue-300">{gameState.hp.blue} / {gameState.maxHp} HP ({Math.round(blueHpPct)}%)</span>
             <span className="text-red-300">{gameState.hp.red} / {gameState.maxHp} HP ({Math.round(redHpPct)}%)</span>
           </div>
