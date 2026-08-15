@@ -7,6 +7,11 @@ export const SKELETON_STATES = {
   WALK: 'walk',
   ATTACK_SLASH: 'attack_slash',
   ATTACK_SPIN: 'attack_spin',
+  ATTACK_BLUE_THRUST: 'attack_blue_thrust',
+  ATTACK_BLUE_CROSS: 'attack_blue_cross',
+  ATTACK_RED_CLEAVE: 'attack_red_cleave',
+  ATTACK_RED_SWEEP: 'attack_red_sweep',
+  DEFEND_PARRY: 'defend_parry',
   DANCE: 'dance',
   VICTORY: 'victory',
   DEFEATED: 'defeated',
@@ -14,19 +19,22 @@ export const SKELETON_STATES = {
 };
 
 /**
- * Computes 3D Forward Kinematics for every human joint and limb
+ * Computes 3D Forward Kinematics for every human joint and limb with asymmetric faction combat styles
  */
 export function computeSkeletalJoints({
   gender = 'male',
   animState = SKELETON_STATES.WALK,
+  factionId = 'blue',
   time = 0,
   phase = 0,
   tier = 1,
   animSpeed = 0.55
 }) {
-  const speed = Math.max(0.1, Math.min(2.0, animSpeed || 0.55));
-  const t = time * 0.003 * speed + phase;
+  // Slower, deliberate, and impactful martial arts cadence as requested by user
+  const speed = Math.max(0.1, Math.min(2.0, animSpeed || 0.55)) * 0.72;
+  const t = time * 0.0022 * speed + phase;
   const isFemale = gender === 'female';
+  const isBlue = factionId === 'blue';
 
   // Body proportions
   const headSize = isFemale ? 6.5 : 7.5;
@@ -57,88 +65,190 @@ export function computeSkeletalJoints({
   let rKneeAngle = 0.15;
 
   // Cloak and hair physics
-  const hairWave = Math.sin(t * 4.0) * 0.3;
-  const capeWave = Math.sin(t * 3.5) * 8;
+  const hairWave = Math.sin(t * 3.2) * 0.35;
+  const capeWave = Math.sin(t * 2.8) * 9;
   let eyeGlow = 1.0;
   let slashArc = 0;
+  let weaponStyle = isBlue ? 'sword_thrust' : 'heavy_cleave';
 
   if (animState === SKELETON_STATES.IDLE) {
-    // Combat Ready Martial Stance (Thế thủ võ thuật, thở sâu, tay giữ kiếm sẵn sàng)
-    const breath = Math.sin(t * 2.2);
-    rootY = breath * 2.0;
-    chestTwist = Math.sin(t * 1.1) * 0.04;
-    headTilt = -chestTwist * 0.6;
+    // Combat Ready Martial Stance (Thế thủ võ thuật riêng biệt: Xanh thanh thoát, Đỏ hùng tráng)
+    const breath = Math.sin(t * 1.8);
+    rootY = breath * 1.8;
 
-    // Guarding arm posture
-    lShoulderAngle = 0.45 + breath * 0.03;
-    lElbowAngle = 0.85 + breath * 0.04;
-    rShoulderAngle = -0.6 - breath * 0.04;
-    rElbowAngle = 1.1 + breath * 0.05;
-    rWristAngle = -0.3;
+    if (isBlue) {
+      // Blue: Thanh tao, kiếm hướng lên 45 độ, tay trái thủ kết ấn kiếm quyết
+      chestTwist = Math.sin(t * 0.9) * 0.05 - 0.08;
+      headTilt = -chestTwist * 0.5;
 
-    // Solid wide martial arts stance
-    lHipAngle = -0.18;
-    lKneeAngle = 0.35;
-    rHipAngle = 0.22;
-    rKneeAngle = 0.3;
-    eyeGlow = 0.9 + breath * 0.3;
+      lShoulderAngle = 0.6 + breath * 0.03;
+      lElbowAngle = 1.4 + breath * 0.04; // Tay trái kết ấn
+      rShoulderAngle = -0.5 - breath * 0.04;
+      rElbowAngle = 0.9 + breath * 0.04;
+      rWristAngle = -0.4;
+
+      lHipAngle = -0.15;
+      lKneeAngle = 0.28;
+      rHipAngle = 0.2;
+      rKneeAngle = 0.25;
+    } else {
+      // Red: Dũng mãnh, hạ trọng tâm, đao cầm ngang hông uy mãnh
+      chestTwist = Math.sin(t * 0.9) * 0.06 + 0.1;
+      headTilt = -chestTwist * 0.4;
+
+      lShoulderAngle = 0.4 + breath * 0.04;
+      lElbowAngle = 0.7 + breath * 0.03;
+      rShoulderAngle = -0.8 - breath * 0.05;
+      rElbowAngle = 1.3 + breath * 0.05;
+      rWristAngle = 0.2;
+
+      lHipAngle = -0.25;
+      lKneeAngle = 0.45;
+      rHipAngle = 0.28;
+      rKneeAngle = 0.4;
+    }
+    eyeGlow = 1.0 + breath * 0.3;
   } else if (animState === SKELETON_STATES.WALK) {
-    // Fluid Human Walk Cycle (Bước tiến linh hoạt, co duỗi khớp tự nhiên)
-    const walkFreq = 3.6;
+    // Fluid Human Walk Cycle (Bước tiến linh hoạt)
+    const walkFreq = 2.8;
     const stride = Math.sin(t * walkFreq);
     const cosStride = Math.cos(t * walkFreq);
 
-    rootY = Math.abs(stride) * 3.2;
-    rootTiltZ = stride * 0.05;
-    chestTwist = -stride * 0.12;
-    headTilt = stride * 0.06;
+    rootY = Math.abs(stride) * 2.8;
+    rootTiltZ = stride * 0.04;
+    chestTwist = -stride * 0.1;
+    headTilt = stride * 0.05;
 
-    // Leg stride with realistic knee lifting & extension
-    lHipAngle = stride * 0.65;
-    lKneeAngle = Math.max(0.1, -cosStride * 0.9);
-    rHipAngle = -stride * 0.65;
-    rKneeAngle = Math.max(0.1, cosStride * 0.9);
+    lHipAngle = stride * 0.55;
+    lKneeAngle = Math.max(0.1, -cosStride * 0.75);
+    rHipAngle = -stride * 0.55;
+    rKneeAngle = Math.max(0.1, cosStride * 0.75);
 
-    // Arms counter-swinging in sync with strides
-    lShoulderAngle = -stride * 0.55;
-    lElbowAngle = 0.4 + Math.max(0, stride * 0.4);
-    rShoulderAngle = stride * 0.55;
-    rElbowAngle = 0.6 + Math.max(0, -stride * 0.4);
-    rWristAngle = 0.2;
+    lShoulderAngle = -stride * 0.45;
+    lElbowAngle = 0.4 + Math.max(0, stride * 0.35);
+    rShoulderAngle = stride * 0.45;
+    rElbowAngle = 0.5 + Math.max(0, -stride * 0.35);
+    rWristAngle = 0.15;
     eyeGlow = 1.0;
-  } else if (animState === SKELETON_STATES.ATTACK_SLASH) {
-    // Powerful Forward Sword Lunge & Heavy Slash (Lao người chém kiếm dứt khoát)
-    const attackPhase = (t * 5.0) % (Math.PI * 2);
+  } else if (animState === SKELETON_STATES.ATTACK_BLUE_THRUST || (isBlue && animState === SKELETON_STATES.ATTACK_SLASH)) {
+    // BLUE ATTACK 1: Tật Phong Kiếm - Phi thân đâm thẳng chớp nhoáng
+    const attackPhase = (t * 3.2) % (Math.PI * 2);
+    const strike = Math.sin(attackPhase);
+    const lunge = Math.max(0, strike);
+
+    rootY = 1.5 + strike * 2.5;
+    rootTiltZ = strike * 0.14;
+    chestTwist = strike * 0.35;
+    headTilt = -chestTwist * 0.4;
+
+    // Direct forward thrust
+    rShoulderAngle = -1.7 + strike * 0.8;
+    rElbowAngle = 0.1 + (1 - lunge) * 0.6;
+    rWristAngle = 0.4 * strike;
+    slashArc = strike;
+    weaponStyle = 'sword_thrust';
+
+    lShoulderAngle = 0.9 - strike * 0.2;
+    lElbowAngle = 1.4;
+
+    lHipAngle = 0.6 * lunge + 0.1;
+    lKneeAngle = 0.8 * lunge + 0.2;
+    rHipAngle = -0.6 * lunge - 0.1;
+    rKneeAngle = 0.25;
+    eyeGlow = 2.2;
+  } else if (animState === SKELETON_STATES.ATTACK_BLUE_CROSS) {
+    // BLUE ATTACK 2: Lưỡng Nghi Kiếm Khí - Chém chéo kép thanh thoát
+    const attackPhase = (t * 3.0) % (Math.PI * 2);
     const slash = Math.sin(attackPhase);
-    const lunge = Math.max(0, slash);
 
-    rootY = 2.0 + slash * 3.5;
-    rootTiltZ = slash * 0.18;
-    chestTwist = slash * 0.45;
-    headTilt = -chestTwist * 0.5;
+    rootY = Math.abs(slash) * 3.0;
+    rootTiltZ = slash * 0.2;
+    chestTwist = slash * 0.5;
 
-    // Sword arm swings full 140° arc
-    rShoulderAngle = -1.4 + (slash + 1) * 1.3;
-    rElbowAngle = 0.3 + (1 - slash) * 0.7;
-    rWristAngle = slash * 0.6;
+    rShoulderAngle = -1.2 + slash * 1.5;
+    rElbowAngle = 0.4 + (1 - Math.abs(slash)) * 0.5;
+    rWristAngle = slash * 0.5;
     slashArc = slash;
+    weaponStyle = 'sword_slash';
 
-    // Left arm guards chest
-    lShoulderAngle = 0.7 - slash * 0.3;
+    lShoulderAngle = 1.2 - slash * 0.8;
+    lElbowAngle = 0.8;
+
+    lHipAngle = slash * 0.3;
+    lKneeAngle = 0.35;
+    rHipAngle = -slash * 0.3;
+    rKneeAngle = 0.35;
+    eyeGlow = 2.4;
+  } else if (animState === SKELETON_STATES.ATTACK_RED_CLEAVE || (!isBlue && animState === SKELETON_STATES.ATTACK_SLASH)) {
+    // RED ATTACK 1: Phách Sơn Đao - Nhảy bổ chém cực mạnh từ trên xuống
+    const attackPhase = (t * 2.8) % (Math.PI * 2);
+    const chop = Math.sin(attackPhase);
+    const powerDown = Math.max(0, -chop);
+
+    rootY = 3.0 + powerDown * 4.0;
+    rootTiltZ = -chop * 0.22;
+    chestTwist = -chop * 0.4;
+    headTilt = powerDown * 0.3;
+
+    // Overhead massive cleave
+    rShoulderAngle = -2.2 + powerDown * 2.0;
+    rElbowAngle = 0.2 + (1 - powerDown) * 0.8;
+    rWristAngle = powerDown * 0.7;
+    slashArc = powerDown;
+    weaponStyle = 'heavy_cleave';
+
+    lShoulderAngle = -1.8 + powerDown * 1.6; // Two-handed power assist
+    lElbowAngle = 0.5;
+
+    lHipAngle = -0.2 + powerDown * 0.7;
+    lKneeAngle = 0.3 + powerDown * 0.6;
+    rHipAngle = 0.3 + powerDown * 0.5;
+    rKneeAngle = 0.3 + powerDown * 0.5;
+    eyeGlow = 2.6;
+  } else if (animState === SKELETON_STATES.ATTACK_RED_SWEEP) {
+    // RED ATTACK 2: Hoành Tảo Thiên Quân - Quét đao hình bán nguyệt
+    const sweepPhase = (t * 2.6) % (Math.PI * 2);
+    const sweep = Math.sin(sweepPhase);
+
+    rootY = 2.0;
+    rootTiltZ = sweep * 0.15;
+    chestTwist = sweep * 0.6;
+
+    rShoulderAngle = -0.4 + sweep * 1.8;
+    rElbowAngle = 0.3;
+    rWristAngle = sweep * 0.6;
+    slashArc = sweep;
+    weaponStyle = 'heavy_sweep';
+
+    lShoulderAngle = 0.6;
+    lElbowAngle = 1.1;
+
+    lHipAngle = 0.4;
+    lKneeAngle = 0.5;
+    rHipAngle = -0.3;
+    rKneeAngle = 0.4;
+    eyeGlow = 2.5;
+  } else if (animState === SKELETON_STATES.DEFEND_PARRY) {
+    // Defense / Parry stance when taking enemy blow
+    rootY = 2.5;
+    chestTwist = isBlue ? -0.15 : 0.15;
+    rShoulderAngle = -1.2;
+    rElbowAngle = 1.3;
+    rWristAngle = -0.3;
+    lShoulderAngle = 0.8;
     lElbowAngle = 1.2;
 
-    // Deep martial lunge stance: Front leg bends deep, back leg stretches
-    lHipAngle = 0.55 * lunge + 0.1;
-    lKneeAngle = 0.75 * lunge + 0.2;
-    rHipAngle = -0.65 * lunge - 0.1;
-    rKneeAngle = 0.3;
-    eyeGlow = 2.2;
+    lHipAngle = 0.35;
+    lKneeAngle = 0.55;
+    rHipAngle = -0.35;
+    rKneeAngle = 0.5;
+    eyeGlow = 1.5;
   } else if (animState === SKELETON_STATES.ATTACK_SPIN) {
-    // 360-degree Whirlwind Blade Tempest (Xoay tròn trảm phong 360 độ)
-    const spinPhase = t * 7.5;
-    rootY = Math.sin(spinPhase) * 3.0;
+    // Whirlwind Blade
+    const spinPhase = t * 4.5;
+    rootY = Math.sin(spinPhase) * 2.5;
     rootTiltZ = Math.cos(spinPhase) * 0.12;
-    chestTwist = Math.sin(spinPhase) * 0.4;
+    chestTwist = Math.sin(spinPhase) * 0.45;
 
     rShoulderAngle = -1.5;
     rElbowAngle = 0.25;
@@ -146,19 +256,19 @@ export function computeSkeletalJoints({
     lElbowAngle = 0.25;
     slashArc = 1.0;
 
-    lHipAngle = Math.sin(spinPhase) * 0.4;
+    lHipAngle = Math.sin(spinPhase) * 0.35;
     lKneeAngle = 0.35;
-    rHipAngle = -Math.sin(spinPhase) * 0.4;
+    rHipAngle = -Math.sin(spinPhase) * 0.35;
     rKneeAngle = 0.35;
     eyeGlow = 2.5;
   } else if (animState === SKELETON_STATES.DANCE) {
     // Graceful martial arts dance
-    const danceFreq = 3.2;
+    const danceFreq = 2.4;
     const dancePhase = t * danceFreq;
     const bounce = Math.abs(Math.sin(dancePhase));
     const hipSway = Math.sin(dancePhase * 0.5);
 
-    rootY = bounce * 4.5;
+    rootY = bounce * 4.0;
     rootTiltZ = hipSway * 0.1;
     chestTwist = hipSway * 0.2;
     headTilt = -hipSway * 0.15;
@@ -175,8 +285,8 @@ export function computeSkeletalJoints({
     eyeGlow = 1.4;
   } else if (animState === SKELETON_STATES.VICTORY) {
     // Triumphant double-sword raise
-    const vPhase = t * 2.8;
-    rootY = Math.abs(Math.sin(vPhase)) * 3.5;
+    const vPhase = t * 2.2;
+    rootY = Math.abs(Math.sin(vPhase)) * 3.0;
     headTilt = -0.25;
 
     lShoulderAngle = 1.9 + Math.sin(vPhase) * 0.15;
@@ -209,7 +319,7 @@ export function computeSkeletalJoints({
     eyeGlow = 0.0;
   } else if (animState === SKELETON_STATES.REVIVE) {
     // Holy ascension
-    const rPhase = t * 6.0;
+    const rPhase = t * 4.5;
     rootY = -6.0 + Math.sin(rPhase) * 2.0;
     headTilt = -0.35;
     lShoulderAngle = -1.3;
@@ -226,8 +336,10 @@ export function computeSkeletalJoints({
   return {
     gender,
     isFemale,
+    factionId,
     tier,
     animState,
+    weaponStyle,
     headSize,
     chestW,
     chestH,
@@ -390,23 +502,31 @@ export function render3DWarriorSkeleton(ctx, skeletonData, options = {}) {
   ctx.fill();
   ctx.restore();
 
-  // 2. Billowing Dragon Mantle / Cloak (Behind body)
+  // 2. Billowing Dragon Mantle / Silk Sash Cape (Behind body)
   if (!isDefeated) {
     ctx.save();
     ctx.beginPath();
-    ctx.moveTo(-chestW * 0.4, -chestH);
-    ctx.lineTo(-chestW * 0.8 + capeWave, thighLen * 1.15);
-    ctx.quadraticCurveTo(capeWave, thighLen * 1.15 + 7, chestW * 0.8 + capeWave, thighLen * 1.15);
-    ctx.lineTo(chestW * 0.4, -chestH);
+    ctx.moveTo(-chestW * 0.45, -chestH * 0.9);
+    // Multi-layer sweeping silk cape
+    const capeWarp = capeWave * (isGoldTier ? 1.3 : 1.0);
+    ctx.quadraticCurveTo(-chestW * 0.9 + capeWarp * 0.5, thighLen * 0.6, -chestW * 1.0 + capeWarp, thighLen * 1.25);
+    ctx.quadraticCurveTo(capeWarp * 0.7, thighLen * 1.35, chestW * 0.8 + capeWarp * 0.6, thighLen * 1.15);
+    ctx.quadraticCurveTo(chestW * 0.5, -chestH * 0.3, chestW * 0.45, -chestH * 0.9);
     ctx.closePath();
 
-    const capeGrad = ctx.createLinearGradient(0, -chestH, 0, thighLen);
-    capeGrad.addColorStop(0, isGoldTier ? '#78350f' : (factionId === 'blue' ? '#1e3a8a' : '#881337'));
-    capeGrad.addColorStop(1, isGoldTier ? '#ca8a04' : (factionId === 'blue' ? '#2563eb' : '#e11d48'));
+    const capeGrad = ctx.createLinearGradient(0, -chestH, 0, thighLen * 1.3);
+    if (isGoldTier) {
+      capeGrad.addColorStop(0, isBlue ? '#1e3a8a' : '#7f1d1d');
+      capeGrad.addColorStop(0.5, isBlue ? '#2563eb' : '#dc2626');
+      capeGrad.addColorStop(1, '#facc15');
+    } else {
+      capeGrad.addColorStop(0, isBlue ? '#0f172a' : '#450a0a');
+      capeGrad.addColorStop(1, isBlue ? '#1d4ed8' : '#be123c');
+    }
     ctx.fillStyle = capeGrad;
     ctx.fill();
-    ctx.strokeStyle = isGoldTier ? '#facc15' : '#ffffff';
-    ctx.lineWidth = 1.0;
+    ctx.strokeStyle = isGoldTier ? '#fde047' : (isBlue ? '#60a5fa' : '#f87171');
+    ctx.lineWidth = isGoldTier ? 1.5 : 0.8;
     ctx.stroke();
     ctx.restore();
   }
@@ -562,67 +682,139 @@ export function render3DWarriorSkeleton(ctx, skeletonData, options = {}) {
   ctx.fillStyle = isGoldTier ? '#ca8a04' : '#334155';
   ctx.fill();
 
-  // 9. THE LEGENDARY ENCHANTED SWORD / DRAGON BLADE
+  // 9. ASYMMETRIC WEAPONS: BLUE IMPERIAL QI SWORD vs RED DRAGON FLAME CLEAVER
   if (!isDefeated) {
     ctx.save();
-    ctx.rotate(Math.PI * 0.75); // Natural grip angle pointing upward/forward
+    ctx.rotate(Math.PI * 0.75); // Natural grip angle
 
-    // Sword Blade (Volumetric Glowing Steel)
-    ctx.beginPath();
-    ctx.moveTo(-3.5, 0);
-    ctx.lineTo(3.5, 0);
-    ctx.lineTo(2.5, -36);
-    ctx.lineTo(0, -42); // Sharp Tip
-    ctx.lineTo(-2.5, -36);
-    ctx.closePath();
+    if (isBlue) {
+      // BLUE WEAPON: Thanh Kiếm Hiệp Đế Vương (Imperial Celestial Sword) - Thon gọn, sắc lẹm, ánh lam ngọc
+      ctx.beginPath();
+      ctx.moveTo(-2.8, 0);
+      ctx.lineTo(2.8, 0);
+      ctx.lineTo(2.2, -38);
+      ctx.lineTo(0, -46); // Sharp Needle Tip
+      ctx.lineTo(-2.2, -38);
+      ctx.closePath();
 
-    const bladeGrad = ctx.createLinearGradient(0, -42, 0, 0);
-    bladeGrad.addColorStop(0, '#ffffff');
-    bladeGrad.addColorStop(0.3, isGoldTier ? '#fde047' : '#93c5fd');
-    bladeGrad.addColorStop(1, isGoldTier ? '#ca8a04' : '#1e3a8a');
-    ctx.fillStyle = bladeGrad;
-    ctx.fill();
+      const blueBladeGrad = ctx.createLinearGradient(0, -46, 0, 0);
+      blueBladeGrad.addColorStop(0, '#ffffff');
+      blueBladeGrad.addColorStop(0.3, isGoldTier ? '#e0f2fe' : '#bae6fd');
+      blueBladeGrad.addColorStop(1, isGoldTier ? '#0284c7' : '#1e40af');
+      ctx.fillStyle = blueBladeGrad;
+      ctx.fill();
 
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.2;
-    ctx.shadowColor = glowColor;
-    ctx.shadowBlur = 16 * eyeGlow;
-    ctx.stroke();
+      ctx.strokeStyle = isGoldTier ? '#fde047' : '#ffffff';
+      ctx.lineWidth = 1.2;
+      ctx.shadowColor = '#38bdf8';
+      ctx.shadowBlur = 16 * eyeGlow;
+      ctx.stroke();
 
-    // Dragon Crossguard & Pommel
-    ctx.beginPath();
-    ctx.roundRect(-6.5, -3, 13, 4, 1.5);
-    ctx.fillStyle = '#ca8a04';
-    ctx.fill();
-    ctx.strokeStyle = '#fde047';
-    ctx.lineWidth = 0.8;
-    ctx.stroke();
+      // Blue Sword Fuller / Central Qi Ridge
+      ctx.beginPath();
+      ctx.moveTo(0, -2);
+      ctx.lineTo(0, -38);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 0.9;
+      ctx.stroke();
+
+      // Blue Crossguard
+      ctx.beginPath();
+      ctx.roundRect(-6.0, -3, 12, 3.5, 1.2);
+      ctx.fillStyle = isGoldTier ? '#facc15' : '#0369a1';
+      ctx.fill();
+      ctx.strokeStyle = '#bae6fd';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+    } else {
+      // RED WEAPON: Bá Vương Long Đao (Dragon Cleaver) - Rộng bản, răng cưa uy mãnh, rực lửa xích diễm
+      ctx.beginPath();
+      ctx.moveTo(-4.5, 0);
+      ctx.lineTo(4.5, 0);
+      ctx.lineTo(5.5, -24);
+      ctx.lineTo(7.5, -34); // Curved Heavy Cleaver Tip
+      ctx.lineTo(0, -44);
+      ctx.lineTo(-4.0, -32);
+      ctx.closePath();
+
+      const redBladeGrad = ctx.createLinearGradient(0, -44, 0, 0);
+      redBladeGrad.addColorStop(0, '#ffffff');
+      redBladeGrad.addColorStop(0.3, isGoldTier ? '#fee2e2' : '#fca5a5');
+      redBladeGrad.addColorStop(1, isGoldTier ? '#b91c1c' : '#881337');
+      ctx.fillStyle = redBladeGrad;
+      ctx.fill();
+
+      ctx.strokeStyle = isGoldTier ? '#fde047' : '#ffffff';
+      ctx.lineWidth = 1.4;
+      ctx.shadowColor = '#f43f5e';
+      ctx.shadowBlur = 18 * eyeGlow;
+      ctx.stroke();
+
+      // Red Dragon Sawtooth Spine
+      ctx.beginPath();
+      ctx.moveTo(4.5, -10);
+      ctx.lineTo(6.5, -14);
+      ctx.lineTo(4.8, -18);
+      ctx.lineTo(7.0, -22);
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 1.0;
+      ctx.stroke();
+
+      // Red Cleaver Guard
+      ctx.beginPath();
+      ctx.roundRect(-7.5, -3.5, 15, 4.5, 1.5);
+      ctx.fillStyle = isGoldTier ? '#ca8a04' : '#991b1b';
+      ctx.fill();
+      ctx.strokeStyle = '#fca5a5';
+      ctx.lineWidth = 0.9;
+      ctx.stroke();
+    }
+
     ctx.restore();
   }
 
   ctx.restore();
 
-  // 10. Dynamic Sword Slash Crescent Energy Arc (When attacking/clashing)
-  if (!isDefeated && (animState === SKELETON_STATES.ATTACK_SLASH || animState === SKELETON_STATES.ATTACK_SPIN || isPulsing)) {
+  // 10. Asymmetric Combat Slash Crescent Effects (Vệt kiếm khí xanh vs Vệt đao quang đỏ)
+  if (!isDefeated && (animState.includes('attack') || isPulsing)) {
     ctx.save();
-    ctx.translate(16, -10);
+    ctx.translate(18, -10);
     ctx.rotate(slashArc * 1.2);
 
-    ctx.beginPath();
-    ctx.arc(0, 0, 30, -Math.PI * 0.45, Math.PI * 0.45);
-    ctx.strokeStyle = isGoldTier ? 'rgba(254, 240, 138, 0.95)' : 'rgba(186, 230, 253, 0.95)';
-    ctx.lineWidth = 4.0;
-    ctx.shadowColor = glowColor;
-    ctx.shadowBlur = 20;
-    ctx.stroke();
-
-    // Sparks along slash arc
-    for (let sp = 0; sp < 4; sp++) {
-      const spA = -Math.PI * 0.35 + sp * 0.25;
+    if (isBlue) {
+      // Blue: Swift crescent arc with crystalline light particles
       ctx.beginPath();
-      ctx.arc(Math.cos(spA) * 31, Math.sin(spA) * 31, 2.2, 0, Math.PI * 2);
-      ctx.fillStyle = '#ffffff';
-      ctx.fill();
+      ctx.arc(0, 0, 32, -Math.PI * 0.45, Math.PI * 0.45);
+      ctx.strokeStyle = isGoldTier ? 'rgba(254, 240, 138, 0.95)' : 'rgba(186, 230, 253, 0.95)';
+      ctx.lineWidth = 3.5;
+      ctx.shadowColor = '#38bdf8';
+      ctx.shadowBlur = 18;
+      ctx.stroke();
+
+      for (let sp = 0; sp < 4; sp++) {
+        const spA = -Math.PI * 0.35 + sp * 0.25;
+        ctx.beginPath();
+        ctx.arc(Math.cos(spA) * 33, Math.sin(spA) * 33, 2.2, 0, Math.PI * 2);
+        ctx.fillStyle = '#bae6fd';
+        ctx.fill();
+      }
+    } else {
+      // Red: Heavy fiery cleave trail with ember bursts
+      ctx.beginPath();
+      ctx.arc(0, 0, 36, -Math.PI * 0.5, Math.PI * 0.4);
+      ctx.strokeStyle = isGoldTier ? 'rgba(254, 205, 211, 0.95)' : 'rgba(254, 202, 202, 0.95)';
+      ctx.lineWidth = 5.0;
+      ctx.shadowColor = '#f43f5e';
+      ctx.shadowBlur = 22;
+      ctx.stroke();
+
+      for (let sp = 0; sp < 5; sp++) {
+        const spA = -Math.PI * 0.4 + sp * 0.2;
+        ctx.beginPath();
+        ctx.arc(Math.cos(spA) * 37, Math.sin(spA) * 37, 2.8, 0, Math.PI * 2);
+        ctx.fillStyle = sp % 2 === 0 ? '#fde047' : '#f43f5e';
+        ctx.fill();
+      }
     }
     ctx.restore();
   }

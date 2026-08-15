@@ -390,9 +390,16 @@ export default function GameChienDau({
         fighter.currentHp = Math.min(fighter.maxHp, (fighter.currentHp || fighter.maxHp) + Math.floor(pointsToAdd * 0.4));
       }
     } else {
-      const centerX = (engineRef.current.w || canvas.width) / 2;
-      const startX = factionId === 'blue' ? (centerX - 90) : (centerX + 90);
-      const startY = (engineRef.current.h || canvas.height) * 0.68;
+      const w = engineRef.current.w || canvas.width;
+      const h = engineRef.current.h || canvas.height;
+      const centerX = w / 2;
+      const daisY = h * 0.28;
+      const isVipSpawn = pointsToAdd >= 50;
+
+      const startX = isVipSpawn
+        ? (factionId === 'blue' ? (centerX - 135) : (centerX + 135))
+        : (factionId === 'blue' ? (centerX - 90) : (centerX + 90));
+      const startY = isVipSpawn ? daisY : h * 0.68;
       
       let gender = preferredGender;
       if (!gender) {
@@ -413,6 +420,7 @@ export default function GameChienDau({
         y: startY,
         targetX: startX,
         targetY: startY,
+        isVipStage: isVipSpawn,
         bobPhase: Math.random() * Math.PI * 2,
         pulseUntil: performance.now() + (pointsToAdd >= 50 ? 3500 : 800),
         maxHp: initialHp,
@@ -938,14 +946,21 @@ export default function GameChienDau({
       ctx.restore();
 
       // 2. Update & Draw Fighters (Chiến binh Kiếm Hiệp 3D: Tướng VIP trên vòng tròn + Song đấu 1v1 phân bố toàn màn hình)
-      const lerpFactor = Math.min(1, dt * 5);
+      const lerpFactor = Math.min(1, dt * 5.5);
       
-      // Real-time Active 1v1 Pair-Duels Sword Clashing across all distributed duel spots
+      // Ensure persistent faction assignment on original fighter objects
+      engineRef.current.fighters.blue.forEach(f => { f.factionId = 'blue'; });
+      engineRef.current.fighters.red.forEach(f => { f.factionId = 'red'; });
+
       const activeBlue = engineRef.current.fighters.blue.filter(f => !f.isKnockedOut);
       const activeRed = engineRef.current.fighters.red.filter(f => !f.isKnockedOut);
       const blueRegulars = activeBlue.filter(f => !f.isVipStage);
       const redRegulars = activeRed.filter(f => !f.isVipStage);
       const pairCount = Math.min(blueRegulars.length, redRegulars.length);
+      const totalActive = activeBlue.length + activeRed.length;
+
+      // Dynamic Auto-Scale for crowded battlefields: Automatically scale regular fighters down smoothly as more join
+      const crowdScaleFactor = totalActive <= 4 ? 1.0 : Math.max(0.65, 1.0 - (totalActive - 4) * 0.035);
 
       // Spawn sparks for active dueling pairs across the screen
       if (pairCount > 0 && Math.random() < 0.65) {
@@ -968,7 +983,7 @@ export default function GameChienDau({
           });
         }
 
-        if (time - (engineRef.current.lastClashSoundTime || 0) > 850) {
+        if (time - (engineRef.current.lastClashSoundTime || 0) > 950) {
           engineRef.current.lastClashSoundTime = time;
           playSfx('hit');
         }
@@ -990,56 +1005,89 @@ export default function GameChienDau({
         });
       }
 
-      // Collect and sort all fighters for back-to-front rendering
+      // Collect real fighter references and sort for back-to-front rendering
       const allFighters = [
-        ...engineRef.current.fighters.blue.map(f => ({ ...f, factionId: 'blue' })),
-        ...engineRef.current.fighters.red.map(f => ({ ...f, factionId: 'red' }))
+        ...engineRef.current.fighters.blue,
+        ...engineRef.current.fighters.red
       ].sort((a, b) => {
-        // Render lower stage before VIPs, and sort by y
-        if (a.isVipStage !== b.isVipStage) return a.isVipStage ? 1 : -1;
+        // VIP Dais fighters are rendered slightly earlier in layer or sorted by y
+        if (a.isVipStage !== b.isVipStage) return a.isVipStage ? -1 : 1;
         return a.y - b.y;
       });
 
       allFighters.forEach(f => {
         if (f.isKnockedOut) return; // Disappear immediately upon death as requested by user
 
-        const factionId = f.factionId;
+        const factionId = f.factionId || 'blue';
         const color = factionId === 'blue' ? config.blueColor : config.redColor;
-        const dir = factionId === 'blue' ? -1 : 1;
+        const dir = factionId === 'blue' ? 1 : -1;
 
-        let targetX = f.targetX;
+        // Smooth physics lerp on the actual persistent fighter object
+        const targetX = f.targetX !== undefined ? f.targetX : (factionId === 'blue' ? centerX - 90 : centerX + 90);
+        const targetY = f.targetY !== undefined ? f.targetY : (f.isVipStage ? daisY : h * 0.65);
 
         f.x += (targetX - f.x) * lerpFactor;
-        f.y += (f.targetY - f.y) * lerpFactor;
-        f.bobPhase += dt * 4.5;
+        f.y += (targetY - f.y) * lerpFactor;
+        f.bobPhase += dt * 3.5;
 
         // Calculate Character Tier based on score
         const tier = f.score >= 5000 ? 5 : f.score >= 2000 ? 4 : f.score >= 500 ? 3 : f.score >= 100 ? 2 : 1;
         const isPulsing = performance.now() < f.pulseUntil;
         const isTopRank = f.rank === 0;
 
-        // Scale: Regular Troops scaled x2 (~1.15 - 1.35) as explicitly requested by user.
-        // VIP Champions (Tướng khi được tặng quà) are scaled x2.4 - 3.2 on the top circular rings.
-        let baseScale = 1.15;
-        if (tier >= 5) baseScale = 3.2;
-        else if (tier === 4) baseScale = 2.8;
-        else if (tier === 3 || isTopRank) baseScale = 2.4;
-        else if (tier === 2) baseScale = 1.35;
+        // Scale: VIP Champions on Dais Rings are x2.4 - 3.2 (Tướng to x3). Regular troops use crowdScaleFactor
+        let baseScale = 1.15 * crowdScaleFactor;
+        if (f.isVipStage || tier >= 3 || isTopRank) {
+          if (tier >= 5) baseScale = 3.2;
+          else if (tier === 4) baseScale = 2.8;
+          else baseScale = 2.4;
+        } else if (tier === 2) {
+          baseScale = 1.35 * crowdScaleFactor;
+        }
 
-        const scale = baseScale * (isPulsing ? 1.15 : 1.0);
+        const scale = baseScale * (isPulsing ? 1.12 : 1.0);
 
         // Ground shadow (sleek & natural)
         ctx.save();
         ctx.beginPath();
         ctx.ellipse(f.x, f.y + 20 * scale, (12 + tier * 2) * scale, (4 + tier) * scale, 0, 0, Math.PI * 2);
-        ctx.fillStyle = f.isKnockedOut ? 'rgba(0, 0, 0, 0.22)' : (isPulsing ? 'rgba(250, 204, 21, 0.45)' : 'rgba(0, 0, 0, 0.35)');
+        ctx.fillStyle = isPulsing ? 'rgba(250, 204, 21, 0.45)' : 'rgba(0, 0, 0, 0.35)';
         ctx.fill();
         ctx.restore();
 
+        // Sacred Beast Mount / Celestial Dragon Energy Ring under VIP Champions (Thú cưỡi / Thần long cho Tướng VIP)
+        if (f.isVipStage && tier >= 3) {
+          ctx.save();
+          ctx.translate(f.x, f.y + 14 * scale);
+          const dragonAngle = time * 0.0025;
+          ctx.rotate(dragonAngle);
+
+          // Dragon / Sacred Beast Energy Arc
+          ctx.beginPath();
+          ctx.arc(0, 0, 38 * scale, 0, Math.PI * 1.6);
+          ctx.strokeStyle = factionId === 'blue' ? 'rgba(56, 189, 248, 0.85)' : 'rgba(244, 63, 94, 0.85)';
+          ctx.lineWidth = 3.5 * scale;
+          ctx.shadowColor = factionId === 'blue' ? '#38bdf8' : '#f43f5e';
+          ctx.shadowBlur = 18;
+          ctx.stroke();
+
+          // Dragon Head Crest / Flaming Beast Eye
+          const headAngle = Math.PI * 1.6;
+          const hx = Math.cos(headAngle) * 38 * scale;
+          const hy = Math.sin(headAngle) * 38 * scale;
+          ctx.beginPath();
+          ctx.arc(hx, hy, 5 * scale, 0, Math.PI * 2);
+          ctx.fillStyle = '#fef08a';
+          ctx.shadowColor = '#facc15';
+          ctx.shadowBlur = 14;
+          ctx.fill();
+          ctx.restore();
+        }
+
         // Name tag, Title & Health Bar (Tạo khoảng cách thông thoáng, không che khuất nhân vật)
         ctx.save();
-        const tagDist = (28 + (tier >= 3 ? 6 : 0)) * scale;
-        const isVip = tier >= 3 || isTopRank;
+        const tagDist = (28 + (tier >= 3 ? 8 : 0)) * scale;
+        const isVip = tier >= 3 || isTopRank || f.isVipStage;
 
         ctx.font = `${isVip ? 'bold 12px' : 'bold 10px'} 'Be Vietnam Pro', sans-serif`;
         ctx.textAlign = 'center';
@@ -1047,16 +1095,13 @@ export default function GameChienDau({
         ctx.strokeStyle = 'rgba(0,0,0,0.95)';
         
         let tierBadge = '';
-        if (f.isKnockedOut) {
-          tierBadge = '✝️ ';
-          ctx.fillStyle = '#f87171';
-        } else if (tier === 5) {
+        if (tier === 5) {
           tierBadge = '👑 [CHÍ TÔN] ';
           ctx.fillStyle = '#fef08a';
         } else if (tier === 4) {
           tierBadge = '⚡ [CHIẾN THẦN] ';
           ctx.fillStyle = '#38bdf8';
-        } else if (tier === 3) {
+        } else if (tier === 3 || f.isVipStage) {
           tierBadge = '✨ [THẦN TƯỚNG] ';
           ctx.fillStyle = '#fde047';
         } else if (tier === 2) {
@@ -1071,8 +1116,8 @@ export default function GameChienDau({
         ctx.strokeText(tierBadge + nameText, f.x, f.y - tagDist);
         ctx.fillText(tierBadge + nameText, f.x, f.y - tagDist);
 
-        // Individual Health Bar (Máu riêng của từng chiến sĩ)
-        const barW = (isVip ? 36 : 24) * scale;
+        // Individual Health Bar
+        const barW = (isVip ? 38 : 24) * scale;
         const barH = 3.5 * scale;
         const barX = f.x - barW / 2;
         const barY = f.y - (tagDist - 5 * scale);
@@ -1080,13 +1125,11 @@ export default function GameChienDau({
         ctx.fillStyle = 'rgba(0,0,0,0.75)';
         ctx.fillRect(barX, barY, barW, barH);
         
-        if (!f.isKnockedOut) {
-          const currentHp = f.currentHp !== undefined ? f.currentHp : (f.maxHp || 280);
-          const maxHp = f.maxHp || 280;
-          const hpRatio = Math.max(0, Math.min(1, currentHp / maxHp));
-          ctx.fillStyle = hpRatio > 0.5 ? (tier >= 4 ? '#eab308' : color) : '#ef4444';
-          ctx.fillRect(barX, barY, barW * hpRatio, barH);
-        }
+        const currentHp = f.currentHp !== undefined ? f.currentHp : (f.maxHp || 280);
+        const maxHp = f.maxHp || 280;
+        const hpRatio = Math.max(0, Math.min(1, currentHp / maxHp));
+        ctx.fillStyle = hpRatio > 0.5 ? (tier >= 4 ? '#eab308' : color) : '#ef4444';
+        ctx.fillRect(barX, barY, barW * hpRatio, barH);
         ctx.restore();
 
         // Holy Revive Light Pillar
@@ -1101,39 +1144,35 @@ export default function GameChienDau({
           ctx.restore();
         }
 
-        // Draw 3D Articulated Warrior Body & Skeletal Limbs
+        // Protective Barrier Aura (Hào Quang Bảo Vệ) for VIP Heroes / High Gifts
         ctx.save();
         ctx.translate(f.x, f.y);
         ctx.scale(scale, scale);
 
-        if (f.isKnockedOut) {
-          ctx.globalAlpha = 0.55;
-        }
+        if ((tier >= 3 || isPulsing || f.isVipStage) && !f.isKnockedOut) {
+          const auraPulse = Math.sin(time * 0.003) * 0.08 + 1.0;
+          const auraScale = (1.2 + (tier >= 4 ? 0.25 : 0)) * auraPulse;
 
-        // Persistent Radiant Lingering Halo Aura for Upgraded / Gifted Heroes & Tier 2+
-        if ((isPulsing || tier >= 2 || f.hasGift || f.isSuperVip) && !f.isKnockedOut) {
-          const auraScale = 1 + Math.sin(time * 0.005 + (f.x * 0.01)) * 0.18;
           ctx.save();
-          const auraGlowColor = tier === 5 ? '#facc15' : tier === 4 ? '#38bdf8' : tier === 3 ? '#fbbf24' : '#a855f7';
-          ctx.shadowColor = auraGlowColor;
-          ctx.shadowBlur = 28;
+          ctx.shadowColor = tier === 5 ? '#facc15' : (factionId === 'blue' ? '#38bdf8' : '#f43f5e');
+          ctx.shadowBlur = 22;
 
-          // Outer shimmering energy ellipse
-          ctx.strokeStyle = tier === 5 ? 'rgba(250, 204, 21, 0.85)' : tier === 4 ? 'rgba(56, 189, 248, 0.85)' : 'rgba(251, 191, 36, 0.8)';
-          ctx.lineWidth = 2.2;
+          // Outer shimmering protective sphere
+          ctx.strokeStyle = tier === 5 ? 'rgba(250, 204, 21, 0.85)' : (factionId === 'blue' ? 'rgba(56, 189, 248, 0.85)' : 'rgba(244, 63, 94, 0.85)');
+          ctx.lineWidth = 2.0;
           ctx.beginPath();
           ctx.ellipse(0, 0, 28 * auraScale, 32 * auraScale, 0, 0, Math.PI * 2);
           ctx.stroke();
 
           // Inner soft ambient light fill
-          ctx.fillStyle = tier === 5 ? 'rgba(250, 204, 21, 0.25)' : tier === 4 ? 'rgba(56, 189, 248, 0.22)' : 'rgba(251, 191, 36, 0.18)';
+          ctx.fillStyle = tier === 5 ? 'rgba(250, 204, 21, 0.20)' : (factionId === 'blue' ? 'rgba(56, 189, 248, 0.18)' : 'rgba(244, 63, 94, 0.18)');
           ctx.fill();
 
-          // Rotating celestial rune sparks under feet
-          const runeAngle = time * 0.003;
+          // Rotating celestial protective runes
+          const runeAngle = time * 0.002;
           ctx.save();
           ctx.rotate(runeAngle);
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
           ctx.lineWidth = 1;
           for (let r = 0; r < 4; r++) {
             ctx.strokeRect(-18 + r * 9, -2, 4, 4);
@@ -1142,9 +1181,9 @@ export default function GameChienDau({
           ctx.restore();
         }
 
-        // Wings of Light for Tier 3, 4, 5 (Strictly differentiated by Blue vs Red faction)
+        // Wings of Light for Tier 3, 4, 5
         if (tier >= 3 && !f.isKnockedOut) {
-          const wingFlap = Math.sin(time * 0.005) * 6;
+          const wingFlap = Math.sin(time * 0.004) * 6;
           const isBlueTeam = factionId === 'blue';
           const wingColor = tier === 5 ? '#facc15' : (isBlueTeam ? '#38bdf8' : '#f43f5e');
           const wingGlow = isBlueTeam ? '#0284c7' : '#e11d48';
@@ -1185,12 +1224,12 @@ export default function GameChienDau({
           ctx.restore();
         }
 
-        // 3D Articulated Skeletal Kinematics
+        // 3D Articulated Skeletal Kinematics with Asymmetric Martial Arts Stances
         const fighterGender = f.gender || (f.rank % 2 === 0 ? 'male' : 'female');
         
         let animState = SKELETON_STATES.WALK;
-        const distToTarget = Math.hypot(f.targetX - f.x, f.targetY - f.y);
-        const isArrived = distToTarget < 20;
+        const distToTarget = Math.hypot(targetX - f.x, targetY - f.y);
+        const isArrived = distToTarget < 24;
 
         if (f.isKnockedOut) {
           animState = SKELETON_STATES.DEFEATED;
@@ -1199,37 +1238,60 @@ export default function GameChienDau({
         } else if (f.isDancing && performance.now() < f.danceUntil) {
           animState = SKELETON_STATES.DANCE;
         } else if (isPulsing) {
-          animState = (tier >= 4 || isTopRank) ? SKELETON_STATES.ATTACK_SPIN : SKELETON_STATES.ATTACK_SLASH;
+          animState = factionId === 'blue' ? SKELETON_STATES.ATTACK_BLUE_CROSS : SKELETON_STATES.ATTACK_RED_CLEAVE;
         } else if (f.isVipStage) {
           if (hasVipDuel) {
-            const combatCycle = (time * 0.0025 + (f.rank || 0) * 1.2) % 3.0;
-            animState = combatCycle < 1.6 ? SKELETON_STATES.ATTACK_SLASH : SKELETON_STATES.ATTACK_SPIN;
+            // Slower, grand martial arts duel on top dais
+            const vipCycle = (time * 0.0016 + (f.rank || 0) * 1.5) % 4.0;
+            if (factionId === 'blue') {
+              animState = vipCycle < 1.6 ? SKELETON_STATES.ATTACK_BLUE_THRUST : (vipCycle < 2.8 ? SKELETON_STATES.DEFEND_PARRY : SKELETON_STATES.IDLE);
+            } else {
+              animState = vipCycle < 1.6 ? SKELETON_STATES.DEFEND_PARRY : (vipCycle < 2.8 ? SKELETON_STATES.ATTACK_RED_CLEAVE : SKELETON_STATES.IDLE);
+            }
           } else {
-            // VIP stands proudly on the dais waiting for a challenger
+            // VIP stands majestically on dais in commanding martial stance
             animState = isArrived ? SKELETON_STATES.IDLE : SKELETON_STATES.WALK;
           }
         } else if (f.isDuelFront && f.duelPairIdx !== undefined && f.duelPairIdx >= 0) {
           if (isArrived) {
-            const pairOffset = (f.duelPairIdx || 0) * 1.6;
-            const combatCycle = ((time * 0.0024) + pairOffset) % 3.2;
-            if (combatCycle < 1.5) {
-              animState = SKELETON_STATES.ATTACK_SLASH;
-            } else if (combatCycle < 2.3 && tier >= 2) {
-              animState = SKELETON_STATES.ATTACK_SPIN;
+            // Asymmetric combat rhythm: Blue and Red take turns attacking and parrying
+            const pairOffset = (f.duelPairIdx || 0) * 1.4;
+            const combatCycle = ((time * 0.0018) + pairOffset) % 4.0;
+
+            if (factionId === 'blue') {
+              if (combatCycle < 1.4) {
+                animState = (f.duelPairIdx % 2 === 0) ? SKELETON_STATES.ATTACK_BLUE_THRUST : SKELETON_STATES.ATTACK_BLUE_CROSS;
+              } else if (combatCycle < 2.0) {
+                animState = SKELETON_STATES.IDLE;
+              } else if (combatCycle < 3.4) {
+                animState = SKELETON_STATES.DEFEND_PARRY;
+              } else {
+                animState = SKELETON_STATES.IDLE;
+              }
             } else {
-              animState = SKELETON_STATES.IDLE;
+              // Red counters when Blue pauses
+              if (combatCycle < 1.4) {
+                animState = SKELETON_STATES.DEFEND_PARRY;
+              } else if (combatCycle < 2.0) {
+                animState = SKELETON_STATES.IDLE;
+              } else if (combatCycle < 3.4) {
+                animState = (f.duelPairIdx % 2 === 0) ? SKELETON_STATES.ATTACK_RED_CLEAVE : SKELETON_STATES.ATTACK_RED_SWEEP;
+              } else {
+                animState = SKELETON_STATES.IDLE;
+              }
             }
           } else {
             animState = SKELETON_STATES.WALK;
           }
         } else {
-          // Unpaired fighters waiting in ready martial stance
+          // Unpaired fighters waiting in ready stance
           animState = isArrived ? SKELETON_STATES.IDLE : SKELETON_STATES.WALK;
         }
 
         const skeletonData = computeSkeletalJoints({
           gender: fighterGender,
           animState: animState,
+          factionId: factionId,
           time: time,
           phase: f.bobPhase || 0,
           tier: tier,
@@ -1246,7 +1308,7 @@ export default function GameChienDau({
         if (tier >= 4 && !f.isKnockedOut) {
           const orbitSwords = tier === 5 ? 4 : 3;
           for (let s = 0; s < orbitSwords; s++) {
-            const angle = time * 0.004 + (s * (Math.PI * 2 / orbitSwords));
+            const angle = time * 0.003 + (s * (Math.PI * 2 / orbitSwords));
             const ox = Math.cos(angle) * 18;
             const oy = Math.sin(angle) * 11;
             ctx.save();
