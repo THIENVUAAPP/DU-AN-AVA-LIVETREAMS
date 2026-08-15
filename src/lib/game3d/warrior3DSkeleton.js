@@ -553,6 +553,14 @@ export function computeSkeletalJoints({
   };
 }
 
+function drawRoundRect(ctx, x, y, w, h, r) {
+  if (typeof ctx.roundRect === 'function') {
+    ctx.roundRect(x, y, w, h, r);
+  } else {
+    ctx.rect(x, y, w, h);
+  }
+}
+
 /**
  * Draws a 3D Armored Segment with realistic metallic shading, highlights, and gold trim
  */
@@ -763,7 +771,7 @@ export function render3DWarriorSkeleton(ctx, skeletonData, options = {}) {
   // 5. PELVIS & ARMORED FAULDS / TASSETS (Hông giáp & Đai lưng)
   ctx.save();
   ctx.beginPath();
-  ctx.roundRect(-chestW * 0.45, -4, chestW * 0.9, 7, 2);
+  drawRoundRect(ctx, -chestW * 0.45, -4, chestW * 0.9, 7, 2);
   ctx.fillStyle = isGoldTier ? '#ca8a04' : '#334155';
   ctx.fill();
   ctx.strokeStyle = isGoldTier ? '#fde047' : '#ffffff';
@@ -905,7 +913,7 @@ export function render3DWarriorSkeleton(ctx, skeletonData, options = {}) {
 
       // Blue Crossguard
       ctx.beginPath();
-      ctx.roundRect(-6.0, -3, 12, 3.5, 1.2);
+      drawRoundRect(ctx, -6.0, -3, 12, 3.5, 1.2);
       ctx.fillStyle = isGoldTier ? '#facc15' : '#0369a1';
       ctx.fill();
       ctx.strokeStyle = '#bae6fd';
@@ -947,7 +955,7 @@ export function render3DWarriorSkeleton(ctx, skeletonData, options = {}) {
 
       // Red Cleaver Guard
       ctx.beginPath();
-      ctx.roundRect(-7.5, -3.5, 15, 4.5, 1.5);
+      drawRoundRect(ctx, -7.5, -3.5, 15, 4.5, 1.5);
       ctx.fillStyle = isGoldTier ? '#ca8a04' : '#991b1b';
       ctx.fill();
       ctx.strokeStyle = '#fca5a5';
@@ -1056,7 +1064,7 @@ export function render3DWarriorSkeleton(ctx, skeletonData, options = {}) {
 
   // Helmet / Tiara Crown (Mũ giáp Thần Long hoặc Vương miện Valkyrie)
   ctx.beginPath();
-  ctx.roundRect(-headSize * 0.9, -headSize * 1.25, headSize * 1.8, 3.8, 1.5);
+  drawRoundRect(ctx, -headSize * 0.9, -headSize * 1.25, headSize * 1.8, 3.8, 1.5);
   ctx.fillStyle = isGoldTier ? '#ca8a04' : '#475569';
   ctx.fill();
   ctx.strokeStyle = isGoldTier ? '#fde047' : '#ffffff';

@@ -138,7 +138,58 @@ export default function GameChienDau({
 
   // Refs for Game Engine Loop
   const engineRef = useRef({
-    fighters: { blue: [], red: [] }, // { userId, nickname, score, rank, x, y, targetX, targetY, bobPhase, pulseUntil, tier, currentHp, maxHp, isKnockedOut, knockoutTime, knockbackVx, revivedAt }
+    fighters: {
+      blue: [{
+        userId: 'lead_blue_01',
+        nickname: config.blueName || 'Đại Tướng Xanh',
+        score: 150,
+        rank: 0,
+        gender: 'male',
+        factionId: 'blue',
+        x: 600,
+        y: 260,
+        targetX: 600,
+        targetY: 260,
+        isVipStage: true,
+        isDuelFront: true,
+        duelPairIdx: 0,
+        bobPhase: 0,
+        pulseUntil: 0,
+        maxHp: 600,
+        currentHp: 600,
+        isKnockedOut: false,
+        knockoutTime: 0,
+        knockbackVx: 0,
+        revivedAt: 0,
+        hasGift: false,
+        isSuperVip: false
+      }],
+      red: [{
+        userId: 'lead_red_01',
+        nickname: config.redName || 'Đại Tướng Đỏ',
+        score: 150,
+        rank: 0,
+        gender: 'female',
+        factionId: 'red',
+        x: 680,
+        y: 260,
+        targetX: 680,
+        targetY: 260,
+        isVipStage: true,
+        isDuelFront: true,
+        duelPairIdx: 0,
+        bobPhase: Math.PI,
+        pulseUntil: 0,
+        maxHp: 600,
+        currentHp: 600,
+        isKnockedOut: false,
+        knockoutTime: 0,
+        knockbackVx: 0,
+        revivedAt: 0,
+        hasGift: false,
+        isSuperVip: false
+      }]
+    },
     dancers: { blue: [], red: [] },   // { userId, nickname, factionId, danceStyleId, startedAt, durationMs, x, y, scale, targetX, targetY, targetScale }
     bosses: [],                      // { id, factionId, x, y, targetX, spawnedAt }
     particles: [],                   // { x, y, vx, vy, size, color, isFlash, lifespanMs, spawnedAt }
@@ -1014,17 +1065,19 @@ export default function GameChienDau({
     window.addEventListener('resize', handleResize);
 
     const renderLoop = (time) => {
-      const dt = Math.min(0.05, (time - engineRef.current.lastTime) / 1000);
-      engineRef.current.lastTime = time;
+      try {
+        const dt = Math.min(0.05, (time - engineRef.current.lastTime) / 1000);
+        engineRef.current.lastTime = time;
 
-      const w = engineRef.current.w || (canvas.width / (window.devicePixelRatio || 1));
-      const h = engineRef.current.h || (canvas.height / (window.devicePixelRatio || 1));
+        const w = engineRef.current.w || (canvas.width / (window.devicePixelRatio || 1));
+        const h = engineRef.current.h || (canvas.height / (window.devicePixelRatio || 1));
 
-      ctx.clearRect(0, 0, w, h);
+        ctx.clearRect(0, 0, w, h);
 
-      // 1. Draw Battlefield Background Grid & Central Rift
-      const centerX = w / 2;
-      const centerY = h / 2;
+        // 1. Draw Battlefield Background Grid & Central Rift
+        const centerX = w / 2;
+        const centerY = h / 2;
+        const daisY = h * 0.36;
 
       // Ground plane glow
       const groundGrad = ctx.createLinearGradient(0, h * 0.4, 0, h);
@@ -1802,12 +1855,15 @@ export default function GameChienDau({
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fill();
 
-        if (performance.now() - p.spawnedAt > p.lifespanMs) {
-          particles.splice(i, 1);
+          if (performance.now() - p.spawnedAt > p.lifespanMs) {
+            particles.splice(i, 1);
+          }
         }
+      } catch (err) {
+        console.error('Battlefield renderLoop error:', err);
+      } finally {
+        engineRef.current.rAfId = requestAnimationFrame(renderLoop);
       }
-
-      engineRef.current.rAfId = requestAnimationFrame(renderLoop);
     };
 
     engineRef.current.rAfId = requestAnimationFrame(renderLoop);
@@ -1816,7 +1872,7 @@ export default function GameChienDau({
       window.removeEventListener('resize', handleResize);
       if (engineRef.current.rAfId) cancelAnimationFrame(engineRef.current.rAfId);
     };
-  }, [config, updateFormation]);
+  }, [config, updateFormation, initDefaultChampions]);
 
   // Calculate HP Percentages
   const blueHpPct = Math.max(0, Math.min(100, (gameState.hp.blue / gameState.maxHp) * 100));
