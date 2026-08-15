@@ -1313,7 +1313,10 @@ export default function DesktopAppUI() {
 
       {/* Token History Modal */}
       {showTokenHistory && (
-        <TokenHistoryModal onClose={() => setShowTokenHistory(false)} />
+        <TokenHistoryModal 
+          onClose={() => setShowTokenHistory(false)} 
+          onOpenPayment={() => setActiveSettingsModal('coins')}
+        />
       )}
 
       {/* ---------------- MONITOR MODALS ---------------- */}

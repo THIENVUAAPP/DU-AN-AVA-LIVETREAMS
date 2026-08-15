@@ -552,6 +552,96 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
           ))}
         </div>
 
+        {/* TOKEN ADDON PACKAGES SUB-SECTION */}
+        <div className="mt-16 bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-indigo-500/10 border border-amber-500/30 rounded-3xl p-8 max-w-7xl mx-auto backdrop-blur-xl">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8 text-center md:text-left">
+            <div>
+              <span className="px-3 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-full text-xs font-black uppercase tracking-wider inline-flex items-center gap-1.5 mb-2">
+                💎 Gói Nạp Thêm Token Phụ (Dùng Ngay)
+              </span>
+              <h3 className="text-2xl font-black text-white">Nạp Thêm Token Linh Hoạt — Tặng Đến +20% Token</h3>
+              <p className="text-gray-400 text-xs mt-1">Sử dụng cho AI Gemini, ElevenLabs TTS & Minigame. Không giới hạn thời gian sử dụng.</p>
+            </div>
+            <button
+              onClick={() => setActiveTab && setActiveTab('enterprise')}
+              className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-90 text-white font-black text-xs rounded-xl shadow-lg transition-all flex items-center gap-2 shrink-0 cursor-pointer"
+            >
+              <span>Xem Chi Tiết Cổng Nạp SePay</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* GÓI 1 */}
+            <div 
+              onClick={() => setActiveTab && setActiveTab('enterprise')}
+              className="bg-[#0B0B14] p-6 rounded-2xl border border-white/10 hover:border-amber-500/50 transition-all cursor-pointer group hover:-translate-y-1 shadow-lg"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-black text-blue-400 bg-blue-500/10 border border-blue-500/30 px-2 py-0.5 rounded-full">THƯỞNG +10%</span>
+                <span className="text-xs text-gray-400 font-mono">10.000 + 1.000</span>
+              </div>
+              <h4 className="text-lg font-black text-white group-hover:text-amber-400 transition-colors">Gói Token Khởi Nghiệp</h4>
+              <p className="text-2xl font-black text-amber-400 my-2">499.000đ</p>
+              <p className="text-xs text-gray-300 font-bold mb-4 flex items-center gap-1">
+                <span>💎 Nhận:</span>
+                <span className="text-emerald-400 font-black text-sm">11.000 Token</span>
+              </p>
+              <ul className="text-xs text-gray-400 space-y-1.5 border-t border-white/5 pt-3">
+                <li>✓ Dùng AI Gemini & TTS ~1.500 lượt</li>
+                <li>✓ Không giới hạn thời gian hết hạn</li>
+                <li>✓ Quét mã VietQR nhận token ngay 3s</li>
+              </ul>
+            </div>
+
+            {/* GÓI 2 */}
+            <div 
+              onClick={() => setActiveTab && setActiveTab('enterprise')}
+              className="bg-[#0E0C1B] p-6 rounded-2xl border-2 border-amber-500/60 shadow-xl shadow-amber-500/10 hover:border-amber-400 transition-all cursor-pointer group hover:-translate-y-1 relative"
+            >
+              <div className="absolute -top-3 right-6 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-black px-3 py-0.5 rounded-full shadow">
+                PHỔ BIẾN NHẤT +15%
+              </div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-black text-amber-300 bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 rounded-full">GIÁ TRỊ X3</span>
+                <span className="text-xs text-gray-400 font-mono">30.000 + 4.500</span>
+              </div>
+              <h4 className="text-lg font-black text-white group-hover:text-amber-300 transition-colors">Gói Token Tăng Trưởng</h4>
+              <p className="text-2xl font-black text-amber-400 my-2">1.497.000đ</p>
+              <p className="text-xs text-gray-300 font-bold mb-4 flex items-center gap-1">
+                <span>💎 Nhận:</span>
+                <span className="text-emerald-400 font-black text-sm">34.500 Token</span>
+              </p>
+              <ul className="text-xs text-gray-400 space-y-1.5 border-t border-white/5 pt-3">
+                <li>✓ Dùng AI Gemini & TTS ~5.000 lượt</li>
+                <li>✓ Ưu tiên băng thông đường truyền AI</li>
+                <li>✓ Tặng thêm +15% Token thưởng</li>
+              </ul>
+            </div>
+
+            {/* GÓI 3 */}
+            <div 
+              onClick={() => setActiveTab && setActiveTab('enterprise')}
+              className="bg-[#0B0B14] p-6 rounded-2xl border border-white/10 hover:border-amber-500/50 transition-all cursor-pointer group hover:-translate-y-1 shadow-lg"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-black text-purple-400 bg-purple-500/10 border border-purple-500/30 px-2 py-0.5 rounded-full">SIÊU VIP +20%</span>
+                <span className="text-xs text-gray-400 font-mono">90.000 + 18.000</span>
+              </div>
+              <h4 className="text-lg font-black text-white group-hover:text-purple-300 transition-colors">Gói Token Đột Phá VIP</h4>
+              <p className="text-2xl font-black text-amber-400 my-2">4.491.000đ</p>
+              <p className="text-xs text-gray-300 font-bold mb-4 flex items-center gap-1">
+                <span>💎 Nhận:</span>
+                <span className="text-emerald-400 font-black text-sm">108.000 Token</span>
+              </p>
+              <ul className="text-xs text-gray-400 space-y-1.5 border-t border-white/5 pt-3">
+                <li>✓ Dùng AI Gemini & TTS ~15.000 lượt</li>
+                <li>✓ Tặng thêm +20% Token thưởng</li>
+                <li>✓ Hỗ trợ kỹ thuật VIP riêng 24/7</li>
+              </ul>
+            </div>
+          </div>
+        </div>
 
       </section>
 

@@ -4,42 +4,50 @@ import { useToken } from './TokenContext';
 import SepayQRModal from './SepayQRModal';
 
 // ============================================================
-// CÁC GÓI TOKEN (Anh chỉnh giá & số token ở đây)
+// CÁC GÓI NẠP THÊM TOKEN PHỤ (3 Gói Giá trị x3, Tăng Thưởng 10% - 15% - 20%)
 // ============================================================
-const TOKEN_PACKAGES = [
+export const TOKEN_ADDON_PACKAGES = [
   {
-    id: 'starter',
-    name: 'Gói Khởi Đầu',
-    tokens: 1000,
-    price: 99000,
+    id: 'token_starter',
+    name: 'Gói Token Khởi Nghiệp',
+    tokens: 11000, // 10.000 + 10% thưởng = 11.000 Token
+    baseTokens: 10000,
+    bonusPercent: 10,
+    price: 499000,
     icon: Zap,
     color: 'blue',
-    desc: 'Phù hợp để trải nghiệm AvaLive AI',
-    features: ['1.000 Token AvaLive', 'Dùng AI Gemini ~200 phiên', 'Dùng ElevenLabs TTS ~50.000 ký tự'],
+    desc: 'Gói nạp phụ trải nghiệm AI mượt mà',
+    features: ['10.000 Token Gốc', 'Tặng thêm +10% Token (1.000 Token)', 'Tổng nhận: 11.000 Token', 'Dùng AI Gemini & ElevenLabs ~1.500 lượt', 'Không giới hạn thời gian sử dụng'],
     highlight: false,
+    badge: 'THƯỞNG +10%',
   },
   {
-    id: 'pro',
-    name: 'Gói Pro',
-    tokens: 5000,
-    price: 399000,
+    id: 'token_growth',
+    name: 'Gói Token Tăng Trưởng',
+    tokens: 34500, // 30.000 + 15% thưởng = 34.500 Token
+    baseTokens: 30000,
+    bonusPercent: 15,
+    price: 1497000, // 499.000 x 3
     icon: Rocket,
     color: 'indigo',
-    desc: 'Livestream không giới hạn cả tuần',
-    features: ['5.000 Token AvaLive', 'Dùng AI Gemini ~1.000 phiên', 'Dùng ElevenLabs TTS ~250.000 ký tự', 'Tặng thêm 10% Token'],
+    desc: 'Giá trị x3 lần — Livestream liên tục cả tháng',
+    features: ['30.000 Token Gốc (x3 Giá trị)', 'Tặng thêm +15% Token (4.500 Token)', 'Tổng nhận: 34.500 Token', 'Dùng AI Gemini & ElevenLabs ~5.000 lượt', 'Ưu tiên băng thông đường truyền AI'],
     highlight: true,
-    badge: 'PHỔ BIẾN',
+    badge: 'PHỔ BIẾN NHẤT +15%',
   },
   {
-    id: 'vip',
-    name: 'Gói VIP',
-    tokens: 15000,
-    price: 999000,
+    id: 'token_vip',
+    name: 'Gói Token Đột Phá VIP',
+    tokens: 108000, // 90.000 + 20% thưởng = 108.000 Token
+    baseTokens: 90000,
+    bonusPercent: 20,
+    price: 4491000, // 1.497.000 x 3
     icon: Crown,
     color: 'amber',
-    desc: 'Dành cho streamer chuyên nghiệp',
-    features: ['15.000 Token AvaLive', 'Dùng AI Gemini ~3.000 phiên', 'Dùng ElevenLabs TTS ~750.000 ký tự', 'Tặng thêm 20% Token', 'Hỗ trợ kỹ thuật ưu tiên'],
+    desc: 'Giá trị x3 tiếp — Dành cho Studio & Streamer VIP',
+    features: ['90.000 Token Gốc (x9 Giá trị)', 'Tặng thêm +20% Token (18.000 Token)', 'Tổng nhận: 108.000 Token', 'Dùng AI Gemini & ElevenLabs ~15.000 lượt', 'Hỗ trợ kỹ thuật VIP 24/7 riêng biệt'],
     highlight: false,
+    badge: 'SIÊU VIP +20%',
   },
 ];
 
@@ -63,24 +71,24 @@ export default function ThanhToanCoin({ onClose }) {
         <div className="flex flex-col lg:flex-row items-start gap-8 mb-10">
           <div className="flex-1">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-400 rounded-full text-[10px] font-black mb-4 border border-amber-500/20 uppercase tracking-widest">
-              <Sparkles size={10} /> AvaLive Token System
+              <Sparkles size={10} /> AvaLive Token Addon System
             </span>
             <h1 className="text-4xl font-black text-white mb-3 leading-tight">
-              Nạp Token để<br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400">Livestream không ngừng</span>
+              Nạp Thêm Token để<br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400">Livestream Không Giới Hạn</span>
             </h1>
             <p className="text-gray-400 font-medium leading-relaxed max-w-md">
-              Token được sử dụng khi AI Gemini và ElevenLabs xử lý phiên live. Mua một lần, dùng mãi không hết hạn theo gói.
+              Token nạp phụ sử dụng linh hoạt cho AI Gemini, ElevenLabs TTS và Game Tương Tác. Thưởng thêm đến 20% Token, không bao giờ hết hạn.
             </p>
             <div className="flex flex-wrap gap-2 mt-4">
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded-full border border-white/10 text-xs font-bold text-gray-300">
-                <Check size={12} className="text-emerald-400" /> Thanh toán qua SePay
+                <Check size={12} className="text-emerald-400" /> Thanh toán VietQR SePay
               </div>
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded-full border border-white/10 text-xs font-bold text-gray-300">
-                <Check size={12} className="text-emerald-400" /> Cộng token tự động
+                <Check size={12} className="text-emerald-400" /> Thưởng thêm 10% - 20% Token
               </div>
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded-full border border-white/10 text-xs font-bold text-gray-300">
-                <Check size={12} className="text-emerald-400" /> Token không hết hạn
+                <Check size={12} className="text-emerald-400" /> Token vĩnh viễn không hết hạn
               </div>
             </div>
           </div>
@@ -99,9 +107,15 @@ export default function ThanhToanCoin({ onClose }) {
         </div>
 
         {/* Packages */}
-        <h2 className="text-xl font-black text-white mb-5">Chọn gói Token phù hợp</h2>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-xl font-black text-white">3 Gói Nạp Thêm Token Ưu Đãi</h2>
+          <span className="text-xs text-amber-400 font-bold bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full">
+            🎁 Tặng Thêm Đến +20% Token
+          </span>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {TOKEN_PACKAGES.map(pkg => {
+          {TOKEN_ADDON_PACKAGES.map(pkg => {
             const c = colorMap[pkg.color];
             const Icon = pkg.icon;
             return (
@@ -129,7 +143,12 @@ export default function ThanhToanCoin({ onClose }) {
                 <div className="mb-4">
                   <span className="text-3xl font-black text-white">{pkg.price.toLocaleString()}</span>
                   <span className="text-gray-400 text-sm">đ</span>
-                  <div className="text-sm font-bold text-amber-400 mt-1">+{pkg.tokens.toLocaleString()} Token</div>
+                  <div className="text-sm font-bold text-amber-400 mt-1 flex items-center gap-1.5">
+                    <span>+{pkg.tokens.toLocaleString()} Token</span>
+                    <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/30 font-bold">
+                      +{pkg.bonusPercent}% Thưởng
+                    </span>
+                  </div>
                 </div>
 
                 <ul className="space-y-2 mb-5">
@@ -145,15 +164,15 @@ export default function ThanhToanCoin({ onClose }) {
                   onClick={() => setSelectedPkg(pkg)}
                   className={`w-full py-3 bg-gradient-to-r ${c.bg} hover:opacity-90 text-white font-black rounded-xl shadow-md transition-all text-sm`}
                 >
-                  Mua ngay • {pkg.price.toLocaleString()}đ
+                  Nạp ngay • {pkg.price.toLocaleString()}đ
                 </button>
               </div>
             );
           })}
         </div>
 
-        <p className="text-center text-xs text-gray-600 mt-8">
-          🔒 Thanh toán được bảo mật qua cổng SePay • VietQR • Hỗ trợ tất cả ngân hàng Việt Nam
+        <p className="text-center text-xs text-gray-400 mt-8">
+          🔒 Thanh toán bảo mật qua cổng SePay VietQR (Techcombank 19035907828017) • Tự động cộng Token ngay sau 3 giây
         </p>
       </div>
 

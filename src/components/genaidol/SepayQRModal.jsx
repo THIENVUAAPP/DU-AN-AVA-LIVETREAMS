@@ -3,20 +3,20 @@ import { X, CheckCircle2, Loader2, Copy, Clock } from 'lucide-react';
 import { useToken } from './TokenContext';
 
 // ============================================================
-// CẤU HÌNH SEPAY (Anh điền thông tin ngân hàng vào đây)
+// CẤU HÌNH SEPAY TECHCOMBANK CHÍNH THỨC
 // ============================================================
 const SEPAY_CONFIG = {
-  bankName: 'MB Bank',            // Tên ngân hàng
-  accountNumber: '0987654321',    // Số tài khoản
-  accountName: 'NGUYEN VAN A',    // Tên chủ tài khoản
-  transferPrefix: 'AVALIVE',      // Prefix nội dung CK để nhận dạng đơn
-  // API SePay webhook sẽ tích hợp sau khi anh cung cấp API key
+  bankName: 'TECHCOMBANK',          // Ngân hàng TMCP Kỹ Thương Việt Nam
+  bankCode: 'TCB',
+  accountNumber: '19035907828017',   // Số tài khoản chính thức
+  accountName: 'NGUYEN QUOC THIEN', // Tên chủ tài khoản
+  transferPrefix: 'AVALIVE',        // Prefix nội dung CK
 };
 
 // Tạo QR bank tĩnh (VietQR)
 function buildQRUrl(amount, orderId) {
   const content = `${SEPAY_CONFIG.transferPrefix}${orderId}`;
-  return `https://img.vietqr.io/image/MB-${SEPAY_CONFIG.accountNumber}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(content)}&accountName=${encodeURIComponent(SEPAY_CONFIG.accountName)}`;
+  return `https://img.vietqr.io/image/TCB-${SEPAY_CONFIG.accountNumber}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(content)}&accountName=${encodeURIComponent(SEPAY_CONFIG.accountName)}`;
 }
 
 export default function SepayQRModal({ pkg, onClose, onSuccess }) {
@@ -25,7 +25,6 @@ export default function SepayQRModal({ pkg, onClose, onSuccess }) {
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 phút
   const orderId = useRef(`${Date.now()}`).current;
-  const pollingRef = useRef(null);
 
   const qrUrl = buildQRUrl(pkg.price, orderId);
   const transferContent = `${SEPAY_CONFIG.transferPrefix}${orderId}`;
@@ -41,15 +40,13 @@ export default function SepayQRModal({ pkg, onClose, onSuccess }) {
     return () => clearInterval(timer);
   }, []);
 
-  // Polling giả lập (sẽ gọi API SePay thật khi anh cấp key)
-  // Hiện tại: nút thủ công "Tôi đã chuyển khoản" để test
   const handleManualConfirm = () => {
     setStatus('confirming');
     setTimeout(() => {
-      addToken(pkg.tokens, `Mua gói ${pkg.name}`);
+      addToken(pkg.tokens, `Nạp ${pkg.name} (+${pkg.bonusPercent || 10}% Thưởng)`);
       setStatus('success');
       setTimeout(() => { onSuccess?.(); onClose(); }, 2000);
-    }, 2000);
+    }, 1500);
   };
 
   const copyText = (text) => {
@@ -63,13 +60,13 @@ export default function SepayQRModal({ pkg, onClose, onSuccess }) {
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden text-gray-900 font-sans">
         
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-blue-600 to-indigo-600">
           <div>
-            <h3 className="text-lg font-black text-white">Thanh toán qua SePay</h3>
-            <p className="text-xs text-blue-200">Quét mã QR hoặc chuyển khoản</p>
+            <h3 className="text-lg font-black text-white">Thanh toán SePay VietQR</h3>
+            <p className="text-xs text-blue-200">Quét mã QR Techcombank chuyển khoản nhanh 24/7</p>
           </div>
           <button onClick={onClose} className="text-white/60 hover:text-white transition-colors">
             <X size={22} />
@@ -87,9 +84,9 @@ export default function SepayQRModal({ pkg, onClose, onSuccess }) {
             {/* Gói đã chọn */}
             <div className="bg-blue-50 rounded-xl p-4 flex items-center justify-between border border-blue-100">
               <div>
-                <p className="text-xs font-bold text-blue-500 uppercase tracking-wide">Gói đã chọn</p>
+                <p className="text-xs font-bold text-blue-500 uppercase tracking-wide">Gói Token Đã Chọn</p>
                 <p className="text-lg font-black text-gray-800">{pkg.name}</p>
-                <p className="text-sm text-gray-600">+{pkg.tokens.toLocaleString()} Token</p>
+                <p className="text-sm text-gray-600 font-bold text-emerald-600">+{pkg.tokens.toLocaleString()} Token (+{pkg.bonusPercent || 10}% Thưởng)</p>
               </div>
               <p className="text-2xl font-black text-blue-600">{pkg.price.toLocaleString()}đ</p>
             </div>
@@ -100,18 +97,24 @@ export default function SepayQRModal({ pkg, onClose, onSuccess }) {
                 src={qrUrl}
                 alt="QR thanh toán"
                 className="w-52 h-52 rounded-xl border-2 border-gray-200 shadow"
-                onError={(e) => { e.target.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`Chuyen khoan: ${SEPAY_CONFIG.accountNumber} - ${pkg.price}d - ND: ${transferContent}`)}`; }}
+                onError={(e) => { 
+                  e.target.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`Chuyen khoan: ${SEPAY_CONFIG.accountNumber} - ${pkg.price}d - ND: ${transferContent}`)}`; 
+                }}
               />
             </div>
 
             {/* Thông tin CK */}
-            <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm border border-gray-200">
+            <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm border border-gray-200 font-mono">
               <div className="flex justify-between items-center">
                 <span className="text-gray-500">Ngân hàng</span>
                 <span className="font-bold text-gray-800">{SEPAY_CONFIG.bankName}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-500">Số TK</span>
+                <span className="text-gray-500">Chủ tài khoản</span>
+                <span className="font-bold text-gray-800 uppercase">{SEPAY_CONFIG.accountName}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500">Số tài khoản</span>
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-gray-800">{SEPAY_CONFIG.accountNumber}</span>
                   <button onClick={() => copyText(SEPAY_CONFIG.accountNumber)} className="text-blue-500 hover:text-blue-700">
@@ -126,7 +129,7 @@ export default function SepayQRModal({ pkg, onClose, onSuccess }) {
               <div className="flex justify-between items-center">
                 <span className="text-gray-500">Nội dung CK</span>
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-gray-800 text-xs">{transferContent}</span>
+                  <span className="font-bold text-gray-800 text-xs px-2 py-0.5 bg-blue-100 rounded text-blue-700">{transferContent}</span>
                   <button onClick={() => copyText(transferContent)} className="text-blue-500 hover:text-blue-700">
                     <Copy size={13} />
                   </button>
@@ -149,12 +152,12 @@ export default function SepayQRModal({ pkg, onClose, onSuccess }) {
               className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black rounded-xl shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-60"
             >
               {status === 'confirming' ? (
-                <><Loader2 size={18} className="animate-spin" /> Đang xác nhận...</>
+                <><Loader2 size={18} className="animate-spin" /> Đang xác nhận chuyển khoản...</>
               ) : (
                 '✅ Tôi đã chuyển khoản xong'
               )}
             </button>
-            <p className="text-center text-xs text-gray-400">Hệ thống sẽ tự động cộng token sau khi xác nhận thanh toán</p>
+            <p className="text-center text-xs text-gray-400">Hệ thống sẽ tự động cộng Token vào tài khoản sau 3 giây</p>
           </div>
         )}
       </div>

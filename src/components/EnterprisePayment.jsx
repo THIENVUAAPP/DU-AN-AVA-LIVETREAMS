@@ -9,11 +9,19 @@ import {
   Copy,
   Check,
   RefreshCw,
-  Clock
+  Clock,
+  Coins,
+  Crown,
+  Sparkles,
+  Rocket
 } from "lucide-react";
+import { useToken } from "./genaidol/TokenContext";
 
-export default function EnterprisePayment({ setActiveTab }) {
+export default function EnterprisePayment({ setActiveTab, initialCategory = "subscription" }) {
+  const { addToken } = useToken();
+  const [paymentCategory, setPaymentCategory] = useState(initialCategory); // "subscription" | "tokens"
   const [selectedPlan, setSelectedPlan] = useState("business");
+  const [selectedTokenPlan, setSelectedTokenPlan] = useState("token_growth");
   const [billingCycle, setBillingCycle] = useState("annual");
   const [paymentStep, setPaymentStep] = useState("checkout");
   const [activePlanData, setActivePlanData] = useState(null);
@@ -42,7 +50,8 @@ export default function EnterprisePayment({ setActiveTab }) {
     setTimeout(() => setCopiedField(null), 2000);
   };
 
-  const plans = [
+  // 1. GÓI BẢN QUYỀN PHẦN MỀM LIVESTREAM (Tháng / Năm)
+  const subscriptionPlans = [
     { 
       id: "starter", 
       name: "Starter Pro", 
@@ -85,38 +94,120 @@ export default function EnterprisePayment({ setActiveTab }) {
     },
   ];
 
-  const currentPlan = plans.find(p => p.id === selectedPlan) || plans[1];
+  // 2. 3 GÓI NẠP THÊM TOKEN PHỤ (499k +10%, 1.497k +15%, 4.491k +20%)
+  const tokenAddonPlans = [
+    {
+      id: "token_starter",
+      name: "Gói Token Khởi Nghiệp",
+      tokens: 11000,
+      baseTokens: 10000,
+      bonusPercent: 10,
+      priceVnd: "499.000",
+      priceDisplay: "499.000đ",
+      priceNum: 499000,
+      orderCode: "AVATOKEN499",
+      desc: "Nạp thêm 10.000 Token + Thưởng 10%",
+      badge: "THƯỞNG +10% TOKEN",
+      icon: Zap
+    },
+    {
+      id: "token_growth",
+      name: "Gói Token Tăng Trưởng (x3)",
+      tokens: 34500,
+      baseTokens: 30000,
+      bonusPercent: 15,
+      priceVnd: "1.497.000",
+      priceDisplay: "1.497.000đ",
+      priceNum: 1497000,
+      orderCode: "AVATOKEN1497",
+      desc: "Nạp thêm 30.000 Token + Thưởng 15%",
+      badge: "PHỔ BIẾN NHẤT +15%",
+      popular: true,
+      icon: Rocket
+    },
+    {
+      id: "token_vip",
+      name: "Gói Token Đột Phá VIP (x9)",
+      tokens: 108000,
+      baseTokens: 90000,
+      bonusPercent: 20,
+      priceVnd: "4.491.000",
+      priceDisplay: "4.491.000đ",
+      priceNum: 4491000,
+      orderCode: "AVATOKEN4491",
+      desc: "Nạp thêm 90.000 Token + Thưởng 20%",
+      badge: "SIÊU VIP +20% TOKEN",
+      icon: Crown
+    }
+  ];
+
+  const currentPlan = paymentCategory === "subscription"
+    ? (subscriptionPlans.find(p => p.id === selectedPlan) || subscriptionPlans[1])
+    : (tokenAddonPlans.find(p => p.id === selectedTokenPlan) || tokenAddonPlans[1]);
+
   const bankAccountNum = "19035907828017";
   const bankAccountName = "NGUYEN QUOC THIEN";
   const bankName = "TECHCOMBANK";
 
   const handleActivatePaymentSuccess = async () => {
-    await syncPaymentToSupabase({
-      plan: currentPlan.id.toUpperCase(), // Using ID to be precise (STARTER, PRO, VIP)
-      amount: currentPlan.priceNum,
-      referenceCode: currentPlan.orderCode,
-      status: "completed",
-      billingCycle: billingCycle
-    });
-    const expiresDate = new Date(Date.now() + (billingCycle === "annual" ? 365 : 30) * 86400000).toLocaleDateString("vi-VN");
-    const todayDate = new Date().toLocaleDateString("vi-VN");
+    if (paymentCategory === "tokens") {
+      // Add tokens directly to account
+      addToken(currentPlan.tokens, `Nạp ${currentPlan.name} (+${currentPlan.bonusPercent}% Thưởng)`);
 
-    const planData = {
-      planId: currentPlan.id,
-      planName: currentPlan.name,
-      price: currentPlan.priceDisplay,
-      billingCycle: billingCycle === "annual" ? "Gói 1 Năm (Tặng 2 Tháng)" : "Gói 1 Tháng",
-      activatedAt: todayDate,
-      expiresAt: expiresDate,
-      hours: currentPlan.hours,
-      channels: currentPlan.channels,
-      res: currentPlan.res,
-      isPaid: true
-    };
+      await syncPaymentToSupabase({
+        plan: currentPlan.id.toUpperCase(),
+        amount: currentPlan.priceNum,
+        referenceCode: currentPlan.orderCode,
+        status: "completed",
+        billingCycle: "Token Addon"
+      });
 
-    localStorage.setItem("avalive_active_plan", JSON.stringify(planData));
-    setActivePlanData(planData);
-    setPaymentStep("thankyou");
+      const todayDate = new Date().toLocaleDateString("vi-VN");
+      const planData = {
+        planId: currentPlan.id,
+        planName: currentPlan.name,
+        price: currentPlan.priceDisplay,
+        tokensReceived: currentPlan.tokens,
+        bonusPercent: currentPlan.bonusPercent,
+        billingCycle: "Gói Nạp Thêm Token (Không hết hạn)",
+        activatedAt: todayDate,
+        expiresAt: "Vĩnh viễn",
+        isPaid: true,
+        isTokenAddon: true
+      };
+
+      setActivePlanData(planData);
+      setPaymentStep("thankyou");
+    } else {
+      // Software subscription activation
+      await syncPaymentToSupabase({
+        plan: currentPlan.id.toUpperCase(),
+        amount: currentPlan.priceNum,
+        referenceCode: currentPlan.orderCode,
+        status: "completed",
+        billingCycle: billingCycle
+      });
+      const expiresDate = new Date(Date.now() + (billingCycle === "annual" ? 365 : 30) * 86400000).toLocaleDateString("vi-VN");
+      const todayDate = new Date().toLocaleDateString("vi-VN");
+
+      const planData = {
+        planId: currentPlan.id,
+        planName: currentPlan.name,
+        price: currentPlan.priceDisplay,
+        billingCycle: billingCycle === "annual" ? "Gói 1 Năm (Tặng 2 Tháng)" : "Gói 1 Tháng",
+        activatedAt: todayDate,
+        expiresAt: expiresDate,
+        hours: currentPlan.hours,
+        channels: currentPlan.channels,
+        res: currentPlan.res,
+        isPaid: true,
+        isTokenAddon: false
+      };
+
+      localStorage.setItem("avalive_active_plan", JSON.stringify(planData));
+      setActivePlanData(planData);
+      setPaymentStep("thankyou");
+    }
   };
 
   return (
@@ -126,47 +217,108 @@ export default function EnterprisePayment({ setActiveTab }) {
       {paymentStep === "checkout" && (
         <div className="space-y-5 animate-fadeIn">
 
-          {/* Billing Cycle & Plan Selector */}
-          <div className="bg-[#12121D] p-3 rounded-2xl border border-white/10 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-gray-300">CHỌN GÓI THANH TOÁN SEPAY:</span>
-              <div className="flex items-center gap-1 bg-black/50 p-1 rounded-xl border border-white/10 text-[11px]">
-                <button
-                  onClick={() => setBillingCycle("monthly")}
-                  className={`px-2.5 py-1 rounded-lg font-bold transition-all ${billingCycle === "monthly" ? "bg-[#EF4444] text-white" : "text-gray-400 hover:text-white"}`}
-                >
-                  Tháng
-                </button>
-                <button
-                  onClick={() => setBillingCycle("annual")}
-                  className={`px-2.5 py-1 rounded-lg font-bold transition-all ${billingCycle === "annual" ? "bg-emerald-600 text-white" : "text-gray-400 hover:text-white"}`}
-                >
-                  Năm (Tặng 2Th)
-                </button>
+          {/* MAIN CATEGORY TAB SWITCHER: SOFTWARE PLANS VS TOKEN ADDONS */}
+          <div className="bg-[#12121D] p-1.5 rounded-2xl border border-white/15 flex items-center gap-1.5">
+            <button
+              onClick={() => setPaymentCategory("subscription")}
+              className={`flex-1 py-2.5 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2 ${
+                paymentCategory === "subscription"
+                  ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-glow-emerald"
+                  : "text-gray-400 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <Zap className="w-4 h-4" />
+              <span>Gói Bản Quyền Live</span>
+            </button>
+            <button
+              onClick={() => setPaymentCategory("tokens")}
+              className={`flex-1 py-2.5 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2 ${
+                paymentCategory === "tokens"
+                  ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
+                  : "text-gray-400 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <Coins className="w-4 h-4 text-amber-300" />
+              <span>Nạp Thêm Token (+20%)</span>
+            </button>
+          </div>
+
+          {/* PLAN SELECTOR ACCORDING TO ACTIVE CATEGORY */}
+          {paymentCategory === "subscription" ? (
+            <div className="bg-[#12121D] p-3.5 rounded-2xl border border-white/10 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-gray-300">CHỌN GÓI BẢN QUYỀN SEPAY:</span>
+                <div className="flex items-center gap-1 bg-black/50 p-1 rounded-xl border border-white/10 text-[11px]">
+                  <button
+                    onClick={() => setBillingCycle("monthly")}
+                    className={`px-2.5 py-1 rounded-lg font-bold transition-all ${billingCycle === "monthly" ? "bg-[#EF4444] text-white" : "text-gray-400 hover:text-white"}`}
+                  >
+                    Tháng
+                  </button>
+                  <button
+                    onClick={() => setBillingCycle("annual")}
+                    className={`px-2.5 py-1 rounded-lg font-bold transition-all ${billingCycle === "annual" ? "bg-emerald-600 text-white" : "text-gray-400 hover:text-white"}`}
+                  >
+                    Năm (Tặng 2Th)
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                {subscriptionPlans.map((p) => {
+                  const isSel = p.id === selectedPlan;
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => setSelectedPlan(p.id)}
+                      className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                        isSel 
+                          ? "bg-emerald-950/60 border-emerald-500 text-white shadow-glow-emerald" 
+                          : "bg-black/40 border-white/10 text-gray-400 hover:text-white"
+                      }`}
+                    >
+                      <span className="text-[9px] font-bold block text-emerald-400">{p.badge}</span>
+                      <span className="text-xs font-black block text-white truncate">{p.name}</span>
+                      <span className="text-[11px] font-bold block text-emerald-300">{p.priceDisplay}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
+          ) : (
+            <div className="bg-[#12121D] p-3.5 rounded-2xl border border-amber-500/30 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" /> CHỌN GÓI NẠP THÊM TOKEN PHỤ:
+                </span>
+                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
+                  Tặng Thêm Đến +20%
+                </span>
+              </div>
 
-            <div className="grid grid-cols-3 gap-2">
-              {plans.map((p) => {
-                const isSel = p.id === selectedPlan;
-                return (
-                  <button
-                    key={p.id}
-                    onClick={() => setSelectedPlan(p.id)}
-                    className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
-                      isSel 
-                        ? "bg-emerald-950/60 border-emerald-500 text-white shadow-glow-emerald" 
-                        : "bg-black/40 border-white/10 text-gray-400 hover:text-white"
-                    }`}
-                  >
-                    <span className="text-[9px] font-bold block text-emerald-400">{p.badge}</span>
-                    <span className="text-xs font-black block text-white truncate">{p.name}</span>
-                    <span className="text-[11px] font-bold block text-emerald-300">{p.priceDisplay}</span>
-                  </button>
-                );
-              })}
+              <div className="grid grid-cols-3 gap-2">
+                {tokenAddonPlans.map((p) => {
+                  const isSel = p.id === selectedTokenPlan;
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => setSelectedTokenPlan(p.id)}
+                      className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                        isSel 
+                          ? "bg-amber-950/60 border-amber-500 text-white shadow-lg shadow-amber-500/20" 
+                          : "bg-black/40 border-white/10 text-gray-400 hover:text-white"
+                      }`}
+                    >
+                      <span className="text-[9px] font-bold block text-amber-400 truncate">{p.badge}</span>
+                      <span className="text-xs font-black block text-white truncate">{p.name}</span>
+                      <span className="text-[11px] font-bold block text-amber-300">+{p.tokens.toLocaleString()} T</span>
+                      <span className="text-[10px] text-gray-400 block">{p.priceDisplay}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* MAIN EXACT SEPAY PAYMENT CARD */}
           <div className="bg-[#0D0D18] p-6 md:p-8 rounded-[32px] border border-white/15 shadow-2xl space-y-6 text-center">
@@ -208,6 +360,11 @@ export default function EnterprisePayment({ setActiveTab }) {
                 <p className="text-xs font-black text-gray-900 uppercase tracking-wide">{bankAccountName}</p>
                 <p className="text-xs font-mono font-bold text-gray-700">{bankAccountNum}</p>
                 <p className="text-xs font-mono font-black text-[#EF4444]">Số tiền: {currentPlan.priceVnd} VND</p>
+                {paymentCategory === "tokens" && (
+                  <p className="text-[11px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full inline-block mt-1">
+                    💎 Nhận: {currentPlan.tokens.toLocaleString()} Token (+{currentPlan.bonusPercent}%)
+                  </p>
+                )}
               </div>
 
             </div>
@@ -215,7 +372,7 @@ export default function EnterprisePayment({ setActiveTab }) {
             {/* THÔNG TIN CHUYỂN KHOẢN BOX WITH 1-CLICK COPY BUTTONS */}
             <div className="bg-[#151525] p-5 rounded-2xl border border-white/10 text-xs font-mono text-left space-y-3.5 shadow-inner">
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block border-b border-white/10 pb-2">
-                THÔNG TIN CHUYỂN KHOẢN
+                THÔNG TIN CHUYỂN KHOẢN CHÍNH THỨC
               </span>
 
               <div className="flex items-center justify-between">
@@ -276,7 +433,7 @@ export default function EnterprisePayment({ setActiveTab }) {
             <div className="space-y-2 pt-1 text-center">
               <div className="inline-flex items-center gap-2 text-xs font-mono font-bold text-emerald-400">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-                <span>🟢 Đang chờ xác nhận thanh toán...</span>
+                <span>🟢 Đang chờ xác nhận thanh toán tự động...</span>
               </div>
               <p className="text-[10px] text-gray-500 font-mono">
                 🔒 Giao dịch được bảo mật · Tự động kích hoạt qua SePay Webhook
@@ -297,7 +454,7 @@ export default function EnterprisePayment({ setActiveTab }) {
         </div>
       )}
 
-      {/* STEP 2: THANK YOU & VIP CONFIRMATION VIEW */}
+      {/* STEP 2: THANK YOU & CONFIRMATION VIEW */}
       {paymentStep === "thankyou" && activePlanData && (
         <div className="glass-panel p-8 md:p-12 rounded-[32px] border border-emerald-500/50 bg-gradient-to-br from-emerald-950/40 via-[#0A0A0A] to-black shadow-2xl text-center space-y-6 animate-fadeIn">
           
@@ -311,26 +468,39 @@ export default function EnterprisePayment({ setActiveTab }) {
             </span>
             <h2 className="text-3xl md:text-5xl font-black text-white">
               Cảm Ơn Quý Khách!<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-green-400">Gói VIP Đã Kích Hoạt Tự Động</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-green-400">
+                {activePlanData.isTokenAddon ? "Đã Nạp Token Thành Công" : "Gói VIP Đã Kích Hoạt Tự Động"}
+              </span>
             </h2>
             <p className="text-xs text-gray-300 leading-relaxed font-sans">
-              Hệ thống SePay đã nhận diện giao dịch thành công. Toàn bộ chức năng của gói <strong>{activePlanData.planName}</strong> đã được đồng bộ mở khóa 100% cho tài khoản của bạn.
+              Hệ thống SePay đã nhận diện giao dịch thành công. {activePlanData.isTokenAddon ? (
+                <>Đã cộng ngay <strong>{activePlanData.tokensReceived?.toLocaleString()} Token</strong> (+{activePlanData.bonusPercent}% Thưởng) vào tài khoản của bạn.</>
+              ) : (
+                <>Toàn bộ chức năng của gói <strong>{activePlanData.planName}</strong> đã được đồng bộ mở khóa 100% cho tài khoản của bạn.</>
+              )}
             </p>
           </div>
 
-          {/* VIP Subscription Receipt Card */}
+          {/* VIP Subscription / Token Receipt Card */}
           <div className="max-w-xl mx-auto bg-[#121218] p-6 rounded-3xl border border-emerald-500/30 text-xs font-mono text-left space-y-3 shadow-inner">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <span className="text-gray-400 font-bold">Trạng Thái Gói VIP:</span>
+              <span className="text-gray-400 font-bold">Trạng Thái Giao Dịch:</span>
               <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-black text-xs">
-                ● GÓI BẢN QUYỀN VIP ACTIVE
+                ● {activePlanData.isTokenAddon ? "NẠP TOKEN THÀNH CÔNG" : "GÓI BẢN QUYỀN VIP ACTIVE"}
               </span>
             </div>
 
             <div className="flex justify-between border-b border-white/10 pb-2">
-              <span className="text-gray-400">Gói Cước Đã Đăng Ký:</span>
+              <span className="text-gray-400">Gói Đã Thanh Toán:</span>
               <span className="text-white font-bold">{activePlanData.planName}</span>
             </div>
+
+            {activePlanData.isTokenAddon && (
+              <div className="flex justify-between border-b border-white/10 pb-2">
+                <span className="text-gray-400">Số Lượng Token Đã Cộng:</span>
+                <span className="text-amber-400 font-black text-sm">+{activePlanData.tokensReceived?.toLocaleString()} Token (+{activePlanData.bonusPercent}%)</span>
+              </div>
+            )}
 
             <div className="flex justify-between border-b border-white/10 pb-2">
               <span className="text-gray-400">Chủ Tài Khoản Ngân Hàng:</span>
