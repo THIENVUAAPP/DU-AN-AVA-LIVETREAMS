@@ -1,12 +1,27 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
-import { Play, Pause, FastForward, Settings, Mic, Volume2 } from 'lucide-react';
+import { Play, Pause, FastForward, Settings, Mic, Volume2, ShieldCheck, Sparkles } from 'lucide-react';
+import { getDualVoiceConfig } from '../../utils/voiceSyncService';
 
 const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTriggered, currentVideoUrl }, ref) => {
   const [job, setJob] = useState(null);
   const [queue, setQueue] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [voiceConfig, setVoiceConfig] = useState(getDualVoiceConfig());
   const audioRef = useRef(null);
+
+  // Đồng bộ cấu hình Voice toàn app khi có cập nhật
+  useEffect(() => {
+    const handleVoiceUpdate = (e) => {
+      if (e.detail) {
+        setVoiceConfig(e.detail);
+      } else {
+        setVoiceConfig(getDualVoiceConfig());
+      }
+    };
+    window.addEventListener('aidol_voice_sync_updated', handleVoiceUpdate);
+    return () => window.removeEventListener('aidol_voice_sync_updated', handleVoiceUpdate);
+  }, []);
 
   const getAudio = () => {
     if (!audioRef.current && typeof window !== 'undefined' && typeof Audio !== 'undefined') {
@@ -26,7 +41,7 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
           // Tách kịch bản thành từng câu ngắn an toàn
           if (parsed && typeof parsed.scriptContent === 'string' && parsed.scriptContent.trim()) {
             const sentences = parsed.scriptContent.split(/[.?!]/).filter(s => s.trim().length > 0);
-            setQueue(sentences.map(s => ({ type: 'script', text: s.trim() })));
+            setQueue(sentences.map(s => ({ type: 'script', text: s.trim(), voiceChannel: 'idol' })));
             setCurrentIndex(0);
             setIsPlaying(true);
           }
@@ -58,16 +73,20 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
     try {
       if (onAudioPlayStateChange) onAudioPlayStateChange(true);
       
-      const provider = job?.voiceProvider || 'gemini';
+      const channel = item.voiceChannel || (item.type === 'script' ? 'idol' : 'manager');
+      const activeVoice = channel === 'idol' ? voiceConfig.idolVoice : voiceConfig.managerVoice;
+      
+      const provider = activeVoice?.provider || job?.voiceProvider || 'gemini';
       const apiKey = provider === 'openai_tts' ? localStorage.getItem('openai_api_key') : localStorage.getItem('gemini_api_key');
 
-      // GỌI API TTS THẬT
+      // GỌI API TTS THẬT VỚI VOICE ĐƯỢC ĐỒNG BỘ
       const res = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: item.text,
-          platform: provider.includes('openai') ? 'openai' : 'gemini',
+          platform: provider.includes('openai') ? 'openai' : provider,
+          voiceId: activeVoice?.voiceId || activeVoice?.id,
           apiKey
         })
       });
@@ -113,8 +132,8 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
         audioUrl = URL.createObjectURL(blob);
       }
 
-      // --- GỌI API LIP-SYNC ĐỂ TẠO VIDEO NHÉP MIỆNG KHỚP AUDIO ---
-      if (currentVideoUrl && onActionTriggered) {
+      // --- GỌI API LIP-SYNC ĐỂ TẠO VIDEO NHÉP MIỆNG (Chỉ áp dụng khi là giọng Idol) ---
+      if (channel === 'idol' && currentVideoUrl && onActionTriggered) {
         try {
           const lipSyncRes = await fetch('/api/lip-sync', {
             method: 'POST',
@@ -122,12 +141,11 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
             body: JSON.stringify({
               audioBase64: data.audioBase64,
               videoUrl: currentVideoUrl,
-              platform: 'synclabs' // hoặc heygen
+              platform: 'synclabs'
             })
           });
           const lipSyncData = await lipSyncRes.json();
           if (lipSyncData.success && lipSyncData.lipSyncVideoUrl) {
-            // Gửi URL video đã nhép miệng lên UI chính để phát
             onActionTriggered({ type: 'LIPSYNC_READY', videoUrl: lipSyncData.lipSyncVideoUrl });
           }
         } catch (e) {
@@ -149,11 +167,25 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
       }
 
     } catch (err) {
-      console.error('Audio play error, falling back to Web Speech:', err);
-      // Fallback nếu API lỗi hoặc thiếu Key
+      console.error('Audio play error, falling back to Web Speech with synced voice settings:', err);
+      // Fallback Web Speech Synthesis với cấu hình giọng đồng bộ
       if (typeof window !== 'undefined' && 'SpeechSynthesisUtterance' in window && 'speechSynthesis' in window) {
+        const channel = item.voiceChannel || (item.type === 'script' ? 'idol' : 'manager');
+        const activeVoice = channel === 'idol' ? voiceConfig.idolVoice : voiceConfig.managerVoice;
+        
         const utterance = new SpeechSynthesisUtterance(item.text);
         utterance.lang = 'vi-VN';
+        utterance.rate = activeVoice?.rate || (channel === 'manager' ? 1.08 : 1.0);
+        utterance.pitch = activeVoice?.pitch || (channel === 'manager' ? 0.95 : 1.05);
+
+        const voices = window.speechSynthesis.getVoices();
+        const matched = voices.find(v => 
+          (activeVoice?.gender === 'Female' && (v.name.includes('Female') || v.name.includes('Linh') || v.name.includes('Google Tiếng Việt') || v.name.includes('Zira'))) ||
+          (activeVoice?.gender === 'Male' && (v.name.includes('Male') || v.name.includes('David') || v.name.includes('Nam') || v.name.includes('Minh'))) ||
+          v.lang.includes('vi')
+        );
+        if (matched) utterance.voice = matched;
+
         utterance.onend = () => {
           if (isPlaying) setCurrentIndex(prev => prev + 1);
         };
@@ -164,8 +196,9 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
 
   // Expose methods to parent
   useImperativeHandle(ref, () => ({
-    enqueueItem: (text, action, isImmediate = false) => {
-      const newItem = { type: 'dynamic', text, action };
+    enqueueItem: (text, action, isImmediate = false, options = {}) => {
+      const voiceChannel = options?.voiceChannel || (action?.includes('IDOL') ? 'idol' : 'manager');
+      const newItem = { type: 'dynamic', text, action, voiceChannel };
       if (isImmediate) {
         const aud = getAudio();
         if (aud) {

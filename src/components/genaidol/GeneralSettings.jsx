@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Search, CheckCircle2, FolderOpen, Brain, Upload } from 'lucide-react';
 import { getLiveMediaByCategory } from '../../lib/liveKhoDB';
+import { saveDualVoiceConfig, CURATED_VOICES } from '../../utils/voiceSyncService';
 
 const ELEVENLABS_VOICES = [
   { id: 'el_rachel', name: 'Rachel (Trầm ấm, Tự tin)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
@@ -94,7 +95,6 @@ export default function GeneralSettings({ onClose }) {
         console.error("Failed to parse settings", e);
       }
     }
-    
     // Fetch count of idle videos
     getLiveMediaByCategory('idle').then(items => {
       setIdleVideoCount(items.length);
@@ -103,6 +103,16 @@ export default function GeneralSettings({ onClose }) {
 
   const handleSave = () => {
     localStorage.setItem('aidol_general_settings', JSON.stringify(settings));
+
+    // Đồng bộ vào hệ thống Dual Voice của AVA Live
+    const idolMatch = CURATED_VOICES.find(v => v.id === settings.mainVoiceId);
+    const managerMatch = CURATED_VOICES.find(v => v.id === settings.assistantVoiceId);
+    
+    saveDualVoiceConfig({
+      idolVoice: idolMatch ? { ...idolMatch, role: 'idol' } : undefined,
+      managerVoice: managerMatch ? { ...managerMatch, role: 'manager' } : undefined
+    });
+
     onClose();
   };
 
