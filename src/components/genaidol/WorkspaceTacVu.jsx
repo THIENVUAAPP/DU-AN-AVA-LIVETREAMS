@@ -198,13 +198,217 @@ export default function WorkspaceTacVu() {
 
   const selectedEventInfo = EVENTS.find(e => e.id === selectedEventId);
 
-  const FieldLabel = ({ icon, text, hasHelp = true, minW = "min-w-[220px]" }) => (
-    <div className={`flex items-center gap-1.5 text-[13px] font-semibold text-gray-700 ${minW}`}>
-      {icon && <span className="text-[#a53b3b]">{icon}</span>}
-      <span>{text}:</span>
-      {hasHelp && <HelpCircle size={14} className="text-blue-500 cursor-pointer ml-1" />}
+const HELP_DATA = {
+  // General & Common Fields
+  priority: {
+    title: '⭐ Độ ưu tiên',
+    desc: 'Quyết định sự kiện nào được phát trước khi có nhiều sự kiện xảy ra cùng lúc.',
+    tip: 'Số càng lớn ưu tiên càng cao (VD: Quà đặc biệt 999 > Chốt đơn 100 > Quà thường 90 > Comment 50 > Chờ 10).'
+  },
+  active: {
+    title: '✅ Kích hoạt',
+    desc: 'Bật hoặc tắt tính năng xử lý sự kiện này trong suốt phiên livestream.',
+    tip: 'Bỏ chọn nếu bạn tạm thời không muốn Idol phản hồi sự kiện này.'
+  },
+  videoCategory: {
+    title: '🎥 Danh mục Video',
+    desc: 'Tên phân nhóm video dùng để ghép khớp với kịch bản hành động của Idol.',
+    tip: 'Ví dụ: comment, gift, checkout, follow, idle...'
+  },
+  videoFolder: {
+    title: '📁 Thư mục Video Cục bộ',
+    desc: 'Đường dẫn thư mục chứa các file video (.mp4, .webm) thực tế trên máy của bạn.',
+    tip: 'Bấm nút "Chọn..." để duyệt thư mục chứa clip động tác của Idol.'
+  },
+  useAi: {
+    title: '🧠 Dùng AI Trả lời (Bộ não Gemini)',
+    desc: 'Kích hoạt bộ não AI Gemini 1.5 Flash tự động phân tích ngữ cảnh và sáng tạo câu trả lời tức thì.',
+    tip: 'Giúp câu nói của Idol tự nhiên, thông minh, không bị lặp lại nhàm chán.'
+  },
+  useVoice: {
+    title: '🗣️ Dùng Giọng nói (TTS Voice)',
+    desc: 'Bật chuyển văn bản câu trả lời thành giọng đọc AI tự nhiên (ElevenLabs).',
+    tip: 'Nếu tắt, Idol sẽ chỉ diễn video mà không phát âm thanh giọng nói.'
+  },
+  useTTS: {
+    title: '🗣️ Dùng TTS (Giọng đọc AI)',
+    desc: 'Tự động phát âm thanh lời thoại được tạo ra bằng giọng nói trí tuệ nhân tạo.',
+    tip: 'Nên bật để người xem nghe rõ tên của họ và thông điệp cá nhân hóa.'
+  },
+  muteSourceVideo: {
+    title: '🔇 Tắt âm gốc Video',
+    desc: 'Tự động tắt tiếng sẵn có trong file clip để không bị đè lên giọng đọc AI.',
+    tip: 'Khuyên dùng BẬT để giọng nói của Idol và Trợ lý nghe trong trẻo, rõ nét nhất.'
+  },
+  aiPrompt: {
+    title: '✍️ Kịch bản cho AI (System Prompt)',
+    desc: 'Lời chỉ dẫn đóng vai cho AI (tính cách, vai trò, quy tắc trả lời, thông tin sản phẩm).',
+    tip: 'Dùng cú pháp {user}, {comment}, {gift_name} để AI tự điền tên người xem thời gian thực.'
+  },
+  sampleAnswers: {
+    title: '📄 Câu trả lời mẫu (Dự phòng)',
+    desc: 'Danh sách các câu thoại soạn sẵn (mỗi câu 1 dòng), hệ thống sẽ chọn ngẫu nhiên khi không dùng AI.',
+    tip: 'Hữu ích khi muốn câu thoại chuẩn chỉnh $100\\%$ theo kịch bản có sẵn.'
+  },
+  waitBetweenEvents: {
+    title: '⏳ Thời gian chờ giữa các lần (Cooldown)',
+    desc: 'Khoảng thời gian nghỉ (giây) giữa 2 lần kích hoạt sự kiện liên tiếp.',
+    tip: 'Tránh việc Idol nói liên tục dồn dập khi lượng tương tác vào quá đông.'
+  },
+
+  // Checkout Fields (Chốt đơn)
+  productName: {
+    title: '🏷️ Tên Sản Phẩm',
+    desc: 'Tên định danh của mặt hàng cần tư vấn / bán trong phiên live.',
+    tip: 'Ví dụ: Khóa học, Son môi, Áo thun, Phần mềm AvaLive...'
+  },
+  keywords: {
+    title: '🔑 Từ khóa Chốt Đơn',
+    desc: 'Danh sách từ người xem hay gõ khi muốn mua hàng (cách nhau bởi dấu chấm phẩy ;).',
+    tip: 'Ví dụ: mua;giá;tư vấn;bao nhiêu;inbox;chốt đơn;order. Khi comment có từ này, AI sẽ ưu tiên bán sản phẩm này.'
+  },
+
+  // Special Gift Fields
+  giftName: {
+    title: '🎁 Tên Quà Tặng',
+    desc: 'Loại quà tặng đặc biệt trên nền tảng (TikTok/Facebook) cần gán phản ứng độc quyền.',
+    tip: 'Ví dụ: Lion (Sư tử), Yacht (Du thuyền), Finger Heart, Lucky pig...'
+  },
+  useAssistant: {
+    title: '👥 Cấu hình Trợ Lý Riêng',
+    desc: 'Bật nhân vật phụ / trợ lý ảo lên tiếng tung hứng, cảm ơn phụ họa cùng Idol chính.',
+    tip: 'Tăng không khí sôi động và chuyên nghiệp như các phiên livestream lớn.'
+  },
+  assistantPrompt: {
+    title: '💬 Câu mẫu của Trợ Lý',
+    desc: 'Lời thoại của trợ lý ảo khi sự kiện xảy ra (VD: "Cảm ơn đại gia {user} đã ủng hộ!").',
+    tip: 'Có thể dùng thẻ {user} để gọi tên người xem.'
+  },
+  assistantVideoFolder: {
+    title: '🎬 Video của Trợ Lý',
+    desc: 'Thư mục chứa clip hoạt cảnh phản ứng riêng của nhân vật trợ lý.',
+    tip: 'Chọn video có động tác vỗ tay, hoan hô của trợ lý.'
+  },
+  assistantUseMainVoice: {
+    title: '🎙️ Dùng giọng nhân vật chính',
+    desc: 'Chọn xem Trợ lý có dùng chung voice AI với Idol chính hay dùng voice riêng biệt.',
+    tip: 'Bật nếu muốn đồng bộ giọng, tắt nếu muốn Trợ lý có âm sắc giọng riêng.'
+  },
+
+  // Comment Specific Fields
+  replyRate: {
+    title: '📊 Tỷ lệ Trả lời (%)',
+    desc: 'Tỷ lệ phần trăm bình luận được chọn để phản hồi (từ 0% đến 100%).',
+    tip: 'Khuyên đặt 60% - 80% để Idol chọn lọc comment chất lượng, tránh nói quá tải phiên live.'
+  },
+  bannedWords: {
+    title: '🚫 Từ khóa Cấm (Blacklist)',
+    desc: 'Danh sách từ ngữ thô tục, tiêu cực, lừa đảo... (mỗi từ 1 dòng).',
+    tip: 'Khi bình luận chứa từ này, AI sẽ tự động bỏ qua tuyệt đối, không đọc và không phản hồi.'
+  },
+  priorityWords: {
+    title: '⭐ Từ khóa Ưu tiên',
+    desc: 'Danh sách từ khóa quan trọng liên quan đến chốt đơn, đặt hàng (mỗi từ 1 dòng).',
+    tip: 'Bình luận chứa các từ này sẽ được ưu tiên xếp lên đầu hàng đợi để Idol trả lời ngay.'
+  },
+  smartSpamFilter: {
+    title: '🛡️ Bộ lọc Spam Thông minh',
+    desc: 'Tự động nhận diện và chặn các tài khoản bình luận liên tục hoặc gửi nội dung vô nghĩa.',
+    tip: 'Bảo vệ phiên live khỏi bot spam phá hoại và giữ luồng trò chuyện mượt mà.'
+  },
+  waitBetweenSpam: {
+    title: '⏱️ Thời gian chờ phạt Spam (giây)',
+    desc: 'Số giây hệ thống tạm ngưng nhận comment từ tài khoản có hành vi spam liên tục.',
+    tip: 'Khuyên đặt 3 - 5 giây.'
+  },
+  maxRepeatChars: {
+    title: '🔤 Tỷ lệ Ký tự lặp lại tối đa (0.0 - 1.0)',
+    desc: 'Ngưỡng phát hiện chuỗi ký tự vô nghĩa bị lặp (VD: aaaaaaaa, 1111111111).',
+    tip: 'Đặt 0.7 nghĩa là nếu trên 70% nội dung là ký tự lặp, comment sẽ tự động bị bỏ qua.'
+  },
+
+  // Specific Timers & Thresholds
+  likeThreshold: {
+    title: '❤️ Ngưỡng Tim để Cảm ơn',
+    desc: 'Số lượng lượt thích (tim) tích lũy để Idol kích hoạt 1 lần cảm ơn mốc tim.',
+    tip: 'Ví dụ: Đặt 50 hoặc 100 nghĩa là cứ tăng thêm 50-100 tim thì Idol sẽ cảm ơn 1 lần.'
+  },
+  greetMinutes: {
+    title: '⏱️ Số phút Gom nhóm Chào / Xin lỗi',
+    desc: 'Khoảng thời gian định kỳ gom người mới vào phòng để chào một lượt.',
+    tip: 'Giúp không bị ngắt quãng phiên live khi người xem ra vào liên tục.'
+  },
+  speakAfterIdleSeconds: {
+    title: '⏱️ Tự nói sau khoảng thời gian Im lặng (giây)',
+    desc: 'Số giây không có tương tác trước khi Idol tự động tìm chủ đề bắt chuyện cứu live.',
+    tip: 'Khuyên đặt 5 - 10 giây để giữ phiên live luôn sôi động, không bị chết thời gian.'
+  }
+};
+
+// Reusable Interactive Help Tooltip Component
+const HelpTooltip = ({ helpKey, customText, customTitle, className = "" }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const info = HELP_DATA[helpKey] || {
+    title: customTitle || 'Hướng dẫn chức năng',
+    desc: customText || 'Chức năng hỗ trợ tùy chỉnh hoạt động của Idol trong phiên livestream.',
+    tip: 'Nhấp để xem hướng dẫn chi tiết.'
+  };
+
+  return (
+    <div className={`relative inline-flex items-center ${className}`}>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
+        onMouseEnter={() => setIsOpen(true)}
+        onMouseLeave={() => setIsOpen(false)}
+        className="w-4 h-4 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 flex items-center justify-center text-[10px] font-bold transition-all shadow-xs ml-1 focus:outline-none ring-1 ring-blue-300 hover:scale-110"
+        title="Bấm hoặc rê chuột để xem hướng dẫn"
+      >
+        ?
+      </button>
+
+      {isOpen && (
+        <div 
+          onMouseEnter={() => setIsOpen(true)}
+          onMouseLeave={() => setIsOpen(false)}
+          className="absolute z-50 left-6 -top-2 w-72 p-3 bg-[#1e293b] text-white rounded-lg shadow-2xl border border-blue-500/40 text-left pointer-events-auto backdrop-blur-md animate-in fade-in zoom-in-95 duration-150"
+        >
+          <div className="flex items-center justify-between pb-1.5 border-b border-gray-700/60 mb-2">
+            <span className="font-bold text-xs text-blue-300 flex items-center gap-1.5">
+              {info.title}
+            </span>
+            <span className="text-[10px] bg-blue-900/60 text-blue-200 px-1.5 py-0.5 rounded font-mono border border-blue-400/30">
+              HDSD
+            </span>
+          </div>
+
+          <p className="text-[11.5px] text-gray-200 leading-relaxed mb-2 font-normal">
+            {info.desc}
+          </p>
+
+          {info.tip && (
+            <div className="bg-blue-950/70 p-2 rounded border border-blue-800/50 text-[10.5px] text-cyan-200 flex items-start gap-1.5 leading-snug">
+              <span className="text-yellow-400 font-bold shrink-0">💡 Mẹo:</span>
+              <span>{info.tip}</span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
+};
+
+const FieldLabel = ({ icon, text, helpKey, customHelpText, minW = "min-w-[220px]" }) => (
+  <div className={`flex items-center gap-1.5 text-[13px] font-semibold text-gray-700 ${minW}`}>
+    {icon && <span className="text-[#a53b3b]">{icon}</span>}
+    <span>{text}:</span>
+    <HelpTooltip helpKey={helpKey} customText={customHelpText} customTitle={text} />
+  </div>
+);
 
   return (
     <div className="flex w-full h-[95vh] bg-[#f0f2f5] font-sans text-gray-800 overflow-hidden">
@@ -269,11 +473,11 @@ export default function WorkspaceTacVu() {
                   </legend>
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center">
-                      <FieldLabel icon="⭐" text="Độ ưu tiên" minW="min-w-[150px]" />
+                      <FieldLabel icon="⭐" text="Độ ưu tiên" helpKey="priority" minW="min-w-[150px]" />
                       <input type="number" name="priority" value={currentConfig.priority} onChange={handleChange} className="w-64 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
                     </div>
                     <div className="flex items-center">
-                      <FieldLabel icon="✅" text="Kích hoạt" minW="min-w-[150px]" />
+                      <FieldLabel icon="✅" text="Kích hoạt" helpKey="active" minW="min-w-[150px]" />
                       <input type="checkbox" name="active" checked={currentConfig.active} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded" />
                     </div>
                   </div>
@@ -293,46 +497,70 @@ export default function WorkspaceTacVu() {
                           <input type="checkbox" checked={slot.active} onChange={(e) => handleSlotChange(slot.id, 'active', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded" />
                           <span className="font-bold text-gray-800 text-[13px]">Slot {slot.id}</span>
                         </div>
-                        <div className="grid grid-cols-[150px_1fr] gap-y-3 gap-x-4 items-center">
+                        <div className="grid grid-cols-[160px_1fr] gap-y-3 gap-x-4 items-center">
                           
-                          <label className="text-[13px] font-semibold text-[#a53b3b]">Tên Quà tặng:</label>
+                          <div className="flex items-center gap-1">
+                            <label className="text-[13px] font-semibold text-[#a53b3b]">Tên Quà tặng:</label>
+                            <HelpTooltip helpKey="giftName" />
+                          </div>
                           <select value={slot.giftName} onChange={(e) => handleSlotChange(slot.id, 'giftName', e.target.value)} className="border border-gray-300 rounded px-2 py-1 text-[13px] bg-white focus:outline-blue-500 max-w-xs">
                             {GIFT_TYPES.map(g => <option key={g} value={g}>{g}</option>)}
                           </select>
 
-                          <label className="text-[13px] font-semibold text-[#a53b3b]">Thư mục Video Chính:</label>
+                          <div className="flex items-center gap-1">
+                            <label className="text-[13px] font-semibold text-[#a53b3b]">Thư mục Video Chính:</label>
+                            <HelpTooltip helpKey="videoFolder" />
+                          </div>
                           <div className="flex items-center gap-2">
                             <span className="text-[13px] font-medium min-w-[150px]">{slot.videoFolder || 'Chưa chọn'}</span>
                             <button onClick={() => selectSlotFolder(slot.id, 'videoFolder')} className="text-[13px] text-gray-600 font-medium hover:text-gray-900 transition-colors underline decoration-dotted">Chọn...</button>
                             <div className="ml-auto flex gap-4">
-                              <label className="flex items-center gap-1.5"><input type="checkbox" checked={slot.useTTS} onChange={(e) => handleSlotChange(slot.id, 'useTTS', e.target.checked, true)} /> <span className="text-[13px]">Dùng TTS</span></label>
-                              <label className="flex items-center gap-1.5"><input type="checkbox" checked={slot.muteSourceVideo} onChange={(e) => handleSlotChange(slot.id, 'muteSourceVideo', e.target.checked, true)} /> <span className="text-[13px]">Tắt âm gốc video</span></label>
+                              <label className="flex items-center gap-1.5 cursor-pointer">
+                                <input type="checkbox" checked={slot.useTTS} onChange={(e) => handleSlotChange(slot.id, 'useTTS', e.target.checked, true)} /> 
+                                <span className="text-[13px]">Dùng TTS</span>
+                                <HelpTooltip helpKey="useTTS" />
+                              </label>
+                              <label className="flex items-center gap-1.5 cursor-pointer">
+                                <input type="checkbox" checked={slot.muteSourceVideo} onChange={(e) => handleSlotChange(slot.id, 'muteSourceVideo', e.target.checked, true)} /> 
+                                <span className="text-[13px]">Tắt âm gốc video</span>
+                                <HelpTooltip helpKey="muteSourceVideo" />
+                              </label>
                             </div>
                           </div>
 
                           <div className="col-span-2 border-t border-gray-300 my-1"></div>
 
                           <div className="col-span-2">
-                            <label className="flex items-center gap-2 mb-2">
-                              <input type="checkbox" checked={slot.useAssistant} onChange={(e) => handleSlotChange(slot.id, 'useAssistant', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded" />
-                              <span className="font-bold text-gray-800 text-[13px]">Cấu hình Trợ lý riêng</span>
-                            </label>
+                            <div className="flex items-center gap-2 mb-2">
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" checked={slot.useAssistant} onChange={(e) => handleSlotChange(slot.id, 'useAssistant', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded" />
+                                <span className="font-bold text-gray-800 text-[13px]">Cấu hình Trợ lý riêng</span>
+                              </label>
+                              <HelpTooltip helpKey="useAssistant" />
+                            </div>
                             
                             {slot.useAssistant && (
-                              <div className="pl-6 grid grid-cols-[130px_1fr] gap-y-3 gap-x-4">
-                                <label className="text-[13px] font-semibold text-gray-700">Câu mẫu của Trợ lý:</label>
+                              <div className="pl-6 grid grid-cols-[150px_1fr] gap-y-3 gap-x-4">
+                                <div className="flex items-center gap-1">
+                                  <label className="text-[13px] font-semibold text-gray-700">Câu mẫu của Trợ lý:</label>
+                                  <HelpTooltip helpKey="assistantPrompt" />
+                                </div>
                                 <textarea value={slot.assistantPrompt} onChange={(e) => handleSlotChange(slot.id, 'assistantPrompt', e.target.value)} className="w-full h-[60px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-white focus:outline-blue-500" />
                                 
-                                <label className="text-[13px] font-semibold text-gray-700">Video của Trợ lý:</label>
+                                <div className="flex items-center gap-1">
+                                  <label className="text-[13px] font-semibold text-gray-700">Video của Trợ lý:</label>
+                                  <HelpTooltip helpKey="assistantVideoFolder" />
+                                </div>
                                 <div className="flex items-center gap-2">
                                   <span className="text-[13px] font-medium min-w-[150px]">{slot.assistantVideoFolder || 'Chưa chọn'}</span>
                                   <button onClick={() => selectSlotFolder(slot.id, 'assistantVideoFolder')} className="text-[13px] text-gray-600 font-medium hover:text-gray-900 transition-colors underline decoration-dotted">Chọn...</button>
                                 </div>
 
                                 <div className="col-span-2 flex justify-center mt-1">
-                                  <label className="flex items-center gap-1.5">
+                                  <label className="flex items-center gap-1.5 cursor-pointer">
                                     <input type="checkbox" checked={slot.useMainVoice} onChange={(e) => handleSlotChange(slot.id, 'useMainVoice', e.target.checked, true)} /> 
                                     <span className="text-[13px] text-gray-600 font-medium">Dùng giọng của nhân vật chính</span>
+                                    <HelpTooltip helpKey="assistantUseMainVoice" />
                                   </label>
                                 </div>
                               </div>
@@ -352,11 +580,11 @@ export default function WorkspaceTacVu() {
               <div className="border border-gray-300 rounded-md bg-white mb-3 shadow-sm px-3 py-4">
                 <div className="flex items-center gap-8 mb-4 ml-4">
                   <div className="flex items-center">
-                    <FieldLabel icon="✅" text="Kích hoạt" minW="min-w-[120px]" />
+                    <FieldLabel icon="✅" text="Kích hoạt" helpKey="active" minW="min-w-[120px]" />
                     <input type="checkbox" name="active" checked={currentConfig.active} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded" />
                   </div>
                   <div className="flex items-center">
-                    <FieldLabel icon="⭐" text="Độ ưu tiên" minW="min-w-[100px]" />
+                    <FieldLabel icon="⭐" text="Độ ưu tiên" helpKey="priority" minW="min-w-[100px]" />
                     <input type="number" name="priority" value={currentConfig.priority} onChange={handleChange} className="w-32 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
                   </div>
                 </div>
@@ -370,26 +598,50 @@ export default function WorkspaceTacVu() {
                       </legend>
                       
                       <div className="grid grid-cols-[200px_1fr] gap-y-3 gap-x-4 items-center">
-                        <label className="text-[13px] font-semibold text-gray-700">Tên sản phẩm:</label>
+                        <div className="flex items-center gap-1">
+                          <label className="text-[13px] font-semibold text-gray-700">Tên sản phẩm:</label>
+                          <HelpTooltip helpKey="productName" />
+                        </div>
                         <input type="text" value={prod.productName} onChange={(e) => handleProductChange(prod.id, 'productName', e.target.value)} className="border border-gray-300 rounded px-2 py-1.5 text-[13px] bg-white focus:outline-blue-500 w-full" />
 
-                        <label className="text-[13px] font-semibold text-[#a53b3b]">Từ khóa <span className="font-normal text-gray-500">(cách nhau bởi ;)</span>:</label>
+                        <div className="flex items-center gap-1">
+                          <label className="text-[13px] font-semibold text-[#a53b3b]">Từ khóa <span className="font-normal text-gray-500">(cách nhau bởi ;)</span>:</label>
+                          <HelpTooltip helpKey="keywords" />
+                        </div>
                         <input type="text" value={prod.keywords} onChange={(e) => handleProductChange(prod.id, 'keywords', e.target.value)} className="border border-gray-300 rounded px-2 py-1.5 text-[13px] bg-white focus:outline-blue-500 w-full" />
 
-                        <label className="text-[13px] font-semibold text-gray-700">Thư mục Video:</label>
+                        <div className="flex items-center gap-1">
+                          <label className="text-[13px] font-semibold text-gray-700">Thư mục Video:</label>
+                          <HelpTooltip helpKey="videoFolder" />
+                        </div>
                         <div className="flex items-center gap-2 w-full">
                           <span className="text-[13px] font-medium min-w-[200px] flex-1 truncate">{prod.videoFolder || 'Chưa chọn'}</span>
                           <button onClick={() => selectProductFolder(prod.id)} className="text-[13px] text-gray-600 font-medium hover:text-gray-900 transition-colors underline decoration-dotted bg-gray-200 px-3 py-1 rounded">Chọn...</button>
                         </div>
 
-                        <label className="text-[13px] font-semibold text-gray-700 mt-2 self-start">Kịch bản cho AI:</label>
+                        <div className="flex items-center gap-1 mt-2 self-start">
+                          <label className="text-[13px] font-semibold text-gray-700">Kịch bản cho AI:</label>
+                          <HelpTooltip helpKey="aiPrompt" />
+                        </div>
                         <div className="flex flex-col gap-2 mt-2">
                           <textarea value={prod.aiPrompt} onChange={(e) => handleProductChange(prod.id, 'aiPrompt', e.target.value)} className="w-full h-[60px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-white focus:outline-blue-500" />
                           
                           <div className="flex items-center justify-center gap-6 mt-1">
-                            <label className="flex items-center gap-1.5"><input type="checkbox" checked={prod.useAi} onChange={(e) => handleProductChange(prod.id, 'useAi', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded"/> <span className="text-[13px] font-medium">Dùng AI</span></label>
-                            <label className="flex items-center gap-1.5"><input type="checkbox" checked={prod.useTTS} onChange={(e) => handleProductChange(prod.id, 'useTTS', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded"/> <span className="text-[13px] font-medium">Dùng TTS</span></label>
-                            <label className="flex items-center gap-1.5"><input type="checkbox" checked={prod.muteSourceVideo} onChange={(e) => handleProductChange(prod.id, 'muteSourceVideo', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded"/> <span className="text-[13px] font-medium">Tắt âm gốc video</span></label>
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                              <input type="checkbox" checked={prod.useAi} onChange={(e) => handleProductChange(prod.id, 'useAi', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded"/> 
+                              <span className="text-[13px] font-medium">Dùng AI</span>
+                              <HelpTooltip helpKey="useAi" />
+                            </label>
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                              <input type="checkbox" checked={prod.useTTS} onChange={(e) => handleProductChange(prod.id, 'useTTS', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded"/> 
+                              <span className="text-[13px] font-medium">Dùng TTS</span>
+                              <HelpTooltip helpKey="useTTS" />
+                            </label>
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                              <input type="checkbox" checked={prod.muteSourceVideo} onChange={(e) => handleProductChange(prod.id, 'muteSourceVideo', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded"/> 
+                              <span className="text-[13px] font-medium">Tắt âm gốc video</span>
+                              <HelpTooltip helpKey="muteSourceVideo" />
+                            </label>
                           </div>
                         </div>
                       </div>
@@ -411,15 +663,15 @@ export default function WorkspaceTacVu() {
                       </legend>
                       <div className="flex flex-col gap-3">
                         <div className="flex items-center">
-                          <FieldLabel icon="⭐" text="Độ ưu tiên" minW="min-w-[180px]" />
+                          <FieldLabel icon="⭐" text="Độ ưu tiên" helpKey="priority" minW="min-w-[180px]" />
                           <input type="number" name="priority" value={currentConfig.priority} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
                         </div>
                         <div className="flex items-center">
-                          <FieldLabel icon="✅" text="Kích hoạt" minW="min-w-[180px]" />
+                          <FieldLabel icon="✅" text="Kích hoạt" helpKey="active" minW="min-w-[180px]" />
                           <input type="checkbox" name="active" checked={currentConfig.active} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded" />
                         </div>
                         <div className="flex items-center">
-                          <FieldLabel icon="⏳" text="Chờ giữa các quà tặng (giây)" minW="min-w-[180px]" />
+                          <FieldLabel icon="⏳" text="Chờ giữa các quà tặng (giây)" helpKey="waitBetweenEvents" minW="min-w-[180px]" />
                           <input type="number" name="waitBetweenEvents" value={currentConfig.waitBetweenEvents} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
                         </div>
                       </div>
@@ -432,27 +684,27 @@ export default function WorkspaceTacVu() {
                       </legend>
                       <div className="flex flex-col gap-3">
                         <div className="flex items-center">
-                          <FieldLabel icon="🎥" text="Danh mục video" minW="min-w-[180px]" />
+                          <FieldLabel icon="🎥" text="Danh mục video" helpKey="videoCategory" minW="min-w-[180px]" />
                           <input type="text" name="videoCategory" value={currentConfig.videoCategory} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
                         </div>
                         <div className="flex items-center">
-                          <FieldLabel icon="🧠" text="Dùng AI trả lời" minW="min-w-[180px]" />
+                          <FieldLabel icon="🧠" text="Dùng AI trả lời" helpKey="useAi" minW="min-w-[180px]" />
                           <input type="checkbox" name="useAi" checked={currentConfig.useAi} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded" />
                         </div>
                         <div className="flex items-center">
-                          <FieldLabel icon="🗣️" text="Dùng giọng nói" minW="min-w-[180px]" />
+                          <FieldLabel icon="🗣️" text="Dùng giọng nói" helpKey="useVoice" minW="min-w-[180px]" />
                           <input type="checkbox" name="useVoice" checked={currentConfig.useVoice} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded" />
                         </div>
                         <div className="flex items-center">
-                          <FieldLabel icon="🔇" text="Tắt âm gốc video" minW="min-w-[180px]" />
+                          <FieldLabel icon="🔇" text="Tắt âm gốc video" helpKey="muteSourceVideo" minW="min-w-[180px]" />
                           <input type="checkbox" name="muteSourceVideo" checked={currentConfig.muteSourceVideo} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded" />
                         </div>
                         <div className="flex items-start mt-2">
-                          <FieldLabel icon="✍️" text="Kịch bản cho AI" minW="min-w-[180px]" />
+                          <FieldLabel icon="✍️" text="Kịch bản cho AI" helpKey="aiPrompt" minW="min-w-[180px]" />
                           <textarea name="aiPrompt" value={currentConfig.aiPrompt} onChange={handleChange} className="flex-1 min-h-[80px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-gray-50 focus:bg-white focus:outline-blue-500" />
                         </div>
                         <div className="flex items-start mt-2">
-                          <FieldLabel icon="📄" text="Câu trả lời mẫu (mỗi câu 1 dòng)" minW="min-w-[180px]" />
+                          <FieldLabel icon="📄" text="Câu trả lời mẫu (mỗi câu 1 dòng)" helpKey="sampleAnswers" minW="min-w-[180px]" />
                           <textarea name="sampleAnswers" value={currentConfig.sampleAnswers} onChange={handleChange} className="flex-1 min-h-[100px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-gray-50 focus:bg-white focus:outline-blue-500" />
                         </div>
                       </div>
@@ -474,49 +726,49 @@ export default function WorkspaceTacVu() {
                         
                         {currentConfig.videoCategory !== undefined && (
                           <div className="flex items-center">
-                            <FieldLabel icon="🎥" text="Danh mục video" />
+                            <FieldLabel icon="🎥" text="Danh mục video" helpKey="videoCategory" />
                             <input type="text" name="videoCategory" value={currentConfig.videoCategory} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
                           </div>
                         )}
 
                         {currentConfig.priority !== undefined && (
                           <div className="flex items-center">
-                            <FieldLabel icon="⭐" text="Độ ưu tiên" />
+                            <FieldLabel icon="⭐" text="Độ ưu tiên" helpKey="priority" />
                             <input type="number" name="priority" value={currentConfig.priority} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
                           </div>
                         )}
                         
                         {currentConfig.active !== undefined && (
                           <div className="flex items-center">
-                            <FieldLabel icon="✅" text="Kích hoạt" />
+                            <FieldLabel icon="✅" text="Kích hoạt" helpKey="active" />
                             <input type="checkbox" name="active" checked={currentConfig.active} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded" />
                           </div>
                         )}
 
                         {currentConfig.useVoice !== undefined && selectedEventId !== 'talking' && selectedEventId !== 'idle' && (
                           <div className="flex items-center">
-                            <FieldLabel icon="🗣️" text="Dùng giọng nói" />
+                            <FieldLabel icon="🗣️" text="Dùng giọng nói" helpKey="useVoice" />
                             <input type="checkbox" name="useVoice" checked={currentConfig.useVoice} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded" />
                           </div>
                         )}
 
                         {currentConfig.muteSourceVideo !== undefined && selectedEventId !== 'talking' && selectedEventId !== 'idle' && (
                           <div className="flex items-center">
-                            <FieldLabel icon="🔇" text="Tắt âm gốc video" />
+                            <FieldLabel icon="🔇" text="Tắt âm gốc video" helpKey="muteSourceVideo" />
                             <input type="checkbox" name="muteSourceVideo" checked={currentConfig.muteSourceVideo} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded" />
                           </div>
                         )}
 
                         {currentConfig.useAi !== undefined && selectedEventId !== 'idle' && selectedEventId !== 'apology' && (
                           <div className="flex items-center">
-                            <FieldLabel icon="🧠" text="Dùng AI trả lời" />
+                            <FieldLabel icon="🧠" text="Dùng AI trả lời" helpKey="useAi" />
                             <input type="checkbox" name="useAi" checked={currentConfig.useAi} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded" />
                           </div>
                         )}
                         
                         {selectedEventId === 'thanks_heart' && (
                           <div className="flex items-center">
-                            <FieldLabel icon="❤️" text="Ngưỡng tim để cảm ơn" />
+                            <FieldLabel icon="❤️" text="Ngưỡng tim để cảm ơn" helpKey="likeThreshold" />
                             <input type="number" name="likeThreshold" value={currentConfig.likeThreshold} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
                           </div>
                         )}
@@ -524,14 +776,14 @@ export default function WorkspaceTacVu() {
                         {/* Specific fields */}
                         {(selectedEventId === 'apology' || selectedEventId === 'welcome') && (
                           <div className="flex items-center">
-                            <FieldLabel icon="⏱️" text="Số phút để chào" />
+                            <FieldLabel icon="⏱️" text="Số phút để chào" helpKey="greetMinutes" />
                             <input type="number" name="greetMinutes" value={currentConfig.greetMinutes} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
                           </div>
                         )}
 
                         {(selectedEventId === 'comment' || selectedEventId === 'follow') && (
                           <div className="flex items-center">
-                            <FieldLabel icon="⏳" text={`Chờ giữa các ${selectedEventId === 'comment' ? 'comment' : 'follow'} (giây)`} />
+                            <FieldLabel icon="⏳" text={`Chờ giữa các ${selectedEventId === 'comment' ? 'comment' : 'follow'} (giây)`} helpKey="waitBetweenEvents" />
                             <input type="number" name="waitBetweenEvents" value={currentConfig.waitBetweenEvents} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
                           </div>
                         )}
@@ -539,27 +791,27 @@ export default function WorkspaceTacVu() {
                         {selectedEventId === 'comment' && (
                           <>
                             <div className="flex items-center">
-                              <FieldLabel icon="📊" text="Tỷ lệ trả lời (%)" />
+                              <FieldLabel icon="📊" text="Tỷ lệ trả lời (%)" helpKey="replyRate" />
                               <input type="number" name="replyRate" value={currentConfig.replyRate} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
                             </div>
                             <div className="flex items-start mt-1">
-                              <FieldLabel icon="🚫" text="Từ khóa cấm" />
+                              <FieldLabel icon="🚫" text="Từ khóa cấm" helpKey="bannedWords" />
                               <textarea name="bannedWords" value={currentConfig.bannedWords} onChange={handleChange} className="flex-1 h-[60px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-gray-50 focus:bg-white focus:outline-blue-500" />
                             </div>
                             <div className="flex items-start mt-1">
-                              <FieldLabel icon="⭐" text="Từ khóa ưu tiên" />
+                              <FieldLabel icon="⭐" text="Từ khóa ưu tiên" helpKey="priorityWords" />
                               <textarea name="priorityWords" value={currentConfig.priorityWords} onChange={handleChange} className="flex-1 h-[60px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-gray-50 focus:bg-white focus:outline-blue-500" />
                             </div>
                             <div className="flex items-center mt-1">
-                              <FieldLabel icon="🛡️" text="Bật bộ lọc spam thông minh" />
+                              <FieldLabel icon="🛡️" text="Bật bộ lọc spam thông minh" helpKey="smartSpamFilter" />
                               <input type="checkbox" name="smartSpamFilter" checked={currentConfig.smartSpamFilter} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded" />
                             </div>
                             <div className="flex items-center">
-                              <FieldLabel icon="⏱️" text="Chờ giữa các comment spam (giây)" />
+                              <FieldLabel icon="⏱️" text="Chờ giữa các comment spam (giây)" helpKey="waitBetweenSpam" />
                               <input type="number" name="waitBetweenSpam" value={currentConfig.waitBetweenSpam} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
                             </div>
                             <div className="flex items-center">
-                              <FieldLabel icon="🔤" text="Tỷ lệ ký tự lặp lại tối đa (0.0-1.0)" />
+                              <FieldLabel icon="🔤" text="Tỷ lệ ký tự lặp lại tối đa (0.0-1.0)" helpKey="maxRepeatChars" />
                               <input type="number" step="0.1" name="maxRepeatChars" value={currentConfig.maxRepeatChars} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
                             </div>
                           </>
@@ -567,21 +819,21 @@ export default function WorkspaceTacVu() {
 
                         {selectedEventId === 'idle' && (
                           <div className="flex items-center">
-                            <FieldLabel icon="⏱️" text="Tự nói sau (giây) im lặng" />
+                            <FieldLabel icon="⏱️" text="Tự nói sau (giây) im lặng" helpKey="speakAfterIdleSeconds" />
                             <input type="number" name="speakAfterIdleSeconds" value={currentConfig.speakAfterIdleSeconds} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
                           </div>
                         )}
 
                         {currentConfig.aiPrompt !== undefined && selectedEventId !== 'idle' && selectedEventId !== 'apology' && selectedEventId !== 'welcome' && (
                           <div className="flex items-start mt-2">
-                            <FieldLabel icon="✍️" text="Kịch bản cho AI" />
+                            <FieldLabel icon="✍️" text="Kịch bản cho AI" helpKey="aiPrompt" />
                             <textarea name="aiPrompt" value={currentConfig.aiPrompt} onChange={handleChange} className="flex-1 min-h-[120px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-gray-50 focus:bg-white focus:outline-blue-500" />
                           </div>
                         )}
 
                         {currentConfig.sampleAnswers !== undefined && selectedEventId !== 'idle' && (
                           <div className="flex items-start mt-2">
-                            <FieldLabel icon="📄" text="Câu trả lời mẫu (mỗi câu 1 dòng)" />
+                            <FieldLabel icon="📄" text="Câu trả lời mẫu (mỗi câu 1 dòng)" helpKey="sampleAnswers" />
                             <textarea name="sampleAnswers" value={currentConfig.sampleAnswers} onChange={handleChange} className="flex-1 min-h-[100px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-gray-50 focus:bg-white focus:outline-blue-500" />
                           </div>
                         )}
@@ -589,11 +841,11 @@ export default function WorkspaceTacVu() {
                         {selectedEventId === 'talking' && (
                           <>
                             <div className="flex items-center mt-2">
-                              <FieldLabel icon="🗣️" text="Dùng giọng nói" />
+                              <FieldLabel icon="🗣️" text="Dùng giọng nói" helpKey="useVoice" />
                               <input type="checkbox" name="useVoice" checked={currentConfig.useVoice} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded" />
                             </div>
                             <div className="flex items-center">
-                              <FieldLabel icon="🔇" text="Tắt âm gốc video" />
+                              <FieldLabel icon="🔇" text="Tắt âm gốc video" helpKey="muteSourceVideo" />
                               <input type="checkbox" name="muteSourceVideo" checked={currentConfig.muteSourceVideo} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded" />
                             </div>
                           </>
@@ -608,8 +860,9 @@ export default function WorkspaceTacVu() {
               {/* Cấu hình Video Chung & Cài đặt Trợ lý cho các Tab còn lại */}
               <div className="border border-gray-300 rounded-md bg-white mb-3 shadow-sm px-3 py-4">
                 <fieldset className="border border-gray-300 rounded p-4 pt-4 mt-2 relative">
-                  <legend className="absolute -top-3 left-3 bg-white px-1 text-sm font-semibold text-gray-700">
-                    Cấu hình Video Chung (Dự phòng)
+                  <legend className="absolute -top-3 left-3 bg-white px-1 text-sm font-semibold text-gray-700 flex items-center gap-1">
+                    <span>Cấu hình Video Chung (Dự phòng)</span>
+                    <HelpTooltip helpKey="videoFolder" />
                   </legend>
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center gap-4">
@@ -636,17 +889,22 @@ export default function WorkspaceTacVu() {
                   <fieldset className="border border-gray-300 rounded p-4 pt-4 mt-2 relative">
                     <legend className="absolute -top-3 left-3 bg-white px-1 text-sm font-semibold text-gray-700 flex items-center gap-2">
                       <input type="checkbox" className="w-3.5 h-3.5" checked readOnly />
-                      Cài đặt Trợ lý
+                      <span>Cài đặt Trợ lý</span>
+                      <HelpTooltip helpKey="useAssistant" />
                     </legend>
                     <div className="flex flex-col gap-2">
-                      <label className="text-[13px] text-gray-700 font-semibold">Câu mẫu của Trợ lý:</label>
+                      <div className="flex items-center gap-1">
+                        <label className="text-[13px] text-gray-700 font-semibold">Câu mẫu của Trợ lý:</label>
+                        <HelpTooltip helpKey="assistantPrompt" />
+                      </div>
                       <textarea 
                         name="assistantPrompt" value={currentConfig.assistantPrompt} onChange={handleChange}
                         className="w-full h-[80px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-gray-50 focus:bg-white focus:outline-blue-500" 
                       />
-                      <label className="flex items-center gap-2 justify-center mt-2">
+                      <label className="flex items-center gap-2 justify-center mt-2 cursor-pointer">
                         <input type="checkbox" name="assistantUseMainVoice" checked={currentConfig.assistantUseMainVoice} onChange={handleChange} className="w-4 h-4 rounded" />
                         <span className="text-[13px] text-gray-600 font-medium">Dùng giọng của nhân vật chính</span>
+                        <HelpTooltip helpKey="assistantUseMainVoice" />
                       </label>
                     </div>
                   </fieldset>
