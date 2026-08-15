@@ -168,11 +168,12 @@ export default function GameChienDau({
     else if (type === 'level_up') battleAudio.playLevelUp(vol);
   }, [config.soundEnabled, config.sfxVolume, soundMuted]);
 
-  // Recalculate formation slots with Collision-Free Distributed 1v1 Full-Screen Arena Architecture:
+  // Recalculate formation slots with Collision-Free Distributed 1v1 & Multi-Target Group Arena Architecture:
   // 1) Upper Dais Stage (Thư Hùng Đỉnh Cao): Blue Top 1 Champion vs Red Top 1 Champion stationed on the dual glowing dais rings (daisY = h * 0.32).
   // 2) Distributed 1v1 Pair-Duels across the entire arena: Blue #k vs Red #k stationed on dedicated spacious duel spots with guaranteed clearance.
-  // 3) Strict Viewport Clamping: All positions clamped inside device screen boundaries so characters NEVER drift off-screen.
-  // 4) Dynamic Proportional Scaling: Automatically shrinks both Tướng and Regular soldiers as battlefield player count increases.
+  // 3) Multi-Target / Group Match-up (1 Tướng vs Nhóm 2-3 Lính): If one side has surplus fighters, they dynamically flank and assist active duels so NO FIGHTER WAITS IDLE!
+  // 4) Strict Viewport Clamping: All positions clamped inside device screen boundaries so characters NEVER drift or jump off-screen.
+  // 5) Dynamic Proportional Scaling: Automatically shrinks both Tướng and Regular soldiers as battlefield player count increases.
   const updateFormation = useCallback((canvasWidth, canvasHeight) => {
     const centerX = canvasWidth / 2;
     const daisY = canvasHeight * 0.32; // Grand dais stage height with clear margin below top HUD
@@ -213,10 +214,10 @@ export default function GameChienDau({
     ];
 
     // Helper: Safely clamp coordinates within device viewport
-    const clampX = (x) => Math.max(50 * crowdScaleFactor, Math.min(canvasWidth - 50 * crowdScaleFactor, x));
+    const clampX = (x) => Math.max(45 * crowdScaleFactor, Math.min(canvasWidth - 45 * crowdScaleFactor, x));
     const clampY = (y) => Math.max(canvasHeight * 0.28, Math.min(canvasHeight * 0.88, y));
 
-    // Pair up 1v1 Duels for all active fighters
+    // 1. If both factions have combatants, pair them up 1v1 first
     for (let p = 0; p < pairCount; p++) {
       const bFighter = activeBlue[p];
       const rFighter = activeRed[p];
@@ -263,34 +264,105 @@ export default function GameChienDau({
       }
     }
 
-    // Surplus Blue fighters stationed in Strategic Reserve Rally Zone (Left Area)
-    for (let u = pairCount; u < activeBlue.length; u++) {
-      const uFighter = activeBlue[u];
-      const uIdx = u - pairCount;
-      uFighter.isVipStage = false;
-      uFighter.isDuelFront = false;
-      uFighter.duelPairIdx = -1;
-      uFighter.targetX = clampX(canvasWidth * 0.14);
-      uFighter.targetY = clampY(canvasHeight * (0.50 + (uIdx % 4) * 0.11));
+    // 2. Multi-Target / Group Duels for Surplus Blue Fighters (1 Tướng vs Nhóm lính hoặc Hỗ trợ vây đánh)
+    if (activeBlue.length > activeRed.length) {
+      for (let u = pairCount; u < activeBlue.length; u++) {
+        const uFighter = activeBlue[u];
+        const uIdx = u - pairCount;
+
+        if (activeRed.length > 0) {
+          // Assign surplus Blue fighters to flank and attack existing Red fighters (e.g. 1 Tướng Red vs Group of Blue fighters)
+          const targetPairIdx = uIdx % activeRed.length;
+          const targetOpponent = activeRed[targetPairIdx];
+          const isDaisTarget = targetOpponent.isVipStage;
+
+          uFighter.isVipStage = false;
+          uFighter.isDuelFront = true;
+          uFighter.duelPairIdx = targetPairIdx;
+
+          // Flanking positions on the left side of the Red opponent
+          const flankOffsetY = (uIdx % 2 === 0 ? -28 : 28) * crowdScaleFactor;
+          const flankOffsetX = (isDaisTarget ? -85 : -40) * crowdScaleFactor;
+
+          uFighter.duelSpotX = targetOpponent.x || centerX;
+          uFighter.duelSpotY = targetOpponent.y || daisY;
+          uFighter.targetX = clampX((targetOpponent.targetX || targetOpponent.x) + flankOffsetX);
+          uFighter.targetY = clampY((targetOpponent.targetY || targetOpponent.y) + flankOffsetY);
+        } else {
+          // If no Red fighters exist yet, station in active martial readiness stance across the arena
+          const readySpot = duelSpots[uIdx % duelSpots.length];
+          uFighter.isVipStage = (u === 0);
+          uFighter.isDuelFront = false;
+          uFighter.duelPairIdx = -1;
+          uFighter.targetX = clampX(readySpot.x - 30 * crowdScaleFactor);
+          uFighter.targetY = clampY(readySpot.y);
+        }
+      }
     }
 
-    // Surplus Red fighters stationed in Strategic Reserve Rally Zone (Right Area)
-    for (let u = pairCount; u < activeRed.length; u++) {
-      const uFighter = activeRed[u];
-      const uIdx = u - pairCount;
-      uFighter.isVipStage = false;
-      uFighter.isDuelFront = false;
-      uFighter.duelPairIdx = -1;
-      uFighter.targetX = clampX(canvasWidth * 0.86);
-      uFighter.targetY = clampY(canvasHeight * (0.50 + (uIdx % 4) * 0.11));
+    // 3. Multi-Target / Group Duels for Surplus Red Fighters (1 Tướng Blue vs Nhóm 2-3 Lính Red)
+    if (activeRed.length > activeBlue.length) {
+      for (let u = pairCount; u < activeRed.length; u++) {
+        const uFighter = activeRed[u];
+        const uIdx = u - pairCount;
+
+        if (activeBlue.length > 0) {
+          // Assign surplus Red fighters to flank and attack Blue fighters (e.g. 1 Tướng Blue vs Group of Red fighters on Dais)
+          const targetPairIdx = uIdx % activeBlue.length;
+          const targetOpponent = activeBlue[targetPairIdx];
+          const isDaisTarget = targetOpponent.isVipStage;
+
+          uFighter.isVipStage = false;
+          uFighter.isDuelFront = true;
+          uFighter.duelPairIdx = targetPairIdx;
+
+          // Flanking positions on the right side surrounding the Blue opponent
+          const flankOffsetY = (uIdx % 2 === 0 ? -28 : 28) * crowdScaleFactor;
+          const flankOffsetX = (isDaisTarget ? 85 : 40) * crowdScaleFactor;
+
+          uFighter.duelSpotX = targetOpponent.x || centerX;
+          uFighter.duelSpotY = targetOpponent.y || daisY;
+          uFighter.targetX = clampX((targetOpponent.targetX || targetOpponent.x) + flankOffsetX);
+          uFighter.targetY = clampY((targetOpponent.targetY || targetOpponent.y) + flankOffsetY);
+        } else {
+          // If no Blue fighters exist yet, station in active martial readiness stance across the arena
+          const readySpot = duelSpots[uIdx % duelSpots.length];
+          uFighter.isVipStage = (u === 0);
+          uFighter.isDuelFront = false;
+          uFighter.duelPairIdx = -1;
+          uFighter.targetX = clampX(readySpot.x + 30 * crowdScaleFactor);
+          uFighter.targetY = clampY(readySpot.y);
+        }
+      }
     }
   }, []);
 
-  // Action Dispatchers: Add / Update / Revive Fighters
-  const addOrUpdateFighter = useCallback((factionId, nickname, pointsToAdd = 10, preferredGender = null) => {
+  // Action Dispatchers: Add / Update / Revive Fighters with Dynamic Auto-Balancing
+  const addOrUpdateFighter = useCallback((requestedFactionId, nickname, pointsToAdd = 10, preferredGender = null) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    // Dynamic Team Auto-Balancing: If one side has more active fighters, automatically balance new joins
+    const listRequested = engineRef.current.fighters[requestedFactionId] || [];
+    const oppFactionId = requestedFactionId === 'blue' ? 'red' : 'blue';
+    const listOpp = engineRef.current.fighters[oppFactionId] || [];
+
+    const activeRequested = listRequested.filter(f => !f.isKnockedOut);
+    const activeOpp = listOpp.filter(f => !f.isKnockedOut);
+
     const userId = `user_${nickname.toLowerCase().replace(/\s+/g, '_')}`;
+    let existingFighter = listRequested.find(f => f.userId === userId) || listOpp.find(f => f.userId === userId);
+
+    let factionId = requestedFactionId;
+    if (existingFighter) {
+      factionId = existingFighter.factionId || (listRequested.includes(existingFighter) ? requestedFactionId : oppFactionId);
+    } else {
+      // New fighter: Auto-balance team if requested side is already crowded (+1 or more surplus)
+      if (activeRequested.length > activeOpp.length) {
+        factionId = oppFactionId;
+      }
+    }
+
     const list = engineRef.current.fighters[factionId];
     let fighter = list.find(f => f.userId === userId);
 
@@ -472,18 +544,23 @@ export default function GameChienDau({
     if (!canvas) return;
     const oppFaction = factionId === 'blue' ? 'red' : 'blue';
     const oppColor = oppFaction === 'blue' ? config.blueColor : config.redColor;
+    const oppFighters = engineRef.current.fighters[oppFaction] || [];
     
-    // Spawn particles on opponent side
-    const isBlueOpp = oppFaction === 'blue';
-    const xStart = isBlueOpp ? 0 : canvas.width * 0.5;
-    const xRange = canvas.width * 0.5;
+    // Target the specific paired opponent directly
+    const ownFighter = engineRef.current.fighters[factionId]?.find(f => f.nickname === donorName);
+    const targetFighter = oppFighters.find(op => !op.isKnockedOut && ownFighter && op.duelPairIdx === ownFighter.duelPairIdx) 
+      || oppFighters.find(op => !op.isKnockedOut)
+      || { x: oppFaction === 'blue' ? canvas.width * 0.3 : canvas.width * 0.7, y: canvas.height * 0.5 };
+
+    const targetX = targetFighter.x || (oppFaction === 'blue' ? canvas.width * 0.3 : canvas.width * 0.7);
+    const targetY = targetFighter.y || (canvas.height * 0.5);
 
     for (let i = 0; i < 28; i++) {
       engineRef.current.particles.push({
-        x: xStart + Math.random() * xRange,
-        y: canvas.height * 0.28 + Math.random() * (canvas.height * 0.1),
-        vx: (Math.random() - 0.5) * 40,
-        vy: 100 + Math.random() * 80,
+        x: targetX + (Math.random() - 0.5) * 50,
+        y: targetY - 45 + (Math.random() - 0.5) * 30,
+        vx: (Math.random() - 0.5) * 50,
+        vy: 80 + Math.random() * 80,
         size: 3 + Math.random() * 4,
         color: oppColor,
         isFlash: false,
@@ -509,13 +586,19 @@ export default function GameChienDau({
     const canvas = canvasRef.current;
     if (!canvas) return;
     const isBlue = factionId === 'blue';
+    const oppFaction = isBlue ? 'red' : 'blue';
+    const oppFighters = engineRef.current.fighters[oppFaction] || [];
+    const leadOpponent = oppFighters.find(op => !op.isKnockedOut);
+
+    const targetX = leadOpponent ? leadOpponent.x : (isBlue ? canvas.width * 0.82 : canvas.width * 0.18);
+    const targetY = leadOpponent ? leadOpponent.y : canvas.height * 0.58;
 
     engineRef.current.bosses.push({
       id: Date.now(),
       factionId,
       x: isBlue ? canvas.width * 0.05 : canvas.width * 0.95,
-      y: canvas.height * 0.58,
-      targetX: isBlue ? canvas.width * 0.92 : canvas.width * 0.08,
+      y: targetY,
+      targetX: targetX,
       spawnedAt: performance.now()
     });
 
@@ -535,21 +618,25 @@ export default function GameChienDau({
     if (!canvas) return;
     const isBlue = factionId === 'blue';
     const oppFaction = isBlue ? 'red' : 'blue';
-    const oppFighters = engineRef.current.fighters[oppFaction];
+    const oppFighters = engineRef.current.fighters[oppFaction] || [];
     
-    // Target the highest ranking or leading enemy fighter directly
-    const targetFighter = oppFighters.length > 0 ? oppFighters[0] : null;
-    const targetX = targetFighter ? targetFighter.x : (isBlue ? canvas.width * 0.75 : canvas.width * 0.25);
-    const targetY = targetFighter ? targetFighter.y : canvas.height * 0.62;
+    // Target the specific paired enemy fighter directly
+    const ownFighter = engineRef.current.fighters[factionId]?.find(f => f.nickname === donorName);
+    const targetFighter = oppFighters.find(op => !op.isKnockedOut && ownFighter && op.duelPairIdx === ownFighter.duelPairIdx) 
+      || oppFighters.find(op => !op.isKnockedOut)
+      || { x: isBlue ? canvas.width * 0.75 : canvas.width * 0.25, y: canvas.height * 0.55 };
+
+    const targetX = targetFighter.x;
+    const targetY = targetFighter.y;
 
     for (let i = 0; i < 18; i++) {
       engineRef.current.flyingSwords.push({
         id: Date.now() + Math.random(),
         factionId,
-        x: (isBlue ? canvas.width * 0.2 : canvas.width * 0.8) + (Math.random() - 0.5) * 140,
-        y: canvas.height * 0.08 + (Math.random() - 0.5) * 60,
-        targetX: targetX + (Math.random() - 0.5) * 60,
-        targetY: targetY + (Math.random() - 0.5) * 50,
+        x: (isBlue ? canvas.width * 0.2 : canvas.width * 0.8) + (Math.random() - 0.5) * 100,
+        y: canvas.height * 0.12 + (Math.random() - 0.5) * 40,
+        targetX: targetX + (Math.random() - 0.5) * 30,
+        targetY: targetY + (Math.random() - 0.5) * 30,
         color: isBlue ? '#38bdf8' : '#f87171',
         progress: -i * 0.04,
         speed: 2.2 + Math.random() * 0.8,
@@ -572,16 +659,22 @@ export default function GameChienDau({
     if (!canvas) return;
     const isBlue = factionId === 'blue';
     const oppFaction = isBlue ? 'red' : 'blue';
-    const oppFighters = engineRef.current.fighters[oppFaction];
-    const targetFighter = oppFighters.length > 0 ? oppFighters[0] : null;
+    const oppFighters = engineRef.current.fighters[oppFaction] || [];
+    
+    const ownFighter = engineRef.current.fighters[factionId]?.find(f => f.nickname === donorName);
+    const targetFighter = oppFighters.find(op => !op.isKnockedOut && ownFighter && op.duelPairIdx === ownFighter.duelPairIdx) 
+      || oppFighters.find(op => !op.isKnockedOut);
+
+    const targetX = targetFighter ? targetFighter.x : (isBlue ? canvas.width * 0.80 : canvas.width * 0.20);
+    const targetY = targetFighter ? targetFighter.y : canvas.height * 0.55;
 
     engineRef.current.dragonBeasts.push({
       id: Date.now(),
       factionId,
       x: isBlue ? 0 : canvas.width,
-      y: canvas.height * 0.55,
-      targetX: targetFighter ? targetFighter.x : (isBlue ? canvas.width * 0.85 : canvas.width * 0.15),
-      targetY: targetFighter ? targetFighter.y : canvas.height * 0.62,
+      y: canvas.height * 0.45,
+      targetX: targetX,
+      targetY: targetY,
       progress: 0,
       spawnedAt: performance.now()
     });
@@ -1021,6 +1114,15 @@ export default function GameChienDau({
 
         f.x += (targetX - f.x) * lerpFactor;
         f.y += (targetY - f.y) * lerpFactor;
+
+        // Strict Viewport Clamping: Guaranteed zero off-screen drift or overshoot
+        const minX = 40 * crowdScaleFactor;
+        const maxX = w - 40 * crowdScaleFactor;
+        const minY = h * 0.28;
+        const maxY = h * 0.88;
+        f.x = Math.max(minX, Math.min(maxX, f.x));
+        f.y = Math.max(minY, Math.min(maxY, f.y));
+
         f.bobPhase += dt * 3.5;
 
         // Calculate Character Tier based on score

@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Shield, Lock, Unlock, LogOut, CheckCircle2, RotateCcw, 
   Volume2, VolumeX, Sliders, Play, Pause, Swords, Flame, 
   Zap, Trophy, AlertCircle, X, Sparkles, UserCheck, PlayCircle, StopCircle, 
-  Minimize2, Maximize2, Gift, Plus, Trash2
+  Minimize2, Maximize2, Gift, Plus, Trash2, GripHorizontal, Move
 } from 'lucide-react';
 import { battleAudio } from './battleAudioEngine';
 
@@ -37,9 +37,85 @@ export default function GameChienDauAdminModal({
   const [activeTab, setActiveTab] = useState('referee'); // 'referee' | 'gifts' | 'audio' | 'settings' | 'match'
   const [isMinimized, setIsMinimized] = useState(false);
 
+  // Draggable floating modal position state
+  const [position, setPosition] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedPos = localStorage.getItem('GAME_ADMIN_MODAL_POS');
+      if (savedPos) {
+        try { return JSON.parse(savedPos); } catch (e) {}
+      }
+      return { x: Math.max(16, window.innerWidth - 690), y: Math.max(16, window.innerHeight - 640) };
+    }
+    return { x: 40, y: 40 };
+  });
+
+  const [isDragging, setIsDragging] = useState(false);
+  const dragRef = useRef({ startX: 0, startY: 0, posX: 0, posY: 0 });
+  const modalRef = useRef(null);
+
   // Auto simulation state
   const [isSimulating, setIsSimulating] = useState(false);
   const simTimerRef = useRef(null);
+
+  // Dragging Handlers
+  const handleDragStart = useCallback((e) => {
+    // Only drag from header bar or grip, ignore button clicks
+    if (e.target.closest('button') || e.target.closest('input')) return;
+    
+    setIsDragging(true);
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    
+    dragRef.current = {
+      startX: clientX,
+      startY: clientY,
+      posX: position.x,
+      posY: position.y
+    };
+  }, [position]);
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e) => {
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      
+      const dx = clientX - dragRef.current.startX;
+      const dy = clientY - dragRef.current.startY;
+
+      const modalWidth = isMinimized ? 320 : (modalRef.current?.offsetWidth || 650);
+      const modalHeight = isMinimized ? 60 : (modalRef.current?.offsetHeight || 550);
+
+      const maxX = Math.max(0, window.innerWidth - modalWidth - 10);
+      const maxY = Math.max(0, window.innerHeight - modalHeight - 10);
+
+      const newX = Math.max(10, Math.min(maxX, dragRef.current.posX + dx));
+      const newY = Math.max(10, Math.min(maxY, dragRef.current.posY + dy));
+
+      setPosition({ x: newX, y: newY });
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      setPosition(prev => {
+        localStorage.setItem('GAME_ADMIN_MODAL_POS', JSON.stringify(prev));
+        return prev;
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('touchmove', handleMouseMove);
+    window.addEventListener('touchend', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchmove', handleMouseMove);
+      window.removeEventListener('touchend', handleMouseUp);
+    };
+  }, [isDragging, isMinimized]);
 
   // Editable config state
   const [config, setConfig] = useState(() => {
@@ -199,25 +275,43 @@ export default function GameChienDauAdminModal({
   };
 
   return (
-    <div className={`fixed z-50 transition-all duration-300 ${
-      isMinimized 
-        ? 'bottom-6 right-6 w-80 shadow-2xl' 
-        : 'bottom-4 right-4 md:bottom-6 md:right-6 w-full max-w-2xl max-h-[88vh] shadow-2xl shadow-purple-950/70'
-    }`}>
+    <div 
+      ref={modalRef}
+      style={{
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        userSelect: isDragging ? 'none' : 'auto'
+      }}
+      className={`fixed z-50 transition-shadow ${
+        isMinimized 
+          ? 'w-80 shadow-2xl' 
+          : 'w-[94vw] max-w-2xl max-h-[88vh] shadow-2xl shadow-purple-950/70'
+      }`}
+    >
       <div className="relative w-full bg-[#11131c]/95 backdrop-blur-xl border border-purple-500/40 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         
-        {/* Header (Always Visible & Compact) */}
-        <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-purple-950/90 via-indigo-950/90 to-[#11131c] border-b border-purple-500/30 select-none">
+        {/* Header (Draggable Handle + Always Visible & Compact) */}
+        <div 
+          onMouseDown={handleDragStart}
+          onTouchStart={handleDragStart}
+          className={`flex items-center justify-between px-4 py-3 bg-gradient-to-r from-purple-950/95 via-indigo-950/95 to-[#11131c] border-b border-purple-500/30 select-none cursor-move ${
+            isDragging ? 'cursor-grabbing ring-2 ring-purple-400/50' : 'cursor-grab'
+          }`}
+          title="Nhấn giữ và kéo để di chuyển bảng Quản trị Admin tới bất kỳ đâu"
+        >
           <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-lg bg-purple-500/20 text-purple-400 border border-purple-400/30">
-              <Shield size={16} />
+            <div className="p-1.5 rounded-lg bg-purple-500/20 text-purple-400 border border-purple-400/30 flex items-center justify-center">
+              <Move size={14} className="animate-pulse text-purple-300" />
             </div>
             <div>
               <h2 className="text-xs font-black text-white flex items-center gap-1.5">
-                BẢNG QUẢN TRỊ ADMIN (GAME CHIẾN ĐẤU)
+                BẢNG QUẢN TRỊ ADMIN
                 {isSimulating && (
                   <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                 )}
+                <span className="text-[10px] font-normal text-purple-400/80 bg-purple-900/40 px-1.5 py-0.5 rounded border border-purple-500/20 hidden sm:inline">
+                  Kéo thả tự do
+                </span>
               </h2>
             </div>
           </div>
@@ -227,7 +321,7 @@ export default function GameChienDauAdminModal({
               <button
                 onClick={() => setIsMinimized(!isMinimized)}
                 className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
-                title={isMinimized ? "Mở rộng cửa sổ Admin" : "Thu nhỏ (để xem toàn cảnh trận đấu)"}
+                title={isMinimized ? "Mở rộng cửa sổ Admin" : "Thu nhỏ gọn (để xem toàn cảnh trận đấu)"}
               >
                 {isMinimized ? <Maximize2 size={14} /> : <Minimize2 size={14} />}
               </button>
