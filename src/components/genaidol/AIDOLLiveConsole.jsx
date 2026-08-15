@@ -72,12 +72,34 @@ export default function AIDOLLiveConsole() {
   const [savedJobs, setSavedJobs] = useState([]);
 
   // ── Live Stream state ──
-  const [rtmpKey, setRtmpKey] = useState('');
+  const [rtmpKey, setRtmpKey] = useState(() => {
+    try {
+      return localStorage.getItem('aidol_rtmp_key') || '';
+    } catch (e) {
+      return '';
+    }
+  });
   const [streamStatus, setStreamStatus] = useState('idle'); // idle | connecting | live | error
   const videoRef = useRef(null);
   const [activeVideoItem, setActiveVideoItem] = useState(null);
   const [activeJobItem, setActiveJobItem] = useState(null);
   const [videoQueue, setVideoQueue] = useState([]);
+
+  const handleToggleStream = (platform = 'tiktok') => {
+    if (streamStatus === 'live') {
+      setStreamStatus('idle');
+      setIsAILive(false);
+      return;
+    }
+    setStreamStatus('connecting');
+    if (rtmpKey) {
+      try { localStorage.setItem('aidol_rtmp_key', rtmpKey); } catch(e) {}
+    }
+    setTimeout(() => {
+      setStreamStatus('live');
+      setIsAILive(true);
+    }, 1000);
+  };
   const [currentVideoIdx, setCurrentVideoIdx] = useState(0);
 
   // ── Simulator State ──
@@ -388,8 +410,27 @@ export default function AIDOLLiveConsole() {
                   <input type="text" placeholder="Stream Key từ TikTok Studio..." value={rtmpKey} onChange={e => setRtmpKey(e.target.value)}
                     className="w-full bg-black/40 border border-slate-600 rounded-lg px-3 py-2 text-xs text-white mb-2 outline-none focus:border-[#ff0050]"/>
                   <div className="text-[9px] text-slate-500 mb-2">RTMP URL: <span className="text-[#ff0050] font-mono">rtmp://live.tiktok.com/live/</span></div>
-                  <button className={`w-full py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all ${rtmpKey ? 'bg-[#ff0050] hover:bg-[#cc0040] text-white' : 'bg-white/5 text-slate-500 border border-slate-700'}`}>
-                    {rtmpKey ? <><Wifi className="w-3.5 h-3.5"/> Kết nối TikTok Live</> : <><WifiOff className="w-3.5 h-3.5"/> Nhập Stream Key để kết nối</>}
+                  <button 
+                    onClick={() => handleToggleStream('tiktok')}
+                    className={`w-full py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                      streamStatus === 'live'
+                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20'
+                        : streamStatus === 'connecting'
+                        ? 'bg-yellow-600 text-white animate-pulse'
+                        : rtmpKey
+                        ? 'bg-[#ff0050] hover:bg-[#cc0040] text-white shadow-lg shadow-[#ff0050]/20'
+                        : 'bg-white/5 text-slate-500 border border-slate-700'
+                    }`}
+                  >
+                    {streamStatus === 'live' ? (
+                      <><CheckCircle className="w-3.5 h-3.5 text-white"/> Đang Live TikTok Studio (Bấm để Dừng)</>
+                    ) : streamStatus === 'connecting' ? (
+                      <><RefreshCw className="w-3.5 h-3.5 animate-spin"/> Đang kết nối...</>
+                    ) : rtmpKey ? (
+                      <><Wifi className="w-3.5 h-3.5"/> Kết nối TikTok Live Studio</>
+                    ) : (
+                      <><WifiOff className="w-3.5 h-3.5"/> Nhập Stream Key để kết nối</>
+                    )}
                   </button>
                 </div>
 

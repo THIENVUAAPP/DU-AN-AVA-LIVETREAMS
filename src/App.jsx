@@ -13,6 +13,7 @@ import DanceFloorStudio from "./components/DanceFloorStudio";
 import KOLLiveDashboard from "./components/KOLLiveDashboard";
 import DanceFloorOverlay from "./components/DanceFloorOverlay";
 import GameBattleOverlay from "./components/genaidol/game/GameBattleOverlay";
+import CleanLiveOverlay from "./components/genaidol/CleanLiveOverlay";
 import MultiAccountManager from "./components/MultiAccountManager";
 import AISellerOps from "./components/AISellerOps";
 import EnterprisePayment from "./components/EnterprisePayment";
@@ -187,13 +188,16 @@ export default function App() {
     alert(`⚡ ĐÃ KẾT NỐI THÀNH CÔNG TÀI KHOẢN GOOGLE REAL-TIME!\n\n👤 Email: ${emailClean}\n👑 Quyền hạn: ${isAdmin ? "SUPER ADMIN VIP" : "THÀNH VIÊN GÓI CHÍNH THỨC"}\n\nHồ sơ đã được đồng bộ với Cơ sở dữ liệu Supabase!`);
   };
 
-  // Cửa Sổ Overlay Trong Suốt cho Sàn Nhảy & Game Chiến Đấu TikTok
+  // Cửa Sổ Overlay Trong Suốt cho Sàn Nhảy & Game Chiến Đấu & Nhân Vật Live TikTok
   const overlayType = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("overlay");
   if (overlayType === "dancefloor") {
     return <DanceFloorOverlay />;
   }
   if (overlayType === "gamebattle" || overlayType === "game") {
     return <GameBattleOverlay />;
+  }
+  if (overlayType === "cleanlive" || overlayType === "avatar" || overlayType === "stream") {
+    return <CleanLiveOverlay />;
   }
 
   return (

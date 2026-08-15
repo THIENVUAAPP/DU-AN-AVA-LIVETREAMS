@@ -22,7 +22,13 @@ export default function DesktopAppUI() {
   const [isSettingsDropdownOpen, setIsSettingsDropdownOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isCommMode, setIsCommMode] = useState(false);
-  const [tiktokId, setTiktokId] = useState('');
+  const [tiktokId, setTiktokId] = useState(() => {
+    try {
+      return localStorage.getItem('aidol_tiktok_id') || '';
+    } catch (e) {
+      return '';
+    }
+  });
   const [selectedCharacter, setSelectedCharacter] = useState('aidol_lan_huong');
   const [showTokenHistory, setShowTokenHistory] = useState(false);
   const [showSimulator, setShowSimulator] = useState(false);
@@ -274,22 +280,74 @@ export default function DesktopAppUI() {
   }
 
 
+  // Đồng bộ hoá luồng video sạch sang TikTok LIVE Studio / OBS qua BroadcastChannel và localStorage
+  useEffect(() => {
+    const char = CHARACTERS[selectedCharacter] || { url: '', type: 'image', name: 'AI Idol' };
+    const currentMedia = (isConnected || showSimulator) && activeVideoItem ? activeVideoItem.mediaUrl : char.url;
+    const isVid = char.type === 'video' || (activeVideoItem && activeVideoItem.type === 'video');
+
+    const streamPayload = {
+      type: 'STREAM_MEDIA_UPDATE',
+      mediaUrl: currentMedia,
+      isVideo: !!isVid,
+      characterName: char.name || 'AI Idol',
+      isConnected: !!(isConnected || showSimulator)
+    };
+
+    try {
+      localStorage.setItem('aidol_clean_stream_state', JSON.stringify(streamPayload));
+    } catch (e) {}
+
+    if (typeof BroadcastChannel !== 'undefined') {
+      const channel = new BroadcastChannel('avalive_clean_stream_channel');
+      channel.postMessage(streamPayload);
+      channel.close();
+    }
+  }, [selectedCharacter, activeVideoItem, isConnected, showSimulator, CHARACTERS]);
+
   const handleConnect = async () => {
     if (isConnected) {
       // Dừng AI & Ngắt kết nối
       setIsConnected(false);
+      const timeStr = new Date().toLocaleTimeString();
+      setSystemLogs(prev => [`[${timeStr}] 🛑 Đã dừng phiên Live & ngắt kết nối`, ...prev.slice(0, 49)]);
+      setTiktokLogs(prev => [`[${timeStr}] 🛑 Phiên Live TikTok đã tạm dừng`, ...prev.slice(0, 49)]);
       return;
     }
     
     setIsConnecting(true);
+    const cleanId = tiktokId.trim().replace(/^@/, '');
+    if (cleanId) {
+      try {
+        localStorage.setItem('aidol_tiktok_id', cleanId);
+      } catch (e) {}
+    }
     setTimeout(() => {
       setIsConnecting(false);
       setIsConnected(true);
       setConnectionError('');
+      const targetChan = cleanId ? `@${cleanId}` : 'Kênh TikTok Live';
+      setToast({
+        type: 'success',
+        message: `Đã kết nối thành công với ${targetChan}! Sẵn sàng phát live TikTok Studio.`
+      });
+      setTimeout(() => setToast(null), 4000);
+
+      const timeStr = new Date().toLocaleTimeString();
+      setSystemLogs(prev => [
+        `[${timeStr}] 🟢 KẾT NỐI THÀNH CÔNG: ${targetChan}`,
+        `[${timeStr}] ⚡ Đang đồng bộ hóa luồng video sang TikTok Live Studio / OBS`,
+        ...prev.slice(0, 48)
+      ]);
+      setTiktokLogs(prev => [
+        `[${timeStr}] 🟢 Đã kết nối với TikTok Live: ${targetChan}`,
+        `[${timeStr}] 📡 Sẵn sàng bắt sự kiện Quà tặng, Bình luận, Follow và Thả tim`,
+        ...prev.slice(0, 48)
+      ]);
       
       // Bắt đầu sự kiện chào mừng
-      handleLiveEvent('VIEWER_JOIN', { name: 'Mọi người' });
-    }, 1500);
+      handleLiveEvent('VIEWER_JOIN', { name: cleanId ? `@${cleanId}` : 'Mọi người' });
+    }, 1200);
   };
 
   const toggleWebcam = async () => {
@@ -757,13 +815,44 @@ export default function DesktopAppUI() {
                   <html>
                   <head>
                     <title>TikTok Live Studio - Clean Video Output</title>
+                    <meta charset="UTF-8" />
                     <style>
-                      body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; display: flex; align-items: center; justify-content: center; }
+                      body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; display: flex; align-items: center; justify-content: center; font-family: sans-serif; }
+                      #media-wrapper { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
                       video, img { width: 100%; height: 100%; object-fit: cover; }
                     </style>
                   </head>
                   <body>
-                    ${isVid ? `<video id="clean-stream-video" src="${currentMedia}" autoplay loop muted playsinline></video>` : `<img id="clean-stream-img" src="${currentMedia}" />`}
+                    <div id="media-wrapper">
+                      ${isVid ? `<video id="clean-stream-video" src="${currentMedia}" autoplay loop muted playsinline></video>` : `<img id="clean-stream-img" src="${currentMedia}" />`}
+                    </div>
+                    <script>
+                      function updateMedia(url, isVideo) {
+                        var wrapper = document.getElementById('media-wrapper');
+                        if (!wrapper || !url) return;
+                        if (isVideo) {
+                          wrapper.innerHTML = '<video src="' + url + '" autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;"></video>';
+                        } else {
+                          wrapper.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;" />';
+                        }
+                      }
+                      if (typeof BroadcastChannel !== 'undefined') {
+                        var bc = new BroadcastChannel('avalive_clean_stream_channel');
+                        bc.onmessage = function(e) {
+                          if (e.data && e.data.mediaUrl) {
+                            updateMedia(e.data.mediaUrl, e.data.isVideo);
+                          }
+                        };
+                      }
+                      window.addEventListener('storage', function(e) {
+                        if (e.key === 'aidol_clean_stream_state' && e.newValue) {
+                          try {
+                            var p = JSON.parse(e.newValue);
+                            if (p.mediaUrl) updateMedia(p.mediaUrl, p.isVideo);
+                          } catch(err) {}
+                        }
+                      });
+                    </script>
                   </body>
                   </html>
                 `);
