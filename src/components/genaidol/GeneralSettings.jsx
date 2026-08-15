@@ -44,9 +44,9 @@ export default function GeneralSettings({ onClose }) {
     customVoices: []
   });
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount (deep merge with backup)
   useEffect(() => {
-    const savedSettings = localStorage.getItem('aidol_general_settings');
+    const savedSettings = localStorage.getItem('aidol_general_settings') || localStorage.getItem('aidol_general_settings_backup');
     if (savedSettings) {
       try {
         const parsed = JSON.parse(savedSettings);
@@ -72,20 +72,37 @@ export default function GeneralSettings({ onClose }) {
     }).catch(console.error);
   }, []);
 
-  const handleSave = () => {
-    localStorage.setItem('aidol_general_settings', JSON.stringify(settings));
-    localStorage.setItem('gemini_model', settings.apiModel || 'gemini-1.5-flash');
+  // Tự động lưu bền vững vĩnh viễn cấu hình chung
+  useEffect(() => {
+    if (settings) {
+      try {
+        const json = JSON.stringify(settings);
+        localStorage.setItem('aidol_general_settings', json);
+        localStorage.setItem('aidol_general_settings_backup', json);
+      } catch (e) {}
+    }
+  }, [settings]);
 
-    // Đồng bộ vào hệ thống 3 kênh giọng ElevenLabs của AVA Live
-    const idolMatch = ELEVENLABS_VOICES.find(v => v.id === settings.mainVoiceId);
-    const managerMatch = ELEVENLABS_VOICES.find(v => v.id === settings.assistantVoiceId);
-    const gameMatch = ELEVENLABS_VOICES.find(v => v.id === settings.gameVoiceId);
-    
-    saveDualVoiceConfig({
-      idolVoice: idolMatch ? { ...idolMatch, role: 'idol' } : undefined,
-      managerVoice: managerMatch ? { ...managerMatch, role: 'manager' } : undefined,
-      gameVoice: gameMatch ? { ...gameMatch, role: 'game' } : undefined
-    });
+  const handleSave = () => {
+    try {
+      const json = JSON.stringify(settings);
+      localStorage.setItem('aidol_general_settings', json);
+      localStorage.setItem('aidol_general_settings_backup', json);
+      localStorage.setItem('gemini_model', settings.apiModel || 'gemini-1.5-flash');
+
+      // Đồng bộ vào hệ thống 3 kênh giọng ElevenLabs của AVA Live
+      const idolMatch = ELEVENLABS_VOICES.find(v => v.id === settings.mainVoiceId);
+      const managerMatch = ELEVENLABS_VOICES.find(v => v.id === settings.assistantVoiceId);
+      const gameMatch = ELEVENLABS_VOICES.find(v => v.id === settings.gameVoiceId);
+      
+      saveDualVoiceConfig({
+        idolVoice: idolMatch ? { ...idolMatch, role: 'idol' } : undefined,
+        managerVoice: managerMatch ? { ...managerMatch, role: 'manager' } : undefined,
+        gameVoice: gameMatch ? { ...gameMatch, role: 'game' } : undefined
+      });
+    } catch(e) {
+      console.warn("Lỗi lưu cấu hình:", e);
+    }
 
     onClose();
   };

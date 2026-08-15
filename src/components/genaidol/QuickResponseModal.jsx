@@ -147,7 +147,7 @@ export default function QuickResponseModal({
   // 5. ==================== STATE MẪU KỊCH BẢN 1-CHẠM (EDITABLE) ====================
   const [presetScripts, setPresetScripts] = useState(() => {
     try {
-      const saved = localStorage.getItem('aidol_custom_preset_scripts');
+      const saved = localStorage.getItem('aidol_custom_preset_scripts') || localStorage.getItem('aidol_custom_preset_scripts_backup');
       return saved ? JSON.parse(saved) : DEFAULT_SCRIPTS;
     } catch {
       return DEFAULT_SCRIPTS;
@@ -168,7 +168,9 @@ export default function QuickResponseModal({
   const saveScriptsToStorage = (updated) => {
     setPresetScripts(updated);
     try {
-      localStorage.setItem('aidol_custom_preset_scripts', JSON.stringify(updated));
+      const json = JSON.stringify(updated);
+      localStorage.setItem('aidol_custom_preset_scripts', json);
+      localStorage.setItem('aidol_custom_preset_scripts_backup', json);
     } catch (e) {
       console.warn('Lỗi lưu kịch bản mẫu vào localStorage:', e);
     }
@@ -177,7 +179,7 @@ export default function QuickResponseModal({
   // 6. ==================== STATE VOICE SOUNDBOARD (EDITABLE) ====================
   const [soundboardList, setSoundboardList] = useState(() => {
     try {
-      const saved = localStorage.getItem('aidol_custom_voice_soundboard');
+      const saved = localStorage.getItem('aidol_custom_voice_soundboard') || localStorage.getItem('aidol_custom_voice_soundboard_backup');
       return saved ? JSON.parse(saved) : DEFAULT_SOUNDBOARD;
     } catch {
       return DEFAULT_SOUNDBOARD;

@@ -31,15 +31,8 @@ class ErrorBoundary extends Component {
             <button 
               onClick={() => {
                 try {
-                  localStorage.removeItem('aidol_custom_chars');
-                  localStorage.removeItem('aidol_hidden_builtins');
                   localStorage.removeItem('aidol_active_job');
-                  localStorage.removeItem('aidol_general_settings');
                   localStorage.removeItem('aidol_quick_recent_actions');
-                  localStorage.removeItem('aidol_event_configs');
-                  localStorage.removeItem('aidol_custom_categories');
-                  localStorage.removeItem('aidol_custom_brains');
-                  localStorage.removeItem('avalive_token_data');
                 } catch(e) {}
                 window.location.reload();
               }}

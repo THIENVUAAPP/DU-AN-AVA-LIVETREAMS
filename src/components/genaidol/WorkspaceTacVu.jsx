@@ -21,84 +21,126 @@ const EVENTS = [
 
 const GIFT_TYPES = ['Finger Heart', 'Cap', 'Confetti', 'Corgi', 'Crystal Rose', 'Crystal Shoe', "Cupid's Bow", "Don't cry", 'Doughnut', 'Encore Clap', 'Lucky pig', 'Lion', 'Yacht'];
 
+const getDefaultEventConfigs = () => {
+  const defaults = {};
+  EVENTS.forEach(ev => {
+    defaults[ev.id] = {
+      priority: ev.id === 'apology' ? 20 : ev.id === 'comment' ? 50 : ev.id === 'follow' ? 70 : ev.id === 'gift' ? 90 : ev.id === 'welcome' ? 60 : ev.id === 'special_gift' ? 999 : ev.id === 'checkout' ? 100 : ev.id === 'share' ? 50 : ev.id === 'thanks_heart' ? 15 : 50,
+      active: ev.id !== 'welcome' && ev.id !== 'share' && ev.id !== 'thanks_heart', 
+      useVoice: ev.id !== 'gift' && ev.id !== 'welcome',
+      muteSourceVideo: ev.id !== 'gift' && ev.id !== 'welcome',
+      videoCategory: ev.id === 'welcome' ? 'join' : ev.id === 'call_to_action' ? 'interaction' : ev.id === 'thanks_heart' ? 'thank_for_likes' : ev.id,
+      videoFolder: '',
+      useAi: ev.id !== 'gift',
+      aiPrompt: '',
+      sampleAnswers: '',
+      assistantPrompt: '',
+      assistantUseMainVoice: false,
+      
+      greetMinutes: ev.id === 'apology' || ev.id === 'welcome' ? 1 : '',
+      waitBetweenEvents: ev.id === 'comment' ? 1 : ev.id === 'follow' ? 60 : ev.id === 'gift' ? 0 : '',
+      replyRate: ev.id === 'comment' ? 70 : '',
+      bannedWords: ev.id === 'comment' ? 'scam\ngiả' : '',
+      priorityWords: ev.id === 'comment' ? 'mua\nbán' : '',
+      smartSpamFilter: ev.id === 'comment' ? true : false,
+      waitBetweenSpam: ev.id === 'comment' ? 3 : '',
+      maxRepeatChars: ev.id === 'comment' ? 0.7 : '',
+      speakAfterIdleSeconds: ev.id === 'idle' ? 5 : '',
+      likeThreshold: ev.id === 'thanks_heart' ? 10 : '',
+      
+      // Special gifts
+      specialGiftSlots: ev.id === 'special_gift' ? [
+        { id: 1, active: true, giftName: 'Finger Heart', videoFolder: '', useTTS: false, muteSourceVideo: false, useAssistant: true, assistantPrompt: '', assistantVideoFolder: '', useMainVoice: true },
+        { id: 2, active: true, giftName: 'Lucky pig', videoFolder: '', useTTS: false, muteSourceVideo: false, useAssistant: false, assistantPrompt: '', assistantVideoFolder: '', useMainVoice: true }
+      ] : [],
+
+      // Checkout Products
+      checkoutProducts: ev.id === 'checkout' ? [
+        { id: 1, active: true, productName: 'aidol', keywords: 'aidol;phần mềm;giá;liên hệ', videoFolder: 'bình luận', useAi: true, useTTS: false, muteSourceVideo: true, aiPrompt: 'TRong vai là một nhân viên sale chuyên nghiệp hãy đọc bình luận và đem ra câu trả lời để chốt đơn, giá phần mềm là 3 triệu rưỡi/1 năm, hoặc gói dùng thử là 500000 đồng trên 1 tháng. Chốt sale hoặc cần tư vấn thêm thì hãy liên hệ với đội ngũ admin' },
+        { id: 2, active: false, productName: '', keywords: '', videoFolder: '', useAi: false, useTTS: false, muteSourceVideo: false, aiPrompt: '' },
+        { id: 3, active: false, productName: '', keywords: '', videoFolder: '', useAi: false, useTTS: false, muteSourceVideo: false, aiPrompt: '' }
+      ] : []
+    };
+  });
+  
+  defaults['apology'].sampleAnswers = "Cả nhà ơi, đôi khi bình luận và người tham gia mới đông quá em không chào hết được, có bỏ sót ai thì mọi người thông cảm cho em nhé. Yêu mọi người nhiều!\nMọi người thông cảm nha, nếu em có lỡ bỏ qua bình luận của ai thì nhắn lại giúp em với nhé, do nhiều tin nhắn quá em không xem kịp ạ.";
+  defaults['comment'].aiPrompt = "### NHIỆM VỤ: Trả lời bình luận của người dùng tên {user}.";
+  defaults['comment'].sampleAnswers = "Cảm ơn bạn {user} đã bình luận nhé!\nMình đã nhận được bình luận của {user} rồi ạ.";
+  defaults['follow'].aiPrompt = "Hãy nói một câu cảm ơn bạn {user} đã theo dõi kênh.";
+  defaults['follow'].sampleAnswers = "A, cảm ơn bạn {user} đã theo dõi mình. Yêu bạn!\nCảm ơn {user} đã follow kênh của mình nhé!";
+  defaults['talking'].aiPrompt = "Bạn là một streamer AI, đang không có ai tương tác. Hãy chủ động nói một điều gì đó thật thú vị, đặt một câu hỏi mở, nói một cách hài hước...";
+  defaults['talking'].sampleAnswers = "xin chào các bn\ncác bạn ơi nói chuyện đi";
+  defaults['comment'].assistantPrompt = "A, có bạn {user} vừa mới bình luận là: {comment}";
+  defaults['gift'].aiPrompt = "Bạn là streamer AI. Hãy viết lời cảm ơn sáng tạo tới {user} vì đã tặng 1 {gift_name}.";
+  defaults['call_to_action'].sampleAnswers = "Mọi người ơi, đừng xem chùa nữa, hãy thả tim và bình luận để mình có thêm động lực nhé!\nCác bạn có câu hỏi nào cho mình không ạ? Đừng ngại hỏi nha!\nNếu thấy buổi live thú vị, mọi người hãy giúp mình một lượt chia sẻ nhé. Yêu mọi người!";
+  defaults['welcome'].sampleAnswers = "Chào mừng bạn {user} và {count} người mới đã đến với livestream!\nXin chào {user} và mọi người mới vào xem nhé! Chúc mọi người xem live vui vẻ.\nHelu {user}! Cảm ơn {count} bạn mới đã ghé thăm kênh của mình nha.";
+  defaults['share'].aiPrompt = "Hãy cảm ơn người dùng tên {user} vì đã chia sẻ livestream.";
+  defaults['share'].sampleAnswers = "Cảm ơn bạn {user} đã chia sẻ live giúp mình nhé!\nMình cảm ơn bạn {user} rất nhiều!";
+  defaults['thanks_heart'].sampleAnswers = "Cảm ơn mọi người đã giúp mình đạt mốc {milestone} tim!\nWow, chúng ta đã đạt {milestone} tim rồi! Yêu các bạn nhiều!";
+
+  return defaults;
+};
+
 export default function WorkspaceTacVu() {
   const [selectedEventId, setSelectedEventId] = useState('checkout');
-  const [eventConfigs, setEventConfigs] = useState({});
-
-  useEffect(() => {
-    const saved = localStorage.getItem('aidol_event_configs');
-    if (saved) {
-      try {
-        setEventConfigs(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse event configs", e);
+  
+  // Khởi tạo và nạp bền vững vĩnh viễn dữ liệu người dùng đã cài đặt
+  const [eventConfigs, setEventConfigs] = useState(() => {
+    const defaults = getDefaultEventConfigs();
+    try {
+      const saved = localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          const merged = { ...defaults };
+          Object.keys(defaults).forEach(key => {
+            if (parsed[key]) {
+              merged[key] = {
+                ...defaults[key],
+                ...parsed[key],
+                // Giữ nguyên các slot quà tặng và sản phẩm người dùng đã tùy chỉnh
+                specialGiftSlots: (Array.isArray(parsed[key]?.specialGiftSlots) && parsed[key].specialGiftSlots.length > 0)
+                  ? parsed[key].specialGiftSlots
+                  : defaults[key].specialGiftSlots,
+                checkoutProducts: (Array.isArray(parsed[key]?.checkoutProducts) && parsed[key].checkoutProducts.length > 0)
+                  ? parsed[key].checkoutProducts
+                  : defaults[key].checkoutProducts,
+              };
+            }
+          });
+          return merged;
+        }
       }
-    } else {
-      const defaults = {};
-      EVENTS.forEach(ev => {
-        defaults[ev.id] = {
-          priority: ev.id === 'apology' ? 20 : ev.id === 'comment' ? 50 : ev.id === 'follow' ? 70 : ev.id === 'gift' ? 90 : ev.id === 'welcome' ? 60 : ev.id === 'special_gift' ? 999 : ev.id === 'checkout' ? 100 : ev.id === 'share' ? 50 : ev.id === 'thanks_heart' ? 15 : 50,
-          active: ev.id !== 'welcome' && ev.id !== 'share' && ev.id !== 'thanks_heart', 
-          useVoice: ev.id !== 'gift' && ev.id !== 'welcome',
-          muteSourceVideo: ev.id !== 'gift' && ev.id !== 'welcome',
-          videoCategory: ev.id === 'welcome' ? 'join' : ev.id === 'call_to_action' ? 'interaction' : ev.id === 'thanks_heart' ? 'thank_for_likes' : ev.id,
-          videoFolder: '',
-          useAi: ev.id !== 'gift',
-          aiPrompt: '',
-          sampleAnswers: '',
-          assistantPrompt: '',
-          assistantUseMainVoice: false,
-          
-          greetMinutes: ev.id === 'apology' || ev.id === 'welcome' ? 1 : '',
-          waitBetweenEvents: ev.id === 'comment' ? 1 : ev.id === 'follow' ? 60 : ev.id === 'gift' ? 0 : '',
-          replyRate: ev.id === 'comment' ? 70 : '',
-          bannedWords: ev.id === 'comment' ? 'scam\ngiả' : '',
-          priorityWords: ev.id === 'comment' ? 'mua\nbán' : '',
-          smartSpamFilter: ev.id === 'comment' ? true : false,
-          waitBetweenSpam: ev.id === 'comment' ? 3 : '',
-          maxRepeatChars: ev.id === 'comment' ? 0.7 : '',
-          speakAfterIdleSeconds: ev.id === 'idle' ? 5 : '',
-          likeThreshold: ev.id === 'thanks_heart' ? 10 : '',
-          
-          // Special gifts
-          specialGiftSlots: ev.id === 'special_gift' ? [
-            { id: 1, active: true, giftName: 'Finger Heart', videoFolder: '', useTTS: false, muteSourceVideo: false, useAssistant: true, assistantPrompt: '', assistantVideoFolder: '', useMainVoice: true },
-            { id: 2, active: true, giftName: 'Lucky pig', videoFolder: '', useTTS: false, muteSourceVideo: false, useAssistant: false, assistantPrompt: '', assistantVideoFolder: '', useMainVoice: true }
-          ] : [],
-
-          // Checkout Products
-          checkoutProducts: ev.id === 'checkout' ? [
-            { id: 1, active: true, productName: 'aidol', keywords: 'aidol;phần mềm;giá;liên hệ', videoFolder: 'bình luận', useAi: true, useTTS: false, muteSourceVideo: true, aiPrompt: 'TRong vai là một nhân viên sale chuyên nghiệp hãy đọc bình luận và đem ra câu trả lời để chốt đơn, giá phần mềm là 3 triệu rưỡi/1 năm, hoặc gói dùng thử là 500000 đồng trên 1 tháng. Chốt sale hoặc cần tư vấn thêm thì hãy liên hệ với đội ngũ admin' },
-            { id: 2, active: false, productName: '', keywords: '', videoFolder: '', useAi: false, useTTS: false, muteSourceVideo: false, aiPrompt: '' },
-            { id: 3, active: false, productName: '', keywords: '', videoFolder: '', useAi: false, useTTS: false, muteSourceVideo: false, aiPrompt: '' }
-          ] : []
-        };
-      });
-      
-      defaults['apology'].sampleAnswers = "Cả nhà ơi, đôi khi bình luận và người tham gia mới đông quá em không chào hết được, có bỏ sót ai thì mọi người thông cảm cho em nhé. Yêu mọi người nhiều!\nMọi người thông cảm nha, nếu em có lỡ bỏ qua bình luận của ai thì nhắn lại giúp em với nhé, do nhiều tin nhắn quá em không xem kịp ạ.";
-      defaults['comment'].aiPrompt = "### NHIỆM VỤ: Trả lời bình luận của người dùng tên {user}.";
-      defaults['comment'].sampleAnswers = "Cảm ơn bạn {user} đã bình luận nhé!\nMình đã nhận được bình luận của {user} rồi ạ.";
-      defaults['follow'].aiPrompt = "Hãy nói một câu cảm ơn bạn {user} đã theo dõi kênh.";
-      defaults['follow'].sampleAnswers = "A, cảm ơn bạn {user} đã theo dõi mình. Yêu bạn!\nCảm ơn {user} đã follow kênh của mình nhé!";
-      defaults['talking'].aiPrompt = "Bạn là một streamer AI, đang không có ai tương tác. Hãy chủ động nói một điều gì đó thật thú vị, đặt một câu hỏi mở, nói một cách hài hước...";
-      defaults['talking'].sampleAnswers = "xin chào các bn\ncác bạn ơi nói chuyện đi";
-      defaults['comment'].assistantPrompt = "A, có bạn {user} vừa mới bình luận là: {comment}";
-      defaults['gift'].aiPrompt = "Bạn là streamer AI. Hãy viết lời cảm ơn sáng tạo tới {user} vì đã tặng 1 {gift_name}.";
-      defaults['call_to_action'].sampleAnswers = "Mọi người ơi, đừng xem chùa nữa, hãy thả tim và bình luận để mình có thêm động lực nhé!\nCác bạn có câu hỏi nào cho mình không ạ? Đừng ngại hỏi nha!\nNếu thấy buổi live thú vị, mọi người hãy giúp mình một lượt chia sẻ nhé. Yêu mọi người!";
-      defaults['welcome'].sampleAnswers = "Chào mừng bạn {user} và {count} người mới đã đến với livestream!\nXin chào {user} và mọi người mới vào xem nhé! Chúc mọi người xem live vui vẻ.\nHelu {user}! Cảm ơn {count} bạn mới đã ghé thăm kênh của mình nha.";
-      defaults['share'].aiPrompt = "Hãy cảm ơn người dùng tên {user} vì đã chia sẻ livestream.";
-      defaults['share'].sampleAnswers = "Cảm ơn bạn {user} đã chia sẻ live giúp mình nhé!\nMình cảm ơn bạn {user} rất nhiều!";
-      defaults['thanks_heart'].sampleAnswers = "Cảm ơn mọi người đã giúp mình đạt mốc {milestone} tim!\nWow, chúng ta đã đạt {milestone} tim rồi! Yêu các bạn nhiều!";
-
-      setEventConfigs(defaults);
+    } catch (e) {
+      console.warn("Lỗi load cấu hình sự kiện đã lưu:", e);
     }
-  }, []);
+    return defaults;
+  });
+
+  // Tự động sao lưu và bảo lưu liên tục vào LocalStorage mỗi khi có thay đổi
+  useEffect(() => {
+    if (eventConfigs && Object.keys(eventConfigs).length > 0) {
+      try {
+        const json = JSON.stringify(eventConfigs);
+        localStorage.setItem('aidol_event_configs', json);
+        localStorage.setItem('aidol_event_configs_backup', json);
+      } catch (e) {
+        console.warn("Lỗi tự động lưu cấu hình:", e);
+      }
+    }
+  }, [eventConfigs]);
 
   const currentConfig = eventConfigs[selectedEventId] || {};
 
   const handleSave = () => {
-    localStorage.setItem('aidol_event_configs', JSON.stringify(eventConfigs));
-    alert('Đã lưu cấu hình sự kiện thành công!');
+    try {
+      const json = JSON.stringify(eventConfigs);
+      localStorage.setItem('aidol_event_configs', json);
+      localStorage.setItem('aidol_event_configs_backup', json);
+      alert('✅ Đã bảo lưu toàn bộ cấu hình sự kiện & kịch bản thành công vĩnh viễn!');
+    } catch (e) {
+      alert('Lỗi lưu cấu hình: ' + e.message);
+    }
   };
 
   const handleChange = (e) => {
