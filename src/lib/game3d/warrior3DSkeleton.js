@@ -7,11 +7,21 @@ export const SKELETON_STATES = {
   WALK: 'walk',
   ATTACK_SLASH: 'attack_slash',
   ATTACK_SPIN: 'attack_spin',
-  ATTACK_BLUE_THRUST: 'attack_blue_thrust',
-  ATTACK_BLUE_CROSS: 'attack_blue_cross',
-  ATTACK_RED_CLEAVE: 'attack_red_cleave',
-  ATTACK_RED_SWEEP: 'attack_red_sweep',
-  DEFEND_PARRY: 'defend_parry',
+  // 10+ Dynamic Martial Arts Styles:
+  ATTACK_BLUE_THRUST: 'attack_blue_thrust',            // 1: Tật Phong Kiếm - Đâm thẳng
+  ATTACK_BLUE_CROSS: 'attack_blue_cross',              // 2: Lưỡng Nghi Kiếm - Chém chéo kép
+  ATTACK_BLUE_HEAVEN_SWORD: 'attack_blue_heaven_sword',// 3: Thiên Ngoại Phi Tiên - Kiếm chỉ trời phóng khí
+  ATTACK_BLUE_UPPERCUT: 'attack_blue_uppercut',        // 4: Bá Vương Hất Kiếm - Hất chém bốc từ dưới lên
+  ATTACK_BLUE_DOUBLE: 'attack_blue_double',            // 5: Song Tuyệt Liên Hoàn Kiếm - Đâm chém dồn dập
+  ATTACK_RED_CLEAVE: 'attack_red_cleave',              // 6: Phách Sơn Đao - Bổ đao giáng trời
+  ATTACK_RED_SWEEP: 'attack_red_sweep',                // 7: Hoành Tảo Thiên Quân - Quét đao bán nguyệt
+  ATTACK_RED_WHIRLWIND: 'attack_red_whirlwind',        // 8: Cuồng Phong Trảm - Xoay thân trảm 360 độ
+  ATTACK_RED_HEAVY_SLAM: 'attack_red_heavy_slam',      // 9: Cự Lực Đập Đất - Giậm chân đập cán đao chấn động
+  ATTACK_RED_DOUBLE_CHOP: 'attack_red_double_chop',    // 10: Liên Hoàn Song Trảm - Chém dọc đôi
+  MARTIAL_KICK_COMBO: 'martial_kick_combo',            // 11: Long Quyền Hổ Cước - Tung cước võ thuật
+  TAI_CHI_PALM: 'tai_chi_palm',                        // 12: Chưởng Pháp Thái Cực - Vận khí đẩy chưởng quang
+  DEFEND_PARRY: 'defend_parry',                        // 13: Thái Cực Bạt Kiếm / Đao Khí Hộ Thân
+  DEFEND_BLOCK: 'defend_block',                        // 14: Bất Động Như Sơn - Thủ thế vững vàng
   DANCE: 'dance',
   VICTORY: 'victory',
   DEFEATED: 'defeated',
@@ -131,7 +141,7 @@ export function computeSkeletalJoints({
     rWristAngle = 0.15;
     eyeGlow = 1.0;
   } else if (animState === SKELETON_STATES.ATTACK_BLUE_THRUST || (isBlue && animState === SKELETON_STATES.ATTACK_SLASH)) {
-    // BLUE ATTACK 1: Tật Phong Kiếm - Phi thân đâm thẳng chớp nhoáng
+    // 1: BLUE ATTACK 1 - Tật Phong Kiếm (Phi thân đâm thẳng chớp nhoáng)
     const attackPhase = (t * 3.2) % (Math.PI * 2);
     const strike = Math.sin(attackPhase);
     const lunge = Math.max(0, strike);
@@ -141,7 +151,6 @@ export function computeSkeletalJoints({
     chestTwist = strike * 0.35;
     headTilt = -chestTwist * 0.4;
 
-    // Direct forward thrust
     rShoulderAngle = -1.7 + strike * 0.8;
     rElbowAngle = 0.1 + (1 - lunge) * 0.6;
     rWristAngle = 0.4 * strike;
@@ -157,7 +166,7 @@ export function computeSkeletalJoints({
     rKneeAngle = 0.25;
     eyeGlow = 2.2;
   } else if (animState === SKELETON_STATES.ATTACK_BLUE_CROSS) {
-    // BLUE ATTACK 2: Lưỡng Nghi Kiếm Khí - Chém chéo kép thanh thoát
+    // 2: BLUE ATTACK 2 - Lưỡng Nghi Kiếm Khí (Chém chéo kép thanh thoát)
     const attackPhase = (t * 3.0) % (Math.PI * 2);
     const slash = Math.sin(attackPhase);
 
@@ -179,8 +188,70 @@ export function computeSkeletalJoints({
     rHipAngle = -slash * 0.3;
     rKneeAngle = 0.35;
     eyeGlow = 2.4;
+  } else if (animState === SKELETON_STATES.ATTACK_BLUE_HEAVEN_SWORD) {
+    // 3: BLUE ATTACK 3 - Thiên Ngoại Phi Tiên (Giương kiếm chỉ thiên tỏa kiếm khí)
+    const phaseHeaven = (t * 2.8) % (Math.PI * 2);
+    const wave = Math.sin(phaseHeaven);
+    rootY = -2.0 + Math.abs(wave) * 3.5;
+    chestTwist = -0.25 + wave * 0.1;
+    headTilt = -0.3;
+
+    rShoulderAngle = -2.6 + wave * 0.3;
+    rElbowAngle = 0.15;
+    rWristAngle = -0.2;
+    lShoulderAngle = 1.4 + wave * 0.2;
+    lElbowAngle = 1.3;
+    slashArc = 0.8;
+    weaponStyle = 'sword_thrust';
+
+    lHipAngle = 0.15;
+    lKneeAngle = 0.2;
+    rHipAngle = -0.15;
+    rKneeAngle = 0.2;
+    eyeGlow = 3.0;
+  } else if (animState === SKELETON_STATES.ATTACK_BLUE_UPPERCUT) {
+    // 4: BLUE ATTACK 4 - Bá Vương Hất Kiếm (Chém bốc hất ngược từ dưới lên)
+    const pUpper = (t * 3.4) % (Math.PI * 2);
+    const upper = Math.sin(pUpper);
+    rootY = 2.0 - upper * 4.0;
+    chestTwist = upper * 0.4;
+    headTilt = -upper * 0.2;
+
+    rShoulderAngle = -0.4 - upper * 1.8;
+    rElbowAngle = 0.2 + (1 - Math.abs(upper)) * 0.5;
+    rWristAngle = upper * 0.6;
+    lShoulderAngle = 0.8 - upper * 0.4;
+    lElbowAngle = 0.9;
+    slashArc = upper;
+    weaponStyle = 'sword_slash';
+
+    lHipAngle = upper * 0.4;
+    lKneeAngle = 0.3;
+    rHipAngle = -upper * 0.4;
+    rKneeAngle = 0.3;
+    eyeGlow = 2.6;
+  } else if (animState === SKELETON_STATES.ATTACK_BLUE_DOUBLE) {
+    // 5: BLUE ATTACK 5 - Song Tuyệt Liên Hoàn Kiếm (Đâm nhịp 1 + Chém xoay nhịp 2)
+    const pDbl = (t * 4.2) % (Math.PI * 2);
+    const dbl = Math.sin(pDbl);
+    rootY = 1.0 + Math.abs(dbl) * 2.5;
+    chestTwist = dbl * 0.45;
+
+    rShoulderAngle = -1.5 + dbl * 1.2;
+    rElbowAngle = 0.2 + (1 - Math.abs(dbl)) * 0.4;
+    rWristAngle = dbl * 0.4;
+    lShoulderAngle = 1.0 - dbl * 0.6;
+    lElbowAngle = 1.1;
+    slashArc = dbl;
+    weaponStyle = 'sword_thrust';
+
+    lHipAngle = dbl * 0.3;
+    lKneeAngle = 0.4;
+    rHipAngle = -dbl * 0.3;
+    rKneeAngle = 0.4;
+    eyeGlow = 2.5;
   } else if (animState === SKELETON_STATES.ATTACK_RED_CLEAVE || (!isBlue && animState === SKELETON_STATES.ATTACK_SLASH)) {
-    // RED ATTACK 1: Phách Sơn Đao - Nhảy bổ chém cực mạnh từ trên xuống
+    // 6: RED ATTACK 1 - Phách Sơn Đao (Nhảy bổ chém uy lực giáng trời)
     const attackPhase = (t * 2.8) % (Math.PI * 2);
     const chop = Math.sin(attackPhase);
     const powerDown = Math.max(0, -chop);
@@ -190,14 +261,13 @@ export function computeSkeletalJoints({
     chestTwist = -chop * 0.4;
     headTilt = powerDown * 0.3;
 
-    // Overhead massive cleave
     rShoulderAngle = -2.2 + powerDown * 2.0;
     rElbowAngle = 0.2 + (1 - powerDown) * 0.8;
     rWristAngle = powerDown * 0.7;
     slashArc = powerDown;
     weaponStyle = 'heavy_cleave';
 
-    lShoulderAngle = -1.8 + powerDown * 1.6; // Two-handed power assist
+    lShoulderAngle = -1.8 + powerDown * 1.6;
     lElbowAngle = 0.5;
 
     lHipAngle = -0.2 + powerDown * 0.7;
@@ -206,7 +276,7 @@ export function computeSkeletalJoints({
     rKneeAngle = 0.3 + powerDown * 0.5;
     eyeGlow = 2.6;
   } else if (animState === SKELETON_STATES.ATTACK_RED_SWEEP) {
-    // RED ATTACK 2: Hoành Tảo Thiên Quân - Quét đao hình bán nguyệt
+    // 7: RED ATTACK 2 - Hoành Tảo Thiên Quân (Quét đao bán nguyệt)
     const sweepPhase = (t * 2.6) % (Math.PI * 2);
     const sweep = Math.sin(sweepPhase);
 
@@ -228,8 +298,108 @@ export function computeSkeletalJoints({
     rHipAngle = -0.3;
     rKneeAngle = 0.4;
     eyeGlow = 2.5;
+  } else if (animState === SKELETON_STATES.ATTACK_RED_WHIRLWIND || animState === SKELETON_STATES.ATTACK_SPIN) {
+    // 8: RED ATTACK 3 - Cuồng Phong Trảm (Xoay tròn 360 độ đao quang rực lửa)
+    const spinPhase = t * 4.2;
+    rootY = Math.sin(spinPhase) * 2.5;
+    rootTiltZ = Math.cos(spinPhase) * 0.14;
+    chestTwist = Math.sin(spinPhase) * 0.6;
+
+    rShoulderAngle = -1.4 + Math.sin(spinPhase) * 0.5;
+    rElbowAngle = 0.25;
+    lShoulderAngle = 1.4 - Math.sin(spinPhase) * 0.5;
+    lElbowAngle = 0.25;
+    slashArc = 1.0;
+    weaponStyle = 'heavy_sweep';
+
+    lHipAngle = Math.sin(spinPhase) * 0.4;
+    lKneeAngle = 0.4;
+    rHipAngle = -Math.sin(spinPhase) * 0.4;
+    rKneeAngle = 0.4;
+    eyeGlow = 2.8;
+  } else if (animState === SKELETON_STATES.ATTACK_RED_HEAVY_SLAM) {
+    // 9: RED ATTACK 4 - Cự Lực Đập Đất (Giậm chân đập cán đao chấn động)
+    const pSlam = (t * 2.4) % (Math.PI * 2);
+    const slam = Math.sin(pSlam);
+    const impact = Math.max(0, -slam);
+    rootY = 4.0 + impact * 3.5;
+    chestTwist = 0.15;
+    headTilt = 0.35;
+
+    rShoulderAngle = -2.4 + impact * 2.2;
+    rElbowAngle = 0.1;
+    rWristAngle = impact * 0.8;
+    lShoulderAngle = 0.7;
+    lElbowAngle = 0.8;
+    slashArc = impact;
+    weaponStyle = 'heavy_cleave';
+
+    lHipAngle = 0.6 * impact + 0.2;
+    lKneeAngle = 0.8 * impact + 0.3;
+    rHipAngle = -0.3;
+    rKneeAngle = 0.5;
+    eyeGlow = 2.8;
+  } else if (animState === SKELETON_STATES.ATTACK_RED_DOUBLE_CHOP) {
+    // 10: RED ATTACK 5 - Liên Hoàn Song Trảm (Chém dọc liên tiếp)
+    const pChop = (t * 3.8) % (Math.PI * 2);
+    const cVal = Math.sin(pChop);
+    rootY = 2.0 + Math.abs(cVal) * 3.0;
+    chestTwist = -cVal * 0.35;
+
+    rShoulderAngle = -1.8 + cVal * 1.4;
+    rElbowAngle = 0.25;
+    rWristAngle = cVal * 0.5;
+    lShoulderAngle = 0.8 + cVal * 0.4;
+    lElbowAngle = 0.6;
+    slashArc = cVal;
+    weaponStyle = 'heavy_cleave';
+
+    lHipAngle = cVal * 0.3;
+    lKneeAngle = 0.35;
+    rHipAngle = -cVal * 0.3;
+    rKneeAngle = 0.35;
+    eyeGlow = 2.6;
+  } else if (animState === SKELETON_STATES.MARTIAL_KICK_COMBO) {
+    // 11: MARTIAL KICK - Long Quyền Hổ Cước (Xoay người tung cước võ thuật)
+    const pKick = (t * 3.6) % (Math.PI * 2);
+    const kick = Math.sin(pKick);
+    const kExt = Math.max(0, kick);
+    rootY = 1.0 - kExt * 4.0;
+    rootTiltZ = kExt * 0.3;
+    chestTwist = -kExt * 0.4;
+
+    rShoulderAngle = -1.2;
+    rElbowAngle = 0.8;
+    lShoulderAngle = 1.2;
+    lElbowAngle = 0.8;
+
+    lHipAngle = -0.2;
+    lKneeAngle = 0.4;
+    rHipAngle = 1.4 * kExt;
+    rKneeAngle = 0.1;
+    eyeGlow = 2.5;
+  } else if (animState === SKELETON_STATES.TAI_CHI_PALM) {
+    // 12: TAI CHI PALM - Chưởng Pháp Thái Cực (Vận khí đẩy chưởng quang)
+    const pPalm = (t * 2.2) % (Math.PI * 2);
+    const palm = Math.sin(pPalm);
+    const pExtend = Math.max(0, palm);
+    rootY = 2.0;
+    chestTwist = palm * 0.3;
+
+    rShoulderAngle = -0.8 - pExtend * 1.0;
+    rElbowAngle = 0.2 + (1 - pExtend) * 0.7;
+    rWristAngle = -0.4;
+    lShoulderAngle = 0.8 - pExtend * 0.6;
+    lElbowAngle = 0.9;
+    slashArc = pExtend;
+
+    lHipAngle = 0.3;
+    lKneeAngle = 0.5;
+    rHipAngle = -0.3;
+    rKneeAngle = 0.5;
+    eyeGlow = 2.8;
   } else if (animState === SKELETON_STATES.DEFEND_PARRY) {
-    // Defense / Parry stance when taking enemy blow
+    // 13: DEFEND PARRY - Thái Cực Bạt Kiếm / Đao Khí Hộ Thân (Đỡ đòn)
     rootY = 2.5;
     chestTwist = isBlue ? -0.15 : 0.15;
     rShoulderAngle = -1.2;
@@ -243,6 +413,21 @@ export function computeSkeletalJoints({
     rHipAngle = -0.35;
     rKneeAngle = 0.5;
     eyeGlow = 1.5;
+  } else if (animState === SKELETON_STATES.DEFEND_BLOCK) {
+    // 14: DEFEND BLOCK - Bất Động Như Sơn (Thủ thế vững chắc)
+    rootY = 3.2;
+    chestTwist = 0;
+    rShoulderAngle = -1.0;
+    rElbowAngle = 1.5;
+    rWristAngle = 0.3;
+    lShoulderAngle = 1.0;
+    lElbowAngle = 1.5;
+
+    lHipAngle = 0.45;
+    lKneeAngle = 0.7;
+    rHipAngle = -0.45;
+    rKneeAngle = 0.7;
+    eyeGlow = 1.8;
   } else if (animState === SKELETON_STATES.ATTACK_SPIN) {
     // Whirlwind Blade
     const spinPhase = t * 4.5;

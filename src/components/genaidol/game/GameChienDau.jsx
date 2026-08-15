@@ -168,15 +168,15 @@ export default function GameChienDau({
     else if (type === 'level_up') battleAudio.playLevelUp(vol);
   }, [config.soundEnabled, config.sfxVolume, soundMuted]);
 
-  // Recalculate formation slots with Collision-Free Distributed 1v1 & Multi-Target Group Arena Architecture:
-  // 1) Upper Dais Stage (Thư Hùng Đỉnh Cao): Blue Top 1 Champion vs Red Top 1 Champion stationed on the dual glowing dais rings (daisY = h * 0.32).
-  // 2) Distributed 1v1 Pair-Duels across the entire arena: Blue #k vs Red #k stationed on dedicated spacious duel spots with guaranteed clearance.
-  // 3) Multi-Target / Group Match-up (1 Tướng vs Nhóm 2-3 Lính): If one side has surplus fighters, they dynamically flank and assist active duels so NO FIGHTER WAITS IDLE!
-  // 4) Strict Viewport Clamping: All positions clamped inside device screen boundaries so characters NEVER drift or jump off-screen.
+  // Recalculate formation slots with Concentric Inside-to-Outside Full-Screen Arena Architecture:
+  // 1) Top VIP Stage (Thư Hùng Đỉnh Cao): Blue Top 1 Champion vs Red Top 1 Champion stationed high up in top center (y = h * 0.33) so they never block fighters below.
+  // 2) Inside-to-Outside Concentric Duels: Duels expand from center outwards and downwards as player count grows.
+  // 3) Multi-Target / Group Match-up (1 Tướng vs Nhóm 2-3 Lính): Surplus fighters dynamically flank and assist active duels so NO FIGHTER WAITS IDLE!
+  // 4) Strict Viewport Safe Clamping: All positions clamped inside [w * 0.12, w * 0.88] so characters NEVER drift or jump near screen edges.
   // 5) Dynamic Proportional Scaling: Automatically shrinks both Tướng and Regular soldiers as battlefield player count increases.
   const updateFormation = useCallback((canvasWidth, canvasHeight) => {
     const centerX = canvasWidth / 2;
-    const daisY = canvasHeight * 0.32; // Grand dais stage height with clear margin below top HUD
+    const daisY = canvasHeight * 0.33; // Grand VIP stage height (high up with clear margin below HUD)
 
     const listBlue = engineRef.current.fighters.blue || [];
     const listRed = engineRef.current.fighters.red || [];
@@ -193,45 +193,45 @@ export default function GameChienDau({
       : totalActive <= 4 ? 0.88 
       : totalActive <= 6 ? 0.76 
       : totalActive <= 10 ? 0.64 
-      : Math.max(0.46, 1.0 - (totalActive - 2) * 0.038);
+      : Math.max(0.44, 1.0 - (totalActive - 2) * 0.038);
 
     const pairCount = Math.min(activeBlue.length, activeRed.length);
 
-    // Distributed 1v1 Battle Arena Spots spread across the entire viewport (strictly clamped)
+    // Helper: Safely clamp coordinates within device viewport safe centered area
+    const clampX = (x) => Math.max(canvasWidth * 0.12, Math.min(canvasWidth * 0.88, x));
+    const clampY = (y) => Math.max(canvasHeight * 0.30, Math.min(canvasHeight * 0.86, y));
+
+    // Concentric Inside-Out Battle Arena Spots (From Center Outward & Top to Bottom)
     const duelSpots = [
-      { x: canvasWidth * 0.28, y: canvasHeight * 0.48 }, // 1: Upper-Mid Left
-      { x: canvasWidth * 0.72, y: canvasHeight * 0.48 }, // 2: Upper-Mid Right
-      { x: canvasWidth * 0.50, y: canvasHeight * 0.60 }, // 3: Center Stage Core Duel
-      { x: canvasWidth * 0.24, y: canvasHeight * 0.72 }, // 4: Lower-Mid Left
-      { x: canvasWidth * 0.76, y: canvasHeight * 0.72 }, // 5: Lower-Mid Right
-      { x: canvasWidth * 0.50, y: canvasHeight * 0.82 }, // 6: Center Bottom Arena
-      { x: canvasWidth * 0.34, y: canvasHeight * 0.88 }, // 7: Lower Left Flank
-      { x: canvasWidth * 0.66, y: canvasHeight * 0.88 }, // 8: Lower Right Flank
-      { x: canvasWidth * 0.16, y: canvasHeight * 0.58 }, // 9: Far Left Mid
-      { x: canvasWidth * 0.84, y: canvasHeight * 0.58 }, // 10: Far Right Mid
-      { x: canvasWidth * 0.38, y: canvasHeight * 0.44 }, // 11: Mid-Top Left
-      { x: canvasWidth * 0.62, y: canvasHeight * 0.44 }, // 12: Mid-Top Right
+      { x: centerX, y: canvasHeight * 0.48 },                             // 1: Center-Mid Core
+      { x: centerX - 110 * crowdScaleFactor, y: canvasHeight * 0.52 },    // 2: Upper-Left Center
+      { x: centerX + 110 * crowdScaleFactor, y: canvasHeight * 0.52 },    // 3: Upper-Right Center
+      { x: centerX - 60 * crowdScaleFactor, y: canvasHeight * 0.64 },     // 4: Mid-Left Center
+      { x: centerX + 60 * crowdScaleFactor, y: canvasHeight * 0.64 },     // 5: Mid-Right Center
+      { x: centerX - 170 * crowdScaleFactor, y: canvasHeight * 0.66 },    // 6: Outer-Left Mid
+      { x: centerX + 170 * crowdScaleFactor, y: canvasHeight * 0.66 },    // 7: Outer-Right Mid
+      { x: centerX - 85 * crowdScaleFactor, y: canvasHeight * 0.78 },     // 8: Lower-Left Center
+      { x: centerX + 85 * crowdScaleFactor, y: canvasHeight * 0.78 },     // 9: Lower-Right Center
+      { x: centerX, y: canvasHeight * 0.82 },                             // 10: Center-Bottom Front
+      { x: centerX - 200 * crowdScaleFactor, y: canvasHeight * 0.76 },    // 11: Far-Left Lower
+      { x: centerX + 200 * crowdScaleFactor, y: canvasHeight * 0.76 },    // 12: Far-Right Lower
     ];
 
-    // Helper: Safely clamp coordinates within device viewport
-    const clampX = (x) => Math.max(45 * crowdScaleFactor, Math.min(canvasWidth - 45 * crowdScaleFactor, x));
-    const clampY = (y) => Math.max(canvasHeight * 0.28, Math.min(canvasHeight * 0.88, y));
-
-    // 1. If both factions have combatants, pair them up 1v1 first
+    // 1. If both factions have combatants, pair them up 1v1 from center outward
     for (let p = 0; p < pairCount; p++) {
       const bFighter = activeBlue[p];
       const rFighter = activeRed[p];
 
       if (p === 0) {
-        // PAIR #0: The Grand Peak Dais Duel (Thư Hùng Đỉnh Cao Tướng #1)
-        const daisOffset = 75 * crowdScaleFactor;
+        // PAIR #0: Top VIP Champions Duel (Đỉnh Cao Tướng #1) - Stationed at Top Center
+        const champOffset = 55 * crowdScaleFactor;
         
         bFighter.isVipStage = true;
         bFighter.isDuelFront = true;
         bFighter.duelPairIdx = 0;
         bFighter.duelSpotX = centerX;
         bFighter.duelSpotY = daisY;
-        bFighter.targetX = clampX(centerX - daisOffset);
+        bFighter.targetX = clampX(centerX - champOffset);
         bFighter.targetY = daisY;
 
         rFighter.isVipStage = true;
@@ -239,12 +239,12 @@ export default function GameChienDau({
         rFighter.duelPairIdx = 0;
         rFighter.duelSpotX = centerX;
         rFighter.duelSpotY = daisY;
-        rFighter.targetX = clampX(centerX + daisOffset);
+        rFighter.targetX = clampX(centerX + champOffset);
         rFighter.targetY = daisY;
       } else {
-        // PAIRS #1...N: Distributed 1v1 Duels across the battlefield
+        // PAIRS #1...N: Distributed Inside-to-Outside Duels across the center battlefield
         const spot = duelSpots[(p - 1) % duelSpots.length];
-        const fighterSpacing = 30 * crowdScaleFactor;
+        const fighterSpacing = 28 * crowdScaleFactor;
 
         bFighter.isVipStage = false;
         bFighter.isDuelFront = true;
@@ -274,27 +274,27 @@ export default function GameChienDau({
           // Assign surplus Blue fighters to flank and attack existing Red fighters (e.g. 1 Tướng Red vs Group of Blue fighters)
           const targetPairIdx = uIdx % activeRed.length;
           const targetOpponent = activeRed[targetPairIdx];
-          const isDaisTarget = targetOpponent.isVipStage;
+          const isTopTarget = targetOpponent.isVipStage;
 
           uFighter.isVipStage = false;
           uFighter.isDuelFront = true;
           uFighter.duelPairIdx = targetPairIdx;
 
           // Flanking positions on the left side of the Red opponent
-          const flankOffsetY = (uIdx % 2 === 0 ? -28 : 28) * crowdScaleFactor;
-          const flankOffsetX = (isDaisTarget ? -85 : -40) * crowdScaleFactor;
+          const flankOffsetY = (uIdx % 2 === 0 ? -24 : 24) * crowdScaleFactor;
+          const flankOffsetX = (isTopTarget ? -65 : -35) * crowdScaleFactor;
 
           uFighter.duelSpotX = targetOpponent.x || centerX;
           uFighter.duelSpotY = targetOpponent.y || daisY;
           uFighter.targetX = clampX((targetOpponent.targetX || targetOpponent.x) + flankOffsetX);
           uFighter.targetY = clampY((targetOpponent.targetY || targetOpponent.y) + flankOffsetY);
         } else {
-          // If no Red fighters exist yet, station in active martial readiness stance across the arena
+          // If no Red fighters exist yet, station in active martial readiness stance in center area
           const readySpot = duelSpots[uIdx % duelSpots.length];
           uFighter.isVipStage = (u === 0);
           uFighter.isDuelFront = false;
           uFighter.duelPairIdx = -1;
-          uFighter.targetX = clampX(readySpot.x - 30 * crowdScaleFactor);
+          uFighter.targetX = clampX(readySpot.x - 25 * crowdScaleFactor);
           uFighter.targetY = clampY(readySpot.y);
         }
       }
@@ -307,30 +307,30 @@ export default function GameChienDau({
         const uIdx = u - pairCount;
 
         if (activeBlue.length > 0) {
-          // Assign surplus Red fighters to flank and attack Blue fighters (e.g. 1 Tướng Blue vs Group of Red fighters on Dais)
+          // Assign surplus Red fighters to flank and attack Blue fighters (e.g. 1 Tướng Blue vs Group of Red fighters)
           const targetPairIdx = uIdx % activeBlue.length;
           const targetOpponent = activeBlue[targetPairIdx];
-          const isDaisTarget = targetOpponent.isVipStage;
+          const isTopTarget = targetOpponent.isVipStage;
 
           uFighter.isVipStage = false;
           uFighter.isDuelFront = true;
           uFighter.duelPairIdx = targetPairIdx;
 
           // Flanking positions on the right side surrounding the Blue opponent
-          const flankOffsetY = (uIdx % 2 === 0 ? -28 : 28) * crowdScaleFactor;
-          const flankOffsetX = (isDaisTarget ? 85 : 40) * crowdScaleFactor;
+          const flankOffsetY = (uIdx % 2 === 0 ? -24 : 24) * crowdScaleFactor;
+          const flankOffsetX = (isTopTarget ? 65 : 35) * crowdScaleFactor;
 
           uFighter.duelSpotX = targetOpponent.x || centerX;
           uFighter.duelSpotY = targetOpponent.y || daisY;
           uFighter.targetX = clampX((targetOpponent.targetX || targetOpponent.x) + flankOffsetX);
           uFighter.targetY = clampY((targetOpponent.targetY || targetOpponent.y) + flankOffsetY);
         } else {
-          // If no Blue fighters exist yet, station in active martial readiness stance across the arena
+          // If no Blue fighters exist yet, station in active martial readiness stance in center area
           const readySpot = duelSpots[uIdx % duelSpots.length];
           uFighter.isVipStage = (u === 0);
           uFighter.isDuelFront = false;
           uFighter.duelPairIdx = -1;
-          uFighter.targetX = clampX(readySpot.x + 30 * crowdScaleFactor);
+          uFighter.targetX = clampX(readySpot.x + 25 * crowdScaleFactor);
           uFighter.targetY = clampY(readySpot.y);
         }
       }
@@ -433,8 +433,9 @@ export default function GameChienDau({
     } else {
       const w = engineRef.current.w || canvas.width;
       const h = engineRef.current.h || canvas.height;
-      const startX = factionId === 'blue' ? 45 : (w - 45);
-      const startY = h * 0.60;
+      const centerX = w / 2;
+      const startX = factionId === 'blue' ? (centerX - 75) : (centerX + 75);
+      const startY = h * 0.55;
       
       let gender = preferredGender;
       if (!gender) {
@@ -999,53 +1000,9 @@ export default function GameChienDau({
         : totalActive <= 4 ? 0.88 
         : totalActive <= 6 ? 0.76 
         : totalActive <= 10 ? 0.64 
-        : Math.max(0.46, 1.0 - (totalActive - 2) * 0.038);
+        : Math.max(0.44, 1.0 - (totalActive - 2) * 0.038);
 
-      // Upper VIP Champions Circular Dais Rings (Ô Vòng Tròn Thư Hùng Đỉnh Cao cho Tướng VIP #1)
-      ctx.save();
-      const daisY = h * 0.32;
-      const daisRadiusX = 75 * crowdScaleFactor;
-      const daisRadiusY = 22 * crowdScaleFactor;
-      const daisOffsetX = 75 * crowdScaleFactor;
-      
-      // Blue VIP Circular Dais
-      ctx.beginPath();
-      ctx.ellipse(centerX - daisOffsetX, daisY, daisRadiusX, daisRadiusY, 0, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(56, 189, 248, 0.22)';
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.85)';
-      ctx.lineWidth = 2.5;
-      ctx.shadowColor = '#38bdf8';
-      ctx.shadowBlur = 18;
-      ctx.stroke();
-
-      // Inner Blue Dais Runic Ring
-      ctx.beginPath();
-      ctx.ellipse(centerX - daisOffsetX, daisY, daisRadiusX * 0.7, daisRadiusY * 0.7, 0, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(186, 230, 253, 0.55)';
-      ctx.lineWidth = 1.2;
-      ctx.stroke();
-
-      // Red VIP Circular Dais
-      ctx.beginPath();
-      ctx.ellipse(centerX + daisOffsetX, daisY, daisRadiusX, daisRadiusY, 0, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(244, 63, 94, 0.22)';
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(244, 63, 94, 0.85)';
-      ctx.lineWidth = 2.5;
-      ctx.shadowColor = '#f43f5e';
-      ctx.shadowBlur = 18;
-      ctx.stroke();
-
-      // Inner Red Dais Runic Ring
-      ctx.beginPath();
-      ctx.ellipse(centerX + daisOffsetX, daisY, daisRadiusX * 0.7, daisRadiusY * 0.7, 0, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(254, 205, 211, 0.55)';
-      ctx.lineWidth = 1.2;
-      ctx.stroke();
-      ctx.restore();
-
-      // 2. Update & Draw Fighters (Chiến binh Kiếm Hiệp 3D: Tướng VIP trên vòng tròn + Song đấu 1v1 phân bố toàn màn hình)
+      // 2. Update & Draw Fighters (Chiến binh Kiếm Hiệp 3D: Tướng VIP ở trên cao + Song đấu 1v1 phân bố từ trong ra ngoài)
       const lerpFactor = Math.min(1, dt * 5.5);
 
       // Spawn sparks for active dueling pairs across the screen
@@ -1319,9 +1276,28 @@ export default function GameChienDau({
           ctx.restore();
         }
 
-        // 3D Articulated Skeletal Kinematics with Asymmetric Martial Arts Stances
+        // 3D Articulated Skeletal Kinematics with Dynamic 10+ Martial Arts Stances
         const fighterGender = f.gender || (f.rank % 2 === 0 ? 'male' : 'female');
         
+        const blueAttackMoves = [
+          SKELETON_STATES.ATTACK_BLUE_THRUST,
+          SKELETON_STATES.ATTACK_BLUE_CROSS,
+          SKELETON_STATES.ATTACK_BLUE_HEAVEN_SWORD,
+          SKELETON_STATES.ATTACK_BLUE_UPPERCUT,
+          SKELETON_STATES.ATTACK_BLUE_DOUBLE,
+          SKELETON_STATES.MARTIAL_KICK_COMBO,
+          SKELETON_STATES.TAI_CHI_PALM
+        ];
+        const redAttackMoves = [
+          SKELETON_STATES.ATTACK_RED_CLEAVE,
+          SKELETON_STATES.ATTACK_RED_SWEEP,
+          SKELETON_STATES.ATTACK_RED_WHIRLWIND,
+          SKELETON_STATES.ATTACK_RED_HEAVY_SLAM,
+          SKELETON_STATES.ATTACK_RED_DOUBLE_CHOP,
+          SKELETON_STATES.MARTIAL_KICK_COMBO,
+          SKELETON_STATES.TAI_CHI_PALM
+        ];
+
         let animState = SKELETON_STATES.WALK;
         const distToTarget = Math.hypot(targetX - f.x, targetY - f.y);
         const isArrived = distToTarget < 24;
@@ -1333,44 +1309,47 @@ export default function GameChienDau({
         } else if (f.isDancing && performance.now() < f.danceUntil) {
           animState = SKELETON_STATES.DANCE;
         } else if (isPulsing) {
-          animState = factionId === 'blue' ? SKELETON_STATES.ATTACK_BLUE_CROSS : SKELETON_STATES.ATTACK_RED_CLEAVE;
+          animState = factionId === 'blue' ? SKELETON_STATES.ATTACK_BLUE_HEAVEN_SWORD : SKELETON_STATES.ATTACK_RED_HEAVY_SLAM;
         } else if (f.isVipStage) {
           if (hasVipDuel) {
-            // Slower, grand martial arts duel on top dais
+            // Slower, grand martial arts duel on top VIP tier with dynamic 10+ combo cycling
+            const moveIdx = Math.floor(time * 0.00045 + (f.rank || 0)) % 7;
             const vipCycle = (time * 0.0016 + (f.rank || 0) * 1.5) % 4.0;
             if (factionId === 'blue') {
-              animState = vipCycle < 1.6 ? SKELETON_STATES.ATTACK_BLUE_THRUST : (vipCycle < 2.8 ? SKELETON_STATES.DEFEND_PARRY : SKELETON_STATES.IDLE);
+              animState = vipCycle < 1.6 ? blueAttackMoves[moveIdx] : (vipCycle < 2.8 ? (moveIdx % 2 === 0 ? SKELETON_STATES.DEFEND_PARRY : SKELETON_STATES.DEFEND_BLOCK) : SKELETON_STATES.IDLE);
             } else {
-              animState = vipCycle < 1.6 ? SKELETON_STATES.DEFEND_PARRY : (vipCycle < 2.8 ? SKELETON_STATES.ATTACK_RED_CLEAVE : SKELETON_STATES.IDLE);
+              animState = vipCycle < 1.6 ? (moveIdx % 2 === 0 ? SKELETON_STATES.DEFEND_PARRY : SKELETON_STATES.DEFEND_BLOCK) : (vipCycle < 2.8 ? redAttackMoves[moveIdx] : SKELETON_STATES.IDLE);
             }
           } else {
-            // VIP stands majestically on dais in commanding martial stance
+            // VIP stands majestically in commanding martial stance
             animState = isArrived ? SKELETON_STATES.IDLE : SKELETON_STATES.WALK;
           }
         } else if (f.isDuelFront && f.duelPairIdx !== undefined && f.duelPairIdx >= 0) {
           if (isArrived) {
-            // Asymmetric combat rhythm: Blue and Red take turns attacking and parrying
+            // Dynamic martial arts combat rotation: 10+ varied moves cycled across pairs
             const pairOffset = (f.duelPairIdx || 0) * 1.4;
-            const combatCycle = ((time * 0.0018) + pairOffset) % 4.0;
+            const combatTime = time * 0.0018 + pairOffset;
+            const moveIdx = Math.floor(combatTime * 0.45 + (f.duelPairIdx || 0)) % 7;
+            const combatCycle = combatTime % 4.0;
 
             if (factionId === 'blue') {
               if (combatCycle < 1.4) {
-                animState = (f.duelPairIdx % 2 === 0) ? SKELETON_STATES.ATTACK_BLUE_THRUST : SKELETON_STATES.ATTACK_BLUE_CROSS;
+                animState = blueAttackMoves[moveIdx];
               } else if (combatCycle < 2.0) {
                 animState = SKELETON_STATES.IDLE;
               } else if (combatCycle < 3.4) {
-                animState = SKELETON_STATES.DEFEND_PARRY;
+                animState = (moveIdx % 2 === 0) ? SKELETON_STATES.DEFEND_PARRY : SKELETON_STATES.DEFEND_BLOCK;
               } else {
                 animState = SKELETON_STATES.IDLE;
               }
             } else {
               // Red counters when Blue pauses
               if (combatCycle < 1.4) {
-                animState = SKELETON_STATES.DEFEND_PARRY;
+                animState = (moveIdx % 2 === 0) ? SKELETON_STATES.DEFEND_PARRY : SKELETON_STATES.DEFEND_BLOCK;
               } else if (combatCycle < 2.0) {
                 animState = SKELETON_STATES.IDLE;
               } else if (combatCycle < 3.4) {
-                animState = (f.duelPairIdx % 2 === 0) ? SKELETON_STATES.ATTACK_RED_CLEAVE : SKELETON_STATES.ATTACK_RED_SWEEP;
+                animState = redAttackMoves[moveIdx];
               } else {
                 animState = SKELETON_STATES.IDLE;
               }
