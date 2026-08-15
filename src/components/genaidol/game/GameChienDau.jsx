@@ -168,14 +168,14 @@ export default function GameChienDau({
     else if (type === 'level_up') battleAudio.playLevelUp(vol);
   }, [config.soundEnabled, config.sfxVolume, soundMuted]);
 
-  // Recalculate formation slots with Distributed 1v1 Full-Screen Arena Architecture:
-  // 1) Upper VIP Champions Grand Dais Rings: Tier 3, 4, 5 & Gifted giants stand on glowing circular dais rings (daisY = h * 0.28).
-  // 2) Distributed 1v1 Regular Army Pair-Duels: Each Blue vs Red pair is assigned an independent duel spot distributed across the ENTIRE battlefield.
-  // 3) Unpaired Reinforcements: Stand in ready martial formations on their faction side until an opponent joins.
+  // Recalculate formation slots with Collision-Free Distributed 1v1 Full-Screen Arena Architecture:
+  // 1) Upper VIP Champions Grand Dais Rings: Tier 3+, Gifted giants & Boss supporters stand on glowing circular dais rings (daisY = h * 0.28).
+  // 2) Distributed 1v1 Regular Army Pair-Duels: Each Blue vs Red pair is assigned an independent duel spot distributed across the ENTIRE battlefield with guaranteed separation.
+  // 3) Unpaired Reinforcements: Dynamically allocated into vacant candidate grid slots maintaining >= 85px distance from all units.
   // 4) Dead Fighters: Disappear immediately upon knockout.
   const updateFormation = useCallback((canvasWidth, canvasHeight) => {
     const centerX = canvasWidth / 2;
-    const daisY = canvasHeight * 0.28; // Grand dais rings height (lowered down for optimal viewing)
+    const daisY = canvasHeight * 0.28; // Grand dais rings height
 
     const listBlue = engineRef.current.fighters.blue || [];
     const listRed = engineRef.current.fighters.red || [];
@@ -185,7 +185,7 @@ export default function GameChienDau({
 
     const isVipFighter = (f) => {
       const tier = f.score >= 5000 ? 5 : f.score >= 2000 ? 4 : f.score >= 500 ? 3 : f.score >= 100 ? 2 : 1;
-      return tier >= 3 || f.isSuperVip;
+      return tier >= 3 || f.isSuperVip || f.hasGift || f.score >= 400;
     };
 
     // 1. Separate VIPs vs Regular Troops
@@ -193,6 +193,8 @@ export default function GameChienDau({
     const redVips = activeRed.filter(f => isVipFighter(f));
     const blueRegulars = activeBlue.filter(f => !isVipFighter(f));
     const redRegulars = activeRed.filter(f => !isVipFighter(f));
+
+    const occupiedPositions = [];
 
     // 2. Position VIP Champions strictly on their Grand Dais Rings (daisY = h * 0.28)
     const daisSpacingX = 54;
@@ -202,6 +204,7 @@ export default function GameChienDau({
       f.duelPairIdx = -1;
       f.targetX = centerX - 135 - (vIdx * daisSpacingX);
       f.targetY = daisY;
+      occupiedPositions.push({ x: f.targetX, y: f.targetY });
     });
 
     redVips.forEach((f, vIdx) => {
@@ -210,38 +213,31 @@ export default function GameChienDau({
       f.duelPairIdx = -1;
       f.targetX = centerX + 135 + (vIdx * daisSpacingX);
       f.targetY = daisY;
+      occupiedPositions.push({ x: f.targetX, y: f.targetY });
     });
 
     // 3. Distributed 1v1 Duel Spot Generator across the ENTIRE Battlefield Area
-    const getDuelSpot = (pairIdx) => {
-      const spots = [
-        { x: canvasWidth * 0.50, y: canvasHeight * 0.52 }, // Center duel 0
-        { x: canvasWidth * 0.26, y: canvasHeight * 0.58 }, // Left duel 1
-        { x: canvasWidth * 0.74, y: canvasHeight * 0.58 }, // Right duel 2
-        { x: canvasWidth * 0.38, y: canvasHeight * 0.72 }, // Mid-left duel 3
-        { x: canvasWidth * 0.62, y: canvasHeight * 0.72 }, // Mid-right duel 4
-        { x: canvasWidth * 0.18, y: canvasHeight * 0.82 }, // Bottom-left duel 5
-        { x: canvasWidth * 0.82, y: canvasHeight * 0.82 }, // Bottom-right duel 6
-        { x: canvasWidth * 0.50, y: canvasHeight * 0.86 }, // Bottom-center duel 7
-        { x: canvasWidth * 0.18, y: canvasHeight * 0.44 }, // Top-left duel 8
-        { x: canvasWidth * 0.82, y: canvasHeight * 0.44 }, // Top-right duel 9
-        { x: canvasWidth * 0.36, y: canvasHeight * 0.43 }, // Mid-top-left duel 10
-        { x: canvasWidth * 0.64, y: canvasHeight * 0.43 }, // Mid-top-right duel 11
-      ];
-      if (pairIdx < spots.length) return spots[pairIdx];
-      const col = pairIdx % 4;
-      const row = Math.floor(pairIdx / 4);
-      return {
-        x: canvasWidth * (0.16 + col * 0.23),
-        y: canvasHeight * (0.44 + (row % 4) * 0.13)
-      };
-    };
+    const duelSpots = [
+      { x: canvasWidth * 0.50, y: canvasHeight * 0.50 }, // 0: Center Mid
+      { x: canvasWidth * 0.25, y: canvasHeight * 0.60 }, // 1: Left Mid
+      { x: canvasWidth * 0.75, y: canvasHeight * 0.60 }, // 2: Right Mid
+      { x: canvasWidth * 0.50, y: canvasHeight * 0.72 }, // 3: Center Low
+      { x: canvasWidth * 0.25, y: canvasHeight * 0.82 }, // 4: Left Low
+      { x: canvasWidth * 0.75, y: canvasHeight * 0.82 }, // 5: Right Low
+      { x: canvasWidth * 0.12, y: canvasHeight * 0.48 }, // 6: Far Left Top
+      { x: canvasWidth * 0.88, y: canvasHeight * 0.48 }, // 7: Far Right Top
+      { x: canvasWidth * 0.38, y: canvasHeight * 0.44 }, // 8: Mid-Left Top
+      { x: canvasWidth * 0.62, y: canvasHeight * 0.44 }, // 9: Mid-Right Top
+      { x: canvasWidth * 0.50, y: canvasHeight * 0.88 }, // 10: Center Bottom
+      { x: canvasWidth * 0.12, y: canvasHeight * 0.72 }, // 11: Far Left Low
+      { x: canvasWidth * 0.88, y: canvasHeight * 0.72 }, // 12: Far Right Low
+    ];
 
     const pairCount = Math.min(blueRegulars.length, redRegulars.length);
 
     // Pair up 1v1 Duels
     for (let p = 0; p < pairCount; p++) {
-      const spot = getDuelSpot(p);
+      const spot = duelSpots[p % duelSpots.length];
       const bFighter = blueRegulars[p];
       const rFighter = redRegulars[p];
 
@@ -250,38 +246,74 @@ export default function GameChienDau({
       bFighter.duelPairIdx = p;
       bFighter.duelSpotX = spot.x;
       bFighter.duelSpotY = spot.y;
-      bFighter.targetX = spot.x - 30;
+      bFighter.targetX = spot.x - 36;
       bFighter.targetY = spot.y;
+      occupiedPositions.push({ x: bFighter.targetX, y: bFighter.targetY });
 
       rFighter.isVipStage = false;
       rFighter.isDuelFront = true;
       rFighter.duelPairIdx = p;
       rFighter.duelSpotX = spot.x;
       rFighter.duelSpotY = spot.y;
-      rFighter.targetX = spot.x + 30;
+      rFighter.targetX = spot.x + 36;
       rFighter.targetY = spot.y;
+      occupiedPositions.push({ x: rFighter.targetX, y: rFighter.targetY });
     }
 
-    // Unpaired Blue fighters (ready/patrol formation on left zone)
+    // Helper: Find completely non-overlapping open candidate slot
+    const getUnpairedSpot = (faction) => {
+      const isBlue = faction === 'blue';
+      const xList = isBlue ? [0.10, 0.22, 0.34, 0.16, 0.28, 0.08] : [0.90, 0.78, 0.66, 0.84, 0.72, 0.92];
+      const yList = [0.46, 0.58, 0.70, 0.82, 0.88, 0.52, 0.64, 0.76];
+      const candidates = [];
+      for (let r = 0; r < yList.length; r++) {
+        for (let c = 0; c < xList.length; c++) {
+          candidates.push({ x: canvasWidth * xList[c], y: canvasHeight * yList[r] });
+        }
+      }
+      for (let cand of candidates) {
+        const isTooClose = occupiedPositions.some(occ => Math.hypot(cand.x - occ.x, cand.y - occ.y) < 85);
+        if (!isTooClose) {
+          occupiedPositions.push(cand);
+          return cand;
+        }
+      }
+      // Fallback with maximum distance
+      let bestCand = candidates[0];
+      let maxMinDist = -1;
+      for (let cand of candidates) {
+        let minDist = occupiedPositions.length > 0
+          ? Math.min(...occupiedPositions.map(occ => Math.hypot(cand.x - occ.x, cand.y - occ.y)))
+          : 999;
+        if (minDist > maxMinDist) {
+          maxMinDist = minDist;
+          bestCand = cand;
+        }
+      }
+      occupiedPositions.push(bestCand);
+      return bestCand;
+    };
+
+    // Unpaired Blue fighters (ready/patrol formation spread on left zone)
     for (let u = pairCount; u < blueRegulars.length; u++) {
       const uFighter = blueRegulars[u];
-      const uIdx = u - pairCount;
       uFighter.isVipStage = false;
       uFighter.isDuelFront = false;
       uFighter.duelPairIdx = -1;
-      uFighter.targetX = canvasWidth * (0.14 + (uIdx % 2) * 0.10);
-      uFighter.targetY = canvasHeight * (0.48 + Math.floor(uIdx / 2) * 0.14);
+      const spot = getUnpairedSpot('blue');
+      uFighter.targetX = spot.x;
+      uFighter.targetY = spot.y;
     }
 
-    // Unpaired Red fighters (ready/patrol formation on right zone)
+    // Unpaired Red fighters (ready/patrol formation spread on right zone)
     for (let u = pairCount; u < redRegulars.length; u++) {
       const uFighter = redRegulars[u];
-      const uIdx = u - pairCount;
       uFighter.isVipStage = false;
       uFighter.isDuelFront = false;
       uFighter.duelPairIdx = -1;
-      uFighter.targetX = canvasWidth * (0.86 - (uIdx % 2) * 0.10);
-      uFighter.targetY = canvasHeight * (0.48 + Math.floor(uIdx / 2) * 0.14);
+      const spot = getUnpairedSpot('red');
+      uFighter.targetX = spot.x;
+      uFighter.targetY = spot.y;
     }
   }, []);
 
@@ -304,9 +336,11 @@ export default function GameChienDau({
     if (fighter) {
       const wasKnockedOut = fighter.isKnockedOut;
       fighter.score += pointsToAdd;
-      fighter.pulseUntil = performance.now() + 600;
+      fighter.pulseUntil = performance.now() + (pointsToAdd >= 50 ? 3500 : 800);
       fighter.maxHp = calcMaxHp(fighter.score);
       if (preferredGender) fighter.gender = preferredGender;
+      if (pointsToAdd >= 50 || fighter.score >= 300) fighter.hasGift = true;
+      if (pointsToAdd >= 150 || fighter.score >= 400) fighter.isSuperVip = true;
 
       // Respawn Mechanic
       if (wasKnockedOut) {
@@ -380,13 +414,15 @@ export default function GameChienDau({
         targetX: startX,
         targetY: startY,
         bobPhase: Math.random() * Math.PI * 2,
-        pulseUntil: performance.now() + 600,
+        pulseUntil: performance.now() + (pointsToAdd >= 50 ? 3500 : 800),
         maxHp: initialHp,
         currentHp: initialHp,
         isKnockedOut: false,
         knockoutTime: 0,
         knockbackVx: 0,
-        revivedAt: 0
+        revivedAt: 0,
+        hasGift: pointsToAdd >= 50,
+        isSuperVip: pointsToAdd >= 150
       };
       list.push(fighter);
     }
@@ -525,14 +561,15 @@ export default function GameChienDau({
       });
     }
 
-    addOrUpdateFighter(factionId, donorName, 180);
+    addOrUpdateFighter(factionId, donorName, 600);
+    const donorFighter = engineRef.current.fighters[factionId].find(f => f.nickname === donorName);
+    if (donorFighter) {
+      donorFighter.isSuperVip = true;
+      donorFighter.hasGift = true;
+    }
+    updateFormation(canvas.width, canvas.height);
     playSfx('van_kiem');
-    setGameState(prev => ({
-      ...prev,
-      recentSpotlight: { name: donorName, gift: 'Tuyệt Kỹ VẠN KIẾM QUY TÔNG (Khóa Mục Tiêu) ⚔️', faction: factionId }
-    }));
-    setTimeout(() => setGameState(prev => ({ ...prev, recentSpotlight: null })), 4500);
-  }, [addOrUpdateFighter, playSfx]);
+  }, [addOrUpdateFighter, updateFormation, playSfx]);
 
   const triggerGiangLong = useCallback((factionId, donorName = 'VIP Thần Long') => {
     const canvas = canvasRef.current;
@@ -553,16 +590,16 @@ export default function GameChienDau({
       spawnedAt: performance.now()
     });
 
-    addOrUpdateFighter(factionId, donorName, 350);
+    addOrUpdateFighter(factionId, donorName, 1200);
+    const donorFighter = engineRef.current.fighters[factionId].find(f => f.nickname === donorName);
+    if (donorFighter) {
+      donorFighter.isSuperVip = true;
+      donorFighter.hasGift = true;
+    }
     triggerDance(factionId, donorName, 20, 9000);
+    updateFormation(canvas.width, canvas.height);
     playSfx('giang_long');
-
-    setGameState(prev => ({
-      ...prev,
-      recentSpotlight: { name: donorName, gift: 'Tuyệt Kỹ GIÁNG LONG THẬP BÁT CHƯỞNG 🐉', faction: factionId }
-    }));
-    setTimeout(() => setGameState(prev => ({ ...prev, recentSpotlight: null })), 5000);
-  }, [addOrUpdateFighter, triggerDance, playSfx]);
+  }, [addOrUpdateFighter, triggerDance, updateFormation, playSfx]);
 
   const triggerThaiCuc = useCallback((factionId, donorName = 'VIP Hộ Pháp') => {
     const canvas = canvasRef.current;
@@ -582,15 +619,15 @@ export default function GameChienDau({
       spawnedAt: performance.now()
     });
 
-    addOrUpdateFighter(factionId, donorName, 100);
+    addOrUpdateFighter(factionId, donorName, 600);
+    const donorFighter = engineRef.current.fighters[factionId].find(f => f.nickname === donorName);
+    if (donorFighter) {
+      donorFighter.isSuperVip = true;
+      donorFighter.hasGift = true;
+    }
+    updateFormation(canvas.width, canvas.height);
     playSfx('thai_cuc');
-
-    setGameState(prev => ({
-      ...prev,
-      recentSpotlight: { name: donorName, gift: 'Tuyệt Kỹ THÁI CỰC KIẾM TRẬN HỘ THÂN ☯️', faction: factionId }
-    }));
-    setTimeout(() => setGameState(prev => ({ ...prev, recentSpotlight: null })), 4000);
-  }, [addOrUpdateFighter, playSfx]);
+  }, [addOrUpdateFighter, updateFormation, playSfx]);
 
   const triggerHeroUpgrade = useCallback((factionId, donorName = 'VIP Chiến Binh 3D', tierLevel = 3) => {
     const canvas = canvasRef.current;
@@ -606,7 +643,9 @@ export default function GameChienDau({
 
     if (fighter) {
       fighter.score = Math.max(fighter.score, targetScore);
-      fighter.pulseUntil = performance.now() + 2500;
+      fighter.pulseUntil = performance.now() + 3500;
+      fighter.hasGift = true;
+      fighter.isSuperVip = tierLevel >= 3;
     } else {
       const startX = factionId === 'blue' ? canvas.width * 0.35 : canvas.width * 0.65;
       const startY = canvas.height * 0.62;
@@ -620,7 +659,9 @@ export default function GameChienDau({
         targetX: startX,
         targetY: startY,
         bobPhase: 0,
-        pulseUntil: performance.now() + 2500
+        pulseUntil: performance.now() + 3500,
+        hasGift: true,
+        isSuperVip: tierLevel >= 3
       };
       list.unshift(fighter);
     }
@@ -1069,21 +1110,35 @@ export default function GameChienDau({
           ctx.globalAlpha = 0.55;
         }
 
-        // Persistent Lingering Aura for Tier 4 & 5
-        if ((isPulsing || tier >= 4) && !f.isKnockedOut) {
-          const auraScale = 1 + Math.sin(time * 0.004) * 0.15;
+        // Persistent Radiant Lingering Halo Aura for Upgraded / Gifted Heroes & Tier 2+
+        if ((isPulsing || tier >= 2 || f.hasGift || f.isSuperVip) && !f.isKnockedOut) {
+          const auraScale = 1 + Math.sin(time * 0.005 + (f.x * 0.01)) * 0.18;
           ctx.save();
-          ctx.shadowColor = tier === 5 ? '#facc15' : (tier === 4 ? '#38bdf8' : '#fbbf24');
-          ctx.shadowBlur = 24;
+          const auraGlowColor = tier === 5 ? '#facc15' : tier === 4 ? '#38bdf8' : tier === 3 ? '#fbbf24' : '#a855f7';
+          ctx.shadowColor = auraGlowColor;
+          ctx.shadowBlur = 28;
 
-          ctx.strokeStyle = tier === 5 ? 'rgba(250, 204, 21, 0.7)' : 'rgba(56, 189, 248, 0.7)';
-          ctx.lineWidth = 2;
+          // Outer shimmering energy ellipse
+          ctx.strokeStyle = tier === 5 ? 'rgba(250, 204, 21, 0.85)' : tier === 4 ? 'rgba(56, 189, 248, 0.85)' : 'rgba(251, 191, 36, 0.8)';
+          ctx.lineWidth = 2.2;
           ctx.beginPath();
-          ctx.ellipse(0, 0, 26 * auraScale, 30 * auraScale, 0, 0, Math.PI * 2);
+          ctx.ellipse(0, 0, 28 * auraScale, 32 * auraScale, 0, 0, Math.PI * 2);
           ctx.stroke();
 
-          ctx.fillStyle = tier === 5 ? 'rgba(250, 204, 21, 0.22)' : 'rgba(56, 189, 248, 0.18)';
+          // Inner soft ambient light fill
+          ctx.fillStyle = tier === 5 ? 'rgba(250, 204, 21, 0.25)' : tier === 4 ? 'rgba(56, 189, 248, 0.22)' : 'rgba(251, 191, 36, 0.18)';
           ctx.fill();
+
+          // Rotating celestial rune sparks under feet
+          const runeAngle = time * 0.003;
+          ctx.save();
+          ctx.rotate(runeAngle);
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+          ctx.lineWidth = 1;
+          for (let r = 0; r < 4; r++) {
+            ctx.strokeRect(-18 + r * 9, -2, 4, 4);
+          }
+          ctx.restore();
           ctx.restore();
         }
 
@@ -1715,18 +1770,7 @@ export default function GameChienDau({
         </div>
       )}
 
-      {/* DONOR SPOTLIGHT (Popup Banner) */}
-      {gameState.recentSpotlight && (
-        <div className="absolute top-20 sm:top-28 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-600/95 via-orange-600/95 to-amber-700/95 text-white px-3.5 sm:px-5 py-1.5 sm:py-2.5 rounded-2xl shadow-2xl border border-amber-300/50 z-30 animate-in fade-in zoom-in-95 duration-200 max-w-[90vw]">
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            <Sparkles size={16} className="text-yellow-200 animate-spin shrink-0" />
-            <div>
-              <p className="text-[9px] sm:text-[10px] text-yellow-200 font-bold uppercase tracking-wider">Cảm ơn Nhà Tài Trợ Trợ Lực!</p>
-              <p className="text-[11px] sm:text-xs font-black truncate">{gameState.recentSpotlight.name} đã tặng {gameState.recentSpotlight.gift}</p>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* LIVE COMMENT & GIFT STREAM (Bottom Left - Responsive) */}
       <div className="absolute bottom-12 sm:bottom-14 left-2 sm:left-4 max-w-[190px] sm:max-w-xs space-y-1 sm:space-y-1.5 z-20 pointer-events-none">
