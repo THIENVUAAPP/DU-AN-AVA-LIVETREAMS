@@ -233,15 +233,16 @@ export default function GameChienDau({
   // 3) Center Core (Tâm Kim Cương): Cặp Trung Tâm (y = h * 0.55)
   // 4) Bottom Apex (Đỉnh Dưới Kim Cương): Cặp Tuyến Dưới (y = h * 0.77)
   // -------------------------------------------------------------
-  // ĐỘI HÌNH KIM CƯƠNG CHUẨN XÁC 1-1 (Spacious Diamond Grid 1v1 Formation)
-  // 1) Không dính chùm: Blue bên trái, Red bên phải mỗi slot cách nhau 140px-176px
-  // 2) Không nhảy lung tung: Mỗi nhân vật giữ chặt slot kim cương của mình
-  // 3) Bắt cặp 1v1 đối xứng: Từng cặp Blue #i và Red #i đối đầu trực diện tại Slot #i
-  // 4) Nhân vật chờ: Đứng ngay ngắn ở slot của mình chờ đối thủ, không chạy xà beng
+  // ĐỘI HÌNH KIM CƯƠNG CỐ ĐỊNH KHÔNG NHẢY LUNG TUNG (Persistent 1v1 Diamond Arena)
+  // 1) 2 Kiếm Chạm Nhau (Sword-to-Sword Melee): Khoảng cách 68px (gap = 34px), mũi kiếm giao nhau tóe lửa
+  // 2) Giữ Vị Trí Tuyệt Đối (Persistent Slot Reservation): Mỗi nhân vật giữ chặt slot của mình, không bao giờ bị đổi/nhảy khi điểm số thay đổi
+  // 3) Chỉ thay thế khi chết: Khi một tướng chết thì slot đó mới mở cho người khác vào thay thế
+  // 4) Đa Tầng Kim Cương Đối Xứng: 13 Điểm Kim Cương so le cao độ, tuyệt đối không bị dồn hàng ngang hay dính chùm
   // -------------------------------------------------------------
   const updateFormation = useCallback((canvasWidth, canvasHeight) => {
-    const centerX = canvasWidth / 2;
-    const centerY = canvasHeight * 0.55;
+    const w = canvasWidth || engineRef.current.w || 1280;
+    const h = canvasHeight || engineRef.current.h || 720;
+    const centerX = w / 2;
 
     const listBlue = engineRef.current.fighters.blue || [];
     const listRed = engineRef.current.fighters.red || [];
@@ -249,96 +250,128 @@ export default function GameChienDau({
     const activeBlue = listBlue.filter(f => !f.isKnockedOut);
     const activeRed = listRed.filter(f => !f.isKnockedOut);
 
-    // Maintain stable order: VIP / highest score first, stable tie-break by userId
-    activeBlue.sort((a, b) => (b.score || 0) - (a.score || 0) || a.userId.localeCompare(b.userId));
-    activeRed.sort((a, b) => (b.score || 0) - (a.score || 0) || a.userId.localeCompare(b.userId));
-
     const totalActive = activeBlue.length + activeRed.length;
     const crowdScaleFactor = totalActive <= 2 ? 1.0 
       : totalActive <= 4 ? 0.92 
-      : totalActive <= 6 ? 0.84 
-      : totalActive <= 10 ? 0.75 
-      : Math.max(0.55, 1.0 - (totalActive - 2) * 0.03);
+      : totalActive <= 6 ? 0.85 
+      : totalActive <= 10 ? 0.76 
+      : Math.max(0.60, 1.0 - (totalActive - 2) * 0.028);
 
     // Helper: Clamp coordinates safely within centered viewing area
-    const clampX = (x) => Math.max(canvasWidth * 0.14, Math.min(canvasWidth * 0.86, x));
-    const clampY = (y) => Math.max(canvasHeight * 0.28, Math.min(canvasHeight * 0.84, y));
+    const clampX = (x) => Math.max(w * 0.12, Math.min(w * 0.88, x));
+    const clampY = (y) => Math.max(h * 0.26, Math.min(h * 0.86, y));
 
-    // Dynamic Diamond / Rhombus Spacing
-    const diamondSpreadX = Math.min(canvasWidth * 0.30, 250) * crowdScaleFactor;
-    const diamondSpreadY = Math.min(canvasHeight * 0.23, 145) * crowdScaleFactor;
-    const topApexY = Math.max(canvasHeight * 0.32, centerY - diamondSpreadY * 1.15);
-    const bottomApexY = Math.min(canvasHeight * 0.80, centerY + diamondSpreadY * 1.15);
-
-    // Diamond Grid Slots (13 Điểm Kim Cương Cố Định Toàn Sân Khấu)
+    // Dynamic Multi-Tier Diamond Grid Slots (13 Điểm Kim Cương Đa Tầng Cố Định Tuyệt Đối)
+    // Tọa độ mỗi điểm hoàn toàn khác nhau về cả X và Y, tạo thành hình quả trám / kim cương tuyệt đẹp
     const diamondSlots = [
-      // 0: Top Apex (Đài Danh Vọng Kim Cương Trên Cùng - Cặp VIP / Tướng Quân)
-      { x: centerX, y: topApexY, isTopVip: true },
-      // 1: Left Wing Apex (Cánh Trái Kim Cương)
-      { x: centerX - diamondSpreadX, y: centerY, isTopVip: false },
-      // 2: Right Wing Apex (Cánh Phải Kim Cương)
-      { x: centerX + diamondSpreadX, y: centerY, isTopVip: false },
-      // 3: Center Core (Tâm Kim Cương)
-      { x: centerX, y: centerY, isTopVip: false },
-      // 4: Bottom Apex (Đỉnh Dưới Kim Cương)
-      { x: centerX, y: bottomApexY, isTopVip: false },
-      // 5: Upper-Left Facet (Cạnh Trên - Trái)
-      { x: centerX - diamondSpreadX * 0.54, y: centerY - diamondSpreadY * 0.58, isTopVip: false },
-      // 6: Upper-Right Facet (Cạnh Trên - Phải)
-      { x: centerX + diamondSpreadX * 0.54, y: centerY - diamondSpreadY * 0.58, isTopVip: false },
-      // 7: Lower-Left Facet (Cạnh Dưới - Trái)
-      { x: centerX - diamondSpreadX * 0.54, y: centerY + diamondSpreadY * 0.58, isTopVip: false },
-      // 8: Lower-Right Facet (Cạnh Dưới - Phải)
-      { x: centerX + diamondSpreadX * 0.54, y: centerY + diamondSpreadY * 0.58, isTopVip: false },
-      // 9: Outer-Left Mid Flank (Mở rộng Cánh Trái)
-      { x: centerX - diamondSpreadX * 0.95, y: centerY + diamondSpreadY * 0.42, isTopVip: false },
-      // 10: Outer-Right Mid Flank (Mở rộng Cánh Phải)
-      { x: centerX + diamondSpreadX * 0.95, y: centerY + diamondSpreadY * 0.42, isTopVip: false },
-      // 11: Upper-Mid Inner Left
-      { x: centerX - diamondSpreadX * 0.28, y: centerY - diamondSpreadY * 0.42, isTopVip: false },
-      // 12: Upper-Mid Inner Right
-      { x: centerX + diamondSpreadX * 0.28, y: centerY - diamondSpreadY * 0.42, isTopVip: false },
+      // 0: Đài VIP Đỉnh Trên Cùng (Cặp VIP / Tướng Quân 1)
+      { id: 0, x: centerX, y: h * 0.28, isTopVip: true },
+      
+      // 1 & 2: Tầng 2 (Thượng Cánh Trái & Phải)
+      { id: 1, x: centerX - 200 * crowdScaleFactor, y: h * 0.40, isTopVip: false },
+      { id: 2, x: centerX + 200 * crowdScaleFactor, y: h * 0.40, isTopVip: false },
+      
+      // 3: Tầng 3 (Tâm Sân Khấu)
+      { id: 3, x: centerX, y: h * 0.52, isTopVip: false },
+      
+      // 4 & 5: Tầng 3 (Cánh Xa Trái & Phải)
+      { id: 4, x: centerX - 300 * crowdScaleFactor, y: h * 0.55, isTopVip: false },
+      { id: 5, x: centerX + 300 * crowdScaleFactor, y: h * 0.55, isTopVip: false },
+      
+      // 6 & 7: Tầng 4 (Hạ Cánh Trái & Phải)
+      { id: 6, x: centerX - 190 * crowdScaleFactor, y: h * 0.68, isTopVip: false },
+      { id: 7, x: centerX + 190 * crowdScaleFactor, y: h * 0.68, isTopVip: false },
+      
+      // 8: Tầng 5 (Đỉnh Dưới Cùng Kim Cương)
+      { id: 8, x: centerX, y: h * 0.80, isTopVip: false },
+      
+      // 9, 10: Tầng Phụ Giữa Thượng
+      { id: 9, x: centerX - 100 * crowdScaleFactor, y: h * 0.46, isTopVip: false },
+      { id: 10, x: centerX + 100 * crowdScaleFactor, y: h * 0.46, isTopVip: false },
+      
+      // 11, 12: Tầng Phụ Giữa Hạ
+      { id: 11, x: centerX - 100 * crowdScaleFactor, y: h * 0.62, isTopVip: false },
+      { id: 12, x: centerX + 100 * crowdScaleFactor, y: h * 0.62, isTopVip: false },
     ];
 
-    // Khoảng cách an toàn giữa 2 đấu thủ trong cùng 1 cặp 1v1 (Đảm bảo tuyệt đối không dính chùm)
-    const champOffset = Math.max(76, Math.min(canvasWidth * 0.13, 88)) * crowdScaleFactor;
-    const fighterOffset = Math.max(65, Math.min(canvasWidth * 0.10, 78)) * crowdScaleFactor;
+    // Khoảng cách 1v1 cận chiến: 2 kiếm CHẠM NHAU (Sword-to-Sword Melee Clash)
+    // 34px mỗi bên -> Tổng khoảng cách giữa 2 đấu thủ là 68px. Kiếm dài 35px sẽ va chạm tóe lửa ngay tâm slot!
+    const gap = 34 * crowdScaleFactor;
 
-    // 1. Phân bổ đội Xanh (Blue Faction) vào nửa trái của từng Slot Kim Cương
-    for (let i = 0; i < activeBlue.length; i++) {
-      const bFighter = activeBlue[i];
-      const slot = diamondSlots[i % diamondSlots.length];
-      const isTop = (i === 0);
-      const gap = isTop ? champOffset : fighterOffset;
-      const hasOpponent = i < activeRed.length;
+    // Slot reservation tracker: ensure stable persistent slot IDs
+    const usedBlueSlots = new Set();
+    const usedRedSlots = new Set();
 
-      bFighter.isVipStage = isTop;
-      bFighter.isDuelFront = hasOpponent;
-      bFighter.duelPairIdx = i;
-      bFighter.assignedSlotIdx = i % diamondSlots.length;
-      bFighter.duelSpotX = slot.x;
-      bFighter.duelSpotY = slot.y;
-      bFighter.targetX = clampX(slot.x - gap);
-      bFighter.targetY = clampY(slot.y);
-    }
+    // 1. Giữ nguyên slot đã gán cho những nhân vật đang còn sống
+    activeBlue.forEach(f => {
+      if (f.assignedSlotIdx !== undefined && f.assignedSlotIdx >= 0 && !usedBlueSlots.has(f.assignedSlotIdx)) {
+        usedBlueSlots.add(f.assignedSlotIdx);
+      } else {
+        f.assignedSlotIdx = undefined;
+      }
+    });
 
-    // 2. Phân bổ đội Đỏ (Red Faction) vào nửa phải của từng Slot Kim Cương
-    for (let i = 0; i < activeRed.length; i++) {
-      const rFighter = activeRed[i];
-      const slot = diamondSlots[i % diamondSlots.length];
-      const isTop = (i === 0);
-      const gap = isTop ? champOffset : fighterOffset;
-      const hasOpponent = i < activeBlue.length;
+    activeRed.forEach(f => {
+      if (f.assignedSlotIdx !== undefined && f.assignedSlotIdx >= 0 && !usedRedSlots.has(f.assignedSlotIdx)) {
+        usedRedSlots.add(f.assignedSlotIdx);
+      } else {
+        f.assignedSlotIdx = undefined;
+      }
+    });
 
-      rFighter.isVipStage = isTop;
-      rFighter.isDuelFront = hasOpponent;
-      rFighter.duelPairIdx = i;
-      rFighter.assignedSlotIdx = i % diamondSlots.length;
-      rFighter.duelSpotX = slot.x;
-      rFighter.duelSpotY = slot.y;
-      rFighter.targetX = clampX(slot.x + gap);
-      rFighter.targetY = clampY(slot.y);
-    }
+    // 2. Gán slot còn trống thấp nhất cho các nhân vật mới vào hoặc vừa hồi sinh
+    let nextBlueSlot = 0;
+    activeBlue.forEach(f => {
+      if (f.assignedSlotIdx === undefined) {
+        while (usedBlueSlots.has(nextBlueSlot)) {
+          nextBlueSlot++;
+        }
+        f.assignedSlotIdx = nextBlueSlot % diamondSlots.length;
+        usedBlueSlots.add(nextBlueSlot);
+      }
+    });
+
+    let nextRedSlot = 0;
+    activeRed.forEach(f => {
+      if (f.assignedSlotIdx === undefined) {
+        while (usedRedSlots.has(nextRedSlot)) {
+          nextRedSlot++;
+        }
+        f.assignedSlotIdx = nextRedSlot % diamondSlots.length;
+        usedRedSlots.add(nextRedSlot);
+      }
+    });
+
+    // 3. Cập nhật vị trí targetX, targetY cho toàn bộ nhân vật (CỐ ĐỊNH, KHÔNG BAO GIỜ BỊ NHẢY)
+    activeBlue.forEach(f => {
+      const slotIdx = f.assignedSlotIdx % diamondSlots.length;
+      const slot = diamondSlots[slotIdx];
+      const isTop = (slotIdx === 0);
+      const hasOpponent = activeRed.some(r => r.assignedSlotIdx === f.assignedSlotIdx);
+
+      f.isVipStage = isTop;
+      f.isDuelFront = hasOpponent;
+      f.duelPairIdx = slotIdx;
+      f.duelSpotX = slot.x;
+      f.duelSpotY = slot.y;
+      f.targetX = clampX(slot.x - gap);
+      f.targetY = clampY(slot.y);
+    });
+
+    activeRed.forEach(f => {
+      const slotIdx = f.assignedSlotIdx % diamondSlots.length;
+      const slot = diamondSlots[slotIdx];
+      const isTop = (slotIdx === 0);
+      const hasOpponent = activeBlue.some(b => b.assignedSlotIdx === f.assignedSlotIdx);
+
+      f.isVipStage = isTop;
+      f.isDuelFront = hasOpponent;
+      f.duelPairIdx = slotIdx;
+      f.duelSpotX = slot.x;
+      f.duelSpotY = slot.y;
+      f.targetX = clampX(slot.x + gap);
+      f.targetY = clampY(slot.y);
+    });
   }, []);
 
   // Action Dispatchers: Add / Update / Revive Fighters with Dynamic Auto-Balancing
@@ -506,7 +539,6 @@ export default function GameChienDau({
       }
     }
 
-    list.sort((a, b) => b.score - a.score);
     updateFormation(engineRef.current.w || canvas.width, engineRef.current.h || canvas.height);
 
     setGameState(prev => {
@@ -762,10 +794,9 @@ export default function GameChienDau({
         hasGift: true,
         isSuperVip: tierLevel >= 3
       };
-      list.unshift(fighter);
+      list.push(fighter);
     }
 
-    list.sort((a, b) => b.score - a.score);
     updateFormation(canvas.width, canvas.height);
     playSfx('level_up');
 
@@ -803,7 +834,7 @@ export default function GameChienDau({
     const w = customW || engineRef.current.w || 1280;
     const h = customH || engineRef.current.h || 720;
     const centerX = w / 2;
-    const daisY = h * 0.33;
+    const daisY = h * 0.28;
 
     if (engineRef.current.fighters.blue.length === 0 && engineRef.current.fighters.red.length === 0) {
       const blueLeader = {
@@ -813,9 +844,9 @@ export default function GameChienDau({
         rank: 0,
         gender: 'male',
         factionId: 'blue',
-        x: centerX - 80,
+        x: centerX - 34,
         y: daisY,
-        targetX: centerX - 80,
+        targetX: centerX - 34,
         targetY: daisY,
         isVipStage: true,
         isDuelFront: true,
@@ -840,9 +871,9 @@ export default function GameChienDau({
         rank: 0,
         gender: 'female',
         factionId: 'red',
-        x: centerX + 80,
+        x: centerX + 34,
         y: daisY,
-        targetX: centerX + 80,
+        targetX: centerX + 34,
         targetY: daisY,
         isVipStage: true,
         isDuelFront: true,
