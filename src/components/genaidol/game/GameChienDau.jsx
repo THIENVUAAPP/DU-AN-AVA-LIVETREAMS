@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { 
   Trophy, Volume2, VolumeX, Shield, Swords, Sparkles, 
-  Crown, Play, Pause, RotateCcw, Settings, Flame, Zap, CheckCircle2 
+  Crown, Play, Pause, RotateCcw, Settings, Flame, Zap, CheckCircle2, Mic, MicOff, Music, Music2 
 } from 'lucide-react';
 import { battleAudio } from './battleAudioEngine';
+import { battleCommentary } from './battleCommentaryEngine';
 import { computeSkeletalJoints, render3DWarriorSkeleton, SKELETON_STATES } from '../../../lib/game3d/warrior3DSkeleton';
 
 // 20 Dance styles
@@ -107,6 +108,69 @@ export default function GameChienDau({
     const newItem = { id: Date.now() + Math.random(), name, text, faction };
     setLiveFeed(prev => [...prev.slice(-4), newItem]);
   }, []);
+
+  // Commentary & BGM Lifecycle Hook
+  const [isVoiceAiActive, setIsVoiceAiActive] = useState(true);
+  const [isBgmActive, setIsBgmActive] = useState(false);
+  const broadcastChannelRef = useRef(null);
+  const prevLowHpWarnedRef = useRef({ blue: false, red: false });
+
+  useEffect(() => {
+    // Init BroadcastChannel for Live Studio / OBS Overlay synchronization
+    if (typeof BroadcastChannel !== 'undefined') {
+      broadcastChannelRef.current = new BroadcastChannel('avalive_gamebattle_stage');
+    }
+
+    // Audio Ducking hook
+    battleCommentary.onDuckAudio = (shouldDuck) => {
+      battleAudio.duckBgm(shouldDuck);
+    };
+
+    // Start periodic AI commentary
+    battleCommentary.isEnabled = config.commentaryEnabled !== false;
+    battleCommentary.intervalSeconds = config.commentaryInterval || 15;
+    battleCommentary.volume = config.commentaryVolume !== undefined ? config.commentaryVolume : 0.9;
+    battleCommentary.startPeriodicCommentary(!gameState.isPaused && !gameState.winner);
+
+    return () => {
+      battleCommentary.stopAll();
+      battleAudio.stopBgm();
+      if (broadcastChannelRef.current) {
+        broadcastChannelRef.current.close();
+      }
+    };
+  }, []);
+
+  // Sync HP warning to commentary
+  useEffect(() => {
+    const bluePct = (gameState.hp.blue / gameState.maxHp) * 100;
+    const redPct = (gameState.hp.red / gameState.maxHp) * 100;
+
+    if (bluePct <= 30 && !prevLowHpWarnedRef.current.blue && !gameState.winner) {
+      prevLowHpWarnedRef.current.blue = true;
+      battleCommentary.triggerLowHpWarning('blue', config.blueName);
+    } else if (bluePct > 35) {
+      prevLowHpWarnedRef.current.blue = false;
+    }
+
+    if (redPct <= 30 && !prevLowHpWarnedRef.current.red && !gameState.winner) {
+      prevLowHpWarnedRef.current.red = true;
+      battleCommentary.triggerLowHpWarning('red', config.redName);
+    } else if (redPct > 35) {
+      prevLowHpWarnedRef.current.red = false;
+    }
+
+    // Broadcast update to overlay
+    if (broadcastChannelRef.current) {
+      try {
+        broadcastChannelRef.current.postMessage({
+          type: 'GAME_STATE_UPDATE',
+          gameState,
+          config
+        });
+      } catch (e) {}
+    }
+  }, [gameState.hp.blue, gameState.hp.red, gameState.maxHp, gameState.winner, config]);
 
   // Preload 3D Male & Female Warrior Assets (Tripo 3D Models)
   const warriorImagesRef = useRef({
@@ -1006,16 +1070,20 @@ export default function GameChienDau({
 
       if (diamondCount >= 1000) {
         triggerGiangLong(assignedFaction, nickname);
+        battleCommentary.triggerGiftCommentary(nickname, 'Thần Long Vũ Trụ', 'Chí Tôn Thiên Tôn', assignedFaction);
         addLiveFeedItem(nickname, `tặng quà lớn triệu hồi GIÁNG LONG CHƯỞNG (${diamondCount} xu)! 🐉`, assignedFaction);
       } else if (diamondCount >= 500) {
         triggerVanKiem(assignedFaction, nickname);
+        battleCommentary.triggerGiftCommentary(nickname, 'Chiến Xa / Sét', 'Chiến Thần Vạn Kiếm', assignedFaction);
         addLiveFeedItem(nickname, `tặng quà kích hoạt VẠN KIẾM QUY TÔNG (${diamondCount} xu)! ⚔️`, assignedFaction);
       } else if (diamondCount >= 200) {
         triggerHeroUpgrade(assignedFaction, nickname, 3);
         triggerThaiCuc(assignedFaction, nickname);
+        battleCommentary.triggerGiftCommentary(nickname, 'Vương Miện Hoàng Kim', 'Kim Khải Thần Tướng', assignedFaction);
         addLiveFeedItem(nickname, `thăng cấp KIM KHẢI THẦN TƯỚNG + THÁI CỰC TRẬN (${diamondCount} xu)! 👑`, assignedFaction);
       } else if (diamondCount >= 50) {
         triggerHeroUpgrade(assignedFaction, nickname, 2);
+        battleCommentary.triggerGiftCommentary(nickname, 'Nước Hoa Thiết Giáp', 'Thiết Giáp Kiếm Hiệp', assignedFaction);
         addLiveFeedItem(nickname, `thăng cấp THIẾT GIÁP KIẾM HIỆP (${diamondCount} xu)! 🛡️`, assignedFaction);
       } else {
         addOrUpdateFighter(assignedFaction, nickname, Math.max(20, diamondCount * 2));
@@ -2058,8 +2126,47 @@ export default function GameChienDau({
         <span className="truncate">BL <strong className="text-blue-400 font-bold">"xanh"</strong> / <strong className="text-red-400 font-bold">"đỏ"</strong> Vào Trận & Hồi Sinh | Tặng Quà Nâng Cấp!</span>
       </div>
 
-      {/* QUICK LIVE SPEED & AUDIO CONTROLS (Bottom Right - Responsive) */}
-      <div className="absolute bottom-3 sm:bottom-4 right-2 sm:right-4 z-20 flex items-center gap-1.5 sm:gap-2.5 bg-black/85 backdrop-blur-md px-2 sm:px-3 py-1 sm:py-1.5 rounded-2xl border border-white/15 shadow-2xl text-white pointer-events-auto">
+      {/* QUICK LIVE SPEED, VOICE AI, BGM & AUDIO CONTROLS (Bottom Right - Responsive) */}
+      <div className="absolute bottom-3 sm:bottom-4 right-2 sm:right-4 z-20 flex items-center gap-1.5 sm:gap-2 bg-black/85 backdrop-blur-md px-2 sm:px-3 py-1 sm:py-1.5 rounded-2xl border border-purple-500/30 shadow-2xl text-white pointer-events-auto">
+        {/* Voice AI BLV Quick Toggle */}
+        <button
+          onClick={() => {
+            const next = !isVoiceAiActive;
+            setIsVoiceAiActive(next);
+            battleCommentary.isEnabled = next;
+            battleCommentary.saveSettings();
+            if (next) battleCommentary.speak("Bộ não AI bình luận viên đã sẵn sàng!", true);
+          }}
+          className={`p-1 sm:p-1.5 rounded-lg flex items-center gap-1 text-[10px] sm:text-[11px] font-bold transition-colors ${
+            isVoiceAiActive ? 'bg-pink-500/20 text-pink-300 hover:bg-pink-500/30' : 'bg-white/5 text-gray-400 hover:text-white'
+          }`}
+          title={isVoiceAiActive ? "Voice AI BLV: Đang BẬT" : "Voice AI BLV: Đã TẮT"}
+        >
+          {isVoiceAiActive ? <Mic size={13} className="text-pink-400 animate-pulse" /> : <MicOff size={13} />}
+          <span className="hidden sm:inline">Voice AI</span>
+        </button>
+
+        {/* BGM Quick Toggle */}
+        <button
+          onClick={() => {
+            if (isBgmActive) {
+              battleAudio.stopBgm();
+              setIsBgmActive(false);
+            } else {
+              battleAudio.startBgm(config.bgmTrack || 'epic_synth', config.bgmVolume || 0.4, config.customBgmUrl);
+              setIsBgmActive(true);
+            }
+          }}
+          className={`p-1 sm:p-1.5 rounded-lg flex items-center gap-1 text-[10px] sm:text-[11px] font-bold transition-colors ${
+            isBgmActive ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' : 'bg-white/5 text-gray-400 hover:text-white'
+          }`}
+          title={isBgmActive ? "Nhạc nền BGM: Đang PHÁT" : "Nhạc nền BGM: Đã TẮT"}
+        >
+          {isBgmActive ? <Music size={13} className="text-amber-400" /> : <Music2 size={13} />}
+          <span className="hidden sm:inline">BGM</span>
+        </button>
+
+        {/* Speed Slider */}
         <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] text-amber-300 font-bold">
           <span>⚡</span>
           <input
@@ -2069,22 +2176,35 @@ export default function GameChienDau({
             step="0.05"
             value={config.animSpeed || 0.55}
             onChange={(e) => setConfig(prev => ({ ...prev, animSpeed: parseFloat(e.target.value) }))}
-            className="w-12 sm:w-16 h-1.5 accent-amber-400 cursor-pointer"
+            className="w-10 sm:w-14 h-1.5 accent-amber-400 cursor-pointer"
             title={`Tốc độ cử động: ${(config.animSpeed || 0.55).toFixed(2)}x`}
           />
-          <span className="font-mono text-[9px] sm:text-[10px] text-gray-300 w-6 sm:w-7">{((config.animSpeed || 0.55)).toFixed(1)}x</span>
         </div>
 
         <div className="w-[1px] h-3.5 bg-white/20" />
 
+        {/* Sound FX Toggle */}
         <button
           onClick={() => setSoundMuted(!soundMuted)}
           className="p-1 rounded-lg hover:bg-white/10 text-gray-300 hover:text-white transition-colors"
-          title={soundMuted ? "Bật âm thanh" : "Tắt âm thanh"}
+          title={soundMuted ? "Bật âm thanh hiệu ứng" : "Tắt âm thanh hiệu ứng"}
         >
           {soundMuted ? <VolumeX size={14} className="text-red-400" /> : <Volume2 size={14} className="text-emerald-400" />}
         </button>
 
+        {/* Admin Shortcut Button */}
+        {onOpenAdmin && (
+          <button
+            onClick={onOpenAdmin}
+            className="p-1 sm:px-2 sm:py-1 rounded-lg bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 border border-purple-500/40 text-[10px] sm:text-[11px] font-bold flex items-center gap-1 transition-all"
+            title="Mở Bảng Quản trị Admin Trực Tiếp (Không cần mật khẩu)"
+          >
+            <Shield size={13} className="text-purple-400" />
+            <span className="hidden sm:inline">Admin</span>
+          </button>
+        )}
+
+        {/* Reset Match Button */}
         <button
           onClick={resetMatch}
           className="p-1 rounded-lg hover:bg-white/10 text-gray-300 hover:text-amber-400 transition-colors"

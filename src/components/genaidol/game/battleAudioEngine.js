@@ -1,9 +1,15 @@
 // Melodic & Studio-Grade Web Audio Engine for TikTok LIVE Battle Game
-// Zero-noise, Zero-buzzing ("è è" completely eliminated), Pure Harmonic Musical Tones
+// Zero-noise, Zero-buzzing, Pure Harmonic Musical Tones + Dedicated BGM & MP3 Engine
 
 let audioCtx = null;
-let bgmIntervalId = null;
+let bgmAudioElement = null;
 let isBgmPlaying = false;
+let bgmLoopTimer = null;
+let isDucked = false;
+let currentBgmVolume = 0.5;
+let currentSfxVolume = 0.7;
+let currentBgmTrack = 'epic_synth'; // 'epic_synth' | 'war_horns' | 'edm_live' | 'custom_upload'
+let customBgmUrl = null;
 
 function getAudioContext() {
   if (typeof window === 'undefined') return null;
@@ -50,8 +56,56 @@ function playHarmonicTone(ctx, freq, startTime, duration, gainValue = 0.3, maste
   osc2.stop(startTime + duration + 0.05);
 }
 
+// Synthesized Epic War BGM Loop Generator (100% offline, crystal clear harmonic chords)
+function playSynthBgmPattern(type, volume) {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  const master = ctx.createGain();
+  const effVol = (isDucked ? volume * 0.3 : volume) * 0.22;
+  master.gain.setValueAtTime(effVol, now);
+  master.connect(ctx.destination);
+
+  if (type === 'war_horns') {
+    // Battle Horns & War Chords: D minor epic progression (D -> F -> C -> G)
+    const chords = [
+      [146.83, 220.00, 293.66, 349.23], // Dm
+      [174.61, 220.00, 261.63, 349.23], // F
+      [130.81, 196.00, 261.63, 329.63], // C
+      [98.00, 146.83, 196.00, 246.94]   // G
+    ];
+    chords.forEach((chord, i) => {
+      chord.forEach(freq => {
+        playHarmonicTone(ctx, freq, now + i * 1.5, 1.4, 0.28, master);
+      });
+    });
+  } else if (type === 'edm_live') {
+    // Upbeat EDM Live Pulse Bass: A Minor energetic rhythm
+    const bassNotes = [110, 110, 130.81, 146.83, 110, 110, 164.81, 146.83];
+    bassNotes.forEach((freq, idx) => {
+      playHarmonicTone(ctx, freq, now + idx * 0.4, 0.35, 0.35, master);
+      if (idx % 2 === 0) {
+        playHarmonicTone(ctx, freq * 4, now + idx * 0.4, 0.15, 0.15, master);
+      }
+    });
+  } else {
+    // Epic Synth Battle (Default): Harmonic Asian Cinematic Pentatonic
+    const notes = [
+      [220, 329.63, 440], 
+      [261.63, 392.00, 523.25], 
+      [293.66, 440, 587.33], 
+      [349.23, 523.25, 698.46]
+    ];
+    notes.forEach((chord, i) => {
+      chord.forEach(freq => {
+        playHarmonicTone(ctx, freq, now + i * 1.25, 1.2, 0.3, master);
+      });
+    });
+  }
+}
+
 export const battleAudio = {
-  // 1. Tham chiến (Âm sắc Kèn Chuông Xung Trận - Melodic Chime Fanfare)
+  // SFX 1. Tham chiến (Kèn Chuông Xung Trận)
   playJoin(volume = 0.7) {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -60,14 +114,13 @@ export const battleAudio = {
     masterGain.gain.setValueAtTime(volume * 0.4, now);
     masterGain.connect(ctx.destination);
 
-    // C5 -> E5 -> G5 -> C6 (Joyful Fanfare)
     const notes = [523.25, 659.25, 783.99, 1046.50];
     notes.forEach((freq, i) => {
       playHarmonicTone(ctx, freq, now + i * 0.07, 0.4, 0.45, masterGain);
     });
   },
 
-  // 2. Va chạm Gươm Đao / Đòn Đánh (Crisp Steel Clash - Sắc bén, không rè)
+  // SFX 2. Va chạm Gươm Đao / Đòn Đánh
   playHit(volume = 0.7) {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -76,7 +129,6 @@ export const battleAudio = {
     masterGain.gain.setValueAtTime(volume * 0.45, now);
     masterGain.connect(ctx.destination);
 
-    // High metal strike
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
@@ -91,11 +143,10 @@ export const battleAudio = {
     osc.start(now);
     osc.stop(now + 0.14);
 
-    // Secondary strike ring
     playHarmonicTone(ctx, 1200, now + 0.02, 0.18, 0.25, masterGain);
   },
 
-  // 3. Bão Sét / Kỹ Năng AoE (Âm Thanh Ma Thuật Huyền Ảo - Magic Energy Sweep)
+  // SFX 3. Bão Sét / Kỹ Năng AoE
   playAoe(volume = 0.7) {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -104,29 +155,13 @@ export const battleAudio = {
     masterGain.gain.setValueAtTime(volume * 0.5, now);
     masterGain.connect(ctx.destination);
 
-    // Rapid harmonic arpeggio (C-Major pentatonic: C5, D5, E5, G5, A5, C6)
-    const arpeggio = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50];
-    arpeggio.forEach((freq, idx) => {
-      playHarmonicTone(ctx, freq, now + idx * 0.05, 0.45, 0.4, masterGain);
+    const notes = [440, 554.37, 659.25, 880, 1108.73];
+    notes.forEach((freq, i) => {
+      playHarmonicTone(ctx, freq, now + i * 0.05, 0.5, 0.35, masterGain);
     });
-
-    // Warm deep sub-impact (zero buzz)
-    const oscBass = ctx.createOscillator();
-    const gainBass = ctx.createGain();
-    oscBass.type = 'sine';
-    oscBass.frequency.setValueAtTime(180, now);
-    oscBass.frequency.exponentialRampToValueAtTime(50, now + 0.5);
-
-    gainBass.gain.setValueAtTime(0.6, now);
-    gainBass.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
-
-    oscBass.connect(gainBass);
-    gainBass.connect(masterGain);
-    oscBass.start(now);
-    oscBass.stop(now + 0.56);
   },
 
-  // 4. Thả Boss Thần Thú Rồng / Hổ (Âm Sắc Đại Hùng Trầm Uy - Mighty Brass Fanfare)
+  // SFX 4. Trùm / Xuất hiện Chiến Tướng
   playBoss(volume = 0.7) {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -135,69 +170,50 @@ export const battleAudio = {
     masterGain.gain.setValueAtTime(volume * 0.6, now);
     masterGain.connect(ctx.destination);
 
-    // Majestic brass chord fanfare: C4 + G4 + C5 -> E5 -> G5
-    const chord1 = [261.63, 392.00, 523.25];
-    chord1.forEach(freq => {
-      playHarmonicTone(ctx, freq, now, 0.5, 0.4, masterGain);
-    });
-
-    const chord2 = [329.63, 493.88, 659.25];
-    chord2.forEach(freq => {
-      playHarmonicTone(ctx, freq, now + 0.25, 0.5, 0.45, masterGain);
-    });
-
-    const chord3 = [392.00, 587.33, 783.99, 1046.50];
-    chord3.forEach(freq => {
-      playHarmonicTone(ctx, freq, now + 0.5, 0.9, 0.5, masterGain);
+    const notes = [130.81, 164.81, 196.00, 261.63];
+    notes.forEach((freq) => {
+      playHarmonicTone(ctx, freq, now, 0.8, 0.5, masterGain);
     });
   },
 
-  // 5. Khúc Khải Hoàn Chiến Thắng (Grand Victory Triumphal Symphony)
+  // SFX 5. Chiến thắng Khải Hoàn
   playVictory(volume = 0.7) {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(volume * 0.65, now);
+    masterGain.gain.setValueAtTime(volume * 0.5, now);
     masterGain.connect(ctx.destination);
 
-    // Grand Melody: G4 -> C5 -> E5 -> G5 -> C6 (Held Chime)
-    const melody = [
-      { note: 392.00, time: 0.0,  dur: 0.2 },
-      { note: 523.25, time: 0.18, dur: 0.2 },
-      { note: 659.25, time: 0.36, dur: 0.2 },
-      { note: 783.99, time: 0.54, dur: 0.35 },
-      { note: 1046.50, time: 0.85, dur: 1.4 }
+    const victoryNotes = [
+      { f: 523.25, t: 0.0, d: 0.3 },
+      { f: 523.25, t: 0.2, d: 0.3 },
+      { f: 523.25, t: 0.4, d: 0.3 },
+      { f: 659.25, t: 0.6, d: 0.5 },
+      { f: 783.99, t: 0.9, d: 0.4 },
+      { f: 1046.50, t: 1.2, d: 0.9 }
     ];
-
-    melody.forEach(({ note, time, dur }) => {
-      playHarmonicTone(ctx, note, now + time, dur, 0.5, masterGain);
+    victoryNotes.forEach(n => {
+      playHarmonicTone(ctx, n.f, now + n.t, n.d, 0.4, masterGain);
     });
-
-    // Sparkling bell overtone cascades
-    for (let i = 0; i < 6; i++) {
-      const bellFreq = 1500 + i * 200;
-      playHarmonicTone(ctx, bellFreq, now + 0.9 + i * 0.09, 0.35, 0.25, masterGain);
-    }
   },
 
-  // 6. Nhịp Điệu Vũ Đạo Sân Khấu (Rhythmic Dance Melody)
+  // SFX 6. Vũ Điệu Âm Nhạc
   playDanceBeat(volume = 0.7) {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(volume * 0.45, now);
+    masterGain.gain.setValueAtTime(volume * 0.4, now);
     masterGain.connect(ctx.destination);
 
-    // Melodic synth pop motif: A4 -> C5 -> E5 -> G5 -> A5
-    const steps = [440, 523.25, 659.25, 783.99, 880];
-    steps.forEach((freq, idx) => {
-      playHarmonicTone(ctx, freq, now + idx * 0.09, 0.22, 0.38, masterGain);
+    const danceNotes = [440, 523.25, 659.25, 523.25, 783.99];
+    danceNotes.forEach((freq, idx) => {
+      playHarmonicTone(ctx, freq, now + idx * 0.12, 0.25, 0.35, masterGain);
     });
   },
 
-  // 7. Tuyệt kỹ Kiếm Hiệp: VẠN KIẾM QUY TÔNG (Flying Swords Swarm - Phi kiếm xé gió ngân vang)
+  // SFX 7. VẠN KIẾM QUY TÔNG
   playVanKiemQuyTong(volume = 0.7) {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -206,7 +222,6 @@ export const battleAudio = {
     masterGain.gain.setValueAtTime(volume * 0.55, now);
     masterGain.connect(ctx.destination);
 
-    // Chuỗi phi kiếm xé gió vút cao liên hoàn (Sword whooshes & rings)
     const swordPitches = [880, 1108.73, 1318.51, 1567.98, 1760, 2093, 2349.32];
     swordPitches.forEach((freq, i) => {
       const startTime = now + i * 0.06;
@@ -226,7 +241,6 @@ export const battleAudio = {
       osc.stop(startTime + 0.23);
     });
 
-    // Đại kiếm chém xuống chấn động hào quang (Final Divine Blade Strike)
     setTimeout(() => {
       const strikeCtx = getAudioContext();
       if (!strikeCtx) return;
@@ -236,7 +250,7 @@ export const battleAudio = {
     }, 450);
   },
 
-  // 8. Tuyệt kỹ Kiếm Hiệp: GIÁNG LONG THẬP BÁT CHƯỞNG (Dragon Palm Roar & Shockwave)
+  // SFX 8. GIÁNG LONG THẬP BÁT CHƯỞNG
   playGiangLongChuong(volume = 0.7) {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -245,7 +259,6 @@ export const battleAudio = {
     masterGain.gain.setValueAtTime(volume * 0.65, now);
     masterGain.connect(ctx.destination);
 
-    // Tiếng rồng gầm trầm hùng uy lực (Deep Harmonic Dragon Roar)
     const roarTones = [110, 164.81, 220, 329.63, 440];
     roarTones.forEach((freq, idx) => {
       const osc = ctx.createOscillator();
@@ -265,12 +278,11 @@ export const battleAudio = {
       osc.stop(now + 0.95);
     });
 
-    // Sóng chấn khí bùng nổ (Energy Shockwave)
     playHarmonicTone(ctx, 523.25, now + 0.25, 0.6, 0.5, masterGain);
     playHarmonicTone(ctx, 783.99, now + 0.4, 0.5, 0.4, masterGain);
   },
 
-  // 9. Tuyệt kỹ Kiếm Hiệp: THÁI CỰC KIẾM TRẬN & HÀO QUANG KIM THẦN KHẢI (Tai Chi Shield & Gold Armor)
+  // SFX 9. THÁI CỰC KIẾM TRẬN
   playThaiCucKiemTran(volume = 0.7) {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -279,14 +291,13 @@ export const battleAudio = {
     masterGain.gain.setValueAtTime(volume * 0.55, now);
     masterGain.connect(ctx.destination);
 
-    // Chuông tiên gia đạo giáo thanh tịnh ngân vang (Zen temple energy bell)
     const zenPitches = [659.25, 880, 1046.50, 1318.51];
     zenPitches.forEach((freq, i) => {
       playHarmonicTone(ctx, freq, now + i * 0.08, 0.8, 0.4, masterGain);
     });
   },
 
-  // 10. Nâng cấp Trang bị & Thăng Cấp Thần Binh (Level Up & Golden Armor Upgrade)
+  // SFX 10. Nâng cấp Trang bị & Thăng Cấp Thần Binh
   playLevelUp(volume = 0.7) {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -295,10 +306,80 @@ export const battleAudio = {
     masterGain.gain.setValueAtTime(volume * 0.6, now);
     masterGain.connect(ctx.destination);
 
-    // Thăng cấp 5 âm cao lấp lánh (Sparkling Level-Up Strum: C5, E5, G5, B5, C6, E6)
     const arpeggio = [523.25, 659.25, 783.99, 987.77, 1046.50, 1318.51];
     arpeggio.forEach((freq, idx) => {
       playHarmonicTone(ctx, freq, now + idx * 0.06, 0.45, 0.45, masterGain);
     });
+  },
+
+  // -------------------------------------------------------------
+  // BACKGROUND MUSIC (BGM) ENGINE & UPLOADED MP3 MANAGER
+  // -------------------------------------------------------------
+  startBgm(track = 'epic_synth', volume = 0.4, customUrl = null) {
+    currentBgmTrack = track;
+    currentBgmVolume = volume;
+    if (customUrl) customBgmUrl = customUrl;
+    isBgmPlaying = true;
+
+    this.stopBgm();
+    isBgmPlaying = true;
+
+    if (track === 'custom_upload' && customBgmUrl) {
+      // Play custom uploaded MP3 via HTML5 Audio
+      if (typeof window !== 'undefined' && typeof Audio !== 'undefined') {
+        try {
+          if (!bgmAudioElement) {
+            bgmAudioElement = new Audio();
+            bgmAudioElement.loop = true;
+          }
+          bgmAudioElement.src = customBgmUrl;
+          bgmAudioElement.volume = Math.max(0, Math.min(1, isDucked ? currentBgmVolume * 0.3 : currentBgmVolume));
+          bgmAudioElement.play().catch(err => console.warn('BGM Audio play failed:', err));
+        } catch (e) {
+          console.warn('Custom BGM error:', e);
+        }
+      }
+    } else {
+      // Play synthesized epic loops
+      const loopDuration = track === 'war_horns' ? 6000 : (track === 'edm_live' ? 3200 : 5000);
+      playSynthBgmPattern(track, currentBgmVolume);
+      bgmLoopTimer = setInterval(() => {
+        if (isBgmPlaying) {
+          playSynthBgmPattern(track, currentBgmVolume);
+        }
+      }, loopDuration);
+    }
+  },
+
+  stopBgm() {
+    isBgmPlaying = false;
+    if (bgmLoopTimer) {
+      clearInterval(bgmLoopTimer);
+      bgmLoopTimer = null;
+    }
+    if (bgmAudioElement) {
+      try {
+        bgmAudioElement.pause();
+        bgmAudioElement.currentTime = 0;
+      } catch (e) {}
+    }
+  },
+
+  setBgmVolume(volume) {
+    currentBgmVolume = Math.max(0, Math.min(1, volume));
+    if (bgmAudioElement) {
+      bgmAudioElement.volume = isDucked ? currentBgmVolume * 0.3 : currentBgmVolume;
+    }
+  },
+
+  duckBgm(shouldDuck = true) {
+    isDucked = shouldDuck;
+    if (bgmAudioElement) {
+      bgmAudioElement.volume = isDucked ? currentBgmVolume * 0.3 : currentBgmVolume;
+    }
+  },
+
+  isBgmActive() {
+    return isBgmPlaying;
   }
 };

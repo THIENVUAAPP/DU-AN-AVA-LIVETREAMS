@@ -12,6 +12,7 @@ import UnifiedChatHub from "./components/UnifiedChatHub";
 import DanceFloorStudio from "./components/DanceFloorStudio";
 import KOLLiveDashboard from "./components/KOLLiveDashboard";
 import DanceFloorOverlay from "./components/DanceFloorOverlay";
+import GameBattleOverlay from "./components/genaidol/game/GameBattleOverlay";
 import MultiAccountManager from "./components/MultiAccountManager";
 import AISellerOps from "./components/AISellerOps";
 import EnterprisePayment from "./components/EnterprisePayment";
@@ -186,12 +187,13 @@ export default function App() {
     alert(`⚡ ĐÃ KẾT NỐI THÀNH CÔNG TÀI KHOẢN GOOGLE REAL-TIME!\n\n👤 Email: ${emailClean}\n👑 Quyền hạn: ${isAdmin ? "SUPER ADMIN VIP" : "THÀNH VIÊN GÓI CHÍNH THỨC"}\n\nHồ sơ đã được đồng bộ với Cơ sở dữ liệu Supabase!`);
   };
 
-  // Cửa Sổ Overlay Trong Suốt cho Sàn Nhảy TikTok — bỏ qua toàn bộ Header/đăng nhập, chỉ render sàn
-  // diễn nền trong suốt để OBS/TikTok LIVE Studio/YouTube Studio Capture Cửa Sổ đưa lên live thật.
-  const isDanceFloorOverlay =
-    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("overlay") === "dancefloor";
-  if (isDanceFloorOverlay) {
+  // Cửa Sổ Overlay Trong Suốt cho Sàn Nhảy & Game Chiến Đấu TikTok
+  const overlayType = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("overlay");
+  if (overlayType === "dancefloor") {
     return <DanceFloorOverlay />;
+  }
+  if (overlayType === "gamebattle" || overlayType === "game") {
+    return <GameBattleOverlay />;
   }
 
   return (
