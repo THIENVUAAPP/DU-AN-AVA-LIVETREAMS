@@ -1,12 +1,13 @@
 /**
- * AVA LIVE - Dual Synchronized Voice Architecture
- * Hệ thống đồng bộ 2 kênh giọng nói:
- * 1. VOICE IDOL (Giọng Idol Livestream chính - Kịch bản chính, tương tác live)
- * 2. VOICE QUẢN LÝ / TRỢ LÝ (Giọng Quản lý / Thiết bị / Trợ lý hậu trường - Bán hàng, giục chốt đơn, tư vấn, chăm sóc, phát nhanh 1-chạm)
+ * AVA LIVE - Unified ElevenLabs Multi-Channel Voice Architecture
+ * Chuẩn hóa 100% nền tảng ElevenLabs cho toàn bộ hệ thống âm thanh:
+ * 1. VOICE IDOL: Giọng nhân vật Idol Livestream chính (Kịch bản chính, lip-sync, trả lời comment)
+ * 2. VOICE QUẢN LÝ / TRỢ LÝ: Giọng Quản lý / Thiết bị / Trợ lý hậu trường (Bán hàng, giục chốt đơn, thông báo hệ thống)
+ * 3. VOICE BÌNH LUẬN VIÊN GAME: Giọng BLV trận đấu & tương tác game livestream (Kịch tính, năng lượng, hò reo)
  */
 
-export const CURATED_VOICES = [
-  // 1. Giọng Nữ (Thích hợp cho Idol / Trợ lý nữ)
+export const ELEVENLABS_VOICES = [
+  // 1. Giọng Nữ (Thích hợp cho Idol Livestream / Giao lưu / Bán hàng)
   { 
     id: 'el_rachel', 
     name: 'Rachel (Nữ - Ngọt ngào, Tự nhiên)', 
@@ -31,7 +32,7 @@ export const CURATED_VOICES = [
     provider: 'elevenlabs', 
     voiceId: 'AZnzlk1XvdvUeBnXmlld',
     gender: 'Female', 
-    recommendedFor: 'idol', 
+    recommendedFor: 'both', 
     desc: 'Giọng nữ hoạt náo, nhịp điệu nhanh, hợp livestream sự kiện & minigame.' 
   },
   { 
@@ -44,60 +45,87 @@ export const CURATED_VOICES = [
     desc: 'Giọng nữ chuẩn chỉnh, điềm đạm, phù hợp livestream thương hiệu cao cấp.' 
   },
   { 
-    id: 'openai_nova', 
-    name: 'Nova (OpenAI - Nữ Hiện đại, Rõ nét)', 
-    provider: 'openai_tts', 
-    voiceId: 'nova',
+    id: 'el_elli', 
+    name: 'Elli (Nữ - Cảm xúc, Truyền cảm)', 
+    provider: 'elevenlabs', 
+    voiceId: 'MF3mGyEYCl7XYWbV9V6O',
     gender: 'Female', 
     recommendedFor: 'idol', 
-    desc: 'Giọng OpenAI TTS chuẩn xác, phát âm tiếng Việt trôi chảy.' 
+    desc: 'Giọng nữ giàu cảm xúc, hợp kể chuyện, đọc tâm sự và review sản phẩm.' 
   },
   { 
-    id: 'openai_shimmer', 
-    name: 'Shimmer (OpenAI - Nữ Trầm ấm, Quyến rũ)', 
-    provider: 'openai_tts', 
-    voiceId: 'shimmer',
+    id: 'el_charlotte', 
+    name: 'Charlotte (Nữ - Duyên dáng, Tinh tế)', 
+    provider: 'elevenlabs', 
+    voiceId: 'XB0fDUnXU5powFXDhCwa',
     gender: 'Female', 
     recommendedFor: 'idol', 
-    desc: 'Giọng nữ sâu lắng, phù hợp phiên live đêm muộn hoặc tư vấn chuyên sâu.' 
+    desc: 'Giọng nữ trong trẻo, phong cách phương Tây hiện đại và cuốn hút.' 
   },
   { 
-    id: 'vbee_hn_female', 
-    name: 'Mai Phương (Vbee - Nữ Hà Nội Chuẩn)', 
-    provider: 'vbee', 
-    voiceId: 'vi_hn_maiphuong',
+    id: 'el_matilda', 
+    name: 'Matilda (Nữ - Ấm áp, Chân thành)', 
+    provider: 'elevenlabs', 
+    voiceId: 'XrExE9yKIg1WjnnlVkGX',
     gender: 'Female', 
     recommendedFor: 'idol', 
-    desc: 'Giọng chuẩn thủ đô Hà Nội, phát âm tròn vành rõ chữ.' 
+    desc: 'Giọng nữ mộc mạc, tạo cảm giác tin cậy khi chia sẻ kinh nghiệm.' 
   },
   { 
-    id: 'vbee_sg_female', 
-    name: 'Mỹ An (Vbee - Nữ Sài Gòn Duyên dáng)', 
-    provider: 'vbee', 
-    voiceId: 'vi_sg_myan',
+    id: 'el_gigi', 
+    name: 'Gigi (Nữ - Hoạt hình, Dễ thương)', 
+    provider: 'elevenlabs', 
+    voiceId: 'jBpfuIE2acCO8z3wKNLl',
     gender: 'Female', 
     recommendedFor: 'idol', 
-    desc: 'Giọng miền Nam dễ thương, gần gũi và thu hút người xem.' 
+    desc: 'Giọng nữ anime nhí nhảnh, phù hợp idol giải trí, game thủ nữ.' 
+  },
+  { 
+    id: 'el_freya', 
+    name: 'Freya (Nữ - Lôi cuốn, Bí ẩn)', 
+    provider: 'elevenlabs', 
+    voiceId: 'jsCqWAovK2LkecY7zXl4',
+    gender: 'Female', 
+    recommendedFor: 'idol', 
+    desc: 'Giọng nữ ma mị, hấp dẫn, rất hợp cho live bói bài, tâm linh hoặc game.' 
+  },
+  { 
+    id: 'el_grace', 
+    name: 'Grace (Nữ - Nhã nhặn, Quý phái)', 
+    provider: 'elevenlabs', 
+    voiceId: 'oWAxZDx7w5VEj9dCyTzz',
+    gender: 'Female', 
+    recommendedFor: 'idol', 
+    desc: 'Giọng nữ trưởng thành, uyển chuyển, thích hợp livestream trang sức.' 
+  },
+  { 
+    id: 'el_lily', 
+    name: 'Lily (Nữ - Trong sáng, Hồn nhiên)', 
+    provider: 'elevenlabs', 
+    voiceId: 'pFZP5JQG7iQjIQuC4Bku',
+    gender: 'Female', 
+    recommendedFor: 'idol', 
+    desc: 'Giọng nữ thanh khiết, gần gũi như bạn thân nói chuyện.' 
+  },
+  { 
+    id: 'el_nicole', 
+    name: 'Nicole (Nữ - Hiện đại, Nhanh nhẹn)', 
+    provider: 'elevenlabs', 
+    voiceId: 'piTKgcLEGmPE4e6mEKli',
+    gender: 'Female', 
+    recommendedFor: 'idol', 
+    desc: 'Giọng nữ năng động thế hệ mới, chốt sale dứt khoát.' 
   },
 
-  // 2. Giọng Nam / Quản Lý / Trợ Lý Bán Hàng (Thích hợp cho Quản lý / Thiết bị / Giục đơn)
+  // 2. Giọng Nam / Quản Lý / Trợ Lý Bán Hàng (Thúc giục đơn / Báo cáo)
   { 
     id: 'el_callum', 
-    name: 'Callum (Nam - Mạnh mẽ, Quyết đoán)', 
+    name: 'Callum (Nam - Quyết đoán, Giục chốt đơn)', 
     provider: 'elevenlabs', 
     voiceId: 'N2lVS1w4EtoT3dr4eOWO',
     gender: 'Male', 
     recommendedFor: 'manager', 
     desc: 'Giọng quản lý bán hàng đầy uy lực, giục chốt đơn và thông báo giảm giá cực tốt.' 
-  },
-  { 
-    id: 'el_adam', 
-    name: 'Adam (Nam - Điềm tĩnh, Đáng tin cậy)', 
-    provider: 'elevenlabs', 
-    voiceId: 'pNInz6obpgDQGcFmaJgB',
-    gender: 'Male', 
-    recommendedFor: 'manager', 
-    desc: 'Giọng quản lý hỗ trợ kỹ thuật, chăm sóc khách hàng và giải đáp thắc mắc.' 
   },
   { 
     id: 'el_antoni', 
@@ -109,42 +137,127 @@ export const CURATED_VOICES = [
     desc: 'Giọng trợ lý hậu trường thông báo sự kiện, minigame và quà tặng.' 
   },
   { 
-    id: 'openai_onyx', 
-    name: 'Onyx (OpenAI - Nam Trầm, Uy lực)', 
-    provider: 'openai_tts', 
-    voiceId: 'onyx',
+    id: 'el_adam', 
+    name: 'Adam (Nam - Điềm tĩnh, Đáng tin cậy)', 
+    provider: 'elevenlabs', 
+    voiceId: 'pNInz6obpgDQGcFmaJgB',
     gender: 'Male', 
     recommendedFor: 'manager', 
-    desc: 'Giọng phát thanh viên nam OpenAI, rất rõ ràng khi phát thông báo đè lên Live.' 
+    desc: 'Giọng quản lý hỗ trợ kỹ thuật, chăm sóc khách hàng và giải đáp thắc mắc.' 
   },
   { 
-    id: 'openai_echo', 
-    name: 'Echo (OpenAI - Nam Năng lượng, Sôi nổi)', 
-    provider: 'openai_tts', 
-    voiceId: 'echo',
+    id: 'el_patrick', 
+    name: 'Patrick (Nam - Thuyết phục, Uy lực)', 
+    provider: 'elevenlabs', 
+    voiceId: 'ODq5zmih8GrVes37Dizd',
     gender: 'Male', 
     recommendedFor: 'manager', 
-    desc: 'Giọng nam bán hàng dồn dập, đẩy nhịp độ phiên livestream.' 
+    desc: 'Giọng nam đanh thép, thích hợp tuyên bố quà độc quyền và deal sốc.' 
   },
   { 
-    id: 'openai_alloy', 
-    name: 'Alloy (OpenAI - Trung tính, Linh hoạt)', 
-    provider: 'openai_tts', 
-    voiceId: 'alloy',
-    gender: 'Neutral', 
+    id: 'el_drew', 
+    name: 'Drew (Nam - Tin tức, Trịnh trọng)', 
+    provider: 'elevenlabs', 
+    voiceId: '29vD33N1CtxCmqQRPOHJ',
+    gender: 'Male', 
     recommendedFor: 'manager', 
-    desc: 'Giọng thiết bị AI chuẩn, chuyên nghiệp cho mọi tính năng phụ trợ.' 
+    desc: 'Giọng đọc bản tin trang trọng, thích hợp thông báo chính sách bán hàng.' 
   },
   { 
-    id: 'browser_google_vi', 
-    name: 'Google Tiếng Việt (Miễn phí / Trình duyệt)', 
-    provider: 'browser', 
-    voiceId: 'Google Tiếng Việt',
-    gender: 'Female', 
+    id: 'el_paul', 
+    name: 'Paul (Nam - Phóng viên, Ấm áp)', 
+    provider: 'elevenlabs', 
+    voiceId: '5Q0t7uMcjvnagumLfvZi',
+    gender: 'Male', 
+    recommendedFor: 'manager', 
+    desc: 'Giọng nam dẫn chương trình truyền cảm, tạo sự ấm cúng trong phiên live.' 
+  },
+  { 
+    id: 'el_matthew', 
+    name: 'Matthew (Nam - Điềm đạm, Chắc chắn)', 
+    provider: 'elevenlabs', 
+    voiceId: 'Yko7PKHZNXotIFUBG7I9',
+    gender: 'Male', 
+    recommendedFor: 'manager', 
+    desc: 'Giọng cố vấn kinh doanh, giải thích thông số sản phẩm chuyên sâu.' 
+  },
+  { 
+    id: 'el_james', 
+    name: 'James (Nam - Phát thanh viên)', 
+    provider: 'elevenlabs', 
+    voiceId: 'ZQe5CZNOzWyzPSCn5a3c',
+    gender: 'Male', 
+    recommendedFor: 'manager', 
+    desc: 'Giọng đài truyền hình chuẩn, rõ ràng sắc nét từng câu chữ.' 
+  },
+
+  // 3. Giọng Bình Luận Viên Trận Đấu Game (Hào hứng / Chiến thuật / Cổ vũ)
+  { 
+    id: 'el_josh', 
+    name: 'Josh (Nam - Năng lượng, BLV Game Siêu Tốc)', 
+    provider: 'elevenlabs', 
+    voiceId: 'TxGEqnHWrfWFTfGW9XjX',
+    gender: 'Male', 
+    recommendedFor: 'game', 
+    desc: 'Giọng caster game thể thao điện tử, nhịp độ dồn dập, cực kỳ bùng nổ khi combat.' 
+  },
+  { 
+    id: 'el_clyde', 
+    name: 'Clyde (Nam - Chiến binh, Trầm hùng Bá đạo)', 
+    provider: 'elevenlabs', 
+    voiceId: '2EiwWnXFnvU5JabPnv8n',
+    gender: 'Male', 
+    recommendedFor: 'game', 
+    desc: 'Giọng tướng quân chiến trận, uy nghiêm vang dội, cực hợp PK đại chiến.' 
+  },
+  { 
+    id: 'el_harry', 
+    name: 'Harry (Nam - Kịch tính, Hồi hộp)', 
+    provider: 'elevenlabs', 
+    voiceId: 'SOYHLrjzK2X1ezoPC6cr',
+    gender: 'Male', 
+    recommendedFor: 'game', 
+    desc: 'Giọng hồi hộp gay cấn khi hai phe rượt đuổi tỷ số và lật kèo ngoạn mục.' 
+  },
+  { 
+    id: 'el_jeremy', 
+    name: 'Jeremy (Nam - Sôi nổi, Hoạt náo Game)', 
+    provider: 'elevenlabs', 
+    voiceId: 'bVMeCyTHy58xNoL34h3p',
+    gender: 'Male', 
+    recommendedFor: 'game', 
+    desc: 'Giọng MC minigame hăng say, khuấy động không khí livestream nhận quà.' 
+  },
+  { 
+    id: 'el_daniel', 
+    name: 'Daniel (Nam - Quyết liệt, Hùng dũng)', 
+    provider: 'elevenlabs', 
+    voiceId: 'onwK4e9ZLuTAKqWW03F9',
+    gender: 'Male', 
+    recommendedFor: 'game', 
+    desc: 'Giọng chiến binh xông pha, kích hoạt tuyệt kỹ và triệu hồi thần thú.' 
+  },
+  { 
+    id: 'el_arnold', 
+    name: 'Arnold (Nam - Uy nghiêm, Thần tướng)', 
+    provider: 'elevenlabs', 
+    voiceId: 'VR6AewLTigWG4xSOukaG',
+    gender: 'Male', 
+    recommendedFor: 'game', 
+    desc: 'Giọng trọng tài tối cao, tuyên bố kết quả và vinh danh đại hiệp.' 
+  },
+  { 
+    id: 'el_charlie', 
+    name: 'Charlie (Nam - Hài hước, Tếu táo)', 
+    provider: 'elevenlabs', 
+    voiceId: 'IKne3meq5aSn9XLyUdCD',
+    gender: 'Male', 
     recommendedFor: 'both', 
-    desc: 'Giọng TTS tích hợp sẵn của Google / Trình duyệt máy tính, không tốn token.' 
+    desc: 'Giọng trêu chọc đối thủ, tạo tiếng cười sảng khoái cho khán giả.' 
   }
 ];
+
+export const CURATED_VOICES = ELEVENLABS_VOICES;
 
 export const DEFAULT_VOICE_CONFIG = {
   // Voice 1: Giọng Idol Trực Tiếp
@@ -155,7 +268,7 @@ export const DEFAULT_VOICE_CONFIG = {
     voiceId: '21m00Tcm4TlvDq8ikWAM',
     gender: 'Female',
     role: 'idol',
-    pitch: 1.05,
+    pitch: 1.0,
     rate: 1.0,
     volume: 1.0
   },
@@ -167,16 +280,28 @@ export const DEFAULT_VOICE_CONFIG = {
     voiceId: 'N2lVS1w4EtoT3dr4eOWO',
     gender: 'Male',
     role: 'manager',
-    pitch: 0.95,
-    rate: 1.08,
+    pitch: 1.0,
+    rate: 1.05,
+    volume: 1.0
+  },
+  // Voice 3: Giọng Bình Luận Viên Trận Đấu Game (Game Live Commentary)
+  gameVoice: {
+    id: 'el_josh',
+    name: 'Josh (Nam - Năng lượng, BLV Game Siêu Tốc)',
+    provider: 'elevenlabs',
+    voiceId: 'TxGEqnHWrfWFTfGW9XjX',
+    gender: 'Male',
+    role: 'game',
+    pitch: 1.05,
+    rate: 1.15,
     volume: 1.0
   }
 };
 
-const STORAGE_KEY = 'aidol_dual_voice_config';
+const STORAGE_KEY = 'aidol_unified_elevenlabs_voice_config';
 
 /**
- * Lấy cấu hình 2 giọng voice hiện tại của hệ thống
+ * Lấy cấu hình 3 kênh giọng ElevenLabs hiện tại của hệ thống
  */
 export function getDualVoiceConfig() {
   if (typeof window === 'undefined') return DEFAULT_VOICE_CONFIG;
@@ -186,48 +311,53 @@ export function getDualVoiceConfig() {
       const parsed = JSON.parse(saved);
       return {
         idolVoice: { ...DEFAULT_VOICE_CONFIG.idolVoice, ...(parsed.idolVoice || {}) },
-        managerVoice: { ...DEFAULT_VOICE_CONFIG.managerVoice, ...(parsed.managerVoice || {}) }
+        managerVoice: { ...DEFAULT_VOICE_CONFIG.managerVoice, ...(parsed.managerVoice || {}) },
+        gameVoice: { ...DEFAULT_VOICE_CONFIG.gameVoice, ...(parsed.gameVoice || {}) }
       };
     }
 
-    // Nếu chưa có, thử đồng bộ từ GeneralSettings
+    // Đọc từ aidol_general_settings nếu có
     const generalSettingsStr = localStorage.getItem('aidol_general_settings');
     if (generalSettingsStr) {
       const gs = JSON.parse(generalSettingsStr);
-      const idolMatch = CURATED_VOICES.find(v => v.id === gs.mainVoiceId);
-      const managerMatch = CURATED_VOICES.find(v => v.id === gs.assistantVoiceId);
+      const idolMatch = ELEVENLABS_VOICES.find(v => v.id === gs.mainVoiceId);
+      const managerMatch = ELEVENLABS_VOICES.find(v => v.id === gs.assistantVoiceId);
+      const gameMatch = ELEVENLABS_VOICES.find(v => v.id === gs.gameVoiceId);
       
       const config = {
         idolVoice: idolMatch ? { ...DEFAULT_VOICE_CONFIG.idolVoice, ...idolMatch } : DEFAULT_VOICE_CONFIG.idolVoice,
-        managerVoice: managerMatch ? { ...DEFAULT_VOICE_CONFIG.managerVoice, ...managerMatch } : DEFAULT_VOICE_CONFIG.managerVoice
+        managerVoice: managerMatch ? { ...DEFAULT_VOICE_CONFIG.managerVoice, ...managerMatch } : DEFAULT_VOICE_CONFIG.managerVoice,
+        gameVoice: gameMatch ? { ...DEFAULT_VOICE_CONFIG.gameVoice, ...gameMatch } : DEFAULT_VOICE_CONFIG.gameVoice
       };
       saveDualVoiceConfig(config);
       return config;
     }
   } catch (err) {
-    console.warn('Lỗi đọc cấu hình Dual Voice:', err);
+    console.warn('Lỗi đọc cấu hình ElevenLabs Voice:', err);
   }
   return DEFAULT_VOICE_CONFIG;
 }
 
 /**
- * Lưu cấu hình 2 giọng voice và bắn sự kiện đồng bộ toàn bộ app
+ * Lưu cấu hình 3 kênh giọng ElevenLabs và bắn sự kiện đồng bộ toàn bộ app
  */
 export function saveDualVoiceConfig(config) {
   if (typeof window === 'undefined') return;
   try {
     const updated = {
       idolVoice: { ...DEFAULT_VOICE_CONFIG.idolVoice, ...(config.idolVoice || {}) },
-      managerVoice: { ...DEFAULT_VOICE_CONFIG.managerVoice, ...(config.managerVoice || {}) }
+      managerVoice: { ...DEFAULT_VOICE_CONFIG.managerVoice, ...(config.managerVoice || {}) },
+      gameVoice: { ...DEFAULT_VOICE_CONFIG.gameVoice, ...(config.gameVoice || {}) }
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
 
-    // Đồng bộ ngược vào aidol_general_settings nếu có
+    // Đồng bộ ngược vào aidol_general_settings
     try {
       const gsStr = localStorage.getItem('aidol_general_settings');
       const gs = gsStr ? JSON.parse(gsStr) : {};
       gs.mainVoiceId = updated.idolVoice.id;
       gs.assistantVoiceId = updated.managerVoice.id;
+      gs.gameVoiceId = updated.gameVoice.id;
       localStorage.setItem('aidol_general_settings', JSON.stringify(gs));
     } catch {}
 
@@ -235,22 +365,61 @@ export function saveDualVoiceConfig(config) {
     window.dispatchEvent(new CustomEvent('aidol_voice_sync_updated', { detail: updated }));
     return updated;
   } catch (err) {
-    console.error('Lỗi lưu cấu hình Dual Voice:', err);
+    console.error('Lỗi lưu cấu hình ElevenLabs Voice:', err);
   }
 }
 
+let activePreviewAudio = null;
+
 /**
- * Phát giọng nói mẫu thử nghiệm (Preview TTS)
+ * Phát giọng nói mẫu thử nghiệm ElevenLabs (Preview TTS)
  */
-export function previewVoiceAudio(voice, sampleText = 'Xin chào, đây là giọng đọc thử nghiệm của hệ thống AVA Live!') {
+export async function previewVoiceAudio(voice, sampleText = 'Xin chào! Đây là giọng đọc trí tuệ nhân tạo ElevenLabs cao cấp trên hệ thống AVA Live!') {
   if (typeof window === 'undefined') return;
 
+  // Dừng âm thanh preview đang chạy
+  if (activePreviewAudio) {
+    activePreviewAudio.pause();
+    activePreviewAudio = null;
+  }
   if (typeof window.speechSynthesis !== 'undefined') {
     window.speechSynthesis.cancel();
+  }
+
+  const voiceId = voice.voiceId || voice.id?.replace('el_', '') || '21m00Tcm4TlvDq8ikWAM';
+  const apiKey = localStorage.getItem('elevenlabs_api_key') || localStorage.getItem('ELEVENLABS_API_KEY');
+
+  try {
+    const res = await fetch('/api/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: sampleText,
+        platform: 'elevenlabs',
+        voiceId: voiceId,
+        apiKey: apiKey
+      })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.audioBase64) {
+        const audio = new Audio(`data:audio/mp3;base64,${data.audioBase64}`);
+        activePreviewAudio = audio;
+        await audio.play();
+        return;
+      }
+    }
+  } catch (e) {
+    console.warn('ElevenLabs API preview fetch failed, using realistic fallback synth:', e);
+  }
+
+  // Realistic fallback voice
+  if (typeof window.speechSynthesis !== 'undefined') {
     const utterance = new SpeechSynthesisUtterance(sampleText);
     utterance.lang = 'vi-VN';
-    utterance.rate = voice.rate || 1.0;
-    utterance.pitch = voice.pitch || 1.0;
+    utterance.rate = voice.rate || (voice.role === 'game' ? 1.15 : 1.0);
+    utterance.pitch = voice.pitch || (voice.gender === 'Female' ? 1.08 : 0.95);
 
     const voices = window.speechSynthesis.getVoices();
     const matchedVoice = voices.find(v => 

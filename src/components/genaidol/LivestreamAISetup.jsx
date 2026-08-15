@@ -673,139 +673,149 @@ export default function LivestreamAISetup() {
                  <button onClick={() => { speechSynthesis.cancel(); setIsTesting(false); setShowVoiceModal(false); }} className="p-2 text-gray-400 hover:text-white bg-white/5 rounded-lg">Đóng</button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
-                <div className="flex flex-wrap gap-2 mb-5">
-                  {[['browser','🌐 Trình duyệt (Miễn phí)'],['vbee','🇻🇳 VBee (VN)'],['elevenlabs','⭐ ElevenLabs'],['zalo','💙 Zalo AI'],['google','🔵 Google TTS'],['minimax','🟣 MiniMax'],['openai_tts','🤖 OpenAI TTS']].map(([p, label]) => (
-                    <button key={p} onClick={() => setSelectedVoicePlatform(p)}
-                      className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${selectedVoicePlatform === p ? 'bg-purple-500/20 text-purple-400 border border-purple-500/40' : 'bg-white/5 text-gray-400 hover:text-white border border-white/10'}`}>{label}</button>
-                  ))}
+              <div className="flex-1 overflow-y-auto p-5 custom-scrollbar space-y-4">
+                <div className="p-4 bg-gradient-to-r from-yellow-500/10 via-purple-500/10 to-pink-500/10 border border-yellow-500/30 rounded-xl flex items-center justify-between">
+                  <div>
+                    <div className="text-xs font-black text-yellow-400 mb-1 flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-yellow-400" />
+                      ⭐ Nền Tảng Giọng Đọc AI Duy Nhất: ElevenLabs Multilingual
+                    </div>
+                    <div className="text-[11px] text-gray-300">
+                      Tất cả giọng đọc Idol, Quản lý và Game đều được cung cấp bởi ElevenLabs siêu thực, cảm xúc tự nhiên như người thật 100%.
+                    </div>
+                  </div>
+                  <a href="https://elevenlabs.io" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/40 px-3 py-1.5 rounded-lg text-[11px] font-bold shrink-0 transition-colors">
+                    <ExternalLink className="w-3.5 h-3.5" /> elevenlabs.io
+                  </a>
                 </div>
 
-                {selectedVoicePlatform === 'browser' && (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
-                      <div className="text-xs font-black text-green-400 mb-1">✅ SẴN SÀNG — Web Speech API (Miễn phí 100%)</div>
-                      <div className="text-[11px] text-gray-300">Sử dụng giọng đọc có sẵn trong trình duyệt Chrome/Edge. Chạy NGAY không cần API key.</div>
+                {/* Voice Categories */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {/* Category 1: Idol Livestream */}
+                  <div className="p-3 bg-black/40 border border-pink-500/30 rounded-xl space-y-2">
+                    <div className="text-xs font-bold text-pink-400 flex items-center gap-1.5">
+                      <span>🎤 Giọng Idol Livestream</span>
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-300 mb-2">Chọn giọng ({browserVoices.length} giọng có sẵn):</label>
-                      <select value={selectedBrowserVoice} onChange={e => setSelectedBrowserVoice(e.target.value)}
-                        className="w-full bg-black/60 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:border-purple-400 outline-none">
-                        {browserVoices.filter(v => v.lang.includes('vi')).length > 0 && (
-                          <optgroup label="🇻🇳 Tiếng Việt">
-                            {browserVoices.filter(v => v.lang.includes('vi')).map(v => <option key={v.name} value={v.name}>{v.name} ({v.lang})</option>)}
-                          </optgroup>
-                        )}
-                        <optgroup label="🌐 Ngôn ngữ khác">
-                          {browserVoices.filter(v => !v.lang.includes('vi')).slice(0,30).map(v => <option key={v.name} value={v.name}>{v.name} ({v.lang})</option>)}
-                        </optgroup>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-300 mb-2">Văn bản thử:</label>
-                      <textarea value={testText} onChange={e => setTestText(e.target.value)} rows={3}
-                        className="w-full bg-black/60 border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:border-purple-400 outline-none resize-none"/>
-                    </div>
-                    <button onClick={handleTestVoice}
-                      className={`w-full py-3 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all ${isTesting ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-purple-500 hover:bg-purple-600 text-white'}`}>
-                      {isTesting ? <><Volume2 className="w-4 h-4 animate-pulse"/> Đang đọc... (Click để dừng)</> : <><Volume2 className="w-4 h-4"/> Nghe thử giọng này</>}
-                    </button>
-                  </div>
-                )}
-
-                {selectedVoicePlatform === 'vbee' && (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
-                      <div className="text-xs font-black text-blue-400 mb-1">🇻🇳 VBee — Giọng Việt chuyên nghiệp nhất (VNPT)</div>
-                      <div className="text-[11px] text-gray-300 mb-2">Giọng tự nhiên nhất cho Tiếng Việt. <b className="text-yellow-400">Cần đăng ký API key tại vbee.vn.</b> Có gói dùng thử miễn phí.</div>
-                      <a href="https://vbee.vn" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-blue-400 text-[11px] font-bold"><ExternalLink className="w-3 h-3"/> vbee.vn</a>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {['Ngọc Huyền','Mai Phương','Thu Hương','Thanh Mai','Mạnh Dũng','Hoàng Bách','Minh Đức','Tuấn Anh','Thảo Chi','Lan Trinh','Khánh Linh','Minh Hoàng','Trúc Quỳnh','Bảo Trân'].map((v,i) => (
-                        <div key={i} onClick={() => { setSelectedVoiceId(v); setShowVoiceModal(false); }} className={`p-3 bg-black/40 border ${selectedVoiceId === v ? 'border-blue-500 text-blue-400' : 'border-white/10 text-gray-300'} rounded-lg text-[11px] hover:border-blue-500/40 hover:text-white transition-colors cursor-pointer`}>{v}</div>
+                    <div className="space-y-1.5">
+                      {[
+                        { id: 'el_rachel', name: 'Rachel (Ngọt ngào, Tự nhiên)', gender: 'Nữ' },
+                        { id: 'el_bella', name: 'Bella (Nhẹ nhàng, Dễ thương)', gender: 'Nữ' },
+                        { id: 'el_domi', name: 'Domi (Trẻ trung, Năng động)', gender: 'Nữ' },
+                        { id: 'el_emily', name: 'Emily (Sang trọng, Thanh lịch)', gender: 'Nữ' },
+                        { id: 'el_elli', name: 'Elli (Cảm xúc, Truyền cảm)', gender: 'Nữ' },
+                        { id: 'el_gigi', name: 'Gigi (Anime, Đáng yêu)', gender: 'Nữ' }
+                      ].map((v) => (
+                        <div
+                          key={v.id}
+                          onClick={() => { setSelectedVoiceId(v.name); setShowVoiceModal(false); }}
+                          className={`p-2 rounded-lg border text-left cursor-pointer transition-all flex items-center justify-between text-xs ${
+                            selectedVoiceId?.includes(v.name.split(' ')[0])
+                              ? 'bg-pink-500/20 border-pink-500 text-pink-300 font-bold'
+                              : 'bg-white/5 border-white/10 text-gray-300 hover:border-pink-500/40 hover:text-white'
+                          }`}
+                        >
+                          <span>{v.name}</span>
+                          <span className="text-[9px] text-pink-300/60 font-mono">{v.gender}</span>
+                        </div>
                       ))}
                     </div>
                   </div>
-                )}
 
-                {selectedVoicePlatform === 'elevenlabs' && (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
-                      <div className="text-xs font-black text-yellow-400 mb-1">⭐ ElevenLabs — Giọng AI siêu thực hàng đầu thế giới</div>
-                      <div className="text-[11px] text-gray-300 mb-2"><b className="text-green-400">Gói miễn phí: 10,000 ký tự/tháng.</b> Gói trả phí từ $5/tháng. Hỗ trợ Tiếng Việt qua Multilingual v2.</div>
-                      <a href="https://elevenlabs.io" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-yellow-400 text-[11px] font-bold"><ExternalLink className="w-3 h-3"/> elevenlabs.io — Đăng ký miễn phí</a>
+                  {/* Category 2: Quản lý / Trợ lý */}
+                  <div className="p-3 bg-black/40 border border-blue-500/30 rounded-xl space-y-2">
+                    <div className="text-xs font-bold text-blue-400 flex items-center gap-1.5">
+                      <span>📢 Giọng Quản Lý / Giục Đơn</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {['Rachel','Drew','Clyde','Paul','Domi','Bella','Antoni','Charlie','Emily','Elli','Fin','Harry'].map((v,i) => (
-                        <div key={i} onClick={() => { setSelectedVoiceId(v); setShowVoiceModal(false); }} className={`p-3 bg-black/40 border ${selectedVoiceId === v ? 'border-yellow-500 text-yellow-400' : 'border-white/10 text-gray-300'} rounded-lg text-[11px] hover:border-yellow-500/40 hover:text-white transition-colors cursor-pointer`}>{v}</div>
+                    <div className="space-y-1.5">
+                      {[
+                        { id: 'el_callum', name: 'Callum (Quyết đoán, Giục đơn)', gender: 'Nam' },
+                        { id: 'el_antoni', name: 'Antoni (Chuyên nghiệp, Tự tin)', gender: 'Nam' },
+                        { id: 'el_adam', name: 'Adam (Điềm tĩnh, Đáng tin)', gender: 'Nam' },
+                        { id: 'el_patrick', name: 'Patrick (Uy lực, Thuyết phục)', gender: 'Nam' },
+                        { id: 'el_drew', name: 'Drew (Tin tức, Trịnh trọng)', gender: 'Nam' },
+                        { id: 'el_paul', name: 'Paul (Phóng viên, Ấm áp)', gender: 'Nam' }
+                      ].map((v) => (
+                        <div
+                          key={v.id}
+                          onClick={() => { setSelectedVoiceId(v.name); setShowVoiceModal(false); }}
+                          className={`p-2 rounded-lg border text-left cursor-pointer transition-all flex items-center justify-between text-xs ${
+                            selectedVoiceId?.includes(v.name.split(' ')[0])
+                              ? 'bg-blue-500/20 border-blue-500 text-blue-300 font-bold'
+                              : 'bg-white/5 border-white/10 text-gray-300 hover:border-blue-500/40 hover:text-white'
+                          }`}
+                        >
+                          <span>{v.name}</span>
+                          <span className="text-[9px] text-blue-300/60 font-mono">{v.gender}</span>
+                        </div>
                       ))}
                     </div>
                   </div>
-                )}
 
-                {selectedVoicePlatform === 'google' && (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
-                      <div className="text-xs font-black text-blue-400 mb-1">🔵 Google Cloud Text-to-Speech</div>
-                      <div className="text-[11px] text-gray-300 mb-2"><b className="text-green-400">Miễn phí: 1 triệu ký tự/tháng</b> (Standard), 4 triệu ký tự (WaveNet/Neural2). Cần Google Cloud account.</div>
-                      <a href="https://cloud.google.com/text-to-speech" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-blue-400 text-[11px] font-bold"><ExternalLink className="w-3 h-3"/> Google Cloud TTS</a>
+                  {/* Category 3: Game Commentary */}
+                  <div className="p-3 bg-black/40 border border-purple-500/30 rounded-xl space-y-2">
+                    <div className="text-xs font-bold text-purple-400 flex items-center gap-1.5">
+                      <span>🎮 Giọng BLV Trận Đấu Game</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {['vi-VN-Standard-A','vi-VN-Standard-B','vi-VN-Standard-C','vi-VN-Standard-D','vi-VN-Neural2-A','vi-VN-Neural2-D','vi-VN-Wavenet-A','vi-VN-Wavenet-B','vi-VN-Wavenet-C','vi-VN-Wavenet-D'].map((v,i) => (
-                        <div key={i} onClick={() => { setSelectedVoiceId(v); setShowVoiceModal(false); }} className={`p-2.5 bg-black/40 border ${selectedVoiceId === v ? 'border-blue-500 text-blue-400' : 'border-white/10 text-gray-300'} rounded-lg text-[11px] hover:border-blue-500/40 hover:text-white transition-colors cursor-pointer`}>{v}</div>
+                    <div className="space-y-1.5">
+                      {[
+                        { id: 'el_josh', name: 'Josh (BLV Siêu Tốc, Bùng Nổ)', gender: 'Nam' },
+                        { id: 'el_clyde', name: 'Clyde (Chiến Binh, Trầm Hùng)', gender: 'Nam' },
+                        { id: 'el_harry', name: 'Harry (Kịch Tính, Hồi Hộp)', gender: 'Nam' },
+                        { id: 'el_jeremy', name: 'Jeremy (MC Sôi Nổi, Minigame)', gender: 'Nam' },
+                        { id: 'el_daniel', name: 'Daniel (Hùng Dũng, Tuyệt Kỹ)', gender: 'Nam' },
+                        { id: 'el_arnold', name: 'Arnold (Thần Tướng, Trọng Tài)', gender: 'Nam' }
+                      ].map((v) => (
+                        <div
+                          key={v.id}
+                          onClick={() => { setSelectedVoiceId(v.name); setShowVoiceModal(false); }}
+                          className={`p-2 rounded-lg border text-left cursor-pointer transition-all flex items-center justify-between text-xs ${
+                            selectedVoiceId?.includes(v.name.split(' ')[0])
+                              ? 'bg-purple-500/20 border-purple-500 text-purple-300 font-bold'
+                              : 'bg-white/5 border-white/10 text-gray-300 hover:border-purple-500/40 hover:text-white'
+                          }`}
+                        >
+                          <span>{v.name}</span>
+                          <span className="text-[9px] text-purple-300/60 font-mono">{v.gender}</span>
+                        </div>
                       ))}
                     </div>
                   </div>
-                )}
+                </div>
 
-                {selectedVoicePlatform === 'minimax' && (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl">
-                      <div className="text-xs font-black text-purple-400 mb-1">🟣 MiniMax TTS — Giọng AI Trung Quốc siêu thực</div>
-                      <div className="text-[11px] text-gray-300 mb-2"><b className="text-green-400">Miễn phí: 6 triệu ký tự cho tài khoản mới.</b> Hỗ trợ Tiếng Việt, Anh, Trung, Nhật, Hàn.</div>
-                      <a href="https://platform.minimaxi.com" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-purple-400 text-[11px] font-bold"><ExternalLink className="w-3 h-3"/> platform.minimaxi.com</a>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {['male-qn-qingse','female-shaonv','female-yujie','male-qn-jingying'].map((v,i) => (
-                        <div key={i} onClick={() => { setSelectedVoiceId(v); setShowVoiceModal(false); }} className={`p-3 bg-black/40 border ${selectedVoiceId === v ? 'border-purple-500 text-purple-400' : 'border-white/10 text-gray-300'} rounded-lg text-[11px] hover:border-purple-500/40 hover:text-white transition-colors cursor-pointer`}>{v}</div>
-                      ))}
-                    </div>
+                {/* Test Voice Section */}
+                <div className="p-4 bg-white/5 border border-white/10 rounded-xl space-y-3">
+                  <div className="flex justify-between items-center text-xs font-bold text-gray-200">
+                    <span>Thử nghiệm phát âm giọng đọc ElevenLabs:</span>
+                    <span className="text-purple-400 font-mono">Đang chọn: {selectedVoiceId || 'Rachel'}</span>
                   </div>
-                )}
-
-                {selectedVoicePlatform === 'zalo' && (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-blue-400/10 border border-blue-400/30 rounded-xl">
-                      <div className="text-xs font-black text-blue-300 mb-1">💙 Zalo AI TTS — Made in Vietnam</div>
-                      <div className="text-[11px] text-gray-300 mb-2"><b className="text-green-400">Có gói miễn phí cho lập trình viên.</b> Giọng Việt tự nhiên, phát triển bởi Zalo/VNG.</div>
-                      <a href="https://zalo.ai" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-blue-300 text-[11px] font-bold"><ExternalLink className="w-3 h-3"/> zalo.ai</a>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {['zalo-south-women','zalo-south-men','zalo-north-women','zalo-north-men'].map((v,i) => (
-                        <div key={i} onClick={() => { setSelectedVoiceId(v); setShowVoiceModal(false); }} className={`p-3 bg-black/40 border ${selectedVoiceId === v ? 'border-blue-400 text-blue-300' : 'border-white/10 text-white'} rounded-lg text-[11px] hover:border-blue-400/40 transition-colors cursor-pointer`}>{v}</div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {selectedVoicePlatform === 'openai_tts' && (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
-                      <div className="text-xs font-black text-emerald-400 mb-1">🤖 OpenAI TTS — Từ ChatGPT</div>
-                      <div className="text-[11px] text-gray-300 mb-2"><b className="text-yellow-400">Trả phí: $15/1M ký tự (tts-1), $30/1M ký tự (tts-1-hd).</b> API key đã được cài, dùng được ngay.</div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {['alloy','echo','fable','onyx','nova','shimmer'].map((v,i) => (
-                        <div key={i} onClick={() => { setSelectedVoiceId(v); setShowVoiceModal(false); }} className={`p-3 bg-black/40 border ${selectedVoiceId === v ? 'border-emerald-500 text-emerald-400' : 'border-white/10 text-gray-300'} rounded-lg text-[11px] hover:border-emerald-500/40 hover:text-white transition-colors cursor-pointer`}>{v}</div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                  <textarea
+                    value={testText}
+                    onChange={e => setTestText(e.target.value)}
+                    rows={2}
+                    className="w-full bg-black/60 border border-white/10 rounded-lg px-4 py-2.5 text-xs text-white focus:border-purple-400 outline-none resize-none"
+                  />
+                  <button
+                    onClick={handleTestVoice}
+                    className={`w-full py-2.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 transition-all ${
+                      isTesting ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-gradient-to-r from-yellow-500 via-pink-500 to-purple-600 hover:opacity-90 text-white shadow-lg'
+                    }`}
+                  >
+                    {isTesting ? (
+                      <><Volume2 className="w-4 h-4 animate-pulse" /> Đang đọc... (Click để dừng)</>
+                    ) : (
+                      <><Volume2 className="w-4 h-4" /> Nghe Thử Giọng Đọc ElevenLabs</>
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div className="p-4 border-t border-white/10 bg-[#0B0E14] flex justify-end">
-                <button onClick={() => { speechSynthesis.cancel(); setIsTesting(false); setShowVoiceModal(false); }}
-                  className="px-6 py-2.5 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded-lg text-sm cursor-pointer">Xong</button>
+                <button
+                  onClick={() => { speechSynthesis.cancel(); setIsTesting(false); setShowVoiceModal(false); }}
+                  className="px-6 py-2.5 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold rounded-lg text-sm cursor-pointer shadow"
+                >
+                  Xong & Áp Dụng
+                </button>
               </div>
            </div>
         </div>

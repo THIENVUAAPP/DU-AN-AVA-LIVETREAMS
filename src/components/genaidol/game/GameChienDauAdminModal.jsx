@@ -6,7 +6,7 @@ import {
   Minimize2, Maximize2, Gift, Plus, Trash2, Move, Mic, Radio, Copy, Upload, Music, Music2, ExternalLink
 } from 'lucide-react';
 import { battleAudio } from './battleAudioEngine';
-import { battleCommentary } from './battleCommentaryEngine';
+import { battleCommentary, ELEVENLABS_GAME_VOICES } from './battleCommentaryEngine';
 
 const SIMULATED_USERS = [
   'Nguyễn Hùng', 'Trần Mai', 'Hoàng Long', 'Minh Quân', 
@@ -525,7 +525,48 @@ export default function GameChienDauAdminModal({
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-pink-500/20">
+                    {/* ElevenLabs Voice Selection for Game Commentary */}
+                    <div className="pt-2 border-t border-pink-500/20 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-black text-yellow-300 flex items-center gap-1.5 uppercase">
+                          <Sparkles size={13} className="text-yellow-400" />
+                          Giọng Đọc Bình Luận Viên Game (ElevenLabs AI):
+                        </label>
+                        <span className="text-[10px] text-green-400 bg-green-500/20 px-2 py-0.5 rounded font-mono font-bold">
+                          100% ElevenLabs Multilingual
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {ELEVENLABS_GAME_VOICES.map((v) => {
+                          const isSelected = (config.commentaryVoiceId || battleCommentary.selectedVoiceId || 'el_josh') === v.id;
+                          return (
+                            <div
+                              key={v.id}
+                              onClick={() => {
+                                setConfig({ ...config, commentaryVoiceId: v.id });
+                                battleCommentary.setElevenLabsVoice(v.id);
+                              }}
+                              className={`p-2 rounded-lg border text-left cursor-pointer transition-all flex items-center justify-between gap-2 ${
+                                isSelected
+                                  ? 'bg-gradient-to-r from-pink-600/30 to-purple-600/30 border-pink-500 text-white shadow-md shadow-pink-500/20'
+                                  : 'bg-black/50 border-white/10 text-gray-400 hover:text-white hover:border-pink-500/40'
+                              }`}
+                            >
+                              <div className="truncate flex-1">
+                                <div className="text-[11px] font-bold text-gray-200 truncate">{v.name}</div>
+                                <div className="text-[9px] text-pink-300/80 font-mono">Giới tính: {v.gender === 'Female' ? 'Nữ' : 'Nam'}</div>
+                              </div>
+                              {isSelected && (
+                                <span className="w-2 h-2 rounded-full bg-pink-400 animate-ping shrink-0" />
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-pink-500/20">
                       {/* Interval Settings */}
                       <div>
                         <label className="text-[11px] font-bold text-gray-200 block mb-1">
@@ -583,9 +624,9 @@ export default function GameChienDauAdminModal({
                       </span>
                       <button
                         onClick={() => testVoiceSpeech()}
-                        className="px-3 py-1 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white rounded-lg text-[10px] font-bold shadow transition-all flex items-center gap-1"
+                        className="px-3.5 py-1.5 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white rounded-lg text-[11px] font-bold shadow-lg shadow-pink-600/30 transition-all flex items-center gap-1.5"
                       >
-                        <Volume2 size={12} /> Nghe Thử Giọng AI
+                        <Volume2 size={13} /> Nghe Thử Giọng AI ElevenLabs
                       </button>
                     </div>
                   </div>

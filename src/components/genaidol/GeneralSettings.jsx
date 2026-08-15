@@ -1,52 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Search, CheckCircle2, FolderOpen, Brain, Upload } from 'lucide-react';
 import { getLiveMediaByCategory } from '../../lib/liveKhoDB';
-import { saveDualVoiceConfig, CURATED_VOICES } from '../../utils/voiceSyncService';
-
-const ELEVENLABS_VOICES = [
-  { id: 'el_rachel', name: 'Rachel (Trầm ấm, Tự tin)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
-  { id: 'el_drew', name: 'Drew (Tin tức, Trịnh trọng)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
-  { id: 'el_clyde', name: 'Clyde (Chiến binh, Trầm)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
-  { id: 'el_paul', name: 'Paul (Phóng viên, Ấm áp)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
-  { id: 'el_domi', name: 'Domi (Trẻ trung, Năng động)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
-  { id: 'el_fin', name: 'Fin (Lão thành, Thông thái)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
-  { id: 'el_bella', name: 'Bella (Nhẹ nhàng, Mềm mại)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
-  { id: 'el_antoni', name: 'Antoni (Chuyên nghiệp, Rõ ràng)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
-  { id: 'el_thomas', name: 'Thomas (Kể chuyện, Cuốn hút)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
-  { id: 'el_charlie', name: 'Charlie (Tự nhiên, Thân thiện)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
-  { id: 'el_emily', name: 'Emily (Trong trẻo, Thanh lịch)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
-  { id: 'el_elli', name: 'Elli (Cảm xúc, Truyền cảm)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
-  { id: 'el_callum', name: 'Callum (Nam tính, Mạnh mẽ)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
-  { id: 'el_patrick', name: 'Patrick (Thuyết phục, Uy lực)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
-  { id: 'el_harry', name: 'Harry (Hồi hộp, Kịch tính)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
-  { id: 'el_liam', name: 'Liam (Gần gũi, Hài hước)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
-  { id: 'el_dorothy', name: 'Dorothy (Người kể chuyện nhí)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
-  { id: 'el_josh', name: 'Josh (Năng lượng, Nhanh nhẹn)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
-  { id: 'el_arnold', name: 'Arnold (Cứng rắn, Uy nghiêm)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
-  { id: 'el_charlotte', name: 'Charlotte (Duyên dáng, Tinh tế)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
-  { id: 'el_matilda', name: 'Matilda (Ấm áp, Chân thành)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
-  { id: 'el_matthew', name: 'Matthew (Điềm tĩnh, Đáng tin)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
-  { id: 'el_james', name: 'James (Phát thanh viên)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
-  { id: 'el_joseph', name: 'Joseph (Kể chuyện cổ tích)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
-  { id: 'el_jeremy', name: 'Jeremy (Sôi nổi, Hoạt náo)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
-  { id: 'el_michael', name: 'Michael (Giáo sư, Thông thái)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
-  { id: 'el_ethan', name: 'Ethan (Bí ẩn, Trầm tĩnh)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
-  { id: 'el_gigi', name: 'Gigi (Hoạt hình, Dễ thương)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
-  { id: 'el_freya', name: 'Freya (Phép thuật, Lôi cuốn)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
-  { id: 'el_grace', name: 'Grace (Sang trọng, Nhã nhặn)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
-  { id: 'el_daniel', name: 'Daniel (Quyết đoán, Mạnh mẽ)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
-  { id: 'el_lily', name: 'Lily (Hồn nhiên, Trong sáng)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
-  { id: 'el_serena', name: 'Serena (Quyến rũ, Mượt mà)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' },
-  { id: 'el_adam', name: 'Adam (Mộc mạc, Giản dị)', type: 'ElevenLabs', gender: 'Male', cost: '1 token/ký tự' },
-  { id: 'el_nicole', name: 'Nicole (Năng động, Hiện đại)', type: 'ElevenLabs', gender: 'Female', cost: '1 token/ký tự' }
-];
+import { saveDualVoiceConfig, ELEVENLABS_VOICES, previewVoiceAudio } from '../../utils/voiceSyncService';
 
 const MAIN_VOICES = [...ELEVENLABS_VOICES];
-
-const ASSISTANT_VOICES = [
-  { id: '1', name: 'Giọng Google (Miễn phí)', type: 'Miễn phí', gender: 'Female', cost: '0 token' },
-  ...ELEVENLABS_VOICES
-];
+const ASSISTANT_VOICES = [...ELEVENLABS_VOICES];
+const GAME_VOICES = [...ELEVENLABS_VOICES];
 
 export default function GeneralSettings({ onClose }) {
   const [activeTab, setActiveTab] = useState('prompt');
@@ -60,19 +19,23 @@ export default function GeneralSettings({ onClose }) {
     systemPrompt: "Bạn là một nhân vật ảo AI tên là 'Lan Hương', bạn nữ, thân thiện, hài hước và thông minh. Bạn là một nhân viên live stream siêu đáng yêu, đang bán phần mềm AIDOL live stream bằng trí tuệ nhân tạo. Bạn có một ông chủ tên là Tun Tử Tế rất giỏi trong lĩnh vực trí tuệ nhân tạo, thỉnh thoảng có thể trêu trọc ông chủ.",
     backgroundContext: "Bối cảnh: Bạn đang livestream bán phần mềm AIDOL một phần mềm dùng để live stream bằng trí tuệ nhân tạo. Người dùng có thể tự tạo ra nhân vật của chính họ bằng các chỉ từ 1 ảnh, tạo ra video, cho video đó vào phần mềm AIDOL thì phần mềm AIDOL sẽ tự đóng gói lại và tạo thành 1 nhân vật live stream đồng nhất, có thể dùng nhân vật đó live stream kiếm xu nhận quà trên tiktok, bán hàng tiếp thị liên kết, hoặc xuất hiện trên live cùng với người thật. Giá phần mềm là 3 triệu 5 trăm ngàn đồng / 1 năm hoặc có thể dùng gói dùng thử 500000 trên 1 tháng.\nKĩ thuật phần mềm: Công dụng: dùng để live stream bằng nhân vật ảo hoặc nhân bản chính bản thân mình, live stream phản hồi theo thời gian thực tất cả các sự kiện trong khi live tiktok. Phần mềm có hơn 500 giọng nói khác nhau. Nhân vật live stream có thể là bất cứ ai tùy vào người dùng tự tạo và tưởng tượng ra.\nChốt đơn bằng cách khuyến khích mọi người nhấn tin vào link bio.",
     
-    // Tab 2: Nhân vật Chính
+    // Tab 2: Nhân vật Chính (Idol Live)
     llmChoice: 'avalive', 
     apiModel: 'Model AvaLive',
     mainVoiceFilter: 'all', // 'all' | 'male' | 'female'
     mainVoiceId: 'el_rachel',
     
-    // Tab 3: Trợ lý
+    // Tab 3: Trợ lý / Quản lý Phiên Live
     assistantEnabled: true,
     assistantVideoFolder: 'im lặng (2 video)',
     assistantVoiceFilter: 'all',
-    assistantVoiceId: '1',
+    assistantVoiceId: 'el_callum',
+
+    // Tab 4: Bình luận Game Live
+    gameVoiceFilter: 'all',
+    gameVoiceId: 'el_josh',
     
-    // Tab 4: Cấu hình Nhanh
+    // Tab 5: Cấu hình Nhanh
     selectedPreset: 'fast', // 'fast' | 'notification' | 'custom_LanHuong'
     userPresets: [],
     newPresetName: '',
@@ -90,6 +53,10 @@ export default function GeneralSettings({ onClose }) {
         if (parsed.userPresets) {
           parsed.userPresets = parsed.userPresets.filter(p => p.id !== 'custom_LanHuong');
         }
+        // Ensure assistantVoiceId defaults to ElevenLabs
+        if (parsed.assistantVoiceId === '1') {
+          parsed.assistantVoiceId = 'el_callum';
+        }
         setSettings(prev => ({ ...prev, ...parsed }));
       } catch (e) {
         console.error("Failed to parse settings", e);
@@ -104,13 +71,15 @@ export default function GeneralSettings({ onClose }) {
   const handleSave = () => {
     localStorage.setItem('aidol_general_settings', JSON.stringify(settings));
 
-    // Đồng bộ vào hệ thống Dual Voice của AVA Live
-    const idolMatch = CURATED_VOICES.find(v => v.id === settings.mainVoiceId);
-    const managerMatch = CURATED_VOICES.find(v => v.id === settings.assistantVoiceId);
+    // Đồng bộ vào hệ thống 3 kênh giọng ElevenLabs của AVA Live
+    const idolMatch = ELEVENLABS_VOICES.find(v => v.id === settings.mainVoiceId);
+    const managerMatch = ELEVENLABS_VOICES.find(v => v.id === settings.assistantVoiceId);
+    const gameMatch = ELEVENLABS_VOICES.find(v => v.id === settings.gameVoiceId);
     
     saveDualVoiceConfig({
       idolVoice: idolMatch ? { ...idolMatch, role: 'idol' } : undefined,
-      managerVoice: managerMatch ? { ...managerMatch, role: 'manager' } : undefined
+      managerVoice: managerMatch ? { ...managerMatch, role: 'manager' } : undefined,
+      gameVoice: gameMatch ? { ...gameMatch, role: 'game' } : undefined
     });
 
     onClose();
@@ -123,6 +92,7 @@ export default function GeneralSettings({ onClose }) {
 
   const handleMainVoiceFilter = (filter) => setSettings(prev => ({ ...prev, mainVoiceFilter: filter }));
   const handleAssistantVoiceFilter = (filter) => setSettings(prev => ({ ...prev, assistantVoiceFilter: filter }));
+  const handleGameVoiceFilter = (filter) => setSettings(prev => ({ ...prev, gameVoiceFilter: filter }));
 
   const selectFolder = async () => {
     try {
@@ -172,7 +142,7 @@ export default function GeneralSettings({ onClose }) {
       const newVoice = {
         id: `custom_${Date.now()}`,
         name: voiceName,
-        type: 'Custom Clone',
+        type: 'ElevenLabs Clone',
         gender: 'Bản sao',
         cost: '1 token/ký tự'
       };
@@ -186,7 +156,7 @@ export default function GeneralSettings({ onClose }) {
     e.target.value = null; // reset
   };
 
-  // Helper renderers for Tables
+  // Helper renderers for Tables with Instant Audio Preview
   const renderVoiceTable = (voices, currentFilter, selectedId, onSelect) => {
     const filtered = voices.filter(v => {
       if (currentFilter === 'male') return v.gender === 'Male';
@@ -200,11 +170,11 @@ export default function GeneralSettings({ onClose }) {
           <thead className="bg-gray-100 text-gray-700 font-semibold border-b border-gray-300">
             <tr>
               <th className="px-4 py-2 w-12 text-center">ID</th>
-              <th className="px-4 py-2">Tên Giọng Nói</th>
+              <th className="px-4 py-2">Tên Giọng Nói (ElevenLabs)</th>
               <th className="px-4 py-2">Loại</th>
               <th className="px-4 py-2">Giới Tính</th>
               <th className="px-4 py-2">Chi Phí</th>
-              <th className="px-4 py-2 w-16 text-center"></th>
+              <th className="px-4 py-2 w-24 text-center">Nghe thử</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -218,12 +188,19 @@ export default function GeneralSettings({ onClose }) {
                 >
                   <td className="px-4 py-2 text-center font-medium">{v.id}</td>
                   <td className="px-4 py-2 font-medium">{v.name}</td>
-                  <td className={`px-4 py-2 ${isSelected ? 'text-white' : 'text-blue-600'}`}>{v.type}</td>
-                  <td className="px-4 py-2">{v.gender}</td>
-                  <td className="px-4 py-2">{v.cost}</td>
+                  <td className={`px-4 py-2 ${isSelected ? 'text-white' : 'text-blue-600'}`}>{v.type || 'ElevenLabs'}</td>
+                  <td className="px-4 py-2">{v.gender === 'Female' ? 'Nữ' : v.gender === 'Male' ? 'Nam' : v.gender}</td>
+                  <td className="px-4 py-2">{v.cost || '1 token/ký tự'}</td>
                   <td className="px-4 py-2 text-center">
-                    <button className={`p-1.5 rounded-full ${isSelected ? 'bg-green-400 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'} transition-colors`}>
-                      <Volume2 size={14} />
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        previewVoiceAudio(v);
+                      }}
+                      title="Nghe thử giọng này"
+                      className={`p-1.5 rounded-full ${isSelected ? 'bg-white text-green-700 hover:bg-gray-100 shadow' : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200'} transition-all`}
+                    >
+                      <Volume2 size={15} />
                     </button>
                   </td>
                 </tr>
@@ -242,25 +219,31 @@ export default function GeneralSettings({ onClose }) {
       <div className="flex bg-white border-b border-gray-300">
         <button 
           onClick={() => setActiveTab('prompt')}
-          className={`flex items-center gap-2 px-6 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'prompt' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
+          className={`flex items-center gap-2 px-5 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'prompt' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
         >
           <Brain size={16} /> BỘ NÃO IDOL
         </button>
         <button 
           onClick={() => setActiveTab('main-character')}
-          className={`flex items-center gap-2 px-6 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'main-character' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
+          className={`flex items-center gap-2 px-5 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'main-character' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
         >
-          <User size={16} className={activeTab === 'main-character' ? 'text-blue-600' : 'text-blue-500'} /> Nhân vật Chính
+          <User size={16} className={activeTab === 'main-character' ? 'text-blue-600' : 'text-blue-500'} /> Giọng Idol Live
         </button>
         <button 
           onClick={() => setActiveTab('assistant')}
-          className={`flex items-center gap-2 px-6 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'assistant' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
+          className={`flex items-center gap-2 px-5 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'assistant' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
         >
-          <Mic size={16} className="text-red-500" /> Trợ lý
+          <Mic size={16} className="text-red-500" /> Giọng Quản Lý / Trợ Lý
+        </button>
+        <button 
+          onClick={() => setActiveTab('game-voice')}
+          className={`flex items-center gap-2 px-5 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'game-voice' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
+        >
+          <Volume2 size={16} className="text-purple-600" /> Giọng BLV Game
         </button>
         <button 
           onClick={() => setActiveTab('quick-config')}
-          className={`flex items-center gap-2 px-6 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'quick-config' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
+          className={`flex items-center gap-2 px-5 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'quick-config' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
         >
           <Settings2 size={16} className="text-gray-400" /> Cấu hình Nhanh
         </button>
@@ -444,7 +427,63 @@ export default function GeneralSettings({ onClose }) {
             </>
           )}
 
-          {/* TAB 4: CẤU HÌNH NHANH */}
+          {/* TAB 4: BÌNH LUẬN VIÊN GAME */}
+          {activeTab === 'game-voice' && (
+            <>
+              {/* Giới thiệu Kênh Giọng BLV Game */}
+              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
+                <div className="bg-purple-50 px-4 py-2.5 border-b border-purple-200 font-bold text-purple-900 text-sm flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Volume2 size={16} className="text-purple-600" />
+                    Kênh Giọng Đọc Bình Luận Viên Trận Đấu Game Live
+                  </span>
+                  <span className="text-xs bg-purple-200 text-purple-800 px-2.5 py-0.5 rounded font-mono font-bold">
+                    100% ElevenLabs AI
+                  </span>
+                </div>
+                <div className="p-4 space-y-2 text-sm text-gray-700">
+                  <p>
+                    Giọng đọc chuyên biệt cho <b>Game Chiến Đấu / PK Livestream</b>. Tự động hò reo, bình luận trận chiến, cảnh báo máu thấp và xướng tên khán giả tặng quà.
+                  </p>
+                  <p className="text-xs text-gray-500 italic">
+                    💡 Khuyên dùng: <b>Josh</b> (Bùng nổ siêu tốc), <b>Clyde</b> (Trầm hùng chiến binh), <b>Harry</b> (Kịch tính hồi hộp).
+                  </p>
+                </div>
+              </div>
+
+              {/* Bảng Giọng nói Game */}
+              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden flex flex-col h-[480px]">
+                <div className="px-4 py-3 border-b border-gray-300 bg-white">
+                  <h3 className="font-bold text-gray-800 text-sm mb-2">Chọn Giọng ElevenLabs Cho Bình Luận Viên Game</h3>
+                  <div className="flex items-center gap-6">
+                    <span className="text-sm font-semibold text-gray-700">Lọc theo:</span>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="radio" checked={settings.gameVoiceFilter === 'all'} onChange={() => handleGameVoiceFilter('all')} className="w-4 h-4 text-purple-600" />
+                      <span className="text-sm font-medium text-gray-700">Tất cả</span>
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="radio" checked={settings.gameVoiceFilter === 'male'} onChange={() => handleGameVoiceFilter('male')} className="w-4 h-4 text-purple-600" />
+                      <span className="text-sm font-medium text-gray-700">Giọng Nam</span>
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="radio" checked={settings.gameVoiceFilter === 'female'} onChange={() => handleGameVoiceFilter('female')} className="w-4 h-4 text-purple-600" />
+                      <span className="text-sm font-medium text-gray-700">Giọng Nữ</span>
+                    </label>
+                  </div>
+                </div>
+                
+                <div className="flex-1 overflow-auto p-4">
+                  {renderVoiceTable([...settings.customVoices, ...GAME_VOICES], settings.gameVoiceFilter, settings.gameVoiceId, (id) => setSettings(prev => ({...prev, gameVoiceId: id})))}
+                </div>
+
+                <div className="px-4 py-2 bg-purple-50 border-t border-gray-300 text-xs text-purple-700 italic flex items-center gap-1">
+                  ⓘ Bấm vào nút 'Nghe thử' 🔊 để nghe âm sắc của bình luận viên ElevenLabs trước khi lưu.
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* TAB 5: CẤU HÌNH NHANH */}
           {activeTab === 'quick-config' && (
             <div className="space-y-4 max-w-4xl mx-auto">
               {/* Chọn cấu hình có sẵn */}
