@@ -317,6 +317,14 @@ export default function EnterprisePayment({ setActiveTab, initialCategory = "sub
                   );
                 })}
               </div>
+
+              {/* Notice for 3-month token package duration */}
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-300 text-left flex items-start gap-2">
+                <Clock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <span>
+                  <strong>⏳ Hạn sử dụng gói phụ:</strong> Số lượng token của các gói phụ có thời hạn sử dụng trong vòng <strong>3 tháng (90 ngày)</strong>. Sau 3 tháng không sử dụng hết, lượng token còn lại sẽ tự động về 0.
+                </span>
+              </div>
             </div>
           )}
 

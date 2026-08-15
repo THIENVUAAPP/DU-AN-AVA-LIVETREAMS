@@ -1294,10 +1294,10 @@ export default function DesktopAppUI() {
         </div>
       )}
 
-      {/* Payment Modal */}
-      {activeSettingsModal === 'payment' && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in zoom-in duration-200">
-          <div className="w-full max-w-5xl h-[90vh] flex flex-col rounded-xl overflow-hidden shadow-2xl bg-[#0f0f1a] relative">
+      {/* Payment & Token Packages Modal */}
+      {(activeSettingsModal === 'payment' || activeSettingsModal === 'coins') && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in zoom-in duration-200">
+          <div className="w-full max-w-5xl h-[92vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl bg-[#0f0f1a] border border-gray-800 relative">
             <button 
               onClick={() => setActiveSettingsModal(null)}
               className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 text-white/60 hover:bg-white/20 hover:text-white transition-colors"
@@ -1305,7 +1305,10 @@ export default function DesktopAppUI() {
               <X size={20} />
             </button>
             <div className="flex-1 overflow-y-auto">
-              <ThanhToanCoin onClose={() => setActiveSettingsModal(null)} />
+              <ThanhToanCoin 
+                initialTab={activeSettingsModal === 'coins' ? 'tokens' : 'subscription'} 
+                onClose={() => setActiveSettingsModal(null)} 
+              />
             </div>
           </div>
         </div>
