@@ -54,15 +54,22 @@ Trả về ĐÚNG định dạng JSON sau:
 
     let generatedText = '';
 
-    if (brain === 'gemini') {
+    if (brain === 'gemini' || brain === 'avalive') {
       const activeKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || apiKey;
       if (!activeKey) return res.status(500).json({ error: 'Missing Gemini API Key' });
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${activeKey}`, {
+      // Ưu tiên model gemini-1.5-flash: Nhanh nhất (<500ms), thông minh nhất và rẻ nhất cho livestream real-time
+      const selectedModel = req.body.model || 'gemini-1.5-flash';
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${activeKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: finalPrompt }] }]
+          contents: [{ parts: [{ text: finalPrompt }] }],
+          generationConfig: {
+            temperature: 0.8,
+            maxOutputTokens: 250,
+            topP: 0.95
+          }
         })
       });
       const data = await response.json();

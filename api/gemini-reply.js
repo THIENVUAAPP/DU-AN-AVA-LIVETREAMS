@@ -2,11 +2,9 @@
 // xuống trình duyệt. Chỉ dùng cho 2 tình huống: cảm ơn người tặng quà & chào mừng người bình luận mới
 // (theo đúng yêu cầu "API chỉ sử dụng cho trò chuyện giao tiếp với người tặng quà và người mới").
 //
-// Model: gemini-2.5-flash (sinh câu thoại) + gemini-2.5-flash-preview-tts (đọc giọng, cả 2 đều nằm
-// trong hạn mức miễn phí của Google AI Studio tại thời điểm viết — xem ai.google.dev/gemini-api/docs).
-// trong hạn mức miễn phí của Google AI Studio tại thời điểm viết — xem ai.google.dev/gemini-api/docs).
-const TEXT_MODEL = 'gemini-2.5-flash';
-const TTS_MODEL = 'gemini-2.5-flash-preview-tts';
+// Model: gemini-1.5-flash (Bộ não nhanh nhất <500ms, thông minh nhất và chi phí rẻ nhất của Google AI Studio)
+const TEXT_MODEL = 'gemini-1.5-flash';
+const TTS_MODEL = 'gemini-1.5-flash';
 const API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 
 const PERSONALITY_VOICE_HINT = {

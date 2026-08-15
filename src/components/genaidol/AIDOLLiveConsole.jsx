@@ -117,6 +117,7 @@ export default function AIDOLLiveConsole() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           brain: 'gemini',
+          model: localStorage.getItem('gemini_model') || 'gemini-1.5-flash',
           apiKey: localStorage.getItem('gemini_api_key'),
           eventType: type,
           payload,

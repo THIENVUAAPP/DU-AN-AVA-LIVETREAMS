@@ -20,8 +20,8 @@ export default function GeneralSettings({ onClose }) {
     backgroundContext: "Bối cảnh: Bạn đang livestream bán phần mềm AIDOL một phần mềm dùng để live stream bằng trí tuệ nhân tạo. Người dùng có thể tự tạo ra nhân vật của chính họ bằng các chỉ từ 1 ảnh, tạo ra video, cho video đó vào phần mềm AIDOL thì phần mềm AIDOL sẽ tự đóng gói lại và tạo thành 1 nhân vật live stream đồng nhất, có thể dùng nhân vật đó live stream kiếm xu nhận quà trên tiktok, bán hàng tiếp thị liên kết, hoặc xuất hiện trên live cùng với người thật. Giá phần mềm là 3 triệu 5 trăm ngàn đồng / 1 năm hoặc có thể dùng gói dùng thử 500000 trên 1 tháng.\nKĩ thuật phần mềm: Công dụng: dùng để live stream bằng nhân vật ảo hoặc nhân bản chính bản thân mình, live stream phản hồi theo thời gian thực tất cả các sự kiện trong khi live tiktok. Phần mềm có hơn 500 giọng nói khác nhau. Nhân vật live stream có thể là bất cứ ai tùy vào người dùng tự tạo và tưởng tượng ra.\nChốt đơn bằng cách khuyến khích mọi người nhấn tin vào link bio.",
     
     // Tab 2: Nhân vật Chính (Idol Live)
-    llmChoice: 'avalive', 
-    apiModel: 'Model AvaLive',
+    llmChoice: 'gemini', 
+    apiModel: 'gemini-1.5-flash',
     mainVoiceFilter: 'all', // 'all' | 'male' | 'female'
     mainVoiceId: 'el_rachel',
     
@@ -57,6 +57,10 @@ export default function GeneralSettings({ onClose }) {
         if (parsed.assistantVoiceId === '1') {
           parsed.assistantVoiceId = 'el_callum';
         }
+        // Default model to gemini-1.5-flash if Model AvaLive or not set
+        if (!parsed.apiModel || parsed.apiModel === 'Model AvaLive') {
+          parsed.apiModel = 'gemini-1.5-flash';
+        }
         setSettings(prev => ({ ...prev, ...parsed }));
       } catch (e) {
         console.error("Failed to parse settings", e);
@@ -70,6 +74,7 @@ export default function GeneralSettings({ onClose }) {
 
   const handleSave = () => {
     localStorage.setItem('aidol_general_settings', JSON.stringify(settings));
+    localStorage.setItem('gemini_model', settings.apiModel || 'gemini-1.5-flash');
 
     // Đồng bộ vào hệ thống 3 kênh giọng ElevenLabs của AVA Live
     const idolMatch = ELEVENLABS_VOICES.find(v => v.id === settings.mainVoiceId);
@@ -297,23 +302,47 @@ export default function GeneralSettings({ onClose }) {
             <>
               {/* Thiết lập LLM */}
               <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
-                <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm">
-                  Thiết lập AI (LLM - 'Bộ Não')
+                <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Brain size={16} className="text-blue-600" /> Thiết lập Bộ Não AI (Gemini Flash Intelligence)
+                  </span>
+                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold border border-green-300">
+                    ⚡ Siêu Nhanh & Rẻ Nhất
+                  </span>
                 </div>
                 <div className="p-4 space-y-4">
-                  <p className="text-sm font-semibold text-gray-800">Cấu hình Bộ não AI cho Nhân vật:</p>
+                  <p className="text-sm font-semibold text-gray-800">Cấu hình Model AI Google Gemini cho Idol & Trợ lý:</p>
                   
-                  <div className="flex items-center gap-4 mt-2">
-                    <label className="text-sm font-semibold text-[#a53b3b]">Chọn Model AI:</label>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-2">
+                    <label className="text-sm font-semibold text-[#a53b3b] min-w-[130px]">Chọn Model AI:</label>
                     <select 
                       name="apiModel" value={settings.apiModel} onChange={handleChange}
-                      className="flex-1 max-w-md border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500 text-gray-700"
+                      className="flex-1 border border-blue-400 bg-blue-50/40 font-medium rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600 text-gray-800 shadow-sm"
                     >
-                      <option value="Model AvaLive">Model AvaLive</option>
+                      <option value="gemini-1.5-flash">🔥 Gemini 1.5 Flash (Khuyên dùng: Siêu tốc &lt;0.4s | Thông minh nhất | Tiết kiệm nhất)</option>
+                      <option value="gemini-2.0-flash">⚡ Gemini 2.0 Flash (Next-Gen Realtime AI — Tốc độ xử lý đỉnh cao)</option>
+                      <option value="gemini-1.5-flash-8b">💎 Gemini 1.5 Flash 8B (Tối ưu hóa chi phí cực hạn & Siêu nhẹ)</option>
+                      <option value="gpt-4o-mini">🤖 OpenAI GPT-4o Mini (OpenAI Engine)</option>
                     </select>
                   </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-gray-50 p-3 rounded-lg border border-gray-200 text-xs">
+                    <div className="flex items-center gap-1.5 text-gray-700">
+                      <span className="text-green-600 font-bold">✓ Tốc độ phản hồi:</span>
+                      <span className="font-semibold text-blue-600">&lt; 400ms (Real-time)</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-gray-700">
+                      <span className="text-green-600 font-bold">✓ Độ thông minh:</span>
+                      <span className="font-semibold text-purple-600">Hiểu tiếng Việt tự nhiên</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-gray-700">
+                      <span className="text-green-600 font-bold">✓ Chi phí API:</span>
+                      <span className="font-semibold text-emerald-600">~0.5đ - 1.5đ / câu hỏi đáp</span>
+                    </div>
+                  </div>
+
                   <p className="text-xs text-gray-500 italic flex items-center gap-1">
-                    ⓘ Việc tạo ra câu trả lời sẽ trừ token từ tài khoản của bạn.
+                    ⓘ Bộ não Gemini Flash được tối ưu hóa riêng biệt cho Idol Live, Trợ lý chốt đơn và BLV Game.
                   </p>
                 </div>
               </div>

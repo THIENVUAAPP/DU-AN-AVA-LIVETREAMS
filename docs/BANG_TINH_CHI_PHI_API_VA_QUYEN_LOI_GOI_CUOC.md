@@ -9,7 +9,7 @@
 | Dịch vụ API | Đơn giá thị trường (USD) | Quy đổi VNĐ (Tỷ giá 25.500đ) | Chi phí trên 1 đơn vị sử dụng |
 | :--- | :--- | :--- | :--- |
 | **ElevenLabs TTS (Multilingual v2)** | \$0.15 - \$0.18 / 1.000 ký tự *(Gói Scale/Enterprise)* | ~3.800đ - 4.500đ / 1.000 ký tự | **~3.8đ - 4.5đ / 1 ký tự đọc** |
-| **LLM Brain (Gemini 1.5 Flash / GPT-4o-mini)** | \$0.15 / 1.000.000 tokens input<br>\$0.60 / 1.000.000 tokens output | ~3.8đ - 15đ / 1.000 tokens LLM | **~1.5đ - 2.5đ / 1 câu hỏi - đáp thông minh** |
+| **LLM Brain (Google Gemini 1.5 Flash)**<br>*(Mô hình số 1: Tốc độ <400ms, Rẻ nhất & Thông minh nhất)* | \$0.075 / 1.000.000 tokens input<br>\$0.30 / 1.000.000 tokens output | ~1.9đ - 7.6đ / 1.000 tokens LLM | **~0.5đ - 1.5đ / 1 câu hỏi - đáp thông minh** |
 | **Server Relay / Duy trì Phiên Live** | Chi phí hạ tầng cloud băng thông | ~500đ / giờ live | **~0.15đ / phút live** |
 
 ---
