@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 
 // ============================================================
-// CẤU HÌNH TỶ LỆ TOKEN (Anh chỉnh ở đây)
+// CẤU HÌNH TỶ LỆ TOKEN (Chuẩn hóa Biên Lợi Nhuận Gộp 65% - Chi Phí API <= 35%)
 // ============================================================
 export const TOKEN_RATES = {
-  AI_PER_30S: 5,
-  TTS_PER_50CHARS: 1,
-  LOW_BALANCE_WARN: 200,
+  TTS_PER_CHAR: 1,           // 1 Token = 1 Ký tự ElevenLabs siêu thực (Idol, Quản lý, Game PK)
+  AI_LIVE_PER_30S: 5,        // 10 Token / phút duy trì kết nối LLM Brain & Server Live
+  LOW_BALANCE_WARN: 500,     // Cảnh báo khi số dư dưới 500 Token
 };
 
 const STORAGE_KEY = 'avalive_token_data';
@@ -84,6 +84,28 @@ export function TokenProvider({ children }) {
       return { balance: Math.max(0, prevBal - actual), history: [entry, ...prevHist].slice(0, 200) };
     });
   }, []);
+
+  // Global event listeners to allow decoupled modules (e.g. Battle Game Commentary, Standalone TTS) to deduct/add tokens
+  useEffect(() => {
+    const handleGlobalDeduct = (e) => {
+      if (e.detail && e.detail.amount) {
+        deductToken(e.detail.amount, e.detail.reason || 'Sử dụng ElevenLabs / AI Voice');
+      }
+    };
+    const handleGlobalAdd = (e) => {
+      if (e.detail && e.detail.amount) {
+        addToken(e.detail.amount, e.detail.reason || 'Nạp Token');
+      }
+    };
+
+    window.addEventListener('avalive:deduct_token', handleGlobalDeduct);
+    window.addEventListener('avalive:add_token', handleGlobalAdd);
+
+    return () => {
+      window.removeEventListener('avalive:deduct_token', handleGlobalDeduct);
+      window.removeEventListener('avalive:add_token', handleGlobalAdd);
+    };
+  }, [deductToken, addToken]);
 
   const setNotifyCallback = useCallback((fn) => { notifyRef.current = fn; }, []);
   const clearHistory = useCallback(() => { setTokenData(prev => ({ ...prev, history: [] })); }, []);

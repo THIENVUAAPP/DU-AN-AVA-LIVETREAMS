@@ -156,6 +156,18 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
       const aud = getAudio();
       if (aud) {
         aud.src = audioUrl;
+        
+        // Trừ token tự động theo độ dài ký tự thực tế phát ElevenLabs
+        if (typeof window !== 'undefined') {
+          const charLen = (item.text || '').length || 30;
+          window.dispatchEvent(new CustomEvent('avalive:deduct_token', {
+            detail: {
+              amount: charLen,
+              reason: `ElevenLabs (${channel === 'idol' ? 'Idol' : 'Quản lý'}): "${(item.text || '').slice(0, 20)}..."`
+            }
+          }));
+        }
+
         aud.onended = () => {
           URL.revokeObjectURL(audioUrl);
           if (onActionTriggered) onActionTriggered({ type: 'LIPSYNC_ENDED' });

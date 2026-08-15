@@ -171,6 +171,17 @@ class BattleCommentaryEngine {
           audio.volume = this.volume;
           this.activeAudio = audio;
 
+          // Trừ token tự động theo ký tự BLV Game PK ElevenLabs
+          if (typeof window !== 'undefined') {
+            const charCount = (text || '').length || 30;
+            window.dispatchEvent(new CustomEvent('avalive:deduct_token', {
+              detail: {
+                amount: charCount,
+                reason: `ElevenLabs Game PK (${this.selectedVoiceId}): "${(text || '').slice(0, 20)}..."`
+              }
+            }));
+          }
+
           audio.onended = () => {
             this.isSpeaking = false;
             this.activeAudio = null;

@@ -173,11 +173,11 @@ export default function DesktopAppUI() {
     setNotifyCallback(({ message }) => showToast(message, 'warn'));
   }, [setNotifyCallback]);
 
-  // Auto-deduct tokens when live session is active
+  // Auto-deduct tokens when live session is active (AI Brain & Server 유지)
   useEffect(() => {
     if (!isConnected) return;
     const timer = setInterval(() => {
-      deductToken(TOKEN_RATES.AI_PER_30S, 'AI Gemini (phiên live)');
+      deductToken(TOKEN_RATES.AI_LIVE_PER_30S || 5, 'AI LLM Brain & Duy trì Live (30s)');
     }, 30000);
     return () => clearInterval(timer);
   }, [isConnected, deductToken]);
