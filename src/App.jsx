@@ -14,6 +14,7 @@ import KOLLiveDashboard from "./components/KOLLiveDashboard";
 import DanceFloorOverlay from "./components/DanceFloorOverlay";
 import GameBattleOverlay from "./components/genaidol/game/GameBattleOverlay";
 import CleanLiveOverlay from "./components/genaidol/CleanLiveOverlay";
+import GameBanDoOverlay from "./components/genaidol/game/GameBanDoOverlay";
 import MultiAccountManager from "./components/MultiAccountManager";
 import AISellerOps from "./components/AISellerOps";
 import EnterprisePayment from "./components/EnterprisePayment";
@@ -198,6 +199,9 @@ export default function App() {
   }
   if (overlayType === "cleanlive" || overlayType === "avatar" || overlayType === "stream") {
     return <CleanLiveOverlay />;
+  }
+  if (overlayType === "bando" || overlayType === "vietnam_map" || overlayType === "map" || overlayType === "vietnam") {
+    return <GameBanDoOverlay />;
   }
 
   return (

@@ -3,7 +3,7 @@ import {
   Settings, CreditCard, Video, Moon, Sun, 
   MessageCircle, Play, Pause, Mic, MicOff, X, Download, Plus,
   Brain, Radio, Coins, AlertTriangle, Eye, Clock, List, Zap, AlertCircle, FileText, CheckSquare,
-  Gift, ShoppingBag, Sparkles, RotateCcw, Send, Trash2, Heart, Share2, UserPlus, Users, Swords, Shield, Gamepad2
+  Gift, ShoppingBag, Sparkles, RotateCcw, Send, Trash2, Heart, Share2, UserPlus, Users, Swords, Shield, Gamepad2, Flag, MapPin
 } from 'lucide-react';
 import WorkspaceTacVu from './WorkspaceTacVu';
 import GeneralSettings from './GeneralSettings';
@@ -16,6 +16,8 @@ import QuickResponseModal from './QuickResponseModal';
 import TemplateLibraryModal from './TemplateLibraryModal';
 import GameChienDau from './game/GameChienDau';
 import GameChienDauAdminModal from './game/GameChienDauAdminModal';
+import GameBanDoVietNam from './game/GameBanDoVietNam';
+import GameBanDoAdminModal from './game/GameBanDoAdminModal';
 import { saveCharacterToIDB, loadAllCharactersFromIDB, deleteCharacterFromIDB } from '../../utils/idbHelper';
 export default function DesktopAppUI() {
   const [activeSettingsModal, setActiveSettingsModal] = useState(null); 
@@ -41,6 +43,10 @@ export default function DesktopAppUI() {
   const [isGameBattleActive, setIsGameBattleActive] = useState(false);
   const [isGameAdminOpen, setIsGameAdminOpen] = useState(false);
   const [lastGameEvent, setLastGameEvent] = useState(null);
+
+  // Game Bản Đồ Hình Chữ S States
+  const [isGameBanDoActive, setIsGameBanDoActive] = useState(false);
+  const [isGameBanDoAdminOpen, setIsGameBanDoAdminOpen] = useState(false);
 
   // States cho Menu Theo dõi
   const [isMonitorDropdownOpen, setIsMonitorDropdownOpen] = useState(false);
@@ -471,6 +477,16 @@ export default function DesktopAppUI() {
       );
     }
 
+    // -2. Chế độ Game Đất Nước Bản Đồ Hình Chữ S (Việt Nam Ghép Cờ LIVE)
+    if (isGameBanDoActive) {
+      return (
+        <GameBanDoVietNam 
+          isPopout={false}
+          onOpenAdmin={() => setIsGameBanDoAdminOpen(true)}
+        />
+      );
+    }
+
     // 0. Ưu tiên phát Video Phản hồi Nhanh khẩn cấp (Override Live Screen)
     if (quickResponseActiveVideo) {
       return (
@@ -621,7 +637,11 @@ export default function DesktopAppUI() {
                 ? 'bg-gradient-to-r from-red-600 via-purple-600 to-indigo-600 text-white border-purple-400 shadow-purple-500/40 ring-2 ring-purple-400/50 animate-pulse' 
                 : (isDarkMode ? 'border-indigo-500/50 bg-indigo-950/40 text-indigo-300 hover:bg-indigo-900/60' : 'border-indigo-300 bg-indigo-50 text-indigo-700 hover:bg-indigo-100')
             }`}
-            onClick={() => setIsGameBattleActive(!isGameBattleActive)}
+            onClick={() => {
+              const next = !isGameBattleActive;
+              setIsGameBattleActive(next);
+              if (next && isGameBanDoActive) setIsGameBanDoActive(false);
+            }}
             title="Bật/Tắt chế độ Game Chiến Đấu (TikTok LIVE Battle Game) trên màn hình chính"
           >
             <Swords size={14} className={isGameBattleActive ? 'text-yellow-300' : 'text-indigo-400'} />
@@ -639,7 +659,40 @@ export default function DesktopAppUI() {
               title="Mở Bảng Quản trị Admin của Game Chiến Đấu (Tách biệt hoàn toàn với Live Stream)"
             >
               <Shield size={13} className="text-purple-400" />
-              <span>Admin</span>
+              <span>Admin PK</span>
+            </button>
+          )}
+
+          {/* Nút Kích hoạt Game Ghép Cờ Bản Đồ Việt Nam (Hình Chữ S) */}
+          <button 
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border shadow-sm ${
+              isGameBanDoActive 
+                ? 'bg-gradient-to-r from-red-600 via-amber-600 to-yellow-500 text-white border-yellow-300 shadow-yellow-500/40 ring-2 ring-yellow-400/50 animate-pulse' 
+                : (isDarkMode ? 'border-amber-500/50 bg-amber-950/40 text-amber-300 hover:bg-amber-900/60' : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100')
+            }`}
+            onClick={() => {
+              const next = !isGameBanDoActive;
+              setIsGameBanDoActive(next);
+              if (next && isGameBattleActive) setIsGameBattleActive(false);
+            }}
+            title="Bật/Tắt Game Ghép Cờ Bản Đồ Việt Nam (Đất Nước Hình Chữ S) trên màn hình chính"
+          >
+            <Flag size={14} className={isGameBanDoActive ? 'text-yellow-200' : 'text-amber-400'} />
+            <span>Bản Đồ Chữ S</span>
+            {isGameBanDoActive && (
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            )}
+          </button>
+
+          {/* Nút Bảng Quản trị Admin của Game Bản Đồ */}
+          {isGameBanDoActive && (
+            <button 
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-amber-600/30 hover:bg-amber-600/50 text-amber-300 border border-amber-500/40 transition-colors"
+              onClick={() => setIsGameBanDoAdminOpen(true)}
+              title="Mở Bảng Quản trị Admin của Game Ghép Cờ Bản Đồ Việt Nam"
+            >
+              <Shield size={13} className="text-amber-400" />
+              <span>Admin Bản Đồ</span>
             </button>
           )}
 
@@ -1631,6 +1684,12 @@ export default function DesktopAppUI() {
             setLastGameEvent({ type: 'FORCE_WIN', data: { faction: 'red' }, timestamp: t });
           }
         }}
+      />
+
+      {/* Game Ghép Cờ Bản Đồ Admin Control Modal */}
+      <GameBanDoAdminModal
+        isOpen={isGameBanDoAdminOpen}
+        onClose={() => setIsGameBanDoAdminOpen(false)}
       />
 
       {/* Toast Notification */}
