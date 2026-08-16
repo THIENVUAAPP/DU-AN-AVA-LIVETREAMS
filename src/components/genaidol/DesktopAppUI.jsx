@@ -3,7 +3,8 @@ import {
   Settings, CreditCard, Video, Moon, Sun, 
   MessageCircle, Play, Pause, Mic, MicOff, X, Download, Plus,
   Brain, Radio, Coins, AlertTriangle, Eye, Clock, List, Zap, AlertCircle, FileText, CheckSquare,
-  Gift, ShoppingBag, Sparkles, RotateCcw, Send, Trash2, Heart, Share2, UserPlus, Users, Swords, Shield, Gamepad2, Flag, MapPin
+  Gift, ShoppingBag, Sparkles, RotateCcw, Send, Trash2, Heart, Share2, UserPlus, Users, Swords, Shield, Gamepad2, Flag, MapPin,
+  Smartphone, MonitorPlay
 } from 'lucide-react';
 import WorkspaceTacVu from './WorkspaceTacVu';
 import GeneralSettings from './GeneralSettings';
@@ -47,6 +48,23 @@ export default function DesktopAppUI() {
   // Game Bản Đồ Hình Chữ S States
   const [isGameBanDoActive, setIsGameBanDoActive] = useState(false);
   const [isGameBanDoAdminOpen, setIsGameBanDoAdminOpen] = useState(false);
+
+  // Tỷ Lệ Khung Hình Toàn Cục (9:16 TikTok Dọc vs 16:9 OBS Ngang)
+  const [globalAspectRatio, setGlobalAspectRatio] = useState(() => {
+    try {
+      return localStorage.getItem('avalive_global_aspect_ratio') || '9:16';
+    } catch (e) {
+      return '9:16';
+    }
+  });
+
+  const toggleGlobalAspectRatio = () => {
+    const next = globalAspectRatio === '9:16' ? '16:9' : '9:16';
+    setGlobalAspectRatio(next);
+    try {
+      localStorage.setItem('avalive_global_aspect_ratio', next);
+    } catch (e) {}
+  };
 
   // States cho Menu Theo dõi
   const [isMonitorDropdownOpen, setIsMonitorDropdownOpen] = useState(false);
@@ -465,28 +483,7 @@ export default function DesktopAppUI() {
     await deleteCharacterFromIDB(id);
   };
 
-  const renderCharacterContent = () => {
-    // -1. Chế độ Game Chiến Đấu (TikTok LIVE Battle Overlay)
-    if (isGameBattleActive) {
-      return (
-        <GameChienDau 
-          isPopout={false}
-          onOpenAdmin={() => setIsGameAdminOpen(true)}
-          externalLiveEvent={lastGameEvent}
-        />
-      );
-    }
-
-    // -2. Chế độ Game Đất Nước Bản Đồ Hình Chữ S (Việt Nam Ghép Cờ LIVE)
-    if (isGameBanDoActive) {
-      return (
-        <GameBanDoVietNam 
-          isPopout={false}
-          onOpenAdmin={() => setIsGameBanDoAdminOpen(true)}
-        />
-      );
-    }
-
+  const renderAiIdolLiveStage = () => {
     // 0. Ưu tiên phát Video Phản hồi Nhanh khẩn cấp (Override Live Screen)
     if (quickResponseActiveVideo) {
       return (
@@ -617,6 +614,48 @@ export default function DesktopAppUI() {
     }
   };
 
+  const renderCharacterContent = () => {
+    // -1. Chế độ Game Chiến Đấu (TikTok LIVE Battle Overlay)
+    if (isGameBattleActive) {
+      return (
+        <GameChienDau 
+          isPopout={false}
+          onOpenAdmin={() => setIsGameAdminOpen(true)}
+          externalLiveEvent={lastGameEvent}
+          aspectRatio={globalAspectRatio}
+          onToggleAspectRatio={toggleGlobalAspectRatio}
+        />
+      );
+    }
+
+    // -2. Chế độ Game Đất Nước Bản Đồ Hình Chữ S (Việt Nam Ghép Cờ LIVE)
+    if (isGameBanDoActive) {
+      return (
+        <GameBanDoVietNam 
+          isPopout={false}
+          onOpenAdmin={() => setIsGameBanDoAdminOpen(true)}
+          aspectRatio={globalAspectRatio}
+          onToggleAspectRatio={toggleGlobalAspectRatio}
+        />
+      );
+    }
+
+    // 0. Chế độ AI Idol Livestream Video / Live Screen
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-[#05070c] p-2 sm:p-3 overflow-hidden">
+        <div 
+          className={`relative flex flex-col overflow-hidden transition-all duration-300 ${
+            globalAspectRatio === '9:16'
+              ? 'w-full max-w-[440px] h-full max-h-[860px] aspect-[9/16] rounded-2xl md:rounded-3xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-black'
+              : 'w-full max-w-[1200px] h-auto max-h-full aspect-[16/9] rounded-2xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-black'
+          }`}
+        >
+          {renderAiIdolLiveStage()}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={`w-full h-screen flex flex-col font-sans ${isDarkMode ? 'bg-[#0f0f13] text-white' : 'bg-gray-100 text-gray-900'}`}>
       
@@ -695,6 +734,20 @@ export default function DesktopAppUI() {
               <span>Admin Bản Đồ</span>
             </button>
           )}
+
+          {/* Nút Chuyển Tỷ Lệ Khung Hình Toàn Cục: 9:16 (TikTok Dọc) vs 16:9 (OBS Ngang) */}
+          <button
+            onClick={toggleGlobalAspectRatio}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all border shadow-sm ${
+              globalAspectRatio === '9:16'
+                ? 'bg-gradient-to-r from-pink-600 via-rose-500 to-amber-500 text-white border-pink-300 ring-2 ring-pink-400/50 shadow-pink-500/30'
+                : (isDarkMode ? 'bg-white/10 hover:bg-white/20 text-cyan-300 border-white/10' : 'bg-gray-200 hover:bg-gray-300 text-slate-800 border-gray-300')
+            }`}
+            title={globalAspectRatio === '9:16' ? "Đang ở Khung Hình 9:16 (Chuẩn TikTok Live Dọc) — Bấm chuyển sang 16:9 (Ngang OBS/PC)" : "Đang ở Khung Hình 16:9 (Ngang OBS/PC) — Bấm chuyển sang 9:16 (Chuẩn TikTok Live Dọc)"}
+          >
+            <Smartphone size={13} className={globalAspectRatio === '9:16' ? 'text-yellow-300' : 'text-cyan-300'} />
+            <span>{globalAspectRatio === '9:16' ? '📱 9:16 TikTok' : '🖥️ 16:9 OBS'}</span>
+          </button>
 
           <button onClick={() => setIsDarkMode(!isDarkMode)} className={`p-1.5 rounded transition-colors ${isDarkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-400 text-gray-800 hover:bg-gray-500'}`}>
             {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}

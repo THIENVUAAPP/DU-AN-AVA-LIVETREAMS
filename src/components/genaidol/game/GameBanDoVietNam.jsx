@@ -1197,1133 +1197,607 @@ export default function GameBanDoVietNam({
       if (lx >= 0 && lx <= canvas.width && ly >= 0 && ly <= canvas.height) {
         ctx.fillStyle = 'rgba(0,0,0,0.75)';
         ctx.strokeStyle = item.color || '#facc15';
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 2;
         ctx.font = 'bold 11px sans-serif';
-        const textMetrics = ctx.measureText(item.text);
-        const pad = 6;
-        ctx.beginPath();
-        ctx.roundRect(lx - textMetrics.width / 2 - pad, ly - 16, textMetrics.width + pad * 2, 20, 6);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.fillStyle = item.color || '#facc15';
-        ctx.fillText(item.text, lx - textMetrics.width / 2, ly - 2);
+        ctx.textAlign = 'center';
+        ctx.strokeText(item.text, lx, ly);
+        ctx.fillText(item.text, lx, ly);
       }
     });
+  }, [viewMode3D, pan2D, zoom2D, gameState.claimedCount, isLightTheme, maskData]);
 
-    // Draw 2D Claim Badges & User Names
-    recentClaimBadges.forEach((badge) => {
-      const bx = offsetX + (badge.wx + cols / 2) * scale;
-      const by = offsetY + (badge.wz + rows / 2) * scale;
-      if (bx >= 0 && bx <= canvas.width && by >= 0 && by <= canvas.height) {
-        ctx.fillStyle = 'rgba(0,0,0,0.9)';
-        ctx.strokeStyle = '#facc15';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.roundRect(bx - 70, by - 26, 140, 24, 8);
-        ctx.fill();
-        ctx.stroke();
+  // HÀM RENDER SÂN KHẤU LIVE SẠCH 100% (Pure Clean Stage Viewport)
+  const renderCleanStage = () => (
+    <div className="relative w-full h-full overflow-hidden select-none font-sans">
+      {/* 3D Container or 2D Canvas */}
+      {viewMode3D ? (
+        <div ref={containerRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
+      ) : (
+        <canvas 
+          ref={canvas2dRef} 
+          width={1280} 
+          height={720} 
+          className="w-full h-full cursor-move"
+          onMouseDown={handleMouseDown2D}
+          onMouseMove={handleMouseMove2D}
+          onMouseUp={handleMouseUp2D}
+          onWheel={handleWheel2D}
+        />
+      )}
 
-        ctx.font = 'bold 10px sans-serif';
-        ctx.fillStyle = '#facc15';
-        ctx.fillText(`${badge.flag} ID: ${badge.userId}`, bx - 62, by - 12);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(`+${badge.count} Ô Cờ`, bx + 15, by - 12);
-      }
-    });
-  }, [viewMode3D, gameState.claimedCount, gameState.settings, gameState.mapTexts, zoom2D, pan2D, recentClaimBadges, isLightTheme]);
-
-  return (
-    <div 
-      className={`relative w-full h-full flex items-center justify-center select-none font-sans transition-colors duration-300 ${
-        isPopout 
-          ? 'bg-transparent' 
-          : isLightTheme 
-          ? 'bg-slate-200 text-slate-900' 
-          : 'bg-[#05070c] text-white'
-      } overflow-hidden`}
-      onPointerDown={handleUserGesture}
-    >
-      <div 
-        className={`relative flex flex-col overflow-hidden transition-all duration-300 ${
-          aspectRatio === '9:16'
-            ? 'w-full max-w-[440px] h-full max-h-[920px] aspect-[9/16] rounded-2xl md:rounded-3xl border border-yellow-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-[#070b14]'
-            : 'w-full h-full bg-[#070b14]'
-        }`}
-      >
-      {/* 1. TOP HUD: Header & Tiến Độ Hoàn Thành Bản Đồ - RESPONSIVE ALL DEVICES */}
-      <div className={`relative z-20 flex flex-wrap md:flex-nowrap items-center justify-between px-3 py-2 sm:px-4 sm:py-2.5 backdrop-blur-md border-b shrink-0 transition-colors gap-2 ${
-        isLightTheme 
-          ? 'bg-white/90 text-slate-900 border-slate-200 shadow-sm' 
-          : 'bg-black/75 text-white border-white/10'
-      }`}>
-        {/* Title & Info */}
-        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-          <div className="relative flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-red-600 via-amber-500 to-yellow-400 shadow-lg shadow-red-500/40 ring-2 ring-yellow-400/60 animate-pulse shrink-0">
-            <span className="text-lg sm:text-xl">{currentCountry?.flag || '🇻🇳'}</span>
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <h2 className={`text-xs sm:text-sm md:text-base font-black uppercase tracking-wider truncate ${
-                isLightTheme 
-                  ? 'bg-gradient-to-r from-red-700 via-amber-600 to-yellow-600 bg-clip-text text-transparent' 
-                  : 'bg-gradient-to-r from-yellow-300 via-red-400 to-amber-300 bg-clip-text text-transparent'
-              }`}>
-                {gameState.settings.customMapTitle || `${currentCountry?.name || 'Việt Nam'} ${t.title}`}
-              </h2>
-              <span className="px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black bg-red-600 text-white shadow-sm shrink-0">
-                {gameState.roundId}
-              </span>
+      {/* TOP MINI STAGE HEADER (Chỉ chứa thông tin Live sạch 100% - KHÔNG CÓ NÚT BẤM) */}
+      <div className="absolute top-2.5 left-2.5 right-2.5 z-20 pointer-events-none">
+        <div className="bg-black/75 backdrop-blur-md border border-white/15 rounded-2xl px-3 py-2 shadow-2xl flex items-center justify-between gap-2 text-white">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-red-600 via-amber-500 to-yellow-400 flex items-center justify-center text-base shadow-md shrink-0 animate-pulse">
+              <span>{currentCountry?.flag || '🇻🇳'}</span>
             </div>
-            <div className={`text-[10px] sm:text-[11px] font-medium flex items-center gap-1.5 sm:gap-2 truncate ${isLightTheme ? 'text-slate-600' : 'text-gray-300'}`}>
-              <span>{t.claimed}: <strong className={`${isLightTheme ? 'text-red-700' : 'text-yellow-400'} font-bold`}>{gameState.claimedCount.toLocaleString()}</strong>/{gameState.totalCells.toLocaleString()}</span>
-              <span>•</span>
-              <span className="text-emerald-400 font-bold">{gameState.percent}% map</span>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <h2 className="text-xs sm:text-sm font-black uppercase tracking-wider bg-gradient-to-r from-yellow-300 via-red-400 to-amber-300 bg-clip-text text-transparent truncate">
+                  {gameState.settings.customMapTitle || `${currentCountry?.name || 'Việt Nam'} ${t.title}`}
+                </h2>
+                <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-red-600 text-white shadow-sm shrink-0">
+                  {gameState.roundId}
+                </span>
+              </div>
+              <div className="text-[10px] text-gray-300 font-medium flex items-center gap-1.5">
+                <span>{t.claimed}: <strong className="text-yellow-400 font-bold">{gameState.claimedCount.toLocaleString()}</strong>/{gameState.totalCells.toLocaleString()}</span>
+                <span>•</span>
+                <span className="text-emerald-400 font-bold">{gameState.percent}% map</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Progress Bar & Controls */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 ml-auto flex-wrap justify-end">
-          {gameState.combo.active && gameState.combo.count >= 2 && (
-            <div className="flex items-center gap-1 px-2.5 py-0.5 sm:py-1 bg-gradient-to-r from-amber-600 to-red-600 rounded-full text-white text-[10px] sm:text-xs font-black shadow-lg animate-bounce">
-              <Flame size={12} className="text-yellow-300 animate-spin" />
-              <span>x{gameState.combo.multiplier} ({gameState.combo.count}🎁)</span>
-            </div>
-          )}
-
-          <div className="hidden lg:flex flex-col items-end w-36 xl:w-48">
-            <div className={`flex justify-between w-full text-[10px] xl:text-[11px] font-bold mb-0.5 ${isLightTheme ? 'text-slate-600' : 'text-gray-300'}`}>
-              <span>{t.progress}</span>
-              <span className={`${isLightTheme ? 'text-amber-700' : 'text-yellow-400'} font-mono`}>{gameState.percent}%</span>
-            </div>
-            <div className={`w-full h-2 rounded-full overflow-hidden p-0.5 border ${
-              isLightTheme ? 'bg-slate-200 border-slate-300' : 'bg-white/10 border-white/20'
-            }`}>
+          <div className="flex items-center gap-2 shrink-0">
+            {gameState.combo.active && gameState.combo.count >= 2 && (
+              <div className="flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-amber-600 to-red-600 rounded-full text-white text-[10px] sm:text-xs font-black shadow-lg animate-bounce">
+                <Flame size={12} className="text-yellow-300 animate-spin" />
+                <span>x{gameState.combo.multiplier} ({gameState.combo.count}🎁)</span>
+              </div>
+            )}
+            <div className="w-20 sm:w-28 h-2 bg-black/60 rounded-full overflow-hidden p-0.5 border border-white/20">
               <div 
-                className="h-full bg-gradient-to-r from-red-600 via-amber-500 to-yellow-400 rounded-full transition-all duration-500 shadow-[0_0_12px_rgba(234,179,8,0.8)]"
+                className="h-full bg-gradient-to-r from-red-600 via-amber-500 to-yellow-400 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(234,179,8,0.8)]"
                 style={{ width: `${gameState.percent}%` }}
               />
             </div>
           </div>
+        </div>
+      </div>
 
-          {!isPopout && !isLiveCleanMode && (
-            <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
-              {/* Nút Chuyển Đổi Tỷ Lệ Khung Hình: 9:16 (TikTok Dọc) vs 16:9 (OBS Ngang) */}
-              <button
-                onClick={() => {
-                  const nextAspect = aspectRatio === '9:16' ? '16:9' : '9:16';
-                  setAspectRatio(nextAspect);
-                  try {
-                    localStorage.setItem('avalive_map_aspect_ratio', nextAspect);
-                  } catch (e) {}
-                }}
-                className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all border flex items-center gap-1 shadow-sm ${
-                  aspectRatio === '9:16'
-                    ? 'bg-gradient-to-r from-pink-600 via-rose-500 to-amber-500 text-white border-pink-300 ring-2 ring-pink-400/50 shadow-pink-500/30'
-                    : isLightTheme
-                    ? 'bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300'
-                    : 'bg-white/10 hover:bg-white/20 text-cyan-300 border-white/10'
-                }`}
-                title={aspectRatio === '9:16' ? "Đang ở Khung Hình 9:16 (Chuẩn TikTok Live Dọc) — Bấm chuyển sang 16:9 (Ngang OBS/PC)" : "Đang ở Khung Hình 16:9 (Ngang OBS/PC) — Bấm chuyển sang 9:16 (Chuẩn TikTok Live Dọc)"}
-              >
-                <Smartphone size={12} className={aspectRatio === '9:16' ? 'text-yellow-300' : 'text-cyan-300'} />
-                <span>{aspectRatio === '9:16' ? '📱 9:16 TikTok' : '🖥️ 16:9 OBS'}</span>
-              </button>
-
-              {/* Nút Bật/Tắt Chế Độ Tự Động Hoàn Toàn 24/24 (Auto Loop 24/7) */}
-              <div className="flex items-center rounded-lg border border-purple-500/40 bg-purple-950/40 p-0.5 shadow-sm">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    bandoAudio.ensureContext();
-                    const playing = bandoAudio.toggleBgm();
-                    setIsBgmPlaying(playing);
-                  }}
-                  className={`px-2 py-1 rounded-md text-[10px] sm:text-xs font-bold transition-all flex items-center gap-1 ${
-                    isBgmPlaying
-                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/30'
-                      : 'text-purple-300 hover:text-white hover:bg-white/10'
-                  }`}
-                  title={isBgmPlaying ? `Nhạc nền đang PHÁT (Chế độ: ${bgmTimerMode === '24/7' ? 'Vô Tận 24/24' : bgmTimerMode}) — Bấm để TẠM DỪNG` : "Bấm để MỞ NHẠC NỀN ngay lập tức"}
-                >
-                  <Music size={12} className={isBgmPlaying ? 'text-yellow-300 fill-yellow-300 animate-pulse' : 'text-gray-400'} />
-                  <span className="hidden sm:inline">{isBgmPlaying ? `Nhạc ${bgmTimerMode}` : 'Mở Nhạc'}</span>
-                </button>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowAudioModal(true);
-                  }}
-                  className="p-1 rounded-md text-purple-300 hover:text-white hover:bg-purple-800/50 transition-all border-l border-purple-400/20"
-                  title="Mở Bảng Cài Đặt Nhạc Nền 24/24 & Hẹn Giờ Tự Động"
-                >
-                  <Sliders size={12} />
-                </button>
-              </div>
-
-              <button
-                onClick={() => {
-                  bandoEngine.toggleAuto247();
-                  setIsAuto247(bandoEngine.isAuto247Running);
-                }}
-                className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all border flex items-center gap-1 shadow-md ${
-                  isAuto247
-                    ? 'bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 text-white border-emerald-300 ring-2 ring-emerald-400 animate-pulse shadow-emerald-500/40'
-                    : isLightTheme
-                    ? 'bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300'
-                    : 'bg-white/10 hover:bg-white/20 text-yellow-300 border-white/10'
-                }`}
-                title={isAuto247 ? "Hệ thống đang TỰ ĐỘNG CHẠY 24/24 (Ghép cờ -> Vinh danh Top 30 + Top 1 -> Tự reset vòng mới) — Bấm để TẠM DỪNG" : "Bấm để BẬT chế độ TỰ ĐỘNG 24/24 xuyên suốt không ngừng nghỉ"}
-              >
-                <Zap size={12} className={isAuto247 ? 'text-yellow-300 fill-yellow-300 animate-bounce' : 'text-yellow-400'} />
-                <span>{isAuto247 ? '⚡ 24/7: BẬT' : '⚡ Auto 24/7'}</span>
-              </button>
-
-              {/* Nút Chuyển Đổi Nền Sáng / Tối (Light / Dark Mode Switcher) */}
-              <button
-                onClick={() => {
-                  const nextTheme = gameState.settings?.theme === 'light' ? 'dark' : 'light';
-                  bandoEngine.setTheme(nextTheme);
-                }}
-                className={`p-1 sm:px-2 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold transition-all border flex items-center gap-1 ${
-                  isLightTheme
-                    ? 'bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-300 shadow-sm'
-                    : 'bg-indigo-950/70 hover:bg-indigo-900/80 text-indigo-200 border-indigo-500/40 shadow-sm'
-                }`}
-                title={isLightTheme ? "Đang ở Nền Sáng — Bấm chuyển sang Nền Tối" : "Đang ở Nền Tối — Bấm chuyển sang Nền Sáng"}
-              >
-                {isLightTheme ? <Sun size={12} className="text-amber-600" /> : <Moon size={12} className="text-indigo-400" />}
-                <span className="hidden md:inline">{isLightTheme ? 'Sáng' : 'Tối'}</span>
-              </button>
-
-              {/* Nút Bật/Tắt Xoay Tự Động Bản Đồ */}
-              <button
-                onClick={handleToggleAutoRotate}
-                className={`p-1 sm:px-2 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold transition-all border flex items-center gap-1 ${
-                  autoRotate
-                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400 shadow-md shadow-emerald-500/30'
-                    : isLightTheme
-                    ? 'bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300'
-                    : 'bg-white/10 hover:bg-white/20 text-gray-300 border-white/10'
-                }`}
-                title={autoRotate ? "Bản đồ đang tự động quay — Bấm để ĐỨNG YÊN" : "Bản đồ đang đứng yên — Bấm để TỰ ĐỘNG XOAY"}
-              >
-                <RefreshCw size={12} className={autoRotate ? 'animate-spin' : ''} />
-                <span className="hidden md:inline">{autoRotate ? 'Xoay' : 'Tĩnh'}</span>
-              </button>
-
-              {/* Nút Ẩn/Hiện Bảng Bên Hông */}
-              <button
-                onClick={() => setShowSidePanels(!showSidePanels)}
-                className={`p-1 sm:p-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all border ${
-                  showSidePanels 
-                    ? isLightTheme ? 'bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300' : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10' 
-                    : 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40 shadow-md shadow-yellow-500/20'
-                }`}
-                title={showSidePanels ? "Thu gọn bảng bên hông (Tối đa hóa bản đồ)" : "Mở lại bảng bên hông"}
-              >
-                {showSidePanels ? <Eye size={13} /> : <EyeOff size={13} />}
-              </button>
-
-              {/* 3D / 2D Toggle */}
-              <button
-                onClick={() => setViewMode3D(!viewMode3D)}
-                className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs font-bold border transition-colors flex items-center gap-1 ${
-                  isLightTheme 
-                    ? 'bg-slate-200 hover:bg-slate-300 text-slate-800 border-slate-300' 
-                    : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
-                }`}
-                title={viewMode3D ? "Chuyển sang chế độ 2D" : "Chuyển sang chế độ 3D"}
-              >
-                <Layers size={12} />
-                <span>{viewMode3D ? '3D' : '2D'}</span>
-              </button>
-
-              {/* Admin Modal Shortcut (Only shown if onOpenAdmin provided) */}
-              {onOpenAdmin && (
-                <button
-                  onClick={onOpenAdmin}
-                  className="p-1 sm:px-2 sm:py-1 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/40 text-[10px] sm:text-xs font-black flex items-center gap-1 transition-all"
-                  title="Mở Bảng Quản trị Admin Toàn Diện"
-                >
-                  <Settings size={12} />
-                  <span className="hidden sm:inline">Admin</span>
-                </button>
-              )}
+      {/* 3D Landmarks Overlay Layer */}
+      <div ref={labelsLayerRef} className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
+        {(bandoEngine.landmarks || []).map(lm => (
+          <div
+            key={lm.id}
+            ref={el => labelRefs.current[lm.id] = el}
+            className="absolute top-0 left-0 hidden flex-col items-center pointer-events-none transition-all duration-75"
+            style={{ willChange: 'transform' }}
+          >
+            <div className={`px-2 py-0.5 rounded-full text-[10px] font-black shadow-lg border backdrop-blur-md flex items-center gap-1 whitespace-nowrap ${
+              lm.id === 'hoangsa' || lm.id === 'truongsa'
+                ? 'bg-red-600/90 text-yellow-300 border-yellow-300/80 animate-pulse ring-2 ring-red-500/50'
+                : 'bg-black/75 text-amber-300 border-amber-400/40'
+            }`}>
+              <MapPin size={10} className="text-yellow-400 shrink-0" />
+              <span>{lm.name}</span>
             </div>
+            <div className="w-0.5 h-2 bg-yellow-400/70" />
+          </div>
+        ))}
+      </div>
+
+      {/* User Claim Flag Badges Floating Overlay Layer */}
+      <div ref={claimBadgesLayerRef} className="absolute inset-0 pointer-events-none z-15 overflow-hidden">
+        {recentClaimBadges.map(b => (
+          <div
+            key={b.id}
+            ref={el => badgeRefs.current[b.id] = el}
+            className="absolute top-0 left-0 hidden flex-col items-center pointer-events-none transition-all duration-100 animate-in zoom-in-50 fade-in duration-200"
+            style={{ willChange: 'transform' }}
+          >
+            <div className="relative flex items-center gap-1.5 px-2.5 py-1 rounded-2xl bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 text-white font-black text-[11px] shadow-2xl border border-yellow-300 ring-2 ring-yellow-400/60 whitespace-nowrap">
+              <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-xs overflow-hidden border border-white/40 shrink-0">
+                {b.avatar ? (
+                  <img src={b.avatar} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                ) : (
+                  <span>👤</span>
+                )}
+              </div>
+              <div className="flex flex-col text-left leading-tight">
+                <span className="text-[10px] text-yellow-200 font-bold truncate max-w-[90px]">{b.username}</span>
+                <span className="text-[9px] text-white flex items-center gap-0.5">
+                  🇻🇳 +{b.giftCells} ô {b.multiplier > 1 && <strong className="text-yellow-300">x{b.multiplier}</strong>}
+                </span>
+              </div>
+            </div>
+            <div className="w-0.5 h-3 bg-gradient-to-b from-yellow-400 to-transparent" />
+          </div>
+        ))}
+      </div>
+
+      {/* Bookmark Notification Banner */}
+      {bookmarkNotification && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30 pointer-events-none animate-in fade-in slide-in-from-top duration-300">
+          <div className="px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-black font-black text-xs shadow-2xl border border-yellow-200 flex items-center gap-1.5">
+            <Sparkles size={13} className="text-black stroke-[2.5]" />
+            <span>{bookmarkNotification}</span>
+          </div>
+        </div>
+      )}
+
+      {/* VICTORY CELEBRATION CEREMONY / CHAMPION PODIUM */}
+      {gameState.status === 'victory' && (
+        <div className="absolute inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-40 p-4 animate-in zoom-in-95 duration-300">
+          <div className="text-center max-w-lg w-full p-5 sm:p-6 bg-gradient-to-b from-[#1c1917] to-[#0c0a09] border-2 border-yellow-500/80 rounded-3xl shadow-[0_0_60px_rgba(234,179,8,0.4)] text-white">
+            <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-gradient-to-tr from-yellow-400 via-amber-500 to-red-600 flex items-center justify-center text-3xl shadow-xl shadow-amber-500/50 animate-bounce">
+              🏆
+            </div>
+
+            <h2 className="text-xl sm:text-2xl font-black bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-200 bg-clip-text text-transparent uppercase tracking-wider mb-1">
+              BẢN ĐỒ VIỆT NAM HOÀN THÀNH!
+            </h2>
+            <p className="text-xs sm:text-sm text-yellow-200 font-bold mb-3">
+              Chúc mừng toàn thể cộng đồng đã chung tay cắm cờ thành công!
+            </p>
+
+            {/* Victory Tabs: Quán Quân Top 1 vs Bảng Vàng Top 30 */}
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <button
+                onClick={() => setVictoryTab('champion')}
+                className={`px-3 py-1 rounded-xl text-xs font-black transition-all ${
+                  victoryTab === 'champion'
+                    ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-black shadow-lg shadow-amber-500/30'
+                    : 'bg-white/10 text-gray-300 hover:text-white'
+                }`}
+              >
+                👑 QUÁN QUÂN TOP 1
+              </button>
+              <button
+                onClick={() => setVictoryTab('top30')}
+                className={`px-3 py-1 rounded-xl text-xs font-black transition-all ${
+                  victoryTab === 'top30'
+                    ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-black shadow-lg shadow-amber-500/30'
+                    : 'bg-white/10 text-gray-300 hover:text-white'
+                }`}
+              >
+                🏅 BẢNG VÀNG TOP 30 ({gameState.leaderboard?.length || 0})
+              </button>
+            </div>
+
+            {/* Tab 1: Champion Top 1 Podium */}
+            {victoryTab === 'champion' && (
+              <div className="bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 border border-yellow-400/50 rounded-2xl p-4 mb-3 text-center">
+                {gameState.leaderboard && gameState.leaderboard.length > 0 ? (
+                  <div className="flex flex-col items-center">
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-yellow-400 to-amber-600 p-0.5 shadow-lg shadow-yellow-500/40 mb-2">
+                      <div className="w-full h-full rounded-full bg-black/60 flex items-center justify-center text-xl overflow-hidden">
+                        {gameState.leaderboard[0].avatar ? (
+                          <img src={gameState.leaderboard[0].avatar} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <span>👑</span>
+                        )}
+                      </div>
+                    </div>
+                    <span className="text-base font-black text-yellow-300 uppercase tracking-wide">
+                      {gameState.leaderboard[0].username || 'Quán Quân'}
+                    </span>
+                    <span className="text-xs font-mono font-bold text-amber-200 mt-0.5">
+                      Đã cắm: {gameState.leaderboard[0].cells?.toLocaleString() || 0} lá cờ Tổ Quốc
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-400">Tất cả người chơi đều là những anh hùng đóng góp!</p>
+                )}
+              </div>
+            )}
+
+            {/* Tab 2: Top 30 Scrollable */}
+            {victoryTab === 'top30' && (
+              <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1 mb-3 custom-scrollbar">
+                {(gameState.leaderboard || []).slice(0, 30).map((user, idx) => (
+                  <div key={user.userId || idx} className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/10 text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center font-black text-[10px] ${
+                        idx === 0 ? 'bg-yellow-400 text-black' : idx === 1 ? 'bg-slate-300 text-black' : idx === 2 ? 'bg-amber-600 text-white' : 'bg-white/10 text-gray-300'
+                      }`}>
+                        {idx + 1}
+                      </span>
+                      <span className="font-bold truncate max-w-[140px] text-white">{user.username}</span>
+                    </div>
+                    <span className="font-mono font-bold text-yellow-400">{user.cells} ô</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="text-[11px] text-amber-300/80 animate-pulse">
+              🔄 Tự động bắt đầu vòng mới trong giây lát...
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  // NẾU LÀ POPOUT / OVERLAY CHO TIKTOK STUDIO / OBS $\rightarrow$ CHỈ RENDER DUY NHẤT SÂN KHẤU SẠCH 100%
+  if (isPopout) {
+    return (
+      <div 
+        className="w-full h-full relative overflow-hidden bg-[#070b14] select-none font-sans"
+        onPointerDown={handleUserGesture}
+      >
+        {renderCleanStage()}
+      </div>
+    );
+  }
+
+  // GIAO DIỆN PHẦN MỀM CHÍNH (STREAMER VIEW): TÁCH RỜI THANH QUẢN TRỊ BÊN NGOÀI KHUNG LIVE
+  return (
+    <div 
+      className={`relative w-full h-full flex flex-col font-sans select-none transition-colors duration-300 ${
+        isLightTheme ? 'bg-slate-100 text-slate-900' : 'bg-[#05070c] text-white'
+      } overflow-hidden`}
+      onPointerDown={handleUserGesture}
+    >
+      {/* 1. OUTER TOP HOST CONTROL BAR (Nằm bên ngoài khung live) */}
+      <div className={`relative z-20 flex items-center justify-between px-3 py-2 border-b shrink-0 gap-2 flex-wrap sm:flex-nowrap shadow-sm ${
+        isLightTheme ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#0d1017] border-white/10 text-white'
+      }`}>
+        {/* Left Side: Title & Status */}
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-red-600 via-amber-500 to-yellow-400 flex items-center justify-center text-sm shadow-md">
+            <span>{currentCountry?.flag || '🇻🇳'}</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xs font-black uppercase tracking-wider bg-gradient-to-r from-yellow-400 to-amber-300 bg-clip-text text-transparent">
+              {gameState.settings.customMapTitle || `${currentCountry?.name || 'Việt Nam'} ${t.title}`}
+            </span>
+            <span className="text-[10px] text-gray-400">
+              Vòng {gameState.roundId} • {gameState.percent}% ({gameState.claimedCount.toLocaleString()}/{gameState.totalCells.toLocaleString()})
+            </span>
+          </div>
+        </div>
+
+        {/* Right Side: Host Management Controls */}
+        <div className="flex items-center gap-1.5 flex-wrap justify-end">
+          {/* Nút Chuyển Tỷ Lệ Khung Hình: 9:16 (TikTok Dọc) vs 16:9 (OBS Ngang) */}
+          <button
+            onClick={handleToggleAspectRatio}
+            className={`px-2.5 py-1.5 rounded-lg text-xs font-black transition-all border flex items-center gap-1 shadow-sm ${
+              aspectRatio === '9:16'
+                ? 'bg-gradient-to-r from-pink-600 via-rose-500 to-amber-500 text-white border-pink-300 ring-2 ring-pink-400/50 shadow-pink-500/30'
+                : isLightTheme
+                ? 'bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300'
+                : 'bg-white/10 hover:bg-white/20 text-cyan-300 border-white/10'
+            }`}
+            title={aspectRatio === '9:16' ? "Đang ở Khung Hình 9:16 (Chuẩn TikTok Live Dọc) — Bấm chuyển sang 16:9 (Ngang OBS/PC)" : "Đang ở Khung Hình 16:9 (Ngang OBS/PC) — Bấm chuyển sang 9:16 (Chuẩn TikTok Live Dọc)"}
+          >
+            <Smartphone size={13} className={aspectRatio === '9:16' ? 'text-yellow-300' : 'text-cyan-300'} />
+            <span>{aspectRatio === '9:16' ? '📱 9:16 TikTok' : '🖥️ 16:9 OBS'}</span>
+          </button>
+
+          {/* Nút Mở Nhạc Nền 24/24 */}
+          <div className="flex items-center rounded-lg border border-purple-500/40 bg-purple-950/40 p-0.5 shadow-sm">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                bandoAudio.ensureContext();
+                const playing = bandoAudio.toggleBgm();
+                setIsBgmPlaying(playing);
+              }}
+              className={`px-2 py-1 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${
+                isBgmPlaying
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/30'
+                  : 'text-purple-300 hover:text-white hover:bg-white/10'
+              }`}
+              title={isBgmPlaying ? `Nhạc nền đang PHÁT — Bấm để TẠM DỪNG` : "Bấm để MỞ NHẠC NỀN ngay"}
+            >
+              <Music size={12} className={isBgmPlaying ? 'text-yellow-300 fill-yellow-300 animate-pulse' : 'text-gray-400'} />
+              <span>{isBgmPlaying ? `Nhạc ${bgmTimerMode}` : 'Mở Nhạc'}</span>
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowAudioModal(true);
+              }}
+              className="p-1 rounded-md text-purple-300 hover:text-white hover:bg-purple-800/50 transition-all border-l border-purple-400/20"
+              title="Cài Đặt Nhạc Nền 24/24 & Hẹn Giờ"
+            >
+              <Sliders size={12} />
+            </button>
+          </div>
+
+          {/* Nút Auto 24/7 */}
+          <button
+            onClick={() => {
+              bandoEngine.toggleAuto247();
+              setIsAuto247(bandoEngine.isAuto247Running);
+            }}
+            className={`px-2.5 py-1.5 rounded-lg text-xs font-black transition-all border flex items-center gap-1 shadow-md ${
+              isAuto247
+                ? 'bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 text-white border-emerald-300 ring-2 ring-emerald-400 animate-pulse shadow-emerald-500/40'
+                : isLightTheme
+                ? 'bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300'
+                : 'bg-white/10 hover:bg-white/20 text-yellow-300 border-white/10'
+            }`}
+            title="Bật/Tắt Tự Động 24/24"
+          >
+            <Zap size={12} className={isAuto247 ? 'text-yellow-300 fill-yellow-300 animate-bounce' : 'text-yellow-400'} />
+            <span>{isAuto247 ? '⚡ 24/7: BẬT' : '⚡ Auto 24/7'}</span>
+          </button>
+
+          {/* Sáng / Tối */}
+          <button
+            onClick={() => {
+              const nextTheme = gameState.settings?.theme === 'light' ? 'dark' : 'light';
+              bandoEngine.setTheme(nextTheme);
+            }}
+            className={`p-1.5 rounded-lg text-xs font-bold transition-all border flex items-center gap-1 ${
+              isLightTheme ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-indigo-950/70 text-indigo-200 border-indigo-500/40'
+            }`}
+            title={isLightTheme ? "Chuyển sang Nền Tối" : "Chuyển sang Nền Sáng"}
+          >
+            {isLightTheme ? <Sun size={13} className="text-amber-600" /> : <Moon size={13} className="text-indigo-400" />}
+          </button>
+
+          {/* 3D / 2D */}
+          <button
+            onClick={() => setViewMode3D(!viewMode3D)}
+            className="px-2 py-1.5 rounded-lg text-xs font-bold border transition-colors flex items-center gap-1 bg-white/10 hover:bg-white/20 text-gray-200 border-white/10"
+            title={viewMode3D ? "Chuyển sang 2D" : "Chuyển sang 3D"}
+          >
+            <Layers size={13} />
+            <span>{viewMode3D ? '3D' : '2D'}</span>
+          </button>
+
+          {/* Xoay / Tĩnh */}
+          <button
+            onClick={handleToggleAutoRotate}
+            className={`p-1.5 rounded-lg text-xs font-bold transition-all border flex items-center gap-1 ${
+              autoRotate ? 'bg-emerald-600 text-white border-emerald-400' : 'bg-white/10 text-gray-300 border-white/10'
+            }`}
+            title={autoRotate ? "Bản đồ đang xoay — Bấm để Đứng yên" : "Bấm để Tự động xoay"}
+          >
+            <RefreshCw size={13} className={autoRotate ? 'animate-spin' : ''} />
+            <span>{autoRotate ? 'Xoay' : 'Tĩnh'}</span>
+          </button>
+
+          {/* Bảng Bên Hông */}
+          <button
+            onClick={() => setShowSidePanels(!showSidePanels)}
+            className={`p-1.5 rounded-lg text-xs font-bold transition-all border ${
+              showSidePanels ? 'bg-white/10 text-gray-200 border-white/10' : 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40'
+            }`}
+            title={showSidePanels ? "Ẩn bảng bên hông" : "Hiện bảng bên hông"}
+          >
+            {showSidePanels ? <Eye size={13} /> : <EyeOff size={13} />}
+          </button>
+
+          {/* Toàn Cảnh */}
+          <button
+            onClick={handleResetOverview}
+            className={`px-2 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+              activeBookmarkId === 'overview'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'bg-white/10 hover:bg-white/20 text-gray-200'
+            }`}
+            title="Quay về góc nhìn Toàn Cảnh"
+          >
+            <span>🏠 Toàn Cảnh</span>
+          </button>
+
+          {/* Ghim & Vị trí Camera */}
+          {customBookmarks.slice(0, 3).map((bm) => (
+            <button
+              key={bm.id}
+              onClick={() => handleApplyBookmark(bm)}
+              className={`px-2 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                activeBookmarkId === bm.id
+                  ? 'bg-gradient-to-r from-red-600 to-yellow-500 text-white shadow-md font-black border border-yellow-300'
+                  : 'bg-white/5 hover:bg-white/15 text-gray-300'
+              }`}
+              title={bm.name}
+            >
+              <span>{bm.icon || '📍'}</span>
+              <span>{bm.shortName || bm.name}</span>
+            </button>
+          ))}
+
+          <button
+            onClick={() => setShowBookmarkManager(prev => !prev)}
+            className="p-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition-all"
+            title="Ghim / Quản lý vị trí camera"
+          >
+            <BookmarkPlus size={13} />
+          </button>
+
+          {/* Admin Modal Shortcut */}
+          {onOpenAdmin && (
+            <button
+              onClick={onOpenAdmin}
+              className="px-2.5 py-1.5 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/40 text-xs font-black flex items-center gap-1 transition-all"
+              title="Mở Bảng Quản trị Admin"
+            >
+              <Settings size={13} />
+              <span>Admin</span>
+            </button>
           )}
         </div>
       </div>
 
-      {/* 2. MAIN 3D / 2D MAP STAGE */}
-      <div className="relative flex-1 w-full h-full overflow-hidden">
-        {viewMode3D ? (
-          <div ref={containerRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
-        ) : (
-          <canvas 
-            ref={canvas2dRef} 
-            className="w-full h-full cursor-move"
-            onMouseDown={handleMouseDown2D}
-            onMouseMove={handleMouseMove2D}
-            onMouseUp={handleMouseUp2D}
-            onWheel={handleWheel2D}
-          />
-        )}
-
-        {/* TRUE 3D-ANCHORED LANDMARK LABELS LAYER */}
-        {gameState.settings.showMapTexts && (
-          <div ref={labelsLayerRef} className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
-            {gameState.mapTexts?.map((item) => (
-              <div
-                key={item.id}
-                ref={(el) => { labelRefs.current[item.id] = el; }}
-                style={{
-                  position: 'absolute',
-                  left: 0,
-                  top: 0,
-                  display: 'none',
-                  color: item.color || '#facc15',
-                }}
-                className={`tracking-wide whitespace-nowrap select-none pointer-events-none transition-all duration-150 ${
-                  (item.id?.includes('cap') || item.text?.includes('THỦ ĐÔ'))
-                    ? 'font-black text-[12px] px-3.5 py-1 rounded-full bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 text-black border-2 border-yellow-100 shadow-[0_0_22px_rgba(250,204,21,0.9)] ring-2 ring-yellow-500/60 flex items-center gap-1.5'
-                    : item.glow 
-                      ? 'font-black text-xs drop-shadow-[0_0_14px_rgba(250,204,21,0.95)] px-2.5 py-1 rounded-full bg-black/80 border border-yellow-400/90 text-yellow-300 backdrop-blur-sm shadow-xl' 
-                      : 'font-bold text-xs drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] px-2.5 py-0.5 rounded-lg bg-black/65 backdrop-blur-xs border border-white/20 text-gray-100'
-                }`}
-              >
-                {item.text}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* INDEPENDENT 3D-ANCHORED NATIONAL FLAG & USER CLAIM BADGES LAYER (THU NHỎ 30% TINH TẾ) */}
-        <div ref={claimBadgesLayerRef} className="absolute inset-0 pointer-events-none z-20 overflow-hidden">
-          {recentClaimBadges.map((badge) => (
-            <div
-              key={badge.id}
-              ref={(el) => { badgeRefs.current[badge.id] = el; }}
-              style={{
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                display: 'none',
-              }}
-              className="flex flex-col items-center pointer-events-none select-none drop-shadow-xl animate-in zoom-in duration-200"
-            >
-              {/* 1. TOP FLOATING BADGE (Avatar + Flag + TikTok ID + Claim Count) - ULTRA COMPACT & ELEGANT */}
-              <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg bg-black/90 border border-yellow-400/80 shadow-[0_0_10px_rgba(250,204,21,0.55)] backdrop-blur-md">
-                {/* National Flag & Mini Avatar */}
-                <div className="relative flex-shrink-0">
-                  {badge.avatar ? (
-                    <img 
-                      src={badge.avatar} 
-                      alt="Avatar" 
-                      className="w-4 h-4 rounded-full border border-yellow-300 object-cover shadow-sm" 
-                    />
-                  ) : (
-                    <div className="w-4 h-4 rounded-full bg-red-600 border border-yellow-300 flex items-center justify-center text-[8px] shadow-sm">
-                      {badge.flag || '🇻🇳'}
-                    </div>
-                  )}
-                  <span className="absolute -bottom-0.5 -right-0.5 text-[7px] select-none">
-                    {badge.flag || '🇻🇳'}
-                  </span>
-                </div>
-
-                {/* User Info & TikTok ID - Nhỏ gọn, thanh thoát */}
-                <div className="flex items-center gap-1 leading-none">
-                  <span className="text-[8.5px] font-bold text-yellow-300 font-mono tracking-tight max-w-[75px] truncate">
-                    {badge.userId.startsWith('@') ? badge.userId : `@${badge.userId}`}
-                  </span>
-                </div>
-
-                {/* Claim Count Badge Mini */}
-                <div className="px-1 py-0.5 rounded bg-red-600/90 text-white font-bold text-[7.5px] font-mono shadow-xs flex items-center gap-0.5">
-                  <Flag size={6} className="fill-white" />
-                  <span>+{badge.count}</span>
-                </div>
-              </div>
-
-              {/* 2. 3D PIN POLE LINE CONNECTING BADGE TO 3D MAP CELL */}
-              <div className="flex flex-col items-center">
-                <div className="w-0.5 h-2.5 bg-gradient-to-b from-yellow-400 via-yellow-500 to-transparent" />
-                <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 border border-white shadow-[0_0_6px_#facc15]" />
-              </div>
-            </div>
-          ))}
+      {/* 2. CENTER LIVE STAGE VIEWPORT (Khung hình Live Sạch 100%) */}
+      <div className="flex-1 w-full h-full flex items-center justify-center p-2 sm:p-3 overflow-hidden bg-[#04060a]">
+        <div 
+          className={`relative flex flex-col overflow-hidden transition-all duration-300 ${
+            aspectRatio === '9:16'
+              ? 'w-full max-w-[440px] h-full max-h-[860px] aspect-[9/16] rounded-2xl md:rounded-3xl border border-yellow-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-[#070b14]'
+              : 'w-full max-w-[1200px] h-auto max-h-full aspect-[16/9] rounded-2xl border border-yellow-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-[#070b14]'
+          }`}
+        >
+          {/* SÂN KHẤU LIVE SẠCH NẰM Ở ĐÂY (Canvas + Top mini stage + Victory + Side panels) */}
+          {renderCleanStage()}
         </div>
-
-        {/* FLOATING MULTI-DIRECTIONAL D-PAD & PAN/ZOOM NAVIGATION CONTROLLER */}
-        {!isPopout && !isLiveCleanMode && (
-          <>
-            <div className={`absolute bottom-4 left-4 z-20 flex items-center gap-2 p-2 backdrop-blur-md border rounded-2xl shadow-2xl transition-colors ${
-              isLightTheme ? 'bg-white/90 border-slate-300 shadow-xl' : 'bg-black/75 border-white/15'
-            }`}>
-              {/* Zoom Buttons with Macro Ultra Close-up View */}
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => viewMode3D ? handleZoom3D(0.80) : setZoom2D(z => Math.min(4.0, z * 1.25))}
-                  className={`p-2 rounded-xl border transition-all active:scale-95 shadow-sm ${
-                    isLightTheme 
-                      ? 'bg-slate-100 hover:bg-slate-200 text-amber-600 border-slate-300' 
-                      : 'bg-white/10 hover:bg-white/20 text-yellow-300 hover:text-white border-white/10'
-                  }`}
-                  title="Phóng to (+)"
-                >
-                  <ZoomIn size={15} />
-                </button>
-                <button
-                  onClick={() => viewMode3D ? handleZoom3D(1.25) : setZoom2D(z => Math.max(0.5, z * 0.80))}
-                  className={`p-2 rounded-xl border transition-all active:scale-95 shadow-sm ${
-                    isLightTheme 
-                      ? 'bg-slate-100 hover:bg-slate-200 text-amber-600 border-slate-300' 
-                      : 'bg-white/10 hover:bg-white/20 text-yellow-300 hover:text-white border-white/10'
-                  }`}
-                  title="Thu nhỏ (-)"
-                >
-                  <ZoomOut size={15} />
-                </button>
-                <button
-                  onClick={() => {
-                    if (viewMode3D) {
-                      applyCameraPreset('macro');
-                    } else {
-                      setZoom2D(3.5);
-                    }
-                    notifyBookmark('🔍 Chế độ Zoom Siêu Cận Cảnh: Soi rõ nét từng ô cờ 3D');
-                  }}
-                  className="px-2 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-black text-[11px] shadow-md border border-yellow-300 transition-all active:scale-95 flex items-center gap-1"
-                  title="Zoom Siêu Cận Cảnh Soi Từng Ô Lá Cờ"
-                >
-                  <Search size={12} className="stroke-[2.5]" />
-                  <span>Cận Cảnh</span>
-                </button>
-              </div>
-
-              <div className={`w-[1px] h-6 mx-1 ${isLightTheme ? 'bg-slate-300' : 'bg-white/20'}`} />
-
-              {/* Mouse Mode Toggle: Pan vs Orbit */}
-              <button
-                onClick={() => setIsPanMode(!isPanMode)}
-                className={`px-2 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1 shadow-sm ${
-                  isPanMode
-                    ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white border-blue-400 shadow-md shadow-blue-500/30'
-                    : isLightTheme
-                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
-                    : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
-                }`}
-                title={isPanMode ? "Đang ở Chế độ Kéo Lướt Bản Đồ (Chuột trái kéo) — Bấm để đổi sang Xoay 3D" : "Đang ở Chế độ Xoay 3D — Bấm để đổi sang Kéo Lướt Bản Đồ"}
-              >
-                {isPanMode ? <Move size={13} /> : <Compass size={13} />}
-                <span>{isPanMode ? '🖐️ Kéo' : '🔄 Xoay'}</span>
-              </button>
-
-              <div className={`w-[1px] h-6 mx-1 ${isLightTheme ? 'bg-slate-300' : 'bg-white/20'}`} />
-
-              {/* D-Pad Pan Directions */}
-              <div className="grid grid-cols-3 gap-1">
-                <div />
-                <button
-                  onClick={() => viewMode3D ? handlePan3D(0, -1) : setPan2D(p => ({ ...p, y: p.y + 40 }))}
-                  className={`p-1.5 rounded-lg border transition-all active:scale-90 ${
-                    isLightTheme ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300' : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
-                  }`}
-                  title="Kéo Lên Trên"
-                >
-                  <ArrowUp size={13} />
-                </button>
-                <div />
-
-                <button
-                  onClick={() => viewMode3D ? handlePan3D(-1, 0) : setPan2D(p => ({ ...p, x: p.x + 40 }))}
-                  className={`p-1.5 rounded-lg border transition-all active:scale-90 ${
-                    isLightTheme ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300' : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
-                  }`}
-                  title="Kéo Sang Trái"
-                >
-                  <ArrowLeft size={13} />
-                </button>
-                <button
-                  onClick={handleResetCamera}
-                  className="p-1.5 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 border border-yellow-500/40 transition-all active:scale-90 text-[10px] font-black"
-                  title="Đặt Lại Góc Nhìn Mặc Định"
-                >
-                  🎯
-                </button>
-                <button
-                  onClick={() => viewMode3D ? handlePan3D(1, 0) : setPan2D(p => ({ ...p, x: p.x - 40 }))}
-                  className={`p-1.5 rounded-lg border transition-all active:scale-90 ${
-                    isLightTheme ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300' : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
-                  }`}
-                  title="Kéo Sang Phải"
-                >
-                  <ArrowRight size={13} />
-                </button>
-
-                <div />
-                <button
-                  onClick={() => viewMode3D ? handlePan3D(0, 1) : setPan2D(p => ({ ...p, y: p.y - 40 }))}
-                  className={`p-1.5 rounded-lg border transition-all active:scale-90 ${
-                    isLightTheme ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300' : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
-                  }`}
-                  title="Kéo Xuống Dưới"
-                >
-                  <ArrowDown size={13} />
-                </button>
-                <div />
-              </div>
-            </div>
-
-            {/* FLOATING CUSTOM CAMERA BOOKMARKS & PRESET SLOTS TOOLBAR */}
-            <div className={`absolute bottom-4 right-4 z-30 flex flex-wrap items-center gap-1.5 p-1.5 backdrop-blur-md border rounded-2xl shadow-2xl transition-colors ${
-              isLightTheme ? 'bg-white/90 border-slate-300' : 'bg-black/80 border-white/15'
-            }`}>
-              {/* 1. Toàn Cảnh Reset Button */}
-              <button
-                onClick={handleResetOverview}
-                className={`px-3 py-1.5 rounded-xl text-[11px] font-black transition-all flex items-center gap-1.5 ${
-                  activeBookmarkId === 'overview'
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-105 border border-cyan-300'
-                    : isLightTheme
-                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200'
-                    : 'bg-white/10 hover:bg-white/20 text-gray-200'
-                }`}
-                title="Quay về góc nhìn Toàn Cảnh Ban Đầu"
-              >
-                <span>🏠</span>
-                <span>Toàn Cảnh</span>
-              </button>
-
-              <div className="w-[1px] h-5 bg-white/20 mx-0.5" />
-
-              {/* 2. Custom Bookmark Slots (Slot 1, Slot 2, Slot 3...) */}
-              {customBookmarks.map((bm) => (
-                <button
-                  key={bm.id}
-                  onClick={() => handleApplyBookmark(bm)}
-                  className={`px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 ${
-                    activeBookmarkId === bm.id
-                      ? 'bg-gradient-to-r from-red-600 via-amber-600 to-yellow-500 text-white shadow-lg shadow-red-500/40 scale-105 border border-yellow-300 font-black'
-                      : isLightTheme
-                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
-                      : 'bg-white/5 hover:bg-white/15 text-gray-300 hover:text-white'
-                  }`}
-                  title={`Chuyển đến: ${bm.name} (Bấm để nhảy tới)`}
-                >
-                  <span>{bm.icon || '📍'}</span>
-                  <span>{bm.shortName || bm.name}</span>
-                </button>
-              ))}
-
-              <div className="w-[1px] h-5 bg-white/20 mx-0.5" />
-
-              {/* 3. Nút Ghim & Cài Đặt Vị Trí Modal Trigger */}
-              <button
-                onClick={() => setShowBookmarkManager(prev => !prev)}
-                className="px-3 py-1.5 rounded-xl text-[11px] font-black bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 shadow-lg shadow-amber-500/30 flex items-center gap-1.5 transition-all active:scale-95 border border-yellow-200"
-                title="Ghim góc nhìn hiện tại hoặc Tùy chỉnh danh sách vị trí camera"
-              >
-                <BookmarkPlus size={13} className="text-black" />
-                <span>Ghim / Cài Đặt Vị Trí</span>
-              </button>
-            </div>
-          </>
-        )}
-
-        {/* NOTIFICATION TOAST FOR CAMERA BOOKMARK ACTIONS */}
-        {bookmarkNotification && (
-          <div className="absolute bottom-16 right-4 z-40 px-4 py-2 rounded-xl bg-slate-900/95 border-2 border-yellow-400 text-yellow-300 text-xs font-black shadow-2xl backdrop-blur-md flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-150">
-            <Sparkles size={14} className="text-yellow-400 animate-spin" />
-            <span>{bookmarkNotification}</span>
-          </div>
-        )}
-
-        {/* INTERACTIVE CUSTOM CAMERA BOOKMARKS MANAGEMENT MODAL */}
-        {showBookmarkManager && (
-          <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
-            <div className="w-full max-w-lg bg-gradient-to-b from-slate-900 via-neutral-900 to-black border-2 border-yellow-500/60 rounded-3xl p-5 shadow-2xl text-white relative">
-              {/* Header */}
-              <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 rounded-xl bg-yellow-500/20 border border-yellow-400/40 text-yellow-400">
-                    <Bookmark size={18} />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-black text-yellow-300 uppercase tracking-wide">Cài Đặt & Ghim Vị Trí Camera</h3>
-                    <p className="text-[11px] text-gray-400">Lưu góc nhìn 3D zoom mặc định để chuyển đổi nhanh 1 chạm</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowBookmarkManager(false)}
-                  className="p-1.5 rounded-xl hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-
-              {/* Tips & Instruction Banner */}
-              <div className="p-3 rounded-2xl bg-yellow-500/10 border border-yellow-500/30 mb-4 text-[11px] text-yellow-200/90 leading-relaxed flex items-start gap-2">
-                <Sparkles size={16} className="text-yellow-400 flex-shrink-0 mt-0.5" />
-                <span>
-                  💡 <strong>Cách sử dụng:</strong> Bạn tự do dùng chuột kéo, xoay, phóng to/thu nhỏ camera tới bất kỳ tỉnh thành hay vùng bản đồ nào. Sau đó bấm nút <strong>[💾 Ghim góc này]</strong> ở vị trí mong muốn hoặc bấm <strong>[➕ Thêm vị trí mới]</strong> để lưu lại vĩnh viễn!
-                </span>
-              </div>
-
-              {/* Bookmark Slots List */}
-              <div className="space-y-2.5 max-h-64 overflow-y-auto custom-scrollbar pr-1 mb-4">
-                {customBookmarks.map((bm) => (
-                  <div
-                    key={bm.id}
-                    className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:border-yellow-400/40 transition-all flex items-center justify-between gap-2"
-                  >
-                    <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                      <span className="text-lg select-none">{bm.icon || '📍'}</span>
-                      <div className="flex-1 min-w-0">
-                        {editingBookmarkId === bm.id ? (
-                          <div className="flex items-center gap-1.5">
-                            <input
-                              type="text"
-                              value={editingBookmarkName}
-                              onChange={(e) => setEditingBookmarkName(e.target.value)}
-                              className="px-2 py-1 text-xs rounded-lg bg-black/60 border border-yellow-400 text-white w-full font-bold focus:outline-none"
-                              placeholder="Nhập tên vị trí..."
-                              autoFocus
-                            />
-                            <button
-                              onClick={() => handleRenameBookmark(bm.id, editingBookmarkName)}
-                              className="p-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white"
-                              title="Lưu tên"
-                            >
-                              <Check size={13} />
-                            </button>
-                            <button
-                              onClick={() => setEditingBookmarkId(null)}
-                              className="p-1 rounded-lg bg-gray-700 hover:bg-gray-600 text-white"
-                              title="Hủy"
-                            >
-                              <X size={13} />
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-gray-100 truncate">{bm.name}</span>
-                            <button
-                              onClick={() => {
-                                setEditingBookmarkId(bm.id);
-                                setEditingBookmarkName(bm.name);
-                              }}
-                              className="text-gray-400 hover:text-yellow-300 transition-colors p-0.5"
-                              title="Đổi tên vị trí"
-                            >
-                              <Edit2 size={11} />
-                            </button>
-                          </div>
-                        )}
-                        <span className="text-[10px] text-gray-400 font-mono block">
-                          Tọa độ: [{bm.pos?.[0]}, {bm.pos?.[1]}, {bm.pos?.[2]}]
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Actions on this Slot */}
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      {/* Fly To Button */}
-                      <button
-                        onClick={() => {
-                          handleApplyBookmark(bm);
-                          setShowBookmarkManager(false);
-                        }}
-                        className="px-2.5 py-1 rounded-xl text-[10px] font-bold bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-1 shadow-sm transition-all"
-                        title="Bay camera tới vị trí này"
-                      >
-                        <Crosshair size={11} />
-                        <span>Xem</span>
-                      </button>
-
-                      {/* Ghim Góc Nhìn Hiện Tại Vào Đây */}
-                      <button
-                        onClick={() => handleSaveCurrentViewToSlot(bm.id)}
-                        className="px-2.5 py-1 rounded-xl text-[10px] font-bold bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-1 shadow-sm transition-all"
-                        title="Lấy góc camera & độ zoom bạn đang nhìn hiện tại ghim vào vị trí này"
-                      >
-                        <Save size={11} />
-                        <span>Ghim góc này</span>
-                      </button>
-
-                      {/* Delete Slot (if > 1) */}
-                      {customBookmarks.length > 1 && (
-                        <button
-                          onClick={() => handleDeleteBookmark(bm.id)}
-                          className="p-1.5 rounded-xl hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors"
-                          title="Xóa vị trí này"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Bottom Global Actions */}
-              <div className="flex items-center justify-between pt-3 border-t border-white/10 gap-2">
-                <button
-                  onClick={handleRestoreDefaultBookmarks}
-                  className="px-3 py-1.5 rounded-xl text-xs font-bold text-gray-400 hover:text-white hover:bg-white/10 transition-colors flex items-center gap-1.5"
-                >
-                  <RefreshCw size={13} />
-                  <span>Khôi phục 3 mặc định</span>
-                </button>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleAddNewBookmarkFromCurrentView}
-                    className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-slate-950 shadow-md flex items-center gap-1.5 transition-all active:scale-95"
-                  >
-                    <Plus size={14} />
-                    <span>➕ Thêm vị trí mới</span>
-                  </button>
-
-                  <button
-                    onClick={() => setShowBookmarkManager(false)}
-                    className="px-4 py-1.5 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white transition-colors"
-                  >
-                    Đóng
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* LEFT HUD: Boss Event & Urgent Mission & Live Feed (Collapsible) */}
-        {showSidePanels && (
-          <div className={`absolute z-10 flex flex-col gap-2 pointer-events-none animate-in fade-in duration-200 ${
-            aspectRatio === '9:16' ? 'top-2 left-2 max-w-[145px]' : 'top-4 left-4 max-w-[280px]'
-          }`}>
-            {/* Boss Banner */}
-            {gameState.boss.active && (
-              <div className="pointer-events-auto bg-gradient-to-r from-red-950/90 via-purple-950/90 to-black/90 border-2 border-red-500/80 rounded-xl p-2 sm:p-3 shadow-2xl backdrop-blur-md animate-pulse">
-                <div className="flex items-center justify-between text-[10px] sm:text-xs font-black text-red-400 mb-1">
-                  <span className="truncate">{gameState.boss.name}</span>
-                  <span className="font-mono text-yellow-300">{gameState.boss.remainingSec}s</span>
-                </div>
-                <p className="text-[9px] sm:text-[10px] text-gray-300 mb-1.5 truncate">Thưởng: {gameState.boss.reward}</p>
-                <div className="w-full h-1.5 sm:h-2 bg-black/60 rounded-full overflow-hidden border border-red-500/40">
-                  <div 
-                    className="h-full bg-red-600 transition-all duration-300"
-                    style={{ width: `${Math.min(100, (gameState.boss.currentCells / gameState.boss.targetCells) * 100)}%` }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Active Mission Banner */}
-            {gameState.activeMission && (
-              <div className="pointer-events-auto bg-blue-950/80 border border-blue-400/60 rounded-xl p-2 sm:p-2.5 shadow-xl backdrop-blur-md">
-                <div className="text-[10px] sm:text-[11px] font-black text-blue-300 flex items-center gap-1 mb-0.5 truncate">
-                  <Zap size={11} className="text-yellow-400 animate-spin shrink-0" />
-                  <span className="truncate">{gameState.activeMission.title}</span>
-                </div>
-                <div className="text-[9px] sm:text-[10px] text-gray-400 truncate">Thưởng: <span className="text-emerald-400 font-bold">{gameState.activeMission.reward}</span></div>
-              </div>
-            )}
-
-            {/* Real-time Live Activity Feed */}
-            <div className="pointer-events-auto bg-black/65 border border-white/10 rounded-2xl p-2 sm:p-2.5 shadow-xl backdrop-blur-md max-h-40 sm:max-h-48 overflow-y-auto custom-scrollbar">
-              <div className="text-[9px] sm:text-[10px] font-bold text-gray-300 uppercase tracking-wider mb-1 flex items-center gap-1">
-                <Sparkles size={10} className="text-yellow-400 shrink-0" /> <span className="truncate">Hoạt động cắm cờ</span>
-              </div>
-              <div className="space-y-1">
-                {gameState.feed.slice(0, 6).map(item => (
-                  <div key={item.id} className="text-[10px] sm:text-[11px] text-gray-200 leading-tight bg-white/5 p-1 rounded-lg border border-white/5 animate-in fade-in">
-                    <span className="text-[8px] sm:text-[9px] text-gray-400 font-mono mr-1">[{item.time}]</span>
-                    <span className="break-words">{item.text}</span>
-                  </div>
-                ))}
-                {gameState.feed.length === 0 && (
-                  <div className="text-[10px] text-gray-500 italic">Chưa có lượt tặng quà...</div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* RIGHT HUD: Leaderboard Top Đại Gia (Collapsible) */}
-        {showSidePanels && (
-          <div className={`absolute z-10 pointer-events-none animate-in fade-in duration-200 ${
-            aspectRatio === '9:16' ? 'top-2 right-2 w-36' : 'top-4 right-4 w-64'
-          }`}>
-            <div className="pointer-events-auto bg-black/70 border border-white/10 rounded-2xl p-2 sm:p-3 shadow-2xl backdrop-blur-md">
-              <div className="flex items-center justify-between pb-1.5 border-b border-white/10 mb-1.5">
-                <div className="flex items-center gap-1 text-[10px] sm:text-xs font-black text-yellow-400 truncate">
-                  <Trophy size={12} className="text-yellow-400 shrink-0" />
-                  <span className="truncate">BẢNG VÀNG</span>
-                </div>
-                <span className="text-[9px] px-1 py-0.2 rounded bg-yellow-400/20 text-yellow-300 font-mono font-bold shrink-0">
-                  TOP {gameState.leaderboard.length}
-                </span>
-              </div>
-
-              <div className="space-y-1.5 max-h-56 overflow-y-auto custom-scrollbar">
-                {gameState.leaderboard.slice(0, 8).map((user, idx) => (
-                  <div 
-                    key={user.userId} 
-                    className={`flex items-center justify-between p-1.5 rounded-lg border text-xs ${
-                      idx === 0 
-                        ? 'bg-yellow-500/20 border-yellow-500/40 text-yellow-200' 
-                        : idx === 1 
-                        ? 'bg-slate-400/20 border-slate-400/40 text-gray-200' 
-                        : idx === 2 
-                        ? 'bg-amber-700/20 border-amber-700/40 text-amber-300' 
-                        : 'bg-white/5 border-white/5 text-gray-300'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 overflow-hidden">
-                      <span className="w-5 text-center font-black font-mono text-[11px]">
-                        {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`}
-                      </span>
-                      <span className="font-bold truncate text-[11px]">{user.username}</span>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <div className="font-black font-mono text-yellow-400 text-[11px]">+{user.totalCells.toLocaleString()} ô</div>
-                    </div>
-                  </div>
-                ))}
-                {gameState.leaderboard.length === 0 && (
-                  <div className="text-center py-4 text-xs text-gray-500 italic">Chưa có ai trong bảng xếp hạng</div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* SIÊU LỄ VINH DANH CHIẾN THẮNG & BẢNG VÀNG TOP 30 / TOP 1 (GRAND VICTORY CEREMONY) */}
-        {gameState.status === 'victory' && (
-          <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/85 backdrop-blur-xl animate-in fade-in zoom-in duration-300 p-4 overflow-y-auto custom-scrollbar">
-            {/* Background Fireworks & Star Sparkles Effect */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-              <div className="absolute top-10 left-10 text-4xl animate-ping opacity-75">🎆</div>
-              <div className="absolute top-20 right-16 text-5xl animate-bounce opacity-80">✨</div>
-              <div className="absolute bottom-20 left-20 text-4xl animate-pulse opacity-75">🎇</div>
-              <div className="absolute bottom-16 right-24 text-5xl animate-ping opacity-80">🎆</div>
-              <div className="absolute top-1/2 left-8 text-3xl animate-bounce opacity-70">⭐</div>
-              <div className="absolute top-1/3 right-12 text-4xl animate-pulse opacity-70">✨</div>
-            </div>
-
-            <div className="relative max-w-2xl w-full bg-gradient-to-b from-red-950/95 via-slate-900/95 to-black border-2 border-yellow-400 rounded-3xl p-5 sm:p-7 shadow-[0_0_60px_rgba(234,179,8,0.35)] text-center my-auto">
-              {/* Header Title */}
-              <div className="flex items-center justify-center gap-2 text-3xl sm:text-4xl mb-1">
-                <span className="animate-bounce">🏆</span>
-                <span className="text-yellow-400 font-black tracking-widest uppercase drop-shadow-[0_0_20px_rgba(234,179,8,0.9)] text-xl sm:text-2xl">
-                  KHẢI HOÀN CA ĐẠI THẮNG
-                </span>
-                <span className="animate-bounce">🏆</span>
-              </div>
-              <p className="text-xs sm:text-sm text-gray-200 mb-4 font-medium">
-                Toàn bộ non sông và hải đảo của <strong className="text-yellow-300">{gameState.settings.customMapTitle}</strong> đã rực rỡ sắc cờ Quốc Kỳ!
-              </p>
-
-              {/* Navigation Tabs: TOP 1 QUÁN QUÂN vs BẢNG VÀNG TOP 30 */}
-              <div className="flex items-center justify-center gap-2 mb-4 bg-black/50 p-1.5 rounded-2xl border border-white/10 max-w-md mx-auto">
-                <button
-                  onClick={() => setVictoryTab('champion')}
-                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-                    victoryTab === 'champion'
-                      ? 'bg-gradient-to-r from-yellow-500 to-amber-600 text-black shadow-lg shadow-yellow-500/30'
-                      : 'text-gray-300 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <Crown size={15} className={victoryTab === 'champion' ? 'text-black' : 'text-yellow-400'} />
-                  <span>👑 Top 1 Quán Quân</span>
-                </button>
-
-                <button
-                  onClick={() => setVictoryTab('top30')}
-                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-                    victoryTab === 'top30'
-                      ? 'bg-gradient-to-r from-yellow-500 to-amber-600 text-black shadow-lg shadow-yellow-500/30'
-                      : 'text-gray-300 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <Medal size={15} className={victoryTab === 'top30' ? 'text-black' : 'text-yellow-400'} />
-                  <span>📜 Bảng Vàng TOP 30 ({gameState.victory?.top30?.length || 0})</span>
-                </button>
-              </div>
-
-              {/* TAB 1: VINH DANH TOP 1 CHIẾN THẦN QUỐC GIA (GRAND TOP 1 CEREMONY) */}
-              {victoryTab === 'champion' && (
-                <div className="bg-white/5 border border-yellow-400/40 rounded-2xl p-4 sm:p-5 mb-4 animate-in zoom-in-95 duration-200">
-                  {/* Giant Glowing Crown */}
-                  <div className="relative inline-block mb-2">
-                    <Crown size={42} className="text-yellow-300 fill-yellow-400 drop-shadow-[0_0_25px_rgba(250,204,21,1)] animate-bounce mx-auto" />
-                    
-                    {/* Champion Avatar with Rotating Golden Aura */}
-                    <div className="relative w-20 h-20 sm:w-24 sm:h-24 mx-auto mt-1 rounded-full p-1 bg-gradient-to-tr from-yellow-400 via-amber-300 to-red-500 shadow-[0_0_35px_rgba(234,179,8,0.7)] animate-pulse">
-                      <img
-                        src={gameState.victory?.top1Champion?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120'}
-                        alt="MVP Champion"
-                        className="w-full h-full rounded-full object-cover border-2 border-yellow-200"
-                      />
-                      <span className="absolute -bottom-1 -right-1 text-xl sm:text-2xl drop-shadow-md">
-                        🥇
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* MVP Title & Name */}
-                  <div className="mb-3">
-                    <span className="inline-block px-3 py-0.5 rounded-full bg-yellow-400/20 border border-yellow-400/50 text-[10px] sm:text-xs font-black text-yellow-300 tracking-wider uppercase mb-1">
-                      👑 ĐỆ NHẤT CHIẾN THẦN LÃNH THỔ 🇻🇳
-                    </span>
-                    <h2 className="text-lg sm:text-2xl font-black text-white tracking-wide">
-                      {gameState.victory?.top1Champion?.username || gameState.victory?.mvpUser?.username || 'Chiến Binh Áo Đỏ 🇻🇳'}
-                    </h2>
-                    <p className="text-[11px] text-gray-400 font-mono">
-                      {gameState.victory?.top1Champion?.userId || '@dai_tuong_quan'}
-                    </p>
-                  </div>
-
-                  {/* Stats Cards */}
-                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                    <div className="p-2.5 rounded-xl bg-black/40 border border-white/10">
-                      <div className="text-[10px] text-gray-400 mb-0.5">Số Ô Cờ Đã Cắm</div>
-                      <div className="font-mono font-black text-emerald-400 text-sm sm:text-base">
-                        {(gameState.victory?.top1Champion?.totalCells || gameState.totalCells).toLocaleString()} Ô
-                      </div>
-                    </div>
-
-                    <div className="p-2.5 rounded-xl bg-black/40 border border-white/10">
-                      <div className="text-[10px] text-gray-400 mb-0.5">Lượt Quà Cống Hiến</div>
-                      <div className="font-mono font-black text-yellow-400 text-sm sm:text-base">
-                        {(gameState.victory?.top1Champion?.totalGifts || 35)} Lượt
-                      </div>
-                    </div>
-
-                    <div className="p-2.5 rounded-xl bg-black/40 border border-white/10">
-                      <div className="text-[10px] text-gray-400 mb-0.5">Tỷ Lệ Lãnh Thổ</div>
-                      <div className="font-mono font-black text-cyan-400 text-sm sm:text-base">
-                        {(((gameState.victory?.top1Champion?.totalCells || 1) / Math.max(1, gameState.totalCells)) * 100).toFixed(1)}%
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 2: BẢNG VINH DANH TOP 30 CHIẾN BINH (TOP 30 HALL OF FAME) */}
-              {victoryTab === 'top30' && (
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-3 mb-4 max-h-64 sm:max-h-72 overflow-y-auto custom-scrollbar animate-in zoom-in-95 duration-200">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {(gameState.victory?.top30 || gameState.leaderboard.slice(0, 30)).map((user, idx) => {
-                      const rank = idx + 1;
-                      const isTop1 = rank === 1;
-                      const isTop2 = rank === 2;
-                      const isTop3 = rank === 3;
-                      const percentContrib = ((user.totalCells / Math.max(1, gameState.totalCells)) * 100).toFixed(1);
-
-                      return (
-                        <div
-                          key={user.userId || idx}
-                          className={`flex items-center justify-between p-2 rounded-xl border transition-all text-xs ${
-                            isTop1
-                              ? 'bg-gradient-to-r from-yellow-500/20 to-amber-600/20 border-yellow-400/60 shadow-md shadow-yellow-500/20'
-                              : isTop2
-                              ? 'bg-slate-300/15 border-slate-300/40'
-                              : isTop3
-                              ? 'bg-amber-800/20 border-amber-600/40'
-                              : 'bg-black/30 border-white/5 hover:border-white/15'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 min-w-0">
-                            {/* Rank Badge */}
-                            <div className="w-6 h-6 rounded-lg flex items-center justify-center font-black font-mono text-[11px] shrink-0">
-                              {isTop1 ? '🥇' : isTop2 ? '🥈' : isTop3 ? '🥉' : `#${rank}`}
-                            </div>
-
-                            {/* Avatar */}
-                            <img
-                              src={user.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=50'}
-                              alt={user.username}
-                              className="w-7 h-7 rounded-full object-cover border border-white/20 shrink-0"
-                            />
-
-                            {/* Name & ID */}
-                            <div className="text-left min-w-0">
-                              <div className="font-bold text-white truncate max-w-[120px] sm:max-w-[140px] text-[11px]">
-                                {user.username}
-                              </div>
-                              <div className="text-[9px] text-gray-400 font-mono truncate">
-                                {user.userId}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Stats */}
-                          <div className="text-right shrink-0">
-                            <div className="font-black font-mono text-yellow-400 text-[11px]">
-                              +{user.totalCells.toLocaleString()} ô
-                            </div>
-                            <div className="text-[9px] text-emerald-400 font-mono">
-                              {percentContrib}% map
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-
-                    {(!gameState.victory?.top30 || gameState.victory.top30.length === 0) && (
-                      <div className="col-span-2 text-center py-6 text-xs text-gray-400 italic">
-                        Đang đồng bộ danh sách 30 chiến binh...
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* AUTO-LOOP 24/7 COUNTDOWN BAR & ACTIONS */}
-              <div className="mb-4 bg-emerald-950/60 border border-emerald-500/40 rounded-2xl p-2.5 text-xs text-center animate-pulse">
-                <div className="flex items-center justify-between text-emerald-300 font-bold mb-1 px-1 text-[11px]">
-                  <span className="flex items-center gap-1">
-                    <Zap size={12} className="text-yellow-400" /> Tự Động Bắt Đầu Trận Mới:
-                  </span>
-                  <span className="font-mono text-yellow-300">
-                    Bắt đầu sau: <strong>{typeof gameState.victoryCountdown === 'number' && gameState.victoryCountdown >= 0 ? gameState.victoryCountdown : 4}s</strong>
-                  </span>
-                </div>
-                <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-emerald-500 to-yellow-400 transition-all duration-1000"
-                    style={{
-                      width: `${Math.max(0, (((typeof gameState.victoryCountdown === 'number' ? gameState.victoryCountdown : 4) / 4) * 100))}%`
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-2.5">
-                <button
-                  onClick={() => bandoEngine.resetRound()}
-                  className="flex-1 py-3 bg-gradient-to-r from-red-600 to-yellow-500 hover:from-red-500 hover:to-yellow-400 text-white font-black text-xs sm:text-sm rounded-xl shadow-lg shadow-red-500/30 transition-all flex items-center justify-center gap-2 active:scale-95"
-                >
-                  <RotateCcw size={16} /> Bắt Đầu Trận Mới Ngay
-                </button>
-
-                <button
-                  onClick={() => {
-                    const nextAuto = !gameState.autoLoop247;
-                    bandoEngine.setAutoLoop247(nextAuto);
-                  }}
-                  className={`py-3 px-4 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-1.5 ${
-                    gameState.autoLoop247
-                      ? 'bg-emerald-900/40 text-emerald-300 border-emerald-500/40 hover:bg-emerald-800/50'
-                      : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white'
-                  }`}
-                  title={gameState.autoLoop247 ? "Đang bật Tự động lặp lại vòng chơi 24/24" : "Bật Tự động lặp lại vòng chơi 24/24"}
-                >
-                  <Zap size={14} className={gameState.autoLoop247 ? 'text-yellow-400 fill-yellow-400' : ''} />
-                  <span>{gameState.autoLoop247 ? 'Auto 24/7: BẬT' : 'Auto 24/7: TẮT'}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* ================= MODAL CÀI ĐẶT NHẠC NỀN & ÂM THANH 24/24 ================= */}
-      {showAudioModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/75 backdrop-blur-md animate-in fade-in">
-          <div className="bg-[#121624] border border-purple-500/40 rounded-3xl w-full max-w-md shadow-2xl p-5 text-white relative">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-purple-600/30 border border-purple-400/40 flex items-center justify-center">
-                  <Music size={18} className="text-purple-300" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-white">Cài Đặt Nhạc Nền 24/24 & Âm Thanh</h3>
-                  <p className="text-[10px] text-gray-400">Tự động lặp lại vô tận hoặc hẹn giờ tắt</p>
-                </div>
-              </div>
+      {/* 3. OUTER BOTTOM HOST CONTROL BAR (Thanh Quản trị & Test nằm ngoài khung live) */}
+      <div className="relative z-20 bg-[#0d1017] border-t border-white/10 p-2 sm:p-2.5 shrink-0 animate-in slide-in-from-bottom duration-200">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-2">
+          
+          {/* Left: D-Pad & Camera Controls */}
+          <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+            <span className="text-[11px] font-black text-cyan-400 uppercase tracking-wider mr-1 shrink-0 flex items-center gap-1">
+              <Move size={12} /> Camera:
+            </span>
+            <button
+              onClick={() => viewMode3D ? handleZoom3D(0.80) : setZoom2D(z => Math.min(4.0, z * 1.25))}
+              className="p-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/15 text-yellow-300"
+              title="Phóng to (+)"
+            >
+              <ZoomIn size={14} />
+            </button>
+            <button
+              onClick={() => viewMode3D ? handleZoom3D(1.25) : setZoom2D(z => Math.max(0.5, z * 0.80))}
+              className="p-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/15 text-yellow-300"
+              title="Thu nhỏ (-)"
+            >
+              <ZoomOut size={14} />
+            </button>
+            <button
+              onClick={() => {
+                if (viewMode3D) applyCameraPreset('macro');
+                else setZoom2D(3.5);
+                notifyBookmark('🔍 Chế độ Zoom Siêu Cận Cảnh');
+              }}
+              className="px-2 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black text-[10px] flex items-center gap-1 shadow-sm"
+              title="Zoom Cận Cảnh"
+            >
+              <Search size={11} />
+              <span>Cận Cảnh</span>
+            </button>
+            <button
+              onClick={() => setIsPanMode(!isPanMode)}
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold border flex items-center gap-1 ${
+                isPanMode ? 'bg-blue-600 text-white border-blue-400' : 'bg-white/10 text-gray-200 border-white/10'
+              }`}
+              title="Chuyển chế độ Kéo / Xoay"
+            >
+              {isPanMode ? '🖐️ Kéo' : '🔄 Xoay'}
+            </button>
+
+            {/* D-Pad 4 hướng */}
+            <div className="flex items-center gap-0.5 ml-1">
+              <button onClick={() => viewMode3D ? handlePan3D(0, -1) : setPan2D(p => ({ ...p, y: p.y + 40 }))} className="p-1 rounded bg-white/5 hover:bg-white/15 text-gray-300"><ArrowUp size={12} /></button>
+              <button onClick={() => viewMode3D ? handlePan3D(-1, 0) : setPan2D(p => ({ ...p, x: p.x + 40 }))} className="p-1 rounded bg-white/5 hover:bg-white/15 text-gray-300"><ArrowLeft size={12} /></button>
+              <button onClick={handleResetCamera} className="p-1 rounded bg-yellow-500/20 text-yellow-400 text-[10px] font-black">🎯</button>
+              <button onClick={() => viewMode3D ? handlePan3D(1, 0) : setPan2D(p => ({ ...p, x: p.x - 40 }))} className="p-1 rounded bg-white/5 hover:bg-white/15 text-gray-300"><ArrowRight size={12} /></button>
+              <button onClick={() => viewMode3D ? handlePan3D(0, 1) : setPan2D(p => ({ ...p, y: p.y - 40 }))} className="p-1 rounded bg-white/5 hover:bg-white/15 text-gray-300"><ArrowDown size={12} /></button>
+            </div>
+          </div>
+
+          {/* Center: Mock Gift Quick Test */}
+          <div className="flex items-center gap-1 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+            <span className="text-[11px] font-black text-yellow-400 uppercase tracking-wider mr-1 shrink-0 flex items-center gap-1">
+              <Sparkles size={12} /> Test Quà:
+            </span>
+            {(gameState.gifts || []).map(gift => (
               <button
-                onClick={() => setShowAudioModal(false)}
-                className="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-gray-400 hover:text-white"
+                key={gift.id}
+                onClick={() => handleTestGift(gift.id)}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold bg-white/5 hover:bg-white/15 border border-white/10 hover:border-yellow-400/50 text-gray-200 transition-all shrink-0 hover:scale-105 active:scale-95 shadow-sm"
+                title={`Test gửi ${gift.name} (+${gift.cells} ô)`}
               >
+                <span>{gift.icon}</span>
+                <span>{gift.name}</span>
+                <span className="text-[10px] text-yellow-400 font-mono">+{gift.cells}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Right: Quick Actions */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={handleToggleAutoTest}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-black transition-all border shadow-lg ${
+                isAutoTesting
+                  ? 'bg-red-600 text-white border-yellow-300 ring-2 ring-yellow-400 animate-pulse'
+                  : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-emerald-400/50'
+              }`}
+              title="Chạy tự động kiểm thử toàn bộ hệ thống quà tặng, combo, boss và hoàn thành bản đồ"
+            >
+              {isAutoTesting ? <Pause size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />}
+              <span>{isAutoTesting ? `Test (#${autoTestStep})` : '⚡ Chạy Test'}</span>
+            </button>
+
+            <button
+              onClick={() => {
+                window.open('?overlay=bando', 'AvaliveMapOverlay', 'width=450,height=800,menubar=no,toolbar=no,location=no,status=no');
+              }}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-black bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white border border-pink-400/50 shadow-md shadow-pink-500/30 transition-all active:scale-95"
+              title="Mở Cửa Sổ Khung 9:16 Sạch Riêng Biệt để TikTok LIVE Studio hoặc OBS bắt hình phát sóng"
+            >
+              <MonitorPlay size={13} />
+              <span>📺 Khung Live 9:16</span>
+            </button>
+
+            <button
+              onClick={() => bandoEngine.resetRound()}
+              className="p-1.5 rounded-lg text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
+              title="Làm mới bàn cờ"
+            >
+              <RotateCcw size={14} />
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      {/* AUDIO SETTINGS MODAL */}
+      {showAudioModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-[#161a23] border border-purple-500/40 rounded-2xl max-w-sm w-full p-5 shadow-2xl text-white">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+              <div className="flex items-center gap-2">
+                <Music size={18} className="text-purple-400" />
+                <h3 className="font-bold text-sm">Cài Đặt Nhạc Nền 24/24</h3>
+              </div>
+              <button onClick={() => setShowAudioModal(false)} className="text-gray-400 hover:text-white">
                 <X size={16} />
               </button>
             </div>
 
-            {/* Quick Toggle BGM Button */}
-            <div className="mt-4 p-3 rounded-2xl bg-purple-950/40 border border-purple-500/30 flex items-center justify-between">
+            <div className="space-y-4">
               <div>
-                <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                  <Zap size={14} className="text-yellow-400" /> Nhạc Nền Hào Khí Đông A:
-                </div>
-                <div className="text-[10px] text-purple-300/80">
-                  {isBgmPlaying ? 'Đang phát trực tiếp 24/7' : 'Đang tạm dừng'}
+                <label className="text-xs font-bold text-gray-300 block mb-1.5">Chế Độ Phát / Hẹn Giờ:</label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {[
+                    { id: '24/7', label: 'Vô Tận (24/24)' },
+                    { id: '30m', label: 'Hẹn Giờ: 30 Phút' },
+                    { id: '60m', label: 'Hẹn Giờ: 60 Phút' },
+                    { id: '120m', label: 'Hẹn Giờ: 120 Phút' },
+                  ].map(m => (
+                    <button
+                      key={m.id}
+                      onClick={() => {
+                        setBgmTimerMode(m.id);
+                        bandoAudio.setBgmTimer(m.id);
+                      }}
+                      className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border ${
+                        bgmTimerMode === m.id
+                          ? 'bg-purple-600 text-white border-purple-400 shadow-md shadow-purple-500/40'
+                          : 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10'
+                      }`}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
                 </div>
               </div>
-              <button
-                onClick={() => {
-                  bandoAudio.ensureContext();
-                  const playing = bandoAudio.toggleBgm();
-                  setIsBgmPlaying(playing);
-                }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
-                  isBgmPlaying
-                    ? 'bg-gradient-to-r from-red-600 to-rose-500 text-white shadow-lg'
-                    : 'bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-lg'
-                }`}
-              >
-                {isBgmPlaying ? 'Tắt Nhạc' : 'Bật Nhạc Ngay'}
-              </button>
-            </div>
 
-            {/* Chế Độ Hẹn Giờ & Lặp 24/24 */}
-            <div className="mt-4">
-              <label className="text-[11px] font-bold text-gray-300 mb-2 block flex items-center gap-1">
-                <Clock size={12} className="text-cyan-400" /> Chế độ Chạy & Lặp Lại:
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { mode: '24/7', label: '⚡ Vô Tận 24/24', desc: 'Chạy liên tục không ngừng' },
-                  { mode: '15m', label: '⏱️ 15 Phút', desc: 'Tự tắt sau 15p' },
-                  { mode: '30m', label: '⏱️ 30 Phút', desc: 'Tự tắt sau 30p' },
-                  { mode: '1h', label: '⏱️ 1 Giờ', desc: 'Tự tắt sau 1h' },
-                  { mode: '2h', label: '⏱️ 2 Giờ', desc: 'Tự tắt sau 2h' },
-                  { mode: '4h', label: '⏱️ 4 Giờ', desc: 'Tự tắt sau 4h' },
-                ].map((item) => (
-                  <button
-                    key={item.mode}
-                    onClick={() => {
-                      setBgmTimerMode(item.mode);
-                      bandoAudio.setBgmTimerMode(item.mode);
-                      if (!isBgmPlaying) {
-                        bandoAudio.playBgmOnLive();
-                        setIsBgmPlaying(true);
-                      }
-                    }}
-                    className={`p-2 rounded-xl text-left border transition-all ${
-                      bgmTimerMode === item.mode
-                        ? 'bg-purple-600/30 border-purple-400 text-white shadow-md ring-1 ring-purple-400'
-                        : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'
-                    }`}
-                  >
-                    <div className="text-[11px] font-black text-yellow-300">{item.label}</div>
-                    <div className="text-[9px] text-gray-400 truncate">{item.desc}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Volume Controls */}
-            <div className="mt-4 space-y-3">
               <div>
                 <div className="flex justify-between text-xs font-bold text-gray-300 mb-1">
-                  <span className="flex items-center gap-1"><Music size={12} /> Âm lượng Nhạc Nền (BGM):</span>
+                  <span>Âm lượng Nhạc Nền (BGM):</span>
                   <span className="font-mono text-purple-300">{Math.round(bgmVolume * 100)}%</span>
                 </div>
                 <input
@@ -2343,7 +1817,7 @@ export default function GameBanDoVietNam({
 
               <div>
                 <div className="flex justify-between text-xs font-bold text-gray-300 mb-1">
-                  <span className="flex items-center gap-1"><Volume2 size={12} /> Âm lượng Hiệu Ứng (SFX):</span>
+                  <span>Âm lượng Hiệu Ứng (SFX):</span>
                   <span className="font-mono text-cyan-300">{Math.round(sfxVolume * 100)}%</span>
                 </div>
                 <input
@@ -2362,11 +1836,10 @@ export default function GameBanDoVietNam({
               </div>
             </div>
 
-            {/* Close Button */}
             <div className="mt-5">
               <button
                 onClick={() => setShowAudioModal(false)}
-                className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors"
+                className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition-colors"
               >
                 Xong / Đóng
               </button>
@@ -2375,70 +1848,96 @@ export default function GameBanDoVietNam({
         </div>
       )}
 
-      {/* 3. BOTTOM TEST & AUTO CONTROL BAR (Chỉ hiển thị khi Demo Mode Bật & KHÔNG Ở Chế Độ Live Sạch) */}
-      {gameState.isDemoMode && !isPopout && !isLiveCleanMode && (
-        <div className="relative z-20 bg-[#0d1017] border-t border-white/10 p-3 shrink-0 animate-in slide-in-from-bottom duration-200">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-            
-            {/* Mock Gift Quick Buttons */}
-            <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 custom-scrollbar">
-              <span className="text-[11px] font-black text-yellow-400 uppercase tracking-wider mr-1 shrink-0 flex items-center gap-1">
-                <Sparkles size={12} /> Test Quà:
-              </span>
+      {/* BOOKMARK MANAGER MODAL */}
+      {showBookmarkManager && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-[#161a23] border border-amber-500/40 rounded-2xl max-w-md w-full p-5 shadow-2xl text-white">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+              <div className="flex items-center gap-2">
+                <BookmarkPlus size={18} className="text-amber-400" />
+                <h3 className="font-bold text-sm">Quản Lý Vị Trí Ghim Camera</h3>
+              </div>
+              <button onClick={() => setShowBookmarkManager(false)} className="text-gray-400 hover:text-white">
+                <X size={16} />
+              </button>
+            </div>
 
-              {(gameState.gifts || []).map(gift => (
-                <button
-                  key={gift.id}
-                  onClick={() => handleTestGift(gift.id)}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white/5 hover:bg-white/15 border border-white/10 hover:border-yellow-400/50 text-gray-200 transition-all shrink-0 hover:scale-105 active:scale-95 shadow-sm"
-                  title={`Test gửi ${gift.name} quy đổi +${gift.cells} ô cờ`}
-                >
-                  <span>{gift.icon}</span>
-                  <span>{gift.name}</span>
-                  <span className="text-[10px] text-yellow-400 font-mono">+{gift.cells}</span>
-                </button>
+            <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1 custom-scrollbar mb-4">
+              {customBookmarks.map((bm) => (
+                <div key={bm.id} className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/10 hover:border-amber-400/40 transition-all">
+                  <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
+                    <span className="text-base">{bm.icon || '📍'}</span>
+                    {editingBookmarkId === bm.id ? (
+                      <div className="flex items-center gap-1 flex-1">
+                        <input
+                          type="text"
+                          value={editingBookmarkName}
+                          onChange={(e) => setEditingBookmarkName(e.target.value)}
+                          className="bg-black/60 border border-amber-400 rounded px-2 py-0.5 text-xs text-white outline-none w-full"
+                          autoFocus
+                        />
+                        <button
+                          onClick={() => handleRenameBookmark(bm.id, editingBookmarkName)}
+                          className="p-1 rounded bg-emerald-600 text-white"
+                        >
+                          <Check size={12} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-xs font-bold text-white truncate">{bm.name}</span>
+                        <span className="text-[9px] text-gray-400 font-mono">Pos: [{bm.pos.join(', ')}]</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => handleApplyBookmark(bm)}
+                      className="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 text-[10px] font-bold"
+                    >
+                      Nhảy tới
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingBookmarkId(bm.id);
+                        setEditingBookmarkName(bm.name);
+                      }}
+                      className="p-1 rounded text-gray-400 hover:text-white"
+                      title="Đổi tên"
+                    >
+                      <Edit2 size={12} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteBookmark(bm.id)}
+                      className="p-1 rounded text-red-400 hover:text-red-300"
+                      title="Xóa"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
 
-            {/* Quick Actions */}
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2">
               <button
-                onClick={handleToggleAutoTest}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all border shadow-lg ${
-                  isAutoTesting
-                    ? 'bg-red-600 text-white border-yellow-300 ring-2 ring-yellow-400 animate-pulse'
-                    : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-emerald-400/50'
-                }`}
-                title="Chạy tự động kiểm thử toàn bộ hệ thống quà tặng, combo, boss và hoàn thành bản đồ"
+                onClick={handleSaveCurrentCameraAsNewBookmark}
+                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-black text-xs transition-all shadow-md flex items-center justify-center gap-1.5"
               >
-                {isAutoTesting ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
-                <span>{isAutoTesting ? `Đang Test (#${autoTestStep})` : '⚡ Chạy Test Toàn Bộ'}</span>
+                <Plus size={14} /> Ghim Góc Nhìn Hiện Tại
               </button>
-
               <button
-                onClick={() => {
-                  window.open('?overlay=bando', 'AvaliveMapOverlay', 'width=450,height=800,menubar=no,toolbar=no,location=no,status=no');
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white border border-pink-400/50 shadow-md shadow-pink-500/30 transition-all active:scale-95"
-                title="Mở Cửa Sổ Khung 9:16 Sạch Riêng Biệt (Không có nút điều khiển) để TikTok LIVE Studio hoặc OBS bắt hình phát sóng"
+                onClick={handleRestoreDefaultBookmarks}
+                className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 text-xs font-bold"
+                title="Khôi phục 3 vị trí mặc định"
               >
-                <MonitorPlay size={14} />
-                <span>📺 Khung Live 9:16</span>
-              </button>
-
-              <button
-                onClick={() => bandoEngine.resetRound()}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
-                title="Làm mới trận đấu"
-              >
-                <RotateCcw size={15} />
+                <RotateCcw size={14} />
               </button>
             </div>
-
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 }
