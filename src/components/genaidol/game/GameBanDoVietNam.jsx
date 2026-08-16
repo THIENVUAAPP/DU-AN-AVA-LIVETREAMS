@@ -172,7 +172,7 @@ export default function GameBanDoVietNam({
     const isVN = gameState.selectedCountry === 'vietnam';
     return {
       overview: { name: 'Toàn Cảnh', icon: '🌐', pos: [0, 240, 260], target: [0, 0, 10] },
-      north: { name: isVN ? 'Miền Bắc & Hà Nội' : 'Vùng Phía Bắc', icon: '🏛️', pos: [-49, 110, -85], target: [-49.2, 0, -123.0] },
+      north: { name: isVN ? 'Miền Bắc & Hà Nội' : 'Vùng Phía Bắc', icon: '🏛️', pos: [-66, 110, -90], target: [-66.0, 0, -128.0] },
       central: { name: isVN ? 'Miền Trung & Huế' : 'Khu Vực Trung Tâm', icon: '🏖️', pos: [15, 120, 30], target: [-4.7, 0, 4.5] },
       south: { name: isVN ? 'Miền Nam & TP.HCM' : 'Vùng Phía Nam', icon: '🏙️', pos: [-27, 110, 155], target: [-27.6, 0, 126.4] },
       tip_camau: { name: isVN ? 'Mũi Cà Mau (Cực Nam)' : 'Cực Nam', icon: '⛵', pos: [-63, 75, 195], target: [-63.1, 0, 161.9] },
@@ -279,7 +279,7 @@ export default function GameBanDoVietNam({
     scene.add(rimLight);
 
     const pLight1 = new THREE.PointLight(0xffd700, 1.2 * brightness, 350);
-    pLight1.position.set(-49.2, 65, -123.0);
+    pLight1.position.set(-66.0, 65, -128.0);
     scene.add(pLight1);
 
     const pLight2 = new THREE.PointLight(0x38bdf8, 1.0 * brightness, 300);

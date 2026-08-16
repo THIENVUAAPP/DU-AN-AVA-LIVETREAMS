@@ -40,7 +40,7 @@ export { WORLD_COUNTRIES, CONTINENTS };
 const STORAGE_KEY_CONFIG = 'aidol_bando_custom_config_v4';
 const STORAGE_KEY_COUNTRIES = 'aidol_bando_countries_custom_v4';
 
-// Helper khử trùng lặp nhãn địa danh
+// Helper khử trùng lặp nhãn địa danh & hiệu chỉnh toạ độ chính xác
 function sanitizeMapLabels(labels) {
   if (!Array.isArray(labels)) return [];
   const seenTexts = new Set();
@@ -50,12 +50,24 @@ function sanitizeMapLabels(labels) {
     const norm = item.text.trim().toLowerCase();
     if (!seenTexts.has(norm)) {
       seenTexts.add(norm);
+
+      let targetWx = item.wx ?? 0;
+      let targetWy = item.wy ?? 4.0;
+      let targetWz = item.wz ?? 0;
+
+      // Tự động định vị chuẩn xác Hà Nội ngay cạnh ngôi sao vàng trung tâm đất liền
+      if (norm.includes('hà nội') && (targetWx > -58 || targetWz > -125)) {
+        targetWx = -66.0;
+        targetWy = 4.0;
+        targetWz = -128.0;
+      }
+
       result.push({
         id: item.id || `lbl_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
         text: item.text.trim(),
-        wx: item.wx ?? 0,
-        wy: item.wy ?? 4.0,
-        wz: item.wz ?? 0,
+        wx: targetWx,
+        wy: targetWy,
+        wz: targetWz,
         color: item.color || '#facc15',
         glow: item.glow !== false
       });
@@ -88,7 +100,9 @@ class BanDoGameEngine {
 
     // Khởi tạo Khối Lưới Ô Cờ Tiêu Đề 3D (Banner Flag Cells)
     const initialBannerText = savedCustomConfig.bannerText || (initialCountryKey === 'vietnam' ? 'VIỆT NAM MUÔN NĂM' : currentPreset.name.toUpperCase());
-    const initialBannerPos = savedCustomConfig.bannerPos || { x: 0, y: 3.5, z: -155 };
+    const initialBannerPos = (savedCustomConfig.bannerPos && savedCustomConfig.bannerPos.z <= -170)
+      ? savedCustomConfig.bannerPos
+      : { x: 0, y: 4.0, z: -190 };
 
     this.bannerEngine = new BannerFlagCellsEngine({
       text: initialBannerText,
