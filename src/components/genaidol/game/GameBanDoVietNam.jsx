@@ -5,7 +5,7 @@ import {
   Play, Pause, RotateCcw, Shield, Sparkles, Trophy, Flame, 
   MapPin, Flag, Eye, EyeOff, Volume2, VolumeX, Maximize2, Zap, Star,
   Compass, Award, ChevronRight, Layers, CheckCircle2, AlertTriangle, 
-  MonitorPlay, Sun, Moon, Move, ZoomIn, ZoomOut, Globe, Navigation, Compass as CompassIcon,
+  MonitorPlay, Sun, Moon, Move, ZoomIn, ZoomOut, Search, Globe, Navigation, Compass as CompassIcon,
   Sliders, Settings, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RefreshCw,
   Bookmark, BookmarkPlus, BookmarkCheck, Edit2, Trash2, Plus, Save, Check, X, Crosshair
 } from 'lucide-react';
@@ -24,48 +24,52 @@ function easeInOutCubic(t) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
-// Function tạo Texture Quốc Kỳ sắc nét cho từng ô pixel 3D
+// Function tạo Texture Quốc Kỳ siêu sắc nét cho từng ô pixel/voxel 3D
 function createCountryFlagTexture(countryCode = 'vietnam') {
   const canvas = document.createElement('canvas');
-  canvas.width = 128;
-  canvas.height = 128;
+  canvas.width = 256;
+  canvas.height = 256;
   const ctx = canvas.getContext('2d');
 
   if (countryCode === 'japan') {
     // 🇯🇵 Nhật Bản: Nền trắng + Mặt trời đỏ
     ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, 128, 128);
+    ctx.fillRect(0, 0, 256, 256);
     ctx.fillStyle = '#BC002D';
     ctx.beginPath();
-    ctx.arc(64, 64, 38, 0, Math.PI * 2);
+    ctx.arc(128, 128, 76, 0, Math.PI * 2);
     ctx.fill();
   } else if (countryCode === 'korea') {
     // 🇰🇷 Hàn Quốc: Nền trắng + Âm Dương
     ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, 128, 128);
+    ctx.fillRect(0, 0, 256, 256);
     ctx.fillStyle = '#CD2E3A';
     ctx.beginPath();
-    ctx.arc(64, 64, 36, Math.PI, 0);
+    ctx.arc(128, 128, 72, Math.PI, 0);
     ctx.fill();
     ctx.fillStyle = '#0047A0';
     ctx.beginPath();
-    ctx.arc(64, 64, 36, 0, Math.PI);
+    ctx.arc(128, 128, 72, 0, Math.PI);
     ctx.fill();
   } else {
-    // 🇻🇳 VIỆT NAM (Mặc định): Nền đỏ tươi + Viền 3D nổi + Ngôi Sao Vàng 5 cánh chính giữa
+    // 🇻🇳 VIỆT NAM (Mặc định): Nền đỏ tươi rực rỡ + Viền khối 3D voxel + Ngôi Sao Vàng 5 cánh chính giữa
     ctx.fillStyle = '#DA251D';
-    ctx.fillRect(0, 0, 128, 128);
+    ctx.fillRect(0, 0, 256, 256);
 
-    // Viền nổi pixel tile
-    ctx.strokeStyle = '#B91C1C';
+    // Viền khối 3D nổi vi mô cho từng ô voxel
+    ctx.strokeStyle = '#991B1B';
+    ctx.lineWidth = 10;
+    ctx.strokeRect(5, 5, 246, 246);
+
+    ctx.strokeStyle = '#EF4444';
     ctx.lineWidth = 4;
-    ctx.strokeRect(2, 2, 124, 124);
+    ctx.strokeRect(10, 10, 236, 236);
 
-    // Ngôi sao vàng 5 cánh siêu nét
-    const cx = 64, cy = 64, outerR = 38, innerR = 15;
+    // Ngôi sao vàng 5 cánh chuẩn tỷ lệ hình học, siêu nét rực sáng
+    const cx = 128, cy = 128, outerR = 78, innerR = 31;
     ctx.fillStyle = '#FFFF00';
-    ctx.shadowColor = '#FFD700';
-    ctx.shadowBlur = 6;
+    ctx.shadowColor = '#FFA500';
+    ctx.shadowBlur = 8;
     ctx.beginPath();
     for (let i = 0; i < 5; i++) {
       const rotOuter = (i * 4 * Math.PI) / 5 - Math.PI / 2;
@@ -121,7 +125,7 @@ const DEFAULT_CUSTOM_BOOKMARKS = [
   },
 ];
 
-// Dữ liệu mẫu khởi tạo huy hiệu cắm cờ để luôn hiển thị ngay lập tức
+// Dữ liệu mẫu khởi tạo huy hiệu cắm cờ phân bổ đều 3 miền, tránh trùng tọa độ
 const INITIAL_DEMO_BADGES = [
   {
     id: 'badge_hanoi_demo',
@@ -145,7 +149,7 @@ const INITIAL_DEMO_BADGES = [
     wx: -4.7,
     wy: 5.5,
     wz: 4.5,
-    timestamp: Date.now(),
+    timestamp: Date.now() - 1000,
   },
   {
     id: 'badge_saigon_demo',
@@ -157,7 +161,7 @@ const INITIAL_DEMO_BADGES = [
     wx: -27.6,
     wy: 5.5,
     wz: 126.4,
-    timestamp: Date.now(),
+    timestamp: Date.now() - 2000,
   },
 ];
 
@@ -537,8 +541,8 @@ export default function GameBanDoVietNam({
       scene.fog = new THREE.FogExp2(bgColor, isLightTheme ? 0.0012 : 0.0015);
     }
 
-    // Camera
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 4000);
+    // Camera với Near plane cực gần (0.05) cho phép Zoom Siêu Cận Cảnh từng ô voxel
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.05, 4000);
     camera.position.set(0, 240, 260);
     camera.lookAt(0, 0, 10);
     state.camera = camera;
@@ -550,18 +554,18 @@ export default function GameBanDoVietNam({
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = (gameState.settings.brightness || 1.2) * (isLightTheme ? 1.0 : 0.9);
+    renderer.toneMappingExposure = (gameState.settings.brightness || 1.2) * (isLightTheme ? 1.0 : 0.95);
     container.innerHTML = '';
     container.appendChild(renderer.domElement);
     state.renderer = renderer;
 
-    // Controls with Ultra-close Zoom and Wide Pan
+    // Controls with Ultra-close Zoom (minDistance = 0.5) and Wide Pan
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
     controls.maxPolarAngle = Math.PI / 2.02;
-    controls.minDistance = 6;
-    controls.maxDistance = 850;
+    controls.minDistance = 0.5;
+    controls.maxDistance = 1200;
     controls.target.set(0, 0, 10);
     controls.enablePan = true;
     controls.panSpeed = 1.6;
@@ -577,12 +581,16 @@ export default function GameBanDoVietNam({
     controls.autoRotateSpeed = 0.8;
     state.controls = controls;
 
-    // Balanced Lighting (Crisp Colors without Overexposure)
+    // Balanced Lighting: Đảm bảo toàn bộ bề mặt cờ 3D luôn sáng rực rỡ, không bị tối đen
     const brightness = gameState.settings.brightness || 1.2;
-    const ambientLight = new THREE.AmbientLight(0xffffff, (isLightTheme ? 1.2 : 0.95) * brightness);
+    const ambientLight = new THREE.AmbientLight(0xffffff, (isLightTheme ? 1.35 : 1.15) * brightness);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xfffaee, (isLightTheme ? 1.35 : 1.25) * brightness);
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x555555, 0.7 * brightness);
+    hemiLight.position.set(0, 300, 0);
+    scene.add(hemiLight);
+
+    const dirLight = new THREE.DirectionalLight(0xfffaee, (isLightTheme ? 1.4 : 1.3) * brightness);
     dirLight.position.set(120, 320, 160);
     dirLight.castShadow = true;
     scene.add(dirLight);
@@ -633,8 +641,8 @@ export default function GameBanDoVietNam({
     const boxGeo = new THREE.BoxGeometry(0.88, 1, 0.88);
     const boxMat = new THREE.MeshStandardMaterial({
       map: flagTexture,
-      roughness: 0.38,
-      metalness: 0.12,
+      roughness: 0.25,
+      metalness: 0.08,
       vertexColors: true,
     });
     const instancedMesh = new THREE.InstancedMesh(boxGeo, boxMat, count);
@@ -681,9 +689,6 @@ export default function GameBanDoVietNam({
     const cols = maskData?.gridCols || 300;
     const rows = maskData?.gridRows || 389;
     const dummy = state.dummy;
-    const emptyColor = new THREE.Color(gameState.settings.emptyCellColor || '#475569');
-    const goldStarColor = new THREE.Color(gameState.settings.starColor || '#FFD700');
-    const redFlagColor = new THREE.Color(gameState.settings.claimedCellColor || '#DA251D');
 
     for (let i = 0; i < count; i++) {
       const cell = cells[i] || { x: (i % 100), y: Math.floor(i / 100) };
@@ -691,7 +696,7 @@ export default function GameBanDoVietNam({
       const wz = (cell.y - rows / 2) * 1.0;
       const isClaimed = !!bandoEngine.state.cellsById[cell.id];
 
-      const scaleY = isClaimed ? 1.7 : 0.35;
+      const scaleY = isClaimed ? 1.8 : 0.42;
       const posY = scaleY / 2;
 
       dummy.position.set(wx, posY, wz);
@@ -700,10 +705,11 @@ export default function GameBanDoVietNam({
       instancedMesh.setMatrixAt(i, dummy.matrix);
 
       if (isClaimed) {
-        // Multiplier trắng (1,1,1) hiển thị 100% nguyên bản Texture Lá Cờ Quốc Kỳ Đỏ Sao Vàng sắc nét
-        instancedMesh.setColorAt(i, new THREE.Color(1.0, 1.0, 1.0));
+        // Ô đã cắm cờ: Nhô cao 3D rực rỡ + Vàng kim phát sáng
+        instancedMesh.setColorAt(i, new THREE.Color(1.35, 1.25, 1.05));
       } else {
-        instancedMesh.setColorAt(i, emptyColor);
+        // Ô lãnh thổ quốc gia: Hiển thị trọn vẹn 100% Texture Lá Cờ Quốc Kỳ Đỏ Sao Vàng sắc nét không bị đen
+        instancedMesh.setColorAt(i, new THREE.Color(1.0, 1.0, 1.0));
       }
     }
     instancedMesh.instanceMatrix.needsUpdate = true;
@@ -803,10 +809,13 @@ export default function GameBanDoVietNam({
         }
       }
 
-      // PROJECTION: Update Recent Claim Badges (User ID & Ultra-Sharp Flag)
-      const badges = recentClaimBadgesRef.current || [];
-      for (let b = 0; b < badges.length; b++) {
-        const badge = badges[b];
+      // PROJECTION & ANTI-OVERLAP: Update Recent Claim Badges with Smart Stacking (Tuyệt đối không chồng chéo)
+      const allBadges = recentClaimBadgesRef.current || [];
+      const visibleBadges = [];
+      const maxVisible = 5; // Tối đa 5 huy hiệu hiển thị đồng thời để bản đồ luôn thông thoáng
+
+      for (let b = 0; b < Math.min(allBadges.length, maxVisible); b++) {
+        const badge = allBadges[b];
         const badgeEl = badgeRefs.current[badge.id];
         if (!badgeEl) continue;
 
@@ -814,13 +823,39 @@ export default function GameBanDoVietNam({
         tempVec.project(camera);
 
         if (tempVec.z < 1.0) {
-          const sx = (tempVec.x * 0.5 + 0.5) * contW;
-          const sy = (-tempVec.y * 0.5 + 0.5) * contH;
+          let sx = (tempVec.x * 0.5 + 0.5) * contW;
+          let sy = (-tempVec.y * 0.5 + 0.5) * contH;
+
+          // Thuật toán phân giải va chạm 2D (Anti-overlapping / Collision repulsion)
+          for (let p = 0; p < visibleBadges.length; p++) {
+            const prev = visibleBadges[p];
+            const dx = sx - prev.sx;
+            const dy = sy - prev.sy;
+            const minDistX = 135;
+            const minDistY = 42;
+
+            if (Math.abs(dx) < minDistX && Math.abs(dy) < minDistY) {
+              // Tự động đẩy dời độ cao sy lên trên hoặc so le sang bên để không đè che khuất nhau
+              sy = prev.sy - minDistY;
+              if (Math.abs(dx) < minDistX * 0.4) {
+                sx = prev.sx + (dx >= 0 ? 35 : -35);
+              }
+            }
+          }
+
+          visibleBadges.push({ badge, badgeEl, sx, sy });
           badgeEl.style.display = 'flex';
           badgeEl.style.transform = `translate3d(${sx}px, ${sy}px, 0px) translate(-50%, -100%)`;
         } else {
           badgeEl.style.display = 'none';
         }
+      }
+
+      // Ẩn các badge vượt quá giới hạn
+      for (let b = maxVisible; b < allBadges.length; b++) {
+        const badge = allBadges[b];
+        const badgeEl = badgeRefs.current[badge?.id];
+        if (badgeEl) badgeEl.style.display = 'none';
       }
     };
     state.animFrameId = requestAnimationFrame(animate);
@@ -857,7 +892,7 @@ export default function GameBanDoVietNam({
     const controls = state.controls;
 
     const dir = new THREE.Vector3().subVectors(camera.position, controls.target);
-    const newLen = Math.max(8, Math.min(800, dir.length() * factor));
+    const newLen = Math.max(0.8, Math.min(1200, dir.length() * factor));
     dir.setLength(newLen);
     camera.position.copy(controls.target).add(dir);
   };
@@ -942,7 +977,7 @@ export default function GameBanDoVietNam({
       const cell = cells[i];
       if (!cell) continue;
       const isClaimed = !!gameState.cellsById[cell.id];
-      const scaleY = isClaimed ? 1.7 : 0.35;
+      const scaleY = isClaimed ? 1.8 : 0.42;
       const posY = scaleY / 2;
       const wx = (cell.x - cols / 2) * 1.0;
       const wz = (cell.y - rows / 2) * 1.0;
@@ -953,10 +988,11 @@ export default function GameBanDoVietNam({
       instancedMesh.setMatrixAt(i, dummy.matrix);
 
       if (isClaimed) {
-        // Hiển thị trọn vẹn lá cờ quốc kỳ trên từng ô pixel
-        instancedMesh.setColorAt(i, new THREE.Color(1.0, 1.0, 1.0));
+        // Ô đã cắm cờ: Nhô cao 3D rực rỡ + Vàng kim phát sáng
+        instancedMesh.setColorAt(i, new THREE.Color(1.35, 1.25, 1.05));
       } else {
-        instancedMesh.setColorAt(i, emptyColor);
+        // Ô lãnh thổ quốc gia: Hiển thị trọn vẹn 100% Texture Lá Cờ Quốc Kỳ Đỏ Sao Vàng sắc nét
+        instancedMesh.setColorAt(i, new THREE.Color(1.0, 1.0, 1.0));
       }
     }
 
@@ -1060,8 +1096,17 @@ export default function GameBanDoVietNam({
           ctx.fill();
         }
       } else {
-        ctx.fillStyle = isLightTheme ? '#94a3b8' : (gameState.settings.emptyCellColor || '#334155');
+        ctx.fillStyle = '#DC2626';
         ctx.fillRect(cx, cy, cellSize, cellSize);
+        if (cellSize >= 3.0) {
+          ctx.fillStyle = '#FDE047';
+          const r = cellSize * 0.22;
+          const midX = cx + cellSize / 2;
+          const midY = cy + cellSize / 2;
+          ctx.beginPath();
+          ctx.arc(midX, midY, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
     });
 
@@ -1343,10 +1388,10 @@ export default function GameBanDoVietNam({
         <div className={`absolute bottom-4 left-4 z-20 flex items-center gap-2 p-2 backdrop-blur-md border rounded-2xl shadow-2xl transition-colors ${
           isLightTheme ? 'bg-white/90 border-slate-300 shadow-xl' : 'bg-black/75 border-white/15'
         }`}>
-          {/* Zoom Buttons */}
+          {/* Zoom Buttons with Macro Ultra Close-up View */}
           <div className="flex items-center gap-1">
             <button
-              onClick={() => viewMode3D ? handleZoom3D(0.85) : setZoom2D(z => Math.min(4.0, z * 1.2))}
+              onClick={() => viewMode3D ? handleZoom3D(0.80) : setZoom2D(z => Math.min(4.0, z * 1.25))}
               className={`p-2 rounded-xl border transition-all active:scale-95 shadow-sm ${
                 isLightTheme 
                   ? 'bg-slate-100 hover:bg-slate-200 text-amber-600 border-slate-300' 
@@ -1357,7 +1402,7 @@ export default function GameBanDoVietNam({
               <ZoomIn size={15} />
             </button>
             <button
-              onClick={() => viewMode3D ? handleZoom3D(1.18) : setZoom2D(z => Math.max(0.5, z * 0.82))}
+              onClick={() => viewMode3D ? handleZoom3D(1.25) : setZoom2D(z => Math.max(0.5, z * 0.80))}
               className={`p-2 rounded-xl border transition-all active:scale-95 shadow-sm ${
                 isLightTheme 
                   ? 'bg-slate-100 hover:bg-slate-200 text-amber-600 border-slate-300' 
@@ -1366,6 +1411,21 @@ export default function GameBanDoVietNam({
               title="Thu nhỏ (-)"
             >
               <ZoomOut size={15} />
+            </button>
+            <button
+              onClick={() => {
+                if (viewMode3D) {
+                  applyCameraPreset('macro');
+                } else {
+                  setZoom2D(3.5);
+                }
+                notifyBookmark('🔍 Chế độ Zoom Siêu Cận Cảnh: Soi rõ nét từng ô cờ 3D');
+              }}
+              className="px-2 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-black text-[11px] shadow-md border border-yellow-300 transition-all active:scale-95 flex items-center gap-1"
+              title="Zoom Siêu Cận Cảnh Soi Từng Ô Lá Cờ"
+            >
+              <Search size={12} className="stroke-[2.5]" />
+              <span>Cận Cảnh</span>
             </button>
           </div>
 
