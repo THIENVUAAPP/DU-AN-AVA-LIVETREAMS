@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import bandoEngine, { DEFAULT_MAP_GIFTS, COUNTRY_PRESETS, WORLD_COUNTRIES, CONTINENTS } from './bandoGameEngine';
 import bandoAudio from './bandoAudioEngine';
-import { ELEVENLABS_VOICES, previewVoiceAudio, getDualVoiceConfig, saveDualVoiceConfig } from '../../../utils/voiceSyncService';
+import { ELEVENLABS_VOICES, previewVoiceAudio, stopVoiceAudio, getDualVoiceConfig, saveDualVoiceConfig } from '../../../utils/voiceSyncService';
 
 export default function GameBanDoAdminModal({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('operations');
@@ -190,28 +190,46 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
     }
   };
 
-  // Preview Voice AI TTS
-  const handlePreviewVoice = async (voice) => {
+  // Preview & Stop Voice AI TTS ngay lập tức
+  const handleTogglePreviewVoice = async (voice) => {
+    if (previewingVoiceId === voice.id) {
+      stopVoiceAudio();
+      setPreviewingVoiceId(null);
+      return;
+    }
+    stopVoiceAudio();
     setPreviewingVoiceId(voice.id);
-    await previewVoiceAudio(voice, `Chào bạn! Đây là giọng đọc trí tuệ nhân tạo ${voice.name} kịch tính trong Game Cắm Cờ AVA Live!`);
-    setPreviewingVoiceId(null);
+    let sampleText = `Chào bạn! Đây là giọng đọc trí tuệ nhân tạo ${voice.name} trên hệ thống AVA Live!`;
+    if (voice.role === 'game' || voice.recommendedFor === 'game') {
+      sampleText = `Kịch tính quá cả nhà ơi! Cắm cờ dồn dập, rượt đuổi tỷ số nghẹt thở trên bản đồ AVA Live!`;
+    } else if (voice.role === 'idol' || voice.gender === 'Female') {
+      sampleText = `Dạ em chào cả nhà yêu nha! Mọi người thả tim và tặng quà ủng hộ cắm cờ cho phiên live của em nhé!`;
+    } else if (voice.role === 'manager') {
+      sampleText = `Thông báo từ trợ lý hệ thống: Chỉ còn 5 ô cờ cuối cùng, anh em đại gia nhanh tay chốt hạ chiến thắng ngay!`;
+    }
+    await previewVoiceAudio(voice, sampleText, () => {
+      setPreviewingVoiceId(null);
+    });
   };
 
-  // Chọn Giọng Bình Luận Viên cho Game
-  const handleSelectGameVoice = (voice) => {
-    setSelectedGameVoiceId(voice.id);
+  // Gán Giọng Đọc Cho Từng Vai Trò Cụ Thể (BLV Game / Nữ Idol / Nam Trợ Lý)
+  const handleAssignVoiceToRole = (voice, roleKey) => {
     const updated = {
       ...voiceConfig,
-      gameVoice: {
-        ...voiceConfig.gameVoice,
+      [roleKey]: {
+        ...voiceConfig[roleKey],
         id: voice.id,
         name: voice.name,
         voiceId: voice.voiceId,
-        gender: voice.gender
+        gender: voice.gender,
+        provider: 'elevenlabs'
       }
     };
+    if (roleKey === 'gameVoice') setSelectedGameVoiceId(voice.id);
     setVoiceConfig(updated);
     saveDualVoiceConfig(updated);
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 2000);
   };
 
   // Lọc danh sách 200 quốc gia
@@ -731,20 +749,20 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                 <div>
                   <h3 className="text-sm font-black text-white uppercase flex items-center gap-2">
-                    <Mic size={18} className="text-purple-400" /> Hệ Thống 30+ Giọng Đọc Voice AI & Bình Luận Viên (ElevenLabs)
+                    <Mic size={18} className="text-purple-400" /> Hệ Thống 30+ Giọng Đọc Voice AI & Gán Vai Trò (ElevenLabs)
                   </h3>
                   <p className="text-xs text-gray-400">
-                    Kho giọng đọc đa dạng phong cách: BLV thể thao/esports kịch tính, idol bán hàng ngọt ngào, trợ lý quản lý dứt khoát
+                    Bấm nghe thử & dừng ngay lập tức. Tự do áp dụng giọng cho Bình Luận Viên Game, Nữ Idol Bán Hàng hoặc Nam Trợ Lý/MC.
                   </p>
                 </div>
 
                 {/* Voice filter */}
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   {[
                     { id: 'all', label: 'Tất Cả Giọng (30+)' },
-                    { id: 'game', label: '🎙️ BLV Game & Trận Đấu' },
-                    { id: 'female', label: '👑 Nữ Idol Bán Hàng' },
-                    { id: 'male', label: '💼 Nam Trợ Lý / MC' },
+                    { id: 'game', label: '🎙️ BLV Game' },
+                    { id: 'female', label: '👑 Nữ Idol' },
+                    { id: 'male', label: '💼 Nam Trợ Lý' },
                   ].map(cat => (
                     <button
                       key={cat.id}
@@ -761,27 +779,90 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                 </div>
               </div>
 
+              {/* EXECUTIVE TOP ROLES DASHBOARD */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 bg-gradient-to-r from-purple-950/40 via-slate-900/60 to-black/60 border border-purple-500/30 rounded-2xl">
+                {/* Role 1: BLV Game */}
+                <div className="p-2.5 rounded-xl bg-purple-900/20 border border-purple-500/30">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] font-black text-purple-300 uppercase tracking-wider flex items-center gap-1">
+                      <Radio size={11} className="text-yellow-400" /> 🎙️ BLV Trận Đấu Game
+                    </span>
+                    <span className="text-[9px] px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-200 font-mono">Game</span>
+                  </div>
+                  <div className="text-xs font-black text-white truncate">
+                    {voiceConfig.gameVoice?.name || 'Josh (Nam - BLV Game)'}
+                  </div>
+                </div>
+
+                {/* Role 2: Nữ Idol */}
+                <div className="p-2.5 rounded-xl bg-pink-900/20 border border-pink-500/30">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] font-black text-pink-300 uppercase tracking-wider flex items-center gap-1">
+                      <Sparkles size={11} className="text-pink-400" /> 👑 Nữ Idol Bán Hàng
+                    </span>
+                    <span className="text-[9px] px-1.5 py-0.2 rounded bg-pink-500/20 text-pink-200 font-mono">Idol</span>
+                  </div>
+                  <div className="text-xs font-black text-white truncate">
+                    {voiceConfig.idolVoice?.name || 'Rachel (Nữ - Ngọt ngào)'}
+                  </div>
+                </div>
+
+                {/* Role 3: Trợ Lý / MC */}
+                <div className="p-2.5 rounded-xl bg-blue-900/20 border border-blue-500/30">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] font-black text-blue-300 uppercase tracking-wider flex items-center gap-1">
+                      <Zap size={11} className="text-cyan-400" /> 💼 Nam Trợ Lý / MC
+                    </span>
+                    <span className="text-[9px] px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-200 font-mono">Manager</span>
+                  </div>
+                  <div className="text-xs font-black text-white truncate">
+                    {voiceConfig.managerVoice?.name || 'Callum (Nam - Quyết đoán)'}
+                  </div>
+                </div>
+              </div>
+
               {/* Voice Cards Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 max-h-[58vh] overflow-y-auto custom-scrollbar pr-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 max-h-[52vh] overflow-y-auto custom-scrollbar pr-1">
                 {filteredVoices.map(v => {
-                  const isSelected = selectedGameVoiceId === v.id;
+                  const isBLV = voiceConfig.gameVoice?.id === v.id;
+                  const isIdol = voiceConfig.idolVoice?.id === v.id;
+                  const isManager = voiceConfig.managerVoice?.id === v.id;
+                  const isAnyRole = isBLV || isIdol || isManager;
                   const isPreviewing = previewingVoiceId === v.id;
+
                   return (
                     <div
                       key={v.id}
                       className={`p-4 rounded-2xl border transition-all flex flex-col justify-between ${
-                        isSelected
+                        isAnyRole
                           ? 'bg-gradient-to-tr from-purple-950/80 via-slate-900 to-black border-purple-400 ring-2 ring-purple-400/50 shadow-2xl'
                           : 'bg-white/5 border-white/10 hover:bg-white/10'
                       }`}
                     >
                       <div>
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                            v.gender === 'Female' ? 'bg-pink-500/20 text-pink-300' : 'bg-blue-500/20 text-blue-300'
-                          }`}>
-                            {v.gender === 'Female' ? '♀ Nữ' : '♂ Nam'} • {v.recommendedFor?.toUpperCase()}
-                          </span>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                              v.gender === 'Female' ? 'bg-pink-500/20 text-pink-300' : 'bg-blue-500/20 text-blue-300'
+                            }`}>
+                              {v.gender === 'Female' ? '♀ Nữ' : '♂ Nam'} • {v.recommendedFor?.toUpperCase()}
+                            </span>
+                            {isBLV && (
+                              <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-purple-600 text-white shadow-xs">
+                                🎙️ Đang làm BLV
+                              </span>
+                            )}
+                            {isIdol && (
+                              <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-pink-600 text-white shadow-xs">
+                                👑 Đang làm Idol
+                              </span>
+                            )}
+                            {isManager && (
+                              <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-blue-600 text-white shadow-xs">
+                                💼 Đang làm Trợ Lý
+                              </span>
+                            )}
+                          </div>
                           <span className="text-[10px] font-mono text-gray-400">ElevenLabs</span>
                         </div>
 
@@ -789,26 +870,71 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                         <p className="text-[11px] text-gray-400 mb-3">{v.desc}</p>
                       </div>
 
-                      <div className="flex items-center gap-2 pt-2 border-t border-white/10">
-                        <button
-                          onClick={() => handlePreviewVoice(v)}
-                          disabled={isPreviewing}
-                          className="flex-1 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition-all"
-                        >
-                          <Volume2 size={13} className={isPreviewing ? 'text-yellow-400 animate-spin' : 'text-gray-300'} />
-                          <span>{isPreviewing ? 'Đang đọc...' : 'Nghe Thử'}</span>
-                        </button>
+                      {/* Controls: Nghe Thử / Dừng Ngay & Áp Dụng Cho Từng Vai Trò */}
+                      <div className="space-y-2 pt-2 border-t border-white/10">
+                        {/* Play / Stop Preview Button */}
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleTogglePreviewVoice(v)}
+                            className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-md ${
+                              isPreviewing
+                                ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white ring-2 ring-red-400 animate-pulse'
+                                : 'bg-white/10 hover:bg-white/20 text-yellow-300'
+                            }`}
+                            title={isPreviewing ? "Bấm để DỪNG PHÁT NGAY LẬP TỨC" : "Bấm để NGHE THỬ giọng đọc này"}
+                          >
+                            {isPreviewing ? (
+                              <>
+                                <VolumeX size={13} className="text-white fill-white" />
+                                <span>⏹️ Dừng Ngay</span>
+                              </>
+                            ) : (
+                              <>
+                                <Volume2 size={13} className="text-yellow-400" />
+                                <span>▶️ Nghe Thử</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
 
-                        <button
-                          onClick={() => handleSelectGameVoice(v)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
-                            isSelected
-                              ? 'bg-purple-600 text-white shadow-md shadow-purple-500/40'
-                              : 'bg-purple-950/60 hover:bg-purple-900 text-purple-200 border border-purple-500/30'
-                          }`}
-                        >
-                          {isSelected ? 'Đang Dùng' : 'Chọn Giọng'}
-                        </button>
+                        {/* Role Assignment Buttons */}
+                        <div className="grid grid-cols-3 gap-1.5">
+                          <button
+                            onClick={() => handleAssignVoiceToRole(v, 'gameVoice')}
+                            className={`py-1 px-1.5 rounded-lg text-[10px] font-black transition-all border flex items-center justify-center gap-0.5 ${
+                              isBLV
+                                ? 'bg-purple-600 text-white border-purple-300 shadow-md ring-1 ring-purple-400'
+                                : 'bg-purple-950/40 hover:bg-purple-900/60 text-purple-200 border-purple-500/20'
+                            }`}
+                            title="Gán giọng này làm Bình Luận Viên Trận Đấu Game"
+                          >
+                            <span>🎙️ {isBLV ? 'BLV (Dùng)' : 'Gán BLV'}</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleAssignVoiceToRole(v, 'idolVoice')}
+                            className={`py-1 px-1.5 rounded-lg text-[10px] font-black transition-all border flex items-center justify-center gap-0.5 ${
+                              isIdol
+                                ? 'bg-pink-600 text-white border-pink-300 shadow-md ring-1 ring-pink-400'
+                                : 'bg-pink-950/40 hover:bg-pink-900/60 text-pink-200 border-pink-500/20'
+                            }`}
+                            title="Gán giọng này làm Nữ Idol Livestream & Bán Hàng"
+                          >
+                            <span>👑 {isIdol ? 'Idol (Dùng)' : 'Gán Idol'}</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleAssignVoiceToRole(v, 'managerVoice')}
+                            className={`py-1 px-1.5 rounded-lg text-[10px] font-black transition-all border flex items-center justify-center gap-0.5 ${
+                              isManager
+                                ? 'bg-blue-600 text-white border-blue-300 shadow-md ring-1 ring-blue-400'
+                                : 'bg-blue-950/40 hover:bg-blue-900/60 text-blue-200 border-blue-500/20'
+                            }`}
+                            title="Gán giọng này làm Nam Trợ Lý Hậu Trường / Quản Lý"
+                          >
+                            <span>💼 {isManager ? 'Trợ Lý (Dùng)' : 'Gán Trợ Lý'}</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );

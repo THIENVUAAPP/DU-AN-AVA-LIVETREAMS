@@ -435,19 +435,28 @@ export function saveDualVoiceConfig(config) {
 let activePreviewAudio = null;
 
 /**
- * Phát giọng nói mẫu thử nghiệm ElevenLabs (Preview TTS)
+ * Dừng phát giọng nói xem trước ngay lập tức
  */
-export async function previewVoiceAudio(voice, sampleText = 'Xin chào! Đây là giọng đọc trí tuệ nhân tạo ElevenLabs cao cấp trên hệ thống AVA Live!') {
+export function stopVoiceAudio() {
   if (typeof window === 'undefined') return;
-
-  // Dừng âm thanh preview đang chạy
   if (activePreviewAudio) {
     activePreviewAudio.pause();
+    activePreviewAudio.currentTime = 0;
     activePreviewAudio = null;
   }
   if (typeof window.speechSynthesis !== 'undefined') {
     window.speechSynthesis.cancel();
   }
+}
+
+/**
+ * Phát giọng nói mẫu thử nghiệm ElevenLabs (Preview TTS) với hỗ trợ dừng tức thì & onEnd callback
+ */
+export async function previewVoiceAudio(voice, sampleText = 'Xin chào! Đây là giọng đọc trí tuệ nhân tạo ElevenLabs cao cấp trên hệ thống AVA Live!', onEnd = null) {
+  if (typeof window === 'undefined') return;
+
+  // Dừng âm thanh preview đang chạy trước đó
+  stopVoiceAudio();
 
   const voiceId = voice.voiceId || voice.id?.replace('el_', '') || '21m00Tcm4TlvDq8ikWAM';
   const apiKey = localStorage.getItem('elevenlabs_api_key') || localStorage.getItem('ELEVENLABS_API_KEY');
@@ -469,6 +478,14 @@ export async function previewVoiceAudio(voice, sampleText = 'Xin chào! Đây l�
       if (data.audioBase64) {
         const audio = new Audio(`data:audio/mp3;base64,${data.audioBase64}`);
         activePreviewAudio = audio;
+        audio.onended = () => {
+          activePreviewAudio = null;
+          if (onEnd) onEnd();
+        };
+        audio.onerror = () => {
+          activePreviewAudio = null;
+          if (onEnd) onEnd();
+        };
         await audio.play();
         return;
       }
@@ -484,6 +501,13 @@ export async function previewVoiceAudio(voice, sampleText = 'Xin chào! Đây l�
     utterance.rate = voice.rate || (voice.role === 'game' ? 1.15 : 1.0);
     utterance.pitch = voice.pitch || (voice.gender === 'Female' ? 1.08 : 0.95);
 
+    utterance.onend = () => {
+      if (onEnd) onEnd();
+    };
+    utterance.onerror = () => {
+      if (onEnd) onEnd();
+    };
+
     const voices = window.speechSynthesis.getVoices();
     const matchedVoice = voices.find(v => 
       (voice.gender === 'Female' && (v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Linh') || v.name.includes('Google Tiếng Việt'))) ||
@@ -493,5 +517,7 @@ export async function previewVoiceAudio(voice, sampleText = 'Xin chào! Đây l�
     if (matchedVoice) utterance.voice = matchedVoice;
 
     window.speechSynthesis.speak(utterance);
+  } else {
+    if (onEnd) onEnd();
   }
 }

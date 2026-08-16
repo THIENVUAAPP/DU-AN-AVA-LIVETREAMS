@@ -8,7 +8,7 @@ import {
   MonitorPlay, Sun, Moon, Move, ZoomIn, ZoomOut, Search, Globe, Navigation, Compass as CompassIcon,
   Sliders, Settings, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RefreshCw,
   Bookmark, BookmarkPlus, BookmarkCheck, Edit2, Trash2, Plus, Save, Check, X, Crosshair,
-  Crown, Medal, Music, Clock
+  Crown, Medal, Music, Clock, Smartphone
 } from 'lucide-react';
 import bandoEngine, { getHonorTier, COUNTRY_PRESETS } from './bandoGameEngine';
 import bandoAudio from './bandoAudioEngine';
@@ -187,6 +187,13 @@ export default function GameBanDoVietNam({
   const [bgmVolume, setBgmVolumeState] = useState(() => bandoAudio.bgmVolume);
   const [sfxVolume, setSfxVolumeState] = useState(() => bandoAudio.sfxVolume);
   const [isLiveCleanMode, setIsLiveCleanMode] = useState(isPopout);
+  const [aspectRatio, setAspectRatio] = useState(() => {
+    try {
+      return localStorage.getItem('avalive_map_aspect_ratio') || '16:9';
+    } catch (e) {
+      return '16:9';
+    }
+  });
   const isLightTheme = gameState.settings?.theme === 'light';
 
   // Đồng bộ isLiveCleanMode khi isPopout thay đổi
@@ -686,7 +693,9 @@ export default function GameBanDoVietNam({
     const count = cells.length > 0 ? cells.length : 15125;
     const flagTexture = createCountryFlagTexture(gameState.selectedCountry || 'vietnam');
     state.flagTexture = flagTexture;
-    const boxGeo = new THREE.BoxGeometry(0.88, 1, 0.88);
+    const cellDim = Math.min(0.94, Math.max(0.35, 0.88 * Math.sqrt(15125 / count)));
+    state.cellDim = cellDim;
+    const boxGeo = new THREE.BoxGeometry(cellDim, 1, cellDim);
     const boxMat = new THREE.MeshLambertMaterial({
       map: flagTexture,
       color: 0xffffff,
@@ -748,8 +757,9 @@ export default function GameBanDoVietNam({
       const scaleY = isClaimed ? 1.75 : 0.16;
       const posY = scaleY / 2;
 
+      const curDim = state.cellDim || 0.88;
       dummy.position.set(wx, posY, wz);
-      dummy.scale.set(0.94, scaleY, 0.94);
+      dummy.scale.set(curDim, scaleY, curDim);
       dummy.updateMatrix();
       instancedMesh.setMatrixAt(i, dummy.matrix);
 
@@ -1036,8 +1046,9 @@ export default function GameBanDoVietNam({
       const wx = (cell.x - cols / 2) * 1.0;
       const wz = (cell.y - rows / 2) * 1.0;
 
+      const curDim = state.cellDim || 0.88;
       dummy.position.set(wx, posY, wz);
-      dummy.scale.set(0.94, scaleY, 0.94);
+      dummy.scale.set(curDim, scaleY, curDim);
       dummy.updateMatrix();
       instancedMesh.setMatrixAt(i, dummy.matrix);
 
@@ -1224,15 +1235,22 @@ export default function GameBanDoVietNam({
 
   return (
     <div 
-      className={`relative w-full h-full flex flex-col overflow-hidden select-none font-sans transition-colors duration-300 ${
+      className={`relative w-full h-full flex items-center justify-center select-none font-sans transition-colors duration-300 ${
         isPopout 
           ? 'bg-transparent' 
           : isLightTheme 
-          ? 'bg-slate-100 text-slate-900' 
-          : 'bg-[#070b14] text-white'
-      }`}
+          ? 'bg-slate-200 text-slate-900' 
+          : 'bg-[#05070c] text-white'
+      } overflow-hidden`}
       onPointerDown={handleUserGesture}
     >
+      <div 
+        className={`relative flex flex-col overflow-hidden transition-all duration-300 ${
+          aspectRatio === '9:16'
+            ? 'w-full max-w-[440px] h-full max-h-[920px] aspect-[9/16] rounded-2xl md:rounded-3xl border border-yellow-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-[#070b14]'
+            : 'w-full h-full bg-[#070b14]'
+        }`}
+      >
       {/* 1. TOP HUD: Header & Tiến Độ Hoàn Thành Bản Đồ - RESPONSIVE ALL DEVICES */}
       <div className={`relative z-20 flex flex-wrap md:flex-nowrap items-center justify-between px-3 py-2 sm:px-4 sm:py-2.5 backdrop-blur-md border-b shrink-0 transition-colors gap-2 ${
         isLightTheme 
@@ -1290,20 +1308,26 @@ export default function GameBanDoVietNam({
           </div>
 
           <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
-            {/* Nút Chuyển Đổi Màn Hình Live Sạch 100% vs Quản Trị */}
+            {/* Nút Chuyển Đổi Tỷ Lệ Khung Hình: 9:16 (TikTok Dọc) vs 16:9 (OBS Ngang) */}
             <button
-              onClick={() => setIsLiveCleanMode(!isLiveCleanMode)}
+              onClick={() => {
+                const nextAspect = aspectRatio === '9:16' ? '16:9' : '9:16';
+                setAspectRatio(nextAspect);
+                try {
+                  localStorage.setItem('avalive_map_aspect_ratio', nextAspect);
+                } catch (e) {}
+              }}
               className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all border flex items-center gap-1 shadow-sm ${
-                isLiveCleanMode
-                  ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-red-400 ring-2 ring-red-400/50 animate-pulse'
+                aspectRatio === '9:16'
+                  ? 'bg-gradient-to-r from-pink-600 via-rose-500 to-amber-500 text-white border-pink-300 ring-2 ring-pink-400/50 shadow-pink-500/30'
                   : isLightTheme
                   ? 'bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300'
-                  : 'bg-white/10 hover:bg-white/20 text-gray-300 border-white/10'
+                  : 'bg-white/10 hover:bg-white/20 text-cyan-300 border-white/10'
               }`}
-              title={isLiveCleanMode ? "Đang ở CHẾ ĐỘ MÀN HÌNH LIVE (Sạch 100%, ẩn nút test quà & admin) — Bấm để mở Chế độ Quản trị" : "Bấm để chuyển sang CHẾ ĐỘ MÀN HÌNH LIVE (Sạch 100% cho OBS / TikTok LIVE Studio)"}
+              title={aspectRatio === '9:16' ? "Đang ở Khung Hình 9:16 (Chuẩn TikTok Live Dọc) — Bấm chuyển sang 16:9 (Ngang OBS/PC)" : "Đang ở Khung Hình 16:9 (Ngang OBS/PC) — Bấm chuyển sang 9:16 (Chuẩn TikTok Live Dọc)"}
             >
-              <span className="w-2 h-2 rounded-full bg-red-400 animate-ping shrink-0" />
-              <span>{isLiveCleanMode ? '🔴 Màn Hình Live' : '⚙️ Chế Độ Admin'}</span>
+              <Smartphone size={12} className={aspectRatio === '9:16' ? 'text-yellow-300' : 'text-cyan-300'} />
+              <span>{aspectRatio === '9:16' ? '📱 9:16 TikTok' : '🖥️ 16:9 OBS'}</span>
             </button>
 
             {/* Nút Bật/Tắt Chế Độ Tự Động Hoàn Toàn 24/24 (Auto Loop 24/7) */}
@@ -1873,16 +1897,18 @@ export default function GameBanDoVietNam({
 
         {/* LEFT HUD: Boss Event & Urgent Mission & Live Feed (Collapsible) */}
         {showSidePanels && (
-          <div className="absolute top-4 left-4 z-10 flex flex-col gap-2.5 max-w-[280px] pointer-events-none animate-in fade-in slide-in-from-left duration-200">
+          <div className={`absolute z-10 flex flex-col gap-2 pointer-events-none animate-in fade-in duration-200 ${
+            aspectRatio === '9:16' ? 'top-2 left-2 max-w-[145px]' : 'top-4 left-4 max-w-[280px]'
+          }`}>
             {/* Boss Banner */}
             {gameState.boss.active && (
-              <div className="pointer-events-auto bg-gradient-to-r from-red-950/90 via-purple-950/90 to-black/90 border-2 border-red-500/80 rounded-xl p-3 shadow-2xl backdrop-blur-md animate-pulse">
-                <div className="flex items-center justify-between text-xs font-black text-red-400 mb-1">
-                  <span>{gameState.boss.name}</span>
+              <div className="pointer-events-auto bg-gradient-to-r from-red-950/90 via-purple-950/90 to-black/90 border-2 border-red-500/80 rounded-xl p-2 sm:p-3 shadow-2xl backdrop-blur-md animate-pulse">
+                <div className="flex items-center justify-between text-[10px] sm:text-xs font-black text-red-400 mb-1">
+                  <span className="truncate">{gameState.boss.name}</span>
                   <span className="font-mono text-yellow-300">{gameState.boss.remainingSec}s</span>
                 </div>
-                <p className="text-[10px] text-gray-300 mb-2">Thưởng: {gameState.boss.reward}</p>
-                <div className="w-full h-2 bg-black/60 rounded-full overflow-hidden border border-red-500/40">
+                <p className="text-[9px] sm:text-[10px] text-gray-300 mb-1.5 truncate">Thưởng: {gameState.boss.reward}</p>
+                <div className="w-full h-1.5 sm:h-2 bg-black/60 rounded-full overflow-hidden border border-red-500/40">
                   <div 
                     className="h-full bg-red-600 transition-all duration-300"
                     style={{ width: `${Math.min(100, (gameState.boss.currentCells / gameState.boss.targetCells) * 100)}%` }}
@@ -1893,29 +1919,29 @@ export default function GameBanDoVietNam({
 
             {/* Active Mission Banner */}
             {gameState.activeMission && (
-              <div className="pointer-events-auto bg-blue-950/80 border border-blue-400/60 rounded-xl p-2.5 shadow-xl backdrop-blur-md">
-                <div className="text-[11px] font-black text-blue-300 flex items-center gap-1.5 mb-1">
-                  <Zap size={12} className="text-yellow-400 animate-spin" />
-                  <span>{gameState.activeMission.title}</span>
+              <div className="pointer-events-auto bg-blue-950/80 border border-blue-400/60 rounded-xl p-2 sm:p-2.5 shadow-xl backdrop-blur-md">
+                <div className="text-[10px] sm:text-[11px] font-black text-blue-300 flex items-center gap-1 mb-0.5 truncate">
+                  <Zap size={11} className="text-yellow-400 animate-spin shrink-0" />
+                  <span className="truncate">{gameState.activeMission.title}</span>
                 </div>
-                <div className="text-[10px] text-gray-400">Thưởng: <span className="text-emerald-400 font-bold">{gameState.activeMission.reward}</span></div>
+                <div className="text-[9px] sm:text-[10px] text-gray-400 truncate">Thưởng: <span className="text-emerald-400 font-bold">{gameState.activeMission.reward}</span></div>
               </div>
             )}
 
             {/* Real-time Live Activity Feed */}
-            <div className="pointer-events-auto bg-black/60 border border-white/10 rounded-2xl p-2.5 shadow-xl backdrop-blur-md max-h-48 overflow-y-auto custom-scrollbar">
-              <div className="text-[10px] font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                <Sparkles size={11} className="text-yellow-400" /> Hoạt động cắm cờ
+            <div className="pointer-events-auto bg-black/65 border border-white/10 rounded-2xl p-2 sm:p-2.5 shadow-xl backdrop-blur-md max-h-40 sm:max-h-48 overflow-y-auto custom-scrollbar">
+              <div className="text-[9px] sm:text-[10px] font-bold text-gray-300 uppercase tracking-wider mb-1 flex items-center gap-1">
+                <Sparkles size={10} className="text-yellow-400 shrink-0" /> <span className="truncate">Hoạt động cắm cờ</span>
               </div>
-              <div className="space-y-1.5">
-                {gameState.feed.slice(0, 8).map(item => (
-                  <div key={item.id} className="text-[11px] text-gray-200 leading-tight bg-white/5 p-1.5 rounded-lg border border-white/5 animate-in fade-in">
-                    <span className="text-[9px] text-gray-400 font-mono mr-1">[{item.time}]</span>
-                    {item.text}
+              <div className="space-y-1">
+                {gameState.feed.slice(0, 6).map(item => (
+                  <div key={item.id} className="text-[10px] sm:text-[11px] text-gray-200 leading-tight bg-white/5 p-1 rounded-lg border border-white/5 animate-in fade-in">
+                    <span className="text-[8px] sm:text-[9px] text-gray-400 font-mono mr-1">[{item.time}]</span>
+                    <span className="break-words">{item.text}</span>
                   </div>
                 ))}
                 {gameState.feed.length === 0 && (
-                  <div className="text-[11px] text-gray-500 italic">Chưa có lượt tặng quà nào...</div>
+                  <div className="text-[10px] text-gray-500 italic">Chưa có lượt tặng quà...</div>
                 )}
               </div>
             </div>
@@ -1924,14 +1950,16 @@ export default function GameBanDoVietNam({
 
         {/* RIGHT HUD: Leaderboard Top Đại Gia (Collapsible) */}
         {showSidePanels && (
-          <div className="absolute top-4 right-4 z-10 w-64 pointer-events-none animate-in fade-in slide-in-from-right duration-200">
-            <div className="pointer-events-auto bg-black/65 border border-white/10 rounded-2xl p-3 shadow-2xl backdrop-blur-md">
-              <div className="flex items-center justify-between pb-2 border-b border-white/10 mb-2">
-                <div className="flex items-center gap-1.5 text-xs font-black text-yellow-400">
-                  <Trophy size={14} className="text-yellow-400" />
-                  <span>BẢNG VÀNG CẮM CỜ</span>
+          <div className={`absolute z-10 pointer-events-none animate-in fade-in duration-200 ${
+            aspectRatio === '9:16' ? 'top-2 right-2 w-36' : 'top-4 right-4 w-64'
+          }`}>
+            <div className="pointer-events-auto bg-black/70 border border-white/10 rounded-2xl p-2 sm:p-3 shadow-2xl backdrop-blur-md">
+              <div className="flex items-center justify-between pb-1.5 border-b border-white/10 mb-1.5">
+                <div className="flex items-center gap-1 text-[10px] sm:text-xs font-black text-yellow-400 truncate">
+                  <Trophy size={12} className="text-yellow-400 shrink-0" />
+                  <span className="truncate">BẢNG VÀNG</span>
                 </div>
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-400/20 text-yellow-300 font-mono font-bold">
+                <span className="text-[9px] px-1 py-0.2 rounded bg-yellow-400/20 text-yellow-300 font-mono font-bold shrink-0">
                   TOP {gameState.leaderboard.length}
                 </span>
               </div>
@@ -2369,23 +2397,6 @@ export default function GameBanDoVietNam({
 
             {/* Quick Actions */}
             <div className="flex items-center gap-2 shrink-0">
-              {/* Nút Kích Hoạt Chế Độ Tự Động 24/7 */}
-              <button
-                onClick={() => {
-                  bandoEngine.toggleAuto247();
-                  setIsAuto247(bandoEngine.isAuto247Running);
-                }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all border shadow-lg ${
-                  isAuto247
-                    ? 'bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 text-white border-emerald-300 ring-2 ring-emerald-400 animate-pulse'
-                    : 'bg-white/10 hover:bg-white/20 text-yellow-300 border-white/10'
-                }`}
-                title="Tự động hoá toàn diện 24/24: Cắm cờ liên tục -> Hoàn thành 100% -> Vinh danh Top 30 + Top 1 -> Tự động chuyển vòng mới"
-              >
-                <Zap size={14} className={isAuto247 ? 'text-yellow-300 fill-yellow-300 animate-bounce' : 'text-yellow-400'} />
-                <span>{isAuto247 ? '⚡ Đang Auto 24/7' : '⚡ Bật Auto 24/7'}</span>
-              </button>
-
               <button
                 onClick={handleToggleAutoTest}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all border shadow-lg ${
@@ -2422,6 +2433,7 @@ export default function GameBanDoVietNam({
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -312,15 +312,20 @@ class BanDoGameEngine {
     const preset = this.countries[this.state.selectedCountry] || this.countries.vietnam || WORLD_COUNTRIES[0];
     const targetCount = this.state.totalCells || 15125;
 
+    // Cache original Vietnam cells
+    if (this.maskData && this.maskData.cells && !this._originalVietnamCells && this.state.selectedCountry === 'vietnam') {
+      this._originalVietnamCells = this.maskData.cells;
+    }
+
     // Build or scale cell grid
     let baseCells = [];
-    if (this.maskData && this.maskData.cells && this.state.selectedCountry === 'vietnam') {
-      baseCells = this.maskData.cells;
+    if (this.state.selectedCountry === 'vietnam' && (this._originalVietnamCells || this.maskData?.cells)) {
+      baseCells = this._originalVietnamCells || this.maskData.cells;
     } else {
       baseCells = this.generateCountryGeometry(this.state.selectedCountry, targetCount);
     }
 
-    // Subsample or interpolate to match targetCount
+    // Subsample or interpolate to match targetCount with clean regular grid
     let finalCells = [];
     if (baseCells.length === targetCount) {
       finalCells = baseCells;
@@ -330,17 +335,33 @@ class BanDoGameEngine {
         finalCells.push(baseCells[Math.floor(i * step)]);
       }
     } else {
+      // Subdivide cleanly with regular sub-pixel offsets (no random jitter)
       finalCells = [...baseCells];
+      const expansionRatio = targetCount / baseCells.length;
+      const subOffsets = [
+        { dx: -0.25, dy: -0.25 },
+        { dx: 0.25, dy: -0.25 },
+        { dx: -0.25, dy: 0.25 },
+        { dx: 0.25, dy: 0.25 },
+        { dx: 0, dy: -0.35 },
+        { dx: 0, dy: 0.35 },
+        { dx: -0.35, dy: 0 },
+        { dx: 0.35, dy: 0 }
+      ];
+
       let idx = 0;
+      let offsetIdx = 0;
       while (finalCells.length < targetCount) {
         const c = baseCells[idx % baseCells.length];
+        const off = subOffsets[offsetIdx % subOffsets.length];
         finalCells.push({
           ...c,
           id: finalCells.length + 1,
-          x: c.x + (Math.random() - 0.5) * 1.5,
-          y: c.y + (Math.random() - 0.5) * 1.5,
+          x: c.x + off.dx,
+          y: c.y + off.dy,
         });
         idx++;
+        if (idx % baseCells.length === 0) offsetIdx++;
       }
     }
 
