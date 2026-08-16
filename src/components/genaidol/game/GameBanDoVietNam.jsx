@@ -702,20 +702,20 @@ export default function GameBanDoVietNam({
       const wz = (cell.y - rows / 2) * 1.0;
       const isClaimed = !!bandoEngine.state.cellsById[cell.id];
 
-      const scaleY = isClaimed ? 1.8 : 0.42;
+      const scaleY = isClaimed ? 1.70 : 0.32;
       const posY = scaleY / 2;
 
       dummy.position.set(wx, posY, wz);
-      dummy.scale.set(1, scaleY, 1);
+      dummy.scale.set(0.94, scaleY, 0.94);
       dummy.updateMatrix();
       instancedMesh.setMatrixAt(i, dummy.matrix);
 
       if (isClaimed) {
-        // Ô đã cắm cờ: Nhô cao 3D rực rỡ + Vàng kim phát sáng
-        instancedMesh.setColorAt(i, new THREE.Color(1.35, 1.25, 1.05));
+        // Ô đã cắm cờ (người xem tặng quà): Lắp lá cờ quốc kỳ 3D nhô cao + Phát sáng rực rỡ
+        instancedMesh.setColorAt(i, new THREE.Color(1.20, 1.15, 1.05));
       } else {
-        // Ô lãnh thổ quốc gia: Hiển thị trọn vẹn 100% Texture Lá Cờ Quốc Kỳ Đỏ Sao Vàng sắc nét không bị đen
-        instancedMesh.setColorAt(i, new THREE.Color(1.0, 1.0, 1.0));
+        // Ô nền lãnh thổ CHƯA cắm cờ: Giữ nguyên ô nền màu đen/xám tối công nghệ (chờ lắp cờ khi tặng quà)
+        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.25, 0.28, 0.35) : new THREE.Color(0.08, 0.10, 0.14));
       }
     }
     instancedMesh.instanceMatrix.needsUpdate = true;
@@ -991,22 +991,22 @@ export default function GameBanDoVietNam({
       const cell = cells[i];
       if (!cell) continue;
       const isClaimed = !!gameState.cellsById[cell.id];
-      const scaleY = isClaimed ? 1.8 : 0.42;
+      const scaleY = isClaimed ? 1.70 : 0.32;
       const posY = scaleY / 2;
       const wx = (cell.x - cols / 2) * 1.0;
       const wz = (cell.y - rows / 2) * 1.0;
 
       dummy.position.set(wx, posY, wz);
-      dummy.scale.set(1, scaleY, 1);
+      dummy.scale.set(0.94, scaleY, 0.94);
       dummy.updateMatrix();
       instancedMesh.setMatrixAt(i, dummy.matrix);
 
       if (isClaimed) {
-        // Ô đã cắm cờ: Nhô cao 3D rực rỡ + Vàng kim phát sáng
-        instancedMesh.setColorAt(i, new THREE.Color(1.35, 1.25, 1.05));
+        // Ô đã cắm cờ (người xem tặng quà): Lắp lá cờ quốc kỳ 3D nhô cao + Phát sáng rực rỡ
+        instancedMesh.setColorAt(i, new THREE.Color(1.20, 1.15, 1.05));
       } else {
-        // Ô lãnh thổ quốc gia: Hiển thị trọn vẹn 100% Texture Lá Cờ Quốc Kỳ Đỏ Sao Vàng sắc nét
-        instancedMesh.setColorAt(i, new THREE.Color(1.0, 1.0, 1.0));
+        // Ô nền lãnh thổ CHƯA cắm cờ: Giữ nguyên ô nền màu đen/xám tối công nghệ (chờ lắp cờ khi tặng quà)
+        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.25, 0.28, 0.35) : new THREE.Color(0.08, 0.10, 0.14));
       }
     }
 
@@ -1110,17 +1110,9 @@ export default function GameBanDoVietNam({
           ctx.fill();
         }
       } else {
-        ctx.fillStyle = '#DC2626';
+        // Ô nền đen xám công nghệ (chưa cắm cờ)
+        ctx.fillStyle = isLightTheme ? '#cbd5e1' : '#1e293b';
         ctx.fillRect(cx, cy, cellSize, cellSize);
-        if (cellSize >= 3.0) {
-          ctx.fillStyle = '#FDE047';
-          const r = cellSize * 0.22;
-          const midX = cx + cellSize / 2;
-          const midY = cy + cellSize / 2;
-          ctx.beginPath();
-          ctx.arc(midX, midY, r, 0, Math.PI * 2);
-          ctx.fill();
-        }
       }
     });
 
@@ -1350,49 +1342,44 @@ export default function GameBanDoVietNam({
               }}
               className="flex flex-col items-center pointer-events-none select-none drop-shadow-xl animate-in zoom-in duration-200"
             >
-              {/* 1. TOP FLOATING BADGE (Avatar + Flag + TikTok ID + Claim Count) - REDUCED 30% */}
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-gradient-to-r from-red-950/95 via-neutral-900/95 to-black/95 border border-yellow-400/90 shadow-[0_0_18px_rgba(250,204,21,0.75)] backdrop-blur-md ring-1 ring-yellow-400/40">
-                {/* National Flag & Avatar */}
+              {/* 1. TOP FLOATING BADGE (Avatar + Flag + TikTok ID + Claim Count) - ULTRA COMPACT & ELEGANT */}
+              <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg bg-black/90 border border-yellow-400/80 shadow-[0_0_10px_rgba(250,204,21,0.55)] backdrop-blur-md">
+                {/* National Flag & Mini Avatar */}
                 <div className="relative flex-shrink-0">
                   {badge.avatar ? (
                     <img 
                       src={badge.avatar} 
                       alt="Avatar" 
-                      className="w-5 h-5 rounded-full border border-yellow-300 object-cover shadow-sm" 
+                      className="w-4 h-4 rounded-full border border-yellow-300 object-cover shadow-sm" 
                     />
                   ) : (
-                    <div className="w-5 h-5 rounded-full bg-red-600 border border-yellow-300 flex items-center justify-center text-[10px] shadow-sm">
+                    <div className="w-4 h-4 rounded-full bg-red-600 border border-yellow-300 flex items-center justify-center text-[8px] shadow-sm">
                       {badge.flag || '🇻🇳'}
                     </div>
                   )}
-                  <span className="absolute -bottom-1 -right-1 text-[9px] drop-shadow select-none">
+                  <span className="absolute -bottom-0.5 -right-0.5 text-[7px] select-none">
                     {badge.flag || '🇻🇳'}
                   </span>
                 </div>
 
-                {/* User Info & TikTok ID */}
-                <div className="flex flex-col text-left leading-none">
-                  <div className="flex items-center gap-0.5">
-                    <span className="text-[10px] font-black text-yellow-300 font-mono tracking-wide">
-                      {badge.userId.startsWith('@') ? badge.userId : `@${badge.userId}`}
-                    </span>
-                  </div>
-                  <span className="text-[9px] font-bold text-white max-w-[95px] truncate mt-0.5">
-                    {badge.username}
+                {/* User Info & TikTok ID - Nhỏ gọn, thanh thoát */}
+                <div className="flex items-center gap-1 leading-none">
+                  <span className="text-[8.5px] font-bold text-yellow-300 font-mono tracking-tight max-w-[75px] truncate">
+                    {badge.userId.startsWith('@') ? badge.userId : `@${badge.userId}`}
                   </span>
                 </div>
 
-                {/* Claim Count Badge */}
-                <div className="ml-1 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-red-600 via-amber-500 to-yellow-500 text-white font-black text-[9px] font-mono shadow-[0_0_8px_rgba(239,68,68,0.7)] flex items-center gap-0.5">
-                  <Flag size={8} className="fill-white" />
-                  <span>+{badge.count} Ô</span>
+                {/* Claim Count Badge Mini */}
+                <div className="px-1 py-0.5 rounded bg-red-600/90 text-white font-bold text-[7.5px] font-mono shadow-xs flex items-center gap-0.5">
+                  <Flag size={6} className="fill-white" />
+                  <span>+{badge.count}</span>
                 </div>
               </div>
 
               {/* 2. 3D PIN POLE LINE CONNECTING BADGE TO 3D MAP CELL */}
               <div className="flex flex-col items-center">
-                <div className="w-0.5 h-4 bg-gradient-to-b from-yellow-400 via-yellow-500 to-transparent shadow-[0_0_6px_rgba(250,204,21,0.9)]" />
-                <div className="w-2 h-2 rounded-full bg-yellow-400 border border-white shadow-[0_0_8px_#facc15] animate-ping" />
+                <div className="w-0.5 h-2.5 bg-gradient-to-b from-yellow-400 via-yellow-500 to-transparent" />
+                <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 border border-white shadow-[0_0_6px_#facc15]" />
               </div>
             </div>
           ))}
