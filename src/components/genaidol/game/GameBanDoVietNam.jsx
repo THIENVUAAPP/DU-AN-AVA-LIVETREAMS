@@ -121,45 +121,8 @@ const DEFAULT_CUSTOM_BOOKMARKS = [
   },
 ];
 
-// Dữ liệu mẫu khởi tạo huy hiệu cắm cờ phân bổ đều 3 miền, tránh trùng tọa độ
-const INITIAL_DEMO_BADGES = [
-  {
-    id: 'badge_hanoi_demo',
-    userId: '@hanoi_pho_co',
-    username: 'Chiến Binh Thủ Đô 🏛️',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100',
-    flag: '🇻🇳',
-    count: 25,
-    wx: -49.2,
-    wy: 5.5,
-    wz: -123.0,
-    timestamp: Date.now(),
-  },
-  {
-    id: 'badge_danang_demo',
-    userId: '@danang_song_han',
-    username: 'Rồng Vàng Miền Trung 🏖️',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-    flag: '🇻🇳',
-    count: 18,
-    wx: -4.7,
-    wy: 5.5,
-    wz: 4.5,
-    timestamp: Date.now() - 1000,
-  },
-  {
-    id: 'badge_saigon_demo',
-    userId: '@saigon_pho_hoa',
-    username: 'Bác Ba Sài Gòn 🏙️',
-    avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100',
-    flag: '🇻🇳',
-    count: 32,
-    wx: -27.6,
-    wy: 5.5,
-    wz: 126.4,
-    timestamp: Date.now() - 2000,
-  },
-];
+// Khởi tạo danh sách huy hiệu cắm cờ rỗng sạch cho chiến dịch chạy thật
+const INITIAL_DEMO_BADGES = [];
 
 export default function GameBanDoVietNam({
   isPopout = false,
@@ -174,7 +137,7 @@ export default function GameBanDoVietNam({
   const [activeCameraPreset, setActiveCameraPreset] = useState('overview');
   const [autoRotate, setAutoRotate] = useState(() => bandoEngine.state.autoRotate || false);
   const [isPanMode, setIsPanMode] = useState(false);
-  const [recentClaimBadges, setRecentClaimBadges] = useState(INITIAL_DEMO_BADGES);
+  const [recentClaimBadges, setRecentClaimBadges] = useState([]);
   const [victoryTab, setVictoryTab] = useState('champion'); // 'champion' | 'top30'
   const [isAuto247, setIsAuto247] = useState(() => bandoEngine.isAuto247Running);
   const [isBgmLoop, setIsBgmLoop] = useState(() => bandoAudio.isBgmLoop);
@@ -421,6 +384,11 @@ export default function GameBanDoVietNam({
         setActiveCameraPreset(newState.cameraPreset);
       }
 
+      // Khi reset vòng chơi mới, dọn sạch toàn bộ huy hiệu cũ trên bản đồ
+      if (lastEvt && (lastEvt.type === 'ROUND_RESET' || lastEvt.type === 'RESET')) {
+        setRecentClaimBadges([]);
+      }
+
       // Xử lý sự kiện cắm ô cờ để tạo Huy Hiệu ID Người Dùng & Lá Cờ Quốc Kỳ Siêu Sắc Nét
       if (lastEvt && (lastEvt.type === 'GIFT_PLACED' || lastEvt.type === 'GIFT')) {
         const user = lastEvt.user;
@@ -458,6 +426,24 @@ export default function GameBanDoVietNam({
     });
     return () => unsub();
   }, [currentCountry]);
+
+  // Tự động đóng màn hình vinh danh & Bắt đầu trận mới sau đúng 4 giây khi chiến thắng
+  useEffect(() => {
+    if (gameState.status !== 'victory') return;
+    const timer = setTimeout(() => {
+      if (bandoEngine.state.status === 'victory') {
+        bandoEngine.resetRound();
+        if (bandoEngine.isAuto247Running || bandoEngine.state.autoLoop247) {
+          setTimeout(() => {
+            if (bandoEngine.state.status === 'playing') {
+              bandoEngine.startAuto247Loop();
+            }
+          }, 300);
+        }
+      }
+    }, 4200);
+    return () => clearTimeout(timer);
+  }, [gameState.status]);
 
   // Handle external TikTok events if passed from parent
   useEffect(() => {
@@ -2124,26 +2110,24 @@ export default function GameBanDoVietNam({
               )}
 
               {/* AUTO-LOOP 24/7 COUNTDOWN BAR & ACTIONS */}
-              {gameState.autoLoop247 && (
-                <div className="mb-4 bg-emerald-950/60 border border-emerald-500/40 rounded-2xl p-2.5 text-xs text-center animate-pulse">
-                  <div className="flex items-center justify-between text-emerald-300 font-bold mb-1 px-1 text-[11px]">
-                    <span className="flex items-center gap-1">
-                      <Zap size={12} className="text-yellow-400" /> Chế độ Tự Động 24/24:
-                    </span>
-                    <span className="font-mono text-yellow-300">
-                      Bắt đầu Trận mới sau: <strong>{gameState.victoryCountdown || 4}s</strong>
-                    </span>
-                  </div>
-                  <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-emerald-500 to-yellow-400 transition-all duration-1000"
-                      style={{
-                        width: `${Math.max(5, ((gameState.victoryCountdown || 4) / (gameState.autoNewRoundDelaySec || 4)) * 100)}%`
-                      }}
-                    />
-                  </div>
+              <div className="mb-4 bg-emerald-950/60 border border-emerald-500/40 rounded-2xl p-2.5 text-xs text-center animate-pulse">
+                <div className="flex items-center justify-between text-emerald-300 font-bold mb-1 px-1 text-[11px]">
+                  <span className="flex items-center gap-1">
+                    <Zap size={12} className="text-yellow-400" /> Tự Động Bắt Đầu Trận Mới:
+                  </span>
+                  <span className="font-mono text-yellow-300">
+                    Bắt đầu sau: <strong>{typeof gameState.victoryCountdown === 'number' && gameState.victoryCountdown >= 0 ? gameState.victoryCountdown : 4}s</strong>
+                  </span>
                 </div>
-              )}
+                <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-emerald-500 to-yellow-400 transition-all duration-1000"
+                    style={{
+                      width: `${Math.max(0, (((typeof gameState.victoryCountdown === 'number' ? gameState.victoryCountdown : 4) / 4) * 100))}%`
+                    }}
+                  />
+                </div>
+              </div>
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-2.5">

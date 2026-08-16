@@ -765,12 +765,18 @@ class BanDoGameEngine {
       this.victoryCountdownTimer = null;
     }
 
-    const celebrationDelay = this.state.autoNewRoundDelaySec !== undefined ? this.state.autoNewRoundDelaySec : 4;
-    this.state.victoryCountdown = celebrationDelay;
-    this.notify({ type: 'VICTORY_COUNTDOWN', seconds: this.state.victoryCountdown });
+    this.state.victoryCountdown = 4;
+    this.notify({ type: 'VICTORY' });
+    this.notify({ type: 'VICTORY_COUNTDOWN', seconds: 4 });
 
     this.victoryCountdownTimer = setInterval(() => {
-      this.state.victoryCountdown -= 1;
+      if (this.state.status !== 'victory') {
+        clearInterval(this.victoryCountdownTimer);
+        this.victoryCountdownTimer = null;
+        return;
+      }
+
+      this.state.victoryCountdown = Math.max(0, (this.state.victoryCountdown ?? 4) - 1);
       this.notify({ type: 'VICTORY_COUNTDOWN', seconds: this.state.victoryCountdown });
 
       if (this.state.victoryCountdown <= 0) {
@@ -789,13 +795,13 @@ class BanDoGameEngine {
             if (this.state.status === 'playing') {
               this.startAuto247Loop();
             }
-          }, 600);
+          }, 300);
         } else if (wasAutoTesting) {
           setTimeout(() => {
             if (this.state.status === 'playing') {
               this.startAutoTestLoop();
             }
-          }, 600);
+          }, 300);
         }
       }
     }, 1000);
