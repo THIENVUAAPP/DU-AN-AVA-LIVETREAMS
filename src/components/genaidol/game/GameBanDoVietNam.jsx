@@ -25,7 +25,7 @@ function easeInOutCubic(t) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
-// Function tạo Texture Quốc Kỳ siêu sắc nét cho từng ô pixel/voxel 3D
+// Function tạo Texture Quốc Kỳ siêu sắc nét, rực rỡ, đẳng cấp cho từng ô pixel/voxel 3D
 function createCountryFlagTexture(countryCode = 'vietnam') {
   const canvas = document.createElement('canvas');
   canvas.width = 256;
@@ -33,17 +33,23 @@ function createCountryFlagTexture(countryCode = 'vietnam') {
   const ctx = canvas.getContext('2d');
 
   if (countryCode === 'japan') {
-    // 🇯🇵 Nhật Bản: Nền trắng + Mặt trời đỏ
+    // 🇯🇵 Nhật Bản: Nền trắng ngà siêu nét + Viền khối + Mặt trời đỏ rực rỡ
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, 256, 256);
+    ctx.strokeStyle = '#E2E8F0';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(3, 3, 250, 250);
     ctx.fillStyle = '#BC002D';
     ctx.beginPath();
     ctx.arc(128, 128, 76, 0, Math.PI * 2);
     ctx.fill();
   } else if (countryCode === 'korea') {
-    // 🇰🇷 Hàn Quốc: Nền trắng + Âm Dương
+    // 🇰🇷 Hàn Quốc: Nền trắng + Âm Dương Thái Cực
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, 256, 256);
+    ctx.strokeStyle = '#E2E8F0';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(3, 3, 250, 250);
     ctx.fillStyle = '#CD2E3A';
     ctx.beginPath();
     ctx.arc(128, 128, 72, Math.PI, 0);
@@ -52,19 +58,48 @@ function createCountryFlagTexture(countryCode = 'vietnam') {
     ctx.beginPath();
     ctx.arc(128, 128, 72, 0, Math.PI);
     ctx.fill();
+  } else if (countryCode === 'usa') {
+    // 🇺🇸 Mỹ: Sọc đỏ trắng + Góc xanh sao
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, 256, 256);
+    ctx.fillStyle = '#B22234';
+    for (let s = 0; s < 7; s++) {
+      ctx.fillRect(0, s * 36.5, 256, 18.25);
+    }
+    ctx.fillStyle = '#3C3B6E';
+    ctx.fillRect(0, 0, 110, 110);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(55, 55, 24, 0, Math.PI * 2);
+    ctx.fill();
   } else {
-    // 🇻🇳 VIỆT NAM (Mặc định): Nền đỏ cờ thắm tươi + Viền khối sắc nét + Ngôi sao vàng 5 cánh chuẩn hình học (KHÔNG phát quang, không glow mờ)
-    ctx.fillStyle = '#DA251D';
+    // 🇻🇳 VIỆT NAM (Mặc định): Nền đỏ cờ thắm hoàng gia + Viền khối vàng hổ phách + Ngôi sao vàng 5 cánh chuẩn tỷ lệ sắc nét tuyệt đối
+    const redGrad = ctx.createLinearGradient(0, 0, 256, 256);
+    redGrad.addColorStop(0, '#DA251D');
+    redGrad.addColorStop(1, '#B91C1C');
+    ctx.fillStyle = redGrad;
     ctx.fillRect(0, 0, 256, 256);
 
-    // Viền phân tách nhẹ tạo chiều sâu khối hộp 3D cho từng ô
-    ctx.strokeStyle = '#991B1B';
+    // Viền khối 3D tạo chiều sâu chắc chắn cho từng khối voxel
+    ctx.strokeStyle = '#7F1D1D';
     ctx.lineWidth = 8;
     ctx.strokeRect(4, 4, 248, 248);
 
-    // Ngôi sao vàng 5 cánh chuẩn tỷ lệ, siêu sắc nét, nhìn từ xa hay gần đều rõ ràng tuyệt đối
-    const cx = 128, cy = 128, outerR = 80, innerR = 32;
-    ctx.fillStyle = '#FFFF00';
+    // Viền ánh kim vàng nhẹ bên trong tăng độ sang trọng
+    ctx.strokeStyle = '#FBBF24';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(8, 8, 240, 240);
+
+    // Ngôi sao vàng 5 cánh chuẩn tỷ lệ hình học quốc kỳ, sắc sảo từ mọi góc nhìn
+    const cx = 128, cy = 128, outerR = 82, innerR = 33;
+    
+    // Gradient vàng hoàng kim rực rỡ
+    const goldGrad = ctx.createRadialGradient(cx, cy, 10, cx, cy, outerR);
+    goldGrad.addColorStop(0, '#FFFBEB');
+    goldGrad.addColorStop(0.3, '#FDE047');
+    goldGrad.addColorStop(1, '#EAB308');
+    
+    ctx.fillStyle = goldGrad;
     ctx.beginPath();
     for (let i = 0; i < 5; i++) {
       const rotOuter = (i * 4 * Math.PI) / 5 - Math.PI / 2;
@@ -80,6 +115,11 @@ function createCountryFlagTexture(countryCode = 'vietnam') {
     }
     ctx.closePath();
     ctx.fill();
+
+    // Viền nét vàng đậm định hình cánh sao
+    ctx.strokeStyle = '#CA8A04';
+    ctx.lineWidth = 2;
+    ctx.stroke();
   }
 
   const texture = new THREE.CanvasTexture(canvas);
@@ -1421,10 +1461,12 @@ export default function GameBanDoVietNam({
                   display: 'none',
                   color: item.color || '#facc15',
                 }}
-                className={`font-black text-xs tracking-wide whitespace-nowrap select-none pointer-events-none transition-opacity duration-150 ${
-                  item.glow 
-                    ? 'drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] px-2.5 py-1 rounded-full bg-black/60 border border-yellow-400/60 backdrop-blur-sm shadow-xl' 
-                    : 'drop-shadow-[0_2px_5px_rgba(0,0,0,0.9)] px-2 py-0.5 rounded-lg bg-black/45 backdrop-blur-xs border border-white/10'
+                className={`tracking-wide whitespace-nowrap select-none pointer-events-none transition-all duration-150 ${
+                  (item.id?.includes('cap') || item.text?.includes('THỦ ĐÔ'))
+                    ? 'font-black text-[12px] px-3.5 py-1 rounded-full bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 text-black border-2 border-yellow-100 shadow-[0_0_22px_rgba(250,204,21,0.9)] ring-2 ring-yellow-500/60 flex items-center gap-1.5'
+                    : item.glow 
+                      ? 'font-black text-xs drop-shadow-[0_0_14px_rgba(250,204,21,0.95)] px-2.5 py-1 rounded-full bg-black/80 border border-yellow-400/90 text-yellow-300 backdrop-blur-sm shadow-xl' 
+                      : 'font-bold text-xs drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] px-2.5 py-0.5 rounded-lg bg-black/65 backdrop-blur-xs border border-white/20 text-gray-100'
                 }`}
               >
                 {item.text}

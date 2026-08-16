@@ -683,7 +683,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
               </div>
 
               {/* Country Cards Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5 max-h-[58vh] overflow-y-auto custom-scrollbar pr-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 max-h-[58vh] overflow-y-auto custom-scrollbar pr-1">
                 {filteredCountries.map(country => (
                   <div
                     key={country.id}
@@ -762,7 +762,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
               </div>
 
               {/* Voice Cards Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-[58vh] overflow-y-auto custom-scrollbar pr-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 max-h-[58vh] overflow-y-auto custom-scrollbar pr-1">
                 {filteredVoices.map(v => {
                   const isSelected = selectedGameVoiceId === v.id;
                   const isPreviewing = previewingVoiceId === v.id;
@@ -1417,7 +1417,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
               </form>
 
               {/* Danh sách các Vùng Miền */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-96 overflow-y-auto custom-scrollbar p-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto custom-scrollbar p-1">
                 {Object.values(gameState.provincesStatus || {})
                   .filter(p => !provSearch.trim() || p.name.toLowerCase().includes(provSearch.toLowerCase()))
                   .map((prov) => {
