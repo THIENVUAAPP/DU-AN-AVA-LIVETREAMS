@@ -204,7 +204,7 @@ class BanDoGameEngine {
 
       // Auto 24/7 Mode Configuration
       autoLoop247: savedCustomConfig.autoLoop247 !== undefined ? savedCustomConfig.autoLoop247 : true,
-      autoNewRoundDelaySec: savedCustomConfig.autoNewRoundDelaySec || 12,
+      autoNewRoundDelaySec: savedCustomConfig.autoNewRoundDelaySec !== undefined ? savedCustomConfig.autoNewRoundDelaySec : 4,
       victoryCountdown: 0,
       isAuto247Running: false,
 
@@ -759,46 +759,46 @@ class BanDoGameEngine {
     this.addFeedItem('VICTORY', `🎉 CHÚC MỪNG CHIẾN THẮNG: Toàn bộ Bản Đồ đã rực rỡ sắc cờ quốc kỳ!`);
     this.notify({ type: 'VICTORY' });
 
-    // HỆ THỐNG ĐẾM NGƯỢC AUTO LOOP 24/7 (TỰ ĐỘNG BẮT ĐẦU TRẬN MỚI XUYÊN SUỐT)
+    // HỆ THỐNG ĐẾM NGƯỢC 4 GIÂY CHO Ô CHÚC MỪNG / LỄ VINH DANH (AUTO LOOP HOẶC ĐÓNG VINH DANH)
     if (this.victoryCountdownTimer) {
       clearInterval(this.victoryCountdownTimer);
       this.victoryCountdownTimer = null;
     }
 
-    if (this.state.autoLoop247) {
-      this.state.victoryCountdown = this.state.autoNewRoundDelaySec || 12;
+    const celebrationDelay = this.state.autoNewRoundDelaySec !== undefined ? this.state.autoNewRoundDelaySec : 4;
+    this.state.victoryCountdown = celebrationDelay;
+    this.notify({ type: 'VICTORY_COUNTDOWN', seconds: this.state.victoryCountdown });
+
+    this.victoryCountdownTimer = setInterval(() => {
+      this.state.victoryCountdown -= 1;
       this.notify({ type: 'VICTORY_COUNTDOWN', seconds: this.state.victoryCountdown });
 
-      this.victoryCountdownTimer = setInterval(() => {
-        this.state.victoryCountdown -= 1;
-        this.notify({ type: 'VICTORY_COUNTDOWN', seconds: this.state.victoryCountdown });
+      if (this.state.victoryCountdown <= 0) {
+        clearInterval(this.victoryCountdownTimer);
+        this.victoryCountdownTimer = null;
 
-        if (this.state.victoryCountdown <= 0) {
-          clearInterval(this.victoryCountdownTimer);
-          this.victoryCountdownTimer = null;
+        const wasAuto247 = this.isAuto247Running;
+        const wasAutoTesting = this.isAutoTesting;
+        const isAutoLoop = this.state.autoLoop247;
 
-          const wasAuto247 = this.isAuto247Running;
-          const wasAutoTesting = this.isAutoTesting;
+        this.resetRound();
 
-          this.resetRound();
-
-          // Nếu đang bật chế độ Auto 24/7 hoặc Auto Test thì tiếp tục chạy vòng mới ngay lập tức
-          if (wasAuto247 || this.state.autoLoop247) {
-            setTimeout(() => {
-              if (this.state.status === 'playing') {
-                this.startAuto247Loop();
-              }
-            }, 600);
-          } else if (wasAutoTesting) {
-            setTimeout(() => {
-              if (this.state.status === 'playing') {
-                this.startAutoTestLoop();
-              }
-            }, 600);
-          }
+        // Nếu đang bật chế độ Auto 24/7 hoặc Auto Test thì tiếp tục chạy vòng mới ngay lập tức
+        if (wasAuto247 || isAutoLoop) {
+          setTimeout(() => {
+            if (this.state.status === 'playing') {
+              this.startAuto247Loop();
+            }
+          }, 600);
+        } else if (wasAutoTesting) {
+          setTimeout(() => {
+            if (this.state.status === 'playing') {
+              this.startAutoTestLoop();
+            }
+          }, 600);
         }
-      }, 1000);
-    }
+      }
+    }, 1000);
   }
 
   resetRound() {

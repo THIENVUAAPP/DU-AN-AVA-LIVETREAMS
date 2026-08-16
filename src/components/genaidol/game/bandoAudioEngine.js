@@ -17,6 +17,10 @@ class BanDoAudioEngine {
     this.duckTimeout = null;
     this.isMuted = false;
     this.isBgmLoop = true;
+    this.bgmTimerMode = '24/7'; // '24/7' | '15m' | '30m' | '1h' | '2h' | '4h'
+    this.bgmTimerTimeout = null;
+    this.bgmTimerRemainingSec = 0;
+    this.bgmTimerInterval = null;
 
     // Custom Uploaded Audio Elements & Data
     this.customBgmAudio = null;
@@ -44,6 +48,10 @@ class BanDoAudioEngine {
         const parsed = JSON.parse(savedSfx);
         this.customSfxName = parsed.name || '';
         this.customSfxUrl = parsed.url || '';
+      }
+      const savedTimer = localStorage.getItem('bando_bgm_timer_mode');
+      if (savedTimer) {
+        this.bgmTimerMode = savedTimer;
       }
     } catch (e) {}
   }
@@ -84,8 +92,74 @@ class BanDoAudioEngine {
     }
   }
 
+  toggleBgm() {
+    this.ensureContext();
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
+    if (this.bgmPlaying) {
+      this.stopBgmOnLive();
+      return false;
+    } else {
+      this.playBgmOnLive();
+      return true;
+    }
+  }
+
+  setBgmTimerMode(mode = '24/7') {
+    this.bgmTimerMode = mode;
+    try {
+      localStorage.setItem('bando_bgm_timer_mode', mode);
+    } catch (e) {}
+
+    if (this.bgmTimerTimeout) {
+      clearTimeout(this.bgmTimerTimeout);
+      this.bgmTimerTimeout = null;
+    }
+    if (this.bgmTimerInterval) {
+      clearInterval(this.bgmTimerInterval);
+      this.bgmTimerInterval = null;
+    }
+
+    if (mode === '24/7') {
+      this.bgmTimerRemainingSec = 0;
+      this.isBgmLoop = true;
+      return;
+    }
+
+    let minutes = 30;
+    if (mode === '15m') minutes = 15;
+    else if (mode === '30m') minutes = 30;
+    else if (mode === '1h') minutes = 60;
+    else if (mode === '2h') minutes = 120;
+    else if (mode === '4h') minutes = 240;
+    else if (mode === '8h') minutes = 480;
+
+    this.bgmTimerRemainingSec = minutes * 60;
+    this.bgmTimerInterval = setInterval(() => {
+      if (this.bgmTimerRemainingSec > 0 && this.bgmPlaying) {
+        this.bgmTimerRemainingSec -= 1;
+        if (this.bgmTimerRemainingSec <= 0) {
+          this.stopBgmOnLive();
+          clearInterval(this.bgmTimerInterval);
+          this.bgmTimerInterval = null;
+        }
+      }
+    }, 1000);
+  }
+
+  setBgmLoop(isLoop) {
+    this.isBgmLoop = isLoop;
+    if (this.customBgmAudio) {
+      this.customBgmAudio.loop = isLoop;
+    }
+  }
+
   playBgmOnLive() {
     this.ensureContext();
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
     if (this.customBgmUrl || this.customBgmAudio) {
       this.playCustomBgm();
     } else {
@@ -415,34 +489,27 @@ class BanDoAudioEngine {
     this.tone(246.94, 0.45, { type: 'square', gain: 0.4, delay: 0.3 });
   }
 
-  setBgmLoop(enabled) {
-    this.isBgmLoop = !!enabled;
-    if (this.customBgmAudio) {
-      this.customBgmAudio.loop = this.isBgmLoop;
-    }
+  // 13. Tiếng Reo Hò Cổ Vũ Của Toàn Dân (Crowd Cheer)
+  playCrowdCheer() {
+    this.playWhiteNoise(1.8, 0.45, 0);
+    this.tone(300, 1.2, { type: 'sine', gain: 0.3 });
+    this.tone(450, 1.0, { type: 'triangle', gain: 0.25, delay: 0.1 });
   }
 
-  // 13. Hoàn thành bản đồ (Khải Hoàn Ca Chiến Thắng Hào Hùng - Epic Grand Fanfare)
-  playVictory() {
-    this.playVictoryEpic();
-  }
-
+  // ==================== KHẢI HOÀN CA TOÀN THẮNG BẢN ĐỒ (VICTORY EPIC FANFARE) ====================
   playVictoryEpic() {
-    const ctx = this.ensureContext();
-    if (!ctx || this.isMuted) return;
+    this.ensureContext();
+    this.duckBgm(4000);
 
-    // 1. Kèn Đồng Fanfare Hùng Tráng Tỏa Sáng
+    // 1. Dàn Kèn Đồng Fanfare Khải Hoàn Ca Hùng Tráng
     const fanfareMelody = [
-      // Câu mở đầu dũng mãnh
-      { f: 523.25, d: 0.35, t: 0 },       // C5
-      { f: 659.25, d: 0.35, t: 0.25 },    // E5
-      { f: 783.99, d: 0.45, t: 0.50 },    // G5
-      { f: 1046.50, d: 0.85, t: 0.80 },   // C6
-      // Hợp âm vươn cao hào khí non sông
-      { f: 880.00, d: 0.40, t: 1.50 },    // A5
-      { f: 987.77, d: 0.40, t: 1.80 },    // B5
-      { f: 1046.50, d: 1.20, t: 2.10 },   // C6 (Kéo dài hùng vĩ)
-      { f: 1318.51, d: 1.40, t: 2.15 },   // E6
+      { f: 523.25, d: 0.25, t: 0.00 },   // C5
+      { f: 523.25, d: 0.25, t: 0.22 },   // C5
+      { f: 523.25, d: 0.25, t: 0.44 },   // C5
+      { f: 659.25, d: 0.60, t: 0.66 },   // E5
+      { f: 783.99, d: 0.40, t: 1.15 },   // G5
+      { f: 1046.50, d: 1.20, t: 1.50 },  // C6
+      { f: 1318.51, d: 0.80, t: 1.85 },  // E6
       { f: 1567.98, d: 1.60, t: 2.20 }    // G6
     ];
 
@@ -477,11 +544,13 @@ class BanDoAudioEngine {
       this.playCustomBgm();
       return;
     }
-    if (this.bgmPlaying) return;
     const ctx = this.ensureContext();
     if (!ctx) return;
-    this.bgmPlaying = true;
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
     this.stopSyntheticBgm();
+    this.bgmPlaying = true;
 
     const bpm = 120;
     const beatSec = 60 / bpm;
@@ -490,7 +559,7 @@ class BanDoAudioEngine {
     const bassScale = [130.81, 146.83, 164.81, 196.00];
     let step = 0;
 
-    this.bgmInterval = setInterval(() => {
+    const playStep = () => {
       if (!this.bgmPlaying || this.isMuted) return;
       
       const freq = scale[step % scale.length];
@@ -498,18 +567,26 @@ class BanDoAudioEngine {
 
       // Bass pad trầm hùng
       if (step % 2 === 0) {
-        this.tone(bassFreq, beatSec * 1.9, { type: 'sine', gain: 0.22 * this.bgmVolume });
-        this.tone(bassFreq * 0.5, beatSec * 2.2, { type: 'triangle', gain: 0.18 * this.bgmVolume });
+        this.tone(bassFreq, beatSec * 1.9, { type: 'sine', gain: 0.35, isBgm: true });
+        this.tone(bassFreq * 0.5, beatSec * 2.2, { type: 'triangle', gain: 0.28, isBgm: true });
       }
 
-      // Melody chuông vàng ngân vang
-      this.tone(freq, beatSec * 0.85, { type: 'triangle', gain: 0.20 * this.bgmVolume });
+      // Melody chuông vàng ngũ cung ngân vang
+      this.tone(freq, beatSec * 0.85, { type: 'triangle', gain: 0.32, isBgm: true });
       if (step % 4 === 0) {
-        this.tone(freq * 1.5, beatSec * 0.5, { type: 'sine', gain: 0.14 * this.bgmVolume, delay: 0.05 });
+        this.tone(freq * 1.5, beatSec * 0.5, { type: 'sine', gain: 0.22, delay: 0.05, isBgm: true });
       }
 
       step = (step + 1) % 32;
-    }, beatSec * 1000);
+    };
+
+    // Chạy nốt đầu tiên ngay lập tức
+    playStep();
+    this.bgmInterval = setInterval(playStep, beatSec * 1000);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('bando-bgm-status', { detail: { playing: true } }));
+    }
   }
 
   stopSyntheticBgm() {
@@ -521,6 +598,9 @@ class BanDoAudioEngine {
       this.customBgmAudio.pause();
     }
     this.bgmPlaying = false;
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('bando-bgm-status', { detail: { playing: false } }));
+    }
   }
 }
 

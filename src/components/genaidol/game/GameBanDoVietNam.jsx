@@ -8,7 +8,7 @@ import {
   MonitorPlay, Sun, Moon, Move, ZoomIn, ZoomOut, Search, Globe, Navigation, Compass as CompassIcon,
   Sliders, Settings, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RefreshCw,
   Bookmark, BookmarkPlus, BookmarkCheck, Edit2, Trash2, Plus, Save, Check, X, Crosshair,
-  Crown, Medal, Music
+  Crown, Medal, Music, Clock
 } from 'lucide-react';
 import bandoEngine, { getHonorTier, COUNTRY_PRESETS } from './bandoGameEngine';
 import bandoAudio from './bandoAudioEngine';
@@ -178,6 +178,11 @@ export default function GameBanDoVietNam({
   const [victoryTab, setVictoryTab] = useState('champion'); // 'champion' | 'top30'
   const [isAuto247, setIsAuto247] = useState(() => bandoEngine.isAuto247Running);
   const [isBgmLoop, setIsBgmLoop] = useState(() => bandoAudio.isBgmLoop);
+  const [isBgmPlaying, setIsBgmPlaying] = useState(() => bandoAudio.bgmPlaying);
+  const [bgmTimerMode, setBgmTimerMode] = useState(() => bandoAudio.bgmTimerMode || '24/7');
+  const [showAudioModal, setShowAudioModal] = useState(false);
+  const [bgmVolume, setBgmVolumeState] = useState(() => bandoAudio.bgmVolume);
+  const [sfxVolume, setSfxVolumeState] = useState(() => bandoAudio.sfxVolume);
   const [isLiveCleanMode, setIsLiveCleanMode] = useState(isPopout);
   const isLightTheme = gameState.settings?.theme === 'light';
 
@@ -482,11 +487,18 @@ export default function GameBanDoVietNam({
     const handleFirstGesture = () => {
       bandoAudio.unlock();
     };
+    const handleBgmStatus = (e) => {
+      setIsBgmPlaying(e.detail?.playing ?? bandoAudio.bgmPlaying);
+    };
+
     window.addEventListener('pointerdown', handleFirstGesture, { once: true });
     window.addEventListener('keydown', handleFirstGesture, { once: true });
+    window.addEventListener('bando-bgm-status', handleBgmStatus);
+
     return () => {
       window.removeEventListener('pointerdown', handleFirstGesture);
       window.removeEventListener('keydown', handleFirstGesture);
+      window.removeEventListener('bando-bgm-status', handleBgmStatus);
     };
   }, []);
 
@@ -1269,6 +1281,37 @@ export default function GameBanDoVietNam({
             </button>
 
             {/* Nút Bật/Tắt Chế Độ Tự Động Hoàn Toàn 24/24 (Auto Loop 24/7) */}
+            <div className="flex items-center rounded-lg border border-purple-500/40 bg-purple-950/40 p-0.5 shadow-sm">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  bandoAudio.ensureContext();
+                  const playing = bandoAudio.toggleBgm();
+                  setIsBgmPlaying(playing);
+                }}
+                className={`px-2 py-1 rounded-md text-[10px] sm:text-xs font-bold transition-all flex items-center gap-1 ${
+                  isBgmPlaying
+                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/30'
+                    : 'text-purple-300 hover:text-white hover:bg-white/10'
+                }`}
+                title={isBgmPlaying ? `Nhạc nền đang PHÁT (Chế độ: ${bgmTimerMode === '24/7' ? 'Vô Tận 24/24' : bgmTimerMode}) — Bấm để TẠM DỪNG` : "Bấm để MỞ NHẠC NỀN ngay lập tức"}
+              >
+                <Music size={12} className={isBgmPlaying ? 'text-yellow-300 fill-yellow-300 animate-pulse' : 'text-gray-400'} />
+                <span className="hidden sm:inline">{isBgmPlaying ? `Nhạc ${bgmTimerMode}` : 'Mở Nhạc'}</span>
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowAudioModal(true);
+                }}
+                className="p-1 rounded-md text-purple-300 hover:text-white hover:bg-purple-800/50 transition-all border-l border-purple-400/20"
+                title="Mở Bảng Cài Đặt Nhạc Nền 24/24 & Hẹn Giờ Tự Động"
+              >
+                <Sliders size={12} />
+              </button>
+            </div>
+
             <button
               onClick={() => {
                 bandoEngine.toggleAuto247();
@@ -1287,26 +1330,6 @@ export default function GameBanDoVietNam({
               <span>{isAuto247 ? '⚡ 24/7: BẬT' : '⚡ Auto 24/7'}</span>
             </button>
 
-            {/* Nút Tự Động Lặp Nhạc Nền 24/7 (BGM Loop Toggle) */}
-            <button
-              onClick={() => {
-                const nextLoop = !isBgmLoop;
-                setIsBgmLoop(nextLoop);
-                bandoAudio.setBgmLoop(nextLoop);
-                if (nextLoop && !bandoAudio.bgmPlaying) {
-                  bandoAudio.startSyntheticBgm();
-                }
-              }}
-              className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs font-bold transition-all border flex items-center gap-1 ${
-                isBgmLoop
-                  ? 'bg-purple-900/60 hover:bg-purple-800/70 text-purple-200 border-purple-400/50 shadow-sm'
-                  : 'bg-white/10 hover:bg-white/20 text-gray-400 border-white/10'
-              }`}
-              title={isBgmLoop ? "Nhạc nền đang TỰ ĐỘNG LẶP VÔ TẬN 24/7 — Bấm để tắt lặp" : "Bật Tự Động Lặp Nhạc Nền 24/7"}
-            >
-              <Music size={12} className={isBgmLoop ? 'text-purple-300 animate-pulse' : 'text-gray-400'} />
-              <span className="hidden sm:inline">{isBgmLoop ? 'Nhạc 24/7' : 'Nhạc: Tắt'}</span>
-            </button>
 
             {/* Nút Chuyển Đổi Nền Sáng / Tối (Light / Dark Mode Switcher) */}
             <button
@@ -2108,14 +2131,14 @@ export default function GameBanDoVietNam({
                       <Zap size={12} className="text-yellow-400" /> Chế độ Tự Động 24/24:
                     </span>
                     <span className="font-mono text-yellow-300">
-                      Bắt đầu Trận mới sau: <strong>{gameState.victoryCountdown || 12}s</strong>
+                      Bắt đầu Trận mới sau: <strong>{gameState.victoryCountdown || 4}s</strong>
                     </span>
                   </div>
                   <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-emerald-500 to-yellow-400 transition-all duration-1000"
                       style={{
-                        width: `${Math.max(5, ((gameState.victoryCountdown || 12) / (gameState.autoNewRoundDelaySec || 12)) * 100)}%`
+                        width: `${Math.max(5, ((gameState.victoryCountdown || 4) / (gameState.autoNewRoundDelaySec || 4)) * 100)}%`
                       }}
                     />
                   </div>
@@ -2151,6 +2174,147 @@ export default function GameBanDoVietNam({
           </div>
         )}
       </div>
+
+      {/* ================= MODAL CÀI ĐẶT NHẠC NỀN & ÂM THANH 24/24 ================= */}
+      {showAudioModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/75 backdrop-blur-md animate-in fade-in">
+          <div className="bg-[#121624] border border-purple-500/40 rounded-3xl w-full max-w-md shadow-2xl p-5 text-white relative">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-purple-600/30 border border-purple-400/40 flex items-center justify-center">
+                  <Music size={18} className="text-purple-300" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-white">Cài Đặt Nhạc Nền 24/24 & Âm Thanh</h3>
+                  <p className="text-[10px] text-gray-400">Tự động lặp lại vô tận hoặc hẹn giờ tắt</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAudioModal(false)}
+                className="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-gray-400 hover:text-white"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Quick Toggle BGM Button */}
+            <div className="mt-4 p-3 rounded-2xl bg-purple-950/40 border border-purple-500/30 flex items-center justify-between">
+              <div>
+                <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <Zap size={14} className="text-yellow-400" /> Nhạc Nền Hào Khí Đông A:
+                </div>
+                <div className="text-[10px] text-purple-300/80">
+                  {isBgmPlaying ? 'Đang phát trực tiếp 24/7' : 'Đang tạm dừng'}
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  bandoAudio.ensureContext();
+                  const playing = bandoAudio.toggleBgm();
+                  setIsBgmPlaying(playing);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                  isBgmPlaying
+                    ? 'bg-gradient-to-r from-red-600 to-rose-500 text-white shadow-lg'
+                    : 'bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-lg'
+                }`}
+              >
+                {isBgmPlaying ? 'Tắt Nhạc' : 'Bật Nhạc Ngay'}
+              </button>
+            </div>
+
+            {/* Chế Độ Hẹn Giờ & Lặp 24/24 */}
+            <div className="mt-4">
+              <label className="text-[11px] font-bold text-gray-300 mb-2 block flex items-center gap-1">
+                <Clock size={12} className="text-cyan-400" /> Chế độ Chạy & Lặp Lại:
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { mode: '24/7', label: '⚡ Vô Tận 24/24', desc: 'Chạy liên tục không ngừng' },
+                  { mode: '15m', label: '⏱️ 15 Phút', desc: 'Tự tắt sau 15p' },
+                  { mode: '30m', label: '⏱️ 30 Phút', desc: 'Tự tắt sau 30p' },
+                  { mode: '1h', label: '⏱️ 1 Giờ', desc: 'Tự tắt sau 1h' },
+                  { mode: '2h', label: '⏱️ 2 Giờ', desc: 'Tự tắt sau 2h' },
+                  { mode: '4h', label: '⏱️ 4 Giờ', desc: 'Tự tắt sau 4h' },
+                ].map((item) => (
+                  <button
+                    key={item.mode}
+                    onClick={() => {
+                      setBgmTimerMode(item.mode);
+                      bandoAudio.setBgmTimerMode(item.mode);
+                      if (!isBgmPlaying) {
+                        bandoAudio.playBgmOnLive();
+                        setIsBgmPlaying(true);
+                      }
+                    }}
+                    className={`p-2 rounded-xl text-left border transition-all ${
+                      bgmTimerMode === item.mode
+                        ? 'bg-purple-600/30 border-purple-400 text-white shadow-md ring-1 ring-purple-400'
+                        : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    <div className="text-[11px] font-black text-yellow-300">{item.label}</div>
+                    <div className="text-[9px] text-gray-400 truncate">{item.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Volume Controls */}
+            <div className="mt-4 space-y-3">
+              <div>
+                <div className="flex justify-between text-xs font-bold text-gray-300 mb-1">
+                  <span className="flex items-center gap-1"><Music size={12} /> Âm lượng Nhạc Nền (BGM):</span>
+                  <span className="font-mono text-purple-300">{Math.round(bgmVolume * 100)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={bgmVolume}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    setBgmVolumeState(val);
+                    bandoAudio.setBgmVolume(val);
+                  }}
+                  className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between text-xs font-bold text-gray-300 mb-1">
+                  <span className="flex items-center gap-1"><Volume2 size={12} /> Âm lượng Hiệu Ứng (SFX):</span>
+                  <span className="font-mono text-cyan-300">{Math.round(sfxVolume * 100)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={sfxVolume}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    setSfxVolumeState(val);
+                    bandoAudio.setSfxVolume(val);
+                  }}
+                  className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                />
+              </div>
+            </div>
+
+            {/* Close Button */}
+            <div className="mt-5">
+              <button
+                onClick={() => setShowAudioModal(false)}
+                className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors"
+              >
+                Xong / Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 3. BOTTOM TEST & AUTO CONTROL BAR (Chỉ hiển thị khi Demo Mode Bật & KHÔNG Ở Chế Độ Live Sạch) */}
       {gameState.isDemoMode && !isPopout && !isLiveCleanMode && (
