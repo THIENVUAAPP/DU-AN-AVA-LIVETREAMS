@@ -4,6 +4,7 @@ import bandoEngine from './bandoGameEngine';
 
 export default function GameBanDoOverlay() {
   const [liveEvent, setLiveEvent] = useState(null);
+  const ratio = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('ratio') || '16:9' : '16:9';
 
   useEffect(() => {
     // Listen to BroadcastChannel for real-time live events from Admin / Host
@@ -25,6 +26,7 @@ export default function GameBanDoOverlay() {
       <GameBanDoVietNam 
         isPopout={true}
         externalLiveEvent={liveEvent}
+        aspectRatio={ratio}
       />
     </div>
   );

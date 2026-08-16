@@ -168,6 +168,8 @@ export default function GameBanDoVietNam({
   isPopout = false,
   onOpenAdmin = null,
   externalLiveEvent = null,
+  aspectRatio: propAspectRatio = null,
+  onToggleAspectRatio = null,
 }) {
   const [gameState, setGameState] = useState(() => bandoEngine.state);
   const [viewMode3D, setViewMode3D] = useState(true);
@@ -187,13 +189,27 @@ export default function GameBanDoVietNam({
   const [bgmVolume, setBgmVolumeState] = useState(() => bandoAudio.bgmVolume);
   const [sfxVolume, setSfxVolumeState] = useState(() => bandoAudio.sfxVolume);
   const [isLiveCleanMode, setIsLiveCleanMode] = useState(isPopout);
-  const [aspectRatio, setAspectRatio] = useState(() => {
+  const [internalAspectRatio, setInternalAspectRatio] = useState(() => {
     try {
       return localStorage.getItem('avalive_map_aspect_ratio') || '16:9';
     } catch (e) {
       return '16:9';
     }
   });
+
+  const aspectRatio = propAspectRatio || internalAspectRatio;
+
+  const handleToggleAspectRatio = () => {
+    if (onToggleAspectRatio) {
+      onToggleAspectRatio();
+    } else {
+      const nextAspect = aspectRatio === '9:16' ? '16:9' : '9:16';
+      setInternalAspectRatio(nextAspect);
+      try {
+        localStorage.setItem('avalive_map_aspect_ratio', nextAspect);
+      } catch (e) {}
+    }
+  };
   const isLightTheme = gameState.settings?.theme === 'light';
 
   // Đồng bộ isLiveCleanMode khi isPopout thay đổi
@@ -386,6 +402,8 @@ export default function GameBanDoVietNam({
     saveBookmarksToStorage(updated);
     notifyBookmark(`➕ Đã thêm [${newBm.name}] từ góc nhìn camera hiện tại!`);
   };
+
+  const handleSaveCurrentCameraAsNewBookmark = handleAddNewBookmarkFromCurrentView;
 
   // Xóa Vị Trí Ghim
   const handleDeleteBookmark = (slotId) => {
