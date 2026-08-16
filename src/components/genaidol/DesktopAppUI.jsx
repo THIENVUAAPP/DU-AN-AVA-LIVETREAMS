@@ -682,7 +682,7 @@ export default function DesktopAppUI() {
         <div 
           className={`relative flex flex-col overflow-hidden transition-all duration-300 ${
             globalAspectRatio === '9:16'
-              ? 'w-full max-w-[440px] h-full max-h-[860px] aspect-[9/16] rounded-2xl md:rounded-3xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-black'
+              ? 'h-full max-h-full aspect-[9/16] w-auto max-w-full mx-auto rounded-2xl md:rounded-3xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-black'
               : 'w-full max-w-[1200px] h-auto max-h-full aspect-[16/9] rounded-2xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-black'
           }`}
         >

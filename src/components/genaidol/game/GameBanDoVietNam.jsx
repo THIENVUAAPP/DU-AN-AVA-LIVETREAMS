@@ -638,9 +638,15 @@ export default function GameBanDoVietNam({
     }
 
     // Camera với Near plane cực gần (0.05) cho phép Zoom Siêu Cận Cảnh từng ô voxel
+    const isVerticalAspect = aspectRatio === '9:16';
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.05, 4000);
-    camera.position.set(0, 240, 260);
-    camera.lookAt(0, 0, 10);
+    if (isVerticalAspect) {
+      camera.position.set(0, 360, 380);
+      camera.lookAt(0, 0, 15);
+    } else {
+      camera.position.set(0, 240, 260);
+      camera.lookAt(0, 0, 10);
+    }
     state.camera = camera;
 
     // Renderer with balanced tone mapping
@@ -819,16 +825,32 @@ export default function GameBanDoVietNam({
     instancedMesh.instanceMatrix.needsUpdate = true;
     if (instancedMesh.instanceColor) instancedMesh.instanceColor.needsUpdate = true;
 
-    // Resize handler
+    // Resize handler với ResizeObserver đảm bảo scene Three.js luôn vẽ đúng kích thước ngay lập tức
     const handleResize = () => {
       if (!container || state.disposed) return;
-      const w = container.clientWidth;
-      const h = container.clientHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
+      const w = container.clientWidth || 800;
+      const h = container.clientHeight || 600;
+      if (w > 0 && h > 0) {
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+      }
     };
     window.addEventListener('resize', handleResize);
+
+    let resizeObserver = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver((entries) => {
+        if (state.disposed || !entries[0]) return;
+        const rect = entries[0].contentRect;
+        if (rect.width > 0 && rect.height > 0) {
+          camera.aspect = rect.width / rect.height;
+          camera.updateProjectionMatrix();
+          renderer.setSize(rect.width, rect.height);
+        }
+      });
+      resizeObserver.observe(container);
+    }
 
     // Animation Loop with 3D-to-Screen Label Projection
     const tempVec = state.tempVec;
@@ -1008,6 +1030,7 @@ export default function GameBanDoVietNam({
       state.disposed = true;
       if (state.animFrameId) cancelAnimationFrame(state.animFrameId);
       window.removeEventListener('resize', handleResize);
+      if (resizeObserver) resizeObserver.disconnect();
       renderer.domElement.removeEventListener('pointerdown', handleDomPointerDown);
       renderer.domElement.removeEventListener('pointerup', handleDomPointerUp);
       renderer.dispose();
@@ -1015,7 +1038,7 @@ export default function GameBanDoVietNam({
       boxMat.dispose();
       if (state.flagTexture) state.flagTexture.dispose();
     };
-  }, [viewMode3D, isPopout, gameState.selectedCountry, isLightTheme, gameState.maskLoaded, gameState.isLoaded]);
+  }, [viewMode3D, isPopout, gameState.selectedCountry, isLightTheme, gameState.maskLoaded, gameState.isLoaded, aspectRatio]);
 
   // Handle Multi-directional Pan & Smooth Zoom Controls
   const handlePan3D = (dirX, dirZ) => {
@@ -1820,7 +1843,7 @@ export default function GameBanDoVietNam({
         <div 
           className={`relative flex flex-col overflow-hidden transition-all duration-300 ${
             aspectRatio === '9:16'
-              ? 'w-full max-w-[480px] h-[98%] max-h-full aspect-[9/16] rounded-2xl md:rounded-3xl border border-yellow-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-[#070b14]'
+              ? 'h-full max-h-full aspect-[9/16] w-auto max-w-full mx-auto rounded-2xl md:rounded-3xl border border-yellow-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-[#070b14]'
               : 'w-full max-w-[1360px] h-full aspect-[16/9] rounded-2xl border border-yellow-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-[#070b14]'
           }`}
         >

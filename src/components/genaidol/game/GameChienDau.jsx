@@ -2112,43 +2112,43 @@ export default function GameChienDau({
         </div>
       </div>
 
-      {/* TOP SUPPORTERS LEADERBOARD (Top Left - Responsive) */}
-      <div className={`absolute top-20 sm:top-28 left-2 sm:left-4 z-20 transition-all duration-300 pointer-events-auto ${
-        isLeaderboardMinimized ? 'w-9 sm:w-10 overflow-hidden' : 'w-36 sm:w-48'
+      {/* TOP SUPPORTERS LEADERBOARD (Top Left - Siêu nhỏ gọn 1/3 kích thước theo yêu cầu) */}
+      <div className={`absolute top-20 sm:top-24 left-2 sm:left-3 z-20 transition-all duration-300 pointer-events-auto ${
+        isLeaderboardMinimized ? 'w-7 sm:w-8 overflow-hidden' : 'w-28 sm:w-32'
       }`}>
-        <div className="bg-black/80 backdrop-blur-md border border-white/15 rounded-xl p-2 sm:p-2.5 shadow-xl text-white">
-          <div className="flex items-center justify-between text-[11px] sm:text-xs font-bold text-amber-300 mb-1 border-b border-white/10 pb-1">
+        <div className="bg-black/85 backdrop-blur-md border border-white/15 rounded-lg p-1 sm:p-1.5 shadow-xl text-white">
+          <div className="flex items-center justify-between text-[9px] sm:text-[10px] font-bold text-amber-300 mb-0.5 border-b border-white/10 pb-0.5">
             {!isLeaderboardMinimized && (
-              <div className="flex items-center gap-1.5">
-                <Trophy size={13} className="text-amber-400 shrink-0" />
-                <span>Bảng Xếp Hạng</span>
+              <div className="flex items-center gap-1">
+                <Trophy size={10} className="text-amber-400 shrink-0" />
+                <span className="truncate">BXH Top</span>
               </div>
             )}
             <button
               onClick={() => setIsLeaderboardMinimized(!isLeaderboardMinimized)}
               className="p-0.5 rounded text-gray-400 hover:text-white hover:bg-white/10 transition-colors ml-auto"
-              title={isLeaderboardMinimized ? "Mở rộng bảng xếp hạng" : "Thu nhỏ bảng xếp hạng"}
+              title={isLeaderboardMinimized ? "Mở rộng BXH" : "Thu nhỏ BXH"}
             >
-              <span className="text-xs font-bold">{isLeaderboardMinimized ? '🏆' : '−'}</span>
+              <span className="text-[9px] font-bold">{isLeaderboardMinimized ? '🏆' : '−'}</span>
             </button>
           </div>
 
           {!isLeaderboardMinimized && (
-            <div className="space-y-1 max-h-48 overflow-y-auto custom-scrollbar">
+            <div className="space-y-0.5 max-h-24 overflow-y-auto custom-scrollbar">
               {gameState.leaderboard.length === 0 ? (
-                <p className="text-[9px] sm:text-[10px] text-gray-400 text-center py-1.5 italic">Chưa có người ủng hộ</p>
+                <p className="text-[8px] text-gray-400 text-center py-1 italic">Chưa có</p>
               ) : (
-                gameState.leaderboard.map((player, idx) => (
-                  <div key={player.userId + idx} className="flex items-center justify-between text-[9px] sm:text-[10px] bg-white/5 px-1.5 py-0.5 sm:py-1 rounded">
-                    <span className="flex items-center gap-1 font-medium truncate max-w-[80px] sm:max-w-[100px]">
+                gameState.leaderboard.slice(0, 3).map((player, idx) => (
+                  <div key={player.userId + idx} className="flex items-center justify-between text-[8px] sm:text-[9px] bg-white/5 px-1 py-0.5 rounded">
+                    <span className="flex items-center gap-0.5 font-medium truncate max-w-[55px] sm:max-w-[65px]">
                       <span className={idx === 0 ? 'text-amber-400 font-bold' : idx === 1 ? 'text-gray-300' : 'text-amber-600'}>
                         #{idx + 1}
                       </span>
-                      <span className={player.faction === 'blue' ? 'text-blue-300' : 'text-red-300'}>
+                      <span className={player.faction === 'blue' ? 'text-blue-300 truncate' : 'text-red-300 truncate'}>
                         {player.nickname}
                       </span>
                     </span>
-                    <span className="font-mono font-bold text-amber-400">{player.score}đ</span>
+                    <span className="font-mono font-bold text-amber-400 shrink-0">{player.score}đ</span>
                   </div>
                 ))
               )}
@@ -2156,58 +2156,55 @@ export default function GameChienDau({
           )}
         </div>
       </div>
-
-      {/* PINNED GIFT & EQUIPMENT SHOWCASE HUD (Top Right - Responsive) */}
+      {/* PINNED GIFT & EQUIPMENT SHOWCASE HUD (Top Right - Siêu nhỏ gọn tinh tế) */}
       {config.showGiftHud !== false && (
-        <div className={`absolute top-20 sm:top-28 right-2 sm:right-4 z-20 transition-all duration-300 pointer-events-auto ${
-          isGiftHudMinimized ? 'w-9 sm:w-10 overflow-hidden' : 'w-48 sm:w-60'
+        <div className={`absolute top-20 sm:top-24 right-2 sm:right-3 z-20 transition-all duration-300 pointer-events-auto ${
+          isGiftHudMinimized ? 'w-7 sm:w-8 overflow-hidden' : 'w-36 sm:w-44'
         }`}>
-          <div className="bg-black/85 backdrop-blur-xl border border-purple-500/40 rounded-2xl shadow-2xl overflow-hidden text-white">
+          <div className="bg-black/85 backdrop-blur-xl border border-purple-500/40 rounded-lg shadow-xl overflow-hidden text-white">
             {/* HUD Header */}
-            <div className="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-gradient-to-r from-purple-950/80 to-indigo-950/80 border-b border-purple-500/30 flex items-center justify-between">
+            <div className="px-1.5 py-0.5 bg-gradient-to-r from-purple-950/90 to-indigo-950/90 border-b border-purple-500/30 flex items-center justify-between">
               {!isGiftHudMinimized ? (
-                <div className="flex items-center gap-1.5">
-                  <Sparkles size={13} className="text-yellow-400 animate-spin" />
-                  <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-purple-200">
-                    CÂY TRANG BỊ & QUÀ
+                <div className="flex items-center gap-1">
+                  <Sparkles size={10} className="text-yellow-400 animate-spin" />
+                  <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-purple-200 truncate">
+                    Quà & Buff
                   </span>
                 </div>
               ) : null}
               <button
                 onClick={() => setIsGiftHudMinimized(!isGiftHudMinimized)}
-                className="p-1 rounded text-gray-400 hover:text-white hover:bg-white/10 transition-colors ml-auto"
+                className="p-0.5 rounded text-gray-400 hover:text-white hover:bg-white/10 transition-colors ml-auto"
                 title={isGiftHudMinimized ? "Mở rộng bảng quà" : "Thu nhỏ bảng quà"}
               >
-                <span className="text-xs font-bold">{isGiftHudMinimized ? '🎁' : '−'}</span>
+                <span className="text-[9px] font-bold">{isGiftHudMinimized ? '🎁' : '−'}</span>
               </button>
             </div>
 
             {/* HUD Items List */}
             {!isGiftHudMinimized && (
-              <div className="p-1.5 sm:p-2 space-y-1 sm:space-y-1.5 max-h-52 sm:max-h-60 overflow-y-auto">
+              <div className="p-1 space-y-0.5 max-h-36 overflow-y-auto">
                 {(config.gifts || [
-                  { id: 1, name: 'Hoa Hồng / Tim', icon: '🌸', coins: 1, tier: 'Tân Binh', buff: '+10 HP Xung Trận' },
-                  { id: 2, name: 'Nước Hoa / Mũ', icon: '🛡️', coins: 50, tier: 'Thiết Giáp Hiệp', buff: '+150 HP + Giáp Bạc' },
-                  { id: 3, name: 'Vương Miện / Cánh', icon: '👑', coins: 200, tier: 'Kim Khải Thần Tướng', buff: '+600 HP + Cánh Vàng' },
-                  { id: 4, name: 'Xe Thể Thao / Sét', icon: '⚡', coins: 500, tier: 'Chiến Thần Vạn Kiếm', buff: '+1500 HP + Thần Binh' },
-                  { id: 5, name: 'Thần Long / Vũ Trụ', icon: '🐉', coins: 1000, tier: 'Chí Tôn Thiên Tôn', buff: '+3500 HP + Rồng Thần' }
+                  { id: 1, name: 'Hoa Hồng', icon: '🌸', coins: 1, tier: 'Tân Binh', buff: '+10 HP' },
+                  { id: 2, name: 'Nước Hoa', icon: '🛡️', coins: 50, tier: 'Thiết Giáp', buff: '+150 HP' },
+                  { id: 3, name: 'Vương Miện', icon: '👑', coins: 200, tier: 'Kim Khải', buff: '+600 HP' },
+                  { id: 4, name: 'Tên Lửa / Sét', icon: '⚡', coins: 500, tier: 'Vạn Kiếm', buff: '+1500 HP' },
+                  { id: 5, name: 'Thần Long', icon: '🐉', coins: 1000, tier: 'Giáng Long', buff: '+3500 HP' }
                 ]).map((g, i) => (
                   <div 
                     key={g.id || i}
-                    className="flex items-center justify-between p-1 sm:p-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all text-xs"
+                    className="flex items-center justify-between p-0.5 sm:p-1 rounded bg-white/5 border border-white/5 text-[8px] sm:text-[9px]"
                   >
-                    <div className="flex items-center gap-1.5 sm:gap-2">
-                      <span className="text-sm sm:text-base">{g.icon}</span>
-                      <div>
-                        <div className="text-[10px] sm:text-[11px] font-bold text-gray-200">{g.tier || g.name}</div>
-                        <div className="text-[8px] sm:text-[9px] text-purple-300">{g.buff}</div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs">{g.icon}</span>
+                      <div className="truncate max-w-[65px] sm:max-w-[80px]">
+                        <div className="font-bold text-gray-200 truncate">{g.tier || g.name}</div>
+                        <div className="text-[7px] text-purple-300 truncate">{g.buff}</div>
                       </div>
                     </div>
-                    <div className="text-right shrink-0">
-                      <span className="text-[9px] sm:text-[10px] font-mono font-black text-amber-400 bg-amber-500/10 px-1 sm:px-1.5 py-0.5 rounded border border-amber-500/20">
-                        {g.coins} xu
-                      </span>
-                    </div>
+                    <span className="font-mono font-bold text-amber-400 shrink-0">
+                      {g.coins}x
+                    </span>
                   </div>
                 ))}
               </div>
@@ -2215,18 +2212,6 @@ export default function GameChienDau({
           </div>
         </div>
       )}
-
-      {/* LIVE COMMENT & GIFT STREAM (Bottom Left - Responsive) */}
-      <div className="absolute bottom-12 sm:bottom-14 left-2 sm:left-4 max-w-[190px] sm:max-w-xs space-y-1 sm:space-y-1.5 z-20 pointer-events-none">
-        {liveFeed.map(item => (
-          <div key={item.id} className="flex items-center gap-1.5 bg-black/80 backdrop-blur-md px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl border border-white/10 text-[10px] sm:text-[11px] text-white shadow-xl animate-in slide-in-from-left-4 fade-in duration-200">
-            <span className="font-bold text-yellow-300 truncate max-w-[75px] sm:max-w-[90px]">{item.name}</span>:
-            <span className={item.faction === 'blue' ? 'text-blue-300 font-semibold' : item.faction === 'red' ? 'text-red-300 font-semibold' : 'text-gray-200'}>
-              {item.text}
-            </span>
-          </div>
-        ))}
-      </div>
 
       {/* BOTTOM HINT BANNER (Responsive) */}
       <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-md border border-white/20 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-medium text-gray-200 z-20 pointer-events-none shadow-lg flex items-center gap-1.5 sm:gap-2 max-w-[92vw] truncate">
@@ -2493,7 +2478,7 @@ export default function GameChienDau({
         <div 
           className={`relative flex flex-col overflow-hidden transition-all duration-300 ${
             aspectRatio === '9:16'
-              ? 'w-full max-w-[480px] h-[98%] max-h-full aspect-[9/16] rounded-2xl md:rounded-3xl border border-purple-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-[#0a0c14]'
+              ? 'h-full max-h-full aspect-[9/16] w-auto max-w-full mx-auto rounded-2xl md:rounded-3xl border border-purple-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-[#0a0c14]'
               : 'w-full max-w-[1360px] h-full aspect-[16/9] rounded-2xl border border-purple-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-[#0a0c14]'
           }`}
         >
