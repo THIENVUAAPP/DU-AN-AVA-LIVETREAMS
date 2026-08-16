@@ -17,7 +17,8 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
   const [totalCellsInput, setTotalCellsInput] = useState(() => bandoEngine.state.totalCells || 15125);
   const [copiedLink, setCopiedLink] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [brightness, setBrightness] = useState(() => bandoEngine.state.settings.brightness || 1.4);
+  const [theme, setTheme] = useState(() => bandoEngine.state.settings.theme || 'dark');
+  const [brightness, setBrightness] = useState(() => bandoEngine.state.settings.brightness || 1.2);
   const [bgmVolume, setBgmVolume] = useState(() => bandoEngine.state.settings.bgmVolume ?? 0.45);
   const [sfxVolume, setSfxVolume] = useState(() => bandoEngine.state.settings.sfxVolume ?? 0.85);
   const [selectedCountry, setSelectedCountry] = useState(() => bandoEngine.state.selectedCountry || 'vietnam');
@@ -61,6 +62,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
   useEffect(() => {
     const unsub = bandoEngine.subscribe((state) => {
       setGameState({ ...state });
+      if (state.settings?.theme) setTheme(state.settings.theme);
       if (state.settings?.customMapTitle) setCustomTitle(state.settings.customMapTitle);
       if (state.totalCells) setTotalCellsInput(state.totalCells);
       if (state.settings?.brightness) setBrightness(state.settings.brightness);
@@ -87,6 +89,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
 
   const handleSaveAll = () => {
     bandoEngine.updateSettings({
+      theme: theme,
       customMapTitle: customTitle,
       brightness: parseFloat(brightness),
       bgmVolume: parseFloat(bgmVolume),
@@ -427,6 +430,75 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                         className="w-full h-1.5 bg-gray-700 rounded-lg accent-yellow-400 cursor-pointer"
                       />
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Theme & Visual Lighting Customization */}
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                    <Sun size={16} className="text-yellow-400" /> Tùy Chỉnh Nền Sáng / Tối & Độ Sáng Bản Đồ 3D
+                  </h3>
+                  <span className="text-[11px] text-gray-400">Bảo lưu vĩnh viễn</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Theme Switcher */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-300 block">Chế Độ Màu Sắc Giao Diện & Nền:</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTheme('dark');
+                          bandoEngine.setTheme('dark');
+                        }}
+                        className={`p-2.5 rounded-xl border flex items-center justify-center gap-2 font-bold text-xs transition-all ${
+                          theme === 'dark'
+                            ? 'bg-slate-900 border-yellow-400 text-yellow-300 shadow-md ring-2 ring-yellow-400/40'
+                            : 'bg-black/40 border-white/10 text-gray-400 hover:bg-white/5'
+                        }`}
+                      >
+                        <span>🌙 Nền Tối (Vũ Trụ)</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTheme('light');
+                          bandoEngine.setTheme('light');
+                        }}
+                        className={`p-2.5 rounded-xl border flex items-center justify-center gap-2 font-bold text-xs transition-all ${
+                          theme === 'light'
+                            ? 'bg-white border-amber-500 text-slate-900 shadow-md ring-2 ring-amber-400/50'
+                            : 'bg-black/40 border-white/10 text-gray-400 hover:bg-white/5'
+                        }`}
+                      >
+                        <span>☀️ Nền Sáng (Studio)</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Brightness slider */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center text-xs font-bold text-gray-300">
+                      <span>Độ Sáng Ánh Sáng 3D:</span>
+                      <span className="font-mono text-yellow-400 font-bold">{Math.round(brightness * 100)}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.6"
+                      max="2.0"
+                      step="0.05"
+                      value={brightness}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        setBrightness(val);
+                        bandoEngine.updateSettings({ brightness: val });
+                      }}
+                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-400 mt-2"
+                    />
                   </div>
                 </div>
               </div>

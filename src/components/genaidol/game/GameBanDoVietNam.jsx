@@ -5,7 +5,7 @@ import {
   Play, Pause, RotateCcw, Shield, Sparkles, Trophy, Flame, 
   MapPin, Flag, Eye, EyeOff, Volume2, VolumeX, Maximize2, Zap, Star,
   Compass, Award, ChevronRight, Layers, CheckCircle2, AlertTriangle, 
-  MonitorPlay, Sun, ZoomIn, ZoomOut, Globe, Navigation, Compass as CompassIcon,
+  MonitorPlay, Sun, Moon, Move, ZoomIn, ZoomOut, Globe, Navigation, Compass as CompassIcon,
   Sliders, Settings, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RefreshCw
 } from 'lucide-react';
 import bandoEngine, { getHonorTier, COUNTRY_PRESETS } from './bandoGameEngine';
@@ -35,6 +35,7 @@ export default function GameBanDoVietNam({
   const [showSidePanels, setShowSidePanels] = useState(true);
   const [activeCameraPreset, setActiveCameraPreset] = useState('overview');
   const [autoRotate, setAutoRotate] = useState(() => bandoEngine.state.autoRotate || false);
+  const [isPanMode, setIsPanMode] = useState(false);
   const [recentClaimBadges, setRecentClaimBadges] = useState([]);
 
   // 2D Canvas Pan & Zoom State
@@ -63,6 +64,18 @@ export default function GameBanDoVietNam({
     tween: null,
     tempVec: new THREE.Vector3(),
   });
+
+  // Dynamic Mouse Controls Mode (Orbit 3D vs Pan Drag)
+  useEffect(() => {
+    const state = threeStateRef.current;
+    if (state.controls) {
+      state.controls.mouseButtons = {
+        LEFT: isPanMode ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE,
+        MIDDLE: THREE.MOUSE.DOLLY,
+        RIGHT: isPanMode ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN,
+      };
+    }
+  }, [isPanMode]);
 
   // Current Country Translation
   const currentCountry = COUNTRY_PRESETS[gameState.selectedCountry] || COUNTRY_PRESETS['vietnam'];
@@ -123,9 +136,9 @@ export default function GameBanDoVietNam({
     const { type, data } = externalLiveEvent;
     if (type === 'GIFT') {
       bandoEngine.processGift(data.giftId || 'rose', data.count || 1, {
-        id: data.userId || 'tiktok_user',
-        username: data.username || 'Người xem TikTok',
-        avatar: data.avatar || ''
+        id: data.userId || 'guest',
+        username: data.username || 'Khách Live',
+        avatar: data.avatar || '',
       });
     } else if (type === 'RESET') {
       bandoEngine.resetRound();
@@ -158,12 +171,12 @@ export default function GameBanDoVietNam({
     const isVN = gameState.selectedCountry === 'vietnam';
     return {
       overview: { name: 'Toàn Cảnh', icon: '🌐', pos: [0, 240, 260], target: [0, 0, 10] },
-      north: { name: isVN ? 'Miền Bắc & Hà Nội' : 'Vùng Phía Bắc', icon: '🏛️', pos: [-20, 120, -50], target: [-20, 0, -85] },
-      central: { name: isVN ? 'Miền Trung & Huế' : 'Khu Vực Trung Tâm', icon: '🏖️', pos: [25, 130, 20], target: [15, 0, 10] },
-      south: { name: isVN ? 'Miền Nam & TP.HCM' : 'Vùng Phía Nam', icon: '🏙️', pos: [-15, 120, 140], target: [-15, 0, 105] },
-      tip_camau: { name: isVN ? 'Mũi Cà Mau (Cực Nam)' : 'Cực Nam', icon: '⛵', pos: [-35, 75, 185], target: [-35, 0, 145] },
-      islands: { name: isVN ? 'Hoàng Sa & Trường Sa' : 'Hải Đảo', icon: '🏝️', pos: [80, 110, 40], target: [65, 0, 15] },
-      macro: { name: 'Cận Cảnh Từng Ô Cờ', icon: '🔍', pos: [0, 25, 25], target: [0, 0, 0] },
+      north: { name: isVN ? 'Miền Bắc & Hà Nội' : 'Vùng Phía Bắc', icon: '🏛️', pos: [-49, 110, -85], target: [-49.2, 0, -123.0] },
+      central: { name: isVN ? 'Miền Trung & Huế' : 'Khu Vực Trung Tâm', icon: '🏖️', pos: [15, 120, 30], target: [-4.7, 0, 4.5] },
+      south: { name: isVN ? 'Miền Nam & TP.HCM' : 'Vùng Phía Nam', icon: '🏙️', pos: [-27, 110, 155], target: [-27.6, 0, 126.4] },
+      tip_camau: { name: isVN ? 'Mũi Cà Mau (Cực Nam)' : 'Cực Nam', icon: '⛵', pos: [-63, 75, 195], target: [-63.1, 0, 161.9] },
+      islands: { name: isVN ? 'Hoàng Sa & Trường Sa' : 'Hải Đảo', icon: '🏝️', pos: [75, 110, 20], target: [65.6, 0, -34.4] },
+      macro: { name: 'Cận Cảnh Từng Ô Cờ', icon: '🔍', pos: [0, 20, 20], target: [0, 0, 0] },
     };
   }, [gameState.selectedCountry]);
 
@@ -197,15 +210,17 @@ export default function GameBanDoVietNam({
 
     const width = container.clientWidth || 800;
     const height = container.clientHeight || 600;
+    const isLightTheme = gameState.settings?.theme === 'light';
 
-    // Scene
+    // Scene with theme-responsive background & fog
     const scene = new THREE.Scene();
     state.scene = scene;
     if (isPopout) {
       scene.background = null;
     } else {
-      scene.background = new THREE.Color(0x0a0f1d);
-      scene.fog = new THREE.FogExp2(0x0a0f1d, 0.0015);
+      const bgColor = isLightTheme ? 0xf8fafc : 0x0a0f1d;
+      scene.background = new THREE.Color(bgColor);
+      scene.fog = new THREE.FogExp2(bgColor, isLightTheme ? 0.0012 : 0.0015);
     }
 
     // Camera
@@ -221,7 +236,7 @@ export default function GameBanDoVietNam({
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = (gameState.settings.brightness || 1.2) * 0.9;
+    renderer.toneMappingExposure = (gameState.settings.brightness || 1.2) * (isLightTheme ? 1.0 : 0.9);
     container.innerHTML = '';
     container.appendChild(renderer.domElement);
     state.renderer = renderer;
@@ -231,59 +246,66 @@ export default function GameBanDoVietNam({
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
     controls.maxPolarAngle = Math.PI / 2.02;
-    controls.minDistance = 8;
-    controls.maxDistance = 800;
+    controls.minDistance = 6;
+    controls.maxDistance = 850;
     controls.target.set(0, 0, 10);
     controls.enablePan = true;
-    controls.panSpeed = 1.5;
+    controls.panSpeed = 1.6;
     controls.screenSpacePanning = true;
     controls.enableZoom = true;
     controls.zoomSpeed = 1.25;
+    controls.mouseButtons = {
+      LEFT: isPanMode ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE,
+      MIDDLE: THREE.MOUSE.DOLLY,
+      RIGHT: isPanMode ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN,
+    };
     controls.autoRotate = !isPopout && autoRotate;
     controls.autoRotateSpeed = 0.8;
     state.controls = controls;
 
     // Balanced Lighting (Crisp Colors without Overexposure)
     const brightness = gameState.settings.brightness || 1.2;
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.95 * brightness);
+    const ambientLight = new THREE.AmbientLight(0xffffff, (isLightTheme ? 1.2 : 0.95) * brightness);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xfffaee, 1.25 * brightness);
+    const dirLight = new THREE.DirectionalLight(0xfffaee, (isLightTheme ? 1.35 : 1.25) * brightness);
     dirLight.position.set(120, 320, 160);
     dirLight.castShadow = true;
     scene.add(dirLight);
 
-    const rimLight = new THREE.DirectionalLight(0x38bdf8, 0.8 * brightness);
+    const rimLight = new THREE.DirectionalLight(isLightTheme ? 0x0284c7 : 0x38bdf8, (isLightTheme ? 0.9 : 0.8) * brightness);
     rimLight.position.set(-150, 180, -120);
     scene.add(rimLight);
 
     const pLight1 = new THREE.PointLight(0xffd700, 1.2 * brightness, 350);
-    pLight1.position.set(-20, 65, -85);
+    pLight1.position.set(-49.2, 65, -123.0);
     scene.add(pLight1);
 
     const pLight2 = new THREE.PointLight(0x38bdf8, 1.0 * brightness, 300);
-    pLight2.position.set(-15, 60, 105);
+    pLight2.position.set(-27.6, 60, 126.4);
     scene.add(pLight2);
 
     const pLight3 = new THREE.PointLight(0xf43f5e, 1.2 * brightness, 350);
-    pLight3.position.set(75, 65, 25);
+    pLight3.position.set(65.6, 65, -34.4);
     scene.add(pLight3);
 
-    // Stars in background
+    // Stars / Background Grid
     if (!isPopout) {
-      const starGeo = new THREE.BufferGeometry();
-      const starCount = 800;
-      const starPos = new Float32Array(starCount * 3);
-      for (let i = 0; i < starCount * 3; i += 3) {
-        starPos[i] = (Math.random() - 0.5) * 1400;
-        starPos[i + 1] = Math.random() * 600 + 30;
-        starPos[i + 2] = (Math.random() - 0.5) * 1400;
+      if (!isLightTheme) {
+        const starGeo = new THREE.BufferGeometry();
+        const starCount = 800;
+        const starPos = new Float32Array(starCount * 3);
+        for (let i = 0; i < starCount * 3; i += 3) {
+          starPos[i] = (Math.random() - 0.5) * 1400;
+          starPos[i + 1] = Math.random() * 600 + 30;
+          starPos[i + 2] = (Math.random() - 0.5) * 1400;
+        }
+        starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+        const starMat = new THREE.PointsMaterial({ color: 0x93c5fd, size: 1.4, transparent: true, opacity: 0.75 });
+        scene.add(new THREE.Points(starGeo, starMat));
       }
-      starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-      const starMat = new THREE.PointsMaterial({ color: 0x93c5fd, size: 1.4, transparent: true, opacity: 0.75 });
-      scene.add(new THREE.Points(starGeo, starMat));
 
-      const gridHelper = new THREE.GridHelper(500, 35, 0x1e293b, 0x0f172a);
+      const gridHelper = new THREE.GridHelper(500, 35, isLightTheme ? 0x94a3b8 : 0x1e293b, isLightTheme ? 0xe2e8f0 : 0x0f172a);
       gridHelper.position.y = -2;
       scene.add(gridHelper);
     }
@@ -690,60 +712,46 @@ export default function GameBanDoVietNam({
         ctx.fillText(`${badge.flag} ${badge.userId}`, bx - 52, by - 10);
       }
     });
-  }, [viewMode3D, gameState.claimedCount, gameState.settings, zoom2D, pan2D, recentClaimBadges]);
-
-  // Test gift trigger handler
-  const handleTestGift = (giftId) => {
-    handleUserGesture();
-    const gifts = gameState.gifts || [];
-    const gift = gifts.find(g => g.id === giftId) || gifts[0];
-    bandoEngine.processGift(gift.id, 1, {
-      id: `user_test_${Math.floor(Math.random() * 5)}`,
-      username: `Đại Gia ${gift.name} 💎`,
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'
-    });
-  };
-
-  // Toggle Auto Test Loop
-  const handleToggleAutoTest = () => {
-    handleUserGesture();
-    if (isAutoTesting) {
-      bandoEngine.stopAutoTestLoop();
-      setIsAutoTesting(false);
-    } else {
-      setIsAutoTesting(true);
-      bandoEngine.startAutoTestLoop((step, name) => {
-        setAutoTestStep(step);
-      });
-    }
-  };
-
-  const cameraPresets = getCameraPresetsForCountry();
+  }, [viewMode3D, gameState.claimedCount, gameState.settings, zoom2D, pan2D, recentClaimBadges, isLightTheme]);
 
   return (
     <div 
-      className={`relative w-full h-full flex flex-col overflow-hidden select-none font-sans ${isPopout ? 'bg-transparent' : 'bg-[#090d16] text-gray-100'}`}
-      onClick={handleUserGesture}
+      className={`relative w-full h-full flex flex-col overflow-hidden select-none font-sans transition-colors duration-300 ${
+        isPopout 
+          ? 'bg-transparent' 
+          : isLightTheme 
+          ? 'bg-slate-100 text-slate-900' 
+          : 'bg-[#070b14] text-white'
+      }`}
+      onPointerDown={handleUserGesture}
     >
       {/* 1. TOP HUD: Header & Tiến Độ Hoàn Thành Bản Đồ */}
-      <div className="relative z-20 flex items-center justify-between px-4 py-2.5 bg-black/65 backdrop-blur-md border-b border-white/10 shrink-0">
+      <div className={`relative z-20 flex items-center justify-between px-4 py-2.5 backdrop-blur-md border-b shrink-0 transition-colors ${
+        isLightTheme 
+          ? 'bg-white/85 text-slate-900 border-slate-200 shadow-sm' 
+          : 'bg-black/65 text-white border-white/10'
+      }`}>
         <div className="flex items-center gap-3">
           <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-red-600 via-amber-500 to-yellow-400 shadow-lg shadow-red-500/40 ring-2 ring-yellow-400/60 animate-pulse">
             <span className="text-xl">{currentCountry?.flag || '🇻🇳'}</span>
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-sm md:text-base font-black bg-gradient-to-r from-yellow-300 via-red-400 to-amber-300 bg-clip-text text-transparent uppercase tracking-wider">
+              <h2 className={`text-sm md:text-base font-black uppercase tracking-wider ${
+                isLightTheme 
+                  ? 'bg-gradient-to-r from-red-700 via-amber-600 to-yellow-600 bg-clip-text text-transparent' 
+                  : 'bg-gradient-to-r from-yellow-300 via-red-400 to-amber-300 bg-clip-text text-transparent'
+              }`}>
                 {gameState.settings.customMapTitle || `${currentCountry?.name || 'Việt Nam'} ${t.title}`}
               </h2>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-600 text-white shadow-sm">
                 {gameState.roundId}
               </span>
             </div>
-            <div className="text-[11px] text-gray-300 font-medium flex items-center gap-2">
-              <span>{t.claimed}: <strong className="text-yellow-400 font-bold">{gameState.claimedCount.toLocaleString()}</strong> / {gameState.totalCells.toLocaleString()} {t.cells}</span>
+            <div className={`text-[11px] font-medium flex items-center gap-2 ${isLightTheme ? 'text-slate-600' : 'text-gray-300'}`}>
+              <span>{t.claimed}: <strong className={`${isLightTheme ? 'text-red-700' : 'text-yellow-400'} font-bold`}>{gameState.claimedCount.toLocaleString()}</strong> / {gameState.totalCells.toLocaleString()} {t.cells}</span>
               <span>•</span>
-              <span>{t.remaining}: <strong className="text-emerald-400 font-bold">{gameState.remainingCells.toLocaleString()}</strong> {t.cells}</span>
+              <span>{t.remaining}: <strong className="text-emerald-500 font-bold">{gameState.remainingCells.toLocaleString()}</strong> {t.cells}</span>
             </div>
           </div>
         </div>
@@ -758,11 +766,13 @@ export default function GameBanDoVietNam({
           )}
 
           <div className="hidden sm:flex flex-col items-end w-44 md:w-56">
-            <div className="flex justify-between w-full text-[11px] font-bold text-gray-300 mb-1">
+            <div className={`flex justify-between w-full text-[11px] font-bold mb-1 ${isLightTheme ? 'text-slate-600' : 'text-gray-300'}`}>
               <span>{t.progress}</span>
-              <span className="text-yellow-400 font-mono">{gameState.percent}%</span>
+              <span className={`${isLightTheme ? 'text-amber-700' : 'text-yellow-400'} font-mono`}>{gameState.percent}%</span>
             </div>
-            <div className="w-full h-2.5 bg-white/10 rounded-full overflow-hidden p-0.5 border border-white/20">
+            <div className={`w-full h-2.5 rounded-full overflow-hidden p-0.5 border ${
+              isLightTheme ? 'bg-slate-200 border-slate-300' : 'bg-white/10 border-white/20'
+            }`}>
               <div 
                 className="h-full bg-gradient-to-r from-red-600 via-amber-500 to-yellow-400 rounded-full transition-all duration-500 shadow-[0_0_12px_rgba(234,179,8,0.8)]"
                 style={{ width: `${gameState.percent}%` }}
@@ -771,12 +781,31 @@ export default function GameBanDoVietNam({
           </div>
 
           <div className="flex items-center gap-1.5">
+            {/* Nút Chuyển Đổi Nền Sáng / Tối (Light / Dark Mode Switcher) */}
+            <button
+              onClick={() => {
+                const nextTheme = gameState.settings?.theme === 'light' ? 'dark' : 'light';
+                bandoEngine.setTheme(nextTheme);
+              }}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all border flex items-center gap-1.5 ${
+                isLightTheme
+                  ? 'bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-300 shadow-sm'
+                  : 'bg-indigo-950/70 hover:bg-indigo-900/80 text-indigo-200 border-indigo-500/40 shadow-sm'
+              }`}
+              title={isLightTheme ? "Đang ở Nền Sáng — Bấm chuyển sang Nền Tối" : "Đang ở Nền Tối — Bấm chuyển sang Nền Sáng"}
+            >
+              {isLightTheme ? <Sun size={13} className="text-amber-600" /> : <Moon size={13} className="text-indigo-400" />}
+              <span className="hidden sm:inline">{isLightTheme ? 'Nền Sáng' : 'Nền Tối'}</span>
+            </button>
+
             {/* Nút Bật/Tắt Xoay Tự Động Bản Đồ */}
             <button
               onClick={handleToggleAutoRotate}
               className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all border flex items-center gap-1.5 ${
                 autoRotate
                   ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400 shadow-md shadow-emerald-500/30'
+                  : isLightTheme
+                  ? 'bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300'
                   : 'bg-white/10 hover:bg-white/20 text-gray-300 border-white/10'
               }`}
               title={autoRotate ? "Bản đồ đang tự động quay — Bấm để ĐỨNG YÊN" : "Bản đồ đang đứng yên — Bấm để TỰ ĐỘNG XOAY"}
@@ -789,7 +818,7 @@ export default function GameBanDoVietNam({
               onClick={() => setShowSidePanels(!showSidePanels)}
               className={`p-1.5 rounded-lg text-xs font-bold transition-all border ${
                 showSidePanels 
-                  ? 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10' 
+                  ? isLightTheme ? 'bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300' : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10' 
                   : 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40 shadow-md shadow-yellow-500/20'
               }`}
               title={showSidePanels ? "Thu gọn bảng bên hông (Tối đa hóa bản đồ)" : "Mở lại bảng bên hông"}
@@ -799,7 +828,11 @@ export default function GameBanDoVietNam({
 
             <button
               onClick={() => setViewMode3D(!viewMode3D)}
-              className="px-2.5 py-1 rounded-lg text-xs font-bold bg-white/10 hover:bg-white/20 text-gray-200 border border-white/10 transition-colors flex items-center gap-1"
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-colors flex items-center gap-1 ${
+                isLightTheme 
+                  ? 'bg-slate-200 hover:bg-slate-300 text-slate-800 border-slate-300' 
+                  : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
+              }`}
               title={viewMode3D ? "Chuyển sang chế độ 2D" : "Chuyển sang chế độ 3D"}
             >
               <Layers size={13} />
@@ -875,33 +908,63 @@ export default function GameBanDoVietNam({
         )}
 
         {/* FLOATING MULTI-DIRECTIONAL D-PAD & PAN/ZOOM NAVIGATION CONTROLLER */}
-        <div className="absolute bottom-4 left-4 z-20 flex items-center gap-2 p-2 bg-black/75 backdrop-blur-md border border-white/15 rounded-2xl shadow-2xl">
+        <div className={`absolute bottom-4 left-4 z-20 flex items-center gap-2 p-2 backdrop-blur-md border rounded-2xl shadow-2xl transition-colors ${
+          isLightTheme ? 'bg-white/90 border-slate-300 shadow-xl' : 'bg-black/75 border-white/15'
+        }`}>
           {/* Zoom Buttons */}
           <div className="flex items-center gap-1">
             <button
               onClick={() => viewMode3D ? handleZoom3D(0.85) : setZoom2D(z => Math.min(4.0, z * 1.2))}
-              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-yellow-300 hover:text-white border border-white/10 transition-all active:scale-95 shadow-sm"
+              className={`p-2 rounded-xl border transition-all active:scale-95 shadow-sm ${
+                isLightTheme 
+                  ? 'bg-slate-100 hover:bg-slate-200 text-amber-600 border-slate-300' 
+                  : 'bg-white/10 hover:bg-white/20 text-yellow-300 hover:text-white border-white/10'
+              }`}
               title="Phóng to (+)"
             >
               <ZoomIn size={15} />
             </button>
             <button
               onClick={() => viewMode3D ? handleZoom3D(1.18) : setZoom2D(z => Math.max(0.5, z * 0.82))}
-              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-yellow-300 hover:text-white border border-white/10 transition-all active:scale-95 shadow-sm"
+              className={`p-2 rounded-xl border transition-all active:scale-95 shadow-sm ${
+                isLightTheme 
+                  ? 'bg-slate-100 hover:bg-slate-200 text-amber-600 border-slate-300' 
+                  : 'bg-white/10 hover:bg-white/20 text-yellow-300 hover:text-white border-white/10'
+              }`}
               title="Thu nhỏ (-)"
             >
               <ZoomOut size={15} />
             </button>
           </div>
 
-          <div className="w-[1px] h-6 bg-white/20 mx-1" />
+          <div className={`w-[1px] h-6 mx-1 ${isLightTheme ? 'bg-slate-300' : 'bg-white/20'}`} />
+
+          {/* Mouse Mode Toggle: Pan vs Orbit */}
+          <button
+            onClick={() => setIsPanMode(!isPanMode)}
+            className={`px-2 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1 shadow-sm ${
+              isPanMode
+                ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white border-blue-400 shadow-md shadow-blue-500/30'
+                : isLightTheme
+                ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
+            }`}
+            title={isPanMode ? "Đang ở Chế độ Kéo Lướt Bản Đồ (Chuột trái kéo) — Bấm để đổi sang Xoay 3D" : "Đang ở Chế độ Xoay 3D — Bấm để đổi sang Kéo Lướt Bản Đồ"}
+          >
+            {isPanMode ? <Move size={13} /> : <Compass size={13} />}
+            <span>{isPanMode ? '🖐️ Kéo' : '🔄 Xoay'}</span>
+          </button>
+
+          <div className={`w-[1px] h-6 mx-1 ${isLightTheme ? 'bg-slate-300' : 'bg-white/20'}`} />
 
           {/* D-Pad Pan Directions */}
           <div className="grid grid-cols-3 gap-1">
             <div />
             <button
               onClick={() => viewMode3D ? handlePan3D(0, -1) : setPan2D(p => ({ ...p, y: p.y + 40 }))}
-              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 border border-white/10 transition-all active:scale-90"
+              className={`p-1.5 rounded-lg border transition-all active:scale-90 ${
+                isLightTheme ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300' : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
+              }`}
               title="Kéo Lên Trên"
             >
               <ArrowUp size={13} />
@@ -910,21 +973,25 @@ export default function GameBanDoVietNam({
 
             <button
               onClick={() => viewMode3D ? handlePan3D(-1, 0) : setPan2D(p => ({ ...p, x: p.x + 40 }))}
-              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 border border-white/10 transition-all active:scale-90"
+              className={`p-1.5 rounded-lg border transition-all active:scale-90 ${
+                isLightTheme ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300' : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
+              }`}
               title="Kéo Sang Trái"
             >
               <ArrowLeft size={13} />
             </button>
             <button
               onClick={handleResetCamera}
-              className="p-1.5 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/40 transition-all active:scale-90 text-[10px] font-black"
+              className="p-1.5 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 border border-yellow-500/40 transition-all active:scale-90 text-[10px] font-black"
               title="Đặt Lại Góc Nhìn Mặc Định"
             >
               🎯
             </button>
             <button
               onClick={() => viewMode3D ? handlePan3D(1, 0) : setPan2D(p => ({ ...p, x: p.x - 40 }))}
-              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 border border-white/10 transition-all active:scale-90"
+              className={`p-1.5 rounded-lg border transition-all active:scale-90 ${
+                isLightTheme ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300' : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
+              }`}
               title="Kéo Sang Phải"
             >
               <ArrowRight size={13} />
@@ -933,7 +1000,9 @@ export default function GameBanDoVietNam({
             <div />
             <button
               onClick={() => viewMode3D ? handlePan3D(0, 1) : setPan2D(p => ({ ...p, y: p.y - 40 }))}
-              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 border border-white/10 transition-all active:scale-90"
+              className={`p-1.5 rounded-lg border transition-all active:scale-90 ${
+                isLightTheme ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300' : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
+              }`}
               title="Kéo Xuống Dưới"
             >
               <ArrowDown size={13} />
@@ -943,9 +1012,11 @@ export default function GameBanDoVietNam({
         </div>
 
         {/* FLOATING CAMERA PRESET ZOOM TOOLBAR */}
-        <div className="absolute bottom-4 right-4 z-20 flex flex-wrap items-center gap-1.5 p-1.5 bg-black/70 backdrop-blur-md border border-white/15 rounded-2xl shadow-2xl">
-          <span className="text-[10px] font-black text-gray-400 uppercase px-2 flex items-center gap-1">
-            <CompassIcon size={12} className="text-yellow-400" /> {t.zoom}:
+        <div className={`absolute bottom-4 right-4 z-20 flex flex-wrap items-center gap-1.5 p-1.5 backdrop-blur-md border rounded-2xl shadow-2xl transition-colors ${
+          isLightTheme ? 'bg-white/90 border-slate-300' : 'bg-black/70 border-white/15'
+        }`}>
+          <span className={`text-[10px] font-black uppercase px-2 flex items-center gap-1 ${isLightTheme ? 'text-slate-500' : 'text-gray-400'}`}>
+            <CompassIcon size={12} className="text-yellow-500" /> {t.zoom}:
           </span>
           {Object.entries(getCameraPresetsForCountry()).map(([key, item]) => (
             <button
@@ -954,6 +1025,8 @@ export default function GameBanDoVietNam({
               className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1 ${
                 activeCameraPreset === key
                   ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-lg shadow-red-500/30 scale-105 border border-yellow-300/40'
+                  : isLightTheme
+                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
                   : 'bg-white/5 hover:bg-white/15 text-gray-300 hover:text-white'
               }`}
               title={`Góc nhìn camera: ${item.name}`}

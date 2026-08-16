@@ -151,8 +151,8 @@ class BanDoGameEngine {
       showBannerCells: savedCustomConfig.showBannerCells !== undefined ? savedCustomConfig.showBannerCells : true,
 
       settings: {
-        theme: 'dark',
-        brightness: savedCustomConfig.brightness || 1.4,
+        theme: savedCustomConfig.theme || 'dark',
+        brightness: savedCustomConfig.brightness || 1.2,
         emptyCellColor: savedCustomConfig.emptyCellColor || currentPreset.emptyCellColor || '#475569',
         claimedCellColor: savedCustomConfig.claimedCellColor || currentPreset.claimedCellColor || '#DA251D',
         starColor: savedCustomConfig.starColor || currentPreset.starColor || '#FFD700',
@@ -181,8 +181,18 @@ class BanDoGameEngine {
   loadFromStorage(key, fallback) {
     if (typeof localStorage === 'undefined') return fallback;
     try {
-      const data = localStorage.getItem(key);
-      return data ? JSON.parse(data) : fallback;
+      // Thử đọc từ key hiện tại, nếu chưa có thì tìm lại ở các key cũ để không bao giờ mất cài đặt của người dùng
+      const keysToCheck = [key, 'aidol_bando_custom_config_v4', 'aidol_bando_custom_config_v3', 'aidol_bando_custom_config_v2', 'aidol_bando_custom_config'];
+      for (const k of keysToCheck) {
+        const item = localStorage.getItem(k);
+        if (item) {
+          const parsed = JSON.parse(item);
+          if (parsed && typeof parsed === 'object') {
+            return { ...fallback, ...parsed };
+          }
+        }
+      }
+      return fallback;
     } catch (e) {
       return fallback;
     }
@@ -195,6 +205,7 @@ class BanDoGameEngine {
         selectedCountry: this.state.selectedCountry,
         totalCells: this.state.totalCells,
         isDemoMode: this.state.isDemoMode,
+        theme: this.state.settings.theme,
         brightness: this.state.settings.brightness,
         emptyCellColor: this.state.settings.emptyCellColor,
         claimedCellColor: this.state.settings.claimedCellColor,
@@ -748,6 +759,11 @@ class BanDoGameEngine {
     this.state.settings = { ...this.state.settings, ...newSettings };
     this.saveToStorage();
     this.notify({ type: 'SETTINGS_UPDATED', settings: this.state.settings });
+  }
+
+  setTheme(theme) {
+    const validTheme = theme === 'light' ? 'light' : 'dark';
+    this.updateSettings({ theme: validTheme });
   }
 
   updateMapTexts(newTexts) {

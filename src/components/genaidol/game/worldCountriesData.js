@@ -58,13 +58,13 @@ export const WORLD_COUNTRIES = [
     ['Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Thừa Thiên Huế', 'Hải Phòng', 'Cần Thơ', 'Khánh Hòa', 'Quảng Ninh', 'Cao Bằng', 'Cà Mau'],
     ['Quần đảo Hoàng Sa', 'Quần đảo Trường Sa', 'Đảo Phú Quốc', 'Côn Đảo', 'Đảo Bạch Long Vĩ', 'Đảo Lý Sơn'],
     [
-      { id: 't_vn_cap', text: '🏛️ THỦ ĐÔ HÀ NỘI', wx: -18, wy: 4.0, wz: -85, color: '#facc15', glow: true },
-      { id: 't_vn_danang', text: '🏙️ ĐÀ NẴNG', wx: 16, wy: 4.0, wz: -10, color: '#38bdf8', glow: true },
-      { id: 't_vn_hcm', text: '🏙️ TP. HỒ CHÍ MINH', wx: -12, wy: 4.0, wz: 82, color: '#38bdf8', glow: true },
-      { id: 't_vn_hs', text: '🇻🇳 QUẦN ĐẢO HOÀNG SA', wx: 62, wy: 4.0, wz: -15, color: '#ef4444', glow: true },
-      { id: 't_vn_ts', text: '🇻🇳 QUẦN ĐẢO TRƯỜNG SA', wx: 78, wy: 4.0, wz: 68, color: '#ef4444', glow: true },
-      { id: 't_vn_biendong', text: '🌊 BIỂN ĐÔNG VIỆT NAM', wx: 92, wy: 4.0, wz: 22, color: '#60a5fa', glow: false },
-      { id: 't_vn_slogan', text: '⭐ NON SÔNG LIỀN MỘT DẢI ⭐', wx: 0, wy: 4.0, wz: 160, color: '#fbbf24', glow: true }
+      { id: 't_vn_cap', text: '🏛️ THỦ ĐÔ HÀ NỘI', wx: -49.2, wy: 4.0, wz: -123.0, color: '#facc15', glow: true },
+      { id: 't_vn_danang', text: '🏙️ ĐÀ NẴNG', wx: -4.7, wy: 4.0, wz: 4.5, color: '#38bdf8', glow: true },
+      { id: 't_vn_hcm', text: '🏙️ TP. HỒ CHÍ MINH', wx: -27.6, wy: 4.0, wz: 126.4, color: '#38bdf8', glow: true },
+      { id: 't_vn_hs', text: '🇻🇳 QUẦN ĐẢO HOÀNG SA', wx: 65.6, wy: 4.0, wz: -34.4, color: '#ef4444', glow: true },
+      { id: 't_vn_ts', text: '🇻🇳 QUẦN ĐẢO TRƯỜNG SA', wx: 29.4, wy: 4.0, wz: 122.5, color: '#ef4444', glow: true },
+      { id: 't_vn_biendong', text: '🌊 BIỂN ĐÔNG VIỆT NAM', wx: 85.0, wy: 4.0, wz: 20.0, color: '#60a5fa', glow: false },
+      { id: 't_vn_slogan', text: '⭐ NON SÔNG LIỀN MỘT DẢI ⭐', wx: -20.0, wy: 4.0, wz: 185.0, color: '#fbbf24', glow: true }
     ]
   ),
   createCountryDef('japan', 'Nhật Bản', '🇯🇵', 'JP', 'asia', 'JAPAN FLAG LIVE — 日本地図', '#BC002D', '#FFFFFF',
