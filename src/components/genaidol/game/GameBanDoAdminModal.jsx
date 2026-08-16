@@ -3,7 +3,7 @@ import {
   X, Shield, Play, Pause, RotateCcw, Award, Globe, Music, Volume2, 
   Sparkles, Gift, MapPin, Flag, CheckCircle, Copy, AlertTriangle, 
   Settings, RefreshCw, Zap, Sliders, ExternalLink, Trophy, Type,
-  Compass, Sun, Eye, Trash2, Plus, VolumeX, Save, Check, Grid,
+  Compass, Sun, Eye, Trash2, Plus, PlusCircle, VolumeX, Save, Check, Grid,
   Upload, Search, Mic, Radio, Volume1, FileAudio
 } from 'lucide-react';
 import bandoEngine, { DEFAULT_MAP_GIFTS, COUNTRY_PRESETS, WORLD_COUNTRIES, CONTINENTS } from './bandoGameEngine';
@@ -46,6 +46,11 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
   const [newTextWX, setNewTextWX] = useState(0);
   const [newTextWZ, setNewTextWZ] = useState(0);
   const [newTextGlow, setNewTextGlow] = useState(true);
+
+  // Form thêm vùng miền tùy ý
+  const [newProvName, setNewProvName] = useState('');
+  const [newProvCells, setNewProvCells] = useState(500);
+  const [provSearch, setProvSearch] = useState('');
 
   // Voice AI & Bình Luận ElevenLabs
   const [voiceConfig, setVoiceConfig] = useState(() => getDualVoiceConfig());
@@ -126,6 +131,22 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
 
   const handleDeleteMapText = (id) => {
     bandoEngine.removeMapText(id);
+  };
+
+  const handleAddCustomProvince = (e) => {
+    e.preventDefault();
+    if (!newProvName.trim()) return;
+    bandoEngine.addCustomProvince(selectedCountry, {
+      name: newProvName.trim(),
+      totalCells: parseInt(newProvCells) || 500,
+    });
+    setNewProvName('');
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 2000);
+  };
+
+  const handleRemoveCustomProvince = (provId) => {
+    bandoEngine.removeCustomProvince(selectedCountry, provId);
   };
 
   const handleSaveGiftCells = (giftId, newCells) => {
@@ -1200,43 +1221,110 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
 
           {/* TAB 8: PROVINCES & REGIONS */}
           {activeTab === 'provinces' && (
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-black text-white uppercase">🗺️ Danh Sách Vùng Miền Của {COUNTRY_PRESETS[selectedCountry]?.name}</h3>
-                <p className="text-xs text-gray-400">Theo dõi tiến độ ghép cờ của từng khu vực địa lý</p>
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-black text-white uppercase">🗺️ Danh Sách Vùng Miền Của {COUNTRY_PRESETS[selectedCountry]?.name}</h3>
+                  <p className="text-xs text-gray-400">Theo dõi tiến độ ghép cờ và bổ sung vùng miền tùy ý cho quốc gia</p>
+                </div>
+
+                {/* Tìm kiếm vùng miền */}
+                <input
+                  type="text"
+                  placeholder="🔍 Tìm tỉnh thành..."
+                  value={provSearch}
+                  onChange={(e) => setProvSearch(e.target.value)}
+                  className="px-3 py-1.5 bg-black/40 border border-white/15 rounded-xl text-xs text-white placeholder-gray-500 outline-none w-full sm:w-48"
+                />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {Object.values(gameState.provincesStatus).map((prov) => {
-                  const pct = Math.min(100, Math.round((prov.claimedCount / (prov.totalCells || 1)) * 100));
-                  return (
-                    <div key={prov.id} className="bg-white/5 border border-white/10 rounded-2xl p-3.5">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <div className="text-xs font-black text-white flex items-center gap-1.5">
-                          <MapPin size={12} className="text-red-400" />
-                          <span>{prov.name}</span>
-                        </div>
-                        <span className={`text-[10px] font-bold font-mono ${prov.isCompleted ? 'text-emerald-400' : 'text-yellow-400'}`}>
-                          {pct}%
-                        </span>
-                      </div>
+              {/* Form Bổ Sung Vùng Miền / Tỉnh Thành Mới Tùy Ý */}
+              <form onSubmit={handleAddCustomProvince} className="bg-gradient-to-r from-red-950/40 via-amber-950/30 to-black border border-yellow-500/30 rounded-2xl p-4 space-y-3">
+                <div className="text-xs font-black text-yellow-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <PlusCircle size={14} className="text-yellow-400" />
+                  <span>➕ Bổ Sung Vùng Miền / Tỉnh Thành Mới Cho {COUNTRY_PRESETS[selectedCountry]?.name}</span>
+                </div>
 
-                      <div className="w-full h-1.5 bg-black/50 rounded-full overflow-hidden mb-2">
-                        <div 
-                          className={`h-full transition-all duration-300 ${prov.isCompleted ? 'bg-emerald-500' : 'bg-red-600'}`}
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="sm:col-span-2">
+                    <label className="text-[11px] font-bold text-gray-300 block mb-1">Tên Tỉnh / Vùng / Quần Đảo:</label>
+                    <input
+                      type="text"
+                      value={newProvName}
+                      onChange={(e) => setNewProvName(e.target.value)}
+                      placeholder="Ví dụ: Đảo Phú Quốc, Tỉnh Long An, Bang California..."
+                      className="w-full px-3 py-2 bg-black/60 border border-white/20 rounded-xl text-xs text-white placeholder-gray-500 outline-none focus:border-yellow-400"
+                    />
+                  </div>
 
-                      <div className="flex items-center justify-between text-[10px] text-gray-400">
-                        <span>Đã cắm: {prov.claimedCount} / {prov.totalCells} ô</span>
-                        <span className="text-yellow-300 font-bold truncate max-w-[100px]">
-                          {prov.leader ? `👑 ${prov.leader}` : 'Chưa có'}
-                        </span>
-                      </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-gray-300 block mb-1">Số Ô Cờ Dự Kiến:</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        min="50"
+                        max="5000"
+                        value={newProvCells}
+                        onChange={(e) => setNewProvCells(e.target.value)}
+                        className="w-full px-3 py-2 bg-black/60 border border-white/20 rounded-xl text-xs text-white outline-none font-mono"
+                      />
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-black font-black text-xs rounded-xl shadow-lg transition-all shrink-0 active:scale-95"
+                      >
+                        Thêm
+                      </button>
                     </div>
-                  );
-                })}
+                  </div>
+                </div>
+              </form>
+
+              {/* Danh sách các Vùng Miền */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-96 overflow-y-auto custom-scrollbar p-1">
+                {Object.values(gameState.provincesStatus || {})
+                  .filter(p => !provSearch.trim() || p.name.toLowerCase().includes(provSearch.toLowerCase()))
+                  .map((prov) => {
+                    const pct = Math.min(100, Math.round((prov.claimedCount / (prov.totalCells || 1)) * 100));
+                    const isCustom = prov.id.includes('custom');
+                    return (
+                      <div key={prov.id} className="bg-white/5 border border-white/10 rounded-2xl p-3.5 relative group hover:border-yellow-400/40 transition-colors">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="text-xs font-black text-white flex items-center gap-1.5 truncate">
+                            <MapPin size={12} className="text-red-400 shrink-0" />
+                            <span className="truncate">{prov.name}</span>
+                          </div>
+                          <span className={`text-[10px] font-bold font-mono ${prov.isCompleted ? 'text-emerald-400' : 'text-yellow-400'}`}>
+                            {pct}%
+                          </span>
+                        </div>
+
+                        <div className="w-full h-1.5 bg-black/50 rounded-full overflow-hidden mb-2">
+                          <div 
+                            className={`h-full transition-all duration-300 ${prov.isCompleted ? 'bg-emerald-500' : 'bg-red-600'}`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between text-[10px] text-gray-400">
+                          <span>Đã cắm: {prov.claimedCount} / {prov.totalCells} ô</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-yellow-300 font-bold truncate max-w-[80px]">
+                              {prov.leader ? `👑 ${prov.leader}` : 'Chưa có'}
+                            </span>
+                            {isCustom && (
+                              <button
+                                onClick={() => handleRemoveCustomProvince(prov.id)}
+                                className="text-red-400 hover:text-red-300 text-[10px] px-1 hover:bg-red-500/20 rounded"
+                                title="Xóa vùng miền tự thêm"
+                              >
+                                ✕
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
               </div>
             </div>
           )}

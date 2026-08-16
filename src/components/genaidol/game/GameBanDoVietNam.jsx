@@ -5,11 +5,12 @@ import {
   Play, Pause, RotateCcw, Shield, Sparkles, Trophy, Flame, 
   MapPin, Flag, Eye, EyeOff, Volume2, VolumeX, Maximize2, Zap, Star,
   Compass, Award, ChevronRight, Layers, CheckCircle2, AlertTriangle, 
-  MonitorPlay, Sun, ZoomIn, Globe, Navigation, Compass as CompassIcon,
-  Sliders, Settings
+  MonitorPlay, Sun, ZoomIn, ZoomOut, Globe, Navigation, Compass as CompassIcon,
+  Sliders, Settings, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RefreshCw
 } from 'lucide-react';
 import bandoEngine, { getHonorTier, COUNTRY_PRESETS } from './bandoGameEngine';
 import bandoAudio from './bandoAudioEngine';
+import { getGameTranslation } from './gameTranslations';
 
 // Ease helpers
 function easeOutBack(t) {
@@ -33,12 +34,20 @@ export default function GameBanDoVietNam({
   const [autoTestStep, setAutoTestStep] = useState(0);
   const [showSidePanels, setShowSidePanels] = useState(true);
   const [activeCameraPreset, setActiveCameraPreset] = useState('overview');
-  const [projectedLabels, setProjectedLabels] = useState([]);
+  const [autoRotate, setAutoRotate] = useState(() => bandoEngine.state.autoRotate || false);
+  const [recentClaimBadges, setRecentClaimBadges] = useState([]);
+
+  // 2D Canvas Pan & Zoom State
+  const [zoom2D, setZoom2D] = useState(1.0);
+  const [pan2D, setPan2D] = useState({ x: 0, y: 0 });
+  const isDragging2DRef = useRef(false);
+  const dragStart2DRef = useRef({ x: 0, y: 0 });
 
   const containerRef = useRef(null);
   const canvas2dRef = useRef(null);
   const labelsLayerRef = useRef(null);
   const labelRefs = useRef({});
+  const badgeRefs = useRef({});
 
   const threeStateRef = useRef({
     scene: null,
@@ -46,6 +55,7 @@ export default function GameBanDoVietNam({
     renderer: null,
     controls: null,
     instancedMesh: null,
+    bannerMesh: null,
     dummy: new THREE.Object3D(),
     colorObj: new THREE.Color(),
     disposed: false,
@@ -54,17 +64,58 @@ export default function GameBanDoVietNam({
     tempVec: new THREE.Vector3(),
   });
 
-  // Subscribe engine state
+  // Current Country Translation
+  const currentCountry = COUNTRY_PRESETS[gameState.selectedCountry] || COUNTRY_PRESETS['vietnam'];
+  const t = getGameTranslation(currentCountry?.lang || 'vi');
+
+  // Subscribe engine state & gift placements
   useEffect(() => {
     const unsub = bandoEngine.subscribe((newState, lastEvt) => {
       setGameState({ ...newState });
       setIsAutoTesting(bandoEngine.isAutoTesting);
+      if (newState.autoRotate !== undefined) {
+        setAutoRotate(newState.autoRotate);
+      }
       if (newState.cameraPreset) {
         setActiveCameraPreset(newState.cameraPreset);
       }
+
+      // Xử lý sự kiện cắm ô cờ để tạo Huy Hiệu ID Người Dùng & Lá Cờ Quốc Kỳ Siêu Sắc Nét
+      if (lastEvt && (lastEvt.type === 'GIFT_PLACED' || lastEvt.type === 'GIFT')) {
+        const user = lastEvt.user;
+        const count = lastEvt.claimed || lastEvt.count || 1;
+        const flag = currentCountry?.flag || '🇻🇳';
+        const maskData = bandoEngine.maskData;
+        const cols = maskData?.gridCols || 300;
+        const rows = maskData?.gridRows || 389;
+
+        // Tính toạ độ 3D trung tâm của nhóm ô cờ vừa cắm
+        let wx = 0, wz = 0;
+        if (bandoEngine.state.lastFocalTarget) {
+          wx = bandoEngine.state.lastFocalTarget.wx || 0;
+          wz = bandoEngine.state.lastFocalTarget.wz || 0;
+        } else {
+          wx = (Math.random() - 0.5) * 80;
+          wz = (Math.random() - 0.5) * 120;
+        }
+
+        const newBadge = {
+          id: `badge_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+          userId: user?.id || 'id_vip',
+          username: user?.username || 'Chiến Binh Yêu Nước',
+          flag,
+          count,
+          wx,
+          wy: 5.5,
+          wz,
+          timestamp: Date.now(),
+        };
+
+        setRecentClaimBadges(prev => [newBadge, ...prev.slice(0, 11)]);
+      }
     });
     return () => unsub();
-  }, []);
+  }, [currentCountry]);
 
   // Handle external TikTok events if passed from parent
   useEffect(() => {
@@ -162,16 +213,21 @@ export default function GameBanDoVietNam({
     container.appendChild(renderer.domElement);
     state.renderer = renderer;
 
-    // Controls
+    // Controls with Smooth Multi-directional Pan & Zoom
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.07;
-    controls.maxPolarAngle = Math.PI / 2.05;
-    controls.minDistance = 30;
-    controls.maxDistance = 700;
+    controls.dampingFactor = 0.08;
+    controls.maxPolarAngle = Math.PI / 2.02;
+    controls.minDistance = 25;
+    controls.maxDistance = 750;
     controls.target.set(0, 0, 10);
-    controls.autoRotate = !isPopout && gameState.settings.autoRotate;
-    controls.autoRotateSpeed = gameState.settings.autoRotateSpeed || 0.6;
+    controls.enablePan = true;
+    controls.panSpeed = 1.3;
+    controls.screenSpacePanning = true;
+    controls.enableZoom = true;
+    controls.zoomSpeed = 1.2;
+    controls.autoRotate = !isPopout && autoRotate;
+    controls.autoRotateSpeed = 0.8;
     state.controls = controls;
 
     // Enhanced High-Brightness Lighting
@@ -236,7 +292,7 @@ export default function GameBanDoVietNam({
     scene.add(instancedMesh);
     state.instancedMesh = instancedMesh;
 
-    // Instanced Mesh for 3D Banner Title Flag Cells (Khối Lưới Chữ Ô Cờ trên đầu bản đồ)
+    // Instanced Mesh for 3D Banner Title Flag Cells
     const bannerCells = bandoEngine.state.bannerCells || [];
     const bannerCount = bannerCells.length;
     let bannerMesh = null;
@@ -326,6 +382,11 @@ export default function GameBanDoVietNam({
       const dt = (time - lastTime) / 1000;
       lastTime = time;
 
+      // Update Auto-Rotate dynamically
+      if (controls) {
+        controls.autoRotate = !isPopout && autoRotate;
+      }
+
       // Handle focal camera zoom tween
       if (state.tween) {
         const tw = state.tween;
@@ -366,6 +427,7 @@ export default function GameBanDoVietNam({
       }
 
       controls.update();
+      camera.updateMatrixWorld(true);
       renderer.render(scene, camera);
 
       // PROJECTION: Update all 3D Anchored Landmark Labels in real-time
@@ -391,6 +453,25 @@ export default function GameBanDoVietNam({
           el.style.display = 'none';
         }
       }
+
+      // PROJECTION: Update Recent Claim Badges (User ID & Ultra-Sharp Flag)
+      for (let b = 0; b < recentClaimBadges.length; b++) {
+        const badge = recentClaimBadges[b];
+        const badgeEl = badgeRefs.current[badge.id];
+        if (!badgeEl) continue;
+
+        tempVec.set(badge.wx || 0, badge.wy || 5.5, badge.wz || 0);
+        tempVec.project(camera);
+
+        if (tempVec.z < 1.0) {
+          const sx = (tempVec.x * 0.5 + 0.5) * contW;
+          const sy = (-tempVec.y * 0.5 + 0.5) * contH;
+          badgeEl.style.display = 'flex';
+          badgeEl.style.transform = `translate3d(${sx}px, ${sy}px, 0px) translate(-50%, -120%)`;
+        } else {
+          badgeEl.style.display = 'none';
+        }
+      }
     };
     state.animFrameId = requestAnimationFrame(animate);
 
@@ -402,7 +483,67 @@ export default function GameBanDoVietNam({
       boxGeo.dispose();
       boxMat.dispose();
     };
-  }, [viewMode3D, isPopout, gameState.selectedCountry, getCameraPresetsForCountry]);
+  }, [viewMode3D, isPopout, gameState.selectedCountry, getCameraPresetsForCountry, autoRotate, recentClaimBadges]);
+
+  // Handle Multi-directional Pan & Smooth Zoom Controls
+  const handlePan3D = (dirX, dirZ) => {
+    const state = threeStateRef.current;
+    if (!state.camera || !state.controls) return;
+    const camera = state.camera;
+    const controls = state.controls;
+
+    const offset = new THREE.Vector3(dirX * 25, 0, dirZ * 25);
+    offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), controls.getAzimuthalAngle());
+
+    camera.position.add(offset);
+    controls.target.add(offset);
+  };
+
+  const handleZoom3D = (factor) => {
+    const state = threeStateRef.current;
+    if (!state.camera || !state.controls) return;
+    const camera = state.camera;
+    const controls = state.controls;
+
+    const dir = new THREE.Vector3().subVectors(camera.position, controls.target);
+    const newLen = Math.max(30, Math.min(650, dir.length() * factor));
+    dir.setLength(newLen);
+    camera.position.copy(controls.target).add(dir);
+  };
+
+  const handleToggleAutoRotate = () => {
+    const next = !autoRotate;
+    setAutoRotate(next);
+    bandoEngine.setAutoRotate(next);
+  };
+
+  const handleResetCamera = () => {
+    applyCameraPreset('overview');
+  };
+
+  // 2D Canvas Handlers (Pan & Zoom)
+  const handleMouseDown2D = (e) => {
+    isDragging2DRef.current = true;
+    dragStart2DRef.current = { x: e.clientX - pan2D.x, y: e.clientY - pan2D.y };
+  };
+
+  const handleMouseMove2D = (e) => {
+    if (!isDragging2DRef.current) return;
+    setPan2D({
+      x: e.clientX - dragStart2DRef.current.x,
+      y: e.clientY - dragStart2DRef.current.y
+    });
+  };
+
+  const handleMouseUp2D = () => {
+    isDragging2DRef.current = false;
+  };
+
+  const handleWheel2D = (e) => {
+    e.preventDefault();
+    const zoomDelta = e.deltaY < 0 ? 1.15 : 0.88;
+    setZoom2D(prev => Math.max(0.5, Math.min(4.0, prev * zoomDelta)));
+  };
 
   // Update 3D mesh instances when cells are claimed, reset or settings changed
   useEffect(() => {
@@ -489,7 +630,7 @@ export default function GameBanDoVietNam({
   }, [gameState.claimedCount, gameState.status, gameState.settings, gameState.selectedCountry, gameState.bannerCells, gameState.bannerClaimedCount, gameState.showBannerCells, gameState.bannerPos, viewMode3D]);
 
   // ============================================================
-  // 2D CANVAS FALLBACK RENDERER
+  // 2D CANVAS FALLBACK RENDERER WITH PAN & ZOOM
   // ============================================================
   useEffect(() => {
     if (viewMode3D || !canvas2dRef.current) return;
@@ -503,19 +644,40 @@ export default function GameBanDoVietNam({
 
     const cols = maskData.gridCols || 300;
     const rows = maskData.gridRows || 389;
-    const scale = Math.min(canvas.width / cols, canvas.height / rows) * 0.92;
-    const offsetX = (canvas.width - cols * scale) / 2;
-    const offsetY = (canvas.height - rows * scale) / 2;
+    const baseScale = Math.min(canvas.width / cols, canvas.height / rows) * 0.92;
+    const scale = baseScale * zoom2D;
+    const offsetX = (canvas.width - cols * scale) / 2 + pan2D.x;
+    const offsetY = (canvas.height - rows * scale) / 2 + pan2D.y;
 
     ctx.fillStyle = '#0a0f1d';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // Draw Grid Cells
     (maskData.cells || []).forEach(cell => {
       const isClaimed = !!gameState.cellsById[cell.id];
       ctx.fillStyle = isClaimed ? (gameState.settings.claimedCellColor || '#DA251D') : (gameState.settings.emptyCellColor || '#475569');
-      ctx.fillRect(offsetX + cell.x * scale, offsetY + cell.y * scale, scale * 0.88, scale * 0.88);
+      ctx.fillRect(offsetX + cell.x * scale, offsetY + cell.y * scale, Math.max(1, scale * 0.88), Math.max(1, scale * 0.88));
     });
-  }, [viewMode3D, gameState.claimedCount, gameState.settings]);
+
+    // Draw 2D Claim Badges & User Names
+    recentClaimBadges.forEach((badge) => {
+      const bx = offsetX + (badge.wx + cols / 2) * scale;
+      const by = offsetY + (badge.wz + rows / 2) * scale;
+      if (bx >= 0 && bx <= canvas.width && by >= 0 && by <= canvas.height) {
+        ctx.fillStyle = 'rgba(0,0,0,0.85)';
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(bx - 60, by - 24, 120, 22, 6);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.font = 'bold 10px sans-serif';
+        ctx.fillStyle = '#facc15';
+        ctx.fillText(`${badge.flag} ${badge.userId}`, bx - 52, by - 10);
+      }
+    });
+  }, [viewMode3D, gameState.claimedCount, gameState.settings, zoom2D, pan2D, recentClaimBadges]);
 
   // Test gift trigger handler
   const handleTestGift = (giftId) => {
@@ -554,21 +716,21 @@ export default function GameBanDoVietNam({
       <div className="relative z-20 flex items-center justify-between px-4 py-2.5 bg-black/65 backdrop-blur-md border-b border-white/10 shrink-0">
         <div className="flex items-center gap-3">
           <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-red-600 via-amber-500 to-yellow-400 shadow-lg shadow-red-500/40 ring-2 ring-yellow-400/60 animate-pulse">
-            <span className="text-xl">{COUNTRY_PRESETS[gameState.selectedCountry]?.flag || '🇻🇳'}</span>
+            <span className="text-xl">{currentCountry?.flag || '🇻🇳'}</span>
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-sm md:text-base font-black bg-gradient-to-r from-yellow-300 via-red-400 to-amber-300 bg-clip-text text-transparent uppercase tracking-wider">
-                {gameState.settings.customMapTitle || 'Việt Nam Ghép Cờ LIVE — Bản Đồ Chữ S'}
+                {gameState.settings.customMapTitle || `${currentCountry?.name || 'Việt Nam'} ${t.title}`}
               </h2>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-600 text-white shadow-sm">
                 {gameState.roundId}
               </span>
             </div>
             <div className="text-[11px] text-gray-300 font-medium flex items-center gap-2">
-              <span>Đã cắm: <strong className="text-yellow-400 font-bold">{gameState.claimedCount.toLocaleString()}</strong> / {gameState.totalCells.toLocaleString()} ô cờ</span>
+              <span>{t.claimed}: <strong className="text-yellow-400 font-bold">{gameState.claimedCount.toLocaleString()}</strong> / {gameState.totalCells.toLocaleString()} {t.cells}</span>
               <span>•</span>
-              <span>Còn lại: <strong className="text-emerald-400 font-bold">{gameState.remainingCells.toLocaleString()}</strong> ô</span>
+              <span>{t.remaining}: <strong className="text-emerald-400 font-bold">{gameState.remainingCells.toLocaleString()}</strong> {t.cells}</span>
             </div>
           </div>
         </div>
@@ -578,13 +740,13 @@ export default function GameBanDoVietNam({
           {gameState.combo.active && gameState.combo.count >= 2 && (
             <div className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-600 to-red-600 rounded-full text-white text-xs font-black shadow-lg animate-bounce">
               <Flame size={14} className="text-yellow-300 animate-spin" />
-              <span>COMBO x{gameState.combo.multiplier} ({gameState.combo.count} Quà)</span>
+              <span>{t.combo} x{gameState.combo.multiplier} ({gameState.combo.count} {t.gifts})</span>
             </div>
           )}
 
           <div className="hidden sm:flex flex-col items-end w-44 md:w-56">
             <div className="flex justify-between w-full text-[11px] font-bold text-gray-300 mb-1">
-              <span>TIẾN ĐỘ QUỐC GIA</span>
+              <span>{t.progress}</span>
               <span className="text-yellow-400 font-mono">{gameState.percent}%</span>
             </div>
             <div className="w-full h-2.5 bg-white/10 rounded-full overflow-hidden p-0.5 border border-white/20">
@@ -596,6 +758,20 @@ export default function GameBanDoVietNam({
           </div>
 
           <div className="flex items-center gap-1.5">
+            {/* Nút Bật/Tắt Xoay Tự Động Bản Đồ */}
+            <button
+              onClick={handleToggleAutoRotate}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all border flex items-center gap-1.5 ${
+                autoRotate
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400 shadow-md shadow-emerald-500/30'
+                  : 'bg-white/10 hover:bg-white/20 text-gray-300 border-white/10'
+              }`}
+              title={autoRotate ? "Bản đồ đang tự động quay — Bấm để ĐỨNG YÊN" : "Bản đồ đang đứng yên — Bấm để TỰ ĐỘNG XOAY"}
+            >
+              <RefreshCw size={13} className={autoRotate ? 'animate-spin' : ''} />
+              <span className="hidden sm:inline">{autoRotate ? 'Đang Xoay' : 'Đứng Yên'}</span>
+            </button>
+
             <button
               onClick={() => setShowSidePanels(!showSidePanels)}
               className={`p-1.5 rounded-lg text-xs font-bold transition-all border ${
@@ -625,7 +801,14 @@ export default function GameBanDoVietNam({
         {viewMode3D ? (
           <div ref={containerRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
         ) : (
-          <canvas ref={canvas2dRef} className="w-full h-full" />
+          <canvas 
+            ref={canvas2dRef} 
+            className="w-full h-full cursor-move"
+            onMouseDown={handleMouseDown2D}
+            onMouseMove={handleMouseMove2D}
+            onMouseUp={handleMouseUp2D}
+            onWheel={handleWheel2D}
+          />
         )}
 
         {/* TRUE 3D-ANCHORED LANDMARK LABELS LAYER */}
@@ -651,13 +834,105 @@ export default function GameBanDoVietNam({
                 {item.text}
               </div>
             ))}
+
+            {/* FLOATING USER ID & ULTRA-SHARP NATIONAL FLAG CLAIM BADGES */}
+            {recentClaimBadges.map((badge) => (
+              <div
+                key={badge.id}
+                ref={(el) => { badgeRefs.current[badge.id] = el; }}
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  display: 'none',
+                }}
+                className="px-2.5 py-1 rounded-2xl bg-gradient-to-r from-red-950/95 via-slate-900/95 to-black/95 border-2 border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.6)] backdrop-blur-md flex items-center gap-2 animate-bounce ring-2 ring-yellow-400/40 pointer-events-none select-none"
+              >
+                <span className="text-xl drop-shadow-md select-none">{badge.flag}</span>
+                <div className="flex flex-col text-left">
+                  <span className="text-[10px] font-black text-yellow-300 font-mono tracking-wider">ID: {badge.userId}</span>
+                  <span className="text-[10px] font-bold text-white max-w-[100px] truncate">{badge.username}</span>
+                </div>
+                <span className="text-[9px] font-black font-mono px-2 py-0.5 rounded-full bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-sm">
+                  +{badge.count} Ô
+                </span>
+              </div>
+            ))}
           </div>
         )}
+
+        {/* FLOATING MULTI-DIRECTIONAL D-PAD & PAN/ZOOM NAVIGATION CONTROLLER */}
+        <div className="absolute bottom-4 left-4 z-20 flex items-center gap-2 p-2 bg-black/75 backdrop-blur-md border border-white/15 rounded-2xl shadow-2xl">
+          {/* Zoom Buttons */}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => viewMode3D ? handleZoom3D(0.85) : setZoom2D(z => Math.min(4.0, z * 1.2))}
+              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-yellow-300 hover:text-white border border-white/10 transition-all active:scale-95 shadow-sm"
+              title="Phóng to (+)"
+            >
+              <ZoomIn size={15} />
+            </button>
+            <button
+              onClick={() => viewMode3D ? handleZoom3D(1.18) : setZoom2D(z => Math.max(0.5, z * 0.82))}
+              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-yellow-300 hover:text-white border border-white/10 transition-all active:scale-95 shadow-sm"
+              title="Thu nhỏ (-)"
+            >
+              <ZoomOut size={15} />
+            </button>
+          </div>
+
+          <div className="w-[1px] h-6 bg-white/20 mx-1" />
+
+          {/* D-Pad Pan Directions */}
+          <div className="grid grid-cols-3 gap-1">
+            <div />
+            <button
+              onClick={() => viewMode3D ? handlePan3D(0, -1) : setPan2D(p => ({ ...p, y: p.y + 40 }))}
+              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 border border-white/10 transition-all active:scale-90"
+              title="Kéo Lên Trên"
+            >
+              <ArrowUp size={13} />
+            </button>
+            <div />
+
+            <button
+              onClick={() => viewMode3D ? handlePan3D(-1, 0) : setPan2D(p => ({ ...p, x: p.x + 40 }))}
+              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 border border-white/10 transition-all active:scale-90"
+              title="Kéo Sang Trái"
+            >
+              <ArrowLeft size={13} />
+            </button>
+            <button
+              onClick={handleResetCamera}
+              className="p-1.5 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/40 transition-all active:scale-90 text-[10px] font-black"
+              title="Đặt Lại Góc Nhìn Mặc Định"
+            >
+              🎯
+            </button>
+            <button
+              onClick={() => viewMode3D ? handlePan3D(1, 0) : setPan2D(p => ({ ...p, x: p.x - 40 }))}
+              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 border border-white/10 transition-all active:scale-90"
+              title="Kéo Sang Phải"
+            >
+              <ArrowRight size={13} />
+            </button>
+
+            <div />
+            <button
+              onClick={() => viewMode3D ? handlePan3D(0, 1) : setPan2D(p => ({ ...p, y: p.y - 40 }))}
+              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 border border-white/10 transition-all active:scale-90"
+              title="Kéo Xuống Dưới"
+            >
+              <ArrowDown size={13} />
+            </button>
+            <div />
+          </div>
+        </div>
 
         {/* FLOATING CAMERA PRESET ZOOM TOOLBAR */}
         <div className="absolute bottom-4 right-4 z-20 flex flex-wrap items-center gap-1.5 p-1.5 bg-black/70 backdrop-blur-md border border-white/15 rounded-2xl shadow-2xl">
           <span className="text-[10px] font-black text-gray-400 uppercase px-2 flex items-center gap-1">
-            <CompassIcon size={12} className="text-yellow-400" /> Zoom:
+            <CompassIcon size={12} className="text-yellow-400" /> {t.zoom}:
           </span>
           {Object.entries(getCameraPresetsForCountry()).map(([key, item]) => (
             <button

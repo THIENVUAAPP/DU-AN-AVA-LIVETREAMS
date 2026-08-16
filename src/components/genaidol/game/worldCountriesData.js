@@ -14,7 +14,7 @@ export const CONTINENTS = [
 ];
 
 // Helper để sinh danh sách tỉnh thành/địa danh chuẩn cho quốc gia
-function createCountryDef(id, name, flag, code, continent, title, primaryColor, secondaryColor, mainCities, islands = [], customLabels = []) {
+function createCountryDef(id, name, flag, code, continent, title, primaryColor, secondaryColor, mainCities, islands = [], customLabels = [], lang = 'en') {
   const provinces = [
     ...mainCities.map((c, i) => ({ id: `${id}_prov_${i+1}`, name: c, totalCells: 600 })),
     ...islands.map((isl, i) => ({ id: `${id}_isl_${i+1}`, name: isl, totalCells: 350 }))
@@ -34,6 +34,7 @@ function createCountryDef(id, name, flag, code, continent, title, primaryColor, 
     flag,
     code,
     continent,
+    lang,
     title: `${flag} ${title || (name.toUpperCase() + ' GHÉP CỜ LIVE')} ${flag}`,
     claimedCellColor: primaryColor || '#DA251D',
     starColor: secondaryColor || '#FFD700',

@@ -763,6 +763,62 @@ class BanDoGameEngine {
     this.notify({ type: 'GIFTS_UPDATED', gifts: newGifts });
   }
 
+  setAutoRotate(enabled) {
+    this.state.autoRotate = !!enabled;
+    this.saveToStorage();
+    this.notify({ type: 'AUTO_ROTATE_CHANGED', autoRotate: this.state.autoRotate });
+  }
+
+  toggleAutoRotate() {
+    this.setAutoRotate(!this.state.autoRotate);
+    return this.state.autoRotate;
+  }
+
+  addCustomProvince(countryKey, prov) {
+    const targetKey = countryKey || this.state.selectedCountry;
+    const country = this.countries[targetKey] || COUNTRIES_BY_ID[targetKey];
+    if (!country) return;
+
+    if (!country.provinces) country.provinces = [];
+    const newProv = {
+      id: prov.id || `${targetKey}_custom_${Date.now()}`,
+      name: prov.name || 'Vùng Miền Mới',
+      totalCells: Number(prov.totalCells) || 500,
+    };
+
+    country.provinces.push(newProv);
+
+    // If currently playing this country, update provincesStatus
+    if (this.state.selectedCountry === targetKey) {
+      if (!this.state.provincesStatus) this.state.provincesStatus = {};
+      this.state.provincesStatus[newProv.id] = {
+        id: newProv.id,
+        name: newProv.name,
+        totalCells: newProv.totalCells,
+        claimedCount: 0,
+        isCompleted: false,
+        leader: null
+      };
+    }
+
+    this.saveToStorage();
+    this.notify({ type: 'PROVINCES_UPDATED', countryKey: targetKey, provinces: country.provinces });
+  }
+
+  removeCustomProvince(countryKey, provId) {
+    const targetKey = countryKey || this.state.selectedCountry;
+    const country = this.countries[targetKey] || COUNTRIES_BY_ID[targetKey];
+    if (!country || !country.provinces) return;
+
+    country.provinces = country.provinces.filter(p => p.id !== provId);
+    if (this.state.selectedCountry === targetKey && this.state.provincesStatus) {
+      delete this.state.provincesStatus[provId];
+    }
+
+    this.saveToStorage();
+    this.notify({ type: 'PROVINCES_UPDATED', countryKey: targetKey, provinces: country.provinces });
+  }
+
   restoreDefaultCountryConfig(countryKey) {
     const defaultPreset = COUNTRIES_BY_ID[countryKey] || WORLD_COUNTRIES[0];
     this.countries[countryKey] = JSON.parse(JSON.stringify(defaultPreset));
