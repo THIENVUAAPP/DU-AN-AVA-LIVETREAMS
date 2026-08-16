@@ -5,6 +5,7 @@ import GameChienDau from './GameChienDau';
 // Mở đường dẫn "?overlay=gamebattle" trên trình duyệt, rồi dùng Window Capture / Browser Source trong TikTok LIVE Studio.
 export default function GameBattleOverlay() {
   const [lastLiveEvent, setLastLiveEvent] = useState(null);
+  const ratio = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('ratio') || '9:16' : '9:16';
 
   useEffect(() => {
     document.title = 'AVA Battle Overlay — TikTok LIVE Studio';
@@ -27,6 +28,7 @@ export default function GameBattleOverlay() {
         isPopout={true}
         onOpenAdmin={null}
         externalLiveEvent={lastLiveEvent}
+        aspectRatio={ratio}
       />
     </div>
   );

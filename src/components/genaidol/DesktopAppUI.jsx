@@ -912,28 +912,6 @@ export default function DesktopAppUI() {
         {/* Right Side: Toggles & Stream Window */}
         <div className="flex items-center gap-1.5 shrink-0">
           
-          {/* 1 Nút Mở Cửa Sổ Live Sạch DUY NHẤT */}
-          <button 
-            onClick={() => {
-              let overlayUrl = `?overlay=cleanlive&ratio=${globalAspectRatio}`;
-              let winName = 'AvaliveCleanStream';
-              if (isGameBanDoActive) {
-                overlayUrl = `?overlay=bando&ratio=${globalAspectRatio}`;
-                winName = 'AvaliveMapOverlay';
-              } else if (isGameBattleActive) {
-                overlayUrl = `?overlay=gamebattle&ratio=${globalAspectRatio}`;
-                winName = 'AvaliveBattleOverlay';
-              }
-              const w = globalAspectRatio === '9:16' ? 450 : 1280;
-              const h = globalAspectRatio === '9:16' ? 800 : 720;
-              window.open(overlayUrl, winName, `width=${w},height=${h},menubar=no,toolbar=no,location=no,status=no`);
-            }}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black transition-all bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white shadow-md shadow-pink-500/25 border border-pink-400/40 active:scale-95"
-            title={`Mở cửa sổ ${globalAspectRatio} sạch độc lập để đưa thẳng vào TikTok LIVE Studio hoặc OBS Studio`}
-          >
-            <Video size={13} />
-            <span>{globalAspectRatio === '9:16' ? 'Cửa Sổ 9:16' : 'Cửa Sổ 16:9'}</span>
-          </button>
 
           {/* 1 Nút Chạy Demo DUY NHẤT dùng chung */}
           <button 
