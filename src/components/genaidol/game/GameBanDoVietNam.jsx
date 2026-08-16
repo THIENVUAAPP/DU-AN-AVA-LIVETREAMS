@@ -24,6 +24,75 @@ function easeInOutCubic(t) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
+// Function tạo Texture Quốc Kỳ sắc nét cho từng ô pixel 3D
+function createCountryFlagTexture(countryCode = 'vietnam') {
+  const canvas = document.createElement('canvas');
+  canvas.width = 128;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+
+  if (countryCode === 'japan') {
+    // 🇯🇵 Nhật Bản: Nền trắng + Mặt trời đỏ
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, 128, 128);
+    ctx.fillStyle = '#BC002D';
+    ctx.beginPath();
+    ctx.arc(64, 64, 38, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (countryCode === 'korea') {
+    // 🇰🇷 Hàn Quốc: Nền trắng + Âm Dương
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, 128, 128);
+    ctx.fillStyle = '#CD2E3A';
+    ctx.beginPath();
+    ctx.arc(64, 64, 36, Math.PI, 0);
+    ctx.fill();
+    ctx.fillStyle = '#0047A0';
+    ctx.beginPath();
+    ctx.arc(64, 64, 36, 0, Math.PI);
+    ctx.fill();
+  } else {
+    // 🇻🇳 VIỆT NAM (Mặc định): Nền đỏ tươi + Viền 3D nổi + Ngôi Sao Vàng 5 cánh chính giữa
+    ctx.fillStyle = '#DA251D';
+    ctx.fillRect(0, 0, 128, 128);
+
+    // Viền nổi pixel tile
+    ctx.strokeStyle = '#B91C1C';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(2, 2, 124, 124);
+
+    // Ngôi sao vàng 5 cánh siêu nét
+    const cx = 64, cy = 64, outerR = 38, innerR = 15;
+    ctx.fillStyle = '#FFFF00';
+    ctx.shadowColor = '#FFD700';
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+    for (let i = 0; i < 5; i++) {
+      const rotOuter = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+      const x1 = cx + Math.cos(rotOuter) * outerR;
+      const y1 = cy + Math.sin(rotOuter) * outerR;
+      if (i === 0) ctx.moveTo(x1, y1);
+      else ctx.lineTo(x1, y1);
+
+      const rotInner = rotOuter + (2 * Math.PI) / 10;
+      const x2 = cx + Math.cos(rotInner) * innerR;
+      const y2 = cy + Math.sin(rotInner) * innerR;
+      ctx.lineTo(x2, y2);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.ClampToEdgeWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.generateMipmaps = true;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.needsUpdate = true;
+  return texture;
+}
+
 // 3 Vị Trí Ghim Camera Mặc Định Ban Đầu
 const DEFAULT_CUSTOM_BOOKMARKS = [
   {
@@ -555,13 +624,16 @@ export default function GameBanDoVietNam({
       scene.add(gridHelper);
     }
 
-    // Instanced Mesh for cells with bright reflective material
+    // Instanced Mesh for cells with National Flag Texture (Lá cờ quốc kỳ trên từng ô pixel)
     const maskData = bandoEngine.maskData;
     const cells = maskData?.cells || [];
     const count = cells.length > 0 ? cells.length : 15125;
+    const flagTexture = createCountryFlagTexture(gameState.selectedCountry || 'vietnam');
+    state.flagTexture = flagTexture;
     const boxGeo = new THREE.BoxGeometry(0.88, 1, 0.88);
     const boxMat = new THREE.MeshStandardMaterial({
-      roughness: 0.48,
+      map: flagTexture,
+      roughness: 0.38,
       metalness: 0.12,
       vertexColors: true,
     });
@@ -628,11 +700,8 @@ export default function GameBanDoVietNam({
       instancedMesh.setMatrixAt(i, dummy.matrix);
 
       if (isClaimed) {
-        if ((cell.provinceId === 'ha-noi' || cell.provinceId === 'tokyo' || cell.provinceId === 'seoul') && (cell.x + cell.y) % 7 === 0) {
-          instancedMesh.setColorAt(i, goldStarColor);
-        } else {
-          instancedMesh.setColorAt(i, redFlagColor);
-        }
+        // Multiplier trắng (1,1,1) hiển thị 100% nguyên bản Texture Lá Cờ Quốc Kỳ Đỏ Sao Vàng sắc nét
+        instancedMesh.setColorAt(i, new THREE.Color(1.0, 1.0, 1.0));
       } else {
         instancedMesh.setColorAt(i, emptyColor);
       }
@@ -763,6 +832,7 @@ export default function GameBanDoVietNam({
       renderer.dispose();
       boxGeo.dispose();
       boxMat.dispose();
+      if (state.flagTexture) state.flagTexture.dispose();
     };
   }, [viewMode3D, isPopout, gameState.selectedCountry, isLightTheme]);
 
@@ -883,11 +953,8 @@ export default function GameBanDoVietNam({
       instancedMesh.setMatrixAt(i, dummy.matrix);
 
       if (isClaimed) {
-        if ((cell.provinceId === 'ha-noi' || cell.provinceId === 'tokyo' || cell.provinceId === 'seoul') && (cell.x + cell.y) % 7 === 0) {
-          instancedMesh.setColorAt(i, goldStarColor);
-        } else {
-          instancedMesh.setColorAt(i, redFlagColor);
-        }
+        // Hiển thị trọn vẹn lá cờ quốc kỳ trên từng ô pixel
+        instancedMesh.setColorAt(i, new THREE.Color(1.0, 1.0, 1.0));
       } else {
         instancedMesh.setColorAt(i, emptyColor);
       }
@@ -958,11 +1025,44 @@ export default function GameBanDoVietNam({
     ctx.fillStyle = isLightTheme ? '#f8fafc' : '#0a0f1d';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw Grid Cells
+    // Draw Grid Cells in 2D Canvas with National Flag (Đỏ Sao Vàng trên từng ô pixel)
     (maskData.cells || []).forEach(cell => {
       const isClaimed = !!gameState.cellsById[cell.id];
-      ctx.fillStyle = isClaimed ? (gameState.settings.claimedCellColor || '#DA251D') : (gameState.settings.emptyCellColor || '#475569');
-      ctx.fillRect(offsetX + cell.x * scale, offsetY + cell.y * scale, Math.max(1, scale * 0.88), Math.max(1, scale * 0.88));
+      const cx = offsetX + cell.x * scale;
+      const cy = offsetY + cell.y * scale;
+      const cellSize = Math.max(1, scale * 0.9);
+
+      if (isClaimed) {
+        // Cờ đỏ
+        ctx.fillStyle = '#DA251D';
+        ctx.fillRect(cx, cy, cellSize, cellSize);
+
+        // Ngôi sao vàng mini ở trung tâm ô pixel nếu kích thước đủ lớn
+        if (cellSize >= 3.5) {
+          ctx.fillStyle = '#FFFF00';
+          const r = cellSize * 0.30;
+          const midX = cx + cellSize / 2;
+          const midY = cy + cellSize / 2;
+          ctx.beginPath();
+          for (let s = 0; s < 5; s++) {
+            const rotOuter = (s * 4 * Math.PI) / 5 - Math.PI / 2;
+            const x1 = midX + Math.cos(rotOuter) * r;
+            const y1 = midY + Math.sin(rotOuter) * r;
+            if (s === 0) ctx.moveTo(x1, y1);
+            else ctx.lineTo(x1, y1);
+
+            const rotInner = rotOuter + (2 * Math.PI) / 10;
+            const x2 = midX + Math.cos(rotInner) * (r * 0.4);
+            const y2 = midY + Math.sin(rotInner) * (r * 0.4);
+            ctx.lineTo(x2, y2);
+          }
+          ctx.closePath();
+          ctx.fill();
+        }
+      } else {
+        ctx.fillStyle = isLightTheme ? '#94a3b8' : (gameState.settings.emptyCellColor || '#334155');
+        ctx.fillRect(cx, cy, cellSize, cellSize);
+      }
     });
 
     // Draw 2D Landmark Labels
@@ -1177,7 +1277,7 @@ export default function GameBanDoVietNam({
           </div>
         )}
 
-        {/* INDEPENDENT 3D-ANCHORED NATIONAL FLAG & USER CLAIM BADGES LAYER (LUÔN HIỂN THỊ ĐỘC LẬP) */}
+        {/* INDEPENDENT 3D-ANCHORED NATIONAL FLAG & USER CLAIM BADGES LAYER (THU NHỎ 30% TINH TẾ) */}
         <div ref={claimBadgesLayerRef} className="absolute inset-0 pointer-events-none z-20 overflow-hidden">
           {recentClaimBadges.map((badge) => (
             <div
@@ -1189,51 +1289,51 @@ export default function GameBanDoVietNam({
                 top: 0,
                 display: 'none',
               }}
-              className="flex flex-col items-center pointer-events-none select-none drop-shadow-2xl animate-in zoom-in duration-200"
+              className="flex flex-col items-center pointer-events-none select-none drop-shadow-xl animate-in zoom-in duration-200"
             >
-              {/* 1. TOP FLOATING BADGE (Avatar + Flag + TikTok ID + Claim Count) */}
-              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-gradient-to-r from-red-950/95 via-neutral-900/95 to-black/95 border-2 border-yellow-400 shadow-[0_0_25px_rgba(250,204,21,0.85)] backdrop-blur-md ring-2 ring-yellow-400/50">
+              {/* 1. TOP FLOATING BADGE (Avatar + Flag + TikTok ID + Claim Count) - REDUCED 30% */}
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-gradient-to-r from-red-950/95 via-neutral-900/95 to-black/95 border border-yellow-400/90 shadow-[0_0_18px_rgba(250,204,21,0.75)] backdrop-blur-md ring-1 ring-yellow-400/40">
                 {/* National Flag & Avatar */}
                 <div className="relative flex-shrink-0">
                   {badge.avatar ? (
                     <img 
                       src={badge.avatar} 
                       alt="Avatar" 
-                      className="w-7 h-7 rounded-full border-2 border-yellow-300 object-cover shadow-md" 
+                      className="w-5 h-5 rounded-full border border-yellow-300 object-cover shadow-sm" 
                     />
                   ) : (
-                    <div className="w-7 h-7 rounded-full bg-red-600 border-2 border-yellow-300 flex items-center justify-center text-sm shadow-md">
+                    <div className="w-5 h-5 rounded-full bg-red-600 border border-yellow-300 flex items-center justify-center text-[10px] shadow-sm">
                       {badge.flag || '🇻🇳'}
                     </div>
                   )}
-                  <span className="absolute -bottom-1 -right-1 text-sm drop-shadow select-none">
+                  <span className="absolute -bottom-1 -right-1 text-[9px] drop-shadow select-none">
                     {badge.flag || '🇻🇳'}
                   </span>
                 </div>
 
                 {/* User Info & TikTok ID */}
-                <div className="flex flex-col text-left leading-tight">
-                  <div className="flex items-center gap-1">
-                    <span className="text-[11px] font-black text-yellow-300 font-mono tracking-wider">
+                <div className="flex flex-col text-left leading-none">
+                  <div className="flex items-center gap-0.5">
+                    <span className="text-[10px] font-black text-yellow-300 font-mono tracking-wide">
                       {badge.userId.startsWith('@') ? badge.userId : `@${badge.userId}`}
                     </span>
                   </div>
-                  <span className="text-[10px] font-bold text-white max-w-[120px] truncate">
+                  <span className="text-[9px] font-bold text-white max-w-[95px] truncate mt-0.5">
                     {badge.username}
                   </span>
                 </div>
 
                 {/* Claim Count Badge */}
-                <div className="ml-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-red-600 via-amber-500 to-yellow-500 text-white font-black text-[10px] font-mono shadow-[0_0_12px_rgba(239,68,68,0.7)] flex items-center gap-1">
-                  <Flag size={10} className="fill-white" />
+                <div className="ml-1 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-red-600 via-amber-500 to-yellow-500 text-white font-black text-[9px] font-mono shadow-[0_0_8px_rgba(239,68,68,0.7)] flex items-center gap-0.5">
+                  <Flag size={8} className="fill-white" />
                   <span>+{badge.count} Ô</span>
                 </div>
               </div>
 
               {/* 2. 3D PIN POLE LINE CONNECTING BADGE TO 3D MAP CELL */}
               <div className="flex flex-col items-center">
-                <div className="w-0.5 h-6 bg-gradient-to-b from-yellow-400 via-yellow-500 to-transparent shadow-[0_0_8px_rgba(250,204,21,0.9)]" />
-                <div className="w-2.5 h-2.5 rounded-full bg-yellow-400 border border-white shadow-[0_0_10px_#facc15] animate-ping" />
+                <div className="w-0.5 h-4 bg-gradient-to-b from-yellow-400 via-yellow-500 to-transparent shadow-[0_0_6px_rgba(250,204,21,0.9)]" />
+                <div className="w-2 h-2 rounded-full bg-yellow-400 border border-white shadow-[0_0_8px_#facc15] animate-ping" />
               </div>
             </div>
           ))}
