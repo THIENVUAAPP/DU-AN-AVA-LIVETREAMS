@@ -711,11 +711,11 @@ export default function GameBanDoVietNam({
       instancedMesh.setMatrixAt(i, dummy.matrix);
 
       if (isClaimed) {
-        // Ô đã cắm cờ (người xem tặng quà): Lắp lá cờ quốc kỳ 3D nhô cao + Phát sáng rực rỡ
-        instancedMesh.setColorAt(i, new THREE.Color(1.20, 1.15, 1.05));
+        // Ô đã cắm cờ (người xem tặng quà): Lắp lá cờ quốc kỳ 3D nhô cao + Phát sáng rực rỡ đậm màu
+        instancedMesh.setColorAt(i, new THREE.Color(1.35, 1.25, 1.12));
       } else {
-        // Ô nền lãnh thổ CHƯA cắm cờ: Giữ nguyên ô nền màu đen/xám tối công nghệ (chờ lắp cờ khi tặng quà)
-        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.25, 0.28, 0.35) : new THREE.Color(0.08, 0.10, 0.14));
+        // Ô nền lãnh thổ CHƯA cắm cờ: Hiển thị lá cờ quốc kỳ tông màu nhạt/mờ hơn (nhìn từ xa vẫn thấy rõ quốc kỳ & ngôi sao)
+        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.50, 0.48, 0.50) : new THREE.Color(0.42, 0.40, 0.42));
       }
     }
     instancedMesh.instanceMatrix.needsUpdate = true;
@@ -983,9 +983,6 @@ export default function GameBanDoVietNam({
     const cols = maskData.gridCols || 300;
     const rows = maskData.gridRows || 389;
     const dummy = state.dummy;
-    const emptyColor = new THREE.Color(gameState.settings.emptyCellColor || '#475569');
-    const goldStarColor = new THREE.Color(gameState.settings.starColor || '#FFD700');
-    const redFlagColor = new THREE.Color(gameState.settings.claimedCellColor || '#DA251D');
 
     for (let i = 0; i < count; i++) {
       const cell = cells[i];
@@ -1002,11 +999,11 @@ export default function GameBanDoVietNam({
       instancedMesh.setMatrixAt(i, dummy.matrix);
 
       if (isClaimed) {
-        // Ô đã cắm cờ (người xem tặng quà): Lắp lá cờ quốc kỳ 3D nhô cao + Phát sáng rực rỡ
-        instancedMesh.setColorAt(i, new THREE.Color(1.20, 1.15, 1.05));
+        // Ô đã cắm cờ (người xem tặng quà): Lắp lá cờ quốc kỳ 3D nhô cao + Phát sáng rực rỡ đậm màu
+        instancedMesh.setColorAt(i, new THREE.Color(1.35, 1.25, 1.12));
       } else {
-        // Ô nền lãnh thổ CHƯA cắm cờ: Giữ nguyên ô nền màu đen/xám tối công nghệ (chờ lắp cờ khi tặng quà)
-        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.25, 0.28, 0.35) : new THREE.Color(0.08, 0.10, 0.14));
+        // Ô nền lãnh thổ CHƯA cắm cờ: Hiển thị lá cờ quốc kỳ tông màu nhạt/mờ hơn (nhìn từ xa vẫn thấy rõ quốc kỳ & ngôi sao)
+        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.50, 0.48, 0.50) : new THREE.Color(0.42, 0.40, 0.42));
       }
     }
 
@@ -1083,14 +1080,14 @@ export default function GameBanDoVietNam({
       const cellSize = Math.max(1, scale * 0.9);
 
       if (isClaimed) {
-        // Cờ đỏ
-        ctx.fillStyle = '#DA251D';
+        // Ô đã cắm cờ (Tặng quà): Cờ đỏ thắm tươi rực rỡ
+        ctx.fillStyle = '#DC2626';
         ctx.fillRect(cx, cy, cellSize, cellSize);
 
-        // Ngôi sao vàng mini ở trung tâm ô pixel nếu kích thước đủ lớn
-        if (cellSize >= 3.5) {
+        // Ngôi sao vàng mini ở trung tâm ô pixel
+        if (cellSize >= 3.0) {
           ctx.fillStyle = '#FFFF00';
-          const r = cellSize * 0.30;
+          const r = cellSize * 0.32;
           const midX = cx + cellSize / 2;
           const midY = cy + cellSize / 2;
           ctx.beginPath();
@@ -1110,9 +1107,31 @@ export default function GameBanDoVietNam({
           ctx.fill();
         }
       } else {
-        // Ô nền đen xám công nghệ (chưa cắm cờ)
-        ctx.fillStyle = isLightTheme ? '#cbd5e1' : '#1e293b';
+        // Ô nền CHƯA cắm cờ: Hiển thị cờ đỏ nhạt / mờ dịu
+        ctx.fillStyle = isLightTheme ? 'rgba(220, 38, 38, 0.22)' : 'rgba(185, 28, 28, 0.30)';
         ctx.fillRect(cx, cy, cellSize, cellSize);
+
+        if (cellSize >= 3.5) {
+          ctx.fillStyle = isLightTheme ? 'rgba(234, 179, 8, 0.35)' : 'rgba(250, 204, 21, 0.35)';
+          const r = cellSize * 0.25;
+          const midX = cx + cellSize / 2;
+          const midY = cy + cellSize / 2;
+          ctx.beginPath();
+          for (let s = 0; s < 5; s++) {
+            const rotOuter = (s * 4 * Math.PI) / 5 - Math.PI / 2;
+            const x1 = midX + Math.cos(rotOuter) * r;
+            const y1 = midY + Math.sin(rotOuter) * r;
+            if (s === 0) ctx.moveTo(x1, y1);
+            else ctx.lineTo(x1, y1);
+
+            const rotInner = rotOuter + (2 * Math.PI) / 10;
+            const x2 = midX + Math.cos(rotInner) * (r * 0.4);
+            const y2 = midY + Math.sin(rotInner) * (r * 0.4);
+            ctx.lineTo(x2, y2);
+          }
+          ctx.closePath();
+          ctx.fill();
+        }
       }
     });
 

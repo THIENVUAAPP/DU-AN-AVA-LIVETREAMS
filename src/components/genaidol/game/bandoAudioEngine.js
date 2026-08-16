@@ -271,38 +271,42 @@ class BanDoAudioEngine {
   }
 
   // 1. Cắm ô cờ (Pop-in)
-  playCellPop(frequency = 520) {
-    this.tone(frequency, 0.08, { type: 'sine', gain: 0.35 });
-    this.tone(frequency * 1.5, 0.06, { type: 'triangle', gain: 0.2, delay: 0.02 });
+  playCellPop(frequency = 587.33) {
+    this.tone(frequency, 0.09, { type: 'sine', gain: 0.45 });
+    this.tone(frequency * 1.5, 0.07, { type: 'triangle', gain: 0.35, delay: 0.015 });
+    this.tone(frequency * 2.0, 0.05, { type: 'sine', gain: 0.25, delay: 0.03 });
   }
 
-  // 2. Kèn Lệnh Xung Trận Hào Hùng (War Horn)
+  // 2. Kèn Lệnh Xung Trận Hào Hùng Hùng Tráng (War Horn - Brass fanfare)
   playWarHorn() {
-    const notes = [293.66, 369.99, 440.00, 587.33]; // D - F# - A - D
+    const notes = [293.66, 369.99, 440.00, 587.33, 739.99, 880.00]; // D - F# - A - D - F# - A
     notes.forEach((f, i) => {
-      this.tone(f, 0.6, { type: 'sawtooth', gain: 0.45, delay: i * 0.15 });
-      this.tone(f * 0.5, 0.7, { type: 'triangle', gain: 0.3, delay: i * 0.15 });
+      this.tone(f, 0.55, { type: 'sawtooth', gain: 0.45, delay: i * 0.11 });
+      this.tone(f * 0.5, 0.65, { type: 'triangle', gain: 0.35, delay: i * 0.11 });
+      this.tone(f * 1.5, 0.45, { type: 'sine', gain: 0.25, delay: i * 0.11 + 0.02 });
     });
   }
 
-  // 3. Tiếng Trống Trận Dồn Dập Kịch Tính (War Drums)
-  playWarDrums(beats = 4) {
+  // 3. Tiếng Trống Trận Dồn Dập Hào Khí Rực Lửa (War Drums)
+  playWarDrums(beats = 5) {
     const ctx = this.ensureContext();
     if (!ctx) return;
     for (let i = 0; i < beats; i++) {
-      const delay = i * 0.14;
-      this.tone(90 + (i % 2) * 30, 0.18, { type: 'sine', gain: 0.7, delay, attack: 0.005 });
-      this.tone(60, 0.25, { type: 'triangle', gain: 0.6, delay, attack: 0.005 });
+      const delay = i * 0.12;
+      const isAccent = i === 0 || i === beats - 1;
+      this.tone(isAccent ? 120 : 85 + (i % 2) * 25, 0.22, { type: 'sine', gain: isAccent ? 0.9 : 0.7, delay, attack: 0.003 });
+      this.tone(55, 0.30, { type: 'triangle', gain: isAccent ? 0.8 : 0.6, delay, attack: 0.003 });
+      this.tone(180, 0.08, { type: 'sawtooth', gain: 0.35, delay, attack: 0.002 });
     }
   }
 
-  // 4. Pháo Hoa Nổ Vang (Fireworks Explosion)
+  // 4. Pháo Hoa Nổ Vang Rực Sáng (Fireworks Explosion)
   playFireworks() {
     const ctx = this.ensureContext();
     if (!ctx || this.isMuted) return;
     try {
       // Noise burst for explosion
-      const bufferSize = ctx.sampleRate * 0.5;
+      const bufferSize = ctx.sampleRate * 0.55;
       const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
       const output = buffer.getChannelData(0);
       for (let i = 0; i < bufferSize; i++) {
@@ -313,63 +317,70 @@ class BanDoAudioEngine {
 
       const filter = ctx.createBiquadFilter();
       filter.type = 'lowpass';
-      filter.frequency.value = 800;
+      filter.frequency.value = 950;
 
       const gain = ctx.createGain();
       const start = ctx.currentTime;
-      gain.gain.setValueAtTime(0.7 * this.sfxVolume, start);
-      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.45);
+      gain.gain.setValueAtTime(0.85 * this.sfxVolume, start);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.50);
 
       whiteNoise.connect(filter);
       filter.connect(gain);
       gain.connect(this.sfxGain || this.masterGain);
 
       whiteNoise.start(start);
-      whiteNoise.stop(start + 0.5);
+      whiteNoise.stop(start + 0.55);
 
       // Chimes sparkle
-      [880, 1174, 1567, 2093].forEach((f, i) => {
-        this.tone(f, 0.4, { type: 'sine', gain: 0.35, delay: 0.1 + i * 0.06 });
+      [880, 1174, 1567, 2093, 2637].forEach((f, i) => {
+        this.tone(f, 0.45, { type: 'sine', gain: 0.4, delay: 0.08 + i * 0.05 });
       });
     } catch (e) {}
   }
 
   // 5. Tiếng Khán Giả Hò Reo Vang Dội (Crowd Cheer)
   playCrowdCheer() {
-    [440, 554, 659, 880, 1108].forEach((f, i) => {
-      this.tone(f + Math.random() * 20, 0.8, { type: 'triangle', gain: 0.25, delay: i * 0.05 });
+    [440, 554, 659, 880, 1108, 1318].forEach((f, i) => {
+      this.tone(f + Math.random() * 25, 0.85, { type: 'triangle', gain: 0.3, delay: i * 0.04 });
     });
   }
 
-  // 6. Tiếng Sét Đánh / Rồng Thần Giáng Lâm (Thunder Strike)
+  // 6. Tiếng Sét Đánh / Rồng Thần Giáng Lâm (Thunder Strike & Mythic Roar)
   playThunderStrike() {
-    this.tone(80, 0.5, { type: 'sawtooth', gain: 0.75 });
-    this.tone(45, 0.7, { type: 'square', gain: 0.6, delay: 0.05 });
+    this.tone(90, 0.65, { type: 'sawtooth', gain: 0.85 });
+    this.tone(40, 0.85, { type: 'square', gain: 0.75, delay: 0.03 });
+    this.tone(150, 0.45, { type: 'sawtooth', gain: 0.6, delay: 0.08 });
     this.playFireworks();
+    this.playWarHorn();
   }
 
   // 7. Mưa Tiền Vàng / Quà Lớn (Gold Coins Shower)
-  playGoldCoins(count = 5) {
-    const freqs = [1046.5, 1318.5, 1567.98, 2093.0];
+  playGoldCoins(count = 7) {
+    const freqs = [1046.5, 1318.5, 1567.98, 2093.0, 2637.0];
     for (let i = 0; i < count; i++) {
-      const f = freqs[i % freqs.length] + Math.random() * 80;
-      this.tone(f, 0.12, { type: 'sine', gain: 0.4, delay: i * 0.07 });
+      const f = freqs[i % freqs.length] + Math.random() * 90;
+      this.tone(f, 0.14, { type: 'sine', gain: 0.45, delay: i * 0.06 });
+      this.tone(f * 1.5, 0.09, { type: 'triangle', gain: 0.25, delay: i * 0.06 + 0.01 });
     }
   }
 
   // 8. Thăng Cấp Đột Phá (Level Up)
   playLevelUp() {
-    const melody = [523.25, 659.25, 783.99, 1046.5, 1318.5];
+    const melody = [523.25, 659.25, 783.99, 1046.5, 1318.5, 1567.98];
     melody.forEach((f, i) => {
-      this.tone(f, 0.25, { type: 'triangle', gain: 0.45, delay: i * 0.08 });
+      this.tone(f, 0.3, { type: 'triangle', gain: 0.5, delay: i * 0.07 });
+      this.tone(f * 0.5, 0.35, { type: 'sine', gain: 0.35, delay: i * 0.07 });
     });
   }
 
   // 9. Tặng quà lớn (Fanfare)
   playGiftFanfare(tier = 'large') {
-    const notes = tier === 'huge' ? [523.25, 659.25, 783.99, 1046.5, 1318.51] : [440, 554.37, 659.25, 880];
+    const notes = tier === 'huge' 
+      ? [523.25, 659.25, 783.99, 1046.5, 1318.51, 1567.98] 
+      : [440, 554.37, 659.25, 880, 1108.73];
     notes.forEach((freq, idx) => {
-      this.tone(freq, 0.28, { type: 'triangle', gain: 0.4, delay: idx * 0.08 });
+      this.tone(freq, 0.32, { type: 'sawtooth', gain: 0.35, delay: idx * 0.07 });
+      this.tone(freq, 0.35, { type: 'triangle', gain: 0.45, delay: idx * 0.07 });
     });
   }
 
