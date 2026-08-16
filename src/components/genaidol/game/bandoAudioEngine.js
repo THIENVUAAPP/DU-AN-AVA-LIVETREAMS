@@ -53,6 +53,10 @@ class BanDoAudioEngine {
       if (savedTimer) {
         this.bgmTimerMode = savedTimer;
       }
+      const savedMute = localStorage.getItem('bando_is_muted');
+      if (savedMute === 'true') {
+        this.isMuted = true;
+      }
     } catch (e) {}
   }
 
@@ -89,10 +93,19 @@ class BanDoAudioEngine {
     if (ctx && ctx.state === 'suspended') {
       ctx.resume().catch(() => {});
     }
-    this.playCellPop();
-    if (!this.isMuted && this.bgmVolume > 0 && !this.bgmPlaying) {
-      this.playBgmOnLive();
+  }
+
+  setMuted(isMuted) {
+    this.isMuted = isMuted;
+    if (this.masterGain && this.ctx) {
+      this.masterGain.gain.setValueAtTime(isMuted ? 0 : 0.9, this.ctx.currentTime);
     }
+    if (isMuted) {
+      this.stopBgmOnLive();
+    }
+    try {
+      localStorage.setItem('bando_is_muted', isMuted ? 'true' : 'false');
+    } catch (e) {}
   }
 
   toggleBgm() {

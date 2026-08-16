@@ -745,6 +745,18 @@ export default function DesktopAppUI() {
             )}
           </button>
 
+          {/* Nút Cài đặt Game Chiến Đấu - Nằm KẾ BÊN Game Chiến Đấu khi đang mở */}
+          {isGameBattleActive && (
+            <button
+              onClick={() => setIsGameAdminOpen(true)}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-gradient-to-r from-purple-900/90 to-indigo-900/90 hover:from-purple-800 hover:to-indigo-800 text-purple-200 hover:text-white border border-purple-400/80 shadow-md transition-all animate-in fade-in duration-200"
+              title="Mở bảng Menu Cài Đặt Game Chiến Đấu"
+            >
+              <Settings size={12} className="text-yellow-300 animate-spin-slow" />
+              <span>⚙️ Cài đặt Game</span>
+            </button>
+          )}
+
           {/* Nút Kích hoạt Game Ghép Cờ Bản Đồ Việt Nam (Hình Chữ S) */}
           <button 
             className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border shadow-sm ${
@@ -764,6 +776,18 @@ export default function DesktopAppUI() {
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
             )}
           </button>
+
+          {/* Nút Cài đặt Game Bản Đồ - Nằm KẾ BÊN Game Bản Đồ khi đang mở */}
+          {isGameBanDoActive && (
+            <button
+              onClick={() => setIsGameBanDoAdminOpen(true)}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-900/90 to-red-900/90 hover:from-amber-800 hover:to-red-800 text-amber-200 hover:text-white border border-amber-400/80 shadow-md transition-all animate-in fade-in duration-200"
+              title="Mở bảng Menu Cài Đặt Game Bản Đồ Cắm Cờ Quốc Gia"
+            >
+              <Settings size={12} className="text-yellow-300 animate-spin-slow" />
+              <span>⚙️ Cài đặt Game</span>
+            </button>
+          )}
 
           {/* 1 Nút Chuyển Tỷ Lệ Khung Hình Toàn Cục DUY NHẤT CHO TOÀN BỘ HỆ THỐNG: 9:16 (TikTok Dọc) vs 16:9 (OBS Ngang) */}
           <button

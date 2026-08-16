@@ -237,6 +237,82 @@ export default function GameBanDoVietNam({
   const [editingBookmarkId, setEditingBookmarkId] = useState(null);
   const [editingBookmarkName, setEditingBookmarkName] = useState('');
 
+  // Draggable HUDs State (Thu nhỏ ~50% và có thể di chuyển tùy ý trên màn hình)
+  const [isLeaderboardMinimized, setIsLeaderboardMinimized] = useState(false);
+  const [isGiftHudMinimized, setIsGiftHudMinimized] = useState(false);
+  const [leaderboardPos, setLeaderboardPos] = useState(() => {
+    try {
+      const saved = localStorage.getItem('bando_hud_leaderboard_pos');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return { x: 10, y: 70 };
+  });
+  const [giftHudPos, setGiftHudPos] = useState(() => {
+    try {
+      const saved = localStorage.getItem('bando_hud_gift_pos');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return { x: null, y: 70, right: 10 };
+  });
+
+  const draggingHudRef = useRef(null); // 'leaderboard' | 'gift' | null
+  const dragOffsetRef = useRef({ x: 0, y: 0 });
+
+  const handleHudDragStart = (e, hudType) => {
+    e.stopPropagation();
+    draggingHudRef.current = hudType;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const parentEl = e.currentTarget.parentElement;
+    if (parentEl) {
+      const rect = parentEl.getBoundingClientRect();
+      dragOffsetRef.current = {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+  };
+
+  useEffect(() => {
+    const handlePointerMove = (e) => {
+      if (!draggingHudRef.current || !containerRef.current) return;
+      const stageRect = containerRef.current.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      let newX = clientX - stageRect.left - dragOffsetRef.current.x;
+      let newY = clientY - stageRect.top - dragOffsetRef.current.y;
+
+      newX = Math.max(5, Math.min(newX, stageRect.width - 70));
+      newY = Math.max(5, Math.min(newY, stageRect.height - 70));
+
+      if (draggingHudRef.current === 'leaderboard') {
+        const newPos = { x: Math.round(newX), y: Math.round(newY) };
+        setLeaderboardPos(newPos);
+        try { localStorage.setItem('bando_hud_leaderboard_pos', JSON.stringify(newPos)); } catch (err) {}
+      } else if (draggingHudRef.current === 'gift') {
+        const newPos = { x: Math.round(newX), y: Math.round(newY), right: null };
+        setGiftHudPos(newPos);
+        try { localStorage.setItem('bando_hud_gift_pos', JSON.stringify(newPos)); } catch (err) {}
+      }
+    };
+
+    const handlePointerUp = () => {
+      draggingHudRef.current = null;
+    };
+
+    window.addEventListener('mousemove', handlePointerMove);
+    window.addEventListener('mouseup', handlePointerUp);
+    window.addEventListener('touchmove', handlePointerMove);
+    window.addEventListener('touchend', handlePointerUp);
+    return () => {
+      window.removeEventListener('mousemove', handlePointerMove);
+      window.removeEventListener('mouseup', handlePointerUp);
+      window.removeEventListener('touchmove', handlePointerMove);
+      window.removeEventListener('touchend', handlePointerUp);
+    };
+  }, []);
+
   // 2D Canvas Pan & Zoom State
   const [zoom2D, setZoom2D] = useState(1.0);
   const [pan2D, setPan2D] = useState({ x: 0, y: 0 });
@@ -626,25 +702,26 @@ export default function GameBanDoVietNam({
     const height = container.clientHeight || 600;
     const isLightTheme = gameState.settings?.theme === 'light';
 
-    // Scene with theme-responsive background & fog
+    // Scene with theme-responsive background - KHÔNG DÙNG FOG ĐẬM LÀM ĐEN BẢN ĐỒ
     const scene = new THREE.Scene();
     state.scene = scene;
     if (isPopout) {
       scene.background = null;
     } else {
-      const bgColor = isLightTheme ? 0xf8fafc : 0x0a0f1d;
+      const bgColor = isLightTheme ? 0xf8fafc : 0x070b14;
       scene.background = new THREE.Color(bgColor);
-      scene.fog = new THREE.FogExp2(bgColor, isLightTheme ? 0.0012 : 0.0015);
+      // Dùng Fog rất nhẹ ở khoảng cách xa (1200 -> 4000) để không làm tối các ô voxel bản đồ
+      scene.fog = new THREE.Fog(bgColor, 1200, 4500);
     }
 
-    // Camera với Near plane cực gần (0.05) cho phép Zoom Siêu Cận Cảnh từng ô voxel
+    // Camera căn chỉnh chuẩn xác cho tỷ lệ 9:16 và 16:9 bao quát trọn vẹn dải đất hình chữ S
     const isVerticalAspect = aspectRatio === '9:16';
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.05, 4000);
+    const camera = new THREE.PerspectiveCamera(48, width / height, 0.1, 5000);
     if (isVerticalAspect) {
-      camera.position.set(0, 360, 380);
-      camera.lookAt(0, 0, 15);
+      camera.position.set(0, 270, 290);
+      camera.lookAt(0, 0, 10);
     } else {
-      camera.position.set(0, 240, 260);
+      camera.position.set(0, 200, 220);
       camera.lookAt(0, 0, 10);
     }
     state.camera = camera;
@@ -656,7 +733,7 @@ export default function GameBanDoVietNam({
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = (gameState.settings.brightness || 1.2) * (isLightTheme ? 1.0 : 0.95);
+    renderer.toneMappingExposure = (gameState.settings.brightness || 1.25) * (isLightTheme ? 1.05 : 1.0);
     container.innerHTML = '';
     container.appendChild(renderer.domElement);
     state.renderer = renderer;
@@ -667,7 +744,7 @@ export default function GameBanDoVietNam({
     controls.dampingFactor = 0.08;
     controls.maxPolarAngle = Math.PI / 2.02;
     controls.minDistance = 0.5;
-    controls.maxDistance = 1200;
+    controls.maxDistance = 1500;
     controls.target.set(0, 0, 10);
     controls.enablePan = true;
     controls.panSpeed = 1.6;
@@ -683,34 +760,34 @@ export default function GameBanDoVietNam({
     controls.autoRotateSpeed = 0.8;
     state.controls = controls;
 
-    // Balanced Lighting: Đảm bảo toàn bộ bề mặt cờ 3D luôn sáng rực rỡ, không bị tối đen
-    const brightness = gameState.settings.brightness || 1.2;
-    const ambientLight = new THREE.AmbientLight(0xffffff, (isLightTheme ? 1.35 : 1.15) * brightness);
+    // Balanced Lighting: Ánh sáng mạnh mẽ, chiếu sáng rực rỡ toàn bộ lãnh thổ quốc gia
+    const brightness = gameState.settings.brightness || 1.25;
+    const ambientLight = new THREE.AmbientLight(0xffffff, (isLightTheme ? 1.5 : 1.4) * brightness);
     scene.add(ambientLight);
 
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x555555, 0.7 * brightness);
-    hemiLight.position.set(0, 300, 0);
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x334155, 0.9 * brightness);
+    hemiLight.position.set(0, 350, 0);
     scene.add(hemiLight);
 
-    const dirLight = new THREE.DirectionalLight(0xfffaee, (isLightTheme ? 1.4 : 1.3) * brightness);
-    dirLight.position.set(120, 320, 160);
+    const dirLight = new THREE.DirectionalLight(0xfffaee, (isLightTheme ? 1.5 : 1.45) * brightness);
+    dirLight.position.set(120, 340, 160);
     dirLight.castShadow = true;
     scene.add(dirLight);
 
-    const rimLight = new THREE.DirectionalLight(isLightTheme ? 0x0284c7 : 0x38bdf8, (isLightTheme ? 0.9 : 0.8) * brightness);
-    rimLight.position.set(-150, 180, -120);
+    const rimLight = new THREE.DirectionalLight(isLightTheme ? 0x0284c7 : 0x38bdf8, (isLightTheme ? 1.1 : 1.0) * brightness);
+    rimLight.position.set(-150, 200, -120);
     scene.add(rimLight);
 
-    const pLight1 = new THREE.PointLight(0xffd700, 1.2 * brightness, 350);
-    pLight1.position.set(-49.2, 65, -123.0);
+    const pLight1 = new THREE.PointLight(0xffd700, 1.4 * brightness, 400);
+    pLight1.position.set(-49.2, 75, -123.0);
     scene.add(pLight1);
 
-    const pLight2 = new THREE.PointLight(0x38bdf8, 1.0 * brightness, 300);
-    pLight2.position.set(-27.6, 60, 126.4);
+    const pLight2 = new THREE.PointLight(0x38bdf8, 1.2 * brightness, 350);
+    pLight2.position.set(-27.6, 70, 126.4);
     scene.add(pLight2);
 
-    const pLight3 = new THREE.PointLight(0xf43f5e, 1.2 * brightness, 350);
-    pLight3.position.set(65.6, 65, -34.4);
+    const pLight3 = new THREE.PointLight(0xf43f5e, 1.4 * brightness, 400);
+    pLight3.position.set(65.6, 75, -34.4);
     scene.add(pLight3);
 
     // Stars / Background Grid
@@ -818,8 +895,8 @@ export default function GameBanDoVietNam({
         // Ô đã cắm cờ (người xem tặng quà): Lắp lá cờ quốc kỳ 3D vươn cao, màu đỏ thắm đậm sắc nét tuyệt đối
         instancedMesh.setColorAt(i, new THREE.Color(1.0, 1.0, 1.0));
       } else {
-        // Ô nền lãnh thổ CHƯA cắm cờ: Màu xám bạc kim loại / lam đá sắc nét, làm nổi bật rõ ràng dáng hình đất nước
-        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.70, 0.74, 0.80) : new THREE.Color(0.28, 0.32, 0.40));
+        // Ô nền lãnh thổ CHƯA cắm cờ: Màu lam đá bạc sáng rõ, làm nổi bật trọn vẹn dáng hình đất nước chữ S và 2 quần đảo
+        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.78, 0.82, 0.90) : new THREE.Color(0.60, 0.68, 0.80));
       }
     }
     instancedMesh.instanceMatrix.needsUpdate = true;
@@ -1459,6 +1536,115 @@ export default function GameBanDoVietNam({
           </div>
         </div>
       )}
+
+      {/* 1. TOP SUPPORTERS LEADERBOARD (Draggable & ~50% Compact Size) */}
+      <div 
+        className={`absolute z-30 transition-all duration-100 pointer-events-auto select-none ${
+          isLeaderboardMinimized ? 'w-8 overflow-hidden' : 'w-32 sm:w-36'
+        }`}
+        style={{
+          top: `${leaderboardPos.y}px`,
+          left: `${leaderboardPos.x}px`
+        }}
+      >
+        <div className="bg-black/85 backdrop-blur-md border border-amber-500/40 rounded-lg p-1 shadow-2xl text-white">
+          <div 
+            className="flex items-center justify-between text-[9px] font-black text-amber-300 mb-0.5 border-b border-white/10 pb-0.5 cursor-move"
+            onMouseDown={(e) => handleHudDragStart(e, 'leaderboard')}
+            onTouchStart={(e) => handleHudDragStart(e, 'leaderboard')}
+            title="Kéo thả để di chuyển Bảng Xếp Hạng"
+          >
+            {!isLeaderboardMinimized && (
+              <div className="flex items-center gap-1">
+                <Trophy size={10} className="text-yellow-400 shrink-0" />
+                <span className="truncate">BXH Top</span>
+              </div>
+            )}
+            <button
+              onClick={() => setIsLeaderboardMinimized(!isLeaderboardMinimized)}
+              className="p-0.5 rounded text-gray-400 hover:text-white hover:bg-white/10 transition-colors ml-auto"
+              title={isLeaderboardMinimized ? "Mở rộng BXH" : "Thu nhỏ BXH"}
+            >
+              <span className="text-[9px] font-bold">{isLeaderboardMinimized ? '🏆' : '−'}</span>
+            </button>
+          </div>
+
+          {!isLeaderboardMinimized && (
+            <div className="space-y-0.5 max-h-24 overflow-y-auto custom-scrollbar">
+              {(!gameState.leaderboard || gameState.leaderboard.length === 0) ? (
+                <p className="text-[8px] text-gray-400 text-center py-1 italic">Chưa có lượt cắm</p>
+              ) : (
+                gameState.leaderboard.slice(0, 3).map((user, idx) => (
+                  <div key={user.userId || idx} className="flex items-center justify-between text-[8px] sm:text-[9px] bg-white/5 px-1 py-0.5 rounded">
+                    <span className="flex items-center gap-0.5 font-medium truncate max-w-[65px]">
+                      <span className={idx === 0 ? 'text-amber-400 font-bold' : idx === 1 ? 'text-gray-300' : 'text-amber-600'}>
+                        #{idx + 1}
+                      </span>
+                      <span className="text-yellow-100 truncate">{user.username}</span>
+                    </span>
+                    <span className="font-mono font-bold text-yellow-400 shrink-0">{user.cells} ô</span>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 2. PINNED GIFT & FLAG CELLS SHOWCASE HUD (Draggable & ~50% Compact Size) */}
+      <div 
+        className={`absolute z-30 transition-all duration-100 pointer-events-auto select-none ${
+          isGiftHudMinimized ? 'w-8 overflow-hidden' : 'w-36 sm:w-40'
+        }`}
+        style={{
+          top: `${giftHudPos.y}px`,
+          ...(giftHudPos.right != null ? { right: `${giftHudPos.right}px` } : { left: `${giftHudPos.x}px` })
+        }}
+      >
+        <div className="bg-black/85 backdrop-blur-xl border border-red-500/40 rounded-lg shadow-2xl overflow-hidden text-white">
+          <div 
+            className="px-1.5 py-0.5 bg-gradient-to-r from-red-950/90 to-amber-950/90 border-b border-red-500/30 flex items-center justify-between cursor-move"
+            onMouseDown={(e) => handleHudDragStart(e, 'gift')}
+            onTouchStart={(e) => handleHudDragStart(e, 'gift')}
+            title="Kéo thả để di chuyển Bảng Quà Tặng"
+          >
+            {!isGiftHudMinimized && (
+              <div className="flex items-center gap-1">
+                <Sparkles size={10} className="text-yellow-400 animate-spin" />
+                <span className="text-[9px] font-black uppercase tracking-wider text-yellow-300 truncate">
+                  Quà & Ô Cờ
+                </span>
+              </div>
+            )}
+            <button
+              onClick={() => setIsGiftHudMinimized(!isGiftHudMinimized)}
+              className="p-0.5 rounded text-gray-400 hover:text-white hover:bg-white/10 transition-colors ml-auto"
+              title={isGiftHudMinimized ? "Mở rộng bảng quà" : "Thu nhỏ bảng quà"}
+            >
+              <span className="text-[9px] font-bold">{isGiftHudMinimized ? '🎁' : '−'}</span>
+            </button>
+          </div>
+
+          {!isGiftHudMinimized && (
+            <div className="p-1 space-y-0.5 max-h-36 overflow-y-auto custom-scrollbar">
+              {(gameState.gifts || []).map((g, i) => (
+                <div 
+                  key={g.id || i}
+                  className="flex items-center justify-between p-0.5 rounded bg-white/5 border border-white/5 text-[8px]"
+                >
+                  <div className="flex items-center gap-1 truncate max-w-[80px]">
+                    <span className="text-xs">{g.icon}</span>
+                    <span className="font-bold text-gray-200 truncate">{g.name}</span>
+                  </div>
+                  <span className="font-mono font-bold text-yellow-400 shrink-0">
+                    +{g.cells} ô
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* VICTORY CELEBRATION CEREMONY / CHAMPION PODIUM */}
       {gameState.status === 'victory' && (

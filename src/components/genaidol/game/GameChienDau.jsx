@@ -90,6 +90,80 @@ export default function GameChienDau({
   const [isLeaderboardMinimized, setIsLeaderboardMinimized] = useState(false);
   const [isLiveCleanMode, setIsLiveCleanMode] = useState(isPopout);
 
+  // Draggable HUD Positions State
+  const [leaderboardPos, setLeaderboardPos] = useState(() => {
+    try {
+      const saved = localStorage.getItem('battle_hud_leaderboard_pos');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return { x: 10, y: 70 };
+  });
+  const [giftHudPos, setGiftHudPos] = useState(() => {
+    try {
+      const saved = localStorage.getItem('battle_hud_gift_pos');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return { x: null, y: 70, right: 10 };
+  });
+
+  const draggingBattleHudRef = useRef(null);
+  const dragBattleOffsetRef = useRef({ x: 0, y: 0 });
+
+  const handleBattleHudDragStart = (e, hudType) => {
+    e.stopPropagation();
+    draggingBattleHudRef.current = hudType;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const parentEl = e.currentTarget.parentElement;
+    if (parentEl) {
+      const rect = parentEl.getBoundingClientRect();
+      dragBattleOffsetRef.current = {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+  };
+
+  useEffect(() => {
+    const handlePointerMove = (e) => {
+      if (!draggingBattleHudRef.current || !containerRef.current) return;
+      const stageRect = containerRef.current.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      let newX = clientX - stageRect.left - dragBattleOffsetRef.current.x;
+      let newY = clientY - stageRect.top - dragBattleOffsetRef.current.y;
+
+      newX = Math.max(5, Math.min(newX, stageRect.width - 70));
+      newY = Math.max(5, Math.min(newY, stageRect.height - 70));
+
+      if (draggingBattleHudRef.current === 'leaderboard') {
+        const newPos = { x: Math.round(newX), y: Math.round(newY) };
+        setLeaderboardPos(newPos);
+        try { localStorage.setItem('battle_hud_leaderboard_pos', JSON.stringify(newPos)); } catch (err) {}
+      } else if (draggingBattleHudRef.current === 'gift') {
+        const newPos = { x: Math.round(newX), y: Math.round(newY), right: null };
+        setGiftHudPos(newPos);
+        try { localStorage.setItem('battle_hud_gift_pos', JSON.stringify(newPos)); } catch (err) {}
+      }
+    };
+
+    const handlePointerUp = () => {
+      draggingBattleHudRef.current = null;
+    };
+
+    window.addEventListener('mousemove', handlePointerMove);
+    window.addEventListener('mouseup', handlePointerUp);
+    window.addEventListener('touchmove', handlePointerMove);
+    window.addEventListener('touchend', handlePointerUp);
+    return () => {
+      window.removeEventListener('mousemove', handlePointerMove);
+      window.removeEventListener('mouseup', handlePointerUp);
+      window.removeEventListener('touchmove', handlePointerMove);
+      window.removeEventListener('touchend', handlePointerUp);
+    };
+  }, []);
+
   const [internalAspectRatio, setInternalAspectRatio] = useState(() => {
     try {
       return localStorage.getItem('avalive_battle_aspect_ratio') || '16:9';
@@ -2112,12 +2186,23 @@ export default function GameChienDau({
         </div>
       </div>
 
-      {/* TOP SUPPORTERS LEADERBOARD (Top Left - Siêu nhỏ gọn 1/3 kích thước theo yêu cầu) */}
-      <div className={`absolute top-20 sm:top-24 left-2 sm:left-3 z-20 transition-all duration-300 pointer-events-auto ${
-        isLeaderboardMinimized ? 'w-7 sm:w-8 overflow-hidden' : 'w-28 sm:w-32'
-      }`}>
+      {/* TOP SUPPORTERS LEADERBOARD (Draggable & Siêu nhỏ gọn tinh tế) */}
+      <div 
+        className={`absolute z-20 transition-all duration-100 pointer-events-auto select-none ${
+          isLeaderboardMinimized ? 'w-7 sm:w-8 overflow-hidden' : 'w-28 sm:w-32'
+        }`}
+        style={{
+          top: `${leaderboardPos.y}px`,
+          left: `${leaderboardPos.x}px`
+        }}
+      >
         <div className="bg-black/85 backdrop-blur-md border border-white/15 rounded-lg p-1 sm:p-1.5 shadow-xl text-white">
-          <div className="flex items-center justify-between text-[9px] sm:text-[10px] font-bold text-amber-300 mb-0.5 border-b border-white/10 pb-0.5">
+          <div 
+            className="flex items-center justify-between text-[9px] sm:text-[10px] font-bold text-amber-300 mb-0.5 border-b border-white/10 pb-0.5 cursor-move"
+            onMouseDown={(e) => handleBattleHudDragStart(e, 'leaderboard')}
+            onTouchStart={(e) => handleBattleHudDragStart(e, 'leaderboard')}
+            title="Kéo thả để di chuyển Bảng Xếp Hạng"
+          >
             {!isLeaderboardMinimized && (
               <div className="flex items-center gap-1">
                 <Trophy size={10} className="text-amber-400 shrink-0" />
@@ -2156,14 +2241,26 @@ export default function GameChienDau({
           )}
         </div>
       </div>
-      {/* PINNED GIFT & EQUIPMENT SHOWCASE HUD (Top Right - Siêu nhỏ gọn tinh tế) */}
+
+      {/* PINNED GIFT & EQUIPMENT SHOWCASE HUD (Draggable & Siêu nhỏ gọn tinh tế) */}
       {config.showGiftHud !== false && (
-        <div className={`absolute top-20 sm:top-24 right-2 sm:right-3 z-20 transition-all duration-300 pointer-events-auto ${
-          isGiftHudMinimized ? 'w-7 sm:w-8 overflow-hidden' : 'w-36 sm:w-44'
-        }`}>
+        <div 
+          className={`absolute z-20 transition-all duration-100 pointer-events-auto select-none ${
+            isGiftHudMinimized ? 'w-7 sm:w-8 overflow-hidden' : 'w-36 sm:w-44'
+          }`}
+          style={{
+            top: `${giftHudPos.y}px`,
+            ...(giftHudPos.right != null ? { right: `${giftHudPos.right}px` } : { left: `${giftHudPos.x}px` })
+          }}
+        >
           <div className="bg-black/85 backdrop-blur-xl border border-purple-500/40 rounded-lg shadow-xl overflow-hidden text-white">
             {/* HUD Header */}
-            <div className="px-1.5 py-0.5 bg-gradient-to-r from-purple-950/90 to-indigo-950/90 border-b border-purple-500/30 flex items-center justify-between">
+            <div 
+              className="px-1.5 py-0.5 bg-gradient-to-r from-purple-950/90 to-indigo-950/90 border-b border-purple-500/30 flex items-center justify-between cursor-move"
+              onMouseDown={(e) => handleBattleHudDragStart(e, 'gift')}
+              onTouchStart={(e) => handleBattleHudDragStart(e, 'gift')}
+              title="Kéo thả để di chuyển Bảng Quà & Buff"
+            >
               {!isGiftHudMinimized ? (
                 <div className="flex items-center gap-1">
                   <Sparkles size={10} className="text-yellow-400 animate-spin" />
