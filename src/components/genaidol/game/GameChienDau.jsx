@@ -2262,6 +2262,13 @@ export default function GameChienDau({
     </div>
   );
 
+  // Unlock Audio on User Gesture
+  const handleUserGesture = useCallback(() => {
+    try {
+      battleAudio.unlock();
+    } catch (_) {}
+  }, []);
+
   // State cho Popover Menu Cài Đặt của Game Chiến Đấu
   const [isBattleMenuOpen, setIsBattleMenuOpen] = useState(false);
   const battleMenuRef = useRef(null);
@@ -2297,38 +2304,10 @@ export default function GameChienDau({
       className="relative w-full h-full flex flex-col font-sans select-none bg-[#05070c] text-white overflow-hidden"
       onPointerDown={handleUserGesture}
     >
-      {/* 1. OUTER TOP HOST CONTROL BAR (Siêu gọn gàng, tinh tế, tiết kiệm 30% diện tích) */}
-      <div className="relative z-20 flex items-center justify-between px-3 py-1.5 border-b border-white/10 shrink-0 gap-2 shadow-sm bg-[#0d1017]">
-        {/* Left Side: Title & Status */}
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-purple-600 via-pink-600 to-amber-400 flex items-center justify-center text-xs shadow-md">
-            <Swords size={13} className="text-yellow-300" />
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-black uppercase tracking-wider bg-gradient-to-r from-purple-300 via-pink-300 to-amber-300 bg-clip-text text-transparent">
-              {config.title}
-            </span>
-            <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-purple-600/80 text-white border border-purple-400/40">
-              PK
-            </span>
-            <span className="hidden sm:inline text-[10px] text-gray-400">
-              <span className="text-blue-400 font-bold">{config.blueName}</span> VS <span className="text-red-400 font-bold">{config.redName}</span>
-            </span>
-          </div>
-        </div>
-
-        {/* Right Side: Controls (Gọn gàng với Nút Trận Đấu Mới & Menu Popover) */}
+      {/* 1. OUTER TOP HOST CONTROL BAR (Chỉ giữ nút Cài Đặt Game bên phải, không che màn hình) */}
+      <div className="relative z-20 flex items-center justify-end px-3 py-1.5 border-b border-white/10 shrink-0 gap-2 shadow-sm bg-[#0d1017]">
+        {/* Right Side: Host Management Controls (Menu Popover Cài Đặt Game) */}
         <div className="flex items-center gap-1.5 shrink-0 relative" ref={battleMenuRef}>
-          {/* Nút Trận Đấu Mới */}
-          <button
-            onClick={resetMatch}
-            className="px-2.5 py-1 rounded-lg text-xs font-bold text-gray-200 hover:text-white bg-white/10 hover:bg-white/20 border border-white/10 flex items-center gap-1 transition-all active:scale-95"
-            title="Làm mới trận đấu PK về trạng thái ban đầu"
-          >
-            <RotateCcw size={12} />
-            <span>Trận đấu mới</span>
-          </button>
-
           {/* Nút Menu Dropdown Popover Chứa Toàn Bộ Cài Đặt Game */}
           <button
             onClick={() => setIsBattleMenuOpen(!isBattleMenuOpen)}
@@ -2364,6 +2343,18 @@ export default function GameChienDau({
               </div>
 
               <div className="space-y-2 max-h-[75vh] overflow-y-auto pr-1 custom-scrollbar">
+                {/* 0. Nút Trận Đấu Mới (Đã di chuyển vào trong Cài Đặt Game) */}
+                <button
+                  onClick={() => {
+                    resetMatch();
+                    setIsBattleMenuOpen(false);
+                  }}
+                  className="w-full flex items-center justify-center gap-1.5 p-2 rounded-xl bg-gradient-to-r from-red-600 via-purple-600 to-indigo-600 hover:opacity-95 text-white border border-purple-400/50 text-xs font-black shadow-md transition-all active:scale-95"
+                  title="Làm mới trận đấu PK về trạng thái ban đầu"
+                >
+                  <RotateCcw size={13} />
+                  <span>Trận Đấu Mới (Reset PK)</span>
+                </button>
                 {/* 1. Admin Quản Trị PK */}
                 {onOpenAdmin && (
                   <button

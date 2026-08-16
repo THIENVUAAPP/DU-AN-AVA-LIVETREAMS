@@ -383,6 +383,10 @@ export const battleAudio = {
     }
   },
 
+  unlock() {
+    getAudioContext();
+  },
+
   isBgmActive() {
     return isBgmPlaying;
   }

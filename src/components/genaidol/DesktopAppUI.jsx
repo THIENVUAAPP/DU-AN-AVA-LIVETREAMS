@@ -705,6 +705,26 @@ export default function DesktopAppUI() {
         </div>
         
         <div className="flex items-center gap-1.5">
+          {/* Nút Chế độ Live AI Idol */}
+          <button 
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border shadow-sm ${
+              !isGameBattleActive && !isGameBanDoActive 
+                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 text-white border-cyan-300 shadow-cyan-500/40 ring-2 ring-cyan-400/50' 
+                : (isDarkMode ? 'border-cyan-500/40 bg-cyan-950/30 text-cyan-300 hover:bg-cyan-900/50' : 'border-cyan-300 bg-cyan-50 text-cyan-700 hover:bg-cyan-100')
+            }`}
+            onClick={() => {
+              setIsGameBattleActive(false);
+              setIsGameBanDoActive(false);
+            }}
+            title="Chuyển sang màn hình Livestream AI Idol"
+          >
+            <Video size={12} className={!isGameBattleActive && !isGameBanDoActive ? 'text-yellow-300' : 'text-cyan-400'} />
+            <span>Live AI Idol</span>
+            {!isGameBattleActive && !isGameBanDoActive && (
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+            )}
+          </button>
+
           {/* Nút Kích hoạt Game Chiến Đấu */}
           <button 
             className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border shadow-sm ${
@@ -713,11 +733,10 @@ export default function DesktopAppUI() {
                 : (isDarkMode ? 'border-indigo-500/50 bg-indigo-950/40 text-indigo-300 hover:bg-indigo-900/60' : 'border-indigo-300 bg-indigo-50 text-indigo-700 hover:bg-indigo-100')
             }`}
             onClick={() => {
-              const next = !isGameBattleActive;
-              setIsGameBattleActive(next);
-              if (next && isGameBanDoActive) setIsGameBanDoActive(false);
+              setIsGameBattleActive(true);
+              setIsGameBanDoActive(false);
             }}
-            title="Bật/Tắt chế độ Game Chiến Đấu (TikTok LIVE Battle Game) trên màn hình chính"
+            title="Chuyển sang chế độ Game Chiến Đấu (TikTok LIVE Battle Game) trên màn hình chính"
           >
             <Swords size={12} className={isGameBattleActive ? 'text-yellow-300' : 'text-indigo-400'} />
             <span>Game Chiến Đấu</span>
@@ -734,11 +753,10 @@ export default function DesktopAppUI() {
                 : (isDarkMode ? 'border-amber-500/50 bg-amber-950/40 text-amber-300 hover:bg-amber-900/60' : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100')
             }`}
             onClick={() => {
-              const next = !isGameBanDoActive;
-              setIsGameBanDoActive(next);
-              if (next && isGameBattleActive) setIsGameBattleActive(false);
+              setIsGameBanDoActive(true);
+              setIsGameBattleActive(false);
             }}
-            title="Bật/Tắt Game Ghép Cờ Bản Đồ Việt Nam (Đất Nước Hình Chữ S) trên màn hình chính"
+            title="Chuyển sang Game Ghép Cờ Bản Đồ Việt Nam (Đất Nước Hình Chữ S) trên màn hình chính"
           >
             <Flag size={12} className={isGameBanDoActive ? 'text-yellow-200' : 'text-amber-400'} />
             <span>Bản Đồ Chữ S</span>
@@ -856,7 +874,11 @@ export default function DesktopAppUI() {
                 CHARACTERS[charId] ? (
                   <div 
                     key={charId}
-                    onClick={() => setSelectedCharacter(charId)}
+                    onClick={() => {
+                      setSelectedCharacter(charId);
+                      setIsGameBattleActive(false);
+                      setIsGameBanDoActive(false);
+                    }}
                     className={`w-7 h-7 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 relative group ${selectedCharacter === charId ? 'border-2 border-blue-500 shadow-md shadow-blue-500/30' : 'border border-gray-600 opacity-60 hover:opacity-100'}`}
                     title={CHARACTERS[charId]?.name || ''}
                   >

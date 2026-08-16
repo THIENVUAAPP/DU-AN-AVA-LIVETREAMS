@@ -1591,40 +1591,12 @@ export default function GameBanDoVietNam({
       } overflow-hidden`}
       onPointerDown={handleUserGesture}
     >
-      {/* 1. OUTER TOP HOST CONTROL BAR (Siêu gọn gàng, tinh tế, tiết kiệm 30% diện tích) */}
-      <div className={`relative z-20 flex items-center justify-between px-3 py-1.5 border-b shrink-0 gap-2 shadow-sm ${
+      {/* 1. OUTER TOP HOST CONTROL BAR (Chỉ giữ nút Cài Đặt Game bên phải, không che màn hình) */}
+      <div className={`relative z-20 flex items-center justify-end px-3 py-1.5 border-b shrink-0 gap-2 shadow-sm ${
         isLightTheme ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#0d1017] border-white/10 text-white'
       }`}>
-        {/* Left Side: Title & Status */}
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-red-600 via-amber-500 to-yellow-400 flex items-center justify-center text-xs shadow-md">
-            <span>{currentCountry?.flag || '🇻🇳'}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-black uppercase tracking-wider bg-gradient-to-r from-yellow-400 to-amber-300 bg-clip-text text-transparent">
-              {gameState.settings.customMapTitle || `${currentCountry?.name || 'Việt Nam'} ${t.title}`}
-            </span>
-            <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-red-600/80 text-white border border-red-400/40">
-              Vòng {gameState.roundId}
-            </span>
-            <span className="hidden sm:inline text-[10px] text-gray-400">
-              {gameState.percent}% ({gameState.claimedCount.toLocaleString()}/{gameState.totalCells.toLocaleString()})
-            </span>
-          </div>
-        </div>
-
-        {/* Right Side: Host Management Controls (Gọn gàng với Nút Bàn Cờ Mới & Menu Popover) */}
+        {/* Right Side: Host Management Controls (Menu Popover Cài Đặt Game) */}
         <div className="flex items-center gap-1.5 shrink-0 relative" ref={gameMenuRef}>
-          {/* Nút Bàn Cờ Mới */}
-          <button
-            onClick={() => bandoEngine.resetRound()}
-            className="px-2.5 py-1 rounded-lg text-xs font-bold text-gray-200 hover:text-white bg-white/10 hover:bg-white/20 border border-white/10 flex items-center gap-1 transition-all active:scale-95"
-            title="Làm mới bàn cờ về trạng thái ban đầu"
-          >
-            <RotateCcw size={12} />
-            <span>Bàn cờ mới</span>
-          </button>
-
           {/* Nút Menu Dropdown Popover Chứa Toàn Bộ Cài Đặt Game */}
           <button
             onClick={() => setIsGameMenuOpen(!isGameMenuOpen)}
@@ -1662,6 +1634,19 @@ export default function GameBanDoVietNam({
               </div>
 
               <div className="space-y-2 max-h-[75vh] overflow-y-auto pr-1 custom-scrollbar">
+                {/* 0. Nút Bàn Cờ Mới (Đã di chuyển vào trong Cài Đặt Game) */}
+                <button
+                  onClick={() => {
+                    bandoEngine.resetRound();
+                    setIsGameMenuOpen(false);
+                  }}
+                  className="w-full flex items-center justify-center gap-1.5 p-2 rounded-xl bg-gradient-to-r from-red-600 via-amber-600 to-yellow-500 hover:opacity-95 text-white border border-yellow-300/50 text-xs font-black shadow-md transition-all active:scale-95"
+                  title="Làm mới bàn cờ về trạng thái ban đầu"
+                >
+                  <RotateCcw size={13} />
+                  <span>Bàn Cờ Mới (Làm Mới Map)</span>
+                </button>
+
                 {/* 1. Admin Quản Trị */}
                 {onOpenAdmin && (
                   <button
