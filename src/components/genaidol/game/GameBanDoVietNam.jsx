@@ -37,6 +37,7 @@ export default function GameBanDoVietNam({
   const [autoRotate, setAutoRotate] = useState(() => bandoEngine.state.autoRotate || false);
   const [isPanMode, setIsPanMode] = useState(false);
   const [recentClaimBadges, setRecentClaimBadges] = useState([]);
+  const isLightTheme = gameState.settings?.theme === 'light';
 
   // 2D Canvas Pan & Zoom State
   const [zoom2D, setZoom2D] = useState(1.0);
@@ -684,7 +685,7 @@ export default function GameBanDoVietNam({
     const offsetX = (canvas.width - cols * scale) / 2 + pan2D.x;
     const offsetY = (canvas.height - rows * scale) / 2 + pan2D.y;
 
-    ctx.fillStyle = '#0a0f1d';
+    ctx.fillStyle = isLightTheme ? '#f8fafc' : '#0a0f1d';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Draw Grid Cells
