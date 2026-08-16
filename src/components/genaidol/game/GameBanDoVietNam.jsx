@@ -5,9 +5,10 @@ import {
   Play, Pause, RotateCcw, Shield, Sparkles, Trophy, Flame, 
   MapPin, Flag, Eye, EyeOff, Volume2, VolumeX, Maximize2, Zap, Star,
   Compass, Award, ChevronRight, Layers, CheckCircle2, AlertTriangle, 
-  MonitorPlay, Sun, ZoomIn, Globe, Navigation, Compass as CompassIcon
+  MonitorPlay, Sun, ZoomIn, Globe, Navigation, Compass as CompassIcon,
+  Sliders, Settings
 } from 'lucide-react';
-import bandoEngine, { DEFAULT_MAP_GIFTS, getHonorTier } from './bandoGameEngine';
+import bandoEngine, { getHonorTier, COUNTRY_PRESETS } from './bandoGameEngine';
 import bandoAudio from './bandoAudioEngine';
 
 // Ease helpers
@@ -21,63 +22,24 @@ function easeInOutCubic(t) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
-// Camera Preset Positions
-const CAMERA_PRESETS = {
-  overview: {
-    name: 'Toàn Cảnh Chữ S',
-    icon: '🌐',
-    pos: [0, 240, 260],
-    target: [0, 0, 10],
-  },
-  north: {
-    name: 'Miền Bắc & Hà Nội',
-    icon: '🏛️',
-    pos: [-20, 120, -50],
-    target: [-20, 0, -85],
-  },
-  central: {
-    name: 'Miền Trung & Cố Đô',
-    icon: '🏖️',
-    pos: [25, 130, 20],
-    target: [15, 0, 10],
-  },
-  south: {
-    name: 'Miền Nam & TP.HCM',
-    icon: '🏙️',
-    pos: [-15, 120, 140],
-    target: [-15, 0, 105],
-  },
-  islands: {
-    name: 'Hoàng Sa & Trường Sa',
-    icon: '🏝️',
-    pos: [80, 110, 40],
-    target: [65, 0, 15],
-  },
-  macro: {
-    name: 'Cận Cảnh Chi Tiết',
-    icon: '🔍',
-    pos: [0, 60, 60],
-    target: [0, 0, 0],
-  },
-};
-
 export default function GameBanDoVietNam({
   isPopout = false,
   onOpenAdmin = null,
   externalLiveEvent = null,
 }) {
   const [gameState, setGameState] = useState(() => bandoEngine.state);
-  const [isAudioMuted, setIsAudioMuted] = useState(false);
-  const [viewMode3D, setViewMode3D] = useState(true); // true = 3D WebGL, false = 2D Canvas
-  const [selectedGiftId, setSelectedGiftId] = useState('rose');
-  const [giftMultiplier, setGiftMultiplier] = useState(1);
+  const [viewMode3D, setViewMode3D] = useState(true);
   const [isAutoTesting, setIsAutoTesting] = useState(false);
   const [autoTestStep, setAutoTestStep] = useState(0);
   const [showSidePanels, setShowSidePanels] = useState(true);
   const [activeCameraPreset, setActiveCameraPreset] = useState('overview');
+  const [projectedLabels, setProjectedLabels] = useState([]);
 
   const containerRef = useRef(null);
   const canvas2dRef = useRef(null);
+  const labelsLayerRef = useRef(null);
+  const labelRefs = useRef({});
+
   const threeStateRef = useRef({
     scene: null,
     camera: null,
@@ -89,7 +51,7 @@ export default function GameBanDoVietNam({
     disposed: false,
     animFrameId: null,
     tween: null,
-    lights: {},
+    tempVec: new THREE.Vector3(),
   });
 
   // Subscribe engine state
@@ -128,10 +90,24 @@ export default function GameBanDoVietNam({
     bandoAudio.unlock();
   }, []);
 
+  // Camera preset positions based on active country
+  const getCameraPresetsForCountry = useCallback(() => {
+    const isVN = gameState.selectedCountry === 'vietnam';
+    return {
+      overview: { name: 'Toàn Cảnh', icon: '🌐', pos: [0, 240, 260], target: [0, 0, 10] },
+      north: { name: isVN ? 'Miền Bắc & Hà Nội' : 'Vùng Phía Bắc', icon: '🏛️', pos: [-20, 120, -50], target: [-20, 0, -85] },
+      central: { name: isVN ? 'Miền Trung & Huế' : 'Khu Vực Trung Tâm', icon: '🏖️', pos: [25, 130, 20], target: [15, 0, 10] },
+      south: { name: isVN ? 'Miền Nam & TP.HCM' : 'Vùng Phía Nam', icon: '🏙️', pos: [-15, 120, 140], target: [-15, 0, 105] },
+      islands: { name: isVN ? 'Hoàng Sa & Trường Sa' : 'Hải Đảo', icon: '🏝️', pos: [80, 110, 40], target: [65, 0, 15] },
+      macro: { name: 'Cận Cảnh Chi Tiết', icon: '🔍', pos: [0, 60, 60], target: [0, 0, 0] },
+    };
+  }, [gameState.selectedCountry]);
+
   // Camera preset switcher function
   const applyCameraPreset = useCallback((presetKey) => {
     setActiveCameraPreset(presetKey);
-    const preset = CAMERA_PRESETS[presetKey];
+    const presets = getCameraPresetsForCountry();
+    const preset = presets[presetKey];
     const state = threeStateRef.current;
     if (!preset || !state.camera || !state.controls) return;
 
@@ -144,7 +120,7 @@ export default function GameBanDoVietNam({
       duration: 1100,
       phase: 'direct',
     };
-  }, []);
+  }, [getCameraPresetsForCountry]);
 
   // ============================================================
   // THREE.JS 3D MAP INITIALIZATION & RENDER LOOP
@@ -164,11 +140,11 @@ export default function GameBanDoVietNam({
     if (isPopout) {
       scene.background = null;
     } else {
-      scene.background = new THREE.Color(0x0a0f1d); // Deep Cyber Space Blue
-      scene.fog = new THREE.FogExp2(0x0a0f1d, 0.0016);
+      scene.background = new THREE.Color(0x0a0f1d);
+      scene.fog = new THREE.FogExp2(0x0a0f1d, 0.0015);
     }
 
-    // Camera (Isometric angle over S-shape)
+    // Camera
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 4000);
     camera.position.set(0, 240, 260);
     camera.lookAt(0, 0, 10);
@@ -191,50 +167,40 @@ export default function GameBanDoVietNam({
     controls.enableDamping = true;
     controls.dampingFactor = 0.07;
     controls.maxPolarAngle = Math.PI / 2.05;
-    controls.minDistance = 35;
-    controls.maxDistance = 650;
+    controls.minDistance = 30;
+    controls.maxDistance = 700;
     controls.target.set(0, 0, 10);
     controls.autoRotate = !isPopout && gameState.settings.autoRotate;
     controls.autoRotateSpeed = gameState.settings.autoRotateSpeed || 0.6;
     state.controls = controls;
 
-    // Enhanced High-Brightness Lighting System
+    // Enhanced High-Brightness Lighting
     const brightness = gameState.settings.brightness || 1.4;
-    
-    // 1. Ambient Light
     const ambientLight = new THREE.AmbientLight(0xffffff, 1.35 * brightness);
     scene.add(ambientLight);
 
-    // 2. Main Sun Directional Light
     const dirLight = new THREE.DirectionalLight(0xfffaee, 1.85 * brightness);
     dirLight.position.set(120, 320, 160);
     dirLight.castShadow = true;
-    dirLight.shadow.mapSize.width = 2048;
-    dirLight.shadow.mapSize.height = 2048;
-    dirLight.shadow.bias = -0.0005;
     scene.add(dirLight);
 
-    // 3. Secondary Cyan/Blue Rim Light
     const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.1 * brightness);
     rimLight.position.set(-150, 180, -120);
     scene.add(rimLight);
 
-    // 4. Regional Point Lights (Hanoi, Saigon, Islands)
-    const goldPointLight = new THREE.PointLight(0xffd700, 2.2 * brightness, 350);
-    goldPointLight.position.set(-20, 65, -85);
-    scene.add(goldPointLight);
+    const pLight1 = new THREE.PointLight(0xffd700, 2.2 * brightness, 350);
+    pLight1.position.set(-20, 65, -85);
+    scene.add(pLight1);
 
-    const saigonPointLight = new THREE.PointLight(0x38bdf8, 1.9 * brightness, 300);
-    saigonPointLight.position.set(-15, 60, 105);
-    scene.add(saigonPointLight);
+    const pLight2 = new THREE.PointLight(0x38bdf8, 1.9 * brightness, 300);
+    pLight2.position.set(-15, 60, 105);
+    scene.add(pLight2);
 
-    const islandPointLight = new THREE.PointLight(0xf43f5e, 2.2 * brightness, 350);
-    islandPointLight.position.set(75, 65, 25);
-    scene.add(islandPointLight);
+    const pLight3 = new THREE.PointLight(0xf43f5e, 2.2 * brightness, 350);
+    pLight3.position.set(75, 65, 25);
+    scene.add(pLight3);
 
-    state.lights = { ambientLight, dirLight, rimLight, goldPointLight, saigonPointLight, islandPointLight };
-
-    // Atmosphere: Stars in background
+    // Stars in background
     if (!isPopout) {
       const starGeo = new THREE.BufferGeometry();
       const starCount = 800;
@@ -248,13 +214,12 @@ export default function GameBanDoVietNam({
       const starMat = new THREE.PointsMaterial({ color: 0x93c5fd, size: 1.4, transparent: true, opacity: 0.75 });
       scene.add(new THREE.Points(starGeo, starMat));
 
-      // Grid Floor for Depth
-      const gridHelper = new THREE.GridHelper(450, 30, 0x1e293b, 0x0f172a);
+      const gridHelper = new THREE.GridHelper(500, 35, 0x1e293b, 0x0f172a);
       gridHelper.position.y = -2;
       scene.add(gridHelper);
     }
 
-    // Instanced Mesh for 15,125 cells with bright metallic material
+    // Instanced Mesh for cells with bright reflective material
     const maskData = bandoEngine.maskData;
     const cells = maskData?.cells || [];
     const count = cells.length > 0 ? cells.length : 15125;
@@ -271,13 +236,13 @@ export default function GameBanDoVietNam({
     scene.add(instancedMesh);
     state.instancedMesh = instancedMesh;
 
-    // Initial positioning
+    // Positioning
     const cols = maskData?.gridCols || 300;
     const rows = maskData?.gridRows || 389;
     const dummy = state.dummy;
-    const emptyColor = new THREE.Color(gameState.settings.emptyCellColor || 0x475569); // High-contrast metallic slate
-    const goldStarColor = new THREE.Color(gameState.settings.starColor || 0xffd700);
-    const redFlagColor = new THREE.Color(gameState.settings.claimedCellColor || 0xda251d);
+    const emptyColor = new THREE.Color(gameState.settings.emptyCellColor || '#475569');
+    const goldStarColor = new THREE.Color(gameState.settings.starColor || '#FFD700');
+    const redFlagColor = new THREE.Color(gameState.settings.claimedCellColor || '#DA251D');
 
     for (let i = 0; i < count; i++) {
       const cell = cells[i] || { x: (i % 100), y: Math.floor(i / 100) };
@@ -294,7 +259,7 @@ export default function GameBanDoVietNam({
       instancedMesh.setMatrixAt(i, dummy.matrix);
 
       if (isClaimed) {
-        if (cell.provinceId === 'ha-noi' && (cell.x + cell.y) % 7 === 0) {
+        if ((cell.provinceId === 'ha-noi' || cell.provinceId === 'tokyo' || cell.provinceId === 'seoul') && (cell.x + cell.y) % 7 === 0) {
           instancedMesh.setColorAt(i, goldStarColor);
         } else {
           instancedMesh.setColorAt(i, redFlagColor);
@@ -317,8 +282,10 @@ export default function GameBanDoVietNam({
     };
     window.addEventListener('resize', handleResize);
 
-    // Animation Loop
+    // Animation Loop with 3D-to-Screen Label Projection
+    const tempVec = state.tempVec;
     let lastTime = performance.now();
+
     const animate = (time) => {
       if (state.disposed) return;
       state.animFrameId = requestAnimationFrame(animate);
@@ -351,8 +318,9 @@ export default function GameBanDoVietNam({
             tw.duration = 1600;
             tw.from.copy(camera.position);
             tw.fromTarget.copy(controls.target);
-            const defaultPos = CAMERA_PRESETS[activeCameraPreset]?.pos || [0, 240, 260];
-            const defaultTarget = CAMERA_PRESETS[activeCameraPreset]?.target || [0, 0, 10];
+            const presets = getCameraPresetsForCountry();
+            const defaultPos = presets[activeCameraPreset]?.pos || [0, 240, 260];
+            const defaultTarget = presets[activeCameraPreset]?.target || [0, 0, 10];
             tw.to.set(...defaultPos);
             tw.toTarget.set(...defaultTarget);
           }
@@ -366,6 +334,30 @@ export default function GameBanDoVietNam({
 
       controls.update();
       renderer.render(scene, camera);
+
+      // PROJECTION: Update all 3D Anchored Landmark Labels in real-time
+      const texts = bandoEngine.state.mapTexts || [];
+      const contW = container.clientWidth || 800;
+      const contH = container.clientHeight || 600;
+
+      for (let i = 0; i < texts.length; i++) {
+        const item = texts[i];
+        const el = labelRefs.current[item.id];
+        if (!el) continue;
+
+        tempVec.set(item.wx || 0, item.wy || 3.5, item.wz || 0);
+        tempVec.project(camera);
+
+        // Check if label is in front of camera (tempVec.z < 1.0)
+        if (tempVec.z < 1.0) {
+          const sx = (tempVec.x * 0.5 + 0.5) * contW;
+          const sy = (-tempVec.y * 0.5 + 0.5) * contH;
+          el.style.display = 'block';
+          el.style.transform = `translate3d(${sx}px, ${sy}px, 0px) translate(-50%, -100%)`;
+        } else {
+          el.style.display = 'none';
+        }
+      }
     };
     state.animFrameId = requestAnimationFrame(animate);
 
@@ -377,7 +369,7 @@ export default function GameBanDoVietNam({
       boxGeo.dispose();
       boxMat.dispose();
     };
-  }, [viewMode3D, isPopout]);
+  }, [viewMode3D, isPopout, gameState.selectedCountry, getCameraPresetsForCountry]);
 
   // Update 3D mesh instances when cells are claimed, reset or settings changed
   useEffect(() => {
@@ -392,9 +384,9 @@ export default function GameBanDoVietNam({
     const cols = maskData.gridCols || 300;
     const rows = maskData.gridRows || 389;
     const dummy = state.dummy;
-    const emptyColor = new THREE.Color(gameState.settings.emptyCellColor || 0x475569);
-    const goldStarColor = new THREE.Color(gameState.settings.starColor || 0xffd700);
-    const redFlagColor = new THREE.Color(gameState.settings.claimedCellColor || 0xda251d);
+    const emptyColor = new THREE.Color(gameState.settings.emptyCellColor || '#475569');
+    const goldStarColor = new THREE.Color(gameState.settings.starColor || '#FFD700');
+    const redFlagColor = new THREE.Color(gameState.settings.claimedCellColor || '#DA251D');
 
     for (let i = 0; i < count; i++) {
       const cell = cells[i];
@@ -411,7 +403,7 @@ export default function GameBanDoVietNam({
       instancedMesh.setMatrixAt(i, dummy.matrix);
 
       if (isClaimed) {
-        if (cell.provinceId === 'ha-noi' && (cell.x + cell.y) % 7 === 0) {
+        if ((cell.provinceId === 'ha-noi' || cell.provinceId === 'tokyo' || cell.provinceId === 'seoul') && (cell.x + cell.y) % 7 === 0) {
           instancedMesh.setColorAt(i, goldStarColor);
         } else {
           instancedMesh.setColorAt(i, redFlagColor);
@@ -438,7 +430,7 @@ export default function GameBanDoVietNam({
         holdUntil: 0
       };
     }
-  }, [gameState.claimedCount, gameState.status, gameState.settings, viewMode3D]);
+  }, [gameState.claimedCount, gameState.status, gameState.settings, gameState.selectedCountry, viewMode3D]);
 
   // ============================================================
   // 2D CANVAS FALLBACK RENDERER
@@ -464,16 +456,17 @@ export default function GameBanDoVietNam({
 
     (maskData.cells || []).forEach(cell => {
       const isClaimed = !!gameState.cellsById[cell.id];
-      ctx.fillStyle = isClaimed ? '#DA251D' : '#475569';
+      ctx.fillStyle = isClaimed ? (gameState.settings.claimedCellColor || '#DA251D') : (gameState.settings.emptyCellColor || '#475569');
       ctx.fillRect(offsetX + cell.x * scale, offsetY + cell.y * scale, scale * 0.88, scale * 0.88);
     });
-  }, [viewMode3D, gameState.claimedCount]);
+  }, [viewMode3D, gameState.claimedCount, gameState.settings]);
 
   // Test gift trigger handler
   const handleTestGift = (giftId) => {
     handleUserGesture();
-    const gift = DEFAULT_MAP_GIFTS.find(g => g.id === giftId) || DEFAULT_MAP_GIFTS[0];
-    bandoEngine.processGift(gift.id, giftMultiplier, {
+    const gifts = gameState.gifts || [];
+    const gift = gifts.find(g => g.id === giftId) || gifts[0];
+    bandoEngine.processGift(gift.id, 1, {
       id: `user_test_${Math.floor(Math.random() * 5)}`,
       username: `Đại Gia ${gift.name} 💎`,
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'
@@ -494,21 +487,23 @@ export default function GameBanDoVietNam({
     }
   };
 
+  const cameraPresets = getCameraPresetsForCountry();
+
   return (
     <div 
       className={`relative w-full h-full flex flex-col overflow-hidden select-none font-sans ${isPopout ? 'bg-transparent' : 'bg-[#090d16] text-gray-100'}`}
       onClick={handleUserGesture}
     >
-      {/* 1. TOP HUD: Header & Tiến Độ Hoàn Thành Bản Đồ Tổ Quốc */}
+      {/* 1. TOP HUD: Header & Tiến Độ Hoàn Thành Bản Đồ */}
       <div className="relative z-20 flex items-center justify-between px-4 py-2.5 bg-black/65 backdrop-blur-md border-b border-white/10 shrink-0">
         <div className="flex items-center gap-3">
           <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-red-600 via-amber-500 to-yellow-400 shadow-lg shadow-red-500/40 ring-2 ring-yellow-400/60 animate-pulse">
-            <span className="text-xl">🇻🇳</span>
+            <span className="text-xl">{COUNTRY_PRESETS[gameState.selectedCountry]?.flag || '🇻🇳'}</span>
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-sm md:text-base font-black bg-gradient-to-r from-yellow-300 via-red-400 to-amber-300 bg-clip-text text-transparent uppercase tracking-wider">
-                Việt Nam Ghép Cờ LIVE — Bản Đồ Chữ S
+                {gameState.settings.customMapTitle || 'Việt Nam Ghép Cờ LIVE — Bản Đồ Chữ S'}
               </h2>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-600 text-white shadow-sm">
                 {gameState.roundId}
@@ -522,7 +517,7 @@ export default function GameBanDoVietNam({
           </div>
         </div>
 
-        {/* Progress Bar & Combo Streak */}
+        {/* Progress Bar & Controls */}
         <div className="flex items-center gap-3 md:gap-4">
           {gameState.combo.active && gameState.combo.count >= 2 && (
             <div className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-600 to-red-600 rounded-full text-white text-xs font-black shadow-lg animate-bounce">
@@ -533,7 +528,7 @@ export default function GameBanDoVietNam({
 
           <div className="hidden sm:flex flex-col items-end w-44 md:w-56">
             <div className="flex justify-between w-full text-[11px] font-bold text-gray-300 mb-1">
-              <span>TIẾN ĐỘ TỔ QUỐC</span>
+              <span>TIẾN ĐỘ QUỐC GIA</span>
               <span className="text-yellow-400 font-mono">{gameState.percent}%</span>
             </div>
             <div className="w-full h-2.5 bg-white/10 rounded-full overflow-hidden p-0.5 border border-white/20">
@@ -544,7 +539,6 @@ export default function GameBanDoVietNam({
             </div>
           </div>
 
-          {/* Quick HUD Visibility & 2D/3D Mode Controls */}
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setShowSidePanels(!showSidePanels)}
@@ -561,7 +555,7 @@ export default function GameBanDoVietNam({
             <button
               onClick={() => setViewMode3D(!viewMode3D)}
               className="px-2.5 py-1 rounded-lg text-xs font-bold bg-white/10 hover:bg-white/20 text-gray-200 border border-white/10 transition-colors flex items-center gap-1"
-              title={viewMode3D ? "Chuyển sang chế độ 2D mượt nhẹ" : "Chuyển sang chế độ 3D Three.js"}
+              title={viewMode3D ? "Chuyển sang chế độ 2D" : "Chuyển sang chế độ 3D"}
             >
               <Layers size={13} />
               <span>{viewMode3D ? '3D' : '2D'}</span>
@@ -578,24 +572,24 @@ export default function GameBanDoVietNam({
           <canvas ref={canvas2dRef} className="w-full h-full" />
         )}
 
-        {/* FLOATING MAP TEXT LABELS & QUẦN ĐẢO BIỂN ĐÔNG (Map Text Overlay) */}
+        {/* TRUE 3D-ANCHORED LANDMARK LABELS LAYER */}
         {gameState.settings.showMapTexts && (
-          <div className="absolute inset-0 pointer-events-none z-10">
+          <div ref={labelsLayerRef} className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
             {gameState.mapTexts?.map((item) => (
               <div
                 key={item.id}
+                ref={(el) => { labelRefs.current[item.id] = el; }}
                 style={{
                   position: 'absolute',
-                  left: `${item.x}%`,
-                  top: `${item.y}%`,
-                  transform: 'translate(-50%, -50%)',
+                  left: 0,
+                  top: 0,
+                  display: 'none',
                   color: item.color || '#facc15',
-                  fontSize: `${item.size || 13}px`,
                 }}
-                className={`font-black tracking-wide whitespace-nowrap select-none transition-all duration-300 ${
+                className={`font-black text-xs tracking-wide whitespace-nowrap select-none pointer-events-none transition-opacity duration-150 ${
                   item.glow 
-                    ? 'drop-shadow-[0_0_10px_rgba(250,204,21,0.8)] px-2.5 py-1 rounded-full bg-black/45 border border-yellow-400/40 backdrop-blur-sm' 
-                    : 'drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] px-2 py-0.5 rounded-lg bg-black/30 backdrop-blur-xs'
+                    ? 'drop-shadow-[0_0_12px_rgba(250,204,21,0.9)] px-2.5 py-1 rounded-full bg-black/60 border border-yellow-400/60 backdrop-blur-sm shadow-xl' 
+                    : 'drop-shadow-[0_2px_5px_rgba(0,0,0,0.9)] px-2 py-0.5 rounded-lg bg-black/45 backdrop-blur-xs border border-white/10'
                 }`}
               >
                 {item.text}
@@ -609,7 +603,7 @@ export default function GameBanDoVietNam({
           <span className="text-[10px] font-black text-gray-400 uppercase px-2 flex items-center gap-1">
             <CompassIcon size={12} className="text-yellow-400" /> Zoom:
           </span>
-          {Object.entries(CAMERA_PRESETS).map(([key, item]) => (
+          {Object.entries(cameraPresets).map(([key, item]) => (
             <button
               key={key}
               onClick={() => applyCameraPreset(key)}
@@ -618,7 +612,7 @@ export default function GameBanDoVietNam({
                   ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-lg shadow-red-500/30 scale-105 border border-yellow-300/40'
                   : 'bg-white/5 hover:bg-white/15 text-gray-300 hover:text-white'
               }`}
-              title={`Chuyển góc nhìn camera: ${item.name}`}
+              title={`Góc nhìn camera: ${item.name}`}
             >
               <span>{item.icon}</span>
               <span className="hidden md:inline">{item.name}</span>
@@ -724,22 +718,22 @@ export default function GameBanDoVietNam({
           </div>
         )}
 
-        {/* Victory Celebration Overlay Screen */}
+        {/* Victory Screen */}
         {gameState.status === 'victory' && (
           <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/80 backdrop-blur-lg animate-in fade-in zoom-in duration-300 p-4">
             <div className="max-w-md w-full bg-gradient-to-b from-red-950/90 via-slate-900 to-black border-2 border-yellow-400 rounded-3xl p-6 shadow-2xl text-center">
-              <div className="text-5xl mb-2 animate-bounce">🇻🇳 🏆 🇻🇳</div>
+              <div className="text-5xl mb-2 animate-bounce">🏆 🎉 🏆</div>
               <h1 className="text-2xl font-black text-yellow-300 uppercase tracking-wider mb-2">
-                HOÀN THÀNH GHÉP CỜ TỔ QUỐC!
+                HOÀN THÀNH GHÉP CỜ!
               </h1>
               <p className="text-sm text-gray-200 mb-4">
-                Toàn bộ non sông gấm vóc <strong>Bản Đồ Việt Nam Hình Chữ S</strong> đã rực rỡ sắc cờ đỏ sao vàng!
+                Toàn bộ non sông và hải đảo của <strong>{gameState.settings.customMapTitle}</strong> đã rực rỡ sắc cờ!
               </p>
 
               <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-5 text-left space-y-2 text-xs">
                 <div className="flex justify-between">
                   <span className="text-gray-400">Đại tướng quân MVP:</span>
-                  <span className="font-black text-yellow-400">{gameState.victory?.mvpUser?.username || 'Chiến Binh Tổ Quốc'}</span>
+                  <span className="font-black text-yellow-400">{gameState.victory?.mvpUser?.username || 'Chiến Binh Xuất Sắc'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Tổng số ô cờ đã cắm:</span>
@@ -764,7 +758,7 @@ export default function GameBanDoVietNam({
         )}
       </div>
 
-      {/* 3. BOTTOM TEST CONTROL BAR (Chỉ hiển thị khi Admin bật Chế Độ Thử Nghiệm / Demo Mode) */}
+      {/* 3. BOTTOM TEST CONTROL BAR (Chỉ hiển thị khi Demo Mode Bật) */}
       {gameState.isDemoMode && !isPopout && (
         <div className="relative z-20 bg-[#0d1017] border-t border-white/10 p-3 shrink-0 animate-in slide-in-from-bottom duration-200">
           <div className="flex flex-col md:flex-row items-center justify-between gap-3">
@@ -775,7 +769,7 @@ export default function GameBanDoVietNam({
                 <Sparkles size={12} /> Test Quà:
               </span>
 
-              {DEFAULT_MAP_GIFTS.map(gift => (
+              {(gameState.gifts || []).map(gift => (
                 <button
                   key={gift.id}
                   onClick={() => handleTestGift(gift.id)}
@@ -789,9 +783,8 @@ export default function GameBanDoVietNam({
               ))}
             </div>
 
-            {/* Quick Actions: Auto Test Loop & Multiplier & Overlay Button */}
+            {/* Quick Actions */}
             <div className="flex items-center gap-2 shrink-0">
-              {/* Auto Test Loop Button */}
               <button
                 onClick={handleToggleAutoTest}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all border shadow-lg ${
@@ -805,7 +798,6 @@ export default function GameBanDoVietNam({
                 <span>{isAutoTesting ? `Đang Test (#${autoTestStep})` : '⚡ Chạy Test Toàn Bộ'}</span>
               </button>
 
-              {/* Mở Cửa Sổ Overlay Trong Suốt Cho TikTok Studio / OBS */}
               <button
                 onClick={() => {
                   window.open('?overlay=bando', 'AvaliveMapOverlay', 'width=900,height=750,menubar=no,toolbar=no,location=no');
@@ -817,7 +809,6 @@ export default function GameBanDoVietNam({
                 <span>Overlay Studio</span>
               </button>
 
-              {/* Reset Button */}
               <button
                 onClick={() => bandoEngine.resetRound()}
                 className="p-1.5 rounded-lg text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
