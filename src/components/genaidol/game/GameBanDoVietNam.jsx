@@ -799,7 +799,7 @@ export default function GameBanDoVietNam({
       const wz = (cell.y - rows / 2) * 1.0;
       const isClaimed = !!bandoEngine.state.cellsById[cell.id];
 
-      const scaleY = isClaimed ? 1.75 : 0.16;
+      const scaleY = isClaimed ? 2.4 : 0.45;
       const posY = scaleY / 2;
 
       const curDim = state.cellDim || 0.88;
@@ -812,8 +812,8 @@ export default function GameBanDoVietNam({
         // Ô đã cắm cờ (người xem tặng quà): Lắp lá cờ quốc kỳ 3D vươn cao, màu đỏ thắm đậm sắc nét tuyệt đối
         instancedMesh.setColorAt(i, new THREE.Color(1.0, 1.0, 1.0));
       } else {
-        // Ô nền lãnh thổ CHƯA cắm cờ: Tối mờ sâu, chìm hẳn xuống dưới, chỉ thấy mờ mờ bóng dáng lãnh thổ
-        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.12, 0.09, 0.10) : new THREE.Color(0.08, 0.06, 0.07));
+        // Ô nền lãnh thổ CHƯA cắm cờ: Màu xám bạc kim loại / lam đá sắc nét, làm nổi bật rõ ràng dáng hình đất nước
+        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.70, 0.74, 0.80) : new THREE.Color(0.28, 0.32, 0.40));
       }
     }
     instancedMesh.instanceMatrix.needsUpdate = true;
@@ -1015,7 +1015,7 @@ export default function GameBanDoVietNam({
       boxMat.dispose();
       if (state.flagTexture) state.flagTexture.dispose();
     };
-  }, [viewMode3D, isPopout, gameState.selectedCountry, isLightTheme]);
+  }, [viewMode3D, isPopout, gameState.selectedCountry, isLightTheme, gameState.maskLoaded, gameState.isLoaded]);
 
   // Handle Multi-directional Pan & Smooth Zoom Controls
   const handlePan3D = (dirX, dirZ) => {
@@ -1151,7 +1151,7 @@ export default function GameBanDoVietNam({
       const cell = cells[i];
       if (!cell) continue;
       const isClaimed = !!gameState.cellsById[cell.id];
-      const scaleY = isClaimed ? 1.75 : 0.16;
+      const scaleY = isClaimed ? 2.4 : 0.45;
       const posY = scaleY / 2;
       const wx = (cell.x - cols / 2) * 1.0;
       const wz = (cell.y - rows / 2) * 1.0;
@@ -1166,8 +1166,8 @@ export default function GameBanDoVietNam({
         // Ô đã cắm cờ (người xem tặng quà): Lắp lá cờ quốc kỳ 3D vươn cao, màu đỏ thắm đậm sắc nét tuyệt đối
         instancedMesh.setColorAt(i, new THREE.Color(1.0, 1.0, 1.0));
       } else {
-        // Ô nền lãnh thổ CHƯA cắm cờ: Tối mờ sâu, chìm hẳn xuống dưới, chỉ thấy mờ mờ bóng dáng lãnh thổ
-        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.12, 0.09, 0.10) : new THREE.Color(0.08, 0.06, 0.07));
+        // Ô nền lãnh thổ CHƯA cắm cờ: Màu xám bạc kim loại / lam đá sắc nét, làm nổi bật rõ ràng dáng hình đất nước
+        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.70, 0.74, 0.80) : new THREE.Color(0.28, 0.32, 0.40));
       }
     }
 
@@ -1211,7 +1211,7 @@ export default function GameBanDoVietNam({
         holdUntil: 0
       };
     }
-  }, [gameState.claimedCount, gameState.status, gameState.settings, gameState.selectedCountry, gameState.bannerCells, gameState.bannerClaimedCount, gameState.showBannerCells, gameState.bannerPos, viewMode3D]);
+  }, [gameState.claimedCount, gameState.status, gameState.settings, gameState.selectedCountry, gameState.bannerCells, gameState.bannerClaimedCount, gameState.showBannerCells, gameState.bannerPos, viewMode3D, gameState.maskLoaded]);
 
   // ============================================================
   // 2D CANVAS FALLBACK RENDERER WITH PAN & ZOOM
@@ -1271,8 +1271,8 @@ export default function GameBanDoVietNam({
           ctx.fill();
         }
       } else {
-        // Ô nền CHƯA cắm cờ: Tối mờ sâu, chìm hẳn xuống dưới
-        ctx.fillStyle = isLightTheme ? 'rgba(120, 20, 25, 0.10)' : 'rgba(40, 10, 12, 0.22)';
+        // Ô nền CHƯA cắm cờ: Sắc nét, làm nổi bật rõ ràng dáng hình đất nước
+        ctx.fillStyle = isLightTheme ? 'rgba(100, 116, 139, 0.35)' : 'rgba(51, 65, 85, 0.65)';
         ctx.fillRect(cx, cy, cellSize, cellSize);
 
         // Chỉ khi zoom rất gần mới vẽ sao mờ trên nền
@@ -1585,7 +1585,7 @@ export default function GameBanDoVietNam({
             title={aspectRatio === '9:16' ? "Đang ở Khung Hình 9:16 (Chuẩn TikTok Live Dọc) — Bấm chuyển sang 16:9 (Ngang OBS/PC)" : "Đang ở Khung Hình 16:9 (Ngang OBS/PC) — Bấm chuyển sang 9:16 (Chuẩn TikTok Live Dọc)"}
           >
             <Smartphone size={13} className={aspectRatio === '9:16' ? 'text-yellow-300' : 'text-cyan-300'} />
-            <span>{aspectRatio === '9:16' ? '📱 9:16 TikTok' : '🖥️ 16:9 OBS'}</span>
+            <span>{aspectRatio === '9:16' ? '9:16 TikTok' : '16:9 OBS'}</span>
           </button>
 
           {/* Nút Mở Nhạc Nền 24/24 */}

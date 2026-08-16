@@ -2319,7 +2319,7 @@ export default function GameChienDau({
             title={aspectRatio === '9:16' ? "Đang ở Khung Hình 9:16 (Chuẩn TikTok Live Dọc) — Bấm chuyển sang 16:9 (Ngang OBS/PC)" : "Đang ở Khung Hình 16:9 (Ngang OBS/PC) — Bấm chuyển sang 9:16 (Chuẩn TikTok Live Dọc)"}
           >
             <Smartphone size={13} className={aspectRatio === '9:16' ? 'text-yellow-300' : 'text-cyan-300'} />
-            <span>{aspectRatio === '9:16' ? '📱 9:16 TikTok' : '🖥️ 16:9 OBS'}</span>
+            <span>{aspectRatio === '9:16' ? '9:16 TikTok' : '16:9 OBS'}</span>
           </button>
 
           {/* Voice AI BLV Quick Toggle */}

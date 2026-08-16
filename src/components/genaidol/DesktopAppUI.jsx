@@ -782,7 +782,7 @@ export default function DesktopAppUI() {
             title={globalAspectRatio === '9:16' ? "Đang ở Khung Hình 9:16 (Chuẩn TikTok Live Dọc) — Bấm chuyển sang 16:9 (Ngang OBS/PC)" : "Đang ở Khung Hình 16:9 (Ngang OBS/PC) — Bấm chuyển sang 9:16 (Chuẩn TikTok Live Dọc)"}
           >
             <Smartphone size={13} className={globalAspectRatio === '9:16' ? 'text-yellow-300' : 'text-cyan-300'} />
-            <span>{globalAspectRatio === '9:16' ? '📱 9:16 TikTok' : '🖥️ 16:9 OBS'}</span>
+            <span>{globalAspectRatio === '9:16' ? '9:16 TikTok' : '16:9 OBS'}</span>
           </button>
 
           <button onClick={() => setIsDarkMode(!isDarkMode)} className={`p-1.5 rounded transition-colors ${isDarkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-400 text-gray-800 hover:bg-gray-500'}`}>
@@ -963,7 +963,7 @@ export default function DesktopAppUI() {
             title={`Mở cửa sổ ${globalAspectRatio} sạch độc lập (không chứa bất kỳ nút bấm quản trị hay cài đặt nào) để đưa thẳng vào TikTok LIVE Studio hoặc OBS Studio`}
           >
             <Video size={16} />
-            <span>{globalAspectRatio === '9:16' ? '📺 Khung Live 9:16' : '🖥️ Khung Live 16:9'}</span>
+            <span>{globalAspectRatio === '9:16' ? 'Khung Live 9:16' : 'Khung Live 16:9'}</span>
           </button>
 
           {/* 1 Nút Chạy Demo DUY NHẤT dùng chung cho toàn bộ App và các Game */}
