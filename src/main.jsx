@@ -28,18 +28,28 @@ class ErrorBoundary extends Component {
                 {this.state.error.toString()}
               </pre>
             )}
-            <button 
-              onClick={() => {
-                try {
-                  localStorage.removeItem('aidol_active_job');
-                  localStorage.removeItem('aidol_quick_recent_actions');
-                } catch(e) {}
-                window.location.reload();
-              }}
-              style={{ backgroundColor: '#3b82f6', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}
-            >
-              🔄 Khôi Phục & Làm Mới
-            </button>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+              <button 
+                onClick={async () => {
+                  try {
+                    localStorage.removeItem('aidol_active_job');
+                    localStorage.removeItem('aidol_quick_recent_actions');
+                    if ('caches' in window) {
+                      const keys = await caches.keys();
+                      await Promise.all(keys.map(k => caches.delete(k)));
+                    }
+                    if ('serviceWorker' in navigator) {
+                      const regs = await navigator.serviceWorker.getRegistrations();
+                      for (let reg of regs) await reg.unregister();
+                    }
+                  } catch(e) {}
+                  window.location.href = window.location.origin + window.location.pathname + (window.location.pathname.includes('desktop') ? '' : '/desktop') + '?v=' + Date.now();
+                }}
+                style={{ backgroundColor: '#2563eb', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', boxShadow: '0 4px 12px rgba(37,99,235,0.4)' }}
+              >
+                🔄 Khôi Phục & Làm Mới (Xóa Cache)
+              </button>
+            </div>
           </div>
         </div>
       );
