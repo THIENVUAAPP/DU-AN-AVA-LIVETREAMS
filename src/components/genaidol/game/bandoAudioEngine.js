@@ -16,6 +16,7 @@ class BanDoAudioEngine {
     this.ducked = false;
     this.duckTimeout = null;
     this.isMuted = false;
+    this.isBgmLoop = true;
 
     // Custom Uploaded Audio Elements & Data
     this.customBgmAudio = null;
@@ -216,9 +217,16 @@ class BanDoAudioEngine {
   playCustomBgm() {
     if (!this.customBgmAudio && this.customBgmUrl) {
       this.customBgmAudio = new Audio(this.customBgmUrl);
-      this.customBgmAudio.loop = true;
+      this.customBgmAudio.loop = this.isBgmLoop;
+      this.customBgmAudio.onended = () => {
+        if (this.isBgmLoop && this.bgmPlaying && this.customBgmAudio) {
+          this.customBgmAudio.currentTime = 0;
+          this.customBgmAudio.play().catch(() => {});
+        }
+      };
     }
     if (this.customBgmAudio) {
+      this.customBgmAudio.loop = this.isBgmLoop;
       this.customBgmAudio.volume = this.bgmVolume;
       this.customBgmAudio.play().catch(() => {});
       this.bgmPlaying = true;
@@ -407,24 +415,63 @@ class BanDoAudioEngine {
     this.tone(246.94, 0.45, { type: 'square', gain: 0.4, delay: 0.3 });
   }
 
-  // 13. Hoàn thành bản đồ (Khải Hoàn Ca Chiến Thắng)
-  playVictory() {
-    const victoryMelody = [
-      { f: 523.25, d: 0.3, t: 0 },
-      { f: 659.25, d: 0.3, t: 0.25 },
-      { f: 783.99, d: 0.4, t: 0.5 },
-      { f: 1046.5, d: 0.7, t: 0.8 },
-      { f: 880, d: 0.4, t: 1.4 },
-      { f: 1046.5, d: 0.9, t: 1.8 }
-    ];
-    victoryMelody.forEach(note => {
-      this.tone(note.f, note.d, { type: 'triangle', gain: 0.6, delay: note.t });
-      this.tone(note.f * 0.5, note.d, { type: 'sine', gain: 0.4, delay: note.t });
-    });
-    this.playCrowdCheer();
+  setBgmLoop(enabled) {
+    this.isBgmLoop = !!enabled;
+    if (this.customBgmAudio) {
+      this.customBgmAudio.loop = this.isBgmLoop;
+    }
   }
 
-  // ==================== BGM TỔNG HỢP MẶC ĐỊNH ====================
+  // 13. Hoàn thành bản đồ (Khải Hoàn Ca Chiến Thắng Hào Hùng - Epic Grand Fanfare)
+  playVictory() {
+    this.playVictoryEpic();
+  }
+
+  playVictoryEpic() {
+    const ctx = this.ensureContext();
+    if (!ctx || this.isMuted) return;
+
+    // 1. Kèn Đồng Fanfare Hùng Tráng Tỏa Sáng
+    const fanfareMelody = [
+      // Câu mở đầu dũng mãnh
+      { f: 523.25, d: 0.35, t: 0 },       // C5
+      { f: 659.25, d: 0.35, t: 0.25 },    // E5
+      { f: 783.99, d: 0.45, t: 0.50 },    // G5
+      { f: 1046.50, d: 0.85, t: 0.80 },   // C6
+      // Hợp âm vươn cao hào khí non sông
+      { f: 880.00, d: 0.40, t: 1.50 },    // A5
+      { f: 987.77, d: 0.40, t: 1.80 },    // B5
+      { f: 1046.50, d: 1.20, t: 2.10 },   // C6 (Kéo dài hùng vĩ)
+      { f: 1318.51, d: 1.40, t: 2.15 },   // E6
+      { f: 1567.98, d: 1.60, t: 2.20 }    // G6
+    ];
+
+    fanfareMelody.forEach(note => {
+      // Âm chính kèn đồng (Sawtooth + Triangle)
+      this.tone(note.f, note.d, { type: 'sawtooth', gain: 0.55, delay: note.t });
+      this.tone(note.f, note.d * 1.1, { type: 'triangle', gain: 0.45, delay: note.t });
+      // Âm trầm đệm uy nghiêm
+      this.tone(note.f * 0.5, note.d * 1.2, { type: 'sine', gain: 0.5, delay: note.t });
+    });
+
+    // 2. Trống Trận Dồn Dập Hào Hùng
+    this.playWarDrums(7);
+
+    // 3. Pháo Hoa Kép Nổ Vang Rực Rỡ
+    setTimeout(() => this.playFireworks(), 300);
+    setTimeout(() => this.playFireworks(), 900);
+    setTimeout(() => this.playFireworks(), 1700);
+    setTimeout(() => this.playFireworks(), 2400);
+
+    // 4. Tiếng Reo Hò Khán Giả Toàn Dân Tộc
+    this.playCrowdCheer();
+    setTimeout(() => this.playCrowdCheer(), 1200);
+
+    // 5. Rơi Mưa Vàng Kim Lấp Lánh
+    setTimeout(() => this.playGoldCoins(10), 1000);
+  }
+
+  // ==================== BGM TỔNG HỢP MẶC ĐỊNH (TỰ ĐỘNG LẶP VÔ TẬN 24/7) ====================
   startSyntheticBgm() {
     if (this.customBgmUrl || this.customBgmAudio) {
       this.playCustomBgm();
@@ -436,23 +483,32 @@ class BanDoAudioEngine {
     this.bgmPlaying = true;
     this.stopSyntheticBgm();
 
-    const bpm = 115;
+    const bpm = 120;
     const beatSec = 60 / bpm;
-    const scale = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25]; // Pentatonic Heroic
+    // Giai điệu Hào Khí Đông A - Ngũ Cung Hùng Tráng (C - D - E - G - A - C)
+    const scale = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 659.25, 523.25];
+    const bassScale = [130.81, 146.83, 164.81, 196.00];
     let step = 0;
 
     this.bgmInterval = setInterval(() => {
       if (!this.bgmPlaying || this.isMuted) return;
+      
       const freq = scale[step % scale.length];
-      const bassFreq = freq / 2;
+      const bassFreq = bassScale[Math.floor(step / 2) % bassScale.length];
 
-      // Bass pad
-      this.tone(bassFreq, beatSec * 1.8, { type: 'sine', gain: 0.15 * this.bgmVolume });
-      // Melody chime
+      // Bass pad trầm hùng
       if (step % 2 === 0) {
-        this.tone(freq, beatSec * 0.8, { type: 'triangle', gain: 0.18 * this.bgmVolume });
+        this.tone(bassFreq, beatSec * 1.9, { type: 'sine', gain: 0.22 * this.bgmVolume });
+        this.tone(bassFreq * 0.5, beatSec * 2.2, { type: 'triangle', gain: 0.18 * this.bgmVolume });
       }
-      step = (step + 1) % 16;
+
+      // Melody chuông vàng ngân vang
+      this.tone(freq, beatSec * 0.85, { type: 'triangle', gain: 0.20 * this.bgmVolume });
+      if (step % 4 === 0) {
+        this.tone(freq * 1.5, beatSec * 0.5, { type: 'sine', gain: 0.14 * this.bgmVolume, delay: 0.05 });
+      }
+
+      step = (step + 1) % 32;
     }, beatSec * 1000);
   }
 

@@ -7,7 +7,8 @@ import {
   Compass, Award, ChevronRight, Layers, CheckCircle2, AlertTriangle, 
   MonitorPlay, Sun, Moon, Move, ZoomIn, ZoomOut, Search, Globe, Navigation, Compass as CompassIcon,
   Sliders, Settings, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RefreshCw,
-  Bookmark, BookmarkPlus, BookmarkCheck, Edit2, Trash2, Plus, Save, Check, X, Crosshair
+  Bookmark, BookmarkPlus, BookmarkCheck, Edit2, Trash2, Plus, Save, Check, X, Crosshair,
+  Crown, Medal, Music
 } from 'lucide-react';
 import bandoEngine, { getHonorTier, COUNTRY_PRESETS } from './bandoGameEngine';
 import bandoAudio from './bandoAudioEngine';
@@ -174,6 +175,9 @@ export default function GameBanDoVietNam({
   const [autoRotate, setAutoRotate] = useState(() => bandoEngine.state.autoRotate || false);
   const [isPanMode, setIsPanMode] = useState(false);
   const [recentClaimBadges, setRecentClaimBadges] = useState(INITIAL_DEMO_BADGES);
+  const [victoryTab, setVictoryTab] = useState('champion'); // 'champion' | 'top30'
+  const [isAuto247, setIsAuto247] = useState(() => bandoEngine.isAuto247Running);
+  const [isBgmLoop, setIsBgmLoop] = useState(() => bandoAudio.isBgmLoop);
   const isLightTheme = gameState.settings?.theme === 'light';
 
   // Quản lý Danh Sách Vị Trí Ghim Camera Tùy Chỉnh (Custom Camera Bookmarks)
@@ -398,6 +402,7 @@ export default function GameBanDoVietNam({
     const unsub = bandoEngine.subscribe((newState, lastEvt) => {
       setGameState({ ...newState });
       setIsAutoTesting(bandoEngine.isAutoTesting);
+      setIsAuto247(bandoEngine.isAuto247Running);
       if (newState.autoRotate !== undefined) {
         setAutoRotate(newState.autoRotate);
       }
@@ -1240,6 +1245,46 @@ export default function GameBanDoVietNam({
           </div>
 
           <div className="flex items-center gap-1.5">
+            {/* Nút Bật/Tắt Chế Độ Tự Động Hoàn Toàn 24/24 (Auto Loop 24/7) */}
+            <button
+              onClick={() => {
+                bandoEngine.toggleAuto247();
+                setIsAuto247(bandoEngine.isAuto247Running);
+              }}
+              className={`px-3 py-1 rounded-lg text-xs font-black transition-all border flex items-center gap-1.5 shadow-md ${
+                isAuto247
+                  ? 'bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 text-white border-emerald-300 ring-2 ring-emerald-400 animate-pulse shadow-emerald-500/40'
+                  : isLightTheme
+                  ? 'bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300'
+                  : 'bg-white/10 hover:bg-white/20 text-yellow-300 border-white/10'
+              }`}
+              title={isAuto247 ? "Hệ thống đang TỰ ĐỘNG CHẠY 24/24 (Ghép cờ -> Vinh danh Top 30 + Top 1 -> Tự reset vòng mới) — Bấm để TẠM DỪNG" : "Bấm để BẬT chế độ TỰ ĐỘNG 24/24 xuyên suốt không ngừng nghỉ"}
+            >
+              <Zap size={13} className={isAuto247 ? 'text-yellow-300 fill-yellow-300 animate-bounce' : 'text-yellow-400'} />
+              <span>{isAuto247 ? '⚡ AUTO 24/7: BẬT' : '⚡ Auto 24/7'}</span>
+            </button>
+
+            {/* Nút Tự Động Lặp Nhạc Nền 24/7 (BGM Loop Toggle) */}
+            <button
+              onClick={() => {
+                const nextLoop = !isBgmLoop;
+                setIsBgmLoop(nextLoop);
+                bandoAudio.setBgmLoop(nextLoop);
+                if (nextLoop && !bandoAudio.bgmPlaying) {
+                  bandoAudio.startSyntheticBgm();
+                }
+              }}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all border flex items-center gap-1.5 ${
+                isBgmLoop
+                  ? 'bg-purple-900/60 hover:bg-purple-800/70 text-purple-200 border-purple-400/50 shadow-sm'
+                  : 'bg-white/10 hover:bg-white/20 text-gray-400 border-white/10'
+              }`}
+              title={isBgmLoop ? "Nhạc nền đang TỰ ĐỘNG LẶP VÔ TẬN 24/7 — Bấm để tắt lặp" : "Bật Tự Động Lặp Nhạc Nền 24/7"}
+            >
+              <Music size={13} className={isBgmLoop ? 'text-purple-300 animate-pulse' : 'text-gray-400'} />
+              <span className="hidden sm:inline">{isBgmLoop ? 'Nhạc: Lặp 24/7' : 'Nhạc: 1 Lần'}</span>
+            </button>
+
             {/* Nút Chuyển Đổi Nền Sáng / Tối (Light / Dark Mode Switcher) */}
             <button
               onClick={() => {
@@ -1836,39 +1881,233 @@ export default function GameBanDoVietNam({
           </div>
         )}
 
-        {/* Victory Screen */}
+        {/* SIÊU LỄ VINH DANH CHIẾN THẮNG & BẢNG VÀNG TOP 30 / TOP 1 (GRAND VICTORY CEREMONY) */}
         {gameState.status === 'victory' && (
-          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/80 backdrop-blur-lg animate-in fade-in zoom-in duration-300 p-4">
-            <div className="max-w-md w-full bg-gradient-to-b from-red-950/90 via-slate-900 to-black border-2 border-yellow-400 rounded-3xl p-6 shadow-2xl text-center">
-              <div className="text-5xl mb-2 animate-bounce">🏆 🎉 🏆</div>
-              <h1 className="text-2xl font-black text-yellow-300 uppercase tracking-wider mb-2">
-                HOÀN THÀNH GHÉP CỜ!
-              </h1>
-              <p className="text-sm text-gray-200 mb-4">
-                Toàn bộ non sông và hải đảo của <strong>{gameState.settings.customMapTitle}</strong> đã rực rỡ sắc cờ!
+          <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/85 backdrop-blur-xl animate-in fade-in zoom-in duration-300 p-4 overflow-y-auto custom-scrollbar">
+            {/* Background Fireworks & Star Sparkles Effect */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              <div className="absolute top-10 left-10 text-4xl animate-ping opacity-75">🎆</div>
+              <div className="absolute top-20 right-16 text-5xl animate-bounce opacity-80">✨</div>
+              <div className="absolute bottom-20 left-20 text-4xl animate-pulse opacity-75">🎇</div>
+              <div className="absolute bottom-16 right-24 text-5xl animate-ping opacity-80">🎆</div>
+              <div className="absolute top-1/2 left-8 text-3xl animate-bounce opacity-70">⭐</div>
+              <div className="absolute top-1/3 right-12 text-4xl animate-pulse opacity-70">✨</div>
+            </div>
+
+            <div className="relative max-w-2xl w-full bg-gradient-to-b from-red-950/95 via-slate-900/95 to-black border-2 border-yellow-400 rounded-3xl p-5 sm:p-7 shadow-[0_0_60px_rgba(234,179,8,0.35)] text-center my-auto">
+              {/* Header Title */}
+              <div className="flex items-center justify-center gap-2 text-3xl sm:text-4xl mb-1">
+                <span className="animate-bounce">🏆</span>
+                <span className="text-yellow-400 font-black tracking-widest uppercase drop-shadow-[0_0_20px_rgba(234,179,8,0.9)] text-xl sm:text-2xl">
+                  KHẢI HOÀN CA ĐẠI THẮNG
+                </span>
+                <span className="animate-bounce">🏆</span>
+              </div>
+              <p className="text-xs sm:text-sm text-gray-200 mb-4 font-medium">
+                Toàn bộ non sông và hải đảo của <strong className="text-yellow-300">{gameState.settings.customMapTitle}</strong> đã rực rỡ sắc cờ Quốc Kỳ!
               </p>
 
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-5 text-left space-y-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Đại tướng quân MVP:</span>
-                  <span className="font-black text-yellow-400">{gameState.victory?.mvpUser?.username || 'Chiến Binh Xuất Sắc'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Tổng số ô cờ đã cắm:</span>
-                  <span className="font-mono font-bold text-emerald-400">{gameState.totalCells.toLocaleString()} Ô CỜ</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Thời gian hoàn thành:</span>
-                  <span className="font-mono text-gray-300">{gameState.victory?.completedAt}</span>
-                </div>
+              {/* Navigation Tabs: TOP 1 QUÁN QUÂN vs BẢNG VÀNG TOP 30 */}
+              <div className="flex items-center justify-center gap-2 mb-4 bg-black/50 p-1.5 rounded-2xl border border-white/10 max-w-md mx-auto">
+                <button
+                  onClick={() => setVictoryTab('champion')}
+                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                    victoryTab === 'champion'
+                      ? 'bg-gradient-to-r from-yellow-500 to-amber-600 text-black shadow-lg shadow-yellow-500/30'
+                      : 'text-gray-300 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Crown size={15} className={victoryTab === 'champion' ? 'text-black' : 'text-yellow-400'} />
+                  <span>👑 Top 1 Quán Quân</span>
+                </button>
+
+                <button
+                  onClick={() => setVictoryTab('top30')}
+                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                    victoryTab === 'top30'
+                      ? 'bg-gradient-to-r from-yellow-500 to-amber-600 text-black shadow-lg shadow-yellow-500/30'
+                      : 'text-gray-300 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Medal size={15} className={victoryTab === 'top30' ? 'text-black' : 'text-yellow-400'} />
+                  <span>📜 Bảng Vàng TOP 30 ({gameState.victory?.top30?.length || 0})</span>
+                </button>
               </div>
 
-              <div className="flex gap-3">
+              {/* TAB 1: VINH DANH TOP 1 CHIẾN THẦN QUỐC GIA (GRAND TOP 1 CEREMONY) */}
+              {victoryTab === 'champion' && (
+                <div className="bg-white/5 border border-yellow-400/40 rounded-2xl p-4 sm:p-5 mb-4 animate-in zoom-in-95 duration-200">
+                  {/* Giant Glowing Crown */}
+                  <div className="relative inline-block mb-2">
+                    <Crown size={42} className="text-yellow-300 fill-yellow-400 drop-shadow-[0_0_25px_rgba(250,204,21,1)] animate-bounce mx-auto" />
+                    
+                    {/* Champion Avatar with Rotating Golden Aura */}
+                    <div className="relative w-20 h-20 sm:w-24 sm:h-24 mx-auto mt-1 rounded-full p-1 bg-gradient-to-tr from-yellow-400 via-amber-300 to-red-500 shadow-[0_0_35px_rgba(234,179,8,0.7)] animate-pulse">
+                      <img
+                        src={gameState.victory?.top1Champion?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120'}
+                        alt="MVP Champion"
+                        className="w-full h-full rounded-full object-cover border-2 border-yellow-200"
+                      />
+                      <span className="absolute -bottom-1 -right-1 text-xl sm:text-2xl drop-shadow-md">
+                        🥇
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* MVP Title & Name */}
+                  <div className="mb-3">
+                    <span className="inline-block px-3 py-0.5 rounded-full bg-yellow-400/20 border border-yellow-400/50 text-[10px] sm:text-xs font-black text-yellow-300 tracking-wider uppercase mb-1">
+                      👑 ĐỆ NHẤT CHIẾN THẦN LÃNH THỔ 🇻🇳
+                    </span>
+                    <h2 className="text-lg sm:text-2xl font-black text-white tracking-wide">
+                      {gameState.victory?.top1Champion?.username || gameState.victory?.mvpUser?.username || 'Chiến Binh Áo Đỏ 🇻🇳'}
+                    </h2>
+                    <p className="text-[11px] text-gray-400 font-mono">
+                      {gameState.victory?.top1Champion?.userId || '@dai_tuong_quan'}
+                    </p>
+                  </div>
+
+                  {/* Stats Cards */}
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div className="p-2.5 rounded-xl bg-black/40 border border-white/10">
+                      <div className="text-[10px] text-gray-400 mb-0.5">Số Ô Cờ Đã Cắm</div>
+                      <div className="font-mono font-black text-emerald-400 text-sm sm:text-base">
+                        {(gameState.victory?.top1Champion?.totalCells || gameState.totalCells).toLocaleString()} Ô
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl bg-black/40 border border-white/10">
+                      <div className="text-[10px] text-gray-400 mb-0.5">Lượt Quà Cống Hiến</div>
+                      <div className="font-mono font-black text-yellow-400 text-sm sm:text-base">
+                        {(gameState.victory?.top1Champion?.totalGifts || 35)} Lượt
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl bg-black/40 border border-white/10">
+                      <div className="text-[10px] text-gray-400 mb-0.5">Tỷ Lệ Lãnh Thổ</div>
+                      <div className="font-mono font-black text-cyan-400 text-sm sm:text-base">
+                        {(((gameState.victory?.top1Champion?.totalCells || 1) / Math.max(1, gameState.totalCells)) * 100).toFixed(1)}%
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: BẢNG VINH DANH TOP 30 CHIẾN BINH (TOP 30 HALL OF FAME) */}
+              {victoryTab === 'top30' && (
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-3 mb-4 max-h-64 sm:max-h-72 overflow-y-auto custom-scrollbar animate-in zoom-in-95 duration-200">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {(gameState.victory?.top30 || gameState.leaderboard.slice(0, 30)).map((user, idx) => {
+                      const rank = idx + 1;
+                      const isTop1 = rank === 1;
+                      const isTop2 = rank === 2;
+                      const isTop3 = rank === 3;
+                      const percentContrib = ((user.totalCells / Math.max(1, gameState.totalCells)) * 100).toFixed(1);
+
+                      return (
+                        <div
+                          key={user.userId || idx}
+                          className={`flex items-center justify-between p-2 rounded-xl border transition-all text-xs ${
+                            isTop1
+                              ? 'bg-gradient-to-r from-yellow-500/20 to-amber-600/20 border-yellow-400/60 shadow-md shadow-yellow-500/20'
+                              : isTop2
+                              ? 'bg-slate-300/15 border-slate-300/40'
+                              : isTop3
+                              ? 'bg-amber-800/20 border-amber-600/40'
+                              : 'bg-black/30 border-white/5 hover:border-white/15'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            {/* Rank Badge */}
+                            <div className="w-6 h-6 rounded-lg flex items-center justify-center font-black font-mono text-[11px] shrink-0">
+                              {isTop1 ? '🥇' : isTop2 ? '🥈' : isTop3 ? '🥉' : `#${rank}`}
+                            </div>
+
+                            {/* Avatar */}
+                            <img
+                              src={user.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=50'}
+                              alt={user.username}
+                              className="w-7 h-7 rounded-full object-cover border border-white/20 shrink-0"
+                            />
+
+                            {/* Name & ID */}
+                            <div className="text-left min-w-0">
+                              <div className="font-bold text-white truncate max-w-[120px] sm:max-w-[140px] text-[11px]">
+                                {user.username}
+                              </div>
+                              <div className="text-[9px] text-gray-400 font-mono truncate">
+                                {user.userId}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Stats */}
+                          <div className="text-right shrink-0">
+                            <div className="font-black font-mono text-yellow-400 text-[11px]">
+                              +{user.totalCells.toLocaleString()} ô
+                            </div>
+                            <div className="text-[9px] text-emerald-400 font-mono">
+                              {percentContrib}% map
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {(!gameState.victory?.top30 || gameState.victory.top30.length === 0) && (
+                      <div className="col-span-2 text-center py-6 text-xs text-gray-400 italic">
+                        Đang đồng bộ danh sách 30 chiến binh...
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* AUTO-LOOP 24/7 COUNTDOWN BAR & ACTIONS */}
+              {gameState.autoLoop247 && (
+                <div className="mb-4 bg-emerald-950/60 border border-emerald-500/40 rounded-2xl p-2.5 text-xs text-center animate-pulse">
+                  <div className="flex items-center justify-between text-emerald-300 font-bold mb-1 px-1 text-[11px]">
+                    <span className="flex items-center gap-1">
+                      <Zap size={12} className="text-yellow-400" /> Chế độ Tự Động 24/24:
+                    </span>
+                    <span className="font-mono text-yellow-300">
+                      Bắt đầu Trận mới sau: <strong>{gameState.victoryCountdown || 12}s</strong>
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-emerald-500 to-yellow-400 transition-all duration-1000"
+                      style={{
+                        width: `${Math.max(5, ((gameState.victoryCountdown || 12) / (gameState.autoNewRoundDelaySec || 12)) * 100)}%`
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-2.5">
                 <button
                   onClick={() => bandoEngine.resetRound()}
-                  className="flex-1 py-3 bg-gradient-to-r from-red-600 to-yellow-500 hover:from-red-500 hover:to-yellow-400 text-white font-black rounded-xl shadow-lg shadow-red-500/30 transition-all flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-gradient-to-r from-red-600 to-yellow-500 hover:from-red-500 hover:to-yellow-400 text-white font-black text-xs sm:text-sm rounded-xl shadow-lg shadow-red-500/30 transition-all flex items-center justify-center gap-2 active:scale-95"
                 >
-                  <RotateCcw size={16} /> Bắt Đầu Trận Mới
+                  <RotateCcw size={16} /> Bắt Đầu Trận Mới Ngay
+                </button>
+
+                <button
+                  onClick={() => {
+                    const nextAuto = !gameState.autoLoop247;
+                    bandoEngine.setAutoLoop247(nextAuto);
+                  }}
+                  className={`py-3 px-4 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-1.5 ${
+                    gameState.autoLoop247
+                      ? 'bg-emerald-900/40 text-emerald-300 border-emerald-500/40 hover:bg-emerald-800/50'
+                      : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white'
+                  }`}
+                  title={gameState.autoLoop247 ? "Đang bật Tự động lặp lại vòng chơi 24/24" : "Bật Tự động lặp lại vòng chơi 24/24"}
+                >
+                  <Zap size={14} className={gameState.autoLoop247 ? 'text-yellow-400 fill-yellow-400' : ''} />
+                  <span>{gameState.autoLoop247 ? 'Auto 24/7: BẬT' : 'Auto 24/7: TẮT'}</span>
                 </button>
               </div>
             </div>
@@ -1876,7 +2115,7 @@ export default function GameBanDoVietNam({
         )}
       </div>
 
-      {/* 3. BOTTOM TEST CONTROL BAR (Chỉ hiển thị khi Demo Mode Bật) */}
+      {/* 3. BOTTOM TEST & AUTO CONTROL BAR (Chỉ hiển thị khi Demo Mode Bật) */}
       {gameState.isDemoMode && !isPopout && (
         <div className="relative z-20 bg-[#0d1017] border-t border-white/10 p-3 shrink-0 animate-in slide-in-from-bottom duration-200">
           <div className="flex flex-col md:flex-row items-center justify-between gap-3">
@@ -1903,6 +2142,23 @@ export default function GameBanDoVietNam({
 
             {/* Quick Actions */}
             <div className="flex items-center gap-2 shrink-0">
+              {/* Nút Kích Hoạt Chế Độ Tự Động 24/7 */}
+              <button
+                onClick={() => {
+                  bandoEngine.toggleAuto247();
+                  setIsAuto247(bandoEngine.isAuto247Running);
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all border shadow-lg ${
+                  isAuto247
+                    ? 'bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 text-white border-emerald-300 ring-2 ring-emerald-400 animate-pulse'
+                    : 'bg-white/10 hover:bg-white/20 text-yellow-300 border-white/10'
+                }`}
+                title="Tự động hoá toàn diện 24/24: Cắm cờ liên tục -> Hoàn thành 100% -> Vinh danh Top 30 + Top 1 -> Tự động chuyển vòng mới"
+              >
+                <Zap size={14} className={isAuto247 ? 'text-yellow-300 fill-yellow-300 animate-bounce' : 'text-yellow-400'} />
+                <span>{isAuto247 ? '⚡ Đang Auto 24/7' : '⚡ Bật Auto 24/7'}</span>
+              </button>
+
               <button
                 onClick={handleToggleAutoTest}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all border shadow-lg ${

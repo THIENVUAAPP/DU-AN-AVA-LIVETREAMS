@@ -17,6 +17,44 @@ export const DEFAULT_MAP_GIFTS = [
   { id: 'flag_legend', name: 'Đại Kỳ Quốc Gia', icon: '🚩', cells: 5000, color: '#dc2626', tier: 'divine', priceToken: 5000 },
 ];
 
+export const MOCK_WARRIORS_POOL = [
+  { id: '@vietnam_vo_dich', username: 'Chiến Binh Áo Đỏ 🇻🇳', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100' },
+  { id: '@hanoi_pho_co', username: 'Thủ Đô Trái Tim 🏛️', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100' },
+  { id: '@danang_song_han', username: 'Rồng Vàng Miền Trung 🌊', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100' },
+  { id: '@saigon_pho_hoa', username: 'Thành Phố Bác 🏙️', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100' },
+  { id: '@cantho_song_nuoc', username: 'Chín Rồng Miền Tây 🌾', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100' },
+  { id: '@hoang_sa_truong_sa', username: 'Hải Quân Biển Đảo ⚓', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100' },
+  { id: '@dong_a_hao_khi', username: 'Hào Khí Đông A ⚔️', avatar: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=100' },
+  { id: '@lac_hong_bat_diet', username: 'Dòng Máu Lạc Hồng 🦅', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100' },
+  { id: '@tay_nguyen_hung_vi', username: 'Đại Ngàn Tây Nguyên 🐘', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100' },
+  { id: '@ha_long_ky_quan', username: 'Vịnh Rồng Hạ Long 🐉', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100' },
+  { id: '@fansipan_noc_nha', username: 'Đỉnh Fansipan 3143m 🏔️', avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=100' },
+  { id: '@phu_quoc_ngoc_bien', username: 'Đảo Ngọc Phú Quốc 🏝️', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100' },
+  { id: '@nam_quoc_son_ha', username: 'Nam Quốc Sơn Hà 📜', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100' },
+  { id: '@bach_dang_giang', username: 'Sóng Bạch Đằng Giang 🚩', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100' },
+  { id: '@phu_dong_thien_vuong', username: 'Phù Đổng Thiên Vương ⚡', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100' },
+  { id: '@nguyen_hue_ao_vai', username: 'Chiến Tướng Tây Sơn 🐎', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100' },
+  { id: '@hai_ba_trung', username: 'Nữ Tướng Trưng Vương 🌸', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100' },
+  { id: '@tran_hung_dao', username: 'Quốc Công Tiết Chế 🛡️', avatar: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=100' },
+  { id: '@dien_bien_phu', username: 'Lừng Lẫy Điện Biên 🌟', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100' },
+  { id: '@co_do_hue', username: 'Cố Đô Sông Hương 🏮', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100' },
+  { id: '@ca_mau_mui_dat', username: 'Đất Mũi Cà Mau 🧭', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100' },
+  { id: '@lung_cu_ha_giang', username: 'Cột Cờ Lũng Cú 🚩', avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=100' },
+  { id: '@truong_son_dong', username: 'Huyền Thoại Trường Sơn 🌲', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100' },
+  { id: '@non_nuoc_cao_bang', username: 'Non Nước Cao Bằng 🌄', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100' },
+  { id: '@lang_sen_nghe_an', username: 'Làng Sen Quê Bác 🪷', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100' },
+  { id: '@bac_ninh_quan_ho', username: 'Quan Họ Kinh Bắc 🎭', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100' },
+  { id: '@hoi_an_hoai_pho', username: 'Phố Cổ Hội An 🪔', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100' },
+  { id: '@mui_ne_phan_thiet', username: 'Đồi Cát Bay 🏜️', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100' },
+  { id: '@nha_trang_bien_xanh', username: 'Vịnh Nha Trang 🐬', avatar: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=100' },
+  { id: '@da_lat_ngan_hoa', username: 'Đà Lạt Ngàn Hoa 🌹', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100' },
+  { id: '@an_giang_that_son', username: 'Thất Sơn Bảy Núi ⛰️', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100' },
+  { id: '@kien_giang_ha_tien', username: 'Thập Cảnh Hà Tiên 🌴', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100' },
+  { id: '@quang_ninh_than_vang', username: 'Đất Mỏ Quảng Ninh 💎', avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=100' },
+  { id: '@vinh_phuc_tam_dao', username: 'Sương Mờ Tam Đảo ☁️', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100' },
+  { id: '@son_la_tay_bac', username: 'Hoa Ban Tây Bắc 🌸', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100' },
+];
+
 export const HONOR_TIERS = [
   { id: 'novice', name: 'Tân Thủ Cắm Cờ', minCells: 1, icon: '🌱', color: '#94a3b8' },
   { id: 'bronze', name: 'Chiến Binh Đồng', minCells: 50, icon: '🥉', color: '#cd7f32' },
@@ -164,6 +202,12 @@ class BanDoGameEngine {
       bannerClaimedCount: 0,
       showBannerCells: savedCustomConfig.showBannerCells !== undefined ? savedCustomConfig.showBannerCells : true,
 
+      // Auto 24/7 Mode Configuration
+      autoLoop247: savedCustomConfig.autoLoop247 !== undefined ? savedCustomConfig.autoLoop247 : true,
+      autoNewRoundDelaySec: savedCustomConfig.autoNewRoundDelaySec || 12,
+      victoryCountdown: 0,
+      isAuto247Running: false,
+
       settings: {
         theme: savedCustomConfig.theme || 'dark',
         brightness: savedCustomConfig.brightness || 1.2,
@@ -186,7 +230,10 @@ class BanDoGameEngine {
     this.missionTimer = null;
     this.bossTimer = null;
     this.autoTestTimer = null;
+    this.auto247Timer = null;
+    this.victoryCountdownTimer = null;
     this.isAutoTesting = false;
+    this.isAuto247Running = false;
 
     // Load static data
     this.initData();
@@ -667,6 +714,8 @@ class BanDoGameEngine {
   }
 
   triggerVictory(winnerUser = { username: 'Đoàn Kết Dân Tộc' }) {
+    if (this.state.status === 'victory') return;
+
     this.state.status = 'victory';
     this.state.percent = 100;
     this.state.remainingCells = 0;
@@ -674,20 +723,90 @@ class BanDoGameEngine {
     this.state.bannerCells = [...this.bannerEngine.cells];
     this.state.bannerClaimedCount = this.bannerEngine.claimedCount;
 
+    // Sắp xếp Bảng Xếp Hạng hoàn chỉnh
+    this.state.leaderboard.sort((a, b) => b.totalCells - a.totalCells);
+
+    // Xác định TOP 1 CHIẾN THẦN QUỐC GIA (MVP Champion)
+    const top1Champion = this.state.leaderboard[0] || {
+      userId: '@dai_tuong_quan',
+      username: winnerUser.username || 'Chiến Binh Áo Đỏ 🇻🇳',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100',
+      totalCells: this.state.claimedCount || 1,
+      totalGifts: 25,
+      tier: 'supreme'
+    };
+
+    // Thu thập BẢNG VINH DANH TOP 30 CHIẾN BINH
+    let top30 = [...this.state.leaderboard];
+    if (top30.length === 0) {
+      top30.push(top1Champion);
+    }
+    top30 = top30.slice(0, 30);
+
     this.state.victory = {
       roundId: this.state.roundId,
-      winner: winnerUser.username,
+      winner: top1Champion.username,
       totalCells: this.state.totalCells,
-      mvpUser: this.state.leaderboard[0] || winnerUser,
-      topContributors: this.state.leaderboard.slice(0, 5),
+      mvpUser: top1Champion,
+      top1Champion: top1Champion,
+      topContributors: top30.slice(0, 5),
+      top30: top30,
       completedAt: new Date().toLocaleTimeString(),
     };
-    bandoAudio.playVictory();
+
+    // Kích hoạt Nhạc Khải Hoàn Ca Hào Hùng & Pháo Hoa
+    bandoAudio.playVictoryEpic();
     this.addFeedItem('VICTORY', `🎉 CHÚC MỪNG CHIẾN THẮNG: Toàn bộ Bản Đồ đã rực rỡ sắc cờ quốc kỳ!`);
     this.notify({ type: 'VICTORY' });
+
+    // HỆ THỐNG ĐẾM NGƯỢC AUTO LOOP 24/7 (TỰ ĐỘNG BẮT ĐẦU TRẬN MỚI XUYÊN SUỐT)
+    if (this.victoryCountdownTimer) {
+      clearInterval(this.victoryCountdownTimer);
+      this.victoryCountdownTimer = null;
+    }
+
+    if (this.state.autoLoop247) {
+      this.state.victoryCountdown = this.state.autoNewRoundDelaySec || 12;
+      this.notify({ type: 'VICTORY_COUNTDOWN', seconds: this.state.victoryCountdown });
+
+      this.victoryCountdownTimer = setInterval(() => {
+        this.state.victoryCountdown -= 1;
+        this.notify({ type: 'VICTORY_COUNTDOWN', seconds: this.state.victoryCountdown });
+
+        if (this.state.victoryCountdown <= 0) {
+          clearInterval(this.victoryCountdownTimer);
+          this.victoryCountdownTimer = null;
+
+          const wasAuto247 = this.isAuto247Running;
+          const wasAutoTesting = this.isAutoTesting;
+
+          this.resetRound();
+
+          // Nếu đang bật chế độ Auto 24/7 hoặc Auto Test thì tiếp tục chạy vòng mới ngay lập tức
+          if (wasAuto247 || this.state.autoLoop247) {
+            setTimeout(() => {
+              if (this.state.status === 'playing') {
+                this.startAuto247Loop();
+              }
+            }, 600);
+          } else if (wasAutoTesting) {
+            setTimeout(() => {
+              if (this.state.status === 'playing') {
+                this.startAutoTestLoop();
+              }
+            }, 600);
+          }
+        }
+      }, 1000);
+    }
   }
 
   resetRound() {
+    if (this.victoryCountdownTimer) {
+      clearInterval(this.victoryCountdownTimer);
+      this.victoryCountdownTimer = null;
+    }
+
     this.state.status = 'playing';
     this.state.roundId = `ROUND-${Date.now().toString().slice(-4)}`;
     this.state.claimedCount = 0;
@@ -695,6 +814,7 @@ class BanDoGameEngine {
     this.state.percent = 0;
     this.state.cellsById = {};
     this.state.victory = null;
+    this.state.victoryCountdown = 0;
     this.state.leaderboard = [];
     this.state.combo = { userId: null, username: null, count: 0, level: 1, multiplier: 1, active: false, expiresAt: 0 };
     this.state.boss.active = false;
@@ -714,43 +834,100 @@ class BanDoGameEngine {
     this.notify({ type: 'ROUND_RESET' });
   }
 
-  // Chạy Test Tự Động Toàn Bộ Danh Mục Quà
+  // ==================== HỆ THỐNG AUTO 24/7 TOÀN DIỆN ====================
+  setAutoLoop247(enabled) {
+    this.state.autoLoop247 = !!enabled;
+    this.saveToStorage();
+    this.notify({ type: 'AUTO_LOOP_CHANGED', autoLoop247: this.state.autoLoop247 });
+  }
+
+  startAuto247Loop() {
+    this.stopAuto247Loop();
+    this.stopAutoTestLoop();
+    this.isAuto247Running = true;
+    this.state.isAuto247Running = true;
+
+    // Đảm bảo BGM bật và tự động loop liên tục 24/24
+    bandoAudio.startSyntheticBgm();
+
+    let step = 0;
+    this.auto247Timer = setInterval(() => {
+      if (!this.isAuto247Running) {
+        this.stopAuto247Loop();
+        return;
+      }
+      if (this.state.status === 'victory') {
+        // Đang trong màn chúc mừng chiến thắng, chờ đếm ngược reset tự động
+        return;
+      }
+
+      const gifts = this.state.gifts || DEFAULT_MAP_GIFTS;
+      const gift = gifts[step % gifts.length];
+      const user = MOCK_WARRIORS_POOL[step % MOCK_WARRIORS_POOL.length];
+      const count = (step % 5 === 0 && gift.cells <= 20) ? Math.floor(Math.random() * 6) + 2 : 1;
+
+      this.processGift(gift.id, count, user);
+
+      // Kích hoạt Thử Thách & Boss định kỳ để game kịch tính
+      if (step % 14 === 0 && !this.state.activeMission) this.triggerMission();
+      if (step % 28 === 0 && !this.state.boss.active) this.triggerBossEvent();
+
+      step++;
+    }, 650);
+
+    this.notify({ type: 'AUTO_247_STATUS', running: true });
+  }
+
+  stopAuto247Loop() {
+    this.isAuto247Running = false;
+    this.state.isAuto247Running = false;
+    if (this.auto247Timer) {
+      clearInterval(this.auto247Timer);
+      this.auto247Timer = null;
+    }
+    this.notify({ type: 'AUTO_247_STATUS', running: false });
+  }
+
+  toggleAuto247() {
+    if (this.isAuto247Running) {
+      this.stopAuto247Loop();
+    } else {
+      this.startAuto247Loop();
+    }
+  }
+
+  // Chạy Test Tự Động Toàn Bộ Danh Mục Quà (Demo Test Loop)
   startAutoTestLoop(onProgress = null) {
     if (this.isAutoTesting) {
       this.stopAutoTestLoop();
       return;
     }
     this.isAutoTesting = true;
-    const testUsers = [
-      { id: '@vietnam_vo_dich', username: 'Chiến Binh Áo Đỏ 🇻🇳', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100' },
-      { id: '@hanoi_pho_co', username: 'Thủ Đô Trái Tim 🏛️', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100' },
-      { id: '@danang_song_han', username: 'Rồng Vàng Miền Trung 🌊', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100' },
-      { id: '@saigon_pho_hoa', username: 'Thành Phố Bác 🏙️', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100' },
-      { id: '@cantho_song_nuoc', username: 'Chín Rồng Miền Tây 🌾', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100' },
-    ];
 
     let step = 0;
     this.autoTestTimer = setInterval(() => {
-      if (!this.isAutoTesting || this.state.status === 'victory') {
+      if (!this.isAutoTesting) {
         this.stopAutoTestLoop();
+        return;
+      }
+      if (this.state.status === 'victory') {
         return;
       }
 
       const gifts = this.state.gifts || DEFAULT_MAP_GIFTS;
       const gift = gifts[step % gifts.length];
-      const user = testUsers[step % testUsers.length];
+      const user = MOCK_WARRIORS_POOL[step % MOCK_WARRIORS_POOL.length];
       const count = (step % 4 === 0 && gift.cells <= 10) ? 5 : 1;
 
       this.processGift(gift.id, count, user);
 
-      // Thỉnh thoảng kích hoạt Mission & Boss
       if (step === 8) this.triggerMission();
       if (step === 15) this.triggerBossEvent();
 
       step++;
       if (onProgress) onProgress(step, gift.name);
-    }, 1200);
-    this.notify();
+    }, 950);
+    this.notify({ type: 'AUTO_TEST_STATUS', running: true });
   }
 
   stopAutoTestLoop() {
@@ -759,7 +936,7 @@ class BanDoGameEngine {
       clearInterval(this.autoTestTimer);
       this.autoTestTimer = null;
     }
-    this.notify();
+    this.notify({ type: 'AUTO_TEST_STATUS', running: false });
   }
 
   setDemoMode(enabled) {

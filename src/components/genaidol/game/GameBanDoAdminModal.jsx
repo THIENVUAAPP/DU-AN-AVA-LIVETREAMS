@@ -561,11 +561,45 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                 </div>
               </div>
 
-              {/* Emergency Streamer Actions */}
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
-                <h3 className="text-sm font-black text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <Zap size={16} className="text-yellow-400" /> Bảng Điều Khiển Sự Kiện Trực Tiếp
-                </h3>
+              {/* Emergency Streamer & Automation 24/7 Actions */}
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                    <Zap size={16} className="text-yellow-400" /> Hệ Thống Vận Hành Tự Động 24/24 & Sự Kiện Trực Tiếp
+                  </h3>
+                  <span className="text-[11px] text-emerald-400 font-mono">
+                    {gameState.autoLoop247 ? '● Chế Độ Auto 24/7: ĐANG BẬT' : '○ Chế Độ Auto 24/7: TẮT'}
+                  </span>
+                </div>
+
+                {/* Auto 24/7 Control Banner */}
+                <div className="p-4 bg-gradient-to-r from-emerald-950/50 via-teal-950/40 to-black/60 border border-emerald-500/40 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+                  <div>
+                    <div className="text-xs font-black text-white flex items-center gap-2">
+                      <Zap size={15} className="text-yellow-400 fill-yellow-400" />
+                      <span>Vòng Lặp Tự Động Xuyên Suốt 24/24 (Auto Loop 24/7)</span>
+                    </div>
+                    <p className="text-[11px] text-gray-300 mt-0.5">
+                      Tự động cắm cờ mô phỏng 24/7, khi đạt 100% bản đồ sẽ nổ pháo hoa vinh danh TOP 30 + TOP 1 rồi tự đếm ngược 12s reset trận mới.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => {
+                        bandoEngine.toggleAuto247();
+                      }}
+                      className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md ${
+                        bandoEngine.isAuto247Running
+                          ? 'bg-red-600 hover:bg-red-500 text-white ring-2 ring-yellow-400 animate-pulse'
+                          : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white'
+                      }`}
+                    >
+                      <Zap size={14} />
+                      <span>{bandoEngine.isAuto247Running ? 'Dừng Auto 24/7' : 'Bật Chạy Auto 24/7'}</span>
+                    </button>
+                  </div>
+                </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <button
@@ -597,7 +631,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                     className="p-3 bg-yellow-950/60 hover:bg-yellow-900/80 border border-yellow-500/40 text-yellow-200 rounded-xl font-bold text-xs flex flex-col items-center gap-1.5 transition-all"
                   >
                     <Award size={18} className="text-yellow-400" />
-                    <span>Bắn Pháo Hoa Thắng</span>
+                    <span>Vinh Danh TOP 30 & TOP 1</span>
                   </button>
                 </div>
               </div>
@@ -1007,8 +1041,37 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                 </div>
               </div>
 
-              {/* Volume Sliders */}
+              {/* Volume Sliders & Auto Loop Music */}
               <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
+                {/* BGM 24/7 Loop Setting Toggle */}
+                <div className="flex items-center justify-between p-3 bg-purple-950/40 border border-purple-500/30 rounded-xl">
+                  <div>
+                    <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <Music size={14} className="text-purple-400" />
+                      <span>Tự Động Lặp Lại Nhạc Nền 24/7 (BGM Auto-Loop)</span>
+                    </div>
+                    <p className="text-[10px] text-gray-300">
+                      Khi bài hát kết thúc sẽ tự động phát lại liền mạch, đảm bảo phòng Live luôn tràn ngập âm nhạc hào hùng.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const next = !bandoAudio.isBgmLoop;
+                      bandoAudio.setBgmLoop(next);
+                      if (next && !bandoAudio.bgmPlaying) {
+                        bandoAudio.startSyntheticBgm();
+                      }
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      bandoAudio.isBgmLoop
+                        ? 'bg-purple-600 text-white shadow-md shadow-purple-500/30'
+                        : 'bg-white/10 text-gray-400 hover:bg-white/20'
+                    }`}
+                  >
+                    {bandoAudio.isBgmLoop ? '✓ Đang Lặp 24/7' : '○ Tắt Lặp'}
+                  </button>
+                </div>
+
                 <div>
                   <div className="flex justify-between items-center text-xs font-bold text-white mb-2">
                     <span className="flex items-center gap-1.5"><Music size={14} className="text-yellow-400" /> Âm Lượng Nhạc Nền (BGM)</span>
