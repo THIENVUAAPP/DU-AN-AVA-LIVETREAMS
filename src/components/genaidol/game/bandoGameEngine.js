@@ -1,4 +1,6 @@
 import bandoAudio from './bandoAudioEngine';
+import { WORLD_COUNTRIES, COUNTRIES_BY_ID, CONTINENTS } from './worldCountriesData';
+import { BannerFlagCellsEngine } from './bannerFlagCellsEngine';
 
 // Danh mục quà TikTok chuẩn quy đổi số ô cờ
 export const DEFAULT_MAP_GIFTS = [
@@ -32,176 +34,11 @@ export function getHonorTier(cells) {
   return matched;
 }
 
-// Định nghĩa Cấu Hình Toàn Diện Cho Các Quốc Gia
-export const COUNTRY_PRESETS = {
-  vietnam: {
-    id: 'vietnam',
-    name: 'Việt Nam 🇻🇳',
-    flag: '🇻🇳',
-    code: 'VN',
-    title: '🇻🇳 VIỆT NAM GHÉP CỜ LIVE — BẢN ĐỒ HÌNH CHỮ S 🇻🇳',
-    claimedCellColor: '#DA251D',
-    starColor: '#FFD700',
-    emptyCellColor: '#475569',
-    totalCells: 15125,
-    labels: [
-      { id: 't_hanoi', text: '🏛️ THỦ ĐÔ HÀ NỘI', wx: -20, wy: 3.5, wz: -90, color: '#facc15', glow: true },
-      { id: 't_saigon', text: '🏙️ TP. HỒ CHÍ MINH', wx: -15, wy: 3.5, wz: 105, color: '#38bdf8', glow: true },
-      { id: 't_hs', text: '🇻🇳 QUẦN ĐẢO HOÀNG SA', wx: 55, wy: 3.5, wz: -10, color: '#ef4444', glow: true },
-      { id: 't_ts', text: '🇻🇳 QUẦN ĐẢO TRƯỜNG SA', wx: 75, wy: 3.5, wz: 65, color: '#ef4444', glow: true },
-      { id: 't_biendong', text: '🌊 BIỂN ĐÔNG VIỆT NAM', wx: 65, wy: 3.5, wz: 25, color: '#60a5fa', glow: false },
-      { id: 't_phuquoc', text: '🏝️ ĐẢO PHÚ QUỐC', wx: -42, wy: 3.5, wz: 140, color: '#34d399', glow: false },
-      { id: 't_condao', text: '🏝️ CÔN ĐẢO', wx: -10, wy: 3.5, wz: 160, color: '#34d399', glow: false },
-      { id: 't_danang', text: '🏖️ ĐÀ NẴNG', wx: 15, wy: 3.5, wz: 10, color: '#fbbf24', glow: false },
-      { id: 't_slogan', text: '⭐ NON SÔNG LIỀN MỘT DẢI ⭐', wx: 0, wy: 3.5, wz: 190, color: '#fbbf24', glow: true },
-    ],
-    provinces: [
-      { id: 'ha-noi', name: 'Thủ Đô Hà Nội', totalCells: 650 },
-      { id: 'ho-chi-minh', name: 'TP. Hồ Chí Minh', totalCells: 850 },
-      { id: 'da-nang', name: 'Đà Nẵng', totalCells: 450 },
-      { id: 'hue', name: 'Thừa Thiên Huế', totalCells: 400 },
-      { id: 'hai-phong', name: 'Hải Phòng', totalCells: 380 },
-      { id: 'can-tho', name: 'Cần Thơ', totalCells: 350 },
-      { id: 'khanh-hoa', name: 'Khánh Hòa (Hoàng Sa - Trường Sa)', totalCells: 750 },
-      { id: 'quang-ninh', name: 'Quảng Ninh', totalCells: 420 },
-      { id: 'cao-bang', name: 'Cao Bằng', totalCells: 300 },
-      { id: 'kien-giang', name: 'Kiên Giang (Đảo Phú Quốc)', totalCells: 420 },
-      { id: 'ca-mau', name: 'Cà Mau (Đất Mũi)', totalCells: 360 },
-      { id: 'ba-ria', name: 'Bà Rịa - Vũng Tàu (Côn Đảo)', totalCells: 340 },
-    ]
-  },
-  japan: {
-    id: 'japan',
-    name: 'Nhật Bản 🇯🇵',
-    flag: '🇯🇵',
-    code: 'JP',
-    title: '🇯🇵 JAPAN FLAG LIVE — 日本地図 🇯🇵',
-    claimedCellColor: '#BC002D',
-    starColor: '#FFFFFF',
-    emptyCellColor: '#475569',
-    totalCells: 15125,
-    labels: [
-      { id: 't_tokyo', text: '🏛️ THỦ ĐÔ TOKYO (東京)', wx: 0, wy: 3.5, wz: 10, color: '#ef4444', glow: true },
-      { id: 't_hokkaido', text: '❄️ ĐẢO HOKKAIDO (北海道)', wx: 40, wy: 3.5, wz: -110, color: '#38bdf8', glow: true },
-      { id: 't_osaka', text: '🏙️ OSAKA & KYOTO (大阪)', wx: -30, wy: 3.5, wz: 40, color: '#facc15', glow: false },
-      { id: 't_okinawa', text: '🏝️ QUẦN ĐẢO OKINAWA (沖縄)', wx: -90, wy: 3.5, wz: 150, color: '#34d399', glow: true },
-      { id: 't_kyushu', text: '🌊 ĐẢO KYUSHU (九州)', wx: -60, wy: 3.5, wz: 90, color: '#a78bfa', glow: false },
-    ],
-    provinces: [
-      { id: 'tokyo', name: 'Tokyo (Kanto)', totalCells: 800 },
-      { id: 'osaka', name: 'Osaka (Kansai)', totalCells: 650 },
-      { id: 'hokkaido', name: 'Hokkaido', totalCells: 900 },
-      { id: 'kyoto', name: 'Kyoto', totalCells: 450 },
-      { id: 'fukuoka', name: 'Fukuoka (Kyushu)', totalCells: 500 },
-      { id: 'okinawa', name: 'Okinawa', totalCells: 400 },
-      { id: 'nagoya', name: 'Nagoya (Aichi)', totalCells: 550 },
-      { id: 'hiroshima', name: 'Hiroshima', totalCells: 420 },
-    ]
-  },
-  korea: {
-    id: 'korea',
-    name: 'Hàn Quốc 🇰🇷',
-    flag: '🇰🇷',
-    code: 'KR',
-    title: '🇰🇷 KOREA FLAG LIVE — 대한민국 🇰🇷',
-    claimedCellColor: '#0047A0',
-    starColor: '#CD2E3A',
-    emptyCellColor: '#475569',
-    totalCells: 15125,
-    labels: [
-      { id: 't_seoul', text: '🏛️ THỦ ĐÔ SEOUL (서울)', wx: -10, wy: 3.5, wz: -60, color: '#ef4444', glow: true },
-      { id: 't_busan', text: '🏙️ THÀNH PHỐ BUSAN (부산)', wx: 30, wy: 3.5, wz: 60, color: '#38bdf8', glow: true },
-      { id: 't_jeju', text: '🏝️ ĐẢO JEJU (제주도)', wx: -40, wy: 3.5, wz: 140, color: '#34d399', glow: true },
-      { id: 't_incheon', text: '✈️ INCHEON (인천)', wx: -25, wy: 3.5, wz: -50, color: '#facc15', glow: false },
-    ],
-    provinces: [
-      { id: 'seoul', name: 'Seoul', totalCells: 950 },
-      { id: 'busan', name: 'Busan', totalCells: 700 },
-      { id: 'incheon', name: 'Incheon', totalCells: 500 },
-      { id: 'daegu', name: 'Daegu', totalCells: 450 },
-      { id: 'jeju', name: 'Đảo Jeju', totalCells: 400 },
-      { id: 'gyeonggi', name: 'Gyeonggi-do', totalCells: 800 },
-      { id: 'gangwon', name: 'Gangwon-do', totalCells: 500 },
-    ]
-  },
-  usa: {
-    id: 'usa',
-    name: 'Hoa Kỳ 🇺🇸',
-    flag: '🇺🇸',
-    code: 'US',
-    title: '🇺🇸 UNITED STATES FLAG LIVE — USA 🇺🇸',
-    claimedCellColor: '#B22234',
-    starColor: '#3C3B6E',
-    emptyCellColor: '#475569',
-    totalCells: 15125,
-    labels: [
-      { id: 't_dc', text: '🏛️ WASHINGTON D.C', wx: 60, wy: 3.5, wz: -20, color: '#38bdf8', glow: true },
-      { id: 't_nyc', text: '🏙️ NEW YORK CITY', wx: 70, wy: 3.5, wz: -40, color: '#facc15', glow: true },
-      { id: 't_cali', text: '🏖️ CALIFORNIA', wx: -80, wy: 3.5, wz: 10, color: '#fbbf24', glow: true },
-      { id: 't_hawaii', text: '🏝️ QUẦN ĐẢO HAWAII', wx: -110, wy: 3.5, wz: 120, color: '#34d399', glow: true },
-      { id: 't_texas', text: '⭐ TEXAS', wx: -10, wy: 3.5, wz: 70, color: '#ef4444', glow: false },
-    ],
-    provinces: [
-      { id: 'california', name: 'California', totalCells: 900 },
-      { id: 'texas', name: 'Texas', totalCells: 850 },
-      { id: 'new-york', name: 'New York', totalCells: 750 },
-      { id: 'florida', name: 'Florida', totalCells: 650 },
-      { id: 'washington', name: 'Washington D.C', totalCells: 550 },
-      { id: 'hawaii', name: 'Hawaii', totalCells: 400 },
-    ]
-  },
-  france: {
-    id: 'france',
-    name: 'Pháp 🇫🇷',
-    flag: '🇫🇷',
-    code: 'FR',
-    title: '🇫🇷 FRANCE FLAG LIVE — LA FRANCE 🇫🇷',
-    claimedCellColor: '#0055A4',
-    starColor: '#EF4135',
-    emptyCellColor: '#475569',
-    totalCells: 15125,
-    labels: [
-      { id: 't_paris', text: '🏛️ THỦ ĐÔ PARIS', wx: 0, wy: 3.5, wz: -40, color: '#38bdf8', glow: true },
-      { id: 't_marseille', text: '🏖️ MARSEILLE & NICE', wx: 20, wy: 3.5, wz: 80, color: '#ef4444', glow: true },
-      { id: 't_corse', text: '🏝️ ĐẢO CORSE', wx: 60, wy: 3.5, wz: 110, color: '#34d399', glow: true },
-      { id: 't_lyon', text: '🏙️ LYON', wx: 25, wy: 3.5, wz: 30, color: '#facc15', glow: false },
-    ],
-    provinces: [
-      { id: 'paris', name: 'Paris (Île-de-France)', totalCells: 950 },
-      { id: 'marseille', name: 'Marseille (PACA)', totalCells: 650 },
-      { id: 'lyon', name: 'Lyon (Auvergne)', totalCells: 550 },
-      { id: 'corse', name: 'Đảo Corse', totalCells: 400 },
-      { id: 'bordeaux', name: 'Bordeaux', totalCells: 450 },
-    ]
-  },
-  germany: {
-    id: 'germany',
-    name: 'Đức 🇩🇪',
-    flag: '🇩🇪',
-    code: 'DE',
-    title: '🇩🇪 GERMANY FLAG LIVE — DEUTSCHLAND 🇩🇪',
-    claimedCellColor: '#FFCC00',
-    starColor: '#DD0000',
-    emptyCellColor: '#475569',
-    totalCells: 15125,
-    labels: [
-      { id: 't_berlin', text: '🏛️ THỦ ĐÔ BERLIN', wx: 30, wy: 3.5, wz: -60, color: '#facc15', glow: true },
-      { id: 't_munich', text: '🏙️ MUNICH (BAYERN)', wx: 10, wy: 3.5, wz: 70, color: '#ef4444', glow: true },
-      { id: 't_frankfurt', text: '💼 FRANKFURT', wx: -20, wy: 3.5, wz: 10, color: '#38bdf8', glow: false },
-      { id: 't_hamburg', text: '⚓ HAMBURG', wx: -5, wy: 3.5, wz: -90, color: '#60a5fa', glow: false },
-    ],
-    provinces: [
-      { id: 'berlin', name: 'Berlin', totalCells: 850 },
-      { id: 'bayern', name: 'Bayern (Munich)', totalCells: 800 },
-      { id: 'hamburg', name: 'Hamburg', totalCells: 500 },
-      { id: 'hessen', name: 'Hessen (Frankfurt)', totalCells: 550 },
-      { id: 'nrw', name: 'Nordrhein-Westfalen', totalCells: 750 },
-    ]
-  }
-};
+export const COUNTRY_PRESETS = COUNTRIES_BY_ID;
+export { WORLD_COUNTRIES, CONTINENTS };
 
-const STORAGE_KEY_CONFIG = 'aidol_bando_custom_config_v2';
-const STORAGE_KEY_COUNTRIES = 'aidol_bando_countries_custom_v2';
+const STORAGE_KEY_CONFIG = 'aidol_bando_custom_config_v3';
+const STORAGE_KEY_COUNTRIES = 'aidol_bando_countries_custom_v3';
 
 class BanDoGameEngine {
   constructor() {
@@ -219,11 +56,25 @@ class BanDoGameEngine {
 
     // Load persisted configurations from local machine
     const savedCustomConfig = this.loadFromStorage(STORAGE_KEY_CONFIG, {});
-    const savedCountries = this.loadFromStorage(STORAGE_KEY_COUNTRIES, COUNTRY_PRESETS);
-    this.countries = { ...COUNTRY_PRESETS, ...savedCountries };
+    const savedCountries = this.loadFromStorage(STORAGE_KEY_COUNTRIES, {});
+    this.countries = { ...COUNTRIES_BY_ID, ...savedCountries };
 
     const initialCountryKey = savedCustomConfig.selectedCountry || 'vietnam';
-    const currentPreset = this.countries[initialCountryKey] || this.countries.vietnam;
+    const currentPreset = this.countries[initialCountryKey] || this.countries.vietnam || WORLD_COUNTRIES[0];
+
+    // Khởi tạo Khối Lưới Ô Cờ Tiêu Đề 3D (Banner Flag Cells)
+    const initialBannerText = savedCustomConfig.bannerText || (initialCountryKey === 'vietnam' ? 'VIỆT NAM MUÔN NĂM' : currentPreset.name.toUpperCase());
+    const initialBannerPos = savedCustomConfig.bannerPos || { x: 0, y: 3.5, z: -155 };
+
+    this.bannerEngine = new BannerFlagCellsEngine({
+      text: initialBannerText,
+      posX: initialBannerPos.x,
+      posY: initialBannerPos.y,
+      posZ: initialBannerPos.z,
+      claimedColor: currentPreset.claimedCellColor || '#DA251D',
+      unclaimedColor: currentPreset.emptyCellColor || '#334155',
+      starColor: currentPreset.starColor || '#FFD700'
+    });
 
     // Game state
     this.state = {
@@ -260,8 +111,16 @@ class BanDoGameEngine {
       isDemoMode: savedCustomConfig.isDemoMode !== undefined ? savedCustomConfig.isDemoMode : true,
       cameraPreset: 'overview',
       selectedCountry: initialCountryKey,
-      mapTexts: savedCustomConfig.mapTexts || currentPreset.labels,
+      mapTexts: savedCustomConfig.mapTexts || currentPreset.labels || [],
       gifts: savedCustomConfig.gifts || DEFAULT_MAP_GIFTS,
+      
+      // Banner Flag Cells Matrix State
+      bannerText: initialBannerText,
+      bannerPos: initialBannerPos,
+      bannerCells: this.bannerEngine.cells,
+      bannerClaimedCount: 0,
+      showBannerCells: savedCustomConfig.showBannerCells !== undefined ? savedCustomConfig.showBannerCells : true,
+
       settings: {
         theme: 'dark',
         brightness: savedCustomConfig.brightness || 1.4,
@@ -273,8 +132,8 @@ class BanDoGameEngine {
         showProvinceLabels: true,
         showMapTexts: true,
         voiceAnnouncer: true,
-        bgmVolume: savedCustomConfig.bgmVolume !== undefined ? savedCustomConfig.bgmVolume : 0.35,
-        sfxVolume: savedCustomConfig.sfxVolume !== undefined ? savedCustomConfig.sfxVolume : 0.8,
+        bgmVolume: savedCustomConfig.bgmVolume !== undefined ? savedCustomConfig.bgmVolume : 0.45,
+        sfxVolume: savedCustomConfig.sfxVolume !== undefined ? savedCustomConfig.sfxVolume : 0.85,
         customMapTitle: savedCustomConfig.customMapTitle || currentPreset.title,
         selectedCountry: initialCountryKey,
       }
@@ -316,6 +175,9 @@ class BanDoGameEngine {
         sfxVolume: this.state.settings.sfxVolume,
         mapTexts: this.state.mapTexts,
         gifts: this.state.gifts,
+        bannerText: this.state.bannerText,
+        bannerPos: this.state.bannerPos,
+        showBannerCells: this.state.showBannerCells,
       };
       localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(configToSave));
       localStorage.setItem(STORAGE_KEY_COUNTRIES, JSON.stringify(this.countries));
@@ -342,7 +204,7 @@ class BanDoGameEngine {
   }
 
   buildGridForCurrentCountry() {
-    const preset = this.countries[this.state.selectedCountry] || this.countries.vietnam;
+    const preset = this.countries[this.state.selectedCountry] || this.countries.vietnam || WORLD_COUNTRIES[0];
     const targetCount = this.state.totalCells || 15125;
 
     // Build or scale cell grid
@@ -409,8 +271,6 @@ class BanDoGameEngine {
 
   generateCountryGeometry(countryKey, count = 15000) {
     const cells = [];
-    const cols = 300;
-    const rows = 389;
     let cid = 1;
 
     for (let i = 0; i < count; i++) {
@@ -418,26 +278,20 @@ class BanDoGameEngine {
       let y = 190;
 
       if (countryKey === 'japan') {
-        // Japanese Archipelago (Arch curve from SW to NE + Hokkaido + Okinawa)
-        const t = (i / count);
+        // Japanese Archipelago
         if (i % 8 === 0) {
-          // Okinawa Islands
           x = 80 + (Math.random() - 0.5) * 20;
           y = 320 + (Math.random() - 0.5) * 20;
         } else if (i % 6 === 0) {
-          // Hokkaido Island
           x = 210 + (Math.random() - 0.5) * 45;
           y = 70 + (Math.random() - 0.5) * 35;
         } else {
-          // Honshu mainland curve
           const prog = (i % (count * 0.8)) / (count * 0.8);
           x = 100 + Math.pow(prog, 1.2) * 110 + (Math.random() - 0.5) * 28;
           y = 260 - prog * 160 + (Math.random() - 0.5) * 25;
         }
       } else if (countryKey === 'korea') {
-        // Korean Peninsula + Jeju
         if (i % 12 === 0) {
-          // Jeju Island
           x = 120 + (Math.random() - 0.5) * 16;
           y = 310 + (Math.random() - 0.5) * 16;
         } else {
@@ -445,9 +299,7 @@ class BanDoGameEngine {
           y = 110 + (i / count) * 160 + (Math.random() - 0.5) * 15;
         }
       } else if (countryKey === 'usa') {
-        // US wide mainland + Hawaii
         if (i % 15 === 0) {
-          // Hawaii
           x = 60 + (Math.random() - 0.5) * 18;
           y = 290 + (Math.random() - 0.5) * 18;
         } else {
@@ -455,9 +307,7 @@ class BanDoGameEngine {
           y = 120 + Math.random() * 140;
         }
       } else if (countryKey === 'france') {
-        // Hexagon France + Corsica
         if (i % 15 === 0) {
-          // Corsica Island
           x = 220 + (Math.random() - 0.5) * 15;
           y = 280 + (Math.random() - 0.5) * 25;
         } else {
@@ -467,9 +317,11 @@ class BanDoGameEngine {
           y = 190 + Math.sin(angle) * rad * 0.9;
         }
       } else {
-        // Germany / Default
-        x = 150 + (Math.random() - 0.5) * 80;
-        y = 190 + (Math.random() - 0.5) * 110;
+        // Generic continental organic shape
+        const angle = Math.random() * Math.PI * 2;
+        const rad = Math.sqrt(Math.random()) * 75;
+        x = 150 + Math.cos(angle) * rad * 1.1;
+        y = 190 + Math.sin(angle) * rad * 1.25;
       }
 
       cells.push({
@@ -509,9 +361,9 @@ class BanDoGameEngine {
     }
   }
 
-  // Xử lý chuyển quốc gia
+  // ==================== QUẢN TRỊ 200 QUỐC GIA ====================
   switchCountry(countryKey) {
-    const preset = this.countries[countryKey] || this.countries.vietnam;
+    const preset = this.countries[countryKey] || this.countries.vietnam || WORLD_COUNTRIES[0];
     this.state.selectedCountry = countryKey;
     this.state.mapTexts = preset.labels || [];
     this.state.settings.customMapTitle = preset.title;
@@ -520,10 +372,39 @@ class BanDoGameEngine {
     this.state.settings.emptyCellColor = preset.emptyCellColor;
     this.state.settings.selectedCountry = countryKey;
 
+    // Cập nhật Banner Text tương ứng quốc gia nếu chưa đặt riêng
+    const newBannerText = countryKey === 'vietnam' ? 'VIỆT NAM MUÔN NĂM' : (preset.name.split(' ')[0] + ' VÔ ĐỊCH').toUpperCase();
+    this.setBannerText(newBannerText);
+
     this.resetRound();
     this.buildGridForCurrentCountry();
     this.saveToStorage();
     this.notify({ type: 'COUNTRY_CHANGED', countryKey });
+  }
+
+  // ==================== QUẢN LÝ CHỮ Ô CỜ TIÊU ĐỀ 3D (BANNER CELLS) ====================
+  setBannerText(text) {
+    const clean = (text || 'VIỆT NAM MUÔN NĂM').trim();
+    this.bannerEngine.setText(clean);
+    this.state.bannerText = clean;
+    this.state.bannerCells = [...this.bannerEngine.cells];
+    this.state.bannerClaimedCount = this.bannerEngine.claimedCount;
+    this.saveToStorage();
+    this.notify({ type: 'BANNER_TEXT_UPDATED', bannerText: clean });
+  }
+
+  setBannerPosition(x, y, z) {
+    this.bannerEngine.setPosition(x, y, z);
+    this.state.bannerPos = { x: this.bannerEngine.posX, y: this.bannerEngine.posY, z: this.bannerEngine.posZ };
+    this.state.bannerCells = [...this.bannerEngine.cells];
+    this.saveToStorage();
+    this.notify({ type: 'BANNER_POS_UPDATED', bannerPos: this.state.bannerPos });
+  }
+
+  toggleShowBannerCells(show) {
+    this.state.showBannerCells = !!show;
+    this.saveToStorage();
+    this.notify({ type: 'BANNER_VISIBILITY_UPDATED', showBannerCells: this.state.showBannerCells });
   }
 
   // Cài đặt tổng số ô cờ
@@ -602,9 +483,20 @@ class BanDoGameEngine {
     this.state.remainingCells = Math.max(0, this.state.totalCells - this.state.claimedCount);
     this.state.percent = Math.min(100, Math.round((this.state.claimedCount / this.state.totalCells) * 1000) / 10);
 
-    // Audio SFX
-    if (giftDef.tier === 'mythic' || giftDef.tier === 'divine' || giftDef.tier === 'legendary') {
-      bandoAudio.playGiftFanfare(giftDef.tier);
+    // Đồng bộ lấp đầy cờ vào khối chữ Ô CỜ Tiêu Đề (Banner Flag Cells)
+    this.bannerEngine.syncWithMapPercent(this.state.percent);
+    this.state.bannerCells = [...this.bannerEngine.cells];
+    this.state.bannerClaimedCount = this.bannerEngine.claimedCount;
+
+    // Audio SFX kịch tính
+    if (giftDef.tier === 'mythic' || giftDef.tier === 'divine') {
+      bandoAudio.playThunderStrike();
+      bandoAudio.playGoldCoins(10);
+    } else if (giftDef.tier === 'legendary') {
+      bandoAudio.playWarHorn();
+      bandoAudio.playGoldCoins(5);
+    } else if (giftDef.tier === 'epic') {
+      bandoAudio.playWarDrums(3);
     } else {
       bandoAudio.playCellPop();
     }
@@ -720,6 +612,10 @@ class BanDoGameEngine {
     this.state.status = 'victory';
     this.state.percent = 100;
     this.state.remainingCells = 0;
+    this.bannerEngine.syncWithMapPercent(100);
+    this.state.bannerCells = [...this.bannerEngine.cells];
+    this.state.bannerClaimedCount = this.bannerEngine.claimedCount;
+
     this.state.victory = {
       roundId: this.state.roundId,
       winner: winnerUser.username,
@@ -746,6 +642,10 @@ class BanDoGameEngine {
     this.state.boss.active = false;
     this.state.activeMission = null;
 
+    this.bannerEngine.reset();
+    this.state.bannerCells = [...this.bannerEngine.cells];
+    this.state.bannerClaimedCount = 0;
+
     Object.values(this.state.provincesStatus).forEach(p => {
       p.claimedCount = 0;
       p.isCompleted = false;
@@ -764,8 +664,8 @@ class BanDoGameEngine {
     }
     this.isAutoTesting = true;
     const testUsers = [
-      { id: 'user_viet', username: 'Quân Đội Nhân Dân 🇻🇳', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100' },
-      { id: 'user_dan', username: 'Đồng Bào Cả Nước ❤️', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100' },
+      { id: 'user_viet', username: 'Chiến Binh Áo Đỏ 🇻🇳', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100' },
+      { id: 'user_dan', username: 'Đồng Bào Yêu Nước ❤️', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100' },
       { id: 'user_hanoi', username: 'Thủ Đô Trái Tim 🏛️', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100' },
       { id: 'user_saigon', username: 'Thành Phố Rực Rỡ 🏙️', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100' },
       { id: 'user_danang', username: 'Biển Đảo Quê Hương 🌊', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100' },
@@ -864,7 +764,7 @@ class BanDoGameEngine {
   }
 
   restoreDefaultCountryConfig(countryKey) {
-    const defaultPreset = COUNTRY_PRESETS[countryKey] || COUNTRY_PRESETS.vietnam;
+    const defaultPreset = COUNTRIES_BY_ID[countryKey] || WORLD_COUNTRIES[0];
     this.countries[countryKey] = JSON.parse(JSON.stringify(defaultPreset));
     if (this.state.selectedCountry === countryKey) {
       this.switchCountry(countryKey);

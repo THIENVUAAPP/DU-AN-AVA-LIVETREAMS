@@ -1,18 +1,6 @@
-// AI Voice & Brain Commentary Engine for TikTok LIVE Battle Game
-// Powerful, Responsive, Multi-trigger Live Commentator with ElevenLabs TTS, Audio Ducking & Web Speech fallback
+import { ELEVENLABS_VOICES } from '../../../utils/voiceSyncService';
 
-export const ELEVENLABS_GAME_VOICES = [
-  { id: 'el_josh', name: 'Josh (BLV Game Siêu Tốc - Năng Lượng Bùng Nổ)', voiceId: 'TxGEqnHWrfWFTfGW9XjX', gender: 'Male' },
-  { id: 'el_clyde', name: 'Clyde (Chiến Binh Bá Đạo - Trầm Hùng Uy Nghiêm)', voiceId: '2EiwWnXFnvU5JabPnv8n', gender: 'Male' },
-  { id: 'el_harry', name: 'Harry (Kịch Tính Hồi Hộp - Rượt Đuổi Tỷ Số)', voiceId: 'SOYHLrjzK2X1ezoPC6cr', gender: 'Male' },
-  { id: 'el_jeremy', name: 'Jeremy (MC Sôi Nổi - Hoạt Náo Live Minigame)', voiceId: 'bVMeCyTHy58xNoL34h3p', gender: 'Male' },
-  { id: 'el_callum', name: 'Callum (Nam Quyết Đoán - Hùng Hồn Trợ Lực)', voiceId: 'N2lVS1w4EtoT3dr4eOWO', gender: 'Male' },
-  { id: 'el_domi', name: 'Domi (Nữ Nhiệt Huyết - Hào Hứng Cổ Vũ)', voiceId: 'AZnzlk1XvdvUeBnXmlld', gender: 'Female' },
-  { id: 'el_rachel', name: 'Rachel (Nữ MC Sắc Sảo - Giao Lưu Khán Giả)', voiceId: '21m00Tcm4TlvDq8ikWAM', gender: 'Female' },
-  { id: 'el_patrick', name: 'Patrick (Uy Lực Đanh Thép - Thách Đấu PK)', voiceId: 'ODq5zmih8GrVes37Dizd', gender: 'Male' },
-  { id: 'el_arnold', name: 'Arnold (Thần Tướng - Trọng Tài Tối Cao)', voiceId: 'VR6AewLTigWG4xSOukaG', gender: 'Male' },
-  { id: 'el_charlie', name: 'Charlie (Hài Hước Tếu Táo - Trêu Chọc Đối Thủ)', voiceId: 'IKne3meq5aSn9XLyUdCD', gender: 'Male' }
-];
+export const ELEVENLABS_GAME_VOICES = ELEVENLABS_VOICES;
 
 const DEFAULT_COMMENTARY_SCRIPTS = [
   "Trận chiến đang diễn ra vô cùng nảy lửa! Hai bên đang dồn toàn lực giao tranh!",

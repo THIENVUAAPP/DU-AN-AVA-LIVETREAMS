@@ -7,7 +7,7 @@
  */
 
 export const ELEVENLABS_VOICES = [
-  // 1. Giọng Nữ (Thích hợp cho Idol Livestream / Giao lưu / Bán hàng)
+  // ==================== 1. GIỌNG NỮ (Idol Livestream / Giao lưu / Bán hàng) ====================
   { 
     id: 'el_rachel', 
     name: 'Rachel (Nữ - Ngọt ngào, Tự nhiên)', 
@@ -116,8 +116,35 @@ export const ELEVENLABS_VOICES = [
     recommendedFor: 'idol', 
     desc: 'Giọng nữ năng động thế hệ mới, chốt sale dứt khoát.' 
   },
+  { 
+    id: 'el_serena', 
+    name: 'Serena (Nữ - Trầm ấm, Sâu lắng)', 
+    provider: 'elevenlabs', 
+    voiceId: 'pMsXgVXv3BLzUgSXRplE',
+    gender: 'Female', 
+    recommendedFor: 'idol', 
+    desc: 'Giọng nữ sâu lắng, thích hợp cho livestream đêm muộn, tâm sự.' 
+  },
+  { 
+    id: 'el_glinda', 
+    name: 'Glinda (Nữ - Nữ hoàng Quyền lực)', 
+    provider: 'elevenlabs', 
+    voiceId: 'z9fAnlkOXvlPwwBMtIwu',
+    gender: 'Female', 
+    recommendedFor: 'game', 
+    desc: 'Giọng nữ tướng quân đanh thép, thông báo sự kiện bùng nổ.' 
+  },
+  { 
+    id: 'el_dorothy', 
+    name: 'Dorothy (Nữ - Dịu êm, Truyện kể)', 
+    provider: 'elevenlabs', 
+    voiceId: 'ThT5KcBeYPX3keUQqHPh',
+    gender: 'Female', 
+    recommendedFor: 'idol', 
+    desc: 'Giọng nữ êm ái như đọc truyện, ru ngủ và chữa lành tâm hồn.' 
+  },
 
-  // 2. Giọng Nam / Quản Lý / Trợ Lý Bán Hàng (Thúc giục đơn / Báo cáo)
+  // ==================== 2. GIỌNG NAM / QUẢN LÝ / TRỢ LÝ BÁN HÀNG ====================
   { 
     id: 'el_callum', 
     name: 'Callum (Nam - Quyết đoán, Giục chốt đơn)', 
@@ -190,11 +217,29 @@ export const ELEVENLABS_VOICES = [
     recommendedFor: 'manager', 
     desc: 'Giọng đài truyền hình chuẩn, rõ ràng sắc nét từng câu chữ.' 
   },
+  { 
+    id: 'el_sam', 
+    name: 'Sam (Nam - Sinh động, Thân thiện)', 
+    provider: 'elevenlabs', 
+    voiceId: 'yoZ06aMxZJJ28mfd3POQ',
+    gender: 'Male', 
+    recommendedFor: 'manager', 
+    desc: 'Giọng nam vui tươi, hòa đồng, tư vấn nhiệt tình như anh em trong nhà.' 
+  },
+  { 
+    id: 'el_george', 
+    name: 'George (Nam - Uyên bác, Lịch lãm)', 
+    provider: 'elevenlabs', 
+    voiceId: 'JBFqnCBsd6RMkjVDRZzb',
+    gender: 'Male', 
+    recommendedFor: 'manager', 
+    desc: 'Giọng quý ông từng trải, chuyên gia đánh giá sản phẩm cao cấp.' 
+  },
 
-  // 3. Giọng Bình Luận Viên Trận Đấu Game (Hào hứng / Chiến thuật / Cổ vũ)
+  // ==================== 3. GIỌNG BÌNH LUẬN VIÊN TRẬN ĐẤU & GAME LIVESTREAM ====================
   { 
     id: 'el_josh', 
-    name: 'Josh (Nam - Năng lượng, BLV Game Siêu Tốc)', 
+    name: 'Josh (Nam - BLV Game Siêu Tốc, Năng Lượng)', 
     provider: 'elevenlabs', 
     voiceId: 'TxGEqnHWrfWFTfGW9XjX',
     gender: 'Male', 
@@ -203,7 +248,7 @@ export const ELEVENLABS_VOICES = [
   },
   { 
     id: 'el_clyde', 
-    name: 'Clyde (Nam - Chiến binh, Trầm hùng Bá đạo)', 
+    name: 'Clyde (Nam - Chiến Binh Bá Đạo, Trầm Hùng)', 
     provider: 'elevenlabs', 
     voiceId: '2EiwWnXFnvU5JabPnv8n',
     gender: 'Male', 
@@ -212,7 +257,7 @@ export const ELEVENLABS_VOICES = [
   },
   { 
     id: 'el_harry', 
-    name: 'Harry (Nam - Kịch tính, Hồi hộp)', 
+    name: 'Harry (Nam - Kịch Tính, Rượt Đuổi Tỷ Số)', 
     provider: 'elevenlabs', 
     voiceId: 'SOYHLrjzK2X1ezoPC6cr',
     gender: 'Male', 
@@ -221,7 +266,7 @@ export const ELEVENLABS_VOICES = [
   },
   { 
     id: 'el_jeremy', 
-    name: 'Jeremy (Nam - Sôi nổi, Hoạt náo Game)', 
+    name: 'Jeremy (Nam - MC Sôi Nổi, Hoạt Náo Live)', 
     provider: 'elevenlabs', 
     voiceId: 'bVMeCyTHy58xNoL34h3p',
     gender: 'Male', 
@@ -230,7 +275,7 @@ export const ELEVENLABS_VOICES = [
   },
   { 
     id: 'el_daniel', 
-    name: 'Daniel (Nam - Quyết liệt, Hùng dũng)', 
+    name: 'Daniel (Nam - Quyết Liệt, Hùng Dũng)', 
     provider: 'elevenlabs', 
     voiceId: 'onwK4e9ZLuTAKqWW03F9',
     gender: 'Male', 
@@ -239,7 +284,7 @@ export const ELEVENLABS_VOICES = [
   },
   { 
     id: 'el_arnold', 
-    name: 'Arnold (Nam - Uy nghiêm, Thần tướng)', 
+    name: 'Arnold (Nam - Uy Nghiêm, Trọng Tài Tối Cao)', 
     provider: 'elevenlabs', 
     voiceId: 'VR6AewLTigWG4xSOukaG',
     gender: 'Male', 
@@ -248,12 +293,30 @@ export const ELEVENLABS_VOICES = [
   },
   { 
     id: 'el_charlie', 
-    name: 'Charlie (Nam - Hài hước, Tếu táo)', 
+    name: 'Charlie (Nam - Hài Hước, Trêu Chọc Đối Thủ)', 
     provider: 'elevenlabs', 
     voiceId: 'IKne3meq5aSn9XLyUdCD',
     gender: 'Male', 
     recommendedFor: 'both', 
     desc: 'Giọng trêu chọc đối thủ, tạo tiếng cười sảng khoái cho khán giả.' 
+  },
+  { 
+    id: 'el_thomas', 
+    name: 'Thomas (Nam - Hùng Hồn, Sử Thi Tráng Lệ)', 
+    provider: 'elevenlabs', 
+    voiceId: 'GBv7mTt0atIp3Br8iCZE',
+    gender: 'Male', 
+    recommendedFor: 'game', 
+    desc: 'Giọng kể sử thi hào hùng, tôn vinh các chiến tích vang dội trên bản đồ.' 
+  },
+  { 
+    id: 'el_liam', 
+    name: 'Liam (Nam - Trẻ trung, Nhiệt huyết Game Thủ)', 
+    provider: 'elevenlabs', 
+    voiceId: 'TX3LPaxmHKxFdv7VOQHJ',
+    gender: 'Male', 
+    recommendedFor: 'game', 
+    desc: 'Giọng streamer game Gen Z, nhạy bén và cực kỳ bắt trend.' 
   }
 ];
 
@@ -287,7 +350,7 @@ export const DEFAULT_VOICE_CONFIG = {
   // Voice 3: Giọng Bình Luận Viên Trận Đấu Game (Game Live Commentary)
   gameVoice: {
     id: 'el_josh',
-    name: 'Josh (Nam - Năng lượng, BLV Game Siêu Tốc)',
+    name: 'Josh (Nam - BLV Game Siêu Tốc, Năng Lượng)',
     provider: 'elevenlabs',
     voiceId: 'TxGEqnHWrfWFTfGW9XjX',
     gender: 'Male',

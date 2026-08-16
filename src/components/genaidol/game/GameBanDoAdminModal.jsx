@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, Shield, Play, Pause, RotateCcw, Award, Globe, Music, Volume2, 
   Sparkles, Gift, MapPin, Flag, CheckCircle, Copy, AlertTriangle, 
   Settings, RefreshCw, Zap, Sliders, ExternalLink, Trophy, Type,
-  Compass, Sun, Eye, Trash2, Plus, VolumeX, Save, Check, Grid
+  Compass, Sun, Eye, Trash2, Plus, VolumeX, Save, Check, Grid,
+  Upload, Search, Mic, Radio, Volume1, FileAudio
 } from 'lucide-react';
-import bandoEngine, { DEFAULT_MAP_GIFTS, COUNTRY_PRESETS } from './bandoGameEngine';
+import bandoEngine, { DEFAULT_MAP_GIFTS, COUNTRY_PRESETS, WORLD_COUNTRIES, CONTINENTS } from './bandoGameEngine';
 import bandoAudio from './bandoAudioEngine';
+import { ELEVENLABS_VOICES, previewVoiceAudio, getDualVoiceConfig, saveDualVoiceConfig } from '../../../utils/voiceSyncService';
 
 export default function GameBanDoAdminModal({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('operations');
@@ -16,9 +18,27 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
   const [copiedLink, setCopiedLink] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [brightness, setBrightness] = useState(() => bandoEngine.state.settings.brightness || 1.4);
-  const [bgmVolume, setBgmVolume] = useState(() => bandoEngine.state.settings.bgmVolume ?? 0.35);
-  const [sfxVolume, setSfxVolume] = useState(() => bandoEngine.state.settings.sfxVolume ?? 0.8);
+  const [bgmVolume, setBgmVolume] = useState(() => bandoEngine.state.settings.bgmVolume ?? 0.45);
+  const [sfxVolume, setSfxVolume] = useState(() => bandoEngine.state.settings.sfxVolume ?? 0.85);
   const [selectedCountry, setSelectedCountry] = useState(() => bandoEngine.state.selectedCountry || 'vietnam');
+
+  // Khối Lưới Ô Cờ Tiêu Đề (Banner Flag Cells)
+  const [bannerTextInput, setBannerTextInput] = useState(() => bandoEngine.state.bannerText || 'VIỆT NAM MUÔN NĂM');
+  const [bannerPosX, setBannerPosX] = useState(() => bandoEngine.state.bannerPos?.x ?? 0);
+  const [bannerPosY, setBannerPosY] = useState(() => bandoEngine.state.bannerPos?.y ?? 3.5);
+  const [bannerPosZ, setBannerPosZ] = useState(() => bandoEngine.state.bannerPos?.z ?? -155);
+  const [showBannerCells, setShowBannerCells] = useState(() => bandoEngine.state.showBannerCells !== false);
+
+  // 200 Quốc Gia: Tìm kiếm & Lọc theo châu lục
+  const [countrySearch, setCountrySearch] = useState('');
+  const [selectedContinent, setSelectedContinent] = useState('all');
+
+  // Quản lý tải lên âm nhạc BGM / SFX
+  const [uploadedBgmName, setUploadedBgmName] = useState(() => bandoAudio.customBgmName || '');
+  const [uploadedSfxName, setUploadedSfxName] = useState(() => bandoAudio.customSfxName || '');
+  const [isBgmPlaying, setIsBgmPlaying] = useState(() => bandoAudio.bgmPlaying);
+  const bgmFileInputRef = useRef(null);
+  const sfxFileInputRef = useRef(null);
 
   // Form thêm nhãn toạ độ 3D
   const [newTextLabel, setNewTextLabel] = useState('');
@@ -27,6 +47,12 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
   const [newTextWZ, setNewTextWZ] = useState(0);
   const [newTextGlow, setNewTextGlow] = useState(true);
 
+  // Voice AI & Bình Luận ElevenLabs
+  const [voiceConfig, setVoiceConfig] = useState(() => getDualVoiceConfig());
+  const [selectedGameVoiceId, setSelectedGameVoiceId] = useState(() => getDualVoiceConfig().gameVoice?.id || 'el_josh');
+  const [voiceCategory, setVoiceCategory] = useState('all');
+  const [previewingVoiceId, setPreviewingVoiceId] = useState(null);
+
   useEffect(() => {
     const unsub = bandoEngine.subscribe((state) => {
       setGameState({ ...state });
@@ -34,6 +60,13 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
       if (state.totalCells) setTotalCellsInput(state.totalCells);
       if (state.settings?.brightness) setBrightness(state.settings.brightness);
       if (state.selectedCountry) setSelectedCountry(state.selectedCountry);
+      if (state.bannerText) setBannerTextInput(state.bannerText);
+      if (state.bannerPos) {
+        setBannerPosX(state.bannerPos.x);
+        setBannerPosY(state.bannerPos.y);
+        setBannerPosZ(state.bannerPos.z);
+      }
+      if (state.showBannerCells !== undefined) setShowBannerCells(state.showBannerCells);
     });
     return () => unsub();
   }, []);
@@ -54,6 +87,9 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
       bgmVolume: parseFloat(bgmVolume),
       sfxVolume: parseFloat(sfxVolume),
     });
+    bandoEngine.setBannerText(bannerTextInput);
+    bandoEngine.setBannerPosition(bannerPosX, bannerPosY, bannerPosZ);
+    bandoEngine.toggleShowBannerCells(showBannerCells);
     bandoEngine.saveToStorage();
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 2500);
@@ -99,20 +135,94 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
     bandoEngine.updateGiftConfig(updated);
   };
 
+  // Upload BGM File Handler
+  const handleUploadBgm = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const result = await bandoAudio.uploadCustomBgmFile(file);
+      if (result) {
+        setUploadedBgmName(result.name);
+        bandoAudio.playCustomBgm();
+        setIsBgmPlaying(true);
+      }
+    } catch (err) {
+      console.error('Lỗi tải file nhạc BGM:', err);
+    }
+  };
+
+  // Upload SFX File Handler
+  const handleUploadSfx = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const result = await bandoAudio.uploadCustomSfxFile(file);
+      if (result) {
+        setUploadedSfxName(result.name);
+        bandoAudio.playCustomSfx();
+      }
+    } catch (err) {
+      console.error('Lỗi tải file SFX:', err);
+    }
+  };
+
+  // Preview Voice AI TTS
+  const handlePreviewVoice = async (voice) => {
+    setPreviewingVoiceId(voice.id);
+    await previewVoiceAudio(voice, `Chào bạn! Đây là giọng đọc trí tuệ nhân tạo ${voice.name} kịch tính trong Game Cắm Cờ AVA Live!`);
+    setPreviewingVoiceId(null);
+  };
+
+  // Chọn Giọng Bình Luận Viên cho Game
+  const handleSelectGameVoice = (voice) => {
+    setSelectedGameVoiceId(voice.id);
+    const updated = {
+      ...voiceConfig,
+      gameVoice: {
+        ...voiceConfig.gameVoice,
+        id: voice.id,
+        name: voice.name,
+        voiceId: voice.voiceId,
+        gender: voice.gender
+      }
+    };
+    setVoiceConfig(updated);
+    saveDualVoiceConfig(updated);
+  };
+
+  // Lọc danh sách 200 quốc gia
+  const filteredCountries = WORLD_COUNTRIES.filter(c => {
+    const matchContinent = selectedContinent === 'all' || c.continent === selectedContinent;
+    const matchQuery = countrySearch.trim() === '' || 
+      c.name.toLowerCase().includes(countrySearch.toLowerCase()) || 
+      c.code.toLowerCase().includes(countrySearch.toLowerCase()) ||
+      c.title.toLowerCase().includes(countrySearch.toLowerCase());
+    return matchContinent && matchQuery;
+  });
+
+  // Lọc danh sách Giọng ElevenLabs
+  const filteredVoices = ELEVENLABS_VOICES.filter(v => {
+    if (voiceCategory === 'all') return true;
+    if (voiceCategory === 'game') return v.recommendedFor === 'game' || v.recommendedFor === 'both';
+    if (voiceCategory === 'female') return v.gender === 'Female';
+    if (voiceCategory === 'male') return v.gender === 'Male';
+    return true;
+  });
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-5xl h-[92vh] bg-[#11131a] border border-white/15 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-gray-100 font-sans">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-5xl h-[94vh] bg-[#11131a] border border-white/15 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-gray-100 font-sans">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-black/40 border-b border-white/10 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 bg-black/50 border-b border-white/10 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-red-600 to-amber-500 flex items-center justify-center shadow-lg shadow-red-500/20 ring-2 ring-yellow-400/40">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-red-600 via-amber-500 to-yellow-400 flex items-center justify-center shadow-lg shadow-red-500/20 ring-2 ring-yellow-400/40">
               <Shield size={20} className="text-white" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-black text-white tracking-wide">
-                  ADMIN QUẢN TRỊ — GAME GHÉP CỜ QUỐC GIA & BẢN ĐỒ
+                <h2 className="text-sm md:text-base font-black text-white tracking-wide">
+                  ADMIN QUẢN TRỊ — GAME GHÉP CỜ 200 QUỐC GIA & VOICE AI
                 </h2>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-600 text-white shadow-sm">
                   {gameState.roundId}
@@ -120,7 +230,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                 <span className="text-xs">{COUNTRY_PRESETS[selectedCountry]?.flag || '🇻🇳'}</span>
               </div>
               <p className="text-xs text-gray-400">
-                Độ sáng cao cấp, ghim nhãn toạ độ 3D, số ô cờ, đa quốc gia & lưu cấu hình vĩnh viễn
+                200 Quốc gia, Khối chữ Ô Cờ 3D, Tải nhạc BGM/SFX, 30+ Voice AI ElevenLabs & Lưu vĩnh viễn
               </p>
             </div>
           </div>
@@ -128,7 +238,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
           <div className="flex items-center gap-2">
             <button
               onClick={handleSaveAll}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-md ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-md ${
                 saveSuccess 
                   ? 'bg-emerald-600 text-white' 
                   : 'bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-black font-black'
@@ -150,13 +260,14 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
         {/* Navigation Tabs */}
         <div className="flex items-center gap-1 px-6 py-2.5 bg-[#161922] border-b border-white/10 overflow-x-auto shrink-0 custom-scrollbar">
           {[
-            { id: 'operations', label: '🎮 Vận Hành & Tiêu Đề' },
+            { id: 'operations', label: '🎮 Vận Hành & Khối Chữ Ô Cờ' },
+            { id: 'countries', label: '🌍 200 Quốc Gia & Quần Đảo' },
+            { id: 'voices', label: '🎙️ Voice AI & Bình Luận (30+ Giọng)' },
+            { id: 'audio', label: '🎵 Tải Nhạc BGM & Kho SFX' },
             { id: 'grid_cells', label: '🔢 Cài Đặt Số Ô Cờ' },
             { id: 'map_texts', label: '📍 Ghim Nhãn Địa Danh 3D' },
-            { id: 'countries', label: '🌍 Bản Đồ Quốc Gia' },
             { id: 'gifts', label: '🎁 Cấu Hình Quà Tặng' },
             { id: 'provinces', label: '🗺️ Danh Sách Vùng Miền' },
-            { id: 'audio', label: '🎵 Âm Nhạc & SFX' },
             { id: 'checklist', label: '🛠️ Link Live OBS / Studio' },
           ].map(tab => (
             <button
@@ -176,17 +287,136 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
         {/* Tab Content */}
         <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-[#0f1118]">
           
-          {/* TAB 1: OPERATIONS & TITLE CUSTOMIZATION */}
+          {/* TAB 1: OPERATIONS & BANNER FLAG CELLS 3D */}
           {activeTab === 'operations' && (
             <div className="space-y-6">
               
+              {/* BANNER FLAG CELLS MATRIX CONFIGURATION */}
+              <div className="bg-gradient-to-r from-red-950/40 via-purple-950/40 to-black/60 border border-yellow-500/40 rounded-2xl p-5 space-y-4 shadow-xl">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-black text-yellow-300 uppercase tracking-wider flex items-center gap-2">
+                    <Grid size={18} className="text-yellow-400" /> Khối Lưới Chữ Ô Cờ 3D Trên Đầu Bản Đồ
+                  </h3>
+                  <label className="flex items-center gap-2 cursor-pointer bg-black/40 px-3 py-1 rounded-xl border border-white/10">
+                    <input
+                      type="checkbox"
+                      checked={showBannerCells}
+                      onChange={(e) => {
+                        setShowBannerCells(e.target.checked);
+                        bandoEngine.toggleShowBannerCells(e.target.checked);
+                      }}
+                      className="accent-yellow-400"
+                    />
+                    <span className="text-xs font-bold text-gray-200">Hiển Thị Khối Chữ Ô Cờ</span>
+                  </label>
+                </div>
+
+                <p className="text-xs text-gray-300">
+                  Dòng chữ biểu ngữ được cấu tạo từ các <strong>Ô CỜ 3D thực tế</strong>. Khi viewer tặng quà, các ô trên từng nét chữ sẽ tự động được cắm cờ quốc kỳ rực sáng!
+                </p>
+
+                {/* Input Text & Position 3D */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                  <div>
+                    <label className="text-xs font-bold text-gray-300 block mb-1">Nội Dung Chữ Biểu Ngữ:</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={bannerTextInput}
+                        onChange={(e) => setBannerTextInput(e.target.value)}
+                        placeholder="Ví dụ: VIỆT NAM MUÔN NĂM..."
+                        className="flex-1 px-3 py-2 bg-black/60 border border-white/20 rounded-xl text-xs font-bold text-yellow-300 focus:outline-none focus:border-yellow-400 uppercase"
+                      />
+                      <button
+                        onClick={() => bandoEngine.setBannerText(bannerTextInput)}
+                        className="px-3 py-2 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded-xl"
+                      >
+                        Áp Dụng Chữ
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-gray-300 block mb-1">Tiến Độ Cắm Cờ Khối Chữ:</label>
+                    <div className="p-2.5 bg-black/50 border border-white/10 rounded-xl flex items-center justify-between">
+                      <div className="text-xs text-gray-300">
+                        Đã lắp: <strong className="text-yellow-400 font-mono">{gameState.bannerClaimedCount || 0}</strong> / {(gameState.bannerCells || []).length} ô chữ
+                      </div>
+                      <span className="text-xs font-mono font-bold text-emerald-400">
+                        {Math.round(((gameState.bannerClaimedCount || 0) / Math.max(1, (gameState.bannerCells || []).length)) * 100)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3D Coordinate Sliders */}
+                <div className="p-4 bg-black/40 border border-white/10 rounded-xl space-y-3">
+                  <div className="text-xs font-bold text-gray-300 flex items-center gap-1.5">
+                    <Compass size={14} className="text-yellow-400" /> Di Chuyển Vị Trí Đặt Khối Chữ Ô Cờ (3D Space):
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-gray-400">
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span>Toạ độ X (Ngang):</span>
+                        <span className="font-mono text-yellow-300 font-bold">{bannerPosX}</span>
+                      </div>
+                      <input
+                        type="range" min="-100" max="100" step="1"
+                        value={bannerPosX}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          setBannerPosX(val);
+                          bandoEngine.setBannerPosition(val, bannerPosY, bannerPosZ);
+                        }}
+                        className="w-full h-1.5 bg-gray-700 rounded-lg accent-yellow-400 cursor-pointer"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span>Toạ độ Y (Độ Cao):</span>
+                        <span className="font-mono text-yellow-300 font-bold">{bannerPosY}</span>
+                      </div>
+                      <input
+                        type="range" min="0" max="40" step="0.5"
+                        value={bannerPosY}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          setBannerPosY(val);
+                          bandoEngine.setBannerPosition(bannerPosX, val, bannerPosZ);
+                        }}
+                        className="w-full h-1.5 bg-gray-700 rounded-lg accent-yellow-400 cursor-pointer"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span>Toạ độ Z (Bắc - Nam):</span>
+                        <span className="font-mono text-yellow-300 font-bold">{bannerPosZ}</span>
+                      </div>
+                      <input
+                        type="range" min="-220" max="0" step="1"
+                        value={bannerPosZ}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          setBannerPosZ(val);
+                          bandoEngine.setBannerPosition(bannerPosX, bannerPosY, val);
+                        }}
+                        className="w-full h-1.5 bg-gray-700 rounded-lg accent-yellow-400 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Live Title Customization */}
               <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-                    <Type size={16} className="text-yellow-400" /> Tùy Chỉnh Tiêu Đề Phiên Live Của Bạn
+                    <Type size={16} className="text-yellow-400" /> Tùy Chỉnh Tiêu Đề Phụ Màn Hình Live
                   </h3>
-                  <span className="text-[11px] text-gray-400">Tự động lưu vĩnh viễn trên máy</span>
+                  <span className="text-[11px] text-gray-400">Tự động lưu vĩnh viễn</span>
                 </div>
 
                 <div className="flex gap-2">
@@ -230,71 +460,10 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                 <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
                   <div className="text-xs font-bold text-gray-400 mb-1">CHẾ ĐỘ MÀN HÌNH</div>
                   <div className="text-lg font-black text-blue-400">
-                    {gameState.isDemoMode ? '🧪 Chế Độ Thử Nghiệm' : '🔴 Livestream Thật (Ẩn Test Bar)'}
+                    {gameState.isDemoMode ? '🧪 Chế Độ Thử Nghiệm' : '🔴 Livestream Thật'}
                   </div>
                   <div className="text-xs text-gray-400 mt-2">
-                    Góc nhìn: <strong className="text-white uppercase">{gameState.cameraPreset}</strong>
-                  </div>
-                </div>
-              </div>
-
-              {/* Display & Brightness Controls */}
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
-                <h3 className="text-sm font-black text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <Sun size={16} className="text-yellow-400" /> Tùy Chỉnh Độ Sáng & Phân Quyền Test Quà
-                </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Demo Mode Toggle */}
-                  <div className="flex items-center justify-between p-4 bg-black/40 border border-white/10 rounded-xl">
-                    <div>
-                      <div className="text-xs font-bold text-white flex items-center gap-2">
-                        <span>Chế Độ Test Quà (Demo Mode)</span>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-black ${gameState.isDemoMode ? 'bg-emerald-500/20 text-emerald-300' : 'bg-gray-500/20 text-gray-400'}`}>
-                          {gameState.isDemoMode ? 'BẬT' : 'TẮT'}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-gray-400 mt-1">
-                        Khi tắt, thanh test quà ở đáy màn hình sẽ ẩn hoàn toàn cho buổi live thật
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => bandoEngine.setDemoMode(!gameState.isDemoMode)}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                        gameState.isDemoMode 
-                          ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' 
-                          : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                      }`}
-                    >
-                      {gameState.isDemoMode ? 'Tắt Test' : 'Bật Test'}
-                    </button>
-                  </div>
-
-                  {/* Brightness Slider */}
-                  <div className="p-4 bg-black/40 border border-white/10 rounded-xl">
-                    <div className="flex justify-between items-center text-xs font-bold text-white mb-2">
-                      <span className="flex items-center gap-1.5"><Sun size={14} className="text-yellow-400" /> Độ Sáng 3D Bản Đồ</span>
-                      <span className="text-yellow-400 font-mono font-black">{Math.round(brightness * 100)}%</span>
-                    </div>
-                    <input 
-                      type="range" 
-                      min="0.8" 
-                      max="2.2" 
-                      step="0.05" 
-                      value={brightness}
-                      onChange={(e) => {
-                        const v = parseFloat(e.target.value);
-                        setBrightness(v);
-                        bandoEngine.updateSettings({ brightness: v });
-                      }}
-                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-400"
-                    />
-                    <div className="flex justify-between text-[10px] text-gray-400 mt-1.5">
-                      <span>Dịu mắt (80%)</span>
-                      <span>Mặc định sáng (140%)</span>
-                      <span>Rực rỡ (220%)</span>
-                    </div>
+                    Độ sáng 3D: <strong className="text-white">{Math.round(brightness * 100)}%</strong>
                   </div>
                 </div>
               </div>
@@ -327,7 +496,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                     className="p-3 bg-blue-950/60 hover:bg-blue-900/80 border border-blue-500/40 text-blue-200 rounded-xl font-bold text-xs flex flex-col items-center gap-1.5 transition-all"
                   >
                     <Zap size={18} className="text-blue-400" />
-                    <span>Giao Nhiệm Vụ Tỉnh</span>
+                    <span>Giao Nhiệm Vụ Vùng</span>
                   </button>
 
                   <button
@@ -343,7 +512,446 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
             </div>
           )}
 
-          {/* TAB 2: GRID / CELL COUNT CONFIGURATION */}
+          {/* TAB 2: 200 WORLD COUNTRIES WITH PROVINCES & ISLANDS */}
+          {activeTab === 'countries' && (
+            <div className="space-y-5">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-black text-white uppercase flex items-center gap-2">
+                    <Globe size={18} className="text-blue-400" /> Hệ Thống 200 Quốc Gia & Quần Đảo Chi Tiết
+                  </h3>
+                  <p className="text-xs text-gray-400">
+                    Đầy đủ 200 quốc gia trên thế giới kèm thủ đô, các tỉnh thành/tiểu bang và quần đảo địa lý chi tiết
+                  </p>
+                </div>
+
+                {/* Continent filter tabs */}
+                <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1">
+                  {CONTINENTS.map(ct => (
+                    <button
+                      key={ct.id}
+                      onClick={() => setSelectedContinent(ct.id)}
+                      className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                        selectedContinent === ct.id
+                          ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30'
+                          : 'bg-white/5 hover:bg-white/10 text-gray-300'
+                      }`}
+                    >
+                      {ct.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Search input */}
+              <div className="relative">
+                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={countrySearch}
+                  onChange={(e) => setCountrySearch(e.target.value)}
+                  placeholder="Tìm kiếm quốc gia theo tên, mã ISO hoặc cờ (ví dụ: Việt Nam, Nhật Bản, US, France, Hàn Quốc...)"
+                  className="w-full pl-10 pr-4 py-2.5 bg-black/60 border border-white/20 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-blue-400"
+                />
+              </div>
+
+              {/* Country Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5 max-h-[58vh] overflow-y-auto custom-scrollbar pr-1">
+                {filteredCountries.map(country => (
+                  <div
+                    key={country.id}
+                    onClick={() => handleSwitchCountry(country.id)}
+                    className={`p-4 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between ${
+                      selectedCountry === country.id
+                        ? 'bg-gradient-to-tr from-red-950/80 via-slate-900 to-black border-yellow-400 ring-2 ring-yellow-400/50 shadow-2xl scale-[1.01]'
+                        : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-3xl">{country.flag}</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-white/10 font-mono text-gray-300">
+                          {country.code} • {country.continent?.toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="text-xs font-black text-white mb-1">{country.name}</div>
+                      <p className="text-[11px] text-gray-300 line-clamp-1 mb-2">{country.title}</p>
+                      
+                      {/* Hiển thị tóm tắt tỉnh thành & quần đảo */}
+                      <div className="text-[10px] text-gray-400 space-y-1 mb-2 bg-black/30 p-2 rounded-lg">
+                        <div className="truncate">🏙️ Tỉnh/TP: {country.provinces?.slice(0, 3).map(p => p.name).join(', ')}...</div>
+                        {country.labels?.some(l => l.text.includes('QUẦN ĐẢO') || l.text.includes('ĐẢO')) && (
+                          <div className="truncate text-emerald-400">🏝️ Hải đảo: {country.labels.filter(l => l.text.includes('ĐẢO')).map(l => l.text.replace(/^[^\w\s]+/, '')).slice(0, 2).join(', ')}</div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[10px] text-gray-400 pt-2 border-t border-white/10">
+                      <span>{country.labels?.length || 0} Nhãn 3D</span>
+                      <span className={`font-bold ${selectedCountry === country.id ? 'text-yellow-400' : 'text-blue-400'}`}>
+                        {selectedCountry === country.id ? '⭐ Đang kích hoạt' : 'Bấm để chọn'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: VOICE AI & ELEVENLABS 30+ VOICES */}
+          {activeTab === 'voices' && (
+            <div className="space-y-5">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-black text-white uppercase flex items-center gap-2">
+                    <Mic size={18} className="text-purple-400" /> Hệ Thống 30+ Giọng Đọc Voice AI & Bình Luận Viên (ElevenLabs)
+                  </h3>
+                  <p className="text-xs text-gray-400">
+                    Kho giọng đọc đa dạng phong cách: BLV thể thao/esports kịch tính, idol bán hàng ngọt ngào, trợ lý quản lý dứt khoát
+                  </p>
+                </div>
+
+                {/* Voice filter */}
+                <div className="flex items-center gap-1.5">
+                  {[
+                    { id: 'all', label: 'Tất Cả Giọng (30+)' },
+                    { id: 'game', label: '🎙️ BLV Game & Trận Đấu' },
+                    { id: 'female', label: '👑 Nữ Idol Bán Hàng' },
+                    { id: 'male', label: '💼 Nam Trợ Lý / MC' },
+                  ].map(cat => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setVoiceCategory(cat.id)}
+                      className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
+                        voiceCategory === cat.id
+                          ? 'bg-purple-600 text-white shadow-md shadow-purple-500/30'
+                          : 'bg-white/5 hover:bg-white/10 text-gray-300'
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Voice Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-[58vh] overflow-y-auto custom-scrollbar pr-1">
+                {filteredVoices.map(v => {
+                  const isSelected = selectedGameVoiceId === v.id;
+                  const isPreviewing = previewingVoiceId === v.id;
+                  return (
+                    <div
+                      key={v.id}
+                      className={`p-4 rounded-2xl border transition-all flex flex-col justify-between ${
+                        isSelected
+                          ? 'bg-gradient-to-tr from-purple-950/80 via-slate-900 to-black border-purple-400 ring-2 ring-purple-400/50 shadow-2xl'
+                          : 'bg-white/5 border-white/10 hover:bg-white/10'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                            v.gender === 'Female' ? 'bg-pink-500/20 text-pink-300' : 'bg-blue-500/20 text-blue-300'
+                          }`}>
+                            {v.gender === 'Female' ? '♀ Nữ' : '♂ Nam'} • {v.recommendedFor?.toUpperCase()}
+                          </span>
+                          <span className="text-[10px] font-mono text-gray-400">ElevenLabs</span>
+                        </div>
+
+                        <div className="text-xs font-black text-white mb-1">{v.name}</div>
+                        <p className="text-[11px] text-gray-400 mb-3">{v.desc}</p>
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-2 border-t border-white/10">
+                        <button
+                          onClick={() => handlePreviewVoice(v)}
+                          disabled={isPreviewing}
+                          className="flex-1 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition-all"
+                        >
+                          <Volume2 size={13} className={isPreviewing ? 'text-yellow-400 animate-spin' : 'text-gray-300'} />
+                          <span>{isPreviewing ? 'Đang đọc...' : 'Nghe Thử'}</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleSelectGameVoice(v)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                            isSelected
+                              ? 'bg-purple-600 text-white shadow-md shadow-purple-500/40'
+                              : 'bg-purple-950/60 hover:bg-purple-900 text-purple-200 border border-purple-500/30'
+                          }`}
+                        >
+                          {isSelected ? 'Đang Dùng' : 'Chọn Giọng'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: AUDIO BGM, CUSTOM UPLOAD & SFX */}
+          {activeTab === 'audio' && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-sm font-black text-white uppercase flex items-center gap-2">
+                  <Music size={18} className="text-emerald-400" /> Tải Lên Âm Nhạc BGM & Kho Hiệu Ứng SFX Kịch Tính
+                </h3>
+                <p className="text-xs text-gray-400">
+                  Tự tải file nhạc nền MP3 từ máy tính hoặc sử dụng kho nhạc hiệu ứng chiến đấu Web Audio siêu thực
+                </p>
+              </div>
+
+              {/* CUSTOM AUDIO UPLOAD SECTION */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                {/* Custom BGM Upload */}
+                <div className="p-5 bg-gradient-to-tr from-emerald-950/40 to-black/60 border border-emerald-500/40 rounded-2xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-emerald-300 uppercase flex items-center gap-1.5">
+                      <Upload size={15} /> Tải Nhạc Nền (BGM) Tùy Chỉnh
+                    </span>
+                    <span className="text-[10px] text-gray-400">Hỗ trợ MP3 / WAV</span>
+                  </div>
+
+                  <p className="text-[11px] text-gray-300">
+                    Tải bài hát nền của riêng bạn để phát lặp lại trong suốt buổi livestream cắm cờ.
+                  </p>
+
+                  <input
+                    ref={bgmFileInputRef}
+                    type="file"
+                    accept="audio/*"
+                    onChange={handleUploadBgm}
+                    className="hidden"
+                  />
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => bgmFileInputRef.current?.click()}
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-emerald-500/20"
+                    >
+                      <Upload size={14} /> Chọn File Nhạc MP3
+                    </button>
+
+                    {uploadedBgmName && (
+                      <button
+                        onClick={() => {
+                          if (isBgmPlaying) {
+                            bandoAudio.stopCustomBgm();
+                            setIsBgmPlaying(false);
+                          } else {
+                            bandoAudio.playCustomBgm();
+                            setIsBgmPlaying(true);
+                          }
+                        }}
+                        className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold flex items-center gap-1"
+                      >
+                        {isBgmPlaying ? <Pause size={14} /> : <Play size={14} />}
+                        <span>{isBgmPlaying ? 'Dừng Nhạc' : 'Phát Nhạc'}</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {uploadedBgmName && (
+                    <div className="flex items-center justify-between text-xs text-emerald-300 bg-black/40 p-2.5 rounded-xl border border-emerald-500/30 font-mono">
+                      <span className="truncate flex items-center gap-1.5"><FileAudio size={14} /> {uploadedBgmName}</span>
+                      <button
+                        onClick={() => {
+                          bandoAudio.stopCustomBgm();
+                          bandoAudio.customBgmUrl = '';
+                          bandoAudio.customBgmAudio = null;
+                          bandoAudio.customBgmName = '';
+                          setUploadedBgmName('');
+                          setIsBgmPlaying(false);
+                          localStorage.removeItem('bando_custom_bgm_meta');
+                        }}
+                        className="text-red-400 hover:text-red-300 ml-2"
+                        title="Xóa nhạc đã tải"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Custom SFX Upload */}
+                <div className="p-5 bg-gradient-to-tr from-amber-950/40 to-black/60 border border-amber-500/40 rounded-2xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-yellow-300 uppercase flex items-center gap-1.5">
+                      <Upload size={15} /> Tải Hiệu Ứng (SFX) Tùy Chỉnh
+                    </span>
+                    <span className="text-[10px] text-gray-400">Hỗ trợ MP3 / WAV</span>
+                  </div>
+
+                  <p className="text-[11px] text-gray-300">
+                    Tải âm thanh hiệu ứng quà tặng hoặc sự kiện đặc biệt của riêng bạn.
+                  </p>
+
+                  <input
+                    ref={sfxFileInputRef}
+                    type="file"
+                    accept="audio/*"
+                    onChange={handleUploadSfx}
+                    className="hidden"
+                  />
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => sfxFileInputRef.current?.click()}
+                      className="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-black font-black rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-yellow-500/20"
+                    >
+                      <Upload size={14} /> Chọn File SFX
+                    </button>
+
+                    {uploadedSfxName && (
+                      <button
+                        onClick={() => bandoAudio.playCustomSfx()}
+                        className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold flex items-center gap-1"
+                      >
+                        <Play size={14} /> Nghe Thử SFX
+                      </button>
+                    )}
+                  </div>
+
+                  {uploadedSfxName && (
+                    <div className="flex items-center justify-between text-xs text-yellow-300 bg-black/40 p-2.5 rounded-xl border border-yellow-500/30 font-mono">
+                      <span className="truncate flex items-center gap-1.5"><FileAudio size={14} /> {uploadedSfxName}</span>
+                      <button
+                        onClick={() => {
+                          bandoAudio.customSfxUrl = '';
+                          bandoAudio.customSfxAudio = null;
+                          bandoAudio.customSfxName = '';
+                          setUploadedSfxName('');
+                          localStorage.removeItem('bando_custom_sfx_meta');
+                        }}
+                        className="text-red-400 hover:text-red-300 ml-2"
+                        title="Xóa SFX đã tải"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+
+              {/* BẢNG KHO SFX KỊCH TÍNH MỚI */}
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
+                <div className="flex justify-between items-center">
+                  <div className="text-xs font-black text-white uppercase flex items-center gap-2">
+                    <Volume2 size={16} className="text-yellow-400" /> Thư Viện Hiệu Ứng Âm Thanh Kịch Tính (SFX):
+                  </div>
+                  <span className="text-[11px] text-gray-400">Bấm nút để nghe thử tức thì</span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  <button
+                    onClick={() => bandoAudio.playWarHorn()}
+                    className="p-3 bg-red-950/60 hover:bg-red-900 border border-red-500/30 text-white rounded-xl text-xs font-bold text-left transition-all"
+                  >
+                    <div className="text-yellow-400 text-sm mb-1">🎺 Kèn Xung Trận</div>
+                    <div className="text-[10px] text-gray-300">Hào hùng xung phong</div>
+                  </button>
+
+                  <button
+                    onClick={() => bandoAudio.playWarDrums(4)}
+                    className="p-3 bg-amber-950/60 hover:bg-amber-900 border border-amber-500/30 text-white rounded-xl text-xs font-bold text-left transition-all"
+                  >
+                    <div className="text-yellow-400 text-sm mb-1">🥁 Trống Trận</div>
+                    <div className="text-[10px] text-gray-300">Dồn dập gay cấn</div>
+                  </button>
+
+                  <button
+                    onClick={() => bandoAudio.playFireworks()}
+                    className="p-3 bg-purple-950/60 hover:bg-purple-900 border border-purple-500/30 text-white rounded-xl text-xs font-bold text-left transition-all"
+                  >
+                    <div className="text-purple-300 text-sm mb-1">🎆 Pháo Hoa Nổ</div>
+                    <div className="text-[10px] text-gray-300">Tiếng nổ vang rực rỡ</div>
+                  </button>
+
+                  <button
+                    onClick={() => bandoAudio.playCrowdCheer()}
+                    className="p-3 bg-blue-950/60 hover:bg-blue-900 border border-blue-500/30 text-white rounded-xl text-xs font-bold text-left transition-all"
+                  >
+                    <div className="text-blue-300 text-sm mb-1">👏 Khán Giả Hò Reo</div>
+                    <div className="text-[10px] text-gray-300">Cổ vũ rợp trời</div>
+                  </button>
+
+                  <button
+                    onClick={() => bandoAudio.playThunderStrike()}
+                    className="p-3 bg-indigo-950/60 hover:bg-indigo-900 border border-indigo-500/30 text-white rounded-xl text-xs font-bold text-left transition-all"
+                  >
+                    <div className="text-indigo-300 text-sm mb-1">⚡ Sét Đánh Thần Thoại</div>
+                    <div className="text-[10px] text-gray-300">Sấm sét giáng lâm</div>
+                  </button>
+
+                  <button
+                    onClick={() => bandoAudio.playGoldCoins(8)}
+                    className="p-3 bg-yellow-950/60 hover:bg-yellow-900 border border-yellow-500/30 text-white rounded-xl text-xs font-bold text-left transition-all"
+                  >
+                    <div className="text-yellow-300 text-sm mb-1">💰 Mưa Tiền Vàng</div>
+                    <div className="text-[10px] text-gray-300">Xu rơi leng keng</div>
+                  </button>
+
+                  <button
+                    onClick={() => bandoAudio.playLevelUp()}
+                    className="p-3 bg-teal-950/60 hover:bg-teal-900 border border-teal-500/30 text-white rounded-xl text-xs font-bold text-left transition-all"
+                  >
+                    <div className="text-teal-300 text-sm mb-1">🆙 Thăng Cấp Đột Phá</div>
+                    <div className="text-[10px] text-gray-300">Lên cấp danh vọng</div>
+                  </button>
+
+                  <button
+                    onClick={() => bandoAudio.playVictory()}
+                    className="p-3 bg-gradient-to-r from-red-900 to-amber-900 border border-yellow-400 text-white rounded-xl text-xs font-black text-left transition-all"
+                  >
+                    <div className="text-yellow-300 text-sm mb-1">🏆 Đại Khải Hoàn Ca</div>
+                    <div className="text-[10px] text-yellow-100">Toàn thắng bản đồ</div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Volume Sliders */}
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
+                <div>
+                  <div className="flex justify-between items-center text-xs font-bold text-white mb-2">
+                    <span className="flex items-center gap-1.5"><Music size={14} className="text-yellow-400" /> Âm Lượng Nhạc Nền (BGM)</span>
+                    <span className="font-mono text-yellow-400">{Math.round(bgmVolume * 100)}%</span>
+                  </div>
+                  <input 
+                    type="range" min="0" max="1" step="0.05" value={bgmVolume}
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value);
+                      setBgmVolume(v);
+                      bandoAudio.setBgmVolume(v);
+                      bandoEngine.updateSettings({ bgmVolume: v });
+                    }}
+                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-400"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center text-xs font-bold text-white mb-2">
+                    <span className="flex items-center gap-1.5"><Volume2 size={14} className="text-emerald-400" /> Âm Lượng Hiệu Ứng (SFX)</span>
+                    <span className="font-mono text-emerald-400">{Math.round(sfxVolume * 100)}%</span>
+                  </div>
+                  <input 
+                    type="range" min="0" max="1" step="0.05" value={sfxVolume}
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value);
+                      setSfxVolume(v);
+                      bandoAudio.setSfxVolume(v);
+                      bandoEngine.updateSettings({ sfxVolume: v });
+                    }}
+                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-emerald-400"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: GRID / CELL COUNT CONFIGURATION */}
           {activeTab === 'grid_cells' && (
             <div className="space-y-6">
               <div>
@@ -355,7 +963,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                 </p>
               </div>
 
-              {/* Quick preset selector & custom input */}
+              {/* Quick preset selector */}
               <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
                 <div className="text-xs font-bold text-gray-300">Chọn Nhanh Số Lượng Ô Cờ Chuẩn:</div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
@@ -410,7 +1018,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
             </div>
           )}
 
-          {/* TAB 3: TRUE 3D ANCHORED LANDMARKS */}
+          {/* TAB 6: TRUE 3D ANCHORED LANDMARKS */}
           {activeTab === 'map_texts' && (
             <div className="space-y-6">
               <div>
@@ -534,51 +1142,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
             </div>
           )}
 
-          {/* TAB 4: MULTI-COUNTRY CONFIGURATION */}
-          {activeTab === 'countries' && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-sm font-black text-white uppercase flex items-center gap-2">
-                  <Globe size={16} className="text-blue-400" /> Hệ Thống Bản Đồ Đa Quốc Gia
-                </h3>
-                <p className="text-xs text-gray-400">
-                  Tất cả các quốc gia đều được đồng bộ đầy đủ các chức năng ghép cờ, nhãn địa danh 3D, danh mục vùng miền và lưu trữ vĩnh viễn
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {Object.values(COUNTRY_PRESETS).map(country => (
-                  <div
-                    key={country.id}
-                    onClick={() => handleSwitchCountry(country.id)}
-                    className={`p-4 rounded-2xl border cursor-pointer transition-all ${
-                      selectedCountry === country.id
-                        ? 'bg-gradient-to-tr from-red-950/70 to-slate-900 border-yellow-400 ring-2 ring-yellow-400/50 shadow-2xl scale-[1.02]'
-                        : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-3xl">{country.flag}</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-white/10 font-mono text-gray-300">
-                        {country.code}
-                      </span>
-                    </div>
-                    <div className="text-xs font-black text-white mb-1">{country.name}</div>
-                    <p className="text-[11px] text-gray-400 truncate mb-3">{country.title}</p>
-
-                    <div className="flex items-center justify-between text-[10px] text-gray-400 pt-2 border-t border-white/10">
-                      <span>{country.labels.length} Địa danh 3D</span>
-                      <span className="text-yellow-400 font-bold">
-                        {selectedCountry === country.id ? 'Đang kích hoạt' : 'Bấm để chuyển'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 5: GIFTS CONFIGURATION */}
+          {/* TAB 7: GIFTS CONFIGURATION */}
           {activeTab === 'gifts' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
@@ -634,7 +1198,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
             </div>
           )}
 
-          {/* TAB 6: PROVINCES & REGIONS */}
+          {/* TAB 8: PROVINCES & REGIONS */}
           {activeTab === 'provinces' && (
             <div className="space-y-4">
               <div>
@@ -677,61 +1241,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
             </div>
           )}
 
-          {/* TAB 7: AUDIO & SFX */}
-          {activeTab === 'audio' && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-sm font-black text-white uppercase">🎵 Âm Nhạc Hào Hùng & Hiệu Ứng SFX</h3>
-                <p className="text-xs text-gray-400">Tùy chỉnh âm lượng nhạc nền BGM và tiếng kèn cắm cờ</p>
-              </div>
-
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-5">
-                <div>
-                  <div className="flex justify-between items-center text-xs font-bold text-white mb-2">
-                    <span className="flex items-center gap-1.5"><Music size={14} className="text-yellow-400" /> Âm Lượng Nhạc Nền (BGM)</span>
-                    <span className="font-mono text-yellow-400">{Math.round(bgmVolume * 100)}%</span>
-                  </div>
-                  <input 
-                    type="range" min="0" max="1" step="0.05" value={bgmVolume}
-                    onChange={(e) => {
-                      const v = parseFloat(e.target.value);
-                      setBgmVolume(v);
-                      bandoAudio.setBgmVolume(v);
-                      bandoEngine.updateSettings({ bgmVolume: v });
-                    }}
-                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-400"
-                  />
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center text-xs font-bold text-white mb-2">
-                    <span className="flex items-center gap-1.5"><Volume2 size={14} className="text-emerald-400" /> Âm Lượng Hiệu Ứng (SFX)</span>
-                    <span className="font-mono text-emerald-400">{Math.round(sfxVolume * 100)}%</span>
-                  </div>
-                  <input 
-                    type="range" min="0" max="1" step="0.05" value={sfxVolume}
-                    onChange={(e) => {
-                      const v = parseFloat(e.target.value);
-                      setSfxVolume(v);
-                      bandoAudio.setSfxVolume(v);
-                      bandoEngine.updateSettings({ sfxVolume: v });
-                    }}
-                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-emerald-400"
-                  />
-                </div>
-
-                <div className="pt-3 border-t border-white/10 flex flex-wrap gap-2">
-                  <span className="text-xs text-gray-400 self-center mr-2">Bấm nghe thử:</span>
-                  <button onClick={() => bandoAudio.playCellPop()} className="px-2.5 py-1 bg-white/10 hover:bg-white/20 text-xs rounded-lg">Cắm Cờ</button>
-                  <button onClick={() => bandoAudio.playCombo(3)} className="px-2.5 py-1 bg-white/10 hover:bg-white/20 text-xs rounded-lg">Combo x3</button>
-                  <button onClick={() => bandoAudio.playGiftFanfare('mythic')} className="px-2.5 py-1 bg-white/10 hover:bg-white/20 text-xs rounded-lg">Quà Thần Thoại</button>
-                  <button onClick={() => bandoAudio.playVictory()} className="px-2.5 py-1 bg-white/10 hover:bg-white/20 text-xs rounded-lg">Chiến Thắng</button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 8: CHECKLIST & LIVE LINK */}
+          {/* TAB 9: CHECKLIST & LIVE LINK */}
           {activeTab === 'checklist' && (
             <div className="space-y-6">
               <div>

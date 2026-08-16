@@ -236,6 +236,39 @@ export default function GameBanDoVietNam({
     scene.add(instancedMesh);
     state.instancedMesh = instancedMesh;
 
+    // Instanced Mesh for 3D Banner Title Flag Cells (Khối Lưới Chữ Ô Cờ trên đầu bản đồ)
+    const bannerCells = bandoEngine.state.bannerCells || [];
+    const bannerCount = bannerCells.length;
+    let bannerMesh = null;
+    let bannerBoxGeo = null;
+    let bannerBoxMat = null;
+
+    if (bannerCount > 0) {
+      bannerBoxGeo = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+      bannerBoxMat = new THREE.MeshStandardMaterial({
+        roughness: 0.2,
+        metalness: 0.4,
+        vertexColors: true,
+      });
+      bannerMesh = new THREE.InstancedMesh(bannerBoxGeo, bannerBoxMat, bannerCount);
+      bannerMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      bannerMesh.visible = gameState.showBannerCells !== false;
+      scene.add(bannerMesh);
+      state.bannerMesh = bannerMesh;
+
+      const bannerDummy = state.dummy;
+      for (let i = 0; i < bannerCount; i++) {
+        const bc = bannerCells[i];
+        bannerDummy.position.set(bc.wx, bc.wy, bc.wz);
+        bannerDummy.scale.set(1, bc.isClaimed ? 1.4 : 0.8, 1);
+        bannerDummy.updateMatrix();
+        bannerMesh.setMatrixAt(i, bannerDummy.matrix);
+        bannerMesh.setColorAt(i, new THREE.Color(bc.color || (bc.isClaimed ? (gameState.settings.claimedCellColor || '#DA251D') : '#334155')));
+      }
+      bannerMesh.instanceMatrix.needsUpdate = true;
+      if (bannerMesh.instanceColor) bannerMesh.instanceColor.needsUpdate = true;
+    }
+
     // Positioning
     const cols = maskData?.gridCols || 300;
     const rows = maskData?.gridRows || 389;
@@ -416,6 +449,29 @@ export default function GameBanDoVietNam({
     instancedMesh.instanceMatrix.needsUpdate = true;
     if (instancedMesh.instanceColor) instancedMesh.instanceColor.needsUpdate = true;
 
+    // Cập nhật ma trận và màu sắc của Khối Chữ Ô Cờ 3D (Banner Flag Cells)
+    if (state.bannerMesh && gameState.bannerCells) {
+      const bCells = gameState.bannerCells;
+      const bMesh = state.bannerMesh;
+      bMesh.visible = gameState.showBannerCells !== false;
+      const bannerDummy = state.dummy;
+      const bannerRed = new THREE.Color(gameState.settings.claimedCellColor || '#DA251D');
+      const bannerEmpty = new THREE.Color('#334155');
+
+      for (let j = 0; j < bMesh.count; j++) {
+        const bc = bCells[j];
+        if (bc) {
+          bannerDummy.position.set(bc.wx, bc.wy, bc.wz);
+          bannerDummy.scale.set(1, bc.isClaimed ? 1.4 : 0.8, 1);
+          bannerDummy.updateMatrix();
+          bMesh.setMatrixAt(j, bannerDummy.matrix);
+          bMesh.setColorAt(j, bc.isClaimed ? bannerRed : bannerEmpty);
+        }
+      }
+      bMesh.instanceMatrix.needsUpdate = true;
+      if (bMesh.instanceColor) bMesh.instanceColor.needsUpdate = true;
+    }
+
     // Trigger Camera zoom to focal target
     if (gameState.lastFocalTarget && state.camera && state.controls) {
       const ft = gameState.lastFocalTarget;
@@ -430,7 +486,7 @@ export default function GameBanDoVietNam({
         holdUntil: 0
       };
     }
-  }, [gameState.claimedCount, gameState.status, gameState.settings, gameState.selectedCountry, viewMode3D]);
+  }, [gameState.claimedCount, gameState.status, gameState.settings, gameState.selectedCountry, gameState.bannerCells, gameState.bannerClaimedCount, gameState.showBannerCells, gameState.bannerPos, viewMode3D]);
 
   // ============================================================
   // 2D CANVAS FALLBACK RENDERER
@@ -603,7 +659,7 @@ export default function GameBanDoVietNam({
           <span className="text-[10px] font-black text-gray-400 uppercase px-2 flex items-center gap-1">
             <CompassIcon size={12} className="text-yellow-400" /> Zoom:
           </span>
-          {Object.entries(cameraPresets).map(([key, item]) => (
+          {Object.entries(getCameraPresetsForCountry()).map(([key, item]) => (
             <button
               key={key}
               onClick={() => applyCameraPreset(key)}
