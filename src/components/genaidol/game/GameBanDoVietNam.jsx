@@ -6,7 +6,8 @@ import {
   MapPin, Flag, Eye, EyeOff, Volume2, VolumeX, Maximize2, Zap, Star,
   Compass, Award, ChevronRight, Layers, CheckCircle2, AlertTriangle, 
   MonitorPlay, Sun, Moon, Move, ZoomIn, ZoomOut, Globe, Navigation, Compass as CompassIcon,
-  Sliders, Settings, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RefreshCw
+  Sliders, Settings, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RefreshCw,
+  Bookmark, BookmarkPlus, BookmarkCheck, Edit2, Trash2, Plus, Save, Check, X, Crosshair
 } from 'lucide-react';
 import bandoEngine, { getHonorTier, COUNTRY_PRESETS } from './bandoGameEngine';
 import bandoAudio from './bandoAudioEngine';
@@ -23,6 +24,74 @@ function easeInOutCubic(t) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
+// 3 Vị Trí Ghim Camera Mặc Định Ban Đầu
+const DEFAULT_CUSTOM_BOOKMARKS = [
+  {
+    id: 'bm_hanoi',
+    name: 'Vị trí 1: Thủ Đô Hà Nội (Bắc Bộ)',
+    shortName: '1. Hà Nội',
+    icon: '🏛️',
+    pos: [-49, 110, -85],
+    target: [-49.2, 0, -123.0],
+  },
+  {
+    id: 'bm_danang',
+    name: 'Vị trí 2: Đà Nẵng (Miền Trung)',
+    shortName: '2. Đà Nẵng',
+    icon: '🏖️',
+    pos: [15, 120, 30],
+    target: [-4.7, 0, 4.5],
+  },
+  {
+    id: 'bm_saigon',
+    name: 'Vị trí 3: TP. Hồ Chí Minh (Nam Bộ)',
+    shortName: '3. TP.HCM',
+    icon: '🏙️',
+    pos: [-27, 110, 155],
+    target: [-27.6, 0, 126.4],
+  },
+];
+
+// Dữ liệu mẫu khởi tạo huy hiệu cắm cờ để luôn hiển thị ngay lập tức
+const INITIAL_DEMO_BADGES = [
+  {
+    id: 'badge_hanoi_demo',
+    userId: '@hanoi_pho_co',
+    username: 'Chiến Binh Thủ Đô 🏛️',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100',
+    flag: '🇻🇳',
+    count: 25,
+    wx: -49.2,
+    wy: 5.5,
+    wz: -123.0,
+    timestamp: Date.now(),
+  },
+  {
+    id: 'badge_danang_demo',
+    userId: '@danang_song_han',
+    username: 'Rồng Vàng Miền Trung 🏖️',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
+    flag: '🇻🇳',
+    count: 18,
+    wx: -4.7,
+    wy: 5.5,
+    wz: 4.5,
+    timestamp: Date.now(),
+  },
+  {
+    id: 'badge_saigon_demo',
+    userId: '@saigon_pho_hoa',
+    username: 'Bác Ba Sài Gòn 🏙️',
+    avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100',
+    flag: '🇻🇳',
+    count: 32,
+    wx: -27.6,
+    wy: 5.5,
+    wz: 126.4,
+    timestamp: Date.now(),
+  },
+];
+
 export default function GameBanDoVietNam({
   isPopout = false,
   onOpenAdmin = null,
@@ -36,8 +105,28 @@ export default function GameBanDoVietNam({
   const [activeCameraPreset, setActiveCameraPreset] = useState('overview');
   const [autoRotate, setAutoRotate] = useState(() => bandoEngine.state.autoRotate || false);
   const [isPanMode, setIsPanMode] = useState(false);
-  const [recentClaimBadges, setRecentClaimBadges] = useState([]);
+  const [recentClaimBadges, setRecentClaimBadges] = useState(INITIAL_DEMO_BADGES);
   const isLightTheme = gameState.settings?.theme === 'light';
+
+  // Quản lý Danh Sách Vị Trí Ghim Camera Tùy Chỉnh (Custom Camera Bookmarks)
+  const [customBookmarks, setCustomBookmarks] = useState(() => {
+    try {
+      const saved = localStorage.getItem('bando_custom_camera_bookmarks_v2');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error('Error loading camera bookmarks:', e);
+    }
+    return DEFAULT_CUSTOM_BOOKMARKS;
+  });
+
+  const [activeBookmarkId, setActiveBookmarkId] = useState(null);
+  const [showBookmarkManager, setShowBookmarkManager] = useState(false);
+  const [bookmarkNotification, setBookmarkNotification] = useState(null);
+  const [editingBookmarkId, setEditingBookmarkId] = useState(null);
+  const [editingBookmarkName, setEditingBookmarkName] = useState('');
 
   // 2D Canvas Pan & Zoom State
   const [zoom2D, setZoom2D] = useState(1.0);
@@ -48,8 +137,14 @@ export default function GameBanDoVietNam({
   const containerRef = useRef(null);
   const canvas2dRef = useRef(null);
   const labelsLayerRef = useRef(null);
+  const claimBadgesLayerRef = useRef(null);
   const labelRefs = useRef({});
   const badgeRefs = useRef({});
+  const recentClaimBadgesRef = useRef(recentClaimBadges);
+
+  useEffect(() => {
+    recentClaimBadgesRef.current = recentClaimBadges;
+  }, [recentClaimBadges]);
 
   const threeStateRef = useRef({
     scene: null,
@@ -78,9 +173,157 @@ export default function GameBanDoVietNam({
     }
   }, [isPanMode]);
 
+  // Update OrbitControls autoRotate dynamically without scene recreation
+  useEffect(() => {
+    const state = threeStateRef.current;
+    if (state.controls) {
+      state.controls.autoRotate = autoRotate;
+      state.controls.autoRotateSpeed = 0.8;
+    }
+  }, [autoRotate]);
+
   // Current Country Translation
   const currentCountry = COUNTRY_PRESETS[gameState.selectedCountry] || COUNTRY_PRESETS['vietnam'];
   const t = getGameTranslation(currentCountry?.lang || 'vi');
+
+  // Lưu danh sách Bookmarks vào localStorage
+  const saveBookmarksToStorage = (bms) => {
+    setCustomBookmarks(bms);
+    try {
+      localStorage.setItem('bando_custom_camera_bookmarks_v2', JSON.stringify(bms));
+    } catch (e) {
+      console.error('Failed to save camera bookmarks:', e);
+    }
+  };
+
+  const notifyBookmark = (msg) => {
+    setBookmarkNotification(msg);
+    setTimeout(() => {
+      setBookmarkNotification(null);
+    }, 2800);
+  };
+
+  // Chuyển mượt mà Camera tới Bookmark đã lưu
+  const handleApplyBookmark = (bm) => {
+    const state = threeStateRef.current;
+    if (!state.camera || !state.controls || !bm) return;
+    setActiveBookmarkId(bm.id);
+    setActiveCameraPreset(bm.id);
+    state.tween = {
+      from: state.camera.position.clone(),
+      to: new THREE.Vector3(...bm.pos),
+      fromTarget: state.controls.target.clone(),
+      toTarget: new THREE.Vector3(...bm.target),
+      start: performance.now(),
+      duration: 1100,
+      phase: 'direct',
+    };
+    notifyBookmark(`🎯 Đang chuyển đến: ${bm.name}`);
+  };
+
+  // Quay về góc nhìn Toàn Cảnh ban đầu
+  const handleResetOverview = () => {
+    const state = threeStateRef.current;
+    if (!state.camera || !state.controls) return;
+    setActiveBookmarkId('overview');
+    setActiveCameraPreset('overview');
+    state.tween = {
+      from: state.camera.position.clone(),
+      to: new THREE.Vector3(0, 240, 260),
+      fromTarget: state.controls.target.clone(),
+      toTarget: new THREE.Vector3(0, 0, 10),
+      start: performance.now(),
+      duration: 1000,
+      phase: 'direct',
+    };
+    notifyBookmark(`🏠 Đã trở về góc nhìn Toàn Cảnh Bản Đồ`);
+  };
+
+  // Ghim Góc Nhìn Hiện Tại vào Slot được chọn
+  const handleSaveCurrentViewToSlot = (slotId) => {
+    const state = threeStateRef.current;
+    if (!state.camera || !state.controls) return;
+    const currentPos = [
+      parseFloat(state.camera.position.x.toFixed(1)),
+      parseFloat(state.camera.position.y.toFixed(1)),
+      parseFloat(state.camera.position.z.toFixed(1)),
+    ];
+    const currentTarget = [
+      parseFloat(state.controls.target.x.toFixed(1)),
+      parseFloat(state.controls.target.y.toFixed(1)),
+      parseFloat(state.controls.target.z.toFixed(1)),
+    ];
+
+    const updated = customBookmarks.map(b => {
+      if (b.id === slotId) {
+        return { ...b, pos: currentPos, target: currentTarget };
+      }
+      return b;
+    });
+
+    saveBookmarksToStorage(updated);
+    const targetBm = updated.find(b => b.id === slotId);
+    notifyBookmark(`💾 Đã ghim góc nhìn & zoom hiện tại vào [${targetBm?.name || slotId}]!`);
+  };
+
+  // Thêm Vị Trí Mới từ góc nhìn hiện tại
+  const handleAddNewBookmarkFromCurrentView = () => {
+    const state = threeStateRef.current;
+    if (!state.camera || !state.controls) return;
+    const currentPos = [
+      parseFloat(state.camera.position.x.toFixed(1)),
+      parseFloat(state.camera.position.y.toFixed(1)),
+      parseFloat(state.camera.position.z.toFixed(1)),
+    ];
+    const currentTarget = [
+      parseFloat(state.controls.target.x.toFixed(1)),
+      parseFloat(state.controls.target.y.toFixed(1)),
+      parseFloat(state.controls.target.z.toFixed(1)),
+    ];
+    const slotNum = customBookmarks.length + 1;
+    const newBm = {
+      id: `bm_${Date.now()}`,
+      name: `Vị trí ${slotNum} (Tùy chỉnh)`,
+      shortName: `${slotNum}. Tùy chỉnh`,
+      icon: '📍',
+      pos: currentPos,
+      target: currentTarget,
+    };
+    const updated = [...customBookmarks, newBm];
+    saveBookmarksToStorage(updated);
+    notifyBookmark(`➕ Đã thêm [${newBm.name}] từ góc nhìn camera hiện tại!`);
+  };
+
+  // Xóa Vị Trí Ghim
+  const handleDeleteBookmark = (slotId) => {
+    if (customBookmarks.length <= 1) {
+      notifyBookmark(`⚠️ Cần giữ lại ít nhất 1 vị trí ghim.`);
+      return;
+    }
+    const updated = customBookmarks.filter(b => b.id !== slotId);
+    saveBookmarksToStorage(updated);
+    notifyBookmark(`🗑️ Đã xóa vị trí ghim.`);
+  };
+
+  // Đổi tên Vị Trí Ghim
+  const handleRenameBookmark = (slotId, newName) => {
+    if (!newName.trim()) return;
+    const updated = customBookmarks.map(b => {
+      if (b.id === slotId) {
+        return { ...b, name: newName.trim(), shortName: newName.trim().slice(0, 14) };
+      }
+      return b;
+    });
+    saveBookmarksToStorage(updated);
+    setEditingBookmarkId(null);
+    notifyBookmark(`✏️ Đã đổi tên thành: ${newName.trim()}`);
+  };
+
+  // Khôi phục 3 vị trí mặc định
+  const handleRestoreDefaultBookmarks = () => {
+    saveBookmarksToStorage(DEFAULT_CUSTOM_BOOKMARKS);
+    notifyBookmark(`🔄 Đã khôi phục 3 vị trí mặc định ban đầu!`);
+  };
 
   // Subscribe engine state & gift placements
   useEffect(() => {
@@ -99,13 +342,13 @@ export default function GameBanDoVietNam({
         const user = lastEvt.user;
         const count = lastEvt.claimed || lastEvt.count || 1;
         const flag = currentCountry?.flag || '🇻🇳';
-        const maskData = bandoEngine.maskData;
-        const cols = maskData?.gridCols || 300;
-        const rows = maskData?.gridRows || 389;
 
         // Tính toạ độ 3D trung tâm của nhóm ô cờ vừa cắm
         let wx = 0, wz = 0;
-        if (bandoEngine.state.lastFocalTarget) {
+        if (lastEvt.focalTarget) {
+          wx = lastEvt.focalTarget.wx || 0;
+          wz = lastEvt.focalTarget.wz || 0;
+        } else if (bandoEngine.state.lastFocalTarget) {
           wx = bandoEngine.state.lastFocalTarget.wx || 0;
           wz = bandoEngine.state.lastFocalTarget.wz || 0;
         } else {
@@ -115,7 +358,7 @@ export default function GameBanDoVietNam({
 
         const newBadge = {
           id: `badge_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-          userId: user?.id || 'id_vip',
+          userId: user?.id ? (user.id.startsWith('@') ? user.id : `@${user.id}`) : '@tiktok_vip',
           username: user?.username || 'Chiến Binh Yêu Nước',
           avatar: user?.avatar || '',
           flag,
@@ -492,8 +735,9 @@ export default function GameBanDoVietNam({
       }
 
       // PROJECTION: Update Recent Claim Badges (User ID & Ultra-Sharp Flag)
-      for (let b = 0; b < recentClaimBadges.length; b++) {
-        const badge = recentClaimBadges[b];
+      const badges = recentClaimBadgesRef.current || [];
+      for (let b = 0; b < badges.length; b++) {
+        const badge = badges[b];
         const badgeEl = badgeRefs.current[badge.id];
         if (!badgeEl) continue;
 
@@ -504,7 +748,7 @@ export default function GameBanDoVietNam({
           const sx = (tempVec.x * 0.5 + 0.5) * contW;
           const sy = (-tempVec.y * 0.5 + 0.5) * contH;
           badgeEl.style.display = 'flex';
-          badgeEl.style.transform = `translate3d(${sx}px, ${sy}px, 0px) translate(-50%, -120%)`;
+          badgeEl.style.transform = `translate3d(${sx}px, ${sy}px, 0px) translate(-50%, -100%)`;
         } else {
           badgeEl.style.display = 'none';
         }
@@ -520,7 +764,7 @@ export default function GameBanDoVietNam({
       boxGeo.dispose();
       boxMat.dispose();
     };
-  }, [viewMode3D, isPopout, gameState.selectedCountry, getCameraPresetsForCountry, autoRotate, recentClaimBadges]);
+  }, [viewMode3D, isPopout, gameState.selectedCountry, isLightTheme]);
 
   // Handle Multi-directional Pan & Smooth Zoom Controls
   const handlePan3D = (dirX, dirZ) => {
@@ -930,39 +1174,70 @@ export default function GameBanDoVietNam({
                 {item.text}
               </div>
             ))}
-
-            {/* FLOATING USER ID & ULTRA-SHARP NATIONAL FLAG CLAIM BADGES */}
-            {recentClaimBadges.map((badge) => (
-              <div
-                key={badge.id}
-                ref={(el) => { badgeRefs.current[badge.id] = el; }}
-                style={{
-                  position: 'absolute',
-                  left: 0,
-                  top: 0,
-                  display: 'none',
-                }}
-                className="px-3 py-1.5 rounded-2xl bg-gradient-to-r from-red-950/95 via-slate-900/95 to-black/95 border-2 border-yellow-400 shadow-[0_0_25px_rgba(250,204,21,0.7)] backdrop-blur-md flex items-center gap-2.5 animate-bounce ring-2 ring-yellow-400/40 pointer-events-none select-none z-30"
-              >
-                {badge.avatar ? (
-                  <img src={badge.avatar} alt="Avatar" className="w-6 h-6 rounded-full border border-yellow-400 object-cover shadow" />
-                ) : (
-                  <span className="text-xl drop-shadow-md select-none">{badge.flag}</span>
-                )}
-                <div className="flex flex-col text-left">
-                  <div className="flex items-center gap-1">
-                    <span className="text-[11px] font-black text-yellow-300 font-mono tracking-wider">ID: {badge.userId}</span>
-                    <span className="text-xs">{badge.flag}</span>
-                  </div>
-                  <span className="text-[10px] font-bold text-white max-w-[110px] truncate">{badge.username}</span>
-                </div>
-                <span className="text-[10px] font-black font-mono px-2.5 py-0.5 rounded-full bg-gradient-to-r from-red-600 via-amber-500 to-yellow-500 text-white shadow-md">
-                  +{badge.count} Ô
-                </span>
-              </div>
-            ))}
           </div>
         )}
+
+        {/* INDEPENDENT 3D-ANCHORED NATIONAL FLAG & USER CLAIM BADGES LAYER (LUÔN HIỂN THỊ ĐỘC LẬP) */}
+        <div ref={claimBadgesLayerRef} className="absolute inset-0 pointer-events-none z-20 overflow-hidden">
+          {recentClaimBadges.map((badge) => (
+            <div
+              key={badge.id}
+              ref={(el) => { badgeRefs.current[badge.id] = el; }}
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                display: 'none',
+              }}
+              className="flex flex-col items-center pointer-events-none select-none drop-shadow-2xl animate-in zoom-in duration-200"
+            >
+              {/* 1. TOP FLOATING BADGE (Avatar + Flag + TikTok ID + Claim Count) */}
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-gradient-to-r from-red-950/95 via-neutral-900/95 to-black/95 border-2 border-yellow-400 shadow-[0_0_25px_rgba(250,204,21,0.85)] backdrop-blur-md ring-2 ring-yellow-400/50">
+                {/* National Flag & Avatar */}
+                <div className="relative flex-shrink-0">
+                  {badge.avatar ? (
+                    <img 
+                      src={badge.avatar} 
+                      alt="Avatar" 
+                      className="w-7 h-7 rounded-full border-2 border-yellow-300 object-cover shadow-md" 
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-red-600 border-2 border-yellow-300 flex items-center justify-center text-sm shadow-md">
+                      {badge.flag || '🇻🇳'}
+                    </div>
+                  )}
+                  <span className="absolute -bottom-1 -right-1 text-sm drop-shadow select-none">
+                    {badge.flag || '🇻🇳'}
+                  </span>
+                </div>
+
+                {/* User Info & TikTok ID */}
+                <div className="flex flex-col text-left leading-tight">
+                  <div className="flex items-center gap-1">
+                    <span className="text-[11px] font-black text-yellow-300 font-mono tracking-wider">
+                      {badge.userId.startsWith('@') ? badge.userId : `@${badge.userId}`}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-bold text-white max-w-[120px] truncate">
+                    {badge.username}
+                  </span>
+                </div>
+
+                {/* Claim Count Badge */}
+                <div className="ml-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-red-600 via-amber-500 to-yellow-500 text-white font-black text-[10px] font-mono shadow-[0_0_12px_rgba(239,68,68,0.7)] flex items-center gap-1">
+                  <Flag size={10} className="fill-white" />
+                  <span>+{badge.count} Ô</span>
+                </div>
+              </div>
+
+              {/* 2. 3D PIN POLE LINE CONNECTING BADGE TO 3D MAP CELL */}
+              <div className="flex flex-col items-center">
+                <div className="w-0.5 h-6 bg-gradient-to-b from-yellow-400 via-yellow-500 to-transparent shadow-[0_0_8px_rgba(250,204,21,0.9)]" />
+                <div className="w-2.5 h-2.5 rounded-full bg-yellow-400 border border-white shadow-[0_0_10px_#facc15] animate-ping" />
+              </div>
+            </div>
+          ))}
+        </div>
 
         {/* FLOATING MULTI-DIRECTIONAL D-PAD & PAN/ZOOM NAVIGATION CONTROLLER */}
         <div className={`absolute bottom-4 left-4 z-20 flex items-center gap-2 p-2 backdrop-blur-md border rounded-2xl shadow-2xl transition-colors ${
@@ -1068,31 +1343,225 @@ export default function GameBanDoVietNam({
           </div>
         </div>
 
-        {/* FLOATING CAMERA PRESET ZOOM TOOLBAR */}
-        <div className={`absolute bottom-4 right-4 z-20 flex flex-wrap items-center gap-1.5 p-1.5 backdrop-blur-md border rounded-2xl shadow-2xl transition-colors ${
-          isLightTheme ? 'bg-white/90 border-slate-300' : 'bg-black/70 border-white/15'
+        {/* FLOATING CUSTOM CAMERA BOOKMARKS & PRESET SLOTS TOOLBAR */}
+        <div className={`absolute bottom-4 right-4 z-30 flex flex-wrap items-center gap-1.5 p-1.5 backdrop-blur-md border rounded-2xl shadow-2xl transition-colors ${
+          isLightTheme ? 'bg-white/90 border-slate-300' : 'bg-black/80 border-white/15'
         }`}>
-          <span className={`text-[10px] font-black uppercase px-2 flex items-center gap-1 ${isLightTheme ? 'text-slate-500' : 'text-gray-400'}`}>
-            <CompassIcon size={12} className="text-yellow-500" /> {t.zoom}:
-          </span>
-          {Object.entries(getCameraPresetsForCountry()).map(([key, item]) => (
+          {/* 1. Toàn Cảnh Reset Button */}
+          <button
+            onClick={handleResetOverview}
+            className={`px-3 py-1.5 rounded-xl text-[11px] font-black transition-all flex items-center gap-1.5 ${
+              activeBookmarkId === 'overview'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-105 border border-cyan-300'
+                : isLightTheme
+                ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200'
+                : 'bg-white/10 hover:bg-white/20 text-gray-200'
+            }`}
+            title="Quay về góc nhìn Toàn Cảnh Ban Đầu"
+          >
+            <span>🏠</span>
+            <span>Toàn Cảnh</span>
+          </button>
+
+          <div className="w-[1px] h-5 bg-white/20 mx-0.5" />
+
+          {/* 2. Custom Bookmark Slots (Slot 1, Slot 2, Slot 3...) */}
+          {customBookmarks.map((bm) => (
             <button
-              key={key}
-              onClick={() => applyCameraPreset(key)}
-              className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1 ${
-                activeCameraPreset === key
-                  ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-lg shadow-red-500/30 scale-105 border border-yellow-300/40'
+              key={bm.id}
+              onClick={() => handleApplyBookmark(bm)}
+              className={`px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 ${
+                activeBookmarkId === bm.id
+                  ? 'bg-gradient-to-r from-red-600 via-amber-600 to-yellow-500 text-white shadow-lg shadow-red-500/40 scale-105 border border-yellow-300 font-black'
                   : isLightTheme
                   ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
                   : 'bg-white/5 hover:bg-white/15 text-gray-300 hover:text-white'
               }`}
-              title={`Góc nhìn camera: ${item.name}`}
+              title={`Chuyển đến: ${bm.name} (Bấm để nhảy tới)`}
             >
-              <span>{item.icon}</span>
-              <span className="hidden md:inline">{item.name}</span>
+              <span>{bm.icon || '📍'}</span>
+              <span>{bm.shortName || bm.name}</span>
             </button>
           ))}
+
+          <div className="w-[1px] h-5 bg-white/20 mx-0.5" />
+
+          {/* 3. Nút Ghim & Cài Đặt Vị Trí Modal Trigger */}
+          <button
+            onClick={() => setShowBookmarkManager(prev => !prev)}
+            className="px-3 py-1.5 rounded-xl text-[11px] font-black bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 shadow-lg shadow-amber-500/30 flex items-center gap-1.5 transition-all active:scale-95 border border-yellow-200"
+            title="Ghim góc nhìn hiện tại hoặc Tùy chỉnh danh sách vị trí camera"
+          >
+            <BookmarkPlus size={13} className="text-black" />
+            <span>Ghim / Cài Đặt Vị Trí</span>
+          </button>
         </div>
+
+        {/* NOTIFICATION TOAST FOR CAMERA BOOKMARK ACTIONS */}
+        {bookmarkNotification && (
+          <div className="absolute bottom-16 right-4 z-40 px-4 py-2 rounded-xl bg-slate-900/95 border-2 border-yellow-400 text-yellow-300 text-xs font-black shadow-2xl backdrop-blur-md flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-150">
+            <Sparkles size={14} className="text-yellow-400 animate-spin" />
+            <span>{bookmarkNotification}</span>
+          </div>
+        )}
+
+        {/* INTERACTIVE CUSTOM CAMERA BOOKMARKS MANAGEMENT MODAL */}
+        {showBookmarkManager && (
+          <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
+            <div className="w-full max-w-lg bg-gradient-to-b from-slate-900 via-neutral-900 to-black border-2 border-yellow-500/60 rounded-3xl p-5 shadow-2xl text-white relative">
+              {/* Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-yellow-500/20 border border-yellow-400/40 text-yellow-400">
+                    <Bookmark size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-yellow-300 uppercase tracking-wide">Cài Đặt & Ghim Vị Trí Camera</h3>
+                    <p className="text-[11px] text-gray-400">Lưu góc nhìn 3D zoom mặc định để chuyển đổi nhanh 1 chạm</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowBookmarkManager(false)}
+                  className="p-1.5 rounded-xl hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Tips & Instruction Banner */}
+              <div className="p-3 rounded-2xl bg-yellow-500/10 border border-yellow-500/30 mb-4 text-[11px] text-yellow-200/90 leading-relaxed flex items-start gap-2">
+                <Sparkles size={16} className="text-yellow-400 flex-shrink-0 mt-0.5" />
+                <span>
+                  💡 <strong>Cách sử dụng:</strong> Bạn tự do dùng chuột kéo, xoay, phóng to/thu nhỏ camera tới bất kỳ tỉnh thành hay vùng bản đồ nào. Sau đó bấm nút <strong>[💾 Ghim góc này]</strong> ở vị trí mong muốn hoặc bấm <strong>[➕ Thêm vị trí mới]</strong> để lưu lại vĩnh viễn!
+                </span>
+              </div>
+
+              {/* Bookmark Slots List */}
+              <div className="space-y-2.5 max-h-64 overflow-y-auto custom-scrollbar pr-1 mb-4">
+                {customBookmarks.map((bm) => (
+                  <div
+                    key={bm.id}
+                    className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:border-yellow-400/40 transition-all flex items-center justify-between gap-2"
+                  >
+                    <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                      <span className="text-lg select-none">{bm.icon || '📍'}</span>
+                      <div className="flex-1 min-w-0">
+                        {editingBookmarkId === bm.id ? (
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              type="text"
+                              value={editingBookmarkName}
+                              onChange={(e) => setEditingBookmarkName(e.target.value)}
+                              className="px-2 py-1 text-xs rounded-lg bg-black/60 border border-yellow-400 text-white w-full font-bold focus:outline-none"
+                              placeholder="Nhập tên vị trí..."
+                              autoFocus
+                            />
+                            <button
+                              onClick={() => handleRenameBookmark(bm.id, editingBookmarkName)}
+                              className="p-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white"
+                              title="Lưu tên"
+                            >
+                              <Check size={13} />
+                            </button>
+                            <button
+                              onClick={() => setEditingBookmarkId(null)}
+                              className="p-1 rounded-lg bg-gray-700 hover:bg-gray-600 text-white"
+                              title="Hủy"
+                            >
+                              <X size={13} />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-gray-100 truncate">{bm.name}</span>
+                            <button
+                              onClick={() => {
+                                setEditingBookmarkId(bm.id);
+                                setEditingBookmarkName(bm.name);
+                              }}
+                              className="text-gray-400 hover:text-yellow-300 transition-colors p-0.5"
+                              title="Đổi tên vị trí"
+                            >
+                              <Edit2 size={11} />
+                            </button>
+                          </div>
+                        )}
+                        <span className="text-[10px] text-gray-400 font-mono block">
+                          Tọa độ: [{bm.pos?.[0]}, {bm.pos?.[1]}, {bm.pos?.[2]}]
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Actions on this Slot */}
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      {/* Fly To Button */}
+                      <button
+                        onClick={() => {
+                          handleApplyBookmark(bm);
+                          setShowBookmarkManager(false);
+                        }}
+                        className="px-2.5 py-1 rounded-xl text-[10px] font-bold bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-1 shadow-sm transition-all"
+                        title="Bay camera tới vị trí này"
+                      >
+                        <Crosshair size={11} />
+                        <span>Xem</span>
+                      </button>
+
+                      {/* Ghim Góc Nhìn Hiện Tại Vào Đây */}
+                      <button
+                        onClick={() => handleSaveCurrentViewToSlot(bm.id)}
+                        className="px-2.5 py-1 rounded-xl text-[10px] font-bold bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-1 shadow-sm transition-all"
+                        title="Lấy góc camera & độ zoom bạn đang nhìn hiện tại ghim vào vị trí này"
+                      >
+                        <Save size={11} />
+                        <span>Ghim góc này</span>
+                      </button>
+
+                      {/* Delete Slot (if > 1) */}
+                      {customBookmarks.length > 1 && (
+                        <button
+                          onClick={() => handleDeleteBookmark(bm.id)}
+                          className="p-1.5 rounded-xl hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors"
+                          title="Xóa vị trí này"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Bottom Global Actions */}
+              <div className="flex items-center justify-between pt-3 border-t border-white/10 gap-2">
+                <button
+                  onClick={handleRestoreDefaultBookmarks}
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold text-gray-400 hover:text-white hover:bg-white/10 transition-colors flex items-center gap-1.5"
+                >
+                  <RefreshCw size={13} />
+                  <span>Khôi phục 3 mặc định</span>
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleAddNewBookmarkFromCurrentView}
+                    className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-slate-950 shadow-md flex items-center gap-1.5 transition-all active:scale-95"
+                  >
+                    <Plus size={14} />
+                    <span>➕ Thêm vị trí mới</span>
+                  </button>
+
+                  <button
+                    onClick={() => setShowBookmarkManager(false)}
+                    className="px-4 py-1.5 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white transition-colors"
+                  >
+                    Đóng
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* LEFT HUD: Boss Event & Urgent Mission & Live Feed (Collapsible) */}
         {showSidePanels && (

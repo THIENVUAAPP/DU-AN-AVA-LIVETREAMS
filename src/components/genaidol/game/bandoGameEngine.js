@@ -607,7 +607,7 @@ class BanDoGameEngine {
       return;
     }
 
-    this.notify({ type: 'GIFT_PLACED', giftId, count, user, claimed: toClaim.length });
+    this.notify({ type: 'GIFT_PLACED', giftId, count, user, claimed: toClaim.length, focalTarget: this.state.lastFocalTarget });
   }
 
   addFeedItem(type, text) {
@@ -718,11 +718,11 @@ class BanDoGameEngine {
     }
     this.isAutoTesting = true;
     const testUsers = [
-      { id: 'user_viet', username: 'Chiến Binh Áo Đỏ 🇻🇳', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100' },
-      { id: 'user_dan', username: 'Đồng Bào Yêu Nước ❤️', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100' },
-      { id: 'user_hanoi', username: 'Thủ Đô Trái Tim 🏛️', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100' },
-      { id: 'user_saigon', username: 'Thành Phố Rực Rỡ 🏙️', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100' },
-      { id: 'user_danang', username: 'Biển Đảo Quê Hương 🌊', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100' },
+      { id: '@vietnam_vo_dich', username: 'Chiến Binh Áo Đỏ 🇻🇳', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100' },
+      { id: '@hanoi_pho_co', username: 'Thủ Đô Trái Tim 🏛️', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100' },
+      { id: '@danang_song_han', username: 'Rồng Vàng Miền Trung 🌊', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100' },
+      { id: '@saigon_pho_hoa', username: 'Thành Phố Bác 🏙️', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100' },
+      { id: '@cantho_song_nuoc', username: 'Chín Rồng Miền Tây 🌾', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100' },
     ];
 
     let step = 0;
