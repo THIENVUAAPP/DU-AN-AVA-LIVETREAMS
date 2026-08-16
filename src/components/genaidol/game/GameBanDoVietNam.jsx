@@ -557,6 +557,31 @@ export default function GameBanDoVietNam({
     applyCameraPreset('overview');
   };
 
+  const handleTestGift = (giftId) => {
+    handleUserGesture();
+    const gifts = gameState.gifts || [];
+    const gift = gifts.find(g => g.id === giftId) || gifts[0];
+    if (!gift) return;
+    bandoEngine.processGift(gift.id, 1, {
+      id: `user_test_${Math.floor(Math.random() * 5)}`,
+      username: `Đại Gia ${gift.name} 💎`,
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'
+    });
+  };
+
+  const handleToggleAutoTest = () => {
+    handleUserGesture();
+    if (isAutoTesting) {
+      bandoEngine.stopAutoTestLoop();
+      setIsAutoTesting(false);
+    } else {
+      setIsAutoTesting(true);
+      bandoEngine.startAutoTestLoop((step, name) => {
+        setAutoTestStep(step);
+      });
+    }
+  };
+
   // 2D Canvas Handlers (Pan & Zoom)
   const handleMouseDown2D = (e) => {
     isDragging2DRef.current = true;
