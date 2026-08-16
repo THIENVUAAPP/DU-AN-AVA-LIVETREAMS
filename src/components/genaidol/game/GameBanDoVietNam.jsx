@@ -52,24 +52,40 @@ function createCountryFlagTexture(countryCode = 'vietnam') {
     ctx.arc(128, 128, 72, 0, Math.PI);
     ctx.fill();
   } else {
-    // 🇻🇳 VIỆT NAM (Mặc định): Nền đỏ tươi rực rỡ + Viền khối 3D voxel + Ngôi Sao Vàng 5 cánh chính giữa
-    ctx.fillStyle = '#DA251D';
+    // 🇻🇳 VIỆT NAM (Mặc định): Nền cờ đỏ rực rỡ + Viền dạ quang phát sáng + Ngôi sao vàng kim phát quang siêu nét
+    const grad = ctx.createLinearGradient(0, 0, 256, 256);
+    grad.addColorStop(0, '#EF4444');
+    grad.addColorStop(0.5, '#DC2626');
+    grad.addColorStop(1, '#B91C1C');
+    ctx.fillStyle = grad;
     ctx.fillRect(0, 0, 256, 256);
 
-    // Viền khối 3D nổi vi mô cho từng ô voxel
-    ctx.strokeStyle = '#991B1B';
-    ctx.lineWidth = 10;
-    ctx.strokeRect(5, 5, 246, 246);
+    // Viền khối 3D phát quang (Fluorescent Neon Border)
+    ctx.strokeStyle = 'rgba(254, 240, 138, 0.85)';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(3, 3, 250, 250);
 
-    ctx.strokeStyle = '#EF4444';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(10, 10, 236, 236);
+    ctx.strokeStyle = 'rgba(239, 68, 68, 0.9)';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(9, 9, 238, 238);
 
-    // Ngôi sao vàng 5 cánh chuẩn tỷ lệ hình học, siêu nét rực sáng
-    const cx = 128, cy = 128, outerR = 82, innerR = 33;
+    // Ngôi sao vàng 5 cánh chuẩn tỷ lệ hình học, hiệu ứng phát quang rực rỡ (Fluorescent Glow Aura)
+    const cx = 128, cy = 128, outerR = 84, innerR = 34;
+    
+    // Radial Glow Aura xung quanh ngôi sao
+    const starGlow = ctx.createRadialGradient(cx, cy, innerR * 0.5, cx, cy, outerR * 1.25);
+    starGlow.addColorStop(0, 'rgba(255, 255, 0, 0.6)');
+    starGlow.addColorStop(0.7, 'rgba(245, 158, 11, 0.3)');
+    starGlow.addColorStop(1, 'rgba(220, 38, 38, 0)');
+    ctx.fillStyle = starGlow;
+    ctx.beginPath();
+    ctx.arc(cx, cy, outerR * 1.25, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Thân Ngôi sao vàng kim siêu nét
     ctx.fillStyle = '#FFFF00';
-    ctx.shadowColor = '#F59E0B';
-    ctx.shadowBlur = 12;
+    ctx.shadowColor = '#FBBF24';
+    ctx.shadowBlur = 16;
     ctx.beginPath();
     for (let i = 0; i < 5; i++) {
       const rotOuter = (i * 4 * Math.PI) / 5 - Math.PI / 2;
@@ -702,7 +718,7 @@ export default function GameBanDoVietNam({
       const wz = (cell.y - rows / 2) * 1.0;
       const isClaimed = !!bandoEngine.state.cellsById[cell.id];
 
-      const scaleY = isClaimed ? 1.70 : 0.32;
+      const scaleY = isClaimed ? 1.85 : 0.22;
       const posY = scaleY / 2;
 
       dummy.position.set(wx, posY, wz);
@@ -711,11 +727,11 @@ export default function GameBanDoVietNam({
       instancedMesh.setMatrixAt(i, dummy.matrix);
 
       if (isClaimed) {
-        // Ô đã cắm cờ (người xem tặng quà): Lắp lá cờ quốc kỳ 3D nhô cao + Phát sáng rực rỡ đậm màu
-        instancedMesh.setColorAt(i, new THREE.Color(1.35, 1.25, 1.12));
+        // Ô đã cắm cờ (người xem tặng quà): Lắp lá cờ quốc kỳ 3D vươn cao + Dạ phát quang siêu rực rỡ (gấp 10 lần màu nền)
+        instancedMesh.setColorAt(i, new THREE.Color(2.2, 1.9, 1.6));
       } else {
-        // Ô nền lãnh thổ CHƯA cắm cờ: Hiển thị lá cờ quốc kỳ tông màu nhạt/mờ hơn (nhìn từ xa vẫn thấy rõ quốc kỳ & ngôi sao)
-        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.50, 0.48, 0.50) : new THREE.Color(0.42, 0.40, 0.42));
+        // Ô nền lãnh thổ CHƯA cắm cờ: Tối mờ dịu, sẫm màu, chìm xuống dưới
+        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.22, 0.18, 0.20) : new THREE.Color(0.18, 0.14, 0.16));
       }
     }
     instancedMesh.instanceMatrix.needsUpdate = true;
@@ -764,7 +780,7 @@ export default function GameBanDoVietNam({
           controls.target.lerpVectors(tw.fromTarget, tw.toTarget, t);
           if (progress >= 1) {
             tw.phase = 'hold';
-            tw.holdUntil = time + 2500;
+            tw.holdUntil = time + 4000; // Giữ camera zoom cận cảnh đúng 4 giây
           }
         } else if (tw.phase === 'hold') {
           if (time >= tw.holdUntil) {
@@ -988,7 +1004,7 @@ export default function GameBanDoVietNam({
       const cell = cells[i];
       if (!cell) continue;
       const isClaimed = !!gameState.cellsById[cell.id];
-      const scaleY = isClaimed ? 1.70 : 0.32;
+      const scaleY = isClaimed ? 1.85 : 0.22;
       const posY = scaleY / 2;
       const wx = (cell.x - cols / 2) * 1.0;
       const wz = (cell.y - rows / 2) * 1.0;
@@ -999,11 +1015,11 @@ export default function GameBanDoVietNam({
       instancedMesh.setMatrixAt(i, dummy.matrix);
 
       if (isClaimed) {
-        // Ô đã cắm cờ (người xem tặng quà): Lắp lá cờ quốc kỳ 3D nhô cao + Phát sáng rực rỡ đậm màu
-        instancedMesh.setColorAt(i, new THREE.Color(1.35, 1.25, 1.12));
+        // Ô đã cắm cờ (người xem tặng quà): Lắp lá cờ quốc kỳ 3D vươn cao + Dạ phát quang siêu rực rỡ (gấp 10 lần màu nền)
+        instancedMesh.setColorAt(i, new THREE.Color(2.2, 1.9, 1.6));
       } else {
-        // Ô nền lãnh thổ CHƯA cắm cờ: Hiển thị lá cờ quốc kỳ tông màu nhạt/mờ hơn (nhìn từ xa vẫn thấy rõ quốc kỳ & ngôi sao)
-        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.50, 0.48, 0.50) : new THREE.Color(0.42, 0.40, 0.42));
+        // Ô nền lãnh thổ CHƯA cắm cờ: Tối mờ dịu, sẫm màu, chìm xuống dưới
+        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.22, 0.18, 0.20) : new THREE.Color(0.18, 0.14, 0.16));
       }
     }
 
@@ -1080,14 +1096,21 @@ export default function GameBanDoVietNam({
       const cellSize = Math.max(1, scale * 0.9);
 
       if (isClaimed) {
-        // Ô đã cắm cờ (Tặng quà): Cờ đỏ thắm tươi rực rỡ
+        // Ô đã cắm cờ (Tặng quà): Cờ đỏ thắm tươi rực rỡ + Viền dạ quang phát sáng
         ctx.fillStyle = '#DC2626';
         ctx.fillRect(cx, cy, cellSize, cellSize);
+
+        // Viền dạ quang neon phát sáng
+        if (cellSize >= 4.0) {
+          ctx.strokeStyle = 'rgba(254, 240, 138, 0.85)';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(cx, cy, cellSize, cellSize);
+        }
 
         // Ngôi sao vàng mini ở trung tâm ô pixel
         if (cellSize >= 3.0) {
           ctx.fillStyle = '#FFFF00';
-          const r = cellSize * 0.32;
+          const r = cellSize * 0.34;
           const midX = cx + cellSize / 2;
           const midY = cy + cellSize / 2;
           ctx.beginPath();
@@ -1107,13 +1130,13 @@ export default function GameBanDoVietNam({
           ctx.fill();
         }
       } else {
-        // Ô nền CHƯA cắm cờ: Hiển thị cờ đỏ nhạt / mờ dịu
-        ctx.fillStyle = isLightTheme ? 'rgba(220, 38, 38, 0.22)' : 'rgba(185, 28, 28, 0.30)';
+        // Ô nền CHƯA cắm cờ: Tối mờ dịu, sẫm màu, chìm xuống dưới
+        ctx.fillStyle = isLightTheme ? 'rgba(160, 40, 40, 0.16)' : 'rgba(70, 18, 22, 0.28)';
         ctx.fillRect(cx, cy, cellSize, cellSize);
 
-        if (cellSize >= 3.5) {
-          ctx.fillStyle = isLightTheme ? 'rgba(234, 179, 8, 0.35)' : 'rgba(250, 204, 21, 0.35)';
-          const r = cellSize * 0.25;
+        if (cellSize >= 4.5) {
+          ctx.fillStyle = isLightTheme ? 'rgba(200, 140, 20, 0.20)' : 'rgba(180, 120, 20, 0.20)';
+          const r = cellSize * 0.22;
           const midX = cx + cellSize / 2;
           const midY = cy + cellSize / 2;
           ctx.beginPath();
