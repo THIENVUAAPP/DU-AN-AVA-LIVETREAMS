@@ -695,19 +695,19 @@ export default function DesktopAppUI() {
   return (
     <div className={`w-full h-screen flex flex-col font-sans ${isDarkMode ? 'bg-[#0f0f13] text-white' : 'bg-gray-100 text-gray-900'}`}>
       
-      {/* 1. Fake Window Title Bar (Đã gộp nút Tải ZIP và Game Chiến Đấu lên đây) */}
-      <div className={`flex items-center justify-between px-4 py-2 ${isDarkMode ? 'bg-[#1c1c23]' : 'bg-gray-300'} select-none z-30`}>
+      {/* 1. Fake Window Title Bar (Thu nhỏ ~30% cực kỳ thanh thoát) */}
+      <div className={`flex items-center justify-between px-3 py-1.5 ${isDarkMode ? 'bg-[#1c1c23]' : 'bg-gray-300'} select-none z-30 border-b ${isDarkMode ? 'border-gray-800' : 'border-gray-300'}`}>
         <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded bg-blue-500 flex items-center justify-center">
-            <Video size={12} className="text-white" />
+          <div className="w-4 h-4 rounded bg-blue-500 flex items-center justify-center">
+            <Video size={10} className="text-white" />
           </div>
-          <span className="text-sm font-medium">Livestream AI (Clone) - Profile: {CHARACTERS[selectedCharacter]?.name || 'Không xác định'}</span>
+          <span className="text-xs font-semibold">Livestream AI (Clone) - Profile: {CHARACTERS[selectedCharacter]?.name || 'Không xác định'}</span>
         </div>
         
-        <div className="flex items-center gap-2.5">
-          {/* Nút Kích hoạt Game Chiến Đấu (Đã chuyển lên thanh tiêu đề trên cùng) */}
+        <div className="flex items-center gap-1.5">
+          {/* Nút Kích hoạt Game Chiến Đấu */}
           <button 
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border shadow-sm ${
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border shadow-sm ${
               isGameBattleActive 
                 ? 'bg-gradient-to-r from-red-600 via-purple-600 to-indigo-600 text-white border-purple-400 shadow-purple-500/40 ring-2 ring-purple-400/50 animate-pulse' 
                 : (isDarkMode ? 'border-indigo-500/50 bg-indigo-950/40 text-indigo-300 hover:bg-indigo-900/60' : 'border-indigo-300 bg-indigo-50 text-indigo-700 hover:bg-indigo-100')
@@ -719,28 +719,16 @@ export default function DesktopAppUI() {
             }}
             title="Bật/Tắt chế độ Game Chiến Đấu (TikTok LIVE Battle Game) trên màn hình chính"
           >
-            <Swords size={14} className={isGameBattleActive ? 'text-yellow-300' : 'text-indigo-400'} />
+            <Swords size={12} className={isGameBattleActive ? 'text-yellow-300' : 'text-indigo-400'} />
             <span>Game Chiến Đấu</span>
             {isGameBattleActive && (
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
             )}
           </button>
 
-          {/* Nút Bảng Quản trị Admin của Game Chiến Đấu */}
-          {isGameBattleActive && (
-            <button 
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 border border-purple-500/40 transition-colors"
-              onClick={() => setIsGameAdminOpen(true)}
-              title="Mở Bảng Quản trị Admin của Game Chiến Đấu (Tách biệt hoàn toàn với Live Stream)"
-            >
-              <Shield size={13} className="text-purple-400" />
-              <span>Admin PK</span>
-            </button>
-          )}
-
           {/* Nút Kích hoạt Game Ghép Cờ Bản Đồ Việt Nam (Hình Chữ S) */}
           <button 
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border shadow-sm ${
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border shadow-sm ${
               isGameBanDoActive 
                 ? 'bg-gradient-to-r from-red-600 via-amber-600 to-yellow-500 text-white border-yellow-300 shadow-yellow-500/40 ring-2 ring-yellow-400/50 animate-pulse' 
                 : (isDarkMode ? 'border-amber-500/50 bg-amber-950/40 text-amber-300 hover:bg-amber-900/60' : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100')
@@ -752,47 +740,35 @@ export default function DesktopAppUI() {
             }}
             title="Bật/Tắt Game Ghép Cờ Bản Đồ Việt Nam (Đất Nước Hình Chữ S) trên màn hình chính"
           >
-            <Flag size={14} className={isGameBanDoActive ? 'text-yellow-200' : 'text-amber-400'} />
+            <Flag size={12} className={isGameBanDoActive ? 'text-yellow-200' : 'text-amber-400'} />
             <span>Bản Đồ Chữ S</span>
             {isGameBanDoActive && (
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
             )}
           </button>
 
-          {/* Nút Bảng Quản trị Admin của Game Bản Đồ */}
-          {isGameBanDoActive && (
-            <button 
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-amber-600/30 hover:bg-amber-600/50 text-amber-300 border border-amber-500/40 transition-colors"
-              onClick={() => setIsGameBanDoAdminOpen(true)}
-              title="Mở Bảng Quản trị Admin của Game Ghép Cờ Bản Đồ Việt Nam"
-            >
-              <Shield size={13} className="text-amber-400" />
-              <span>Admin Bản Đồ</span>
-            </button>
-          )}
-
-          {/* Nút Chuyển Tỷ Lệ Khung Hình Toàn Cục: 9:16 (TikTok Dọc) vs 16:9 (OBS Ngang) */}
+          {/* 1 Nút Chuyển Tỷ Lệ Khung Hình Toàn Cục DUY NHẤT CHO TOÀN BỘ HỆ THỐNG: 9:16 (TikTok Dọc) vs 16:9 (OBS Ngang) */}
           <button
             onClick={toggleGlobalAspectRatio}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all border shadow-sm ${
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black transition-all border shadow-sm ${
               globalAspectRatio === '9:16'
                 ? 'bg-gradient-to-r from-pink-600 via-rose-500 to-amber-500 text-white border-pink-300 ring-2 ring-pink-400/50 shadow-pink-500/30'
                 : (isDarkMode ? 'bg-white/10 hover:bg-white/20 text-cyan-300 border-white/10' : 'bg-gray-200 hover:bg-gray-300 text-slate-800 border-gray-300')
             }`}
             title={globalAspectRatio === '9:16' ? "Đang ở Khung Hình 9:16 (Chuẩn TikTok Live Dọc) — Bấm chuyển sang 16:9 (Ngang OBS/PC)" : "Đang ở Khung Hình 16:9 (Ngang OBS/PC) — Bấm chuyển sang 9:16 (Chuẩn TikTok Live Dọc)"}
           >
-            <Smartphone size={13} className={globalAspectRatio === '9:16' ? 'text-yellow-300' : 'text-cyan-300'} />
+            <Smartphone size={12} className={globalAspectRatio === '9:16' ? 'text-yellow-300' : 'text-cyan-300'} />
             <span>{globalAspectRatio === '9:16' ? '9:16 TikTok' : '16:9 OBS'}</span>
           </button>
 
-          <button onClick={() => setIsDarkMode(!isDarkMode)} className={`p-1.5 rounded transition-colors ${isDarkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-400 text-gray-800 hover:bg-gray-500'}`}>
-            {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+          <button onClick={() => setIsDarkMode(!isDarkMode)} className={`p-1 rounded transition-colors ${isDarkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-400 text-gray-800 hover:bg-gray-500'}`}>
+            {isDarkMode ? <Sun size={13} /> : <Moon size={13} />}
           </button>
 
           {/* Token Widget */}
           <button
             onClick={() => setShowTokenHistory(true)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-all border ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border ${
               balance === 0
                 ? 'bg-red-500/20 border-red-500/40 text-red-400 hover:bg-red-500/30'
                 : balance < TOKEN_RATES.LOW_BALANCE_WARN
@@ -801,91 +777,87 @@ export default function DesktopAppUI() {
             }`}
             title="Xem lịch sử Token"
           >
-            {balance < TOKEN_RATES.LOW_BALANCE_WARN && <AlertTriangle size={13} />}
-            <Coins size={14} />
+            {balance < TOKEN_RATES.LOW_BALANCE_WARN && <AlertTriangle size={12} />}
+            <Coins size={12} />
             <span>{balance.toLocaleString()}</span>
           </button>
 
-          <button className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-[#0088cc]/20 text-[#0088cc] hover:bg-[#0088cc]/30' : 'bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20'}`}>
-            <MessageCircle size={16} />
-            Zalo
+          <button className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${isDarkMode ? 'bg-[#0088cc]/20 text-[#0088cc] hover:bg-[#0088cc]/30' : 'bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20'}`}>
+            <MessageCircle size={13} />
+            <span>Zalo</span>
           </button>
 
-          <button onClick={() => setActiveSettingsModal('payment')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-green-500/10 text-green-700 hover:bg-green-500/20'}`}>
-            <CreditCard size={16} />
-            Thanh toán
+          <button onClick={() => setActiveSettingsModal('payment')} className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${isDarkMode ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-green-500/10 text-green-700 hover:bg-green-500/20'}`}>
+            <CreditCard size={13} />
+            <span>Thanh toán</span>
           </button>
 
-          {/* Nút Tải phần mềm (ZIP) đã được đưa lên góc này */}
+          {/* Nút Tải phần mềm (ZIP) */}
           <button 
             onClick={handleDownload}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-xs rounded shadow-sm flex items-center gap-1.5 transition-colors"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 text-xs rounded shadow-sm flex items-center gap-1 transition-colors"
           >
-            <Download size={14} />
-            <span>Tải phần mềm (ZIP)</span>
+            <Download size={12} />
+            <span>Tải ZIP</span>
           </button>
         </div>
       </div>
 
-      {/* 2. Top Control Bar (Single Row) */}
-      <div className={`flex items-center gap-3 p-3 ${isDarkMode ? 'bg-[#1a1a24]' : 'bg-gray-200'} border-b ${isDarkMode ? 'border-gray-800' : 'border-gray-300'} z-40 shadow-sm overflow-visible whitespace-nowrap`}>
+      {/* 2. Top Control Bar (Thu nhỏ ~30% để không gian live to rộng) */}
+      <div className={`flex items-center gap-2 px-3 py-1.5 ${isDarkMode ? 'bg-[#1a1a24]' : 'bg-gray-200'} border-b ${isDarkMode ? 'border-gray-800' : 'border-gray-300'} z-40 shadow-sm overflow-visible whitespace-nowrap`}>
         
         {/* Left Side: Settings & Payment */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <div className="relative shrink-0">
             <button 
               onClick={() => setIsSettingsDropdownOpen(!isSettingsDropdownOpen)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold transition-colors ${isDarkMode ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
             >
-              <Settings size={16} />
-              MENU ▼
+              <Settings size={13} />
+              <span>MENU ▼</span>
             </button>
             
             {isSettingsDropdownOpen && (
-              <div className={`absolute top-full left-0 mt-2 w-72 rounded-xl shadow-2xl border z-50 p-2 overflow-hidden ${isDarkMode ? 'bg-[#1c1c23] border-gray-700' : 'bg-white border-gray-200'} animate-in fade-in slide-in-from-top-2 duration-200`}>
+              <div className={`absolute top-full left-0 mt-2 w-64 rounded-xl shadow-2xl border z-50 p-2 overflow-hidden ${isDarkMode ? 'bg-[#1c1c23] border-gray-700' : 'bg-white border-gray-200'} animate-in fade-in slide-in-from-top-2 duration-200`}>
                 <button 
                   onClick={() => { setActiveSettingsModal('general'); setIsSettingsDropdownOpen(false); }}
-                  className={`w-full text-left px-4 py-3 mb-2 rounded-lg text-sm font-bold transition-all flex items-center gap-3 ${isDarkMode ? 'bg-gradient-to-r from-blue-900/40 to-blue-800/20 hover:from-blue-600 hover:to-blue-500 text-blue-100 hover:text-white border border-blue-800/50 hover:border-blue-400 hover:shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-500 hover:to-blue-600 text-blue-800 hover:text-white border border-blue-200 hover:border-blue-500 hover:shadow-lg'}`}
+                  className={`w-full text-left px-3 py-2.5 mb-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-blue-900/40 to-blue-800/20 hover:from-blue-600 hover:to-blue-500 text-blue-100 hover:text-white border border-blue-800/50' : 'bg-blue-50 hover:bg-blue-500 text-blue-800 hover:text-white'}`}
                 >
-                  <div className={`p-2 rounded-md transition-colors ${isDarkMode ? 'bg-blue-900/50 text-blue-400 group-hover:text-white' : 'bg-white/80 text-blue-600'}`}>
-                    <Brain size={20} />
-                  </div>
-                  BỘ NÃO AI
+                  <Brain size={16} />
+                  <span>BỘ NÃO AI</span>
                 </button>
                 <button 
                   onClick={() => { setActiveSettingsModal('workspace'); setIsSettingsDropdownOpen(false); }}
-                  className={`w-full text-left px-4 py-3 rounded-lg text-sm font-bold transition-all flex items-center gap-3 ${isDarkMode ? 'bg-gradient-to-r from-purple-900/40 to-purple-800/20 hover:from-purple-600 hover:to-purple-500 text-purple-100 hover:text-white border border-purple-800/50 hover:border-purple-400 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)]' : 'bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-500 hover:to-purple-600 text-purple-800 hover:text-white border border-purple-200 hover:border-purple-500 hover:shadow-lg'}`}
+                  className={`w-full text-left px-3 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-purple-900/40 to-purple-800/20 hover:from-purple-600 hover:to-purple-500 text-purple-100 hover:text-white border border-purple-800/50' : 'bg-purple-50 hover:bg-purple-500 text-purple-800 hover:text-white'}`}
                 >
-                  <div className={`p-2 rounded-md transition-colors ${isDarkMode ? 'bg-purple-900/50 text-purple-400 group-hover:text-white' : 'bg-white/80 text-purple-600'}`}>
-                    <Radio size={20} />
-                  </div>
-                  KẾT NỐI IDOL
+                  <Radio size={16} />
+                  <span>KẾT NỐI IDOL</span>
                 </button>
               </div>
             )}
           </div>
 
           {/* Nút Studio đặt cạnh MENU */}
-          <button onClick={toggleWebcam} className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isWebcamActive ? 'bg-pink-600 text-white hover:bg-pink-500' : isDarkMode ? 'bg-pink-500/20 text-pink-400 hover:bg-pink-500/30' : 'bg-pink-100 text-pink-700 hover:bg-pink-200'}`}>
-            <Video size={16} />
-            Studio
+          <button onClick={toggleWebcam} className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${isWebcamActive ? 'bg-pink-600 text-white hover:bg-pink-500' : isDarkMode ? 'bg-pink-500/20 text-pink-400 hover:bg-pink-500/30' : 'bg-pink-100 text-pink-700 hover:bg-pink-200'}`}>
+            <Video size={13} />
+            <span>Studio</span>
           </button>
         </div>
 
         <div className="flex-1"></div>
 
         {/* Middle: Controls */}
-        <div className="flex items-center justify-center gap-3 shrink-0">
+        <div className="flex items-center justify-center gap-2 shrink-0">
           
-          <div className="flex items-center gap-2 border-r border-gray-500/30 pr-3">
-            <span className="text-sm font-medium text-gray-400">Nhân vật:</span>
-            <div className="flex gap-2">
+          <div className="flex items-center gap-1.5 border-r border-gray-500/30 pr-2">
+            <span className="text-xs font-medium text-gray-400">Nhân vật:</span>
+            <div className="flex gap-1.5">
               {Object.keys(CHARACTERS).map((charId) => (
                 CHARACTERS[charId] ? (
                   <div 
                     key={charId}
                     onClick={() => setSelectedCharacter(charId)}
-                    className={`w-10 h-10 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 relative group ${selectedCharacter === charId ? 'border-2 border-blue-500 shadow-lg shadow-blue-500/30' : 'border border-gray-600 opacity-60 hover:opacity-100'}`}
+                    className={`w-7 h-7 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 relative group ${selectedCharacter === charId ? 'border-2 border-blue-500 shadow-md shadow-blue-500/30' : 'border border-gray-600 opacity-60 hover:opacity-100'}`}
                     title={CHARACTERS[charId]?.name || ''}
                   >
                     {CHARACTERS[charId]?.type === 'video' ? (
@@ -893,47 +865,44 @@ export default function DesktopAppUI() {
                     ) : (
                       <img src={CHARACTERS[charId]?.url} className="w-full h-full object-cover" alt={CHARACTERS[charId]?.name || ''} />
                     )}
-                    {/* Nút Xoá – hiển thị khi hover cho TẤT CẢ nhân vật */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         if (charId.startsWith('custom_')) {
                           removeCustomCharacter(e, charId);
                         } else {
-                          // Xoá nhân vật mẫu bằng cách lọc ra khỏi danh sách
                           const allKeys = Object.keys(CHARACTERS);
                           const remaining = allKeys.filter(k => k !== charId);
                           if (remaining.length > 0) setSelectedCharacter(remaining[0]);
-                          // Đánh dấu ẩn built-in char
                           setHiddenBuiltins(prev => [...(prev || []), charId]);
                         }
                       }}
                       className="absolute top-0 right-0 p-0.5 bg-red-600 hover:bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-all duration-150 rounded-bl"
                       title={`Xoá ${CHARACTERS[charId]?.name || ''}`}
                     >
-                      <X size={10} />
+                      <X size={8} />
                     </button>
                   </div>
                 ) : null
               ))}
-              <button className="w-8 h-8 rounded border border-dashed border-gray-500 flex items-center justify-center text-gray-400 hover:text-white cursor-pointer transition-colors hover:bg-gray-700/50 shrink-0" onClick={() => fileInputRef.current?.click()}>
-                <Plus size={16} />
+              <button className="w-7 h-7 rounded border border-dashed border-gray-500 flex items-center justify-center text-gray-400 hover:text-white cursor-pointer transition-colors hover:bg-gray-700/50 shrink-0" onClick={() => fileInputRef.current?.click()}>
+                <Plus size={13} />
               </button>
               <button 
-                className={`px-3 py-1.5 rounded text-sm font-medium transition-colors border ${isDarkMode ? 'border-purple-500/50 bg-purple-900/30 text-purple-300 hover:bg-purple-800/50' : 'border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100'}`}
+                className={`px-2 py-1 rounded text-xs font-medium transition-colors border ${isDarkMode ? 'border-purple-500/50 bg-purple-900/30 text-purple-300 hover:bg-purple-800/50' : 'border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100'}`}
                 onClick={() => setIsTemplateLibraryOpen(true)}
               >
-                Thư viện Mẫu
+                Mẫu
               </button>
               <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="video/*,image/*" onChange={handleFileUpload} />
             </div>
           </div>
 
-          <div className="flex items-center gap-2 px-2 shrink-0">
-            <input type="text" value={tiktokId} onChange={(e) => setTiktokId(e.target.value)} className={`w-32 px-3 py-1.5 rounded text-sm outline-none border ${isDarkMode ? 'bg-[#2a2a35] border-gray-700 text-white focus:border-blue-500' : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'}`} placeholder="ID TikTok..." />
-            <button onClick={handleConnect} className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isConnected ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-blue-600 hover:bg-blue-500 text-white'}`}>
-              {isConnecting ? <span className="animate-spin text-lg leading-none">↻</span> : (isConnected ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />)}
-              {isConnecting ? 'Đang xử lý...' : (isConnected ? 'Dừng AI' : 'Kết nối')}
+          <div className="flex items-center gap-1.5 px-1 shrink-0">
+            <input type="text" value={tiktokId} onChange={(e) => setTiktokId(e.target.value)} className={`w-28 px-2 py-1 rounded text-xs outline-none border ${isDarkMode ? 'bg-[#2a2a35] border-gray-700 text-white focus:border-blue-500' : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'}`} placeholder="ID TikTok..." />
+            <button onClick={handleConnect} className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold transition-colors ${isConnected ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-blue-600 hover:bg-blue-500 text-white'}`}>
+              {isConnecting ? <span className="animate-spin text-sm leading-none">↻</span> : (isConnected ? <Pause size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />)}
+              <span>{isConnecting ? 'Đang xử lý...' : (isConnected ? 'Dừng AI' : 'Kết nối')}</span>
             </button>
           </div>
         </div>
@@ -941,9 +910,9 @@ export default function DesktopAppUI() {
         <div className="flex-1"></div>
 
         {/* Right Side: Toggles & Stream Window */}
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0">
           
-          {/* 1 Nút Mở Cửa Sổ Live Sạch DUY NHẤT (Tự động thích ứng 9:16 TikTok Dọc vs 16:9 OBS Ngang) */}
+          {/* 1 Nút Mở Cửa Sổ Live Sạch DUY NHẤT */}
           <button 
             onClick={() => {
               let overlayUrl = `?overlay=cleanlive&ratio=${globalAspectRatio}`;
@@ -959,66 +928,56 @@ export default function DesktopAppUI() {
               const h = globalAspectRatio === '9:16' ? 800 : 720;
               window.open(overlayUrl, winName, `width=${w},height=${h},menubar=no,toolbar=no,location=no,status=no`);
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-black transition-all bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white shadow-md shadow-pink-500/25 border border-pink-400/40 active:scale-95"
-            title={`Mở cửa sổ ${globalAspectRatio} sạch độc lập (không chứa bất kỳ nút bấm quản trị hay cài đặt nào) để đưa thẳng vào TikTok LIVE Studio hoặc OBS Studio`}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black transition-all bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white shadow-md shadow-pink-500/25 border border-pink-400/40 active:scale-95"
+            title={`Mở cửa sổ ${globalAspectRatio} sạch độc lập để đưa thẳng vào TikTok LIVE Studio hoặc OBS Studio`}
           >
-            <Video size={16} />
-            <span>{globalAspectRatio === '9:16' ? 'Khung Live 9:16' : 'Khung Live 16:9'}</span>
+            <Video size={13} />
+            <span>{globalAspectRatio === '9:16' ? 'Cửa Sổ 9:16' : 'Cửa Sổ 16:9'}</span>
           </button>
 
-          {/* 1 Nút Chạy Demo DUY NHẤT dùng chung cho toàn bộ App và các Game */}
+          {/* 1 Nút Chạy Demo DUY NHẤT dùng chung */}
           <button 
             onClick={handleGlobalRunDemo}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-black transition-all border shadow-md active:scale-95 ${
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black transition-all border shadow-md active:scale-95 ${
               isGlobalDemoRunning
                 ? 'bg-red-600 text-white border-yellow-300 ring-2 ring-yellow-400 animate-pulse'
                 : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-emerald-400/40 shadow-emerald-500/20'
             }`}
-            title="Chạy Demo / Kiểm thử tự động quà tặng & tương tác cho chế độ đang mở (AI Idol, Bản Đồ, Game Chiến Đấu)"
+            title="Chạy Demo / Kiểm thử tự động quà tặng & tương tác"
           >
-            <Zap size={16} className={isGlobalDemoRunning ? 'text-yellow-300 animate-bounce' : 'text-yellow-300'} />
-            <span>{isGlobalDemoRunning ? '⚡ Dừng Demo' : '⚡ Chạy Demo'}</span>
+            <Zap size={13} className={isGlobalDemoRunning ? 'text-yellow-300 animate-bounce' : 'text-yellow-300'} />
+            <span>{isGlobalDemoRunning ? 'Dừng Demo' : 'Chạy Demo'}</span>
           </button>
 
-          {/* Menu Theo dõi: Sắp xếp theo thứ tự ưu tiên hay dùng nhất lên đầu */}
+          {/* Menu Theo dõi */}
           <div className="relative">
             <button 
               onClick={() => setIsMonitorDropdownOpen(!isMonitorDropdownOpen)} 
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isMonitorDropdownOpen ? 'bg-orange-600 text-white' : (isDarkMode ? 'bg-orange-500/20 text-orange-400 hover:bg-orange-500/30' : 'bg-orange-100 text-orange-700 hover:bg-orange-200')}`}>
-              <Eye size={16} />
-              Theo dõi ▼
+              className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${isMonitorDropdownOpen ? 'bg-orange-600 text-white' : (isDarkMode ? 'bg-orange-500/20 text-orange-400 hover:bg-orange-500/30' : 'bg-orange-100 text-orange-700 hover:bg-orange-200')}`}>
+              <Eye size={13} />
+              <span>Theo dõi ▼</span>
             </button>
             {isMonitorDropdownOpen && (
-              <div className={`absolute top-full right-0 mt-2 w-64 rounded-xl shadow-2xl border z-50 p-2 overflow-hidden ${isDarkMode ? 'bg-[#1c1c23] border-gray-700' : 'bg-white border-gray-200'} animate-in fade-in slide-in-from-top-2 duration-200`}>
-                {/* 1. Ưu tiên hàng đầu khi live: Phản hồi nhanh */}
-                <button onClick={() => { setActiveMonitorModal('quick_response'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-3 py-2 mb-1 rounded text-sm font-bold transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-yellow-500/20 text-yellow-400' : 'hover:bg-yellow-100 text-yellow-800'}`}>
-                  <Zap size={16} className="text-yellow-500" /> 
+              <div className={`absolute top-full right-0 mt-2 w-56 rounded-xl shadow-2xl border z-50 p-2 overflow-hidden ${isDarkMode ? 'bg-[#1c1c23] border-gray-700' : 'bg-white border-gray-200'} animate-in fade-in slide-in-from-top-2 duration-200`}>
+                <button onClick={() => { setActiveMonitorModal('quick_response'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-2.5 py-1.5 mb-1 rounded text-xs font-bold transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-yellow-500/20 text-yellow-400' : 'hover:bg-yellow-100 text-yellow-800'}`}>
+                  <Zap size={13} className="text-yellow-500" /> 
                   <span>Phản hồi Nhanh</span>
-                  <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-yellow-500/30 text-yellow-300 font-mono">Ưu tiên #1</span>
                 </button>
-
-                {/* 2. Dòng thời gian sự kiện (xem quà & cmt) */}
-                <button onClick={() => { setActiveMonitorModal('timeline'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-3 py-2 mb-1 rounded text-sm font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}>
-                  <Clock size={16} className="text-blue-400" /> 
-                  <span>Dòng thời gian Sự kiện</span>
+                <button onClick={() => { setActiveMonitorModal('timeline'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-2.5 py-1.5 mb-1 rounded text-xs font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}>
+                  <Clock size={13} className="text-blue-400" /> 
+                  <span>Dòng thời gian</span>
                 </button>
-
-                {/* 3. Giám sát hàng đợi AI */}
-                <button onClick={() => { setActiveMonitorModal('queue'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-3 py-2 mb-1 rounded text-sm font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}>
-                  <List size={16} className="text-purple-400" /> 
-                  <span>Giám sát Hàng đợi</span>
+                <button onClick={() => { setActiveMonitorModal('queue'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-2.5 py-1.5 mb-1 rounded text-xs font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}>
+                  <List size={13} className="text-purple-400" /> 
+                  <span>Hàng đợi AI</span>
                 </button>
-
-                {/* 4. Log sự kiện TikTok */}
-                <button onClick={() => { setActiveMonitorModal('tiktok_log'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-3 py-2 mb-1 rounded text-sm font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}>
-                  <FileText size={16} className="text-pink-400" /> 
-                  <span>Log Sự kiện TikTok</span>
+                <button onClick={() => { setActiveMonitorModal('tiktok_log'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-2.5 py-1.5 mb-1 rounded text-xs font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}>
+                  <FileText size={13} className="text-pink-400" /> 
+                  <span>Log TikTok</span>
                 </button>
-
-                {/* 5. Log hệ thống lỗi (khi có sự cố) */}
-                <button onClick={() => { setActiveMonitorModal('sys_log'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-3 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}>
-                  <AlertCircle size={16} className="text-orange-400" /> 
-                  <span>Log Hệ thống Lỗi</span>
+                <button onClick={() => { setActiveMonitorModal('sys_log'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-2.5 py-1.5 rounded text-xs font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}>
+                  <AlertCircle size={13} className="text-orange-400" /> 
+                  <span>Log Lỗi</span>
                 </button>
               </div>
             )}
@@ -1026,14 +985,14 @@ export default function DesktopAppUI() {
 
           <button 
             onClick={() => setShowSimulator(!showSimulator)} 
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${showSimulator ? 'bg-purple-600 text-white' : (isDarkMode ? 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30' : 'bg-purple-100 text-purple-700 hover:bg-purple-200')}`}>
-            <Brain size={16} />
-            Công cụ Test
+            className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${showSimulator ? 'bg-purple-600 text-white' : (isDarkMode ? 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30' : 'bg-purple-100 text-purple-700 hover:bg-purple-200')}`}>
+            <Brain size={13} />
+            <span>Công cụ Test</span>
           </button>
           
-          <button onClick={() => setIsCommMode(!isCommMode)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isCommMode ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-red-500/20 text-red-500 hover:bg-red-500/30'}`} title="Bật/Tắt Giao tiếp bằng Giọng nói 2 chiều với AI">
-            {isCommMode ? <Mic size={16} /> : <MicOff size={16} />}
-            Giao tiếp
+          <button onClick={() => setIsCommMode(!isCommMode)} className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${isCommMode ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-red-500/20 text-red-500 hover:bg-red-500/30'}`} title="Bật/Tắt Giao tiếp bằng Giọng nói 2 chiều với AI">
+            {isCommMode ? <Mic size={13} /> : <MicOff size={13} />}
+            <span>Giao tiếp</span>
           </button>
         </div>
         

@@ -1,6 +1,8 @@
 import bandoAudio from './bandoAudioEngine';
 import { WORLD_COUNTRIES, COUNTRIES_BY_ID, CONTINENTS } from './worldCountriesData';
 import { BannerFlagCellsEngine } from './bannerFlagCellsEngine';
+import defaultVietnamMask from '../../../../public/data/vietnamMask.json';
+import defaultProvincesData from '../../../../public/data/provinces.json';
 
 // Danh mục quà TikTok chuẩn quy đổi số ô cờ
 export const DEFAULT_MAP_GIFTS = [
@@ -161,6 +163,7 @@ class BanDoGameEngine {
     this.state = {
       roundId: 'ROUND-1',
       status: 'playing', // playing | victory | paused
+      maskLoaded: true,
       totalCells: savedCustomConfig.totalCells || currentPreset.totalCells || 15125,
       claimedCount: 0,
       remainingCells: savedCustomConfig.totalCells || currentPreset.totalCells || 15125,
@@ -236,6 +239,12 @@ class BanDoGameEngine {
     this.isAuto247Running = false;
 
     // Load static data
+    this.maskData = defaultVietnamMask;
+    this.provincesData = defaultProvincesData.provinces || [];
+    this.isLoaded = true;
+    this.state.maskLoaded = true;
+    this._originalVietnamCells = defaultVietnamMask.cells;
+    this.buildGridForCurrentCountry();
     this.initData();
   }
 
@@ -287,20 +296,15 @@ class BanDoGameEngine {
 
   async initData() {
     try {
-      const [maskRes, provRes] = await Promise.all([
-        fetch('/data/vietnamMask.json'),
-        fetch('/data/provinces.json')
-      ]);
-
-      if (maskRes.ok && provRes.ok) {
-        this.maskData = await maskRes.json();
-        const provJson = await provRes.json();
-        this.provincesData = provJson.provinces || [];
+      if (!this.maskData || !this.maskData.cells || this.maskData.cells.length === 0) {
+        this.maskData = defaultVietnamMask;
+        this.provincesData = defaultProvincesData.provinces || [];
+        this._originalVietnamCells = defaultVietnamMask.cells;
         this.buildGridForCurrentCountry();
-        this.isLoaded = true;
-        this.state.maskLoaded = true;
-        this.notify();
       }
+      this.isLoaded = true;
+      this.state.maskLoaded = true;
+      this.notify();
     } catch (e) {
       console.warn('Fallback loading built-in map grid for BanDoGameEngine', e);
       this.generateFallbackGrid();

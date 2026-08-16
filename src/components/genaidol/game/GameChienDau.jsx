@@ -2277,133 +2277,213 @@ export default function GameChienDau({
     </div>
   );
 
-  // NẾU LÀ POPOUT / OVERLAY CHO TIKTOK STUDIO / OBS $\rightarrow$ CHỈ RENDER DUY NHẤT SÂN KHẤU SẠCH 100%
+  // State cho Popover Menu Cài Đặt của Game Chiến Đấu
+  const [isBattleMenuOpen, setIsBattleMenuOpen] = useState(false);
+  const battleMenuRef = useRef(null);
+
+  // Đóng popover menu khi click ra ngoài
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (battleMenuRef.current && !battleMenuRef.current.contains(e.target)) {
+        setIsBattleMenuOpen(false);
+      }
+    };
+    if (isBattleMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isBattleMenuOpen]);
+
+  // NẾU LÀ POPOUT / OVERLAY CHO TIKTOK STUDIO / OBS -> CHỈ RENDER DUY NHẤT SÂN KHẤU SẠCH 100%
   if (isPopout) {
     return (
-      <div className="w-full h-full relative overflow-hidden bg-[#0a0c14] select-none font-sans">
+      <div 
+        className="w-full h-full relative overflow-hidden bg-[#070b14] select-none font-sans"
+        onPointerDown={handleUserGesture}
+      >
         {renderCleanStage()}
       </div>
     );
   }
 
-  // GIAO DIỆN PHẦN MỀM CHÍNH (STREAMER VIEW): TÁCH RỜI THANH QUẢN TRỊ BÊN NGOÀI KHUNG LIVE
+  // GIAO DIỆN PHẦN MỀM CHÍNH (STREAMER VIEW): THANH ĐIỀU KHIỂN SIÊU GỌN GÀNG
   return (
-    <div className="relative w-full h-full flex flex-col font-sans select-none bg-[#070910] text-white overflow-hidden">
-      {/* 1. OUTER TOP HOST CONTROL BAR (Nằm bên ngoài khung live) */}
-      <div className="relative z-20 flex items-center justify-between px-3 py-2 bg-[#0d1017] border-b border-white/10 shrink-0 gap-2 flex-wrap sm:flex-nowrap shadow-sm text-white">
-        {/* Left Side: Title & Info */}
+    <div 
+      className="relative w-full h-full flex flex-col font-sans select-none bg-[#05070c] text-white overflow-hidden"
+      onPointerDown={handleUserGesture}
+    >
+      {/* 1. OUTER TOP HOST CONTROL BAR (Siêu gọn gàng, tinh tế, tiết kiệm 30% diện tích) */}
+      <div className="relative z-20 flex items-center justify-between px-3 py-1.5 border-b border-white/10 shrink-0 gap-2 shadow-sm bg-[#0d1017]">
+        {/* Left Side: Title & Status */}
         <div className="flex items-center gap-2 shrink-0">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-purple-600 via-indigo-600 to-red-600 flex items-center justify-center text-sm shadow-md">
-            <span>⚔️</span>
+          <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-purple-600 via-pink-600 to-amber-400 flex items-center justify-center text-xs shadow-md">
+            <Swords size={13} className="text-yellow-300" />
           </div>
-          <div className="flex flex-col">
+          <div className="flex items-center gap-2">
             <span className="text-xs font-black uppercase tracking-wider bg-gradient-to-r from-purple-300 via-pink-300 to-amber-300 bg-clip-text text-transparent">
               {config.title}
             </span>
-            <span className="text-[10px] text-gray-400">
+            <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-purple-600/80 text-white border border-purple-400/40">
+              PK
+            </span>
+            <span className="hidden sm:inline text-[10px] text-gray-400">
               <span className="text-blue-400 font-bold">{config.blueName}</span> VS <span className="text-red-400 font-bold">{config.redName}</span>
             </span>
           </div>
         </div>
 
-        {/* Right Side: Controls */}
-        <div className="flex items-center gap-1.5 flex-wrap justify-end">
-          {/* Nút Chuyển Tỷ Lệ: 9:16 (TikTok Dọc) vs 16:9 (OBS Ngang) */}
-          <button
-            onClick={handleToggleAspectRatio}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-black transition-all border flex items-center gap-1 shadow-sm ${
-              aspectRatio === '9:16'
-                ? 'bg-gradient-to-r from-pink-600 via-rose-500 to-amber-500 text-white border-pink-300 ring-2 ring-pink-400/50 shadow-pink-500/30'
-                : 'bg-white/10 hover:bg-white/20 text-cyan-300 border-white/10'
-            }`}
-            title={aspectRatio === '9:16' ? "Đang ở Khung Hình 9:16 (Chuẩn TikTok Live Dọc) — Bấm chuyển sang 16:9 (Ngang OBS/PC)" : "Đang ở Khung Hình 16:9 (Ngang OBS/PC) — Bấm chuyển sang 9:16 (Chuẩn TikTok Live Dọc)"}
-          >
-            <Smartphone size={13} className={aspectRatio === '9:16' ? 'text-yellow-300' : 'text-cyan-300'} />
-            <span>{aspectRatio === '9:16' ? '9:16 TikTok' : '16:9 OBS'}</span>
-          </button>
-
-          {/* Voice AI BLV Quick Toggle */}
-          <button
-            onClick={() => {
-              const next = !isVoiceAiActive;
-              setIsVoiceAiActive(next);
-              battleCommentary.isEnabled = next;
-              battleCommentary.saveSettings();
-              if (next) battleCommentary.speak("Bộ não AI bình luận viên đã sẵn sàng!", true);
-            }}
-            className={`px-2 py-1.5 rounded-lg flex items-center gap-1 text-xs font-bold transition-colors border ${
-              isVoiceAiActive ? 'bg-pink-500/20 text-pink-300 border-pink-400/40 shadow-sm' : 'bg-white/5 text-gray-400 border-white/10 hover:text-white'
-            }`}
-            title={isVoiceAiActive ? "Voice AI BLV: Đang BẬT" : "Voice AI BLV: Đã TẮT"}
-          >
-            {isVoiceAiActive ? <Mic size={13} className="text-pink-400 animate-pulse" /> : <MicOff size={13} />}
-            <span>Voice AI</span>
-          </button>
-
-          {/* BGM Quick Toggle */}
-          <button
-            onClick={() => {
-              if (isBgmActive) {
-                battleAudio.stopBgm();
-                setIsBgmActive(false);
-              } else {
-                battleAudio.startBgm(config.bgmTrack || 'epic_synth', config.bgmVolume || 0.4, config.customBgmUrl);
-                setIsBgmActive(true);
-              }
-            }}
-            className={`px-2 py-1.5 rounded-lg flex items-center gap-1 text-xs font-bold transition-colors border ${
-              isBgmActive ? 'bg-amber-500/20 text-amber-300 border-amber-400/40 shadow-sm' : 'bg-white/5 text-gray-400 border-white/10 hover:text-white'
-            }`}
-            title={isBgmActive ? "Nhạc nền BGM: Đang PHÁT" : "Nhạc nền BGM: Đã TẮT"}
-          >
-            {isBgmActive ? <Music size={13} className="text-amber-400 animate-pulse" /> : <Music2 size={13} />}
-            <span>BGM</span>
-          </button>
-
-          {/* Sound FX Toggle */}
-          <button
-            onClick={() => setSoundMuted(!soundMuted)}
-            className="p-1.5 rounded-lg hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 transition-colors"
-            title={soundMuted ? "Bật âm thanh hiệu ứng" : "Tắt âm thanh hiệu ứng"}
-          >
-            {soundMuted ? <VolumeX size={13} className="text-red-400" /> : <Volume2 size={13} className="text-emerald-400" />}
-          </button>
-
-          {/* Speed Slider */}
-          <div className="hidden md:flex items-center gap-1.5 px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-xs font-bold text-amber-300">
-            <span>⚡ Tốc độ:</span>
-            <input
-              type="range"
-              min="0.2"
-              max="1.5"
-              step="0.05"
-              value={config.animSpeed || 0.55}
-              onChange={(e) => setConfig(prev => ({ ...prev, animSpeed: parseFloat(e.target.value) }))}
-              className="w-14 h-1.5 accent-amber-400 cursor-pointer"
-              title={`Tốc độ cử động: ${(config.animSpeed || 0.55).toFixed(2)}x`}
-            />
-          </div>
-
-          {/* Nút Trận đấu mới (Đưa lên trên Top Bar) */}
+        {/* Right Side: Controls (Gọn gàng với Nút Trận Đấu Mới & Menu Popover) */}
+        <div className="flex items-center gap-1.5 shrink-0 relative" ref={battleMenuRef}>
+          {/* Nút Trận Đấu Mới */}
           <button
             onClick={resetMatch}
-            className="px-2.5 py-1.5 rounded-lg text-xs font-bold text-gray-200 hover:text-white bg-white/10 hover:bg-white/20 border border-white/10 flex items-center gap-1 transition-colors"
+            className="px-2.5 py-1 rounded-lg text-xs font-bold text-gray-200 hover:text-white bg-white/10 hover:bg-white/20 border border-white/10 flex items-center gap-1 transition-all active:scale-95"
             title="Làm mới trận đấu PK về trạng thái ban đầu"
           >
-            <RotateCcw size={13} />
+            <RotateCcw size={12} />
             <span>Trận đấu mới</span>
           </button>
 
-          {/* Admin PK Shortcut */}
-          {onOpenAdmin && (
-            <button
-              onClick={onOpenAdmin}
-              className="px-2.5 py-1.5 rounded-lg bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 border border-purple-500/40 text-xs font-black flex items-center gap-1 transition-all"
-              title="Mở Bảng Quản trị Admin PK"
-            >
-              <Shield size={13} className="text-purple-400" />
-              <span>Admin PK</span>
-            </button>
+          {/* Nút Menu Dropdown Popover Chứa Toàn Bộ Cài Đặt Game */}
+          <button
+            onClick={() => setIsBattleMenuOpen(!isBattleMenuOpen)}
+            className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 border shadow-sm ${
+              isBattleMenuOpen
+                ? 'bg-purple-600 text-white border-purple-300 ring-2 ring-purple-400/50'
+                : 'bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-purple-300 border-purple-500/40'
+            }`}
+            title="Mở Menu chức năng & Cài đặt Game Chiến Đấu PK"
+          >
+            <Settings size={13} className={isBattleMenuOpen ? 'rotate-90 transition-transform' : ''} />
+            <span>Cài đặt Game ☰</span>
+            {isVoiceAiActive && (
+              <span className="w-1.5 h-1.5 rounded-full bg-pink-400 animate-pulse"></span>
+            )}
+            {isBgmActive && (
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+            )}
+          </button>
+
+          {/* Giao Diện Popover Menu Nhỏ Gọn (Gom Toàn Bộ Chức Năng Vào Đây) */}
+          {isBattleMenuOpen && (
+            <div className="absolute top-full right-0 mt-2 w-72 rounded-2xl shadow-2xl border border-purple-500/30 z-50 p-3 overflow-hidden backdrop-blur-xl bg-[#121622]/95 text-white shadow-black/80 animate-in fade-in slide-in-from-top-2 duration-150">
+              {/* Header Menu */}
+              <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/10">
+                <div className="flex items-center gap-1.5 text-xs font-black text-purple-400 uppercase tracking-wider">
+                  <Settings size={14} />
+                  <span>Quản Trị & Cài Đặt PK</span>
+                </div>
+                <button onClick={() => setIsBattleMenuOpen(false)} className="text-gray-400 hover:text-white p-0.5 rounded">
+                  <X size={14} />
+                </button>
+              </div>
+
+              <div className="space-y-2 max-h-[75vh] overflow-y-auto pr-1 custom-scrollbar">
+                {/* 1. Admin Quản Trị PK */}
+                {onOpenAdmin && (
+                  <button
+                    onClick={() => {
+                      onOpenAdmin();
+                      setIsBattleMenuOpen(false);
+                    }}
+                    className="w-full flex items-center justify-between p-2 rounded-xl bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500/30 hover:to-pink-500/30 text-purple-300 border border-purple-500/40 text-xs font-black transition-all group"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Shield size={14} className="text-purple-400 group-hover:scale-110 transition-transform" />
+                      <span>Bảng Quản Trị Admin PK</span>
+                    </div>
+                    <ChevronRight size={13} className="text-purple-400/70" />
+                  </button>
+                )}
+
+                {/* 2. Voice AI Bình Luận Viên */}
+                <div className="p-2 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Mic size={14} className={isVoiceAiActive ? 'text-pink-400 animate-pulse' : 'text-gray-400'} />
+                    <div className="flex flex-col text-left min-w-0">
+                      <span className="text-xs font-bold text-white truncate">Voice AI Bình Luận</span>
+                      <span className="text-[10px] text-gray-400">{isVoiceAiActive ? 'Tự động bình luận PK' : 'Đã tắt'}</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const next = !isVoiceAiActive;
+                      setIsVoiceAiActive(next);
+                      battleCommentary.isEnabled = next;
+                      battleCommentary.saveSettings();
+                      if (next) battleCommentary.speak("Bộ não AI bình luận viên đã sẵn sàng!", true);
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                      isVoiceAiActive ? 'bg-pink-600 text-white' : 'bg-white/10 text-gray-300 hover:text-white'
+                    }`}
+                  >
+                    {isVoiceAiActive ? 'BẬT' : 'TẮT'}
+                  </button>
+                </div>
+
+                {/* 3. Nhạc Nền BGM */}
+                <div className="p-2 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Music size={14} className={isBgmActive ? 'text-amber-400 animate-pulse' : 'text-gray-400'} />
+                    <div className="flex flex-col text-left min-w-0">
+                      <span className="text-xs font-bold text-white truncate">Nhạc Nền PK (BGM)</span>
+                      <span className="text-[10px] text-gray-400">{isBgmActive ? 'Đang phát hùng tráng' : 'Đã tắt'}</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (isBgmActive) {
+                        battleAudio.stopBgm();
+                        setIsBgmActive(false);
+                      } else {
+                        battleAudio.startBgm(config.bgmTrack || 'epic_synth', config.bgmVolume || 0.4, config.customBgmUrl);
+                        setIsBgmActive(true);
+                      }
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                      isBgmActive ? 'bg-amber-600 text-white' : 'bg-white/10 text-gray-300 hover:text-white'
+                    }`}
+                  >
+                    {isBgmActive ? 'BẬT' : 'TẮT'}
+                  </button>
+                </div>
+
+                {/* 4. Hiệu Ứng Âm Thanh SFX & Tốc Độ */}
+                <div className="p-2 rounded-xl bg-white/5 border border-white/10 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Volume2 size={14} className={soundMuted ? 'text-gray-500' : 'text-emerald-400'} />
+                      <span className="text-xs font-bold text-white">Âm Thanh Hiệu Ứng</span>
+                    </div>
+                    <button
+                      onClick={() => setSoundMuted(!soundMuted)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                        !soundMuted ? 'bg-emerald-600 text-white' : 'bg-white/10 text-gray-300 hover:text-white'
+                      }`}
+                    >
+                      {!soundMuted ? 'BẬT' : 'TẮT'}
+                    </button>
+                  </div>
+
+                  {/* Speed Slider */}
+                  <div className="pt-2 border-t border-white/10">
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="font-bold text-gray-300">⚡ Tốc độ cử động:</span>
+                      <span className="font-mono text-amber-300 font-bold">{(config.animSpeed || 0.55).toFixed(2)}x</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.2"
+                      max="1.5"
+                      step="0.05"
+                      value={config.animSpeed || 0.55}
+                      onChange={(e) => setConfig(prev => ({ ...prev, animSpeed: parseFloat(e.target.value) }))}
+                      className="w-full h-1.5 accent-amber-400 cursor-pointer"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -2413,8 +2493,8 @@ export default function GameChienDau({
         <div 
           className={`relative flex flex-col overflow-hidden transition-all duration-300 ${
             aspectRatio === '9:16'
-              ? 'w-full max-w-[440px] h-full max-h-[96%] aspect-[9/16] rounded-2xl md:rounded-3xl border border-purple-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-[#0a0c14]'
-              : 'w-full max-w-[1200px] h-auto max-h-full aspect-[16/9] rounded-2xl border border-purple-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-[#0a0c14]'
+              ? 'w-full max-w-[480px] h-[98%] max-h-full aspect-[9/16] rounded-2xl md:rounded-3xl border border-purple-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-[#0a0c14]'
+              : 'w-full max-w-[1360px] h-full aspect-[16/9] rounded-2xl border border-purple-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-[#0a0c14]'
           }`}
         >
           {renderCleanStage()}
