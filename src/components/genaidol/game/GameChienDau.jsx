@@ -84,6 +84,12 @@ export default function GameChienDau({
   const [flashSide, setFlashSide] = useState(null);
   const [liveFeed, setLiveFeed] = useState([]); // Array of recent live comments & gifts
   const [isGiftHudMinimized, setIsGiftHudMinimized] = useState(false);
+  const [isLeaderboardMinimized, setIsLeaderboardMinimized] = useState(false);
+  const [isLiveCleanMode, setIsLiveCleanMode] = useState(isPopout);
+
+  useEffect(() => {
+    if (isPopout) setIsLiveCleanMode(true);
+  }, [isPopout]);
 
   // Sync config from local storage or custom event instantly
   useEffect(() => {
@@ -2021,28 +2027,46 @@ export default function GameChienDau({
       </div>
 
       {/* TOP SUPPORTERS LEADERBOARD (Top Left - Responsive) */}
-      <div className="absolute top-20 sm:top-28 left-2 sm:left-4 w-36 sm:w-48 bg-black/75 backdrop-blur-md border border-white/15 rounded-xl p-2 sm:p-2.5 z-20 pointer-events-none shadow-xl">
-        <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-amber-300 mb-1.5 border-b border-white/10 pb-1">
-          <Trophy size={13} className="text-amber-400 shrink-0" />
-          <span>Bảng Xếp Hạng</span>
-        </div>
-        <div className="space-y-1">
-          {gameState.leaderboard.length === 0 ? (
-            <p className="text-[9px] sm:text-[10px] text-gray-400 text-center py-1.5 italic">Chưa có người ủng hộ</p>
-          ) : (
-            gameState.leaderboard.map((player, idx) => (
-              <div key={player.userId + idx} className="flex items-center justify-between text-[9px] sm:text-[10px] bg-white/5 px-1.5 py-0.5 sm:py-1 rounded">
-                <span className="flex items-center gap-1 font-medium truncate max-w-[80px] sm:max-w-[100px]">
-                  <span className={idx === 0 ? 'text-amber-400 font-bold' : idx === 1 ? 'text-gray-300' : 'text-amber-600'}>
-                    #{idx + 1}
-                  </span>
-                  <span className={player.faction === 'blue' ? 'text-blue-300' : 'text-red-300'}>
-                    {player.nickname}
-                  </span>
-                </span>
-                <span className="font-mono font-bold text-amber-400">{player.score}đ</span>
+      <div className={`absolute top-20 sm:top-28 left-2 sm:left-4 z-20 transition-all duration-300 pointer-events-auto ${
+        isLeaderboardMinimized ? 'w-9 sm:w-10 overflow-hidden' : 'w-36 sm:w-48'
+      }`}>
+        <div className="bg-black/80 backdrop-blur-md border border-white/15 rounded-xl p-2 sm:p-2.5 shadow-xl text-white">
+          <div className="flex items-center justify-between text-[11px] sm:text-xs font-bold text-amber-300 mb-1 border-b border-white/10 pb-1">
+            {!isLeaderboardMinimized && (
+              <div className="flex items-center gap-1.5">
+                <Trophy size={13} className="text-amber-400 shrink-0" />
+                <span>Bảng Xếp Hạng</span>
               </div>
-            ))
+            )}
+            <button
+              onClick={() => setIsLeaderboardMinimized(!isLeaderboardMinimized)}
+              className="p-0.5 rounded text-gray-400 hover:text-white hover:bg-white/10 transition-colors ml-auto"
+              title={isLeaderboardMinimized ? "Mở rộng bảng xếp hạng" : "Thu nhỏ bảng xếp hạng"}
+            >
+              <span className="text-xs font-bold">{isLeaderboardMinimized ? '🏆' : '−'}</span>
+            </button>
+          </div>
+
+          {!isLeaderboardMinimized && (
+            <div className="space-y-1 max-h-48 overflow-y-auto custom-scrollbar">
+              {gameState.leaderboard.length === 0 ? (
+                <p className="text-[9px] sm:text-[10px] text-gray-400 text-center py-1.5 italic">Chưa có người ủng hộ</p>
+              ) : (
+                gameState.leaderboard.map((player, idx) => (
+                  <div key={player.userId + idx} className="flex items-center justify-between text-[9px] sm:text-[10px] bg-white/5 px-1.5 py-0.5 sm:py-1 rounded">
+                    <span className="flex items-center gap-1 font-medium truncate max-w-[80px] sm:max-w-[100px]">
+                      <span className={idx === 0 ? 'text-amber-400 font-bold' : idx === 1 ? 'text-gray-300' : 'text-amber-600'}>
+                        #{idx + 1}
+                      </span>
+                      <span className={player.faction === 'blue' ? 'text-blue-300' : 'text-red-300'}>
+                        {player.nickname}
+                      </span>
+                    </span>
+                    <span className="font-mono font-bold text-amber-400">{player.score}đ</span>
+                  </div>
+                ))
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -2106,8 +2130,6 @@ export default function GameChienDau({
         </div>
       )}
 
-
-
       {/* LIVE COMMENT & GIFT STREAM (Bottom Left - Responsive) */}
       <div className="absolute bottom-12 sm:bottom-14 left-2 sm:left-4 max-w-[190px] sm:max-w-xs space-y-1 sm:space-y-1.5 z-20 pointer-events-none">
         {liveFeed.map(item => (
@@ -2128,6 +2150,20 @@ export default function GameChienDau({
 
       {/* QUICK LIVE SPEED, VOICE AI, BGM & AUDIO CONTROLS (Bottom Right - Responsive) */}
       <div className="absolute bottom-3 sm:bottom-4 right-2 sm:right-4 z-20 flex items-center gap-1.5 sm:gap-2 bg-black/85 backdrop-blur-md px-2 sm:px-3 py-1 sm:py-1.5 rounded-2xl border border-purple-500/30 shadow-2xl text-white pointer-events-auto">
+        {/* Toggle Live Sạch vs Admin */}
+        <button
+          onClick={() => setIsLiveCleanMode(!isLiveCleanMode)}
+          className={`p-1 sm:px-2 sm:py-1 rounded-lg text-[10px] sm:text-[11px] font-black transition-all flex items-center gap-1 border ${
+            isLiveCleanMode 
+              ? 'bg-red-600/30 text-red-300 border-red-500/40 ring-1 ring-red-400/50 animate-pulse' 
+              : 'bg-white/5 text-gray-400 border-white/10 hover:text-white'
+          }`}
+          title={isLiveCleanMode ? "Đang ở CHẾ ĐỘ MÀN HÌNH LIVE (Sạch 100%) — Bấm để mở Quản trị" : "Bấm để bật CHẾ ĐỘ LIVE SẠCH (Ẩn thanh quản trị)"}
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping shrink-0" />
+          <span>{isLiveCleanMode ? '🔴 Live View' : '⚙️ Admin'}</span>
+        </button>
+
         {/* Voice AI BLV Quick Toggle */}
         <button
           onClick={() => {
@@ -2166,23 +2202,6 @@ export default function GameChienDau({
           <span className="hidden sm:inline">BGM</span>
         </button>
 
-        {/* Speed Slider */}
-        <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] text-amber-300 font-bold">
-          <span>⚡</span>
-          <input
-            type="range"
-            min="0.2"
-            max="1.5"
-            step="0.05"
-            value={config.animSpeed || 0.55}
-            onChange={(e) => setConfig(prev => ({ ...prev, animSpeed: parseFloat(e.target.value) }))}
-            className="w-10 sm:w-14 h-1.5 accent-amber-400 cursor-pointer"
-            title={`Tốc độ cử động: ${(config.animSpeed || 0.55).toFixed(2)}x`}
-          />
-        </div>
-
-        <div className="w-[1px] h-3.5 bg-white/20" />
-
         {/* Sound FX Toggle */}
         <button
           onClick={() => setSoundMuted(!soundMuted)}
@@ -2192,26 +2211,47 @@ export default function GameChienDau({
           {soundMuted ? <VolumeX size={14} className="text-red-400" /> : <Volume2 size={14} className="text-emerald-400" />}
         </button>
 
-        {/* Admin Shortcut Button */}
-        {onOpenAdmin && (
-          <button
-            onClick={onOpenAdmin}
-            className="p-1 sm:px-2 sm:py-1 rounded-lg bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 border border-purple-500/40 text-[10px] sm:text-[11px] font-bold flex items-center gap-1 transition-all"
-            title="Mở Bảng Quản trị Admin Trực Tiếp (Không cần mật khẩu)"
-          >
-            <Shield size={13} className="text-purple-400" />
-            <span className="hidden sm:inline">Admin</span>
-          </button>
-        )}
+        {/* Speed Slider & Admin Controls (Chỉ hiển thị khi KHÔNG Ở CHẾ ĐỘ LIVE SẠCH) */}
+        {!isLiveCleanMode && (
+          <>
+            <div className="hidden md:flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] text-amber-300 font-bold">
+              <span>⚡</span>
+              <input
+                type="range"
+                min="0.2"
+                max="1.5"
+                step="0.05"
+                value={config.animSpeed || 0.55}
+                onChange={(e) => setConfig(prev => ({ ...prev, animSpeed: parseFloat(e.target.value) }))}
+                className="w-10 sm:w-14 h-1.5 accent-amber-400 cursor-pointer"
+                title={`Tốc độ cử động: ${(config.animSpeed || 0.55).toFixed(2)}x`}
+              />
+            </div>
 
-        {/* Reset Match Button */}
-        <button
-          onClick={resetMatch}
-          className="p-1 rounded-lg hover:bg-white/10 text-gray-300 hover:text-amber-400 transition-colors"
-          title="Làm mới trận đấu"
-        >
-          <RotateCcw size={14} />
-        </button>
+            <div className="w-[1px] h-3.5 bg-white/20" />
+
+            {/* Admin Shortcut Button */}
+            {onOpenAdmin && (
+              <button
+                onClick={onOpenAdmin}
+                className="p-1 sm:px-2 sm:py-1 rounded-lg bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 border border-purple-500/40 text-[10px] sm:text-[11px] font-bold flex items-center gap-1 transition-all"
+                title="Mở Bảng Quản trị Admin Trực Tiếp (Không cần mật khẩu)"
+              >
+                <Shield size={13} className="text-purple-400" />
+                <span className="hidden sm:inline">Admin</span>
+              </button>
+            )}
+
+            {/* Reset Match Button */}
+            <button
+              onClick={resetMatch}
+              className="p-1 rounded-lg hover:bg-white/10 text-gray-300 hover:text-amber-400 transition-colors"
+              title="Làm mới trận đấu"
+            >
+              <RotateCcw size={14} />
+            </button>
+          </>
+        )}
       </div>
 
       {/* VICTORY CEREMONY / RESULTS PODIUM */}

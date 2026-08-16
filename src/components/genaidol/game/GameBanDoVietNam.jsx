@@ -178,7 +178,13 @@ export default function GameBanDoVietNam({
   const [victoryTab, setVictoryTab] = useState('champion'); // 'champion' | 'top30'
   const [isAuto247, setIsAuto247] = useState(() => bandoEngine.isAuto247Running);
   const [isBgmLoop, setIsBgmLoop] = useState(() => bandoAudio.isBgmLoop);
+  const [isLiveCleanMode, setIsLiveCleanMode] = useState(isPopout);
   const isLightTheme = gameState.settings?.theme === 'light';
+
+  // Đồng bộ isLiveCleanMode khi isPopout thay đổi
+  useEffect(() => {
+    if (isPopout) setIsLiveCleanMode(true);
+  }, [isPopout]);
 
   // Quản lý Danh Sách Vị Trí Ghim Camera Tùy Chỉnh (Custom Camera Bookmarks)
   const [customBookmarks, setCustomBookmarks] = useState(() => {
@@ -1189,52 +1195,53 @@ export default function GameBanDoVietNam({
       }`}
       onPointerDown={handleUserGesture}
     >
-      {/* 1. TOP HUD: Header & Tiến Độ Hoàn Thành Bản Đồ */}
-      <div className={`relative z-20 flex items-center justify-between px-4 py-2.5 backdrop-blur-md border-b shrink-0 transition-colors ${
+      {/* 1. TOP HUD: Header & Tiến Độ Hoàn Thành Bản Đồ - RESPONSIVE ALL DEVICES */}
+      <div className={`relative z-20 flex flex-wrap md:flex-nowrap items-center justify-between px-3 py-2 sm:px-4 sm:py-2.5 backdrop-blur-md border-b shrink-0 transition-colors gap-2 ${
         isLightTheme 
-          ? 'bg-white/85 text-slate-900 border-slate-200 shadow-sm' 
-          : 'bg-black/65 text-white border-white/10'
+          ? 'bg-white/90 text-slate-900 border-slate-200 shadow-sm' 
+          : 'bg-black/75 text-white border-white/10'
       }`}>
-        <div className="flex items-center gap-3">
-          <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-red-600 via-amber-500 to-yellow-400 shadow-lg shadow-red-500/40 ring-2 ring-yellow-400/60 animate-pulse">
-            <span className="text-xl">{currentCountry?.flag || '🇻🇳'}</span>
+        {/* Title & Info */}
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div className="relative flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-red-600 via-amber-500 to-yellow-400 shadow-lg shadow-red-500/40 ring-2 ring-yellow-400/60 animate-pulse shrink-0">
+            <span className="text-lg sm:text-xl">{currentCountry?.flag || '🇻🇳'}</span>
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className={`text-sm md:text-base font-black uppercase tracking-wider ${
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <h2 className={`text-xs sm:text-sm md:text-base font-black uppercase tracking-wider truncate ${
                 isLightTheme 
                   ? 'bg-gradient-to-r from-red-700 via-amber-600 to-yellow-600 bg-clip-text text-transparent' 
                   : 'bg-gradient-to-r from-yellow-300 via-red-400 to-amber-300 bg-clip-text text-transparent'
               }`}>
                 {gameState.settings.customMapTitle || `${currentCountry?.name || 'Việt Nam'} ${t.title}`}
               </h2>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-600 text-white shadow-sm">
+              <span className="px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black bg-red-600 text-white shadow-sm shrink-0">
                 {gameState.roundId}
               </span>
             </div>
-            <div className={`text-[11px] font-medium flex items-center gap-2 ${isLightTheme ? 'text-slate-600' : 'text-gray-300'}`}>
-              <span>{t.claimed}: <strong className={`${isLightTheme ? 'text-red-700' : 'text-yellow-400'} font-bold`}>{gameState.claimedCount.toLocaleString()}</strong> / {gameState.totalCells.toLocaleString()} {t.cells}</span>
+            <div className={`text-[10px] sm:text-[11px] font-medium flex items-center gap-1.5 sm:gap-2 truncate ${isLightTheme ? 'text-slate-600' : 'text-gray-300'}`}>
+              <span>{t.claimed}: <strong className={`${isLightTheme ? 'text-red-700' : 'text-yellow-400'} font-bold`}>{gameState.claimedCount.toLocaleString()}</strong>/{gameState.totalCells.toLocaleString()}</span>
               <span>•</span>
-              <span>{t.remaining}: <strong className="text-emerald-500 font-bold">{gameState.remainingCells.toLocaleString()}</strong> {t.cells}</span>
+              <span className="text-emerald-400 font-bold">{gameState.percent}% map</span>
             </div>
           </div>
         </div>
 
         {/* Progress Bar & Controls */}
-        <div className="flex items-center gap-3 md:gap-4">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 ml-auto flex-wrap justify-end">
           {gameState.combo.active && gameState.combo.count >= 2 && (
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-600 to-red-600 rounded-full text-white text-xs font-black shadow-lg animate-bounce">
-              <Flame size={14} className="text-yellow-300 animate-spin" />
-              <span>{t.combo} x{gameState.combo.multiplier} ({gameState.combo.count} {t.gifts})</span>
+            <div className="flex items-center gap-1 px-2.5 py-0.5 sm:py-1 bg-gradient-to-r from-amber-600 to-red-600 rounded-full text-white text-[10px] sm:text-xs font-black shadow-lg animate-bounce">
+              <Flame size={12} className="text-yellow-300 animate-spin" />
+              <span>x{gameState.combo.multiplier} ({gameState.combo.count}🎁)</span>
             </div>
           )}
 
-          <div className="hidden sm:flex flex-col items-end w-44 md:w-56">
-            <div className={`flex justify-between w-full text-[11px] font-bold mb-1 ${isLightTheme ? 'text-slate-600' : 'text-gray-300'}`}>
+          <div className="hidden lg:flex flex-col items-end w-36 xl:w-48">
+            <div className={`flex justify-between w-full text-[10px] xl:text-[11px] font-bold mb-0.5 ${isLightTheme ? 'text-slate-600' : 'text-gray-300'}`}>
               <span>{t.progress}</span>
               <span className={`${isLightTheme ? 'text-amber-700' : 'text-yellow-400'} font-mono`}>{gameState.percent}%</span>
             </div>
-            <div className={`w-full h-2.5 rounded-full overflow-hidden p-0.5 border ${
+            <div className={`w-full h-2 rounded-full overflow-hidden p-0.5 border ${
               isLightTheme ? 'bg-slate-200 border-slate-300' : 'bg-white/10 border-white/20'
             }`}>
               <div 
@@ -1244,14 +1251,30 @@ export default function GameBanDoVietNam({
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
+            {/* Nút Chuyển Đổi Màn Hình Live Sạch 100% vs Quản Trị */}
+            <button
+              onClick={() => setIsLiveCleanMode(!isLiveCleanMode)}
+              className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all border flex items-center gap-1 shadow-sm ${
+                isLiveCleanMode
+                  ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-red-400 ring-2 ring-red-400/50 animate-pulse'
+                  : isLightTheme
+                  ? 'bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300'
+                  : 'bg-white/10 hover:bg-white/20 text-gray-300 border-white/10'
+              }`}
+              title={isLiveCleanMode ? "Đang ở CHẾ ĐỘ MÀN HÌNH LIVE (Sạch 100%, ẩn nút test quà & admin) — Bấm để mở Chế độ Quản trị" : "Bấm để chuyển sang CHẾ ĐỘ MÀN HÌNH LIVE (Sạch 100% cho OBS / TikTok LIVE Studio)"}
+            >
+              <span className="w-2 h-2 rounded-full bg-red-400 animate-ping shrink-0" />
+              <span>{isLiveCleanMode ? '🔴 Màn Hình Live' : '⚙️ Chế Độ Admin'}</span>
+            </button>
+
             {/* Nút Bật/Tắt Chế Độ Tự Động Hoàn Toàn 24/24 (Auto Loop 24/7) */}
             <button
               onClick={() => {
                 bandoEngine.toggleAuto247();
                 setIsAuto247(bandoEngine.isAuto247Running);
               }}
-              className={`px-3 py-1 rounded-lg text-xs font-black transition-all border flex items-center gap-1.5 shadow-md ${
+              className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all border flex items-center gap-1 shadow-md ${
                 isAuto247
                   ? 'bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 text-white border-emerald-300 ring-2 ring-emerald-400 animate-pulse shadow-emerald-500/40'
                   : isLightTheme
@@ -1260,8 +1283,8 @@ export default function GameBanDoVietNam({
               }`}
               title={isAuto247 ? "Hệ thống đang TỰ ĐỘNG CHẠY 24/24 (Ghép cờ -> Vinh danh Top 30 + Top 1 -> Tự reset vòng mới) — Bấm để TẠM DỪNG" : "Bấm để BẬT chế độ TỰ ĐỘNG 24/24 xuyên suốt không ngừng nghỉ"}
             >
-              <Zap size={13} className={isAuto247 ? 'text-yellow-300 fill-yellow-300 animate-bounce' : 'text-yellow-400'} />
-              <span>{isAuto247 ? '⚡ AUTO 24/7: BẬT' : '⚡ Auto 24/7'}</span>
+              <Zap size={12} className={isAuto247 ? 'text-yellow-300 fill-yellow-300 animate-bounce' : 'text-yellow-400'} />
+              <span>{isAuto247 ? '⚡ 24/7: BẬT' : '⚡ Auto 24/7'}</span>
             </button>
 
             {/* Nút Tự Động Lặp Nhạc Nền 24/7 (BGM Loop Toggle) */}
@@ -1274,15 +1297,15 @@ export default function GameBanDoVietNam({
                   bandoAudio.startSyntheticBgm();
                 }
               }}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all border flex items-center gap-1.5 ${
+              className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs font-bold transition-all border flex items-center gap-1 ${
                 isBgmLoop
                   ? 'bg-purple-900/60 hover:bg-purple-800/70 text-purple-200 border-purple-400/50 shadow-sm'
                   : 'bg-white/10 hover:bg-white/20 text-gray-400 border-white/10'
               }`}
               title={isBgmLoop ? "Nhạc nền đang TỰ ĐỘNG LẶP VÔ TẬN 24/7 — Bấm để tắt lặp" : "Bật Tự Động Lặp Nhạc Nền 24/7"}
             >
-              <Music size={13} className={isBgmLoop ? 'text-purple-300 animate-pulse' : 'text-gray-400'} />
-              <span className="hidden sm:inline">{isBgmLoop ? 'Nhạc: Lặp 24/7' : 'Nhạc: 1 Lần'}</span>
+              <Music size={12} className={isBgmLoop ? 'text-purple-300 animate-pulse' : 'text-gray-400'} />
+              <span className="hidden sm:inline">{isBgmLoop ? 'Nhạc 24/7' : 'Nhạc: Tắt'}</span>
             </button>
 
             {/* Nút Chuyển Đổi Nền Sáng / Tối (Light / Dark Mode Switcher) */}
@@ -1291,21 +1314,21 @@ export default function GameBanDoVietNam({
                 const nextTheme = gameState.settings?.theme === 'light' ? 'dark' : 'light';
                 bandoEngine.setTheme(nextTheme);
               }}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all border flex items-center gap-1.5 ${
+              className={`p-1 sm:px-2 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold transition-all border flex items-center gap-1 ${
                 isLightTheme
                   ? 'bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-300 shadow-sm'
                   : 'bg-indigo-950/70 hover:bg-indigo-900/80 text-indigo-200 border-indigo-500/40 shadow-sm'
               }`}
               title={isLightTheme ? "Đang ở Nền Sáng — Bấm chuyển sang Nền Tối" : "Đang ở Nền Tối — Bấm chuyển sang Nền Sáng"}
             >
-              {isLightTheme ? <Sun size={13} className="text-amber-600" /> : <Moon size={13} className="text-indigo-400" />}
-              <span className="hidden sm:inline">{isLightTheme ? 'Nền Sáng' : 'Nền Tối'}</span>
+              {isLightTheme ? <Sun size={12} className="text-amber-600" /> : <Moon size={12} className="text-indigo-400" />}
+              <span className="hidden md:inline">{isLightTheme ? 'Sáng' : 'Tối'}</span>
             </button>
 
             {/* Nút Bật/Tắt Xoay Tự Động Bản Đồ */}
             <button
               onClick={handleToggleAutoRotate}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all border flex items-center gap-1.5 ${
+              className={`p-1 sm:px-2 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold transition-all border flex items-center gap-1 ${
                 autoRotate
                   ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400 shadow-md shadow-emerald-500/30'
                   : isLightTheme
@@ -1314,34 +1337,48 @@ export default function GameBanDoVietNam({
               }`}
               title={autoRotate ? "Bản đồ đang tự động quay — Bấm để ĐỨNG YÊN" : "Bản đồ đang đứng yên — Bấm để TỰ ĐỘNG XOAY"}
             >
-              <RefreshCw size={13} className={autoRotate ? 'animate-spin' : ''} />
-              <span className="hidden sm:inline">{autoRotate ? 'Đang Xoay' : 'Đứng Yên'}</span>
+              <RefreshCw size={12} className={autoRotate ? 'animate-spin' : ''} />
+              <span className="hidden md:inline">{autoRotate ? 'Xoay' : 'Tĩnh'}</span>
             </button>
 
+            {/* Nút Ẩn/Hiện Bảng Bên Hông */}
             <button
               onClick={() => setShowSidePanels(!showSidePanels)}
-              className={`p-1.5 rounded-lg text-xs font-bold transition-all border ${
+              className={`p-1 sm:p-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all border ${
                 showSidePanels 
                   ? isLightTheme ? 'bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300' : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10' 
                   : 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40 shadow-md shadow-yellow-500/20'
               }`}
               title={showSidePanels ? "Thu gọn bảng bên hông (Tối đa hóa bản đồ)" : "Mở lại bảng bên hông"}
             >
-              {showSidePanels ? <Eye size={14} /> : <EyeOff size={14} />}
+              {showSidePanels ? <Eye size={13} /> : <EyeOff size={13} />}
             </button>
 
+            {/* 3D / 2D Toggle */}
             <button
               onClick={() => setViewMode3D(!viewMode3D)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-colors flex items-center gap-1 ${
+              className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs font-bold border transition-colors flex items-center gap-1 ${
                 isLightTheme 
                   ? 'bg-slate-200 hover:bg-slate-300 text-slate-800 border-slate-300' 
                   : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
               }`}
               title={viewMode3D ? "Chuyển sang chế độ 2D" : "Chuyển sang chế độ 3D"}
             >
-              <Layers size={13} />
+              <Layers size={12} />
               <span>{viewMode3D ? '3D' : '2D'}</span>
             </button>
+
+            {/* Admin Modal Shortcut (Only shown if onOpenAdmin provided) */}
+            {onOpenAdmin && (
+              <button
+                onClick={onOpenAdmin}
+                className="p-1 sm:px-2 sm:py-1 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/40 text-[10px] sm:text-xs font-black flex items-center gap-1 transition-all"
+                title="Mở Bảng Quản trị Admin Toàn Diện"
+              >
+                <Settings size={12} />
+                <span className="hidden sm:inline">Admin</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -2115,8 +2152,8 @@ export default function GameBanDoVietNam({
         )}
       </div>
 
-      {/* 3. BOTTOM TEST & AUTO CONTROL BAR (Chỉ hiển thị khi Demo Mode Bật) */}
-      {gameState.isDemoMode && !isPopout && (
+      {/* 3. BOTTOM TEST & AUTO CONTROL BAR (Chỉ hiển thị khi Demo Mode Bật & KHÔNG Ở Chế Độ Live Sạch) */}
+      {gameState.isDemoMode && !isPopout && !isLiveCleanMode && (
         <div className="relative z-20 bg-[#0d1017] border-t border-white/10 p-3 shrink-0 animate-in slide-in-from-bottom duration-200">
           <div className="flex flex-col md:flex-row items-center justify-between gap-3">
             

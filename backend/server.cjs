@@ -2,12 +2,27 @@ require('dotenv').config();
 const express = require('express');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
+const path = require('path');
+const fs = require('fs');
+
 const cors = require('cors');
 const { WebcastPushConnection } = require('tiktok-live-connector');
 
 const app = express();
 app.use(cors());
 app.use(express.json()); // Để parse JSON body
+
+// Tự động phục vụ frontend từ thư mục dist (nếu đã build)
+const distPath = fs.existsSync(path.join(__dirname, '../dist'))
+  ? path.join(__dirname, '../dist')
+  : fs.existsSync(path.join(__dirname, './dist'))
+  ? path.join(__dirname, './dist')
+  : null;
+
+if (distPath) {
+  console.log(`[AvaLive Standalone] Phục vụ Frontend Static từ: ${distPath}`);
+  app.use(express.static(distPath));
+}
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
@@ -185,7 +200,22 @@ app.post('/api/generate-script', async (req, res) => {
   }
 });
 
+// SPA Fallback: Trả về index.html cho các route / overlay
+if (distPath) {
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/socket.io')) {
+      return next();
+    }
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
+
 const PORT = process.env.PORT || 3001;
 httpServer.listen(PORT, () => {
-  console.log(`TikTok Live Connector Backend running on port ${PORT}`);
+  console.log(`\n===========================================================`);
+  console.log(`🚀 HỆ THỐNG AVALIVE LIVESTREAM VIP PRO ĐANG HOẠT ĐỘNG!`);
+  console.log(`🌐 Màn Hình Chính & Bảng Điều Khiển: http://localhost:${PORT}`);
+  console.log(`🗺️ Link Overlay Game Bản Đồ (OBS/TikTok Studio): http://localhost:${PORT}/?overlay=bando`);
+  console.log(`⚔️ Link Overlay Game Chiến Đấu (OBS/TikTok Studio): http://localhost:${PORT}/?overlay=battle`);
+  console.log(`===========================================================\n`);
 });

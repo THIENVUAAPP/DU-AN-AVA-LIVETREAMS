@@ -28,6 +28,7 @@
   },
   "scripts": {
     "build:electron": "vite build && electron-builder -mw",
+    "package:zip": "node scripts/create_standalone_zip.cjs",
     "dev": "concurrently \"vite --port 5173 --strictPort\" \"node backend/server.cjs\"",
     "build": "vite build",
     "lint": "echo 'No lint errors'",
