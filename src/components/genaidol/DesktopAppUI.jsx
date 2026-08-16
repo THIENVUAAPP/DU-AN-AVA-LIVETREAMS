@@ -258,15 +258,51 @@ export default function DesktopAppUI() {
     };
   }, [isDraggingWebcam]);
 
-  const handleDragStart = (e) => {
-    // Prevent drag if clicking on the close button or resize handle
-    if (e.target.closest('button') || e.target.closest('.resize-handle')) return;
-    setIsDraggingWebcam(true);
-    dragStartPos.current = {
-      x: e.clientX - webcamPos.x,
-      y: e.clientY - webcamPos.y
+  // Trạng thái Chạy Demo / Test Toàn Cục (1 Nút Duy Nhất cho tất cả Game / Idol)
+  const [isGlobalDemoRunning, setIsGlobalDemoRunning] = useState(false);
+  const globalDemoTimerRef = useRef(null);
+
+  const handleGlobalRunDemo = useCallback(() => {
+    if (isGlobalDemoRunning) {
+      if (globalDemoTimerRef.current) {
+        clearInterval(globalDemoTimerRef.current);
+        globalDemoTimerRef.current = null;
+      }
+      setIsGlobalDemoRunning(false);
+      return;
+    }
+
+    setIsGlobalDemoRunning(true);
+
+    if (isGameBanDoActive) {
+      // 1. Kích hoạt Demo Game Bản Đồ Cắm Cờ
+      window.dispatchEvent(new CustomEvent('bando-trigger-demo'));
+      globalDemoTimerRef.current = setInterval(() => {
+        window.dispatchEvent(new CustomEvent('bando-trigger-demo'));
+      }, 1200);
+    } else if (isGameBattleActive) {
+      // 2. Kích hoạt Demo Game Chiến Đấu PK
+      window.dispatchEvent(new CustomEvent('battle-trigger-demo'));
+      globalDemoTimerRef.current = setInterval(() => {
+        window.dispatchEvent(new CustomEvent('battle-trigger-demo'));
+      }, 1500);
+    } else {
+      // 3. Kích hoạt Demo AI Idol Live
+      const mockEvt = SIMULATION_EVENTS[Math.floor(Math.random() * SIMULATION_EVENTS.length)];
+      handleLiveEvent(mockEvt.type, mockEvt.payload);
+      globalDemoTimerRef.current = setInterval(() => {
+        const rand = SIMULATION_EVENTS[Math.floor(Math.random() * SIMULATION_EVENTS.length)];
+        handleLiveEvent(rand.type, rand.payload);
+      }, 3500);
+    }
+  }, [isGlobalDemoRunning, isGameBanDoActive, isGameBattleActive, handleLiveEvent, SIMULATION_EVENTS]);
+
+  // Clean up global demo timer on unmount
+  useEffect(() => {
+    return () => {
+      if (globalDemoTimerRef.current) clearInterval(globalDemoTimerRef.current);
     };
-  };
+  }, []);
 
   const ALL_CHARACTERS = {
     'aidol_lan_huong': { 
@@ -905,27 +941,43 @@ export default function DesktopAppUI() {
         <div className="flex-1"></div>
 
         {/* Right Side: Toggles & Stream Window */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0">
           
-          {/* Nút Mở Cửa Sổ Live Sạch 9:16 Dành Riêng Cho TikTok Live Studio / OBS */}
+          {/* 1 Nút Mở Cửa Sổ Live Sạch DUY NHẤT (Tự động thích ứng 9:16 TikTok Dọc vs 16:9 OBS Ngang) */}
           <button 
             onClick={() => {
-              let overlayUrl = '?overlay=cleanlive';
+              let overlayUrl = `?overlay=cleanlive&ratio=${globalAspectRatio}`;
               let winName = 'AvaliveCleanStream';
               if (isGameBanDoActive) {
-                overlayUrl = '?overlay=bando';
+                overlayUrl = `?overlay=bando&ratio=${globalAspectRatio}`;
                 winName = 'AvaliveMapOverlay';
               } else if (isGameBattleActive) {
-                overlayUrl = '?overlay=gamebattle';
+                overlayUrl = `?overlay=gamebattle&ratio=${globalAspectRatio}`;
                 winName = 'AvaliveBattleOverlay';
               }
-              window.open(overlayUrl, winName, 'width=450,height=800,menubar=no,toolbar=no,location=no,status=no');
+              const w = globalAspectRatio === '9:16' ? 450 : 1280;
+              const h = globalAspectRatio === '9:16' ? 800 : 720;
+              window.open(overlayUrl, winName, `width=${w},height=${h},menubar=no,toolbar=no,location=no,status=no`);
             }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-black transition-all bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white shadow-md shadow-pink-500/25 border border-pink-400/40 active:scale-95"
-            title="Mở cửa sổ 9:16 sạch độc lập (không có nút bấm/thanh điều khiển) để đưa thẳng vào TikTok LIVE Studio hoặc OBS Studio"
+            title={`Mở cửa sổ ${globalAspectRatio} sạch độc lập (không chứa bất kỳ nút bấm quản trị hay cài đặt nào) để đưa thẳng vào TikTok LIVE Studio hoặc OBS Studio`}
           >
             <Video size={16} />
-            <span>📺 Khung Live 9:16</span>
+            <span>{globalAspectRatio === '9:16' ? '📺 Khung Live 9:16' : '🖥️ Khung Live 16:9'}</span>
+          </button>
+
+          {/* 1 Nút Chạy Demo DUY NHẤT dùng chung cho toàn bộ App và các Game */}
+          <button 
+            onClick={handleGlobalRunDemo}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-black transition-all border shadow-md active:scale-95 ${
+              isGlobalDemoRunning
+                ? 'bg-red-600 text-white border-yellow-300 ring-2 ring-yellow-400 animate-pulse'
+                : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-emerald-400/40 shadow-emerald-500/20'
+            }`}
+            title="Chạy Demo / Kiểm thử tự động quà tặng & tương tác cho chế độ đang mở (AI Idol, Bản Đồ, Game Chiến Đấu)"
+          >
+            <Zap size={16} className={isGlobalDemoRunning ? 'text-yellow-300 animate-bounce' : 'text-yellow-300'} />
+            <span>{isGlobalDemoRunning ? '⚡ Dừng Demo' : '⚡ Chạy Demo'}</span>
           </button>
 
           {/* Menu Theo dõi: Sắp xếp theo thứ tự ưu tiên hay dùng nhất lên đầu */}

@@ -78,14 +78,17 @@ class BanDoAudioEngine {
       this.voiceGain.gain.value = this.voiceVolume;
       this.voiceGain.connect(this.masterGain);
     }
-    if (this.ctx.state === 'suspended') {
+    if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume().catch(() => {});
     }
     return this.ctx;
   }
 
   unlock() {
-    this.ensureContext();
+    const ctx = this.ensureContext();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
     this.playCellPop();
     if (!this.isMuted && this.bgmVolume > 0 && !this.bgmPlaying) {
       this.playBgmOnLive();
@@ -93,9 +96,9 @@ class BanDoAudioEngine {
   }
 
   toggleBgm() {
-    this.ensureContext();
-    if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume().catch(() => {});
+    const ctx = this.ensureContext();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
     }
     if (this.bgmPlaying) {
       this.stopBgmOnLive();
@@ -160,8 +163,12 @@ class BanDoAudioEngine {
     if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume().catch(() => {});
     }
-    if (this.customBgmUrl || this.customBgmAudio) {
-      this.playCustomBgm();
+    if (this.customBgmUrl && this.customBgmUrl.length > 10) {
+      try {
+        this.playCustomBgm();
+      } catch (e) {
+        this.startSyntheticBgm();
+      }
     } else {
       this.startSyntheticBgm();
     }

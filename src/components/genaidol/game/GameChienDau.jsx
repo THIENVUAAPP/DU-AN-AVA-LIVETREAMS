@@ -2022,7 +2022,17 @@ export default function GameChienDau({
   };
 
   useEffect(() => {
+    const handleTriggerDemo = (e) => {
+      const gifts = [1, 50, 200, 500, 1000];
+      const fac = Math.random() < 0.5 ? 'blue' : 'red';
+      const randomCoin = gifts[Math.floor(Math.random() * gifts.length)];
+      handleTestGift(randomCoin, fac);
+    };
+
+    window.addEventListener('battle-trigger-demo', handleTriggerDemo);
+
     return () => {
+      window.removeEventListener('battle-trigger-demo', handleTriggerDemo);
       if (autoTestTimerRef.current) clearInterval(autoTestTimerRef.current);
     };
   }, []);
@@ -2405,63 +2415,21 @@ export default function GameChienDau({
       <div className="relative z-20 bg-[#0d1017] border-t border-white/10 p-2 sm:p-2.5 shrink-0 animate-in slide-in-from-bottom duration-200">
         <div className="flex flex-col md:flex-row items-center justify-between gap-2">
           
-          {/* Left: Quick Mock Gift Test PK */}
-          <div className="flex items-center gap-1 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
-            <span className="text-[11px] font-black text-yellow-400 uppercase tracking-wider mr-1 shrink-0 flex items-center gap-1">
-              <Sparkles size={12} /> Test Quà PK:
-            </span>
-            {[
-              { id: 1, name: 'Hoa Hồng', icon: '🌸', coins: 1 },
-              { id: 2, name: 'Mũ / Nước Hoa', icon: '🛡️', coins: 50 },
-              { id: 3, name: 'Vương Miện', icon: '👑', coins: 200 },
-              { id: 4, name: 'Xe Thể Thao', icon: '⚡', coins: 500 },
-              { id: 5, name: 'Thần Long', icon: '🐉', coins: 1000 },
-            ].map(gift => (
-              <button
-                key={gift.id}
-                onClick={() => handleTestGift(gift.coins, Math.random() < 0.5 ? 'blue' : 'red')}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold bg-white/5 hover:bg-white/15 border border-white/10 hover:border-yellow-400/50 text-gray-200 transition-all shrink-0 hover:scale-105 active:scale-95 shadow-sm"
-                title={`Test gửi ${gift.name} (${gift.coins} xu)`}
-              >
-                <span>{gift.icon}</span>
-                <span>{gift.name}</span>
-                <span className="text-[10px] text-yellow-400 font-mono">+{gift.coins}</span>
-              </button>
-            ))}
+          {/* Left: Info status */}
+          <div className="flex items-center gap-2 text-xs text-gray-400">
+            <span className="text-purple-400 font-bold">⚔️ Đấu Trường PK:</span>
+            <span>Hiệp sĩ Xanh vs Hiệp sĩ Đỏ</span>
           </div>
 
           {/* Right: Quick Actions */}
           <div className="flex items-center gap-1.5 shrink-0">
             <button
-              onClick={handleToggleAutoTest}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-black transition-all border shadow-lg ${
-                isAutoTesting
-                  ? 'bg-red-600 text-white border-yellow-300 ring-2 ring-yellow-400 animate-pulse'
-                  : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white border-purple-400/50'
-              }`}
-              title="Chạy tự động mô phỏng quà tặng và trận đấu PK"
-            >
-              {isAutoTesting ? <Pause size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />}
-              <span>{isAutoTesting ? 'Đang Test PK' : '⚡ Chạy Test PK'}</span>
-            </button>
-
-            <button
-              onClick={() => {
-                window.open('?overlay=gamebattle', 'AvaliveBattleOverlay', 'width=450,height=800,menubar=no,toolbar=no,location=no,status=no');
-              }}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-black bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white border border-pink-400/50 shadow-md shadow-pink-500/30 transition-all active:scale-95"
-              title="Mở Cửa Sổ Khung 9:16 Sạch Riêng Biệt để TikTok LIVE Studio hoặc OBS bắt hình phát sóng"
-            >
-              <MonitorPlay size={13} />
-              <span>📺 Khung Live 9:16</span>
-            </button>
-
-            <button
               onClick={resetMatch}
-              className="p-1.5 rounded-lg text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
-              title="Làm mới trận đấu"
+              className="px-2.5 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-1.5 transition-colors"
+              title="Làm mới trận đấu PK về trạng thái ban đầu"
             >
-              <RotateCcw size={14} />
+              <RotateCcw size={13} />
+              <span>Trận đấu mới</span>
             </button>
           </div>
 

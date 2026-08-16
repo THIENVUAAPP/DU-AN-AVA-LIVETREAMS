@@ -528,10 +528,37 @@ export default function GameBanDoVietNam({
     window.addEventListener('keydown', handleFirstGesture, { once: true });
     window.addEventListener('bando-bgm-status', handleBgmStatus);
 
+    const handleTriggerDemo = () => {
+      const mockUsers = ['Minh Trí', 'Thanh Hằng', 'Bảo Long', 'Hồng Nhung', 'Khánh An', 'Tuấn Kiệt', 'Đức Anh', 'Hương Giang'];
+      const mockGifts = [
+        { id: 'flag', name: 'Lá Cờ Tổ Quốc', cells: 1, diamondCount: 1 },
+        { id: 'rose', name: 'Hoa Hồng', cells: 5, diamondCount: 1 },
+        { id: 'hat', name: 'Nón Lá Việt Nam', cells: 20, diamondCount: 10 },
+        { id: 'heart', name: 'Trái Tim Yêu Nước', cells: 50, diamondCount: 50 },
+        { id: 'dragon', name: 'Thần Long Việt Nam', cells: 200, diamondCount: 1000 }
+      ];
+      const randUser = mockUsers[Math.floor(Math.random() * mockUsers.length)];
+      const randGift = mockGifts[Math.floor(Math.random() * mockGifts.length)];
+      
+      bandoAudio.unlock();
+      bandoEngine.handleGift({
+        userId: 'demo_' + Math.floor(Math.random() * 10000),
+        username: randUser,
+        avatar: '',
+        giftId: randGift.id,
+        giftName: randGift.name,
+        count: 1,
+        diamondCount: randGift.diamondCount,
+      });
+    };
+
+    window.addEventListener('bando-trigger-demo', handleTriggerDemo);
+
     return () => {
       window.removeEventListener('pointerdown', handleFirstGesture);
       window.removeEventListener('keydown', handleFirstGesture);
       window.removeEventListener('bando-bgm-status', handleBgmStatus);
+      window.removeEventListener('bando-trigger-demo', handleTriggerDemo);
     };
   }, []);
 
@@ -917,12 +944,54 @@ export default function GameBanDoVietNam({
         if (badgeEl) badgeEl.style.display = 'none';
       }
     };
-    state.animFrameId = requestAnimationFrame(animate);
+    // Raycaster cho phép click trực tiếp vào từng vị trí bản đồ 3D để cắm cờ
+    const raycaster = new THREE.Raycaster();
+    const mousePos = new THREE.Vector2();
+    let pointerDownInfo = { x: 0, y: 0, time: 0 };
+
+    const handleDomPointerDown = (e) => {
+      pointerDownInfo = { x: e.clientX, y: e.clientY, time: performance.now() };
+    };
+
+    const handleDomPointerUp = (e) => {
+      const dist = Math.hypot(e.clientX - pointerDownInfo.x, e.clientY - pointerDownInfo.y);
+      const duration = performance.now() - pointerDownInfo.time;
+      if (dist < 8 && duration < 400 && state.instancedMesh) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        mousePos.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        mousePos.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+        raycaster.setFromCamera(mousePos, camera);
+        const intersects = raycaster.intersectObject(state.instancedMesh);
+        if (intersects.length > 0) {
+          const hit = intersects[0];
+          const instanceId = hit.instanceId;
+          bandoAudio.unlock();
+          bandoAudio.playCellPop();
+
+          bandoEngine.handleGift({
+            userId: 'streamer_host',
+            username: '🌟 Chủ Phòng Live',
+            avatar: '',
+            giftId: 'flag',
+            giftName: 'Lá Cờ Tổ Quốc',
+            count: 1,
+            diamondCount: 1,
+            focusCellId: instanceId
+          });
+        }
+      }
+    };
+
+    renderer.domElement.addEventListener('pointerdown', handleDomPointerDown);
+    renderer.domElement.addEventListener('pointerup', handleDomPointerUp);
 
     return () => {
       state.disposed = true;
       if (state.animFrameId) cancelAnimationFrame(state.animFrameId);
       window.removeEventListener('resize', handleResize);
+      renderer.domElement.removeEventListener('pointerdown', handleDomPointerDown);
+      renderer.domElement.removeEventListener('pointerup', handleDomPointerUp);
       renderer.dispose();
       boxGeo.dispose();
       boxMat.dispose();
@@ -991,10 +1060,16 @@ export default function GameBanDoVietNam({
     }
   };
 
-  // 2D Canvas Handlers (Pan & Zoom)
+  // 2D Canvas Handlers (Pan, Zoom & Direct Click)
   const handleMouseDown2D = (e) => {
     isDragging2DRef.current = true;
-    dragStart2DRef.current = { x: e.clientX - pan2D.x, y: e.clientY - pan2D.y };
+    dragStart2DRef.current = { 
+      x: e.clientX - pan2D.x, 
+      y: e.clientY - pan2D.y,
+      rawX: e.clientX,
+      rawY: e.clientY,
+      time: performance.now()
+    };
   };
 
   const handleMouseMove2D = (e) => {
@@ -1005,7 +1080,24 @@ export default function GameBanDoVietNam({
     });
   };
 
-  const handleMouseUp2D = () => {
+  const handleMouseUp2D = (e) => {
+    if (dragStart2DRef.current) {
+      const dist = Math.hypot(e.clientX - dragStart2DRef.current.rawX, e.clientY - dragStart2DRef.current.rawY);
+      const duration = performance.now() - dragStart2DRef.current.time;
+      if (dist < 8 && duration < 350) {
+        bandoAudio.unlock();
+        bandoAudio.playCellPop();
+        bandoEngine.handleGift({
+          userId: 'streamer_host',
+          username: '🌟 Chủ Phòng Live',
+          avatar: '',
+          giftId: 'flag',
+          giftName: 'Lá Cờ Tổ Quốc',
+          count: 1,
+          diamondCount: 1,
+        });
+      }
+    }
     isDragging2DRef.current = false;
   };
 
@@ -1696,57 +1788,15 @@ export default function GameBanDoVietNam({
             </div>
           </div>
 
-          {/* Center: Mock Gift Quick Test */}
-          <div className="flex items-center gap-1 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
-            <span className="text-[11px] font-black text-yellow-400 uppercase tracking-wider mr-1 shrink-0 flex items-center gap-1">
-              <Sparkles size={12} /> Test Quà:
-            </span>
-            {(gameState.gifts || []).map(gift => (
-              <button
-                key={gift.id}
-                onClick={() => handleTestGift(gift.id)}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold bg-white/5 hover:bg-white/15 border border-white/10 hover:border-yellow-400/50 text-gray-200 transition-all shrink-0 hover:scale-105 active:scale-95 shadow-sm"
-                title={`Test gửi ${gift.name} (+${gift.cells} ô)`}
-              >
-                <span>{gift.icon}</span>
-                <span>{gift.name}</span>
-                <span className="text-[10px] text-yellow-400 font-mono">+{gift.cells}</span>
-              </button>
-            ))}
-          </div>
-
           {/* Right: Quick Actions */}
           <div className="flex items-center gap-1.5 shrink-0">
             <button
-              onClick={handleToggleAutoTest}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-black transition-all border shadow-lg ${
-                isAutoTesting
-                  ? 'bg-red-600 text-white border-yellow-300 ring-2 ring-yellow-400 animate-pulse'
-                  : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-emerald-400/50'
-              }`}
-              title="Chạy tự động kiểm thử toàn bộ hệ thống quà tặng, combo, boss và hoàn thành bản đồ"
-            >
-              {isAutoTesting ? <Pause size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />}
-              <span>{isAutoTesting ? `Test (#${autoTestStep})` : '⚡ Chạy Test'}</span>
-            </button>
-
-            <button
-              onClick={() => {
-                window.open('?overlay=bando', 'AvaliveMapOverlay', 'width=450,height=800,menubar=no,toolbar=no,location=no,status=no');
-              }}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-black bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white border border-pink-400/50 shadow-md shadow-pink-500/30 transition-all active:scale-95"
-              title="Mở Cửa Sổ Khung 9:16 Sạch Riêng Biệt để TikTok LIVE Studio hoặc OBS bắt hình phát sóng"
-            >
-              <MonitorPlay size={13} />
-              <span>📺 Khung Live 9:16</span>
-            </button>
-
-            <button
               onClick={() => bandoEngine.resetRound()}
-              className="p-1.5 rounded-lg text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
-              title="Làm mới bàn cờ"
+              className="px-2.5 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-1.5 transition-colors"
+              title="Làm mới bàn cờ về trạng thái ban đầu"
             >
-              <RotateCcw size={14} />
+              <RotateCcw size={13} />
+              <span>Bàn cờ mới</span>
             </button>
           </div>
 

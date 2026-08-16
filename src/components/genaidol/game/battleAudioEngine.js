@@ -312,14 +312,14 @@ export const battleAudio = {
     });
   },
 
-  // -------------------------------------------------------------
-  // BACKGROUND MUSIC (BGM) ENGINE & UPLOADED MP3 MANAGER
-  // -------------------------------------------------------------
   startBgm(track = 'epic_synth', volume = 0.4, customUrl = null) {
+    const ctx = getAudioContext();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
     currentBgmTrack = track;
     currentBgmVolume = volume;
     if (customUrl) customBgmUrl = customUrl;
-    isBgmPlaying = true;
 
     this.stopBgm();
     isBgmPlaying = true;
@@ -334,9 +334,13 @@ export const battleAudio = {
           }
           bgmAudioElement.src = customBgmUrl;
           bgmAudioElement.volume = Math.max(0, Math.min(1, isDucked ? currentBgmVolume * 0.3 : currentBgmVolume));
-          bgmAudioElement.play().catch(err => console.warn('BGM Audio play failed:', err));
+          bgmAudioElement.play().catch(err => {
+            console.warn('BGM Audio play failed, falling back to synth:', err);
+            playSynthBgmPattern('epic_synth', currentBgmVolume);
+          });
         } catch (e) {
           console.warn('Custom BGM error:', e);
+          playSynthBgmPattern('epic_synth', currentBgmVolume);
         }
       }
     } else {
