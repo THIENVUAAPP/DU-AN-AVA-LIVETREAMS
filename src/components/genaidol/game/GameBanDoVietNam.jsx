@@ -117,6 +117,7 @@ export default function GameBanDoVietNam({
           id: `badge_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
           userId: user?.id || 'id_vip',
           username: user?.username || 'Chiến Binh Yêu Nước',
+          avatar: user?.avatar || '',
           flag,
           count,
           wx,
@@ -125,7 +126,7 @@ export default function GameBanDoVietNam({
           timestamp: Date.now(),
         };
 
-        setRecentClaimBadges(prev => [newBadge, ...prev.slice(0, 11)]);
+        setRecentClaimBadges(prev => [newBadge, ...prev.slice(0, 14)]);
       }
     });
     return () => unsub();
@@ -172,7 +173,7 @@ export default function GameBanDoVietNam({
     const isVN = gameState.selectedCountry === 'vietnam';
     return {
       overview: { name: 'Toàn Cảnh', icon: '🌐', pos: [0, 240, 260], target: [0, 0, 10] },
-      north: { name: isVN ? 'Miền Bắc & Hà Nội' : 'Vùng Phía Bắc', icon: '🏛️', pos: [-66, 110, -90], target: [-66.0, 0, -128.0] },
+      north: { name: isVN ? 'Miền Bắc & Hà Nội' : 'Vùng Phía Bắc', icon: '🏛️', pos: [-49, 110, -85], target: [-49.2, 0, -123.0] },
       central: { name: isVN ? 'Miền Trung & Huế' : 'Khu Vực Trung Tâm', icon: '🏖️', pos: [15, 120, 30], target: [-4.7, 0, 4.5] },
       south: { name: isVN ? 'Miền Nam & TP.HCM' : 'Vùng Phía Nam', icon: '🏙️', pos: [-27, 110, 155], target: [-27.6, 0, 126.4] },
       tip_camau: { name: isVN ? 'Mũi Cà Mau (Cực Nam)' : 'Cực Nam', icon: '⛵', pos: [-63, 75, 195], target: [-63.1, 0, 161.9] },
@@ -279,7 +280,7 @@ export default function GameBanDoVietNam({
     scene.add(rimLight);
 
     const pLight1 = new THREE.PointLight(0xffd700, 1.2 * brightness, 350);
-    pLight1.position.set(-66.0, 65, -128.0);
+    pLight1.position.set(-49.2, 65, -123.0);
     scene.add(pLight1);
 
     const pLight2 = new THREE.PointLight(0x38bdf8, 1.0 * brightness, 300);
@@ -720,25 +721,48 @@ export default function GameBanDoVietNam({
       ctx.fillRect(offsetX + cell.x * scale, offsetY + cell.y * scale, Math.max(1, scale * 0.88), Math.max(1, scale * 0.88));
     });
 
+    // Draw 2D Landmark Labels
+    (gameState.mapTexts || []).forEach(item => {
+      const lx = offsetX + (item.wx + cols / 2) * scale;
+      const ly = offsetY + (item.wz + rows / 2) * scale;
+      if (lx >= 0 && lx <= canvas.width && ly >= 0 && ly <= canvas.height) {
+        ctx.fillStyle = 'rgba(0,0,0,0.75)';
+        ctx.strokeStyle = item.color || '#facc15';
+        ctx.lineWidth = 1;
+        ctx.font = 'bold 11px sans-serif';
+        const textMetrics = ctx.measureText(item.text);
+        const pad = 6;
+        ctx.beginPath();
+        ctx.roundRect(lx - textMetrics.width / 2 - pad, ly - 16, textMetrics.width + pad * 2, 20, 6);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = item.color || '#facc15';
+        ctx.fillText(item.text, lx - textMetrics.width / 2, ly - 2);
+      }
+    });
+
     // Draw 2D Claim Badges & User Names
     recentClaimBadges.forEach((badge) => {
       const bx = offsetX + (badge.wx + cols / 2) * scale;
       const by = offsetY + (badge.wz + rows / 2) * scale;
       if (bx >= 0 && bx <= canvas.width && by >= 0 && by <= canvas.height) {
-        ctx.fillStyle = 'rgba(0,0,0,0.85)';
+        ctx.fillStyle = 'rgba(0,0,0,0.9)';
         ctx.strokeStyle = '#facc15';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.roundRect(bx - 60, by - 24, 120, 22, 6);
+        ctx.roundRect(bx - 70, by - 26, 140, 24, 8);
         ctx.fill();
         ctx.stroke();
 
         ctx.font = 'bold 10px sans-serif';
         ctx.fillStyle = '#facc15';
-        ctx.fillText(`${badge.flag} ${badge.userId}`, bx - 52, by - 10);
+        ctx.fillText(`${badge.flag} ID: ${badge.userId}`, bx - 62, by - 12);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(`+${badge.count} Ô Cờ`, bx + 15, by - 12);
       }
     });
-  }, [viewMode3D, gameState.claimedCount, gameState.settings, zoom2D, pan2D, recentClaimBadges, isLightTheme]);
+  }, [viewMode3D, gameState.claimedCount, gameState.settings, gameState.mapTexts, zoom2D, pan2D, recentClaimBadges, isLightTheme]);
 
   return (
     <div 
@@ -918,14 +942,21 @@ export default function GameBanDoVietNam({
                   top: 0,
                   display: 'none',
                 }}
-                className="px-2.5 py-1 rounded-2xl bg-gradient-to-r from-red-950/95 via-slate-900/95 to-black/95 border-2 border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.6)] backdrop-blur-md flex items-center gap-2 animate-bounce ring-2 ring-yellow-400/40 pointer-events-none select-none"
+                className="px-3 py-1.5 rounded-2xl bg-gradient-to-r from-red-950/95 via-slate-900/95 to-black/95 border-2 border-yellow-400 shadow-[0_0_25px_rgba(250,204,21,0.7)] backdrop-blur-md flex items-center gap-2.5 animate-bounce ring-2 ring-yellow-400/40 pointer-events-none select-none z-30"
               >
-                <span className="text-xl drop-shadow-md select-none">{badge.flag}</span>
+                {badge.avatar ? (
+                  <img src={badge.avatar} alt="Avatar" className="w-6 h-6 rounded-full border border-yellow-400 object-cover shadow" />
+                ) : (
+                  <span className="text-xl drop-shadow-md select-none">{badge.flag}</span>
+                )}
                 <div className="flex flex-col text-left">
-                  <span className="text-[10px] font-black text-yellow-300 font-mono tracking-wider">ID: {badge.userId}</span>
-                  <span className="text-[10px] font-bold text-white max-w-[100px] truncate">{badge.username}</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-[11px] font-black text-yellow-300 font-mono tracking-wider">ID: {badge.userId}</span>
+                    <span className="text-xs">{badge.flag}</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-white max-w-[110px] truncate">{badge.username}</span>
                 </div>
-                <span className="text-[9px] font-black font-mono px-2 py-0.5 rounded-full bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-sm">
+                <span className="text-[10px] font-black font-mono px-2.5 py-0.5 rounded-full bg-gradient-to-r from-red-600 via-amber-500 to-yellow-500 text-white shadow-md">
                   +{badge.count} Ô
                 </span>
               </div>

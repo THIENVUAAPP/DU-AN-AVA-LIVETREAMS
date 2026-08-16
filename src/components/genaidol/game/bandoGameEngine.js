@@ -55,11 +55,11 @@ function sanitizeMapLabels(labels) {
       let targetWy = item.wy ?? 4.0;
       let targetWz = item.wz ?? 0;
 
-      // Tự động định vị chuẩn xác Hà Nội ngay cạnh ngôi sao vàng trung tâm đất liền
-      if (norm.includes('hà nội') && (targetWx > -58 || targetWz > -125)) {
-        targetWx = -66.0;
+      // Tự động định vị chuẩn xác Hà Nội ngay trung tâm tỉnh thành trên đất liền
+      if (norm.includes('hà nội')) {
+        targetWx = -49.2;
         targetWy = 4.0;
-        targetWz = -128.0;
+        targetWz = -123.0;
       }
 
       result.push({
@@ -98,11 +98,11 @@ class BanDoGameEngine {
     const initialCountryKey = savedCustomConfig.selectedCountry || 'vietnam';
     const currentPreset = this.countries[initialCountryKey] || this.countries.vietnam || WORLD_COUNTRIES[0];
 
-    // Khởi tạo Khối Lưới Ô Cờ Tiêu Đề 3D (Banner Flag Cells)
+    // Khởi tạo Khối Lưới Ô Cờ Tiêu Đề 3D (Banner Flag Cells) - Tách biệt hoàn toàn khỏi đất liền phía Bắc
     const initialBannerText = savedCustomConfig.bannerText || (initialCountryKey === 'vietnam' ? 'VIỆT NAM MUÔN NĂM' : currentPreset.name.toUpperCase());
-    const initialBannerPos = (savedCustomConfig.bannerPos && savedCustomConfig.bannerPos.z <= -170)
+    const initialBannerPos = (savedCustomConfig.bannerPos && savedCustomConfig.bannerPos.z <= -200)
       ? savedCustomConfig.bannerPos
-      : { x: 0, y: 4.0, z: -190 };
+      : { x: 0, y: 4.0, z: -210 };
 
     this.bannerEngine = new BannerFlagCellsEngine({
       text: initialBannerText,

@@ -58,7 +58,7 @@ export const WORLD_COUNTRIES = [
     ['Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Thừa Thiên Huế', 'Hải Phòng', 'Cần Thơ', 'Khánh Hòa', 'Quảng Ninh', 'Cao Bằng', 'Cà Mau'],
     ['Quần đảo Hoàng Sa', 'Quần đảo Trường Sa', 'Đảo Phú Quốc', 'Côn Đảo', 'Đảo Bạch Long Vĩ', 'Đảo Lý Sơn'],
     [
-      { id: 't_vn_cap', text: '🏛️ THỦ ĐÔ HÀ NỘI', wx: -66.0, wy: 4.0, wz: -128.0, color: '#facc15', glow: true },
+      { id: 't_vn_cap', text: '🏛️ THỦ ĐÔ HÀ NỘI', wx: -49.2, wy: 4.0, wz: -123.0, color: '#facc15', glow: true },
       { id: 't_vn_danang', text: '🏙️ ĐÀ NẴNG', wx: -4.7, wy: 4.0, wz: 4.5, color: '#38bdf8', glow: true },
       { id: 't_vn_hcm', text: '🏙️ TP. HỒ CHÍ MINH', wx: -27.6, wy: 4.0, wz: 126.4, color: '#38bdf8', glow: true },
       { id: 't_vn_hs', text: '🇻🇳 QUẦN ĐẢO HOÀNG SA', wx: 65.6, wy: 4.0, wz: -34.4, color: '#ef4444', glow: true },
