@@ -52,40 +52,18 @@ function createCountryFlagTexture(countryCode = 'vietnam') {
     ctx.arc(128, 128, 72, 0, Math.PI);
     ctx.fill();
   } else {
-    // 🇻🇳 VIỆT NAM (Mặc định): Nền cờ đỏ rực rỡ + Viền dạ quang phát sáng + Ngôi sao vàng kim phát quang siêu nét
-    const grad = ctx.createLinearGradient(0, 0, 256, 256);
-    grad.addColorStop(0, '#EF4444');
-    grad.addColorStop(0.5, '#DC2626');
-    grad.addColorStop(1, '#B91C1C');
-    ctx.fillStyle = grad;
+    // 🇻🇳 VIỆT NAM (Mặc định): Nền đỏ cờ thắm tươi + Viền khối sắc nét + Ngôi sao vàng 5 cánh chuẩn hình học (KHÔNG phát quang, không glow mờ)
+    ctx.fillStyle = '#DA251D';
     ctx.fillRect(0, 0, 256, 256);
 
-    // Viền khối 3D phát quang (Fluorescent Neon Border)
-    ctx.strokeStyle = 'rgba(254, 240, 138, 0.85)';
-    ctx.lineWidth = 6;
-    ctx.strokeRect(3, 3, 250, 250);
-
-    ctx.strokeStyle = 'rgba(239, 68, 68, 0.9)';
+    // Viền phân tách nhẹ tạo chiều sâu khối hộp 3D cho từng ô
+    ctx.strokeStyle = '#991B1B';
     ctx.lineWidth = 8;
-    ctx.strokeRect(9, 9, 238, 238);
+    ctx.strokeRect(4, 4, 248, 248);
 
-    // Ngôi sao vàng 5 cánh chuẩn tỷ lệ hình học, hiệu ứng phát quang rực rỡ (Fluorescent Glow Aura)
-    const cx = 128, cy = 128, outerR = 84, innerR = 34;
-    
-    // Radial Glow Aura xung quanh ngôi sao
-    const starGlow = ctx.createRadialGradient(cx, cy, innerR * 0.5, cx, cy, outerR * 1.25);
-    starGlow.addColorStop(0, 'rgba(255, 255, 0, 0.6)');
-    starGlow.addColorStop(0.7, 'rgba(245, 158, 11, 0.3)');
-    starGlow.addColorStop(1, 'rgba(220, 38, 38, 0)');
-    ctx.fillStyle = starGlow;
-    ctx.beginPath();
-    ctx.arc(cx, cy, outerR * 1.25, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Thân Ngôi sao vàng kim siêu nét
+    // Ngôi sao vàng 5 cánh chuẩn tỷ lệ, siêu sắc nét, nhìn từ xa hay gần đều rõ ràng tuyệt đối
+    const cx = 128, cy = 128, outerR = 80, innerR = 32;
     ctx.fillStyle = '#FFFF00';
-    ctx.shadowColor = '#FBBF24';
-    ctx.shadowBlur = 16;
     ctx.beginPath();
     for (let i = 0; i < 5; i++) {
       const rotOuter = (i * 4 * Math.PI) / 5 - Math.PI / 2;
@@ -718,7 +696,7 @@ export default function GameBanDoVietNam({
       const wz = (cell.y - rows / 2) * 1.0;
       const isClaimed = !!bandoEngine.state.cellsById[cell.id];
 
-      const scaleY = isClaimed ? 1.85 : 0.22;
+      const scaleY = isClaimed ? 1.75 : 0.16;
       const posY = scaleY / 2;
 
       dummy.position.set(wx, posY, wz);
@@ -727,11 +705,11 @@ export default function GameBanDoVietNam({
       instancedMesh.setMatrixAt(i, dummy.matrix);
 
       if (isClaimed) {
-        // Ô đã cắm cờ (người xem tặng quà): Lắp lá cờ quốc kỳ 3D vươn cao + Dạ phát quang siêu rực rỡ (gấp 10 lần màu nền)
-        instancedMesh.setColorAt(i, new THREE.Color(2.2, 1.9, 1.6));
+        // Ô đã cắm cờ (người xem tặng quà): Lắp lá cờ quốc kỳ 3D vươn cao, màu đỏ thắm đậm sắc nét tuyệt đối
+        instancedMesh.setColorAt(i, new THREE.Color(1.0, 1.0, 1.0));
       } else {
-        // Ô nền lãnh thổ CHƯA cắm cờ: Tối mờ dịu, sẫm màu, chìm xuống dưới
-        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.22, 0.18, 0.20) : new THREE.Color(0.18, 0.14, 0.16));
+        // Ô nền lãnh thổ CHƯA cắm cờ: Tối mờ sâu, chìm hẳn xuống dưới, chỉ thấy mờ mờ bóng dáng lãnh thổ
+        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.12, 0.09, 0.10) : new THREE.Color(0.08, 0.06, 0.07));
       }
     }
     instancedMesh.instanceMatrix.needsUpdate = true;
@@ -1004,7 +982,7 @@ export default function GameBanDoVietNam({
       const cell = cells[i];
       if (!cell) continue;
       const isClaimed = !!gameState.cellsById[cell.id];
-      const scaleY = isClaimed ? 1.85 : 0.22;
+      const scaleY = isClaimed ? 1.75 : 0.16;
       const posY = scaleY / 2;
       const wx = (cell.x - cols / 2) * 1.0;
       const wz = (cell.y - rows / 2) * 1.0;
@@ -1015,11 +993,11 @@ export default function GameBanDoVietNam({
       instancedMesh.setMatrixAt(i, dummy.matrix);
 
       if (isClaimed) {
-        // Ô đã cắm cờ (người xem tặng quà): Lắp lá cờ quốc kỳ 3D vươn cao + Dạ phát quang siêu rực rỡ (gấp 10 lần màu nền)
-        instancedMesh.setColorAt(i, new THREE.Color(2.2, 1.9, 1.6));
+        // Ô đã cắm cờ (người xem tặng quà): Lắp lá cờ quốc kỳ 3D vươn cao, màu đỏ thắm đậm sắc nét tuyệt đối
+        instancedMesh.setColorAt(i, new THREE.Color(1.0, 1.0, 1.0));
       } else {
-        // Ô nền lãnh thổ CHƯA cắm cờ: Tối mờ dịu, sẫm màu, chìm xuống dưới
-        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.22, 0.18, 0.20) : new THREE.Color(0.18, 0.14, 0.16));
+        // Ô nền lãnh thổ CHƯA cắm cờ: Tối mờ sâu, chìm hẳn xuống dưới, chỉ thấy mờ mờ bóng dáng lãnh thổ
+        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.12, 0.09, 0.10) : new THREE.Color(0.08, 0.06, 0.07));
       }
     }
 
@@ -1096,21 +1074,14 @@ export default function GameBanDoVietNam({
       const cellSize = Math.max(1, scale * 0.9);
 
       if (isClaimed) {
-        // Ô đã cắm cờ (Tặng quà): Cờ đỏ thắm tươi rực rỡ + Viền dạ quang phát sáng
-        ctx.fillStyle = '#DC2626';
+        // Ô đã cắm cờ (Tặng quà): Cờ đỏ thắm tươi #DA251D, sắc nét tuyệt đối
+        ctx.fillStyle = '#DA251D';
         ctx.fillRect(cx, cy, cellSize, cellSize);
-
-        // Viền dạ quang neon phát sáng
-        if (cellSize >= 4.0) {
-          ctx.strokeStyle = 'rgba(254, 240, 138, 0.85)';
-          ctx.lineWidth = 1;
-          ctx.strokeRect(cx, cy, cellSize, cellSize);
-        }
 
         // Ngôi sao vàng mini ở trung tâm ô pixel
         if (cellSize >= 3.0) {
           ctx.fillStyle = '#FFFF00';
-          const r = cellSize * 0.34;
+          const r = cellSize * 0.32;
           const midX = cx + cellSize / 2;
           const midY = cy + cellSize / 2;
           ctx.beginPath();
@@ -1130,13 +1101,14 @@ export default function GameBanDoVietNam({
           ctx.fill();
         }
       } else {
-        // Ô nền CHƯA cắm cờ: Tối mờ dịu, sẫm màu, chìm xuống dưới
-        ctx.fillStyle = isLightTheme ? 'rgba(160, 40, 40, 0.16)' : 'rgba(70, 18, 22, 0.28)';
+        // Ô nền CHƯA cắm cờ: Tối mờ sâu, chìm hẳn xuống dưới
+        ctx.fillStyle = isLightTheme ? 'rgba(120, 20, 25, 0.10)' : 'rgba(40, 10, 12, 0.22)';
         ctx.fillRect(cx, cy, cellSize, cellSize);
 
-        if (cellSize >= 4.5) {
-          ctx.fillStyle = isLightTheme ? 'rgba(200, 140, 20, 0.20)' : 'rgba(180, 120, 20, 0.20)';
-          const r = cellSize * 0.22;
+        // Chỉ khi zoom rất gần mới vẽ sao mờ trên nền
+        if (cellSize >= 7.0) {
+          ctx.fillStyle = isLightTheme ? 'rgba(180, 100, 10, 0.15)' : 'rgba(150, 90, 10, 0.15)';
+          const r = cellSize * 0.20;
           const midX = cx + cellSize / 2;
           const midY = cy + cellSize / 2;
           ctx.beginPath();
