@@ -78,6 +78,23 @@ class BanDoAudioEngine {
   unlock() {
     this.ensureContext();
     this.playCellPop();
+    if (!this.isMuted && this.bgmVolume > 0 && !this.bgmPlaying) {
+      this.playBgmOnLive();
+    }
+  }
+
+  playBgmOnLive() {
+    this.ensureContext();
+    if (this.customBgmUrl || this.customBgmAudio) {
+      this.playCustomBgm();
+    } else {
+      this.startSyntheticBgm();
+    }
+  }
+
+  stopBgmOnLive() {
+    this.stopCustomBgm();
+    this.stopSyntheticBgm();
   }
 
   setMasterVolume(val) {

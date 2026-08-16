@@ -755,23 +755,25 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                       <Upload size={14} /> Chọn File Nhạc MP3
                     </button>
 
-                    {uploadedBgmName && (
-                      <button
-                        onClick={() => {
-                          if (isBgmPlaying) {
-                            bandoAudio.stopCustomBgm();
-                            setIsBgmPlaying(false);
-                          } else {
-                            bandoAudio.playCustomBgm();
-                            setIsBgmPlaying(true);
-                          }
-                        }}
-                        className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold flex items-center gap-1"
-                      >
-                        {isBgmPlaying ? <Pause size={14} /> : <Play size={14} />}
-                        <span>{isBgmPlaying ? 'Dừng Nhạc' : 'Phát Nhạc'}</span>
-                      </button>
-                    )}
+                    <button
+                      onClick={() => {
+                        if (isBgmPlaying) {
+                          bandoAudio.stopBgmOnLive();
+                          setIsBgmPlaying(false);
+                        } else {
+                          bandoAudio.playBgmOnLive();
+                          setIsBgmPlaying(true);
+                        }
+                      }}
+                      className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+                        isBgmPlaying 
+                          ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-md' 
+                          : 'bg-white/10 hover:bg-white/20 text-white'
+                      }`}
+                    >
+                      {isBgmPlaying ? <Pause size={14} /> : <Play size={14} />}
+                      <span>{isBgmPlaying ? 'Dừng Nhạc LIVE' : (uploadedBgmName ? 'Phát Nhạc Tải Lên' : 'Phát Nhạc Hùng Thiêng')}</span>
+                    </button>
                   </div>
 
                   {uploadedBgmName && (

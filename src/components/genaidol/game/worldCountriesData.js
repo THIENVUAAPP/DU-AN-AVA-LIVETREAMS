@@ -14,19 +14,25 @@ export const CONTINENTS = [
 ];
 
 // Helper để sinh danh sách tỉnh thành/địa danh chuẩn cho quốc gia
-function createCountryDef(id, name, flag, code, continent, title, primaryColor, secondaryColor, mainCities, islands = [], customLabels = [], lang = 'en') {
+function createCountryDef(id, name, flag, code, continent, title, primaryColor, secondaryColor, mainCities, islands = [], customLabels = null, lang = 'en') {
   const provinces = [
     ...mainCities.map((c, i) => ({ id: `${id}_prov_${i+1}`, name: c, totalCells: 600 })),
     ...islands.map((isl, i) => ({ id: `${id}_isl_${i+1}`, name: isl, totalCells: 350 }))
   ];
 
-  const labels = [
-    { id: `t_${id}_cap`, text: `🏛️ THỦ ĐÔ ${mainCities[0]?.toUpperCase() || name}`, wx: 0, wy: 3.5, wz: -50, color: secondaryColor || '#facc15', glow: true },
-    ...(mainCities[1] ? [{ id: `t_${id}_city2`, text: `🏙️ ${mainCities[1].toUpperCase()}`, wx: -20, wy: 3.5, wz: 40, color: '#38bdf8', glow: true }] : []),
-    ...(islands[0] ? [{ id: `t_${id}_isl1`, text: `🏝️ ${islands[0].toUpperCase()}`, wx: 50, wy: 3.5, wz: 80, color: '#34d399', glow: true }] : []),
-    ...(islands[1] ? [{ id: `t_${id}_isl2`, text: `🏝️ ${islands[1].toUpperCase()}`, wx: 70, wy: 3.5, wz: 120, color: '#34d399', glow: true }] : []),
-    ...customLabels
-  ];
+  let labels = [];
+  if (customLabels && Array.isArray(customLabels) && customLabels.length > 0) {
+    labels = customLabels;
+  } else {
+    const rawCap = mainCities[0] || name;
+    const capName = rawCap.replace(/^thủ\s*đô\s*/i, '').trim();
+    labels = [
+      { id: `t_${id}_cap`, text: `🏛️ THỦ ĐÔ ${capName.toUpperCase()}`, wx: 0, wy: 4.0, wz: -60, color: secondaryColor || '#facc15', glow: true },
+      ...(mainCities[1] ? [{ id: `t_${id}_city2`, text: `🏙️ ${mainCities[1].toUpperCase()}`, wx: -20, wy: 4.0, wz: 50, color: '#38bdf8', glow: true }] : []),
+      ...(islands[0] ? [{ id: `t_${id}_isl1`, text: `🏝️ ${islands[0].toUpperCase()}`, wx: 60, wy: 4.0, wz: 0, color: '#34d399', glow: true }] : []),
+      ...(islands[1] ? [{ id: `t_${id}_isl2`, text: `🏝️ ${islands[1].toUpperCase()}`, wx: 75, wy: 4.0, wz: 70, color: '#34d399', glow: true }] : []),
+    ];
+  }
 
   return {
     id,
@@ -49,13 +55,16 @@ function createCountryDef(id, name, flag, code, continent, title, primaryColor, 
 export const WORLD_COUNTRIES = [
   // ==================== CHÂU Á (ASIA) ====================
   createCountryDef('vietnam', 'Việt Nam', '🇻🇳', 'VN', 'asia', 'VIỆT NAM GHÉP CỜ LIVE — BẢN ĐỒ HÌNH CHỮ S', '#DA251D', '#FFD700', 
-    ['Thủ Đô Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Thừa Thiên Huế', 'Hải Phòng', 'Cần Thơ', 'Khánh Hòa', 'Quảng Ninh', 'Cao Bằng', 'Cà Mau'],
+    ['Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Thừa Thiên Huế', 'Hải Phòng', 'Cần Thơ', 'Khánh Hòa', 'Quảng Ninh', 'Cao Bằng', 'Cà Mau'],
     ['Quần đảo Hoàng Sa', 'Quần đảo Trường Sa', 'Đảo Phú Quốc', 'Côn Đảo', 'Đảo Bạch Long Vĩ', 'Đảo Lý Sơn'],
     [
-      { id: 't_vn_hs', text: '🇻🇳 QUẦN ĐẢO HOÀNG SA', wx: 55, wy: 3.5, wz: -10, color: '#ef4444', glow: true },
-      { id: 't_vn_ts', text: '🇻🇳 QUẦN ĐẢO TRƯỜNG SA', wx: 75, wy: 3.5, wz: 65, color: '#ef4444', glow: true },
-      { id: 't_vn_biendong', text: '🌊 BIỂN ĐÔNG VIỆT NAM', wx: 65, wy: 3.5, wz: 25, color: '#60a5fa', glow: false },
-      { id: 't_vn_slogan', text: '⭐ NON SÔNG LIỀN MỘT DẢI ⭐', wx: 0, wy: 3.5, wz: 190, color: '#fbbf24', glow: true }
+      { id: 't_vn_cap', text: '🏛️ THỦ ĐÔ HÀ NỘI', wx: -18, wy: 4.0, wz: -85, color: '#facc15', glow: true },
+      { id: 't_vn_danang', text: '🏙️ ĐÀ NẴNG', wx: 16, wy: 4.0, wz: -10, color: '#38bdf8', glow: true },
+      { id: 't_vn_hcm', text: '🏙️ TP. HỒ CHÍ MINH', wx: -12, wy: 4.0, wz: 82, color: '#38bdf8', glow: true },
+      { id: 't_vn_hs', text: '🇻🇳 QUẦN ĐẢO HOÀNG SA', wx: 62, wy: 4.0, wz: -15, color: '#ef4444', glow: true },
+      { id: 't_vn_ts', text: '🇻🇳 QUẦN ĐẢO TRƯỜNG SA', wx: 78, wy: 4.0, wz: 68, color: '#ef4444', glow: true },
+      { id: 't_vn_biendong', text: '🌊 BIỂN ĐÔNG VIỆT NAM', wx: 92, wy: 4.0, wz: 22, color: '#60a5fa', glow: false },
+      { id: 't_vn_slogan', text: '⭐ NON SÔNG LIỀN MỘT DẢI ⭐', wx: 0, wy: 4.0, wz: 160, color: '#fbbf24', glow: true }
     ]
   ),
   createCountryDef('japan', 'Nhật Bản', '🇯🇵', 'JP', 'asia', 'JAPAN FLAG LIVE — 日本地図', '#BC002D', '#FFFFFF',

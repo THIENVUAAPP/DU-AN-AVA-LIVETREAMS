@@ -136,9 +136,21 @@ export default function GameBanDoVietNam({
     }
   }, [externalLiveEvent]);
 
-  // Unlock Web Audio on first user interaction
+  // Unlock Web Audio and Auto-Play BGM on first user interaction on Live
   const handleUserGesture = useCallback(() => {
     bandoAudio.unlock();
+  }, []);
+
+  useEffect(() => {
+    const handleFirstGesture = () => {
+      bandoAudio.unlock();
+    };
+    window.addEventListener('pointerdown', handleFirstGesture, { once: true });
+    window.addEventListener('keydown', handleFirstGesture, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', handleFirstGesture);
+      window.removeEventListener('keydown', handleFirstGesture);
+    };
   }, []);
 
   // Camera preset positions based on active country
@@ -149,8 +161,9 @@ export default function GameBanDoVietNam({
       north: { name: isVN ? 'Miền Bắc & Hà Nội' : 'Vùng Phía Bắc', icon: '🏛️', pos: [-20, 120, -50], target: [-20, 0, -85] },
       central: { name: isVN ? 'Miền Trung & Huế' : 'Khu Vực Trung Tâm', icon: '🏖️', pos: [25, 130, 20], target: [15, 0, 10] },
       south: { name: isVN ? 'Miền Nam & TP.HCM' : 'Vùng Phía Nam', icon: '🏙️', pos: [-15, 120, 140], target: [-15, 0, 105] },
+      tip_camau: { name: isVN ? 'Mũi Cà Mau (Cực Nam)' : 'Cực Nam', icon: '⛵', pos: [-35, 75, 185], target: [-35, 0, 145] },
       islands: { name: isVN ? 'Hoàng Sa & Trường Sa' : 'Hải Đảo', icon: '🏝️', pos: [80, 110, 40], target: [65, 0, 15] },
-      macro: { name: 'Cận Cảnh Chi Tiết', icon: '🔍', pos: [0, 60, 60], target: [0, 0, 0] },
+      macro: { name: 'Cận Cảnh Từng Ô Cờ', icon: '🔍', pos: [0, 25, 25], target: [0, 0, 0] },
     };
   }, [gameState.selectedCountry]);
 
@@ -201,58 +214,58 @@ export default function GameBanDoVietNam({
     camera.lookAt(0, 0, 10);
     state.camera = camera;
 
-    // Renderer
+    // Renderer with balanced tone mapping
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = (gameState.settings.brightness || 1.4) * 0.95;
+    renderer.toneMappingExposure = (gameState.settings.brightness || 1.2) * 0.9;
     container.innerHTML = '';
     container.appendChild(renderer.domElement);
     state.renderer = renderer;
 
-    // Controls with Smooth Multi-directional Pan & Zoom
+    // Controls with Ultra-close Zoom and Wide Pan
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
     controls.maxPolarAngle = Math.PI / 2.02;
-    controls.minDistance = 25;
-    controls.maxDistance = 750;
+    controls.minDistance = 8;
+    controls.maxDistance = 800;
     controls.target.set(0, 0, 10);
     controls.enablePan = true;
-    controls.panSpeed = 1.3;
+    controls.panSpeed = 1.5;
     controls.screenSpacePanning = true;
     controls.enableZoom = true;
-    controls.zoomSpeed = 1.2;
+    controls.zoomSpeed = 1.25;
     controls.autoRotate = !isPopout && autoRotate;
     controls.autoRotateSpeed = 0.8;
     state.controls = controls;
 
-    // Enhanced High-Brightness Lighting
-    const brightness = gameState.settings.brightness || 1.4;
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.35 * brightness);
+    // Balanced Lighting (Crisp Colors without Overexposure)
+    const brightness = gameState.settings.brightness || 1.2;
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.95 * brightness);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xfffaee, 1.85 * brightness);
+    const dirLight = new THREE.DirectionalLight(0xfffaee, 1.25 * brightness);
     dirLight.position.set(120, 320, 160);
     dirLight.castShadow = true;
     scene.add(dirLight);
 
-    const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.1 * brightness);
+    const rimLight = new THREE.DirectionalLight(0x38bdf8, 0.8 * brightness);
     rimLight.position.set(-150, 180, -120);
     scene.add(rimLight);
 
-    const pLight1 = new THREE.PointLight(0xffd700, 2.2 * brightness, 350);
+    const pLight1 = new THREE.PointLight(0xffd700, 1.2 * brightness, 350);
     pLight1.position.set(-20, 65, -85);
     scene.add(pLight1);
 
-    const pLight2 = new THREE.PointLight(0x38bdf8, 1.9 * brightness, 300);
+    const pLight2 = new THREE.PointLight(0x38bdf8, 1.0 * brightness, 300);
     pLight2.position.set(-15, 60, 105);
     scene.add(pLight2);
 
-    const pLight3 = new THREE.PointLight(0xf43f5e, 2.2 * brightness, 350);
+    const pLight3 = new THREE.PointLight(0xf43f5e, 1.2 * brightness, 350);
     pLight3.position.set(75, 65, 25);
     scene.add(pLight3);
 
@@ -281,8 +294,8 @@ export default function GameBanDoVietNam({
     const count = cells.length > 0 ? cells.length : 15125;
     const boxGeo = new THREE.BoxGeometry(0.88, 1, 0.88);
     const boxMat = new THREE.MeshStandardMaterial({
-      roughness: 0.28,
-      metalness: 0.35,
+      roughness: 0.48,
+      metalness: 0.12,
       vertexColors: true,
     });
     const instancedMesh = new THREE.InstancedMesh(boxGeo, boxMat, count);
@@ -302,8 +315,8 @@ export default function GameBanDoVietNam({
     if (bannerCount > 0) {
       bannerBoxGeo = new THREE.BoxGeometry(1.5, 1.5, 1.5);
       bannerBoxMat = new THREE.MeshStandardMaterial({
-        roughness: 0.2,
-        metalness: 0.4,
+        roughness: 0.42,
+        metalness: 0.18,
         vertexColors: true,
       });
       bannerMesh = new THREE.InstancedMesh(bannerBoxGeo, bannerBoxMat, bannerCount);
@@ -506,7 +519,7 @@ export default function GameBanDoVietNam({
     const controls = state.controls;
 
     const dir = new THREE.Vector3().subVectors(camera.position, controls.target);
-    const newLen = Math.max(30, Math.min(650, dir.length() * factor));
+    const newLen = Math.max(8, Math.min(800, dir.length() * factor));
     dir.setLength(newLen);
     camera.position.copy(controls.target).add(dir);
   };

@@ -37,8 +37,32 @@ export function getHonorTier(cells) {
 export const COUNTRY_PRESETS = COUNTRIES_BY_ID;
 export { WORLD_COUNTRIES, CONTINENTS };
 
-const STORAGE_KEY_CONFIG = 'aidol_bando_custom_config_v3';
-const STORAGE_KEY_COUNTRIES = 'aidol_bando_countries_custom_v3';
+const STORAGE_KEY_CONFIG = 'aidol_bando_custom_config_v4';
+const STORAGE_KEY_COUNTRIES = 'aidol_bando_countries_custom_v4';
+
+// Helper khử trùng lặp nhãn địa danh
+function sanitizeMapLabels(labels) {
+  if (!Array.isArray(labels)) return [];
+  const seenTexts = new Set();
+  const result = [];
+  for (const item of labels) {
+    if (!item || !item.text) continue;
+    const norm = item.text.trim().toLowerCase();
+    if (!seenTexts.has(norm)) {
+      seenTexts.add(norm);
+      result.push({
+        id: item.id || `lbl_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        text: item.text.trim(),
+        wx: item.wx ?? 0,
+        wy: item.wy ?? 4.0,
+        wz: item.wz ?? 0,
+        color: item.color || '#facc15',
+        glow: item.glow !== false
+      });
+    }
+  }
+  return result;
+}
 
 class BanDoGameEngine {
   constructor() {
@@ -76,6 +100,11 @@ class BanDoGameEngine {
       starColor: currentPreset.starColor || '#FFD700'
     });
 
+    const rawLabels = savedCustomConfig.mapTexts && savedCustomConfig.mapTexts.length > 0
+      ? savedCustomConfig.mapTexts
+      : (currentPreset.labels || []);
+    const sanitizedLabels = sanitizeMapLabels(rawLabels);
+
     // Game state
     this.state = {
       roundId: 'ROUND-1',
@@ -111,7 +140,7 @@ class BanDoGameEngine {
       isDemoMode: savedCustomConfig.isDemoMode !== undefined ? savedCustomConfig.isDemoMode : true,
       cameraPreset: 'overview',
       selectedCountry: initialCountryKey,
-      mapTexts: savedCustomConfig.mapTexts || currentPreset.labels || [],
+      mapTexts: sanitizedLabels,
       gifts: savedCustomConfig.gifts || DEFAULT_MAP_GIFTS,
       
       // Banner Flag Cells Matrix State
@@ -365,7 +394,7 @@ class BanDoGameEngine {
   switchCountry(countryKey) {
     const preset = this.countries[countryKey] || this.countries.vietnam || WORLD_COUNTRIES[0];
     this.state.selectedCountry = countryKey;
-    this.state.mapTexts = preset.labels || [];
+    this.state.mapTexts = sanitizeMapLabels(preset.labels || []);
     this.state.settings.customMapTitle = preset.title;
     this.state.settings.claimedCellColor = preset.claimedCellColor;
     this.state.settings.starColor = preset.starColor;
