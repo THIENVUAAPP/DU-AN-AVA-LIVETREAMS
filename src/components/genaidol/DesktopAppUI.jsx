@@ -670,6 +670,7 @@ export default function DesktopAppUI() {
         <GameBanDoVietNam 
           isPopout={false}
           onOpenAdmin={() => setIsGameBanDoAdminOpen(true)}
+          externalLiveEvent={lastGameEvent}
           aspectRatio={globalAspectRatio}
           onToggleAspectRatio={toggleGlobalAspectRatio}
         />
@@ -750,10 +751,10 @@ export default function DesktopAppUI() {
             <button
               onClick={() => setIsGameAdminOpen(true)}
               className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-gradient-to-r from-purple-900/90 to-indigo-900/90 hover:from-purple-800 hover:to-indigo-800 text-purple-200 hover:text-white border border-purple-400/80 shadow-md transition-all animate-in fade-in duration-200"
-              title="Mở bảng Menu Cài Đặt Game Chiến Đấu"
+              title="Cài đặt Game Chiến Đấu"
             >
-              <Settings size={12} className="text-yellow-300 animate-spin-slow" />
-              <span>⚙️ Cài đặt Game</span>
+              <Settings size={12} className="text-yellow-300" />
+              <span>Game</span>
             </button>
           )}
 
@@ -782,10 +783,10 @@ export default function DesktopAppUI() {
             <button
               onClick={() => setIsGameBanDoAdminOpen(true)}
               className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-900/90 to-red-900/90 hover:from-amber-800 hover:to-red-800 text-amber-200 hover:text-white border border-amber-400/80 shadow-md transition-all animate-in fade-in duration-200"
-              title="Mở bảng Menu Cài Đặt Game Bản Đồ Cắm Cờ Quốc Gia"
+              title="Cài đặt Game Bản Đồ"
             >
-              <Settings size={12} className="text-yellow-300 animate-spin-slow" />
-              <span>⚙️ Cài đặt Game</span>
+              <Settings size={12} className="text-yellow-300" />
+              <span>Game</span>
             </button>
           )}
 
