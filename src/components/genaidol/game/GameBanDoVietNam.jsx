@@ -66,10 +66,10 @@ function createCountryFlagTexture(countryCode = 'vietnam') {
     ctx.strokeRect(10, 10, 236, 236);
 
     // Ngôi sao vàng 5 cánh chuẩn tỷ lệ hình học, siêu nét rực sáng
-    const cx = 128, cy = 128, outerR = 78, innerR = 31;
+    const cx = 128, cy = 128, outerR = 82, innerR = 33;
     ctx.fillStyle = '#FFFF00';
-    ctx.shadowColor = '#FFA500';
-    ctx.shadowBlur = 8;
+    ctx.shadowColor = '#F59E0B';
+    ctx.shadowBlur = 12;
     ctx.beginPath();
     for (let i = 0; i < 5; i++) {
       const rotOuter = (i * 4 * Math.PI) / 5 - Math.PI / 2;
@@ -88,6 +88,7 @@ function createCountryFlagTexture(countryCode = 'vietnam') {
   }
 
   const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
   texture.wrapS = THREE.ClampToEdgeWrapping;
   texture.wrapT = THREE.ClampToEdgeWrapping;
   texture.generateMipmaps = true;
@@ -628,7 +629,11 @@ export default function GameBanDoVietNam({
       }
 
       const gridHelper = new THREE.GridHelper(500, 35, isLightTheme ? 0x94a3b8 : 0x1e293b, isLightTheme ? 0xe2e8f0 : 0x0f172a);
-      gridHelper.position.y = -2;
+      gridHelper.position.y = -3;
+      if (gridHelper.material) {
+        gridHelper.material.transparent = true;
+        gridHelper.material.opacity = 0.25;
+      }
       scene.add(gridHelper);
     }
 
@@ -639,12 +644,13 @@ export default function GameBanDoVietNam({
     const flagTexture = createCountryFlagTexture(gameState.selectedCountry || 'vietnam');
     state.flagTexture = flagTexture;
     const boxGeo = new THREE.BoxGeometry(0.88, 1, 0.88);
-    const boxMat = new THREE.MeshStandardMaterial({
+    const boxMat = new THREE.MeshLambertMaterial({
       map: flagTexture,
-      roughness: 0.25,
-      metalness: 0.08,
-      vertexColors: true,
+      color: 0xffffff,
+      reflectivity: 0.1,
     });
+    state.boxMat = boxMat;
+    state.currentCountry = gameState.selectedCountry || 'vietnam';
     const instancedMesh = new THREE.InstancedMesh(boxGeo, boxMat, count);
     instancedMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     instancedMesh.castShadow = true;
@@ -963,6 +969,14 @@ export default function GameBanDoVietNam({
     const instancedMesh = state.instancedMesh;
     const maskData = bandoEngine.maskData;
     if (!instancedMesh || !maskData) return;
+
+    // Cập nhật Texture Quốc Kỳ khi chuyển đổi quốc gia
+    if (state.boxMat && gameState.selectedCountry && state.currentCountry !== gameState.selectedCountry) {
+      state.currentCountry = gameState.selectedCountry;
+      const newTex = createCountryFlagTexture(gameState.selectedCountry);
+      state.boxMat.map = newTex;
+      state.boxMat.needsUpdate = true;
+    }
 
     const cells = maskData.cells || [];
     const count = cells.length;

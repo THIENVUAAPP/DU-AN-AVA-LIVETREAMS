@@ -250,10 +250,14 @@ class BanDoGameEngine {
         const provJson = await provRes.json();
         this.provincesData = provJson.provinces || [];
         this.buildGridForCurrentCountry();
+        this.isLoaded = true;
+        this.notify();
       }
     } catch (e) {
       console.warn('Fallback loading built-in map grid for BanDoGameEngine', e);
       this.generateFallbackGrid();
+      this.isLoaded = true;
+      this.notify();
     }
   }
 
