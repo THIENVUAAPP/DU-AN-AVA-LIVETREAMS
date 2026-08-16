@@ -2384,6 +2384,16 @@ export default function GameChienDau({
             />
           </div>
 
+          {/* Nút Trận đấu mới (Đưa lên trên Top Bar) */}
+          <button
+            onClick={resetMatch}
+            className="px-2.5 py-1.5 rounded-lg text-xs font-bold text-gray-200 hover:text-white bg-white/10 hover:bg-white/20 border border-white/10 flex items-center gap-1 transition-colors"
+            title="Làm mới trận đấu PK về trạng thái ban đầu"
+          >
+            <RotateCcw size={13} />
+            <span>Trận đấu mới</span>
+          </button>
+
           {/* Admin PK Shortcut */}
           {onOpenAdmin && (
             <button
@@ -2398,41 +2408,16 @@ export default function GameChienDau({
         </div>
       </div>
 
-      {/* 2. CENTER LIVE STAGE VIEWPORT (Khung hình Live Sạch 100%) */}
-      <div className="flex-1 w-full h-full flex items-center justify-center p-2 sm:p-3 overflow-hidden bg-[#04060a]">
+      {/* 2. CENTER LIVE STAGE VIEWPORT (Khung hình Live Sạch 100% - Full chiều cao 9:16 & 16:9) */}
+      <div className="flex-1 w-full h-full flex items-center justify-center p-1 sm:p-2 overflow-hidden bg-[#04060a]">
         <div 
           className={`relative flex flex-col overflow-hidden transition-all duration-300 ${
             aspectRatio === '9:16'
-              ? 'w-full max-w-[440px] h-full max-h-[860px] aspect-[9/16] rounded-2xl md:rounded-3xl border border-purple-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-[#0a0c14]'
+              ? 'w-full max-w-[440px] h-full max-h-[96%] aspect-[9/16] rounded-2xl md:rounded-3xl border border-purple-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-[#0a0c14]'
               : 'w-full max-w-[1200px] h-auto max-h-full aspect-[16/9] rounded-2xl border border-purple-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-[#0a0c14]'
           }`}
         >
           {renderCleanStage()}
-        </div>
-      </div>
-
-      {/* 3. OUTER BOTTOM HOST CONTROL BAR (Thanh Quản trị & Test nằm ngoài khung live) */}
-      <div className="relative z-20 bg-[#0d1017] border-t border-white/10 p-2 sm:p-2.5 shrink-0 animate-in slide-in-from-bottom duration-200">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-2">
-          
-          {/* Left: Info status */}
-          <div className="flex items-center gap-2 text-xs text-gray-400">
-            <span className="text-purple-400 font-bold">⚔️ Đấu Trường PK:</span>
-            <span>Hiệp sĩ Xanh vs Hiệp sĩ Đỏ</span>
-          </div>
-
-          {/* Right: Quick Actions */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              onClick={resetMatch}
-              className="px-2.5 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-1.5 transition-colors"
-              title="Làm mới trận đấu PK về trạng thái ban đầu"
-            >
-              <RotateCcw size={13} />
-              <span>Trận đấu mới</span>
-            </button>
-          </div>
-
         </div>
       </div>
     </div>

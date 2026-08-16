@@ -1296,7 +1296,7 @@ export default function GameBanDoVietNam({
         ctx.fillText(item.text, lx, ly);
       }
     });
-  }, [viewMode3D, pan2D, zoom2D, gameState.claimedCount, isLightTheme, maskData]);
+  }, [viewMode3D, pan2D, zoom2D, gameState.claimedCount, isLightTheme]);
 
   // HÀM RENDER SÂN KHẤU LIVE SẠCH 100% (Pure Clean Stage Viewport)
   const renderCleanStage = () => (
@@ -1705,6 +1705,16 @@ export default function GameBanDoVietNam({
             <BookmarkPlus size={13} />
           </button>
 
+          {/* Nút Bàn Cờ Mới (Đặt lên trên Top Bar) */}
+          <button
+            onClick={() => bandoEngine.resetRound()}
+            className="px-2.5 py-1.5 rounded-lg text-xs font-bold text-gray-200 hover:text-white bg-white/10 hover:bg-white/20 border border-white/10 flex items-center gap-1 transition-colors"
+            title="Làm mới bàn cờ về trạng thái ban đầu"
+          >
+            <RotateCcw size={13} />
+            <span>Bàn cờ mới</span>
+          </button>
+
           {/* Admin Modal Shortcut */}
           {onOpenAdmin && (
             <button
@@ -1719,87 +1729,17 @@ export default function GameBanDoVietNam({
         </div>
       </div>
 
-      {/* 2. CENTER LIVE STAGE VIEWPORT (Khung hình Live Sạch 100%) */}
-      <div className="flex-1 w-full h-full flex items-center justify-center p-2 sm:p-3 overflow-hidden bg-[#04060a]">
+      {/* 2. CENTER LIVE STAGE VIEWPORT (Khung hình Live Sạch 100% - Chiều cao tối đa trọn vẹn 9:16 & 16:9) */}
+      <div className="flex-1 w-full h-full flex items-center justify-center p-1 sm:p-2 overflow-hidden bg-[#04060a]">
         <div 
           className={`relative flex flex-col overflow-hidden transition-all duration-300 ${
             aspectRatio === '9:16'
-              ? 'w-full max-w-[440px] h-full max-h-[860px] aspect-[9/16] rounded-2xl md:rounded-3xl border border-yellow-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-[#070b14]'
+              ? 'w-full max-w-[440px] h-full max-h-[96%] aspect-[9/16] rounded-2xl md:rounded-3xl border border-yellow-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-[#070b14]'
               : 'w-full max-w-[1200px] h-auto max-h-full aspect-[16/9] rounded-2xl border border-yellow-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-[#070b14]'
           }`}
         >
           {/* SÂN KHẤU LIVE SẠCH NẰM Ở ĐÂY (Canvas + Top mini stage + Victory + Side panels) */}
           {renderCleanStage()}
-        </div>
-      </div>
-
-      {/* 3. OUTER BOTTOM HOST CONTROL BAR (Thanh Quản trị & Test nằm ngoài khung live) */}
-      <div className="relative z-20 bg-[#0d1017] border-t border-white/10 p-2 sm:p-2.5 shrink-0 animate-in slide-in-from-bottom duration-200">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-2">
-          
-          {/* Left: D-Pad & Camera Controls */}
-          <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
-            <span className="text-[11px] font-black text-cyan-400 uppercase tracking-wider mr-1 shrink-0 flex items-center gap-1">
-              <Move size={12} /> Camera:
-            </span>
-            <button
-              onClick={() => viewMode3D ? handleZoom3D(0.80) : setZoom2D(z => Math.min(4.0, z * 1.25))}
-              className="p-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/15 text-yellow-300"
-              title="Phóng to (+)"
-            >
-              <ZoomIn size={14} />
-            </button>
-            <button
-              onClick={() => viewMode3D ? handleZoom3D(1.25) : setZoom2D(z => Math.max(0.5, z * 0.80))}
-              className="p-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/15 text-yellow-300"
-              title="Thu nhỏ (-)"
-            >
-              <ZoomOut size={14} />
-            </button>
-            <button
-              onClick={() => {
-                if (viewMode3D) applyCameraPreset('macro');
-                else setZoom2D(3.5);
-                notifyBookmark('🔍 Chế độ Zoom Siêu Cận Cảnh');
-              }}
-              className="px-2 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black text-[10px] flex items-center gap-1 shadow-sm"
-              title="Zoom Cận Cảnh"
-            >
-              <Search size={11} />
-              <span>Cận Cảnh</span>
-            </button>
-            <button
-              onClick={() => setIsPanMode(!isPanMode)}
-              className={`px-2 py-1 rounded-lg text-[10px] font-bold border flex items-center gap-1 ${
-                isPanMode ? 'bg-blue-600 text-white border-blue-400' : 'bg-white/10 text-gray-200 border-white/10'
-              }`}
-              title="Chuyển chế độ Kéo / Xoay"
-            >
-              {isPanMode ? '🖐️ Kéo' : '🔄 Xoay'}
-            </button>
-
-            {/* D-Pad 4 hướng */}
-            <div className="flex items-center gap-0.5 ml-1">
-              <button onClick={() => viewMode3D ? handlePan3D(0, -1) : setPan2D(p => ({ ...p, y: p.y + 40 }))} className="p-1 rounded bg-white/5 hover:bg-white/15 text-gray-300"><ArrowUp size={12} /></button>
-              <button onClick={() => viewMode3D ? handlePan3D(-1, 0) : setPan2D(p => ({ ...p, x: p.x + 40 }))} className="p-1 rounded bg-white/5 hover:bg-white/15 text-gray-300"><ArrowLeft size={12} /></button>
-              <button onClick={handleResetCamera} className="p-1 rounded bg-yellow-500/20 text-yellow-400 text-[10px] font-black">🎯</button>
-              <button onClick={() => viewMode3D ? handlePan3D(1, 0) : setPan2D(p => ({ ...p, x: p.x - 40 }))} className="p-1 rounded bg-white/5 hover:bg-white/15 text-gray-300"><ArrowRight size={12} /></button>
-              <button onClick={() => viewMode3D ? handlePan3D(0, 1) : setPan2D(p => ({ ...p, y: p.y - 40 }))} className="p-1 rounded bg-white/5 hover:bg-white/15 text-gray-300"><ArrowDown size={12} /></button>
-            </div>
-          </div>
-
-          {/* Right: Quick Actions */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              onClick={() => bandoEngine.resetRound()}
-              className="px-2.5 py-1.5 rounded-lg text-xs font-bold text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-1.5 transition-colors"
-              title="Làm mới bàn cờ về trạng thái ban đầu"
-            >
-              <RotateCcw size={13} />
-              <span>Bàn cờ mới</span>
-            </button>
-          </div>
-
         </div>
       </div>
 
