@@ -3,8 +3,9 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { 
   Play, Pause, RotateCcw, Shield, Sparkles, Trophy, Flame, 
-  MapPin, Flag, Eye, Volume2, VolumeX, Maximize2, Zap, Star,
-  Compass, Award, ChevronRight, Layers, CheckCircle2, AlertTriangle, MonitorPlay
+  MapPin, Flag, Eye, EyeOff, Volume2, VolumeX, Maximize2, Zap, Star,
+  Compass, Award, ChevronRight, Layers, CheckCircle2, AlertTriangle, 
+  MonitorPlay, Sun, ZoomIn, Globe, Navigation, Compass as CompassIcon
 } from 'lucide-react';
 import bandoEngine, { DEFAULT_MAP_GIFTS, getHonorTier } from './bandoGameEngine';
 import bandoAudio from './bandoAudioEngine';
@@ -15,6 +16,50 @@ function easeOutBack(t) {
   const c3 = c1 + 1;
   return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
 }
+
+function easeInOutCubic(t) {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+// Camera Preset Positions
+const CAMERA_PRESETS = {
+  overview: {
+    name: 'Toàn Cảnh Chữ S',
+    icon: '🌐',
+    pos: [0, 240, 260],
+    target: [0, 0, 10],
+  },
+  north: {
+    name: 'Miền Bắc & Hà Nội',
+    icon: '🏛️',
+    pos: [-20, 120, -50],
+    target: [-20, 0, -85],
+  },
+  central: {
+    name: 'Miền Trung & Cố Đô',
+    icon: '🏖️',
+    pos: [25, 130, 20],
+    target: [15, 0, 10],
+  },
+  south: {
+    name: 'Miền Nam & TP.HCM',
+    icon: '🏙️',
+    pos: [-15, 120, 140],
+    target: [-15, 0, 105],
+  },
+  islands: {
+    name: 'Hoàng Sa & Trường Sa',
+    icon: '🏝️',
+    pos: [80, 110, 40],
+    target: [65, 0, 15],
+  },
+  macro: {
+    name: 'Cận Cảnh Chi Tiết',
+    icon: '🔍',
+    pos: [0, 60, 60],
+    target: [0, 0, 0],
+  },
+};
 
 export default function GameBanDoVietNam({
   isPopout = false,
@@ -28,6 +73,8 @@ export default function GameBanDoVietNam({
   const [giftMultiplier, setGiftMultiplier] = useState(1);
   const [isAutoTesting, setIsAutoTesting] = useState(false);
   const [autoTestStep, setAutoTestStep] = useState(0);
+  const [showSidePanels, setShowSidePanels] = useState(true);
+  const [activeCameraPreset, setActiveCameraPreset] = useState('overview');
 
   const containerRef = useRef(null);
   const canvas2dRef = useRef(null);
@@ -42,6 +89,7 @@ export default function GameBanDoVietNam({
     disposed: false,
     animFrameId: null,
     tween: null,
+    lights: {},
   });
 
   // Subscribe engine state
@@ -49,6 +97,9 @@ export default function GameBanDoVietNam({
     const unsub = bandoEngine.subscribe((newState, lastEvt) => {
       setGameState({ ...newState });
       setIsAutoTesting(bandoEngine.isAutoTesting);
+      if (newState.cameraPreset) {
+        setActiveCameraPreset(newState.cameraPreset);
+      }
     });
     return () => unsub();
   }, []);
@@ -77,6 +128,24 @@ export default function GameBanDoVietNam({
     bandoAudio.unlock();
   }, []);
 
+  // Camera preset switcher function
+  const applyCameraPreset = useCallback((presetKey) => {
+    setActiveCameraPreset(presetKey);
+    const preset = CAMERA_PRESETS[presetKey];
+    const state = threeStateRef.current;
+    if (!preset || !state.camera || !state.controls) return;
+
+    state.tween = {
+      from: state.camera.position.clone(),
+      to: new THREE.Vector3(...preset.pos),
+      fromTarget: state.controls.target.clone(),
+      toTarget: new THREE.Vector3(...preset.target),
+      start: performance.now(),
+      duration: 1100,
+      phase: 'direct',
+    };
+  }, []);
+
   // ============================================================
   // THREE.JS 3D MAP INITIALIZATION & RENDER LOOP
   // ============================================================
@@ -95,21 +164,24 @@ export default function GameBanDoVietNam({
     if (isPopout) {
       scene.background = null;
     } else {
-      scene.background = new THREE.Color(0x0a0c14);
-      scene.fog = new THREE.FogExp2(0x0a0c14, 0.0022);
+      scene.background = new THREE.Color(0x0a0f1d); // Deep Cyber Space Blue
+      scene.fog = new THREE.FogExp2(0x0a0f1d, 0.0016);
     }
 
     // Camera (Isometric angle over S-shape)
-    const camera = new THREE.PerspectiveCamera(48, width / height, 0.1, 4000);
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 4000);
     camera.position.set(0, 240, 260);
     camera.lookAt(0, 0, 10);
     state.camera = camera;
 
     // Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = (gameState.settings.brightness || 1.4) * 0.95;
     container.innerHTML = '';
     container.appendChild(renderer.domElement);
     state.renderer = renderer;
@@ -117,55 +189,85 @@ export default function GameBanDoVietNam({
     // Controls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.08;
+    controls.dampingFactor = 0.07;
     controls.maxPolarAngle = Math.PI / 2.05;
-    controls.minDistance = 40;
-    controls.maxDistance = 600;
+    controls.minDistance = 35;
+    controls.maxDistance = 650;
     controls.target.set(0, 0, 10);
     controls.autoRotate = !isPopout && gameState.settings.autoRotate;
     controls.autoRotateSpeed = gameState.settings.autoRotateSpeed || 0.6;
     state.controls = controls;
 
-    // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
+    // Enhanced High-Brightness Lighting System
+    const brightness = gameState.settings.brightness || 1.4;
+    
+    // 1. Ambient Light
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.35 * brightness);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xfff0dd, 1.2);
-    dirLight.position.set(120, 300, 150);
+    // 2. Main Sun Directional Light
+    const dirLight = new THREE.DirectionalLight(0xfffaee, 1.85 * brightness);
+    dirLight.position.set(120, 320, 160);
     dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 2048;
+    dirLight.shadow.mapSize.height = 2048;
+    dirLight.shadow.bias = -0.0005;
     scene.add(dirLight);
 
-    const goldPointLight = new THREE.PointLight(0xffd700, 1.5, 300);
-    goldPointLight.position.set(0, 80, 0);
+    // 3. Secondary Cyan/Blue Rim Light
+    const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.1 * brightness);
+    rimLight.position.set(-150, 180, -120);
+    scene.add(rimLight);
+
+    // 4. Regional Point Lights (Hanoi, Saigon, Islands)
+    const goldPointLight = new THREE.PointLight(0xffd700, 2.2 * brightness, 350);
+    goldPointLight.position.set(-20, 65, -85);
     scene.add(goldPointLight);
 
-    // Stars in background
+    const saigonPointLight = new THREE.PointLight(0x38bdf8, 1.9 * brightness, 300);
+    saigonPointLight.position.set(-15, 60, 105);
+    scene.add(saigonPointLight);
+
+    const islandPointLight = new THREE.PointLight(0xf43f5e, 2.2 * brightness, 350);
+    islandPointLight.position.set(75, 65, 25);
+    scene.add(islandPointLight);
+
+    state.lights = { ambientLight, dirLight, rimLight, goldPointLight, saigonPointLight, islandPointLight };
+
+    // Atmosphere: Stars in background
     if (!isPopout) {
       const starGeo = new THREE.BufferGeometry();
-      const starCount = 600;
+      const starCount = 800;
       const starPos = new Float32Array(starCount * 3);
       for (let i = 0; i < starCount * 3; i += 3) {
-        starPos[i] = (Math.random() - 0.5) * 1200;
-        starPos[i + 1] = Math.random() * 500 + 40;
-        starPos[i + 2] = (Math.random() - 0.5) * 1200;
+        starPos[i] = (Math.random() - 0.5) * 1400;
+        starPos[i + 1] = Math.random() * 600 + 30;
+        starPos[i + 2] = (Math.random() - 0.5) * 1400;
       }
       starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-      const starMat = new THREE.PointsMaterial({ color: 0x93c5fd, size: 1.2, transparent: true, opacity: 0.6 });
+      const starMat = new THREE.PointsMaterial({ color: 0x93c5fd, size: 1.4, transparent: true, opacity: 0.75 });
       scene.add(new THREE.Points(starGeo, starMat));
+
+      // Grid Floor for Depth
+      const gridHelper = new THREE.GridHelper(450, 30, 0x1e293b, 0x0f172a);
+      gridHelper.position.y = -2;
+      scene.add(gridHelper);
     }
 
-    // Instanced Mesh for 15,125 cells
+    // Instanced Mesh for 15,125 cells with bright metallic material
     const maskData = bandoEngine.maskData;
     const cells = maskData?.cells || [];
     const count = cells.length > 0 ? cells.length : 15125;
-    const boxGeo = new THREE.BoxGeometry(0.85, 1, 0.85);
+    const boxGeo = new THREE.BoxGeometry(0.88, 1, 0.88);
     const boxMat = new THREE.MeshStandardMaterial({
-      roughness: 0.35,
-      metalness: 0.25,
-      vertexColors: true
+      roughness: 0.28,
+      metalness: 0.35,
+      vertexColors: true,
     });
     const instancedMesh = new THREE.InstancedMesh(boxGeo, boxMat, count);
     instancedMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    instancedMesh.castShadow = true;
+    instancedMesh.receiveShadow = true;
     scene.add(instancedMesh);
     state.instancedMesh = instancedMesh;
 
@@ -173,10 +275,9 @@ export default function GameBanDoVietNam({
     const cols = maskData?.gridCols || 300;
     const rows = maskData?.gridRows || 389;
     const dummy = state.dummy;
-    const colorObj = state.colorObj;
-    const emptyColor = new THREE.Color(0x1e293b);
-    const goldStarColor = new THREE.Color(0xffcd00);
-    const redFlagColor = new THREE.Color(0xda251d);
+    const emptyColor = new THREE.Color(gameState.settings.emptyCellColor || 0x475569); // High-contrast metallic slate
+    const goldStarColor = new THREE.Color(gameState.settings.starColor || 0xffd700);
+    const redFlagColor = new THREE.Color(gameState.settings.claimedCellColor || 0xda251d);
 
     for (let i = 0; i < count; i++) {
       const cell = cells[i] || { x: (i % 100), y: Math.floor(i / 100) };
@@ -184,7 +285,7 @@ export default function GameBanDoVietNam({
       const wz = (cell.y - rows / 2) * 1.0;
       const isClaimed = !!bandoEngine.state.cellsById[cell.id];
 
-      const scaleY = isClaimed ? 1.6 : 0.25;
+      const scaleY = isClaimed ? 1.7 : 0.35;
       const posY = scaleY / 2;
 
       dummy.position.set(wx, posY, wz);
@@ -193,7 +294,6 @@ export default function GameBanDoVietNam({
       instancedMesh.setMatrixAt(i, dummy.matrix);
 
       if (isClaimed) {
-        // Yellow star at Hanoi center or Red Flag
         if (cell.provinceId === 'ha-noi' && (cell.x + cell.y) % 7 === 0) {
           instancedMesh.setColorAt(i, goldStarColor);
         } else {
@@ -230,7 +330,13 @@ export default function GameBanDoVietNam({
       if (state.tween) {
         const tw = state.tween;
         const progress = Math.min(1, (time - tw.start) / tw.duration);
-        if (tw.phase === 'in') {
+        
+        if (tw.phase === 'direct') {
+          const t = easeInOutCubic(progress);
+          camera.position.lerpVectors(tw.from, tw.to, t);
+          controls.target.lerpVectors(tw.fromTarget, tw.toTarget, t);
+          if (progress >= 1) state.tween = null;
+        } else if (tw.phase === 'in') {
           const t = easeOutBack(progress);
           camera.position.lerpVectors(tw.from, tw.to, t);
           controls.target.lerpVectors(tw.fromTarget, tw.toTarget, t);
@@ -242,14 +348,16 @@ export default function GameBanDoVietNam({
           if (time >= tw.holdUntil) {
             tw.phase = 'out';
             tw.start = time;
-            tw.duration = 1800;
+            tw.duration = 1600;
             tw.from.copy(camera.position);
             tw.fromTarget.copy(controls.target);
-            tw.to.set(0, 240, 260);
-            tw.toTarget.set(0, 0, 10);
+            const defaultPos = CAMERA_PRESETS[activeCameraPreset]?.pos || [0, 240, 260];
+            const defaultTarget = CAMERA_PRESETS[activeCameraPreset]?.target || [0, 0, 10];
+            tw.to.set(...defaultPos);
+            tw.toTarget.set(...defaultTarget);
           }
         } else if (tw.phase === 'out') {
-          const t = Math.min(1, (time - tw.start) / tw.duration);
+          const t = easeInOutCubic(Math.min(1, (time - tw.start) / tw.duration));
           camera.position.lerpVectors(tw.from, tw.to, t);
           controls.target.lerpVectors(tw.fromTarget, tw.toTarget, t);
           if (t >= 1) state.tween = null;
@@ -271,7 +379,7 @@ export default function GameBanDoVietNam({
     };
   }, [viewMode3D, isPopout]);
 
-  // Update 3D mesh instances when cells are claimed or reset
+  // Update 3D mesh instances when cells are claimed, reset or settings changed
   useEffect(() => {
     if (!viewMode3D) return;
     const state = threeStateRef.current;
@@ -284,15 +392,15 @@ export default function GameBanDoVietNam({
     const cols = maskData.gridCols || 300;
     const rows = maskData.gridRows || 389;
     const dummy = state.dummy;
-    const emptyColor = new THREE.Color(0x1e293b);
-    const goldStarColor = new THREE.Color(0xffcd00);
-    const redFlagColor = new THREE.Color(0xda251d);
+    const emptyColor = new THREE.Color(gameState.settings.emptyCellColor || 0x475569);
+    const goldStarColor = new THREE.Color(gameState.settings.starColor || 0xffd700);
+    const redFlagColor = new THREE.Color(gameState.settings.claimedCellColor || 0xda251d);
 
     for (let i = 0; i < count; i++) {
       const cell = cells[i];
       if (!cell) continue;
       const isClaimed = !!gameState.cellsById[cell.id];
-      const scaleY = isClaimed ? 1.6 : 0.25;
+      const scaleY = isClaimed ? 1.7 : 0.35;
       const posY = scaleY / 2;
       const wx = (cell.x - cols / 2) * 1.0;
       const wz = (cell.y - rows / 2) * 1.0;
@@ -321,16 +429,16 @@ export default function GameBanDoVietNam({
       const ft = gameState.lastFocalTarget;
       state.tween = {
         from: state.camera.position.clone(),
-        to: new THREE.Vector3(ft.wx, 80, ft.wz + 65),
+        to: new THREE.Vector3(ft.wx, 75, ft.wz + 60),
         fromTarget: state.controls.target.clone(),
         toTarget: new THREE.Vector3(ft.wx, 0, ft.wz),
         start: performance.now(),
-        duration: 800,
+        duration: 750,
         phase: 'in',
         holdUntil: 0
       };
     }
-  }, [gameState.claimedCount, gameState.status, viewMode3D]);
+  }, [gameState.claimedCount, gameState.status, gameState.settings, viewMode3D]);
 
   // ============================================================
   // 2D CANVAS FALLBACK RENDERER
@@ -351,11 +459,12 @@ export default function GameBanDoVietNam({
     const offsetX = (canvas.width - cols * scale) / 2;
     const offsetY = (canvas.height - rows * scale) / 2;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#0a0f1d';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     (maskData.cells || []).forEach(cell => {
       const isClaimed = !!gameState.cellsById[cell.id];
-      ctx.fillStyle = isClaimed ? '#DA251D' : '#1e293b';
+      ctx.fillStyle = isClaimed ? '#DA251D' : '#475569';
       ctx.fillRect(offsetX + cell.x * scale, offsetY + cell.y * scale, scale * 0.88, scale * 0.88);
     });
   }, [viewMode3D, gameState.claimedCount]);
@@ -387,13 +496,13 @@ export default function GameBanDoVietNam({
 
   return (
     <div 
-      className={`relative w-full h-full flex flex-col overflow-hidden select-none font-sans ${isPopout ? 'bg-transparent' : 'bg-[#090b10] text-gray-100'}`}
+      className={`relative w-full h-full flex flex-col overflow-hidden select-none font-sans ${isPopout ? 'bg-transparent' : 'bg-[#090d16] text-gray-100'}`}
       onClick={handleUserGesture}
     >
       {/* 1. TOP HUD: Header & Tiến Độ Hoàn Thành Bản Đồ Tổ Quốc */}
-      <div className="relative z-20 flex items-center justify-between px-4 py-2.5 bg-black/60 backdrop-blur-md border-b border-white/10 shrink-0">
+      <div className="relative z-20 flex items-center justify-between px-4 py-2.5 bg-black/65 backdrop-blur-md border-b border-white/10 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-red-600 to-amber-500 shadow-lg shadow-red-500/30 ring-2 ring-yellow-400/50">
+          <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-red-600 via-amber-500 to-yellow-400 shadow-lg shadow-red-500/40 ring-2 ring-yellow-400/60 animate-pulse">
             <span className="text-xl">🇻🇳</span>
           </div>
           <div>
@@ -401,11 +510,11 @@ export default function GameBanDoVietNam({
               <h2 className="text-sm md:text-base font-black bg-gradient-to-r from-yellow-300 via-red-400 to-amber-300 bg-clip-text text-transparent uppercase tracking-wider">
                 Việt Nam Ghép Cờ LIVE — Bản Đồ Chữ S
               </h2>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-600 text-white shadow-sm animate-pulse">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-600 text-white shadow-sm">
                 {gameState.roundId}
               </span>
             </div>
-            <div className="text-[11px] text-gray-400 font-medium flex items-center gap-2">
+            <div className="text-[11px] text-gray-300 font-medium flex items-center gap-2">
               <span>Đã cắm: <strong className="text-yellow-400 font-bold">{gameState.claimedCount.toLocaleString()}</strong> / {gameState.totalCells.toLocaleString()} ô cờ</span>
               <span>•</span>
               <span>Còn lại: <strong className="text-emerald-400 font-bold">{gameState.remainingCells.toLocaleString()}</strong> ô</span>
@@ -414,7 +523,7 @@ export default function GameBanDoVietNam({
         </div>
 
         {/* Progress Bar & Combo Streak */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 md:gap-4">
           {gameState.combo.active && gameState.combo.count >= 2 && (
             <div className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-600 to-red-600 rounded-full text-white text-xs font-black shadow-lg animate-bounce">
               <Flame size={14} className="text-yellow-300 animate-spin" />
@@ -422,10 +531,10 @@ export default function GameBanDoVietNam({
             </div>
           )}
 
-          <div className="hidden sm:flex flex-col items-end w-48 md:w-64">
+          <div className="hidden sm:flex flex-col items-end w-44 md:w-56">
             <div className="flex justify-between w-full text-[11px] font-bold text-gray-300 mb-1">
               <span>TIẾN ĐỘ TỔ QUỐC</span>
-              <span className="text-yellow-400">{gameState.percent}%</span>
+              <span className="text-yellow-400 font-mono">{gameState.percent}%</span>
             </div>
             <div className="w-full h-2.5 bg-white/10 rounded-full overflow-hidden p-0.5 border border-white/20">
               <div 
@@ -435,8 +544,20 @@ export default function GameBanDoVietNam({
             </div>
           </div>
 
-          {/* Controls button */}
+          {/* Quick HUD Visibility & 2D/3D Mode Controls */}
           <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setShowSidePanels(!showSidePanels)}
+              className={`p-1.5 rounded-lg text-xs font-bold transition-all border ${
+                showSidePanels 
+                  ? 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10' 
+                  : 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40 shadow-md shadow-yellow-500/20'
+              }`}
+              title={showSidePanels ? "Thu gọn bảng bên hông (Tối đa hóa bản đồ)" : "Mở lại bảng bên hông"}
+            >
+              {showSidePanels ? <Eye size={14} /> : <EyeOff size={14} />}
+            </button>
+
             <button
               onClick={() => setViewMode3D(!viewMode3D)}
               className="px-2.5 py-1 rounded-lg text-xs font-bold bg-white/10 hover:bg-white/20 text-gray-200 border border-white/10 transition-colors flex items-center gap-1"
@@ -445,17 +566,6 @@ export default function GameBanDoVietNam({
               <Layers size={13} />
               <span>{viewMode3D ? '3D' : '2D'}</span>
             </button>
-
-            {onOpenAdmin && (
-              <button
-                onClick={onOpenAdmin}
-                className="px-3 py-1 rounded-lg text-xs font-black bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-500/20 border border-purple-400/40 transition-all flex items-center gap-1.5"
-                title="Mở Bảng Quản Trị Admin Bản Đồ"
-              >
-                <Shield size={13} className="text-yellow-300" />
-                <span>Admin</span>
-              </button>
-            )}
           </div>
         </div>
       </div>
@@ -468,99 +578,151 @@ export default function GameBanDoVietNam({
           <canvas ref={canvas2dRef} className="w-full h-full" />
         )}
 
-        {/* LEFT HUD: Boss Event & Urgent Mission & Live Feed */}
-        <div className="absolute top-4 left-4 z-10 flex flex-col gap-2.5 max-w-[280px] pointer-events-none">
-          {/* Boss Banner */}
-          {gameState.boss.active && (
-            <div className="pointer-events-auto bg-gradient-to-r from-red-950/90 via-purple-950/90 to-black/90 border-2 border-red-500/80 rounded-xl p-3 shadow-2xl backdrop-blur-md animate-pulse">
-              <div className="flex items-center justify-between text-xs font-black text-red-400 mb-1">
-                <span>{gameState.boss.name}</span>
-                <span className="font-mono text-yellow-300">{gameState.boss.remainingSec}s</span>
+        {/* FLOATING MAP TEXT LABELS & QUẦN ĐẢO BIỂN ĐÔNG (Map Text Overlay) */}
+        {gameState.settings.showMapTexts && (
+          <div className="absolute inset-0 pointer-events-none z-10">
+            {gameState.mapTexts?.map((item) => (
+              <div
+                key={item.id}
+                style={{
+                  position: 'absolute',
+                  left: `${item.x}%`,
+                  top: `${item.y}%`,
+                  transform: 'translate(-50%, -50%)',
+                  color: item.color || '#facc15',
+                  fontSize: `${item.size || 13}px`,
+                }}
+                className={`font-black tracking-wide whitespace-nowrap select-none transition-all duration-300 ${
+                  item.glow 
+                    ? 'drop-shadow-[0_0_10px_rgba(250,204,21,0.8)] px-2.5 py-1 rounded-full bg-black/45 border border-yellow-400/40 backdrop-blur-sm' 
+                    : 'drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] px-2 py-0.5 rounded-lg bg-black/30 backdrop-blur-xs'
+                }`}
+              >
+                {item.text}
               </div>
-              <p className="text-[10px] text-gray-300 mb-2">Thưởng: {gameState.boss.reward}</p>
-              <div className="w-full h-2 bg-black/60 rounded-full overflow-hidden border border-red-500/40">
-                <div 
-                  className="h-full bg-red-600 transition-all duration-300"
-                  style={{ width: `${Math.min(100, (gameState.boss.currentCells / gameState.boss.targetCells) * 100)}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Active Mission Banner */}
-          {gameState.activeMission && (
-            <div className="pointer-events-auto bg-blue-950/80 border border-blue-400/60 rounded-xl p-2.5 shadow-xl backdrop-blur-md">
-              <div className="text-[11px] font-black text-blue-300 flex items-center gap-1.5 mb-1">
-                <Zap size={12} className="text-yellow-400 animate-spin" />
-                <span>{gameState.activeMission.title}</span>
-              </div>
-              <div className="text-[10px] text-gray-400">Thưởng: <span className="text-emerald-400 font-bold">{gameState.activeMission.reward}</span></div>
-            </div>
-          )}
-
-          {/* Real-time Live Activity Feed */}
-          <div className="pointer-events-auto bg-black/50 border border-white/10 rounded-xl p-2.5 shadow-xl backdrop-blur-md max-h-48 overflow-y-auto custom-scrollbar">
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-              <Sparkles size={11} className="text-yellow-400" /> Hoạt động cắm cờ
-            </div>
-            <div className="space-y-1.5">
-              {gameState.feed.slice(0, 8).map(item => (
-                <div key={item.id} className="text-[11px] text-gray-200 leading-tight bg-white/5 p-1.5 rounded border border-white/5 animate-in fade-in">
-                  <span className="text-[9px] text-gray-400 font-mono mr-1">[{item.time}]</span>
-                  {item.text}
-                </div>
-              ))}
-              {gameState.feed.length === 0 && (
-                <div className="text-[11px] text-gray-500 italic">Chưa có lượt tặng quà nào...</div>
-              )}
-            </div>
+            ))}
           </div>
+        )}
+
+        {/* FLOATING CAMERA PRESET ZOOM TOOLBAR */}
+        <div className="absolute bottom-4 right-4 z-20 flex flex-wrap items-center gap-1.5 p-1.5 bg-black/70 backdrop-blur-md border border-white/15 rounded-2xl shadow-2xl">
+          <span className="text-[10px] font-black text-gray-400 uppercase px-2 flex items-center gap-1">
+            <CompassIcon size={12} className="text-yellow-400" /> Zoom:
+          </span>
+          {Object.entries(CAMERA_PRESETS).map(([key, item]) => (
+            <button
+              key={key}
+              onClick={() => applyCameraPreset(key)}
+              className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1 ${
+                activeCameraPreset === key
+                  ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-lg shadow-red-500/30 scale-105 border border-yellow-300/40'
+                  : 'bg-white/5 hover:bg-white/15 text-gray-300 hover:text-white'
+              }`}
+              title={`Chuyển góc nhìn camera: ${item.name}`}
+            >
+              <span>{item.icon}</span>
+              <span className="hidden md:inline">{item.name}</span>
+            </button>
+          ))}
         </div>
 
-        {/* RIGHT HUD: Leaderboard Top Đại Gia */}
-        <div className="absolute top-4 right-4 z-10 w-64 pointer-events-none">
-          <div className="pointer-events-auto bg-black/60 border border-white/10 rounded-2xl p-3 shadow-2xl backdrop-blur-md">
-            <div className="flex items-center justify-between pb-2 border-b border-white/10 mb-2">
-              <div className="flex items-center gap-1.5 text-xs font-black text-yellow-400">
-                <Trophy size={14} className="text-yellow-400" />
-                <span>BẢNG VÀNG CẮM CỜ</span>
-              </div>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-400/20 text-yellow-300 font-mono font-bold">
-                TOP {gameState.leaderboard.length}
-              </span>
-            </div>
-
-            <div className="space-y-1.5 max-h-56 overflow-y-auto custom-scrollbar">
-              {gameState.leaderboard.slice(0, 8).map((user, idx) => (
-                <div 
-                  key={user.userId} 
-                  className={`flex items-center justify-between p-1.5 rounded-lg border text-xs ${
-                    idx === 0 
-                      ? 'bg-yellow-500/20 border-yellow-500/40 text-yellow-200' 
-                      : idx === 1 
-                      ? 'bg-slate-400/20 border-slate-400/40 text-gray-200' 
-                      : idx === 2 
-                      ? 'bg-amber-700/20 border-amber-700/40 text-amber-300' 
-                      : 'bg-white/5 border-white/5 text-gray-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-2 overflow-hidden">
-                    <span className="w-5 text-center font-black font-mono text-[11px]">
-                      {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`}
-                    </span>
-                    <span className="font-bold truncate text-[11px]">{user.username}</span>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <div className="font-black font-mono text-yellow-400 text-[11px]">+{user.totalCells.toLocaleString()} ô</div>
-                  </div>
+        {/* LEFT HUD: Boss Event & Urgent Mission & Live Feed (Collapsible) */}
+        {showSidePanels && (
+          <div className="absolute top-4 left-4 z-10 flex flex-col gap-2.5 max-w-[280px] pointer-events-none animate-in fade-in slide-in-from-left duration-200">
+            {/* Boss Banner */}
+            {gameState.boss.active && (
+              <div className="pointer-events-auto bg-gradient-to-r from-red-950/90 via-purple-950/90 to-black/90 border-2 border-red-500/80 rounded-xl p-3 shadow-2xl backdrop-blur-md animate-pulse">
+                <div className="flex items-center justify-between text-xs font-black text-red-400 mb-1">
+                  <span>{gameState.boss.name}</span>
+                  <span className="font-mono text-yellow-300">{gameState.boss.remainingSec}s</span>
                 </div>
-              ))}
-              {gameState.leaderboard.length === 0 && (
-                <div className="text-center py-4 text-xs text-gray-500 italic">Chưa có ai trong bảng xếp hạng</div>
-              )}
+                <p className="text-[10px] text-gray-300 mb-2">Thưởng: {gameState.boss.reward}</p>
+                <div className="w-full h-2 bg-black/60 rounded-full overflow-hidden border border-red-500/40">
+                  <div 
+                    className="h-full bg-red-600 transition-all duration-300"
+                    style={{ width: `${Math.min(100, (gameState.boss.currentCells / gameState.boss.targetCells) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Active Mission Banner */}
+            {gameState.activeMission && (
+              <div className="pointer-events-auto bg-blue-950/80 border border-blue-400/60 rounded-xl p-2.5 shadow-xl backdrop-blur-md">
+                <div className="text-[11px] font-black text-blue-300 flex items-center gap-1.5 mb-1">
+                  <Zap size={12} className="text-yellow-400 animate-spin" />
+                  <span>{gameState.activeMission.title}</span>
+                </div>
+                <div className="text-[10px] text-gray-400">Thưởng: <span className="text-emerald-400 font-bold">{gameState.activeMission.reward}</span></div>
+              </div>
+            )}
+
+            {/* Real-time Live Activity Feed */}
+            <div className="pointer-events-auto bg-black/60 border border-white/10 rounded-2xl p-2.5 shadow-xl backdrop-blur-md max-h-48 overflow-y-auto custom-scrollbar">
+              <div className="text-[10px] font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                <Sparkles size={11} className="text-yellow-400" /> Hoạt động cắm cờ
+              </div>
+              <div className="space-y-1.5">
+                {gameState.feed.slice(0, 8).map(item => (
+                  <div key={item.id} className="text-[11px] text-gray-200 leading-tight bg-white/5 p-1.5 rounded-lg border border-white/5 animate-in fade-in">
+                    <span className="text-[9px] text-gray-400 font-mono mr-1">[{item.time}]</span>
+                    {item.text}
+                  </div>
+                ))}
+                {gameState.feed.length === 0 && (
+                  <div className="text-[11px] text-gray-500 italic">Chưa có lượt tặng quà nào...</div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* RIGHT HUD: Leaderboard Top Đại Gia (Collapsible) */}
+        {showSidePanels && (
+          <div className="absolute top-4 right-4 z-10 w-64 pointer-events-none animate-in fade-in slide-in-from-right duration-200">
+            <div className="pointer-events-auto bg-black/65 border border-white/10 rounded-2xl p-3 shadow-2xl backdrop-blur-md">
+              <div className="flex items-center justify-between pb-2 border-b border-white/10 mb-2">
+                <div className="flex items-center gap-1.5 text-xs font-black text-yellow-400">
+                  <Trophy size={14} className="text-yellow-400" />
+                  <span>BẢNG VÀNG CẮM CỜ</span>
+                </div>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-400/20 text-yellow-300 font-mono font-bold">
+                  TOP {gameState.leaderboard.length}
+                </span>
+              </div>
+
+              <div className="space-y-1.5 max-h-56 overflow-y-auto custom-scrollbar">
+                {gameState.leaderboard.slice(0, 8).map((user, idx) => (
+                  <div 
+                    key={user.userId} 
+                    className={`flex items-center justify-between p-1.5 rounded-lg border text-xs ${
+                      idx === 0 
+                        ? 'bg-yellow-500/20 border-yellow-500/40 text-yellow-200' 
+                        : idx === 1 
+                        ? 'bg-slate-400/20 border-slate-400/40 text-gray-200' 
+                        : idx === 2 
+                        ? 'bg-amber-700/20 border-amber-700/40 text-amber-300' 
+                        : 'bg-white/5 border-white/5 text-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      <span className="w-5 text-center font-black font-mono text-[11px]">
+                        {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`}
+                      </span>
+                      <span className="font-bold truncate text-[11px]">{user.username}</span>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="font-black font-mono text-yellow-400 text-[11px]">+{user.totalCells.toLocaleString()} ô</div>
+                    </div>
+                  </div>
+                ))}
+                {gameState.leaderboard.length === 0 && (
+                  <div className="text-center py-4 text-xs text-gray-500 italic">Chưa có ai trong bảng xếp hạng</div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Victory Celebration Overlay Screen */}
         {gameState.status === 'victory' && (
@@ -602,70 +764,72 @@ export default function GameBanDoVietNam({
         )}
       </div>
 
-      {/* 3. BOTTOM TEST CONTROL BAR — NÚT BẤM TEST TOÀN BỘ QUÀ TẶNG */}
-      <div className="relative z-20 bg-[#0d1017] border-t border-white/10 p-3 shrink-0">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-          
-          {/* Mock Gift Quick Buttons */}
-          <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 custom-scrollbar">
-            <span className="text-[11px] font-black text-yellow-400 uppercase tracking-wider mr-1 shrink-0 flex items-center gap-1">
-              <Sparkles size={12} /> Test Quà:
-            </span>
+      {/* 3. BOTTOM TEST CONTROL BAR (Chỉ hiển thị khi Admin bật Chế Độ Thử Nghiệm / Demo Mode) */}
+      {gameState.isDemoMode && !isPopout && (
+        <div className="relative z-20 bg-[#0d1017] border-t border-white/10 p-3 shrink-0 animate-in slide-in-from-bottom duration-200">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+            
+            {/* Mock Gift Quick Buttons */}
+            <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 custom-scrollbar">
+              <span className="text-[11px] font-black text-yellow-400 uppercase tracking-wider mr-1 shrink-0 flex items-center gap-1">
+                <Sparkles size={12} /> Test Quà:
+              </span>
 
-            {DEFAULT_MAP_GIFTS.map(gift => (
+              {DEFAULT_MAP_GIFTS.map(gift => (
+                <button
+                  key={gift.id}
+                  onClick={() => handleTestGift(gift.id)}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white/5 hover:bg-white/15 border border-white/10 hover:border-yellow-400/50 text-gray-200 transition-all shrink-0 hover:scale-105 active:scale-95 shadow-sm"
+                  title={`Test gửi ${gift.name} quy đổi +${gift.cells} ô cờ`}
+                >
+                  <span>{gift.icon}</span>
+                  <span>{gift.name}</span>
+                  <span className="text-[10px] text-yellow-400 font-mono">+{gift.cells}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Quick Actions: Auto Test Loop & Multiplier & Overlay Button */}
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Auto Test Loop Button */}
               <button
-                key={gift.id}
-                onClick={() => handleTestGift(gift.id)}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white/5 hover:bg-white/15 border border-white/10 hover:border-yellow-400/50 text-gray-200 transition-all shrink-0 hover:scale-105 active:scale-95 shadow-sm"
-                title={`Test gửi ${gift.name} quy đổi +${gift.cells} ô cờ`}
+                onClick={handleToggleAutoTest}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all border shadow-lg ${
+                  isAutoTesting
+                    ? 'bg-red-600 text-white border-yellow-300 ring-2 ring-yellow-400 animate-pulse'
+                    : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-emerald-400/50'
+                }`}
+                title="Chạy tự động kiểm thử toàn bộ hệ thống quà tặng, combo, boss và hoàn thành bản đồ"
               >
-                <span>{gift.icon}</span>
-                <span>{gift.name}</span>
-                <span className="text-[10px] text-yellow-400 font-mono">+{gift.cells}</span>
+                {isAutoTesting ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
+                <span>{isAutoTesting ? `Đang Test (#${autoTestStep})` : '⚡ Chạy Test Toàn Bộ'}</span>
               </button>
-            ))}
+
+              {/* Mở Cửa Sổ Overlay Trong Suốt Cho TikTok Studio / OBS */}
+              <button
+                onClick={() => {
+                  window.open('?overlay=bando', 'AvaliveMapOverlay', 'width=900,height=750,menubar=no,toolbar=no,location=no');
+                }}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 border border-blue-400/40 transition-colors"
+                title="Mở Cửa Sổ Overlay Trong Suốt để TikTok LIVE Studio hoặc OBS bắt hình"
+              >
+                <MonitorPlay size={14} />
+                <span>Overlay Studio</span>
+              </button>
+
+              {/* Reset Button */}
+              <button
+                onClick={() => bandoEngine.resetRound()}
+                className="p-1.5 rounded-lg text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
+                title="Làm mới trận đấu"
+              >
+                <RotateCcw size={15} />
+              </button>
+            </div>
+
           </div>
-
-          {/* Quick Actions: Auto Test Loop & Multiplier & Overlay Button */}
-          <div className="flex items-center gap-2 shrink-0">
-            {/* Auto Test Loop Button */}
-            <button
-              onClick={handleToggleAutoTest}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all border shadow-lg ${
-                isAutoTesting
-                  ? 'bg-red-600 text-white border-yellow-300 ring-2 ring-yellow-400 animate-pulse'
-                  : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-emerald-400/50'
-              }`}
-              title="Chạy tự động kiểm thử toàn bộ hệ thống quà tặng, combo, boss và hoàn thành bản đồ"
-            >
-              {isAutoTesting ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
-              <span>{isAutoTesting ? `Đang Test (#${autoTestStep})` : '⚡ Chạy Test Toàn Bộ'}</span>
-            </button>
-
-            {/* Mở Cửa Sổ Overlay Trong Suốt */}
-            <button
-              onClick={() => {
-                window.open('?overlay=bando', 'AvaliveMapOverlay', 'width=900,height=750,menubar=no,toolbar=no,location=no');
-              }}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 border border-blue-400/40 transition-colors"
-              title="Mở Cửa Sổ Overlay Trong Suốt để TikTok LIVE Studio hoặc OBS bắt hình"
-            >
-              <MonitorPlay size={14} />
-              <span>Overlay Studio</span>
-            </button>
-
-            {/* Reset Button */}
-            <button
-              onClick={() => bandoEngine.resetRound()}
-              className="p-1.5 rounded-lg text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
-              title="Làm mới trận đấu"
-            >
-              <RotateCcw size={15} />
-            </button>
-          </div>
-
         </div>
-      </div>
+      )}
     </div>
   );
 }

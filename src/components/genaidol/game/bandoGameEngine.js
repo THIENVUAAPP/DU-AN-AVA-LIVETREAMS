@@ -78,15 +78,31 @@ class BanDoGameEngine {
       victory: null,
       feed: [],
       lastFocalTarget: null, // { wx, wz, username, giftName, count }
+      isDemoMode: true, // Chế độ thử nghiệm / test quà
+      cameraPreset: 'overview', // overview | north | central | south | islands | macro | tour
+      mapTexts: [
+        { id: 't_hanoi', text: '🏛️ THỦ ĐÔ HÀ NỘI', x: 38, y: 22, color: '#facc15', size: 13, glow: true },
+        { id: 't_saigon', text: '🏙️ TP. HỒ CHÍ MINH', x: 36, y: 78, color: '#38bdf8', size: 13, glow: true },
+        { id: 't_hs_ts', text: '🇻🇳 HOÀNG SA & TRƯỜNG SA LÀ CỦA VIỆT NAM 🇻🇳', x: 78, y: 55, color: '#ef4444', size: 14, glow: true },
+        { id: 't_biendong', text: '🌊 BIỂN ĐÔNG VIỆT NAM', x: 74, y: 38, color: '#60a5fa', size: 13, glow: false },
+        { id: 't_phuquoc', text: '🏝️ ĐẢO PHÚ QUỐC & CÔN ĐẢO', x: 25, y: 88, color: '#34d399', size: 12, glow: false },
+        { id: 't_slogan', text: '⭐ NON SÔNG LIỀN MỘT DẢI — NƯỚC VIỆT NAM LÀ MỘT ⭐', x: 50, y: 94, color: '#fbbf24', size: 14, glow: true },
+      ],
       settings: {
         theme: 'dark',
+        brightness: 1.4, // Độ sáng bản đồ (1.0 -> 2.0)
+        emptyCellColor: '#475569', // Xám kim loại sáng bóng rõ nét
+        claimedCellColor: '#DA251D', // Đỏ cờ Tổ Quốc
+        starColor: '#FFD700', // Vàng sao neon
         autoRotate: true,
         autoRotateSpeed: 0.6,
         showProvinceLabels: true,
+        showMapTexts: true,
         voiceAnnouncer: true,
         bgmVolume: 0.35,
         sfxVolume: 0.8,
         customMapTitle: '🇻🇳 VIỆT NAM GHÉP CỜ LIVE — BẢN ĐỒ HÌNH CHỮ S 🇻🇳',
+        selectedCountry: 'vietnam',
       }
     };
 
@@ -461,7 +477,47 @@ class BanDoGameEngine {
     }
     this.notify();
   }
+
+  setDemoMode(enabled) {
+    this.state.isDemoMode = !!enabled;
+    this.notify({ type: 'DEMO_MODE_CHANGED', isDemoMode: this.state.isDemoMode });
+  }
+
+  setCameraPreset(preset) {
+    this.state.cameraPreset = preset;
+    this.notify({ type: 'CAMERA_PRESET_CHANGED', preset });
+  }
+
+  updateSettings(newSettings) {
+    this.state.settings = { ...this.state.settings, ...newSettings };
+    this.notify({ type: 'SETTINGS_UPDATED', settings: this.state.settings });
+  }
+
+  updateMapTexts(newTexts) {
+    this.state.mapTexts = newTexts;
+    this.notify({ type: 'MAP_TEXTS_UPDATED', mapTexts: newTexts });
+  }
+
+  addMapText(textObj) {
+    const item = {
+      id: textObj.id || `text_${Date.now()}`,
+      text: textObj.text || 'Nhãn Bản Đồ',
+      x: textObj.x ?? 50,
+      y: textObj.y ?? 50,
+      color: textObj.color || '#facc15',
+      size: textObj.size || 14,
+      glow: !!textObj.glow,
+    };
+    this.state.mapTexts = [...this.state.mapTexts, item];
+    this.notify({ type: 'MAP_TEXTS_UPDATED', mapTexts: this.state.mapTexts });
+  }
+
+  removeMapText(textId) {
+    this.state.mapTexts = this.state.mapTexts.filter(t => t.id !== textId);
+    this.notify({ type: 'MAP_TEXTS_UPDATED', mapTexts: this.state.mapTexts });
+  }
 }
 
 export const bandoEngine = new BanDoGameEngine();
 export default bandoEngine;
+
