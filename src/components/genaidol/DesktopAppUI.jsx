@@ -854,69 +854,25 @@ export default function DesktopAppUI() {
         {/* Right Side: Toggles & Stream Window */}
         <div className="flex items-center gap-3 shrink-0">
           
-          {/* Nút Mở Cửa Sổ Live Sạch Dành Riêng Cho TikTok Live Studio / OBS */}
+          {/* Nút Mở Cửa Sổ Live Sạch 9:16 Dành Riêng Cho TikTok Live Studio / OBS */}
           <button 
             onClick={() => {
-              const streamWin = window.open('', 'AvaliveCleanStream', 'width=720,height=1280,menubar=no,toolbar=no,location=no,status=no');
-              if (streamWin) {
-                const char = CHARACTERS[selectedCharacter] || { url: '', type: 'image' };
-                const currentMedia = (isConnected || showSimulator) && activeVideoItem ? activeVideoItem.mediaUrl : char.url;
-                const isVid = char.type === 'video' || (activeVideoItem && activeVideoItem.type === 'video');
-                
-                streamWin.document.write(`
-                  <!DOCTYPE html>
-                  <html>
-                  <head>
-                    <title>TikTok Live Studio - Clean Video Output</title>
-                    <meta charset="UTF-8" />
-                    <style>
-                      body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; display: flex; align-items: center; justify-content: center; font-family: sans-serif; }
-                      #media-wrapper { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-                      video, img { width: 100%; height: 100%; object-fit: cover; }
-                    </style>
-                  </head>
-                  <body>
-                    <div id="media-wrapper">
-                      ${isVid ? `<video id="clean-stream-video" src="${currentMedia}" autoplay loop muted playsinline></video>` : `<img id="clean-stream-img" src="${currentMedia}" />`}
-                    </div>
-                    <script>
-                      function updateMedia(url, isVideo) {
-                        var wrapper = document.getElementById('media-wrapper');
-                        if (!wrapper || !url) return;
-                        if (isVideo) {
-                          wrapper.innerHTML = '<video src="' + url + '" autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;"></video>';
-                        } else {
-                          wrapper.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;" />';
-                        }
-                      }
-                      if (typeof BroadcastChannel !== 'undefined') {
-                        var bc = new BroadcastChannel('avalive_clean_stream_channel');
-                        bc.onmessage = function(e) {
-                          if (e.data && e.data.mediaUrl) {
-                            updateMedia(e.data.mediaUrl, e.data.isVideo);
-                          }
-                        };
-                      }
-                      window.addEventListener('storage', function(e) {
-                        if (e.key === 'aidol_clean_stream_state' && e.newValue) {
-                          try {
-                            var p = JSON.parse(e.newValue);
-                            if (p.mediaUrl) updateMedia(p.mediaUrl, p.isVideo);
-                          } catch(err) {}
-                        }
-                      });
-                    </script>
-                  </body>
-                  </html>
-                `);
-                streamWin.document.close();
+              let overlayUrl = '?overlay=cleanlive';
+              let winName = 'AvaliveCleanStream';
+              if (isGameBanDoActive) {
+                overlayUrl = '?overlay=bando';
+                winName = 'AvaliveMapOverlay';
+              } else if (isGameBattleActive) {
+                overlayUrl = '?overlay=gamebattle';
+                winName = 'AvaliveBattleOverlay';
               }
+              window.open(overlayUrl, winName, 'width=450,height=800,menubar=no,toolbar=no,location=no,status=no');
             }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isDarkMode ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}`}
-            title="Mở cửa sổ video sạch độc lập chỉ chứa nhân vật để TikTok Live Studio / OBS bắt hình trực tiếp"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-black transition-all bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white shadow-md shadow-pink-500/25 border border-pink-400/40 active:scale-95"
+            title="Mở cửa sổ 9:16 sạch độc lập (không có nút bấm/thanh điều khiển) để đưa thẳng vào TikTok LIVE Studio hoặc OBS Studio"
           >
             <Video size={16} />
-            Live TikTok
+            <span>📺 Khung Live 9:16</span>
           </button>
 
           {/* Menu Theo dõi: Sắp xếp theo thứ tự ưu tiên hay dùng nhất lên đầu */}

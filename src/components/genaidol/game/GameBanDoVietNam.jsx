@@ -1307,152 +1307,153 @@ export default function GameBanDoVietNam({
             </div>
           </div>
 
-          <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
-            {/* Nút Chuyển Đổi Tỷ Lệ Khung Hình: 9:16 (TikTok Dọc) vs 16:9 (OBS Ngang) */}
-            <button
-              onClick={() => {
-                const nextAspect = aspectRatio === '9:16' ? '16:9' : '9:16';
-                setAspectRatio(nextAspect);
-                try {
-                  localStorage.setItem('avalive_map_aspect_ratio', nextAspect);
-                } catch (e) {}
-              }}
-              className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all border flex items-center gap-1 shadow-sm ${
-                aspectRatio === '9:16'
-                  ? 'bg-gradient-to-r from-pink-600 via-rose-500 to-amber-500 text-white border-pink-300 ring-2 ring-pink-400/50 shadow-pink-500/30'
-                  : isLightTheme
-                  ? 'bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300'
-                  : 'bg-white/10 hover:bg-white/20 text-cyan-300 border-white/10'
-              }`}
-              title={aspectRatio === '9:16' ? "Đang ở Khung Hình 9:16 (Chuẩn TikTok Live Dọc) — Bấm chuyển sang 16:9 (Ngang OBS/PC)" : "Đang ở Khung Hình 16:9 (Ngang OBS/PC) — Bấm chuyển sang 9:16 (Chuẩn TikTok Live Dọc)"}
-            >
-              <Smartphone size={12} className={aspectRatio === '9:16' ? 'text-yellow-300' : 'text-cyan-300'} />
-              <span>{aspectRatio === '9:16' ? '📱 9:16 TikTok' : '🖥️ 16:9 OBS'}</span>
-            </button>
-
-            {/* Nút Bật/Tắt Chế Độ Tự Động Hoàn Toàn 24/24 (Auto Loop 24/7) */}
-            <div className="flex items-center rounded-lg border border-purple-500/40 bg-purple-950/40 p-0.5 shadow-sm">
+          {!isPopout && !isLiveCleanMode && (
+            <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
+              {/* Nút Chuyển Đổi Tỷ Lệ Khung Hình: 9:16 (TikTok Dọc) vs 16:9 (OBS Ngang) */}
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  bandoAudio.ensureContext();
-                  const playing = bandoAudio.toggleBgm();
-                  setIsBgmPlaying(playing);
+                onClick={() => {
+                  const nextAspect = aspectRatio === '9:16' ? '16:9' : '9:16';
+                  setAspectRatio(nextAspect);
+                  try {
+                    localStorage.setItem('avalive_map_aspect_ratio', nextAspect);
+                  } catch (e) {}
                 }}
-                className={`px-2 py-1 rounded-md text-[10px] sm:text-xs font-bold transition-all flex items-center gap-1 ${
-                  isBgmPlaying
-                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/30'
-                    : 'text-purple-300 hover:text-white hover:bg-white/10'
+                className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all border flex items-center gap-1 shadow-sm ${
+                  aspectRatio === '9:16'
+                    ? 'bg-gradient-to-r from-pink-600 via-rose-500 to-amber-500 text-white border-pink-300 ring-2 ring-pink-400/50 shadow-pink-500/30'
+                    : isLightTheme
+                    ? 'bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300'
+                    : 'bg-white/10 hover:bg-white/20 text-cyan-300 border-white/10'
                 }`}
-                title={isBgmPlaying ? `Nhạc nền đang PHÁT (Chế độ: ${bgmTimerMode === '24/7' ? 'Vô Tận 24/24' : bgmTimerMode}) — Bấm để TẠM DỪNG` : "Bấm để MỞ NHẠC NỀN ngay lập tức"}
+                title={aspectRatio === '9:16' ? "Đang ở Khung Hình 9:16 (Chuẩn TikTok Live Dọc) — Bấm chuyển sang 16:9 (Ngang OBS/PC)" : "Đang ở Khung Hình 16:9 (Ngang OBS/PC) — Bấm chuyển sang 9:16 (Chuẩn TikTok Live Dọc)"}
               >
-                <Music size={12} className={isBgmPlaying ? 'text-yellow-300 fill-yellow-300 animate-pulse' : 'text-gray-400'} />
-                <span className="hidden sm:inline">{isBgmPlaying ? `Nhạc ${bgmTimerMode}` : 'Mở Nhạc'}</span>
+                <Smartphone size={12} className={aspectRatio === '9:16' ? 'text-yellow-300' : 'text-cyan-300'} />
+                <span>{aspectRatio === '9:16' ? '📱 9:16 TikTok' : '🖥️ 16:9 OBS'}</span>
               </button>
 
+              {/* Nút Bật/Tắt Chế Độ Tự Động Hoàn Toàn 24/24 (Auto Loop 24/7) */}
+              <div className="flex items-center rounded-lg border border-purple-500/40 bg-purple-950/40 p-0.5 shadow-sm">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    bandoAudio.ensureContext();
+                    const playing = bandoAudio.toggleBgm();
+                    setIsBgmPlaying(playing);
+                  }}
+                  className={`px-2 py-1 rounded-md text-[10px] sm:text-xs font-bold transition-all flex items-center gap-1 ${
+                    isBgmPlaying
+                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/30'
+                      : 'text-purple-300 hover:text-white hover:bg-white/10'
+                  }`}
+                  title={isBgmPlaying ? `Nhạc nền đang PHÁT (Chế độ: ${bgmTimerMode === '24/7' ? 'Vô Tận 24/24' : bgmTimerMode}) — Bấm để TẠM DỪNG` : "Bấm để MỞ NHẠC NỀN ngay lập tức"}
+                >
+                  <Music size={12} className={isBgmPlaying ? 'text-yellow-300 fill-yellow-300 animate-pulse' : 'text-gray-400'} />
+                  <span className="hidden sm:inline">{isBgmPlaying ? `Nhạc ${bgmTimerMode}` : 'Mở Nhạc'}</span>
+                </button>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowAudioModal(true);
+                  }}
+                  className="p-1 rounded-md text-purple-300 hover:text-white hover:bg-purple-800/50 transition-all border-l border-purple-400/20"
+                  title="Mở Bảng Cài Đặt Nhạc Nền 24/24 & Hẹn Giờ Tự Động"
+                >
+                  <Sliders size={12} />
+                </button>
+              </div>
+
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowAudioModal(true);
+                onClick={() => {
+                  bandoEngine.toggleAuto247();
+                  setIsAuto247(bandoEngine.isAuto247Running);
                 }}
-                className="p-1 rounded-md text-purple-300 hover:text-white hover:bg-purple-800/50 transition-all border-l border-purple-400/20"
-                title="Mở Bảng Cài Đặt Nhạc Nền 24/24 & Hẹn Giờ Tự Động"
+                className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all border flex items-center gap-1 shadow-md ${
+                  isAuto247
+                    ? 'bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 text-white border-emerald-300 ring-2 ring-emerald-400 animate-pulse shadow-emerald-500/40'
+                    : isLightTheme
+                    ? 'bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300'
+                    : 'bg-white/10 hover:bg-white/20 text-yellow-300 border-white/10'
+                }`}
+                title={isAuto247 ? "Hệ thống đang TỰ ĐỘNG CHẠY 24/24 (Ghép cờ -> Vinh danh Top 30 + Top 1 -> Tự reset vòng mới) — Bấm để TẠM DỪNG" : "Bấm để BẬT chế độ TỰ ĐỘNG 24/24 xuyên suốt không ngừng nghỉ"}
               >
-                <Sliders size={12} />
+                <Zap size={12} className={isAuto247 ? 'text-yellow-300 fill-yellow-300 animate-bounce' : 'text-yellow-400'} />
+                <span>{isAuto247 ? '⚡ 24/7: BẬT' : '⚡ Auto 24/7'}</span>
               </button>
-            </div>
 
-            <button
-              onClick={() => {
-                bandoEngine.toggleAuto247();
-                setIsAuto247(bandoEngine.isAuto247Running);
-              }}
-              className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all border flex items-center gap-1 shadow-md ${
-                isAuto247
-                  ? 'bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 text-white border-emerald-300 ring-2 ring-emerald-400 animate-pulse shadow-emerald-500/40'
-                  : isLightTheme
-                  ? 'bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300'
-                  : 'bg-white/10 hover:bg-white/20 text-yellow-300 border-white/10'
-              }`}
-              title={isAuto247 ? "Hệ thống đang TỰ ĐỘNG CHẠY 24/24 (Ghép cờ -> Vinh danh Top 30 + Top 1 -> Tự reset vòng mới) — Bấm để TẠM DỪNG" : "Bấm để BẬT chế độ TỰ ĐỘNG 24/24 xuyên suốt không ngừng nghỉ"}
-            >
-              <Zap size={12} className={isAuto247 ? 'text-yellow-300 fill-yellow-300 animate-bounce' : 'text-yellow-400'} />
-              <span>{isAuto247 ? '⚡ 24/7: BẬT' : '⚡ Auto 24/7'}</span>
-            </button>
-
-
-            {/* Nút Chuyển Đổi Nền Sáng / Tối (Light / Dark Mode Switcher) */}
-            <button
-              onClick={() => {
-                const nextTheme = gameState.settings?.theme === 'light' ? 'dark' : 'light';
-                bandoEngine.setTheme(nextTheme);
-              }}
-              className={`p-1 sm:px-2 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold transition-all border flex items-center gap-1 ${
-                isLightTheme
-                  ? 'bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-300 shadow-sm'
-                  : 'bg-indigo-950/70 hover:bg-indigo-900/80 text-indigo-200 border-indigo-500/40 shadow-sm'
-              }`}
-              title={isLightTheme ? "Đang ở Nền Sáng — Bấm chuyển sang Nền Tối" : "Đang ở Nền Tối — Bấm chuyển sang Nền Sáng"}
-            >
-              {isLightTheme ? <Sun size={12} className="text-amber-600" /> : <Moon size={12} className="text-indigo-400" />}
-              <span className="hidden md:inline">{isLightTheme ? 'Sáng' : 'Tối'}</span>
-            </button>
-
-            {/* Nút Bật/Tắt Xoay Tự Động Bản Đồ */}
-            <button
-              onClick={handleToggleAutoRotate}
-              className={`p-1 sm:px-2 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold transition-all border flex items-center gap-1 ${
-                autoRotate
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400 shadow-md shadow-emerald-500/30'
-                  : isLightTheme
-                  ? 'bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300'
-                  : 'bg-white/10 hover:bg-white/20 text-gray-300 border-white/10'
-              }`}
-              title={autoRotate ? "Bản đồ đang tự động quay — Bấm để ĐỨNG YÊN" : "Bản đồ đang đứng yên — Bấm để TỰ ĐỘNG XOAY"}
-            >
-              <RefreshCw size={12} className={autoRotate ? 'animate-spin' : ''} />
-              <span className="hidden md:inline">{autoRotate ? 'Xoay' : 'Tĩnh'}</span>
-            </button>
-
-            {/* Nút Ẩn/Hiện Bảng Bên Hông */}
-            <button
-              onClick={() => setShowSidePanels(!showSidePanels)}
-              className={`p-1 sm:p-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all border ${
-                showSidePanels 
-                  ? isLightTheme ? 'bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300' : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10' 
-                  : 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40 shadow-md shadow-yellow-500/20'
-              }`}
-              title={showSidePanels ? "Thu gọn bảng bên hông (Tối đa hóa bản đồ)" : "Mở lại bảng bên hông"}
-            >
-              {showSidePanels ? <Eye size={13} /> : <EyeOff size={13} />}
-            </button>
-
-            {/* 3D / 2D Toggle */}
-            <button
-              onClick={() => setViewMode3D(!viewMode3D)}
-              className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs font-bold border transition-colors flex items-center gap-1 ${
-                isLightTheme 
-                  ? 'bg-slate-200 hover:bg-slate-300 text-slate-800 border-slate-300' 
-                  : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
-              }`}
-              title={viewMode3D ? "Chuyển sang chế độ 2D" : "Chuyển sang chế độ 3D"}
-            >
-              <Layers size={12} />
-              <span>{viewMode3D ? '3D' : '2D'}</span>
-            </button>
-
-            {/* Admin Modal Shortcut (Only shown if onOpenAdmin provided) */}
-            {onOpenAdmin && (
+              {/* Nút Chuyển Đổi Nền Sáng / Tối (Light / Dark Mode Switcher) */}
               <button
-                onClick={onOpenAdmin}
-                className="p-1 sm:px-2 sm:py-1 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/40 text-[10px] sm:text-xs font-black flex items-center gap-1 transition-all"
-                title="Mở Bảng Quản trị Admin Toàn Diện"
+                onClick={() => {
+                  const nextTheme = gameState.settings?.theme === 'light' ? 'dark' : 'light';
+                  bandoEngine.setTheme(nextTheme);
+                }}
+                className={`p-1 sm:px-2 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold transition-all border flex items-center gap-1 ${
+                  isLightTheme
+                    ? 'bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-300 shadow-sm'
+                    : 'bg-indigo-950/70 hover:bg-indigo-900/80 text-indigo-200 border-indigo-500/40 shadow-sm'
+                }`}
+                title={isLightTheme ? "Đang ở Nền Sáng — Bấm chuyển sang Nền Tối" : "Đang ở Nền Tối — Bấm chuyển sang Nền Sáng"}
               >
-                <Settings size={12} />
-                <span className="hidden sm:inline">Admin</span>
+                {isLightTheme ? <Sun size={12} className="text-amber-600" /> : <Moon size={12} className="text-indigo-400" />}
+                <span className="hidden md:inline">{isLightTheme ? 'Sáng' : 'Tối'}</span>
               </button>
-            )}
-          </div>
+
+              {/* Nút Bật/Tắt Xoay Tự Động Bản Đồ */}
+              <button
+                onClick={handleToggleAutoRotate}
+                className={`p-1 sm:px-2 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold transition-all border flex items-center gap-1 ${
+                  autoRotate
+                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400 shadow-md shadow-emerald-500/30'
+                    : isLightTheme
+                    ? 'bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300'
+                    : 'bg-white/10 hover:bg-white/20 text-gray-300 border-white/10'
+                }`}
+                title={autoRotate ? "Bản đồ đang tự động quay — Bấm để ĐỨNG YÊN" : "Bản đồ đang đứng yên — Bấm để TỰ ĐỘNG XOAY"}
+              >
+                <RefreshCw size={12} className={autoRotate ? 'animate-spin' : ''} />
+                <span className="hidden md:inline">{autoRotate ? 'Xoay' : 'Tĩnh'}</span>
+              </button>
+
+              {/* Nút Ẩn/Hiện Bảng Bên Hông */}
+              <button
+                onClick={() => setShowSidePanels(!showSidePanels)}
+                className={`p-1 sm:p-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all border ${
+                  showSidePanels 
+                    ? isLightTheme ? 'bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300' : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10' 
+                    : 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40 shadow-md shadow-yellow-500/20'
+                }`}
+                title={showSidePanels ? "Thu gọn bảng bên hông (Tối đa hóa bản đồ)" : "Mở lại bảng bên hông"}
+              >
+                {showSidePanels ? <Eye size={13} /> : <EyeOff size={13} />}
+              </button>
+
+              {/* 3D / 2D Toggle */}
+              <button
+                onClick={() => setViewMode3D(!viewMode3D)}
+                className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs font-bold border transition-colors flex items-center gap-1 ${
+                  isLightTheme 
+                    ? 'bg-slate-200 hover:bg-slate-300 text-slate-800 border-slate-300' 
+                    : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
+                }`}
+                title={viewMode3D ? "Chuyển sang chế độ 2D" : "Chuyển sang chế độ 3D"}
+              >
+                <Layers size={12} />
+                <span>{viewMode3D ? '3D' : '2D'}</span>
+              </button>
+
+              {/* Admin Modal Shortcut (Only shown if onOpenAdmin provided) */}
+              {onOpenAdmin && (
+                <button
+                  onClick={onOpenAdmin}
+                  className="p-1 sm:px-2 sm:py-1 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/40 text-[10px] sm:text-xs font-black flex items-center gap-1 transition-all"
+                  title="Mở Bảng Quản trị Admin Toàn Diện"
+                >
+                  <Settings size={12} />
+                  <span className="hidden sm:inline">Admin</span>
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -1557,177 +1558,181 @@ export default function GameBanDoVietNam({
         </div>
 
         {/* FLOATING MULTI-DIRECTIONAL D-PAD & PAN/ZOOM NAVIGATION CONTROLLER */}
-        <div className={`absolute bottom-4 left-4 z-20 flex items-center gap-2 p-2 backdrop-blur-md border rounded-2xl shadow-2xl transition-colors ${
-          isLightTheme ? 'bg-white/90 border-slate-300 shadow-xl' : 'bg-black/75 border-white/15'
-        }`}>
-          {/* Zoom Buttons with Macro Ultra Close-up View */}
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => viewMode3D ? handleZoom3D(0.80) : setZoom2D(z => Math.min(4.0, z * 1.25))}
-              className={`p-2 rounded-xl border transition-all active:scale-95 shadow-sm ${
-                isLightTheme 
-                  ? 'bg-slate-100 hover:bg-slate-200 text-amber-600 border-slate-300' 
-                  : 'bg-white/10 hover:bg-white/20 text-yellow-300 hover:text-white border-white/10'
-              }`}
-              title="Phóng to (+)"
-            >
-              <ZoomIn size={15} />
-            </button>
-            <button
-              onClick={() => viewMode3D ? handleZoom3D(1.25) : setZoom2D(z => Math.max(0.5, z * 0.80))}
-              className={`p-2 rounded-xl border transition-all active:scale-95 shadow-sm ${
-                isLightTheme 
-                  ? 'bg-slate-100 hover:bg-slate-200 text-amber-600 border-slate-300' 
-                  : 'bg-white/10 hover:bg-white/20 text-yellow-300 hover:text-white border-white/10'
-              }`}
-              title="Thu nhỏ (-)"
-            >
-              <ZoomOut size={15} />
-            </button>
-            <button
-              onClick={() => {
-                if (viewMode3D) {
-                  applyCameraPreset('macro');
-                } else {
-                  setZoom2D(3.5);
-                }
-                notifyBookmark('🔍 Chế độ Zoom Siêu Cận Cảnh: Soi rõ nét từng ô cờ 3D');
-              }}
-              className="px-2 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-black text-[11px] shadow-md border border-yellow-300 transition-all active:scale-95 flex items-center gap-1"
-              title="Zoom Siêu Cận Cảnh Soi Từng Ô Lá Cờ"
-            >
-              <Search size={12} className="stroke-[2.5]" />
-              <span>Cận Cảnh</span>
-            </button>
-          </div>
+        {!isPopout && !isLiveCleanMode && (
+          <>
+            <div className={`absolute bottom-4 left-4 z-20 flex items-center gap-2 p-2 backdrop-blur-md border rounded-2xl shadow-2xl transition-colors ${
+              isLightTheme ? 'bg-white/90 border-slate-300 shadow-xl' : 'bg-black/75 border-white/15'
+            }`}>
+              {/* Zoom Buttons with Macro Ultra Close-up View */}
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => viewMode3D ? handleZoom3D(0.80) : setZoom2D(z => Math.min(4.0, z * 1.25))}
+                  className={`p-2 rounded-xl border transition-all active:scale-95 shadow-sm ${
+                    isLightTheme 
+                      ? 'bg-slate-100 hover:bg-slate-200 text-amber-600 border-slate-300' 
+                      : 'bg-white/10 hover:bg-white/20 text-yellow-300 hover:text-white border-white/10'
+                  }`}
+                  title="Phóng to (+)"
+                >
+                  <ZoomIn size={15} />
+                </button>
+                <button
+                  onClick={() => viewMode3D ? handleZoom3D(1.25) : setZoom2D(z => Math.max(0.5, z * 0.80))}
+                  className={`p-2 rounded-xl border transition-all active:scale-95 shadow-sm ${
+                    isLightTheme 
+                      ? 'bg-slate-100 hover:bg-slate-200 text-amber-600 border-slate-300' 
+                      : 'bg-white/10 hover:bg-white/20 text-yellow-300 hover:text-white border-white/10'
+                  }`}
+                  title="Thu nhỏ (-)"
+                >
+                  <ZoomOut size={15} />
+                </button>
+                <button
+                  onClick={() => {
+                    if (viewMode3D) {
+                      applyCameraPreset('macro');
+                    } else {
+                      setZoom2D(3.5);
+                    }
+                    notifyBookmark('🔍 Chế độ Zoom Siêu Cận Cảnh: Soi rõ nét từng ô cờ 3D');
+                  }}
+                  className="px-2 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-black text-[11px] shadow-md border border-yellow-300 transition-all active:scale-95 flex items-center gap-1"
+                  title="Zoom Siêu Cận Cảnh Soi Từng Ô Lá Cờ"
+                >
+                  <Search size={12} className="stroke-[2.5]" />
+                  <span>Cận Cảnh</span>
+                </button>
+              </div>
 
-          <div className={`w-[1px] h-6 mx-1 ${isLightTheme ? 'bg-slate-300' : 'bg-white/20'}`} />
+              <div className={`w-[1px] h-6 mx-1 ${isLightTheme ? 'bg-slate-300' : 'bg-white/20'}`} />
 
-          {/* Mouse Mode Toggle: Pan vs Orbit */}
-          <button
-            onClick={() => setIsPanMode(!isPanMode)}
-            className={`px-2 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1 shadow-sm ${
-              isPanMode
-                ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white border-blue-400 shadow-md shadow-blue-500/30'
-                : isLightTheme
-                ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
-                : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
-            }`}
-            title={isPanMode ? "Đang ở Chế độ Kéo Lướt Bản Đồ (Chuột trái kéo) — Bấm để đổi sang Xoay 3D" : "Đang ở Chế độ Xoay 3D — Bấm để đổi sang Kéo Lướt Bản Đồ"}
-          >
-            {isPanMode ? <Move size={13} /> : <Compass size={13} />}
-            <span>{isPanMode ? '🖐️ Kéo' : '🔄 Xoay'}</span>
-          </button>
+              {/* Mouse Mode Toggle: Pan vs Orbit */}
+              <button
+                onClick={() => setIsPanMode(!isPanMode)}
+                className={`px-2 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1 shadow-sm ${
+                  isPanMode
+                    ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white border-blue-400 shadow-md shadow-blue-500/30'
+                    : isLightTheme
+                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                    : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
+                }`}
+                title={isPanMode ? "Đang ở Chế độ Kéo Lướt Bản Đồ (Chuột trái kéo) — Bấm để đổi sang Xoay 3D" : "Đang ở Chế độ Xoay 3D — Bấm để đổi sang Kéo Lướt Bản Đồ"}
+              >
+                {isPanMode ? <Move size={13} /> : <Compass size={13} />}
+                <span>{isPanMode ? '🖐️ Kéo' : '🔄 Xoay'}</span>
+              </button>
 
-          <div className={`w-[1px] h-6 mx-1 ${isLightTheme ? 'bg-slate-300' : 'bg-white/20'}`} />
+              <div className={`w-[1px] h-6 mx-1 ${isLightTheme ? 'bg-slate-300' : 'bg-white/20'}`} />
 
-          {/* D-Pad Pan Directions */}
-          <div className="grid grid-cols-3 gap-1">
-            <div />
-            <button
-              onClick={() => viewMode3D ? handlePan3D(0, -1) : setPan2D(p => ({ ...p, y: p.y + 40 }))}
-              className={`p-1.5 rounded-lg border transition-all active:scale-90 ${
-                isLightTheme ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300' : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
-              }`}
-              title="Kéo Lên Trên"
-            >
-              <ArrowUp size={13} />
-            </button>
-            <div />
+              {/* D-Pad Pan Directions */}
+              <div className="grid grid-cols-3 gap-1">
+                <div />
+                <button
+                  onClick={() => viewMode3D ? handlePan3D(0, -1) : setPan2D(p => ({ ...p, y: p.y + 40 }))}
+                  className={`p-1.5 rounded-lg border transition-all active:scale-90 ${
+                    isLightTheme ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300' : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
+                  }`}
+                  title="Kéo Lên Trên"
+                >
+                  <ArrowUp size={13} />
+                </button>
+                <div />
 
-            <button
-              onClick={() => viewMode3D ? handlePan3D(-1, 0) : setPan2D(p => ({ ...p, x: p.x + 40 }))}
-              className={`p-1.5 rounded-lg border transition-all active:scale-90 ${
-                isLightTheme ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300' : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
-              }`}
-              title="Kéo Sang Trái"
-            >
-              <ArrowLeft size={13} />
-            </button>
-            <button
-              onClick={handleResetCamera}
-              className="p-1.5 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 border border-yellow-500/40 transition-all active:scale-90 text-[10px] font-black"
-              title="Đặt Lại Góc Nhìn Mặc Định"
-            >
-              🎯
-            </button>
-            <button
-              onClick={() => viewMode3D ? handlePan3D(1, 0) : setPan2D(p => ({ ...p, x: p.x - 40 }))}
-              className={`p-1.5 rounded-lg border transition-all active:scale-90 ${
-                isLightTheme ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300' : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
-              }`}
-              title="Kéo Sang Phải"
-            >
-              <ArrowRight size={13} />
-            </button>
+                <button
+                  onClick={() => viewMode3D ? handlePan3D(-1, 0) : setPan2D(p => ({ ...p, x: p.x + 40 }))}
+                  className={`p-1.5 rounded-lg border transition-all active:scale-90 ${
+                    isLightTheme ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300' : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
+                  }`}
+                  title="Kéo Sang Trái"
+                >
+                  <ArrowLeft size={13} />
+                </button>
+                <button
+                  onClick={handleResetCamera}
+                  className="p-1.5 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 border border-yellow-500/40 transition-all active:scale-90 text-[10px] font-black"
+                  title="Đặt Lại Góc Nhìn Mặc Định"
+                >
+                  🎯
+                </button>
+                <button
+                  onClick={() => viewMode3D ? handlePan3D(1, 0) : setPan2D(p => ({ ...p, x: p.x - 40 }))}
+                  className={`p-1.5 rounded-lg border transition-all active:scale-90 ${
+                    isLightTheme ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300' : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
+                  }`}
+                  title="Kéo Sang Phải"
+                >
+                  <ArrowRight size={13} />
+                </button>
 
-            <div />
-            <button
-              onClick={() => viewMode3D ? handlePan3D(0, 1) : setPan2D(p => ({ ...p, y: p.y - 40 }))}
-              className={`p-1.5 rounded-lg border transition-all active:scale-90 ${
-                isLightTheme ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300' : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
-              }`}
-              title="Kéo Xuống Dưới"
-            >
-              <ArrowDown size={13} />
-            </button>
-            <div />
-          </div>
-        </div>
+                <div />
+                <button
+                  onClick={() => viewMode3D ? handlePan3D(0, 1) : setPan2D(p => ({ ...p, y: p.y - 40 }))}
+                  className={`p-1.5 rounded-lg border transition-all active:scale-90 ${
+                    isLightTheme ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300' : 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/10'
+                  }`}
+                  title="Kéo Xuống Dưới"
+                >
+                  <ArrowDown size={13} />
+                </button>
+                <div />
+              </div>
+            </div>
 
-        {/* FLOATING CUSTOM CAMERA BOOKMARKS & PRESET SLOTS TOOLBAR */}
-        <div className={`absolute bottom-4 right-4 z-30 flex flex-wrap items-center gap-1.5 p-1.5 backdrop-blur-md border rounded-2xl shadow-2xl transition-colors ${
-          isLightTheme ? 'bg-white/90 border-slate-300' : 'bg-black/80 border-white/15'
-        }`}>
-          {/* 1. Toàn Cảnh Reset Button */}
-          <button
-            onClick={handleResetOverview}
-            className={`px-3 py-1.5 rounded-xl text-[11px] font-black transition-all flex items-center gap-1.5 ${
-              activeBookmarkId === 'overview'
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-105 border border-cyan-300'
-                : isLightTheme
-                ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200'
-                : 'bg-white/10 hover:bg-white/20 text-gray-200'
-            }`}
-            title="Quay về góc nhìn Toàn Cảnh Ban Đầu"
-          >
-            <span>🏠</span>
-            <span>Toàn Cảnh</span>
-          </button>
+            {/* FLOATING CUSTOM CAMERA BOOKMARKS & PRESET SLOTS TOOLBAR */}
+            <div className={`absolute bottom-4 right-4 z-30 flex flex-wrap items-center gap-1.5 p-1.5 backdrop-blur-md border rounded-2xl shadow-2xl transition-colors ${
+              isLightTheme ? 'bg-white/90 border-slate-300' : 'bg-black/80 border-white/15'
+            }`}>
+              {/* 1. Toàn Cảnh Reset Button */}
+              <button
+                onClick={handleResetOverview}
+                className={`px-3 py-1.5 rounded-xl text-[11px] font-black transition-all flex items-center gap-1.5 ${
+                  activeBookmarkId === 'overview'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-105 border border-cyan-300'
+                    : isLightTheme
+                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200'
+                    : 'bg-white/10 hover:bg-white/20 text-gray-200'
+                }`}
+                title="Quay về góc nhìn Toàn Cảnh Ban Đầu"
+              >
+                <span>🏠</span>
+                <span>Toàn Cảnh</span>
+              </button>
 
-          <div className="w-[1px] h-5 bg-white/20 mx-0.5" />
+              <div className="w-[1px] h-5 bg-white/20 mx-0.5" />
 
-          {/* 2. Custom Bookmark Slots (Slot 1, Slot 2, Slot 3...) */}
-          {customBookmarks.map((bm) => (
-            <button
-              key={bm.id}
-              onClick={() => handleApplyBookmark(bm)}
-              className={`px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 ${
-                activeBookmarkId === bm.id
-                  ? 'bg-gradient-to-r from-red-600 via-amber-600 to-yellow-500 text-white shadow-lg shadow-red-500/40 scale-105 border border-yellow-300 font-black'
-                  : isLightTheme
-                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
-                  : 'bg-white/5 hover:bg-white/15 text-gray-300 hover:text-white'
-              }`}
-              title={`Chuyển đến: ${bm.name} (Bấm để nhảy tới)`}
-            >
-              <span>{bm.icon || '📍'}</span>
-              <span>{bm.shortName || bm.name}</span>
-            </button>
-          ))}
+              {/* 2. Custom Bookmark Slots (Slot 1, Slot 2, Slot 3...) */}
+              {customBookmarks.map((bm) => (
+                <button
+                  key={bm.id}
+                  onClick={() => handleApplyBookmark(bm)}
+                  className={`px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 ${
+                    activeBookmarkId === bm.id
+                      ? 'bg-gradient-to-r from-red-600 via-amber-600 to-yellow-500 text-white shadow-lg shadow-red-500/40 scale-105 border border-yellow-300 font-black'
+                      : isLightTheme
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
+                      : 'bg-white/5 hover:bg-white/15 text-gray-300 hover:text-white'
+                  }`}
+                  title={`Chuyển đến: ${bm.name} (Bấm để nhảy tới)`}
+                >
+                  <span>{bm.icon || '📍'}</span>
+                  <span>{bm.shortName || bm.name}</span>
+                </button>
+              ))}
 
-          <div className="w-[1px] h-5 bg-white/20 mx-0.5" />
+              <div className="w-[1px] h-5 bg-white/20 mx-0.5" />
 
-          {/* 3. Nút Ghim & Cài Đặt Vị Trí Modal Trigger */}
-          <button
-            onClick={() => setShowBookmarkManager(prev => !prev)}
-            className="px-3 py-1.5 rounded-xl text-[11px] font-black bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 shadow-lg shadow-amber-500/30 flex items-center gap-1.5 transition-all active:scale-95 border border-yellow-200"
-            title="Ghim góc nhìn hiện tại hoặc Tùy chỉnh danh sách vị trí camera"
-          >
-            <BookmarkPlus size={13} className="text-black" />
-            <span>Ghim / Cài Đặt Vị Trí</span>
-          </button>
-        </div>
+              {/* 3. Nút Ghim & Cài Đặt Vị Trí Modal Trigger */}
+              <button
+                onClick={() => setShowBookmarkManager(prev => !prev)}
+                className="px-3 py-1.5 rounded-xl text-[11px] font-black bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 shadow-lg shadow-amber-500/30 flex items-center gap-1.5 transition-all active:scale-95 border border-yellow-200"
+                title="Ghim góc nhìn hiện tại hoặc Tùy chỉnh danh sách vị trí camera"
+              >
+                <BookmarkPlus size={13} className="text-black" />
+                <span>Ghim / Cài Đặt Vị Trí</span>
+              </button>
+            </div>
+          </>
+        )}
 
         {/* NOTIFICATION TOAST FOR CAMERA BOOKMARK ACTIONS */}
         {bookmarkNotification && (
@@ -2412,13 +2417,13 @@ export default function GameBanDoVietNam({
 
               <button
                 onClick={() => {
-                  window.open('?overlay=bando', 'AvaliveMapOverlay', 'width=900,height=750,menubar=no,toolbar=no,location=no');
+                  window.open('?overlay=bando', 'AvaliveMapOverlay', 'width=450,height=800,menubar=no,toolbar=no,location=no,status=no');
                 }}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 border border-blue-400/40 transition-colors"
-                title="Mở Cửa Sổ Overlay Trong Suốt để TikTok LIVE Studio hoặc OBS bắt hình"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white border border-pink-400/50 shadow-md shadow-pink-500/30 transition-all active:scale-95"
+                title="Mở Cửa Sổ Khung 9:16 Sạch Riêng Biệt (Không có nút điều khiển) để TikTok LIVE Studio hoặc OBS bắt hình phát sóng"
               >
                 <MonitorPlay size={14} />
-                <span>Overlay Studio</span>
+                <span>📺 Khung Live 9:16</span>
               </button>
 
               <button
