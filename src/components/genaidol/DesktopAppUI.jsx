@@ -1818,6 +1818,34 @@ export default function DesktopAppUI() {
             setLastGameEvent({ type: 'COMMENT', data: { nickname: randName, comment: 'xanh', score: 20 }, timestamp: t });
           } else if (action === 'ADD_RED_20') {
             setLastGameEvent({ type: 'COMMENT', data: { nickname: randName, comment: 'đỏ', score: 20 }, timestamp: t });
+          } else if (action === 'ADD_BLUE_50') {
+            setLastGameEvent({ type: 'ADD_TROOPS', data: { faction: 'blue', count: 50, rankTier: 1 }, timestamp: t });
+          } else if (action === 'ADD_RED_50') {
+            setLastGameEvent({ type: 'ADD_TROOPS', data: { faction: 'red', count: 50, rankTier: 1 }, timestamp: t });
+          } else if (action === 'ADD_BLUE_100') {
+            setLastGameEvent({ type: 'ADD_TROOPS', data: { faction: 'blue', count: 100, rankTier: 2 }, timestamp: t });
+          } else if (action === 'ADD_RED_100') {
+            setLastGameEvent({ type: 'ADD_TROOPS', data: { faction: 'red', count: 100, rankTier: 2 }, timestamp: t });
+          } else if (action === 'TRIGGER_LUC_MACH_BLUE') {
+            setLastGameEvent({ type: 'TRIGGER_LUC_MACH', data: { nickname: randName, faction: 'blue' }, timestamp: t });
+          } else if (action === 'TRIGGER_LUC_MACH_RED') {
+            setLastGameEvent({ type: 'TRIGGER_LUC_MACH', data: { nickname: randName, faction: 'red' }, timestamp: t });
+          } else if (action === 'TRIGGER_DOC_CO_BLUE') {
+            setLastGameEvent({ type: 'TRIGGER_DOC_CO', data: { nickname: randName, faction: 'blue' }, timestamp: t });
+          } else if (action === 'TRIGGER_DOC_CO_RED') {
+            setLastGameEvent({ type: 'TRIGGER_DOC_CO', data: { nickname: randName, faction: 'red' }, timestamp: t });
+          } else if (action === 'TRIGGER_NHU_LAI_BLUE') {
+            setLastGameEvent({ type: 'TRIGGER_NHU_LAI', data: { nickname: randName, faction: 'blue' }, timestamp: t });
+          } else if (action === 'TRIGGER_NHU_LAI_RED') {
+            setLastGameEvent({ type: 'TRIGGER_NHU_LAI', data: { nickname: randName, faction: 'red' }, timestamp: t });
+          } else if (action === 'TRIGGER_THIEN_NGOAI_BLUE') {
+            setLastGameEvent({ type: 'TRIGGER_THIEN_NGOAI', data: { nickname: randName, faction: 'blue' }, timestamp: t });
+          } else if (action === 'TRIGGER_THIEN_NGOAI_RED') {
+            setLastGameEvent({ type: 'TRIGGER_THIEN_NGOAI', data: { nickname: randName, faction: 'red' }, timestamp: t });
+          } else if (action === 'TRIGGER_KIM_CANG_BLUE') {
+            setLastGameEvent({ type: 'TRIGGER_KIM_CANG', data: { nickname: randName, faction: 'blue' }, timestamp: t });
+          } else if (action === 'TRIGGER_KIM_CANG_RED') {
+            setLastGameEvent({ type: 'TRIGGER_KIM_CANG', data: { nickname: randName, faction: 'red' }, timestamp: t });
           } else if (action === 'TRIGGER_VAN_KIEM_BLUE') {
             setLastGameEvent({ type: 'TRIGGER_VAN_KIEM', data: { nickname: randName, faction: 'blue' }, timestamp: t });
           } else if (action === 'TRIGGER_VAN_KIEM_RED') {

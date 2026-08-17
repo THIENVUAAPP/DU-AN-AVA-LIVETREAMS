@@ -1492,18 +1492,18 @@ export default function GameBanDoVietNam({
       if (bMesh.instanceColor) bMesh.instanceColor.needsUpdate = true;
     }
 
-    // Trigger Camera zoom to focal target (Zoom cận cảnh trực diện từ trên cao nhìn rõ lá quốc kỳ và tên người tặng dù chỉ tặng 1 ô)
+    // Trigger Camera zoom to focal target (Zoom cận cảnh trực diện siêu nét thấy rõ lá quốc kỳ và tên / ID người tặng dù chỉ tặng 1 ô)
     if (gameState.lastFocalTarget && state.camera && state.controls) {
       const ft = gameState.lastFocalTarget;
       state.tween = {
         from: state.camera.position.clone(),
-        to: new THREE.Vector3(ft.wx, 26, ft.wz + 20),
+        to: new THREE.Vector3(ft.wx, 20, ft.wz + 15),
         fromTarget: state.controls.target.clone(),
         toTarget: new THREE.Vector3(ft.wx, 0, ft.wz),
         start: performance.now(),
-        duration: 500,
+        duration: 550,
         phase: 'in',
-        holdDuration: 4000,
+        holdDuration: 4200,
         holdUntil: 0
       };
     }
@@ -1726,18 +1726,18 @@ export default function GameBanDoVietNam({
         ))}
       </div>
 
-      {/* User Claim Flag Badges Floating Overlay Layer (Hiển thị Quốc Kỳ & Tên Người Tặng Nhỏ Gọn 20% Cận Cảnh Trực Diện) */}
+      {/* User Claim Flag Badges Floating Overlay Layer (Hiển thị Quốc Kỳ & Tên / ID Người Tặng Nổi Bật Cận Cảnh 3D) */}
       <div ref={claimBadgesLayerRef} className="absolute inset-0 pointer-events-none z-15 overflow-hidden">
         {recentClaimBadges.map(b => (
           <div
             key={b.id}
             ref={el => badgeRefs.current[b.id] = el}
-            className="absolute top-0 left-0 hidden flex-col items-center pointer-events-none transition-all duration-100 animate-in zoom-in-50 fade-in duration-200"
+            className="absolute top-0 left-0 hidden flex-col items-center pointer-events-none transition-all duration-100 animate-in zoom-in-75 fade-in duration-200"
             style={{ willChange: 'transform' }}
           >
-            <div className="relative flex items-center gap-1.5 px-2 py-1 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 text-white font-black text-[9.5px] shadow-xl border border-yellow-300 ring-1 ring-yellow-400/70 whitespace-nowrap drop-shadow-md">
-              <span className="text-sm leading-none drop-shadow">{b.flag || '🇻🇳'}</span>
-              <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-[10px] overflow-hidden border border-white/60 shrink-0">
+            <div className="relative flex items-center gap-2 px-2.5 py-1.5 rounded-2xl bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 text-white font-black text-[10.5px] shadow-[0_8px_25px_rgba(239,68,68,0.6)] border-2 border-yellow-300 ring-2 ring-yellow-400/80 whitespace-nowrap drop-shadow-xl">
+              <span className="text-base leading-none drop-shadow-md animate-bounce">{b.flag || '🇻🇳'}</span>
+              <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-xs overflow-hidden border border-white shadow-inner shrink-0">
                 {b.avatar ? (
                   <img src={b.avatar} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
                 ) : (
@@ -1745,14 +1745,18 @@ export default function GameBanDoVietNam({
                 )}
               </div>
               <div className="flex flex-col text-left leading-tight">
-                <span className="text-[9.5px] text-yellow-200 font-black truncate max-w-[85px] drop-shadow">{b.username}</span>
-                <span className="text-[8px] text-white font-bold flex items-center gap-0.5">
-                  <span>{b.flag || '🇻🇳'} +{b.count || 1} Ô Cờ</span>
-                  {b.giftName && <span className="text-yellow-300 text-[7.5px]">({b.giftName})</span>}
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] text-yellow-100 font-black truncate max-w-[100px] drop-shadow">{b.username}</span>
+                  {b.userId && <span className="text-[8px] text-yellow-300 font-mono font-bold opacity-90">{b.userId}</span>}
+                </div>
+                <span className="text-[8.5px] text-white font-black flex items-center gap-1 drop-shadow">
+                  <span className="text-yellow-200">{b.flag || '🇻🇳'} Cắm +{b.count || 1} Ô Cờ</span>
+                  {b.giftName && <span className="text-yellow-300 text-[8px]">({b.giftName})</span>}
                 </span>
               </div>
             </div>
-            <div className="w-0.5 h-3 bg-gradient-to-b from-yellow-300 via-yellow-400 to-transparent rounded-full shadow-sm" />
+            {/* Glowing Golden 3D Pin Needle */}
+            <div className="w-1 h-4 bg-gradient-to-b from-yellow-300 via-yellow-400 to-transparent rounded-full shadow-[0_0_8px_rgba(250,204,21,0.9)]" />
           </div>
         ))}
       </div>

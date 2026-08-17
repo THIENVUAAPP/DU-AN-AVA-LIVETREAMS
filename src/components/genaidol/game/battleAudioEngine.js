@@ -312,6 +312,107 @@ export const battleAudio = {
     });
   },
 
+  // SFX 11. LỤC MẠCH THẦN KIẾM (Laser Kiếm Khí Vô Hình Xuyên Phá)
+  playLucMachThanKiem(volume = 0.7) {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(volume * 0.65, now);
+    masterGain.connect(ctx.destination);
+
+    // 6 laser beam pulses corresponding to 6 meridian swords
+    const beamPitches = [880, 1174.66, 1318.51, 1567.98, 1760, 2093.00];
+    beamPitches.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      const beamStart = now + idx * 0.05;
+      osc.frequency.setValueAtTime(freq * 1.5, beamStart);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.5, beamStart + 0.18);
+
+      gain.gain.setValueAtTime(0.35, beamStart);
+      gain.gain.exponentialRampToValueAtTime(0.001, beamStart + 0.18);
+
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(beamStart);
+      osc.stop(beamStart + 0.2);
+    });
+  },
+
+  // SFX 12. ĐỘC CÔ CỬU KIẾM (Kiếm Trận Bão Lốc Xoáy)
+  playDocCoCuuKiem(volume = 0.7) {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(volume * 0.65, now);
+    masterGain.connect(ctx.destination);
+
+    // Whirlwind ascending sword arpeggio
+    const whirlTones = [329.63, 440, 523.25, 659.25, 880, 1046.50, 1318.51, 1760, 2093.00];
+    whirlTones.forEach((freq, idx) => {
+      playHarmonicTone(ctx, freq, now + idx * 0.04, 0.35, 0.4, masterGain);
+    });
+  },
+
+  // SFX 13. NHƯ LAI THẦN CHƯỞNG (Phật Quang Thái Dương Hoàng Kim)
+  playNhuLaiThanChuong(volume = 0.7) {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(volume * 0.8, now);
+    masterGain.connect(ctx.destination);
+
+    // Heavy resonant Tibetan bell strike + deep booming impact
+    const bellFrequencies = [110, 220, 440, 880, 1320];
+    bellFrequencies.forEach((freq) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(0.4, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.6);
+
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 1.7);
+    });
+  },
+
+  // SFX 14. THIÊN NGOẠI PHI TIÊN (Băng Vũ Kiếm Thần Phi Tiên)
+  playThienNgoaiPhiTien(volume = 0.7) {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(volume * 0.65, now);
+    masterGain.connect(ctx.destination);
+
+    const celestialNotes = [1046.50, 1318.51, 1567.98, 2093.00, 2637.02];
+    celestialNotes.forEach((freq, idx) => {
+      playHarmonicTone(ctx, freq, now + idx * 0.07, 0.5, 0.45, masterGain);
+    });
+  },
+
+  // SFX 15. KIM CANG BẤT HOẠI (Thần Chuông Vàng Hoàng Kim Phản Đòn)
+  playKimCangBatHoai(volume = 0.7) {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(volume * 0.7, now);
+    masterGain.connect(ctx.destination);
+
+    const bellNotes = [523.25, 659.25, 783.99, 1046.50];
+    bellNotes.forEach((freq, idx) => {
+      playHarmonicTone(ctx, freq, now + idx * 0.03, 0.9, 0.5, masterGain);
+    });
+  },
+
   startBgm(track = 'epic_synth', volume = 0.4, customUrl = null) {
     const ctx = getAudioContext();
     if (ctx && ctx.state === 'suspended') {

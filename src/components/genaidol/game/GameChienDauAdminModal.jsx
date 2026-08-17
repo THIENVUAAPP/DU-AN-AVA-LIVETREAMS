@@ -3,10 +3,11 @@ import {
   Shield, CheckCircle2, RotateCcw, 
   Volume2, VolumeX, Sliders, Play, Pause, Swords, Flame, 
   Zap, Trophy, AlertCircle, X, Sparkles, UserCheck, PlayCircle, StopCircle, 
-  Minimize2, Maximize2, Gift, Plus, Trash2, Move, Mic, Radio, Copy, Upload, Music, Music2, ExternalLink
+  Minimize2, Maximize2, Gift, Plus, Trash2, Move, Mic, Radio, Copy, Upload, Music, Music2, ExternalLink, Key, Filter
 } from 'lucide-react';
 import { battleAudio } from './battleAudioEngine';
-import { battleCommentary, ELEVENLABS_GAME_VOICES } from './battleCommentaryEngine';
+import { battleCommentary } from './battleCommentaryEngine';
+import { ELEVENLABS_VOICES, previewVoiceAudio, stopVoiceAudio } from '../../../utils/voiceSyncService';
 
 const SIMULATED_USERS = [
   'Nguyễn Hùng', 'Trần Mai', 'Hoàng Long', 'Minh Quân', 
@@ -16,48 +17,85 @@ const SIMULATED_USERS = [
   'Thanh Tùng', 'Mỹ Duyên', 'Quốc Bảo', 'Lan Anh'
 ];
 
-const DEFAULT_GIFTS = [
+export const DEFAULT_GIFTS = [
   // 1. Phổ biến (1 - 10 xu)
   { id: 'flag_vn', name: 'Cờ Tổ Quốc 🇻🇳', icon: '🇻🇳', coins: 1, tier: 'Tân Binh', buff: '+10 HP Xung Trận', skill: 'Vào Trận' },
   { id: 'rose', name: 'Hoa Hồng 🌹', icon: '🌹', coins: 1, tier: 'Tân Binh', buff: '+10 HP Tăng Tốc', skill: 'Bắn Tim' },
   { id: 'heart_tap', name: 'Thả Tim 🧡', icon: '🧡', coins: 1, tier: 'Tân Binh', buff: '+10 HP Tiếp Lực', skill: 'Thả Tim' },
   { id: 'very_good', name: 'Rất Tốt 👍', icon: '👍', coins: 1, tier: 'Tân Binh', buff: '+10 HP Khích Lệ', skill: 'Khích Lệ' },
   { id: 'birthday_cake', name: 'Bánh Sinh Nhật 🍰', icon: '🍰', coins: 1, tier: 'Tân Binh', buff: '+15 HP Hồi Phục', skill: 'Hồi Máu' },
+  { id: 'dallah', name: 'Dallah Chào Mừng 🫖', icon: '🫖', coins: 1, tier: 'Tân Binh', buff: '+15 HP Tiếp Sức', skill: 'Trà Đạo' },
+  { id: 'heart_shot', name: 'Bắn Tim 🫰', icon: '🫰', coins: 1, tier: 'Tân Binh', buff: '+15 HP Nạp Năng Lượng', skill: 'Bắn Tim' },
   { id: 'bing_chilling', name: 'Bing Chilling 🍦', icon: '🍦', coins: 5, tier: 'Tập Sự', buff: '+25 HP Làm Chậm', skill: 'Đóng Băng' },
   { id: 'peach', name: 'Quả Đào 🍑', icon: '🍑', coins: 5, tier: 'Tập Sự', buff: '+25 HP Sinh Lực', skill: 'Tăng Lực' },
   { id: 'spin_ball', name: 'Trái Bóng Xoáy ⚽', icon: '⚽', coins: 5, tier: 'Tập Sự', buff: '+30 HP Tốc Biến', skill: 'Xoáy Gió' },
+  { id: 'magic_fingers', name: 'Ngón Tay Thần Thánh 🤲', icon: '🤲', coins: 6, tier: 'Tập Sự', buff: '+35 HP Phù Phép', skill: 'Thần Lực' },
   { id: 'helmet', name: 'Mũ Cối Yêu Nước 🪖', icon: '🪖', coins: 10, tier: 'Dũng Sĩ', buff: '+50 HP Khiên Thép', skill: 'Hộ Thể' },
   { id: 'flower_bouquet', name: 'Bó Hoa Tươi 💐', icon: '💐', coins: 10, tier: 'Dũng Sĩ', buff: '+50 HP Cổ Vũ', skill: 'Sức Mạnh' },
 
-  // 2. Hiếm (50 - 499 xu)
-  { id: 'perfume', name: 'Nước Hoa 🌸', icon: '🌸', coins: 50, tier: 'Hiệp Khách', buff: '+150 HP + Giáp Bạc', skill: 'Hương Thơm' },
-  { id: 'crown', name: 'Vương Miện 👑', icon: '👑', coins: 99, tier: 'Hoàng Gia', buff: '+300 HP + Cánh Vàng', skill: 'Thái Cực Trận' },
+  // 2. Hiếm (20 - 499 xu)
+  { id: 'tea', name: 'Trà Đào ☕', icon: '☕', coins: 20, tier: 'Hiệp Khách', buff: '+80 HP Thư Giãn', skill: 'Dưỡng Lực' },
+  { id: 'perfume', name: 'Nước Hoa Hương Tình Yêu 🌸', icon: '🌸', coins: 50, tier: 'Hiệp Khách', buff: '+150 HP + Giáp Bạc', skill: 'Hương Thơm' },
+  { id: 'crown', name: 'Vương Miện Hoàng Gia 👑', icon: '👑', coins: 99, tier: 'Hoàng Gia', buff: '+300 HP + Cánh Vàng', skill: 'Thái Cực Trận' },
   { id: 'tank_390', name: 'Xe Tăng 390 🎖️', icon: '🎖️', coins: 99, tier: 'Chiến Binh Thép', buff: '+350 HP Giáp Sắt', skill: 'Pháo Kích' },
   { id: 'corgi', name: 'Corgi Đáng Yêu 🐶', icon: '🐶', coins: 100, tier: 'Linh Thú', buff: '+400 HP Linh Hoạt', skill: 'Corgi Nhảy' },
+  { id: 'free_music', name: 'Nhạc Tự Do 🎹', icon: '🎹', coins: 100, tier: 'Linh Thú', buff: '+450 HP Tấu Khúc', skill: 'Phím Nhạc' },
+  { id: 'rhythm_robot', name: 'Robot Nhịp Điệu 🤖', icon: '🤖', coins: 199, tier: 'Cơ Giáp', buff: '+600 HP Tấn Công', skill: 'Robot Vũ Đạo' },
   { id: 'boom_drum', name: 'Trống Bùng Nổ 🥁', icon: '🥁', coins: 249, tier: 'Âm Ba Thần Khí', buff: '+800 HP + Sóng Âm', skill: 'Sóng Thần' },
+  { id: 'romantic_cello', name: 'Cello Lãng Mạn 🎻', icon: '🎻', coins: 299, tier: 'Âm Ba Thần Khí', buff: '+900 HP Hồi Phục', skill: 'Cello Thần' },
   { id: 'firework_indep', name: 'Pháo Hoa Độc Lập 🎆', icon: '🎆', coins: 299, tier: 'Hào Khí', buff: '+1000 HP Bắn Pháo', skill: 'Pháo Hoa Rực Rỡ' },
+  { id: 'chopin_rain', name: 'Chopin Trong Mưa 🌂', icon: '🌂', coins: 349, tier: 'Hào Khí', buff: '+1100 HP Mưa Bão', skill: 'Mưa Rào' },
   { id: 'lead_singer_bear', name: 'Gấu Hát Chính 🐻', icon: '🐻', coins: 399, tier: 'Ca Vương', buff: '+1200 HP Hát Vang', skill: 'Tiếng Hát Thần' },
+  { id: 'sage_pea', name: 'Sage Hạt Đậu Thần Kỳ 🫐', icon: '🫐', coins: 399, tier: 'Ca Vương', buff: '+1300 HP Đột Phá', skill: 'Đậu Thần' },
+  { id: 'pop_parrot', name: 'Vẹt Ca Sĩ Pop 🦜', icon: '🦜', coins: 400, tier: 'Ca Vương', buff: '+1350 HP Âm Lực', skill: 'Vẹt Ca' },
   { id: 'cat_trumpet', name: 'Kèn Trumpet Mèo 🎺', icon: '🎺', coins: 449, tier: 'Nhạc Sĩ', buff: '+1400 HP Kèn Xung Trận', skill: 'Kèn Lệnh' },
 
   // 3. Sử thi (500 - 2,999 xu)
+  { id: 'alluring_sax', name: 'Tiếng Sax Quyến Rũ 🎷', icon: '🎷', coins: 700, tier: 'Bảo Vật Quốc Gia', buff: '+2200 HP Mê Hoặc', skill: 'Kèn Quyến Rũ' },
   { id: 'dong_son_drum', name: 'Trống Đồng Đông Sơn 🏛️', icon: '🏛️', coins: 999, tier: 'Bảo Vật Quốc Gia', buff: '+3000 HP Trận Đồ', skill: 'Đông Sơn Nộ' },
+  { id: 'colorful_ribbon', name: 'Ruy Băng Khoe Sắc ✨', icon: '✨', coins: 1000, tier: 'Bảo Vật Quốc Gia', buff: '+3200 HP Hào Quang', skill: 'Ruy Băng' },
   { id: 'racetrack_launch', name: 'Ra Mắt Đường Đua 🏎️', icon: '🏎️', coins: 1500, tier: 'Siêu Tốc Độ', buff: '+4500 HP Tăng Tốc', skill: 'Bão Táp Xa Lộ' },
+  { id: 'healing_hug', name: 'Cái Ôm Chữa Lành 🫂', icon: '🫂', coins: 1600, tier: 'Siêu Tốc Độ', buff: '+5000 HP Hồi Phục Toàn Quân', skill: 'Chữa Lành' },
   { id: 'truong_sa_landmark', name: 'Cột Mốc Trường Sa ⚓', icon: '⚓', coins: 1999, tier: 'Chủ Quyền Thiêng Liêng', buff: '+6000 HP Biển Đảo', skill: 'Sóng Thần Hải Quân' },
+  { id: 'tanuki_nut', name: 'Hạt Dẻ Tanuki 🌰', icon: '🌰', coins: 1999, tier: 'Võ Thần', buff: '+6200 HP Thiết Giáp', skill: 'Hạt Dẻ Thần' },
   { id: 'rocky_punch', name: 'Cú Đấm Của Rocky 🥊', icon: '🥊', coins: 1999, tier: 'Võ Thần', buff: '+6500 HP Trực Diện', skill: 'Thiết Quyền' },
+  { id: 'interplanetary', name: 'Thám Hiểm Liên Hành Tinh 🧑‍🚀', icon: '🧑‍🚀', coins: 1999, tier: 'Vũ Trụ', buff: '+6800 HP Khám Phá', skill: 'Phi Hành Gia' },
+  { id: 'heart_land', name: 'Vùng Đất Trái Tim 🏝️', icon: '🏝️', coins: 2199, tier: 'Kỳ Quan', buff: '+7500 HP Đảo Thần', skill: 'Vùng Đất Vàng' },
+  { id: 'sage_xubot', name: 'XuBot Của Sage 🪙', icon: '🪙', coins: 2199, tier: 'Kỳ Quan', buff: '+7600 HP Bắn Tiền', skill: 'XuBot' },
+  { id: 'honor_star', name: 'Ngôi Sao Danh Dự ⭐', icon: '⭐', coins: 2200, tier: 'Kỳ Quan', buff: '+7800 HP Hào Quang Sao', skill: 'Sao Vinh Quang' },
   { id: 'motorcycle', name: 'Xe Máy Siêu Phân Khối 🏍️', icon: '🏍️', coins: 2988, tier: 'Phi Đội Tốc Độ', buff: '+9000 HP Đột Kích', skill: 'Phi Mã Trận' },
+  { id: 'icecream_truck', name: 'Xe Tải Bán Kem 🚚', icon: '🚚', coins: 2988, tier: 'Phi Đội Tốc Độ', buff: '+9500 HP Cung Cấp', skill: 'Xe Kem Thần' },
   { id: 'rhythm_bear', name: 'Gấu Nhịp Điệu 🧸', icon: '🧸', coins: 2999, tier: 'Thần Thú Nhịp Điệu', buff: '+10000 HP Hộ Thể', skill: 'Gấu Cuồng Nộ' },
+  { id: 'contest_fan', name: 'Tín Đồ Thi Đấu 🏆', icon: '🏆', coins: 2999, tier: 'Vinh Quang', buff: '+10500 HP Chiến Thắng', skill: 'Cúp Vàng' },
+  { id: 'party_bus', name: 'Xe Buýt Tiệc Tùng 🚌', icon: '🚌', coins: 2999, tier: 'Vinh Quang', buff: '+11000 HP Tiệc Tùng', skill: 'Party Bus' },
 
   // 4. Huyền thoại (3,000 - 15,999 xu)
+  { id: 'hiphop_chicken', name: 'Chú Gà Hip-Hop 🐔', icon: '🐔', coins: 3200, tier: 'Huyền Thoại', buff: '+12000 HP Nhảy Múa', skill: 'Gà Nhảy' },
   { id: 'private_jet', name: 'Chuyên Cơ Hoàng Gia ✈️', icon: '✈️', coins: 4888, tier: 'Phi Thuyền VIP', buff: '+15000 HP Không Kích', skill: 'Oanh Tạc' },
+  { id: 'hero_spaceship', name: 'Tàu Không Gian Anh Hùng 🛸', icon: '🛸', coins: 4999, tier: 'Phi Thuyền VIP', buff: '+16000 HP Đột Kích Vũ Trụ', skill: 'UFO Oanh Tạc' },
   { id: 'golden_dragon', name: 'Rồng Vàng Thăng Long 🐉', icon: '🐉', coins: 5000, tier: 'Kim Long Thăng Thiên', buff: '+18000 HP Long Uy', skill: 'Long Trảo Thủ' },
+  { id: 'star_heroes_stage', name: 'Sân Khấu Star Heroes 🎪', icon: '🎪', coins: 5999, tier: 'Sân Khấu Chí Tôn', buff: '+20000 HP Tỏa Sáng', skill: 'Đại Sân Khấu' },
+  { id: 'solid_finish', name: 'Vững Vàng Về Đích 🏁', icon: '🏁', coins: 6000, tier: 'Chiến Thần', buff: '+21000 HP Quyết Thắng', skill: 'Cán Đích' },
   { id: 'rust_reborn', name: 'Rust Tái Sinh 🤖', icon: '🤖', coins: 6000, tier: 'Cơ Giáp Tối Thượng', buff: '+22000 HP + Tia Lazer', skill: 'Laze Hủy Diệt' },
+  { id: 'work_hard_play_hard', name: 'Làm Hết Sức Chơi Hết Mình 🎉', icon: '🎉', coins: 6000, tier: 'Đại Tiệc', buff: '+23000 HP Bùng Nổ', skill: 'Pháo Hoa Tiệc' },
+  { id: 'lili_leopard', name: 'Báo Đốm Lili 🐆', icon: '🐆', coins: 6599, tier: 'Thần Thú', buff: '+24000 HP Thần Tốc', skill: 'Báo Đột Kích' },
+  { id: 'rust_vs_world', name: 'Rust vs Thế Giới ⚔️', icon: '⚔️', coins: 9999, tier: 'Chí Tôn Đại Chiến', buff: '+32000 HP Trận Thế', skill: 'Đại Chiến' },
+  { id: 'sunset_racetrack', name: 'Đường Đua Hoàng Hôn 🏎️', icon: '🏎️', coins: 10000, tier: 'Siêu Xa Lộ', buff: '+35000 HP Siêu Tốc', skill: 'Xa Lộ Hoàng Hôn' },
+  { id: 'superstar', name: 'Siêu Sao 🌟', icon: '🌟', coins: 12000, tier: 'Chí Tôn Sao Sáng', buff: '+40000 HP Tỏa Sáng', skill: 'Sao Kim Cương' },
   { id: 'meteor_shower', name: 'Mưa Sao Băng Kìa! 🌠', icon: '🌠', coins: 15000, tier: 'Thiên Thạch Tinh Hà', buff: '+45000 HP + Mưa Sao', skill: 'Mưa Sao Băng' },
+  { id: 'space_party', name: 'Tiệc Tùng Không Gian 👾', icon: '👾', coins: 15000, tier: 'Tinh Cầu', buff: '+46000 HP Bão Điện', skill: 'Laser Party' },
+  { id: 'rosary_nebula', name: 'Tinh Vân Mân Khôi 🌌', icon: '🌌', coins: 15000, tier: 'Vũ Trụ Cổ Đại', buff: '+48000 HP Sương Mù Tinh Vân', skill: 'Bão Tinh Vân' },
+  { id: 'future_journey', name: 'Hành Trình Tương Lai 🚀', icon: '🚀', coins: 15000, tier: 'Du Hành', buff: '+50000 HP Tên Lửa Vượt Thời Gian', skill: 'Tên Lửa Tương Lai' },
+  { id: 'stadium', name: 'Sân Vận Động 🏟️', icon: '🏟️', coins: 15999, tier: 'Đấu Trường La Mã', buff: '+52000 HP Tiếng Hò Reo', skill: 'Đấu Trường' },
 
   // 5. Thần thoại & Tuyệt phẩm (17,000 - 44,999 xu)
   { id: 'amusement_park', name: 'Công Viên Giải Trí 🎡', icon: '🎡', coins: 17000, tier: 'Ảo Ảnh Kỳ Quan', buff: '+55000 HP Kết Giới', skill: 'Vòng Xoay Thần' },
   { id: 'tiktok_shuttle', name: 'Tàu Con Thoi TikTok 🚀', icon: '🚀', coins: 20000, tier: 'Du Hành Vũ Trụ', buff: '+65000 HP Đột Phá Không Gian', skill: 'Phi Thuyền Tối Cao' },
+  { id: 'glory_target', name: 'Mục Tiêu Vinh Quang 🏆', icon: '🏆', coins: 21500, tier: 'Chí Tôn Vinh Quang', buff: '+70000 HP Vương Quyền', skill: 'Đỉnh Vinh Quang' },
   { id: 'phoenix', name: 'Phoenix Phượng Hoàng 🦅', icon: '🦅', coins: 25999, tier: 'Bất Tử Phượng Hoàng', buff: '+80000 HP + Bão Lửa', skill: 'Hỏa Phụng Liêu Nguyên' },
+  { id: 'adam_dream', name: 'Giấc Mơ Của Adam 💫', icon: '💫', coins: 25999, tier: 'Hư Ảo Thần Giới', buff: '+85000 HP Mộng Cảnh', skill: 'Ảo Mộng Thiên Thần' },
   { id: 'holy_dragon_flame', name: 'Ngọn Lửa Rồng Thiêng 🐲', icon: '🐲', coins: 26999, tier: 'Thánh Long Tối Thượng', buff: '+90000 HP + Hơi Thở Rồng', skill: 'Long Thần Nộ' },
+  { id: 'lion_king', name: 'Sư Tử 🦁', icon: '🦁', coins: 29999, tier: 'Chúa Sơn Lâm', buff: '+100000 HP Gầm Vang', skill: 'Sư Tử Gầm' },
   { id: 'leon_and_lion', name: 'Leon và Sư Tử 👑🦁', icon: '👑🦁', coins: 34000, tier: 'Chí Tôn Vạn Thú', buff: '+110000 HP Vương Giả', skill: 'Sư Tử Hống' },
   { id: 'tiktok_stars', name: 'TikTok Stars ✨💫', icon: '✨💫', coins: 39999, tier: 'Chí Tôn Thiên Hà', buff: '+130000 HP Ánh Sáng Tinh Tú', skill: 'Vũ Trụ Vạn Năng' },
   { id: 'tiktok_universe', name: 'TikTok Universe 🪐🌌', icon: '🪐🌌', coins: 44999, tier: 'Chí Tôn Vạn Giới', buff: '+150000 HP + Toàn Năng', skill: 'Vũ Trụ Thần Chưởng' }
@@ -69,7 +107,6 @@ export default function GameChienDauAdminModal({
   onApplyConfig,
   onTriggerRefereeAction
 }) {
-  // Passwordless access: 1-click direct admin access
   const [activeTab, setActiveTab] = useState('commentary'); // 'commentary' | 'bgm' | 'referee' | 'gifts' | 'settings' | 'match' | 'tiktok'
   const [modalWidthMode, setModalWidthMode] = useState('medium'); // 'compact' | 'medium' | 'wide'
   const [isMinimized, setIsMinimized] = useState(false);
@@ -77,7 +114,28 @@ export default function GameChienDauAdminModal({
   const [newPromptText, setNewPromptText] = useState('');
   const [isBgmPlayingState, setIsBgmPlayingState] = useState(false);
   const [availableVoices, setAvailableVoices] = useState([]);
+  const [elevenLabsApiKey, setElevenLabsApiKey] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('elevenlabs_api_key') || localStorage.getItem('ELEVENLABS_API_KEY') || '';
+    }
+    return '';
+  });
+  const [previewingVoiceId, setPreviewingVoiceId] = useState(null);
+  const [voiceGenderFilter, setVoiceGenderFilter] = useState('all');
+  const [voiceRoleFilter, setVoiceRoleFilter] = useState('all');
   const bgmFileInputRef = useRef(null);
+
+  const handlePreviewVoice = (voice, sampleText = null) => {
+    if (previewingVoiceId === voice.id) {
+      stopVoiceAudio();
+      setPreviewingVoiceId(null);
+      return;
+    }
+    setPreviewingVoiceId(voice.id);
+    previewVoiceAudio(voice, sampleText, () => {
+      setPreviewingVoiceId(null);
+    });
+  };
 
   // Draggable floating modal position state
   const [position, setPosition] = useState(() => {
@@ -612,41 +670,158 @@ export default function GameChienDauAdminModal({
                       </button>
                     </div>
 
-                    {/* ElevenLabs Voice Selection for Game Commentary */}
+                    {/* ElevenLabs API Key Input & Direct Status */}
                     <div className="pt-2 border-t border-pink-500/20 space-y-2">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-black text-yellow-300 flex items-center gap-1.5 uppercase">
-                          <Sparkles size={13} className="text-yellow-400" />
-                          Giọng Đọc Bình Luận Viên Game (ElevenLabs AI):
+                        <label className="text-[11px] font-black text-pink-300 flex items-center gap-1.5 uppercase">
+                          <Key size={13} className="text-yellow-400" /> ElevenLabs API Key (Tùy chọn):
                         </label>
-                        <span className="text-[10px] text-green-400 bg-green-500/20 px-2 py-0.5 rounded font-mono font-bold">
-                          100% ElevenLabs Multilingual
+                        <span className="text-[9.5px] text-emerald-400 font-mono font-bold bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">
+                          {elevenLabsApiKey ? '✓ Đã kết nối API Key' : '⚡ Sẵn sàng phát Preview'}
                         </span>
                       </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="password"
+                          value={elevenLabsApiKey}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setElevenLabsApiKey(val);
+                            localStorage.setItem('elevenlabs_api_key', val);
+                          }}
+                          placeholder="Dán mã ElevenLabs API Key (VD: sk_...)"
+                          className="flex-1 px-3 py-1.5 bg-black/60 border border-white/20 rounded-lg text-xs text-white placeholder-gray-500 focus:outline-none focus:border-pink-500"
+                        />
+                        <button
+                          onClick={() => {
+                            localStorage.setItem('elevenlabs_api_key', elevenLabsApiKey);
+                            setSavedSuccess(true);
+                            setTimeout(() => setSavedSuccess(false), 2000);
+                          }}
+                          className="px-3 py-1.5 bg-pink-600 hover:bg-pink-500 text-white rounded-lg text-xs font-bold shrink-0 shadow-md shadow-pink-600/30"
+                        >
+                          Lưu Key
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Quick Role Voice Test Buttons */}
+                    <div className="pt-2 border-t border-pink-500/20 space-y-2">
+                      <label className="text-[11px] font-black text-yellow-300 flex items-center gap-1.5 uppercase">
+                        <Sparkles size={13} className="text-yellow-400" />
+                        Thử Nhanh Giọng Đọc Theo Vai Trò:
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <button
+                          onClick={() => {
+                            const blvVoice = ELEVENLABS_VOICES.find(v => v.id === 'el_josh') || ELEVENLABS_VOICES[0];
+                            handlePreviewVoice(blvVoice, 'Đại chiến PK Rồng Xanh và Hổ Đỏ vô cùng gay cấn! Anh em hai phe mau dồn sức tung tuyệt chiêu!');
+                          }}
+                          className="p-2 bg-gradient-to-r from-blue-900/40 to-indigo-900/40 hover:from-blue-800/60 hover:to-indigo-800/60 border border-blue-500/40 rounded-lg text-left text-xs text-blue-200 font-bold transition-all flex items-center gap-1.5"
+                        >
+                          <Volume2 size={13} className="text-blue-400 shrink-0" />
+                          <span className="truncate">🎤 BLV Trận Đấu</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            const idolVoice = ELEVENLABS_VOICES.find(v => v.id === 'el_rachel') || ELEVENLABS_VOICES[1];
+                            handlePreviewVoice(idolVoice, 'Cảm ơn đại gia đã tặng Thần Long và Vạn Kiếm Quy Tông cho em nhé! Yêu cả nhà nhiều!');
+                          }}
+                          className="p-2 bg-gradient-to-r from-pink-900/40 to-rose-900/40 hover:from-pink-800/60 hover:to-rose-800/60 border border-pink-500/40 rounded-lg text-left text-xs text-pink-200 font-bold transition-all flex items-center gap-1.5"
+                        >
+                          <Volume2 size={13} className="text-pink-400 shrink-0" />
+                          <span className="truncate">💃 Nữ Idol Live</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            const refVoice = ELEVENLABS_VOICES.find(v => v.id === 'el_adam') || ELEVENLABS_VOICES[2];
+                            handlePreviewVoice(refVoice, 'Thông báo trọng tài: Phe Xanh vừa kích hoạt Thái Cực Kiếm Trận hộ thể và triệu hồi 50 thiết kỵ!');
+                          }}
+                          className="p-2 bg-gradient-to-r from-amber-900/40 to-yellow-900/40 hover:from-amber-800/60 hover:to-yellow-800/60 border border-amber-500/40 rounded-lg text-left text-xs text-amber-200 font-bold transition-all flex items-center gap-1.5"
+                        >
+                          <Volume2 size={13} className="text-amber-400 shrink-0" />
+                          <span className="truncate">🛡️ Trợ Lý Trọng Tài</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            const ultVoice = ELEVENLABS_VOICES.find(v => v.id === 'el_antoni') || ELEVENLABS_VOICES[3];
+                            handlePreviewVoice(ultVoice, 'Tuyệt kỹ Như Lai Thần Chưởng giáng thế! Toàn bộ quân địch đã bị quét sạch!');
+                          }}
+                          className="p-2 bg-gradient-to-r from-purple-900/40 to-violet-900/40 hover:from-purple-800/60 hover:to-violet-800/60 border border-purple-500/40 rounded-lg text-left text-xs text-purple-200 font-bold transition-all flex items-center gap-1.5"
+                        >
+                          <Volume2 size={13} className="text-purple-400 shrink-0" />
+                          <span className="truncate">⚡ Tuyệt Kỹ Kiếm Hiệp</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Filter & ElevenLabs Voice Catalog */}
+                    <div className="pt-2 border-t border-pink-500/20 space-y-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <label className="text-[11px] font-black text-yellow-300 flex items-center gap-1.5 uppercase">
+                          <Mic size={13} className="text-yellow-400" />
+                          Danh Sách 30+ Giọng Đọc ElevenLabs AI:
+                        </label>
+                        <div className="flex items-center gap-1">
+                          {['all', 'Female', 'Male'].map((g) => (
+                            <button
+                              key={g}
+                              onClick={() => setVoiceGenderFilter(g)}
+                              className={`px-2 py-0.5 rounded text-[9.5px] font-bold transition-all ${
+                                voiceGenderFilter === g 
+                                  ? 'bg-pink-600 text-white' 
+                                  : 'bg-black/50 text-gray-400 hover:text-white border border-white/10'
+                              }`}
+                            >
+                              {g === 'all' ? 'Tất cả' : g === 'Female' ? 'Nữ' : 'Nam'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {ELEVENLABS_GAME_VOICES.map((v) => {
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+                        {ELEVENLABS_VOICES.filter(v => voiceGenderFilter === 'all' || v.gender === voiceGenderFilter).map((v) => {
                           const isSelected = (config.commentaryVoiceId || battleCommentary.selectedVoiceId || 'el_josh') === v.id;
+                          const isPreviewing = previewingVoiceId === v.id;
                           return (
                             <div
                               key={v.id}
-                              onClick={() => {
-                                setConfig({ ...config, commentaryVoiceId: v.id });
-                                battleCommentary.setElevenLabsVoice(v.id);
-                              }}
-                              className={`p-2 rounded-lg border text-left cursor-pointer transition-all flex items-center justify-between gap-2 ${
+                              className={`p-2 rounded-lg border text-left transition-all flex items-center justify-between gap-2 ${
                                 isSelected
-                                  ? 'bg-gradient-to-r from-pink-600/30 to-purple-600/30 border-pink-500 text-white shadow-md shadow-pink-500/20'
+                                  ? 'bg-gradient-to-r from-pink-600/30 to-purple-600/30 border-pink-500 text-white shadow-md shadow-pink-500/20 ring-1 ring-pink-400'
                                   : 'bg-black/50 border-white/10 text-gray-400 hover:text-white hover:border-pink-500/40'
                               }`}
                             >
-                              <div className="truncate flex-1">
-                                <div className="text-[11px] font-bold text-gray-200 truncate">{v.name}</div>
-                                <div className="text-[9px] text-pink-300/80 font-mono">Giới tính: {v.gender === 'Female' ? 'Nữ' : 'Nam'}</div>
+                              <div 
+                                onClick={() => {
+                                  setConfig({ ...config, commentaryVoiceId: v.id });
+                                  battleCommentary.setElevenLabsVoice(v.id);
+                                }}
+                                className="truncate flex-1 cursor-pointer"
+                              >
+                                <div className="text-[11px] font-bold text-gray-200 truncate flex items-center gap-1.5">
+                                  <span>{v.name}</span>
+                                  {v.badge && (
+                                    <span className="text-[8px] bg-pink-500/30 text-pink-300 px-1 rounded">{v.badge}</span>
+                                  )}
+                                </div>
+                                <div className="text-[9px] text-pink-300/80 font-mono">
+                                  {v.gender === 'Female' ? '♀ Nữ' : '♂ Nam'} • {v.style || 'Truyền cảm'}
+                                </div>
                               </div>
-                              {isSelected && (
-                                <span className="w-2 h-2 rounded-full bg-pink-400 animate-ping shrink-0" />
-                              )}
+
+                              <button
+                                onClick={() => handlePreviewVoice(v)}
+                                className={`px-2 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 shrink-0 transition-all ${
+                                  isPreviewing
+                                    ? 'bg-amber-500 text-black animate-pulse'
+                                    : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
+                                }`}
+                                title="Nghe thử giọng này"
+                              >
+                                {isPreviewing ? <StopCircle size={12} /> : <Volume2 size={12} />}
+                                <span>{isPreviewing ? 'Dừng' : 'Thử'}</span>
+                              </button>
                             </div>
                           );
                         })}
@@ -1018,12 +1193,159 @@ export default function GameChienDauAdminModal({
                     </div>
                   </div>
 
-                  {/* Skills trigger */}
+                  {/* Skills trigger - 8 Tuyệt Kỹ Kiếm Hiệp Đỉnh Cao */}
                   <div className="p-3.5 bg-gradient-to-br from-purple-950/30 to-pink-950/30 border border-purple-500/30 rounded-xl space-y-2.5">
-                    <h4 className="text-xs font-bold text-purple-300 uppercase flex items-center gap-1.5">
-                      <Zap size={13} className="text-yellow-400" /> Thi Triển Tuyệt Kỹ Kiếm Hiệp
-                    </h4>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-black text-purple-300 uppercase flex items-center gap-1.5">
+                        <Zap size={13} className="text-yellow-400" /> 8 Tuyệt Kỹ Kiếm Hiệp & Tiên Hiệp Đỉnh Cao
+                      </h4>
+                      <span className="text-[9px] text-pink-300 bg-pink-950/80 px-2 py-0.5 rounded border border-pink-500/30">
+                        Hiệu ứng 3D & Âm thanh độc quyền
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
+                      {/* 1. Lục Mạch Thần Kiếm */}
+                      <button
+                        onClick={() => {
+                          if (onTriggerRefereeAction) onTriggerRefereeAction('TRIGGER_LUC_MACH_BLUE');
+                          battleCommentary.triggerSkillCommentary('luc_mach', 'blue');
+                        }}
+                        className="py-2 px-2.5 bg-sky-600/20 hover:bg-sky-600/40 text-sky-300 border border-sky-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                      >
+                        <div className="truncate">
+                          <span className="block font-black truncate">🌈 Lục Mạch Kiếm (Xanh)</span>
+                          <span className="text-[8px] text-sky-400">Laser kiếm khí 6 màu</span>
+                        </div>
+                        <span className="text-[9px] bg-sky-500/30 px-1 py-0.5 rounded text-sky-200 shrink-0">+250 HP</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (onTriggerRefereeAction) onTriggerRefereeAction('TRIGGER_LUC_MACH_RED');
+                          battleCommentary.triggerSkillCommentary('luc_mach', 'red');
+                        }}
+                        className="py-2 px-2.5 bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                      >
+                        <div className="truncate">
+                          <span className="block font-black truncate">🌈 Lục Mạch Kiếm (Đỏ)</span>
+                          <span className="text-[8px] text-rose-400">Laser kiếm khí 6 màu</span>
+                        </div>
+                        <span className="text-[9px] bg-rose-500/30 px-1 py-0.5 rounded text-rose-200 shrink-0">+250 HP</span>
+                      </button>
+
+                      {/* 2. Độc Cô Cửu Kiếm */}
+                      <button
+                        onClick={() => {
+                          if (onTriggerRefereeAction) onTriggerRefereeAction('TRIGGER_DOC_CO_BLUE');
+                          battleCommentary.triggerSkillCommentary('doc_co', 'blue');
+                        }}
+                        className="py-2 px-2.5 bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-300 border border-cyan-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                      >
+                        <div className="truncate">
+                          <span className="block font-black truncate">🌪️ Độc Cô Cửu Kiếm (Xanh)</span>
+                          <span className="text-[8px] text-cyan-400">Bão lốc xoáy vô chiêu</span>
+                        </div>
+                        <span className="text-[9px] bg-cyan-500/30 px-1 py-0.5 rounded text-cyan-200 shrink-0">+300 HP</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (onTriggerRefereeAction) onTriggerRefereeAction('TRIGGER_DOC_CO_RED');
+                          battleCommentary.triggerSkillCommentary('doc_co', 'red');
+                        }}
+                        className="py-2 px-2.5 bg-orange-600/20 hover:bg-orange-600/40 text-orange-300 border border-orange-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                      >
+                        <div className="truncate">
+                          <span className="block font-black truncate">🌪️ Độc Cô Cửu Kiếm (Đỏ)</span>
+                          <span className="text-[8px] text-orange-400">Bão lốc xoáy vô chiêu</span>
+                        </div>
+                        <span className="text-[9px] bg-orange-500/30 px-1 py-0.5 rounded text-orange-200 shrink-0">+300 HP</span>
+                      </button>
+
+                      {/* 3. Như Lai Thần Chưởng */}
+                      <button
+                        onClick={() => {
+                          if (onTriggerRefereeAction) onTriggerRefereeAction('TRIGGER_NHU_LAI_BLUE');
+                          battleCommentary.triggerSkillCommentary('nhu_lai', 'blue');
+                        }}
+                        className="py-2 px-2.5 bg-amber-600/20 hover:bg-amber-600/40 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                      >
+                        <div className="truncate">
+                          <span className="block font-black truncate">✋ Như Lai Thần Chưởng (Xanh)</span>
+                          <span className="text-[8px] text-amber-400">Phật quang thái dương</span>
+                        </div>
+                        <span className="text-[9px] bg-amber-500/30 px-1 py-0.5 rounded text-amber-200 shrink-0">+500 HP</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (onTriggerRefereeAction) onTriggerRefereeAction('TRIGGER_NHU_LAI_RED');
+                          battleCommentary.triggerSkillCommentary('nhu_lai', 'red');
+                        }}
+                        className="py-2 px-2.5 bg-yellow-600/20 hover:bg-yellow-600/40 text-yellow-300 border border-yellow-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                      >
+                        <div className="truncate">
+                          <span className="block font-black truncate">✋ Như Lai Thần Chưởng (Đỏ)</span>
+                          <span className="text-[8px] text-yellow-400">Phật quang thái dương</span>
+                        </div>
+                        <span className="text-[9px] bg-yellow-500/30 px-1 py-0.5 rounded text-yellow-200 shrink-0">+500 HP</span>
+                      </button>
+
+                      {/* 4. Thiên Ngoại Phi Tiên */}
+                      <button
+                        onClick={() => {
+                          if (onTriggerRefereeAction) onTriggerRefereeAction('TRIGGER_THIEN_NGOAI_BLUE');
+                          battleCommentary.triggerSkillCommentary('thien_ngoai', 'blue');
+                        }}
+                        className="py-2 px-2.5 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 border border-indigo-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                      >
+                        <div className="truncate">
+                          <span className="block font-black truncate">❄️ Thiên Ngoại Phi Tiên (Xanh)</span>
+                          <span className="text-[8px] text-indigo-400">Băng vũ kiếm chém chớp</span>
+                        </div>
+                        <span className="text-[9px] bg-indigo-500/30 px-1 py-0.5 rounded text-indigo-200 shrink-0">+350 HP</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (onTriggerRefereeAction) onTriggerRefereeAction('TRIGGER_THIEN_NGOAI_RED');
+                          battleCommentary.triggerSkillCommentary('thien_ngoai', 'red');
+                        }}
+                        className="py-2 px-2.5 bg-fuchsia-600/20 hover:bg-fuchsia-600/40 text-fuchsia-300 border border-fuchsia-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                      >
+                        <div className="truncate">
+                          <span className="block font-black truncate">❄️ Thiên Ngoại Phi Tiên (Đỏ)</span>
+                          <span className="text-[8px] text-fuchsia-400">Băng vũ kiếm chém chớp</span>
+                        </div>
+                        <span className="text-[9px] bg-fuchsia-500/30 px-1 py-0.5 rounded text-fuchsia-200 shrink-0">+350 HP</span>
+                      </button>
+
+                      {/* 5. Kim Cang Bất Hoại */}
+                      <button
+                        onClick={() => {
+                          if (onTriggerRefereeAction) onTriggerRefereeAction('TRIGGER_KIM_CANG_BLUE');
+                          battleCommentary.triggerSkillCommentary('kim_cang', 'blue');
+                        }}
+                        className="py-2 px-2.5 bg-yellow-600/20 hover:bg-yellow-600/40 text-yellow-300 border border-yellow-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                      >
+                        <div className="truncate">
+                          <span className="block font-black truncate">🔔 Kim Cang Bất Hoại (Xanh)</span>
+                          <span className="text-[8px] text-yellow-400">Chuông vàng bất tử phản đòn</span>
+                        </div>
+                        <span className="text-[9px] bg-yellow-500/30 px-1 py-0.5 rounded text-yellow-200 shrink-0">+400 HP</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (onTriggerRefereeAction) onTriggerRefereeAction('TRIGGER_KIM_CANG_RED');
+                          battleCommentary.triggerSkillCommentary('kim_cang', 'red');
+                        }}
+                        className="py-2 px-2.5 bg-amber-600/20 hover:bg-amber-600/40 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                      >
+                        <div className="truncate">
+                          <span className="block font-black truncate">🔔 Kim Cang Bất Hoại (Đỏ)</span>
+                          <span className="text-[8px] text-amber-400">Chuông vàng bất tử phản đòn</span>
+                        </div>
+                        <span className="text-[9px] bg-amber-500/30 px-1 py-0.5 rounded text-amber-200 shrink-0">+400 HP</span>
+                      </button>
+
+                      {/* 6. Vạn Kiếm Quy Tông */}
                       <button
                         onClick={() => {
                           if (onTriggerRefereeAction) onTriggerRefereeAction('TRIGGER_VAN_KIEM_BLUE');
@@ -1031,8 +1353,11 @@ export default function GameChienDauAdminModal({
                         }}
                         className="py-2 px-2.5 bg-sky-600/20 hover:bg-sky-600/40 text-sky-300 border border-sky-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
                       >
-                        <span>⚔️ Vạn Kiếm (Xanh)</span>
-                        <span className="text-[9px] bg-sky-500/30 px-1 py-0.5 rounded text-sky-200">+150 HP</span>
+                        <div className="truncate">
+                          <span className="block font-black truncate">⚔️ Vạn Kiếm Quy Tông (Xanh)</span>
+                          <span className="text-[8px] text-sky-400">Bão kiếm liên hoàn</span>
+                        </div>
+                        <span className="text-[9px] bg-sky-500/30 px-1 py-0.5 rounded text-sky-200 shrink-0">+150 HP</span>
                       </button>
                       <button
                         onClick={() => {
@@ -1041,10 +1366,14 @@ export default function GameChienDauAdminModal({
                         }}
                         className="py-2 px-2.5 bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
                       >
-                        <span>⚔️ Vạn Kiếm (Đỏ)</span>
-                        <span className="text-[9px] bg-rose-500/30 px-1 py-0.5 rounded text-rose-200">+150 HP</span>
+                        <div className="truncate">
+                          <span className="block font-black truncate">⚔️ Vạn Kiếm Quy Tông (Đỏ)</span>
+                          <span className="text-[8px] text-rose-400">Bão kiếm liên hoàn</span>
+                        </div>
+                        <span className="text-[9px] bg-rose-500/30 px-1 py-0.5 rounded text-rose-200 shrink-0">+150 HP</span>
                       </button>
 
+                      {/* 7. Giáng Long Thập Bát Chưởng */}
                       <button
                         onClick={() => {
                           if (onTriggerRefereeAction) onTriggerRefereeAction('TRIGGER_GIANG_LONG_BLUE');
@@ -1052,8 +1381,11 @@ export default function GameChienDauAdminModal({
                         }}
                         className="py-2 px-2.5 bg-amber-600/20 hover:bg-amber-600/40 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
                       >
-                        <span>🐉 Giáng Long (Xanh)</span>
-                        <span className="text-[9px] bg-amber-500/30 px-1 py-0.5 rounded text-amber-200">+350 HP</span>
+                        <div className="truncate">
+                          <span className="block font-black truncate">🐉 Giáng Long Chưởng (Xanh)</span>
+                          <span className="text-[8px] text-amber-400">Thần long quét sạch</span>
+                        </div>
+                        <span className="text-[9px] bg-amber-500/30 px-1 py-0.5 rounded text-amber-200 shrink-0">+350 HP</span>
                       </button>
                       <button
                         onClick={() => {
@@ -1062,31 +1394,92 @@ export default function GameChienDauAdminModal({
                         }}
                         className="py-2 px-2.5 bg-orange-600/20 hover:bg-orange-600/40 text-orange-300 border border-orange-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
                       >
-                        <span>🐉 Giáng Long (Đỏ)</span>
-                        <span className="text-[9px] bg-orange-500/30 px-1 py-0.5 rounded text-orange-200">+350 HP</span>
+                        <div className="truncate">
+                          <span className="block font-black truncate">🐉 Giáng Long Chưởng (Đỏ)</span>
+                          <span className="text-[8px] text-orange-400">Thần long quét sạch</span>
+                        </div>
+                        <span className="text-[9px] bg-orange-500/30 px-1 py-0.5 rounded text-orange-200 shrink-0">+350 HP</span>
+                      </button>
+
+                      {/* 8. Thái Cực Kiếm Trận */}
+                      <button
+                        onClick={() => {
+                          if (onTriggerRefereeAction) onTriggerRefereeAction('TRIGGER_THAI_CUC_BLUE');
+                          battleCommentary.triggerSkillCommentary('thai_cuc', 'blue');
+                        }}
+                        className="py-2 px-2.5 bg-teal-600/20 hover:bg-teal-600/40 text-teal-300 border border-teal-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                      >
+                        <div className="truncate">
+                          <span className="block font-black truncate">☯️ Thái Cực Kiếm Trận (Xanh)</span>
+                          <span className="text-[8px] text-teal-400">Âm dương hộ thân</span>
+                        </div>
+                        <span className="text-[9px] bg-teal-500/30 px-1 py-0.5 rounded text-teal-200 shrink-0">+200 HP</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (onTriggerRefereeAction) onTriggerRefereeAction('TRIGGER_THAI_CUC_RED');
+                          battleCommentary.triggerSkillCommentary('thai_cuc', 'red');
+                        }}
+                        className="py-2 px-2.5 bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                      >
+                        <div className="truncate">
+                          <span className="block font-black truncate">☯️ Thái Cực Kiếm Trận (Đỏ)</span>
+                          <span className="text-[8px] text-rose-400">Âm dương hộ thân</span>
+                        </div>
+                        <span className="text-[9px] bg-rose-500/30 px-1 py-0.5 rounded text-rose-200 shrink-0">+200 HP</span>
                       </button>
                     </div>
                   </div>
 
-                  {/* Reinforcements */}
+                  {/* Reinforcements - Đa cấp bậc quân lực */}
                   <div className="p-3.5 bg-gradient-to-br from-amber-950/20 to-orange-950/20 border border-amber-500/30 rounded-xl space-y-2.5">
                     <h4 className="text-xs font-bold text-amber-400 uppercase flex items-center gap-1.5">
-                      <Flame size={13} /> Bổ Sung Quân Số & Vũ Điệu
+                      <Flame size={13} /> Tiếp Viện Quân Lực & Đại Binh
                     </h4>
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('ADD_BLUE_20')}
-                        className="py-2 px-2.5 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 border border-blue-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                        className="py-1.5 px-2.5 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 border border-blue-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
                       >
                         <span>🛡️ +20 Quân Xanh</span>
                         <span className="text-[9px] bg-blue-500/30 px-1 py-0.5 rounded text-blue-200">+20 HP</span>
                       </button>
                       <button
                         onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('ADD_RED_20')}
-                        className="py-2 px-2.5 bg-red-600/20 hover:bg-red-600/40 text-red-300 border border-red-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
+                        className="py-1.5 px-2.5 bg-red-600/20 hover:bg-red-600/40 text-red-300 border border-red-500/30 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between"
                       >
                         <span>🗡️ +20 Quân Đỏ</span>
                         <span className="text-[9px] bg-red-500/30 px-1 py-0.5 rounded text-red-200">+20 HP</span>
+                      </button>
+
+                      <button
+                        onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('ADD_BLUE_50')}
+                        className="py-1.5 px-2.5 bg-blue-600/30 hover:bg-blue-600/50 text-blue-200 border border-blue-400/40 rounded-lg text-xs font-black transition-all text-left flex items-center justify-between"
+                      >
+                        <span>⚡ +50 Đại Binh Xanh</span>
+                        <span className="text-[9px] bg-blue-400/40 px-1 py-0.5 rounded text-white">+50 HP</span>
+                      </button>
+                      <button
+                        onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('ADD_RED_50')}
+                        className="py-1.5 px-2.5 bg-red-600/30 hover:bg-red-600/50 text-red-200 border border-red-400/40 rounded-lg text-xs font-black transition-all text-left flex items-center justify-between"
+                      >
+                        <span>🔥 +50 Đại Binh Đỏ</span>
+                        <span className="text-[9px] bg-red-400/40 px-1 py-0.5 rounded text-white">+50 HP</span>
+                      </button>
+
+                      <button
+                        onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('ADD_BLUE_100')}
+                        className="py-1.5 px-2.5 bg-gradient-to-r from-blue-600/40 to-indigo-600/40 hover:from-blue-500/50 hover:to-indigo-500/50 text-white border border-blue-300/50 rounded-lg text-xs font-black transition-all text-left flex items-center justify-between shadow-md shadow-blue-500/20"
+                      >
+                        <span>👑 +100 Thiết Kỵ Xanh</span>
+                        <span className="text-[9px] bg-yellow-400 text-black px-1.5 py-0.5 rounded font-black">+100 HP</span>
+                      </button>
+                      <button
+                        onClick={() => onTriggerRefereeAction && onTriggerRefereeAction('ADD_RED_100')}
+                        className="py-1.5 px-2.5 bg-gradient-to-r from-red-600/40 to-rose-600/40 hover:from-red-500/50 hover:to-rose-500/50 text-white border border-red-300/50 rounded-lg text-xs font-black transition-all text-left flex items-center justify-between shadow-md shadow-red-500/20"
+                      >
+                        <span>👑 +100 Thiết Kỵ Đỏ</span>
+                        <span className="text-[9px] bg-yellow-400 text-black px-1.5 py-0.5 rounded font-black">+100 HP</span>
                       </button>
                     </div>
                   </div>

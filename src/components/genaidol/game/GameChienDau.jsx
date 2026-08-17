@@ -376,6 +376,11 @@ export default function GameChienDau({
     flyingSwords: [],                // { id, factionId, x, y, targetX, targetY, color, progress, speed, spawnedAt }
     dragonBeasts: [],                // { id, factionId, x, y, targetX, progress, spawnedAt }
     taiChiShields: [],               // { id, factionId, x, y, radius, maxRadius, lifespanMs, spawnedAt }
+    lucMachBeams: [],                // { id, factionId, beams, spawnedAt }
+    docCoStorms: [],                 // { id, factionId, x, y, radius, lifespanMs, spawnedAt }
+    nhuLaiPalms: [],                 // { id, factionId, x, y, size, progress, spawnedAt }
+    thienNgoaiFlashes: [],           // { id, factionId, points, progress, color, spawnedAt }
+    kimCangBells: [],                // { id, factionId, x, y, radius, lifespanMs, spawnedAt }
     floatingTexts: [],               // { id, text, x, y, vy, color, font, spawnedAt, lifespanMs }
     w: 1280,
     h: 720,
@@ -396,6 +401,11 @@ export default function GameChienDau({
     else if (type === 'van_kiem') battleAudio.playVanKiemQuyTong(vol);
     else if (type === 'giang_long') battleAudio.playGiangLongChuong(vol);
     else if (type === 'thai_cuc') battleAudio.playThaiCucKiemTran(vol);
+    else if (type === 'luc_mach') battleAudio.playLucMachThanKiem(vol);
+    else if (type === 'doc_co') battleAudio.playDocCoCuuKiem(vol);
+    else if (type === 'nhu_lai') battleAudio.playNhuLaiThanChuong(vol);
+    else if (type === 'thien_ngoai') battleAudio.playThienNgoaiPhiTien(vol);
+    else if (type === 'kim_cang') battleAudio.playKimCangBatHoai(vol);
     else if (type === 'level_up') battleAudio.playLevelUp(vol);
   }, [config.soundEnabled, config.sfxVolume, soundMuted]);
 
@@ -938,6 +948,193 @@ export default function GameChienDau({
     playSfx('thai_cuc');
   }, [addOrUpdateFighter, updateFormation, playSfx]);
 
+  // 1. LỤC MẠCH THẦN KIẾM (Laser Kiếm Khí 6 Màu)
+  const triggerLucMach = useCallback((factionId, donorName = 'Lục Mạch Kiếm Khách') => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const isBlue = factionId === 'blue';
+    const startX = isBlue ? canvas.width * 0.22 : canvas.width * 0.78;
+    const targetX = isBlue ? canvas.width * 0.88 : canvas.width * 0.12;
+    const baseY = canvas.height * 0.55;
+
+    const colors = ['#ef4444', '#f97316', '#eab308', '#10b981', '#06b6d4', '#a855f7'];
+    const beams = colors.map((col, idx) => ({
+      color: col,
+      yOffset: (idx - 2.5) * 18,
+      progress: -idx * 0.08,
+      speed: 2.8,
+      width: 4
+    }));
+
+    engineRef.current.lucMachBeams.push({
+      id: Date.now() + Math.random(),
+      factionId,
+      startX,
+      targetX,
+      baseY,
+      beams,
+      spawnedAt: performance.now(),
+      lifespanMs: 2500
+    });
+
+    addOrUpdateFighter(factionId, donorName, 450);
+    updateFormation(canvas.width, canvas.height);
+    playSfx('luc_mach');
+
+    setGameState(prev => ({
+      ...prev,
+      recentSpotlight: { name: donorName, gift: '🌈 LỤC MẠCH THẦN KIẾM 3D', faction: factionId }
+    }));
+    setTimeout(() => setGameState(prev => ({ ...prev, recentSpotlight: null })), 4500);
+  }, [addOrUpdateFighter, updateFormation, playSfx]);
+
+  // 2. ĐỘC CÔ CỬU KIẾM (Bão Kiếm Lốc Xoáy)
+  const triggerDocCo = useCallback((factionId, donorName = 'Độc Cô Tiền Bối') => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const isBlue = factionId === 'blue';
+    const centerX = isBlue ? canvas.width * 0.65 : canvas.width * 0.35;
+    const centerY = canvas.height * 0.56;
+
+    engineRef.current.docCoStorms.push({
+      id: Date.now() + Math.random(),
+      factionId,
+      x: centerX,
+      y: centerY,
+      radius: 30,
+      maxRadius: 180,
+      swordCount: 9,
+      spawnedAt: performance.now(),
+      lifespanMs: 3800
+    });
+
+    addOrUpdateFighter(factionId, donorName, 550);
+    updateFormation(canvas.width, canvas.height);
+    playSfx('doc_co');
+
+    setGameState(prev => ({
+      ...prev,
+      recentSpotlight: { name: donorName, gift: '🌪️ ĐỘC CÔ CỬU KIẾM 3D', faction: factionId }
+    }));
+    setTimeout(() => setGameState(prev => ({ ...prev, recentSpotlight: null })), 4500);
+  }, [addOrUpdateFighter, updateFormation, playSfx]);
+
+  // 3. NHƯ LAI THẦN CHƯỞNG (Phật Quang Thái Dương)
+  const triggerNhuLai = useCallback((factionId, donorName = 'Phật Quang Chí Tôn') => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const isBlue = factionId === 'blue';
+    const targetX = isBlue ? canvas.width * 0.68 : canvas.width * 0.32;
+    const targetY = canvas.height * 0.58;
+
+    engineRef.current.nhuLaiPalms.push({
+      id: Date.now() + Math.random(),
+      factionId,
+      x: targetX,
+      y: targetY,
+      size: 40,
+      maxSize: 220,
+      progress: 0,
+      spawnedAt: performance.now(),
+      lifespanMs: 3200
+    });
+
+    addOrUpdateFighter(factionId, donorName, 1200);
+    updateFormation(canvas.width, canvas.height);
+    playSfx('nhu_lai');
+
+    setGameState(prev => ({
+      ...prev,
+      recentSpotlight: { name: donorName, gift: '✋ NHƯ LAI THẦN CHƯỞNG 3D', faction: factionId }
+    }));
+    setTimeout(() => setGameState(prev => ({ ...prev, recentSpotlight: null })), 4500);
+  }, [addOrUpdateFighter, updateFormation, playSfx]);
+
+  // 4. THIÊN NGOẠI PHI TIÊN (Băng Vũ Kiếm Thần)
+  const triggerThienNgoai = useCallback((factionId, donorName = 'Bạch Y Kiếm Thần') => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const isBlue = factionId === 'blue';
+    const oppX = isBlue ? canvas.width * 0.65 : canvas.width * 0.35;
+    const baseY = canvas.height * 0.54;
+
+    const points = [
+      { x: oppX - 120, y: baseY - 80 },
+      { x: oppX + 100, y: baseY - 40 },
+      { x: oppX - 90, y: baseY + 50 },
+      { x: oppX + 110, y: baseY + 80 }
+    ];
+
+    engineRef.current.thienNgoaiFlashes.push({
+      id: Date.now() + Math.random(),
+      factionId,
+      points,
+      progress: 0,
+      color: isBlue ? '#38bdf8' : '#fb7185',
+      spawnedAt: performance.now(),
+      lifespanMs: 2200
+    });
+
+    addOrUpdateFighter(factionId, donorName, 650);
+    updateFormation(canvas.width, canvas.height);
+    playSfx('thien_ngoai');
+
+    setGameState(prev => ({
+      ...prev,
+      recentSpotlight: { name: donorName, gift: '❄️ THIÊN NGOẠI PHI TIÊN 3D', faction: factionId }
+    }));
+    setTimeout(() => setGameState(prev => ({ ...prev, recentSpotlight: null })), 4500);
+  }, [addOrUpdateFighter, updateFormation, playSfx]);
+
+  // 5. KIM CANG BẤT HOẠI (Chuông Vàng Phản Đòn)
+  const triggerKimCang = useCallback((factionId, donorName = 'Kim Cang Thần Tăng') => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const isBlue = factionId === 'blue';
+    const ownX = isBlue ? canvas.width * 0.32 : canvas.width * 0.68;
+    const ownY = canvas.height * 0.58;
+
+    engineRef.current.kimCangBells.push({
+      id: Date.now() + Math.random(),
+      factionId,
+      x: ownX,
+      y: ownY,
+      radius: 30,
+      maxRadius: 170,
+      spawnedAt: performance.now(),
+      lifespanMs: 4000
+    });
+
+    // Heal all allies by 300 HP
+    engineRef.current.fighters[factionId].forEach(f => {
+      f.currentHp = Math.min(f.maxHp || 600, (f.currentHp || 280) + 300);
+      f.isKnockedOut = false;
+      f.pulseUntil = performance.now() + 3000;
+    });
+
+    addOrUpdateFighter(factionId, donorName, 700);
+    updateFormation(canvas.width, canvas.height);
+    playSfx('kim_cang');
+
+    setGameState(prev => ({
+      ...prev,
+      recentSpotlight: { name: donorName, gift: '🔔 KIM CANG BẤT HOẠI 3D', faction: factionId }
+    }));
+    setTimeout(() => setGameState(prev => ({ ...prev, recentSpotlight: null })), 4500);
+  }, [addOrUpdateFighter, updateFormation, playSfx]);
+
+  // TIẾP VIỆN QUÂN LỰC
+  const triggerReinforcements = useCallback((factionId, count = 20, rankTier = 0) => {
+    const names = ['Chiến Binh', 'Thiết Kỵ', 'Vệ Binh', 'Hiệp Khách', 'Hộ Pháp', 'Tiên Phong', 'Kỵ Binh', 'Dũng Tướng'];
+    for (let i = 0; i < count; i++) {
+      const rName = `${names[i % names.length]} #${Math.floor(100 + Math.random() * 900)}`;
+      addOrUpdateFighter(factionId, rName, 20 + rankTier * 15);
+    }
+    const canvas = canvasRef.current;
+    if (canvas) updateFormation(canvas.width, canvas.height);
+    playSfx('join');
+  }, [addOrUpdateFighter, updateFormation, playSfx]);
+
   const triggerHeroUpgrade = useCallback((factionId, donorName = 'VIP Chiến Binh 3D', tierLevel = 3) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -1083,6 +1280,11 @@ export default function GameChienDau({
     engineRef.current.flyingSwords = [];
     engineRef.current.dragonBeasts = [];
     engineRef.current.taiChiShields = [];
+    engineRef.current.lucMachBeams = [];
+    engineRef.current.docCoStorms = [];
+    engineRef.current.nhuLaiPalms = [];
+    engineRef.current.thienNgoaiFlashes = [];
+    engineRef.current.kimCangBells = [];
     initDefaultChampions();
     setGameState({
       hp: { blue: config.maxHp, red: config.maxHp },
@@ -1130,6 +1332,46 @@ export default function GameChienDau({
       return;
     }
 
+    if (type === 'TRIGGER_LUC_MACH') {
+      const fac = data.faction || 'blue';
+      const name = data.nickname || 'Lục Mạch Kiếm Khách';
+      triggerLucMach(fac, name);
+      addLiveFeedItem(name, 'thi triển LỤC MẠCH THẦN KIẾM! 🌈⚔️', fac);
+      return;
+    }
+
+    if (type === 'TRIGGER_DOC_CO') {
+      const fac = data.faction || 'blue';
+      const name = data.nickname || 'Độc Cô Cầu Bại';
+      triggerDocCo(fac, name);
+      addLiveFeedItem(name, 'thi triển ĐỘC CÔ CỬU KIẾM bão xoáy! 🌪️⚔️', fac);
+      return;
+    }
+
+    if (type === 'TRIGGER_NHU_LAI') {
+      const fac = data.faction || 'blue';
+      const name = data.nickname || 'Phật Quang Chí Tôn';
+      triggerNhuLai(fac, name);
+      addLiveFeedItem(name, 'giáng thế NHƯ LAI THẦN CHƯỞNG! ✋✨', fac);
+      return;
+    }
+
+    if (type === 'TRIGGER_THIEN_NGOAI') {
+      const fac = data.faction || 'blue';
+      const name = data.nickname || 'Bạch Y Kiếm Thần';
+      triggerThienNgoai(fac, name);
+      addLiveFeedItem(name, 'lướt kiếm THIÊN NGOẠI PHI TIÊN! ❄️⚔️', fac);
+      return;
+    }
+
+    if (type === 'TRIGGER_KIM_CANG') {
+      const fac = data.faction || 'blue';
+      const name = data.nickname || 'Kim Cang Thần Tăng';
+      triggerKimCang(fac, name);
+      addLiveFeedItem(name, 'kích hoạt KIM CANG BẤT HOẠI! 🔔🛡️', fac);
+      return;
+    }
+
     if (type === 'TRIGGER_VAN_KIEM') {
       const fac = data.faction || 'blue';
       const name = data.nickname || 'Kiếm Khách';
@@ -1151,6 +1393,14 @@ export default function GameChienDau({
       const name = data.nickname || 'Hộ Pháp';
       triggerThaiCuc(fac, name);
       addLiveFeedItem(name, 'kích hoạt THÁI CỰC KIẾM TRẬN HỘ THÂN! ☯️', fac);
+      return;
+    }
+
+    if (type === 'ADD_TROOPS') {
+      const fac = data.faction || 'blue';
+      const count = data.count || 20;
+      triggerReinforcements(fac, count, data.rankTier || 0);
+      addLiveFeedItem('Tiếp Viện', `+${count} chiến binh gia nhập phe ${fac === 'blue' ? config.blueName : config.redName}! 🛡️`, fac);
       return;
     }
 
@@ -1182,7 +1432,17 @@ export default function GameChienDau({
       const diamondCount = data.diamondCount || data.coins || 1;
       const assignedFaction = data.faction || (Math.random() < 0.5 ? 'blue' : 'red');
 
-      if (diamondCount >= 1000) {
+      if (diamondCount >= 10000) {
+        triggerNhuLai(assignedFaction, nickname);
+        triggerGiangLong(assignedFaction, nickname);
+        battleCommentary.triggerGiftCommentary(nickname, 'Vũ Trụ Thần Thoại', 'Chí Tôn Thần Giới', assignedFaction);
+        addLiveFeedItem(nickname, `tặng quà thần thoại kích hoạt NHƯ LAI THẦN CHƯỞNG (${diamondCount} xu)! ✋🪐`, assignedFaction);
+      } else if (diamondCount >= 3000) {
+        triggerDocCo(assignedFaction, nickname);
+        triggerLucMach(assignedFaction, nickname);
+        battleCommentary.triggerGiftCommentary(nickname, 'Thần Thú Huyền Thoại', 'Độc Cô Kiếm Tôn', assignedFaction);
+        addLiveFeedItem(nickname, `tặng quà huyền thoại kích hoạt ĐỘC CÔ CỬU KIẾM (${diamondCount} xu)! 🌪️⚔️`, assignedFaction);
+      } else if (diamondCount >= 1000) {
         triggerGiangLong(assignedFaction, nickname);
         battleCommentary.triggerGiftCommentary(nickname, 'Thần Long Vũ Trụ', 'Chí Tôn Thiên Tôn', assignedFaction);
         addLiveFeedItem(nickname, `tặng quà lớn triệu hồi GIÁNG LONG CHƯỞNG (${diamondCount} xu)! 🐉`, assignedFaction);
@@ -1205,7 +1465,7 @@ export default function GameChienDau({
         addLiveFeedItem(nickname, `tặng quà tiếp sức & mở vũ điệu! 🎁`, assignedFaction);
       }
     }
-  }, [externalLiveEvent, config.blueName, config.redName, addOrUpdateFighter, triggerDance, triggerAoeSkill, triggerBossSummon, triggerVanKiem, triggerGiangLong, triggerThaiCuc, triggerHeroUpgrade, resetMatch, playSfx, addLiveFeedItem]);
+  }, [externalLiveEvent, config.blueName, config.redName, addOrUpdateFighter, triggerDance, triggerAoeSkill, triggerBossSummon, triggerVanKiem, triggerGiangLong, triggerThaiCuc, triggerLucMach, triggerDocCo, triggerNhuLai, triggerThienNgoai, triggerKimCang, triggerReinforcements, triggerHeroUpgrade, resetMatch, playSfx, addLiveFeedItem]);
 
   // Main Canvas Rendering Loop
   useEffect(() => {
@@ -1957,6 +2217,294 @@ export default function GameChienDau({
           ctx.restore();
         } else {
           engineRef.current.taiChiShields.splice(i, 1);
+        }
+      }
+
+      // 5.1 Update & Draw Lục Mạch Thần Kiếm (Laser Kiếm Khí 6 Màu)
+      for (let i = (engineRef.current.lucMachBeams?.length || 0) - 1; i >= 0; i--) {
+        const lm = engineRef.current.lucMachBeams[i];
+        const elapsed = performance.now() - lm.spawnedAt;
+        if (elapsed < lm.lifespanMs) {
+          lm.beams.forEach(b => {
+            b.progress += dt * b.speed;
+            if (b.progress > 0 && b.progress < 1.4) {
+              const currentX = lm.startX + (lm.targetX - lm.startX) * Math.min(1, b.progress);
+              const curY = lm.baseY + b.yOffset;
+
+              ctx.save();
+              ctx.shadowColor = b.color;
+              ctx.shadowBlur = 24;
+              ctx.strokeStyle = b.color;
+              ctx.lineWidth = b.width * 2;
+              ctx.beginPath();
+              ctx.moveTo(lm.startX, curY);
+              ctx.lineTo(currentX, curY);
+              ctx.stroke();
+
+              // Laser head flare
+              ctx.fillStyle = '#ffffff';
+              ctx.beginPath();
+              ctx.arc(currentX, curY, 6, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.restore();
+
+              // Damage enemy line
+              if (b.progress >= 1 && !b.hitTriggered) {
+                b.hitTriggered = true;
+                const oppFaction = lm.factionId === 'blue' ? 'red' : 'blue';
+                const oppList = engineRef.current.fighters[oppFaction];
+                oppList.forEach(f => {
+                  if (f.isKnockedOut) return;
+                  if (Math.abs(f.y - curY) < 45) {
+                    const dmg = Math.floor(220 + Math.random() * 150);
+                    f.currentHp = Math.max(0, (f.currentHp || f.maxHp || 280) - dmg);
+                    engineRef.current.floatingTexts.push({
+                      text: `🌈 -${dmg}`,
+                      x: f.x,
+                      y: f.y - 35,
+                      vy: -45,
+                      color: b.color,
+                      font: 'bold 13px sans-serif',
+                      spawnedAt: performance.now(),
+                      lifespanMs: 1100
+                    });
+                    if (f.currentHp <= 0) {
+                      f.isKnockedOut = true;
+                      f.knockoutTime = performance.now();
+                      f.knockbackVx = (oppFaction === 'red' ? 1 : -1) * 85;
+                    }
+                  }
+                });
+              }
+            }
+          });
+        } else {
+          engineRef.current.lucMachBeams.splice(i, 1);
+        }
+      }
+
+      // 5.2 Update & Draw Độc Cô Cửu Kiếm (Bão Lốc Xoáy Kiếm Trận)
+      for (let i = (engineRef.current.docCoStorms?.length || 0) - 1; i >= 0; i--) {
+        const storm = engineRef.current.docCoStorms[i];
+        const elapsed = performance.now() - storm.spawnedAt;
+        const progress = elapsed / storm.lifespanMs;
+        if (progress < 1) {
+          storm.radius += (storm.maxRadius - storm.radius) * dt * 2.5;
+          ctx.save();
+          ctx.translate(storm.x, storm.y);
+          ctx.rotate(time * 0.008);
+          ctx.shadowColor = '#06b6d4';
+          ctx.shadowBlur = 28;
+
+          // Swirling vortex rings
+          ctx.strokeStyle = `rgba(6, 182, 212, ${1 - progress})`;
+          ctx.lineWidth = 3.5;
+          ctx.beginPath();
+          ctx.arc(0, 0, storm.radius, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // 9 revolving mystical swords
+          for (let s = 0; s < 9; s++) {
+            const angle = (s / 9) * Math.PI * 2 + time * 0.005;
+            const sx = Math.cos(angle) * storm.radius * 0.85;
+            const sy = Math.sin(angle) * storm.radius * 0.85;
+
+            ctx.save();
+            ctx.translate(sx, sy);
+            ctx.rotate(angle + Math.PI / 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(-2, -18, 4, 36);
+            ctx.restore();
+          }
+          ctx.restore();
+
+          // Vortex suction and hit ticks
+          if (!storm.lastHitTick || performance.now() - storm.lastHitTick > 400) {
+            storm.lastHitTick = performance.now();
+            const oppFaction = storm.factionId === 'blue' ? 'red' : 'blue';
+            engineRef.current.fighters[oppFaction].forEach(f => {
+              if (f.isKnockedOut) return;
+              const dist = Math.hypot(f.x - storm.x, f.y - storm.y);
+              if (dist < storm.radius + 30) {
+                const dmg = Math.floor(180 + Math.random() * 120);
+                f.currentHp = Math.max(0, (f.currentHp || f.maxHp || 280) - dmg);
+                engineRef.current.floatingTexts.push({
+                  text: `🌪️ -${dmg}`,
+                  x: f.x,
+                  y: f.y - 30,
+                  vy: -40,
+                  color: '#06b6d4',
+                  font: 'bold 12px sans-serif',
+                  spawnedAt: performance.now(),
+                  lifespanMs: 900
+                });
+                if (f.currentHp <= 0) {
+                  f.isKnockedOut = true;
+                  f.knockoutTime = performance.now();
+                  f.knockbackVx = (oppFaction === 'red' ? 1 : -1) * 90;
+                }
+              }
+            });
+          }
+        } else {
+          engineRef.current.docCoStorms.splice(i, 1);
+        }
+      }
+
+      // 5.3 Update & Draw Như Lai Thần Chưởng (Phật Quang Thái Dương Hoàng Kim)
+      for (let i = (engineRef.current.nhuLaiPalms?.length || 0) - 1; i >= 0; i--) {
+        const palm = engineRef.current.nhuLaiPalms[i];
+        palm.progress += dt * 0.7;
+        if (palm.progress < 1.2) {
+          const currentSize = palm.size + (palm.maxSize - palm.size) * Math.min(1, palm.progress);
+          const alpha = palm.progress <= 1 ? 0.9 : Math.max(0, 1 - (palm.progress - 1) * 5);
+
+          ctx.save();
+          ctx.translate(palm.x, palm.y);
+          ctx.shadowColor = '#eab308';
+          ctx.shadowBlur = 40;
+
+          // Radiant Sun Halo Rings
+          ctx.strokeStyle = `rgba(234, 179, 8, ${alpha * 0.8})`;
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(0, 0, currentSize * 0.9, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Golden Sanskrit Mandala Circle
+          ctx.fillStyle = `rgba(234, 179, 8, ${alpha * 0.25})`;
+          ctx.beginPath();
+          ctx.arc(0, 0, currentSize * 0.8, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Giant Buddha Palm Icon
+          ctx.font = `bold ${Math.floor(currentSize * 0.8)}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('✋', 0, 0);
+
+          ctx.restore();
+
+          // Impact shockwave on reaching full size
+          if (palm.progress >= 0.85 && !palm.hitTriggered) {
+            palm.hitTriggered = true;
+            const oppFaction = palm.factionId === 'blue' ? 'red' : 'blue';
+            engineRef.current.fighters[oppFaction].forEach(f => {
+              if (f.isKnockedOut) return;
+              const dist = Math.hypot(f.x - palm.x, f.y - palm.y);
+              if (dist < palm.maxSize) {
+                const dmg = Math.floor(450 + Math.random() * 250);
+                f.currentHp = Math.max(0, (f.currentHp || f.maxHp || 280) - dmg);
+                engineRef.current.floatingTexts.push({
+                  text: `✋ PHẬT QUANG -${dmg}`,
+                  x: f.x,
+                  y: f.y - 45,
+                  vy: -55,
+                  color: '#eab308',
+                  font: 'bold 15px sans-serif',
+                  spawnedAt: performance.now(),
+                  lifespanMs: 1400
+                });
+                if (f.currentHp <= 0) {
+                  f.isKnockedOut = true;
+                  f.knockoutTime = performance.now();
+                  f.knockbackVx = (oppFaction === 'red' ? 1 : -1) * 120;
+                }
+              }
+            });
+          }
+        } else {
+          engineRef.current.nhuLaiPalms.splice(i, 1);
+        }
+      }
+
+      // 5.4 Update & Draw Thiên Ngoại Phi Tiên (Băng Vũ Kiếm Thần)
+      for (let i = (engineRef.current.thienNgoaiFlashes?.length || 0) - 1; i >= 0; i--) {
+        const tf = engineRef.current.thienNgoaiFlashes[i];
+        tf.progress += dt * 1.8;
+        if (tf.progress < 1.3) {
+          ctx.save();
+          ctx.shadowColor = tf.color;
+          ctx.shadowBlur = 30;
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 3;
+
+          ctx.beginPath();
+          tf.points.forEach((pt, idx) => {
+            if (idx === 0) ctx.moveTo(pt.x, pt.y);
+            else ctx.lineTo(pt.x, pt.y);
+          });
+          ctx.stroke();
+
+          // Draw fairy sword slash avatar along path
+          const currentPtIdx = Math.min(tf.points.length - 1, Math.floor(tf.progress * tf.points.length));
+          const curPt = tf.points[currentPtIdx] || tf.points[0];
+
+          ctx.font = 'bold 24px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('❄️⚔️', curPt.x, curPt.y);
+          ctx.restore();
+
+          if (tf.progress >= 0.7 && !tf.hitTriggered) {
+            tf.hitTriggered = true;
+            const oppFaction = tf.factionId === 'blue' ? 'red' : 'blue';
+            engineRef.current.fighters[oppFaction].forEach(f => {
+              if (f.isKnockedOut) return;
+              const dmg = Math.floor(320 + Math.random() * 180);
+              f.currentHp = Math.max(0, (f.currentHp || f.maxHp || 280) - dmg);
+              engineRef.current.floatingTexts.push({
+                text: `❄️ PHI TIÊN -${dmg}`,
+                x: f.x,
+                y: f.y - 35,
+                vy: -45,
+                color: '#38bdf8',
+                font: 'bold 13px sans-serif',
+                spawnedAt: performance.now(),
+                lifespanMs: 1100
+              });
+              if (f.currentHp <= 0) {
+                f.isKnockedOut = true;
+                f.knockoutTime = performance.now();
+                f.knockbackVx = (oppFaction === 'red' ? 1 : -1) * 95;
+              }
+            });
+          }
+        } else {
+          engineRef.current.thienNgoaiFlashes.splice(i, 1);
+        }
+      }
+
+      // 5.5 Update & Draw Kim Cang Bất Hoại (Chuông Vàng Hoàng Kim)
+      for (let i = (engineRef.current.kimCangBells?.length || 0) - 1; i >= 0; i--) {
+        const bell = engineRef.current.kimCangBells[i];
+        const elapsed = performance.now() - bell.spawnedAt;
+        const progress = elapsed / bell.lifespanMs;
+        if (progress < 1) {
+          bell.radius += (bell.maxRadius - bell.radius) * dt * 3;
+
+          ctx.save();
+          ctx.translate(bell.x, bell.y);
+          ctx.shadowColor = '#facc15';
+          ctx.shadowBlur = 35;
+
+          // Golden Bell Dome
+          ctx.strokeStyle = `rgba(250, 204, 21, ${1 - progress * 0.8})`;
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(0, 0, bell.radius, Math.PI, 0, false);
+          ctx.stroke();
+
+          ctx.fillStyle = `rgba(250, 204, 21, ${(1 - progress) * 0.25})`;
+          ctx.beginPath();
+          ctx.arc(0, 0, bell.radius, Math.PI, 0, false);
+          ctx.fill();
+
+          ctx.font = 'bold 22px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('🔔 KIM CANG', 0, -bell.radius * 0.4);
+          ctx.restore();
+        } else {
+          engineRef.current.kimCangBells.splice(i, 1);
         }
       }
 
