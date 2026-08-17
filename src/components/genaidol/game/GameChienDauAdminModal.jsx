@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { battleAudio } from './battleAudioEngine';
 import { battleCommentary } from './battleCommentaryEngine';
-import { ELEVENLABS_VOICES, previewVoiceAudio, stopVoiceAudio } from '../../../utils/voiceSyncService';
+import { ELEVENLABS_VOICES, FREE_VOICES, ALL_SYSTEM_VOICES, previewVoiceAudio, stopVoiceAudio } from '../../../utils/voiceSyncService';
 
 const SIMULATED_USERS = [
   'Nguyễn Hùng', 'Trần Mai', 'Hoàng Long', 'Minh Quân', 
@@ -121,6 +121,7 @@ export default function GameChienDauAdminModal({
     return '';
   });
   const [previewingVoiceId, setPreviewingVoiceId] = useState(null);
+  const [voiceTierFilter, setVoiceTierFilter] = useState('all'); // 'all', 'pro', 'free'
   const [voiceGenderFilter, setVoiceGenderFilter] = useState('all');
   const [voiceRoleFilter, setVoiceRoleFilter] = useState('all');
   const bgmFileInputRef = useRef(null);
@@ -755,13 +756,36 @@ export default function GameChienDauAdminModal({
                       </div>
                     </div>
 
-                    {/* Filter & ElevenLabs Voice Catalog */}
+                    {/* Filter & Voice AI Catalog (💎 Pro vs 🆓 Miễn Phí) */}
                     <div className="pt-2 border-t border-pink-500/20 space-y-2">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <label className="text-[11px] font-black text-yellow-300 flex items-center gap-1.5 uppercase">
                           <Mic size={13} className="text-yellow-400" />
-                          Danh Sách 30+ Giọng Đọc ElevenLabs AI:
+                          Danh Sách Giọng Đọc AI (💎 Pro Trả Phí & 🆓 Miễn Phí):
                         </label>
+                        
+                        {/* Tier Filters: Pro vs Free vs All */}
+                        <div className="flex items-center gap-1">
+                          {[
+                            { id: 'all', label: 'Tất cả' },
+                            { id: 'pro', label: '💎 Trả Phí (ElevenLabs)' },
+                            { id: 'free', label: '🆓 Miễn Phí (Hệ Thống)' },
+                          ].map((t) => (
+                            <button
+                              key={t.id}
+                              onClick={() => setVoiceTierFilter(t.id)}
+                              className={`px-2 py-0.5 rounded text-[9.5px] font-bold transition-all ${
+                                voiceTierFilter === t.id 
+                                  ? (t.id === 'pro' ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black shadow-md' : t.id === 'free' ? 'bg-emerald-600 text-white font-black shadow-md' : 'bg-pink-600 text-white')
+                                  : 'bg-black/50 text-gray-400 hover:text-white border border-white/10'
+                              }`}
+                            >
+                              {t.label}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Gender Filters */}
                         <div className="flex items-center gap-1">
                           {['all', 'Female', 'Male'].map((g) => (
                             <button
@@ -769,20 +793,25 @@ export default function GameChienDauAdminModal({
                               onClick={() => setVoiceGenderFilter(g)}
                               className={`px-2 py-0.5 rounded text-[9.5px] font-bold transition-all ${
                                 voiceGenderFilter === g 
-                                  ? 'bg-pink-600 text-white' 
+                                  ? 'bg-purple-600 text-white' 
                                   : 'bg-black/50 text-gray-400 hover:text-white border border-white/10'
                               }`}
                             >
-                              {g === 'all' ? 'Tất cả' : g === 'Female' ? 'Nữ' : 'Nam'}
+                              {g === 'all' ? 'Tất cả giới tính' : g === 'Female' ? '♀ Nữ' : '♂ Nam'}
                             </button>
                           ))}
                         </div>
                       </div>
                       
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
-                        {ELEVENLABS_VOICES.filter(v => voiceGenderFilter === 'all' || v.gender === voiceGenderFilter).map((v) => {
+                        {ALL_SYSTEM_VOICES.filter(v => {
+                          const matchTier = voiceTierFilter === 'all' || v.tier === voiceTierFilter;
+                          const matchGender = voiceGenderFilter === 'all' || v.gender === voiceGenderFilter;
+                          return matchTier && matchGender;
+                        }).map((v) => {
                           const isSelected = (config.commentaryVoiceId || battleCommentary.selectedVoiceId || 'el_josh') === v.id;
                           const isPreviewing = previewingVoiceId === v.id;
+                          const isPro = v.tier === 'pro';
                           return (
                             <div
                               key={v.id}
@@ -801,12 +830,16 @@ export default function GameChienDauAdminModal({
                               >
                                 <div className="text-[11px] font-bold text-gray-200 truncate flex items-center gap-1.5">
                                   <span>{v.name}</span>
-                                  {v.badge && (
-                                    <span className="text-[8px] bg-pink-500/30 text-pink-300 px-1 rounded">{v.badge}</span>
+                                  {isPro ? (
+                                    <span className="text-[8px] bg-amber-500/20 border border-amber-400/40 text-amber-300 font-bold px-1.5 py-0.2 rounded-full">💎 Pro</span>
+                                  ) : (
+                                    <span className="text-[8px] bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold px-1.5 py-0.2 rounded-full">🆓 Miễn Phí</span>
                                   )}
                                 </div>
-                                <div className="text-[9px] text-pink-300/80 font-mono">
-                                  {v.gender === 'Female' ? '♀ Nữ' : '♂ Nam'} • {v.style || 'Truyền cảm'}
+                                <div className="text-[9px] text-pink-300/80 font-mono flex items-center gap-2">
+                                  <span>{v.gender === 'Female' ? '♀ Nữ' : '♂ Nam'}</span>
+                                  <span>•</span>
+                                  <span>{v.style || (isPro ? 'ElevenLabs AI' : 'Web Speech')}</span>
                                 </div>
                               </div>
 
@@ -814,7 +847,7 @@ export default function GameChienDauAdminModal({
                                 onClick={() => handlePreviewVoice(v)}
                                 className={`px-2 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 shrink-0 transition-all ${
                                   isPreviewing
-                                    ? 'bg-amber-500 text-black animate-pulse'
+                                    ? 'bg-amber-500 text-black animate-pulse shadow-md shadow-amber-500/30'
                                     : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
                                 }`}
                                 title="Nghe thử giọng này"

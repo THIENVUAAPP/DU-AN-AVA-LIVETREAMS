@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Search, CheckCircle2, FolderOpen, Brain, Upload } from 'lucide-react';
 import { getLiveMediaByCategory } from '../../lib/liveKhoDB';
-import { saveDualVoiceConfig, ELEVENLABS_VOICES, previewVoiceAudio } from '../../utils/voiceSyncService';
+import { saveDualVoiceConfig, ALL_SYSTEM_VOICES, ELEVENLABS_VOICES, previewVoiceAudio } from '../../utils/voiceSyncService';
 
-const MAIN_VOICES = [...ELEVENLABS_VOICES];
-const ASSISTANT_VOICES = [...ELEVENLABS_VOICES];
-const GAME_VOICES = [...ELEVENLABS_VOICES];
+const MAIN_VOICES = [...ALL_SYSTEM_VOICES];
+const ASSISTANT_VOICES = [...ALL_SYSTEM_VOICES];
+const GAME_VOICES = [...ALL_SYSTEM_VOICES];
 
 export default function GeneralSettings({ onClose }) {
   const [activeTab, setActiveTab] = useState('prompt');

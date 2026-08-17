@@ -316,11 +316,99 @@ export const ELEVENLABS_VOICES = [
     voiceId: 'TX3LPaxmHKxFdv7VOQHJ',
     gender: 'Male', 
     recommendedFor: 'game', 
-    desc: 'Giọng streamer game Gen Z, nhạy bén và cực kỳ bắt trend.' 
+  }
+].map(v => ({ ...v, tier: 'pro', icon: '💎', badge: '💎 Pro' }));
+
+// ==================== 4. DANH SÁCH GIỌNG ĐỌC MIỄN PHÍ (HỆ THỐNG / EDGE TTS) ====================
+export const FREE_VOICES = [
+  {
+    id: 'free_hoaimy',
+    name: 'Hoài My (Nữ - Edge TTS Tiếng Việt)',
+    provider: 'system',
+    tier: 'free',
+    icon: '🆓',
+    badge: '🆓 Miễn Phí',
+    gender: 'Female',
+    recommendedFor: 'idol',
+    style: 'Tự nhiên, trong trẻo',
+    desc: 'Giọng nữ chuẩn tiếng Việt miền Bắc, phát âm mượt mà, sẵn sàng 24/7 hoàn toàn miễn phí.'
+  },
+  {
+    id: 'free_namminh',
+    name: 'Nam Minh (Nam - Edge TTS Tiếng Việt)',
+    provider: 'system',
+    tier: 'free',
+    icon: '🆓',
+    badge: '🆓 Miễn Phí',
+    gender: 'Male',
+    recommendedFor: 'game',
+    style: 'Trầm ấm, mạnh mẽ',
+    desc: 'Giọng nam chuẩn tiếng Việt miền Bắc, hào sảng, bình luận trận đấu dõng dạc, miễn phí.'
+  },
+  {
+    id: 'free_mai',
+    name: 'Mai (Nữ - Miền Nam Dễ Thương)',
+    provider: 'system',
+    tier: 'free',
+    icon: '🆓',
+    badge: '🆓 Miễn Phí',
+    gender: 'Female',
+    recommendedFor: 'idol',
+    style: 'Dễ thương, miền Nam',
+    desc: 'Giọng nữ miền Nam ngọt ngào, gần gũi, giao lưu người xem thân thiện, miễn phí.'
+  },
+  {
+    id: 'free_minh',
+    name: 'Minh (Nam - Miền Nam Quyết Đoán)',
+    provider: 'system',
+    tier: 'free',
+    icon: '🆓',
+    badge: '🆓 Miễn Phí',
+    gender: 'Male',
+    recommendedFor: 'manager',
+    style: 'Chững chạc, uy tín',
+    desc: 'Giọng nam miền Nam dõng dạc, giục chốt đơn linh hoạt, thông báo tức thì, miễn phí.'
+  },
+  {
+    id: 'free_google_vi',
+    name: 'Google Tiếng Việt (Chuẩn Hệ Thống)',
+    provider: 'system',
+    tier: 'free',
+    icon: '🆓',
+    badge: '🆓 Miễn Phí',
+    gender: 'Female',
+    recommendedFor: 'both',
+    style: 'Tròn vành rõ chữ',
+    desc: 'Giọng đọc Google Tiếng Việt tích hợp mặc định trên trình duyệt Web Speech API.'
+  },
+  {
+    id: 'free_zira_en',
+    name: 'Microsoft Zira (Nữ - US English)',
+    provider: 'system',
+    tier: 'free',
+    icon: '🆓',
+    badge: '🆓 Miễn Phí',
+    gender: 'Female',
+    recommendedFor: 'idol',
+    style: 'Fluent English',
+    desc: 'Giọng nữ tiếng Anh chuẩn Mỹ miễn phí cho livestream quốc tế.'
+  },
+  {
+    id: 'free_david_en',
+    name: 'Microsoft David (Nam - US English)',
+    provider: 'system',
+    tier: 'free',
+    icon: '🆓',
+    badge: '🆓 Miễn Phí',
+    gender: 'Male',
+    recommendedFor: 'game',
+    style: 'Dynamic Game English',
+    desc: 'Giọng nam tiếng Anh phong cách streamer năng động miễn phí.'
   }
 ];
 
-export const CURATED_VOICES = ELEVENLABS_VOICES;
+export const ALL_SYSTEM_VOICES = [...ELEVENLABS_VOICES, ...FREE_VOICES];
+export const CURATED_VOICES = ALL_SYSTEM_VOICES;
 
 export const DEFAULT_VOICE_CONFIG = {
   // Voice 1: Giọng Idol Trực Tiếp
@@ -510,48 +598,50 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
   const voiceId = voice.voiceId || voice.id?.replace('el_', '') || '21m00Tcm4TlvDq8ikWAM';
   const apiKey = localStorage.getItem('elevenlabs_api_key') || localStorage.getItem('ELEVENLABS_API_KEY') || localStorage.getItem('elevenlabsApiKey');
 
-  // Thử gọi ElevenLabs API Trực Tiếp Client-Side nếu có API key
-  if (apiKey && apiKey.trim().length > 10) {
-    try {
-      const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'xi-api-key': apiKey.trim(),
-          'Accept': 'audio/mpeg'
-        },
-        body: JSON.stringify({
-          text: textToSpeak,
-          model_id: 'eleven_multilingual_v2',
-          voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.75,
-            style: 0.0,
-            use_speaker_boost: true
-          }
-        })
-      });
+  // 1. NẾU LÀ GIỌNG TRẢ PHÍ (ELEVENLABS PRO): Thử gọi ElevenLabs API nếu có API key
+  if (voice.provider === 'elevenlabs') {
+    if (apiKey && apiKey.trim().length > 10) {
+      try {
+        const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'xi-api-key': apiKey.trim(),
+            'Accept': 'audio/mpeg'
+          },
+          body: JSON.stringify({
+            text: textToSpeak,
+            model_id: 'eleven_multilingual_v2',
+            voice_settings: {
+              stability: 0.5,
+              similarity_boost: 0.75,
+              style: 0.0,
+              use_speaker_boost: true
+            }
+          })
+        });
 
-      if (res.ok) {
-        const blob = await res.blob();
-        const audioUrl = URL.createObjectURL(blob);
-        const audio = new Audio(audioUrl);
-        activePreviewAudio = audio;
-        audio.onended = () => {
-          activePreviewAudio = null;
-          try { URL.revokeObjectURL(audioUrl); } catch {}
-          if (onEnd) onEnd();
-        };
-        audio.onerror = () => {
-          activePreviewAudio = null;
-          try { URL.revokeObjectURL(audioUrl); } catch {}
-          if (onEnd) onEnd();
-        };
-        await audio.play();
-        return;
+        if (res.ok) {
+          const blob = await res.blob();
+          const audioUrl = URL.createObjectURL(blob);
+          const audio = new Audio(audioUrl);
+          activePreviewAudio = audio;
+          audio.onended = () => {
+            activePreviewAudio = null;
+            try { URL.revokeObjectURL(audioUrl); } catch {}
+            if (onEnd) onEnd();
+          };
+          audio.onerror = () => {
+            activePreviewAudio = null;
+            try { URL.revokeObjectURL(audioUrl); } catch {}
+            if (onEnd) onEnd();
+          };
+          await audio.play();
+          return;
+        }
+      } catch (e) {
+        console.warn('ElevenLabs API direct fetch error, fallback to high-fidelity Web Speech:', e);
       }
-    } catch (e) {
-      console.warn('ElevenLabs API direct fetch error, fallback to high-fidelity Web Speech:', e);
     }
   }
 

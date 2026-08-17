@@ -1126,7 +1126,7 @@ export default function GameBanDoVietNam({
           controls.target.lerpVectors(tw.fromTarget, tw.toTarget, t);
           if (progress >= 1) {
             tw.phase = 'hold';
-            tw.holdUntil = time + (tw.holdDuration || 3500); // Giữ camera zoom cận cảnh
+            tw.holdUntil = time + (tw.holdDuration || 4000); // Giữ camera zoom cận cảnh đúng 4 giây theo yêu cầu
           }
         } else if (tw.phase === 'hold') {
           if (time >= tw.holdUntil) {
@@ -1726,37 +1726,37 @@ export default function GameBanDoVietNam({
         ))}
       </div>
 
-      {/* User Claim Flag Badges Floating Overlay Layer (Hiển thị Quốc Kỳ & Tên / ID Người Tặng Nổi Bật Cận Cảnh 3D) */}
+      {/* User Claim Flag Badges Floating Overlay Layer (Hiển thị Quốc Kỳ & Tên / ID Người Tặng Nhỏ Gọn 50%, Tinh Tế) */}
       <div ref={claimBadgesLayerRef} className="absolute inset-0 pointer-events-none z-15 overflow-hidden">
         {recentClaimBadges.map(b => (
           <div
             key={b.id}
             ref={el => badgeRefs.current[b.id] = el}
-            className="absolute top-0 left-0 hidden flex-col items-center pointer-events-none transition-all duration-100 animate-in zoom-in-75 fade-in duration-200"
+            className="absolute top-0 left-0 hidden flex-col items-center pointer-events-none transition-all duration-100 animate-in zoom-in-75 fade-in duration-150"
             style={{ willChange: 'transform' }}
           >
-            <div className="relative flex items-center gap-2 px-2.5 py-1.5 rounded-2xl bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 text-white font-black text-[10.5px] shadow-[0_8px_25px_rgba(239,68,68,0.6)] border-2 border-yellow-300 ring-2 ring-yellow-400/80 whitespace-nowrap drop-shadow-xl">
-              <span className="text-base leading-none drop-shadow-md animate-bounce">{b.flag || '🇻🇳'}</span>
-              <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-xs overflow-hidden border border-white shadow-inner shrink-0">
+            <div className="relative flex items-center gap-1.5 px-2 py-0.5 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 text-white font-bold text-[9px] shadow-[0_4px_15px_rgba(239,68,68,0.5)] border border-yellow-300 ring-1 ring-yellow-400/70 whitespace-nowrap drop-shadow-md">
+              <span className="text-xs leading-none drop-shadow-sm">{b.flag || '🇻🇳'}</span>
+              <div className="w-3.5 h-3.5 rounded-full bg-white/20 flex items-center justify-center text-[8px] overflow-hidden border border-white/80 shrink-0">
                 {b.avatar ? (
                   <img src={b.avatar} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
                 ) : (
                   <span>👤</span>
                 )}
               </div>
-              <div className="flex flex-col text-left leading-tight">
+              <div className="flex flex-col text-left leading-none">
                 <div className="flex items-center gap-1">
-                  <span className="text-[10px] text-yellow-100 font-black truncate max-w-[100px] drop-shadow">{b.username}</span>
-                  {b.userId && <span className="text-[8px] text-yellow-300 font-mono font-bold opacity-90">{b.userId}</span>}
+                  <span className="text-[8.5px] text-yellow-100 font-bold truncate max-w-[65px] drop-shadow">{b.username}</span>
+                  {b.userId && <span className="text-[7px] text-yellow-300 font-mono opacity-80">{b.userId}</span>}
                 </div>
-                <span className="text-[8.5px] text-white font-black flex items-center gap-1 drop-shadow">
-                  <span className="text-yellow-200">{b.flag || '🇻🇳'} Cắm +{b.count || 1} Ô Cờ</span>
-                  {b.giftName && <span className="text-yellow-300 text-[8px]">({b.giftName})</span>}
+                <span className="text-[7.5px] text-white font-bold flex items-center gap-0.5 mt-0.5">
+                  <span className="text-yellow-200">+{b.count || 1} Ô</span>
+                  {b.giftName && <span className="text-yellow-300 text-[7px]">({b.giftName})</span>}
                 </span>
               </div>
             </div>
-            {/* Glowing Golden 3D Pin Needle */}
-            <div className="w-1 h-4 bg-gradient-to-b from-yellow-300 via-yellow-400 to-transparent rounded-full shadow-[0_0_8px_rgba(250,204,21,0.9)]" />
+            {/* Compact 3D Pin Needle */}
+            <div className="w-0.5 h-2 bg-gradient-to-b from-yellow-300 via-yellow-400 to-transparent rounded-full shadow-[0_0_4px_rgba(250,204,21,0.8)]" />
           </div>
         ))}
       </div>

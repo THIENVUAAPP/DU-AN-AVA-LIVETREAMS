@@ -1636,7 +1636,7 @@ export default function DesktopAppUI() {
               </button>
             </div>
             <div className="flex-1 overflow-y-auto">
-              <AutoCaptchaSolver onClose={() => setActiveSettingsModal(null)} setActiveTab={setActiveTab} />
+              <AutoCaptchaSolver onClose={() => setActiveSettingsModal(null)} />
             </div>
           </div>
         </div>

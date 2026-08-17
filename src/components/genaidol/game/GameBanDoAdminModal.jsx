@@ -8,8 +8,7 @@ import {
   Palette, Minimize2, Maximize2, Columns, Edit2, MessageSquare, Bot, Key
 } from 'lucide-react';
 import bandoEngine, { DEFAULT_MAP_GIFTS, COUNTRY_PRESETS, WORLD_COUNTRIES, CONTINENTS } from './bandoGameEngine';
-import bandoAudio from './bandoAudioEngine';
-import { ELEVENLABS_VOICES, previewVoiceAudio, stopVoiceAudio, getDualVoiceConfig, saveDualVoiceConfig } from '../../../utils/voiceSyncService';
+import { ELEVENLABS_VOICES, FREE_VOICES, ALL_SYSTEM_VOICES, previewVoiceAudio, stopVoiceAudio, getDualVoiceConfig, saveDualVoiceConfig } from '../../../utils/voiceSyncService';
 
 export default function GameBanDoAdminModal({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('operations');
@@ -410,9 +409,11 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
     return matchContinent && matchQuery;
   });
 
-  // Lọc danh sách Giọng ElevenLabs
-  const filteredVoices = ELEVENLABS_VOICES.filter(v => {
+  // Lọc danh sách Giọng AI (💎 Pro Trả Phí & 🆓 Miễn Phí)
+  const filteredVoices = ALL_SYSTEM_VOICES.filter(v => {
     if (voiceCategory === 'all') return true;
+    if (voiceCategory === 'pro') return v.tier === 'pro';
+    if (voiceCategory === 'free') return v.tier === 'free';
     if (voiceCategory === 'game') return v.recommendedFor === 'game' || v.recommendedFor === 'both';
     if (voiceCategory === 'female') return v.gender === 'Female';
     if (voiceCategory === 'male') return v.gender === 'Male';
@@ -1255,7 +1256,9 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                 {/* Voice filter */}
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {[
-                    { id: 'all', label: 'Tất Cả Giọng (30+)' },
+                    { id: 'all', label: 'Tất Cả Giọng (37+)' },
+                    { id: 'pro', label: '💎 Trả Phí (ElevenLabs Pro)' },
+                    { id: 'free', label: '🆓 Miễn Phí (Hệ Thống)' },
                     { id: 'game', label: '🎙️ BLV Game' },
                     { id: 'female', label: '👑 Nữ Idol' },
                     { id: 'male', label: '💼 Nam Trợ Lý' },
@@ -1265,7 +1268,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                       onClick={() => setVoiceCategory(cat.id)}
                       className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
                         voiceCategory === cat.id
-                          ? 'bg-purple-600 text-white shadow-md shadow-purple-500/30'
+                          ? (cat.id === 'pro' ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black shadow-md' : cat.id === 'free' ? 'bg-emerald-600 text-white font-black shadow-md' : 'bg-purple-600 text-white shadow-md shadow-purple-500/30')
                           : 'bg-white/5 hover:bg-white/10 text-gray-300'
                       }`}
                     >
@@ -1381,6 +1384,15 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                             }`}>
                               {v.gender === 'Female' ? '♀ Nữ' : '♂ Nam'} • {v.recommendedFor?.toUpperCase()}
                             </span>
+                            {v.tier === 'pro' ? (
+                              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-300">
+                                💎 Pro ElevenLabs
+                              </span>
+                            ) : (
+                              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/50 text-emerald-300">
+                                🆓 Miễn Phí
+                              </span>
+                            )}
                             {isBLV && (
                               <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-purple-600 text-white shadow-xs">
                                 🎙️ Đang làm BLV
@@ -1397,10 +1409,12 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                               </span>
                             )}
                           </div>
-                          <span className="text-[10px] font-mono text-gray-400">ElevenLabs</span>
+                          <span className="text-[10px] font-mono text-gray-400">{v.tier === 'pro' ? 'ElevenLabs AI' : 'Edge TTS'}</span>
                         </div>
 
-                        <div className="text-xs font-black text-white mb-1">{v.name}</div>
+                        <div className="text-xs font-black text-white mb-1 flex items-center gap-1.5">
+                          <span>{v.name}</span>
+                        </div>
                         <p className="text-[11px] text-gray-400 mb-3">{v.desc}</p>
                       </div>
 
