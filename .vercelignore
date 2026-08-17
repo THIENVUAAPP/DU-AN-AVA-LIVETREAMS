@@ -1,0 +1,23 @@
+# Vercel Ignore
+release/
+dist/
+node_modules/
+.git/
+python_scripts/
+*.dmg
+*.zip
+*.exe
+*.tar.gz
+*.mp4
+*.m4a
+*.wav
+*.mp3
+*.py
+test*.js
+test*.cjs
+test*.mjs
+test*.sh
+test*.py
+update_*.py
+update_*.cjs
+rewrite_*.py
