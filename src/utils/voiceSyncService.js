@@ -713,33 +713,40 @@ export function getElevenLabsApiKey() {
  * Đảm bảo 100% các giọng đọc đều phát được ngay lập tức, sử dụng giọng nói tự nhiên chân thực, KHÔNG phát tiếng bíp.
  */
 export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {
+    if (onEnd) onEnd();
+    return;
+  }
 
   // Dừng âm thanh preview đang chạy trước đó
   stopVoiceAudio();
 
   const profile = VOICE_ACOUSTIC_PROFILES[voice.id] || {};
-  const langCode = voice.lang || profile.lang || 'vi-VN';
+  const langCode = voice.lang || profile.lang || (voice.id?.includes('_us_') ? 'en-US' : voice.id?.includes('_uk_') ? 'en-GB' : voice.id?.includes('_jp_') ? 'ja-JP' : voice.id?.includes('_kr_') ? 'ko-KR' : voice.id?.includes('_cn_') ? 'zh-CN' : voice.id?.includes('_fr_') ? 'fr-FR' : 'vi-VN');
   
   const defaultSample = profile.text || (
     langCode.startsWith('en') 
-      ? 'Hello! Welcome to our live interactive broadcast!'
+      ? 'Hello! Welcome to our live interactive broadcast! Let us have a great show!'
       : langCode.startsWith('ja')
-        ? 'こんにちは！ライブ配信へようこそ！'
+        ? 'みなさん、こんにちは！ライブ配信へようこそ！一緒に盛り上がりましょう！'
         : langCode.startsWith('ko')
-          ? '안녕하세요! 라이브에 오신 것을 환영합니다!'
-          : (voice.role === 'game' 
-              ? 'Đại chiến cắm cờ đang diễn ra cực kỳ kịch tính! Toàn quân hãy cùng sẵn sàng xung trận!'
-              : (voice.gender === 'Female' 
-                  ? 'Xin chào quý khán giả đang xem livestream! Hãy cùng cắm cờ Tổ Quốc rực rỡ và nhận thật nhiều quà nhé!'
-                  : 'Chào mừng tất cả anh em chiến binh đã gia nhập chiến trường livestream rực lửa hôm nay!'))
+          ? '안녕하세요! 라이브에 오신 것을 환영합니다! 오늘 멋진 시간 보내세요!'
+          : langCode.startsWith('zh')
+            ? '各位直播间的朋友们大家好！欢迎来到我们的直播间！'
+            : langCode.startsWith('fr')
+              ? 'Bonjour à tous et bienvenue sur notre diffusion en direct!'
+              : (voice.role === 'game' 
+                  ? 'Đại chiến cắm cờ đang diễn ra cực kỳ kịch tính! Toàn quân hãy cùng sẵn sàng xung trận!'
+                  : (voice.gender === 'Female' || voice.gender === 'Nữ'
+                      ? 'Xin chào quý khán giả đang xem livestream! Hãy cùng cắm cờ Tổ Quốc rực rỡ và nhận thật nhiều quà nhé!'
+                      : 'Chào mừng tất cả anh em chiến binh đã gia nhập chiến trường livestream rực lửa hôm nay!'))
   );
 
   const textToSpeak = sampleText || defaultSample;
   const voiceId = voice.voiceId || voice.id?.replace('el_', '') || '21m00Tcm4TlvDq8ikWAM';
   const apiKey = getElevenLabsApiKey();
 
-  // 1. NẾU CÓ ELEVENLABS API KEY TỪ BIẾN MÔI TRƯỜNG: Gọi trực tiếp máy chủ ElevenLabs TTS High-Fidelity
+  // 1. NẾU CÓ ELEVENLABS API KEY TỪ BIẾN MÔI TRƯỜNG / LOCAL STORAGE: Gọi trực tiếp máy chủ ElevenLabs TTS High-Fidelity
   if (voice.provider === 'elevenlabs' && apiKey && apiKey.length > 10) {
     try {
       const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
@@ -784,7 +791,7 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
     }
   }
 
-  // 2. TỔNG HỢP GIỌNG ĐỌC TỰ NHIÊN WEB SPEECH API (Phát âm chuẩn tự nhiên 100%, không bị hủy tiếng)
+  // 2. TỔNG HỢP GIỌNG ĐỌC TỰ NHIÊN WEB SPEECH API (Phát âm chuẩn tự nhiên 100%, có hỗ trợ giọng Nam/Nữ/Quốc tế)
   if (typeof window.speechSynthesis !== 'undefined') {
     try {
       window.speechSynthesis.cancel();

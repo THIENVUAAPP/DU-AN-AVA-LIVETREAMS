@@ -1,4 +1,4 @@
-import { ELEVENLABS_VOICES, getElevenLabsApiKey } from '../../../utils/voiceSyncService';
+import { ELEVENLABS_VOICES, getElevenLabsApiKey, previewVoiceAudio, stopVoiceAudio } from '../../../utils/voiceSyncService';
 
 export const ELEVENLABS_GAME_VOICES = ELEVENLABS_VOICES;
 
@@ -132,102 +132,34 @@ class BattleCommentaryEngine {
       return;
     }
 
-    this.isSpeaking = true;
-    if (this.onDuckAudio) this.onDuckAudio(true); // Lower BGM
-    if (this.onSpeechStateChange) this.onSpeechStateChange(true, text);
-
-    // 1. Thử gọi API ElevenLabs TTS siêu thực
+    // GỌI UNIFIED VOICE ENGINE CHO BÌNH LUẬN VIÊN GAME
     try {
-      const apiKey = getElevenLabsApiKey();
-      const voiceId = this.selectedElevenLabsVoiceId || 'TxGEqnHWrfWFTfGW9XjX';
+      const voiceObj = ELEVENLABS_VOICES.find(v => v.id === (customVoiceId || this.selectedVoiceId)) || {
+        id: this.selectedVoiceId || 'el_josh',
+        voiceId: this.selectedElevenLabsVoiceId || 'TxGEqnHWrfWFTfGW9XjX',
+        provider: 'elevenlabs',
+        gender: 'Male',
+        role: 'game'
+      };
 
-      const res = await fetch('/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text,
-          platform: 'elevenlabs',
-          voiceId,
-          apiKey
-        })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.audioBase64) {
-          const audio = new Audio(`data:audio/mp3;base64,${data.audioBase64}`);
-          audio.volume = this.volume;
-          this.activeAudio = audio;
-
-          // Trừ token tự động theo ký tự BLV Game PK ElevenLabs
-          if (typeof window !== 'undefined') {
-            const charCount = (text || '').length || 30;
-            window.dispatchEvent(new CustomEvent('avalive:deduct_token', {
-              detail: {
-                amount: charCount,
-                reason: `ElevenLabs Game PK (${this.selectedVoiceId}): "${(text || '').slice(0, 20)}..."`
-              }
-            }));
+      if (typeof window !== 'undefined') {
+        const charCount = (text || '').length || 30;
+        window.dispatchEvent(new CustomEvent('avalive:deduct_token', {
+          detail: {
+            amount: charCount,
+            reason: `ElevenLabs Game PK (${voiceObj.id}): "${(text || '').slice(0, 20)}..."`
           }
-
-          audio.onended = () => {
-            this.isSpeaking = false;
-            this.activeAudio = null;
-            if (this.onDuckAudio) this.onDuckAudio(false); // Restore BGM
-            if (this.onSpeechStateChange) this.onSpeechStateChange(false, '');
-          };
-
-          audio.onerror = () => {
-            this.fallbackWebSpeech(text);
-          };
-
-          await audio.play();
-          return;
-        }
+        }));
       }
+
+      await previewVoiceAudio(voiceObj, text, () => {
+        this.isSpeaking = false;
+        this.activeAudio = null;
+        if (this.onDuckAudio) this.onDuckAudio(false); // Restore BGM
+        if (this.onSpeechStateChange) this.onSpeechStateChange(false, '');
+      });
     } catch (err) {
-      console.warn('ElevenLabs Commentary API fallback to Web Speech:', err);
-    }
-
-    // 2. Fallback sang Web Speech Synthesis khi chưa có API key / offline
-    this.fallbackWebSpeech(text);
-  }
-
-  fallbackWebSpeech(text) {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      this.isSpeaking = false;
-      if (this.onDuckAudio) this.onDuckAudio(false);
-      if (this.onSpeechStateChange) this.onSpeechStateChange(false, '');
-      return;
-    }
-
-    try {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.volume = this.volume;
-      utterance.pitch = this.pitch;
-      utterance.rate = this.rate;
-      utterance.lang = 'vi-VN';
-
-      const voices = window.speechSynthesis.getVoices();
-      const viVoice = voices.find(v => v.lang.startsWith('vi') || v.name.toLowerCase().includes('vietnam') || v.name.toLowerCase().includes('vietnamese'));
-      if (viVoice) utterance.voice = viVoice;
-
-      utterance.onend = () => {
-        this.isSpeaking = false;
-        if (this.onDuckAudio) this.onDuckAudio(false);
-        if (this.onSpeechStateChange) this.onSpeechStateChange(false, '');
-      };
-
-      utterance.onerror = (err) => {
-        console.warn('Speech synthesis error:', err);
-        this.isSpeaking = false;
-        if (this.onDuckAudio) this.onDuckAudio(false);
-        if (this.onSpeechStateChange) this.onSpeechStateChange(false, '');
-      };
-
-      window.speechSynthesis.speak(utterance);
-    } catch (e) {
-      console.warn('Failed to fallback speak text:', e);
+      console.warn('Commentary voice error:', err);
       this.isSpeaking = false;
       if (this.onDuckAudio) this.onDuckAudio(false);
       if (this.onSpeechStateChange) this.onSpeechStateChange(false, '');
@@ -235,14 +167,14 @@ class BattleCommentaryEngine {
   }
 
   cancelSpeech() {
+    stopVoiceAudio();
     if (this.activeAudio) {
       this.activeAudio.pause();
       this.activeAudio = null;
     }
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
     this.isSpeaking = false;
+    if (this.onDuckAudio) this.onDuckAudio(false);
+    if (this.onSpeechStateChange) this.onSpeechStateChange(false, '');
   }
 
   speakRandomPrompt() {

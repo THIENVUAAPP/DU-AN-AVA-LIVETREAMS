@@ -1027,6 +1027,79 @@ export default function GameBanDoVietNam({
       if (bannerMesh.instanceColor) bannerMesh.instanceColor.needsUpdate = true;
     }
 
+    // 3. 3D Focal Flag Marker Group (Cột cờ 3D mạ vàng + Lá cờ quốc kỳ tung bay siêu sắc nét + Hào quang phát sáng tại vị trí vừa cắm cờ)
+    const focalGroup = new THREE.Group();
+    focalGroup.visible = false;
+    scene.add(focalGroup);
+    state.focalGroup = focalGroup;
+
+    // Cán cờ vàng kim hoàng gia
+    const poleGeo = new THREE.CylinderGeometry(0.08, 0.08, 4.2, 16);
+    const poleMat = new THREE.MeshStandardMaterial({
+      color: 0xffd700,
+      metalness: 0.85,
+      roughness: 0.2,
+      emissive: 0xffaa00,
+      emissiveIntensity: 0.5
+    });
+    const poleMesh = new THREE.Mesh(poleGeo, poleMat);
+    poleMesh.position.set(0, 2.1, 0);
+    focalGroup.add(poleMesh);
+
+    // Đỉnh chóp quả cầu vàng phát quang
+    const sphereGeo = new THREE.SphereGeometry(0.18, 16, 16);
+    const sphereMat = new THREE.MeshStandardMaterial({
+      color: 0xffea00,
+      emissive: 0xffcc00,
+      emissiveIntensity: 0.9
+    });
+    const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
+    sphereMesh.position.set(0, 4.2, 0);
+    focalGroup.add(sphereMesh);
+
+    // Lá cờ quốc kỳ 3D vẫy sóng siêu sắc nét
+    const flagGeo = new THREE.PlaneGeometry(2.2, 1.4, 16, 10);
+    const flagPlaneMat = new THREE.MeshStandardMaterial({
+      map: flagTexture,
+      emissiveMap: flagTexture,
+      emissive: new THREE.Color(0xffffff),
+      emissiveIntensity: 0.85,
+      side: THREE.DoubleSide,
+      roughness: 0.2,
+      metalness: 0.05
+    });
+    const flagPlaneMesh = new THREE.Mesh(flagGeo, flagPlaneMat);
+    flagPlaneMesh.position.set(1.1, 3.4, 0);
+    focalGroup.add(flagPlaneMesh);
+    state.flagPlaneMesh = flagPlaneMesh;
+
+    // Vầng hào quang ánh vàng mặt đất (Beacon Pulse Ring)
+    const ringGeo = new THREE.RingGeometry(0.2, 1.6, 32);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0xffd700,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.85
+    });
+    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+    ringMesh.rotation.x = -Math.PI / 2;
+    ringMesh.position.set(0, 0.08, 0);
+    focalGroup.add(ringMesh);
+    state.ringMesh = ringMesh;
+
+    // Cột tia sáng thiên thanh chiếu thẳng lên trời (Light Beam)
+    const beamGeo = new THREE.CylinderGeometry(0.3, 0.8, 15, 16, 1, true);
+    const beamMat = new THREE.MeshBasicMaterial({
+      color: 0xff3b30,
+      transparent: true,
+      opacity: 0.4,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending
+    });
+    const beamMesh = new THREE.Mesh(beamGeo, beamMat);
+    beamMesh.position.set(0, 7.5, 0);
+    focalGroup.add(beamMesh);
+
     // Positioning
     const cols = maskData?.gridCols || 300;
     const rows = maskData?.gridRows || 389;
@@ -1141,12 +1214,27 @@ export default function GameBanDoVietNam({
             const defaultTarget = presets[activeCameraPreset]?.target || [0, 0, 10];
             tw.to.set(...defaultPos);
             tw.toTarget.set(...defaultTarget);
+            if (state.focalGroup) state.focalGroup.visible = false;
           }
         } else if (tw.phase === 'out') {
           const t = easeInOutCubic(Math.min(1, (time - tw.start) / tw.duration));
           camera.position.lerpVectors(tw.from, tw.to, t);
           controls.target.lerpVectors(tw.fromTarget, tw.toTarget, t);
-          if (t >= 1) state.tween = null;
+          if (t >= 1) {
+            state.tween = null;
+            if (state.focalGroup) state.focalGroup.visible = false;
+          }
+        }
+      }
+
+      // Hoạt họa Lá cờ Quốc kỳ 3D vẫy sóng & Vòng tròn hào quang phát sáng
+      if (state.focalGroup && state.focalGroup.visible) {
+        if (state.flagPlaneMesh) {
+          state.flagPlaneMesh.rotation.y = Math.sin(time * 0.006) * 0.25;
+        }
+        if (state.ringMesh) {
+          const s = 1.0 + 0.18 * Math.sin(time * 0.008);
+          state.ringMesh.scale.set(s, s, s);
         }
       }
 
@@ -1426,6 +1514,11 @@ export default function GameBanDoVietNam({
       state.flagMat.map = newTex;
       state.flagMat.emissiveMap = newTex;
       state.flagMat.needsUpdate = true;
+      if (state.flagPlaneMesh && state.flagPlaneMesh.material) {
+        state.flagPlaneMesh.material.map = newTex;
+        state.flagPlaneMesh.material.emissiveMap = newTex;
+        state.flagPlaneMesh.material.needsUpdate = true;
+      }
     }
 
     const cells = maskData.cells || [];
@@ -1495,11 +1588,15 @@ export default function GameBanDoVietNam({
     // Trigger Camera zoom to focal target (Zoom cận cảnh trực diện siêu nét thấy rõ lá quốc kỳ và tên / ID người tặng dù chỉ tặng 1 ô)
     if (gameState.lastFocalTarget && state.camera && state.controls) {
       const ft = gameState.lastFocalTarget;
+      if (state.focalGroup) {
+        state.focalGroup.position.set(ft.wx, 0, ft.wz);
+        state.focalGroup.visible = true;
+      }
       state.tween = {
         from: state.camera.position.clone(),
-        to: new THREE.Vector3(ft.wx, 20, ft.wz + 15),
+        to: new THREE.Vector3(ft.wx, 8.5, ft.wz + 7.0),
         fromTarget: state.controls.target.clone(),
-        toTarget: new THREE.Vector3(ft.wx, 0, ft.wz),
+        toTarget: new THREE.Vector3(ft.wx, 1.8, ft.wz),
         start: performance.now(),
         duration: 550,
         phase: 'in',
@@ -1507,7 +1604,7 @@ export default function GameBanDoVietNam({
         holdUntil: 0
       };
     }
-  }, [gameState.claimedCount, gameState.status, gameState.settings, gameState.selectedCountry, gameState.bannerCells, gameState.bannerClaimedCount, gameState.showBannerCells, gameState.bannerPos, gameState.bannerClaimedColor, gameState.bannerUnclaimedColor, gameState.bannerVoxelScale, viewMode3D, gameState.maskLoaded, isAutoTesting, isAuto247]);
+  }, [gameState.claimedCount, gameState.cellsById, gameState.lastFocalTarget, gameState.status, gameState.settings, gameState.selectedCountry, gameState.bannerCells, gameState.bannerClaimedCount, gameState.showBannerCells, gameState.bannerPos, gameState.bannerClaimedColor, gameState.bannerUnclaimedColor, gameState.bannerVoxelScale, viewMode3D, gameState.maskLoaded, isAutoTesting, isAuto247]);
 
   // Smart Camera Director: Cứ cách 10-12 giây khi rảnh thì zoom cận vùng đất chứa cờ, sau đó hồi lại tổng quan
   // CHỈ HOẠT ĐỘNG KHI CHẠY DEMO, AUTO 24/7 HOẶC LIVE THỰC TẾ (Không làm gián đoạn Admin khi soi map)

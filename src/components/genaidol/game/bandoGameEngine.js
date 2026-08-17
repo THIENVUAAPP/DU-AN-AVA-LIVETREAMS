@@ -783,6 +783,7 @@ class BanDoGameEngine {
   }
 
   notify(lastEvent = null) {
+    this.state.cellsById = { ...this.state.cellsById };
     this.listeners.forEach(cb => {
       try { cb(this.state, lastEvent); } catch(e) {}
     });

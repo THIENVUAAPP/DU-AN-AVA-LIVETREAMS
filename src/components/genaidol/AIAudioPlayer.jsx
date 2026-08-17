@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Play, Pause, FastForward, Settings, Mic, Volume2, ShieldCheck, Sparkles } from 'lucide-react';
-import { getDualVoiceConfig } from '../../utils/voiceSyncService';
+import { getDualVoiceConfig, previewVoiceAudio, stopVoiceAudio } from '../../utils/voiceSyncService';
 
 const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTriggered, currentVideoUrl }, ref) => {
   const [job, setJob] = useState(null);
@@ -79,129 +79,27 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
       const provider = activeVoice?.provider || job?.voiceProvider || 'gemini';
       const apiKey = provider === 'openai_tts' ? localStorage.getItem('openai_api_key') : localStorage.getItem('gemini_api_key');
 
-      // GỌI API TTS THẬT VỚI VOICE ĐƯỢC ĐỒNG BỘ
-      const res = await fetch('/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: item.text,
-          platform: provider.includes('openai') ? 'openai' : provider,
-          voiceId: activeVoice?.voiceId || activeVoice?.id,
-          apiKey
-        })
+      // GỌI API TTS THẬT HOẶC PHÁT QUA UNIFIED VOICE ENGINE
+      const charLen = (item.text || '').length || 30;
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('avalive:deduct_token', {
+          detail: {
+            amount: charLen,
+            reason: `ElevenLabs (${channel === 'idol' ? 'Idol' : 'Quản lý'}): "${(item.text || '').slice(0, 20)}..."`
+          }
+        }));
+      }
+
+      await previewVoiceAudio(activeVoice || { id: 'el_rachel', provider: 'elevenlabs', gender: 'Female' }, item.text, () => {
+        if (onActionTriggered) onActionTriggered({ type: 'LIPSYNC_ENDED' });
+        if (isPlaying) {
+          setCurrentIndex(prev => prev + 1);
+        }
       });
-
-      if (!res.ok) {
-        throw new Error('TTS API failed');
-      }
-      
-      const data = await res.json();
-      if (!data.audioBase64) throw new Error('No audio returned');
-
-      // Chuyển base64 thành Blob URL cho Audio
-      const isPcm = provider === 'gemini';
-      let audioUrl = '';
-      if (isPcm) {
-        const binaryStr = atob(data.audioBase64);
-        const len = binaryStr.length;
-        const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) bytes[i] = binaryStr.charCodeAt(i);
-        
-        const wavBuffer = new ArrayBuffer(44 + bytes.length);
-        const view = new DataView(wavBuffer);
-        const writeString = (offset, string) => { for(let i=0; i<string.length; i++) view.setUint8(offset+i, string.charCodeAt(i)); };
-        writeString(0, 'RIFF');
-        view.setUint32(4, 36 + bytes.length, true);
-        writeString(8, 'WAVE');
-        writeString(12, 'fmt ');
-        view.setUint32(16, 16, true);
-        view.setUint16(20, 1, true);
-        view.setUint16(22, 1, true);
-        view.setUint32(24, 24000, true);
-        view.setUint32(28, 24000 * 2, true);
-        view.setUint16(32, 2, true);
-        view.setUint16(34, 16, true);
-        writeString(36, 'data');
-        view.setUint32(40, bytes.length, true);
-        new Uint8Array(wavBuffer, 44).set(bytes);
-        
-        const blob = new Blob([wavBuffer], { type: 'audio/wav' });
-        audioUrl = URL.createObjectURL(blob);
-      } else {
-        const blob = await fetch(`data:audio/mp3;base64,${data.audioBase64}`).then(r => r.blob());
-        audioUrl = URL.createObjectURL(blob);
-      }
-
-      // --- GỌI API LIP-SYNC ĐỂ TẠO VIDEO NHÉP MIỆNG (Chỉ áp dụng khi là giọng Idol) ---
-      if (channel === 'idol' && currentVideoUrl && onActionTriggered) {
-        try {
-          const lipSyncRes = await fetch('/api/lip-sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              audioBase64: data.audioBase64,
-              videoUrl: currentVideoUrl,
-              platform: 'synclabs'
-            })
-          });
-          const lipSyncData = await lipSyncRes.json();
-          if (lipSyncData.success && lipSyncData.lipSyncVideoUrl) {
-            onActionTriggered({ type: 'LIPSYNC_READY', videoUrl: lipSyncData.lipSyncVideoUrl });
-          }
-        } catch (e) {
-          console.warn('LipSync API Error (falling back to audio only):', e);
-        }
-      }
-
-      const aud = getAudio();
-      if (aud) {
-        aud.src = audioUrl;
-        
-        // Trừ token tự động theo độ dài ký tự thực tế phát ElevenLabs
-        if (typeof window !== 'undefined') {
-          const charLen = (item.text || '').length || 30;
-          window.dispatchEvent(new CustomEvent('avalive:deduct_token', {
-            detail: {
-              amount: charLen,
-              reason: `ElevenLabs (${channel === 'idol' ? 'Idol' : 'Quản lý'}): "${(item.text || '').slice(0, 20)}..."`
-            }
-          }));
-        }
-
-        aud.onended = () => {
-          URL.revokeObjectURL(audioUrl);
-          if (onActionTriggered) onActionTriggered({ type: 'LIPSYNC_ENDED' });
-          if (isPlaying) {
-            setCurrentIndex(prev => prev + 1);
-          }
-        };
-        await aud.play().catch(e => console.warn('Audio play failed:', e));
-      }
-
     } catch (err) {
       console.error('Audio play error, falling back to Web Speech with synced voice settings:', err);
-      // Fallback Web Speech Synthesis với cấu hình giọng đồng bộ
-      if (typeof window !== 'undefined' && 'SpeechSynthesisUtterance' in window && 'speechSynthesis' in window) {
-        const channel = item.voiceChannel || (item.type === 'script' ? 'idol' : 'manager');
-        const activeVoice = channel === 'idol' ? voiceConfig.idolVoice : voiceConfig.managerVoice;
-        
-        const utterance = new SpeechSynthesisUtterance(item.text);
-        utterance.lang = 'vi-VN';
-        utterance.rate = activeVoice?.rate || (channel === 'manager' ? 1.08 : 1.0);
-        utterance.pitch = activeVoice?.pitch || (channel === 'manager' ? 0.95 : 1.05);
-
-        const voices = window.speechSynthesis.getVoices();
-        const matched = voices.find(v => 
-          (activeVoice?.gender === 'Female' && (v.name.includes('Female') || v.name.includes('Linh') || v.name.includes('Google Tiếng Việt') || v.name.includes('Zira'))) ||
-          (activeVoice?.gender === 'Male' && (v.name.includes('Male') || v.name.includes('David') || v.name.includes('Nam') || v.name.includes('Minh'))) ||
-          v.lang.includes('vi')
-        );
-        if (matched) utterance.voice = matched;
-
-        utterance.onend = () => {
-          if (isPlaying) setCurrentIndex(prev => prev + 1);
-        };
-        window.speechSynthesis.speak(utterance);
+      if (isPlaying) {
+        setCurrentIndex(prev => prev + 1);
       }
     }
   };
