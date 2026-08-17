@@ -350,6 +350,33 @@ class BanDoAudioEngine {
     }
   }
 
+  pauseCustomBgm() {
+    if (this.customBgmAudio) {
+      this.customBgmAudio.pause();
+    }
+    this.bgmPlaying = false;
+  }
+
+  seekCustomBgm(seconds) {
+    if (this.customBgmAudio && !isNaN(seconds)) {
+      this.customBgmAudio.currentTime = Math.max(0, Math.min(seconds, this.customBgmAudio.duration || 0));
+    }
+  }
+
+  getBgmCurrentTime() {
+    if (this.customBgmAudio) {
+      return this.customBgmAudio.currentTime || 0;
+    }
+    return 0;
+  }
+
+  getBgmDuration() {
+    if (this.customBgmAudio) {
+      return this.customBgmAudio.duration || 0;
+    }
+    return 0;
+  }
+
   stopCustomBgm() {
     if (this.customBgmAudio) {
       this.customBgmAudio.pause();

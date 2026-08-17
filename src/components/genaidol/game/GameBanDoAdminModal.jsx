@@ -45,6 +45,9 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
   const [uploadedSfxName, setUploadedSfxName] = useState(() => bandoAudio.customSfxName || '');
   const [isBgmPlaying, setIsBgmPlaying] = useState(() => bandoAudio.bgmPlaying);
   const [isSfxEnabled, setIsSfxEnabled] = useState(() => !bandoAudio.isSfxMuted);
+  const [bgmCurrentTime, setBgmCurrentTime] = useState(0);
+  const [bgmDuration, setBgmDuration] = useState(0);
+  const [activePlayingSfx, setActivePlayingSfx] = useState(null);
   const bgmFileInputRef = useRef(null);
   const sfxFileInputRef = useRef(null);
 
@@ -84,6 +87,15 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
   };
 
   const [isAutoTesting, setIsAutoTesting] = useState(() => bandoEngine.isAutoTesting);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIsBgmPlaying(bandoAudio.bgmPlaying);
+      setBgmCurrentTime(bandoAudio.getBgmCurrentTime());
+      setBgmDuration(bandoAudio.getBgmDuration());
+    }, 250);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const unsub = bandoEngine.subscribe((state, lastEvent) => {
@@ -285,24 +297,57 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
     });
   };
 
-  // Gán Giọng Đọc Cho Từng Vai Trò Cụ Thể (BLV Game / Nữ Idol / Nam Trợ Lý)
+  // Gán hoặc Bỏ Chọn Giọng Đọc Cho Từng Vai Trò Cụ Thể (BLV Game / Nữ Idol / Nam Trợ Lý)
   const handleAssignVoiceToRole = (voice, roleKey) => {
-    const updated = {
-      ...voiceConfig,
-      [roleKey]: {
-        ...voiceConfig[roleKey],
-        id: voice.id,
-        name: voice.name,
-        voiceId: voice.voiceId,
-        gender: voice.gender,
-        provider: 'elevenlabs'
-      }
-    };
-    if (roleKey === 'gameVoice') setSelectedGameVoiceId(voice.id);
+    const isCurrentlyAssigned = voiceConfig[roleKey]?.id === voice.id;
+    let updated;
+    if (isCurrentlyAssigned) {
+      // Bỏ chọn (Deselect / Unassign)
+      updated = {
+        ...voiceConfig,
+        [roleKey]: {
+          id: null,
+          name: 'Chưa chọn',
+          voiceId: null,
+          gender: null,
+          provider: 'elevenlabs'
+        }
+      };
+      if (roleKey === 'gameVoice') setSelectedGameVoiceId(null);
+    } else {
+      // Gán vai trò mới
+      updated = {
+        ...voiceConfig,
+        [roleKey]: {
+          ...voiceConfig[roleKey],
+          id: voice.id,
+          name: voice.name,
+          voiceId: voice.voiceId,
+          gender: voice.gender,
+          provider: 'elevenlabs'
+        }
+      };
+      if (roleKey === 'gameVoice') setSelectedGameVoiceId(voice.id);
+    }
     setVoiceConfig(updated);
     saveDualVoiceConfig(updated);
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 2000);
+  };
+
+  // Helper format audio time mm:ss
+  const formatAudioTime = (seconds) => {
+    if (isNaN(seconds) || seconds < 0) return '00:00';
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  // Kéo thanh trượt tiến trình phát nhạc (Seekbar BGM)
+  const handleSeekBgm = (e) => {
+    const val = parseFloat(e.target.value);
+    setBgmCurrentTime(val);
+    bandoAudio.seekCustomBgm(val);
   };
 
   // Lọc danh sách 200 quốc gia
@@ -1253,24 +1298,24 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                   <Music size={18} className="text-emerald-400" /> Tải Lên Âm Nhạc BGM & Kho Hiệu Ứng SFX Kịch Tính
                 </h3>
                 <p className="text-xs text-gray-400">
-                  Tự tải file nhạc nền MP3 từ máy tính hoặc sử dụng kho nhạc hiệu ứng chiến đấu Web Audio siêu thực
+                  Tự tải file nhạc nền MP3 từ máy tính, kéo thanh tiến trình nghe đến đâu, tùy chỉnh âm lượng và bật/tắt toàn bộ hiệu ứng SFX chiến đấu
                 </p>
               </div>
 
-              {/* CUSTOM AUDIO UPLOAD SECTION */}
+              {/* CUSTOM AUDIO UPLOAD & BGM PLAYER SECTION */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 
-                {/* Custom BGM Upload */}
-                <div className="p-5 bg-gradient-to-tr from-emerald-950/40 to-black/60 border border-emerald-500/40 rounded-2xl space-y-3">
+                {/* Custom BGM Upload & Seekbar Player */}
+                <div className="p-5 bg-gradient-to-tr from-emerald-950/40 to-black/60 border border-emerald-500/40 rounded-2xl space-y-3 shadow-xl">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-black text-emerald-300 uppercase flex items-center gap-1.5">
-                      <Upload size={15} /> Tải Nhạc Nền (BGM) Tùy Chỉnh
+                      <Upload size={15} /> Nhạc Nền (BGM) & Thanh Tiến Trình
                     </span>
                     <span className="text-[10px] text-gray-400">Hỗ trợ MP3 / WAV</span>
                   </div>
 
                   <p className="text-[11px] text-gray-300">
-                    Tải bài hát nền của riêng bạn để phát lặp lại trong suốt buổi livestream cắm cờ.
+                    Phát bài hát nền tùy chỉnh hoặc nhạc tổng hợp. Kéo thanh trượt để nghe đoạn bạn muốn.
                   </p>
 
                   <input
@@ -1281,10 +1326,11 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                     className="hidden"
                   />
 
+                  {/* Playback & Upload Buttons */}
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       onClick={() => bgmFileInputRef.current?.click()}
-                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 transition-all"
+                      className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 transition-all"
                     >
                       <Upload size={14} /> Chọn File Nhạc MP3
                     </button>
@@ -1301,13 +1347,37 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                       }}
                       className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all shadow-md ${
                         isBgmPlaying 
-                          ? 'bg-amber-600 hover:bg-amber-500 text-white ring-2 ring-amber-400/50 shadow-amber-500/30' 
+                          ? 'bg-amber-600 hover:bg-amber-500 text-white ring-2 ring-amber-400/50 shadow-amber-500/30 animate-pulse' 
                           : 'bg-emerald-600 hover:bg-emerald-500 text-white ring-2 ring-emerald-400/30 shadow-emerald-500/20'
                       }`}
                     >
-                      {isBgmPlaying ? <Pause size={15} className="animate-pulse" /> : <Play size={15} />}
-                      <span>{isBgmPlaying ? '⏸ Tắt Nhạc Nền' : '▶ Phát Nhạc Nền'}</span>
+                      {isBgmPlaying ? <Pause size={15} /> : <Play size={15} />}
+                      <span>{isBgmPlaying ? '⏸ Tạm Dừng BGM' : '▶ Phát Nhạc Nền'}</span>
                     </button>
+                  </div>
+
+                  {/* BGM Seekbar (Kéo nghe đến đâu) */}
+                  <div className="p-3 bg-black/50 border border-emerald-500/30 rounded-xl space-y-1.5">
+                    <div className="flex justify-between items-center text-[11px] font-mono text-emerald-300">
+                      <span className="flex items-center gap-1 font-bold">
+                        <Music2 size={12} className={isBgmPlaying ? "animate-spin text-emerald-400" : "text-gray-400"} />
+                        {uploadedBgmName || (isBgmPlaying ? 'Nhạc Nền Sử Thi Hào Khí Đông A' : 'Chưa phát nhạc')}
+                      </span>
+                      <span className="font-bold text-amber-300">
+                        {formatAudioTime(bgmCurrentTime)} / {formatAudioTime(bgmDuration)}
+                      </span>
+                    </div>
+
+                    <input
+                      type="range"
+                      min="0"
+                      max={bgmDuration > 0 ? bgmDuration : 100}
+                      step="0.5"
+                      value={bgmCurrentTime}
+                      onChange={handleSeekBgm}
+                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-emerald-400"
+                      title="Kéo để tua đến đoạn nhạc bạn muốn nghe"
+                    />
                   </div>
 
                   {uploadedBgmName && (
@@ -1333,7 +1403,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                 </div>
 
                 {/* Custom SFX Upload & SFX Toggle Switch */}
-                <div className="p-5 bg-gradient-to-tr from-amber-950/40 to-black/60 border border-amber-500/40 rounded-2xl space-y-3">
+                <div className="p-5 bg-gradient-to-tr from-amber-950/40 to-black/60 border border-amber-500/40 rounded-2xl space-y-3 shadow-xl">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-black text-yellow-300 uppercase flex items-center gap-1.5">
                       <Upload size={15} /> Hiệu Ứng Âm Thanh (SFX)
@@ -1342,7 +1412,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                   </div>
 
                   <p className="text-[11px] text-gray-300">
-                    Bật/tắt hiệu ứng tiếng hò reo, tiếng cắm cờ, tiếng trống trận hoặc tải hiệu ứng âm thanh tùy chỉnh.
+                    Bật/tắt toàn bộ hiệu ứng âm thanh tiếng hò reo, tiếng cắm cờ, tiếng trống trận hoặc tải hiệu ứng âm thanh riêng.
                   </p>
 
                   <input
@@ -1409,84 +1479,172 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
 
               </div>
 
-              {/* BẢNG KHO SFX KỊCH TÍNH MỚI */}
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
+              {/* BẢNG KHO SFX KỊCH TÍNH MỚI VỚI NÚT NGHE THỬ TỪNG MÓN */}
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4 shadow-xl">
                 <div className="flex justify-between items-center">
                   <div className="text-xs font-black text-white uppercase flex items-center gap-2">
                     <Volume2 size={16} className="text-yellow-400" /> Thư Viện Hiệu Ứng Âm Thanh Kịch Tính (SFX):
                   </div>
-                  <span className="text-[11px] text-gray-400">Bấm nút để nghe thử tức thì</span>
+                  <span className="text-[11px] text-gray-400">Bấm từng nút để nghe thử hiệu ứng tức thì</span>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   <button
-                    onClick={() => bandoAudio.playWarHorn()}
-                    className="p-3 bg-red-950/60 hover:bg-red-900 border border-red-500/30 text-white rounded-xl text-xs font-bold text-left transition-all"
+                    onClick={() => {
+                      setActivePlayingSfx('horn');
+                      bandoAudio.playWarHorn();
+                      setTimeout(() => setActivePlayingSfx(null), 1200);
+                    }}
+                    className={`p-3 border rounded-xl text-xs font-bold text-left transition-all ${
+                      activePlayingSfx === 'horn'
+                        ? 'bg-red-600 text-white border-yellow-300 ring-2 ring-red-400 animate-pulse shadow-lg'
+                        : 'bg-red-950/60 hover:bg-red-900 border-red-500/30 text-white'
+                    }`}
                   >
-                    <div className="text-yellow-400 text-sm mb-1">🎺 Kèn Xung Trận</div>
+                    <div className="text-yellow-400 text-sm mb-1 flex items-center justify-between">
+                      <span>🎺 Kèn Xung Trận</span>
+                      {activePlayingSfx === 'horn' ? <Volume2 size={13} className="text-yellow-300" /> : <Play size={11} className="text-gray-400" />}
+                    </div>
                     <div className="text-[10px] text-gray-300">Hào hùng xung phong</div>
                   </button>
 
                   <button
-                    onClick={() => bandoAudio.playWarDrums(4)}
-                    className="p-3 bg-amber-950/60 hover:bg-amber-900 border border-amber-500/30 text-white rounded-xl text-xs font-bold text-left transition-all"
+                    onClick={() => {
+                      setActivePlayingSfx('drums');
+                      bandoAudio.playWarDrums(4);
+                      setTimeout(() => setActivePlayingSfx(null), 1500);
+                    }}
+                    className={`p-3 border rounded-xl text-xs font-bold text-left transition-all ${
+                      activePlayingSfx === 'drums'
+                        ? 'bg-amber-600 text-white border-yellow-300 ring-2 ring-amber-400 animate-pulse shadow-lg'
+                        : 'bg-amber-950/60 hover:bg-amber-900 border-amber-500/30 text-white'
+                    }`}
                   >
-                    <div className="text-yellow-400 text-sm mb-1">🥁 Trống Trận</div>
+                    <div className="text-yellow-400 text-sm mb-1 flex items-center justify-between">
+                      <span>🥁 Trống Trận</span>
+                      {activePlayingSfx === 'drums' ? <Volume2 size={13} className="text-yellow-300" /> : <Play size={11} className="text-gray-400" />}
+                    </div>
                     <div className="text-[10px] text-gray-300">Dồn dập gay cấn</div>
                   </button>
 
                   <button
-                    onClick={() => bandoAudio.playFireworks()}
-                    className="p-3 bg-purple-950/60 hover:bg-purple-900 border border-purple-500/30 text-white rounded-xl text-xs font-bold text-left transition-all"
+                    onClick={() => {
+                      setActivePlayingSfx('fireworks');
+                      bandoAudio.playFireworks();
+                      setTimeout(() => setActivePlayingSfx(null), 1400);
+                    }}
+                    className={`p-3 border rounded-xl text-xs font-bold text-left transition-all ${
+                      activePlayingSfx === 'fireworks'
+                        ? 'bg-purple-600 text-white border-yellow-300 ring-2 ring-purple-400 animate-pulse shadow-lg'
+                        : 'bg-purple-950/60 hover:bg-purple-900 border-purple-500/30 text-white'
+                    }`}
                   >
-                    <div className="text-purple-300 text-sm mb-1">🎆 Pháo Hoa Nổ</div>
+                    <div className="text-purple-300 text-sm mb-1 flex items-center justify-between">
+                      <span>🎆 Pháo Hoa Nổ</span>
+                      {activePlayingSfx === 'fireworks' ? <Volume2 size={13} className="text-yellow-300" /> : <Play size={11} className="text-gray-400" />}
+                    </div>
                     <div className="text-[10px] text-gray-300">Tiếng nổ vang rực rỡ</div>
                   </button>
 
                   <button
-                    onClick={() => bandoAudio.playCrowdCheer()}
-                    className="p-3 bg-blue-950/60 hover:bg-blue-900 border border-blue-500/30 text-white rounded-xl text-xs font-bold text-left transition-all"
+                    onClick={() => {
+                      setActivePlayingSfx('cheer');
+                      bandoAudio.playCrowdCheer();
+                      setTimeout(() => setActivePlayingSfx(null), 1600);
+                    }}
+                    className={`p-3 border rounded-xl text-xs font-bold text-left transition-all ${
+                      activePlayingSfx === 'cheer'
+                        ? 'bg-blue-600 text-white border-yellow-300 ring-2 ring-blue-400 animate-pulse shadow-lg'
+                        : 'bg-blue-950/60 hover:bg-blue-900 border-blue-500/30 text-white'
+                    }`}
                   >
-                    <div className="text-blue-300 text-sm mb-1">👏 Khán Giả Hò Reo</div>
+                    <div className="text-blue-300 text-sm mb-1 flex items-center justify-between">
+                      <span>👏 Khán Giả Hò Reo</span>
+                      {activePlayingSfx === 'cheer' ? <Volume2 size={13} className="text-yellow-300" /> : <Play size={11} className="text-gray-400" />}
+                    </div>
                     <div className="text-[10px] text-gray-300">Cổ vũ rợp trời</div>
                   </button>
 
                   <button
-                    onClick={() => bandoAudio.playThunderStrike()}
-                    className="p-3 bg-indigo-950/60 hover:bg-indigo-900 border border-indigo-500/30 text-white rounded-xl text-xs font-bold text-left transition-all"
+                    onClick={() => {
+                      setActivePlayingSfx('thunder');
+                      bandoAudio.playThunderStrike();
+                      setTimeout(() => setActivePlayingSfx(null), 1200);
+                    }}
+                    className={`p-3 border rounded-xl text-xs font-bold text-left transition-all ${
+                      activePlayingSfx === 'thunder'
+                        ? 'bg-indigo-600 text-white border-yellow-300 ring-2 ring-indigo-400 animate-pulse shadow-lg'
+                        : 'bg-indigo-950/60 hover:bg-indigo-900 border-indigo-500/30 text-white'
+                    }`}
                   >
-                    <div className="text-indigo-300 text-sm mb-1">⚡ Sét Đánh Thần Thoại</div>
+                    <div className="text-indigo-300 text-sm mb-1 flex items-center justify-between">
+                      <span>⚡ Sét Đánh Thần Thoại</span>
+                      {activePlayingSfx === 'thunder' ? <Volume2 size={13} className="text-yellow-300" /> : <Play size={11} className="text-gray-400" />}
+                    </div>
                     <div className="text-[10px] text-gray-300">Sấm sét giáng lâm</div>
                   </button>
 
                   <button
-                    onClick={() => bandoAudio.playGoldCoins(8)}
-                    className="p-3 bg-yellow-950/60 hover:bg-yellow-900 border border-yellow-500/30 text-white rounded-xl text-xs font-bold text-left transition-all"
+                    onClick={() => {
+                      setActivePlayingSfx('coins');
+                      bandoAudio.playGoldCoins(8);
+                      setTimeout(() => setActivePlayingSfx(null), 1200);
+                    }}
+                    className={`p-3 border rounded-xl text-xs font-bold text-left transition-all ${
+                      activePlayingSfx === 'coins'
+                        ? 'bg-yellow-600 text-white border-yellow-300 ring-2 ring-yellow-400 animate-pulse shadow-lg'
+                        : 'bg-yellow-950/60 hover:bg-yellow-900 border-yellow-500/30 text-white'
+                    }`}
                   >
-                    <div className="text-yellow-300 text-sm mb-1">💰 Mưa Tiền Vàng</div>
+                    <div className="text-yellow-300 text-sm mb-1 flex items-center justify-between">
+                      <span>💰 Mưa Tiền Vàng</span>
+                      {activePlayingSfx === 'coins' ? <Volume2 size={13} className="text-yellow-300" /> : <Play size={11} className="text-gray-400" />}
+                    </div>
                     <div className="text-[10px] text-gray-300">Xu rơi leng keng</div>
                   </button>
 
                   <button
-                    onClick={() => bandoAudio.playLevelUp()}
-                    className="p-3 bg-teal-950/60 hover:bg-teal-900 border border-teal-500/30 text-white rounded-xl text-xs font-bold text-left transition-all"
+                    onClick={() => {
+                      setActivePlayingSfx('levelup');
+                      bandoAudio.playLevelUp();
+                      setTimeout(() => setActivePlayingSfx(null), 1200);
+                    }}
+                    className={`p-3 border rounded-xl text-xs font-bold text-left transition-all ${
+                      activePlayingSfx === 'levelup'
+                        ? 'bg-teal-600 text-white border-yellow-300 ring-2 ring-teal-400 animate-pulse shadow-lg'
+                        : 'bg-teal-950/60 hover:bg-teal-900 border-teal-500/30 text-white'
+                    }`}
                   >
-                    <div className="text-teal-300 text-sm mb-1">🆙 Thăng Cấp Đột Phá</div>
+                    <div className="text-teal-300 text-sm mb-1 flex items-center justify-between">
+                      <span>🆙 Thăng Cấp Đột Phá</span>
+                      {activePlayingSfx === 'levelup' ? <Volume2 size={13} className="text-yellow-300" /> : <Play size={11} className="text-gray-400" />}
+                    </div>
                     <div className="text-[10px] text-gray-300">Lên cấp danh vọng</div>
                   </button>
 
                   <button
-                    onClick={() => bandoAudio.playVictory()}
-                    className="p-3 bg-gradient-to-r from-red-900 to-amber-900 border border-yellow-400 text-white rounded-xl text-xs font-black text-left transition-all"
+                    onClick={() => {
+                      setActivePlayingSfx('victory');
+                      bandoAudio.playVictory();
+                      setTimeout(() => setActivePlayingSfx(null), 2500);
+                    }}
+                    className={`p-3 border rounded-xl text-xs font-black text-left transition-all ${
+                      activePlayingSfx === 'victory'
+                        ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white border-yellow-200 ring-2 ring-yellow-400 animate-pulse shadow-lg'
+                        : 'bg-gradient-to-r from-red-900 to-amber-900 border-yellow-400 text-white'
+                    }`}
                   >
-                    <div className="text-yellow-300 text-sm mb-1">🏆 Đại Khải Hoàn Ca</div>
+                    <div className="text-yellow-300 text-sm mb-1 flex items-center justify-between">
+                      <span>🏆 Đại Khải Hoàn Ca</span>
+                      {activePlayingSfx === 'victory' ? <Volume2 size={13} className="text-yellow-300" /> : <Play size={11} className="text-gray-400" />}
+                    </div>
                     <div className="text-[10px] text-yellow-100">Toàn thắng bản đồ</div>
                   </button>
                 </div>
               </div>
 
               {/* Volume Sliders & Auto Loop Music */}
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4 shadow-xl">
                 {/* BGM 24/7 Loop Setting Toggle */}
                 <div className="flex items-center justify-between p-3 bg-purple-950/40 border border-purple-500/30 rounded-xl">
                   <div>

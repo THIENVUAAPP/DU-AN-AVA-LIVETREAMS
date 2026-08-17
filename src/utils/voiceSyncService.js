@@ -515,6 +515,28 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
   if (typeof window.speechSynthesis !== 'undefined') {
     try {
       window.speechSynthesis.cancel(); // Reset hàng đợi
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+
+      // Phát âm thanh báo hiệu Web Audio (Audio cue) để người dùng lập tức cảm nhận âm thanh
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          const ctx = new AudioCtx();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = voice.gender === 'Female' ? 'triangle' : 'sine';
+          osc.frequency.setValueAtTime(voice.gender === 'Female' ? 587.33 : 329.63, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(voice.gender === 'Female' ? 880 : 440, ctx.currentTime + 0.15);
+          gain.gain.setValueAtTime(0.2, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.22);
+        }
+      } catch (e) {}
       
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
       activeUtterance = utterance;
@@ -547,8 +569,8 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
             utterance.voice = viVoice;
           } else {
             const genderMatch = voices.find(v => 
-              isFemale ? (v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Linh'))
-                       : (v.name.includes('Male') || v.name.includes('David') || v.name.includes('Nam'))
+              isFemale ? (v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Linh') || v.name.includes('Samantha'))
+                       : (v.name.includes('Male') || v.name.includes('David') || v.name.includes('Nam') || v.name.includes('Alex'))
             );
             if (genderMatch) utterance.voice = genderMatch;
           }
@@ -567,7 +589,7 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
           if (activeUtterance) {
             window.speechSynthesis.speak(utterance);
           }
-        }, 100);
+        }, 120);
       }
       return;
     } catch (synthErr) {

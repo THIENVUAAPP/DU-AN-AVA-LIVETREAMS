@@ -17,21 +17,50 @@ const SIMULATED_USERS = [
 ];
 
 const DEFAULT_GIFTS = [
-  { id: 1, name: 'Hoa Hồng / Tim', icon: '🌹', coins: 1, tier: 'Tân Binh', buff: '+10 HP Xung Trận', skill: 'Vào Trận' },
-  { id: 2, name: 'Thả Tim / Bắn Tim', icon: '🧡', coins: 1, tier: 'Tân Binh', buff: '+10 HP Tăng Tốc', skill: 'Bắn Tim' },
-  { id: 3, name: 'Bánh Sinh Nhật', icon: '🍰', coins: 1, tier: 'Tân Binh', buff: '+15 HP Hồi Máu', skill: 'Hồi Phục' },
-  { id: 4, name: 'Nước Hoa / Mũ Cối', icon: '🛡️', coins: 50, tier: 'Thiết Giáp Hiệp', buff: '+150 HP + Giáp Bạc', skill: 'Kiếm Thép' },
-  { id: 5, name: 'Vương Miện / Cánh', icon: '👑', coins: 99, tier: 'Kim Khải Thần Tướng', buff: '+300 HP + Cánh Vàng', skill: 'Thái Cực Trận' },
-  { id: 6, name: 'Trống Đồng / Saxophone', icon: '🥁', coins: 249, tier: 'Âm Ba Thần Khí', buff: '+800 HP + Sóng Âm', skill: 'Bùng Nổ' },
-  { id: 7, name: 'Xe Thể Thao / Sét', icon: '⚡', coins: 500, tier: 'Chiến Thần Vạn Kiếm', buff: '+1500 HP + Thần Binh', skill: 'Vạn Kiếm Quy Tông' },
-  { id: 8, name: 'Xe Tải Kem / Gấu Nhịp Điệu', icon: '🧸', coins: 2999, tier: 'Thần Thú Nhịp Điệu', buff: '+5000 HP + Hộ Thể', skill: 'Gấu Cuồng Nộ' },
-  { id: 9, name: 'Rust Tái Sinh / Về Đích', icon: '🤖', coins: 6000, tier: 'Cơ Giáp Tối Thượng', buff: '+12000 HP + Tia Lazer', skill: 'Laze Hủy Diệt' },
-  { id: 10, name: 'Mưa Sao Băng Kìa!', icon: '🌠', coins: 15000, tier: 'Thiên Thạch Tinh Hà', buff: '+30000 HP + Mưa Tinh Cầu', skill: 'Mưa Sao Băng' },
-  { id: 11, name: 'Công Viên Giải Trí', icon: '🎡', coins: 17000, tier: 'Ảo Ảnh Kỳ Quan', buff: '+35000 HP + Kết Giới', skill: 'Vòng Xoay Thần' },
-  { id: 12, name: 'Phoenix Phượng Hoàng', icon: '🦅', coins: 25999, tier: 'Bất Tử Phượng Hoàng', buff: '+50000 HP + Bão Lửa', skill: 'Hỏa Phụng Liêu Nguyên' },
-  { id: 13, name: 'Ngọn Lửa Rồng Thiêng', icon: '🐲', coins: 26999, tier: 'Thánh Long Tối Thượng', buff: '+60000 HP + Hơi Thở Rồng', skill: 'Long Thần Nộ' },
-  { id: 14, name: 'Leon và Sư Tử', icon: '🦁👑', coins: 34000, tier: 'Chí Tôn Vạn Thú', buff: '+80000 HP + Vương Giả', skill: 'Sư Tử Hống' },
-  { id: 15, name: 'TikTok Stars / Universe', icon: '✨🪐', coins: 39999, tier: 'Chí Tôn Thiên Vũ Trụ', buff: '+100000 HP + Toàn Năng', skill: 'Vũ Trụ Thần Chưởng' }
+  // 1. Phổ biến (1 - 10 xu)
+  { id: 'flag_vn', name: 'Cờ Tổ Quốc 🇻🇳', icon: '🇻🇳', coins: 1, tier: 'Tân Binh', buff: '+10 HP Xung Trận', skill: 'Vào Trận' },
+  { id: 'rose', name: 'Hoa Hồng 🌹', icon: '🌹', coins: 1, tier: 'Tân Binh', buff: '+10 HP Tăng Tốc', skill: 'Bắn Tim' },
+  { id: 'heart_tap', name: 'Thả Tim 🧡', icon: '🧡', coins: 1, tier: 'Tân Binh', buff: '+10 HP Tiếp Lực', skill: 'Thả Tim' },
+  { id: 'very_good', name: 'Rất Tốt 👍', icon: '👍', coins: 1, tier: 'Tân Binh', buff: '+10 HP Khích Lệ', skill: 'Khích Lệ' },
+  { id: 'birthday_cake', name: 'Bánh Sinh Nhật 🍰', icon: '🍰', coins: 1, tier: 'Tân Binh', buff: '+15 HP Hồi Phục', skill: 'Hồi Máu' },
+  { id: 'bing_chilling', name: 'Bing Chilling 🍦', icon: '🍦', coins: 5, tier: 'Tập Sự', buff: '+25 HP Làm Chậm', skill: 'Đóng Băng' },
+  { id: 'peach', name: 'Quả Đào 🍑', icon: '🍑', coins: 5, tier: 'Tập Sự', buff: '+25 HP Sinh Lực', skill: 'Tăng Lực' },
+  { id: 'spin_ball', name: 'Trái Bóng Xoáy ⚽', icon: '⚽', coins: 5, tier: 'Tập Sự', buff: '+30 HP Tốc Biến', skill: 'Xoáy Gió' },
+  { id: 'helmet', name: 'Mũ Cối Yêu Nước 🪖', icon: '🪖', coins: 10, tier: 'Dũng Sĩ', buff: '+50 HP Khiên Thép', skill: 'Hộ Thể' },
+  { id: 'flower_bouquet', name: 'Bó Hoa Tươi 💐', icon: '💐', coins: 10, tier: 'Dũng Sĩ', buff: '+50 HP Cổ Vũ', skill: 'Sức Mạnh' },
+
+  // 2. Hiếm (50 - 499 xu)
+  { id: 'perfume', name: 'Nước Hoa 🌸', icon: '🌸', coins: 50, tier: 'Hiệp Khách', buff: '+150 HP + Giáp Bạc', skill: 'Hương Thơm' },
+  { id: 'crown', name: 'Vương Miện 👑', icon: '👑', coins: 99, tier: 'Hoàng Gia', buff: '+300 HP + Cánh Vàng', skill: 'Thái Cực Trận' },
+  { id: 'tank_390', name: 'Xe Tăng 390 🎖️', icon: '🎖️', coins: 99, tier: 'Chiến Binh Thép', buff: '+350 HP Giáp Sắt', skill: 'Pháo Kích' },
+  { id: 'corgi', name: 'Corgi Đáng Yêu 🐶', icon: '🐶', coins: 100, tier: 'Linh Thú', buff: '+400 HP Linh Hoạt', skill: 'Corgi Nhảy' },
+  { id: 'boom_drum', name: 'Trống Bùng Nổ 🥁', icon: '🥁', coins: 249, tier: 'Âm Ba Thần Khí', buff: '+800 HP + Sóng Âm', skill: 'Sóng Thần' },
+  { id: 'firework_indep', name: 'Pháo Hoa Độc Lập 🎆', icon: '🎆', coins: 299, tier: 'Hào Khí', buff: '+1000 HP Bắn Pháo', skill: 'Pháo Hoa Rực Rỡ' },
+  { id: 'lead_singer_bear', name: 'Gấu Hát Chính 🐻', icon: '🐻', coins: 399, tier: 'Ca Vương', buff: '+1200 HP Hát Vang', skill: 'Tiếng Hát Thần' },
+  { id: 'cat_trumpet', name: 'Kèn Trumpet Mèo 🎺', icon: '🎺', coins: 449, tier: 'Nhạc Sĩ', buff: '+1400 HP Kèn Xung Trận', skill: 'Kèn Lệnh' },
+
+  // 3. Sử thi (500 - 2,999 xu)
+  { id: 'dong_son_drum', name: 'Trống Đồng Đông Sơn 🏛️', icon: '🏛️', coins: 999, tier: 'Bảo Vật Quốc Gia', buff: '+3000 HP Trận Đồ', skill: 'Đông Sơn Nộ' },
+  { id: 'racetrack_launch', name: 'Ra Mắt Đường Đua 🏎️', icon: '🏎️', coins: 1500, tier: 'Siêu Tốc Độ', buff: '+4500 HP Tăng Tốc', skill: 'Bão Táp Xa Lộ' },
+  { id: 'truong_sa_landmark', name: 'Cột Mốc Trường Sa ⚓', icon: '⚓', coins: 1999, tier: 'Chủ Quyền Thiêng Liêng', buff: '+6000 HP Biển Đảo', skill: 'Sóng Thần Hải Quân' },
+  { id: 'rocky_punch', name: 'Cú Đấm Của Rocky 🥊', icon: '🥊', coins: 1999, tier: 'Võ Thần', buff: '+6500 HP Trực Diện', skill: 'Thiết Quyền' },
+  { id: 'motorcycle', name: 'Xe Máy Siêu Phân Khối 🏍️', icon: '🏍️', coins: 2988, tier: 'Phi Đội Tốc Độ', buff: '+9000 HP Đột Kích', skill: 'Phi Mã Trận' },
+  { id: 'rhythm_bear', name: 'Gấu Nhịp Điệu 🧸', icon: '🧸', coins: 2999, tier: 'Thần Thú Nhịp Điệu', buff: '+10000 HP Hộ Thể', skill: 'Gấu Cuồng Nộ' },
+
+  // 4. Huyền thoại (3,000 - 15,999 xu)
+  { id: 'private_jet', name: 'Chuyên Cơ Hoàng Gia ✈️', icon: '✈️', coins: 4888, tier: 'Phi Thuyền VIP', buff: '+15000 HP Không Kích', skill: 'Oanh Tạc' },
+  { id: 'golden_dragon', name: 'Rồng Vàng Thăng Long 🐉', icon: '🐉', coins: 5000, tier: 'Kim Long Thăng Thiên', buff: '+18000 HP Long Uy', skill: 'Long Trảo Thủ' },
+  { id: 'rust_reborn', name: 'Rust Tái Sinh 🤖', icon: '🤖', coins: 6000, tier: 'Cơ Giáp Tối Thượng', buff: '+22000 HP + Tia Lazer', skill: 'Laze Hủy Diệt' },
+  { id: 'meteor_shower', name: 'Mưa Sao Băng Kìa! 🌠', icon: '🌠', coins: 15000, tier: 'Thiên Thạch Tinh Hà', buff: '+45000 HP + Mưa Sao', skill: 'Mưa Sao Băng' },
+
+  // 5. Thần thoại & Tuyệt phẩm (17,000 - 44,999 xu)
+  { id: 'amusement_park', name: 'Công Viên Giải Trí 🎡', icon: '🎡', coins: 17000, tier: 'Ảo Ảnh Kỳ Quan', buff: '+55000 HP Kết Giới', skill: 'Vòng Xoay Thần' },
+  { id: 'tiktok_shuttle', name: 'Tàu Con Thoi TikTok 🚀', icon: '🚀', coins: 20000, tier: 'Du Hành Vũ Trụ', buff: '+65000 HP Đột Phá Không Gian', skill: 'Phi Thuyền Tối Cao' },
+  { id: 'phoenix', name: 'Phoenix Phượng Hoàng 🦅', icon: '🦅', coins: 25999, tier: 'Bất Tử Phượng Hoàng', buff: '+80000 HP + Bão Lửa', skill: 'Hỏa Phụng Liêu Nguyên' },
+  { id: 'holy_dragon_flame', name: 'Ngọn Lửa Rồng Thiêng 🐲', icon: '🐲', coins: 26999, tier: 'Thánh Long Tối Thượng', buff: '+90000 HP + Hơi Thở Rồng', skill: 'Long Thần Nộ' },
+  { id: 'leon_and_lion', name: 'Leon và Sư Tử 👑🦁', icon: '👑🦁', coins: 34000, tier: 'Chí Tôn Vạn Thú', buff: '+110000 HP Vương Giả', skill: 'Sư Tử Hống' },
+  { id: 'tiktok_stars', name: 'TikTok Stars ✨💫', icon: '✨💫', coins: 39999, tier: 'Chí Tôn Thiên Hà', buff: '+130000 HP Ánh Sáng Tinh Tú', skill: 'Vũ Trụ Vạn Năng' },
+  { id: 'tiktok_universe', name: 'TikTok Universe 🪐🌌', icon: '🪐🌌', coins: 44999, tier: 'Chí Tôn Vạn Giới', buff: '+150000 HP + Toàn Năng', skill: 'Vũ Trụ Thần Chưởng' }
 ];
 
 export default function GameChienDauAdminModal({ 
@@ -135,9 +164,10 @@ export default function GameChienDauAdminModal({
     if (saved) {
       try { 
         const parsed = JSON.parse(saved);
+        const gifts = (parsed.gifts && Array.isArray(parsed.gifts) && parsed.gifts.length >= 25) ? parsed.gifts : DEFAULT_GIFTS;
         return {
           ...parsed,
-          gifts: parsed.gifts || DEFAULT_GIFTS,
+          gifts,
           showGiftHud: parsed.showGiftHud !== undefined ? parsed.showGiftHud : true,
           tiktokUsername: parsed.tiktokUsername || '',
           bgmTrack: parsed.bgmTrack || 'epic_synth',
@@ -186,16 +216,29 @@ export default function GameChienDauAdminModal({
       if (saved) {
         try { 
           const parsed = JSON.parse(saved);
+          const gifts = (parsed.gifts && Array.isArray(parsed.gifts) && parsed.gifts.length >= 25) ? parsed.gifts : DEFAULT_GIFTS;
           setConfig(prev => ({
             ...prev,
             ...parsed,
-            gifts: parsed.gifts || DEFAULT_GIFTS,
+            gifts,
             showGiftHud: parsed.showGiftHud !== undefined ? parsed.showGiftHud : true
           }));
         } catch (e) {}
       }
     }
   }, [isOpen]);
+
+  const handleResetDefaultGifts = () => {
+    if (window.confirm('Bạn có chắc muốn khôi phục lại toàn bộ danh mục 35 món quà TikTok & cấp bậc trang bị chuẩn không?')) {
+      const updated = { ...config, gifts: DEFAULT_GIFTS };
+      setConfig(updated);
+      localStorage.setItem('GAME_BATTLE_CONFIG', JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent('GAME_BATTLE_CONFIG_UPDATE', { detail: updated }));
+      if (onApplyConfig) onApplyConfig(updated);
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 2000);
+    }
+  };
 
   // Clean up auto simulation timer when unmounting
   useEffect(() => {
@@ -1076,16 +1119,28 @@ export default function GameChienDauAdminModal({
                   </div>
 
                   <div className="p-3.5 bg-purple-950/20 border border-purple-500/30 rounded-xl space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-bold text-purple-300 uppercase flex items-center gap-1.5">
-                        <Gift size={13} /> Danh Sách Cấp Bậc Quà & Trang Bị Nhân Vật
-                      </h4>
-                      <button
-                        onClick={addGiftItem}
-                        className="px-2 py-1 rounded bg-purple-600 hover:bg-purple-500 text-white text-[10px] font-bold flex items-center gap-1 shadow"
-                      >
-                        <Plus size={12} /> Thêm Quà
-                      </button>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <h4 className="text-xs font-bold text-purple-300 uppercase flex items-center gap-1.5">
+                          <Gift size={13} /> Danh Sách Cấp Bậc Quà & Trang Bị TikTok ({config.gifts?.length || DEFAULT_GIFTS.length} món)
+                        </h4>
+                        <p className="text-[10px] text-gray-400">Đồng bộ hoàn toàn với Game Bản Đồ Cắm Cờ và Kho Quà TikTok Live</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handleResetDefaultGifts}
+                          className="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[10px] font-bold flex items-center gap-1 shadow transition-all"
+                          title="Khôi phục lại toàn bộ danh mục quà 35 món TikTok chuẩn"
+                        >
+                          <RotateCcw size={11} /> Khôi Phục Quà Chuẩn TikTok
+                        </button>
+                        <button
+                          onClick={addGiftItem}
+                          className="px-2.5 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-[10px] font-bold flex items-center gap-1 shadow transition-all"
+                        >
+                          <Plus size={12} /> Thêm Quà Mới
+                        </button>
+                      </div>
                     </div>
 
                     <div className="space-y-2">
