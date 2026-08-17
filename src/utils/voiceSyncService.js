@@ -784,7 +784,7 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
     }
   }
 
-  // 2. TỔNG HỢP GIỌNG ĐỌC TỰ NHIÊN WEB SPEECH API (Không có tiếng bíp, phát âm chuẩn tự nhiên 100%)
+  // 2. TỔNG HỢP GIỌNG ĐỌC TỰ NHIÊN WEB SPEECH API (Phát âm chuẩn tự nhiên 100%, không bị hủy tiếng)
   if (typeof window.speechSynthesis !== 'undefined') {
     try {
       window.speechSynthesis.cancel();
@@ -794,6 +794,9 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
 
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
       activeUtterance = utterance;
+      if (typeof window !== 'undefined') {
+        window._activeVoiceUtterance = utterance;
+      }
       utterance.lang = langCode;
 
       // Áp dụng thông số nhịp điệu & tông giọng riêng biệt cho từng loại Model ElevenLabs
@@ -804,50 +807,64 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
 
       utterance.onend = () => {
         activeUtterance = null;
+        if (typeof window !== 'undefined') window._activeVoiceUtterance = null;
         if (onEnd) onEnd();
       };
       utterance.onerror = (err) => {
         console.warn('SpeechSynthesis error:', err);
         activeUtterance = null;
+        if (typeof window !== 'undefined') window._activeVoiceUtterance = null;
         if (onEnd) onEnd();
       };
 
       // Chọn voice phù hợp trong danh sách có sẵn của trình duyệt
-      const assignVoice = () => {
-        const voices = window.speechSynthesis.getVoices() || [];
-        if (voices.length > 0) {
-          const langPrefix = langCode.split('-')[0].toLowerCase();
-          const matchedLangVoices = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith(langPrefix));
-
-          if (matchedLangVoices.length > 0) {
-            const genderMatch = matchedLangVoices.find(v => 
-              isFemale ? (v.name.includes('Female') || v.name.includes('HoaiMy') || v.name.includes('Mai') || v.name.includes('Linh') || v.name.includes('Zira') || v.name.includes('Samantha') || v.name.includes('Kyoko') || v.name.includes('Yuna'))
-                       : (v.name.includes('Male') || v.name.includes('NamMinh') || v.name.includes('Minh') || v.name.includes('David') || v.name.includes('Alex') || v.name.includes('Keita') || v.name.includes('InJoon'))
-            );
-            utterance.voice = genderMatch || matchedLangVoices[0];
-          } else {
-            const generalMatch = voices.find(v => 
-              isFemale ? (v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Samantha'))
-                       : (v.name.includes('Male') || v.name.includes('David') || v.name.includes('Alex'))
-            );
-            if (generalMatch) utterance.voice = generalMatch;
+      const assignAndSpeak = () => {
+        try {
+          if (window.speechSynthesis.paused) {
+            window.speechSynthesis.resume();
           }
+          const voices = window.speechSynthesis.getVoices() || [];
+          if (voices.length > 0) {
+            const langPrefix = langCode.split('-')[0].toLowerCase();
+            const matchedLangVoices = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith(langPrefix));
+
+            if (matchedLangVoices.length > 0) {
+              const genderMatch = matchedLangVoices.find(v => 
+                isFemale ? (v.name.includes('Female') || v.name.includes('HoaiMy') || v.name.includes('Mai') || v.name.includes('Linh') || v.name.includes('Zira') || v.name.includes('Samantha') || v.name.includes('Kyoko') || v.name.includes('Yuna'))
+                         : (v.name.includes('Male') || v.name.includes('NamMinh') || v.name.includes('Minh') || v.name.includes('David') || v.name.includes('Alex') || v.name.includes('Keita') || v.name.includes('InJoon'))
+              );
+              utterance.voice = genderMatch || matchedLangVoices[0];
+            } else {
+              const generalMatch = voices.find(v => 
+                isFemale ? (v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Samantha'))
+                         : (v.name.includes('Male') || v.name.includes('David') || v.name.includes('Alex'))
+              );
+              if (generalMatch) utterance.voice = generalMatch;
+            }
+          }
+          window.speechSynthesis.speak(utterance);
+        } catch (e) {
+          console.warn('Speak attempt error:', e);
+          if (onEnd) onEnd();
         }
-        window.speechSynthesis.speak(utterance);
       };
 
-      if (window.speechSynthesis.getVoices().length > 0) {
-        assignVoice();
-      } else {
-        window.speechSynthesis.onvoiceschanged = () => {
-          assignVoice();
-        };
-        setTimeout(() => {
-          if (activeUtterance) {
-            window.speechSynthesis.speak(utterance);
-          }
-        }, 120);
-      }
+      // Trì hoãn 40ms để trình duyệt xử lý xong lệnh cancel() trước khi gọi speak() (Khắc phục triệt để lỗi silent trên Chrome/Safari)
+      setTimeout(() => {
+        const availableVoices = window.speechSynthesis.getVoices();
+        if (availableVoices && availableVoices.length > 0) {
+          assignAndSpeak();
+        } else {
+          window.speechSynthesis.onvoiceschanged = () => {
+            assignAndSpeak();
+          };
+          setTimeout(() => {
+            if (activeUtterance) {
+              assignAndSpeak();
+            }
+          }, 150);
+        }
+      }, 40);
       return;
     } catch (synthErr) {
       console.warn('Web Speech API failed:', synthErr);

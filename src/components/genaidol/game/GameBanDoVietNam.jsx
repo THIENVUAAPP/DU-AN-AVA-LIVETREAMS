@@ -972,14 +972,14 @@ export default function GameBanDoVietNam({
     scene.add(terrainMesh);
     state.terrainMesh = terrainMesh;
 
-    // 2. Mesh Ô Cờ Quốc Kỳ Đã Cắm (Lá cờ quốc kỳ 3D vươn cao, đỏ thắm, sao vàng phát sáng ĐA GÓC NHÌN TỪ TRÊN XUỐNG, NGANG, XÉO, CẬN CẢNH)
+    // 2. Mesh Ô Cờ Quốc Kỳ Đã Cắm (Lá cờ quốc kỳ 3D vươn cao, đỏ thắm, sao vàng tự phát sáng 100% ĐA GÓC NHÌN TỪ TRÊN XUỐNG, NGANG, XÉO, CẬN CẢNH)
     const flagMat = new THREE.MeshStandardMaterial({
       map: flagTexture,
       emissiveMap: flagTexture,
       emissive: new THREE.Color(0xffffff),
-      emissiveIntensity: 0.45,
-      roughness: 0.28,
-      metalness: 0.10,
+      emissiveIntensity: 0.85,
+      roughness: 0.15,
+      metalness: 0.05,
     });
     state.flagMat = flagMat;
     state.currentCountry = gameState.selectedCountry || 'vietnam';
@@ -1037,19 +1037,18 @@ export default function GameBanDoVietNam({
       const cell = cells[i] || { x: (i % 100), y: Math.floor(i / 100) };
       const wx = (cell.x - cols / 2) * 1.0;
       const wz = (cell.y - rows / 2) * 1.0;
-      const isClaimed = !!bandoEngine.state.cellsById[cell.id];
+      const isClaimed = !!(gameState.cellsById?.[cell.id] ?? gameState.cellsById?.[String(cell.id)] ?? gameState.cellsById?.[Number(cell.id)] ?? bandoEngine.state.cellsById?.[cell.id] ?? bandoEngine.state.cellsById?.[String(cell.id)]);
       const curDim = state.cellDim || 0.98;
 
       if (isClaimed) {
         // Ô đã cắm cờ (người xem tặng quà): Hiện trên flagMesh vươn cao, ẩn trên terrainMesh
         terrainMesh.setMatrixAt(i, zeroMatrix);
 
-        const scaleY = 2.6;
+        const scaleY = 3.5;
         dummy.position.set(wx, scaleY / 2, wz);
         dummy.scale.set(curDim, scaleY, curDim);
         dummy.updateMatrix();
         flagMesh.setMatrixAt(i, dummy.matrix);
-        flagMesh.setColorAt(i, new THREE.Color(1.0, 1.0, 1.0));
       } else {
         // Ô nền lãnh thổ CHƯA cắm cờ: Hiện trên terrainMesh (tối/sáng dịu, ZERO cờ đỏ/ngôi sao), ẩn trên flagMesh
         const scaleY = 0.35;
@@ -1065,7 +1064,6 @@ export default function GameBanDoVietNam({
     terrainMesh.instanceMatrix.needsUpdate = true;
     if (terrainMesh.instanceColor) terrainMesh.instanceColor.needsUpdate = true;
     flagMesh.instanceMatrix.needsUpdate = true;
-    if (flagMesh.instanceColor) flagMesh.instanceColor.needsUpdate = true;
 
     // Resize handler với ResizeObserver đảm bảo scene Three.js luôn vẽ đúng kích thước ngay lập tức
     const handleResize = () => {
@@ -1440,7 +1438,7 @@ export default function GameBanDoVietNam({
     for (let i = 0; i < count; i++) {
       const cell = cells[i];
       if (!cell) continue;
-      const isClaimed = !!gameState.cellsById[cell.id];
+      const isClaimed = !!(gameState.cellsById?.[cell.id] ?? gameState.cellsById?.[String(cell.id)] ?? gameState.cellsById?.[Number(cell.id)] ?? bandoEngine.state.cellsById?.[cell.id] ?? bandoEngine.state.cellsById?.[String(cell.id)]);
       const wx = (cell.x - cols / 2) * 1.0;
       const wz = (cell.y - rows / 2) * 1.0;
       const curDim = state.cellDim || 0.98;
@@ -1449,12 +1447,11 @@ export default function GameBanDoVietNam({
         // 1. Ô đã cắm cờ (người xem tặng quà): Hiện trên flagMesh vươn cao, ẩn trên terrainMesh
         terrainMesh.setMatrixAt(i, zeroMatrix);
 
-        const scaleY = 2.6;
+        const scaleY = 3.5;
         dummy.position.set(wx, scaleY / 2, wz);
         dummy.scale.set(curDim, scaleY, curDim);
         dummy.updateMatrix();
         flagMesh.setMatrixAt(i, dummy.matrix);
-        flagMesh.setColorAt(i, new THREE.Color(1.0, 1.0, 1.0));
       } else {
         // 2. Ô nền lãnh thổ CHƯA cắm cờ: Hiện trên terrainMesh (tối/sáng dịu, ZERO cờ đỏ/ngôi sao), ẩn trên flagMesh
         const scaleY = 0.35;
@@ -1471,7 +1468,6 @@ export default function GameBanDoVietNam({
     terrainMesh.instanceMatrix.needsUpdate = true;
     if (terrainMesh.instanceColor) terrainMesh.instanceColor.needsUpdate = true;
     flagMesh.instanceMatrix.needsUpdate = true;
-    if (flagMesh.instanceColor) flagMesh.instanceColor.needsUpdate = true;
 
     // Cập nhật ma trận và màu sắc của Khối Chữ Ô Cờ 3D (Banner Flag Cells)
     if (state.bannerMesh && gameState.bannerCells) {
