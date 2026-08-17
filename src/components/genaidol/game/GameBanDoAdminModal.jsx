@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  X, Shield, Play, Pause, RotateCcw, Award, Globe, Music, Volume2, 
+  X, Shield, Play, Pause, Square, RotateCcw, Award, Globe, Music, Volume2, 
   Sparkles, Gift, MapPin, Flag, CheckCircle, Copy, AlertTriangle, 
   Settings, RefreshCw, Zap, Sliders, ExternalLink, Trophy, Type,
   Compass, Sun, Eye, Trash2, Plus, PlusCircle, VolumeX, Save, Check, Grid,
@@ -83,9 +83,12 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
     window.dispatchEvent(new CustomEvent('bando-camera-action', { detail: { action, payload } }));
   };
 
+  const [isAutoTesting, setIsAutoTesting] = useState(() => bandoEngine.isAutoTesting);
+
   useEffect(() => {
-    const unsub = bandoEngine.subscribe((state) => {
+    const unsub = bandoEngine.subscribe((state, lastEvent) => {
       setGameState({ ...state });
+      setIsAutoTesting(bandoEngine.isAutoTesting);
       if (state.settings?.theme) setTheme(state.settings.theme);
       if (state.settings?.customMapTitle) setCustomTitle(state.settings.customMapTitle);
       if (state.totalCells) setTotalCellsInput(state.totalCells);
@@ -1771,10 +1774,23 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                   </button>
 
                   <button
-                    onClick={() => bandoEngine.startAutoTestLoop()}
-                    className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-black shadow-lg flex items-center gap-1.5 transition-all"
+                    onClick={() => {
+                      if (bandoEngine.isAutoTesting) {
+                        bandoEngine.stopAutoTestLoop();
+                        setIsAutoTesting(false);
+                      } else {
+                        bandoEngine.startAutoTestLoop();
+                        setIsAutoTesting(true);
+                      }
+                    }}
+                    className={`px-3.5 py-2 ${
+                      isAutoTesting 
+                        ? 'bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white animate-pulse' 
+                        : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white'
+                    } rounded-xl text-xs font-black shadow-lg flex items-center gap-1.5 transition-all`}
                   >
-                    <Play size={13} /> Chạy Test Tự Động
+                    {isAutoTesting ? <Square size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />}
+                    <span>{isAutoTesting ? 'Dừng Test Ngay' : 'Chạy Test Tự Động'}</span>
                   </button>
                 </div>
               </div>

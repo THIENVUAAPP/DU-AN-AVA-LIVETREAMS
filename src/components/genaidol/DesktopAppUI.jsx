@@ -283,7 +283,9 @@ export default function DesktopAppUI() {
       }
       try {
         bandoEngine.stopAutoTestLoop();
+        bandoEngine.stopAuto247Loop();
       } catch (e) {}
+      window.dispatchEvent(new CustomEvent('global-stop-demo'));
       setIsGlobalDemoRunning(false);
       return;
     }
@@ -330,7 +332,9 @@ export default function DesktopAppUI() {
       }
       try {
         bandoEngine.stopAutoTestLoop();
+        bandoEngine.stopAuto247Loop();
       } catch (e) {}
+      window.dispatchEvent(new CustomEvent('global-stop-demo'));
       return;
     }
 

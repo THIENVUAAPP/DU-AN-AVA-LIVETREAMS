@@ -19,7 +19,40 @@ const EVENTS = [
   { id: 'idle', label: 'Im lặng (Chờ)', icon: Clock, color: 'text-orange-500', desc: 'Cấu hình các hành động của Aldol khi ở trạng thái chờ, không có sự kiện nào cần xử lý.' }
 ];
 
-const GIFT_TYPES = ['Finger Heart', 'Cap', 'Confetti', 'Corgi', 'Crystal Rose', 'Crystal Shoe', "Cupid's Bow", "Don't cry", 'Doughnut', 'Encore Clap', 'Lucky pig', 'Lion', 'Yacht'];
+const GIFT_OPTIONS = [
+  { id: 'rose', name: 'Hoa Hồng', icon: '🌹', coins: 1, label: '🌹 Hoa Hồng (1 xu)' },
+  { id: 'heart', name: 'Thả Tim', icon: '🧡', coins: 1, label: '🧡 Thả Tim (1 xu)' },
+  { id: 'finger_heart', name: 'Bắn Tim / Finger Heart', icon: '🫰', coins: 1, label: '🫰 Bắn Tim / Finger Heart (1 xu)' },
+  { id: 'cake', name: 'Bánh Sinh Nhật', icon: '🍰', coins: 1, label: '🍰 Bánh Sinh Nhật (1 xu)' },
+  { id: 'coffee', name: 'Cà Phê', icon: '☕', coins: 1, label: '☕ Cà Phê (1 xu)' },
+  { id: 'icecream', name: 'Kem Ốc Quế', icon: '🍦', coins: 1, label: '🍦 Kem Ốc Quế (1 xu)' },
+  { id: 'dumbbell', name: 'Tạ Thể Hình', icon: '🏋️', coins: 1, label: '🏋️ Tạ Thể Hình (1 xu)' },
+  { id: 'perfume', name: 'Nước Hoa', icon: '🌸', coins: 50, label: '🌸 Nước Hoa (50 xu)' },
+  { id: 'cap', name: 'Mũ Cối / Nón', icon: '🧢', coins: 99, label: '🧢 Mũ Cối / Nón (99 xu)' },
+  { id: 'crown', name: 'Vương Miện', icon: '👑', coins: 99, label: '👑 Vương Miện (99 xu)' },
+  { id: 'confetti', name: 'Pháo Hoa / Confetti', icon: '🎉', coins: 100, label: '🎉 Pháo Hoa / Confetti (100 xu)' },
+  { id: 'origami', name: 'Hạc Giấy May Mắn', icon: '🕊️', coins: 199, label: '🕊️ Hạc Giấy May Mắn (199 xu)' },
+  { id: 'drum', name: 'Trống Đồng', icon: '🥁', coins: 249, label: '🥁 Trống Đồng (249 xu)' },
+  { id: 'corgi', name: 'Chó Corgi', icon: '🐶', coins: 299, label: '🐶 Chó Corgi (299 xu)' },
+  { id: 'sunglasses', name: 'Kính Mát Thời Trang', icon: '🕶️', coins: 399, label: '🕶️ Kính Mát Thời Trang (399 xu)' },
+  { id: 'sportscar', name: 'Siêu Xe Thể Thao', icon: '⚡', coins: 500, label: '⚡ Siêu Xe Thể Thao (500 xu)' },
+  { id: 'crystal_rose', name: 'Hoa Hồng Pha Lê', icon: '💎', coins: 1000, label: '💎 Hoa Hồng Pha Lê (1000 xu)' },
+  { id: 'crystal_shoe', name: 'Giày Thủy Tinh', icon: '👠', coins: 1500, label: '👠 Giày Thủy Tinh (1500 xu)' },
+  { id: 'icecream_truck', name: 'Xe Tải Kem', icon: '🚚', coins: 2988, label: '🚚 Xe Tải Kem (2988 xu)' },
+  { id: 'rhythm_bear', name: 'Gấu Nhịp Điệu', icon: '🧸', coins: 2999, label: '🧸 Gấu Nhịp Điệu (2999 xu)' },
+  { id: 'rust_reborn', name: 'Rust Tái Sinh', icon: '🤖', coins: 6000, label: '🤖 Rust Tái Sinh (6000 xu)' },
+  { id: 'finish_line', name: 'Vững Vàng Về Đích', icon: '🏁', coins: 6000, label: '🏁 Vững Vàng Về Đích (6000 xu)' },
+  { id: 'yacht', name: 'Du Thuyền Hạng Sang / Yacht', icon: '🛥️', coins: 9888, label: '🛥️ Du Thuyền Hạng Sang / Yacht (9888 xu)' },
+  { id: 'meteor_shower', name: 'Mưa Sao Băng Kìa!', icon: '🌠', coins: 15000, label: '🌠 Mưa Sao Băng Kìa! (15000 xu)' },
+  { id: 'amusement_park', name: 'Công Viên Giải Trí', icon: '🎡', coins: 17000, label: '🎡 Công Viên Giải Trí (17000 xu)' },
+  { id: 'phoenix', name: 'Phoenix Phượng Hoàng', icon: '🦅', coins: 25999, label: '🦅 Phoenix Phượng Hoàng (25999 xu)' },
+  { id: 'dragon_flame', name: 'Ngọn Lửa Rồng Thiêng', icon: '🐲', coins: 26999, label: '🐲 Ngọn Lửa Rồng Thiêng (26999 xu)' },
+  { id: 'leon_lion', name: 'Leon & Sư Tử', icon: '🦁', coins: 34000, label: '🦁 Leon & Sư Tử (34000 xu)' },
+  { id: 'tiktok_stars', name: 'TikTok Stars', icon: '✨', coins: 39999, label: '✨ TikTok Stars (39999 xu)' },
+  { id: 'tiktok_universe', name: 'TikTok Universe', icon: '🪐', coins: 44999, label: '🪐 TikTok Universe (44999 xu)' }
+];
+
+const GIFT_TYPES = GIFT_OPTIONS.map(g => g.label);
 
 const getDefaultEventConfigs = () => {
   const defaults = {};
@@ -31,6 +64,7 @@ const getDefaultEventConfigs = () => {
       muteSourceVideo: ev.id !== 'gift' && ev.id !== 'welcome',
       videoCategory: ev.id === 'welcome' ? 'join' : ev.id === 'call_to_action' ? 'interaction' : ev.id === 'thanks_heart' ? 'thank_for_likes' : ev.id,
       videoFolder: '',
+      supportVideoFolder: '',
       useAi: ev.id !== 'gift',
       aiPrompt: '',
       sampleAnswers: '',
@@ -50,15 +84,17 @@ const getDefaultEventConfigs = () => {
       
       // Special gifts
       specialGiftSlots: ev.id === 'special_gift' ? [
-        { id: 1, active: true, giftName: 'Finger Heart', videoFolder: '', useTTS: false, muteSourceVideo: false, useAssistant: true, assistantPrompt: '', assistantVideoFolder: '', useMainVoice: true },
-        { id: 2, active: true, giftName: 'Lucky pig', videoFolder: '', useTTS: false, muteSourceVideo: false, useAssistant: false, assistantPrompt: '', assistantVideoFolder: '', useMainVoice: true }
+        { id: 1, active: true, giftName: '🫰 Bắn Tim / Finger Heart (1 xu)', videoFolder: '', supportVideoFolder: '', useTTS: false, muteSourceVideo: false, useAssistant: true, assistantPrompt: '', assistantVideoFolder: '', useMainVoice: true },
+        { id: 2, active: true, giftName: '👑 Vương Miện (99 xu)', videoFolder: '', supportVideoFolder: '', useTTS: false, muteSourceVideo: false, useAssistant: false, assistantPrompt: '', assistantVideoFolder: '', useMainVoice: true },
+        { id: 3, active: true, giftName: '🦁 Leon & Sư Tử (34000 xu)', videoFolder: '', supportVideoFolder: '', useTTS: false, muteSourceVideo: false, useAssistant: true, assistantPrompt: '', assistantVideoFolder: '', useMainVoice: true },
+        { id: 4, active: true, giftName: '🪐 TikTok Universe (44999 xu)', videoFolder: '', supportVideoFolder: '', useTTS: false, muteSourceVideo: false, useAssistant: true, assistantPrompt: '', assistantVideoFolder: '', useMainVoice: true }
       ] : [],
 
       // Checkout Products
       checkoutProducts: ev.id === 'checkout' ? [
-        { id: 1, active: true, productName: 'aidol', keywords: 'aidol;phần mềm;giá;liên hệ', videoFolder: 'bình luận', useAi: true, useTTS: false, muteSourceVideo: true, aiPrompt: 'TRong vai là một nhân viên sale chuyên nghiệp hãy đọc bình luận và đem ra câu trả lời để chốt đơn, giá phần mềm là 3 triệu rưỡi/1 năm, hoặc gói dùng thử là 500000 đồng trên 1 tháng. Chốt sale hoặc cần tư vấn thêm thì hãy liên hệ với đội ngũ admin' },
-        { id: 2, active: false, productName: '', keywords: '', videoFolder: '', useAi: false, useTTS: false, muteSourceVideo: false, aiPrompt: '' },
-        { id: 3, active: false, productName: '', keywords: '', videoFolder: '', useAi: false, useTTS: false, muteSourceVideo: false, aiPrompt: '' }
+        { id: 1, active: true, productName: 'aidol', keywords: 'aidol;phần mềm;giá;liên hệ', videoFolder: 'bình luận', supportVideoFolder: '', useAi: true, useTTS: false, muteSourceVideo: true, aiPrompt: 'TRong vai là một nhân viên sale chuyên nghiệp hãy đọc bình luận và đem ra câu trả lời để chốt đơn, giá phần mềm là 3 triệu rưỡi/1 năm, hoặc gói dùng thử là 500000 đồng trên 1 tháng. Chốt sale hoặc cần tư vấn thêm thì hãy liên hệ với đội ngũ admin' },
+        { id: 2, active: false, productName: '', keywords: '', videoFolder: '', supportVideoFolder: '', useAi: false, useTTS: false, muteSourceVideo: false, aiPrompt: '' },
+        { id: 3, active: false, productName: '', keywords: '', videoFolder: '', supportVideoFolder: '', useAi: false, useTTS: false, muteSourceVideo: false, aiPrompt: '' }
       ] : []
     };
   });
@@ -542,11 +578,19 @@ const FieldLabel = ({ icon, text, helpKey, customHelpText, minW = "min-w-[220px]
                         <div className="grid grid-cols-[160px_1fr] gap-y-3 gap-x-4 items-center">
                           
                           <div className="flex items-center gap-1">
-                            <label className="text-[13px] font-semibold text-[#a53b3b]">Tên Quà tặng:</label>
+                            <label className="text-[13px] font-semibold text-[#a53b3b]">Tên Quà tặng (TikTok):</label>
                             <HelpTooltip helpKey="giftName" />
                           </div>
-                          <select value={slot.giftName} onChange={(e) => handleSlotChange(slot.id, 'giftName', e.target.value)} className="border border-gray-300 rounded px-2 py-1 text-[13px] bg-white focus:outline-blue-500 max-w-xs">
-                            {GIFT_TYPES.map(g => <option key={g} value={g}>{g}</option>)}
+                          <select 
+                            value={slot.giftName} 
+                            onChange={(e) => handleSlotChange(slot.id, 'giftName', e.target.value)} 
+                            className="border border-gray-300 rounded px-2.5 py-1.5 text-[13px] font-medium bg-white focus:outline-blue-500 max-w-sm text-gray-800 shadow-sm"
+                          >
+                            {GIFT_OPTIONS.map(g => (
+                              <option key={g.id} value={g.label}>
+                                {g.label}
+                              </option>
+                            ))}
                           </select>
 
                           <div className="flex items-center gap-1">
@@ -554,20 +598,29 @@ const FieldLabel = ({ icon, text, helpKey, customHelpText, minW = "min-w-[220px]
                             <HelpTooltip helpKey="videoFolder" />
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[13px] font-medium min-w-[150px]">{slot.videoFolder || 'Chưa chọn'}</span>
-                            <button onClick={() => selectSlotFolder(slot.id, 'videoFolder')} className="text-[13px] text-gray-600 font-medium hover:text-gray-900 transition-colors underline decoration-dotted">Chọn...</button>
+                            <span className="text-[13px] font-medium min-w-[150px] text-gray-700 bg-gray-50 px-2 py-1 rounded border border-gray-200">{slot.videoFolder || 'Chưa chọn thư mục'}</span>
+                            <button onClick={() => selectSlotFolder(slot.id, 'videoFolder')} className="text-[13px] text-blue-600 font-semibold hover:text-blue-800 transition-colors underline decoration-dotted">Chọn...</button>
                             <div className="ml-auto flex gap-4">
                               <label className="flex items-center gap-1.5 cursor-pointer">
-                                <input type="checkbox" checked={slot.useTTS} onChange={(e) => handleSlotChange(slot.id, 'useTTS', e.target.checked, true)} /> 
-                                <span className="text-[13px]">Dùng TTS</span>
+                                <input type="checkbox" checked={slot.useTTS} onChange={(e) => handleSlotChange(slot.id, 'useTTS', e.target.checked, true)} className="rounded text-blue-600" /> 
+                                <span className="text-[13px] font-medium">Dùng TTS</span>
                                 <HelpTooltip helpKey="useTTS" />
                               </label>
                               <label className="flex items-center gap-1.5 cursor-pointer">
-                                <input type="checkbox" checked={slot.muteSourceVideo} onChange={(e) => handleSlotChange(slot.id, 'muteSourceVideo', e.target.checked, true)} /> 
-                                <span className="text-[13px]">Tắt âm gốc video</span>
+                                <input type="checkbox" checked={slot.muteSourceVideo} onChange={(e) => handleSlotChange(slot.id, 'muteSourceVideo', e.target.checked, true)} className="rounded text-blue-600" /> 
+                                <span className="text-[13px] font-medium">Tắt âm gốc</span>
                                 <HelpTooltip helpKey="muteSourceVideo" />
                               </label>
                             </div>
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            <label className="text-[13px] font-semibold text-[#1e40af]">🎬 Video Nền Hỗ Trợ:</label>
+                            <HelpTooltip helpKey="videoFolder" />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[13px] font-medium min-w-[150px] text-gray-700 bg-gray-50 px-2 py-1 rounded border border-gray-200">{slot.supportVideoFolder || 'Chưa chọn (Dùng video nền mặc định)'}</span>
+                            <button onClick={() => selectSlotFolder(slot.id, 'supportVideoFolder')} className="text-[13px] text-indigo-600 font-semibold hover:text-indigo-800 transition-colors underline decoration-dotted">Chọn video nền...</button>
                           </div>
 
                           <div className="col-span-2 border-t border-gray-300 my-1"></div>
@@ -899,27 +952,38 @@ const FieldLabel = ({ icon, text, helpKey, customHelpText, minW = "min-w-[220px]
                 </div>
               )}
 
-              {/* Cấu hình Video Chung & Cài đặt Trợ lý cho các Tab còn lại */}
+              {/* Cấu hình Video Chung & Video Nền Hỗ Trợ Phiên Live */}
               <div className="border border-gray-300 rounded-md bg-white mb-3 shadow-sm px-3 py-4">
                 <fieldset className="border border-gray-300 rounded p-4 pt-4 mt-2 relative">
                   <legend className="absolute -top-3 left-3 bg-white px-1 text-sm font-semibold text-gray-700 flex items-center gap-1">
-                    <span>Cấu hình Video Chung (Dự phòng)</span>
+                    <span>🎬 Cấu hình Video Chính & Video Nền Hỗ Trợ Phiên Live</span>
                     <HelpTooltip helpKey="videoFolder" />
                   </legend>
-                  <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-3.5">
                     <div className="flex items-center gap-4">
                       <span className="text-[13px] text-[#a53b3b] font-semibold min-w-[200px]">Danh mục video cho sự kiện này:</span>
                       <select name="videoCategory" value={currentConfig.videoCategory} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-white focus:outline-blue-500">
                         <option value={currentConfig.videoCategory}>{currentConfig.videoCategory}</option>
                       </select>
                     </div>
+                    
                     <div className="flex items-center justify-between border-t border-gray-200 pt-3">
                       <div className="flex items-center gap-4">
-                        <span className="text-[13px] text-[#a53b3b] font-semibold min-w-[200px]">Thư mục video tương ứng:</span>
-                        <span className="text-[13px] text-gray-800 font-medium truncate max-w-sm">{currentConfig.videoFolder || 'Chưa chọn thư mục'}</span>
+                        <span className="text-[13px] text-[#a53b3b] font-semibold min-w-[200px]">Thư mục video hành động:</span>
+                        <span className="text-[13px] text-gray-800 font-medium truncate max-w-sm bg-gray-50 px-2 py-0.5 rounded border border-gray-200">{currentConfig.videoFolder || 'Chưa chọn thư mục'}</span>
                       </div>
-                      <button onClick={() => selectFolder()} className="text-[13px] text-gray-600 font-medium hover:text-gray-900 transition-colors underline decoration-dotted">
+                      <button onClick={() => selectFolder('videoFolder')} className="text-[13px] text-blue-600 font-semibold hover:text-blue-800 transition-colors underline decoration-dotted">
                         Chọn thư mục...
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between border-t border-gray-200 pt-3">
+                      <div className="flex items-center gap-4">
+                        <span className="text-[13px] text-[#1e40af] font-semibold min-w-[200px]">Thư mục video nền hỗ trợ:</span>
+                        <span className="text-[13px] text-gray-800 font-medium truncate max-w-sm bg-gray-50 px-2 py-0.5 rounded border border-gray-200">{currentConfig.supportVideoFolder || 'Chưa chọn (Dùng video nền mặc định)'}</span>
+                      </div>
+                      <button onClick={() => selectFolder('supportVideoFolder')} className="text-[13px] text-indigo-600 font-semibold hover:text-indigo-800 transition-colors underline decoration-dotted">
+                        Chọn video nền...
                       </button>
                     </div>
                   </div>

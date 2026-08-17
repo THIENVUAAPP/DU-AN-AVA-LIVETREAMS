@@ -667,11 +667,13 @@ export default function GameBanDoVietNam({
         setRecentClaimBadges([]);
       }
 
-      // Xử lý sự kiện cắm ô cờ để tạo Huy Hiệu ID Người Dùng & Lá Cờ Quốc Kỳ Siêu Sắc Nét
+      // Xử lý sự kiện cắm ô cờ để tạo Huy Hiệu ID Người Dùng & Lá Cờ Quốc Kỳ Siêu Sắc Nét (Dù chỉ 1 ô cũng hiển thị rõ quốc kỳ)
       if (lastEvt && (lastEvt.type === 'GIFT_PLACED' || lastEvt.type === 'GIFT')) {
         const user = lastEvt.user;
         const count = lastEvt.claimed || lastEvt.count || 1;
         const flag = currentCountry?.flag || '🇻🇳';
+        const giftDef = bandoEngine.state.gifts?.find(g => g.id === lastEvt.giftId);
+        const giftName = lastEvt.giftName || giftDef?.name || 'Ô Quốc Kỳ';
 
         // Tính toạ độ 3D trung tâm của nhóm ô cờ vừa cắm
         let wx = 0, wz = 0;
@@ -693,6 +695,7 @@ export default function GameBanDoVietNam({
           avatar: user?.avatar || '',
           flag,
           count,
+          giftName,
           wx,
           wy: 5.5,
           wz,
@@ -1489,19 +1492,18 @@ export default function GameBanDoVietNam({
       if (bMesh.instanceColor) bMesh.instanceColor.needsUpdate = true;
     }
 
-    // Trigger Camera zoom to focal target (Chỉ zoom khi đang chạy Demo, Auto 24/7 hoặc Live thật)
-    const isRunning = isAutoTesting || isAuto247 || (bandoEngine.state && bandoEngine.state.isLiveRunning);
-    if (isRunning && gameState.lastFocalTarget && state.camera && state.controls) {
+    // Trigger Camera zoom to focal target (Zoom cận cảnh rõ lá quốc kỳ và tên người tặng dù chỉ tặng 1 ô)
+    if (gameState.lastFocalTarget && state.camera && state.controls) {
       const ft = gameState.lastFocalTarget;
       state.tween = {
         from: state.camera.position.clone(),
-        to: new THREE.Vector3(ft.wx, 45, ft.wz + 50),
+        to: new THREE.Vector3(ft.wx, 42, ft.wz + 48),
         fromTarget: state.controls.target.clone(),
         toTarget: new THREE.Vector3(ft.wx, 0, ft.wz),
         start: performance.now(),
-        duration: 650,
+        duration: 550,
         phase: 'in',
-        holdDuration: 3500,
+        holdDuration: 3800,
         holdUntil: 0
       };
     }
@@ -1724,7 +1726,7 @@ export default function GameBanDoVietNam({
         ))}
       </div>
 
-      {/* User Claim Flag Badges Floating Overlay Layer */}
+      {/* User Claim Flag Badges Floating Overlay Layer (Hiển thị Quốc Kỳ & Tên Người Tặng Cận Cảnh Siêu Sắc Nét) */}
       <div ref={claimBadgesLayerRef} className="absolute inset-0 pointer-events-none z-15 overflow-hidden">
         {recentClaimBadges.map(b => (
           <div
@@ -1733,8 +1735,9 @@ export default function GameBanDoVietNam({
             className="absolute top-0 left-0 hidden flex-col items-center pointer-events-none transition-all duration-100 animate-in zoom-in-50 fade-in duration-200"
             style={{ willChange: 'transform' }}
           >
-            <div className="relative flex items-center gap-1.5 px-2.5 py-1 rounded-2xl bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 text-white font-black text-[11px] shadow-2xl border border-yellow-300 ring-2 ring-yellow-400/60 whitespace-nowrap">
-              <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-xs overflow-hidden border border-white/40 shrink-0">
+            <div className="relative flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 text-white font-black text-[11px] shadow-2xl border-2 border-yellow-300 ring-2 ring-yellow-400/70 whitespace-nowrap drop-shadow-xl">
+              <span className="text-base leading-none drop-shadow scale-110">{b.flag || '🇻🇳'}</span>
+              <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-xs overflow-hidden border border-white/60 shrink-0">
                 {b.avatar ? (
                   <img src={b.avatar} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
                 ) : (
@@ -1742,13 +1745,14 @@ export default function GameBanDoVietNam({
                 )}
               </div>
               <div className="flex flex-col text-left leading-tight">
-                <span className="text-[10px] text-yellow-200 font-bold truncate max-w-[90px]">{b.username}</span>
-                <span className="text-[9px] text-white flex items-center gap-0.5">
-                  🇻🇳 +{b.giftCells} ô {b.multiplier > 1 && <strong className="text-yellow-300">x{b.multiplier}</strong>}
+                <span className="text-[11px] text-yellow-200 font-black truncate max-w-[110px] drop-shadow">{b.username}</span>
+                <span className="text-[9.5px] text-white font-bold flex items-center gap-1">
+                  <span>{b.flag || '🇻🇳'} +{b.count || 1} Ô Quốc Kỳ</span>
+                  {b.giftName && <span className="text-yellow-300 text-[8.5px]">({b.giftName})</span>}
                 </span>
               </div>
             </div>
-            <div className="w-0.5 h-3 bg-gradient-to-b from-yellow-400 to-transparent" />
+            <div className="w-1 h-4 bg-gradient-to-b from-yellow-300 via-yellow-400 to-transparent rounded-full shadow-md" />
           </div>
         ))}
       </div>

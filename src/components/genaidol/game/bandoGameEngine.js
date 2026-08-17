@@ -323,6 +323,14 @@ class BanDoGameEngine {
     this.isAutoTesting = false;
     this.isAuto247Running = false;
 
+    // Lắng nghe sự kiện Dừng Demo Toàn Cục để dừng tức thì mọi vòng lặp
+    if (typeof window !== 'undefined') {
+      window.addEventListener('global-stop-demo', () => {
+        this.stopAutoTestLoop();
+        this.stopAuto247Loop();
+      });
+    }
+
     // Load static data
     this.maskData = defaultVietnamMask;
     this.provincesData = defaultProvincesData.provinces || [];
