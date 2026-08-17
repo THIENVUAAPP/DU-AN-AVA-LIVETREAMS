@@ -962,20 +962,47 @@ export default function DesktopAppUI() {
                 </button>
                 <button 
                   onClick={() => { setActiveSettingsModal('captcha'); setIsSettingsDropdownOpen(false); }}
-                  className={`w-full text-left px-3 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-emerald-900/50 to-teal-800/30 hover:from-emerald-600 hover:to-teal-500 text-emerald-200 hover:text-white border border-emerald-700/60 shadow-lg' : 'bg-emerald-50 hover:bg-emerald-500 text-emerald-800 hover:text-white'}`}
+                  className={`w-full text-left px-3 py-2.5 mb-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-emerald-900/50 to-teal-800/30 hover:from-emerald-600 hover:to-teal-500 text-emerald-200 hover:text-white border border-emerald-700/60 shadow-lg' : 'bg-emerald-50 hover:bg-emerald-500 text-emerald-800 hover:text-white'}`}
                 >
                   <Shield size={16} className="text-emerald-400" />
                   <span>🛡️ VƯỢT CAPTCHA AI 24/7</span>
                 </button>
+
+                {/* Đường phân cách */}
+                <div className={`my-1.5 border-t ${isDarkMode ? 'border-gray-700/60' : 'border-gray-200'}`} />
+
+                {/* 4. STUDIO (WEBCAM / LIVE STUDIO) - NẰM DƯỚI CÙNG MENU */}
+                <button 
+                  onClick={() => { toggleWebcam(); setIsSettingsDropdownOpen(false); }}
+                  className={`w-full text-left px-3 py-2 mb-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-between gap-2 ${isWebcamActive ? (isDarkMode ? 'bg-pink-600/30 hover:bg-pink-600/40 text-pink-200 border border-pink-500/60 shadow-md' : 'bg-pink-100 hover:bg-pink-200 text-pink-800 border border-pink-300') : (isDarkMode ? 'bg-gray-800/50 hover:bg-pink-900/30 text-gray-300 hover:text-pink-300 border border-gray-700/50' : 'bg-gray-50 hover:bg-pink-50 text-gray-700 hover:text-pink-700 border border-gray-200')}`}
+                  title="Bật/Tắt Cửa sổ Camera Webcam Live Studio"
+                >
+                  <div className="flex items-center gap-2">
+                    <Video size={15} className={isWebcamActive ? 'text-pink-400 animate-pulse' : 'text-gray-400'} />
+                    <span>Studio</span>
+                  </div>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${isWebcamActive ? 'bg-pink-500 text-white' : (isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-200 text-gray-600')}`}>
+                    {isWebcamActive ? 'BẬT' : 'TẮT'}
+                  </span>
+                </button>
+
+                {/* 5. GIAO TIẾP (GIỌNG NÓI 2 CHIỀU AI) - NẰM DƯỚI CÙNG MENU */}
+                <button 
+                  onClick={() => { setIsCommMode(!isCommMode); setIsSettingsDropdownOpen(false); }}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-between gap-2 ${isCommMode ? (isDarkMode ? 'bg-red-600/30 hover:bg-red-600/40 text-red-200 border border-red-500/60 shadow-md' : 'bg-red-100 hover:bg-red-200 text-red-800 border border-red-300') : (isDarkMode ? 'bg-gray-800/50 hover:bg-red-900/30 text-gray-300 hover:text-red-300 border border-gray-700/50' : 'bg-gray-50 hover:bg-red-50 text-gray-700 hover:text-red-700 border border-gray-200')}`}
+                  title="Bật/Tắt Giao tiếp bằng Giọng nói 2 chiều với AI"
+                >
+                  <div className="flex items-center gap-2">
+                    {isCommMode ? <Mic size={15} className="text-red-400 animate-pulse" /> : <MicOff size={15} className="text-gray-400" />}
+                    <span>Giao tiếp</span>
+                  </div>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${isCommMode ? 'bg-red-500 text-white animate-pulse' : (isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-200 text-gray-600')}`}>
+                    {isCommMode ? 'BẬT' : 'TẮT'}
+                  </span>
+                </button>
               </div>
             )}
           </div>
-
-          {/* Nút Studio đặt cạnh MENU */}
-          <button onClick={toggleWebcam} className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${isWebcamActive ? 'bg-pink-600 text-white hover:bg-pink-500' : isDarkMode ? 'bg-pink-500/20 text-pink-400 hover:bg-pink-500/30' : 'bg-pink-100 text-pink-700 hover:bg-pink-200'}`}>
-            <Video size={13} />
-            <span>Studio</span>
-          </button>
         </div>
 
         <div className="flex-1"></div>
@@ -1120,11 +1147,6 @@ export default function DesktopAppUI() {
             className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${showSimulator ? 'bg-purple-600 text-white' : (isDarkMode ? 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30' : 'bg-purple-100 text-purple-700 hover:bg-purple-200')}`}>
             <Brain size={13} />
             <span>Công cụ Test</span>
-          </button>
-          
-          <button onClick={() => setIsCommMode(!isCommMode)} className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${isCommMode ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-red-500/20 text-red-500 hover:bg-red-500/30'}`} title="Bật/Tắt Giao tiếp bằng Giọng nói 2 chiều với AI">
-            {isCommMode ? <Mic size={13} /> : <MicOff size={13} />}
-            <span>Giao tiếp</span>
           </button>
         </div>
         
