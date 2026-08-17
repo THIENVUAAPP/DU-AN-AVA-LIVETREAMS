@@ -719,7 +719,7 @@ export default function GameBanDoVietNam({
     const isVerticalAspect = aspectRatio === '9:16';
     const camera = new THREE.PerspectiveCamera(48, width / height, 0.1, 5000);
     if (isVerticalAspect) {
-      camera.position.set(0, 270, 290);
+      camera.position.set(0, 310, 330);
       camera.lookAt(0, 0, 10);
     } else {
       camera.position.set(0, 200, 220);
@@ -1106,6 +1106,9 @@ export default function GameBanDoVietNam({
 
     renderer.domElement.addEventListener('pointerdown', handleDomPointerDown);
     renderer.domElement.addEventListener('pointerup', handleDomPointerUp);
+
+    // Kích hoạt Render Loop của Three.js
+    state.animFrameId = requestAnimationFrame(animate);
 
     return () => {
       state.disposed = true;

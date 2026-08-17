@@ -88,6 +88,10 @@ export default function GameChienDau({
   const [flashSide, setFlashSide] = useState(null);
   const [liveFeed, setLiveFeed] = useState([]); // Array of recent live comments & gifts
   const [isGiftHudMinimized, setIsGiftHudMinimized] = useState(false);
+
+  const handleUserGesture = useCallback(() => {
+    battleAudio.unlock();
+  }, []);
   const [isLeaderboardMinimized, setIsLeaderboardMinimized] = useState(false);
   const [isLiveCleanMode, setIsLiveCleanMode] = useState(isPopout);
 
