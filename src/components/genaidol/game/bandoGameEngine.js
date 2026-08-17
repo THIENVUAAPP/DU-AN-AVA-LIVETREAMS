@@ -4,19 +4,89 @@ import { BannerFlagCellsEngine } from './bannerFlagCellsEngine';
 import defaultVietnamMask from '../../../../public/data/vietnamMask.json';
 import defaultProvincesData from '../../../../public/data/provinces.json';
 
-// Danh mục quà TikTok chuẩn quy đổi số ô cờ
+// Danh mục quà TikTok chuẩn quy đổi số ô cờ từ Kho Quà TikTok Live
 export const DEFAULT_MAP_GIFTS = [
+  // 1. Phổ biến (1 - 10 xu)
+  { id: 'flag_vn', name: 'Cờ Tổ Quốc', icon: '🇻🇳', cells: 1, color: '#dc2626', tier: 'common', priceToken: 1 },
   { id: 'rose', name: 'Hoa Hồng', icon: '🌹', cells: 1, color: '#f43f5e', tier: 'common', priceToken: 1 },
-  { id: 'ice_cream', name: 'Kem Ốc Quế', icon: '🍦', cells: 5, color: '#ec4899', tier: 'common', priceToken: 5 },
-  { id: 'heart', name: 'Tim Rực Rỡ', icon: '💖', cells: 10, color: '#ef4444', tier: 'rare', priceToken: 10 },
+  { id: 'very_good', name: 'Rất Tốt', icon: '👍', cells: 1, color: '#f59e0b', tier: 'common', priceToken: 1 },
+  { id: 'birthday_cake', name: 'Bánh Sinh Nhật', icon: '🍰', cells: 1, color: '#ec4899', tier: 'common', priceToken: 1 },
+  { id: 'dallah', name: 'Dallah Chào Mừng', icon: '🫖', cells: 1, color: '#06b6d4', tier: 'common', priceToken: 1 },
+  { id: 'heart_tap', name: 'Thả Tim', icon: '🧡', cells: 1, color: '#f97316', tier: 'common', priceToken: 1 },
+  { id: 'heart_shot', name: 'Bắn Tim', icon: '🫰', cells: 1, color: '#ef4444', tier: 'common', priceToken: 1 },
+  { id: 'peach', name: 'Quả Đào', icon: '🍑', cells: 5, color: '#fb7185', tier: 'common', priceToken: 5 },
+  { id: 'bing_chilling', name: 'Bing Chilling', icon: '🍦', cells: 5, color: '#38bdf8', tier: 'common', priceToken: 5 },
+  { id: 'spin_ball', name: 'Trái Bóng Xoáy', icon: '⚽', cells: 5, color: '#10b981', tier: 'common', priceToken: 5 },
+  { id: 'magic_fingers', name: 'Ngón Tay Thần Thánh', icon: '🤲', cells: 6, color: '#8b5cf6', tier: 'common', priceToken: 6 },
+  { id: 'helmet', name: 'Mũ Cối Yêu Nước', icon: '🪖', cells: 10, color: '#15803d', tier: 'common', priceToken: 10 },
+  { id: 'flower_bouquet', name: 'Bó Hoa', icon: '💐', cells: 10, color: '#f43f5e', tier: 'common', priceToken: 10 },
+
+  // 2. Hiếm (20 - 499 xu)
   { id: 'tea', name: 'Trà Đào', icon: '☕', cells: 20, color: '#f59e0b', tier: 'rare', priceToken: 20 },
-  { id: 'perfume', name: 'Nước Hoa', icon: '🌸', cells: 50, color: '#d946ef', tier: 'epic', priceToken: 50 },
-  { id: 'corgi', name: 'Corgi Đáng Yêu', icon: '🐶', cells: 100, color: '#eab308', tier: 'epic', priceToken: 100 },
-  { id: 'crown', name: 'Vương Miện', icon: '👑', cells: 200, color: '#f59e0b', tier: 'legendary', priceToken: 200 },
-  { id: 'lion', name: 'Sư Tử Vàng', icon: '🦁', cells: 500, color: '#eab308', tier: 'legendary', priceToken: 500 },
-  { id: 'rocket', name: 'Tên Lửa Vũ Trụ', icon: '🚀', cells: 1000, color: '#3b82f6', tier: 'mythic', priceToken: 1000 },
-  { id: 'universe', name: 'Vũ Trụ TikTok', icon: '🪐', cells: 2000, color: '#8b5cf6', tier: 'mythic', priceToken: 2000 },
-  { id: 'flag_legend', name: 'Đại Kỳ Quốc Gia', icon: '🚩', cells: 5000, color: '#dc2626', tier: 'divine', priceToken: 5000 },
+  { id: 'perfume', name: 'Nước Hoa Hương Tình Yêu', icon: '🌸', cells: 50, color: '#d946ef', tier: 'rare', priceToken: 50 },
+  { id: 'tank_390', name: 'Xe Tăng 390', icon: '🎖️', cells: 99, color: '#ca8a04', tier: 'rare', priceToken: 99 },
+  { id: 'crown', name: 'Vương Miện', icon: '👑', cells: 99, color: '#f59e0b', tier: 'rare', priceToken: 99 },
+  { id: 'corgi', name: 'Corgi Đáng Yêu', icon: '🐶', cells: 100, color: '#eab308', tier: 'rare', priceToken: 100 },
+  { id: 'free_music', name: 'Nhạc Tự Do', icon: '🎹', cells: 100, color: '#14b8a6', tier: 'rare', priceToken: 100 },
+  { id: 'rhythm_robot', name: 'Robot Nhịp Điệu', icon: '🤖', cells: 199, color: '#06b6d4', tier: 'rare', priceToken: 199 },
+  { id: 'boom_drum', name: 'Trống Bùng Nổ', icon: '🥁', cells: 249, color: '#eab308', tier: 'rare', priceToken: 249 },
+  { id: 'romantic_cello', name: 'Cello Lãng Mạn', icon: '🎻', cells: 299, color: '#e11d48', tier: 'rare', priceToken: 299 },
+  { id: 'firework_indep', name: 'Pháo Hoa Độc Lập', icon: '🎆', cells: 299, color: '#f43f5e', tier: 'rare', priceToken: 299 },
+  { id: 'chopin_rain', name: 'Chopin Trong Mưa', icon: '🌂', cells: 349, color: '#64748b', tier: 'rare', priceToken: 349 },
+  { id: 'lead_singer_bear', name: 'Gấu Hát Chính', icon: '🐻', cells: 399, color: '#f59e0b', tier: 'rare', priceToken: 399 },
+  { id: 'sage_pea', name: 'Sage Hạt Đậu Thần Kỳ', icon: '🫐', cells: 399, color: '#3b82f6', tier: 'rare', priceToken: 399 },
+  { id: 'pop_parrot', name: 'Vẹt Ca Sĩ Pop', icon: '🦜', cells: 400, color: '#06b6d4', tier: 'rare', priceToken: 400 },
+  { id: 'cat_trumpet', name: 'Kèn Trumpet Mèo', icon: '🎺', cells: 449, color: '#ec4899', tier: 'rare', priceToken: 449 },
+
+  // 3. Sử thi (500 - 2,999 xu)
+  { id: 'alluring_sax', name: 'Tiếng Sax Quyến Rũ', icon: '🎷', cells: 700, color: '#a855f7', tier: 'epic', priceToken: 700 },
+  { id: 'dong_son_drum', name: 'Trống Đồng Đông Sơn', icon: '🏛️', cells: 999, color: '#eab308', tier: 'epic', priceToken: 999 },
+  { id: 'colorful_ribbon', name: 'Ruy Băng Khoe Sắc', icon: '✨', cells: 1000, color: '#fbbf24', tier: 'epic', priceToken: 1000 },
+  { id: 'racetrack_launch', name: 'Ra Mắt Đường Đua', icon: '🏎️', cells: 1500, color: '#ef4444', tier: 'epic', priceToken: 1500 },
+  { id: 'healing_hug', name: 'Cái Ôm Chữa Lành', icon: '🫂', cells: 1600, color: '#c084fc', tier: 'epic', priceToken: 1600 },
+  { id: 'truong_sa_landmark', name: 'Cột Mốc Trường Sa', icon: '⚓', cells: 1999, color: '#0284c7', tier: 'epic', priceToken: 1999 },
+  { id: 'tanuki_nut', name: 'Hạt Dẻ Tanuki', icon: '🌰', cells: 1999, color: '#d97706', tier: 'epic', priceToken: 1999 },
+  { id: 'rocky_punch', name: 'Cú Đấm Của Rocky', icon: '🥊', cells: 1999, color: '#dc2626', tier: 'epic', priceToken: 1999 },
+  { id: 'interplanetary', name: 'Thám Hiểm Liên Hành Tinh', icon: '🧑‍🚀', cells: 1999, color: '#38bdf8', tier: 'epic', priceToken: 1999 },
+  { id: 'heart_land', name: 'Vùng Đất Trái Tim', icon: '🏝️', cells: 2199, color: '#f43f5e', tier: 'epic', priceToken: 2199 },
+  { id: 'sage_xubot', name: 'XuBot Của Sage', icon: '🪙', cells: 2199, color: '#0ea5e9', tier: 'epic', priceToken: 2199 },
+  { id: 'honor_star', name: 'Ngôi Sao Danh Dự', icon: '⭐', cells: 2200, color: '#8b5cf6', tier: 'epic', priceToken: 2200 },
+  { id: 'motorcycle', name: 'Xe Máy', icon: '🏍️', cells: 2988, color: '#10b981', tier: 'epic', priceToken: 2988 },
+  { id: 'icecream_truck', name: 'Xe Tải Bán Kem', icon: '🚚', cells: 2988, color: '#06b6d4', tier: 'epic', priceToken: 2988 },
+  { id: 'rhythm_bear', name: 'Gấu Nhịp Điệu', icon: '🧸', cells: 2999, color: '#b45309', tier: 'epic', priceToken: 2999 },
+  { id: 'contest_fan', name: 'Tín Đồ Thi Đấu', icon: '🏆', cells: 2999, color: '#e11d48', tier: 'epic', priceToken: 2999 },
+  { id: 'party_bus', name: 'Xe Buýt Tiệc Tùng', icon: '🚌', cells: 2999, color: '#f59e0b', tier: 'epic', priceToken: 2999 },
+
+  // 4. Huyền thoại (3,000 - 15,999 xu)
+  { id: 'hiphop_chicken', name: 'Chú Gà Hip-Hop', icon: '🐔', cells: 3200, color: '#ec4899', tier: 'legendary', priceToken: 3200 },
+  { id: 'private_jet', name: 'Chuyên Cơ', icon: '✈️', cells: 4888, color: '#facc15', tier: 'legendary', priceToken: 4888 },
+  { id: 'hero_spaceship', name: 'Tàu Không Gian Anh Hùng', icon: '🛸', cells: 4999, color: '#06b6d4', tier: 'legendary', priceToken: 4999 },
+  { id: 'golden_dragon', name: 'Rồng Vàng Thăng Long', icon: '🐉', cells: 5000, color: '#eab308', tier: 'legendary', priceToken: 5000 },
+  { id: 'star_heroes_stage', name: 'Sân Khấu Star Heroes', icon: '🎪', cells: 5999, color: '#f59e0b', tier: 'legendary', priceToken: 5999 },
+  { id: 'solid_finish', name: 'Vững Vàng Về Đích', icon: '🏁', cells: 6000, color: '#3b82f6', tier: 'legendary', priceToken: 6000 },
+  { id: 'rust_reborn', name: 'Rust Tái Sinh', icon: '🤖', cells: 6000, color: '#64748b', tier: 'legendary', priceToken: 6000 },
+  { id: 'work_hard_play_hard', name: 'Làm Hết Sức Chơi Hết Mình', icon: '🎉', cells: 6000, color: '#8b5cf6', tier: 'legendary', priceToken: 6000 },
+  { id: 'lili_leopard', name: 'Báo Đốm Lili', icon: '🐆', cells: 6599, color: '#f43f5e', tier: 'legendary', priceToken: 6599 },
+  { id: 'rust_vs_world', name: 'Rust vs Thế Giới', icon: '⚔️', cells: 9999, color: '#dc2626', tier: 'legendary', priceToken: 9999 },
+  { id: 'sunset_racetrack', name: 'Đường Đua Hoàng Hôn', icon: '🏎️', cells: 10000, color: '#f97316', tier: 'legendary', priceToken: 10000 },
+  { id: 'superstar', name: 'Siêu Sao', icon: '🌟', cells: 12000, color: '#eab308', tier: 'legendary', priceToken: 12000 },
+  { id: 'meteor_shower', name: 'Mưa Sao Băng Kìa!', icon: '🌠', cells: 15000, color: '#6366f1', tier: 'legendary', priceToken: 15000 },
+  { id: 'space_party', name: 'Tiệc Tùng Không Gian', icon: '👾', cells: 15000, color: '#a855f7', tier: 'legendary', priceToken: 15000 },
+  { id: 'rosary_nebula', name: 'Tinh Vân Mân Khôi', icon: '🌌', cells: 15000, color: '#ec4899', tier: 'legendary', priceToken: 15000 },
+  { id: 'future_journey', name: 'Hành Trình Tương Lai', icon: '🚀', cells: 15000, color: '#06b6d4', tier: 'legendary', priceToken: 15000 },
+  { id: 'stadium', name: 'Sân Vận Động', icon: '🏟️', cells: 15999, color: '#0ea5e9', tier: 'legendary', priceToken: 15999 },
+
+  // 5. Thần thoại & Tuyệt phẩm (17,000 - 44,999 xu)
+  { id: 'amusement_park', name: 'Công Viên Giải Trí', icon: '🎡', cells: 17000, color: '#ec4899', tier: 'mythic', priceToken: 17000 },
+  { id: 'tiktok_shuttle', name: 'Tàu Con Thoi TikTok', icon: '🚀', cells: 20000, color: '#f43f5e', tier: 'mythic', priceToken: 20000 },
+  { id: 'glory_target', name: 'Mục Tiêu Vinh Quang', icon: '🏆', cells: 21500, color: '#eab308', tier: 'mythic', priceToken: 21500 },
+  { id: 'phoenix', name: 'Phoenix Phượng Hoàng', icon: '🦅', cells: 25999, color: '#ea580c', tier: 'mythic', priceToken: 25999 },
+  { id: 'adam_dream', name: 'Giấc Mơ Của Adam', icon: '💫', cells: 25999, color: '#38bdf8', tier: 'mythic', priceToken: 25999 },
+  { id: 'holy_dragon_flame', name: 'Ngọn Lửa Rồng Thiêng', icon: '🐲', cells: 26999, color: '#dc2626', tier: 'divine', priceToken: 26999 },
+  { id: 'lion_king', name: 'Sư Tử', icon: '🦁', cells: 29999, color: '#f59e0b', tier: 'divine', priceToken: 29999 },
+  { id: 'leon_and_lion', name: 'Leon và Sư Tử', icon: '👑🦁', cells: 34000, color: '#eab308', tier: 'divine', priceToken: 34000 },
+  { id: 'tiktok_stars', name: 'TikTok Stars', icon: '✨💫', cells: 39999, color: '#ec4899', tier: 'divine', priceToken: 39999 },
+  { id: 'tiktok_universe', name: 'TikTok Universe', icon: '🪐🌌', cells: 44999, color: '#8b5cf6', tier: 'divine', priceToken: 44999 },
 ];
 
 export const MOCK_WARRIORS_POOL = [
@@ -199,7 +269,16 @@ class BanDoGameEngine {
       cameraPreset: 'overview',
       selectedCountry: initialCountryKey,
       mapTexts: sanitizedLabels,
-      gifts: savedCustomConfig.gifts || DEFAULT_MAP_GIFTS,
+      gifts: (() => {
+        const saved = savedCustomConfig.gifts;
+        if (!saved || !Array.isArray(saved) || saved.length === 0) return [...DEFAULT_MAP_GIFTS];
+        if (saved.length < DEFAULT_MAP_GIFTS.length) {
+          const savedIds = new Set(saved.map(g => g.id));
+          const missing = DEFAULT_MAP_GIFTS.filter(g => !savedIds.has(g.id));
+          return [...saved, ...missing];
+        }
+        return saved;
+      })(),
       
       // Banner Flag Cells Matrix State
       bannerText: initialBannerText,
@@ -831,6 +910,28 @@ class BanDoGameEngine {
     this.notify({ type: 'GIFT_PLACED', giftId, count, user, claimed: toClaim.length, focalTarget: this.state.lastFocalTarget });
   }
 
+  // Xử lý sự kiện bình luận (Comment tương tác Live)
+  processComment(commentText, user = { id: 'guest_cm', username: 'Khán Giả Live', avatar: '' }) {
+    if (!commentText || this.state.status === 'victory') return;
+    const clean = commentText.toString().trim().toLowerCase();
+    
+    // Tự động phân tích comment và cắm cờ
+    if (clean === '1' || clean === 'cm 1' || clean === 'số 1' || clean === 'so 1') {
+      this.processGift('flag_vn', 1, user);
+    } else if (clean === '2' || clean === 'cm 2' || clean === 'số 2' || clean === 'so 2') {
+      this.processGift('flag_vn', 2, user);
+    } else if (clean.includes('hoa hong') || clean.includes('rose') || clean.includes('🌹')) {
+      this.processGift('rose', 1, user);
+    } else if (clean.includes('tim') || clean.includes('heart') || clean.includes('❤️') || clean.includes('🧡')) {
+      this.processGift('heart_tap', 1, user);
+    } else if (clean.includes('vietnam') || clean.includes('việt nam') || clean.includes('vn')) {
+      this.processGift('flag_vn', 3, user);
+    } else {
+      // Mọi comment hợp lệ được thưởng 1 ô cờ
+      this.processGift('flag_vn', 1, user);
+    }
+  }
+
   addFeedItem(type, text) {
     const item = {
       id: `${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
@@ -1177,6 +1278,50 @@ class BanDoGameEngine {
     this.state.gifts = newGifts;
     this.saveToStorage();
     this.notify({ type: 'GIFTS_UPDATED', gifts: newGifts });
+  }
+
+  addGift(newGift) {
+    if (!newGift || !newGift.name) return;
+    const gifts = this.state.gifts || DEFAULT_MAP_GIFTS;
+    const id = newGift.id || `gift_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+    const gift = {
+      id,
+      name: newGift.name,
+      icon: newGift.icon || '🎁',
+      cells: Math.max(1, parseInt(newGift.cells) || 1),
+      color: newGift.color || '#f59e0b',
+      tier: newGift.tier || 'common',
+      priceToken: Math.max(1, parseInt(newGift.priceToken) || parseInt(newGift.cells) || 1),
+    };
+    const updated = [gift, ...gifts];
+    this.updateGiftConfig(updated);
+    return gift;
+  }
+
+  removeGift(giftId) {
+    const gifts = this.state.gifts || DEFAULT_MAP_GIFTS;
+    const updated = gifts.filter(g => g.id !== giftId);
+    this.updateGiftConfig(updated);
+  }
+
+  updateGift(giftId, fields) {
+    const gifts = this.state.gifts || DEFAULT_MAP_GIFTS;
+    const updated = gifts.map(g => {
+      if (g.id === giftId) {
+        return {
+          ...g,
+          ...fields,
+          cells: fields.cells !== undefined ? Math.max(1, parseInt(fields.cells) || 1) : g.cells,
+          priceToken: fields.priceToken !== undefined ? Math.max(1, parseInt(fields.priceToken) || 1) : g.priceToken,
+        };
+      }
+      return g;
+    });
+    this.updateGiftConfig(updated);
+  }
+
+  resetDefaultGifts() {
+    this.updateGiftConfig([...DEFAULT_MAP_GIFTS]);
   }
 
   setAutoRotate(enabled) {

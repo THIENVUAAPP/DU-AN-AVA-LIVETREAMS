@@ -17,11 +17,21 @@ const SIMULATED_USERS = [
 ];
 
 const DEFAULT_GIFTS = [
-  { id: 1, name: 'Hoa Hồng / Tim', icon: '🌸', coins: 1, tier: 'Tân Binh', buff: '+10 HP Xung Trận', skill: 'Vào Trận' },
-  { id: 2, name: 'Nước Hoa / Mũ', icon: '🛡️', coins: 50, tier: 'Thiết Giáp Hiệp', buff: '+150 HP + Giáp Bạc', skill: 'Kiếm Thép' },
-  { id: 3, name: 'Vương Miện / Cánh', icon: '👑', coins: 200, tier: 'Kim Khải Thần Tướng', buff: '+600 HP + Cánh Vàng', skill: 'Thái Cực Trận' },
-  { id: 4, name: 'Xe Thể Thao / Sét', icon: '⚡', coins: 500, tier: 'Chiến Thần Vạn Kiếm', buff: '+1500 HP + Thần Binh', skill: 'Vạn Kiếm Quy Tông' },
-  { id: 5, name: 'Thần Long / Vũ Trụ', icon: '🐉', coins: 1000, tier: 'Chí Tôn Thiên Tôn', buff: '+3500 HP + Rồng Thần', skill: 'Giáng Long Chưởng' }
+  { id: 1, name: 'Hoa Hồng / Tim', icon: '🌹', coins: 1, tier: 'Tân Binh', buff: '+10 HP Xung Trận', skill: 'Vào Trận' },
+  { id: 2, name: 'Thả Tim / Bắn Tim', icon: '🧡', coins: 1, tier: 'Tân Binh', buff: '+10 HP Tăng Tốc', skill: 'Bắn Tim' },
+  { id: 3, name: 'Bánh Sinh Nhật', icon: '🍰', coins: 1, tier: 'Tân Binh', buff: '+15 HP Hồi Máu', skill: 'Hồi Phục' },
+  { id: 4, name: 'Nước Hoa / Mũ Cối', icon: '🛡️', coins: 50, tier: 'Thiết Giáp Hiệp', buff: '+150 HP + Giáp Bạc', skill: 'Kiếm Thép' },
+  { id: 5, name: 'Vương Miện / Cánh', icon: '👑', coins: 99, tier: 'Kim Khải Thần Tướng', buff: '+300 HP + Cánh Vàng', skill: 'Thái Cực Trận' },
+  { id: 6, name: 'Trống Đồng / Saxophone', icon: '🥁', coins: 249, tier: 'Âm Ba Thần Khí', buff: '+800 HP + Sóng Âm', skill: 'Bùng Nổ' },
+  { id: 7, name: 'Xe Thể Thao / Sét', icon: '⚡', coins: 500, tier: 'Chiến Thần Vạn Kiếm', buff: '+1500 HP + Thần Binh', skill: 'Vạn Kiếm Quy Tông' },
+  { id: 8, name: 'Xe Tải Kem / Gấu Nhịp Điệu', icon: '🧸', coins: 2999, tier: 'Thần Thú Nhịp Điệu', buff: '+5000 HP + Hộ Thể', skill: 'Gấu Cuồng Nộ' },
+  { id: 9, name: 'Rust Tái Sinh / Về Đích', icon: '🤖', coins: 6000, tier: 'Cơ Giáp Tối Thượng', buff: '+12000 HP + Tia Lazer', skill: 'Laze Hủy Diệt' },
+  { id: 10, name: 'Mưa Sao Băng Kìa!', icon: '🌠', coins: 15000, tier: 'Thiên Thạch Tinh Hà', buff: '+30000 HP + Mưa Tinh Cầu', skill: 'Mưa Sao Băng' },
+  { id: 11, name: 'Công Viên Giải Trí', icon: '🎡', coins: 17000, tier: 'Ảo Ảnh Kỳ Quan', buff: '+35000 HP + Kết Giới', skill: 'Vòng Xoay Thần' },
+  { id: 12, name: 'Phoenix Phượng Hoàng', icon: '🦅', coins: 25999, tier: 'Bất Tử Phượng Hoàng', buff: '+50000 HP + Bão Lửa', skill: 'Hỏa Phụng Liêu Nguyên' },
+  { id: 13, name: 'Ngọn Lửa Rồng Thiêng', icon: '🐲', coins: 26999, tier: 'Thánh Long Tối Thượng', buff: '+60000 HP + Hơi Thở Rồng', skill: 'Long Thần Nộ' },
+  { id: 14, name: 'Leon và Sư Tử', icon: '🦁👑', coins: 34000, tier: 'Chí Tôn Vạn Thú', buff: '+80000 HP + Vương Giả', skill: 'Sư Tử Hống' },
+  { id: 15, name: 'TikTok Stars / Universe', icon: '✨🪐', coins: 39999, tier: 'Chí Tôn Thiên Vũ Trụ', buff: '+100000 HP + Toàn Năng', skill: 'Vũ Trụ Thần Chưởng' }
 ];
 
 export default function GameChienDauAdminModal({ 
@@ -32,6 +42,7 @@ export default function GameChienDauAdminModal({
 }) {
   // Passwordless access: 1-click direct admin access
   const [activeTab, setActiveTab] = useState('commentary'); // 'commentary' | 'bgm' | 'referee' | 'gifts' | 'settings' | 'match' | 'tiktok'
+  const [modalWidthMode, setModalWidthMode] = useState('medium'); // 'compact' | 'medium' | 'wide'
   const [isMinimized, setIsMinimized] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [newPromptText, setNewPromptText] = useState('');
@@ -46,7 +57,7 @@ export default function GameChienDauAdminModal({
       if (savedPos) {
         try { return JSON.parse(savedPos); } catch (e) {}
       }
-      return { x: Math.max(16, window.innerWidth - 690), y: Math.max(16, window.innerHeight - 640) };
+      return { x: Math.max(16, window.innerWidth - 560), y: 16 };
     }
     return { x: 40, y: 40 };
   });
@@ -340,7 +351,13 @@ export default function GameChienDauAdminModal({
         style={{ 
           transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
           transition: isDragging ? 'none' : 'box-shadow 0.2s ease',
-          width: isMinimized ? '340px' : 'min(94vw, 700px)'
+          width: isMinimized 
+            ? '320px' 
+            : modalWidthMode === 'compact' 
+              ? '400px' 
+              : modalWidthMode === 'medium' 
+                ? '560px' 
+                : 'min(94vw, 760px)'
         }}
         className={`pointer-events-auto bg-[#0d0f17]/98 backdrop-blur-2xl border border-purple-500/50 rounded-2xl shadow-2xl shadow-purple-950/60 overflow-hidden flex flex-col ${
           isDragging ? 'cursor-grabbing select-none opacity-95 ring-2 ring-purple-400' : ''
@@ -353,24 +370,51 @@ export default function GameChienDauAdminModal({
           className="px-4 py-3 bg-gradient-to-r from-purple-950/90 via-indigo-950/90 to-purple-950/90 border-b border-purple-500/40 flex items-center justify-between cursor-grab select-none"
           title="Nhấn giữ và kéo để di chuyển bảng Quản trị Admin tới bất kỳ đâu"
         >
-          <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-lg bg-purple-500/20 text-purple-400 border border-purple-400/30 flex items-center justify-center">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="p-1.5 rounded-lg bg-purple-500/20 text-purple-400 border border-purple-400/30 flex items-center justify-center shrink-0">
               <Move size={14} className="animate-pulse text-purple-300" />
             </div>
-            <div>
-              <h2 className="text-xs font-black text-white flex items-center gap-1.5">
-                BẢNG QUẢN TRỊ ADMIN GAME
+            <div className="min-w-0">
+              <h2 className="text-xs font-black text-white flex items-center gap-1.5 truncate">
+                ADMIN GAME CHIẾN ĐẤU 3D
                 {isSimulating && (
-                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
                 )}
-                <span className="text-[9px] font-bold text-emerald-400 bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-500/30">
-                  VIP Direct
+                <span className="text-[9px] font-bold text-emerald-400 bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-500/30 shrink-0">
+                  VIP
                 </span>
               </h2>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Width Size Switcher */}
+            {!isMinimized && (
+              <div className="hidden sm:flex items-center bg-black/50 border border-white/10 rounded-lg p-0.5 text-[10px]">
+                <button
+                  onClick={() => setModalWidthMode('compact')}
+                  className={`px-1.5 py-0.5 rounded transition-colors ${modalWidthMode === 'compact' ? 'bg-purple-600 text-white font-bold' : 'text-gray-400 hover:text-white'}`}
+                  title="Khung Gọn (400px)"
+                >
+                  Gọn
+                </button>
+                <button
+                  onClick={() => setModalWidthMode('medium')}
+                  className={`px-1.5 py-0.5 rounded transition-colors ${modalWidthMode === 'medium' ? 'bg-purple-600 text-white font-bold' : 'text-gray-400 hover:text-white'}`}
+                  title="Khung Vừa (560px)"
+                >
+                  Vừa
+                </button>
+                <button
+                  onClick={() => setModalWidthMode('wide')}
+                  className={`px-1.5 py-0.5 rounded transition-colors ${modalWidthMode === 'wide' ? 'bg-purple-600 text-white font-bold' : 'text-gray-400 hover:text-white'}`}
+                  title="Khung Rộng (760px)"
+                >
+                  Rộng
+                </button>
+              </div>
+            )}
+
             <button
               onClick={() => setIsMinimized(!isMinimized)}
               className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"

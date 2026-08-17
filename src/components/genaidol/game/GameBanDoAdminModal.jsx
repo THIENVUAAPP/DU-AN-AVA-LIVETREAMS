@@ -4,7 +4,8 @@ import {
   Sparkles, Gift, MapPin, Flag, CheckCircle, Copy, AlertTriangle, 
   Settings, RefreshCw, Zap, Sliders, ExternalLink, Trophy, Type,
   Compass, Sun, Eye, Trash2, Plus, PlusCircle, VolumeX, Save, Check, Grid,
-  Upload, Search, Mic, Radio, Volume1, FileAudio, ZoomIn, ZoomOut, Move, Camera, BookmarkPlus, Layers
+  Upload, Search, Mic, Radio, Volume1, FileAudio, ZoomIn, ZoomOut, Move, Camera, BookmarkPlus, Layers,
+  Palette, Minimize2, Maximize2, Columns, Edit2, MessageSquare, Bot
 } from 'lucide-react';
 import bandoEngine, { DEFAULT_MAP_GIFTS, COUNTRY_PRESETS, WORLD_COUNTRIES, CONTINENTS } from './bandoGameEngine';
 import bandoAudio from './bandoAudioEngine';
@@ -12,6 +13,8 @@ import { ELEVENLABS_VOICES, previewVoiceAudio, stopVoiceAudio, getDualVoiceConfi
 
 export default function GameBanDoAdminModal({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('operations');
+  const [modalWidthMode, setModalWidthMode] = useState('medium'); // 'compact' | 'medium' | 'wide'
+  const [isMinimized, setIsMinimized] = useState(false);
   const [gameState, setGameState] = useState(() => bandoEngine.state);
   const [customTitle, setCustomTitle] = useState(() => bandoEngine.state.settings.customMapTitle || '');
   const [totalCellsInput, setTotalCellsInput] = useState(() => bandoEngine.state.totalCells || 15125);
@@ -62,6 +65,18 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
   const [selectedGameVoiceId, setSelectedGameVoiceId] = useState(() => getDualVoiceConfig().gameVoice?.id || 'el_josh');
   const [voiceCategory, setVoiceCategory] = useState('all');
   const [previewingVoiceId, setPreviewingVoiceId] = useState(null);
+
+  // Quản lý quà tặng TikTok
+  const [giftSearch, setGiftSearch] = useState('');
+  const [giftTierFilter, setGiftTierFilter] = useState('all');
+  const [isAddingGift, setIsAddingGift] = useState(false);
+  const [newGiftName, setNewGiftName] = useState('');
+  const [newGiftIcon, setNewGiftIcon] = useState('🎁');
+  const [newGiftPrice, setNewGiftPrice] = useState(100);
+  const [newGiftCells, setNewGiftCells] = useState(100);
+  const [newGiftTier, setNewGiftTier] = useState('common');
+  const [editingGiftId, setEditingGiftId] = useState(null);
+  const [editGiftData, setEditGiftData] = useState({});
 
   // Trigger camera actions from inside Admin settings
   const triggerCameraAction = (action, payload) => {
@@ -162,10 +177,56 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
   };
 
   const handleSaveGiftCells = (giftId, newCells) => {
-    const updated = (gameState.gifts || DEFAULT_MAP_GIFTS).map(g => 
-      g.id === giftId ? { ...g, cells: Math.max(1, parseInt(newCells) || 1) } : g
-    );
-    bandoEngine.updateGiftConfig(updated);
+    bandoEngine.updateGift(giftId, { cells: parseInt(newCells) || 1 });
+  };
+
+  const handleAddGift = (e) => {
+    e.preventDefault();
+    if (!newGiftName.trim()) return;
+    bandoEngine.addGift({
+      name: newGiftName.trim(),
+      icon: newGiftIcon.trim() || '🎁',
+      priceToken: parseInt(newGiftPrice) || 1,
+      cells: parseInt(newGiftCells) || 1,
+      tier: newGiftTier,
+    });
+    setNewGiftName('');
+    setNewGiftIcon('🎁');
+    setNewGiftPrice(100);
+    setNewGiftCells(100);
+    setIsAddingGift(false);
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 2000);
+  };
+
+  const handleDeleteGift = (id) => {
+    bandoEngine.removeGift(id);
+  };
+
+  const handleStartEditGift = (gift) => {
+    setEditingGiftId(gift.id);
+    setEditGiftData({
+      name: gift.name,
+      icon: gift.icon,
+      priceToken: gift.priceToken,
+      cells: gift.cells,
+      tier: gift.tier || 'common',
+    });
+  };
+
+  const handleSaveEditGift = (id) => {
+    bandoEngine.updateGift(id, editGiftData);
+    setEditingGiftId(null);
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 2000);
+  };
+
+  const handleResetDefaultGifts = () => {
+    if (window.confirm('Bạn có chắc muốn khôi phục lại toàn bộ danh mục quà TikTok mặc định ban đầu không?')) {
+      bandoEngine.resetDefaultGifts();
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2000);
+    }
   };
 
   // Upload BGM File Handler
@@ -260,56 +321,127 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
     return true;
   });
 
+  // Chế độ Widget Thu Nhỏ Góc Phải (Không Che Màn Hình Live)
+  if (isMinimized) {
+    return (
+      <div className="fixed bottom-4 right-4 z-50 pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-200">
+        <div className="bg-[#11131a]/95 backdrop-blur-xl border border-yellow-500/50 rounded-2xl shadow-2xl p-2.5 flex items-center gap-3 text-white">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-red-600 to-yellow-500 flex items-center justify-center font-bold text-xs shadow">
+            {COUNTRY_PRESETS[selectedCountry]?.flag || '🇻🇳'}
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xs font-black text-yellow-400">ADMIN BẢN ĐỒ</span>
+            <span className="text-[10px] text-gray-400">{gameState.roundId} • Đang Thu Gọn</span>
+          </div>
+          <button
+            onClick={() => setIsMinimized(false)}
+            className="px-3 py-1.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-black font-black text-xs flex items-center gap-1 shadow"
+            title="Mở rộng bảng quản trị"
+          >
+            <Maximize2 size={13} /> Mở Rộng
+          </button>
+          <button
+            onClick={onClose}
+            className="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-white/10"
+            title="Đóng"
+          >
+            <X size={15} />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-end p-2 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 pointer-events-auto">
-      <div className="relative w-full max-w-4xl h-[96vh] bg-[#11131a] border border-white/15 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-gray-100 font-sans mr-0 sm:mr-3">
+    <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-end p-2 sm:p-3 animate-in fade-in duration-200">
+      <div 
+        style={{
+          width: modalWidthMode === 'compact' ? '400px' : modalWidthMode === 'medium' ? '560px' : '820px',
+          maxWidth: 'calc(100vw - 16px)'
+        }}
+        className="pointer-events-auto h-[95vh] bg-[#0f1118]/98 backdrop-blur-2xl border border-yellow-500/40 rounded-2xl shadow-2xl shadow-black/80 flex flex-col overflow-hidden text-gray-100 font-sans transition-all duration-200 ml-auto"
+      >
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-black/50 border-b border-white/10 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-red-600 via-amber-500 to-yellow-400 flex items-center justify-center shadow-lg shadow-red-500/20 ring-2 ring-yellow-400/40">
-              <Shield size={20} className="text-white" />
+        <div className="flex items-center justify-between px-4 py-3 bg-black/60 border-b border-white/10 shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-red-600 via-amber-500 to-yellow-400 flex items-center justify-center shadow-md shadow-red-500/20 shrink-0">
+              <Shield size={16} className="text-white" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm md:text-base font-black text-white tracking-wide">
-                  ADMIN QUẢN TRỊ — GAME GHÉP CỜ 200 QUỐC GIA & VOICE AI
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <h2 className="text-xs font-black text-white tracking-wide truncate">
+                  ADMIN GAME GHÉP CỜ & VOICE AI
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-600 text-white shadow-sm">
+                <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-red-600 text-white shadow-sm shrink-0">
                   {gameState.roundId}
                 </span>
-                <span className="text-xs">{COUNTRY_PRESETS[selectedCountry]?.flag || '🇻🇳'}</span>
+                <span className="text-xs shrink-0">{COUNTRY_PRESETS[selectedCountry]?.flag || '🇻🇳'}</span>
               </div>
-              <p className="text-xs text-gray-400">
-                200 Quốc gia, Khối chữ Ô Cờ 3D, Tải nhạc BGM/SFX, 30+ Voice AI ElevenLabs & Lưu vĩnh viễn
+              <p className="text-[10px] text-gray-400 truncate">
+                200 Quốc gia • 30+ Voice AI • Cài Đặt Quà Tặng & Tương Tác
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Width Size Switcher */}
+            <div className="hidden sm:flex items-center bg-black/50 border border-white/10 rounded-lg p-0.5 text-[10px]">
+              <button
+                onClick={() => setModalWidthMode('compact')}
+                className={`px-1.5 py-0.5 rounded transition-colors ${modalWidthMode === 'compact' ? 'bg-yellow-500 text-black font-black' : 'text-gray-400 hover:text-white'}`}
+                title="Khung Gọn (400px)"
+              >
+                Gọn
+              </button>
+              <button
+                onClick={() => setModalWidthMode('medium')}
+                className={`px-1.5 py-0.5 rounded transition-colors ${modalWidthMode === 'medium' ? 'bg-yellow-500 text-black font-black' : 'text-gray-400 hover:text-white'}`}
+                title="Khung Vừa (560px)"
+              >
+                Vừa
+              </button>
+              <button
+                onClick={() => setModalWidthMode('wide')}
+                className={`px-1.5 py-0.5 rounded transition-colors ${modalWidthMode === 'wide' ? 'bg-yellow-500 text-black font-black' : 'text-gray-400 hover:text-white'}`}
+                title="Khung Rộng (820px)"
+              >
+                Rộng
+              </button>
+            </div>
+
+            <button
+              onClick={() => setIsMinimized(true)}
+              className="p-1.5 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
+              title="Thu nhỏ cửa sổ góc phải (để xem toàn cảnh Live)"
+            >
+              <Minimize2 size={14} />
+            </button>
+
             <button
               onClick={handleSaveAll}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-md ${
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 shadow-md ${
                 saveSuccess 
                   ? 'bg-emerald-600 text-white' 
                   : 'bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-black font-black'
               }`}
             >
-              {saveSuccess ? <Check size={14} /> : <Save size={14} />}
-              <span>{saveSuccess ? 'Đã Lưu Vĩnh Viễn!' : '💾 Lưu Vĩnh Viễn'}</span>
+              {saveSuccess ? <Check size={13} /> : <Save size={13} />}
+              <span className="hidden sm:inline">{saveSuccess ? 'Đã Lưu!' : 'Lưu'}</span>
             </button>
 
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
+              className="p-1.5 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
+              title="Đóng bảng Admin"
             >
-              <X size={20} />
+              <X size={16} />
             </button>
           </div>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex items-center gap-1 px-6 py-2.5 bg-[#161922] border-b border-white/10 overflow-x-auto shrink-0 custom-scrollbar">
+        <div className="flex items-center gap-1 px-4 py-2 bg-[#141722] border-b border-white/10 overflow-x-auto shrink-0 custom-scrollbar">
           {[
             { id: 'operations', label: '🎮 Vận Hành & Khối Chữ Ô Cờ' },
             { id: 'camera', label: '🎥 Góc Nhìn & Camera 3D' },
@@ -1612,55 +1744,293 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
           {/* TAB 7: GIFTS CONFIGURATION */}
           {activeTab === 'gifts' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                 <div>
-                  <h3 className="text-sm font-black text-white">DANH MỤC QUÀ TIKTOK & SỐ Ô CỜ QUY ĐỔI</h3>
-                  <p className="text-xs text-gray-400">Chỉnh sửa số ô cờ nhận được cho từng món quà TikTok</p>
+                  <h3 className="text-sm font-black text-white uppercase flex items-center gap-2">
+                    <Gift size={18} className="text-yellow-400" /> Quản Lý Kho Quà Tặng TikTok Live & Tỷ Lệ Cắm Cờ
+                  </h3>
+                  <p className="text-xs text-gray-400">
+                    Đầy đủ 45+ quà tặng TikTok chuẩn từ 1 xu đến 44,999 xu. Cho phép thêm quà mới, chỉnh sửa tên/xu/ô cờ và xóa tùy ý.
+                  </p>
                 </div>
-                <button
-                  onClick={() => bandoEngine.startAutoTestLoop()}
-                  className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-black shadow-lg flex items-center gap-1.5"
-                >
-                  <Play size={13} /> Chạy Tự Động Test Toàn Bộ Quà
-                </button>
+                
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setIsAddingGift(!isAddingGift)}
+                    className="px-3.5 py-2 bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-500 hover:to-red-500 text-white rounded-xl text-xs font-black shadow-lg flex items-center gap-1.5 transition-all"
+                  >
+                    <Plus size={14} /> {isAddingGift ? 'Đóng Form Thêm' : '➕ Thêm Quà Mới'}
+                  </button>
+
+                  <button
+                    onClick={handleResetDefaultGifts}
+                    className="px-3 py-2 bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
+                    title="Khôi phục toàn bộ danh mục quà chuẩn"
+                  >
+                    <RotateCcw size={13} /> Khôi Phục Gốc
+                  </button>
+
+                  <button
+                    onClick={() => bandoEngine.startAutoTestLoop()}
+                    className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-black shadow-lg flex items-center gap-1.5 transition-all"
+                  >
+                    <Play size={13} /> Chạy Test Tự Động
+                  </button>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {(gameState.gifts || DEFAULT_MAP_GIFTS).map((gift) => (
-                  <div key={gift.id} className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col justify-between">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-2xl">{gift.icon}</span>
-                        <div>
-                          <div className="text-xs font-black text-white">{gift.name}</div>
-                          <div className="text-[10px] text-gray-400 capitalize">{gift.tier} • {gift.priceToken} xu</div>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => {
-                          bandoAudio.unlock();
-                          bandoEngine.processGift(gift.id, 1, { id: 'admin_test', username: 'Admin Test 👑', avatar: '' });
-                        }}
-                        className="px-2 py-1 rounded bg-white/10 hover:bg-yellow-500 hover:text-black text-gray-300 text-[11px] font-bold transition-all"
-                      >
-                        Bấm Test
-                      </button>
+              {/* Form Thêm Món Quà Mới */}
+              {isAddingGift && (
+                <form onSubmit={handleAddGift} className="bg-gradient-to-r from-amber-950/40 via-red-950/40 to-black/80 border border-yellow-500/40 rounded-2xl p-5 space-y-4 animate-in fade-in duration-200">
+                  <div className="text-xs font-black text-yellow-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <PlusCircle size={15} className="text-yellow-400" />
+                    <span>Thêm Món Quà Tặng TikTok Mới Vào Hệ Thống</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+                    <div>
+                      <label className="text-[11px] font-bold text-gray-300 block mb-1">Biểu tượng (Icon/Emoji):</label>
+                      <input
+                        type="text"
+                        value={newGiftIcon}
+                        onChange={(e) => setNewGiftIcon(e.target.value)}
+                        placeholder="🌹, 👑, 🦁..."
+                        className="w-full px-3 py-2 bg-black/60 border border-white/20 rounded-xl text-center text-lg text-white placeholder-gray-500 outline-none focus:border-yellow-400"
+                        required
+                      />
                     </div>
 
-                    <div className="flex items-center gap-2 pt-2 border-t border-white/10">
-                      <span className="text-xs text-gray-400">Số ô cờ:</span>
+                    <div className="md:col-span-2">
+                      <label className="text-[11px] font-bold text-gray-300 block mb-1">Tên Món Quà:</label>
+                      <input
+                        type="text"
+                        value={newGiftName}
+                        onChange={(e) => setNewGiftName(e.target.value)}
+                        placeholder="Ví dụ: Rồng Thần, Siêu Xe, Trống Trận..."
+                        className="w-full px-3 py-2 bg-black/60 border border-white/20 rounded-xl text-xs text-white placeholder-gray-500 outline-none focus:border-yellow-400"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-gray-300 block mb-1">Giá Xu (Coins):</label>
                       <input
                         type="number"
                         min="1"
-                        max="50000"
-                        value={gift.cells}
-                        onChange={(e) => handleSaveGiftCells(gift.id, e.target.value)}
-                        className="w-24 px-2 py-1 bg-black/50 border border-white/20 rounded-lg text-xs font-mono font-bold text-yellow-400 text-right focus:outline-none focus:border-yellow-400"
+                        max="500000"
+                        value={newGiftPrice}
+                        onChange={(e) => setNewGiftPrice(e.target.value)}
+                        className="w-full px-3 py-2 bg-black/60 border border-white/20 rounded-xl text-xs font-mono text-yellow-300 outline-none focus:border-yellow-400"
+                        required
                       />
-                      <span className="text-xs text-yellow-300 font-bold">ô</span>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-gray-300 block mb-1">Số Ô Cờ Nhận Được:</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="500000"
+                        value={newGiftCells}
+                        onChange={(e) => setNewGiftCells(e.target.value)}
+                        className="w-full px-3 py-2 bg-black/60 border border-white/20 rounded-xl text-xs font-mono text-emerald-400 outline-none focus:border-yellow-400"
+                        required
+                      />
                     </div>
                   </div>
-                ))}
+
+                  <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                    <div className="flex items-center gap-2">
+                      <label className="text-[11px] font-bold text-gray-300">Cấp Độ (Tier):</label>
+                      <select
+                        value={newGiftTier}
+                        onChange={(e) => setNewGiftTier(e.target.value)}
+                        className="px-3 py-1.5 bg-black/60 border border-white/20 rounded-xl text-xs text-white outline-none focus:border-yellow-400"
+                      >
+                        <option value="common">Phổ biến (Common)</option>
+                        <option value="rare">Hiếm (Rare)</option>
+                        <option value="epic">Sử thi (Epic)</option>
+                        <option value="legendary">Huyền thoại (Legendary)</option>
+                        <option value="mythic">Thần thoại (Mythic)</option>
+                        <option value="divine">Tuyệt phẩm (Divine)</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsAddingGift(false)}
+                        className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-gray-300 rounded-xl text-xs font-bold"
+                      >
+                        Hủy
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-5 py-1.5 bg-gradient-to-r from-yellow-500 to-amber-600 text-black font-black rounded-xl text-xs shadow-lg flex items-center gap-1"
+                      >
+                        <Check size={14} /> Lưu Món Quà
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              )}
+
+              {/* Tìm kiếm & Lọc Theo Phân Hạng Tier */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {[
+                    { id: 'all', label: `Tất Cả (${(gameState.gifts || []).length})` },
+                    { id: 'common', label: '🟢 Phổ biến (1-10 xu)' },
+                    { id: 'rare', label: '🔵 Hiếm (20-499 xu)' },
+                    { id: 'epic', label: '🟣 Sử thi (500-2,999 xu)' },
+                    { id: 'legendary', label: '🟡 Huyền thoại (3,000-15,999 xu)' },
+                    { id: 'mythic', label: '🔴 Thần thoại (17,000-44,999 xu)' },
+                  ].map(t => (
+                    <button
+                      key={t.id}
+                      onClick={() => setGiftTierFilter(t.id)}
+                      className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
+                        giftTierFilter === t.id
+                          ? 'bg-yellow-500 text-black shadow-md shadow-yellow-500/30'
+                          : 'bg-white/5 hover:bg-white/10 text-gray-300'
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="relative w-full sm:w-64">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    value={giftSearch}
+                    onChange={(e) => setGiftSearch(e.target.value)}
+                    placeholder="Tìm tên quà hoặc số xu..."
+                    className="w-full pl-9 pr-3 py-1.5 bg-black/50 border border-white/15 rounded-xl text-xs text-white placeholder-gray-500 outline-none focus:border-yellow-400"
+                  />
+                </div>
+              </div>
+
+              {/* Danh Sách Quà Tặng Dưới Dạng Thẻ Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-[58vh] overflow-y-auto custom-scrollbar pr-1">
+                {(gameState.gifts || DEFAULT_MAP_GIFTS)
+                  .filter(g => {
+                    const matchTier = giftTierFilter === 'all' || g.tier === giftTierFilter || (giftTierFilter === 'mythic' && (g.tier === 'mythic' || g.tier === 'divine'));
+                    const matchSearch = !giftSearch.trim() || g.name.toLowerCase().includes(giftSearch.toLowerCase()) || g.priceToken.toString().includes(giftSearch);
+                    return matchTier && matchSearch;
+                  })
+                  .map((gift) => (
+                    <div
+                      key={gift.id}
+                      className={`p-3.5 rounded-2xl border transition-all flex flex-col justify-between ${
+                        editingGiftId === gift.id
+                          ? 'bg-amber-950/60 border-yellow-400 ring-2 ring-yellow-400/40 shadow-xl'
+                          : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/[0.08]'
+                      }`}
+                    >
+                      {editingGiftId === gift.id ? (
+                        /* Chế độ Chỉnh Sửa Trực Tiếp */
+                        <div className="space-y-2.5">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={editGiftData.icon || ''}
+                              onChange={(e) => setEditGiftData({ ...editGiftData, icon: e.target.value })}
+                              className="w-10 px-1 py-1 bg-black/60 border border-white/20 rounded-lg text-center text-lg text-white"
+                              title="Biểu tượng"
+                            />
+                            <input
+                              type="text"
+                              value={editGiftData.name || ''}
+                              onChange={(e) => setEditGiftData({ ...editGiftData, name: e.target.value })}
+                              className="flex-1 px-2 py-1 bg-black/60 border border-white/20 rounded-lg text-xs font-bold text-white"
+                              placeholder="Tên quà"
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 text-[11px]">
+                            <div>
+                              <span className="text-gray-400 block mb-0.5">Giá Xu:</span>
+                              <input
+                                type="number"
+                                value={editGiftData.priceToken || ''}
+                                onChange={(e) => setEditGiftData({ ...editGiftData, priceToken: e.target.value })}
+                                className="w-full px-2 py-1 bg-black/60 border border-white/20 rounded-lg text-xs font-mono font-bold text-yellow-300"
+                              />
+                            </div>
+                            <div>
+                              <span className="text-gray-400 block mb-0.5">Số Ô Cờ:</span>
+                              <input
+                                type="number"
+                                value={editGiftData.cells || ''}
+                                onChange={(e) => setEditGiftData({ ...editGiftData, cells: e.target.value })}
+                                className="w-full px-2 py-1 bg-black/60 border border-white/20 rounded-lg text-xs font-mono font-bold text-emerald-400"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-white/10">
+                            <button
+                              onClick={() => setEditingGiftId(null)}
+                              className="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-gray-300 text-[11px]"
+                            >
+                              Hủy
+                            </button>
+                            <button
+                              onClick={() => handleSaveEditGift(gift.id)}
+                              className="px-3 py-1 rounded bg-yellow-500 hover:bg-yellow-400 text-black font-black text-[11px]"
+                            >
+                              Lưu
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        /* Chế độ Hiển Thị Thông Thường */
+                        <div>
+                          <div className="flex items-start justify-between gap-1.5 mb-2">
+                            <div className="flex items-center gap-2 truncate">
+                              <span className="text-2xl shrink-0">{gift.icon}</span>
+                              <div className="truncate">
+                                <div className="text-xs font-black text-white truncate" title={gift.name}>{gift.name}</div>
+                                <div className="text-[10px] text-yellow-400 font-mono font-bold">{gift.priceToken?.toLocaleString()} xu</div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                onClick={() => handleStartEditGift(gift)}
+                                className="p-1 text-gray-400 hover:text-yellow-300 hover:bg-white/10 rounded-lg transition-colors"
+                                title="Sửa quà này"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                onClick={() => handleDeleteGift(gift.id)}
+                                className="p-1 text-gray-400 hover:text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                                title="Xóa món quà này"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t border-white/10 text-xs">
+                            <span className="text-emerald-400 font-mono font-black">+{gift.cells?.toLocaleString()} ô cờ</span>
+                            <button
+                              onClick={() => {
+                                bandoAudio.unlock();
+                                bandoEngine.processGift(gift.id, 1, { id: 'admin_test', username: 'Admin Thử Nghiệm 👑', avatar: '' });
+                              }}
+                              className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-bold text-[10px] shadow transition-all active:scale-95 flex items-center gap-1"
+                            >
+                              <Play size={10} /> Test
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
               </div>
             </div>
           )}

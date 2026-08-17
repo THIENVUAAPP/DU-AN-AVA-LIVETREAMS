@@ -662,14 +662,26 @@ export default function AIDOLLiveConsole() {
 
                   <div className="flex gap-2 mb-4">
                     <select value={simGift} onChange={e => setSimGift(e.target.value)} className="flex-1 bg-[#0D0F1A] border border-slate-700 rounded px-3 py-1.5 text-xs text-white outline-none focus:border-pink-500">
-                      <option value="Hoa hồng (Rose)">🌹 Hoa hồng (1 xu)</option>
-                      <option value="Trái tim (Heart)">❤️ Trái tim (10 xu)</option>
-                      <option value="Kính râm (Sunglasses)">🕶️ Kính râm (199 xu)</option>
-                      <option value="Sư tử (Lion)">🦁 Sư tử (29999 xu)</option>
-                      <option value="Siêu xe (Sports Car)">🏎️ Siêu xe (39999 xu)</option>
+                      <option value="🌹 Hoa hồng (1 xu)">🌹 Hoa hồng (1 xu)</option>
+                      <option value="🧡 Thả tim (1 xu)">🧡 Thả tim (1 xu)</option>
+                      <option value="🍰 Bánh sinh nhật (1 xu)">🍰 Bánh sinh nhật (1 xu)</option>
+                      <option value="🌸 Nước hoa (50 xu)">🌸 Nước hoa (50 xu)</option>
+                      <option value="👑 Vương miện (99 xu)">👑 Vương miện (99 xu)</option>
+                      <option value="🥁 Trống đồng (249 xu)">🥁 Trống đồng (249 xu)</option>
+                      <option value="⚡ Xe thể thao (500 xu)">⚡ Xe thể thao (500 xu)</option>
+                      <option value="🚚 Xe tải kem (2988 xu)">🚚 Xe tải kem (2988 xu)</option>
+                      <option value="🧸 Gấu nhịp điệu (2999 xu)">🧸 Gấu nhịp điệu (2999 xu)</option>
+                      <option value="🤖 Rust tái sinh (6000 xu)">🤖 Rust tái sinh (6000 xu)</option>
+                      <option value="🏁 Vững vàng về đích (6000 xu)">🏁 Vững vàng về đích (6000 xu)</option>
+                      <option value="🌠 Mưa sao băng kìa! (15000 xu)">🌠 Mưa sao băng kìa! (15000 xu)</option>
+                      <option value="🎡 Công viên giải trí (17000 xu)">🎡 Công viên giải trí (17000 xu)</option>
+                      <option value="🦅 Phoenix Phượng hoàng (25999 xu)">🦅 Phoenix Phượng hoàng (25999 xu)</option>
+                      <option value="🐲 Ngọn lửa rồng thiêng (26999 xu)">🐲 Ngọn lửa rồng thiêng (26999 xu)</option>
+                      <option value="🦁 Leon và Sư tử (34000 xu)">🦁 Leon và Sư tử (34000 xu)</option>
+                      <option value="🪐 TikTok Universe (44999 xu)">🪐 TikTok Universe (44999 xu)</option>
                     </select>
                     <button onClick={() => {
-                      const isSpecial = simGift.includes('Sư tử') || simGift.includes('Siêu xe');
+                      const isSpecial = simGift.includes('Sư tử') || simGift.includes('Universe') || simGift.includes('Phoenix') || simGift.includes('Rồng') || simGift.includes('Xe');
                       handleLiveEvent(isSpecial ? 'SPECIAL_GIFT' : 'GIFT', { name: simName, gift: simGift });
                     }} className="px-4 bg-pink-500/20 text-pink-400 border border-pink-500/40 rounded text-xs font-bold hover:bg-pink-500/30 transition-colors">Tặng Quà</button>
                   </div>

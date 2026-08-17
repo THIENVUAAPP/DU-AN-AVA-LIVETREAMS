@@ -13,6 +13,7 @@ import {
 import bandoEngine, { getHonorTier, COUNTRY_PRESETS } from './bandoGameEngine';
 import bandoAudio from './bandoAudioEngine';
 import { getGameTranslation } from './gameTranslations';
+import GameBanDoAdminModal from './GameBanDoAdminModal';
 
 // Ease helpers
 function easeOutBack(t) {
@@ -73,45 +74,53 @@ function createCountryFlagTexture(countryCode = 'vietnam') {
     ctx.arc(110, 110, 50, 0, Math.PI * 2);
     ctx.fill();
   } else {
-    // 🇻🇳 VIỆT NAM (Mặc định): Nền đỏ cờ thắm hoàng gia rực rỡ + Viền khối hổ phách + Ngôi sao vàng 5 cánh kim cương phát sáng
-    const redGrad = ctx.createRadialGradient(256, 256, 30, 256, 256, 360);
-    redGrad.addColorStop(0, '#E50914');   // Đỏ cờ tươi sáng rực rỡ tâm điểm
-    redGrad.addColorStop(0.7, '#D60000'); // Đỏ thắm quốc kỳ
+    // 🇻🇳 VIỆT NAM (Mặc định): Nền đỏ cờ thắm hoàng gia rực rỡ + Viền vàng + Ngôi sao vàng 5 cánh to rõ, phát quang rực rỡ
+    const redGrad = ctx.createRadialGradient(256, 256, 20, 256, 256, 360);
+    redGrad.addColorStop(0, '#EF233C');   // Đỏ tươi phát sáng tâm
+    redGrad.addColorStop(0.65, '#DA251D'); // Đỏ cờ quốc kỳ Việt Nam chuẩn
     redGrad.addColorStop(1, '#990000');   // Đỏ đậm viền tạo chiều sâu 3D
     ctx.fillStyle = redGrad;
     ctx.fillRect(0, 0, 512, 512);
 
-    // Viền nổi 3D sang trọng cho từng khối voxel
-    ctx.strokeStyle = '#6B0000';
-    ctx.lineWidth = 14;
-    ctx.strokeRect(7, 7, 498, 498);
+    // Viền khối 3D sang trọng
+    ctx.strokeStyle = '#5A0000';
+    ctx.lineWidth = 12;
+    ctx.strokeRect(6, 6, 500, 500);
 
-    // Viền kim loại ánh vàng hoàng gia bên trong
-    ctx.strokeStyle = '#FDE047';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(16, 16, 480, 480);
+    // Viền ánh vàng hổ phách bên trong
+    ctx.strokeStyle = '#FACC15';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(14, 14, 484, 484);
 
-    // Ngôi sao vàng 5 cánh tỷ lệ chuẩn quốc kỳ
-    const cx = 256, cy = 256, outerR = 175, innerR = 70;
+    // Vầng hào quang ánh vàng lan tỏa quanh ngôi sao (Aura Glow)
+    const auraGrad = ctx.createRadialGradient(256, 256, 60, 256, 256, 230);
+    auraGrad.addColorStop(0, 'rgba(255, 230, 0, 0.45)');
+    auraGrad.addColorStop(0.6, 'rgba(255, 200, 0, 0.2)');
+    auraGrad.addColorStop(1, 'rgba(218, 37, 29, 0)');
+    ctx.fillStyle = auraGrad;
+    ctx.beginPath();
+    ctx.arc(256, 256, 230, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ngôi sao vàng 5 cánh tỷ lệ to rõ ràng, chiếm trọn tâm diện tích ô voxel
+    const cx = 256, cy = 256, outerR = 195, innerR = 78;
     
     // Gradient vàng kim phát quang rực rỡ
-    const goldGrad = ctx.createRadialGradient(cx, cy, 20, cx, cy, outerR);
-    goldGrad.addColorStop(0, '#FFFFFF');   // Tâm phát sáng tinh khiết
-    goldGrad.addColorStop(0.25, '#FFF066'); // Vàng kim chói lọi
-    goldGrad.addColorStop(0.75, '#FFD700'); // Vàng đậm hoàng gia
-    goldGrad.addColorStop(1, '#E6A100');    // Viền vàng hổ phách
+    const goldGrad = ctx.createRadialGradient(cx, cy, 15, cx, cy, outerR);
+    goldGrad.addColorStop(0, '#FFFFFF');   // Lõi trắng phát sáng
+    goldGrad.addColorStop(0.2, '#FFFF55'); // Vàng chanh sáng
+    goldGrad.addColorStop(0.65, '#FFD700'); // Vàng kim chuẩn
+    goldGrad.addColorStop(1, '#E69500');    // Viền hổ phách đậm
     
     ctx.fillStyle = goldGrad;
     ctx.beginPath();
     for (let i = 0; i < 5; i++) {
-      // Đỉnh ngoài (Outer vertex)
       const rotOuter = (i * 2 * Math.PI) / 5 - Math.PI / 2;
       const x1 = cx + Math.cos(rotOuter) * outerR;
       const y1 = cy + Math.sin(rotOuter) * outerR;
       if (i === 0) ctx.moveTo(x1, y1);
       else ctx.lineTo(x1, y1);
 
-      // Đỉnh trong (Inner vertex)
       const rotInner = rotOuter + Math.PI / 5;
       const x2 = cx + Math.cos(rotInner) * innerR;
       const y2 = cy + Math.sin(rotInner) * innerR;
@@ -120,14 +129,14 @@ function createCountryFlagTexture(countryCode = 'vietnam') {
     ctx.closePath();
     ctx.fill();
 
-    // Viền nét vàng đậm định hình cánh sao sắc nét tuyệt đối
-    ctx.strokeStyle = '#B45309';
-    ctx.lineWidth = 4;
+    // Viền cánh sao màu hổ phách sắc nét để nổi bật trên nền đỏ
+    ctx.strokeStyle = '#92400E';
+    ctx.lineWidth = 5;
     ctx.stroke();
 
-    // Điểm nhấn khối 3D trên các cánh sao (Star Facet Bevel)
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-    ctx.lineWidth = 2;
+    // Gân nổi 3D đa diện trên các cánh sao (Star Facets)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.lineWidth = 2.5;
     for (let i = 0; i < 5; i++) {
       const rotOuter = (i * 2 * Math.PI) / 5 - Math.PI / 2;
       const x1 = cx + Math.cos(rotOuter) * outerR;
