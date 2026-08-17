@@ -972,11 +972,14 @@ export default function GameBanDoVietNam({
     scene.add(terrainMesh);
     state.terrainMesh = terrainMesh;
 
-    // 2. Mesh Ô Cờ Quốc Kỳ Đã Cắm (Lá cờ quốc kỳ 3D vươn cao, đỏ thắm, sao vàng phát sáng)
-    const flagMat = new THREE.MeshLambertMaterial({
+    // 2. Mesh Ô Cờ Quốc Kỳ Đã Cắm (Lá cờ quốc kỳ 3D vươn cao, đỏ thắm, sao vàng phát sáng ĐA GÓC NHÌN TỪ TRÊN XUỐNG, NGANG, XÉO, CẬN CẢNH)
+    const flagMat = new THREE.MeshStandardMaterial({
       map: flagTexture,
-      color: 0xffffff,
-      reflectivity: 0.18,
+      emissiveMap: flagTexture,
+      emissive: new THREE.Color(0xffffff),
+      emissiveIntensity: 0.45,
+      roughness: 0.28,
+      metalness: 0.10,
     });
     state.flagMat = flagMat;
     state.currentCountry = gameState.selectedCountry || 'vietnam';
@@ -1423,6 +1426,7 @@ export default function GameBanDoVietNam({
       state.currentCountry = gameState.selectedCountry;
       const newTex = createCountryFlagTexture(gameState.selectedCountry);
       state.flagMat.map = newTex;
+      state.flagMat.emissiveMap = newTex;
       state.flagMat.needsUpdate = true;
     }
 

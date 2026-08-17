@@ -1,4 +1,4 @@
-import { ELEVENLABS_VOICES } from '../../../utils/voiceSyncService';
+import { ELEVENLABS_VOICES, getElevenLabsApiKey } from '../../../utils/voiceSyncService';
 
 export const ELEVENLABS_GAME_VOICES = ELEVENLABS_VOICES;
 
@@ -138,7 +138,7 @@ class BattleCommentaryEngine {
 
     // 1. Thử gọi API ElevenLabs TTS siêu thực
     try {
-      const apiKey = localStorage.getItem('elevenlabs_api_key') || localStorage.getItem('ELEVENLABS_API_KEY');
+      const apiKey = getElevenLabsApiKey();
       const voiceId = this.selectedElevenLabsVoiceId || 'TxGEqnHWrfWFTfGW9XjX';
 
       const res = await fetch('/api/tts', {

@@ -114,12 +114,6 @@ export default function GameChienDauAdminModal({
   const [newPromptText, setNewPromptText] = useState('');
   const [isBgmPlayingState, setIsBgmPlayingState] = useState(false);
   const [availableVoices, setAvailableVoices] = useState([]);
-  const [elevenLabsApiKey, setElevenLabsApiKey] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('elevenlabs_api_key') || localStorage.getItem('ELEVENLABS_API_KEY') || '';
-    }
-    return '';
-  });
   const [previewingVoiceId, setPreviewingVoiceId] = useState(null);
   const [voiceTierFilter, setVoiceTierFilter] = useState('all'); // 'all', 'pro', 'free'
   const [voiceGenderFilter, setVoiceGenderFilter] = useState('all');
@@ -669,41 +663,6 @@ export default function GameChienDauAdminModal({
                       >
                         {config.commentaryEnabled !== false ? '● ĐANG BẬT' : '○ ĐÃ TẮT'}
                       </button>
-                    </div>
-
-                    {/* ElevenLabs API Key Input & Direct Status */}
-                    <div className="pt-2 border-t border-pink-500/20 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-black text-pink-300 flex items-center gap-1.5 uppercase">
-                          <Key size={13} className="text-yellow-400" /> ElevenLabs API Key (Tùy chọn):
-                        </label>
-                        <span className="text-[9.5px] text-emerald-400 font-mono font-bold bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">
-                          {elevenLabsApiKey ? '✓ Đã kết nối API Key' : '⚡ Sẵn sàng phát Preview'}
-                        </span>
-                      </div>
-                      <div className="flex gap-2">
-                        <input
-                          type="password"
-                          value={elevenLabsApiKey}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setElevenLabsApiKey(val);
-                            localStorage.setItem('elevenlabs_api_key', val);
-                          }}
-                          placeholder="Dán mã ElevenLabs API Key (VD: sk_...)"
-                          className="flex-1 px-3 py-1.5 bg-black/60 border border-white/20 rounded-lg text-xs text-white placeholder-gray-500 focus:outline-none focus:border-pink-500"
-                        />
-                        <button
-                          onClick={() => {
-                            localStorage.setItem('elevenlabs_api_key', elevenLabsApiKey);
-                            setSavedSuccess(true);
-                            setTimeout(() => setSavedSuccess(false), 2000);
-                          }}
-                          className="px-3 py-1.5 bg-pink-600 hover:bg-pink-500 text-white rounded-lg text-xs font-bold shrink-0 shadow-md shadow-pink-600/30"
-                        >
-                          Lưu Key
-                        </button>
-                      </div>
                     </div>
 
                     {/* Quick Role Voice Test Buttons */}

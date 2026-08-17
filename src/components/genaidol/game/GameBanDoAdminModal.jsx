@@ -88,13 +88,6 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
   const [isProcessingMapImage, setIsProcessingMapImage] = useState(false);
   const [mapProcessSuccess, setMapProcessSuccess] = useState(false);
 
-  // Quản lý ElevenLabs API Key
-  const [elevenLabsApiKeyInput, setElevenLabsApiKeyInput] = useState(() => {
-    if (typeof localStorage === 'undefined') return '';
-    return localStorage.getItem('elevenlabs_api_key') || localStorage.getItem('ELEVENLABS_API_KEY') || '';
-  });
-  const [elevenLabsKeySaved, setElevenLabsKeySaved] = useState(false);
-
   // Trigger camera actions from inside Admin settings
   const triggerCameraAction = (action, payload) => {
     window.dispatchEvent(new CustomEvent('bando-camera-action', { detail: { action, payload } }));
@@ -161,19 +154,6 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
       setMapProcessSuccess(true);
       setTimeout(() => setMapProcessSuccess(false), 3000);
     }
-  };
-
-  const handleSaveElevenLabsKey = () => {
-    const key = elevenLabsApiKeyInput.trim();
-    if (key) {
-      localStorage.setItem('elevenlabs_api_key', key);
-      localStorage.setItem('ELEVENLABS_API_KEY', key);
-    } else {
-      localStorage.removeItem('elevenlabs_api_key');
-      localStorage.removeItem('ELEVENLABS_API_KEY');
-    }
-    setElevenLabsKeySaved(true);
-    setTimeout(() => setElevenLabsKeySaved(false), 2500);
   };
 
   const handleSaveAll = () => {
@@ -1276,44 +1256,6 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                       {cat.label}
                     </button>
                   ))}
-                </div>
-              </div>
-
-              {/* ELEVENLABS API KEY & STATUS SETTING */}
-              <div className="p-3.5 bg-purple-950/30 border border-purple-500/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-purple-500/20 text-purple-400 border border-purple-500/30">
-                    <Key size={16} />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <span>ElevenLabs API Key (Tùy chọn)</span>
-                      <span className={`text-[9px] px-1.5 py-0.2 rounded font-mono ${
-                        elevenLabsApiKeyInput ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/10 text-gray-400'
-                      }`}>
-                        {elevenLabsApiKeyInput ? '✓ Đang dùng API Trực Tiếp' : '⚡ Chế độ Synth Web Speech AI'}
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-gray-400">
-                      Tất cả giọng đọc đều hoạt động 100%. Nhập API Key nếu bạn muốn nghe bằng máy chủ ElevenLabs AI chính thức.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <input
-                    type="password"
-                    value={elevenLabsApiKeyInput}
-                    onChange={(e) => setElevenLabsApiKeyInput(e.target.value)}
-                    placeholder="Nhập xi-api-key..."
-                    className="flex-1 sm:w-56 px-2.5 py-1.5 bg-black/60 border border-white/20 rounded-xl text-xs text-yellow-300 font-mono outline-none focus:border-purple-400"
-                  />
-                  <button
-                    onClick={handleSaveElevenLabsKey}
-                    className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-md transition-all shrink-0 active:scale-95"
-                  >
-                    {elevenLabsKeySaved ? '✓ Đã Lưu' : 'Lưu Key'}
-                  </button>
                 </div>
               </div>
 
