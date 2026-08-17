@@ -19,6 +19,9 @@ import GameChienDau from './game/GameChienDau';
 import GameChienDauAdminModal from './game/GameChienDauAdminModal';
 import GameBanDoVietNam from './game/GameBanDoVietNam';
 import GameBanDoAdminModal from './game/GameBanDoAdminModal';
+import bandoEngine from './game/bandoGameEngine';
+import bandoAudio from './game/bandoAudioEngine';
+import AutoCaptchaSolver from '../AutoCaptchaSolver';
 import { saveCharacterToIDB, loadAllCharactersFromIDB, deleteCharacterFromIDB } from '../../utils/idbHelper';
 export default function DesktopAppUI() {
   const [activeSettingsModal, setActiveSettingsModal] = useState(null); 
@@ -268,6 +271,9 @@ export default function DesktopAppUI() {
         clearInterval(globalDemoTimerRef.current);
         globalDemoTimerRef.current = null;
       }
+      try {
+        bandoEngine.stopAutoTestLoop();
+      } catch (e) {}
       setIsGlobalDemoRunning(false);
       return;
     }
@@ -275,11 +281,14 @@ export default function DesktopAppUI() {
     setIsGlobalDemoRunning(true);
 
     if (isGameBanDoActive) {
-      // 1. Kích hoạt Demo Game Bản Đồ Cắm Cờ
-      window.dispatchEvent(new CustomEvent('bando-trigger-demo'));
-      globalDemoTimerRef.current = setInterval(() => {
+      // 1. Kích hoạt Demo Game Bản Đồ Cắm Cờ (Chạy tự động liên tục vòng lặp quà tặng)
+      try {
+        bandoAudio.unlock();
+        bandoEngine.startAutoTestLoop();
         window.dispatchEvent(new CustomEvent('bando-trigger-demo'));
-      }, 1200);
+      } catch (e) {
+        console.error('Error starting bando demo loop:', e);
+      }
     } else if (isGameBattleActive) {
       // 2. Kích hoạt Demo Game Chiến Đấu PK
       window.dispatchEvent(new CustomEvent('battle-trigger-demo'));
@@ -297,10 +306,13 @@ export default function DesktopAppUI() {
     }
   }, [isGlobalDemoRunning, isGameBanDoActive, isGameBattleActive, handleLiveEvent, SIMULATION_EVENTS]);
 
-  // Clean up global demo timer on unmount
+  // Dừng demo bản đồ khi tắt component
   useEffect(() => {
     return () => {
       if (globalDemoTimerRef.current) clearInterval(globalDemoTimerRef.current);
+      try {
+        bandoEngine.stopAutoTestLoop();
+      } catch (e) {}
     };
   }, []);
 
@@ -873,10 +885,17 @@ export default function DesktopAppUI() {
                 </button>
                 <button 
                   onClick={() => { setActiveSettingsModal('workspace'); setIsSettingsDropdownOpen(false); }}
-                  className={`w-full text-left px-3 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-purple-900/40 to-purple-800/20 hover:from-purple-600 hover:to-purple-500 text-purple-100 hover:text-white border border-purple-800/50' : 'bg-purple-50 hover:bg-purple-500 text-purple-800 hover:text-white'}`}
+                  className={`w-full text-left px-3 py-2.5 mb-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-purple-900/40 to-purple-800/20 hover:from-purple-600 hover:to-purple-500 text-purple-100 hover:text-white border border-purple-800/50' : 'bg-purple-50 hover:bg-purple-500 text-purple-800 hover:text-white'}`}
                 >
                   <Radio size={16} />
                   <span>KẾT NỐI IDOL</span>
+                </button>
+                <button 
+                  onClick={() => { setActiveSettingsModal('captcha'); setIsSettingsDropdownOpen(false); }}
+                  className={`w-full text-left px-3 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-emerald-900/50 to-teal-800/30 hover:from-emerald-600 hover:to-teal-500 text-emerald-200 hover:text-white border border-emerald-700/60 shadow-lg' : 'bg-emerald-50 hover:bg-emerald-500 text-emerald-800 hover:text-white'}`}
+                >
+                  <Shield size={16} className="text-emerald-400" />
+                  <span>🛡️ VƯỢT CAPTCHA AI 24/7</span>
                 </button>
               </div>
             )}
@@ -1508,6 +1527,30 @@ export default function DesktopAppUI() {
                 initialTab={activeSettingsModal === 'coins' ? 'tokens' : 'subscription'} 
                 onClose={() => setActiveSettingsModal(null)} 
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Auto Captcha Solver 24/7 Modal */}
+      {activeSettingsModal === 'captcha' && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in zoom-in duration-200">
+          <div className="w-full max-w-5xl h-[92vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl bg-[#0b0f19] border border-emerald-500/30 relative">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-emerald-500/20 bg-emerald-950/40">
+              <div className="flex items-center gap-2 text-emerald-400 font-black text-sm">
+                <Shield size={18} className="text-emerald-400 animate-pulse" />
+                <span>HỆ THỐNG VƯỢT CAPTCHA TỰ ĐỘNG 24/7 (AI CAPTCHA SOLVER)</span>
+              </div>
+              <button 
+                onClick={() => setActiveSettingsModal(null)}
+                className="p-1.5 rounded-lg bg-white/10 text-white/70 hover:bg-white/20 hover:text-white transition-colors"
+                title="Đóng"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <AutoCaptchaSolver />
             </div>
           </div>
         </div>

@@ -49,6 +49,7 @@ export default function Header({
     { id: 'multistream', label: 'Restream' },
     { id: 'livestream-cloner', label: 'Clone Live' },
     { id: 'chat-hub', label: 'Chat Hub' },
+    { id: 'captcha', label: '🛡️ Vượt Captcha' },
     ...(currentUser?.role === 'admin' ? [{ id: 'dance-floor', label: 'Sàn Nhảy' }] : []),
     { id: 'ai-storyteller', label: 'KOL LIVE' },
   ];

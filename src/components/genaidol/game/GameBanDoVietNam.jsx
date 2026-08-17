@@ -90,8 +90,8 @@ function createCountryFlagTexture(countryCode = 'vietnam') {
     ctx.lineWidth = 2;
     ctx.strokeRect(8, 8, 240, 240);
 
-    // Ngôi sao vàng 5 cánh chuẩn tỷ lệ hình học quốc kỳ, sắc sảo từ mọi góc nhìn
-    const cx = 128, cy = 128, outerR = 82, innerR = 33;
+    // Ngôi sao vàng 5 cánh chuẩn tỷ lệ hình học quốc kỳ, sắc sảo từ mọi góc nhìn, lấp đầy 100% không khuyết lỗ
+    const cx = 128, cy = 128, outerR = 84, innerR = 34;
     
     // Gradient vàng hoàng kim rực rỡ
     const goldGrad = ctx.createRadialGradient(cx, cy, 10, cx, cy, outerR);
@@ -102,13 +102,15 @@ function createCountryFlagTexture(countryCode = 'vietnam') {
     ctx.fillStyle = goldGrad;
     ctx.beginPath();
     for (let i = 0; i < 5; i++) {
-      const rotOuter = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+      // Đỉnh ngoài (Outer vertex)
+      const rotOuter = (i * 2 * Math.PI) / 5 - Math.PI / 2;
       const x1 = cx + Math.cos(rotOuter) * outerR;
       const y1 = cy + Math.sin(rotOuter) * outerR;
       if (i === 0) ctx.moveTo(x1, y1);
       else ctx.lineTo(x1, y1);
 
-      const rotInner = rotOuter + (2 * Math.PI) / 10;
+      // Đỉnh trong (Inner vertex)
+      const rotInner = rotOuter + Math.PI / 5;
       const x2 = cx + Math.cos(rotInner) * innerR;
       const y2 = cy + Math.sin(rotInner) * innerR;
       ctx.lineTo(x2, y2);
@@ -240,7 +242,9 @@ export default function GameBanDoVietNam({
 
   // Draggable HUDs State (Thu nhỏ ~50% và có thể di chuyển tùy ý trên màn hình)
   const [isLeaderboardMinimized, setIsLeaderboardMinimized] = useState(false);
+  const [isLeaderboardClosed, setIsLeaderboardClosed] = useState(false);
   const [isGiftHudMinimized, setIsGiftHudMinimized] = useState(false);
+  const [isGiftHudClosed, setIsGiftHudClosed] = useState(false);
   const [leaderboardPos, setLeaderboardPos] = useState(() => {
     try {
       const saved = localStorage.getItem('bando_hud_leaderboard_pos');
@@ -258,6 +262,48 @@ export default function GameBanDoVietNam({
 
   const draggingHudRef = useRef(null); // 'leaderboard' | 'gift' | null
   const dragOffsetRef = useRef({ x: 0, y: 0 });
+
+  // Camera Zoom In / Zoom Out / Pan helpers
+  const handleZoomIn = useCallback(() => {
+    if (viewMode3D) {
+      const state = threeStateRef.current;
+      if (state.camera && state.controls) {
+        state.camera.position.lerp(state.controls.target, 0.25);
+        state.controls.update();
+      }
+    } else {
+      setZoom2D(prev => Math.min(prev * 1.25, 6.0));
+    }
+  }, [viewMode3D]);
+
+  const handleZoomOut = useCallback(() => {
+    if (viewMode3D) {
+      const state = threeStateRef.current;
+      if (state.camera && state.controls) {
+        const offset = state.camera.position.clone().sub(state.controls.target);
+        offset.multiplyScalar(1.3);
+        state.camera.position.copy(state.controls.target).add(offset);
+        state.controls.update();
+      }
+    } else {
+      setZoom2D(prev => Math.max(prev / 1.25, 0.3));
+    }
+  }, [viewMode3D]);
+
+  const handlePanStep = useCallback((dx, dz) => {
+    if (viewMode3D) {
+      const state = threeStateRef.current;
+      if (state.camera && state.controls) {
+        state.camera.position.x += dx;
+        state.camera.position.z += dz;
+        state.controls.target.x += dx;
+        state.controls.target.z += dz;
+        state.controls.update();
+      }
+    } else {
+      setPan2D(prev => ({ x: prev.x - dx * 2, y: prev.y - dz * 2 }));
+    }
+  }, [viewMode3D]);
 
   const handleHudDragStart = (e, hudType) => {
     e.stopPropagation();
@@ -347,7 +393,7 @@ export default function GameBanDoVietNam({
     tempVec: new THREE.Vector3(),
   });
 
-  // Dynamic Mouse Controls Mode (Orbit 3D vs Pan Drag)
+  // Dynamic Mouse & Touch Controls Mode (Orbit 3D vs Pan Drag)
   useEffect(() => {
     const state = threeStateRef.current;
     if (state.controls) {
@@ -355,6 +401,10 @@ export default function GameBanDoVietNam({
         LEFT: isPanMode ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE,
         MIDDLE: THREE.MOUSE.DOLLY,
         RIGHT: isPanMode ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN,
+      };
+      state.controls.touches = {
+        ONE: isPanMode ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE,
+        TWO: THREE.TOUCH.DOLLY_PAN,
       };
     }
   }, [isPanMode]);
@@ -624,27 +674,12 @@ export default function GameBanDoVietNam({
     window.addEventListener('bando-bgm-status', handleBgmStatus);
 
     const handleTriggerDemo = () => {
-      const mockUsers = ['Minh Trí', 'Thanh Hằng', 'Bảo Long', 'Hồng Nhung', 'Khánh An', 'Tuấn Kiệt', 'Đức Anh', 'Hương Giang'];
-      const mockGifts = [
-        { id: 'flag', name: 'Lá Cờ Tổ Quốc', cells: 1, diamondCount: 1 },
-        { id: 'rose', name: 'Hoa Hồng', cells: 5, diamondCount: 1 },
-        { id: 'hat', name: 'Nón Lá Việt Nam', cells: 20, diamondCount: 10 },
-        { id: 'heart', name: 'Trái Tim Yêu Nước', cells: 50, diamondCount: 50 },
-        { id: 'dragon', name: 'Thần Long Việt Nam', cells: 200, diamondCount: 1000 }
-      ];
-      const randUser = mockUsers[Math.floor(Math.random() * mockUsers.length)];
-      const randGift = mockGifts[Math.floor(Math.random() * mockGifts.length)];
+      const gifts = bandoEngine.state.gifts || DEFAULT_MAP_GIFTS;
+      const randGift = gifts[Math.floor(Math.random() * gifts.length)] || DEFAULT_MAP_GIFTS[0];
+      const randUser = MOCK_WARRIORS_POOL[Math.floor(Math.random() * MOCK_WARRIORS_POOL.length)];
       
       bandoAudio.unlock();
-      bandoEngine.handleGift({
-        userId: 'demo_' + Math.floor(Math.random() * 10000),
-        username: randUser,
-        avatar: '',
-        giftId: randGift.id,
-        giftName: randGift.name,
-        count: 1,
-        diamondCount: randGift.diamondCount,
-      });
+      bandoEngine.processGift(randGift.id, 1, randUser);
     };
 
     window.addEventListener('bando-trigger-demo', handleTriggerDemo);
@@ -756,6 +791,10 @@ export default function GameBanDoVietNam({
       LEFT: isPanMode ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE,
       MIDDLE: THREE.MOUSE.DOLLY,
       RIGHT: isPanMode ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN,
+    };
+    controls.touches = {
+      ONE: isPanMode ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE,
+      TWO: THREE.TOUCH.DOLLY_PAN,
     };
     controls.autoRotate = !isPopout && autoRotate;
     controls.autoRotateSpeed = 0.8;
@@ -896,8 +935,8 @@ export default function GameBanDoVietNam({
         // Ô đã cắm cờ (người xem tặng quà): Lắp lá cờ quốc kỳ 3D vươn cao, màu đỏ thắm đậm sắc nét tuyệt đối
         instancedMesh.setColorAt(i, new THREE.Color(1.0, 1.0, 1.0));
       } else {
-        // Ô nền lãnh thổ CHƯA cắm cờ: Màu lam đá bạc sáng rõ, làm nổi bật trọn vẹn dáng hình đất nước chữ S và 2 quần đảo
-        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.78, 0.82, 0.90) : new THREE.Color(0.60, 0.68, 0.80));
+        // Ô nền lãnh thổ CHƯA cắm cờ: Màu xám than đá mờ tinh tế, giúp lá cờ Tổ Quốc cắm lên nổi bật rực rỡ tuyệt đối
+        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.55, 0.60, 0.68) : new THREE.Color(0.18, 0.22, 0.30));
       }
     }
     instancedMesh.instanceMatrix.needsUpdate = true;
@@ -1275,8 +1314,8 @@ export default function GameBanDoVietNam({
         // Ô đã cắm cờ (người xem tặng quà): Lắp lá cờ quốc kỳ 3D vươn cao, màu đỏ thắm đậm sắc nét tuyệt đối
         instancedMesh.setColorAt(i, new THREE.Color(1.0, 1.0, 1.0));
       } else {
-        // Ô nền lãnh thổ CHƯA cắm cờ: Màu xám bạc kim loại / lam đá sắc nét, làm nổi bật rõ ràng dáng hình đất nước
-        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.70, 0.74, 0.80) : new THREE.Color(0.28, 0.32, 0.40));
+        // Ô nền lãnh thổ CHƯA cắm cờ: Màu xám than đá mờ tinh tế, giúp cờ Tổ Quốc cắm lên nổi bật rực rỡ
+        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.55, 0.60, 0.68) : new THREE.Color(0.18, 0.22, 0.30));
       }
     }
 
@@ -1546,114 +1585,299 @@ export default function GameBanDoVietNam({
         </div>
       )}
 
-      {/* 1. TOP SUPPORTERS LEADERBOARD (Draggable & ~50% Compact Size) */}
-      <div 
-        className={`absolute z-30 transition-all duration-100 pointer-events-auto select-none ${
-          isLeaderboardMinimized ? 'w-8 overflow-hidden' : 'w-32 sm:w-36'
-        }`}
-        style={{
-          top: `${leaderboardPos.y}px`,
-          left: `${leaderboardPos.x}px`
-        }}
-      >
-        <div className="bg-black/85 backdrop-blur-md border border-amber-500/40 rounded-lg p-1 shadow-2xl text-white">
-          <div 
-            className="flex items-center justify-between text-[9px] font-black text-amber-300 mb-0.5 border-b border-white/10 pb-0.5 cursor-move"
-            onMouseDown={(e) => handleHudDragStart(e, 'leaderboard')}
-            onTouchStart={(e) => handleHudDragStart(e, 'leaderboard')}
-            title="Kéo thả để di chuyển Bảng Xếp Hạng"
+      {/* FLOATING INTERACTIVE CAMERA & VIEW CONTROLS (Thanh điều khiển Zoom, Pan, 2D/3D, Góc nhìn Camera trực tiếp trên bản đồ) */}
+      <div className="absolute bottom-2.5 left-2.5 right-2.5 z-25 pointer-events-auto flex items-center justify-between gap-1.5 flex-wrap">
+        {/* Left: Quick Camera Presets */}
+        <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md border border-white/10 p-1 rounded-xl shadow-xl overflow-x-auto max-w-[55%] custom-scrollbar">
+          <button
+            onClick={() => applyCameraPreset('overview')}
+            className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all whitespace-nowrap ${
+              activeCameraPreset === 'overview' ? 'bg-amber-500 text-black shadow-md' : 'bg-white/5 text-gray-200 hover:bg-white/15'
+            }`}
+            title="Góc nhìn toàn cảnh đất nước"
           >
-            {!isLeaderboardMinimized && (
-              <div className="flex items-center gap-1">
-                <Trophy size={10} className="text-yellow-400 shrink-0" />
-                <span className="truncate">BXH Top</span>
-              </div>
-            )}
+            <span>🌐</span>
+            <span>Toàn Cảnh</span>
+          </button>
+          <button
+            onClick={() => applyCameraPreset('north')}
+            className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all whitespace-nowrap ${
+              activeCameraPreset === 'north' ? 'bg-amber-500 text-black shadow-md' : 'bg-white/5 text-gray-200 hover:bg-white/15'
+            }`}
+            title="Miền Bắc & Hà Nội"
+          >
+            <span>🏛️</span>
+            <span>Bắc</span>
+          </button>
+          <button
+            onClick={() => applyCameraPreset('central')}
+            className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all whitespace-nowrap ${
+              activeCameraPreset === 'central' ? 'bg-amber-500 text-black shadow-md' : 'bg-white/5 text-gray-200 hover:bg-white/15'
+            }`}
+            title="Miền Trung & Huế"
+          >
+            <span>🏖️</span>
+            <span>Trung</span>
+          </button>
+          <button
+            onClick={() => applyCameraPreset('south')}
+            className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all whitespace-nowrap ${
+              activeCameraPreset === 'south' ? 'bg-amber-500 text-black shadow-md' : 'bg-white/5 text-gray-200 hover:bg-white/15'
+            }`}
+            title="Miền Nam & TP.HCM"
+          >
+            <span>🏙️</span>
+            <span>Nam</span>
+          </button>
+          <button
+            onClick={() => applyCameraPreset('islands')}
+            className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all whitespace-nowrap ${
+              activeCameraPreset === 'islands' ? 'bg-red-600 text-yellow-300 shadow-md ring-1 ring-yellow-400/50' : 'bg-white/5 text-gray-200 hover:bg-white/15'
+            }`}
+            title="Hoàng Sa & Trường Sa"
+          >
+            <span>🏝️</span>
+            <span>Hải Đảo</span>
+          </button>
+          <button
+            onClick={() => applyCameraPreset('tip_camau')}
+            className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all whitespace-nowrap ${
+              activeCameraPreset === 'tip_camau' ? 'bg-amber-500 text-black shadow-md' : 'bg-white/5 text-gray-200 hover:bg-white/15'
+            }`}
+            title="Mũi Cà Mau (Cực Nam)"
+          >
+            <span>⛵</span>
+            <span>Cà Mau</span>
+          </button>
+        </div>
+
+        {/* Right: 2D/3D Toggle, Pan Hand Mode & Zoom Controls */}
+        <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md border border-white/10 p-1 rounded-xl shadow-xl ml-auto">
+          {/* 2D / 3D Toggle */}
+          <button
+            onClick={() => setViewMode3D(!viewMode3D)}
+            className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1 ${
+              viewMode3D 
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md' 
+                : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md'
+            }`}
+            title="Chuyển đổi giữa chế độ 3D và 2D phẳng"
+          >
+            <Globe size={11} className="text-yellow-300" />
+            <span>{viewMode3D ? '3D' : '2D'}</span>
+          </button>
+
+          {/* Pan Drag Mode Toggle */}
+          {viewMode3D && (
             <button
-              onClick={() => setIsLeaderboardMinimized(!isLeaderboardMinimized)}
-              className="p-0.5 rounded text-gray-400 hover:text-white hover:bg-white/10 transition-colors ml-auto"
-              title={isLeaderboardMinimized ? "Mở rộng BXH" : "Thu nhỏ BXH"}
+              onClick={() => setIsPanMode(!isPanMode)}
+              className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1 ${
+                isPanMode 
+                  ? 'bg-amber-500 text-black ring-2 ring-yellow-300' 
+                  : 'bg-white/10 text-gray-200 hover:bg-white/20'
+              }`}
+              title={isPanMode ? "Đang ở chế độ Kéo rê bản đồ (Pan Drag)" : "Bật chế độ Kéo rê bản đồ (Pan Drag)"}
             >
-              <span className="text-[9px] font-bold">{isLeaderboardMinimized ? '🏆' : '−'}</span>
+              <Move size={11} className={isPanMode ? 'text-black' : 'text-amber-300'} />
+              <span>{isPanMode ? 'Kéo Pan' : 'Xoay 3D'}</span>
+            </button>
+          )}
+
+          {/* Pan Directional Buttons */}
+          <div className="flex items-center gap-0.5 px-0.5 border-l border-white/10">
+            <button
+              onClick={() => handlePanStep(0, -25)}
+              className="p-1 rounded-md bg-white/5 hover:bg-white/20 text-gray-200 transition-colors text-[9px] font-bold"
+              title="Kéo bản đồ Lên"
+            >
+              ▲
+            </button>
+            <button
+              onClick={() => handlePanStep(0, 25)}
+              className="p-1 rounded-md bg-white/5 hover:bg-white/20 text-gray-200 transition-colors text-[9px] font-bold"
+              title="Kéo bản đồ Xuống"
+            >
+              ▼
+            </button>
+            <button
+              onClick={() => handlePanStep(-25, 0)}
+              className="p-1 rounded-md bg-white/5 hover:bg-white/20 text-gray-200 transition-colors text-[9px] font-bold"
+              title="Kéo bản đồ Sang Trái"
+            >
+              ◀
+            </button>
+            <button
+              onClick={() => handlePanStep(25, 0)}
+              className="p-1 rounded-md bg-white/5 hover:bg-white/20 text-gray-200 transition-colors text-[9px] font-bold"
+              title="Kéo bản đồ Sang Phải"
+            >
+              ▶
             </button>
           </div>
 
-          {!isLeaderboardMinimized && (
-            <div className="space-y-0.5 max-h-24 overflow-y-auto custom-scrollbar">
-              {(!gameState.leaderboard || gameState.leaderboard.length === 0) ? (
-                <p className="text-[8px] text-gray-400 text-center py-1 italic">Chưa có lượt cắm</p>
-              ) : (
-                gameState.leaderboard.slice(0, 3).map((user, idx) => (
-                  <div key={user.userId || idx} className="flex items-center justify-between text-[8px] sm:text-[9px] bg-white/5 px-1 py-0.5 rounded">
-                    <span className="flex items-center gap-0.5 font-medium truncate max-w-[65px]">
-                      <span className={idx === 0 ? 'text-amber-400 font-bold' : idx === 1 ? 'text-gray-300' : 'text-amber-600'}>
-                        #{idx + 1}
-                      </span>
-                      <span className="text-yellow-100 truncate">{user.username}</span>
-                    </span>
-                    <span className="font-mono font-bold text-yellow-400 shrink-0">{user.cells} ô</span>
-                  </div>
-                ))
-              )}
-            </div>
+          {/* Zoom In & Out */}
+          <div className="flex items-center gap-0.5 px-0.5 border-l border-white/10">
+            <button
+              onClick={handleZoomIn}
+              className="p-1 rounded-md bg-white/10 hover:bg-white/25 text-yellow-300 transition-colors"
+              title="Phóng to bản đồ (Zoom In)"
+            >
+              <ZoomIn size={12} />
+            </button>
+            <button
+              onClick={handleZoomOut}
+              className="p-1 rounded-md bg-white/10 hover:bg-white/25 text-yellow-300 transition-colors"
+              title="Thu nhỏ bản đồ (Zoom Out)"
+            >
+              <ZoomOut size={12} />
+            </button>
+          </div>
+
+          {/* Auto Rotate Toggle */}
+          {viewMode3D && (
+            <button
+              onClick={() => setAutoRotate(!autoRotate)}
+              className={`p-1 rounded-md transition-colors ${
+                autoRotate ? 'bg-purple-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/15'
+              }`}
+              title={autoRotate ? "Tắt tự động xoay 3D" : "Bật tự động xoay 3D nhẹ nhàng"}
+            >
+              <RotateCcw size={12} className={autoRotate ? 'animate-spin' : ''} />
+            </button>
           )}
         </div>
       </div>
 
-      {/* 2. PINNED GIFT & FLAG CELLS SHOWCASE HUD (Draggable & ~50% Compact Size) */}
-      <div 
-        className={`absolute z-30 transition-all duration-100 pointer-events-auto select-none ${
-          isGiftHudMinimized ? 'w-8 overflow-hidden' : 'w-36 sm:w-40'
-        }`}
-        style={{
-          top: `${giftHudPos.y}px`,
-          ...(giftHudPos.right != null ? { right: `${giftHudPos.right}px` } : { left: `${giftHudPos.x}px` })
-        }}
-      >
-        <div className="bg-black/85 backdrop-blur-xl border border-red-500/40 rounded-lg shadow-2xl overflow-hidden text-white">
-          <div 
-            className="px-1.5 py-0.5 bg-gradient-to-r from-red-950/90 to-amber-950/90 border-b border-red-500/30 flex items-center justify-between cursor-move"
-            onMouseDown={(e) => handleHudDragStart(e, 'gift')}
-            onTouchStart={(e) => handleHudDragStart(e, 'gift')}
-            title="Kéo thả để di chuyển Bảng Quà Tặng"
-          >
-            {!isGiftHudMinimized && (
-              <div className="flex items-center gap-1">
-                <Sparkles size={10} className="text-yellow-400 animate-spin" />
-                <span className="text-[9px] font-black uppercase tracking-wider text-yellow-300 truncate">
-                  Quà & Ô Cờ
-                </span>
+      {/* 1. TOP SUPPORTERS LEADERBOARD (Ultra Transparent Glassmorphism - Nhìn xuyên thấu nền game 100%) */}
+      {!isLeaderboardClosed && (
+        <div 
+          className={`absolute z-30 transition-all duration-100 pointer-events-auto select-none ${
+            isLeaderboardMinimized ? 'w-8 overflow-hidden' : 'w-32 sm:w-36'
+          }`}
+          style={{
+            top: `${leaderboardPos.y}px`,
+            left: `${leaderboardPos.x}px`
+          }}
+        >
+          <div className="bg-black/20 backdrop-blur-[2px] hover:bg-black/40 border border-amber-500/20 hover:border-amber-400/40 rounded-lg p-1 shadow-2xl text-white transition-all">
+            <div 
+              className="flex items-center justify-between text-[9px] font-black text-amber-300 mb-0.5 border-b border-white/10 pb-0.5 cursor-move"
+              onMouseDown={(e) => handleHudDragStart(e, 'leaderboard')}
+              onTouchStart={(e) => handleHudDragStart(e, 'leaderboard')}
+              title="Kéo thả để di chuyển Bảng Xếp Hạng"
+            >
+              {!isLeaderboardMinimized && (
+                <div className="flex items-center gap-1">
+                  <Trophy size={10} className="text-yellow-400 shrink-0" />
+                  <span className="truncate drop-shadow">BXH Top</span>
+                </div>
+              )}
+              <div className="flex items-center gap-0.5 ml-auto">
+                <button
+                  onClick={() => setIsLeaderboardMinimized(!isLeaderboardMinimized)}
+                  className="p-0.5 rounded text-gray-300 hover:text-white hover:bg-white/20 transition-colors"
+                  title={isLeaderboardMinimized ? "Mở rộng BXH" : "Thu nhỏ BXH"}
+                >
+                  <span className="text-[9px] font-bold">{isLeaderboardMinimized ? '🏆' : '−'}</span>
+                </button>
+                <button
+                  onClick={() => setIsLeaderboardClosed(true)}
+                  className="p-0.5 rounded text-gray-400 hover:text-red-400 hover:bg-white/20 transition-colors"
+                  title="Ẩn BXH"
+                >
+                  <span className="text-[8px] font-bold">✕</span>
+                </button>
+              </div>
+            </div>
+
+            {!isLeaderboardMinimized && (
+              <div className="space-y-0.5 max-h-24 overflow-y-auto custom-scrollbar">
+                {(!gameState.leaderboard || gameState.leaderboard.length === 0) ? (
+                  <p className="text-[8px] text-gray-300 text-center py-1 italic">Chưa có lượt cắm</p>
+                ) : (
+                  gameState.leaderboard.slice(0, 3).map((user, idx) => (
+                    <div key={user.userId || idx} className="flex items-center justify-between text-[8px] sm:text-[9px] bg-black/30 px-1 py-0.5 rounded border border-white/5">
+                      <span className="flex items-center gap-0.5 font-medium truncate max-w-[65px]">
+                        <span className={idx === 0 ? 'text-amber-400 font-bold' : idx === 1 ? 'text-gray-300' : 'text-amber-600'}>
+                          #{idx + 1}
+                        </span>
+                        <span className="text-yellow-100 truncate font-semibold">{user.username}</span>
+                      </span>
+                      <span className="font-mono font-bold text-yellow-400 shrink-0">{user.cells} ô</span>
+                    </div>
+                  ))
+                )}
               </div>
             )}
-            <button
-              onClick={() => setIsGiftHudMinimized(!isGiftHudMinimized)}
-              className="p-0.5 rounded text-gray-400 hover:text-white hover:bg-white/10 transition-colors ml-auto"
-              title={isGiftHudMinimized ? "Mở rộng bảng quà" : "Thu nhỏ bảng quà"}
-            >
-              <span className="text-[9px] font-bold">{isGiftHudMinimized ? '🎁' : '−'}</span>
-            </button>
           </div>
+        </div>
+      )}
 
-          {!isGiftHudMinimized && (
-            <div className="p-1 space-y-0.5 max-h-36 overflow-y-auto custom-scrollbar">
-              {(gameState.gifts || []).map((g, i) => (
-                <div 
-                  key={g.id || i}
-                  className="flex items-center justify-between p-0.5 rounded bg-white/5 border border-white/5 text-[8px]"
-                >
-                  <div className="flex items-center gap-1 truncate max-w-[80px]">
-                    <span className="text-xs">{g.icon}</span>
-                    <span className="font-bold text-gray-200 truncate">{g.name}</span>
-                  </div>
-                  <span className="font-mono font-bold text-yellow-400 shrink-0">
-                    +{g.cells} ô
+      {/* 2. PINNED GIFT & FLAG CELLS SHOWCASE HUD (Ultra Transparent Glassmorphism - Tinh gọn, Nhìn xuyên thấu nền game 100%) */}
+      {!isGiftHudClosed && (
+        <div 
+          className={`absolute z-30 transition-all duration-100 pointer-events-auto select-none ${
+            isGiftHudMinimized ? 'w-8 overflow-hidden' : 'w-36 sm:w-40'
+          }`}
+          style={{
+            top: `${giftHudPos.y}px`,
+            ...(giftHudPos.right != null ? { right: `${giftHudPos.right}px` } : { left: `${giftHudPos.x}px` })
+          }}
+        >
+          <div className="bg-black/20 backdrop-blur-[2px] hover:bg-black/40 border border-red-500/20 hover:border-red-400/40 rounded-lg shadow-2xl overflow-hidden text-white transition-all">
+            <div 
+              className="px-1.5 py-0.5 bg-black/30 border-b border-red-500/20 flex items-center justify-between cursor-move"
+              onMouseDown={(e) => handleHudDragStart(e, 'gift')}
+              onTouchStart={(e) => handleHudDragStart(e, 'gift')}
+              title="Kéo thả để di chuyển Bảng Quà Tặng"
+            >
+              {!isGiftHudMinimized && (
+                <div className="flex items-center gap-1">
+                  <Sparkles size={10} className="text-yellow-400 animate-spin" />
+                  <span className="text-[9px] font-black uppercase tracking-wider text-yellow-300 truncate drop-shadow">
+                    Quà & Ô Cờ
                   </span>
                 </div>
-              ))}
+              )}
+              <div className="flex items-center gap-0.5 ml-auto">
+                <button
+                  onClick={() => setIsGiftHudMinimized(!isGiftHudMinimized)}
+                  className="p-0.5 rounded text-gray-300 hover:text-white hover:bg-white/20 transition-colors"
+                  title={isGiftHudMinimized ? "Mở rộng bảng quà" : "Thu nhỏ bảng quà"}
+                >
+                  <span className="text-[9px] font-bold">{isGiftHudMinimized ? '🎁' : '−'}</span>
+                </button>
+                <button
+                  onClick={() => setIsGiftHudClosed(true)}
+                  className="p-0.5 rounded text-gray-400 hover:text-red-400 hover:bg-white/20 transition-colors"
+                  title="Ẩn bảng quà"
+                >
+                  <span className="text-[8px] font-bold">✕</span>
+                </button>
+              </div>
             </div>
-          )}
+
+            {!isGiftHudMinimized && (
+              <div className="p-0.5 space-y-0.5 max-h-32 overflow-y-auto custom-scrollbar">
+                {(gameState.gifts || []).map((g, i) => (
+                  <div 
+                    key={g.id || i}
+                    className="flex items-center justify-between px-1 py-0.5 rounded bg-black/30 border border-white/5 text-[8px]"
+                  >
+                    <div className="flex items-center gap-1 truncate max-w-[85px]">
+                      <span className="text-[11px] shrink-0">{g.icon}</span>
+                      <span className="font-bold text-gray-100 truncate">{g.name}</span>
+                    </div>
+                    <span className="font-mono font-bold text-yellow-400 shrink-0 ml-1">
+                      +{g.cells} ô
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* VICTORY CELEBRATION CEREMONY / CHAMPION PODIUM */}
       {gameState.status === 'victory' && (

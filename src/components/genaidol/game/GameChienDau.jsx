@@ -88,11 +88,13 @@ export default function GameChienDau({
   const [flashSide, setFlashSide] = useState(null);
   const [liveFeed, setLiveFeed] = useState([]); // Array of recent live comments & gifts
   const [isGiftHudMinimized, setIsGiftHudMinimized] = useState(false);
+  const [isGiftHudClosed, setIsGiftHudClosed] = useState(false);
 
   const handleUserGesture = useCallback(() => {
     battleAudio.unlock();
   }, []);
   const [isLeaderboardMinimized, setIsLeaderboardMinimized] = useState(false);
+  const [isLeaderboardClosed, setIsLeaderboardClosed] = useState(false);
   const [isLiveCleanMode, setIsLiveCleanMode] = useState(isPopout);
 
   // Draggable HUD Positions State
@@ -2228,77 +2230,88 @@ export default function GameChienDau({
         </div>
       </div>
 
-      {/* TOP SUPPORTERS LEADERBOARD (Draggable & Siêu nhỏ gọn tinh tế) */}
-      <div 
-        className={`absolute z-20 transition-all duration-100 pointer-events-auto select-none ${
-          isLeaderboardMinimized ? 'w-7 sm:w-8 overflow-hidden' : 'w-28 sm:w-32'
-        }`}
-        style={{
-          top: `${leaderboardPos.y}px`,
-          left: `${leaderboardPos.x}px`
-        }}
-      >
-        <div className="bg-black/85 backdrop-blur-md border border-white/15 rounded-lg p-1 sm:p-1.5 shadow-xl text-white">
-          <div 
-            className="flex items-center justify-between text-[9px] sm:text-[10px] font-bold text-amber-300 mb-0.5 border-b border-white/10 pb-0.5 cursor-move"
-            onMouseDown={(e) => handleBattleHudDragStart(e, 'leaderboard')}
-            onTouchStart={(e) => handleBattleHudDragStart(e, 'leaderboard')}
-            title="Kéo thả để di chuyển Bảng Xếp Hạng"
-          >
+      {/* 1. TOP PLAYERS LEADERBOARD HUD (Ultra Transparent Glassmorphism - Nhìn xuyên thấu nền game 100%) */}
+      {!isLeaderboardClosed && (
+        <div 
+          className={`absolute z-30 transition-all duration-100 pointer-events-auto select-none ${
+            isLeaderboardMinimized ? 'w-8 overflow-hidden' : 'w-32 sm:w-36'
+          }`}
+          style={{
+            top: `${leaderboardPos.y}px`,
+            left: `${leaderboardPos.x}px`
+          }}
+        >
+          <div className="bg-black/20 backdrop-blur-[2px] hover:bg-black/40 border border-white/10 hover:border-white/20 rounded-lg p-1 sm:p-1.5 shadow-xl text-white transition-all">
+            <div 
+              className="flex items-center justify-between text-[9px] sm:text-[10px] font-bold text-amber-300 mb-0.5 border-b border-white/10 pb-0.5 cursor-move"
+              onMouseDown={(e) => handleBattleHudDragStart(e, 'leaderboard')}
+              onTouchStart={(e) => handleBattleHudDragStart(e, 'leaderboard')}
+              title="Kéo thả để di chuyển Bảng Xếp Hạng"
+            >
+              {!isLeaderboardMinimized && (
+                <div className="flex items-center gap-1">
+                  <Trophy size={10} className="text-amber-400 shrink-0" />
+                  <span className="truncate drop-shadow">BXH Top</span>
+                </div>
+              )}
+              <div className="flex items-center gap-0.5 ml-auto">
+                <button
+                  onClick={() => setIsLeaderboardMinimized(!isLeaderboardMinimized)}
+                  className="p-0.5 rounded text-gray-300 hover:text-white hover:bg-white/20 transition-colors"
+                  title={isLeaderboardMinimized ? "Mở rộng BXH" : "Thu nhỏ BXH"}
+                >
+                  <span className="text-[9px] font-bold">{isLeaderboardMinimized ? '🏆' : '−'}</span>
+                </button>
+                <button
+                  onClick={() => setIsLeaderboardClosed(true)}
+                  className="p-0.5 rounded text-gray-400 hover:text-red-400 hover:bg-white/20 transition-colors"
+                  title="Ẩn BXH (Có thể bật lại trong cài đặt)"
+                >
+                  <span className="text-[8px] font-bold">✕</span>
+                </button>
+              </div>
+            </div>
+
             {!isLeaderboardMinimized && (
-              <div className="flex items-center gap-1">
-                <Trophy size={10} className="text-amber-400 shrink-0" />
-                <span className="truncate">BXH Top</span>
+              <div className="space-y-0.5 max-h-24 overflow-y-auto custom-scrollbar">
+                {gameState.leaderboard.length === 0 ? (
+                  <p className="text-[8px] text-gray-300 text-center py-1 italic">Chưa có</p>
+                ) : (
+                  gameState.leaderboard.slice(0, 3).map((player, idx) => (
+                    <div key={player.userId + idx} className="flex items-center justify-between text-[8px] sm:text-[9px] bg-black/30 px-1 py-0.5 rounded border border-white/5">
+                      <span className="flex items-center gap-0.5 font-medium truncate max-w-[55px] sm:max-w-[65px]">
+                        <span className={idx === 0 ? 'text-amber-400 font-bold' : idx === 1 ? 'text-gray-300' : 'text-amber-600'}>
+                          #{idx + 1}
+                        </span>
+                        <span className={player.faction === 'blue' ? 'text-blue-300 truncate font-semibold' : 'text-red-300 truncate font-semibold'}>
+                          {player.nickname}
+                        </span>
+                      </span>
+                      <span className="font-mono font-bold text-amber-400 shrink-0">{player.score}đ</span>
+                    </div>
+                  ))
+                )}
               </div>
             )}
-            <button
-              onClick={() => setIsLeaderboardMinimized(!isLeaderboardMinimized)}
-              className="p-0.5 rounded text-gray-400 hover:text-white hover:bg-white/10 transition-colors ml-auto"
-              title={isLeaderboardMinimized ? "Mở rộng BXH" : "Thu nhỏ BXH"}
-            >
-              <span className="text-[9px] font-bold">{isLeaderboardMinimized ? '🏆' : '−'}</span>
-            </button>
           </div>
-
-          {!isLeaderboardMinimized && (
-            <div className="space-y-0.5 max-h-24 overflow-y-auto custom-scrollbar">
-              {gameState.leaderboard.length === 0 ? (
-                <p className="text-[8px] text-gray-400 text-center py-1 italic">Chưa có</p>
-              ) : (
-                gameState.leaderboard.slice(0, 3).map((player, idx) => (
-                  <div key={player.userId + idx} className="flex items-center justify-between text-[8px] sm:text-[9px] bg-white/5 px-1 py-0.5 rounded">
-                    <span className="flex items-center gap-0.5 font-medium truncate max-w-[55px] sm:max-w-[65px]">
-                      <span className={idx === 0 ? 'text-amber-400 font-bold' : idx === 1 ? 'text-gray-300' : 'text-amber-600'}>
-                        #{idx + 1}
-                      </span>
-                      <span className={player.faction === 'blue' ? 'text-blue-300 truncate' : 'text-red-300 truncate'}>
-                        {player.nickname}
-                      </span>
-                    </span>
-                    <span className="font-mono font-bold text-amber-400 shrink-0">{player.score}đ</span>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
         </div>
-      </div>
+      )}
 
-      {/* PINNED GIFT & EQUIPMENT SHOWCASE HUD (Draggable & Siêu nhỏ gọn tinh tế) */}
-      {config.showGiftHud !== false && (
+      {/* PINNED GIFT & EQUIPMENT SHOWCASE HUD (Ultra Transparent Glassmorphism - Tinh gọn, Nhìn xuyên thấu nền game 100%) */}
+      {config.showGiftHud !== false && !isGiftHudClosed && (
         <div 
           className={`absolute z-20 transition-all duration-100 pointer-events-auto select-none ${
-            isGiftHudMinimized ? 'w-7 sm:w-8 overflow-hidden' : 'w-36 sm:w-44'
+            isGiftHudMinimized ? 'w-7 sm:w-8 overflow-hidden' : 'w-36 sm:w-40'
           }`}
           style={{
             top: `${giftHudPos.y}px`,
             ...(giftHudPos.right != null ? { right: `${giftHudPos.right}px` } : { left: `${giftHudPos.x}px` })
           }}
         >
-          <div className="bg-black/85 backdrop-blur-xl border border-purple-500/40 rounded-lg shadow-xl overflow-hidden text-white">
+          <div className="bg-black/20 backdrop-blur-[2px] hover:bg-black/40 border border-purple-500/25 hover:border-purple-400/40 rounded-lg shadow-xl overflow-hidden text-white transition-all">
             {/* HUD Header */}
             <div 
-              className="px-1.5 py-0.5 bg-gradient-to-r from-purple-950/90 to-indigo-950/90 border-b border-purple-500/30 flex items-center justify-between cursor-move"
+              className="px-1.5 py-0.5 bg-black/30 border-b border-purple-500/20 flex items-center justify-between cursor-move"
               onMouseDown={(e) => handleBattleHudDragStart(e, 'gift')}
               onTouchStart={(e) => handleBattleHudDragStart(e, 'gift')}
               title="Kéo thả để di chuyển Bảng Quà & Buff"
@@ -2306,42 +2319,49 @@ export default function GameChienDau({
               {!isGiftHudMinimized ? (
                 <div className="flex items-center gap-1">
                   <Sparkles size={10} className="text-yellow-400 animate-spin" />
-                  <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-purple-200 truncate">
+                  <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-purple-200 truncate drop-shadow">
                     Quà & Buff
                   </span>
                 </div>
               ) : null}
-              <button
-                onClick={() => setIsGiftHudMinimized(!isGiftHudMinimized)}
-                className="p-0.5 rounded text-gray-400 hover:text-white hover:bg-white/10 transition-colors ml-auto"
-                title={isGiftHudMinimized ? "Mở rộng bảng quà" : "Thu nhỏ bảng quà"}
-              >
-                <span className="text-[9px] font-bold">{isGiftHudMinimized ? '🎁' : '−'}</span>
-              </button>
+              <div className="flex items-center gap-0.5 ml-auto">
+                <button
+                  onClick={() => setIsGiftHudMinimized(!isGiftHudMinimized)}
+                  className="p-0.5 rounded text-gray-300 hover:text-white hover:bg-white/20 transition-colors"
+                  title={isGiftHudMinimized ? "Mở rộng bảng quà" : "Thu nhỏ bảng quà"}
+                >
+                  <span className="text-[9px] font-bold">{isGiftHudMinimized ? '🎁' : '−'}</span>
+                </button>
+                <button
+                  onClick={() => setIsGiftHudClosed(true)}
+                  className="p-0.5 rounded text-gray-400 hover:text-red-400 hover:bg-white/20 transition-colors"
+                  title="Ẩn bảng quà"
+                >
+                  <span className="text-[8px] font-bold">✕</span>
+                </button>
+              </div>
             </div>
 
-            {/* HUD Items List */}
+            {/* HUD Items List - Tối ưu siêu ngắn gọn */}
             {!isGiftHudMinimized && (
-              <div className="p-1 space-y-0.5 max-h-36 overflow-y-auto">
+              <div className="p-0.5 space-y-0.5 max-h-32 overflow-y-auto custom-scrollbar">
                 {(config.gifts || [
                   { id: 1, name: 'Hoa Hồng', icon: '🌸', coins: 1, tier: 'Tân Binh', buff: '+10 HP' },
                   { id: 2, name: 'Nước Hoa', icon: '🛡️', coins: 50, tier: 'Thiết Giáp', buff: '+150 HP' },
                   { id: 3, name: 'Vương Miện', icon: '👑', coins: 200, tier: 'Kim Khải', buff: '+600 HP' },
-                  { id: 4, name: 'Tên Lửa / Sét', icon: '⚡', coins: 500, tier: 'Vạn Kiếm', buff: '+1500 HP' },
-                  { id: 5, name: 'Thần Long', icon: '🐉', coins: 1000, tier: 'Giáng Long', buff: '+3500 HP' }
+                  { id: 4, name: 'Tên Lửa', icon: '⚡', coins: 500, tier: 'Vạn Kiếm', buff: '+1.5k HP' },
+                  { id: 5, name: 'Thần Long', icon: '🐉', coins: 1000, tier: 'Giáng Long', buff: '+3.5k HP' }
                 ]).map((g, i) => (
                   <div 
                     key={g.id || i}
-                    className="flex items-center justify-between p-0.5 sm:p-1 rounded bg-white/5 border border-white/5 text-[8px] sm:text-[9px]"
+                    className="flex items-center justify-between px-1 py-0.5 rounded bg-black/30 border border-white/5 text-[8px] sm:text-[9px]"
                   >
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs">{g.icon}</span>
-                      <div className="truncate max-w-[65px] sm:max-w-[80px]">
-                        <div className="font-bold text-gray-200 truncate">{g.tier || g.name}</div>
-                        <div className="text-[7px] text-purple-300 truncate">{g.buff}</div>
-                      </div>
+                    <div className="flex items-center gap-1 truncate max-w-[85px]">
+                      <span className="text-[11px] shrink-0">{g.icon}</span>
+                      <span className="font-bold text-gray-100 truncate">{g.tier || g.name}</span>
+                      <span className="text-[7px] text-purple-300 font-mono shrink-0">{g.buff}</span>
                     </div>
-                    <span className="font-mono font-bold text-amber-400 shrink-0">
+                    <span className="font-mono font-bold text-amber-400 shrink-0 ml-1">
                       {g.coins}x
                     </span>
                   </div>
