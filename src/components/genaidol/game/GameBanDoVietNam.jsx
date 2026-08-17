@@ -1464,6 +1464,21 @@ export default function GameBanDoVietNam({
     });
   }, [viewMode3D, pan2D, zoom2D, gameState.claimedCount, isLightTheme]);
 
+  // Lắng nghe sự kiện điều khiển camera từ Admin Modal hoặc Phím tắt
+  useEffect(() => {
+    const handleCameraAction = (e) => {
+      const { action, payload } = e.detail || {};
+      if (action === 'preset') applyCameraPreset(payload);
+      if (action === 'viewMode3D') setViewMode3D(payload !== undefined ? payload : !viewMode3D);
+      if (action === 'panStep' && payload) handlePanStep(payload.dx || 0, payload.dy || 0);
+      if (action === 'zoomIn') handleZoomIn();
+      if (action === 'zoomOut') handleZoomOut();
+      if (action === 'autoRotate') setAutoRotate(payload !== undefined ? payload : !autoRotate);
+    };
+    window.addEventListener('bando-camera-action', handleCameraAction);
+    return () => window.removeEventListener('bando-camera-action', handleCameraAction);
+  }, [applyCameraPreset, handlePanStep, handleZoomIn, handleZoomOut, viewMode3D, autoRotate]);
+
   // HÀM RENDER SÂN KHẤU LIVE SẠCH 100% (Pure Clean Stage Viewport)
   const renderCleanStage = () => (
     <div className="relative w-full h-full min-h-[360px] overflow-hidden select-none font-sans">
@@ -1584,169 +1599,6 @@ export default function GameBanDoVietNam({
           </div>
         </div>
       )}
-
-      {/* FLOATING INTERACTIVE CAMERA & VIEW CONTROLS (Thanh điều khiển Zoom, Pan, 2D/3D, Góc nhìn Camera trực tiếp trên bản đồ) */}
-      <div className="absolute bottom-2.5 left-2.5 right-2.5 z-25 pointer-events-auto flex items-center justify-between gap-1.5 flex-wrap">
-        {/* Left: Quick Camera Presets */}
-        <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md border border-white/10 p-1 rounded-xl shadow-xl overflow-x-auto max-w-[55%] custom-scrollbar">
-          <button
-            onClick={() => applyCameraPreset('overview')}
-            className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all whitespace-nowrap ${
-              activeCameraPreset === 'overview' ? 'bg-amber-500 text-black shadow-md' : 'bg-white/5 text-gray-200 hover:bg-white/15'
-            }`}
-            title="Góc nhìn toàn cảnh đất nước"
-          >
-            <span>🌐</span>
-            <span>Toàn Cảnh</span>
-          </button>
-          <button
-            onClick={() => applyCameraPreset('north')}
-            className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all whitespace-nowrap ${
-              activeCameraPreset === 'north' ? 'bg-amber-500 text-black shadow-md' : 'bg-white/5 text-gray-200 hover:bg-white/15'
-            }`}
-            title="Miền Bắc & Hà Nội"
-          >
-            <span>🏛️</span>
-            <span>Bắc</span>
-          </button>
-          <button
-            onClick={() => applyCameraPreset('central')}
-            className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all whitespace-nowrap ${
-              activeCameraPreset === 'central' ? 'bg-amber-500 text-black shadow-md' : 'bg-white/5 text-gray-200 hover:bg-white/15'
-            }`}
-            title="Miền Trung & Huế"
-          >
-            <span>🏖️</span>
-            <span>Trung</span>
-          </button>
-          <button
-            onClick={() => applyCameraPreset('south')}
-            className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all whitespace-nowrap ${
-              activeCameraPreset === 'south' ? 'bg-amber-500 text-black shadow-md' : 'bg-white/5 text-gray-200 hover:bg-white/15'
-            }`}
-            title="Miền Nam & TP.HCM"
-          >
-            <span>🏙️</span>
-            <span>Nam</span>
-          </button>
-          <button
-            onClick={() => applyCameraPreset('islands')}
-            className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all whitespace-nowrap ${
-              activeCameraPreset === 'islands' ? 'bg-red-600 text-yellow-300 shadow-md ring-1 ring-yellow-400/50' : 'bg-white/5 text-gray-200 hover:bg-white/15'
-            }`}
-            title="Hoàng Sa & Trường Sa"
-          >
-            <span>🏝️</span>
-            <span>Hải Đảo</span>
-          </button>
-          <button
-            onClick={() => applyCameraPreset('tip_camau')}
-            className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all whitespace-nowrap ${
-              activeCameraPreset === 'tip_camau' ? 'bg-amber-500 text-black shadow-md' : 'bg-white/5 text-gray-200 hover:bg-white/15'
-            }`}
-            title="Mũi Cà Mau (Cực Nam)"
-          >
-            <span>⛵</span>
-            <span>Cà Mau</span>
-          </button>
-        </div>
-
-        {/* Right: 2D/3D Toggle, Pan Hand Mode & Zoom Controls */}
-        <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md border border-white/10 p-1 rounded-xl shadow-xl ml-auto">
-          {/* 2D / 3D Toggle */}
-          <button
-            onClick={() => setViewMode3D(!viewMode3D)}
-            className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1 ${
-              viewMode3D 
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md' 
-                : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md'
-            }`}
-            title="Chuyển đổi giữa chế độ 3D và 2D phẳng"
-          >
-            <Globe size={11} className="text-yellow-300" />
-            <span>{viewMode3D ? '3D' : '2D'}</span>
-          </button>
-
-          {/* Pan Drag Mode Toggle */}
-          {viewMode3D && (
-            <button
-              onClick={() => setIsPanMode(!isPanMode)}
-              className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1 ${
-                isPanMode 
-                  ? 'bg-amber-500 text-black ring-2 ring-yellow-300' 
-                  : 'bg-white/10 text-gray-200 hover:bg-white/20'
-              }`}
-              title={isPanMode ? "Đang ở chế độ Kéo rê bản đồ (Pan Drag)" : "Bật chế độ Kéo rê bản đồ (Pan Drag)"}
-            >
-              <Move size={11} className={isPanMode ? 'text-black' : 'text-amber-300'} />
-              <span>{isPanMode ? 'Kéo Pan' : 'Xoay 3D'}</span>
-            </button>
-          )}
-
-          {/* Pan Directional Buttons */}
-          <div className="flex items-center gap-0.5 px-0.5 border-l border-white/10">
-            <button
-              onClick={() => handlePanStep(0, -25)}
-              className="p-1 rounded-md bg-white/5 hover:bg-white/20 text-gray-200 transition-colors text-[9px] font-bold"
-              title="Kéo bản đồ Lên"
-            >
-              ▲
-            </button>
-            <button
-              onClick={() => handlePanStep(0, 25)}
-              className="p-1 rounded-md bg-white/5 hover:bg-white/20 text-gray-200 transition-colors text-[9px] font-bold"
-              title="Kéo bản đồ Xuống"
-            >
-              ▼
-            </button>
-            <button
-              onClick={() => handlePanStep(-25, 0)}
-              className="p-1 rounded-md bg-white/5 hover:bg-white/20 text-gray-200 transition-colors text-[9px] font-bold"
-              title="Kéo bản đồ Sang Trái"
-            >
-              ◀
-            </button>
-            <button
-              onClick={() => handlePanStep(25, 0)}
-              className="p-1 rounded-md bg-white/5 hover:bg-white/20 text-gray-200 transition-colors text-[9px] font-bold"
-              title="Kéo bản đồ Sang Phải"
-            >
-              ▶
-            </button>
-          </div>
-
-          {/* Zoom In & Out */}
-          <div className="flex items-center gap-0.5 px-0.5 border-l border-white/10">
-            <button
-              onClick={handleZoomIn}
-              className="p-1 rounded-md bg-white/10 hover:bg-white/25 text-yellow-300 transition-colors"
-              title="Phóng to bản đồ (Zoom In)"
-            >
-              <ZoomIn size={12} />
-            </button>
-            <button
-              onClick={handleZoomOut}
-              className="p-1 rounded-md bg-white/10 hover:bg-white/25 text-yellow-300 transition-colors"
-              title="Thu nhỏ bản đồ (Zoom Out)"
-            >
-              <ZoomOut size={12} />
-            </button>
-          </div>
-
-          {/* Auto Rotate Toggle */}
-          {viewMode3D && (
-            <button
-              onClick={() => setAutoRotate(!autoRotate)}
-              className={`p-1 rounded-md transition-colors ${
-                autoRotate ? 'bg-purple-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/15'
-              }`}
-              title={autoRotate ? "Tắt tự động xoay 3D" : "Bật tự động xoay 3D nhẹ nhàng"}
-            >
-              <RotateCcw size={12} className={autoRotate ? 'animate-spin' : ''} />
-            </button>
-          )}
-        </div>
-      </div>
 
       {/* 1. TOP SUPPORTERS LEADERBOARD (Ultra Transparent Glassmorphism - Nhìn xuyên thấu nền game 100%) */}
       {!isLeaderboardClosed && (
@@ -1973,6 +1825,148 @@ export default function GameBanDoVietNam({
     </div>
   );
 
+  // THANH ĐIỀU KHIỂN CAMERA & GÓC NHÌN 3D NẰM BÊN NGOÀI KHUNG HÌNH (CHO CHẾ ĐỘ 9:16 - KHÔNG CHE PHIÊN LIVE)
+  const renderExternalCameraControls = () => (
+    <div className="flex flex-col gap-2 p-2.5 bg-black/60 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl text-white select-none max-w-[155px] shrink-0 animate-in fade-in slide-in-from-right duration-200">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-1.5 border-b border-white/10">
+        <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 flex items-center gap-1">
+          <Compass size={12} /> Góc Nhìn 3D
+        </span>
+        <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-mono font-bold">9:16</span>
+      </div>
+
+      {/* 1. Quick Camera Presets */}
+      <div className="space-y-1">
+        <span className="text-[9px] font-bold text-gray-400 uppercase">Khu vực:</span>
+        <div className="grid grid-cols-2 gap-1">
+          {[
+            { id: 'overview', icon: '🌐', label: 'Toàn cảnh' },
+            { id: 'north', icon: '🏛️', label: 'Miền Bắc' },
+            { id: 'central', icon: '🏖️', label: 'M.Trung' },
+            { id: 'south', icon: '🏙️', label: 'Miền Nam' },
+            { id: 'islands', icon: '🏝️', label: 'Hải Đảo' },
+            { id: 'tip_camau', icon: '⛵', label: 'Cà Mau' },
+          ].map(p => (
+            <button
+              key={p.id}
+              onClick={() => applyCameraPreset(p.id)}
+              className={`px-1.5 py-1 rounded-lg text-[9px] font-bold flex items-center gap-1 transition-all truncate ${
+                activeCameraPreset === p.id 
+                  ? 'bg-amber-500 text-black shadow-md font-black ring-1 ring-yellow-300' 
+                  : 'bg-white/5 text-gray-200 hover:bg-white/15'
+              }`}
+              title={p.label}
+            >
+              <span>{p.icon}</span>
+              <span className="truncate">{p.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 2. 2D / 3D & Pan Mode Toggle */}
+      <div className="space-y-1 pt-1 border-t border-white/10">
+        <div className="grid grid-cols-2 gap-1">
+          <button
+            onClick={() => setViewMode3D(!viewMode3D)}
+            className={`py-1 px-1 rounded-lg text-[9px] font-black transition-all flex items-center justify-center gap-1 ${
+              viewMode3D 
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md' 
+                : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md'
+            }`}
+          >
+            <Globe size={10} className="text-yellow-300" />
+            <span>{viewMode3D ? '3D' : '2D'}</span>
+          </button>
+
+          {viewMode3D && (
+            <button
+              onClick={() => setIsPanMode(!isPanMode)}
+              className={`py-1 px-1 rounded-lg text-[9px] font-black transition-all flex items-center justify-center gap-0.5 ${
+                isPanMode ? 'bg-amber-500 text-black ring-1 ring-yellow-300' : 'bg-white/10 text-gray-200 hover:bg-white/20'
+              }`}
+              title={isPanMode ? "Đang Pan Kéo" : "Bật Pan Kéo"}
+            >
+              <Move size={10} className={isPanMode ? 'text-black' : 'text-amber-300'} />
+              <span>{isPanMode ? 'Pan' : 'Xoay'}</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* 3. D-Pad Directional Pan Buttons */}
+      <div className="space-y-1 pt-1 border-t border-white/10">
+        <span className="text-[9px] font-bold text-gray-400 uppercase">Di chuyển map:</span>
+        <div className="grid grid-cols-3 gap-0.5 max-w-[90px] mx-auto text-center">
+          <div></div>
+          <button onClick={() => handlePanStep(0, -25)} className="p-1 rounded bg-white/10 hover:bg-white/25 text-[9px] font-bold text-yellow-300" title="Lên">▲</button>
+          <div></div>
+          <button onClick={() => handlePanStep(-25, 0)} className="p-1 rounded bg-white/10 hover:bg-white/25 text-[9px] font-bold text-yellow-300" title="Trái">◀</button>
+          <div className="flex items-center justify-center text-[8px] text-gray-500">🎯</div>
+          <button onClick={() => handlePanStep(25, 0)} className="p-1 rounded bg-white/10 hover:bg-white/25 text-[9px] font-bold text-yellow-300" title="Phải">▶</button>
+          <div></div>
+          <button onClick={() => handlePanStep(0, 25)} className="p-1 rounded bg-white/10 hover:bg-white/25 text-[9px] font-bold text-yellow-300" title="Xuống">▼</button>
+          <div></div>
+        </div>
+      </div>
+
+      {/* 4. Zoom & Auto Rotate */}
+      <div className="pt-1 border-t border-white/10 flex items-center justify-between gap-1">
+        <div className="flex items-center gap-0.5">
+          <button onClick={handleZoomIn} className="p-1 rounded bg-white/10 hover:bg-white/25 text-yellow-300" title="Zoom +">
+            <ZoomIn size={11} />
+          </button>
+          <button onClick={handleZoomOut} className="p-1 rounded bg-white/10 hover:bg-white/25 text-yellow-300" title="Zoom -">
+            <ZoomOut size={11} />
+          </button>
+        </div>
+
+        {viewMode3D && (
+          <button
+            onClick={() => setAutoRotate(!autoRotate)}
+            className={`p-1 rounded text-[9px] font-bold flex items-center gap-0.5 ${autoRotate ? 'bg-purple-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/15'}`}
+            title="Xoay 3D"
+          >
+            <RotateCcw size={10} className={autoRotate ? 'animate-spin' : ''} />
+            <span>{autoRotate ? 'Dừng' : 'Xoay'}</span>
+          </button>
+        )}
+      </div>
+
+      {/* 5. Bookmarks, Nhạc BGM & Cài Đặt Game */}
+      <div className="pt-1 border-t border-white/10 space-y-1">
+        <div className="grid grid-cols-2 gap-1">
+          <button
+            onClick={() => setShowBookmarkManager(true)}
+            className="py-1 px-1 rounded-lg text-[9px] font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 flex items-center justify-center gap-0.5 truncate"
+            title="Quản lý vị trí ghim"
+          >
+            <BookmarkPlus size={9} />
+            <span>Ghim</span>
+          </button>
+          <button
+            onClick={() => setShowAudioModal(true)}
+            className="py-1 px-1 rounded-lg text-[9px] font-bold bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 flex items-center justify-center gap-0.5 truncate"
+            title="Cài đặt Nhạc nền 24/24"
+          >
+            <Music size={9} />
+            <span>Nhạc</span>
+          </button>
+        </div>
+        {onOpenAdmin && (
+          <button
+            onClick={onOpenAdmin}
+            className="w-full py-1.5 px-2 rounded-lg text-[9px] font-black bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white flex items-center justify-center gap-1 shadow-sm active:scale-95 transition-all"
+          >
+            <Settings size={10} />
+            <span>Cài Đặt Game</span>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
   // State cho Popover Menu Cài Đặt của Game Bản Đồ
   const [isGameMenuOpen, setIsGameMenuOpen] = useState(false);
   const gameMenuRef = useRef(null);
@@ -2020,6 +2014,13 @@ export default function GameBanDoVietNam({
         {/* SÂN KHẤU LIVE SẠCH NẰM Ở ĐÂY (Canvas + Top mini stage + Victory + Side panels) */}
         {renderCleanStage()}
       </div>
+
+      {/* THANH ĐIỀU KHIỂN NẰM BÊN NGOÀI KHUNG HÌNH 9:16 (MÉ BÊN PHẢI) - KHÔNG CHE PHIÊN LIVE */}
+      {aspectRatio === '9:16' && (
+        <div className="hidden sm:flex flex-col ml-3 z-30 pointer-events-auto">
+          {renderExternalCameraControls()}
+        </div>
+      )}
 
       {/* AUDIO SETTINGS MODAL */}
       {showAudioModal && (

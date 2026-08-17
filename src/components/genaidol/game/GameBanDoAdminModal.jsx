@@ -4,7 +4,7 @@ import {
   Sparkles, Gift, MapPin, Flag, CheckCircle, Copy, AlertTriangle, 
   Settings, RefreshCw, Zap, Sliders, ExternalLink, Trophy, Type,
   Compass, Sun, Eye, Trash2, Plus, PlusCircle, VolumeX, Save, Check, Grid,
-  Upload, Search, Mic, Radio, Volume1, FileAudio
+  Upload, Search, Mic, Radio, Volume1, FileAudio, ZoomIn, ZoomOut, Move, Camera, BookmarkPlus, Layers
 } from 'lucide-react';
 import bandoEngine, { DEFAULT_MAP_GIFTS, COUNTRY_PRESETS, WORLD_COUNTRIES, CONTINENTS } from './bandoGameEngine';
 import bandoAudio from './bandoAudioEngine';
@@ -58,6 +58,11 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
   const [selectedGameVoiceId, setSelectedGameVoiceId] = useState(() => getDualVoiceConfig().gameVoice?.id || 'el_josh');
   const [voiceCategory, setVoiceCategory] = useState('all');
   const [previewingVoiceId, setPreviewingVoiceId] = useState(null);
+
+  // Trigger camera actions from inside Admin settings
+  const triggerCameraAction = (action, payload) => {
+    window.dispatchEvent(new CustomEvent('bando-camera-action', { detail: { action, payload } }));
+  };
 
   useEffect(() => {
     const unsub = bandoEngine.subscribe((state) => {
@@ -252,8 +257,8 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-5xl h-[94vh] bg-[#11131a] border border-white/15 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-gray-100 font-sans">
+    <div className="fixed inset-0 z-50 flex items-center justify-end p-2 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 pointer-events-auto">
+      <div className="relative w-full max-w-4xl h-[96vh] bg-[#11131a] border border-white/15 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-gray-100 font-sans mr-0 sm:mr-3">
         
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 bg-black/50 border-b border-white/10 shrink-0">
@@ -303,6 +308,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
         <div className="flex items-center gap-1 px-6 py-2.5 bg-[#161922] border-b border-white/10 overflow-x-auto shrink-0 custom-scrollbar">
           {[
             { id: 'operations', label: '🎮 Vận Hành & Khối Chữ Ô Cờ' },
+            { id: 'camera', label: '🎥 Góc Nhìn & Camera 3D' },
             { id: 'countries', label: '🌍 200 Quốc Gia & Quần Đảo' },
             { id: 'voices', label: '🎙️ Voice AI & Bình Luận (30+ Giọng)' },
             { id: 'audio', label: '🎵 Tải Nhạc BGM & Kho SFX' },
@@ -328,6 +334,103 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
 
         {/* Tab Content */}
         <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-[#0f1118]">
+          
+          {/* TAB 0: CAMERA & GÓC NHÌN 3D (ĐIỀU KHIỂN TRỰC TIẾP TỪ CÀI ĐẶT CHO CHẾ ĐỘ 16:9) */}
+          {activeTab === 'camera' && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-sm font-black text-white uppercase flex items-center gap-2">
+                  <Compass size={16} className="text-amber-400" /> Điều Khiển Góc Nhìn & Camera Bản Đồ 3D
+                </h3>
+                <p className="text-xs text-gray-400">Tùy chỉnh góc quay, zoom phóng to thu nhỏ, di chuyển pan và đổi chế độ 2D/3D trực tiếp</p>
+              </div>
+
+              {/* Quick Presets Grid */}
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
+                <span className="text-xs font-bold text-yellow-300 uppercase tracking-wider block">🌐 Các Góc Nhìn Nhanh (Camera Presets):</span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {[
+                    { id: 'overview', icon: '🌐', title: 'Toàn Cảnh Đất Nước', desc: 'Bao quát trọn vẹn dải đất hình chữ S' },
+                    { id: 'north', icon: '🏛️', title: 'Miền Bắc & Hà Nội', desc: 'Thủ đô Hà Nội và các tỉnh phía Bắc' },
+                    { id: 'central', icon: '🏖️', title: 'Miền Trung & Huế', desc: 'Duyên hải miền Trung, Đà Nẵng, Huế' },
+                    { id: 'south', icon: '🏙️', title: 'Miền Nam & TP.HCM', desc: 'TP. Hồ Chí Minh & Nam Bộ' },
+                    { id: 'islands', icon: '🏝️', title: 'Hoàng Sa & Trường Sa', desc: 'Quần đảo thiêng liêng Tổ Quốc' },
+                    { id: 'tip_camau', icon: '⛵', title: 'Mũi Cà Mau', desc: 'Cực Nam của Tổ Quốc' },
+                  ].map(p => (
+                    <button
+                      key={p.id}
+                      onClick={() => triggerCameraAction('preset', p.id)}
+                      className="p-3.5 rounded-xl bg-black/40 border border-white/10 hover:border-amber-400/50 hover:bg-amber-500/10 text-left transition-all group"
+                    >
+                      <div className="text-xl mb-1">{p.icon}</div>
+                      <div className="text-xs font-black text-white group-hover:text-yellow-300 transition-colors">{p.title}</div>
+                      <div className="text-[10px] text-gray-400 mt-0.5">{p.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 2D / 3D, Pan & Zoom Tools */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
+                  <span className="text-xs font-bold text-yellow-300 uppercase tracking-wider block">📐 Chế Độ Không Gian & Xoay:</span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => triggerCameraAction('viewMode3D', true)}
+                      className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xs transition-all flex items-center justify-center gap-1.5 shadow-md"
+                    >
+                      <Globe size={14} className="text-yellow-300" />
+                      <span>Chế Độ 3D Voxel</span>
+                    </button>
+                    <button
+                      onClick={() => triggerCameraAction('viewMode3D', false)}
+                      className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs transition-all flex items-center justify-center gap-1.5 shadow-md"
+                    >
+                      <Layers size={14} className="text-yellow-300" />
+                      <span>Chế Độ 2D Phẳng</span>
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => triggerCameraAction('autoRotate')}
+                    className="w-full py-2.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 border border-purple-500/40 text-purple-200 font-bold text-xs transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <RotateCcw size={14} className="text-purple-300" />
+                    <span>Bật / Tắt Tự Động Xoay 3D (Auto Rotate)</span>
+                  </button>
+                </div>
+
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
+                  <span className="text-xs font-bold text-yellow-300 uppercase tracking-wider block">🔍 Phóng To / Thu Nhỏ & Di Chuyển:</span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => triggerCameraAction('zoomIn')}
+                      className="flex-1 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-yellow-300 font-bold text-xs transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <ZoomIn size={14} /> Phóng To (Zoom +)
+                    </button>
+                    <button
+                      onClick={() => triggerCameraAction('zoomOut')}
+                      className="flex-1 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-yellow-300 font-bold text-xs transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <ZoomOut size={14} /> Thu Nhỏ (Zoom -)
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-1 max-w-[120px] mx-auto text-center pt-1">
+                    <div></div>
+                    <button onClick={() => triggerCameraAction('panStep', { dx: 0, dy: -25 })} className="p-2 rounded-lg bg-white/10 hover:bg-white/25 text-xs font-bold text-yellow-300">▲</button>
+                    <div></div>
+                    <button onClick={() => triggerCameraAction('panStep', { dx: -25, dy: 0 })} className="p-2 rounded-lg bg-white/10 hover:bg-white/25 text-xs font-bold text-yellow-300">◀</button>
+                    <div className="flex items-center justify-center text-xs text-gray-500">🎯</div>
+                    <button onClick={() => triggerCameraAction('panStep', { dx: 25, dy: 0 })} className="p-2 rounded-lg bg-white/10 hover:bg-white/25 text-xs font-bold text-yellow-300">▶</button>
+                    <div></div>
+                    <button onClick={() => triggerCameraAction('panStep', { dx: 0, dy: 25 })} className="p-2 rounded-lg bg-white/10 hover:bg-white/25 text-xs font-bold text-yellow-300">▼</button>
+                    <div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           
           {/* TAB 1: OPERATIONS & BANNER FLAG CELLS 3D */}
           {activeTab === 'operations' && (

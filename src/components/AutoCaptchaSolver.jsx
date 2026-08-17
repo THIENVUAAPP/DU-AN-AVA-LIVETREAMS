@@ -2,11 +2,25 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { ShieldCheck, Cpu, Terminal, Zap, CheckCircle2, Scan, Activity, ArrowLeft } from 'lucide-react';
 
-const AutoCaptchaSolver = ({ setActiveTab }) => {
+const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved }) => {
   const [phase, setPhase] = useState('init');
   const [progress, setProgress] = useState(0);
   const [logs, setLogs] = useState([]);
   const logsEndRef = useRef(null);
+
+  const handleExit = () => {
+    if (onClose) {
+      onClose();
+      return;
+    }
+    if (setActiveTab) {
+      setActiveTab("broadcast");
+      return;
+    }
+    if (window.history.length > 1) {
+      window.history.back();
+    }
+  };
 
   const [captchaConfig, setCaptchaConfig] = useState({
     imageBypass: true,
@@ -108,6 +122,7 @@ const AutoCaptchaSolver = ({ setActiveTab }) => {
       
       setPhase('success');
       addLog("Bypass Complete. Session token secured.", 'success');
+      if (onSolved) onSolved();
     };
     runSequence();
     return () => { isMounted = false; };
@@ -118,7 +133,7 @@ const AutoCaptchaSolver = ({ setActiveTab }) => {
       
       <header className="h-[72px] border-b border-white/5 flex items-center justify-between px-8 bg-[#111118]/50 backdrop-blur-md shrink-0">
         <div className="flex items-center gap-6">
-          <button onClick={() => setActiveTab && setActiveTab("overview")} className="flex items-center gap-3 group cursor-pointer">
+          <button onClick={handleExit} className="flex items-center gap-3 group cursor-pointer" title="Quay lại">
              <div className="w-10 h-10 rounded-xl bg-[#111] p-0.5 flex items-center justify-center shadow-[0_0_15px_rgba(239,68,68,0.3)] group-hover:scale-105 transition-transform">
                 <img src="/official_logo.jpg" alt="AVA LIVE" className="w-full h-full object-cover rounded-[10px] border border-white/20" />
              </div>
@@ -128,8 +143,8 @@ const AutoCaptchaSolver = ({ setActiveTab }) => {
           </button>
         </div>
         <div className="flex items-center gap-4">
-           <button onClick={() => setActiveTab && setActiveTab("overview")} className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-bold text-gray-300 transition-colors flex items-center gap-2 cursor-pointer">
-             <ArrowLeft className="w-4 h-4" /> Thoát
+           <button onClick={handleExit} className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-bold text-white transition-colors flex items-center gap-2 cursor-pointer shadow-sm hover:scale-105 active:scale-95" title="Quay lại / Thoát">
+             <ArrowLeft className="w-4 h-4 text-amber-400" /> Thoát
            </button>
            <div className="px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-xs font-black flex items-center gap-2 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></div>

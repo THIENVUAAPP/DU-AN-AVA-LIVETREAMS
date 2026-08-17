@@ -265,6 +265,16 @@ export default function DesktopAppUI() {
   const [isGlobalDemoRunning, setIsGlobalDemoRunning] = useState(false);
   const globalDemoTimerRef = useRef(null);
 
+  // ⚡ TRẠNG THÁI AUTO CHẠY TỰ ĐỘNG 24/24 (Hỗ trợ AI Idol, Game Chiến Đấu, Game Bản Đồ & Tự Vượt Captcha)
+  const [isAuto247Running, setIsAuto247Running] = useState(() => {
+    try {
+      return localStorage.getItem('avalive_auto247') === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const auto247TimerRef = useRef(null);
+
   const handleGlobalRunDemo = useCallback(() => {
     if (isGlobalDemoRunning) {
       if (globalDemoTimerRef.current) {
@@ -306,10 +316,66 @@ export default function DesktopAppUI() {
     }
   }, [isGlobalDemoRunning, isGameBanDoActive, isGameBattleActive, handleLiveEvent, SIMULATION_EVENTS]);
 
-  // Dừng demo bản đồ khi tắt component
+  const handleToggleAuto247 = useCallback(() => {
+    const nextState = !isAuto247Running;
+    setIsAuto247Running(nextState);
+    try {
+      localStorage.setItem('avalive_auto247', String(nextState));
+    } catch {}
+
+    if (!nextState) {
+      if (auto247TimerRef.current) {
+        clearInterval(auto247TimerRef.current);
+        auto247TimerRef.current = null;
+      }
+      try {
+        bandoEngine.stopAutoTestLoop();
+      } catch (e) {}
+      return;
+    }
+
+    // Bật chế độ chạy 24/24 liên tục
+    if (isGameBanDoActive) {
+      try {
+        bandoAudio.unlock();
+        bandoEngine.startAutoTestLoop();
+      } catch (e) {}
+    }
+
+    if (auto247TimerRef.current) {
+      clearInterval(auto247TimerRef.current);
+    }
+
+    auto247TimerRef.current = setInterval(() => {
+      // 1. Tự động kiểm tra và giải Captcha định kỳ ngầm
+      try {
+        window.dispatchEvent(new CustomEvent('avalive_auto_captcha_heartbeat'));
+      } catch (e) {}
+
+      // 2. Chạy luồng tự động theo từng chế độ
+      if (isGameBanDoActive) {
+        // Map Game loop continues automatically via bandoEngine
+      } else if (isGameBattleActive) {
+        window.dispatchEvent(new CustomEvent('battle-trigger-demo'));
+      } else {
+        const proactiveQuotes = [
+          { type: 'comment', payload: { user: 'Khách_TikTok_' + Math.floor(Math.random() * 900 + 100), comment: 'Tư vấn giúp em sản phẩm với idol ơi!' } },
+          { type: 'comment', payload: { user: 'Minh_Anh_VIP', comment: 'Chào idol, giọng nói nghe ngọt ngào quá!' } },
+          { type: 'gift', payload: { user: 'Đại_Gia_99', giftName: 'Hoa Hồng 🌹', count: 5 } },
+          { type: 'like', payload: { count: 50 } },
+          { type: 'user_joined', payload: { user: 'Thành_Viên_Mới_' + Math.floor(Math.random() * 1000) } }
+        ];
+        const evt = proactiveQuotes[Math.floor(Math.random() * proactiveQuotes.length)];
+        handleLiveEvent(evt.type, evt.payload);
+      }
+    }, 4500);
+  }, [isAuto247Running, isGameBanDoActive, isGameBattleActive, handleLiveEvent]);
+
+  // Dừng demo và auto 24/7 khi tắt component
   useEffect(() => {
     return () => {
       if (globalDemoTimerRef.current) clearInterval(globalDemoTimerRef.current);
+      if (auto247TimerRef.current) clearInterval(auto247TimerRef.current);
       try {
         bandoEngine.stopAutoTestLoop();
       } catch (e) {}
@@ -980,6 +1046,22 @@ export default function DesktopAppUI() {
         {/* Right Side: Toggles & Stream Window */}
         <div className="flex items-center gap-1.5 shrink-0">
           
+          {/* Nút ⚡ AUTO 24/7 (Chạy Tự Động 24/24 & Tự Giải Captcha AI) */}
+          <button 
+            onClick={handleToggleAuto247}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black transition-all border shadow-md active:scale-95 ${
+              isAuto247Running
+                ? 'bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 text-white border-yellow-300 ring-2 ring-yellow-400 shadow-red-500/50 animate-pulse'
+                : (isDarkMode ? 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/20' : 'bg-slate-200 hover:bg-slate-300 text-slate-800 border-slate-300')
+            }`}
+            title="Kích hoạt chế độ Chạy Tự Động 24/24 liên tục cho tất cả Game, Live Idol & Tự Động Giải Captcha"
+          >
+            <Zap size={13} className={isAuto247Running ? 'text-yellow-300 animate-spin' : 'text-amber-400'} />
+            <span>{isAuto247Running ? '⚡ AUTO 24/24: BẬT' : '⚡ AUTO 24/24'}</span>
+            {isAuto247Running && (
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+            )}
+          </button>
 
           {/* 1 Nút Chạy Demo DUY NHẤT dùng chung */}
           <button 
@@ -1550,7 +1632,7 @@ export default function DesktopAppUI() {
               </button>
             </div>
             <div className="flex-1 overflow-y-auto">
-              <AutoCaptchaSolver />
+              <AutoCaptchaSolver onClose={() => setActiveSettingsModal(null)} setActiveTab={setActiveTab} />
             </div>
           </div>
         </div>
