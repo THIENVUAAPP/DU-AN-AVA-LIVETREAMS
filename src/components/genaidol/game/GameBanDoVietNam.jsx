@@ -74,45 +74,19 @@ function createCountryFlagTexture(countryCode = 'vietnam') {
     ctx.arc(110, 110, 50, 0, Math.PI * 2);
     ctx.fill();
   } else {
-    // 🇻🇳 VIỆT NAM (Mặc định): Nền đỏ cờ thắm hoàng gia rực rỡ + Viền vàng + Ngôi sao vàng 5 cánh to rõ, phát quang rực rỡ
-    const redGrad = ctx.createRadialGradient(256, 256, 20, 256, 256, 360);
-    redGrad.addColorStop(0, '#EF233C');   // Đỏ tươi phát sáng tâm
-    redGrad.addColorStop(0.65, '#DA251D'); // Đỏ cờ quốc kỳ Việt Nam chuẩn
-    redGrad.addColorStop(1, '#990000');   // Đỏ đậm viền tạo chiều sâu 3D
-    ctx.fillStyle = redGrad;
+    // 🇻🇳 VIỆT NAM (Mặc định): Nền đỏ tươi cờ Tổ Quốc chuẩn sắc nét, KHÔNG phát sáng chói lóa
+    ctx.fillStyle = '#DA251D'; // Đỏ tươi quốc kỳ Việt Nam chuẩn
     ctx.fillRect(0, 0, 512, 512);
 
-    // Viền khối 3D sang trọng
-    ctx.strokeStyle = '#5A0000';
-    ctx.lineWidth = 12;
-    ctx.strokeRect(6, 6, 500, 500);
-
-    // Viền ánh vàng hổ phách bên trong
-    ctx.strokeStyle = '#FACC15';
+    // Viền khối trang nhã, sắc nét
+    ctx.strokeStyle = '#B91C1C';
     ctx.lineWidth = 6;
-    ctx.strokeRect(14, 14, 484, 484);
+    ctx.strokeRect(3, 3, 506, 506);
 
-    // Vầng hào quang ánh vàng lan tỏa quanh ngôi sao (Aura Glow)
-    const auraGrad = ctx.createRadialGradient(256, 256, 60, 256, 256, 230);
-    auraGrad.addColorStop(0, 'rgba(255, 230, 0, 0.45)');
-    auraGrad.addColorStop(0.6, 'rgba(255, 200, 0, 0.2)');
-    auraGrad.addColorStop(1, 'rgba(218, 37, 29, 0)');
-    ctx.fillStyle = auraGrad;
-    ctx.beginPath();
-    ctx.arc(256, 256, 230, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Ngôi sao vàng 5 cánh tỷ lệ to rõ ràng, chiếm trọn tâm diện tích ô voxel
-    const cx = 256, cy = 256, outerR = 195, innerR = 78;
+    // Ngôi sao vàng 5 cánh chuẩn sắc nét, tỷ lệ vàng cân đối (KHÔNG phát sáng chói lóa, KHÔNG hào quang làm mờ)
+    const cx = 256, cy = 256, outerR = 175, innerR = 70;
     
-    // Gradient vàng kim phát quang rực rỡ
-    const goldGrad = ctx.createRadialGradient(cx, cy, 15, cx, cy, outerR);
-    goldGrad.addColorStop(0, '#FFFFFF');   // Lõi trắng phát sáng
-    goldGrad.addColorStop(0.2, '#FFFF55'); // Vàng chanh sáng
-    goldGrad.addColorStop(0.65, '#FFD700'); // Vàng kim chuẩn
-    goldGrad.addColorStop(1, '#E69500');    // Viền hổ phách đậm
-    
-    ctx.fillStyle = goldGrad;
+    ctx.fillStyle = '#FFFF00'; // Vàng tươi chuẩn sắc nét
     ctx.beginPath();
     for (let i = 0; i < 5; i++) {
       const rotOuter = (i * 2 * Math.PI) / 5 - Math.PI / 2;
@@ -129,23 +103,10 @@ function createCountryFlagTexture(countryCode = 'vietnam') {
     ctx.closePath();
     ctx.fill();
 
-    // Viền cánh sao màu hổ phách sắc nét để nổi bật trên nền đỏ
-    ctx.strokeStyle = '#92400E';
-    ctx.lineWidth = 5;
+    // Viền cánh sao vàng kim sắc nét giúp hiển thị rõ ràng từ mọi khoảng cách
+    ctx.strokeStyle = '#EAB308';
+    ctx.lineWidth = 4;
     ctx.stroke();
-
-    // Gân nổi 3D đa diện trên các cánh sao (Star Facets)
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-    ctx.lineWidth = 2.5;
-    for (let i = 0; i < 5; i++) {
-      const rotOuter = (i * 2 * Math.PI) / 5 - Math.PI / 2;
-      const x1 = cx + Math.cos(rotOuter) * outerR;
-      const y1 = cy + Math.sin(rotOuter) * outerR;
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.lineTo(x1, y1);
-      ctx.stroke();
-    }
   }
 
   const texture = new THREE.CanvasTexture(canvas);
@@ -887,6 +848,11 @@ export default function GameBanDoVietNam({
     };
     controls.autoRotate = !isPopout && autoRotate;
     controls.autoRotateSpeed = 0.8;
+    
+    // Tự do tương tác: Khi admin/streamer chủ động rê/xoay/zoom chuột, nhường quyền tức thì, không giằng co camera
+    controls.addEventListener('start', () => {
+      state.tween = null;
+    });
     state.controls = controls;
 
     // Balanced Lighting: Ánh sáng mạnh mẽ, chiếu sáng rực rỡ toàn bộ lãnh thổ quốc gia
@@ -972,13 +938,10 @@ export default function GameBanDoVietNam({
     scene.add(terrainMesh);
     state.terrainMesh = terrainMesh;
 
-    // 2. Mesh Ô Cờ Quốc Kỳ Đã Cắm (Lá cờ quốc kỳ 3D vươn cao, đỏ thắm, sao vàng tự phát sáng 100% ĐA GÓC NHÌN TỪ TRÊN XUỐNG, NGANG, XÉO, CẬN CẢNH)
+    // 2. Mesh Ô Cờ Quốc Kỳ Đã Cắm (Lá cờ quốc kỳ 3D vươn cao, đỏ thắm, sao vàng sắc nét chuẩn màu, không phát sáng chói lóa)
     const flagMat = new THREE.MeshStandardMaterial({
       map: flagTexture,
-      emissiveMap: flagTexture,
-      emissive: new THREE.Color(0xffffff),
-      emissiveIntensity: 0.85,
-      roughness: 0.15,
+      roughness: 0.35,
       metalness: 0.05,
     });
     state.flagMat = flagMat;
@@ -1027,7 +990,7 @@ export default function GameBanDoVietNam({
       if (bannerMesh.instanceColor) bannerMesh.instanceColor.needsUpdate = true;
     }
 
-    // 3. 3D Focal Flag Marker Group (Cột cờ 3D mạ vàng + Lá cờ quốc kỳ tung bay siêu sắc nét + Hào quang phát sáng tại vị trí vừa cắm cờ)
+    // 3. 3D Focal Flag Marker Group (Cột cờ 3D mạ vàng + Lá cờ quốc kỳ tung bay siêu sắc nét chuẩn màu, KHÔNG phát sáng chói lóa)
     const focalGroup = new THREE.Group();
     focalGroup.visible = false;
     scene.add(focalGroup);
@@ -1038,67 +1001,35 @@ export default function GameBanDoVietNam({
     const poleMat = new THREE.MeshStandardMaterial({
       color: 0xffd700,
       metalness: 0.85,
-      roughness: 0.2,
-      emissive: 0xffaa00,
-      emissiveIntensity: 0.5
+      roughness: 0.25
     });
     const poleMesh = new THREE.Mesh(poleGeo, poleMat);
     poleMesh.position.set(0, 2.1, 0);
     focalGroup.add(poleMesh);
 
-    // Đỉnh chóp quả cầu vàng phát quang
+    // Đỉnh chóp quả cầu vàng sắc nét
     const sphereGeo = new THREE.SphereGeometry(0.18, 16, 16);
     const sphereMat = new THREE.MeshStandardMaterial({
       color: 0xffea00,
-      emissive: 0xffcc00,
-      emissiveIntensity: 0.9
+      metalness: 0.6,
+      roughness: 0.2
     });
     const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
     sphereMesh.position.set(0, 4.2, 0);
     focalGroup.add(sphereMesh);
 
-    // Lá cờ quốc kỳ 3D vẫy sóng siêu sắc nét
+    // Lá cờ quốc kỳ 3D vẫy sóng siêu sắc nét chuẩn màu đỏ tươi & sao vàng, KHÔNG phát sáng chói lóa
     const flagGeo = new THREE.PlaneGeometry(2.2, 1.4, 16, 10);
     const flagPlaneMat = new THREE.MeshStandardMaterial({
       map: flagTexture,
-      emissiveMap: flagTexture,
-      emissive: new THREE.Color(0xffffff),
-      emissiveIntensity: 0.85,
       side: THREE.DoubleSide,
-      roughness: 0.2,
+      roughness: 0.35,
       metalness: 0.05
     });
     const flagPlaneMesh = new THREE.Mesh(flagGeo, flagPlaneMat);
     flagPlaneMesh.position.set(1.1, 3.4, 0);
     focalGroup.add(flagPlaneMesh);
     state.flagPlaneMesh = flagPlaneMesh;
-
-    // Vầng hào quang ánh vàng mặt đất (Beacon Pulse Ring)
-    const ringGeo = new THREE.RingGeometry(0.2, 1.6, 32);
-    const ringMat = new THREE.MeshBasicMaterial({
-      color: 0xffd700,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.85
-    });
-    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
-    ringMesh.rotation.x = -Math.PI / 2;
-    ringMesh.position.set(0, 0.08, 0);
-    focalGroup.add(ringMesh);
-    state.ringMesh = ringMesh;
-
-    // Cột tia sáng thiên thanh chiếu thẳng lên trời (Light Beam)
-    const beamGeo = new THREE.CylinderGeometry(0.3, 0.8, 15, 16, 1, true);
-    const beamMat = new THREE.MeshBasicMaterial({
-      color: 0xff3b30,
-      transparent: true,
-      opacity: 0.4,
-      side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending
-    });
-    const beamMesh = new THREE.Mesh(beamGeo, beamMat);
-    beamMesh.position.set(0, 7.5, 0);
-    focalGroup.add(beamMesh);
 
     // Positioning
     const cols = maskData?.gridCols || 300;
@@ -1184,10 +1115,14 @@ export default function GameBanDoVietNam({
         controls.autoRotate = !isPopout && !!autoRotateRef.current;
       }
 
-      // Handle focal camera zoom tween
+      // Handle 3-Stage Smart Camera Zoom:
+      // Giai đoạn 1: Zoom Cận Cảnh 4s (Thấy rõ tên ID và lá cờ sắc nét chuẩn màu không phát sáng chói lóa)
+      // Giai đoạn 2: Zoom Khu Vực (Tỉnh/vùng lân cận) khoảng 6s (Tổng 10s)
+      // Giai đoạn 3: Zoom Toàn Cảnh (Tổng thể bản đồ đất nước)
       if (state.tween) {
         const tw = state.tween;
-        const progress = Math.min(1, (time - tw.start) / tw.duration);
+        const elapsed = time - tw.start;
+        const progress = Math.min(1, Math.max(0, elapsed / tw.duration));
         
         if (tw.phase === 'direct') {
           const t = easeInOutCubic(progress);
@@ -1195,16 +1130,54 @@ export default function GameBanDoVietNam({
           controls.target.lerpVectors(tw.fromTarget, tw.toTarget, t);
           if (progress >= 1) state.tween = null;
         } else if (tw.phase === 'in') {
+          // 1. Tiến vào góc Zoom Cận Cảnh
           const t = easeOutBack(progress);
           camera.position.lerpVectors(tw.from, tw.to, t);
           controls.target.lerpVectors(tw.fromTarget, tw.toTarget, t);
           if (progress >= 1) {
-            tw.phase = 'hold';
-            tw.holdUntil = time + (tw.holdDuration || 4000); // Giữ camera zoom cận cảnh đúng 4 giây theo yêu cầu
+            tw.phase = 'hold_closeup';
+            tw.holdUntil = time + (tw.holdDuration || 4000); // 4 giây cận cảnh theo yêu cầu
           }
-        } else if (tw.phase === 'hold') {
+        } else if (tw.phase === 'hold_closeup') {
+          // Giữ góc cận cảnh đúng 4 giây
           if (time >= tw.holdUntil) {
-            tw.phase = 'out';
+            if (tw.regionalTo && tw.regionalTarget) {
+              // Chuyển tiếp sang Giai đoạn 2: Zoom Khu Vực (Tỉnh/Vùng)
+              tw.phase = 'to_regional';
+              tw.start = time;
+              tw.duration = 1100;
+              tw.from.copy(camera.position);
+              tw.fromTarget.copy(controls.target);
+              tw.to.copy(tw.regionalTo);
+              tw.toTarget.copy(tw.regionalTarget);
+            } else {
+              // Nếu không có góc khu vực, chuyển thẳng về Toàn Cảnh
+              tw.phase = 'to_overview';
+              tw.start = time;
+              tw.duration = 1300;
+              tw.from.copy(camera.position);
+              tw.fromTarget.copy(controls.target);
+              const presets = getCameraPresetsForCountry();
+              const defaultPos = presets[activeCameraPreset]?.pos || [0, 240, 260];
+              const defaultTarget = presets[activeCameraPreset]?.target || [0, 0, 10];
+              tw.to.set(...defaultPos);
+              tw.toTarget.set(...defaultTarget);
+              if (state.focalGroup) state.focalGroup.visible = false;
+            }
+          }
+        } else if (tw.phase === 'to_regional') {
+          // Lướt sang góc khu vực
+          const t = easeInOutCubic(progress);
+          camera.position.lerpVectors(tw.from, tw.to, t);
+          controls.target.lerpVectors(tw.fromTarget, tw.toTarget, t);
+          if (progress >= 1) {
+            tw.phase = 'hold_regional';
+            tw.holdUntil = time + 6000; // Giữ góc khu vực 6 giây (Tổng cộng 10s)
+          }
+        } else if (tw.phase === 'hold_regional') {
+          if (time >= tw.holdUntil) {
+            // Chuyển tiếp sang Giai đoạn 3: Zoom Toàn Cảnh
+            tw.phase = 'to_overview';
             tw.start = time;
             tw.duration = 1400;
             tw.from.copy(camera.position);
@@ -1216,25 +1189,22 @@ export default function GameBanDoVietNam({
             tw.toTarget.set(...defaultTarget);
             if (state.focalGroup) state.focalGroup.visible = false;
           }
-        } else if (tw.phase === 'out') {
-          const t = easeInOutCubic(Math.min(1, (time - tw.start) / tw.duration));
+        } else if (tw.phase === 'to_overview' || tw.phase === 'out') {
+          // Thu về toàn cảnh tổng thể bản đồ
+          const t = easeInOutCubic(progress);
           camera.position.lerpVectors(tw.from, tw.to, t);
           controls.target.lerpVectors(tw.fromTarget, tw.toTarget, t);
-          if (t >= 1) {
+          if (progress >= 1) {
             state.tween = null;
             if (state.focalGroup) state.focalGroup.visible = false;
           }
         }
       }
 
-      // Hoạt họa Lá cờ Quốc kỳ 3D vẫy sóng & Vòng tròn hào quang phát sáng
+      // Hoạt họa Lá cờ Quốc kỳ 3D vẫy sóng nhẹ nhàng
       if (state.focalGroup && state.focalGroup.visible) {
         if (state.flagPlaneMesh) {
           state.flagPlaneMesh.rotation.y = Math.sin(time * 0.006) * 0.25;
-        }
-        if (state.ringMesh) {
-          const s = 1.0 + 0.18 * Math.sin(time * 0.008);
-          state.ringMesh.scale.set(s, s, s);
         }
       }
 
@@ -1585,7 +1555,7 @@ export default function GameBanDoVietNam({
       if (bMesh.instanceColor) bMesh.instanceColor.needsUpdate = true;
     }
 
-    // Trigger Camera zoom to focal target (Zoom cận cảnh trực diện siêu nét thấy rõ lá quốc kỳ và tên / ID người tặng dù chỉ tặng 1 ô)
+    // Trigger Camera 3-Stage Zoom: Zoom cận cảnh 4s (thấy rõ lá cờ và ID người tặng) -> Zoom khu vực 6s -> Zoom toàn cảnh tổng thể
     if (gameState.lastFocalTarget && state.camera && state.controls) {
       const ft = gameState.lastFocalTarget;
       if (state.focalGroup) {
@@ -1597,10 +1567,12 @@ export default function GameBanDoVietNam({
         to: new THREE.Vector3(ft.wx, 8.5, ft.wz + 7.0),
         fromTarget: state.controls.target.clone(),
         toTarget: new THREE.Vector3(ft.wx, 1.8, ft.wz),
+        regionalTo: new THREE.Vector3(ft.wx * 0.65, 80, ft.wz * 0.65 + 65),
+        regionalTarget: new THREE.Vector3(ft.wx * 0.65, 0, ft.wz * 0.65),
         start: performance.now(),
         duration: 550,
         phase: 'in',
-        holdDuration: 4200,
+        holdDuration: 4000,
         holdUntil: 0
       };
     }
