@@ -2151,7 +2151,7 @@ export default function GameChienDau({
   const renderCleanStage = () => (
     <div 
       ref={containerRef}
-      className={`relative w-full h-full overflow-hidden select-none font-sans ${
+      className={`relative w-full h-full min-h-[360px] overflow-hidden select-none font-sans ${
         !isDarkMode ? 'bg-slate-100 text-slate-900' : 'bg-[#0a0c14] text-white'
       }`}
     >
@@ -2400,8 +2400,8 @@ export default function GameChienDau({
   // GIAO DIỆN PHẦN MỀM CHÍNH (STREAMER VIEW): SÂN KHẤU SẠCH 100%
   return (
     <div 
-      className={`relative w-full h-full flex items-center justify-center p-1 sm:p-2 overflow-hidden font-sans select-none ${
-        !isDarkMode ? 'bg-slate-100 text-slate-900' : 'bg-[#04060a] text-white'
+      className={`relative w-full h-full flex items-center justify-center p-2 sm:p-3 overflow-hidden font-sans select-none ${
+        !isDarkMode ? 'bg-slate-200 text-slate-900' : 'bg-[#05070c] text-white'
       }`}
       onPointerDown={handleUserGesture}
     >
@@ -2409,7 +2409,7 @@ export default function GameChienDau({
         className={`relative flex flex-col overflow-hidden transition-all duration-300 ${
           aspectRatio === '9:16'
             ? 'h-full max-h-full aspect-[9/16] w-auto max-w-full mx-auto rounded-2xl md:rounded-3xl border border-purple-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)]'
-            : 'w-full max-w-[1360px] h-full max-h-full aspect-[16/9] rounded-2xl border border-purple-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)]'
+            : 'w-full max-w-[1200px] h-auto max-h-full aspect-[16/9] rounded-2xl border border-purple-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)]'
         } ${!isDarkMode ? 'bg-white' : 'bg-[#0a0c14]'}`}
       >
         {renderCleanStage()}

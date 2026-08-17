@@ -1424,16 +1424,16 @@ export default function GameBanDoVietNam({
 
   // HÀM RENDER SÂN KHẤU LIVE SẠCH 100% (Pure Clean Stage Viewport)
   const renderCleanStage = () => (
-    <div className="relative w-full h-full overflow-hidden select-none font-sans">
+    <div className="relative w-full h-full min-h-[360px] overflow-hidden select-none font-sans">
       {/* 3D Container or 2D Canvas */}
       {viewMode3D ? (
-        <div ref={containerRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
+        <div ref={containerRef} className="w-full h-full min-h-[360px] cursor-grab active:cursor-grabbing" />
       ) : (
         <canvas 
           ref={canvas2dRef} 
           width={1280} 
           height={720} 
-          className="w-full h-full cursor-move"
+          className="w-full h-full min-h-[360px] cursor-move"
           onMouseDown={handleMouseDown2D}
           onMouseMove={handleMouseMove2D}
           onMouseUp={handleMouseUp2D}
@@ -1778,8 +1778,8 @@ export default function GameBanDoVietNam({
   // GIAO DIỆN PHẦN MỀM CHÍNH (STREAMER VIEW): SÂN KHẤU SẠCH 100% (KHÔNG CÓ THANH CÔNG CỤ CHE KHUẤT)
   return (
     <div 
-      className={`relative w-full h-full flex items-center justify-center p-1 sm:p-2 overflow-hidden select-none font-sans ${
-        isLightTheme ? 'bg-slate-100 text-slate-900' : 'bg-[#04060a] text-white'
+      className={`relative w-full h-full flex items-center justify-center p-2 sm:p-3 overflow-hidden select-none font-sans ${
+        isLightTheme ? 'bg-slate-200 text-slate-900' : 'bg-[#05070c] text-white'
       }`}
       onPointerDown={handleUserGesture}
     >
@@ -1787,7 +1787,7 @@ export default function GameBanDoVietNam({
         className={`relative flex flex-col overflow-hidden transition-all duration-300 ${
           aspectRatio === '9:16'
             ? 'h-full max-h-full aspect-[9/16] w-auto max-w-full mx-auto rounded-2xl md:rounded-3xl border border-yellow-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)]'
-            : 'w-full max-w-[1360px] h-full max-h-full aspect-[16/9] rounded-2xl border border-yellow-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)]'
+            : 'w-full max-w-[1200px] h-auto max-h-full aspect-[16/9] rounded-2xl border border-yellow-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)]'
         } ${isLightTheme ? 'bg-slate-50' : 'bg-[#070b14]'}`}
       >
         {/* SÂN KHẤU LIVE SẠCH NẰM Ở ĐÂY (Canvas + Top mini stage + Victory + Side panels) */}
