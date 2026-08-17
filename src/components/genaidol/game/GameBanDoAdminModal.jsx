@@ -8,6 +8,7 @@ import {
   Palette, Minimize2, Maximize2, Columns, Edit2, MessageSquare, Bot, Key
 } from 'lucide-react';
 import bandoEngine, { DEFAULT_MAP_GIFTS, COUNTRY_PRESETS, WORLD_COUNTRIES, CONTINENTS } from './bandoGameEngine';
+import bandoAudio from './bandoAudioEngine';
 import { ELEVENLABS_VOICES, FREE_VOICES, ALL_SYSTEM_VOICES, previewVoiceAudio, stopVoiceAudio, getDualVoiceConfig, saveDualVoiceConfig } from '../../../utils/voiceSyncService';
 
 export default function GameBanDoAdminModal({ isOpen, onClose }) {
