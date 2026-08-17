@@ -29,6 +29,9 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
   const [bannerPosY, setBannerPosY] = useState(() => bandoEngine.state.bannerPos?.y ?? 3.5);
   const [bannerPosZ, setBannerPosZ] = useState(() => bandoEngine.state.bannerPos?.z ?? -155);
   const [showBannerCells, setShowBannerCells] = useState(() => bandoEngine.state.showBannerCells !== false);
+  const [bannerClaimedColor, setBannerClaimedColor] = useState(() => bandoEngine.state.bannerClaimedColor || '#DA251D');
+  const [bannerUnclaimedColor, setBannerUnclaimedColor] = useState(() => bandoEngine.state.bannerUnclaimedColor || '#334155');
+  const [bannerVoxelScale, setBannerVoxelScale] = useState(() => bandoEngine.state.bannerVoxelScale || 1.5);
 
   // 200 Quốc Gia: Tìm kiếm & Lọc theo châu lục
   const [countrySearch, setCountrySearch] = useState('');
@@ -550,6 +553,66 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                           bandoEngine.setBannerPosition(bannerPosX, bannerPosY, val);
                         }}
                         className="w-full h-1.5 bg-gray-700 rounded-lg accent-yellow-400 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Banner Colors & Voxel Scale Customizer */}
+                <div className="p-4 bg-black/40 border border-white/10 rounded-xl space-y-3">
+                  <div className="text-xs font-bold text-gray-300 flex items-center gap-1.5">
+                    <Palette size={14} className="text-yellow-400" /> Tùy Chỉnh Màu Sắc & Kích Thước Ô Cờ Khối Chữ:
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-gray-300">
+                    <div>
+                      <label className="block text-[11px] text-gray-400 mb-1 font-semibold">Màu Ô Khi Đã Cắm Cờ:</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={bannerClaimedColor}
+                          onChange={(e) => {
+                            const col = e.target.value;
+                            setBannerClaimedColor(col);
+                            bandoEngine.setBannerColors(col, bannerUnclaimedColor, bannerVoxelScale);
+                          }}
+                          className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border border-white/20"
+                        />
+                        <span className="font-mono text-xs text-yellow-300 font-bold">{bannerClaimedColor}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] text-gray-400 mb-1 font-semibold">Màu Ô Khung Chưa Cắm:</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={bannerUnclaimedColor}
+                          onChange={(e) => {
+                            const col = e.target.value;
+                            setBannerUnclaimedColor(col);
+                            bandoEngine.setBannerColors(bannerClaimedColor, col, bannerVoxelScale);
+                          }}
+                          className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border border-white/20"
+                        />
+                        <span className="font-mono text-xs text-gray-400 font-bold">{bannerUnclaimedColor}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-[11px] text-gray-400 font-semibold">Kích Cỡ Khối Voxel:</span>
+                        <span className="font-mono text-yellow-300 font-bold">{bannerVoxelScale}x</span>
+                      </div>
+                      <input
+                        type="range" min="0.8" max="3.0" step="0.1"
+                        value={bannerVoxelScale}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          setBannerVoxelScale(val);
+                          bandoEngine.setBannerColors(bannerClaimedColor, bannerUnclaimedColor, val);
+                        }}
+                        className="w-full h-1.5 bg-gray-700 rounded-lg accent-yellow-400 cursor-pointer mt-2"
                       />
                     </div>
                   </div>

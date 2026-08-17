@@ -143,14 +143,17 @@ class BanDoGameEngine {
     const initialBannerPos = (savedCustomConfig.bannerPos && savedCustomConfig.bannerPos.z <= -200)
       ? savedCustomConfig.bannerPos
       : { x: 0, y: 4.0, z: -210 };
+    const initialBannerClaimedColor = savedCustomConfig.bannerClaimedColor || currentPreset.claimedCellColor || '#DA251D';
+    const initialBannerUnclaimedColor = savedCustomConfig.bannerUnclaimedColor || currentPreset.emptyCellColor || '#334155';
+    const initialBannerVoxelScale = savedCustomConfig.bannerVoxelScale || 1.5;
 
     this.bannerEngine = new BannerFlagCellsEngine({
       text: initialBannerText,
       posX: initialBannerPos.x,
       posY: initialBannerPos.y,
       posZ: initialBannerPos.z,
-      claimedColor: currentPreset.claimedCellColor || '#DA251D',
-      unclaimedColor: currentPreset.emptyCellColor || '#334155',
+      claimedColor: initialBannerClaimedColor,
+      unclaimedColor: initialBannerUnclaimedColor,
       starColor: currentPreset.starColor || '#FFD700'
     });
 
@@ -204,6 +207,9 @@ class BanDoGameEngine {
       bannerCells: this.bannerEngine.cells,
       bannerClaimedCount: 0,
       showBannerCells: savedCustomConfig.showBannerCells !== undefined ? savedCustomConfig.showBannerCells : true,
+      bannerClaimedColor: initialBannerClaimedColor,
+      bannerUnclaimedColor: initialBannerUnclaimedColor,
+      bannerVoxelScale: initialBannerVoxelScale,
 
       // Auto 24/7 Mode Configuration
       autoLoop247: savedCustomConfig.autoLoop247 !== undefined ? savedCustomConfig.autoLoop247 : true,
@@ -288,6 +294,9 @@ class BanDoGameEngine {
         bannerText: this.state.bannerText,
         bannerPos: this.state.bannerPos,
         showBannerCells: this.state.showBannerCells,
+        bannerClaimedColor: this.state.bannerClaimedColor,
+        bannerUnclaimedColor: this.state.bannerUnclaimedColor,
+        bannerVoxelScale: this.state.bannerVoxelScale,
       };
       localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(configToSave));
       localStorage.setItem(STORAGE_KEY_COUNTRIES, JSON.stringify(this.countries));
@@ -632,6 +641,29 @@ class BanDoGameEngine {
     this.state.showBannerCells = !!show;
     this.saveToStorage();
     this.notify({ type: 'BANNER_VISIBILITY_UPDATED', showBannerCells: this.state.showBannerCells });
+  }
+
+  setBannerColors(claimedColor, unclaimedColor, voxelScale) {
+    if (claimedColor) {
+      this.bannerEngine.claimedColor = claimedColor;
+      this.state.bannerClaimedColor = claimedColor;
+    }
+    if (unclaimedColor) {
+      this.bannerEngine.unclaimedColor = unclaimedColor;
+      this.state.bannerUnclaimedColor = unclaimedColor;
+    }
+    if (voxelScale !== undefined) {
+      this.state.bannerVoxelScale = parseFloat(voxelScale) || 1.5;
+    }
+    this.bannerEngine.setColors(this.state.bannerClaimedColor, this.state.bannerUnclaimedColor);
+    this.state.bannerCells = [...this.bannerEngine.cells];
+    this.saveToStorage();
+    this.notify({
+      type: 'BANNER_STYLE_UPDATED',
+      claimedColor: this.state.bannerClaimedColor,
+      unclaimedColor: this.state.bannerUnclaimedColor,
+      voxelScale: this.state.bannerVoxelScale
+    });
   }
 
   // Cài đặt tổng số ô cờ

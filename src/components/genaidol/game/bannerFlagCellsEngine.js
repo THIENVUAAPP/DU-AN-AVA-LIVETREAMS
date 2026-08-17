@@ -417,6 +417,22 @@ export class BannerFlagCellsEngine {
     return newlyClaimed;
   }
 
+  // Tuỳ chỉnh màu sắc ô cờ khối chữ (Đã cắm / Chưa cắm)
+  setColors(claimedColor, unclaimedColor) {
+    if (claimedColor) this.claimedColor = claimedColor;
+    if (unclaimedColor) this.unclaimedColor = unclaimedColor;
+    this.cells.forEach(c => {
+      c.color = c.isClaimed ? this.claimedColor : this.unclaimedColor;
+    });
+  }
+
+  // Tuỳ chỉnh khoảng cách và kích cỡ ô chữ
+  setSpacing(cellSpacing, letterSpacing) {
+    if (cellSpacing !== undefined) this.cellSpacing = parseFloat(cellSpacing);
+    if (letterSpacing !== undefined) this.letterSpacing = parseFloat(letterSpacing);
+    this.generateCells();
+  }
+
   // Đồng bộ tỷ lệ lấp đầy theo phần trăm hoàn thành của toàn bản đồ
   syncWithMapPercent(percent = 0) {
     const targetClaimed = Math.floor((this.cells.length * Math.min(100, Math.max(0, percent))) / 100);

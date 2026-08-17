@@ -150,6 +150,60 @@ function createCountryFlagTexture(countryCode = 'vietnam') {
   return texture;
 }
 
+// Function tạo Texture Vùng Đất / Khối Nền Lãnh Thổ CHƯA CẮM CỜ (Tối hoặc sáng dịu, ZERO cờ đỏ/ngôi sao, chuẩn địa hình 3D cao cấp)
+function createTerrainTexture(isLightTheme = false) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+
+  if (isLightTheme) {
+    // Sáng thanh lịch: Đá cẩm thạch ngọc xám sáng với viền vát 3D tinh xảo
+    const bgGrad = ctx.createLinearGradient(0, 0, 512, 512);
+    bgGrad.addColorStop(0, '#E2E8F0');
+    bgGrad.addColorStop(0.5, '#CBD5E1');
+    bgGrad.addColorStop(1, '#94A3B8');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, 512, 512);
+
+    ctx.strokeStyle = '#64748B';
+    ctx.lineWidth = 14;
+    ctx.strokeRect(7, 7, 498, 498);
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(18, 18, 476, 476);
+  } else {
+    // Tối: Khối đá than ngọc bích / Dark Slate Topographic Relief cao cấp, huyền bí, ZERO lá cờ/sao
+    const bgGrad = ctx.createRadialGradient(256, 256, 40, 256, 256, 360);
+    bgGrad.addColorStop(0, '#1E293B');    // Slate trung tâm
+    bgGrad.addColorStop(0.7, '#0F172A');  // Deep Midnight Slate
+    bgGrad.addColorStop(1, '#080E1A');    // Dark border
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, 512, 512);
+
+    // Viền vát 3D tối màu
+    ctx.strokeStyle = '#020617';
+    ctx.lineWidth = 14;
+    ctx.strokeRect(7, 7, 498, 498);
+
+    // Đường viền topographic tinh tế
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.15)';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(18, 18, 476, 476);
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.wrapS = THREE.ClampToEdgeWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.generateMipmaps = true;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.needsUpdate = true;
+  return texture;
+}
+
 // 3 Vị Trí Ghim Camera Mặc Định Ban Đầu
 const DEFAULT_CUSTOM_BOOKMARKS = [
   {
@@ -403,6 +457,10 @@ export default function GameBanDoVietNam({
     renderer: null,
     controls: null,
     instancedMesh: null,
+    terrainMesh: null,
+    flagMesh: null,
+    terrainMat: null,
+    flagMat: null,
     bannerMesh: null,
     dummy: new THREE.Object3D(),
     colorObj: new THREE.Color(),
@@ -874,29 +932,49 @@ export default function GameBanDoVietNam({
       scene.add(gridHelper);
     }
 
-    // Instanced Mesh for cells with National Flag Texture (Lá cờ quốc kỳ trên từng ô pixel)
+    // Instanced Meshes: Phân tách rõ ràng giữa Vùng Đất Nền Lãnh Thổ (Terrain Base) & Ô Cờ Quốc Kỳ Đã Cắm (Claimed Flags)
     const maskData = bandoEngine.maskData;
     const cells = maskData?.cells || [];
     const count = cells.length > 0 ? cells.length : 15125;
     const flagTexture = createCountryFlagTexture(gameState.selectedCountry || 'vietnam');
+    const terrainTexture = createTerrainTexture(isLightTheme);
     state.flagTexture = flagTexture;
+    state.terrainTexture = terrainTexture;
+
     // Tự động điều chỉnh kích thước ô voxel để liền mạch 100%, tuyệt đối không để khe hở hay lỗ thủng
     const cellDim = Math.min(2.5, Math.max(0.98, 1.05 * Math.sqrt(15125 / count)));
     state.cellDim = cellDim;
     const boxGeo = new THREE.BoxGeometry(cellDim, 1, cellDim);
-    const boxMat = new THREE.MeshLambertMaterial({
+
+    // 1. Mesh Vùng Đất Nền Chưa Cắm (Tối/Sáng dịu, ZERO cờ đỏ/ngôi sao)
+    const terrainMat = new THREE.MeshLambertMaterial({
+      map: terrainTexture,
+      color: 0xffffff,
+      reflectivity: 0.10,
+    });
+    state.terrainMat = terrainMat;
+    const terrainMesh = new THREE.InstancedMesh(boxGeo, terrainMat, count);
+    terrainMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    terrainMesh.castShadow = true;
+    terrainMesh.receiveShadow = true;
+    scene.add(terrainMesh);
+    state.terrainMesh = terrainMesh;
+
+    // 2. Mesh Ô Cờ Quốc Kỳ Đã Cắm (Lá cờ quốc kỳ 3D vươn cao, đỏ thắm, sao vàng phát sáng)
+    const flagMat = new THREE.MeshLambertMaterial({
       map: flagTexture,
       color: 0xffffff,
-      reflectivity: 0.15,
+      reflectivity: 0.18,
     });
-    state.boxMat = boxMat;
+    state.flagMat = flagMat;
     state.currentCountry = gameState.selectedCountry || 'vietnam';
-    const instancedMesh = new THREE.InstancedMesh(boxGeo, boxMat, count);
-    instancedMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    instancedMesh.castShadow = true;
-    instancedMesh.receiveShadow = true;
-    scene.add(instancedMesh);
-    state.instancedMesh = instancedMesh;
+    const flagMesh = new THREE.InstancedMesh(boxGeo, flagMat, count);
+    flagMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    flagMesh.castShadow = true;
+    flagMesh.receiveShadow = true;
+    scene.add(flagMesh);
+    state.flagMesh = flagMesh;
+    state.instancedMesh = terrainMesh; // Giữ để tương thích ngược
 
     // Instanced Mesh for 3D Banner Title Flag Cells
     const bannerCells = bandoEngine.state.bannerCells || [];
@@ -906,7 +984,8 @@ export default function GameBanDoVietNam({
     let bannerBoxMat = null;
 
     if (bannerCount > 0) {
-      bannerBoxGeo = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+      const bScale = gameState.bannerVoxelScale || 1.5;
+      bannerBoxGeo = new THREE.BoxGeometry(bScale, bScale, bScale);
       bannerBoxMat = new THREE.MeshStandardMaterial({
         roughness: 0.42,
         metalness: 0.18,
@@ -919,13 +998,15 @@ export default function GameBanDoVietNam({
       state.bannerMesh = bannerMesh;
 
       const bannerDummy = state.dummy;
+      const bClaimedCol = gameState.bannerClaimedColor || gameState.settings?.claimedCellColor || '#DA251D';
+      const bUnclaimedCol = gameState.bannerUnclaimedColor || '#334155';
       for (let i = 0; i < bannerCount; i++) {
         const bc = bannerCells[i];
         bannerDummy.position.set(bc.wx, bc.wy, bc.wz);
         bannerDummy.scale.set(1, bc.isClaimed ? 1.4 : 0.8, 1);
         bannerDummy.updateMatrix();
         bannerMesh.setMatrixAt(i, bannerDummy.matrix);
-        bannerMesh.setColorAt(i, new THREE.Color(bc.color || (bc.isClaimed ? (gameState.settings.claimedCellColor || '#DA251D') : '#334155')));
+        bannerMesh.setColorAt(i, new THREE.Color(bc.color || (bc.isClaimed ? bClaimedCol : bUnclaimedCol)));
       }
       bannerMesh.instanceMatrix.needsUpdate = true;
       if (bannerMesh.instanceColor) bannerMesh.instanceColor.needsUpdate = true;
@@ -935,32 +1016,41 @@ export default function GameBanDoVietNam({
     const cols = maskData?.gridCols || 300;
     const rows = maskData?.gridRows || 389;
     const dummy = state.dummy;
+    const zeroMatrix = new THREE.Matrix4().makeScale(0, 0, 0);
 
     for (let i = 0; i < count; i++) {
       const cell = cells[i] || { x: (i % 100), y: Math.floor(i / 100) };
       const wx = (cell.x - cols / 2) * 1.0;
       const wz = (cell.y - rows / 2) * 1.0;
       const isClaimed = !!bandoEngine.state.cellsById[cell.id];
-
-      const scaleY = isClaimed ? 2.6 : 0.45;
-      const posY = scaleY / 2;
-
       const curDim = state.cellDim || 0.98;
-      dummy.position.set(wx, posY, wz);
-      dummy.scale.set(curDim, scaleY, curDim);
-      dummy.updateMatrix();
-      instancedMesh.setMatrixAt(i, dummy.matrix);
 
       if (isClaimed) {
-        // Ô đã cắm cờ (người xem tặng quà): Lắp lá cờ quốc kỳ 3D vươn cao, màu đỏ thắm đậm sắc nét tuyệt đối
-        instancedMesh.setColorAt(i, new THREE.Color(1.0, 1.0, 1.0));
+        // Ô đã cắm cờ (người xem tặng quà): Hiện trên flagMesh vươn cao, ẩn trên terrainMesh
+        terrainMesh.setMatrixAt(i, zeroMatrix);
+
+        const scaleY = 2.6;
+        dummy.position.set(wx, scaleY / 2, wz);
+        dummy.scale.set(curDim, scaleY, curDim);
+        dummy.updateMatrix();
+        flagMesh.setMatrixAt(i, dummy.matrix);
+        flagMesh.setColorAt(i, new THREE.Color(1.0, 1.0, 1.0));
       } else {
-        // Ô nền lãnh thổ CHƯA cắm cờ: Màu xám đá ngọc bích mờ tinh tế, tuyệt đối không tạo cảm giác lỗ đen/lỗ thủng
-        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.65, 0.72, 0.78) : new THREE.Color(0.24, 0.32, 0.38));
+        // Ô nền lãnh thổ CHƯA cắm cờ: Hiện trên terrainMesh (tối/sáng dịu, ZERO cờ đỏ/ngôi sao), ẩn trên flagMesh
+        const scaleY = 0.35;
+        dummy.position.set(wx, scaleY / 2, wz);
+        dummy.scale.set(curDim, scaleY, curDim);
+        dummy.updateMatrix();
+        terrainMesh.setMatrixAt(i, dummy.matrix);
+        terrainMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.85, 0.90, 0.95) : new THREE.Color(0.70, 0.78, 0.88));
+
+        flagMesh.setMatrixAt(i, zeroMatrix);
       }
     }
-    instancedMesh.instanceMatrix.needsUpdate = true;
-    if (instancedMesh.instanceColor) instancedMesh.instanceColor.needsUpdate = true;
+    terrainMesh.instanceMatrix.needsUpdate = true;
+    if (terrainMesh.instanceColor) terrainMesh.instanceColor.needsUpdate = true;
+    flagMesh.instanceMatrix.needsUpdate = true;
+    if (flagMesh.instanceColor) flagMesh.instanceColor.needsUpdate = true;
 
     // Resize handler với ResizeObserver đảm bảo scene Three.js luôn vẽ đúng kích thước ngay lập tức
     const handleResize = () => {
@@ -1142,7 +1232,8 @@ export default function GameBanDoVietNam({
         mousePos.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
         raycaster.setFromCamera(mousePos, camera);
-        const intersects = raycaster.intersectObject(state.instancedMesh);
+        const targetMeshes = [state.terrainMesh, state.flagMesh].filter(Boolean);
+        const intersects = raycaster.intersectObjects(targetMeshes);
         if (intersects.length > 0) {
           const hit = intersects[0];
           const instanceId = hit.instanceId;
@@ -1180,7 +1271,9 @@ export default function GameBanDoVietNam({
       renderer.domElement.removeEventListener('pointerup', handleDomPointerUp);
       renderer.dispose();
       boxGeo.dispose();
-      boxMat.dispose();
+      if (state.terrainMat) state.terrainMat.dispose();
+      if (state.flagMat) state.flagMat.dispose();
+      if (state.terrainTexture) state.terrainTexture.dispose();
       if (state.flagTexture) state.flagTexture.dispose();
     };
   }, [viewMode3D, isPopout, gameState.selectedCountry, isLightTheme, gameState.maskLoaded, gameState.isLoaded, aspectRatio]);
@@ -1308,16 +1401,17 @@ export default function GameBanDoVietNam({
   useEffect(() => {
     if (!viewMode3D) return;
     const state = threeStateRef.current;
-    const instancedMesh = state.instancedMesh;
+    const terrainMesh = state.terrainMesh;
+    const flagMesh = state.flagMesh;
     const maskData = bandoEngine.maskData;
-    if (!instancedMesh || !maskData) return;
+    if (!terrainMesh || !flagMesh || !maskData) return;
 
     // Cập nhật Texture Quốc Kỳ khi chuyển đổi quốc gia
-    if (state.boxMat && gameState.selectedCountry && state.currentCountry !== gameState.selectedCountry) {
+    if (state.flagMat && gameState.selectedCountry && state.currentCountry !== gameState.selectedCountry) {
       state.currentCountry = gameState.selectedCountry;
       const newTex = createCountryFlagTexture(gameState.selectedCountry);
-      state.boxMat.map = newTex;
-      state.boxMat.needsUpdate = true;
+      state.flagMat.map = newTex;
+      state.flagMat.needsUpdate = true;
     }
 
     const cells = maskData.cells || [];
@@ -1325,33 +1419,43 @@ export default function GameBanDoVietNam({
     const cols = maskData.gridCols || 300;
     const rows = maskData.gridRows || 389;
     const dummy = state.dummy;
+    const zeroMatrix = new THREE.Matrix4().makeScale(0, 0, 0);
 
     for (let i = 0; i < count; i++) {
       const cell = cells[i];
       if (!cell) continue;
       const isClaimed = !!gameState.cellsById[cell.id];
-      const scaleY = isClaimed ? 2.4 : 0.45;
-      const posY = scaleY / 2;
       const wx = (cell.x - cols / 2) * 1.0;
       const wz = (cell.y - rows / 2) * 1.0;
-
-      const curDim = state.cellDim || 0.88;
-      dummy.position.set(wx, posY, wz);
-      dummy.scale.set(curDim, scaleY, curDim);
-      dummy.updateMatrix();
-      instancedMesh.setMatrixAt(i, dummy.matrix);
+      const curDim = state.cellDim || 0.98;
 
       if (isClaimed) {
-        // Ô đã cắm cờ (người xem tặng quà): Lắp lá cờ quốc kỳ 3D vươn cao, màu đỏ thắm đậm sắc nét tuyệt đối
-        instancedMesh.setColorAt(i, new THREE.Color(1.0, 1.0, 1.0));
+        // 1. Ô đã cắm cờ (người xem tặng quà): Hiện trên flagMesh vươn cao, ẩn trên terrainMesh
+        terrainMesh.setMatrixAt(i, zeroMatrix);
+
+        const scaleY = 2.6;
+        dummy.position.set(wx, scaleY / 2, wz);
+        dummy.scale.set(curDim, scaleY, curDim);
+        dummy.updateMatrix();
+        flagMesh.setMatrixAt(i, dummy.matrix);
+        flagMesh.setColorAt(i, new THREE.Color(1.0, 1.0, 1.0));
       } else {
-        // Ô nền lãnh thổ CHƯA cắm cờ: Màu xám than đá mờ tinh tế, giúp cờ Tổ Quốc cắm lên nổi bật rực rỡ
-        instancedMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.55, 0.60, 0.68) : new THREE.Color(0.18, 0.22, 0.30));
+        // 2. Ô nền lãnh thổ CHƯA cắm cờ: Hiện trên terrainMesh (tối/sáng dịu, ZERO cờ đỏ/ngôi sao), ẩn trên flagMesh
+        const scaleY = 0.35;
+        dummy.position.set(wx, scaleY / 2, wz);
+        dummy.scale.set(curDim, scaleY, curDim);
+        dummy.updateMatrix();
+        terrainMesh.setMatrixAt(i, dummy.matrix);
+        terrainMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.85, 0.90, 0.95) : new THREE.Color(0.70, 0.78, 0.88));
+
+        flagMesh.setMatrixAt(i, zeroMatrix);
       }
     }
 
-    instancedMesh.instanceMatrix.needsUpdate = true;
-    if (instancedMesh.instanceColor) instancedMesh.instanceColor.needsUpdate = true;
+    terrainMesh.instanceMatrix.needsUpdate = true;
+    if (terrainMesh.instanceColor) terrainMesh.instanceColor.needsUpdate = true;
+    flagMesh.instanceMatrix.needsUpdate = true;
+    if (flagMesh.instanceColor) flagMesh.instanceColor.needsUpdate = true;
 
     // Cập nhật ma trận và màu sắc của Khối Chữ Ô Cờ 3D (Banner Flag Cells)
     if (state.bannerMesh && gameState.bannerCells) {
@@ -1359,8 +1463,8 @@ export default function GameBanDoVietNam({
       const bMesh = state.bannerMesh;
       bMesh.visible = gameState.showBannerCells !== false;
       const bannerDummy = state.dummy;
-      const bannerRed = new THREE.Color(gameState.settings.claimedCellColor || '#DA251D');
-      const bannerEmpty = new THREE.Color('#334155');
+      const bannerClaimedColor = new THREE.Color(gameState.bannerClaimedColor || gameState.settings?.claimedCellColor || '#DA251D');
+      const bannerEmpty = new THREE.Color(gameState.bannerUnclaimedColor || '#334155');
 
       for (let j = 0; j < bMesh.count; j++) {
         const bc = bCells[j];
@@ -1369,15 +1473,16 @@ export default function GameBanDoVietNam({
           bannerDummy.scale.set(1, bc.isClaimed ? 1.4 : 0.8, 1);
           bannerDummy.updateMatrix();
           bMesh.setMatrixAt(j, bannerDummy.matrix);
-          bMesh.setColorAt(j, bc.isClaimed ? bannerRed : bannerEmpty);
+          bMesh.setColorAt(j, bc.isClaimed ? bannerClaimedColor : bannerEmpty);
         }
       }
       bMesh.instanceMatrix.needsUpdate = true;
       if (bMesh.instanceColor) bMesh.instanceColor.needsUpdate = true;
     }
 
-    // Trigger Camera zoom to focal target (Dynamic smart zoom cận cảnh lá cờ 3.5s rồi hồi về toàn cảnh)
-    if (gameState.lastFocalTarget && state.camera && state.controls) {
+    // Trigger Camera zoom to focal target (Chỉ zoom khi đang chạy Demo, Auto 24/7 hoặc Live thật)
+    const isRunning = isAutoTesting || isAuto247 || (bandoEngine.state && bandoEngine.state.isLiveRunning);
+    if (isRunning && gameState.lastFocalTarget && state.camera && state.controls) {
       const ft = gameState.lastFocalTarget;
       state.tween = {
         from: state.camera.position.clone(),
@@ -1391,9 +1496,10 @@ export default function GameBanDoVietNam({
         holdUntil: 0
       };
     }
-  }, [gameState.claimedCount, gameState.status, gameState.settings, gameState.selectedCountry, gameState.bannerCells, gameState.bannerClaimedCount, gameState.showBannerCells, gameState.bannerPos, viewMode3D, gameState.maskLoaded]);
+  }, [gameState.claimedCount, gameState.status, gameState.settings, gameState.selectedCountry, gameState.bannerCells, gameState.bannerClaimedCount, gameState.showBannerCells, gameState.bannerPos, gameState.bannerClaimedColor, gameState.bannerUnclaimedColor, gameState.bannerVoxelScale, viewMode3D, gameState.maskLoaded, isAutoTesting, isAuto247]);
 
   // Smart Camera Director: Cứ cách 10-12 giây khi rảnh thì zoom cận vùng đất chứa cờ, sau đó hồi lại tổng quan
+  // CHỈ HOẠT ĐỘNG KHI CHẠY DEMO, AUTO 24/7 HOẶC LIVE THỰC TẾ (Không làm gián đoạn Admin khi soi map)
   useEffect(() => {
     if (!viewMode3D || isPopout) return;
     let nextClusterIdx = 0;
@@ -1405,6 +1511,10 @@ export default function GameBanDoVietNam({
     ];
 
     const directorInterval = setInterval(() => {
+      // Chỉ chạy khi đang phát live, chạy demo hoặc auto 24/7
+      const isRunning = isAutoTesting || isAuto247 || (bandoEngine.state && bandoEngine.state.isLiveRunning);
+      if (!isRunning) return;
+
       const state = threeStateRef.current;
       if (!state.camera || !state.controls || state.tween) return;
       if (autoRotateRef.current) return;
@@ -1426,7 +1536,7 @@ export default function GameBanDoVietNam({
     }, 12000);
 
     return () => clearInterval(directorInterval);
-  }, [viewMode3D, isPopout]);
+  }, [viewMode3D, isPopout, isAutoTesting, isAuto247]);
 
   // ============================================================
   // 2D CANVAS FALLBACK RENDERER WITH PAN & ZOOM
