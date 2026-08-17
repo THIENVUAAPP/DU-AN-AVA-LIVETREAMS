@@ -38,6 +38,7 @@ export default function GameChienDau({
   externalLiveEvent = null,
   aspectRatio: propAspectRatio = null,
   onToggleAspectRatio = null,
+  isDarkMode = true,
 }) {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
@@ -1207,23 +1208,50 @@ export default function GameChienDau({
     const ctx = canvas.getContext('2d');
 
     const handleResize = () => {
-      if (containerRef.current) {
+      if (containerRef.current && canvas) {
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        const w = containerRef.current.clientWidth || window.innerWidth || 1280;
-        const h = containerRef.current.clientHeight || window.innerHeight || 720;
-        engineRef.current.w = w;
-        engineRef.current.h = h;
-        canvas.width = w * dpr;
-        canvas.height = h * dpr;
-        canvas.style.width = `${w}px`;
-        canvas.style.height = `${h}px`;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        updateFormation(w, h);
+        const rect = containerRef.current.getBoundingClientRect();
+        const w = rect.width > 0 ? rect.width : (containerRef.current.clientWidth || 1280);
+        const h = rect.height > 0 ? rect.height : (containerRef.current.clientHeight || 720);
+        if (w > 0 && h > 0) {
+          engineRef.current.w = w;
+          engineRef.current.h = h;
+          canvas.width = w * dpr;
+          canvas.height = h * dpr;
+          canvas.style.width = `${w}px`;
+          canvas.style.height = `${h}px`;
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          updateFormation(w, h);
+        }
       }
     };
 
     handleResize();
+    const animFrameId = requestAnimationFrame(handleResize);
+    const initialTimer = setTimeout(handleResize, 100);
     window.addEventListener('resize', handleResize);
+
+    let resizeObserver = null;
+    if (typeof ResizeObserver !== 'undefined' && containerRef.current) {
+      resizeObserver = new ResizeObserver((entries) => {
+        if (!entries[0]) return;
+        const rect = entries[0].contentRect;
+        if (rect.width > 0 && rect.height > 0) {
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          const w = rect.width;
+          const h = rect.height;
+          engineRef.current.w = w;
+          engineRef.current.h = h;
+          canvas.width = w * dpr;
+          canvas.height = h * dpr;
+          canvas.style.width = `${w}px`;
+          canvas.style.height = `${h}px`;
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          updateFormation(w, h);
+        }
+      });
+      resizeObserver.observe(containerRef.current);
+    }
 
     const renderLoop = (time) => {
       try {
@@ -1242,8 +1270,13 @@ export default function GameChienDau({
 
       // Ground plane glow
       const groundGrad = ctx.createLinearGradient(0, h * 0.4, 0, h);
-      groundGrad.addColorStop(0, 'rgba(15, 18, 30, 0)');
-      groundGrad.addColorStop(1, 'rgba(8, 10, 18, 0.85)');
+      if (!isDarkMode) {
+        groundGrad.addColorStop(0, 'rgba(241, 245, 249, 0)');
+        groundGrad.addColorStop(1, 'rgba(226, 232, 240, 0.9)');
+      } else {
+        groundGrad.addColorStop(0, 'rgba(15, 18, 30, 0)');
+        groundGrad.addColorStop(1, 'rgba(8, 10, 18, 0.85)');
+      }
       ctx.fillStyle = groundGrad;
       ctx.fillRect(0, h * 0.4, w, h * 0.6);
 
@@ -2045,9 +2078,12 @@ export default function GameChienDau({
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animFrameId);
+      clearTimeout(initialTimer);
+      if (resizeObserver) resizeObserver.disconnect();
       if (engineRef.current.rAfId) cancelAnimationFrame(engineRef.current.rAfId);
     };
-  }, [config, updateFormation, initDefaultChampions]);
+  }, [config, updateFormation, initDefaultChampions, isDarkMode]);
 
   // Calculate HP Percentages
   const blueHpPct = Math.max(0, Math.min(100, (gameState.hp.blue / gameState.maxHp) * 100));
@@ -2115,7 +2151,9 @@ export default function GameChienDau({
   const renderCleanStage = () => (
     <div 
       ref={containerRef}
-      className="relative w-full h-full overflow-hidden select-none font-sans bg-[#0a0c14]"
+      className={`relative w-full h-full overflow-hidden select-none font-sans ${
+        !isDarkMode ? 'bg-slate-100 text-slate-900' : 'bg-[#0a0c14] text-white'
+      }`}
     >
       {/* 2D Battlefield Interactive Canvas */}
       <canvas 
@@ -2362,15 +2400,17 @@ export default function GameChienDau({
   // GIAO DIỆN PHẦN MỀM CHÍNH (STREAMER VIEW): SÂN KHẤU SẠCH 100%
   return (
     <div 
-      className="relative w-full h-full flex items-center justify-center p-1 sm:p-2 overflow-hidden bg-[#04060a] font-sans select-none"
+      className={`relative w-full h-full flex items-center justify-center p-1 sm:p-2 overflow-hidden font-sans select-none ${
+        !isDarkMode ? 'bg-slate-100 text-slate-900' : 'bg-[#04060a] text-white'
+      }`}
       onPointerDown={handleUserGesture}
     >
       <div 
         className={`relative flex flex-col overflow-hidden transition-all duration-300 ${
           aspectRatio === '9:16'
-            ? 'h-full max-h-full aspect-[9/16] w-auto max-w-full mx-auto rounded-2xl md:rounded-3xl border border-purple-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-[#0a0c14]'
-            : 'w-full max-w-[1360px] h-full aspect-[16/9] rounded-2xl border border-purple-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-[#0a0c14]'
-        }`}
+            ? 'h-full max-h-full aspect-[9/16] w-auto max-w-full mx-auto rounded-2xl md:rounded-3xl border border-purple-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)]'
+            : 'w-full max-w-[1360px] h-full max-h-full aspect-[16/9] rounded-2xl border border-purple-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)]'
+        } ${!isDarkMode ? 'bg-white' : 'bg-[#0a0c14]'}`}
       >
         {renderCleanStage()}
       </div>

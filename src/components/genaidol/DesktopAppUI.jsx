@@ -660,6 +660,7 @@ export default function DesktopAppUI() {
           externalLiveEvent={lastGameEvent}
           aspectRatio={globalAspectRatio}
           onToggleAspectRatio={toggleGlobalAspectRatio}
+          isDarkMode={isDarkMode}
         />
       );
     }
@@ -673,13 +674,14 @@ export default function DesktopAppUI() {
           externalLiveEvent={lastGameEvent}
           aspectRatio={globalAspectRatio}
           onToggleAspectRatio={toggleGlobalAspectRatio}
+          isDarkMode={isDarkMode}
         />
       );
     }
 
     // 0. Chế độ AI Idol Livestream Video / Live Screen
     return (
-      <div className="w-full h-full flex items-center justify-center bg-[#05070c] p-2 sm:p-3 overflow-hidden">
+      <div className={`w-full h-full flex items-center justify-center p-2 sm:p-3 overflow-hidden ${isDarkMode ? 'bg-[#05070c]' : 'bg-slate-200'}`}>
         <div 
           className={`relative flex flex-col overflow-hidden transition-all duration-300 ${
             globalAspectRatio === '9:16'
@@ -694,10 +696,10 @@ export default function DesktopAppUI() {
   };
 
   return (
-    <div className={`w-full h-screen flex flex-col font-sans ${isDarkMode ? 'bg-[#0f0f13] text-white' : 'bg-gray-100 text-gray-900'}`}>
+    <div className={`w-full h-screen flex flex-col font-sans transition-colors duration-200 ${isDarkMode ? 'bg-[#0f0f13] text-white' : 'bg-slate-100 text-slate-900'}`}>
       
       {/* 1. Fake Window Title Bar (Thu nhỏ ~30% cực kỳ thanh thoát) */}
-      <div className={`flex items-center justify-between px-3 py-1.5 ${isDarkMode ? 'bg-[#1c1c23]' : 'bg-gray-300'} select-none z-30 border-b ${isDarkMode ? 'border-gray-800' : 'border-gray-300'}`}>
+      <div className={`flex items-center justify-between px-3 py-1.5 ${isDarkMode ? 'bg-[#1c1c23] border-gray-800 text-white' : 'bg-slate-200 border-slate-300 text-slate-800'} select-none z-30 border-b`}>
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded bg-blue-500 flex items-center justify-center">
             <Video size={10} className="text-white" />
@@ -1082,18 +1084,22 @@ export default function DesktopAppUI() {
 
         {/* Cửa sổ Nổi: Công cụ Giả lập Live (Pre-Live Simulator) */}
         {showSimulator && (
-          <div className="absolute right-6 top-4 w-[420px] max-h-[90vh] flex flex-col bg-[#16161e] border border-purple-500/40 rounded-2xl shadow-2xl z-40 animate-in fade-in slide-in-from-right-4 overflow-hidden backdrop-blur-md">
+          <div className={`absolute right-6 top-4 w-[420px] max-h-[90vh] flex flex-col rounded-2xl shadow-2xl z-40 animate-in fade-in slide-in-from-right-4 overflow-hidden backdrop-blur-md border ${
+            isDarkMode ? 'bg-[#16161e] border-purple-500/40 text-white' : 'bg-white border-purple-300 text-slate-800'
+          }`}>
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-purple-900/60 to-indigo-900/60 border-b border-purple-500/30">
+            <div className={`flex items-center justify-between px-4 py-3 border-b ${
+              isDarkMode ? 'bg-gradient-to-r from-purple-900/60 to-indigo-900/60 border-purple-500/30 text-white' : 'bg-purple-50 border-purple-200 text-purple-900'
+            }`}>
               <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-purple-500/20 rounded-lg border border-purple-400/30 text-purple-300">
+                <div className={`p-1.5 rounded-lg border ${isDarkMode ? 'bg-purple-500/20 border-purple-400/30 text-purple-300' : 'bg-purple-100 border-purple-300 text-purple-700'}`}>
                   <Brain size={16} />
                 </div>
                 <div>
-                  <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+                  <h3 className={`text-xs font-black uppercase tracking-wider flex items-center gap-1.5 ${isDarkMode ? 'text-white' : 'text-purple-950'}`}>
                     Công cụ Giả lập Live
                   </h3>
-                  <p className="text-[10px] text-purple-200/70">Test phản hồi AI, âm thanh & video trước khi Live</p>
+                  <p className={`text-[10px] ${isDarkMode ? 'text-purple-200/70' : 'text-purple-700/80'}`}>Test phản hồi AI, âm thanh & video trước khi Live</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -1103,25 +1109,25 @@ export default function DesktopAppUI() {
                   className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all border ${
                     autoSimActive 
                       ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-sm shadow-emerald-500/20 animate-pulse' 
-                      : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'
+                      : (isDarkMode ? 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10' : 'bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200')
                   }`}
                   title="Tự động phát sinh người vào, bình luận, tặng quà mỗi 9s"
                 >
                   <span className={`w-1.5 h-1.5 rounded-full ${autoSimActive ? 'bg-emerald-400' : 'bg-gray-500'}`}></span>
                   Auto Test: {autoSimActive ? 'BẬT' : 'TẮT'}
                 </button>
-                <button onClick={() => setShowSimulator(false)} className="text-gray-400 hover:text-white p-1 hover:bg-white/10 rounded-lg transition-colors">
+                <button onClick={() => setShowSimulator(false)} className={`p-1 rounded-lg transition-colors ${isDarkMode ? 'text-gray-400 hover:text-white hover:bg-white/10' : 'text-gray-500 hover:text-slate-900 hover:bg-slate-100'}`}>
                   <X size={15} />
                 </button>
               </div>
             </div>
 
             {/* Navigation Tabs */}
-            <div className="flex bg-black/40 border-b border-white/10 p-1 gap-1 text-[11px] font-semibold">
+            <div className={`flex border-b p-1 gap-1 text-[11px] font-semibold ${isDarkMode ? 'bg-black/40 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
               <button
                 onClick={() => setSimTab('quick')}
                 className={`flex-1 py-1.5 rounded-lg text-center transition-all flex items-center justify-center gap-1 ${
-                  simTab === 'quick' ? 'bg-purple-600 text-white shadow-md' : 'text-gray-400 hover:text-gray-200'
+                  simTab === 'quick' ? 'bg-purple-600 text-white shadow-md' : (isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-slate-600 hover:text-slate-900')
                 }`}
               >
                 <Zap size={12} /> Tương tác
@@ -1129,7 +1135,7 @@ export default function DesktopAppUI() {
               <button
                 onClick={() => setSimTab('comments')}
                 className={`flex-1 py-1.5 rounded-lg text-center transition-all flex items-center justify-center gap-1 ${
-                  simTab === 'comments' ? 'bg-purple-600 text-white shadow-md' : 'text-gray-400 hover:text-gray-200'
+                  simTab === 'comments' ? 'bg-purple-600 text-white shadow-md' : (isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-slate-600 hover:text-slate-900')
                 }`}
               >
                 <MessageCircle size={12} /> Bình luận
@@ -1137,7 +1143,7 @@ export default function DesktopAppUI() {
               <button
                 onClick={() => setSimTab('orders')}
                 className={`flex-1 py-1.5 rounded-lg text-center transition-all flex items-center justify-center gap-1 ${
-                  simTab === 'orders' ? 'bg-purple-600 text-white shadow-md' : 'text-gray-400 hover:text-gray-200'
+                  simTab === 'orders' ? 'bg-purple-600 text-white shadow-md' : (isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-slate-600 hover:text-slate-900')
                 }`}
               >
                 <ShoppingBag size={12} /> Chốt đơn
@@ -1145,7 +1151,7 @@ export default function DesktopAppUI() {
               <button
                 onClick={() => setSimTab('director')}
                 className={`flex-1 py-1.5 rounded-lg text-center transition-all flex items-center justify-center gap-1 ${
-                  simTab === 'director' ? 'bg-purple-600 text-white shadow-md' : 'text-gray-400 hover:text-gray-200'
+                  simTab === 'director' ? 'bg-purple-600 text-white shadow-md' : (isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-slate-600 hover:text-slate-900')
                 }`}
               >
                 <Mic size={12} /> Đạo diễn
@@ -1158,83 +1164,89 @@ export default function DesktopAppUI() {
               {simTab === 'quick' && (
                 <div className="space-y-2.5">
                   <div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5 flex items-center gap-1">
-                      <Users size={11} className="text-blue-400" /> Khán giả vào phòng:
+                    <span className={`text-[10px] font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1 ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>
+                      <Users size={11} className="text-blue-500" /> Khán giả vào phòng:
                     </span>
                     <div className="grid grid-cols-3 gap-1.5">
                       <button 
                         onClick={() => handleLiveEvent('VIEWER_JOIN', { name: 'Thanh Nhàn' })}
-                        className="py-1.5 px-2 bg-blue-500/10 hover:bg-blue-500/25 text-blue-300 border border-blue-500/30 rounded-lg text-[11px] font-medium transition-all text-center truncate"
+                        className={`py-1.5 px-2 rounded-lg text-[11px] font-medium transition-all text-center truncate border ${isDarkMode ? 'bg-blue-500/10 hover:bg-blue-500/25 text-blue-300 border-blue-500/30' : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200'}`}
                       >
                         👋 Khách mới vào
                       </button>
                       <button 
                         onClick={() => handleLiveEvent('VIEWER_JOIN', { name: 'Vip_HoàngNam 👑' })}
-                        className="py-1.5 px-2 bg-indigo-500/10 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 rounded-lg text-[11px] font-medium transition-all text-center truncate"
+                        className={`py-1.5 px-2 rounded-lg text-[11px] font-medium transition-all text-center truncate border ${isDarkMode ? 'bg-indigo-500/10 hover:bg-indigo-500/25 text-indigo-300 border-indigo-500/30' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'}`}
                       >
                         ⭐ VIP vào phòng
                       </button>
                       <button 
                         onClick={() => handleLiveEvent('VIEWER_JOIN', { name: 'Bảo Trâm ❤️' })}
-                        className="py-1.5 px-2 bg-purple-500/10 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 rounded-lg text-[11px] font-medium transition-all text-center truncate"
+                        className={`py-1.5 px-2 rounded-lg text-[11px] font-medium transition-all text-center truncate border ${isDarkMode ? 'bg-pink-500/10 hover:bg-pink-500/25 text-pink-300 border-pink-500/30' : 'bg-pink-50 hover:bg-pink-100 text-pink-700 border-pink-200'}`}
                       >
-                        ❤️ Fan Cứng vào
+                        ❤️ Fan cứng vào
                       </button>
                     </div>
                   </div>
 
                   <div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5 flex items-center gap-1">
-                      <Gift size={11} className="text-pink-400" /> Tặng quà Live:
+                    <span className={`text-[10px] font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1 ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>
+                      <Gift size={11} className="text-amber-500" /> Tặng quà TikTok:
                     </span>
-                    <div className="grid grid-cols-4 gap-1.5">
+                    <div className="grid grid-cols-3 gap-1.5">
                       <button 
-                        onClick={() => handleLiveEvent('GIFT', { name: 'Tuấn Anh', gift: 'Hoa hồng 🌹 (1 xu)' })}
-                        className="py-1.5 bg-pink-500/10 hover:bg-pink-500/25 text-pink-300 border border-pink-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate"
+                        onClick={() => handleLiveEvent('GIFT', { name: 'Anh Tuấn', gift: 'Hoa Hồng', count: 1 })}
+                        className={`py-1.5 bg-amber-500/10 hover:bg-amber-500/25 text-amber-500 border border-amber-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate`}
                       >
-                        🌹 Hoa hồng
+                        🌹 Hoa Hồng (1 xu)
                       </button>
                       <button 
-                        onClick={() => handleLiveEvent('GIFT', { name: 'Lan Anh', gift: 'Du thuyền 🛥️' })}
-                        className="py-1.5 bg-cyan-500/10 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate"
+                        onClick={() => handleLiveEvent('GIFT', { name: 'Hoàng Long VIP', gift: 'Nước Hoa Thiết Giáp', count: 50 })}
+                        className={`py-1.5 bg-purple-500/10 hover:bg-purple-500/25 text-purple-400 border border-purple-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate`}
                       >
-                        🛥️ Du thuyền
+                        🛡️ Thiết Giáp (50 xu)
                       </button>
                       <button 
-                        onClick={() => handleLiveEvent('GIFT', { name: 'Đại Gia Phố Cổ', gift: 'Tên lửa vũ trụ 🚀' })}
-                        className="py-1.5 bg-amber-500/10 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate"
+                        onClick={() => handleLiveEvent('GIFT', { name: 'Đại Gia Phố Núi', gift: 'Vương Miện Hoàng Kim', count: 200 })}
+                        className={`py-1.5 bg-yellow-500/10 hover:bg-yellow-500/25 text-yellow-500 border border-yellow-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate`}
                       >
-                        🚀 Tên lửa
+                        👑 Thần Tướng (200 xu)
                       </button>
                       <button 
-                        onClick={() => handleLiveEvent('GIFT', { name: 'Chủ Tịch VIP', gift: 'Sư tử hoàng gia 🦁' })}
-                        className="py-1.5 bg-orange-500/10 hover:bg-orange-500/25 text-orange-300 border border-orange-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate"
+                        onClick={() => handleLiveEvent('GIFT', { name: 'Thần Kiếm', gift: 'Kiếm Sấm Sét', count: 500 })}
+                        className={`py-1.5 bg-cyan-500/10 hover:bg-cyan-500/25 text-cyan-400 border border-cyan-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate`}
                       >
-                        🦁 Sư tử VIP
+                        ⚔️ Vạn Kiếm (500 xu)
+                      </button>
+                      <button 
+                        onClick={() => handleLiveEvent('GIFT', { name: 'Chủ Tịch Tập Đoàn', gift: 'Thần Long Vũ Trụ', count: 1000 })}
+                        className={`col-span-2 py-1.5 bg-red-500/15 hover:bg-red-500/30 text-red-400 border border-red-500/40 rounded-lg text-[10px] font-bold transition-all text-center truncate`}
+                      >
+                        🐉 Giáng Long Chưởng (1000 xu)
                       </button>
                     </div>
                   </div>
 
                   <div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5 flex items-center gap-1">
-                      <Heart size={11} className="text-red-400" /> Tương tác kênh:
+                    <span className={`text-[10px] font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1 ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>
+                      <Heart size={11} className="text-red-500" /> Tương tác kênh:
                     </span>
                     <div className="grid grid-cols-3 gap-1.5">
                       <button 
                         onClick={() => handleLiveEvent('LIKE', { count: '10.000 tim' })}
-                        className="py-1.5 bg-red-500/10 hover:bg-red-500/25 text-red-300 border border-red-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate"
+                        className="py-1.5 bg-red-500/10 hover:bg-red-500/25 text-red-500 border border-red-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate"
                       >
                         💖 Đạt 10.000 Tim
                       </button>
                       <button 
                         onClick={() => handleLiveEvent('FOLLOW', { name: 'Khánh Vy' })}
-                        className="py-1.5 bg-emerald-500/10 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate"
+                        className="py-1.5 bg-emerald-500/10 hover:bg-emerald-500/25 text-emerald-500 border border-emerald-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate"
                       >
                         ➕ Follow kênh
                       </button>
                       <button 
                         onClick={() => handleLiveEvent('SHARE', { name: 'Minh Trang' })}
-                        className="py-1.5 bg-violet-500/10 hover:bg-violet-500/25 text-violet-300 border border-violet-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate"
+                        className="py-1.5 bg-violet-500/10 hover:bg-violet-500/25 text-violet-500 border border-violet-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate"
                       >
                         ↗️ Chia sẻ live
                       </button>
@@ -1246,35 +1258,35 @@ export default function DesktopAppUI() {
               {/* TAB 2: BÌNH LUẬN */}
               {simTab === 'comments' && (
                 <div className="space-y-2">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Bình luận mẫu thường gặp:</span>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider block ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>Bình luận mẫu thường gặp:</span>
                   <div className="space-y-1.5">
                     <button 
                       onClick={() => handleLiveEvent('COMMENT', { name: 'Minh Thảo', text: 'Chào idol, hôm nay xinh và dễ thương quá!' })}
-                      className="w-full text-left p-2 bg-[#00FF66]/10 hover:bg-[#00FF66]/20 text-[#00FF66] border border-[#00FF66]/20 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between"
+                      className={`w-full text-left p-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between border ${isDarkMode ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-500/20' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200'}`}
                     >
                       <span>💬 "Chào idol, hôm nay xinh và dễ thương quá!"</span>
-                      <span className="text-[9px] bg-[#00FF66]/20 px-1.5 py-0.5 rounded text-white">Khen</span>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${isDarkMode ? 'bg-emerald-500/20 text-white' : 'bg-emerald-200 text-emerald-900'}`}>Khen</span>
                     </button>
                     <button 
                       onClick={() => handleLiveEvent('COMMENT', { name: 'Hải Đăng', text: 'Mẫu này chất liệu gì và còn size L không shop?' })}
-                      className="w-full text-left p-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border border-blue-500/20 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between"
+                      className={`w-full text-left p-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between border ${isDarkMode ? 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border-blue-500/20' : 'bg-blue-50 hover:bg-blue-100 text-blue-800 border-blue-200'}`}
                     >
                       <span>🛒 "Mẫu này chất liệu gì và còn size L không shop?"</span>
-                      <span className="text-[9px] bg-blue-500/20 px-1.5 py-0.5 rounded text-white">Hỏi Size</span>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${isDarkMode ? 'bg-blue-500/20 text-white' : 'bg-blue-200 text-blue-900'}`}>Hỏi Size</span>
                     </button>
                     <button 
                       onClick={() => handleLiveEvent('COMMENT', { name: 'Quỳnh Như', text: 'Sản phẩm này giá bao nhiêu và có freeship không ạ?' })}
-                      className="w-full text-left p-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between"
+                      className={`w-full text-left p-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between border ${isDarkMode ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/20' : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200'}`}
                     >
                       <span>💰 "Giá bao nhiêu và có freeship không ạ?"</span>
-                      <span className="text-[9px] bg-amber-500/20 px-1.5 py-0.5 rounded text-white">Hỏi Giá</span>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${isDarkMode ? 'bg-amber-500/20 text-white' : 'bg-amber-200 text-amber-900'}`}>Hỏi Giá</span>
                     </button>
                     <button 
                       onClick={() => handleLiveEvent('COMMENT', { name: 'Bảo Long', text: 'Mình 1m70 nặng 65kg mặc size nào vừa chuẩn bạn ơi?' })}
-                      className="w-full text-left p-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between"
+                      className={`w-full text-left p-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between border ${isDarkMode ? 'bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border-purple-500/20' : 'bg-purple-50 hover:bg-purple-100 text-purple-800 border-purple-200'}`}
                     >
                       <span>📏 "Mình 1m70 nặng 65kg mặc size nào chuẩn?"</span>
-                      <span className="text-[9px] bg-purple-500/20 px-1.5 py-0.5 rounded text-white">Tư Vấn</span>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${isDarkMode ? 'bg-purple-500/20 text-white' : 'bg-purple-200 text-purple-900'}`}>Tư Vấn</span>
                     </button>
                   </div>
                 </div>
@@ -1283,28 +1295,28 @@ export default function DesktopAppUI() {
               {/* TAB 3: CHỐT ĐƠN */}
               {simTab === 'orders' && (
                 <div className="space-y-2">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Sự kiện chốt đơn mua hàng:</span>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider block ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>Sự kiện chốt đơn mua hàng:</span>
                   <div className="space-y-1.5">
                     <button 
                       onClick={() => handleLiveEvent('PURCHASE', { name: 'Hoàng Nam', item: '1 Áo Polo Cao Cấp' })}
-                      className="w-full text-left p-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between"
+                      className={`w-full text-left p-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between border ${isDarkMode ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200'}`}
                     >
                       <span>🎉 Khách Hoàng Nam vừa chốt 1 Áo Polo</span>
-                      <span className="text-[9px] bg-emerald-500/30 px-1.5 py-0.5 rounded text-white font-bold">1 Đơn</span>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${isDarkMode ? 'bg-emerald-500/30 text-white' : 'bg-emerald-200 text-emerald-900'}`}>1 Đơn</span>
                     </button>
                     <button 
                       onClick={() => handleLiveEvent('PURCHASE', { name: 'Thanh Thảo VIP', item: 'Combo 2 Váy Thiết Kế Dạ Hội' })}
-                      className="w-full text-left p-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between"
+                      className={`w-full text-left p-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between border ${isDarkMode ? 'bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border-purple-500/30' : 'bg-purple-50 hover:bg-purple-100 text-purple-800 border-purple-200'}`}
                     >
                       <span>🎁 Khách Thanh Thảo vừa chốt Combo 2 Váy</span>
-                      <span className="text-[9px] bg-purple-500/30 px-1.5 py-0.5 rounded text-white font-bold">Combo VIP</span>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${isDarkMode ? 'bg-purple-500/30 text-white' : 'bg-purple-200 text-purple-900'}`}>Combo VIP</span>
                     </button>
                     <button 
                       onClick={() => handleLiveEvent('PURCHASE', { name: 'Đoàn Khách Sỉ', item: 'Set 5 Áo Sơ Mi Hàn Quốc' })}
-                      className="w-full text-left p-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between"
+                      className={`w-full text-left p-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between border ${isDarkMode ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30' : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200'}`}
                     >
                       <span>🔥 Khách Sỉ vừa chốt Set 5 Áo Sơ Mi</span>
-                      <span className="text-[9px] bg-amber-500/30 px-1.5 py-0.5 rounded text-white font-bold">Đơn Sỉ</span>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${isDarkMode ? 'bg-amber-500/30 text-white' : 'bg-amber-200 text-amber-900'}`}>Đơn Sỉ</span>
                     </button>
                   </div>
                 </div>
@@ -1314,38 +1326,38 @@ export default function DesktopAppUI() {
               {simTab === 'director' && (
                 <div className="space-y-2.5">
                   <div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Lệnh nhanh 1-chạm:</span>
+                    <span className={`text-[10px] font-bold uppercase tracking-wider block mb-1.5 ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>Lệnh nhanh 1-chạm:</span>
                     <div className="grid grid-cols-2 gap-1.5">
                       <button 
                         onClick={() => handleLiveEvent('ASSISTANT_PROMPT', { prompt: 'Nhắc mọi người bấm vào giỏ hàng góc trái đang có ưu đãi lớn!' })}
-                        className="p-1.5 bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 rounded-lg text-[10px] font-medium text-left truncate"
+                        className={`p-1.5 rounded-lg text-[10px] font-medium text-left truncate border ${isDarkMode ? 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'}`}
                       >
                         🛒 Giục xem giỏ hàng
                       </button>
                       <button 
                         onClick={() => handleLiveEvent('ASSISTANT_PROMPT', { prompt: 'Nhắc voucher giảm 50k chỉ còn 3 suất duy nhất!' })}
-                        className="p-1.5 bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 rounded-lg text-[10px] font-medium text-left truncate"
+                        className={`p-1.5 rounded-lg text-[10px] font-medium text-left truncate border ${isDarkMode ? 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'}`}
                       >
                         🔥 Nhắc mã còn 3 suất
                       </button>
                       <button 
                         onClick={() => handleLiveEvent('ASSISTANT_PROMPT', { prompt: 'Cảm ơn toàn thể khán giả đang theo dõi và kêu gọi thả tim!' })}
-                        className="p-1.5 bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 rounded-lg text-[10px] font-medium text-left truncate"
+                        className={`p-1.5 rounded-lg text-[10px] font-medium text-left truncate border ${isDarkMode ? 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'}`}
                       >
                         🙏 Cảm ơn khán giả
                       </button>
                       <button 
                         onClick={() => handleLiveEvent('ASSISTANT_PROMPT', { prompt: 'Kể một câu chuyện vui hoặc hát một đoạn ngắn giao lưu!' })}
-                        className="p-1.5 bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 rounded-lg text-[10px] font-medium text-left truncate"
+                        className={`p-1.5 rounded-lg text-[10px] font-medium text-left truncate border ${isDarkMode ? 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'}`}
                       >
                         🎶 Hát / Kể chuyện vui
                       </button>
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-white/10">
-                    <label className="text-[10px] text-gray-400 font-medium flex items-center gap-1 mb-1.5">
-                      <Mic size={11} className="text-red-400" /> Nhập lệnh Đạo diễn bất kỳ:
+                  <div className={`pt-2 border-t ${isDarkMode ? 'border-white/10' : 'border-slate-200'}`}>
+                    <label className={`text-[10px] font-medium flex items-center gap-1 mb-1.5 ${isDarkMode ? 'text-gray-400' : 'text-slate-600'}`}>
+                      <Mic size={11} className="text-red-500" /> Nhập lệnh Đạo diễn bất kỳ:
                     </label>
                     <div className="flex gap-1.5">
                       <input 
@@ -1353,7 +1365,7 @@ export default function DesktopAppUI() {
                         value={assistantPrompt}
                         onChange={(e) => setAssistantPrompt(e.target.value)}
                         placeholder="VD: Nhắc idol giới thiệu áo sơ mi trắng..."
-                        className="flex-1 bg-black/50 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-red-500"
+                        className={`flex-1 rounded-lg px-2.5 py-1.5 text-xs outline-none border ${isDarkMode ? 'bg-black/50 border-gray-700 text-white placeholder-gray-500 focus:border-red-500' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-red-500'}`}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && assistantPrompt.trim()) {
                             handleLiveEvent('ASSISTANT_PROMPT', { prompt: assistantPrompt.trim() });
@@ -1379,22 +1391,22 @@ export default function DesktopAppUI() {
 
               {/* Status processing indicator */}
               {isProcessingEvent && (
-                <div className="flex items-center justify-center gap-2 py-1.5 bg-purple-500/10 border border-purple-500/20 rounded-lg text-purple-300 text-[11px] font-semibold animate-pulse">
-                  <Sparkles size={12} className="text-purple-400 animate-spin" /> AI đang suy nghĩ & chuẩn bị phản hồi...
+                <div className="flex items-center justify-center gap-2 py-1.5 bg-purple-500/10 border border-purple-500/20 rounded-lg text-purple-500 text-[11px] font-semibold animate-pulse">
+                  <Sparkles size={12} className="text-purple-500 animate-spin" /> AI đang suy nghĩ & chuẩn bị phản hồi...
                 </div>
               )}
             </div>
             
             {/* Lịch sử sự kiện */}
-            <div className="border-t border-white/10 bg-black/30 p-3 flex flex-col">
+            <div className={`border-t p-3 flex flex-col ${isDarkMode ? 'border-white/10 bg-black/30' : 'border-slate-200 bg-slate-50'}`}>
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                <span className={`text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>
                   <List size={11} /> Lịch sử giả lập ({viewerHistory.length})
                 </span>
                 {viewerHistory.length > 0 && (
                   <button 
                     onClick={() => setViewerHistory([])}
-                    className="text-[9px] text-gray-400 hover:text-red-400 flex items-center gap-1 transition-colors"
+                    className="text-[9px] text-gray-400 hover:text-red-500 flex items-center gap-1 transition-colors"
                   >
                     <Trash2 size={10} /> Xoá log
                   </button>
@@ -1402,7 +1414,7 @@ export default function DesktopAppUI() {
               </div>
               <div className="h-28 overflow-y-auto space-y-1.5 pr-1 text-[10px]">
                 {viewerHistory.length === 0 ? (
-                  <div className="text-gray-500 text-center py-4 italic text-[11px]">
+                  <div className="text-gray-400 text-center py-4 italic text-[11px]">
                     Chưa có sự kiện nào. Hãy bấm một nút ở trên để thử nghiệm!
                   </div>
                 ) : (
@@ -1512,41 +1524,41 @@ export default function DesktopAppUI() {
       {/* ---------------- MONITOR MODALS ---------------- */}
       {activeMonitorModal === 'timeline' && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-200">
-          <div className="bg-[#e5e5e5] rounded shadow-2xl w-full max-w-5xl h-[80vh] flex flex-col border border-gray-400">
-            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-300 bg-[#f0f0f0]">
-              <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2"><Clock size={16} className="text-blue-800" /> Dòng thời gian Sự kiện & Phản ứng</h2>
-              <button onClick={() => setActiveMonitorModal(null)} className="p-1 hover:bg-gray-300 rounded transition-colors"><X size={16} className="text-gray-600" /></button>
+          <div className={`rounded-xl shadow-2xl w-full max-w-5xl h-[80vh] flex flex-col border ${isDarkMode ? 'bg-[#1c1c24] text-white border-gray-700' : 'bg-white text-slate-800 border-slate-300'}`}>
+            <div className={`flex items-center justify-between px-4 py-2.5 border-b ${isDarkMode ? 'border-gray-700 bg-[#252532]' : 'border-slate-200 bg-slate-100'}`}>
+              <h2 className="text-sm font-bold flex items-center gap-2"><Clock size={16} className="text-blue-500" /> Dòng thời gian Sự kiện & Phản ứng</h2>
+              <button onClick={() => setActiveMonitorModal(null)} className={`p-1 rounded transition-colors ${isDarkMode ? 'hover:bg-gray-700 text-gray-400 hover:text-white' : 'hover:bg-slate-200 text-gray-600'}`}><X size={16} /></button>
             </div>
-            <div className="flex-1 overflow-auto bg-white">
+            <div className={`flex-1 overflow-auto ${isDarkMode ? 'bg-[#16161e]' : 'bg-white'}`}>
               <table className="w-full text-sm text-left">
-                <thead className="bg-[#f0f0f0] text-gray-700 font-semibold border-b border-gray-300 sticky top-0">
+                <thead className={`font-semibold border-b sticky top-0 ${isDarkMode ? 'bg-[#252532] text-gray-300 border-gray-700' : 'bg-slate-100 text-slate-700 border-slate-200'}`}>
                   <tr>
-                    <th className="px-4 py-2 w-32 text-center text-[#a53b3b]">Thời gian</th>
-                    <th className="px-4 py-2 w-48 text-[#a53b3b]">Tên Sự kiện</th>
-                    <th className="px-4 py-2 w-1/3 text-[#a53b3b]">Nội dung Sự kiện</th>
-                    <th className="px-4 py-2 text-[#a53b3b]">Phản ứng của AI</th>
+                    <th className="px-4 py-2 w-32 text-center text-red-400">Thời gian</th>
+                    <th className="px-4 py-2 w-48 text-red-400">Tên Sự kiện</th>
+                    <th className="px-4 py-2 w-1/3 text-red-400">Nội dung Sự kiện</th>
+                    <th className="px-4 py-2 text-red-400">Phản ứng của AI</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className={`divide-y ${isDarkMode ? 'divide-gray-800 text-gray-300' : 'divide-slate-200 text-slate-700'}`}>
                   {viewerHistory.slice().reverse().map((h, i) => (
-                    <tr key={i} className="hover:bg-blue-50 transition-colors">
-                      <td className="px-4 py-2 text-center text-gray-500">{h.time}</td>
-                      <td className="px-4 py-2 font-medium text-gray-700">{h.type === 'COMMENT' ? 'Bình luận' : h.type === 'GIFT' ? 'Tặng quà' : 'Vào phòng'}</td>
-                      <td className="px-4 py-2 text-gray-800">{h.type === 'COMMENT' ? h.payload.text : h.type === 'GIFT' ? h.payload.gift : h.payload.name}</td>
-                      <td className="px-4 py-2 text-green-700">{h.ai_reply || ''}</td>
+                    <tr key={i} className={isDarkMode ? 'hover:bg-white/5 transition-colors' : 'hover:bg-blue-50 transition-colors'}>
+                      <td className="px-4 py-2 text-center opacity-70">{h.time}</td>
+                      <td className="px-4 py-2 font-medium">{h.type === 'COMMENT' ? 'Bình luận' : h.type === 'GIFT' ? 'Tặng quà' : 'Vào phòng'}</td>
+                      <td className="px-4 py-2">{h.type === 'COMMENT' ? h.payload.text : h.type === 'GIFT' ? h.payload.gift : h.payload.name}</td>
+                      <td className="px-4 py-2 text-emerald-500 font-medium">{h.ai_reply || ''}</td>
                     </tr>
                   ))}
                   {viewerHistory.length === 0 && (
                     <tr>
-                      <td colSpan="4" className="px-4 py-8 text-center text-gray-400">Chưa có sự kiện nào trong phiên live này.</td>
+                      <td colSpan="4" className="px-4 py-8 text-center text-gray-500">Chưa có sự kiện nào trong phiên live này.</td>
                     </tr>
                   )}
                 </tbody>
               </table>
             </div>
-            <div className="px-4 py-2 bg-[#f0f0f0] border-t border-gray-300 flex justify-center">
-              <button onClick={exportTimelineCSV} className="flex items-center gap-1.5 px-4 py-1.5 bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 rounded text-sm font-medium transition-colors shadow-sm">
-                <Download size={14} className="text-purple-600" /> Xuất ra file CSV...
+            <div className={`px-4 py-2.5 border-t flex justify-center ${isDarkMode ? 'bg-[#252532] border-gray-700' : 'bg-slate-100 border-slate-200'}`}>
+              <button onClick={exportTimelineCSV} className={`flex items-center gap-1.5 px-4 py-1.5 rounded text-sm font-medium transition-colors shadow-sm border ${isDarkMode ? 'bg-gray-800 border-gray-700 hover:bg-gray-700 text-white' : 'bg-white border-slate-300 hover:bg-slate-50 text-slate-700'}`}>
+                <Download size={14} className="text-purple-500" /> Xuất ra file CSV...
               </button>
             </div>
           </div>
@@ -1578,25 +1590,25 @@ export default function DesktopAppUI() {
 
       {activeMonitorModal === 'queue' && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-200">
-          <div className="bg-[#e5e5e5] rounded shadow-2xl w-[600px] h-[400px] flex flex-col border border-gray-400">
-            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-300 bg-[#f0f0f0]">
-              <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                <List size={16} className="text-blue-800" /> Giám sát Hàng đợi
+          <div className={`rounded-xl shadow-2xl w-[600px] h-[400px] flex flex-col border ${isDarkMode ? 'bg-[#1c1c24] text-white border-gray-700' : 'bg-white text-slate-800 border-slate-300'}`}>
+            <div className={`flex items-center justify-between px-4 py-2.5 border-b ${isDarkMode ? 'border-gray-700 bg-[#252532]' : 'border-slate-200 bg-slate-100'}`}>
+              <h2 className="text-sm font-bold flex items-center gap-2">
+                <List size={16} className="text-blue-500" /> Giám sát Hàng đợi
               </h2>
-              <button onClick={() => setActiveMonitorModal(null)} className="p-1 hover:bg-gray-300 rounded transition-colors"><X size={16} className="text-gray-600" /></button>
+              <button onClick={() => setActiveMonitorModal(null)} className={`p-1 rounded transition-colors ${isDarkMode ? 'hover:bg-gray-700 text-gray-400 hover:text-white' : 'hover:bg-slate-200 text-gray-600'}`}><X size={16} /></button>
             </div>
-            <div className="flex-1 overflow-auto bg-white p-4">
-              <h3 className="text-xs font-semibold text-gray-500 mb-3 uppercase">Đang xử lý / Chờ AI</h3>
+            <div className={`flex-1 overflow-auto p-4 ${isDarkMode ? 'bg-[#16161e]' : 'bg-white'}`}>
+              <h3 className="text-xs font-semibold opacity-60 mb-3 uppercase">Đang xử lý / Chờ AI</h3>
               {isProcessingEvent ? (
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded flex items-center gap-3 animate-pulse">
+                <div className={`p-3 border rounded-lg flex items-center gap-3 animate-pulse ${isDarkMode ? 'bg-blue-950/40 border-blue-800' : 'bg-blue-50 border-blue-200'}`}>
                   <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                   <div>
-                    <div className="text-sm font-bold text-blue-800">Sự kiện gần nhất</div>
-                    <div className="text-xs text-blue-600">Đang sinh phản hồi AI...</div>
+                    <div className="text-sm font-bold text-blue-500">Sự kiện gần nhất</div>
+                    <div className="text-xs text-blue-400">Đang sinh phản hồi AI...</div>
                   </div>
                 </div>
               ) : (
-                <div className="text-sm text-gray-400 italic">Hàng đợi đang trống.</div>
+                <div className="text-sm text-gray-500 italic">Hàng đợi đang trống.</div>
               )}
             </div>
           </div>
@@ -1605,20 +1617,20 @@ export default function DesktopAppUI() {
 
       {activeMonitorModal === 'sys_log' && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-200">
-          <div className="bg-[#e5e5e5] rounded shadow-2xl w-[800px] h-[500px] flex flex-col border border-gray-400">
-            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-300 bg-[#f0f0f0]">
-              <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                <AlertCircle size={16} className="text-orange-600" /> Log Hệ thống Lỗi
+          <div className={`rounded-xl shadow-2xl w-[800px] h-[500px] flex flex-col border ${isDarkMode ? 'bg-[#1c1c24] text-white border-gray-700' : 'bg-white text-slate-800 border-slate-300'}`}>
+            <div className={`flex items-center justify-between px-4 py-2.5 border-b ${isDarkMode ? 'border-gray-700 bg-[#252532]' : 'border-slate-200 bg-slate-100'}`}>
+              <h2 className="text-sm font-bold flex items-center gap-2">
+                <AlertCircle size={16} className="text-orange-500" /> Log Hệ thống Lỗi
               </h2>
-              <button onClick={() => setActiveMonitorModal(null)} className="p-1 hover:bg-gray-300 rounded transition-colors"><X size={16} className="text-gray-600" /></button>
+              <button onClick={() => setActiveMonitorModal(null)} className={`p-1 rounded transition-colors ${isDarkMode ? 'hover:bg-gray-700 text-gray-400 hover:text-white' : 'hover:bg-slate-200 text-gray-600'}`}><X size={16} /></button>
             </div>
-            <div className="flex-1 overflow-auto bg-white text-gray-800 p-4 text-sm">
+            <div className={`flex-1 overflow-auto p-4 text-sm ${isDarkMode ? 'bg-[#16161e]' : 'bg-white'}`}>
               {systemLogs.length === 0 ? (
                 <div className="text-gray-500 italic flex items-center justify-center h-full">Hệ thống đang hoạt động ổn định. Chưa ghi nhận lỗi nào.</div>
               ) : (
                 systemLogs.map((log, idx) => (
-                  <div key={idx} className="mb-2 p-2 bg-red-50 border border-red-200 rounded">
-                    <span className="text-gray-500 text-xs font-mono">[{log.time}]</span> <span className="font-bold text-red-600">ERROR:</span> <span className="text-red-800">{log.message}</span>
+                  <div key={idx} className="mb-2 p-2 bg-red-500/10 border border-red-500/30 rounded">
+                    <span className="opacity-70 text-xs font-mono">[{log.time}]</span> <span className="font-bold text-red-500">ERROR:</span> <span className="text-red-400">{log.message}</span>
                   </div>
                 ))
               )}
@@ -1629,21 +1641,21 @@ export default function DesktopAppUI() {
 
       {activeMonitorModal === 'tiktok_log' && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-200">
-          <div className="bg-[#e5e5e5] rounded shadow-2xl w-[800px] h-[500px] flex flex-col border border-gray-400">
-            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-300 bg-[#f0f0f0]">
-              <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                <FileText size={16} className="text-pink-600" /> Log Sự kiện TikTok
+          <div className={`rounded-xl shadow-2xl w-[800px] h-[500px] flex flex-col border ${isDarkMode ? 'bg-[#1c1c24] text-white border-gray-700' : 'bg-white text-slate-800 border-slate-300'}`}>
+            <div className={`flex items-center justify-between px-4 py-2.5 border-b ${isDarkMode ? 'border-gray-700 bg-[#252532]' : 'border-slate-200 bg-slate-100'}`}>
+              <h2 className="text-sm font-bold flex items-center gap-2">
+                <FileText size={16} className="text-pink-500" /> Log Sự kiện TikTok
               </h2>
-              <button onClick={() => setActiveMonitorModal(null)} className="p-1 hover:bg-gray-300 rounded transition-colors"><X size={16} className="text-gray-600" /></button>
+              <button onClick={() => setActiveMonitorModal(null)} className={`p-1 rounded transition-colors ${isDarkMode ? 'hover:bg-gray-700 text-gray-400 hover:text-white' : 'hover:bg-slate-200 text-gray-600'}`}><X size={16} /></button>
             </div>
-            <div className="flex-1 overflow-auto bg-white text-gray-800 p-4 text-sm">
+            <div className={`flex-1 overflow-auto p-4 text-sm ${isDarkMode ? 'bg-[#16161e]' : 'bg-white'}`}>
               {tiktokLogs.length === 0 ? (
                 <div className="text-gray-500 italic flex items-center justify-center h-full">Đang chờ sự kiện thô từ TikTok...</div>
               ) : (
                 tiktokLogs.map((log, idx) => (
-                  <div key={idx} className="mb-3 border border-gray-200 rounded bg-gray-50 p-2">
-                    <div className="text-blue-600 font-bold mb-1 border-b border-gray-200 pb-1">[{log.time}] {log.type}</div>
-                    <pre className="text-gray-600 overflow-x-auto font-mono text-xs">{JSON.stringify(log.payload, null, 2)}</pre>
+                  <div key={idx} className={`mb-3 border rounded-lg p-2.5 ${isDarkMode ? 'border-gray-800 bg-gray-900/60' : 'border-slate-200 bg-slate-50'}`}>
+                    <div className="text-blue-500 font-bold mb-1 border-b border-gray-500/20 pb-1">[{log.time}] {log.type}</div>
+                    <pre className="opacity-80 overflow-x-auto font-mono text-xs">{JSON.stringify(log.payload, null, 2)}</pre>
                   </div>
                 ))
               )}

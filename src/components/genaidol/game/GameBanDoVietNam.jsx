@@ -170,6 +170,7 @@ export default function GameBanDoVietNam({
   externalLiveEvent = null,
   aspectRatio: propAspectRatio = null,
   onToggleAspectRatio = null,
+  isDarkMode = true,
 }) {
   const [gameState, setGameState] = useState(() => bandoEngine.state);
   const [viewMode3D, setViewMode3D] = useState(true);
@@ -210,7 +211,7 @@ export default function GameBanDoVietNam({
       } catch (e) {}
     }
   };
-  const isLightTheme = gameState.settings?.theme === 'light';
+  const isLightTheme = isDarkMode !== undefined ? !isDarkMode : (gameState.settings?.theme === 'light');
 
   // Đồng bộ isLiveCleanMode khi isPopout thay đổi
   useEffect(() => {
@@ -700,7 +701,7 @@ export default function GameBanDoVietNam({
 
     const width = container.clientWidth || 800;
     const height = container.clientHeight || 600;
-    const isLightTheme = gameState.settings?.theme === 'light';
+    const isLightTheme = isDarkMode !== undefined ? !isDarkMode : (gameState.settings?.theme === 'light');
 
     // Scene with theme-responsive background - KHÔNG DÙNG FOG ĐẬM LÀM ĐEN BẢN ĐỒ
     const scene = new THREE.Scene();
@@ -913,6 +914,9 @@ export default function GameBanDoVietNam({
         renderer.setSize(w, h);
       }
     };
+    handleResize();
+    const animFrameResizeId = requestAnimationFrame(handleResize);
+    const initialResizeTimer = setTimeout(handleResize, 100);
     window.addEventListener('resize', handleResize);
 
     let resizeObserver = null;
@@ -1106,6 +1110,8 @@ export default function GameBanDoVietNam({
     return () => {
       state.disposed = true;
       if (state.animFrameId) cancelAnimationFrame(state.animFrameId);
+      cancelAnimationFrame(animFrameResizeId);
+      clearTimeout(initialResizeTimer);
       window.removeEventListener('resize', handleResize);
       if (resizeObserver) resizeObserver.disconnect();
       renderer.domElement.removeEventListener('pointerdown', handleDomPointerDown);
@@ -1780,9 +1786,9 @@ export default function GameBanDoVietNam({
       <div 
         className={`relative flex flex-col overflow-hidden transition-all duration-300 ${
           aspectRatio === '9:16'
-            ? 'h-full max-h-full aspect-[9/16] w-auto max-w-full mx-auto rounded-2xl md:rounded-3xl border border-yellow-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-[#070b14]'
-            : 'w-full max-w-[1360px] h-full aspect-[16/9] rounded-2xl border border-yellow-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-[#070b14]'
-        }`}
+            ? 'h-full max-h-full aspect-[9/16] w-auto max-w-full mx-auto rounded-2xl md:rounded-3xl border border-yellow-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)]'
+            : 'w-full max-w-[1360px] h-full max-h-full aspect-[16/9] rounded-2xl border border-yellow-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)]'
+        } ${isLightTheme ? 'bg-slate-50' : 'bg-[#070b14]'}`}
       >
         {/* SÂN KHẤU LIVE SẠCH NẰM Ở ĐÂY (Canvas + Top mini stage + Victory + Side panels) */}
         {renderCleanStage()}
