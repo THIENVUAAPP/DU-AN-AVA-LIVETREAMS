@@ -16,6 +16,7 @@ class BanDoAudioEngine {
     this.ducked = false;
     this.duckTimeout = null;
     this.isMuted = false;
+    this.isSfxMuted = false;
     this.isBgmLoop = true;
     this.bgmTimerMode = '24/7'; // '24/7' | '15m' | '30m' | '1h' | '2h' | '4h'
     this.bgmTimerTimeout = null;
@@ -57,6 +58,10 @@ class BanDoAudioEngine {
       if (savedMute === 'true') {
         this.isMuted = true;
       }
+      const savedSfxMute = localStorage.getItem('bando_is_sfx_muted');
+      if (savedSfxMute === 'true') {
+        this.isSfxMuted = true;
+      }
     } catch (e) {}
   }
 
@@ -71,7 +76,7 @@ class BanDoAudioEngine {
       this.masterGain.connect(this.ctx.destination);
 
       this.sfxGain = this.ctx.createGain();
-      this.sfxGain.gain.value = this.sfxVolume;
+      this.sfxGain.gain.value = this.isSfxMuted ? 0 : this.sfxVolume;
       this.sfxGain.connect(this.masterGain);
 
       this.bgmGain = this.ctx.createGain();
@@ -106,6 +111,24 @@ class BanDoAudioEngine {
     try {
       localStorage.setItem('bando_is_muted', isMuted ? 'true' : 'false');
     } catch (e) {}
+  }
+
+  setSfxMuted(isMuted) {
+    this.isSfxMuted = isMuted;
+    if (this.sfxGain && this.ctx) {
+      this.sfxGain.gain.setValueAtTime(isMuted ? 0 : this.sfxVolume, this.ctx.currentTime);
+    }
+    if (this.customSfxAudio) {
+      this.customSfxAudio.muted = isMuted;
+    }
+    try {
+      localStorage.setItem('bando_is_sfx_muted', isMuted ? 'true' : 'false');
+    } catch (e) {}
+  }
+
+  toggleSfx() {
+    this.setSfxMuted(!this.isSfxMuted);
+    return !this.isSfxMuted;
   }
 
   toggleBgm() {

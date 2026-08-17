@@ -38,6 +38,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
   const [uploadedBgmName, setUploadedBgmName] = useState(() => bandoAudio.customBgmName || '');
   const [uploadedSfxName, setUploadedSfxName] = useState(() => bandoAudio.customSfxName || '');
   const [isBgmPlaying, setIsBgmPlaying] = useState(() => bandoAudio.bgmPlaying);
+  const [isSfxEnabled, setIsSfxEnabled] = useState(() => !bandoAudio.isSfxMuted);
   const bgmFileInputRef = useRef(null);
   const sfxFileInputRef = useRef(null);
 
@@ -1082,10 +1083,10 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                     className="hidden"
                   />
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       onClick={() => bgmFileInputRef.current?.click()}
-                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-emerald-500/20"
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 transition-all"
                     >
                       <Upload size={14} /> Chọn File Nhạc MP3
                     </button>
@@ -1100,14 +1101,14 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                           setIsBgmPlaying(true);
                         }
                       }}
-                      className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+                      className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all shadow-md ${
                         isBgmPlaying 
-                          ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-md' 
-                          : 'bg-white/10 hover:bg-white/20 text-white'
+                          ? 'bg-amber-600 hover:bg-amber-500 text-white ring-2 ring-amber-400/50 shadow-amber-500/30' 
+                          : 'bg-emerald-600 hover:bg-emerald-500 text-white ring-2 ring-emerald-400/30 shadow-emerald-500/20'
                       }`}
                     >
-                      {isBgmPlaying ? <Pause size={14} /> : <Play size={14} />}
-                      <span>{isBgmPlaying ? 'Dừng Nhạc LIVE' : (uploadedBgmName ? 'Phát Nhạc Tải Lên' : 'Phát Nhạc Hùng Thiêng')}</span>
+                      {isBgmPlaying ? <Pause size={15} className="animate-pulse" /> : <Play size={15} />}
+                      <span>{isBgmPlaying ? '⏸ Tắt Nhạc Nền' : '▶ Phát Nhạc Nền'}</span>
                     </button>
                   </div>
 
@@ -1133,17 +1134,17 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                   )}
                 </div>
 
-                {/* Custom SFX Upload */}
+                {/* Custom SFX Upload & SFX Toggle Switch */}
                 <div className="p-5 bg-gradient-to-tr from-amber-950/40 to-black/60 border border-amber-500/40 rounded-2xl space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-black text-yellow-300 uppercase flex items-center gap-1.5">
-                      <Upload size={15} /> Tải Hiệu Ứng (SFX) Tùy Chỉnh
+                      <Upload size={15} /> Hiệu Ứng Âm Thanh (SFX)
                     </span>
                     <span className="text-[10px] text-gray-400">Hỗ trợ MP3 / WAV</span>
                   </div>
 
                   <p className="text-[11px] text-gray-300">
-                    Tải âm thanh hiệu ứng quà tặng hoặc sự kiện đặc biệt của riêng bạn.
+                    Bật/tắt hiệu ứng tiếng hò reo, tiếng cắm cờ, tiếng trống trận hoặc tải hiệu ứng âm thanh tùy chỉnh.
                   </p>
 
                   <input
@@ -1154,12 +1155,28 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                     className="hidden"
                   />
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Dedicated SFX ON/OFF Toggle Button */}
+                    <button
+                      onClick={() => {
+                        const nextState = bandoAudio.toggleSfx();
+                        setIsSfxEnabled(nextState);
+                      }}
+                      className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-md ${
+                        isSfxEnabled
+                          ? 'bg-yellow-500 hover:bg-yellow-400 text-black ring-2 ring-yellow-300/40 shadow-yellow-500/20'
+                          : 'bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40'
+                      }`}
+                    >
+                      {isSfxEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
+                      <span>{isSfxEnabled ? '🔊 SFX: Đang Bật' : '🔇 SFX: Đã Tắt'}</span>
+                    </button>
+
                     <button
                       onClick={() => sfxFileInputRef.current?.click()}
-                      className="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-black font-black rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-yellow-500/20"
+                      className="px-3 py-2 bg-yellow-600/80 hover:bg-yellow-500 text-black font-black rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-yellow-500/20"
                     >
-                      <Upload size={14} /> Chọn File SFX
+                      <Upload size={14} /> Tải File SFX
                     </button>
 
                     {uploadedSfxName && (

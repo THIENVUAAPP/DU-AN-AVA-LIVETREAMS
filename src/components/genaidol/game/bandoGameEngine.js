@@ -314,45 +314,140 @@ class BanDoGameEngine {
     }
   }
 
+  /**
+   * Thuật toán lấp đầy 100% mọi lỗ thủng / khoảng trống bên trong lãnh thổ và hải đảo
+   */
+  fillMapHolesAndGaps(rawCells, cols = 300, rows = 389) {
+    if (!rawCells || rawCells.length === 0) return [];
+    
+    // Tạo 2D Spatial Map
+    const gridMap = new Map();
+    const cellLookup = new Map();
+    let maxId = 0;
+
+    rawCells.forEach(c => {
+      const k = `${c.x},${c.y}`;
+      gridMap.set(k, true);
+      cellLookup.set(k, c);
+      if (c.id > maxId) maxId = c.id;
+    });
+
+    const filledCells = [...rawCells];
+
+    // Quét từng hàng và từng cột để lấp các lỗ thủng 1-pixel và 2-pixel được bao quanh bởi đất liền
+    for (let y = 5; y < rows - 5; y++) {
+      let rowMinX = 9999, rowMaxX = -9999;
+      for (let x = 5; x < cols - 5; x++) {
+        if (gridMap.has(`${x},${y}`)) {
+          if (x < rowMinX) rowMinX = x;
+          if (x > rowMaxX) rowMaxX = x;
+        }
+      }
+
+      if (rowMinX < rowMaxX) {
+        for (let x = rowMinX + 1; x < rowMaxX; x++) {
+          const key = `${x},${y}`;
+          if (!gridMap.has(key)) {
+            // Kiểm tra xem có phải lỗ thủng bên trong (có lân cận 4 hướng là đất liền)
+            const leftLand = gridMap.has(`${x - 1},${y}`) || gridMap.has(`${x - 2},${y}`);
+            const rightLand = gridMap.has(`${x + 1},${y}`) || gridMap.has(`${x + 2},${y}`);
+            const topLand = gridMap.has(`${x},${y - 1}`) || gridMap.has(`${x},${y - 2}`);
+            const bottomLand = gridMap.has(`${x},${y + 1}`) || gridMap.has(`${x},${y + 2}`);
+
+            if ((leftLand && rightLand) || (topLand && bottomLand) || (leftLand && topLand && bottomLand)) {
+              maxId++;
+              const neighbor = cellLookup.get(`${x - 1},${y}`) || 
+                               cellLookup.get(`${x + 1},${y}`) || 
+                               cellLookup.get(`${x},${y - 1}`) || 
+                               cellLookup.get(`${x},${y + 1}`) || 
+                               rawCells[0];
+              const newCell = {
+                id: maxId,
+                x: x,
+                y: y,
+                region: neighbor.region || 'mainland',
+                provinceId: neighbor.provinceId || 'hanoi'
+              };
+              gridMap.set(key, true);
+              cellLookup.set(key, newCell);
+              filledCells.push(newCell);
+            }
+          }
+        }
+      }
+    }
+
+    return filledCells;
+  }
+
   buildGridForCurrentCountry() {
     const preset = this.countries[this.state.selectedCountry] || this.countries.vietnam || WORLD_COUNTRIES[0];
     const targetCount = this.state.totalCells || 15125;
 
-    // Cache original Vietnam cells
-    if (this.maskData && this.maskData.cells && !this._originalVietnamCells && this.state.selectedCountry === 'vietnam') {
-      this._originalVietnamCells = this.maskData.cells;
+    // Cache original Vietnam cells và lấp đầy 100% lỗ trống
+    if (!this._originalVietnamCells && defaultVietnamMask?.cells) {
+      this._originalVietnamCells = this.fillMapHolesAndGaps(defaultVietnamMask.cells, 300, 389);
     }
 
-    // Build or scale cell grid
     let baseCells = [];
-    if (this.state.selectedCountry === 'vietnam' && (this._originalVietnamCells || this.maskData?.cells)) {
-      baseCells = this._originalVietnamCells || this.maskData.cells;
+    if (this.state.selectedCountry === 'vietnam') {
+      baseCells = this._originalVietnamCells || this.fillMapHolesAndGaps(this.maskData?.cells || defaultVietnamMask?.cells || [], 300, 389);
     } else {
       baseCells = this.generateCountryGeometry(this.state.selectedCountry, targetCount);
     }
 
-    // Subsample or interpolate to match targetCount with clean regular grid
+    // Tái phân bổ lưới 2D liền mạch theo targetCount: Tuyệt đối không để lỗ trống/lỗ thủng
     let finalCells = [];
     if (baseCells.length === targetCount) {
       finalCells = baseCells;
     } else if (baseCells.length > targetCount) {
-      const step = baseCells.length / targetCount;
-      for (let i = 0; i < targetCount; i++) {
-        finalCells.push(baseCells[Math.floor(i * step)]);
+      // Downsampling 2D bằng cách gom cụm ô (Grid Binning) thay vì bỏ bước nhảy 1D để tránh tạo lỗ hổng
+      const scale = Math.sqrt(baseCells.length / targetCount);
+      const binnedMap = new Map();
+
+      baseCells.forEach(c => {
+        const bx = Math.round(c.x / scale);
+        const by = Math.round(c.y / scale);
+        const bkey = `${bx},${by}`;
+        if (!binnedMap.has(bkey)) {
+          binnedMap.set(bkey, {
+            id: binnedMap.size + 1,
+            x: bx * scale,
+            y: by * scale,
+            region: c.region || 'mainland',
+            provinceId: c.provinceId || 'vietnam_all',
+          });
+        }
+      });
+
+      const binnedArr = Array.from(binnedMap.values());
+      if (binnedArr.length >= targetCount) {
+        finalCells = binnedArr.slice(0, targetCount);
+      } else {
+        finalCells = binnedArr;
+        // Bổ sung thêm các ô viền tiếp giáp nếu thiếu để đạt đúng targetCount mà vẫn phủ kín 100%
+        let pIdx = 0;
+        while (finalCells.length < targetCount && pIdx < baseCells.length) {
+          const bc = baseCells[pIdx];
+          finalCells.push({
+            ...bc,
+            id: finalCells.length + 1,
+          });
+          pIdx++;
+        }
       }
     } else {
-      // Subdivide cleanly with regular sub-pixel offsets (no random jitter)
+      // Phóng to / Chia nhỏ ô (Subdivide) với offset chuẩn xác, lấp đầy 100% không gian
       finalCells = [...baseCells];
-      const expansionRatio = targetCount / baseCells.length;
       const subOffsets = [
-        { dx: -0.25, dy: -0.25 },
-        { dx: 0.25, dy: -0.25 },
-        { dx: -0.25, dy: 0.25 },
-        { dx: 0.25, dy: 0.25 },
-        { dx: 0, dy: -0.35 },
-        { dx: 0, dy: 0.35 },
-        { dx: -0.35, dy: 0 },
-        { dx: 0.35, dy: 0 }
+        { dx: -0.28, dy: -0.28 },
+        { dx: 0.28, dy: -0.28 },
+        { dx: -0.28, dy: 0.28 },
+        { dx: 0.28, dy: 0.28 },
+        { dx: 0, dy: -0.38 },
+        { dx: 0, dy: 0.38 },
+        { dx: -0.38, dy: 0 },
+        { dx: 0.38, dy: 0 }
       ];
 
       let idx = 0;
@@ -383,7 +478,7 @@ class BanDoGameEngine {
     const provStatus = {};
     const cellsPerProv = Math.floor(finalCells.length / Math.max(1, provs.length));
 
-    provs.forEach((p, idx) => {
+    provs.forEach((p) => {
       provStatus[p.id] = {
         id: p.id,
         name: p.name,

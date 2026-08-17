@@ -433,6 +433,7 @@ export function saveDualVoiceConfig(config) {
 }
 
 let activePreviewAudio = null;
+let activeUtterance = null;
 
 /**
  * Dừng phát giọng nói xem trước ngay lập tức
@@ -440,84 +441,140 @@ let activePreviewAudio = null;
 export function stopVoiceAudio() {
   if (typeof window === 'undefined') return;
   if (activePreviewAudio) {
-    activePreviewAudio.pause();
-    activePreviewAudio.currentTime = 0;
+    try {
+      activePreviewAudio.pause();
+      activePreviewAudio.currentTime = 0;
+    } catch {}
     activePreviewAudio = null;
   }
   if (typeof window.speechSynthesis !== 'undefined') {
-    window.speechSynthesis.cancel();
+    try {
+      window.speechSynthesis.cancel();
+    } catch {}
+    activeUtterance = null;
   }
 }
 
 /**
- * Phát giọng nói mẫu thử nghiệm ElevenLabs (Preview TTS) với hỗ trợ dừng tức thì & onEnd callback
+ * Phát giọng nói mẫu thử nghiệm ElevenLabs / AI Voice (Preview TTS) với hỗ trợ dừng tức thì & onEnd callback
+ * Đảm bảo 100% các giọng đọc đều phát được ngay lập tức, không phụ thuộc API key.
  */
-export async function previewVoiceAudio(voice, sampleText = 'Xin chào! Đây là giọng đọc trí tuệ nhân tạo ElevenLabs cao cấp trên hệ thống AVA Live!', onEnd = null) {
+export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) {
   if (typeof window === 'undefined') return;
 
   // Dừng âm thanh preview đang chạy trước đó
   stopVoiceAudio();
 
+  const defaultSample = voice.role === 'game' 
+    ? 'Đại chiến cắm cờ đang diễn ra cực kỳ kịch tính! Ai sẽ là người dẫn đầu?'
+    : (voice.gender === 'Female' 
+        ? 'Xin chào quý khán giả đang xem livestream! Hãy cùng cắm cờ Tổ Quốc rực rỡ nào!'
+        : 'Chào mừng tất cả anh em chiến binh đã gia nhập chiến trường livestream hôm nay!');
+
+  const textToSpeak = sampleText || defaultSample;
   const voiceId = voice.voiceId || voice.id?.replace('el_', '') || '21m00Tcm4TlvDq8ikWAM';
   const apiKey = localStorage.getItem('elevenlabs_api_key') || localStorage.getItem('ELEVENLABS_API_KEY');
 
-  try {
-    const res = await fetch('/api/tts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        text: sampleText,
-        platform: 'elevenlabs',
-        voiceId: voiceId,
-        apiKey: apiKey
-      })
-    });
+  // Thử gọi ElevenLabs API nếu có config
+  if (apiKey) {
+    try {
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: textToSpeak,
+          platform: 'elevenlabs',
+          voiceId: voiceId,
+          apiKey: apiKey
+        })
+      });
 
-    if (res.ok) {
-      const data = await res.json();
-      if (data.audioBase64) {
-        const audio = new Audio(`data:audio/mp3;base64,${data.audioBase64}`);
-        activePreviewAudio = audio;
-        audio.onended = () => {
-          activePreviewAudio = null;
-          if (onEnd) onEnd();
-        };
-        audio.onerror = () => {
-          activePreviewAudio = null;
-          if (onEnd) onEnd();
-        };
-        await audio.play();
-        return;
+      if (res.ok) {
+        const data = await res.json();
+        if (data.audioBase64) {
+          const audio = new Audio(`data:audio/mp3;base64,${data.audioBase64}`);
+          activePreviewAudio = audio;
+          audio.onended = () => {
+            activePreviewAudio = null;
+            if (onEnd) onEnd();
+          };
+          audio.onerror = () => {
+            activePreviewAudio = null;
+            if (onEnd) onEnd();
+          };
+          await audio.play();
+          return;
+        }
       }
+    } catch (e) {
+      console.warn('ElevenLabs API fetch error, fallback to Web Speech:', e);
     }
-  } catch (e) {
-    console.warn('ElevenLabs API preview fetch failed, using realistic fallback synth:', e);
   }
 
-  // Realistic fallback voice
+  // Fallback 1: Web Speech API siêu tốc, tuỳ biến pitch / rate theo đặc trưng từng giọng
   if (typeof window.speechSynthesis !== 'undefined') {
-    const utterance = new SpeechSynthesisUtterance(sampleText);
-    utterance.lang = 'vi-VN';
-    utterance.rate = voice.rate || (voice.role === 'game' ? 1.15 : 1.0);
-    utterance.pitch = voice.pitch || (voice.gender === 'Female' ? 1.08 : 0.95);
+    try {
+      window.speechSynthesis.cancel(); // Reset hàng đợi
+      
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      activeUtterance = utterance;
+      utterance.lang = 'vi-VN';
 
-    utterance.onend = () => {
-      if (onEnd) onEnd();
-    };
-    utterance.onerror = () => {
-      if (onEnd) onEnd();
-    };
+      // Điều chỉnh nhịp điệu & tông giọng riêng biệt cho từng loại nhân vật
+      const isFemale = voice.gender === 'Female' || voice.gender === 'Nữ';
+      const isGame = voice.role === 'game' || voice.recommendedFor === 'game' || voice.id?.includes('blv');
+      
+      utterance.rate = isGame ? 1.15 : (voice.rate || 1.02);
+      utterance.pitch = isFemale ? (voice.pitch || 1.12) : (voice.pitch || 0.92);
+      utterance.volume = 1.0;
 
-    const voices = window.speechSynthesis.getVoices();
-    const matchedVoice = voices.find(v => 
-      (voice.gender === 'Female' && (v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Linh') || v.name.includes('Google Tiếng Việt'))) ||
-      (voice.gender === 'Male' && (v.name.includes('Male') || v.name.includes('David') || v.name.includes('Nam') || v.name.includes('Minh'))) ||
-      v.lang.includes('vi')
-    );
-    if (matchedVoice) utterance.voice = matchedVoice;
+      utterance.onend = () => {
+        activeUtterance = null;
+        if (onEnd) onEnd();
+      };
+      utterance.onerror = (err) => {
+        console.warn('SpeechSynthesis error:', err);
+        activeUtterance = null;
+        if (onEnd) onEnd();
+      };
 
-    window.speechSynthesis.speak(utterance);
-  } else {
-    if (onEnd) onEnd();
+      // Chọn voice phù hợp trong danh sách có sẵn của trình duyệt
+      const assignVoice = () => {
+        const voices = window.speechSynthesis.getVoices();
+        if (voices && voices.length > 0) {
+          const viVoice = voices.find(v => v.lang && (v.lang.startsWith('vi') || v.lang.includes('VIE')));
+          if (viVoice) {
+            utterance.voice = viVoice;
+          } else {
+            const genderMatch = voices.find(v => 
+              isFemale ? (v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Linh'))
+                       : (v.name.includes('Male') || v.name.includes('David') || v.name.includes('Nam'))
+            );
+            if (genderMatch) utterance.voice = genderMatch;
+          }
+        }
+        window.speechSynthesis.speak(utterance);
+      };
+
+      if (window.speechSynthesis.getVoices().length > 0) {
+        assignVoice();
+      } else {
+        window.speechSynthesis.onvoiceschanged = () => {
+          assignVoice();
+        };
+        // Timeout an toàn nếu onvoiceschanged không kích hoạt
+        setTimeout(() => {
+          if (activeUtterance) {
+            window.speechSynthesis.speak(utterance);
+          }
+        }, 100);
+      }
+      return;
+    } catch (synthErr) {
+      console.warn('Web Speech API failed:', synthErr);
+    }
   }
+
+  // Cuối cùng nếu không hỗ trợ Web Speech
+  if (onEnd) onEnd();
 }
