@@ -1,4 +1,5 @@
 import bandoAudio from './bandoAudioEngine';
+import { mapVoiceEngine } from './gameVoiceEngine';
 import { WORLD_COUNTRIES, COUNTRIES_BY_ID, CONTINENTS } from './worldCountriesData';
 import { BannerFlagCellsEngine } from './bannerFlagCellsEngine';
 import defaultVietnamMask from '../../../../public/data/vietnamMask.json';
@@ -1033,11 +1034,16 @@ class BanDoGameEngine {
     this.notify({ type: 'GIFT_PLACED', giftId, count, user, claimed: toClaim.length, focalTarget: this.state.lastFocalTarget });
   }
 
-  // Xử lý sự kiện bình luận (Comment tương tác Live)
+  // Xử lý sự kiện bình luận (Comment tương tác Live & Kích Hoạt Auto Voice Trả Lời)
   processComment(commentText, user = { id: 'guest_cm', username: 'Khán Giả Live', avatar: '' }) {
     if (!commentText || this.state.status === 'victory') return;
     const clean = commentText.toString().trim().toLowerCase();
     
+    // Kích hoạt Hệ Thống Voice AI & Từ Khóa Trả Lời Tự Động
+    try {
+      mapVoiceEngine.handleUserComment(commentText, user?.username || 'Bạn');
+    } catch (e) {}
+
     // Tự động phân tích comment và cắm cờ
     if (clean === '1' || clean === 'cm 1' || clean === 'số 1' || clean === 'so 1') {
       this.processGift('flag_vn', 1, user);
