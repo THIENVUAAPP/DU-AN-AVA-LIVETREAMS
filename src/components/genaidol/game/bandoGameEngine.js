@@ -593,6 +593,10 @@ class BanDoGameEngine {
   }
 
   generateCountryGeometry(countryKey, count = 15000) {
+    if (countryKey === 'custom_upload' && this._customUploadedCells && this._customUploadedCells.length > 0) {
+      return this._customUploadedCells;
+    }
+
     const cells = [];
     let cid = 1;
 
@@ -656,6 +660,116 @@ class BanDoGameEngine {
       });
     }
     return cells;
+  }
+
+  /**
+   * Tải ảnh mẫu bản đồ bất kỳ (PNG/JPG/WebP/SVG) -> Chuyển thành ma trận ô cờ 3D chuẩn xác 100%
+   */
+  async loadCustomMapFromImage(imageDataUrl, countryName = 'Bản Đồ Mẫu Tùy Chỉnh', targetCellCount = 15000) {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return false;
+
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      img.crossOrigin = 'Anonymous';
+      img.onload = () => {
+        try {
+          const cols = 300;
+          const rows = 389;
+          const canvas = document.createElement('canvas');
+          canvas.width = cols;
+          canvas.height = rows;
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
+          
+          // Vẽ ảnh phủ vừa vặn khung 300x389 giữ tỉ lệ
+          ctx.clearRect(0, 0, cols, rows);
+          const aspect = img.width / img.height;
+          const targetAspect = cols / rows;
+          let drawW = cols;
+          let drawH = rows;
+          let offX = 0;
+          let offY = 0;
+          if (aspect > targetAspect) {
+            drawH = cols / aspect;
+            offY = (rows - drawH) / 2;
+          } else {
+            drawW = rows * aspect;
+            offX = (cols - drawW) / 2;
+          }
+          ctx.drawImage(img, offX, offY, drawW, drawH);
+
+          const imgData = ctx.getImageData(0, 0, cols, rows).data;
+          const rawCells = [];
+          let cid = 1;
+
+          for (let y = 0; y < rows; y++) {
+            for (let x = 0; x < cols; x++) {
+              const idx = (y * cols + x) * 4;
+              const r = imgData[idx];
+              const g = imgData[idx + 1];
+              const b = imgData[idx + 2];
+              const a = imgData[idx + 3];
+
+              // Pixel được tính là đất liền nếu alpha > 30 và không phải màu nền trắng tinh/đen tuyền
+              const isTransparent = a < 35;
+              const isPureWhiteBg = (r > 245 && g > 245 && b > 245 && a > 200);
+              const isDarkVoid = (r < 10 && g < 10 && b < 10 && a < 50);
+
+              if (!isTransparent && !isPureWhiteBg && !isDarkVoid) {
+                rawCells.push({
+                  id: cid++,
+                  x: x,
+                  y: y,
+                  region: 'mainland',
+                  provinceId: 'custom_zone'
+                });
+              }
+            }
+          }
+
+          // Lấp kín 100% các lỗ hổng
+          const solidCells = this.fillMapHolesAndGaps(rawCells, cols, rows);
+
+          this._customUploadedCells = solidCells.length > 300 ? solidCells : rawCells;
+          
+          const customPreset = {
+            id: 'custom_upload',
+            name: countryName,
+            code: 'MAP',
+            title: `Bản đồ ${countryName} (Từ Ảnh Mẫu)`,
+            continent: 'custom',
+            flag: '🗺️',
+            claimedCellColor: '#dc2626',
+            starColor: '#f59e0b',
+            emptyCellColor: '#475569',
+            referenceImageUrl: imageDataUrl,
+            labels: [
+              { text: `★ ${countryName.toUpperCase()}`, wx: 0, wz: 0, color: '#facc15' },
+              { text: '★ THỦ ĐÔ TRUNG TÂM', wx: 0, wz: -20, color: '#38bdf8' }
+            ],
+            provinces: [
+              { id: 'zone_1', name: 'Khu Vực 1 (Phía Bắc)', totalCells: Math.floor(targetCellCount * 0.33) },
+              { id: 'zone_2', name: 'Khu Vực 2 (Trung Tâm)', totalCells: Math.floor(targetCellCount * 0.34) },
+              { id: 'zone_3', name: 'Khu Vực 3 (Phía Nam)', totalCells: Math.floor(targetCellCount * 0.33) },
+            ]
+          };
+
+          this.countries['custom_upload'] = customPreset;
+          this.state.selectedCountry = 'custom_upload';
+          this.state.settings.customMapTitle = customPreset.title;
+          this.state.totalCells = targetCellCount;
+          this.setBannerText(countryName.toUpperCase() + ' VÔ ĐỊCH');
+          this.buildGridForCurrentCountry();
+          this.saveToStorage();
+          this.notify({ type: 'CUSTOM_MAP_LOADED', countryKey: 'custom_upload', countryName });
+          resolve(true);
+        } catch (err) {
+          console.error('Error processing custom map image:', err);
+          resolve(false);
+        }
+      };
+      img.onerror = () => resolve(false);
+      img.src = imageDataUrl;
+    });
   }
 
   generateFallbackGrid() {

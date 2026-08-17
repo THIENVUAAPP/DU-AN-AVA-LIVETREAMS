@@ -455,6 +455,38 @@ export function stopVoiceAudio() {
   }
 }
 
+// Bảng cấu hình Pitch & Rate đặc trưng cho từng Model Voice của ElevenLabs
+const VOICE_ACOUSTIC_PROFILES = {
+  // Nữ Idol
+  'el_rachel': { pitch: 1.15, rate: 1.05, freq: 587.33, text: 'Xin chào quý khán giả! Em là Rachel, chúc các bạn xem livestream cắm cờ thật vui và săn được thật nhiều quà nhé!' },
+  'el_bella': { pitch: 1.25, rate: 1.00, freq: 659.25, text: 'Chào mọi người nha! Giọng của Bella ngọt ngào dễ thương, cùng nhau tương tác thật rôm rả nào!' },
+  'el_domi': { pitch: 1.28, rate: 1.18, freq: 698.46, text: 'Hế lô cả nhà ơi! Domi năng động sẵn sàng khuấy động không khí livestream bùng nổ ngay bây giờ!' },
+  'el_emily': { pitch: 1.08, rate: 1.00, freq: 523.25, text: 'Kính chào quý vị! Emily rất vinh hạnh được đồng hành trong buổi phát sóng trực tiếp hôm nay.' },
+  'el_elli': { pitch: 1.12, rate: 0.98, freq: 554.37, text: 'Chào các bạn thân yêu! Elli gửi trọn cảm xúc ngọt ngào đến tất cả khán giả đang theo dõi.' },
+  'el_charlotte': { pitch: 1.18, rate: 1.06, freq: 622.25, text: 'Hello mọi người! Charlotte mang phong cách hiện đại, tinh tế và cực kỳ cuốn hút.' },
+  'el_matilda': { pitch: 1.05, rate: 0.96, freq: 493.88, text: 'Thân chào các bạn, Matilda chân thành gửi lời cảm ơn những món quà quý giá của mọi người.' },
+  'el_gigi': { pitch: 1.35, rate: 1.20, freq: 783.99, text: 'Yayyy! Gigi siêu nhí nhảnh đây, các anh chị ơi bấm tim và tặng quà ủng hộ em nha!' },
+  'el_freya': { pitch: 0.95, rate: 0.95, freq: 440.00, text: 'Chào mừng bạn bước vào không gian livestream huyền bí và lôi cuốn cùng Freya.' },
+  'el_grace': { pitch: 1.06, rate: 0.98, freq: 523.25, text: 'Grace xin gửi lời chào trang trọng và quý phái nhất tới tất cả quý khách hàng.' },
+  'el_lily': { pitch: 1.22, rate: 1.04, freq: 659.25, text: 'Chào bạn nhé! Lily trong sáng và hồn nhiên, rất vui được làm quen với mọi người!' },
+  'el_nicole': { pitch: 1.14, rate: 1.12, freq: 587.33, text: 'Nicole chốt đơn siêu tốc! Cơ hội vàng cho các chiến binh trong phiên live hôm nay!' },
+  'el_serena': { pitch: 1.00, rate: 0.94, freq: 493.88, text: 'Serena dịu êm như làn gió, chúc quý vị có những giây phút thư giãn tuyệt vời.' },
+  // Nam BLV & Quản lý
+  'el_josh': { pitch: 0.82, rate: 1.18, freq: 220.00, text: 'VÀOOOO! Tôi là BLV Josh, chiến trường cắm cờ đang nóng hơn bao giờ hết! Ai sẽ là người thống trị bản đồ?' },
+  'el_adam': { pitch: 0.76, rate: 1.08, freq: 174.61, text: 'Adam lên tiếng! Đẳng cấp, chiều sâu và sức mạnh của một thủ lĩnh thực thụ trên livestream!' },
+  'el_antoni': { pitch: 0.88, rate: 1.10, freq: 246.94, text: 'Chào toàn thể anh em! Antoni nhiệt huyết và bùng nổ, hãy cùng nhau công phá bảng xếp hạng!' },
+  'el_arnold': { pitch: 0.70, rate: 1.02, freq: 146.83, text: 'Arnold hùng hồn thông báo: Chiến dịch cắm cờ toàn quốc đã chính thức bước vào giai đoạn quyết định!' },
+  'el_sam': { pitch: 0.84, rate: 1.15, freq: 220.00, text: 'Sam đang trực tiếp bình luận! Một pha tặng quà cực khủng vừa làm thay đổi toàn bộ cục diện trận đấu!' },
+  'el_callum': { pitch: 0.80, rate: 1.10, freq: 196.00, text: 'Quản lý Callum thông báo: Các chiến binh hãy nhanh tay cắm cờ để nhận nhân đôi điểm danh vọng!' },
+  'el_charlie': { pitch: 0.90, rate: 1.05, freq: 261.63, text: 'Charlie thân chào các bạn! Hãy cùng đoàn kết cắm cờ phủ đỏ khắp 63 tỉnh thành Việt Nam!' },
+  'el_george': { pitch: 0.85, rate: 0.98, freq: 220.00, text: 'George kính chào quý vị khán giả đang theo dõi bản đồ trực tiếp trên sóng livestream.' },
+  'el_harry': { pitch: 0.92, rate: 1.12, freq: 293.66, text: 'Harry năng động tràn đầy nhiệt huyết! Anh em sẵn sàng bứt phá top 1 hôm nay chưa?' },
+  'el_liam': { pitch: 0.88, rate: 1.08, freq: 246.94, text: 'Liam xin chào! Từng tấc đất quê hương đều là niềm tự hào của mỗi người con đất Việt!' },
+  'el_james': { pitch: 0.78, rate: 1.00, freq: 174.61, text: 'James phong độ lịch lãm, trân trọng cảm ơn sự ủng hộ nhiệt tình của tất cả các bạn.' },
+  'el_brian': { pitch: 0.82, rate: 1.02, freq: 196.00, text: 'Brian xin chào! Hãy giữ vững tinh thần đồng đội để đưa lá cờ Tổ Quốc lên vị trí cao nhất!' },
+  'el_daniel': { pitch: 0.85, rate: 1.06, freq: 220.00, text: 'Daniel phát biểu: Cảm ơn tình cảm to lớn của các bạn dành cho bản đồ Việt Nam tươi đẹp!' }
+};
+
 /**
  * Phát giọng nói mẫu thử nghiệm ElevenLabs / AI Voice (Preview TTS) với hỗ trợ dừng tức thì & onEnd callback
  * Đảm bảo 100% các giọng đọc đều phát được ngay lập tức, không phụ thuộc API key.
@@ -465,53 +497,65 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
   // Dừng âm thanh preview đang chạy trước đó
   stopVoiceAudio();
 
-  const defaultSample = voice.role === 'game' 
-    ? 'Đại chiến cắm cờ đang diễn ra cực kỳ kịch tính! Ai sẽ là người dẫn đầu?'
-    : (voice.gender === 'Female' 
-        ? 'Xin chào quý khán giả đang xem livestream! Hãy cùng cắm cờ Tổ Quốc rực rỡ nào!'
-        : 'Chào mừng tất cả anh em chiến binh đã gia nhập chiến trường livestream hôm nay!');
+  const profile = VOICE_ACOUSTIC_PROFILES[voice.id] || {};
+  const defaultSample = profile.text || (
+    voice.role === 'game' 
+      ? 'Đại chiến cắm cờ đang diễn ra cực kỳ kịch tính! Ai sẽ là người dẫn đầu?'
+      : (voice.gender === 'Female' 
+          ? 'Xin chào quý khán giả đang xem livestream! Hãy cùng cắm cờ Tổ Quốc rực rỡ nào!'
+          : 'Chào mừng tất cả anh em chiến binh đã gia nhập chiến trường livestream hôm nay!')
+  );
 
   const textToSpeak = sampleText || defaultSample;
   const voiceId = voice.voiceId || voice.id?.replace('el_', '') || '21m00Tcm4TlvDq8ikWAM';
-  const apiKey = localStorage.getItem('elevenlabs_api_key') || localStorage.getItem('ELEVENLABS_API_KEY');
+  const apiKey = localStorage.getItem('elevenlabs_api_key') || localStorage.getItem('ELEVENLABS_API_KEY') || localStorage.getItem('elevenlabsApiKey');
 
-  // Thử gọi ElevenLabs API nếu có config
-  if (apiKey) {
+  // Thử gọi ElevenLabs API Trực Tiếp Client-Side nếu có API key
+  if (apiKey && apiKey.trim().length > 10) {
     try {
-      const res = await fetch('/api/tts', {
+      const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'xi-api-key': apiKey.trim(),
+          'Accept': 'audio/mpeg'
+        },
         body: JSON.stringify({
           text: textToSpeak,
-          platform: 'elevenlabs',
-          voiceId: voiceId,
-          apiKey: apiKey
+          model_id: 'eleven_multilingual_v2',
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.75,
+            style: 0.0,
+            use_speaker_boost: true
+          }
         })
       });
 
       if (res.ok) {
-        const data = await res.json();
-        if (data.audioBase64) {
-          const audio = new Audio(`data:audio/mp3;base64,${data.audioBase64}`);
-          activePreviewAudio = audio;
-          audio.onended = () => {
-            activePreviewAudio = null;
-            if (onEnd) onEnd();
-          };
-          audio.onerror = () => {
-            activePreviewAudio = null;
-            if (onEnd) onEnd();
-          };
-          await audio.play();
-          return;
-        }
+        const blob = await res.blob();
+        const audioUrl = URL.createObjectURL(blob);
+        const audio = new Audio(audioUrl);
+        activePreviewAudio = audio;
+        audio.onended = () => {
+          activePreviewAudio = null;
+          try { URL.revokeObjectURL(audioUrl); } catch {}
+          if (onEnd) onEnd();
+        };
+        audio.onerror = () => {
+          activePreviewAudio = null;
+          try { URL.revokeObjectURL(audioUrl); } catch {}
+          if (onEnd) onEnd();
+        };
+        await audio.play();
+        return;
       }
     } catch (e) {
-      console.warn('ElevenLabs API fetch error, fallback to Web Speech:', e);
+      console.warn('ElevenLabs API direct fetch error, fallback to high-fidelity Web Speech:', e);
     }
   }
 
-  // Fallback 1: Web Speech API siêu tốc, tuỳ biến pitch / rate theo đặc trưng từng giọng
+  // Fallback Siêu Tốc: Web Speech API kết hợp Bộ Điều Âm Tần Số Web Audio
   if (typeof window.speechSynthesis !== 'undefined') {
     try {
       window.speechSynthesis.cancel(); // Reset hàng đợi
@@ -519,22 +563,25 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
         window.speechSynthesis.resume();
       }
 
-      // Phát âm thanh báo hiệu Web Audio (Audio cue) để người dùng lập tức cảm nhận âm thanh
+      // Phát âm thanh báo hiệu Web Audio (Audio cue) đặc trưng theo tần số của từng giọng
       try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (AudioCtx) {
           const ctx = new AudioCtx();
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
-          osc.type = voice.gender === 'Female' ? 'triangle' : 'sine';
-          osc.frequency.setValueAtTime(voice.gender === 'Female' ? 587.33 : 329.63, ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(voice.gender === 'Female' ? 880 : 440, ctx.currentTime + 0.15);
-          gain.gain.setValueAtTime(0.2, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+          const isFemale = voice.gender === 'Female' || voice.gender === 'Nữ';
+          const baseFreq = profile.freq || (isFemale ? 587.33 : 220.00);
+          
+          osc.type = isFemale ? 'triangle' : 'sawtooth';
+          osc.frequency.setValueAtTime(baseFreq, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.5, ctx.currentTime + 0.15);
+          gain.gain.setValueAtTime(0.18, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
           osc.connect(gain);
           gain.connect(ctx.destination);
           osc.start();
-          osc.stop(ctx.currentTime + 0.22);
+          osc.stop(ctx.currentTime + 0.24);
         }
       } catch (e) {}
       
@@ -542,12 +589,10 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
       activeUtterance = utterance;
       utterance.lang = 'vi-VN';
 
-      // Điều chỉnh nhịp điệu & tông giọng riêng biệt cho từng loại nhân vật
+      // Áp dụng thông số nhịp điệu & tông giọng riêng biệt cho từng loại Model ElevenLabs
       const isFemale = voice.gender === 'Female' || voice.gender === 'Nữ';
-      const isGame = voice.role === 'game' || voice.recommendedFor === 'game' || voice.id?.includes('blv');
-      
-      utterance.rate = isGame ? 1.15 : (voice.rate || 1.02);
-      utterance.pitch = isFemale ? (voice.pitch || 1.12) : (voice.pitch || 0.92);
+      utterance.rate = profile.rate || (isFemale ? 1.05 : 1.08);
+      utterance.pitch = profile.pitch || (isFemale ? 1.15 : 0.85);
       utterance.volume = 1.0;
 
       utterance.onend = () => {
@@ -569,8 +614,8 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
             utterance.voice = viVoice;
           } else {
             const genderMatch = voices.find(v => 
-              isFemale ? (v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Linh') || v.name.includes('Samantha'))
-                       : (v.name.includes('Male') || v.name.includes('David') || v.name.includes('Nam') || v.name.includes('Alex'))
+              isFemale ? (v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Linh') || v.name.includes('Samantha') || v.name.includes('Google US English'))
+                       : (v.name.includes('Male') || v.name.includes('David') || v.name.includes('Nam') || v.name.includes('Alex') || v.name.includes('Google UK English Male'))
             );
             if (genderMatch) utterance.voice = genderMatch;
           }

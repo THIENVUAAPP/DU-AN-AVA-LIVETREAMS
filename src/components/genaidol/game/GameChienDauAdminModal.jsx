@@ -1145,12 +1145,12 @@ export default function GameChienDauAdminModal({
 
                     <div className="space-y-2">
                       {(config.gifts || DEFAULT_GIFTS).map((gift, idx) => (
-                        <div key={gift.id || idx} className="p-2 bg-black/50 border border-white/10 rounded-xl flex items-center gap-2 text-xs">
+                        <div key={gift.id || idx} className="p-2.5 bg-black/60 border border-white/10 hover:border-amber-500/30 rounded-xl flex flex-wrap sm:flex-nowrap items-center gap-2 text-xs transition-all">
                           <input
                             type="text"
                             value={gift.icon}
                             onChange={(e) => updateGiftItem(idx, 'icon', e.target.value)}
-                            className="w-9 text-center py-1 bg-black/60 border border-white/20 rounded text-sm"
+                            className="w-10 text-center py-1 bg-black/80 border border-white/20 rounded-lg text-base"
                             title="Icon vật phẩm"
                           />
                           <input
@@ -1158,31 +1158,34 @@ export default function GameChienDauAdminModal({
                             value={gift.tier}
                             onChange={(e) => updateGiftItem(idx, 'tier', e.target.value)}
                             placeholder="Cấp bậc..."
-                            className="w-32 px-2 py-1 bg-black/60 border border-white/20 rounded font-bold text-amber-300 text-xs"
+                            className="w-28 px-2 py-1 bg-black/80 border border-white/20 rounded-lg font-black text-amber-300 text-xs"
                           />
                           <input
                             type="text"
                             value={gift.buff}
                             onChange={(e) => updateGiftItem(idx, 'buff', e.target.value)}
                             placeholder="Hiệu ứng buff..."
-                            className="flex-1 px-2 py-1 bg-black/60 border border-white/20 rounded text-gray-300 text-[11px]"
+                            className="flex-1 min-w-[120px] px-2 py-1 bg-black/80 border border-white/20 rounded-lg text-gray-300 text-[11px]"
                           />
-                          <div className="flex items-center gap-1">
-                            <input
-                              type="number"
-                              value={gift.coins}
-                              onChange={(e) => updateGiftItem(idx, 'coins', parseInt(e.target.value) || 0)}
-                              className="w-16 px-1.5 py-1 bg-black/60 border border-amber-500/30 rounded text-amber-400 font-mono font-bold text-right text-xs"
-                            />
-                            <span className="text-[10px] text-gray-400">xu</span>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <div className="flex items-center gap-1 bg-amber-500/20 border border-amber-400/40 px-2 py-0.5 rounded-lg">
+                              <span className="text-xs">🪙</span>
+                              <input
+                                type="number"
+                                value={gift.coins}
+                                onChange={(e) => updateGiftItem(idx, 'coins', parseInt(e.target.value) || 0)}
+                                className="w-14 bg-transparent text-amber-300 font-mono font-black text-right text-xs outline-none"
+                              />
+                              <span className="text-[10px] text-amber-400 font-bold">xu</span>
+                            </div>
+                            <button
+                              onClick={() => deleteGiftItem(idx)}
+                              className="p-1 rounded-lg text-red-400 hover:bg-red-500/20 transition-colors"
+                              title="Xóa quà"
+                            >
+                              <Trash2 size={13} />
+                            </button>
                           </div>
-                          <button
-                            onClick={() => deleteGiftItem(idx)}
-                            className="p-1 rounded text-red-400 hover:bg-red-500/20"
-                            title="Xóa quà"
-                          >
-                            <Trash2 size={13} />
-                          </button>
                         </div>
                       ))}
                     </div>

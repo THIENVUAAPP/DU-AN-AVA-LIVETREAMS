@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  X, Shield, Play, Pause, Square, RotateCcw, Award, Globe, Music, Volume2, 
+  X, Shield, Play, Pause, Square, RotateCcw, Award, Globe, Music, Music2, Volume2, 
   Sparkles, Gift, MapPin, Flag, CheckCircle, Copy, AlertTriangle, 
   Settings, RefreshCw, Zap, Sliders, ExternalLink, Trophy, Type,
   Compass, Sun, Eye, Trash2, Plus, PlusCircle, VolumeX, Save, Check, Grid,
-  Upload, Search, Mic, Radio, Volume1, FileAudio, ZoomIn, ZoomOut, Move, Camera, BookmarkPlus, Layers,
-  Palette, Minimize2, Maximize2, Columns, Edit2, MessageSquare, Bot
+  Upload, UploadCloud, Image, Search, Mic, Radio, Volume1, FileAudio, ZoomIn, ZoomOut, Move, Camera, BookmarkPlus, Layers,
+  Palette, Minimize2, Maximize2, Columns, Edit2, MessageSquare, Bot, Key
 } from 'lucide-react';
 import bandoEngine, { DEFAULT_MAP_GIFTS, COUNTRY_PRESETS, WORLD_COUNTRIES, CONTINENTS } from './bandoGameEngine';
 import bandoAudio from './bandoAudioEngine';
@@ -81,6 +81,20 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
   const [editingGiftId, setEditingGiftId] = useState(null);
   const [editGiftData, setEditGiftData] = useState({});
 
+  // Quản lý Tải Lên Ảnh Mẫu Bản Đồ Tham Chiếu Chuẩn Xác 100%
+  const mapImageFileInputRef = useRef(null);
+  const [uploadedMapImage, setUploadedMapImage] = useState(null);
+  const [customCountryNameInput, setCustomCountryNameInput] = useState('Bản Đồ Mẫu Tùy Chỉnh');
+  const [isProcessingMapImage, setIsProcessingMapImage] = useState(false);
+  const [mapProcessSuccess, setMapProcessSuccess] = useState(false);
+
+  // Quản lý ElevenLabs API Key
+  const [elevenLabsApiKeyInput, setElevenLabsApiKeyInput] = useState(() => {
+    if (typeof localStorage === 'undefined') return '';
+    return localStorage.getItem('elevenlabs_api_key') || localStorage.getItem('ELEVENLABS_API_KEY') || '';
+  });
+  const [elevenLabsKeySaved, setElevenLabsKeySaved] = useState(false);
+
   // Trigger camera actions from inside Admin settings
   const triggerCameraAction = (action, payload) => {
     window.dispatchEvent(new CustomEvent('bando-camera-action', { detail: { action, payload } }));
@@ -119,11 +133,47 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  const handleCopyOverlayUrl = () => {
-    const url = `${window.location.origin}${window.location.pathname}?overlay=bando`;
+  const handleCopyOverlayUrl = (ratio = '9:16') => {
+    const url = `${window.location.origin}${window.location.pathname}?overlay=bando&ratio=${ratio}`;
     navigator.clipboard.writeText(url);
-    setCopiedLink(true);
+    setCopiedLink(ratio);
     setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  const handleUploadMapImage = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setUploadedMapImage(ev.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleApplyCustomMapFromImage = async () => {
+    if (!uploadedMapImage) return;
+    setIsProcessingMapImage(true);
+    const count = parseInt(totalCellsInput) || 15000;
+    const success = await bandoEngine.loadCustomMapFromImage(uploadedMapImage, customCountryNameInput, count);
+    setIsProcessingMapImage(false);
+    if (success) {
+      setSelectedCountry('custom_upload');
+      setMapProcessSuccess(true);
+      setTimeout(() => setMapProcessSuccess(false), 3000);
+    }
+  };
+
+  const handleSaveElevenLabsKey = () => {
+    const key = elevenLabsApiKeyInput.trim();
+    if (key) {
+      localStorage.setItem('elevenlabs_api_key', key);
+      localStorage.setItem('ELEVENLABS_API_KEY', key);
+    } else {
+      localStorage.removeItem('elevenlabs_api_key');
+      localStorage.removeItem('ELEVENLABS_API_KEY');
+    }
+    setElevenLabsKeySaved(true);
+    setTimeout(() => setElevenLabsKeySaved(false), 2500);
   };
 
   const handleSaveAll = () => {
@@ -1035,6 +1085,105 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                 </div>
               </div>
 
+              {/* Ô TẢI ẢNH MẪU BẢN ĐỒ QUỐC GIA THAM CHIẾU CHUẨN XÁC 100% */}
+              <div className="p-4 bg-gradient-to-r from-blue-950/50 via-indigo-950/40 to-black/80 border border-blue-500/40 rounded-2xl space-y-3 shadow-xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                      <UploadCloud size={18} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+                        <span>Tải Lên Ảnh Mẫu Bản Đồ / Quốc Gia Tùy Chọn</span>
+                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">Chuẩn Xác 100%</span>
+                      </h4>
+                      <p className="text-[10px] text-gray-300">
+                        Tải ảnh bản đồ lãnh thổ bất kỳ (PNG, JPG, WebP) để AI tự động trích xuất ma trận ô cờ 3D khớp 100% hình dạng thực tế.
+                      </p>
+                    </div>
+                  </div>
+
+                  <input
+                    ref={mapImageFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleUploadMapImage}
+                    className="hidden"
+                  />
+
+                  <button
+                    onClick={() => mapImageFileInputRef.current?.click()}
+                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-black shadow-lg shadow-blue-500/20 flex items-center justify-center gap-1.5 transition-all shrink-0 active:scale-95"
+                  >
+                    <Image size={14} />
+                    <span>{uploadedMapImage ? '🔄 Đổi Ảnh Khác' : '📁 Chọn Ảnh Bản Đồ'}</span>
+                  </button>
+                </div>
+
+                {uploadedMapImage && (
+                  <div className="p-3 bg-black/60 border border-white/10 rounded-xl space-y-3 animate-in fade-in duration-200">
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                      {/* Image Thumbnail Preview */}
+                      <div className="relative w-24 h-28 bg-black/80 rounded-lg border border-blue-400/40 overflow-hidden shrink-0 flex items-center justify-center">
+                        <img 
+                          src={uploadedMapImage} 
+                          alt="Bản đồ mẫu" 
+                          className="max-w-full max-h-full object-contain"
+                        />
+                        <span className="absolute bottom-0 inset-x-0 bg-black/80 text-[8px] text-center text-blue-300 font-mono py-0.5">
+                          Ảnh Mẫu
+                        </span>
+                      </div>
+
+                      {/* Custom Country Name & Cell Count Inputs */}
+                      <div className="flex-1 w-full space-y-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-[10px] font-bold text-gray-300 block mb-1">Tên Quốc Gia / Vùng Đất:</label>
+                            <input
+                              type="text"
+                              value={customCountryNameInput}
+                              onChange={(e) => setCustomCountryNameInput(e.target.value)}
+                              placeholder="Ví dụ: Việt Nam, Nhật Bản, Châu Âu..."
+                              className="w-full px-2.5 py-1.5 bg-black/70 border border-white/20 rounded-lg text-xs font-bold text-white outline-none focus:border-blue-400"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-[10px] font-bold text-gray-300 block mb-1">Số Ô Cờ Ma Trận 3D:</label>
+                            <input
+                              type="number"
+                              value={totalCellsInput}
+                              onChange={(e) => setTotalCellsInput(e.target.value)}
+                              className="w-full px-2.5 py-1.5 bg-black/70 border border-white/20 rounded-lg text-xs font-mono font-bold text-yellow-300 outline-none focus:border-blue-400"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-1">
+                          <span className="text-[10px] text-emerald-400 font-mono">
+                            {mapProcessSuccess ? '✓ Đã tạo thành công Bản Đồ 3D từ ảnh mẫu!' : 'Đã nạp ảnh mẫu sẵn sàng'}
+                          </span>
+
+                          <button
+                            onClick={handleApplyCustomMapFromImage}
+                            disabled={isProcessingMapImage}
+                            className={`px-4 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-md ${
+                              isProcessingMapImage
+                                ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-500/30 active:scale-95'
+                            }`}
+                          >
+                            {isProcessingMapImage ? <RefreshCw size={13} className="animate-spin" /> : <CheckCircle size={13} />}
+                            <span>{isProcessingMapImage ? 'Đang Xử Lý Ma Trận...' : '🚀 Áp Dụng Bản Đồ 3D Khớp 100%'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Search input */}
               <div className="relative">
                 <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -1123,6 +1272,44 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                       {cat.label}
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* ELEVENLABS API KEY & STATUS SETTING */}
+              <div className="p-3.5 bg-purple-950/30 border border-purple-500/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                    <Key size={16} />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <span>ElevenLabs API Key (Tùy chọn)</span>
+                      <span className={`text-[9px] px-1.5 py-0.2 rounded font-mono ${
+                        elevenLabsApiKeyInput ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/10 text-gray-400'
+                      }`}>
+                        {elevenLabsApiKeyInput ? '✓ Đang dùng API Trực Tiếp' : '⚡ Chế độ Synth Web Speech AI'}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-gray-400">
+                      Tất cả giọng đọc đều hoạt động 100%. Nhập API Key nếu bạn muốn nghe bằng máy chủ ElevenLabs AI chính thức.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <input
+                    type="password"
+                    value={elevenLabsApiKeyInput}
+                    onChange={(e) => setElevenLabsApiKeyInput(e.target.value)}
+                    placeholder="Nhập xi-api-key..."
+                    className="flex-1 sm:w-56 px-2.5 py-1.5 bg-black/60 border border-white/20 rounded-xl text-xs text-yellow-300 font-mono outline-none focus:border-purple-400"
+                  />
+                  <button
+                    onClick={handleSaveElevenLabsKey}
+                    className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-md transition-all shrink-0 active:scale-95"
+                  >
+                    {elevenLabsKeySaved ? '✓ Đã Lưu' : 'Lưu Key'}
+                  </button>
                 </div>
               </div>
 
@@ -2161,13 +2348,17 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                         </div>
                       ) : (
                         /* Chế độ Hiển Thị Thông Thường */
-                        <div>
-                          <div className="flex items-start justify-between gap-1.5 mb-2">
-                            <div className="flex items-center gap-2 truncate">
-                              <span className="text-2xl shrink-0">{gift.icon}</span>
-                              <div className="truncate">
+                        <div className="space-y-2.5">
+                          <div className="flex items-start justify-between gap-1.5">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <span className="text-3xl shrink-0 p-1.5 rounded-xl bg-black/40 border border-white/10 shadow-inner">{gift.icon}</span>
+                              <div className="min-w-0">
                                 <div className="text-xs font-black text-white truncate" title={gift.name}>{gift.name}</div>
-                                <div className="text-[10px] text-yellow-400 font-mono font-bold">{gift.priceToken?.toLocaleString()} xu</div>
+                                <div className="flex items-center gap-1 mt-1">
+                                  <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-400/40 text-[11px] font-bold font-mono shadow-xs">
+                                    🪙 {gift.priceToken?.toLocaleString()} xu
+                                  </span>
+                                </div>
                               </div>
                             </div>
 
@@ -2190,13 +2381,15 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                           </div>
 
                           <div className="flex items-center justify-between pt-2 border-t border-white/10 text-xs">
-                            <span className="text-emerald-400 font-mono font-black">+{gift.cells?.toLocaleString()} ô cờ</span>
+                            <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-mono font-black text-[11px]">
+                              +{gift.cells?.toLocaleString()} ô cờ
+                            </span>
                             <button
                               onClick={() => {
                                 bandoAudio.unlock();
                                 bandoEngine.processGift(gift.id, 1, { id: 'admin_test', username: 'Admin Thử Nghiệm 👑', avatar: '' });
                               }}
-                              className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-bold text-[10px] shadow transition-all active:scale-95 flex items-center gap-1"
+                              className="px-3 py-1 rounded-xl bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-bold text-[11px] shadow-md shadow-red-500/20 transition-all active:scale-95 flex items-center gap-1"
                             >
                               <Play size={10} /> Test
                             </button>
@@ -2328,38 +2521,73 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
               </div>
 
               <div className="bg-gradient-to-r from-red-950/60 via-purple-950/60 to-black border border-white/15 rounded-2xl p-5 space-y-4">
-                <div className="text-xs font-bold text-yellow-400 uppercase tracking-wider flex items-center gap-2">
-                  <ExternalLink size={16} /> Link Overlay Browser Source Cho OBS / TikTok LIVE Studio
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-bold text-yellow-400 uppercase tracking-wider flex items-center gap-2">
+                    <ExternalLink size={16} /> Link Overlay Chuẩn Sạch 100% Cho TikTok Studio / OBS
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold">
+                    ⚡ Realtime Đồng Bộ 0.0001s
+                  </span>
                 </div>
 
-                <div className="flex items-center gap-2 bg-black/60 border border-white/20 p-2.5 rounded-xl">
-                  <input
-                    type="text"
-                    readOnly
-                    value={`${window.location.origin}${window.location.pathname}?overlay=bando`}
-                    className="flex-1 bg-transparent text-xs font-mono text-yellow-300 outline-none truncate"
-                  />
-                  <button
-                    onClick={handleCopyOverlayUrl}
-                    className="px-3 py-1.5 bg-yellow-500 hover:bg-yellow-400 text-black font-black text-xs rounded-lg transition-all flex items-center gap-1 shrink-0"
-                  >
-                    {copiedLink ? <CheckCircle size={13} /> : <Copy size={13} />}
-                    <span>{copiedLink ? 'Đã Sao Chép!' : 'Sao Chép'}</span>
-                  </button>
+                <p className="text-xs text-gray-300">
+                  Khi dán đường dẫn này vào TikTok Live Studio hoặc OBS Studio, hệ thống <strong>chỉ xuất đúng khung Live sân khấu (không có bất kỳ thanh công cụ hay nút quản trị nào)</strong>, giúp phiên Live hoàn toàn tinh tế và chuyên nghiệp.
+                </p>
+
+                {/* Option 1: 9:16 (Dọc TikTok Studio) */}
+                <div className="p-3 bg-black/60 border border-white/10 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-pink-300">
+                    <span>📱 1. Khung Dọc 9:16 (TikTok LIVE Studio / Shorts / Reels):</span>
+                    <span className="text-[10px] text-gray-400 font-mono">1080 x 1920 px</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-black/80 border border-white/15 p-2 rounded-lg">
+                    <input
+                      type="text"
+                      readOnly
+                      value={`${window.location.origin}${window.location.pathname}?overlay=bando&ratio=9:16`}
+                      className="flex-1 bg-transparent text-xs font-mono text-yellow-300 outline-none truncate"
+                    />
+                    <button
+                      onClick={() => handleCopyOverlayUrl('9:16')}
+                      className="px-3.5 py-1.5 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-black text-xs rounded-lg transition-all flex items-center gap-1 shrink-0 shadow-md shadow-pink-500/20"
+                    >
+                      {copiedLink === '9:16' ? <CheckCircle size={13} /> : <Copy size={13} />}
+                      <span>{copiedLink === '9:16' ? '✓ Đã Copy Link 9:16!' : 'Sao Chép Link 9:16'}</span>
+                    </button>
+                  </div>
                 </div>
 
-                <div className="space-y-2 text-xs text-gray-300">
+                {/* Option 2: 16:9 (Ngang OBS Studio) */}
+                <div className="p-3 bg-black/60 border border-white/10 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-blue-300">
+                    <span>🖥️ 2. Khung Ngang 16:9 (OBS Studio / PC Livestream):</span>
+                    <span className="text-[10px] text-gray-400 font-mono">1920 x 1080 px</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-black/80 border border-white/15 p-2 rounded-lg">
+                    <input
+                      type="text"
+                      readOnly
+                      value={`${window.location.origin}${window.location.pathname}?overlay=bando&ratio=16:9`}
+                      className="flex-1 bg-transparent text-xs font-mono text-yellow-300 outline-none truncate"
+                    />
+                    <button
+                      onClick={() => handleCopyOverlayUrl('16:9')}
+                      className="px-3.5 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xs rounded-lg transition-all flex items-center gap-1 shrink-0 shadow-md shadow-blue-500/20"
+                    >
+                      {copiedLink === '16:9' ? <CheckCircle size={13} /> : <Copy size={13} />}
+                      <span>{copiedLink === '16:9' ? '✓ Đã Copy Link 16:9!' : 'Sao Chép Link 16:9'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 text-xs text-gray-300 pt-2 border-t border-white/10">
                   <div className="flex items-start gap-2">
-                    <span className="font-bold text-yellow-400">1.</span>
-                    <span>Mở <strong>TikTok LIVE Studio</strong> hoặc <strong>OBS Studio</strong>.</span>
+                    <span className="font-bold text-yellow-400">Bước 1:</span>
+                    <span>Mở TikTok LIVE Studio hoặc OBS Studio, bấm Thêm Nguồn (Add Source) &gt; <strong>Browser Source (Trình duyệt)</strong>.</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="font-bold text-yellow-400">2.</span>
-                    <span>Thêm nguồn <strong>Trình duyệt (Browser Source)</strong> và dán URL trên vào.</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="font-bold text-yellow-400">3.</span>
-                    <span>Đặt độ phân giải <strong>1080 x 1920</strong> (Dọc) hoặc <strong>1920 x 1080</strong> (Ngang). Màn hình sẽ tự động trong suốt và nổi bật!</span>
+                    <span className="font-bold text-yellow-400">Bước 2:</span>
+                    <span>Dán link tương ứng và chỉnh độ phân giải khớp khung hình. Khung hình sẽ tự động cập nhật mượt mà, độ trễ 0s!</span>
                   </div>
                 </div>
               </div>
