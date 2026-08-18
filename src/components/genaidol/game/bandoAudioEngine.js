@@ -1,5 +1,6 @@
 // Audio Engine cho Game Bản Đồ Cắm Cờ Quốc Gia & Live Battle Game
-// SFX tổng hợp Web Audio API chất lượng cao + BGM Nhạc Nền 24/7 + Hỗ trợ tải lên Âm nhạc tùy chỉnh
+// SFX tổng hợp Web Audio API chất lượng cao + BGM Nhạc Nền 24/7 + Hỗ trợ tải lên Âm nhạc tùy chỉnh vĩnh viễn
+import { saveAudioFile, getAudioFile, deleteAudioFile } from '../../../utils/audioStorage.js';
 
 class BanDoAudioEngine {
   constructor() {
@@ -46,9 +47,10 @@ class BanDoAudioEngine {
     window.addEventListener('keydown', unlock, { once: true });
   }
 
-  loadSavedAudioSettings() {
+  async loadSavedAudioSettings() {
     if (typeof window === 'undefined') return;
     try {
+      // 1. Load from localStorage metadata
       const savedBgm = localStorage.getItem('bando_custom_bgm_meta');
       if (savedBgm) {
         const parsed = JSON.parse(savedBgm);
@@ -61,11 +63,27 @@ class BanDoAudioEngine {
         this.customSfxName = parsed.name || '';
         this.customSfxUrl = parsed.url || '';
       }
+
+      // 2. Load permanent Base64 binary from IndexedDB
+      const idbBgm = await getAudioFile('bando_custom_bgm');
+      if (idbBgm && idbBgm.dataUrl) {
+        this.customBgmName = idbBgm.name || this.customBgmName || 'Nhạc Nền Tùy Chỉnh';
+        this.customBgmUrl = idbBgm.dataUrl;
+      }
+
+      const idbSfx = await getAudioFile('bando_custom_sfx');
+      if (idbSfx && idbSfx.dataUrl) {
+        this.customSfxName = idbSfx.name || this.customSfxName || 'SFX Tùy Chỉnh';
+        this.customSfxUrl = idbSfx.dataUrl;
+      }
+
       const savedTimer = localStorage.getItem('bando_bgm_timer_mode');
       if (savedTimer) this.bgmTimerMode = savedTimer;
       if (localStorage.getItem('bando_is_muted') === 'true') this.isMuted = true;
       if (localStorage.getItem('bando_is_sfx_muted') === 'true') this.isSfxMuted = true;
-    } catch (e) {}
+    } catch (e) {
+      console.warn('loadSavedAudioSettings warning:', e);
+    }
   }
 
   ensureContext() {
@@ -121,7 +139,7 @@ class BanDoAudioEngine {
   }
 
   setSfxMuted(isMuted) {
-    this.isSfxMuted = isMuted;
+    this.isMuted = isMuted;
     if (this.sfxGain && this.ctx) {
       this.sfxGain.gain.setValueAtTime(isMuted ? 0 : this.sfxVolume, this.ctx.currentTime);
     }
@@ -163,16 +181,12 @@ class BanDoAudioEngine {
     if (mode === '24/7') {
       this.bgmTimerRemainingSec = 0;
       this.isBgmLoop = true;
+      if (this.customBgmAudio) this.customBgmAudio.loop = true;
       return;
     }
 
-    let minutes = 30;
-    if (mode === '15m') minutes = 15;
-    else if (mode === '30m') minutes = 30;
-    else if (mode === '1h') minutes = 60;
-    else if (mode === '2h') minutes = 120;
-    else if (mode === '4h') minutes = 240;
-
+    const minutesMap = { '15m': 15, '30m': 30, '60m': 60, '120m': 120 };
+    const minutes = minutesMap[mode] || 30;
     this.bgmTimerRemainingSec = minutes * 60;
     this.bgmTimerInterval = setInterval(() => {
       if (this.bgmTimerRemainingSec > 0 && this.bgmPlaying) {
@@ -195,13 +209,9 @@ class BanDoAudioEngine {
 
   playBgmOnLive() {
     this.unlock();
-    if (this.customBgmUrl && this.customBgmUrl.length > 5) {
-      try {
-        this.playCustomBgm();
-        return;
-      } catch (e) {
-        console.warn('Custom BGM playback fallback to synth:', e);
-      }
+    if (this.customBgmUrl && this.customBgmUrl.length > 10) {
+      this.playCustomBgm();
+      return;
     }
     this.startSyntheticBgm();
   }
@@ -265,7 +275,71 @@ class BanDoAudioEngine {
     }, durationMs);
   }
 
-  setCustomBgm(url, name = 'Nhạc nền Tải lên') {
+  /**
+   * Tải lên File Nhạc Nền Tùy Chỉnh (MP3, WAV, AAC, OGG, FLAC)
+   * Lưu vĩnh viễn vào IndexedDB & Tự động phát ngay lập tức
+   */
+  async uploadCustomBgmFile(file) {
+    if (!file) return null;
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const dataUrl = e.target.result;
+        const name = file.name || 'Nhạc Nền Tải Lên';
+        this.customBgmUrl = dataUrl;
+        this.customBgmName = name;
+
+        if (this.customBgmAudio) {
+          this.customBgmAudio.pause();
+          this.customBgmAudio = null;
+        }
+
+        // Save permanent
+        await saveAudioFile('bando_custom_bgm', name, dataUrl, file.type || 'audio/mp3');
+        try {
+          localStorage.setItem('bando_custom_bgm_meta', JSON.stringify({ name, hasCustom: true }));
+        } catch (err) {}
+
+        this.playCustomBgm();
+        resolve({ name, dataUrl });
+      };
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  /**
+   * Tải lên File SFX Tùy Chỉnh
+   */
+  async uploadCustomSfxFile(file) {
+    if (!file) return null;
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const dataUrl = e.target.result;
+        const name = file.name || 'SFX Tải Lên';
+        this.customSfxUrl = dataUrl;
+        this.customSfxName = name;
+
+        if (this.customSfxAudio) {
+          this.customSfxAudio.pause();
+          this.customSfxAudio = null;
+        }
+
+        await saveAudioFile('bando_custom_sfx', name, dataUrl, file.type || 'audio/mp3');
+        try {
+          localStorage.setItem('bando_custom_sfx_meta', JSON.stringify({ name, hasCustom: true }));
+        } catch (err) {}
+
+        this.playCustomSfx();
+        resolve({ name, dataUrl });
+      };
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  setCustomBgm(url, name = 'Nhạc Nền Tải Lên') {
     this.customBgmUrl = url;
     this.customBgmName = name;
     if (this.customBgmAudio) {
@@ -281,7 +355,7 @@ class BanDoAudioEngine {
     }
   }
 
-  clearCustomBgm() {
+  async clearCustomBgm() {
     this.customBgmUrl = '';
     this.customBgmName = '';
     if (this.customBgmAudio) {
@@ -290,19 +364,35 @@ class BanDoAudioEngine {
     }
     try {
       localStorage.removeItem('bando_custom_bgm_meta');
+      await deleteAudioFile('bando_custom_bgm');
     } catch (e) {}
     if (this.bgmPlaying) {
       this.startSyntheticBgm();
     }
   }
 
+  async clearCustomSfx() {
+    this.customSfxUrl = '';
+    this.customSfxName = '';
+    if (this.customSfxAudio) {
+      this.customSfxAudio.pause();
+      this.customSfxAudio = null;
+    }
+    try {
+      localStorage.removeItem('bando_custom_sfx_meta');
+      await deleteAudioFile('bando_custom_sfx');
+    } catch (e) {}
+  }
+
   playCustomBgm() {
+    this.unlock();
     if (!this.customBgmUrl) {
       this.startSyntheticBgm();
       return;
     }
     this.stopSyntheticBgm();
-    if (!this.customBgmAudio) {
+
+    if (!this.customBgmAudio || this.customBgmAudio.src !== this.customBgmUrl) {
       this.customBgmAudio = new Audio(this.customBgmUrl);
       this.customBgmAudio.loop = this.isBgmLoop;
     }
@@ -310,10 +400,10 @@ class BanDoAudioEngine {
     this.customBgmAudio.play().then(() => {
       this.bgmPlaying = true;
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('bando-bgm-status', { detail: { playing: true, name: this.customBgmName } }));
+        window.dispatchEvent(new CustomEvent('bando-bgm-status', { detail: { playing: true, name: this.customBgmName || 'Nhạc Nền Tải Lên' } }));
       }
     }).catch(e => {
-      console.warn('Custom BGM audio play error, falling back to synth BGM:', e);
+      console.warn('Custom BGM audio play catch, falling back to synth BGM:', e);
       this.startSyntheticBgm();
     });
   }
@@ -324,15 +414,19 @@ class BanDoAudioEngine {
       this.customBgmAudio.currentTime = 0;
     }
     this.bgmPlaying = false;
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('bando-bgm-status', { detail: { playing: false } }));
+    }
   }
 
   playCustomSfx() {
+    this.unlock();
     if (!this.customSfxAudio && this.customSfxUrl) {
       this.customSfxAudio = new Audio(this.customSfxUrl);
     }
     if (this.customSfxAudio) {
       this.customSfxAudio.currentTime = 0;
-      this.customSfxAudio.volume = this.sfxVolume;
+      this.customSfxAudio.volume = this.isSfxMuted ? 0 : this.sfxVolume;
       this.customSfxAudio.play().catch(() => {});
     }
   }
@@ -364,139 +458,131 @@ class BanDoAudioEngine {
     } catch (e) {}
   }
 
-  playCellPop(frequency = 587.33) {
-    this.tone(frequency, 0.09, { type: 'sine', gain: 0.45 });
-    this.tone(frequency * 1.5, 0.07, { type: 'triangle', gain: 0.35, delay: 0.015 });
-  }
-
-  playWarHorn() {
-    const notes = [293.66, 369.99, 440.00, 587.33, 739.99, 880.00];
-    notes.forEach((f, i) => {
-      this.tone(f, 0.55, { type: 'sawtooth', gain: 0.45, delay: i * 0.11 });
-      this.tone(f * 0.5, 0.65, { type: 'triangle', gain: 0.35, delay: i * 0.11 });
-    });
-  }
-
-  playWarDrums(beats = 5) {
+  noise(duration, opts = {}) {
     const ctx = this.ensureContext();
-    if (!ctx) return;
-    for (let i = 0; i < beats; i++) {
-      const delay = i * 0.12;
-      const isAccent = i === 0 || i === beats - 1;
-      this.tone(isAccent ? 120 : 85 + (i % 2) * 25, 0.22, { type: 'sine', gain: isAccent ? 0.9 : 0.7, delay, attack: 0.003 });
-      this.tone(55, 0.30, { type: 'triangle', gain: isAccent ? 0.8 : 0.6, delay, attack: 0.003 });
-    }
-  }
-
-  playFireworks() {
-    const ctx = this.ensureContext();
-    if (!ctx || this.isMuted) return;
+    if (!ctx || this.isMuted || this.isSfxMuted) return;
     try {
-      const bufferSize = ctx.sampleRate * 0.55;
+      const bufferSize = ctx.sampleRate * duration;
       const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
       const output = buffer.getChannelData(0);
       for (let i = 0; i < bufferSize; i++) {
         output[i] = Math.random() * 2 - 1;
       }
+
       const whiteNoise = ctx.createBufferSource();
       whiteNoise.buffer = buffer;
 
       const filter = ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.value = 950;
+      filter.type = opts.filterType || 'lowpass';
+      filter.frequency.value = opts.cutoff || 800;
 
       const gain = ctx.createGain();
-      const start = ctx.currentTime;
-      gain.gain.setValueAtTime(0.85 * this.sfxVolume, start);
-      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.50);
+      const start = ctx.currentTime + (opts.delay || 0);
+      const g = (opts.gain !== undefined ? opts.gain : 0.5) * this.sfxVolume;
+
+      gain.gain.setValueAtTime(g, start);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
 
       whiteNoise.connect(filter);
       filter.connect(gain);
       gain.connect(this.sfxGain || this.masterGain);
 
       whiteNoise.start(start);
-      whiteNoise.stop(start + 0.55);
-
-      [880, 1174, 1567, 2093, 2637].forEach((f, i) => {
-        this.tone(f, 0.45, { type: 'sine', gain: 0.4, delay: 0.08 + i * 0.05 });
-      });
+      whiteNoise.stop(start + duration + 0.05);
     } catch (e) {}
   }
 
-  playCrowdCheer() {
-    [440, 554, 659, 880, 1108, 1318].forEach((f, i) => {
-      this.tone(f + Math.random() * 25, 0.85, { type: 'triangle', gain: 0.3, delay: i * 0.04 });
-    });
-  }
-
-  playThunderStrike() {
-    this.tone(90, 0.65, { type: 'sawtooth', gain: 0.85 });
-    this.tone(40, 0.85, { type: 'square', gain: 0.75, delay: 0.03 });
-    this.playFireworks();
-    this.playWarHorn();
-  }
-
-  playGoldCoins(count = 7) {
-    const freqs = [1046.5, 1318.5, 1567.98, 2093.0, 2637.0];
-    for (let i = 0; i < count; i++) {
-      const f = freqs[i % freqs.length] + Math.random() * 90;
-      this.tone(f, 0.14, { type: 'sine', gain: 0.45, delay: i * 0.06 });
+  playFlagPlace(claimedCount = 1) {
+    if (this.customSfxUrl) {
+      this.playCustomSfx();
     }
+    const pitchMultiplier = Math.min(2.0, 1 + (claimedCount % 50) * 0.015);
+    this.tone(523.25 * pitchMultiplier, 0.12, { type: 'sine', gain: 0.45 });
+    this.tone(659.25 * pitchMultiplier, 0.16, { type: 'triangle', gain: 0.35, delay: 0.04 });
+    this.tone(783.99 * pitchMultiplier, 0.22, { type: 'sine', gain: 0.30, delay: 0.08 });
+    this.noise(0.08, { cutoff: 1800, gain: 0.25 });
   }
 
-  playLevelUp() {
-    const melody = [523.25, 659.25, 783.99, 1046.5, 1318.5, 1567.98];
-    melody.forEach((f, i) => {
-      this.tone(f, 0.3, { type: 'triangle', gain: 0.5, delay: i * 0.07 });
+  playBigGift(comboCount = 1) {
+    const baseFreq = 440;
+    const chords = [
+      [baseFreq, baseFreq * 1.25, baseFreq * 1.5],
+      [baseFreq * 1.125, baseFreq * 1.35, baseFreq * 1.68],
+      [baseFreq * 1.33, baseFreq * 1.66, baseFreq * 2.0]
+    ];
+    const chord = chords[Math.min(chords.length - 1, Math.floor(comboCount / 3))];
+    chord.forEach((f, idx) => {
+      this.tone(f, 0.45, { type: 'triangle', gain: 0.45, delay: idx * 0.06 });
+      this.tone(f * 2, 0.35, { type: 'sine', gain: 0.3, delay: idx * 0.06 + 0.02 });
     });
+    this.noise(0.35, { cutoff: 2200, gain: 0.4, delay: 0.05 });
   }
 
-  playGiftFanfare(tier = 'large') {
-    const notes = tier === 'huge' 
-      ? [523.25, 659.25, 783.99, 1046.5, 1318.51, 1567.98] 
-      : [440, 554.37, 659.25, 880, 1108.73];
-    notes.forEach((freq, idx) => {
-      this.tone(freq, 0.32, { type: 'sawtooth', gain: 0.35, delay: idx * 0.07 });
-      this.tone(freq, 0.35, { type: 'triangle', gain: 0.45, delay: idx * 0.07 });
-    });
-  }
-
-  playCombo(level = 2) {
-    const baseFreq = 440 + Math.min(level, 20) * 45;
-    this.tone(baseFreq, 0.15, { type: 'sawtooth', gain: 0.3 });
-    this.tone(baseFreq * 1.25, 0.18, { type: 'triangle', gain: 0.35, delay: 0.06 });
-  }
-
-  playProvinceComplete() {
-    const melody = [523.25, 659.25, 783.99, 1046.5];
-    melody.forEach((f, i) => {
-      this.tone(f, 0.3, { type: 'sine', gain: 0.5, delay: i * 0.1 });
+  playComboFanfare(combo = 5) {
+    const scale = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+    scale.forEach((f, idx) => {
+      this.tone(f, 0.25, { type: 'sine', gain: 0.4, delay: idx * 0.07 });
+      this.tone(f * 0.5, 0.25, { type: 'triangle', gain: 0.35, delay: idx * 0.07 });
     });
   }
 
   playBossAlert() {
-    this.tone(220, 0.3, { type: 'sawtooth', gain: 0.5 });
-    this.tone(196, 0.3, { type: 'sawtooth', gain: 0.5, delay: 0.15 });
-    this.tone(246.94, 0.45, { type: 'square', gain: 0.4, delay: 0.3 });
+    this.duckBgm(4000);
+    this.tone(130.81, 0.8, { type: 'sawtooth', gain: 0.7 });
+    this.tone(123.47, 0.8, { type: 'sawtooth', gain: 0.7, delay: 0.4 });
+    this.noise(0.6, { cutoff: 400, gain: 0.75, delay: 0.1 });
+    setTimeout(() => {
+      this.tone(110.00, 1.2, { type: 'sawtooth', gain: 0.8 });
+      this.noise(1.0, { cutoff: 300, gain: 0.8 });
+    }, 800);
   }
 
-  playVictoryEpic() {
-    this.ensureContext();
-    this.duckBgm(4000);
+  playWarDrums(count = 5) {
+    for (let i = 0; i < count; i++) {
+      const delay = i * 0.18;
+      const freq = 90 + (i % 2 === 0 ? 0 : 25);
+      this.tone(freq, 0.22, { type: 'sine', gain: 0.7, delay });
+      this.noise(0.18, { cutoff: 350, gain: 0.65, delay });
+    }
+  }
 
-    const fanfareMelody = [
-      { f: 523.25, d: 0.25, t: 0.00 },
-      { f: 523.25, d: 0.25, t: 0.22 },
-      { f: 523.25, d: 0.25, t: 0.44 },
-      { f: 659.25, d: 0.60, t: 0.66 },
-      { f: 783.99, d: 0.40, t: 1.15 },
-      { f: 1046.50, d: 1.20, t: 1.50 },
-      { f: 1318.51, d: 0.80, t: 1.85 },
-      { f: 1567.98, d: 1.60, t: 2.20 }
+  playFireworks() {
+    this.noise(0.15, { cutoff: 2800, gain: 0.5 });
+    setTimeout(() => {
+      this.noise(0.6, { cutoff: 1400, gain: 0.75 });
+      this.tone(880, 0.35, { type: 'sine', gain: 0.3 });
+      this.tone(1174.66, 0.4, { type: 'triangle', gain: 0.35, delay: 0.05 });
+    }, 180);
+  }
+
+  playCrowdCheer() {
+    this.noise(2.5, { cutoff: 1800, gain: 0.45 });
+    this.noise(2.2, { cutoff: 1200, gain: 0.40, delay: 0.2 });
+  }
+
+  playGoldCoins(count = 6) {
+    for (let i = 0; i < count; i++) {
+      const delay = i * 0.06;
+      const freq = 1800 + Math.random() * 600;
+      this.tone(freq, 0.09, { type: 'sine', gain: 0.35, delay });
+      this.tone(freq * 1.5, 0.08, { type: 'triangle', gain: 0.25, delay: delay + 0.02 });
+    }
+  }
+
+  playVictoryTheme() {
+    this.duckBgm(8000);
+    const melody = [
+      { f: 523.25, d: 0.3, t: 0 },
+      { f: 659.25, d: 0.3, t: 0.25 },
+      { f: 783.99, d: 0.3, t: 0.5 },
+      { f: 1046.50, d: 0.7, t: 0.75 },
+      { f: 880.00, d: 0.3, t: 1.5 },
+      { f: 1046.50, d: 1.2, t: 1.8 }
     ];
 
-    fanfareMelody.forEach(note => {
-      this.tone(note.f, note.d, { type: 'sawtooth', gain: 0.55, delay: note.t });
+    melody.forEach(note => {
+      this.tone(note.f, note.d, { type: 'sine', gain: 0.55, delay: note.t });
+      this.tone(note.f * 0.5, note.d, { type: 'sawtooth', gain: 0.3, delay: note.t });
       this.tone(note.f, note.d * 1.1, { type: 'triangle', gain: 0.45, delay: note.t });
     });
 

@@ -1,17 +1,62 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
+
+  // Support GET proxy for quick direct audio stream
+  if (req.method === 'GET') {
+    try {
+      const text = req.query.text || 'Chào bạn';
+      const lang = req.query.lang || 'vi';
+      const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(lang)}&q=${encodeURIComponent(text.slice(0, 200))}`;
+      
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Referer': 'https://translate.google.com/'
+        }
+      });
+      if (!response.ok) throw new Error(`Google TTS status: ${response.status}`);
+      const buffer = await response.arrayBuffer();
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      return res.status(200).send(Buffer.from(buffer));
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   try {
-    const { text, platform, apiKey: clientApiKey } = req.body;
+    const { text, platform, lang = 'vi', apiKey: clientApiKey } = req.body;
     if (!text) return res.status(400).json({ error: 'Missing text' });
 
     let audioBase64 = null;
 
+    // 1. FREE TTS PROXY (Google / Edge Free)
+    if (!platform || platform === 'free' || platform === 'google' || platform === 'edge') {
+      try {
+        const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(lang)}&q=${encodeURIComponent(text.slice(0, 200))}`;
+        const response = await fetch(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Referer': 'https://translate.google.com/'
+          }
+        });
+        if (response.ok) {
+          const buffer = await response.arrayBuffer();
+          audioBase64 = Buffer.from(buffer).toString('base64');
+          return res.status(200).json({ audioBase64, format: 'audio/mpeg' });
+        }
+      } catch (err) {
+        console.warn('Free TTS fetch warning:', err);
+      }
+    }
+
+    // 2. OPENAI TTS
     if (platform === 'openai_tts' || platform === 'openai') {
       const apiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY || clientApiKey;
       if (!apiKey) return res.status(503).json({ error: 'Vui lòng kiểm tra lại cấu hình OPENAI_API_KEY trên Vercel.' });
@@ -25,15 +70,15 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           model: 'tts-1',
           input: text,
-          voice: 'alloy'
+          voice: req.body.voiceId || 'alloy'
         })
       });
       
       if (!response.ok) throw new Error('OpenAI TTS Error: ' + await response.text());
-      
       const buffer = await response.arrayBuffer();
       audioBase64 = Buffer.from(buffer).toString('base64');
     } 
+    // 3. GEMINI TTS
     else if (platform === 'gemini') {
       const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || clientApiKey;
       if (!apiKey) return res.status(503).json({ error: 'Vui lòng kiểm tra lại cấu hình GEMINI_API_KEY trên Vercel.' });
@@ -45,7 +90,7 @@ export default async function handler(req, res) {
           contents: [{ role: 'user', parts: [{ text }] }],
           generationConfig: {
             responseModalities: ['AUDIO'],
-            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } }
+            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: req.body.voiceId || 'Kore' } } }
           }
         })
       });
@@ -55,11 +100,13 @@ export default async function handler(req, res) {
       audioBase64 = data?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
       if (!audioBase64) throw new Error('No audio returned from Gemini');
     } 
+    // 4. ELEVENLABS TTS
     else if (platform === 'elevenlabs') {
       const apiKey = process.env.ELEVENLABS_API_KEY || process.env.VITE_ELEVENLABS_API_KEY || clientApiKey;
       if (!apiKey) return res.status(503).json({ error: 'Vui lòng kiểm tra lại cấu hình ELEVENLABS_API_KEY trên Vercel.' });
       
-      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${req.body.voiceId}`, {
+      const voiceId = req.body.voiceId || '21m00Tcm4TlvDq8ikWAM';
+      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
         method: 'POST',
         headers: {
           'Accept': 'audio/mpeg',
@@ -76,6 +123,7 @@ export default async function handler(req, res) {
       const buffer = await response.arrayBuffer();
       audioBase64 = Buffer.from(buffer).toString('base64');
     }
+    // 5. MINIMAX TTS
     else if (platform === 'minimax') {
       const apiKey = process.env.MINIMAX_API_KEY || process.env.VITE_MINIMAX_API_KEY || clientApiKey;
       const groupId = process.env.MINIMAX_GROUP_ID || process.env.VITE_MINIMAX_GROUP_ID || req.body.groupId;
@@ -122,7 +170,20 @@ export default async function handler(req, res) {
       }
     }
     else {
-      return res.status(400).json({ error: 'Unsupported TTS platform' });
+      // Fallback to Google Free TTS
+      const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(lang)}&q=${encodeURIComponent(text.slice(0, 200))}`;
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Referer': 'https://translate.google.com/'
+        }
+      });
+      if (response.ok) {
+        const buffer = await response.arrayBuffer();
+        audioBase64 = Buffer.from(buffer).toString('base64');
+      } else {
+        return res.status(400).json({ error: 'Unsupported TTS platform' });
+      }
     }
 
     return res.status(200).json({ audioBase64 });

@@ -131,6 +131,16 @@ export default function DesktopAppUI() {
     } catch (e) {}
   }, [hiddenBuiltins]);
 
+  useEffect(() => {
+    const handleLang = (e) => {
+      if (e.detail?.language) {
+        setCurrentLangState(e.detail.language);
+      }
+    };
+    window.addEventListener('avalive_language_changed', handleLang);
+    return () => window.removeEventListener('avalive_language_changed', handleLang);
+  }, []);
+
   const { balance, deductToken, setNotifyCallback } = useToken();
   
   // Audio Player Ref

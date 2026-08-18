@@ -1325,14 +1325,10 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                     <div className="flex items-center justify-between text-xs text-emerald-300 bg-black/40 p-2.5 rounded-xl border border-emerald-500/30 font-mono">
                       <span className="truncate flex items-center gap-1.5"><FileAudio size={14} /> {uploadedBgmName}</span>
                       <button
-                        onClick={() => {
-                          bandoAudio.stopCustomBgm();
-                          bandoAudio.customBgmUrl = '';
-                          bandoAudio.customBgmAudio = null;
-                          bandoAudio.customBgmName = '';
+                        onClick={async () => {
+                          await bandoAudio.clearCustomBgm();
                           setUploadedBgmName('');
                           setIsBgmPlaying(false);
-                          localStorage.removeItem('bando_custom_bgm_meta');
                         }}
                         className="text-red-400 hover:text-red-300 ml-2"
                         title="Xóa nhạc đã tải"
@@ -1402,12 +1398,9 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                     <div className="flex items-center justify-between text-xs text-yellow-300 bg-black/40 p-2.5 rounded-xl border border-yellow-500/30 font-mono">
                       <span className="truncate flex items-center gap-1.5"><FileAudio size={14} /> {uploadedSfxName}</span>
                       <button
-                        onClick={() => {
-                          bandoAudio.customSfxUrl = '';
-                          bandoAudio.customSfxAudio = null;
-                          bandoAudio.customSfxName = '';
+                        onClick={async () => {
+                          await bandoAudio.clearCustomSfx();
                           setUploadedSfxName('');
-                          localStorage.removeItem('bando_custom_sfx_meta');
                         }}
                         className="text-red-400 hover:text-red-300 ml-2"
                         title="Xóa SFX đã tải"

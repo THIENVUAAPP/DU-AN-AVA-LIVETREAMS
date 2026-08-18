@@ -27,20 +27,20 @@ export const ELEVENLABS_VOICES = [
   // ==================== 3. GIỌNG PRO 20 QUỐC GIA ====================
   { id: 'el_us_female', name: 'Sarah 🇺🇸 (Nữ - US English Native)', provider: 'elevenlabs', voiceId: 'EXAVITQu4vr4xnSDxMaL', gender: 'Female', lang: 'en-US', recommendedFor: 'idol', desc: 'Giọng nữ bản xứ Mỹ truyền cảm chuẩn quốc tế.' },
   { id: 'el_uk_male', name: 'Arthur 🇬🇧 (Nam - UK British Gentleman)', provider: 'elevenlabs', voiceId: 'JBFqnCBsd6RMkjVDRZzb', gender: 'Male', lang: 'en-GB', recommendedFor: 'game', desc: 'Giọng nam quý ông Anh Quốc lịch lãm.' },
-  { id: 'el_cn_female', name: 'Mei-Ling 🇨🇳 (Nữ - Trung Quốc Chuẩn)', provider: 'elevenlabs', voiceId: 'piTKgcLEGmPE4e6mEKli', gender: 'Female', lang: 'zh-CN', recommendedFor: 'idol', desc: 'Giọng nữ livestream bán hàng thương mại điện tử Trung Quốc.' },
-  { id: 'el_cn_male', name: 'Zhang-Wei 🇨🇳 (Nam - Trung Quốc Caster)', provider: 'elevenlabs', voiceId: 'VR6AewLTigWG4xSOukaG', gender: 'Male', lang: 'zh-CN', recommendedFor: 'game', desc: 'Giọng nam bình luận viên võ thuật Trung Hoa.' },
-  { id: 'el_jp_female', name: 'Sakura 🇯🇵 (Nữ - Nhật Bản Anime Kawaii)', provider: 'elevenlabs', voiceId: 'jBpfuIE2acCO8z3wKNLl', gender: 'Female', lang: 'ja-JP', recommendedFor: 'idol', desc: 'Giọng nữ Nhật Bản ngọt ngào chuẩn Anime VTuber.' },
-  { id: 'el_jp_male', name: 'Kenji 🇯🇵 (Nam - Nhật Bản Samurai)', provider: 'elevenlabs', voiceId: '2EiwWnXFnvU5JabPnv8n', gender: 'Male', lang: 'ja-JP', recommendedFor: 'game', desc: 'Giọng nam Samurai dũng mãnh chuẩn điện ảnh Nhật Bản.' },
-  { id: 'el_kr_female', name: 'Min-ji 🇰🇷 (Nữ - Hàn Quốc K-Pop Idol)', provider: 'elevenlabs', voiceId: '21m00Tcm4TlvDq8ikWAM', gender: 'Female', lang: 'ko-KR', recommendedFor: 'idol', desc: 'Giọng nữ idol K-Pop thanh thoát, trẻ trung.' },
-  { id: 'el_kr_male', name: 'Hyun-woo 🇰🇷 (Nam - Hàn Quốc K-Drama)', provider: 'elevenlabs', voiceId: 'TX3LPaxmHKxFdv7VOQHJ', gender: 'Male', lang: 'ko-KR', recommendedFor: 'game', desc: 'Giọng nam MC truyền hình Hàn Quốc ấm áp.' },
-  { id: 'el_fr_female', name: 'Camille 🇫🇷 (Nữ - Pháp Paris Chic)', provider: 'elevenlabs', voiceId: 'LcfcDJNigL5wcJAoLJq7', gender: 'Female', lang: 'fr-FR', recommendedFor: 'idol', desc: 'Giọng nữ quý phái phong cách Paris lãng mạn.' },
-  { id: 'el_es_female', name: 'Lucia 🇪🇸 (Nữ - Tây Ban Nha)', provider: 'elevenlabs', voiceId: 'MF3mGyEYCl7XYWbV9V6O', gender: 'Female', lang: 'es-ES', recommendedFor: 'idol', desc: 'Giọng nữ Tây Ban Nha rực rỡ và nồng nhiệt.' },
-  { id: 'el_th_female', name: 'Premwadee 🇹🇭 (Nữ - Thái Lan)', provider: 'elevenlabs', voiceId: 'XrExE9yKIg1WjnnlVkGX', gender: 'Female', lang: 'th-TH', recommendedFor: 'idol', desc: 'Giọng nữ Thái Lan dịu dàng, trong trẻo.' },
-  { id: 'el_de_male', name: 'Hans 🇩🇪 (Nam - Đức)', provider: 'elevenlabs', voiceId: '5Q0t7uMcjvnagumLfvZi', gender: 'Male', lang: 'de-DE', recommendedFor: 'manager', desc: 'Giọng nam Đức trầm ấm, dõng dạc.' },
-  { id: 'el_ru_female', name: 'Tatiana 🇷🇺 (Nữ - Nga)', provider: 'elevenlabs', voiceId: 'pMsXgVXv3BLzUgSXRplE', gender: 'Female', lang: 'ru-RU', recommendedFor: 'idol', desc: 'Giọng nữ Nga sâu lắng, truyền cảm.' }
+  { id: 'el_cn_female', name: 'Mei-Ling 🇨🇳 (Nữ - 中文普通话)', provider: 'elevenlabs', voiceId: 'piTKgcLEGmPE4e6mEKli', gender: 'Female', lang: 'zh-CN', recommendedFor: 'idol', desc: 'Giọng nữ livestream bán hàng thương mại điện tử Trung Quốc.' },
+  { id: 'el_cn_male', name: 'Zhang-Wei 🇨🇳 (Nam - 中文普通话 Caster)', provider: 'elevenlabs', voiceId: 'VR6AewLTigWG4xSOukaG', gender: 'Male', lang: 'zh-CN', recommendedFor: 'game', desc: 'Giọng nam bình luận viên võ thuật Trung Hoa.' },
+  { id: 'el_jp_female', name: 'Sakura 🇯🇵 (Nữ - 日本語 Anime Kawaii)', provider: 'elevenlabs', voiceId: 'jBpfuIE2acCO8z3wKNLl', gender: 'Female', lang: 'ja-JP', recommendedFor: 'idol', desc: 'Giọng nữ Nhật Bản ngọt ngào chuẩn Anime VTuber.' },
+  { id: 'el_jp_male', name: 'Kenji 🇯🇵 (Nam - 日本語 Samurai)', provider: 'elevenlabs', voiceId: '2EiwWnXFnvU5JabPnv8n', gender: 'Male', lang: 'ja-JP', recommendedFor: 'game', desc: 'Giọng nam Samurai dũng mãnh chuẩn điện ảnh Nhật Bản.' },
+  { id: 'el_kr_female', name: 'Min-ji 🇰🇷 (Nữ - 한국어 K-Pop Idol)', provider: 'elevenlabs', voiceId: '21m00Tcm4TlvDq8ikWAM', gender: 'Female', lang: 'ko-KR', recommendedFor: 'idol', desc: 'Giọng nữ idol K-Pop thanh thoát, trẻ trung.' },
+  { id: 'el_kr_male', name: 'Hyun-woo 🇰🇷 (Nam - 한국어 K-Drama)', provider: 'elevenlabs', voiceId: 'TX3LPaxmHKxFdv7VOQHJ', gender: 'Male', lang: 'ko-KR', recommendedFor: 'game', desc: 'Giọng nam MC truyền hình Hàn Quốc ấm áp.' },
+  { id: 'el_fr_female', name: 'Camille 🇫🇷 (Nữ - Français Paris Chic)', provider: 'elevenlabs', voiceId: 'LcfcDJNigL5wcJAoLJq7', gender: 'Female', lang: 'fr-FR', recommendedFor: 'idol', desc: 'Giọng nữ quý phái phong cách Paris lãng mạn.' },
+  { id: 'el_es_female', name: 'Lucia 🇪🇸 (Nữ - Español)', provider: 'elevenlabs', voiceId: 'MF3mGyEYCl7XYWbV9V6O', gender: 'Female', lang: 'es-ES', recommendedFor: 'idol', desc: 'Giọng nữ Tây Ban Nha rực rỡ và nồng nhiệt.' },
+  { id: 'el_th_female', name: 'Premwadee 🇹🇭 (Nữ - ภาษาไทย)', provider: 'elevenlabs', voiceId: 'XrExE9yKIg1WjnnlVkGX', gender: 'Female', lang: 'th-TH', recommendedFor: 'idol', desc: 'Giọng nữ Thái Lan dịu dàng, trong trẻo.' },
+  { id: 'el_de_male', name: 'Hans 🇩🇪 (Nam - Deutsch)', provider: 'elevenlabs', voiceId: '5Q0t7uMcjvnagumLfvZi', gender: 'Male', lang: 'de-DE', recommendedFor: 'manager', desc: 'Giọng nam Đức trầm ấm, dõng dạc.' },
+  { id: 'el_ru_female', name: 'Tatiana 🇷🇺 (Nữ - Русский)', provider: 'elevenlabs', voiceId: 'pMsXgVXv3BLzUgSXRplE', gender: 'Female', lang: 'ru-RU', recommendedFor: 'idol', desc: 'Giọng nữ Nga sâu lắng, truyền cảm.' }
 ].map(v => ({ ...v, tier: 'pro', icon: '💎', badge: '💎 Pro' }));
 
-// ==================== 4. DANH SÁCH GIỌNG ĐỌC MIỄN PHÍ 20 QUỐC GIA (FREE CLOUD & SYSTEM TTS) ====================
+// ==================== 4. DANH SÁCH GIỌNG ĐỌC MIỄN PHÍ 20 QUỐC GIA ====================
 export const FREE_VOICES = [
   // Việt Nam 🇻🇳
   { id: 'free_vi_female', name: 'Hoài My 🇻🇳 (Nữ - Tiếng Việt Chuẩn)', provider: 'system', tier: 'free', icon: '🇻🇳', badge: '🆓 Miễn Phí', gender: 'Female', lang: 'vi-VN', recommendedFor: 'idol', desc: 'Giọng nữ chuẩn tiếng Việt truyền cảm, phát âm mượt mà, miễn phí 100%.' },
@@ -138,104 +138,103 @@ export const DEFAULT_VOICE_CONFIG = {
     rate: 1.05,
     volume: 1.0
   },
-  gameVoice: {
+  gameBlvVoice: {
     id: 'free_vi_male',
     name: 'Nam Minh 🇻🇳 (Nam - Tiếng Việt Hào Sảng)',
     provider: 'system',
     tier: 'free',
     gender: 'Male',
     role: 'game',
-    pitch: 1.05,
-    rate: 1.15,
+    pitch: 1.0,
+    rate: 1.1,
     volume: 1.0
-  }
+  },
+  generalVoice: {
+    id: 'free_vi_female',
+    name: 'Hoài My 🇻🇳 (Nữ - Tiếng Việt Chuẩn)',
+    provider: 'system',
+    tier: 'free',
+    gender: 'Female',
+    role: 'both',
+    pitch: 1.0,
+    rate: 1.0,
+    volume: 1.0
+  },
+  selectedLanguage: 'vi',
+  elevenLabsApiKey: '',
+  openaiApiKey: '',
+  geminiApiKey: ''
 };
 
-const STORAGE_KEY = 'aidol_unified_voice_config';
-
-export function getVoiceSyncConfig() {
+// ==================== STORAGE & CONFIG HELPERS ====================
+export function getSavedVoiceConfig() {
   if (typeof window === 'undefined') return DEFAULT_VOICE_CONFIG;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULT_VOICE_CONFIG;
-    const parsed = JSON.parse(raw);
-    return {
-      idolVoice: { ...DEFAULT_VOICE_CONFIG.idolVoice, ...(parsed.idolVoice || {}) },
-      managerVoice: { ...DEFAULT_VOICE_CONFIG.managerVoice, ...(parsed.managerVoice || {}) },
-      gameVoice: { ...DEFAULT_VOICE_CONFIG.gameVoice, ...(parsed.gameVoice || {}) }
-    };
-  } catch {
-    return DEFAULT_VOICE_CONFIG;
+    const saved = localStorage.getItem('ava_live_voice_config_v2');
+    if (saved) {
+      return { ...DEFAULT_VOICE_CONFIG, ...JSON.parse(saved) };
+    }
+  } catch (e) {
+    console.warn('Lỗi đọc voice config:', e);
   }
+  return DEFAULT_VOICE_CONFIG;
 }
 
-export function saveVoiceSyncConfig(config) {
+export function saveVoiceConfig(config) {
   if (typeof window === 'undefined') return;
   try {
-    const current = getVoiceSyncConfig();
-    const updated = {
-      idolVoice: { ...current.idolVoice, ...(config.idolVoice || {}) },
-      managerVoice: { ...current.managerVoice, ...(config.managerVoice || {}) },
-      gameVoice: { ...current.gameVoice, ...(config.gameVoice || {}) }
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-
-    try {
-      const gsStr = localStorage.getItem('aidol_general_settings');
-      const gs = gsStr ? JSON.parse(gsStr) : {};
-      gs.mainVoiceId = updated.idolVoice.id;
-      gs.assistantVoiceId = updated.managerVoice.id;
-      gs.gameVoiceId = updated.gameVoice.id;
-      localStorage.setItem('aidol_general_settings', JSON.stringify(gs));
-    } catch {}
-
-    window.dispatchEvent(new CustomEvent('aidol_voice_sync_updated', { detail: updated }));
-    return updated;
-  } catch (err) {
-    console.error('Lỗi lưu cấu hình Voice:', err);
-  }
-}
-
-export const getDualVoiceConfig = getVoiceSyncConfig;
-export const saveDualVoiceConfig = saveVoiceSyncConfig;
-
-let activePreviewAudio = null;
-let activeUtterance = null;
-
-export function stopVoiceAudio() {
-  if (typeof window === 'undefined') return;
-  if (activePreviewAudio) {
-    try {
-      activePreviewAudio.pause();
-      activePreviewAudio.currentTime = 0;
-    } catch {}
-    activePreviewAudio = null;
-  }
-  if (typeof window.speechSynthesis !== 'undefined') {
-    try {
-      window.speechSynthesis.cancel();
-    } catch {}
-    activeUtterance = null;
+    localStorage.setItem('ava_live_voice_config_v2', JSON.stringify(config));
+    window.dispatchEvent(new CustomEvent('ava_voice_config_updated', { detail: config }));
+  } catch (e) {
+    console.warn('Lỗi lưu voice config:', e);
   }
 }
 
 export function getElevenLabsApiKey() {
-  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ELEVENLABS_API_KEY) {
-    return import.meta.env.VITE_ELEVENLABS_API_KEY.trim();
+  if (typeof window === 'undefined') return '';
+  const config = getSavedVoiceConfig();
+  if (config.elevenLabsApiKey) return config.elevenLabsApiKey;
+  return localStorage.getItem('elevenlabs_api_key') || localStorage.getItem('VITE_ELEVENLABS_API_KEY') || '';
+}
+
+// Global active audio & utterance references
+let activePreviewAudio = null;
+let activeUtterance = null;
+let preloadedVoices = [];
+
+// Pre-load Web Speech API voices on first opportunity
+if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+  const loadVoices = () => {
+    preloadedVoices = window.speechSynthesis.getVoices() || [];
+  };
+  loadVoices();
+  if (window.speechSynthesis.onvoiceschanged !== undefined) {
+    window.speechSynthesis.onvoiceschanged = loadVoices;
   }
-  if (typeof process !== 'undefined' && process.env?.VITE_ELEVENLABS_API_KEY) {
-    return process.env.VITE_ELEVENLABS_API_KEY.trim();
+}
+
+export function stopVoiceAudio() {
+  if (activePreviewAudio) {
+    try {
+      activePreviewAudio.pause();
+      activePreviewAudio.currentTime = 0;
+    } catch (e) {}
+    activePreviewAudio = null;
   }
-  if (typeof localStorage !== 'undefined') {
-    const local = localStorage.getItem('elevenlabs_api_key') || localStorage.getItem('ELEVENLABS_API_KEY') || localStorage.getItem('elevenlabsApiKey');
-    if (local && local.trim()) return local.trim();
+  if (typeof window !== 'undefined' && window.speechSynthesis) {
+    try {
+      window.speechSynthesis.cancel();
+    } catch (e) {}
   }
-  return '';
+  activeUtterance = null;
 }
 
 /**
- * Phát giọng nói mẫu thử nghiệm (Preview TTS & Live Speech)
- * Đảm bảo 100% tất cả giọng Free & Paid đều phát ra âm thanh tự nhiên ngay lập tức
+ * Phát Voice AI Âm Thanh Cho Mọi Mục Đích (Preview, Idol nói, Game BLV, Trợ lý)
+ * Zero-Fail Multi-Tier Engine:
+ * 1. ElevenLabs Direct / Serverless API Proxy
+ * 2. Serverless Free TTS Proxy (/api/tts)
+ * 3. Client Web Speech API (Đã tối ưu Pitch/Rate + Auto-Resume)
  */
 export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) {
   if (typeof window === 'undefined') {
@@ -245,7 +244,27 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
 
   stopVoiceAudio();
 
-  const rawLang = voice?.lang || (voice?.id?.includes('_us_') || voice?.id?.includes('_en_') ? 'en-US' : voice?.id?.includes('_zh_') ? 'zh-CN' : voice?.id?.includes('_ja_') ? 'ja-JP' : voice?.id?.includes('_ko_') ? 'ko-KR' : voice?.id?.includes('_fr_') ? 'fr-FR' : voice?.id?.includes('_es_') ? 'es-ES' : voice?.id?.includes('_th_') ? 'th-TH' : voice?.id?.includes('_pt_') ? 'pt-BR' : voice?.id?.includes('_de_') ? 'de-DE' : voice?.id?.includes('_it_') ? 'it-IT' : voice?.id?.includes('_ru_') ? 'ru-RU' : voice?.id?.includes('_ar_') ? 'ar-SA' : voice?.id?.includes('_id_') ? 'id-ID' : voice?.id?.includes('_hi_') ? 'hi-IN' : voice?.id?.includes('_tr_') ? 'tr-TR' : voice?.id?.includes('_pl_') ? 'pl-PL' : voice?.id?.includes('_nl_') ? 'nl-NL' : voice?.id?.includes('_tl_') ? 'tl-PH' : voice?.id?.includes('_ms_') ? 'ms-MY' : 'vi-VN');
+  const rawLang = voice?.lang || (
+    voice?.id?.includes('_us_') || voice?.id?.includes('_en_') ? 'en-US' :
+    voice?.id?.includes('_zh_') ? 'zh-CN' :
+    voice?.id?.includes('_ja_') ? 'ja-JP' :
+    voice?.id?.includes('_ko_') ? 'ko-KR' :
+    voice?.id?.includes('_fr_') ? 'fr-FR' :
+    voice?.id?.includes('_es_') ? 'es-ES' :
+    voice?.id?.includes('_th_') ? 'th-TH' :
+    voice?.id?.includes('_pt_') ? 'pt-BR' :
+    voice?.id?.includes('_de_') ? 'de-DE' :
+    voice?.id?.includes('_it_') ? 'it-IT' :
+    voice?.id?.includes('_ru_') ? 'ru-RU' :
+    voice?.id?.includes('_ar_') ? 'ar-SA' :
+    voice?.id?.includes('_id_') ? 'id-ID' :
+    voice?.id?.includes('_hi_') ? 'hi-IN' :
+    voice?.id?.includes('_tr_') ? 'tr-TR' :
+    voice?.id?.includes('_pl_') ? 'pl-PL' :
+    voice?.id?.includes('_nl_') ? 'nl-NL' :
+    voice?.id?.includes('_tl_') ? 'tl-PH' :
+    voice?.id?.includes('_ms_') ? 'ms-MY' : 'vi-VN'
+  );
   const langCode = rawLang || 'vi-VN';
   const shortLang = langCode.split('-')[0].toLowerCase() || 'vi';
 
@@ -276,7 +295,7 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
   const apiKey = getElevenLabsApiKey();
   const voiceId = voice?.voiceId || '21m00Tcm4TlvDq8ikWAM';
 
-  // 1. NẾU CÓ ELEVENLABS API KEY & LÀ GIỌNG PRO: Phát qua ElevenLabs API
+  // Tier 1: ElevenLabs API Direct
   if (voice?.provider === 'elevenlabs' && apiKey && apiKey.length > 10) {
     try {
       const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
@@ -317,52 +336,56 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
         return;
       }
     } catch (e) {
-      console.warn('ElevenLabs API direct fetch error, falling back to natural voice audio:', e);
+      console.warn('ElevenLabs API direct fetch error, falling back to Serverless TTS Proxy:', e);
     }
   }
 
-  // 2. TỔNG HỢP GIỌNG ĐỌC CLOUD TTS TỰ NHIÊN (100% Phát tiếng người thật)
-  const tryGoogleTts = () => {
-    return new Promise((resolve) => {
-      try {
-        const encodedText = encodeURIComponent(textToSpeak.slice(0, 200));
-        const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${shortLang}&q=${encodedText}`;
-        const audio = new Audio(audioUrl);
-        activePreviewAudio = audio;
-        
-        let resolved = false;
-        const done = (success) => {
-          if (resolved) return;
-          resolved = true;
-          activePreviewAudio = null;
-          if (onEnd) onEnd();
-          resolve(success);
-        };
+  // Tier 2: Serverless TTS Proxy (/api/tts)
+  const tryServerlessTts = async () => {
+    try {
+      const platform = voice?.provider === 'elevenlabs' ? 'elevenlabs' : 'free';
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: textToSpeak,
+          platform,
+          lang: shortLang,
+          voiceId: voice?.voiceId
+        })
+      });
 
-        audio.onended = () => done(true);
-        audio.onerror = () => done(false);
-
-        audio.volume = 1.0;
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-          playPromise.then(() => {
-            // Playing successfully
-          }).catch((err) => {
-            console.warn('Audio play catch, trying web speech:', err);
-            done(false);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.audioBase64) {
+          const audioSrc = `data:audio/mp3;base64,${data.audioBase64}`;
+          const audio = new Audio(audioSrc);
+          activePreviewAudio = audio;
+          return new Promise((resolve) => {
+            let done = false;
+            const finish = (ok) => {
+              if (done) return;
+              done = true;
+              activePreviewAudio = null;
+              if (onEnd) onEnd();
+              resolve(ok);
+            };
+            audio.onended = () => finish(true);
+            audio.onerror = () => finish(false);
+            audio.play().catch(() => finish(false));
           });
         }
-      } catch (err) {
-        console.warn('Google TTS instantiate error:', err);
-        resolve(false);
       }
-    });
+    } catch (err) {
+      console.warn('Serverless TTS proxy warning:', err);
+    }
+    return false;
   };
 
-  // 3. TỔNG HỢP GIỌNG ĐỌC WEB SPEECH API
+  // Tier 3: Client Web Speech API (Đảm bảo 100% chạy trên mọi thiết bị offline/online)
   const tryWebSpeech = () => {
     return new Promise((resolve) => {
-      if (typeof window === 'undefined' || typeof window.speechSynthesis === 'undefined') {
+      if (typeof window === 'undefined' || !window.speechSynthesis) {
         if (onEnd) onEnd();
         return resolve(false);
       }
@@ -378,8 +401,8 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
         utterance.lang = langCode;
 
         const isFemale = voice?.gender === 'Female' || voice?.gender === 'Nữ';
-        utterance.rate = isFemale ? 1.02 : 1.05;
-        utterance.pitch = isFemale ? 1.15 : 0.85;
+        utterance.rate = isFemale ? 1.02 : 1.08;
+        utterance.pitch = isFemale ? 1.15 : 0.82;
         utterance.volume = 1.0;
 
         let hasEnded = false;
@@ -394,10 +417,10 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
         utterance.onend = () => finish(true);
         utterance.onerror = () => finish(false);
 
-        // Safety watchdog: nếu Web Speech bị treo hoặc im lặng quá 6 giây, giải phóng
-        setTimeout(() => finish(true), 6000);
+        // Safety watchdog: giải phóng nếu bị đơ
+        setTimeout(() => finish(true), 7000);
 
-        const voices = window.speechSynthesis.getVoices() || [];
+        const voices = preloadedVoices.length > 0 ? preloadedVoices : window.speechSynthesis.getVoices() || [];
         if (voices.length > 0) {
           const matched = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(shortLang));
           if (matched) utterance.voice = matched;
@@ -412,9 +435,29 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
     });
   };
 
-  // Thử Google TTS trước (100% tự nhiên không cần cài gói giọng OS), nếu thất bại chuyển sang Web Speech
-  const cloudSuccess = await tryGoogleTts();
-  if (!cloudSuccess) {
+  // Run Serverless TTS first, then fallback to Web Speech
+  const serverlessOk = await tryServerlessTts();
+  if (!serverlessOk) {
     await tryWebSpeech();
   }
 }
+
+export const speakVoiceAudio = previewVoiceAudio;
+export const getDualVoiceConfig = getSavedVoiceConfig;
+export const saveDualVoiceConfig = saveVoiceConfig;
+
+export default {
+  ELEVENLABS_VOICES,
+  FREE_VOICES,
+  ALL_SYSTEM_VOICES,
+  CURATED_VOICES,
+  DEFAULT_VOICE_CONFIG,
+  getSavedVoiceConfig,
+  saveVoiceConfig,
+  getDualVoiceConfig,
+  saveDualVoiceConfig,
+  getElevenLabsApiKey,
+  stopVoiceAudio,
+  previewVoiceAudio,
+  speakVoiceAudio
+};

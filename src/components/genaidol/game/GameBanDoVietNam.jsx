@@ -1584,45 +1584,79 @@ export default function GameBanDoVietNam({
     }
   }, [gameState.claimedCount, gameState.cellsById, gameState.lastFocalTarget, gameState.status, gameState.settings, gameState.selectedCountry, gameState.bannerCells, gameState.bannerClaimedCount, gameState.showBannerCells, gameState.bannerPos, gameState.bannerClaimedColor, gameState.bannerUnclaimedColor, gameState.bannerVoxelScale, viewMode3D, gameState.maskLoaded, isAutoTesting, isAuto247]);
 
-  // Smart Camera Director: Cứ cách 10-12 giây khi rảnh thì zoom cận vùng đất chứa cờ, sau đó hồi lại tổng quan
-  // CHỈ HOẠT ĐỘNG KHI CHẠY DEMO, AUTO 24/7 HOẶC LIVE THỰC TẾ (Không làm gián đoạn Admin khi soi map)
+  // Smart Camera Director: Luân phiên góc nhìn khi ở chế độ chờ (Chưa có người dùng tặng quà):
+  // 1. Zoom gần cận khu vực lá cờ quốc kỳ (10-15s)
+  // 2. Zoom toàn cảnh bản đồ tổng thể (5-10s)
+  // 3. Luân phiên liên tục. Khi có quà tặng mới -> Ngay lập tức Zoom cận cảnh 4s -> Zoom khu vực 6s -> Tiếp tục luân phiên
   useEffect(() => {
     if (!viewMode3D || isPopout) return;
+    let standbyMode = 'flag_closeup'; // 'flag_closeup' hoặc 'overview'
     let nextClusterIdx = 0;
+
     const clusterPresets = [
-      { name: 'Thủ Đô Hà Nội & Vùng Núi Phía Bắc', pos: [-49, 85, -60], target: [-49.2, 0, -123.0] },
-      { name: 'Đà Nẵng & Dải Đất Miền Trung', pos: [12, 90, 30], target: [-4.7, 0, 4.5] },
-      { name: 'TP. Hồ Chí Minh & Vùng Đất Nam Bộ', pos: [-45, 90, 145], target: [-54.7, 0, 102.5] },
-      { name: 'Biển Đảo Hoàng Sa & Trường Sa', pos: [78, 95, 65], target: [58, 0, 45] }
+      { name: 'Thủ Đô Hà Nội & Vùng Phía Bắc', pos: [-49, 45, -75], target: [-49.2, 0, -123.0] },
+      { name: 'Đà Nẵng & Dải Đất Miền Trung', pos: [12, 50, 15], target: [-4.7, 0, 4.5] },
+      { name: 'TP. Hồ Chí Minh & Nam Bộ', pos: [-35, 50, 135], target: [-40.0, 0, 115.0] },
+      { name: 'Hải Đảo Hoàng Sa & Trường Sa', pos: [70, 55, 45], target: [65.6, 0, -34.4] }
     ];
 
     const directorInterval = setInterval(() => {
-      // Chỉ chạy khi đang phát live, chạy demo hoặc auto 24/7
-      const isRunning = isAutoTesting || isAuto247 || (bandoEngine.state && bandoEngine.state.isLiveRunning);
-      if (!isRunning) return;
-
       const state = threeStateRef.current;
       if (!state.camera || !state.controls || state.tween) return;
       if (autoRotateRef.current) return;
 
-      const cluster = clusterPresets[nextClusterIdx % clusterPresets.length];
-      nextClusterIdx++;
+      const presets = getCameraPresetsForCountry();
+      const overviewPreset = presets.overview || { pos: [0, 240, 260], target: [0, 0, 10] };
 
-      state.tween = {
-        from: state.camera.position.clone(),
-        to: new THREE.Vector3(...cluster.pos),
-        fromTarget: state.controls.target.clone(),
-        toTarget: new THREE.Vector3(...cluster.target),
-        start: performance.now(),
-        duration: 1100,
-        phase: 'in',
-        holdDuration: 5500,
-        holdUntil: 0
-      };
-    }, 12000);
+      if (standbyMode === 'flag_closeup') {
+        // Giai đoạn chờ 1: Zoom Gần Cận Khu Vực Cờ Quốc Kỳ (Giữ 12s)
+        let targetPos = null;
+        let targetLook = null;
+
+        if (gameState.lastFocalTarget && gameState.lastFocalTarget.wx !== undefined) {
+          const ft = gameState.lastFocalTarget;
+          targetPos = [ft.wx, 35, ft.wz + 30];
+          targetLook = [ft.wx, 0, ft.wz];
+        } else {
+          const cluster = clusterPresets[nextClusterIdx % clusterPresets.length];
+          nextClusterIdx++;
+          targetPos = cluster.pos;
+          targetLook = cluster.target;
+        }
+
+        state.tween = {
+          from: state.camera.position.clone(),
+          to: new THREE.Vector3(...targetPos),
+          fromTarget: state.controls.target.clone(),
+          toTarget: new THREE.Vector3(...targetLook),
+          start: performance.now(),
+          duration: 1200,
+          phase: 'in',
+          holdDuration: 12000, // 12 giây cận cảnh cờ (theo yêu cầu 10-15s)
+          holdUntil: 0
+        };
+
+        standbyMode = 'overview';
+      } else {
+        // Giai đoạn chờ 2: Zoom Toàn Cảnh Bản Đồ (Giữ 7s)
+        state.tween = {
+          from: state.camera.position.clone(),
+          to: new THREE.Vector3(...overviewPreset.pos),
+          fromTarget: state.controls.target.clone(),
+          toTarget: new THREE.Vector3(...overviewPreset.target),
+          start: performance.now(),
+          duration: 1300,
+          phase: 'in',
+          holdDuration: 7000, // 7 giây toàn cảnh (theo yêu cầu 5-10s)
+          holdUntil: 0
+        };
+
+        standbyMode = 'flag_closeup';
+      }
+    }, 9000);
 
     return () => clearInterval(directorInterval);
-  }, [viewMode3D, isPopout, isAutoTesting, isAuto247]);
+  }, [viewMode3D, isPopout, gameState.lastFocalTarget, getCameraPresetsForCountry]);
 
   // ============================================================
   // 2D CANVAS FALLBACK RENDERER WITH PAN & ZOOM
