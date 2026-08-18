@@ -266,6 +266,7 @@ class BanDoGameEngine {
       victory: null,
       feed: [],
       lastFocalTarget: null, // { wx, wz, username, giftName, count }
+      activeFlagPoles: [], // Array<{ id, wx, wz, username, avatar, giftName, giftIcon, count, claimedAt }>
       isDemoMode: savedCustomConfig.isDemoMode !== undefined ? savedCustomConfig.isDemoMode : true,
       cameraPreset: 'overview',
       selectedCountry: initialCountryKey,
@@ -1016,18 +1017,39 @@ class BanDoGameEngine {
     // Add Live Feed Item
     this.addFeedItem('GIFT', `${user.username} đã gửi [${giftDef.icon} ${giftDef.name} x${count}] → Cắm +${toClaim.length} Ô Cờ!`);
 
-    // Camera Focal Target
+    // Camera Focal Target & Persistent 3D Flag Poles for ALL Donors
     if (lastCell) {
+      const wx = (lastCell.x - (this.maskData.gridCols || 300) / 2) * 1.0;
+      const wz = (lastCell.y - (this.maskData.gridRows || 389) / 2) * 1.0;
       this.state.lastFocalTarget = {
         x: lastCell.x,
         y: lastCell.y,
-        wx: (lastCell.x - (this.maskData.gridCols || 300) / 2) * 1.0,
-        wz: (lastCell.y - (this.maskData.gridRows || 389) / 2) * 1.0,
+        wx,
+        wz,
         username: user.username,
         giftName: giftDef.name,
         count: toClaim.length,
         seq: now,
       };
+
+      // Thêm Cột Cờ 3D cho người tặng vào bản đồ (Lưu giữ đầy đủ tất cả lá cờ của người xem)
+      if (!this.state.activeFlagPoles) this.state.activeFlagPoles = [];
+      const newPole = {
+        id: `pole_${now}_${Math.random().toString(36).substr(2, 5)}`,
+        wx,
+        wz,
+        userId: user.id || '',
+        username: user.username,
+        avatar: user.avatar || '',
+        giftName: giftDef.name,
+        giftIcon: giftDef.icon,
+        count: toClaim.length,
+        claimedAt: now,
+      };
+      this.state.activeFlagPoles.push(newPole);
+      if (this.state.activeFlagPoles.length > 100) {
+        this.state.activeFlagPoles.shift();
+      }
     }
 
     // Check victory condition
@@ -1227,6 +1249,8 @@ class BanDoGameEngine {
     this.state.victory = null;
     this.state.victoryCountdown = 0;
     this.state.leaderboard = [];
+    this.state.activeFlagPoles = [];
+    this.state.lastFocalTarget = null;
     this.state.combo = { userId: null, username: null, count: 0, level: 1, multiplier: 1, active: false, expiresAt: 0 };
     this.state.boss.active = false;
     this.state.activeMission = null;

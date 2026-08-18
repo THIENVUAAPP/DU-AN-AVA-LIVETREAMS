@@ -120,6 +120,41 @@ function createCountryFlagTexture(countryCode = 'vietnam') {
   return texture;
 }
 
+// Cache và tạo Badge Sprite 3D hiển thị Tên ID & Quà tặng của từng người xem cắm cờ
+const donorBadgeTextureCache = new Map();
+function getOrCreateDonorBadgeTexture(username, giftText) {
+  const cacheKey = `${username || ''}_${giftText || ''}`;
+  if (donorBadgeTextureCache.has(cacheKey)) {
+    return donorBadgeTextureCache.get(cacheKey);
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = 640;
+  canvas.height = 200;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+  if (ctx.roundRect) {
+    ctx.roundRect(12, 12, 616, 176, 24);
+    ctx.fill();
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 8;
+    ctx.roundRect(12, 12, 616, 176, 24);
+    ctx.stroke();
+  } else {
+    ctx.fillRect(12, 12, 616, 176);
+  }
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 44px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(`👑 ${username || 'Chiến Binh Áo Đỏ'}`, 320, 78);
+  ctx.fillStyle = '#fbbf24';
+  ctx.font = 'bold 34px sans-serif';
+  ctx.fillText(giftText || '🇻🇳 Cắm Cờ Tổ Quốc', 320, 145);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  donorBadgeTextureCache.set(cacheKey, texture);
+  return texture;
+}
+
 // Function tạo Texture Vùng Đất / Khối Nền Lãnh Thổ CHƯA CẮM CỜ (Tối hoặc sáng dịu, ZERO cờ đỏ/ngôi sao, chuẩn địa hình 3D cao cấp)
 function createTerrainTexture(isLightTheme = false) {
   const canvas = document.createElement('canvas');
@@ -993,36 +1028,25 @@ export default function GameBanDoVietNam({
       if (bannerMesh.instanceColor) bannerMesh.instanceColor.needsUpdate = true;
     }
 
-    // 3. 3D Focal Flag Marker Group (Cột cờ 3D mạ vàng đại lễ + Lá cờ quốc kỳ tung bay siêu sắc nét rực rỡ + Bảng ID người tặng)
-    const focalGroup = new THREE.Group();
-    focalGroup.visible = false;
-    scene.add(focalGroup);
-    state.focalGroup = focalGroup;
+    // 3. Multi-Flag 3D System (Hiển thị TẤT CẢ các Cột cờ 3D mạ vàng + Lá cờ quốc kỳ tung bay + Bảng tên người xem cắm cờ)
+    const multiFlagGroup = new THREE.Group();
+    scene.add(multiFlagGroup);
+    state.multiFlagGroup = multiFlagGroup;
+    state.poleMeshMap = new Map();
 
-    // Cán cờ vàng kim hoàng gia cao 7.2m
-    const poleGeo = new THREE.CylinderGeometry(0.12, 0.12, 7.2, 16);
+    const poleGeo = new THREE.CylinderGeometry(0.12, 0.12, 7.2, 14);
     const poleMat = new THREE.MeshStandardMaterial({
       color: 0xffd700,
       metalness: 0.90,
       roughness: 0.15
     });
-    const poleMesh = new THREE.Mesh(poleGeo, poleMat);
-    poleMesh.position.set(0, 3.6, 0);
-    focalGroup.add(poleMesh);
-
-    // Đỉnh chóp quả cầu vàng sắc nét
-    const sphereGeo = new THREE.SphereGeometry(0.28, 16, 16);
+    const sphereGeo = new THREE.SphereGeometry(0.28, 14, 14);
     const sphereMat = new THREE.MeshStandardMaterial({
       color: 0xffea00,
       metalness: 0.8,
       roughness: 0.1
     });
-    const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
-    sphereMesh.position.set(0, 7.2, 0);
-    focalGroup.add(sphereMesh);
-
-    // Lá cờ quốc kỳ 3D vẫy sóng siêu to & sắc nét chuẩn màu đỏ tươi & sao vàng (Kích thước 4.2m x 2.7m)
-    const flagGeo = new THREE.PlaneGeometry(4.2, 2.7, 24, 16);
+    const flagGeo = new THREE.PlaneGeometry(4.2, 2.7, 20, 14);
     const flagPlaneMat = new THREE.MeshStandardMaterial({
       map: flagTexture,
       side: THREE.DoubleSide,
@@ -1031,43 +1055,35 @@ export default function GameBanDoVietNam({
       emissive: new THREE.Color(0x350505),
       emissiveIntensity: 0.35,
     });
-    const flagPlaneMesh = new THREE.Mesh(flagGeo, flagPlaneMat);
-    flagPlaneMesh.position.set(2.1, 5.4, 0);
-    focalGroup.add(flagPlaneMesh);
-    state.flagPlaneMesh = flagPlaneMesh;
+    state.sharedPoleAssets = { poleGeo, poleMat, sphereGeo, sphereMat, flagGeo, flagPlaneMat };
 
-    // Bảng tên ID Người Tặng & Quà 3D trên đỉnh cột cờ (Kích thước 640x200 sắc nét)
-    const initialBadgeCanvas = document.createElement('canvas');
-    initialBadgeCanvas.width = 640;
-    initialBadgeCanvas.height = 200;
-    const bCtx = initialBadgeCanvas.getContext('2d');
-    bCtx.fillStyle = 'rgba(15, 23, 42, 0.95)';
-    if (bCtx.roundRect) {
-      bCtx.roundRect(12, 12, 616, 176, 24);
-      bCtx.fill();
-      bCtx.strokeStyle = '#f59e0b';
-      bCtx.lineWidth = 8;
-      bCtx.roundRect(12, 12, 616, 176, 24);
-      bCtx.stroke();
-    } else {
-      bCtx.fillRect(12, 12, 616, 176);
-    }
-    bCtx.fillStyle = '#ffffff';
-    bCtx.font = 'bold 44px sans-serif';
-    bCtx.textAlign = 'center';
-    bCtx.fillText('👑 Chiến Binh Áo Đỏ', 320, 78);
-    bCtx.fillStyle = '#fbbf24';
-    bCtx.font = 'bold 34px sans-serif';
-    bCtx.fillText('🇻🇳 Cắm Cờ Tổ Quốc', 320, 145);
+    // 4. 3D Focal Flag Marker Group (Cột cờ tiêu điểm zoom cận cảnh tức thì cho người tặng mới nhất)
+    const focalGroup = new THREE.Group();
+    focalGroup.visible = false;
+    scene.add(focalGroup);
+    state.focalGroup = focalGroup;
 
-    const badgeTexture = new THREE.CanvasTexture(initialBadgeCanvas);
-    const badgeMat = new THREE.SpriteMaterial({ map: badgeTexture, depthTest: false });
+    const focalPoleMesh = new THREE.Mesh(poleGeo, poleMat);
+    focalPoleMesh.position.set(0, 3.6, 0);
+    focalGroup.add(focalPoleMesh);
+
+    const focalSphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
+    focalSphereMesh.position.set(0, 7.2, 0);
+    focalGroup.add(focalSphereMesh);
+
+    const focalFlagPlaneMesh = new THREE.Mesh(flagGeo, flagPlaneMat);
+    focalFlagPlaneMesh.position.set(2.1, 5.4, 0);
+    focalGroup.add(focalFlagPlaneMesh);
+    state.flagPlaneMesh = focalFlagPlaneMesh;
+
+    const initialBadgeTex = getOrCreateDonorBadgeTexture('Chiến Binh Áo Đỏ', '🇻🇳 Cắm Cờ Tổ Quốc');
+    const badgeMat = new THREE.SpriteMaterial({ map: initialBadgeTex, depthTest: false });
     const badgeSprite = new THREE.Sprite(badgeMat);
     badgeSprite.position.set(2.1, 8.2, 0);
     badgeSprite.scale.set(5.8, 1.8, 1.0);
     focalGroup.add(badgeSprite);
     state.badgeSprite = badgeSprite;
-    state.badgeTexture = badgeTexture;
+    state.badgeTexture = initialBadgeTex;
 
     // Positioning
     const cols = maskData?.gridCols || 300;
@@ -1239,7 +1255,17 @@ export default function GameBanDoVietNam({
         }
       }
 
-      // Hoạt họa Lá cờ Quốc kỳ 3D vẫy sóng nhẹ nhàng
+      // Hoạt họa Lá cờ Quốc kỳ 3D vẫy sóng nhẹ nhàng cho TẤT CẢ các cột cờ người xem trên bản đồ
+      if (state.multiFlagGroup && state.multiFlagGroup.children.length > 0) {
+        const pChildren = state.multiFlagGroup.children;
+        for (let c = 0; c < pChildren.length; c++) {
+          const pGroup = pChildren[c];
+          if (pGroup.flagPlane) {
+            pGroup.flagPlane.rotation.y = Math.sin(time * 0.006 + (pGroup.animPhase || 0)) * 0.25;
+          }
+        }
+      }
+
       if (state.focalGroup && state.focalGroup.visible) {
         if (state.flagPlaneMesh) {
           state.flagPlaneMesh.rotation.y = Math.sin(time * 0.006) * 0.25;
@@ -1522,10 +1548,66 @@ export default function GameBanDoVietNam({
       state.flagMat.map = newTex;
       state.flagMat.emissiveMap = newTex;
       state.flagMat.needsUpdate = true;
+      if (state.sharedPoleAssets && state.sharedPoleAssets.flagPlaneMat) {
+        state.sharedPoleAssets.flagPlaneMat.map = newTex;
+        state.sharedPoleAssets.flagPlaneMat.needsUpdate = true;
+      }
       if (state.flagPlaneMesh && state.flagPlaneMesh.material) {
         state.flagPlaneMesh.material.map = newTex;
         state.flagPlaneMesh.material.emissiveMap = newTex;
         state.flagPlaneMesh.material.needsUpdate = true;
+      }
+    }
+
+    // Cập nhật và Đồng Bộ Toàn Bộ Cột Cờ 3D của TẤT CẢ Người Xem Đã Cắm Trên Bản Đồ
+    if (state.multiFlagGroup && state.sharedPoleAssets) {
+      const activePoles = gameState.activeFlagPoles || [];
+      const currentPoleIds = new Set(activePoles.map(p => p.id));
+      const poleMap = state.poleMeshMap || new Map();
+      state.poleMeshMap = poleMap;
+
+      // Xóa các cột cờ đã bị loại bỏ khi reset vòng
+      for (const [id, poleObj] of poleMap.entries()) {
+        if (!currentPoleIds.has(id)) {
+          state.multiFlagGroup.remove(poleObj);
+          poleMap.delete(id);
+        }
+      }
+
+      // Thêm mới các cột cờ 3D cho tất cả người tặng quà (Cán vàng + Cờ vẫy sóng + Bảng tên ID)
+      const { poleGeo, poleMat, sphereGeo, sphereMat, flagGeo, flagPlaneMat } = state.sharedPoleAssets;
+      for (let pIdx = 0; pIdx < activePoles.length; pIdx++) {
+        const p = activePoles[pIdx];
+        if (!poleMap.has(p.id)) {
+          const poleGroup = new THREE.Group();
+          const pMesh = new THREE.Mesh(poleGeo, poleMat);
+          pMesh.position.set(0, 3.6, 0);
+
+          const sMesh = new THREE.Mesh(sphereGeo, sphereMat);
+          sMesh.position.set(0, 7.2, 0);
+
+          const fPlane = new THREE.Mesh(flagGeo, flagPlaneMat);
+          fPlane.position.set(2.1, 5.4, 0);
+
+          const giftText = p.giftName ? `🎁 ${p.giftName} (+${p.count || 1} Ô)` : `🇻🇳 +${p.count || 1} Ô Cờ`;
+          const badgeTex = getOrCreateDonorBadgeTexture(p.username, giftText);
+          const bMat = new THREE.SpriteMaterial({ map: badgeTex, depthTest: false });
+          const bSprite = new THREE.Sprite(bMat);
+          bSprite.position.set(2.1, 8.2, 0);
+          bSprite.scale.set(5.8, 1.8, 1.0);
+
+          poleGroup.add(pMesh);
+          poleGroup.add(sMesh);
+          poleGroup.add(fPlane);
+          poleGroup.add(bSprite);
+
+          poleGroup.position.set(p.wx, 0, p.wz);
+          poleGroup.flagPlane = fPlane;
+          poleGroup.animPhase = Math.random() * Math.PI * 2;
+
+          state.multiFlagGroup.add(poleGroup);
+          poleMap.set(p.id, poleGroup);
+        }
       }
     }
 
@@ -1652,7 +1734,7 @@ export default function GameBanDoVietNam({
         };
       }
     }
-  }, [gameState.claimedCount, gameState.cellsById, gameState.lastFocalTarget, gameState.status, gameState.settings, gameState.selectedCountry, gameState.bannerCells, gameState.bannerClaimedCount, gameState.showBannerCells, gameState.bannerPos, gameState.bannerClaimedColor, gameState.bannerUnclaimedColor, gameState.bannerVoxelScale, viewMode3D, gameState.maskLoaded, isAutoTesting, isAuto247]);
+  }, [gameState.claimedCount, gameState.cellsById, gameState.lastFocalTarget, gameState.activeFlagPoles, gameState.status, gameState.settings, gameState.selectedCountry, gameState.bannerCells, gameState.bannerClaimedCount, gameState.showBannerCells, gameState.bannerPos, gameState.bannerClaimedColor, gameState.bannerUnclaimedColor, gameState.bannerVoxelScale, viewMode3D, gameState.maskLoaded, isAutoTesting, isAuto247]);
 
   // Smart Camera Director: Luân phiên góc nhìn khi ở chế độ chờ (Chưa có người dùng tặng quà):
   // 1. Zoom gần khu vực CÓ LÁ CỜ QUỐC KỲ (10-15s, mặc định 12s) - Nhìn thấy rõ tất cả lá cờ quốc kỳ đã cắm
