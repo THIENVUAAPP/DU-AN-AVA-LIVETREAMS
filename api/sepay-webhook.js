@@ -19,12 +19,22 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, message: 'Method Not Allowed' });
   }
 
+  // SePay Authorization check (if configured in env)
+  const authHeader = req.headers['authorization'] || req.headers['x-api-key'] || '';
+  const expectedKey = process.env.SEPAY_API_KEY;
+  if (expectedKey && !authHeader.includes(expectedKey)) {
+    return res.status(401).json({ success: false, message: 'Unauthorized webhook request' });
+  }
+
   try {
-    const data = req.body;
+    const data = req.body || {};
+    if (typeof data !== 'object') {
+      return res.status(400).json({ success: false, message: 'Invalid payload' });
+    }
     
     // SePay payload
     const content = data.transactionContent || data.content || '';
-    const amountIn = parseInt(data.transferAmount || data.amountIn || 0);
+    const amountIn = parseInt(data.transferAmount || data.amountIn || 0, 10);
 
     const match = content.match(/AVA\d+/i);
     

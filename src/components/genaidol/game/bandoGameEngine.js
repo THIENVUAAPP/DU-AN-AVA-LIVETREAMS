@@ -1625,6 +1625,20 @@ class BanDoGameEngine {
     }
     this.saveToStorage();
   }
+
+  destroy() {
+    this.stopAutoTest();
+    this.stopAuto247();
+    if (this.bossTimer) {
+      clearInterval(this.bossTimer);
+      this.bossTimer = null;
+    }
+    if (this.victoryCountdownTimer) {
+      clearInterval(this.victoryCountdownTimer);
+      this.victoryCountdownTimer = null;
+    }
+    this.listeners = [];
+  }
 }
 
 export const bandoEngine = new BanDoGameEngine();
