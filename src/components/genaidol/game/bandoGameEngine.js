@@ -1340,9 +1340,9 @@ class BanDoGameEngine {
       if (onProgress) onProgress(step, gift.name);
     };
 
-    // Bắn phát quà đầu tiên ngay lập tức, sau đó lặp đều 3.8 giây mỗi món quà để xem trọn vẹn Zoom 4s & Bảng tên 3D
+    // Bắn phát quà đầu tiên ngay lập tức, sau đó lặp đều 1.6 giây mỗi món quà để test nhanh và mượt mà
     runStep();
-    this.autoTestTimer = setInterval(runStep, 3800);
+    this.autoTestTimer = setInterval(runStep, 1600);
     this.notify({ type: 'AUTO_TEST_STATUS', running: true });
   }
 
