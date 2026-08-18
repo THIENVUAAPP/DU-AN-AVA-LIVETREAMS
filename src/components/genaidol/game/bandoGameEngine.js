@@ -898,7 +898,12 @@ class BanDoGameEngine {
 
   // Xử lý sự kiện tặng quà và cắm cờ
   processGift(giftId, count = 1, user = { id: 'guest_1', username: 'Chiến Binh Áo Đỏ', avatar: '' }) {
-    if (this.state.status === 'victory' || !this.maskData) return;
+    if (this.state.status === 'victory') {
+      this.resetGame();
+    }
+    if (!this.maskData || !this.maskData.cells || this.maskData.cells.length === 0) {
+      this.maskData = defaultVietnamMask;
+    }
 
     const giftDef = (this.state.gifts || DEFAULT_MAP_GIFTS).find(g => g.id === giftId) || DEFAULT_MAP_GIFTS[0];
     const rawCells = (giftDef.cells || 1) * count;
@@ -1302,28 +1307,29 @@ class BanDoGameEngine {
     }
   }
 
-  // Chạy Test Tự Động Toàn Bộ Danh Mục Quà (Demo Test Loop)
+  // Chạy Test Tự Động Toàn Bộ Danh Mục Quà (Demo Test Loop như chạy thật 100%)
   startAutoTestLoop(onProgress = null) {
     if (this.isAutoTesting) {
       this.stopAutoTestLoop();
       return;
     }
     this.isAutoTesting = true;
+    bandoAudio.unlock();
 
     let step = 0;
-    this.autoTestTimer = setInterval(() => {
+    const runStep = () => {
       if (!this.isAutoTesting) {
         this.stopAutoTestLoop();
         return;
       }
       if (this.state.status === 'victory') {
-        return;
+        this.resetGame();
       }
 
       const gifts = this.state.gifts || DEFAULT_MAP_GIFTS;
       const gift = gifts[step % gifts.length];
       const user = MOCK_WARRIORS_POOL[step % MOCK_WARRIORS_POOL.length];
-      const count = (step % 4 === 0 && gift.cells <= 10) ? 5 : 1;
+      const count = (step % 4 === 0 && gift.cells <= 10) ? 5 : (step % 6 === 0 ? 2 : 1);
 
       this.processGift(gift.id, count, user);
 
@@ -1332,7 +1338,11 @@ class BanDoGameEngine {
 
       step++;
       if (onProgress) onProgress(step, gift.name);
-    }, 950);
+    };
+
+    // Bắn phát quà đầu tiên ngay lập tức, sau đó lặp đều 3.8 giây mỗi món quà để xem trọn vẹn Zoom 4s & Bảng tên 3D
+    runStep();
+    this.autoTestTimer = setInterval(runStep, 3800);
     this.notify({ type: 'AUTO_TEST_STATUS', running: true });
   }
 

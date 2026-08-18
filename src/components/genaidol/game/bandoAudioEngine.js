@@ -201,9 +201,23 @@ class BanDoAudioEngine {
   }
 
   setBgmLoop(isLoop) {
-    this.isBgmLoop = isLoop;
+    this.isBgmLoop = !!isLoop;
+    try {
+      localStorage.setItem('bando_bgm_loop', String(this.isBgmLoop));
+    } catch (e) {}
     if (this.customBgmAudio) {
-      this.customBgmAudio.loop = isLoop;
+      this.customBgmAudio.loop = this.isBgmLoop;
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('bando-bgm-status', { 
+        detail: { 
+          playing: this.bgmPlaying, 
+          loop: this.isBgmLoop,
+          name: this.customBgmName,
+          currentTime: this.customBgmAudio?.currentTime || 0,
+          duration: this.customBgmAudio?.duration || 0
+        } 
+      }));
     }
   }
 
@@ -214,6 +228,11 @@ class BanDoAudioEngine {
       return;
     }
     this.startSyntheticBgm();
+  }
+
+  pauseBgmOnLive() {
+    this.pauseCustomBgm();
+    this.stopSyntheticBgm();
   }
 
   stopBgmOnLive() {
@@ -396,16 +415,43 @@ class BanDoAudioEngine {
       this.customBgmAudio = new Audio(this.customBgmUrl);
       this.customBgmAudio.loop = this.isBgmLoop;
     }
+    this.customBgmAudio.loop = this.isBgmLoop;
     this.customBgmAudio.volume = this.ducked ? this.bgmVolume * 0.25 : this.bgmVolume;
     this.customBgmAudio.play().then(() => {
       this.bgmPlaying = true;
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('bando-bgm-status', { detail: { playing: true, name: this.customBgmName || 'Nhạc Nền Tải Lên' } }));
+        window.dispatchEvent(new CustomEvent('bando-bgm-status', { 
+          detail: { 
+            playing: true, 
+            loop: this.isBgmLoop,
+            name: this.customBgmName || 'Nhạc Nền Tải Lên',
+            currentTime: this.customBgmAudio.currentTime,
+            duration: this.customBgmAudio.duration || 0
+          } 
+        }));
       }
     }).catch(e => {
       console.warn('Custom BGM audio play catch, falling back to synth BGM:', e);
       this.startSyntheticBgm();
     });
+  }
+
+  pauseCustomBgm() {
+    if (this.customBgmAudio) {
+      this.customBgmAudio.pause();
+    }
+    this.bgmPlaying = false;
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('bando-bgm-status', { 
+        detail: { 
+          playing: false,
+          loop: this.isBgmLoop,
+          name: this.customBgmName || 'Nhạc Nền Tải Lên',
+          currentTime: this.customBgmAudio?.currentTime || 0,
+          duration: this.customBgmAudio?.duration || 0
+        } 
+      }));
+    }
   }
 
   stopCustomBgm() {
@@ -415,8 +461,58 @@ class BanDoAudioEngine {
     }
     this.bgmPlaying = false;
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('bando-bgm-status', { detail: { playing: false } }));
+      window.dispatchEvent(new CustomEvent('bando-bgm-status', { 
+        detail: { 
+          playing: false,
+          loop: this.isBgmLoop,
+          name: this.customBgmName || 'Nhạc Nền Tải Lên',
+          currentTime: 0,
+          duration: this.customBgmAudio?.duration || 0
+        } 
+      }));
     }
+  }
+
+  seekCustomBgm(timeInSeconds) {
+    if (this.customBgmAudio) {
+      this.customBgmAudio.currentTime = Math.max(0, timeInSeconds);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('bando-bgm-status', { 
+          detail: { 
+            playing: this.bgmPlaying,
+            loop: this.isBgmLoop,
+            name: this.customBgmName || 'Nhạc Nền Tải Lên',
+            currentTime: this.customBgmAudio.currentTime,
+            duration: this.customBgmAudio.duration || 0
+          } 
+        }));
+      }
+    }
+  }
+
+  replayCustomBgm() {
+    if (this.customBgmAudio) {
+      this.customBgmAudio.currentTime = 0;
+    }
+    this.playCustomBgm();
+  }
+
+  getBgmCurrentTime() {
+    if (this.customBgmAudio && !isNaN(this.customBgmAudio.currentTime)) {
+      return this.customBgmAudio.currentTime;
+    }
+    return 0;
+  }
+
+  getBgmDuration() {
+    if (this.customBgmAudio && !isNaN(this.customBgmAudio.duration) && isFinite(this.customBgmAudio.duration)) {
+      return this.customBgmAudio.duration;
+    }
+    return 0;
+  }
+
+  getBgmLoop() {
+    return !!this.isBgmLoop;
   }
 
   playCustomSfx() {

@@ -295,7 +295,9 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
   const apiKey = getElevenLabsApiKey();
   const voiceId = voice?.voiceId || '21m00Tcm4TlvDq8ikWAM';
 
-  // Tier 1: ElevenLabs API Direct (Nếu người dùng nhập API Key & chọn ElevenLabs)
+  // =========================================================================
+  // TIER 1: ElevenLabs API Direct (Khi cấu hình ElevenLabs và có API Key)
+  // =========================================================================
   if (voice?.provider === 'elevenlabs' && apiKey && apiKey.length > 10) {
     try {
       const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
@@ -338,11 +340,60 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
         });
       }
     } catch (e) {
-      console.warn('ElevenLabs API direct fetch error, falling back to instant Web Speech API:', e);
+      console.warn('ElevenLabs API direct fetch error, falling back to Free Online TTS:', e);
     }
   }
 
-  // Tier 2: Instant Client Web Speech API (Đảm bảo 100% chạy mượt mà tức thì trên mọi trình duyệt Chrome, Edge, Safari)
+  // =========================================================================
+  // TIER 2: Free Multi-Lingual Online TTS Audio Stream (Phát âm thanh MP3 trực tiếp 100% không phụ thuộc OS)
+  // =========================================================================
+  try {
+    const encodedText = encodeURIComponent(textToSpeak.length > 180 ? textToSpeak.slice(0, 180) : textToSpeak);
+    const googleTtsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${shortLang}&client=tw-ob&q=${encodedText}`;
+    
+    const streamAudio = new Audio(googleTtsUrl);
+    streamAudio.crossOrigin = 'anonymous';
+    activePreviewAudio = streamAudio;
+
+    const streamPlayed = await new Promise((resolve) => {
+      let isDone = false;
+      const onStreamDone = (success) => {
+        if (isDone) return;
+        isDone = true;
+        activePreviewAudio = null;
+        if (onEnd) onEnd();
+        resolve(success);
+      };
+
+      streamAudio.onended = () => onStreamDone(true);
+      streamAudio.onerror = (err) => {
+        console.warn('Online TTS stream audio error, falling back to Web Speech API:', err);
+        onStreamDone(false);
+      };
+
+      // Tự động kết thúc nếu quá thời gian
+      const streamWatchdog = setTimeout(() => {
+        if (!isDone) onStreamDone(true);
+      }, Math.max(7000, textToSpeak.length * 200));
+
+      streamAudio.addEventListener('ended', () => clearTimeout(streamWatchdog));
+
+      streamAudio.play().catch((playErr) => {
+        console.warn('Audio.play() error for online TTS stream:', playErr);
+        onStreamDone(false);
+      });
+    });
+
+    if (streamPlayed) {
+      return true;
+    }
+  } catch (onlineTtsErr) {
+    console.warn('Tier 2 Online TTS stream catch:', onlineTtsErr);
+  }
+
+  // =========================================================================
+  // TIER 3: Instant Client Web Speech API (Dự phòng cho máy không có mạng)
+  // =========================================================================
   return new Promise((resolve) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) {
       if (onEnd) onEnd();

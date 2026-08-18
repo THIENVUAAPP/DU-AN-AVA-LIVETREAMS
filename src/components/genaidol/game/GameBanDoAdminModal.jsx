@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  X, Shield, Play, Pause, Square, RotateCcw, Award, Globe, Music, Music2, Volume2, 
+  X, Shield, Play, Pause, Square, RotateCcw, Repeat, Award, Globe, Music, Music2, Volume2, 
   Sparkles, Gift, MapPin, Flag, CheckCircle, Copy, AlertTriangle, 
   Settings, RefreshCw, Zap, Sliders, ExternalLink, Trophy, Type,
   Compass, Sun, Eye, Trash2, Plus, PlusCircle, VolumeX, Save, Check, Grid,
@@ -46,6 +46,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
   const [uploadedBgmName, setUploadedBgmName] = useState(() => bandoAudio.customBgmName || '');
   const [uploadedSfxName, setUploadedSfxName] = useState(() => bandoAudio.customSfxName || '');
   const [isBgmPlaying, setIsBgmPlaying] = useState(() => bandoAudio.bgmPlaying);
+  const [isBgmLoop, setIsBgmLoop] = useState(() => bandoAudio.getBgmLoop());
   const [isSfxEnabled, setIsSfxEnabled] = useState(() => !bandoAudio.isSfxMuted);
   const [bgmCurrentTime, setBgmCurrentTime] = useState(0);
   const [bgmDuration, setBgmDuration] = useState(0);
@@ -98,12 +99,29 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
   const [isAutoTesting, setIsAutoTesting] = useState(() => bandoEngine.isAutoTesting);
 
   useEffect(() => {
+    const handleBgmStatus = (e) => {
+      if (e.detail) {
+        if (e.detail.playing !== undefined) setIsBgmPlaying(e.detail.playing);
+        if (e.detail.loop !== undefined) setIsBgmLoop(e.detail.loop);
+        if (e.detail.currentTime !== undefined) setBgmCurrentTime(e.detail.currentTime);
+        if (e.detail.duration !== undefined && e.detail.duration > 0) setBgmDuration(e.detail.duration);
+        if (e.detail.name) setUploadedBgmName(e.detail.name);
+      }
+    };
+    window.addEventListener('bando-bgm-status', handleBgmStatus);
+
     const timer = setInterval(() => {
       setIsBgmPlaying(bandoAudio.bgmPlaying);
+      setIsBgmLoop(bandoAudio.getBgmLoop());
       setBgmCurrentTime(bandoAudio.getBgmCurrentTime());
-      setBgmDuration(bandoAudio.getBgmDuration());
+      const dur = bandoAudio.getBgmDuration();
+      if (dur > 0) setBgmDuration(dur);
     }, 250);
-    return () => clearInterval(timer);
+
+    return () => {
+      window.removeEventListener('bando-bgm-status', handleBgmStatus);
+      clearInterval(timer);
+    };
   }, []);
 
   useEffect(() => {
@@ -1247,16 +1265,18 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 
                 {/* Custom BGM Upload & Seekbar Player */}
-                <div className="p-5 bg-gradient-to-tr from-emerald-950/40 to-black/60 border border-emerald-500/40 rounded-2xl space-y-3 shadow-xl">
+                <div className="p-5 bg-gradient-to-tr from-emerald-950/50 via-black/70 to-emerald-950/30 border border-emerald-500/50 rounded-2xl space-y-3.5 shadow-2xl backdrop-blur-xl">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-emerald-300 uppercase flex items-center gap-1.5">
-                      <Upload size={15} /> Nhạc Nền (BGM) & Thanh Tiến Trình
+                    <span className="text-xs font-black text-emerald-300 uppercase flex items-center gap-1.5 tracking-wider">
+                      <Upload size={15} className="text-emerald-400" /> Nhạc Nền (BGM) & Thanh Tiến Trình
                     </span>
-                    <span className="text-[10px] text-gray-400">Hỗ trợ MP3 / WAV</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono">
+                      MP3 / WAV
+                    </span>
                   </div>
 
-                  <p className="text-[11px] text-gray-300">
-                    Phát bài hát nền tùy chỉnh hoặc nhạc tổng hợp. Kéo thanh trượt để nghe đoạn bạn muốn.
+                  <p className="text-[11px] text-gray-300 leading-relaxed">
+                    Tùy chỉnh phát nhạc nền live. Bấm tạm dừng / tiếp tục tại đúng vị trí giây, tua lại từ đầu hoặc bật chế độ lặp vô tận.
                   </p>
 
                   <input
@@ -1267,44 +1287,76 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                     className="hidden"
                   />
 
-                  {/* Playback & Upload Buttons */}
+                  {/* Playback & Upload Controls Bar */}
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       onClick={() => bgmFileInputRef.current?.click()}
-                      className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 transition-all"
+                      className="px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 transition-all active:scale-95"
                     >
                       <Upload size={14} /> Chọn File Nhạc MP3
                     </button>
 
+                    {/* Nút Tạm Dừng / Tiếp Tục tại đúng vị trí giây */}
                     <button
                       onClick={() => {
                         if (isBgmPlaying) {
-                          bandoAudio.stopBgmOnLive();
+                          bandoAudio.pauseBgmOnLive();
                           setIsBgmPlaying(false);
                         } else {
                           bandoAudio.playBgmOnLive();
                           setIsBgmPlaying(true);
                         }
                       }}
-                      className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all shadow-md ${
+                      className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-md active:scale-95 ${
                         isBgmPlaying 
                           ? 'bg-amber-600 hover:bg-amber-500 text-white ring-2 ring-amber-400/50 shadow-amber-500/30 animate-pulse' 
                           : 'bg-emerald-600 hover:bg-emerald-500 text-white ring-2 ring-emerald-400/30 shadow-emerald-500/20'
                       }`}
+                      title={isBgmPlaying ? "Tạm dừng tại vị trí hiện tại" : "Tiếp tục phát từ vị trí đang dừng"}
                     >
-                      {isBgmPlaying ? <Pause size={15} /> : <Play size={15} />}
-                      <span>{isBgmPlaying ? '⏸ Tạm Dừng BGM' : '▶ Phát Nhạc Nền'}</span>
+                      {isBgmPlaying ? <Pause size={14} /> : <Play size={14} />}
+                      <span>{isBgmPlaying ? '⏸ Tạm Dừng' : '▶ Phát Tiếp'}</span>
+                    </button>
+
+                    {/* Nút Tua Lại Từ Đầu */}
+                    <button
+                      onClick={() => {
+                        bandoAudio.replayCustomBgm();
+                        setIsBgmPlaying(true);
+                      }}
+                      className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-200 hover:text-white rounded-xl text-xs font-bold transition-all active:scale-95 border border-white/10"
+                      title="Tua lại từ đầu bài hát (00:00)"
+                    >
+                      <RotateCcw size={14} />
+                    </button>
+
+                    {/* Nút Bật/Tắt Vòng Lặp (Loop) */}
+                    <button
+                      onClick={() => {
+                        const nextLoop = !isBgmLoop;
+                        setIsBgmLoop(nextLoop);
+                        bandoAudio.setBgmLoop(nextLoop);
+                      }}
+                      className={`px-3 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all active:scale-95 border ${
+                        isBgmLoop
+                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-md shadow-emerald-500/20'
+                          : 'bg-gray-800/80 text-gray-400 border-gray-700 hover:text-gray-200'
+                      }`}
+                      title="Chạy vòng lặp liên tục bài hát"
+                    >
+                      <Repeat size={13} className={isBgmLoop ? "animate-spin text-emerald-400" : ""} />
+                      <span>{isBgmLoop ? '🔁 Lặp: BẬT' : '🔁 Lặp: TẮT'}</span>
                     </button>
                   </div>
 
-                  {/* BGM Seekbar (Kéo nghe đến đâu) */}
-                  <div className="p-3 bg-black/50 border border-emerald-500/30 rounded-xl space-y-1.5">
+                  {/* BGM Seekbar & Track Info */}
+                  <div className="p-3.5 bg-black/60 border border-emerald-500/40 rounded-xl space-y-2">
                     <div className="flex justify-between items-center text-[11px] font-mono text-emerald-300">
-                      <span className="flex items-center gap-1 font-bold">
-                        <Music2 size={12} className={isBgmPlaying ? "animate-spin text-emerald-400" : "text-gray-400"} />
-                        {uploadedBgmName || (isBgmPlaying ? 'Nhạc Nền Sử Thi Hào Khí Đông A' : 'Chưa phát nhạc')}
+                      <span className="flex items-center gap-1.5 font-bold truncate max-w-[210px]">
+                        <Music2 size={13} className={isBgmPlaying ? "animate-spin text-emerald-400" : "text-gray-400"} />
+                        <span className="truncate">{uploadedBgmName || (isBgmPlaying ? 'Nhạc Nền Sử Thi Hào Khí Đông A' : 'Chưa phát nhạc')}</span>
                       </span>
-                      <span className="font-bold text-amber-300">
+                      <span className="font-bold text-amber-300 shrink-0 font-mono">
                         {formatAudioTime(bgmCurrentTime)} / {formatAudioTime(bgmDuration)}
                       </span>
                     </div>
@@ -1313,25 +1365,27 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                       type="range"
                       min="0"
                       max={bgmDuration > 0 ? bgmDuration : 100}
-                      step="0.5"
+                      step="0.25"
                       value={bgmCurrentTime}
                       onChange={handleSeekBgm}
-                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-emerald-400"
-                      title="Kéo để tua đến đoạn nhạc bạn muốn nghe"
+                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-emerald-400 transition-all hover:h-2.5"
+                      title="Kéo thanh trượt để nghe đoạn nhạc bạn muốn"
                     />
                   </div>
 
                   {uploadedBgmName && (
-                    <div className="flex items-center justify-between text-xs text-emerald-300 bg-black/40 p-2.5 rounded-xl border border-emerald-500/30 font-mono">
-                      <span className="truncate flex items-center gap-1.5"><FileAudio size={14} /> {uploadedBgmName}</span>
+                    <div className="flex items-center justify-between text-xs text-emerald-300 bg-black/50 p-2.5 rounded-xl border border-emerald-500/30 font-mono">
+                      <span className="truncate flex items-center gap-1.5"><FileAudio size={14} className="text-emerald-400" /> {uploadedBgmName}</span>
                       <button
                         onClick={async () => {
                           await bandoAudio.clearCustomBgm();
                           setUploadedBgmName('');
                           setIsBgmPlaying(false);
+                          setBgmCurrentTime(0);
+                          setBgmDuration(0);
                         }}
-                        className="text-red-400 hover:text-red-300 ml-2"
-                        title="Xóa nhạc đã tải"
+                        className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-colors ml-2"
+                        title="Xóa bài nhạc này"
                       >
                         <Trash2 size={14} />
                       </button>
