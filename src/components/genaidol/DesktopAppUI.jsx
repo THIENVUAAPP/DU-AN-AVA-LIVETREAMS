@@ -4,7 +4,7 @@ import {
   MessageCircle, Play, Pause, Mic, MicOff, X, Download, Plus,
   Brain, Radio, Coins, AlertTriangle, Eye, Clock, List, Zap, AlertCircle, FileText, CheckSquare,
   Gift, ShoppingBag, Sparkles, RotateCcw, Send, Trash2, Heart, Share2, UserPlus, Users, Swords, Shield, Gamepad2, Flag, MapPin,
-  Smartphone, MonitorPlay
+  Smartphone, MonitorPlay, Globe
 } from 'lucide-react';
 import WorkspaceTacVu from './WorkspaceTacVu';
 import GeneralSettings from './GeneralSettings';
@@ -23,11 +23,15 @@ import bandoEngine from './game/bandoGameEngine';
 import bandoAudio from './game/bandoAudioEngine';
 import AutoCaptchaSolver from '../AutoCaptchaSolver';
 import { saveCharacterToIDB, loadAllCharactersFromIDB, deleteCharacterFromIDB } from '../../utils/idbHelper';
+import { SUPPORTED_LANGUAGES, getCurrentLanguage, setCurrentLanguage, t } from '../../utils/i18n';
+
 export default function DesktopAppUI() {
   const [activeSettingsModal, setActiveSettingsModal] = useState(null); 
   const [isSettingsDropdownOpen, setIsSettingsDropdownOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isCommMode, setIsCommMode] = useState(false);
+  const [currentLang, setCurrentLangState] = useState(() => getCurrentLanguage());
+  const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const [tiktokId, setTiktokId] = useState(() => {
     try {
       return localStorage.getItem('aidol_tiktok_id') || '';
@@ -888,6 +892,48 @@ export default function DesktopAppUI() {
             <span>{globalAspectRatio === '9:16' ? '9:16 TikTok' : '16:9 OBS'}</span>
           </button>
 
+          {/* 🌐 Bộ Chuyển Đổi 20 Ngôn Ngữ Toàn Cầu */}
+          <div className="relative">
+            <button
+              onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border shadow-sm ${
+                isDarkMode ? 'bg-white/10 hover:bg-white/20 text-yellow-300 border-white/10' : 'bg-gray-200 hover:bg-gray-300 text-slate-900 border-gray-300'
+              }`}
+              title="Chuyển đổi ngôn ngữ hệ thống & Giọng đọc AI (20 Quốc Gia)"
+            >
+              <Globe size={13} className="text-amber-400" />
+              <span>{SUPPORTED_LANGUAGES.find(l => l.code === currentLang)?.flag || '🌐'} {SUPPORTED_LANGUAGES.find(l => l.code === currentLang)?.name || 'Ngôn ngữ'}</span>
+            </button>
+            {isLangDropdownOpen && (
+              <div className={`absolute top-full right-0 mt-2 w-64 max-h-80 overflow-y-auto rounded-xl shadow-2xl border z-50 p-1.5 ${isDarkMode ? 'bg-[#1c1c23] border-gray-700 text-white' : 'bg-white border-gray-200 text-slate-800'} animate-in fade-in slide-in-from-top-2 duration-200`}>
+                <div className="px-2 py-1 text-[10px] font-black uppercase text-gray-400 border-b border-gray-500/20 mb-1">
+                  20 Ngôn Ngữ Quốc Tế (Đồng Bộ Giao Diện & Voice)
+                </div>
+                {SUPPORTED_LANGUAGES.map(lang => (
+                  <button
+                    key={lang.code}
+                    onClick={() => {
+                      setCurrentLanguage(lang.code);
+                      setCurrentLangState(lang.code);
+                      setIsLangDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-between gap-2 ${
+                      currentLang === lang.code
+                        ? 'bg-blue-600 text-white'
+                        : (isDarkMode ? 'hover:bg-white/10 text-gray-200' : 'hover:bg-gray-100 text-gray-800')
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="text-base">{lang.flag}</span>
+                      <span>{lang.name}</span>
+                    </span>
+                    <span className="text-[10px] opacity-75">{lang.code.toUpperCase()}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           <button onClick={() => setIsDarkMode(!isDarkMode)} className={`p-1 rounded transition-colors ${isDarkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-400 text-gray-800 hover:bg-gray-500'}`}>
             {isDarkMode ? <Sun size={13} /> : <Moon size={13} />}
           </button>
@@ -916,7 +962,7 @@ export default function DesktopAppUI() {
 
           <button onClick={() => setActiveSettingsModal('payment')} className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${isDarkMode ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-green-500/10 text-green-700 hover:bg-green-500/20'}`}>
             <CreditCard size={13} />
-            <span>Thanh toán</span>
+            <span>{t('payment', currentLang)}</span>
           </button>
 
           {/* Nút Tải phần mềm (ZIP) */}
@@ -925,7 +971,7 @@ export default function DesktopAppUI() {
             className="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 text-xs rounded shadow-sm flex items-center gap-1 transition-colors"
           >
             <Download size={12} />
-            <span>Tải ZIP</span>
+            <span>{t('downloadZip', currentLang)}</span>
           </button>
         </div>
       </div>
@@ -941,7 +987,7 @@ export default function DesktopAppUI() {
               className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold transition-colors ${isDarkMode ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
             >
               <Settings size={13} />
-              <span>MENU ▼</span>
+              <span>{t('menu', currentLang)}</span>
             </button>
             
             {isSettingsDropdownOpen && (
@@ -951,21 +997,21 @@ export default function DesktopAppUI() {
                   className={`w-full text-left px-3 py-2.5 mb-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-blue-900/40 to-blue-800/20 hover:from-blue-600 hover:to-blue-500 text-blue-100 hover:text-white border border-blue-800/50' : 'bg-blue-50 hover:bg-blue-500 text-blue-800 hover:text-white'}`}
                 >
                   <Brain size={16} />
-                  <span>BỘ NÃO AI</span>
+                  <span>{t('aiBrain', currentLang)}</span>
                 </button>
                 <button 
                   onClick={() => { setActiveSettingsModal('workspace'); setIsSettingsDropdownOpen(false); }}
                   className={`w-full text-left px-3 py-2.5 mb-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-purple-900/40 to-purple-800/20 hover:from-purple-600 hover:to-purple-500 text-purple-100 hover:text-white border border-purple-800/50' : 'bg-purple-50 hover:bg-purple-500 text-purple-800 hover:text-white'}`}
                 >
                   <Radio size={16} />
-                  <span>KẾT NỐI IDOL</span>
+                  <span>{t('idolConnect', currentLang)}</span>
                 </button>
                 <button 
                   onClick={() => { setActiveSettingsModal('captcha'); setIsSettingsDropdownOpen(false); }}
                   className={`w-full text-left px-3 py-2.5 mb-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-emerald-900/50 to-teal-800/30 hover:from-emerald-600 hover:to-teal-500 text-emerald-200 hover:text-white border border-emerald-700/60 shadow-lg' : 'bg-emerald-50 hover:bg-emerald-500 text-emerald-800 hover:text-white'}`}
                 >
                   <Shield size={16} className="text-emerald-400" />
-                  <span>🛡️ VƯỢT CAPTCHA AI 24/7</span>
+                  <span>{t('captchaBypass', currentLang)}</span>
                 </button>
 
                 {/* Đường phân cách */}
@@ -979,10 +1025,10 @@ export default function DesktopAppUI() {
                 >
                   <div className="flex items-center gap-2">
                     <Video size={15} className={isWebcamActive ? 'text-pink-400 animate-pulse' : 'text-gray-400'} />
-                    <span>Studio</span>
+                    <span>{t('studio', currentLang)}</span>
                   </div>
                   <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${isWebcamActive ? 'bg-pink-500 text-white' : (isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-200 text-gray-600')}`}>
-                    {isWebcamActive ? 'BẬT' : 'TẮT'}
+                    {isWebcamActive ? t('on', currentLang) : t('off', currentLang)}
                   </span>
                 </button>
 
@@ -994,10 +1040,10 @@ export default function DesktopAppUI() {
                 >
                   <div className="flex items-center gap-2">
                     {isCommMode ? <Mic size={15} className="text-red-400 animate-pulse" /> : <MicOff size={15} className="text-gray-400" />}
-                    <span>Giao tiếp</span>
+                    <span>{t('communication', currentLang)}</span>
                   </div>
                   <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${isCommMode ? 'bg-red-500 text-white animate-pulse' : (isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-200 text-gray-600')}`}>
-                    {isCommMode ? 'BẬT' : 'TẮT'}
+                    {isCommMode ? t('on', currentLang) : t('off', currentLang)}
                   </span>
                 </button>
               </div>
@@ -1011,7 +1057,7 @@ export default function DesktopAppUI() {
         <div className="flex items-center justify-center gap-2 shrink-0">
           
           <div className="flex items-center gap-1.5 border-r border-gray-500/30 pr-2">
-            <span className="text-xs font-medium text-gray-400">Nhân vật:</span>
+            <span className="text-xs font-medium text-gray-400">{t('characters', currentLang)}</span>
             <div className="flex gap-1.5">
               {Object.keys(CHARACTERS).map((charId) => (
                 CHARACTERS[charId] ? (
@@ -1057,17 +1103,17 @@ export default function DesktopAppUI() {
                 className={`px-2 py-1 rounded text-xs font-medium transition-colors border ${isDarkMode ? 'border-purple-500/50 bg-purple-900/30 text-purple-300 hover:bg-purple-800/50' : 'border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100'}`}
                 onClick={() => setIsTemplateLibraryOpen(true)}
               >
-                Mẫu
+                {t('templates', currentLang)}
               </button>
               <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="video/*,image/*" onChange={handleFileUpload} />
             </div>
           </div>
 
           <div className="flex items-center gap-1.5 px-1 shrink-0">
-            <input type="text" value={tiktokId} onChange={(e) => setTiktokId(e.target.value)} className={`w-28 px-2 py-1 rounded text-xs outline-none border ${isDarkMode ? 'bg-[#2a2a35] border-gray-700 text-white focus:border-blue-500' : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'}`} placeholder="ID TikTok..." />
+            <input type="text" value={tiktokId} onChange={(e) => setTiktokId(e.target.value)} className={`w-28 px-2 py-1 rounded text-xs outline-none border ${isDarkMode ? 'bg-[#2a2a35] border-gray-700 text-white focus:border-blue-500' : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'}`} placeholder={t('tiktokPlaceholder', currentLang)} />
             <button onClick={handleConnect} className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold transition-colors ${isConnected ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-blue-600 hover:bg-blue-500 text-white'}`}>
               {isConnecting ? <span className="animate-spin text-sm leading-none">↻</span> : (isConnected ? <Pause size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />)}
-              <span>{isConnecting ? 'Đang xử lý...' : (isConnected ? 'Dừng AI' : 'Kết nối')}</span>
+              <span>{isConnecting ? t('connecting', currentLang) : (isConnected ? t('stopAi', currentLang) : t('connect', currentLang))}</span>
             </button>
           </div>
         </div>
@@ -1088,7 +1134,7 @@ export default function DesktopAppUI() {
             title="Kích hoạt chế độ Chạy Tự Động 24/24 liên tục cho tất cả Game, Live Idol & Tự Động Giải Captcha"
           >
             <Zap size={13} className={isAuto247Running ? 'text-yellow-300 animate-spin' : 'text-amber-400'} />
-            <span>{isAuto247Running ? '⚡ AUTO 24/24: BẬT' : '⚡ AUTO 24/24'}</span>
+            <span>{isAuto247Running ? t('auto247On', currentLang) : t('auto247Off', currentLang)}</span>
             {isAuto247Running && (
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
             )}
@@ -1105,7 +1151,7 @@ export default function DesktopAppUI() {
             title="Chạy Demo / Kiểm thử tự động quà tặng & tương tác"
           >
             <Zap size={13} className={isGlobalDemoRunning ? 'text-yellow-300 animate-bounce' : 'text-yellow-300'} />
-            <span>{isGlobalDemoRunning ? 'Dừng Demo' : 'Chạy Demo'}</span>
+            <span>{isGlobalDemoRunning ? t('stopDemo', currentLang) : t('runDemo', currentLang)}</span>
           </button>
 
           {/* Menu Theo dõi */}
@@ -1114,29 +1160,29 @@ export default function DesktopAppUI() {
               onClick={() => setIsMonitorDropdownOpen(!isMonitorDropdownOpen)} 
               className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${isMonitorDropdownOpen ? 'bg-orange-600 text-white' : (isDarkMode ? 'bg-orange-500/20 text-orange-400 hover:bg-orange-500/30' : 'bg-orange-100 text-orange-700 hover:bg-orange-200')}`}>
               <Eye size={13} />
-              <span>Theo dõi ▼</span>
+              <span>{t('monitor', currentLang)}</span>
             </button>
             {isMonitorDropdownOpen && (
-              <div className={`absolute top-full right-0 mt-2 w-56 rounded-xl shadow-2xl border z-50 p-2 overflow-hidden ${isDarkMode ? 'bg-[#1c1c23] border-gray-700' : 'bg-white border-gray-200'} animate-in fade-in slide-in-from-top-2 duration-200`}>
+              <div className={`absolute top-full right-0 mt-2 w-56 rounded-xl shadow-2xl border z-50 p-2 overflow-hidden ${isDarkMode ? 'bg-[#1c1c23] border-gray-700 text-white' : 'bg-white border-gray-200 text-slate-800'} animate-in fade-in slide-in-from-top-2 duration-200`}>
                 <button onClick={() => { setActiveMonitorModal('quick_response'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-2.5 py-1.5 mb-1 rounded text-xs font-bold transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-yellow-500/20 text-yellow-400' : 'hover:bg-yellow-100 text-yellow-800'}`}>
                   <Zap size={13} className="text-yellow-500" /> 
-                  <span>Phản hồi Nhanh</span>
+                  <span>{t('quickResponse', currentLang)}</span>
                 </button>
                 <button onClick={() => { setActiveMonitorModal('timeline'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-2.5 py-1.5 mb-1 rounded text-xs font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}>
                   <Clock size={13} className="text-blue-400" /> 
-                  <span>Dòng thời gian</span>
+                  <span>{t('timeline', currentLang)}</span>
                 </button>
                 <button onClick={() => { setActiveMonitorModal('queue'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-2.5 py-1.5 mb-1 rounded text-xs font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}>
                   <List size={13} className="text-purple-400" /> 
-                  <span>Hàng đợi AI</span>
+                  <span>{t('aiQueue', currentLang)}</span>
                 </button>
                 <button onClick={() => { setActiveMonitorModal('tiktok_log'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-2.5 py-1.5 mb-1 rounded text-xs font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}>
                   <FileText size={13} className="text-pink-400" /> 
-                  <span>Log TikTok</span>
+                  <span>{t('tiktokLog', currentLang)}</span>
                 </button>
                 <button onClick={() => { setActiveMonitorModal('sys_log'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-2.5 py-1.5 rounded text-xs font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}>
                   <AlertCircle size={13} className="text-orange-400" /> 
-                  <span>Log Lỗi</span>
+                  <span>{t('sysLog', currentLang)}</span>
                 </button>
               </div>
             )}
@@ -1146,7 +1192,7 @@ export default function DesktopAppUI() {
             onClick={() => setShowSimulator(!showSimulator)} 
             className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${showSimulator ? 'bg-purple-600 text-white' : (isDarkMode ? 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30' : 'bg-purple-100 text-purple-700 hover:bg-purple-200')}`}>
             <Brain size={13} />
-            <span>Công cụ Test</span>
+            <span>{t('testTools', currentLang)}</span>
           </button>
         </div>
         

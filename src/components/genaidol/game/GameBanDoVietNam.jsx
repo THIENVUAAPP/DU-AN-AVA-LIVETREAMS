@@ -439,6 +439,7 @@ export default function GameBanDoVietNam({
     tween: null,
     tempVec: new THREE.Vector3(),
   });
+  const lastFocalKeyRef = useRef(null);
 
   // Dynamic Mouse & Touch Controls Mode (Orbit 3D vs Pan Drag)
   useEffect(() => {
@@ -1558,23 +1559,28 @@ export default function GameBanDoVietNam({
     // Trigger Camera 3-Stage Zoom: Zoom cận cảnh 4s (thấy rõ lá cờ và ID người tặng) -> Zoom khu vực 6s -> Zoom toàn cảnh tổng thể
     if (gameState.lastFocalTarget && state.camera && state.controls) {
       const ft = gameState.lastFocalTarget;
-      if (state.focalGroup) {
-        state.focalGroup.position.set(ft.wx, 0, ft.wz);
-        state.focalGroup.visible = true;
+      const focalKey = `${Math.round(ft.wx * 10)}_${Math.round(ft.wz * 10)}_${ft.user || ''}`;
+      
+      if (lastFocalKeyRef.current !== focalKey) {
+        lastFocalKeyRef.current = focalKey;
+        if (state.focalGroup) {
+          state.focalGroup.position.set(ft.wx, 0, ft.wz);
+          state.focalGroup.visible = true;
+        }
+        state.tween = {
+          from: state.camera.position.clone(),
+          to: new THREE.Vector3(ft.wx, 8.5, ft.wz + 7.0),
+          fromTarget: state.controls.target.clone(),
+          toTarget: new THREE.Vector3(ft.wx, 1.8, ft.wz),
+          regionalTo: new THREE.Vector3(ft.wx * 0.65, 80, ft.wz * 0.65 + 65),
+          regionalTarget: new THREE.Vector3(ft.wx * 0.65, 0, ft.wz * 0.65),
+          start: performance.now(),
+          duration: 550,
+          phase: 'in',
+          holdDuration: 4000,
+          holdUntil: 0
+        };
       }
-      state.tween = {
-        from: state.camera.position.clone(),
-        to: new THREE.Vector3(ft.wx, 8.5, ft.wz + 7.0),
-        fromTarget: state.controls.target.clone(),
-        toTarget: new THREE.Vector3(ft.wx, 1.8, ft.wz),
-        regionalTo: new THREE.Vector3(ft.wx * 0.65, 80, ft.wz * 0.65 + 65),
-        regionalTarget: new THREE.Vector3(ft.wx * 0.65, 0, ft.wz * 0.65),
-        start: performance.now(),
-        duration: 550,
-        phase: 'in',
-        holdDuration: 4000,
-        holdUntil: 0
-      };
     }
   }, [gameState.claimedCount, gameState.cellsById, gameState.lastFocalTarget, gameState.status, gameState.settings, gameState.selectedCountry, gameState.bannerCells, gameState.bannerClaimedCount, gameState.showBannerCells, gameState.bannerPos, gameState.bannerClaimedColor, gameState.bannerUnclaimedColor, gameState.bannerVoxelScale, viewMode3D, gameState.maskLoaded, isAutoTesting, isAuto247]);
 
