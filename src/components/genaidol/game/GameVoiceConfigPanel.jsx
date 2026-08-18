@@ -903,7 +903,7 @@ export default function GameVoiceConfigPanel({
                   onClick={() => setShowBulkPromptModal(true)}
                   className="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition-all"
                 >
-                  <Upload size={13} /> 📁 Tải Lên File (.MD, .PDF, .DOCX, .TXT, .CSV, .JSON)
+                  <Upload size={13} /> 📁 Tải Lên File (.MD, .PDF, .DOCX, .DOC, .TXT, .CSV, .JSON)
                 </button>
 
                 {/* Clear All Prompts Button */}
@@ -997,7 +997,7 @@ export default function GameVoiceConfigPanel({
                     onClick={() => promptFileInputRef.current?.click()}
                     className="px-3.5 py-2 bg-purple-600/30 hover:bg-purple-600/50 border border-purple-400/40 text-purple-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
                   >
-                    <Upload size={13} /> 📁 Chọn File (.md, .pdf, .docx, .txt, .csv, .json)
+                    <Upload size={13} /> 📁 Chọn File (.md, .pdf, .docx, .doc, .txt, .csv, .json)
                   </button>
 
                   <select
@@ -1338,7 +1338,7 @@ export default function GameVoiceConfigPanel({
                 <span className="text-gray-400 font-bold">Hỗ trợ:</span>
                 <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold border border-purple-500/30">📄 .MD</span>
                 <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30">📑 .PDF</span>
-                <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-bold border border-blue-500/30">📘 .DOCX</span>
+                <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-bold border border-blue-500/30">📘 .DOCX / .DOC</span>
                 <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">📝 .TXT</span>
                 <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">📊 .CSV</span>
                 <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30">🏷️ .JSON</span>
@@ -1364,7 +1364,7 @@ export default function GameVoiceConfigPanel({
                   onClick={() => ruleFileInputRef.current?.click()}
                   className="px-3.5 py-2 bg-amber-600/30 hover:bg-amber-600/50 border border-amber-400/40 text-amber-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
                 >
-                  <Upload size={13} /> 📁 Chọn File (.md, .pdf, .docx, .txt, .csv, .json)
+                  <Upload size={13} /> 📁 Chọn File (.md, .pdf, .docx, .doc, .txt, .csv, .json)
                 </button>
 
                 <button
