@@ -2132,6 +2132,20 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                             </div>
                           </div>
 
+                          <div>
+                            <span className="text-gray-400 block mb-0.5 text-[10px]">🚩 Vùng Miền Cắm Cờ:</span>
+                            <select
+                              value={editGiftData.regionTarget || 'all'}
+                              onChange={(e) => setEditGiftData({ ...editGiftData, regionTarget: e.target.value === 'all' ? null : e.target.value })}
+                              className="w-full px-2 py-1 bg-black/60 border border-white/20 rounded-lg text-[11px] font-bold text-amber-300"
+                            >
+                              <option value="all">🌐 Toàn Quốc (Tất cả vùng miền)</option>
+                              <option value="north">🏔️ Miền Bắc (Hà Nội, Tây Bắc...)</option>
+                              <option value="central">🌊 Miền Trung (Đà Nẵng, Huế, Khánh Hòa...)</option>
+                              <option value="south">🌴 Miền Nam (TP.HCM, Cần Thơ, Cà Mau...)</option>
+                            </select>
+                          </div>
+
                           <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-white/10">
                             <button
                               onClick={() => setEditingGiftId(null)}
@@ -2155,10 +2169,25 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                               <span className="text-3xl shrink-0 p-1.5 rounded-xl bg-black/40 border border-white/10 shadow-inner">{gift.icon}</span>
                               <div className="min-w-0">
                                 <div className="text-xs font-black text-white truncate" title={gift.name}>{gift.name}</div>
-                                <div className="flex items-center gap-1 mt-1">
+                                <div className="flex items-center gap-1 mt-1 flex-wrap">
                                   <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-400/40 text-[11px] font-bold font-mono shadow-xs">
                                     🪙 {gift.priceToken?.toLocaleString()} xu
                                   </span>
+                                  {gift.regionTarget === 'north' && (
+                                    <span className="px-1.5 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30 text-[9px] font-bold">
+                                      🏔️ Miền Bắc
+                                    </span>
+                                  )}
+                                  {gift.regionTarget === 'central' && (
+                                    <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[9px] font-bold">
+                                      🌊 Miền Trung
+                                    </span>
+                                  )}
+                                  {gift.regionTarget === 'south' && (
+                                    <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-bold">
+                                      🌴 Miền Nam
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             </div>

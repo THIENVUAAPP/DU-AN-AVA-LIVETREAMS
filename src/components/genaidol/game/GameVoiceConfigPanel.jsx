@@ -9,7 +9,7 @@ import {
   ALL_SYSTEM_VOICES, previewVoiceAudio, stopVoiceAudio 
 } from '../../../utils/voiceSyncService';
 import { askGeminiLiveAi } from '../../../lib/geminiClient';
-import { readUniversalFile } from '../../../utils/universalDocumentParser';
+import { readUniversalFile, parseUniversalRulePairs } from '../../../utils/universalDocumentParser';
 
 export const COUNTRY_FILTERS = [
   { id: 'all', label: 'Tất Cả', icon: '🌐' },
@@ -346,41 +346,20 @@ export default function GameVoiceConfigPanel({
   };
 
   // Bulk split keyword rules from Text or Universal File (TXT/CSV/JSON/MD/PDF/DOCX)
-  const handleBulkImportRules = (rawText) => {
-    if (!rawText || !rawText.trim()) return;
-    const lines = rawText
-      .split(/\r?\n/)
-      .map(line => line.trim())
-      .filter(line => line.length > 3);
-
-    if (lines.length === 0) return;
-
-    const newRules = lines.map((line, idx) => {
-      // Split by ":" or "|"
-      let parts = line.split(':');
-      if (parts.length < 2) parts = line.split('|');
-      
-      const left = (parts[0] || '').trim().replace(/^(\d+[\.\/\:\-\)]\s*|[\-\*\•\#\>\~]\s*)/, '');
-      const right = (parts.slice(1).join(':') || '').trim();
-
-      const kwList = left.split(',').map(s => s.trim()).filter(Boolean);
-      return {
-        id: 'k_' + (Date.now() + idx),
-        name: kwList[0] ? `Quy tắc ${kwList[0]}` : `Quy tắc ${idx + 1}`,
-        keywords: kwList.length > 0 ? kwList : [left],
-        replyText: right || `Dạ em chào anh chị [user] ạ!`,
-        role: 'assistant',
-        cooldownSec: 4,
-        enabled: true
-      };
-    });
+  const handleBulkImportRules = (rawInput) => {
+    if (!rawInput) return;
+    const newRules = parseUniversalRulePairs(rawInput);
+    if (!newRules || newRules.length === 0) {
+      showToast('⚠️ Không tìm thấy quy tắc hợp lệ trong văn bản hoặc file');
+      return;
+    }
 
     const updated = [...newRules, ...keywordRules];
     setKeywordRules(updated);
     syncToEngine({ keywordRules: updated });
     setShowBulkRuleModal(false);
     setBulkRuleText('');
-    showToast(`✅ Đã nạp thành công ${newRules.length} quy tắc từ khóa từ file!`);
+    showToast(`✅ Đã nạp thành công ${newRules.length} quy tắc từ khóa chuẩn xác 100%!`);
   };
 
   const handleFileUploadRules = async (e) => {
@@ -388,9 +367,9 @@ export default function GameVoiceConfigPanel({
     if (!file) return;
     try {
       showToast(`⏳ Đang đọc và bóc tách quy tắc từ file ${file.name}...`);
-      const lines = await readUniversalFile(file);
-      if (lines && lines.length > 0) {
-        handleBulkImportRules(lines.join('\n'));
+      const raw = await readUniversalFile(file);
+      if (raw) {
+        handleBulkImportRules(raw);
       } else {
         showToast(`⚠️ Không tìm thấy nội dung văn bản trong file ${file.name}`);
       }
@@ -399,6 +378,67 @@ export default function GameVoiceConfigPanel({
       showToast(`❌ Lỗi đọc file: ${err.message}`);
     }
     e.target.value = '';
+  };
+
+  // Xuất kịch bản ra file (.md hoặc .json)
+  const handleExportRules = (format = 'md') => {
+    if (!keywordRules || keywordRules.length === 0) {
+      showToast('⚠️ Chưa có quy tắc nào trong danh sách để xuất!');
+      return;
+    }
+    let content = '';
+    const fileName = `KICH_BAN_TU_KHOA_AVA_${Date.now()}.${format}`;
+    const mimeType = format === 'json' ? 'application/json;charset=utf-8' : 'text/markdown;charset=utf-8';
+
+    if (format === 'json') {
+      content = JSON.stringify(keywordRules, null, 2);
+    } else {
+      content = `# KỊCH BẢN TỪ KHÓA & PHẢN HỒI LIVESTREAM AVA\n# Tổng số quy tắc: ${keywordRules.length}\n# Ngày xuất: ${new Date().toLocaleString('vi-VN')}\n\n`;
+      keywordRules.forEach((r, idx) => {
+        const kws = (r.keywords || []).map(k => `"${k}"`).join(', ');
+        content += `## ${idx + 1}. ${r.name || `Quy tắc ${idx + 1}`}\n${kws}\n“${r.replyText || ''}”\n\n`;
+      });
+    }
+
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(`✅ Đã xuất thành công ${keywordRules.length} quy tắc ra file ${fileName}!`);
+  };
+
+  // Tải file mẫu kịch bản chuẩn (.md)
+  const handleDownloadSampleTemplate = () => {
+    const sampleContent = `# KỊCH BẢN TỪ KHÓA & PHẢN HỒI MẪU CHO LIVESTREAM AVA
+# Hướng dẫn: Bạn có thể chỉnh sửa thêm bớt các câu hỏi và phản hồi tùy ý, sau đó bấm Tải Lên File để nạp vào hệ thống.
+
+## 1. CHÀO HỎI & GIA NHẬP GAME
+"chào", "xin chào", "hello", "hi", "hé lô", "chào ad", "chào em", "mới vào", "mới vô live"
+“Chào mừng bạn đã đến với tinh thần yêu nước lấp đầy lãnh thổ Việt Nam! Bạn hãy ở lại cùng cắm cờ đỏ sao vàng nhé! 🇻🇳🔥”
+
+## 2. HƯỚNG DẪN LUẬT CHƠI
+"luật chơi", "chơi sao", "cách chơi", "hướng dẫn", "làm sao chơi", "cách tham gia"
+“Luật chơi rất đơn giản! Bạn chỉ cần tương tác hoặc gửi quà 5 xu theo từng miền để cắm cờ phủ đỏ Tổ Quốc! 🇻🇳”
+
+## 3. TẶNG QUÀ CẮM CỜ 3 MIỀN
+"quà 5 xu", "cắm cờ miền bắc", "cắm cờ miền trung", "cắm cờ miền nam", "chọn miền"
+“Bạn có thể chọn cắm cờ theo 3 vùng miền: Ngón Tay Tim cho Miền Bắc, Bánh Donut cho Miền Trung, Gấu Con cho Miền Nam nhé! 🇻🇳✨”
+`;
+    const blob = new Blob([sampleContent], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `FILE_MAU_KICH_BAN_TU_KHOA_AVA.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('✅ Đã tải về file mẫu kịch bản chuẩn .md!');
   };
 
   // -------------------------------------------------------------
@@ -428,7 +468,7 @@ export default function GameVoiceConfigPanel({
           question: testComment.trim(),
           username: testUsername.trim() || 'Khán Giả',
           role: simSelectedVoiceRole === 'game' ? 'game' : 'assistant',
-          context: gameType === 'battle' ? 'Đại Chiến PK Phe Xanh vs Phe Đỏ' : 'Đại Chiến Cắm Cờ Tổ Quốc',
+          context: gameType === 'battle' ? 'Đại Chiến PK Phe Xanh vs Phe Đỏ' : 'Đại Chiến Cắm Cờ Tổ Quốc Việt Nam',
           gameType
         });
         if (aiRes?.text) {
@@ -1215,18 +1255,34 @@ export default function GameVoiceConfigPanel({
               <div className="flex items-center gap-2 flex-wrap">
                 <button
                   onClick={() => setShowBulkRuleModal(true)}
-                  className="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-black rounded-xl text-xs flex items-center gap-1.5 shadow-md"
+                  className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-black rounded-xl text-xs flex items-center gap-1.5 shadow-md"
                 >
-                  <Upload size={13} /> 📁 Tải Lên File Từ Khóa Hàng Loạt
+                  <Upload size={13} /> 📁 Tải Lên / Dán File Kịch Bản
+                </button>
+                <button
+                  onClick={handleDownloadSampleTemplate}
+                  title="Tải về file mẫu .md chuẩn để chỉnh sửa trên máy tính"
+                  className="px-3 py-1.5 bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/40 text-emerald-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
+                >
+                  <Download size={13} /> 📥 Tải File Mẫu (.md)
                 </button>
                 {keywordRules.length > 0 && (
-                  <button
-                    onClick={handleClearAllKeywordRules}
-                    title="Dọn sạch toàn bộ các quy tắc từ khóa hiện tại"
-                    className="px-3 py-1.5 bg-red-600/30 hover:bg-red-600 border border-red-500/40 hover:border-red-500 text-red-200 hover:text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md"
-                  >
-                    <Trash2 size={13} /> 🗑️ XÓA TẤT CẢ ({keywordRules.length})
-                  </button>
+                  <>
+                    <button
+                      onClick={() => handleExportRules('md')}
+                      title="Xuất danh sách kịch bản hiện tại ra file .md"
+                      className="px-3 py-1.5 bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/40 text-cyan-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
+                    >
+                      <Download size={13} /> 📤 Xuất File (.md)
+                    </button>
+                    <button
+                      onClick={handleClearAllKeywordRules}
+                      title="Dọn sạch toàn bộ các quy tắc từ khóa hiện tại"
+                      className="px-3 py-1.5 bg-red-600/30 hover:bg-red-600 border border-red-500/40 hover:border-red-500 text-red-200 hover:text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md"
+                    >
+                      <Trash2 size={13} /> 🗑️ XÓA TẤT CẢ ({keywordRules.length})
+                    </button>
+                  </>
                 )}
                 <button
                   onClick={() => {

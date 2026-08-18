@@ -278,8 +278,215 @@ export async function parsePdfArrayBuffer(arrayBuffer) {
 }
 
 /**
+ * Specialized Universal Rule Pair Parser
+ * Intelligently separates Keywords <-> Reply Texts from any document format:
+ * - Numbered items: 1. "chào", "hello" \n “Chào bạn nhé!”
+ * - Markdown headers: ## 1. Chào hỏi \n "chào", "hi" \n “Chào bạn!”
+ * - Colon separated: "chào, hello: Chào bạn nhé"
+ * - Tagged: Từ khóa: ... \n Phản hồi: ...
+ * - Markdown tables, CSV, JSON
+ */
+export function parseUniversalRulePairs(rawInput) {
+  if (!rawInput) return [];
+  
+  let rawText = '';
+  if (Array.isArray(rawInput)) {
+    rawText = rawInput.join('\n');
+  } else if (typeof rawInput === 'string') {
+    rawText = rawInput;
+  } else if (typeof rawInput === 'object') {
+    try {
+      rawText = JSON.stringify(rawInput);
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // 1. Try JSON format
+  const trimmed = rawText.trim();
+  if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || (trimmed.startsWith('{') && trimmed.endsWith('}'))) {
+    try {
+      const parsedJson = JSON.parse(trimmed);
+      const list = Array.isArray(parsedJson) ? parsedJson : (parsedJson.rules || parsedJson.items || [parsedJson]);
+      const validRules = [];
+      list.forEach((item, idx) => {
+        if (!item) return;
+        const kws = Array.isArray(item.keywords) 
+          ? item.keywords 
+          : (item.keywords || item.keyword || item.kws || item.key || '').split(',').map(s => s.trim().replace(/^["“'‘]|["”'’]$/g, '')).filter(Boolean);
+        const reply = item.replyText || item.reply || item.response || item.answer || item.text || '';
+        if (kws.length > 0 || reply) {
+          validRules.push({
+            id: 'k_' + (Date.now() + idx),
+            name: item.name || (kws[0] ? `Quy tắc "${kws[0]}"` : `Quy tắc ${idx + 1}`),
+            keywords: kws.length > 0 ? kws : ['chào'],
+            replyText: reply || 'Dạ em chào bạn nha!',
+            role: item.role || 'assistant',
+            cooldownSec: item.cooldownSec || 4,
+            enabled: item.enabled !== false
+          });
+        }
+      });
+      if (validRules.length > 0) return validRules;
+    } catch (e) {}
+  }
+
+  // 2. Intelligent Multi-Format Block & Line Scanning
+  const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const rules = [];
+
+  let currentTitle = '';
+  let currentKeywords = [];
+  let currentReply = '';
+  let ruleCounter = 1;
+
+  function commitCurrentRule() {
+    if (currentKeywords.length > 0 || currentReply) {
+      const firstKw = currentKeywords[0] || '';
+      const rName = currentTitle || (firstKw ? `Quy tắc "${firstKw}"` : `Quy tắc ${ruleCounter}`);
+      rules.push({
+        id: 'k_' + (Date.now() + rules.length + '_' + Math.random().toString(36).substr(2, 4)),
+        name: rName,
+        keywords: currentKeywords.length > 0 ? currentKeywords : (firstKw ? [firstKw] : ['chào']),
+        replyText: currentReply || `Dạ em chào anh chị [user] ạ!`,
+        role: 'assistant',
+        cooldownSec: 4,
+        enabled: true
+      });
+      ruleCounter++;
+    }
+    currentTitle = '';
+    currentKeywords = [];
+    currentReply = '';
+  }
+
+  function extractKeywordsFromString(str) {
+    if (!str) return [];
+    // Extract phrases in quotes
+    const quoteRegex = /["“'‘]([^"“”'‘’]+)["”'’]/g;
+    const matches = [];
+    let m;
+    while ((m = quoteRegex.exec(str)) !== null) {
+      if (m[1] && m[1].trim()) matches.push(m[1].trim());
+    }
+    if (matches.length > 0) return matches;
+
+    // Otherwise split by commas or pipes
+    return str
+      .split(/[,;|]/)
+      .map(s => s.trim().replace(/^["“'‘]|["”'’]$/g, ''))
+      .filter(s => s.length > 0 && !/^(\d+[\.\)\:]|Từ khóa|Keywords?|Quy tắc)/i.test(s));
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Markdown Table divider / header row
+    if (/^\|?\s*[-:]+\s*\|/.test(line)) continue;
+    if (/^\|?\s*(từ khóa|keyword|stt|câu hỏi)\s*\|/i.test(line)) continue;
+
+    // Pattern: Markdown table row: | "kw1", "kw2" | "Reply text" |
+    if (line.startsWith('|') && line.endsWith('|')) {
+      const cols = line.split('|').map(c => c.trim()).filter(Boolean);
+      if (cols.length >= 2) {
+        commitCurrentRule();
+        const kwCol = cols[0];
+        const replyCol = cols.slice(1).join(' ');
+        currentKeywords = extractKeywordsFromString(kwCol);
+        currentReply = replyCol.replace(/^["“'‘]|["”'’]$/g, '').trim();
+        commitCurrentRule();
+        continue;
+      }
+    }
+
+    // Pattern: Header (e.g., ## 5. KÊU GỌI BÌNH LUẬN or # 1. CHÀO HỎI)
+    const headerMatch = line.match(/^#+\s*(?:(\d+)[\.\:\-\s]+)?(.*)$/);
+    if (headerMatch) {
+      commitCurrentRule();
+      const num = headerMatch[1];
+      const titleText = headerMatch[2]?.trim() || '';
+      currentTitle = num ? `Quy tắc ${num}: ${titleText}` : titleText;
+      continue;
+    }
+
+    // Pattern: Tagged "Từ khóa:" or "Keywords:"
+    if (/^(?:từ khóa|keywords?|câu hỏi)\s*[:：]/i.test(line)) {
+      if (currentKeywords.length > 0 && currentReply) commitCurrentRule();
+      const content = line.replace(/^(?:từ khóa|keywords?|câu hỏi)\s*[:：]\s*/i, '');
+      currentKeywords = extractKeywordsFromString(content);
+      continue;
+    }
+
+    // Pattern: Tagged "Phản hồi:" or "Trả lời:"
+    if (/^(?:phản hồi|câu trả lời|reply|response|trả lời)\s*[:：]/i.test(line)) {
+      const content = line.replace(/^(?:phản hồi|câu trả lời|reply|response|trả lời)\s*[:：]\s*/i, '');
+      currentReply = (currentReply ? currentReply + ' ' : '') + content.replace(/^["“'‘]|["”'’]$/g, '').trim();
+      commitCurrentRule();
+      continue;
+    }
+
+    // Pattern: Numbered line starting with e.g. `1. "chào", "xin chào"...`
+    const numberedMatch = line.match(/^(\d+)[\.\)\:\-]\s*(.*)$/);
+    if (numberedMatch) {
+      commitCurrentRule();
+      const ruleNum = numberedMatch[1];
+      const rest = numberedMatch[2].trim();
+      if (!currentTitle) currentTitle = `Quy tắc ${ruleNum}`;
+
+      // If line contains colon separating keywords and reply
+      if (rest.includes(':') && !rest.startsWith('"') && !rest.startsWith('“')) {
+        const parts = rest.split(':');
+        currentKeywords = extractKeywordsFromString(parts[0]);
+        currentReply = parts.slice(1).join(':').replace(/^["“'‘]|["”'’]$/g, '').trim();
+        commitCurrentRule();
+        continue;
+      }
+
+      currentKeywords = extractKeywordsFromString(rest);
+      continue;
+    }
+
+    // Pattern: Standalone quoted reply line e.g. “Chào mừng bạn đã đến...”
+    if (/^[“"«]/.test(line) && currentKeywords.length > 0 && !currentReply) {
+      currentReply = line.replace(/^[“"«\s]+|[”"»\s]+$/g, '').trim();
+      commitCurrentRule();
+      continue;
+    }
+
+    // Pattern: Standalone keywords line containing multiple quotes
+    if ((line.match(/["“'‘]/g) || []).length >= 2 && currentKeywords.length === 0) {
+      currentKeywords = extractKeywordsFromString(line);
+      continue;
+    }
+
+    // Pattern: If we have keywords and this is the reply line
+    if (currentKeywords.length > 0 && !currentReply) {
+      currentReply = line.replace(/^[“"«\s]+|[”"»\s]+$/g, '').trim();
+      commitCurrentRule();
+      continue;
+    }
+
+    // Pattern: Single line `kw1, kw2 : reply text`
+    if (line.includes(':') || line.includes('|')) {
+      commitCurrentRule();
+      const delim = line.includes(':') ? ':' : '|';
+      const parts = line.split(delim);
+      const left = parts[0].trim();
+      const right = parts.slice(1).join(delim).trim();
+      currentKeywords = extractKeywordsFromString(left);
+      currentReply = right.replace(/^["“'‘]|["”'’]$/g, '').trim();
+      commitCurrentRule();
+      continue;
+    }
+  }
+
+  commitCurrentRule();
+  return rules;
+}
+
+/**
  * Universal File Reader for any file (.md, .pdf, .docx, .doc, .txt, .csv, .json)
- * Returns array of clean, verified human-speech string lines in exact numerical/document order
+ * Returns raw text lines from document
  */
 export async function readUniversalFile(file) {
   if (!file) return [];
@@ -302,12 +509,13 @@ export async function readUniversalFile(file) {
     reader.onload = (e) => {
       const content = e.target?.result;
       if (typeof content === 'string') {
-        resolve(parseTextContent(content, ext));
+        resolve(content);
       } else {
-        resolve([]);
+        resolve('');
       }
     };
     reader.onerror = (err) => reject(err);
     reader.readAsText(file, 'utf-8');
   });
 }
+

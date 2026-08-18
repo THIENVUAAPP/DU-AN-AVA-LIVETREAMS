@@ -2167,21 +2167,59 @@ export default function GameBanDoVietNam({
             </div>
 
             {!isGiftHudMinimized && (
-              <div className="p-0.5 space-y-0.5 max-h-32 overflow-y-auto custom-scrollbar">
-                {(gameState.gifts || []).map((g, i) => (
-                  <div 
-                    key={g.id || i}
-                    className="flex items-center justify-between px-1 py-0.5 rounded bg-black/30 border border-white/5 text-[8px]"
-                  >
-                    <div className="flex items-center gap-1 truncate max-w-[85px]">
-                      <span className="text-[11px] shrink-0">{g.icon}</span>
-                      <span className="font-bold text-gray-100 truncate">{g.name}</span>
-                    </div>
-                    <span className="font-mono font-bold text-yellow-400 shrink-0 ml-1">
-                      +{g.cells} ô
-                    </span>
+              <div className="p-0.5 space-y-0.5 max-h-36 overflow-y-auto custom-scrollbar">
+                {/* 3 MÓN QUÀ 5 XU CẮM CỜ 3 MIỀN BẮC - TRUNG - NAM */}
+                <div className="p-1 rounded-md bg-gradient-to-r from-red-950/60 via-amber-950/60 to-emerald-950/60 border border-yellow-500/30 mb-1">
+                  <div className="text-[7.5px] font-black text-yellow-300 uppercase tracking-wide flex items-center gap-0.5 mb-0.5">
+                    <span>🚩 CẮM CỜ 3 MIỀN (5 XU):</span>
                   </div>
-                ))}
+                  <div className="grid grid-cols-3 gap-0.5 text-[7px] text-center">
+                    <div className="p-0.5 rounded bg-red-500/20 border border-red-500/40 text-red-200">
+                      <div className="text-[10px]">🫰</div>
+                      <div className="font-bold truncate">Miền Bắc</div>
+                      <div className="text-[6.5px] text-yellow-300 font-mono font-bold">5 xu</div>
+                    </div>
+                    <div className="p-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-200">
+                      <div className="text-[10px]">🍩</div>
+                      <div className="font-bold truncate">Miền Trung</div>
+                      <div className="text-[6.5px] text-yellow-300 font-mono font-bold">5 xu</div>
+                    </div>
+                    <div className="p-0.5 rounded bg-emerald-500/20 border border-emerald-500/40 text-emerald-200">
+                      <div className="text-[10px]">🧸</div>
+                      <div className="font-bold truncate">Miền Nam</div>
+                      <div className="text-[6.5px] text-yellow-300 font-mono font-bold">5 xu</div>
+                    </div>
+                  </div>
+                </div>
+
+                {(gameState.gifts || []).map((g, i) => {
+                  const isRegional = g.regionTarget || g.id?.includes('region_');
+                  return (
+                    <div 
+                      key={g.id || i}
+                      className={`flex items-center justify-between px-1 py-0.5 rounded border text-[8px] ${
+                        isRegional 
+                          ? 'bg-amber-950/40 border-amber-500/40 shadow-xs' 
+                          : 'bg-black/30 border-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1 truncate max-w-[85px]">
+                        <span className="text-[11px] shrink-0">{g.icon}</span>
+                        <span className={`font-bold truncate ${isRegional ? 'text-yellow-200' : 'text-gray-100'}`}>
+                          {g.name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0 ml-1">
+                        <span className="text-[7px] text-yellow-300/80 font-mono">
+                          {g.priceToken || 1} xu
+                        </span>
+                        <span className="font-mono font-bold text-yellow-400">
+                          +{g.cells} ô
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

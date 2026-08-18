@@ -5,9 +5,45 @@ import { BannerFlagCellsEngine } from './bannerFlagCellsEngine';
 import defaultVietnamMask from '../../../../public/data/vietnamMask.json';
 import defaultProvincesData from '../../../../public/data/provinces.json';
 
+// Phân loại ô cờ theo 3 miền Bắc - Trung - Nam dựa trên danh sách tỉnh thành hoặc toạ độ Y
+export const NORTH_PROVINCES = new Set([
+  'ha-noi', 'hai-phong', 'lai-chau', 'dien-bien', 'son-la', 'hoa-binh', 'lao-cai', 'yen-bai',
+  'phu-tho', 'tuyen-quang', 'ha-giang', 'cao-bang', 'bac-kan', 'lang-son', 'quang-ninh',
+  'thai-nguyen', 'bac-giang', 'bac-ninh', 'hung-yen', 'hai-duong', 'nam-dinh', 'thai-binh',
+  'ha-nam', 'ninh-binh', 'vinh-phuc'
+]);
+
+export const CENTRAL_PROVINCES = new Set([
+  'thanh-hoa', 'nghe-an', 'ha-tinh', 'quang-binh', 'quang-tri', 'hue', 'thua-thien-hue',
+  'da-nang', 'quang-nam', 'quang-ngai', 'binh-dinh', 'phu-yen', 'khanh-hoa', 'ninh-thuan',
+  'binh-thuan', 'kon-tum', 'gia-lai', 'dak-lak', 'dak-nong', 'lam-dong', 'hoang-sa'
+]);
+
+export const SOUTH_PROVINCES = new Set([
+  'ho-chi-minh', 'binh-phuoc', 'binh-duong', 'dong-nai', 'tay-ninh', 'ba-ria-vung-tau',
+  'long-an', 'dong-thap', 'tien-giang', 'an-giang', 'ben-tre', 'vinh-long', 'tra-vinh',
+  'hau-giang', 'kien-giang', 'soc-trang', 'bac-lieu', 'ca-mau', 'can-tho', 'truong-sa', 'phu-quoc'
+]);
+
+export function getRegionForCell(cell) {
+  if (!cell) return 'central';
+  const pid = (cell.provinceId || '').toLowerCase();
+  if (NORTH_PROVINCES.has(pid)) return 'north';
+  if (CENTRAL_PROVINCES.has(pid)) return 'central';
+  if (SOUTH_PROVINCES.has(pid)) return 'south';
+  if (cell.y < 165) return 'north';
+  if (cell.y < 280) return 'central';
+  return 'south';
+}
+
 // Danh mục quà TikTok chuẩn quy đổi số ô cờ từ Kho Quà TikTok Live
 export const DEFAULT_MAP_GIFTS = [
-  // 1. Phổ biến (1 - 10 xu)
+  // 1. Quà 5 Xu Riêng Biệt Cho 3 Vùng Miền (Bắc - Trung - Nam)
+  { id: 'gift_region_north', name: 'Ngón Tay Tim (Miền Bắc)', icon: '🫰', cells: 5, color: '#ef4444', tier: 'common', priceToken: 5, regionTarget: 'north', desc: 'Tặng 5 xu cắm cờ khu vực Miền Bắc' },
+  { id: 'gift_region_central', name: 'Bánh Donut (Miền Trung)', icon: '🍩', cells: 5, color: '#f59e0b', tier: 'common', priceToken: 5, regionTarget: 'central', desc: 'Tặng 5 xu cắm cờ khu vực Miền Trung' },
+  { id: 'gift_region_south', name: 'Gấu Con (Miền Nam)', icon: '🧸', cells: 5, color: '#10b981', tier: 'common', priceToken: 5, regionTarget: 'south', desc: 'Tặng 5 xu cắm cờ khu vực Miền Nam' },
+
+  // 2. Phổ biến (1 - 10 xu)
   { id: 'flag_vn', name: 'Cờ Tổ Quốc', icon: '🇻🇳', cells: 1, color: '#dc2626', tier: 'common', priceToken: 1 },
   { id: 'rose', name: 'Hoa Hồng', icon: '🌹', cells: 1, color: '#f43f5e', tier: 'common', priceToken: 1 },
   { id: 'very_good', name: 'Rất Tốt', icon: '👍', cells: 1, color: '#f59e0b', tier: 'common', priceToken: 1 },
@@ -931,10 +967,36 @@ class BanDoGameEngine {
       };
     }
 
-    // Allocate unclaimed cells
+    // Xác định vùng miền chỉ định (nếu có: 'north' | 'central' | 'south')
+    let regionTarget = giftDef.regionTarget || null;
+    const gId = (giftId || '').toLowerCase();
+    const gName = (giftDef.name || '').toLowerCase();
+    if (!regionTarget) {
+      if (gId.includes('north') || gId.includes('bac') || gName.includes('bắc') || gId === 'peach') {
+        regionTarget = 'north';
+      } else if (gId.includes('central') || gId.includes('trung') || gName.includes('trung') || gId === 'spin_ball' || gId === 'doughnut') {
+        regionTarget = 'central';
+      } else if (gId.includes('south') || gId.includes('nam') || gName.includes('nam') || gId === 'bing_chilling' || gId === 'hi_bear') {
+        regionTarget = 'south';
+      }
+    }
+
+    // Allocate unclaimed cells (ưu tiên phân bổ vào vùng miền chỉ định)
     const allCells = this.maskData.cells || [];
     const unallocated = allCells.filter(c => !this.state.cellsById[c.id]);
-    const toClaim = unallocated.slice(0, effectiveCells);
+
+    let toClaim = [];
+    if (regionTarget) {
+      const regionalUnallocated = unallocated.filter(c => getRegionForCell(c) === regionTarget);
+      if (regionalUnallocated.length >= effectiveCells) {
+        toClaim = regionalUnallocated.slice(0, effectiveCells);
+      } else {
+        const otherUnallocated = unallocated.filter(c => getRegionForCell(c) !== regionTarget);
+        toClaim = [...regionalUnallocated, ...otherUnallocated].slice(0, effectiveCells);
+      }
+    } else {
+      toClaim = unallocated.slice(0, effectiveCells);
+    }
 
     if (toClaim.length === 0 && unallocated.length === 0) {
       this.triggerVictory(user);
@@ -1014,8 +1076,10 @@ class BanDoGameEngine {
     userEntry.tier = getHonorTier(userEntry.totalCells);
     this.state.leaderboard.sort((a, b) => b.totalCells - a.totalCells);
 
-    // Add Live Feed Item
-    this.addFeedItem('GIFT', `${user.username} đã gửi [${giftDef.icon} ${giftDef.name} x${count}] → Cắm +${toClaim.length} Ô Cờ!`);
+    // Add Live Feed Item with Region Name
+    const regionNameVi = regionTarget === 'north' ? 'Miền Bắc 🏔️' : regionTarget === 'central' ? 'Miền Trung 🌊' : regionTarget === 'south' ? 'Miền Nam 🌴' : '';
+    const regionText = regionNameVi ? ` [Khu vực ${regionNameVi}]` : '';
+    this.addFeedItem('GIFT', `${user.username} đã gửi [${giftDef.icon} ${giftDef.name} x${count}]${regionText} → Cắm +${toClaim.length} Ô Cờ!`);
 
     // Camera Focal Target & Persistent 3D Flag Poles for ALL Donors
     if (lastCell) {
@@ -1029,6 +1093,7 @@ class BanDoGameEngine {
         username: user.username,
         giftName: giftDef.name,
         count: toClaim.length,
+        regionTarget,
         seq: now,
       };
 
@@ -1044,6 +1109,7 @@ class BanDoGameEngine {
         giftName: giftDef.name,
         giftIcon: giftDef.icon,
         count: toClaim.length,
+        regionTarget,
         claimedAt: now,
       };
       this.state.activeFlagPoles.push(newPole);
@@ -1058,7 +1124,15 @@ class BanDoGameEngine {
       return;
     }
 
-    this.notify({ type: 'GIFT_PLACED', giftId, count, user, claimed: toClaim.length, focalTarget: this.state.lastFocalTarget });
+    this.notify({ 
+      type: 'GIFT_PLACED', 
+      giftId, 
+      count, 
+      user, 
+      claimed: toClaim.length, 
+      regionTarget,
+      focalTarget: this.state.lastFocalTarget 
+    });
   }
 
   // Xử lý sự kiện bình luận (Comment tương tác Live & Kích Hoạt Auto Voice Trả Lời)
