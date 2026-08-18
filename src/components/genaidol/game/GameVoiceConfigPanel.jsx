@@ -34,8 +34,9 @@ export default function GameVoiceConfigPanel({
   const [gameVoice, setGameVoice] = useState(engine.gameVoice || { enabled: true, rate: 1.05, pitch: 1.0, volume: 1.0 });
   const [assistantVoice, setAssistantVoice] = useState(engine.assistantVoice || { enabled: true, rate: 1.0, pitch: 1.05, volume: 1.0 });
   const [isAutoEnabled, setIsAutoEnabled] = useState(engine.isAutoEnabled);
+  const [isAutoLoop, setIsAutoLoop] = useState(engine.isAutoLoop ?? true);
   const [intervalSeconds, setIntervalSeconds] = useState(engine.intervalSeconds);
-  const [playbackOrder, setPlaybackOrder] = useState(engine.playbackOrder || 'random');
+  const [playbackOrder, setPlaybackOrder] = useState(engine.playbackOrder || 'sequential');
   const [volume, setVolume] = useState(engine.volume || 0.9);
   const [speedRate, setSpeedRate] = useState(engine.speedRate || 1.0);
   const [pitch, setPitch] = useState(engine.pitch || 1.0);
@@ -200,6 +201,15 @@ export default function GameVoiceConfigPanel({
     showToast('🗑️ Đã xóa câu thoại khỏi kịch bản!');
   };
 
+  const handleClearAllPrompts = () => {
+    if (prompts.length === 0) return;
+    if (window.confirm(`⚠️ Anh có chắc chắn muốn XÓA SẠCH TẤT CẢ ${prompts.length} câu thoại trong kịch bản không?\n(Hành động này sẽ dọn sạch danh sách ngay lập tức)`)) {
+      setPrompts([]);
+      syncToEngine({ prompts: [] });
+      showToast('🗑️ Đã xóa sạch toàn bộ kịch bản câu thoại!');
+    }
+  };
+
   const handleTogglePrompt = (idx) => {
     const updated = prompts.map((p, i) => i === idx ? { ...p, enabled: !p.enabled } : p);
     setPrompts(updated);
@@ -318,6 +328,15 @@ export default function GameVoiceConfigPanel({
     setKeywordRules(updated);
     syncToEngine({ keywordRules: updated });
     showToast('🗑️ Đã xóa quy tắc từ khóa!');
+  };
+
+  const handleClearAllKeywordRules = () => {
+    if (keywordRules.length === 0) return;
+    if (window.confirm(`⚠️ Anh có chắc chắn muốn XÓA SẠCH TẤT CẢ ${keywordRules.length} quy tắc từ khóa không?\n(Hành động này sẽ dọn sạch danh sách từ khóa ngay lập tức)`)) {
+      setKeywordRules([]);
+      syncToEngine({ keywordRules: [] });
+      showToast('🗑️ Đã xóa sạch toàn bộ quy tắc từ khóa!');
+    }
   };
 
   const handleToggleKeywordRule = (idx) => {
@@ -853,19 +872,51 @@ export default function GameVoiceConfigPanel({
       {/* ========================================================================= */}
       {activeSubTab === 'prompts' && (
         <div className="space-y-4">
-          {/* Header Action Bar: Add Single + Bulk Upload/Paste */}
+          {/* Header Action Bar: Add Single + Bulk Upload/Paste + Loop 24/7 + Clear All */}
           <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-3">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
                 <Plus size={14} className="text-purple-400" /> Thêm & Quản Lý Kịch Bản (Tự Động Chia Theo Dòng)
               </h4>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* 24/7 Loop Toggle Button */}
+                <button
+                  onClick={() => {
+                    const nextLoop = !isAutoLoop;
+                    setIsAutoLoop(nextLoop);
+                    syncToEngine({ isAutoLoop: nextLoop });
+                    showToast(nextLoop ? '🔁 Đã BẬT chế độ lặp lại vô tận suốt live!' : '⏹️ Đã TẮT chế độ lặp lại vô tận!');
+                  }}
+                  title="Khi BẬT: AI sẽ tự động đọc lặp lại kịch bản liên tục đến khi tắt phiên live"
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md ${
+                    isAutoLoop
+                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white ring-1 ring-emerald-400'
+                      : 'bg-white/10 hover:bg-white/20 text-gray-400 border border-white/10'
+                  }`}
+                >
+                  <RefreshCw size={13} className={isAutoLoop ? 'animate-spin' : ''} style={{ animationDuration: '4s' }} />
+                  {isAutoLoop ? '🔁 LẶP LẠI SUỐT LIVE: BẬT' : '⏹️ LẶP LẠI: TẮT'}
+                </button>
+
+                {/* Bulk Import Button */}
                 <button
                   onClick={() => setShowBulkPromptModal(true)}
                   className="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition-all"
                 >
                   <Upload size={13} /> 📁 Tải Lên File (.MD, .PDF, .DOCX, .TXT, .CSV, .JSON)
                 </button>
+
+                {/* Clear All Prompts Button */}
+                {prompts.length > 0 && (
+                  <button
+                    onClick={handleClearAllPrompts}
+                    title="Dọn sạch toàn bộ các câu thoại kịch bản hiện tại"
+                    className="px-3 py-1.5 bg-red-600/30 hover:bg-red-600 border border-red-500/40 hover:border-red-500 text-red-200 hover:text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md"
+                  >
+                    <Trash2 size={13} /> 🗑️ XÓA TẤT CẢ ({prompts.length})
+                  </button>
+                )}
+
                 <span className="text-xs text-gray-400 font-mono">
                   Tổng: <strong className="text-purple-300">{prompts.length}</strong> câu
                 </span>
@@ -1161,13 +1212,22 @@ export default function GameVoiceConfigPanel({
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <button
                   onClick={() => setShowBulkRuleModal(true)}
                   className="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-black rounded-xl text-xs flex items-center gap-1.5 shadow-md"
                 >
                   <Upload size={13} /> 📁 Tải Lên File Từ Khóa Hàng Loạt
                 </button>
+                {keywordRules.length > 0 && (
+                  <button
+                    onClick={handleClearAllKeywordRules}
+                    title="Dọn sạch toàn bộ các quy tắc từ khóa hiện tại"
+                    className="px-3 py-1.5 bg-red-600/30 hover:bg-red-600 border border-red-500/40 hover:border-red-500 text-red-200 hover:text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md"
+                  >
+                    <Trash2 size={13} /> 🗑️ XÓA TẤT CẢ ({keywordRules.length})
+                  </button>
+                )}
                 <button
                   onClick={() => {
                     const updated = !isKeywordAutoReplyEnabled;
@@ -1844,6 +1904,38 @@ export default function GameVoiceConfigPanel({
                   className="w-full accent-pink-500 h-2 bg-white/10 rounded-lg cursor-pointer"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Section 4: Lặp lại vô tận suốt phiên Live */}
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/60 via-slate-900 to-teal-950/60 border border-emerald-500/40 space-y-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="space-y-1">
+                <h4 className="text-xs font-black text-emerald-300 uppercase tracking-wider flex items-center gap-2">
+                  <RefreshCw size={14} className="text-emerald-400" />
+                  4. Chế Độ Lặp Lại Vô Tận Suốt Phiên Live (24/7 Loop)
+                </h4>
+                <p className="text-[11px] text-gray-300">
+                  Khi bật, AI sẽ tự động đọc lặp tuần hoàn toàn bộ kịch bản liên tục đến khi tắt live, không bao giờ dừng lại.
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  const nextLoop = !isAutoLoop;
+                  setIsAutoLoop(nextLoop);
+                  syncToEngine({ isAutoLoop: nextLoop });
+                  showToast(nextLoop ? '🔁 Đã BẬT chế độ lặp lại vô tận!' : '⏹️ Đã TẮT chế độ lặp lại vô tận!');
+                }}
+                className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-lg ${
+                  isAutoLoop
+                    ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/30 ring-2 ring-emerald-400'
+                    : 'bg-white/10 hover:bg-white/20 text-gray-400'
+                }`}
+              >
+                <RefreshCw size={13} className={isAutoLoop ? 'animate-spin' : ''} style={{ animationDuration: '4s' }} />
+                {isAutoLoop ? '● LẶP LẠI 24/7: ĐANG BẬT' : '○ LẶP LẠI 24/7: ĐÃ TẮT'}
+              </button>
             </div>
           </div>
         </div>

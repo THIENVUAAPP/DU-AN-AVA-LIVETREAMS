@@ -107,8 +107,9 @@ class GameVoiceEngine {
     
     // Auto Periodic Commentary Config
     this.isAutoEnabled = true;
-    this.intervalSeconds = 15;
-    this.playbackOrder = 'random'; // 'random' | 'sequential'
+    this.isAutoLoop = true; // Loop endlessly throughout livestream
+    this.intervalSeconds = 25; // 25s
+    this.playbackOrder = 'sequential'; // 'sequential' | 'random'
     this.prompts = gameType === 'battle' ? [...DEFAULT_BATTLE_PROMPTS] : [...DEFAULT_MAP_PROMPTS];
     this.lastSpokenIndex = -1;
     this.timerId = null;
@@ -142,6 +143,7 @@ class GameVoiceEngine {
         if (parsed.gameVoice) this.gameVoice = { ...this.gameVoice, ...parsed.gameVoice };
         if (parsed.assistantVoice) this.assistantVoice = { ...this.assistantVoice, ...parsed.assistantVoice };
         if (parsed.isAutoEnabled !== undefined) this.isAutoEnabled = parsed.isAutoEnabled;
+        if (parsed.isAutoLoop !== undefined) this.isAutoLoop = parsed.isAutoLoop;
         if (parsed.intervalSeconds !== undefined) this.intervalSeconds = parsed.intervalSeconds;
         if (parsed.playbackOrder) this.playbackOrder = parsed.playbackOrder;
         if (Array.isArray(parsed.prompts) && parsed.prompts.length > 0) this.prompts = parsed.prompts;
@@ -165,6 +167,7 @@ class GameVoiceEngine {
         gameVoice: this.gameVoice,
         assistantVoice: this.assistantVoice,
         isAutoEnabled: this.isAutoEnabled,
+        isAutoLoop: this.isAutoLoop,
         intervalSeconds: this.intervalSeconds,
         playbackOrder: this.playbackOrder,
         prompts: this.prompts,
@@ -209,8 +212,20 @@ class GameVoiceEngine {
 
     let targetPrompt;
     if (this.playbackOrder === 'sequential') {
-      this.lastSpokenIndex = (this.lastSpokenIndex + 1) % activePrompts.length;
-      targetPrompt = activePrompts[this.lastSpokenIndex];
+      const nextIdx = this.lastSpokenIndex + 1;
+      if (nextIdx >= activePrompts.length) {
+        if (this.isAutoLoop !== false) {
+          // Loop indefinitely
+          this.lastSpokenIndex = 0;
+          targetPrompt = activePrompts[0];
+        } else {
+          // Stop when finished
+          return;
+        }
+      } else {
+        this.lastSpokenIndex = nextIdx;
+        targetPrompt = activePrompts[this.lastSpokenIndex];
+      }
     } else {
       const idx = Math.floor(Math.random() * activePrompts.length);
       targetPrompt = activePrompts[idx];
