@@ -126,28 +126,28 @@ class BanDoAudioEngine {
   }
 
   setMuted(isMuted) {
-    this.isMuted = isMuted;
+    this.isMuted = !!isMuted;
     if (this.masterGain && this.ctx) {
-      this.masterGain.gain.setValueAtTime(isMuted ? 0 : 0.9, this.ctx.currentTime);
+      this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 0.9, this.ctx.currentTime);
     }
-    if (isMuted) {
+    if (this.isMuted) {
       this.stopBgmOnLive();
     }
     try {
-      localStorage.setItem('bando_is_muted', isMuted ? 'true' : 'false');
+      localStorage.setItem('bando_is_muted', this.isMuted ? 'true' : 'false');
     } catch (e) {}
   }
 
   setSfxMuted(isMuted) {
-    this.isMuted = isMuted;
+    this.isSfxMuted = !!isMuted;
     if (this.sfxGain && this.ctx) {
-      this.sfxGain.gain.setValueAtTime(isMuted ? 0 : this.sfxVolume, this.ctx.currentTime);
+      this.sfxGain.gain.setValueAtTime(this.isSfxMuted ? 0 : this.sfxVolume, this.ctx.currentTime);
     }
     if (this.customSfxAudio) {
-      this.customSfxAudio.muted = isMuted;
+      this.customSfxAudio.muted = this.isSfxMuted;
     }
     try {
-      localStorage.setItem('bando_is_sfx_muted', isMuted ? 'true' : 'false');
+      localStorage.setItem('bando_is_sfx_muted', this.isSfxMuted ? 'true' : 'false');
     } catch (e) {}
   }
 
@@ -589,6 +589,7 @@ class BanDoAudioEngine {
   }
 
   playFlagPlace(claimedCount = 1) {
+    this.unlock();
     if (this.customSfxUrl) {
       this.playCustomSfx();
     }
@@ -599,7 +600,12 @@ class BanDoAudioEngine {
     this.noise(0.08, { cutoff: 1800, gain: 0.25 });
   }
 
+  playCellPop(claimedCount = 1) {
+    this.playFlagPlace(claimedCount);
+  }
+
   playBigGift(comboCount = 1) {
+    this.unlock();
     const baseFreq = 440;
     const chords = [
       [baseFreq, baseFreq * 1.25, baseFreq * 1.5],
@@ -614,12 +620,72 @@ class BanDoAudioEngine {
     this.noise(0.35, { cutoff: 2200, gain: 0.4, delay: 0.05 });
   }
 
+  playWarHorn() {
+    this.unlock();
+    if (this.customSfxUrl) this.playCustomSfx();
+    const hornNotes = [
+      { f: 261.63, d: 0.22, t: 0 },
+      { f: 392.00, d: 0.22, t: 0.14 },
+      { f: 523.25, d: 0.35, t: 0.28 },
+      { f: 659.25, d: 0.70, t: 0.50 }
+    ];
+    hornNotes.forEach(n => {
+      this.tone(n.f, n.d, { type: 'sawtooth', gain: 0.55, delay: n.t });
+      this.tone(n.f * 1.005, n.d, { type: 'triangle', gain: 0.45, delay: n.t });
+    });
+    this.noise(0.4, { cutoff: 1200, gain: 0.3, delay: 0.50 });
+  }
+
+  playThunderStrike() {
+    this.unlock();
+    this.duckBgm(2500);
+    // Instant electric spark
+    this.tone(1200, 0.08, { type: 'sawtooth', gain: 0.8 });
+    this.tone(450, 0.12, { type: 'square', gain: 0.7, delay: 0.02 });
+    this.noise(0.2, { cutoff: 3500, gain: 0.9 });
+    // Thunder rumble & sub-bass impact
+    setTimeout(() => {
+      this.tone(65, 0.9, { type: 'sine', gain: 0.9 });
+      this.noise(0.85, { cutoff: 380, gain: 0.85 });
+    }, 60);
+    setTimeout(() => {
+      this.noise(1.1, { cutoff: 220, gain: 0.7 });
+    }, 180);
+  }
+
   playComboFanfare(combo = 5) {
+    this.unlock();
     const scale = [523.25, 659.25, 783.99, 1046.50, 1318.51];
     scale.forEach((f, idx) => {
       this.tone(f, 0.25, { type: 'sine', gain: 0.4, delay: idx * 0.07 });
       this.tone(f * 0.5, 0.25, { type: 'triangle', gain: 0.35, delay: idx * 0.07 });
     });
+  }
+
+  playCombo(combo = 5) {
+    this.playComboFanfare(combo);
+  }
+
+  playLevelUp() {
+    this.unlock();
+    const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+    notes.forEach((f, idx) => {
+      this.tone(f, 0.28, { type: 'sine', gain: 0.5, delay: idx * 0.08 });
+      this.tone(f * 2, 0.2, { type: 'triangle', gain: 0.35, delay: idx * 0.08 + 0.02 });
+    });
+    this.noise(0.2, { cutoff: 2500, gain: 0.4, delay: 0.35 });
+  }
+
+  playProvinceComplete(provinceName = '') {
+    this.unlock();
+    this.duckBgm(3000);
+    const chords = [523.25, 659.25, 783.99, 1046.50];
+    chords.forEach((f, i) => {
+      this.tone(f, 0.6, { type: 'triangle', gain: 0.5, delay: i * 0.06 });
+      this.tone(f * 1.5, 0.5, { type: 'sine', gain: 0.35, delay: i * 0.06 + 0.02 });
+    });
+    this.playWarDrums(3);
+    setTimeout(() => this.playGoldCoins(6), 350);
   }
 
   playBossAlert() {
@@ -634,6 +700,7 @@ class BanDoAudioEngine {
   }
 
   playWarDrums(count = 5) {
+    this.unlock();
     for (let i = 0; i < count; i++) {
       const delay = i * 0.18;
       const freq = 90 + (i % 2 === 0 ? 0 : 25);
@@ -643,6 +710,7 @@ class BanDoAudioEngine {
   }
 
   playFireworks() {
+    this.unlock();
     this.noise(0.15, { cutoff: 2800, gain: 0.5 });
     setTimeout(() => {
       this.noise(0.6, { cutoff: 1400, gain: 0.75 });
@@ -652,11 +720,13 @@ class BanDoAudioEngine {
   }
 
   playCrowdCheer() {
+    this.unlock();
     this.noise(2.5, { cutoff: 1800, gain: 0.45 });
     this.noise(2.2, { cutoff: 1200, gain: 0.40, delay: 0.2 });
   }
 
   playGoldCoins(count = 6) {
+    this.unlock();
     for (let i = 0; i < count; i++) {
       const delay = i * 0.06;
       const freq = 1800 + Math.random() * 600;
@@ -666,6 +736,7 @@ class BanDoAudioEngine {
   }
 
   playVictoryTheme() {
+    this.unlock();
     this.duckBgm(8000);
     const melody = [
       { f: 523.25, d: 0.3, t: 0 },
@@ -688,6 +759,14 @@ class BanDoAudioEngine {
     setTimeout(() => this.playFireworks(), 1700);
     this.playCrowdCheer();
     setTimeout(() => this.playGoldCoins(10), 1000);
+  }
+
+  playVictory() {
+    this.playVictoryTheme();
+  }
+
+  playVictoryEpic() {
+    this.playVictoryTheme();
   }
 
   // ==================== BGM TỔNG HỢP (TỰ ĐỘNG LẶP 24/7) ====================
