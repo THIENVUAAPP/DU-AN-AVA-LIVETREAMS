@@ -1556,10 +1556,10 @@ export default function GameBanDoVietNam({
       if (bMesh.instanceColor) bMesh.instanceColor.needsUpdate = true;
     }
 
-    // Trigger Camera 3-Stage Zoom: Zoom cận cảnh 4s (thấy rõ lá cờ và ID người tặng) -> Zoom khu vực 6s -> Zoom toàn cảnh tổng thể
+    // Trigger Camera 3-Stage Zoom: Zoom cận cảnh 4s (thấy rõ lá cờ quốc kỳ và ID người tặng) -> Zoom khu vực 6s -> Zoom toàn cảnh tổng thể
     if (gameState.lastFocalTarget && state.camera && state.controls) {
       const ft = gameState.lastFocalTarget;
-      const focalKey = `${Math.round(ft.wx * 10)}_${Math.round(ft.wz * 10)}_${ft.user || ''}`;
+      const focalKey = `${ft.seq || ''}_${Math.round((ft.wx || 0) * 10)}_${Math.round((ft.wz || 0) * 10)}_${ft.username || ft.user || ''}`;
       
       if (lastFocalKeyRef.current !== focalKey) {
         lastFocalKeyRef.current = focalKey;
@@ -1567,12 +1567,13 @@ export default function GameBanDoVietNam({
           state.focalGroup.position.set(ft.wx, 0, ft.wz);
           state.focalGroup.visible = true;
         }
+        // Giai đoạn 1: Zoom Cận Cảnh đúng 4s (thấy rõ lá cờ quốc kỳ 3D và ID người tặng kế bên)
         state.tween = {
           from: state.camera.position.clone(),
           to: new THREE.Vector3(ft.wx, 8.5, ft.wz + 7.0),
           fromTarget: state.controls.target.clone(),
           toTarget: new THREE.Vector3(ft.wx, 1.8, ft.wz),
-          regionalTo: new THREE.Vector3(ft.wx * 0.65, 80, ft.wz * 0.65 + 65),
+          regionalTo: new THREE.Vector3(ft.wx * 0.65, 75, ft.wz * 0.65 + 60),
           regionalTarget: new THREE.Vector3(ft.wx * 0.65, 0, ft.wz * 0.65),
           start: performance.now(),
           duration: 550,
@@ -1585,20 +1586,12 @@ export default function GameBanDoVietNam({
   }, [gameState.claimedCount, gameState.cellsById, gameState.lastFocalTarget, gameState.status, gameState.settings, gameState.selectedCountry, gameState.bannerCells, gameState.bannerClaimedCount, gameState.showBannerCells, gameState.bannerPos, gameState.bannerClaimedColor, gameState.bannerUnclaimedColor, gameState.bannerVoxelScale, viewMode3D, gameState.maskLoaded, isAutoTesting, isAuto247]);
 
   // Smart Camera Director: Luân phiên góc nhìn khi ở chế độ chờ (Chưa có người dùng tặng quà):
-  // 1. Zoom gần cận khu vực lá cờ quốc kỳ (10-15s)
-  // 2. Zoom toàn cảnh bản đồ tổng thể (5-10s)
-  // 3. Luân phiên liên tục. Khi có quà tặng mới -> Ngay lập tức Zoom cận cảnh 4s -> Zoom khu vực 6s -> Tiếp tục luân phiên
+  // 1. Zoom gần khu vực CÓ LÁ CỜ QUỐC KỲ (10-15s, mặc định 12s) - Nhìn thấy rõ tất cả lá cờ quốc kỳ đã cắm
+  // 2. Zoom toàn cảnh lãnh thổ quốc gia đó (5-10s, mặc định 7s)
+  // 3. Vòng lặp xoay chuyển liên tục. Khi có quà tặng mới -> Ngay lập tức ngắt chu trình chờ để Zoom cận cảnh 4s -> Zoom khu vực 6s -> Tiếp tục luân phiên
   useEffect(() => {
     if (!viewMode3D || isPopout) return;
-    let standbyMode = 'flag_closeup'; // 'flag_closeup' hoặc 'overview'
-    let nextClusterIdx = 0;
-
-    const clusterPresets = [
-      { name: 'Thủ Đô Hà Nội & Vùng Phía Bắc', pos: [-49, 45, -75], target: [-49.2, 0, -123.0] },
-      { name: 'Đà Nẵng & Dải Đất Miền Trung', pos: [12, 50, 15], target: [-4.7, 0, 4.5] },
-      { name: 'TP. Hồ Chí Minh & Nam Bộ', pos: [-35, 50, 135], target: [-40.0, 0, 115.0] },
-      { name: 'Hải Đảo Hoàng Sa & Trường Sa', pos: [70, 55, 45], target: [65.6, 0, -34.4] }
-    ];
+    let standbyMode = 'flag_cluster'; // 'flag_cluster' hoặc 'overview'
 
     const directorInterval = setInterval(() => {
       const state = threeStateRef.current;
@@ -1608,20 +1601,51 @@ export default function GameBanDoVietNam({
       const presets = getCameraPresetsForCountry();
       const overviewPreset = presets.overview || { pos: [0, 240, 260], target: [0, 0, 10] };
 
-      if (standbyMode === 'flag_closeup') {
-        // Giai đoạn chờ 1: Zoom Gần Cận Khu Vực Cờ Quốc Kỳ (Giữ 12s)
+      if (standbyMode === 'flag_cluster') {
+        // Giai đoạn chờ 1: Zoom Gần Cận Khu Vực CÓ LÁ CỜ QUỐC KỲ (12 giây)
+        const claimedCells = Object.values(gameState.cellsById || {}).filter(Boolean);
         let targetPos = null;
         let targetLook = null;
 
-        if (gameState.lastFocalTarget && gameState.lastFocalTarget.wx !== undefined) {
+        if (claimedCells.length > 0) {
+          const maskData = bandoEngine.maskData;
+          const cols = maskData?.gridCols || 300;
+          const rows = maskData?.gridRows || 389;
+
+          let sumX = 0, sumZ = 0;
+          let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+
+          claimedCells.forEach(c => {
+            const wx = (c.x - cols / 2) * 1.0;
+            const wz = (c.y - rows / 2) * 1.0;
+            sumX += wx;
+            sumZ += wz;
+            if (wx < minX) minX = wx;
+            if (wx > maxX) maxX = wx;
+            if (wz < minZ) minZ = wz;
+            if (wz > maxZ) maxZ = wz;
+          });
+
+          const centerWx = sumX / claimedCells.length;
+          const centerWz = sumZ / claimedCells.length;
+          const spanX = Math.max(15, maxX - minX);
+          const spanZ = Math.max(15, maxZ - minZ);
+          const maxSpan = Math.max(spanX, spanZ);
+
+          // Camera zoom gần ôm trọn toàn bộ cụm lá cờ quốc kỳ đã cắm
+          const altitude = Math.min(110, Math.max(36, maxSpan * 0.85));
+          const distZ = Math.min(95, Math.max(30, maxSpan * 0.7));
+
+          targetPos = [centerWx, altitude, centerWz + distZ];
+          targetLook = [centerWx, 0, centerWz];
+        } else if (gameState.lastFocalTarget && gameState.lastFocalTarget.wx !== undefined) {
           const ft = gameState.lastFocalTarget;
-          targetPos = [ft.wx, 35, ft.wz + 30];
+          targetPos = [ft.wx, 38, ft.wz + 32];
           targetLook = [ft.wx, 0, ft.wz];
         } else {
-          const cluster = clusterPresets[nextClusterIdx % clusterPresets.length];
-          nextClusterIdx++;
-          targetPos = cluster.pos;
-          targetLook = cluster.target;
+          // Khi chưa có ô nào được cắm cờ: Zoom gần vào trung tâm lãnh thổ quốc gia
+          targetPos = [overviewPreset.target[0] || 0, 65, (overviewPreset.target[2] || 0) + 55];
+          targetLook = [overviewPreset.target[0] || 0, 0, overviewPreset.target[2] || 0];
         }
 
         state.tween = {
@@ -1632,13 +1656,13 @@ export default function GameBanDoVietNam({
           start: performance.now(),
           duration: 1200,
           phase: 'in',
-          holdDuration: 12000, // 12 giây cận cảnh cờ (theo yêu cầu 10-15s)
+          holdDuration: 12000, // Giữ 12 giây cận cảnh khu vực cờ (theo chuẩn 10-15s)
           holdUntil: 0
         };
 
         standbyMode = 'overview';
       } else {
-        // Giai đoạn chờ 2: Zoom Toàn Cảnh Bản Đồ (Giữ 7s)
+        // Giai đoạn chờ 2: Zoom Toàn Cảnh Bản Đồ Lãnh Thổ (7 giây)
         state.tween = {
           from: state.camera.position.clone(),
           to: new THREE.Vector3(...overviewPreset.pos),
@@ -1647,16 +1671,16 @@ export default function GameBanDoVietNam({
           start: performance.now(),
           duration: 1300,
           phase: 'in',
-          holdDuration: 7000, // 7 giây toàn cảnh (theo yêu cầu 5-10s)
+          holdDuration: 7000, // Giữ 7 giây toàn cảnh lãnh thổ (theo chuẩn 5-10s)
           holdUntil: 0
         };
 
-        standbyMode = 'flag_closeup';
+        standbyMode = 'flag_cluster';
       }
-    }, 9000);
+    }, 8500);
 
     return () => clearInterval(directorInterval);
-  }, [viewMode3D, isPopout, gameState.lastFocalTarget, getCameraPresetsForCountry]);
+  }, [viewMode3D, isPopout, gameState.lastFocalTarget, gameState.cellsById, getCameraPresetsForCountry]);
 
   // ============================================================
   // 2D CANVAS FALLBACK RENDERER WITH PAN & ZOOM

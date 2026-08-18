@@ -295,7 +295,7 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
   const apiKey = getElevenLabsApiKey();
   const voiceId = voice?.voiceId || '21m00Tcm4TlvDq8ikWAM';
 
-  // Tier 1: ElevenLabs API Direct
+  // Tier 1: ElevenLabs API Direct (Nếu người dùng nhập API Key & chọn ElevenLabs)
   if (voice?.provider === 'elevenlabs' && apiKey && apiKey.length > 10) {
     try {
       const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
@@ -322,124 +322,94 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
         const audioUrl = URL.createObjectURL(blob);
         const audio = new Audio(audioUrl);
         activePreviewAudio = audio;
-        audio.onended = () => {
-          activePreviewAudio = null;
-          try { URL.revokeObjectURL(audioUrl); } catch {}
-          if (onEnd) onEnd();
-        };
-        audio.onerror = () => {
-          activePreviewAudio = null;
-          try { URL.revokeObjectURL(audioUrl); } catch {}
-          if (onEnd) onEnd();
-        };
-        await audio.play();
-        return;
+        return new Promise((resolve) => {
+          let finished = false;
+          const finish = () => {
+            if (finished) return;
+            finished = true;
+            activePreviewAudio = null;
+            try { URL.revokeObjectURL(audioUrl); } catch {}
+            if (onEnd) onEnd();
+            resolve(true);
+          };
+          audio.onended = finish;
+          audio.onerror = finish;
+          audio.play().catch(finish);
+        });
       }
     } catch (e) {
-      console.warn('ElevenLabs API direct fetch error, falling back to Serverless TTS Proxy:', e);
+      console.warn('ElevenLabs API direct fetch error, falling back to instant Web Speech API:', e);
     }
   }
 
-  // Tier 2: Serverless TTS Proxy (/api/tts)
-  const tryServerlessTts = async () => {
+  // Tier 2: Instant Client Web Speech API (Đảm bảo 100% chạy mượt mà tức thì trên mọi trình duyệt Chrome, Edge, Safari)
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      if (onEnd) onEnd();
+      return resolve(false);
+    }
+
     try {
-      const platform = voice?.provider === 'elevenlabs' ? 'elevenlabs' : 'free';
-      const res = await fetch('/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: textToSpeak,
-          platform,
-          lang: shortLang,
-          voiceId: voice?.voiceId
-        })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.audioBase64) {
-          const audioSrc = `data:audio/mp3;base64,${data.audioBase64}`;
-          const audio = new Audio(audioSrc);
-          activePreviewAudio = audio;
-          return new Promise((resolve) => {
-            let done = false;
-            const finish = (ok) => {
-              if (done) return;
-              done = true;
-              activePreviewAudio = null;
-              if (onEnd) onEnd();
-              resolve(ok);
-            };
-            audio.onended = () => finish(true);
-            audio.onerror = () => finish(false);
-            audio.play().catch(() => finish(false));
-          });
-        }
+      window.speechSynthesis.cancel();
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
       }
-    } catch (err) {
-      console.warn('Serverless TTS proxy warning:', err);
+
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      activeUtterance = utterance;
+      window._activeVoiceUtterance = utterance; // Ngăn chặn browser Garbage Collector làm mất giọng
+      utterance.lang = langCode;
+
+      const isFemale = voice?.gender === 'Female' || voice?.gender === 'Nữ';
+      utterance.rate = voice?.rate || (isFemale ? 1.02 : 1.08);
+      utterance.pitch = voice?.pitch || (isFemale ? 1.15 : 0.82);
+      utterance.volume = voice?.volume || 1.0;
+
+      let hasEnded = false;
+      const finish = (ok) => {
+        if (hasEnded) return;
+        hasEnded = true;
+        activeUtterance = null;
+        window._activeVoiceUtterance = null;
+        if (onEnd) onEnd();
+        resolve(ok);
+      };
+
+      utterance.onend = () => finish(true);
+      utterance.onerror = (e) => {
+        console.warn('SpeechSynthesis error:', e);
+        finish(false);
+      };
+
+      // Safety watchdog: tự động hoàn thành nếu trình duyệt bị đơ
+      const maxDurationMs = Math.max(6000, textToSpeak.length * 150);
+      const watchdog = setTimeout(() => finish(true), maxDurationMs);
+      utterance.addEventListener('end', () => clearTimeout(watchdog));
+
+      const voices = preloadedVoices.length > 0 ? preloadedVoices : (window.speechSynthesis.getVoices() || []);
+      if (voices.length > 0) {
+        // Tìm giọng phù hợp theo ngôn ngữ và giới tính
+        const matched = voices.find(v => v.lang && v.lang.toLowerCase().replace('_', '-').startsWith(shortLang)) ||
+                        voices.find(v => v.lang && v.lang.toLowerCase().startsWith('vi')) ||
+                        voices[0];
+        if (matched) utterance.voice = matched;
+      }
+
+      // Khởi chạy giọng nói tức thì với delay nhỏ 40ms để tránh xung đột hàng đợi của Chrome
+      setTimeout(() => {
+        try {
+          window.speechSynthesis.speak(utterance);
+        } catch (speakErr) {
+          console.warn('speechSynthesis.speak error:', speakErr);
+          finish(false);
+        }
+      }, 40);
+    } catch (synthErr) {
+      console.warn('Web Speech API failed:', synthErr);
+      if (onEnd) onEnd();
+      resolve(false);
     }
-    return false;
-  };
-
-  // Tier 3: Client Web Speech API (Đảm bảo 100% chạy trên mọi thiết bị offline/online)
-  const tryWebSpeech = () => {
-    return new Promise((resolve) => {
-      if (typeof window === 'undefined' || !window.speechSynthesis) {
-        if (onEnd) onEnd();
-        return resolve(false);
-      }
-
-      try {
-        window.speechSynthesis.cancel();
-        if (window.speechSynthesis.paused) {
-          window.speechSynthesis.resume();
-        }
-
-        const utterance = new SpeechSynthesisUtterance(textToSpeak);
-        activeUtterance = utterance;
-        utterance.lang = langCode;
-
-        const isFemale = voice?.gender === 'Female' || voice?.gender === 'Nữ';
-        utterance.rate = isFemale ? 1.02 : 1.08;
-        utterance.pitch = isFemale ? 1.15 : 0.82;
-        utterance.volume = 1.0;
-
-        let hasEnded = false;
-        const finish = (ok) => {
-          if (hasEnded) return;
-          hasEnded = true;
-          activeUtterance = null;
-          if (onEnd) onEnd();
-          resolve(ok);
-        };
-
-        utterance.onend = () => finish(true);
-        utterance.onerror = () => finish(false);
-
-        // Safety watchdog: giải phóng nếu bị đơ
-        setTimeout(() => finish(true), 7000);
-
-        const voices = preloadedVoices.length > 0 ? preloadedVoices : window.speechSynthesis.getVoices() || [];
-        if (voices.length > 0) {
-          const matched = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(shortLang));
-          if (matched) utterance.voice = matched;
-        }
-
-        window.speechSynthesis.speak(utterance);
-      } catch (synthErr) {
-        console.warn('Web Speech API failed:', synthErr);
-        if (onEnd) onEnd();
-        resolve(false);
-      }
-    });
-  };
-
-  // Run Serverless TTS first, then fallback to Web Speech
-  const serverlessOk = await tryServerlessTts();
-  if (!serverlessOk) {
-    await tryWebSpeech();
-  }
+  });
 }
 
 export const speakVoiceAudio = previewVoiceAudio;
