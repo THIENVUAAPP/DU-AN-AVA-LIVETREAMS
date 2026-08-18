@@ -221,12 +221,35 @@ class GameVoiceEngine {
     }
   }
 
-  async speak(text, role = 'game', priority = false) {
+  async speak(text, roleOrVoice = 'game', priority = false) {
     if (typeof window === 'undefined') return;
     if (!text || typeof text !== 'string') return;
     if (this.isSpeaking && !priority) return;
 
-    const activeVoice = role === 'assistant' ? this.assistantVoice : this.gameVoice;
+    let activeVoice = null;
+    let effectiveRole = 'game';
+
+    if (roleOrVoice === 'assistant') {
+      activeVoice = this.assistantVoice;
+      effectiveRole = 'assistant';
+    } else if (roleOrVoice === 'game') {
+      activeVoice = this.gameVoice;
+      effectiveRole = 'game';
+    } else if (typeof roleOrVoice === 'string') {
+      // Direct voice ID provided
+      const foundVoice = ALL_SYSTEM_VOICES.find(v => v.id === roleOrVoice || v.voiceId === roleOrVoice);
+      if (foundVoice) {
+        activeVoice = foundVoice;
+        effectiveRole = foundVoice.gender === 'Female' ? 'assistant' : 'game';
+      } else {
+        activeVoice = this.assistantVoice;
+        effectiveRole = 'assistant';
+      }
+    } else if (typeof roleOrVoice === 'object' && roleOrVoice !== null) {
+      activeVoice = roleOrVoice;
+      effectiveRole = roleOrVoice.gender === 'Female' ? 'assistant' : 'game';
+    }
+
     if (activeVoice?.enabled === false) return; // Nếu giọng vai trò này bị tắt
 
     if (priority) {
@@ -235,14 +258,14 @@ class GameVoiceEngine {
 
     this.isSpeaking = true;
     if (this.onDuckAudio) this.onDuckAudio(true);
-    if (this.onSpeechStateChange) this.onSpeechStateChange(true, text, role);
+    if (this.onSpeechStateChange) this.onSpeechStateChange(true, text, effectiveRole);
 
     const baseVoice = ALL_SYSTEM_VOICES.find(v => v.id === activeVoice?.id || v.voiceId === activeVoice?.voiceId) || activeVoice || {
-      id: role === 'assistant' ? 'free_vi_female' : 'free_vi_male',
+      id: effectiveRole === 'assistant' ? 'free_vi_female' : 'free_vi_male',
       provider: 'system',
       tier: 'free',
-      gender: role === 'assistant' ? 'Female' : 'Male',
-      role
+      gender: effectiveRole === 'assistant' ? 'Female' : 'Male',
+      role: effectiveRole
     };
 
     const voiceObj = {
@@ -257,20 +280,20 @@ class GameVoiceEngine {
       window.dispatchEvent(new CustomEvent('avalive:deduct_token', {
         detail: {
           amount: charCount,
-          reason: `Game Voice AI (${role === 'assistant' ? 'Trợ Lý' : 'BLV'} - ${voiceObj.name || voiceObj.id}): "${text.slice(0, 20)}..."`
+          reason: `Game Voice AI (${effectiveRole === 'assistant' ? 'Trợ Lý' : 'BLV'} - ${voiceObj.name || voiceObj.id}): "${text.slice(0, 20)}..."`
         }
       }));
 
       await previewVoiceAudio(voiceObj, text, () => {
         this.isSpeaking = false;
         if (this.onDuckAudio) this.onDuckAudio(false);
-        if (this.onSpeechStateChange) this.onSpeechStateChange(false, '', role);
+        if (this.onSpeechStateChange) this.onSpeechStateChange(false, '', effectiveRole);
       });
     } catch (err) {
       console.warn(`[GameVoiceEngine:${this.gameType}] Speak error:`, err);
       this.isSpeaking = false;
       if (this.onDuckAudio) this.onDuckAudio(false);
-      if (this.onSpeechStateChange) this.onSpeechStateChange(false, '', role);
+      if (this.onSpeechStateChange) this.onSpeechStateChange(false, '', effectiveRole);
     }
   }
 
@@ -281,7 +304,7 @@ class GameVoiceEngine {
     if (this.onSpeechStateChange) this.onSpeechStateChange(false, '', 'game');
   }
 
-  // Khớp Từ Khóa & Bộ Não AI Gemini Tự Động Trả Lời Câu Hỏi Ngoài Vùng Cài Đặt (Smart Q&A)
+  // Khớp Từ Khóa & Bộ Não AI Gemini Tự Động Trả Lời Câu Hỏi Ngoài Vùng Cài Đặt (Smart Real-time Q&A)
   async handleUserComment(commentText, userName = 'Khán Giả') {
     if (!this.isKeywordAutoReplyEnabled || !commentText) return false;
     const lower = commentText.toLowerCase().trim();
@@ -303,10 +326,16 @@ class GameVoiceEngine {
           .replace(/\[user\]/gi, userName)
           .replace(/\[game\]/gi, this.gameType === 'battle' ? 'Đại Chiến PK' : 'Bản Đồ Cắm Cờ');
 
-        const delayMs = (this.responseDelaySec || 1.0) * 1000;
-        setTimeout(() => {
-          this.speak(reply, rule.role || 'assistant', true);
-        }, delayMs);
+        const delayMs = Math.max(0, (this.responseDelaySec !== undefined ? this.responseDelaySec : 1.0) * 1000);
+        const voiceTarget = rule.voiceId || rule.role || 'assistant';
+
+        if (delayMs <= 50) {
+          this.speak(reply, voiceTarget, true);
+        } else {
+          setTimeout(() => {
+            this.speak(reply, voiceTarget, true);
+          }, delayMs);
+        }
 
         return true;
       }
@@ -318,25 +347,33 @@ class GameVoiceEngine {
         const aiResponse = await askGeminiLiveAi({
           question: commentText,
           username: userName,
-          role: 'assistant',
+          role: this.assistantVoice?.gender === 'Female' ? 'assistant' : 'game',
           context: this.gameType === 'battle' ? 'Đại Chiến PK Rồng Xanh vs Hổ Đỏ' : 'Đại Chiến Cắm Cờ Bản Đồ Tổ Quốc Việt Nam',
           gameType: this.gameType
         });
 
         if (aiResponse?.text) {
-          const delayMs = (this.responseDelaySec || 1.0) * 1000;
-          setTimeout(() => {
-            this.speak(aiResponse.text, 'assistant', true);
-          }, delayMs);
+          const delayMs = Math.max(0, (this.responseDelaySec !== undefined ? this.responseDelaySec : 1.0) * 1000);
+          if (delayMs <= 50) {
+            this.speak(aiResponse.text, this.assistantVoice || 'assistant', true);
+          } else {
+            setTimeout(() => {
+              this.speak(aiResponse.text, this.assistantVoice || 'assistant', true);
+            }, delayMs);
+          }
           return true;
         }
       } catch (geminiErr) {
         console.warn(`[GameVoiceEngine:${this.gameType}] Gemini Q&A error, using safe fallback:`, geminiErr);
         const fallbackReply = `Dạ em chào anh chị ${userName}! Mọi người cùng thả tim và tiếp sức nhiệt tình cho trận đấu nha!`;
-        const delayMs = (this.responseDelaySec || 1.0) * 1000;
-        setTimeout(() => {
+        const delayMs = Math.max(0, (this.responseDelaySec !== undefined ? this.responseDelaySec : 1.0) * 1000);
+        if (delayMs <= 50) {
           this.speak(fallbackReply, 'assistant', false);
-        }, delayMs);
+        } else {
+          setTimeout(() => {
+            this.speak(fallbackReply, 'assistant', false);
+          }, delayMs);
+        }
         return true;
       }
     }

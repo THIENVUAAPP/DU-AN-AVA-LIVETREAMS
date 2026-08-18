@@ -9,6 +9,7 @@ import {
   ALL_SYSTEM_VOICES, previewVoiceAudio, stopVoiceAudio 
 } from '../../../utils/voiceSyncService';
 import { askGeminiLiveAi } from '../../../lib/geminiClient';
+import { readUniversalFile } from '../../../utils/universalDocumentParser';
 
 export const COUNTRY_FILTERS = [
   { id: 'all', label: 'Tất Cả', icon: '🌐' },
@@ -84,6 +85,12 @@ export default function GameVoiceConfigPanel({
   const [simVoiceVolume, setSimVoiceVolume] = useState(1.0);
   const [simVoiceRate, setSimVoiceRate] = useState(1.0);
   const [copiedStatus, setCopiedStatus] = useState('');
+  const [saveToast, setSaveToast] = useState('');
+
+  const showToast = (msg) => {
+    setSaveToast(msg);
+    setTimeout(() => setSaveToast(''), 3000);
+  };
 
   // Sync to engine whenever states change
   const syncToEngine = (partial = {}) => {
@@ -104,6 +111,7 @@ export default function GameVoiceConfigPanel({
       };
       setGameVoice(updated);
       syncToEngine({ gameVoice: updated });
+      showToast(`✅ Đã gán giọng "${voice.name}" cho Bình Luận Viên!`);
     } else {
       const updated = {
         ...assistantVoice,
@@ -116,6 +124,7 @@ export default function GameVoiceConfigPanel({
       };
       setAssistantVoice(updated);
       syncToEngine({ assistantVoice: updated });
+      showToast(`✅ Đã gán giọng "${voice.name}" cho Trợ Lý AI!`);
     }
   };
 
@@ -160,6 +169,7 @@ export default function GameVoiceConfigPanel({
     setPrompts(updated);
     setNewPromptText('');
     syncToEngine({ prompts: updated });
+    showToast('✅ Đã thêm câu thoại mới vào kịch bản!');
   };
 
   const handleSaveEditPrompt = (id) => {
@@ -169,6 +179,7 @@ export default function GameVoiceConfigPanel({
     setEditingPromptId(null);
     setEditingPromptText('');
     syncToEngine({ prompts: updated });
+    showToast('✅ Đã lưu kịch bản thành công và áp dụng cho phiên Live thật!');
   };
 
   const handleMovePrompt = (idx, direction) => {
@@ -186,6 +197,7 @@ export default function GameVoiceConfigPanel({
     const updated = prompts.filter((_, i) => i !== idx);
     setPrompts(updated);
     syncToEngine({ prompts: updated });
+    showToast('🗑️ Đã xóa câu thoại khỏi kịch bản!');
   };
 
   const handleTogglePrompt = (idx) => {
@@ -194,7 +206,7 @@ export default function GameVoiceConfigPanel({
     syncToEngine({ prompts: updated });
   };
 
-  // Bulk split prompts from Text or File (TXT/CSV/JSON)
+  // Bulk split prompts from Text or Universal File (TXT/CSV/JSON/MD/PDF/DOCX)
   const handleBulkImportPrompts = (rawText, defaultRole = 'game') => {
     if (!rawText || !rawText.trim()) return;
     const lines = rawText
@@ -206,7 +218,7 @@ export default function GameVoiceConfigPanel({
 
     const newItems = lines.map((line, idx) => {
       // Clean leading numbers like "1. ", "1/ ", "- "
-      const cleaned = line.replace(/^(\d+[\.\/\:\-\)]\s*|[\-\*\•]\s*)/, '').trim();
+      const cleaned = line.replace(/^(\d+[\.\/\:\-\)]\s*|[\-\*\•\#\>\~]\s*)/, '').trim();
       let role = defaultRole;
       if (cleaned.toLowerCase().startsWith('[trợ lý]') || cleaned.toLowerCase().startsWith('[assistant]')) {
         role = 'assistant';
@@ -226,19 +238,24 @@ export default function GameVoiceConfigPanel({
     syncToEngine({ prompts: updated });
     setShowBulkPromptModal(false);
     setBulkPromptText('');
+    showToast(`✅ Đã nạp thành công ${newItems.length} câu thoại từ file!`);
   };
 
-  const handleFileUploadPrompts = (e) => {
+  const handleFileUploadPrompts = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const content = ev.target?.result;
-      if (typeof content === 'string') {
-        handleBulkImportPrompts(content, bulkPromptRole);
+    try {
+      showToast(`⏳ Đang đọc và bóc tách dữ liệu từ file ${file.name}...`);
+      const lines = await readUniversalFile(file);
+      if (lines && lines.length > 0) {
+        handleBulkImportPrompts(lines.join('\n'), bulkPromptRole);
+      } else {
+        showToast(`⚠️ Không tìm thấy nội dung văn bản trong file ${file.name}`);
       }
-    };
-    reader.readAsText(file);
+    } catch (err) {
+      console.error('File upload prompts error:', err);
+      showToast(`❌ Lỗi đọc file: ${err.message}`);
+    }
     e.target.value = '';
   };
 
@@ -254,6 +271,7 @@ export default function GameVoiceConfigPanel({
       keywords: kwList,
       replyText: newRuleReply.trim(),
       role: newRuleRole,
+      voiceId: newRuleRole !== 'assistant' && newRuleRole !== 'game' ? newRuleRole : undefined,
       cooldownSec: Number(newRuleCooldown) || 4,
       enabled: true
     };
@@ -263,6 +281,7 @@ export default function GameVoiceConfigPanel({
     setNewRuleKeywords('');
     setNewRuleReply('');
     syncToEngine({ keywordRules: updated });
+    showToast('✅ Đã thêm quy tắc từ khóa mới!');
   };
 
   const handleSaveEditRule = (id) => {
@@ -273,12 +292,14 @@ export default function GameVoiceConfigPanel({
       keywords: typeof editingRuleData.keywords === 'string' ? editingRuleData.keywords.split(',').map(s => s.trim()).filter(Boolean) : editingRuleData.keywords,
       replyText: editingRuleData.replyText,
       role: editingRuleData.role,
+      voiceId: editingRuleData.voiceId,
       cooldownSec: Number(editingRuleData.cooldownSec) || 4
     } : r);
     setKeywordRules(updated);
     setEditingRuleId(null);
     setEditingRuleData(null);
     syncToEngine({ keywordRules: updated });
+    showToast('✅ Đã lưu thay đổi quy tắc từ khóa & áp dụng real-time!');
   };
 
   const handleMoveKeywordRule = (idx, direction) => {
@@ -296,6 +317,7 @@ export default function GameVoiceConfigPanel({
     const updated = keywordRules.filter((_, i) => i !== idx);
     setKeywordRules(updated);
     syncToEngine({ keywordRules: updated });
+    showToast('🗑️ Đã xóa quy tắc từ khóa!');
   };
 
   const handleToggleKeywordRule = (idx) => {
@@ -304,7 +326,7 @@ export default function GameVoiceConfigPanel({
     syncToEngine({ keywordRules: updated });
   };
 
-  // Bulk split keyword rules from Text or File (Format: "Từ khóa 1, từ khóa 2: Câu trả lời" or CSV)
+  // Bulk split keyword rules from Text or Universal File (TXT/CSV/JSON/MD/PDF/DOCX)
   const handleBulkImportRules = (rawText) => {
     if (!rawText || !rawText.trim()) return;
     const lines = rawText
@@ -319,7 +341,7 @@ export default function GameVoiceConfigPanel({
       let parts = line.split(':');
       if (parts.length < 2) parts = line.split('|');
       
-      const left = (parts[0] || '').trim().replace(/^(\d+[\.\/\:\-\)]\s*|[\-\*\•]\s*)/, '');
+      const left = (parts[0] || '').trim().replace(/^(\d+[\.\/\:\-\)]\s*|[\-\*\•\#\>\~]\s*)/, '');
       const right = (parts.slice(1).join(':') || '').trim();
 
       const kwList = left.split(',').map(s => s.trim()).filter(Boolean);
@@ -339,19 +361,24 @@ export default function GameVoiceConfigPanel({
     syncToEngine({ keywordRules: updated });
     setShowBulkRuleModal(false);
     setBulkRuleText('');
+    showToast(`✅ Đã nạp thành công ${newRules.length} quy tắc từ khóa từ file!`);
   };
 
-  const handleFileUploadRules = (e) => {
+  const handleFileUploadRules = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const content = ev.target?.result;
-      if (typeof content === 'string') {
-        handleBulkImportRules(content);
+    try {
+      showToast(`⏳ Đang đọc và bóc tách quy tắc từ file ${file.name}...`);
+      const lines = await readUniversalFile(file);
+      if (lines && lines.length > 0) {
+        handleBulkImportRules(lines.join('\n'));
+      } else {
+        showToast(`⚠️ Không tìm thấy nội dung văn bản trong file ${file.name}`);
       }
-    };
-    reader.readAsText(file);
+    } catch (err) {
+      console.error('File upload rules error:', err);
+      showToast(`❌ Lỗi đọc file: ${err.message}`);
+    }
     e.target.value = '';
   };
 
@@ -422,7 +449,15 @@ export default function GameVoiceConfigPanel({
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 relative">
+      {/* Floating Save Toast Notification */}
+      {saveToast && (
+        <div className="fixed top-6 right-6 z-50 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white font-bold text-xs shadow-2xl border border-emerald-300/40 flex items-center gap-2 animate-bounce">
+          <CheckCircle2 size={16} className="text-white shrink-0" />
+          <span>{saveToast}</span>
+        </div>
+      )}
+
       {/* Top Banner & Executive Overview */}
       <div className="p-4 bg-gradient-to-r from-purple-950/80 via-slate-900/90 to-indigo-950/80 border border-purple-500/40 rounded-2xl shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
@@ -827,9 +862,9 @@ export default function GameVoiceConfigPanel({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowBulkPromptModal(true)}
-                  className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition-all"
+                  className="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition-all"
                 >
-                  <Upload size={13} /> 📁 Tải Lên File TXT/CSV/Dán Hàng Trăm Câu
+                  <Upload size={13} /> 📁 Tải Lên File (.MD, .PDF, .DOCX, .TXT, .CSV, .JSON)
                 </button>
                 <span className="text-xs text-gray-400 font-mono">
                   Tổng: <strong className="text-purple-300">{prompts.length}</strong> câu
@@ -866,27 +901,35 @@ export default function GameVoiceConfigPanel({
             </div>
           </div>
 
-          {/* Bulk Import Prompt Modal */}
+          {/* Bulk Import Prompt Modal Supporting All Document Formats */}
           {showBulkPromptModal && (
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-950/90 via-slate-900 to-indigo-950/90 border border-purple-500/50 shadow-2xl space-y-3 animate-fadeIn">
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-950/95 via-slate-900 to-indigo-950/95 border border-purple-500/50 shadow-2xl space-y-3 animate-fadeIn">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-xs font-black text-purple-300 uppercase">
                   <FileText size={15} /> 
-                  Tải Lên File Văn Bản / Dán Hàng Trăm Câu Thoại (Tự Động Chia Tách)
+                  Tải Lên File Đa Định Dạng / Dán Kịch Bản (Tự Động Chia Tách Theo Dòng)
                 </div>
                 <button onClick={() => setShowBulkPromptModal(false)} className="text-gray-400 hover:text-white text-xs">
                   ✕ Đóng
                 </button>
               </div>
-              <p className="text-[11px] text-gray-300">
-                Mỗi dòng sẽ tự động được chia thành 1 câu thoại theo đúng thứ tự 1, 2, 3... Hỗ trợ tải trực tiếp file `.txt`, `.csv` hoặc copy-paste cả đoạn văn bản dài.
-              </p>
+
+              {/* Supported formats badges */}
+              <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
+                <span className="text-gray-400 font-bold">Hỗ trợ định dạng:</span>
+                <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold border border-purple-500/30">📄 .MD (Markdown)</span>
+                <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30">📑 .PDF (Tài liệu)</span>
+                <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-bold border border-blue-500/30">📘 .DOCX / .DOC (Word)</span>
+                <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">📝 .TXT</span>
+                <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">📊 .CSV</span>
+                <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30">🏷️ .JSON</span>
+              </div>
 
               <textarea
-                rows={5}
+                rows={6}
                 value={bulkPromptText}
                 onChange={(e) => setBulkPromptText(e.target.value)}
-                placeholder="Dán hàng chục hoặc hàng trăm câu thoại vào đây (mỗi câu 1 dòng)...&#10;Ví dụ:&#10;1. Đại chiến cắm cờ đang diễn ra cực kỳ sôi động!&#10;2. Chào mừng tất cả anh em vào xem live nhé!&#10;3. Mau thả tim để triệu hồi hào quang nào!"
+                placeholder="Dán hàng chục hoặc hàng trăm câu thoại vào đây (mỗi câu 1 dòng)...&#10;Hệ thống tự động trích xuất nội dung và sắp xếp theo thứ tự 1, 2, 3...&#10;Ví dụ:&#10;1. Đại chiến cắm cờ đang diễn ra cực kỳ sôi động!&#10;2. Chào mừng tất cả anh em vào xem live nhé!&#10;3. Mau thả tim để triệu hồi hào quang nào!"
                 className="w-full p-3 bg-black/70 border border-white/20 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-purple-400 font-mono custom-scrollbar"
               />
 
@@ -895,15 +938,15 @@ export default function GameVoiceConfigPanel({
                   <input
                     type="file"
                     ref={promptFileInputRef}
-                    accept=".txt,.csv,.json"
+                    accept=".txt,.csv,.json,.md,.pdf,.docx,.doc"
                     onChange={handleFileUploadPrompts}
                     className="hidden"
                   />
                   <button
                     onClick={() => promptFileInputRef.current?.click()}
-                    className="px-3.5 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
+                    className="px-3.5 py-2 bg-purple-600/30 hover:bg-purple-600/50 border border-purple-400/40 text-purple-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
                   >
-                    <Upload size={13} /> 📁 Chọn File Từ Máy Tính
+                    <Upload size={13} /> 📁 Chọn File (.md, .pdf, .docx, .txt, .csv, .json)
                   </button>
 
                   <select
@@ -920,16 +963,79 @@ export default function GameVoiceConfigPanel({
                   onClick={() => handleBulkImportPrompts(bulkPromptText, bulkPromptRole)}
                   className="px-5 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-black font-black rounded-xl text-xs flex items-center gap-1.5 shadow-lg transition-all"
                 >
-                  <Check size={14} /> Tự Động Chia Tách & Thêm Vào Kịch Bản
+                  <Check size={14} /> Tự Động Chia Tách & Nạp Vào Kịch Bản
                 </button>
               </div>
             </div>
           )}
 
-          {/* Prompts List with Ordering & Direct Inline Edit */}
-          <div className="space-y-2 max-h-[50vh] overflow-y-auto custom-scrollbar pr-1">
+          {/* Prompts List with Ordering & Spacious Dedicated Edit Card */}
+          <div className="space-y-2.5 max-h-[50vh] overflow-y-auto custom-scrollbar pr-1">
             {prompts.map((p, idx) => {
               const isEditing = editingPromptId === (p.id || idx);
+
+              if (isEditing) {
+                return (
+                  <div 
+                    key={p.id || idx}
+                    className="p-3.5 rounded-2xl bg-gradient-to-r from-purple-950/90 via-slate-900 to-indigo-950/90 border-2 border-purple-400 shadow-2xl space-y-3 animate-fadeIn"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <Edit3 size={13} /> Chỉnh Sửa Câu Thoại #{idx + 1}
+                      </span>
+                      <span className="text-[10px] text-gray-400">Thay đổi có hiệu lực ngay khi bấm Lưu</span>
+                    </div>
+
+                    <textarea
+                      rows={2}
+                      value={editingPromptText}
+                      onChange={(e) => setEditingPromptText(e.target.value)}
+                      placeholder="Nội dung câu nói..."
+                      className="w-full p-2.5 bg-black/80 border border-purple-400/60 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-purple-300 font-medium"
+                    />
+
+                    <div className="flex items-center justify-between flex-wrap gap-2 pt-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-300 font-bold">Vai trò:</span>
+                        <select
+                          value={editingPromptRole}
+                          onChange={(e) => setEditingPromptRole(e.target.value)}
+                          className="px-3 py-1.5 bg-black/80 border border-purple-400/50 rounded-xl text-xs text-purple-300 font-bold focus:outline-none"
+                        >
+                          <option value="game">🎙️ BLV Game</option>
+                          <option value="assistant">💼 Trợ Lý AI</option>
+                        </select>
+                        <button
+                          onClick={() => engine.speak(editingPromptText, editingPromptRole, true)}
+                          className="px-3 py-1.5 bg-purple-600/40 hover:bg-purple-600/60 border border-purple-400/40 text-purple-200 rounded-xl text-xs font-bold flex items-center gap-1"
+                          title="Nghe thử câu vừa chỉnh sửa"
+                        >
+                          <Volume2 size={12} /> Nghe Thử Câu Này
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            setEditingPromptId(null);
+                            setEditingPromptText('');
+                          }}
+                          className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-gray-300 rounded-xl text-xs font-bold"
+                        >
+                          ✕ Hủy
+                        </button>
+                        <button
+                          onClick={() => handleSaveEditPrompt(p.id || idx)}
+                          className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-500/30"
+                        >
+                          <Check size={14} /> ✓ Lưu Thay Đổi Ngay
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
 
               return (
                 <div 
@@ -989,38 +1095,11 @@ export default function GameVoiceConfigPanel({
                     </button>
                   </div>
 
-                  {/* Content (Inline Edit or Text) */}
+                  {/* Content */}
                   <div className="flex-1 min-w-0">
-                    {isEditing ? (
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={editingPromptText}
-                          onChange={(e) => setEditingPromptText(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && handleSaveEditPrompt(p.id || idx)}
-                          className="flex-1 px-3 py-1.5 bg-black/80 border border-purple-400 rounded-lg text-xs text-white focus:outline-none"
-                        />
-                        <select
-                          value={editingPromptRole}
-                          onChange={(e) => setEditingPromptRole(e.target.value)}
-                          className="px-2 py-1.5 bg-black/80 border border-purple-400 rounded-lg text-xs text-purple-300 font-bold"
-                        >
-                          <option value="game">🎙️ BLV</option>
-                          <option value="assistant">💼 Trợ Lý</option>
-                        </select>
-                        <button
-                          onClick={() => handleSaveEditPrompt(p.id || idx)}
-                          className="p-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500"
-                          title="Lưu sửa đổi"
-                        >
-                          <Check size={14} />
-                        </button>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-gray-200 font-medium truncate block">
-                        "{p.text}"
-                      </span>
-                    )}
+                    <span className="text-xs text-gray-200 font-medium truncate block">
+                      "{p.text}"
+                    </span>
                   </div>
 
                   {/* Action Icons */}
@@ -1034,22 +1113,18 @@ export default function GameVoiceConfigPanel({
                     </button>
                     <button
                       onClick={() => {
-                        if (isEditing) {
-                          setEditingPromptId(null);
-                        } else {
-                          setEditingPromptId(p.id || idx);
-                          setEditingPromptText(p.text);
-                          setEditingPromptRole(p.role || 'game');
-                        }
+                        setEditingPromptId(p.id || idx);
+                        setEditingPromptText(p.text);
+                        setEditingPromptRole(p.role || 'game');
                       }}
-                      className="p-1.5 rounded-lg bg-white/10 text-gray-300 hover:bg-white/20 transition-all"
+                      className="p-1.5 rounded-lg bg-purple-500/20 text-purple-300 hover:bg-purple-500/40 transition-all font-bold text-xs flex items-center gap-1"
                       title="Sửa trực tiếp câu này"
                     >
-                      <Edit3 size={12} />
+                      <Edit3 size={12} /> Sửa
                     </button>
                     <button
                       onClick={() => engine.speak(p.text, p.role || 'game', true)}
-                      className="p-1.5 rounded-lg bg-purple-500/20 text-purple-300 hover:bg-purple-500/40 transition-all"
+                      className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/40 transition-all"
                       title="Nghe thử câu này"
                     >
                       <Play size={12} className="fill-current" />
@@ -1070,46 +1145,124 @@ export default function GameVoiceConfigPanel({
       )}
 
       {/* ========================================================================= */}
-      {/* SUB-TAB 3: TỪ KHÓA, PHẢN HỒI & TẢI FILE TỰ ĐỘNG CHIA TÁCH */}
+      {/* SUB-TAB 3: TỪ KHÓA, PHẢN HỒI REAL-TIME, GIỌNG TRỢ LÝ & TẢI FILE ĐA DẠNG */}
       {/* ========================================================================= */}
       {activeSubTab === 'keywords' && (
         <div className="space-y-4">
-          <div className="p-3.5 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-between gap-3 flex-wrap">
-            <div>
-              <h4 className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
-                <Zap size={14} className="text-amber-400" /> Bắt Từ Khóa Tự Động & Phản Hồi (Keyword Trigger)
-              </h4>
-              <p className="text-[11px] text-gray-400 mt-0.5">
-                Tự động nhận diện từ khóa và phát âm thanh câu trả lời chuẩn xác. Có thể tải file lên để chia hàng loạt.
-              </p>
+          {/* Top Assistant Voice & Real-time Delay Config Box */}
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-950/70 via-slate-900 to-orange-950/70 border border-amber-500/40 shadow-xl space-y-3.5">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <h4 className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Zap size={14} className="text-amber-400" /> Bắt Từ Khóa Real-time & Phản Hồi Tức Thì
+                </h4>
+                <p className="text-[11px] text-gray-300 mt-0.5">
+                  Tùy chỉnh Giọng Trợ Lý • Thiết lập độ trễ (0s - Tức thì) • Tải file .md, .pdf, .docx, .txt, .csv, .json
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowBulkRuleModal(true)}
+                  className="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-black rounded-xl text-xs flex items-center gap-1.5 shadow-md"
+                >
+                  <Upload size={13} /> 📁 Tải Lên File Từ Khóa Hàng Loạt
+                </button>
+                <button
+                  onClick={() => {
+                    const updated = !isKeywordAutoReplyEnabled;
+                    setIsKeywordAutoReplyEnabled(updated);
+                    syncToEngine({ isKeywordAutoReplyEnabled: updated });
+                  }}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+                    isKeywordAutoReplyEnabled 
+                      ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/30' 
+                      : 'bg-white/10 text-gray-400'
+                  }`}
+                >
+                  {isKeywordAutoReplyEnabled ? '● PHẢN HỒI: ĐANG BẬT' : '○ PHẢN HỒI: ĐÃ TẮT'}
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowBulkRuleModal(true)}
-                className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-black rounded-xl text-xs flex items-center gap-1.5 shadow-md"
-              >
-                <Upload size={13} /> 📁 Tải Lên File Từ Khóa Hàng Loạt
-              </button>
-              <button
-                onClick={() => {
-                  const updated = !isKeywordAutoReplyEnabled;
-                  setIsKeywordAutoReplyEnabled(updated);
-                  syncToEngine({ isKeywordAutoReplyEnabled: updated });
-                }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
-                  isKeywordAutoReplyEnabled 
-                    ? 'bg-amber-500 text-black shadow-md' 
-                    : 'bg-white/10 text-gray-400'
-                }`}
-              >
-                {isKeywordAutoReplyEnabled ? '● ĐANG BẬT' : '○ ĐÃ TẮT'}
-              </button>
+
+            {/* Global Assistant Voice & Response Time Settings Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-black/40 p-3 rounded-xl border border-white/10">
+              {/* Voice Picker for Assistant */}
+              <div>
+                <label className="text-[11px] text-gray-300 font-bold block mb-1">
+                  💼 Giọng Đọc Trợ Lý AI:
+                </label>
+                <select
+                  value={assistantVoice?.id || 'free_vi_female'}
+                  onChange={(e) => {
+                    const found = ALL_SYSTEM_VOICES.find(v => v.id === e.target.value);
+                    if (found) {
+                      handleAssignVoice(found, 'assistant');
+                    }
+                  }}
+                  className="w-full px-2.5 py-1.5 bg-black/80 border border-amber-400/40 rounded-xl text-xs text-amber-300 font-bold focus:outline-none"
+                >
+                  <optgroup label="── Giọng Tiếng Việt ──">
+                    {ALL_SYSTEM_VOICES.filter(v => v.lang?.startsWith('vi') || v.id.includes('_vi_')).map(v => (
+                      <option key={v.id} value={v.id}>{v.name} ({v.gender === 'Female' ? 'Nữ' : 'Nam'} • {v.provider})</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="── 20+ Quốc Gia & Giọng Đọc Khác ──">
+                    {ALL_SYSTEM_VOICES.filter(v => !v.lang?.startsWith('vi') && !v.id.includes('_vi_')).map(v => (
+                      <option key={v.id} value={v.id}>{v.name} ({v.gender === 'Female' ? 'Nữ' : 'Nam'} • {v.lang})</option>
+                    ))}
+                  </optgroup>
+                </select>
+              </div>
+
+              {/* Response Delay Slider */}
+              <div>
+                <div className="flex justify-between text-[11px] text-gray-300 font-bold mb-1">
+                  <span>⏱️ Thời Gian Phản Hồi (Delay):</span>
+                  <span className="font-mono text-amber-400 font-black">
+                    {responseDelaySec === 0 ? '0s (Tức thì / Real-time)' : `${responseDelaySec.toFixed(1)}s`}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="5"
+                  step="0.5"
+                  value={responseDelaySec}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    setResponseDelaySec(val);
+                    syncToEngine({ responseDelaySec: val });
+                  }}
+                  className="w-full accent-amber-500 h-1.5 bg-white/10 rounded cursor-pointer"
+                />
+              </div>
+
+              {/* Gemini AI Auto Reply Toggle */}
+              <div className="flex flex-col justify-center">
+                <span className="text-[11px] text-gray-300 font-bold mb-1">🧠 Bộ Não AI Gemini:</span>
+                <button
+                  onClick={() => {
+                    const updated = !useGeminiAI;
+                    setUseGeminiAI(updated);
+                    syncToEngine({ useGeminiAI: updated });
+                  }}
+                  className={`w-full py-1.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                    useGeminiAI 
+                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' 
+                      : 'bg-white/5 text-gray-400 border border-white/10'
+                  }`}
+                >
+                  <Bot size={13} />
+                  {useGeminiAI ? 'Bộ Não AI: ĐANG BẬT' : 'Bộ Não AI: TẮT'}
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Bulk Import Rules Modal */}
           {showBulkRuleModal && (
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-950/90 via-slate-900 to-orange-950/90 border border-amber-500/50 shadow-2xl space-y-3 animate-fadeIn">
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-950/95 via-slate-900 to-orange-950/95 border border-amber-500/50 shadow-2xl space-y-3 animate-fadeIn">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-xs font-black text-amber-300 uppercase">
                   <FileText size={15} /> 
@@ -1119,15 +1272,23 @@ export default function GameVoiceConfigPanel({
                   ✕ Đóng
                 </button>
               </div>
-              <p className="text-[11px] text-gray-300">
-                Định dạng mỗi dòng: <code>Từ khóa 1, từ khóa 2: Câu phản hồi</code> (Tự động chia tách vào từng hàng 1, 2, 3...)
-              </p>
+
+              {/* Formats badges */}
+              <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
+                <span className="text-gray-400 font-bold">Hỗ trợ:</span>
+                <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold border border-purple-500/30">📄 .MD</span>
+                <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30">📑 .PDF</span>
+                <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-bold border border-blue-500/30">📘 .DOCX</span>
+                <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">📝 .TXT</span>
+                <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">📊 .CSV</span>
+                <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30">🏷️ .JSON</span>
+              </div>
 
               <textarea
-                rows={5}
+                rows={6}
                 value={bulkRuleText}
                 onChange={(e) => setBulkRuleText(e.target.value)}
-                placeholder="chào, hi, hello: Dạ em chào [user] đã đến với livestream nha!&#10;luật chơi, hướng dẫn: Luật chơi là bạn thả tim và cắm cờ để phủ đỏ bản đồ!&#10;xanh, phe xanh: Chiến binh [user] vừa tiếp lửa cho Phe Xanh!"
+                placeholder="Định dạng mỗi dòng: Từ khóa 1, từ khóa 2: Câu phản hồi&#10;Ví dụ:&#10;chào, hi, hello: Dạ em chào [user] đã đến với livestream nha!&#10;luật chơi, hướng dẫn: Luật chơi là bạn thả tim và cắm cờ để phủ đỏ bản đồ!&#10;xanh, phe xanh: Chiến binh [user] vừa tiếp lửa cho Phe Xanh!"
                 className="w-full p-3 bg-black/70 border border-white/20 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-400 font-mono custom-scrollbar"
               />
 
@@ -1135,22 +1296,22 @@ export default function GameVoiceConfigPanel({
                 <input
                   type="file"
                   ref={ruleFileInputRef}
-                  accept=".txt,.csv,.json"
+                  accept=".txt,.csv,.json,.md,.pdf,.docx,.doc"
                   onChange={handleFileUploadRules}
                   className="hidden"
                 />
                 <button
                   onClick={() => ruleFileInputRef.current?.click()}
-                  className="px-3.5 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
+                  className="px-3.5 py-2 bg-amber-600/30 hover:bg-amber-600/50 border border-amber-400/40 text-amber-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
                 >
-                  <Upload size={13} /> 📁 Chọn File Từ Máy Tính
+                  <Upload size={13} /> 📁 Chọn File (.md, .pdf, .docx, .txt, .csv, .json)
                 </button>
 
                 <button
                   onClick={() => handleBulkImportRules(bulkRuleText)}
                   className="px-5 py-2 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-black rounded-xl text-xs flex items-center gap-1.5 shadow-lg transition-all"
                 >
-                  <Check size={14} /> Tự Động Chia Tách & Thêm Vào Danh Sách
+                  <Check size={14} /> Tự Động Chia Tách & Nạp Quy Tắc
                 </button>
               </div>
             </div>
@@ -1192,6 +1353,9 @@ export default function GameVoiceConfigPanel({
               >
                 <option value="assistant">💼 Giọng Trợ Lý AI</option>
                 <option value="game">🎙️ Giọng BLV Game</option>
+                {ALL_SYSTEM_VOICES.map(v => (
+                  <option key={v.id} value={v.id}>🔊 {v.name} ({v.gender === 'Female' ? 'Nữ' : 'Nam'})</option>
+                ))}
               </select>
               <button
                 onClick={handleAddKeywordRule}
@@ -1202,10 +1366,112 @@ export default function GameVoiceConfigPanel({
             </div>
           </div>
 
-          {/* Keyword Rules List with Ordering & Direct Inline Edit */}
+          {/* Keyword Rules List with Ordering & Dedicated Edit Card */}
           <div className="space-y-2.5 max-h-[48vh] overflow-y-auto custom-scrollbar pr-1">
             {keywordRules.map((rule, idx) => {
               const isEditing = editingRuleId === (rule.id || idx);
+
+              if (isEditing && editingRuleData) {
+                return (
+                  <div 
+                    key={rule.id || idx}
+                    className="p-4 rounded-2xl bg-gradient-to-r from-amber-950/90 via-slate-900 to-orange-950/90 border-2 border-amber-400 shadow-2xl space-y-3 animate-fadeIn"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <Edit3 size={13} /> Chỉnh Sửa Quy Tắc #{idx + 1}
+                      </span>
+                      <span className="text-[10px] text-gray-400">Áp dụng real-time ngay khi bấm Lưu</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] text-gray-300 font-bold block mb-1">Tên bộ quy tắc:</label>
+                        <input
+                          type="text"
+                          value={editingRuleData.name}
+                          onChange={(e) => setEditingRuleData({ ...editingRuleData, name: e.target.value })}
+                          className="w-full px-3 py-1.5 bg-black/80 border border-white/20 rounded-xl text-xs text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-gray-300 font-bold block mb-1">Từ khóa (cách nhau bằng dấu phẩy):</label>
+                        <input
+                          type="text"
+                          value={editingRuleData.keywords}
+                          onChange={(e) => setEditingRuleData({ ...editingRuleData, keywords: e.target.value })}
+                          className="w-full px-3 py-1.5 bg-black/80 border border-white/20 rounded-xl text-xs text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] text-gray-300 font-bold block mb-1">Câu thoại phản hồi (Hỗ trợ [user]):</label>
+                      <textarea
+                        rows={2}
+                        value={editingRuleData.replyText}
+                        onChange={(e) => setEditingRuleData({ ...editingRuleData, replyText: e.target.value })}
+                        className="w-full p-2.5 bg-black/80 border border-white/20 rounded-xl text-xs text-white font-medium"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] text-gray-300 font-bold block mb-1">Giọng đọc riêng cho câu này:</label>
+                        <select
+                          value={editingRuleData.role}
+                          onChange={(e) => setEditingRuleData({ ...editingRuleData, role: e.target.value, voiceId: e.target.value !== 'assistant' && e.target.value !== 'game' ? e.target.value : undefined })}
+                          className="w-full px-3 py-1.5 bg-black/80 border border-white/20 rounded-xl text-xs text-amber-300 font-bold"
+                        >
+                          <option value="assistant">💼 Giọng Trợ Lý Mặc Định</option>
+                          <option value="game">🎙️ Giọng BLV Game</option>
+                          {ALL_SYSTEM_VOICES.map(v => (
+                            <option key={v.id} value={v.id}>🔊 {v.name} ({v.gender === 'Female' ? 'Nữ' : 'Nam'})</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-gray-300 font-bold block mb-1">Thời gian chờ lặp lại (Cooldown):</label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="30"
+                          value={editingRuleData.cooldownSec || 4}
+                          onChange={(e) => setEditingRuleData({ ...editingRuleData, cooldownSec: Number(e.target.value) })}
+                          className="w-full px-3 py-1.5 bg-black/80 border border-white/20 rounded-xl text-xs text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between flex-wrap gap-2 pt-2 border-t border-white/10">
+                      <button
+                        onClick={() => engine.speak(editingRuleData.replyText.replace(/\[user\]/gi, 'Khán Giả VIP'), editingRuleData.role || 'assistant', true)}
+                        className="px-3.5 py-1.5 bg-purple-600/40 hover:bg-purple-600/60 border border-purple-400/40 text-purple-200 rounded-xl text-xs font-bold flex items-center gap-1.5"
+                      >
+                        <Volume2 size={13} /> Nghe Thử Phản Hồi Này
+                      </button>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            setEditingRuleId(null);
+                            setEditingRuleData(null);
+                          }}
+                          className="px-3.5 py-1.5 bg-white/10 hover:bg-white/20 text-gray-300 rounded-xl text-xs font-bold"
+                        >
+                          ✕ Hủy
+                        </button>
+                        <button
+                          onClick={() => handleSaveEditRule(rule.id || idx)}
+                          className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-500/30"
+                        >
+                          <Check size={14} /> ✓ Lưu Thay Đổi Ngay
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
 
               return (
                 <div
@@ -1260,24 +1526,20 @@ export default function GameVoiceConfigPanel({
                       </button>
                       <button
                         onClick={() => {
-                          if (isEditing) {
-                            setEditingRuleId(null);
-                            setEditingRuleData(null);
-                          } else {
-                            setEditingRuleId(rule.id || idx);
-                            setEditingRuleData({
-                              name: rule.name,
-                              keywords: Array.isArray(rule.keywords) ? rule.keywords.join(', ') : rule.keywords,
-                              replyText: rule.replyText,
-                              role: rule.role || 'assistant',
-                              cooldownSec: rule.cooldownSec || 4
-                            });
-                          }
+                          setEditingRuleId(rule.id || idx);
+                          setEditingRuleData({
+                            name: rule.name,
+                            keywords: Array.isArray(rule.keywords) ? rule.keywords.join(', ') : rule.keywords,
+                            replyText: rule.replyText,
+                            role: rule.role || 'assistant',
+                            voiceId: rule.voiceId,
+                            cooldownSec: rule.cooldownSec || 4
+                          });
                         }}
-                        className="p-1.5 rounded-lg bg-white/10 text-gray-300 hover:bg-white/20"
+                        className="p-1.5 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/40 font-bold text-xs flex items-center gap-1"
                         title="Sửa trực tiếp quy tắc này"
                       >
-                        <Edit3 size={12} />
+                        <Edit3 size={12} /> Sửa
                       </button>
                       <button
                         onClick={() => handleToggleKeywordRule(idx)}
@@ -1304,71 +1566,20 @@ export default function GameVoiceConfigPanel({
                     </div>
                   </div>
 
-                  {/* Inline Edit Form for Rule */}
-                  {isEditing && editingRuleData ? (
-                    <div className="p-3 bg-black/80 rounded-xl border border-amber-500/40 space-y-2">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <div>
-                          <label className="text-[10px] text-gray-400 font-bold block mb-1">Tên bộ quy tắc:</label>
-                          <input
-                            type="text"
-                            value={editingRuleData.name}
-                            onChange={(e) => setEditingRuleData({ ...editingRuleData, name: e.target.value })}
-                            className="w-full px-2.5 py-1.5 bg-black/60 border border-white/20 rounded-lg text-xs text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[10px] text-gray-400 font-bold block mb-1">Từ khóa (cách nhau bằng dấu phẩy):</label>
-                          <input
-                            type="text"
-                            value={editingRuleData.keywords}
-                            onChange={(e) => setEditingRuleData({ ...editingRuleData, keywords: e.target.value })}
-                            className="w-full px-2.5 py-1.5 bg-black/60 border border-white/20 rounded-lg text-xs text-white"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-[10px] text-gray-400 font-bold block mb-1">Câu thoại phản hồi:</label>
-                        <input
-                          type="text"
-                          value={editingRuleData.replyText}
-                          onChange={(e) => setEditingRuleData({ ...editingRuleData, replyText: e.target.value })}
-                          className="w-full px-2.5 py-1.5 bg-black/60 border border-white/20 rounded-lg text-xs text-white"
-                        />
-                      </div>
-                      <div className="flex items-center justify-end gap-2 pt-1">
-                        <button
-                          onClick={() => setEditingRuleId(null)}
-                          className="px-3 py-1 bg-white/10 text-gray-300 rounded-lg text-xs"
-                        >
-                          Hủy
-                        </button>
-                        <button
-                          onClick={() => handleSaveEditRule(rule.id || idx)}
-                          className="px-3.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs flex items-center gap-1"
-                        >
-                          <Check size={12} /> Lưu Sửa Đổi
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      {/* Keywords Chips */}
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[10px] text-gray-400 font-bold">Từ khóa:</span>
-                        {rule.keywords.map((kw, kidx) => (
-                          <span key={kidx} className="text-[10px] px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/20 font-mono">
-                            "{kw}"
-                          </span>
-                        ))}
-                      </div>
+                  {/* Keywords Chips */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] text-gray-400 font-bold">Từ khóa:</span>
+                    {rule.keywords.map((kw, kidx) => (
+                      <span key={kidx} className="text-[10px] px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/20 font-mono">
+                        "{kw}"
+                      </span>
+                    ))}
+                  </div>
 
-                      {/* Reply preview */}
-                      <div className="text-xs text-gray-300 bg-black/40 p-2 rounded-xl border border-white/5 italic">
-                        💬 Phản hồi: "{rule.replyText}"
-                      </div>
-                    </>
-                  )}
+                  {/* Reply preview */}
+                  <div className="text-xs text-gray-300 bg-black/40 p-2 rounded-xl border border-white/5 italic">
+                    💬 Phản hồi: "{rule.replyText}"
+                  </div>
                 </div>
               );
             })}
