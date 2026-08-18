@@ -186,6 +186,35 @@ export default defineConfig({
             return;
           }
 
+          if (req.url.startsWith('/api/tts')) {
+            try {
+              const urlObj = new URL(req.url, 'http://localhost');
+              const text = urlObj.searchParams.get('text') || 'Xin chào';
+              const lang = urlObj.searchParams.get('lang') || 'vi';
+              const googleUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(lang)}&q=${encodeURIComponent(text.slice(0, 200))}`;
+              
+              const https = await import('https');
+              const gReq = https.get(googleUrl, {
+                headers: {
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                  'Referer': 'https://translate.google.com/'
+                }
+              }, (gRes) => {
+                res.setHeader('Content-Type', 'audio/mpeg');
+                res.setHeader('Cache-Control', 'public, max-age=86400');
+                gRes.pipe(res);
+              });
+              gReq.on('error', (err) => {
+                res.statusCode = 500;
+                res.end(JSON.stringify({ error: err.message }));
+              });
+            } catch (err) {
+              res.statusCode = 500;
+              res.end(JSON.stringify({ error: err.message }));
+            }
+            return;
+          }
+
           // /api/extract has been completely removed to avoid yt-dlp dependencies
           next();
         });

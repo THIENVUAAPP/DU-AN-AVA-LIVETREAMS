@@ -396,10 +396,10 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
   }
 
   // =========================================================================
-  // TIER 2: Universal High-Fidelity Cloud Audio Stream (Google TTS CDN)
+  // TIER 2: Local Server Audio Stream Proxy (/api/tts)
   // =========================================================================
   try {
-    const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${shortLang}&client=tw-ob&q=${encodeURIComponent(textToSpeak)}`;
+    const ttsUrl = `/api/tts?lang=${encodeURIComponent(shortLang)}&text=${encodeURIComponent(textToSpeak)}`;
     const cloudAudio = new Audio(ttsUrl);
     cloudAudio.volume = voice?.volume || 1.0;
     activePreviewAudio = cloudAudio;
@@ -417,32 +417,31 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
       cloudAudio.onended = () => cleanup(true);
       cloudAudio.onerror = () => cleanup(false);
 
-      // Thử phát audio cloud stream
       cloudAudio.play()
         .then(() => {
-          // Phát thành công!
+          // Stream đang phát trực tiếp!
         })
         .catch(() => {
           cleanup(false);
         });
 
-      // Timeout fallback nếu mạng quá chậm
+      // Nếu sau 1.2s không chạy được qua server proxy, fallback ngay sang Web Speech
       setTimeout(() => {
         if (!isDone && cloudAudio.paused) {
           cleanup(false);
         }
-      }, 1500);
+      }, 1200);
     });
 
     if (cloudPlayed) {
       return true;
     }
   } catch (cloudErr) {
-    console.warn('Cloud TTS Stream fallback error, trying Web Speech API:', cloudErr);
+    console.warn('Server TTS stream error, falling back to Web Speech API:', cloudErr);
   }
 
   // =========================================================================
-  // TIER 3: Instant Client Web Speech API (Đã tối ưu mở khoá & chống huỷ ngầm)
+  // TIER 3: Instant Client Web Speech API (Đồng bộ, tối ưu hoá mọi trình duyệt)
   // =========================================================================
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
     return new Promise((resolve) => {
@@ -453,15 +452,28 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
         const utterance = new SpeechSynthesisUtterance(textToSpeak);
         activeUtterance = utterance;
         
-        // Lưu vào Set toàn cục để tránh bị Browser Garbage Collector dọn dẹp giữa chừng
+        // Lưu vào Set toàn cục để tránh bị Garbage Collector dọn dẹp giữa chừng
         window._activeVoiceSet = window._activeVoiceSet || new Set();
         window._activeVoiceSet.add(utterance);
 
         utterance.lang = langCode;
 
-        const isFemale = voice?.gender === 'Female' || voice?.gender === 'Nữ';
-        utterance.rate = voice?.rate || (isFemale ? 1.0 : 1.05);
-        utterance.pitch = voice?.pitch || (isFemale ? 1.15 : 0.88);
+        const isMale = voice?.gender === 'Male' || voice?.gender === 'Nam';
+        const isFemale = !isMale;
+
+        if (voice?.id === 'free_vi_male') {
+          utterance.rate = 1.08;
+          utterance.pitch = 0.85;
+        } else if (voice?.id === 'free_vi_female2') {
+          utterance.rate = 0.98;
+          utterance.pitch = 1.25;
+        } else if (voice?.id === 'free_vi_female') {
+          utterance.rate = 1.0;
+          utterance.pitch = 1.12;
+        } else {
+          utterance.rate = voice?.rate || (isFemale ? 1.0 : 1.05);
+          utterance.pitch = voice?.pitch || (isFemale ? 1.15 : 0.88);
+        }
         utterance.volume = voice?.volume || 1.0;
 
         let hasEnded = false;
@@ -491,26 +503,31 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
         // Lấy danh sách giọng từ Web Speech API
         const availableVoices = (preloadedVoices.length > 0 ? preloadedVoices : window.speechSynthesis.getVoices()) || [];
         if (availableVoices.length > 0) {
-          // Tìm giọng chuẩn theo ngôn ngữ
-          const matched = availableVoices.find(v => {
+          // Tìm giọng chuẩn theo ngôn ngữ và giới tính
+          let matched = availableVoices.find(v => {
             const vLang = (v.lang || '').toLowerCase().replace('_', '-');
-            return vLang.startsWith(shortLang) || vLang.includes(shortLang);
+            const matchesLang = vLang.startsWith(shortLang) || vLang.includes(shortLang);
+            const vName = (v.name || '').toLowerCase();
+            if (isMale) {
+              return matchesLang && (vName.includes('male') || vName.includes('nam') || vName.includes('david') || vName.includes('george'));
+            } else {
+              return matchesLang && (vName.includes('female') || vName.includes('nữ') || vName.includes('linh') || vName.includes('mai') || vName.includes('zira') || vName.includes('samantha'));
+            }
           });
+
+          if (!matched) {
+            matched = availableVoices.find(v => {
+              const vLang = (v.lang || '').toLowerCase().replace('_', '-');
+              return vLang.startsWith(shortLang) || vLang.includes(shortLang);
+            });
+          }
 
           if (matched) {
             utterance.voice = matched;
           }
         }
 
-        // Kích hoạt phát âm thanh sau microtask ngắn để tránh bug cancel của Chrome
-        setTimeout(() => {
-          try {
-            window.speechSynthesis.speak(utterance);
-          } catch (spkErr) {
-            playFallbackHarmonicChime(voice?.gender);
-            finish(false);
-          }
-        }, 30);
+        window.speechSynthesis.speak(utterance);
       } catch (synthErr) {
         console.warn('Web Speech API execution catch:', synthErr);
         playFallbackHarmonicChime(voice?.gender);
