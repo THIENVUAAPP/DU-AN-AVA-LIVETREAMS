@@ -1032,6 +1032,39 @@ export default function GameBanDoVietNam({
     focalGroup.add(flagPlaneMesh);
     state.flagPlaneMesh = flagPlaneMesh;
 
+    // Bảng tên ID Người Tặng & Quà 3D trên đỉnh cột cờ
+    const initialBadgeCanvas = document.createElement('canvas');
+    initialBadgeCanvas.width = 512;
+    initialBadgeCanvas.height = 160;
+    const bCtx = initialBadgeCanvas.getContext('2d');
+    bCtx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+    if (bCtx.roundRect) {
+      bCtx.roundRect(10, 10, 492, 140, 20);
+      bCtx.fill();
+      bCtx.strokeStyle = '#f59e0b';
+      bCtx.lineWidth = 6;
+      bCtx.roundRect(10, 10, 492, 140, 20);
+      bCtx.stroke();
+    } else {
+      bCtx.fillRect(10, 10, 492, 140);
+    }
+    bCtx.fillStyle = '#ffffff';
+    bCtx.font = 'bold 36px sans-serif';
+    bCtx.textAlign = 'center';
+    bCtx.fillText('👑 Chiến Binh Áo Đỏ', 256, 62);
+    bCtx.fillStyle = '#fbbf24';
+    bCtx.font = 'bold 26px sans-serif';
+    bCtx.fillText('🇻🇳 Cắm Cờ Tổ Quốc', 256, 115);
+
+    const badgeTexture = new THREE.CanvasTexture(initialBadgeCanvas);
+    const badgeMat = new THREE.SpriteMaterial({ map: badgeTexture, depthTest: false });
+    const badgeSprite = new THREE.Sprite(badgeMat);
+    badgeSprite.position.set(1.1, 4.9, 0);
+    badgeSprite.scale.set(3.8, 1.2, 1.0);
+    focalGroup.add(badgeSprite);
+    state.badgeSprite = badgeSprite;
+    state.badgeTexture = badgeTexture;
+
     // Positioning
     const cols = maskData?.gridCols || 300;
     const rows = maskData?.gridRows || 389;
@@ -1566,6 +1599,35 @@ export default function GameBanDoVietNam({
         if (state.focalGroup) {
           state.focalGroup.position.set(ft.wx, 0, ft.wz);
           state.focalGroup.visible = true;
+
+          if (state.badgeTexture) {
+            const userName = ft.username || ft.user || 'Chiến Binh Áo Đỏ';
+            const giftText = ft.giftName ? `🎁 ${ft.giftName} (+${ft.count || 1} ô)` : `🇻🇳 +${ft.count || 1} Ô Cờ`;
+            const updatedCanvas = document.createElement('canvas');
+            updatedCanvas.width = 512;
+            updatedCanvas.height = 160;
+            const ctx = updatedCanvas.getContext('2d');
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+            if (ctx.roundRect) {
+              ctx.roundRect(10, 10, 492, 140, 20);
+              ctx.fill();
+              ctx.strokeStyle = '#f59e0b';
+              ctx.lineWidth = 6;
+              ctx.roundRect(10, 10, 492, 140, 20);
+              ctx.stroke();
+            } else {
+              ctx.fillRect(10, 10, 492, 140);
+            }
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 36px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`👑 ${userName}`, 256, 62);
+            ctx.fillStyle = '#fbbf24';
+            ctx.font = 'bold 26px sans-serif';
+            ctx.fillText(giftText, 256, 115);
+            state.badgeTexture.image = updatedCanvas;
+            state.badgeTexture.needsUpdate = true;
+          }
         }
         // Giai đoạn 1: Zoom Cận Cảnh đúng 4s (thấy rõ lá cờ quốc kỳ 3D và ID người tặng kế bên)
         state.tween = {

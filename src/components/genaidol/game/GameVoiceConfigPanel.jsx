@@ -5,7 +5,7 @@ import {
   Send, HelpCircle, ShieldCheck, UserCheck, Flame
 } from 'lucide-react';
 import { 
-  ELEVENLABS_VOICES, previewVoiceAudio, stopVoiceAudio 
+  ALL_SYSTEM_VOICES, previewVoiceAudio, stopVoiceAudio 
 } from '../../../utils/voiceSyncService';
 
 export default function GameVoiceConfigPanel({ 
@@ -43,7 +43,7 @@ export default function GameVoiceConfigPanel({
 
   // Test Simulator state
   const [testComment, setTestComment] = useState('');
-  const [testUsername, setTestUsername] = useState('Đại Gia VIP');
+  const [testUsername, setTestUsername] = useState('');
   const [simulatorStatus, setSimulatorStatus] = useState('');
 
   // Sync to engine whenever states change
@@ -165,7 +165,7 @@ export default function GameVoiceConfigPanel({
     setTimeout(() => setSimulatorStatus(''), 4000);
   };
 
-  const filteredVoices = ELEVENLABS_VOICES.filter(v => {
+  const filteredVoices = ALL_SYSTEM_VOICES.filter(v => {
     if (voiceFilter === 'pro') return v.tier === 'pro';
     if (voiceFilter === 'free') return v.tier === 'free';
     if (voiceFilter === 'female') return v.gender === 'Female';

@@ -90,10 +90,10 @@ export default function GeneralSettings({ onClose }) {
       localStorage.setItem('aidol_general_settings_backup', json);
       localStorage.setItem('gemini_model', settings.apiModel || 'gemini-1.5-flash');
 
-      // Đồng bộ vào hệ thống 3 kênh giọng ElevenLabs của AVA Live
-      const idolMatch = ELEVENLABS_VOICES.find(v => v.id === settings.mainVoiceId);
-      const managerMatch = ELEVENLABS_VOICES.find(v => v.id === settings.assistantVoiceId);
-      const gameMatch = ELEVENLABS_VOICES.find(v => v.id === settings.gameVoiceId);
+      // Đồng bộ vào hệ thống 3 kênh giọng của AVA Live
+      const idolMatch = ALL_SYSTEM_VOICES.find(v => v.id === settings.mainVoiceId);
+      const managerMatch = ALL_SYSTEM_VOICES.find(v => v.id === settings.assistantVoiceId);
+      const gameMatch = ALL_SYSTEM_VOICES.find(v => v.id === settings.gameVoiceId);
       
       saveDualVoiceConfig({
         idolVoice: idolMatch ? { ...idolMatch, role: 'idol' } : undefined,

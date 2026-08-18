@@ -1,4 +1,4 @@
-import { ELEVENLABS_VOICES, getElevenLabsApiKey, previewVoiceAudio, stopVoiceAudio } from '../../../utils/voiceSyncService';
+import { ALL_SYSTEM_VOICES, ELEVENLABS_VOICES, getElevenLabsApiKey, previewVoiceAudio, stopVoiceAudio } from '../../../utils/voiceSyncService';
 
 export const DEFAULT_MAP_PROMPTS = [
   { id: 'p1', text: "Đại chiến cắm cờ Tổ Quốc đang diễn ra vô cùng sôi động! Mọi người mau thả tim và tặng quà để phủ đỏ bản đồ nào!", role: 'game', enabled: true },
@@ -208,9 +208,10 @@ class GameVoiceEngine {
     if (this.onSpeechStateChange) this.onSpeechStateChange(true, text, role);
 
     const activeVoice = role === 'assistant' ? this.assistantVoice : this.gameVoice;
-    const voiceObj = ELEVENLABS_VOICES.find(v => v.id === activeVoice?.id || v.voiceId === activeVoice?.voiceId) || activeVoice || {
-      id: role === 'assistant' ? 'el_rachel' : 'el_josh',
-      provider: 'elevenlabs',
+    const voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === activeVoice?.id || v.voiceId === activeVoice?.voiceId) || activeVoice || {
+      id: role === 'assistant' ? 'free_vi_female' : 'free_vi_male',
+      provider: 'system',
+      tier: 'free',
       gender: role === 'assistant' ? 'Female' : 'Male',
       role
     };

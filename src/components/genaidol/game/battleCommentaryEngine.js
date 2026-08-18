@@ -1,6 +1,6 @@
-import { ELEVENLABS_VOICES, getElevenLabsApiKey, previewVoiceAudio, stopVoiceAudio } from '../../../utils/voiceSyncService';
+import { ALL_SYSTEM_VOICES, ELEVENLABS_VOICES, getElevenLabsApiKey, previewVoiceAudio, stopVoiceAudio } from '../../../utils/voiceSyncService';
 
-export const ELEVENLABS_GAME_VOICES = ELEVENLABS_VOICES;
+export const ELEVENLABS_GAME_VOICES = ALL_SYSTEM_VOICES;
 
 const DEFAULT_COMMENTARY_SCRIPTS = [
   "Trận chiến đang diễn ra vô cùng nảy lửa! Hai bên đang dồn toàn lực giao tranh!",
@@ -134,10 +134,11 @@ class BattleCommentaryEngine {
 
     // GỌI UNIFIED VOICE ENGINE CHO BÌNH LUẬN VIÊN GAME
     try {
-      const voiceObj = ELEVENLABS_VOICES.find(v => v.id === (customVoiceId || this.selectedVoiceId)) || {
-        id: this.selectedVoiceId || 'el_josh',
+      const voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === (customVoiceId || this.selectedVoiceId)) || {
+        id: this.selectedVoiceId || 'free_vi_male',
         voiceId: this.selectedElevenLabsVoiceId || 'TxGEqnHWrfWFTfGW9XjX',
-        provider: 'elevenlabs',
+        provider: 'system',
+        tier: 'free',
         gender: 'Male',
         role: 'game'
       };
