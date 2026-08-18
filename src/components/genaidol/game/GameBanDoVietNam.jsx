@@ -2397,23 +2397,64 @@ export default function GameBanDoVietNam({
         </div>
       )}
 
-      {/* AUDIO SETTINGS MODAL */}
+      {/* AUDIO & SFX SETTINGS MODAL */}
       {showAudioModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-[#161a23] border border-purple-500/40 rounded-2xl max-w-sm w-full p-5 shadow-2xl text-white">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+          <div className="bg-[#161a23] border border-purple-500/40 rounded-2xl max-w-md w-full p-5 shadow-2xl text-white space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
               <div className="flex items-center gap-2">
-                <Music size={18} className="text-purple-400" />
-                <h3 className="font-bold text-sm">Cài Đặt Nhạc Nền 24/24</h3>
+                <span className="p-1.5 rounded-lg bg-purple-500/20 text-purple-300">
+                  <Music size={18} />
+                </span>
+                <div>
+                  <h3 className="font-black text-sm text-white">Cài Đặt Âm Thanh & Nhạc Nền 24/24</h3>
+                  <p className="text-[10px] text-gray-400">Bật/Tắt riêng Nhạc Nền BGM & Hiệu Ứng SFX cho Game</p>
+                </div>
               </div>
-              <button onClick={() => setShowAudioModal(false)} className="text-gray-400 hover:text-white">
+              <button onClick={() => setShowAudioModal(false)} className="text-gray-400 hover:text-white p-1 rounded-lg hover:bg-white/10">
                 <X size={16} />
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3.5 max-h-[70vh] overflow-y-auto custom-scrollbar pr-1">
+              {/* 1. Toggle BGM & SFX Dual Switches */}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    const isMuted = bandoAudio.isMuted;
+                    bandoAudio.setMuted(!isMuted);
+                    setIsBgmPlaying(!bandoAudio.isMuted && bandoAudio.bgmPlaying);
+                  }}
+                  className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all ${
+                    !bandoAudio.isMuted
+                      ? 'bg-purple-950/60 border-purple-400 text-purple-200 shadow-md ring-1 ring-purple-400'
+                      : 'bg-white/5 border-white/10 text-gray-500'
+                  }`}
+                >
+                  <Music size={16} className={!bandoAudio.isMuted ? 'text-purple-300 animate-pulse' : 'text-gray-500'} />
+                  <span className="text-[11px] font-black">{!bandoAudio.isMuted ? '🎵 NHẠC NỀN: BẬT' : '🎵 NHẠC NỀN: TẮT'}</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    bandoAudio.toggleSfx();
+                    // force re-render
+                    setSfxVolumeState(bandoAudio.sfxVolume);
+                  }}
+                  className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all ${
+                    !bandoAudio.isSfxMuted
+                      ? 'bg-cyan-950/60 border-cyan-400 text-cyan-200 shadow-md ring-1 ring-cyan-400'
+                      : 'bg-white/5 border-white/10 text-gray-500'
+                  }`}
+                >
+                  <Volume2 size={16} className={!bandoAudio.isSfxMuted ? 'text-cyan-300' : 'text-gray-500'} />
+                  <span className="text-[11px] font-black">{!bandoAudio.isSfxMuted ? '🔊 SFX HIỆU ỨNG: BẬT' : '🔊 SFX: TẮT'}</span>
+                </button>
+              </div>
+
+              {/* 2. Timer Mode */}
               <div>
-                <label className="text-xs font-bold text-gray-300 block mb-1.5">Chế Độ Phát / Hẹn Giờ:</label>
+                <label className="text-xs font-bold text-gray-300 block mb-1.5">Chế Độ Phát / Hẹn Giờ Nhạc:</label>
                 <div className="grid grid-cols-2 gap-1.5">
                   {[
                     { id: '24/7', label: 'Vô Tận (24/24)' },
@@ -2439,10 +2480,11 @@ export default function GameBanDoVietNam({
                 </div>
               </div>
 
-              <div>
-                <div className="flex justify-between text-xs font-bold text-gray-300 mb-1">
-                  <span>Âm lượng Nhạc Nền (BGM):</span>
-                  <span className="font-mono text-purple-300">{Math.round(bgmVolume * 100)}%</span>
+              {/* 3. BGM Volume Slider */}
+              <div className="p-3 bg-black/40 rounded-xl border border-white/10 space-y-1.5">
+                <div className="flex justify-between text-xs font-bold text-gray-300">
+                  <span className="flex items-center gap-1"><Music size={12} className="text-purple-400" /> Âm lượng Nhạc Nền (BGM):</span>
+                  <span className="font-mono text-purple-300 font-black">{Math.round(bgmVolume * 100)}%</span>
                 </div>
                 <input
                   type="range"
@@ -2459,10 +2501,11 @@ export default function GameBanDoVietNam({
                 />
               </div>
 
-              <div>
-                <div className="flex justify-between text-xs font-bold text-gray-300 mb-1">
-                  <span>Âm lượng Hiệu Ứng (SFX):</span>
-                  <span className="font-mono text-cyan-300">{Math.round(sfxVolume * 100)}%</span>
+              {/* 4. SFX Volume Slider */}
+              <div className="p-3 bg-black/40 rounded-xl border border-white/10 space-y-1.5">
+                <div className="flex justify-between text-xs font-bold text-gray-300">
+                  <span className="flex items-center gap-1"><Volume2 size={12} className="text-cyan-400" /> Âm lượng Hiệu Ứng Game (SFX):</span>
+                  <span className="font-mono text-cyan-300 font-black">{Math.round(sfxVolume * 100)}%</span>
                 </div>
                 <input
                   type="range"
@@ -2480,12 +2523,12 @@ export default function GameBanDoVietNam({
               </div>
             </div>
 
-            <div className="mt-5">
+            <div className="pt-2 border-t border-white/10">
               <button
                 onClick={() => setShowAudioModal(false)}
-                className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition-colors"
+                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs transition-all shadow-lg shadow-purple-600/30"
               >
-                Xong / Đóng
+                ✓ Hoàn Tất & Áp Dụng Cho Game
               </button>
             </div>
           </div>
