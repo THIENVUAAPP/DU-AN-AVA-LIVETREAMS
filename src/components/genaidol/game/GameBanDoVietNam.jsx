@@ -993,76 +993,78 @@ export default function GameBanDoVietNam({
       if (bannerMesh.instanceColor) bannerMesh.instanceColor.needsUpdate = true;
     }
 
-    // 3. 3D Focal Flag Marker Group (Cột cờ 3D mạ vàng + Lá cờ quốc kỳ tung bay siêu sắc nét chuẩn màu, KHÔNG phát sáng chói lóa)
+    // 3. 3D Focal Flag Marker Group (Cột cờ 3D mạ vàng đại lễ + Lá cờ quốc kỳ tung bay siêu sắc nét rực rỡ + Bảng ID người tặng)
     const focalGroup = new THREE.Group();
     focalGroup.visible = false;
     scene.add(focalGroup);
     state.focalGroup = focalGroup;
 
-    // Cán cờ vàng kim hoàng gia
-    const poleGeo = new THREE.CylinderGeometry(0.08, 0.08, 4.2, 16);
+    // Cán cờ vàng kim hoàng gia cao 7.2m
+    const poleGeo = new THREE.CylinderGeometry(0.12, 0.12, 7.2, 16);
     const poleMat = new THREE.MeshStandardMaterial({
       color: 0xffd700,
-      metalness: 0.85,
-      roughness: 0.25
+      metalness: 0.90,
+      roughness: 0.15
     });
     const poleMesh = new THREE.Mesh(poleGeo, poleMat);
-    poleMesh.position.set(0, 2.1, 0);
+    poleMesh.position.set(0, 3.6, 0);
     focalGroup.add(poleMesh);
 
     // Đỉnh chóp quả cầu vàng sắc nét
-    const sphereGeo = new THREE.SphereGeometry(0.18, 16, 16);
+    const sphereGeo = new THREE.SphereGeometry(0.28, 16, 16);
     const sphereMat = new THREE.MeshStandardMaterial({
       color: 0xffea00,
-      metalness: 0.6,
-      roughness: 0.2
+      metalness: 0.8,
+      roughness: 0.1
     });
     const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
-    sphereMesh.position.set(0, 4.2, 0);
+    sphereMesh.position.set(0, 7.2, 0);
     focalGroup.add(sphereMesh);
 
-    // Lá cờ quốc kỳ 3D vẫy sóng siêu sắc nét chuẩn màu đỏ tươi & sao vàng, KHÔNG phát sáng chói lóa
-    const flagGeo = new THREE.PlaneGeometry(2.2, 1.4, 16, 10);
+    // Lá cờ quốc kỳ 3D vẫy sóng siêu to & sắc nét chuẩn màu đỏ tươi & sao vàng (Kích thước 4.2m x 2.7m)
+    const flagGeo = new THREE.PlaneGeometry(4.2, 2.7, 24, 16);
     const flagPlaneMat = new THREE.MeshStandardMaterial({
       map: flagTexture,
       side: THREE.DoubleSide,
-      roughness: 0.35,
-      metalness: 0.05
+      roughness: 0.25,
+      metalness: 0.05,
+      emissive: new THREE.Color(0x350505),
+      emissiveIntensity: 0.35,
     });
     const flagPlaneMesh = new THREE.Mesh(flagGeo, flagPlaneMat);
-    flagPlaneMesh.position.set(1.1, 3.4, 0);
+    flagPlaneMesh.position.set(2.1, 5.4, 0);
     focalGroup.add(flagPlaneMesh);
     state.flagPlaneMesh = flagPlaneMesh;
 
-    // Bảng tên ID Người Tặng & Quà 3D trên đỉnh cột cờ
+    // Bảng tên ID Người Tặng & Quà 3D trên đỉnh cột cờ (Kích thước 640x200 sắc nét)
     const initialBadgeCanvas = document.createElement('canvas');
-    initialBadgeCanvas.width = 512;
-    initialBadgeCanvas.height = 160;
+    initialBadgeCanvas.width = 640;
+    initialBadgeCanvas.height = 200;
     const bCtx = initialBadgeCanvas.getContext('2d');
-    bCtx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+    bCtx.fillStyle = 'rgba(15, 23, 42, 0.95)';
     if (bCtx.roundRect) {
-      bCtx.roundRect(10, 10, 492, 140, 20);
+      bCtx.roundRect(12, 12, 616, 176, 24);
       bCtx.fill();
       bCtx.strokeStyle = '#f59e0b';
-      bCtx.lineWidth = 6;
-      bCtx.roundRect(10, 10, 492, 140, 20);
+      bCtx.lineWidth = 8;
+      bCtx.roundRect(12, 12, 616, 176, 24);
       bCtx.stroke();
     } else {
-      bCtx.fillRect(10, 10, 492, 140);
+      bCtx.fillRect(12, 12, 616, 176);
     }
     bCtx.fillStyle = '#ffffff';
-    bCtx.font = 'bold 36px sans-serif';
+    bCtx.font = 'bold 44px sans-serif';
     bCtx.textAlign = 'center';
-    bCtx.fillText('👑 Chiến Binh Áo Đỏ', 256, 62);
+    bCtx.fillText('👑 Chiến Binh Áo Đỏ', 320, 78);
     bCtx.fillStyle = '#fbbf24';
-    bCtx.font = 'bold 26px sans-serif';
-    bCtx.fillText('🇻🇳 Cắm Cờ Tổ Quốc', 256, 115);
+    bCtx.font = 'bold 34px sans-serif';
+    bCtx.fillText('🇻🇳 Cắm Cờ Tổ Quốc', 320, 145);
 
     const badgeTexture = new THREE.CanvasTexture(initialBadgeCanvas);
     const badgeMat = new THREE.SpriteMaterial({ map: badgeTexture, depthTest: false });
     const badgeSprite = new THREE.Sprite(badgeMat);
-    badgeSprite.position.set(1.1, 4.9, 0);
-    badgeSprite.scale.set(3.8, 1.2, 1.0);
+    badgeSprite.position.set(2.1, 8.2, 0);
+    badgeSprite.scale.set(5.8, 1.8, 1.0);
     focalGroup.add(badgeSprite);
     state.badgeSprite = badgeSprite;
     state.badgeTexture = badgeTexture;
@@ -1608,50 +1610,46 @@ export default function GameBanDoVietNam({
             const userName = ft.username || ft.user || 'Chiến Binh Áo Đỏ';
             const giftText = ft.giftName ? `🎁 ${ft.giftName} (+${ft.count || 1} ô)` : `🇻🇳 +${ft.count || 1} Ô Cờ`;
             const updatedCanvas = document.createElement('canvas');
-            updatedCanvas.width = 512;
-            updatedCanvas.height = 160;
+            updatedCanvas.width = 640;
+            updatedCanvas.height = 200;
             const ctx = updatedCanvas.getContext('2d');
-            ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
             if (ctx.roundRect) {
-              ctx.roundRect(10, 10, 492, 140, 20);
+              ctx.roundRect(12, 12, 616, 176, 24);
               ctx.fill();
               ctx.strokeStyle = '#f59e0b';
-              ctx.lineWidth = 6;
-              ctx.roundRect(10, 10, 492, 140, 20);
+              ctx.lineWidth = 8;
+              ctx.roundRect(12, 12, 616, 176, 24);
               ctx.stroke();
             } else {
-              ctx.fillRect(10, 10, 492, 140);
+              ctx.fillRect(12, 12, 616, 176);
             }
             ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 36px sans-serif';
+            ctx.font = 'bold 44px sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText(`👑 ${userName}`, 256, 62);
+            ctx.fillText(`👑 ${userName}`, 320, 78);
             ctx.fillStyle = '#fbbf24';
-            ctx.font = 'bold 26px sans-serif';
-            ctx.fillText(giftText, 256, 115);
+            ctx.font = 'bold 34px sans-serif';
+            ctx.fillText(giftText, 320, 145);
             state.badgeTexture.image = updatedCanvas;
             state.badgeTexture.needsUpdate = true;
           }
         }
 
-        // CHỈ zoom camera khi Chạy Thật (Live Stream). Khi Chạy Demo Test Quà -> Giữ camera ổn định toàn cảnh
-        const isTestingNow = isAutoTesting || bandoEngine.isAutoTesting;
-        if (!isTestingNow) {
-          // Giai đoạn 1: Zoom Cận Cảnh đúng 4s (thấy rõ lá cờ quốc kỳ 3D và ID người tặng kế bên)
-          state.tween = {
-            from: state.camera.position.clone(),
-            to: new THREE.Vector3(ft.wx, 8.5, ft.wz + 7.0),
-            fromTarget: state.controls.target.clone(),
-            toTarget: new THREE.Vector3(ft.wx, 1.8, ft.wz),
-            regionalTo: new THREE.Vector3(ft.wx * 0.65, 75, ft.wz * 0.65 + 60),
-            regionalTarget: new THREE.Vector3(ft.wx * 0.65, 0, ft.wz * 0.65),
-            start: performance.now(),
-            duration: 550,
-            phase: 'in',
-            holdDuration: 4000,
-            holdUntil: 0
-          };
-        }
+        // Chu kỳ Zoom 3 Cấp: Zoom Cận Cảnh (rõ lá cờ quốc kỳ 3D + Bảng tên ID) -> Zoom Vùng -> Zoom Toàn Cảnh
+        state.tween = {
+          from: state.camera.position.clone(),
+          to: new THREE.Vector3(ft.wx, 11.5, ft.wz + 10.5),
+          fromTarget: state.controls.target.clone(),
+          toTarget: new THREE.Vector3(ft.wx, 4.2, ft.wz),
+          regionalTo: new THREE.Vector3(ft.wx * 0.65, 80, ft.wz * 0.65 + 65),
+          regionalTarget: new THREE.Vector3(ft.wx * 0.65, 0, ft.wz * 0.65),
+          start: performance.now(),
+          duration: 600,
+          phase: 'in',
+          holdDuration: 2400, // Cận cảnh sắc nét 2.4s
+          holdUntil: 0
+        };
       }
     }
   }, [gameState.claimedCount, gameState.cellsById, gameState.lastFocalTarget, gameState.status, gameState.settings, gameState.selectedCountry, gameState.bannerCells, gameState.bannerClaimedCount, gameState.showBannerCells, gameState.bannerPos, gameState.bannerClaimedColor, gameState.bannerUnclaimedColor, gameState.bannerVoxelScale, viewMode3D, gameState.maskLoaded, isAutoTesting, isAuto247]);

@@ -291,15 +291,6 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
 
   stopVoiceAudio();
 
-  // Đảm bảo mở khóa Web Speech & Web Audio ngay lập tức trên thao tác bấm chuột của người dùng
-  if ('speechSynthesis' in window) {
-    try {
-      if (window.speechSynthesis.paused) {
-        window.speechSynthesis.resume();
-      }
-    } catch (e) {}
-  }
-
   const rawLang = voice?.lang || (
     voice?.id?.includes('_us_') || voice?.id?.includes('_en_') ? 'en-US' :
     voice?.id?.includes('_zh_') ? 'zh-CN' :
@@ -400,17 +391,65 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
         });
       }
     } catch (e) {
-      console.warn('ElevenLabs API direct fetch error, falling back to Web Speech API:', e);
+      console.warn('ElevenLabs API direct fetch error, trying universal cloud TTS:', e);
     }
   }
 
   // =========================================================================
-  // TIER 2: Instant Client Web Speech API (Khởi chạy đồng bộ ngay lập tức 100%)
+  // TIER 2: Universal High-Fidelity Cloud Audio Stream (Google TTS CDN)
+  // =========================================================================
+  try {
+    const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${shortLang}&client=tw-ob&q=${encodeURIComponent(textToSpeak)}`;
+    const cloudAudio = new Audio(ttsUrl);
+    cloudAudio.volume = voice?.volume || 1.0;
+    activePreviewAudio = cloudAudio;
+
+    const cloudPlayed = await new Promise((resolve) => {
+      let isDone = false;
+      const cleanup = (success) => {
+        if (isDone) return;
+        isDone = true;
+        activePreviewAudio = null;
+        if (onEnd && success) onEnd();
+        resolve(success);
+      };
+
+      cloudAudio.onended = () => cleanup(true);
+      cloudAudio.onerror = () => cleanup(false);
+
+      // Thử phát audio cloud stream
+      cloudAudio.play()
+        .then(() => {
+          // Phát thành công!
+        })
+        .catch(() => {
+          cleanup(false);
+        });
+
+      // Timeout fallback nếu mạng quá chậm
+      setTimeout(() => {
+        if (!isDone && cloudAudio.paused) {
+          cleanup(false);
+        }
+      }, 1500);
+    });
+
+    if (cloudPlayed) {
+      return true;
+    }
+  } catch (cloudErr) {
+    console.warn('Cloud TTS Stream fallback error, trying Web Speech API:', cloudErr);
+  }
+
+  // =========================================================================
+  // TIER 3: Instant Client Web Speech API (Đã tối ưu mở khoá & chống huỷ ngầm)
   // =========================================================================
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
     return new Promise((resolve) => {
       try {
+        window.speechSynthesis.cancel();
         window.speechSynthesis.resume();
+
         const utterance = new SpeechSynthesisUtterance(textToSpeak);
         activeUtterance = utterance;
         
@@ -421,8 +460,8 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
         utterance.lang = langCode;
 
         const isFemale = voice?.gender === 'Female' || voice?.gender === 'Nữ';
-        utterance.rate = voice?.rate || (isFemale ? 1.02 : 1.08);
-        utterance.pitch = voice?.pitch || (isFemale ? 1.15 : 0.85);
+        utterance.rate = voice?.rate || (isFemale ? 1.0 : 1.05);
+        utterance.pitch = voice?.pitch || (isFemale ? 1.15 : 0.88);
         utterance.volume = voice?.volume || 1.0;
 
         let hasEnded = false;
@@ -445,32 +484,33 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
         };
 
         // Safety watchdog: tự động kết thúc nếu trình duyệt bị đơ
-        const maxDurationMs = Math.max(5000, textToSpeak.length * 150);
+        const maxDurationMs = Math.max(5000, textToSpeak.length * 160);
         const watchdog = setTimeout(() => finish(true), maxDurationMs);
         utterance.addEventListener('end', () => clearTimeout(watchdog));
 
         // Lấy danh sách giọng từ Web Speech API
         const availableVoices = (preloadedVoices.length > 0 ? preloadedVoices : window.speechSynthesis.getVoices()) || [];
         if (availableVoices.length > 0) {
-          // Tìm giọng chuẩn theo ngôn ngữ và giới tính
-          let matched = availableVoices.find(v => {
+          // Tìm giọng chuẩn theo ngôn ngữ
+          const matched = availableVoices.find(v => {
             const vLang = (v.lang || '').toLowerCase().replace('_', '-');
             return vLang.startsWith(shortLang) || vLang.includes(shortLang);
           });
-
-          // Nếu không có giọng chuẩn theo ngôn ngữ, tìm giọng tiếng Việt hoặc giọng đầu tiên
-          if (!matched) {
-            matched = availableVoices.find(v => (v.lang || '').toLowerCase().startsWith('vi')) ||
-                      availableVoices.find(v => (v.lang || '').toLowerCase().startsWith('en')) ||
-                      availableVoices[0];
-          }
 
           if (matched) {
             utterance.voice = matched;
           }
         }
 
-        window.speechSynthesis.speak(utterance);
+        // Kích hoạt phát âm thanh sau microtask ngắn để tránh bug cancel của Chrome
+        setTimeout(() => {
+          try {
+            window.speechSynthesis.speak(utterance);
+          } catch (spkErr) {
+            playFallbackHarmonicChime(voice?.gender);
+            finish(false);
+          }
+        }, 30);
       } catch (synthErr) {
         console.warn('Web Speech API execution catch:', synthErr);
         playFallbackHarmonicChime(voice?.gender);
@@ -481,7 +521,7 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
   }
 
   // =========================================================================
-  // TIER 3: Web Audio API Tone Fallback
+  // TIER 4: Web Audio API Tone Fallback
   // =========================================================================
   playFallbackHarmonicChime(voice?.gender);
   if (onEnd) setTimeout(onEnd, 1200);

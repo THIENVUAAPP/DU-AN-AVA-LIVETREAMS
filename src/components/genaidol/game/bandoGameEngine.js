@@ -1340,9 +1340,9 @@ class BanDoGameEngine {
       if (onProgress) onProgress(step, gift.name);
     };
 
-    // Bắn phát quà đầu tiên ngay lập tức, sau đó lặp đều 1.6 giây mỗi món quà để test nhanh và mượt mà
+    // Bắn phát quà đầu tiên ngay lập tức, sau đó lặp đều 3.5 giây mỗi món quà để quan sát trọn vẹn chu kỳ zoom cắm cờ và bảng tên ID
     runStep();
-    this.autoTestTimer = setInterval(runStep, 1600);
+    this.autoTestTimer = setInterval(runStep, 3500);
     this.notify({ type: 'AUTO_TEST_STATUS', running: true });
   }
 
