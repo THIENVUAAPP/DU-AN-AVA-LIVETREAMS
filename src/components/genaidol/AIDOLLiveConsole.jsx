@@ -1,14 +1,19 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Settings, Eye, Play, Square, RefreshCw, Download, Upload, Trash2,
   Video, Mic2, Volume2, Wifi, WifiOff, Radio, CheckCircle, AlertCircle,
-  Plus, Search, X, ChevronDown, Monitor, Zap, SkipForward, Pause
+  Plus, Search, X, ChevronDown, Monitor, Zap, SkipForward, Pause,
+  Sliders, Globe, Sparkles, Bot, VolumeX, Edit3, Check
 } from 'lucide-react';
 import AIAudioPlayer from './AIAudioPlayer';
 import WorkspaceTacVu from './WorkspaceTacVu';
 import {
   LIVE_CATEGORIES, initLiveDB, addLiveMedia, getAllLiveMedia, deleteLiveMedia, importFromAIDOLDB
 } from '../../lib/liveKhoDB';
+import {
+  ALL_SYSTEM_VOICES, previewVoiceAudio, stopVoiceAudio, getSavedVoiceConfig, saveVoiceConfig
+} from '../../utils/voiceSyncService';
+import { askGeminiLiveAi } from '../../lib/geminiClient';
+import { COUNTRY_FILTERS } from './game/GameVoiceConfigPanel';
 
 // ──────────────────────────────────────────────
 // AIDOL_DB (dùng lại kho AIDOL của tôi)
@@ -127,6 +132,68 @@ export default function AIDOLLiveConsole() {
     { id: 'sing', label: 'Idol Hát', icon: '🎤' },
     ...customBrains.map(b => ({ id: b.id, label: b.name, icon: b.icon || '🧠' }))
   ];
+
+  // ── 3-Role Voice Configuration States ──
+  const [voiceConfig, setVoiceConfig] = useState(() => getSavedVoiceConfig());
+  const [activeVoiceRoleTab, setActiveVoiceRoleTab] = useState('idol'); // 'idol' | 'manager' | 'comment' | 'events'
+  const [voiceFilterCategory, setVoiceFilterCategory] = useState('all'); // 'all' | 'pro' | 'free' | 'female' | 'male'
+  const [voiceCountryFilter, setVoiceCountryFilter] = useState('all');
+  const [previewingVoiceId, setPreviewingVoiceId] = useState(null);
+  
+  // Event script prompts
+  const [eventPrompts, setEventPrompts] = useState([
+    { id: 'ev_1', event: 'Chào mừng người mới vào xem', text: 'Dạ em chào anh chị [user] đã đến với livestream của em! Thả tim ủng hộ em nhé!', role: 'manager', enabled: true },
+    { id: 'ev_2', event: 'Cảm ơn tặng quà', text: 'Ôi em cảm ơn đại gia [user] rất nhiều vì đã tặng [gift] siêu đẹp cho em ạ!', role: 'idol', enabled: true },
+    { id: 'ev_3', event: 'Thông báo chốt đơn & Deal sốc', text: 'Dạ các bác ơi, số lượng deal giảm giá có hạn, mọi người mau bấm giỏ hàng chốt đơn nha!', role: 'manager', enabled: true },
+    { id: 'ev_4', event: 'Trả lời bình luận & câu hỏi', text: 'Cảm ơn câu hỏi của [user] nha, để em giải đáp ngay cho mọi người cùng nghe nè!', role: 'comment', enabled: true },
+  ]);
+  const [editingEventPromptId, setEditingEventPromptId] = useState(null);
+  const [editingEventPromptText, setEditingEventPromptText] = useState('');
+
+  // Gemini Live Q&A test
+  const [testVoiceQuestion, setTestVoiceQuestion] = useState('');
+  const [testVoiceUser, setTestVoiceUser] = useState('Khán Giả VIP');
+  const [testVoiceStatus, setTestVoiceStatus] = useState('');
+
+  useEffect(() => {
+    const handleVoiceSync = (e) => {
+      if (e.detail) setVoiceConfig(e.detail);
+    };
+    window.addEventListener('aidol_voice_sync_updated', handleVoiceSync);
+    window.addEventListener('ava_voice_config_updated', handleVoiceSync);
+    return () => {
+      window.removeEventListener('aidol_voice_sync_updated', handleVoiceSync);
+      window.removeEventListener('ava_voice_config_updated', handleVoiceSync);
+    };
+  }, []);
+
+  const updateAndSaveVoiceConfig = (newConfig) => {
+    setVoiceConfig(newConfig);
+    saveVoiceConfig(newConfig);
+  };
+
+  const handlePreviewRoleVoice = (voice, sampleText = null, configOverride = null) => {
+    if (previewingVoiceId === voice.id) {
+      stopVoiceAudio();
+      setPreviewingVoiceId(null);
+      return;
+    }
+    setPreviewingVoiceId(voice.id);
+    const sample = sampleText || (
+      voice.gender === 'Female'
+        ? `Dạ em chào cả nhà yêu! Em là Idol AI của phiên live hôm nay, chúc mọi người xem live thật vui ạ!`
+        : `Chào mừng toàn thể anh em đến với phiên livestream đỉnh cao ngày hôm nay!`
+    );
+    const voiceToPlay = {
+      ...voice,
+      rate: configOverride?.rate || voice.rate || 1.0,
+      pitch: configOverride?.pitch || voice.pitch || 1.0,
+      volume: configOverride?.volume || voice.volume || 1.0
+    };
+    previewVoiceAudio(voiceToPlay, sample, () => {
+      setPreviewingVoiceId(null);
+    });
+  };
 
   const [previousVideoItem, setPreviousVideoItem] = useState(null); // Lưu video nền trước khi có sự kiện
 
@@ -470,10 +537,16 @@ export default function AIDOLLiveConsole() {
         {/* ═══ CENTER + RIGHT: KHO + AI CONTROLS ═══ */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Tab Navigation */}
-          <div className="flex border-b border-slate-700/50 bg-[#1a1b26]/80 px-4 pt-2 flex-shrink-0">
-            {[['kho','📦 Kho Video Live'],['ai-player','🤖 AI Director'],['ai-setup','⚙️ Cài đặt Sự kiện AI'],['stream','📡 Stream Setup']].map(([id, label]) => (
+          <div className="flex border-b border-slate-700/50 bg-[#1a1b26]/80 px-4 pt-2 flex-shrink-0 overflow-x-auto custom-scrollbar">
+            {[
+              ['kho','📦 Kho Video Live'],
+              ['ai-voice', '🎙️ Giọng Đọc 3 Vai Trò & Sự Kiện'],
+              ['ai-player','🤖 AI Director'],
+              ['ai-setup','⚙️ Cài đặt Sự kiện AI'],
+              ['stream','📡 Stream Setup']
+            ].map(([id, label]) => (
               <button key={id} onClick={() => setActiveTab(id)}
-                className={`px-4 py-2.5 text-xs font-bold rounded-t-lg mr-1 transition-all ${activeTab === id ? 'bg-[#0D0F1A] text-[#00FF66] border-t border-l border-r border-slate-700/50' : 'text-slate-500 hover:text-slate-300'}`}>
+                className={`px-4 py-2.5 text-xs font-bold rounded-t-lg mr-1 whitespace-nowrap transition-all ${activeTab === id ? 'bg-[#0D0F1A] text-[#00FF66] border-t border-l border-r border-slate-700/50 shadow-md' : 'text-slate-500 hover:text-slate-300'}`}>
                 {label}
               </button>
             ))}
@@ -582,6 +655,512 @@ export default function AIDOLLiveConsole() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* ══ TAB: 3-ROLE VOICE & LIVE EVENTS ══ */}
+            {activeTab === 'ai-voice' && (
+              <div className="p-5 space-y-5">
+                {/* Header overview */}
+                <div className="p-4 bg-gradient-to-r from-purple-950/80 via-slate-900/90 to-indigo-950/80 border border-purple-500/40 rounded-2xl shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <span className="p-2.5 rounded-xl bg-purple-600/30 text-purple-300 border border-purple-400/30">
+                      <Mic2 className="w-6 h-6 animate-pulse text-purple-300" />
+                    </span>
+                    <div>
+                      <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                        Studio Giọng Đọc 3 Vai Trò & Sự Kiện Livestream
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black">
+                          20+ Quốc Gia • Gemini AI + ElevenLabs
+                        </span>
+                      </h3>
+                      <p className="text-xs text-gray-300 mt-0.5">
+                        Tùy chỉnh Âm lượng, Tốc độ (0.5x - 2.0x), Bật/Tắt riêng biệt cho Giọng Idol, Giọng Trợ Lý & Giọng Trả Lời Bình Luận.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sub Role Navigation */}
+                <div className="flex items-center gap-2 border-b border-white/10 pb-2 overflow-x-auto custom-scrollbar">
+                  {[
+                    { id: 'idol', label: '👑 1. Giọng Live Idol Chính', roleKey: 'idolVoice', icon: Sparkles, color: 'text-purple-400' },
+                    { id: 'manager', label: '💼 2. Giọng Trợ Lý & Bán Hàng', roleKey: 'managerVoice', icon: Zap, color: 'text-blue-400' },
+                    { id: 'comment', label: '💬 3. Giọng Trả Lời Bình Luận AI', roleKey: 'commentVoice', icon: Bot, color: 'text-pink-400' },
+                    { id: 'events', label: '⚡ 4. Kịch Bản Câu Thoại Sự Kiện', roleKey: null, icon: Radio, color: 'text-yellow-400' },
+                  ].map(tab => {
+                    const Icon = tab.icon;
+                    const isActive = activeVoiceRoleTab === tab.id;
+                    const activeVoice = tab.roleKey ? (voiceConfig[tab.roleKey] || {}) : null;
+
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveVoiceRoleTab(tab.id)}
+                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 shrink-0 ${
+                          isActive 
+                            ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30 ring-1 ring-purple-400' 
+                            : 'bg-white/5 hover:bg-white/10 text-gray-300 border border-white/5'
+                        }`}
+                      >
+                        <Icon size={14} className={isActive ? 'text-white' : tab.color} />
+                        <span>{tab.label}</span>
+                        {activeVoice && (
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-mono ${
+                            activeVoice.enabled !== false ? 'bg-emerald-500 text-black font-black' : 'bg-red-500/30 text-red-300'
+                          }`}>
+                            {activeVoice.enabled !== false ? 'ON' : 'OFF'}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Role Specific Configuration Body */}
+                {activeVoiceRoleTab !== 'events' ? (
+                  <div className="space-y-4">
+                    {/* Active Voice Card */}
+                    {(() => {
+                      const roleKey = activeVoiceRoleTab === 'idol' ? 'idolVoice' : (activeVoiceRoleTab === 'manager' ? 'managerVoice' : 'commentVoice');
+                      const currentVoice = voiceConfig[roleKey] || {
+                        id: 'free_vi_female',
+                        name: 'Hoài My 🇻🇳 (Nữ)',
+                        rate: 1.0,
+                        pitch: 1.0,
+                        volume: 1.0,
+                        enabled: true
+                      };
+
+                      return (
+                        <div className="p-4 rounded-2xl bg-gradient-to-tr from-purple-950/40 via-slate-900 to-indigo-950/40 border border-purple-500/30 shadow-xl space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-black text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
+                              🎙️ Giọng Đang Chọn Cho: {activeVoiceRoleTab === 'idol' ? 'Idol Chính' : (activeVoiceRoleTab === 'manager' ? 'Trợ Lý Bán Hàng' : 'Trả Lời Bình Luận')}
+                            </span>
+                            <button
+                              onClick={() => {
+                                const updated = {
+                                  ...voiceConfig,
+                                  [roleKey]: {
+                                    ...currentVoice,
+                                    enabled: currentVoice.enabled === false ? true : false
+                                  }
+                                };
+                                updateAndSaveVoiceConfig(updated);
+                              }}
+                              className={`text-[10px] px-3 py-1 rounded-full font-black transition-all ${
+                                currentVoice.enabled !== false 
+                                  ? 'bg-emerald-500 text-black shadow-md' 
+                                  : 'bg-red-500/30 text-red-300 border border-red-500/40'
+                              }`}
+                            >
+                              {currentVoice.enabled !== false ? '● ĐANG BẬT' : '○ ĐÃ TẮT'}
+                            </button>
+                          </div>
+
+                          <div className="text-base font-black text-white flex items-center gap-2">
+                            <span>{currentVoice.name}</span>
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold border border-purple-500/30">
+                              {currentVoice.provider?.toUpperCase()}
+                            </span>
+                          </div>
+
+                          {/* Sliders for Volume, Speed, Pitch */}
+                          <div className="space-y-2 bg-black/40 p-3.5 rounded-xl border border-white/10">
+                            <div className="flex items-center justify-between text-xs text-gray-200">
+                              <span className="flex items-center gap-1 font-bold">
+                                <Volume2 size={12} className="text-purple-400" /> Âm Lượng (Volume):
+                              </span>
+                              <span className="font-mono text-purple-300 font-black">
+                                {Math.round((currentVoice.volume !== undefined ? currentVoice.volume : 1.0) * 100)}%
+                              </span>
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max="1"
+                              step="0.05"
+                              value={currentVoice.volume !== undefined ? currentVoice.volume : 1.0}
+                              onChange={(e) => {
+                                const val = parseFloat(e.target.value);
+                                updateAndSaveVoiceConfig({
+                                  ...voiceConfig,
+                                  [roleKey]: { ...currentVoice, volume: val }
+                                });
+                              }}
+                              className="w-full accent-purple-500 h-1.5 bg-white/10 rounded cursor-pointer"
+                            />
+
+                            <div className="flex items-center justify-between text-xs text-gray-200 pt-1">
+                              <span className="flex items-center gap-1 font-bold">
+                                <Sliders size={12} className="text-yellow-400" /> Tốc Độ Đọc (Speed):
+                              </span>
+                              <span className="font-mono text-yellow-300 font-black">
+                                {(currentVoice.rate !== undefined ? currentVoice.rate : 1.0).toFixed(2)}x
+                              </span>
+                            </div>
+                            <input
+                              type="range"
+                              min="0.5"
+                              max="2.0"
+                              step="0.05"
+                              value={currentVoice.rate !== undefined ? currentVoice.rate : 1.0}
+                              onChange={(e) => {
+                                const val = parseFloat(e.target.value);
+                                updateAndSaveVoiceConfig({
+                                  ...voiceConfig,
+                                  [roleKey]: { ...currentVoice, rate: val }
+                                });
+                              }}
+                              className="w-full accent-yellow-500 h-1.5 bg-white/10 rounded cursor-pointer"
+                            />
+
+                            <div className="flex items-center justify-between text-xs text-gray-200 pt-1">
+                              <span className="flex items-center gap-1 font-bold">
+                                <Sparkles size={12} className="text-cyan-400" /> Cao Độ (Pitch):
+                              </span>
+                              <span className="font-mono text-cyan-300 font-black">
+                                {(currentVoice.pitch !== undefined ? currentVoice.pitch : 1.0).toFixed(2)}x
+                              </span>
+                            </div>
+                            <input
+                              type="range"
+                              min="0.5"
+                              max="1.5"
+                              step="0.05"
+                              value={currentVoice.pitch !== undefined ? currentVoice.pitch : 1.0}
+                              onChange={(e) => {
+                                const val = parseFloat(e.target.value);
+                                updateAndSaveVoiceConfig({
+                                  ...voiceConfig,
+                                  [roleKey]: { ...currentVoice, pitch: val }
+                                });
+                              }}
+                              className="w-full accent-cyan-500 h-1.5 bg-white/10 rounded cursor-pointer"
+                            />
+                          </div>
+
+                          <button
+                            onClick={() => {
+                              const voice = ALL_SYSTEM_VOICES.find(v => v.id === currentVoice.id) || currentVoice;
+                              handlePreviewRoleVoice(voice, null, currentVoice);
+                            }}
+                            className="w-full py-2 bg-purple-600/30 hover:bg-purple-600/50 border border-purple-400/40 text-purple-200 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+                          >
+                            <Volume2 size={13} /> Nghe Thử Giọng Này Với Tốc Độ & Âm Lượng Hiện Tại
+                          </button>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Filter Bar for 20+ Countries & Tiers */}
+                    <div className="space-y-2 pt-2">
+                      <div className="flex items-center justify-between gap-3 flex-wrap">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {[
+                            { id: 'all', label: 'Tất Cả Giọng' },
+                            { id: 'pro', label: '💎 ElevenLabs Pro' },
+                            { id: 'free', label: '🆓 Miễn Phí (TTS Chuẩn)' },
+                            { id: 'female', label: '♀ Giọng Nữ' },
+                            { id: 'male', label: '♂ Giọng Nam' },
+                          ].map(cat => (
+                            <button
+                              key={cat.id}
+                              onClick={() => setVoiceFilterCategory(cat.id)}
+                              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
+                                voiceFilterCategory === cat.id
+                                  ? 'bg-purple-600 text-white shadow-md'
+                                  : 'bg-white/5 hover:bg-white/10 text-gray-300'
+                              }`}
+                            >
+                              {cat.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Country Filters Bar */}
+                      <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1">
+                        <span className="text-xs font-bold text-gray-400 flex items-center gap-1 shrink-0">
+                          <Globe size={13} className="text-cyan-400" /> Quốc Gia:
+                        </span>
+                        {COUNTRY_FILTERS.map(c => (
+                          <button
+                            key={c.id}
+                            onClick={() => setVoiceCountryFilter(c.id)}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-bold shrink-0 transition-all flex items-center gap-1 ${
+                              voiceCountryFilter === c.id 
+                                ? 'bg-cyan-500 text-black font-black shadow-md' 
+                                : 'bg-white/5 hover:bg-white/10 text-gray-300 border border-white/5'
+                            }`}
+                          >
+                            <span>{c.icon}</span>
+                            <span>{c.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Voice Catalog Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[44vh] overflow-y-auto custom-scrollbar pr-1">
+                      {ALL_SYSTEM_VOICES.filter(v => {
+                        if (voiceFilterCategory === 'pro' && v.tier !== 'pro') return false;
+                        if (voiceFilterCategory === 'free' && v.tier !== 'free') return false;
+                        if (voiceFilterCategory === 'female' && v.gender !== 'Female') return false;
+                        if (voiceFilterCategory === 'male' && v.gender !== 'Male') return false;
+                        if (voiceCountryFilter !== 'all') {
+                          const target = COUNTRY_FILTERS.find(c => c.id === voiceCountryFilter);
+                          if (target && target.code && !v.lang?.startsWith(target.code) && !v.id.includes(`_${voiceCountryFilter}_`)) {
+                            return false;
+                          }
+                        }
+                        return true;
+                      }).map(v => {
+                        const roleKey = activeVoiceRoleTab === 'idol' ? 'idolVoice' : (activeVoiceRoleTab === 'manager' ? 'managerVoice' : 'commentVoice');
+                        const isCurrentAssigned = voiceConfig[roleKey]?.id === v.id;
+                        const isPreviewing = previewingVoiceId === v.id;
+
+                        return (
+                          <div
+                            key={v.id}
+                            className={`p-3.5 rounded-2xl border transition-all flex flex-col justify-between ${
+                              isCurrentAssigned
+                                ? 'bg-gradient-to-tr from-purple-950/80 via-slate-900 to-black border-purple-400 ring-2 ring-purple-400/50 shadow-xl'
+                                : 'bg-white/5 border-white/10 hover:bg-white/10'
+                            }`}
+                          >
+                            <div>
+                              <div className="flex items-center justify-between mb-1.5">
+                                <div className="flex items-center gap-1.5">
+                                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                                    v.gender === 'Female' ? 'bg-pink-500/20 text-pink-300' : 'bg-blue-500/20 text-blue-300'
+                                  }`}>
+                                    {v.gender === 'Female' ? '♀ Nữ' : '♂ Nam'} • {v.lang || 'vi-VN'}
+                                  </span>
+                                  {v.tier === 'pro' ? (
+                                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black">
+                                      💎 PRO
+                                    </span>
+                                  ) : (
+                                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
+                                      🆓 FREE
+                                    </span>
+                                  )}
+                                </div>
+
+                                {isCurrentAssigned && (
+                                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-purple-500 text-white font-black">
+                                    ✓ ĐANG DÙNG
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="text-sm font-black text-white">{v.name}</div>
+                              <p className="text-[11px] text-gray-400 line-clamp-1 mb-2.5">{v.desc}</p>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/10">
+                              <button
+                                onClick={() => handlePreviewRoleVoice(v)}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                                  isPreviewing 
+                                    ? 'bg-amber-500 text-black font-black animate-pulse' 
+                                    : 'bg-white/10 hover:bg-white/20 text-gray-200'
+                                }`}
+                              >
+                                {isPreviewing ? <Square size={12} className="fill-current" /> : <Play size={12} className="fill-current" />}
+                                <span>{isPreviewing ? 'Dừng' : 'Nghe Thử'}</span>
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  const updated = {
+                                    ...voiceConfig,
+                                    [roleKey]: {
+                                      id: v.id,
+                                      name: v.name,
+                                      voiceId: v.voiceId || v.id,
+                                      provider: v.provider || 'elevenlabs',
+                                      gender: v.gender || 'Female',
+                                      lang: v.lang || 'vi-VN',
+                                      rate: voiceConfig[roleKey]?.rate || 1.0,
+                                      pitch: voiceConfig[roleKey]?.pitch || 1.0,
+                                      volume: voiceConfig[roleKey]?.volume || 1.0,
+                                      enabled: true
+                                    }
+                                  };
+                                  updateAndSaveVoiceConfig(updated);
+                                }}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                                  isCurrentAssigned 
+                                    ? 'bg-purple-600 text-white shadow-md' 
+                                    : 'bg-white/10 hover:bg-purple-600/60 text-gray-200'
+                                }`}
+                              >
+                                {isCurrentAssigned ? '✓ Đã Chọn' : '+ Chọn Giọng Này'}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  /* ========================================================================= */
+                  /* SUB-TAB 4: KỊCH BẢN SỰ KIỆN LIVESTREAM & BỘ NÃO GEMINI SMART Q&A */
+                  /* ========================================================================= */
+                  <div className="space-y-4">
+                    <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-3">
+                      <h4 className="text-xs font-black text-yellow-300 uppercase tracking-wider flex items-center gap-2">
+                        <Sparkles size={14} className="text-yellow-400" />
+                        Danh Sách Kịch Bản Sự Kiện Livestream Tự Động
+                      </h4>
+                      <p className="text-xs text-gray-400">
+                        Tùy biến câu chào, lời cảm ơn khi nhận quà, thông báo chốt deal và xử lý bình luận của khán giả.
+                      </p>
+
+                      <div className="space-y-2.5">
+                        {eventPrompts.map((p, idx) => {
+                          const isEditing = editingEventPromptId === p.id;
+
+                          return (
+                            <div key={p.id} className="p-3 bg-white/5 border border-white/10 rounded-xl space-y-2">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-black text-white">{p.event}</span>
+                                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                                    p.role === 'idol' ? 'bg-purple-500/20 text-purple-300' : p.role === 'comment' ? 'bg-pink-500/20 text-pink-300' : 'bg-blue-500/20 text-blue-300'
+                                  }`}>
+                                    {p.role === 'idol' ? '👑 Giọng Idol' : p.role === 'comment' ? '💬 Giọng Trả Lời' : '💼 Giọng Trợ Lý'}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => {
+                                      if (isEditing) {
+                                        setEditingEventPromptId(null);
+                                      } else {
+                                        setEditingEventPromptId(p.id);
+                                        setEditingEventPromptText(p.text);
+                                      }
+                                    }}
+                                    className="p-1.5 rounded-lg bg-white/10 text-gray-300 hover:bg-white/20"
+                                    title="Sửa câu thoại"
+                                  >
+                                    <Edit3 size={12} />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      const voice = p.role === 'idol' 
+                                        ? voiceConfig.idolVoice 
+                                        : (p.role === 'comment' ? voiceConfig.commentVoice : voiceConfig.managerVoice);
+                                      handlePreviewRoleVoice(voice, p.text.replace(/\[user\]/gi, 'Khán Giả').replace(/\[gift\]/gi, 'Hoa Hồng'));
+                                    }}
+                                    className="p-1.5 rounded-lg bg-purple-500/20 text-purple-300 hover:bg-purple-500/40"
+                                    title="Nghe thử"
+                                  >
+                                    <Play size={12} className="fill-current" />
+                                  </button>
+                                </div>
+                              </div>
+
+                              {isEditing ? (
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="text"
+                                    value={editingEventPromptText}
+                                    onChange={(e) => setEditingEventPromptText(e.target.value)}
+                                    className="flex-1 px-3 py-1.5 bg-black/80 border border-purple-400 rounded-lg text-xs text-white focus:outline-none"
+                                  />
+                                  <button
+                                    onClick={() => {
+                                      const updated = eventPrompts.map(item => item.id === p.id ? { ...item, text: editingEventPromptText } : item);
+                                      setEventPrompts(updated);
+                                      setEditingEventPromptId(null);
+                                    }}
+                                    className="p-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg"
+                                  >
+                                    <Check size={14} />
+                                  </button>
+                                </div>
+                              ) : (
+                                <p className="text-xs text-gray-300 italic bg-black/40 p-2 rounded-lg">
+                                  "{p.text}"
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Gemini AI Live Q&A Box */}
+                    <div className="p-4 rounded-2xl bg-gradient-to-r from-cyan-950/60 via-slate-900 to-indigo-950/60 border border-cyan-500/40 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <span className="p-2 rounded-xl bg-cyan-600/30 text-cyan-300 border border-cyan-400/30">
+                          <Bot size={18} className="animate-pulse text-cyan-300" />
+                        </span>
+                        <div>
+                          <h4 className="text-xs font-black text-cyan-300 uppercase tracking-wider">
+                            🧠 Thử Nghiệm Bộ Não AI Gemini Flash Trả Lời Trực Tiếp
+                          </h4>
+                          <p className="text-[11px] text-gray-300">
+                            Tự động trả lời thông minh mọi câu hỏi ngoài vùng của người xem livestream, phát giọng đọc ra loa ngay tức thì.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <input
+                          type="text"
+                          value={testVoiceUser}
+                          onChange={(e) => setTestVoiceUser(e.target.value)}
+                          placeholder="Tên người hỏi..."
+                          className="w-full sm:w-40 px-3 py-2 bg-black/60 border border-white/20 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
+                        />
+                        <input
+                          type="text"
+                          value={testVoiceQuestion}
+                          onChange={(e) => setTestVoiceQuestion(e.target.value)}
+                          placeholder="Nhập câu hỏi khán giả (VD: 'Shop còn mẫu áo màu xanh không?', 'Idol hát bài gì đi?')..."
+                          className="flex-1 px-3 py-2 bg-black/60 border border-white/20 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
+                        />
+                        <button
+                          onClick={async () => {
+                            if (!testVoiceQuestion.trim()) return;
+                            setTestVoiceStatus('🧠 Gemini AI đang phân tích và tạo câu thoại...');
+                            try {
+                              const aiRes = await askGeminiLiveAi({
+                                question: testVoiceQuestion.trim(),
+                                username: testVoiceUser.trim() || 'Khán Giả',
+                                role: 'comment',
+                                context: 'Phiên Livestream AIDOL'
+                              });
+                              if (aiRes?.text) {
+                                setTestVoiceStatus('✅ AI trả lời: "' + aiRes.text + '"');
+                                const voice = voiceConfig.commentVoice || voiceConfig.idolVoice;
+                                handlePreviewRoleVoice(voice, aiRes.text);
+                              }
+                            } catch (e) {
+                              setTestVoiceStatus('❌ Lỗi: ' + e.message);
+                            }
+                          }}
+                          className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-black font-black rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/30 transition-all shrink-0"
+                        >
+                          <Play size={12} className="fill-current" /> Hỏi & Nghe Đọc
+                        </button>
+                      </div>
+
+                      {testVoiceStatus && (
+                        <div className="text-xs font-bold text-cyan-300 bg-black/40 p-2.5 rounded-xl border border-cyan-500/30 animate-fadeIn">
+                          {testVoiceStatus}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

@@ -122,7 +122,8 @@ export const DEFAULT_VOICE_CONFIG = {
     role: 'idol',
     pitch: 1.0,
     rate: 1.0,
-    volume: 1.0
+    volume: 1.0,
+    enabled: true
   },
   managerVoice: {
     id: 'el_callum',
@@ -133,7 +134,20 @@ export const DEFAULT_VOICE_CONFIG = {
     role: 'manager',
     pitch: 1.0,
     rate: 1.05,
-    volume: 1.0
+    volume: 1.0,
+    enabled: true
+  },
+  commentVoice: {
+    id: 'free_vi_female2',
+    name: 'Mai Miền Nam 🇻🇳 (Nữ - Ngọt Ngào)',
+    provider: 'system',
+    tier: 'free',
+    gender: 'Female',
+    role: 'comment',
+    pitch: 1.05,
+    rate: 1.0,
+    volume: 1.0,
+    enabled: true
   },
   gameBlvVoice: {
     id: 'free_vi_male',
@@ -144,7 +158,8 @@ export const DEFAULT_VOICE_CONFIG = {
     role: 'game',
     pitch: 1.0,
     rate: 1.1,
-    volume: 1.0
+    volume: 1.0,
+    enabled: true
   },
   generalVoice: {
     id: 'free_vi_female',
@@ -155,7 +170,8 @@ export const DEFAULT_VOICE_CONFIG = {
     role: 'both',
     pitch: 1.0,
     rate: 1.0,
-    volume: 1.0
+    volume: 1.0,
+    enabled: true
   },
   selectedLanguage: 'vi',
   elevenLabsApiKey: '',
@@ -182,6 +198,7 @@ export function saveVoiceConfig(config) {
   try {
     localStorage.setItem('ava_live_voice_config_v2', JSON.stringify(config));
     window.dispatchEvent(new CustomEvent('ava_voice_config_updated', { detail: config }));
+    window.dispatchEvent(new CustomEvent('aidol_voice_sync_updated', { detail: config }));
   } catch (e) {
     console.warn('Lỗi lưu voice config:', e);
   }

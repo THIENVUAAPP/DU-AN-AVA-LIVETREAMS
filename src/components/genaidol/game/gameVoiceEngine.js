@@ -1,4 +1,5 @@
 import { ALL_SYSTEM_VOICES, ELEVENLABS_VOICES, getElevenLabsApiKey, previewVoiceAudio, stopVoiceAudio } from '../../../utils/voiceSyncService';
+import { askGeminiLiveAi } from '../../../lib/geminiClient';
 
 export const DEFAULT_MAP_PROMPTS = [
   { id: 'p1', text: "Đại chiến cắm cờ Tổ Quốc đang diễn ra vô cùng sôi động! Mọi người mau thả tim và tặng quà để phủ đỏ bản đồ nào!", role: 'game', enabled: true },
@@ -81,8 +82,28 @@ class GameVoiceEngine {
     this.storageKey = `GAME_VOICE_CONFIG_${gameType.toUpperCase()}`;
     
     // Core Voice Role Configurations
-    this.gameVoice = { id: 'el_josh', name: 'Josh (Nam - BLV Game)', voiceId: 'TxGEqnHWrfWFTfGW9XjX', provider: 'elevenlabs', gender: 'Male' };
-    this.assistantVoice = { id: 'el_rachel', name: 'Rachel (Nữ - Ngọt ngào)', voiceId: '21m00Tcm4TlvDq8ikWAM', provider: 'elevenlabs', gender: 'Female' };
+    this.gameVoice = { 
+      id: 'el_josh', 
+      name: 'Josh (Nam - BLV Game)', 
+      voiceId: 'TxGEqnHWrfWFTfGW9XjX', 
+      provider: 'elevenlabs', 
+      gender: 'Male',
+      rate: 1.05,
+      pitch: 1.0,
+      volume: 1.0,
+      enabled: true
+    };
+    this.assistantVoice = { 
+      id: 'el_rachel', 
+      name: 'Rachel (Nữ - Ngọt ngào)', 
+      voiceId: '21m00Tcm4TlvDq8ikWAM', 
+      provider: 'elevenlabs', 
+      gender: 'Female',
+      rate: 1.0,
+      pitch: 1.05,
+      volume: 1.0,
+      enabled: true
+    };
     
     // Auto Periodic Commentary Config
     this.isAutoEnabled = true;
@@ -92,7 +113,7 @@ class GameVoiceEngine {
     this.lastSpokenIndex = -1;
     this.timerId = null;
     
-    // Keyword Auto Reply Config
+    // Keyword Auto Reply Config & Gemini Q&A
     this.isKeywordAutoReplyEnabled = true;
     this.useGeminiAI = true;
     this.responseDelaySec = 1.0;
@@ -101,6 +122,8 @@ class GameVoiceEngine {
     
     // Audio State
     this.volume = 0.9;
+    this.speedRate = 1.0;
+    this.pitch = 1.0;
     this.isSpeaking = false;
     this.onDuckAudio = null;
     this.onSpeechStateChange = null;
@@ -116,8 +139,8 @@ class GameVoiceEngine {
       const saved = localStorage.getItem(this.storageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.gameVoice) this.gameVoice = parsed.gameVoice;
-        if (parsed.assistantVoice) this.assistantVoice = parsed.assistantVoice;
+        if (parsed.gameVoice) this.gameVoice = { ...this.gameVoice, ...parsed.gameVoice };
+        if (parsed.assistantVoice) this.assistantVoice = { ...this.assistantVoice, ...parsed.assistantVoice };
         if (parsed.isAutoEnabled !== undefined) this.isAutoEnabled = parsed.isAutoEnabled;
         if (parsed.intervalSeconds !== undefined) this.intervalSeconds = parsed.intervalSeconds;
         if (parsed.playbackOrder) this.playbackOrder = parsed.playbackOrder;
@@ -127,6 +150,8 @@ class GameVoiceEngine {
         if (parsed.responseDelaySec !== undefined) this.responseDelaySec = parsed.responseDelaySec;
         if (Array.isArray(parsed.keywordRules) && parsed.keywordRules.length > 0) this.keywordRules = parsed.keywordRules;
         if (parsed.volume !== undefined) this.volume = parsed.volume;
+        if (parsed.speedRate !== undefined) this.speedRate = parsed.speedRate;
+        if (parsed.pitch !== undefined) this.pitch = parsed.pitch;
       }
     } catch (e) {
       console.warn(`[GameVoiceEngine:${this.gameType}] Load settings failed:`, e);
@@ -147,7 +172,9 @@ class GameVoiceEngine {
         useGeminiAI: this.useGeminiAI,
         responseDelaySec: this.responseDelaySec,
         keywordRules: this.keywordRules,
-        volume: this.volume
+        volume: this.volume,
+        speedRate: this.speedRate,
+        pitch: this.pitch
       };
       localStorage.setItem(this.storageKey, JSON.stringify(data));
       window.dispatchEvent(new CustomEvent('game_voice_settings_updated', { detail: { gameType: this.gameType, settings: data } }));
@@ -199,6 +226,9 @@ class GameVoiceEngine {
     if (!text || typeof text !== 'string') return;
     if (this.isSpeaking && !priority) return;
 
+    const activeVoice = role === 'assistant' ? this.assistantVoice : this.gameVoice;
+    if (activeVoice?.enabled === false) return; // Nếu giọng vai trò này bị tắt
+
     if (priority) {
       this.cancelSpeech();
     }
@@ -207,13 +237,19 @@ class GameVoiceEngine {
     if (this.onDuckAudio) this.onDuckAudio(true);
     if (this.onSpeechStateChange) this.onSpeechStateChange(true, text, role);
 
-    const activeVoice = role === 'assistant' ? this.assistantVoice : this.gameVoice;
-    const voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === activeVoice?.id || v.voiceId === activeVoice?.voiceId) || activeVoice || {
+    const baseVoice = ALL_SYSTEM_VOICES.find(v => v.id === activeVoice?.id || v.voiceId === activeVoice?.voiceId) || activeVoice || {
       id: role === 'assistant' ? 'free_vi_female' : 'free_vi_male',
       provider: 'system',
       tier: 'free',
       gender: role === 'assistant' ? 'Female' : 'Male',
       role
+    };
+
+    const voiceObj = {
+      ...baseVoice,
+      volume: (activeVoice?.volume !== undefined ? activeVoice.volume : this.volume),
+      rate: (activeVoice?.rate !== undefined ? activeVoice.rate : this.speedRate),
+      pitch: (activeVoice?.pitch !== undefined ? activeVoice.pitch : this.pitch)
     };
 
     try {
@@ -245,12 +281,13 @@ class GameVoiceEngine {
     if (this.onSpeechStateChange) this.onSpeechStateChange(false, '', 'game');
   }
 
-  // Khớp Từ Khóa Tự Động Trả Lời Khán Giả (Keyword Trigger Matcher)
-  async handleUserComment(commentText, userName = 'Bạn') {
+  // Khớp Từ Khóa & Bộ Não AI Gemini Tự Động Trả Lời Câu Hỏi Ngoài Vùng Cài Đặt (Smart Q&A)
+  async handleUserComment(commentText, userName = 'Khán Giả') {
     if (!this.isKeywordAutoReplyEnabled || !commentText) return false;
     const lower = commentText.toLowerCase().trim();
     const now = Date.now();
 
+    // 1. Khớp từ khóa cố định trong danh sách cài sẵn
     const activeRules = (this.keywordRules || []).filter(r => r.enabled !== false);
     for (const rule of activeRules) {
       const matched = rule.keywords.some(k => lower.includes(k.toLowerCase().trim()));
@@ -275,12 +312,28 @@ class GameVoiceEngine {
       }
     }
 
-    // Nếu bật Gemini AI và không khớp từ khóa cố định
-    if (this.useGeminiAI && lower.length > 2) {
-      const isQuestion = lower.includes('?') || lower.includes('sao') || lower.includes('gì') || lower.includes('nào') || lower.includes('ai');
-      if (isQuestion) {
-        const fallbackReply = `Dạ ${userName} ơi, hãy thả tim và gửi quà để ủng hộ thần tượng và nhận thật nhiều chiến công nhé!`;
-        const delayMs = (this.responseDelaySec || 1.2) * 1000;
+    // 2. Nếu không khớp từ khóa cố định & Bật Gemini AI: Tự động trả lời thông minh câu hỏi ngoài vùng
+    if (this.useGeminiAI && lower.length >= 2) {
+      try {
+        const aiResponse = await askGeminiLiveAi({
+          question: commentText,
+          username: userName,
+          role: 'assistant',
+          context: this.gameType === 'battle' ? 'Đại Chiến PK Rồng Xanh vs Hổ Đỏ' : 'Đại Chiến Cắm Cờ Bản Đồ Tổ Quốc Việt Nam',
+          gameType: this.gameType
+        });
+
+        if (aiResponse?.text) {
+          const delayMs = (this.responseDelaySec || 1.0) * 1000;
+          setTimeout(() => {
+            this.speak(aiResponse.text, 'assistant', true);
+          }, delayMs);
+          return true;
+        }
+      } catch (geminiErr) {
+        console.warn(`[GameVoiceEngine:${this.gameType}] Gemini Q&A error, using safe fallback:`, geminiErr);
+        const fallbackReply = `Dạ em chào anh chị ${userName}! Mọi người cùng thả tim và tiếp sức nhiệt tình cho trận đấu nha!`;
+        const delayMs = (this.responseDelaySec || 1.0) * 1000;
         setTimeout(() => {
           this.speak(fallbackReply, 'assistant', false);
         }, delayMs);
@@ -294,3 +347,12 @@ class GameVoiceEngine {
 
 export const mapVoiceEngine = new GameVoiceEngine('map');
 export const battleVoiceEngine = new GameVoiceEngine('battle');
+
+export default {
+  mapVoiceEngine,
+  battleVoiceEngine,
+  GameVoiceEngine,
+  DEFAULT_MAP_PROMPTS,
+  DEFAULT_BATTLE_PROMPTS,
+  DEFAULT_KEYWORD_RULES
+};

@@ -215,6 +215,44 @@ export default defineConfig({
             return;
           }
 
+          if (req.url.startsWith('/api/gemini-reply')) {
+            let bodyStr = '';
+            req.on('data', chunk => { bodyStr += chunk; });
+            req.on('end', async () => {
+              try {
+                const body = JSON.parse(bodyStr || '{}');
+                const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || body.apiKey;
+                if (!apiKey) {
+                  res.statusCode = 503;
+                  res.end(JSON.stringify({ error: 'Chưa cấu hình GEMINI_API_KEY' }));
+                  return;
+                }
+                const prompt = body.kind === 'gift' 
+                  ? `Bạn là MC livestream TikTok. Khán giả "${body.username || 'bạn'}" vừa tặng "${body.giftName || 'món quà'}". Viết 1 câu cảm ơn tự nhiên, hài hước, không quá 25 từ, không nói tục, chỉ trả về đúng 1 câu thoại tiếng Việt.`
+                  : body.kind === 'welcome'
+                    ? `Bạn là MC livestream TikTok. Khán giả "${body.username || 'bạn'}" vừa vào xem. Viết 1 câu chào mừng tự nhiên, duyên dáng, không quá 25 từ, không nói tục, chỉ trả về đúng 1 câu thoại tiếng Việt.`
+                    : `Bạn là ${body.role === 'game' ? 'Bình luận viên game' : 'Trợ lý livestream bán hàng'} thông minh, thân thiện. Khán giả "${body.username || 'bạn'}" vừa hỏi/bình luận: "${body.question || body.comment || ''}". Trả lời thông minh, đúng câu hỏi, ngắn gọn (1-2 câu, dưới 25 từ), lịch sự, tuyệt đối không nói tục. Chỉ trả về đúng 1 câu thoại tiếng Việt.`;
+
+                const gRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                    generationConfig: { temperature: 0.85, maxOutputTokens: 100 }
+                  })
+                });
+                const data = await gRes.json();
+                const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim()?.replace(/^["“]|["”]$/g, '') || 'Dạ cảm ơn bạn đã tương tác cùng livestream nha!';
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ text, audioBase64: null }));
+              } catch (err) {
+                res.statusCode = 500;
+                res.end(JSON.stringify({ error: err.message }));
+              }
+            });
+            return;
+          }
+
           // /api/extract has been completely removed to avoid yt-dlp dependencies
           next();
         });

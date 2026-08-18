@@ -73,9 +73,17 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
     try {
       if (onAudioPlayStateChange) onAudioPlayStateChange(true);
       
-      const channel = item.voiceChannel || (item.type === 'script' ? 'idol' : 'manager');
-      const activeVoice = channel === 'idol' ? voiceConfig.idolVoice : voiceConfig.managerVoice;
+      const channel = item.voiceChannel || (item.type === 'script' ? 'idol' : item.type === 'comment' ? 'comment' : 'manager');
+      const activeVoice = channel === 'idol' 
+        ? voiceConfig.idolVoice 
+        : (channel === 'comment' ? (voiceConfig.commentVoice || voiceConfig.idolVoice) : voiceConfig.managerVoice);
       
+      if (activeVoice?.enabled === false) {
+        // Kênh giọng đọc này đang bị tắt
+        if (isPlaying) setCurrentIndex(prev => prev + 1);
+        return;
+      }
+
       const provider = activeVoice?.provider || job?.voiceProvider || 'gemini';
       const apiKey = provider === 'openai_tts' ? localStorage.getItem('openai_api_key') : localStorage.getItem('gemini_api_key');
 
@@ -85,7 +93,7 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
         window.dispatchEvent(new CustomEvent('avalive:deduct_token', {
           detail: {
             amount: charLen,
-            reason: `ElevenLabs (${channel === 'idol' ? 'Idol' : 'Quản lý'}): "${(item.text || '').slice(0, 20)}..."`
+            reason: `Voice AI (${channel === 'idol' ? 'Idol' : channel === 'comment' ? 'Bình Luận AI' : 'Quản Lý'}): "${(item.text || '').slice(0, 20)}..."`
           }
         }));
       }
@@ -107,7 +115,7 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
   // Expose methods to parent
   useImperativeHandle(ref, () => ({
     enqueueItem: (text, action, isImmediate = false, options = {}) => {
-      const voiceChannel = options?.voiceChannel || (action?.includes('IDOL') ? 'idol' : 'manager');
+      const voiceChannel = options?.voiceChannel || (action?.includes('COMMENT') ? 'comment' : action?.includes('IDOL') ? 'idol' : 'manager');
       const newItem = { type: 'dynamic', text, action, voiceChannel };
       if (isImmediate) {
         const aud = getAudio();
