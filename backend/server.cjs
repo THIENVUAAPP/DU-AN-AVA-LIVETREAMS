@@ -7,7 +7,8 @@ const fs = require('fs');
 
 const https = require('https');
 const cors = require('cors');
-const { WebcastPushConnection } = require('tiktok-live-connector');
+const { TikTokLiveConnection, WebcastPushConnection } = require('tiktok-live-connector');
+const TikTokConnector = TikTokLiveConnection || WebcastPushConnection;
 
 const app = express();
 app.use(cors());
@@ -111,26 +112,33 @@ io.on('connection', (socket) => {
         socket.emit('tiktok_connected', { username: targetUser });
         return;
       }
-      tiktokConnection.disconnect();
+      try {
+        tiktokConnection.disconnect();
+      } catch (e) {}
       tiktokConnection = null;
     }
 
     currentUsername = targetUser;
     console.log(`Connecting to TikTok username: ${targetUser}`);
 
-    tiktokConnection = new WebcastPushConnection(targetUser, {
-      processInitialData: false,
-      enableExtendedGiftInfo: true,
-      enableWebsocketUpgrade: true,
-      requestPollingIntervalMs: 1000,
-      clientParams: {
-        "app_language": "vi-VN",
-        "device_platform": "web"
-      }
-    });
+    try {
+      tiktokConnection = new TikTokConnector(targetUser, {
+        processInitialData: false,
+        enableExtendedGiftInfo: true,
+        enableWebsocketUpgrade: true,
+        requestPollingIntervalMs: 1000,
+        clientParams: {
+          "app_language": "vi-VN",
+          "device_platform": "web"
+        }
+      });
+    } catch (e) {
+      console.error('Error instantiating TikTokLiveConnection:', e);
+      return;
+    }
 
     tiktokConnection.connect().then(state => {
-      console.log(`Connected to TikTok Room ID: ${state.roomId}`);
+      console.log(`Connected to TikTok Room ID: ${state?.roomId || 'ACTIVE'}`);
       io.emit('tiktok_connected', { username: targetUser });
     }).catch(err => {
       console.error('Failed to connect to TikTok Live:', err);
