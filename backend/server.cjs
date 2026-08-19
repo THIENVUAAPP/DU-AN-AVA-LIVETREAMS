@@ -372,8 +372,8 @@ app.post('/api/generate-script', async (req, res) => {
 
 // SPA Fallback: Trả về index.html cho các route / overlay
 if (distPath) {
-  app.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api') || req.path.startsWith('/socket.io')) {
+  app.use((req, res, next) => {
+    if (req.method !== 'GET' || req.path.startsWith('/api') || req.path.startsWith('/socket.io')) {
       return next();
     }
     res.sendFile(path.join(distPath, 'index.html'));

@@ -3,8 +3,8 @@ import { mapVoiceEngine } from './gameVoiceEngine';
 import { WORLD_COUNTRIES, COUNTRIES_BY_ID, CONTINENTS } from './worldCountriesData';
 import { BannerFlagCellsEngine } from './bannerFlagCellsEngine';
 import { saveGiftConfig, REGIONAL_FLAG_GIFTS } from '../../../utils/giftSyncService';
-import defaultVietnamMask from '../../../../public/data/vietnamMask.json';
-import defaultProvincesData from '../../../../public/data/provinces.json';
+import defaultVietnamMask from '../../../data/vietnamMask.json';
+import defaultProvincesData from '../../../data/provinces.json';
 
 // Phân loại ô cờ theo 3 miền Bắc - Trung - Nam dựa trên danh sách tỉnh thành hoặc toạ độ Y
 export const NORTH_PROVINCES = new Set([
