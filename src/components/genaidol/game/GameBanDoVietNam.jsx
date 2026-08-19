@@ -613,11 +613,14 @@ export default function GameBanDoVietNam({
     if (!state.camera || !state.controls) return;
     setActiveBookmarkId('overview');
     setActiveCameraPreset('overview');
+    const presets = getCameraPresetsForCountry();
+    const overviewPos = presets.overview?.pos || (aspectRatio === '9:16' ? [0, 480, 250] : [0, 220, 240]);
+    const overviewTarget = presets.overview?.target || (aspectRatio === '9:16' ? [0, -10, 10] : [0, 0, 10]);
     state.tween = {
       from: state.camera.position.clone(),
-      to: new THREE.Vector3(0, 240, 260),
+      to: new THREE.Vector3(...overviewPos),
       fromTarget: state.controls.target.clone(),
-      toTarget: new THREE.Vector3(0, 0, 10),
+      toTarget: new THREE.Vector3(...overviewTarget),
       start: performance.now(),
       duration: 1000,
       phase: 'direct',
@@ -852,19 +855,22 @@ export default function GameBanDoVietNam({
     };
   }, []);
 
-  // Camera preset positions based on active country
+  // Camera preset positions based on active country & aspect ratio
   const getCameraPresetsForCountry = useCallback(() => {
     const isVN = gameState.selectedCountry === 'vietnam';
+    const isVertical = aspectRatio === '9:16';
+    const overviewPos = isVertical ? [0, 480, 250] : [0, 220, 240];
+    const overviewTarget = isVertical ? [0, -10, 10] : [0, 0, 10];
     return {
-      overview: { name: 'Toàn Cảnh', icon: '🌐', pos: [0, 240, 260], target: [0, 0, 10] },
-      north: { name: isVN ? 'Miền Bắc & Hà Nội' : 'Vùng Phía Bắc', icon: '🏛️', pos: [-49, 110, -85], target: [-49.2, 0, -123.0] },
-      central: { name: isVN ? 'Miền Trung & Huế' : 'Khu Vực Trung Tâm', icon: '🏖️', pos: [15, 120, 30], target: [-4.7, 0, 4.5] },
-      south: { name: isVN ? 'Miền Nam & TP.HCM' : 'Vùng Phía Nam', icon: '🏙️', pos: [-27, 110, 155], target: [-27.6, 0, 126.4] },
-      tip_camau: { name: isVN ? 'Mũi Cà Mau (Cực Nam)' : 'Cực Nam', icon: '⛵', pos: [-63, 75, 195], target: [-63.1, 0, 161.9] },
-      islands: { name: isVN ? 'Hoàng Sa & Trường Sa' : 'Hải Đảo', icon: '🏝️', pos: [75, 110, 20], target: [65.6, 0, -34.4] },
+      overview: { name: 'Toàn Cảnh', icon: '🌐', pos: overviewPos, target: overviewTarget },
+      north: { name: isVN ? 'Miền Bắc & Hà Nội' : 'Vùng Phía Bắc', icon: '🏛️', pos: isVertical ? [-49, 150, -60] : [-49, 110, -85], target: [-49.2, 0, -123.0] },
+      central: { name: isVN ? 'Miền Trung & Huế' : 'Khu Vực Trung Tâm', icon: '🏖️', pos: isVertical ? [15, 160, 40] : [15, 120, 30], target: [-4.7, 0, 4.5] },
+      south: { name: isVN ? 'Miền Nam & TP.HCM' : 'Vùng Phía Nam', icon: '🏙️', pos: isVertical ? [-27, 150, 170] : [-27, 110, 155], target: [-27.6, 0, 126.4] },
+      tip_camau: { name: isVN ? 'Mũi Cà Mau (Cực Nam)' : 'Cực Nam', icon: '⛵', pos: isVertical ? [-63, 110, 210] : [-63, 75, 195], target: [-63.1, 0, 161.9] },
+      islands: { name: isVN ? 'Hoàng Sa & Trường Sa' : 'Hải Đảo', icon: '🏝️', pos: isVertical ? [75, 150, 30] : [75, 110, 20], target: [65.6, 0, -34.4] },
       macro: { name: 'Cận Cảnh Từng Ô Cờ', icon: '🔍', pos: [0, 20, 20], target: [0, 0, 0] },
     };
-  }, [gameState.selectedCountry]);
+  }, [gameState.selectedCountry, aspectRatio]);
 
   // Camera preset switcher function
   const applyCameraPreset = useCallback((presetKey) => {
@@ -912,13 +918,13 @@ export default function GameBanDoVietNam({
 
     // Camera căn chỉnh chuẩn xác cho tỷ lệ 9:16 và 16:9 bao quát trọn vẹn dải đất hình chữ S
     const isVerticalAspect = aspectRatio === '9:16' || width < height;
-    const fov = isVerticalAspect ? 52 : 48;
+    const fov = isVerticalAspect ? 50 : 48;
     const camera = new THREE.PerspectiveCamera(fov, width / height, 0.1, 5000);
     if (isVerticalAspect) {
-      camera.position.set(0, 330, 270);
-      camera.lookAt(0, -10, 0);
+      camera.position.set(0, 480, 250);
+      camera.lookAt(0, -10, 10);
     } else {
-      camera.position.set(0, 200, 220);
+      camera.position.set(0, 220, 240);
       camera.lookAt(0, 0, 10);
     }
     state.camera = camera;
@@ -1206,7 +1212,7 @@ export default function GameBanDoVietNam({
       if (w > 0 && h > 0) {
         camera.aspect = w / h;
         const isVert = aspectRatio === '9:16' || w < h;
-        camera.fov = isVert ? 52 : 48;
+        camera.fov = isVert ? 50 : 48;
         camera.updateProjectionMatrix();
         renderer.setSize(w, h);
       }
@@ -1223,6 +1229,8 @@ export default function GameBanDoVietNam({
         const rect = entries[0].contentRect;
         if (rect.width > 0 && rect.height > 0) {
           camera.aspect = rect.width / rect.height;
+          const isVert = aspectRatio === '9:16' || rect.width < rect.height;
+          camera.fov = isVert ? 50 : 48;
           camera.updateProjectionMatrix();
           renderer.setSize(rect.width, rect.height);
         }
