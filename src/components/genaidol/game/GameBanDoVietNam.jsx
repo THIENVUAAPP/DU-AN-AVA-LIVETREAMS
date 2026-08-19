@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { io } from 'socket.io-client';
 import { 
   Play, Pause, RotateCcw, Shield, Sparkles, Trophy, Flame, 
   MapPin, Flag, Eye, EyeOff, Volume2, VolumeX, Maximize2, Zap, Star,
@@ -818,6 +819,41 @@ export default function GameBanDoVietNam({
       bandoEngine.triggerMission();
     }
   }, [externalLiveEvent]);
+
+  // Direct Realtime Socket.io listener for TikTok gifts across all windows / overlays / popouts
+  useEffect(() => {
+    const backendUrl = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3001' : '';
+    let socket = null;
+    try {
+      socket = io(backendUrl || window.location.origin, {
+        transports: ['websocket', 'polling'],
+        reconnection: true
+      });
+      socket.on('tiktok_gift', (data) => {
+        if (!data) return;
+        bandoAudio.unlock();
+        bandoEngine.processGift({
+          giftId: data.giftId,
+          giftName: data.giftName,
+          count: data.repeatCount || 1,
+          diamondCount: data.diamondCount || 1,
+          userId: data.userId || data.uniqueId || 'tiktok_viewer',
+          username: data.nickname || data.uniqueId || data.username || 'Khách Live',
+          avatar: data.profilePictureUrl || ''
+        });
+      });
+      socket.on('bando_event', (evt) => {
+        if (!evt || !evt.data) return;
+        if (evt.type === 'GIFT') {
+          bandoEngine.processGift(evt.data);
+        }
+      });
+    } catch (e) {}
+
+    return () => {
+      if (socket) socket.disconnect();
+    };
+  }, []);
 
   // Unlock Web Audio and Auto-Play BGM on first user interaction on Live
   const handleUserGesture = useCallback(() => {

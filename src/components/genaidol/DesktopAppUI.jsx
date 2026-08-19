@@ -519,14 +519,10 @@ export default function DesktopAppUI() {
       setTiktokLogs(prev => [`[${timeStr}] 💬 ${author}: ${text}`, ...prev.slice(0, 49)]);
       
       // Chuyển tiếp tới Game Bản Đồ Chữ S & AI Commentary
-      if (isGameBanDoActive) {
-        bandoEngine.handleUserComment(text, author);
-        mapVoiceEngine.handleUserComment(text, author);
-      } else if (isGameBattleActive) {
-        battleVoiceEngine.handleUserComment(text, author);
-      } else {
-        handleLiveEvent('COMMENT', { name: author, text });
-      }
+      bandoEngine.handleUserComment(text, author);
+      mapVoiceEngine.handleUserComment(text, author);
+      battleVoiceEngine.handleUserComment(text, author);
+      handleLiveEvent('COMMENT', { name: author, text });
     });
 
     socket.on('tiktok_gift', (data) => {
@@ -539,21 +535,22 @@ export default function DesktopAppUI() {
       const diamondCount = data.diamondCount || 1;
       setTiktokLogs(prev => [`[${timeStr}] 🎁 ${author} tặng ${giftName} x${giftCount} (${diamondCount} xu)`, ...prev.slice(0, 49)]);
 
-      if (isGameBanDoActive) {
-        bandoEngine.processGift({
-          giftId: data.giftId,
-          giftName: data.giftName,
-          count: giftCount,
-          diamondCount: diamondCount,
-          userId: data.userId || data.uniqueId || 'tiktok_viewer',
-          username: author,
-          avatar: data.profilePictureUrl || ''
-        });
-      } else if (isGameBattleActive) {
-        window.dispatchEvent(new CustomEvent('battle-trigger-gift', { detail: data }));
-      } else {
-        handleLiveEvent('GIFT', { name: author, gift: giftName, count: giftCount });
-      }
+      // 1. Luôn kích hoạt cắm ô cờ trên Bản Đồ 3D Việt Nam
+      bandoEngine.processGift({
+        giftId: data.giftId,
+        giftName: data.giftName,
+        count: giftCount,
+        diamondCount: diamondCount,
+        userId: data.userId || data.uniqueId || 'tiktok_viewer',
+        username: author,
+        avatar: data.profilePictureUrl || ''
+      });
+
+      // 2. Chuyển tiếp Game Chiến Đấu nếu đang mở
+      window.dispatchEvent(new CustomEvent('battle-trigger-gift', { detail: data }));
+
+      // 3. Kích hoạt phản hồi Idol Live
+      handleLiveEvent('GIFT', { name: author, gift: giftName, count: giftCount });
     });
 
     socket.on('tiktok_like', (data) => {

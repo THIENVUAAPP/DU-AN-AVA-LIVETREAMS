@@ -1066,6 +1066,21 @@ class BanDoGameEngine {
       }
     }
 
+    // Khử trùng lặp gói tin nếu nhận đa luồng socket trong vòng 80ms
+    const eventKey = `${user.id}_${giftId}_${giftNameInput}_${count}_${diamondCountInput}`;
+    const nowTime = Date.now();
+    if (this._recentGiftEvents && this._recentGiftEvents.has(eventKey)) {
+      const lastTime = this._recentGiftEvents.get(eventKey);
+      if (nowTime - lastTime < 80) {
+        return; // Bỏ qua gói tin trùng lặp
+      }
+    }
+    if (!this._recentGiftEvents) this._recentGiftEvents = new Map();
+    this._recentGiftEvents.set(eventKey, nowTime);
+    if (this._recentGiftEvents.size > 200) {
+      this._recentGiftEvents.clear();
+    }
+
     // Luôn kích hoạt audio context ngay khi có quà tặng
     bandoAudio.unlock();
 

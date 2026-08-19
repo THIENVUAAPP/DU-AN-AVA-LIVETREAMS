@@ -22,10 +22,27 @@ export default function GameBanDoOverlay() {
         reconnection: true
       });
       socket.on('LIVE_EVENT', (data) => {
-        if (data) setLiveEvent(data);
+        if (data) setLiveEvent({ ...data, _seq: Date.now() + Math.random() });
       });
       socket.on('bando_event', (data) => {
-        if (data) setLiveEvent(data);
+        if (data) setLiveEvent({ ...data, _seq: Date.now() + Math.random() });
+      });
+      socket.on('tiktok_gift', (data) => {
+        if (data) {
+          setLiveEvent({
+            type: 'GIFT',
+            data: {
+              giftId: data.giftId,
+              giftName: data.giftName,
+              count: data.repeatCount || 1,
+              diamondCount: data.diamondCount || 1,
+              userId: data.userId || data.uniqueId || 'tiktok_viewer',
+              username: data.nickname || data.uniqueId || data.username || 'Khách Live',
+              avatar: data.profilePictureUrl || ''
+            },
+            _seq: Date.now() + Math.random()
+          });
+        }
       });
     } catch (err) {}
 
