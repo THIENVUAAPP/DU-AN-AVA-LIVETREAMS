@@ -1259,90 +1259,129 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
             />
           )}
 
-          {/* TAB 4: AUDIO BGM, CUSTOM UPLOAD & SFX & VOICE */}
+          {/* TAB 4: AUDIO BGM, CUSTOM UPLOAD & SFX & VOICE (HORIZONTAL ROWS LAYOUT) */}
           {activeTab === 'audio' && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-sm font-black text-white uppercase flex items-center gap-2">
-                  <Music size={18} className="text-emerald-400" /> Điều Khiển Âm Thanh Live Toàn Diện (BGM, SFX & Giọng Đọc AI)
-                </h3>
-                <p className="text-xs text-gray-400">
-                  Tùy chỉnh âm lượng riêng biệt cho từng kênh (Nhạc nền, Hiệu ứng âm thanh, Giọng đọc AI). Bấm tắt là ngắt hoàn toàn tức thì 100%, bấm mở là phát lại mượt mà.
-                </p>
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
+                <div>
+                  <h3 className="text-sm font-black text-white uppercase flex items-center gap-2">
+                    <Music size={18} className="text-emerald-400" /> Bảng Điều Khiển Âm Thanh Toàn Diện (BGM, SFX & Giọng Đọc AI)
+                  </h3>
+                  <p className="text-xs text-gray-400">
+                    Bố cục hàng ngang tinh gọn. Bấm tắt là ngắt tức thì 100%, bấm mở là phát lại mượt mà, âm thanh to rõ sắc nét.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => {
+                      bandoAudio.unlock();
+                      bandoAudio.playWarHorn({ force: true });
+                    }}
+                    className="px-3 py-1.5 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/40 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
+                  >
+                    <Zap size={13} /> Kích Hoạt Âm Thanh
+                  </button>
+                </div>
               </div>
 
-              {/* 3 CHÍNH: BGM, SFX, VOICE TTS CHUYÊN DỤNG */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                
-                {/* 1. Custom BGM Upload & Player */}
-                <div className="p-4 bg-gradient-to-tr from-emerald-950/50 via-black/70 to-emerald-950/30 border border-emerald-500/50 rounded-2xl space-y-3 shadow-2xl backdrop-blur-xl flex flex-col justify-between">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-black text-emerald-300 uppercase flex items-center gap-1.5 tracking-wider">
-                        <Music2 size={15} className="text-emerald-400" /> Nhạc Nền (BGM)
+              {/* HÀNG 1: NHẠC NỀN (BGM) */}
+              <div className="p-3.5 sm:p-4 bg-gradient-to-r from-emerald-950/50 via-black/70 to-emerald-950/30 border border-emerald-500/40 rounded-2xl shadow-xl space-y-3">
+                <input
+                  ref={bgmFileInputRef}
+                  type="file"
+                  accept="audio/*"
+                  onChange={handleUploadBgm}
+                  className="hidden"
+                />
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
+                  {/* Cột 1: Thông tin kênh BGM */}
+                  <div className="lg:col-span-3 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                        <Music2 size={16} />
                       </span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono">
-                        {isBgmPlaying ? '▶ Đang Phát' : '⏸ Đang Dừng'}
-                      </span>
+                      <div>
+                        <div className="text-xs font-black text-emerald-300 uppercase tracking-wide flex items-center gap-1.5">
+                          <span>Nhạc Nền (BGM)</span>
+                          <span className={`text-[9px] px-2 py-0.2 rounded-full font-mono font-bold ${
+                            isBgmPlaying ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-gray-700/50 text-gray-400'
+                          }`}>
+                            {isBgmPlaying ? '▶ ĐANG PHÁT' : '⏸ ĐÃ TẮT'}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-gray-300 font-mono truncate max-w-[200px]" title={uploadedBgmName || 'Hào Khí Đông A (Synth 24/7)'}>
+                          {uploadedBgmName || (isBgmPlaying ? 'Hào Khí Đông A (Synth)' : 'Chưa phát nhạc')}
+                        </div>
+                      </div>
                     </div>
+                  </div>
 
-                    <p className="text-[11px] text-gray-300 leading-relaxed">
-                      Phát nhạc nền hào hùng. Bấm Tắt là ngắt dứt khoát 100%, bấm Mở là tiếp tục.
-                    </p>
-
-                    <input
-                      ref={bgmFileInputRef}
-                      type="file"
-                      accept="audio/*"
-                      onChange={handleUploadBgm}
-                      className="hidden"
-                    />
-
-                    {/* Playback Controls */}
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        onClick={() => {
-                          if (isBgmPlaying) {
-                            bandoAudio.stopBgmOnLive();
-                            setIsBgmPlaying(false);
-                          } else {
-                            bandoAudio.playBgmOnLive();
-                            setIsBgmPlaying(true);
-                          }
-                        }}
-                        className={`flex-1 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 ${
-                          isBgmPlaying 
-                            ? 'bg-rose-600 hover:bg-rose-500 text-white ring-2 ring-rose-400/50 shadow-rose-500/30' 
-                            : 'bg-emerald-600 hover:bg-emerald-500 text-white ring-2 ring-emerald-400/30 shadow-emerald-500/20'
-                        }`}
-                        title={isBgmPlaying ? "Bấm để tắt hẳn nhạc nền ngay lập tức" : "Bấm để bật phát nhạc nền"}
-                      >
-                        {isBgmPlaying ? <Pause size={14} /> : <Play size={14} />}
-                        <span>{isBgmPlaying ? '⏹ TẮT NHẠC NỀN' : '▶ BẬT NHẠC NỀN'}</span>
-                      </button>
-
-                      <button
-                        onClick={() => bgmFileInputRef.current?.click()}
-                        className="p-2 bg-emerald-700/60 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all active:scale-95 border border-emerald-500/30"
-                        title="Chọn file MP3 từ máy tính"
-                      >
-                        <Upload size={14} />
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          bandoAudio.replayCustomBgm();
+                  {/* Cột 2: Cụm nút điều khiển BGM */}
+                  <div className="lg:col-span-4 flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                    <button
+                      onClick={() => {
+                        bandoAudio.unlock();
+                        if (isBgmPlaying) {
+                          bandoAudio.stopBgmOnLive();
+                          setIsBgmPlaying(false);
+                        } else {
+                          bandoAudio.playBgmOnLive();
                           setIsBgmPlaying(true);
-                        }}
-                        className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-200 hover:text-white rounded-xl text-xs font-bold transition-all active:scale-95 border border-white/10"
-                        title="Tua lại từ đầu bài hát (00:00)"
-                      >
-                        <RotateCcw size={14} />
-                      </button>
-                    </div>
+                        }
+                      }}
+                      className={`flex-1 py-2 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 whitespace-nowrap ${
+                        isBgmPlaying 
+                          ? 'bg-rose-600 hover:bg-rose-500 text-white ring-2 ring-rose-400/50 shadow-rose-500/30' 
+                          : 'bg-emerald-600 hover:bg-emerald-500 text-white ring-2 ring-emerald-400/30 shadow-emerald-500/20'
+                      }`}
+                      title={isBgmPlaying ? "Bấm để tắt hẳn nhạc nền ngay lập tức" : "Bấm để bật phát nhạc nền"}
+                    >
+                      {isBgmPlaying ? <Pause size={14} /> : <Play size={14} />}
+                      <span>{isBgmPlaying ? '⏹ TẮT NHẠC' : '▶ PHÁT NHẠC'}</span>
+                    </button>
 
-                    {/* BGM Volume Slider inside card */}
-                    <div className="p-2.5 bg-black/50 border border-emerald-500/30 rounded-xl space-y-1">
+                    <button
+                      onClick={() => bgmFileInputRef.current?.click()}
+                      className="px-3 py-2 bg-emerald-700/60 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all active:scale-95 border border-emerald-500/30 flex items-center gap-1 shrink-0"
+                      title="Chọn file MP3 từ máy tính"
+                    >
+                      <Upload size={13} />
+                      <span className="hidden sm:inline">Tải MP3</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        bandoAudio.unlock();
+                        bandoAudio.replayCustomBgm();
+                        setIsBgmPlaying(true);
+                      }}
+                      className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-200 hover:text-white rounded-xl text-xs font-bold transition-all active:scale-95 border border-white/10 shrink-0"
+                      title="Tua lại từ đầu bài hát (00:00)"
+                    >
+                      <RotateCcw size={13} />
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        const next = !bandoAudio.isBgmLoop;
+                        bandoAudio.setBgmLoop(next);
+                        setIsBgmLoop(next);
+                      }}
+                      className={`px-2.5 py-2 rounded-xl text-[10px] font-bold border transition-all shrink-0 ${
+                        isBgmLoop ? 'bg-purple-600/60 text-purple-200 border-purple-400' : 'bg-black/40 text-gray-400 border-white/10'
+                      }`}
+                      title="Tự động lặp lại bài hát 24/7"
+                    >
+                      <Repeat size={12} className="inline mr-1" />
+                      <span>{isBgmLoop ? 'Lặp 24/7' : '1 Lần'}</span>
+                    </button>
+                  </div>
+
+                  {/* Cột 3: Âm lượng & Seekbar */}
+                  <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-center">
+                    {/* Volume Slider */}
+                    <div className="p-2 bg-black/50 border border-emerald-500/30 rounded-xl space-y-1">
                       <div className="flex justify-between text-[11px] font-bold text-gray-300">
                         <span className="flex items-center gap-1"><Volume2 size={12} className="text-emerald-400" /> Âm Lượng BGM:</span>
                         <span className="font-mono text-emerald-300 font-black">{Math.round(bgmVolume * 100)}%</span>
@@ -1360,12 +1399,10 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                     </div>
 
                     {/* Seekbar */}
-                    <div className="p-2.5 bg-black/60 border border-emerald-500/40 rounded-xl space-y-1.5">
+                    <div className="p-2 bg-black/60 border border-emerald-500/40 rounded-xl space-y-1">
                       <div className="flex justify-between items-center text-[10px] font-mono text-emerald-300">
-                        <span className="truncate max-w-[140px]">
-                          {uploadedBgmName || (isBgmPlaying ? 'Hào Khí Đông A' : 'Chưa phát nhạc')}
-                        </span>
-                        <span className="font-bold text-amber-300 shrink-0 font-mono">
+                        <span className="text-gray-400">Tiến trình:</span>
+                        <span className="font-bold text-amber-300 font-mono">
                           {formatAudioTime(bgmCurrentTime)} / {formatAudioTime(bgmDuration)}
                         </span>
                       </div>
@@ -1380,80 +1417,75 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                       />
                     </div>
                   </div>
-
-                  {uploadedBgmName && (
-                    <div className="flex items-center justify-between text-xs text-emerald-300 bg-black/50 p-2 rounded-xl border border-emerald-500/30 font-mono mt-2">
-                      <span className="truncate flex items-center gap-1.5 text-[11px]"><FileAudio size={13} className="text-emerald-400" /> {uploadedBgmName}</span>
-                      <button
-                        onClick={async () => {
-                          await bandoAudio.clearCustomBgm();
-                          setUploadedBgmName('');
-                          setIsBgmPlaying(false);
-                          setBgmCurrentTime(0);
-                          setBgmDuration(0);
-                        }}
-                        className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-colors ml-2"
-                        title="Xóa bài nhạc này"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                  )}
                 </div>
+              </div>
 
-                {/* 2. Custom SFX Upload & Controls */}
-                <div className="p-4 bg-gradient-to-tr from-amber-950/40 via-black/70 to-amber-950/20 border border-amber-500/40 rounded-2xl space-y-3 shadow-xl flex flex-col justify-between">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-black text-yellow-300 uppercase flex items-center gap-1.5">
-                        <Zap size={15} className="text-yellow-400" /> Hiệu Ứng (SFX)
+              {/* HÀNG 2: HIỆU ỨNG ÂM THANH (SFX) */}
+              <div className="p-3.5 sm:p-4 bg-gradient-to-r from-amber-950/40 via-black/70 to-amber-950/20 border border-amber-500/40 rounded-2xl shadow-xl space-y-3">
+                <input
+                  ref={sfxFileInputRef}
+                  type="file"
+                  accept="audio/*"
+                  onChange={handleUploadSfx}
+                  className="hidden"
+                />
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
+                  {/* Cột 1: Thông tin kênh SFX */}
+                  <div className="lg:col-span-3 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="p-1.5 rounded-lg bg-yellow-500/20 text-yellow-300 border border-yellow-500/40">
+                        <Zap size={16} />
                       </span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/15 border border-yellow-500/30 text-yellow-300 font-mono">
-                        {isSfxEnabled ? '🔊 Đang Bật' : '🔇 Đã Tắt'}
-                      </span>
+                      <div>
+                        <div className="text-xs font-black text-yellow-300 uppercase tracking-wide flex items-center gap-1.5">
+                          <span>Hiệu Ứng (SFX)</span>
+                          <span className={`text-[9px] px-2 py-0.2 rounded-full font-mono font-bold ${
+                            isSfxEnabled ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/40' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                          }`}>
+                            {isSfxEnabled ? '🔊 ĐANG BẬT' : '🔇 ĐÃ TẮT'}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-gray-300">
+                          Âm thanh cắm cờ, kèn lệnh, trống trận
+                        </div>
+                      </div>
                     </div>
+                  </div>
 
-                    <p className="text-[11px] text-gray-300 leading-relaxed">
-                      Âm thanh cắm cờ, kèn lệnh, trống trận, sấm sét. Bấm Tắt là dứt điểm 100% không còn tiếng SFX nào.
-                    </p>
+                  {/* Cột 2: Cụm nút điều khiển SFX */}
+                  <div className="lg:col-span-4 flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                    <button
+                      onClick={() => {
+                        bandoAudio.unlock();
+                        const nextState = bandoAudio.toggleSfx();
+                        setIsSfxEnabled(nextState);
+                      }}
+                      className={`flex-1 py-2 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 whitespace-nowrap ${
+                        isSfxEnabled
+                          ? 'bg-yellow-500 hover:bg-yellow-400 text-black ring-2 ring-yellow-300/40 shadow-yellow-500/20'
+                          : 'bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40'
+                      }`}
+                      title={isSfxEnabled ? "Bấm để tắt toàn bộ hiệu ứng âm thanh SFX" : "Bấm để bật hiệu ứng âm thanh SFX"}
+                    >
+                      {isSfxEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
+                      <span>{isSfxEnabled ? '🔊 SFX: ĐANG BẬT' : '🔇 SFX: ĐÃ TẮT'}</span>
+                    </button>
 
-                    <input
-                      ref={sfxFileInputRef}
-                      type="file"
-                      accept="audio/*"
-                      onChange={handleUploadSfx}
-                      className="hidden"
-                    />
+                    <button
+                      onClick={() => sfxFileInputRef.current?.click()}
+                      className="px-3 py-2 bg-yellow-600/80 hover:bg-yellow-500 text-black font-black rounded-xl text-xs flex items-center gap-1 shadow-lg shadow-yellow-500/20 shrink-0"
+                      title="Tải file SFX riêng từ máy tính"
+                    >
+                      <Upload size={13} />
+                      <span className="hidden sm:inline">Tải SFX</span>
+                    </button>
+                  </div>
 
-                    {/* SFX Toggle & Upload */}
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        onClick={() => {
-                          const nextState = bandoAudio.toggleSfx();
-                          setIsSfxEnabled(nextState);
-                        }}
-                        className={`flex-1 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 ${
-                          isSfxEnabled
-                            ? 'bg-yellow-500 hover:bg-yellow-400 text-black ring-2 ring-yellow-300/40 shadow-yellow-500/20'
-                            : 'bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40'
-                        }`}
-                        title={isSfxEnabled ? "Bấm để tắt toàn bộ hiệu ứng âm thanh SFX" : "Bấm để bật hiệu ứng âm thanh SFX"}
-                      >
-                        {isSfxEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
-                        <span>{isSfxEnabled ? '🔊 SFX: ĐANG BẬT' : '🔇 SFX: ĐÃ TẮT'}</span>
-                      </button>
-
-                      <button
-                        onClick={() => sfxFileInputRef.current?.click()}
-                        className="p-2 bg-yellow-600/80 hover:bg-yellow-500 text-black font-black rounded-xl text-xs flex items-center gap-1 shadow-lg shadow-yellow-500/20"
-                        title="Tải file SFX riêng"
-                      >
-                        <Upload size={14} />
-                      </button>
-                    </div>
-
-                    {/* SFX Volume Slider inside card */}
-                    <div className="p-2.5 bg-black/50 border border-yellow-500/30 rounded-xl space-y-1">
+                  {/* Cột 3: Thanh trượt Âm lượng SFX & Phím Test Nhanh */}
+                  <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-center">
+                    {/* SFX Volume Slider */}
+                    <div className="p-2 bg-black/50 border border-yellow-500/30 rounded-xl space-y-1">
                       <div className="flex justify-between text-[11px] font-bold text-gray-300">
                         <span className="flex items-center gap-1"><Volume2 size={12} className="text-yellow-400" /> Âm Lượng SFX:</span>
                         <span className="font-mono text-yellow-300 font-black">{Math.round(sfxVolume * 100)}%</span>
@@ -1470,134 +1502,97 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                       />
                     </div>
 
-                    {/* Quick SFX Test Grid Buttons */}
-                    <div className="pt-1 space-y-1.5">
-                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
-                        <Play size={10} className="text-yellow-400" /> Nghe Thử Âm Thanh Hiệu Ứng (SFX):
-                      </div>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        <button
-                          onClick={() => {
-                            bandoAudio.unlock();
-                            bandoAudio.playWarHorn({ force: true });
-                            setActivePlayingSfx('horn');
-                            setTimeout(() => setActivePlayingSfx(null), 1200);
-                          }}
-                          className={`py-1.5 px-2 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${
-                            activePlayingSfx === 'horn' ? 'ring-2 ring-yellow-400 bg-yellow-500/30' : ''
-                          }`}
-                        >
-                          <Play size={11} /> 🎺 Kèn Xung Trận
-                        </button>
+                    {/* Quick SFX Test 2 Buttons */}
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <button
+                        onClick={() => {
+                          bandoAudio.unlock();
+                          bandoAudio.playWarHorn({ force: true });
+                          setActivePlayingSfx('horn');
+                          setTimeout(() => setActivePlayingSfx(null), 1200);
+                        }}
+                        className={`py-1.5 px-2 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 rounded-xl text-[10.5px] font-bold flex items-center justify-center gap-1 transition-all ${
+                          activePlayingSfx === 'horn' ? 'ring-2 ring-yellow-400 bg-yellow-500/30' : ''
+                        }`}
+                      >
+                        <Play size={10} /> 🎺 Kèn Lệnh
+                      </button>
 
-                        <button
-                          onClick={() => {
-                            bandoAudio.unlock();
-                            bandoAudio.playWarDrums(4, { force: true });
-                            setActivePlayingSfx('drums');
-                            setTimeout(() => setActivePlayingSfx(null), 1000);
-                          }}
-                          className={`py-1.5 px-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${
-                            activePlayingSfx === 'drums' ? 'ring-2 ring-amber-400 bg-amber-500/30' : ''
-                          }`}
-                        >
-                          <Play size={11} /> 🥁 Trống Trận
-                        </button>
+                      <button
+                        onClick={() => {
+                          bandoAudio.unlock();
+                          bandoAudio.playFlagPlace(1, { force: true });
+                          setActivePlayingSfx('flag');
+                          setTimeout(() => setActivePlayingSfx(null), 800);
+                        }}
+                        className={`py-1.5 px-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-xl text-[10.5px] font-bold flex items-center justify-center gap-1 transition-all ${
+                          activePlayingSfx === 'flag' ? 'ring-2 ring-emerald-400 bg-emerald-500/30' : ''
+                        }`}
+                      >
+                        <Play size={10} /> 🚩 Cắm Cờ
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-                        <button
-                          onClick={() => {
-                            bandoAudio.unlock();
-                            bandoAudio.playThunderStrike({ force: true });
-                            setActivePlayingSfx('thunder');
-                            setTimeout(() => setActivePlayingSfx(null), 1200);
-                          }}
-                          className={`py-1.5 px-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${
-                            activePlayingSfx === 'thunder' ? 'ring-2 ring-purple-400 bg-purple-500/30' : ''
-                          }`}
-                        >
-                          <Play size={11} /> ⚡ Sấm Sét
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            bandoAudio.unlock();
-                            bandoAudio.playFlagPlace(1, { force: true });
-                            setActivePlayingSfx('flag');
-                            setTimeout(() => setActivePlayingSfx(null), 800);
-                          }}
-                          className={`py-1.5 px-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${
-                            activePlayingSfx === 'flag' ? 'ring-2 ring-emerald-400 bg-emerald-500/30' : ''
-                          }`}
-                        >
-                          <Play size={11} /> 🚩 Tinh Ting Cờ
-                        </button>
+              {/* HÀNG 3: GIỌNG ĐỌC AI (VOICE TTS) */}
+              <div className="p-3.5 sm:p-4 bg-gradient-to-r from-cyan-950/40 via-black/70 to-blue-950/20 border border-cyan-500/40 rounded-2xl shadow-xl space-y-3">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
+                  {/* Cột 1: Thông tin kênh Voice AI */}
+                  <div className="lg:col-span-3 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                        <Mic size={16} />
+                      </span>
+                      <div>
+                        <div className="text-xs font-black text-cyan-300 uppercase tracking-wide flex items-center gap-1.5">
+                          <span>Giọng Đọc AI (Voice)</span>
+                          <span className={`text-[9px] px-2 py-0.2 rounded-full font-mono font-bold ${
+                            isVoiceEnabled ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                          }`}>
+                            {isVoiceEnabled ? '🎙️ ĐANG BẬT' : '🔇 ĐÃ TẮT'}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-gray-300">
+                          Bình luận viên & Thuyết minh trận đấu tự động
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {uploadedSfxName && (
-                    <div className="flex items-center justify-between text-xs text-yellow-300 bg-black/40 p-2 rounded-xl border border-yellow-500/30 font-mono mt-2">
-                      <span className="truncate flex items-center gap-1.5 text-[11px]"><FileAudio size={13} /> {uploadedSfxName}</span>
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => bandoAudio.playCustomSfx()}
-                          className="px-2 py-0.5 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 rounded text-[10px] font-bold"
-                        >
-                          Phát
-                        </button>
-                        <button
-                          onClick={async () => {
-                            await bandoAudio.clearCustomSfx();
-                            setUploadedSfxName('');
-                          }}
-                          className="text-red-400 hover:text-red-300 ml-1 p-0.5"
-                          title="Xóa SFX đã tải"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                  {/* Cột 2: Cụm nút điều khiển Voice AI */}
+                  <div className="lg:col-span-4 flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        const nextState = bandoAudio.toggleVoice();
+                        setIsVoiceEnabled(nextState);
+                        mapVoiceEngine.setMuted(!nextState);
+                      }}
+                      className={`flex-1 py-2 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 ${
+                        isVoiceEnabled
+                          ? 'bg-cyan-500 hover:bg-cyan-400 text-black ring-2 ring-cyan-300/40 shadow-cyan-500/20'
+                          : 'bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40'
+                      }`}
+                      title={isVoiceEnabled ? "Bấm để tắt giọng đọc AI" : "Bấm để bật giọng đọc AI"}
+                    >
+                      {isVoiceEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
+                      <span>{isVoiceEnabled ? '🎙️ VOICE AI: ĐANG BẬT' : '🔇 VOICE AI: ĐÃ TẮT'}</span>
+                    </button>
 
-                {/* 3. Voice AI & Commentary TTS Controls */}
-                <div className="p-4 bg-gradient-to-tr from-cyan-950/40 via-black/70 to-blue-950/20 border border-cyan-500/40 rounded-2xl space-y-3 shadow-xl flex flex-col justify-between">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-black text-cyan-300 uppercase flex items-center gap-1.5">
-                        <Mic size={15} className="text-cyan-400" /> Giọng Đọc AI (Voice TTS)
-                      </span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 font-mono">
-                        {isVoiceEnabled ? '🎙️ Đang Bật' : '🔇 Đã Tắt'}
-                      </span>
-                    </div>
+                    <button
+                      onClick={() => {
+                        mapVoiceEngine.speak("Chào mừng các chiến binh đến với Đại chiến Bản đồ Việt Nam! Cùng chung tay cắm cờ Tổ Quốc nhé!", 'game', true);
+                      }}
+                      className="px-3 py-2 bg-white/10 hover:bg-white/20 text-cyan-300 border border-white/10 rounded-xl text-xs font-bold flex items-center gap-1 shrink-0"
+                    >
+                      <Play size={12} /> Nghe Thử BLV
+                    </button>
+                  </div>
 
-                    <p className="text-[11px] text-gray-300 leading-relaxed">
-                      Giọng đọc bình luận viên AI & thuyết minh tự động khi người xem tương tác.
-                    </p>
-
-                    {/* Voice Toggle */}
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        onClick={() => {
-                          const nextState = bandoAudio.toggleVoice();
-                          setIsVoiceEnabled(nextState);
-                          mapVoiceEngine.setMuted(!nextState);
-                        }}
-                        className={`w-full py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 ${
-                          isVoiceEnabled
-                            ? 'bg-cyan-500 hover:bg-cyan-400 text-black ring-2 ring-cyan-300/40 shadow-cyan-500/20'
-                            : 'bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40'
-                        }`}
-                        title={isVoiceEnabled ? "Bấm để tắt giọng đọc AI" : "Bấm để bật giọng đọc AI"}
-                      >
-                        {isVoiceEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
-                        <span>{isVoiceEnabled ? '🎙️ VOICE AI: ĐANG BẬT' : '🔇 VOICE AI: ĐÃ TẮT'}</span>
-                      </button>
-                    </div>
-
-                    {/* Voice Volume Slider inside card */}
-                    <div className="p-2.5 bg-black/50 border border-cyan-500/30 rounded-xl space-y-1">
+                  {/* Cột 3: Âm lượng Voice AI */}
+                  <div className="lg:col-span-5">
+                    <div className="p-2 bg-black/50 border border-cyan-500/30 rounded-xl space-y-1">
                       <div className="flex justify-between text-[11px] font-bold text-gray-300">
                         <span className="flex items-center gap-1"><Volume2 size={12} className="text-cyan-400" /> Âm Lượng Giọng Đọc:</span>
                         <span className="font-mono text-cyan-300 font-black">{Math.round(voiceVolume * 100)}%</span>
@@ -1613,37 +1608,25 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                         className="w-full h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-400"
                       />
                     </div>
-
-                    {/* Quick Voice Test button */}
-                    <div className="pt-1">
-                      <button
-                        onClick={() => {
-                          mapVoiceEngine.speak("Chào mừng các chiến binh đến với Đại chiến Bản đồ Việt Nam! Hãy cùng chung tay cắm cờ Tổ Quốc rực rỡ nhé!", 'game', true);
-                        }}
-                        className="w-full py-1.5 px-3 bg-white/5 hover:bg-white/10 text-cyan-300 border border-white/10 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
-                      >
-                        <Play size={12} /> Nghe Thử Giọng BLV Trận Đấu
-                      </button>
-                    </div>
                   </div>
                 </div>
-
               </div>
 
-              {/* BẢNG KHO SFX KỊCH TÍNH MỚI VỚI NÚT NGHE THỬ TỪNG MÓN */}
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4 shadow-xl">
+              {/* BẢNG KHO SFX KỊCH TÍNH VỚI NÚT NGHE THỬ TỨC THÌ */}
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-5 space-y-3 shadow-xl">
                 <div className="flex justify-between items-center">
                   <div className="text-xs font-black text-white uppercase flex items-center gap-2">
-                    <Volume2 size={16} className="text-yellow-400" /> Thư Viện Hiệu Ứng Âm Thanh Kịch Tính (SFX):
+                    <Volume2 size={16} className="text-yellow-400" /> Kho Hiệu Ứng Âm Thanh Kịch Tính (SFX Soundboard):
                   </div>
-                  <span className="text-[11px] text-gray-400">Bấm từng nút để nghe thử hiệu ứng tức thì</span>
+                  <span className="text-[11px] text-gray-400">Bấm từng nút để phát âm thanh tức thì</span>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   <button
                     onClick={() => {
+                      bandoAudio.unlock();
                       setActivePlayingSfx('horn');
-                      bandoAudio.playWarHorn();
+                      bandoAudio.playWarHorn({ force: true });
                       setTimeout(() => setActivePlayingSfx(null), 1200);
                     }}
                     className={`p-3 border rounded-xl text-xs font-bold text-left transition-all ${
@@ -1661,8 +1644,9 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
 
                   <button
                     onClick={() => {
+                      bandoAudio.unlock();
                       setActivePlayingSfx('drums');
-                      bandoAudio.playWarDrums(4);
+                      bandoAudio.playWarDrums(4, { force: true });
                       setTimeout(() => setActivePlayingSfx(null), 1500);
                     }}
                     className={`p-3 border rounded-xl text-xs font-bold text-left transition-all ${
@@ -1680,6 +1664,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
 
                   <button
                     onClick={() => {
+                      bandoAudio.unlock();
                       setActivePlayingSfx('fireworks');
                       bandoAudio.playFireworks();
                       setTimeout(() => setActivePlayingSfx(null), 1400);
@@ -1699,6 +1684,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
 
                   <button
                     onClick={() => {
+                      bandoAudio.unlock();
                       setActivePlayingSfx('cheer');
                       bandoAudio.playCrowdCheer();
                       setTimeout(() => setActivePlayingSfx(null), 1600);
@@ -1718,6 +1704,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
 
                   <button
                     onClick={() => {
+                      bandoAudio.unlock();
                       setActivePlayingSfx('thunder');
                       bandoAudio.playThunderStrike();
                       setTimeout(() => setActivePlayingSfx(null), 1200);
@@ -1737,6 +1724,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
 
                   <button
                     onClick={() => {
+                      bandoAudio.unlock();
                       setActivePlayingSfx('coins');
                       bandoAudio.playGoldCoins(8);
                       setTimeout(() => setActivePlayingSfx(null), 1200);
@@ -1756,6 +1744,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
 
                   <button
                     onClick={() => {
+                      bandoAudio.unlock();
                       setActivePlayingSfx('levelup');
                       bandoAudio.playLevelUp();
                       setTimeout(() => setActivePlayingSfx(null), 1200);
@@ -1775,8 +1764,9 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
 
                   <button
                     onClick={() => {
+                      bandoAudio.unlock();
                       setActivePlayingSfx('victory');
-                      bandoAudio.playVictory();
+                      bandoAudio.playVictoryTheme();
                       setTimeout(() => setActivePlayingSfx(null), 2500);
                     }}
                     className={`p-3 border rounded-xl text-xs font-black text-left transition-all ${
@@ -1791,94 +1781,6 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                     </div>
                     <div className="text-[10px] text-yellow-100">Toàn thắng bản đồ</div>
                   </button>
-                </div>
-              </div>
-
-              {/* Volume Sliders & Auto Loop Music */}
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4 shadow-xl">
-                {/* BGM 24/7 Loop Setting Toggle */}
-                <div className="flex items-center justify-between p-3 bg-purple-950/40 border border-purple-500/30 rounded-xl">
-                  <div>
-                    <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <Music size={14} className="text-purple-400" />
-                      <span>Tự Động Lặp Lại Nhạc Nền 24/7 (BGM Auto-Loop)</span>
-                    </div>
-                    <p className="text-[10px] text-gray-300">
-                      Khi bài hát kết thúc sẽ tự động phát lại liền mạch, đảm bảo phòng Live luôn tràn ngập âm nhạc hào hùng.
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      const next = !bandoAudio.isBgmLoop;
-                      bandoAudio.setBgmLoop(next);
-                      if (next && !bandoAudio.bgmPlaying) {
-                        bandoAudio.startSyntheticBgm();
-                      }
-                    }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                      bandoAudio.isBgmLoop
-                        ? 'bg-purple-600 text-white shadow-md shadow-purple-500/30'
-                        : 'bg-white/10 text-gray-400 hover:bg-white/20'
-                    }`}
-                  >
-                    {bandoAudio.isBgmLoop ? '✓ Đang Lặp 24/7' : '○ Tắt Lặp'}
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* BGM Mixer */}
-                  <div className="p-3 bg-black/40 rounded-xl border border-yellow-500/20 space-y-2">
-                    <div className="flex justify-between items-center text-xs font-bold text-white">
-                      <span className="flex items-center gap-1.5"><Music size={14} className="text-yellow-400" /> Nhạc Nền (BGM)</span>
-                      <span className="font-mono text-yellow-400">{Math.round(bgmVolume * 100)}%</span>
-                    </div>
-                    <input 
-                      type="range" min="0" max="1" step="0.05" value={bgmVolume}
-                      onChange={(e) => {
-                        const v = parseFloat(e.target.value);
-                        setBgmVolume(v);
-                        bandoAudio.setBgmVolume(v);
-                        bandoEngine.updateSettings({ bgmVolume: v });
-                      }}
-                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-400"
-                    />
-                  </div>
-
-                  {/* SFX Mixer */}
-                  <div className="p-3 bg-black/40 rounded-xl border border-emerald-500/20 space-y-2">
-                    <div className="flex justify-between items-center text-xs font-bold text-white">
-                      <span className="flex items-center gap-1.5"><Volume2 size={14} className="text-emerald-400" /> Hiệu Ứng (SFX)</span>
-                      <span className="font-mono text-emerald-400">{Math.round(sfxVolume * 100)}%</span>
-                    </div>
-                    <input 
-                      type="range" min="0" max="1" step="0.05" value={sfxVolume}
-                      onChange={(e) => {
-                        const v = parseFloat(e.target.value);
-                        setSfxVolume(v);
-                        bandoAudio.setSfxVolume(v);
-                        bandoEngine.updateSettings({ sfxVolume: v });
-                      }}
-                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-emerald-400"
-                    />
-                  </div>
-
-                  {/* Voice Mixer */}
-                  <div className="p-3 bg-black/40 rounded-xl border border-cyan-500/20 space-y-2">
-                    <div className="flex justify-between items-center text-xs font-bold text-white">
-                      <span className="flex items-center gap-1.5"><Mic size={14} className="text-cyan-400" /> Giọng Đọc AI (Voice)</span>
-                      <span className="font-mono text-cyan-400">{Math.round(voiceVolume * 100)}%</span>
-                    </div>
-                    <input 
-                      type="range" min="0" max="1" step="0.05" value={voiceVolume}
-                      onChange={(e) => {
-                        const v = parseFloat(e.target.value);
-                        setVoiceVolume(v);
-                        bandoAudio.setVoiceVolume(v);
-                        mapVoiceEngine.setVolume(v);
-                      }}
-                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-400"
-                    />
-                  </div>
                 </div>
               </div>
             </div>
@@ -2233,52 +2135,77 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                 </div>
               </div>
 
-              {/* CARD 2: 3 MÓN QUÀ CẮM CỜ 3 MIỀN (5 XU) */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-red-950/40 via-amber-950/40 to-emerald-950/40 border border-yellow-500/40 shadow-xl space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs sm:text-sm font-black text-yellow-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <Flag size={15} className="text-red-400" />
-                    🚩 3 Quà Cắm Cờ 3 Miền (5 Xu): Bắc - Trung - Nam
+              {/* CARD 2: 3 MÓN QUÀ CẮM CỜ 3 MIỀN (5 XU) - THIẾT KẾ MỚI SIÊU GỌN GÀNG, ĐẸP MẮT */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-red-950/30 via-amber-950/20 to-emerald-950/30 border border-yellow-500/40 shadow-2xl space-y-3.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-white/10 pb-2.5">
+                  <h4 className="text-xs sm:text-sm font-black text-yellow-300 uppercase tracking-wider flex items-center gap-2">
+                    <span className="p-1 rounded-md bg-red-600/30 border border-red-500/40 text-red-400">
+                      <Flag size={14} />
+                    </span>
+                    <span>🚩 3 Quà Cắm Cờ 3 Miền (5 Xu): Bắc - Trung - Nam</span>
                   </h4>
-                  <span className="text-[10px] text-gray-300 font-mono">Tự động nhận diện & cắm cờ đúng vùng miền</span>
+                  <span className="text-[11px] text-gray-300 font-mono">
+                    Tự động nhận diện quà & cắm cờ chuẩn xác 100% từng miền
+                  </span>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {REGIONAL_FLAG_GIFTS.map((rg) => {
-                    let rTheme = {
-                      name: 'Miền Bắc',
-                      border: 'border-red-500/40',
-                      bg: 'bg-red-950/40 text-red-200'
+                    let rStyle = {
+                      regionName: 'Miền Bắc',
+                      border: 'border-red-500/50 hover:border-red-400',
+                      bg: 'bg-gradient-to-br from-red-950/60 via-black/70 to-red-950/40',
+                      badgeBg: 'bg-red-500/20 text-red-300 border-red-500/40',
+                      btnBg: 'bg-red-600 hover:bg-red-500 text-white shadow-red-500/20'
                     };
                     if (rg.regionTarget === 'central') {
-                      rTheme = {
-                        name: 'Miền Trung',
-                        border: 'border-amber-500/40',
-                        bg: 'bg-amber-950/40 text-amber-200'
+                      rStyle = {
+                        regionName: 'Miền Trung',
+                        border: 'border-amber-500/50 hover:border-amber-400',
+                        bg: 'bg-gradient-to-br from-amber-950/60 via-black/70 to-amber-950/40',
+                        badgeBg: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+                        btnBg: 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-500/20'
                       };
                     } else if (rg.regionTarget === 'south') {
-                      rTheme = {
-                        name: 'Miền Nam',
-                        border: 'border-emerald-500/40',
-                        bg: 'bg-emerald-950/40 text-emerald-200'
+                      rStyle = {
+                        regionName: 'Miền Nam',
+                        border: 'border-emerald-500/50 hover:border-emerald-400',
+                        bg: 'bg-gradient-to-br from-emerald-950/60 via-black/70 to-emerald-950/40',
+                        badgeBg: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+                        btnBg: 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/20'
                       };
                     }
 
                     return (
-                      <div key={rg.id} className={`p-3 rounded-xl border ${rTheme.border} ${rTheme.bg} flex items-center justify-between gap-2 shadow-md`}>
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl">{rg.icon}</span>
-                          <div>
-                            <div className="text-xs font-black text-white">{rg.name}</div>
-                            <div className="text-[10px] font-mono text-yellow-300 font-bold">
-                              {rg.priceToken} xu • +{rg.cells} ô cờ
+                      <div 
+                        key={rg.id} 
+                        className={`p-3 rounded-xl border ${rStyle.border} ${rStyle.bg} flex items-center justify-between gap-2.5 shadow-lg backdrop-blur-md transition-all hover:scale-[1.01]`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          {/* Avatar Icon */}
+                          <div className="w-10 h-10 rounded-xl bg-black/50 border border-white/15 flex items-center justify-center text-2xl shadow-inner shrink-0">
+                            {rg.icon}
+                          </div>
+                          
+                          {/* Info */}
+                          <div className="truncate">
+                            <div className="flex items-center gap-1.5 truncate">
+                              <span className="text-xs font-black text-white truncate">{rg.name.split(' (')[0]}</span>
+                              <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold border ${rStyle.badgeBg} shrink-0`}>
+                                {rStyle.regionName}
+                              </span>
+                            </div>
+                            <div className="text-[10.5px] font-mono text-yellow-300 font-bold mt-0.5">
+                              {rg.priceToken} xu <span className="text-gray-400">•</span> <span className="text-emerald-400">+{rg.cells} ô cờ</span>
                             </div>
                           </div>
                         </div>
 
+                        {/* Test Button */}
                         <button
                           type="button"
                           onClick={() => {
+                            bandoAudio.unlock();
                             bandoEngine.processGift({
                               userId: 'admin_test',
                               nickname: 'Admin Test',
@@ -2289,10 +2216,10 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                               regionTarget: rg.regionTarget
                             });
                           }}
-                          className="px-2.5 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white text-[10px] font-bold shrink-0 flex items-center gap-1"
-                          title="Bấm để test cắm cờ ngay"
+                          className={`px-3 py-1.5 rounded-lg ${rStyle.btnBg} text-[11px] font-black shrink-0 flex items-center gap-1 shadow-md active:scale-95 transition-all`}
+                          title={`Bấm để test cắm cờ ${rStyle.regionName}`}
                         >
-                          <Play size={10} fill="currentColor" /> Test Cờ
+                          <Play size={10} fill="currentColor" /> Test
                         </button>
                       </div>
                     );

@@ -470,13 +470,25 @@ export default function DesktopAppUI() {
       }));
     } catch (e) {}
 
+    let masterChannel = null;
+    let cleanChannel = null;
+
     if (typeof BroadcastChannel !== 'undefined') {
       try {
-        const masterChannel = new BroadcastChannel('avalive_master_live_stream');
+        masterChannel = new BroadcastChannel('avalive_master_live_stream');
         masterChannel.postMessage(masterPayload);
-        masterChannel.close();
 
-        const cleanChannel = new BroadcastChannel('avalive_clean_stream_channel');
+        // Lắng nghe khi tab overlay vừa tải lên hỏi state hiện tại
+        masterChannel.onmessage = (e) => {
+          if (e.data && e.data.type === 'REQUEST_MASTER_LIVE_STATE') {
+            masterChannel.postMessage({
+              ...masterPayload,
+              updatedAt: Date.now()
+            });
+          }
+        };
+
+        cleanChannel = new BroadcastChannel('avalive_clean_stream_channel');
         cleanChannel.postMessage({
           type: 'STREAM_MEDIA_UPDATE',
           mediaUrl: currentMedia,
@@ -484,9 +496,13 @@ export default function DesktopAppUI() {
           characterName: char.name || 'AI Idol',
           isConnected: !!(isConnected || showSimulator)
         });
-        cleanChannel.close();
       } catch (e) {}
     }
+
+    return () => {
+      if (masterChannel) masterChannel.close();
+      if (cleanChannel) cleanChannel.close();
+    };
   }, [isGameBanDoActive, isGameBattleActive, selectedCharacter, activeVideoItem, isConnected, showSimulator, globalAspectRatio, isDarkMode, currentLang, CHARACTERS]);
 
   const handleConnect = async () => {

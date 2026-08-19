@@ -62,8 +62,44 @@ export default function LiveGiftMarqueeTicker({
       }
     };
     window.addEventListener('avalive_gift_config_updated', handleUpdate);
-    return () => window.removeEventListener('avalive_gift_config_updated', handleUpdate);
+    
+    // Cross-window storage sync
+    const handleStorage = (e) => {
+      if (e.key === `avalive_gift_config_${mode}`) {
+        setConfig(getGiftConfig(mode));
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      window.removeEventListener('avalive_gift_config_updated', handleUpdate);
+      window.removeEventListener('storage', handleStorage);
+    };
   }, [mode]);
+
+  // VÒNG LẶP CUỘN BẢNG ĐIỆN TỰ ĐỘNG (AUTO-SCROLL MARQUEE TICKER)
+  useEffect(() => {
+    if (isPaused || isMinimized || isClosed) return;
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    let animId;
+    let accumulated = container.scrollTop;
+
+    const scrollStep = () => {
+      if (!isPaused && container) {
+        accumulated += 0.45; // Cuộn êm ái mượt mà
+        if (accumulated >= container.scrollHeight - container.clientHeight) {
+          accumulated = 0; // Tự động tua lại đầu bảng lặp lại vô tận
+        }
+        container.scrollTop = accumulated;
+      }
+      animId = requestAnimationFrame(scrollStep);
+    };
+
+    animId = requestAnimationFrame(scrollStep);
+    return () => cancelAnimationFrame(animId);
+  }, [isPaused, isMinimized, isClosed]);
 
   // Lưu scale khi thay đổi
   const handleScaleChange = (delta) => {

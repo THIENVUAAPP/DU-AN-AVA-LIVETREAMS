@@ -55,21 +55,37 @@ export default function CleanLiveOverlay() {
     let battleChannel = null;
     let cleanChannel = null;
 
+    const applyMasterState = (data) => {
+      if (!data) return;
+      setMasterState(prev => {
+        const next = { ...prev, ...data };
+        // Giữ stage URL override nếu có tham số cố định
+        const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+        const overlayParam = urlParams ? urlParams.get('overlay') : '';
+        if (overlayParam === 'bando' || overlayParam === 'vietnam_map' || overlayParam === 'map') {
+          next.stage = 'bando';
+        } else if (overlayParam === 'gamebattle' || overlayParam === 'battle' || overlayParam === 'game') {
+          next.stage = 'battle';
+        }
+        return next;
+      });
+    };
+
     if (typeof BroadcastChannel !== 'undefined') {
       try {
         masterChannel = new BroadcastChannel('avalive_master_live_stream');
         masterChannel.onmessage = (event) => {
           if (event.data) {
-            if (event.data.type === 'MASTER_LIVE_STATE_UPDATE') {
-              setMasterState(prev => ({
-                ...prev,
-                ...event.data
-              }));
+            if (event.data.type === 'MASTER_LIVE_STATE_UPDATE' || event.data.stage) {
+              applyMasterState(event.data);
             } else if (event.data.type === 'LIVE_EVENT') {
               setLiveEvent(event.data.payload);
             }
           }
         };
+
+        // Gửi yêu cầu xin trạng thái hiện tại ngay khi Overlay vừa mở
+        masterChannel.postMessage({ type: 'REQUEST_MASTER_LIVE_STATE' });
 
         bandoChannel = new BroadcastChannel('avalive_bando_stage');
         bandoChannel.onmessage = (e) => {
@@ -107,7 +123,7 @@ export default function CleanLiveOverlay() {
       if (e.key === 'avalive_master_live_state' && e.newValue) {
         try {
           const parsed = JSON.parse(e.newValue);
-          setMasterState(prev => ({ ...prev, ...parsed }));
+          applyMasterState(parsed);
         } catch (err) {}
       } else if (e.key === 'aidol_clean_stream_state' && e.newValue) {
         try {
@@ -124,12 +140,28 @@ export default function CleanLiveOverlay() {
     };
     window.addEventListener('storage', handleStorage);
 
+    // 3. Heartbeat Polling Interval: Đảm bảo OBS / TikTok Live Studio CEF luôn đồng bộ tức thì
+    let lastUpdatedTimestamp = 0;
+    const pollInterval = setInterval(() => {
+      try {
+        const saved = localStorage.getItem('avalive_master_live_state');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.updatedAt && parsed.updatedAt !== lastUpdatedTimestamp) {
+            lastUpdatedTimestamp = parsed.updatedAt;
+            applyMasterState(parsed);
+          }
+        }
+      } catch (e) {}
+    }, 400);
+
     return () => {
       if (masterChannel) masterChannel.close();
       if (bandoChannel) bandoChannel.close();
       if (battleChannel) battleChannel.close();
       if (cleanChannel) cleanChannel.close();
       window.removeEventListener('storage', handleStorage);
+      clearInterval(pollInterval);
     };
   }, []);
 
