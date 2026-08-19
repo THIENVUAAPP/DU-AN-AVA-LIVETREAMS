@@ -2,6 +2,7 @@ import bandoAudio from './bandoAudioEngine';
 import { mapVoiceEngine } from './gameVoiceEngine';
 import { WORLD_COUNTRIES, COUNTRIES_BY_ID, CONTINENTS } from './worldCountriesData';
 import { BannerFlagCellsEngine } from './bannerFlagCellsEngine';
+import { saveGiftConfig, REGIONAL_FLAG_GIFTS } from '../../../utils/giftSyncService';
 import defaultVietnamMask from '../../../../public/data/vietnamMask.json';
 import defaultProvincesData from '../../../../public/data/provinces.json';
 
@@ -337,13 +338,8 @@ class BanDoGameEngine {
       mapTexts: sanitizedLabels,
       gifts: (() => {
         const saved = savedCustomConfig.gifts;
-        if (!saved || !Array.isArray(saved) || saved.length === 0) return [...DEFAULT_MAP_GIFTS];
-        if (saved.length < DEFAULT_MAP_GIFTS.length) {
-          const savedIds = new Set(saved.map(g => g.id));
-          const missing = DEFAULT_MAP_GIFTS.filter(g => !savedIds.has(g.id));
-          return [...saved, ...missing];
-        }
-        return saved;
+        if (Array.isArray(saved) && saved.length > 0) return saved;
+        return [...DEFAULT_MAP_GIFTS];
       })(),
       
       // Banner Flag Cells Matrix State
@@ -970,7 +966,26 @@ class BanDoGameEngine {
       this.maskData = defaultVietnamMask;
     }
 
-    const giftDef = (this.state.gifts || DEFAULT_MAP_GIFTS).find(g => g.id === giftId) || DEFAULT_MAP_GIFTS[0];
+    let explicitRegionTarget = null;
+    if (typeof giftId === 'object' && giftId !== null) {
+      const obj = giftId;
+      giftId = obj.giftId || obj.id || 'flag_vn';
+      count = obj.count || obj.repeatCount || count || 1;
+      user = {
+        id: obj.userId || obj.id || user.id || 'guest_1',
+        username: obj.username || obj.nickname || user.username || 'Chiến Binh Áo Đỏ',
+        avatar: obj.avatar || obj.profilePictureUrl || user.avatar || ''
+      };
+      if (obj.regionTarget) {
+        explicitRegionTarget = obj.regionTarget;
+      }
+    }
+
+    // Luôn kích hoạt audio context ngay khi có quà tặng
+    bandoAudio.unlock();
+
+    const allKnownGifts = [...(this.state.gifts || DEFAULT_MAP_GIFTS), ...REGIONAL_FLAG_GIFTS];
+    const giftDef = allKnownGifts.find(g => g.id === giftId) || DEFAULT_MAP_GIFTS[0];
     const rawCells = (giftDef.cells || 1) * count;
     
     // Combo multiplier
@@ -996,15 +1011,15 @@ class BanDoGameEngine {
     }
 
     // Xác định vùng miền chỉ định (nếu có: 'north' | 'central' | 'south')
-    let regionTarget = giftDef.regionTarget || null;
+    let regionTarget = explicitRegionTarget || giftDef.regionTarget || null;
     const gId = (giftId || '').toLowerCase();
     const gName = (giftDef.name || '').toLowerCase();
     if (!regionTarget) {
-      if (gId.includes('north') || gId.includes('bac') || gName.includes('bắc') || gId === 'peach') {
+      if (gId.includes('north') || gId.includes('bac') || gName.includes('bắc') || gId === 'peach' || gId === 'finger_heart' || gName.includes('ngón tay tim')) {
         regionTarget = 'north';
-      } else if (gId.includes('central') || gId.includes('trung') || gName.includes('trung') || gId === 'spin_ball' || gId === 'doughnut') {
+      } else if (gId.includes('central') || gId.includes('trung') || gName.includes('trung') || gId === 'spin_ball' || gId === 'doughnut' || gId === 'donut' || gName.includes('donut')) {
         regionTarget = 'central';
-      } else if (gId.includes('south') || gId.includes('nam') || gName.includes('nam') || gId === 'bing_chilling' || gId === 'hi_bear') {
+      } else if (gId.includes('south') || gId.includes('nam') || gName.includes('nam') || gId === 'bing_chilling' || gId === 'hi_bear' || gId === 'bear' || gName.includes('gấu con') || gName.includes('gấu')) {
         regionTarget = 'south';
       }
     }
@@ -1560,6 +1575,14 @@ class BanDoGameEngine {
   updateGiftConfig(newGifts) {
     this.state.gifts = newGifts;
     this.saveToStorage();
+    try {
+      saveGiftConfig('map', { gifts: newGifts });
+    } catch (e) {}
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('avalive_gift_config_updated', {
+        detail: { mode: 'map', gifts: newGifts }
+      }));
+    }
     this.notify({ type: 'GIFTS_UPDATED', gifts: newGifts });
   }
 

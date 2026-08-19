@@ -8,6 +8,7 @@ import {
   saveGiftConfig, 
   DEFAULT_GIFT_MARQUEE_SETTINGS 
 } from '../../../utils/giftSyncService';
+import bandoAudio from './bandoAudioEngine';
 
 /**
  * BẢNG ĐIỆN QUÀ TẶNG TÙY BIẾN (GIFT HUD WIDGET)
@@ -296,8 +297,11 @@ export default function LiveGiftMarqueeTicker({
           {mode === 'map' && (
             <div className="grid grid-cols-3 gap-1 mb-1">
               <div 
-                onClick={() => onGiftClick && onGiftClick({ id: 'gift_region_north', name: 'Ngón Tay Tim (Miền Bắc)', icon: '🫰', priceToken: 5, cells: 5, regionTarget: 'north' })}
-                className="py-1 px-0.5 rounded-lg bg-red-950/60 hover:bg-red-900/80 border border-red-500/40 text-center cursor-pointer transition-transform hover:scale-105"
+                onClick={() => {
+                  bandoAudio.unlock();
+                  onGiftClick && onGiftClick({ id: 'gift_region_north', name: 'Ngón Tay Tim (Miền Bắc)', icon: '🫰', priceToken: 5, cells: 5, regionTarget: 'north' });
+                }}
+                className="py-1 px-0.5 rounded-lg bg-red-950/60 hover:bg-red-900/80 border border-red-500/40 text-center cursor-pointer transition-transform hover:scale-105 active:scale-95"
                 title="Cắm cờ Miền Bắc (+5 ô)"
               >
                 <div className="text-[12px]">🫰</div>
@@ -306,8 +310,11 @@ export default function LiveGiftMarqueeTicker({
               </div>
 
               <div 
-                onClick={() => onGiftClick && onGiftClick({ id: 'gift_region_central', name: 'Bánh Donut (Miền Trung)', icon: '🍩', priceToken: 5, cells: 5, regionTarget: 'central' })}
-                className="py-1 px-0.5 rounded-lg bg-amber-950/60 hover:bg-amber-900/80 border border-amber-500/40 text-center cursor-pointer transition-transform hover:scale-105"
+                onClick={() => {
+                  bandoAudio.unlock();
+                  onGiftClick && onGiftClick({ id: 'gift_region_central', name: 'Bánh Donut (Miền Trung)', icon: '🍩', priceToken: 5, cells: 5, regionTarget: 'central' });
+                }}
+                className="py-1 px-0.5 rounded-lg bg-amber-950/60 hover:bg-amber-900/80 border border-amber-500/40 text-center cursor-pointer transition-transform hover:scale-105 active:scale-95"
                 title="Cắm cờ Miền Trung (+5 ô)"
               >
                 <div className="text-[12px]">🍩</div>
@@ -316,8 +323,11 @@ export default function LiveGiftMarqueeTicker({
               </div>
 
               <div 
-                onClick={() => onGiftClick && onGiftClick({ id: 'gift_region_south', name: 'Gấu Con (Miền Nam)', icon: '🧸', priceToken: 5, cells: 5, regionTarget: 'south' })}
-                className="py-1 px-0.5 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-center cursor-pointer transition-transform hover:scale-105"
+                onClick={() => {
+                  bandoAudio.unlock();
+                  onGiftClick && onGiftClick({ id: 'gift_region_south', name: 'Gấu Con (Miền Nam)', icon: '🧸', priceToken: 5, cells: 5, regionTarget: 'south' });
+                }}
+                className="py-1 px-0.5 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-center cursor-pointer transition-transform hover:scale-105 active:scale-95"
                 title="Cắm cờ Miền Nam (+5 ô)"
               >
                 <div className="text-[12px]">🧸</div>

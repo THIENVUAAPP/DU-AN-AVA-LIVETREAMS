@@ -80,9 +80,9 @@ class BanDoAudioEngine {
 
       const savedTimer = localStorage.getItem('bando_bgm_timer_mode');
       if (savedTimer) this.bgmTimerMode = savedTimer;
-      if (localStorage.getItem('bando_is_muted') === 'true') this.isMuted = true;
-      if (localStorage.getItem('bando_is_sfx_muted') === 'true') this.isSfxMuted = true;
-      if (localStorage.getItem('bando_is_voice_muted') === 'true') this.isVoiceMuted = true;
+      this.isMuted = localStorage.getItem('bando_is_muted') === 'true';
+      this.isSfxMuted = localStorage.getItem('bando_is_sfx_muted') === 'true';
+      this.isVoiceMuted = localStorage.getItem('bando_is_voice_muted') === 'true';
 
       const savedBgmVol = localStorage.getItem('bando_bgm_volume');
       if (savedBgmVol !== null) this.bgmVolume = parseFloat(savedBgmVol) || 0.5;
