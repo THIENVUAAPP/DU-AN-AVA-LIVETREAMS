@@ -556,6 +556,25 @@ export default function DesktopAppUI() {
       }
     });
 
+    socket.on('bando_event', (evt) => {
+      if (!evt || !evt.data) return;
+      if (evt.type === 'GIFT' && isGameBanDoActive) {
+        bandoEngine.processGift(evt.data);
+      }
+    });
+
+    socket.on('LIVE_EVENT', (evt) => {
+      if (!evt) return;
+      if (evt.type === 'GIFT') {
+        const giftData = evt.data || evt;
+        if (isGameBanDoActive) {
+          bandoEngine.processGift(giftData);
+        } else if (isGameBattleActive) {
+          window.dispatchEvent(new CustomEvent('battle-trigger-gift', { detail: giftData }));
+        }
+      }
+    });
+
     socket.on('tiktok_like', (data) => {
       if (!data) return;
       const count = data.likeCount || 1;
