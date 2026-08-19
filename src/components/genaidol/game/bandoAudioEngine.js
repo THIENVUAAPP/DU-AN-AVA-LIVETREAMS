@@ -242,6 +242,10 @@ class BanDoAudioEngine {
     }
   }
 
+  setBgmTimer(mode = '24/7') {
+    return this.setBgmTimerMode(mode);
+  }
+
   setBgmTimerMode(mode = '24/7') {
     this.bgmTimerMode = mode;
     try {

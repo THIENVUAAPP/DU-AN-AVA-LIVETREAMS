@@ -1490,10 +1490,17 @@ export default function GameBanDoVietNam({
           bandoAudio.unlock();
           bandoAudio.playCellPop();
 
+          const activeUserChannel = (typeof localStorage !== 'undefined' && localStorage.getItem('aidol_tiktok_id'))
+            ? localStorage.getItem('aidol_tiktok_id').replace(/^@/, '')
+            : 'chienbinh_vn';
+          const activeUserId = `@${activeUserChannel}`;
+          const activeUsername = activeUserChannel;
+          const activeAvatar = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100';
+
           bandoEngine.handleGift({
-            userId: 'streamer_host',
-            username: '🌟 Chủ Phòng Live',
-            avatar: '',
+            userId: activeUserId,
+            username: activeUsername,
+            avatar: activeAvatar,
             giftId: 'flag',
             giftName: 'Lá Cờ Tổ Quốc',
             count: 1,
@@ -1627,10 +1634,17 @@ export default function GameBanDoVietNam({
       if (dist < 8 && duration < 350) {
         bandoAudio.unlock();
         bandoAudio.playCellPop();
+        const activeUserChannel = (typeof localStorage !== 'undefined' && localStorage.getItem('aidol_tiktok_id'))
+          ? localStorage.getItem('aidol_tiktok_id').replace(/^@/, '')
+          : 'chienbinh_vn';
+        const activeUserId = `@${activeUserChannel}`;
+        const activeUsername = activeUserChannel;
+        const activeAvatar = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100';
+
         bandoEngine.handleGift({
-          userId: 'streamer_host',
-          username: '🌟 Chủ Phòng Live',
-          avatar: '',
+          userId: activeUserId,
+          username: activeUsername,
+          avatar: activeAvatar,
           giftId: 'flag',
           giftName: 'Lá Cờ Tổ Quốc',
           count: 1,
@@ -2660,7 +2674,15 @@ export default function GameBanDoVietNam({
                       key={m.id}
                       onClick={() => {
                         setBgmTimerMode(m.id);
-                        bandoAudio.setBgmTimer(m.id);
+                        try {
+                          if (bandoAudio && typeof bandoAudio.setBgmTimerMode === 'function') {
+                            bandoAudio.setBgmTimerMode(m.id);
+                          } else if (bandoAudio && typeof bandoAudio.setBgmTimer === 'function') {
+                            bandoAudio.setBgmTimer(m.id);
+                          }
+                        } catch (e) {
+                          console.error('Lỗi setBgmTimer:', e);
+                        }
                       }}
                       className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border ${
                         bgmTimerMode === m.id
