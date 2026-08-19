@@ -133,6 +133,19 @@ class GameVoiceEngine {
     this.isGameActive = false;
     
     this.loadSettings();
+    this.setupEmergencyStopListener();
+  }
+
+  setupEmergencyStopListener() {
+    if (typeof window === 'undefined') return;
+    window.addEventListener('avalive_emergency_stop_all', () => {
+      this.stopAll();
+    });
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'avalive_emergency_stop_trigger') {
+        this.stopAll();
+      }
+    });
   }
 
   loadSettings() {
@@ -341,6 +354,13 @@ class GameVoiceEngine {
     this.isSpeaking = false;
     if (this.onDuckAudio) this.onDuckAudio(false);
     if (this.onSpeechStateChange) this.onSpeechStateChange(false, '', 'game');
+  }
+
+  stopAll() {
+    this.stopPeriodicCommentary();
+    this.cancelSpeech();
+    this.isGameActive = false;
+    this.isSpeaking = false;
   }
 
   // Khớp Từ Khóa & Bộ Não AI Gemini Tự Động Trả Lời Câu Hỏi Ngoài Vùng Cài Đặt (Smart Real-time Q&A)

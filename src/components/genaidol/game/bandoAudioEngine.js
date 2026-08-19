@@ -46,6 +46,15 @@ class BanDoAudioEngine {
     window.addEventListener('click', unlock, { once: true });
     window.addEventListener('touchstart', unlock, { once: true });
     window.addEventListener('keydown', unlock, { once: true });
+
+    window.addEventListener('avalive_emergency_stop_all', () => {
+      this.stopAll();
+    });
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'avalive_emergency_stop_trigger') {
+        this.stopAll();
+      }
+    });
   }
 
   async loadSavedAudioSettings() {

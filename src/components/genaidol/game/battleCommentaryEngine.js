@@ -34,12 +34,26 @@ class BattleCommentaryEngine {
 
     // Load saved settings
     this.loadSettings();
+    this.setupEmergencyStopListener();
 
     // Init browser speech voices as fallback
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.onvoiceschanged = () => {
         this.getAvailableVoices();
       };
+    }
+  }
+
+  setupEmergencyStopListener() {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('avalive_emergency_stop_all', () => {
+        this.stopAll();
+      });
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'avalive_emergency_stop_trigger') {
+          this.stopAll();
+        }
+      });
     }
   }
 
@@ -178,6 +192,13 @@ class BattleCommentaryEngine {
     if (this.onSpeechStateChange) this.onSpeechStateChange(false, '');
   }
 
+  stopAll() {
+    this.stopPeriodicCommentary();
+    this.cancelSpeech();
+    this.isGameActive = false;
+    this.isSpeaking = false;
+  }
+
   speakRandomPrompt() {
     if (this.customPrompts.length === 0) return;
     let nextIndex = Math.floor(Math.random() * this.customPrompts.length);
@@ -235,4 +256,5 @@ class BattleCommentaryEngine {
 }
 
 export const battleCommentary = new BattleCommentaryEngine();
+export default battleCommentary;
 

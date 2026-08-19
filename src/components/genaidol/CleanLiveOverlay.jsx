@@ -121,9 +121,12 @@ export default function CleanLiveOverlay() {
         masterChannel.onmessage = (event) => {
           if (event.data) {
             if (event.data.type === 'EMERGENCY_STOP_ALL') {
-              if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('avalive_emergency_stop_all'));
+                if (window.speechSynthesis) window.speechSynthesis.cancel();
+              }
               const mediaElements = document.querySelectorAll('audio, video');
-              mediaElements.forEach(el => { try { el.pause(); } catch (e) {} });
+              mediaElements.forEach(el => { try { el.pause(); el.currentTime = 0; } catch (e) {} });
             } else if (event.data.type === 'MASTER_LIVE_STATE_UPDATE' || event.data.stage) {
               applyMasterState(event.data);
             } else if (event.data.type === 'LIVE_EVENT') {

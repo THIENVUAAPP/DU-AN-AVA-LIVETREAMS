@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import bandoEngine, { getHonorTier, COUNTRY_PRESETS } from './bandoGameEngine';
 import bandoAudio from './bandoAudioEngine';
+import { mapVoiceEngine } from './gameVoiceEngine';
 import { getGameTranslation } from './gameTranslations';
 import GameBanDoAdminModal from './GameBanDoAdminModal';
 import LiveGiftMarqueeTicker from './LiveGiftMarqueeTicker';
@@ -847,11 +848,21 @@ export default function GameBanDoVietNam({
 
     window.addEventListener('bando-trigger-demo', handleTriggerDemo);
 
+    const handleEmergencyStop = () => {
+      bandoAudio.stopAll();
+      mapVoiceEngine.stopAll();
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+    window.addEventListener('avalive_emergency_stop_all', handleEmergencyStop);
+
     return () => {
       window.removeEventListener('pointerdown', handleFirstGesture);
       window.removeEventListener('keydown', handleFirstGesture);
       window.removeEventListener('bando-bgm-status', handleBgmStatus);
       window.removeEventListener('bando-trigger-demo', handleTriggerDemo);
+      window.removeEventListener('avalive_emergency_stop_all', handleEmergencyStop);
     };
   }, []);
 

@@ -22,6 +22,9 @@ import GameBanDoVietNam from './game/GameBanDoVietNam';
 import GameBanDoAdminModal from './game/GameBanDoAdminModal';
 import bandoEngine from './game/bandoGameEngine';
 import bandoAudio from './game/bandoAudioEngine';
+import { mapVoiceEngine, battleVoiceEngine } from './game/gameVoiceEngine';
+import battleCommentary from './game/battleCommentaryEngine';
+import { stopVoiceAudio } from '../../utils/voiceSyncService';
 import AutoCaptchaSolver from '../AutoCaptchaSolver';
 import { saveCharacterToIDB, loadAllCharactersFromIDB, deleteCharacterFromIDB } from '../../utils/idbHelper';
 import { SUPPORTED_LANGUAGES, getCurrentLanguage, setCurrentLanguage, t } from '../../utils/i18n';
@@ -585,11 +588,17 @@ export default function DesktopAppUI() {
       // 3. Tắt toàn bộ âm thanh / BGM / SFX / Voice
       bandoAudio.stopAll();
       
-      // 4. Dừng toàn bộ vòng lặp game, auto 24/7, demo, battle
+      // 4. Dừng ngay lập tức toàn bộ Voice Commentary AI (Bản đồ + Trận đấu + Trợ lý)
+      mapVoiceEngine.stopAll();
+      battleVoiceEngine.stopAll();
+      battleCommentary.stopAll();
+      stopVoiceAudio();
+      
+      // 5. Dừng toàn bộ vòng lặp game, auto 24/7, demo, battle
       bandoEngine.stopAuto247Loop();
       bandoEngine.stopAutoTestLoop();
       
-      // 5. Tắt player video / audio AIDOL
+      // 6. Tắt player video / audio AIDOL
       if (audioPlayerRef.current) {
         try {
           audioPlayerRef.current.pause();
@@ -597,22 +606,23 @@ export default function DesktopAppUI() {
         } catch (e) {}
       }
       
-      // 6. Tắt toàn bộ Speech Synthesis của trình duyệt ngay lập tức
+      // 7. Tắt toàn bộ Speech Synthesis của trình duyệt ngay lập tức
       if (typeof window !== 'undefined' && window.speechSynthesis) {
         window.speechSynthesis.cancel();
       }
       
-      // 7. Tắt tất cả các audio / video elements đang phát trong DOM
+      // 8. Tắt tất cả các audio / video elements đang phát trong DOM
       if (typeof document !== 'undefined') {
         const mediaElements = document.querySelectorAll('audio, video');
         mediaElements.forEach(el => {
           try {
             el.pause();
+            el.currentTime = 0;
           } catch (e) {}
         });
       }
 
-      // 8. Phát tín hiệu dừng toàn cục (BroadcastChannel, CustomEvent, LocalStorage) cho OBS/TikTok Live Studio Overlay
+      // 9. Phát tín hiệu dừng toàn cục (BroadcastChannel, CustomEvent, LocalStorage) cho OBS/TikTok Live Studio Overlay
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('avalive_emergency_stop_all'));
         window.dispatchEvent(new CustomEvent('global-stop-demo'));
@@ -640,7 +650,7 @@ export default function DesktopAppUI() {
         } catch (e) {}
       }
 
-      // 9. Toast thông báo
+      // Toast thông báo
       setToast({
         type: 'info',
         message: '🛑 ĐÃ TẮT TOÀN BỘ PHIÊN LIVE, GAME & ÂM THANH!'
@@ -659,13 +669,19 @@ export default function DesktopAppUI() {
         localStorage.setItem('avalive_master_live_running', 'true');
       } catch (e) {}
 
-      // 1. Mở kết nối TikTok Live
+      // 1. Mở kết nối TikTok Live nếu có username
       handleConnect();
 
-      // 2. Mở âm thanh BGM nếu cần
+      // 2. Mở lại Web Audio Engine & Bình Luận Viên AI
       try {
         bandoAudio.unlock();
-        bandoAudio.playBgm();
+        if (isGameBanDoActive) {
+          bandoAudio.playBgmOnLive();
+          mapVoiceEngine.startPeriodicCommentary(true);
+        } else if (isGameBattleActive) {
+          battleCommentary.startPeriodicCommentary(true);
+          battleVoiceEngine.startPeriodicCommentary(true);
+        }
       } catch (e) {}
 
       // 3. Phát tín hiệu bật lại toàn cục
@@ -1034,6 +1050,9 @@ export default function DesktopAppUI() {
             onClick={() => {
               setIsGameBattleActive(false);
               setIsGameBanDoActive(false);
+              mapVoiceEngine.stopAll();
+              battleVoiceEngine.stopAll();
+              battleCommentary.stopAll();
             }}
             title="Chuyển sang màn hình Livestream AI Idol"
           >
@@ -1054,6 +1073,12 @@ export default function DesktopAppUI() {
             onClick={() => {
               setIsGameBattleActive(true);
               setIsGameBanDoActive(false);
+              mapVoiceEngine.stopAll();
+              if (isMasterLiveRunning) {
+                bandoAudio.unlock();
+                battleCommentary.startPeriodicCommentary(true);
+                battleVoiceEngine.startPeriodicCommentary(true);
+              }
             }}
             title="Chuyển sang chế độ Game Chiến Đấu (TikTok LIVE Battle Game) trên màn hình chính"
           >
@@ -1086,6 +1111,13 @@ export default function DesktopAppUI() {
             onClick={() => {
               setIsGameBanDoActive(true);
               setIsGameBattleActive(false);
+              battleVoiceEngine.stopAll();
+              battleCommentary.stopAll();
+              if (isMasterLiveRunning) {
+                bandoAudio.unlock();
+                bandoAudio.playBgmOnLive();
+                mapVoiceEngine.startPeriodicCommentary(true);
+              }
             }}
             title="Chuyển sang Game Ghép Cờ Bản Đồ Việt Nam (Đất Nước Hình Chữ S) trên màn hình chính"
           >

@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { battleAudio } from './battleAudioEngine';
 import { battleCommentary } from './battleCommentaryEngine';
+import { battleVoiceEngine } from './gameVoiceEngine';
 import { computeSkeletalJoints, render3DWarriorSkeleton, SKELETON_STATES } from '../../../lib/game3d/warrior3DSkeleton';
 import LiveGiftMarqueeTicker from './LiveGiftMarqueeTicker';
 import LiveGiftConfigModal from './LiveGiftConfigModal';
@@ -2700,8 +2701,19 @@ export default function GameChienDau({
 
     window.addEventListener('battle-trigger-demo', handleTriggerDemo);
 
+    const handleEmergencyStop = () => {
+      battleCommentary.stopAll();
+      battleVoiceEngine.stopAll();
+      battleAudio.stopAll();
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+    window.addEventListener('avalive_emergency_stop_all', handleEmergencyStop);
+
     return () => {
       window.removeEventListener('battle-trigger-demo', handleTriggerDemo);
+      window.removeEventListener('avalive_emergency_stop_all', handleEmergencyStop);
       if (autoTestTimerRef.current) clearInterval(autoTestTimerRef.current);
     };
   }, []);
