@@ -726,152 +726,172 @@ class BanDoAudioEngine {
 
   playWarHorn(opts = {}) {
     this.unlock();
+    const opt = { force: true, ...opts };
     if (this.customSfxUrl) this.playCustomSfx();
     const hornNotes = [
-      { f: 261.63, d: 0.25, t: 0 },
-      { f: 392.00, d: 0.25, t: 0.16 },
-      { f: 523.25, d: 0.38, t: 0.32 },
-      { f: 659.25, d: 0.75, t: 0.55 }
+      { f: 261.63, d: 0.35, t: 0 },
+      { f: 329.63, d: 0.35, t: 0.18 },
+      { f: 392.00, d: 0.40, t: 0.36 },
+      { f: 523.25, d: 0.85, t: 0.60 }
     ];
     hornNotes.forEach(n => {
-      this.tone(n.f, n.d, { type: 'sawtooth', gain: 0.65, delay: n.t, ...opts });
-      this.tone(n.f * 1.005, n.d, { type: 'triangle', gain: 0.55, delay: n.t, ...opts });
-      this.tone(n.f * 0.5, n.d, { type: 'sine', gain: 0.4, delay: n.t, ...opts });
+      this.tone(n.f, n.d, { type: 'sawtooth', gain: 0.7, delay: n.t, ...opt });
+      this.tone(n.f * 1.005, n.d, { type: 'triangle', gain: 0.6, delay: n.t, ...opt });
+      this.tone(n.f * 0.5, n.d, { type: 'sine', gain: 0.5, delay: n.t, ...opt });
     });
-    this.noise(0.45, { cutoff: 1400, gain: 0.35, delay: 0.55, ...opts });
+    this.noise(0.45, { cutoff: 1600, gain: 0.35, delay: 0.6, ...opt });
   }
 
-  playThunderStrike() {
+  playThunderStrike(opts = {}) {
     this.unlock();
     this.duckBgm(2500);
+    const opt = { force: true, ...opts };
     // Instant electric spark
-    this.tone(1200, 0.08, { type: 'sawtooth', gain: 0.8 });
-    this.tone(450, 0.12, { type: 'square', gain: 0.7, delay: 0.02 });
-    this.noise(0.2, { cutoff: 3500, gain: 0.9 });
+    this.tone(1200, 0.1, { type: 'sawtooth', gain: 0.85, ...opt });
+    this.tone(450, 0.15, { type: 'square', gain: 0.75, delay: 0.02, ...opt });
+    this.noise(0.25, { cutoff: 3500, gain: 0.9, ...opt });
     // Thunder rumble & sub-bass impact
     setTimeout(() => {
-      this.tone(65, 0.9, { type: 'sine', gain: 0.9 });
-      this.noise(0.85, { cutoff: 380, gain: 0.85 });
+      this.tone(65, 1.1, { type: 'sine', gain: 0.95, ...opt });
+      this.tone(45, 1.4, { type: 'triangle', gain: 0.8, ...opt });
+      this.noise(0.9, { cutoff: 380, gain: 0.85, ...opt });
     }, 60);
     setTimeout(() => {
-      this.noise(1.1, { cutoff: 220, gain: 0.7 });
+      this.noise(1.3, { cutoff: 220, gain: 0.75, ...opt });
     }, 180);
   }
 
-  playComboFanfare(combo = 5) {
+  playComboFanfare(combo = 5, opts = {}) {
     this.unlock();
+    const opt = { force: true, ...opts };
     const scale = [523.25, 659.25, 783.99, 1046.50, 1318.51];
     scale.forEach((f, idx) => {
-      this.tone(f, 0.25, { type: 'sine', gain: 0.4, delay: idx * 0.07 });
-      this.tone(f * 0.5, 0.25, { type: 'triangle', gain: 0.35, delay: idx * 0.07 });
+      this.tone(f, 0.25, { type: 'sine', gain: 0.45, delay: idx * 0.07, ...opt });
+      this.tone(f * 0.5, 0.25, { type: 'triangle', gain: 0.35, delay: idx * 0.07, ...opt });
     });
   }
 
-  playCombo(combo = 5) {
-    this.playComboFanfare(combo);
+  playCombo(combo = 5, opts = {}) {
+    this.playComboFanfare(combo, opts);
   }
 
-  playLevelUp() {
+  playLevelUp(opts = {}) {
     this.unlock();
-    const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+    const opt = { force: true, ...opts };
+    const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98];
     notes.forEach((f, idx) => {
-      this.tone(f, 0.28, { type: 'sine', gain: 0.5, delay: idx * 0.08 });
-      this.tone(f * 2, 0.2, { type: 'triangle', gain: 0.35, delay: idx * 0.08 + 0.02 });
+      this.tone(f, 0.3, { type: 'sine', gain: 0.55, delay: idx * 0.07, ...opt });
+      this.tone(f * 1.5, 0.22, { type: 'triangle', gain: 0.4, delay: idx * 0.07 + 0.02, ...opt });
     });
-    this.noise(0.2, { cutoff: 2500, gain: 0.4, delay: 0.35 });
+    this.noise(0.25, { cutoff: 2800, gain: 0.45, delay: 0.35, ...opt });
   }
 
-  playProvinceComplete(provinceName = '') {
+  playProvinceComplete(provinceName = '', opts = {}) {
     this.unlock();
     this.duckBgm(3000);
+    const opt = { force: true, ...opts };
     const chords = [523.25, 659.25, 783.99, 1046.50];
     chords.forEach((f, i) => {
-      this.tone(f, 0.6, { type: 'triangle', gain: 0.5, delay: i * 0.06 });
-      this.tone(f * 1.5, 0.5, { type: 'sine', gain: 0.35, delay: i * 0.06 + 0.02 });
+      this.tone(f, 0.65, { type: 'triangle', gain: 0.55, delay: i * 0.06, ...opt });
+      this.tone(f * 1.5, 0.55, { type: 'sine', gain: 0.4, delay: i * 0.06 + 0.02, ...opt });
     });
-    this.playWarDrums(3);
-    setTimeout(() => this.playGoldCoins(6), 350);
+    this.playWarDrums(3, opt);
+    setTimeout(() => this.playGoldCoins(6, opt), 350);
   }
 
-  playBossAlert() {
+  playBossAlert(opts = {}) {
+    const opt = { force: true, ...opts };
     this.duckBgm(4000);
-    this.tone(130.81, 0.8, { type: 'sawtooth', gain: 0.7 });
-    this.tone(123.47, 0.8, { type: 'sawtooth', gain: 0.7, delay: 0.4 });
-    this.noise(0.6, { cutoff: 400, gain: 0.75, delay: 0.1 });
+    this.tone(130.81, 0.8, { type: 'sawtooth', gain: 0.75, ...opt });
+    this.tone(123.47, 0.8, { type: 'sawtooth', gain: 0.75, delay: 0.4, ...opt });
+    this.noise(0.6, { cutoff: 400, gain: 0.8, delay: 0.1, ...opt });
     setTimeout(() => {
-      this.tone(110.00, 1.2, { type: 'sawtooth', gain: 0.8 });
-      this.noise(1.0, { cutoff: 300, gain: 0.8 });
+      this.tone(110.00, 1.2, { type: 'sawtooth', gain: 0.85, ...opt });
+      this.noise(1.0, { cutoff: 300, gain: 0.85, ...opt });
     }, 800);
   }
 
-  playWarDrums(count = 5) {
+  playWarDrums(count = 5, opts = {}) {
     this.unlock();
+    const opt = { force: true, ...opts };
     for (let i = 0; i < count; i++) {
       const delay = i * 0.18;
-      const freq = 90 + (i % 2 === 0 ? 0 : 25);
-      this.tone(freq, 0.22, { type: 'sine', gain: 0.7, delay });
-      this.noise(0.18, { cutoff: 350, gain: 0.65, delay });
+      const freq = 85 + (i % 2 === 0 ? 0 : 30);
+      this.tone(freq, 0.28, { type: 'sine', gain: 0.85, delay, ...opt });
+      this.tone(freq * 0.5, 0.35, { type: 'triangle', gain: 0.7, delay, ...opt });
+      this.noise(0.22, { cutoff: 400, gain: 0.75, delay, ...opt });
     }
   }
 
-  playFireworks() {
+  playFireworks(opts = {}) {
     this.unlock();
-    this.noise(0.15, { cutoff: 2800, gain: 0.5 });
+    const opt = { force: true, ...opts };
+    // Whistle launch
+    this.tone(500, 0.18, { type: 'sine', gain: 0.4, ...opt });
+    this.noise(0.18, { cutoff: 2800, gain: 0.55, ...opt });
     setTimeout(() => {
-      this.noise(0.6, { cutoff: 1400, gain: 0.75 });
-      this.tone(880, 0.35, { type: 'sine', gain: 0.3 });
-      this.tone(1174.66, 0.4, { type: 'triangle', gain: 0.35, delay: 0.05 });
+      // Big pop & sparkle
+      this.noise(0.7, { cutoff: 1600, gain: 0.85, ...opt });
+      this.tone(880, 0.38, { type: 'sine', gain: 0.4, ...opt });
+      this.tone(1174.66, 0.42, { type: 'triangle', gain: 0.45, delay: 0.05, ...opt });
+      this.tone(1760.00, 0.35, { type: 'sine', gain: 0.3, delay: 0.1, ...opt });
     }, 180);
   }
 
-  playCrowdCheer() {
+  playCrowdCheer(opts = {}) {
     this.unlock();
-    this.noise(2.5, { cutoff: 1800, gain: 0.45 });
-    this.noise(2.2, { cutoff: 1200, gain: 0.40, delay: 0.2 });
+    const opt = { force: true, ...opts };
+    this.noise(2.8, { cutoff: 2200, gain: 0.65, ...opt });
+    this.noise(2.4, { cutoff: 1400, gain: 0.60, delay: 0.15, ...opt });
+    this.tone(440, 0.6, { type: 'sine', gain: 0.25, delay: 0.1, ...opt });
+    this.tone(523.25, 0.7, { type: 'triangle', gain: 0.25, delay: 0.2, ...opt });
   }
 
-  playGoldCoins(count = 6) {
+  playGoldCoins(count = 6, opts = {}) {
     this.unlock();
+    const opt = { force: true, ...opts };
     for (let i = 0; i < count; i++) {
       const delay = i * 0.06;
-      const freq = 1800 + Math.random() * 600;
-      this.tone(freq, 0.09, { type: 'sine', gain: 0.35, delay });
-      this.tone(freq * 1.5, 0.08, { type: 'triangle', gain: 0.25, delay: delay + 0.02 });
+      const freq = 1800 + Math.random() * 800;
+      this.tone(freq, 0.12, { type: 'sine', gain: 0.5, delay, ...opt });
+      this.tone(freq * 1.5, 0.1, { type: 'triangle', gain: 0.35, delay: delay + 0.02, ...opt });
+      this.tone(freq * 2.2, 0.08, { type: 'sine', gain: 0.25, delay: delay + 0.03, ...opt });
     }
   }
 
-  playVictoryTheme() {
+  playVictoryTheme(opts = {}) {
     this.unlock();
     this.duckBgm(8000);
+    const opt = { force: true, ...opts };
     const melody = [
-      { f: 523.25, d: 0.3, t: 0 },
-      { f: 659.25, d: 0.3, t: 0.25 },
-      { f: 783.99, d: 0.3, t: 0.5 },
-      { f: 1046.50, d: 0.7, t: 0.75 },
-      { f: 880.00, d: 0.3, t: 1.5 },
-      { f: 1046.50, d: 1.2, t: 1.8 }
+      { f: 523.25, d: 0.35, t: 0 },
+      { f: 659.25, d: 0.35, t: 0.25 },
+      { f: 783.99, d: 0.35, t: 0.5 },
+      { f: 1046.50, d: 0.85, t: 0.75 },
+      { f: 880.00, d: 0.35, t: 1.5 },
+      { f: 1046.50, d: 1.3, t: 1.8 }
     ];
 
     melody.forEach(note => {
-      this.tone(note.f, note.d, { type: 'sine', gain: 0.55, delay: note.t });
-      this.tone(note.f * 0.5, note.d, { type: 'sawtooth', gain: 0.3, delay: note.t });
-      this.tone(note.f, note.d * 1.1, { type: 'triangle', gain: 0.45, delay: note.t });
+      this.tone(note.f, note.d, { type: 'sine', gain: 0.65, delay: note.t, ...opt });
+      this.tone(note.f * 0.5, note.d, { type: 'sawtooth', gain: 0.4, delay: note.t, ...opt });
+      this.tone(note.f, note.d * 1.1, { type: 'triangle', gain: 0.55, delay: note.t, ...opt });
     });
 
-    this.playWarDrums(7);
-    setTimeout(() => this.playFireworks(), 300);
-    setTimeout(() => this.playFireworks(), 900);
-    setTimeout(() => this.playFireworks(), 1700);
-    this.playCrowdCheer();
-    setTimeout(() => this.playGoldCoins(10), 1000);
+    this.playWarDrums(7, opt);
+    setTimeout(() => this.playFireworks(opt), 300);
+    setTimeout(() => this.playFireworks(opt), 900);
+    setTimeout(() => this.playFireworks(opt), 1700);
+    this.playCrowdCheer(opt);
+    setTimeout(() => this.playGoldCoins(10, opt), 1000);
   }
 
-  playVictory() {
-    this.playVictoryTheme();
+  playVictory(opts = {}) {
+    this.playVictoryTheme(opts);
   }
 
-  playVictoryEpic() {
-    this.playVictoryTheme();
+  playVictoryEpic(opts = {}) {
+    this.playVictoryTheme(opts);
   }
 
   // ==================== BGM TỔNG HỢP (TỰ ĐỘNG LẶP 24/7) ====================

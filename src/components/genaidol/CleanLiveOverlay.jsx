@@ -118,7 +118,7 @@ export default function CleanLiveOverlay() {
       }
     }
 
-    // 2. LocalStorage Storage Event Fallback (khi khác tiến trình trình duyệt)
+    // 2. LocalStorage Storage Event Fallback (khi khác tiến trình trình duyệt CEF TikTok Live Studio)
     const handleStorage = (e) => {
       if (e.key === 'avalive_master_live_state' && e.newValue) {
         try {
@@ -135,6 +135,13 @@ export default function CleanLiveOverlay() {
             characterName: parsed.characterName,
             isConnected: parsed.isConnected
           }));
+        } catch (err) {}
+      } else if (e.key === 'avalive_bando_realtime_sync' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (parsed.lastEvent) {
+            setLiveEvent(parsed.lastEvent);
+          }
         } catch (err) {}
       }
     };
@@ -153,7 +160,7 @@ export default function CleanLiveOverlay() {
           }
         }
       } catch (e) {}
-    }, 400);
+    }, 150);
 
     return () => {
       if (masterChannel) masterChannel.close();

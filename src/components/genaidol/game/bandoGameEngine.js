@@ -259,11 +259,60 @@ class BanDoGameEngine {
     this.isLoaded = false;
     this.listeners = new Set();
     this.broadcastChannel = null;
+    this._lastSyncTimestamp = 0;
+    this._isApplyingRemoteSync = false;
 
     if (typeof BroadcastChannel !== 'undefined') {
       try {
         this.broadcastChannel = new BroadcastChannel('avalive_bando_stage');
+        this.broadcastChannel.onmessage = (e) => {
+          if (!e.data) return;
+          if (e.data.type === 'BANDO_STATE_UPDATE' && e.data.state) {
+            this.applyRemoteState(e.data.state, e.data.lastEvent);
+          } else if (e.data.type === 'REQUEST_BANDO_STATE') {
+            if (this.broadcastChannel && !this._isApplyingRemoteSync) {
+              this.broadcastChannel.postMessage({
+                type: 'BANDO_STATE_UPDATE',
+                state: this.state,
+                lastEvent: null,
+                ts: Date.now()
+              });
+            }
+          }
+        };
+
+        // Gửi yêu cầu xin state từ tab host nếu đây là tab overlay vừa mở
+        this.broadcastChannel.postMessage({ type: 'REQUEST_BANDO_STATE' });
       } catch (e) {}
+    }
+
+    if (typeof window !== 'undefined') {
+      // 1. Storage event listener (cho các tab khác)
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'avalive_bando_realtime_sync' && e.newValue) {
+          try {
+            const parsed = JSON.parse(e.newValue);
+            if (parsed.state && parsed.ts && parsed.ts !== this._lastSyncTimestamp) {
+              this._lastSyncTimestamp = parsed.ts;
+              this.applyRemoteState(parsed.state, parsed.lastEvent);
+            }
+          } catch (err) {}
+        }
+      });
+
+      // 2. Heartbeat polling 150ms cho Chromium Embedded Framework (TikTok LIVE Studio / OBS Browser Source)
+      setInterval(() => {
+        try {
+          const raw = localStorage.getItem('avalive_bando_realtime_sync');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed.state && parsed.ts && parsed.ts !== this._lastSyncTimestamp) {
+              this._lastSyncTimestamp = parsed.ts;
+              this.applyRemoteState(parsed.state, parsed.lastEvent);
+            }
+          }
+        } catch (err) {}
+      }, 150);
     }
 
     // Load persisted configurations from local machine
@@ -844,19 +893,57 @@ class BanDoGameEngine {
     return () => this.listeners.delete(listener);
   }
 
+  applyRemoteState(remoteState, lastEvent = null) {
+    if (!remoteState) return;
+    this._isApplyingRemoteSync = true;
+    try {
+      this.state = {
+        ...this.state,
+        ...remoteState,
+        cellsById: remoteState.cellsById ? { ...remoteState.cellsById } : this.state.cellsById,
+        provincesStatus: remoteState.provincesStatus ? { ...remoteState.provincesStatus } : this.state.provincesStatus,
+        leaderboard: remoteState.leaderboard ? [...remoteState.leaderboard] : this.state.leaderboard,
+        combo: remoteState.combo ? { ...remoteState.combo } : this.state.combo,
+        boss: remoteState.boss ? { ...remoteState.boss } : this.state.boss,
+        activeMission: remoteState.activeMission ? { ...remoteState.activeMission } : this.state.activeMission
+      };
+
+      this.listeners.forEach(cb => {
+        try { cb(this.state, lastEvent); } catch(e) {}
+      });
+    } finally {
+      this._isApplyingRemoteSync = false;
+    }
+  }
+
   notify(lastEvent = null) {
+    if (this._isApplyingRemoteSync) return;
     this.state.cellsById = { ...this.state.cellsById };
     this.listeners.forEach(cb => {
       try { cb(this.state, lastEvent); } catch(e) {}
     });
+
+    const now = Date.now();
+    this._lastSyncTimestamp = now;
 
     if (this.broadcastChannel) {
       try {
         this.broadcastChannel.postMessage({
           type: 'BANDO_STATE_UPDATE',
           state: this.state,
-          lastEvent
+          lastEvent,
+          ts: now
         });
+      } catch (e) {}
+    }
+
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem('avalive_bando_realtime_sync', JSON.stringify({
+          state: this.state,
+          lastEvent,
+          ts: now
+        }));
       } catch (e) {}
     }
   }
