@@ -958,38 +958,14 @@ export default function GameChienDauAdminModal({
                       </div>
                     </div>
 
-                    {/* 1-Click Copy Overlay Link */}
-                    <div className="p-3 bg-black/50 border border-white/10 rounded-xl space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-gray-200">Đường Dẫn Overlay Cho Live Studio:</span>
-                        {copiedLink && (
-                          <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
-                            <CheckCircle2 size={12} /> Đã sao chép!
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          readOnly
-                          value={typeof window !== 'undefined' ? `${window.location.origin}/?overlay=gamebattle` : ''}
-                          className="flex-1 px-3 py-1.5 bg-black/70 border border-white/20 rounded-lg text-xs font-mono text-cyan-300"
-                        />
-                        <button
-                          onClick={handleCopyOverlayLink}
-                          className="px-3 py-1.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-lg text-xs font-bold shadow flex items-center gap-1 shrink-0"
-                        >
-                          <Copy size={13} /> Sao Chép Link
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* 3-Step Live Studio Guide */}
+                    {/* Global Overlay Banner */}
                     <div className="p-3 bg-cyan-950/30 border border-cyan-500/20 rounded-xl space-y-1.5 text-[11px] text-gray-300">
-                      <div className="font-bold text-cyan-300 text-xs">🚀 Hướng Dẫn Tích Hợp TikTok Live Studio:</div>
-                      <div>1. Mở TikTok LIVE Studio hoặc OBS Studio trên máy tính.</div>
-                      <div>2. Chọn <strong>Thêm Nguồn (Add Source)</strong> &rarr; Chọn <strong>Nguồn Trình Duyệt (Browser Source)</strong> hoặc <strong>Quay Cửa Sổ (Window Capture)</strong>.</div>
-                      <div>3. Dán link vừa sao chép ở trên vào, đặt độ phân giải <strong>1920x1080</strong> &rarr; Trận chiến sẽ phát trực tiếp trên màn hình live thật!</div>
+                      <div className="font-bold text-cyan-300 text-xs flex items-center gap-1.5">
+                        <Radio size={13} className="text-yellow-400" /> Xuất Hình Sang TikTok Live Studio / OBS Studio:
+                      </div>
+                      <div>
+                        Đường dẫn Overlay sạch 100% cho mọi chế độ hiện đã được tích hợp tập trung tại nút <span className="font-bold text-yellow-300 bg-black/50 px-1.5 py-0.5 rounded border border-yellow-500/30">📡 Link Live</span> trên thanh Menu chính (Header) của phần mềm.
+                      </div>
                     </div>
                   </div>
                 </div>

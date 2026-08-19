@@ -99,47 +99,60 @@ class BanDoAudioEngine {
 
   ensureContext() {
     if (typeof window === 'undefined') return null;
-    if (!this.ctx) {
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContextClass) return null;
-      this.ctx = new AudioContextClass();
+    try {
+      if (!this.ctx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return null;
+        this.ctx = new AudioContextClass();
 
-      this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.value = this.isMuted ? 0 : 0.9;
-      this.masterGain.connect(this.ctx.destination);
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.gain.value = this.isMuted ? 0 : 0.95;
+        this.masterGain.connect(this.ctx.destination);
 
-      this.sfxGain = this.ctx.createGain();
-      this.sfxGain.gain.value = this.isSfxMuted ? 0 : this.sfxVolume;
-      this.sfxGain.connect(this.masterGain);
+        this.sfxGain = this.ctx.createGain();
+        this.sfxGain.gain.value = this.isSfxMuted ? 0 : (this.sfxVolume || 0.85);
+        this.sfxGain.connect(this.masterGain);
 
-      this.bgmGain = this.ctx.createGain();
-      this.bgmGain.gain.value = this.bgmPlaying ? this.bgmVolume : 0;
-      this.bgmGain.connect(this.masterGain);
+        this.bgmGain = this.ctx.createGain();
+        this.bgmGain.gain.value = this.bgmPlaying ? (this.bgmVolume || 0.5) : 0;
+        this.bgmGain.connect(this.masterGain);
 
-      this.voiceGain = this.ctx.createGain();
-      this.voiceGain.gain.value = this.isVoiceMuted ? 0 : this.voiceVolume;
-      this.voiceGain.connect(this.masterGain);
-    }
-    if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume().catch(() => {});
+        this.voiceGain = this.ctx.createGain();
+        this.voiceGain.gain.value = this.isVoiceMuted ? 0 : (this.voiceVolume || 1.0);
+        this.voiceGain.connect(this.masterGain);
+      }
+      if (this.ctx && this.ctx.state === 'suspended') {
+        this.ctx.resume().catch(() => {});
+      }
+    } catch (e) {
+      console.warn('AudioContext creation error:', e);
     }
     return this.ctx;
   }
 
   unlock() {
-    const ctx = this.ensureContext();
-    if (ctx && ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
-    }
-    if (this.customBgmAudio && this.bgmPlaying && this.customBgmAudio.paused) {
-      this.customBgmAudio.play().catch(() => {});
-    }
+    try {
+      const ctx = this.ensureContext();
+      if (ctx && ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
+      }
+      if (this.masterGain && this.ctx) {
+        this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 0.95, this.ctx.currentTime);
+      }
+      if (this.sfxGain && this.ctx) {
+        this.sfxGain.gain.setValueAtTime(this.isSfxMuted ? 0 : (this.sfxVolume || 0.85), this.ctx.currentTime);
+      }
+      if (this.customBgmAudio && this.bgmPlaying && this.customBgmAudio.paused) {
+        this.customBgmAudio.play().catch(() => {});
+      }
+    } catch (e) {}
   }
 
   setMuted(isMuted) {
     this.isMuted = !!isMuted;
+    this.ensureContext();
     if (this.masterGain && this.ctx) {
-      this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 0.9, this.ctx.currentTime);
+      this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 0.95, this.ctx.currentTime);
     }
     if (this.isMuted) {
       this.stopBgmOnLive();
@@ -152,8 +165,9 @@ class BanDoAudioEngine {
 
   setSfxMuted(isMuted) {
     this.isSfxMuted = !!isMuted;
+    this.ensureContext();
     if (this.sfxGain && this.ctx) {
-      this.sfxGain.gain.setValueAtTime(this.isSfxMuted ? 0 : this.sfxVolume, this.ctx.currentTime);
+      this.sfxGain.gain.setValueAtTime(this.isSfxMuted ? 0 : (this.sfxVolume || 0.85), this.ctx.currentTime);
     }
     if (this.customSfxAudio) {
       this.customSfxAudio.muted = this.isSfxMuted;
@@ -165,7 +179,13 @@ class BanDoAudioEngine {
   }
 
   toggleSfx() {
-    this.setSfxMuted(!this.isSfxMuted);
+    this.unlock();
+    const nextState = !this.isSfxMuted;
+    this.setSfxMuted(nextState);
+    if (!this.isSfxMuted) {
+      // Âm thanh thông báo khi bật SFX thành công
+      setTimeout(() => this.playFlagPlace(1), 50);
+    }
     return !this.isSfxMuted;
   }
 
@@ -601,36 +621,45 @@ class BanDoAudioEngine {
     const isBgm = !!opts.isBgm;
     // Nếu là BGM nhưng BGM đang tắt -> ngắt ngay lập tức
     if (isBgm && !this.bgmPlaying) return;
-    // Nếu là SFX nhưng SFX đang tắt (Muted) -> ngắt ngay lập tức
-    if (!isBgm && (this.isSfxMuted || this.sfxVolume <= 0.001)) return;
+    // Nếu là SFX nhưng SFX đang tắt (Muted) và không phải force -> ngắt
+    if (!isBgm && !opts.force && (this.isSfxMuted || (this.sfxVolume || 0) <= 0.001)) return;
 
     try {
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
+      }
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = opts.type || 'sine';
-      osc.frequency.value = freq;
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
 
-      const start = ctx.currentTime + (opts.delay || 0);
+      const start = Math.max(ctx.currentTime, 0.001) + (opts.delay || 0);
       const attack = opts.attack || 0.01;
-      const g = (opts.gain !== undefined ? opts.gain : 0.4);
+      const g = (opts.gain !== undefined ? opts.gain : 0.45);
 
       gain.gain.setValueAtTime(0.0001, start);
-      gain.gain.linearRampToValueAtTime(g, start + attack);
+      gain.gain.linearRampToValueAtTime(g, start + Math.min(attack, duration * 0.4));
       gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
 
       osc.connect(gain);
-      gain.connect(isBgm ? (this.bgmGain || this.masterGain) : (this.sfxGain || this.masterGain));
+      gain.connect(isBgm ? (this.bgmGain || this.masterGain || ctx.destination) : (this.sfxGain || this.masterGain || ctx.destination));
 
       osc.start(start);
       osc.stop(start + duration + 0.05);
-    } catch (e) {}
+    } catch (e) {
+      console.warn('tone synth error:', e);
+    }
   }
 
   noise(duration, opts = {}) {
     const ctx = this.ensureContext();
-    if (!ctx || this.isMuted || this.isSfxMuted || this.sfxVolume <= 0.001) return;
+    if (!ctx || this.isMuted) return;
+    if (!opts.force && (this.isSfxMuted || (this.sfxVolume || 0) <= 0.001)) return;
     try {
-      const bufferSize = ctx.sampleRate * duration;
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
+      }
+      const bufferSize = Math.floor(ctx.sampleRate * duration);
       const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
       const output = buffer.getChannelData(0);
       for (let i = 0; i < bufferSize; i++) {
@@ -642,41 +671,44 @@ class BanDoAudioEngine {
 
       const filter = ctx.createBiquadFilter();
       filter.type = opts.filterType || 'lowpass';
-      filter.frequency.value = opts.cutoff || 800;
+      filter.frequency.setValueAtTime(opts.cutoff || 800, ctx.currentTime);
 
       const gain = ctx.createGain();
-      const start = ctx.currentTime + (opts.delay || 0);
+      const start = Math.max(ctx.currentTime, 0.001) + (opts.delay || 0);
       const g = (opts.gain !== undefined ? opts.gain : 0.5);
 
-      gain.gain.setValueAtTime(g, start);
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.linearRampToValueAtTime(g, start + 0.01);
       gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
 
       whiteNoise.connect(filter);
       filter.connect(gain);
-      gain.connect(this.sfxGain || this.masterGain);
+      gain.connect(this.sfxGain || this.masterGain || ctx.destination);
 
       whiteNoise.start(start);
       whiteNoise.stop(start + duration + 0.05);
-    } catch (e) {}
+    } catch (e) {
+      console.warn('noise synth error:', e);
+    }
   }
 
-  playFlagPlace(claimedCount = 1) {
+  playFlagPlace(claimedCount = 1, opts = {}) {
     this.unlock();
     if (this.customSfxUrl) {
       this.playCustomSfx();
     }
     const pitchMultiplier = Math.min(2.0, 1 + (claimedCount % 50) * 0.015);
-    this.tone(523.25 * pitchMultiplier, 0.12, { type: 'sine', gain: 0.45 });
-    this.tone(659.25 * pitchMultiplier, 0.16, { type: 'triangle', gain: 0.35, delay: 0.04 });
-    this.tone(783.99 * pitchMultiplier, 0.22, { type: 'sine', gain: 0.30, delay: 0.08 });
-    this.noise(0.08, { cutoff: 1800, gain: 0.25 });
+    this.tone(523.25 * pitchMultiplier, 0.12, { type: 'sine', gain: 0.5, ...opts });
+    this.tone(659.25 * pitchMultiplier, 0.16, { type: 'triangle', gain: 0.4, delay: 0.04, ...opts });
+    this.tone(783.99 * pitchMultiplier, 0.22, { type: 'sine', gain: 0.35, delay: 0.08, ...opts });
+    this.noise(0.08, { cutoff: 1800, gain: 0.25, ...opts });
   }
 
   playCellPop(claimedCount = 1) {
     this.playFlagPlace(claimedCount);
   }
 
-  playBigGift(comboCount = 1) {
+  playBigGift(comboCount = 1, opts = {}) {
     this.unlock();
     const baseFreq = 440;
     const chords = [
@@ -686,26 +718,27 @@ class BanDoAudioEngine {
     ];
     const chord = chords[Math.min(chords.length - 1, Math.floor(comboCount / 3))];
     chord.forEach((f, idx) => {
-      this.tone(f, 0.45, { type: 'triangle', gain: 0.45, delay: idx * 0.06 });
-      this.tone(f * 2, 0.35, { type: 'sine', gain: 0.3, delay: idx * 0.06 + 0.02 });
+      this.tone(f, 0.45, { type: 'triangle', gain: 0.5, delay: idx * 0.06, ...opts });
+      this.tone(f * 2, 0.35, { type: 'sine', gain: 0.35, delay: idx * 0.06 + 0.02, ...opts });
     });
-    this.noise(0.35, { cutoff: 2200, gain: 0.4, delay: 0.05 });
+    this.noise(0.35, { cutoff: 2200, gain: 0.4, delay: 0.05, ...opts });
   }
 
-  playWarHorn() {
+  playWarHorn(opts = {}) {
     this.unlock();
     if (this.customSfxUrl) this.playCustomSfx();
     const hornNotes = [
-      { f: 261.63, d: 0.22, t: 0 },
-      { f: 392.00, d: 0.22, t: 0.14 },
-      { f: 523.25, d: 0.35, t: 0.28 },
-      { f: 659.25, d: 0.70, t: 0.50 }
+      { f: 261.63, d: 0.25, t: 0 },
+      { f: 392.00, d: 0.25, t: 0.16 },
+      { f: 523.25, d: 0.38, t: 0.32 },
+      { f: 659.25, d: 0.75, t: 0.55 }
     ];
     hornNotes.forEach(n => {
-      this.tone(n.f, n.d, { type: 'sawtooth', gain: 0.55, delay: n.t });
-      this.tone(n.f * 1.005, n.d, { type: 'triangle', gain: 0.45, delay: n.t });
+      this.tone(n.f, n.d, { type: 'sawtooth', gain: 0.65, delay: n.t, ...opts });
+      this.tone(n.f * 1.005, n.d, { type: 'triangle', gain: 0.55, delay: n.t, ...opts });
+      this.tone(n.f * 0.5, n.d, { type: 'sine', gain: 0.4, delay: n.t, ...opts });
     });
-    this.noise(0.4, { cutoff: 1200, gain: 0.3, delay: 0.50 });
+    this.noise(0.45, { cutoff: 1400, gain: 0.35, delay: 0.55, ...opts });
   }
 
   playThunderStrike() {

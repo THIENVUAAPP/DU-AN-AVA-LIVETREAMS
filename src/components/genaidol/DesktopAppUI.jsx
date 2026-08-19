@@ -1003,14 +1003,14 @@ export default function DesktopAppUI() {
             <span>{t('payment', currentLang)}</span>
           </button>
 
-          {/* Nút Sao Chép Link Realtime TikTok LIVE Studio & OBS Studio */}
+          {/* Nút Mở Link Realtime TikTok LIVE Studio & OBS Studio - Nhỏ gọn tinh tế */}
           <button
             onClick={() => setShowOverlayModal(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black bg-gradient-to-r from-cyan-600 via-teal-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white shadow-md border border-cyan-300 ring-1 ring-cyan-400/40 transition-all hover:scale-105"
-            title="Mở cửa sổ & Sao chép Link Overlay Live cho TikTok LIVE Studio / OBS Studio"
+            className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-cyan-600/80 hover:bg-cyan-500 text-white border border-cyan-400/50 shadow-sm transition-all hover:scale-105"
+            title="Mở & Sao chép Link Live Overlay cho TikTok LIVE Studio / OBS Studio"
           >
-            <Radio size={12} className="text-yellow-300 animate-pulse" />
-            <span>Link Live TikTok / OBS</span>
+            <Radio size={11} className="text-yellow-300 animate-pulse" />
+            <span>📡 Link Live</span>
           </button>
 
           {/* Nút Tải phần mềm (ZIP) */}

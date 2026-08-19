@@ -125,57 +125,45 @@ export default function LiveGiftMarqueeTicker({
 
   if (allActiveGifts.length === 0) return null;
 
-  // Render từng thẻ quà tặng bên trong danh sách cuộn
+  // Render từng thẻ quà tặng bên trong danh sách cuộn: Siêu tinh gọn [Icon] [Tên] [+X ô]
   const renderGiftRow = (gift, key) => {
-    const isRegional = Boolean(gift.regionTarget || gift.id?.startsWith('gift_region_'));
-    let rowBg = 'bg-black/30 hover:bg-black/50 border-white/5';
+    let rowBg = 'bg-black/35 hover:bg-black/55 border-white/10';
     let nameColor = 'text-gray-100';
-    let regionBadge = null;
 
     if (gift.regionTarget === 'north') {
       rowBg = 'bg-red-950/40 hover:bg-red-900/60 border-red-500/30';
       nameColor = 'text-red-200';
-      regionBadge = <span className="text-[7px] px-1 py-0.2 rounded bg-red-500/30 text-red-300 font-bold">MB</span>;
     } else if (gift.regionTarget === 'central') {
       rowBg = 'bg-amber-950/40 hover:bg-amber-900/60 border-amber-500/30';
       nameColor = 'text-amber-200';
-      regionBadge = <span className="text-[7px] px-1 py-0.2 rounded bg-amber-500/30 text-amber-300 font-bold">MT</span>;
     } else if (gift.regionTarget === 'south') {
       rowBg = 'bg-emerald-950/40 hover:bg-emerald-900/60 border-emerald-500/30';
       nameColor = 'text-emerald-200';
-      regionBadge = <span className="text-[7px] px-1 py-0.2 rounded bg-emerald-500/30 text-emerald-300 font-bold">MN</span>;
     } else if (gift.priceToken >= 1000) {
-      rowBg = 'bg-gradient-to-r from-amber-950/50 to-yellow-950/50 border-yellow-500/40';
+      rowBg = 'bg-yellow-950/40 hover:bg-yellow-900/60 border-yellow-500/30';
       nameColor = 'text-yellow-200 font-black';
-      regionBadge = <span className="text-[7px] px-1 py-0.2 rounded bg-yellow-500/30 text-yellow-300 font-bold animate-pulse">VIP</span>;
     }
+
+    const cellCount = gift.cells || (mode === 'battle' ? `${gift.hpBuff || 50}HP` : 1);
 
     return (
       <div
         key={key}
         onClick={() => onGiftClick && onGiftClick(gift)}
-        className={`flex items-center justify-between px-1.5 py-0.8 rounded border ${rowBg} text-[8.5px] cursor-pointer transition-all hover:scale-[1.02] select-none`}
-        title={`Tặng "${gift.name}" (${gift.priceToken || 1} xu) -> +${gift.cells || gift.hpBuff || 1} ${mode === 'map' ? 'Ô Cờ' : 'HP'}`}
+        className={`flex items-center justify-between px-2 py-1 rounded-lg border ${rowBg} text-[9px] cursor-pointer transition-all hover:scale-[1.02] select-none`}
+        title={`Tặng "${gift.name}" -> +${cellCount} ${mode === 'map' ? 'ô cờ' : 'HP'}`}
       >
-        <div className="flex items-center gap-1 truncate max-w-[95px]">
-          <span className="text-[11px] shrink-0 drop-shadow-xs">{gift.icon}</span>
+        <div className="flex items-center gap-1.5 truncate">
+          <span className="text-[12px] shrink-0 drop-shadow-xs">{gift.icon}</span>
           <span className={`font-bold truncate ${nameColor}`}>
             {gift.shortName || gift.name}
           </span>
-          {regionBadge}
         </div>
 
-        <div className="flex items-center gap-1 shrink-0 ml-1">
-          {marquee.showPrices !== false && (
-            <span className="text-[7.5px] font-mono font-bold text-yellow-300/90 bg-black/40 px-1 py-0.2 rounded border border-yellow-500/20 whitespace-nowrap">
-              {gift.priceToken || 1} xu
-            </span>
-          )}
-          {marquee.showCellsOrBuff !== false && (
-            <span className="font-mono font-black text-amber-400 text-[8px] whitespace-nowrap">
-              +{gift.cells || (mode === 'battle' ? `${gift.hpBuff || 50}HP` : 1)} {mode === 'map' ? 'ô' : ''}
-            </span>
-          )}
+        <div className="shrink-0 ml-1">
+          <span className="font-mono font-black text-amber-300 text-[8.5px] bg-black/40 px-1.5 py-0.5 rounded border border-amber-500/20 whitespace-nowrap">
+            +{cellCount} {mode === 'map' ? 'ô' : ''}
+          </span>
         </div>
       </div>
     );
@@ -210,8 +198,8 @@ export default function LiveGiftMarqueeTicker({
           </button>
         </div>
       ) : (
-        /* 2. KHUNG BOX WIDGET ĐẦY ĐỦ (GIỐNG BXH TOP, CÓ THỂ KÉO THẢ & ZOOM) */
-        <div className="w-40 sm:w-44 bg-black/25 backdrop-blur-[3px] hover:bg-black/45 border border-amber-500/25 hover:border-amber-400/50 rounded-xl p-1 shadow-2xl text-white transition-all">
+        /* 2. KHUNG BOX WIDGET ĐẦY ĐỦ (TINH GỌN, KHÔNG CHE KHUẤT MÀN HÌNH) */
+        <div className="w-36 sm:w-40 bg-black/30 backdrop-blur-[3px] hover:bg-black/50 border border-amber-500/30 hover:border-amber-400/60 rounded-xl p-1.5 shadow-2xl text-white transition-all">
           
           {/* HEADER: KÉO THẢ + ZOOM +/- + THU NHỎ + ĐÓNG */}
           <div 
@@ -224,13 +212,12 @@ export default function LiveGiftMarqueeTicker({
               <Move size={9} className="text-gray-400 shrink-0" />
               <Sparkles size={10} className="text-yellow-400 animate-spin shrink-0" style={{ animationDuration: '4s' }} />
               <span className="truncate drop-shadow uppercase tracking-wider text-[8.5px]">
-                {marquee.tickerTitle || (mode === 'battle' ? 'Quà & Buff' : 'Bảng Quà Tặng')}
+                {mode === 'battle' ? 'Quà & Buff' : 'Quà Tặng'}
               </span>
             </div>
 
             {/* CỤM NÚT ĐIỀU KHIỂN GÓC PHẢI */}
             <div className="flex items-center gap-0.5 ml-auto">
-              {/* Nút Thu nhỏ Scale (-) */}
               <button
                 onClick={(e) => { e.stopPropagation(); handleScaleChange(-0.1); }}
                 className="w-3.5 h-3.5 flex items-center justify-center rounded text-gray-300 hover:text-white hover:bg-white/20 transition-colors text-[8px]"
@@ -239,12 +226,10 @@ export default function LiveGiftMarqueeTicker({
                 −
               </button>
               
-              {/* Chỉ số Zoom scale */}
               <span className="text-[7px] text-gray-400 font-mono">
                 {Math.round(scale * 100)}%
               </span>
 
-              {/* Nút Phóng to Scale (+) */}
               <button
                 onClick={(e) => { e.stopPropagation(); handleScaleChange(0.1); }}
                 className="w-3.5 h-3.5 flex items-center justify-center rounded text-gray-300 hover:text-white hover:bg-white/20 transition-colors text-[8px]"
@@ -253,7 +238,6 @@ export default function LiveGiftMarqueeTicker({
                 +
               </button>
 
-              {/* Nút Thu gọn / Minimize */}
               <button
                 onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }}
                 className="p-0.5 rounded text-gray-300 hover:text-white hover:bg-white/20 transition-colors"
@@ -262,7 +246,6 @@ export default function LiveGiftMarqueeTicker({
                 <Minus size={9} />
               </button>
 
-              {/* Nút Đóng / Ẩn */}
               <button
                 onClick={(e) => { e.stopPropagation(); setIsClosed(true); }}
                 className="p-0.5 rounded text-gray-400 hover:text-red-400 hover:bg-white/20 transition-colors"
@@ -273,47 +256,42 @@ export default function LiveGiftMarqueeTicker({
             </div>
           </div>
 
-          {/* KHỐI 1: CẮM CỜ 3 MIỀN BẮC - TRUNG - NAM (5 XU) */}
+          {/* KHỐI 1: CẮM CỜ 3 MIỀN BẮC - TRUNG - NAM (TINH GỌN, KHÔNG SỐ XU) */}
           {mode === 'map' && (
-            <div className="p-1 rounded-lg bg-gradient-to-r from-red-950/50 via-amber-950/50 to-emerald-950/50 border border-yellow-500/25 mb-1">
-              <div className="text-[7.5px] font-black text-yellow-300 uppercase tracking-wide flex items-center justify-between mb-0.5">
-                <span>🚩 CẮM CỜ 3 MIỀN (5 XU):</span>
+            <div className="grid grid-cols-3 gap-1 mb-1">
+              <div 
+                onClick={() => onGiftClick && onGiftClick({ id: 'gift_region_north', name: 'Ngón Tay Tim (Miền Bắc)', icon: '🫰', priceToken: 5, cells: 5, regionTarget: 'north' })}
+                className="py-1 px-0.5 rounded-lg bg-red-950/60 hover:bg-red-900/80 border border-red-500/40 text-center cursor-pointer transition-transform hover:scale-105"
+                title="Cắm cờ Miền Bắc (+5 ô)"
+              >
+                <div className="text-[12px]">🫰</div>
+                <div className="text-[7.5px] font-bold text-red-200 truncate">Bắc</div>
+                <div className="text-[7px] text-amber-300 font-mono font-black">+5 ô</div>
               </div>
-              <div className="grid grid-cols-3 gap-0.5 text-[7px] text-center">
-                <div 
-                  onClick={() => onGiftClick && onGiftClick({ id: 'gift_region_north', name: 'Ngón Tay Tim (Miền Bắc)', icon: '🫰', priceToken: 5, cells: 5, regionTarget: 'north' })}
-                  className="p-0.5 rounded bg-red-500/20 hover:bg-red-500/40 border border-red-500/40 text-red-200 cursor-pointer transition-transform hover:scale-105"
-                  title="Cắm cờ Miền Bắc (+5 ô)"
-                >
-                  <div className="text-[10px]">🫰</div>
-                  <div className="font-bold truncate">Bắc</div>
-                  <div className="text-[6.5px] text-yellow-300 font-mono font-bold">5 xu</div>
-                </div>
 
-                <div 
-                  onClick={() => onGiftClick && onGiftClick({ id: 'gift_region_central', name: 'Bánh Donut (Miền Trung)', icon: '🍩', priceToken: 5, cells: 5, regionTarget: 'central' })}
-                  className="p-0.5 rounded bg-amber-500/20 hover:bg-amber-500/40 border border-amber-500/40 text-amber-200 cursor-pointer transition-transform hover:scale-105"
-                  title="Cắm cờ Miền Trung (+5 ô)"
-                >
-                  <div className="text-[10px]">🍩</div>
-                  <div className="font-bold truncate">Trung</div>
-                  <div className="text-[6.5px] text-yellow-300 font-mono font-bold">5 xu</div>
-                </div>
+              <div 
+                onClick={() => onGiftClick && onGiftClick({ id: 'gift_region_central', name: 'Bánh Donut (Miền Trung)', icon: '🍩', priceToken: 5, cells: 5, regionTarget: 'central' })}
+                className="py-1 px-0.5 rounded-lg bg-amber-950/60 hover:bg-amber-900/80 border border-amber-500/40 text-center cursor-pointer transition-transform hover:scale-105"
+                title="Cắm cờ Miền Trung (+5 ô)"
+              >
+                <div className="text-[12px]">🍩</div>
+                <div className="text-[7.5px] font-bold text-amber-200 truncate">Trung</div>
+                <div className="text-[7px] text-amber-300 font-mono font-black">+5 ô</div>
+              </div>
 
-                <div 
-                  onClick={() => onGiftClick && onGiftClick({ id: 'gift_region_south', name: 'Gấu Con (Miền Nam)', icon: '🧸', priceToken: 5, cells: 5, regionTarget: 'south' })}
-                  className="p-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-500/40 text-emerald-200 cursor-pointer transition-transform hover:scale-105"
-                  title="Cắm cờ Miền Nam (+5 ô)"
-                >
-                  <div className="text-[10px]">🧸</div>
-                  <div className="font-bold truncate">Nam</div>
-                  <div className="text-[6.5px] text-yellow-300 font-mono font-bold">5 xu</div>
-                </div>
+              <div 
+                onClick={() => onGiftClick && onGiftClick({ id: 'gift_region_south', name: 'Gấu Con (Miền Nam)', icon: '🧸', priceToken: 5, cells: 5, regionTarget: 'south' })}
+                className="py-1 px-0.5 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-center cursor-pointer transition-transform hover:scale-105"
+                title="Cắm cờ Miền Nam (+5 ô)"
+              >
+                <div className="text-[12px]">🧸</div>
+                <div className="text-[7.5px] font-bold text-emerald-200 truncate">Nam</div>
+                <div className="text-[7px] text-amber-300 font-mono font-black">+5 ô</div>
               </div>
             </div>
           )}
 
-          {/* KHỐI 2: DANH SÁCH QUÀ TẶNG & TÍCH ĐIỂM (AUTO-SCROLL MARQUEE CUỘN DỌC MƯỢT MÀ) */}
+          {/* KHỐI 2: DANH SÁCH QUÀ TẶNG & TÍCH ĐIỂM (CUỘN GỌN GÀNG) */}
           <div 
             ref={scrollContainerRef}
             className="space-y-0.5 max-h-36 overflow-y-auto custom-scrollbar relative"
@@ -323,23 +301,6 @@ export default function LiveGiftMarqueeTicker({
             onTouchEnd={() => setIsPaused(false)}
           >
             {allActiveGifts.map((g, i) => renderGiftRow(g, `gift_row_${g.id}_${i}`))}
-          </div>
-
-          {/* FOOTER: NÚT TẠM DỪNG / CÀI ĐẶT NHANH */}
-          <div className="flex items-center justify-between text-[7.5px] text-gray-400 pt-0.5 mt-0.5 border-t border-white/5 px-0.5">
-            <span className="italic truncate">
-              {isPaused ? '⏸️ Tạm dừng cuộn' : '🔄 Tự động cuộn quà'}
-            </span>
-            {onOpenSettings && (
-              <button
-                onClick={onOpenSettings}
-                className="text-amber-300 hover:text-amber-200 transition-colors flex items-center gap-0.5"
-                title="Tùy chỉnh quà tặng"
-              >
-                <Settings size={8} />
-                <span>Cài đặt</span>
-              </button>
-            )}
           </div>
 
         </div>

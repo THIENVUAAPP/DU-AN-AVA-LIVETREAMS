@@ -563,7 +563,6 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
             { id: 'map_texts', label: '📍 Ghim Nhãn Địa Danh 3D' },
             { id: 'gifts', label: '🎁 Cấu Hình Quà Tặng' },
             { id: 'provinces', label: '🗺️ Danh Sách Vùng Miền' },
-            { id: 'checklist', label: '🛠️ Link Live OBS / Studio' },
           ].map(tab => (
             <button
               key={tab.id}
@@ -1471,18 +1470,68 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                       />
                     </div>
 
-                    {/* Quick SFX Test button */}
-                    <div className="pt-1">
-                      <button
-                        onClick={() => {
-                          bandoAudio.playWarHorn();
-                          setActivePlayingSfx('horn');
-                          setTimeout(() => setActivePlayingSfx(null), 1200);
-                        }}
-                        className="w-full py-1.5 px-3 bg-white/5 hover:bg-white/10 text-yellow-300 border border-white/10 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
-                      >
-                        <Play size={12} /> Nghe Thử SFX Kèn Xung Trận
-                      </button>
+                    {/* Quick SFX Test Grid Buttons */}
+                    <div className="pt-1 space-y-1.5">
+                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                        <Play size={10} className="text-yellow-400" /> Nghe Thử Âm Thanh Hiệu Ứng (SFX):
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        <button
+                          onClick={() => {
+                            bandoAudio.unlock();
+                            bandoAudio.playWarHorn({ force: true });
+                            setActivePlayingSfx('horn');
+                            setTimeout(() => setActivePlayingSfx(null), 1200);
+                          }}
+                          className={`py-1.5 px-2 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${
+                            activePlayingSfx === 'horn' ? 'ring-2 ring-yellow-400 bg-yellow-500/30' : ''
+                          }`}
+                        >
+                          <Play size={11} /> 🎺 Kèn Xung Trận
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            bandoAudio.unlock();
+                            bandoAudio.playWarDrums(4, { force: true });
+                            setActivePlayingSfx('drums');
+                            setTimeout(() => setActivePlayingSfx(null), 1000);
+                          }}
+                          className={`py-1.5 px-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${
+                            activePlayingSfx === 'drums' ? 'ring-2 ring-amber-400 bg-amber-500/30' : ''
+                          }`}
+                        >
+                          <Play size={11} /> 🥁 Trống Trận
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            bandoAudio.unlock();
+                            bandoAudio.playThunderStrike({ force: true });
+                            setActivePlayingSfx('thunder');
+                            setTimeout(() => setActivePlayingSfx(null), 1200);
+                          }}
+                          className={`py-1.5 px-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${
+                            activePlayingSfx === 'thunder' ? 'ring-2 ring-purple-400 bg-purple-500/30' : ''
+                          }`}
+                        >
+                          <Play size={11} /> ⚡ Sấm Sét
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            bandoAudio.unlock();
+                            bandoAudio.playFlagPlace(1, { force: true });
+                            setActivePlayingSfx('flag');
+                            setTimeout(() => setActivePlayingSfx(null), 800);
+                          }}
+                          className={`py-1.5 px-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${
+                            activePlayingSfx === 'flag' ? 'ring-2 ring-emerald-400 bg-emerald-500/30' : ''
+                          }`}
+                        >
+                          <Play size={11} /> 🚩 Tinh Ting Cờ
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -2648,88 +2697,6 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                       </div>
                     );
                   })}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 9: CHECKLIST & LIVE LINK */}
-          {activeTab === 'checklist' && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-sm font-black text-white uppercase">🛠️ Hướng Dẫn Tích Hợp TikTok LIVE Studio & OBS</h3>
-                <p className="text-xs text-gray-400">Đường dẫn Overlay Trong Suốt để bắt hình trực tiếp vào phần mềm phát sóng</p>
-              </div>
-
-              <div className="bg-gradient-to-r from-red-950/60 via-purple-950/60 to-black border border-white/15 rounded-2xl p-5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="text-xs font-bold text-yellow-400 uppercase tracking-wider flex items-center gap-2">
-                    <ExternalLink size={16} /> Link Overlay Chuẩn Sạch 100% Cho TikTok Studio / OBS
-                  </div>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold">
-                    ⚡ Realtime Đồng Bộ 0.0001s
-                  </span>
-                </div>
-
-                <p className="text-xs text-gray-300">
-                  Khi dán đường dẫn này vào TikTok Live Studio hoặc OBS Studio, hệ thống <strong>chỉ xuất đúng khung Live sân khấu (không có bất kỳ thanh công cụ hay nút quản trị nào)</strong>, giúp phiên Live hoàn toàn tinh tế và chuyên nghiệp.
-                </p>
-
-                {/* Option 1: 9:16 (Dọc TikTok Studio) */}
-                <div className="p-3 bg-black/60 border border-white/10 rounded-xl space-y-2">
-                  <div className="flex items-center justify-between text-xs font-bold text-pink-300">
-                    <span>📱 1. Khung Dọc 9:16 (TikTok LIVE Studio / Shorts / Reels):</span>
-                    <span className="text-[10px] text-gray-400 font-mono">1080 x 1920 px</span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-black/80 border border-white/15 p-2 rounded-lg">
-                    <input
-                      type="text"
-                      readOnly
-                      value={`${window.location.origin}${window.location.pathname}?overlay=bando&ratio=9:16`}
-                      className="flex-1 bg-transparent text-xs font-mono text-yellow-300 outline-none truncate"
-                    />
-                    <button
-                      onClick={() => handleCopyOverlayUrl('9:16')}
-                      className="px-3.5 py-1.5 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-black text-xs rounded-lg transition-all flex items-center gap-1 shrink-0 shadow-md shadow-pink-500/20"
-                    >
-                      {copiedLink === '9:16' ? <CheckCircle size={13} /> : <Copy size={13} />}
-                      <span>{copiedLink === '9:16' ? '✓ Đã Copy Link 9:16!' : 'Sao Chép Link 9:16'}</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Option 2: 16:9 (Ngang OBS Studio) */}
-                <div className="p-3 bg-black/60 border border-white/10 rounded-xl space-y-2">
-                  <div className="flex items-center justify-between text-xs font-bold text-blue-300">
-                    <span>🖥️ 2. Khung Ngang 16:9 (OBS Studio / PC Livestream):</span>
-                    <span className="text-[10px] text-gray-400 font-mono">1920 x 1080 px</span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-black/80 border border-white/15 p-2 rounded-lg">
-                    <input
-                      type="text"
-                      readOnly
-                      value={`${window.location.origin}${window.location.pathname}?overlay=bando&ratio=16:9`}
-                      className="flex-1 bg-transparent text-xs font-mono text-yellow-300 outline-none truncate"
-                    />
-                    <button
-                      onClick={() => handleCopyOverlayUrl('16:9')}
-                      className="px-3.5 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xs rounded-lg transition-all flex items-center gap-1 shrink-0 shadow-md shadow-blue-500/20"
-                    >
-                      {copiedLink === '16:9' ? <CheckCircle size={13} /> : <Copy size={13} />}
-                      <span>{copiedLink === '16:9' ? '✓ Đã Copy Link 16:9!' : 'Sao Chép Link 16:9'}</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-1.5 text-xs text-gray-300 pt-2 border-t border-white/10">
-                  <div className="flex items-start gap-2">
-                    <span className="font-bold text-yellow-400">Bước 1:</span>
-                    <span>Mở TikTok LIVE Studio hoặc OBS Studio, bấm Thêm Nguồn (Add Source) &gt; <strong>Browser Source (Trình duyệt)</strong>.</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="font-bold text-yellow-400">Bước 2:</span>
-                    <span>Dán link tương ứng và chỉnh độ phân giải khớp khung hình. Khung hình sẽ tự động cập nhật mượt mà, độ trễ 0s!</span>
-                  </div>
-                </div>
               </div>
             </div>
           )}

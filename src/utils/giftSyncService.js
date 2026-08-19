@@ -50,7 +50,6 @@ export const REGIONAL_FLAG_GIFTS = [
 ];
 
 export const DEFAULT_STANDARD_GIFTS = [
-  { id: 'flag_vn', name: 'Cờ Tổ Quốc', shortName: 'Cờ VN', icon: '🇻🇳', priceToken: 1, cells: 1, hpBuff: 10, tier: 'common', color: '#dc2626', enabled: true },
   { id: 'rose', name: 'Hoa Hồng', shortName: 'Hoa Hồng', icon: '🌹', priceToken: 1, cells: 1, hpBuff: 10, tier: 'common', color: '#f43f5e', enabled: true },
   { id: 'heart_tap', name: 'Thả Tim', shortName: 'Thả Tim', icon: '💖', priceToken: 1, cells: 1, hpBuff: 10, tier: 'common', color: '#ec4899', enabled: true },
   { id: 'helmet', name: 'Mũ Cối Yêu Nước', shortName: 'Mũ Cối', icon: '🪖', priceToken: 10, cells: 10, hpBuff: 50, tier: 'common', color: '#15803d', enabled: true },
