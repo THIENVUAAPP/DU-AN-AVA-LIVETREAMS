@@ -1491,46 +1491,30 @@ class BanDoGameEngine {
     this.notify({ type: 'ROUND_RESET' });
   }
 
-  // ==================== HỆ THỐNG AUTO 24/7 TOÀN DIỆN ====================
+  // ==================== HỆ THỐNG AUTO 24/7 TOÀN DIỆN (CHẠY THẬT LIVE TIKTOK) ====================
   setAutoLoop247(enabled) {
     this.state.autoLoop247 = !!enabled;
-    this.saveToStorage();
+    this.saveSettings();
     this.notify({ type: 'AUTO_LOOP_CHANGED', autoLoop247: this.state.autoLoop247 });
   }
 
+  // Bật chế độ VẬN HÀNH THẬT 24/7: Tự động chạy live, phát nhạc nền & BLV, nhận quà thật từ TikTok để cắm cờ, tự động qua màn mới
   startAuto247Loop() {
     this.stopAuto247Loop();
     this.stopAutoTestLoop();
     this.isAuto247Running = true;
     this.state.isAuto247Running = true;
 
-    // Đảm bảo BGM bật và tự động loop liên tục 24/24
-    bandoAudio.startSyntheticBgm();
+    // 1. Mở khóa và phát Nhạc Nền BGM tự động 24/24
+    bandoAudio.unlock();
+    if (!bandoAudio.bgmPlaying) {
+      bandoAudio.startSyntheticBgm();
+    }
 
-    let step = 0;
-    this.auto247Timer = setInterval(() => {
-      if (!this.isAuto247Running) {
-        this.stopAuto247Loop();
-        return;
-      }
-      if (this.state.status === 'victory') {
-        // Đang trong màn chúc mừng chiến thắng, chờ đếm ngược reset tự động
-        return;
-      }
-
-      const gifts = this.state.gifts || DEFAULT_MAP_GIFTS;
-      const gift = gifts[step % gifts.length];
-      const user = MOCK_WARRIORS_POOL[step % MOCK_WARRIORS_POOL.length];
-      const count = (step % 5 === 0 && gift.cells <= 20) ? Math.floor(Math.random() * 6) + 2 : 1;
-
-      this.processGift(gift.id, count, user);
-
-      // Kích hoạt Thử Thách & Boss định kỳ để game kịch tính
-      if (step % 14 === 0 && !this.state.activeMission) this.triggerMission();
-      if (step % 28 === 0 && !this.state.boss.active) this.triggerBossEvent();
-
-      step++;
-    }, 650);
+    // 2. Kích hoạt giọng bình luận viên AI (BLV) định kỳ
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('bando-auto-247-started', { detail: { running: true } }));
+    }
 
     this.notify({ type: 'AUTO_247_STATUS', running: true });
   }

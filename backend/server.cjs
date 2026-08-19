@@ -5,6 +5,7 @@ const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
 
+const https = require('https');
 const cors = require('cors');
 const { WebcastPushConnection } = require('tiktok-live-connector');
 
@@ -38,13 +39,12 @@ let currentUsername = null;
 let currentMasterLiveState = {
   stage: 'bando', // Mặc định mở Game Bản Đồ nếu đang chạy game
   aspectRatio: '9:16',
-  selectedCharacter: 0,
-  characterName: 'AI Idol Lan Hương',
-  mediaUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1200&auto=format&fit=crop&q=80',
-  isVideo: false,
-  isConnected: true,
+  characterId: 'char_1',
+  characterName: 'Mèo 2k4',
+  mediaUrl: '/idols/meo2k4.mp4',
+  isVideo: true,
+  isAudioMuted: false,
   isDarkMode: true,
-  currentLang: 'vi',
   updatedAt: Date.now()
 };
 
@@ -52,12 +52,10 @@ let currentBandoGameState = null;
 let currentBattleGameState = null;
 
 io.on('connection', (socket) => {
-  console.log('Client connected to Realtime Server:', socket.id);
+  console.log('Client connected to Live Hub:', socket.id);
 
   // 1. Ngay khi client mới (TikTok Live Studio, OBS, Browser) kết nối -> Gửi ngay toàn bộ state mới nhất
-  if (currentMasterLiveState) {
-    socket.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
-  }
+  socket.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
   if (currentBandoGameState) {
     socket.emit('bando_sync', currentBandoGameState);
   }
@@ -65,81 +63,99 @@ io.on('connection', (socket) => {
     socket.emit('battle_sync', currentBattleGameState);
   }
 
-  // 2. Lắng nghe cập nhật Master Live State (Đổi cảnh giữa AI Idol / Bản Đồ / Chiến Đấu)
-  socket.on('MASTER_LIVE_STATE_UPDATE', (data) => {
-    if (!data) return;
-    currentMasterLiveState = { ...currentMasterLiveState, ...data, updatedAt: Date.now() };
-    io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+  // 2. Lắng nghe cập nhật Master Live State từ giao diện điều khiển chính (Desktop App)
+  socket.on('MASTER_LIVE_STATE_UPDATE', (state) => {
+    if (state && typeof state === 'object') {
+      currentMasterLiveState = { ...currentMasterLiveState, ...state, updatedAt: Date.now() };
+      // Broadcast tới toàn bộ CEF Browser Source trên TikTok Live Studio & OBS
+      io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+    }
   });
 
   socket.on('REQUEST_MASTER_LIVE_STATE', () => {
     socket.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
   });
 
-  // 3. Lắng nghe cập nhật Game Bản Đồ 3 Miền (Cắm cờ, Điểm số, BXH, Quà tặng)
-  socket.on('bando_sync', (data) => {
-    if (!data) return;
-    currentBandoGameState = data;
-    socket.broadcast.emit('bando_sync', data);
+  // 3. Relay sự kiện Game Bản Đồ & Game Chiến Đấu
+  socket.on('bando_sync', (state) => {
+    currentBandoGameState = state;
+    socket.broadcast.emit('bando_sync', state);
   });
 
-  // 4. Lắng nghe cập nhật Game Chiến Đấu PK
-  socket.on('battle_sync', (data) => {
-    if (!data) return;
-    currentBattleGameState = data;
-    socket.broadcast.emit('battle_sync', data);
+  socket.on('battle_sync', (state) => {
+    currentBattleGameState = state;
+    socket.broadcast.emit('battle_sync', state);
   });
 
-  // 5. Lắng nghe sự kiện quà tặng / tương tác live
-  socket.on('LIVE_EVENT', (data) => {
-    io.emit('LIVE_EVENT', data);
+  socket.on('bando_event', (evt) => {
+    io.emit('bando_event', evt);
+    io.emit('LIVE_EVENT', evt);
   });
 
-  socket.on('bando_event', (data) => {
-    io.emit('bando_event', data);
+  socket.on('battle_event', (evt) => {
+    io.emit('battle_event', evt);
+    io.emit('LIVE_EVENT', evt);
   });
 
+  socket.on('LIVE_EVENT', (evt) => {
+    io.emit('LIVE_EVENT', evt);
+  });
+
+  // 4. TikTok Live Integration
   socket.on('connect_tiktok', (username) => {
-    if (!username) return;
+    const targetUser = username ? username.trim().replace(/^@/, '') : '';
+    if (!targetUser) return;
 
     if (tiktokConnection) {
-      if (currentUsername === username) {
-        socket.emit('tiktok_connected', { username });
+      if (currentUsername === targetUser) {
+        socket.emit('tiktok_connected', { username: targetUser });
         return;
       }
       tiktokConnection.disconnect();
+      tiktokConnection = null;
     }
 
-    console.log(`Connecting to TikTok username: ${username}`);
-    currentUsername = username;
-    
-    tiktokConnection = new WebcastPushConnection(username, {
+    currentUsername = targetUser;
+    console.log(`Connecting to TikTok username: ${targetUser}`);
+
+    tiktokConnection = new WebcastPushConnection(targetUser, {
       processInitialData: false,
       enableExtendedGiftInfo: true,
       enableWebsocketUpgrade: true,
-      requestPollingIntervalMs: 2000,
+      requestPollingIntervalMs: 1000,
       clientParams: {
-        "app_language": "en-US",
+        "app_language": "vi-VN",
         "device_platform": "web"
       }
     });
 
     tiktokConnection.connect().then(state => {
-      console.info(`Connected to roomId ${state.roomId}`);
-      io.emit('tiktok_connected', { username });
+      console.log(`Connected to TikTok Room ID: ${state.roomId}`);
+      io.emit('tiktok_connected', { username: targetUser });
     }).catch(err => {
-      console.error('Failed to connect', err);
+      console.error('Failed to connect to TikTok Live:', err);
       io.emit('tiktok_error', err.toString());
+      tiktokConnection = null;
     });
 
     // Handle TikTok Events
     tiktokConnection.on('chat', data => {
-      io.emit('tiktok_chat', {
+      const chatPayload = {
         userId: data.userId,
         uniqueId: data.uniqueId,
         nickname: data.nickname,
         comment: data.comment,
         profilePictureUrl: data.profilePictureUrl
+      };
+      io.emit('tiktok_chat', chatPayload);
+      io.emit('LIVE_EVENT', {
+        type: 'COMMENT',
+        data: {
+          userId: data.userId,
+          nickname: data.nickname,
+          comment: data.comment,
+          avatar: data.profilePictureUrl
+        }
       });
     });
 
@@ -148,16 +164,34 @@ io.on('connection', (socket) => {
         // Streak in progress => show only once
         return;
       }
-      io.emit('tiktok_gift', {
+      const giftPayload = {
         userId: data.userId,
         uniqueId: data.uniqueId,
         nickname: data.nickname,
         giftId: data.giftId,
         giftName: data.giftName,
-        diamondCount: data.diamondCount,
-        repeatCount: data.repeatCount,
+        diamondCount: data.diamondCount || 1,
+        repeatCount: data.repeatCount || 1,
         profilePictureUrl: data.profilePictureUrl
-      });
+      };
+      io.emit('tiktok_gift', giftPayload);
+      
+      // Chuyển đổi trực tiếp thành sự kiện cắm cờ bản đồ & game chiến đấu
+      const giftEvent = {
+        type: 'GIFT',
+        data: {
+          giftId: String(data.giftId || 'rose'),
+          giftName: data.giftName || 'Quà TikTok',
+          count: data.repeatCount || 1,
+          userId: data.userId || 'tiktok_viewer',
+          username: data.nickname || data.uniqueId || 'Khán Giả',
+          avatar: data.profilePictureUrl || '',
+          diamondCount: data.diamondCount || 1
+        },
+        timestamp: Date.now()
+      };
+      io.emit('bando_event', giftEvent);
+      io.emit('LIVE_EVENT', giftEvent);
     });
 
     tiktokConnection.on('like', data => {
@@ -168,6 +202,13 @@ io.on('connection', (socket) => {
         likeCount: data.likeCount,
         totalLikeCount: data.totalLikeCount,
         profilePictureUrl: data.profilePictureUrl
+      });
+      io.emit('LIVE_EVENT', {
+        type: 'LIKE',
+        data: {
+          count: data.likeCount || 1,
+          username: data.nickname || 'Khán Giả'
+        }
       });
     });
 
@@ -181,7 +222,7 @@ io.on('connection', (socket) => {
     });
 
     tiktokConnection.on('streamEnd', (actionId) => {
-      console.log('Stream ended');
+      console.log('TikTok Live Stream ended');
       io.emit('tiktok_disconnected', 'Stream ended');
       tiktokConnection = null;
     });
@@ -202,7 +243,7 @@ io.on('connection', (socket) => {
   });
 });
 
-// REST API Endpoints cho CEF Polling / Fallback
+// REST API Endpoints
 app.get('/api/live-state', (req, res) => {
   res.json(currentMasterLiveState);
 });
@@ -237,6 +278,36 @@ app.post('/api/battle-state', (req, res) => {
     io.emit('battle_sync', req.body);
   }
   res.json({ success: true });
+});
+
+// TTS Proxy Endpoint: Phát giọng đọc trực tiếp độ trễ cực thấp
+app.get('/api/tts', (req, res) => {
+  const text = (req.query.text || '').toString().trim();
+  const lang = (req.query.lang || 'vi').toString().trim();
+  if (!text) {
+    return res.status(400).send('Missing text parameter');
+  }
+
+  const encodedText = encodeURIComponent(text.slice(0, 200));
+  const encodedLang = encodeURIComponent(lang.toLowerCase().startsWith('vi') ? 'vi' : (lang || 'vi'));
+  const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=${encodedLang}&client=tw-ob`;
+
+  https.get(ttsUrl, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'audio/mpeg'
+    }
+  }, (proxyRes) => {
+    if (proxyRes.statusCode !== 200) {
+      return res.status(proxyRes.statusCode).send('Failed to fetch TTS');
+    }
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    proxyRes.pipe(res);
+  }).on('error', (err) => {
+    console.warn('TTS proxy error:', err);
+    res.status(500).send('TTS error');
+  });
 });
 
 // AI Generation Endpoint

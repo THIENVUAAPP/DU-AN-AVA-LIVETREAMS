@@ -80,6 +80,7 @@ class BanDoAudioEngine {
 
       const savedTimer = localStorage.getItem('bando_bgm_timer_mode');
       if (savedTimer) this.bgmTimerMode = savedTimer;
+      // Mặc định KHÔNG MUTE để đảm bảo người dùng luôn nghe thấy âm thanh ngay khi mở app
       this.isMuted = localStorage.getItem('bando_is_muted') === 'true';
       this.isSfxMuted = localStorage.getItem('bando_is_sfx_muted') === 'true';
       this.isVoiceMuted = localStorage.getItem('bando_is_voice_muted') === 'true';
@@ -88,7 +89,7 @@ class BanDoAudioEngine {
       if (savedBgmVol !== null) this.bgmVolume = parseFloat(savedBgmVol) || 0.5;
 
       const savedSfxVol = localStorage.getItem('bando_sfx_volume');
-      if (savedSfxVol !== null) this.sfxVolume = parseFloat(savedSfxVol) || 0.85;
+      if (savedSfxVol !== null) this.sfxVolume = parseFloat(savedSfxVol) || 0.9;
 
       const savedVoiceVol = localStorage.getItem('bando_voice_volume');
       if (savedVoiceVol !== null) this.voiceVolume = parseFloat(savedVoiceVol) || 1.0;
@@ -110,7 +111,7 @@ class BanDoAudioEngine {
         this.masterGain.connect(this.ctx.destination);
 
         this.sfxGain = this.ctx.createGain();
-        this.sfxGain.gain.value = this.isSfxMuted ? 0 : (this.sfxVolume || 0.85);
+        this.sfxGain.gain.value = this.isSfxMuted ? 0 : (this.sfxVolume || 0.9);
         this.sfxGain.connect(this.masterGain);
 
         this.bgmGain = this.ctx.createGain();
@@ -650,7 +651,7 @@ class BanDoAudioEngine {
 
       const start = Math.max(ctx.currentTime, 0.001) + (opts.delay || 0);
       const attack = opts.attack || 0.01;
-      const g = (opts.gain !== undefined ? opts.gain : 0.55);
+      const g = (opts.gain !== undefined ? opts.gain : 0.7);
 
       gain.gain.setValueAtTime(0.0001, start);
       gain.gain.linearRampToValueAtTime(g, start + Math.min(attack, duration * 0.4));
@@ -658,19 +659,15 @@ class BanDoAudioEngine {
 
       osc.connect(gain);
 
-      // Nếu là force test (preview), kết nối trực tiếp đến masterGain hoặc destination để âm thanh chắc chắn phát ra
+      // Nếu là force test (preview), kết nối trực tiếp đến ctx.destination để luôn luôn phát ra tiếng 100%
       if (isForce) {
-        if (this.masterGain) {
-          gain.connect(this.masterGain);
-        } else {
-          gain.connect(ctx.destination);
-        }
+        gain.connect(ctx.destination);
       } else if (isBgm) {
         gain.connect(this.bgmGain || this.masterGain || ctx.destination);
       } else {
         // Đảm bảo sfxGain không bị 0 khi SFX đang bật
         if (this.sfxGain && !this.isSfxMuted && this.sfxGain.gain.value <= 0.001) {
-          this.sfxGain.gain.setValueAtTime(this.sfxVolume || 0.85, ctx.currentTime);
+          this.sfxGain.gain.setValueAtTime(this.sfxVolume || 0.9, ctx.currentTime);
         }
         gain.connect(this.sfxGain || this.masterGain || ctx.destination);
       }
@@ -710,7 +707,7 @@ class BanDoAudioEngine {
 
       const gain = ctx.createGain();
       const start = Math.max(ctx.currentTime, 0.001) + (opts.delay || 0);
-      const g = (opts.gain !== undefined ? opts.gain : 0.6);
+      const g = (opts.gain !== undefined ? opts.gain : 0.75);
 
       gain.gain.setValueAtTime(0.0001, start);
       gain.gain.linearRampToValueAtTime(g, start + 0.01);
@@ -720,14 +717,10 @@ class BanDoAudioEngine {
       filter.connect(gain);
 
       if (isForce) {
-        if (this.masterGain) {
-          gain.connect(this.masterGain);
-        } else {
-          gain.connect(ctx.destination);
-        }
+        gain.connect(ctx.destination);
       } else {
         if (this.sfxGain && !this.isSfxMuted && this.sfxGain.gain.value <= 0.001) {
-          this.sfxGain.gain.setValueAtTime(this.sfxVolume || 0.85, ctx.currentTime);
+          this.sfxGain.gain.setValueAtTime(this.sfxVolume || 0.9, ctx.currentTime);
         }
         gain.connect(this.sfxGain || this.masterGain || ctx.destination);
       }

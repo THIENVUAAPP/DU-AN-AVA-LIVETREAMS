@@ -1007,15 +1007,15 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                   </span>
                 </div>
 
-                {/* Auto 24/7 Control Banner */}
+                {/* Auto 24/7 Control Banner (CHẠY THẬT TIKTOK LIVE) */}
                 <div className="p-4 bg-gradient-to-r from-emerald-950/50 via-teal-950/40 to-black/60 border border-emerald-500/40 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
                   <div>
                     <div className="text-xs font-black text-white flex items-center gap-2">
                       <Zap size={15} className="text-yellow-400 fill-yellow-400" />
-                      <span>Vòng Lặp Tự Động Xuyên Suốt 24/24 (Auto Loop 24/7)</span>
+                      <span className="uppercase text-emerald-300">Vận Hành Live Thật 24/24 (Auto Live 24/7)</span>
                     </div>
                     <p className="text-[11px] text-gray-300 mt-0.5">
-                      Tự động cắm cờ mô phỏng 24/7, khi đạt 100% bản đồ sẽ nổ pháo hoa vinh danh TOP 30 + TOP 1 rồi tự đếm ngược 12s reset trận mới.
+                      Chế độ <strong>CHẠY THẬT</strong> cho TikTok LIVE: Nhạc nền & BLV tự động 24/7, <strong>chỉ cắm cờ khi có quà thật từ khán giả</strong>. Khi phủ kín 100% bản đồ sẽ vinh danh và tự động chuyển vòng đấu tiếp theo.
                     </p>
                   </div>
 
@@ -1023,15 +1023,37 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                     <button
                       onClick={() => {
                         bandoEngine.toggleAuto247();
+                        setIsAutoTesting(false);
                       }}
-                      className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md ${
+                      className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md ${
                         bandoEngine.isAuto247Running
-                          ? 'bg-red-600 hover:bg-red-500 text-white ring-2 ring-yellow-400 animate-pulse'
-                          : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white'
+                          ? 'bg-red-600 hover:bg-red-500 text-white ring-2 ring-yellow-400 animate-pulse shadow-red-500/30'
+                          : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-500/20'
                       }`}
                     >
                       <Zap size={14} />
-                      <span>{bandoEngine.isAuto247Running ? 'Dừng Auto 24/7' : 'Bật Chạy Auto 24/7'}</span>
+                      <span>{bandoEngine.isAuto247Running ? '🛑 Dừng Auto 24/7' : '⚡ Bật Auto 24/7 (Chạy Thật)'}</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (bandoEngine.isAutoTesting) {
+                          bandoEngine.stopAutoTestLoop();
+                          setIsAutoTesting(false);
+                        } else {
+                          bandoEngine.startAutoTestLoop();
+                          setIsAutoTesting(true);
+                        }
+                      }}
+                      className={`px-3 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md ${
+                        isAutoTesting
+                          ? 'bg-amber-600 hover:bg-amber-500 text-white animate-pulse'
+                          : 'bg-white/10 hover:bg-white/20 text-yellow-300 border border-yellow-500/30'
+                      }`}
+                      title="Chạy mô phỏng thả quà giả lập để test"
+                    >
+                      {isAutoTesting ? <Square size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />}
+                      <span>{isAutoTesting ? 'Dừng Demo' : '🧪 Chạy Demo'}</span>
                     </button>
                   </div>
                 </div>
