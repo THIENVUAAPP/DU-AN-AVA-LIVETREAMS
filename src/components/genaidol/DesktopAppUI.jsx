@@ -533,21 +533,26 @@ export default function DesktopAppUI() {
       if (!data) return;
       bandoAudio.unlock();
       const timeStr = new Date().toLocaleTimeString();
-      const author = data.username || data.nickname || 'Khách Live';
+      const author = data.username || data.nickname || data.uniqueId || 'Khách Live';
       const giftName = data.giftName || 'Hoa Hồng';
-      const count = data.diamondCount || data.repeatCount || 1;
-      setTiktokLogs(prev => [`[${timeStr}] 🎁 ${author} tặng ${giftName} x${count}`, ...prev.slice(0, 49)]);
+      const giftCount = data.repeatCount || 1;
+      const diamondCount = data.diamondCount || 1;
+      setTiktokLogs(prev => [`[${timeStr}] 🎁 ${author} tặng ${giftName} x${giftCount} (${diamondCount} xu)`, ...prev.slice(0, 49)]);
 
       if (isGameBanDoActive) {
-        bandoEngine.processGift(giftName, count, {
-          id: data.userId || 'tiktok_viewer',
+        bandoEngine.processGift({
+          giftId: data.giftId,
+          giftName: data.giftName,
+          count: giftCount,
+          diamondCount: diamondCount,
+          userId: data.userId || data.uniqueId || 'tiktok_viewer',
           username: author,
           avatar: data.profilePictureUrl || ''
         });
       } else if (isGameBattleActive) {
         window.dispatchEvent(new CustomEvent('battle-trigger-gift', { detail: data }));
       } else {
-        handleLiveEvent('GIFT', { name: author, gift: giftName, count });
+        handleLiveEvent('GIFT', { name: author, gift: giftName, count: giftCount });
       }
     });
 

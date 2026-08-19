@@ -159,20 +159,36 @@ io.on('connection', (socket) => {
       });
     });
 
+    // Lưu streak combo quà tặng để xử lý ngay tức thì từng lượt tặng
+    const streakMap = new Map();
+
     tiktokConnection.on('gift', data => {
-      if (data.giftType === 1 && !data.repeatEnd) {
-        // Streak in progress => show only once
-        return;
+      const streakKey = `${data.userId || data.uniqueId}_${data.giftId}`;
+      let deltaCount = 1;
+
+      if (data.giftType === 1) {
+        const prevCount = streakMap.get(streakKey) || 0;
+        const currentCount = data.repeatCount || 1;
+        deltaCount = Math.max(1, currentCount - prevCount);
+        streakMap.set(streakKey, currentCount);
+
+        if (data.repeatEnd) {
+          streakMap.delete(streakKey);
+        }
+      } else {
+        deltaCount = data.repeatCount || 1;
       }
+
       const giftPayload = {
-        userId: data.userId,
-        uniqueId: data.uniqueId,
-        nickname: data.nickname,
+        userId: data.userId || 'tiktok_viewer',
+        uniqueId: data.uniqueId || '',
+        nickname: data.nickname || data.uniqueId || 'Khán Giả',
         giftId: data.giftId,
-        giftName: data.giftName,
+        giftName: data.giftName || 'Quà TikTok',
         diamondCount: data.diamondCount || 1,
-        repeatCount: data.repeatCount || 1,
-        profilePictureUrl: data.profilePictureUrl
+        repeatCount: deltaCount,
+        totalRepeatCount: data.repeatCount || deltaCount,
+        profilePictureUrl: data.profilePictureUrl || ''
       };
       io.emit('tiktok_gift', giftPayload);
       
@@ -182,7 +198,7 @@ io.on('connection', (socket) => {
         data: {
           giftId: String(data.giftId || 'rose'),
           giftName: data.giftName || 'Quà TikTok',
-          count: data.repeatCount || 1,
+          count: deltaCount,
           userId: data.userId || 'tiktok_viewer',
           username: data.nickname || data.uniqueId || 'Khán Giả',
           avatar: data.profilePictureUrl || '',

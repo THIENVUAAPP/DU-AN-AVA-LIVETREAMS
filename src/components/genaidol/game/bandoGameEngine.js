@@ -2,7 +2,7 @@ import bandoAudio from './bandoAudioEngine';
 import { mapVoiceEngine } from './gameVoiceEngine';
 import { WORLD_COUNTRIES, COUNTRIES_BY_ID, CONTINENTS } from './worldCountriesData';
 import { BannerFlagCellsEngine } from './bannerFlagCellsEngine';
-import { saveGiftConfig, REGIONAL_FLAG_GIFTS } from '../../../utils/giftSyncService';
+import { saveGiftConfig, REGIONAL_FLAG_GIFTS, DEFAULT_STANDARD_GIFTS } from '../../../utils/giftSyncService';
 import defaultVietnamMask from '../../../data/vietnamMask.json';
 import defaultProvincesData from '../../../data/provinces.json';
 
@@ -1054,10 +1054,15 @@ class BanDoGameEngine {
     }
 
     let explicitRegionTarget = null;
+    let giftNameInput = '';
+    let diamondCountInput = 1;
+
     if (typeof giftId === 'object' && giftId !== null) {
       const obj = giftId;
-      giftId = obj.giftId || obj.id || 'flag_vn';
-      count = obj.count || obj.repeatCount || count || 1;
+      giftNameInput = obj.giftName || obj.name || '';
+      diamondCountInput = Number(obj.diamondCount) || 1;
+      giftId = obj.giftId || obj.id || giftNameInput || 'flag_vn';
+      count = Number(obj.count || obj.repeatCount) || count || 1;
       user = {
         id: obj.userId || obj.id || user.id || 'guest_1',
         username: obj.username || obj.nickname || user.username || 'Chiến Binh Áo Đỏ',
@@ -1071,9 +1076,38 @@ class BanDoGameEngine {
     // Luôn kích hoạt audio context ngay khi có quà tặng
     bandoAudio.unlock();
 
-    const allKnownGifts = [...(this.state.gifts || DEFAULT_MAP_GIFTS), ...REGIONAL_FLAG_GIFTS];
-    const giftDef = allKnownGifts.find(g => g.id === giftId) || DEFAULT_MAP_GIFTS[0];
-    const rawCells = (giftDef.cells || 1) * count;
+    const allKnownGifts = [...(this.state.gifts || DEFAULT_MAP_GIFTS), ...REGIONAL_FLAG_GIFTS, ...DEFAULT_STANDARD_GIFTS];
+    
+    // Tìm quà theo id chính xác, hoặc theo tên tiếng Việt/Anh, hoặc theo token/xu
+    const targetKey = String(giftId || '').toLowerCase().trim();
+    const targetName = String(giftNameInput || '').toLowerCase().trim();
+
+    let giftDef = allKnownGifts.find(g => {
+      const gId = String(g.id || '').toLowerCase();
+      const gName = String(g.name || '').toLowerCase();
+      const gShort = String(g.shortName || '').toLowerCase();
+      return gId === targetKey || gName === targetKey || gName === targetName || 
+             (targetName && (gName.includes(targetName) || targetName.includes(gName) || (gShort && targetName.includes(gShort)))) ||
+             (targetKey && (gName.includes(targetKey) || targetKey.includes(gName)));
+    });
+
+    // Nếu không tìm thấy quà định nghĩa sẵn, tính số ô cờ theo số xu (Diamond Count) của quà TikTok
+    if (!giftDef) {
+      const estimatedCells = Math.max(1, diamondCountInput);
+      giftDef = {
+        id: targetKey || 'custom_gift',
+        name: giftNameInput || giftId || 'Quà TikTok',
+        cells: estimatedCells,
+        priceToken: diamondCountInput,
+        icon: estimatedCells >= 1000 ? '👑' : estimatedCells >= 100 ? '💎' : estimatedCells >= 10 ? '🎁' : '🌹',
+        color: '#dc2626',
+        tier: estimatedCells >= 1000 ? 'legendary' : estimatedCells >= 200 ? 'epic' : estimatedCells >= 20 ? 'rare' : 'common'
+      };
+    }
+
+    // Số lượng ô cờ thực tế = Số ô của quà * số lượng quà tặng
+    const cellValue = Number(giftDef.cells) || Math.max(1, diamondCountInput);
+    const rawCells = Math.max(1, cellValue * count);
     
     // Combo multiplier
     let effectiveCells = rawCells;
@@ -1100,13 +1134,13 @@ class BanDoGameEngine {
     // Xác định vùng miền chỉ định (nếu có: 'north' | 'central' | 'south')
     let regionTarget = explicitRegionTarget || giftDef.regionTarget || null;
     const gId = (giftId || '').toLowerCase();
-    const gName = (giftDef.name || '').toLowerCase();
+    const gName = (giftDef.name || giftNameInput || '').toLowerCase();
     if (!regionTarget) {
-      if (gId.includes('north') || gId.includes('bac') || gName.includes('bắc') || gId === 'peach' || gId === 'finger_heart' || gName.includes('ngón tay tim')) {
+      if (gId.includes('north') || gId.includes('bac') || gName.includes('bắc') || gId === 'peach' || gId === 'finger_heart' || gName.includes('ngón tay tim') || gName.includes('finger heart')) {
         regionTarget = 'north';
-      } else if (gId.includes('central') || gId.includes('trung') || gName.includes('trung') || gId === 'spin_ball' || gId === 'doughnut' || gId === 'donut' || gName.includes('donut')) {
+      } else if (gId.includes('central') || gId.includes('trung') || gName.includes('trung') || gId === 'spin_ball' || gId === 'doughnut' || gId === 'donut' || gName.includes('donut') || gName.includes('bánh')) {
         regionTarget = 'central';
-      } else if (gId.includes('south') || gId.includes('nam') || gName.includes('nam') || gId === 'bing_chilling' || gId === 'hi_bear' || gId === 'bear' || gName.includes('gấu con') || gName.includes('gấu')) {
+      } else if (gId.includes('south') || gId.includes('nam') || gName.includes('nam') || gId === 'bing_chilling' || gId === 'hi_bear' || gId === 'bear' || gName.includes('gấu con') || gName.includes('gấu') || gName.includes('bear')) {
         regionTarget = 'south';
       }
     }
