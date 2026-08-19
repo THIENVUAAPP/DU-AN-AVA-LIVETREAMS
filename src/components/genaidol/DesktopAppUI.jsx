@@ -348,49 +348,31 @@ export default function DesktopAppUI() {
         auto247TimerRef.current = null;
       }
       try {
-        bandoEngine.stopAutoTestLoop();
         bandoEngine.stopAuto247Loop();
+        bandoEngine.stopAutoTestLoop();
       } catch (e) {}
-      window.dispatchEvent(new CustomEvent('global-stop-demo'));
       return;
     }
 
-    // Bật chế độ chạy 24/24 liên tục
-    if (isGameBanDoActive) {
-      try {
-        bandoAudio.unlock();
-        bandoEngine.startAutoTestLoop();
-      } catch (e) {}
-    }
+    // Bật chế độ VẬN HÀNH THẬT 24/7 (CHỈ CẮM CỜ KHI CÓ QUÀ THẬT TỪ TIKTOK LIVE)
+    try {
+      bandoAudio.unlock();
+      bandoEngine.stopAutoTestLoop(); // Dừng ngay mọi vòng lặp test giả lập
+      bandoEngine.startAuto247Loop(); // Chạy lắng nghe Live thật 24/7
+    } catch (e) {}
 
     if (auto247TimerRef.current) {
       clearInterval(auto247TimerRef.current);
     }
 
     auto247TimerRef.current = setInterval(() => {
-      // 1. Tự động kiểm tra và giải Captcha định kỳ ngầm
+      // 1. Tự động kiểm tra và giải Captcha định kỳ ngầm để giữ kết nối Live 24/24
       try {
         window.dispatchEvent(new CustomEvent('avalive_auto_captcha_heartbeat'));
       } catch (e) {}
-
-      // 2. Chạy luồng tự động theo từng chế độ
-      if (isGameBanDoActive) {
-        // Map Game loop continues automatically via bandoEngine
-      } else if (isGameBattleActive) {
-        window.dispatchEvent(new CustomEvent('battle-trigger-demo'));
-      } else {
-        const proactiveQuotes = [
-          { type: 'comment', payload: { user: 'Khách_TikTok_' + Math.floor(Math.random() * 900 + 100), comment: 'Tư vấn giúp em sản phẩm với idol ơi!' } },
-          { type: 'comment', payload: { user: 'Minh_Anh_VIP', comment: 'Chào idol, giọng nói nghe ngọt ngào quá!' } },
-          { type: 'gift', payload: { user: 'Đại_Gia_99', giftName: 'Hoa Hồng 🌹', count: 5 } },
-          { type: 'like', payload: { count: 50 } },
-          { type: 'user_joined', payload: { user: 'Thành_Viên_Mới_' + Math.floor(Math.random() * 1000) } }
-        ];
-        const evt = proactiveQuotes[Math.floor(Math.random() * proactiveQuotes.length)];
-        handleLiveEvent(evt.type, evt.payload);
-      }
-    }, 4500);
-  }, [isAuto247Running, isGameBanDoActive, isGameBattleActive, handleLiveEvent]);
+      // 2. KHÔNG TỰ ĐỘNG CẮM CỜ GIẢ LẬP: Chỉ cắm cờ khi có người xem thật gửi quà thật từ TikTok Live Studio
+    }, 15000);
+  }, [isAuto247Running]);
 
   // Dừng demo và auto 24/7 khi tắt component
   useEffect(() => {
