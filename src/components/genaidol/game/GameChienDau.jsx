@@ -2,11 +2,14 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { 
   Trophy, Volume2, VolumeX, Shield, Swords, Sparkles, 
   Crown, Play, Pause, RotateCcw, Settings, Flame, Zap, CheckCircle2, Mic, MicOff, Music, Music2,
-  Smartphone, MonitorPlay
+  Smartphone, MonitorPlay, Gift
 } from 'lucide-react';
 import { battleAudio } from './battleAudioEngine';
 import { battleCommentary } from './battleCommentaryEngine';
 import { computeSkeletalJoints, render3DWarriorSkeleton, SKELETON_STATES } from '../../../lib/game3d/warrior3DSkeleton';
+import LiveGiftMarqueeTicker from './LiveGiftMarqueeTicker';
+import LiveGiftConfigModal from './LiveGiftConfigModal';
+
 
 // 20 Dance styles
 export const DANCE_STYLES = [
@@ -89,6 +92,7 @@ export default function GameChienDau({
   const [liveFeed, setLiveFeed] = useState([]); // Array of recent live comments & gifts
   const [isGiftHudMinimized, setIsGiftHudMinimized] = useState(false);
   const [isGiftHudClosed, setIsGiftHudClosed] = useState(false);
+  const [showGiftConfigModal, setShowGiftConfigModal] = useState(false);
 
   const handleUserGesture = useCallback(() => {
     battleAudio.unlock();
@@ -2920,6 +2924,12 @@ export default function GameChienDau({
         </div>
       )}
 
+      {/* BẢNG ĐIỆN CUỘN QUÀ TẶNG CHIẾN ĐẤU (LED / ULTRA-TRANSPARENT MARQUEE) */}
+      <LiveGiftMarqueeTicker 
+        mode="battle" 
+        onOpenSettings={() => setShowGiftConfigModal(true)} 
+      />
+
       {/* BOTTOM HINT BANNER (Responsive) */}
       <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-md border border-white/20 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-medium text-gray-200 z-20 pointer-events-none shadow-lg flex items-center gap-1.5 sm:gap-2 max-w-[92vw] truncate">
         <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
@@ -2986,6 +2996,13 @@ export default function GameChienDau({
       >
         {renderCleanStage()}
       </div>
+
+      {/* MODAL CÀI ĐẶT BẢNG ĐIỆN & QUÀ TẶNG CHIẾN ĐẤU */}
+      <LiveGiftConfigModal
+        isOpen={showGiftConfigModal}
+        onClose={() => setShowGiftConfigModal(false)}
+        mode="battle"
+      />
     </div>
   );
 }

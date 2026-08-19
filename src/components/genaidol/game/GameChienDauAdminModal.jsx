@@ -8,8 +8,10 @@ import {
 import { battleAudio } from './battleAudioEngine';
 import { battleCommentary } from './battleCommentaryEngine';
 import { ELEVENLABS_VOICES, FREE_VOICES, ALL_SYSTEM_VOICES, previewVoiceAudio, stopVoiceAudio } from '../../../utils/voiceSyncService';
+import { getGiftConfig, saveGiftConfig, DEFAULT_GIFT_MARQUEE_SETTINGS } from '../../../utils/giftSyncService';
 import GameVoiceConfigPanel from './GameVoiceConfigPanel';
 import { battleVoiceEngine } from './gameVoiceEngine';
+
 
 const SIMULATED_USERS = [
   'Nguyễn Hùng', 'Trần Mai', 'Hoàng Long', 'Minh Quân', 
@@ -1182,29 +1184,91 @@ export default function GameChienDauAdminModal({
               )}
 
               {/* ============================================================== */}
-              {/* TAB: QUẢN LÝ QUÀ & CÂY TRANG BỊ */}
+              {/* TAB: QUẢN LÝ QUÀ & BẢNG ĐIỆN CUỘN */}
               {/* ============================================================== */}
               {activeTab === 'gifts' && (
-                <div className="space-y-3">
-                  <div className="p-3.5 bg-black/40 border border-white/10 rounded-xl space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-xs font-bold text-gray-200 block">Ghim Bảng Cây Trang Bị Trên Màn Hình Live:</span>
-                        <span className="text-[10px] text-gray-400">Hiển thị danh sách quà tương ứng cấp bậc để khán giả donate</span>
+                <div className="space-y-4">
+                  
+                  {/* BẢNG ĐIỆN CUỘN QUÀ TẶNG CHIẾN ĐẤU */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-950/40 via-pink-950/30 to-black/60 border border-purple-500/40 shadow-xl space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <Sparkles size={16} className="text-purple-400 animate-spin" style={{ animationDuration: '6s' }} />
+                        <h4 className="text-xs sm:text-sm font-black text-purple-300 uppercase tracking-wider">
+                          ⚡ Bảng Điện Cuộn Quà Tặng (LED Marquee Ticker)
+                        </h4>
                       </div>
-                      <button
-                        onClick={() => {
-                          const updated = { ...config, showGiftHud: !config.showGiftHud };
-                          setConfig(updated);
-                        }}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                          config.showGiftHud !== false ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-red-500/20 text-red-400 border border-red-500/40'
-                        }`}
-                      >
-                        {config.showGiftHud !== false ? 'ĐANG BẬT' : 'ĐANG TẮT'}
-                      </button>
+                      <span className="text-[11px] text-gray-300 font-medium">
+                        Nền trong suốt nhìn xuyên thấu đấu trường, không che nhân vật
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-gray-300 uppercase">Hiển Thị Bảng Điện:</label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const cur = getGiftConfig('battle').marquee;
+                            const updated = { ...cur, enabled: cur.enabled === false ? true : false };
+                            saveGiftConfig('battle', { marquee: updated });
+                          }}
+                          className="w-full py-2 rounded-xl text-xs font-black bg-purple-600 hover:bg-purple-500 text-white transition-all shadow-md"
+                        >
+                          🟢 BẬT / TẮT BẢNG ĐIỆN
+                        </button>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-gray-300 uppercase">Tốc Độ Cuộn:</label>
+                        <select
+                          defaultValue={getGiftConfig('battle').marquee?.speed || 'normal'}
+                          onChange={(e) => {
+                            const cur = getGiftConfig('battle').marquee;
+                            saveGiftConfig('battle', { marquee: { ...cur, speed: e.target.value } });
+                          }}
+                          className="w-full px-2.5 py-2 rounded-xl bg-black/60 border border-white/20 text-xs text-white outline-none focus:border-purple-400 font-bold"
+                        >
+                          <option value="slow">🐢 Chậm (50s)</option>
+                          <option value="normal">🚶 Vừa (30s)</option>
+                          <option value="fast">⚡ Nhanh (18s)</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-gray-300 uppercase">Độ Trong Suốt:</label>
+                        <select
+                          defaultValue={getGiftConfig('battle').marquee?.opacityMode || 'ultra_transparent'}
+                          onChange={(e) => {
+                            const cur = getGiftConfig('battle').marquee;
+                            saveGiftConfig('battle', { marquee: { ...cur, opacityMode: e.target.value } });
+                          }}
+                          className="w-full px-2.5 py-2 rounded-xl bg-black/60 border border-white/20 text-xs text-white outline-none focus:border-purple-400 font-bold"
+                        >
+                          <option value="ultra_transparent">✨ Trong suốt 100% (Khuyên dùng)</option>
+                          <option value="glassmorphism">🪟 Kính Mờ (Glass)</option>
+                          <option value="semi_dark">⬛ Nền Tối Đậm</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-gray-300 uppercase">Vị Trí Hiển Thị:</label>
+                        <select
+                          defaultValue={getGiftConfig('battle').marquee?.position || 'bottom'}
+                          onChange={(e) => {
+                            const cur = getGiftConfig('battle').marquee;
+                            saveGiftConfig('battle', { marquee: { ...cur, position: e.target.value } });
+                          }}
+                          className="w-full px-2.5 py-2 rounded-xl bg-black/60 border border-white/20 text-xs text-white outline-none focus:border-purple-400 font-bold"
+                        >
+                          <option value="bottom">⬇️ Dưới Đáy Màn Hình</option>
+                          <option value="top">⬆️ Trên Đỉnh</option>
+                          <option value="floating">🖱️ Tự Do Kéo Thả</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
+
 
                   <div className="p-3.5 bg-purple-950/20 border border-purple-500/30 rounded-xl space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">

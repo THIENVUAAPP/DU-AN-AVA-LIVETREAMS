@@ -8,12 +8,15 @@ import {
   MonitorPlay, Sun, Moon, Move, ZoomIn, ZoomOut, Search, Globe, Navigation, Compass as CompassIcon,
   Sliders, Settings, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RefreshCw,
   Bookmark, BookmarkPlus, BookmarkCheck, Edit2, Trash2, Plus, Save, Check, X, Crosshair,
-  Crown, Medal, Music, Clock, Smartphone
+  Crown, Medal, Music, Clock, Smartphone, Gift as GiftIcon
 } from 'lucide-react';
 import bandoEngine, { getHonorTier, COUNTRY_PRESETS } from './bandoGameEngine';
 import bandoAudio from './bandoAudioEngine';
 import { getGameTranslation } from './gameTranslations';
 import GameBanDoAdminModal from './GameBanDoAdminModal';
+import LiveGiftMarqueeTicker from './LiveGiftMarqueeTicker';
+import LiveGiftConfigModal from './LiveGiftConfigModal';
+
 
 // Ease helpers
 function easeOutBack(t) {
@@ -317,6 +320,20 @@ export default function GameBanDoVietNam({
   const [bookmarkNotification, setBookmarkNotification] = useState(null);
   const [editingBookmarkId, setEditingBookmarkId] = useState(null);
   const [editingBookmarkName, setEditingBookmarkName] = useState('');
+  const [showGiftConfigModal, setShowGiftConfigModal] = useState(false);
+
+  // Xử lý khi bấm vào thẻ quà trên Bảng điện cuộn (Test nhanh cắm cờ)
+  const handleTestGiftMarquee = useCallback((gift) => {
+    bandoEngine.processGift({
+      userId: 'host_streamer_test',
+      nickname: 'Streamer Host',
+      giftId: gift.id,
+      giftName: gift.name,
+      diamondCount: gift.priceToken || 1,
+      repeatCount: 1,
+      regionTarget: gift.regionTarget
+    });
+  }, []);
 
   // Draggable HUDs State (Thu nhỏ ~50% và có thể di chuyển tùy ý trên màn hình)
   const [isLeaderboardMinimized, setIsLeaderboardMinimized] = useState(false);
@@ -340,6 +357,7 @@ export default function GameBanDoVietNam({
 
   const draggingHudRef = useRef(null); // 'leaderboard' | 'gift' | null
   const dragOffsetRef = useRef({ x: 0, y: 0 });
+
 
   // Camera Zoom In / Zoom Out / Pan helpers
   const handleZoomIn = useCallback(() => {
@@ -2226,6 +2244,13 @@ export default function GameBanDoVietNam({
         </div>
       )}
 
+      {/* 3. BẢNG ĐIỆN CUỘN QUÀ TẶNG (LED / ULTRA-TRANSPARENT MARQUEE) */}
+      <LiveGiftMarqueeTicker 
+        mode="map" 
+        onOpenSettings={() => setShowGiftConfigModal(true)} 
+        onGiftClick={handleTestGiftMarquee} 
+      />
+
       {/* VICTORY CELEBRATION CEREMONY / CHAMPION PODIUM */}
       {gameState.status === 'victory' && (
         <div className="absolute inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-40 p-4 animate-in zoom-in-95 duration-300">
@@ -2745,6 +2770,14 @@ export default function GameBanDoVietNam({
           </div>
         </div>
       )}
+
+      {/* MODAL CÀI ĐẶT BẢNG ĐIỆN & KHO QUÀ TẶNG CẮM CỜ 3 MIỀN */}
+      <LiveGiftConfigModal
+        isOpen={showGiftConfigModal}
+        onClose={() => setShowGiftConfigModal(false)}
+        mode="map"
+        onTestGift={handleTestGiftMarquee}
+      />
     </div>
   );
 }

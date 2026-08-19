@@ -10,8 +10,10 @@ import {
 import bandoEngine, { DEFAULT_MAP_GIFTS, COUNTRY_PRESETS, WORLD_COUNTRIES, CONTINENTS } from './bandoGameEngine';
 import bandoAudio from './bandoAudioEngine';
 import { ELEVENLABS_VOICES, FREE_VOICES, ALL_SYSTEM_VOICES, previewVoiceAudio, stopVoiceAudio, getDualVoiceConfig, saveDualVoiceConfig } from '../../../utils/voiceSyncService';
+import { getGiftConfig, saveGiftConfig, DEFAULT_GIFT_MARQUEE_SETTINGS, REGIONAL_FLAG_GIFTS } from '../../../utils/giftSyncService';
 import GameVoiceConfigPanel from './GameVoiceConfigPanel';
 import { mapVoiceEngine } from './gameVoiceEngine';
+
 
 export default function GameBanDoAdminModal({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('operations');
@@ -83,6 +85,8 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
   const [newGiftTier, setNewGiftTier] = useState('common');
   const [editingGiftId, setEditingGiftId] = useState(null);
   const [editGiftData, setEditGiftData] = useState({});
+  const [giftMarqueeSettings, setGiftMarqueeSettings] = useState(() => getGiftConfig('map').marquee || DEFAULT_GIFT_MARQUEE_SETTINGS);
+
 
   // Quản lý Tải Lên Ảnh Mẫu Bản Đồ Tham Chiếu Chuẩn Xác 100%
   const mapImageFileInputRef = useRef(null);
@@ -1938,6 +1942,180 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                     {isAutoTesting ? <Square size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />}
                     <span>{isAutoTesting ? 'Dừng Test Ngay' : 'Chạy Test Tự Động'}</span>
                   </button>
+                </div>
+              </div>
+
+              {/* CARD 1: CẤU HÌNH BẢNG ĐIỆN CUỘN LED MARQUEE TRONG SUỐT */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-blue-950/30 to-black/60 border border-cyan-500/40 shadow-xl space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={16} className="text-cyan-400 animate-spin" style={{ animationDuration: '6s' }} />
+                    <h4 className="text-xs sm:text-sm font-black text-cyan-300 uppercase tracking-wider">
+                      ⚡ Bảng Điện Cuộn Quà Tặng (LED Marquee Ticker)
+                    </h4>
+                  </div>
+                  <span className="text-[11px] text-gray-300 font-medium">
+                    Nền trong suốt nhìn xuyên thấu bản đồ, không che khuất thao tác
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                  {/* Bật / Tắt */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-gray-300 uppercase">Hiển Thị Bảng Điện:</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = { ...giftMarqueeSettings, enabled: giftMarqueeSettings.enabled === false ? true : false };
+                        setGiftMarqueeSettings(updated);
+                        saveGiftConfig('map', { marquee: updated });
+                      }}
+                      className={`w-full py-2 rounded-xl text-xs font-black transition-all ${
+                        giftMarqueeSettings.enabled !== false 
+                          ? 'bg-emerald-600 text-white shadow-md' 
+                          : 'bg-rose-600/80 text-white'
+                      }`}
+                    >
+                      {giftMarqueeSettings.enabled !== false ? '🟢 ĐANG BẬT' : '🔴 ĐANG TẮT'}
+                    </button>
+                  </div>
+
+                  {/* Tốc độ */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-gray-300 uppercase">Tốc Độ Cuộn:</label>
+                    <select
+                      value={giftMarqueeSettings.speed || 'normal'}
+                      onChange={(e) => {
+                        const updated = { ...giftMarqueeSettings, speed: e.target.value };
+                        setGiftMarqueeSettings(updated);
+                        saveGiftConfig('map', { marquee: updated });
+                      }}
+                      className="w-full px-2.5 py-2 rounded-xl bg-black/60 border border-white/20 text-xs text-white outline-none focus:border-cyan-400 font-bold"
+                    >
+                      <option value="slow">🐢 Chậm (50s)</option>
+                      <option value="normal">🚶 Vừa (30s)</option>
+                      <option value="fast">⚡ Nhanh (18s)</option>
+                    </select>
+                  </div>
+
+                  {/* Độ trong suốt */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-gray-300 uppercase">Độ Trong Suốt:</label>
+                    <select
+                      value={giftMarqueeSettings.opacityMode || 'ultra_transparent'}
+                      onChange={(e) => {
+                        const updated = { ...giftMarqueeSettings, opacityMode: e.target.value };
+                        setGiftMarqueeSettings(updated);
+                        saveGiftConfig('map', { marquee: updated });
+                      }}
+                      className="w-full px-2.5 py-2 rounded-xl bg-black/60 border border-white/20 text-xs text-white outline-none focus:border-cyan-400 font-bold"
+                    >
+                      <option value="ultra_transparent">✨ Trong suốt 100% (Khuyên dùng)</option>
+                      <option value="glassmorphism">🪟 Kính Mờ (Glass)</option>
+                      <option value="semi_dark">⬛ Nền Tối Đậm</option>
+                    </select>
+                  </div>
+
+                  {/* Vị trí */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-gray-300 uppercase">Vị Trí Hiển Thị:</label>
+                    <select
+                      value={giftMarqueeSettings.position || 'bottom'}
+                      onChange={(e) => {
+                        const updated = { ...giftMarqueeSettings, position: e.target.value };
+                        setGiftMarqueeSettings(updated);
+                        saveGiftConfig('map', { marquee: updated });
+                      }}
+                      className="w-full px-2.5 py-2 rounded-xl bg-black/60 border border-white/20 text-xs text-white outline-none focus:border-cyan-400 font-bold"
+                    >
+                      <option value="bottom">⬇️ Dưới Đáy Màn Hình</option>
+                      <option value="top">⬆️ Trên Đỉnh</option>
+                      <option value="floating">🖱️ Tự Do Kéo Thả</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-2 pt-2 border-t border-white/10">
+                  <div className="flex-1 w-full flex items-center gap-2">
+                    <span className="text-[11px] font-bold text-gray-400 shrink-0">Tiêu đề LED:</span>
+                    <input
+                      type="text"
+                      value={giftMarqueeSettings.tickerTitle || '🎁 QUÀ TẶNG & CẮM CỜ:'}
+                      onChange={(e) => {
+                        const updated = { ...giftMarqueeSettings, tickerTitle: e.target.value };
+                        setGiftMarqueeSettings(updated);
+                        saveGiftConfig('map', { marquee: updated });
+                      }}
+                      className="flex-1 px-3 py-1.5 rounded-lg bg-black/60 border border-white/20 text-xs text-yellow-300 font-bold outline-none focus:border-yellow-400"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* CARD 2: 3 MÓN QUÀ CẮM CỜ 3 MIỀN (5 XU) */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-red-950/40 via-amber-950/40 to-emerald-950/40 border border-yellow-500/40 shadow-xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs sm:text-sm font-black text-yellow-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <Flag size={15} className="text-red-400" />
+                    🚩 3 Quà Cắm Cờ 3 Miền (5 Xu): Bắc - Trung - Nam
+                  </h4>
+                  <span className="text-[10px] text-gray-300 font-mono">Tự động nhận diện & cắm cờ đúng vùng miền</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {REGIONAL_FLAG_GIFTS.map((rg) => {
+                    let rTheme = {
+                      name: 'Miền Bắc',
+                      border: 'border-red-500/40',
+                      bg: 'bg-red-950/40 text-red-200'
+                    };
+                    if (rg.regionTarget === 'central') {
+                      rTheme = {
+                        name: 'Miền Trung',
+                        border: 'border-amber-500/40',
+                        bg: 'bg-amber-950/40 text-amber-200'
+                      };
+                    } else if (rg.regionTarget === 'south') {
+                      rTheme = {
+                        name: 'Miền Nam',
+                        border: 'border-emerald-500/40',
+                        bg: 'bg-emerald-950/40 text-emerald-200'
+                      };
+                    }
+
+                    return (
+                      <div key={rg.id} className={`p-3 rounded-xl border ${rTheme.border} ${rTheme.bg} flex items-center justify-between gap-2 shadow-md`}>
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">{rg.icon}</span>
+                          <div>
+                            <div className="text-xs font-black text-white">{rg.name}</div>
+                            <div className="text-[10px] font-mono text-yellow-300 font-bold">
+                              {rg.priceToken} xu • +{rg.cells} ô cờ
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            bandoEngine.processGift({
+                              userId: 'admin_test',
+                              nickname: 'Admin Test',
+                              giftId: rg.id,
+                              giftName: rg.name,
+                              diamondCount: rg.priceToken,
+                              repeatCount: 1,
+                              regionTarget: rg.regionTarget
+                            });
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white text-[10px] font-bold shrink-0 flex items-center gap-1"
+                          title="Bấm để test cắm cờ ngay"
+                        >
+                          <Play size={10} fill="currentColor" /> Test Cờ
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
