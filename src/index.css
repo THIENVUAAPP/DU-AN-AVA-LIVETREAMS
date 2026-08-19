@@ -44,7 +44,7 @@
 
 /* Marquee */
 @keyframes marquee { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
-.animate-marquee { display: flex; width: max-content; animation: marquee 25s linear infinite; }
+.animate-marquee { display: flex; width: max-content; animation: marquee 65s linear infinite; }
 .animate-marquee:hover { animation-play-state: paused; }
 
 /* ===== $10M PREMIUM ANIMATIONS ===== */
@@ -150,7 +150,7 @@
 
 
 @keyframes marquee-reverse { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
-.animate-marquee-reverse { display: flex; width: max-content; animation: marquee-reverse 25s linear infinite reverse; }
+.animate-marquee-reverse { display: flex; width: max-content; animation: marquee-reverse 65s linear infinite reverse; }
 
 /* ===== SÀN NHẢY TIKTOK — Dance Floor Character Animations ===== */
 @keyframes danceBounce { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-18px) rotate(3deg); } }

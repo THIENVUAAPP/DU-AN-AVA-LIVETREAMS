@@ -667,16 +667,16 @@ export default function LiveGiftConfigModal({
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { id: 'slow', label: '🐢 Chậm (50s)' },
-                      { id: 'normal', label: '🚶 Vừa (30s)' },
-                      { id: 'fast', label: '⚡ Nhanh (18s)' }
+                      { id: 'slow', label: '🐢 Siêu Chậm (Dễ Đọc)' },
+                      { id: 'normal', label: '🚶 Chậm Vừa (Êm Dịu)' },
+                      { id: 'fast', label: '⚡ Vừa Phải' }
                     ].map(spd => (
                       <button
                         key={spd.id}
                         onClick={() => handleMarqueeChange('speed', spd.id)}
                         className={`py-2 rounded-xl text-xs font-bold transition-all ${
-                          marquee.speed === spd.id 
-                            ? 'bg-cyan-600 text-white shadow-md' 
+                          (marquee.speed || 'slow') === spd.id 
+                            ? 'bg-cyan-600 text-white shadow-md ring-1 ring-cyan-400' 
                             : 'bg-white/5 text-gray-400 hover:text-white'
                         }`}
                       >

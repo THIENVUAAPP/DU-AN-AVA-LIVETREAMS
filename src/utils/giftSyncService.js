@@ -66,7 +66,7 @@ export const DEFAULT_STANDARD_GIFTS = [
 
 export const DEFAULT_GIFT_MARQUEE_SETTINGS = {
   enabled: true,
-  speed: 'normal', // 'slow' (45s) | 'normal' (25s) | 'fast' (15s)
+  speed: 'slow', // 'slow' (siêu chậm, dễ đọc) | 'normal' (chậm vừa) | 'fast' (vừa phải)
   position: 'bottom', // 'bottom' | 'top' | 'floating'
   opacityMode: 'ultra_transparent', // 'ultra_transparent' | 'glassmorphism' | 'semi_dark'
   pauseOnHover: true,

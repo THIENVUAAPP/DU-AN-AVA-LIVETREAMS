@@ -89,9 +89,13 @@ export default function LiveGiftMarqueeTicker({
     let animId;
     let accumulated = container.scrollTop;
 
+    // Tốc độ cuộn chậm rãi, êm ái, người xem đọc rõ ràng 100%
+    const currentSpeed = (config?.marquee?.speed) || 'slow';
+    const stepSpeed = currentSpeed === 'slow' ? 0.10 : currentSpeed === 'normal' ? 0.18 : 0.28;
+
     const scrollStep = () => {
       if (!isPaused && container) {
-        accumulated += 0.45; // Cuộn êm ái mượt mà
+        accumulated += stepSpeed; // Cuộn chầm chậm, êm dịu, không bị giật hay lướt nhanh
         if (accumulated >= container.scrollHeight - container.clientHeight) {
           accumulated = 0; // Tự động tua lại đầu bảng lặp lại vô tận
         }
@@ -102,7 +106,7 @@ export default function LiveGiftMarqueeTicker({
 
     animId = requestAnimationFrame(scrollStep);
     return () => cancelAnimationFrame(animId);
-  }, [isPaused, isMinimized, isClosed]);
+  }, [isPaused, isMinimized, isClosed, config?.marquee?.speed]);
 
   // Lưu scale khi thay đổi (+/- nút bấm)
   const handleScaleChange = (delta) => {
