@@ -798,11 +798,16 @@ export default function GameBanDoVietNam({
   useEffect(() => {
     if (!externalLiveEvent) return;
     const { type, data } = externalLiveEvent;
-    if (type === 'GIFT') {
-      bandoEngine.processGift(data.giftId || 'rose', data.count || 1, {
-        id: data.userId || 'guest',
-        username: data.username || 'Khách Live',
-        avatar: data.avatar || '',
+    if (type === 'GIFT' && data) {
+      bandoEngine.processGift({
+        giftId: data.giftId || 'rose',
+        giftName: data.giftName || data.name || '',
+        diamondCount: data.diamondCount || 1,
+        count: data.count || data.repeatCount || 1,
+        userId: data.userId || 'tiktok_guest',
+        username: data.username || data.nickname || 'Khách Live',
+        avatar: data.avatar || data.profilePictureUrl || '',
+        regionTarget: data.regionTarget || null
       });
     } else if (type === 'RESET') {
       bandoEngine.resetRound();
@@ -2122,7 +2127,7 @@ export default function GameBanDoVietNam({
         ))}
       </div>
 
-      {/* User Claim Flag Badges Floating Overlay Layer (Hiển thị Quốc Kỳ & Tên / ID Người Tặng Nhỏ Gọn 50%, Tinh Tế) */}
+      {/* User Claim Flag Badges Floating Overlay Layer (Hiển thị Avatar, ID & Lá Cờ Quốc Kỳ) */}
       <div ref={claimBadgesLayerRef} className="absolute inset-0 pointer-events-none z-15 overflow-hidden">
         {recentClaimBadges.map(b => (
           <div
@@ -2131,9 +2136,9 @@ export default function GameBanDoVietNam({
             className="absolute top-0 left-0 hidden flex-col items-center pointer-events-none transition-all duration-100 animate-in zoom-in-75 fade-in duration-150"
             style={{ willChange: 'transform' }}
           >
-            <div className="relative flex items-center gap-1.5 px-2 py-0.5 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 text-white font-bold text-[9px] shadow-[0_4px_15px_rgba(239,68,68,0.5)] border border-yellow-300 ring-1 ring-yellow-400/70 whitespace-nowrap drop-shadow-md">
-              <span className="text-xs leading-none drop-shadow-sm">{b.flag || '🇻🇳'}</span>
-              <div className="w-3.5 h-3.5 rounded-full bg-white/20 flex items-center justify-center text-[8px] overflow-hidden border border-white/80 shrink-0">
+            <div className="relative flex items-center gap-1.5 px-2 py-1 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 text-white font-bold text-[9.5px] shadow-[0_4px_18px_rgba(239,68,68,0.6)] border border-yellow-300 ring-2 ring-yellow-400/80 whitespace-nowrap drop-shadow-lg">
+              <span className="text-sm leading-none drop-shadow-md shrink-0">{b.flag || currentCountry?.flag || '🇻🇳'}</span>
+              <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-[9px] overflow-hidden border-2 border-yellow-300 shadow-xs shrink-0 bg-gradient-to-tr from-amber-400 to-yellow-200">
                 {b.avatar ? (
                   <img src={b.avatar} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
                 ) : (
