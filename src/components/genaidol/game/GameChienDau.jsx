@@ -394,8 +394,9 @@ export default function GameChienDau({
   });
 
   const playSfx = useCallback((type) => {
-    if (!config.soundEnabled || soundMuted) return;
-    const vol = config.sfxVolume !== undefined ? config.sfxVolume : 0.7;
+    if (!config.soundEnabled || soundMuted || battleAudio.isSfxMutedState()) return;
+    const vol = config.sfxVolume !== undefined ? config.sfxVolume : battleAudio.getSfxVolume();
+    if (vol <= 0.001) return;
     if (type === 'join') battleAudio.playJoin(vol);
     else if (type === 'hit') battleAudio.playHit(vol);
     else if (type === 'aoe') battleAudio.playAoe(vol);

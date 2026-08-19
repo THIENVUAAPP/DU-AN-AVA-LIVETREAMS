@@ -116,13 +116,31 @@ export default function GameChienDauAdminModal({
   const [isMinimized, setIsMinimized] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [newPromptText, setNewPromptText] = useState('');
-  const [isBgmPlayingState, setIsBgmPlayingState] = useState(false);
+  const [isBgmPlayingState, setIsBgmPlayingState] = useState(() => battleAudio.isBgmActive());
+  const [isSfxMutedState, setIsSfxMutedState] = useState(() => battleAudio.isSfxMutedState());
+  const [isVoiceMutedState, setIsVoiceMutedState] = useState(() => battleAudio.isVoiceMutedState());
   const [availableVoices, setAvailableVoices] = useState([]);
   const [previewingVoiceId, setPreviewingVoiceId] = useState(null);
   const [voiceTierFilter, setVoiceTierFilter] = useState('all'); // 'all', 'pro', 'free'
   const [voiceGenderFilter, setVoiceGenderFilter] = useState('all');
   const [voiceRoleFilter, setVoiceRoleFilter] = useState('all');
+  const [activeTestingSfx, setActiveTestingSfx] = useState(null);
   const bgmFileInputRef = useRef(null);
+
+  useEffect(() => {
+    const handleAudioStatus = (e) => {
+      if (e.detail) {
+        if (e.detail.isBgmPlaying !== undefined) setIsBgmPlayingState(e.detail.isBgmPlaying);
+        if (e.detail.isSfxMuted !== undefined) setIsSfxMutedState(e.detail.isSfxMuted);
+        if (e.detail.isVoiceMuted !== undefined) setIsVoiceMutedState(e.detail.isVoiceMuted);
+        if (e.detail.bgmVolume !== undefined) setConfig(c => ({ ...c, bgmVolume: e.detail.bgmVolume }));
+        if (e.detail.sfxVolume !== undefined) setConfig(c => ({ ...c, sfxVolume: e.detail.sfxVolume }));
+        if (e.detail.voiceVolume !== undefined) setConfig(c => ({ ...c, commentaryVolume: e.detail.voiceVolume }));
+      }
+    };
+    window.addEventListener('battle-audio-status', handleAudioStatus);
+    return () => window.removeEventListener('battle-audio-status', handleAudioStatus);
+  }, []);
 
   const handlePreviewVoice = (voice, sampleText = null) => {
     if (previewingVoiceId === voice.id) {
@@ -648,36 +666,151 @@ export default function GameChienDauAdminModal({
               )}
 
               {/* ============================================================== */}
-              {/* TAB: NHẠC NỀN (BGM) & UPLOAD FILE MP3 */}
+              {/* TAB: ÂM THANH BGM, HIỆU ỨNG SFX & GIỌNG ĐỌC AI */}
               {/* ============================================================== */}
               {activeTab === 'bgm' && (
-                <div className="space-y-3">
-                  {/* BGM Player Controller */}
-                  <div className="p-3.5 bg-gradient-to-r from-amber-950/40 to-yellow-950/40 border border-amber-500/40 rounded-xl space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-xs font-black text-amber-300 uppercase flex items-center gap-1.5">
-                          <Music2 size={14} className="text-amber-400" /> Nhạc Chạy Nền Game & Video (BGM)
-                        </h4>
-                        <p className="text-[10px] text-gray-300 mt-0.5">
-                          Phát nhạc nền lặp vô tận, tự động giảm nhỏ khi có bình luận viên AI phát ngôn.
-                        </p>
+                <div className="space-y-4">
+                  {/* 3 KÊNH ÂM THANH ĐỘC LẬP */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {/* Kênh 1: BGM */}
+                    <div className="p-3.5 bg-gradient-to-tr from-amber-950/60 via-black/70 to-amber-950/30 border border-amber-500/50 rounded-xl space-y-2.5 shadow-lg">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-amber-300 uppercase flex items-center gap-1.5">
+                          <Music2 size={14} className="text-amber-400" /> Nhạc Nền (BGM)
+                        </span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded font-mono bg-amber-500/20 text-amber-300">
+                          {isBgmPlayingState ? '▶ ĐANG PHÁT' : '⏸ ĐÃ TẮT'}
+                        </span>
                       </div>
                       <button
                         onClick={toggleBgmPlayback}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 ${
+                        className={`w-full py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-95 ${
                           isBgmPlayingState 
-                            ? 'bg-rose-600 text-white shadow-lg shadow-rose-900/40 animate-pulse' 
-                            : 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/40'
+                            ? 'bg-rose-600 hover:bg-rose-500 text-white ring-2 ring-rose-400/50 shadow-rose-900/40 animate-pulse' 
+                            : 'bg-emerald-600 hover:bg-emerald-500 text-white ring-2 ring-emerald-400/40 shadow-emerald-900/40'
                         }`}
                       >
-                        {isBgmPlayingState ? <><Pause size={13} /> TẠM DỪNG NHẠC</> : <><Play size={13} /> PHÁT NHẠC NỀN</>}
+                        {isBgmPlayingState ? <><Pause size={13} /> ⏹ TẮT NHẠC NỀN</> : <><Play size={13} /> ▶ BẬT NHẠC NỀN</>}
                       </button>
+                      <div className="p-2 bg-black/50 border border-amber-500/20 rounded-lg space-y-1">
+                        <div className="flex justify-between text-[11px] font-bold text-gray-300">
+                          <span>Âm lượng BGM:</span>
+                          <span className="font-mono text-amber-400">{Math.round((config.bgmVolume !== undefined ? config.bgmVolume : 0.4) * 100)}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.05"
+                          value={config.bgmVolume !== undefined ? config.bgmVolume : 0.4}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value);
+                            setConfig({ ...config, bgmVolume: val });
+                            battleAudio.setBgmVolume(val);
+                          }}
+                          className="w-full h-1.5 accent-amber-500"
+                        />
+                      </div>
                     </div>
 
+                    {/* Kênh 2: SFX Võ Công */}
+                    <div className="p-3.5 bg-gradient-to-tr from-purple-950/60 via-black/70 to-purple-950/30 border border-purple-500/50 rounded-xl space-y-2.5 shadow-lg">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-purple-300 uppercase flex items-center gap-1.5">
+                          <Zap size={14} className="text-purple-400" /> SFX Võ Công
+                        </span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded font-mono bg-purple-500/20 text-purple-300">
+                          {!isSfxMutedState ? '🔊 ĐANG BẬT' : '🔇 ĐÃ TẮT'}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const next = battleAudio.toggleSfx();
+                          setIsSfxMutedState(!next);
+                        }}
+                        className={`w-full py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-95 ${
+                          !isSfxMutedState
+                            ? 'bg-yellow-500 hover:bg-yellow-400 text-black ring-2 ring-yellow-300/40 shadow-yellow-500/20'
+                            : 'bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40'
+                        }`}
+                      >
+                        {!isSfxMutedState ? <Volume2 size={13} /> : <VolumeX size={13} />}
+                        <span>{!isSfxMutedState ? '🔊 SFX: ĐANG BẬT' : '🔇 SFX: ĐÃ TẮT'}</span>
+                      </button>
+                      <div className="p-2 bg-black/50 border border-purple-500/20 rounded-lg space-y-1">
+                        <div className="flex justify-between text-[11px] font-bold text-gray-300">
+                          <span>Âm lượng SFX:</span>
+                          <span className="font-mono text-purple-400">{Math.round((config.sfxVolume !== undefined ? config.sfxVolume : 0.85) * 100)}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.05"
+                          value={config.sfxVolume !== undefined ? config.sfxVolume : 0.85}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value);
+                            setConfig({ ...config, sfxVolume: val });
+                            battleAudio.setSfxVolume(val);
+                          }}
+                          className="w-full h-1.5 accent-purple-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Kênh 3: Voice AI */}
+                    <div className="p-3.5 bg-gradient-to-tr from-cyan-950/60 via-black/70 to-cyan-950/30 border border-cyan-500/50 rounded-xl space-y-2.5 shadow-lg">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-cyan-300 uppercase flex items-center gap-1.5">
+                          <Mic size={14} className="text-cyan-400" /> Giọng Đọc BLV
+                        </span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded font-mono bg-cyan-500/20 text-cyan-300">
+                          {!isVoiceMutedState ? '🎙️ ĐANG BẬT' : '🔇 ĐÃ TẮT'}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const next = battleAudio.toggleVoice();
+                          setIsVoiceMutedState(!next);
+                          battleVoiceEngine.setMuted(!next);
+                        }}
+                        className={`w-full py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-95 ${
+                          !isVoiceMutedState
+                            ? 'bg-cyan-500 hover:bg-cyan-400 text-black ring-2 ring-cyan-300/40 shadow-cyan-500/20'
+                            : 'bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40'
+                        }`}
+                      >
+                        {!isVoiceMutedState ? <Volume2 size={13} /> : <VolumeX size={13} />}
+                        <span>{!isVoiceMutedState ? '🎙️ VOICE: ĐANG BẬT' : '🔇 VOICE: ĐÃ TẮT'}</span>
+                      </button>
+                      <div className="p-2 bg-black/50 border border-cyan-500/20 rounded-lg space-y-1">
+                        <div className="flex justify-between text-[11px] font-bold text-gray-300">
+                          <span>Âm lượng Voice:</span>
+                          <span className="font-mono text-cyan-400">{Math.round((config.commentaryVolume !== undefined ? config.commentaryVolume : 1.0) * 100)}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.05"
+                          value={config.commentaryVolume !== undefined ? config.commentaryVolume : 1.0}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value);
+                            setConfig({ ...config, commentaryVolume: val });
+                            battleAudio.setVoiceVolume(val);
+                            battleVoiceEngine.setVolume(val);
+                          }}
+                          className="w-full h-1.5 accent-cyan-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* BGM Player Controller */}
+                  <div className="p-3.5 bg-black/40 border border-amber-500/40 rounded-xl space-y-3">
                     {/* Track Selection */}
-                    <div className="space-y-1.5 pt-1 border-t border-amber-500/20">
-                      <label className="text-[11px] font-bold text-gray-200 block">Chọn bài nhạc nền:</label>
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-gray-200 block">Chọn bài nhạc nền PK:</label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {[
                           { id: 'epic_synth', name: '⚔️ Kiếm Hiệp Hùng Tráng (Epic Synth)', desc: 'Giai điệu ngũ cung hào sảng' },
@@ -714,7 +847,7 @@ export default function GameChienDauAdminModal({
                       <div className="flex items-center justify-between">
                         <div>
                           <span className="text-xs font-bold text-gray-200 block">Tải Nhạc Nền MP3 Từ Máy Tính:</span>
-                          <span className="text-[10px] text-gray-400">Hỗ trợ file MP3, WAV, OGG lưu trực tiếp vào máy</span>
+                          <span className="text-[10px] text-gray-400">Hỗ trợ file MP3, WAV lưu trực tiếp vào máy</span>
                         </div>
                         <input
                           type="file"
@@ -745,44 +878,44 @@ export default function GameChienDauAdminModal({
                         </div>
                       )}
                     </div>
+                  </div>
 
-                    {/* Volume Sliders Grid */}
-                    <div className="grid grid-cols-2 gap-3 pt-1 border-t border-amber-500/20">
-                      <div>
-                        <div className="flex justify-between text-xs text-gray-300 mb-1 font-bold">
-                          <span>Âm lượng Nhạc Nền (BGM):</span>
-                          <span className="font-mono text-amber-400">{Math.round((config.bgmVolume !== undefined ? config.bgmVolume : 0.4) * 100)}%</span>
-                        </div>
-                        <input
-                          type="range"
-                          min="0"
-                          max="1"
-                          step="0.05"
-                          value={config.bgmVolume !== undefined ? config.bgmVolume : 0.4}
-                          onChange={(e) => {
-                            const val = parseFloat(e.target.value);
-                            setConfig({ ...config, bgmVolume: val });
-                            battleAudio.setBgmVolume(val);
+                  {/* THƯ VIỆN 8 CHIÊU THỨC SFX NGHE THỬ */}
+                  <div className="p-3.5 bg-purple-950/20 border border-purple-500/30 rounded-xl space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold text-purple-300 flex items-center gap-1.5">
+                        <Zap size={14} className="text-purple-400" /> Thư Viện Hiệu Ứng Tuyệt Kỹ Võ Công (SFX):
+                      </span>
+                      <span className="text-[10px] text-gray-400">Bấm nút để nghe thử âm thanh</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {[
+                        { id: 'vankiem', name: '🗡️ Vạn Kiếm Quy Tông', fn: () => battleAudio.playVanKiemQuyTong() },
+                        { id: 'gianglong', name: '🐉 Giáng Long Chưởng', fn: () => battleAudio.playGiangLongChuong() },
+                        { id: 'lucmach', name: '⚡ Lục Mạch Thần Kiếm', fn: () => battleAudio.playLucMachThanKiem() },
+                        { id: 'thaicuc', name: '☯️ Thái Cực Kiếm Trận', fn: () => battleAudio.playThaiCucKiemTran() },
+                        { id: 'docco', name: '🌪️ Độc Cô Cửu Kiếm', fn: () => battleAudio.playDocCoCuuKiem() },
+                        { id: 'nhulai', name: '✋ Như Lai Thần Chưởng', fn: () => battleAudio.playNhuLaiThanChuong() },
+                        { id: 'thienngoai', name: '❄️ Thiên Ngoại Phi Tiên', fn: () => battleAudio.playThienNgoaiPhiTien() },
+                        { id: 'kimcang', name: '🔔 Kim Cang Bất Hoại', fn: () => battleAudio.playKimCangBatHoai() },
+                      ].map(s => (
+                        <button
+                          key={s.id}
+                          onClick={() => {
+                            setActiveTestingSfx(s.id);
+                            s.fn();
+                            setTimeout(() => setActiveTestingSfx(null), 1000);
                           }}
-                          className="w-full accent-amber-500"
-                        />
-                      </div>
-
-                      <div>
-                        <div className="flex justify-between text-xs text-gray-300 mb-1 font-bold">
-                          <span>Âm lượng Hiệu ứng (SFX):</span>
-                          <span className="font-mono text-purple-400">{Math.round((config.sfxVolume !== undefined ? config.sfxVolume : 0.7) * 100)}%</span>
-                        </div>
-                        <input
-                          type="range"
-                          min="0"
-                          max="1"
-                          step="0.05"
-                          value={config.sfxVolume !== undefined ? config.sfxVolume : 0.7}
-                          onChange={(e) => setConfig({ ...config, sfxVolume: parseFloat(e.target.value) })}
-                          className="w-full accent-purple-500"
-                        />
-                      </div>
+                          className={`p-2 rounded-lg text-left text-xs font-bold transition-all border ${
+                            activeTestingSfx === s.id
+                              ? 'bg-purple-600 text-white border-purple-300 ring-2 ring-purple-400 animate-pulse'
+                              : 'bg-black/40 hover:bg-white/10 text-gray-200 border-white/10'
+                          }`}
+                        >
+                          <div className="truncate">{s.name}</div>
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>

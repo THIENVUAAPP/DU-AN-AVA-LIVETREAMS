@@ -125,6 +125,7 @@ class GameVoiceEngine {
     this.volume = 0.9;
     this.speedRate = 1.0;
     this.pitch = 1.0;
+    this.isMuted = false;
     this.isSpeaking = false;
     this.onDuckAudio = null;
     this.onSpeechStateChange = null;
@@ -154,6 +155,7 @@ class GameVoiceEngine {
         if (parsed.volume !== undefined) this.volume = parsed.volume;
         if (parsed.speedRate !== undefined) this.speedRate = parsed.speedRate;
         if (parsed.pitch !== undefined) this.pitch = parsed.pitch;
+        if (parsed.isMuted !== undefined) this.isMuted = parsed.isMuted;
       }
     } catch (e) {
       console.warn(`[GameVoiceEngine:${this.gameType}] Load settings failed:`, e);
@@ -177,13 +179,34 @@ class GameVoiceEngine {
         keywordRules: this.keywordRules,
         volume: this.volume,
         speedRate: this.speedRate,
-        pitch: this.pitch
+        pitch: this.pitch,
+        isMuted: this.isMuted
       };
       localStorage.setItem(this.storageKey, JSON.stringify(data));
       window.dispatchEvent(new CustomEvent('game_voice_settings_updated', { detail: { gameType: this.gameType, settings: data } }));
     } catch (e) {
       console.warn(`[GameVoiceEngine:${this.gameType}] Save settings failed:`, e);
     }
+  }
+
+  setVolume(vol) {
+    this.volume = Math.max(0, Math.min(1, vol));
+    if (this.gameVoice) this.gameVoice.volume = this.volume;
+    if (this.assistantVoice) this.assistantVoice.volume = this.volume;
+    this.saveSettings();
+  }
+
+  setMuted(isMuted) {
+    this.isMuted = !!isMuted;
+    if (this.isMuted) {
+      this.cancelSpeech();
+    }
+    this.saveSettings();
+  }
+
+  toggleMuted() {
+    this.setMuted(!this.isMuted);
+    return !this.isMuted;
   }
 
   startPeriodicCommentary(isGameActive = true) {
@@ -239,6 +262,7 @@ class GameVoiceEngine {
   async speak(text, roleOrVoice = 'game', priority = false) {
     if (typeof window === 'undefined') return;
     if (!text || typeof text !== 'string') return;
+    if (this.isMuted || this.volume <= 0.001) return;
     if (this.isSpeaking && !priority) return;
 
     let activeVoice = null;

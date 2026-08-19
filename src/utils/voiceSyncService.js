@@ -308,6 +308,12 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
 
   stopVoiceAudio();
 
+  // Kiểm tra nếu kênh giọng này bị tắt hoặc âm lượng về 0
+  if (voice?.enabled === false || voice?.isMuted === true || (voice?.volume !== undefined && voice.volume <= 0.001)) {
+    if (onEnd) onEnd();
+    return true;
+  }
+
   const rawLang = voice?.lang || (
     voice?.id?.includes('_us_') || voice?.id?.includes('_en_') ? 'en-US' :
     voice?.id?.includes('_zh_') ? 'zh-CN' :
@@ -362,6 +368,7 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
   const textToSpeak = (sampleText || defaultSamples[shortLang] || defaultSamples.vi).trim();
   const apiKey = getElevenLabsApiKey();
   const voiceId = voice?.voiceId || '21m00Tcm4TlvDq8ikWAM';
+  const voiceVolume = voice?.volume !== undefined ? Math.max(0, Math.min(1, voice.volume)) : 1.0;
 
   // =========================================================================
   // TIER 1: ElevenLabs API (Khi cấu hình ElevenLabs và có API Key hợp lệ)
@@ -391,6 +398,7 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
         const blob = await res.blob();
         const audioUrl = URL.createObjectURL(blob);
         const audio = new Audio(audioUrl);
+        audio.volume = voiceVolume;
         activePreviewAudio = audio;
         return new Promise((resolve) => {
           let finished = false;

@@ -17,6 +17,7 @@ class BanDoAudioEngine {
     this.duckTimeout = null;
     this.isMuted = false;
     this.isSfxMuted = false;
+    this.isVoiceMuted = false;
     this.isBgmLoop = true;
     this.bgmTimerMode = '24/7';
     this.bgmTimerRemainingSec = 0;
@@ -81,6 +82,16 @@ class BanDoAudioEngine {
       if (savedTimer) this.bgmTimerMode = savedTimer;
       if (localStorage.getItem('bando_is_muted') === 'true') this.isMuted = true;
       if (localStorage.getItem('bando_is_sfx_muted') === 'true') this.isSfxMuted = true;
+      if (localStorage.getItem('bando_is_voice_muted') === 'true') this.isVoiceMuted = true;
+
+      const savedBgmVol = localStorage.getItem('bando_bgm_volume');
+      if (savedBgmVol !== null) this.bgmVolume = parseFloat(savedBgmVol) || 0.5;
+
+      const savedSfxVol = localStorage.getItem('bando_sfx_volume');
+      if (savedSfxVol !== null) this.sfxVolume = parseFloat(savedSfxVol) || 0.85;
+
+      const savedVoiceVol = localStorage.getItem('bando_voice_volume');
+      if (savedVoiceVol !== null) this.voiceVolume = parseFloat(savedVoiceVol) || 1.0;
     } catch (e) {
       console.warn('loadSavedAudioSettings warning:', e);
     }
@@ -94,7 +105,7 @@ class BanDoAudioEngine {
       this.ctx = new AudioContextClass();
 
       this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.value = 0.9;
+      this.masterGain.gain.value = this.isMuted ? 0 : 0.9;
       this.masterGain.connect(this.ctx.destination);
 
       this.sfxGain = this.ctx.createGain();
@@ -102,11 +113,11 @@ class BanDoAudioEngine {
       this.sfxGain.connect(this.masterGain);
 
       this.bgmGain = this.ctx.createGain();
-      this.bgmGain.gain.value = this.bgmVolume;
+      this.bgmGain.gain.value = this.bgmPlaying ? this.bgmVolume : 0;
       this.bgmGain.connect(this.masterGain);
 
       this.voiceGain = this.ctx.createGain();
-      this.voiceGain.gain.value = this.voiceVolume;
+      this.voiceGain.gain.value = this.isVoiceMuted ? 0 : this.voiceVolume;
       this.voiceGain.connect(this.masterGain);
     }
     if (this.ctx && this.ctx.state === 'suspended') {
@@ -136,6 +147,7 @@ class BanDoAudioEngine {
     try {
       localStorage.setItem('bando_is_muted', this.isMuted ? 'true' : 'false');
     } catch (e) {}
+    this.emitStatusUpdate();
   }
 
   setSfxMuted(isMuted) {
@@ -149,11 +161,28 @@ class BanDoAudioEngine {
     try {
       localStorage.setItem('bando_is_sfx_muted', this.isSfxMuted ? 'true' : 'false');
     } catch (e) {}
+    this.emitStatusUpdate();
   }
 
   toggleSfx() {
     this.setSfxMuted(!this.isSfxMuted);
     return !this.isSfxMuted;
+  }
+
+  setVoiceMuted(isMuted) {
+    this.isVoiceMuted = !!isMuted;
+    if (this.voiceGain && this.ctx) {
+      this.voiceGain.gain.setValueAtTime(this.isVoiceMuted ? 0 : this.voiceVolume, this.ctx.currentTime);
+    }
+    try {
+      localStorage.setItem('bando_is_voice_muted', this.isVoiceMuted ? 'true' : 'false');
+    } catch (e) {}
+    this.emitStatusUpdate();
+  }
+
+  toggleVoice() {
+    this.setVoiceMuted(!this.isVoiceMuted);
+    return !this.isVoiceMuted;
   }
 
   toggleBgm() {
@@ -208,21 +237,15 @@ class BanDoAudioEngine {
     if (this.customBgmAudio) {
       this.customBgmAudio.loop = this.isBgmLoop;
     }
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('bando-bgm-status', { 
-        detail: { 
-          playing: this.bgmPlaying, 
-          loop: this.isBgmLoop,
-          name: this.customBgmName,
-          currentTime: this.customBgmAudio?.currentTime || 0,
-          duration: this.customBgmAudio?.duration || 0
-        } 
-      }));
-    }
+    this.emitStatusUpdate();
   }
 
   playBgmOnLive() {
     this.unlock();
+    this.bgmPlaying = true;
+    if (this.bgmGain && this.ctx) {
+      this.bgmGain.gain.setValueAtTime(this.bgmVolume, this.ctx.currentTime);
+    }
     if (this.customBgmUrl && this.customBgmUrl.length > 10) {
       this.playCustomBgm();
       return;
@@ -233,39 +256,82 @@ class BanDoAudioEngine {
   pauseBgmOnLive() {
     this.pauseCustomBgm();
     this.stopSyntheticBgm();
+    if (this.bgmGain && this.ctx) {
+      this.bgmGain.gain.setValueAtTime(0, this.ctx.currentTime);
+    }
   }
 
   stopBgmOnLive() {
     this.stopCustomBgm();
     this.stopSyntheticBgm();
+    if (this.bgmGain && this.ctx) {
+      this.bgmGain.gain.setValueAtTime(0, this.ctx.currentTime);
+    }
   }
 
   setMasterVolume(val) {
     this.ensureContext();
-    if (this.masterGain) {
-      this.masterGain.gain.value = Math.max(0, Math.min(1, val));
+    if (this.masterGain && this.ctx) {
+      this.masterGain.gain.setValueAtTime(Math.max(0, Math.min(1, val)), this.ctx.currentTime);
     }
   }
 
   setBgmVolume(val) {
     this.bgmVolume = Math.max(0, Math.min(1, val));
-    if (this.bgmGain && this.ctx && !this.ducked) {
-      const t = this.ctx.currentTime;
-      this.bgmGain.gain.cancelScheduledValues(t);
-      this.bgmGain.gain.linearRampToValueAtTime(this.bgmVolume, t + 0.1);
+    try {
+      localStorage.setItem('bando_bgm_volume', String(this.bgmVolume));
+    } catch (e) {}
+    if (this.bgmGain && this.ctx) {
+      const targetGain = this.bgmPlaying ? (this.ducked ? this.bgmVolume * 0.2 : this.bgmVolume) : 0;
+      this.bgmGain.gain.setValueAtTime(targetGain, this.ctx.currentTime);
     }
     if (this.customBgmAudio) {
       this.customBgmAudio.volume = this.ducked ? this.bgmVolume * 0.25 : this.bgmVolume;
     }
+    this.emitStatusUpdate();
   }
 
   setSfxVolume(val) {
     this.sfxVolume = Math.max(0, Math.min(1, val));
-    if (this.sfxGain) {
-      this.sfxGain.gain.value = this.sfxVolume;
+    try {
+      localStorage.setItem('bando_sfx_volume', String(this.sfxVolume));
+    } catch (e) {}
+    if (this.sfxGain && this.ctx) {
+      this.sfxGain.gain.setValueAtTime(this.isSfxMuted ? 0 : this.sfxVolume, this.ctx.currentTime);
     }
     if (this.customSfxAudio) {
-      this.customSfxAudio.volume = this.sfxVolume;
+      this.customSfxAudio.volume = this.isSfxMuted ? 0 : this.sfxVolume;
+    }
+    this.emitStatusUpdate();
+  }
+
+  setVoiceVolume(val) {
+    this.voiceVolume = Math.max(0, Math.min(1, val));
+    try {
+      localStorage.setItem('bando_voice_volume', String(this.voiceVolume));
+    } catch (e) {}
+    if (this.voiceGain && this.ctx) {
+      this.voiceGain.gain.setValueAtTime(this.isVoiceMuted ? 0 : this.voiceVolume, this.ctx.currentTime);
+    }
+    this.emitStatusUpdate();
+  }
+
+  emitStatusUpdate() {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('bando-bgm-status', { 
+        detail: { 
+          playing: this.bgmPlaying, 
+          loop: this.isBgmLoop,
+          name: this.customBgmName || (this.bgmPlaying ? 'Hào Khí Đông A (Synth 24/7)' : 'Chưa phát nhạc'),
+          currentTime: this.customBgmAudio?.currentTime || 0,
+          duration: this.customBgmAudio?.duration || 0,
+          bgmVolume: this.bgmVolume,
+          sfxVolume: this.sfxVolume,
+          voiceVolume: this.voiceVolume,
+          isSfxMuted: this.isSfxMuted,
+          isVoiceMuted: this.isVoiceMuted
+        } 
+      }));
     }
   }
 
@@ -531,6 +597,13 @@ class BanDoAudioEngine {
   tone(freq, duration, opts = {}) {
     const ctx = this.ensureContext();
     if (!ctx || this.isMuted) return;
+
+    const isBgm = !!opts.isBgm;
+    // Nếu là BGM nhưng BGM đang tắt -> ngắt ngay lập tức
+    if (isBgm && !this.bgmPlaying) return;
+    // Nếu là SFX nhưng SFX đang tắt (Muted) -> ngắt ngay lập tức
+    if (!isBgm && (this.isSfxMuted || this.sfxVolume <= 0.001)) return;
+
     try {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -539,8 +612,7 @@ class BanDoAudioEngine {
 
       const start = ctx.currentTime + (opts.delay || 0);
       const attack = opts.attack || 0.01;
-      const isBgm = !!opts.isBgm;
-      const g = (opts.gain !== undefined ? opts.gain : 0.4) * (isBgm ? this.bgmVolume : this.sfxVolume);
+      const g = (opts.gain !== undefined ? opts.gain : 0.4);
 
       gain.gain.setValueAtTime(0.0001, start);
       gain.gain.linearRampToValueAtTime(g, start + attack);
@@ -556,7 +628,7 @@ class BanDoAudioEngine {
 
   noise(duration, opts = {}) {
     const ctx = this.ensureContext();
-    if (!ctx || this.isMuted || this.isSfxMuted) return;
+    if (!ctx || this.isMuted || this.isSfxMuted || this.sfxVolume <= 0.001) return;
     try {
       const bufferSize = ctx.sampleRate * duration;
       const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -574,7 +646,7 @@ class BanDoAudioEngine {
 
       const gain = ctx.createGain();
       const start = ctx.currentTime + (opts.delay || 0);
-      const g = (opts.gain !== undefined ? opts.gain : 0.5) * this.sfxVolume;
+      const g = (opts.gain !== undefined ? opts.gain : 0.5);
 
       gain.gain.setValueAtTime(g, start);
       gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);

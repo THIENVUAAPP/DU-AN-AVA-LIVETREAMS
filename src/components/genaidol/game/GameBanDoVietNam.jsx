@@ -268,10 +268,13 @@ export default function GameBanDoVietNam({
   const [isAuto247, setIsAuto247] = useState(() => bandoEngine.isAuto247Running);
   const [isBgmLoop, setIsBgmLoop] = useState(() => bandoAudio.isBgmLoop);
   const [isBgmPlaying, setIsBgmPlaying] = useState(() => bandoAudio.bgmPlaying);
+  const [isSfxMuted, setIsSfxMuted] = useState(() => bandoAudio.isSfxMuted);
+  const [isVoiceMuted, setIsVoiceMuted] = useState(() => bandoAudio.isVoiceMuted);
   const [bgmTimerMode, setBgmTimerMode] = useState(() => bandoAudio.bgmTimerMode || '24/7');
   const [showAudioModal, setShowAudioModal] = useState(false);
   const [bgmVolume, setBgmVolumeState] = useState(() => bandoAudio.bgmVolume);
   const [sfxVolume, setSfxVolumeState] = useState(() => bandoAudio.sfxVolume);
+  const [voiceVolume, setVoiceVolumeState] = useState(() => bandoAudio.voiceVolume ?? 1.0);
   const [isLiveCleanMode, setIsLiveCleanMode] = useState(isPopout);
   const [internalAspectRatio, setInternalAspectRatio] = useState(() => {
     try {
@@ -770,7 +773,14 @@ export default function GameBanDoVietNam({
       bandoAudio.unlock();
     };
     const handleBgmStatus = (e) => {
-      setIsBgmPlaying(e.detail?.playing ?? bandoAudio.bgmPlaying);
+      if (e.detail) {
+        if (e.detail.playing !== undefined) setIsBgmPlaying(e.detail.playing);
+        if (e.detail.isSfxMuted !== undefined) setIsSfxMuted(e.detail.isSfxMuted);
+        if (e.detail.isVoiceMuted !== undefined) setIsVoiceMuted(e.detail.isVoiceMuted);
+        if (e.detail.bgmVolume !== undefined) setBgmVolumeState(e.detail.bgmVolume);
+        if (e.detail.sfxVolume !== undefined) setSfxVolumeState(e.detail.sfxVolume);
+        if (e.detail.voiceVolume !== undefined) setVoiceVolumeState(e.detail.voiceVolume);
+      }
     };
 
     window.addEventListener('pointerdown', handleFirstGesture, { once: true });
@@ -2562,38 +2572,51 @@ export default function GameBanDoVietNam({
             </div>
 
             <div className="space-y-3.5 max-h-[70vh] overflow-y-auto custom-scrollbar pr-1">
-              {/* 1. Toggle BGM & SFX Dual Switches */}
-              <div className="grid grid-cols-2 gap-2">
+              {/* 1. Toggle BGM, SFX & Voice AI 3-Way Switches */}
+              <div className="grid grid-cols-3 gap-2">
                 <button
                   onClick={() => {
-                    const isMuted = bandoAudio.isMuted;
-                    bandoAudio.setMuted(!isMuted);
-                    setIsBgmPlaying(!bandoAudio.isMuted && bandoAudio.bgmPlaying);
+                    const next = bandoAudio.toggleBgm();
+                    setIsBgmPlaying(next);
                   }}
-                  className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all ${
-                    !bandoAudio.isMuted
-                      ? 'bg-purple-950/60 border-purple-400 text-purple-200 shadow-md ring-1 ring-purple-400'
-                      : 'bg-white/5 border-white/10 text-gray-500'
+                  className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all ${
+                    isBgmPlaying
+                      ? 'bg-purple-950/70 border-purple-400 text-purple-200 shadow-md ring-1 ring-purple-400'
+                      : 'bg-white/5 border-white/10 text-gray-500 hover:bg-white/10'
                   }`}
                 >
-                  <Music size={16} className={!bandoAudio.isMuted ? 'text-purple-300 animate-pulse' : 'text-gray-500'} />
-                  <span className="text-[11px] font-black">{!bandoAudio.isMuted ? '🎵 NHẠC NỀN: BẬT' : '🎵 NHẠC NỀN: TẮT'}</span>
+                  <Music size={15} className={isBgmPlaying ? 'text-purple-300 animate-pulse' : 'text-gray-500'} />
+                  <span className="text-[10px] font-black">{isBgmPlaying ? '🎵 BGM: BẬT' : '🎵 BGM: TẮT'}</span>
                 </button>
 
                 <button
                   onClick={() => {
-                    bandoAudio.toggleSfx();
-                    // force re-render
-                    setSfxVolumeState(bandoAudio.sfxVolume);
+                    const next = bandoAudio.toggleSfx();
+                    setIsSfxMuted(!next);
                   }}
-                  className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all ${
-                    !bandoAudio.isSfxMuted
-                      ? 'bg-cyan-950/60 border-cyan-400 text-cyan-200 shadow-md ring-1 ring-cyan-400'
-                      : 'bg-white/5 border-white/10 text-gray-500'
+                  className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all ${
+                    !isSfxMuted
+                      ? 'bg-amber-950/70 border-amber-400 text-amber-200 shadow-md ring-1 ring-amber-400'
+                      : 'bg-white/5 border-white/10 text-gray-500 hover:bg-white/10'
                   }`}
                 >
-                  <Volume2 size={16} className={!bandoAudio.isSfxMuted ? 'text-cyan-300' : 'text-gray-500'} />
-                  <span className="text-[11px] font-black">{!bandoAudio.isSfxMuted ? '🔊 SFX HIỆU ỨNG: BẬT' : '🔊 SFX: TẮT'}</span>
+                  <Volume2 size={15} className={!isSfxMuted ? 'text-amber-300' : 'text-gray-500'} />
+                  <span className="text-[10px] font-black">{!isSfxMuted ? '🔊 SFX: BẬT' : '🔊 SFX: TẮT'}</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    const next = bandoAudio.toggleVoice();
+                    setIsVoiceMuted(!next);
+                  }}
+                  className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all ${
+                    !isVoiceMuted
+                      ? 'bg-cyan-950/70 border-cyan-400 text-cyan-200 shadow-md ring-1 ring-cyan-400'
+                      : 'bg-white/5 border-white/10 text-gray-500 hover:bg-white/10'
+                  }`}
+                >
+                  <Mic size={15} className={!isVoiceMuted ? 'text-cyan-300' : 'text-gray-500'} />
+                  <span className="text-[10px] font-black">{!isVoiceMuted ? '🎙️ VOICE: BẬT' : '🎙️ VOICE: TẮT'}</span>
                 </button>
               </div>
 
@@ -2626,7 +2649,7 @@ export default function GameBanDoVietNam({
               </div>
 
               {/* 3. BGM Volume Slider */}
-              <div className="p-3 bg-black/40 rounded-xl border border-white/10 space-y-1.5">
+              <div className="p-3 bg-black/40 rounded-xl border border-purple-500/20 space-y-1.5">
                 <div className="flex justify-between text-xs font-bold text-gray-300">
                   <span className="flex items-center gap-1"><Music size={12} className="text-purple-400" /> Âm lượng Nhạc Nền (BGM):</span>
                   <span className="font-mono text-purple-300 font-black">{Math.round(bgmVolume * 100)}%</span>
@@ -2647,10 +2670,10 @@ export default function GameBanDoVietNam({
               </div>
 
               {/* 4. SFX Volume Slider */}
-              <div className="p-3 bg-black/40 rounded-xl border border-white/10 space-y-1.5">
+              <div className="p-3 bg-black/40 rounded-xl border border-amber-500/20 space-y-1.5">
                 <div className="flex justify-between text-xs font-bold text-gray-300">
-                  <span className="flex items-center gap-1"><Volume2 size={12} className="text-cyan-400" /> Âm lượng Hiệu Ứng Game (SFX):</span>
-                  <span className="font-mono text-cyan-300 font-black">{Math.round(sfxVolume * 100)}%</span>
+                  <span className="flex items-center gap-1"><Volume2 size={12} className="text-amber-400" /> Âm lượng Hiệu Ứng Game (SFX):</span>
+                  <span className="font-mono text-amber-300 font-black">{Math.round(sfxVolume * 100)}%</span>
                 </div>
                 <input
                   type="range"
@@ -2662,6 +2685,27 @@ export default function GameBanDoVietNam({
                     const val = parseFloat(e.target.value);
                     setSfxVolumeState(val);
                     bandoAudio.setSfxVolume(val);
+                  }}
+                  className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                />
+              </div>
+
+              {/* 5. Voice AI Volume Slider */}
+              <div className="p-3 bg-black/40 rounded-xl border border-cyan-500/20 space-y-1.5">
+                <div className="flex justify-between text-xs font-bold text-gray-300">
+                  <span className="flex items-center gap-1"><Mic size={12} className="text-cyan-400" /> Âm lượng Giọng Đọc AI (Voice):</span>
+                  <span className="font-mono text-cyan-300 font-black">{Math.round(voiceVolume * 100)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={voiceVolume}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    setVoiceVolumeState(val);
+                    bandoAudio.setVoiceVolume(val);
                   }}
                   className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-cyan-500"
                 />

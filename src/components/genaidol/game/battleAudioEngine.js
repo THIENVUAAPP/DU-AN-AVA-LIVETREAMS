@@ -7,9 +7,26 @@ let isBgmPlaying = false;
 let bgmLoopTimer = null;
 let isDucked = false;
 let currentBgmVolume = 0.5;
-let currentSfxVolume = 0.7;
+let currentSfxVolume = 0.85;
+let currentVoiceVolume = 1.0;
+let isSfxMuted = false;
+let isVoiceMuted = false;
 let currentBgmTrack = 'epic_synth'; // 'epic_synth' | 'war_horns' | 'edm_live' | 'custom_upload'
 let customBgmUrl = null;
+
+// Khôi phục cài đặt lưu trữ từ trước nếu có
+if (typeof window !== 'undefined') {
+  try {
+    const savedBgmVol = localStorage.getItem('battle_bgm_volume');
+    if (savedBgmVol !== null) currentBgmVolume = parseFloat(savedBgmVol) || 0.5;
+    const savedSfxVol = localStorage.getItem('battle_sfx_volume');
+    if (savedSfxVol !== null) currentSfxVolume = parseFloat(savedSfxVol) || 0.85;
+    const savedVoiceVol = localStorage.getItem('battle_voice_volume');
+    if (savedVoiceVol !== null) currentVoiceVolume = parseFloat(savedVoiceVol) || 1.0;
+    if (localStorage.getItem('battle_is_sfx_muted') === 'true') isSfxMuted = true;
+    if (localStorage.getItem('battle_is_voice_muted') === 'true') isVoiceMuted = true;
+  } catch (e) {}
+}
 
 function getAudioContext() {
   if (typeof window === 'undefined') return null;
@@ -27,6 +44,7 @@ function getAudioContext() {
 
 // Helper to create a warm, smooth musical tone (sine + harmonic overtone)
 function playHarmonicTone(ctx, freq, startTime, duration, gainValue = 0.3, master) {
+  if (!ctx || isSfxMuted) return;
   // Fundamental
   const osc1 = ctx.createOscillator();
   const gain1 = ctx.createGain();
@@ -58,6 +76,7 @@ function playHarmonicTone(ctx, freq, startTime, duration, gainValue = 0.3, maste
 
 // Synthesized Epic War BGM Loop Generator (100% offline, crystal clear harmonic chords)
 function playSynthBgmPattern(type, volume) {
+  if (!isBgmPlaying) return;
   const ctx = getAudioContext();
   if (!ctx) return;
   const now = ctx.currentTime;
@@ -76,6 +95,7 @@ function playSynthBgmPattern(type, volume) {
     ];
     chords.forEach((chord, i) => {
       chord.forEach(freq => {
+        if (!isBgmPlaying) return;
         playHarmonicTone(ctx, freq, now + i * 1.5, 1.4, 0.28, master);
       });
     });
@@ -83,6 +103,7 @@ function playSynthBgmPattern(type, volume) {
     // Upbeat EDM Live Pulse Bass: A Minor energetic rhythm
     const bassNotes = [110, 110, 130.81, 146.83, 110, 110, 164.81, 146.83];
     bassNotes.forEach((freq, idx) => {
+      if (!isBgmPlaying) return;
       playHarmonicTone(ctx, freq, now + idx * 0.4, 0.35, 0.35, master);
       if (idx % 2 === 0) {
         playHarmonicTone(ctx, freq * 4, now + idx * 0.4, 0.15, 0.15, master);
@@ -98,6 +119,7 @@ function playSynthBgmPattern(type, volume) {
     ];
     notes.forEach((chord, i) => {
       chord.forEach(freq => {
+        if (!isBgmPlaying) return;
         playHarmonicTone(ctx, freq, now + i * 1.25, 1.2, 0.3, master);
       });
     });
@@ -106,12 +128,15 @@ function playSynthBgmPattern(type, volume) {
 
 export const battleAudio = {
   // SFX 1. Tham chiến (Kèn Chuông Xung Trận)
-  playJoin(volume = 0.7) {
+  playJoin(volume = null) {
+    if (isSfxMuted) return;
+    const vol = volume !== null ? volume : currentSfxVolume;
+    if (vol <= 0.001) return;
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(volume * 0.4, now);
+    masterGain.gain.setValueAtTime(vol * 0.4, now);
     masterGain.connect(ctx.destination);
 
     const notes = [523.25, 659.25, 783.99, 1046.50];
@@ -121,12 +146,14 @@ export const battleAudio = {
   },
 
   // SFX 2. Va chạm Gươm Đao / Đòn Đánh
-  playHit(volume = 0.7) {
+  playHit(volume = null) {
+    if (isSfxMuted) return;
+    const vol = volume !== null ? volume : currentSfxVolume;
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(volume * 0.45, now);
+    masterGain.gain.setValueAtTime(vol * 0.45, now);
     masterGain.connect(ctx.destination);
 
     const osc = ctx.createOscillator();
@@ -147,12 +174,14 @@ export const battleAudio = {
   },
 
   // SFX 3. Bão Sét / Kỹ Năng AoE
-  playAoe(volume = 0.7) {
+  playAoe(volume = null) {
+    if (isSfxMuted) return;
+    const vol = volume !== null ? volume : currentSfxVolume;
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(volume * 0.5, now);
+    masterGain.gain.setValueAtTime(vol * 0.5, now);
     masterGain.connect(ctx.destination);
 
     const notes = [440, 554.37, 659.25, 880, 1108.73];
@@ -162,12 +191,14 @@ export const battleAudio = {
   },
 
   // SFX 4. Trùm / Xuất hiện Chiến Tướng
-  playBoss(volume = 0.7) {
+  playBoss(volume = null) {
+    if (isSfxMuted) return;
+    const vol = volume !== null ? volume : currentSfxVolume;
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(volume * 0.6, now);
+    masterGain.gain.setValueAtTime(vol * 0.6, now);
     masterGain.connect(ctx.destination);
 
     const notes = [130.81, 164.81, 196.00, 261.63];
@@ -177,12 +208,14 @@ export const battleAudio = {
   },
 
   // SFX 5. Chiến thắng Khải Hoàn
-  playVictory(volume = 0.7) {
+  playVictory(volume = null) {
+    if (isSfxMuted) return;
+    const vol = volume !== null ? volume : currentSfxVolume;
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(volume * 0.5, now);
+    masterGain.gain.setValueAtTime(vol * 0.5, now);
     masterGain.connect(ctx.destination);
 
     const victoryNotes = [
@@ -199,12 +232,14 @@ export const battleAudio = {
   },
 
   // SFX 6. Vũ Điệu Âm Nhạc
-  playDanceBeat(volume = 0.7) {
+  playDanceBeat(volume = null) {
+    if (isSfxMuted) return;
+    const vol = volume !== null ? volume : currentSfxVolume;
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(volume * 0.4, now);
+    masterGain.gain.setValueAtTime(vol * 0.4, now);
     masterGain.connect(ctx.destination);
 
     const danceNotes = [440, 523.25, 659.25, 523.25, 783.99];
@@ -214,12 +249,14 @@ export const battleAudio = {
   },
 
   // SFX 7. VẠN KIẾM QUY TÔNG
-  playVanKiemQuyTong(volume = 0.7) {
+  playVanKiemQuyTong(volume = null) {
+    if (isSfxMuted) return;
+    const vol = volume !== null ? volume : currentSfxVolume;
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(volume * 0.55, now);
+    masterGain.gain.setValueAtTime(vol * 0.55, now);
     masterGain.connect(ctx.destination);
 
     const swordPitches = [880, 1108.73, 1318.51, 1567.98, 1760, 2093, 2349.32];
@@ -242,6 +279,7 @@ export const battleAudio = {
     });
 
     setTimeout(() => {
+      if (isSfxMuted) return;
       const strikeCtx = getAudioContext();
       if (!strikeCtx) return;
       const t = strikeCtx.currentTime;
@@ -251,12 +289,14 @@ export const battleAudio = {
   },
 
   // SFX 8. GIÁNG LONG THẬP BÁT CHƯỞNG
-  playGiangLongChuong(volume = 0.7) {
+  playGiangLongChuong(volume = null) {
+    if (isSfxMuted) return;
+    const vol = volume !== null ? volume : currentSfxVolume;
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(volume * 0.65, now);
+    masterGain.gain.setValueAtTime(vol * 0.65, now);
     masterGain.connect(ctx.destination);
 
     const roarTones = [110, 164.81, 220, 329.63, 440];
@@ -283,12 +323,14 @@ export const battleAudio = {
   },
 
   // SFX 9. THÁI CỰC KIẾM TRẬN
-  playThaiCucKiemTran(volume = 0.7) {
+  playThaiCucKiemTran(volume = null) {
+    if (isSfxMuted) return;
+    const vol = volume !== null ? volume : currentSfxVolume;
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(volume * 0.55, now);
+    masterGain.gain.setValueAtTime(vol * 0.55, now);
     masterGain.connect(ctx.destination);
 
     const zenPitches = [659.25, 880, 1046.50, 1318.51];
@@ -298,12 +340,14 @@ export const battleAudio = {
   },
 
   // SFX 10. Nâng cấp Trang bị & Thăng Cấp Thần Binh
-  playLevelUp(volume = 0.7) {
+  playLevelUp(volume = null) {
+    if (isSfxMuted) return;
+    const vol = volume !== null ? volume : currentSfxVolume;
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(volume * 0.6, now);
+    masterGain.gain.setValueAtTime(vol * 0.6, now);
     masterGain.connect(ctx.destination);
 
     const arpeggio = [523.25, 659.25, 783.99, 987.77, 1046.50, 1318.51];
@@ -313,15 +357,16 @@ export const battleAudio = {
   },
 
   // SFX 11. LỤC MẠCH THẦN KIẾM (Laser Kiếm Khí Vô Hình Xuyên Phá)
-  playLucMachThanKiem(volume = 0.7) {
+  playLucMachThanKiem(volume = null) {
+    if (isSfxMuted) return;
+    const vol = volume !== null ? volume : currentSfxVolume;
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(volume * 0.65, now);
+    masterGain.gain.setValueAtTime(vol * 0.65, now);
     masterGain.connect(ctx.destination);
 
-    // 6 laser beam pulses corresponding to 6 meridian swords
     const beamPitches = [880, 1174.66, 1318.51, 1567.98, 1760, 2093.00];
     beamPitches.forEach((freq, idx) => {
       const osc = ctx.createOscillator();
@@ -342,15 +387,16 @@ export const battleAudio = {
   },
 
   // SFX 12. ĐỘC CÔ CỬU KIẾM (Kiếm Trận Bão Lốc Xoáy)
-  playDocCoCuuKiem(volume = 0.7) {
+  playDocCoCuuKiem(volume = null) {
+    if (isSfxMuted) return;
+    const vol = volume !== null ? volume : currentSfxVolume;
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(volume * 0.65, now);
+    masterGain.gain.setValueAtTime(vol * 0.65, now);
     masterGain.connect(ctx.destination);
 
-    // Whirlwind ascending sword arpeggio
     const whirlTones = [329.63, 440, 523.25, 659.25, 880, 1046.50, 1318.51, 1760, 2093.00];
     whirlTones.forEach((freq, idx) => {
       playHarmonicTone(ctx, freq, now + idx * 0.04, 0.35, 0.4, masterGain);
@@ -358,15 +404,16 @@ export const battleAudio = {
   },
 
   // SFX 13. NHƯ LAI THẦN CHƯỞNG (Phật Quang Thái Dương Hoàng Kim)
-  playNhuLaiThanChuong(volume = 0.7) {
+  playNhuLaiThanChuong(volume = null) {
+    if (isSfxMuted) return;
+    const vol = volume !== null ? volume : currentSfxVolume;
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(volume * 0.8, now);
+    masterGain.gain.setValueAtTime(vol * 0.8, now);
     masterGain.connect(ctx.destination);
 
-    // Heavy resonant Tibetan bell strike + deep booming impact
     const bellFrequencies = [110, 220, 440, 880, 1320];
     bellFrequencies.forEach((freq) => {
       const osc = ctx.createOscillator();
@@ -384,12 +431,14 @@ export const battleAudio = {
   },
 
   // SFX 14. THIÊN NGOẠI PHI TIÊN (Băng Vũ Kiếm Thần Phi Tiên)
-  playThienNgoaiPhiTien(volume = 0.7) {
+  playThienNgoaiPhiTien(volume = null) {
+    if (isSfxMuted) return;
+    const vol = volume !== null ? volume : currentSfxVolume;
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(volume * 0.65, now);
+    masterGain.gain.setValueAtTime(vol * 0.65, now);
     masterGain.connect(ctx.destination);
 
     const celestialNotes = [1046.50, 1318.51, 1567.98, 2093.00, 2637.02];
@@ -399,12 +448,14 @@ export const battleAudio = {
   },
 
   // SFX 15. KIM CANG BẤT HOẠI (Thần Chuông Vàng Hoàng Kim Phản Đòn)
-  playKimCangBatHoai(volume = 0.7) {
+  playKimCangBatHoai(volume = null) {
+    if (isSfxMuted) return;
+    const vol = volume !== null ? volume : currentSfxVolume;
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(volume * 0.7, now);
+    masterGain.gain.setValueAtTime(vol * 0.7, now);
     masterGain.connect(ctx.destination);
 
     const bellNotes = [523.25, 659.25, 783.99, 1046.50];
@@ -472,8 +523,64 @@ export const battleAudio = {
 
   setBgmVolume(volume) {
     currentBgmVolume = Math.max(0, Math.min(1, volume));
+    try {
+      localStorage.setItem('battle_bgm_volume', String(currentBgmVolume));
+    } catch (e) {}
     if (bgmAudioElement) {
       bgmAudioElement.volume = isDucked ? currentBgmVolume * 0.3 : currentBgmVolume;
+    }
+    this.emitStatus();
+  },
+
+  setSfxVolume(volume) {
+    currentSfxVolume = Math.max(0, Math.min(1, volume));
+    try {
+      localStorage.setItem('battle_sfx_volume', String(currentSfxVolume));
+    } catch (e) {}
+    this.emitStatus();
+  },
+
+  setVoiceVolume(volume) {
+    currentVoiceVolume = Math.max(0, Math.min(1, volume));
+    try {
+      localStorage.setItem('battle_voice_volume', String(currentVoiceVolume));
+    } catch (e) {}
+    this.emitStatus();
+  },
+
+  setSfxMuted(muted) {
+    isSfxMuted = !!muted;
+    try {
+      localStorage.setItem('battle_is_sfx_muted', isSfxMuted ? 'true' : 'false');
+    } catch (e) {}
+    this.emitStatus();
+  },
+
+  toggleSfx() {
+    this.setSfxMuted(!isSfxMuted);
+    return !isSfxMuted;
+  },
+
+  setVoiceMuted(muted) {
+    isVoiceMuted = !!muted;
+    try {
+      localStorage.setItem('battle_is_voice_muted', isVoiceMuted ? 'true' : 'false');
+    } catch (e) {}
+    this.emitStatus();
+  },
+
+  toggleVoice() {
+    this.setVoiceMuted(!isVoiceMuted);
+    return !isVoiceMuted;
+  },
+
+  toggleBgm() {
+    if (isBgmPlaying) {
+      this.stopBgm();
+      return false;
+    } else {
+      this.startBgm(currentBgmTrack, currentBgmVolume, customBgmUrl);
+      return true;
     }
   },
 
@@ -490,5 +597,41 @@ export const battleAudio = {
 
   isBgmActive() {
     return isBgmPlaying;
+  },
+
+  isSfxMutedState() {
+    return isSfxMuted;
+  },
+
+  isVoiceMutedState() {
+    return isVoiceMuted;
+  },
+
+  getBgmVolume() {
+    return currentBgmVolume;
+  },
+
+  getSfxVolume() {
+    return currentSfxVolume;
+  },
+
+  getVoiceVolume() {
+    return currentVoiceVolume;
+  },
+
+  emitStatus() {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('battle-audio-status', {
+        detail: {
+          isBgmPlaying,
+          isSfxMuted,
+          isVoiceMuted,
+          bgmVolume: currentBgmVolume,
+          sfxVolume: currentSfxVolume,
+          voiceVolume: currentVoiceVolume,
+          track: currentBgmTrack
+        }
+      }));
+    }
   }
 };
