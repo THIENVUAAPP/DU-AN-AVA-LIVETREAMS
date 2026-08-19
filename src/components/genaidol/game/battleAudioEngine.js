@@ -23,8 +23,8 @@ if (typeof window !== 'undefined') {
     if (savedSfxVol !== null) currentSfxVolume = parseFloat(savedSfxVol) || 0.85;
     const savedVoiceVol = localStorage.getItem('battle_voice_volume');
     if (savedVoiceVol !== null) currentVoiceVolume = parseFloat(savedVoiceVol) || 1.0;
-    if (localStorage.getItem('battle_is_sfx_muted') === 'true') isSfxMuted = true;
-    if (localStorage.getItem('battle_is_voice_muted') === 'true') isVoiceMuted = true;
+    isSfxMuted = false;
+    isVoiceMuted = false;
   } catch (e) {}
 }
 

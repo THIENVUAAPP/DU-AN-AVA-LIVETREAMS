@@ -427,23 +427,51 @@ export default function DesktopAppUI() {
   }
 
 
+  // Trạng thái đã mở khóa âm thanh & Voice AI
+  const [isAudioUnlocked, setIsAudioUnlocked] = useState(false);
+
+  const unlockAllAudio = useCallback(async () => {
+    try {
+      setIsAudioUnlocked(true);
+      bandoAudio.unlock();
+      if (bandoAudio.ctx && bandoAudio.ctx.state === 'suspended') {
+        await bandoAudio.ctx.resume();
+      }
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.resume();
+      }
+      if (isMasterLiveRunning) {
+        bandoAudio.playBgmOnLive();
+      }
+    } catch (e) {}
+  }, [isMasterLiveRunning]);
+
+  const handleAudioTest = useCallback(async () => {
+    await unlockAllAudio();
+    bandoAudio.playWarHorn({ force: true });
+    setTimeout(() => {
+      mapVoiceEngine.speak('Hệ thống âm thanh nhạc nền, hiệu ứng và Voice AI đã kích hoạt sẵn sàng trên livestream!', 'game', true);
+    }, 400);
+    showToast('🔊 Đang phát kiểm tra âm thanh & Giọng đọc AI!', 'success');
+  }, [unlockAllAudio]);
+
   // Tự động mở khóa âm thanh Web Audio & Speech khi Streamer tương tác hoặc dùng Window Capture
   useEffect(() => {
     const handleGesture = () => {
-      bandoAudio.unlock();
-      if (typeof window !== 'undefined' && window.speechSynthesis && window.speechSynthesis.paused) {
-        window.speechSynthesis.resume();
-      }
+      unlockAllAudio();
     };
     window.addEventListener('pointerdown', handleGesture);
     window.addEventListener('keydown', handleGesture);
     window.addEventListener('focus', handleGesture);
+    window.addEventListener('click', handleGesture);
     return () => {
       window.removeEventListener('pointerdown', handleGesture);
       window.removeEventListener('keydown', handleGesture);
       window.removeEventListener('focus', handleGesture);
+      window.removeEventListener('click', handleGesture);
     };
-  }, []);
+  }, [unlockAllAudio]);
 
   // ⚡ SOCKET.IO REALTIME KẾT NỐI VỚI BACKEND & TIKTOK LIVE CONNECTOR
   const socketRef = useRef(null);
@@ -1155,6 +1183,19 @@ export default function DesktopAppUI() {
   return (
     <div className={`w-full h-screen flex flex-col font-sans transition-colors duration-200 ${isDarkMode ? 'bg-[#0f0f13] text-white' : 'bg-slate-100 text-slate-900'}`}>
       
+      {/* 🔊 BANNER BẬT ÂM THANH LIVESTREAM NẾU CHƯA UNLOCK */}
+      {!isAudioUnlocked && (
+        <div 
+          onClick={unlockAllAudio}
+          className="fixed top-2 left-1/2 -translate-x-1/2 z-[9999] bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 text-black px-4 py-1.5 rounded-full font-black text-xs shadow-2xl shadow-yellow-500/50 flex items-center gap-2 cursor-pointer hover:scale-105 transition-all animate-bounce border-2 border-white ring-4 ring-yellow-400/40 select-none"
+          title="Bấm vào đây để mở khóa toàn bộ âm thanh Web Audio & Voice AI"
+        >
+          <Volume2 size={15} className="text-black animate-pulse" />
+          <span>🔊 NHẤP VÀO ĐÂY ĐỂ BẬT TOÀN BỘ ÂM THANH & VOICE AI LIVESTREAM</span>
+          <Sparkles size={13} className="text-black" />
+        </div>
+      )}
+
       {/* 1. Fake Window Title Bar (Thu nhỏ ~30% đồng đều tất cả các ô nút bấm) */}
       <div className={`flex items-center justify-between px-2 py-1 ${isDarkMode ? 'bg-[#1c1c23] border-gray-800 text-white' : 'bg-slate-200 border-slate-300 text-slate-800'} select-none z-30 border-b`}>
         <div className="flex items-center gap-1.5">
@@ -1574,6 +1615,16 @@ export default function DesktopAppUI() {
           >
             <Zap size={13} className={isGlobalDemoRunning ? 'text-yellow-300 animate-bounce' : 'text-yellow-300'} />
             <span>{isGlobalDemoRunning ? t('stopDemo', currentLang) : t('runDemo', currentLang)}</span>
+          </button>
+
+          {/* Nút Test Âm Thanh & Voice AI */}
+          <button 
+            onClick={handleAudioTest}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black transition-all border shadow-md active:scale-95 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white border-yellow-300/50 shadow-yellow-500/20"
+            title="Phát thử âm thanh tù và chiến trận & Giọng nói AI để kiểm tra loa / TikTok LIVE Studio"
+          >
+            <Volume2 size={13} className="text-yellow-200" />
+            <span className="whitespace-nowrap">Test Âm Thanh & AI</span>
           </button>
 
           {/* Menu Theo dõi */}
