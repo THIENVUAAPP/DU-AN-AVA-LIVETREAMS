@@ -3,7 +3,8 @@ import {
   Mic, Volume2, Sparkles, Play, Square, Plus, Trash2, Edit3, Check, 
   Clock, MessageSquare, Zap, Radio, Shuffle, ListOrdered, Bot, RefreshCw,
   Send, HelpCircle, ShieldCheck, UserCheck, Flame, Globe, Sliders, VolumeX,
-  Upload, FileText, ArrowUp, ArrowDown, Copy, CheckCircle2, Download
+  Upload, FileText, ArrowUp, ArrowDown, Copy, CheckCircle2, Download,
+  Save, Wand2, Volume1
 } from 'lucide-react';
 import { 
   ALL_SYSTEM_VOICES, previewVoiceAudio, stopVoiceAudio 
@@ -50,6 +51,8 @@ export default function GameVoiceConfigPanel({
   const [voiceFilter, setVoiceFilter] = useState('all'); // 'all' | 'pro' | 'free' | 'female' | 'male'
   const [countryFilter, setCountryFilter] = useState('all');
   const [previewingVoiceId, setPreviewingVoiceId] = useState(null);
+  const [playingRuleId, setPlayingRuleId] = useState(null);
+  const [syncAllVoiceChoice, setSyncAllVoiceChoice] = useState('assistant');
   
   // Form & Editing states for Prompts
   const [newPromptText, setNewPromptText] = useState('');
@@ -90,13 +93,118 @@ export default function GameVoiceConfigPanel({
 
   const showToast = (msg) => {
     setSaveToast(msg);
-    setTimeout(() => setSaveToast(''), 3000);
+    setTimeout(() => setSaveToast(''), 3500);
   };
 
-  // Sync to engine whenever states change
+  // Sync to engine whenever states change and save to localStorage
   const syncToEngine = (partial = {}) => {
     Object.assign(engine, partial);
     engine.saveSettings();
+    try {
+      if (partial.keywordRules) {
+        localStorage.setItem('AVALIVE_KEYWORD_RULES_SHARED', JSON.stringify(partial.keywordRules));
+      }
+    } catch (e) {}
+  };
+
+  // Manual permanent save across all tabs
+  const handleSaveAllConfigPermanently = () => {
+    const fullData = {
+      gameVoice,
+      assistantVoice,
+      prompts,
+      keywordRules,
+      isAutoEnabled,
+      isAutoLoop,
+      intervalSeconds,
+      playbackOrder,
+      isKeywordAutoReplyEnabled,
+      useGeminiAI,
+      responseDelaySec,
+      volume,
+      speedRate,
+      pitch
+    };
+    syncToEngine(fullData);
+    try {
+      localStorage.setItem(`GAME_VOICE_CONFIG_${(engine.gameType || gameType).toUpperCase()}`, JSON.stringify(fullData));
+      localStorage.setItem('AVALIVE_KEYWORD_RULES_SHARED', JSON.stringify(keywordRules));
+      window.dispatchEvent(new CustomEvent('game_voice_settings_updated', {
+        detail: { gameType: engine.gameType || gameType, settings: fullData }
+      }));
+    } catch (e) {
+      console.warn('Permanent save error:', e);
+    }
+    showToast(`💾 ĐÃ LƯU TOÀN BỘ CẤU HÌNH VĨNH VIỄN! (${keywordRules.length} quy tắc & toàn bộ giọng đọc đã lưu an toàn vào máy)`);
+  };
+
+  // Bulk Apply 1 Voice to ALL Rules in 1 Click
+  const handleSyncVoiceToAllRules = (targetChoice) => {
+    if (!keywordRules || keywordRules.length === 0) {
+      showToast('⚠️ Chưa có quy tắc nào trong danh sách để đồng bộ giọng!');
+      return;
+    }
+    const isSpecial = targetChoice === 'assistant' || targetChoice === 'game';
+    const updated = keywordRules.map(r => ({
+      ...r,
+      role: isSpecial ? targetChoice : targetChoice,
+      voiceId: isSpecial ? undefined : targetChoice
+    }));
+    setKeywordRules(updated);
+    syncToEngine({ keywordRules: updated });
+    try {
+      localStorage.setItem(`GAME_VOICE_CONFIG_${(engine.gameType || gameType).toUpperCase()}`, JSON.stringify({
+        ...engine,
+        keywordRules: updated
+      }));
+      localStorage.setItem('AVALIVE_KEYWORD_RULES_SHARED', JSON.stringify(updated));
+    } catch (e) {}
+
+    const voiceName = isSpecial 
+      ? (targetChoice === 'assistant' ? 'Giọng Trợ Lý AI' : 'Giọng Bình Luận Viên Game') 
+      : (ALL_SYSTEM_VOICES.find(v => v.id === targetChoice)?.name || targetChoice);
+    showToast(`✨ ĐÃ ĐỒNG BỘ 1 GIỌNG CHO TẤT CẢ ${updated.length} QUY TẮC: [${voiceName}]!`);
+  };
+
+  // Preview Audio for a single Keyword Rule
+  const handlePlayRuleAudio = async (rule, idx) => {
+    const id = rule.id || idx;
+    if (playingRuleId === id) {
+      stopVoiceAudio();
+      setPlayingRuleId(null);
+      return;
+    }
+    setPlayingRuleId(id);
+    const textToSpeak = (rule.replyText || 'Xin chào bạn!').replace(/\[user\]/gi, 'Khán Giả VIP');
+
+    let voiceToUse = assistantVoice;
+    if (rule.voiceId) {
+      const found = ALL_SYSTEM_VOICES.find(v => v.id === rule.voiceId || v.voiceId === rule.voiceId);
+      if (found) voiceToUse = found;
+    } else if (rule.role === 'game') {
+      voiceToUse = gameVoice;
+    } else if (rule.role === 'assistant') {
+      voiceToUse = assistantVoice;
+    } else if (typeof rule.role === 'string') {
+      const found = ALL_SYSTEM_VOICES.find(v => v.id === rule.role);
+      if (found) voiceToUse = found;
+    }
+
+    const voiceObj = {
+      ...voiceToUse,
+      rate: speedRate,
+      pitch: pitch,
+      volume: volume
+    };
+
+    try {
+      await previewVoiceAudio(voiceObj, textToSpeak, () => {
+        setPlayingRuleId(null);
+      });
+    } catch (e) {
+      console.warn('Play rule audio error:', e);
+      setPlayingRuleId(null);
+    }
   };
 
   const handleAssignVoice = (voice, roleKey) => {
@@ -538,8 +646,16 @@ export default function GameVoiceConfigPanel({
           </div>
         </div>
 
-        {/* Global Quick Toggle */}
-        <div className="flex items-center gap-2 self-end md:self-auto">
+        {/* Global Quick Toggle & Save Button */}
+        <div className="flex items-center gap-2 self-end md:self-auto flex-wrap">
+          <button
+            onClick={handleSaveAllConfigPermanently}
+            title="Lưu vĩnh viễn toàn bộ cấu hình, kịch bản, giọng đọc vào máy (F5/Reload không mất)"
+            className="px-4 py-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-black font-black rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-500/30 transition-all active:scale-95"
+          >
+            <Save size={14} /> 💾 LƯU TẤT CẢ CẤU HÌNH
+          </button>
+
           <button
             onClick={() => {
               const updated = !isAutoEnabled;
@@ -1254,6 +1370,13 @@ export default function GameVoiceConfigPanel({
 
               <div className="flex items-center gap-2 flex-wrap">
                 <button
+                  onClick={handleSaveAllConfigPermanently}
+                  title="Lưu vĩnh viễn toàn bộ kịch bản và cài đặt hiện tại vào máy (F5/Reload không mất)"
+                  className="px-3.5 py-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-black font-black rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-500/30 transition-all active:scale-95"
+                >
+                  <Save size={13} /> 💾 LƯU KỊCH BẢN VĨNH VIỄN
+                </button>
+                <button
                   onClick={() => setShowBulkRuleModal(true)}
                   className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-black rounded-xl text-xs flex items-center gap-1.5 shadow-md"
                 >
@@ -1373,6 +1496,56 @@ export default function GameVoiceConfigPanel({
                   {useGeminiAI ? 'Bộ Não AI: ĐANG BẬT' : 'Bộ Não AI: TẮT'}
                 </button>
               </div>
+            </div>
+          </div>
+
+          {/* Bulk Synchronize 1 Voice to ALL Rules Section */}
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 border border-purple-500/40 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-lg">
+            <div className="flex items-center gap-2.5">
+              <span className="p-2 rounded-xl bg-purple-600/30 text-purple-300 border border-purple-500/30">
+                <Wand2 size={18} className="text-purple-300 animate-pulse" />
+              </span>
+              <div>
+                <h5 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+                  ⚡ Đồng Bộ 1 Giọng Cho Toàn Bộ ({keywordRules.length}) Quy Tắc
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/30 text-purple-200 font-normal">
+                    1-Click Sync All
+                  </span>
+                </h5>
+                <p className="text-[11px] text-gray-300 mt-0.5">
+                  Chọn 1 giọng bên dưới và bấm áp dụng — toàn bộ các ô quy tắc sẽ được đổi sang giọng này cùng lúc!
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 w-full md:w-auto flex-wrap sm:flex-nowrap">
+              <select
+                value={syncAllVoiceChoice}
+                onChange={(e) => setSyncAllVoiceChoice(e.target.value)}
+                className="px-3 py-2 bg-black/80 border border-purple-400/50 rounded-xl text-xs text-purple-200 font-bold focus:outline-none focus:border-purple-400 flex-1 md:w-64"
+              >
+                <optgroup label="── Vai Trò Mặc Định ──">
+                  <option value="assistant">💼 Giọng Trợ Lý AI ({assistantVoice?.name || 'Mặc định'})</option>
+                  <option value="game">🎙️ Giọng Bình Luận Viên Game ({gameVoice?.name || 'Mặc định'})</option>
+                </optgroup>
+                <optgroup label="── Giọng Tiếng Việt ──">
+                  {ALL_SYSTEM_VOICES.filter(v => v.lang?.startsWith('vi') || v.id.includes('_vi_')).map(v => (
+                    <option key={v.id} value={v.id}>🔊 {v.name} ({v.gender === 'Female' ? 'Nữ' : 'Nam'} • {v.provider})</option>
+                  ))}
+                </optgroup>
+                <optgroup label="── Giọng Quốc Tế ──">
+                  {ALL_SYSTEM_VOICES.filter(v => !v.lang?.startsWith('vi') && !v.id.includes('_vi_')).map(v => (
+                    <option key={v.id} value={v.id}>🌐 {v.name} ({v.gender === 'Female' ? 'Nữ' : 'Nam'} • {v.lang})</option>
+                  ))}
+                </optgroup>
+              </select>
+
+              <button
+                onClick={() => handleSyncVoiceToAllRules(syncAllVoiceChoice)}
+                className="px-4 py-2 bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-500 hover:from-purple-400 hover:to-cyan-400 text-white font-black rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-purple-500/30 shrink-0 transition-all active:scale-95"
+              >
+                <Sparkles size={14} /> ✨ ÁP DỤNG CHO TẤT CẢ ({keywordRules.length})
+              </button>
             </div>
           </div>
 
@@ -1620,13 +1793,25 @@ export default function GameVoiceConfigPanel({
                       </div>
 
                       <span className="text-xs font-black text-white">{idx + 1}. {rule.name}</span>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                        rule.role === 'assistant' 
-                          ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30' 
-                          : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                      }`}>
-                        {rule.role === 'assistant' ? '💼 Trợ Lý' : '🎙️ BLV Game'}
-                      </span>
+                      {(() => {
+                        let voiceLabel = rule.role === 'assistant' ? '💼 Giọng Trợ Lý' : '🎙️ BLV Game';
+                        if (rule.voiceId) {
+                          const v = ALL_SYSTEM_VOICES.find(x => x.id === rule.voiceId || x.voiceId === rule.voiceId);
+                          if (v) voiceLabel = `🔊 ${v.name}`;
+                        } else if (typeof rule.role === 'string' && rule.role !== 'assistant' && rule.role !== 'game') {
+                          const v = ALL_SYSTEM_VOICES.find(x => x.id === rule.role);
+                          if (v) voiceLabel = `🔊 ${v.name}`;
+                        }
+                        return (
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                            rule.role === 'assistant' 
+                              ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30' 
+                              : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                          }`}>
+                            {voiceLabel}
+                          </span>
+                        );
+                      })()}
                       <span className="text-[10px] text-gray-400 font-mono">
                         Cooldown: {rule.cooldownSec || 4}s
                       </span>
@@ -1666,11 +1851,25 @@ export default function GameVoiceConfigPanel({
                         {rule.enabled !== false ? 'BẬT' : 'TẮT'}
                       </button>
                       <button
-                        onClick={() => engine.speak(rule.replyText.replace(/\[user\]/gi, 'Đại Gia VIP'), rule.role || 'assistant', true)}
-                        className="p-1.5 rounded-lg bg-purple-500/20 text-purple-300 hover:bg-purple-500/40"
-                        title="Nghe thử phản hồi này"
+                        onClick={() => handlePlayRuleAudio(rule, idx)}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-black flex items-center gap-1 transition-all ${
+                          playingRuleId === (rule.id || idx)
+                            ? 'bg-purple-600 text-white animate-pulse shadow-md shadow-purple-600/50'
+                            : 'bg-purple-500/20 text-purple-300 hover:bg-purple-500/40'
+                        }`}
+                        title={playingRuleId === (rule.id || idx) ? 'Dừng phát âm thanh' : 'Nghe thử câu thoại này với đúng giọng đã gán'}
                       >
-                        <Play size={12} className="fill-current" />
+                        {playingRuleId === (rule.id || idx) ? (
+                          <>
+                            <Square size={11} className="fill-current text-white" />
+                            <span>DỪNG</span>
+                          </>
+                        ) : (
+                          <>
+                            <Play size={11} className="fill-current" />
+                            <span>NGHE THỬ</span>
+                          </>
+                        )}
                       </button>
                       <button
                         onClick={() => handleRemoveKeywordRule(idx)}
