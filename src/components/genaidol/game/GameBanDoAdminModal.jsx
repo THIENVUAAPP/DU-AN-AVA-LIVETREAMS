@@ -1823,7 +1823,12 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
 
               {/* Quick preset selector */}
               <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
-                <div className="text-xs font-bold text-gray-300">Chọn Nhanh Số Lượng Ô Cờ Chuẩn:</div>
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-bold text-gray-300">Chọn Nhanh Số Lượng Ô Cờ Chuẩn:</div>
+                  <span className="text-xs font-black font-mono text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded-lg border border-yellow-500/30">
+                    Hiện tại: {Number(gameState.totalCells || 15125).toLocaleString('vi-VN')} Ô
+                  </span>
+                </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
                   {[
                     { count: 3000, label: '3.000 Ô', desc: 'Live ngắn (15-30p)' },
@@ -1835,13 +1840,16 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                   ].map(p => (
                     <button
                       key={p.count}
+                      type="button"
                       onClick={() => {
                         setTotalCellsInput(p.count);
                         bandoEngine.setTotalCells(p.count);
+                        setSaveSuccess(true);
+                        setTimeout(() => setSaveSuccess(false), 2500);
                       }}
                       className={`p-3 rounded-xl border text-left transition-all ${
-                        gameState.totalCells === p.count
-                          ? 'bg-gradient-to-r from-red-600 to-amber-600 border-yellow-400 text-white shadow-lg'
+                        Number(gameState.totalCells) === p.count
+                          ? 'bg-gradient-to-r from-red-600 to-amber-600 border-yellow-400 text-white shadow-lg ring-2 ring-yellow-400 scale-[1.02]'
                           : 'bg-black/40 border-white/10 hover:bg-white/10 text-gray-300'
                       }`}
                     >
@@ -1867,7 +1875,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
 
                   <button
                     type="submit"
-                    className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs rounded-xl shadow-lg transition-all self-end"
+                    className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs rounded-xl shadow-lg transition-all self-end active:scale-95"
                   >
                     Tạo Lại Lưới Bản Đồ
                   </button>

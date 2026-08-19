@@ -1022,9 +1022,10 @@ class BanDoGameEngine {
     const val = Math.max(500, Math.min(100000, parseInt(newCount) || 15125));
     this.state.totalCells = val;
     this.state.remainingCells = val;
-    this.resetRound();
     this.buildGridForCurrentCountry();
+    this.resetRound();
     this.saveToStorage();
+    this.saveSettings();
     this.notify({ type: 'TOTAL_CELLS_CHANGED', totalCells: val });
   }
 
@@ -1544,8 +1545,8 @@ class BanDoGameEngine {
     this.emitState();
   }
 
-  resetRound() {
-    this.resetGame();
+  resetGame() {
+    this.resetRound();
   }
 
   // ==================== HỆ THỐNG AUTO 24/7 TOÀN DIỆN (CHẠY THẬT LIVE TIKTOK) ====================
