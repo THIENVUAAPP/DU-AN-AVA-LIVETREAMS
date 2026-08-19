@@ -52,12 +52,25 @@ export default function DesktopAppUI() {
   const autoSimTimerRef = useRef(null);
   
   // Game Chiến Đấu States
-  const [isGameBattleActive, setIsGameBattleActive] = useState(false);
+  const [isGameBattleActive, setIsGameBattleActive] = useState(() => {
+    try {
+      return localStorage.getItem('avalive_active_stage') === 'battle';
+    } catch {
+      return false;
+    }
+  });
   const [isGameAdminOpen, setIsGameAdminOpen] = useState(false);
   const [lastGameEvent, setLastGameEvent] = useState(null);
 
-  // Game Bản Đồ Hình Chữ S States
-  const [isGameBanDoActive, setIsGameBanDoActive] = useState(false);
+  // Game Bản Đồ Hình Chữ S States (Mặc định hiển thị Bản Đồ Chữ S 3D tuyệt đẹp)
+  const [isGameBanDoActive, setIsGameBanDoActive] = useState(() => {
+    try {
+      const saved = localStorage.getItem('avalive_active_stage');
+      return saved ? saved === 'bando' : true;
+    } catch {
+      return true;
+    }
+  });
   const [isGameBanDoAdminOpen, setIsGameBanDoAdminOpen] = useState(false);
 
   // Tỷ Lệ Khung Hình Toàn Cục (9:16 TikTok Dọc vs 16:9 OBS Ngang)
@@ -729,9 +742,7 @@ export default function DesktopAppUI() {
       setIsConnected(false);
       setIsConnecting(false);
       
-      // 2. Tắt các chế độ Game & Demo
-      setIsGameBattleActive(false);
-      setIsGameBanDoActive(false);
+      // 2. Tắt các chế độ Demo & Tự động chạy
       setIsGlobalDemoRunning(false);
       setIsAuto247Running(false);
 
@@ -1217,6 +1228,7 @@ export default function DesktopAppUI() {
             onClick={() => {
               setIsGameBattleActive(false);
               setIsGameBanDoActive(false);
+              try { localStorage.setItem('avalive_active_stage', 'idol'); } catch (e) {}
               mapVoiceEngine.stopAll();
               battleVoiceEngine.stopAll();
               battleCommentary.stopAll();
@@ -1240,6 +1252,7 @@ export default function DesktopAppUI() {
             onClick={() => {
               setIsGameBattleActive(true);
               setIsGameBanDoActive(false);
+              try { localStorage.setItem('avalive_active_stage', 'battle'); } catch (e) {}
               mapVoiceEngine.stopAll();
               if (isMasterLiveRunning) {
                 bandoAudio.unlock();
@@ -1278,6 +1291,7 @@ export default function DesktopAppUI() {
             onClick={() => {
               setIsGameBanDoActive(true);
               setIsGameBattleActive(false);
+              try { localStorage.setItem('avalive_active_stage', 'bando'); } catch (e) {}
               battleVoiceEngine.stopAll();
               battleCommentary.stopAll();
               if (isMasterLiveRunning) {
