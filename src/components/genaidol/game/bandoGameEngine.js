@@ -1034,14 +1034,7 @@ class BanDoGameEngine {
     if (typeof giftEvent === 'string') {
       return this.processGift(giftEvent, 1);
     }
-    const giftId = giftEvent.giftId || giftEvent.id || 'flag';
-    const count = giftEvent.count || 1;
-    const user = {
-      id: giftEvent.userId || giftEvent.id || 'guest_1',
-      username: giftEvent.username || giftEvent.nickname || 'Chiến Binh',
-      avatar: giftEvent.avatar || giftEvent.profilePictureUrl || ''
-    };
-    return this.processGift(giftId, count, user);
+    return this.processGift(giftEvent);
   }
 
   // Xử lý sự kiện tặng quà và cắm cờ

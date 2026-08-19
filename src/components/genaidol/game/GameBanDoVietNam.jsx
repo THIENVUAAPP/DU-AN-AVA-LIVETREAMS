@@ -756,11 +756,12 @@ export default function GameBanDoVietNam({
           wz = (Math.random() - 0.5) * 120;
         }
 
+        const defaultAvatar = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(user?.username || user?.id || 'viewer')}`;
         const newBadge = {
           id: `badge_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
           userId: user?.id ? (user.id.startsWith('@') ? user.id : `@${user.id}`) : '@tiktok_vip',
           username: user?.username || 'Chiến Binh Yêu Nước',
-          avatar: user?.avatar || '',
+          avatar: user?.avatar || defaultAvatar,
           flag,
           count,
           giftName,
