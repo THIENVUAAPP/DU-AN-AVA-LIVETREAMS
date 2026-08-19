@@ -120,7 +120,11 @@ export default function CleanLiveOverlay() {
         masterChannel = new BroadcastChannel('avalive_master_live_stream');
         masterChannel.onmessage = (event) => {
           if (event.data) {
-            if (event.data.type === 'MASTER_LIVE_STATE_UPDATE' || event.data.stage) {
+            if (event.data.type === 'EMERGENCY_STOP_ALL') {
+              if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
+              const mediaElements = document.querySelectorAll('audio, video');
+              mediaElements.forEach(el => { try { el.pause(); } catch (e) {} });
+            } else if (event.data.type === 'MASTER_LIVE_STATE_UPDATE' || event.data.stage) {
               applyMasterState(event.data);
             } else if (event.data.type === 'LIVE_EVENT') {
               setLiveEvent(event.data.payload);

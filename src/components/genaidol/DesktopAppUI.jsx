@@ -5,7 +5,7 @@ import {
   MessageCircle, Play, Pause, Mic, MicOff, X, Download, Plus,
   Brain, Radio, Coins, AlertTriangle, Eye, Clock, List, Zap, AlertCircle, FileText, CheckSquare,
   Gift, ShoppingBag, Sparkles, RotateCcw, Send, Trash2, Heart, Share2, UserPlus, Users, Swords, Shield, Gamepad2, Flag, MapPin,
-  Smartphone, MonitorPlay, Globe
+  Smartphone, MonitorPlay, Globe, StopCircle, Power
 } from 'lucide-react';
 import WorkspaceTacVu from './WorkspaceTacVu';
 import GeneralSettings from './GeneralSettings';
@@ -572,6 +572,82 @@ export default function DesktopAppUI() {
     }, 1200);
   };
 
+  // 🛑 NÚT BẤM TẮT TẤT CẢ PHIÊN LIVE: TẮT HẾT GAME, LIVE AIDOL, TẮT CẢ NHẠC, SFX, HIỆU ỨNG, BÌNH LUẬN VIÊN
+  const handleStopAllLive = () => {
+    // 1. Tắt kết nối Live TikTok
+    setIsConnected(false);
+    setIsConnecting(false);
+    
+    // 2. Tắt các chế độ Game
+    setIsGameBattleActive(false);
+    setIsGameBanDoActive(false);
+
+    // 3. Tắt toàn bộ âm thanh / BGM / SFX / Voice
+    bandoAudio.stopAll();
+    
+    // 4. Dừng toàn bộ vòng lặp game, auto 24/7, demo, battle
+    bandoEngine.stopAuto247Loop();
+    bandoEngine.stopAutoTestLoop();
+    
+    // 5. Tắt player video / audio AIDOL
+    if (audioPlayerRef.current) {
+      try {
+        audioPlayerRef.current.pause();
+        audioPlayerRef.current.currentTime = 0;
+      } catch (e) {}
+    }
+    
+    // 6. Tắt toàn bộ Speech Synthesis của trình duyệt
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    
+    // 7. Tắt tất cả các audio / video elements đang phát trong DOM
+    if (typeof document !== 'undefined') {
+      const mediaElements = document.querySelectorAll('audio, video');
+      mediaElements.forEach(el => {
+        try {
+          el.pause();
+        } catch (e) {}
+      });
+    }
+
+    // 8. Phát tín hiệu dừng toàn cục (BroadcastChannel, CustomEvent, LocalStorage) cho OBS/TikTok Live Studio Overlay
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('avalive_emergency_stop_all'));
+      window.dispatchEvent(new CustomEvent('global-stop-demo'));
+      try {
+        localStorage.setItem('avalive_emergency_stop_trigger', Date.now().toString());
+      } catch (e) {}
+    }
+
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        const bc = new BroadcastChannel('avalive_master_live_stream');
+        bc.postMessage({ type: 'EMERGENCY_STOP_ALL', timestamp: Date.now() });
+        bc.close();
+      } catch (e) {}
+      try {
+        const bcBando = new BroadcastChannel('avalive_bando_stage');
+        bcBando.postMessage({ type: 'STOP_ALL', timestamp: Date.now() });
+        bcBando.close();
+      } catch (e) {}
+    }
+
+    // 9. Toast thông báo
+    setToast({
+      type: 'info',
+      message: '🛑 Đã TẮT toàn bộ phiên Live, Game, Nhạc nền & Bình luận viên thành công!'
+    });
+    setTimeout(() => setToast(null), 4000);
+
+    const timeStr = new Date().toLocaleTimeString();
+    setSystemLogs(prev => [
+      `[${timeStr}] 🛑 ĐÃ TẮT TOÀN BỘ PHIÊN LIVE, GAME & ÂM THANH THEO LỆNH STREAMER`,
+      ...prev.slice(0, 48)
+    ]);
+  };
+
   const toggleWebcam = async () => {
     if (isWebcamActive) {
       if (streamRef.current) {
@@ -860,21 +936,31 @@ export default function DesktopAppUI() {
   return (
     <div className={`w-full h-screen flex flex-col font-sans transition-colors duration-200 ${isDarkMode ? 'bg-[#0f0f13] text-white' : 'bg-slate-100 text-slate-900'}`}>
       
-      {/* 1. Fake Window Title Bar (Thu nhỏ ~30% cực kỳ thanh thoát) */}
-      <div className={`flex items-center justify-between px-3 py-1.5 ${isDarkMode ? 'bg-[#1c1c23] border-gray-800 text-white' : 'bg-slate-200 border-slate-300 text-slate-800'} select-none z-30 border-b`}>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-blue-500 flex items-center justify-center">
-            <Video size={10} className="text-white" />
+      {/* 1. Fake Window Title Bar (Thu nhỏ ~30% đồng đều tất cả các ô nút bấm) */}
+      <div className={`flex items-center justify-between px-2 py-1 ${isDarkMode ? 'bg-[#1c1c23] border-gray-800 text-white' : 'bg-slate-200 border-slate-300 text-slate-800'} select-none z-30 border-b`}>
+        <div className="flex items-center gap-1.5">
+          <div className="w-3.5 h-3.5 rounded bg-blue-500 flex items-center justify-center">
+            <Video size={9} className="text-white" />
           </div>
-          <span className="text-xs font-semibold">Livestream AI (Clone) - Profile: {CHARACTERS[selectedCharacter]?.name || 'Không xác định'}</span>
+          <span className="text-[11px] font-bold truncate max-w-[220px]">Profile: {CHARACTERS[selectedCharacter]?.name || 'Không xác định'}</span>
         </div>
         
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
+          {/* NÚT BẤM TẮT TẤT CẢ PHIÊN LIVE (TẮT GAME, LIVE AIDOL, NHẠC, SFX, BÌNH LUẬN) */}
+          <button 
+            onClick={handleStopAllLive}
+            className="flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[10px] font-black bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-500 text-white border border-red-400 shadow-sm transition-all active:scale-95 animate-pulse"
+            title="🛑 BẤM TẮT TẤT CẢ: Dừng ngay toàn bộ phiên Live, Game Chiến Đấu, Game Bản Đồ, Tắt Nhạc nền BGM, Hiệu ứng SFX và Bình Luận Viên"
+          >
+            <StopCircle size={11} className="text-yellow-300 shrink-0" />
+            <span className="uppercase tracking-tight whitespace-nowrap">Tắt Tất Cả</span>
+          </button>
+
           {/* Nút Chế độ Live AI Idol */}
           <button 
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border shadow-sm ${
+            className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs ${
               !isGameBattleActive && !isGameBanDoActive 
-                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 text-white border-cyan-300 shadow-cyan-500/40 ring-2 ring-cyan-400/50' 
+                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 text-white border-cyan-300 shadow-cyan-500/40 ring-1 ring-cyan-400/50' 
                 : (isDarkMode ? 'border-cyan-500/40 bg-cyan-950/30 text-cyan-300 hover:bg-cyan-900/50' : 'border-cyan-300 bg-cyan-50 text-cyan-700 hover:bg-cyan-100')
             }`}
             onClick={() => {
@@ -883,18 +969,18 @@ export default function DesktopAppUI() {
             }}
             title="Chuyển sang màn hình Livestream AI Idol"
           >
-            <Video size={12} className={!isGameBattleActive && !isGameBanDoActive ? 'text-yellow-300' : 'text-cyan-400'} />
-            <span>Live AI Idol</span>
+            <Video size={10} className={!isGameBattleActive && !isGameBanDoActive ? 'text-yellow-300' : 'text-cyan-400'} />
+            <span className="whitespace-nowrap">Live AI Idol</span>
             {!isGameBattleActive && !isGameBanDoActive && (
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+              <span className="w-1 h-1 rounded-full bg-emerald-400 animate-ping"></span>
             )}
           </button>
 
           {/* Nút Kích hoạt Game Chiến Đấu */}
           <button 
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border shadow-sm ${
+            className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs ${
               isGameBattleActive 
-                ? 'bg-gradient-to-r from-red-600 via-purple-600 to-indigo-600 text-white border-purple-400 shadow-purple-500/40 ring-2 ring-purple-400/50 animate-pulse' 
+                ? 'bg-gradient-to-r from-red-600 via-purple-600 to-indigo-600 text-white border-purple-400 shadow-purple-500/40 ring-1 ring-purple-400/50 animate-pulse' 
                 : (isDarkMode ? 'border-indigo-500/50 bg-indigo-950/40 text-indigo-300 hover:bg-indigo-900/60' : 'border-indigo-300 bg-indigo-50 text-indigo-700 hover:bg-indigo-100')
             }`}
             onClick={() => {
@@ -903,10 +989,10 @@ export default function DesktopAppUI() {
             }}
             title="Chuyển sang chế độ Game Chiến Đấu (TikTok LIVE Battle Game) trên màn hình chính"
           >
-            <Swords size={12} className={isGameBattleActive ? 'text-yellow-300' : 'text-indigo-400'} />
-            <span>Game Chiến Đấu</span>
+            <Swords size={10} className={isGameBattleActive ? 'text-yellow-300' : 'text-indigo-400'} />
+            <span className="whitespace-nowrap">Game Chiến Đấu</span>
             {isGameBattleActive && (
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+              <span className="w-1 h-1 rounded-full bg-emerald-400 animate-ping"></span>
             )}
           </button>
 
@@ -914,19 +1000,19 @@ export default function DesktopAppUI() {
           {isGameBattleActive && (
             <button
               onClick={() => setIsGameAdminOpen(true)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-gradient-to-r from-purple-900/90 to-indigo-900/90 hover:from-purple-800 hover:to-indigo-800 text-purple-200 hover:text-white border border-purple-400/80 shadow-md transition-all animate-in fade-in duration-200"
+              className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-gradient-to-r from-purple-900/90 to-indigo-900/90 hover:from-purple-800 hover:to-indigo-800 text-purple-200 hover:text-white border border-purple-400/80 shadow-xs transition-all animate-in fade-in duration-200"
               title="Cài đặt Game Chiến Đấu"
             >
-              <Settings size={12} className="text-yellow-300" />
+              <Settings size={10} className="text-yellow-300" />
               <span>Game</span>
             </button>
           )}
 
           {/* Nút Kích hoạt Game Ghép Cờ Bản Đồ Việt Nam (Hình Chữ S) */}
           <button 
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border shadow-sm ${
+            className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs ${
               isGameBanDoActive 
-                ? 'bg-gradient-to-r from-red-600 via-amber-600 to-yellow-500 text-white border-yellow-300 shadow-yellow-500/40 ring-2 ring-yellow-400/50 animate-pulse' 
+                ? 'bg-gradient-to-r from-red-600 via-amber-600 to-yellow-500 text-white border-yellow-300 shadow-yellow-500/40 ring-1 ring-yellow-400/50 animate-pulse' 
                 : (isDarkMode ? 'border-amber-500/50 bg-amber-950/40 text-amber-300 hover:bg-amber-900/60' : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100')
             }`}
             onClick={() => {
@@ -935,10 +1021,10 @@ export default function DesktopAppUI() {
             }}
             title="Chuyển sang Game Ghép Cờ Bản Đồ Việt Nam (Đất Nước Hình Chữ S) trên màn hình chính"
           >
-            <Flag size={12} className={isGameBanDoActive ? 'text-yellow-200' : 'text-amber-400'} />
-            <span>Bản Đồ Chữ S</span>
+            <Flag size={10} className={isGameBanDoActive ? 'text-yellow-200' : 'text-amber-400'} />
+            <span className="whitespace-nowrap">Bản Đồ Chữ S</span>
             {isGameBanDoActive && (
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+              <span className="w-1 h-1 rounded-full bg-emerald-400 animate-ping"></span>
             )}
           </button>
 
@@ -946,10 +1032,10 @@ export default function DesktopAppUI() {
           {isGameBanDoActive && (
             <button
               onClick={() => setIsGameBanDoAdminOpen(true)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-900/90 to-red-900/90 hover:from-amber-800 hover:to-red-800 text-amber-200 hover:text-white border border-amber-400/80 shadow-md transition-all animate-in fade-in duration-200"
+              className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-gradient-to-r from-amber-900/90 to-red-900/90 hover:from-amber-800 hover:to-red-800 text-amber-200 hover:text-white border border-amber-400/80 shadow-xs transition-all animate-in fade-in duration-200"
               title="Cài đặt Game Bản Đồ"
             >
-              <Settings size={12} className="text-yellow-300" />
+              <Settings size={10} className="text-yellow-300" />
               <span>Game</span>
             </button>
           )}
@@ -957,28 +1043,28 @@ export default function DesktopAppUI() {
           {/* 1 Nút Chuyển Tỷ Lệ Khung Hình Toàn Cục DUY NHẤT CHO TOÀN BỘ HỆ THỐNG: 9:16 (TikTok Dọc) vs 16:9 (OBS Ngang) */}
           <button
             onClick={toggleGlobalAspectRatio}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black transition-all border shadow-sm ${
+            className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-black transition-all border shadow-xs ${
               globalAspectRatio === '9:16'
-                ? 'bg-gradient-to-r from-pink-600 via-rose-500 to-amber-500 text-white border-pink-300 ring-2 ring-pink-400/50 shadow-pink-500/30'
+                ? 'bg-gradient-to-r from-pink-600 via-rose-500 to-amber-500 text-white border-pink-300 ring-1 ring-pink-400/50 shadow-pink-500/30'
                 : (isDarkMode ? 'bg-white/10 hover:bg-white/20 text-cyan-300 border-white/10' : 'bg-gray-200 hover:bg-gray-300 text-slate-800 border-gray-300')
             }`}
             title={globalAspectRatio === '9:16' ? "Đang ở Khung Hình 9:16 (Chuẩn TikTok Live Dọc) — Bấm chuyển sang 16:9 (Ngang OBS/PC)" : "Đang ở Khung Hình 16:9 (Ngang OBS/PC) — Bấm chuyển sang 9:16 (Chuẩn TikTok Live Dọc)"}
           >
-            <Smartphone size={12} className={globalAspectRatio === '9:16' ? 'text-yellow-300' : 'text-cyan-300'} />
-            <span>{globalAspectRatio === '9:16' ? '9:16 TikTok' : '16:9 OBS'}</span>
+            <Smartphone size={10} className={globalAspectRatio === '9:16' ? 'text-yellow-300' : 'text-cyan-300'} />
+            <span className="whitespace-nowrap">{globalAspectRatio === '9:16' ? '9:16 TikTok' : '16:9 OBS'}</span>
           </button>
 
           {/* 🌐 Bộ Chuyển Đổi 20 Ngôn Ngữ Toàn Cầu */}
           <div className="relative">
             <button
               onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border shadow-sm ${
+              className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs ${
                 isDarkMode ? 'bg-white/10 hover:bg-white/20 text-yellow-300 border-white/10' : 'bg-gray-200 hover:bg-gray-300 text-slate-900 border-gray-300'
               }`}
               title="Chuyển đổi ngôn ngữ hệ thống & Giọng đọc AI (20 Quốc Gia)"
             >
-              <Globe size={13} className="text-amber-400" />
-              <span>{SUPPORTED_LANGUAGES.find(l => l.code === currentLang)?.flag || '🌐'} {SUPPORTED_LANGUAGES.find(l => l.code === currentLang)?.name || 'Ngôn ngữ'}</span>
+              <Globe size={11} className="text-amber-400" />
+              <span className="whitespace-nowrap">{SUPPORTED_LANGUAGES.find(l => l.code === currentLang)?.flag || '🌐'} {SUPPORTED_LANGUAGES.find(l => l.code === currentLang)?.name || 'Ngôn ngữ'}</span>
             </button>
             {isLangDropdownOpen && (
               <div className={`absolute top-full right-0 mt-2 w-64 max-h-80 overflow-y-auto rounded-xl shadow-2xl border z-50 p-1.5 ${isDarkMode ? 'bg-[#1c1c23] border-gray-700 text-white' : 'bg-white border-gray-200 text-slate-800'} animate-in fade-in slide-in-from-top-2 duration-200`}>
@@ -993,7 +1079,7 @@ export default function DesktopAppUI() {
                       setCurrentLangState(lang.code);
                       setIsLangDropdownOpen(false);
                     }}
-                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-between gap-2 ${
+                    className={`w-full text-left px-2 py-1 rounded-md text-xs font-bold transition-all flex items-center justify-between gap-2 ${
                       currentLang === lang.code
                         ? 'bg-blue-600 text-white'
                         : (isDarkMode ? 'hover:bg-white/10 text-gray-200' : 'hover:bg-gray-100 text-gray-800')
@@ -1010,14 +1096,14 @@ export default function DesktopAppUI() {
             )}
           </div>
 
-          <button onClick={() => setIsDarkMode(!isDarkMode)} className={`p-1 rounded transition-colors ${isDarkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-400 text-gray-800 hover:bg-gray-500'}`}>
-            {isDarkMode ? <Sun size={13} /> : <Moon size={13} />}
+          <button onClick={() => setIsDarkMode(!isDarkMode)} className={`p-0.5 rounded transition-colors ${isDarkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-400 text-gray-800 hover:bg-gray-500'}`}>
+            {isDarkMode ? <Sun size={10} /> : <Moon size={10} />}
           </button>
 
           {/* Token Widget */}
           <button
             onClick={() => setShowTokenHistory(true)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border ${
+            className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border ${
               balance === 0
                 ? 'bg-red-500/20 border-red-500/40 text-red-400 hover:bg-red-500/30'
                 : balance < TOKEN_RATES.LOW_BALANCE_WARN
@@ -1026,38 +1112,38 @@ export default function DesktopAppUI() {
             }`}
             title="Xem lịch sử Token"
           >
-            {balance < TOKEN_RATES.LOW_BALANCE_WARN && <AlertTriangle size={12} />}
-            <Coins size={12} />
-            <span>{balance.toLocaleString()}</span>
+            {balance < TOKEN_RATES.LOW_BALANCE_WARN && <AlertTriangle size={10} />}
+            <Coins size={10} />
+            <span className="whitespace-nowrap">{balance.toLocaleString()}</span>
           </button>
 
-          <button className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${isDarkMode ? 'bg-[#0088cc]/20 text-[#0088cc] hover:bg-[#0088cc]/30' : 'bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20'}`}>
-            <MessageCircle size={13} />
+          <button className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium transition-colors ${isDarkMode ? 'bg-[#0088cc]/20 text-[#0088cc] hover:bg-[#0088cc]/30' : 'bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20'}`}>
+            <MessageCircle size={10} />
             <span>Zalo</span>
           </button>
 
-          <button onClick={() => setActiveSettingsModal('payment')} className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${isDarkMode ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-green-500/10 text-green-700 hover:bg-green-500/20'}`}>
-            <CreditCard size={13} />
-            <span>{t('payment', currentLang)}</span>
+          <button onClick={() => setActiveSettingsModal('payment')} className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium transition-colors ${isDarkMode ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-green-500/10 text-green-700 hover:bg-green-500/20'}`}>
+            <CreditCard size={10} />
+            <span className="whitespace-nowrap">{t('payment', currentLang)}</span>
           </button>
 
           {/* Nút Mở Link Realtime TikTok LIVE Studio & OBS Studio - Nhỏ gọn tinh tế */}
           <button
             onClick={() => setShowOverlayModal(true)}
-            className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-cyan-600/80 hover:bg-cyan-500 text-white border border-cyan-400/50 shadow-sm transition-all hover:scale-105"
+            className="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-cyan-600/80 hover:bg-cyan-500 text-white border border-cyan-400/50 shadow-xs transition-all hover:scale-105"
             title="Mở & Sao chép Link Live Overlay cho TikTok LIVE Studio / OBS Studio"
           >
-            <Radio size={11} className="text-yellow-300 animate-pulse" />
-            <span>📡 Link Live</span>
+            <Radio size={10} className="text-yellow-300 animate-pulse" />
+            <span className="whitespace-nowrap">📡 Link Live</span>
           </button>
 
           {/* Nút Tải phần mềm (ZIP) */}
           <button 
             onClick={handleDownload}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 text-xs rounded shadow-sm flex items-center gap-1 transition-colors"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-0.5 text-[10px] font-bold rounded-md shadow-xs flex items-center gap-1 transition-colors"
           >
-            <Download size={12} />
-            <span>{t('downloadZip', currentLang)}</span>
+            <Download size={10} />
+            <span className="whitespace-nowrap">{t('downloadZip', currentLang)}</span>
           </button>
         </div>
       </div>

@@ -300,6 +300,36 @@ class BanDoAudioEngine {
     }
   }
 
+  stopCustomSfx() {
+    if (this.customSfxAudio) {
+      try {
+        this.customSfxAudio.pause();
+        this.customSfxAudio.currentTime = 0;
+      } catch (e) {}
+    }
+  }
+
+  stopAll() {
+    this.stopBgmOnLive();
+    this.stopCustomSfx();
+    if (this.ctx) {
+      try {
+        if (this.masterGain) {
+          this.masterGain.gain.setValueAtTime(0, this.ctx.currentTime);
+        }
+        if (this.sfxGain) {
+          this.sfxGain.gain.setValueAtTime(0, this.ctx.currentTime);
+        }
+        if (this.voiceGain) {
+          this.voiceGain.gain.setValueAtTime(0, this.ctx.currentTime);
+        }
+      } catch (e) {}
+    }
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+  }
+
   setMasterVolume(val) {
     this.ensureContext();
     if (this.masterGain && this.ctx) {
