@@ -81,26 +81,28 @@ class GameVoiceEngine {
     this.gameType = gameType; // 'map' | 'battle'
     this.storageKey = `GAME_VOICE_CONFIG_${gameType.toUpperCase()}`;
     
-    // Core Voice Role Configurations
+    // Core Voice Role Configurations (Mặc định dùng giọng Việt Nam native 100% miễn phí & tức thì)
     this.gameVoice = { 
-      id: 'el_josh', 
-      name: 'Josh (Nam - BLV Game)', 
-      voiceId: 'TxGEqnHWrfWFTfGW9XjX', 
-      provider: 'elevenlabs', 
+      id: 'free_vi_male', 
+      name: 'Nam Minh 🇻🇳 (Nam - BLV Game)', 
+      voiceId: 'free_vi_male', 
+      provider: 'system', 
+      tier: 'free',
       gender: 'Male',
-      rate: 1.05,
-      pitch: 1.0,
+      rate: 1.08,
+      pitch: 0.9,
       volume: 1.0,
       enabled: true
     };
     this.assistantVoice = { 
-      id: 'el_rachel', 
-      name: 'Rachel (Nữ - Ngọt ngào)', 
-      voiceId: '21m00Tcm4TlvDq8ikWAM', 
-      provider: 'elevenlabs', 
+      id: 'free_vi_female', 
+      name: 'Hoài My 🇻🇳 (Nữ - Ngọt ngào)', 
+      voiceId: 'free_vi_female', 
+      provider: 'system', 
+      tier: 'free',
       gender: 'Female',
       rate: 1.0,
-      pitch: 1.05,
+      pitch: 1.1,
       volume: 1.0,
       enabled: true
     };

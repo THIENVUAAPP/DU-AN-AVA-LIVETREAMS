@@ -126,10 +126,10 @@ export const DEFAULT_VOICE_CONFIG = {
     enabled: true
   },
   managerVoice: {
-    id: 'el_callum',
-    name: 'Callum (Nam - Quản Lý Giục Chốt Đơn)',
-    provider: 'elevenlabs',
-    voiceId: 'N2lVS1w4EtoT3dr4eOWO',
+    id: 'free_vi_male',
+    name: 'Nam Minh 🇻🇳 (Nam - Quản Lý Giục Chốt Đơn)',
+    provider: 'system',
+    tier: 'free',
     gender: 'Male',
     role: 'manager',
     pitch: 1.0,
@@ -371,7 +371,7 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
   const voiceVolume = voice?.volume !== undefined ? Math.max(0, Math.min(1, voice.volume)) : 1.0;
 
   // =========================================================================
-  // TIER 1: ElevenLabs API (Khi cấu hình ElevenLabs và có API Key hợp lệ)
+  // TIER 1: ElevenLabs API (Chỉ khi cấu hình ElevenLabs và có API Key hợp lệ)
   // =========================================================================
   if (voice?.provider === 'elevenlabs' && apiKey && apiKey.length > 10) {
     try {
@@ -416,53 +416,8 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
         });
       }
     } catch (e) {
-      console.warn('ElevenLabs API direct fetch error, trying universal cloud TTS:', e);
+      console.warn('ElevenLabs API direct fetch error, falling back to instant Web Speech:', e);
     }
-  }
-
-  // =========================================================================
-  // TIER 2: Local Server Audio Stream Proxy (/api/tts)
-  // =========================================================================
-  try {
-    const ttsUrl = `/api/tts?lang=${encodeURIComponent(shortLang)}&text=${encodeURIComponent(textToSpeak)}`;
-    const cloudAudio = new Audio(ttsUrl);
-    cloudAudio.volume = voice?.volume || 1.0;
-    activePreviewAudio = cloudAudio;
-
-    const cloudPlayed = await new Promise((resolve) => {
-      let isDone = false;
-      const cleanup = (success) => {
-        if (isDone) return;
-        isDone = true;
-        activePreviewAudio = null;
-        if (onEnd && success) onEnd();
-        resolve(success);
-      };
-
-      cloudAudio.onended = () => cleanup(true);
-      cloudAudio.onerror = () => cleanup(false);
-
-      cloudAudio.play()
-        .then(() => {
-          // Stream đang phát trực tiếp!
-        })
-        .catch(() => {
-          cleanup(false);
-        });
-
-      // Nếu sau 1.2s không chạy được qua server proxy, fallback ngay sang Web Speech
-      setTimeout(() => {
-        if (!isDone && cloudAudio.paused) {
-          cleanup(false);
-        }
-      }, 1200);
-    });
-
-    if (cloudPlayed) {
-      return true;
-    }
-  } catch (cloudErr) {
-    console.warn('Server TTS stream error, falling back to Web Speech API:', cloudErr);
   }
 
   // =========================================================================

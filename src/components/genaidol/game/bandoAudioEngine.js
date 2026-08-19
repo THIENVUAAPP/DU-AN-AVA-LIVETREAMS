@@ -89,10 +89,10 @@ class BanDoAudioEngine {
 
       const savedTimer = localStorage.getItem('bando_bgm_timer_mode');
       if (savedTimer) this.bgmTimerMode = savedTimer;
-      // Mặc định KHÔNG MUTE để đảm bảo người dùng luôn nghe thấy âm thanh ngay khi mở app
-      this.isMuted = localStorage.getItem('bando_is_muted') === 'true';
-      this.isSfxMuted = localStorage.getItem('bando_is_sfx_muted') === 'true';
-      this.isVoiceMuted = localStorage.getItem('bando_is_voice_muted') === 'true';
+      // Luôn bật âm thanh 100% khi khởi động để đảm bảo Window Capture / OBS nghe rõ
+      this.isMuted = false;
+      this.isSfxMuted = false;
+      this.isVoiceMuted = false;
 
       const savedBgmVol = localStorage.getItem('bando_bgm_volume');
       if (savedBgmVol !== null) this.bgmVolume = parseFloat(savedBgmVol) || 0.5;
@@ -116,11 +116,11 @@ class BanDoAudioEngine {
         this.ctx = new AudioContextClass();
 
         this.masterGain = this.ctx.createGain();
-        this.masterGain.gain.value = this.isMuted ? 0 : 0.95;
+        this.masterGain.gain.value = 0.95;
         this.masterGain.connect(this.ctx.destination);
 
         this.sfxGain = this.ctx.createGain();
-        this.sfxGain.gain.value = this.isSfxMuted ? 0 : (this.sfxVolume || 0.9);
+        this.sfxGain.gain.value = this.sfxVolume || 0.9;
         this.sfxGain.connect(this.masterGain);
 
         this.bgmGain = this.ctx.createGain();
@@ -128,7 +128,7 @@ class BanDoAudioEngine {
         this.bgmGain.connect(this.masterGain);
 
         this.voiceGain = this.ctx.createGain();
-        this.voiceGain.gain.value = this.isVoiceMuted ? 0 : (this.voiceVolume || 1.0);
+        this.voiceGain.gain.value = this.voiceVolume || 1.0;
         this.voiceGain.connect(this.masterGain);
       }
       if (this.ctx && this.ctx.state === 'suspended') {
@@ -142,6 +142,9 @@ class BanDoAudioEngine {
 
   unlock() {
     try {
+      this.isMuted = false;
+      this.isSfxMuted = false;
+      this.isVoiceMuted = false;
       const ctx = this.ensureContext();
       if (ctx) {
         if (ctx.state === 'suspended') {
@@ -157,10 +160,13 @@ class BanDoAudioEngine {
         } catch (e) {}
       }
       if (this.masterGain && this.ctx) {
-        this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 0.95, this.ctx.currentTime);
+        this.masterGain.gain.setValueAtTime(0.95, this.ctx.currentTime);
       }
       if (this.sfxGain && this.ctx) {
-        this.sfxGain.gain.setValueAtTime(this.isSfxMuted ? 0 : (this.sfxVolume || 0.85), this.ctx.currentTime);
+        this.sfxGain.gain.setValueAtTime(this.sfxVolume || 0.9, this.ctx.currentTime);
+      }
+      if (this.voiceGain && this.ctx) {
+        this.voiceGain.gain.setValueAtTime(this.voiceVolume || 1.0, this.ctx.currentTime);
       }
       if (this.customBgmAudio && this.bgmPlaying && this.customBgmAudio.paused) {
         this.customBgmAudio.play().catch(() => {});
