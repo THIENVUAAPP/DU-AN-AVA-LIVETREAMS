@@ -860,11 +860,6 @@ export default function GameBanDoVietNam({
     };
     window.addEventListener('avalive_reset_leaderboard', handleResetLeaderboard);
 
-    // Tự động khởi động bình luận viên & âm thanh nếu đang mở Live
-    if (mapVoiceEngine.isAutoEnabled) {
-      mapVoiceEngine.startPeriodicCommentary(true);
-    }
-
     const handleEmergencyStop = () => {
       bandoAudio.stopAll();
       mapVoiceEngine.stopAll();
