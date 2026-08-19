@@ -278,6 +278,9 @@ export default function DesktopAppUI() {
     };
   }, [isDraggingWebcam]);
 
+  // 🛑/▶️ Trạng thái Tắt / Bật Toàn Bộ Phiên Live Master (Đồng bộ mọi tính năng, game, âm thanh, socket)
+  const [isMasterLiveRunning, setIsMasterLiveRunning] = useState(true);
+
   // Trạng thái Chạy Demo / Test Toàn Cục (1 Nút Duy Nhất cho tất cả Game / Idol)
   const [isGlobalDemoRunning, setIsGlobalDemoRunning] = useState(false);
   const globalDemoTimerRef = useRef(null);
@@ -554,81 +557,149 @@ export default function DesktopAppUI() {
     }, 1200);
   };
 
-  // 🛑 NÚT BẤM TẮT TẤT CẢ PHIÊN LIVE: TẮT HẾT GAME, LIVE AIDOL, TẮT CẢ NHẠC, SFX, HIỆU ỨNG, BÌNH LUẬN VIÊN
-  const handleStopAllLive = () => {
-    // 1. Tắt kết nối Live TikTok
-    setIsConnected(false);
-    setIsConnecting(false);
-    
-    // 2. Tắt các chế độ Game
-    setIsGameBattleActive(false);
-    setIsGameBanDoActive(false);
+  // 🛑/▶️ NÚT ĐỒNG BỘ: TẮT TẤT CẢ / BẬT TẤT CẢ PHIÊN LIVE & CÁC TÍNH NĂNG
+  const handleToggleMasterLive = () => {
+    if (isMasterLiveRunning) {
+      // --- TẮT TẤT CẢ ---
+      setIsMasterLiveRunning(false);
 
-    // 3. Tắt toàn bộ âm thanh / BGM / SFX / Voice
-    bandoAudio.stopAll();
-    
-    // 4. Dừng toàn bộ vòng lặp game, auto 24/7, demo, battle
-    bandoEngine.stopAuto247Loop();
-    bandoEngine.stopAutoTestLoop();
-    
-    // 5. Tắt player video / audio AIDOL
-    if (audioPlayerRef.current) {
-      try {
-        audioPlayerRef.current.pause();
-        audioPlayerRef.current.currentTime = 0;
-      } catch (e) {}
-    }
-    
-    // 6. Tắt toàn bộ Speech Synthesis của trình duyệt
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
-    
-    // 7. Tắt tất cả các audio / video elements đang phát trong DOM
-    if (typeof document !== 'undefined') {
-      const mediaElements = document.querySelectorAll('audio, video');
-      mediaElements.forEach(el => {
+      // 1. Tắt kết nối Live TikTok
+      setIsConnected(false);
+      setIsConnecting(false);
+      
+      // 2. Tắt các chế độ Game & Demo
+      setIsGameBattleActive(false);
+      setIsGameBanDoActive(false);
+      setIsGlobalDemoRunning(false);
+      setIsAuto247Running(false);
+
+      if (globalDemoTimerRef.current) {
+        clearInterval(globalDemoTimerRef.current);
+        globalDemoTimerRef.current = null;
+      }
+      if (auto247TimerRef.current) {
+        clearInterval(auto247TimerRef.current);
+        auto247TimerRef.current = null;
+      }
+
+      // 3. Tắt toàn bộ âm thanh / BGM / SFX / Voice
+      bandoAudio.stopAll();
+      
+      // 4. Dừng toàn bộ vòng lặp game, auto 24/7, demo, battle
+      bandoEngine.stopAuto247Loop();
+      bandoEngine.stopAutoTestLoop();
+      
+      // 5. Tắt player video / audio AIDOL
+      if (audioPlayerRef.current) {
         try {
-          el.pause();
+          audioPlayerRef.current.pause();
+          audioPlayerRef.current.currentTime = 0;
         } catch (e) {}
+      }
+      
+      // 6. Tắt toàn bộ Speech Synthesis của trình duyệt ngay lập tức
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      
+      // 7. Tắt tất cả các audio / video elements đang phát trong DOM
+      if (typeof document !== 'undefined') {
+        const mediaElements = document.querySelectorAll('audio, video');
+        mediaElements.forEach(el => {
+          try {
+            el.pause();
+          } catch (e) {}
+        });
+      }
+
+      // 8. Phát tín hiệu dừng toàn cục (BroadcastChannel, CustomEvent, LocalStorage) cho OBS/TikTok Live Studio Overlay
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('avalive_emergency_stop_all'));
+        window.dispatchEvent(new CustomEvent('global-stop-demo'));
+        try {
+          localStorage.setItem('avalive_emergency_stop_trigger', Date.now().toString());
+          localStorage.setItem('avalive_master_live_running', 'false');
+        } catch (e) {}
+      }
+
+      if (typeof BroadcastChannel !== 'undefined') {
+        try {
+          const bc = new BroadcastChannel('avalive_master_live_stream');
+          bc.postMessage({ type: 'EMERGENCY_STOP_ALL', timestamp: Date.now() });
+          bc.close();
+        } catch (e) {}
+        try {
+          const bcBando = new BroadcastChannel('avalive_bando_stage');
+          bcBando.postMessage({ type: 'STOP_ALL', timestamp: Date.now() });
+          bcBando.close();
+        } catch (e) {}
+        try {
+          const bcBattle = new BroadcastChannel('avalive_gamebattle_stage');
+          bcBattle.postMessage({ type: 'STOP_ALL', timestamp: Date.now() });
+          bcBattle.close();
+        } catch (e) {}
+      }
+
+      // 9. Toast thông báo
+      setToast({
+        type: 'info',
+        message: '🛑 ĐÃ TẮT TOÀN BỘ PHIÊN LIVE, GAME & ÂM THANH!'
       });
-    }
+      setTimeout(() => setToast(null), 3500);
 
-    // 8. Phát tín hiệu dừng toàn cục (BroadcastChannel, CustomEvent, LocalStorage) cho OBS/TikTok Live Studio Overlay
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('avalive_emergency_stop_all'));
-      window.dispatchEvent(new CustomEvent('global-stop-demo'));
+      const timeStr = new Date().toLocaleTimeString();
+      setSystemLogs(prev => [
+        `[${timeStr}] 🛑 ĐÃ TẮT TOÀN BỘ PHIÊN LIVE, GAME & ÂM THANH THEO LỆNH STREAMER`,
+        ...prev.slice(0, 48)
+      ]);
+    } else {
+      // --- BẬT TẤT CẢ ---
+      setIsMasterLiveRunning(true);
       try {
-        localStorage.setItem('avalive_emergency_stop_trigger', Date.now().toString());
+        localStorage.setItem('avalive_master_live_running', 'true');
       } catch (e) {}
-    }
 
-    if (typeof BroadcastChannel !== 'undefined') {
+      // 1. Mở kết nối TikTok Live
+      handleConnect();
+
+      // 2. Mở âm thanh BGM nếu cần
       try {
-        const bc = new BroadcastChannel('avalive_master_live_stream');
-        bc.postMessage({ type: 'EMERGENCY_STOP_ALL', timestamp: Date.now() });
-        bc.close();
+        bandoAudio.unlock();
+        bandoAudio.playBgm();
       } catch (e) {}
-      try {
-        const bcBando = new BroadcastChannel('avalive_bando_stage');
-        bcBando.postMessage({ type: 'STOP_ALL', timestamp: Date.now() });
-        bcBando.close();
-      } catch (e) {}
+
+      // 3. Phát tín hiệu bật lại toàn cục
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('avalive_resume_all'));
+      }
+
+      if (typeof BroadcastChannel !== 'undefined') {
+        try {
+          const bc = new BroadcastChannel('avalive_master_live_stream');
+          bc.postMessage({ 
+            type: 'RESUME_ALL', 
+            stage: isGameBanDoActive ? 'bando' : (isGameBattleActive ? 'battle' : 'idol'),
+            timestamp: Date.now() 
+          });
+          bc.close();
+        } catch (e) {}
+      }
+
+      setToast({
+        type: 'success',
+        message: '▶️ ĐÃ BẬT TOÀN BỘ PHIÊN LIVE & CÁC TÍNH NĂNG CÀI SẴN!'
+      });
+      setTimeout(() => setToast(null), 3500);
+
+      const timeStr = new Date().toLocaleTimeString();
+      setSystemLogs(prev => [
+        `[${timeStr}] ▶️ ĐÃ BẬT TOÀN BỘ PHIÊN LIVE & MỌI TÍNH NĂNG CÀI SẴN`,
+        ...prev.slice(0, 48)
+      ]);
     }
-
-    // 9. Toast thông báo
-    setToast({
-      type: 'info',
-      message: '🛑 Đã TẮT toàn bộ phiên Live, Game, Nhạc nền & Bình luận viên thành công!'
-    });
-    setTimeout(() => setToast(null), 4000);
-
-    const timeStr = new Date().toLocaleTimeString();
-    setSystemLogs(prev => [
-      `[${timeStr}] 🛑 ĐÃ TẮT TOÀN BỘ PHIÊN LIVE, GAME & ÂM THANH THEO LỆNH STREAMER`,
-      ...prev.slice(0, 48)
-    ]);
   };
+
+  const handleStopAllLive = handleToggleMasterLive;
 
   const toggleWebcam = async () => {
     if (isWebcamActive) {
@@ -928,14 +999,29 @@ export default function DesktopAppUI() {
         </div>
         
         <div className="flex items-center gap-1">
-          {/* NÚT BẤM TẮT TẤT CẢ PHIÊN LIVE (TẮT GAME, LIVE AIDOL, NHẠC, SFX, BÌNH LUẬN) */}
+          {/* NÚT BẤM ĐỒNG BỘ: TẮT TẤT CẢ / BẬT TẤT CẢ PHIÊN LIVE & CÁC TÍNH NĂNG */}
           <button 
-            onClick={handleStopAllLive}
-            className="flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[10px] font-black bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-500 text-white border border-red-400 shadow-sm transition-all active:scale-95 animate-pulse"
-            title="🛑 BẤM TẮT TẤT CẢ: Dừng ngay toàn bộ phiên Live, Game Chiến Đấu, Game Bản Đồ, Tắt Nhạc nền BGM, Hiệu ứng SFX và Bình Luận Viên"
+            onClick={handleToggleMasterLive}
+            className={`flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-black border shadow-sm transition-all active:scale-95 ${
+              isMasterLiveRunning
+                ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-500 text-white border-red-400 animate-pulse'
+                : 'bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 hover:from-emerald-500 hover:to-green-500 text-white border-emerald-400 ring-1 ring-emerald-300'
+            }`}
+            title={isMasterLiveRunning 
+              ? "🛑 BẤM TẮT TẤT CẢ: Dừng ngay toàn bộ phiên Live, Game Chiến Đấu, Game Bản Đồ, Tắt Nhạc nền BGM, Hiệu ứng SFX và Bình Luận Viên" 
+              : "▶️ BẤM BẬT TẤT CẢ: Khởi động lại toàn bộ phiên Live, AI Idol, Game, Âm thanh & Kết nối TikTok"}
           >
-            <StopCircle size={11} className="text-yellow-300 shrink-0" />
-            <span className="uppercase tracking-tight whitespace-nowrap">Tắt Tất Cả</span>
+            {isMasterLiveRunning ? (
+              <>
+                <StopCircle size={11} className="text-yellow-300 shrink-0" />
+                <span className="uppercase tracking-tight whitespace-nowrap">Tắt Tất Cả</span>
+              </>
+            ) : (
+              <>
+                <Play size={11} className="text-white fill-white shrink-0" />
+                <span className="uppercase tracking-tight whitespace-nowrap">Bật Tất Cả</span>
+              </>
+            )}
           </button>
 
           {/* Nút Chế độ Live AI Idol */}

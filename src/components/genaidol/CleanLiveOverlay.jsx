@@ -272,6 +272,7 @@ export default function CleanLiveOverlay() {
             ? 'h-full aspect-[9/16] w-auto max-w-full'
             : 'w-full aspect-[16/9] h-auto max-h-full'
         }`}
+        style={ratio === '9:16' ? { aspectRatio: '9 / 16', height: '100%', maxWidth: 'calc(100vh * 9 / 16)' } : { aspectRatio: '16 / 9', width: '100%' }}
       >
         {masterState.isVideo ? (
           <video

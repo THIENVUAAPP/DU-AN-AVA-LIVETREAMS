@@ -2504,10 +2504,19 @@ export default function GameBanDoVietNam({
   if (isPopout) {
     return (
       <div 
-        className="w-full h-full relative overflow-hidden bg-[#070b14] select-none font-sans"
+        className="w-full h-full relative overflow-hidden bg-[#070b14] select-none font-sans flex items-center justify-center"
         onPointerDown={handleUserGesture}
       >
-        {renderCleanStage()}
+        <div 
+          className={`relative flex flex-col overflow-hidden transition-all duration-300 ${
+            aspectRatio === '9:16'
+              ? 'h-full max-h-full aspect-[9/16] w-auto max-w-full mx-auto'
+              : 'w-full max-w-[1200px] h-auto max-h-full aspect-[16/9] mx-auto'
+          }`}
+          style={aspectRatio === '9:16' ? { aspectRatio: '9 / 16', height: '100%', maxWidth: 'calc(100vh * 9 / 16)' } : { aspectRatio: '16 / 9', width: '100%' }}
+        >
+          {renderCleanStage()}
+        </div>
       </div>
     );
   }
@@ -2526,6 +2535,7 @@ export default function GameBanDoVietNam({
             ? 'h-full max-h-full aspect-[9/16] w-auto max-w-full mx-auto rounded-2xl md:rounded-3xl border border-yellow-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)]'
             : 'w-full max-w-[1200px] h-auto max-h-full aspect-[16/9] rounded-2xl border border-yellow-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)]'
         } ${isLightTheme ? 'bg-slate-50' : 'bg-[#070b14]'}`}
+        style={aspectRatio === '9:16' ? { aspectRatio: '9 / 16', maxHeight: '100%', maxWidth: 'calc(100vh * 9 / 16)' } : {}}
       >
         {/* SÂN KHẤU LIVE SẠCH NẰM Ở ĐÂY (Canvas + Top mini stage + Victory + Side panels) */}
         {renderCleanStage()}

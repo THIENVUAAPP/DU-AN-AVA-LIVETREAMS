@@ -2905,6 +2905,27 @@ export default function GameChienDau({
     </div>
   );
 
+  // NẾU LÀ POPOUT / OVERLAY CHO TIKTOK STUDIO / OBS -> CHỈ RENDER DUY NHẤT SÂN KHẤU SẠCH 100%
+  if (isPopout) {
+    return (
+      <div 
+        className="w-full h-full relative overflow-hidden bg-[#0a0c14] select-none font-sans flex items-center justify-center"
+        onPointerDown={handleUserGesture}
+      >
+        <div 
+          className={`relative flex flex-col overflow-hidden transition-all duration-300 ${
+            aspectRatio === '9:16'
+              ? 'h-full max-h-full aspect-[9/16] w-auto max-w-full mx-auto'
+              : 'w-full max-w-[1200px] h-auto max-h-full aspect-[16/9] mx-auto'
+          }`}
+          style={aspectRatio === '9:16' ? { aspectRatio: '9 / 16', height: '100%', maxWidth: 'calc(100vh * 9 / 16)' } : { aspectRatio: '16 / 9', width: '100%' }}
+        >
+          {renderCleanStage()}
+        </div>
+      </div>
+    );
+  }
+
   // GIAO DIỆN PHẦN MỀM CHÍNH (STREAMER VIEW): SÂN KHẤU SẠCH 100%
   return (
     <div 
@@ -2919,6 +2940,7 @@ export default function GameChienDau({
             ? 'h-full max-h-full aspect-[9/16] w-auto max-w-full mx-auto rounded-2xl md:rounded-3xl border border-purple-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)]'
             : 'w-full max-w-[1200px] h-auto max-h-full aspect-[16/9] rounded-2xl border border-purple-500/30 shadow-[0_0_50px_rgba(0,0,0,0.85)]'
         } ${!isDarkMode ? 'bg-white' : 'bg-[#0a0c14]'}`}
+        style={aspectRatio === '9:16' ? { aspectRatio: '9 / 16', maxHeight: '100%', maxWidth: 'calc(100vh * 9 / 16)' } : {}}
       >
         {renderCleanStage()}
       </div>
