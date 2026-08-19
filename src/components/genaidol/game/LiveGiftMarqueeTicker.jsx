@@ -30,11 +30,11 @@ export default function LiveGiftMarqueeTicker({
   const [isMinimized, setIsMinimized] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
 
-  // Kích thước tỷ lệ phóng to thu nhỏ (mặc định 1.0x, cho phép từ 0.7x đến 1.6x)
+  // Kích thước tỷ lệ phóng to thu nhỏ (cho phép từ 0.5x đến 2.0x, mặc định 1.0x)
   const [scale, setScale] = useState(() => {
     try {
       const saved = localStorage.getItem(`avalive_gift_box_scale_${mode}`);
-      if (saved) return Math.max(0.7, Math.min(1.6, parseFloat(saved)));
+      if (saved) return Math.max(0.5, Math.min(2.0, parseFloat(saved)));
     } catch (e) {}
     return 1.0;
   });
@@ -51,6 +51,8 @@ export default function LiveGiftMarqueeTicker({
 
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef({ x: 0, y: 0 });
+  const isResizingRef = useRef(false);
+  const resizeStartRef = useRef({ startX: 0, startScale: 1.0 });
   const scrollContainerRef = useRef(null);
 
   // Lắng nghe cập nhật cấu hình quà
@@ -102,10 +104,10 @@ export default function LiveGiftMarqueeTicker({
     return () => cancelAnimationFrame(animId);
   }, [isPaused, isMinimized, isClosed]);
 
-  // Lưu scale khi thay đổi
+  // Lưu scale khi thay đổi (+/- nút bấm)
   const handleScaleChange = (delta) => {
     setScale(prev => {
-      const next = Math.round(Math.max(0.7, Math.min(1.6, prev + delta)) * 10) / 10;
+      const next = Math.round(Math.max(0.5, Math.min(2.0, prev + delta)) * 10) / 10;
       try {
         localStorage.setItem(`avalive_gift_box_scale_${mode}`, next.toString());
       } catch (e) {}
@@ -113,7 +115,45 @@ export default function LiveGiftMarqueeTicker({
     });
   };
 
-  // Kéo thả vị trí
+  // Kéo thả góc để Phóng to / Thu nhỏ trực tiếp (Corner Drag Resize)
+  const handleCornerResizeStart = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    isResizingRef.current = true;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    resizeStartRef.current = {
+      startX: clientX,
+      startScale: scale
+    };
+
+    const handleResizeMove = (moveEvt) => {
+      if (!isResizingRef.current) return;
+      const currentX = moveEvt.touches ? moveEvt.touches[0].clientX : moveEvt.clientX;
+      const diffX = currentX - resizeStartRef.current.startX;
+      const newScale = Math.max(0.5, Math.min(2.0, resizeStartRef.current.startScale + diffX * 0.005));
+      const rounded = Math.round(newScale * 100) / 100;
+      setScale(rounded);
+    };
+
+    const handleResizeEnd = () => {
+      if (!isResizingRef.current) return;
+      isResizingRef.current = false;
+      window.removeEventListener('mousemove', handleResizeMove);
+      window.removeEventListener('mouseup', handleResizeEnd);
+      window.removeEventListener('touchmove', handleResizeMove);
+      window.removeEventListener('touchend', handleResizeEnd);
+      try {
+        localStorage.setItem(`avalive_gift_box_scale_${mode}`, scale.toString());
+      } catch (e) {}
+    };
+
+    window.addEventListener('mousemove', handleResizeMove);
+    window.addEventListener('mouseup', handleResizeEnd);
+    window.addEventListener('touchmove', handleResizeMove, { passive: false });
+    window.addEventListener('touchend', handleResizeEnd);
+  };
+
+  // Kéo thả vị trí (Drag to Move)
   const handleDragStart = (e) => {
     isDraggingRef.current = true;
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -134,8 +174,8 @@ export default function LiveGiftMarqueeTicker({
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     const newPos = {
-      x: Math.max(0, Math.min(window.innerWidth - 120, clientX - dragStartRef.current.x)),
-      y: Math.max(0, Math.min(window.innerHeight - 80, clientY - dragStartRef.current.y))
+      x: Math.max(0, Math.min(window.innerWidth - 80, clientX - dragStartRef.current.x)),
+      y: Math.max(0, Math.min(window.innerHeight - 60, clientY - dragStartRef.current.y))
     };
     setFloatingPos(newPos);
   };
@@ -349,6 +389,18 @@ export default function LiveGiftMarqueeTicker({
             {allActiveGifts.map((g, i) => renderGiftRow(g, `gift_row_${g.id}_${i}`))}
           </div>
 
+          {/* TAY CẦM KÉO CO GIÃN KÍCH THƯỚC (CORNER RESIZE HANDLE) */}
+          <div 
+            onMouseDown={handleCornerResizeStart}
+            onTouchStart={handleCornerResizeStart}
+            className="flex items-center justify-between pt-1 mt-1 border-t border-white/10 text-[7px] text-gray-400 select-none cursor-nwse-resize hover:text-yellow-300"
+            title="Kéo góc này để phóng to / thu nhỏ bảng quà"
+          >
+            <span className="font-mono text-[7.5px] opacity-70">Tỉ lệ: {Math.round(scale * 100)}%</span>
+            <div className="flex items-center gap-0.5 text-[8px] text-yellow-400/80 hover:text-yellow-300">
+              <span>⤡ Kéo góc</span>
+            </div>
+          </div>
         </div>
       )}
     </div>

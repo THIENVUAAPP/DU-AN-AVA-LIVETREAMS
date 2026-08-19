@@ -338,11 +338,16 @@ export default function GameBanDoVietNam({
     });
   }, []);
 
-  // Draggable HUDs State (Thu nhỏ ~50% và có thể di chuyển tùy ý trên màn hình)
+  // Draggable & Resizable HUDs State (Có thể thu nhỏ / phóng to và di chuyển tùy ý trên màn hình)
   const [isLeaderboardMinimized, setIsLeaderboardMinimized] = useState(false);
   const [isLeaderboardClosed, setIsLeaderboardClosed] = useState(false);
-  const [isGiftHudMinimized, setIsGiftHudMinimized] = useState(false);
-  const [isGiftHudClosed, setIsGiftHudClosed] = useState(false);
+  const [leaderboardScale, setLeaderboardScale] = useState(() => {
+    try {
+      const saved = localStorage.getItem('bando_hud_leaderboard_scale');
+      if (saved) return Math.max(0.5, Math.min(2.0, parseFloat(saved)));
+    } catch (e) {}
+    return 1.0;
+  });
   const [leaderboardPos, setLeaderboardPos] = useState(() => {
     try {
       const saved = localStorage.getItem('bando_hud_leaderboard_pos');
@@ -350,13 +355,54 @@ export default function GameBanDoVietNam({
     } catch (e) {}
     return { x: 10, y: 70 };
   });
-  const [giftHudPos, setGiftHudPos] = useState(() => {
-    try {
-      const saved = localStorage.getItem('bando_hud_gift_pos');
-      if (saved) return JSON.parse(saved);
-    } catch (e) {}
-    return { x: null, y: 70, right: 10 };
-  });
+
+  const handleLeaderboardScaleChange = (delta) => {
+    setLeaderboardScale(prev => {
+      const next = Math.round(Math.max(0.5, Math.min(2.0, prev + delta)) * 10) / 10;
+      try { localStorage.setItem('bando_hud_leaderboard_scale', next.toString()); } catch (err) {}
+      return next;
+    });
+  };
+
+  const isLbResizingRef = useRef(false);
+  const lbResizeStartRef = useRef({ startX: 0, startScale: 1.0 });
+
+  const handleLbCornerResizeStart = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    isLbResizingRef.current = true;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    lbResizeStartRef.current = {
+      startX: clientX,
+      startScale: leaderboardScale
+    };
+
+    const handleResizeMove = (moveEvt) => {
+      if (!isLbResizingRef.current) return;
+      const currentX = moveEvt.touches ? moveEvt.touches[0].clientX : moveEvt.clientX;
+      const diffX = currentX - lbResizeStartRef.current.startX;
+      const newScale = Math.max(0.5, Math.min(2.0, lbResizeStartRef.current.startScale + diffX * 0.005));
+      const rounded = Math.round(newScale * 100) / 100;
+      setLeaderboardScale(rounded);
+    };
+
+    const handleResizeEnd = () => {
+      if (!isLbResizingRef.current) return;
+      isLbResizingRef.current = false;
+      window.removeEventListener('mousemove', handleResizeMove);
+      window.removeEventListener('mouseup', handleResizeEnd);
+      window.removeEventListener('touchmove', handleResizeMove);
+      window.removeEventListener('touchend', handleResizeEnd);
+      try {
+        localStorage.setItem('bando_hud_leaderboard_scale', leaderboardScale.toString());
+      } catch (e) {}
+    };
+
+    window.addEventListener('mousemove', handleResizeMove);
+    window.addEventListener('mouseup', handleResizeEnd);
+    window.addEventListener('touchmove', handleResizeMove, { passive: false });
+    window.addEventListener('touchend', handleResizeEnd);
+  };
 
   const draggingHudRef = useRef(null); // 'leaderboard' | 'gift' | null
   const dragOffsetRef = useRef({ x: 0, y: 0 });
@@ -865,11 +911,12 @@ export default function GameBanDoVietNam({
     }
 
     // Camera căn chỉnh chuẩn xác cho tỷ lệ 9:16 và 16:9 bao quát trọn vẹn dải đất hình chữ S
-    const isVerticalAspect = aspectRatio === '9:16';
-    const camera = new THREE.PerspectiveCamera(48, width / height, 0.1, 5000);
+    const isVerticalAspect = aspectRatio === '9:16' || width < height;
+    const fov = isVerticalAspect ? 52 : 48;
+    const camera = new THREE.PerspectiveCamera(fov, width / height, 0.1, 5000);
     if (isVerticalAspect) {
-      camera.position.set(0, 310, 330);
-      camera.lookAt(0, 0, 10);
+      camera.position.set(0, 330, 270);
+      camera.lookAt(0, -10, 0);
     } else {
       camera.position.set(0, 200, 220);
       camera.lookAt(0, 0, 10);
@@ -1158,6 +1205,8 @@ export default function GameBanDoVietNam({
       const h = container.clientHeight || 600;
       if (w > 0 && h > 0) {
         camera.aspect = w / h;
+        const isVert = aspectRatio === '9:16' || w < h;
+        camera.fov = isVert ? 52 : 48;
         camera.updateProjectionMatrix();
         renderer.setSize(w, h);
       }
@@ -2085,7 +2134,7 @@ export default function GameBanDoVietNam({
         </div>
       )}
 
-      {/* 1. TOP SUPPORTERS LEADERBOARD (Ultra Transparent Glassmorphism - Nhìn xuyên thấu nền game 100%) */}
+      {/* 1. TOP SUPPORTERS LEADERBOARD (Ultra Transparent Glassmorphism - Có thể Kéo Thả & Co Giãn Kích Thước) */}
       {!isLeaderboardClosed && (
         <div 
           className={`absolute z-30 transition-all duration-100 pointer-events-auto select-none ${
@@ -2093,7 +2142,9 @@ export default function GameBanDoVietNam({
           }`}
           style={{
             top: `${leaderboardPos.y}px`,
-            left: `${leaderboardPos.x}px`
+            left: `${leaderboardPos.x}px`,
+            transform: `scale(${leaderboardScale})`,
+            transformOrigin: 'top left'
           }}
         >
           <div className="bg-black/20 backdrop-blur-[2px] hover:bg-black/40 border border-amber-500/20 hover:border-amber-400/40 rounded-lg p-1 shadow-2xl text-white transition-all">
@@ -2110,12 +2161,30 @@ export default function GameBanDoVietNam({
                 </div>
               )}
               <div className="flex items-center gap-0.5 ml-auto">
+                {!isLeaderboardMinimized && (
+                  <>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleLeaderboardScaleChange(-0.1); }}
+                      className="w-3.5 h-3.5 flex items-center justify-center rounded text-gray-300 hover:text-white hover:bg-white/20 transition-colors text-[8px]"
+                      title="Thu nhỏ BXH (-10%)"
+                    >
+                      −
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleLeaderboardScaleChange(0.1); }}
+                      className="w-3.5 h-3.5 flex items-center justify-center rounded text-gray-300 hover:text-white hover:bg-white/20 transition-colors text-[8px]"
+                      title="Phóng to BXH (+10%)"
+                    >
+                      +
+                    </button>
+                  </>
+                )}
                 <button
                   onClick={() => setIsLeaderboardMinimized(!isLeaderboardMinimized)}
                   className="p-0.5 rounded text-gray-300 hover:text-white hover:bg-white/20 transition-colors"
                   title={isLeaderboardMinimized ? "Mở rộng BXH" : "Thu nhỏ BXH"}
                 >
-                  <span className="text-[9px] font-bold">{isLeaderboardMinimized ? '🏆' : '−'}</span>
+                  <span className="text-[9px] font-bold">{isLeaderboardMinimized ? '🏆' : '▾'}</span>
                 </button>
                 <button
                   onClick={() => setIsLeaderboardClosed(true)}
@@ -2128,23 +2197,36 @@ export default function GameBanDoVietNam({
             </div>
 
             {!isLeaderboardMinimized && (
-              <div className="space-y-0.5 max-h-24 overflow-y-auto custom-scrollbar">
-                {(!gameState.leaderboard || gameState.leaderboard.length === 0) ? (
-                  <p className="text-[8px] text-gray-300 text-center py-1 italic">Chưa có lượt cắm</p>
-                ) : (
-                  gameState.leaderboard.slice(0, 3).map((user, idx) => (
-                    <div key={user.userId || idx} className="flex items-center justify-between text-[8px] sm:text-[9px] bg-black/30 px-1 py-0.5 rounded border border-white/5">
-                      <span className="flex items-center gap-0.5 font-medium truncate max-w-[65px]">
-                        <span className={idx === 0 ? 'text-amber-400 font-bold' : idx === 1 ? 'text-gray-300' : 'text-amber-600'}>
-                          #{idx + 1}
+              <>
+                <div className="space-y-0.5 max-h-24 overflow-y-auto custom-scrollbar">
+                  {(!gameState.leaderboard || gameState.leaderboard.length === 0) ? (
+                    <p className="text-[8px] text-gray-300 text-center py-1 italic">Chưa có lượt cắm</p>
+                  ) : (
+                    gameState.leaderboard.slice(0, 3).map((user, idx) => (
+                      <div key={user.userId || idx} className="flex items-center justify-between text-[8px] sm:text-[9px] bg-black/30 px-1 py-0.5 rounded border border-white/5">
+                        <span className="flex items-center gap-0.5 font-medium truncate max-w-[65px]">
+                          <span className={idx === 0 ? 'text-amber-400 font-bold' : idx === 1 ? 'text-gray-300' : 'text-amber-600'}>
+                            #{idx + 1}
+                          </span>
+                          <span className="text-yellow-100 truncate font-semibold">{user.username}</span>
                         </span>
-                        <span className="text-yellow-100 truncate font-semibold">{user.username}</span>
-                      </span>
-                      <span className="font-mono font-bold text-yellow-400 shrink-0">{user.cells} ô</span>
-                    </div>
-                  ))
-                )}
-              </div>
+                        <span className="font-mono font-bold text-yellow-400 shrink-0">{user.cells} ô</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Corner Drag Resize Handle */}
+                <div 
+                  onMouseDown={handleLbCornerResizeStart}
+                  onTouchStart={handleLbCornerResizeStart}
+                  className="flex items-center justify-between pt-0.5 mt-0.5 border-t border-white/10 text-[6.5px] text-gray-400 select-none cursor-nwse-resize hover:text-yellow-300"
+                  title="Kéo góc này để phóng to / thu nhỏ BXH"
+                >
+                  <span className="font-mono opacity-70">{Math.round(leaderboardScale * 100)}%</span>
+                  <span className="text-[7.5px] text-yellow-400/80">⤡</span>
+                </div>
+              </>
             )}
           </div>
         </div>
