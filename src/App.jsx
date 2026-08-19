@@ -189,16 +189,16 @@ export default function App() {
     alert(`⚡ ĐÃ KẾT NỐI THÀNH CÔNG TÀI KHOẢN GOOGLE REAL-TIME!\n\n👤 Email: ${emailClean}\n👑 Quyền hạn: ${isAdmin ? "SUPER ADMIN VIP" : "THÀNH VIÊN GÓI CHÍNH THỨC"}\n\nHồ sơ đã được đồng bộ với Cơ sở dữ liệu Supabase!`);
   };
 
-  // Cửa Sổ Overlay Trong Suốt cho Sàn Nhảy & Game Chiến Đấu & Nhân Vật Live TikTok
+  // Cửa Sổ Overlay Realtime Trong Suốt cho TikTok LIVE Studio & OBS Studio
   const overlayType = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("overlay");
   if (overlayType === "dancefloor") {
     return <DanceFloorOverlay />;
   }
+  if (overlayType === "live" || overlayType === "stage" || overlayType === "tiktok" || overlayType === "obs" || overlayType === "cleanlive" || overlayType === "avatar" || overlayType === "stream") {
+    return <CleanLiveOverlay />;
+  }
   if (overlayType === "gamebattle" || overlayType === "game") {
     return <GameBattleOverlay />;
-  }
-  if (overlayType === "cleanlive" || overlayType === "avatar" || overlayType === "stream") {
-    return <CleanLiveOverlay />;
   }
   if (overlayType === "bando" || overlayType === "vietnam_map" || overlayType === "map" || overlayType === "vietnam") {
     return <GameBanDoOverlay />;

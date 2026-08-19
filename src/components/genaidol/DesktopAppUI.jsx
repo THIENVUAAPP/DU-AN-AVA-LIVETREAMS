@@ -73,10 +73,12 @@ export default function DesktopAppUI() {
     } catch (e) {}
   };
 
-  // States cho Menu Theo dõi
+  // States cho Menu Theo dõi & Realtime Overlay TikTok / OBS
   const [isMonitorDropdownOpen, setIsMonitorDropdownOpen] = useState(false);
   const [activeMonitorModal, setActiveMonitorModal] = useState(null);
   const [quickResponseActiveVideo, setQuickResponseActiveVideo] = useState(null);
+  const [showOverlayModal, setShowOverlayModal] = useState(false);
+  const [copySuccessMsg, setCopySuccessMsg] = useState('');
   
   const [systemLogs, setSystemLogs] = useState([]);
   const [tiktokLogs, setTiktokLogs] = useState([]);
@@ -436,30 +438,56 @@ export default function DesktopAppUI() {
   }
 
 
-  // Đồng bộ hoá luồng video sạch sang TikTok LIVE Studio / OBS qua BroadcastChannel và localStorage
+  // ⚡ MASTER REALTIME BROADCAST: Đồng bộ 100% thời gian thực sang TikTok LIVE Studio / OBS Studio
   useEffect(() => {
+    const stage = isGameBanDoActive ? 'bando' : isGameBattleActive ? 'battle' : 'idol';
     const char = CHARACTERS[selectedCharacter] || { url: '', type: 'image', name: 'AI Idol' };
     const currentMedia = (isConnected || showSimulator) && activeVideoItem ? activeVideoItem.mediaUrl : char.url;
     const isVid = char.type === 'video' || (activeVideoItem && activeVideoItem.type === 'video');
 
-    const streamPayload = {
-      type: 'STREAM_MEDIA_UPDATE',
+    const masterPayload = {
+      type: 'MASTER_LIVE_STATE_UPDATE',
+      stage, // 'idol' | 'battle' | 'bando'
+      aspectRatio: globalAspectRatio, // '9:16' | '16:9'
+      selectedCharacter,
+      characterName: char.name || 'AI Idol',
       mediaUrl: currentMedia,
       isVideo: !!isVid,
-      characterName: char.name || 'AI Idol',
-      isConnected: !!(isConnected || showSimulator)
+      isConnected: !!(isConnected || showSimulator),
+      isDarkMode,
+      currentLang,
+      updatedAt: Date.now()
     };
 
     try {
-      localStorage.setItem('aidol_clean_stream_state', JSON.stringify(streamPayload));
+      localStorage.setItem('avalive_master_live_state', JSON.stringify(masterPayload));
+      localStorage.setItem('aidol_clean_stream_state', JSON.stringify({
+        type: 'STREAM_MEDIA_UPDATE',
+        mediaUrl: currentMedia,
+        isVideo: !!isVid,
+        characterName: char.name || 'AI Idol',
+        isConnected: !!(isConnected || showSimulator)
+      }));
     } catch (e) {}
 
     if (typeof BroadcastChannel !== 'undefined') {
-      const channel = new BroadcastChannel('avalive_clean_stream_channel');
-      channel.postMessage(streamPayload);
-      channel.close();
+      try {
+        const masterChannel = new BroadcastChannel('avalive_master_live_stream');
+        masterChannel.postMessage(masterPayload);
+        masterChannel.close();
+
+        const cleanChannel = new BroadcastChannel('avalive_clean_stream_channel');
+        cleanChannel.postMessage({
+          type: 'STREAM_MEDIA_UPDATE',
+          mediaUrl: currentMedia,
+          isVideo: !!isVid,
+          characterName: char.name || 'AI Idol',
+          isConnected: !!(isConnected || showSimulator)
+        });
+        cleanChannel.close();
+      } catch (e) {}
     }
-  }, [selectedCharacter, activeVideoItem, isConnected, showSimulator, CHARACTERS]);
+  }, [isGameBanDoActive, isGameBattleActive, selectedCharacter, activeVideoItem, isConnected, showSimulator, globalAspectRatio, isDarkMode, currentLang, CHARACTERS]);
 
   const handleConnect = async () => {
     if (isConnected) {
@@ -973,6 +1001,16 @@ export default function DesktopAppUI() {
           <button onClick={() => setActiveSettingsModal('payment')} className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${isDarkMode ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-green-500/10 text-green-700 hover:bg-green-500/20'}`}>
             <CreditCard size={13} />
             <span>{t('payment', currentLang)}</span>
+          </button>
+
+          {/* Nút Sao Chép Link Realtime TikTok LIVE Studio & OBS Studio */}
+          <button
+            onClick={() => setShowOverlayModal(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black bg-gradient-to-r from-cyan-600 via-teal-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white shadow-md border border-cyan-300 ring-1 ring-cyan-400/40 transition-all hover:scale-105"
+            title="Mở cửa sổ & Sao chép Link Overlay Live cho TikTok LIVE Studio / OBS Studio"
+          >
+            <Radio size={12} className="text-yellow-300 animate-pulse" />
+            <span>Link Live TikTok / OBS</span>
           </button>
 
           {/* Nút Tải phần mềm (ZIP) */}
@@ -1983,6 +2021,177 @@ export default function DesktopAppUI() {
         isOpen={isGameBanDoAdminOpen}
         onClose={() => setIsGameBanDoAdminOpen(false)}
       />
+
+      {/* Modal Hướng Dẫn & Sao Chép Link Overlay TikTok LIVE Studio / OBS Studio */}
+      {showOverlayModal && (
+        <div className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 select-none animate-in fade-in duration-200">
+          <div className="w-full max-w-2xl bg-[#181822] border border-cyan-500/40 rounded-2xl shadow-[0_0_50px_rgba(6,182,212,0.25)] overflow-hidden flex flex-col max-h-[90vh]">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-cyan-950 via-teal-950 to-[#181822] border-b border-cyan-500/30">
+              <div className="flex items-center gap-2">
+                <Radio className="text-cyan-400 animate-pulse" size={18} />
+                <h3 className="text-sm font-black text-white uppercase tracking-wide">
+                  Tích Hợp TikTok LIVE Studio & OBS Studio Realtime
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowOverlayModal(false)}
+                className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Body Content */}
+            <div className="p-4 overflow-y-auto space-y-4 text-xs text-gray-200 custom-scrollbar">
+              
+              <div className="p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-cyan-200">
+                <div className="font-bold flex items-center gap-1.5 mb-1 text-yellow-300">
+                  <Sparkles size={14} className="text-yellow-400 animate-spin" />
+                  <span>Đồng Bộ Siêu Tốc 0.00001s Qua BroadcastChannel:</span>
+                </div>
+                <p className="text-[11px] leading-relaxed text-gray-300">
+                  Chỉ cần dán đường link vào mục <strong>Browser Source (Trình duyệt)</strong> trên TikTok LIVE Studio hoặc OBS Studio. Khi bạn thao tác đổi nhân vật Idol, mở Game Bản Đồ hay Game Chiến Đấu, âm thanh và quà tặng sẽ <strong>tự động đồng bộ thời gian thực</strong> lên phiên live!
+                </p>
+              </div>
+
+              {/* 1. LINK MASTER ĐỒNG BỘ TOÀN NĂNG (Khuyên Dùng) */}
+              <div className="p-3 rounded-xl bg-gradient-to-r from-blue-950/60 to-cyan-950/60 border border-cyan-400/50 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-black text-cyan-300 text-xs flex items-center gap-1.5">
+                    <span>⭐ LINK LIVE TOÀN NĂNG (TỰ ĐỘNG CHUYỂN CẢNH REALTIME)</span>
+                  </span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold animate-pulse">
+                    Khuyên Dùng
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    readOnly
+                    value={typeof window !== 'undefined' ? `${window.location.origin}/?overlay=live` : ''}
+                    className="flex-1 bg-black/60 border border-cyan-500/30 rounded-lg px-3 py-1.5 text-cyan-200 font-mono text-[11px] select-all outline-none"
+                  />
+                  <button
+                    onClick={() => {
+                      if (typeof navigator !== 'undefined') {
+                        navigator.clipboard.writeText(`${window.location.origin}/?overlay=live`);
+                        setCopySuccessMsg('Đã sao chép Link Toàn Năng!');
+                        setTimeout(() => setCopySuccessMsg(''), 3000);
+                      }
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs transition-colors shrink-0 flex items-center gap-1 shadow-md"
+                  >
+                    <span>{copySuccessMsg === 'Đã sao chép Link Toàn Năng!' ? '✅ Đã Chép' : 'Sao Chép'}</span>
+                  </button>
+                  <button
+                    onClick={() => window.open(`${window.location.origin}/?overlay=live`, '_blank')}
+                    className="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 font-bold text-xs transition-colors shrink-0"
+                    title="Mở tab mới xem thử"
+                  >
+                    Xem Thử
+                  </button>
+                </div>
+                <p className="text-[10px] text-gray-400">
+                  Tự động chuyển giữa AI Idol, Game Bản Đồ và Game Chiến Đấu theo đúng màn hình đang chạy trong phần mềm.
+                </p>
+              </div>
+
+              {/* 2. CÁC LINK CHUYÊN BIỆT */}
+              <div className="space-y-2">
+                <div className="text-[11px] font-bold text-gray-300 uppercase tracking-wide">
+                  Hoặc Sao Chép Link Chuyên Biệt Theo Từng Game:
+                </div>
+
+                {/* Link Bản Đồ */}
+                <div className="p-2.5 rounded-xl bg-black/40 border border-amber-500/30 flex items-center justify-between gap-2">
+                  <div className="truncate flex-1">
+                    <div className="font-bold text-amber-300 text-[11px] flex items-center gap-1">
+                      <Flag size={12} className="text-red-400" />
+                      <span>Game Bản Đồ Cắm Cờ 3 Miền ({globalAspectRatio})</span>
+                    </div>
+                    <div className="text-[10px] text-gray-400 font-mono truncate">
+                      {typeof window !== 'undefined' ? `${window.location.origin}/?overlay=bando&ratio=${globalAspectRatio}` : ''}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (typeof navigator !== 'undefined') {
+                        navigator.clipboard.writeText(`${window.location.origin}/?overlay=bando&ratio=${globalAspectRatio}`);
+                        setCopySuccessMsg('Đã sao chép Link Bản Đồ!');
+                        setTimeout(() => setCopySuccessMsg(''), 3000);
+                      }
+                    }}
+                    className="px-3 py-1 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-[11px] transition-colors shrink-0"
+                  >
+                    <span>{copySuccessMsg === 'Đã sao chép Link Bản Đồ!' ? '✅ Đã Chép' : 'Sao Chép'}</span>
+                  </button>
+                </div>
+
+                {/* Link Chiến Đấu */}
+                <div className="p-2.5 rounded-xl bg-black/40 border border-purple-500/30 flex items-center justify-between gap-2">
+                  <div className="truncate flex-1">
+                    <div className="font-bold text-purple-300 text-[11px] flex items-center gap-1">
+                      <Swords size={12} className="text-yellow-400" />
+                      <span>Game Đại Chiến PK TikTok ({globalAspectRatio})</span>
+                    </div>
+                    <div className="text-[10px] text-gray-400 font-mono truncate">
+                      {typeof window !== 'undefined' ? `${window.location.origin}/?overlay=gamebattle&ratio=${globalAspectRatio}` : ''}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (typeof navigator !== 'undefined') {
+                        navigator.clipboard.writeText(`${window.location.origin}/?overlay=gamebattle&ratio=${globalAspectRatio}`);
+                        setCopySuccessMsg('Đã sao chép Link Chiến Đấu!');
+                        setTimeout(() => setCopySuccessMsg(''), 3000);
+                      }
+                    }}
+                    className="px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-[11px] transition-colors shrink-0"
+                  >
+                    <span>{copySuccessMsg === 'Đã sao chép Link Chiến Đấu!' ? '✅ Đã Chép' : 'Sao Chép'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Hướng Dẫn Từng Bước */}
+              <div className="p-3 rounded-xl bg-black/40 border border-white/10 space-y-1.5 text-[11px]">
+                <div className="font-bold text-white uppercase text-[11px] mb-1">
+                  🛠️ Hướng Dẫn Cài Đặt Vào TikTok LIVE Studio / OBS Studio:
+                </div>
+                <div className="space-y-1 text-gray-300">
+                  <div>1. Mở TikTok LIVE Studio hoặc OBS Studio, bấm <strong>Thêm Nguồn (Add Source)</strong> &gt; <strong>Browser Source (Trình duyệt)</strong>.</div>
+                  <div>2. Dán đường link vừa sao chép ở trên vào ô <strong>URL</strong>.</div>
+                  <div>
+                    3. Đặt kích thước: 
+                    {globalAspectRatio === '9:16' ? (
+                      <span className="text-yellow-300 font-bold"> Rộng: 1080 - Cao: 1920 (Khung Dọc 9:16)</span>
+                    ) : (
+                      <span className="text-yellow-300 font-bold"> Rộng: 1920 - Cao: 1080 (Khung Ngang 16:9)</span>
+                    )}
+                  </div>
+                  <div>4. Tích chọn <strong>"Control audio via OBS"</strong> (Điều khiển âm thanh) nếu cần, rồi bấm <strong>OK</strong>.</div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Footer */}
+            <div className="px-4 py-2.5 bg-black/40 border-t border-white/10 flex items-center justify-between">
+              <span className="text-[11px] text-gray-400">
+                {copySuccessMsg ? <span className="text-emerald-400 font-bold">✨ {copySuccessMsg}</span> : '⚡ Tự động cập nhật realtime 100%'}
+              </span>
+              <button
+                onClick={() => setShowOverlayModal(false)}
+                className="px-4 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-bold text-xs transition-colors"
+              >
+                Đóng
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
       {/* Toast Notification */}
       {toast && (

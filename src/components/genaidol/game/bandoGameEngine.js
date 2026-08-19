@@ -36,6 +36,34 @@ export function getRegionForCell(cell) {
   return 'south';
 }
 
+// Tọa độ tâm điểm và tỉnh thành cốt lõi cho 3 Miền (Bắc - Trung - Nam)
+export const REGION_CONFIG = {
+  north: {
+    id: 'north',
+    name: 'Miền Bắc',
+    icon: '🏔️',
+    centerGrid: { x: 97.3, y: 67.3 },     // Trung tâm Thủ Đô Hà Nội
+    centerWorld: { wx: -52.7, wz: -127.2 },
+    preferredProvinces: ['ha-noi', 'hai-phong', 'bac-ninh', 'hai-duong', 'hung-yen', 'vinh-phuc', 'phu-tho', 'nam-dinh', 'ninh-binh']
+  },
+  central: {
+    id: 'central',
+    name: 'Miền Trung',
+    icon: '🌊',
+    centerGrid: { x: 145.3, y: 199.0 },   // Trung tâm Đà Nẵng / Huế
+    centerWorld: { wx: -4.7, wz: 4.5 },
+    preferredProvinces: ['da-nang', 'hue', 'thua-thien-hue', 'quang-nam', 'quang-ngai', 'binh-dinh', 'phu-yen', 'khanh-hoa']
+  },
+  south: {
+    id: 'south',
+    name: 'Miền Nam',
+    icon: '🌴',
+    centerGrid: { x: 122.4, y: 320.9 },   // Trung tâm TP. Hồ Chí Minh & Đất liền Đông Nam Bộ
+    centerWorld: { wx: -27.6, wz: 126.4 },
+    preferredProvinces: ['ho-chi-minh', 'binh-duong', 'dong-nai', 'long-an', 'ba-ria-vung-tau', 'tien-giang', 'tay-ninh', 'can-tho']
+  }
+};
+
 // Danh mục quà TikTok chuẩn quy đổi số ô cờ từ Kho Quà TikTok Live
 export const DEFAULT_MAP_GIFTS = [
   // 1. Quà 5 Xu Riêng Biệt Cho 3 Vùng Miền (Bắc - Trung - Nam)
@@ -981,13 +1009,30 @@ class BanDoGameEngine {
       }
     }
 
-    // Allocate unclaimed cells (ưu tiên phân bổ vào vùng miền chỉ định)
+    // Allocate unclaimed cells (ưu tiên phân bổ chính xác vào vùng miền chỉ định và tâm điểm thành phố)
     const allCells = this.maskData.cells || [];
     const unallocated = allCells.filter(c => !this.state.cellsById[c.id]);
 
     let toClaim = [];
     if (regionTarget) {
+      const targetConfig = REGION_CONFIG[regionTarget];
       const regionalUnallocated = unallocated.filter(c => getRegionForCell(c) === regionTarget);
+
+      // Sắp xếp các ô cờ chưa cắm theo thứ tự ưu tiên:
+      // 1. Tỉnh thành cốt lõi (Hà Nội cho MB, Đà Nẵng cho MT, TP.HCM cho MN)
+      // 2. Bán kính đồng tâm gần nhất đến tọa độ trung tâm
+      if (targetConfig) {
+        regionalUnallocated.sort((a, b) => {
+          const aPref = targetConfig.preferredProvinces.includes(a.provinceId) ? 0 : 1;
+          const bPref = targetConfig.preferredProvinces.includes(b.provinceId) ? 0 : 1;
+          if (aPref !== bPref) return aPref - bPref;
+
+          const distA = Math.hypot(a.x - targetConfig.centerGrid.x, a.y - targetConfig.centerGrid.y);
+          const distB = Math.hypot(b.x - targetConfig.centerGrid.x, b.y - targetConfig.centerGrid.y);
+          return distA - distB;
+        });
+      }
+
       if (regionalUnallocated.length >= effectiveCells) {
         toClaim = regionalUnallocated.slice(0, effectiveCells);
       } else {
@@ -1082,12 +1127,13 @@ class BanDoGameEngine {
     this.addFeedItem('GIFT', `${user.username} đã gửi [${giftDef.icon} ${giftDef.name} x${count}]${regionText} → Cắm +${toClaim.length} Ô Cờ!`);
 
     // Camera Focal Target & Persistent 3D Flag Poles for ALL Donors
-    if (lastCell) {
-      const wx = (lastCell.x - (this.maskData.gridCols || 300) / 2) * 1.0;
-      const wz = (lastCell.y - (this.maskData.gridRows || 389) / 2) * 1.0;
+    const focalCell = (regionTarget && REGION_CONFIG[regionTarget] && toClaim.length > 0) ? toClaim[0] : lastCell;
+    if (focalCell) {
+      const wx = (focalCell.x - (this.maskData.gridCols || 300) / 2) * 1.0;
+      const wz = (focalCell.y - (this.maskData.gridRows || 389) / 2) * 1.0;
       this.state.lastFocalTarget = {
-        x: lastCell.x,
-        y: lastCell.y,
+        x: focalCell.x,
+        y: focalCell.y,
         wx,
         wz,
         username: user.username,
