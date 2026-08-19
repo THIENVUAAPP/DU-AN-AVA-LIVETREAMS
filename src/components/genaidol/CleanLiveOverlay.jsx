@@ -105,6 +105,27 @@ export default function CleanLiveOverlay() {
       socket.on('bando_event', (data) => {
         if (data) setLiveEvent(data);
       });
+
+      socket.on('tiktok_chat', (data) => {
+        if (data) {
+          setLiveEvent({ type: 'COMMENT', data: { username: data.username || data.nickname, text: data.comment } });
+        }
+      });
+
+      socket.on('tiktok_gift', (data) => {
+        if (data) {
+          setLiveEvent({ 
+            type: 'GIFT', 
+            data: { 
+              giftId: data.giftName || 'rose', 
+              count: data.diamondCount || data.repeatCount || 1,
+              userId: data.userId || 'guest',
+              username: data.username || data.nickname || 'Khách Live',
+              avatar: data.profilePictureUrl || ''
+            } 
+          });
+        }
+      });
     } catch (err) {
       console.warn('Socket.io error:', err);
     }

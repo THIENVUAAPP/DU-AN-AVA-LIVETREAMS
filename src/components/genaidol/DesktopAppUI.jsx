@@ -427,6 +427,129 @@ export default function DesktopAppUI() {
   }
 
 
+  // Tự động mở khóa âm thanh Web Audio & Speech khi Streamer tương tác hoặc dùng Window Capture
+  useEffect(() => {
+    const handleGesture = () => {
+      bandoAudio.unlock();
+      if (typeof window !== 'undefined' && window.speechSynthesis && window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+    };
+    window.addEventListener('pointerdown', handleGesture);
+    window.addEventListener('keydown', handleGesture);
+    window.addEventListener('focus', handleGesture);
+    return () => {
+      window.removeEventListener('pointerdown', handleGesture);
+      window.removeEventListener('keydown', handleGesture);
+      window.removeEventListener('focus', handleGesture);
+    };
+  }, []);
+
+  // ⚡ SOCKET.IO REALTIME KẾT NỐI VỚI BACKEND & TIKTOK LIVE CONNECTOR
+  const socketRef = useRef(null);
+
+  useEffect(() => {
+    const backendUrl = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3001' : '';
+    const socket = io(backendUrl || window.location.origin, {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionDelay: 1000
+    });
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      // Đã kết nối Socket Backend
+    });
+
+    socket.on('tiktok_connected', (data) => {
+      setIsConnecting(false);
+      setIsConnected(true);
+      setConnectionError('');
+      const targetChan = data?.username ? `@${data.username}` : 'TikTok Live';
+      const timeStr = new Date().toLocaleTimeString();
+      setSystemLogs(prev => [
+        `[${timeStr}] 🟢 ĐÃ KẾT NỐI REAL-TIME TIKTOK LIVE: ${targetChan}`,
+        `[${timeStr}] ⚡ Đang lắng nghe bình luận, quà tặng & AI Voice Commentary 24/7`,
+        ...prev.slice(0, 48)
+      ]);
+      setTiktokLogs(prev => [
+        `[${timeStr}] 🟢 Kết nối thành công TikTok Live: ${targetChan}`,
+        ...prev.slice(0, 48)
+      ]);
+      bandoAudio.unlock();
+      handleLiveEvent('VIEWER_JOIN', { name: targetChan });
+    });
+
+    socket.on('tiktok_chat', (data) => {
+      if (!data) return;
+      bandoAudio.unlock();
+      const timeStr = new Date().toLocaleTimeString();
+      const author = data.username || data.nickname || 'Khán giả';
+      const text = data.comment || '';
+      setTiktokLogs(prev => [`[${timeStr}] 💬 ${author}: ${text}`, ...prev.slice(0, 49)]);
+      
+      // Chuyển tiếp tới Game Bản Đồ Chữ S & AI Commentary
+      if (isGameBanDoActive) {
+        bandoEngine.handleUserComment(text, author);
+        mapVoiceEngine.handleUserComment(text, author);
+      } else if (isGameBattleActive) {
+        battleVoiceEngine.handleUserComment(text, author);
+      } else {
+        handleLiveEvent('COMMENT', { name: author, text });
+      }
+    });
+
+    socket.on('tiktok_gift', (data) => {
+      if (!data) return;
+      bandoAudio.unlock();
+      const timeStr = new Date().toLocaleTimeString();
+      const author = data.username || data.nickname || 'Khách Live';
+      const giftName = data.giftName || 'Hoa Hồng';
+      const count = data.diamondCount || data.repeatCount || 1;
+      setTiktokLogs(prev => [`[${timeStr}] 🎁 ${author} tặng ${giftName} x${count}`, ...prev.slice(0, 49)]);
+
+      if (isGameBanDoActive) {
+        bandoEngine.processGift(giftName, count, {
+          id: data.userId || 'tiktok_viewer',
+          username: author,
+          avatar: data.profilePictureUrl || ''
+        });
+      } else if (isGameBattleActive) {
+        window.dispatchEvent(new CustomEvent('battle-trigger-gift', { detail: data }));
+      } else {
+        handleLiveEvent('GIFT', { name: author, gift: giftName, count });
+      }
+    });
+
+    socket.on('tiktok_like', (data) => {
+      if (!data) return;
+      const count = data.likeCount || 1;
+      const author = data.username || 'Khán giả';
+      handleLiveEvent('LIKE', { count: `${count} tim`, name: author });
+    });
+
+    socket.on('tiktok_member', (data) => {
+      if (!data) return;
+      const author = data.username || data.nickname || 'Khách mới';
+      handleLiveEvent('VIEWER_JOIN', { name: author });
+    });
+
+    socket.on('tiktok_disconnected', () => {
+      const timeStr = new Date().toLocaleTimeString();
+      setTiktokLogs(prev => [`[${timeStr}] ⚠️ Mất kết nối TikTok Live`, ...prev.slice(0, 49)]);
+    });
+
+    socket.on('tiktok_error', (err) => {
+      const timeStr = new Date().toLocaleTimeString();
+      setTiktokLogs(prev => [`[${timeStr}] ⚠️ Lỗi kết nối TikTok: ${err}`, ...prev.slice(0, 49)]);
+      setIsConnecting(false);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [isGameBanDoActive, isGameBattleActive, handleLiveEvent]);
+
   // ⚡ MASTER REALTIME BROADCAST: Đồng bộ 100% thời gian thực sang TikTok LIVE Studio / OBS Studio
   useEffect(() => {
     const stage = isGameBanDoActive ? 'bando' : isGameBattleActive ? 'battle' : 'idol';
@@ -469,14 +592,9 @@ export default function DesktopAppUI() {
     }).catch(() => {});
 
     // 3. Gửi Socket.io Real-time tới TikTok Live Studio CEF & OBS
-    let socket = null;
-    try {
-      socket = io(backendUrl || window.location.origin, {
-        transports: ['websocket', 'polling'],
-        reconnection: false
-      });
-      socket.emit('MASTER_LIVE_STATE_UPDATE', masterPayload);
-    } catch (err) {}
+    if (socketRef.current) {
+      socketRef.current.emit('MASTER_LIVE_STATE_UPDATE', masterPayload);
+    }
 
     // 4. Gửi BroadcastChannel trong trình duyệt
     let masterChannel = null;
@@ -487,7 +605,6 @@ export default function DesktopAppUI() {
         masterChannel = new BroadcastChannel('avalive_master_live_stream');
         masterChannel.postMessage(masterPayload);
 
-        // Lắng nghe khi tab overlay vừa tải lên hỏi state hiện tại
         masterChannel.onmessage = (e) => {
           if (e.data && e.data.type === 'REQUEST_MASTER_LIVE_STATE') {
             masterChannel.postMessage({
@@ -509,16 +626,35 @@ export default function DesktopAppUI() {
     }
 
     return () => {
-      if (socket) socket.disconnect();
       if (masterChannel) masterChannel.close();
       if (cleanChannel) cleanChannel.close();
     };
   }, [isGameBanDoActive, isGameBattleActive, selectedCharacter, activeVideoItem, isConnected, showSimulator, globalAspectRatio, isDarkMode, currentLang, CHARACTERS]);
 
+  // Trích xuất TikTok Username từ Link Live / ID / @username
+  const extractTikTokUsername = (input) => {
+    if (!input || typeof input !== 'string') return '';
+    let str = input.trim().split('?')[0].split('#')[0];
+    const matchAt = str.match(/@([a-zA-Z0-9_.-]+)/);
+    if (matchAt && matchAt[1]) return matchAt[1];
+    const parts = str.split('/').filter(Boolean);
+    if (parts.length > 0) {
+      const last = parts[parts.length - 1];
+      if (last === 'live' && parts.length > 1) {
+        return parts[parts.length - 2].replace(/^@/, '');
+      }
+      return last.replace(/^@/, '');
+    }
+    return str.replace(/^@/, '');
+  };
+
   const handleConnect = async () => {
     if (isConnected) {
       // Dừng AI & Ngắt kết nối
       setIsConnected(false);
+      if (socketRef.current) {
+        socketRef.current.emit('disconnect_tiktok');
+      }
       const timeStr = new Date().toLocaleTimeString();
       setSystemLogs(prev => [`[${timeStr}] 🛑 Đã dừng phiên Live & ngắt kết nối`, ...prev.slice(0, 49)]);
       setTiktokLogs(prev => [`[${timeStr}] 🛑 Phiên Live TikTok đã tạm dừng`, ...prev.slice(0, 49)]);
@@ -526,12 +662,18 @@ export default function DesktopAppUI() {
     }
     
     setIsConnecting(true);
-    const cleanId = tiktokId.trim().replace(/^@/, '');
+    bandoAudio.unlock();
+    const cleanId = extractTikTokUsername(tiktokId);
     if (cleanId) {
       try {
         localStorage.setItem('aidol_tiktok_id', cleanId);
       } catch (e) {}
     }
+
+    if (socketRef.current && cleanId) {
+      socketRef.current.emit('connect_tiktok', cleanId);
+    }
+
     setTimeout(() => {
       setIsConnecting(false);
       setIsConnected(true);
@@ -557,7 +699,7 @@ export default function DesktopAppUI() {
       
       // Bắt đầu sự kiện chào mừng
       handleLiveEvent('VIEWER_JOIN', { name: cleanId ? `@${cleanId}` : 'Mọi người' });
-    }, 1200);
+    }, 800);
   };
 
   // 🛑/▶️ NÚT ĐỒNG BỘ: TẮT TẤT CẢ / BẬT TẤT CẢ PHIÊN LIVE & CÁC TÍNH NĂNG
