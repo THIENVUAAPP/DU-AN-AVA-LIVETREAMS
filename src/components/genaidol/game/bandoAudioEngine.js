@@ -133,8 +133,18 @@ class BanDoAudioEngine {
   unlock() {
     try {
       const ctx = this.ensureContext();
-      if (ctx && ctx.state === 'suspended') {
-        ctx.resume().catch(() => {});
+      if (ctx) {
+        if (ctx.state === 'suspended') {
+          ctx.resume().catch(() => {});
+        }
+        // Play a 1-sample silent buffer to unlock Web Audio API immediately on user gesture
+        try {
+          const buffer = ctx.createBuffer(1, 1, 22050);
+          const source = ctx.createBufferSource();
+          source.buffer = buffer;
+          source.connect(ctx.destination);
+          source.start(0);
+        } catch (e) {}
       }
       if (this.masterGain && this.ctx) {
         this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 0.95, this.ctx.currentTime);
@@ -616,13 +626,18 @@ class BanDoAudioEngine {
   // ==================== KHO SFX TỔNG HỢP WEB AUDIO API ====================
   tone(freq, duration, opts = {}) {
     const ctx = this.ensureContext();
-    if (!ctx || this.isMuted) return;
+    if (!ctx) return;
 
     const isBgm = !!opts.isBgm;
+    const isForce = !!opts.force;
+
+    // Nếu không phải force và toàn bộ hệ thống bị Mute -> ngắt
+    if (!isForce && this.isMuted) return;
+
     // Nếu là BGM nhưng BGM đang tắt -> ngắt ngay lập tức
-    if (isBgm && !this.bgmPlaying) return;
+    if (isBgm && !this.bgmPlaying && !isForce) return;
     // Nếu là SFX nhưng SFX đang tắt (Muted) và không phải force -> ngắt
-    if (!isBgm && !opts.force && (this.isSfxMuted || (this.sfxVolume || 0) <= 0.001)) return;
+    if (!isBgm && !isForce && (this.isSfxMuted || (this.sfxVolume || 0) <= 0.001)) return;
 
     try {
       if (ctx.state === 'suspended') {
@@ -635,14 +650,30 @@ class BanDoAudioEngine {
 
       const start = Math.max(ctx.currentTime, 0.001) + (opts.delay || 0);
       const attack = opts.attack || 0.01;
-      const g = (opts.gain !== undefined ? opts.gain : 0.45);
+      const g = (opts.gain !== undefined ? opts.gain : 0.55);
 
       gain.gain.setValueAtTime(0.0001, start);
       gain.gain.linearRampToValueAtTime(g, start + Math.min(attack, duration * 0.4));
       gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
 
       osc.connect(gain);
-      gain.connect(isBgm ? (this.bgmGain || this.masterGain || ctx.destination) : (this.sfxGain || this.masterGain || ctx.destination));
+
+      // Nếu là force test (preview), kết nối trực tiếp đến masterGain hoặc destination để âm thanh chắc chắn phát ra
+      if (isForce) {
+        if (this.masterGain) {
+          gain.connect(this.masterGain);
+        } else {
+          gain.connect(ctx.destination);
+        }
+      } else if (isBgm) {
+        gain.connect(this.bgmGain || this.masterGain || ctx.destination);
+      } else {
+        // Đảm bảo sfxGain không bị 0 khi SFX đang bật
+        if (this.sfxGain && !this.isSfxMuted && this.sfxGain.gain.value <= 0.001) {
+          this.sfxGain.gain.setValueAtTime(this.sfxVolume || 0.85, ctx.currentTime);
+        }
+        gain.connect(this.sfxGain || this.masterGain || ctx.destination);
+      }
 
       osc.start(start);
       osc.stop(start + duration + 0.05);
@@ -653,8 +684,12 @@ class BanDoAudioEngine {
 
   noise(duration, opts = {}) {
     const ctx = this.ensureContext();
-    if (!ctx || this.isMuted) return;
-    if (!opts.force && (this.isSfxMuted || (this.sfxVolume || 0) <= 0.001)) return;
+    if (!ctx) return;
+
+    const isForce = !!opts.force;
+    if (!isForce && this.isMuted) return;
+    if (!isForce && (this.isSfxMuted || (this.sfxVolume || 0) <= 0.001)) return;
+
     try {
       if (ctx.state === 'suspended') {
         ctx.resume().catch(() => {});
@@ -675,7 +710,7 @@ class BanDoAudioEngine {
 
       const gain = ctx.createGain();
       const start = Math.max(ctx.currentTime, 0.001) + (opts.delay || 0);
-      const g = (opts.gain !== undefined ? opts.gain : 0.5);
+      const g = (opts.gain !== undefined ? opts.gain : 0.6);
 
       gain.gain.setValueAtTime(0.0001, start);
       gain.gain.linearRampToValueAtTime(g, start + 0.01);
@@ -683,7 +718,19 @@ class BanDoAudioEngine {
 
       whiteNoise.connect(filter);
       filter.connect(gain);
-      gain.connect(this.sfxGain || this.masterGain || ctx.destination);
+
+      if (isForce) {
+        if (this.masterGain) {
+          gain.connect(this.masterGain);
+        } else {
+          gain.connect(ctx.destination);
+        }
+      } else {
+        if (this.sfxGain && !this.isSfxMuted && this.sfxGain.gain.value <= 0.001) {
+          this.sfxGain.gain.setValueAtTime(this.sfxVolume || 0.85, ctx.currentTime);
+        }
+        gain.connect(this.sfxGain || this.masterGain || ctx.destination);
+      }
 
       whiteNoise.start(start);
       whiteNoise.stop(start + duration + 0.05);

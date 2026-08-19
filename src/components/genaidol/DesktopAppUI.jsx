@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { io } from 'socket.io-client';
 import { 
   Settings, CreditCard, Video, Moon, Sun, 
   MessageCircle, Play, Pause, Mic, MicOff, X, Download, Plus,
@@ -459,6 +460,7 @@ export default function DesktopAppUI() {
       updatedAt: Date.now()
     };
 
+    // 1. Lưu LocalStorage
     try {
       localStorage.setItem('avalive_master_live_state', JSON.stringify(masterPayload));
       localStorage.setItem('aidol_clean_stream_state', JSON.stringify({
@@ -470,6 +472,25 @@ export default function DesktopAppUI() {
       }));
     } catch (e) {}
 
+    // 2. Gửi REST API tới Backend
+    const backendUrl = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3001' : '';
+    fetch(`${backendUrl}/api/live-state`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(masterPayload)
+    }).catch(() => {});
+
+    // 3. Gửi Socket.io Real-time tới TikTok Live Studio CEF & OBS
+    let socket = null;
+    try {
+      socket = io(backendUrl || window.location.origin, {
+        transports: ['websocket', 'polling'],
+        reconnection: false
+      });
+      socket.emit('MASTER_LIVE_STATE_UPDATE', masterPayload);
+    } catch (err) {}
+
+    // 4. Gửi BroadcastChannel trong trình duyệt
     let masterChannel = null;
     let cleanChannel = null;
 
@@ -500,6 +521,7 @@ export default function DesktopAppUI() {
     }
 
     return () => {
+      if (socket) socket.disconnect();
       if (masterChannel) masterChannel.close();
       if (cleanChannel) cleanChannel.close();
     };

@@ -34,8 +34,70 @@ const io = new Server(httpServer, {
 let tiktokConnection = null;
 let currentUsername = null;
 
+// ⚡ LƯU TRỮ VÀ ĐỒNG BỘ TRẠNG THÁI REALTIME CHO TIKTOK LIVE STUDIO & OBS
+let currentMasterLiveState = {
+  stage: 'bando', // Mặc định mở Game Bản Đồ nếu đang chạy game
+  aspectRatio: '9:16',
+  selectedCharacter: 0,
+  characterName: 'AI Idol Lan Hương',
+  mediaUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1200&auto=format&fit=crop&q=80',
+  isVideo: false,
+  isConnected: true,
+  isDarkMode: true,
+  currentLang: 'vi',
+  updatedAt: Date.now()
+};
+
+let currentBandoGameState = null;
+let currentBattleGameState = null;
+
 io.on('connection', (socket) => {
-  console.log('Client connected:', socket.id);
+  console.log('Client connected to Realtime Server:', socket.id);
+
+  // 1. Ngay khi client mới (TikTok Live Studio, OBS, Browser) kết nối -> Gửi ngay toàn bộ state mới nhất
+  if (currentMasterLiveState) {
+    socket.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+  }
+  if (currentBandoGameState) {
+    socket.emit('bando_sync', currentBandoGameState);
+  }
+  if (currentBattleGameState) {
+    socket.emit('battle_sync', currentBattleGameState);
+  }
+
+  // 2. Lắng nghe cập nhật Master Live State (Đổi cảnh giữa AI Idol / Bản Đồ / Chiến Đấu)
+  socket.on('MASTER_LIVE_STATE_UPDATE', (data) => {
+    if (!data) return;
+    currentMasterLiveState = { ...currentMasterLiveState, ...data, updatedAt: Date.now() };
+    io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+  });
+
+  socket.on('REQUEST_MASTER_LIVE_STATE', () => {
+    socket.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+  });
+
+  // 3. Lắng nghe cập nhật Game Bản Đồ 3 Miền (Cắm cờ, Điểm số, BXH, Quà tặng)
+  socket.on('bando_sync', (data) => {
+    if (!data) return;
+    currentBandoGameState = data;
+    socket.broadcast.emit('bando_sync', data);
+  });
+
+  // 4. Lắng nghe cập nhật Game Chiến Đấu PK
+  socket.on('battle_sync', (data) => {
+    if (!data) return;
+    currentBattleGameState = data;
+    socket.broadcast.emit('battle_sync', data);
+  });
+
+  // 5. Lắng nghe sự kiện quà tặng / tương tác live
+  socket.on('LIVE_EVENT', (data) => {
+    io.emit('LIVE_EVENT', data);
+  });
+
+  socket.on('bando_event', (data) => {
+    io.emit('bando_event', data);
+  });
 
   socket.on('connect_tiktok', (username) => {
     if (!username) return;
@@ -138,6 +200,43 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
   });
+});
+
+// REST API Endpoints cho CEF Polling / Fallback
+app.get('/api/live-state', (req, res) => {
+  res.json(currentMasterLiveState);
+});
+
+app.post('/api/live-state', (req, res) => {
+  if (req.body) {
+    currentMasterLiveState = { ...currentMasterLiveState, ...req.body, updatedAt: Date.now() };
+    io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+  }
+  res.json({ success: true, state: currentMasterLiveState });
+});
+
+app.get('/api/bando-state', (req, res) => {
+  res.json(currentBandoGameState || {});
+});
+
+app.post('/api/bando-state', (req, res) => {
+  if (req.body) {
+    currentBandoGameState = req.body;
+    io.emit('bando_sync', req.body);
+  }
+  res.json({ success: true });
+});
+
+app.get('/api/battle-state', (req, res) => {
+  res.json(currentBattleGameState || {});
+});
+
+app.post('/api/battle-state', (req, res) => {
+  if (req.body) {
+    currentBattleGameState = req.body;
+    io.emit('battle_sync', req.body);
+  }
+  res.json({ success: true });
 });
 
 // AI Generation Endpoint
