@@ -669,10 +669,18 @@ export default function DesktopAppUI() {
         localStorage.setItem('avalive_master_live_running', 'true');
       } catch (e) {}
 
-      // 1. Mở kết nối TikTok Live nếu có username
+      // 1. Reset Bảng Xếp Hạng về 0 để cập nhật thông tin người tặng Live mới nhất
+      try {
+        bandoEngine.resetLeaderboard();
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('avalive_reset_leaderboard'));
+        }
+      } catch (e) {}
+
+      // 2. Mở kết nối TikTok Live nếu có username
       handleConnect();
 
-      // 2. Mở lại Web Audio Engine & Bình Luận Viên AI
+      // 3. Mở lại Web Audio Engine, Nhạc Nền BGM & Bình Luận Viên AI
       try {
         bandoAudio.unlock();
         if (isGameBanDoActive) {
@@ -684,7 +692,7 @@ export default function DesktopAppUI() {
         }
       } catch (e) {}
 
-      // 3. Phát tín hiệu bật lại toàn cục
+      // 4. Phát tín hiệu bật lại toàn cục
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('avalive_resume_all'));
       }

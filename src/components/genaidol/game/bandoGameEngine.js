@@ -1487,8 +1487,23 @@ class BanDoGameEngine {
       p.leader = null;
     });
 
-    this.addFeedItem('RESET', '🔄 Vòng chơi mới đã bắt đầu! Sẵn sàng ghép cờ Quốc Gia!');
-    this.notify({ type: 'ROUND_RESET' });
+    try {
+      localStorage.removeItem('avalive_bando_leaderboard');
+    } catch (e) {}
+
+    this.emitState();
+  }
+
+  resetLeaderboard() {
+    this.state.leaderboard = [];
+    try {
+      localStorage.removeItem('avalive_bando_leaderboard');
+    } catch (e) {}
+    this.emitState();
+  }
+
+  resetRound() {
+    this.resetGame();
   }
 
   // ==================== HỆ THỐNG AUTO 24/7 TOÀN DIỆN (CHẠY THẬT LIVE TIKTOK) ====================

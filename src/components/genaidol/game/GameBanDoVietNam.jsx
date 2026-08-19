@@ -848,6 +848,23 @@ export default function GameBanDoVietNam({
 
     window.addEventListener('bando-trigger-demo', handleTriggerDemo);
 
+    const handleResumeAll = () => {
+      bandoAudio.unlock();
+      bandoAudio.playBgmOnLive();
+      mapVoiceEngine.startPeriodicCommentary(true);
+    };
+    window.addEventListener('avalive_resume_all', handleResumeAll);
+
+    const handleResetLeaderboard = () => {
+      bandoEngine.resetLeaderboard();
+    };
+    window.addEventListener('avalive_reset_leaderboard', handleResetLeaderboard);
+
+    // Tự động khởi động bình luận viên & âm thanh nếu đang mở Live
+    if (mapVoiceEngine.isAutoEnabled) {
+      mapVoiceEngine.startPeriodicCommentary(true);
+    }
+
     const handleEmergencyStop = () => {
       bandoAudio.stopAll();
       mapVoiceEngine.stopAll();
@@ -862,6 +879,8 @@ export default function GameBanDoVietNam({
       window.removeEventListener('keydown', handleFirstGesture);
       window.removeEventListener('bando-bgm-status', handleBgmStatus);
       window.removeEventListener('bando-trigger-demo', handleTriggerDemo);
+      window.removeEventListener('avalive_resume_all', handleResumeAll);
+      window.removeEventListener('avalive_reset_leaderboard', handleResetLeaderboard);
       window.removeEventListener('avalive_emergency_stop_all', handleEmergencyStop);
     };
   }, []);
@@ -2229,7 +2248,7 @@ export default function GameBanDoVietNam({
                           </span>
                           <span className="text-yellow-100 truncate font-semibold">{user.username}</span>
                         </span>
-                        <span className="font-mono font-bold text-yellow-400 shrink-0">{user.cells} ô</span>
+                        <span className="font-mono font-bold text-yellow-400 shrink-0">{(user.totalCells || user.cells || 0).toLocaleString()} ô</span>
                       </div>
                     ))
                   )}
@@ -2315,7 +2334,7 @@ export default function GameBanDoVietNam({
                       {gameState.leaderboard[0].username || 'Quán Quân'}
                     </span>
                     <span className="text-xs font-mono font-bold text-amber-200 mt-0.5">
-                      Đã cắm: {gameState.leaderboard[0].cells?.toLocaleString() || 0} lá cờ Tổ Quốc
+                      Đã cắm: {(gameState.leaderboard[0].totalCells || gameState.leaderboard[0].cells || 0).toLocaleString()} lá cờ Tổ Quốc
                     </span>
                   </div>
                 ) : (
@@ -2337,7 +2356,7 @@ export default function GameBanDoVietNam({
                       </span>
                       <span className="font-bold truncate max-w-[140px] text-white">{user.username}</span>
                     </div>
-                    <span className="font-mono font-bold text-yellow-400">{user.cells} ô</span>
+                    <span className="font-mono font-bold text-yellow-400">{(user.totalCells || user.cells || 0).toLocaleString()} ô</span>
                   </div>
                 ))}
               </div>
