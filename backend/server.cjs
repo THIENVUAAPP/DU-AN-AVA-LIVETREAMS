@@ -190,6 +190,7 @@ io.on('connection', (socket) => {
         totalRepeatCount: data.repeatCount || deltaCount,
         profilePictureUrl: data.profilePictureUrl || ''
       };
+      console.log(`[TikTok Gift] 🎁 ${giftPayload.nickname} (@${giftPayload.uniqueId}) tặng: ${giftPayload.giftName} x${deltaCount} (${giftPayload.diamondCount} xu)`);
       io.emit('tiktok_gift', giftPayload);
       
       // Chuyển đổi trực tiếp thành sự kiện cắm cờ bản đồ & game chiến đấu
@@ -199,7 +200,7 @@ io.on('connection', (socket) => {
           giftId: String(data.giftId || 'rose'),
           giftName: data.giftName || 'Quà TikTok',
           count: deltaCount,
-          userId: data.userId || 'tiktok_viewer',
+          userId: data.userId || data.uniqueId || 'tiktok_viewer',
           username: data.nickname || data.uniqueId || 'Khán Giả',
           avatar: data.profilePictureUrl || '',
           diamondCount: data.diamondCount || 1
