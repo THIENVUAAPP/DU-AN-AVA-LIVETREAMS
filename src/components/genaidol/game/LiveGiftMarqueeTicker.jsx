@@ -49,6 +49,8 @@ export default function LiveGiftMarqueeTicker({
     return mode === 'battle' ? { x: 14, y: 195 } : { x: 14, y: 165 };
   });
 
+  const latestPosRef = useRef(floatingPos);
+  latestPosRef.current = floatingPos;
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef({ x: 0, y: 0 });
   const isResizingRef = useRef(false);
@@ -163,8 +165,8 @@ export default function LiveGiftMarqueeTicker({
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     dragStartRef.current = {
-      x: clientX - floatingPos.x,
-      y: clientY - floatingPos.y
+      x: clientX - latestPosRef.current.x,
+      y: clientY - latestPosRef.current.y
     };
     window.addEventListener('mousemove', handleDragMove);
     window.addEventListener('mouseup', handleDragEnd);
@@ -181,6 +183,7 @@ export default function LiveGiftMarqueeTicker({
       x: Math.max(0, Math.min(window.innerWidth - 80, clientX - dragStartRef.current.x)),
       y: Math.max(0, Math.min(window.innerHeight - 60, clientY - dragStartRef.current.y))
     };
+    latestPosRef.current = newPos;
     setFloatingPos(newPos);
   };
 
@@ -192,7 +195,7 @@ export default function LiveGiftMarqueeTicker({
     window.removeEventListener('touchmove', handleDragMove);
     window.removeEventListener('touchend', handleDragEnd);
     try {
-      localStorage.setItem(`avalive_gift_box_pos_${mode}`, JSON.stringify(floatingPos));
+      localStorage.setItem(`avalive_gift_box_pos_${mode}`, JSON.stringify(latestPosRef.current));
     } catch (e) {}
   };
 
@@ -264,7 +267,7 @@ export default function LiveGiftMarqueeTicker({
 
   return (
     <div 
-      className="absolute z-30 pointer-events-auto select-none transition-all duration-100"
+      className="fixed z-40 pointer-events-auto select-none transition-all duration-75"
       style={{
         top: `${floatingPos.y}px`,
         left: `${floatingPos.x}px`,
@@ -292,7 +295,7 @@ export default function LiveGiftMarqueeTicker({
         </div>
       ) : (
         /* 2. KHUNG BOX WIDGET ĐẦY ĐỦ (TINH GỌN, KHÔNG CHE KHUẤT MÀN HÌNH) */
-        <div className="w-24 sm:w-26 bg-black/35 backdrop-blur-[3px] hover:bg-black/55 border border-amber-500/30 hover:border-amber-400/60 rounded-xl p-1 shadow-2xl text-white transition-all">
+        <div className="w-24 sm:w-26 bg-black/40 backdrop-blur-[4px] hover:bg-black/60 border border-amber-500/30 hover:border-amber-400/60 rounded-xl p-1 shadow-2xl text-white transition-all flex flex-col">
           
           {/* HEADER: KÉO THẢ + ZOOM +/- + THU NHỎ + ĐÓNG */}
           <div 
@@ -349,26 +352,26 @@ export default function LiveGiftMarqueeTicker({
           {/* KHỐI 1: CẮM CỜ 3 MIỀN BẮC - TRUNG - NAM HOẶC BUFF 3 MIỀN (Read-only Showcase) */}
           <div className="grid grid-cols-3 gap-0.5 mb-1 select-none">
             <div 
-              className="py-1 px-0.5 rounded-md bg-red-950/60 border border-red-500/40 text-center"
+              className="py-1 px-0.5 rounded-md bg-red-950/70 border border-red-500/50 text-center"
               title={mode === 'battle' ? 'Tăng kích thước x3' : 'Cắm cờ Miền Bắc (+5 ô)'}
             >
-              <div className="text-[11px]">🫰</div>
+              <div className="text-[11px] leading-none mb-0.5">🫰</div>
               <div className="text-[6.5px] text-amber-300 font-mono font-black">{mode === 'battle' ? 'x3' : '+5'}</div>
             </div>
 
             <div 
-              className="py-1 px-0.5 rounded-md bg-amber-950/60 border border-amber-500/40 text-center"
+              className="py-1 px-0.5 rounded-md bg-amber-950/70 border border-amber-500/50 text-center"
               title={mode === 'battle' ? 'Nâng cấp Giáp' : 'Cắm cờ Miền Trung (+5 ô)'}
             >
-              <div className="text-[11px]">🍩</div>
+              <div className="text-[11px] leading-none mb-0.5">🍩</div>
               <div className="text-[6.5px] text-amber-300 font-mono font-black">{mode === 'battle' ? 'Giáp' : '+5'}</div>
             </div>
 
             <div 
-              className="py-1 px-0.5 rounded-md bg-emerald-950/60 border border-emerald-500/40 text-center"
+              className="py-1 px-0.5 rounded-md bg-emerald-950/70 border border-emerald-500/50 text-center"
               title={mode === 'battle' ? 'Nâng cấp Thú Cưỡi' : 'Cắm cờ Miền Nam (+5 ô)'}
             >
-              <div className="text-[11px]">🧸</div>
+              <div className="text-[11px] leading-none mb-0.5">🧸</div>
               <div className="text-[6.5px] text-amber-300 font-mono font-black">{mode === 'battle' ? 'Thú' : '+5'}</div>
             </div>
           </div>
