@@ -1008,30 +1008,34 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                 </div>
 
                 {/* Auto 24/7 Control Banner (CHẠY THẬT TIKTOK LIVE) */}
-                <div className="p-4 bg-gradient-to-r from-emerald-950/50 via-teal-950/40 to-black/60 border border-emerald-500/40 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
-                  <div>
+                <div className="p-4 bg-gradient-to-r from-emerald-950/60 via-teal-950/50 to-slate-900/80 border border-emerald-500/40 rounded-2xl shadow-xl space-y-3">
+                  <div className="flex items-center justify-between">
                     <div className="text-xs font-black text-white flex items-center gap-2">
-                      <Zap size={15} className="text-yellow-400 fill-yellow-400" />
-                      <span className="uppercase text-emerald-300">Vận Hành Live Thật 24/24 (Auto Live 24/7)</span>
+                      <Zap size={15} className="text-yellow-400 fill-yellow-400 shrink-0" />
+                      <span className="uppercase text-emerald-300 font-black">Vận Hành Auto 24/7 (Chạy Thật TikTok Live)</span>
                     </div>
-                    <p className="text-[11px] text-gray-300 mt-0.5">
-                      Chế độ <strong>CHẠY THẬT</strong> cho TikTok LIVE: Nhạc nền & BLV tự động 24/7, <strong>chỉ cắm cờ khi có quà thật từ khán giả</strong>. Khi phủ kín 100% bản đồ sẽ vinh danh và tự động chuyển vòng đấu tiếp theo.
-                    </p>
+                    <span className="text-[10px] text-emerald-400 font-mono bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-500/30">
+                      {bandoEngine.isAuto247Running ? '● ĐANG CHẠY' : '○ ĐANG DỪNG'}
+                    </span>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <p className="text-[11.5px] text-gray-200 leading-relaxed">
+                    ⚡ <strong>Chế độ Livestream 24/7</strong>: Tự động chạy nhạc nền BGM, bình luận viên AI và bắt sự kiện quà tặng từ khán giả để cắm cờ thời gian thực.
+                  </p>
+
+                  <div className="flex items-center gap-2.5 pt-1">
                     <button
                       onClick={() => {
                         bandoEngine.toggleAuto247();
                         setIsAutoTesting(false);
                       }}
-                      className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md ${
+                      className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 shadow-md ${
                         bandoEngine.isAuto247Running
                           ? 'bg-red-600 hover:bg-red-500 text-white ring-2 ring-yellow-400 animate-pulse shadow-red-500/30'
                           : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-500/20'
                       }`}
                     >
-                      <Zap size={14} />
+                      <Zap size={14} className="shrink-0" />
                       <span>{bandoEngine.isAuto247Running ? '🛑 Dừng Auto 24/7' : '⚡ Bật Auto 24/7 (Chạy Thật)'}</span>
                     </button>
 
@@ -1045,7 +1049,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                           setIsAutoTesting(true);
                         }
                       }}
-                      className={`px-3 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md ${
+                      className={`py-2.5 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-md ${
                         isAutoTesting
                           ? 'bg-amber-600 hover:bg-amber-500 text-white animate-pulse'
                           : 'bg-white/10 hover:bg-white/20 text-yellow-300 border border-yellow-500/30'
@@ -1053,7 +1057,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                       title="Chạy mô phỏng thả quà giả lập để test"
                     >
                       {isAutoTesting ? <Square size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />}
-                      <span>{isAutoTesting ? 'Dừng Demo' : '🧪 Chạy Demo'}</span>
+                      <span>{isAutoTesting ? 'Dừng Demo' : '🪄 Chạy Demo'}</span>
                     </button>
                   </div>
                 </div>

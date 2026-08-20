@@ -206,7 +206,26 @@ export default function LiveGiftMarqueeTicker({
 
   if (allActiveGifts.length === 0) return null;
 
-  // Render từng thẻ quà tặng bên trong danh sách: Siêu tinh gọn [Icon Emoji lớn] [+X ô]
+  const getBattleBuffBadge = (gift) => {
+    if (gift.buffName) return gift.buffName;
+    const gId = String(gift.id || '').toLowerCase();
+    const gName = String(gift.name || '').toLowerCase();
+
+    if (gId.includes('donut') || gName.includes('donut') || gId === 'gift_region_central') return '🛡️ Giáp';
+    if (gId.includes('bear') || gId.includes('gấu') || gName.includes('gấu') || gId === 'gift_region_south') return '🦄 Thú';
+    if (gId.includes('tim') || gId.includes('finger') || gId === 'gift_region_north') return '💥 x3';
+    if (gId.includes('rose') || gName.includes('hồng')) return '⚔️ Kiếm';
+    if (gId.includes('heart') || gName.includes('tim')) return '🩸 Công';
+    if (gId.includes('helmet') || gName.includes('cối')) return '🛡️ Giáp+';
+    if (gId.includes('tea') || gName.includes('trà')) return '⚔️ Kiếm+';
+    if (gId.includes('perfume') || gName.includes('hoa')) return '🦄 Thú+';
+    if (gId.includes('crown') || gName.includes('miện')) return '👑 x3 To';
+    if (gId.includes('dragon') || gName.includes('long')) return '🐉 Thần';
+    if (gId.includes('spaceship') || gName.includes('chiến hạm')) return '🛸 Hạm';
+    return `⚔️ +${gift.hpBuff || gift.cells || 10}`;
+  };
+
+  // Render từng thẻ quà tặng bên trong danh sách: Siêu tinh gọn [Icon Emoji lớn] [Buff / Số Ô]
   const renderGiftRow = (gift, key) => {
     let rowBg = 'bg-black/40 hover:bg-black/60 border-white/15';
     let countColor = 'text-amber-300 border-amber-500/30 bg-black/50';
@@ -225,19 +244,20 @@ export default function LiveGiftMarqueeTicker({
       countColor = 'text-yellow-200 font-black border-yellow-300/50 bg-black/60';
     }
 
-    const cellCount = gift.cells || (mode === 'battle' ? `${gift.hpBuff || 50}HP` : 1);
+    const isBattle = mode === 'battle';
+    const badgeText = isBattle ? getBattleBuffBadge(gift) : `+${gift.cells || 1} ô`;
 
     return (
       <div
         key={key}
         onClick={() => onGiftClick && onGiftClick(gift)}
         className={`flex items-center justify-between px-2 py-1 rounded-lg border ${rowBg} cursor-pointer transition-all hover:scale-[1.03] active:scale-95 select-none shadow-sm`}
-        title={`Tặng quà -> +${cellCount} ${mode === 'map' ? 'ô cờ' : 'HP'}`}
+        title={`Tặng quà -> ${badgeText}`}
       >
-        <span className="text-[17px] leading-none shrink-0 drop-shadow">{gift.icon}</span>
+        <span className="text-[16px] leading-none shrink-0 drop-shadow">{gift.icon}</span>
 
-        <span className={`font-mono font-black text-[10.5px] px-1.5 py-0.5 rounded-md border ${countColor} shadow-inner tracking-tight whitespace-nowrap ml-1.5`}>
-          +{cellCount} {mode === 'map' ? 'ô' : ''}
+        <span className={`font-mono font-black text-[10px] px-1.5 py-0.5 rounded-md border ${countColor} shadow-inner tracking-tight whitespace-nowrap ml-1`}>
+          {badgeText}
         </span>
       </div>
     );
@@ -273,7 +293,7 @@ export default function LiveGiftMarqueeTicker({
         </div>
       ) : (
         /* 2. KHUNG BOX WIDGET ĐẦY ĐỦ (TINH GỌN, KHÔNG CHE KHUẤT MÀN HÌNH) */
-        <div className="w-28 sm:w-30 bg-black/35 backdrop-blur-[3px] hover:bg-black/55 border border-amber-500/30 hover:border-amber-400/60 rounded-xl p-1 shadow-2xl text-white transition-all">
+        <div className="w-24 sm:w-26 bg-black/35 backdrop-blur-[3px] hover:bg-black/55 border border-amber-500/30 hover:border-amber-400/60 rounded-xl p-1 shadow-2xl text-white transition-all">
           
           {/* HEADER: KÉO THẢ + ZOOM +/- + THU NHỎ + ĐÓNG */}
           <div 
@@ -327,49 +347,44 @@ export default function LiveGiftMarqueeTicker({
             </div>
           </div>
 
-          {/* KHỐI 1: CẮM CỜ 3 MIỀN BẮC - TRUNG - NAM (TINH GỌN, KHÔNG SỐ XU) */}
-          {mode === 'map' && (
-            <div className="grid grid-cols-3 gap-1 mb-1">
-              <div 
-                onClick={() => {
-                  bandoAudio.unlock();
-                  onGiftClick && onGiftClick({ id: 'gift_region_north', name: 'Ngón Tay Tim (Miền Bắc)', icon: '🫰', priceToken: 5, cells: 5, regionTarget: 'north' });
-                }}
-                className="py-1 px-0.5 rounded-lg bg-red-950/60 hover:bg-red-900/80 border border-red-500/40 text-center cursor-pointer transition-transform hover:scale-105 active:scale-95"
-                title="Cắm cờ Miền Bắc (+5 ô)"
-              >
-                <div className="text-[12px]">🫰</div>
-                <div className="text-[7.5px] font-bold text-red-200 truncate">Bắc</div>
-                <div className="text-[7px] text-amber-300 font-mono font-black">+5 ô</div>
-              </div>
-
-              <div 
-                onClick={() => {
-                  bandoAudio.unlock();
-                  onGiftClick && onGiftClick({ id: 'gift_region_central', name: 'Bánh Donut (Miền Trung)', icon: '🍩', priceToken: 5, cells: 5, regionTarget: 'central' });
-                }}
-                className="py-1 px-0.5 rounded-lg bg-amber-950/60 hover:bg-amber-900/80 border border-amber-500/40 text-center cursor-pointer transition-transform hover:scale-105 active:scale-95"
-                title="Cắm cờ Miền Trung (+5 ô)"
-              >
-                <div className="text-[12px]">🍩</div>
-                <div className="text-[7.5px] font-bold text-amber-200 truncate">Trung</div>
-                <div className="text-[7px] text-amber-300 font-mono font-black">+5 ô</div>
-              </div>
-
-              <div 
-                onClick={() => {
-                  bandoAudio.unlock();
-                  onGiftClick && onGiftClick({ id: 'gift_region_south', name: 'Gấu Con (Miền Nam)', icon: '🧸', priceToken: 5, cells: 5, regionTarget: 'south' });
-                }}
-                className="py-1 px-0.5 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-center cursor-pointer transition-transform hover:scale-105 active:scale-95"
-                title="Cắm cờ Miền Nam (+5 ô)"
-              >
-                <div className="text-[12px]">🧸</div>
-                <div className="text-[7.5px] font-bold text-emerald-200 truncate">Nam</div>
-                <div className="text-[7px] text-amber-300 font-mono font-black">+5 ô</div>
-              </div>
+          {/* KHỐI 1: CẮM CỜ 3 MIỀN BẮC - TRUNG - NAM HOẶC BUFF 3 MIỀN */}
+          <div className="grid grid-cols-3 gap-0.5 mb-1">
+            <div 
+              onClick={() => {
+                bandoAudio.unlock();
+                onGiftClick && onGiftClick({ id: 'gift_region_north', name: 'Ngón Tay Tim', icon: '🫰', priceToken: 5, cells: 5, regionTarget: 'north' });
+              }}
+              className="py-1 px-0.5 rounded-md bg-red-950/60 hover:bg-red-900/80 border border-red-500/40 text-center cursor-pointer transition-transform hover:scale-105 active:scale-95"
+              title={mode === 'battle' ? 'Tăng kích thước x3' : 'Cắm cờ Miền Bắc (+5 ô)'}
+            >
+              <div className="text-[11px]">🫰</div>
+              <div className="text-[6.5px] text-amber-300 font-mono font-black">{mode === 'battle' ? 'x3' : '+5'}</div>
             </div>
-          )}
+
+            <div 
+              onClick={() => {
+                bandoAudio.unlock();
+                onGiftClick && onGiftClick({ id: 'gift_region_central', name: 'Bánh Donut', icon: '🍩', priceToken: 5, cells: 5, regionTarget: 'central' });
+              }}
+              className="py-1 px-0.5 rounded-md bg-amber-950/60 hover:bg-amber-900/80 border border-amber-500/40 text-center cursor-pointer transition-transform hover:scale-105 active:scale-95"
+              title={mode === 'battle' ? 'Nâng cấp Giáp' : 'Cắm cờ Miền Trung (+5 ô)'}
+            >
+              <div className="text-[11px]">🍩</div>
+              <div className="text-[6.5px] text-amber-300 font-mono font-black">{mode === 'battle' ? 'Giáp' : '+5'}</div>
+            </div>
+
+            <div 
+              onClick={() => {
+                bandoAudio.unlock();
+                onGiftClick && onGiftClick({ id: 'gift_region_south', name: 'Gấu Con', icon: '🧸', priceToken: 5, cells: 5, regionTarget: 'south' });
+              }}
+              className="py-1 px-0.5 rounded-md bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-center cursor-pointer transition-transform hover:scale-105 active:scale-95"
+              title={mode === 'battle' ? 'Nâng cấp Thú Cưỡi' : 'Cắm cờ Miền Nam (+5 ô)'}
+            >
+              <div className="text-[11px]">🧸</div>
+              <div className="text-[6.5px] text-amber-300 font-mono font-black">{mode === 'battle' ? 'Thú' : '+5'}</div>
+            </div>
+          </div>
 
           {/* KHỐI 2: DANH SÁCH QUÀ TẶNG & TÍCH ĐIỂM (CUỘN GỌN GÀNG) */}
           <div 
