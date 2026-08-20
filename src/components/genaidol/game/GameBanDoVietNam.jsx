@@ -1891,7 +1891,8 @@ export default function GameBanDoVietNam({
 
     if (engineClaimedCount !== lastRendered) {
       // Có thay đổi - cần cập nhật meshes
-      const renderedSet = state._renderedCellIds;
+      const renderedSet = state._renderedCellIds || new Set();
+      state._renderedCellIds = renderedSet;
 
       if (engineClaimedCount < lastRendered || lastRendered === 0) {
         // Full reset hoặc init lần đầu: Quét toàn bộ cells
