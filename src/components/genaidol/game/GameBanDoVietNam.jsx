@@ -9,7 +9,7 @@ import {
   MonitorPlay, Sun, Moon, Move, ZoomIn, ZoomOut, Search, Globe, Navigation, Compass as CompassIcon,
   Sliders, Settings, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RefreshCw,
   Bookmark, BookmarkPlus, BookmarkCheck, Edit2, Trash2, Plus, Save, Check, X, Crosshair,
-  Crown, Medal, Music, Clock, Smartphone, Gift as GiftIcon
+  Crown, Medal, Music, Mic, Clock, Smartphone, Gift as GiftIcon
 } from 'lucide-react';
 import bandoEngine, { getHonorTier, COUNTRY_PRESETS } from './bandoGameEngine';
 import bandoAudio from './bandoAudioEngine';

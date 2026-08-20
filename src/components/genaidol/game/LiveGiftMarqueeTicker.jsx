@@ -231,18 +231,14 @@ export default function LiveGiftMarqueeTicker({
       <div
         key={key}
         onClick={() => onGiftClick && onGiftClick(gift)}
-        className={`flex items-center justify-between px-2.5 py-1.5 rounded-xl border ${rowBg} cursor-pointer transition-all hover:scale-[1.03] active:scale-95 select-none shadow-sm`}
+        className={`flex items-center justify-between px-2 py-1 rounded-lg border ${rowBg} cursor-pointer transition-all hover:scale-[1.03] active:scale-95 select-none shadow-sm`}
         title={`Tặng quà -> +${cellCount} ${mode === 'map' ? 'ô cờ' : 'HP'}`}
       >
-        <div className="flex items-center justify-center shrink-0">
-          <span className="text-[18px] drop-shadow-md transform transition-transform hover:scale-110">{gift.icon}</span>
-        </div>
+        <span className="text-[17px] leading-none shrink-0 drop-shadow">{gift.icon}</span>
 
-        <div className="shrink-0 ml-auto">
-          <span className={`font-mono font-black text-[11px] px-2.5 py-0.5 rounded-lg border ${countColor} shadow-inner tracking-tight whitespace-nowrap`}>
-            +{cellCount} {mode === 'map' ? 'ô' : ''}
-          </span>
-        </div>
+        <span className={`font-mono font-black text-[10.5px] px-1.5 py-0.5 rounded-md border ${countColor} shadow-inner tracking-tight whitespace-nowrap ml-1.5`}>
+          +{cellCount} {mode === 'map' ? 'ô' : ''}
+        </span>
       </div>
     );
   };
@@ -266,7 +262,7 @@ export default function LiveGiftMarqueeTicker({
           title="Kéo thả vị trí hoặc bấm để mở rộng Bảng Quà Tặng"
         >
           <Sparkles size={11} className="text-yellow-400 animate-spin" style={{ animationDuration: '4s' }} />
-          <span className="text-[9px] font-black uppercase">Quà Tặng</span>
+          <span className="text-[9px] font-black uppercase">Quà</span>
           <button
             onClick={(e) => { e.stopPropagation(); setIsMinimized(false); }}
             className="ml-1 p-0.5 rounded text-gray-300 hover:text-white hover:bg-white/20"
@@ -277,41 +273,38 @@ export default function LiveGiftMarqueeTicker({
         </div>
       ) : (
         /* 2. KHUNG BOX WIDGET ĐẦY ĐỦ (TINH GỌN, KHÔNG CHE KHUẤT MÀN HÌNH) */
-        <div className="w-36 sm:w-40 bg-black/30 backdrop-blur-[3px] hover:bg-black/50 border border-amber-500/30 hover:border-amber-400/60 rounded-xl p-1.5 shadow-2xl text-white transition-all">
+        <div className="w-28 sm:w-30 bg-black/35 backdrop-blur-[3px] hover:bg-black/55 border border-amber-500/30 hover:border-amber-400/60 rounded-xl p-1 shadow-2xl text-white transition-all">
           
           {/* HEADER: KÉO THẢ + ZOOM +/- + THU NHỎ + ĐÓNG */}
           <div 
-            className="flex items-center justify-between text-[9px] font-black text-amber-300 pb-1 mb-1 border-b border-white/10 cursor-move"
+            className="flex items-center justify-between text-[8px] font-black text-amber-300 pb-0.5 mb-1 border-b border-white/10 cursor-move select-none"
             onMouseDown={handleDragStart}
             onTouchStart={handleDragStart}
-            title="Kéo thả để di chuyển Bảng Quà Tặng"
+            title="Kéo thả để di chuyển Bảng Quà"
           >
-            <div className="flex items-center gap-1">
-              <Move size={9} className="text-gray-400 shrink-0" />
-              <Sparkles size={10} className="text-yellow-400 animate-spin shrink-0" style={{ animationDuration: '4s' }} />
-              <span className="truncate drop-shadow uppercase tracking-wider text-[8.5px]">
-                {mode === 'battle' ? 'Quà & Buff' : 'Quà Tặng'}
-              </span>
+            <div className="flex items-center gap-0.5 opacity-80 hover:opacity-100">
+              <Move size={8} className="text-gray-400 shrink-0" />
+              <Sparkles size={8} className="text-yellow-400 animate-spin shrink-0" style={{ animationDuration: '4s' }} />
             </div>
 
             {/* CỤM NÚT ĐIỀU KHIỂN GÓC PHẢI */}
             <div className="flex items-center gap-0.5 ml-auto">
               <button
                 onClick={(e) => { e.stopPropagation(); handleScaleChange(-0.1); }}
-                className="w-3.5 h-3.5 flex items-center justify-center rounded text-gray-300 hover:text-white hover:bg-white/20 transition-colors text-[8px]"
-                title="Thu nhỏ kích thước bảng (-10%)"
+                className="w-3 h-3 flex items-center justify-center rounded text-gray-300 hover:text-white hover:bg-white/20 transition-colors text-[7.5px]"
+                title="Thu nhỏ (-10%)"
               >
                 −
               </button>
               
-              <span className="text-[7px] text-gray-400 font-mono">
+              <span className="text-[6.5px] text-gray-400 font-mono">
                 {Math.round(scale * 100)}%
               </span>
 
               <button
                 onClick={(e) => { e.stopPropagation(); handleScaleChange(0.1); }}
-                className="w-3.5 h-3.5 flex items-center justify-center rounded text-gray-300 hover:text-white hover:bg-white/20 transition-colors text-[8px]"
-                title="Phóng to kích thước bảng (+10%)"
+                className="w-3 h-3 flex items-center justify-center rounded text-gray-300 hover:text-white hover:bg-white/20 transition-colors text-[7.5px]"
+                title="Phóng to (+10%)"
               >
                 +
               </button>
@@ -319,17 +312,17 @@ export default function LiveGiftMarqueeTicker({
               <button
                 onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }}
                 className="p-0.5 rounded text-gray-300 hover:text-white hover:bg-white/20 transition-colors"
-                title="Thu nhỏ bảng quà"
+                title="Thu nhỏ"
               >
-                <Minus size={9} />
+                <Minus size={8} />
               </button>
 
               <button
                 onClick={(e) => { e.stopPropagation(); setIsClosed(true); }}
                 className="p-0.5 rounded text-gray-400 hover:text-red-400 hover:bg-white/20 transition-colors"
-                title="Ẩn bảng quà"
+                title="Ẩn"
               >
-                <X size={9} />
+                <X size={8} />
               </button>
             </div>
           </div>
