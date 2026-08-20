@@ -43,7 +43,13 @@ export default function DesktopAppUI() {
       return '';
     }
   });
-  const [selectedCharacter, setSelectedCharacter] = useState('aidol_lan_huong');
+  const [selectedCharacter, setSelectedCharacter] = useState(() => {
+    try {
+      return localStorage.getItem('avalive_selected_char') || null;
+    } catch (e) {
+      return null;
+    }
+  });
   const [showTokenHistory, setShowTokenHistory] = useState(false);
   const [showSimulator, setShowSimulator] = useState(false);
   const [assistantPrompt, setAssistantPrompt] = useState('');
@@ -404,41 +410,17 @@ export default function DesktopAppUI() {
     };
   }, []);
 
-  const ALL_CHARACTERS = {
-    'aidol_lan_huong': { 
-      name: 'Lan Hương (AI)', 
-      url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=80', 
-      type: 'image' 
-    },
-    'aidol_ngoc_trinh': { 
-      name: 'Ngọc Trinh (AI)', 
-      url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1200&q=80', 
-      type: 'image' 
-    },
-    'aidol_mai_anh': { 
-      name: 'Mai Anh (KOL)', 
-      url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1200&q=80', 
-      type: 'image' 
-    }
-  };
+  const ALL_CHARACTERS = {};
 
-  // Lọc bỏ các nhân vật đã bị ẩn và gộp nhân vật tuỳ chỉnh
+  // Gộp nhân vật tuỳ chỉnh tải lên bởi người dùng
   const CHARACTERS = {};
-  Object.keys(ALL_CHARACTERS).forEach(id => {
-    if (!hiddenBuiltins.includes(id)) CHARACTERS[id] = ALL_CHARACTERS[id];
-  });
   if (Array.isArray(customCharacters)) {
     customCharacters.forEach(c => {
       if (c && c.id) {
-        CHARACTERS[c.id] = { name: c.name || 'Custom AI', url: c.url, type: c.type || 'image' };
+        CHARACTERS[c.id] = { name: c.name || 'AI Idol', url: c.url, type: c.type || 'image' };
       }
     });
   }
-  // Đảm bảo luôn có ít nhất 1 nhân vật hiển thị
-  if (Object.keys(CHARACTERS).length === 0) {
-    CHARACTERS['aidol_lan_huong'] = ALL_CHARACTERS['aidol_lan_huong'];
-  }
-
 
   // Mở khóa âm thanh (chỉ unlock AudioContext ngầm, không tự ý phát nhạc khi chưa có lệnh)
   const unlockAllAudio = useCallback(async () => {
@@ -1085,19 +1067,21 @@ export default function DesktopAppUI() {
       );
     }
 
-    // 3. Mặc định: Hiển thị nhân vật được chọn từ Topbar với fallback an toàn
-    const selected = CHARACTERS[selectedCharacter] 
-      || Object.values(CHARACTERS)[0] 
-      || ALL_CHARACTERS['aidol_lan_huong'];
+    // 3. Hiển thị nhân vật được chọn từ Topbar hoặc khung trống để người dùng tải ảnh/video
+    const selected = CHARACTERS[selectedCharacter] || Object.values(CHARACTERS)[0];
 
-    if (!selected) {
+    if (!selected || !selected.url) {
       return (
-        <div className="w-full h-full flex flex-col items-center justify-center bg-[#121218] text-white p-6">
-           <div className="w-16 h-16 rounded-2xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center mb-3 text-purple-400">
-             <Video size={32} />
+        <div 
+          onClick={() => fileInputRef.current?.click()}
+          className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-[#101018] to-[#0a0a0f] text-white p-6 cursor-pointer border-2 border-dashed border-gray-700/60 hover:border-blue-500/80 transition-all group select-none"
+          title="Bấm vào đây để tải ảnh hoặc video Idol của bạn lên"
+        >
+           <div className="w-16 h-16 rounded-2xl bg-blue-600/15 group-hover:bg-blue-600/30 border border-blue-500/30 group-hover:border-blue-400/70 flex items-center justify-center mb-3 text-blue-400 group-hover:text-blue-300 transition-all group-hover:scale-110 shadow-lg">
+             <Plus size={30} />
            </div>
-           <h3 className="text-base font-bold text-white mb-1">AIDOL Livestream Studio</h3>
-           <p className="text-xs text-gray-400">Vui lòng chọn hoặc tải nhân vật từ thanh công cụ bên trên.</p>
+           <h3 className="text-base font-bold text-white mb-1 group-hover:text-blue-300 transition-colors">Tải Ảnh / Video Idol Của Bạn</h3>
+           <p className="text-xs text-gray-400 text-center max-w-sm">Bấm vào đây hoặc nút [+] trên thanh công cụ để tải ảnh hoặc video nhân vật bạn muốn sử dụng.</p>
         </div>
       );
     }
@@ -1191,7 +1175,9 @@ export default function DesktopAppUI() {
           <div className="w-3.5 h-3.5 rounded bg-blue-500 flex items-center justify-center">
             <Video size={9} className="text-white" />
           </div>
-          <span className="text-[11px] font-bold truncate max-w-[220px]">Profile: {CHARACTERS[selectedCharacter]?.name || 'Không xác định'}</span>
+          <span className="text-[11px] font-bold truncate max-w-[220px]">
+            Profile: {CHARACTERS[selectedCharacter]?.name || (Object.keys(CHARACTERS).length > 0 ? Object.values(CHARACTERS)[0]?.name : 'Live Idol Pro (Chưa đặt tên)')}
+          </span>
         </div>
         
         <div className="flex items-center gap-1">
@@ -1513,47 +1499,54 @@ export default function DesktopAppUI() {
           
           <div className="flex items-center gap-1.5 border-r border-gray-500/30 pr-2">
             <span className="text-xs font-medium text-gray-400">{t('characters', currentLang)}</span>
-            <div className="flex gap-1.5">
-              {Object.keys(CHARACTERS).map((charId) => (
-                CHARACTERS[charId] ? (
-                  <div 
-                    key={charId}
-                    onClick={() => {
-                      setSelectedCharacter(charId);
-                      setIsGameBattleActive(false);
-                      setIsGameBanDoActive(false);
-                    }}
-                    className={`w-7 h-7 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 relative group ${selectedCharacter === charId ? 'border-2 border-blue-500 shadow-md shadow-blue-500/30' : 'border border-gray-600 opacity-60 hover:opacity-100'}`}
-                    title={CHARACTERS[charId]?.name || ''}
-                  >
-                    {CHARACTERS[charId]?.type === 'video' ? (
-                      <video src={CHARACTERS[charId]?.url} className="w-full h-full object-cover" muted />
-                    ) : (
-                      <img src={CHARACTERS[charId]?.url} className="w-full h-full object-cover" alt={CHARACTERS[charId]?.name || ''} />
-                    )}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (charId.startsWith('custom_')) {
-                          removeCustomCharacter(e, charId);
-                        } else {
-                          const allKeys = Object.keys(CHARACTERS);
-                          const remaining = allKeys.filter(k => k !== charId);
-                          if (remaining.length > 0) setSelectedCharacter(remaining[0]);
-                          setHiddenBuiltins(prev => [...(prev || []), charId]);
-                        }
+            <div className="flex items-center gap-1.5">
+              {Object.keys(CHARACTERS).length === 0 ? (
+                <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-md border border-dashed border-blue-500/50 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-[10.5px] font-bold transition-all hover:scale-105"
+                  title="Tải ảnh hoặc video nhân vật của bạn"
+                >
+                  <Plus size={12} />
+                  <span>+ Tải Nhân Vật</span>
+                </button>
+              ) : (
+                Object.keys(CHARACTERS).map((charId) => (
+                  CHARACTERS[charId] ? (
+                    <div 
+                      key={charId}
+                      onClick={() => {
+                        setSelectedCharacter(charId);
+                        try { localStorage.setItem('avalive_selected_char', charId); } catch (e) {}
+                        setIsGameBattleActive(false);
+                        setIsGameBanDoActive(false);
                       }}
-                      className="absolute top-0 right-0 p-0.5 bg-red-600 hover:bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-all duration-150 rounded-bl"
-                      title={`Xoá ${CHARACTERS[charId]?.name || ''}`}
+                      className={`w-7 h-7 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 relative group ${selectedCharacter === charId ? 'border-2 border-blue-500 shadow-md shadow-blue-500/30' : 'border border-gray-600 opacity-60 hover:opacity-100'}`}
+                      title={CHARACTERS[charId]?.name || ''}
                     >
-                      <X size={8} />
-                    </button>
-                  </div>
-                ) : null
-              ))}
-              <button className="w-7 h-7 rounded border border-dashed border-gray-500 flex items-center justify-center text-gray-400 hover:text-white cursor-pointer transition-colors hover:bg-gray-700/50 shrink-0" onClick={() => fileInputRef.current?.click()}>
-                <Plus size={13} />
-              </button>
+                      {CHARACTERS[charId]?.type === 'video' ? (
+                        <video src={CHARACTERS[charId]?.url} className="w-full h-full object-cover" muted />
+                      ) : (
+                        <img src={CHARACTERS[charId]?.url} className="w-full h-full object-cover" alt={CHARACTERS[charId]?.name || ''} />
+                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeCustomCharacter(e, charId);
+                        }}
+                        className="absolute top-0 right-0 p-0.5 bg-red-600 hover:bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-all duration-150 rounded-bl"
+                        title={`Xoá ${CHARACTERS[charId]?.name || ''}`}
+                      >
+                        <X size={8} />
+                      </button>
+                    </div>
+                  ) : null
+                ))
+              )}
+              {Object.keys(CHARACTERS).length > 0 && (
+                <button className="w-7 h-7 rounded border border-dashed border-gray-500 flex items-center justify-center text-gray-400 hover:text-white cursor-pointer transition-colors hover:bg-gray-700/50 shrink-0" onClick={() => fileInputRef.current?.click()} title="Tải thêm nhân vật mới">
+                  <Plus size={13} />
+                </button>
+              )}
               <button 
                 className={`px-2 py-1 rounded text-xs font-medium transition-colors border ${isDarkMode ? 'border-purple-500/50 bg-purple-900/30 text-purple-300 hover:bg-purple-800/50' : 'border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100'}`}
                 onClick={() => setIsTemplateLibraryOpen(true)}

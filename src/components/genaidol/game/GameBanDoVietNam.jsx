@@ -1207,15 +1207,6 @@ export default function GameBanDoVietNam({
     focalGroup.add(focalFlagPlaneMesh);
     state.flagPlaneMesh = focalFlagPlaneMesh;
 
-    const initialBadgeTex = getOrCreateDonorBadgeTexture('Chiến Binh Áo Đỏ', '🇻🇳 Cắm Cờ Tổ Quốc');
-    const badgeMat = new THREE.SpriteMaterial({ map: initialBadgeTex, depthTest: false });
-    const badgeSprite = new THREE.Sprite(badgeMat);
-    badgeSprite.position.set(2.1, 8.2, 0);
-    badgeSprite.scale.set(5.8, 1.8, 1.0);
-    focalGroup.add(badgeSprite);
-    state.badgeSprite = badgeSprite;
-    state.badgeTexture = initialBadgeTex;
-
     // Positioning
     const cols = maskData?.gridCols || 300;
     const rows = maskData?.gridRows || 389;
@@ -1738,17 +1729,9 @@ export default function GameBanDoVietNam({
           const fPlane = new THREE.Mesh(flagGeo, flagPlaneMat);
           fPlane.position.set(2.1, 5.4, 0);
 
-          const giftText = p.giftName ? `🎁 ${p.giftName} (+${p.count || 1} Ô)` : `🇻🇳 +${p.count || 1} Ô Cờ`;
-          const badgeTex = getOrCreateDonorBadgeTexture(p.username, giftText);
-          const bMat = new THREE.SpriteMaterial({ map: badgeTex, depthTest: false });
-          const bSprite = new THREE.Sprite(bMat);
-          bSprite.position.set(2.1, 8.2, 0);
-          bSprite.scale.set(5.8, 1.8, 1.0);
-
           poleGroup.add(pMesh);
           poleGroup.add(sMesh);
           poleGroup.add(fPlane);
-          poleGroup.add(bSprite);
 
           poleGroup.position.set(p.wx, 0, p.wz);
           poleGroup.flagPlane = fPlane;
