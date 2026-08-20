@@ -30,6 +30,7 @@ class BanDoAudioEngine {
     this.customSfxName = '';
     this.customSfxUrl = '';
     this.bgmInterval = null;
+    this.synthBgmEnabled = false; // Mặc định tắt Nhạc tổng hợp Synth để không tự phát tiếng tưng tưng
 
     this.loadSavedAudioSettings();
     this.setupGlobalUnlockListener();
@@ -89,6 +90,10 @@ class BanDoAudioEngine {
 
       const savedTimer = localStorage.getItem('bando_bgm_timer_mode');
       if (savedTimer) this.bgmTimerMode = savedTimer;
+      
+      const savedSynth = localStorage.getItem('bando_synth_bgm_enabled');
+      this.synthBgmEnabled = savedSynth === 'true';
+
       // Luôn bật âm thanh 100% khi khởi động để đảm bảo Window Capture / OBS nghe rõ
       this.isMuted = false;
       this.isSfxMuted = false;
@@ -98,12 +103,12 @@ class BanDoAudioEngine {
       if (savedBgmVol !== null) this.bgmVolume = parseFloat(savedBgmVol) || 0.5;
 
       const savedSfxVol = localStorage.getItem('bando_sfx_volume');
-      if (savedSfxVol !== null) this.sfxVolume = parseFloat(savedSfxVol) || 0.9;
+      if (savedSfxVol !== null) this.sfxVolume = parseFloat(savedSfxVol) || 0.85;
 
       const savedVoiceVol = localStorage.getItem('bando_voice_volume');
       if (savedVoiceVol !== null) this.voiceVolume = parseFloat(savedVoiceVol) || 1.0;
     } catch (e) {
-      console.warn('loadSavedAudioSettings warning:', e);
+      console.warn('loadSavedAudioSettings error:', e);
     }
   }
 
@@ -290,6 +295,30 @@ class BanDoAudioEngine {
     this.emitStatusUpdate();
   }
 
+  toggleSynthBgm() {
+    this.synthBgmEnabled = !this.synthBgmEnabled;
+    try {
+      localStorage.setItem('bando_synth_bgm_enabled', String(this.synthBgmEnabled));
+    } catch (e) {}
+    if (this.synthBgmEnabled) {
+      this.startSyntheticBgm();
+    } else {
+      this.stopSyntheticBgm();
+    }
+    this.emitStatusUpdate();
+    return this.synthBgmEnabled;
+  }
+
+  toggleBgm() {
+    if (this.bgmPlaying) {
+      this.stopBgmOnLive();
+    } else {
+      this.playBgmOnLive();
+    }
+    this.emitStatusUpdate();
+    return this.bgmPlaying;
+  }
+
   playBgmOnLive() {
     this.unlock();
     this.bgmPlaying = true;
@@ -300,7 +329,9 @@ class BanDoAudioEngine {
       this.playCustomBgm();
       return;
     }
-    this.startSyntheticBgm();
+    if (this.synthBgmEnabled) {
+      this.startSyntheticBgm();
+    }
   }
 
   pauseBgmOnLive() {

@@ -340,6 +340,21 @@ export default function GameBanDoVietNam({
   const [editingBookmarkId, setEditingBookmarkId] = useState(null);
   const [editingBookmarkName, setEditingBookmarkName] = useState('');
   const [showGiftConfigModal, setShowGiftConfigModal] = useState(false);
+  const [isInternalBgmPlaying, setIsInternalBgmPlaying] = useState(() => bandoAudio.bgmPlaying);
+  const [isInternalSfxEnabled, setIsInternalSfxEnabled] = useState(() => !bandoAudio.isSfxMuted);
+
+  useEffect(() => {
+    const handleAudioStatus = () => {
+      setIsInternalBgmPlaying(bandoAudio.bgmPlaying);
+      setIsInternalSfxEnabled(!bandoAudio.isSfxMuted);
+    };
+    window.addEventListener('bando-bgm-status', handleAudioStatus);
+    window.addEventListener('avalive_audio_status_update', handleAudioStatus);
+    return () => {
+      window.removeEventListener('bando-bgm-status', handleAudioStatus);
+      window.removeEventListener('avalive_audio_status_update', handleAudioStatus);
+    };
+  }, []);
 
   // Xử lý khi bấm vào thẻ quà trên Bảng điện cuộn (Test nhanh cắm cờ)
   const handleTestGiftMarquee = useCallback((gift) => {
@@ -836,13 +851,26 @@ export default function GameBanDoVietNam({
 
   // Direct Realtime Socket.io listener for TikTok gifts across all windows / overlays / popouts
   useEffect(() => {
-    const backendUrl = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3001' : '';
     let socket = null;
+    const getSocketTargetUrl = () => {
+      if (typeof window === 'undefined') return 'http://localhost:3001';
+      const customUrl = localStorage.getItem('aidol_backend_url');
+      if (customUrl && customUrl.startsWith('http')) return customUrl;
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        return 'http://localhost:3001';
+      }
+      return window.location.origin;
+    };
+
+    const targetUrl = getSocketTargetUrl();
+
     try {
-      socket = io(backendUrl || window.location.origin, {
+      socket = io(targetUrl, {
         transports: ['websocket', 'polling'],
-        reconnection: true
+        reconnection: true,
+        timeout: 10000
       });
+
       socket.on('tiktok_gift', (data) => {
         if (!data) return;
         bandoAudio.unlock();
@@ -856,16 +884,30 @@ export default function GameBanDoVietNam({
           avatar: data.profilePictureUrl || ''
         });
       });
+
       socket.on('bando_event', (evt) => {
         if (!evt || !evt.data) return;
         if (evt.type === 'GIFT') {
           bandoEngine.processGift(evt.data);
         }
       });
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Socket connection error:', e);
+    }
+
+    // Lắng nghe thêm CustomEvent từ window / iframe / Electron
+    const handleWindowGift = (e) => {
+      if (e.detail) {
+        bandoEngine.processGift(e.detail);
+      }
+    };
+    window.addEventListener('avalive_tiktok_gift', handleWindowGift);
+    window.addEventListener('tiktok_gift', handleWindowGift);
 
     return () => {
       if (socket) socket.disconnect();
+      window.removeEventListener('avalive_tiktok_gift', handleWindowGift);
+      window.removeEventListener('tiktok_gift', handleWindowGift);
     };
   }, []);
 
@@ -2173,14 +2215,49 @@ export default function GameBanDoVietNam({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0 pointer-events-auto">
+            {/* Quick Audio Controls (BẬT / TẮT Nhạc Nền & SFX Ngay Trên Màn Hình) */}
+            <button
+              onClick={() => {
+                bandoAudio.unlock();
+                bandoAudio.toggleBgm();
+                setIsInternalBgmPlaying(bandoAudio.bgmPlaying);
+              }}
+              className={`px-2 py-1 rounded-xl border text-[10px] sm:text-xs font-black flex items-center gap-1 transition-all ${
+                isInternalBgmPlaying
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400 shadow-md shadow-emerald-500/30 ring-1 ring-emerald-300'
+                  : 'bg-white/10 text-gray-300 hover:text-white border-white/20'
+              }`}
+              title={isInternalBgmPlaying ? 'Nhạc nền đang BẬT - Nhấn để TẮT' : 'Nhạc nền đang TẮT - Nhấn để BẬT'}
+            >
+              <Music size={12} className={isInternalBgmPlaying ? 'animate-bounce text-yellow-300' : ''} />
+              <span className="truncate">{isInternalBgmPlaying ? 'Nhạc: BẬT' : 'Nhạc: TẮT'}</span>
+            </button>
+
+            <button
+              onClick={() => {
+                bandoAudio.unlock();
+                const nextSfx = bandoAudio.toggleSfx();
+                setIsInternalSfxEnabled(nextSfx);
+              }}
+              className={`p-1 sm:px-2 sm:py-1 rounded-xl border text-[10px] sm:text-xs font-black flex items-center gap-1 transition-all ${
+                isInternalSfxEnabled
+                  ? 'bg-amber-600/80 text-yellow-200 border-amber-400'
+                  : 'bg-white/10 text-gray-400 border-white/20'
+              }`}
+              title={isInternalSfxEnabled ? 'SFX Hiệu ứng đang BẬT' : 'SFX Hiệu ứng đang TẮT'}
+            >
+              <Volume2 size={12} />
+              <span className="hidden sm:inline">{isInternalSfxEnabled ? 'SFX: BẬT' : 'SFX: TẮT'}</span>
+            </button>
+
             {gameState.combo.active && gameState.combo.count >= 2 && (
-              <div className="flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-amber-600 to-red-600 rounded-full text-white text-[10px] sm:text-xs font-black shadow-lg animate-bounce">
+              <div className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-600 to-red-600 rounded-full text-white text-[10px] sm:text-xs font-black shadow-lg animate-bounce">
                 <Flame size={12} className="text-yellow-300 animate-spin" />
                 <span>x{gameState.combo.multiplier} ({gameState.combo.count}🎁)</span>
               </div>
             )}
-            <div className="w-20 sm:w-28 h-2 bg-black/60 rounded-full overflow-hidden p-0.5 border border-white/20">
+            <div className="w-16 sm:w-24 h-2 bg-black/60 rounded-full overflow-hidden p-0.5 border border-white/20">
               <div 
                 className="h-full bg-gradient-to-r from-red-600 via-amber-500 to-yellow-400 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(234,179,8,0.8)]"
                 style={{ width: `${gameState.percent}%` }}
@@ -2230,12 +2307,10 @@ export default function GameBanDoVietNam({
                   <span>👤</span>
                 )}
               </div>
-              <span className="text-[10px] text-yellow-100 font-black tracking-wide truncate max-w-[120px] drop-shadow">
-                {b.userId && b.userId.startsWith('@') ? b.userId : `@${b.username || b.userId || 'chiến_binh'}`}
-              </span>
+              <span className="truncate max-w-[120px] font-bold text-yellow-100">@{b.username || 'Chiến Binh'}</span>
+              <span className="px-1.5 py-0.5 rounded-full bg-black/40 text-yellow-300 font-mono text-[9px] font-black border border-yellow-400/30">+{b.count || 1} Ô</span>
             </div>
-            {/* Compact 3D Pin Needle */}
-            <div className="w-0.5 h-2 bg-gradient-to-b from-yellow-300 via-yellow-400 to-transparent rounded-full shadow-[0_0_4px_rgba(250,204,21,0.8)]" />
+            <div className="w-0.5 h-3 bg-gradient-to-b from-yellow-300 to-red-500 shadow-sm" />
           </div>
         ))}
       </div>
@@ -2250,11 +2325,11 @@ export default function GameBanDoVietNam({
         </div>
       )}
 
-      {/* 1. TOP SUPPORTERS LEADERBOARD (Ultra Transparent Glassmorphism - Có thể Kéo Thả & Co Giãn Kích Thước) */}
+      {/* 1. TOP 10 SUPPORTERS LEADERBOARD (Ultra Transparent Glassmorphism - Bảng Vàng Top 10 Chuẩn Xác) */}
       {!isLeaderboardClosed && (
         <div 
           className={`absolute z-30 transition-all duration-100 pointer-events-auto select-none ${
-            isLeaderboardMinimized ? 'w-8 overflow-hidden' : 'w-32 sm:w-36'
+            isLeaderboardMinimized ? 'w-8 overflow-hidden' : 'w-36 sm:w-40'
           }`}
           style={{
             top: `${leaderboardPos.y}px`,
@@ -2263,7 +2338,7 @@ export default function GameBanDoVietNam({
             transformOrigin: 'top left'
           }}
         >
-          <div className="bg-black/20 backdrop-blur-[2px] hover:bg-black/40 border border-amber-500/20 hover:border-amber-400/40 rounded-lg p-1 shadow-2xl text-white transition-all">
+          <div className="bg-black/35 backdrop-blur-[3px] hover:bg-black/55 border border-amber-500/30 hover:border-amber-400/50 rounded-xl p-1 shadow-2xl text-white transition-all">
             <div 
               className="flex items-center justify-between text-[9px] font-black text-amber-300 mb-0.5 border-b border-white/10 pb-0.5 cursor-move"
               onMouseDown={(e) => handleHudDragStart(e, 'leaderboard')}
@@ -2273,7 +2348,7 @@ export default function GameBanDoVietNam({
               {!isLeaderboardMinimized && (
                 <div className="flex items-center gap-1">
                   <Trophy size={10} className="text-yellow-400 shrink-0" />
-                  <span className="truncate drop-shadow">BXH Top</span>
+                  <span className="truncate drop-shadow uppercase text-[8.5px]">Top 10 Chiến Binh</span>
                 </div>
               )}
               <div className="flex items-center gap-0.5 ml-auto">
@@ -2314,19 +2389,21 @@ export default function GameBanDoVietNam({
 
             {!isLeaderboardMinimized && (
               <>
-                <div className="space-y-0.5 max-h-24 overflow-y-auto custom-scrollbar">
+                <div className="space-y-0.5 max-h-40 overflow-y-auto custom-scrollbar">
                   {(!gameState.leaderboard || gameState.leaderboard.length === 0) ? (
-                    <p className="text-[8px] text-gray-300 text-center py-1 italic">Chưa có lượt cắm</p>
+                    <p className="text-[8px] text-gray-300 text-center py-2 italic">Chưa có lượt cắm cờ</p>
                   ) : (
-                    gameState.leaderboard.slice(0, 3).map((user, idx) => (
-                      <div key={user.userId || idx} className="flex items-center justify-between text-[8px] sm:text-[9px] bg-black/30 px-1 py-0.5 rounded border border-white/5">
-                        <span className="flex items-center gap-0.5 font-medium truncate max-w-[65px]">
-                          <span className={idx === 0 ? 'text-amber-400 font-bold' : idx === 1 ? 'text-gray-300' : 'text-amber-600'}>
-                            #{idx + 1}
+                    gameState.leaderboard.slice(0, 10).map((user, idx) => (
+                      <div key={user.userId || idx} className="flex items-center justify-between text-[8px] sm:text-[9px] bg-black/35 px-1 py-0.5 rounded border border-white/5">
+                        <span className="flex items-center gap-1 font-medium truncate max-w-[78px]">
+                          <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center font-black text-[7.5px] ${
+                            idx === 0 ? 'bg-yellow-400 text-black' : idx === 1 ? 'bg-slate-300 text-black' : idx === 2 ? 'bg-amber-600 text-white' : 'bg-white/10 text-gray-300'
+                          }`}>
+                            {idx + 1}
                           </span>
-                          <span className="text-yellow-100 truncate font-semibold">{user.username}</span>
+                          <span className="text-yellow-100 truncate font-bold text-[8.5px]">{user.username}</span>
                         </span>
-                        <span className="font-mono font-bold text-yellow-400 shrink-0">{(user.totalCells || user.cells || 0).toLocaleString()} ô</span>
+                        <span className="font-mono font-black text-yellow-400 shrink-0 text-[8px]">{(user.totalCells || user.cells || 0).toLocaleString()} ô</span>
                       </div>
                     ))
                   )}
