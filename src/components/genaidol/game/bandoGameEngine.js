@@ -918,7 +918,11 @@ class BanDoGameEngine {
 
   notify(lastEvent = null) {
     if (this._isApplyingRemoteSync) return;
+    // Tạo bản sao cellsById MỚI để React detect change qua === reference comparison
     this.state.cellsById = { ...this.state.cellsById };
+    // Tăng sequence number đảm bảo React useEffect LUÔN trigger khi có thay đổi
+    if (!this.state._stateSeq) this.state._stateSeq = 0;
+    this.state._stateSeq += 1;
     this.listeners.forEach(cb => {
       try { cb(this.state, lastEvent); } catch(e) {}
     });
@@ -1205,6 +1209,9 @@ class BanDoGameEngine {
     this.state.claimedCount = Object.keys(this.state.cellsById).length;
     this.state.remainingCells = Math.max(0, this.state.totalCells - this.state.claimedCount);
     this.state.percent = Math.min(100, Math.round((this.state.claimedCount / this.state.totalCells) * 1000) / 10);
+
+    // 🔴 DEBUG LOG: Xác nhận processGift đã phân bổ ô cờ thành công
+    console.log(`%c[BANDO ENGINE] 🎁 processGift THÀNH CÔNG: ${user.username} tặng "${giftId}" x${count} → Cắm ${toClaim.length} ô cờ. Tổng claimed: ${this.state.claimedCount}/${this.state.totalCells} (${this.state.percent}%)`, 'color: #22c55e; font-weight: bold; font-size: 13px;');
 
     // Đồng bộ lấp đầy cờ vào khối chữ Ô CỜ Tiêu Đề (Banner Flag Cells)
     this.bannerEngine.syncWithMapPercent(this.state.percent);

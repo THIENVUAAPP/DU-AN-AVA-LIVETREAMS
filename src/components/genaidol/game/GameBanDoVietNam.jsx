@@ -1871,77 +1871,92 @@ export default function GameBanDoVietNam({
           state.cellIndexMap.set(Number(c.id), i);
         }
       }
-      state.claimedSet = new Set();
+      state._lastRenderedClaimedCount = 0;
+      state._renderedCellIds = new Set();
     }
 
     const cellIndexMap = state.cellIndexMap;
-    const claimedSet = state.claimedSet || new Set();
-    state.claimedSet = claimedSet;
     const curDim = state.cellDim || 0.98;
     const scaleYClaimed = 0.55;
     const scaleYUnclaimed = 0.35;
 
-    const currentCellsById = gameState.cellsById || bandoEngine.state.cellsById || {};
-    const currentClaimedIds = Object.keys(currentCellsById);
+    // 🔴 ĐỌC TRỰC TIẾP TỪ ENGINE (nguồn chân lý tuyệt đối) thay vì qua React state
+    const engineCellsById = bandoEngine.state.cellsById || {};
+    const engineClaimedIds = Object.keys(engineCellsById);
+    const engineClaimedCount = engineClaimedIds.length;
+    const lastRendered = state._lastRenderedClaimedCount || 0;
 
-    // If initial load or reset (size reduced): Full pass
-    if (claimedSet.size === 0 || currentClaimedIds.length < claimedSet.size) {
-      claimedSet.clear();
-      for (let i = 0; i < count; i++) {
-        const cell = cells[i];
-        if (!cell) continue;
-        const isClaimed = !!(currentCellsById[cell.id] ?? currentCellsById[String(cell.id)] ?? currentCellsById[Number(cell.id)]);
-        const wx = (cell.x - cols / 2) * 1.0;
-        const wz = (cell.y - rows / 2) * 1.0;
+    // 🔴 DEBUG: Log mỗi khi useEffect này chạy
+    console.log(`%c[3D RENDERER] 🗺️ Voxel Update useEffect: engineClaimed=${engineClaimedCount}, lastRendered=${lastRendered}, gameState.claimedCount=${gameState.claimedCount}`, 'color: #3b82f6; font-weight: bold;');
 
-        if (isClaimed) {
-          claimedSet.add(String(cell.id));
-          terrainMesh.setMatrixAt(i, zeroMatrix);
+    if (engineClaimedCount !== lastRendered) {
+      // Có thay đổi - cần cập nhật meshes
+      const renderedSet = state._renderedCellIds;
 
-          dummy.position.set(wx, scaleYClaimed / 2, wz);
-          dummy.scale.set(curDim, scaleYClaimed, curDim);
-          dummy.updateMatrix();
-          flagMesh.setMatrixAt(i, dummy.matrix);
-        } else {
-          dummy.position.set(wx, scaleYUnclaimed / 2, wz);
-          dummy.scale.set(curDim, scaleYUnclaimed, curDim);
-          dummy.updateMatrix();
-          terrainMesh.setMatrixAt(i, dummy.matrix);
-          terrainMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.92, 0.94, 0.97) : new THREE.Color(0.96, 0.97, 0.99));
-          flagMesh.setMatrixAt(i, zeroMatrix);
+      if (engineClaimedCount < lastRendered || lastRendered === 0) {
+        // Full reset hoặc init lần đầu: Quét toàn bộ cells
+        renderedSet.clear();
+        for (let i = 0; i < count; i++) {
+          const cell = cells[i];
+          if (!cell) continue;
+          const cellIdStr = String(cell.id);
+          const isClaimed = !!(engineCellsById[cell.id] ?? engineCellsById[cellIdStr] ?? engineCellsById[Number(cell.id)]);
+          const wx = (cell.x - cols / 2) * 1.0;
+          const wz = (cell.y - rows / 2) * 1.0;
+
+          if (isClaimed) {
+            renderedSet.add(cellIdStr);
+            terrainMesh.setMatrixAt(i, zeroMatrix);
+
+            dummy.position.set(wx, scaleYClaimed / 2, wz);
+            dummy.scale.set(curDim, scaleYClaimed, curDim);
+            dummy.updateMatrix();
+            flagMesh.setMatrixAt(i, dummy.matrix);
+          } else {
+            dummy.position.set(wx, scaleYUnclaimed / 2, wz);
+            dummy.scale.set(curDim, scaleYUnclaimed, curDim);
+            dummy.updateMatrix();
+            terrainMesh.setMatrixAt(i, dummy.matrix);
+            terrainMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.92, 0.94, 0.97) : new THREE.Color(0.96, 0.97, 0.99));
+            flagMesh.setMatrixAt(i, zeroMatrix);
+          }
         }
-      }
-      terrainMesh.instanceMatrix.needsUpdate = true;
-      if (terrainMesh.instanceColor) terrainMesh.instanceColor.needsUpdate = true;
-      flagMesh.instanceMatrix.needsUpdate = true;
-    } else if (currentClaimedIds.length > claimedSet.size) {
-      // Incremental update (chỉ cập nhật các ô cờ mới vừa được cắm - SIÊU NHẸ 0.01ms thay vì quét 15,000 ô)
-      let hasUpdates = false;
-      for (let k = 0; k < currentClaimedIds.length; k++) {
-        const cid = String(currentClaimedIds[k]);
-        if (!claimedSet.has(cid)) {
-          claimedSet.add(cid);
-          const i = cellIndexMap.get(cid) ?? cellIndexMap.get(Number(cid));
-          if (i !== undefined) {
-            const cell = cells[i];
-            if (cell) {
-              const wx = (cell.x - cols / 2) * 1.0;
-              const wz = (cell.y - rows / 2) * 1.0;
-              terrainMesh.setMatrixAt(i, zeroMatrix);
+        console.log(`%c[3D RENDERER] 🔄 FULL PASS: Rendered ${renderedSet.size} claimed cells out of ${count} total`, 'color: #f59e0b; font-weight: bold;');
+      } else {
+        // Incremental update: chỉ xử lý ô mới
+        let newCells = 0;
+        for (let k = 0; k < engineClaimedIds.length; k++) {
+          const cid = String(engineClaimedIds[k]);
+          if (!renderedSet.has(cid)) {
+            renderedSet.add(cid);
+            const i = cellIndexMap.get(cid) ?? cellIndexMap.get(Number(cid));
+            if (i !== undefined && i >= 0 && i < count) {
+              const cell = cells[i];
+              if (cell) {
+                const wx = (cell.x - cols / 2) * 1.0;
+                const wz = (cell.y - rows / 2) * 1.0;
+                terrainMesh.setMatrixAt(i, zeroMatrix);
 
-              dummy.position.set(wx, scaleYClaimed / 2, wz);
-              dummy.scale.set(curDim, scaleYClaimed, curDim);
-              dummy.updateMatrix();
-              flagMesh.setMatrixAt(i, dummy.matrix);
-              hasUpdates = true;
+                dummy.position.set(wx, scaleYClaimed / 2, wz);
+                dummy.scale.set(curDim, scaleYClaimed, curDim);
+                dummy.updateMatrix();
+                flagMesh.setMatrixAt(i, dummy.matrix);
+                newCells++;
+              }
             }
           }
         }
+        if (newCells > 0) {
+          console.log(`%c[3D RENDERER] ✅ INCREMENTAL: Cắm ${newCells} ô cờ MỚI lên bản đồ 3D. Tổng rendered: ${renderedSet.size}`, 'color: #22c55e; font-weight: bold;');
+        }
       }
-      if (hasUpdates) {
-        terrainMesh.instanceMatrix.needsUpdate = true;
-        flagMesh.instanceMatrix.needsUpdate = true;
-      }
+
+      // LUÔN đánh dấu needsUpdate cho cả hai mesh
+      terrainMesh.instanceMatrix.needsUpdate = true;
+      if (terrainMesh.instanceColor) terrainMesh.instanceColor.needsUpdate = true;
+      flagMesh.instanceMatrix.needsUpdate = true;
+
+      state._lastRenderedClaimedCount = engineClaimedCount;
     }
 
     // Cập nhật ma trận và màu sắc của Khối Chữ Ô Cờ 3D (Banner Flag Cells)
@@ -1997,7 +2012,7 @@ export default function GameBanDoVietNam({
         };
       }
     }
-  }, [gameState.claimedCount, gameState.cellsById, gameState.lastFocalTarget, gameState.activeFlagPoles, gameState.status, gameState.settings, gameState.selectedCountry, gameState.bannerCells, gameState.bannerClaimedCount, gameState.showBannerCells, gameState.bannerPos, gameState.bannerClaimedColor, gameState.bannerUnclaimedColor, gameState.bannerVoxelScale, viewMode3D, gameState.maskLoaded, isAutoTesting, isAuto247]);
+  }, [gameState.claimedCount, gameState.cellsById, gameState._stateSeq, gameState.lastFocalTarget, gameState.activeFlagPoles, gameState.status, gameState.settings, gameState.selectedCountry, gameState.bannerCells, gameState.bannerClaimedCount, gameState.showBannerCells, gameState.bannerPos, gameState.bannerClaimedColor, gameState.bannerUnclaimedColor, gameState.bannerVoxelScale, viewMode3D, gameState.maskLoaded, isAutoTesting, isAuto247]);
 
   // Smart Camera Director: Luân phiên góc nhìn khi ở chế độ chờ (Chưa có người dùng tặng quà):
   // 1. Zoom gần khu vực CÓ LÁ CỜ QUỐC KỲ (10-15s, mặc định 12s) - Nhìn thấy rõ tất cả lá cờ quốc kỳ đã cắm
