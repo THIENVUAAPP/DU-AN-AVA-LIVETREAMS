@@ -97,6 +97,77 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
   const [isProcessingMapImage, setIsProcessingMapImage] = useState(false);
   const [mapProcessSuccess, setMapProcessSuccess] = useState(false);
 
+  // Quản lý Kết Nối Real-time TikTok Live Studio
+  const [tiktokUsernameInput, setTiktokUsernameInput] = useState(() => {
+    return localStorage.getItem('aidol_tiktok_id') || '';
+  });
+  const [isTiktokConnected, setIsTiktokConnected] = useState(false);
+  const [tiktokConnectedUser, setTiktokConnectedUser] = useState('');
+  const [isConnectingTiktok, setIsConnectingTiktok] = useState(false);
+
+  useEffect(() => {
+    const backendUrl = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3001' : '';
+    let socket = null;
+    try {
+      socket = io(backendUrl || window.location.origin, { transports: ['websocket', 'polling'] });
+      socket.emit('get_tiktok_status');
+      socket.on('tiktok_status', (data) => {
+        setIsTiktokConnected(!!data?.connected);
+        setTiktokConnectedUser(data?.username || '');
+        setIsConnectingTiktok(false);
+      });
+      socket.on('tiktok_connected', (data) => {
+        setIsTiktokConnected(true);
+        setTiktokConnectedUser(data?.username || '');
+        setIsConnectingTiktok(false);
+      });
+      socket.on('tiktok_disconnected', () => {
+        setIsTiktokConnected(false);
+        setTiktokConnectedUser('');
+        setIsConnectingTiktok(false);
+      });
+    } catch (e) {}
+
+    return () => {
+      if (socket) socket.disconnect();
+    };
+  }, []);
+
+  const handleConnectTiktok = () => {
+    if (!tiktokUsernameInput) return;
+    const cleanId = tiktokUsernameInput.trim().replace(/^@/, '');
+    try { localStorage.setItem('aidol_tiktok_id', cleanId); } catch (e) {}
+    setIsConnectingTiktok(true);
+    const backendUrl = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3001' : '';
+    try {
+      const socket = io(backendUrl || window.location.origin, { transports: ['websocket', 'polling'] });
+      socket.emit('connect_tiktok', cleanId);
+    } catch (e) {}
+  };
+
+  const handleDisconnectTiktok = () => {
+    const backendUrl = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3001' : '';
+    try {
+      const socket = io(backendUrl || window.location.origin, { transports: ['websocket', 'polling'] });
+      socket.emit('disconnect_tiktok');
+    } catch (e) {}
+    setIsTiktokConnected(false);
+    setTiktokConnectedUser('');
+  };
+
+  const handleTestSpecificGift = (gId, gName, count, diamonds, region) => {
+    bandoEngine.processGift({
+      userId: 'test_donor_' + Date.now().toString(36),
+      username: 'Chiến Binh Yêu Nước 🇻🇳',
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
+      giftId: gId,
+      giftName: gName,
+      count: count,
+      diamondCount: diamonds,
+      regionTarget: region || null
+    });
+  };
+
   // Trigger camera actions from inside Admin settings
   const triggerCameraAction = (action, payload) => {
     window.dispatchEvent(new CustomEvent('bando-camera-action', { detail: { action, payload } }));
@@ -1005,6 +1076,88 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                   <span className="text-[11px] text-emerald-400 font-mono">
                     {gameState.autoLoop247 ? '● Chế Độ Auto 24/7: ĐANG BẬT' : '○ Chế Độ Auto 24/7: TẮT'}
                   </span>
+                </div>
+
+                {/* Real-time TikTok Live Studio Connection Box */}
+                <div className="p-4 bg-gradient-to-r from-rose-950/70 via-red-950/60 to-slate-900/80 border border-rose-500/50 rounded-2xl shadow-xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-black text-white flex items-center gap-2">
+                      <span className="text-base">📡</span>
+                      <span className="uppercase text-rose-300 font-black">Kết Nối TikTok Live Studio (Bắt Quà Thật Realtime)</span>
+                    </div>
+                    <span className={`text-[10px] font-mono px-2.5 py-0.5 rounded-full border font-bold ${
+                      isTiktokConnected 
+                        ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/50 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+                        : 'bg-rose-950/80 text-rose-300 border-rose-500/40'
+                    }`}>
+                      {isTiktokConnected ? `● ĐÃ KẾT NỐI: @${tiktokConnectedUser}` : '○ CHƯA KẾT NỐI LIVE'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={tiktokUsernameInput}
+                      onChange={(e) => setTiktokUsernameInput(e.target.value)}
+                      placeholder="Nhập @username TikTok (VD: thienvuaapp)"
+                      className="flex-1 px-3 py-2 bg-black/60 border border-white/20 rounded-xl text-xs text-white placeholder-gray-400 focus:outline-none focus:border-rose-400 font-mono"
+                    />
+                    {isTiktokConnected ? (
+                      <button
+                        onClick={handleDisconnectTiktok}
+                        className="py-2 px-4 bg-rose-700 hover:bg-rose-600 text-white rounded-xl text-xs font-black transition-all shadow-md active:scale-95"
+                      >
+                        Ngắt Kết Nối
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleConnectTiktok}
+                        disabled={isConnectingTiktok}
+                        className="py-2 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-black transition-all shadow-md active:scale-95 disabled:opacity-50"
+                      >
+                        {isConnectingTiktok ? 'Đang Kết Nối...' : '⚡ Kết Nối Live'}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Fast Gift Testing Buttons (Test ngay lập tức cắm cờ) */}
+                  <div className="pt-1 border-t border-white/10">
+                    <div className="text-[10px] text-gray-300 font-bold mb-1.5 flex items-center justify-between">
+                      <span>🧪 Test Nhanh Quà Tặng (Bấm là cắm cờ và lên Top 10 ngay lập tức):</span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+                      <button
+                        onClick={() => handleTestSpecificGift('rose', 'Hoa Hồng', 1, 1, null)}
+                        className="p-1.5 bg-white/5 hover:bg-rose-600/30 border border-white/10 hover:border-rose-400 rounded-lg text-[10px] font-bold text-rose-200 transition-all flex items-center justify-center gap-1"
+                      >
+                        <span>🌹</span> <span>Hoa Hồng (1 Ô)</span>
+                      </button>
+                      <button
+                        onClick={() => handleTestSpecificGift('peach', 'Quả Đào MB', 1, 5, 'north')}
+                        className="p-1.5 bg-white/5 hover:bg-rose-600/30 border border-white/10 hover:border-rose-400 rounded-lg text-[10px] font-bold text-rose-200 transition-all flex items-center justify-center gap-1"
+                      >
+                        <span>🍑</span> <span>Đào MB (5 Ô)</span>
+                      </button>
+                      <button
+                        onClick={() => handleTestSpecificGift('spin_ball', 'Bóng Xoáy MT', 1, 5, 'central')}
+                        className="p-1.5 bg-white/5 hover:bg-amber-600/30 border border-white/10 hover:border-amber-400 rounded-lg text-[10px] font-bold text-amber-200 transition-all flex items-center justify-center gap-1"
+                      >
+                        <span>⚽</span> <span>Bóng MT (5 Ô)</span>
+                      </button>
+                      <button
+                        onClick={() => handleTestSpecificGift('bing_chilling', 'Kem MN', 1, 5, 'south')}
+                        className="p-1.5 bg-white/5 hover:bg-emerald-600/30 border border-white/10 hover:border-emerald-400 rounded-lg text-[10px] font-bold text-emerald-200 transition-all flex items-center justify-center gap-1"
+                      >
+                        <span>🍦</span> <span>Kem MN (5 Ô)</span>
+                      </button>
+                      <button
+                        onClick={() => handleTestSpecificGift('lion_king', 'Sư Tử', 1, 29999, null)}
+                        className="p-1.5 bg-yellow-500/20 hover:bg-yellow-500/40 border border-yellow-400/50 rounded-lg text-[10px] font-black text-yellow-300 transition-all flex items-center justify-center gap-1 shadow-sm"
+                      >
+                        <span>🦁</span> <span>Sư Tử (29k Ô)</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Auto 24/7 Control Banner (CHẠY THẬT TIKTOK LIVE) */}

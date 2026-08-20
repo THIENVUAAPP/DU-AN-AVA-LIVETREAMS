@@ -103,13 +103,34 @@ io.on('connection', (socket) => {
   });
 
   // 4. TikTok Live Integration
-  socket.on('connect_tiktok', (username) => {
+  socket.on('get_tiktok_status', () => {
+    socket.emit('tiktok_status', {
+      connected: !!tiktokConnection && !!currentUsername,
+      username: currentUsername,
+      roomId: tiktokConnection?.roomId || null
+    });
+  });
+
+  socket.on('disconnect_tiktok', () => {
+    if (tiktokConnection) {
+      try {
+        tiktokConnection.disconnect();
+      } catch (e) {}
+      tiktokConnection = null;
+    }
+    currentUsername = '';
+    io.emit('tiktok_disconnected', { message: 'Đã ngắt kết nối TikTok Live' });
+    io.emit('tiktok_status', { connected: false, username: '', roomId: null });
+  });
+
+  socket.on('connect_tiktok', (username, options = {}) => {
     const targetUser = username ? username.trim().replace(/^@/, '') : '';
     if (!targetUser) return;
 
     if (tiktokConnection) {
       if (currentUsername === targetUser) {
-        socket.emit('tiktok_connected', { username: targetUser });
+        socket.emit('tiktok_connected', { username: targetUser, roomId: tiktokConnection.roomId });
+        io.emit('tiktok_status', { connected: true, username: targetUser, roomId: tiktokConnection.roomId });
         return;
       }
       try {
@@ -119,51 +140,50 @@ io.on('connection', (socket) => {
     }
 
     currentUsername = targetUser;
-    console.log(`Connecting to TikTok username: ${targetUser}`);
+    console.log(`[TikTok Live] 🚀 Connecting to TikTok channel: @${targetUser}`);
 
     try {
       tiktokConnection = new TikTokConnector(targetUser, {
         processInitialData: false,
         enableExtendedGiftInfo: true,
         enableWebsocketUpgrade: true,
-        requestPollingIntervalMs: 1000,
+        requestPollingIntervalMs: 800,
+        sessionId: options.sessionId || process.env.TIKTOK_SESSION_ID || undefined,
         clientParams: {
           "app_language": "vi-VN",
           "device_platform": "web"
         }
       });
     } catch (e) {
-      console.error('Error instantiating TikTokLiveConnection:', e);
+      console.error('[TikTok Live] Error instantiating TikTokLiveConnection:', e);
+      socket.emit('tiktok_error', e.toString());
       return;
     }
 
     tiktokConnection.connect().then(state => {
-      console.log(`Connected to TikTok Room ID: ${state?.roomId || 'ACTIVE'}`);
-      io.emit('tiktok_connected', { username: targetUser });
+      console.log(`[TikTok Live] ✅ Connected to TikTok Room ID: ${state?.roomId || 'ACTIVE'} (@${targetUser})`);
+      io.emit('tiktok_connected', { username: targetUser, roomId: state?.roomId });
+      io.emit('tiktok_status', { connected: true, username: targetUser, roomId: state?.roomId });
     }).catch(err => {
-      console.error('Failed to connect to TikTok Live:', err);
+      console.error(`[TikTok Live] ❌ Failed to connect to @${targetUser}:`, err.message || err);
       io.emit('tiktok_error', err.toString());
+      io.emit('tiktok_status', { connected: false, username: targetUser, error: err.toString() });
       tiktokConnection = null;
     });
 
     // Handle TikTok Events
     tiktokConnection.on('chat', data => {
       const chatPayload = {
-        userId: data.userId,
-        uniqueId: data.uniqueId,
-        nickname: data.nickname,
-        comment: data.comment,
-        profilePictureUrl: data.profilePictureUrl
+        userId: String(data.userId || data.userDetails?.userId || data.uniqueId || ''),
+        uniqueId: String(data.uniqueId || data.userDetails?.uniqueId || ''),
+        nickname: String(data.nickname || data.userDetails?.nickname || data.uniqueId || 'Khán Giả'),
+        comment: String(data.comment || ''),
+        profilePictureUrl: String(data.profilePictureUrl || data.userDetails?.profilePictureUrls?.[0] || '')
       };
       io.emit('tiktok_chat', chatPayload);
       io.emit('LIVE_EVENT', {
         type: 'COMMENT',
-        data: {
-          userId: data.userId,
-          nickname: data.nickname,
-          comment: data.comment,
-          avatar: data.profilePictureUrl
-        }
+        data: chatPayload
       });
     });
 
@@ -171,52 +191,60 @@ io.on('connection', (socket) => {
     const streakMap = new Map();
 
     tiktokConnection.on('gift', data => {
-      const streakKey = `${data.userId || data.uniqueId}_${data.giftId}`;
-      let deltaCount = 1;
+      try {
+        const giftId = String(data.giftId || data.gift?.id || data.extendedGiftInfo?.id || 'rose');
+        const giftName = String(data.giftName || data.gift?.name || data.extendedGiftInfo?.name || data.describe || 'Quà TikTok');
+        const diamondCount = Number(data.diamondCount || data.extendedGiftInfo?.diamond_count || data.gift?.diamond_count || 1) || 1;
+        const userId = String(data.userId || data.userDetails?.userId || data.uniqueId || 'tiktok_viewer');
+        const uniqueId = String(data.uniqueId || data.userDetails?.uniqueId || '');
+        const nickname = String(data.nickname || data.userDetails?.nickname || data.uniqueId || 'Khán Giả');
+        const avatar = String(data.profilePictureUrl || data.userDetails?.profilePictureUrls?.[0] || '');
 
-      if (data.giftType === 1) {
-        const prevCount = streakMap.get(streakKey) || 0;
-        const currentCount = data.repeatCount || 1;
-        deltaCount = Math.max(1, currentCount - prevCount);
-        streakMap.set(streakKey, currentCount);
+        const streakKey = `${userId}_${giftId}`;
+        let count = 1;
 
-        if (data.repeatEnd) {
-          streakMap.delete(streakKey);
+        if (data.giftType === 1) {
+          const prevCount = streakMap.get(streakKey) || 0;
+          const currentCount = Number(data.repeatCount) || 1;
+          count = Math.max(1, currentCount - prevCount);
+          streakMap.set(streakKey, currentCount);
+
+          if (data.repeatEnd) {
+            streakMap.delete(streakKey);
+          }
+        } else {
+          count = Number(data.repeatCount) || 1;
         }
-      } else {
-        deltaCount = data.repeatCount || 1;
-      }
 
-      const giftPayload = {
-        userId: data.userId || 'tiktok_viewer',
-        uniqueId: data.uniqueId || '',
-        nickname: data.nickname || data.uniqueId || 'Khán Giả',
-        giftId: data.giftId,
-        giftName: data.giftName || 'Quà TikTok',
-        diamondCount: data.diamondCount || 1,
-        repeatCount: deltaCount,
-        totalRepeatCount: data.repeatCount || deltaCount,
-        profilePictureUrl: data.profilePictureUrl || ''
-      };
-      console.log(`[TikTok Gift] 🎁 ${giftPayload.nickname} (@${giftPayload.uniqueId}) tặng: ${giftPayload.giftName} x${deltaCount} (${giftPayload.diamondCount} xu)`);
-      io.emit('tiktok_gift', giftPayload);
-      
-      // Chuyển đổi trực tiếp thành sự kiện cắm cờ bản đồ & game chiến đấu
-      const giftEvent = {
-        type: 'GIFT',
-        data: {
-          giftId: String(data.giftId || 'rose'),
-          giftName: data.giftName || 'Quà TikTok',
-          count: deltaCount,
-          userId: data.userId || data.uniqueId || 'tiktok_viewer',
-          username: data.nickname || data.uniqueId || 'Khán Giả',
-          avatar: data.profilePictureUrl || '',
-          diamondCount: data.diamondCount || 1
-        },
-        timestamp: Date.now()
-      };
-      io.emit('bando_event', giftEvent);
-      io.emit('LIVE_EVENT', giftEvent);
+        const giftPayload = {
+          userId,
+          uniqueId,
+          nickname,
+          username: nickname || uniqueId || 'Khán Giả',
+          giftId,
+          giftName,
+          diamondCount,
+          count,
+          repeatCount: count,
+          totalRepeatCount: data.repeatCount || count,
+          profilePictureUrl: avatar,
+          avatar
+        };
+
+        console.log(`[TikTok Gift] 🎁 ${nickname} (@${uniqueId}) tặng: ${giftName} x${count} (${diamondCount} xu)`);
+        io.emit('tiktok_gift', giftPayload);
+        
+        // Chuyển đổi trực tiếp thành sự kiện cắm cờ bản đồ & game chiến đấu
+        const giftEvent = {
+          type: 'GIFT',
+          data: giftPayload,
+          timestamp: Date.now()
+        };
+        io.emit('bando_event', giftEvent);
+        io.emit('LIVE_EVENT', giftEvent);
+      } catch (err) {
+        console.error('[TikTok Gift Error]:', err);
+      }
     });
 
     tiktokConnection.on('like', data => {
@@ -246,26 +274,70 @@ io.on('connection', (socket) => {
       });
     });
 
-    tiktokConnection.on('streamEnd', (actionId) => {
-      console.log('TikTok Live Stream ended');
-      io.emit('tiktok_disconnected', 'Stream ended');
-      tiktokConnection = null;
-    });
-  });
-
-  socket.on('disconnect_tiktok', () => {
-    if (tiktokConnection) {
-      tiktokConnection.disconnect();
+    tiktokConnection.on('streamEnd', () => {
+      console.log(`[TikTok Live] 🛑 Stream ended for @${targetUser}`);
       tiktokConnection = null;
       currentUsername = null;
-      io.emit('tiktok_disconnected', 'Disconnected by user');
-      console.log('Disconnected from TikTok by user');
-    }
+      io.emit('tiktok_stream_ended', { username: targetUser });
+      io.emit('tiktok_status', { connected: false, username: targetUser, ended: true });
+    });
+
+    tiktokConnection.on('disconnected', () => {
+      console.log(`[TikTok Live] ⚠️ Disconnected from @${targetUser}`);
+      io.emit('tiktok_status', { connected: false, username: targetUser });
+    });
   });
 
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
   });
+});
+
+// REST API Endpoints for TikTok Live Simulation & Status
+app.get('/api/tiktok/status', (req, res) => {
+  res.json({
+    connected: !!tiktokConnection && !!currentUsername,
+    username: currentUsername,
+    roomId: tiktokConnection?.roomId || null
+  });
+});
+
+app.post('/api/tiktok/test-gift', (req, res) => {
+  const { giftId, giftName, count, diamondCount, username, avatar, regionTarget } = req.body || {};
+  const deltaCount = Number(count) || 1;
+  const diaCount = Number(diamondCount) || 1;
+  const name = username || 'Chiến Binh Áo Đỏ 🇻🇳';
+  const gName = giftName || 'Hoa Hồng';
+  const gId = giftId || 'rose';
+
+  const giftPayload = {
+    userId: 'test_user_' + Date.now(),
+    uniqueId: 'test_user',
+    nickname: name,
+    username: name,
+    giftId: String(gId),
+    giftName: gName,
+    diamondCount: diaCount,
+    count: deltaCount,
+    repeatCount: deltaCount,
+    totalRepeatCount: deltaCount,
+    profilePictureUrl: avatar || '',
+    avatar: avatar || '',
+    regionTarget: regionTarget || null
+  };
+
+  console.log(`[Test Gift] 🎁 ${name} tặng: ${gName} x${deltaCount} (${diaCount} xu)`);
+  io.emit('tiktok_gift', giftPayload);
+
+  const giftEvent = {
+    type: 'GIFT',
+    data: giftPayload,
+    timestamp: Date.now()
+  };
+  io.emit('bando_event', giftEvent);
+  io.emit('LIVE_EVENT', giftEvent);
+
+  res.json({ success: true, gift: giftPayload });
 });
 
 // REST API Endpoints

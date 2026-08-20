@@ -856,25 +856,25 @@ export default function GameBanDoVietNam({
         timeout: 10000
       });
 
+      socket.on('connect', () => {
+        const savedTiktokId = localStorage.getItem('aidol_tiktok_id');
+        if (savedTiktokId) {
+          socket.emit('connect_tiktok', savedTiktokId);
+        }
+      });
+
       socket.on('tiktok_gift', (data) => {
         if (!data) return;
         bandoAudio.unlock();
         bandoEngine.processGift({
           giftId: data.giftId,
           giftName: data.giftName,
-          count: data.repeatCount || 1,
+          count: data.repeatCount || data.count || 1,
           diamondCount: data.diamondCount || 1,
           userId: data.userId || data.uniqueId || 'tiktok_viewer',
           username: data.nickname || data.uniqueId || data.username || 'Khách Live',
-          avatar: data.profilePictureUrl || ''
+          avatar: data.profilePictureUrl || data.avatar || ''
         });
-      });
-
-      socket.on('bando_event', (evt) => {
-        if (!evt || !evt.data) return;
-        if (evt.type === 'GIFT') {
-          bandoEngine.processGift(evt.data);
-        }
       });
     } catch (e) {
       console.warn('Socket connection error:', e);
@@ -887,7 +887,6 @@ export default function GameBanDoVietNam({
       }
     };
     window.addEventListener('avalive_tiktok_gift', handleWindowGift);
-    window.addEventListener('tiktok_gift', handleWindowGift);
 
     return () => {
       if (socket) socket.disconnect();
