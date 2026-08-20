@@ -125,6 +125,37 @@ function createCountryFlagTexture(countryCode = 'vietnam') {
   return texture;
 }
 
+// Function tạo Texture Mặt Bên của Khối Cờ (Đỏ thắm quốc kỳ sang trọng, KHÔNG méo ngôi sao)
+function createFlagSideTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 128;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+
+  const grad = ctx.createLinearGradient(0, 0, 128, 0);
+  grad.addColorStop(0, '#A81812');
+  grad.addColorStop(0.15, '#DA251D');
+  grad.addColorStop(0.85, '#DA251D');
+  grad.addColorStop(1, '#8B120C');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 128, 512);
+
+  // Viền vàng kim ở đỉnh và đáy cột
+  ctx.fillStyle = '#EAB308';
+  ctx.fillRect(0, 0, 128, 6);
+  ctx.fillRect(0, 506, 128, 6);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = THREE.ClampToEdgeWrapping;
+  tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.generateMipmaps = true;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.needsUpdate = true;
+  return tex;
+}
+
 // Cache và tạo Badge Sprite 3D hiển thị Tên ID & Quà tặng của từng người xem cắm cờ
 const donorBadgeTextureCache = new Map();
 function getOrCreateDonorBadgeTexture(username, giftText) {
@@ -1105,17 +1136,40 @@ export default function GameBanDoVietNam({
     scene.add(terrainMesh);
     state.terrainMesh = terrainMesh;
 
-    // 2. Mesh Ô Cờ Quốc Kỳ Đã Cắm (Lá cờ quốc kỳ 3D vươn cao, đỏ thắm, sao vàng sắc nét chuẩn màu, không phát sáng chói lóa)
-    const flagMat = new THREE.MeshStandardMaterial({
+    // 2. Mesh Ô Cờ Quốc Kỳ Đã Cắm (Mặt đỉnh có Ngôi Sao Vàng chuẩn 1:1 KHÔNG méo, các mặt bên là trụ đỏ thắm sang trọng)
+    const flagTopMat = new THREE.MeshStandardMaterial({
       map: flagTexture,
-      roughness: 0.22,
+      roughness: 0.20,
       metalness: 0.02,
       emissive: new THREE.Color(0x280606),
       emissiveIntensity: 0.35,
     });
-    state.flagMat = flagMat;
+
+    const flagSideTexture = createFlagSideTexture();
+    state.flagSideTexture = flagSideTexture;
+    const flagSideMat = new THREE.MeshStandardMaterial({
+      map: flagSideTexture,
+      roughness: 0.24,
+      metalness: 0.02,
+      emissive: new THREE.Color(0x280606),
+      emissiveIntensity: 0.30,
+    });
+
+    // BoxGeometry groups: 0:+X, 1:-X, 2:+Y(Top), 3:-Y(Bottom), 4:+Z, 5:-Z
+    const flagMaterials = [
+      flagSideMat, // 0: +X Right
+      flagSideMat, // 1: -X Left
+      flagTopMat,  // 2: +Y Top (Ngôi sao vàng 5 cánh tỷ lệ 1:1 chuẩn xác, hoàn hảo từ mọi góc nhìn)
+      flagSideMat, // 3: -Y Bottom
+      flagSideMat, // 4: +Z Front
+      flagSideMat  // 5: -Z Back
+    ];
+
+    state.flagMat = flagTopMat;
+    state.flagSideMat = flagSideMat;
+    state.flagMaterials = flagMaterials;
     state.currentCountry = gameState.selectedCountry || 'vietnam';
-    const flagMesh = new THREE.InstancedMesh(boxGeo, flagMat, count);
+    const flagMesh = new THREE.InstancedMesh(boxGeo, flagMaterials, count);
     flagMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     flagMesh.castShadow = true;
     flagMesh.receiveShadow = true;
@@ -1549,8 +1603,10 @@ export default function GameBanDoVietNam({
       boxGeo.dispose();
       if (state.terrainMat) state.terrainMat.dispose();
       if (state.flagMat) state.flagMat.dispose();
+      if (state.flagSideMat) state.flagSideMat.dispose();
       if (state.terrainTexture) state.terrainTexture.dispose();
       if (state.flagTexture) state.flagTexture.dispose();
+      if (state.flagSideTexture) state.flagSideTexture.dispose();
     };
   }, [viewMode3D, isPopout, gameState.selectedCountry, isLightTheme, gameState.maskLoaded, gameState.isLoaded, aspectRatio]);
 
