@@ -7,8 +7,12 @@
 
 Sau khi giải nén file `.zip`, bạn chỉ cần:
 
-### 🍎 Trên Máy MacBook / iMac (macOS & Linux):
-- Nhấp đúp chuột vào file: **`Chay_App_Mac_Linux.command`**
+### 🍎 Trên Máy MacBook / iMac (macOS):
+- **Cách mở lần đầu (Tránh bị macOS Gatekeeper chặn)**:
+  1. Nhấp **chuột phải** (hoặc giữ phím `Control` + bấm chuột trái) vào file: **`Chay_App_Mac_Linux.command`**.
+  2. Chọn **Mở (Open)** trong danh sách menu hiện ra.
+  3. Bấm **"Mở" (Open)** khi hộp thoại bảo mật xuất hiện.
+  *(Từ các lần sau, bạn chỉ cần nhấp đúp chuột là phần mềm tự động chạy ngay tức thì!)*
 - Trình duyệt web sẽ tự động mở trang điều khiển tại địa chỉ: `http://localhost:3001`
 
 ### 🪟 Trên Máy Tính Windows:

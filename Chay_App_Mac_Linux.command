@@ -14,7 +14,19 @@ echo ""
 
 # 1. Kiểm tra Node.js
 if ! command -v node &> /dev/null; then
-    echo "⚠️ CHÚ Ý: Chưa tìm thấy Node.js trên máy của bạn."
+    # Thử tìm các đường dẫn Node.js phổ biến trên macOS (Homebrew M1/M2/M3 hoặc Intel hoặc NVM)
+    if [ -f "/usr/local/bin/node" ]; then
+        export PATH="/usr/local/bin:$PATH"
+    elif [ -f "/opt/homebrew/bin/node" ]; then
+        export PATH="/opt/homebrew/bin:$PATH"
+    elif [ -d "$HOME/.nvm" ]; then
+        export NVM_DIR="$HOME/.nvm"
+        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    fi
+fi
+
+if ! command -v node &> /dev/null; then
+    echo "⚠️ CHÚ Ý: Chưa tìm thấy Node.js trên máy Mac của bạn."
     echo "👉 Vui lòng tải và cài đặt Node.js miễn phí tại: https://nodejs.org (Bản LTS khuyên dùng)"
     echo "Sau khi cài xong, chỉ cần nhấn đúp chuột vào file này một lần nữa để chạy!"
     echo ""

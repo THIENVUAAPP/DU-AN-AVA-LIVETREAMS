@@ -916,8 +916,8 @@ export default function DesktopAppUI() {
 
   const handleDownload = () => {
     const link = document.createElement('a');
-    link.href = '/Livestream_AI_Software.zip';
-    link.download = 'Livestream_AI_Software.zip';
+    link.href = '/AvaLive_VIP_PRO_Full_Package.zip';
+    link.download = 'AvaLive_VIP_PRO_Full_Package.zip';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
