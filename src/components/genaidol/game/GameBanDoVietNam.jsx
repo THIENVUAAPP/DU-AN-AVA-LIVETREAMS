@@ -1570,7 +1570,7 @@ export default function GameBanDoVietNam({
       // PROJECTION & ANTI-OVERLAP: Update Recent Claim Badges with Dynamic Distance Scale
       const allBadges = recentClaimBadgesRef.current || [];
       const visibleBadges = [];
-      const maxVisible = 5; // Tối đa 5 huy hiệu hiển thị đồng thời để bản đồ luôn thông thoáng
+      const maxVisible = 20; // Hiển thị đầy đủ tất cả huy hiệu cắm cờ của người xem đồng thời
 
       for (let b = 0; b < Math.min(allBadges.length, maxVisible); b++) {
         const badge = allBadges[b];
@@ -1876,6 +1876,16 @@ export default function GameBanDoVietNam({
           poleGroup.add(pMesh);
           poleGroup.add(sMesh);
           poleGroup.add(fPlane);
+
+          // Gắn 3D Sprite bảng tên người dùng & quà tặng ngay trên đỉnh cột cờ 3D
+          const badgeTex = getOrCreateDonorBadgeTexture(p.username || 'Khán Giả', `${p.giftName || 'Cờ Tổ Quốc'} +${p.count || 1}`);
+          if (badgeTex) {
+            const badgeSpriteMat = new THREE.SpriteMaterial({ map: badgeTex, depthTest: false, transparent: true });
+            const badgeSprite = new THREE.Sprite(badgeSpriteMat);
+            badgeSprite.position.set(0, 9.2, 0);
+            badgeSprite.scale.set(10.5, 3.3, 1);
+            poleGroup.add(badgeSprite);
+          }
 
           poleGroup.position.set(p.wx, 0, p.wz);
           poleGroup.flagPlane = fPlane;
