@@ -168,6 +168,32 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
     });
   };
 
+  // Quản lý Khung Thời Gian & Trả Lời Bình Luận AI
+  const [voiceCommentaryInterval, setVoiceCommentaryInterval] = useState(() => mapVoiceEngine.intervalSeconds || 25);
+  const [voiceReplyCooldown, setVoiceReplyCooldown] = useState(() => mapVoiceEngine.replyCooldownSec || 3);
+  const [isVoiceAutoCommentary, setIsVoiceAutoCommentary] = useState(() => mapVoiceEngine.isAutoEnabled);
+  const [isVoiceKeywordReply, setIsVoiceKeywordReply] = useState(() => mapVoiceEngine.isKeywordAutoReplyEnabled);
+  const [isVoiceGeminiAI, setIsVoiceGeminiAI] = useState(() => mapVoiceEngine.useGeminiAI !== false);
+  const [testCommentInput, setTestCommentInput] = useState('');
+  const [testCommentUser, setTestCommentUser] = useState('Chiến Binh Áo Đỏ 🇻🇳');
+  const [testCommentResult, setTestCommentResult] = useState('');
+
+  const handleTestComment = () => {
+    if (!testCommentInput.trim()) return;
+    bandoAudio.unlock();
+    const comment = testCommentInput.trim();
+    const user = testCommentUser.trim() || 'Khán Giả';
+    setTestCommentResult(`Đang xử lý bình luận: "${comment}"...`);
+    
+    // Gọi trực tiếp Engine để cắm cờ và kích hoạt voice trả lời
+    bandoEngine.processComment(comment, { id: 'test_user_' + Date.now(), username: user, avatar: '' });
+    
+    setTimeout(() => {
+      setTestCommentResult(`✅ Đã gửi: "${comment}" - AI đang đọc phản hồi.`);
+      setTimeout(() => setTestCommentResult(''), 4000);
+    }, 500);
+  };
+
   // Trigger camera actions from inside Admin settings
   const triggerCameraAction = (action, payload) => {
     window.dispatchEvent(new CustomEvent('bando-camera-action', { detail: { action, payload } }));
@@ -1155,6 +1181,170 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                         className="p-1.5 bg-yellow-500/20 hover:bg-yellow-500/40 border border-yellow-400/50 rounded-lg text-[10px] font-black text-yellow-300 transition-all flex items-center justify-center gap-1 shadow-sm"
                       >
                         <span>🦁</span> <span>Sư Tử (29k Ô)</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* AI Commentary & Comment Auto-Reply Time Controller Box */}
+                <div className="p-4 bg-gradient-to-r from-indigo-950/70 via-slate-900/80 to-purple-950/70 border border-indigo-500/40 rounded-2xl shadow-xl space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-black text-white flex items-center gap-2">
+                      <span className="text-base">🎙️</span>
+                      <span className="uppercase text-indigo-300 font-black">Hệ Thống Trả Lời Bình Luận & Dẫn Dắt AI Tự Động</span>
+                    </div>
+                    <span className="text-[10px] text-indigo-400 font-mono bg-indigo-950/80 px-2 py-0.5 rounded border border-indigo-500/30">
+                      {isVoiceKeywordReply || isVoiceGeminiAI ? '● AI PHẢN HỒI: BẬT' : '○ TẮT'}
+                    </span>
+                  </div>
+
+                  <p className="text-[11.5px] text-gray-200 leading-relaxed">
+                    ⚡ <strong>Trả lời theo từ khóa & AI thông minh</strong>: Tự động phát âm thanh trả lời khán giả khi bình luận đúng từ khóa (chào hỏi, hướng dẫn, cắm cờ) hoặc câu hỏi bất kỳ, đồng thời điều chỉnh thời gian giãn cách để giọng đọc siêu mượt.
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                    {/* Slider 1: Chu kỳ AI Tự Động Bình Luận Dẫn Dắt */}
+                    <div className="bg-black/40 border border-white/10 p-3 rounded-xl space-y-2">
+                      <div className="flex items-center justify-between text-xs font-bold">
+                        <span className="text-gray-300 flex items-center gap-1.5">
+                          <span>⏱️</span> Chu Kỳ AI Bình Luận Dẫn Dắt:
+                        </span>
+                        <span className="text-amber-400 font-mono text-xs font-black bg-amber-950/60 px-2 py-0.5 rounded border border-amber-500/30">
+                          {voiceCommentaryInterval} giây
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min={5}
+                        max={180}
+                        step={5}
+                        value={voiceCommentaryInterval}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setVoiceCommentaryInterval(val);
+                          mapVoiceEngine.setIntervalSeconds(val);
+                        }}
+                        className="w-full h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-amber-400"
+                      />
+                      <div className="flex justify-between text-[9.5px] text-gray-400 font-mono">
+                        <span>5s (Nhanh)</span>
+                        <span>25s (Chuẩn)</span>
+                        <span>180s (Thưa)</span>
+                      </div>
+                    </div>
+
+                    {/* Slider 2: Giãn cách Trả Lời Bình Luận tránh đè tiếng */}
+                    <div className="bg-black/40 border border-white/10 p-3 rounded-xl space-y-2">
+                      <div className="flex items-center justify-between text-xs font-bold">
+                        <span className="text-gray-300 flex items-center gap-1.5">
+                          <span>⏳</span> Giãn Cách Trả Lời Bình Luận:
+                        </span>
+                        <span className="text-cyan-400 font-mono text-xs font-black bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-500/30">
+                          {voiceReplyCooldown} giây
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min={1}
+                        max={30}
+                        step={1}
+                        value={voiceReplyCooldown}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setVoiceReplyCooldown(val);
+                          mapVoiceEngine.setReplyCooldownSec(val);
+                        }}
+                        className="w-full h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                      />
+                      <div className="flex justify-between text-[9.5px] text-gray-400 font-mono">
+                        <span>1s (Tức thì)</span>
+                        <span>3s (Khuyên dùng)</span>
+                        <span>30s (Giãn cách cao)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Feature Toggles */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                    <button
+                      onClick={() => {
+                        const nxt = !isVoiceKeywordReply;
+                        setIsVoiceKeywordReply(nxt);
+                        mapVoiceEngine.isKeywordAutoReplyEnabled = nxt;
+                        mapVoiceEngine.saveSettings();
+                      }}
+                      className={`p-2.5 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-2 ${
+                        isVoiceKeywordReply
+                          ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-300'
+                          : 'bg-black/40 border-white/10 text-gray-400'
+                      }`}
+                    >
+                      <span>{isVoiceKeywordReply ? '✅' : '⚪'}</span>
+                      <span>Khớp Từ Khóa Cài Sẵn</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        const nxt = !isVoiceGeminiAI;
+                        setIsVoiceGeminiAI(nxt);
+                        mapVoiceEngine.useGeminiAI = nxt;
+                        mapVoiceEngine.saveSettings();
+                      }}
+                      className={`p-2.5 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-2 ${
+                        isVoiceGeminiAI
+                          ? 'bg-purple-950/60 border-purple-500/50 text-purple-300'
+                          : 'bg-black/40 border-white/10 text-gray-400'
+                      }`}
+                    >
+                      <span>{isVoiceGeminiAI ? '✅' : '⚪'}</span>
+                      <span>Trợ Lý Gemini AI</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        const nxt = !isVoiceAutoCommentary;
+                        setIsVoiceAutoCommentary(nxt);
+                        mapVoiceEngine.isAutoEnabled = nxt;
+                        if (nxt) {
+                          mapVoiceEngine.startPeriodicCommentary(true);
+                        } else {
+                          mapVoiceEngine.stopPeriodicCommentary();
+                        }
+                        mapVoiceEngine.saveSettings();
+                      }}
+                      className={`p-2.5 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-2 ${
+                        isVoiceAutoCommentary
+                          ? 'bg-amber-950/60 border-amber-500/50 text-amber-300'
+                          : 'bg-black/40 border-white/10 text-gray-400'
+                      }`}
+                    >
+                      <span>{isVoiceAutoCommentary ? '✅' : '⚪'}</span>
+                      <span>AI Dẫn Dắt Theo Chu Kỳ</span>
+                    </button>
+                  </div>
+
+                  {/* Live Comment Test Simulator */}
+                  <div className="pt-2 border-t border-white/10 space-y-2">
+                    <div className="text-[10.5px] text-gray-300 font-bold flex items-center justify-between">
+                      <span>🧪 Test Thử Bình Luận & Nghe Voice AI Phản Hồi Trực Tiếp:</span>
+                      {testCommentResult && (
+                        <span className="text-[10px] text-emerald-400 font-mono animate-pulse">{testCommentResult}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={testCommentInput}
+                        onChange={(e) => setTestCommentInput(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleTestComment()}
+                        placeholder="Nhập thử: xin chào, hướng dẫn, chơi sao, yêu việt nam, số 1..."
+                        className="flex-1 px-3 py-2 bg-black/60 border border-white/20 rounded-xl text-xs text-white placeholder-gray-400 focus:outline-none focus:border-indigo-400"
+                      />
+                      <button
+                        onClick={handleTestComment}
+                        className="py-2 px-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-black transition-all shadow-md active:scale-95 flex items-center gap-1.5"
+                      >
+                        <span>💬</span> <span>Gửi Test</span>
                       </button>
                     </div>
                   </div>

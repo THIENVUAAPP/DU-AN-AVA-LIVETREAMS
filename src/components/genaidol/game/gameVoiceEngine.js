@@ -119,7 +119,9 @@ class GameVoiceEngine {
     // Keyword Auto Reply Config & Gemini Q&A
     this.isKeywordAutoReplyEnabled = true;
     this.useGeminiAI = true;
-    this.responseDelaySec = 1.0;
+    this.responseDelaySec = 0.5;
+    this.replyCooldownSec = 3; // Giãn cách tối thiểu giữa 2 lần trả lời bình luận
+    this.lastReplyTime = 0;
     this.keywordRules = [...DEFAULT_KEYWORD_RULES];
     this.lastKeywordTriggerTimes = new Map();
     
@@ -166,6 +168,7 @@ class GameVoiceEngine {
         if (parsed.isKeywordAutoReplyEnabled !== undefined) this.isKeywordAutoReplyEnabled = parsed.isKeywordAutoReplyEnabled;
         if (parsed.useGeminiAI !== undefined) this.useGeminiAI = parsed.useGeminiAI;
         if (parsed.responseDelaySec !== undefined) this.responseDelaySec = parsed.responseDelaySec;
+        if (parsed.replyCooldownSec !== undefined) this.replyCooldownSec = parsed.replyCooldownSec;
         if (Array.isArray(parsed.keywordRules) && parsed.keywordRules.length > 0) this.keywordRules = parsed.keywordRules;
         if (parsed.volume !== undefined) this.volume = parsed.volume;
         if (parsed.speedRate !== undefined) this.speedRate = parsed.speedRate;
@@ -191,6 +194,7 @@ class GameVoiceEngine {
         isKeywordAutoReplyEnabled: this.isKeywordAutoReplyEnabled,
         useGeminiAI: this.useGeminiAI,
         responseDelaySec: this.responseDelaySec,
+        replyCooldownSec: this.replyCooldownSec,
         keywordRules: this.keywordRules,
         volume: this.volume,
         speedRate: this.speedRate,
@@ -202,6 +206,19 @@ class GameVoiceEngine {
     } catch (e) {
       console.warn(`[GameVoiceEngine:${this.gameType}] Save settings failed:`, e);
     }
+  }
+
+  setIntervalSeconds(sec) {
+    this.intervalSeconds = Math.max(5, Math.min(300, Number(sec) || 25));
+    if (this.timerId && this.isAutoEnabled) {
+      this.startPeriodicCommentary(this.isGameActive);
+    }
+    this.saveSettings();
+  }
+
+  setReplyCooldownSec(sec) {
+    this.replyCooldownSec = Math.max(1, Math.min(60, Number(sec) || 3));
+    this.saveSettings();
   }
 
   setVolume(vol) {
@@ -371,23 +388,31 @@ class GameVoiceEngine {
     const lower = commentText.toLowerCase().trim();
     const now = Date.now();
 
+    // Global Cooldown Protection để tránh dồn dập nhiều bình luận đè tiếng lên nhau
+    const globalCooldownMs = Math.max(1, this.replyCooldownSec || 3) * 1000;
+    if (this.isSpeaking && now - (this.lastReplyTime || 0) < globalCooldownMs) {
+      return false;
+    }
+
     // 1. Khớp từ khóa cố định trong danh sách cài sẵn
     const activeRules = (this.keywordRules || []).filter(r => r.enabled !== false);
     for (const rule of activeRules) {
       const matched = rule.keywords.some(k => lower.includes(k.toLowerCase().trim()));
       if (matched) {
         const lastTime = this.lastKeywordTriggerTimes.get(rule.id) || 0;
-        const cooldownMs = (rule.cooldownSec || 4) * 1000;
+        const cooldownMs = (rule.cooldownSec || 3) * 1000;
         if (now - lastTime < cooldownMs) {
-          continue; // Cooldown protection
+          continue; // Cooldown protection cho quy tắc này
         }
 
         this.lastKeywordTriggerTimes.set(rule.id, now);
+        this.lastReplyTime = now;
+
         let reply = rule.replyText
           .replace(/\[user\]/gi, userName)
           .replace(/\[game\]/gi, this.gameType === 'battle' ? 'Đại Chiến PK' : 'Bản Đồ Cắm Cờ');
 
-        const delayMs = Math.max(0, (this.responseDelaySec !== undefined ? this.responseDelaySec : 1.0) * 1000);
+        const delayMs = Math.max(0, (this.responseDelaySec !== undefined ? this.responseDelaySec : 0.5) * 1000);
         const voiceTarget = rule.voiceId || rule.role || 'assistant';
 
         if (delayMs <= 50) {
@@ -404,6 +429,11 @@ class GameVoiceEngine {
 
     // 2. Nếu không khớp từ khóa cố định & Bật Gemini AI: Tự động trả lời thông minh câu hỏi ngoài vùng
     if (this.useGeminiAI && lower.length >= 2) {
+      if (now - (this.lastReplyTime || 0) < globalCooldownMs) {
+        return false;
+      }
+      this.lastReplyTime = now;
+
       try {
         const aiResponse = await askGeminiLiveAi({
           question: commentText,
@@ -414,7 +444,7 @@ class GameVoiceEngine {
         });
 
         if (aiResponse?.text) {
-          const delayMs = Math.max(0, (this.responseDelaySec !== undefined ? this.responseDelaySec : 1.0) * 1000);
+          const delayMs = Math.max(0, (this.responseDelaySec !== undefined ? this.responseDelaySec : 0.5) * 1000);
           if (delayMs <= 50) {
             this.speak(aiResponse.text, this.assistantVoice || 'assistant', true);
           } else {
@@ -425,14 +455,18 @@ class GameVoiceEngine {
           return true;
         }
       } catch (geminiErr) {
-        console.warn(`[GameVoiceEngine:${this.gameType}] Gemini Q&A error, using safe fallback:`, geminiErr);
-        const fallbackReply = `Dạ em chào anh chị ${userName}! Mọi người cùng thả tim và tiếp sức nhiệt tình cho trận đấu nha!`;
-        const delayMs = Math.max(0, (this.responseDelaySec !== undefined ? this.responseDelaySec : 1.0) * 1000);
+        const smartFallbacks = [
+          `Dạ em chào anh chị ${userName}! Mọi người cùng thả tim và tặng quà để phủ kín cờ đỏ sao vàng nhé!`,
+          `Chào mừng ${userName} đến với phiên live rực lửa! Hãy cùng bình luận và tiếp sức cho vùng đất quê hương nào!`,
+          `Cảm ơn ${userName} đã tương tác rất nhiệt tình! Chúc bạn có những phút giây giải trí thật bùng nổ cùng đại chiến cắm cờ!`
+        ];
+        const chosen = smartFallbacks[Math.floor(Math.random() * smartFallbacks.length)];
+        const delayMs = Math.max(0, (this.responseDelaySec !== undefined ? this.responseDelaySec : 0.5) * 1000);
         if (delayMs <= 50) {
-          this.speak(fallbackReply, 'assistant', false);
+          this.speak(chosen, 'assistant', false);
         } else {
           setTimeout(() => {
-            this.speak(fallbackReply, 'assistant', false);
+            this.speak(chosen, 'assistant', false);
           }, delayMs);
         }
         return true;

@@ -41,7 +41,8 @@ export default function GameVoiceConfigPanel({
   const [volume, setVolume] = useState(engine.volume || 0.9);
   const [speedRate, setSpeedRate] = useState(engine.speedRate || 1.0);
   const [pitch, setPitch] = useState(engine.pitch || 1.0);
-  const [responseDelaySec, setResponseDelaySec] = useState(engine.responseDelaySec || 1.0);
+  const [responseDelaySec, setResponseDelaySec] = useState(engine.responseDelaySec || 0.5);
+  const [replyCooldownSec, setReplyCooldownSec] = useState(engine.replyCooldownSec || 3);
   const [prompts, setPrompts] = useState([...engine.prompts]);
   const [isKeywordAutoReplyEnabled, setIsKeywordAutoReplyEnabled] = useState(engine.isKeywordAutoReplyEnabled);
   const [useGeminiAI, setUseGeminiAI] = useState(engine.useGeminiAI !== false);
@@ -2157,6 +2158,32 @@ export default function GameVoiceConfigPanel({
                     syncToEngine({ responseDelaySec: val });
                   }}
                   className="w-full accent-pink-500 h-2 bg-white/10 rounded-lg cursor-pointer"
+                />
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-3">
+              <h4 className="text-xs font-black text-cyan-300 uppercase tracking-wider flex items-center gap-2">
+                <Clock size={14} className="text-cyan-400" />
+                4. Giãn Cách Trả Lời Bình Luận (Cooldown Throttle)
+              </h4>
+              <div>
+                <div className="flex justify-between text-xs font-bold text-gray-200 mb-1.5">
+                  <span>Giãn cách giữa 2 câu trả lời:</span>
+                  <span className="font-mono text-cyan-400 font-black">{replyCooldownSec} Giây</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="30"
+                  step="1"
+                  value={replyCooldownSec}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    setReplyCooldownSec(val);
+                    syncToEngine({ replyCooldownSec: val });
+                  }}
+                  className="w-full accent-cyan-500 h-2 bg-white/10 rounded-lg cursor-pointer"
                 />
               </div>
             </div>

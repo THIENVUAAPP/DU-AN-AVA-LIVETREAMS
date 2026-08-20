@@ -1312,6 +1312,16 @@ class BanDoGameEngine {
     });
   }
 
+  handleUserComment(commentText, userNameOrUser = 'Khán Giả Live') {
+    let user = { id: 'guest_cm', username: 'Khán Giả Live', avatar: '' };
+    if (typeof userNameOrUser === 'string') {
+      user.username = userNameOrUser;
+    } else if (typeof userNameOrUser === 'object' && userNameOrUser !== null) {
+      user = { ...user, ...userNameOrUser };
+    }
+    return this.processComment(commentText, user);
+  }
+
   // Xử lý sự kiện bình luận (Comment tương tác Live & Kích Hoạt Auto Voice Trả Lời)
   processComment(commentText, user = { id: 'guest_cm', username: 'Khán Giả Live', avatar: '' }) {
     if (!commentText || this.state.status === 'victory') return;
