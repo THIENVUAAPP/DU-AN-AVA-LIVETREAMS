@@ -791,6 +791,18 @@ export default function GameBanDoVietNam({
         avatar: data.avatar || data.profilePictureUrl || '',
         regionTarget: data.regionTarget || null
       });
+    } else if (type === 'COMMENT' && data) {
+      bandoAudio.unlock();
+      const text = data.comment || data.text || '';
+      const author = data.username || data.nickname || 'Khán Giả';
+      bandoEngine.processComment(text, {
+        id: data.userId || 'chat_user',
+        username: author,
+        avatar: data.avatar || data.profilePictureUrl || ''
+      });
+      try {
+        mapVoiceEngine.handleUserComment(text, author);
+      } catch (e) {}
     } else if (type === 'RESET') {
       bandoEngine.resetRound();
     } else if (type === 'BOSS') {

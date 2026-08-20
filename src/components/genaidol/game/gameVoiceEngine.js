@@ -355,7 +355,16 @@ class GameVoiceEngine {
         }
       }));
 
+      const safetyWatchdog = setTimeout(() => {
+        if (this.isSpeaking) {
+          this.isSpeaking = false;
+          if (this.onDuckAudio) this.onDuckAudio(false);
+          if (this.onSpeechStateChange) this.onSpeechStateChange(false, '', effectiveRole);
+        }
+      }, Math.max(4000, (text || '').length * 150));
+
       await previewVoiceAudio(voiceObj, text, () => {
+        clearTimeout(safetyWatchdog);
         this.isSpeaking = false;
         if (this.onDuckAudio) this.onDuckAudio(false);
         if (this.onSpeechStateChange) this.onSpeechStateChange(false, '', effectiveRole);
@@ -389,7 +398,7 @@ class GameVoiceEngine {
     const now = Date.now();
 
     // Global Cooldown Protection để tránh dồn dập nhiều bình luận đè tiếng lên nhau
-    const globalCooldownMs = Math.max(1, this.replyCooldownSec || 3) * 1000;
+    const globalCooldownMs = Math.max(1, this.replyCooldownSec || 2) * 1000;
     if (this.isSpeaking && now - (this.lastReplyTime || 0) < globalCooldownMs) {
       return false;
     }
@@ -427,8 +436,8 @@ class GameVoiceEngine {
       }
     }
 
-    // 2. Nếu không khớp từ khóa cố định & Bật Gemini AI: Tự động trả lời thông minh câu hỏi ngoài vùng
-    if (this.useGeminiAI && lower.length >= 2) {
+    // 2. Nếu không khớp từ khóa cố định: Tự động trả lời thông minh câu hỏi ngoài vùng
+    if (lower.length >= 1) {
       if (now - (this.lastReplyTime || 0) < globalCooldownMs) {
         return false;
       }

@@ -421,6 +421,44 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
   }
 
   // =========================================================================
+  // TIER 2: Ultra-Reliable Streaming Audio TTS (Hoạt động 100% trên OBS, TikTok Studio & Trình duyệt)
+  // =========================================================================
+  const backendBase = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3001' : '';
+  const serverTtsUrl = `${backendBase}/api/tts?text=${encodeURIComponent(textToSpeak.slice(0, 200))}&lang=${encodeURIComponent(shortLang || 'vi')}`;
+  
+  try {
+    const streamAudio = new Audio(serverTtsUrl);
+    streamAudio.volume = voiceVolume;
+    activePreviewAudio = streamAudio;
+
+    const playPromise = new Promise((resolve) => {
+      let isDone = false;
+      const cleanup = (success) => {
+        if (isDone) return;
+        isDone = true;
+        activePreviewAudio = null;
+        if (onEnd) onEnd();
+        resolve(success);
+      };
+
+      streamAudio.onended = () => cleanup(true);
+      streamAudio.onerror = () => cleanup(false);
+      
+      const playAttempt = streamAudio.play();
+      if (playAttempt && typeof playAttempt.catch === 'function') {
+        playAttempt.catch(() => {
+          cleanup(false);
+        });
+      }
+    });
+
+    const isSuccess = await playPromise;
+    if (isSuccess) return true;
+  } catch (audioStreamErr) {
+    console.warn('Audio stream TTS fallback to Web Speech:', audioStreamErr);
+  }
+
+  // =========================================================================
   // TIER 3: Instant Client Web Speech API (Đồng bộ, tối ưu hoá mọi trình duyệt)
   // =========================================================================
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) {

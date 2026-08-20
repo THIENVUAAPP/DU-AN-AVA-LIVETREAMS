@@ -34,15 +34,43 @@ export default function GameBanDoOverlay() {
       });
       socket.on('tiktok_gift', (data) => {
         if (data) {
+          bandoEngine.processGift({
+            giftId: data.giftId,
+            giftName: data.giftName,
+            count: data.repeatCount || data.count || 1,
+            diamondCount: data.diamondCount || 1,
+            userId: data.userId || data.uniqueId || 'tiktok_viewer',
+            username: data.nickname || data.uniqueId || data.username || 'Khách Live',
+            avatar: data.profilePictureUrl || ''
+          });
           setLiveEvent({
             type: 'GIFT',
             data: {
               giftId: data.giftId,
               giftName: data.giftName,
-              count: data.repeatCount || 1,
+              count: data.repeatCount || data.count || 1,
               diamondCount: data.diamondCount || 1,
               userId: data.userId || data.uniqueId || 'tiktok_viewer',
               username: data.nickname || data.uniqueId || data.username || 'Khách Live',
+              avatar: data.profilePictureUrl || ''
+            },
+            _seq: Date.now() + Math.random()
+          });
+        }
+      });
+      socket.on('tiktok_chat', (data) => {
+        if (data) {
+          const text = data.comment || data.text || '';
+          const author = data.nickname || data.username || data.uniqueId || 'Khán Giả';
+          bandoEngine.handleUserComment(text, author);
+          setLiveEvent({
+            type: 'COMMENT',
+            data: {
+              comment: text,
+              text,
+              username: author,
+              nickname: author,
+              userId: data.userId || data.uniqueId || 'chat_user',
               avatar: data.profilePictureUrl || ''
             },
             _seq: Date.now() + Math.random()
