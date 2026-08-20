@@ -1041,7 +1041,7 @@ class BanDoGameEngine {
   // Xử lý sự kiện tặng quà và cắm cờ
   processGift(giftId, count = 1, user = { id: 'guest_1', username: 'Chiến Binh Áo Đỏ', avatar: '' }) {
     if (this.state.status === 'victory') {
-      this.resetGame();
+      this.resetRound();
     }
     if (!this.maskData || !this.maskData.cells || this.maskData.cells.length === 0) {
       this.maskData = defaultVietnamMask;
@@ -1066,6 +1066,19 @@ class BanDoGameEngine {
         explicitRegionTarget = obj.regionTarget;
       }
     }
+
+    // Deduplication filter: tránh việc cùng 1 sự kiện quà tặng bị gọi trùng lặp nhiều lần qua đa kênh socket trong vòng 180ms
+    const uIdKey = user.id || user.username || 'guest';
+    const giftIdKey = giftId || giftNameInput || 'gift';
+    const dedupeKey = `${uIdKey}_${giftIdKey}_${count}`;
+    const now = Date.now();
+    if (!this._lastGiftTimeByKey) this._lastGiftTimeByKey = new Map();
+    const lastTime = this._lastGiftTimeByKey.get(dedupeKey) || 0;
+    if (now - lastTime < 180) {
+      return; // Bỏ qua trùng lặp trong 180ms
+    }
+    this._lastGiftTimeByKey.set(dedupeKey, now);
+    if (this._lastGiftTimeByKey.size > 200) this._lastGiftTimeByKey.clear();
 
     // Luôn kích hoạt audio context ngay khi có quà tặng
     bandoAudio.unlock();
@@ -1105,7 +1118,6 @@ class BanDoGameEngine {
     
     // Combo multiplier
     let effectiveCells = rawCells;
-    const now = Date.now();
     if (this.state.combo.userId === user.id && this.state.combo.expiresAt > now) {
       this.state.combo.count += 1;
       this.state.combo.level = Math.min(10, Math.floor(this.state.combo.count / 3) + 1);
@@ -1174,8 +1186,9 @@ class BanDoGameEngine {
     }
 
     if (toClaim.length === 0 && unallocated.length === 0) {
-      this.triggerVictory(user);
-      return;
+      this.resetRound();
+      const freshUnallocated = (this.maskData.cells || []).filter(c => !this.state.cellsById[c.id]);
+      toClaim = freshUnallocated.slice(0, effectiveCells);
     }
 
     const placedColor = this.state.settings.claimedCellColor || '#DA251D';
