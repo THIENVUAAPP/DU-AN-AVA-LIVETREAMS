@@ -156,41 +156,6 @@ function createFlagSideTexture() {
   return tex;
 }
 
-// Cache và tạo Badge Sprite 3D hiển thị Tên ID & Quà tặng của từng người xem cắm cờ
-const donorBadgeTextureCache = new Map();
-function getOrCreateDonorBadgeTexture(username, giftText) {
-  const cacheKey = `${username || ''}_${giftText || ''}`;
-  if (donorBadgeTextureCache.has(cacheKey)) {
-    return donorBadgeTextureCache.get(cacheKey);
-  }
-  const canvas = document.createElement('canvas');
-  canvas.width = 640;
-  canvas.height = 200;
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
-  if (ctx.roundRect) {
-    ctx.roundRect(12, 12, 616, 176, 24);
-    ctx.fill();
-    ctx.strokeStyle = '#f59e0b';
-    ctx.lineWidth = 8;
-    ctx.roundRect(12, 12, 616, 176, 24);
-    ctx.stroke();
-  } else {
-    ctx.fillRect(12, 12, 616, 176);
-  }
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 44px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(`👑 ${username || 'Chiến Binh Áo Đỏ'}`, 320, 78);
-  ctx.fillStyle = '#fbbf24';
-  ctx.font = 'bold 34px sans-serif';
-  ctx.fillText(giftText || '🇻🇳 Cắm Cờ Tổ Quốc', 320, 145);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.needsUpdate = true;
-  donorBadgeTextureCache.set(cacheKey, texture);
-  return texture;
-}
-
 // Function tạo Texture Vùng Đất / Khối Nền Lãnh Thổ CHƯA CẮM CỜ (Tối hoặc sáng dịu, ZERO cờ đỏ/ngôi sao, chuẩn địa hình 3D cao cấp)
 function createTerrainTexture(isLightTheme = false) {
   const canvas = document.createElement('canvas');
@@ -1877,16 +1842,6 @@ export default function GameBanDoVietNam({
           poleGroup.add(sMesh);
           poleGroup.add(fPlane);
 
-          // Gắn 3D Sprite bảng tên người dùng & quà tặng ngay trên đỉnh cột cờ 3D
-          const badgeTex = getOrCreateDonorBadgeTexture(p.username || 'Khán Giả', `${p.giftName || 'Cờ Tổ Quốc'} +${p.count || 1}`);
-          if (badgeTex) {
-            const badgeSpriteMat = new THREE.SpriteMaterial({ map: badgeTex, depthTest: false, transparent: true });
-            const badgeSprite = new THREE.Sprite(badgeSpriteMat);
-            badgeSprite.position.set(0, 9.2, 0);
-            badgeSprite.scale.set(10.5, 3.3, 1);
-            poleGroup.add(badgeSprite);
-          }
-
           poleGroup.position.set(p.wx, 0, p.wz);
           poleGroup.flagPlane = fPlane;
           poleGroup.animPhase = Math.random() * Math.PI * 2;
@@ -2024,39 +1979,6 @@ export default function GameBanDoVietNam({
         if (state.focalGroup) {
           state.focalGroup.position.set(ft.wx, 0, ft.wz);
           state.focalGroup.visible = true;
-
-          if (state.badgeTexture) {
-            if (!state.badgeCanvas) {
-              state.badgeCanvas = document.createElement('canvas');
-              state.badgeCanvas.width = 640;
-              state.badgeCanvas.height = 200;
-              state.badgeCtx = state.badgeCanvas.getContext('2d');
-            }
-            const userName = ft.username || ft.user || 'Chiến Binh Áo Đỏ';
-            const giftText = ft.giftName ? `🎁 ${ft.giftName} (+${ft.count || 1} ô)` : `🇻🇳 +${ft.count || 1} Ô Cờ`;
-            const ctx = state.badgeCtx;
-            ctx.clearRect(0, 0, 640, 200);
-            ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
-            if (ctx.roundRect) {
-              ctx.roundRect(12, 12, 616, 176, 24);
-              ctx.fill();
-              ctx.strokeStyle = '#f59e0b';
-              ctx.lineWidth = 8;
-              ctx.roundRect(12, 12, 616, 176, 24);
-              ctx.stroke();
-            } else {
-              ctx.fillRect(12, 12, 616, 176);
-            }
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 44px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText(`👑 ${userName}`, 320, 78);
-            ctx.fillStyle = '#fbbf24';
-            ctx.font = 'bold 34px sans-serif';
-            ctx.fillText(giftText, 320, 145);
-            state.badgeTexture.image = state.badgeCanvas;
-            state.badgeTexture.needsUpdate = true;
-          }
         }
 
         // Chu kỳ Zoom 3 Cấp: Zoom Cận Cảnh (rõ lá cờ quốc kỳ 3D + Bảng tên ID) -> Zoom Vùng -> Zoom Toàn Cảnh
