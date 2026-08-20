@@ -167,41 +167,24 @@ function createTerrainTexture(isLightTheme = false) {
   canvas.height = 512;
   const ctx = canvas.getContext('2d');
 
-  if (isLightTheme) {
-    // Sáng thanh lịch: Đá cẩm thạch ngọc xám sáng với viền vát 3D tinh xảo
-    const bgGrad = ctx.createLinearGradient(0, 0, 512, 512);
-    bgGrad.addColorStop(0, '#E2E8F0');
-    bgGrad.addColorStop(0.5, '#CBD5E1');
-    bgGrad.addColorStop(1, '#94A3B8');
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, 512, 512);
+  // Bạch kim / Trắng ngọc trai Platinum Marble sang trọng, siêu sắc nét, rõ ràng trên nền tối
+  const bgGrad = ctx.createRadialGradient(256, 256, 20, 256, 256, 360);
+  bgGrad.addColorStop(0, '#FFFFFF');    // Trắng tinh khiết tâm ô
+  bgGrad.addColorStop(0.5, '#F8FAFC');  // Trắng ngọc sáng
+  bgGrad.addColorStop(0.85, '#E2E8F0'); // Bạch kim viền ngoài
+  bgGrad.addColorStop(1, '#CBD5E1');    // Shadow viền 3D mềm mại
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, 512, 512);
 
-    ctx.strokeStyle = '#64748B';
-    ctx.lineWidth = 14;
-    ctx.strokeRect(7, 7, 498, 498);
+  // Viền khối 3D ánh bạc tinh tế
+  ctx.strokeStyle = '#94A3B8';
+  ctx.lineWidth = 12;
+  ctx.strokeRect(6, 6, 500, 500);
 
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(18, 18, 476, 476);
-  } else {
-    // Tối: Khối đá than ngọc bích / Dark Slate Topographic Relief cao cấp, huyền bí, ZERO lá cờ/sao
-    const bgGrad = ctx.createRadialGradient(256, 256, 40, 256, 256, 360);
-    bgGrad.addColorStop(0, '#1E293B');    // Slate trung tâm
-    bgGrad.addColorStop(0.7, '#0F172A');  // Deep Midnight Slate
-    bgGrad.addColorStop(1, '#080E1A');    // Dark border
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, 512, 512);
-
-    // Viền vát 3D tối màu
-    ctx.strokeStyle = '#020617';
-    ctx.lineWidth = 14;
-    ctx.strokeRect(7, 7, 498, 498);
-
-    // Đường viền topographic tinh tế
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.15)';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(18, 18, 476, 476);
-  }
+  // Viền ánh hào quang bạch kim nổi khối
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(16, 16, 480, 480);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
@@ -1262,7 +1245,7 @@ export default function GameBanDoVietNam({
         dummy.scale.set(curDim, scaleY, curDim);
         dummy.updateMatrix();
         terrainMesh.setMatrixAt(i, dummy.matrix);
-        terrainMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.85, 0.90, 0.95) : new THREE.Color(0.70, 0.78, 0.88));
+        terrainMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.92, 0.94, 0.97) : new THREE.Color(0.96, 0.97, 0.99));
 
         flagMesh.setMatrixAt(i, zeroMatrix);
       }
@@ -1808,7 +1791,7 @@ export default function GameBanDoVietNam({
         dummy.scale.set(curDim, scaleY, curDim);
         dummy.updateMatrix();
         terrainMesh.setMatrixAt(i, dummy.matrix);
-        terrainMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.85, 0.90, 0.95) : new THREE.Color(0.70, 0.78, 0.88));
+        terrainMesh.setColorAt(i, isLightTheme ? new THREE.Color(0.92, 0.94, 0.97) : new THREE.Color(0.96, 0.97, 0.99));
 
         flagMesh.setMatrixAt(i, zeroMatrix);
       }
@@ -2187,25 +2170,18 @@ export default function GameBanDoVietNam({
             className="absolute top-0 left-0 hidden flex-col items-center pointer-events-none transition-all duration-100 animate-in zoom-in-75 fade-in duration-150"
             style={{ willChange: 'transform' }}
           >
-            <div className="relative flex items-center gap-1.5 px-2 py-1 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 text-white font-bold text-[9.5px] shadow-[0_4px_18px_rgba(239,68,68,0.6)] border border-yellow-300 ring-2 ring-yellow-400/80 whitespace-nowrap drop-shadow-lg">
-              <span className="text-sm leading-none drop-shadow-md shrink-0">{b.flag || currentCountry?.flag || '🇻🇳'}</span>
-              <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-[9px] overflow-hidden border-2 border-yellow-300 shadow-xs shrink-0 bg-gradient-to-tr from-amber-400 to-yellow-200">
+            <div className="relative flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 text-white font-black text-[10px] shadow-[0_4px_20px_rgba(239,68,68,0.7)] border-2 border-yellow-300 ring-1 ring-yellow-400/90 whitespace-nowrap drop-shadow-md">
+              <span className="text-[13px] leading-none shrink-0">{b.flag || currentCountry?.flag || '🇻🇳'}</span>
+              <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] overflow-hidden border-2 border-yellow-200 shadow-sm shrink-0 bg-gradient-to-tr from-amber-400 to-yellow-200">
                 {b.avatar ? (
                   <img src={b.avatar} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
                 ) : (
                   <span>👤</span>
                 )}
               </div>
-              <div className="flex flex-col text-left leading-none">
-                <div className="flex items-center gap-1">
-                  <span className="text-[8.5px] text-yellow-100 font-bold truncate max-w-[65px] drop-shadow">{b.username}</span>
-                  {b.userId && <span className="text-[7px] text-yellow-300 font-mono opacity-80">{b.userId}</span>}
-                </div>
-                <span className="text-[7.5px] text-white font-bold flex items-center gap-0.5 mt-0.5">
-                  <span className="text-yellow-200">+{b.count || 1} Ô</span>
-                  {b.giftName && <span className="text-yellow-300 text-[7px]">({b.giftName})</span>}
-                </span>
-              </div>
+              <span className="text-[10px] text-yellow-100 font-black tracking-wide truncate max-w-[120px] drop-shadow">
+                {b.userId && b.userId.startsWith('@') ? b.userId : `@${b.username || b.userId || 'chiến_binh'}`}
+              </span>
             </div>
             {/* Compact 3D Pin Needle */}
             <div className="w-0.5 h-2 bg-gradient-to-b from-yellow-300 via-yellow-400 to-transparent rounded-full shadow-[0_0_4px_rgba(250,204,21,0.8)]" />

@@ -206,23 +206,23 @@ export default function LiveGiftMarqueeTicker({
 
   if (allActiveGifts.length === 0) return null;
 
-  // Render từng thẻ quà tặng bên trong danh sách cuộn: Siêu tinh gọn [Icon] [Tên] [+X ô]
+  // Render từng thẻ quà tặng bên trong danh sách: Siêu tinh gọn [Icon Emoji lớn] [+X ô]
   const renderGiftRow = (gift, key) => {
-    let rowBg = 'bg-black/35 hover:bg-black/55 border-white/10';
-    let nameColor = 'text-gray-100';
+    let rowBg = 'bg-black/40 hover:bg-black/60 border-white/15';
+    let countColor = 'text-amber-300 border-amber-500/30 bg-black/50';
 
     if (gift.regionTarget === 'north') {
-      rowBg = 'bg-red-950/40 hover:bg-red-900/60 border-red-500/30';
-      nameColor = 'text-red-200';
+      rowBg = 'bg-red-950/50 hover:bg-red-900/70 border-red-500/40';
+      countColor = 'text-yellow-300 border-red-400/40 bg-red-950/70';
     } else if (gift.regionTarget === 'central') {
-      rowBg = 'bg-amber-950/40 hover:bg-amber-900/60 border-amber-500/30';
-      nameColor = 'text-amber-200';
+      rowBg = 'bg-amber-950/50 hover:bg-amber-900/70 border-amber-500/40';
+      countColor = 'text-yellow-300 border-amber-400/40 bg-amber-950/70';
     } else if (gift.regionTarget === 'south') {
-      rowBg = 'bg-emerald-950/40 hover:bg-emerald-900/60 border-emerald-500/30';
-      nameColor = 'text-emerald-200';
+      rowBg = 'bg-emerald-950/50 hover:bg-emerald-900/70 border-emerald-500/40';
+      countColor = 'text-yellow-300 border-emerald-400/40 bg-emerald-950/70';
     } else if (gift.priceToken >= 1000) {
-      rowBg = 'bg-yellow-950/40 hover:bg-yellow-900/60 border-yellow-500/30';
-      nameColor = 'text-yellow-200 font-black';
+      rowBg = 'bg-gradient-to-r from-amber-950/70 to-yellow-950/70 hover:from-amber-900/90 hover:to-yellow-900/90 border-yellow-400/50 shadow-md shadow-yellow-500/10';
+      countColor = 'text-yellow-200 font-black border-yellow-300/50 bg-black/60';
     }
 
     const cellCount = gift.cells || (mode === 'battle' ? `${gift.hpBuff || 50}HP` : 1);
@@ -231,18 +231,15 @@ export default function LiveGiftMarqueeTicker({
       <div
         key={key}
         onClick={() => onGiftClick && onGiftClick(gift)}
-        className={`flex items-center justify-between px-2 py-1 rounded-lg border ${rowBg} text-[9px] cursor-pointer transition-all hover:scale-[1.02] select-none`}
-        title={`Tặng "${gift.name}" -> +${cellCount} ${mode === 'map' ? 'ô cờ' : 'HP'}`}
+        className={`flex items-center justify-between px-2.5 py-1.5 rounded-xl border ${rowBg} cursor-pointer transition-all hover:scale-[1.03] active:scale-95 select-none shadow-sm`}
+        title={`Tặng quà -> +${cellCount} ${mode === 'map' ? 'ô cờ' : 'HP'}`}
       >
-        <div className="flex items-center gap-1.5 truncate">
-          <span className="text-[12px] shrink-0 drop-shadow-xs">{gift.icon}</span>
-          <span className={`font-bold truncate ${nameColor}`}>
-            {gift.shortName || gift.name}
-          </span>
+        <div className="flex items-center justify-center shrink-0">
+          <span className="text-[18px] drop-shadow-md transform transition-transform hover:scale-110">{gift.icon}</span>
         </div>
 
-        <div className="shrink-0 ml-1">
-          <span className="font-mono font-black text-amber-300 text-[8.5px] bg-black/40 px-1.5 py-0.5 rounded border border-amber-500/20 whitespace-nowrap">
+        <div className="shrink-0 ml-auto">
+          <span className={`font-mono font-black text-[11px] px-2.5 py-0.5 rounded-lg border ${countColor} shadow-inner tracking-tight whitespace-nowrap`}>
             +{cellCount} {mode === 'map' ? 'ô' : ''}
           </span>
         </div>
