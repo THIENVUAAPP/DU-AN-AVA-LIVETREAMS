@@ -7,8 +7,23 @@ const fs = require('fs');
 
 const https = require('https');
 const cors = require('cors');
-const { TikTokLiveConnection, WebcastPushConnection } = require('tiktok-live-connector');
-const TikTokConnector = TikTokLiveConnection || WebcastPushConnection;
+
+let TikTokConnector = null;
+(async () => {
+  try {
+    const legacy = await import('tiktok-live-connector/legacy');
+    TikTokConnector = legacy.WebcastPushConnection || legacy.default?.WebcastPushConnection;
+    console.log('[TikTok Connector] ✅ Loaded WebcastPushConnection (Legacy JSON stream engine)');
+  } catch (e) {
+    try {
+      const mod = await import('tiktok-live-connector');
+      TikTokConnector = mod.TikTokLiveConnection || mod.WebcastPushConnection || mod.default?.TikTokLiveConnection;
+      console.log('[TikTok Connector] Loaded TikTokLiveConnection fallback');
+    } catch (err) {
+      console.error('[TikTok Connector] Failed to load connector module:', err);
+    }
+  }
+})();
 
 const app = express();
 app.use(cors());
@@ -123,20 +138,30 @@ io.on('connection', (socket) => {
     io.emit('tiktok_status', { connected: false, username: '', roomId: null });
   });
 
-  socket.on('connect_tiktok', (username, options = {}) => {
+  socket.on('connect_tiktok', async (username, options = {}) => {
     const targetUser = username ? username.trim().replace(/^@/, '') : '';
     if (!targetUser) return;
 
     if (tiktokConnection) {
-      if (currentUsername === targetUser) {
+      if (currentUsername === targetUser && tiktokConnection.isConnected) {
         socket.emit('tiktok_connected', { username: targetUser, roomId: tiktokConnection.roomId });
         io.emit('tiktok_status', { connected: true, username: targetUser, roomId: tiktokConnection.roomId });
         return;
       }
       try {
-        tiktokConnection.disconnect();
+        await tiktokConnection.disconnect();
       } catch (e) {}
       tiktokConnection = null;
+    }
+
+    if (!TikTokConnector) {
+      try {
+        const legacy = await import('tiktok-live-connector/legacy');
+        TikTokConnector = legacy.WebcastPushConnection || legacy.default?.WebcastPushConnection;
+      } catch (e) {
+        const mod = await import('tiktok-live-connector');
+        TikTokConnector = mod.TikTokLiveConnection || mod.WebcastPushConnection;
+      }
     }
 
     currentUsername = targetUser;
@@ -146,16 +171,10 @@ io.on('connection', (socket) => {
       tiktokConnection = new TikTokConnector(targetUser, {
         processInitialData: false,
         enableExtendedGiftInfo: true,
-        enableWebsocketUpgrade: true,
-        requestPollingIntervalMs: 800,
-        sessionId: options.sessionId || process.env.TIKTOK_SESSION_ID || undefined,
-        clientParams: {
-          "app_language": "vi-VN",
-          "device_platform": "web"
-        }
+        sessionId: options.sessionId || process.env.TIKTOK_SESSION_ID || undefined
       });
     } catch (e) {
-      console.error('[TikTok Live] Error instantiating TikTokLiveConnection:', e);
+      console.error('[TikTok Live] Error instantiating TikTok connection:', e);
       socket.emit('tiktok_error', e.toString());
       return;
     }
