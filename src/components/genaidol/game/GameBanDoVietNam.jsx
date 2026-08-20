@@ -863,9 +863,17 @@ export default function GameBanDoVietNam({
         }
       });
 
-      socket.on('tiktok_gift', (data) => {
+      const processedGiftKeys = new Set();
+      const handleIncomingGift = (data) => {
         if (!data) return;
         bandoAudio.unlock();
+        const eventKey = `${data.userId || data.uniqueId}_${data.giftId || data.giftName}_${data.count || data.repeatCount}_${data.timestamp || ''}`;
+        if (data.timestamp && processedGiftKeys.has(eventKey)) return;
+        if (data.timestamp) {
+          processedGiftKeys.add(eventKey);
+          if (processedGiftKeys.size > 200) processedGiftKeys.clear();
+        }
+
         bandoEngine.processGift({
           giftId: data.giftId,
           giftName: data.giftName,
@@ -873,8 +881,21 @@ export default function GameBanDoVietNam({
           diamondCount: data.diamondCount || 1,
           userId: data.userId || data.uniqueId || 'tiktok_viewer',
           username: data.nickname || data.uniqueId || data.username || 'Khách Live',
-          avatar: data.profilePictureUrl || data.avatar || ''
+          avatar: data.profilePictureUrl || data.avatar || '',
+          regionTarget: data.regionTarget || null
         });
+      };
+
+      socket.on('tiktok_gift', handleIncomingGift);
+      socket.on('bando_event', (evt) => {
+        if (evt && evt.type === 'GIFT' && evt.data) {
+          handleIncomingGift(evt.data);
+        }
+      });
+      socket.on('LIVE_EVENT', (evt) => {
+        if (evt && evt.type === 'GIFT' && evt.data) {
+          handleIncomingGift(evt.data);
+        }
       });
     } catch (e) {
       console.warn('Socket connection error:', e);
@@ -1844,13 +1865,17 @@ export default function GameBanDoVietNam({
     const dummy = state.dummy;
     const zeroMatrix = new THREE.Matrix4().makeScale(0, 0, 0);
 
-    // Build index map once for fast O(1) lookup
+    // Build index map once for fast O(1) lookup (hỗ trợ cả Number và String ID)
     if (!state.cellIndexMap || state.cellIndexMapMask !== maskData) {
       state.cellIndexMap = new Map();
       state.cellIndexMapMask = maskData;
       for (let i = 0; i < count; i++) {
         const c = cells[i];
-        if (c) state.cellIndexMap.set(c.id, i);
+        if (c) {
+          state.cellIndexMap.set(c.id, i);
+          state.cellIndexMap.set(String(c.id), i);
+          state.cellIndexMap.set(Number(c.id), i);
+        }
       }
       state.claimedSet = new Set();
     }
@@ -1871,12 +1896,12 @@ export default function GameBanDoVietNam({
       for (let i = 0; i < count; i++) {
         const cell = cells[i];
         if (!cell) continue;
-        const isClaimed = !!currentCellsById[cell.id];
+        const isClaimed = !!(currentCellsById[cell.id] ?? currentCellsById[String(cell.id)] ?? currentCellsById[Number(cell.id)]);
         const wx = (cell.x - cols / 2) * 1.0;
         const wz = (cell.y - rows / 2) * 1.0;
 
         if (isClaimed) {
-          claimedSet.add(cell.id);
+          claimedSet.add(String(cell.id));
           terrainMesh.setMatrixAt(i, zeroMatrix);
 
           dummy.position.set(wx, scaleYClaimed / 2, wz);
@@ -1899,10 +1924,10 @@ export default function GameBanDoVietNam({
       // Incremental update (chỉ cập nhật các ô cờ mới vừa được cắm - SIÊU NHẸ 0.01ms thay vì quét 15,000 ô)
       let hasUpdates = false;
       for (let k = 0; k < currentClaimedIds.length; k++) {
-        const cid = currentClaimedIds[k];
+        const cid = String(currentClaimedIds[k]);
         if (!claimedSet.has(cid)) {
           claimedSet.add(cid);
-          const i = cellIndexMap.get(cid);
+          const i = cellIndexMap.get(cid) ?? cellIndexMap.get(Number(cid));
           if (i !== undefined) {
             const cell = cells[i];
             if (cell) {
