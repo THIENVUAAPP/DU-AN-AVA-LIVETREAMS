@@ -253,8 +253,27 @@ export default function LiveGiftMarqueeTicker({
     return (
       <div
         key={key}
-        className={`flex items-center justify-between px-2 py-1 rounded-lg border ${rowBg} select-none shadow-sm`}
-        title={badgeText}
+        onClick={(e) => {
+          e.stopPropagation();
+          bandoAudio.unlock();
+          if (onGiftClick) {
+            onGiftClick(gift);
+          } else {
+            const randIdx = Math.floor(Math.random() * 900 + 100);
+            window.dispatchEvent(new CustomEvent('avalive_tiktok_gift', { detail: {
+              giftId: gift.id,
+              giftName: gift.name,
+              diamondCount: gift.priceToken || gift.coins || gift.cells || 1,
+              count: 1,
+              userId: `user_${randIdx}`,
+              username: `Khán Giả #${randIdx}`,
+              avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=user_${randIdx}`,
+              regionTarget: gift.regionTarget || null
+            }}));
+          }
+        }}
+        className={`flex items-center justify-between px-2 py-1 rounded-lg border ${rowBg} select-none shadow-sm cursor-pointer hover:scale-105 active:scale-95 transition-all`}
+        title={`Bấm để cắm cờ ${gift.name} (${badgeText})`}
       >
         <span className="text-[16px] leading-none shrink-0 drop-shadow">{gift.icon}</span>
 

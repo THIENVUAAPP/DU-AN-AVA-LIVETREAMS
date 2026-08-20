@@ -1067,18 +1067,7 @@ class BanDoGameEngine {
       }
     }
 
-    // Deduplication filter: tránh việc cùng 1 sự kiện quà tặng bị gọi trùng lặp nhiều lần qua đa kênh socket trong vòng 180ms
-    const uIdKey = user.id || user.username || 'guest';
-    const giftIdKey = giftId || giftNameInput || 'gift';
-    const dedupeKey = `${uIdKey}_${giftIdKey}_${count}`;
     const now = Date.now();
-    if (!this._lastGiftTimeByKey) this._lastGiftTimeByKey = new Map();
-    const lastTime = this._lastGiftTimeByKey.get(dedupeKey) || 0;
-    if (now - lastTime < 180) {
-      return; // Bỏ qua trùng lặp trong 180ms
-    }
-    this._lastGiftTimeByKey.set(dedupeKey, now);
-    if (this._lastGiftTimeByKey.size > 200) this._lastGiftTimeByKey.clear();
 
     // Luôn kích hoạt audio context ngay khi có quà tặng
     bandoAudio.unlock();
