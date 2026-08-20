@@ -295,20 +295,6 @@ class BanDoAudioEngine {
     this.emitStatusUpdate();
   }
 
-  toggleSynthBgm() {
-    this.synthBgmEnabled = !this.synthBgmEnabled;
-    try {
-      localStorage.setItem('bando_synth_bgm_enabled', String(this.synthBgmEnabled));
-    } catch (e) {}
-    if (this.synthBgmEnabled) {
-      this.startSyntheticBgm();
-    } else {
-      this.stopSyntheticBgm();
-    }
-    this.emitStatusUpdate();
-    return this.synthBgmEnabled;
-  }
-
   toggleBgm() {
     if (this.bgmPlaying) {
       this.stopBgmOnLive();
@@ -321,16 +307,12 @@ class BanDoAudioEngine {
 
   playBgmOnLive() {
     this.unlock();
-    this.bgmPlaying = true;
-    if (this.bgmGain && this.ctx) {
-      this.bgmGain.gain.setValueAtTime(this.bgmVolume, this.ctx.currentTime);
-    }
     if (this.customBgmUrl && this.customBgmUrl.length > 10) {
+      this.bgmPlaying = true;
+      if (this.bgmGain && this.ctx) {
+        this.bgmGain.gain.setValueAtTime(this.bgmVolume, this.ctx.currentTime);
+      }
       this.playCustomBgm();
-      return;
-    }
-    if (this.synthBgmEnabled) {
-      this.startSyntheticBgm();
     }
   }
 
@@ -1014,44 +996,10 @@ class BanDoAudioEngine {
     this.playVictoryTheme(opts);
   }
 
-  // ==================== BGM TỔNG HỢP (TỰ ĐỘNG LẶP 24/7) ====================
+  // ==================== BGM NHẠC NỀN ====================
   startSyntheticBgm() {
-    this.unlock();
+    // Nhạc nền máy tổng hợp đã được loại bỏ hoàn toàn - Chỉ phát nhạc nền do người dùng tải lên
     this.stopSyntheticBgm();
-    this.bgmPlaying = true;
-
-    const bpm = 120;
-    const beatSec = 60 / bpm;
-    // Giai điệu Hào Khí Đông A - Ngũ Cung Hùng Tráng (C - D - E - G - A - C)
-    const scale = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 659.25, 523.25];
-    const bassScale = [130.81, 146.83, 164.81, 196.00];
-    let step = 0;
-
-    const playStep = () => {
-      if (!this.bgmPlaying || this.isMuted) return;
-      
-      const freq = scale[step % scale.length];
-      const bassFreq = bassScale[Math.floor(step / 2) % bassScale.length];
-
-      if (step % 2 === 0) {
-        this.tone(bassFreq, beatSec * 1.9, { type: 'sine', gain: 0.35, isBgm: true });
-        this.tone(bassFreq * 0.5, beatSec * 2.2, { type: 'triangle', gain: 0.28, isBgm: true });
-      }
-
-      this.tone(freq, beatSec * 0.85, { type: 'triangle', gain: 0.32, isBgm: true });
-      if (step % 4 === 0) {
-        this.tone(freq * 1.5, beatSec * 0.5, { type: 'sine', gain: 0.22, delay: 0.05, isBgm: true });
-      }
-
-      step = (step + 1) % 32;
-    };
-
-    playStep();
-    this.bgmInterval = setInterval(playStep, beatSec * 1000);
-
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('bando-bgm-status', { detail: { playing: true, name: 'Hào Khí Đông A (Synth 24/7)' } }));
-    }
   }
 
   stopSyntheticBgm() {

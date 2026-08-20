@@ -1317,10 +1317,10 @@ export default function GameBanDoVietNam({
       const curDim = state.cellDim || 0.98;
 
       if (isClaimed) {
-        // Ô đã cắm cờ (người xem tặng quà): Hiện trên flagMesh vươn cao, ẩn trên terrainMesh
+        // Ô đã cắm cờ: Giữ đúng dạng ô vuông 3D phẳng đẹp mắt (scaleY = 0.55), KHÔNG dựng thành cột dài
         terrainMesh.setMatrixAt(i, zeroMatrix);
 
-        const scaleY = 3.5;
+        const scaleY = 0.55;
         dummy.position.set(wx, scaleY / 2, wz);
         dummy.scale.set(curDim, scaleY, curDim);
         dummy.updateMatrix();
@@ -1865,16 +1865,12 @@ export default function GameBanDoVietNam({
       const curDim = state.cellDim || 0.98;
 
       if (isClaimed) {
-        // 1. Ô đã cắm cờ (người xem tặng quà): Hiện trên flagMesh vươn cao, nổi bật trên nền trắng
+        // 1. Ô đã cắm cờ: Giữ đúng kích thước ô vuông 3D phẳng đẹp mắt (scaleY = 0.55), KHÔNG dựng thành cột dài
         terrainMesh.setMatrixAt(i, zeroMatrix);
 
-        const camDist = state.camera ? state.camera.position.distanceTo(state.controls?.target || new THREE.Vector3(0, 0, 0)) : 100;
-        const cellDistScale = Math.min(2.8, Math.max(1.0, camDist / 130));
-        const scaleY = Math.min(8.0, 3.5 * cellDistScale);
-        const cellWidth = curDim * (cellDistScale > 1.5 ? Math.min(1.6, 1.0 + (cellDistScale - 1.5) * 0.4) : 1.0);
-
+        const scaleY = 0.55;
         dummy.position.set(wx, scaleY / 2, wz);
-        dummy.scale.set(cellWidth, scaleY, cellWidth);
+        dummy.scale.set(curDim, scaleY, curDim);
         dummy.updateMatrix();
         flagMesh.setMatrixAt(i, dummy.matrix);
       } else {
