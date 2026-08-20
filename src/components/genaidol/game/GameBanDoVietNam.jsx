@@ -806,8 +806,8 @@ export default function GameBanDoVietNam({
       if (typeof window === 'undefined') return 'http://localhost:3001';
       const customUrl = localStorage.getItem('aidol_backend_url');
       if (customUrl && customUrl.startsWith('http')) return customUrl;
-      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        return 'http://localhost:3001';
+      if (window.location.port === '5173') {
+        return window.location.protocol + '//' + window.location.hostname + ':3001';
       }
       return window.location.origin;
     };

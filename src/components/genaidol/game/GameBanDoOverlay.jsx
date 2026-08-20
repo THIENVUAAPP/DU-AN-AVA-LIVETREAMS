@@ -12,7 +12,12 @@ export default function GameBanDoOverlay() {
     document.documentElement.style.background = 'transparent';
     document.body.style.background = 'transparent';
 
-    const backendUrl = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3001' : '';
+    let backendUrl = '';
+    if (typeof window !== 'undefined') {
+      if (window.location.port === '5173') {
+        backendUrl = window.location.protocol + '//' + window.location.hostname + ':3001';
+      }
+    }
 
     // 1. WebSocket Socket.io cho TikTok Live Studio & OBS
     let socket = null;

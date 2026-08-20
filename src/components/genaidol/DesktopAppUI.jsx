@@ -461,7 +461,16 @@ export default function DesktopAppUI() {
   const socketRef = useRef(null);
 
   useEffect(() => {
-    const backendUrl = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3001' : '';
+    let backendUrl = '';
+    if (typeof window !== 'undefined') {
+      const customUrl = localStorage.getItem('aidol_backend_url');
+      if (customUrl && customUrl.startsWith('http')) {
+        backendUrl = customUrl;
+      } else if (window.location.port === '5173') {
+        backendUrl = window.location.protocol + '//' + window.location.hostname + ':3001';
+      }
+    }
+    
     const socket = io(backendUrl || window.location.origin, {
       transports: ['websocket', 'polling'],
       reconnection: true,
