@@ -1106,11 +1106,11 @@ class BanDoGameEngine {
     }
 
     // Số lượng ô cờ thực tế = Số ô của quà * số lượng quà tặng
-    const cellValue = Number(giftDef.cells) || Math.max(1, diamondCountInput);
-    const rawCells = Math.max(1, cellValue * count);
+    const cellValue = Number(giftDef.cells) || Math.max(1, Number(diamondCountInput) || 1);
+    const rawCells = Math.max(1, (cellValue * count) || 1);
     
     // Combo multiplier
-    let effectiveCells = rawCells;
+    let effectiveCells = Number(rawCells) || 1;
     if (this.state.combo.userId === user.id && this.state.combo.expiresAt > now) {
       this.state.combo.count += 1;
       this.state.combo.level = Math.min(10, Math.floor(this.state.combo.count / 3) + 1);

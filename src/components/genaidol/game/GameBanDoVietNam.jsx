@@ -233,6 +233,7 @@ export default function GameBanDoVietNam({
   isDarkMode = true,
 }) {
   const [gameState, setGameState] = useState(() => bandoEngine.state);
+  const [forceRenderSeq, setForceRenderSeq] = useState(0);
   const [viewMode3D, setViewMode3D] = useState(true);
   const [isAutoTesting, setIsAutoTesting] = useState(false);
   const [autoTestStep, setAutoTestStep] = useState(0);
@@ -851,7 +852,8 @@ export default function GameBanDoVietNam({
         });
       };
 
-      socket.on('tiktok_gift', handleIncomingGift);
+      // Không đăng ký lại listener trùng lặp
+
       socket.on('bando_event', (evt) => {
         if (evt && evt.type === 'GIFT' && evt.data) {
           handleIncomingGift(evt.data);
@@ -866,20 +868,8 @@ export default function GameBanDoVietNam({
           });
         }
       });
-      socket.on('LIVE_EVENT', (evt) => {
-        if (evt && evt.type === 'GIFT' && evt.data) {
-          handleIncomingGift(evt.data);
-        } else if (evt && evt.type === 'COMMENT' && evt.data) {
-          bandoAudio.unlock();
-          const text = evt.data.comment || evt.data.text || '';
-          const author = evt.data.nickname || evt.data.username || 'Khán Giả';
-          bandoEngine.processComment(text, {
-            id: evt.data.userId || 'chat_user',
-            username: author,
-            avatar: evt.data.avatar || ''
-          });
-        }
-      });
+      // Bỏ qua các sự kiện tiktok_gift, bando_event, LIVE_EVENT trùng lặp ở đây vì DesktopAppUI.jsx và GameBanDoOverlay.jsx đã lắng nghe và truyền xuống thông qua externalLiveEvent hoặc bandoEngine.processGift trực tiếp. Việc lắng nghe trực tiếp ở đây dẫn đến xử lý quà tặng 2-3 lần cho 1 phần quà.
+
       socket.on('tiktok_chat', (data) => {
         if (!data) return;
         bandoAudio.unlock();
