@@ -340,21 +340,6 @@ export default function GameBanDoVietNam({
   const [editingBookmarkId, setEditingBookmarkId] = useState(null);
   const [editingBookmarkName, setEditingBookmarkName] = useState('');
   const [showGiftConfigModal, setShowGiftConfigModal] = useState(false);
-  const [isInternalBgmPlaying, setIsInternalBgmPlaying] = useState(() => bandoAudio.bgmPlaying);
-  const [isInternalSfxEnabled, setIsInternalSfxEnabled] = useState(() => !bandoAudio.isSfxMuted);
-
-  useEffect(() => {
-    const handleAudioStatus = () => {
-      setIsInternalBgmPlaying(bandoAudio.bgmPlaying);
-      setIsInternalSfxEnabled(!bandoAudio.isSfxMuted);
-    };
-    window.addEventListener('bando-bgm-status', handleAudioStatus);
-    window.addEventListener('avalive_audio_status_update', handleAudioStatus);
-    return () => {
-      window.removeEventListener('bando-bgm-status', handleAudioStatus);
-      window.removeEventListener('avalive_audio_status_update', handleAudioStatus);
-    };
-  }, []);
 
   // Xử lý khi bấm vào thẻ quà trên Bảng điện cuộn (Test nhanh cắm cờ)
   const handleTestGiftMarquee = useCallback((gift) => {
@@ -2211,49 +2196,14 @@ export default function GameBanDoVietNam({
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0 pointer-events-auto">
-            {/* Quick Audio Controls (BẬT / TẮT Nhạc Nền & SFX Ngay Trên Màn Hình) */}
-            <button
-              onClick={() => {
-                bandoAudio.unlock();
-                bandoAudio.toggleBgm();
-                setIsInternalBgmPlaying(bandoAudio.bgmPlaying);
-              }}
-              className={`px-2 py-1 rounded-xl border text-[10px] sm:text-xs font-black flex items-center gap-1 transition-all ${
-                isInternalBgmPlaying
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400 shadow-md shadow-emerald-500/30 ring-1 ring-emerald-300'
-                  : 'bg-white/10 text-gray-300 hover:text-white border-white/20'
-              }`}
-              title={isInternalBgmPlaying ? 'Nhạc nền đang BẬT - Nhấn để TẮT' : 'Nhạc nền đang TẮT - Nhấn để BẬT'}
-            >
-              <Music size={12} className={isInternalBgmPlaying ? 'animate-bounce text-yellow-300' : ''} />
-              <span className="truncate">{isInternalBgmPlaying ? 'Nhạc: BẬT' : 'Nhạc: TẮT'}</span>
-            </button>
-
-            <button
-              onClick={() => {
-                bandoAudio.unlock();
-                const nextSfx = bandoAudio.toggleSfx();
-                setIsInternalSfxEnabled(nextSfx);
-              }}
-              className={`p-1 sm:px-2 sm:py-1 rounded-xl border text-[10px] sm:text-xs font-black flex items-center gap-1 transition-all ${
-                isInternalSfxEnabled
-                  ? 'bg-amber-600/80 text-yellow-200 border-amber-400'
-                  : 'bg-white/10 text-gray-400 border-white/20'
-              }`}
-              title={isInternalSfxEnabled ? 'SFX Hiệu ứng đang BẬT' : 'SFX Hiệu ứng đang TẮT'}
-            >
-              <Volume2 size={12} />
-              <span className="hidden sm:inline">{isInternalSfxEnabled ? 'SFX: BẬT' : 'SFX: TẮT'}</span>
-            </button>
-
+          <div className="flex items-center gap-2 shrink-0">
             {gameState.combo.active && gameState.combo.count >= 2 && (
-              <div className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-600 to-red-600 rounded-full text-white text-[10px] sm:text-xs font-black shadow-lg animate-bounce">
+              <div className="flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-amber-600 to-red-600 rounded-full text-white text-[10px] sm:text-xs font-black shadow-lg animate-bounce">
                 <Flame size={12} className="text-yellow-300 animate-spin" />
                 <span>x{gameState.combo.multiplier} ({gameState.combo.count}🎁)</span>
               </div>
             )}
-            <div className="w-16 sm:w-24 h-2 bg-black/60 rounded-full overflow-hidden p-0.5 border border-white/20">
+            <div className="w-20 sm:w-28 h-2 bg-black/60 rounded-full overflow-hidden p-0.5 border border-white/20">
               <div 
                 className="h-full bg-gradient-to-r from-red-600 via-amber-500 to-yellow-400 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(234,179,8,0.8)]"
                 style={{ width: `${gameState.percent}%` }}
