@@ -2280,11 +2280,10 @@ export default function GameBanDoVietNam({
         </div>
       )}
 
-      {/* 2. BẢNG ĐIỆN QUÀ TẶNG & CẮM CỜ 3 MIỀN (Draggable / Resizable / Auto-scroll Glassmorphism Widget) */}
+      {/* 2. BẢNG ĐIỆN QUÀ TẶNG & CẮM CỜ 3 MIỀN (Draggable / Resizable Showcase Widget - Read-only cho Live) */}
       <LiveGiftMarqueeTicker 
         mode="map" 
         onOpenSettings={() => setShowGiftConfigModal(true)} 
-        onGiftClick={handleTestGiftMarquee} 
       />
 
       {/* VICTORY CELEBRATION CEREMONY / CHAMPION PODIUM */}

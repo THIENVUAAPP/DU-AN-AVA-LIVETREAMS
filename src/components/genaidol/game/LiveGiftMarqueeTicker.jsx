@@ -250,9 +250,8 @@ export default function LiveGiftMarqueeTicker({
     return (
       <div
         key={key}
-        onClick={() => onGiftClick && onGiftClick(gift)}
-        className={`flex items-center justify-between px-2 py-1 rounded-lg border ${rowBg} cursor-pointer transition-all hover:scale-[1.03] active:scale-95 select-none shadow-sm`}
-        title={`Tặng quà -> ${badgeText}`}
+        className={`flex items-center justify-between px-2 py-1 rounded-lg border ${rowBg} select-none shadow-sm`}
+        title={badgeText}
       >
         <span className="text-[16px] leading-none shrink-0 drop-shadow">{gift.icon}</span>
 
@@ -347,14 +346,10 @@ export default function LiveGiftMarqueeTicker({
             </div>
           </div>
 
-          {/* KHỐI 1: CẮM CỜ 3 MIỀN BẮC - TRUNG - NAM HOẶC BUFF 3 MIỀN */}
-          <div className="grid grid-cols-3 gap-0.5 mb-1">
+          {/* KHỐI 1: CẮM CỜ 3 MIỀN BẮC - TRUNG - NAM HOẶC BUFF 3 MIỀN (Read-only Showcase) */}
+          <div className="grid grid-cols-3 gap-0.5 mb-1 select-none">
             <div 
-              onClick={() => {
-                bandoAudio.unlock();
-                onGiftClick && onGiftClick({ id: 'gift_region_north', name: 'Ngón Tay Tim', icon: '🫰', priceToken: 5, cells: 5, regionTarget: 'north' });
-              }}
-              className="py-1 px-0.5 rounded-md bg-red-950/60 hover:bg-red-900/80 border border-red-500/40 text-center cursor-pointer transition-transform hover:scale-105 active:scale-95"
+              className="py-1 px-0.5 rounded-md bg-red-950/60 border border-red-500/40 text-center"
               title={mode === 'battle' ? 'Tăng kích thước x3' : 'Cắm cờ Miền Bắc (+5 ô)'}
             >
               <div className="text-[11px]">🫰</div>
@@ -362,11 +357,7 @@ export default function LiveGiftMarqueeTicker({
             </div>
 
             <div 
-              onClick={() => {
-                bandoAudio.unlock();
-                onGiftClick && onGiftClick({ id: 'gift_region_central', name: 'Bánh Donut', icon: '🍩', priceToken: 5, cells: 5, regionTarget: 'central' });
-              }}
-              className="py-1 px-0.5 rounded-md bg-amber-950/60 hover:bg-amber-900/80 border border-amber-500/40 text-center cursor-pointer transition-transform hover:scale-105 active:scale-95"
+              className="py-1 px-0.5 rounded-md bg-amber-950/60 border border-amber-500/40 text-center"
               title={mode === 'battle' ? 'Nâng cấp Giáp' : 'Cắm cờ Miền Trung (+5 ô)'}
             >
               <div className="text-[11px]">🍩</div>
@@ -374,11 +365,7 @@ export default function LiveGiftMarqueeTicker({
             </div>
 
             <div 
-              onClick={() => {
-                bandoAudio.unlock();
-                onGiftClick && onGiftClick({ id: 'gift_region_south', name: 'Gấu Con', icon: '🧸', priceToken: 5, cells: 5, regionTarget: 'south' });
-              }}
-              className="py-1 px-0.5 rounded-md bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-center cursor-pointer transition-transform hover:scale-105 active:scale-95"
+              className="py-1 px-0.5 rounded-md bg-emerald-950/60 border border-emerald-500/40 text-center"
               title={mode === 'battle' ? 'Nâng cấp Thú Cưỡi' : 'Cắm cờ Miền Nam (+5 ô)'}
             >
               <div className="text-[11px]">🧸</div>
