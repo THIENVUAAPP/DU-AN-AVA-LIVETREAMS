@@ -1381,11 +1381,17 @@ export default function GameBanDoVietNam({
         }
       }
 
-      // Hoạt họa Lá cờ Quốc kỳ 3D vẫy sóng nhẹ nhàng cho TẤT CẢ các cột cờ người xem trên bản đồ
+      // Tính toán khoảng cách Camera để tự động phóng to lá cờ & huy hiệu khi nhìn từ xa (Distance Adaptive Scale)
+      const camDist = camera.position.distanceTo(controls.target || new THREE.Vector3(0, 0, 0));
+      const distScale = Math.min(3.8, Math.max(1.0, camDist / 110));
+      const badgeScale = Math.min(1.4, Math.max(0.85, camDist / 200));
+
+      // Hoạt họa & Tự động phóng to Lá cờ Quốc kỳ 3D theo khoảng cách zoom cho TẤT CẢ các cột cờ người xem
       if (state.multiFlagGroup && state.multiFlagGroup.children.length > 0) {
         const pChildren = state.multiFlagGroup.children;
         for (let c = 0; c < pChildren.length; c++) {
           const pGroup = pChildren[c];
+          pGroup.scale.set(distScale, distScale, distScale);
           if (pGroup.flagPlane) {
             pGroup.flagPlane.rotation.y = Math.sin(time * 0.006 + (pGroup.animPhase || 0)) * 0.25;
           }
@@ -1393,6 +1399,7 @@ export default function GameBanDoVietNam({
       }
 
       if (state.focalGroup && state.focalGroup.visible) {
+        state.focalGroup.scale.set(distScale, distScale, distScale);
         if (state.flagPlaneMesh) {
           state.flagPlaneMesh.rotation.y = Math.sin(time * 0.006) * 0.25;
         }
@@ -1426,7 +1433,7 @@ export default function GameBanDoVietNam({
         }
       }
 
-      // PROJECTION & ANTI-OVERLAP: Update Recent Claim Badges with Smart Stacking (Tuyệt đối không chồng chéo)
+      // PROJECTION & ANTI-OVERLAP: Update Recent Claim Badges with Dynamic Distance Scale
       const allBadges = recentClaimBadgesRef.current || [];
       const visibleBadges = [];
       const maxVisible = 5; // Tối đa 5 huy hiệu hiển thị đồng thời để bản đồ luôn thông thoáng
@@ -1436,7 +1443,8 @@ export default function GameBanDoVietNam({
         const badgeEl = badgeRefs.current[badge.id];
         if (!badgeEl) continue;
 
-        tempVec.set(badge.wx || 0, badge.wy || 5.5, badge.wz || 0);
+        const badgeY = (badge.wy || 5.5) * distScale;
+        tempVec.set(badge.wx || 0, badgeY, badge.wz || 0);
         tempVec.project(camera);
 
         if (tempVec.z < 1.0) {
@@ -1462,7 +1470,7 @@ export default function GameBanDoVietNam({
 
           visibleBadges.push({ badge, badgeEl, sx, sy });
           badgeEl.style.display = 'flex';
-          badgeEl.style.transform = `translate3d(${sx}px, ${sy}px, 0px) translate(-50%, -100%)`;
+          badgeEl.style.transform = `translate3d(${sx}px, ${sy}px, 0px) translate(-50%, -100%) scale(${badgeScale})`;
         } else {
           badgeEl.style.display = 'none';
         }
@@ -1759,12 +1767,16 @@ export default function GameBanDoVietNam({
       const curDim = state.cellDim || 0.98;
 
       if (isClaimed) {
-        // 1. Ô đã cắm cờ (người xem tặng quà): Hiện trên flagMesh vươn cao, ẩn trên terrainMesh
+        // 1. Ô đã cắm cờ (người xem tặng quà): Hiện trên flagMesh vươn cao, nổi bật trên nền trắng
         terrainMesh.setMatrixAt(i, zeroMatrix);
 
-        const scaleY = 3.5;
+        const camDist = state.camera ? state.camera.position.distanceTo(state.controls?.target || new THREE.Vector3(0, 0, 0)) : 100;
+        const cellDistScale = Math.min(2.8, Math.max(1.0, camDist / 130));
+        const scaleY = Math.min(8.0, 3.5 * cellDistScale);
+        const cellWidth = curDim * (cellDistScale > 1.5 ? Math.min(1.6, 1.0 + (cellDistScale - 1.5) * 0.4) : 1.0);
+
         dummy.position.set(wx, scaleY / 2, wz);
-        dummy.scale.set(curDim, scaleY, curDim);
+        dummy.scale.set(cellWidth, scaleY, cellWidth);
         dummy.updateMatrix();
         flagMesh.setMatrixAt(i, dummy.matrix);
       } else {
