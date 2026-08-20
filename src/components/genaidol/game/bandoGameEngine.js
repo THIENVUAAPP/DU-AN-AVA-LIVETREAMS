@@ -1306,6 +1306,7 @@ class BanDoGameEngine {
       count, 
       user, 
       claimed: toClaim.length, 
+      claimedCells: toClaim,
       regionTarget,
       focalTarget: this.state.lastFocalTarget 
     });
