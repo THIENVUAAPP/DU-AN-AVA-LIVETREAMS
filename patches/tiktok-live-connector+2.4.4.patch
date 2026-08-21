@@ -1,0 +1,12 @@
+diff --git a/node_modules/tiktok-live-connector/dist/legacy.js b/node_modules/tiktok-live-connector/dist/legacy.js
+index b9e7f5f..300cd30 100644
+--- a/node_modules/tiktok-live-connector/dist/legacy.js
++++ b/node_modules/tiktok-live-connector/dist/legacy.js
+@@ -137,6 +137,7 @@ function getEventAttributes(event) {
+ 	return event;
+ }
+ function getTopViewerAttributes(topViewers) {
++	if (!topViewers || !Array.isArray(topViewers)) return [];
+ 	return topViewers.map((viewer) => {
+ 		return {
+ 			user: viewer.user ? getUserAttributes(viewer.user) : null,
