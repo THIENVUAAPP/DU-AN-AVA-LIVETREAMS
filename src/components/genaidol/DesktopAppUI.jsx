@@ -122,6 +122,8 @@ export default function DesktopAppUI() {
   const fileInputRef = useRef(null);
   const flvVideoRef = useRef(null);
   const flvPlayerRef = useRef(null);
+  const lastAiCommentTime = useRef(0);
+  const lastAiGreetingTime = useRef(0);
   const [isTemplateLibraryOpen, setIsTemplateLibraryOpen] = useState(false);
 
   useEffect(() => {
@@ -558,7 +560,13 @@ export default function DesktopAppUI() {
       bandoEngine.handleUserComment(text, author);
       mapVoiceEngine.handleUserComment(text, author);
       battleVoiceEngine.handleUserComment(text, author);
-      handleLiveEvent('COMMENT', { name: author, text });
+      
+      // Chống spam: Giới hạn AI phản hồi bình luận (chỉ đọc nội dung có ý nghĩa và cách nhau 8 giây)
+      const now = Date.now();
+      if (text.trim().length >= 2 && now - lastAiCommentTime.current > 8000) {
+        lastAiCommentTime.current = now;
+        handleLiveEvent('COMMENT', { name: author, text });
+      }
     });
 
     socket.on('tiktok_gift', (data) => {
@@ -599,7 +607,13 @@ export default function DesktopAppUI() {
     socket.on('tiktok_member', (data) => {
       if (!data) return;
       const author = data.username || data.nickname || 'Khách mới';
-      handleLiveEvent('VIEWER_JOIN', { name: author });
+      
+      // Chống spam: Chào hỏi người mới cách nhau ít nhất 15 giây
+      const now = Date.now();
+      if (now - lastAiGreetingTime.current > 15000) {
+        lastAiGreetingTime.current = now;
+        handleLiveEvent('VIEWER_JOIN', { name: author });
+      }
     });
 
     socket.on('tiktok_disconnected', () => {
@@ -1181,9 +1195,6 @@ export default function DesktopAppUI() {
               autoPlay
               muted={false}
             />
-          </div>
-          <div className="absolute bottom-4 right-4 w-[160px] h-[284px] md:w-[240px] md:h-[426px] bg-black border-[3px] border-emerald-500/80 rounded-2xl overflow-hidden shadow-2xl z-30 transition-all hover:scale-105 pointer-events-none">
-            {renderMainCharacter()}
           </div>
         </div>
       );
