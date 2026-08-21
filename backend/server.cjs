@@ -314,14 +314,19 @@ io.on('connection', (socket) => {
       return;
     }
 
-    tiktokConnection.connect().then(state => {
+    const connectPromise = tiktokConnection.connect();
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Connection timeout - Please check the TikTok ID or URL')), 15000)
+    );
+
+    Promise.race([connectPromise, timeoutPromise]).then(state => {
       console.log(`[TikTok Live] ✅ Đã kết nối Room ID: ${state?.roomId || 'ACTIVE'} (${targetUser})`);
       stopSimulationMode();
       io.emit('tiktok_connected', { username: targetUser, roomId: state?.roomId });
       io.emit('tiktok_status', { connected: true, username: targetUser, roomId: state?.roomId });
     }).catch(err => {
       console.error(`[TikTok Live] ❌ Không thể kết nối ${targetUser}: ${err.message || err}`);
-      let userFriendlyError = 'Kênh chưa phát Live, hoặc nhập sai ID.';
+      let userFriendlyError = err.message.includes('timeout') ? 'Lỗi Timeout: Không thể kết nối, vui lòng kiểm tra lại ID.' : 'Kênh chưa phát Live, hoặc nhập sai ID.';
       const errStr = err.toString();
       if (errStr.includes('Failed to retrieve Room ID') || errStr.includes("isn't online") || errStr.includes('UserOfflineError')) {
         userFriendlyError = 'Kênh chưa phát Live hoặc ID không tồn tại!';

@@ -2,7 +2,7 @@ import {
   Settings, Eye, Play, Square, RefreshCw, Download, Upload, Trash2,
   Video, Mic2, Volume2, Wifi, WifiOff, Radio, CheckCircle, AlertCircle,
   Plus, Search, X, ChevronDown, Monitor, Zap, SkipForward, Pause,
-  Sliders, Globe, Sparkles, Bot, VolumeX, Edit3, Check
+  Sliders, Globe, Sparkles, Bot, VolumeX, Edit3, Check, MonitorPlay, StopCircle
 } from 'lucide-react';
 import AIAudioPlayer from './AIAudioPlayer';
 import WorkspaceTacVu from './WorkspaceTacVu';
@@ -89,6 +89,13 @@ export default function AIDOLLiveConsole() {
   const [activeVideoItem, setActiveVideoItem] = useState(null);
   const [activeJobItem, setActiveJobItem] = useState(null);
   const [videoQueue, setVideoQueue] = useState([]);
+
+  // ── Restream / Screen Record State ──
+  const [restreamUrl, setRestreamUrl] = useState('');
+  const [restreamEmbedUrl, setRestreamEmbedUrl] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const recordedChunksRef = useRef([]);
 
   const handleToggleStream = (platform = 'tiktok') => {
     if (streamStatus === 'live') {
@@ -351,6 +358,87 @@ export default function AIDOLLiveConsole() {
   const catMedia = (cat) => liveMedia.filter(i => i.category === cat);
   const formatSize = (bytes) => bytes ? (bytes > 1024 * 1024 ? (bytes / 1024 / 1024).toFixed(1) + ' MB' : (bytes / 1024).toFixed(0) + ' KB') : '';
 
+  const handleLoadRestream = () => {
+    if (!restreamUrl) return;
+    let url = restreamUrl.trim();
+    if (url.includes('/video/')) {
+      const match = url.match(/\/video\/(\d+)/);
+      if (match && match[1]) {
+        url = `https://www.tiktok.com/embed/v2/${match[1]}`;
+      }
+    } else {
+      let cleanId = url.split('?')[0].split('#')[0];
+      const matchAt = cleanId.match(/@([a-zA-Z0-9_.-]+)/);
+      if (matchAt && matchAt[1]) {
+        cleanId = matchAt[1];
+      } else {
+        const parts = cleanId.split('/').filter(Boolean);
+        if (parts.length > 0) {
+          const last = parts[parts.length - 1];
+          cleanId = (last === 'live' && parts.length > 1) ? parts[parts.length - 2].replace(/^@/, '') : last.replace(/^@/, '');
+        } else {
+          cleanId = cleanId.replace(/^@/, '');
+        }
+      }
+      url = `https://www.tiktok.com/@${cleanId}/live`;
+    }
+    setRestreamEmbedUrl(url);
+  };
+
+  const handleOpenRestreamPopout = () => {
+    if (!restreamEmbedUrl) return;
+    window.open(restreamEmbedUrl, 'TiktokLivePopout', 'width=450,height=800,menubar=no,toolbar=no,location=no,status=no');
+  };
+
+  const startScreenRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: { cursor: "always" },
+        audio: true
+      });
+      
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+      mediaRecorderRef.current = mediaRecorder;
+      recordedChunksRef.current = [];
+      
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          recordedChunksRef.current.push(e.data);
+        }
+      };
+      
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        document.body.appendChild(a);
+        a.style = 'display: none';
+        a.href = url;
+        a.download = `AVA-Live-Record-${new Date().getTime()}.webm`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        setIsRecording(false);
+      };
+      
+      mediaRecorder.start();
+      setIsRecording(true);
+      
+      stream.getVideoTracks()[0].onended = () => {
+        if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+      };
+    } catch(err) {
+      console.error("Lỗi khi quay màn hình:", err);
+      alert("Không thể bắt đầu quay màn hình. Vui lòng cấp quyền chia sẻ màn hình.");
+    }
+  };
+
+  const stopScreenRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+    }
+  };
+
   return (
     <div className="w-full min-h-[calc(100vh-8rem)] bg-[#0D0F1A] text-slate-300 font-sans flex flex-col rounded-2xl overflow-hidden border border-slate-700/60 shadow-2xl">
       
@@ -540,10 +628,11 @@ export default function AIDOLLiveConsole() {
           <div className="flex border-b border-slate-700/50 bg-[#1a1b26]/80 px-4 pt-2 flex-shrink-0 overflow-x-auto custom-scrollbar">
             {[
               ['kho','📦 Kho Video Live'],
-              ['ai-voice', '🎙️ Giọng Đọc 3 Vai Trò & Sự Kiện'],
+              ['ai-voice', '🎙️ Giọng Đọc'],
               ['ai-player','🤖 AI Director'],
-              ['ai-setup','⚙️ Cài đặt Sự kiện AI'],
-              ['stream','📡 Stream Setup']
+              ['ai-setup','⚙️ Cài đặt'],
+              ['stream','📡 Stream Setup'],
+              ['restream','🔄 Re-Stream']
             ].map(([id, label]) => (
               <button key={id} onClick={() => setActiveTab(id)}
                 className={`px-4 py-2.5 text-xs font-bold rounded-t-lg mr-1 whitespace-nowrap transition-all ${activeTab === id ? 'bg-[#0D0F1A] text-[#00FF66] border-t border-l border-r border-slate-700/50 shadow-md' : 'text-slate-500 hover:text-slate-300'}`}>
@@ -1370,6 +1459,60 @@ export default function AIDOLLiveConsole() {
                       </div>
                     ))}
                   </div>
+                </div>
+              </div>
+              </div>
+            )}
+
+            {/* ══ TAB: RESTREAM / SCREEN RECORD ══ */}
+            {activeTab === 'restream' && (
+              <div className="p-5 space-y-4">
+                <div>
+                  <h3 className="text-sm font-black text-white mb-1">🔄 Phát Song Song & Quay Màn Hình</h3>
+                  <p className="text-[10px] text-slate-500">Nhập link TikTok Live hoặc Video để hiển thị giao diện sạch và quay màn hình lưu lại.</p>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  <input
+                    type="text"
+                    value={restreamUrl}
+                    onChange={(e) => setRestreamUrl(e.target.value)}
+                    placeholder="Dán link TikTok (VD: https://www.tiktok.com/@aidol/live)"
+                    className="flex-1 bg-[#1a1b26] border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#00FF66]"
+                  />
+                  <button onClick={handleLoadRestream} className="bg-[#00FF66]/20 text-[#00FF66] border border-[#00FF66]/40 font-bold text-sm px-4 py-2.5 rounded-lg hover:bg-[#00FF66]/30 whitespace-nowrap">
+                    Tải Video
+                  </button>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <button onClick={handleOpenRestreamPopout} disabled={!restreamEmbedUrl} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all ${restreamEmbedUrl ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}`}>
+                    <MonitorPlay className="w-5 h-5"/>
+                    Mở Cửa Sổ Sạch (Pop-out)
+                  </button>
+                  <button onClick={isRecording ? stopScreenRecording : startScreenRecording} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all ${isRecording ? 'bg-red-600 hover:bg-red-500 text-white animate-pulse shadow-[0_0_20px_rgba(220,38,38,0.6)]' : 'bg-[#ff0050] hover:bg-[#ff0050]/80 text-white shadow-[0_0_15px_rgba(255,0,80,0.4)]'}`}>
+                    {isRecording ? <><StopCircle className="w-5 h-5"/> Dừng Quay & Tải Xuống</> : <><Video className="w-5 h-5"/> Bắt đầu Quay Màn Hình</>}
+                  </button>
+                </div>
+
+                <div className="bg-black/50 border border-slate-700/50 rounded-2xl flex items-center justify-center overflow-hidden w-full relative" style={{ minHeight: '500px' }}>
+                  {restreamEmbedUrl ? (
+                    <iframe
+                      src={restreamEmbedUrl}
+                      className="absolute inset-0 w-full h-full"
+                      frameBorder="0"
+                      allow="autoplay; encrypted-media"
+                      allowFullScreen
+                    ></iframe>
+                  ) : (
+                    <div className="text-center text-slate-500 p-10 flex flex-col items-center">
+                      <MonitorPlay className="w-16 h-16 mb-4 opacity-20"/>
+                      <p className="text-base font-bold text-slate-300">Chưa có luồng Video/Live</p>
+                      <p className="text-xs text-slate-500 mt-2 max-w-sm">
+                        Dán link và bấm "Tải Video" để xem trước, sau đó bấm "Mở Cửa Sổ Sạch" để hiện popup, hoặc dùng tính năng Quay Màn Hình để lưu video lại.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

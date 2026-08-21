@@ -43,6 +43,7 @@ export default function DesktopAppUI() {
       return '';
     }
   });
+  const [tiktokEmbedUrl, setTiktokEmbedUrl] = useState(null);
   const [selectedCharacter, setSelectedCharacter] = useState(() => {
     try {
       return localStorage.getItem('avalive_selected_char') || null;
@@ -686,6 +687,7 @@ export default function DesktopAppUI() {
     let str = input.trim().split('?')[0].split('#')[0];
     const matchAt = str.match(/@([a-zA-Z0-9_.-]+)/);
     if (matchAt && matchAt[1]) return matchAt[1];
+    
     const parts = str.split('/').filter(Boolean);
     if (parts.length > 0) {
       const last = parts[parts.length - 1];
@@ -702,6 +704,7 @@ export default function DesktopAppUI() {
       // Dừng AI & Ngắt kết nối
       setIsConnected(false);
       setIsConnecting(false);
+      setTiktokEmbedUrl(null);
       if (socketRef.current) {
         socketRef.current.emit('disconnect_tiktok');
       }
@@ -723,6 +726,16 @@ export default function DesktopAppUI() {
       if (isMasterLiveRunning) setIsMasterLiveRunning(false);
       return;
     }
+
+    // Xử lý link embed (video/live)
+    let embedUrl = `https://www.tiktok.com/@${cleanId}/live`;
+    if (tiktokId.includes('/video/')) {
+      const match = tiktokId.match(/\/video\/(\d+)/);
+      if (match && match[1]) {
+        embedUrl = `https://www.tiktok.com/embed/v2/${match[1]}`;
+      }
+    }
+    setTiktokEmbedUrl(embedUrl);
 
     setIsConnecting(true);
     try {
@@ -1049,80 +1062,74 @@ export default function DesktopAppUI() {
       );
     }
 
-    // 1. Ưu tiên phát Video LipSync từ AI (chạy đè lên tất cả)
-    if (lipSyncVideoUrl) {
-      return (
-        <video 
-          src={lipSyncVideoUrl} 
-          className="w-full h-full object-contain bg-black"
-          autoPlay 
-          controls={false}
-          onEnded={handleVideoEnded}
-          onError={() => {
-            setLipSyncVideoUrl(null);
-            handleVideoEnded();
-          }}
-          playsInline 
-        />
-      );
-    }
-    
-    // 2. Nếu đang kết nối Live và có video nền (Story/Idle/Reaction)
-    if (isConnected && activeVideoItem && activeVideoItem.mediaUrl) {
-      return (
-        <video 
-          key={activeVideoItem.id || activeVideoItem.mediaUrl}
-          src={activeVideoItem.mediaUrl} 
-          className="w-full h-full object-contain bg-black"
-          autoPlay 
-          loop={!isProcessingEvent} // Nếu ko bận thì loop
-          controls={false}
-          onEnded={handleVideoEnded}
-          onError={() => {
-            console.warn('Lỗi tải video nền live, chuyển về nhân vật mặc định');
-            setActiveVideoItem(null);
-          }}
-          playsInline 
-        />
-      );
-    }
+    const renderMainCharacter = () => {
+      if (lipSyncVideoUrl) {
+        return (
+          <video 
+            src={lipSyncVideoUrl} 
+            className="w-full h-full object-contain bg-black"
+            autoPlay 
+            controls={false}
+            onEnded={handleVideoEnded}
+            onError={() => {
+              setLipSyncVideoUrl(null);
+              handleVideoEnded();
+            }}
+            playsInline 
+          />
+        );
+      }
+      
+      if (isConnected && activeVideoItem && activeVideoItem.mediaUrl) {
+        return (
+          <video 
+            key={activeVideoItem.id || activeVideoItem.mediaUrl}
+            src={activeVideoItem.mediaUrl} 
+            className="w-full h-full object-contain bg-black"
+            autoPlay 
+            loop={!isProcessingEvent}
+            controls={false}
+            onEnded={handleVideoEnded}
+            onError={() => {
+              console.warn('Lỗi tải video nền live');
+              setActiveVideoItem(null);
+            }}
+            playsInline 
+          />
+        );
+      }
 
-    // 3. Hiển thị nhân vật được chọn từ Topbar hoặc khung trống để người dùng tải ảnh/video
-    const selected = CHARACTERS[selectedCharacter] || Object.values(CHARACTERS)[0];
+      const selected = CHARACTERS[selectedCharacter] || Object.values(CHARACTERS)[0];
+  
+      if (!selected || !selected.url) {
+        return (
+          <div 
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-[#101018] to-[#0a0a0f] text-white p-6 cursor-pointer border-2 border-dashed border-gray-700/60 hover:border-blue-500/80 transition-all group select-none"
+          >
+             <div className="w-16 h-16 rounded-2xl bg-blue-600/15 group-hover:bg-blue-600/30 border border-blue-500/30 flex items-center justify-center mb-3 text-blue-400 shadow-lg">
+               <Plus size={30} />
+             </div>
+             <h3 className="text-base font-bold text-white mb-1">Tải Ảnh / Video Idol Của Bạn</h3>
+          </div>
+        );
+      }
+  
+      if (selected.type === 'video') {
+        return (
+          <video 
+            key={selected.url}
+            src={selected.url} 
+            className="w-full h-full object-contain bg-black"
+            autoPlay 
+            loop 
+            muted 
+            controls 
+            playsInline 
+          />
+        );
+      }
 
-    if (!selected || !selected.url) {
-      return (
-        <div 
-          onClick={() => fileInputRef.current?.click()}
-          className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-[#101018] to-[#0a0a0f] text-white p-6 cursor-pointer border-2 border-dashed border-gray-700/60 hover:border-blue-500/80 transition-all group select-none"
-          title="Bấm vào đây để tải ảnh hoặc video Idol của bạn lên"
-        >
-           <div className="w-16 h-16 rounded-2xl bg-blue-600/15 group-hover:bg-blue-600/30 border border-blue-500/30 group-hover:border-blue-400/70 flex items-center justify-center mb-3 text-blue-400 group-hover:text-blue-300 transition-all group-hover:scale-110 shadow-lg">
-             <Plus size={30} />
-           </div>
-           <h3 className="text-base font-bold text-white mb-1 group-hover:text-blue-300 transition-colors">Tải Ảnh / Video Idol Của Bạn</h3>
-           <p className="text-xs text-gray-400 text-center max-w-sm">Bấm vào đây hoặc nút [+] trên thanh công cụ để tải ảnh hoặc video nhân vật bạn muốn sử dụng.</p>
-        </div>
-      );
-    }
-
-    if (selected.type === 'video') {
-      return (
-        <video 
-          key={selected.url}
-          src={selected.url} 
-          className="w-full h-full object-contain bg-black"
-          autoPlay 
-          loop 
-          muted 
-          controls 
-          playsInline 
-          onError={(e) => {
-            console.warn("Video failed to load, fallback to default character image");
-          }}
-        />
-      );
-    } else {
       return (
         <div className="relative w-full h-full flex items-center justify-center bg-[#0d0d12] overflow-hidden select-none">
           <img 
@@ -1134,11 +1141,31 @@ export default function DesktopAppUI() {
               e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=80';
             }}
           />
-          {/* Subtle gradient vignette to blend naturally */}
           <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/60 via-transparent to-black/20" />
         </div>
       );
+    };
+
+    if (isConnected && tiktokEmbedUrl) {
+      return (
+        <div className="relative w-full h-full flex flex-col bg-black">
+          <div className="w-full h-full flex items-center justify-center">
+            <iframe
+              src={tiktokEmbedUrl}
+              className="w-full h-full"
+              frameBorder="0"
+              allow="autoplay; encrypted-media"
+              allowFullScreen
+            ></iframe>
+          </div>
+          <div className="absolute bottom-4 right-4 w-[160px] h-[284px] md:w-[240px] md:h-[426px] bg-black border-[3px] border-emerald-500/80 rounded-2xl overflow-hidden shadow-2xl z-30 transition-all hover:scale-105">
+            {renderMainCharacter()}
+          </div>
+        </div>
+      );
     }
+
+    return renderMainCharacter();
   };
 
   const renderCharacterContent = () => {

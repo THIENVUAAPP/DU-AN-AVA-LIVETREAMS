@@ -58,7 +58,20 @@ export default function DanceFloorTikTokConnection({ onEvent }) {
     if (!username.trim()) return;
     setStatus('connecting');
     setError(null);
-    socket?.emit('connect_tiktok', username.trim());
+    let cleanId = username.trim().split('?')[0].split('#')[0];
+    const matchAt = cleanId.match(/@([a-zA-Z0-9_.-]+)/);
+    if (matchAt && matchAt[1]) {
+      cleanId = matchAt[1];
+    } else {
+      const parts = cleanId.split('/').filter(Boolean);
+      if (parts.length > 0) {
+        const last = parts[parts.length - 1];
+        cleanId = (last === 'live' && parts.length > 1) ? parts[parts.length - 2].replace(/^@/, '') : last.replace(/^@/, '');
+      } else {
+        cleanId = cleanId.replace(/^@/, '');
+      }
+    }
+    socket?.emit('connect_tiktok', cleanId);
   };
 
   const handleDisconnect = () => {
