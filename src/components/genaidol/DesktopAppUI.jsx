@@ -773,10 +773,10 @@ export default function DesktopAppUI() {
     const cleanId = extractTikTokUsername(tiktokId);
     const cleanVideoId = extractTikTokUsername(videoTiktokId);
     
-    if (!cleanId) {
+    if (!cleanId && !cleanVideoId) {
       setToast({
         type: 'error',
-        message: 'LỖI KẾT NỐI: Anh phải nhập chính xác ID Kênh Lấy Bình Luận!'
+        message: 'LỖI KẾT NỐI: Anh phải nhập ID Kênh Lấy Bình Luận hoặc Video!'
       });
       setIsConnecting(false);
       if (isMasterLiveRunning) setIsMasterLiveRunning(false);

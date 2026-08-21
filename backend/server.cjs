@@ -286,7 +286,7 @@ io.on('connection', (socket) => {
       targetVideoUser = '';
     }
 
-    if (!targetUser) return;
+    if (!targetUser && !targetVideoUser) return;
 
     // Ngắt kết nối cũ
     if (tiktokConnection) {
@@ -311,9 +311,13 @@ io.on('connection', (socket) => {
 
     currentUsername = targetUser;
     currentVideoUsername = targetVideoUser;
-    console.log(`[TikTok Live] 🚀 Đang kết nối tới kênh TikTok Chat: ${targetUser}`);
+    
+    if (targetUser) console.log(`[TikTok Live] 🚀 Đang kết nối tới kênh TikTok Chat: ${targetUser}`);
     if (targetVideoUser) console.log(`[TikTok Live] 🚀 Đang kết nối tới kênh TikTok Video: ${targetVideoUser}`);
-    io.emit('tiktok_status', { connected: false, username: targetUser, connecting: true });
+    
+    // Gửi tên hiển thị là targetUser, nếu không có thì là targetVideoUser
+    const displayUser = targetUser || targetVideoUser;
+    io.emit('tiktok_status', { connected: false, username: displayUser, connecting: true });
 
     // Lấy sessionId từ options, .env, hoặc localStorage gửi lên
     const sessionId = options.sessionId || process.env.TIKTOK_SESSION_ID || undefined;
@@ -359,7 +363,19 @@ io.on('connection', (socket) => {
       } catch(e) {}
     }
 
-    // 2. Kết nối Chat (Bắt buộc)
+    // Nếu không có Chat ID, kết thúc ở đây và chỉ phát Video
+    if (!targetUser) {
+      if (videoConnected && flvUrl) {
+        io.emit('tiktok_connected', { username: targetVideoUser, roomId: 'VIDEO_ONLY', flvUrl });
+        io.emit('tiktok_status', { connected: true, username: targetVideoUser, roomId: 'VIDEO_ONLY', flvUrl });
+      } else {
+        io.emit('tiktok_error', `Kênh Video ${targetVideoUser} chưa live hoặc ID không tồn tại!`);
+        io.emit('tiktok_status', { connected: false, username: targetVideoUser });
+      }
+      return;
+    }
+
+    // 2. Kết nối Chat
     try {
       tiktokConnection = new TikTokConnector(targetUser, {
         processInitialData: false,
