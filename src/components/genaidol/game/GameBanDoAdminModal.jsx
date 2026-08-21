@@ -125,14 +125,16 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
         setTiktokConnectedUser(data?.username || '');
         setIsConnectingTiktok(false);
         setIsSimulationMode(false);
+        window.dispatchEvent(new CustomEvent('avalive_toast', { detail: { type: 'success', message: `🎉 Kết nối thành công TikTok Live: @${data?.username}` } }));
       });
       socket.on('tiktok_disconnected', () => {
         setIsTiktokConnected(false);
         setTiktokConnectedUser('');
         setIsConnectingTiktok(false);
       });
-      socket.on('tiktok_error', () => {
+      socket.on('tiktok_error', (err) => {
         setIsConnectingTiktok(false);
+        window.dispatchEvent(new CustomEvent('avalive_toast', { detail: { type: 'error', message: `LỖI KẾT NỐI: ${err || 'Không thể kết nối'}` } }));
       });
     } catch (e) {}
 

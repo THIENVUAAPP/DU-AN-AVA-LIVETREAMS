@@ -321,11 +321,16 @@ io.on('connection', (socket) => {
       io.emit('tiktok_status', { connected: true, username: targetUser, roomId: state?.roomId });
     }).catch(err => {
       console.error(`[TikTok Live] ❌ Không thể kết nối @${targetUser}: ${err.message || err}`);
-      io.emit('tiktok_error', err.toString());
+      let userFriendlyError = 'Kênh chưa phát Live, hoặc nhập sai ID.';
+      const errStr = err.toString();
+      if (errStr.includes('Failed to retrieve Room ID') || errStr.includes("isn't online") || errStr.includes('UserOfflineError')) {
+        userFriendlyError = 'Kênh chưa phát Live hoặc ID không tồn tại!';
+      }
+      io.emit('tiktok_error', userFriendlyError);
       io.emit('tiktok_status', {
         connected: false,
         username: targetUser,
-        error: err.toString(),
+        error: userFriendlyError,
         note: 'Kênh chưa live hoặc cần sessionId. Đang chuyển sang Simulation Mode...'
       });
       tiktokConnection = null;

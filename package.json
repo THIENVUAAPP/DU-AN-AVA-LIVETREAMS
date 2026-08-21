@@ -57,7 +57,7 @@
     "socket.io-client": "^4.8.3",
     "tailwind-merge": "^2.6.0",
     "three": "^0.185.1",
-    "tiktok-live-connector": "^2.4.3"
+    "tiktok-live-connector": "^2.4.4"
   },
   "devDependencies": {
     "@types/react": "^18.3.18",
