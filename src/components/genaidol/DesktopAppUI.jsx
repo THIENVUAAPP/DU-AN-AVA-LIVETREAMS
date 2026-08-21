@@ -44,6 +44,13 @@ export default function DesktopAppUI() {
       return '';
     }
   });
+  const [videoTiktokId, setVideoTiktokId] = useState(() => {
+    try {
+      return localStorage.getItem('aidol_video_tiktok_id') || '';
+    } catch (e) {
+      return '';
+    }
+  });
   const [flvUrl, setFlvUrl] = useState(null);
   const [selectedCharacter, setSelectedCharacter] = useState(() => {
     try {
@@ -764,11 +771,12 @@ export default function DesktopAppUI() {
     
     bandoAudio.unlock();
     const cleanId = extractTikTokUsername(tiktokId);
+    const cleanVideoId = extractTikTokUsername(videoTiktokId);
     
     if (!cleanId) {
       setToast({
         type: 'error',
-        message: 'LỖI KẾT NỐI: Anh phải nhập chính xác ID TikTok (@username) vào ô trống!'
+        message: 'LỖI KẾT NỐI: Anh phải nhập chính xác ID Kênh Lấy Bình Luận!'
       });
       setIsConnecting(false);
       if (isMasterLiveRunning) setIsMasterLiveRunning(false);
@@ -778,13 +786,12 @@ export default function DesktopAppUI() {
     setIsConnecting(true);
     try {
       localStorage.setItem('aidol_tiktok_id', cleanId);
+      localStorage.setItem('aidol_video_tiktok_id', cleanVideoId);
     } catch (e) {}
 
     if (socketRef.current) {
-      socketRef.current.emit('connect_tiktok', cleanId);
+      socketRef.current.emit('connect_tiktok', { chatId: cleanId, videoId: cleanVideoId });
     }
-    
-    // Ghi chú: Chờ tín hiệu 'tiktok_connected' từ backend (đã xử lý ở dòng 494), không tự set isConnected=true giả mạo.
   };
 
   // 🛑/▶️ NÚT ĐỒNG BỘ: TẮT TẤT CẢ / BẬT TẤT CẢ PHIÊN LIVE & CÁC TÍNH NĂNG
@@ -1640,7 +1647,8 @@ export default function DesktopAppUI() {
           </div>
 
           <div className="flex items-center gap-1.5 px-1 shrink-0">
-            <input type="text" value={tiktokId} onChange={(e) => setTiktokId(e.target.value)} className={`w-28 px-2 py-1 rounded text-xs outline-none border ${isDarkMode ? 'bg-[#2a2a35] border-gray-700 text-white focus:border-blue-500' : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'}`} placeholder={t('tiktokPlaceholder', currentLang)} />
+            <input type="text" value={tiktokId} onChange={(e) => setTiktokId(e.target.value)} className={`w-28 px-2 py-1 rounded text-xs outline-none border ${isDarkMode ? 'bg-[#2a2a35] border-gray-700 text-white focus:border-blue-500' : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'}`} placeholder="ID lấy Chat" title="Nhập ID kênh TikTok của anh để đọc bình luận" />
+            <input type="text" value={videoTiktokId} onChange={(e) => setVideoTiktokId(e.target.value)} className={`w-28 px-2 py-1 rounded text-xs outline-none border ${isDarkMode ? 'bg-[#2a2a35] border-gray-700 text-white focus:border-emerald-500' : 'bg-white border-gray-300 text-gray-900 focus:border-emerald-500'}`} placeholder="ID lấy Video" title="Nhập ID kênh TikTok lấy video re-stream (bỏ trống nếu lấy video kênh chính)" />
             <button onClick={handleConnect} className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold transition-colors ${isConnected ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-500/20'}`}>
               {isConnecting ? <span className="animate-spin text-sm leading-none">↻</span> : (isConnected ? <CheckCircle size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />)}
               <span>{isConnecting ? t('connecting', currentLang) : (isConnected ? t('stopAi', currentLang) : t('connect', currentLang))}</span>
