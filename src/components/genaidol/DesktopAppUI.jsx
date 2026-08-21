@@ -575,6 +575,21 @@ export default function DesktopAppUI() {
       const timeStr = new Date().toLocaleTimeString();
       setTiktokLogs(prev => [`[${timeStr}] ⚠️ Lỗi kết nối TikTok: ${err}`, ...prev.slice(0, 49)]);
       setIsConnecting(false);
+      setToast({ type: 'error', message: `LỖI KẾT NỐI TIKTOK: ${err}` });
+    });
+
+    socket.on('tiktok_status', (data) => {
+      if (!data) return;
+      if (data.connected === false && !data.connecting) {
+        setIsConnecting(false);
+        if (data.error || data.note) {
+          setToast({ type: 'error', message: `Lỗi kết nối: ${data.error || data.note}` });
+          if (isMasterLiveRunning) setIsMasterLiveRunning(false);
+        }
+      } else if (data.connected === true) {
+        setIsConnecting(false);
+        setIsConnected(true);
+      }
     });
 
     return () => {
