@@ -281,6 +281,11 @@ io.on('connection', (socket) => {
       targetVideoUser = payload.videoId ? payload.videoId.trim().replace(/^@/, '') : '';
     }
 
+    // Nếu người dùng nhập trùng 1 kênh cho cả 2 ô, thì gom về 1 kết nối duy nhất để tránh bị kick
+    if (targetUser && targetUser === targetVideoUser) {
+      targetVideoUser = '';
+    }
+
     if (!targetUser) return;
 
     // Ngắt kết nối cũ
