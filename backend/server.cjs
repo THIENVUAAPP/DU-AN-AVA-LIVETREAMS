@@ -346,6 +346,7 @@ io.on('connection', (socket) => {
         tiktokVideoConnection = new TikTokConnector(targetVideoUser, {
           processInitialData: false,
           enableExtendedGiftInfo: false,
+          sessionId,
           requestHeaders: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
         });
         const vidPromise = tiktokVideoConnection.connect();
