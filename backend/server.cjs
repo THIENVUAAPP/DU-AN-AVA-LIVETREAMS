@@ -247,6 +247,21 @@ io.on('connection', (socket) => {
     io.emit('tiktok_status', { connected: false, username: '', roomId: null });
   });
 
+  // ---- Chế độ Simulation ----
+  socket.on('toggle_simulation', (enable) => {
+    if (enable) {
+      startSimulationMode();
+    } else {
+      stopSimulationMode();
+    }
+    io.emit('tiktok_status', {
+      connected: !!tiktokConnection && !!currentUsername,
+      username: currentUsername,
+      roomId: tiktokConnection?.roomId || null,
+      simulationMode: isSimulationMode
+    });
+  });
+
   // ---- Kết nối TikTok Live ----
   socket.on('connect_tiktok', async (username, options = {}) => {
     const targetUser = username ? username.trim().replace(/^@/, '') : '';

@@ -1003,6 +1003,9 @@ export default function GameBanDoVietNam({
       if (typeof window !== 'undefined' && window.speechSynthesis) {
         window.speechSynthesis.cancel();
       }
+      if (socket) {
+        socket.emit('toggle_simulation', false);
+      }
     };
     window.addEventListener('avalive_emergency_stop_all', handleEmergencyStop);
 
