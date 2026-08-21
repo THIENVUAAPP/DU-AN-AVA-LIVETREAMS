@@ -1457,6 +1457,10 @@ class BanDoGameEngine {
     // Kích hoạt Nhạc Khải Hoàn Ca Hào Hùng & Pháo Hoa
     bandoAudio.playVictoryEpic();
     this.addFeedItem('VICTORY', `🎉 CHÚC MỪNG CHIẾN THẮNG: Toàn bộ Bản Đồ đã rực rỡ sắc cờ quốc kỳ!`);
+    
+    // Tự động lưu trữ Snapshot phiên live vào bộ nhớ vĩnh viễn (Session Persistence)
+    this.saveSessionSnapshot();
+
     this.notify({ type: 'VICTORY' });
 
     // HỆ THỐNG ĐẾM NGƯỢC 4 GIÂY CHO Ô CHÚC MỪNG / LỄ VINH DANH (AUTO LOOP HOẶC ĐÓNG VINH DANH)
@@ -1513,8 +1517,13 @@ class BanDoGameEngine {
       this.victoryCountdownTimer = null;
     }
 
+    // Lưu lại session trước khi reset nếu có người cắm cờ
+    if (this.state.claimedCount > 0 && this.state.status !== 'victory') {
+      this.saveSessionSnapshot();
+    }
+
     this.state.status = 'playing';
-    this.state.roundId = `ROUND-${Date.now().toString().slice(-4)}`;
+    this.state.roundId = `RD-${Date.now().toString().slice(-4)}`;
     this.state.claimedCount = 0;
     this.state.remainingCells = this.state.totalCells;
     this.state.percent = 0;
@@ -1546,11 +1555,79 @@ class BanDoGameEngine {
   }
 
   resetLeaderboard() {
-    this.state.leaderboard = [];
-    try {
+    if (typeof localStorage !== 'undefined') {
       localStorage.removeItem('avalive_bando_leaderboard');
-    } catch (e) {}
-    this.emitState();
+    }
+  }
+
+  // ==========================================
+  // LƯU TRỮ & TÁI SỬ DỤNG PHIÊN LIVE (SESSION PERSISTENCE)
+  // ==========================================
+  saveSessionSnapshot() {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      const sessionData = {
+        id: `session_${Date.now()}`,
+        roundId: this.state.roundId,
+        countryId: this.currentCountry?.id || 'vietnam',
+        countryName: this.currentCountry?.name || 'Việt Nam',
+        totalCells: this.state.totalCells,
+        claimedCount: this.state.claimedCount,
+        percent: this.state.percent,
+        leaderboard: [...(this.state.leaderboard || [])],
+        mvp: this.state.victory?.mvpUser || this.state.leaderboard[0] || null,
+        top30: this.state.victory?.top30 || (this.state.leaderboard || []).slice(0, 30),
+        status: this.state.status,
+        savedAt: new Date().toISOString(),
+        savedAtText: new Date().toLocaleString('vi-VN')
+      };
+
+      const existingSessions = JSON.parse(localStorage.getItem('avalive_bando_history_sessions') || '[]');
+      const updated = [sessionData, ...existingSessions.filter(s => s.roundId !== this.state.roundId || Math.abs(new Date(s.savedAt).getTime() - Date.now()) > 60000)].slice(0, 50);
+      localStorage.setItem('avalive_bando_history_sessions', JSON.stringify(updated));
+      
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('avalive_bando_session_saved', { detail: sessionData }));
+      }
+      return sessionData;
+    } catch (e) {
+      console.warn('[BandoEngine] Failed to save session snapshot:', e);
+    }
+  }
+
+  getSessionHistory() {
+    if (typeof localStorage === 'undefined') return [];
+    try {
+      return JSON.parse(localStorage.getItem('avalive_bando_history_sessions') || '[]');
+    } catch (e) {
+      return [];
+    }
+  }
+
+  restoreSessionSnapshot(sessionOrId) {
+    let session = typeof sessionOrId === 'string' 
+      ? this.getSessionHistory().find(s => s.id === sessionOrId || s.roundId === sessionOrId)
+      : sessionOrId;
+
+    if (!session) return false;
+    
+    if (Array.isArray(session.leaderboard) && session.leaderboard.length > 0) {
+      this.state.leaderboard = [...session.leaderboard];
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('avalive_bando_leaderboard', JSON.stringify(this.state.leaderboard));
+      }
+    }
+    
+    this.addEventLog(`♻️ Đã khôi phục dữ liệu phiên live: ${session.roundId} (${session.savedAtText || ''})`, 'system');
+    this.notify({ type: 'SESSION_RESTORED', session });
+    return true;
+  }
+
+  clearSessionHistory() {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('avalive_bando_history_sessions');
+    }
+    this.notify({ type: 'SESSION_HISTORY_CLEARED' });
   }
 
   resetGame() {

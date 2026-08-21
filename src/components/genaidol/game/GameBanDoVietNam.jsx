@@ -259,6 +259,23 @@ export default function GameBanDoVietNam({
   const [sfxVolume, setSfxVolumeState] = useState(() => bandoAudio.sfxVolume);
   const [voiceVolume, setVoiceVolumeState] = useState(() => bandoAudio.voiceVolume ?? 1.0);
   const [isLiveCleanMode, setIsLiveCleanMode] = useState(isPopout);
+  const [isUltraCleanCornerMode, setIsUltraCleanCornerMode] = useState(() => {
+    try {
+      return localStorage.getItem('avalive_bando_ultra_clean') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleUltraCleanCornerMode = () => {
+    setIsUltraCleanCornerMode(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('avalive_bando_ultra_clean', String(next));
+      } catch {}
+      return next;
+    });
+  };
   const [internalAspectRatio, setInternalAspectRatio] = useState(() => {
     try {
       return localStorage.getItem('avalive_map_aspect_ratio') || '16:9';
@@ -2267,9 +2284,10 @@ export default function GameBanDoVietNam({
         />
       )}
 
-      {/* TOP MINI STAGE HEADER (Chỉ chứa thông tin Live sạch 100% - KHÔNG CÓ NÚT BẤM) */}
-      <div className="absolute top-2.5 left-2.5 right-2.5 z-20 pointer-events-none">
-        <div className="bg-black/75 backdrop-blur-md border border-white/15 rounded-2xl px-3 py-2 shadow-2xl flex items-center justify-between gap-2 text-white">
+      {/* TOP MINI STAGE HEADER (Chỉ chứa thông tin Live sạch 100% - KHÔNG CÓ NÚT BẤM - ẨN KHI Ở CHẾ ĐỘ ULTRA CLEAN GÓC MÀN HÌNH) */}
+      {!isUltraCleanCornerMode && (
+        <div className="absolute top-2.5 left-2.5 right-2.5 z-20 pointer-events-none animate-in fade-in duration-200">
+          <div className="bg-black/75 backdrop-blur-md border border-white/15 rounded-2xl px-3 py-2 shadow-2xl flex items-center justify-between gap-2 text-white">
           <div className="flex items-center gap-2 min-w-0">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-red-600 via-amber-500 to-yellow-400 flex items-center justify-center text-base shadow-md shrink-0 animate-pulse">
               <span>{currentCountry?.flag || '🇻🇳'}</span>
@@ -2307,6 +2325,7 @@ export default function GameBanDoVietNam({
           </div>
         </div>
       </div>
+      )}
 
       {/* 3D Landmarks Overlay Layer */}
       <div ref={labelsLayerRef} className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
@@ -2668,8 +2687,21 @@ export default function GameBanDoVietNam({
         )}
       </div>
 
-      {/* 5. Bookmarks, Nhạc BGM & Cài Đặt Game */}
+      {/* 5. Bookmarks, Nhạc BGM, Chế Độ Sạch & Cài Đặt Game */}
       <div className="pt-1 border-t border-white/10 space-y-1">
+        <button
+          onClick={toggleUltraCleanCornerMode}
+          className={`w-full py-1 px-1 rounded-lg text-[8.5px] font-black flex items-center justify-center gap-1 border transition-all ${
+            isUltraCleanCornerMode 
+              ? 'bg-emerald-600/90 border-emerald-400 text-white shadow-md' 
+              : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/15'
+          }`}
+          title="Bật/tắt chế độ lồng góc siêu sạch (Ẩn toàn bộ thanh tiêu đề to để không che video Live)"
+        >
+          <Sparkles size={9} className={isUltraCleanCornerMode ? 'text-yellow-300 animate-spin' : 'text-gray-400'} />
+          <span>{isUltraCleanCornerMode ? '✨ Góc Siêu Sạch: BẬT' : '✨ Góc Siêu Sạch: TẮT'}</span>
+        </button>
+
         <div className="grid grid-cols-2 gap-1">
           <button
             onClick={() => setShowBookmarkManager(true)}

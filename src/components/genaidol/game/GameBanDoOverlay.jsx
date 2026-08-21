@@ -6,9 +6,14 @@ import { mapVoiceEngine } from './gameVoiceEngine';
 
 export default function GameBanDoOverlay() {
   const [liveEvent, setLiveEvent] = useState(null);
-  const ratio = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('ratio') || '9:16' : '9:16';
+  const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const ratio = params ? params.get('ratio') || '9:16' : '9:16';
+  const isClean = params ? params.get('clean') === 'true' : false;
 
   useEffect(() => {
+    if (isClean && typeof localStorage !== 'undefined') {
+      localStorage.setItem('avalive_bando_ultra_clean', 'true');
+    }
     document.title = 'AVA Bản Đồ Việt Nam (Realtime Overlay) — TikTok LIVE Studio / OBS';
     document.documentElement.style.background = 'transparent';
     document.body.style.background = 'transparent';
