@@ -50,6 +50,7 @@ const io = new Server(httpServer, {
 
 let tiktokConnection = null;
 let currentUsername = null;
+let autoReconnectTimer = null; // Tự động reconnect khi mất kết nối
 
 // ⚡ LƯU TRỮ VÀ ĐỒNG BỘ TRẠNG THÁI REALTIME CHO TIKTOK LIVE STUDIO & OBS
 let currentMasterLiveState = {
@@ -296,14 +297,31 @@ io.on('connection', (socket) => {
     tiktokConnection.on('streamEnd', () => {
       console.log(`[TikTok Live] 🛑 Stream ended for @${targetUser}`);
       tiktokConnection = null;
-      currentUsername = null;
       io.emit('tiktok_stream_ended', { username: targetUser });
       io.emit('tiktok_status', { connected: false, username: targetUser, ended: true });
+      // Tự động reconnect sau 30 giây (stream có thể restart)
+      if (currentUsername) {
+        console.log(`[TikTok Live] 🔄 Sẽ thử reconnect @${targetUser} sau 30 giây...`);
+        if (autoReconnectTimer) clearTimeout(autoReconnectTimer);
+        autoReconnectTimer = setTimeout(() => {
+          if (currentUsername === targetUser && !tiktokConnection) {
+            console.log(`[TikTok Live] 🔄 Đang thử reconnect @${targetUser}...`);
+            io.emit('tiktok_status', { connected: false, username: targetUser, reconnecting: true });
+            // Phát signal tới client để reconnect
+            io.emit('REQUEST_RECONNECT_TIKTOK', { username: targetUser });
+          }
+        }, 30000);
+      }
     });
 
     tiktokConnection.on('disconnected', () => {
       console.log(`[TikTok Live] ⚠️ Disconnected from @${targetUser}`);
+      tiktokConnection = null;
       io.emit('tiktok_status', { connected: false, username: targetUser });
+    });
+
+    tiktokConnection.on('error', (err) => {
+      console.error(`[TikTok Live] Error for @${targetUser}:`, err?.message || err);
     });
   });
 
@@ -319,6 +337,15 @@ app.get('/api/tiktok/status', (req, res) => {
     username: currentUsername,
     roomId: tiktokConnection?.roomId || null
   });
+});
+
+// REST API để kết nối TikTok qua HTTP (không cần socket)
+app.post('/api/tiktok/connect', (req, res) => {
+  const { username } = req.body || {};
+  if (!username) return res.status(400).json({ error: 'Missing username' });
+  // Emit socket event từ phía server để trigger connect_tiktok logic
+  io.emit('REQUEST_CONNECT_TIKTOK', { username: username.trim().replace(/^@/, '') });
+  res.json({ success: true, message: `Đang kết nối tới @${username}...` });
 });
 
 app.post('/api/tiktok/test-gift', (req, res) => {

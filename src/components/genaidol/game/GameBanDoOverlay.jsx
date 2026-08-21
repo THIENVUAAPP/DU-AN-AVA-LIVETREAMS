@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import GameBanDoVietNam from './GameBanDoVietNam';
 import bandoEngine from './bandoGameEngine';
+import { mapVoiceEngine } from './gameVoiceEngine';
 
 export default function GameBanDoOverlay() {
   const [liveEvent, setLiveEvent] = useState(null);
@@ -19,67 +20,129 @@ export default function GameBanDoOverlay() {
       }
     }
 
-    // 1. WebSocket Socket.io cho TikTok Live Studio & OBS
+    // ============================
+    // HÀM XỬ LÝ COMMENT TIKTOK LIVE
+    // → Gọi đúng processComment (thay vì handleUserComment không tồn tại trên bandoEngine)
+    // → Kích hoạt AI Voice Engine phản hồi bình luận
+    // ============================
+    const handleComment = (data) => {
+      if (!data) return;
+      const text = data.comment || data.text || '';
+      const author = data.nickname || data.username || data.uniqueId || 'Khán Giả';
+      const userId = data.userId || data.uniqueId || 'chat_user';
+      const avatar = data.profilePictureUrl || '';
+      if (!text) return;
+
+      // FIX: Gọi processComment (tồn tại) thay vì handleUserComment (không tồn tại) trên bandoEngine
+      try {
+        bandoEngine.processComment(text, { id: userId, username: author, avatar });
+      } catch (e) {
+        console.warn('[BandoOverlay] processComment error:', e);
+      }
+
+      // Kích hoạt AI Voice Engine trả lời real-time
+      try {
+        mapVoiceEngine.handleUserComment(text, author);
+      } catch (e) {}
+
+      setLiveEvent({
+        type: 'COMMENT',
+        data: { comment: text, text, username: author, nickname: author, userId, avatar },
+        _seq: Date.now() + Math.random()
+      });
+    };
+
+    // ============================
+    // HÀM XỬ LÝ QUÀ TẶNG TIKTOK LIVE
+    // → Cắm cờ bản đồ theo số xu/quà
+    // ============================
+    const handleGift = (data) => {
+      if (!data) return;
+      const payload = {
+        giftId: data.giftId,
+        giftName: data.giftName,
+        count: data.repeatCount || data.count || 1,
+        diamondCount: data.diamondCount || 1,
+        userId: data.userId || data.uniqueId || 'tiktok_viewer',
+        username: data.nickname || data.uniqueId || data.username || 'Khách Live',
+        avatar: data.profilePictureUrl || data.avatar || '',
+        regionTarget: data.regionTarget || null
+      };
+
+      try {
+        bandoEngine.processGift(payload);
+      } catch (e) {
+        console.warn('[BandoOverlay] processGift error:', e);
+      }
+
+      setLiveEvent({
+        type: 'GIFT',
+        data: payload,
+        _seq: Date.now() + Math.random()
+      });
+    };
+
+    // ============================
+    // 1. KẾT NỐI WEBSOCKET ĐẾN BACKEND
+    // ============================
     let socket = null;
     try {
       socket = io(backendUrl || window.location.origin, {
         transports: ['websocket', 'polling'],
-        reconnection: true
+        reconnection: true,
+        reconnectionAttempts: Infinity,
+        reconnectionDelay: 1000,
+        timeout: 10000
       });
-      socket.on('LIVE_EVENT', (data) => {
-        if (data) setLiveEvent({ ...data, _seq: Date.now() + Math.random() });
-      });
-      socket.on('bando_event', (data) => {
-        if (data) setLiveEvent({ ...data, _seq: Date.now() + Math.random() });
-      });
-      socket.on('tiktok_gift', (data) => {
-        if (data) {
-          bandoEngine.processGift({
-            giftId: data.giftId,
-            giftName: data.giftName,
-            count: data.repeatCount || data.count || 1,
-            diamondCount: data.diamondCount || 1,
-            userId: data.userId || data.uniqueId || 'tiktok_viewer',
-            username: data.nickname || data.uniqueId || data.username || 'Khách Live',
-            avatar: data.profilePictureUrl || ''
-          });
-          setLiveEvent({
-            type: 'GIFT',
-            data: {
-              giftId: data.giftId,
-              giftName: data.giftName,
-              count: data.repeatCount || data.count || 1,
-              diamondCount: data.diamondCount || 1,
-              userId: data.userId || data.uniqueId || 'tiktok_viewer',
-              username: data.nickname || data.uniqueId || data.username || 'Khách Live',
-              avatar: data.profilePictureUrl || ''
-            },
-            _seq: Date.now() + Math.random()
-          });
-        }
-      });
-      socket.on('tiktok_chat', (data) => {
-        if (data) {
-          const text = data.comment || data.text || '';
-          const author = data.nickname || data.username || data.uniqueId || 'Khán Giả';
-          bandoEngine.handleUserComment(text, author);
-          setLiveEvent({
-            type: 'COMMENT',
-            data: {
-              comment: text,
-              text,
-              username: author,
-              nickname: author,
-              userId: data.userId || data.uniqueId || 'chat_user',
-              avatar: data.profilePictureUrl || ''
-            },
-            _seq: Date.now() + Math.random()
-          });
-        }
-      });
-    } catch (err) {}
 
-    // 2. BroadcastChannel
+      // Khi kết nối thành công → tự động đăng ký kênh TikTok đã lưu
+      socket.on('connect', () => {
+        console.log('[BandoOverlay] ✅ Kết nối Socket.io thành công:', socket.id);
+        const savedTiktokId = localStorage.getItem('aidol_tiktok_id');
+        if (savedTiktokId) {
+          console.log('[BandoOverlay] 🚀 Tự động kết nối TikTok:', savedTiktokId);
+          socket.emit('connect_tiktok', savedTiktokId);
+        }
+      });
+
+      socket.on('connect_error', (err) => {
+        console.warn('[BandoOverlay] ❌ Lỗi kết nối socket:', err.message);
+      });
+
+      // ✅ LIVE_EVENT tổng hợp từ backend (cả quà lẫn comment)
+      socket.on('LIVE_EVENT', (data) => {
+        if (!data) return;
+        if (data.type === 'GIFT' && data.data) handleGift(data.data);
+        else if (data.type === 'COMMENT' && data.data) handleComment(data.data);
+      });
+
+      // ✅ bando_event từ backend
+      socket.on('bando_event', (data) => {
+        if (!data) return;
+        if (data.type === 'GIFT' && data.data) handleGift(data.data);
+        else if (data.type === 'COMMENT' && data.data) handleComment(data.data);
+        else setLiveEvent({ ...data, _seq: Date.now() + Math.random() });
+      });
+
+      // ✅ Nhận trực tiếp sự kiện quà tặng TikTok
+      socket.on('tiktok_gift', handleGift);
+
+      // ✅ Nhận trực tiếp sự kiện comment TikTok
+      socket.on('tiktok_chat', handleComment);
+
+      socket.on('tiktok_connected', (data) => {
+        console.log('[BandoOverlay] 🎉 TikTok kết nối thành công:', data?.username, '| RoomID:', data?.roomId);
+      });
+
+      socket.on('tiktok_error', (err) => {
+        console.warn('[BandoOverlay] ⚠️ TikTok lỗi kết nối:', err);
+      });
+
+    } catch (err) {
+      console.warn('[BandoOverlay] Socket init error:', err);
+    }
+
+    // 2. BroadcastChannel (đồng bộ giữa các tab/cửa sổ)
     let bc = null;
     if (typeof BroadcastChannel !== 'undefined') {
       try {
@@ -92,7 +155,7 @@ export default function GameBanDoOverlay() {
       } catch (err) {}
     }
 
-    // 3. Storage Event
+    // 3. Storage Event (đồng bộ qua localStorage)
     const handleStorage = (e) => {
       if (e.key === 'avalive_bando_realtime_sync' && e.newValue) {
         try {
