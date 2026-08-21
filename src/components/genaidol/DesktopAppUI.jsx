@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { 
-  Settings, CreditCard, Video, Moon, Sun, 
-  MessageCircle, Play, Pause, Mic, MicOff, X, Download, Plus,
-  Brain, Radio, Coins, AlertTriangle, Eye, Clock, List, Zap, AlertCircle, FileText, CheckSquare, CheckCircle,
-  Gift, ShoppingBag, Sparkles, RotateCcw, Send, Trash2, Heart, Share2, UserPlus, Users, Swords, Shield, Gamepad2, Flag, MapPin,
-  Smartphone, MonitorPlay, Globe, StopCircle, Power, Volume2, VolumeX, Volume1
+  Settings, Eye, Play, Square, RefreshCw, Download, Upload, Trash2,
+  Video, Mic2, Volume2, Wifi, WifiOff, Radio, CheckCircle, AlertCircle,
+  Plus, Search, X, ChevronDown, Monitor, Zap, SkipForward, Pause,
+  Sliders, Globe, Sparkles, Bot, VolumeX
 } from 'lucide-react';
+import flvjs from 'flv.js';
 import WorkspaceTacVu from './WorkspaceTacVu';
 import GeneralSettings from './GeneralSettings';
 import ThanhToanCoin from './ThanhToanCoin';
@@ -43,6 +43,7 @@ export default function DesktopAppUI() {
       return '';
     }
   });
+  const [flvUrl, setFlvUrl] = useState(null);
   const [selectedCharacter, setSelectedCharacter] = useState(() => {
     try {
       return localStorage.getItem('avalive_selected_char') || null;
@@ -118,7 +119,38 @@ export default function DesktopAppUI() {
     }
   });
   const fileInputRef = useRef(null);
+  const flvVideoRef = useRef(null);
+  const flvPlayerRef = useRef(null);
   const [isTemplateLibraryOpen, setIsTemplateLibraryOpen] = useState(false);
+
+  useEffect(() => {
+    if (flvUrl && flvjs.isSupported() && flvVideoRef.current) {
+      const flvPlayer = flvjs.createPlayer({
+        type: 'flv',
+        isLive: true,
+        hasAudio: true,
+        url: flvUrl,
+        cors: true
+      });
+      flvPlayer.attachMediaElement(flvVideoRef.current);
+      flvPlayer.load();
+      const playPromise = flvPlayer.play();
+      if (playPromise) {
+        playPromise.catch(e => console.warn('Lỗi auto-play flv:', e));
+      }
+      flvPlayerRef.current = flvPlayer;
+
+      return () => {
+        try {
+          flvPlayer.pause();
+          flvPlayer.unload();
+          flvPlayer.detachMediaElement();
+          flvPlayer.destroy();
+        } catch (e) {}
+        flvPlayerRef.current = null;
+      };
+    }
+  }, [flvUrl]);
 
   // Load & Sync custom characters from Unified AIDOL_DB
   const reloadCharacters = () => {
@@ -495,6 +527,7 @@ export default function DesktopAppUI() {
       setIsConnecting(false);
       setIsConnected(true);
       setConnectionError('');
+      if (data?.flvUrl) setFlvUrl(data.flvUrl);
       const targetChan = data?.username ? `${data.username}` : 'TikTok Live';
       setToast({ type: 'success', message: `🎉 Kết nối thành công TikTok Live: ${targetChan}` });
       setTimeout(() => setToast(null), 2000);
@@ -584,6 +617,7 @@ export default function DesktopAppUI() {
       if (!data) return;
       if (data.connected === false && !data.connecting) {
         setIsConnecting(false);
+        setFlvUrl(null);
         if (data.error || data.note) {
           setToast({ type: 'error', message: `Lỗi kết nối: ${data.error || data.note}` });
           if (isMasterLiveRunning) setIsMasterLiveRunning(false);
@@ -703,6 +737,7 @@ export default function DesktopAppUI() {
       // Dừng AI & Ngắt kết nối
       setIsConnected(false);
       setIsConnecting(false);
+      setFlvUrl(null);
       if (socketRef.current) {
         socketRef.current.emit('disconnect_tiktok');
       }
@@ -1133,6 +1168,25 @@ export default function DesktopAppUI() {
         </div>
       );
     };
+
+    if (isConnected && flvUrl) {
+      return (
+        <div className="relative w-full h-full flex flex-col bg-black">
+          <div className="w-full h-full flex items-center justify-center">
+            <video
+              ref={flvVideoRef}
+              className="w-full h-full object-contain"
+              controls={false}
+              autoPlay
+              muted={false}
+            />
+          </div>
+          <div className="absolute bottom-4 right-4 w-[160px] h-[284px] md:w-[240px] md:h-[426px] bg-black border-[3px] border-emerald-500/80 rounded-2xl overflow-hidden shadow-2xl z-30 transition-all hover:scale-105 pointer-events-none">
+            {renderMainCharacter()}
+          </div>
+        </div>
+      );
+    }
 
     return renderMainCharacter();
   };

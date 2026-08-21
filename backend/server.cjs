@@ -322,8 +322,22 @@ io.on('connection', (socket) => {
     Promise.race([connectPromise, timeoutPromise]).then(state => {
       console.log(`[TikTok Live] ✅ Đã kết nối Room ID: ${state?.roomId || 'ACTIVE'} (${targetUser})`);
       stopSimulationMode();
-      io.emit('tiktok_connected', { username: targetUser, roomId: state?.roomId });
-      io.emit('tiktok_status', { connected: true, username: targetUser, roomId: state?.roomId });
+      
+      // Lấy link luồng FLV trực tiếp nếu có
+      let flvUrl = null;
+      if (state?.roomInfo?.data?.stream_url) {
+        const streamUrlObj = state.roomInfo.data.stream_url;
+        if (streamUrlObj.flv_pull_url) {
+          const urls = Object.values(streamUrlObj.flv_pull_url);
+          if (urls.length > 0) flvUrl = urls[0];
+        }
+        if (!flvUrl && streamUrlObj.rtmp_pull_url) {
+          flvUrl = streamUrlObj.rtmp_pull_url;
+        }
+      }
+      
+      io.emit('tiktok_connected', { username: targetUser, roomId: state?.roomId, flvUrl });
+      io.emit('tiktok_status', { connected: true, username: targetUser, roomId: state?.roomId, flvUrl });
     }).catch(err => {
       console.error(`[TikTok Live] ❌ Không thể kết nối ${targetUser}: ${err.message || err}`);
       let userFriendlyError = err.message.includes('timeout') ? 'Lỗi Timeout: Không thể kết nối, vui lòng kiểm tra lại ID.' : 'Kênh chưa phát Live, hoặc nhập sai ID.';
