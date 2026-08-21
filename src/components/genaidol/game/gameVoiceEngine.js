@@ -108,7 +108,7 @@ class GameVoiceEngine {
     };
     
     // Auto Periodic Commentary Config
-    this.isAutoEnabled = true;
+    this.isAutoEnabled = false;
     this.isAutoLoop = true; // Loop endlessly throughout livestream
     this.intervalSeconds = 25; // 25s
     this.playbackOrder = 'sequential'; // 'sequential' | 'random'

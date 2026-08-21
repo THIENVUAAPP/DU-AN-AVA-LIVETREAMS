@@ -329,14 +329,11 @@ io.on('connection', (socket) => {
         note: 'Kênh chưa live hoặc cần sessionId. Đang chuyển sang Simulation Mode...'
       });
       tiktokConnection = null;
-      // Tự động chuyển sang Simulation Mode khi không kết nối được
-      console.log('[TikTok Live] ⚠️ Kênh không live → Chuyển sang Simulation Mode');
-      startSimulationMode();
       io.emit('tiktok_status', {
         connected: false,
         username: targetUser,
-        simulationMode: true,
-        note: `⚠️ @${targetUser} chưa live. Đang chạy Simulation Mode để test hệ thống.`
+        simulationMode: false,
+        note: `⚠️ @${targetUser} chưa live.`
       });
     });
 

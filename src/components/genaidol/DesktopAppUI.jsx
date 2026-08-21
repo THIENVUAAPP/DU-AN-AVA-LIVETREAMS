@@ -157,6 +157,21 @@ export default function DesktopAppUI() {
   }, [hiddenBuiltins]);
 
   useEffect(() => {
+    // Luôn reset về trạng thái 0 (tắt) khi tải lại trang, chờ user bấm "Bật Tất Cả"
+    setIsMasterLiveRunning(false);
+    try {
+      localStorage.setItem('avalive_master_live_running', 'false');
+      // Reset cả bản đồ và bảng xếp hạng
+      if (bandoEngine && typeof bandoEngine.resetGame === 'function') {
+        bandoEngine.resetGame();
+        bandoEngine.resetLeaderboard();
+      }
+      // Báo cho backend biết frontend vừa refresh, yêu cầu ngắt simulation nếu đang chạy
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('avalive_emergency_stop_all'));
+      }
+    } catch (e) {}
+
     const handleLang = (e) => {
       if (e.detail?.language) {
         setCurrentLangState(e.detail.language);
@@ -308,13 +323,7 @@ export default function DesktopAppUI() {
   const globalDemoTimerRef = useRef(null);
 
   // ⚡ TRẠNG THÁI AUTO CHẠY TỰ ĐỘNG 24/24 (Hỗ trợ AI Idol, Game Chiến Đấu, Game Bản Đồ & Tự Vượt Captcha)
-  const [isAuto247Running, setIsAuto247Running] = useState(() => {
-    try {
-      return localStorage.getItem('avalive_auto247') === 'true';
-    } catch {
-      return false;
-    }
-  });
+  const [isAuto247Running, setIsAuto247Running] = useState(false);
   const auto247TimerRef = useRef(null);
 
   const handleGlobalRunDemo = useCallback(() => {
