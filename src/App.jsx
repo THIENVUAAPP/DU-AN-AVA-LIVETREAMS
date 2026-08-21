@@ -194,7 +194,7 @@ export default function App() {
   if (overlayType === "dancefloor") {
     return <DanceFloorOverlay />;
   }
-  if (overlayType === "live" || overlayType === "stage" || overlayType === "tiktok" || overlayType === "obs" || overlayType === "cleanlive" || overlayType === "avatar" || overlayType === "stream") {
+  if (overlayType === "live" || overlayType === "stage" || overlayType === "tiktok" || overlayType === "obs" || overlayType === "cleanlive" || overlayType === "avatar" || overlayType === "stream" || overlayType === "idol") {
     return <CleanLiveOverlay />;
   }
   if (overlayType === "gamebattle" || overlayType === "game") {

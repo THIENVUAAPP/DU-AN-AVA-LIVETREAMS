@@ -2530,59 +2530,145 @@ export default function DesktopAppUI() {
               </div>
 
               {/* 2. CÁC LINK CHUYÊN BIỆT */}
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 <div className="text-[11px] font-bold text-gray-300 uppercase tracking-wide">
-                  Hoặc Sao Chép Link Chuyên Biệt Theo Từng Game:
+                  Hoặc Sao Chép Link Chuyên Biệt Theo Từng Nhu Cầu:
                 </div>
 
-                {/* Link Bản Đồ */}
+                {/* Link Live AI Idol */}
+                <div className="p-2.5 rounded-xl bg-pink-950/30 border border-pink-500/30 flex items-center justify-between gap-2">
+                  <div className="truncate flex-1">
+                    <div className="font-bold text-pink-300 text-[11px] flex items-center gap-1">
+                      <Video size={12} className="text-pink-400" />
+                      <span>1. Live AI Idol (Idol Ảo Livestream 24/7)</span>
+                    </div>
+                    <div className="text-[10px] text-gray-400 font-mono truncate">
+                      {typeof window !== 'undefined' ? `${window.location.origin}/?overlay=idol&ratio=${globalAspectRatio}` : ''}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => {
+                        if (typeof navigator !== 'undefined') {
+                          navigator.clipboard.writeText(`${window.location.origin}/?overlay=idol&ratio=${globalAspectRatio}`);
+                          setCopySuccessMsg('Đã sao chép Link Live AI Idol!');
+                          setTimeout(() => setCopySuccessMsg(''), 3000);
+                        }
+                      }}
+                      className="px-3 py-1 rounded-lg bg-pink-600 hover:bg-pink-500 text-white font-bold text-[11px] transition-colors shadow-sm"
+                    >
+                      <span>{copySuccessMsg === 'Đã sao chép Link Live AI Idol!' ? '✅ Đã Chép' : 'Sao Chép'}</span>
+                    </button>
+                    <button
+                      onClick={() => window.open(`${window.location.origin}/?overlay=idol&ratio=${globalAspectRatio}`, '_blank')}
+                      className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 font-bold text-[10px]"
+                      title="Xem thử tab mới"
+                    >
+                      Xem
+                    </button>
+                  </div>
+                </div>
+
+                {/* Link Bản Đồ Chuẩn */}
                 <div className="p-2.5 rounded-xl bg-black/40 border border-amber-500/30 flex items-center justify-between gap-2">
                   <div className="truncate flex-1">
                     <div className="font-bold text-amber-300 text-[11px] flex items-center gap-1">
                       <Flag size={12} className="text-red-400" />
-                      <span>Game Bản Đồ Cắm Cờ 3 Miền ({globalAspectRatio})</span>
+                      <span>2. Game Bản Đồ Cắm Cờ (Chuẩn Đầy Đủ)</span>
                     </div>
                     <div className="text-[10px] text-gray-400 font-mono truncate">
                       {typeof window !== 'undefined' ? `${window.location.origin}/?overlay=bando&ratio=${globalAspectRatio}` : ''}
                     </div>
                   </div>
-                  <button
-                    onClick={() => {
-                      if (typeof navigator !== 'undefined') {
-                        navigator.clipboard.writeText(`${window.location.origin}/?overlay=bando&ratio=${globalAspectRatio}`);
-                        setCopySuccessMsg('Đã sao chép Link Bản Đồ!');
-                        setTimeout(() => setCopySuccessMsg(''), 3000);
-                      }
-                    }}
-                    className="px-3 py-1 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-[11px] transition-colors shrink-0"
-                  >
-                    <span>{copySuccessMsg === 'Đã sao chép Link Bản Đồ!' ? '✅ Đã Chép' : 'Sao Chép'}</span>
-                  </button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => {
+                        if (typeof navigator !== 'undefined') {
+                          navigator.clipboard.writeText(`${window.location.origin}/?overlay=bando&ratio=${globalAspectRatio}`);
+                          setCopySuccessMsg('Đã sao chép Link Bản Đồ!');
+                          setTimeout(() => setCopySuccessMsg(''), 3000);
+                        }
+                      }}
+                      className="px-3 py-1 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-[11px] transition-colors"
+                    >
+                      <span>{copySuccessMsg === 'Đã sao chép Link Bản Đồ!' ? '✅ Đã Chép' : 'Sao Chép'}</span>
+                    </button>
+                    <button
+                      onClick={() => window.open(`${window.location.origin}/?overlay=bando&ratio=${globalAspectRatio}`, '_blank')}
+                      className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 font-bold text-[10px]"
+                      title="Xem thử tab mới"
+                    >
+                      Xem
+                    </button>
+                  </div>
                 </div>
 
-                {/* Link Chiến Đấu */}
+                {/* Link Bản Đồ Nguồn Siêu Sạch (Lồng Góc / Ultra Clean) */}
+                <div className="p-2.5 rounded-xl bg-emerald-950/30 border border-emerald-500/40 flex items-center justify-between gap-2">
+                  <div className="truncate flex-1">
+                    <div className="font-bold text-emerald-300 text-[11px] flex items-center gap-1">
+                      <Sparkles size={12} className="text-yellow-400 animate-spin" />
+                      <span>3. Game Bản Đồ (✨ Nguồn Sạch Lồng Góc / Ultra Clean)</span>
+                    </div>
+                    <div className="text-[10px] text-gray-400 font-mono truncate">
+                      {typeof window !== 'undefined' ? `${window.location.origin}/?overlay=bando&clean=true&ratio=${globalAspectRatio}` : ''}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => {
+                        if (typeof navigator !== 'undefined') {
+                          navigator.clipboard.writeText(`${window.location.origin}/?overlay=bando&clean=true&ratio=${globalAspectRatio}`);
+                          setCopySuccessMsg('Đã sao chép Link Bản Đồ Siêu Sạch!');
+                          setTimeout(() => setCopySuccessMsg(''), 3000);
+                        }
+                      }}
+                      className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] transition-colors shadow-sm"
+                    >
+                      <span>{copySuccessMsg === 'Đã sao chép Link Bản Đồ Siêu Sạch!' ? '✅ Đã Chép' : 'Sao Chép'}</span>
+                    </button>
+                    <button
+                      onClick={() => window.open(`${window.location.origin}/?overlay=bando&clean=true&ratio=${globalAspectRatio}`, '_blank')}
+                      className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 font-bold text-[10px]"
+                      title="Xem thử tab mới"
+                    >
+                      Xem
+                    </button>
+                  </div>
+                </div>
+
+                {/* Link Chiến Đấu PK */}
                 <div className="p-2.5 rounded-xl bg-black/40 border border-purple-500/30 flex items-center justify-between gap-2">
                   <div className="truncate flex-1">
                     <div className="font-bold text-purple-300 text-[11px] flex items-center gap-1">
                       <Swords size={12} className="text-yellow-400" />
-                      <span>Game Đại Chiến PK TikTok ({globalAspectRatio})</span>
+                      <span>4. Game Đại Chiến PK TikTok ({globalAspectRatio})</span>
                     </div>
                     <div className="text-[10px] text-gray-400 font-mono truncate">
                       {typeof window !== 'undefined' ? `${window.location.origin}/?overlay=gamebattle&ratio=${globalAspectRatio}` : ''}
                     </div>
                   </div>
-                  <button
-                    onClick={() => {
-                      if (typeof navigator !== 'undefined') {
-                        navigator.clipboard.writeText(`${window.location.origin}/?overlay=gamebattle&ratio=${globalAspectRatio}`);
-                        setCopySuccessMsg('Đã sao chép Link Chiến Đấu!');
-                        setTimeout(() => setCopySuccessMsg(''), 3000);
-                      }
-                    }}
-                    className="px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-[11px] transition-colors shrink-0"
-                  >
-                    <span>{copySuccessMsg === 'Đã sao chép Link Chiến Đấu!' ? '✅ Đã Chép' : 'Sao Chép'}</span>
-                  </button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => {
+                        if (typeof navigator !== 'undefined') {
+                          navigator.clipboard.writeText(`${window.location.origin}/?overlay=gamebattle&ratio=${globalAspectRatio}`);
+                          setCopySuccessMsg('Đã sao chép Link Chiến Đấu!');
+                          setTimeout(() => setCopySuccessMsg(''), 3000);
+                        }
+                      }}
+                      className="px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-[11px] transition-colors"
+                    >
+                      <span>{copySuccessMsg === 'Đã sao chép Link Chiến Đấu!' ? '✅ Đã Chép' : 'Sao Chép'}</span>
+                    </button>
+                    <button
+                      onClick={() => window.open(`${window.location.origin}/?overlay=gamebattle&ratio=${globalAspectRatio}`, '_blank')}
+                      className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 font-bold text-[10px]"
+                      title="Xem thử tab mới"
+                    >
+                      Xem
+                    </button>
+                  </div>
                 </div>
               </div>
 

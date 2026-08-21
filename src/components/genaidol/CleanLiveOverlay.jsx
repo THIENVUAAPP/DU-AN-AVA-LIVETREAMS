@@ -22,15 +22,18 @@ export default function CleanLiveOverlay() {
       if (saved) return JSON.parse(saved);
     } catch (e) {}
     
-    // Check URL parameters for explicit mode overrides
     const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
     const overlayParam = urlParams ? urlParams.get('overlay') : '';
     const ratioParam = urlParams ? urlParams.get('ratio') : '9:16';
     
-    let defaultStage = 'bando'; // Mặc định hiển thị Bản Đồ khi mở overlay nếu chưa có dữ liệu
+    let defaultStage = 'idol'; // Mặc định Idol
     if (overlayParam === 'bando' || overlayParam === 'vietnam_map' || overlayParam === 'map') defaultStage = 'bando';
-    if (overlayParam === 'gamebattle' || overlayParam === 'battle' || overlayParam === 'game') defaultStage = 'battle';
-    if (overlayParam === 'avatar' || overlayParam === 'idol') defaultStage = 'idol';
+    else if (overlayParam === 'gamebattle' || overlayParam === 'battle' || overlayParam === 'game') defaultStage = 'battle';
+    else if (overlayParam === 'avatar' || overlayParam === 'idol') defaultStage = 'idol';
+    else if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.stage) defaultStage = parsed.stage;
+    }
 
     return {
       stage: defaultStage, // 'idol' | 'battle' | 'bando'
@@ -289,7 +292,7 @@ export default function CleanLiveOverlay() {
 
   // RENDER STAGE 3: LIVE AI IDOL SẠCH (VIDEO / AVATAR + HIỆU ỨNG LIVE)
   return (
-    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-black flex items-center justify-center select-none">
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent flex items-center justify-center select-none">
       <div 
         className={`relative flex items-center justify-center overflow-hidden transition-all duration-300 ${
           ratio === '9:16'
