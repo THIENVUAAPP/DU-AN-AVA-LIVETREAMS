@@ -1461,9 +1461,7 @@ export default function AIDOLLiveConsole() {
                   </div>
                 </div>
               </div>
-              </div>
             )}
-
             {/* ══ TAB: RESTREAM / SCREEN RECORD ══ */}
             {activeTab === 'restream' && (
               <div className="p-5 space-y-4">
