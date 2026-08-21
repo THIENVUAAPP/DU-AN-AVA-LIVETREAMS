@@ -3,7 +3,7 @@ import { io } from 'socket.io-client';
 import { 
   Settings, CreditCard, Video, Moon, Sun, 
   MessageCircle, Play, Pause, Mic, MicOff, X, Download, Plus,
-  Brain, Radio, Coins, AlertTriangle, Eye, Clock, List, Zap, AlertCircle, FileText, CheckSquare,
+  Brain, Radio, Coins, AlertTriangle, Eye, Clock, List, Zap, AlertCircle, FileText, CheckSquare, CheckCircle,
   Gift, ShoppingBag, Sparkles, RotateCcw, Send, Trash2, Heart, Share2, UserPlus, Users, Swords, Shield, Gamepad2, Flag, MapPin,
   Smartphone, MonitorPlay, Globe, StopCircle, Power, Volume2, VolumeX, Volume1
 } from 'lucide-react';
@@ -1578,8 +1578,8 @@ export default function DesktopAppUI() {
 
           <div className="flex items-center gap-1.5 px-1 shrink-0">
             <input type="text" value={tiktokId} onChange={(e) => setTiktokId(e.target.value)} className={`w-28 px-2 py-1 rounded text-xs outline-none border ${isDarkMode ? 'bg-[#2a2a35] border-gray-700 text-white focus:border-blue-500' : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'}`} placeholder={t('tiktokPlaceholder', currentLang)} />
-            <button onClick={handleConnect} className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold transition-colors ${isConnected ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-blue-600 hover:bg-blue-500 text-white'}`}>
-              {isConnecting ? <span className="animate-spin text-sm leading-none">↻</span> : (isConnected ? <Pause size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />)}
+            <button onClick={handleConnect} className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold transition-colors ${isConnected ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-500/20'}`}>
+              {isConnecting ? <span className="animate-spin text-sm leading-none">↻</span> : (isConnected ? <CheckCircle size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />)}
               <span>{isConnecting ? t('connecting', currentLang) : (isConnected ? t('stopAi', currentLang) : t('connect', currentLang))}</span>
             </button>
           </div>
@@ -2630,7 +2630,7 @@ export default function DesktopAppUI() {
           toast.type === 'error' ? 'bg-red-600 text-white' : 'bg-orange-500 text-white'
         }`}>
           <AlertTriangle size={18} />
-          <span>{toast.msg}</span>
+          <span>{toast.message || toast.msg}</span>
           <button onClick={() => setToast(null)} className="ml-2 opacity-70 hover:opacity-100">
             <X size={14} />
           </button>

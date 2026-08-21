@@ -301,7 +301,7 @@ io.on('connection', (socket) => {
     try {
       tiktokConnection = new TikTokConnector(targetUser, {
         processInitialData: false,
-        enableExtendedGiftInfo: true,
+        enableExtendedGiftInfo: false,
         sessionId,
         requestHeaders: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
