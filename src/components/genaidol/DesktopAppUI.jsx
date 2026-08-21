@@ -495,7 +495,8 @@ export default function DesktopAppUI() {
       setIsConnecting(false);
       setIsConnected(true);
       setConnectionError('');
-      const targetChan = data?.username ? `@${data.username}` : 'TikTok Live';
+      const targetChan = data?.username ? `${data.username}` : 'TikTok Live';
+      setToast({ type: 'success', message: `🎉 Kết nối thành công TikTok Live: ${targetChan}` });
       const timeStr = new Date().toLocaleTimeString();
       setSystemLogs(prev => [
         `[${timeStr}] 🟢 ĐÃ KẾT NỐI REAL-TIME TIKTOK LIVE: ${targetChan}`,

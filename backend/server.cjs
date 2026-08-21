@@ -292,7 +292,7 @@ io.on('connection', (socket) => {
     }
 
     currentUsername = targetUser;
-    console.log(`[TikTok Live] 🚀 Đang kết nối tới kênh TikTok: @${targetUser}`);
+    console.log(`[TikTok Live] 🚀 Đang kết nối tới kênh TikTok: ${targetUser}`);
     io.emit('tiktok_status', { connected: false, username: targetUser, connecting: true });
 
     // Lấy sessionId từ options, .env, hoặc localStorage gửi lên
@@ -315,12 +315,12 @@ io.on('connection', (socket) => {
     }
 
     tiktokConnection.connect().then(state => {
-      console.log(`[TikTok Live] ✅ Đã kết nối Room ID: ${state?.roomId || 'ACTIVE'} (@${targetUser})`);
+      console.log(`[TikTok Live] ✅ Đã kết nối Room ID: ${state?.roomId || 'ACTIVE'} (${targetUser})`);
       stopSimulationMode();
       io.emit('tiktok_connected', { username: targetUser, roomId: state?.roomId });
       io.emit('tiktok_status', { connected: true, username: targetUser, roomId: state?.roomId });
     }).catch(err => {
-      console.error(`[TikTok Live] ❌ Không thể kết nối @${targetUser}: ${err.message || err}`);
+      console.error(`[TikTok Live] ❌ Không thể kết nối ${targetUser}: ${err.message || err}`);
       let userFriendlyError = 'Kênh chưa phát Live, hoặc nhập sai ID.';
       const errStr = err.toString();
       if (errStr.includes('Failed to retrieve Room ID') || errStr.includes("isn't online") || errStr.includes('UserOfflineError')) {
@@ -338,7 +338,7 @@ io.on('connection', (socket) => {
         connected: false,
         username: targetUser,
         simulationMode: false,
-        note: `⚠️ @${targetUser} chưa live.`
+        note: `⚠️ ${targetUser} chưa live.`
       });
     });
 
@@ -411,7 +411,7 @@ io.on('connection', (socket) => {
     });
 
     tiktokConnection.on('streamEnd', () => {
-      console.log(`[TikTok Live] 🛑 Stream kết thúc @${targetUser}`);
+      console.log(`[TikTok Live] 🛑 Stream kết thúc ${targetUser}`);
       tiktokConnection = null;
       io.emit('tiktok_stream_ended', { username: targetUser });
       io.emit('tiktok_status', { connected: false, username: targetUser, ended: true });
@@ -426,7 +426,7 @@ io.on('connection', (socket) => {
     });
 
     tiktokConnection.on('disconnected', () => {
-      console.log(`[TikTok Live] ⚠️ Mất kết nối với @${targetUser}`);
+      console.log(`[TikTok Live] ⚠️ Mất kết nối với ${targetUser}`);
       tiktokConnection = null;
       io.emit('tiktok_status', { connected: false, username: targetUser });
     });
@@ -471,7 +471,7 @@ app.post('/api/tiktok/connect', async (req, res) => {
   if (!username) return res.status(400).json({ error: 'Missing username' });
   // Trigger qua socket event
   io.emit('_server_connect_tiktok', { username: username.trim().replace(/^@/, ''), sessionId });
-  res.json({ success: true, message: `Đang kết nối tới @${username}...` });
+  res.json({ success: true, message: `Đang kết nối tới ${username}...` });
 });
 
 // Bật/tắt Simulation Mode qua REST
