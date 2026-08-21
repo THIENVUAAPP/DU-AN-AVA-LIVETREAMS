@@ -494,7 +494,7 @@ class GameVoiceEngine {
         }
       } catch (geminiErr) {
         const smartFallbacks = [
-          `Dạ em chào anh chị ${userName}! Mọi người cùng thả tim và tặng quà để phủ kín cờ đỏ sao vàng nhé!`,
+          `Chào ${userName}! Mọi người cùng thả tim và tặng quà để phủ kín cờ đỏ sao vàng nhé!`,
           `Chào mừng ${userName} đến với phiên live rực lửa! Hãy cùng bình luận và tiếp sức cho vùng đất quê hương nào!`,
           `Cảm ơn ${userName} đã tương tác rất nhiệt tình! Chúc bạn có những phút giây giải trí thật bùng nổ cùng đại chiến cắm cờ!`
         ];

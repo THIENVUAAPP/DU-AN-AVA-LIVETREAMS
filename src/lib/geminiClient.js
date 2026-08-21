@@ -8,7 +8,7 @@ function generateContextualFallbackReply({ question = '', username = 'bạn', ro
   const user = username || 'bạn';
 
   if (q.includes('chào') || q.includes('hi') || q.includes('hello')) {
-    return `Dạ em chào ${user} nha! Chúc ${user} có một buổi xem live thật vui vẻ và ngập tràn năng lượng ạ!`;
+    return `Chào ${user} nha! Chúc ${user} có một buổi xem live thật vui vẻ và ngập tràn năng lượng nhé!`;
   }
   if (q.includes('game') || q.includes('chơi') || q.includes('cách')) {
     if (gameType === 'battle') {
@@ -17,7 +17,7 @@ function generateContextualFallbackReply({ question = '', username = 'bạn', ro
     return `Chào ${user}! Trận đại chiến Cắm Cờ Việt Nam đang rất sôi động, bạn hãy chọn ô và cắm cờ cùng anh em nhé!`;
   }
   if (q.includes('ai') || q.includes('tên') || q.includes('bot')) {
-    return `Dạ em là Trợ Lý AI của phiên live hôm nay, rất vui được đồng hành và hỗ trợ ${user} ạ!`;
+    return `Mình là Trợ Lý AI của phiên live hôm nay, rất vui được đồng hành và hỗ trợ ${user}!`;
   }
   if (q.includes('quà') || q.includes('gift') || q.includes('xu') || q.includes('tặng')) {
     return `Cảm ơn ${user} rất nhiều! Từng phần quà của bạn là nguồn động lực cực lớn cho cả phòng live!`;
@@ -26,14 +26,14 @@ function generateContextualFallbackReply({ question = '', username = 'bạn', ro
     return `Trận đấu đang ở giai đoạn quyết liệt nhất! ${user} hãy tiếp tục cổ vũ hết mình nhé!`;
   }
   if (q.includes('đẹp') || q.includes('xinh') || q.includes('hay') || q.includes('giỏi')) {
-    return `Dạ em cảm ơn lời khen cực kỳ dễ thương của ${user} ạ! Yêu ${user} rất nhiều!`;
+    return `Cảm ơn lời khen cực kỳ dễ thương của ${user}! Yêu ${user} rất nhiều!`;
   }
 
   // Câu trả lời giao tiếp thông minh tổng quát
   const smartGenericReplies = [
-    `Dạ câu hỏi của ${user} rất thú vị ạ! Cảm ơn bạn đã luôn đồng hành và ủng hộ phiên live hôm nay!`,
+    `Câu hỏi của ${user} rất thú vị! Cảm ơn bạn đã luôn đồng hành và ủng hộ phiên live hôm nay!`,
     `Chào ${user} nha! Bạn có những ý tưởng thật tuyệt vời, cùng tiếp tục theo dõi diễn biến livestream nhé!`,
-    `Dạ em đã ghi nhận ý kiến của ${user} rồi ạ! Chúc ${user} một ngày ngập tràn niềm vui và may mắn nha!`,
+    `Mình đã ghi nhận bình luận của ${user}! Chúc ${user} một ngày ngập tràn niềm vui và may mắn nha!`,
     `Cảm ơn ${user} đã tương tác nhiệt tình! Hãy thả tim và chia sẻ live để cùng tạo nên kỷ lục mới nhé!`
   ];
   return smartGenericReplies[Math.floor(Math.random() * smartGenericReplies.length)];
@@ -64,9 +64,9 @@ export async function fetchAiReply({ kind = 'question', username, characterName,
   if (apiKey && apiKey.trim()) {
     try {
       const promptText = `Bạn là Trợ lý Livestream / Bình luận viên AI thông minh, hài hước, năng lượng cao cho sự kiện livestream Việt Nam.
-Khán giả "${username || 'bạn'}" vừa bình luận: "${question || giftName || 'Xin chào'}".
+Khán giả tên là "${username || 'bạn'}" vừa bình luận: "${question || giftName || 'Xin chào'}".
 Bối cảnh: ${context || 'Livestream tương tác minigame'}.
-Yêu cầu: Trả lời tự nhiên, thân thiện, ngắn gọn (1-2 câu ngắn, tối đa 25 từ), tuyệt đối không nói tục. Chỉ trả về đúng 1 câu thoại tiếng Việt không dấu ngoặc kép.`;
+Yêu cầu: Trả lời tự nhiên, thân thiện, ngắn gọn (1-2 câu ngắn, tối đa 25 từ). Tuyệt đối không được xưng "anh" hay "chị" với khán giả, chỉ được phép gọi là "bạn" và đọc đúng tên "${username || 'bạn'}". Tuyệt đối không nói tục. Chỉ trả về đúng 1 câu thoại tiếng Việt không dấu ngoặc kép.`;
 
       const directRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`, {
         method: 'POST',

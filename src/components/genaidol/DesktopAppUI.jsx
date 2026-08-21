@@ -497,6 +497,7 @@ export default function DesktopAppUI() {
       setConnectionError('');
       const targetChan = data?.username ? `${data.username}` : 'TikTok Live';
       setToast({ type: 'success', message: `🎉 Kết nối thành công TikTok Live: ${targetChan}` });
+      setTimeout(() => setToast(null), 2000);
       const timeStr = new Date().toLocaleTimeString();
       setSystemLogs(prev => [
         `[${timeStr}] 🟢 ĐÃ KẾT NỐI REAL-TIME TIKTOK LIVE: ${targetChan}`,
@@ -2627,11 +2628,15 @@ export default function DesktopAppUI() {
       {/* Toast Notification */}
       {toast && (
         <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[99999] px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-bold animate-in slide-in-from-bottom-4 duration-300 max-w-sm ${
-          toast.type === 'error' ? 'bg-red-600 text-white' : 'bg-orange-500 text-white'
+          toast.type === 'error' ? 'bg-rose-600 text-white' : 
+          toast.type === 'success' ? 'bg-emerald-600 text-white' : 
+          'bg-orange-500 text-white'
         }`}>
-          <AlertTriangle size={18} />
+          {toast.type === 'error' ? <AlertTriangle size={18} /> : 
+           toast.type === 'success' ? <CheckCircle size={18} /> : 
+           <AlertTriangle size={18} />}
           <span>{toast.message || toast.msg}</span>
-          <button onClick={() => setToast(null)} className="ml-2 opacity-70 hover:opacity-100">
+          <button onClick={() => setToast(null)} className="ml-2 opacity-70 hover:opacity-100 transition-opacity">
             <X size={14} />
           </button>
         </div>

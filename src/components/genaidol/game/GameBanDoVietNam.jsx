@@ -2340,15 +2340,8 @@ export default function GameBanDoVietNam({
             className="absolute top-0 left-0 hidden flex-col items-center pointer-events-none transition-all duration-100 animate-in zoom-in-75 fade-in duration-150"
             style={{ willChange: 'transform' }}
           >
-            <div className="relative flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 text-white font-black text-[10px] shadow-[0_4px_20px_rgba(239,68,68,0.7)] border-2 border-yellow-300 ring-1 ring-yellow-400/90 whitespace-nowrap drop-shadow-md">
-              <span className="text-[13px] leading-none shrink-0">{b.flag || currentCountry?.flag || '🇻🇳'}</span>
-              <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] overflow-hidden border-2 border-yellow-200 shadow-sm shrink-0 bg-gradient-to-tr from-amber-400 to-yellow-200">
-                {b.avatar ? (
-                  <img src={b.avatar} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
-                ) : (
-                  <span>👤</span>
-                )}
-              </div>
+            <div className="relative flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 text-white font-black text-[10px] shadow-[0_4px_20px_rgba(239,68,68,0.7)] border border-yellow-300 ring-1 ring-yellow-400/90 whitespace-nowrap drop-shadow-md">
+              <span className="text-[12px] leading-none shrink-0">{b.flag || currentCountry?.flag || '🇻🇳'}</span>
               <span className="truncate max-w-[120px] font-bold text-yellow-100">@{b.username || 'Chiến Binh'}</span>
               <span className="px-1.5 py-0.5 rounded-full bg-black/40 text-yellow-300 font-mono text-[9px] font-black border border-yellow-400/30">+{b.count || 1} Ô</span>
             </div>
