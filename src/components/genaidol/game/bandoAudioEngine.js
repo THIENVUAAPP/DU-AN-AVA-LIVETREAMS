@@ -19,6 +19,7 @@ class BanDoAudioEngine {
     this.isSfxMuted = false;
     this.isVoiceMuted = false;
     this.isBgmLoop = true;
+    this.isBgmEnabled = false; // By default disabled, loaded from localStorage
     this.bgmTimerMode = '24/7';
     this.bgmTimerRemainingSec = 0;
     this.bgmTimerInterval = null;
@@ -107,6 +108,14 @@ class BanDoAudioEngine {
 
       const savedVoiceVol = localStorage.getItem('bando_voice_volume');
       if (savedVoiceVol !== null) this.voiceVolume = parseFloat(savedVoiceVol) || 1.0;
+      
+      const savedBgmEnabled = localStorage.getItem('bando_is_bgm_enabled');
+      if (savedBgmEnabled !== null) {
+        this.isBgmEnabled = savedBgmEnabled === 'true';
+      } else {
+        // Defaults to true if they have custom BGM saved, else false
+        this.isBgmEnabled = !!this.customBgmUrl;
+      }
     } catch (e) {
       console.warn('loadSavedAudioSettings error:', e);
     }
@@ -239,9 +248,13 @@ class BanDoAudioEngine {
   toggleBgm() {
     this.unlock();
     if (this.bgmPlaying) {
+      this.isBgmEnabled = false;
+      try { localStorage.setItem('bando_is_bgm_enabled', 'false'); } catch (e) {}
       this.stopBgmOnLive();
       return false;
     } else {
+      this.isBgmEnabled = true;
+      try { localStorage.setItem('bando_is_bgm_enabled', 'true'); } catch (e) {}
       this.playBgmOnLive();
       return true;
     }
@@ -307,6 +320,8 @@ class BanDoAudioEngine {
 
   playBgmOnLive() {
     this.unlock();
+    if (!this.isBgmEnabled) return; // DON'T PLAY IF THEY EXPLICITLY DISABLED IT
+    
     if (this.customBgmUrl && this.customBgmUrl.length > 10) {
       this.bgmPlaying = true;
       if (this.bgmGain && this.ctx) {
@@ -476,9 +491,10 @@ class BanDoAudioEngine {
         await saveAudioFile('bando_custom_bgm', name, dataUrl, file.type || 'audio/mp3');
         try {
           localStorage.setItem('bando_custom_bgm_meta', JSON.stringify({ name, hasCustom: true }));
+          localStorage.setItem('bando_is_bgm_enabled', 'true'); // Auto-enable when uploaded
         } catch (err) {}
-
-        this.playCustomBgm();
+        this.isBgmEnabled = true;
+        this.playBgmOnLive();
         resolve({ name, dataUrl });
       };
       reader.onerror = (err) => reject(err);
@@ -560,6 +576,13 @@ class BanDoAudioEngine {
       localStorage.removeItem('bando_custom_sfx_meta');
       await deleteAudioFile('bando_custom_sfx');
     } catch (e) {}
+  }
+
+  replayCustomBgm() {
+    this.isBgmEnabled = true;
+    try { localStorage.setItem('bando_is_bgm_enabled', 'true'); } catch (e) {}
+    this.stopCustomBgm();
+    this.playBgmOnLive();
   }
 
   playCustomBgm() {

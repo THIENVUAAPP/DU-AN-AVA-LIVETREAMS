@@ -855,10 +855,7 @@ export default function GameBanDoVietNam({
       });
 
       socket.on('connect', () => {
-        const savedTiktokId = localStorage.getItem('aidol_tiktok_id');
-        if (savedTiktokId) {
-          socket.emit('connect_tiktok', savedTiktokId);
-        }
+        console.log('[GameBanDo] ✅ Socket connected:', socket.id);
       });
 
       socket.on('tiktok_connected', (data) => {

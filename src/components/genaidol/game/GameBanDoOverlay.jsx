@@ -95,14 +95,8 @@ export default function GameBanDoOverlay() {
         timeout: 10000
       });
 
-      // Khi kết nối thành công → tự động đăng ký kênh TikTok đã lưu
       socket.on('connect', () => {
         console.log('[BandoOverlay] ✅ Kết nối Socket.io thành công:', socket.id);
-        const savedTiktokId = localStorage.getItem('aidol_tiktok_id');
-        if (savedTiktokId) {
-          console.log('[BandoOverlay] 🚀 Tự động kết nối TikTok:', savedTiktokId);
-          socket.emit('connect_tiktok', savedTiktokId);
-        }
       });
 
       socket.on('connect_error', (err) => {

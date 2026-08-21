@@ -1742,13 +1742,8 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
                   <button
                     onClick={() => {
                       bandoAudio.unlock();
-                      if (isBgmPlaying) {
-                        bandoAudio.stopBgmOnLive();
-                        setIsBgmPlaying(false);
-                      } else {
-                        bandoAudio.playBgmOnLive();
-                        setIsBgmPlaying(true);
-                      }
+                      const newState = bandoAudio.toggleBgm();
+                      setIsBgmPlaying(newState);
                     }}
                     className={`w-full py-2.5 px-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-lg active:scale-95 truncate ${
                       isBgmPlaying 
