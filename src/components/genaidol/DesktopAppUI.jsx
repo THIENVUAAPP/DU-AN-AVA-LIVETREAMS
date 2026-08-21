@@ -684,6 +684,7 @@ export default function DesktopAppUI() {
     if (isConnected) {
       // Dừng AI & Ngắt kết nối
       setIsConnected(false);
+      setIsConnecting(false);
       if (socketRef.current) {
         socketRef.current.emit('disconnect_tiktok');
       }
@@ -693,45 +694,29 @@ export default function DesktopAppUI() {
       return;
     }
     
-    setIsConnecting(true);
     bandoAudio.unlock();
     const cleanId = extractTikTokUsername(tiktokId);
-    if (cleanId) {
-      try {
-        localStorage.setItem('aidol_tiktok_id', cleanId);
-      } catch (e) {}
+    
+    if (!cleanId) {
+      setToast({
+        type: 'error',
+        message: 'LỖI KẾT NỐI: Anh phải nhập chính xác ID TikTok (@username) vào ô trống!'
+      });
+      setIsConnecting(false);
+      if (isMasterLiveRunning) setIsMasterLiveRunning(false);
+      return;
     }
 
-    if (socketRef.current && cleanId) {
+    setIsConnecting(true);
+    try {
+      localStorage.setItem('aidol_tiktok_id', cleanId);
+    } catch (e) {}
+
+    if (socketRef.current) {
       socketRef.current.emit('connect_tiktok', cleanId);
     }
-
-    setTimeout(() => {
-      setIsConnecting(false);
-      setIsConnected(true);
-      setConnectionError('');
-      const targetChan = cleanId ? `@${cleanId}` : 'Kênh TikTok Live';
-      setToast({
-        type: 'success',
-        message: `Đã kết nối thành công với ${targetChan}! Sẵn sàng phát live TikTok Studio.`
-      });
-      setTimeout(() => setToast(null), 4000);
-
-      const timeStr = new Date().toLocaleTimeString();
-      setSystemLogs(prev => [
-        `[${timeStr}] 🟢 KẾT NỐI THÀNH CÔNG: ${targetChan}`,
-        `[${timeStr}] ⚡ Đang đồng bộ hóa luồng video sang TikTok Live Studio / OBS`,
-        ...prev.slice(0, 48)
-      ]);
-      setTiktokLogs(prev => [
-        `[${timeStr}] 🟢 Đã kết nối với TikTok Live: ${targetChan}`,
-        `[${timeStr}] 📡 Sẵn sàng bắt sự kiện Quà tặng, Bình luận, Follow và Thả tim`,
-        ...prev.slice(0, 48)
-      ]);
-      
-      // Bắt đầu sự kiện chào mừng
-      handleLiveEvent('VIEWER_JOIN', { name: cleanId ? `@${cleanId}` : 'Mọi người' });
-    }, 800);
+    
+    // Ghi chú: Chờ tín hiệu 'tiktok_connected' từ backend (đã xử lý ở dòng 494), không tự set isConnected=true giả mạo.
   };
 
   // 🛑/▶️ NÚT ĐỒNG BỘ: TẮT TẤT CẢ / BẬT TẤT CẢ PHIÊN LIVE & CÁC TÍNH NĂNG
