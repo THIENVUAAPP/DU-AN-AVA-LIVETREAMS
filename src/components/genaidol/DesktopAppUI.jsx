@@ -43,7 +43,6 @@ export default function DesktopAppUI() {
       return '';
     }
   });
-  const [tiktokEmbedUrl, setTiktokEmbedUrl] = useState(null);
   const [selectedCharacter, setSelectedCharacter] = useState(() => {
     try {
       return localStorage.getItem('avalive_selected_char') || null;
@@ -704,7 +703,6 @@ export default function DesktopAppUI() {
       // Dừng AI & Ngắt kết nối
       setIsConnected(false);
       setIsConnecting(false);
-      setTiktokEmbedUrl(null);
       if (socketRef.current) {
         socketRef.current.emit('disconnect_tiktok');
       }
@@ -726,16 +724,6 @@ export default function DesktopAppUI() {
       if (isMasterLiveRunning) setIsMasterLiveRunning(false);
       return;
     }
-
-    // Xử lý link embed (video/live)
-    let embedUrl = `https://www.tiktok.com/@${cleanId}/live`;
-    if (tiktokId.includes('/video/')) {
-      const match = tiktokId.match(/\/video\/(\d+)/);
-      if (match && match[1]) {
-        embedUrl = `https://www.tiktok.com/embed/v2/${match[1]}`;
-      }
-    }
-    setTiktokEmbedUrl(embedUrl);
 
     setIsConnecting(true);
     try {
@@ -1144,27 +1132,6 @@ export default function DesktopAppUI() {
           <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/60 via-transparent to-black/20" />
         </div>
       );
-    };
-
-    if (isConnected && tiktokEmbedUrl) {
-      return (
-        <div className="relative w-full h-full flex flex-col bg-black">
-          <div className="w-full h-full flex items-center justify-center">
-            <iframe
-              src={tiktokEmbedUrl}
-              className="w-full h-full"
-              frameBorder="0"
-              allow="autoplay; encrypted-media"
-              allowFullScreen
-            ></iframe>
-          </div>
-          <div className="absolute bottom-4 right-4 w-[160px] h-[284px] md:w-[240px] md:h-[426px] bg-black border-[3px] border-emerald-500/80 rounded-2xl overflow-hidden shadow-2xl z-30 transition-all hover:scale-105">
-            {renderMainCharacter()}
-          </div>
-        </div>
-      );
-    }
-
     return renderMainCharacter();
   };
 
