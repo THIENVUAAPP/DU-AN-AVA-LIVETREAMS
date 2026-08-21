@@ -4,9 +4,13 @@ const { createServer } = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
-
 const https = require('https');
 const cors = require('cors');
+
+// ============================================================
+// AVALIVE VIP PRO — BACKEND SERVER
+// Hỗ trợ: TikTok Live (WebcastPushConnection) + Simulation Mode
+// ============================================================
 
 let TikTokConnector = null;
 (async () => {
@@ -18,18 +22,18 @@ let TikTokConnector = null;
     try {
       const mod = await import('tiktok-live-connector');
       TikTokConnector = mod.TikTokLiveConnection || mod.WebcastPushConnection || mod.default?.TikTokLiveConnection;
-      console.log('[TikTok Connector] Loaded TikTokLiveConnection fallback');
+      console.log('[TikTok Connector] ✅ Loaded TikTokLiveConnection (New engine)');
     } catch (err) {
-      console.error('[TikTok Connector] Failed to load connector module:', err);
+      console.error('[TikTok Connector] ❌ Failed to load connector module:', err);
     }
   }
 })();
 
 const app = express();
 app.use(cors());
-app.use(express.json()); // Để parse JSON body
+app.use(express.json());
 
-// Tự động phục vụ frontend từ thư mục dist (nếu đã build)
+// Phục vụ frontend từ thư mục dist
 const distPath = fs.existsSync(path.join(__dirname, '../dist'))
   ? path.join(__dirname, '../dist')
   : fs.existsSync(path.join(__dirname, './dist'))
@@ -37,24 +41,24 @@ const distPath = fs.existsSync(path.join(__dirname, '../dist'))
   : null;
 
 if (distPath) {
-  console.log(`[AvaLive Standalone] Phục vụ Frontend Static từ: ${distPath}`);
+  console.log(`[AvaLive] ✅ Phục vụ Frontend Static từ: ${distPath}`);
   app.use(express.static(distPath));
 }
 
 const httpServer = createServer(app);
-const io = new Server(httpServer, {
-  cors: {
-    origin: '*',
-  }
-});
+const io = new Server(httpServer, { cors: { origin: '*' } });
 
+// ============================================================
+// TRẠNG THÁI TOÀN CỤC
+// ============================================================
 let tiktokConnection = null;
 let currentUsername = null;
-let autoReconnectTimer = null; // Tự động reconnect khi mất kết nối
+let autoReconnectTimer = null;
+let isSimulationMode = false;
+let simulationTimer = null;
 
-// ⚡ LƯU TRỮ VÀ ĐỒNG BỘ TRẠNG THÁI REALTIME CHO TIKTOK LIVE STUDIO & OBS
 let currentMasterLiveState = {
-  stage: 'bando', // Mặc định mở Game Bản Đồ nếu đang chạy game
+  stage: 'bando',
   aspectRatio: '9:16',
   characterId: 'char_1',
   characterName: 'Mèo 2k4',
@@ -64,27 +68,133 @@ let currentMasterLiveState = {
   isDarkMode: true,
   updatedAt: Date.now()
 };
-
 let currentBandoGameState = null;
 let currentBattleGameState = null;
 
+// Pool tên thật TikTok cho simulation
+const SIMULATION_USERS = [
+  { id: 'user_101', name: 'Minh Hiếu 🇻🇳', avatar: 'https://i.pravatar.cc/100?img=1' },
+  { id: 'user_102', name: 'Thùy Dương', avatar: 'https://i.pravatar.cc/100?img=5' },
+  { id: 'user_103', name: 'Quốc Toàn', avatar: 'https://i.pravatar.cc/100?img=3' },
+  { id: 'user_104', name: 'Hương Giang ❤️', avatar: 'https://i.pravatar.cc/100?img=9' },
+  { id: 'user_105', name: 'Văn Nam', avatar: 'https://i.pravatar.cc/100?img=11' },
+  { id: 'user_106', name: 'Bảo Châu', avatar: 'https://i.pravatar.cc/100?img=20' },
+  { id: 'user_107', name: 'Duy Khánh 🏆', avatar: 'https://i.pravatar.cc/100?img=15' },
+  { id: 'user_108', name: 'Thu Hà', avatar: 'https://i.pravatar.cc/100?img=25' },
+];
+
+const SIMULATION_COMMENTS = [
+  'Chào shop ơi!', 'Xin chào mọi người!', 'Luật chơi thế nào ạ?',
+  'Hà Nội ơi!', 'Sài Gòn cố lên!', 'Việt Nam vô địch!',
+  'Cắm cờ Miền Nam nào!', 'Tim tim tim!', '1', '2',
+  'Hướng dẫn em với ạ', 'Ủng hộ phe đỏ!', 'Cờ về Hà Nội nào!',
+  'Tặng quà cắm cờ!', 'Hoa hồng cho anh/chị!', 'Yêu Việt Nam!',
+];
+
+const SIMULATION_GIFTS = [
+  { id: 'rose', name: 'Hoa Hồng', diamonds: 1, count: 1 },
+  { id: 'heart_tap', name: 'Thả Tim', diamonds: 1, count: 1 },
+  { id: 'flag_vn', name: 'Cờ Tổ Quốc', diamonds: 1, count: 1 },
+  { id: 'peach', name: 'Quả Đào', diamonds: 5, count: 1 },
+  { id: 'helmet', name: 'Mũ Cối Yêu Nước', diamonds: 10, count: 1 },
+  { id: 'tank_390', name: 'Xe Tăng 390', diamonds: 99, count: 1 },
+  { id: 'dong_son_drum', name: 'Trống Đồng Đông Sơn', diamonds: 999, count: 1 },
+  { id: 'rose', name: 'Hoa Hồng', diamonds: 1, count: 5 },
+  { id: 'rose', name: 'Hoa Hồng', diamonds: 1, count: 10 },
+  { id: 'flag_vn', name: 'Cờ Tổ Quốc', diamonds: 1, count: 3 },
+];
+
+// Hàm phát sự kiện TikTok (dùng chung cho real + simulation)
+function emitTikTokGift(giftData) {
+  io.emit('tiktok_gift', giftData);
+  io.emit('LIVE_EVENT', { type: 'GIFT', data: giftData, timestamp: Date.now() });
+  io.emit('bando_event', { type: 'GIFT', data: giftData, timestamp: Date.now() });
+}
+
+function emitTikTokChat(chatData) {
+  io.emit('tiktok_chat', chatData);
+  io.emit('LIVE_EVENT', { type: 'COMMENT', data: chatData, timestamp: Date.now() });
+}
+
+// ============================================================
+// SIMULATION MODE: Tự động phát quà + comment giả lập
+// ============================================================
+function startSimulationMode() {
+  if (simulationTimer) clearInterval(simulationTimer);
+  isSimulationMode = true;
+  console.log('[Simulation] 🎭 Bắt đầu Simulation Mode — Giả lập TikTok Live events...');
+
+  let tickCount = 0;
+  simulationTimer = setInterval(() => {
+    tickCount++;
+    const user = SIMULATION_USERS[tickCount % SIMULATION_USERS.length];
+
+    // Mỗi 3 giây: Phát 1 comment
+    const comment = SIMULATION_COMMENTS[tickCount % SIMULATION_COMMENTS.length];
+    const chatPayload = {
+      userId: user.id,
+      uniqueId: user.id,
+      nickname: user.name,
+      username: user.name,
+      comment,
+      text: comment,
+      profilePictureUrl: user.avatar,
+      avatar: user.avatar
+    };
+    emitTikTokChat(chatPayload);
+    console.log(`[Simulation] 💬 ${user.name}: "${comment}"`);
+
+    // Mỗi 9 giây (tick chia hết 3): Phát 1 món quà
+    if (tickCount % 3 === 0) {
+      const gift = SIMULATION_GIFTS[Math.floor(tickCount / 3) % SIMULATION_GIFTS.length];
+      const giftUser = SIMULATION_USERS[(tickCount + 2) % SIMULATION_USERS.length];
+      const giftPayload = {
+        userId: giftUser.id,
+        uniqueId: giftUser.id,
+        nickname: giftUser.name,
+        username: giftUser.name,
+        giftId: gift.id,
+        giftName: gift.name,
+        diamondCount: gift.diamonds,
+        count: gift.count,
+        repeatCount: gift.count,
+        totalRepeatCount: gift.count,
+        profilePictureUrl: giftUser.avatar,
+        avatar: giftUser.avatar
+      };
+      emitTikTokGift(giftPayload);
+      console.log(`[Simulation] 🎁 ${giftUser.name} tặng: ${gift.name} x${gift.count} (${gift.diamonds * gift.count} xu)`);
+    }
+  }, 3000);
+}
+
+function stopSimulationMode() {
+  if (simulationTimer) { clearInterval(simulationTimer); simulationTimer = null; }
+  isSimulationMode = false;
+  console.log('[Simulation] 🛑 Dừng Simulation Mode');
+}
+
+// ============================================================
+// SOCKET.IO CONNECTION HANDLER
+// ============================================================
 io.on('connection', (socket) => {
   console.log('Client connected to Live Hub:', socket.id);
 
-  // 1. Ngay khi client mới (TikTok Live Studio, OBS, Browser) kết nối -> Gửi ngay toàn bộ state mới nhất
   socket.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
-  if (currentBandoGameState) {
-    socket.emit('bando_sync', currentBandoGameState);
-  }
-  if (currentBattleGameState) {
-    socket.emit('battle_sync', currentBattleGameState);
-  }
+  if (currentBandoGameState) socket.emit('bando_sync', currentBandoGameState);
+  if (currentBattleGameState) socket.emit('battle_sync', currentBattleGameState);
 
-  // 2. Lắng nghe cập nhật Master Live State từ giao diện điều khiển chính (Desktop App)
+  // Gửi trạng thái kết nối TikTok hiện tại ngay
+  socket.emit('tiktok_status', {
+    connected: !!tiktokConnection && !!currentUsername,
+    username: currentUsername,
+    roomId: tiktokConnection?.roomId || null,
+    simulationMode: isSimulationMode
+  });
+
   socket.on('MASTER_LIVE_STATE_UPDATE', (state) => {
     if (state && typeof state === 'object') {
       currentMasterLiveState = { ...currentMasterLiveState, ...state, updatedAt: Date.now() };
-      // Broadcast tới toàn bộ CEF Browser Source trên TikTok Live Studio & OBS
       io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
     }
   });
@@ -93,7 +203,6 @@ io.on('connection', (socket) => {
     socket.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
   });
 
-  // 3. Relay sự kiện Game Bản Đồ & Game Chiến Đấu
   socket.on('bando_sync', (state) => {
     currentBandoGameState = state;
     socket.broadcast.emit('bando_sync', state);
@@ -114,46 +223,48 @@ io.on('connection', (socket) => {
     io.emit('LIVE_EVENT', evt);
   });
 
-  socket.on('LIVE_EVENT', (evt) => {
-    io.emit('LIVE_EVENT', evt);
-  });
+  socket.on('LIVE_EVENT', (evt) => { io.emit('LIVE_EVENT', evt); });
 
-  // 4. TikTok Live Integration
+  // ---- TikTok Status ----
   socket.on('get_tiktok_status', () => {
     socket.emit('tiktok_status', {
       connected: !!tiktokConnection && !!currentUsername,
       username: currentUsername,
-      roomId: tiktokConnection?.roomId || null
+      roomId: tiktokConnection?.roomId || null,
+      simulationMode: isSimulationMode
     });
   });
 
+  // ---- Ngắt kết nối TikTok ----
   socket.on('disconnect_tiktok', () => {
     if (tiktokConnection) {
-      try {
-        tiktokConnection.disconnect();
-      } catch (e) {}
+      try { tiktokConnection.disconnect(); } catch (e) {}
       tiktokConnection = null;
     }
+    if (autoReconnectTimer) clearTimeout(autoReconnectTimer);
     currentUsername = '';
     io.emit('tiktok_disconnected', { message: 'Đã ngắt kết nối TikTok Live' });
     io.emit('tiktok_status', { connected: false, username: '', roomId: null });
   });
 
+  // ---- Kết nối TikTok Live ----
   socket.on('connect_tiktok', async (username, options = {}) => {
     const targetUser = username ? username.trim().replace(/^@/, '') : '';
     if (!targetUser) return;
 
+    // Nếu đang kết nối rồi thì báo luôn
+    if (tiktokConnection && currentUsername === targetUser) {
+      socket.emit('tiktok_connected', { username: targetUser, roomId: tiktokConnection.roomId });
+      io.emit('tiktok_status', { connected: true, username: targetUser, roomId: tiktokConnection.roomId });
+      return;
+    }
+
+    // Ngắt kết nối cũ
     if (tiktokConnection) {
-      if (currentUsername === targetUser && tiktokConnection.isConnected) {
-        socket.emit('tiktok_connected', { username: targetUser, roomId: tiktokConnection.roomId });
-        io.emit('tiktok_status', { connected: true, username: targetUser, roomId: tiktokConnection.roomId });
-        return;
-      }
-      try {
-        await tiktokConnection.disconnect();
-      } catch (e) {}
+      try { await tiktokConnection.disconnect(); } catch (e) {}
       tiktokConnection = null;
     }
+    if (autoReconnectTimer) clearTimeout(autoReconnectTimer);
 
     if (!TikTokConnector) {
       try {
@@ -166,50 +277,71 @@ io.on('connection', (socket) => {
     }
 
     currentUsername = targetUser;
-    console.log(`[TikTok Live] 🚀 Connecting to TikTok channel: @${targetUser}`);
+    console.log(`[TikTok Live] 🚀 Đang kết nối tới kênh TikTok: @${targetUser}`);
+    io.emit('tiktok_status', { connected: false, username: targetUser, connecting: true });
+
+    // Lấy sessionId từ options, .env, hoặc localStorage gửi lên
+    const sessionId = options.sessionId || process.env.TIKTOK_SESSION_ID || undefined;
 
     try {
       tiktokConnection = new TikTokConnector(targetUser, {
         processInitialData: false,
         enableExtendedGiftInfo: true,
-        sessionId: options.sessionId || process.env.TIKTOK_SESSION_ID || undefined
+        sessionId,
+        requestHeaders: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
       });
     } catch (e) {
-      console.error('[TikTok Live] Error instantiating TikTok connection:', e);
-      socket.emit('tiktok_error', e.toString());
+      console.error('[TikTok Live] Lỗi khởi tạo kết nối:', e);
+      socket.emit('tiktok_error', `Lỗi khởi tạo: ${e.message || e}`);
+      io.emit('tiktok_status', { connected: false, username: targetUser, error: e.toString() });
       return;
     }
 
     tiktokConnection.connect().then(state => {
-      console.log(`[TikTok Live] ✅ Connected to TikTok Room ID: ${state?.roomId || 'ACTIVE'} (@${targetUser})`);
+      console.log(`[TikTok Live] ✅ Đã kết nối Room ID: ${state?.roomId || 'ACTIVE'} (@${targetUser})`);
+      stopSimulationMode();
       io.emit('tiktok_connected', { username: targetUser, roomId: state?.roomId });
       io.emit('tiktok_status', { connected: true, username: targetUser, roomId: state?.roomId });
     }).catch(err => {
-      console.error(`[TikTok Live] ❌ Failed to connect to @${targetUser}:`, err.message || err);
+      console.error(`[TikTok Live] ❌ Không thể kết nối @${targetUser}: ${err.message || err}`);
       io.emit('tiktok_error', err.toString());
-      io.emit('tiktok_status', { connected: false, username: targetUser, error: err.toString() });
+      io.emit('tiktok_status', {
+        connected: false,
+        username: targetUser,
+        error: err.toString(),
+        note: 'Kênh chưa live hoặc cần sessionId. Đang chuyển sang Simulation Mode...'
+      });
       tiktokConnection = null;
+      // Tự động chuyển sang Simulation Mode khi không kết nối được
+      console.log('[TikTok Live] ⚠️ Kênh không live → Chuyển sang Simulation Mode');
+      startSimulationMode();
+      io.emit('tiktok_status', {
+        connected: false,
+        username: targetUser,
+        simulationMode: true,
+        note: `⚠️ @${targetUser} chưa live. Đang chạy Simulation Mode để test hệ thống.`
+      });
     });
 
-    // Handle TikTok Events
+    // ---- Lắng nghe sự kiện TikTok ----
     tiktokConnection.on('chat', data => {
       const chatPayload = {
         userId: String(data.userId || data.userDetails?.userId || data.uniqueId || ''),
         uniqueId: String(data.uniqueId || data.userDetails?.uniqueId || ''),
         nickname: String(data.nickname || data.userDetails?.nickname || data.uniqueId || 'Khán Giả'),
+        username: String(data.nickname || data.uniqueId || 'Khán Giả'),
         comment: String(data.comment || ''),
-        profilePictureUrl: String(data.profilePictureUrl || data.userDetails?.profilePictureUrls?.[0] || '')
+        text: String(data.comment || ''),
+        profilePictureUrl: String(data.profilePictureUrl || data.userDetails?.profilePictureUrls?.[0] || ''),
+        avatar: String(data.profilePictureUrl || '')
       };
-      io.emit('tiktok_chat', chatPayload);
-      io.emit('LIVE_EVENT', {
-        type: 'COMMENT',
-        data: chatPayload
-      });
+      console.log(`[TikTok Chat] 💬 ${chatPayload.nickname}: "${chatPayload.comment}"`);
+      emitTikTokChat(chatPayload);
     });
 
-    // Lưu streak combo quà tặng để xử lý ngay tức thì từng lượt tặng
     const streakMap = new Map();
-
     tiktokConnection.on('gift', data => {
       try {
         const giftId = String(data.giftId || data.gift?.id || data.extendedGiftInfo?.id || 'rose');
@@ -222,46 +354,25 @@ io.on('connection', (socket) => {
 
         const streakKey = `${userId}_${giftId}`;
         let count = 1;
-
         if (data.giftType === 1) {
           const prevCount = streakMap.get(streakKey) || 0;
           const currentCount = Number(data.repeatCount) || 1;
           count = Math.max(1, currentCount - prevCount);
           streakMap.set(streakKey, currentCount);
-
-          if (data.repeatEnd) {
-            streakMap.delete(streakKey);
-          }
+          if (data.repeatEnd) streakMap.delete(streakKey);
         } else {
           count = Number(data.repeatCount) || 1;
         }
 
         const giftPayload = {
-          userId,
-          uniqueId,
-          nickname,
-          username: nickname || uniqueId || 'Khán Giả',
-          giftId,
-          giftName,
-          diamondCount,
-          count,
-          repeatCount: count,
+          userId, uniqueId, nickname, username: nickname || uniqueId || 'Khán Giả',
+          giftId, giftName, diamondCount, count, repeatCount: count,
           totalRepeatCount: data.repeatCount || count,
-          profilePictureUrl: avatar,
-          avatar
+          profilePictureUrl: avatar, avatar
         };
 
-        console.log(`[TikTok Gift] 🎁 ${nickname} (@${uniqueId}) tặng: ${giftName} x${count} (${diamondCount} xu)`);
-        io.emit('tiktok_gift', giftPayload);
-        
-        // Chuyển đổi trực tiếp thành sự kiện cắm cờ bản đồ & game chiến đấu
-        const giftEvent = {
-          type: 'GIFT',
-          data: giftPayload,
-          timestamp: Date.now()
-        };
-        io.emit('bando_event', giftEvent);
-        io.emit('LIVE_EVENT', giftEvent);
+        console.log(`[TikTok Gift] 🎁 ${nickname} tặng: ${giftName} x${count} (${diamondCount} xu)`);
+        emitTikTokGift(giftPayload);
       } catch (err) {
         console.error('[TikTok Gift Error]:', err);
       }
@@ -269,60 +380,54 @@ io.on('connection', (socket) => {
 
     tiktokConnection.on('like', data => {
       io.emit('tiktok_like', {
-        userId: data.userId,
-        uniqueId: data.uniqueId,
-        nickname: data.nickname,
-        likeCount: data.likeCount,
-        totalLikeCount: data.totalLikeCount,
+        userId: data.userId, uniqueId: data.uniqueId, nickname: data.nickname,
+        likeCount: data.likeCount, totalLikeCount: data.totalLikeCount,
         profilePictureUrl: data.profilePictureUrl
-      });
-      io.emit('LIVE_EVENT', {
-        type: 'LIKE',
-        data: {
-          count: data.likeCount || 1,
-          username: data.nickname || 'Khán Giả'
-        }
       });
     });
 
     tiktokConnection.on('member', data => {
       io.emit('tiktok_member', {
-        userId: data.userId,
-        uniqueId: data.uniqueId,
-        nickname: data.nickname,
-        profilePictureUrl: data.profilePictureUrl
+        userId: data.userId, uniqueId: data.uniqueId,
+        nickname: data.nickname, profilePictureUrl: data.profilePictureUrl
       });
     });
 
     tiktokConnection.on('streamEnd', () => {
-      console.log(`[TikTok Live] 🛑 Stream ended for @${targetUser}`);
+      console.log(`[TikTok Live] 🛑 Stream kết thúc @${targetUser}`);
       tiktokConnection = null;
       io.emit('tiktok_stream_ended', { username: targetUser });
       io.emit('tiktok_status', { connected: false, username: targetUser, ended: true });
-      // Tự động reconnect sau 30 giây (stream có thể restart)
+      // Auto-retry sau 60 giây
       if (currentUsername) {
-        console.log(`[TikTok Live] 🔄 Sẽ thử reconnect @${targetUser} sau 30 giây...`);
-        if (autoReconnectTimer) clearTimeout(autoReconnectTimer);
         autoReconnectTimer = setTimeout(() => {
           if (currentUsername === targetUser && !tiktokConnection) {
-            console.log(`[TikTok Live] 🔄 Đang thử reconnect @${targetUser}...`);
-            io.emit('tiktok_status', { connected: false, username: targetUser, reconnecting: true });
-            // Phát signal tới client để reconnect
             io.emit('REQUEST_RECONNECT_TIKTOK', { username: targetUser });
           }
-        }, 30000);
+        }, 60000);
       }
     });
 
     tiktokConnection.on('disconnected', () => {
-      console.log(`[TikTok Live] ⚠️ Disconnected from @${targetUser}`);
+      console.log(`[TikTok Live] ⚠️ Mất kết nối với @${targetUser}`);
       tiktokConnection = null;
       io.emit('tiktok_status', { connected: false, username: targetUser });
     });
 
     tiktokConnection.on('error', (err) => {
-      console.error(`[TikTok Live] Error for @${targetUser}:`, err?.message || err);
+      console.error(`[TikTok Live] Error:`, err?.message || err);
     });
+  });
+
+  // ---- Simulation Mode Control ----
+  socket.on('start_simulation', () => {
+    startSimulationMode();
+    io.emit('tiktok_status', { connected: false, username: currentUsername || 'Simulation', simulationMode: true });
+  });
+
+  socket.on('stop_simulation', () => {
+    stopSimulationMode();
+    io.emit('tiktok_status', { connected: false, username: currentUsername, simulationMode: false });
   });
 
   socket.on('disconnect', () => {
@@ -330,24 +435,40 @@ io.on('connection', (socket) => {
   });
 });
 
-// REST API Endpoints for TikTok Live Simulation & Status
+// ============================================================
+// REST API ENDPOINTS
+// ============================================================
+
 app.get('/api/tiktok/status', (req, res) => {
   res.json({
     connected: !!tiktokConnection && !!currentUsername,
     username: currentUsername,
-    roomId: tiktokConnection?.roomId || null
+    roomId: tiktokConnection?.roomId || null,
+    simulationMode: isSimulationMode
   });
 });
 
-// REST API để kết nối TikTok qua HTTP (không cần socket)
-app.post('/api/tiktok/connect', (req, res) => {
-  const { username } = req.body || {};
+// Kết nối TikTok qua REST
+app.post('/api/tiktok/connect', async (req, res) => {
+  const { username, sessionId } = req.body || {};
   if (!username) return res.status(400).json({ error: 'Missing username' });
-  // Emit socket event từ phía server để trigger connect_tiktok logic
-  io.emit('REQUEST_CONNECT_TIKTOK', { username: username.trim().replace(/^@/, '') });
+  // Trigger qua socket event
+  io.emit('_server_connect_tiktok', { username: username.trim().replace(/^@/, ''), sessionId });
   res.json({ success: true, message: `Đang kết nối tới @${username}...` });
 });
 
+// Bật/tắt Simulation Mode qua REST
+app.post('/api/simulation/start', (req, res) => {
+  startSimulationMode();
+  res.json({ success: true, message: 'Simulation Mode đã bật — Đang phát sự kiện test' });
+});
+
+app.post('/api/simulation/stop', (req, res) => {
+  stopSimulationMode();
+  res.json({ success: true, message: 'Simulation Mode đã tắt' });
+});
+
+// Test Gift qua REST (Manual)
 app.post('/api/tiktok/test-gift', (req, res) => {
   const { giftId, giftName, count, diamondCount, username, avatar, regionTarget } = req.body || {};
   const deltaCount = Number(count) || 1;
@@ -357,40 +478,36 @@ app.post('/api/tiktok/test-gift', (req, res) => {
   const gId = giftId || 'rose';
 
   const giftPayload = {
-    userId: 'test_user_' + Date.now(),
-    uniqueId: 'test_user',
-    nickname: name,
-    username: name,
-    giftId: String(gId),
-    giftName: gName,
-    diamondCount: diaCount,
-    count: deltaCount,
-    repeatCount: deltaCount,
-    totalRepeatCount: deltaCount,
-    profilePictureUrl: avatar || '',
-    avatar: avatar || '',
+    userId: 'test_user_' + Date.now(), uniqueId: 'test_user',
+    nickname: name, username: name,
+    giftId: String(gId), giftName: gName,
+    diamondCount: diaCount, count: deltaCount,
+    repeatCount: deltaCount, totalRepeatCount: deltaCount,
+    profilePictureUrl: avatar || '', avatar: avatar || '',
     regionTarget: regionTarget || null
   };
 
   console.log(`[Test Gift] 🎁 ${name} tặng: ${gName} x${deltaCount} (${diaCount} xu)`);
-  io.emit('tiktok_gift', giftPayload);
-
-  const giftEvent = {
-    type: 'GIFT',
-    data: giftPayload,
-    timestamp: Date.now()
-  };
-  io.emit('bando_event', giftEvent);
-  io.emit('LIVE_EVENT', giftEvent);
-
+  emitTikTokGift(giftPayload);
   res.json({ success: true, gift: giftPayload });
 });
 
-// REST API Endpoints
-app.get('/api/live-state', (req, res) => {
-  res.json(currentMasterLiveState);
+// Test Comment qua REST (Manual)
+app.post('/api/tiktok/test-chat', (req, res) => {
+  const { username, comment } = req.body || {};
+  const chatPayload = {
+    userId: 'test_chat_' + Date.now(), uniqueId: 'test_chat',
+    nickname: username || 'Khán Giả Test', username: username || 'Khán Giả Test',
+    comment: comment || 'Chào shop!', text: comment || 'Chào shop!',
+    profilePictureUrl: '', avatar: ''
+  };
+  console.log(`[Test Chat] 💬 ${chatPayload.nickname}: "${chatPayload.comment}"`);
+  emitTikTokChat(chatPayload);
+  res.json({ success: true, chat: chatPayload });
 });
 
+// Live State APIs
+app.get('/api/live-state', (req, res) => { res.json(currentMasterLiveState); });
 app.post('/api/live-state', (req, res) => {
   if (req.body) {
     currentMasterLiveState = { ...currentMasterLiveState, ...req.body, updatedAt: Date.now() };
@@ -399,37 +516,23 @@ app.post('/api/live-state', (req, res) => {
   res.json({ success: true, state: currentMasterLiveState });
 });
 
-app.get('/api/bando-state', (req, res) => {
-  res.json(currentBandoGameState || {});
-});
-
+app.get('/api/bando-state', (req, res) => { res.json(currentBandoGameState || {}); });
 app.post('/api/bando-state', (req, res) => {
-  if (req.body) {
-    currentBandoGameState = req.body;
-    io.emit('bando_sync', req.body);
-  }
+  if (req.body) { currentBandoGameState = req.body; io.emit('bando_sync', req.body); }
   res.json({ success: true });
 });
 
-app.get('/api/battle-state', (req, res) => {
-  res.json(currentBattleGameState || {});
-});
-
+app.get('/api/battle-state', (req, res) => { res.json(currentBattleGameState || {}); });
 app.post('/api/battle-state', (req, res) => {
-  if (req.body) {
-    currentBattleGameState = req.body;
-    io.emit('battle_sync', req.body);
-  }
+  if (req.body) { currentBattleGameState = req.body; io.emit('battle_sync', req.body); }
   res.json({ success: true });
 });
 
-// TTS Proxy Endpoint: Phát giọng đọc trực tiếp độ trễ cực thấp
+// TTS Proxy
 app.get('/api/tts', (req, res) => {
   const text = (req.query.text || '').toString().trim();
   const lang = (req.query.lang || 'vi').toString().trim();
-  if (!text) {
-    return res.status(400).send('Missing text parameter');
-  }
+  if (!text) return res.status(400).send('Missing text parameter');
 
   const encodedText = encodeURIComponent(text.slice(0, 200));
   const encodedLang = encodeURIComponent(lang.toLowerCase().startsWith('vi') ? 'vi' : (lang || 'vi'));
@@ -441,9 +544,7 @@ app.get('/api/tts', (req, res) => {
       'Accept': 'audio/mpeg'
     }
   }, (proxyRes) => {
-    if (proxyRes.statusCode !== 200) {
-      return res.status(proxyRes.statusCode).send('Failed to fetch TTS');
-    }
+    if (proxyRes.statusCode !== 200) return res.status(proxyRes.statusCode).send('Failed TTS');
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('Cache-Control', 'public, max-age=86400');
     proxyRes.pipe(res);
@@ -453,59 +554,40 @@ app.get('/api/tts', (req, res) => {
   });
 });
 
-// AI Generation Endpoint
+// AI Script Generation
 app.post('/api/generate-script', async (req, res) => {
   try {
     const { brain, model, duration, topic } = req.body;
     if (!topic) return res.status(400).json({ error: 'Missing topic' });
-
     const prompt = `Viết kịch bản livestream bán hàng khoảng ${duration} phút về chủ đề: "${topic}".\nYêu cầu: Viết tự nhiên, cuốn hút, kích thích chốt đơn, có phần chào hỏi và tương tác với người xem. Không cần ghi chú hành động phức tạp.`;
-
     let generatedText = '';
-
     if (brain === 'gemini') {
       const apiKey = process.env.GEMINI_API_KEY;
       if (!apiKey) return res.status(500).json({ error: 'GEMINI_API_KEY is not set' });
-      
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }]
-        })
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
       });
       const data = await response.json();
       if (data.error) throw new Error(data.error.message || 'Gemini API Error');
       generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    } 
-    else if (brain === 'chatgpt') {
+    } else if (brain === 'chatgpt') {
       const apiKey = process.env.OPENAI_API_KEY;
       if (!apiKey) return res.status(500).json({ error: 'OPENAI_API_KEY is not set' });
-
-      // Clean up model name (e.g., 'GPT-4o-mini (Siêu rẻ, Tối ưu)' -> 'gpt-4o-mini')
       let apiModel = 'gpt-4o-mini';
-      if (model.includes('GPT-4o (')) apiModel = 'gpt-4o';
-      if (model.toLowerCase().includes('gpt-3.5')) apiModel = 'gpt-3.5-turbo';
-
+      if (model?.includes('GPT-4o (')) apiModel = 'gpt-4o';
+      if (model?.toLowerCase().includes('gpt-3.5')) apiModel = 'gpt-3.5-turbo';
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: apiModel,
-          messages: [{ role: 'user', content: prompt }]
-        })
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify({ model: apiModel, messages: [{ role: 'user', content: prompt }] })
       });
       const data = await response.json();
       if (data.error) throw new Error(data.error.message || 'OpenAI API Error');
       generatedText = data.choices?.[0]?.message?.content || '';
-    }
-    else {
+    } else {
       return res.status(400).json({ error: 'Unsupported AI Brain' });
     }
-
     res.json({ script: generatedText });
   } catch (error) {
     console.error('AI Gen Error:', error);
@@ -513,12 +595,10 @@ app.post('/api/generate-script', async (req, res) => {
   }
 });
 
-// SPA Fallback: Trả về index.html cho các route / overlay
+// SPA Fallback
 if (distPath) {
   app.use((req, res, next) => {
-    if (req.method !== 'GET' || req.path.startsWith('/api') || req.path.startsWith('/socket.io')) {
-      return next();
-    }
+    if (req.method !== 'GET' || req.path.startsWith('/api') || req.path.startsWith('/socket.io')) return next();
     res.sendFile(path.join(distPath, 'index.html'));
   });
 }
@@ -527,8 +607,11 @@ const PORT = process.env.PORT || 3001;
 httpServer.listen(PORT, () => {
   console.log(`\n===========================================================`);
   console.log(`🚀 HỆ THỐNG AVALIVE LIVESTREAM VIP PRO ĐANG HOẠT ĐỘNG!`);
-  console.log(`🌐 Màn Hình Chính & Bảng Điều Khiển: http://localhost:${PORT}`);
-  console.log(`🗺️ Link Overlay Game Bản Đồ (OBS/TikTok Studio): http://localhost:${PORT}/?overlay=bando`);
-  console.log(`⚔️ Link Overlay Game Chiến Đấu (OBS/TikTok Studio): http://localhost:${PORT}/?overlay=battle`);
+  console.log(`🌐 Màn Hình Chính: http://localhost:${PORT}`);
+  console.log(`🗺️ Overlay Bản Đồ: http://localhost:${PORT}/?overlay=bando`);
+  console.log(`⚔️ Overlay Chiến Đấu: http://localhost:${PORT}/?overlay=battle`);
+  console.log(`🎭 Test Gift: POST http://localhost:${PORT}/api/tiktok/test-gift`);
+  console.log(`💬 Test Chat: POST http://localhost:${PORT}/api/tiktok/test-chat`);
+  console.log(`🎬 Simulation: POST http://localhost:${PORT}/api/simulation/start`);
   console.log(`===========================================================\n`);
 });

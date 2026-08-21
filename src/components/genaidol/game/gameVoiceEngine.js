@@ -131,6 +131,11 @@ class GameVoiceEngine {
     this.pitch = 1.0;
     this.isMuted = false;
     this.isSpeaking = false;
+    
+    // Voice Queue Management (KHÔNG ĐỂ CHỒNG CHÉO)
+    this.speechQueue = [];
+    this.isProcessingQueue = false;
+    
     this.onDuckAudio = null;
     this.onSpeechStateChange = null;
     this.activeAudio = null;
@@ -295,90 +300,125 @@ class GameVoiceEngine {
     if (typeof window === 'undefined') return;
     if (!text || typeof text !== 'string') return;
     if (this.isMuted || this.volume <= 0.001) return;
-    if (this.isSpeaking && !priority) return;
-
-    let activeVoice = null;
-    let effectiveRole = 'game';
-
-    if (roleOrVoice === 'assistant') {
-      activeVoice = this.assistantVoice;
-      effectiveRole = 'assistant';
-    } else if (roleOrVoice === 'game') {
-      activeVoice = this.gameVoice;
-      effectiveRole = 'game';
-    } else if (typeof roleOrVoice === 'string') {
-      // Direct voice ID provided
-      const foundVoice = ALL_SYSTEM_VOICES.find(v => v.id === roleOrVoice || v.voiceId === roleOrVoice);
-      if (foundVoice) {
-        activeVoice = foundVoice;
-        effectiveRole = foundVoice.gender === 'Female' ? 'assistant' : 'game';
-      } else {
-        activeVoice = this.assistantVoice;
-        effectiveRole = 'assistant';
-      }
-    } else if (typeof roleOrVoice === 'object' && roleOrVoice !== null) {
-      activeVoice = roleOrVoice;
-      effectiveRole = roleOrVoice.gender === 'Female' ? 'assistant' : 'game';
-    }
-
-    if (activeVoice?.enabled === false) return; // Nếu giọng vai trò này bị tắt
 
     if (priority) {
       this.cancelSpeech();
+      this.speechQueue = []; // Clear current queue to prioritize this message
     }
 
-    this.isSpeaking = true;
-    if (this.onDuckAudio) this.onDuckAudio(true);
-    if (this.onSpeechStateChange) this.onSpeechStateChange(true, text, effectiveRole);
+    // Add to queue
+    this.speechQueue.push({ text, roleOrVoice });
+    
+    // Process queue if not already processing
+    this.processSpeechQueue();
+  }
 
-    const baseVoice = ALL_SYSTEM_VOICES.find(v => v.id === activeVoice?.id || v.voiceId === activeVoice?.voiceId) || activeVoice || {
-      id: effectiveRole === 'assistant' ? 'free_vi_female' : 'free_vi_male',
-      provider: 'system',
-      tier: 'free',
-      gender: effectiveRole === 'assistant' ? 'Female' : 'Male',
-      role: effectiveRole
-    };
+  async processSpeechQueue() {
+    if (this.isProcessingQueue || this.isSpeaking || this.speechQueue.length === 0) return;
+    
+    this.isProcessingQueue = true;
+    
+    while (this.speechQueue.length > 0) {
+      if (this.isMuted || this.volume <= 0.001) {
+        this.speechQueue = [];
+        break;
+      }
+      
+      const item = this.speechQueue.shift();
+      await this.playSingleSpeech(item.text, item.roleOrVoice);
+      
+      // Delay (kéo giãn thời gian ra) - gap between sentences
+      await new Promise(resolve => setTimeout(resolve, 800));
+    }
+    
+    this.isProcessingQueue = false;
+  }
 
-    const voiceObj = {
-      ...baseVoice,
-      volume: (activeVoice?.volume !== undefined ? activeVoice.volume : this.volume),
-      rate: (activeVoice?.rate !== undefined ? activeVoice.rate : this.speedRate),
-      pitch: (activeVoice?.pitch !== undefined ? activeVoice.pitch : this.pitch)
-    };
+  playSingleSpeech(text, roleOrVoice) {
+    return new Promise(async (resolve) => {
+      let activeVoice = null;
+      let effectiveRole = 'game';
 
-    try {
-      const charCount = (text || '').length || 30;
-      window.dispatchEvent(new CustomEvent('avalive:deduct_token', {
-        detail: {
-          amount: charCount,
-          reason: `Game Voice AI (${effectiveRole === 'assistant' ? 'Trợ Lý' : 'BLV'} - ${voiceObj.name || voiceObj.id}): "${text.slice(0, 20)}..."`
+      if (roleOrVoice === 'assistant') {
+        activeVoice = this.assistantVoice;
+        effectiveRole = 'assistant';
+      } else if (roleOrVoice === 'game') {
+        activeVoice = this.gameVoice;
+        effectiveRole = 'game';
+      } else if (typeof roleOrVoice === 'string') {
+        const foundVoice = ALL_SYSTEM_VOICES.find(v => v.id === roleOrVoice || v.voiceId === roleOrVoice);
+        if (foundVoice) {
+          activeVoice = foundVoice;
+          effectiveRole = foundVoice.gender === 'Female' ? 'assistant' : 'game';
+        } else {
+          activeVoice = this.assistantVoice;
+          effectiveRole = 'assistant';
         }
-      }));
+      } else if (typeof roleOrVoice === 'object' && roleOrVoice !== null) {
+        activeVoice = roleOrVoice;
+        effectiveRole = roleOrVoice.gender === 'Female' ? 'assistant' : 'game';
+      }
 
-      const safetyWatchdog = setTimeout(() => {
-        if (this.isSpeaking) {
+      if (activeVoice?.enabled === false) return resolve(); // Bỏ qua nếu bị tắt
+
+      this.isSpeaking = true;
+      if (this.onDuckAudio) this.onDuckAudio(true);
+      if (this.onSpeechStateChange) this.onSpeechStateChange(true, text, effectiveRole);
+
+      const baseVoice = ALL_SYSTEM_VOICES.find(v => v.id === activeVoice?.id || v.voiceId === activeVoice?.voiceId) || activeVoice || {
+        id: effectiveRole === 'assistant' ? 'free_vi_female' : 'free_vi_male',
+        provider: 'system',
+        tier: 'free',
+        gender: effectiveRole === 'assistant' ? 'Female' : 'Male',
+        role: effectiveRole
+      };
+
+      const voiceObj = {
+        ...baseVoice,
+        volume: (activeVoice?.volume !== undefined ? activeVoice.volume : this.volume),
+        rate: (activeVoice?.rate !== undefined ? activeVoice.rate : this.speedRate),
+        pitch: (activeVoice?.pitch !== undefined ? activeVoice.pitch : this.pitch)
+      };
+
+      try {
+        const charCount = (text || '').length || 30;
+        window.dispatchEvent(new CustomEvent('avalive:deduct_token', {
+          detail: {
+            amount: charCount,
+            reason: `Game Voice AI (${effectiveRole === 'assistant' ? 'Trợ Lý' : 'BLV'} - ${voiceObj.name || voiceObj.id}): "${text.slice(0, 20)}..."`
+          }
+        }));
+
+        const safetyWatchdog = setTimeout(() => {
+          if (this.isSpeaking) {
+            this.isSpeaking = false;
+            if (this.onDuckAudio) this.onDuckAudio(false);
+            if (this.onSpeechStateChange) this.onSpeechStateChange(false, '', effectiveRole);
+            resolve();
+          }
+        }, Math.max(4000, (text || '').length * 150));
+
+        await previewVoiceAudio(voiceObj, text, () => {
+          clearTimeout(safetyWatchdog);
           this.isSpeaking = false;
           if (this.onDuckAudio) this.onDuckAudio(false);
           if (this.onSpeechStateChange) this.onSpeechStateChange(false, '', effectiveRole);
-        }
-      }, Math.max(4000, (text || '').length * 150));
-
-      await previewVoiceAudio(voiceObj, text, () => {
-        clearTimeout(safetyWatchdog);
+          resolve();
+        });
+      } catch (err) {
+        console.warn(`[GameVoiceEngine:${this.gameType}] Speak error:`, err);
         this.isSpeaking = false;
         if (this.onDuckAudio) this.onDuckAudio(false);
         if (this.onSpeechStateChange) this.onSpeechStateChange(false, '', effectiveRole);
-      });
-    } catch (err) {
-      console.warn(`[GameVoiceEngine:${this.gameType}] Speak error:`, err);
-      this.isSpeaking = false;
-      if (this.onDuckAudio) this.onDuckAudio(false);
-      if (this.onSpeechStateChange) this.onSpeechStateChange(false, '', effectiveRole);
-    }
+        resolve();
+      }
+    });
   }
 
   cancelSpeech() {
     stopVoiceAudio();
+    this.speechQueue = [];
+    this.isProcessingQueue = false;
     this.isSpeaking = false;
     if (this.onDuckAudio) this.onDuckAudio(false);
     if (this.onSpeechStateChange) this.onSpeechStateChange(false, '', 'game');
@@ -388,7 +428,6 @@ class GameVoiceEngine {
     this.stopPeriodicCommentary();
     this.cancelSpeech();
     this.isGameActive = false;
-    this.isSpeaking = false;
   }
 
   // Khớp Từ Khóa & Bộ Não AI Gemini Tự Động Trả Lời Câu Hỏi Ngoài Vùng Cài Đặt (Smart Real-time Q&A)
@@ -397,9 +436,16 @@ class GameVoiceEngine {
     const lower = commentText.toLowerCase().trim();
     const now = Date.now();
 
-    // Global Cooldown Protection để tránh dồn dập nhiều bình luận đè tiếng lên nhau
+    // Thay vì chặn ngay nếu đang nói, chúng ta sẽ cho vào queue.
+    // Tuy nhiên, để tránh "rác", ta vẫn giữ cooldown giữa các bình luận để không lấy hết.
     const globalCooldownMs = Math.max(1, this.replyCooldownSec || 2) * 1000;
-    if (this.isSpeaking && now - (this.lastReplyTime || 0) < globalCooldownMs) {
+    
+    // Tránh việc đưa quá nhiều tin nhắn vào hàng đợi
+    if (this.speechQueue.length > 5) {
+      return false; // Hàng đợi quá dài, bỏ qua bình luận mới để kéo giãn thời gian
+    }
+
+    if (now - (this.lastReplyTime || 0) < globalCooldownMs) {
       return false;
     }
 
@@ -421,26 +467,16 @@ class GameVoiceEngine {
           .replace(/\[user\]/gi, userName)
           .replace(/\[game\]/gi, this.gameType === 'battle' ? 'Đại Chiến PK' : 'Bản Đồ Cắm Cờ');
 
-        const delayMs = Math.max(0, (this.responseDelaySec !== undefined ? this.responseDelaySec : 0.5) * 1000);
         const voiceTarget = rule.voiceId || rule.role || 'assistant';
-
-        if (delayMs <= 50) {
-          this.speak(reply, voiceTarget, true);
-        } else {
-          setTimeout(() => {
-            this.speak(reply, voiceTarget, true);
-          }, delayMs);
-        }
-
+        
+        // Push to queue directly instead of timeout
+        this.speak(reply, voiceTarget, false);
         return true;
       }
     }
 
     // 2. Nếu không khớp từ khóa cố định: Tự động trả lời thông minh câu hỏi ngoài vùng
     if (lower.length >= 1) {
-      if (now - (this.lastReplyTime || 0) < globalCooldownMs) {
-        return false;
-      }
       this.lastReplyTime = now;
 
       try {
@@ -453,14 +489,7 @@ class GameVoiceEngine {
         });
 
         if (aiResponse?.text) {
-          const delayMs = Math.max(0, (this.responseDelaySec !== undefined ? this.responseDelaySec : 0.5) * 1000);
-          if (delayMs <= 50) {
-            this.speak(aiResponse.text, this.assistantVoice || 'assistant', true);
-          } else {
-            setTimeout(() => {
-              this.speak(aiResponse.text, this.assistantVoice || 'assistant', true);
-            }, delayMs);
-          }
+          this.speak(aiResponse.text, this.assistantVoice || 'assistant', false);
           return true;
         }
       } catch (geminiErr) {
@@ -470,14 +499,7 @@ class GameVoiceEngine {
           `Cảm ơn ${userName} đã tương tác rất nhiệt tình! Chúc bạn có những phút giây giải trí thật bùng nổ cùng đại chiến cắm cờ!`
         ];
         const chosen = smartFallbacks[Math.floor(Math.random() * smartFallbacks.length)];
-        const delayMs = Math.max(0, (this.responseDelaySec !== undefined ? this.responseDelaySec : 0.5) * 1000);
-        if (delayMs <= 50) {
-          this.speak(chosen, 'assistant', false);
-        } else {
-          setTimeout(() => {
-            this.speak(chosen, 'assistant', false);
-          }, delayMs);
-        }
+        this.speak(chosen, 'assistant', false);
         return true;
       }
     }

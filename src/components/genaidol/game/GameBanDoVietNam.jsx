@@ -252,6 +252,7 @@ export default function GameBanDoVietNam({
   const [isBgmPlaying, setIsBgmPlaying] = useState(() => bandoAudio.bgmPlaying);
   const [isSfxMuted, setIsSfxMuted] = useState(() => bandoAudio.isSfxMuted);
   const [isVoiceMuted, setIsVoiceMuted] = useState(() => bandoAudio.isVoiceMuted);
+  const [tiktokStatus, setTiktokStatus] = useState({ connected: false, username: '', simulationMode: false });
   const [bgmTimerMode, setBgmTimerMode] = useState(() => bandoAudio.bgmTimerMode || '24/7');
   const [showAudioModal, setShowAudioModal] = useState(false);
   const [bgmVolume, setBgmVolumeState] = useState(() => bandoAudio.bgmVolume);
@@ -856,6 +857,24 @@ export default function GameBanDoVietNam({
       socket.on('connect', () => {
         const savedTiktokId = localStorage.getItem('aidol_tiktok_id');
         if (savedTiktokId) {
+          socket.emit('connect_tiktok', savedTiktokId);
+        }
+      });
+
+      socket.on('tiktok_connected', (data) => {
+        setTiktokStatus({ connected: true, username: data?.username || '', simulationMode: false });
+        console.log('[GameBanDo] ✅ TikTok connected:', data?.username);
+      });
+
+      socket.on('tiktok_status', (data) => {
+        setTiktokStatus(prev => ({ ...prev, ...data }));
+      });
+
+      // Khi backend yêu cầu reconnect TikTok (stream bị rớt)
+      socket.on('REQUEST_RECONNECT_TIKTOK', (data) => {
+        const savedTiktokId = localStorage.getItem('aidol_tiktok_id') || data?.username;
+        if (savedTiktokId) {
+          console.log('[GameBanDo] 🔄 Auto-reconnecting TikTok:', savedTiktokId);
           socket.emit('connect_tiktok', savedTiktokId);
         }
       });

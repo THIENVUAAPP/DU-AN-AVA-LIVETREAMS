@@ -104,32 +104,41 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
   const [isTiktokConnected, setIsTiktokConnected] = useState(false);
   const [tiktokConnectedUser, setTiktokConnectedUser] = useState('');
   const [isConnectingTiktok, setIsConnectingTiktok] = useState(false);
+  const [isSimulationMode, setIsSimulationMode] = useState(false);
+  const [adminSocket, setAdminSocket] = useState(null);
 
   useEffect(() => {
     const backendUrl = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3001' : '';
     let socket = null;
     try {
-      socket = io(backendUrl || window.location.origin, { transports: ['websocket', 'polling'] });
+      socket = io(backendUrl || window.location.origin, { transports: ['websocket', 'polling'], reconnection: true });
+      setAdminSocket(socket);
       socket.emit('get_tiktok_status');
       socket.on('tiktok_status', (data) => {
         setIsTiktokConnected(!!data?.connected);
         setTiktokConnectedUser(data?.username || '');
         setIsConnectingTiktok(false);
+        setIsSimulationMode(!!data?.simulationMode);
       });
       socket.on('tiktok_connected', (data) => {
         setIsTiktokConnected(true);
         setTiktokConnectedUser(data?.username || '');
         setIsConnectingTiktok(false);
+        setIsSimulationMode(false);
       });
       socket.on('tiktok_disconnected', () => {
         setIsTiktokConnected(false);
         setTiktokConnectedUser('');
         setIsConnectingTiktok(false);
       });
+      socket.on('tiktok_error', () => {
+        setIsConnectingTiktok(false);
+      });
     } catch (e) {}
 
     return () => {
       if (socket) socket.disconnect();
+      setAdminSocket(null);
     };
   }, []);
 
@@ -138,22 +147,52 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
     const cleanId = tiktokUsernameInput.trim().replace(/^@/, '');
     try { localStorage.setItem('aidol_tiktok_id', cleanId); } catch (e) {}
     setIsConnectingTiktok(true);
-    const backendUrl = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3001' : '';
-    try {
-      const socket = io(backendUrl || window.location.origin, { transports: ['websocket', 'polling'] });
-      socket.emit('connect_tiktok', cleanId);
-    } catch (e) {}
+    if (adminSocket) {
+      adminSocket.emit('connect_tiktok', cleanId);
+    } else {
+      const backendUrl = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3001' : '';
+      try {
+        const socket = io(backendUrl || window.location.origin, { transports: ['websocket', 'polling'] });
+        socket.emit('connect_tiktok', cleanId);
+      } catch (e) {}
+    }
   };
 
   const handleDisconnectTiktok = () => {
-    const backendUrl = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3001' : '';
-    try {
-      const socket = io(backendUrl || window.location.origin, { transports: ['websocket', 'polling'] });
-      socket.emit('disconnect_tiktok');
-    } catch (e) {}
+    if (adminSocket) {
+      adminSocket.emit('disconnect_tiktok');
+    } else {
+      const backendUrl = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3001' : '';
+      try {
+        const socket = io(backendUrl || window.location.origin, { transports: ['websocket', 'polling'] });
+        socket.emit('disconnect_tiktok');
+      } catch (e) {}
+    }
     setIsTiktokConnected(false);
     setTiktokConnectedUser('');
   };
+
+  const handleToggleSimulation = async () => {
+    const backendUrl = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3001' : '';
+    const url = backendUrl || window.location.origin;
+    try {
+      if (isSimulationMode) {
+        await fetch(`${url}/api/simulation/stop`, { method: 'POST' });
+        setIsSimulationMode(false);
+      } else {
+        await fetch(`${url}/api/simulation/start`, { method: 'POST' });
+        setIsSimulationMode(true);
+      }
+    } catch (e) {
+      // Fallback via socket
+      if (adminSocket) {
+        adminSocket.emit(isSimulationMode ? 'stop_simulation' : 'start_simulation');
+        setIsSimulationMode(!isSimulationMode);
+      }
+    }
+  };
+
+
 
   const handleTestSpecificGift = (gId, gName, count, diamonds, region) => {
     bandoEngine.processGift({
