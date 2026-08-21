@@ -719,10 +719,9 @@ export default function GameBanDoVietNam({
       // Xử lý sự kiện cắm ô cờ
       if (lastEvt && (lastEvt.type === 'GIFT_PLACED' || lastEvt.type === 'GIFT')) {
         const user = lastEvt.user;
-        const count = lastEvt.claimed || lastEvt.count || 1;
+        const count = lastEvt.totalCells || lastEvt.claimed || lastEvt.count || 1;
         const flag = currentCountry?.flag || '🇻🇳';
-        const giftDef = bandoEngine.state.gifts?.find(g => g.id === lastEvt.giftId);
-        const giftName = lastEvt.giftName || giftDef?.name || 'Ô Quốc Kỳ';
+        const giftName = lastEvt.giftName || 'Ô Quốc Kỳ';
 
         let wx = 0, wz = 0;
         if (lastEvt.focalTarget) {

@@ -1317,7 +1317,10 @@ class BanDoGameEngine {
       claimed: toClaim.length, 
       claimedCells: toClaim,
       regionTarget,
-      focalTarget: this.state.lastFocalTarget 
+      focalTarget: this.state.lastFocalTarget,
+      giftName: giftDef.name,
+      baseCells: giftDef.cells || 1,
+      totalCells: (giftDef.cells || 1) * count
     });
   }
 

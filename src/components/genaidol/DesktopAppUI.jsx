@@ -2627,7 +2627,7 @@ export default function DesktopAppUI() {
 
       {/* Toast Notification */}
       {toast && (
-        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[99999] px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-bold animate-in slide-in-from-bottom-4 duration-300 max-w-sm ${
+        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[99999] px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-bold animate-in slide-in-from-top-4 duration-300 max-w-sm ${
           toast.type === 'error' ? 'bg-rose-600 text-white' : 
           toast.type === 'success' ? 'bg-emerald-600 text-white' : 
           'bg-orange-500 text-white'
