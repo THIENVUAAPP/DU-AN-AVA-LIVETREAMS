@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { 
-  Settings, Eye, Play, Square, RefreshCw, Download, Upload, Trash2,
-  Video, Mic2, Volume2, Wifi, WifiOff, Radio, CheckCircle, AlertCircle,
-  Plus, Search, X, ChevronDown, Monitor, Zap, SkipForward, Pause,
-  Sliders, Globe, Sparkles, Bot, VolumeX
+  Settings, CreditCard, Video, Moon, Sun, 
+  MessageCircle, Play, Pause, Mic, MicOff, X, Download, Plus,
+  Brain, Radio, Coins, AlertTriangle, Eye, Clock, List, Zap, AlertCircle, FileText, CheckSquare, CheckCircle,
+  Gift, ShoppingBag, Sparkles, RotateCcw, Send, Trash2, Heart, Share2, UserPlus, Users, Swords, Shield, Gamepad2, Flag, MapPin,
+  Smartphone, MonitorPlay, Globe, StopCircle, Power, Volume2, VolumeX, Volume1
 } from 'lucide-react';
 import flvjs from 'flv.js';
 import WorkspaceTacVu from './WorkspaceTacVu';
