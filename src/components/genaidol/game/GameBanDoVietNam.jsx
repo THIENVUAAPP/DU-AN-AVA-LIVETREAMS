@@ -698,25 +698,24 @@ export default function GameBanDoVietNam({
     notifyBookmark(`🔄 Đã khôi phục 3 vị trí mặc định ban đầu!`);
   };
 
-  // Subscribe engine state & gift placements
+  // Subscribe engine state & gift placements (with RequestAnimationFrame Throttle to fix lag)
   useEffect(() => {
+    let pendingState = null;
+    let pendingBadges = [];
+    let rAF_ID = null;
+
     const unsub = bandoEngine.subscribe((newState, lastEvt) => {
-      setGameState({ ...newState });
+      pendingState = newState;
       setIsAutoTesting(bandoEngine.isAutoTesting);
       setIsAuto247(bandoEngine.isAuto247Running);
-      if (newState.autoRotate !== undefined) {
-        setAutoRotate(newState.autoRotate);
-      }
-      if (newState.cameraPreset) {
-        setActiveCameraPreset(newState.cameraPreset);
-      }
 
       // Khi reset vòng chơi mới, dọn sạch toàn bộ huy hiệu cũ trên bản đồ
       if (lastEvt && (lastEvt.type === 'ROUND_RESET' || lastEvt.type === 'RESET')) {
+        pendingBadges = [];
         setRecentClaimBadges([]);
       }
 
-      // Xử lý sự kiện cắm ô cờ để tạo Huy Hiệu ID Người Dùng & Lá Cờ Quốc Kỳ Siêu Sắc Nét (Dù chỉ 1 ô cũng hiển thị rõ quốc kỳ)
+      // Xử lý sự kiện cắm ô cờ
       if (lastEvt && (lastEvt.type === 'GIFT_PLACED' || lastEvt.type === 'GIFT')) {
         const user = lastEvt.user;
         const count = lastEvt.claimed || lastEvt.count || 1;
@@ -724,7 +723,6 @@ export default function GameBanDoVietNam({
         const giftDef = bandoEngine.state.gifts?.find(g => g.id === lastEvt.giftId);
         const giftName = lastEvt.giftName || giftDef?.name || 'Ô Quốc Kỳ';
 
-        // Tính toạ độ 3D trung tâm của nhóm ô cờ vừa cắm
         let wx = 0, wz = 0;
         if (lastEvt.focalTarget) {
           wx = lastEvt.focalTarget.wx || 0;
@@ -752,10 +750,31 @@ export default function GameBanDoVietNam({
           timestamp: Date.now(),
         };
 
-        setRecentClaimBadges(prev => [newBadge, ...prev.slice(0, 14)]);
+        pendingBadges.push(newBadge);
+      }
+
+      if (!rAF_ID) {
+        rAF_ID = setTimeout(() => {
+          if (pendingState) {
+            setGameState({ ...pendingState });
+            if (pendingState.autoRotate !== undefined) setAutoRotate(pendingState.autoRotate);
+            if (pendingState.cameraPreset) setActiveCameraPreset(pendingState.cameraPreset);
+            pendingState = null;
+          }
+          if (pendingBadges.length > 0) {
+            const newB = [...pendingBadges];
+            setRecentClaimBadges(prev => [...newB, ...prev].slice(0, 14));
+            pendingBadges = [];
+          }
+          rAF_ID = null;
+        }, 150); // Batch update every 150ms -> Giảm tần suất render từ 60fps xuống 6fps để ko làm lag 3D
       }
     });
-    return () => unsub();
+
+    return () => {
+      unsub();
+      if (rAF_ID) clearTimeout(rAF_ID);
+    };
   }, [currentCountry]);
 
   // Tự động đóng màn hình vinh danh & Bắt đầu trận mới sau đúng 4 giây khi chiến thắng
