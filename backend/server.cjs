@@ -231,9 +231,10 @@ io.on('connection', (socket) => {
   // ---- TikTok Status ----
   socket.on('get_tiktok_status', () => {
     socket.emit('tiktok_status', {
-      connected: !!tiktokConnection && !!currentUsername,
-      username: currentUsername,
-      roomId: tiktokConnection?.roomId || null,
+      connected: (!!tiktokConnection && !!currentUsername) || (!!tiktokVideoConnection && !!currentVideoUsername) || !!globalFlvUrl,
+      username: currentUsername || currentVideoUsername || '',
+      roomId: tiktokConnection?.roomId || tiktokVideoConnection?.roomId || null,
+      flvUrl: globalFlvUrl,
       simulationMode: isSimulationMode
     });
   });
@@ -264,9 +265,9 @@ io.on('connection', (socket) => {
       stopSimulationMode();
     }
     io.emit('tiktok_status', {
-      connected: !!tiktokConnection && !!currentUsername,
-      username: currentUsername,
-      roomId: tiktokConnection?.roomId || null,
+      connected: (!!tiktokConnection && !!currentUsername) || (!!tiktokVideoConnection && !!currentVideoUsername) || !!globalFlvUrl,
+      username: currentUsername || currentVideoUsername || '',
+      roomId: tiktokConnection?.roomId || tiktokVideoConnection?.roomId || null,
       flvUrl: globalFlvUrl,
       simulationMode: isSimulationMode
     });

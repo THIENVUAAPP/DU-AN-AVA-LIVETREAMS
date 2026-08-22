@@ -534,6 +534,8 @@ export default function DesktopAppUI() {
 
   // ⚡ SOCKET.IO REALTIME KẾT NỐI VỚI BACKEND & TIKTOK LIVE CONNECTOR
   const socketRef = useRef(null);
+  const handleLiveEventRef = useRef(handleLiveEvent);
+  handleLiveEventRef.current = handleLiveEvent;
 
   useEffect(() => {
     let backendUrl = '';
@@ -576,7 +578,7 @@ export default function DesktopAppUI() {
         ...prev.slice(0, 48)
       ]);
       bandoAudio.unlock();
-      handleLiveEvent('VIEWER_JOIN', { name: targetChan });
+      handleLiveEventRef.current?.('VIEWER_JOIN', { name: targetChan });
     });
 
     socket.on('tiktok_chat', (data) => {
@@ -596,7 +598,7 @@ export default function DesktopAppUI() {
       const now = Date.now();
       if (text.trim().length >= 2 && now - lastAiCommentTime.current > 8000) {
         lastAiCommentTime.current = now;
-        handleLiveEvent('COMMENT', { name: author, text });
+        handleLiveEventRef.current?.('COMMENT', { name: author, text });
       }
     });
 
@@ -625,14 +627,14 @@ export default function DesktopAppUI() {
       window.dispatchEvent(new CustomEvent('battle-trigger-gift', { detail: data }));
 
       // 3. Kích hoạt phản hồi Idol Live
-      handleLiveEvent('GIFT', { name: author, gift: giftName, count: giftCount });
+      handleLiveEventRef.current?.('GIFT', { name: author, gift: giftName, count: giftCount });
     });
 
     socket.on('tiktok_like', (data) => {
       if (!data) return;
       const count = data.likeCount || 1;
       const author = data.username || 'Khán giả';
-      handleLiveEvent('LIKE', { count: `${count} tim`, name: author });
+      handleLiveEventRef.current?.('LIKE', { count: `${count} tim`, name: author });
     });
 
     socket.on('tiktok_member', (data) => {
@@ -643,13 +645,16 @@ export default function DesktopAppUI() {
       const now = Date.now();
       if (now - lastAiGreetingTime.current > 15000) {
         lastAiGreetingTime.current = now;
-        handleLiveEvent('VIEWER_JOIN', { name: author });
+        handleLiveEventRef.current?.('VIEWER_JOIN', { name: author });
       }
     });
 
     socket.on('tiktok_disconnected', () => {
       const timeStr = new Date().toLocaleTimeString();
       setTiktokLogs(prev => [`[${timeStr}] ⚠️ Mất kết nối TikTok Live`, ...prev.slice(0, 49)]);
+      setIsConnected(false);
+      setIsConnecting(false);
+      setFlvUrl(null);
     });
 
     socket.on('tiktok_error', (err) => {
@@ -663,6 +668,7 @@ export default function DesktopAppUI() {
       if (!data) return;
       if (data.connected === false && !data.connecting) {
         setIsConnecting(false);
+        setIsConnected(false);
         setFlvUrl(null);
         if (data.error || data.note) {
           setToast({ type: 'error', message: `Lỗi kết nối: ${data.error || data.note}` });
@@ -678,7 +684,7 @@ export default function DesktopAppUI() {
     return () => {
       socket.disconnect();
     };
-  }, [isGameBanDoActive, isGameBattleActive, handleLiveEvent]);
+  }, []);
 
   // ⚡ MASTER REALTIME BROADCAST: Đồng bộ 100% thời gian thực sang TikTok LIVE Studio / OBS Studio
   useEffect(() => {
