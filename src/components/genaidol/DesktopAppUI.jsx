@@ -148,8 +148,10 @@ export default function DesktopAppUI() {
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
         }
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
         if (ctx) {
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         }
       }

@@ -407,6 +407,30 @@ io.on('connection', (socket) => {
       let foundHls = null;
       let foundAny = null;
 
+      // 1. Kiểm tra cấu trúc stream_data cao cấp của TikTok (UHD / Origin / HD)
+      try {
+        let streamDataStr = null;
+        if (rootObj?.live_core_sdk_data?.pull_data?.stream_data) {
+          streamDataStr = rootObj.live_core_sdk_data.pull_data.stream_data;
+        } else if (rootObj?.data?.stream_url?.live_core_sdk_data?.pull_data?.stream_data) {
+          streamDataStr = rootObj.data.stream_url.live_core_sdk_data.pull_data.stream_data;
+        }
+        if (streamDataStr) {
+          const parsed = typeof streamDataStr === 'string' ? JSON.parse(streamDataStr) : streamDataStr;
+          const dataNode = parsed.data || {};
+          const qualityTiers = ['origin', 'uhd', 'full_hd', 'hd', 'sd', 'ld'];
+          for (const q of qualityTiers) {
+            if (dataNode[q]?.main) {
+              const node = dataNode[q].main;
+              if (node.flv && !foundFlv) foundFlv = node.flv;
+              if (node.hls && !foundHls) foundHls = node.hls;
+              if (foundFlv || foundHls) break;
+            }
+          }
+        }
+      } catch (e) {}
+
+      // 2. Quét đệ quy toàn bộ cây đối tượng nếu chưa tìm thấy chất lượng cao nhất
       const scan = (val) => {
         if (!val) return;
         if (typeof val === 'string') {
@@ -445,7 +469,9 @@ io.on('connection', (socket) => {
         }
       };
 
-      scan(rootObj);
+      if (!foundFlv && !foundHls) {
+        scan(rootObj);
+      }
       const bestUrl = foundFlv || foundHls || foundAny;
       return { flv: foundFlv, hls: foundHls, bestUrl };
     };
