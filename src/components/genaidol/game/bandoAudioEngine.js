@@ -308,15 +308,6 @@ class BanDoAudioEngine {
     this.emitStatusUpdate();
   }
 
-  toggleBgm() {
-    if (this.bgmPlaying) {
-      this.stopBgmOnLive();
-    } else {
-      this.playBgmOnLive();
-    }
-    this.emitStatusUpdate();
-    return this.bgmPlaying;
-  }
 
   playBgmOnLive() {
     this.unlock();
@@ -328,6 +319,14 @@ class BanDoAudioEngine {
         this.bgmGain.gain.setValueAtTime(this.bgmVolume, this.ctx.currentTime);
       }
       this.playCustomBgm();
+    } else {
+      if (typeof window !== 'undefined') {
+        alert("Vui lòng tải lên file nhạc nền MP3 của bạn trước khi phát (do nhạc nền mặc định đã được tắt).");
+      }
+      this.isBgmEnabled = false;
+      this.bgmPlaying = false;
+      try { localStorage.setItem('bando_is_bgm_enabled', 'false'); } catch (e) {}
+      this.emitStatusUpdate();
     }
   }
 
