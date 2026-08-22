@@ -280,18 +280,7 @@ export default function LiveCommerceStudio({ isLive }) {
       bannerText: 'Sự Kiện Livestream Bán Hàng',
       countdown: '15:00',
       pinnedProductId: Date.now() + 1,
-      products: [
-        { 
-          id: Date.now() + 1, 
-          name: 'Sản Phẩm Mẫu 01', 
-          price: '990.000₫', 
-          oldPrice: '1.500.000₫',
-          stock: 50,
-          sync: newSessionPlatform,
-          image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80',
-          badge: 'HOT DEAL'
-        }
-      ]
+      products: []
     };
 
     setLiveSessions([newSession, ...liveSessions]);
