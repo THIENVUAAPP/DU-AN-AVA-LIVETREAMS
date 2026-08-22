@@ -19,11 +19,12 @@ import { Volume2, VolumeX, Sparkles, Video, Swords, Flag } from 'lucide-react';
  */
 export default function CleanLiveOverlay() {
   const [masterState, setMasterState] = useState(() => {
+    let saved = null;
     try {
-      const saved = localStorage.getItem('avalive_master_live_state');
-      if (saved) return JSON.parse(saved);
+      const raw = localStorage.getItem('avalive_master_live_state');
+      if (raw) saved = JSON.parse(raw);
     } catch (e) {}
-    
+
     const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
     const overlayParam = urlParams ? urlParams.get('overlay') : '';
     const ratioParam = urlParams ? urlParams.get('ratio') : '9:16';
@@ -32,17 +33,17 @@ export default function CleanLiveOverlay() {
     if (overlayParam === 'bando' || overlayParam === 'vietnam_map' || overlayParam === 'map') defaultStage = 'bando';
     else if (overlayParam === 'gamebattle' || overlayParam === 'battle' || overlayParam === 'game') defaultStage = 'battle';
     else if (overlayParam === 'avatar' || overlayParam === 'idol') defaultStage = 'idol';
-    else if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed.stage) defaultStage = parsed.stage;
+    else if (saved && saved.stage) {
+      defaultStage = saved.stage;
     }
 
     return {
       stage: defaultStage, // 'idol' | 'battle' | 'bando'
       aspectRatio: ratioParam || '9:16',
-      mediaUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1200&auto=format&fit=crop&q=80',
-      isVideo: false,
-      characterName: 'AI Idol Lan Hương',
+      mediaUrl: saved?.mediaUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1200&auto=format&fit=crop&q=80',
+      flvUrl: saved?.flvUrl || null,
+      isVideo: saved?.isVideo || false,
+      characterName: saved?.characterName || 'AI Idol Lan Hương',
       isConnected: true,
       isDarkMode: true,
       currentLang: 'vi'
