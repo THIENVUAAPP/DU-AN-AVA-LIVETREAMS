@@ -163,10 +163,13 @@ export default function DesktopAppUI() {
         hlsPlayerRef.current = null;
       }
 
+      const streamSrc = getPlayableStreamUrl(url);
+      console.log('[AvaLive Stream] 🎬 Đang phát luồng:', streamSrc);
+
       if (url.includes('.m3u8')) {
         if (Hls.isSupported()) {
-          const hls = new Hls({ enableWorker: true, lowLatencyMode: true });
-          hls.loadSource(url);
+          const hls = new Hls({ enableWorker: false, lowLatencyMode: true });
+          hls.loadSource(streamSrc);
           hls.attachMedia(videoEl);
           hls.on(Hls.Events.MANIFEST_PARSED, () => {
             videoEl.play().catch(() => {
@@ -176,27 +179,26 @@ export default function DesktopAppUI() {
           });
           hlsPlayerRef.current = hls;
         } else if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
-          videoEl.src = url;
+          videoEl.src = streamSrc;
           videoEl.play().catch(() => {
             videoEl.muted = true;
             videoEl.play().catch(e => console.warn('Lỗi auto-play hls safari:', e));
           });
         }
       } else if (flvjs.isSupported()) {
-        const streamSrc = getPlayableStreamUrl(url);
-        console.log('[AvaLive Stream] 🎬 Đang gắn kết luồng FLV Player:', streamSrc);
         const flvPlayer = flvjs.createPlayer({
           type: 'flv',
           isLive: true,
           hasAudio: true,
+          hasVideo: true,
           url: streamSrc,
           cors: true,
-          enableWorker: true,
+          enableWorker: false,
           enableStashBuffer: false,
           stashInitialSize: 128,
           lazyLoad: false
         }, {
-          enableWorker: true,
+          enableWorker: false,
           enableStashBuffer: false,
           stashInitialSize: 128,
           lazyLoad: false,
@@ -204,9 +206,15 @@ export default function DesktopAppUI() {
         });
         flvPlayer.attachMediaElement(videoEl);
         flvPlayer.load();
-        flvPlayer.play()?.catch(() => {
-          videoEl.muted = true;
-          flvPlayer.play()?.catch(err => console.warn('Lỗi play flv:', err));
+        const playPromise = flvPlayer.play();
+        if (playPromise && playPromise.catch) {
+          playPromise.catch(() => {
+            videoEl.muted = true;
+            flvPlayer.play()?.catch(err => console.warn('Lỗi play flv:', err));
+          });
+        }
+        flvPlayer.on(flvjs.Events.ERROR, (errType, errDetail, errInfo) => {
+          console.warn('[AvaLive FLV Player Error]:', errType, errDetail, errInfo);
         });
         flvPlayerRef.current = flvPlayer;
       }

@@ -428,29 +428,17 @@ io.on('connection', (socket) => {
       };
 
       // 1. Luôn ưu tiên FLV có chữ ký CDN đầy đủ (Full HD / HD)
-      if (obj.flv_pull_url) {
-        const flv = extractFromMap(obj.flv_pull_url);
-        if (flv) return flv;
-      }
+      let flv = null;
+      let hls = null;
+      if (obj.flv_pull_url) flv = extractFromMap(obj.flv_pull_url);
+      if (obj.hls_pull_url_map) hls = extractFromMap(obj.hls_pull_url_map);
+      if (!hls && obj.hls_pull_url && typeof obj.hls_pull_url === 'string') hls = obj.hls_pull_url;
+      if (!flv && obj.rtmp_pull_url) flv = extractFromMap(obj.rtmp_pull_url);
 
-      // 2. HLS Pull Map (m3u8)
-      if (obj.hls_pull_url_map) {
-        const hls = extractFromMap(obj.hls_pull_url_map);
-        if (hls) return hls;
-      }
-
-      // 3. RTMP Pull URL
-      if (obj.rtmp_pull_url) {
-        const rtmp = extractFromMap(obj.rtmp_pull_url);
-        if (rtmp) return rtmp;
-      }
-
-      if (obj.hls_pull_url && typeof obj.hls_pull_url === 'string') return obj.hls_pull_url;
-
-      return null;
+      return { flv, hls, bestUrl: flv || hls };
     };
 
-    let flvUrl = null;
+    let streamResult = { flv: null, hls: null, bestUrl: null };
     let videoConnected = false;
 
     // 1. Kết nối Video (nếu có targetVideoUser)
@@ -467,11 +455,10 @@ io.on('connection', (socket) => {
         try {
           const vidState = await Promise.race([vidPromise, vidTimeout]);
           console.log(`[TikTok Live] ✅ Đã kết nối Video Room ID: ${vidState?.roomId || 'ACTIVE'} (${targetVideoUser})`);
-          console.log(`[TikTok Live] Video Room Info:`, JSON.stringify(vidState?.roomInfo?.stream_url || vidState?.roomInfo?.data?.stream_url || {}).substring(0, 300));
-          if (vidState?.roomInfo?.stream_url) flvUrl = extractFlv(vidState.roomInfo.stream_url);
-          if (!flvUrl && vidState?.roomInfo?.data?.stream_url) flvUrl = extractFlv(vidState.roomInfo.data.stream_url);
-          console.log(`[TikTok Live] Video FLV URL extracted:`, flvUrl);
-          if (flvUrl) globalFlvUrl = flvUrl;
+          if (vidState?.roomInfo?.stream_url) streamResult = extractFlv(vidState.roomInfo.stream_url);
+          if (!streamResult.bestUrl && vidState?.roomInfo?.data?.stream_url) streamResult = extractFlv(vidState.roomInfo.data.stream_url);
+          console.log(`[TikTok Live] Stream Result: FLV=${streamResult.flv ? 'YES' : 'NO'}, HLS=${streamResult.hls ? 'YES' : 'NO'}`);
+          if (streamResult.bestUrl) globalFlvUrl = streamResult.bestUrl;
           videoConnected = true;
         } catch (err) {
           console.error(`[TikTok Live] ❌ Lỗi kết nối Video ${targetVideoUser}:`, err.message);
@@ -480,11 +467,14 @@ io.on('connection', (socket) => {
       } catch(e) {}
     }
 
+    const flvUrl = streamResult.flv || streamResult.bestUrl;
+    const hlsUrl = streamResult.hls;
+
     // Nếu không có Chat ID, kết thúc ở đây và chỉ phát Video
     if (!targetUser) {
-      if (videoConnected && flvUrl) {
-        io.emit('tiktok_connected', { username: targetVideoUser, roomId: 'VIDEO_ONLY', flvUrl });
-        io.emit('tiktok_status', { connected: true, username: targetVideoUser, roomId: 'VIDEO_ONLY', flvUrl });
+      if (videoConnected && (flvUrl || hlsUrl)) {
+        io.emit('tiktok_connected', { username: targetVideoUser, roomId: 'VIDEO_ONLY', flvUrl, hlsUrl });
+        io.emit('tiktok_status', { connected: true, username: targetVideoUser, roomId: 'VIDEO_ONLY', flvUrl, hlsUrl });
       } else {
         io.emit('tiktok_error', `Kênh Video ${targetVideoUser} chưa live hoặc ID không tồn tại!`);
         io.emit('tiktok_status', { connected: false, username: targetVideoUser });
@@ -516,21 +506,28 @@ io.on('connection', (socket) => {
       stopSimulationMode();
       
       if (!targetVideoUser) {
-        if (state?.roomInfo?.stream_url) flvUrl = extractFlv(state.roomInfo.stream_url);
-        if (!flvUrl && state?.roomInfo?.data?.stream_url) flvUrl = extractFlv(state.roomInfo.data.stream_url);
-        if (flvUrl) globalFlvUrl = flvUrl;
+        if (state?.roomInfo?.stream_url) {
+          const res = extractFlv(state.roomInfo.stream_url);
+          if (res.bestUrl) globalFlvUrl = res.bestUrl;
+        }
+        if (!globalFlvUrl && state?.roomInfo?.data?.stream_url) {
+          const res = extractFlv(state.roomInfo.data.stream_url);
+          if (res.bestUrl) globalFlvUrl = res.bestUrl;
+        }
       }
       
-      io.emit('tiktok_connected', { username: targetUser, roomId: state?.roomId, flvUrl });
-      io.emit('tiktok_status', { connected: true, username: targetUser, roomId: state?.roomId, flvUrl });
+      const finalFlv = flvUrl || globalFlvUrl;
+      const finalHls = hlsUrl;
+      io.emit('tiktok_connected', { username: targetUser, roomId: state?.roomId, flvUrl: finalFlv, hlsUrl: finalHls });
+      io.emit('tiktok_status', { connected: true, username: targetUser, roomId: state?.roomId, flvUrl: finalFlv, hlsUrl: finalHls });
     }).catch(err => {
       console.error(`[TikTok Live] ❌ Không thể kết nối Chat ${targetUser}: ${err.message || err}`);
       
       if (targetVideoUser && videoConnected) {
         // NẾU Chat thất bại (chưa live), NHƯNG Video đã thành công -> Vẫn cho phép hiển thị Video!
         console.log(`[TikTok Live] ⚠️ Chat chưa live nhưng Video đã có. Phát video trước.`);
-        io.emit('tiktok_connected', { username: targetUser, roomId: 'VIDEO_ONLY', flvUrl });
-        io.emit('tiktok_status', { connected: true, username: targetUser, roomId: 'VIDEO_ONLY', flvUrl });
+        io.emit('tiktok_connected', { username: targetUser, roomId: 'VIDEO_ONLY', flvUrl, hlsUrl });
+        io.emit('tiktok_status', { connected: true, username: targetUser, roomId: 'VIDEO_ONLY', flvUrl, hlsUrl });
         io.emit('tiktok_error', `Kênh Chat ${targetUser} chưa live, tạm thời chỉ phát Video.`);
         
         // Thử kết nối lại Chat ngầm mỗi 15 giây
