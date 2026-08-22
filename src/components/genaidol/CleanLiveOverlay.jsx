@@ -366,13 +366,17 @@ export default function CleanLiveOverlay() {
           enableWorker: false,
           enableStashBuffer: false,
           stashInitialSize: 128,
-          lazyLoad: false
+          lazyLoad: false,
+          seekType: 'range'
         }, {
           enableWorker: false,
           enableStashBuffer: false,
           stashInitialSize: 128,
           lazyLoad: false,
-          autoCleanupSourceBuffer: true
+          autoCleanupSourceBuffer: true,
+          autoCleanupMaxBackwardDuration: 5,
+          autoCleanupMinBackwardDuration: 2,
+          fixAudioTimestampGap: false
         });
         flvPlayer.attachMediaElement(videoEl);
         flvPlayer.load();
@@ -383,12 +387,31 @@ export default function CleanLiveOverlay() {
             flvPlayer.play()?.catch(err => console.warn('Lỗi play flv overlay:', err));
           });
         }
+
+        const liveEdgeInterval = setInterval(() => {
+          if (videoEl && !videoEl.paused && videoEl.buffered && videoEl.buffered.length > 0) {
+            const end = videoEl.buffered.end(videoEl.buffered.length - 1);
+            const diff = end - videoEl.currentTime;
+            if (diff > 2.5) {
+              videoEl.currentTime = end - 0.3;
+            }
+          }
+          if (videoEl && videoEl.paused) {
+            videoEl.play()?.catch(() => {});
+          }
+        }, 2000);
+
         flvPlayer.on(flvjs.Events.ERROR, (errType, errDetail, errInfo) => {
           console.warn('[AvaLive Overlay FLV Error]:', errType, errDetail, errInfo);
+          if (errType === flvjs.ErrorTypes.NETWORK_ERROR) {
+            flvPlayer.unload();
+            flvPlayer.load();
+            flvPlayer.play()?.catch(() => {});
+          }
         });
         flvPlayerRef.current = flvPlayer;
       } else if (Hls.isSupported()) {
-        const hls = new Hls({ enableWorker: false, lowLatencyMode: true });
+        const hls = new Hls({ enableWorker: false, lowLatencyMode: true, liveSyncDurationCount: 2 });
         hls.loadSource(streamSrc);
         hls.attachMedia(videoEl);
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
@@ -399,6 +422,19 @@ export default function CleanLiveOverlay() {
         });
         hls.on(Hls.Events.ERROR, (event, data) => {
           console.warn('[HLS Error]:', data);
+          if (data.fatal) {
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                hls.startLoad();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                hls.recoverMediaError();
+                break;
+              default:
+                hls.destroy();
+                break;
+            }
+          }
         });
         hlsPlayerRef.current = hls;
       } else if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
@@ -479,23 +515,17 @@ export default function CleanLiveOverlay() {
         style={ratio === '9:16' ? { aspectRatio: '9 / 16', height: '100%', maxWidth: 'calc(100vh * 9 / 16)' } : { aspectRatio: '16 / 9', width: '100%' }}
       >
         {activeStreamUrl ? (
-          <>
-            <video
-              ref={(el) => {
-                flvVideoRef.current = el;
-                if (el && activeStreamUrl) attachFlvPlayer(el, activeStreamUrl);
-              }}
-              key={activeStreamUrl}
-              autoPlay
-              muted={isAudioMuted}
-              playsInline
-              className="absolute inset-0 w-full h-full object-contain pointer-events-none opacity-0"
-            />
-            <canvas
-              ref={flvCanvasRef}
-              className="w-full h-full object-contain select-none z-10"
-            />
-          </>
+          <video
+            ref={(el) => {
+              flvVideoRef.current = el;
+              if (el && activeStreamUrl) attachFlvPlayer(el, activeStreamUrl);
+            }}
+            key={activeStreamUrl}
+            autoPlay
+            muted={isAudioMuted}
+            playsInline
+            className="w-full h-full object-contain select-none z-10"
+          />
         ) : masterState.isVideo ? (
           <video
             key={masterState.mediaUrl}

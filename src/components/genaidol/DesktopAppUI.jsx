@@ -237,13 +237,17 @@ export default function DesktopAppUI() {
           enableWorker: false,
           enableStashBuffer: false,
           stashInitialSize: 128,
-          lazyLoad: false
+          lazyLoad: false,
+          seekType: 'range'
         }, {
           enableWorker: false,
           enableStashBuffer: false,
           stashInitialSize: 128,
           lazyLoad: false,
-          autoCleanupSourceBuffer: true
+          autoCleanupSourceBuffer: true,
+          autoCleanupMaxBackwardDuration: 5,
+          autoCleanupMinBackwardDuration: 2,
+          fixAudioTimestampGap: false
         });
         flvPlayer.attachMediaElement(videoEl);
         flvPlayer.load();
@@ -254,12 +258,32 @@ export default function DesktopAppUI() {
             flvPlayer.play()?.catch(err => console.warn('Lỗi play flv:', err));
           });
         }
+
+        // Tự động kiểm tra và đảm bảo video luôn chuyển động liên tục ở thời gian thực (Live Edge)
+        const liveEdgeInterval = setInterval(() => {
+          if (videoEl && !videoEl.paused && videoEl.buffered && videoEl.buffered.length > 0) {
+            const end = videoEl.buffered.end(videoEl.buffered.length - 1);
+            const diff = end - videoEl.currentTime;
+            if (diff > 2.5) {
+              videoEl.currentTime = end - 0.3;
+            }
+          }
+          if (videoEl && videoEl.paused) {
+            videoEl.play()?.catch(() => {});
+          }
+        }, 2000);
+
         flvPlayer.on(flvjs.Events.ERROR, (errType, errDetail, errInfo) => {
           console.warn('[AvaLive FLV Player Error]:', errType, errDetail, errInfo);
+          if (errType === flvjs.ErrorTypes.NETWORK_ERROR) {
+            flvPlayer.unload();
+            flvPlayer.load();
+            flvPlayer.play()?.catch(() => {});
+          }
         });
         flvPlayerRef.current = flvPlayer;
       } else if (Hls.isSupported()) {
-        const hls = new Hls({ enableWorker: false, lowLatencyMode: true });
+        const hls = new Hls({ enableWorker: false, lowLatencyMode: true, liveSyncDurationCount: 2 });
         hls.loadSource(streamSrc);
         hls.attachMedia(videoEl);
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
@@ -270,6 +294,19 @@ export default function DesktopAppUI() {
         });
         hls.on(Hls.Events.ERROR, (event, data) => {
           console.warn('[HLS Error]:', data);
+          if (data.fatal) {
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                hls.startLoad();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                hls.recoverMediaError();
+                break;
+              default:
+                hls.destroy();
+                break;
+            }
+          }
         });
         hlsPlayerRef.current = hls;
       } else if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
@@ -1391,22 +1428,17 @@ export default function DesktopAppUI() {
       return (
         <div className="relative w-full h-full flex flex-col bg-black">
           <div className="relative w-full h-full flex items-center justify-center group">
-            {/* Thẻ Video giải mã luồng ngầm */}
+            {/* Thẻ Video trực tiếp 60fps Siêu mượt & Sắc nét 100% sạch */}
             <video
               ref={(el) => {
                 flvVideoRef.current = el;
                 if (el && flvUrl) attachFlvPlayer(el, flvUrl);
               }}
-              className="absolute inset-0 w-full h-full object-contain pointer-events-none opacity-0"
+              className="w-full h-full object-contain cursor-pointer select-none z-10"
               controls={false}
               autoPlay
               muted={isLiveAudioMuted}
               playsInline
-            />
-            {/* Thẻ Canvas chống đen màn hình 100% khi OBS/TikTok Studio quay màn hình */}
-            <canvas
-              ref={flvCanvasRef}
-              className="w-full h-full object-contain cursor-pointer select-none z-10"
               onClick={() => {
                 const nextMuted = !isLiveAudioMuted;
                 setIsLiveAudioMuted(nextMuted);
