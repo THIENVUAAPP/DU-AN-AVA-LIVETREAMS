@@ -345,35 +345,6 @@ export default function Dance3DStage({ instances, characters, effects, effectTri
     <div className="relative rounded-3xl border border-white/10 overflow-hidden h-full min-h-[360px] bg-black">
       <div ref={mountRef} className="absolute inset-0" />
       <div ref={labelsContainerRef} className="absolute inset-0 pointer-events-none overflow-hidden" />
-
-      <div className="absolute top-3 left-3 flex items-center gap-2 z-30">
-        <div className={`px-3 py-1 rounded-full border text-[10px] font-black flex items-center gap-1.5 ${isConnected ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400' : 'bg-gray-500/20 border-gray-500/40 text-gray-400'}`}>
-          {isConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-          {connectionLabel}
-        </div>
-        <div className="px-3 py-1 rounded-full bg-black/60 border border-white/20 text-[10px] font-black text-white flex items-center gap-1">
-          <Move3d className="w-3 h-3" /> SÀN 3D
-        </div>
-      </div>
-
-      <div className="absolute top-3 right-3 flex items-center gap-1.5 z-30">
-        {autoCameraEnabled && (
-          <span className="px-2 py-1 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse">
-            🔄 TỰ ĐỘNG
-          </span>
-        )}
-        {CAMERA_MODES.map((m) => (
-          <button
-            key={m.id}
-            onClick={() => setCameraMode(m.id)}
-            className={`px-2.5 py-1 rounded-full text-[9px] font-black cursor-pointer transition-all flex items-center gap-1 ${
-              cameraMode === m.id ? 'bg-[#8B5CF6] text-white' : 'bg-black/50 text-gray-300 hover:bg-black/70'
-            }`}
-          >
-            <Video className="w-3 h-3" /> {m.label}
-          </button>
-        ))}
-      </div>
     </div>
   );
 }

@@ -1,9 +1,7 @@
 import React, { useRef, useState } from 'react';
 import DanceFloorStage from './dancefloor/DanceFloorStage';
 import Dance3DStage from './dancefloor/Dance3DStage';
-import DanceFloorVideoOverlay from './dancefloor/DanceFloorVideoOverlay';
 import DanceFloorGiftShowcase from './dancefloor/DanceFloorGiftShowcase';
-import DanceFloorGiftPinPanel from './dancefloor/DanceFloorGiftPinPanel';
 import { useDanceFloorEngine } from '../hooks/useDanceFloorEngine';
 import { STAGE_PRESETS_3D } from '../lib/dance3d/stagePresets3D';
 import DanceFloorAdminModal from './DanceFloorAdminModal';
@@ -67,8 +65,6 @@ export default function DanceFloorStudio({ isLive, setIsLive, isAdminOpen, onClo
             }
           />
         )}
-        <DanceFloorGiftPinPanel rules={rules} giftTiers={giftTiers} characters={allCharacters} />
-        <DanceFloorVideoOverlay containerRef={stageContainerRef} />
         <DanceFloorGiftShowcase giftShowcase={giftShowcase} />
       </div>
 

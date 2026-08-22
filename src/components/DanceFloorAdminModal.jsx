@@ -17,6 +17,8 @@ import DanceFloorLibraryPanel from './dancefloor/DanceFloorLibraryPanel';
 import DanceFloorReactionFeed from './dancefloor/DanceFloorReactionFeed';
 import DanceFloorCommentFeed from './dancefloor/DanceFloorCommentFeed';
 import DanceFloorAnimateDiffPanel from './dancefloor/DanceFloorAnimateDiffPanel';
+import DanceFloorAutomationPanel from './dancefloor/DanceFloorAutomationPanel';
+import DanceFloorManualComboPanel from './dancefloor/DanceFloorManualComboPanel';
 import { platformFromChannelId } from '../lib/danceFloorEngine';
 import DanceFloorChannelLivePanel from './dancefloor/DanceFloorChannelLivePanel';
 
@@ -216,6 +218,15 @@ export default function DanceFloorAdminModal({ isOpen, onClose, engine, renderMo
                   selectedChannelIds={selectedChannelIds}
                   toggleChannel={toggleChannel}
                 />
+
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  <DanceFloorAutomationPanel
+                    settings={settings}
+                    setSettings={setSettings}
+                    runAutoShuffle={runAutoShuffle}
+                  />
+                  <DanceFloorManualComboPanel onManualCombo={handleManualCombo} />
+                </div>
               </div>
             )}
 

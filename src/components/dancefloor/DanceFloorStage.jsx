@@ -176,26 +176,7 @@ export default function DanceFloorStage({ instances, maxSlots, effectTriggers, s
       )}
       {!transparent && <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/70 to-transparent animate-tile-glow" />}
 
-      {!transparent && (
-        <div className="absolute top-3 left-3 flex items-center gap-2">
-          <div
-            className={`px-3 py-1 rounded-full border text-[10px] font-black flex items-center gap-1.5 ${
-              isConnected
-                ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
-                : 'bg-gray-500/20 border-gray-500/40 text-gray-400'
-            }`}
-          >
-            {isConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-            {connectionLabel}
-          </div>
-        </div>
-      )}
-
-      {!transparent && (
-        <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-black/50 border border-white/20 text-[10px] font-black text-white">
-          🕺 {instances.length}/{maxSlots} SLOT
-        </div>
-      )}
+      {!transparent && <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/70 to-transparent animate-tile-glow" />}
 
       <div className="relative z-10 h-full grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3 p-5 content-end">
         {slots.map((_, idx) => {
