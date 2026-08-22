@@ -45,42 +45,44 @@ if (distPath) {
   app.use(express.static(distPath));
 }
 
-// 🚀 PROXY STREAM TIÊU CHUẨN: Vượt qua hoàn toàn rào cản CORS của trình duyệt Chrome/Edge
-app.get('/api/stream-proxy', (req, res) => {
+// 🚀 PROXY STREAM TIÊU CHUẨN: Vượt qua hoàn toàn rào cản CORS & Xử lý tự động chuyển hướng (Redirect 302) của TikTok CDN
+app.get('/api/stream-proxy', async (req, res) => {
   const streamUrl = req.query.url || globalFlvUrl;
   if (!streamUrl) {
     return res.status(400).send('Missing stream URL');
   }
 
   try {
-    const parsed = new URL(streamUrl);
-    const client = parsed.protocol === 'https:' ? https : require('http');
-
-    const proxyReq = client.get(streamUrl, {
+    console.log('[Stream Proxy] 📡 Đang kết nối tới luồng TikTok CDN:', streamUrl.substring(0, 100) + '...');
+    const response = await fetch(streamUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
         'Referer': 'https://www.tiktok.com/',
-        'Origin': 'https://www.tiktok.com'
-      }
-    }, (proxyRes) => {
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', '*');
-      res.setHeader('Content-Type', proxyRes.headers['content-type'] || 'video/x-flv');
-      
-      proxyRes.pipe(res);
+        'Origin': 'https://www.tiktok.com',
+        'Accept': '*/*'
+      },
+      redirect: 'follow'
     });
 
-    proxyReq.on('error', (err) => {
-      console.error('[Stream Proxy Error]:', err.message);
-      if (!res.headersSent) res.status(500).send('Proxy stream error');
-    });
+    if (!response.ok && response.status !== 200 && response.status !== 206) {
+      console.error('[Stream Proxy] ❌ TikTok CDN returned status:', response.status);
+      return res.status(response.status).send('CDN error');
+    }
 
-    req.on('close', () => {
-      proxyReq.destroy();
-    });
-  } catch (e) {
-    res.status(400).send('Invalid stream URL');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', '*');
+    res.setHeader('Content-Type', response.headers.get('content-type') || 'video/x-flv');
+
+    const { Readable } = require('stream');
+    if (response.body) {
+      Readable.fromWeb(response.body).pipe(res);
+    } else {
+      res.end();
+    }
+  } catch (err) {
+    console.error('[Stream Proxy Error]:', err.message);
+    if (!res.headersSent) res.status(500).send('Proxy stream error');
   }
 });
 
