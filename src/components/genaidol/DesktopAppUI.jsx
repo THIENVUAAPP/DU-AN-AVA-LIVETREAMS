@@ -1357,22 +1357,17 @@ export default function DesktopAppUI() {
       return (
         <div className="relative w-full h-full flex flex-col bg-black">
           <div className="relative w-full h-full flex items-center justify-center group">
-            {/* Thẻ Video giải mã luồng ngầm */}
+            {/* Thẻ Video trực tiếp 60fps Siêu mượt & Sắc nét */}
             <video
               ref={(el) => {
                 flvVideoRef.current = el;
                 if (el && flvUrl) attachFlvPlayer(el, flvUrl);
               }}
-              className="absolute inset-0 w-full h-full object-contain pointer-events-none opacity-0"
+              className="w-full h-full object-contain cursor-pointer select-none z-10"
               controls={false}
               autoPlay
               muted={isLiveAudioMuted}
               playsInline
-            />
-            {/* Thẻ Canvas chống đen màn hình 100% cho OBS và Quay màn hình */}
-            <canvas
-              ref={flvCanvasRef}
-              className="w-full h-full object-contain cursor-pointer z-10 select-none"
               onClick={() => {
                 const nextMuted = !isLiveAudioMuted;
                 setIsLiveAudioMuted(nextMuted);

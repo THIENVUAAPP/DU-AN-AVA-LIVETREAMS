@@ -445,23 +445,17 @@ export default function CleanLiveOverlay() {
         style={ratio === '9:16' ? { aspectRatio: '9 / 16', height: '100%', maxWidth: 'calc(100vh * 9 / 16)' } : { aspectRatio: '16 / 9', width: '100%' }}
       >
         {activeStreamUrl ? (
-          <>
-            <video
-              ref={(el) => {
-                flvVideoRef.current = el;
-                if (el && activeStreamUrl) attachFlvPlayer(el, activeStreamUrl);
-              }}
-              key={activeStreamUrl}
-              autoPlay
-              muted={isAudioMuted}
-              playsInline
-              className="absolute inset-0 w-full h-full object-contain pointer-events-none opacity-0"
-            />
-            <canvas
-              ref={flvCanvasRef}
-              className="w-full h-full object-contain select-none z-10"
-            />
-          </>
+          <video
+            ref={(el) => {
+              flvVideoRef.current = el;
+              if (el && activeStreamUrl) attachFlvPlayer(el, activeStreamUrl);
+            }}
+            key={activeStreamUrl}
+            autoPlay
+            muted={isAudioMuted}
+            playsInline
+            className="w-full h-full object-contain select-none z-10"
+          />
         ) : masterState.isVideo ? (
           <video
             key={masterState.mediaUrl}
