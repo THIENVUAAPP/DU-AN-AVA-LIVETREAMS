@@ -264,6 +264,7 @@ export default function CleanLiveOverlay() {
   const flvVideoRef = useRef(null);
   const flvPlayerRef = useRef(null);
   const hlsPlayerRef = useRef(null);
+  const currentPlayingUrlRef = useRef(null);
 
   const activeStreamUrl = masterState.flvUrl || (masterState.mediaUrl && (masterState.mediaUrl.includes('.flv') || masterState.mediaUrl.includes('.m3u8')) ? masterState.mediaUrl : null);
 
@@ -276,6 +277,11 @@ export default function CleanLiveOverlay() {
 
   const attachFlvPlayer = (videoEl, url) => {
     if (!videoEl || !url) return;
+    if (currentPlayingUrlRef.current === url && (flvPlayerRef.current || hlsPlayerRef.current)) {
+      return;
+    }
+    currentPlayingUrlRef.current = url;
+
     try {
       if (flvPlayerRef.current) {
         try { flvPlayerRef.current.destroy(); } catch (e) {}
@@ -344,6 +350,7 @@ export default function CleanLiveOverlay() {
 
     return () => {
       try {
+        currentPlayingUrlRef.current = null;
         if (flvPlayerRef.current) {
           flvPlayerRef.current.destroy();
           flvPlayerRef.current = null;

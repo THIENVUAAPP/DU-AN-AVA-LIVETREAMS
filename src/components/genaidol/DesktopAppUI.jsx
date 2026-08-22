@@ -135,6 +135,8 @@ export default function DesktopAppUI() {
   const lastAiGreetingTime = useRef(0);
   const [isTemplateLibraryOpen, setIsTemplateLibraryOpen] = useState(false);
 
+  const currentPlayingUrlRef = useRef(null);
+
   const getPlayableStreamUrl = (rawUrl) => {
     if (!rawUrl) return '';
     if (rawUrl.includes('/api/stream-proxy')) return rawUrl;
@@ -144,6 +146,11 @@ export default function DesktopAppUI() {
 
   const attachFlvPlayer = (videoEl, url) => {
     if (!videoEl || !url) return;
+    if (currentPlayingUrlRef.current === url && (flvPlayerRef.current || hlsPlayerRef.current)) {
+      return;
+    }
+    currentPlayingUrlRef.current = url;
+
     try {
       if (flvPlayerRef.current) {
         try { flvPlayerRef.current.destroy(); } catch (e) {}
@@ -175,6 +182,7 @@ export default function DesktopAppUI() {
         }
       } else if (flvjs.isSupported()) {
         const streamSrc = getPlayableStreamUrl(url);
+        console.log('[AvaLive Stream] 🎬 Đang gắn kết luồng FLV Player:', streamSrc);
         const flvPlayer = flvjs.createPlayer({
           type: 'flv',
           isLive: true,
@@ -212,6 +220,7 @@ export default function DesktopAppUI() {
 
     return () => {
       try {
+        currentPlayingUrlRef.current = null;
         if (flvPlayerRef.current) {
           flvPlayerRef.current.destroy();
           flvPlayerRef.current = null;
