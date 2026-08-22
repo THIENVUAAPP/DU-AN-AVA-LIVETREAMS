@@ -332,7 +332,13 @@ export default function CleanLiveOverlay() {
   const getPlayableStreamUrl = (rawUrl) => {
     if (!rawUrl) return '';
     if (rawUrl.includes('/api/stream-proxy')) return rawUrl;
-    const backendOrigin = typeof window !== 'undefined' ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:3001' : 'http://localhost:3001') : 'http://localhost:3001';
+    
+    // Khi chạy trên HTTPS (Vercel Cloud), gọi API cùng nguồn HTTPS để trình duyệt không chặn Mixed Content
+    if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+      return `/api/stream-proxy?url=${encodeURIComponent(rawUrl)}`;
+    }
+    
+    const backendOrigin = typeof window !== 'undefined' ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:3001' : window.location.origin) : 'http://localhost:3001';
     return `${backendOrigin}/api/stream-proxy?url=${encodeURIComponent(rawUrl)}`;
   };
 
