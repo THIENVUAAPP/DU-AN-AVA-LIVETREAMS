@@ -513,7 +513,7 @@ export default function CleanLiveOverlay() {
 
   // RENDER STAGE 3: LIVE AI IDOL SẠCH (VIDEO / AVATAR + HIỆU ỨNG LIVE)
   return (
-    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent flex items-center justify-center select-none">
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-black flex items-center justify-center select-none">
       <div 
         className={`relative flex items-center justify-center overflow-hidden transition-all duration-300 ${
           ratio === '9:16'
@@ -524,15 +524,13 @@ export default function CleanLiveOverlay() {
       >
         {activeStreamUrl ? (
           <video
-            ref={(el) => {
-              flvVideoRef.current = el;
-              if (el && activeStreamUrl) attachFlvPlayer(el, activeStreamUrl);
-            }}
+            ref={flvVideoRef}
             key={activeStreamUrl}
             autoPlay
             muted={isAudioMuted}
             playsInline
             className="w-full h-full object-contain select-none z-10"
+            style={{ background: 'black' }}
           />
         ) : masterState.isVideo ? (
           <video

@@ -850,6 +850,13 @@ export default function DesktopAppUI() {
     };
   }, []);
 
+  // ⚡ Gắn trình phát FLV khi URL thay đổi
+  useEffect(() => {
+    if (isConnected && flvUrl && flvVideoRef.current) {
+      attachFlvPlayer(flvVideoRef.current, flvUrl);
+    }
+  }, [isConnected, flvUrl]);
+
   // ⚡ MASTER REALTIME BROADCAST: Đồng bộ 100% thời gian thực sang TikTok LIVE Studio / OBS Studio
   useEffect(() => {
     const stage = isGameBanDoActive ? 'bando' : isGameBattleActive ? 'battle' : 'idol';
@@ -1430,12 +1437,9 @@ export default function DesktopAppUI() {
           <div className="relative w-full h-full flex items-center justify-center">
             {/* Video trực tiếp 60fps - Hardware Accelerated */}
             <video
-              ref={(el) => {
-                if (!el) return;
-                flvVideoRef.current = el;
-                attachFlvPlayer(el, flvUrl);
-              }}
+              ref={flvVideoRef}
               className="w-full h-full object-contain select-none"
+              style={{ background: 'black' }}
               controls={false}
               autoPlay
               muted={isLiveAudioMuted}
