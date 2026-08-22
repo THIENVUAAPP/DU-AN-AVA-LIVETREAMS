@@ -344,7 +344,7 @@ io.on('connection', (socket) => {
     if (targetVideoUser) {
       try {
         tiktokVideoConnection = new TikTokConnector(targetVideoUser, {
-          processInitialData: false,
+          processInitialData: true,
           enableExtendedGiftInfo: false,
           sessionId,
           requestHeaders: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
@@ -356,6 +356,7 @@ io.on('connection', (socket) => {
           console.log(`[TikTok Live] ✅ Đã kết nối Video Room ID: ${vidState?.roomId || 'ACTIVE'} (${targetVideoUser})`);
           if (vidState?.roomInfo?.stream_url) flvUrl = extractFlv(vidState.roomInfo.stream_url);
           if (!flvUrl && vidState?.roomInfo?.data?.stream_url) flvUrl = extractFlv(vidState.roomInfo.data.stream_url);
+          console.log(`[TikTok Live] Video FLV URL:`, flvUrl ? 'FOUND' : 'NULL', vidState?.roomInfo?.stream_url ? 'HAS_STREAM_URL' : 'NO_STREAM_URL');
           videoConnected = true;
         } catch (err) {
           console.error(`[TikTok Live] ❌ Lỗi kết nối Video ${targetVideoUser}:`, err.message);
@@ -379,7 +380,7 @@ io.on('connection', (socket) => {
     // 2. Kết nối Chat
     try {
       tiktokConnection = new TikTokConnector(targetUser, {
-        processInitialData: false,
+        processInitialData: true,
         enableExtendedGiftInfo: false,
         sessionId,
         requestHeaders: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
