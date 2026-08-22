@@ -317,56 +317,14 @@ export default function LiveGiftMarqueeTicker({
         <div className="w-24 sm:w-26 bg-black/40 backdrop-blur-[4px] hover:bg-black/60 border border-amber-500/30 hover:border-amber-400/60 rounded-xl p-1 shadow-2xl text-white transition-all flex flex-col">
           
           {/* HEADER: KÉO THẢ + ZOOM +/- + THU NHỎ + ĐÓNG */}
+          {/* VÙNG KÉO THẢ VÔ HÌNH (DRAG HANDLE) */}
           <div 
-            className="flex items-center justify-between text-[8px] font-black text-amber-300 pb-0.5 mb-1 border-b border-white/10 cursor-move select-none"
+            className="absolute top-0 left-0 w-full h-4 cursor-move z-10"
             onMouseDown={handleDragStart}
             onTouchStart={handleDragStart}
             title="Kéo thả để di chuyển Bảng Quà"
-          >
-            <div className="flex items-center gap-0.5 opacity-80 hover:opacity-100">
-              <Move size={8} className="text-gray-400 shrink-0" />
-              <Sparkles size={8} className="text-yellow-400 animate-spin shrink-0" style={{ animationDuration: '4s' }} />
-            </div>
-
-            {/* CỤM NÚT ĐIỀU KHIỂN GÓC PHẢI */}
-            <div className="flex items-center gap-0.5 ml-auto">
-              <button
-                onClick={(e) => { e.stopPropagation(); handleScaleChange(-0.1); }}
-                className="w-3 h-3 flex items-center justify-center rounded text-gray-300 hover:text-white hover:bg-white/20 transition-colors text-[7.5px]"
-                title="Thu nhỏ (-10%)"
-              >
-                −
-              </button>
-              
-              <span className="text-[6.5px] text-gray-400 font-mono">
-                {Math.round(scale * 100)}%
-              </span>
-
-              <button
-                onClick={(e) => { e.stopPropagation(); handleScaleChange(0.1); }}
-                className="w-3 h-3 flex items-center justify-center rounded text-gray-300 hover:text-white hover:bg-white/20 transition-colors text-[7.5px]"
-                title="Phóng to (+10%)"
-              >
-                +
-              </button>
-
-              <button
-                onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }}
-                className="p-0.5 rounded text-gray-300 hover:text-white hover:bg-white/20 transition-colors"
-                title="Thu nhỏ"
-              >
-                <Minus size={8} />
-              </button>
-
-              <button
-                onClick={(e) => { e.stopPropagation(); setIsClosed(true); }}
-                className="p-0.5 rounded text-gray-400 hover:text-red-400 hover:bg-white/20 transition-colors"
-                title="Ẩn"
-              >
-                <X size={8} />
-              </button>
-            </div>
-          </div>
+          />
+          <div className="pt-2"></div>
 
           {/* KHỐI 1: CẮM CỜ 3 MIỀN BẮC - TRUNG - NAM HOẶC BUFF 3 MIỀN (Read-only Showcase) */}
           <div className="grid grid-cols-3 gap-0.5 mb-1 select-none">
@@ -407,18 +365,13 @@ export default function LiveGiftMarqueeTicker({
             {allActiveGifts.map((g, i) => renderGiftRow(g, `gift_row_${g.id}_${i}`))}
           </div>
 
-          {/* TAY CẦM KÉO CO GIÃN KÍCH THƯỚC (CORNER RESIZE HANDLE) */}
+          {/* TAY CẦM KÉO CO GIÃN KÍCH THƯỚC (CORNER RESIZE HANDLE) - INVISIBLE */}
           <div 
             onMouseDown={handleCornerResizeStart}
             onTouchStart={handleCornerResizeStart}
-            className="flex items-center justify-between pt-1 mt-1 border-t border-white/10 text-[7px] text-gray-400 select-none cursor-nwse-resize hover:text-yellow-300"
+            className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize z-50"
             title="Kéo góc này để phóng to / thu nhỏ bảng quà"
-          >
-            <span className="font-mono text-[7.5px] opacity-70">Tỉ lệ: {Math.round(scale * 100)}%</span>
-            <div className="flex items-center gap-0.5 text-[8px] text-yellow-400/80 hover:text-yellow-300">
-              <span>⤡ Kéo góc</span>
-            </div>
-          </div>
+          />
         </div>
       )}
     </div>
