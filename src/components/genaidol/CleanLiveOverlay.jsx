@@ -52,7 +52,7 @@ export default function CleanLiveOverlay() {
   });
 
   const [liveEvent, setLiveEvent] = useState(null);
-  const [isAudioMuted, setIsAudioMuted] = useState(false);
+  const [isAudioMuted, setIsAudioMuted] = useState(true);
 
   useEffect(() => {
     document.title = 'AVA Live Output (Realtime Master Overlay) — TikTok LIVE Studio / OBS';
@@ -547,16 +547,17 @@ export default function CleanLiveOverlay() {
             key={masterState.mediaUrl}
             src={masterState.mediaUrl}
             alt={masterState.characterName || 'AI Idol'}
-            className="w-full h-full object-contain select-none"
           />
         )}
 
-        {/* Live Badge nhỏ gọn góc trên */}
-        <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-white shadow-lg pointer-events-none">
-          <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
-          <span className="text-[10px] font-black tracking-wider uppercase text-red-400">LIVE</span>
-          <span className="text-[10px] text-gray-200 font-bold ml-1">{masterState.characterName || 'AI Idol'}</span>
-        </div>
+        {/* Nút tắt/mở âm thanh góc dưới phải */}
+        <button
+          onClick={() => setIsAudioMuted(!isAudioMuted)}
+          className="absolute bottom-4 right-4 z-50 p-3 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-sm transition-all border border-white/10"
+          title={isAudioMuted ? "Mở âm thanh" : "Tắt âm thanh"}
+        >
+          {isAudioMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+        </button>
       </div>
     </div>
   );
