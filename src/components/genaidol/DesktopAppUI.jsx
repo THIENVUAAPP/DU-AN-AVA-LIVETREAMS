@@ -2842,27 +2842,27 @@ export default function DesktopAppUI() {
                   <div className="truncate flex-1">
                     <div className="font-bold text-purple-300 text-[11px] flex items-center gap-1">
                       <Swords size={12} className="text-yellow-400" />
-                      <span>4. Game Đại Chiến PK TikTok ({globalAspectRatio})</span>
+                      <span>4. Game Đại Chiến PK TikTok</span>
                     </div>
                     <div className="text-[10px] text-gray-400 font-mono truncate">
-                      {typeof window !== 'undefined' ? `${window.location.origin}/?overlay=gamebattle&ratio=${globalAspectRatio}` : ''}
+                      {`${overlayLinkBase}/?overlay=gamebattle`}
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => {
                         if (typeof navigator !== 'undefined') {
-                          navigator.clipboard.writeText(`${window.location.origin}/?overlay=gamebattle&ratio=${globalAspectRatio}`);
+                          navigator.clipboard.writeText(`${overlayLinkBase}/?overlay=gamebattle`);
                           setCopySuccessMsg('Đã sao chép Link Chiến Đấu!');
                           setTimeout(() => setCopySuccessMsg(''), 3000);
                         }
                       }}
-                      className="px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-[11px] transition-colors"
+                      className="px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-[11px] transition-colors shadow-sm"
                     >
                       <span>{copySuccessMsg === 'Đã sao chép Link Chiến Đấu!' ? '✅ Đã Chép' : 'Sao Chép'}</span>
                     </button>
                     <button
-                      onClick={() => window.open(`${window.location.origin}/?overlay=gamebattle&ratio=${globalAspectRatio}`, '_blank')}
+                      onClick={() => window.open(`${overlayLinkBase}/?overlay=gamebattle`, '_blank')}
                       className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 font-bold text-[10px]"
                       title="Xem thử tab mới"
                     >

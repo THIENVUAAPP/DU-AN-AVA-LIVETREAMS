@@ -275,14 +275,26 @@ io.on('connection', (socket) => {
 
   // ---- Kết nối TikTok Live ----
   socket.on('connect_tiktok', async (payload, options = {}) => {
-    let targetUser = '';
-    let targetVideoUser = '';
-    
+    const cleanTikTokUsername = (str) => {
+      if (!str || typeof str !== 'string') return '';
+      let clean = str.trim();
+      // Match tiktok.com/@username/live or tiktok.com/@username
+      const match = clean.match(/tiktok\.com\/@([a-zA-Z0-9_.-]+)/i);
+      if (match) return match[1];
+      // Remove @ prefix
+      if (clean.startsWith('@')) clean = clean.substring(1);
+      // Remove https:// or http:// if prefix remained
+      clean = clean.replace(/^https?:\/\//i, '').replace(/^www\./i, '');
+      // If it contains slashes, take the first part
+      clean = clean.split('?')[0].split('/')[0].trim();
+      return clean;
+    };
+
     if (typeof payload === 'string') {
-      targetUser = payload ? payload.trim().replace(/^@/, '') : '';
+      targetUser = cleanTikTokUsername(payload);
     } else if (payload && typeof payload === 'object') {
-      targetUser = payload.chatId ? payload.chatId.trim().replace(/^@/, '') : '';
-      targetVideoUser = payload.videoId ? payload.videoId.trim().replace(/^@/, '') : '';
+      targetUser = cleanTikTokUsername(payload.chatId);
+      targetVideoUser = cleanTikTokUsername(payload.videoId);
     }
 
     // Nếu người dùng nhập trùng 1 kênh cho cả 2 ô, thì gom về 1 kết nối duy nhất để tránh bị kick
