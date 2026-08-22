@@ -265,11 +265,33 @@ export default function CleanLiveOverlay() {
   }, []);
 
   const flvVideoRef = useRef(null);
+  const flvCanvasRef = useRef(null);
   const flvPlayerRef = useRef(null);
   const hlsPlayerRef = useRef(null);
   const currentPlayingUrlRef = useRef(null);
 
   const activeStreamUrl = masterState.flvUrl || (masterState.mediaUrl && (masterState.mediaUrl.includes('.flv') || masterState.mediaUrl.includes('.m3u8')) ? masterState.mediaUrl : null);
+
+  useEffect(() => {
+    let animId;
+    const renderLoop = () => {
+      const video = flvVideoRef.current;
+      const canvas = flvCanvasRef.current;
+      if (video && canvas && video.readyState >= 2 && video.videoWidth > 0) {
+        if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+        }
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        }
+      }
+      animId = requestAnimationFrame(renderLoop);
+    };
+    animId = requestAnimationFrame(renderLoop);
+    return () => cancelAnimationFrame(animId);
+  }, [activeStreamUrl]);
 
   const getPlayableStreamUrl = (rawUrl) => {
     if (!rawUrl) return '';
@@ -421,17 +443,23 @@ export default function CleanLiveOverlay() {
         style={ratio === '9:16' ? { aspectRatio: '9 / 16', height: '100%', maxWidth: 'calc(100vh * 9 / 16)' } : { aspectRatio: '16 / 9', width: '100%' }}
       >
         {activeStreamUrl ? (
-          <video
-            ref={(el) => {
-              flvVideoRef.current = el;
-              if (el && activeStreamUrl) attachFlvPlayer(el, activeStreamUrl);
-            }}
-            key={activeStreamUrl}
-            autoPlay
-            muted={isAudioMuted}
-            playsInline
-            className="w-full h-full object-contain select-none bg-black"
-          />
+          <>
+            <video
+              ref={(el) => {
+                flvVideoRef.current = el;
+                if (el && activeStreamUrl) attachFlvPlayer(el, activeStreamUrl);
+              }}
+              key={activeStreamUrl}
+              autoPlay
+              muted={isAudioMuted}
+              playsInline
+              className="absolute inset-0 w-full h-full object-contain pointer-events-none opacity-0"
+            />
+            <canvas
+              ref={flvCanvasRef}
+              className="w-full h-full object-contain select-none z-10"
+            />
+          </>
         ) : masterState.isVideo ? (
           <video
             key={masterState.mediaUrl}

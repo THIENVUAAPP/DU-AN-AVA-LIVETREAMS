@@ -132,14 +132,36 @@ export default function DesktopAppUI() {
     }
   });
   const fileInputRef = useRef(null);
-  const flvVideoRef = useRef(null);
   const flvPlayerRef = useRef(null);
   const hlsPlayerRef = useRef(null);
+  const flvVideoRef = useRef(null);
+  const flvCanvasRef = useRef(null);
+  const currentPlayingUrlRef = useRef(null);
+
+  useEffect(() => {
+    let animId;
+    const renderLoop = () => {
+      const video = flvVideoRef.current;
+      const canvas = flvCanvasRef.current;
+      if (video && canvas && video.readyState >= 2 && video.videoWidth > 0) {
+        if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+        }
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        }
+      }
+      animId = requestAnimationFrame(renderLoop);
+    };
+    animId = requestAnimationFrame(renderLoop);
+    return () => cancelAnimationFrame(animId);
+  }, [flvUrl]);
   const lastAiCommentTime = useRef(0);
   const lastAiGreetingTime = useRef(0);
   const [isTemplateLibraryOpen, setIsTemplateLibraryOpen] = useState(false);
 
-  const currentPlayingUrlRef = useRef(null);
 
   const getPlayableStreamUrl = (rawUrl) => {
     if (!rawUrl) return '';
@@ -1333,16 +1355,22 @@ export default function DesktopAppUI() {
       return (
         <div className="relative w-full h-full flex flex-col bg-black">
           <div className="relative w-full h-full flex items-center justify-center group">
+            {/* Thẻ Video giải mã luồng ngầm */}
             <video
               ref={(el) => {
                 flvVideoRef.current = el;
                 if (el && flvUrl) attachFlvPlayer(el, flvUrl);
               }}
-              className="w-full h-full object-contain cursor-pointer"
+              className="absolute inset-0 w-full h-full object-contain pointer-events-none opacity-0"
               controls={false}
               autoPlay
               muted={isLiveAudioMuted}
               playsInline
+            />
+            {/* Thẻ Canvas chống đen màn hình 100% cho OBS và Quay màn hình */}
+            <canvas
+              ref={flvCanvasRef}
+              className="w-full h-full object-contain cursor-pointer z-10 select-none"
               onClick={() => {
                 const nextMuted = !isLiveAudioMuted;
                 setIsLiveAudioMuted(nextMuted);

@@ -46,46 +46,65 @@ if (distPath) {
 }
 
 // 🚀 PROXY STREAM TIÊU CHUẨN: Vượt qua hoàn toàn rào cản CORS & Xử lý tự động chuyển hướng (Redirect 302) của TikTok CDN
-app.get('/api/stream-proxy', async (req, res) => {
+app.get('/api/stream-proxy', (req, res) => {
   const streamUrl = req.query.url || globalFlvUrl;
   if (!streamUrl) {
     return res.status(400).send('Missing stream URL');
   }
 
-  try {
-    console.log('[Stream Proxy] 📡 Đang kết nối tới luồng TikTok CDN:', streamUrl.substring(0, 100) + '...');
-    const response = await fetch(streamUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-        'Referer': 'https://www.tiktok.com/',
-        'Origin': 'https://www.tiktok.com',
-        'Accept': '*/*'
-      },
-      redirect: 'follow'
-    });
+  const isHls = streamUrl.includes('.m3u8') || streamUrl.includes('/hls');
+  const isTs = streamUrl.includes('.ts');
+  let contentType = 'video/x-flv';
+  if (isHls) contentType = 'application/vnd.apple.mpegurl';
+  else if (isTs) contentType = 'video/mp2t';
 
-    const isHls = streamUrl.includes('.m3u8') || streamUrl.includes('/hls');
-    const isTs = streamUrl.includes('.ts');
-    let contentType = response.headers.get('content-type');
-    if (isHls) contentType = 'application/vnd.apple.mpegurl';
-    else if (isTs) contentType = 'video/mp2t';
-    else if (!contentType || contentType.includes('text/plain')) contentType = 'video/x-flv';
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', '*');
+  res.setHeader('Content-Type', contentType);
 
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', '*');
-    res.setHeader('Content-Type', contentType);
+  const fetchStream = (targetUrl) => {
+    try {
+      const parsedUrl = new URL(targetUrl);
+      const clientLib = parsedUrl.protocol === 'http:' ? require('http') : require('https');
 
-    const { Readable } = require('stream');
-    if (response.body) {
-      Readable.fromWeb(response.body).pipe(res);
-    } else {
-      res.end();
+      const proxyReq = clientLib.get(targetUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+          'Referer': 'https://www.tiktok.com/',
+          'Origin': 'https://www.tiktok.com'
+        }
+      }, (proxyRes) => {
+        if (proxyRes.statusCode === 301 || proxyRes.statusCode === 302) {
+          const redirectUrl = proxyRes.headers.location;
+          if (redirectUrl) {
+            return fetchStream(redirectUrl);
+          }
+        }
+
+        proxyRes.pipe(res);
+        proxyRes.on('error', (err) => {
+          console.warn('[Stream Proxy stream error]:', err.message);
+          res.end();
+        });
+      });
+
+      proxyReq.on('error', (err) => {
+        console.warn('[Stream Proxy req error]:', err.message);
+        if (!res.headersSent) res.status(500).send('Proxy error');
+        else res.end();
+      });
+
+      req.on('close', () => {
+        proxyReq.destroy();
+      });
+    } catch (e) {
+      console.warn('[Stream Proxy URL error]:', e.message);
+      if (!res.headersSent) res.status(500).send('Proxy error');
     }
-  } catch (err) {
-    console.error('[Stream Proxy Error]:', err.message);
-    if (!res.headersSent) res.status(500).send('Proxy stream error');
-  }
+  };
+
+  fetchStream(streamUrl);
 });
 
 const httpServer = createServer(app);
@@ -510,6 +529,19 @@ io.on('connection', (socket) => {
       
       const finalFlv = flvUrl || globalFlvUrl;
       const finalHls = hlsUrl;
+      
+      currentMasterLiveState = {
+        ...currentMasterLiveState,
+        flvUrl: finalFlv,
+        hlsUrl: finalHls,
+        mediaUrl: finalFlv || currentMasterLiveState.mediaUrl,
+        isVideo: true,
+        isConnected: true,
+        stage: currentMasterLiveState.stage || 'idol',
+        updatedAt: Date.now()
+      };
+      io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+      
       io.emit('tiktok_connected', { username: targetUser, roomId: state?.roomId, flvUrl: finalFlv, hlsUrl: finalHls });
       io.emit('tiktok_status', { connected: true, username: targetUser, roomId: state?.roomId, flvUrl: finalFlv, hlsUrl: finalHls });
     }).catch(err => {
@@ -518,8 +550,23 @@ io.on('connection', (socket) => {
       if (targetVideoUser && videoConnected) {
         // NẾU Chat thất bại (chưa live), NHƯNG Video đã thành công -> Vẫn cho phép hiển thị Video!
         console.log(`[TikTok Live] ⚠️ Chat chưa live nhưng Video đã có. Phát video trước.`);
-        io.emit('tiktok_connected', { username: targetUser, roomId: 'VIDEO_ONLY', flvUrl, hlsUrl });
-        io.emit('tiktok_status', { connected: true, username: targetUser, roomId: 'VIDEO_ONLY', flvUrl, hlsUrl });
+        const finalFlv = flvUrl || globalFlvUrl;
+        const finalHls = hlsUrl;
+        
+        currentMasterLiveState = {
+          ...currentMasterLiveState,
+          flvUrl: finalFlv,
+          hlsUrl: finalHls,
+          mediaUrl: finalFlv || currentMasterLiveState.mediaUrl,
+          isVideo: true,
+          isConnected: true,
+          stage: currentMasterLiveState.stage || 'idol',
+          updatedAt: Date.now()
+        };
+        io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+        
+        io.emit('tiktok_connected', { username: targetVideoUser, roomId: videoState?.roomId, flvUrl: finalFlv, hlsUrl: finalHls });
+        io.emit('tiktok_status', { connected: true, username: targetVideoUser, roomId: videoState?.roomId, flvUrl: finalFlv, hlsUrl: finalHls });
         io.emit('tiktok_error', `Kênh Chat ${targetUser} chưa live, tạm thời chỉ phát Video.`);
         
         // Thử kết nối lại Chat ngầm mỗi 15 giây
@@ -530,8 +577,8 @@ io.on('connection', (socket) => {
             console.log(`[TikTok Live] ✅ Kênh Chat đã online!`);
             clearInterval(autoReconnectTimer);
             autoReconnectTimer = null;
-            io.emit('tiktok_status', { connected: true, username: targetUser, roomId: chatState?.roomId, flvUrl });
-            io.emit('tiktok_connected', { username: targetUser, roomId: chatState?.roomId, flvUrl }); // Cập nhật lại trạng thái thành công 100%
+            io.emit('tiktok_status', { connected: true, username: targetUser, roomId: chatState?.roomId, flvUrl: finalFlv });
+            io.emit('tiktok_connected', { username: targetUser, roomId: chatState?.roomId, flvUrl: finalFlv });
           }).catch(e => {});
         }, 15000);
       } else {
