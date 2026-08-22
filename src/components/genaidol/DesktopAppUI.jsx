@@ -90,6 +90,7 @@ export default function DesktopAppUI() {
     }
   });
   const [isGameBanDoAdminOpen, setIsGameBanDoAdminOpen] = useState(false);
+  const [isDanceFloorAdminOpen, setIsDanceFloorAdminOpen] = useState(false);
 
   // Sàn Nhảy TikTok States
   const [isDanceFloorActive, setIsDanceFloorActive] = useState(() => {
@@ -1493,10 +1494,16 @@ export default function DesktopAppUI() {
     }
 
     // -3. Chế độ Sàn Nhảy TikTok
+    // -3. Chế độ Sàn Nhảy TikTok
     if (isDanceFloorActive) {
       return (
         <div className="w-full h-full overflow-y-auto bg-black relative">
-           <DanceFloorStudio isLive={isMasterLiveRunning} setIsLive={() => {}} />
+           <DanceFloorStudio 
+             isLive={isMasterLiveRunning} 
+             setIsLive={() => {}} 
+             isAdminOpen={isDanceFloorAdminOpen}
+             onCloseAdmin={() => setIsDanceFloorAdminOpen(false)}
+           />
         </div>
       );
     }
@@ -1647,6 +1654,17 @@ export default function DesktopAppUI() {
             )}
           </button>
 
+          {/* Nút Cài đặt Sàn Nhảy - Nằm KẾ BÊN Sàn Nhảy khi đang mở */}
+          {isDanceFloorActive && (
+            <button
+              onClick={() => setIsDanceFloorAdminOpen(true)}
+              className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-gradient-to-r from-pink-900/90 to-rose-900/90 hover:from-pink-800 hover:to-rose-800 text-pink-200 hover:text-white border border-pink-400/80 shadow-xs transition-all animate-in fade-in duration-200"
+              title="Cài đặt Sàn Nhảy"
+            >
+              <Settings size={10} className="text-white" />
+              <span>Sàn Nhảy</span>
+            </button>
+          )}
           {/* Nút Kích hoạt Game Ghép Cờ Bản Đồ Việt Nam (Hình Chữ S) */}
           <button 
             className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs ${
