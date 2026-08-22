@@ -328,22 +328,72 @@ io.on('connection', (socket) => {
 
     const extractFlv = (obj) => {
       if (!obj) return null;
-      console.log('[TikTok Live] Stream URL Object Keys:', Object.keys(obj));
+      
+      const parseUrlMap = (source) => {
+        if (!source) return null;
+        let map = source;
+        if (typeof source === 'string') {
+          if (source.trim().startsWith('{')) {
+            try { map = JSON.parse(source); } catch (e) { map = source; }
+          } else {
+            return source;
+          }
+        }
+        if (typeof map === 'object' && map !== null) {
+          const priority = ['ORIGIN', 'ORIGINAL', 'FULL_HD1', 'FULL_HD', 'FHD', '1080P', '1080p', 'HD1', 'HD', '720P', '720p', 'SD1', 'SD'];
+          for (const k of priority) {
+            for (const mapKey of Object.keys(map)) {
+              if (mapKey.toUpperCase() === k || mapKey.toUpperCase().includes(k)) {
+                if (map[mapKey] && typeof map[mapKey] === 'string') return map[mapKey];
+              }
+            }
+          }
+          const vals = Object.values(map).filter(v => typeof v === 'string' && v.startsWith('http'));
+          if (vals.length > 0) return vals[0];
+        }
+        return null;
+      };
+
+      // 1. Kiểm tra live_core_sdk_data (chứa chất lượng cao nhất Full HD / 1080p / Origin)
+      if (obj.live_core_sdk_data) {
+        try {
+          let sdkData = obj.live_core_sdk_data;
+          if (typeof sdkData === 'string') sdkData = JSON.parse(sdkData);
+          if (sdkData?.pull_data?.stream_data) {
+            let streamData = sdkData.pull_data.stream_data;
+            if (typeof streamData === 'string') streamData = JSON.parse(streamData);
+            if (streamData?.data) {
+              const dataObj = streamData.data;
+              const priority = ['origin', 'uhd', 'hd', 'sd', 'ld'];
+              for (const p of priority) {
+                if (dataObj[p]?.main?.flv) return dataObj[p].main.flv;
+                if (dataObj[p]?.main?.hls) return dataObj[p].main.hls;
+              }
+            }
+          }
+        } catch (e) {}
+      }
+
+      // 2. Kiểm tra flv_pull_url với độ ưu tiên Full HD / HD
       if (obj.flv_pull_url) {
-        if (typeof obj.flv_pull_url === 'string') return obj.flv_pull_url;
-        const urls = Object.values(obj.flv_pull_url);
-        if (urls.length > 0) return urls[0];
+        const url = parseUrlMap(obj.flv_pull_url);
+        if (url) return url;
       }
-      if (obj.rtmp_pull_url) {
-        if (typeof obj.rtmp_pull_url === 'string') return obj.rtmp_pull_url;
-        const urls = Object.values(obj.rtmp_pull_url);
-        if (urls.length > 0) return urls[0];
-      }
+
+      // 3. Kiểm tra hls_pull_url_map với độ ưu tiên cao nhất
       if (obj.hls_pull_url_map) {
-        if (typeof obj.hls_pull_url_map === 'string') return obj.hls_pull_url_map;
-        const urls = Object.values(obj.hls_pull_url_map);
-        if (urls.length > 0) return urls[0];
+        const url = parseUrlMap(obj.hls_pull_url_map);
+        if (url) return url;
       }
+
+      // 4. Kiểm tra rtmp_pull_url
+      if (obj.rtmp_pull_url) {
+        const url = parseUrlMap(obj.rtmp_pull_url);
+        if (url) return url;
+      }
+
+      if (obj.hls_pull_url && typeof obj.hls_pull_url === 'string') return obj.hls_pull_url;
+
       return null;
     };
 
