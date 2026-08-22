@@ -58,7 +58,7 @@ export default function CleanLiveOverlay() {
     document.documentElement.style.background = 'transparent';
     document.body.style.background = 'transparent';
 
-    const backendUrl = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3001' : '';
+    const backendUrl = typeof window !== 'undefined' ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:3001' : 'http://localhost:3001') : 'http://localhost:3001';
 
     const applyMasterState = (data) => {
       if (!data) return;
@@ -77,20 +77,22 @@ export default function CleanLiveOverlay() {
     };
 
     // 1. LẤY TRẠNG THÁI NGAY TỪ SERVER HTTP BACKEND
-    fetch(`${backendUrl}/api/live-state`)
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.stage) {
-          applyMasterState(data);
-        }
-      })
-      .catch(() => {});
+    const fetchLiveState = () => {
+      fetch(`${backendUrl}/api/live-state`)
+        .then(res => res.json())
+        .then(data => {
+          if (data) {
+            applyMasterState(data);
+          }
+        })
+        .catch(() => {});
+    };
+    fetchLiveState();
 
     // 2. KẾT NỐI WEBSOCKET REALTIME (SOCKET.IO) CHO TIKTOK LIVE STUDIO CEF & OBS
     let socket = null;
     try {
-      const socketTarget = backendUrl || window.location.origin;
-      socket = io(socketTarget, {
+      socket = io(backendUrl, {
         transports: ['websocket', 'polling'],
         reconnection: true,
         reconnectionDelay: 1000
