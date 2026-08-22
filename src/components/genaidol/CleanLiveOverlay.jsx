@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
+import flvjs from 'flv.js';
+import Hls from 'hls.js';
 import GameBanDoVietNam from './game/GameBanDoVietNam';
 import GameChienDau from './game/GameChienDau';
 import { Volume2, VolumeX, Sparkles, Video, Swords, Flag } from 'lucide-react';
@@ -259,6 +261,62 @@ export default function CleanLiveOverlay() {
     };
   }, []);
 
+  const flvVideoRef = useRef(null);
+  const flvPlayerRef = useRef(null);
+  const hlsPlayerRef = useRef(null);
+
+  const activeStreamUrl = masterState.flvUrl || (masterState.mediaUrl && (masterState.mediaUrl.includes('.flv') || masterState.mediaUrl.includes('.m3u8')) ? masterState.mediaUrl : null);
+
+  useEffect(() => {
+    if (activeStreamUrl && flvVideoRef.current) {
+      if (activeStreamUrl.includes('.m3u8')) {
+        if (Hls.isSupported()) {
+          const hls = new Hls();
+          hls.loadSource(activeStreamUrl);
+          hls.attachMedia(flvVideoRef.current);
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            flvVideoRef.current.play().catch(e => console.warn('Lỗi auto-play hls overlay:', e));
+          });
+          hlsPlayerRef.current = hls;
+        } else if (flvVideoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
+          flvVideoRef.current.src = activeStreamUrl;
+          flvVideoRef.current.addEventListener('loadedmetadata', () => {
+            flvVideoRef.current.play().catch(e => console.warn('Lỗi auto-play hls safari overlay:', e));
+          });
+        }
+      } else if (flvjs.isSupported()) {
+        const flvPlayer = flvjs.createPlayer({
+          type: 'flv',
+          isLive: true,
+          hasAudio: true,
+          url: activeStreamUrl,
+          cors: true
+        });
+        flvPlayer.attachMediaElement(flvVideoRef.current);
+        flvPlayer.load();
+        const playPromise = flvPlayer.play();
+        if (playPromise) playPromise.catch(e => console.warn('Lỗi auto-play flv overlay:', e));
+        flvPlayerRef.current = flvPlayer;
+      }
+
+      return () => {
+        try {
+          if (flvPlayerRef.current) {
+            flvPlayerRef.current.pause();
+            flvPlayerRef.current.unload();
+            flvPlayerRef.current.detachMediaElement();
+            flvPlayerRef.current.destroy();
+            flvPlayerRef.current = null;
+          }
+          if (hlsPlayerRef.current) {
+            hlsPlayerRef.current.destroy();
+            hlsPlayerRef.current = null;
+          }
+        } catch (e) {}
+      };
+    }
+  }, [activeStreamUrl]);
+
   const currentStage = masterState.stage || 'idol';
   const ratio = masterState.aspectRatio || '9:16';
 
@@ -301,7 +359,16 @@ export default function CleanLiveOverlay() {
         }`}
         style={ratio === '9:16' ? { aspectRatio: '9 / 16', height: '100%', maxWidth: 'calc(100vh * 9 / 16)' } : { aspectRatio: '16 / 9', width: '100%' }}
       >
-        {masterState.isVideo ? (
+        {activeStreamUrl ? (
+          <video
+            ref={flvVideoRef}
+            key={activeStreamUrl}
+            autoPlay
+            muted={isAudioMuted}
+            playsInline
+            className="w-full h-full object-contain select-none bg-black"
+          />
+        ) : masterState.isVideo ? (
           <video
             key={masterState.mediaUrl}
             src={masterState.mediaUrl}
@@ -309,14 +376,14 @@ export default function CleanLiveOverlay() {
             loop
             muted={isAudioMuted}
             playsInline
-            className="w-full h-full object-cover select-none"
+            className="w-full h-full object-contain select-none bg-black"
           />
         ) : (
           <img
             key={masterState.mediaUrl}
             src={masterState.mediaUrl}
             alt={masterState.characterName || 'AI Idol'}
-            className="w-full h-full object-cover select-none"
+            className="w-full h-full object-contain select-none"
           />
         )}
 

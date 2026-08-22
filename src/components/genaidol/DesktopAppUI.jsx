@@ -696,8 +696,19 @@ export default function DesktopAppUI() {
   useEffect(() => {
     const stage = isGameBanDoActive ? 'bando' : isGameBattleActive ? 'battle' : 'idol';
     const char = CHARACTERS[selectedCharacter] || { url: '', type: 'image', name: 'AI Idol' };
-    const currentMedia = (isConnected || showSimulator) && activeVideoItem ? activeVideoItem.mediaUrl : char.url;
-    const isVid = char.type === 'video' || (activeVideoItem && activeVideoItem.type === 'video');
+    
+    let currentMedia = char.url;
+    let isVid = char.type === 'video';
+    let streamFlvUrl = null;
+
+    if (isConnected && flvUrl) {
+      currentMedia = flvUrl;
+      streamFlvUrl = flvUrl;
+      isVid = true;
+    } else if ((isConnected || showSimulator) && activeVideoItem) {
+      currentMedia = activeVideoItem.mediaUrl;
+      isVid = activeVideoItem.type === 'video';
+    }
 
     const masterPayload = {
       type: 'MASTER_LIVE_STATE_UPDATE',
@@ -706,6 +717,7 @@ export default function DesktopAppUI() {
       selectedCharacter,
       characterName: char.name || 'AI Idol',
       mediaUrl: currentMedia,
+      flvUrl: streamFlvUrl,
       isVideo: !!isVid,
       isConnected: !!(isConnected || showSimulator),
       isDarkMode,
@@ -719,6 +731,7 @@ export default function DesktopAppUI() {
       localStorage.setItem('aidol_clean_stream_state', JSON.stringify({
         type: 'STREAM_MEDIA_UPDATE',
         mediaUrl: currentMedia,
+        flvUrl: streamFlvUrl,
         isVideo: !!isVid,
         characterName: char.name || 'AI Idol',
         isConnected: !!(isConnected || showSimulator)
@@ -760,6 +773,7 @@ export default function DesktopAppUI() {
         cleanChannel.postMessage({
           type: 'STREAM_MEDIA_UPDATE',
           mediaUrl: currentMedia,
+          flvUrl: streamFlvUrl,
           isVideo: !!isVid,
           characterName: char.name || 'AI Idol',
           isConnected: !!(isConnected || showSimulator)
@@ -771,7 +785,7 @@ export default function DesktopAppUI() {
       if (masterChannel) masterChannel.close();
       if (cleanChannel) cleanChannel.close();
     };
-  }, [isGameBanDoActive, isGameBattleActive, selectedCharacter, activeVideoItem, isConnected, showSimulator, globalAspectRatio, isDarkMode, currentLang, CHARACTERS]);
+  }, [isGameBanDoActive, isGameBattleActive, selectedCharacter, activeVideoItem, isConnected, showSimulator, globalAspectRatio, isDarkMode, currentLang, CHARACTERS, flvUrl]);
 
   // Trích xuất TikTok Username từ Link Live / ID / @username
   const extractTikTokUsername = (input) => {
