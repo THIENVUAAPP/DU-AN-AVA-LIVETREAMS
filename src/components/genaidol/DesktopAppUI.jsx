@@ -135,6 +135,13 @@ export default function DesktopAppUI() {
   const lastAiGreetingTime = useRef(0);
   const [isTemplateLibraryOpen, setIsTemplateLibraryOpen] = useState(false);
 
+  const getPlayableStreamUrl = (rawUrl) => {
+    if (!rawUrl) return '';
+    if (rawUrl.includes('/api/stream-proxy')) return rawUrl;
+    const backendOrigin = typeof window !== 'undefined' ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:3001' : window.location.origin) : 'http://localhost:3001';
+    return `${backendOrigin}/api/stream-proxy?url=${encodeURIComponent(rawUrl)}`;
+  };
+
   const attachFlvPlayer = (videoEl, url) => {
     if (!videoEl || !url) return;
     try {
@@ -167,11 +174,12 @@ export default function DesktopAppUI() {
           });
         }
       } else if (flvjs.isSupported()) {
+        const streamSrc = getPlayableStreamUrl(url);
         const flvPlayer = flvjs.createPlayer({
           type: 'flv',
           isLive: true,
           hasAudio: true,
-          url: url,
+          url: streamSrc,
           cors: true,
           enableWorker: true,
           enableStashBuffer: false,

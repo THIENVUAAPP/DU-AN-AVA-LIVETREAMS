@@ -45,6 +45,45 @@ if (distPath) {
   app.use(express.static(distPath));
 }
 
+// 🚀 PROXY STREAM TIÊU CHUẨN: Vượt qua hoàn toàn rào cản CORS của trình duyệt Chrome/Edge
+app.get('/api/stream-proxy', (req, res) => {
+  const streamUrl = req.query.url || globalFlvUrl;
+  if (!streamUrl) {
+    return res.status(400).send('Missing stream URL');
+  }
+
+  try {
+    const parsed = new URL(streamUrl);
+    const client = parsed.protocol === 'https:' ? https : require('http');
+
+    const proxyReq = client.get(streamUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Referer': 'https://www.tiktok.com/',
+        'Origin': 'https://www.tiktok.com'
+      }
+    }, (proxyRes) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', '*');
+      res.setHeader('Content-Type', proxyRes.headers['content-type'] || 'video/x-flv');
+      
+      proxyRes.pipe(res);
+    });
+
+    proxyReq.on('error', (err) => {
+      console.error('[Stream Proxy Error]:', err.message);
+      if (!res.headersSent) res.status(500).send('Proxy stream error');
+    });
+
+    req.on('close', () => {
+      proxyReq.destroy();
+    });
+  } catch (e) {
+    res.status(400).send('Invalid stream URL');
+  }
+});
+
 const httpServer = createServer(app);
 const io = new Server(httpServer, { cors: { origin: '*' } });
 
