@@ -22,12 +22,24 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
     }
   };
 
-  const [captchaConfig, setCaptchaConfig] = useState({
-    imageBypass: true,
-    cloudflareTurnstile: true,
-    autoProxy: true,
-    autoToken: true
+  const [captchaConfig, setCaptchaConfig] = useState(() => {
+    try {
+      const saved = localStorage.getItem('avalive_captcha_config');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return {
+      imageBypass: true,
+      cloudflareTurnstile: true,
+      autoProxy: true,
+      autoToken: true,
+      autoPin: false,
+      pinInterval: 30
+    };
   });
+
+  useEffect(() => {
+    localStorage.setItem('avalive_captcha_config', JSON.stringify(captchaConfig));
+  }, [captchaConfig]);
   
   const [captchaStats, setCaptchaStats] = useState({
     totalSolved: 14205,

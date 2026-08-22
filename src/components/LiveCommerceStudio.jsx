@@ -132,6 +132,50 @@ export default function LiveCommerceStudio({ isLive }) {
     { code: 'kr', name: 'Tiếng Hàn (Seoul Accent)', flag: '🇰🇷' },
   ];
 
+  const productsRef = React.useRef(activeSession.products);
+  React.useEffect(() => {
+    productsRef.current = activeSession.products;
+  }, [activeSession.products]);
+
+  // Auto Pin Product Logic
+  React.useEffect(() => {
+    let pinIntervalId;
+    
+    const runAutoPin = (config) => {
+      if (pinIntervalId) clearInterval(pinIntervalId);
+      if (config.autoPin && config.pinInterval && config.pinInterval > 0) {
+        pinIntervalId = setInterval(() => {
+          setPinnedProductId(currentPinnedId => {
+            const currentProducts = productsRef.current;
+            if (!currentProducts || currentProducts.length <= 1) return currentPinnedId;
+            const currentIndex = currentProducts.findIndex(p => p.id === currentPinnedId);
+            const nextIndex = (currentIndex + 1) % currentProducts.length;
+            return currentProducts[nextIndex].id;
+          });
+        }, config.pinInterval * 1000);
+      }
+    };
+
+    const checkConfig = () => {
+      try {
+        const saved = localStorage.getItem('avalive_captcha_config');
+        if (saved) {
+          runAutoPin(JSON.parse(saved));
+        } else {
+          runAutoPin({ autoPin: false });
+        }
+      } catch (e) {}
+    };
+
+    checkConfig();
+    const configInterval = setInterval(checkConfig, 5000); // Reload config every 5s
+
+    return () => {
+      if (pinIntervalId) clearInterval(pinIntervalId);
+      clearInterval(configInterval);
+    };
+  }, []);
+
   // Open Modal to Add Product
   const handleOpenAddProductModal = () => {
     setEditingProductId(null);
