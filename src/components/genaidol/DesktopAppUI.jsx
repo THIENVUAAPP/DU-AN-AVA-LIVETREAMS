@@ -8,6 +8,7 @@ import {
   Smartphone, MonitorPlay, Globe, StopCircle, Power, Volume2, VolumeX, Volume1
 } from 'lucide-react';
 import flvjs from 'flv.js';
+import Hls from 'hls.js';
 import WorkspaceTacVu from './WorkspaceTacVu';
 import GeneralSettings from './GeneralSettings';
 import ThanhToanCoin from './ThanhToanCoin';
