@@ -225,8 +225,8 @@ export default function DesktopAppUI() {
 
       const streamSrc = getPlayableStreamUrl(url);
       console.log('[AvaLive Stream] 🎬 Đang phát luồng:', streamSrc);
-
-      if (url.includes('.flv') && flvjs.isSupported()) {
+      const isFLV = url.includes('.flv') || url.includes('pull-flv') || url.includes('/flv') || url.includes('tiktokcdn.com') || url.includes('/game/') || url.includes('/stage/') || url.includes('/stream');
+      if (isFLV && flvjs.isSupported()) {
         const flvPlayer = flvjs.createPlayer({
           type: 'flv',
           isLive: true,
@@ -1427,13 +1427,21 @@ export default function DesktopAppUI() {
     if (isConnected && flvUrl) {
       return (
         <div className="relative w-full h-full flex flex-col bg-black">
-          {/* Nhúng trực tiếp màn hình Live Stream đồng bộ 100% với OBS / TikTok Studio */}
-          <iframe
-            key={flvUrl}
-            src={`/overlay-idol?mode=embed&v=${encodeURIComponent(flvUrl)}`}
-            className="w-full h-full border-0 pointer-events-auto select-none bg-black"
-            allow="autoplay; camera; microphone; fullscreen"
-          />
+          <div className="relative w-full h-full flex items-center justify-center">
+            {/* Video trực tiếp 60fps - Hardware Accelerated */}
+            <video
+              ref={(el) => {
+                if (!el) return;
+                flvVideoRef.current = el;
+                attachFlvPlayer(el, flvUrl);
+              }}
+              className="w-full h-full object-contain select-none"
+              controls={false}
+              autoPlay
+              muted={isLiveAudioMuted}
+              playsInline
+            />
+          </div>
         </div>
       );
     }

@@ -271,7 +271,8 @@ export default function CleanLiveOverlay() {
   const hlsPlayerRef = useRef(null);
   const currentPlayingUrlRef = useRef(null);
 
-  const activeStreamUrl = masterState.flvUrl || (masterState.mediaUrl && (masterState.mediaUrl.includes('.flv') || masterState.mediaUrl.includes('.m3u8')) ? masterState.mediaUrl : null);
+  const isStreamUrl = (u) => u && (u.includes('.flv') || u.includes('.m3u8') || u.includes('pull-flv') || u.includes('tiktokcdn.com') || u.includes('/stream') || u.includes('/game/') || u.includes('/stage/'));
+  const activeStreamUrl = masterState.flvUrl || (isStreamUrl(masterState.mediaUrl) ? masterState.mediaUrl : null);
 
   useEffect(() => {
     let animId;
@@ -361,8 +362,8 @@ export default function CleanLiveOverlay() {
       }
 
       const streamSrc = getPlayableStreamUrl(url);
-
-      if (url.includes('.flv') && flvjs.isSupported()) {
+      const isFLV = url.includes('.flv') || url.includes('pull-flv') || url.includes('/flv') || url.includes('tiktokcdn.com') || url.includes('/game/') || url.includes('/stage/') || url.includes('/stream');
+      if (isFLV && flvjs.isSupported()) {
         const flvPlayer = flvjs.createPlayer({
           type: 'flv',
           isLive: true,
