@@ -157,13 +157,29 @@ export default function DesktopAppUI() {
           isLive: true,
           hasAudio: true,
           url: flvUrl,
-          cors: true
+          cors: true,
+          enableWorker: true,
+          enableStashBuffer: false,
+          stashInitialSize: 128,
+          lazyLoad: false
+        }, {
+          enableWorker: true,
+          enableStashBuffer: false,
+          stashInitialSize: 128,
+          lazyLoad: false,
+          autoCleanupSourceBuffer: true
         });
         flvPlayer.attachMediaElement(flvVideoRef.current);
         flvPlayer.load();
         const playPromise = flvPlayer.play();
         if (playPromise) {
-          playPromise.catch(e => console.warn('Lỗi auto-play flv:', e));
+          playPromise.catch(e => {
+            console.warn('Lỗi auto-play flv có tiếng, thử lại ở chế độ tắt tiếng:', e);
+            if (flvVideoRef.current) {
+              flvVideoRef.current.muted = true;
+              flvPlayer.play()?.catch(err => console.warn('Lỗi play flv:', err));
+            }
+          });
         }
         flvPlayerRef.current = flvPlayer;
       }
@@ -2689,14 +2705,14 @@ export default function DesktopAppUI() {
                       <span>1. Live AI Idol (Idol Ảo Livestream 24/7)</span>
                     </div>
                     <div className="text-[10px] text-gray-400 font-mono truncate">
-                      {typeof window !== 'undefined' ? `${window.location.origin}/?overlay=idol&ratio=${globalAspectRatio}` : ''}
+                      {typeof window !== 'undefined' ? `${window.location.origin}/?overlay=idol` : ''}
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => {
                         if (typeof navigator !== 'undefined') {
-                          navigator.clipboard.writeText(`${window.location.origin}/?overlay=idol&ratio=${globalAspectRatio}`);
+                          navigator.clipboard.writeText(`${window.location.origin}/?overlay=idol`);
                           setCopySuccessMsg('Đã sao chép Link Live AI Idol!');
                           setTimeout(() => setCopySuccessMsg(''), 3000);
                         }
@@ -2706,7 +2722,7 @@ export default function DesktopAppUI() {
                       <span>{copySuccessMsg === 'Đã sao chép Link Live AI Idol!' ? '✅ Đã Chép' : 'Sao Chép'}</span>
                     </button>
                     <button
-                      onClick={() => window.open(`${window.location.origin}/?overlay=idol&ratio=${globalAspectRatio}`, '_blank')}
+                      onClick={() => window.open(`${window.location.origin}/?overlay=idol`, '_blank')}
                       className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 font-bold text-[10px]"
                       title="Xem thử tab mới"
                     >
@@ -2723,14 +2739,14 @@ export default function DesktopAppUI() {
                       <span>2. Game Bản Đồ Cắm Cờ (Chuẩn Đầy Đủ)</span>
                     </div>
                     <div className="text-[10px] text-gray-400 font-mono truncate">
-                      {typeof window !== 'undefined' ? `${window.location.origin}/?overlay=bando&ratio=${globalAspectRatio}` : ''}
+                      {typeof window !== 'undefined' ? `${window.location.origin}/?overlay=bando` : ''}
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => {
                         if (typeof navigator !== 'undefined') {
-                          navigator.clipboard.writeText(`${window.location.origin}/?overlay=bando&ratio=${globalAspectRatio}`);
+                          navigator.clipboard.writeText(`${window.location.origin}/?overlay=bando`);
                           setCopySuccessMsg('Đã sao chép Link Bản Đồ!');
                           setTimeout(() => setCopySuccessMsg(''), 3000);
                         }
@@ -2740,7 +2756,7 @@ export default function DesktopAppUI() {
                       <span>{copySuccessMsg === 'Đã sao chép Link Bản Đồ!' ? '✅ Đã Chép' : 'Sao Chép'}</span>
                     </button>
                     <button
-                      onClick={() => window.open(`${window.location.origin}/?overlay=bando&ratio=${globalAspectRatio}`, '_blank')}
+                      onClick={() => window.open(`${window.location.origin}/?overlay=bando`, '_blank')}
                       className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 font-bold text-[10px]"
                       title="Xem thử tab mới"
                     >
@@ -2757,14 +2773,14 @@ export default function DesktopAppUI() {
                       <span>3. Game Bản Đồ (✨ Nguồn Sạch Lồng Góc / Ultra Clean)</span>
                     </div>
                     <div className="text-[10px] text-gray-400 font-mono truncate">
-                      {typeof window !== 'undefined' ? `${window.location.origin}/?overlay=bando&clean=true&ratio=${globalAspectRatio}` : ''}
+                      {typeof window !== 'undefined' ? `${window.location.origin}/?overlay=bando&clean=true` : ''}
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => {
                         if (typeof navigator !== 'undefined') {
-                          navigator.clipboard.writeText(`${window.location.origin}/?overlay=bando&clean=true&ratio=${globalAspectRatio}`);
+                          navigator.clipboard.writeText(`${window.location.origin}/?overlay=bando&clean=true`);
                           setCopySuccessMsg('Đã sao chép Link Bản Đồ Siêu Sạch!');
                           setTimeout(() => setCopySuccessMsg(''), 3000);
                         }
