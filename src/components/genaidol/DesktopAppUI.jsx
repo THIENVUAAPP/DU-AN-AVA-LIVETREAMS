@@ -168,26 +168,7 @@ export default function DesktopAppUI() {
       const streamSrc = getPlayableStreamUrl(url);
       console.log('[AvaLive Stream] 🎬 Đang phát luồng:', streamSrc);
 
-      if (url.includes('.m3u8')) {
-        if (Hls.isSupported()) {
-          const hls = new Hls({ enableWorker: false, lowLatencyMode: true });
-          hls.loadSource(streamSrc);
-          hls.attachMedia(videoEl);
-          hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            videoEl.play().catch(() => {
-              videoEl.muted = true;
-              videoEl.play().catch(e => console.warn('Lỗi auto-play hls:', e));
-            });
-          });
-          hlsPlayerRef.current = hls;
-        } else if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
-          videoEl.src = streamSrc;
-          videoEl.play().catch(() => {
-            videoEl.muted = true;
-            videoEl.play().catch(e => console.warn('Lỗi auto-play hls safari:', e));
-          });
-        }
-      } else if (flvjs.isSupported()) {
+      if (url.includes('.flv') && flvjs.isSupported()) {
         const flvPlayer = flvjs.createPlayer({
           type: 'flv',
           isLive: true,
@@ -219,6 +200,29 @@ export default function DesktopAppUI() {
           console.warn('[AvaLive FLV Player Error]:', errType, errDetail, errInfo);
         });
         flvPlayerRef.current = flvPlayer;
+      } else if (Hls.isSupported()) {
+        const hls = new Hls({ enableWorker: false, lowLatencyMode: true });
+        hls.loadSource(streamSrc);
+        hls.attachMedia(videoEl);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          videoEl.play().catch(() => {
+            videoEl.muted = true;
+            videoEl.play().catch(e => console.warn('Lỗi auto-play hls:', e));
+          });
+        });
+        hls.on(Hls.Events.ERROR, (event, data) => {
+          console.warn('[HLS Error]:', data);
+        });
+        hlsPlayerRef.current = hls;
+      } else if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
+        videoEl.src = streamSrc;
+        videoEl.play().catch(() => {
+          videoEl.muted = true;
+          videoEl.play().catch(e => console.warn('Lỗi auto-play hls safari:', e));
+        });
+      } else {
+        videoEl.src = streamSrc;
+        videoEl.play().catch(e => console.warn('Lỗi native video play:', e));
       }
     } catch (err) {
       console.error('Lỗi khởi tạo player:', err);

@@ -64,15 +64,17 @@ app.get('/api/stream-proxy', async (req, res) => {
       redirect: 'follow'
     });
 
-    if (!response.ok && response.status !== 200 && response.status !== 206) {
-      console.error('[Stream Proxy] ❌ TikTok CDN returned status:', response.status);
-      return res.status(response.status).send('CDN error');
-    }
+    const isHls = streamUrl.includes('.m3u8') || streamUrl.includes('/hls');
+    const isTs = streamUrl.includes('.ts');
+    let contentType = response.headers.get('content-type');
+    if (isHls) contentType = 'application/vnd.apple.mpegurl';
+    else if (isTs) contentType = 'video/mp2t';
+    else if (!contentType || contentType.includes('text/plain')) contentType = 'video/x-flv';
 
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', '*');
-    res.setHeader('Content-Type', response.headers.get('content-type') || 'video/x-flv');
+    res.setHeader('Content-Type', contentType);
 
     const { Readable } = require('stream');
     if (response.body) {
