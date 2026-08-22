@@ -671,6 +671,7 @@ export default function DesktopAppUI() {
       } else if (data.connected === true) {
         setIsConnecting(false);
         setIsConnected(true);
+        if (data.flvUrl) setFlvUrl(data.flvUrl);
       }
     });
 
@@ -1218,6 +1219,9 @@ export default function DesktopAppUI() {
     if (isConnected && flvUrl) {
       return (
         <div className="relative w-full h-full flex flex-col bg-black">
+          <div className="absolute top-4 left-4 z-50 bg-black text-white p-2 text-xs">
+            DEBUG: flvUrl={flvUrl.toString().substring(0, 100)}
+          </div>
           <div className="w-full h-full flex items-center justify-center">
             <video
               ref={flvVideoRef}
@@ -1229,6 +1233,17 @@ export default function DesktopAppUI() {
           </div>
         </div>
       );
+    }
+
+    if (isConnected) {
+       return (
+        <div className="relative w-full h-full flex items-center justify-center bg-[#0d0d12] overflow-hidden select-none">
+          <div className="absolute top-4 left-4 z-50 bg-red-500 text-white p-2 text-xs">
+            DEBUG: isConnected=TRUE but flvUrl={flvUrl === null ? 'NULL' : (flvUrl === undefined ? 'UNDEFINED' : `"${flvUrl}"`)}
+          </div>
+          {renderMainCharacter()}
+        </div>
+       )
     }
 
     return renderMainCharacter();

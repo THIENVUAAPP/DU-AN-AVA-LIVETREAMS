@@ -55,6 +55,7 @@ let tiktokConnection = null;
 let tiktokVideoConnection = null;
 let currentUsername = null;
 let currentVideoUsername = null;
+let globalFlvUrl = null;
 let autoReconnectTimer = null;
 let isSimulationMode = false;
 let simulationTimer = null;
@@ -250,8 +251,9 @@ io.on('connection', (socket) => {
     if (autoReconnectTimer) clearTimeout(autoReconnectTimer);
     currentUsername = '';
     currentVideoUsername = '';
+    globalFlvUrl = null;
     io.emit('tiktok_disconnected', { message: 'Đã ngắt kết nối TikTok Live' });
-    io.emit('tiktok_status', { connected: false, username: '', roomId: null });
+    io.emit('tiktok_status', { connected: false, username: '', roomId: null, flvUrl: null });
   });
 
   // ---- Chế độ Simulation ----
@@ -265,6 +267,7 @@ io.on('connection', (socket) => {
       connected: !!tiktokConnection && !!currentUsername,
       username: currentUsername,
       roomId: tiktokConnection?.roomId || null,
+      flvUrl: globalFlvUrl,
       simulationMode: isSimulationMode
     });
   });
@@ -324,6 +327,7 @@ io.on('connection', (socket) => {
 
     const extractFlv = (obj) => {
       if (!obj) return null;
+      console.log('[TikTok Live] Stream URL Object Keys:', Object.keys(obj));
       if (obj.flv_pull_url) {
         if (typeof obj.flv_pull_url === 'string') return obj.flv_pull_url;
         const urls = Object.values(obj.flv_pull_url);
@@ -332,6 +336,11 @@ io.on('connection', (socket) => {
       if (obj.rtmp_pull_url) {
         if (typeof obj.rtmp_pull_url === 'string') return obj.rtmp_pull_url;
         const urls = Object.values(obj.rtmp_pull_url);
+        if (urls.length > 0) return urls[0];
+      }
+      if (obj.hls_pull_url_map) {
+        if (typeof obj.hls_pull_url_map === 'string') return obj.hls_pull_url_map;
+        const urls = Object.values(obj.hls_pull_url_map);
         if (urls.length > 0) return urls[0];
       }
       return null;
@@ -357,6 +366,7 @@ io.on('connection', (socket) => {
           if (vidState?.roomInfo?.stream_url) flvUrl = extractFlv(vidState.roomInfo.stream_url);
           if (!flvUrl && vidState?.roomInfo?.data?.stream_url) flvUrl = extractFlv(vidState.roomInfo.data.stream_url);
           console.log(`[TikTok Live] Video FLV URL:`, flvUrl ? 'FOUND' : 'NULL', vidState?.roomInfo?.stream_url ? 'HAS_STREAM_URL' : 'NO_STREAM_URL');
+          if (flvUrl) globalFlvUrl = flvUrl;
           videoConnected = true;
         } catch (err) {
           console.error(`[TikTok Live] ❌ Lỗi kết nối Video ${targetVideoUser}:`, err.message);
@@ -403,6 +413,7 @@ io.on('connection', (socket) => {
       if (!targetVideoUser) {
         if (state?.roomInfo?.stream_url) flvUrl = extractFlv(state.roomInfo.stream_url);
         if (!flvUrl && state?.roomInfo?.data?.stream_url) flvUrl = extractFlv(state.roomInfo.data.stream_url);
+        if (flvUrl) globalFlvUrl = flvUrl;
       }
       
       io.emit('tiktok_connected', { username: targetUser, roomId: state?.roomId, flvUrl });
