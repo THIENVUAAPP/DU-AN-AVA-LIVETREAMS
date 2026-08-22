@@ -5,7 +5,7 @@ import {
   MessageCircle, Play, Pause, Mic, MicOff, X, Download, Plus,
   Brain, Radio, Coins, AlertTriangle, Eye, Clock, List, Zap, AlertCircle, FileText, CheckSquare, CheckCircle,
   Gift, ShoppingBag, Sparkles, RotateCcw, Send, Trash2, Heart, Share2, UserPlus, Users, Swords, Shield, Gamepad2, Flag, MapPin,
-  Smartphone, MonitorPlay, Globe, StopCircle, Power, Volume2, VolumeX, Volume1
+  Smartphone, MonitorPlay, Globe, StopCircle, Power, Volume2, VolumeX, Volume1, Music
 } from 'lucide-react';
 import flvjs from 'flv.js';
 import Hls from 'hls.js';
@@ -18,6 +18,7 @@ import { useLiveCoordinator } from '../../hooks/useLiveCoordinator';
 import AIAudioPlayer from './AIAudioPlayer';
 import QuickResponseModal from './QuickResponseModal';
 import TemplateLibraryModal from './TemplateLibraryModal';
+import DanceFloorStudio from '../DanceFloorStudio';
 import GameChienDau from './game/GameChienDau';
 import GameChienDauAdminModal from './game/GameChienDauAdminModal';
 import GameBanDoVietNam from './game/GameBanDoVietNam';
@@ -89,6 +90,15 @@ export default function DesktopAppUI() {
     }
   });
   const [isGameBanDoAdminOpen, setIsGameBanDoAdminOpen] = useState(false);
+
+  // Sàn Nhảy TikTok States
+  const [isDanceFloorActive, setIsDanceFloorActive] = useState(() => {
+    try {
+      return localStorage.getItem('avalive_active_stage') === 'dancefloor';
+    } catch {
+      return false;
+    }
+  });
 
   // Tỷ Lệ Khung Hình Toàn Cục (9:16 TikTok Dọc vs 16:9 OBS Ngang)
   const [globalAspectRatio, setGlobalAspectRatio] = useState(() => {
@@ -1482,6 +1492,15 @@ export default function DesktopAppUI() {
       );
     }
 
+    // -3. Chế độ Sàn Nhảy TikTok
+    if (isDanceFloorActive) {
+      return (
+        <div className="w-full h-full overflow-y-auto bg-black relative">
+           <DanceFloorStudio isLive={isMasterLiveRunning} setIsLive={() => {}} />
+        </div>
+      );
+    }
+
     // 0. Chế độ AI Idol Livestream Video / Live Screen
     return (
       <div className={`w-full h-full flex items-center justify-center p-2 sm:p-3 overflow-hidden ${isDarkMode ? 'bg-[#05070c]' : 'bg-slate-200'}`}>
@@ -1541,13 +1560,14 @@ export default function DesktopAppUI() {
           {/* Nút Chế độ Live AI Idol */}
           <button 
             className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs ${
-              !isGameBattleActive && !isGameBanDoActive 
+              !isGameBattleActive && !isGameBanDoActive && !isDanceFloorActive
                 ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 text-white border-cyan-300 shadow-cyan-500/40 ring-1 ring-cyan-400/50' 
                 : (isDarkMode ? 'border-cyan-500/40 bg-cyan-950/30 text-cyan-300 hover:bg-cyan-900/50' : 'border-cyan-300 bg-cyan-50 text-cyan-700 hover:bg-cyan-100')
             }`}
             onClick={() => {
               setIsGameBattleActive(false);
               setIsGameBanDoActive(false);
+              setIsDanceFloorActive(false);
               try { localStorage.setItem('avalive_active_stage', 'idol'); } catch (e) {}
               mapVoiceEngine.stopAll();
               battleVoiceEngine.stopAll();
@@ -1555,9 +1575,9 @@ export default function DesktopAppUI() {
             }}
             title="Chuyển sang màn hình Livestream AI Idol"
           >
-            <Video size={10} className={!isGameBattleActive && !isGameBanDoActive ? 'text-yellow-300' : 'text-cyan-400'} />
+            <Video size={10} className={!isGameBattleActive && !isGameBanDoActive && !isDanceFloorActive ? 'text-yellow-300' : 'text-cyan-400'} />
             <span className="whitespace-nowrap">Live AI Idol</span>
-            {!isGameBattleActive && !isGameBanDoActive && (
+            {!isGameBattleActive && !isGameBanDoActive && !isDanceFloorActive && (
               <span className="w-1 h-1 rounded-full bg-emerald-400 animate-ping"></span>
             )}
           </button>
@@ -1572,6 +1592,7 @@ export default function DesktopAppUI() {
             onClick={() => {
               setIsGameBattleActive(true);
               setIsGameBanDoActive(false);
+              setIsDanceFloorActive(false);
               try { localStorage.setItem('avalive_active_stage', 'battle'); } catch (e) {}
               mapVoiceEngine.stopAll();
               if (isMasterLiveRunning) {
@@ -1601,6 +1622,31 @@ export default function DesktopAppUI() {
             </button>
           )}
 
+          {/* Nút Kích hoạt Sàn Nhảy TikTok */}
+          <button 
+            className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs ${
+              isDanceFloorActive 
+                ? 'bg-gradient-to-r from-pink-600 via-rose-600 to-pink-500 text-white border-pink-400 shadow-pink-500/40 ring-1 ring-pink-400/50 animate-pulse' 
+                : (isDarkMode ? 'border-pink-500/50 bg-pink-950/40 text-pink-300 hover:bg-pink-900/60' : 'border-pink-300 bg-pink-50 text-pink-700 hover:bg-pink-100')
+            }`}
+            onClick={() => {
+              setIsDanceFloorActive(true);
+              setIsGameBattleActive(false);
+              setIsGameBanDoActive(false);
+              try { localStorage.setItem('avalive_active_stage', 'dancefloor'); } catch (e) {}
+              mapVoiceEngine.stopAll();
+              battleVoiceEngine.stopAll();
+              battleCommentary.stopAll();
+            }}
+            title="Chuyển sang Sàn Nhảy TikTok"
+          >
+            <Music size={10} className={isDanceFloorActive ? 'text-white' : 'text-pink-400'} />
+            <span className="whitespace-nowrap">Sàn Nhảy TikTok</span>
+            {isDanceFloorActive && (
+              <span className="w-1 h-1 rounded-full bg-white animate-ping"></span>
+            )}
+          </button>
+
           {/* Nút Kích hoạt Game Ghép Cờ Bản Đồ Việt Nam (Hình Chữ S) */}
           <button 
             className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs ${
@@ -1611,6 +1657,7 @@ export default function DesktopAppUI() {
             onClick={() => {
               setIsGameBanDoActive(true);
               setIsGameBattleActive(false);
+              setIsDanceFloorActive(false);
               try { localStorage.setItem('avalive_active_stage', 'bando'); } catch (e) {}
               battleVoiceEngine.stopAll();
               battleCommentary.stopAll();
@@ -3017,6 +3064,40 @@ export default function DesktopAppUI() {
                     </button>
                     <button
                       onClick={() => window.open(`${overlayLinkBase}/?overlay=gamebattle`, '_blank')}
+                      className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 font-bold text-[10px]"
+                      title="Xem thử tab mới"
+                    >
+                      Xem
+                    </button>
+                  </div>
+                </div>
+
+                {/* Link Sàn Nhảy TikTok */}
+                <div className="p-2.5 rounded-xl bg-black/40 border border-pink-500/30 flex items-center justify-between gap-2">
+                  <div className="truncate flex-1">
+                    <div className="font-bold text-pink-300 text-[11px] flex items-center gap-1">
+                      <Music size={12} className="text-white" />
+                      <span>5. Sàn Nhảy TikTok</span>
+                    </div>
+                    <div className="text-[10px] text-gray-400 font-mono truncate">
+                      {`${overlayLinkBase}/?overlay=dance-floor`}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => {
+                        if (typeof navigator !== 'undefined') {
+                          navigator.clipboard.writeText(`${overlayLinkBase}/?overlay=dance-floor`);
+                          setCopySuccessMsg('Đã sao chép Link Sàn Nhảy!');
+                          setTimeout(() => setCopySuccessMsg(''), 3000);
+                        }
+                      }}
+                      className="px-3 py-1 rounded-lg bg-pink-600 hover:bg-pink-500 text-white font-bold text-[11px] transition-colors shadow-sm"
+                    >
+                      <span>{copySuccessMsg === 'Đã sao chép Link Sàn Nhảy!' ? '✅ Đã Chép' : 'Sao Chép'}</span>
+                    </button>
+                    <button
+                      onClick={() => window.open(`${overlayLinkBase}/?overlay=dance-floor`, '_blank')}
                       className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 font-bold text-[10px]"
                       title="Xem thử tab mới"
                     >
