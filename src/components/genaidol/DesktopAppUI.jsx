@@ -140,7 +140,11 @@ export default function DesktopAppUI() {
 
   useEffect(() => {
     let animId;
-    const renderLoop = () => {
+    let timerId;
+    let isMounted = true;
+
+    const renderFrame = () => {
+      if (!isMounted) return;
       const video = flvVideoRef.current;
       const canvas = flvCanvasRef.current;
       if (video && canvas && video.readyState >= 2 && video.videoWidth > 0) {
@@ -155,10 +159,40 @@ export default function DesktopAppUI() {
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         }
       }
-      animId = requestAnimationFrame(renderLoop);
+      if (video && 'requestVideoFrameCallback' in video) {
+        video.requestVideoFrameCallback(renderFrame);
+      } else {
+        animId = requestAnimationFrame(renderFrame);
+      }
     };
-    animId = requestAnimationFrame(renderLoop);
-    return () => cancelAnimationFrame(animId);
+
+    const video = flvVideoRef.current;
+    if (video && 'requestVideoFrameCallback' in video) {
+      video.requestVideoFrameCallback(renderFrame);
+    } else {
+      animId = requestAnimationFrame(renderFrame);
+    }
+
+    timerId = setInterval(() => {
+      const v = flvVideoRef.current;
+      const c = flvCanvasRef.current;
+      if (v && c && v.readyState >= 2 && v.videoWidth > 0 && !v.paused) {
+        if (c.width !== v.videoWidth || c.height !== v.videoHeight) {
+          c.width = v.videoWidth;
+          c.height = v.videoHeight;
+        }
+        const ctx = c.getContext('2d', { alpha: false, desynchronized: true });
+        if (ctx) {
+          ctx.drawImage(v, 0, 0, c.width, c.height);
+        }
+      }
+    }, 33);
+
+    return () => {
+      isMounted = false;
+      if (animId) cancelAnimationFrame(animId);
+      if (timerId) clearInterval(timerId);
+    };
   }, [flvUrl]);
   const lastAiCommentTime = useRef(0);
   const lastAiGreetingTime = useRef(0);
@@ -1357,17 +1391,22 @@ export default function DesktopAppUI() {
       return (
         <div className="relative w-full h-full flex flex-col bg-black">
           <div className="relative w-full h-full flex items-center justify-center group">
-            {/* Thẻ Video trực tiếp 60fps Siêu mượt & Sắc nét 100% sạch */}
+            {/* Thẻ Video giải mã luồng ngầm */}
             <video
               ref={(el) => {
                 flvVideoRef.current = el;
                 if (el && flvUrl) attachFlvPlayer(el, flvUrl);
               }}
-              className="w-full h-full object-contain cursor-pointer select-none z-10"
+              className="absolute inset-0 w-full h-full object-contain pointer-events-none opacity-0"
               controls={false}
               autoPlay
               muted={isLiveAudioMuted}
               playsInline
+            />
+            {/* Thẻ Canvas chống đen màn hình 100% khi OBS/TikTok Studio quay màn hình */}
+            <canvas
+              ref={flvCanvasRef}
+              className="w-full h-full object-contain cursor-pointer select-none z-10"
               onClick={() => {
                 const nextMuted = !isLiveAudioMuted;
                 setIsLiveAudioMuted(nextMuted);

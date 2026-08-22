@@ -274,7 +274,11 @@ export default function CleanLiveOverlay() {
 
   useEffect(() => {
     let animId;
-    const renderLoop = () => {
+    let timerId;
+    let isMounted = true;
+
+    const renderFrame = () => {
+      if (!isMounted) return;
       const video = flvVideoRef.current;
       const canvas = flvCanvasRef.current;
       if (video && canvas && video.readyState >= 2 && video.videoWidth > 0) {
@@ -289,10 +293,40 @@ export default function CleanLiveOverlay() {
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         }
       }
-      animId = requestAnimationFrame(renderLoop);
+      if (video && 'requestVideoFrameCallback' in video) {
+        video.requestVideoFrameCallback(renderFrame);
+      } else {
+        animId = requestAnimationFrame(renderFrame);
+      }
     };
-    animId = requestAnimationFrame(renderLoop);
-    return () => cancelAnimationFrame(animId);
+
+    const video = flvVideoRef.current;
+    if (video && 'requestVideoFrameCallback' in video) {
+      video.requestVideoFrameCallback(renderFrame);
+    } else {
+      animId = requestAnimationFrame(renderFrame);
+    }
+
+    timerId = setInterval(() => {
+      const v = flvVideoRef.current;
+      const c = flvCanvasRef.current;
+      if (v && c && v.readyState >= 2 && v.videoWidth > 0 && !v.paused) {
+        if (c.width !== v.videoWidth || c.height !== v.videoHeight) {
+          c.width = v.videoWidth;
+          c.height = v.videoHeight;
+        }
+        const ctx = c.getContext('2d', { alpha: false, desynchronized: true });
+        if (ctx) {
+          ctx.drawImage(v, 0, 0, c.width, c.height);
+        }
+      }
+    }, 33);
+
+    return () => {
+      isMounted = false;
+      if (animId) cancelAnimationFrame(animId);
+      if (timerId) clearInterval(timerId);
+    };
   }, [activeStreamUrl]);
 
   const getPlayableStreamUrl = (rawUrl) => {
@@ -445,17 +479,23 @@ export default function CleanLiveOverlay() {
         style={ratio === '9:16' ? { aspectRatio: '9 / 16', height: '100%', maxWidth: 'calc(100vh * 9 / 16)' } : { aspectRatio: '16 / 9', width: '100%' }}
       >
         {activeStreamUrl ? (
-          <video
-            ref={(el) => {
-              flvVideoRef.current = el;
-              if (el && activeStreamUrl) attachFlvPlayer(el, activeStreamUrl);
-            }}
-            key={activeStreamUrl}
-            autoPlay
-            muted={isAudioMuted}
-            playsInline
-            className="w-full h-full object-contain select-none z-10"
-          />
+          <>
+            <video
+              ref={(el) => {
+                flvVideoRef.current = el;
+                if (el && activeStreamUrl) attachFlvPlayer(el, activeStreamUrl);
+              }}
+              key={activeStreamUrl}
+              autoPlay
+              muted={isAudioMuted}
+              playsInline
+              className="absolute inset-0 w-full h-full object-contain pointer-events-none opacity-0"
+            />
+            <canvas
+              ref={flvCanvasRef}
+              className="w-full h-full object-contain select-none z-10"
+            />
+          </>
         ) : masterState.isVideo ? (
           <video
             key={masterState.mediaUrl}
