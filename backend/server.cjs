@@ -379,63 +379,54 @@ io.on('connection', (socket) => {
     // Lấy sessionId từ options, .env, hoặc localStorage gửi lên
     const sessionId = options.sessionId || process.env.TIKTOK_SESSION_ID || undefined;
 
-    const extractFlv = (obj) => {
-      if (!obj) return null;
-      console.log('[TikTok Live] Stream URL Object Keys:', Object.keys(obj));
+    const extractFlv = (rootObj) => {
+      if (!rootObj) return { flv: null, hls: null, bestUrl: null };
+      
+      let foundFlv = null;
+      let foundHls = null;
+      let foundAny = null;
 
-      const extractFromMap = (source) => {
-        if (!source) return null;
-        let map = source;
-        if (typeof source === 'string') {
-          if (source.trim().startsWith('{')) {
-            try { map = JSON.parse(source); } catch (e) { return source; }
-          } else if (source.startsWith('http')) {
-            return source;
+      const scan = (val) => {
+        if (!val) return;
+        if (typeof val === 'string') {
+          let s = val.trim();
+          if (s.startsWith('{') && (s.includes('flv') || s.includes('hls') || s.includes('http'))) {
+            try {
+              const parsed = JSON.parse(s);
+              scan(parsed);
+              return;
+            } catch (e) {}
           }
+          if (s.startsWith('http://') || s.startsWith('https://')) {
+            if (s.includes('.flv') || s.includes('pull-flv') || s.includes('/game/') || s.includes('/stage/')) {
+              if (!foundFlv) foundFlv = s;
+            } else if (s.includes('.m3u8') || s.includes('pull-hls')) {
+              if (!foundHls) foundHls = s;
+            } else if (s.includes('tiktokcdn.com') || s.includes('stream-')) {
+              if (!foundAny) foundAny = s;
+            }
+          }
+          return;
         }
-        if (typeof map === 'object' && map !== null) {
-          // Priority search
+        if (typeof val === 'object') {
+          // Priority search for Full HD / HD
           const priority = ['FULL_HD1', 'FULL_HD', 'ORIGIN', 'ORIGINAL', 'HD1', 'HD', 'SD1', 'SD', 'LD'];
-          for (const k of priority) {
-            for (const mapKey of Object.keys(map)) {
-              if (mapKey.toUpperCase() === k || mapKey.toUpperCase().includes(k)) {
-                const item = map[mapKey];
-                if (typeof item === 'string' && item.startsWith('http')) return item;
-                if (typeof item === 'object' && item !== null) {
-                  if (item.url && typeof item.url === 'string') return item.url;
-                  if (item.main?.flv) return item.main.flv;
-                  if (item.main?.hls) return item.main.hls;
-                }
+          for (const p of priority) {
+            for (const [k, v] of Object.entries(val)) {
+              if (k.toUpperCase().includes(p)) {
+                scan(v);
               }
             }
           }
-          // Recursive find any http string
-          const findHttp = (val) => {
-            if (!val) return null;
-            if (typeof val === 'string' && val.startsWith('http')) return val;
-            if (typeof val === 'object') {
-              for (const sub of Object.values(val)) {
-                const found = findHttp(sub);
-                if (found) return found;
-              }
-            }
-            return null;
-          };
-          const anyUrl = findHttp(map);
-          if (anyUrl) return anyUrl;
+          for (const v of Object.values(val)) {
+            scan(v);
+          }
         }
-        return null;
       };
 
-      // 1. Luôn ưu tiên FLV có chữ ký CDN đầy đủ (Full HD / HD)
-      let flv = null;
-      let hls = null;
-      if (obj.flv_pull_url) flv = extractFromMap(obj.flv_pull_url);
-      if (obj.hls_pull_url_map) hls = extractFromMap(obj.hls_pull_url_map);
-      if (!hls && obj.hls_pull_url && typeof obj.hls_pull_url === 'string') hls = obj.hls_pull_url;
-      if (!flv && obj.rtmp_pull_url) flv = extractFromMap(obj.rtmp_pull_url);
-
-      return { flv, hls, bestUrl: flv || hls };
+      scan(rootObj);
+      const bestUrl = foundFlv || foundHls || foundAny;
+      return { flv: foundFlv, hls: foundHls, bestUrl };
     };
 
     let streamResult = { flv: null, hls: null, bestUrl: null };
@@ -455,9 +446,8 @@ io.on('connection', (socket) => {
         try {
           const vidState = await Promise.race([vidPromise, vidTimeout]);
           console.log(`[TikTok Live] ✅ Đã kết nối Video Room ID: ${vidState?.roomId || 'ACTIVE'} (${targetVideoUser})`);
-          if (vidState?.roomInfo?.stream_url) streamResult = extractFlv(vidState.roomInfo.stream_url);
-          if (!streamResult.bestUrl && vidState?.roomInfo?.data?.stream_url) streamResult = extractFlv(vidState.roomInfo.data.stream_url);
-          console.log(`[TikTok Live] Stream Result: FLV=${streamResult.flv ? 'YES' : 'NO'}, HLS=${streamResult.hls ? 'YES' : 'NO'}`);
+          streamResult = extractFlv(vidState);
+          console.log(`[TikTok Live] Universal Stream Result: FLV=${streamResult.flv ? 'YES' : 'NO'}, HLS=${streamResult.hls ? 'YES' : 'NO'}, Best=${streamResult.bestUrl ? 'YES' : 'NO'}`);
           if (streamResult.bestUrl) globalFlvUrl = streamResult.bestUrl;
           videoConnected = true;
         } catch (err) {

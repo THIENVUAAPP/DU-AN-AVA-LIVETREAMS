@@ -190,19 +190,19 @@ export default function App() {
   };
 
   // Cửa Sổ Overlay Realtime Trong Suốt cho TikTok LIVE Studio & OBS Studio
-  const overlayType = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("overlay");
-  if (overlayType === "dancefloor") {
-    return <DanceFloorOverlay />;
-  }
-  if (overlayType === "live" || overlayType === "stage" || overlayType === "tiktok" || overlayType === "obs" || overlayType === "cleanlive" || overlayType === "avatar" || overlayType === "stream" || overlayType === "idol") {
-    return <CleanLiveOverlay />;
-  }
-  if (overlayType === "gamebattle" || overlayType === "game") {
-    return <GameBattleOverlay />;
-  }
-  if (overlayType === "bando" || overlayType === "vietnam_map" || overlayType === "map" || overlayType === "vietnam") {
-    return <GameBanDoOverlay />;
-  }
+  const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const pathName = typeof window !== "undefined" ? window.location.pathname.toLowerCase() : "";
+  const overlayType = searchParams?.get("overlay")?.toLowerCase();
+
+  const isOverlayDance = overlayType === "dancefloor" || pathName.includes("/overlay-dance") || pathName.includes("/overlay/dance") || pathName === "/dancefloor";
+  const isOverlayIdol = overlayType === "live" || overlayType === "stage" || overlayType === "tiktok" || overlayType === "obs" || overlayType === "cleanlive" || overlayType === "avatar" || overlayType === "stream" || overlayType === "idol" || pathName.includes("/overlay-idol") || pathName.includes("/overlay/idol") || pathName.includes("/overlay-live") || pathName === "/idol";
+  const isOverlayBattle = overlayType === "gamebattle" || overlayType === "game" || overlayType === "battle" || pathName.includes("/overlay-battle") || pathName.includes("/overlay/battle") || pathName === "/battle";
+  const isOverlayBanDo = overlayType === "bando" || overlayType === "vietnam_map" || overlayType === "map" || overlayType === "vietnam" || pathName.includes("/overlay-bando") || pathName.includes("/overlay/bando") || pathName === "/bando";
+
+  if (isOverlayDance) return <DanceFloorOverlay />;
+  if (isOverlayIdol) return <CleanLiveOverlay />;
+  if (isOverlayBattle) return <GameBattleOverlay />;
+  if (isOverlayBanDo) return <GameBanDoOverlay />;
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-gray-100 flex flex-col font-sans selection:bg-[#EF4444] selection:text-white">
