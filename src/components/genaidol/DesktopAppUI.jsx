@@ -53,6 +53,7 @@ export default function DesktopAppUI() {
     }
   });
   const [flvUrl, setFlvUrl] = useState(null);
+  const [isLiveAudioMuted, setIsLiveAudioMuted] = useState(true);
   const [selectedCharacter, setSelectedCharacter] = useState(() => {
     try {
       return localStorage.getItem('avalive_selected_char') || null;
@@ -1317,18 +1318,46 @@ export default function DesktopAppUI() {
     if (isConnected && flvUrl) {
       return (
         <div className="relative w-full h-full flex flex-col bg-black">
-          <div className="w-full h-full flex items-center justify-center">
+          <div className="relative w-full h-full flex items-center justify-center group">
             <video
               ref={(el) => {
                 flvVideoRef.current = el;
                 if (el && flvUrl) attachFlvPlayer(el, flvUrl);
               }}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain cursor-pointer"
               controls={false}
               autoPlay
-              muted={false}
+              muted={isLiveAudioMuted}
               playsInline
+              onClick={() => {
+                const nextMuted = !isLiveAudioMuted;
+                setIsLiveAudioMuted(nextMuted);
+                if (flvVideoRef.current) flvVideoRef.current.muted = nextMuted;
+              }}
             />
+            {/* Nút Bật/Tắt tiếng nhanh trên video */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                const nextMuted = !isLiveAudioMuted;
+                setIsLiveAudioMuted(nextMuted);
+                if (flvVideoRef.current) flvVideoRef.current.muted = nextMuted;
+              }}
+              className="absolute bottom-4 right-4 z-30 px-3 py-1.5 rounded-xl bg-black/70 hover:bg-black/90 text-white backdrop-blur-md border border-white/20 shadow-xl flex items-center gap-1.5 transition-all text-xs font-bold"
+            >
+              {isLiveAudioMuted ? (
+                <>
+                  <VolumeX size={14} className="text-red-400" />
+                  <span className="text-gray-300">Bật Tiếng</span>
+                </>
+              ) : (
+                <>
+                  <Volume2 size={14} className="text-emerald-400 animate-pulse" />
+                  <span className="text-emerald-300">Có Tiếng</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
       );
