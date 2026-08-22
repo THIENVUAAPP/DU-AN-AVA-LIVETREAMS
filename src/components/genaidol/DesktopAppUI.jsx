@@ -110,6 +110,7 @@ export default function DesktopAppUI() {
   const [activeMonitorModal, setActiveMonitorModal] = useState(null);
   const [quickResponseActiveVideo, setQuickResponseActiveVideo] = useState(null);
   const [showOverlayModal, setShowOverlayModal] = useState(false);
+  const [overlayLinkBase, setOverlayLinkBase] = useState(() => (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? window.location.origin : 'http://127.0.0.1:5173'));
   const [copySuccessMsg, setCopySuccessMsg] = useState('');
   
   const [systemLogs, setSystemLogs] = useState([]);
@@ -2656,10 +2657,31 @@ export default function DesktopAppUI() {
             {/* Body Content */}
             <div className="p-4 overflow-y-auto space-y-4 text-xs text-gray-200 custom-scrollbar">
               
+              {/* Nút chọn Nền Tảng: Local 127.0.0.1 vs Web Cloud Vercel */}
+              <div className="flex items-center justify-between p-2 rounded-xl bg-gray-900/80 border border-cyan-500/40">
+                <span className="font-bold text-gray-300 text-xs pl-2">Chọn nguồn đường link bạn đang dùng:</span>
+                <div className="flex gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setOverlayLinkBase('http://127.0.0.1:5173')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${overlayLinkBase === 'http://127.0.0.1:5173' ? 'bg-cyan-600 text-white shadow-md' : 'bg-white/5 text-gray-400 hover:text-white'}`}
+                  >
+                    ⚡ Local (127.0.0.1)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOverlayLinkBase('https://avalivepro.vercel.app')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${overlayLinkBase === 'https://avalivepro.vercel.app' ? 'bg-purple-600 text-white shadow-md' : 'bg-white/5 text-gray-400 hover:text-white'}`}
+                  >
+                    🌐 Web Cloud (Vercel)
+                  </button>
+                </div>
+              </div>
+
               <div className="p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-cyan-200">
                 <div className="font-bold flex items-center gap-1.5 mb-1 text-yellow-300">
                   <Sparkles size={14} className="text-yellow-400 animate-spin" />
-                  <span>Đồng Bộ Siêu Tốc 0.00001s Qua BroadcastChannel:</span>
+                  <span>Đồng Bộ Siêu Tốc 0.00001s:</span>
                 </div>
                 <p className="text-[11px] leading-relaxed text-gray-300">
                   Chỉ cần dán đường link vào mục <strong>Browser Source (Trình duyệt)</strong> trên TikTok LIVE Studio hoặc OBS Studio. Khi bạn thao tác đổi nhân vật Idol, mở Game Bản Đồ hay Game Chiến Đấu, âm thanh và quà tặng sẽ <strong>tự động đồng bộ thời gian thực</strong> lên phiên live!
@@ -2679,13 +2701,13 @@ export default function DesktopAppUI() {
                 <div className="flex items-center gap-2">
                   <input
                     readOnly
-                    value={typeof window !== 'undefined' ? `${window.location.origin}/?overlay=live` : ''}
+                    value={`${overlayLinkBase}/?overlay=live`}
                     className="flex-1 bg-black/60 border border-cyan-500/30 rounded-lg px-3 py-1.5 text-cyan-200 font-mono text-[11px] select-all outline-none"
                   />
                   <button
                     onClick={() => {
                       if (typeof navigator !== 'undefined') {
-                        navigator.clipboard.writeText(`${window.location.origin}/?overlay=live`);
+                        navigator.clipboard.writeText(`${overlayLinkBase}/?overlay=live`);
                         setCopySuccessMsg('Đã sao chép Link Toàn Năng!');
                         setTimeout(() => setCopySuccessMsg(''), 3000);
                       }
@@ -2695,7 +2717,7 @@ export default function DesktopAppUI() {
                     <span>{copySuccessMsg === 'Đã sao chép Link Toàn Năng!' ? '✅ Đã Chép' : 'Sao Chép'}</span>
                   </button>
                   <button
-                    onClick={() => window.open(`${window.location.origin}/?overlay=live`, '_blank')}
+                    onClick={() => window.open(`${overlayLinkBase}/?overlay=live`, '_blank')}
                     className="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 font-bold text-xs transition-colors shrink-0"
                     title="Mở tab mới xem thử"
                   >
@@ -2721,14 +2743,14 @@ export default function DesktopAppUI() {
                       <span>1. Live AI Idol (Idol Ảo Livestream 24/7)</span>
                     </div>
                     <div className="text-[10px] text-gray-400 font-mono truncate">
-                      {typeof window !== 'undefined' ? `${window.location.origin}/?overlay=idol` : ''}
+                      {`${overlayLinkBase}/?overlay=idol`}
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => {
                         if (typeof navigator !== 'undefined') {
-                          navigator.clipboard.writeText(`${window.location.origin}/?overlay=idol`);
+                          navigator.clipboard.writeText(`${overlayLinkBase}/?overlay=idol`);
                           setCopySuccessMsg('Đã sao chép Link Live AI Idol!');
                           setTimeout(() => setCopySuccessMsg(''), 3000);
                         }
@@ -2738,7 +2760,7 @@ export default function DesktopAppUI() {
                       <span>{copySuccessMsg === 'Đã sao chép Link Live AI Idol!' ? '✅ Đã Chép' : 'Sao Chép'}</span>
                     </button>
                     <button
-                      onClick={() => window.open(`${window.location.origin}/?overlay=idol`, '_blank')}
+                      onClick={() => window.open(`${overlayLinkBase}/?overlay=idol`, '_blank')}
                       className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 font-bold text-[10px]"
                       title="Xem thử tab mới"
                     >
@@ -2755,14 +2777,14 @@ export default function DesktopAppUI() {
                       <span>2. Game Bản Đồ Cắm Cờ (Chuẩn Đầy Đủ)</span>
                     </div>
                     <div className="text-[10px] text-gray-400 font-mono truncate">
-                      {typeof window !== 'undefined' ? `${window.location.origin}/?overlay=bando` : ''}
+                      {`${overlayLinkBase}/?overlay=bando`}
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => {
                         if (typeof navigator !== 'undefined') {
-                          navigator.clipboard.writeText(`${window.location.origin}/?overlay=bando`);
+                          navigator.clipboard.writeText(`${overlayLinkBase}/?overlay=bando`);
                           setCopySuccessMsg('Đã sao chép Link Bản Đồ!');
                           setTimeout(() => setCopySuccessMsg(''), 3000);
                         }
@@ -2772,7 +2794,7 @@ export default function DesktopAppUI() {
                       <span>{copySuccessMsg === 'Đã sao chép Link Bản Đồ!' ? '✅ Đã Chép' : 'Sao Chép'}</span>
                     </button>
                     <button
-                      onClick={() => window.open(`${window.location.origin}/?overlay=bando`, '_blank')}
+                      onClick={() => window.open(`${overlayLinkBase}/?overlay=bando`, '_blank')}
                       className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 font-bold text-[10px]"
                       title="Xem thử tab mới"
                     >
@@ -2789,14 +2811,14 @@ export default function DesktopAppUI() {
                       <span>3. Game Bản Đồ (✨ Nguồn Sạch Lồng Góc / Ultra Clean)</span>
                     </div>
                     <div className="text-[10px] text-gray-400 font-mono truncate">
-                      {typeof window !== 'undefined' ? `${window.location.origin}/?overlay=bando&clean=true` : ''}
+                      {`${overlayLinkBase}/?overlay=bando&clean=true`}
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => {
                         if (typeof navigator !== 'undefined') {
-                          navigator.clipboard.writeText(`${window.location.origin}/?overlay=bando&clean=true`);
+                          navigator.clipboard.writeText(`${overlayLinkBase}/?overlay=bando&clean=true`);
                           setCopySuccessMsg('Đã sao chép Link Bản Đồ Siêu Sạch!');
                           setTimeout(() => setCopySuccessMsg(''), 3000);
                         }

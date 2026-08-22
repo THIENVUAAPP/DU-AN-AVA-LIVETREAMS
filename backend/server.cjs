@@ -328,19 +328,20 @@ io.on('connection', (socket) => {
 
     const extractFlv = (obj) => {
       if (!obj) return null;
-      
-      const parseUrlMap = (source) => {
+      console.log('[TikTok Live] Stream URL Object Keys:', Object.keys(obj));
+
+      const extractFromMap = (source) => {
         if (!source) return null;
         let map = source;
         if (typeof source === 'string') {
           if (source.trim().startsWith('{')) {
-            try { map = JSON.parse(source); } catch (e) { map = source; }
+            try { map = JSON.parse(source); } catch (e) { return source; }
           } else {
             return source;
           }
         }
         if (typeof map === 'object' && map !== null) {
-          const priority = ['ORIGIN', 'ORIGINAL', 'FULL_HD1', 'FULL_HD', 'FHD', '1080P', '1080p', 'HD1', 'HD', '720P', '720p', 'SD1', 'SD'];
+          const priority = ['FULL_HD1', 'FULL_HD', 'ORIGIN', 'ORIGINAL', 'HD1', 'HD', 'SD1', 'SD'];
           for (const k of priority) {
             for (const mapKey of Object.keys(map)) {
               if (mapKey.toUpperCase() === k || mapKey.toUpperCase().includes(k)) {
@@ -354,42 +355,22 @@ io.on('connection', (socket) => {
         return null;
       };
 
-      // 1. Kiểm tra live_core_sdk_data (chứa chất lượng cao nhất Full HD / 1080p / Origin)
-      if (obj.live_core_sdk_data) {
-        try {
-          let sdkData = obj.live_core_sdk_data;
-          if (typeof sdkData === 'string') sdkData = JSON.parse(sdkData);
-          if (sdkData?.pull_data?.stream_data) {
-            let streamData = sdkData.pull_data.stream_data;
-            if (typeof streamData === 'string') streamData = JSON.parse(streamData);
-            if (streamData?.data) {
-              const dataObj = streamData.data;
-              const priority = ['origin', 'uhd', 'hd', 'sd', 'ld'];
-              for (const p of priority) {
-                if (dataObj[p]?.main?.flv) return dataObj[p].main.flv;
-                if (dataObj[p]?.main?.hls) return dataObj[p].main.hls;
-              }
-            }
-          }
-        } catch (e) {}
-      }
-
-      // 2. Kiểm tra flv_pull_url với độ ưu tiên Full HD / HD
+      // 1. Luôn ưu tiên FLV có chữ ký CDN đầy đủ (Full HD / HD)
       if (obj.flv_pull_url) {
-        const url = parseUrlMap(obj.flv_pull_url);
-        if (url) return url;
+        const flv = extractFromMap(obj.flv_pull_url);
+        if (flv) return flv;
       }
 
-      // 3. Kiểm tra hls_pull_url_map với độ ưu tiên cao nhất
+      // 2. HLS Pull Map (m3u8)
       if (obj.hls_pull_url_map) {
-        const url = parseUrlMap(obj.hls_pull_url_map);
-        if (url) return url;
+        const hls = extractFromMap(obj.hls_pull_url_map);
+        if (hls) return hls;
       }
 
-      // 4. Kiểm tra rtmp_pull_url
+      // 3. RTMP Pull URL
       if (obj.rtmp_pull_url) {
-        const url = parseUrlMap(obj.rtmp_pull_url);
-        if (url) return url;
+        const rtmp = extractFromMap(obj.rtmp_pull_url);
+        if (rtmp) return rtmp;
       }
 
       if (obj.hls_pull_url && typeof obj.hls_pull_url === 'string') return obj.hls_pull_url;
