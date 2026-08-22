@@ -112,7 +112,9 @@ export default function DesktopAppUI() {
   const [activeMonitorModal, setActiveMonitorModal] = useState(null);
   const [quickResponseActiveVideo, setQuickResponseActiveVideo] = useState(null);
   const [showOverlayModal, setShowOverlayModal] = useState(false);
-  const [overlayLinkBase, setOverlayLinkBase] = useState(() => (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? window.location.origin : 'http://127.0.0.1:5173'));
+  const [overlayLinkBase, setOverlayLinkBase] = useState(() => {
+    return 'https://avalivepro.vercel.app';
+  });
   const [copySuccessMsg, setCopySuccessMsg] = useState('');
   
   const [systemLogs, setSystemLogs] = useState([]);
