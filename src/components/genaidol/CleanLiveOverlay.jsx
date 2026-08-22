@@ -267,21 +267,35 @@ export default function CleanLiveOverlay() {
 
   const activeStreamUrl = masterState.flvUrl || (masterState.mediaUrl && (masterState.mediaUrl.includes('.flv') || masterState.mediaUrl.includes('.m3u8')) ? masterState.mediaUrl : null);
 
-  useEffect(() => {
-    if (activeStreamUrl && flvVideoRef.current) {
-      if (activeStreamUrl.includes('.m3u8')) {
+  const attachFlvPlayer = (videoEl, url) => {
+    if (!videoEl || !url) return;
+    try {
+      if (flvPlayerRef.current) {
+        try { flvPlayerRef.current.destroy(); } catch (e) {}
+        flvPlayerRef.current = null;
+      }
+      if (hlsPlayerRef.current) {
+        try { hlsPlayerRef.current.destroy(); } catch (e) {}
+        hlsPlayerRef.current = null;
+      }
+
+      if (url.includes('.m3u8')) {
         if (Hls.isSupported()) {
-          const hls = new Hls();
-          hls.loadSource(activeStreamUrl);
-          hls.attachMedia(flvVideoRef.current);
+          const hls = new Hls({ enableWorker: true, lowLatencyMode: true });
+          hls.loadSource(url);
+          hls.attachMedia(videoEl);
           hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            flvVideoRef.current.play().catch(e => console.warn('Lỗi auto-play hls overlay:', e));
+            videoEl.play().catch(() => {
+              videoEl.muted = true;
+              videoEl.play().catch(e => console.warn('Lỗi auto-play hls overlay:', e));
+            });
           });
           hlsPlayerRef.current = hls;
-        } else if (flvVideoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
-          flvVideoRef.current.src = activeStreamUrl;
-          flvVideoRef.current.addEventListener('loadedmetadata', () => {
-            flvVideoRef.current.play().catch(e => console.warn('Lỗi auto-play hls safari overlay:', e));
+        } else if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
+          videoEl.src = url;
+          videoEl.play().catch(() => {
+            videoEl.muted = true;
+            videoEl.play().catch(e => console.warn('Lỗi auto-play hls safari overlay:', e));
           });
         }
       } else if (flvjs.isSupported()) {
@@ -289,32 +303,49 @@ export default function CleanLiveOverlay() {
           type: 'flv',
           isLive: true,
           hasAudio: true,
-          url: activeStreamUrl,
-          cors: true
+          url: url,
+          cors: true,
+          enableWorker: true,
+          enableStashBuffer: false,
+          stashInitialSize: 128,
+          lazyLoad: false
+        }, {
+          enableWorker: true,
+          enableStashBuffer: false,
+          stashInitialSize: 128,
+          lazyLoad: false,
+          autoCleanupSourceBuffer: true
         });
-        flvPlayer.attachMediaElement(flvVideoRef.current);
+        flvPlayer.attachMediaElement(videoEl);
         flvPlayer.load();
-        const playPromise = flvPlayer.play();
-        if (playPromise) playPromise.catch(e => console.warn('Lỗi auto-play flv overlay:', e));
+        flvPlayer.play()?.catch(() => {
+          videoEl.muted = true;
+          flvPlayer.play()?.catch(err => console.warn('Lỗi play flv overlay:', err));
+        });
         flvPlayerRef.current = flvPlayer;
       }
-
-      return () => {
-        try {
-          if (flvPlayerRef.current) {
-            flvPlayerRef.current.pause();
-            flvPlayerRef.current.unload();
-            flvPlayerRef.current.detachMediaElement();
-            flvPlayerRef.current.destroy();
-            flvPlayerRef.current = null;
-          }
-          if (hlsPlayerRef.current) {
-            hlsPlayerRef.current.destroy();
-            hlsPlayerRef.current = null;
-          }
-        } catch (e) {}
-      };
+    } catch (err) {
+      console.error('Lỗi khởi tạo player overlay:', err);
     }
+  };
+
+  useEffect(() => {
+    if (activeStreamUrl && flvVideoRef.current) {
+      attachFlvPlayer(flvVideoRef.current, activeStreamUrl);
+    }
+
+    return () => {
+      try {
+        if (flvPlayerRef.current) {
+          flvPlayerRef.current.destroy();
+          flvPlayerRef.current = null;
+        }
+        if (hlsPlayerRef.current) {
+          hlsPlayerRef.current.destroy();
+          hlsPlayerRef.current = null;
+        }
+      } catch (e) {}
+    };
   }, [activeStreamUrl]);
 
   const currentStage = masterState.stage || 'idol';
@@ -361,7 +392,10 @@ export default function CleanLiveOverlay() {
       >
         {activeStreamUrl ? (
           <video
-            ref={flvVideoRef}
+            ref={(el) => {
+              flvVideoRef.current = el;
+              if (el && activeStreamUrl) attachFlvPlayer(el, activeStreamUrl);
+            }}
             key={activeStreamUrl}
             autoPlay
             muted={isAudioMuted}

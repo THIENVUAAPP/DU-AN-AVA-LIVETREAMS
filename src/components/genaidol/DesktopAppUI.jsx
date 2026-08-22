@@ -134,21 +134,35 @@ export default function DesktopAppUI() {
   const lastAiGreetingTime = useRef(0);
   const [isTemplateLibraryOpen, setIsTemplateLibraryOpen] = useState(false);
 
-  useEffect(() => {
-    if (flvUrl && flvVideoRef.current) {
-      if (flvUrl.includes('.m3u8')) {
+  const attachFlvPlayer = (videoEl, url) => {
+    if (!videoEl || !url) return;
+    try {
+      if (flvPlayerRef.current) {
+        try { flvPlayerRef.current.destroy(); } catch (e) {}
+        flvPlayerRef.current = null;
+      }
+      if (hlsPlayerRef.current) {
+        try { hlsPlayerRef.current.destroy(); } catch (e) {}
+        hlsPlayerRef.current = null;
+      }
+
+      if (url.includes('.m3u8')) {
         if (Hls.isSupported()) {
-          const hls = new Hls();
-          hls.loadSource(flvUrl);
-          hls.attachMedia(flvVideoRef.current);
+          const hls = new Hls({ enableWorker: true, lowLatencyMode: true });
+          hls.loadSource(url);
+          hls.attachMedia(videoEl);
           hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            flvVideoRef.current.play().catch(e => console.warn('Lỗi auto-play hls:', e));
+            videoEl.play().catch(() => {
+              videoEl.muted = true;
+              videoEl.play().catch(e => console.warn('Lỗi auto-play hls:', e));
+            });
           });
           hlsPlayerRef.current = hls;
-        } else if (flvVideoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
-          flvVideoRef.current.src = flvUrl;
-          flvVideoRef.current.addEventListener('loadedmetadata', () => {
-            flvVideoRef.current.play().catch(e => console.warn('Lỗi auto-play hls safari:', e));
+        } else if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
+          videoEl.src = url;
+          videoEl.play().catch(() => {
+            videoEl.muted = true;
+            videoEl.play().catch(e => console.warn('Lỗi auto-play hls safari:', e));
           });
         }
       } else if (flvjs.isSupported()) {
@@ -156,7 +170,7 @@ export default function DesktopAppUI() {
           type: 'flv',
           isLive: true,
           hasAudio: true,
-          url: flvUrl,
+          url: url,
           cors: true,
           enableWorker: true,
           enableStashBuffer: false,
@@ -169,37 +183,36 @@ export default function DesktopAppUI() {
           lazyLoad: false,
           autoCleanupSourceBuffer: true
         });
-        flvPlayer.attachMediaElement(flvVideoRef.current);
+        flvPlayer.attachMediaElement(videoEl);
         flvPlayer.load();
-        const playPromise = flvPlayer.play();
-        if (playPromise) {
-          playPromise.catch(e => {
-            console.warn('Lỗi auto-play flv có tiếng, thử lại ở chế độ tắt tiếng:', e);
-            if (flvVideoRef.current) {
-              flvVideoRef.current.muted = true;
-              flvPlayer.play()?.catch(err => console.warn('Lỗi play flv:', err));
-            }
-          });
-        }
+        flvPlayer.play()?.catch(() => {
+          videoEl.muted = true;
+          flvPlayer.play()?.catch(err => console.warn('Lỗi play flv:', err));
+        });
         flvPlayerRef.current = flvPlayer;
       }
-
-      return () => {
-        try {
-          if (flvPlayerRef.current) {
-            flvPlayerRef.current.pause();
-            flvPlayerRef.current.unload();
-            flvPlayerRef.current.detachMediaElement();
-            flvPlayerRef.current.destroy();
-            flvPlayerRef.current = null;
-          }
-          if (hlsPlayerRef.current) {
-            hlsPlayerRef.current.destroy();
-            hlsPlayerRef.current = null;
-          }
-        } catch (e) {}
-      };
+    } catch (err) {
+      console.error('Lỗi khởi tạo player:', err);
     }
+  };
+
+  useEffect(() => {
+    if (flvUrl && flvVideoRef.current) {
+      attachFlvPlayer(flvVideoRef.current, flvUrl);
+    }
+
+    return () => {
+      try {
+        if (flvPlayerRef.current) {
+          flvPlayerRef.current.destroy();
+          flvPlayerRef.current = null;
+        }
+        if (hlsPlayerRef.current) {
+          hlsPlayerRef.current.destroy();
+          hlsPlayerRef.current = null;
+        }
+      } catch (e) {}
+    };
   }, [flvUrl]);
 
   // Load & Sync custom characters from Unified AIDOL_DB
@@ -1287,7 +1300,10 @@ export default function DesktopAppUI() {
         <div className="relative w-full h-full flex flex-col bg-black">
           <div className="w-full h-full flex items-center justify-center">
             <video
-              ref={flvVideoRef}
+              ref={(el) => {
+                flvVideoRef.current = el;
+                if (el && flvUrl) attachFlvPlayer(el, flvUrl);
+              }}
               className="w-full h-full object-contain"
               controls={false}
               autoPlay
