@@ -42,17 +42,10 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
   }, [captchaConfig]);
   
   const [captchaStats, setCaptchaStats] = useState({
-    totalSolved: 14205,
-    successRate: 99.8,
-    responseTime: 12,
-    historyLogs: [
-      { time: '17:42:15', p: 'TikTok Live', type: '3D Rotate Puzzle', speed: '14ms', status: 'SUCCESS' },
-      { time: '17:41:50', p: 'TikTok Shop', type: 'Slider Puzzle', speed: '11ms', status: 'SUCCESS' },
-      { time: '17:40:12', p: 'Facebook Live', type: 'Turnstile v3', speed: '9ms', status: 'SUCCESS' },
-      { time: '17:38:44', p: 'Shopee Live', type: 'Image CAPTCHA', speed: '16ms', status: 'SUCCESS' },
-      { time: '17:35:21', p: 'YouTube Studio', type: 'reCAPTCHA Enterprise', speed: '12ms', status: 'SUCCESS' },
-      { time: '17:31:05', p: 'TikTok Live', type: 'Slider Puzzle', speed: '13ms', status: 'SUCCESS' },
-    ]
+    totalSolved: 0,
+    successRate: 100,
+    responseTime: 0,
+    historyLogs: []
   });
 
   const fetchLogs = async () => {
