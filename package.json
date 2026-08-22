@@ -46,7 +46,7 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "flv.js": "^1.6.2",
-    "hls.js": "^1.6.16",
+    "hls.js": "^1.7.1",
     "lucide-react": "^0.469.0",
     "mammoth": "^1.12.1",
     "patch-package": "8.0.1",

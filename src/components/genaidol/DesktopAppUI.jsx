@@ -129,35 +129,59 @@ export default function DesktopAppUI() {
   const fileInputRef = useRef(null);
   const flvVideoRef = useRef(null);
   const flvPlayerRef = useRef(null);
+  const hlsPlayerRef = useRef(null);
   const lastAiCommentTime = useRef(0);
   const lastAiGreetingTime = useRef(0);
   const [isTemplateLibraryOpen, setIsTemplateLibraryOpen] = useState(false);
 
   useEffect(() => {
-    if (flvUrl && flvjs.isSupported() && flvVideoRef.current) {
-      const flvPlayer = flvjs.createPlayer({
-        type: 'flv',
-        isLive: true,
-        hasAudio: true,
-        url: flvUrl,
-        cors: true
-      });
-      flvPlayer.attachMediaElement(flvVideoRef.current);
-      flvPlayer.load();
-      const playPromise = flvPlayer.play();
-      if (playPromise) {
-        playPromise.catch(e => console.warn('Lỗi auto-play flv:', e));
+    if (flvUrl && flvVideoRef.current) {
+      if (flvUrl.includes('.m3u8')) {
+        if (Hls.isSupported()) {
+          const hls = new Hls();
+          hls.loadSource(flvUrl);
+          hls.attachMedia(flvVideoRef.current);
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            flvVideoRef.current.play().catch(e => console.warn('Lỗi auto-play hls:', e));
+          });
+          hlsPlayerRef.current = hls;
+        } else if (flvVideoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
+          flvVideoRef.current.src = flvUrl;
+          flvVideoRef.current.addEventListener('loadedmetadata', () => {
+            flvVideoRef.current.play().catch(e => console.warn('Lỗi auto-play hls safari:', e));
+          });
+        }
+      } else if (flvjs.isSupported()) {
+        const flvPlayer = flvjs.createPlayer({
+          type: 'flv',
+          isLive: true,
+          hasAudio: true,
+          url: flvUrl,
+          cors: true
+        });
+        flvPlayer.attachMediaElement(flvVideoRef.current);
+        flvPlayer.load();
+        const playPromise = flvPlayer.play();
+        if (playPromise) {
+          playPromise.catch(e => console.warn('Lỗi auto-play flv:', e));
+        }
+        flvPlayerRef.current = flvPlayer;
       }
-      flvPlayerRef.current = flvPlayer;
 
       return () => {
         try {
-          flvPlayer.pause();
-          flvPlayer.unload();
-          flvPlayer.detachMediaElement();
-          flvPlayer.destroy();
+          if (flvPlayerRef.current) {
+            flvPlayerRef.current.pause();
+            flvPlayerRef.current.unload();
+            flvPlayerRef.current.detachMediaElement();
+            flvPlayerRef.current.destroy();
+            flvPlayerRef.current = null;
+          }
+          if (hlsPlayerRef.current) {
+            hlsPlayerRef.current.destroy();
+            hlsPlayerRef.current = null;
+          }
         } catch (e) {}
-        flvPlayerRef.current = null;
       };
     }
   }, [flvUrl]);
