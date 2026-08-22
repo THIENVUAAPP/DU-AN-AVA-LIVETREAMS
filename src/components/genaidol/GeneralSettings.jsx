@@ -278,6 +278,53 @@ export default function GeneralSettings({ onClose }) {
           {/* TAB 1: BỘ NÃO IDOL */}
           {activeTab === 'prompt' && (
             <>
+              {/* Box 1: Backend Hub URL */}
+              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
+                <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Settings2 size={16} className="text-blue-600" /> Máy chủ Kết nối Live (Backend Hub Server)
+                  </span>
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">
+                    TikTok Live Engine
+                  </span>
+                </div>
+                <div className="p-4 space-y-3">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-semibold text-gray-700">Đường dẫn Máy chủ Backend Node.js (Socket.io):</label>
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        placeholder="VD: http://localhost:3001 hoặc https://your-backend.onrender.com"
+                        value={settings.backendUrl || ''} 
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setSettings(prev => ({ ...prev, backendUrl: val }));
+                          try {
+                            localStorage.setItem('aidol_backend_url', val.trim());
+                          } catch (err) {}
+                        }} 
+                        className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500 font-mono text-gray-800"
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          setSettings(prev => ({ ...prev, backendUrl: 'http://localhost:3001' }));
+                          try {
+                            localStorage.setItem('aidol_backend_url', 'http://localhost:3001');
+                          } catch (err) {}
+                        }}
+                        className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-xs font-semibold border border-gray-300"
+                      >
+                        Đặt Localhost (:3001)
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 italic">
+                    ⓘ Khi chạy trên Web (Vercel), hệ thống cần kết nối tới Server Node.js (cổng 3001 trên máy tính của bạn hoặc server Cloud) để đọc luồng TikTok Live.
+                  </p>
+                </div>
+              </div>
+
               {/* Box 2: Queue Settings */}
               <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
                 <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm">

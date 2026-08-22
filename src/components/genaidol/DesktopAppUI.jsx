@@ -540,11 +540,13 @@ export default function DesktopAppUI() {
   useEffect(() => {
     let backendUrl = '';
     if (typeof window !== 'undefined') {
-      const customUrl = localStorage.getItem('aidol_backend_url');
+      const customUrl = localStorage.getItem('aidol_backend_url') || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BACKEND_URL);
       if (customUrl && customUrl.startsWith('http')) {
         backendUrl = customUrl;
       } else if (window.location.port === '5173') {
         backendUrl = window.location.protocol + '//' + window.location.hostname + ':3001';
+      } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        backendUrl = 'http://localhost:3001';
       }
     }
     
@@ -557,6 +559,10 @@ export default function DesktopAppUI() {
 
     socket.on('connect', () => {
       // Đã kết nối Socket Backend
+    });
+
+    socket.on('connect_error', () => {
+      // Báo lỗi nếu chạy trên cloud mà không có backend
     });
 
     socket.on('tiktok_connected', (data) => {
@@ -820,8 +826,32 @@ export default function DesktopAppUI() {
       localStorage.setItem('aidol_video_tiktok_id', cleanVideoId);
     } catch (e) {}
 
+    // 🛡️ Safety Timer: Tự động hủy trạng thái chờ sau 10s nếu máy chủ không phản hồi
+    const safetyTimer = setTimeout(() => {
+      setIsConnecting(prev => {
+        if (prev) {
+          setToast({
+            type: 'error',
+            message: '⚠️ Không thể kết nối tới TikTok Live / Backend! Hãy đảm bảo Server Node.js (cổng 3001) đang chạy hoặc kiểm tra đường truyền.'
+          });
+          return false;
+        }
+        return false;
+      });
+    }, 10000);
+
+    const onFinish = () => clearTimeout(safetyTimer);
     if (socketRef.current) {
+      socketRef.current.once('tiktok_connected', onFinish);
+      socketRef.current.once('tiktok_error', onFinish);
       socketRef.current.emit('connect_tiktok', { chatId: cleanId, videoId: cleanVideoId });
+    } else {
+      clearTimeout(safetyTimer);
+      setIsConnecting(false);
+      setToast({
+        type: 'error',
+        message: '⚠️ Chưa kết nối tới Server Backend Live Hub! Vui lòng khởi động Server (npm run dev).'
+      });
     }
   };
 

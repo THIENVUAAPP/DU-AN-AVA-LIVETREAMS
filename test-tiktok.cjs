@@ -2,25 +2,17 @@
     let TikTokConnector = null;
     const legacy = await import('tiktok-live-connector/legacy');
     TikTokConnector = legacy.WebcastPushConnection || legacy.default?.WebcastPushConnection;
-    let tiktokUsername = "hian8668";
-    let tiktokLiveConnection = new TikTokConnector(tiktokUsername, {});
+    
+    let chatConnection = new TikTokConnector("elizale676", {});
+    let videoConnection = new TikTokConnector("nglinggg_", {});
+    
     try {
-        let state = await tiktokLiveConnection.connect();
-        const data = state.roomInfo.data;
-        if(data && data.stream_url) {
-            let flvUrl = null;
-            // check flv_pull_url object
-            if (data.stream_url.flv_pull_url) {
-                const urls = Object.values(data.stream_url.flv_pull_url);
-                if (urls.length > 0) flvUrl = urls[0];
-            }
-            if (!flvUrl && data.stream_url.rtmp_pull_url) {
-                flvUrl = data.stream_url.rtmp_pull_url; // fallback
-            }
-            console.log("BEST FLV URL:", flvUrl);
-        }
+        let chatState = await chatConnection.connect();
+        console.log("Chat connected:", chatState.roomId);
+        let videoState = await videoConnection.connect();
+        console.log("Video connected:", videoState.roomId);
     } catch(err) {
-        console.error('Failed to connect', err);
+        console.error('Failed', err);
     }
     process.exit(0);
 })();
