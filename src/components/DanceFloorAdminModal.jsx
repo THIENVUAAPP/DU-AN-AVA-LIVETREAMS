@@ -225,7 +225,12 @@ export default function DanceFloorAdminModal({ isOpen, onClose, engine, renderMo
                     setSettings={setSettings}
                     runAutoShuffle={runAutoShuffle}
                   />
-                  <DanceFloorManualComboPanel onManualCombo={handleManualCombo} />
+                  <DanceFloorManualComboPanel 
+                    characters={allCharacters} 
+                    danceStyles={allDanceStyles} 
+                    sounds={allSounds} 
+                    onApplyCombo={handleManualCombo} 
+                  />
                 </div>
               </div>
             )}
