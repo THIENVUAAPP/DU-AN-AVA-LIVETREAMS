@@ -28,6 +28,7 @@ export default function CleanLiveOverlay() {
     const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
     const overlayParam = urlParams ? urlParams.get('overlay') : '';
     const ratioParam = urlParams ? urlParams.get('ratio') : '9:16';
+    const directVideoUrl = urlParams ? urlParams.get('v') : null;
     
     let defaultStage = 'idol'; // Mặc định Idol
     if (overlayParam === 'bando' || overlayParam === 'vietnam_map' || overlayParam === 'map') defaultStage = 'bando';
@@ -41,7 +42,7 @@ export default function CleanLiveOverlay() {
       stage: defaultStage, // 'idol' | 'battle' | 'bando'
       aspectRatio: ratioParam || '9:16',
       mediaUrl: saved?.mediaUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1200&auto=format&fit=crop&q=80',
-      flvUrl: saved?.flvUrl || null,
+      flvUrl: directVideoUrl || saved?.flvUrl || null,
       isVideo: saved?.isVideo || false,
       characterName: saved?.characterName || 'AI Idol Lan Hương',
       isConnected: true,

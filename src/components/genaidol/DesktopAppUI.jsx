@@ -1427,25 +1427,13 @@ export default function DesktopAppUI() {
     if (isConnected && flvUrl) {
       return (
         <div className="relative w-full h-full flex flex-col bg-black">
-          <div className="relative w-full h-full flex items-center justify-center group">
-            {/* Thẻ Video trực tiếp 60fps Siêu mượt & Sắc nét 100% sạch */}
-            <video
-              ref={(el) => {
-                flvVideoRef.current = el;
-                if (el && flvUrl) attachFlvPlayer(el, flvUrl);
-              }}
-              className="w-full h-full object-contain cursor-pointer select-none z-10"
-              controls={false}
-              autoPlay
-              muted={isLiveAudioMuted}
-              playsInline
-              onClick={() => {
-                const nextMuted = !isLiveAudioMuted;
-                setIsLiveAudioMuted(nextMuted);
-                if (flvVideoRef.current) flvVideoRef.current.muted = nextMuted;
-              }}
-            />
-          </div>
+          {/* Nhúng trực tiếp màn hình Live Stream đồng bộ 100% với OBS / TikTok Studio */}
+          <iframe
+            key={flvUrl}
+            src={`/overlay-idol?mode=embed&v=${encodeURIComponent(flvUrl)}`}
+            className="w-full h-full border-0 pointer-events-auto select-none bg-black"
+            allow="autoplay; camera; microphone; fullscreen"
+          />
         </div>
       );
     }
