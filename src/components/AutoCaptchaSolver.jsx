@@ -259,6 +259,39 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
                  </div>
               </div>
 
+              {/* Bổ sung phần Cấu Hình Ghim Sản Phẩm Tự Động */}
+              <div className="bg-[#141419] border border-white/5 rounded-2xl p-6">
+                 <h4 className="text-sm font-black text-white border-b border-white/5 pb-4 mb-4 flex items-center gap-2">
+                   <Zap className="w-4 h-4 text-emerald-400" /> Auto Ghim Sản Phẩm
+                 </h4>
+                 <div className="space-y-4">
+                   <div className="flex items-center justify-between p-3 rounded-xl bg-black/20 border border-white/5">
+                      <span className="text-xs text-gray-300 font-bold">Kích hoạt Ghim Tự Động</span>
+                      <button 
+                        onClick={() => setCaptchaConfig(prev => ({...prev, autoPin: !prev.autoPin}))}
+                        className={`relative w-10 h-5 rounded-full transition-colors duration-300 cursor-pointer ${captchaConfig.autoPin ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]' : 'bg-gray-700'}`}
+                      >
+                        <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all duration-300 ${captchaConfig.autoPin ? 'left-[22px]' : 'left-[2px]'}`}></div>
+                      </button>
+                   </div>
+                   
+                   <div className="flex flex-col gap-2 p-3 rounded-xl bg-black/20 border border-white/5">
+                      <span className="text-xs text-gray-300 font-bold">Thời gian lặp lại (Giây)</span>
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="range" 
+                          min="5" 
+                          max="120" 
+                          value={captchaConfig.pinInterval || 30}
+                          onChange={(e) => setCaptchaConfig(prev => ({...prev, pinInterval: parseInt(e.target.value)}))}
+                          className="flex-1 accent-emerald-500 h-1 bg-gray-700 rounded-lg appearance-none"
+                        />
+                        <span className="text-xs font-black text-emerald-400 w-8 text-right">{captchaConfig.pinInterval || 30}s</span>
+                      </div>
+                   </div>
+                 </div>
+              </div>
+
               <div className="bg-[#141419] border border-cyan-500/20 rounded-2xl p-6 shadow-[0_0_30px_rgba(6,182,212,0.05)] text-center relative overflow-hidden">
                  <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.05)_1px,transparent_1px)] bg-[size:20px_20px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_10%,transparent_100%)]"></div>
                  <div className="relative z-10 flex flex-col items-center">
