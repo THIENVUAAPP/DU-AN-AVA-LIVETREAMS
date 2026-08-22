@@ -221,9 +221,27 @@ export default function DanceFloorAdminModal({ isOpen, onClose, engine, renderMo
 
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                   <DanceFloorAutomationPanel
-                    settings={settings}
-                    setSettings={setSettings}
-                    runAutoShuffle={runAutoShuffle}
+                    simulationEnabled={settings.simulationEnabled}
+                    onToggleSimulation={() => setSettings(s => ({ ...s, simulationEnabled: !s.simulationEnabled }))}
+                    voiceEnabled={settings.voiceEnabled}
+                    onToggleVoice={() => setSettings(s => ({ ...s, voiceEnabled: !s.voiceEnabled }))}
+                    commentaryStyleId={settings.commentaryStyleId}
+                    onChangeCommentaryStyle={(id) => setSettings(s => ({ ...s, commentaryStyleId: id }))}
+                    onRunAutoShuffle={runAutoShuffle}
+                    autoShuffleIntervalEnabled={settings.autoShuffleIntervalEnabled}
+                    autoShuffleIntervalMinutes={settings.autoShuffleIntervalMinutes}
+                    onUpdateAutoShuffleInterval={(updates) => setSettings(s => ({ ...s, ...updates }))}
+                    scheduleEnabled={settings.scheduleEnabled}
+                    scheduleStartHour={settings.scheduleStartHour}
+                    scheduleEndHour={settings.scheduleEndHour}
+                    onUpdateSchedule={(updates) => setSettings(s => ({ ...s, ...updates }))}
+                    musicPlaylist={musicPlaylist}
+                    musicLoopMode={settings.musicLoopMode}
+                    onUpdateMusicLoopMode={(mode) => setSettings(s => ({ ...s, musicLoopMode: mode }))}
+                    keepCharactersPermanently={settings.keepCharactersPermanently}
+                    onToggleKeepCharacters={() => setSettings(s => ({ ...s, keepCharactersPermanently: !s.keepCharactersPermanently }))}
+                    autoCameraEnabled={settings.autoCameraEnabled}
+                    onToggleAutoCamera={() => setSettings(s => ({ ...s, autoCameraEnabled: !s.autoCameraEnabled }))}
                   />
                   <DanceFloorManualComboPanel 
                     characters={allCharacters} 
