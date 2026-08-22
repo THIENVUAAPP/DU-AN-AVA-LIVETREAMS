@@ -336,21 +336,40 @@ io.on('connection', (socket) => {
         if (typeof source === 'string') {
           if (source.trim().startsWith('{')) {
             try { map = JSON.parse(source); } catch (e) { return source; }
-          } else {
+          } else if (source.startsWith('http')) {
             return source;
           }
         }
         if (typeof map === 'object' && map !== null) {
-          const priority = ['FULL_HD1', 'FULL_HD', 'ORIGIN', 'ORIGINAL', 'HD1', 'HD', 'SD1', 'SD'];
+          // Priority search
+          const priority = ['FULL_HD1', 'FULL_HD', 'ORIGIN', 'ORIGINAL', 'HD1', 'HD', 'SD1', 'SD', 'LD'];
           for (const k of priority) {
             for (const mapKey of Object.keys(map)) {
               if (mapKey.toUpperCase() === k || mapKey.toUpperCase().includes(k)) {
-                if (map[mapKey] && typeof map[mapKey] === 'string') return map[mapKey];
+                const item = map[mapKey];
+                if (typeof item === 'string' && item.startsWith('http')) return item;
+                if (typeof item === 'object' && item !== null) {
+                  if (item.url && typeof item.url === 'string') return item.url;
+                  if (item.main?.flv) return item.main.flv;
+                  if (item.main?.hls) return item.main.hls;
+                }
               }
             }
           }
-          const vals = Object.values(map).filter(v => typeof v === 'string' && v.startsWith('http'));
-          if (vals.length > 0) return vals[0];
+          // Recursive find any http string
+          const findHttp = (val) => {
+            if (!val) return null;
+            if (typeof val === 'string' && val.startsWith('http')) return val;
+            if (typeof val === 'object') {
+              for (const sub of Object.values(val)) {
+                const found = findHttp(sub);
+                if (found) return found;
+              }
+            }
+            return null;
+          };
+          const anyUrl = findHttp(map);
+          if (anyUrl) return anyUrl;
         }
         return null;
       };
@@ -395,9 +414,10 @@ io.on('connection', (socket) => {
         try {
           const vidState = await Promise.race([vidPromise, vidTimeout]);
           console.log(`[TikTok Live] ✅ Đã kết nối Video Room ID: ${vidState?.roomId || 'ACTIVE'} (${targetVideoUser})`);
+          console.log(`[TikTok Live] Video Room Info:`, JSON.stringify(vidState?.roomInfo?.stream_url || vidState?.roomInfo?.data?.stream_url || {}).substring(0, 300));
           if (vidState?.roomInfo?.stream_url) flvUrl = extractFlv(vidState.roomInfo.stream_url);
           if (!flvUrl && vidState?.roomInfo?.data?.stream_url) flvUrl = extractFlv(vidState.roomInfo.data.stream_url);
-          console.log(`[TikTok Live] Video FLV URL:`, flvUrl ? 'FOUND' : 'NULL', vidState?.roomInfo?.stream_url ? 'HAS_STREAM_URL' : 'NO_STREAM_URL');
+          console.log(`[TikTok Live] Video FLV URL extracted:`, flvUrl);
           if (flvUrl) globalFlvUrl = flvUrl;
           videoConnected = true;
         } catch (err) {
