@@ -1357,7 +1357,7 @@ export default function DesktopAppUI() {
       return (
         <div className="relative w-full h-full flex flex-col bg-black">
           <div className="relative w-full h-full flex items-center justify-center group">
-            {/* Thẻ Video trực tiếp 60fps Siêu mượt & Sắc nét */}
+            {/* Thẻ Video trực tiếp 60fps Siêu mượt & Sắc nét 100% sạch */}
             <video
               ref={(el) => {
                 flvVideoRef.current = el;
@@ -1374,29 +1374,6 @@ export default function DesktopAppUI() {
                 if (flvVideoRef.current) flvVideoRef.current.muted = nextMuted;
               }}
             />
-            {/* Nút Bật/Tắt tiếng nhanh trên video */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                const nextMuted = !isLiveAudioMuted;
-                setIsLiveAudioMuted(nextMuted);
-                if (flvVideoRef.current) flvVideoRef.current.muted = nextMuted;
-              }}
-              className="absolute bottom-4 right-4 z-30 px-3 py-1.5 rounded-xl bg-black/70 hover:bg-black/90 text-white backdrop-blur-md border border-white/20 shadow-xl flex items-center gap-1.5 transition-all text-xs font-bold"
-            >
-              {isLiveAudioMuted ? (
-                <>
-                  <VolumeX size={14} className="text-red-400" />
-                  <span className="text-gray-300">Bật Tiếng</span>
-                </>
-              ) : (
-                <>
-                  <Volume2 size={14} className="text-emerald-400 animate-pulse" />
-                  <span className="text-emerald-300">Có Tiếng</span>
-                </>
-              )}
-            </button>
           </div>
         </div>
       );
@@ -1939,6 +1916,26 @@ export default function DesktopAppUI() {
             <Brain size={13} />
             <span>{t('testTools', currentLang)}</span>
           </button>
+
+          {/* Nút Âm thanh Live nằm ngoài khung video */}
+          {isConnected && flvUrl && (
+            <button
+              onClick={() => {
+                const nextMuted = !isLiveAudioMuted;
+                setIsLiveAudioMuted(nextMuted);
+                if (flvVideoRef.current) flvVideoRef.current.muted = nextMuted;
+              }}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold transition-all shadow-md ${
+                isLiveAudioMuted 
+                  ? 'bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500/30' 
+                  : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/30'
+              }`}
+              title={isLiveAudioMuted ? "Bật tiếng Live" : "Tắt tiếng Live"}
+            >
+              {isLiveAudioMuted ? <VolumeX size={13} className="text-red-400" /> : <Volume2 size={13} className="text-emerald-400 animate-pulse" />}
+              <span>{isLiveAudioMuted ? "Tắt tiếng" : "Có tiếng"}</span>
+            </button>
+          )}
         </div>
         
       </div>
