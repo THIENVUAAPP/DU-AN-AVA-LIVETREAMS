@@ -823,6 +823,8 @@ export default function DesktopAppUI() {
 
     socket.on('tiktok_member', (data) => {
       if (!data) return;
+      // Kiểm tra công tắc Tự Động Chào Khán Giả (Bật/Tắt từ Cài Đặt)
+      if (mapVoiceEngine.isAutoGreetingEnabled === false) return;
       const author = data.username || data.nickname || '';
       if (!author || author === 'Khách mới' || author === 'Khán Giả') return;
       const key = author.toLowerCase().trim();

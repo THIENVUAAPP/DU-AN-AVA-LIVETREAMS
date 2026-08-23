@@ -45,8 +45,20 @@ export default function GameVoiceConfigPanel({
   const [replyCooldownSec, setReplyCooldownSec] = useState(engine.replyCooldownSec || 3);
   const [prompts, setPrompts] = useState([...engine.prompts]);
   const [isKeywordAutoReplyEnabled, setIsKeywordAutoReplyEnabled] = useState(engine.isKeywordAutoReplyEnabled);
+  const [isAutoGreetingEnabled, setIsAutoGreetingEnabled] = useState(engine.isAutoGreetingEnabled !== false);
   const [useGeminiAI, setUseGeminiAI] = useState(engine.useGeminiAI !== false);
   const [keywordRules, setKeywordRules] = useState([...engine.keywordRules]);
+  
+  // API Keys for Paid Services (ElevenLabs & Gemini)
+  const [elevenLabsApiKey, setElevenLabsApiKey] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    return localStorage.getItem('elevenlabs_api_key') || localStorage.getItem('VITE_ELEVENLABS_API_KEY') || '';
+  });
+  const [geminiApiKey, setGeminiApiKey] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    return localStorage.getItem('gemini_api_key') || localStorage.getItem('GEMINI_API_KEY') || '';
+  });
+  const [isTestingGeminiKey, setIsTestingGeminiKey] = useState(false);
   
   // Voice filters & preview state
   const [voiceFilter, setVoiceFilter] = useState('all'); // 'all' | 'pro' | 'free' | 'female' | 'male'
@@ -120,6 +132,7 @@ export default function GameVoiceConfigPanel({
       intervalSeconds,
       playbackOrder,
       isKeywordAutoReplyEnabled,
+      isAutoGreetingEnabled,
       useGeminiAI,
       responseDelaySec,
       volume,
@@ -718,6 +731,104 @@ export default function GameVoiceConfigPanel({
       {/* ========================================================================= */}
       {activeSubTab === 'roles' && (
         <div className="space-y-4">
+          {/* BANNER 1: CÔNG TẮC TỰ ĐỘNG CHÀO KHÁN GIẢ MỚI VÀO PHÒNG LIVE */}
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-teal-950/80 via-slate-900 to-emerald-950/80 border border-teal-500/40 shadow-xl space-y-2.5">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2.5">
+                <span className="p-2 rounded-xl bg-teal-500/20 text-teal-300 border border-teal-400/30">
+                  <UserCheck size={20} className="text-teal-300" />
+                </span>
+                <div>
+                  <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+                    👋 Tự Động Chào Khán Giả Mới Vào Xem Livestream (Auto Greeting)
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
+                      1 Lần Duy Nhất / Người
+                    </span>
+                  </h4>
+                  <p className="text-[11px] text-gray-300">
+                    BẬT: AI chào mỗi khán giả đúng 1 lần khi mới vào phòng • TẮT: AI không chào tự động, chỉ nói khi người xem bình luận hoặc tặng quà.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  const updated = !isAutoGreetingEnabled;
+                  setIsAutoGreetingEnabled(updated);
+                  syncToEngine({ isAutoGreetingEnabled: updated });
+                  if (engine.setAutoGreetingEnabled) engine.setAutoGreetingEnabled(updated);
+                  showToast(updated ? '🟢 ĐÃ BẬT Tự Động Chào Khán Giả Mới Vào!' : '⚪ ĐÃ TẮT Tự Động Chào Khán Giả Mới Vào!');
+                }}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg ${
+                  isAutoGreetingEnabled
+                    ? 'bg-emerald-500 text-black shadow-emerald-500/30 ring-2 ring-emerald-400'
+                    : 'bg-white/10 text-gray-400 border border-white/10 hover:bg-white/20'
+                }`}
+              >
+                <Radio size={14} className={isAutoGreetingEnabled ? 'animate-pulse text-black' : 'text-gray-400'} />
+                {isAutoGreetingEnabled ? '● ĐANG BẬT TỰ ĐỘNG CHÀO' : '○ ĐÃ TẮT TỰ ĐỘNG CHÀO'}
+              </button>
+            </div>
+          </div>
+
+          {/* BANNER 2: PHÂN BIỆT RÕ RÀNG GIỌNG MIỄN PHÍ VÀ TRẢ PHÍ (ELEVENLABS) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            {/* Box 1: Giọng Native Miễn Phí */}
+            <div className="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Globe size={15} className="text-emerald-400" /> 🆓 GIỌNG NATIVE MIỄN PHÍ 100%
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500 text-black font-black">
+                  KHÔNG TỐN PHÍ
+                </span>
+              </div>
+              <p className="text-[11px] text-gray-300">
+                Bao gồm Hoài My (Nữ VN), Nam Minh (Nam VN), Mai Miền Nam, Jenny (US), Xiaoxiao (Trung)... Sử dụng công nghệ Edge/Web Speech Engine.
+              </p>
+              <div className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+                <Check size={13} /> Hoàn toàn miễn phí vĩnh viễn • Không cần API Key • Tức thì & Ổn định
+              </div>
+            </div>
+
+            {/* Box 2: Giọng ElevenLabs Pro Trả Phí */}
+            <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-amber-950/40 via-slate-900 to-purple-950/40 border border-amber-500/40 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles size={15} className="text-amber-400" /> 💎 GIỌNG ELEVENLABS PRO (TRẢ PHÍ)
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black">
+                  TRẢ PHÍ THEO API KEY
+                </span>
+              </div>
+              <p className="text-[11px] text-gray-300">
+                Bao gồm Rachel, Bella, Josh, Clyde, Callum... Giọng AI biểu cảm cao cấp. Cần cấu hình API Key của tài khoản ElevenLabs của bạn.
+              </p>
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="password"
+                  value={elevenLabsApiKey}
+                  onChange={(e) => {
+                    const key = e.target.value;
+                    setElevenLabsApiKey(key);
+                    localStorage.setItem('elevenlabs_api_key', key.trim());
+                  }}
+                  placeholder="Nhập ElevenLabs API Key tại đây..."
+                  className="flex-1 px-2.5 py-1 bg-black/70 border border-amber-500/30 rounded-lg text-xs text-amber-200 placeholder-gray-500 focus:outline-none focus:border-amber-400 font-mono"
+                />
+                <button
+                  onClick={() => {
+                    localStorage.setItem('elevenlabs_api_key', elevenLabsApiKey.trim());
+                    showToast('🔑 Đã lưu ElevenLabs API Key thành công!');
+                  }}
+                  className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-lg text-xs shrink-0"
+                >
+                  Lưu Key
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             {/* Card 1: BLV Game */}
             <div className="p-4 rounded-2xl bg-gradient-to-tr from-blue-950/60 via-slate-900 to-indigo-950/60 border border-blue-500/40 shadow-xl relative overflow-hidden space-y-3">
@@ -1908,6 +2019,88 @@ export default function GameVoiceConfigPanel({
       {/* ========================================================================= */}
       {activeSubTab === 'gemini' && (
         <div className="space-y-4">
+          {/* PHÂN BIỆT RÕ RÀNG BỘ NÃO MIỄN PHÍ VÀ BỘ NÃO GEMINI TRẢ PHÍ */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            {/* Box 1: Bộ Não Quy Tắc Miễn Phí */}
+            <div className="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Zap size={15} className="text-emerald-400" /> 🆓 BỘ NÃO TỪ KHÓA CÓ SẴN (MIỄN PHÍ 100%)
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500 text-black font-black">
+                  KHÔNG TỐN PHÍ
+                </span>
+              </div>
+              <p className="text-[11px] text-gray-300">
+                Tự động nhận diện các từ khóa phổ biến (chào hỏi, hướng dẫn luật, cổ vũ, cảm ơn quà tặng...) và ngân hàng phản hồi thông minh cài sẵn trong máy.
+              </p>
+              <div className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+                <Check size={13} /> Hoàn toàn miễn phí 100% • Tốc độ phản hồi tức thì &lt;50ms • Không cần mạng internet / API
+              </div>
+            </div>
+
+            {/* Box 2: Bộ Não Gemini 1.5 Flash Trả Phí */}
+            <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-cyan-950/50 via-slate-900 to-indigo-950/50 border border-cyan-500/40 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Bot size={15} className="text-cyan-400" /> ⚡ BỘ NÃO GOOGLE GEMINI (TRẢ PHÍ)
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500 text-black font-black">
+                  TRẢ PHÍ THEO API KEY
+                </span>
+              </div>
+              <p className="text-[11px] text-gray-300">
+                Hiểu và trả lời tự do các câu hỏi bất kỳ ngoài kịch bản. Tiêu tốn Token API theo Google AI Studio của bạn.
+              </p>
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="password"
+                  value={geminiApiKey}
+                  onChange={(e) => {
+                    const key = e.target.value;
+                    setGeminiApiKey(key);
+                    localStorage.setItem('gemini_api_key', key.trim());
+                  }}
+                  placeholder="Nhập Google Gemini API Key tại đây..."
+                  className="flex-1 px-2.5 py-1 bg-black/70 border border-cyan-500/30 rounded-lg text-xs text-cyan-200 placeholder-gray-500 focus:outline-none focus:border-cyan-400 font-mono"
+                />
+                <button
+                  onClick={() => {
+                    localStorage.setItem('gemini_api_key', geminiApiKey.trim());
+                    showToast('🔑 Đã lưu Google Gemini API Key thành công!');
+                  }}
+                  className="px-2.5 py-1 bg-cyan-500 hover:bg-cyan-400 text-black font-black rounded-lg text-xs shrink-0"
+                >
+                  Lưu Key
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!geminiApiKey.trim()) {
+                      showToast('⚠️ Vui lòng nhập Gemini API Key trước khi kiểm tra!');
+                      return;
+                    }
+                    setIsTestingGeminiKey(true);
+                    try {
+                      const reply = await askGeminiLiveAi('Xin chào, kiểm tra kết nối API', {
+                        apiKey: geminiApiKey.trim(),
+                        systemPrompt: 'Trả lời ngắn 1 câu: Kết nối Gemini API thành công!'
+                      });
+                      showToast(`✅ Kết nối Gemini OK: "${reply}"`);
+                    } catch (err) {
+                      showToast(`❌ Lỗi kết nối Gemini: ${err.message || err}`);
+                    } finally {
+                      setIsTestingGeminiKey(false);
+                    }
+                  }}
+                  disabled={isTestingGeminiKey}
+                  className="px-2.5 py-1 bg-white/10 hover:bg-white/20 text-white font-bold rounded-lg text-xs shrink-0 border border-white/20"
+                >
+                  {isTestingGeminiKey ? 'Đang test...' : 'Test Key'}
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div className="p-4 rounded-2xl bg-gradient-to-r from-cyan-950/70 via-slate-900 to-indigo-950/70 border border-cyan-500/40 shadow-xl space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -1916,10 +2109,10 @@ export default function GameVoiceConfigPanel({
                 </span>
                 <div>
                   <h4 className="text-xs font-black text-cyan-300 uppercase tracking-wider">
-                    Bộ Não AI Gemini Flash Xử Lý Câu Hỏi Khán Giả Ngoài Vùng Cài Đặt
+                    Bật / Tắt Bộ Não AI Gemini Flash Xử Lý Ngoài Kịch Bản
                   </h4>
                   <p className="text-[11px] text-gray-300">
-                    Tự động trả lời thông minh, đúng trọng tâm, ngắn gọn, lịch sự, chuẩn văn hóa livestream, tuyệt đối không nói bậy.
+                    Khi BẬT: Trả lời câu hỏi tự do bằng Gemini • Khi TẮT: Chỉ sử dụng kịch bản và từ khóa có sẵn (Hoàn toàn miễn phí).
                   </p>
                 </div>
               </div>
@@ -1928,6 +2121,7 @@ export default function GameVoiceConfigPanel({
                   const updated = !useGeminiAI;
                   setUseGeminiAI(updated);
                   syncToEngine({ useGeminiAI: updated });
+                  showToast(updated ? '🟢 Đã BẬT Bộ Não Gemini AI' : '⚪ Đã TẮT Bộ Não Gemini AI (Chỉ dùng kịch bản miễn phí)');
                 }}
                 className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
                   useGeminiAI 
@@ -1935,7 +2129,7 @@ export default function GameVoiceConfigPanel({
                     : 'bg-white/10 text-gray-400'
                 }`}
               >
-                {useGeminiAI ? '● ĐANG BẬT' : '○ ĐÃ TẮT'}
+                {useGeminiAI ? '● ĐANG BẬT GEMINI' : '○ ĐÃ TẮT GEMINI'}
               </button>
             </div>
           </div>

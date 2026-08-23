@@ -125,6 +125,9 @@ class GameVoiceEngine {
     this.keywordRules = [...DEFAULT_KEYWORD_RULES];
     this.lastKeywordTriggerTimes = new Map();
     
+    // Auto Greeting Config (Tự động chào khán giả mới vào Live)
+    this.isAutoGreetingEnabled = true;
+    
     // Audio State
     this.volume = 0.9;
     this.speedRate = 1.0;
@@ -171,6 +174,7 @@ class GameVoiceEngine {
         if (parsed.playbackOrder) this.playbackOrder = parsed.playbackOrder;
         if (Array.isArray(parsed.prompts) && parsed.prompts.length > 0) this.prompts = parsed.prompts;
         if (parsed.isKeywordAutoReplyEnabled !== undefined) this.isKeywordAutoReplyEnabled = parsed.isKeywordAutoReplyEnabled;
+        if (parsed.isAutoGreetingEnabled !== undefined) this.isAutoGreetingEnabled = parsed.isAutoGreetingEnabled;
         if (parsed.useGeminiAI !== undefined) this.useGeminiAI = parsed.useGeminiAI;
         if (parsed.responseDelaySec !== undefined) this.responseDelaySec = parsed.responseDelaySec;
         if (parsed.replyCooldownSec !== undefined) this.replyCooldownSec = parsed.replyCooldownSec;
@@ -197,6 +201,7 @@ class GameVoiceEngine {
         playbackOrder: this.playbackOrder,
         prompts: this.prompts,
         isKeywordAutoReplyEnabled: this.isKeywordAutoReplyEnabled,
+        isAutoGreetingEnabled: this.isAutoGreetingEnabled,
         useGeminiAI: this.useGeminiAI,
         responseDelaySec: this.responseDelaySec,
         replyCooldownSec: this.replyCooldownSec,
@@ -223,6 +228,11 @@ class GameVoiceEngine {
 
   setReplyCooldownSec(sec) {
     this.replyCooldownSec = Math.max(1, Math.min(60, Number(sec) || 3));
+    this.saveSettings();
+  }
+
+  setAutoGreetingEnabled(enabled) {
+    this.isAutoGreetingEnabled = !!enabled;
     this.saveSettings();
   }
 
