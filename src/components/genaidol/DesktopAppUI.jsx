@@ -1367,9 +1367,7 @@ export default function DesktopAppUI() {
             >
               Dừng phát ✕
             </button>
-            <UpdateNotificationModal />
     </div>
-          <UpdateNotificationModal />
     </div>
       );
     }
@@ -1421,10 +1419,8 @@ export default function DesktopAppUI() {
           >
              <div className="w-16 h-16 rounded-2xl bg-blue-600/15 group-hover:bg-blue-600/30 border border-blue-500/30 flex items-center justify-center mb-3 text-blue-400 shadow-lg">
                <Plus size={30} />
-               <UpdateNotificationModal />
     </div>
              <h3 className="text-base font-bold text-white mb-1">Tải Ảnh / Video Idol Của Bạn</h3>
-            <UpdateNotificationModal />
     </div>
         );
       }
@@ -1456,7 +1452,6 @@ export default function DesktopAppUI() {
             }}
           />
           <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/60 via-transparent to-black/20" />
-          <UpdateNotificationModal />
     </div>
       );
     };
@@ -1475,9 +1470,7 @@ export default function DesktopAppUI() {
               muted={isLiveAudioMuted}
               playsInline
             />
-            <UpdateNotificationModal />
     </div>
-          <UpdateNotificationModal />
     </div>
       );
     }
@@ -1525,7 +1518,6 @@ export default function DesktopAppUI() {
              isAdminOpen={isDanceFloorAdminOpen}
              onCloseAdmin={() => setIsDanceFloorAdminOpen(false)}
            />
-          <UpdateNotificationModal />
     </div>
       );
     }
@@ -1541,9 +1533,7 @@ export default function DesktopAppUI() {
           }`}
         >
           {renderAiIdolLiveStage()}
-          <UpdateNotificationModal />
     </div>
-        <UpdateNotificationModal />
     </div>
     );
   };
@@ -1556,7 +1546,6 @@ export default function DesktopAppUI() {
         <div className="flex items-center gap-1.5">
           <div className="w-3.5 h-3.5 rounded bg-blue-500 flex items-center justify-center">
             <Video size={9} className="text-white" />
-            <UpdateNotificationModal />
     </div>
           <span className="text-[11px] font-bold truncate max-w-[220px]">
             Profile: {CHARACTERS[selectedCharacter]?.name || (Object.keys(CHARACTERS).length > 0 ? Object.values(CHARACTERS)[0]?.name : 'Live Idol Pro (Chưa đặt tên)')}
@@ -1564,7 +1553,6 @@ export default function DesktopAppUI() {
           <span className="text-[9px] bg-blue-600/20 text-blue-400 px-1.5 py-0.5 rounded-sm font-semibold border border-blue-500/20">
             v{APP_VERSION}
           </span>
-          <UpdateNotificationModal />
     </div>
         
         <div className="flex items-center gap-1">
@@ -1730,7 +1718,6 @@ export default function DesktopAppUI() {
               <div className={`absolute top-full right-0 mt-2 w-64 max-h-80 overflow-y-auto rounded-xl shadow-2xl border z-50 p-1.5 ${isDarkMode ? 'bg-[#1c1c23] border-gray-700 text-white' : 'bg-white border-gray-200 text-slate-800'} animate-in fade-in slide-in-from-top-2 duration-200`}>
                 <div className="px-2 py-1 text-[10px] font-black uppercase text-gray-400 border-b border-gray-500/20 mb-1">
                   20 Ngôn Ngữ Quốc Tế (Đồng Bộ Giao Diện & Voice)
-                  <UpdateNotificationModal />
     </div>
                 {SUPPORTED_LANGUAGES.map(lang => (
                   <button
@@ -1753,10 +1740,8 @@ export default function DesktopAppUI() {
                     <span className="text-[10px] opacity-75">{lang.code.toUpperCase()}</span>
                   </button>
                 ))}
-                <UpdateNotificationModal />
     </div>
             )}
-            <UpdateNotificationModal />
     </div>
 
           <button onClick={() => setIsDarkMode(!isDarkMode)} className={`p-0.5 rounded transition-colors ${isDarkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-400 text-gray-800 hover:bg-gray-500'}`}>
@@ -1808,9 +1793,7 @@ export default function DesktopAppUI() {
             <Download size={10} />
             <span className="whitespace-nowrap">{t('downloadZip', currentLang)}</span>
           </button>
-          <UpdateNotificationModal />
     </div>
-        <UpdateNotificationModal />
     </div>
 
       {/* 2. Top Control Bar (Thu nhỏ ~30% để không gian live to rộng) */}
@@ -1863,7 +1846,6 @@ export default function DesktopAppUI() {
                   <div className="flex items-center gap-2">
                     <Video size={15} className={isWebcamActive ? 'text-pink-400 animate-pulse' : 'text-gray-400'} />
                     <span>{t('studio', currentLang)}</span>
-                    <UpdateNotificationModal />
     </div>
                   <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${isWebcamActive ? 'bg-pink-500 text-white' : (isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-200 text-gray-600')}`}>
                     {isWebcamActive ? t('on', currentLang) : t('off', currentLang)}
@@ -1879,18 +1861,14 @@ export default function DesktopAppUI() {
                   <div className="flex items-center gap-2">
                     {isCommMode ? <Mic size={15} className="text-red-400 animate-pulse" /> : <MicOff size={15} className="text-gray-400" />}
                     <span>{t('communication', currentLang)}</span>
-                    <UpdateNotificationModal />
     </div>
                   <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${isCommMode ? 'bg-red-500 text-white animate-pulse' : (isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-200 text-gray-600')}`}>
                     {isCommMode ? t('on', currentLang) : t('off', currentLang)}
                   </span>
                 </button>
-                <UpdateNotificationModal />
     </div>
             )}
-            <UpdateNotificationModal />
     </div>
-          <UpdateNotificationModal />
     </div>
 
         <div className="flex-1"></div>
@@ -1939,7 +1917,6 @@ export default function DesktopAppUI() {
                       >
                         <X size={8} />
                       </button>
-                      <UpdateNotificationModal />
     </div>
                   ) : null
                 ))
@@ -1956,9 +1933,7 @@ export default function DesktopAppUI() {
                 {t('templates', currentLang)}
               </button>
               <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="video/*,image/*" onChange={handleFileUpload} />
-              <UpdateNotificationModal />
     </div>
-            <UpdateNotificationModal />
     </div>
 
           <div className="flex items-center gap-1.5 px-1 shrink-0">
@@ -1968,9 +1943,7 @@ export default function DesktopAppUI() {
               {isConnecting ? <span className="animate-spin text-sm leading-none">↻</span> : (isConnected ? <CheckCircle size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />)}
               <span>{isConnecting ? t('connecting', currentLang) : (isConnected ? t('stopAi', currentLang) : t('connect', currentLang))}</span>
             </button>
-            <UpdateNotificationModal />
     </div>
-          <UpdateNotificationModal />
     </div>
 
         <div className="flex-1"></div>
@@ -2051,10 +2024,8 @@ export default function DesktopAppUI() {
                   <AlertCircle size={13} className="text-orange-400" /> 
                   <span>{t('sysLog', currentLang)}</span>
                 </button>
-                <UpdateNotificationModal />
     </div>
             )}
-            <UpdateNotificationModal />
     </div>
 
           <button 
@@ -2083,10 +2054,8 @@ export default function DesktopAppUI() {
               <span>{isLiveAudioMuted ? "Tắt tiếng" : "Có tiếng"}</span>
             </button>
           )}
-          <UpdateNotificationModal />
     </div>
         
-        <UpdateNotificationModal />
     </div>
 
       {/* 3. Main Video Area */}
@@ -2105,7 +2074,6 @@ export default function DesktopAppUI() {
               if (e.type === 'LIPSYNC_ENDED') setLipSyncVideoUrl(null);
             }} 
           />
-          <UpdateNotificationModal />
     </div>
 
         {/* Cửa sổ nổi hiển thị Webcam từ Studio (Draggable & Resizable) */}
@@ -2135,7 +2103,6 @@ export default function DesktopAppUI() {
               <button onClick={toggleWebcam} className="text-gray-300 hover:text-white p-0.5 hover:bg-red-500 rounded">
                 <X size={12} />
               </button>
-              <UpdateNotificationModal />
     </div>
 
             <video 
@@ -2145,7 +2112,6 @@ export default function DesktopAppUI() {
               muted 
               className="w-full h-full object-cover pointer-events-none" 
             />
-            <UpdateNotificationModal />
     </div>
         )}
 
@@ -2161,16 +2127,13 @@ export default function DesktopAppUI() {
               <div className="flex items-center gap-2">
                 <div className={`p-1.5 rounded-lg border ${isDarkMode ? 'bg-purple-500/20 border-purple-400/30 text-purple-300' : 'bg-purple-100 border-purple-300 text-purple-700'}`}>
                   <Brain size={16} />
-                  <UpdateNotificationModal />
     </div>
                 <div>
                   <h3 className={`text-xs font-black uppercase tracking-wider flex items-center gap-1.5 ${isDarkMode ? 'text-white' : 'text-purple-950'}`}>
                     Công cụ Giả lập Live
                   </h3>
                   <p className={`text-[10px] ${isDarkMode ? 'text-purple-200/70' : 'text-purple-700/80'}`}>Test phản hồi AI, âm thanh & video trước khi Live</p>
-                  <UpdateNotificationModal />
     </div>
-                <UpdateNotificationModal />
     </div>
               <div className="flex items-center gap-2">
                 {/* Nút bật tắt Auto Simulate */}
@@ -2189,9 +2152,7 @@ export default function DesktopAppUI() {
                 <button onClick={() => setShowSimulator(false)} className={`p-1 rounded-lg transition-colors ${isDarkMode ? 'text-gray-400 hover:text-white hover:bg-white/10' : 'text-gray-500 hover:text-slate-900 hover:bg-slate-100'}`}>
                   <X size={15} />
                 </button>
-                <UpdateNotificationModal />
     </div>
-              <UpdateNotificationModal />
     </div>
 
             {/* Navigation Tabs */}
@@ -2228,7 +2189,6 @@ export default function DesktopAppUI() {
               >
                 <Mic size={12} /> Đạo diễn
               </button>
-              <UpdateNotificationModal />
     </div>
 
             {/* Tab Contents */}
@@ -2259,9 +2219,7 @@ export default function DesktopAppUI() {
                       >
                         ❤️ Fan cứng vào
                       </button>
-                      <UpdateNotificationModal />
     </div>
-                    <UpdateNotificationModal />
     </div>
 
                   <div>
@@ -2299,9 +2257,7 @@ export default function DesktopAppUI() {
                       >
                         🐉 Giáng Long Chưởng (1000 xu)
                       </button>
-                      <UpdateNotificationModal />
     </div>
-                    <UpdateNotificationModal />
     </div>
 
                   <div>
@@ -2327,11 +2283,8 @@ export default function DesktopAppUI() {
                       >
                         ↗️ Chia sẻ live
                       </button>
-                      <UpdateNotificationModal />
     </div>
-                    <UpdateNotificationModal />
     </div>
-                  <UpdateNotificationModal />
     </div>
               )}
 
@@ -2368,9 +2321,7 @@ export default function DesktopAppUI() {
                       <span>📏 "Mình 1m70 nặng 65kg mặc size nào chuẩn?"</span>
                       <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${isDarkMode ? 'bg-purple-500/20 text-white' : 'bg-purple-200 text-purple-900'}`}>Tư Vấn</span>
                     </button>
-                    <UpdateNotificationModal />
     </div>
-                  <UpdateNotificationModal />
     </div>
               )}
 
@@ -2400,9 +2351,7 @@ export default function DesktopAppUI() {
                       <span>🔥 Khách Sỉ vừa chốt Set 5 Áo Sơ Mi</span>
                       <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${isDarkMode ? 'bg-amber-500/30 text-white' : 'bg-amber-200 text-amber-900'}`}>Đơn Sỉ</span>
                     </button>
-                    <UpdateNotificationModal />
     </div>
-                  <UpdateNotificationModal />
     </div>
               )}
 
@@ -2436,9 +2385,7 @@ export default function DesktopAppUI() {
                       >
                         🎶 Hát / Kể chuyện vui
                       </button>
-                      <UpdateNotificationModal />
     </div>
-                    <UpdateNotificationModal />
     </div>
 
                   <div className={`pt-2 border-t ${isDarkMode ? 'border-white/10' : 'border-slate-200'}`}>
@@ -2470,11 +2417,8 @@ export default function DesktopAppUI() {
                       >
                         <Send size={11} /> Gửi
                       </button>
-                      <UpdateNotificationModal />
     </div>
-                    <UpdateNotificationModal />
     </div>
-                  <UpdateNotificationModal />
     </div>
               )}
 
@@ -2482,10 +2426,8 @@ export default function DesktopAppUI() {
               {isProcessingEvent && (
                 <div className="flex items-center justify-center gap-2 py-1.5 bg-purple-500/10 border border-purple-500/20 rounded-lg text-purple-500 text-[11px] font-semibold animate-pulse">
                   <Sparkles size={12} className="text-purple-500 animate-spin" /> AI đang suy nghĩ & chuẩn bị phản hồi...
-                  <UpdateNotificationModal />
     </div>
               )}
-              <UpdateNotificationModal />
     </div>
             
             {/* Lịch sử sự kiện */}
@@ -2502,13 +2444,11 @@ export default function DesktopAppUI() {
                     <Trash2 size={10} /> Xoá log
                   </button>
                 )}
-                <UpdateNotificationModal />
     </div>
               <div className="h-28 overflow-y-auto space-y-1.5 pr-1 text-[10px]">
                 {viewerHistory.length === 0 ? (
                   <div className="text-gray-400 text-center py-4 italic text-[11px]">
                     Chưa có sự kiện nào. Hãy bấm một nút ở trên để thử nghiệm!
-                    <UpdateNotificationModal />
     </div>
                 ) : (
                   viewerHistory.slice().reverse().map((h, i) => (
@@ -2517,26 +2457,19 @@ export default function DesktopAppUI() {
                         <span className="font-semibold text-white">
                           [{h.time}] {h.payload?.name || 'Hệ thống'}: {h.type === 'COMMENT' ? `"${h.payload.text}"` : h.type === 'GIFT' ? `tặng ${h.payload.gift}` : h.type === 'PURCHASE' ? `đã mua ${h.payload.item}` : h.type === 'LIKE' ? 'thả tim' : h.type === 'FOLLOW' ? 'theo dõi' : h.type === 'ASSISTANT_PROMPT' ? `[Lệnh Đạo diễn]: ${h.payload.prompt}` : 'vào phòng live'}
                         </span>
-                        <UpdateNotificationModal />
     </div>
                       {h.ai_reply && (
                         <div className="text-[#00FF66] pl-2 border-l-2 border-[#00FF66]/40 leading-relaxed font-medium">
                           ↳ AI: {h.ai_reply}
-                          <UpdateNotificationModal />
     </div>
                       )}
-                      <UpdateNotificationModal />
     </div>
                   ))
                 )}
-                <UpdateNotificationModal />
     </div>
-              <UpdateNotificationModal />
     </div>
-            <UpdateNotificationModal />
     </div>
         )}
-        <UpdateNotificationModal />
     </div>
 
       {/* General Settings Modal */}
@@ -2554,15 +2487,11 @@ export default function DesktopAppUI() {
               >
                 <X size={16} />
               </button>
-              <UpdateNotificationModal />
     </div>
             <div className="flex-1 overflow-hidden">
               <GeneralSettings onClose={() => setActiveSettingsModal(null)} />
-              <UpdateNotificationModal />
     </div>
-            <UpdateNotificationModal />
     </div>
-          <UpdateNotificationModal />
     </div>
       )}
 
@@ -2588,17 +2517,12 @@ export default function DesktopAppUI() {
                 >
                   <X size={24} />
                 </button>
-                <UpdateNotificationModal />
     </div>
-              <UpdateNotificationModal />
     </div>
             <div className="flex-1 overflow-auto relative">
               <WorkspaceTacVu />
-              <UpdateNotificationModal />
     </div>
-            <UpdateNotificationModal />
     </div>
-          <UpdateNotificationModal />
     </div>
       )}
 
@@ -2617,11 +2541,8 @@ export default function DesktopAppUI() {
                 initialTab={activeSettingsModal === 'coins' ? 'tokens' : 'subscription'} 
                 onClose={() => setActiveSettingsModal(null)} 
               />
-              <UpdateNotificationModal />
     </div>
-            <UpdateNotificationModal />
     </div>
-          <UpdateNotificationModal />
     </div>
       )}
 
@@ -2633,7 +2554,6 @@ export default function DesktopAppUI() {
               <div className="flex items-center gap-2 text-emerald-400 font-black text-sm">
                 <Shield size={18} className="text-emerald-400 animate-pulse" />
                 <span>HỆ THỐNG VƯỢT CAPTCHA TỰ ĐỘNG 24/7 (AI CAPTCHA SOLVER)</span>
-                <UpdateNotificationModal />
     </div>
               <button 
                 onClick={() => setActiveSettingsModal(null)}
@@ -2642,15 +2562,11 @@ export default function DesktopAppUI() {
               >
                 <X size={18} />
               </button>
-              <UpdateNotificationModal />
     </div>
             <div className="flex-1 overflow-y-auto">
               <AutoCaptchaSolver onClose={() => setActiveSettingsModal(null)} />
-              <UpdateNotificationModal />
     </div>
-            <UpdateNotificationModal />
     </div>
-          <UpdateNotificationModal />
     </div>
       )}
 
@@ -2669,7 +2585,6 @@ export default function DesktopAppUI() {
             <div className={`flex items-center justify-between px-4 py-2.5 border-b ${isDarkMode ? 'border-gray-700 bg-[#252532]' : 'border-slate-200 bg-slate-100'}`}>
               <h2 className="text-sm font-bold flex items-center gap-2"><Clock size={16} className="text-blue-500" /> Dòng thời gian Sự kiện & Phản ứng</h2>
               <button onClick={() => setActiveMonitorModal(null)} className={`p-1 rounded transition-colors ${isDarkMode ? 'hover:bg-gray-700 text-gray-400 hover:text-white' : 'hover:bg-slate-200 text-gray-600'}`}><X size={16} /></button>
-              <UpdateNotificationModal />
     </div>
             <div className={`flex-1 overflow-auto ${isDarkMode ? 'bg-[#16161e]' : 'bg-white'}`}>
               <table className="w-full text-sm text-left">
@@ -2697,17 +2612,13 @@ export default function DesktopAppUI() {
                   )}
                 </tbody>
               </table>
-              <UpdateNotificationModal />
     </div>
             <div className={`px-4 py-2.5 border-t flex justify-center ${isDarkMode ? 'bg-[#252532] border-gray-700' : 'bg-slate-100 border-slate-200'}`}>
               <button onClick={exportTimelineCSV} className={`flex items-center gap-1.5 px-4 py-1.5 rounded text-sm font-medium transition-colors shadow-sm border ${isDarkMode ? 'bg-gray-800 border-gray-700 hover:bg-gray-700 text-white' : 'bg-white border-slate-300 hover:bg-slate-50 text-slate-700'}`}>
                 <Download size={14} className="text-purple-500" /> Xuất ra file CSV...
               </button>
-              <UpdateNotificationModal />
     </div>
-            <UpdateNotificationModal />
     </div>
-          <UpdateNotificationModal />
     </div>
       )}
 
@@ -2742,7 +2653,6 @@ export default function DesktopAppUI() {
                 <List size={16} className="text-blue-500" /> Giám sát Hàng đợi
               </h2>
               <button onClick={() => setActiveMonitorModal(null)} className={`p-1 rounded transition-colors ${isDarkMode ? 'hover:bg-gray-700 text-gray-400 hover:text-white' : 'hover:bg-slate-200 text-gray-600'}`}><X size={16} /></button>
-              <UpdateNotificationModal />
     </div>
             <div className={`flex-1 overflow-auto p-4 ${isDarkMode ? 'bg-[#16161e]' : 'bg-white'}`}>
               <h3 className="text-xs font-semibold opacity-60 mb-3 uppercase">Đang xử lý / Chờ AI</h3>
@@ -2752,18 +2662,13 @@ export default function DesktopAppUI() {
                   <div>
                     <div className="text-sm font-bold text-blue-500">Sự kiện gần nhất</div>
                     <div className="text-xs text-blue-400">Đang sinh phản hồi AI...</div>
-                    <UpdateNotificationModal />
     </div>
-                  <UpdateNotificationModal />
     </div>
               ) : (
                 <div className="text-sm text-gray-500 italic">Hàng đợi đang trống.</div>
               )}
-              <UpdateNotificationModal />
     </div>
-            <UpdateNotificationModal />
     </div>
-          <UpdateNotificationModal />
     </div>
       )}
 
@@ -2775,7 +2680,6 @@ export default function DesktopAppUI() {
                 <AlertCircle size={16} className="text-orange-500" /> Log Hệ thống Lỗi
               </h2>
               <button onClick={() => setActiveMonitorModal(null)} className={`p-1 rounded transition-colors ${isDarkMode ? 'hover:bg-gray-700 text-gray-400 hover:text-white' : 'hover:bg-slate-200 text-gray-600'}`}><X size={16} /></button>
-              <UpdateNotificationModal />
     </div>
             <div className={`flex-1 overflow-auto p-4 text-sm ${isDarkMode ? 'bg-[#16161e]' : 'bg-white'}`}>
               {systemLogs.length === 0 ? (
@@ -2784,15 +2688,11 @@ export default function DesktopAppUI() {
                 systemLogs.map((log, idx) => (
                   <div key={idx} className="mb-2 p-2 bg-red-500/10 border border-red-500/30 rounded">
                     <span className="opacity-70 text-xs font-mono">[{log.time}]</span> <span className="font-bold text-red-500">ERROR:</span> <span className="text-red-400">{log.message}</span>
-                    <UpdateNotificationModal />
     </div>
                 ))
               )}
-              <UpdateNotificationModal />
     </div>
-            <UpdateNotificationModal />
     </div>
-          <UpdateNotificationModal />
     </div>
       )}
 
@@ -2804,7 +2704,6 @@ export default function DesktopAppUI() {
                 <FileText size={16} className="text-pink-500" /> Log Sự kiện TikTok
               </h2>
               <button onClick={() => setActiveMonitorModal(null)} className={`p-1 rounded transition-colors ${isDarkMode ? 'hover:bg-gray-700 text-gray-400 hover:text-white' : 'hover:bg-slate-200 text-gray-600'}`}><X size={16} /></button>
-              <UpdateNotificationModal />
     </div>
             <div className={`flex-1 overflow-auto p-4 text-sm ${isDarkMode ? 'bg-[#16161e]' : 'bg-white'}`}>
               {tiktokLogs.length === 0 ? (
@@ -2814,15 +2713,11 @@ export default function DesktopAppUI() {
                   <div key={idx} className={`mb-3 border rounded-lg p-2.5 ${isDarkMode ? 'border-gray-800 bg-gray-900/60' : 'border-slate-200 bg-slate-50'}`}>
                     <div className="text-blue-500 font-bold mb-1 border-b border-gray-500/20 pb-1">[{log.time}] {log.type}</div>
                     <pre className="opacity-80 overflow-x-auto font-mono text-xs">{JSON.stringify(log.payload, null, 2)}</pre>
-                    <UpdateNotificationModal />
     </div>
                 ))
               )}
-              <UpdateNotificationModal />
     </div>
-            <UpdateNotificationModal />
     </div>
-          <UpdateNotificationModal />
     </div>
       )}
 
@@ -2951,7 +2846,6 @@ export default function DesktopAppUI() {
                 <h3 className="text-sm font-black text-white uppercase tracking-wide">
                   Tích Hợp TikTok LIVE Studio & OBS Studio Realtime
                 </h3>
-                <UpdateNotificationModal />
     </div>
               <button
                 onClick={() => setShowOverlayModal(false)}
@@ -2959,7 +2853,6 @@ export default function DesktopAppUI() {
               >
                 <X size={16} />
               </button>
-              <UpdateNotificationModal />
     </div>
 
             {/* Body Content */}
@@ -2983,21 +2876,17 @@ export default function DesktopAppUI() {
                   >
                     🌐 Web Cloud (Vercel)
                   </button>
-                  <UpdateNotificationModal />
     </div>
-                <UpdateNotificationModal />
     </div>
 
               <div className="p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-cyan-200">
                 <div className="font-bold flex items-center gap-1.5 mb-1 text-yellow-300">
                   <Sparkles size={14} className="text-yellow-400 animate-spin" />
                   <span>Đồng Bộ Siêu Tốc 0.00001s:</span>
-                  <UpdateNotificationModal />
     </div>
                 <p className="text-[11px] leading-relaxed text-gray-300">
                   Chỉ cần dán đường link vào mục <strong>Browser Source (Trình duyệt)</strong> trên TikTok LIVE Studio hoặc OBS Studio. Khi bạn thao tác đổi nhân vật Idol, mở Game Bản Đồ hay Game Chiến Đấu, âm thanh và quà tặng sẽ <strong>tự động đồng bộ thời gian thực</strong> lên phiên live!
                 </p>
-                <UpdateNotificationModal />
     </div>
 
               {/* 1. LINK MASTER ĐỒNG BỘ TOÀN NĂNG (Khuyên Dùng) */}
@@ -3009,7 +2898,6 @@ export default function DesktopAppUI() {
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold animate-pulse">
                     Khuyên Dùng
                   </span>
-                  <UpdateNotificationModal />
     </div>
                 <div className="flex items-center gap-2">
                   <input
@@ -3036,19 +2924,16 @@ export default function DesktopAppUI() {
                   >
                     Xem Thử
                   </button>
-                  <UpdateNotificationModal />
     </div>
                 <p className="text-[10px] text-gray-400">
                   Tự động chuyển giữa AI Idol, Game Bản Đồ và Game Chiến Đấu theo đúng màn hình đang chạy trong phần mềm.
                 </p>
-                <UpdateNotificationModal />
     </div>
 
               {/* 2. CÁC LINK CHUYÊN BIỆT */}
               <div className="space-y-2.5">
                 <div className="text-[11px] font-bold text-gray-300 uppercase tracking-wide">
                   Hoặc Sao Chép Link Chuyên Biệt Theo Từng Nhu Cầu:
-                  <UpdateNotificationModal />
     </div>
 
                 {/* Link Live AI Idol */}
@@ -3057,13 +2942,10 @@ export default function DesktopAppUI() {
                     <div className="font-bold text-pink-300 text-[11px] flex items-center gap-1">
                       <Video size={12} className="text-pink-400" />
                       <span>1. Live AI Idol (Idol Ảo Livestream 24/7)</span>
-                      <UpdateNotificationModal />
     </div>
                     <div className="text-[10px] text-gray-400 font-mono truncate">
                       {`${overlayLinkBase}/overlay-idol`}
-                      <UpdateNotificationModal />
     </div>
-                    <UpdateNotificationModal />
     </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
@@ -3085,9 +2967,7 @@ export default function DesktopAppUI() {
                     >
                       Xem
                     </button>
-                    <UpdateNotificationModal />
     </div>
-                  <UpdateNotificationModal />
     </div>
 
                 {/* Link Bản Đồ Chuẩn */}
@@ -3096,13 +2976,10 @@ export default function DesktopAppUI() {
                     <div className="font-bold text-amber-300 text-[11px] flex items-center gap-1">
                       <Flag size={12} className="text-red-400" />
                       <span>2. Game Bản Đồ Cắm Cờ (Chuẩn Đầy Đủ)</span>
-                      <UpdateNotificationModal />
     </div>
                     <div className="text-[10px] text-gray-400 font-mono truncate">
                       {`${overlayLinkBase}/overlay-bando`}
-                      <UpdateNotificationModal />
     </div>
-                    <UpdateNotificationModal />
     </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
@@ -3124,9 +3001,7 @@ export default function DesktopAppUI() {
                     >
                       Xem
                     </button>
-                    <UpdateNotificationModal />
     </div>
-                  <UpdateNotificationModal />
     </div>
 
                 {/* Link Bản Đồ Nguồn Siêu Sạch (Lồng Góc / Ultra Clean) */}
@@ -3135,13 +3010,10 @@ export default function DesktopAppUI() {
                     <div className="font-bold text-emerald-300 text-[11px] flex items-center gap-1">
                       <Sparkles size={12} className="text-yellow-400 animate-spin" />
                       <span>3. Game Bản Đồ (✨ Nguồn Sạch Lồng Góc / Ultra Clean)</span>
-                      <UpdateNotificationModal />
     </div>
                     <div className="text-[10px] text-gray-400 font-mono truncate">
                       {`${overlayLinkBase}/overlay-bando-clean`}
-                      <UpdateNotificationModal />
     </div>
-                    <UpdateNotificationModal />
     </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
@@ -3163,9 +3035,7 @@ export default function DesktopAppUI() {
                     >
                       Xem
                     </button>
-                    <UpdateNotificationModal />
     </div>
-                  <UpdateNotificationModal />
     </div>
 
                 {/* Link Chiến Đấu PK */}
@@ -3174,13 +3044,10 @@ export default function DesktopAppUI() {
                     <div className="font-bold text-purple-300 text-[11px] flex items-center gap-1">
                       <Swords size={12} className="text-yellow-400" />
                       <span>4. Game Đại Chiến PK TikTok</span>
-                      <UpdateNotificationModal />
     </div>
                     <div className="text-[10px] text-gray-400 font-mono truncate">
                       {`${overlayLinkBase}/?overlay=gamebattle`}
-                      <UpdateNotificationModal />
     </div>
-                    <UpdateNotificationModal />
     </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
@@ -3202,18 +3069,14 @@ export default function DesktopAppUI() {
                     >
                       Xem
                     </button>
-                    <UpdateNotificationModal />
     </div>
-                  <UpdateNotificationModal />
     </div>
-                <UpdateNotificationModal />
     </div>
 
               {/* Hướng Dẫn Từng Bước */}
               <div className="p-3 rounded-xl bg-black/40 border border-white/10 space-y-1.5 text-[11px]">
                 <div className="font-bold text-white uppercase text-[11px] mb-1">
                   🛠️ Hướng Dẫn Cài Đặt Vào TikTok LIVE Studio / OBS Studio:
-                  <UpdateNotificationModal />
     </div>
                 <div className="space-y-1 text-gray-300">
                   <div>1. Mở TikTok LIVE Studio hoặc OBS Studio, bấm <strong>Thêm Nguồn (Add Source)</strong> &gt; <strong>Browser Source (Trình duyệt)</strong>.</div>
@@ -3225,15 +3088,11 @@ export default function DesktopAppUI() {
                     ) : (
                       <span className="text-yellow-300 font-bold"> Rộng: 1920 - Cao: 1080 (Khung Ngang 16:9)</span>
                     )}
-                    <UpdateNotificationModal />
     </div>
                   <div>4. Tích chọn <strong>"Control audio via OBS"</strong> (Điều khiển âm thanh) nếu cần, rồi bấm <strong>OK</strong>.</div>
-                  <UpdateNotificationModal />
     </div>
-                <UpdateNotificationModal />
     </div>
 
-              <UpdateNotificationModal />
     </div>
 
             {/* Footer */}
@@ -3247,12 +3106,9 @@ export default function DesktopAppUI() {
               >
                 Đóng
               </button>
-              <UpdateNotificationModal />
     </div>
 
-            <UpdateNotificationModal />
     </div>
-          <UpdateNotificationModal />
     </div>
       )}
 
@@ -3270,10 +3126,8 @@ export default function DesktopAppUI() {
           <button onClick={() => setToast(null)} className="ml-2 opacity-70 hover:opacity-100 transition-opacity">
             <X size={14} />
           </button>
-          <UpdateNotificationModal />
     </div>
       )}
-
       <UpdateNotificationModal />
     </div>
   );
