@@ -1414,7 +1414,7 @@ export default function GameBanDoVietNam({
     const badgeMat = new THREE.SpriteMaterial({ map: initialBadgeTex, depthTest: false, transparent: true });
     const badgeSprite = new THREE.Sprite(badgeMat);
     badgeSprite.position.set(0, 10.2, 0);
-    badgeSprite.scale.set(10.5, 3.3, 1.0);
+    badgeSprite.scale.set(7.35, 2.31, 1.0);
     focalGroup.add(badgeSprite);
     state.badgeSprite = badgeSprite;
     state.badgeTexture = initialBadgeTex;
@@ -1961,8 +1961,12 @@ export default function GameBanDoVietNam({
           if (badgeTex) {
             const badgeSpriteMat = new THREE.SpriteMaterial({ map: badgeTex, depthTest: false, transparent: true });
             const badgeSprite = new THREE.Sprite(badgeSpriteMat);
-            badgeSprite.position.set(0, 10.2, 0);
-            badgeSprite.scale.set(10.5, 3.3, 1);
+            // Xếp chéo ngẫu nhiên để không bị che khuất
+            const offsetX = (Math.random() - 0.5) * 5.0;
+            const offsetY = 9.5 + Math.random() * 3.5;
+            const offsetZ = (Math.random() - 0.5) * 3.0;
+            badgeSprite.position.set(offsetX, offsetY, offsetZ);
+            badgeSprite.scale.set(7.35, 2.31, 1);
             poleGroup.add(badgeSprite);
           }
 
