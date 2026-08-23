@@ -208,6 +208,7 @@ export default function DesktopAppUI() {
   }, [flvUrl]);
   const lastAiCommentTime = useRef(0);
   const lastAiGreetingTime = useRef(0);
+  const greetedUsernamesRef = useRef(new Set());
   const [isTemplateLibraryOpen, setIsTemplateLibraryOpen] = useState(false);
 
 
@@ -822,11 +823,21 @@ export default function DesktopAppUI() {
 
     socket.on('tiktok_member', (data) => {
       if (!data) return;
-      const author = data.username || data.nickname || 'Khách mới';
+      const author = data.username || data.nickname || '';
+      if (!author || author === 'Khách mới' || author === 'Khán Giả') return;
+      const key = author.toLowerCase().trim();
       
-      // Chống spam: Chào hỏi người mới cách nhau ít nhất 15 giây
+      // Tuyệt đối chỉ chào mỗi người dùng ĐÚNG 1 LẦN duy nhất trong suốt buổi livestream
+      if (greetedUsernamesRef.current.has(key)) return;
+      greetedUsernamesRef.current.add(key);
+      if (greetedUsernamesRef.current.size > 500) {
+        const first = greetedUsernamesRef.current.values().next().value;
+        greetedUsernamesRef.current.delete(first);
+      }
+      
+      // Chống dồn dập: Giãn cách lời chào tối thiểu 12 giây
       const now = Date.now();
-      if (now - lastAiGreetingTime.current > 15000) {
+      if (now - lastAiGreetingTime.current > 12000) {
         lastAiGreetingTime.current = now;
         handleLiveEventRef.current?.('VIEWER_JOIN', { name: author });
       }

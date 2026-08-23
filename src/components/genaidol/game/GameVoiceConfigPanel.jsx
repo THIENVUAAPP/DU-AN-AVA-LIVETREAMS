@@ -248,8 +248,8 @@ export default function GameVoiceConfigPanel({
     setPreviewingVoiceId(voice.id);
     const sample = customSample || (
       voice.gender === 'Female' 
-        ? `Dạ em chào anh chị! Em là Trợ Lý AI của phiên live, chúc mọi người xem live thật vui ạ!`
-        : `Chào mừng tất cả anh em chiến binh! Bình luận viên đã sẵn sàng tiếp lửa trận đấu!`
+        ? `Dạ em chào bạn! Em là Trợ Lý AI của phiên live, chúc bạn xem live thật vui ạ!`
+        : `Chào mừng tất cả các bạn! Bình luận viên đã sẵn sàng tiếp lửa trận đấu!`
     );
 
     const voiceToPlay = {

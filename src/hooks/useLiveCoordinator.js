@@ -11,6 +11,7 @@ export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack 
   const [viewerHistory, setViewerHistory] = useState([]);
   const [isProcessingEvent, setIsProcessingEvent] = useState(false);
   const idleTimerRef = useRef(null);
+  const greetedViewersRef = useRef(new Set());
 
   // Load kho video live
   useEffect(() => {
@@ -55,6 +56,19 @@ export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack 
   // Hàm xử lý sự kiện chính (gọi API Gemini)
   const handleLiveEvent = async (type, payload) => {
     if (!isConnected) return;
+
+    if (type === 'VIEWER_JOIN') {
+      const viewerName = (payload?.name || '').trim().toLowerCase();
+      if (!viewerName || viewerName === 'khách mới' || greetedViewersRef.current.has(viewerName)) {
+        return; // Đã chào rồi, không chào lặp lại cùng 1 người
+      }
+      greetedViewersRef.current.add(viewerName);
+      if (greetedViewersRef.current.size > 500) {
+        const first = greetedViewersRef.current.values().next().value;
+        greetedViewersRef.current.delete(first);
+      }
+    }
+
     setIsProcessingEvent(true);
     resetIdleTimer(); // reset lại timer mỗi khi có event
 

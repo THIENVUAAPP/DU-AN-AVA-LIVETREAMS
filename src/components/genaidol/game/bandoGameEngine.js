@@ -265,6 +265,8 @@ class BanDoGameEngine {
     this.cellRenderQueue = [];
     this.reservedCellIds = new Set();
     this.queueTimer = null;
+    this.processedGiftSignatures = new Map();
+    this.processedCommentSignatures = new Map();
 
     if (typeof BroadcastChannel !== 'undefined') {
       try {
@@ -1090,9 +1092,21 @@ class BanDoGameEngine {
 
     const allKnownGifts = [...savedGifts, ...(this.state.gifts || DEFAULT_MAP_GIFTS), ...REGIONAL_FLAG_GIFTS, ...DEFAULT_STANDARD_GIFTS];
     
-    // Tìm quà theo id chính xác, hoặc theo tên tiếng Việt/Anh, hoặc theo token/xu
     const targetKey = String(giftId || '').toLowerCase().trim();
     const targetName = String(giftNameInput || '').toLowerCase().trim();
+
+    // Khử trùng lặp sự kiện quà tặng (Deduplication) - Tuyệt đối không cắm ô hay thông báo lặp
+    const giftSig = `${user.id || user.username}_${targetKey || targetName}_${count}_${diamondCountInput}`;
+    const lastGiftTime = this.processedGiftSignatures?.get(giftSig) || 0;
+    if (now - lastGiftTime < 1500) {
+      return; // Bỏ qua sự kiện trùng lặp trong vòng 1.5 giây
+    }
+    if (!this.processedGiftSignatures) this.processedGiftSignatures = new Map();
+    this.processedGiftSignatures.set(giftSig, now);
+    if (this.processedGiftSignatures.size > 300) {
+      const first = this.processedGiftSignatures.keys().next().value;
+      this.processedGiftSignatures.delete(first);
+    }
 
     let giftDef = allKnownGifts.find(g => {
       const gId = String(g.id || '').toLowerCase();
@@ -1383,10 +1397,23 @@ class BanDoGameEngine {
     return this.processComment(commentText, user);
   }
 
-  // Xử lý sự kiện bình luận (Comment tương tác Live & Kích Hoạt Auto Voice Trả Lời)
   processComment(commentText, user = { id: 'guest_cm', username: 'Khán Giả Live', avatar: '' }) {
     if (!commentText || this.state.status === 'victory') return;
     const clean = commentText.toString().trim().toLowerCase();
+    const now = Date.now();
+
+    // Khử trùng lặp bình luận (Deduplication) - Không đọc lặp lại cùng 1 bình luận trong 4 giây
+    const commentSig = `${user.id || user.username}_${clean}`;
+    const lastCommentTime = this.processedCommentSignatures?.get(commentSig) || 0;
+    if (now - lastCommentTime < 4000) {
+      return;
+    }
+    if (!this.processedCommentSignatures) this.processedCommentSignatures = new Map();
+    this.processedCommentSignatures.set(commentSig, now);
+    if (this.processedCommentSignatures.size > 300) {
+      const first = this.processedCommentSignatures.keys().next().value;
+      this.processedCommentSignatures.delete(first);
+    }
     
     // Kích hoạt Hệ Thống Voice AI & Từ Khóa Trả Lời Tự Động
     try {

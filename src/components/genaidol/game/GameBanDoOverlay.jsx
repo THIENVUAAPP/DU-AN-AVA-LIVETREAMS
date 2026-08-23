@@ -38,17 +38,12 @@ export default function GameBanDoOverlay() {
       const avatar = data.profilePictureUrl || '';
       if (!text) return;
 
-      // FIX: Gọi processComment (tồn tại) thay vì handleUserComment (không tồn tại) trên bandoEngine
+      // Xử lý comment & tự động kích hoạt Voice Engine qua bandoEngine.processComment
       try {
         bandoEngine.processComment(text, { id: userId, username: author, avatar });
       } catch (e) {
         console.warn('[BandoOverlay] processComment error:', e);
       }
-
-      // Kích hoạt AI Voice Engine trả lời real-time
-      try {
-        mapVoiceEngine.handleUserComment(text, author);
-      } catch (e) {}
 
       setLiveEvent({
         type: 'COMMENT',
