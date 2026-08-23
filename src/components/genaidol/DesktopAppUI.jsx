@@ -1629,27 +1629,7 @@ export default function DesktopAppUI() {
             </button>
           )}
 
-          {/* Nút Cài đặt Sàn Nhảy - Luôn hiển thị để mở Admin Modal và chuyển Sàn Nhảy */}
-          <button
-            onClick={() => {
-              setIsDanceFloorActive(true);
-              setIsGameBanDoActive(false);
-              setIsGameBattleActive(false);
-              try { localStorage.setItem('avalive_active_stage', 'dancefloor'); } catch (e) {}
-              battleVoiceEngine.stopAll();
-              battleCommentary.stopAll();
-              setIsDanceFloorAdminOpen(true);
-            }}
-            className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs animate-in fade-in duration-200 ${
-              isDanceFloorActive 
-                ? 'bg-gradient-to-r from-pink-900/90 to-rose-900/90 text-white border-pink-400/80 shadow-pink-500/40 ring-1 ring-pink-400/50' 
-                : (isDarkMode ? 'bg-pink-950/40 text-pink-300 border-pink-500/50 hover:bg-pink-900/60' : 'bg-pink-50 text-pink-700 border-pink-300 hover:bg-pink-100')
-            }`}
-            title="Sàn Nhảy TikTok & Cài Đặt"
-          >
-            <Settings size={10} className={isDanceFloorActive ? 'text-white' : 'text-pink-400'} />
-            <span>Sàn Nhảy</span>
-          </button>
+
           {/* Nút Kích hoạt Game Ghép Cờ Bản Đồ Việt Nam (Hình Chữ S) */}
           <button 
             className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs ${
