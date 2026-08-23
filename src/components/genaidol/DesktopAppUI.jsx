@@ -552,6 +552,10 @@ export default function DesktopAppUI() {
 
   // 🛑/▶️ Trạng thái Tắt / Bật Toàn Bộ Phiên Live Master (Mặc định ở trạng thái Chờ/Tắt, chỉ bật khi Streamer bấm)
   const [isMasterLiveRunning, setIsMasterLiveRunning] = useState(false);
+  const isMasterLiveRunningRef = useRef(isMasterLiveRunning);
+  useEffect(() => {
+    isMasterLiveRunningRef.current = isMasterLiveRunning;
+  }, [isMasterLiveRunning]);
 
   // Trạng thái Chạy Demo / Test Toàn Cục (1 Nút Duy Nhất cho tất cả Game / Idol)
   const [isGlobalDemoRunning, setIsGlobalDemoRunning] = useState(false);
@@ -753,11 +757,15 @@ export default function DesktopAppUI() {
         ...prev.slice(0, 48)
       ]);
       bandoAudio.unlock();
+      if (isMasterLiveRunningRef.current) {
+        bandoAudio.playBgmOnLive();
+      }
       handleLiveEventRef.current?.('VIEWER_JOIN', { name: targetChan });
     });
 
     socket.on('tiktok_chat', (data) => {
       if (!data) return;
+      if (!isMasterLiveRunningRef.current) return; // Không đọc bình luận nếu đang Tắt Tất Cả
       bandoAudio.unlock();
       const timeStr = new Date().toLocaleTimeString();
       const author = data.username || data.nickname || 'Khán giả';
@@ -779,6 +787,7 @@ export default function DesktopAppUI() {
 
     socket.on('tiktok_gift', (data) => {
       if (!data) return;
+      if (!isMasterLiveRunningRef.current) return; // Bỏ qua xử lý quà nếu đang Tắt Tất Cả
       bandoAudio.unlock();
       const timeStr = new Date().toLocaleTimeString();
       const author = data.username || data.nickname || data.uniqueId || 'Khách Live';
@@ -1068,8 +1077,12 @@ export default function DesktopAppUI() {
         auto247TimerRef.current = null;
       }
 
-      // 3. Tắt toàn bộ âm thanh / BGM / SFX / Voice
-      bandoAudio.stopAll();
+      // 3. Tạm dừng toàn bộ âm thanh / BGM / SFX / Voice
+      if (typeof bandoAudio.pauseAll === 'function') {
+        bandoAudio.pauseAll();
+      } else {
+        bandoAudio.stopAll();
+      }
       
       // 4. Dừng ngay lập tức toàn bộ Voice Commentary AI (Bản đồ + Trận đấu + Trợ lý)
       mapVoiceEngine.stopAll();
@@ -1085,7 +1098,7 @@ export default function DesktopAppUI() {
       if (audioPlayerRef.current) {
         try {
           audioPlayerRef.current.pause();
-          audioPlayerRef.current.currentTime = 0;
+          // KHÔNG reset currentTime để phát tiếp
         } catch (e) {}
       }
       
@@ -1100,7 +1113,7 @@ export default function DesktopAppUI() {
         mediaElements.forEach(el => {
           try {
             el.pause();
-            el.currentTime = 0;
+            // KHÔNG reset currentTime để có thể phát tiếp từ chỗ đang dừng
           } catch (e) {}
         });
       }
@@ -3047,40 +3060,6 @@ export default function DesktopAppUI() {
                     </button>
                     <button
                       onClick={() => window.open(`${overlayLinkBase}/?overlay=gamebattle`, '_blank')}
-                      className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 font-bold text-[10px]"
-                      title="Xem thử tab mới"
-                    >
-                      Xem
-                    </button>
-                  </div>
-                </div>
-
-                {/* Link Sàn Nhảy TikTok */}
-                <div className="p-2.5 rounded-xl bg-black/40 border border-pink-500/30 flex items-center justify-between gap-2">
-                  <div className="truncate flex-1">
-                    <div className="font-bold text-pink-300 text-[11px] flex items-center gap-1">
-                      <Music size={12} className="text-white" />
-                      <span>5. Sàn Nhảy TikTok</span>
-                    </div>
-                    <div className="text-[10px] text-gray-400 font-mono truncate">
-                      {`${overlayLinkBase}/?overlay=dance-floor`}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={() => {
-                        if (typeof navigator !== 'undefined') {
-                          navigator.clipboard.writeText(`${overlayLinkBase}/?overlay=dance-floor`);
-                          setCopySuccessMsg('Đã sao chép Link Sàn Nhảy!');
-                          setTimeout(() => setCopySuccessMsg(''), 3000);
-                        }
-                      }}
-                      className="px-3 py-1 rounded-lg bg-pink-600 hover:bg-pink-500 text-white font-bold text-[11px] transition-colors shadow-sm"
-                    >
-                      <span>{copySuccessMsg === 'Đã sao chép Link Sàn Nhảy!' ? '✅ Đã Chép' : 'Sao Chép'}</span>
-                    </button>
-                    <button
-                      onClick={() => window.open(`${overlayLinkBase}/?overlay=dance-floor`, '_blank')}
                       className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 font-bold text-[10px]"
                       title="Xem thử tab mới"
                     >

@@ -1091,22 +1091,21 @@ class BanDoGameEngine {
              (targetKey && (gName.includes(targetKey) || targetKey.includes(gName)));
     });
 
-    // Nếu không tìm thấy quà định nghĩa sẵn, tính số ô cờ theo số xu (Diamond Count) của quà TikTok
+    // Nếu không tìm thấy quà định nghĩa sẵn, mặc định chỉ là 1 ô
     if (!giftDef) {
-      const estimatedCells = Math.max(1, diamondCountInput);
       giftDef = {
         id: targetKey || 'custom_gift',
         name: giftNameInput || giftId || 'Quà TikTok',
-        cells: estimatedCells,
+        cells: 1, // Sửa lỗi: Quà chưa cấu hình chỉ tính 1 ô, không lấy theo giá xu
         priceToken: diamondCountInput,
-        icon: estimatedCells >= 1000 ? '👑' : estimatedCells >= 100 ? '💎' : estimatedCells >= 10 ? '🎁' : '🌹',
+        icon: diamondCountInput >= 1000 ? '👑' : diamondCountInput >= 100 ? '💎' : diamondCountInput >= 10 ? '🎁' : '🌹',
         color: '#dc2626',
-        tier: estimatedCells >= 1000 ? 'legendary' : estimatedCells >= 200 ? 'epic' : estimatedCells >= 20 ? 'rare' : 'common'
+        tier: diamondCountInput >= 1000 ? 'legendary' : diamondCountInput >= 200 ? 'epic' : diamondCountInput >= 20 ? 'rare' : 'common'
       };
     }
 
-    // Số lượng ô cờ thực tế = Số ô của quà * số lượng quà tặng
-    const cellValue = Number(giftDef.cells) || Math.max(1, Number(diamondCountInput) || 1);
+    // Số lượng ô cờ thực tế = Số ô của quà (mặc định 1) * số lượng quà tặng (repeatCount)
+    const cellValue = Number(giftDef.cells) || 1;
     const rawCells = Math.max(1, (cellValue * count) || 1);
     
     // Combo multiplier
