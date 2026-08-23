@@ -802,12 +802,16 @@ export default function DesktopAppUI() {
       // 2. Chuyển tiếp Game Chiến Đấu nếu đang mở
       window.dispatchEvent(new CustomEvent('battle-trigger-gift', { detail: data }));
 
-      // 3. Kích hoạt cảm ơn quà tặng: CHỈ CẢM ƠN 1 LẦN DUY NHẤT (tránh nói lặp đi lặp lại)
+      // 3. Kích hoạt cảm ơn quà tặng: CHỈ CẢM ƠN 1 LẦN DUY NHẤT cho mỗi lần tặng quà (tránh bị lặp lại nhiều lần do streak/combo liên tiếp)
       const now = Date.now();
-      const userKey = author.toLowerCase().trim();
-      const lastThanked = thankedGiftUsersRef.current.get(userKey) || 0;
-      if (now - lastThanked > 45000) {
-        thankedGiftUsersRef.current.set(userKey, now);
+      const userKey = (author || '').toLowerCase().trim();
+      const giftKey = (giftName || '').toLowerCase().trim();
+      const giftEventKey = `${userKey}_${giftKey}`;
+      const lastThanked = thankedGiftUsersRef.current.get(giftEventKey) || 0;
+
+      // Khử trùng lặp streak quà: Chỉ cảm ơn 1 lần duy nhất cho mỗi đợt tặng quà của món quà đó (giãn cách 5s giữa các lần tặng cùng món quà)
+      if (now - lastThanked > 5000) {
+        thankedGiftUsersRef.current.set(giftEventKey, now);
         if (thankedGiftUsersRef.current.size > 500) {
           const first = thankedGiftUsersRef.current.keys().next().value;
           thankedGiftUsersRef.current.delete(first);
