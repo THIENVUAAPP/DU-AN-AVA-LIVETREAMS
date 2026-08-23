@@ -213,10 +213,11 @@ export default function DanceFloorAdminModal({ isOpen, onClose, engine, renderMo
                 </div>
 
                 <DanceFloorChannelLivePanel
-                  isLive={isLive}
-                  setIsLive={setIsLive}
+                  connectedChannels={connectedChannelList}
                   selectedChannelIds={selectedChannelIds}
-                  toggleChannel={toggleChannel}
+                  onToggleChannel={toggleChannel}
+                  isLive={isLive}
+                  onToggleLive={() => setIsLive(!isLive)}
                 />
 
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -345,7 +346,13 @@ export default function DanceFloorAdminModal({ isOpen, onClose, engine, renderMo
 
             {activeTab === 'rules' && (
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <DanceFloorRuleBuilder rules={rules} setRules={setRules} />
+                <DanceFloorRuleBuilder 
+                  rules={rules} setRules={setRules} 
+                  characters={allCharacters} 
+                  sounds={allSounds} 
+                  onTestRule={(rule) => handleManualTrigger(rule.keyword)} 
+                  onSuggestDance={suggestDance} 
+                />
               </div>
             )}
 
@@ -358,15 +365,15 @@ export default function DanceFloorAdminModal({ isOpen, onClose, engine, renderMo
             {activeTab === 'library' && (
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <DanceFloorLibraryPanel
-                  allCharacters={allCharacters} customCharacters={customCharacters} addCustomCharacter={addCustomCharacter} deleteCustomCharacter={deleteCustomCharacter} editCustomCharacter={editCustomCharacter}
-                  allEffects={allEffects} customEffects={customEffects} addCustomEffect={addCustomEffect} deleteCustomEffect={deleteCustomEffect}
-                  allSounds={allSounds} addCustomSound={addCustomSound} deleteCustomSound={deleteCustomSound}
-                  backgroundVideos={backgroundVideos} addBackgroundVideo={addBackgroundVideo} deleteBackgroundVideo={deleteBackgroundVideo} activeBackgroundVideoId={activeBackgroundVideoId} setActiveBackgroundVideoId={setActiveBackgroundVideoId}
-                  settings={settings} setSettings={setSettings}
+                  characters={allCharacters} customCharacters={customCharacters} onAddCustomCharacter={addCustomCharacter} onDeleteCustomCharacter={deleteCustomCharacter} onEditCustomCharacter={editCustomCharacter}
+                  effects={allEffects} customEffects={customEffects} onAddCustomEffect={addCustomEffect} onDeleteCustomEffect={deleteCustomEffect}
+                  sounds={allSounds} onAddCustomSound={addCustomSound} onDeleteCustomSound={deleteCustomSound} onPreviewSound={playSound}
+                  backgroundVideos={backgroundVideos} onAddBackgroundVideo={addBackgroundVideo} onDeleteBackgroundVideo={deleteBackgroundVideo} activeBackgroundVideoId={activeBackgroundVideoId} onSetActiveBackgroundVideoId={setActiveBackgroundVideoId}
                   giftTiers={giftTiers} setGiftTiers={setGiftTiers}
-                  toggleLibraryItem={toggleLibraryItem}
-                  allDanceStyles={allDanceStyles} customDanceStyles={customDanceStyles} addCustomDanceStyle={addCustomDanceStyle} deleteCustomDanceStyle={deleteCustomDanceStyle}
-                  runAutoShuffle={runAutoShuffle}
+                  onToggleLibraryItem={toggleLibraryItem}
+                  disabledCharacterIds={settings.disabledCharacterIds} disabledDanceIds={settings.disabledDanceIds} disabledEffectIds={settings.disabledEffectIds} disabledSceneIds={settings.disabledSceneIds} disabledSoundIds={settings.disabledSoundIds}
+                  danceStyles={allDanceStyles} customDanceStyles={customDanceStyles} onAddCustomDanceStyle={addCustomDanceStyle} onDeleteCustomDanceStyle={deleteCustomDanceStyle} onPreviewDance={suggestDance}
+                  customBackgroundImage={settings.customBackgroundImage} onSetCustomBackgroundImage={setCustomBackgroundImage}
                 />
               </div>
             )}
