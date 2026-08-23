@@ -156,7 +156,6 @@ export default function DanceFloorAdminModal({ isOpen, onClose, engine, renderMo
         <div className="flex items-center gap-1 px-4 py-2 bg-[#141722] border-b border-white/10 overflow-x-auto shrink-0 custom-scrollbar">
           {[
             { id: 'operations', label: '🎮 Vận Hành & TikTok' },
-            { id: 'stage', label: '🎥 Sàn Diễn & Camera' },
             { id: 'rules', label: '⚡ Luật Từ Khóa' },
             { id: 'autoreply', label: '💬 Trả Lời Tự Động' },
             { id: 'library', label: '📚 Thư Viện & Gift-Tier' },
@@ -253,97 +252,6 @@ export default function DanceFloorAdminModal({ isOpen, onClose, engine, renderMo
                 </div>
               </div>
             )}
-
-            {activeTab === 'stage' && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-5">
-                  <h3 className="text-sm font-black text-white flex items-center gap-2">
-                    <Move3d className="w-4 h-4 text-pink-400" /> Thiết Lập Sàn Diễn
-                  </h3>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-gray-300 block">Chế Độ Render</label>
-                      <div className="flex bg-black/50 p-1 rounded-xl border border-white/10">
-                        <button
-                          onClick={() => setRenderMode('2d')}
-                          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${renderMode === '2d' ? 'bg-pink-600 text-white shadow-md' : 'text-gray-400 hover:text-white'}`}
-                        >
-                          Sàn 2D
-                        </button>
-                        <button
-                          onClick={() => setRenderMode('3d')}
-                          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${renderMode === '3d' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:text-white'}`}
-                        >
-                          Sàn 3D
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-gray-300 block">Tỷ Lệ Khung Hình</label>
-                      <div className="flex bg-black/50 p-1 rounded-xl border border-white/10">
-                        <button
-                          onClick={() => setSettings((prev) => ({ ...prev, stageAspectRatio: '16:9' }))}
-                          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${settings.stageAspectRatio === '16:9' ? 'bg-amber-600 text-white shadow-md' : 'text-gray-400 hover:text-white'}`}
-                        >
-                          16:9 Ngang
-                        </button>
-                        <button
-                          onClick={() => setSettings((prev) => ({ ...prev, stageAspectRatio: '9:16' }))}
-                          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${settings.stageAspectRatio === '9:16' ? 'bg-amber-600 text-white shadow-md' : 'text-gray-400 hover:text-white'}`}
-                        >
-                          9:16 Dọc
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-gray-300 block">Kích Thước Nhân Vật</label>
-                      <div className="flex bg-black/50 p-1 rounded-xl border border-white/10">
-                        {[{ id: 'small', label: 'Nhỏ' }, { id: 'medium', label: 'Vừa' }, { id: 'large', label: 'To' }].map((s) => (
-                          <button
-                            key={s.id}
-                            onClick={() => setSettings((prev) => ({ ...prev, characterSizeScale: s.id }))}
-                            className={`flex-1 py-2 text-[11px] font-bold rounded-lg transition-all ${
-                              settings.characterSizeScale === s.id ? 'bg-cyan-600 text-white shadow-md' : 'text-gray-400 hover:text-white'
-                            }`}
-                          >
-                            {s.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-gray-300 block">Âm Thanh BGM / SFX</label>
-                      <button
-                        onClick={() => setSettings((s) => ({ ...s, soundEnabled: !s.soundEnabled }))}
-                        className={`w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all ${
-                          settings.soundEnabled ? 'bg-emerald-600 text-white' : 'bg-red-900/50 text-red-300 border border-red-500/30'
-                        }`}
-                      >
-                        {settings.soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-                        {settings.soundEnabled ? 'Đang Bật Âm Thanh' : 'Đã Tắt Âm Thanh'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <DanceFloorAnimateDiffPanel 
-                  onApplyAiEffect={(config) => {
-                    if (config.type === 'animatediff' && config.imageUrl) {
-                      const now = Date.now();
-                      setCustomBackgroundImage(config.imageUrl);
-                      setSettings(s => ({ ...s, autoShuffleIntervalEnabled: false }));
-                    }
-                  }} 
-                />
-              </div>
-            )}
-
             {activeTab === 'rules' && (
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <DanceFloorRuleBuilder 

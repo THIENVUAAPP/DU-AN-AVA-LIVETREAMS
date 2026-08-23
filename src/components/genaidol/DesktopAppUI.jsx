@@ -1629,42 +1629,27 @@ export default function DesktopAppUI() {
             </button>
           )}
 
-          {/* Nút Kích hoạt Sàn Nhảy TikTok */}
-          <button 
-            className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs ${
-              isDanceFloorActive 
-                ? 'bg-gradient-to-r from-pink-600 via-rose-600 to-pink-500 text-white border-pink-400 shadow-pink-500/40 ring-1 ring-pink-400/50 animate-pulse' 
-                : (isDarkMode ? 'border-pink-500/50 bg-pink-950/40 text-pink-300 hover:bg-pink-900/60' : 'border-pink-300 bg-pink-50 text-pink-700 hover:bg-pink-100')
-            }`}
+          {/* Nút Cài đặt Sàn Nhảy - Luôn hiển thị để mở Admin Modal và chuyển Sàn Nhảy */}
+          <button
             onClick={() => {
               setIsDanceFloorActive(true);
-              setIsGameBattleActive(false);
               setIsGameBanDoActive(false);
+              setIsGameBattleActive(false);
               try { localStorage.setItem('avalive_active_stage', 'dancefloor'); } catch (e) {}
-              mapVoiceEngine.stopAll();
               battleVoiceEngine.stopAll();
               battleCommentary.stopAll();
+              setIsDanceFloorAdminOpen(true);
             }}
-            title="Chuyển sang Sàn Nhảy TikTok"
+            className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs animate-in fade-in duration-200 ${
+              isDanceFloorActive 
+                ? 'bg-gradient-to-r from-pink-900/90 to-rose-900/90 text-white border-pink-400/80 shadow-pink-500/40 ring-1 ring-pink-400/50' 
+                : (isDarkMode ? 'bg-pink-950/40 text-pink-300 border-pink-500/50 hover:bg-pink-900/60' : 'bg-pink-50 text-pink-700 border-pink-300 hover:bg-pink-100')
+            }`}
+            title="Sàn Nhảy TikTok & Cài Đặt"
           >
-            <Music size={10} className={isDanceFloorActive ? 'text-white' : 'text-pink-400'} />
-            <span className="whitespace-nowrap">Sàn Nhảy TikTok</span>
-            {isDanceFloorActive && (
-              <span className="w-1 h-1 rounded-full bg-white animate-ping"></span>
-            )}
+            <Settings size={10} className={isDanceFloorActive ? 'text-white' : 'text-pink-400'} />
+            <span>Sàn Nhảy</span>
           </button>
-
-          {/* Nút Cài đặt Sàn Nhảy - Nằm KẾ BÊN Sàn Nhảy khi đang mở */}
-          {isDanceFloorActive && (
-            <button
-              onClick={() => setIsDanceFloorAdminOpen(true)}
-              className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-gradient-to-r from-pink-900/90 to-rose-900/90 hover:from-pink-800 hover:to-rose-800 text-pink-200 hover:text-white border border-pink-400/80 shadow-xs transition-all animate-in fade-in duration-200"
-              title="Cài đặt Sàn Nhảy"
-            >
-              <Settings size={10} className="text-white" />
-              <span>Sàn Nhảy</span>
-            </button>
-          )}
           {/* Nút Kích hoạt Game Ghép Cờ Bản Đồ Việt Nam (Hình Chữ S) */}
           <button 
             className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs ${
