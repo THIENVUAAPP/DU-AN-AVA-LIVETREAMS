@@ -156,39 +156,36 @@ function createFlagSideTexture() {
   return tex;
 }
 
-// Cache và tạo Badge Sprite 3D hiển thị Tên ID & Quà tặng của từng người xem cắm cờ
+// Cache và tạo Badge Sprite 3D hiển thị DUY NHẤT Tên ID người xem cắm cờ (Gọn gàng, tinh tế, không rối chữ)
 const donorBadgeTextureCache = new Map();
-function getOrCreateDonorBadgeTexture(username, giftText) {
-  const cacheKey = `${username || ''}_${giftText || ''}`;
+function getOrCreateDonorBadgeTexture(username) {
+  const cleanName = (username || 'Khán Giả').trim();
+  const cacheKey = cleanName;
   if (donorBadgeTextureCache.has(cacheKey)) {
     return donorBadgeTextureCache.get(cacheKey);
   }
 
   const canvas = document.createElement('canvas');
-  canvas.width = 640;
-  canvas.height = 200;
+  canvas.width = 512;
+  canvas.height = 120;
   const ctx = canvas.getContext('2d');
 
-  // Nền badge
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
-  ctx.roundRect(10, 10, 620, 180, 40);
+  // Nền badge cong bo góc mềm mại
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.78)';
+  ctx.roundRect(8, 8, 496, 104, 30);
   ctx.fill();
 
-  // Viền vàng kim
+  // Viền vàng kim sắc nét
   ctx.strokeStyle = '#f59e0b';
-  ctx.lineWidth = 6;
+  ctx.lineWidth = 5;
   ctx.stroke();
 
-  // Tên người dùng
+  // Tên ID người dùng duy nhất, to rõ, cực kỳ tinh tế (Không có dòng chữ vàng thừa bên dưới)
   ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 50px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(username || 'Khán Giả', 320, 85);
-
-  // Tên quà tặng và số lượng
-  ctx.fillStyle = '#fbbf24';
   ctx.font = 'bold 44px sans-serif';
-  ctx.fillText(giftText || '🇻🇳 Cờ Tổ Quốc', 320, 155);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(cleanName, 256, 60);
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -1382,11 +1379,11 @@ export default function GameBanDoVietNam({
     focalGroup.add(focalFlagPlaneMesh);
     state.flagPlaneMesh = focalFlagPlaneMesh;
 
-    const initialBadgeTex = getOrCreateDonorBadgeTexture('Chiến Binh Áo Đỏ', '🇻🇳 Cắm Cờ Tổ Quốc');
+    const initialBadgeTex = getOrCreateDonorBadgeTexture('Chiến Binh Áo Đỏ');
     const badgeMat = new THREE.SpriteMaterial({ map: initialBadgeTex, depthTest: false, transparent: true });
     const badgeSprite = new THREE.Sprite(badgeMat);
-    badgeSprite.position.set(0, 10.2, 0);
-    badgeSprite.scale.set(7.35, 2.31, 1.0);
+    badgeSprite.position.set(0, 9.8, 0);
+    badgeSprite.scale.set(5.5, 1.3, 1.0);
     focalGroup.add(badgeSprite);
     state.badgeSprite = badgeSprite;
     state.badgeTexture = initialBadgeTex;
@@ -1927,18 +1924,17 @@ export default function GameBanDoVietNam({
           poleGroup.add(sMesh);
           poleGroup.add(fPlane);
           
-          // Gắn 3D Sprite bảng tên người dùng & quà tặng ngay trên đỉnh cột cờ 3D
-          const giftText = p.giftName ? `🎁 ${p.giftName} (+${p.count || 1} Ô)` : `🇻🇳 +${p.count || 1} Ô Cờ`;
-          const badgeTex = getOrCreateDonorBadgeTexture(p.username, giftText);
+          // Gắn 3D Sprite bảng tên người dùng ngay trên đỉnh cột cờ 3D (chỉ hiện tên ID, không rối chữ)
+          const badgeTex = getOrCreateDonorBadgeTexture(p.username);
           if (badgeTex) {
             const badgeSpriteMat = new THREE.SpriteMaterial({ map: badgeTex, depthTest: false, transparent: true });
             const badgeSprite = new THREE.Sprite(badgeSpriteMat);
             // Xếp chéo ngẫu nhiên để không bị che khuất
-            const offsetX = (Math.random() - 0.5) * 5.0;
-            const offsetY = 9.5 + Math.random() * 3.5;
-            const offsetZ = (Math.random() - 0.5) * 3.0;
+            const offsetX = (Math.random() - 0.5) * 4.5;
+            const offsetY = 9.2 + Math.random() * 2.5;
+            const offsetZ = (Math.random() - 0.5) * 2.5;
             badgeSprite.position.set(offsetX, offsetY, offsetZ);
-            badgeSprite.scale.set(7.35, 2.31, 1);
+            badgeSprite.scale.set(5.5, 1.3, 1);
             poleGroup.add(badgeSprite);
           }
 
@@ -2097,8 +2093,7 @@ export default function GameBanDoVietNam({
           state.focalGroup.visible = true;
           
           if (state.badgeSprite) {
-            const giftText = ft.giftName ? `🎁 ${ft.giftName} (+${ft.count || 1} Ô)` : `🇻🇳 +${ft.count || 1} Ô Cờ`;
-            const badgeTex = getOrCreateDonorBadgeTexture(ft.username || ft.user || 'Khán Giả', giftText);
+            const badgeTex = getOrCreateDonorBadgeTexture(ft.username || ft.user || 'Khán Giả');
             if (badgeTex) {
               state.badgeSprite.material.map = badgeTex;
               state.badgeSprite.material.needsUpdate = true;
@@ -2398,25 +2393,6 @@ export default function GameBanDoVietNam({
               <span>{lm.name}</span>
             </div>
             <div className="w-0.5 h-2 bg-yellow-400/70" />
-          </div>
-        ))}
-      </div>
-
-      {/* User Claim Flag Badges Floating Overlay Layer (Hiển thị Avatar, ID & Lá Cờ Quốc Kỳ) */}
-      <div ref={claimBadgesLayerRef} className="absolute inset-0 pointer-events-none z-15 overflow-hidden">
-        {recentClaimBadges.map(b => (
-          <div
-            key={b.id}
-            ref={el => badgeRefs.current[b.id] = el}
-            className="absolute top-0 left-0 hidden flex-col items-center pointer-events-none transition-all duration-100 animate-in zoom-in-75 fade-in duration-150"
-            style={{ willChange: 'transform' }}
-          >
-            <div className="relative flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 text-white font-black text-[10px] shadow-[0_4px_20px_rgba(239,68,68,0.7)] border border-yellow-300 ring-1 ring-yellow-400/90 whitespace-nowrap drop-shadow-md">
-              <span className="text-[12px] leading-none shrink-0">{b.flag || currentCountry?.flag || '🇻🇳'}</span>
-              <span className="truncate max-w-[120px] font-bold text-yellow-100">@{b.username || 'Chiến Binh'}</span>
-              <span className="px-1.5 py-0.5 rounded-full bg-black/40 text-yellow-300 font-mono text-[9px] font-black border border-yellow-400/30">+{b.count || 1} Ô</span>
-            </div>
-            <div className="w-0.5 h-3 bg-gradient-to-b from-yellow-300 to-red-500 shadow-sm" />
           </div>
         ))}
       </div>

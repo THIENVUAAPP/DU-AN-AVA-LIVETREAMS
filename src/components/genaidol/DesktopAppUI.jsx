@@ -774,8 +774,11 @@ export default function DesktopAppUI() {
       const text = data.comment || '';
       setTiktokLogs(prev => [`[${timeStr}] 💬 ${author}: ${text}`, ...prev.slice(0, 49)]);
       
-      // Chuyển tiếp tới Game Bản Đồ Chữ S & AI Commentary (Tự động đọc & trả lời qua Global Speech Queue)
+      // 1. Chuyển tiếp tới Game Bản Đồ Chữ S & AI Commentary (Tự động đọc & trả lời qua Global Speech Queue)
       bandoEngine.handleUserComment(text, author);
+
+      // 2. Kích hoạt phản hồi bình luận Idol & hiển thị bình luận lên giao diện
+      handleLiveEventRef.current?.('COMMENT', { name: author, text });
     });
 
     socket.on('tiktok_gift', (data) => {
@@ -809,8 +812,8 @@ export default function DesktopAppUI() {
       const giftEventKey = `${userKey}_${giftKey}`;
       const lastThanked = thankedGiftUsersRef.current.get(giftEventKey) || 0;
 
-      // Khử trùng lặp streak quà: Chỉ cảm ơn 1 lần duy nhất cho mỗi đợt tặng quà của món quà đó (giãn cách 5s giữa các lần tặng cùng món quà)
-      if (now - lastThanked > 5000) {
+      // Khử trùng lặp streak quà: Chỉ cảm ơn 1 lần duy nhất cho mỗi đợt tặng quà của món quà đó (giãn cách 4s giữa các lần tặng cùng món quà)
+      if (now - lastThanked > 4000) {
         thankedGiftUsersRef.current.set(giftEventKey, now);
         if (thankedGiftUsersRef.current.size > 500) {
           const first = thankedGiftUsersRef.current.keys().next().value;
@@ -843,9 +846,9 @@ export default function DesktopAppUI() {
         greetedUsernamesRef.current.delete(first);
       }
       
-      // Chống dồn dập: Giãn cách lời chào tối thiểu 12 giây
+      // Chống dồn dập: Giãn cách lời chào tối thiểu 6 giây
       const now = Date.now();
-      if (now - lastAiGreetingTime.current > 12000) {
+      if (now - lastAiGreetingTime.current > 6000) {
         lastAiGreetingTime.current = now;
         handleLiveEventRef.current?.('VIEWER_JOIN', { name: author });
       }

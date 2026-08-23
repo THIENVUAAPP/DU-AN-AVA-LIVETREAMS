@@ -1356,25 +1356,21 @@ class BanDoGameEngine {
       this.processedCommentSignatures.delete(first);
     }
     
+    // Bỏ qua tin nhắn quà tặng hoặc thông báo hệ thống của TikTok lọt vào luồng chat để tuyệt đối không bị cắm thừa ô
+    if (clean.includes('gifted the host') || clean.includes('đã gửi cho chủ phòng') || clean.includes('đã tặng') || clean.includes('rose') || clean.includes('hoa hồng')) {
+      return;
+    }
+
     // Kích hoạt Hệ Thống Voice AI & Từ Khóa Trả Lời Tự Động
     try {
       mapVoiceEngine.handleUserComment(commentText, user?.username || 'Bạn');
     } catch (e) {}
 
-    // Tự động phân tích comment và cắm cờ
+    // Chỉ cắm cờ tương tác khi người dùng chủ động gõ lệnh số 1 hoặc số 2
     if (clean === '1' || clean === 'cm 1' || clean === 'số 1' || clean === 'so 1') {
       this.processGift('flag_vn', 1, user);
     } else if (clean === '2' || clean === 'cm 2' || clean === 'số 2' || clean === 'so 2') {
       this.processGift('flag_vn', 2, user);
-    } else if (clean.includes('hoa hong') || clean.includes('rose') || clean.includes('🌹')) {
-      this.processGift('rose', 1, user);
-    } else if (clean.includes('tim') || clean.includes('heart') || clean.includes('❤️') || clean.includes('🧡')) {
-      this.processGift('heart_tap', 1, user);
-    } else if (clean.includes('vietnam') || clean.includes('việt nam') || clean.includes('vn')) {
-      this.processGift('flag_vn', 3, user);
-    } else {
-      // Mọi comment hợp lệ được thưởng 1 ô cờ
-      this.processGift('flag_vn', 1, user);
     }
   }
 

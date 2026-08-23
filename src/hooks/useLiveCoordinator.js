@@ -55,7 +55,7 @@ export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack 
 
   // Hàm xử lý sự kiện chính (gọi API Gemini)
   const handleLiveEvent = async (type, payload) => {
-    if (!isConnected) return;
+    if (!type) return;
 
     if (type === 'VIEWER_JOIN') {
       const viewerName = (payload?.name || '').trim().toLowerCase();
