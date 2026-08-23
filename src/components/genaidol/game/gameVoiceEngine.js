@@ -442,30 +442,22 @@ class GameVoiceEngine {
 
   // Khớp Từ Khóa & Bộ Não AI Gemini Tự Động Trả Lời Câu Hỏi Ngoài Vùng Cài Đặt (Smart Real-time Q&A)
   async handleUserComment(commentText, userName = 'Khán Giả') {
-    if (!this.isKeywordAutoReplyEnabled || !commentText) return false;
-    const lower = commentText.toLowerCase().trim();
+    if (this.isKeywordAutoReplyEnabled === false || !commentText) return false;
+    const lower = String(commentText).toLowerCase().trim();
     const now = Date.now();
+    const effectiveUser = userName || 'bạn';
 
-    // Thay vì chặn ngay nếu đang nói, chúng ta sẽ cho vào queue.
-    // Tuy nhiên, để tránh "rác", ta vẫn giữ cooldown giữa các bình luận để không lấy hết.
-    const globalCooldownMs = Math.max(1, this.replyCooldownSec || 2) * 1000;
-    
-    // Tránh việc đưa quá nhiều tin nhắn vào hàng đợi
-    if (this.speechQueue.length > 5) {
-      return false; // Hàng đợi quá dài, bỏ qua bình luận mới để kéo giãn thời gian
-    }
-
-    if (now - (this.lastReplyTime || 0) < globalCooldownMs) {
-      return false;
-    }
-
-    // 1. Khớp từ khóa cố định trong danh sách cài sẵn
-    const activeRules = (this.keywordRules || []).filter(r => r.enabled !== false);
+    // 1. Khớp từ khóa cố định trong danh sách cài sẵn (Ưu tiên số 1)
+    const activeRules = (this.keywordRules || []).filter(r => r && r.enabled !== false);
     for (const rule of activeRules) {
-      const matched = rule.keywords.some(k => lower.includes(k.toLowerCase().trim()));
+      const rawKeywords = Array.isArray(rule.keywords)
+        ? rule.keywords
+        : (typeof rule.keywords === 'string' ? rule.keywords.split(',').map(s => s.trim()) : []);
+
+      const matched = rawKeywords.some(k => k && lower.includes(k.toLowerCase().trim()));
       if (matched) {
         const lastTime = this.lastKeywordTriggerTimes.get(rule.id) || 0;
-        const cooldownMs = (rule.cooldownSec || 3) * 1000;
+        const cooldownMs = (rule.cooldownSec || 2) * 1000;
         if (now - lastTime < cooldownMs) {
           continue; // Cooldown protection cho quy tắc này
         }
@@ -473,45 +465,53 @@ class GameVoiceEngine {
         this.lastKeywordTriggerTimes.set(rule.id, now);
         this.lastReplyTime = now;
 
-        let reply = rule.replyText
-          .replace(/\[user\]/gi, userName)
+        let reply = String(rule.replyText || '')
+          .replace(/\[user\]/gi, effectiveUser)
           .replace(/\[game\]/gi, this.gameType === 'battle' ? 'Đại Chiến PK' : 'Bản Đồ Cắm Cờ');
 
         const voiceTarget = rule.voiceId || rule.role || 'assistant';
-        
-        // Push to queue directly instead of timeout
         this.speak(reply, voiceTarget, false);
         return true;
       }
     }
 
-    // 2. Nếu không khớp từ khóa cố định: Tự động trả lời thông minh câu hỏi ngoài vùng
+    // 2. Nếu không khớp từ khóa: Phản hồi thông minh câu hỏi ngoài vùng
+    const globalCooldownMs = Math.max(1, this.replyCooldownSec || 2) * 1000;
+    if (now - (this.lastReplyTime || 0) < globalCooldownMs) {
+      return false;
+    }
+
     if (lower.length >= 1) {
       this.lastReplyTime = now;
 
-      try {
-        const aiResponse = await askGeminiLiveAi({
-          question: commentText,
-          username: userName,
-          role: this.assistantVoice?.gender === 'Female' ? 'assistant' : 'game',
-          context: this.gameType === 'battle' ? 'Đại Chiến PK Rồng Xanh vs Hổ Đỏ' : 'Đại Chiến Cắm Cờ Bản Đồ Tổ Quốc Việt Nam',
-          gameType: this.gameType
-        });
+      // Nếu bật Gemini AI:
+      if (this.useGeminiAI !== false) {
+        try {
+          const aiResponse = await askGeminiLiveAi({
+            question: commentText,
+            username: effectiveUser,
+            role: this.assistantVoice?.gender === 'Female' ? 'assistant' : 'game',
+            context: this.gameType === 'battle' ? 'Đại Chiến PK Rồng Xanh vs Hổ Đỏ' : 'Đại Chiến Cắm Cờ Bản Đồ Tổ Quốc Việt Nam',
+            gameType: this.gameType
+          });
 
-        if (aiResponse?.text) {
-          this.speak(aiResponse.text, this.assistantVoice || 'assistant', false);
-          return true;
-        }
-      } catch (geminiErr) {
-        const smartFallbacks = [
-          `Dạ em chào bạn ${userName}! Chúc bạn xem livestream vui vẻ và cùng thả tim để phủ kín cờ đỏ sao vàng nhé!`,
-          `Em cảm ơn bạn ${userName} đã tương tác rất nhiệt tình cùng phòng live hôm nay nha!`,
-          `Dạ chào bạn ${userName}! Bạn hãy chọn vùng đất quê hương yêu thích và tiếp sức cùng mọi người nhé!`
-        ];
-        const chosen = smartFallbacks[Math.floor(Math.random() * smartFallbacks.length)];
-        this.speak(chosen, 'assistant', false);
-        return true;
+          if (aiResponse?.text) {
+            this.speak(aiResponse.text, this.assistantVoice || 'assistant', false);
+            return true;
+          }
+        } catch (geminiErr) {}
       }
+
+      // Phản hồi thông minh có sẵn dự phòng (100% Free)
+      const smartFallbacks = [
+        `Dạ em chào bạn ${effectiveUser}! Chúc bạn xem livestream vui vẻ và cùng thả tim để phủ kín cờ đỏ sao vàng nhé!`,
+        `Em cảm ơn bạn ${effectiveUser} đã tương tác rất nhiệt tình cùng phòng live hôm nay nha!`,
+        `Dạ chào bạn ${effectiveUser}! Bạn hãy chọn vùng đất quê hương yêu thích và tiếp sức cùng mọi người nhé!`,
+        `Dạ cảm ơn bạn ${effectiveUser}! Mọi người cùng chung tay cắm cờ để rạng rỡ non sông Việt Nam nào!`
+      ];
+      const chosen = smartFallbacks[Math.floor(Math.random() * smartFallbacks.length)];
+      this.speak(chosen, 'assistant', false);
+      return true;
     }
 
     return false;

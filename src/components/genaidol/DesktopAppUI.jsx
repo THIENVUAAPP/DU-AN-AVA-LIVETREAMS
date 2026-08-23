@@ -209,6 +209,7 @@ export default function DesktopAppUI() {
   const lastAiCommentTime = useRef(0);
   const lastAiGreetingTime = useRef(0);
   const greetedUsernamesRef = useRef(new Set());
+  const thankedGiftUsersRef = useRef(new Map());
   const [isTemplateLibraryOpen, setIsTemplateLibraryOpen] = useState(false);
 
 
@@ -767,7 +768,6 @@ export default function DesktopAppUI() {
 
     socket.on('tiktok_chat', (data) => {
       if (!data) return;
-      if (!isMasterLiveRunningRef.current) return; // Không đọc bình luận nếu đang Tắt Tất Cả
       bandoAudio.unlock();
       const timeStr = new Date().toLocaleTimeString();
       const author = data.username || data.nickname || 'Khán giả';
@@ -776,18 +776,10 @@ export default function DesktopAppUI() {
       
       // Chuyển tiếp tới Game Bản Đồ Chữ S & AI Commentary (Tự động đọc & trả lời qua Global Speech Queue)
       bandoEngine.handleUserComment(text, author);
-      
-      // Chống spam: Giới hạn AI phản hồi bình luận Idol (cách nhau 10 giây)
-      const now = Date.now();
-      if (text.trim().length >= 2 && now - lastAiCommentTime.current > 10000) {
-        lastAiCommentTime.current = now;
-        handleLiveEventRef.current?.('COMMENT', { name: author, text });
-      }
     });
 
     socket.on('tiktok_gift', (data) => {
       if (!data) return;
-      if (!isMasterLiveRunningRef.current) return; // Bỏ qua xử lý quà nếu đang Tắt Tất Cả
       bandoAudio.unlock();
       const timeStr = new Date().toLocaleTimeString();
       const author = data.username || data.nickname || data.uniqueId || 'Khách Live';
@@ -810,8 +802,18 @@ export default function DesktopAppUI() {
       // 2. Chuyển tiếp Game Chiến Đấu nếu đang mở
       window.dispatchEvent(new CustomEvent('battle-trigger-gift', { detail: data }));
 
-      // 3. Kích hoạt phản hồi Idol Live
-      handleLiveEventRef.current?.('GIFT', { name: author, gift: giftName, count: giftCount });
+      // 3. Kích hoạt cảm ơn quà tặng: CHỈ CẢM ƠN 1 LẦN DUY NHẤT (tránh nói lặp đi lặp lại)
+      const now = Date.now();
+      const userKey = author.toLowerCase().trim();
+      const lastThanked = thankedGiftUsersRef.current.get(userKey) || 0;
+      if (now - lastThanked > 45000) {
+        thankedGiftUsersRef.current.set(userKey, now);
+        if (thankedGiftUsersRef.current.size > 500) {
+          const first = thankedGiftUsersRef.current.keys().next().value;
+          thankedGiftUsersRef.current.delete(first);
+        }
+        handleLiveEventRef.current?.('GIFT', { name: author, gift: giftName, count: giftCount });
+      }
     });
 
     socket.on('tiktok_like', (data) => {

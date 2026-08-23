@@ -94,14 +94,26 @@ Yêu cầu: Trả lời tự nhiên, thân thiện, ngắn gọn (1-2 câu ngắ
   return { text: fallbackText, audioUrl: null };
 }
 
-export async function askGeminiLiveAi({ question, username = 'Khán Giả', role = 'assistant', context = '', gameType = '' }) {
+export async function askGeminiLiveAi(questionOrParams, options = {}) {
+  if (typeof questionOrParams === 'string') {
+    return fetchAiReply({
+      kind: 'question',
+      question: questionOrParams,
+      username: options.username || 'Khán Giả',
+      role: options.role || 'assistant',
+      context: options.context || '',
+      gameType: options.gameType || '',
+      apiKey: options.apiKey || ''
+    });
+  }
   return fetchAiReply({
     kind: 'question',
-    username,
-    question,
-    role,
-    context,
-    gameType
+    username: questionOrParams?.username || 'Khán Giả',
+    question: questionOrParams?.question || '',
+    role: questionOrParams?.role || 'assistant',
+    context: questionOrParams?.context || '',
+    gameType: questionOrParams?.gameType || '',
+    apiKey: questionOrParams?.apiKey || ''
   });
 }
 
