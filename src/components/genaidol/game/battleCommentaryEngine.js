@@ -1,15 +1,15 @@
-import { ALL_SYSTEM_VOICES, ELEVENLABS_VOICES, getElevenLabsApiKey, previewVoiceAudio, stopVoiceAudio } from '../../../utils/voiceSyncService';
+import { ALL_SYSTEM_VOICES, ELEVENLABS_VOICES, getElevenLabsApiKey, previewVoiceAudio, stopVoiceAudio, isSpeechActive } from '../../../utils/voiceSyncService';
 
 export const ELEVENLABS_GAME_VOICES = ALL_SYSTEM_VOICES;
 
 const DEFAULT_COMMENTARY_SCRIPTS = [
   "Trận chiến đang diễn ra vô cùng nảy lửa! Hai bên đang dồn toàn lực giao tranh!",
-  "Phe Xanh đang dâng cao đội hình tấn công dồn dập! Anh em ơi cố lên!",
+  "Phe Xanh đang dâng cao đội hình tấn công dồn dập! Cả nhà ơi cố lên!",
   "Phe Đỏ phản công cực kỳ mãnh liệt! Đao kiếm chạm nhau tóe lửa hào quang!",
   "Khán giả hãy nhanh tay bình luận Xanh hoặc Đỏ để tiếp sức cho chiến binh của mình!",
   "Một pha giao tranh nghẹt thở! Ai sẽ là người trụ vững đến phút cuối cùng?",
   "Hãy thả tim và gửi quà để triệu hồi Chiến Thần Vạn Kiếm xoay chuyển cờ tàn!",
-  "Tướng quân hai bên đã sẵn sàng tung tuyệt kỹ! Mời tất cả anh em theo dõi!",
+  "Tướng quân hai bên đã sẵn sàng tung tuyệt kỹ! Mời tất cả các bạn cùng theo dõi!",
   "Không khí trên phiên live đang nóng hơn bao giờ hết! Mau gia nhập phe bạn yêu thích!"
 ];
 
@@ -121,7 +121,7 @@ class BattleCommentaryEngine {
 
     const intervalMs = Math.max(5, this.intervalSeconds) * 1000;
     this.timerId = setInterval(() => {
-      if (!this.isSpeaking && this.isEnabled && this.isGameActive) {
+      if (!this.isSpeaking && !isSpeechActive() && this.isEnabled && this.isGameActive) {
         this.speakRandomPrompt();
       }
     }, intervalMs);

@@ -1,12 +1,12 @@
-import { ALL_SYSTEM_VOICES, ELEVENLABS_VOICES, getElevenLabsApiKey, previewVoiceAudio, stopVoiceAudio } from '../../../utils/voiceSyncService';
+import { ALL_SYSTEM_VOICES, ELEVENLABS_VOICES, getElevenLabsApiKey, previewVoiceAudio, stopVoiceAudio, isSpeechActive } from '../../../utils/voiceSyncService';
 import { askGeminiLiveAi } from '../../../lib/geminiClient';
 
 export const DEFAULT_MAP_PROMPTS = [
   { id: 'p1', text: "Đại chiến cắm cờ Tổ Quốc đang diễn ra vô cùng sôi động! Mọi người mau thả tim và tặng quà để phủ đỏ bản đồ nào!", role: 'game', enabled: true },
   { id: 'p2', text: "Xin chào toàn thể khán giả đang theo dõi livestream! Hãy cùng chọn tỉnh thành quê hương bạn yêu thích để cắm cờ rạng rỡ nhé!", role: 'assistant', enabled: true },
   { id: 'p3', text: "Một pha tặng quà cực khủng! Vùng đất linh thiêng vừa được thắp sáng hào quang đỏ thắm!", role: 'game', enabled: true },
-  { id: 'p4', text: "Thông báo từ trợ lý hệ thống: Chỉ còn vài trăm ô cờ nữa là hoàn thành phủ kín bản đồ, anh em cùng chung tay tăng tốc!", role: 'assistant', enabled: true },
-  { id: 'p5', text: "Cảm ơn các đại gia đã tích cực ủng hộ phiên live! Chúc mọi người luôn gặp nhiều may mắn và bình an!", role: 'assistant', enabled: true },
+  { id: 'p4', text: "Thông báo từ trợ lý hệ thống: Chỉ còn vài trăm ô cờ nữa là hoàn thành phủ kín bản đồ, các bạn cùng chung tay tăng tốc nhé!", role: 'assistant', enabled: true },
+  { id: 'p5', text: "Em cảm ơn các bạn đã tích cực ủng hộ phiên live! Chúc mọi người luôn gặp nhiều may mắn và bình an!", role: 'assistant', enabled: true },
   { id: 'p6', text: "Tiếng trống trận vang lừng, từng ô cờ đỏ sao vàng vươn cao hùng tráng giữa biển trời quê hương!", role: 'game', enabled: true },
 ];
 
@@ -24,16 +24,16 @@ export const DEFAULT_KEYWORD_RULES = [
     id: 'k1',
     name: 'Chào hỏi & Gia nhập',
     keywords: ['chào', 'hi', 'hello', 'xin chào', 'chào shop', 'chào idol', 'chào blv', 'hé lô'],
-    replyText: 'Dạ em chào anh/chị [user] đã ghé thăm phiên livestream rực lửa hôm nay nhé! Chúc anh/chị xem live thật vui và nhận nhiều phần quà hấp dẫn ạ!',
+    replyText: 'Dạ em chào bạn [user] đã ghé thăm phiên livestream rực lửa hôm nay nhé! Chúc bạn xem live thật vui và nhận nhiều phần quà hấp dẫn ạ!',
     role: 'assistant',
-    cooldownSec: 4,
+    cooldownSec: 5,
     enabled: true
   },
   {
     id: 'k2',
     name: 'Hỏi luật chơi & Hướng dẫn',
     keywords: ['luật chơi', 'chơi sao', 'cách chơi', 'hướng dẫn', 'làm sao', 'chơi thế nào', 'giải thích'],
-    replyText: 'Chào [user]! Luật chơi vô cùng đơn giản: Bạn chỉ cần bình luận để chọn phe hoặc tỉnh thành, sau đó thả tim và tặng quà để cắm cờ hoặc triệu hồi tuyệt kỹ tướng quân nhé!',
+    replyText: 'Chào bạn [user]! Luật chơi vô cùng đơn giản: Bạn chỉ cần bình luận để chọn phe hoặc tỉnh thành, sau đó thả tim và tặng quà để cắm cờ hoặc triệu hồi tuyệt kỹ nhé!',
     role: 'assistant',
     cooldownSec: 6,
     enabled: true
@@ -42,9 +42,9 @@ export const DEFAULT_KEYWORD_RULES = [
     id: 'k3',
     name: 'Tặng quà & Triệu hồi sức mạnh',
     keywords: ['tặng quà', 'quà', 'gift', 'hoa hồng', 'tim', 'thả tim', 'ủng hộ', 'kim cương'],
-    replyText: 'Cảm ơn đại gia [user] đã gửi tặng món quà vô cùng quý giá! Toàn quân đang được tăng 1000 chiến lực và hào quang bừng sáng!',
+    replyText: 'Em cảm ơn bạn [user] đã gửi tặng món quà vô cùng quý giá! Toàn quân đang được tăng 1000 chiến lực và hào quang bừng sáng!',
     role: 'game',
-    cooldownSec: 3,
+    cooldownSec: 4,
     enabled: true
   },
   {
@@ -53,7 +53,7 @@ export const DEFAULT_KEYWORD_RULES = [
     keywords: ['1', 'xanh', 'phe xanh', 'rồng xanh', 'xanh cố lên', 'xanh win'],
     replyText: 'Chiến binh [user] vừa gia nhập và tiếp lửa cho Phe Xanh! Toàn quân Phe Xanh dâng cao đội hình xung phong!',
     role: 'game',
-    cooldownSec: 3,
+    cooldownSec: 4,
     enabled: true
   },
   {
@@ -62,14 +62,14 @@ export const DEFAULT_KEYWORD_RULES = [
     keywords: ['2', 'đỏ', 'phe đỏ', 'hổ đỏ', 'đỏ cố lên', 'đỏ win'],
     replyText: 'Chiến tướng [user] vừa gia nhập Phe Đỏ! Hổ Đỏ gầm vang chiến trường, sức mạnh đang bùng nổ vượt bậc!',
     role: 'game',
-    cooldownSec: 3,
+    cooldownSec: 4,
     enabled: true
   },
   {
     id: 'k6',
     name: 'Quốc kỳ & Tỉnh thành',
     keywords: ['hà nội', 'sài gòn', 'tp hcm', 'đà nẵng', 'cờ', 'quốc kỳ', 'việt nam', 'yêu việt nam'],
-    replyText: 'Vị trí cờ của [user] vừa được cắm rạng rỡ và uy nghiêm trên bản đồ Tổ Quốc! Hãy cùng phủ kín cờ đỏ sao vàng nhé!',
+    replyText: 'Vị trí cờ của bạn [user] vừa được cắm rạng rỡ và uy nghiêm trên bản đồ Tổ Quốc! Mọi người hãy cùng phủ kín cờ đỏ sao vàng nhé!',
     role: 'game',
     cooldownSec: 4,
     enabled: true
@@ -253,7 +253,7 @@ class GameVoiceEngine {
 
     const intervalMs = Math.max(5, this.intervalSeconds) * 1000;
     this.timerId = setInterval(() => {
-      if (!this.isSpeaking && this.isAutoEnabled && this.isGameActive) {
+      if (!this.isSpeaking && !isSpeechActive() && this.isAutoEnabled && this.isGameActive) {
         this.speakNextPrompt();
       }
     }, intervalMs);
@@ -494,9 +494,9 @@ class GameVoiceEngine {
         }
       } catch (geminiErr) {
         const smartFallbacks = [
-          `Chào ${userName}! Mọi người cùng thả tim và tặng quà để phủ kín cờ đỏ sao vàng nhé!`,
-          `Chào mừng ${userName} đến với phiên live rực lửa! Hãy cùng bình luận và tiếp sức cho vùng đất quê hương nào!`,
-          `Cảm ơn ${userName} đã tương tác rất nhiệt tình! Chúc bạn có những phút giây giải trí thật bùng nổ cùng đại chiến cắm cờ!`
+          `Dạ em chào bạn ${userName}! Chúc bạn xem livestream vui vẻ và cùng thả tim để phủ kín cờ đỏ sao vàng nhé!`,
+          `Em cảm ơn bạn ${userName} đã tương tác rất nhiệt tình cùng phòng live hôm nay nha!`,
+          `Dạ chào bạn ${userName}! Bạn hãy chọn vùng đất quê hương yêu thích và tiếp sức cùng mọi người nhé!`
         ];
         const chosen = smartFallbacks[Math.floor(Math.random() * smartFallbacks.length)];
         this.speak(chosen, 'assistant', false);

@@ -256,6 +256,24 @@ export function stopVoiceAudio() {
     window._activeVoiceSet.clear();
   }
   activeUtterance = null;
+  isGlobalSpeaking = false;
+}
+
+// ==================== GLOBAL SPEECH QUEUE & MUTUAL EXCLUSION LOCK ====================
+// Tuyệt đối không cho 2 giọng nói / bình luận đọc cùng lúc. Mỗi câu đọc xong sẽ nghỉ 1.2s trước khi đọc câu tiếp theo.
+let isGlobalSpeaking = false;
+const globalSpeechQueue = [];
+let isProcessingGlobalQueue = false;
+
+export function isSpeechActive() {
+  return isGlobalSpeaking || globalSpeechQueue.length > 0;
+}
+
+export function clearGlobalSpeechQueue() {
+  globalSpeechQueue.length = 0;
+  isProcessingGlobalQueue = false;
+  isGlobalSpeaking = false;
+  stopVoiceAudio();
 }
 
 /**
@@ -295,24 +313,70 @@ function playFallbackHarmonicChime(gender = 'Female') {
 
 /**
  * Phát Voice AI Âm Thanh Cho Mọi Mục Đích (Preview, Idol nói, Game BLV, Trợ lý)
- * Zero-Fail Multi-Tier Engine:
- * 1. ElevenLabs Direct (Khi người dùng nhập ElevenLabs API Key)
- * 2. Instant Client Web Speech API (Được kích hoạt trực tiếp không bị mất User-Activation)
- * 3. Web Audio Synthesizer Fallback
+ * Đồng bộ qua Global Queue để không bao giờ bị nói đè, nói chồng chéo.
  */
-export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) {
+export async function previewVoiceAudio(voice, sampleText = null, onEnd = null, priority = false) {
   if (typeof window === 'undefined') {
     if (onEnd) onEnd();
     return;
   }
-
-  stopVoiceAudio();
 
   // Kiểm tra nếu kênh giọng này bị tắt hoặc âm lượng về 0
   if (voice?.enabled === false || voice?.isMuted === true || (voice?.volume !== undefined && voice.volume <= 0.001)) {
     if (onEnd) onEnd();
     return true;
   }
+
+  if (priority) {
+    clearGlobalSpeechQueue();
+    return executeSingleSpeech(voice, sampleText, onEnd);
+  }
+
+  return new Promise((resolve) => {
+    // Giới hạn hàng đợi tối đa 10 câu để tránh tràn bộ nhớ khi livestream quá đông
+    if (globalSpeechQueue.length > 10) {
+      globalSpeechQueue.shift();
+    }
+
+    globalSpeechQueue.push({
+      voice,
+      sampleText,
+      onEnd,
+      resolve
+    });
+
+    processGlobalSpeechQueue();
+  });
+}
+
+async function processGlobalSpeechQueue() {
+  if (isProcessingGlobalQueue) return;
+  isProcessingGlobalQueue = true;
+
+  while (globalSpeechQueue.length > 0) {
+    const item = globalSpeechQueue.shift();
+    if (!item) continue;
+
+    try {
+      isGlobalSpeaking = true;
+      await executeSingleSpeech(item.voice, item.sampleText, item.onEnd);
+      if (item.resolve) item.resolve(true);
+    } catch (err) {
+      console.warn('[voiceSyncService] Queue execution error:', err);
+      if (item.resolve) item.resolve(false);
+    } finally {
+      isGlobalSpeaking = false;
+    }
+
+    // Khoảng cách thời gian nghỉ giữa 2 lần đọc / trả lời (1.2 giây) để không bị chồng chéo
+    await new Promise((r) => setTimeout(r, 1200));
+  }
+
+  isProcessingGlobalQueue = false;
+}
+
+async function executeSingleSpeech(voice, sampleText = null, onEnd = null) {
+  stopVoiceAudio();
 
   const rawLang = voice?.lang || (
     voice?.id?.includes('_us_') || voice?.id?.includes('_en_') ? 'en-US' :
@@ -340,8 +404,8 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null) 
 
   const defaultSamples = {
     vi: (voice?.gender === 'Male' || voice?.gender === 'Nam') 
-      ? 'Chào mừng tất cả anh em chiến binh đến với livestream! Trận chiến đang cực kỳ sôi động, hãy cắm cờ Tổ Quốc nào!' 
-      : 'Dạ em chào anh chị đang theo dõi live nha! Em là Trợ Lý AI của phiên live, chúc mọi người xem live thật vui ạ!',
+      ? 'Chào mừng tất cả các bạn đến với livestream! Trận chiến đang cực kỳ sôi động, hãy cùng cắm cờ Tổ Quốc nhé!' 
+      : 'Dạ em chào bạn đang theo dõi live nha! Em là Trợ Lý AI của phiên live, chúc bạn xem live thật vui ạ!',
     en: (voice?.gender === 'Male' || voice?.gender === 'Nam') 
       ? 'Welcome to our live broadcast! Get ready for an epic interactive battle!' 
       : 'Hello everyone! Thank you for joining our livestream today! Have a wonderful time!',

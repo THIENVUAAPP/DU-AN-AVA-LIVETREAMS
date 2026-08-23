@@ -2,7 +2,7 @@ import bandoAudio from './bandoAudioEngine';
 import { mapVoiceEngine } from './gameVoiceEngine';
 import { WORLD_COUNTRIES, COUNTRIES_BY_ID, CONTINENTS } from './worldCountriesData';
 import { BannerFlagCellsEngine } from './bannerFlagCellsEngine';
-import { saveGiftConfig, REGIONAL_FLAG_GIFTS, DEFAULT_STANDARD_GIFTS } from '../../../utils/giftSyncService';
+import { getGiftConfig, saveGiftConfig, REGIONAL_FLAG_GIFTS, DEFAULT_STANDARD_GIFTS } from '../../../utils/giftSyncService';
 import defaultVietnamMask from '../../../data/vietnamMask.json';
 import defaultProvincesData from '../../../data/provinces.json';
 
@@ -1080,7 +1080,15 @@ class BanDoGameEngine {
     // Luôn kích hoạt audio context ngay khi có quà tặng
     bandoAudio.unlock();
 
-    const allKnownGifts = [...(this.state.gifts || DEFAULT_MAP_GIFTS), ...REGIONAL_FLAG_GIFTS, ...DEFAULT_STANDARD_GIFTS];
+    let savedGifts = [];
+    try {
+      const savedCfg = getGiftConfig('map');
+      if (savedCfg) {
+        savedGifts = [...(savedCfg.regionalGifts || []), ...(savedCfg.gifts || [])];
+      }
+    } catch (e) {}
+
+    const allKnownGifts = [...savedGifts, ...(this.state.gifts || DEFAULT_MAP_GIFTS), ...REGIONAL_FLAG_GIFTS, ...DEFAULT_STANDARD_GIFTS];
     
     // Tìm quà theo id chính xác, hoặc theo tên tiếng Việt/Anh, hoặc theo token/xu
     const targetKey = String(giftId || '').toLowerCase().trim();

@@ -773,14 +773,12 @@ export default function DesktopAppUI() {
       const text = data.comment || '';
       setTiktokLogs(prev => [`[${timeStr}] 💬 ${author}: ${text}`, ...prev.slice(0, 49)]);
       
-      // Chuyển tiếp tới Game Bản Đồ Chữ S & AI Commentary
+      // Chuyển tiếp tới Game Bản Đồ Chữ S & AI Commentary (Tự động đọc & trả lời qua Global Speech Queue)
       bandoEngine.handleUserComment(text, author);
-      mapVoiceEngine.handleUserComment(text, author);
-      battleVoiceEngine.handleUserComment(text, author);
       
-      // Chống spam: Giới hạn AI phản hồi bình luận (chỉ đọc nội dung có ý nghĩa và cách nhau 8 giây)
+      // Chống spam: Giới hạn AI phản hồi bình luận Idol (cách nhau 10 giây)
       const now = Date.now();
-      if (text.trim().length >= 2 && now - lastAiCommentTime.current > 8000) {
+      if (text.trim().length >= 2 && now - lastAiCommentTime.current > 10000) {
         lastAiCommentTime.current = now;
         handleLiveEventRef.current?.('COMMENT', { name: author, text });
       }

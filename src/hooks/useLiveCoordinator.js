@@ -108,30 +108,30 @@ export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack 
       let shouldAction = 'none';
 
       if (type === 'VIEWER_JOIN') {
-        fallbackReply = `Dạ em chào anh/chị ${payload?.name || 'bạn'} mới vào xem live nha! Chúc bạn có buổi tối xem live vui vẻ ạ!`;
+        fallbackReply = `Dạ em chào bạn ${payload?.name || ''} mới vào xem live nha! Chúc bạn xem live vui vẻ ạ!`;
       } else if (type === 'GIFT') {
-        fallbackReply = `Ôi em cảm ơn ${payload?.name || 'bạn'} đã tặng ${payload?.gift || 'quà'} cho em nha! Yêu bạn nhiều lắm luôn ạ!`;
+        fallbackReply = `Ôi em cảm ơn bạn ${payload?.name || ''} đã tặng ${payload?.gift || 'quà'} cho em nha! Yêu bạn nhiều lắm luôn ạ!`;
         shouldAction = 'gift_reaction';
       } else if (type === 'COMMENT') {
         const text = payload?.text || '';
         if (text.toLowerCase().includes('giá') || text.toLowerCase().includes('mua') || text.toLowerCase().includes('size') || text.toLowerCase().includes('hàng')) {
-          fallbackReply = `Dạ ${payload?.name || 'bạn'} ơi, mẫu này đang có giá cực ưu đãi trong giỏ hàng góc trái màn hình, bạn bấm vào xem chi tiết ngay nhé!`;
+          fallbackReply = `Dạ bạn ${payload?.name || ''} ơi, mẫu này đang có giá cực ưu đãi trong giỏ hàng góc trái màn hình, bạn bấm vào xem chi tiết ngay nhé!`;
         } else if (text.toLowerCase().includes('xinh') || text.toLowerCase().includes('đẹp') || text.toLowerCase().includes('chào')) {
-          fallbackReply = `Dạ em cảm ơn ${payload?.name || 'bạn'} nhiều nha! Bạn comment làm em có thêm bao nhiêu năng lượng luôn á!`;
+          fallbackReply = `Dạ em cảm ơn bạn ${payload?.name || ''} nhiều nha! Bạn comment làm em có thêm bao nhiêu năng lượng luôn á!`;
         } else {
-          fallbackReply = `Dạ em chào ${payload?.name || 'bạn'}, em đã thấy bình luận của bạn rồi nha!`;
+          fallbackReply = `Dạ em chào bạn ${payload?.name || ''}, em đã thấy bình luận của bạn rồi nha!`;
         }
       } else if (type === 'PURCHASE') {
-        fallbackReply = `Chúc mừng và cảm ơn ${payload?.name || 'quý khách'} đã chốt đơn thành công ${payload?.item || 'sản phẩm'} nha! Đơn hàng sẽ được đóng gói gửi đi sớm nhất ạ!`;
+        fallbackReply = `Chúc mừng và cảm ơn bạn ${payload?.name || ''} đã chốt đơn thành công ${payload?.item || 'sản phẩm'} nha! Đơn hàng sẽ được đóng gói gửi đi sớm nhất ạ!`;
         shouldAction = 'gift_reaction';
       } else if (type === 'LIKE') {
         fallbackReply = `Em cảm ơn mọi người đã thả tim nhiệt tình cho em nha! Cả nhà bấm liên tục vào màn hình giúp em đạt mục tiêu hôm nay nhé!`;
       } else if (type === 'FOLLOW') {
-        fallbackReply = `Dạ em cảm ơn ${payload?.name || 'bạn'} vừa bấm theo dõi kênh của em nha! Nhớ bật thông báo để đón xem các phiên live tiếp theo nhé!`;
+        fallbackReply = `Dạ em cảm ơn bạn ${payload?.name || ''} vừa bấm theo dõi kênh của em nha! Nhớ bật thông báo để đón xem các phiên live tiếp theo nhé!`;
       } else if (type === 'SHARE') {
-        fallbackReply = `Cảm ơn ${payload?.name || 'bạn'} đã chia sẻ phiên livestream này đến bạn bè nha!`;
+        fallbackReply = `Em cảm ơn bạn ${payload?.name || ''} đã chia sẻ phiên livestream này đến bạn bè nha!`;
       } else if (type === 'ASSISTANT_PROMPT') {
-        fallbackReply = payload?.prompt || 'Dạ vâng, em cảm ơn tất cả các anh chị đang theo dõi phiên live ạ!';
+        fallbackReply = payload?.prompt || 'Dạ vâng, em cảm ơn tất cả các bạn đang theo dõi phiên live ạ!';
       }
 
       if (fallbackReply) {
