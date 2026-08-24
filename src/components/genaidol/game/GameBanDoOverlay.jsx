@@ -103,11 +103,11 @@ export default function GameBanDoOverlay() {
         console.warn('[BandoOverlay] ❌ Lỗi kết nối socket:', err.message);
       });
 
-      // ✅ Nhận trực tiếp sự kiện quà tặng TikTok
-      socket.on('tiktok_gift', handleGift);
+      // ✅ Nhận trực tiếp sự kiện quà tặng TikTok (ĐÃ TẮT ĐỂ TRÁNH TRÙNG LẶP VỚI DesktopAppUI)
+      // socket.on('tiktok_gift', handleGift);
 
-      // ✅ Nhận trực tiếp sự kiện comment TikTok
-      socket.on('tiktok_chat', handleComment);
+      // ✅ Nhận trực tiếp sự kiện comment TikTok (ĐÃ TẮT ĐỂ TRÁNH TRÙNG LẶP VỚI DesktopAppUI)
+      // socket.on('tiktok_chat', handleComment);
 
       socket.on('tiktok_connected', (data) => {
         console.log('[BandoOverlay] 🎉 TikTok kết nối thành công:', data?.username, '| RoomID:', data?.roomId);
