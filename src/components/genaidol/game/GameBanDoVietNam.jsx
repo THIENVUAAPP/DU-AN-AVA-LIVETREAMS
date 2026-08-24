@@ -867,6 +867,18 @@ export default function GameBanDoVietNam({
       bandoEngine.triggerBossEvent();
     } else if (type === 'MISSION') {
       bandoEngine.triggerMission();
+    } else if (type === 'GIFT') {
+      if (externalLiveEvent.data) {
+        bandoEngine.processGift(externalLiveEvent.data);
+      }
+    } else if (type === 'COMMENT') {
+      if (externalLiveEvent.data) {
+        bandoEngine.processComment(externalLiveEvent.data.text || externalLiveEvent.data.comment, {
+          id: externalLiveEvent.data.userId,
+          username: externalLiveEvent.data.username || externalLiveEvent.data.nickname,
+          avatar: externalLiveEvent.data.avatar
+        });
+      }
     }
   }, [externalLiveEvent]);
 

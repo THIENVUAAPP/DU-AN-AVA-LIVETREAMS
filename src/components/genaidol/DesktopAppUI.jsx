@@ -796,7 +796,8 @@ export default function DesktopAppUI() {
         diamondCount: diamondCount,
         userId: data.userId || data.uniqueId || 'tiktok_viewer',
         username: author,
-        avatar: data.profilePictureUrl || ''
+        avatar: data.profilePictureUrl || '',
+        msgId: data.msgId
       });
 
       // 2. Chuyển tiếp Game Chiến Đấu nếu đang mở

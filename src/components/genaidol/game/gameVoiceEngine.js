@@ -443,13 +443,13 @@ class GameVoiceEngine {
         const userRuleKey = `${effectiveUser.toLowerCase().trim()}_${rule.id}`;
         const lastUserTime = this.lastUserKeywordTriggerTimes.get(userRuleKey) || 0;
         if (now - lastUserTime < 25000) {
-          continue; // Người này vừa được trả lời câu này rồi, không nhắc lại
+          return true; // Người này vừa được trả lời câu này rồi, không nhắc lại (CHẶN FALLTHROUGH)
         }
 
         const lastTime = this.lastKeywordTriggerTimes.get(rule.id) || 0;
         const cooldownMs = (rule.cooldownSec || 2) * 1000;
         if (now - lastTime < cooldownMs) {
-          continue; // Cooldown protection toàn cục cho quy tắc này
+          return true; // Cooldown protection toàn cục cho quy tắc này (CHẶN FALLTHROUGH)
         }
 
         this.lastUserKeywordTriggerTimes.set(userRuleKey, now);

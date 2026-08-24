@@ -1095,15 +1095,17 @@ class BanDoGameEngine {
     const targetKey = String(giftId || '').toLowerCase().trim();
     const targetName = String(giftNameInput || '').toLowerCase().trim();
 
-    // Khử trùng lặp sự kiện quà tặng (Deduplication) - Tuyệt đối không cắm ô hay thông báo lặp
-    const giftSig = `${user.id || user.username}_${targetKey || targetName}_${count}_${diamondCountInput}`;
+    const msgId = String(typeof giftId === 'object' ? giftId.msgId : '') || `${user.id || user.username}_${targetKey || targetName}_${count}_${diamondCountInput}`;
+    
+    // Khử trùng lặp sự kiện quà tặng (Deduplication) bằng MsgID duy nhất từ TikTok + fallbacks
+    const giftSig = `gift_${msgId}_${count}`;
     const lastGiftTime = this.processedGiftSignatures?.get(giftSig) || 0;
-    if (now - lastGiftTime < 1500) {
-      return; // Bỏ qua sự kiện trùng lặp trong vòng 1.5 giây
+    if (now - lastGiftTime < 2500) {
+      return; // Bỏ qua sự kiện trùng lặp trong vòng 2.5 giây
     }
     if (!this.processedGiftSignatures) this.processedGiftSignatures = new Map();
     this.processedGiftSignatures.set(giftSig, now);
-    if (this.processedGiftSignatures.size > 300) {
+    if (this.processedGiftSignatures.size > 500) {
       const first = this.processedGiftSignatures.keys().next().value;
       this.processedGiftSignatures.delete(first);
     }

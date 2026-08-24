@@ -664,7 +664,9 @@ io.on('connection', (socket) => {
           userId, uniqueId, nickname, username: nickname || uniqueId || 'Khán Giả',
           giftId, giftName, diamondCount, count, repeatCount: count,
           totalRepeatCount: data.repeatCount || count,
-          profilePictureUrl: avatar, avatar
+          profilePictureUrl: avatar, avatar,
+          msgId: data.msgId || `${Date.now()}_${Math.random()}`,
+          timestamp: data.timestamp || Date.now()
         };
 
         console.log(`[TikTok Gift] 🎁 ${nickname} tặng: ${giftName} x${count} (${diamondCount} xu)`);
