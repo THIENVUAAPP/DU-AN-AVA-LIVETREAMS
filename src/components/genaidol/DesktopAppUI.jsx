@@ -723,10 +723,12 @@ export default function DesktopAppUI() {
         backendUrl = window.location.protocol + '//' + window.location.hostname + ':3001';
       } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         backendUrl = 'http://localhost:3001';
+      } else if (window.location.protocol === 'file:') {
+        backendUrl = 'http://localhost:3001'; // Fallback for double-clicking index.html
       }
     }
     
-    const socket = io(backendUrl || window.location.origin, {
+    const socket = io(backendUrl || (window.location.origin !== 'file://' ? window.location.origin : 'http://localhost:3001'), {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000
@@ -1023,17 +1025,22 @@ export default function DesktopAppUI() {
       setTiktokLogs(prev => [`[${timeStr}] 🛑 Phiên Live TikTok đã tạm dừng`, ...prev.slice(0, 49)]);
       return;
     }
-    
+
+    // 🔒 Chặn double-click: Nếu đang trong quá trình kết nối thì bỏ qua
+    if (isConnecting) {
+      console.log('[UI] ⚠️ Đang kết nối, bỏ qua click trùng lặp.');
+      return;
+    }
+
     bandoAudio.unlock();
     const cleanId = extractTikTokUsername(tiktokId);
     const cleanVideoId = extractTikTokUsername(videoTiktokId);
-    
+
     if (!cleanId && !cleanVideoId) {
       setToast({
         type: 'error',
-        message: 'LỖI KẾT NỐI: Anh phải nhập ID Kênh Lấy Bình Luận hoặc Video!'
+        message: 'LỖI KẾT NỐI: Bạn phải nhập ID Kênh Lấy Bình Luận hoặc Video!'
       });
-      setIsConnecting(false);
       if (isMasterLiveRunning) setIsMasterLiveRunning(false);
       return;
     }
@@ -1059,7 +1066,7 @@ export default function DesktopAppUI() {
     }, 20000);
 
     const onFinish = () => clearTimeout(safetyTimer);
-    if (socketRef.current) {
+    if (socketRef.current && socketRef.current.connected) {
       socketRef.current.once('tiktok_connected', onFinish);
       socketRef.current.once('tiktok_error', onFinish);
       socketRef.current.emit('connect_tiktok', { chatId: cleanId, videoId: cleanVideoId });
@@ -1068,7 +1075,7 @@ export default function DesktopAppUI() {
       setIsConnecting(false);
       setToast({
         type: 'error',
-        message: '⚠️ Chưa kết nối tới Server Backend Live Hub! Vui lòng khởi động Server (npm run dev).'
+        message: '⚠️ Chưa kết nối tới Server Backend (cổng 3001). Bạn đã chạy node backend/server.cjs chưa?'
       });
     }
   };

@@ -121,6 +121,7 @@ let globalFlvUrl = null;
 let autoReconnectTimer = null;
 let isSimulationMode = false;
 let simulationTimer = null;
+let isConnectingTikTok = false; // 🔒 Connection Lock — Ngăn race condition
 
 let currentMasterLiveState = {
   stage: 'bando',
@@ -334,6 +335,14 @@ io.on('connection', (socket) => {
 
   // ---- Kết nối TikTok Live ----
   socket.on('connect_tiktok', async (payload, options = {}) => {
+    // 🔒 CONNECTION LOCK — Chỉ cho phép 1 kết nối chạy tại một thời điểm
+    if (isConnectingTikTok) {
+      console.log('[TikTok Live] ⚠️ Đang có kết nối đang xử lý, bỏ qua yêu cầu trùng lặp.');
+      socket.emit('tiktok_status', { connected: false, username: '', connecting: true });
+      return;
+    }
+    isConnectingTikTok = true;
+
     const cleanTikTokUsername = (str) => {
       if (!str || typeof str !== 'string') return '';
       let clean = str.trim();
@@ -349,53 +358,63 @@ io.on('connection', (socket) => {
       return clean;
     };
 
-    if (typeof payload === 'string') {
-      targetUser = cleanTikTokUsername(payload);
-    } else if (payload && typeof payload === 'object') {
-      targetUser = cleanTikTokUsername(payload.chatId);
-      targetVideoUser = cleanTikTokUsername(payload.videoId);
-    }
-
-    // Nếu người dùng nhập trùng 1 kênh cho cả 2 ô, thì gom về 1 kết nối duy nhất để tránh bị kick
-    if (targetUser && targetUser === targetVideoUser) {
-      targetVideoUser = '';
-    }
-
-    if (!targetUser && !targetVideoUser) return;
-
-    // Ngắt kết nối cũ
-    if (tiktokConnection) {
-      try { await tiktokConnection.disconnect(); } catch (e) {}
-      tiktokConnection = null;
-    }
-    if (tiktokVideoConnection) {
-      try { await tiktokVideoConnection.disconnect(); } catch (e) {}
-      tiktokVideoConnection = null;
-    }
-    if (autoReconnectTimer) clearTimeout(autoReconnectTimer);
-
-    if (!TikTokConnector) {
-      try {
-        const legacy = await import('tiktok-live-connector/legacy');
-        TikTokConnector = legacy.WebcastPushConnection || legacy.default?.WebcastPushConnection;
-      } catch (e) {
-        const mod = await import('tiktok-live-connector');
-        TikTokConnector = mod.TikTokLiveConnection || mod.WebcastPushConnection;
+    try {
+      if (typeof payload === 'string') {
+        targetUser = cleanTikTokUsername(payload);
+      } else if (payload && typeof payload === 'object') {
+        targetUser = cleanTikTokUsername(payload.chatId);
+        targetVideoUser = cleanTikTokUsername(payload.videoId);
       }
-    }
 
-    currentUsername = targetUser;
-    currentVideoUsername = targetVideoUser;
-    
-    if (targetUser) console.log(`[TikTok Live] 🚀 Đang kết nối tới kênh TikTok Chat: ${targetUser}`);
-    if (targetVideoUser) console.log(`[TikTok Live] 🚀 Đang kết nối tới kênh TikTok Video: ${targetVideoUser}`);
-    
-    // Gửi tên hiển thị là targetUser, nếu không có thì là targetVideoUser
-    const displayUser = targetUser || targetVideoUser;
-    io.emit('tiktok_status', { connected: false, username: displayUser, connecting: true });
+      // Nếu người dùng nhập trùng 1 kênh cho cả 2 ô, thì gom về 1 kết nối duy nhất để tránh bị kick
+      if (targetUser && targetUser === targetVideoUser) {
+        targetVideoUser = '';
+      }
 
-    // Lấy sessionId từ options, .env, hoặc localStorage gửi lên
-    const sessionId = options.sessionId || process.env.TIKTOK_SESSION_ID || undefined;
+      if (!targetUser && !targetVideoUser) {
+        isConnectingTikTok = false;
+        return;
+      }
+
+      // Ngắt kết nối cũ
+      if (tiktokConnection) {
+        try { await tiktokConnection.disconnect(); } catch (e) {}
+        tiktokConnection = null;
+      }
+      if (tiktokVideoConnection) {
+        try { await tiktokVideoConnection.disconnect(); } catch (e) {}
+        tiktokVideoConnection = null;
+      }
+      if (autoReconnectTimer) { clearTimeout(autoReconnectTimer); clearInterval(autoReconnectTimer); autoReconnectTimer = null; }
+
+      if (!TikTokConnector) {
+        try {
+          const legacy = await import('tiktok-live-connector/legacy');
+          TikTokConnector = legacy.WebcastPushConnection || legacy.default?.WebcastPushConnection;
+        } catch (e) {
+          const mod = await import('tiktok-live-connector');
+          TikTokConnector = mod.TikTokLiveConnection || mod.WebcastPushConnection;
+        }
+      }
+
+      if (!TikTokConnector) {
+        io.emit('tiktok_error', 'Không tải được module TikTok Connector! Hãy chạy npm install trong thư mục dự án.');
+        isConnectingTikTok = false;
+        return;
+      }
+
+      currentUsername = targetUser;
+      currentVideoUsername = targetVideoUser;
+
+      if (targetUser) console.log(`[TikTok Live] 🚀 Đang kết nối tới kênh TikTok Chat: ${targetUser}`);
+      if (targetVideoUser) console.log(`[TikTok Live] 🚀 Đang kết nối tới kênh TikTok Video: ${targetVideoUser}`);
+
+      // Gửi tên hiển thị là targetUser, nếu không có thì là targetVideoUser
+      const displayUser = targetUser || targetVideoUser;
+      io.emit('tiktok_status', { connected: false, username: displayUser, connecting: true });
+
+      // Lấy sessionId từ options, .env, hoặc localStorage gửi lên
+      const sessionId = options.sessionId || process.env.TIKTOK_SESSION_ID || undefined;
 
     const extractFlv = (rootObj) => {
       if (!rootObj) return { flv: null, hls: null, bestUrl: null };
@@ -715,6 +734,15 @@ io.on('connection', (socket) => {
     tiktokConnection.on('error', (err) => {
       console.error(`[TikTok Live] Error:`, err?.message || err);
     });
+
+    } catch (unexpectedErr) {
+      console.error('[TikTok Live] ❌ Lỗi ngoài dự kiến trong connect_tiktok:', unexpectedErr);
+      io.emit('tiktok_error', `Lỗi server: ${unexpectedErr.message || unexpectedErr}`);
+      io.emit('tiktok_status', { connected: false, username: targetUser || targetVideoUser });
+    } finally {
+      // 🔓 Luôn giải phóng khóa sau khi hoàn tất (dù thành công hay thất bại)
+      isConnectingTikTok = false;
+    }
   });
 
   // ---- Simulation Mode Control ----
