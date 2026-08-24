@@ -1044,7 +1044,7 @@ export default function DesktopAppUI() {
       localStorage.setItem('aidol_video_tiktok_id', cleanVideoId);
     } catch (e) {}
 
-    // 🛡️ Safety Timer: Tự động hủy trạng thái chờ sau 10s nếu máy chủ không phản hồi
+    // 🛡️ Safety Timer: Tự động hủy trạng thái chờ sau 20s nếu máy chủ không phản hồi (để server có đủ 15s timeout gốc kết nối TikTok)
     const safetyTimer = setTimeout(() => {
       setIsConnecting(prev => {
         if (prev) {
@@ -1056,7 +1056,7 @@ export default function DesktopAppUI() {
         }
         return false;
       });
-    }, 10000);
+    }, 20000);
 
     const onFinish = () => clearTimeout(safetyTimer);
     if (socketRef.current) {
