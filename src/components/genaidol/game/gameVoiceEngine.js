@@ -409,6 +409,21 @@ class GameVoiceEngine {
     const now = Date.now();
     const effectiveUser = userName || 'bạn';
 
+    // Xử lý tuyệt đối không đọc lại bình luận trùng lặp từ cùng 1 user (Chặn spam)
+    if (!this.lastUserExactComments) this.lastUserExactComments = new Map();
+    const exactCommentKey = `${effectiveUser.toLowerCase().trim()}_${lower}`;
+    const lastTimeExactComment = this.lastUserExactComments.get(exactCommentKey) || 0;
+    if (now - lastTimeExactComment < 120000) {
+      // Bỏ qua nếu cùng 1 user chat y hệt câu cũ trong vòng 2 phút
+      return false; 
+    }
+    this.lastUserExactComments.set(exactCommentKey, now);
+
+    // Xóa bộ đệm cũ để tránh rò rỉ bộ nhớ
+    if (this.lastUserExactComments.size > 200) {
+      this.lastUserExactComments.clear();
+    }
+
     // 1. Khớp từ khóa cố định trong danh sách cài sẵn (Ưu tiên số 1)
     const activeRules = (this.keywordRules || []).filter(r => r && r.enabled !== false);
     for (const rule of activeRules) {
