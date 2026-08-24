@@ -1366,28 +1366,6 @@ export default function GameBanDoVietNam({
     scene.add(focalGroup);
     state.focalGroup = focalGroup;
 
-    const focalPoleMesh = new THREE.Mesh(poleGeo, poleMat);
-    focalPoleMesh.position.set(0, 3.6, 0);
-    focalGroup.add(focalPoleMesh);
-
-    const focalSphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
-    focalSphereMesh.position.set(0, 7.2, 0);
-    focalGroup.add(focalSphereMesh);
-
-    const focalFlagPlaneMesh = new THREE.Mesh(flagGeo, flagPlaneMat);
-    focalFlagPlaneMesh.position.set(2.1, 5.4, 0);
-    focalGroup.add(focalFlagPlaneMesh);
-    state.flagPlaneMesh = focalFlagPlaneMesh;
-
-    const initialBadgeTex = getOrCreateDonorBadgeTexture('Chiến Binh Áo Đỏ');
-    const badgeMat = new THREE.SpriteMaterial({ map: initialBadgeTex, depthTest: false, transparent: true });
-    const badgeSprite = new THREE.Sprite(badgeMat);
-    badgeSprite.position.set(0, 9.8, 0);
-    badgeSprite.scale.set(5.5, 1.3, 1.0);
-    focalGroup.add(badgeSprite);
-    state.badgeSprite = badgeSprite;
-    state.badgeTexture = initialBadgeTex;
-
     // Positioning
     const cols = maskData?.gridCols || 300;
     const rows = maskData?.gridRows || 389;
@@ -2090,15 +2068,6 @@ export default function GameBanDoVietNam({
         lastFocalKeyRef.current = focalKey;
         if (state.focalGroup) {
           state.focalGroup.position.set(ft.wx, 0, ft.wz);
-          state.focalGroup.visible = true;
-          
-          if (state.badgeSprite) {
-            const badgeTex = getOrCreateDonorBadgeTexture(ft.username || ft.user || 'Khán Giả');
-            if (badgeTex) {
-              state.badgeSprite.material.map = badgeTex;
-              state.badgeSprite.material.needsUpdate = true;
-            }
-          }
         }
 
         // Chu kỳ Zoom 3 Cấp: Zoom Cận Cảnh (rõ lá cờ quốc kỳ 3D + Bảng tên ID) -> Zoom Vùng -> Zoom Toàn Cảnh

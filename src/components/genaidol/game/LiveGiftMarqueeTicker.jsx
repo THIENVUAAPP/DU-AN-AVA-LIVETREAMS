@@ -326,30 +326,33 @@ export default function LiveGiftMarqueeTicker({
           />
           <div className="pt-2"></div>
 
-          {/* KHỐI 1: CẮM CỜ 3 MIỀN BẮC - TRUNG - NAM HOẶC BUFF 3 MIỀN (Read-only Showcase) */}
-          <div className="grid grid-cols-3 gap-0.5 mb-1 select-none">
+          {/* KHỐI 1: CẮM CỜ 3 MIỀN BẮC - TRUNG - NAM HOẶC BUFF 3 MIỀN (Thẻ Vùng Miền Sắc Nét) */}
+          <div className="grid grid-cols-3 gap-1 mb-1 select-none">
             <div 
-              className="py-1 px-0.5 rounded-md bg-red-950/70 border border-red-500/50 text-center"
-              title={mode === 'battle' ? 'Tăng kích thước x3' : 'Cắm cờ Miền Bắc (+5 ô)'}
+              className="py-1 px-0.5 rounded-lg bg-gradient-to-b from-red-950/90 to-red-900/60 border border-red-500/70 text-center shadow-sm hover:scale-105 transition-transform"
+              title={mode === 'battle' ? 'Tăng kích thước x3 (Miền Bắc)' : 'Cắm cờ Miền Bắc (+5 ô)'}
             >
-              <div className="text-[11px] leading-none mb-0.5">🫰</div>
-              <div className="text-[6.5px] text-amber-300 font-mono font-black">{mode === 'battle' ? 'x3' : '+5'}</div>
+              <div className="text-[7px] font-black text-red-300 uppercase tracking-tighter mb-0.5">M. Bắc</div>
+              <div className="text-[13px] leading-none mb-0.5 drop-shadow">🫰</div>
+              <div className="text-[7.5px] text-yellow-300 font-mono font-black">{mode === 'battle' ? 'x3' : '+5'}</div>
             </div>
 
             <div 
-              className="py-1 px-0.5 rounded-md bg-amber-950/70 border border-amber-500/50 text-center"
-              title={mode === 'battle' ? 'Nâng cấp Giáp' : 'Cắm cờ Miền Trung (+5 ô)'}
+              className="py-1 px-0.5 rounded-lg bg-gradient-to-b from-amber-950/90 to-amber-900/60 border border-amber-500/70 text-center shadow-sm hover:scale-105 transition-transform"
+              title={mode === 'battle' ? 'Nâng cấp Giáp (Miền Trung)' : 'Cắm cờ Miền Trung (+5 ô)'}
             >
-              <div className="text-[11px] leading-none mb-0.5">🍩</div>
-              <div className="text-[6.5px] text-amber-300 font-mono font-black">{mode === 'battle' ? 'Giáp' : '+5'}</div>
+              <div className="text-[7px] font-black text-amber-300 uppercase tracking-tighter mb-0.5">M. Trung</div>
+              <div className="text-[13px] leading-none mb-0.5 drop-shadow">🍩</div>
+              <div className="text-[7.5px] text-yellow-300 font-mono font-black">{mode === 'battle' ? 'Giáp' : '+5'}</div>
             </div>
 
             <div 
-              className="py-1 px-0.5 rounded-md bg-emerald-950/70 border border-emerald-500/50 text-center"
-              title={mode === 'battle' ? 'Nâng cấp Thú Cưỡi' : 'Cắm cờ Miền Nam (+5 ô)'}
+              className="py-1 px-0.5 rounded-lg bg-gradient-to-b from-emerald-950/90 to-emerald-900/60 border border-emerald-500/70 text-center shadow-sm hover:scale-105 transition-transform"
+              title={mode === 'battle' ? 'Nâng cấp Thú Cưỡi (Miền Nam)' : 'Cắm cờ Miền Nam (+5 ô)'}
             >
-              <div className="text-[11px] leading-none mb-0.5">🧸</div>
-              <div className="text-[6.5px] text-amber-300 font-mono font-black">{mode === 'battle' ? 'Thú' : '+5'}</div>
+              <div className="text-[7px] font-black text-emerald-300 uppercase tracking-tighter mb-0.5">M. Nam</div>
+              <div className="text-[13px] leading-none mb-0.5 drop-shadow">🧸</div>
+              <div className="text-[7.5px] text-yellow-300 font-mono font-black">{mode === 'battle' ? 'Thú' : '+5'}</div>
             </div>
           </div>
 

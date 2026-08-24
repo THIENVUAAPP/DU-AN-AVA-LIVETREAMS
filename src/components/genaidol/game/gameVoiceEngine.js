@@ -311,118 +311,55 @@ class GameVoiceEngine {
     if (!text || typeof text !== 'string') return;
     if (this.isMuted || this.volume <= 0.001) return;
 
-    if (priority) {
-      this.cancelSpeech();
-      this.speechQueue = []; // Clear current queue to prioritize this message
-    }
+    let activeVoice = null;
+    let effectiveRole = 'game';
 
-    // Add to queue
-    this.speechQueue.push({ text, roleOrVoice });
-    
-    // Process queue if not already processing
-    this.processSpeechQueue();
-  }
-
-  async processSpeechQueue() {
-    if (this.isProcessingQueue || this.isSpeaking || this.speechQueue.length === 0) return;
-    
-    this.isProcessingQueue = true;
-    
-    while (this.speechQueue.length > 0) {
-      if (this.isMuted || this.volume <= 0.001) {
-        this.speechQueue = [];
-        break;
-      }
-      
-      const item = this.speechQueue.shift();
-      await this.playSingleSpeech(item.text, item.roleOrVoice);
-      
-      // Delay (kéo giãn thời gian ra) - gap between sentences
-      await new Promise(resolve => setTimeout(resolve, 800));
-    }
-    
-    this.isProcessingQueue = false;
-  }
-
-  playSingleSpeech(text, roleOrVoice) {
-    return new Promise(async (resolve) => {
-      let activeVoice = null;
-      let effectiveRole = 'game';
-
-      if (roleOrVoice === 'assistant') {
+    if (roleOrVoice === 'assistant') {
+      activeVoice = this.assistantVoice;
+      effectiveRole = 'assistant';
+    } else if (roleOrVoice === 'game') {
+      activeVoice = this.gameVoice;
+      effectiveRole = 'game';
+    } else if (typeof roleOrVoice === 'string') {
+      const foundVoice = ALL_SYSTEM_VOICES.find(v => v.id === roleOrVoice || v.voiceId === roleOrVoice);
+      if (foundVoice) {
+        activeVoice = foundVoice;
+        effectiveRole = foundVoice.gender === 'Female' ? 'assistant' : 'game';
+      } else {
         activeVoice = this.assistantVoice;
         effectiveRole = 'assistant';
-      } else if (roleOrVoice === 'game') {
-        activeVoice = this.gameVoice;
-        effectiveRole = 'game';
-      } else if (typeof roleOrVoice === 'string') {
-        const foundVoice = ALL_SYSTEM_VOICES.find(v => v.id === roleOrVoice || v.voiceId === roleOrVoice);
-        if (foundVoice) {
-          activeVoice = foundVoice;
-          effectiveRole = foundVoice.gender === 'Female' ? 'assistant' : 'game';
-        } else {
-          activeVoice = this.assistantVoice;
-          effectiveRole = 'assistant';
-        }
-      } else if (typeof roleOrVoice === 'object' && roleOrVoice !== null) {
-        activeVoice = roleOrVoice;
-        effectiveRole = roleOrVoice.gender === 'Female' ? 'assistant' : 'game';
       }
+    } else if (typeof roleOrVoice === 'object' && roleOrVoice !== null) {
+      activeVoice = roleOrVoice;
+      effectiveRole = roleOrVoice.gender === 'Female' ? 'assistant' : 'game';
+    }
 
-      if (activeVoice?.enabled === false) return resolve(); // Bỏ qua nếu bị tắt
+    if (activeVoice?.enabled === false) return;
 
-      this.isSpeaking = true;
-      if (this.onDuckAudio) this.onDuckAudio(true);
-      if (this.onSpeechStateChange) this.onSpeechStateChange(true, text, effectiveRole);
+    const baseVoice = ALL_SYSTEM_VOICES.find(v => v.id === activeVoice?.id || v.voiceId === activeVoice?.voiceId) || activeVoice || {
+      id: effectiveRole === 'assistant' ? 'free_vi_female' : 'free_vi_male',
+      provider: 'system',
+      tier: 'free',
+      gender: effectiveRole === 'assistant' ? 'Female' : 'Male',
+      role: effectiveRole
+    };
 
-      const baseVoice = ALL_SYSTEM_VOICES.find(v => v.id === activeVoice?.id || v.voiceId === activeVoice?.voiceId) || activeVoice || {
-        id: effectiveRole === 'assistant' ? 'free_vi_female' : 'free_vi_male',
-        provider: 'system',
-        tier: 'free',
-        gender: effectiveRole === 'assistant' ? 'Female' : 'Male',
-        role: effectiveRole
-      };
+    const voiceObj = {
+      ...baseVoice,
+      volume: (activeVoice?.volume !== undefined ? activeVoice.volume : this.volume),
+      rate: (activeVoice?.rate !== undefined ? activeVoice.rate : this.speedRate),
+      pitch: (activeVoice?.pitch !== undefined ? activeVoice.pitch : this.pitch)
+    };
 
-      const voiceObj = {
-        ...baseVoice,
-        volume: (activeVoice?.volume !== undefined ? activeVoice.volume : this.volume),
-        rate: (activeVoice?.rate !== undefined ? activeVoice.rate : this.speedRate),
-        pitch: (activeVoice?.pitch !== undefined ? activeVoice.pitch : this.pitch)
-      };
+    this.isSpeaking = true;
+    if (this.onDuckAudio) this.onDuckAudio(true);
+    if (this.onSpeechStateChange) this.onSpeechStateChange(true, text, effectiveRole);
 
-      try {
-        const charCount = (text || '').length || 30;
-        window.dispatchEvent(new CustomEvent('avalive:deduct_token', {
-          detail: {
-            amount: charCount,
-            reason: `Game Voice AI (${effectiveRole === 'assistant' ? 'Trợ Lý' : 'BLV'} - ${voiceObj.name || voiceObj.id}): "${text.slice(0, 20)}..."`
-          }
-        }));
-
-        const safetyWatchdog = setTimeout(() => {
-          if (this.isSpeaking) {
-            this.isSpeaking = false;
-            if (this.onDuckAudio) this.onDuckAudio(false);
-            if (this.onSpeechStateChange) this.onSpeechStateChange(false, '', effectiveRole);
-            resolve();
-          }
-        }, Math.max(4000, (text || '').length * 150));
-
-        await previewVoiceAudio(voiceObj, text, () => {
-          clearTimeout(safetyWatchdog);
-          this.isSpeaking = false;
-          if (this.onDuckAudio) this.onDuckAudio(false);
-          if (this.onSpeechStateChange) this.onSpeechStateChange(false, '', effectiveRole);
-          resolve();
-        });
-      } catch (err) {
-        console.warn(`[GameVoiceEngine:${this.gameType}] Speak error:`, err);
-        this.isSpeaking = false;
-        if (this.onDuckAudio) this.onDuckAudio(false);
-        if (this.onSpeechStateChange) this.onSpeechStateChange(false, '', effectiveRole);
-        resolve();
-      }
-    });
+    return previewVoiceAudio(voiceObj, text, () => {
+      this.isSpeaking = false;
+      if (this.onDuckAudio) this.onDuckAudio(false);
+      if (this.onSpeechStateChange) this.onSpeechStateChange(false, '', effectiveRole);
+    }, priority);
   }
 
   cancelSpeech() {
@@ -443,7 +380,21 @@ class GameVoiceEngine {
   // Khớp Từ Khóa & Bộ Não AI Gemini Tự Động Trả Lời Câu Hỏi Ngoài Vùng Cài Đặt (Smart Real-time Q&A)
   async handleUserComment(commentText, userName = 'Khán Giả') {
     if (this.isKeywordAutoReplyEnabled === false || !commentText) return false;
-    const lower = String(commentText).toLowerCase().trim();
+    
+    const normalize = (str) => {
+      const s = String(str || '').toLowerCase().trim();
+      const noAcc = s
+        .replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a")
+        .replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e")
+        .replace(/ì|í|ị|ỉ|ĩ/g, "i")
+        .replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o")
+        .replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u")
+        .replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y")
+        .replace(/đ/g, "d");
+      return { raw: s, noAcc };
+    };
+
+    const { raw: lower, noAcc } = normalize(commentText);
     const now = Date.now();
     const effectiveUser = userName || 'bạn';
 
@@ -454,7 +405,12 @@ class GameVoiceEngine {
         ? rule.keywords
         : (typeof rule.keywords === 'string' ? rule.keywords.split(',').map(s => s.trim()) : []);
 
-      const matched = rawKeywords.some(k => k && lower.includes(k.toLowerCase().trim()));
+      const matched = rawKeywords.some(k => {
+        if (!k) return false;
+        const kNorm = normalize(k);
+        return lower.includes(kNorm.raw) || noAcc.includes(kNorm.noAcc);
+      });
+
       if (matched) {
         const lastTime = this.lastKeywordTriggerTimes.get(rule.id) || 0;
         const cooldownMs = (rule.cooldownSec || 2) * 1000;
