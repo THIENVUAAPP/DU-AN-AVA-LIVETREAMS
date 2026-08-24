@@ -169,16 +169,13 @@ const SIMULATION_GIFTS = [
   { id: 'flag_vn', name: 'Cờ Tổ Quốc', diamonds: 1, count: 3 },
 ];
 
-// Hàm phát sự kiện TikTok (dùng chung cho real + simulation)
+// Hàm phát sự kiện TikTok (dùng chung cho real + simulation) - Chuẩn hóa 1 luồng duy nhất
 function emitTikTokGift(giftData) {
   io.emit('tiktok_gift', giftData);
-  io.emit('LIVE_EVENT', { type: 'GIFT', data: giftData, timestamp: Date.now() });
-  io.emit('bando_event', { type: 'GIFT', data: giftData, timestamp: Date.now() });
 }
 
 function emitTikTokChat(chatData) {
   io.emit('tiktok_chat', chatData);
-  io.emit('LIVE_EVENT', { type: 'COMMENT', data: chatData, timestamp: Date.now() });
 }
 
 // ============================================================

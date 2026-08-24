@@ -774,11 +774,8 @@ export default function DesktopAppUI() {
       const text = data.comment || '';
       setTiktokLogs(prev => [`[${timeStr}] 💬 ${author}: ${text}`, ...prev.slice(0, 49)]);
       
-      // 1. Chuyển tiếp tới Game Bản Đồ Chữ S & AI Commentary (Tự động đọc & trả lời qua Global Speech Queue)
+      // 1. Chuyển tiếp tới Game Bản Đồ Chữ S & AI Commentary (Tự động đọc & trả lời DUY NHẤT 1 LẦN qua Global Speech Queue)
       bandoEngine.handleUserComment(text, author);
-
-      // 2. Kích hoạt phản hồi bình luận Idol & hiển thị bình luận lên giao diện
-      handleLiveEventRef.current?.('COMMENT', { name: author, text });
     });
 
     socket.on('tiktok_gift', (data) => {
@@ -787,11 +784,11 @@ export default function DesktopAppUI() {
       const timeStr = new Date().toLocaleTimeString();
       const author = data.username || data.nickname || data.uniqueId || 'Khách Live';
       const giftName = data.giftName || 'Hoa Hồng';
-      const giftCount = data.repeatCount || 1;
-      const diamondCount = data.diamondCount || 1;
+      const giftCount = Number(data.count || data.repeatCount) || 1;
+      const diamondCount = Number(data.diamondCount) || 1;
       setTiktokLogs(prev => [`[${timeStr}] 🎁 ${author} tặng ${giftName} x${giftCount} (${diamondCount} xu)`, ...prev.slice(0, 49)]);
 
-      // 1. Luôn kích hoạt cắm ô cờ trên Bản Đồ 3D Việt Nam
+      // 1. Luôn kích hoạt cắm ô cờ trên Bản Đồ 3D Việt Nam (Chính xác 100% số ô theo cấu hình)
       bandoEngine.processGift({
         giftId: data.giftId,
         giftName: data.giftName,

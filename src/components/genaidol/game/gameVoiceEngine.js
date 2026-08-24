@@ -412,12 +412,21 @@ class GameVoiceEngine {
       });
 
       if (matched) {
+        // Khử lặp theo từng User: Mỗi người xem chỉ trả lời 1 lần duy nhất cho cùng 1 quy tắc (giãn cách 25s cho cùng 1 user)
+        if (!this.lastUserKeywordTriggerTimes) this.lastUserKeywordTriggerTimes = new Map();
+        const userRuleKey = `${effectiveUser.toLowerCase().trim()}_${rule.id}`;
+        const lastUserTime = this.lastUserKeywordTriggerTimes.get(userRuleKey) || 0;
+        if (now - lastUserTime < 25000) {
+          continue; // Người này vừa được trả lời câu này rồi, không nhắc lại
+        }
+
         const lastTime = this.lastKeywordTriggerTimes.get(rule.id) || 0;
         const cooldownMs = (rule.cooldownSec || 2) * 1000;
         if (now - lastTime < cooldownMs) {
-          continue; // Cooldown protection cho quy tắc này
+          continue; // Cooldown protection toàn cục cho quy tắc này
         }
 
+        this.lastUserKeywordTriggerTimes.set(userRuleKey, now);
         this.lastKeywordTriggerTimes.set(rule.id, now);
         this.lastReplyTime = now;
 
@@ -431,13 +440,21 @@ class GameVoiceEngine {
       }
     }
 
-    // 2. Nếu không khớp từ khóa: Phản hồi thông minh câu hỏi ngoài vùng
+    // 2. Nếu không khớp từ khóa: Phản hồi thông minh câu hỏi ngoài vùng (Mỗi User giãn cách tối thiểu 15s)
+    if (!this.lastUserAiReplyTimes) this.lastUserAiReplyTimes = new Map();
+    const userAiKey = effectiveUser.toLowerCase().trim();
+    const lastUserAiTime = this.lastUserAiReplyTimes.get(userAiKey) || 0;
+    if (now - lastUserAiTime < 15000) {
+      return false; // Người này vừa được AI trả lời, không trả lời dồn dập
+    }
+
     const globalCooldownMs = Math.max(1, this.replyCooldownSec || 2) * 1000;
     if (now - (this.lastReplyTime || 0) < globalCooldownMs) {
       return false;
     }
 
     if (lower.length >= 1) {
+      this.lastUserAiReplyTimes.set(userAiKey, now);
       this.lastReplyTime = now;
 
       // Nếu bật Gemini AI:
