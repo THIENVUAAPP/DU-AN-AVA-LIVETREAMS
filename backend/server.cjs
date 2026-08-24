@@ -45,6 +45,36 @@ if (distPath) {
   app.use(express.static(distPath));
 }
 
+// 📦 ROUTE TẢI PHẦN MỀM STANDALONE (Mac & Windows) — Kích hoạt download ngay, không mở trong trình duyệt
+app.get('/api/download-software', (req, res) => {
+  const zipPath = distPath
+    ? path.join(distPath, 'Livestream_AI_Software.zip')
+    : null;
+
+  if (!zipPath || !fs.existsSync(zipPath)) {
+    return res.status(404).json({ error: 'File phần mềm chưa được đóng gói. Vui lòng liên hệ quản trị viên.' });
+  }
+
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Disposition', 'attachment; filename="AvaLive_VIP_PRO_Full_Package_MacWin.zip"');
+  res.sendFile(zipPath);
+});
+
+// Alias trực tiếp: /Livestream_AI_Software.zip -> download với đúng tên file
+app.get('/Livestream_AI_Software.zip', (req, res) => {
+  const zipPath = distPath
+    ? path.join(distPath, 'Livestream_AI_Software.zip')
+    : null;
+
+  if (!zipPath || !fs.existsSync(zipPath)) {
+    return res.status(404).send('File phần mềm không tìm thấy.');
+  }
+
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Disposition', 'attachment; filename="AvaLive_VIP_PRO_Full_Package_MacWin.zip"');
+  res.sendFile(zipPath);
+});
+
 // 🚀 PROXY STREAM TIÊU CHUẨN: Vượt qua hoàn toàn rào cản CORS & Xử lý tự động chuyển hướng (Redirect 302) của TikTok CDN
 app.get('/api/stream-proxy', (req, res) => {
   const streamUrl = req.query.url || globalFlvUrl;

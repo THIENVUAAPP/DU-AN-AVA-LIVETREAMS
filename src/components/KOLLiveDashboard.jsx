@@ -81,10 +81,17 @@ export default function KOLLiveDashboard() {
           ))}
         </nav>
 
-        {/* RIGHT ACTION */}
+        {/* RIGHT ACTION - Nút Tải Phần Mềm */}
         <div className="flex items-center">
           <button 
-            onClick={() => window.open('/desktop', '_blank')}
+            onClick={() => {
+              const link = document.createElement('a');
+              link.href = '/Livestream_AI_Software.zip';
+              link.download = 'AvaLive_VIP_PRO_Full_Package_MacWin.zip';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }}
             className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-4 py-2 rounded-full text-sm font-bold shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all cursor-pointer whitespace-nowrap hidden lg:flex"
           >
             <Download className="w-4 h-4" />
