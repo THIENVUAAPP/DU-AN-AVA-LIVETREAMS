@@ -157,6 +157,14 @@ class GameVoiceEngine {
       if (e.key === 'avalive_emergency_stop_trigger') {
         this.stopAll();
       }
+      if (e.key === this.storageKey || e.key === 'AVALIVE_KEYWORD_RULES_SHARED') {
+        this.loadSettings();
+      }
+    });
+    window.addEventListener('game_voice_settings_updated', (e) => {
+      if (e.detail?.settings) {
+        this.loadSettings();
+      }
     });
   }
 
@@ -183,6 +191,13 @@ class GameVoiceEngine {
         if (parsed.speedRate !== undefined) this.speedRate = parsed.speedRate;
         if (parsed.pitch !== undefined) this.pitch = parsed.pitch;
         if (parsed.isMuted !== undefined) this.isMuted = parsed.isMuted;
+      }
+      const sharedRulesRaw = localStorage.getItem('AVALIVE_KEYWORD_RULES_SHARED');
+      if (sharedRulesRaw) {
+        const sharedRules = JSON.parse(sharedRulesRaw);
+        if (Array.isArray(sharedRules) && sharedRules.length > this.keywordRules.length) {
+          this.keywordRules = sharedRules;
+        }
       }
     } catch (e) {
       console.warn(`[GameVoiceEngine:${this.gameType}] Load settings failed:`, e);
@@ -253,19 +268,16 @@ class GameVoiceEngine {
 
   toggleMuted() {
     this.setMuted(!this.isMuted);
-    return !this.isMuted;
   }
 
-  startPeriodicCommentary(isGameActive = true) {
+  startPeriodicCommentary(isGameActive = false) {
     this.isGameActive = isGameActive;
     this.stopPeriodicCommentary();
-    if (!this.isAutoEnabled || !this.isGameActive) return;
+    if (!this.isAutoEnabled) return;
 
-    const intervalMs = Math.max(5, this.intervalSeconds) * 1000;
+    const intervalMs = Math.max(5000, this.intervalSeconds * 1000);
     this.timerId = setInterval(() => {
-      if (!this.isSpeaking && !isSpeechActive() && this.isAutoEnabled && this.isGameActive) {
-        this.speakNextPrompt();
-      }
+      this.speakNextPrompt();
     }, intervalMs);
   }
 
@@ -276,6 +288,7 @@ class GameVoiceEngine {
     }
   }
 
+  // Thuật toán xoay vòng thông minh: Đảm bảo các câu bình luận luôn tươi mới, không lặp lại nhàm chán
   speakNextPrompt() {
     const activePrompts = (this.prompts || []).filter(p => p.enabled !== false);
     if (activePrompts.length === 0) return;
@@ -285,11 +298,9 @@ class GameVoiceEngine {
       const nextIdx = this.lastSpokenIndex + 1;
       if (nextIdx >= activePrompts.length) {
         if (this.isAutoLoop !== false) {
-          // Loop indefinitely
           this.lastSpokenIndex = 0;
           targetPrompt = activePrompts[0];
         } else {
-          // Stop when finished
           return;
         }
       } else {

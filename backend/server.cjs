@@ -641,13 +641,21 @@ io.on('connection', (socket) => {
         const avatar = String(data.profilePictureUrl || data.userDetails?.profilePictureUrls?.[0] || '');
 
         const streakKey = `${userId}_${giftId}`;
+        const currentRepeatCount = Number(data.repeatCount) || 1;
+        const prevCount = streakMap.get(streakKey) || 0;
         let count = 1;
-        if (data.giftType === 1) {
-          const prevCount = streakMap.get(streakKey) || 0;
-          const currentCount = Number(data.repeatCount) || 1;
-          count = Math.max(1, currentCount - prevCount);
-          streakMap.set(streakKey, currentCount);
-          if (data.repeatEnd) streakMap.delete(streakKey);
+
+        // Tính delta chính xác cho mọi loại quà (cả streak và non-streak)
+        if (data.repeatCount !== undefined || data.giftType === 1) {
+          count = currentRepeatCount - prevCount;
+          if (data.repeatEnd) {
+            streakMap.delete(streakKey);
+          } else {
+            streakMap.set(streakKey, currentRepeatCount);
+          }
+          if (count <= 0) {
+            return; // Đã xử lý ở tick trước, bỏ qua tick repeatEnd trùng lặp!
+          }
         } else {
           count = Number(data.repeatCount) || 1;
         }
