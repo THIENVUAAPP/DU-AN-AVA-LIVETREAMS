@@ -29,11 +29,13 @@ import { mapVoiceEngine, battleVoiceEngine } from './game/gameVoiceEngine';
 import battleCommentary from './game/battleCommentaryEngine';
 import { stopVoiceAudio } from '../../utils/voiceSyncService';
 import AutoCaptchaSolver from '../AutoCaptchaSolver';
+import ProductionStudio from '../ProductionStudio';
 import { saveCharacterToIDB, loadAllCharactersFromIDB, deleteCharacterFromIDB } from '../../utils/idbHelper';
 import { SUPPORTED_LANGUAGES, getCurrentLanguage, setCurrentLanguage, t } from '../../utils/i18n';
 import UpdateNotificationModal, { APP_VERSION } from './UpdateNotificationModal';
 
 export default function DesktopAppUI() {
+  const [isLiveStudioOpen, setIsLiveStudioOpen] = useState(false);
   const [activeSettingsModal, setActiveSettingsModal] = useState(null); 
   const [isSettingsDropdownOpen, setIsSettingsDropdownOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -1631,6 +1633,20 @@ export default function DesktopAppUI() {
             )}
           </button>
 
+          {/* Nút Live Studio (Ảnh 2) - NẰM KẾ BÊN LIVE AI IDOL */}
+          <button 
+            className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs ${
+              isLiveStudioOpen
+                ? 'bg-gradient-to-r from-pink-600 via-rose-600 to-purple-600 text-white border-pink-300 shadow-pink-500/40 ring-1 ring-pink-400/50 animate-pulse'
+                : (isDarkMode ? 'border-pink-500/40 bg-pink-950/30 text-pink-300 hover:bg-pink-900/50' : 'border-pink-300 bg-pink-50 text-pink-700 hover:bg-pink-100')
+            }`}
+            onClick={() => setIsLiveStudioOpen(true)}
+            title="Mở phòng dựng Live Studio 4K chuyên nghiệp (Webcam, Bộ lọc làm đẹp, Video RTMP, Nguồn OBS)"
+          >
+            <Tv size={10} className={isLiveStudioOpen ? 'text-yellow-300' : 'text-pink-400'} />
+            <span className="whitespace-nowrap">Live Studio</span>
+          </button>
+
           {/* Nút Kích hoạt Game Chiến Đấu */}
           <button 
             className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs ${
@@ -3151,8 +3167,35 @@ export default function DesktopAppUI() {
           <button onClick={() => setToast(null)} className="ml-2 opacity-70 hover:opacity-100 transition-opacity">
             <X size={14} />
           </button>
-    </div>
+        </div>
       )}
+
+      {/* Live Studio Fullscreen Modal (Ảnh 2) — Nằm trong phần mềm, đầy đủ tính năng phòng dựng */}
+      {isLiveStudioOpen && (
+        <div className="fixed inset-0 z-[99990] bg-[#0A0A0A] flex flex-col animate-in fade-in zoom-in-95 duration-200">
+          <div className="h-10 bg-[#121216] border-b border-white/10 flex items-center justify-between px-4 shrink-0 shadow-md">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-pink-500 animate-pulse"></span>
+              <h2 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+                <Tv className="w-3.5 h-3.5 text-pink-400" />
+                <span>PHÒNG DỰNG LIVE STUDIO PRO 4K (OBS / WEBCAM / BEAUTY)</span>
+              </h2>
+            </div>
+            <button 
+              onClick={() => setIsLiveStudioOpen(false)}
+              className="flex items-center gap-1 px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer"
+              title="Quay lại giao diện phần mềm chính"
+            >
+              <X size={14} />
+              <span>Đóng Live Studio</span>
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto bg-[#0A0A0A]">
+            <ProductionStudio isLive={isConnected} aiAvatarFeatureEnabled={true} />
+          </div>
+        </div>
+      )}
+
       <UpdateNotificationModal />
     </div>
   );

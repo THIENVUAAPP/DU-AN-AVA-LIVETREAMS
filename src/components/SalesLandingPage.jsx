@@ -107,6 +107,13 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
 
           <nav className="hidden lg:flex items-center gap-6">
             <button onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})} className="text-sm font-semibold text-white hover:text-[#FBBF24] transition-all cursor-pointer">Trang chủ</button>
+            <button 
+              onClick={() => setActiveTab('ai-storyteller')} 
+              className="text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-rose-400 to-pink-500 hover:scale-105 transition-all cursor-pointer flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-amber-400/30 shadow-[0_0_12px_rgba(251,191,36,0.2)]"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+              <span>KOL LIVE</span>
+            </button>
             <button onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-semibold text-gray-300 hover:text-white transition-all cursor-pointer">Tính năng</button>
             <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-semibold text-gray-300 hover:text-white transition-all cursor-pointer">Bảng giá</button>
             <button onClick={() => document.getElementById('guide')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-semibold text-gray-300 hover:text-white transition-all cursor-pointer">Hướng dẫn</button>
@@ -132,10 +139,10 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
               </>
             ) : (
               <button 
-                onClick={() => setActiveTab('broadcast')}
+                onClick={() => setActiveTab('ai-storyteller')}
                 className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#F59E0B] to-[#F43F5E] text-white font-bold text-sm shadow-[0_0_15px_rgba(245,158,11,0.4)] hover:scale-105 transition-all flex items-center gap-2"
               >
-                VÀO STUDIO <ArrowRight className="w-4 h-4" />
+                VÀO KOL LIVE <ArrowRight className="w-4 h-4" />
               </button>
             )}
           </div>

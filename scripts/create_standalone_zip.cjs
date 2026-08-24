@@ -29,23 +29,24 @@ try {
   process.exit(1);
 }
 
-// 3. Xóa file zip cũ nếu có
+// 3. Xóa các file zip cũ trong dist & public để tránh phình dung lượng
 console.log('\n[2/3] Đang nén các thành phần cốt lõi vào file zip...');
-if (fs.existsSync(zipFilePath)) {
-  fs.unlinkSync(zipFilePath);
-}
+const publicZip = path.join(rootDir, 'public', 'Livestream_AI_Software.zip');
+const distZip = path.join(rootDir, 'dist', 'Livestream_AI_Software.zip');
 
-// 4. Chạy lệnh zip nén dist, backend, launchers, docs, config
+if (fs.existsSync(zipFilePath)) fs.unlinkSync(zipFilePath);
+if (fs.existsSync(publicZip)) fs.unlinkSync(publicZip);
+if (fs.existsSync(distZip)) fs.unlinkSync(distZip);
+
+// 4. Chạy lệnh zip nén dist, backend, launchers, docs, config (loại trừ các file zip lồng nhau)
 try {
-  const zipCmd = `zip -r "${zipFileName}" dist backend Chay_App_Mac_Linux.command Chay_App_Windows.bat HUONG_DAN_SU_DUNG_OBS_TIKTOK_STUDIO.md package.json package-lock.json .env.example`;
+  const zipCmd = `zip -r "${zipFileName}" dist backend Chay_App_Mac_Linux.command Chay_App_Windows.bat HUONG_DAN_SU_DUNG_OBS_TIKTOK_STUDIO.md package.json package-lock.json .env.example -x "dist/*.zip" -x "public/*.zip" -x "*.DS_Store"`;
   execSync(zipCmd, { cwd: rootDir, stdio: 'inherit' });
   
   const stats = fs.statSync(zipFilePath);
   const sizeMb = (stats.size / (1024 * 1024)).toFixed(2);
 
   // Đồng bộ file zip sang public và dist để nút tải trên Web App luôn tải bản mới nhất
-  const publicZip = path.join(rootDir, 'public', 'Livestream_AI_Software.zip');
-  const distZip = path.join(rootDir, 'dist', 'Livestream_AI_Software.zip');
   fs.copyFileSync(zipFilePath, publicZip);
   if (fs.existsSync(path.join(rootDir, 'dist'))) {
     fs.copyFileSync(zipFilePath, distZip);
@@ -54,9 +55,9 @@ try {
   console.log('\n===========================================================');
   console.log(`✅ ĐÓNG GÓI HOÀN TẤT THÀNH CÔNG!`);
   console.log(`📁 File Zip Hoàn Chỉnh: ${zipFileName}`);
-  console.log(`📊 Dung lượng: ${sizeMb} MB`);
+  console.log(`📊 Dung lượng siêu nhẹ & đầy đủ: ${sizeMb} MB`);
   console.log(`📍 Đường dẫn file zip chính: ${zipFilePath}`);
-  console.log(`🌐 Đã đồng bộ sang Web Download: public/Livestream_AI_Software.zip`);
+  console.log(`🌐 Đã đồng bộ sang Web Download: public/Livestream_AI_Software.zip & dist/Livestream_AI_Software.zip`);
   console.log('===========================================================\n');
 } catch (err) {
   console.error('❌ Lỗi khi tạo file zip:', err);

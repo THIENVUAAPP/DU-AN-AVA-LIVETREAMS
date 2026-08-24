@@ -39,18 +39,15 @@ export default function Header({
   // Navigation when LOGGED OUT (Public Visitors)
   const publicNavItems = [
     { id: 'overview', label: 'Trang Chủ' },
+    { id: 'ai-storyteller', label: 'KOL LIVE' },
     { id: 'affiliate-landing', label: 'Tiếp Thị 30%' },
   ];
 
-  // Navigation when LOGGED IN (Dynamic based on Admin AI Avatar Toggle)
+  // Navigation when LOGGED IN
   const workspaceNavItems = [
-    { id: 'broadcast', label: 'Live Studio' },
-    ...(aiAvatarFeatureEnabled ? [{ id: 'avatars', label: 'MC AI' }] : []),
-    { id: 'multistream', label: 'Restream' },
-    { id: 'livestream-cloner', label: 'Clone Live' },
-    { id: 'chat-hub', label: 'Chat Hub' },
-    ...(currentUser?.role === 'admin' ? [{ id: 'dance-floor', label: 'Sàn Nhảy' }] : []),
     { id: 'ai-storyteller', label: 'KOL LIVE' },
+    ...(aiAvatarFeatureEnabled ? [{ id: 'avatars', label: 'MC AI' }] : []),
+    ...(currentUser?.role === 'admin' ? [{ id: 'dance-floor', label: 'Sàn Nhảy' }] : []),
   ];
 
   // Close dropdown on click outside
