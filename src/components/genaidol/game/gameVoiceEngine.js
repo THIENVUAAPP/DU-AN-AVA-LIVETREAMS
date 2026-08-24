@@ -446,7 +446,12 @@ class GameVoiceEngine {
           .replace(/\[game\]/gi, this.gameType === 'battle' ? 'Đại Chiến PK' : 'Bản Đồ Cắm Cờ');
 
         const voiceTarget = rule.voiceId || rule.role || 'assistant';
-        this.speak(reply, voiceTarget, false);
+        // Ngắt lời bình luận ngẫu nhiên để ưu tiên trả lời trực tiếp khán giả, không bị chồng chéo
+        this.cancelSpeech();
+        if (this.timerId && this.isAutoEnabled) {
+          this.startPeriodicCommentary(this.isGameActive);
+        }
+        this.speak(reply, voiceTarget, true);
         return true;
       }
     }
@@ -480,7 +485,11 @@ class GameVoiceEngine {
           });
 
           if (aiResponse?.text) {
-            this.speak(aiResponse.text, this.assistantVoice || 'assistant', false);
+            this.cancelSpeech();
+            if (this.timerId && this.isAutoEnabled) {
+              this.startPeriodicCommentary(this.isGameActive);
+            }
+            this.speak(aiResponse.text, this.assistantVoice || 'assistant', true);
             return true;
           }
         } catch (geminiErr) {}
@@ -488,13 +497,17 @@ class GameVoiceEngine {
 
       // Phản hồi thông minh có sẵn dự phòng (100% Free)
       const smartFallbacks = [
-        `Dạ em chào bạn ${effectiveUser}! Chúc bạn xem livestream vui vẻ và cùng thả tim để phủ kín cờ đỏ sao vàng nhé!`,
-        `Em cảm ơn bạn ${effectiveUser} đã tương tác rất nhiệt tình cùng phòng live hôm nay nha!`,
-        `Dạ chào bạn ${effectiveUser}! Bạn hãy chọn vùng đất quê hương yêu thích và tiếp sức cùng mọi người nhé!`,
-        `Dạ cảm ơn bạn ${effectiveUser}! Mọi người cùng chung tay cắm cờ để rạng rỡ non sông Việt Nam nào!`
+        `Dạ em chào bạn ${effectiveUser}! Chúc bạn xem livestream thật vui và cùng tiếp lửa cắm cờ Tổ Quốc nhé!`,
+        `Em cảm ơn bạn ${effectiveUser} đã bình luận tương tác rất nhiệt tình cùng phòng live hôm nay nha!`,
+        `Dạ chào bạn ${effectiveUser}! Bạn hãy chọn vùng đất quê hương yêu thích và cắm cờ cùng mọi người nhé!`,
+        `Dạ cảm ơn bạn ${effectiveUser}! Mọi người cùng chung tay để phủ kín bản đồ cờ đỏ sao vàng nào!`
       ];
       const chosen = smartFallbacks[Math.floor(Math.random() * smartFallbacks.length)];
-      this.speak(chosen, 'assistant', false);
+      this.cancelSpeech();
+      if (this.timerId && this.isAutoEnabled) {
+        this.startPeriodicCommentary(this.isGameActive);
+      }
+      this.speak(chosen, 'assistant', true);
       return true;
     }
 

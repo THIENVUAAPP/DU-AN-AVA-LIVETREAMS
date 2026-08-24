@@ -103,21 +103,6 @@ export default function GameBanDoOverlay() {
         console.warn('[BandoOverlay] ❌ Lỗi kết nối socket:', err.message);
       });
 
-      // ✅ LIVE_EVENT tổng hợp từ backend (cả quà lẫn comment)
-      socket.on('LIVE_EVENT', (data) => {
-        if (!data) return;
-        if (data.type === 'GIFT' && data.data) handleGift(data.data);
-        else if (data.type === 'COMMENT' && data.data) handleComment(data.data);
-      });
-
-      // ✅ bando_event từ backend
-      socket.on('bando_event', (data) => {
-        if (!data) return;
-        if (data.type === 'GIFT' && data.data) handleGift(data.data);
-        else if (data.type === 'COMMENT' && data.data) handleComment(data.data);
-        else setLiveEvent({ ...data, _seq: Date.now() + Math.random() });
-      });
-
       // ✅ Nhận trực tiếp sự kiện quà tặng TikTok
       socket.on('tiktok_gift', handleGift);
 
