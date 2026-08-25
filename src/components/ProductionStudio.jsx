@@ -1464,7 +1464,7 @@ export default function ProductionStudio({
     {
       id: 'dancefloor',
       title: '💃 Sàn Nhảy TikTok Tương Tác 2D & 3D',
-      url: `${originUrl}/?overlay=dancefloor`,
+      url: `${originUrl}/?overlay=live`,
       tag: 'TƯƠNG TÁC TIKTOK LIVE',
       color: 'from-pink-600 to-rose-500',
       desc: 'Sàn diễn nhảy theo Quà, Like, Comment TikTok realtime với nhân vật 3D chuyển động.'
@@ -1472,7 +1472,7 @@ export default function ProductionStudio({
     {
       id: 'gamebattle',
       title: '⚔️ Đấu Trường PK Quà Tặng Game Battle',
-      url: `${originUrl}/?overlay=gamebattle`,
+      url: `${originUrl}/?overlay=live`,
       tag: 'GAME PK THI ĐẤU',
       color: 'from-purple-600 to-indigo-500',
       desc: 'Màn hình PK 2 phe thi đấu so kè quà tặng và comment giữa các khán giả.'
@@ -1480,7 +1480,7 @@ export default function ProductionStudio({
     {
       id: 'bando',
       title: '🗺️ Bản Đồ Việt Nam Check-in 63 Tỉnh Thành',
-      url: `${originUrl}/?overlay=bando`,
+      url: `${originUrl}/?overlay=live`,
       tag: 'VIETNAM MAP LIVE',
       color: 'from-amber-600 to-red-500',
       desc: 'Bản đồ tương tác tính điểm tỉnh thành theo comment người xem realtime.'
