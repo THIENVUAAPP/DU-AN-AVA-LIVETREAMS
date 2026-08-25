@@ -4,15 +4,16 @@ import flvjs from 'flv.js';
 import Hls from 'hls.js';
 import GameBanDoVietNam from './game/GameBanDoVietNam';
 import GameChienDau from './game/GameChienDau';
-import { Volume2, VolumeX, Sparkles, Video, Swords, Flag } from 'lucide-react';
+import DanceFloorOverlay from '../DanceFloorOverlay';
+import { Volume2, VolumeX, Sparkles, Video, Swords, Flag, Music } from 'lucide-react';
 
 /**
- * ⚡ CỬA SỔ OVERLAY REAL-TIME ĐỒNG BỘ 100% CHO TIKTOK LIVE STUDIO & OBS STUDIO
- * - URL: ?overlay=cleanlive hoặc ?overlay=live hoặc ?overlay=stage hoặc ?overlay=avatar
+ * ⚡ CỬA SỔ MASTER OVERLAY 1 LINK DUY NHẤT TOÀN NĂNG — CHO TIKTOK LIVE STUDIO & OBS STUDIO
+ * - URL: ?overlay=live hoặc /overlay-live hoặc /live
  * - Kết nối đa kênh: WebSocket (Socket.io) + REST API Polling + BroadcastChannel + LocalStorage
- * - Độ trễ: < 1ms (Real-time siêu tốc)
+ * - Độ trễ: < 1ms (Real-time siêu tốc 0.00001s)
  * - Tự động đồng bộ ngay lập tức:
- *   1. Chuyển đổi qua lại giữa AI Idol / Game Chiến Đấu / Game Bản Đồ Chữ S
+ *   1. Chuyển cảnh tức thì: AI Idol / Sàn Nhảy 3D TikTok / Game Bản Đồ 63 Tỉnh / Game Chiến Đấu PK / Live Camera Studio
  *   2. Tỷ lệ khung hình 9:16 (TikTok Dọc) và 16:9 (OBS Ngang)
  *   3. Sự kiện Quà tặng, Cắm cờ, Bảng xếp hạng, Âm nhạc BGM, Đòn đánh PK
  * - Sân khấu sạch 100% (Clean Stage), không có thanh menu hay nút bấm admin thừa
@@ -33,13 +34,14 @@ export default function CleanLiveOverlay() {
     let defaultStage = 'idol'; // Mặc định Idol
     if (overlayParam === 'bando' || overlayParam === 'vietnam_map' || overlayParam === 'map') defaultStage = 'bando';
     else if (overlayParam === 'gamebattle' || overlayParam === 'battle' || overlayParam === 'game') defaultStage = 'battle';
+    else if (overlayParam === 'dancefloor' || overlayParam === 'dance') defaultStage = 'dancefloor';
     else if (overlayParam === 'avatar' || overlayParam === 'idol') defaultStage = 'idol';
     else if (saved && saved.stage) {
       defaultStage = saved.stage;
     }
 
     return {
-      stage: defaultStage, // 'idol' | 'battle' | 'bando'
+      stage: defaultStage, // 'idol' | 'dancefloor' | 'battle' | 'bando' | 'broadcast'
       aspectRatio: ratioParam || '9:16',
       mediaUrl: saved?.mediaUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1200&auto=format&fit=crop&q=80',
       flvUrl: directVideoUrl || saved?.flvUrl || null,
@@ -484,7 +486,7 @@ export default function CleanLiveOverlay() {
   const ratio = masterState.aspectRatio || '9:16';
 
   // RENDER STAGE 1: GAME BẢN ĐỒ VIỆT NAM (CẮM CỜ 3 MIỀN)
-  if (currentStage === 'bando') {
+  if (currentStage === 'bando' || currentStage === 'vietnam_map' || currentStage === 'map') {
     return (
       <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent select-none flex items-center justify-center">
         <GameBanDoVietNam 
@@ -498,7 +500,7 @@ export default function CleanLiveOverlay() {
   }
 
   // RENDER STAGE 2: GAME CHIẾN ĐẤU PK ĐẠI CHIẾN
-  if (currentStage === 'battle') {
+  if (currentStage === 'battle' || currentStage === 'gamebattle' || currentStage === 'game') {
     return (
       <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent select-none flex items-center justify-center">
         <GameChienDau 
@@ -511,7 +513,16 @@ export default function CleanLiveOverlay() {
     );
   }
 
-  // RENDER STAGE 3: LIVE AI IDOL SẠCH (VIDEO / AVATAR + HIỆU ỨNG LIVE)
+  // RENDER STAGE 3: SÀN NHẢY TIKTOK TƯƠNG TÁC 2D & 3D
+  if (currentStage === 'dancefloor' || currentStage === 'dance' || currentStage === 'dance-floor') {
+    return (
+      <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent select-none flex items-center justify-center">
+        <DanceFloorOverlay />
+      </div>
+    );
+  }
+
+  // RENDER STAGE 4: LIVE AI IDOL SẠCH / VIDEO STREAM / PHÒNG LIVE CHÍNH
   return (
     <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-black flex items-center justify-center select-none">
       <div 
@@ -547,6 +558,7 @@ export default function CleanLiveOverlay() {
             key={masterState.mediaUrl}
             src={masterState.mediaUrl}
             alt={masterState.characterName || 'AI Idol'}
+            className="w-full h-full object-contain select-none"
           />
         )}
       </div>

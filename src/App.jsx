@@ -27,6 +27,7 @@ import SalesAnalyticsManager from "./components/SalesAnalyticsManager";
 import LivestreamClonerStudio from "./components/LivestreamClonerStudio";
 import UpgradePrompt from "./components/UpgradePrompt";
 import AutoCaptchaSolver from "./components/AutoCaptchaSolver";
+import { syncMasterLiveState } from "./lib/masterLiveSync";
 import { Lock, Sparkles, ShieldCheck, Mail, LogIn, ArrowRight } from "lucide-react";
 
 export default function App() {
@@ -40,6 +41,16 @@ export default function App() {
   });
   const [isLive, setIsLive] = useState(false);
   const [aiAvatarFeatureEnabled, setAiAvatarFeatureEnabled] = useState(false);
+
+  // Tự động đồng bộ trạng thái Master Live khi chuyển Tab
+  useEffect(() => {
+    let stage = 'idol';
+    if (activeTab === 'dance-floor') stage = 'dancefloor';
+    else if (activeTab === 'broadcast') stage = 'broadcast';
+    else if (activeTab === 'avatars') stage = 'idol';
+    else if (activeTab === 'ai-storyteller') stage = 'bando';
+    syncMasterLiveState({ stage });
+  }, [activeTab]);
 
   // Real Google User State (Loaded from localStorage or Supabase session)
   const [currentUser, setCurrentUser] = useState(() => {
@@ -189,20 +200,20 @@ export default function App() {
     alert(`⚡ ĐÃ KẾT NỐI THÀNH CÔNG TÀI KHOẢN GOOGLE REAL-TIME!\n\n👤 Email: ${emailClean}\n👑 Quyền hạn: ${isAdmin ? "SUPER ADMIN VIP" : "THÀNH VIÊN GÓI CHÍNH THỨC"}\n\nHồ sơ đã được đồng bộ với Cơ sở dữ liệu Supabase!`);
   };
 
-  // Cửa Sổ Overlay Realtime Trong Suốt cho TikTok LIVE Studio & OBS Studio
+  // Cửa Sổ Master Live Overlay 1 Link Duy Nhất cho TikTok LIVE Studio & OBS Studio
   const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
   const pathName = typeof window !== "undefined" ? window.location.pathname.toLowerCase() : "";
   const overlayType = searchParams?.get("overlay")?.toLowerCase();
 
   const isOverlayDance = overlayType === "dancefloor" || pathName.includes("/overlay-dance") || pathName.includes("/overlay/dance") || pathName === "/dancefloor";
-  const isOverlayIdol = overlayType === "live" || overlayType === "stage" || overlayType === "tiktok" || overlayType === "obs" || overlayType === "cleanlive" || overlayType === "avatar" || overlayType === "stream" || overlayType === "idol" || pathName.includes("/overlay-idol") || pathName.includes("/overlay/idol") || pathName.includes("/overlay-live") || pathName === "/idol";
-  const isOverlayBattle = overlayType === "gamebattle" || overlayType === "game" || overlayType === "battle" || pathName.includes("/overlay-battle") || pathName.includes("/overlay/battle") || pathName === "/battle";
+  const isOverlayBattle = overlayType === "gamebattle" || overlayType === "battle" || pathName.includes("/overlay-battle") || pathName.includes("/overlay/battle") || pathName === "/battle";
   const isOverlayBanDo = overlayType === "bando" || overlayType === "vietnam_map" || overlayType === "map" || overlayType === "vietnam" || pathName.includes("/overlay-bando") || pathName.includes("/overlay/bando") || pathName === "/bando";
+  const isMasterLiveOverlay = overlayType === "live" || overlayType === "stage" || overlayType === "tiktok" || overlayType === "obs" || overlayType === "cleanlive" || overlayType === "avatar" || overlayType === "stream" || overlayType === "idol" || overlayType === "master" || pathName.includes("/overlay-live") || pathName.includes("/overlay-idol") || pathName.includes("/overlay") || pathName.includes("/live") || pathName === "/idol";
 
   if (isOverlayDance) return <DanceFloorOverlay />;
-  if (isOverlayIdol) return <CleanLiveOverlay />;
   if (isOverlayBattle) return <GameBattleOverlay />;
   if (isOverlayBanDo) return <GameBanDoOverlay />;
+  if (isMasterLiveOverlay) return <CleanLiveOverlay />;
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-gray-100 flex flex-col font-sans selection:bg-[#EF4444] selection:text-white">

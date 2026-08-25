@@ -6,6 +6,7 @@ import DanceFloorVideoOverlay from './dancefloor/DanceFloorVideoOverlay';
 import { useDanceFloorEngine } from '../hooks/useDanceFloorEngine';
 import { STAGE_PRESETS_3D } from '../lib/dance3d/stagePresets3D';
 import DanceFloorAdminModal from './DanceFloorAdminModal';
+import UniversalMasterOverlayModal from './UniversalMasterOverlayModal';
 import { Settings, Radio, Sparkles, Share2, Copy, Check, ExternalLink, CheckCircle2, Box, Move3d } from 'lucide-react';
 
 // "Sàn Nhảy TikTok" — Bản nâng cấp đầy đủ: Trình diễn 2D/3D + Ghép Camera Overlay + Cấu hình Admin + Sao chép Link Overlay OBS/TikTok
@@ -171,85 +172,11 @@ export default function DanceFloorStudio({ isLive, setIsLive, isAdminOpen: propA
       </div>
     </div>
 
-      {/* MODAL LINK OVERLAY CHO OBS & TIKTOK LIVE STUDIO */}
-      {linksModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="glass-panel p-6 rounded-3xl border border-pink-500/40 max-w-2xl w-full text-left space-y-4 shadow-2xl bg-[#0A0A0A]/98 max-h-[90vh] overflow-y-auto animate-fadeIn">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-600 via-purple-600 to-indigo-600 flex items-center justify-center shadow-glow-purple">
-                  <Share2 className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-base font-black text-white">🔗 DANH SÁCH LINK OVERLAY DÁN VÀO STUDIO & OBS</h3>
-                  <p className="text-xs text-gray-400">Dán vào TikTok Live Studio, OBS Studio, vMix làm Browser Source</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setLinksModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {overlayLinksList.map((item) => (
-                <div key={item.id} className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-pink-500/40 transition-all space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-white flex items-center gap-1.5">
-                      {item.title}
-                    </span>
-                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-white/10 text-pink-300 border border-pink-500/30">
-                      {item.tag}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-gray-400 leading-relaxed">{item.desc}</p>
-                  
-                  <div className="flex items-center gap-2 pt-1">
-                    <input 
-                      type="text" 
-                      readOnly 
-                      value={item.url}
-                      className="flex-1 px-3 py-2 rounded-xl bg-black/80 border border-white/15 text-xs text-pink-200 font-mono focus:outline-none select-all"
-                    />
-                    <button
-                      onClick={() => handleCopyLink(item.id, item.url)}
-                      className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-90 text-white font-black text-xs transition-all cursor-pointer flex items-center gap-1.5 shrink-0 shadow-glow-pink"
-                    >
-                      {copiedId === item.id ? (
-                        <>
-                          <Check className="w-3.5 h-3.5 text-white" />
-                          <span>ĐÃ COPY!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5 text-white" />
-                          <span>COPY LINK</span>
-                        </>
-                      )}
-                    </button>
-                    <a
-                      href={item.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white transition-all"
-                      title="Mở tab mới xem thử"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="p-3 rounded-2xl bg-pink-500/10 border border-pink-500/30 text-[11px] text-pink-300 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-pink-400" />
-              <span>Cách dùng: Mở TikTok Live Studio hoặc OBS Studio → Thêm Nguồn (Source) → <strong>Trình duyệt (Browser Source)</strong> → Dán đường link trên vào (Kích thước khuyên dùng: 1080x1920 hoặc 1920x1080).</span>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 👑 MODAL 1 ĐƯỜNG LINK DUY NHẤT TOÀN NĂNG CHO TIKTOK LIVE STUDIO & OBS STUDIO */}
+      <UniversalMasterOverlayModal
+        isOpen={linksModalOpen}
+        onClose={() => setLinksModalOpen(false)}
+      />
 
       {/* Render bảng Admin Modal khi được gọi */}
       <DanceFloorAdminModal
