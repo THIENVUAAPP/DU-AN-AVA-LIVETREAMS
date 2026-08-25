@@ -162,7 +162,7 @@ let currentMasterLiveState = {
   isVideo: true,
   isAudioMuted: false,
   isDarkMode: true,
-  updatedAt: Date.now()
+  updatedAt: 0
 };
 let currentBandoGameState = null;
 let currentBattleGameState = null;

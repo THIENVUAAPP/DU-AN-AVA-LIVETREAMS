@@ -61,6 +61,12 @@ class ErrorBoundary extends Component {
 const pathname = window.location.pathname.toLowerCase();
 const isDesktopMode = pathname === '/desktop' || pathname.startsWith('/desktop') || window.location.hash.includes('desktop') || new URLSearchParams(window.location.search).get('mode') === 'desktop';
 
+// ĐẢM BẢO ĐỒNG BỘ NGUỒN GỐC (CROSS-ORIGIN) GIỮA BẢNG ĐIỀU KHIỂN & OBS
+// Nếu user truy cập bằng localhost (trên trình duyệt, không phải Desktop App), tự động chuyển sang 127.0.0.1.nip.io
+if (window.location.hostname === 'localhost' && !isDesktopMode) {
+  window.location.replace(window.location.href.replace('localhost', '127.0.0.1.nip.io'));
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>

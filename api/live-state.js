@@ -10,7 +10,7 @@ let globalLiveState = {
   flvUrl: null,
   isConnected: true,
   isDarkMode: true,
-  updatedAt: Date.now()
+  updatedAt: 0
 };
 
 export default async function handler(req, res) {
