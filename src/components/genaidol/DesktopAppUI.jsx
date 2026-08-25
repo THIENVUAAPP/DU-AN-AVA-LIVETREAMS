@@ -2116,23 +2116,6 @@ export default function DesktopAppUI() {
                   <Plus size={13} />
                 </button>
               )}
-              <button 
-                className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-black transition-all border shadow-xs active:scale-95 ${
-                  isDarkMode 
-                    ? 'border-pink-500/50 bg-gradient-to-r from-pink-900/40 to-purple-900/40 text-pink-300 hover:from-pink-800/60 hover:to-purple-800/60 shadow-pink-500/10' 
-                    : 'border-pink-300 bg-pink-50 text-pink-700 hover:bg-pink-100 shadow-pink-200'
-                }`}
-                onClick={() => {
-                  const currentSelected = CHARACTERS[selectedCharacter];
-                  setBeautyModalImage(currentSelected?.url || null);
-                  setBeautyModalCharName(currentSelected?.name || 'Nhân vật Live AI');
-                  setIsBeautyModalOpen(true);
-                }}
-                title="Mở Bộ Công Cụ AI Xoá Phông Siêu Sạch & Làm Mịn Da Nét Căng 4K"
-              >
-                <Sparkles size={12} className="text-pink-400 animate-pulse" />
-                <span>Làm Đẹp AI</span>
-              </button>
 
               <button 
                 className={`px-2 py-1 rounded text-xs font-medium transition-colors border ${isDarkMode ? 'border-purple-500/50 bg-purple-900/30 text-purple-300 hover:bg-purple-800/50' : 'border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100'}`}

@@ -1340,54 +1340,7 @@ export default function ProductionStudio({
   ];
 
   return (
-    <div className="space-y-3.5 p-2 sm:p-3">
-      
-      {/* Sleek Compact Header Bar */}
-      <div className="glass-panel py-2 px-3 sm:px-4 rounded-2xl border border-white/10 flex flex-wrap items-center justify-between gap-2 bg-gradient-to-r from-[#121218] via-[#0A0A0A] to-[#141018] shadow-lg">
-        <div className="flex items-center gap-2">
-          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#EF4444]/20 border border-[#EF4444]/40 text-[#EF4444] text-[10px] font-black">
-            <Radio className="w-3 h-3 animate-pulse" /> LIVE 4K
-          </div>
-          <h2 className="text-sm sm:text-base font-black text-white tracking-wide">Bàn Dựng Multicam Studio</h2>
-        </div>
-
-        {/* Integrated Master Sub-Tabs & Compact Guide */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 bg-black/60 p-1 rounded-xl border border-white/10 text-xs font-bold">
-            <button
-              onClick={() => setStudioSubTab('multicam')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-black tracking-wide transition-all flex items-center gap-1.5 cursor-pointer ${
-                studioSubTab === 'multicam'
-                  ? 'bg-gradient-to-r from-red-600 to-purple-600 text-white shadow-glow-purple'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <Camera className="w-3.5 h-3.5" />
-              <span>🎥 BÀN DỰNG 4K ({cameras.length})</span>
-            </button>
-
-            <button
-              onClick={() => setStudioSubTab('commerce')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-black tracking-wide transition-all flex items-center gap-1.5 cursor-pointer ${
-                studioSubTab === 'commerce'
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-glow-emerald'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <Zap className="w-3.5 h-3.5 text-yellow-300" />
-              <span>🛍️ BÁN HÀNG AI</span>
-            </button>
-          </div>
-
-          <button
-            onClick={() => setShowGuideModal(true)}
-            className="px-3 py-1.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 border border-purple-500/40 text-xs font-black transition-all flex items-center gap-1 cursor-pointer shadow-glow-purple"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-            <span>📖 HƯỚNG DẪN</span>
-          </button>
-        </div>
-      </div>
+    <div className="space-y-3 p-1 sm:p-2">
 
       {/* MODAL HƯỚNG DẪN & CẤU HÌNH ĐA CAMERA / ĐA LUỒNG */}
       {showGuideModal && (
@@ -1999,188 +1952,67 @@ export default function ProductionStudio({
         {/* Main Preview Monitor (Left 2 Columns) */}
         <div className="lg:col-span-2 space-y-4">
           
-          {/* REAL-TIME TELEMETRY & WEBCAM CONTROL BAR (COMPACT & CLEAN) */}
-          <div className="glass-panel p-2.5 rounded-2xl border border-white/10 space-y-2 bg-black/80 text-xs shadow-xl">
-            
-            {/* ROW 1: CAMERA CONTROLS, SCREEN SHARE, FPS & ASPECT RATIO SWITCHER */}
-            <div className="flex flex-wrap items-center justify-between gap-1.5">
-              <div className="flex flex-wrap items-center gap-1.5">
-                {/* WEBCAM TOGGLE */}
-                <button
-                  onClick={toggleWebcam}
-                  className={`px-2.5 py-1 rounded-xl font-bold text-[11px] transition-all flex items-center gap-1 cursor-pointer ${
-                    webcamActive
-                      ? 'bg-red-600 text-white shadow-glow-red animate-pulse'
-                      : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:opacity-90 shadow-glow-purple'
-                  }`}
-                  title="Bật/Tắt Webcam thật từ máy tính"
-                >
-                  <Camera className="w-3.5 h-3.5" />
-                  <span>{webcamActive ? '🔴 TẮT CAM' : '📷 WEBCAM'}</span>
-                </button>
+          {/* REAL-TIME CAMERA & ASPECT RATIO CONTROL BAR (ULTRA CLEAN & COMPACT) */}
+          <div className="glass-panel p-2 rounded-2xl border border-white/10 flex flex-wrap items-center justify-between gap-2 bg-black/80 text-xs shadow-xl">
+            <div className="flex flex-wrap items-center gap-1.5">
+              {/* WEBCAM TOGGLE */}
+              <button
+                onClick={toggleWebcam}
+                className={`px-2.5 py-1 rounded-xl font-bold text-[11px] transition-all flex items-center gap-1 cursor-pointer ${
+                  webcamActive
+                    ? 'bg-red-600 text-white shadow-glow-red animate-pulse'
+                    : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:opacity-90 shadow-glow-purple'
+                }`}
+                title="Bật/Tắt Webcam thật từ máy tính"
+              >
+                <Camera className="w-3.5 h-3.5" />
+                <span>{webcamActive ? '🔴 TẮT CAM' : '📷 WEBCAM'}</span>
+              </button>
 
-                {/* CAM SWITCHER */}
-                <button
-                  onClick={toggleCameraFacingMode}
-                  className="px-2 py-1 rounded-xl bg-purple-600/20 hover:bg-purple-600/40 text-purple-200 border border-purple-500/30 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
-                  title="Chuyển Camera Trước / Sau"
-                >
-                  <RefreshCw className="w-3 h-3 text-purple-300" />
-                  <span>{cameraFacingMode === 'user' ? 'Cam Trước' : 'Cam Sau'}</span>
-                </button>
+              {/* CAM SWITCHER */}
+              <button
+                onClick={toggleCameraFacingMode}
+                className="px-2 py-1 rounded-xl bg-purple-600/20 hover:bg-purple-600/40 text-purple-200 border border-purple-500/30 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                title="Chuyển Camera Trước / Sau"
+              >
+                <RefreshCw className="w-3 h-3 text-purple-300" />
+                <span>{cameraFacingMode === 'user' ? 'Cam Trước' : 'Cam Sau'}</span>
+              </button>
 
-                {/* SCREEN SHARE */}
-                <ScreenShareControls
-                  isSharing={isScreenSharing}
-                  layout={screenShareLayout}
-                  onStart={handleStartScreenShare}
-                  onStop={handleStopScreenShare}
-                  onChangeLayout={setScreenShareLayout}
-                />
-
-                {/* 60FPS ACCELERATION */}
-                <button
-                  onClick={handleAutoOptimizeBitrate}
-                  className={`px-2 py-1 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer border ${
-                    ultraAntiLagMode
-                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm shadow-emerald-500/20'
-                      : 'bg-white/5 text-gray-400 border-white/10'
-                  }`}
-                  title="Bật tăng tốc phần cứng 60fps"
-                >
-                  <Zap className="w-3 h-3 text-emerald-400" />
-                  <span>60FPS</span>
-                </button>
-
-                {/* ANTI-SCAN BYPASS */}
-                <button
-                  onClick={() => {
-                    const newState = !isAntiScanActive;
-                    setIsAntiScanActive(newState);
-                    antiScanActiveRef.current = newState;
-                    if (newState) {
-                      alert('🛡️ ĐÃ BẬT CHẾ ĐỘ CHỐNG QUÉT AI (OBS BYPASS)!\n\nHệ thống sẽ tự động thêm nhiễu hạt động, lắc khung hình vi điểm và nhúng mã thời gian tàng hình vào luồng phát để đánh lừa thuật toán quét video phát lại của TikTok/Shopee.');
-                    } else {
-                      alert('🛑 Đã tắt chế độ Chống Quét AI.');
-                    }
-                  }}
-                  className={`px-2 py-1 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer border ${
-                    isAntiScanActive
-                      ? 'bg-blue-600/30 text-blue-300 border-blue-400 shadow-sm shadow-blue-500/20'
-                      : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'
-                  }`}
-                  title="Bật chống quét AI (Bypass Algorithm) cho video phát lại"
-                >
-                  <ShieldCheck className={`w-3 h-3 ${isAntiScanActive ? 'text-blue-300' : 'text-gray-400'}`} />
-                  <span>{isAntiScanActive ? '🛡️ Bảo Vệ' : '🛡️ Chống Quét'}</span>
-                </button>
-
-                {/* RECORD VIDEO */}
-                <button
-                  onClick={handleToggleRecording}
-                  className={`px-2 py-1 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer border ${
-                    isRecording
-                      ? 'bg-red-600 text-white border-red-500 shadow-glow-red animate-pulse'
-                      : 'bg-white/5 text-gray-300 border-white/10 hover:bg-white/10'
-                  }`}
-                  title="Ghi hình luồng Live và tự động lưu vào máy"
-                >
-                  <div className={`w-2 h-2 rounded-full ${isRecording ? 'bg-white' : 'bg-red-500'}`} />
-                  <span>{isRecording ? 'REC...' : 'REC'}</span>
-                </button>
-              </div>
-
-              {/* 📱/📺 ASPECT RATIO CAPSULE SWITCHER (16:9 vs 9:16) */}
-              <div className="flex items-center gap-1 p-0.5 rounded-xl bg-black/60 border border-white/15 shadow-inner">
-                <button
-                  onClick={() => handleToggleAspectRatio('16:9')}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-black transition-all flex items-center gap-1 ${
-                    stageAspectRatio === '16:9'
-                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                  title="Khung hình Ngang 16:9 (YouTube, Facebook, PC)"
-                >
-                  <span>📺 16:9 Ngang</span>
-                </button>
-                <button
-                  onClick={() => handleToggleAspectRatio('9:16')}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-black transition-all flex items-center gap-1 ${
-                    stageAspectRatio === '9:16'
-                      ? 'bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-md shadow-pink-500/30 animate-pulse'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                  title="Khung hình Dọc 9:16 (TikTok LIVE, Shopee, Reels, Mobile)"
-                >
-                  <span>📱 9:16 Dọc TikTok</span>
-                </button>
-              </div>
+              {/* SCREEN SHARE */}
+              <ScreenShareControls
+                isSharing={isScreenSharing}
+                layout={screenShareLayout}
+                onStart={handleStartScreenShare}
+                onStop={handleStopScreenShare}
+                onChangeLayout={setScreenShareLayout}
+              />
             </div>
 
-            {/* ROW 2: TIKTOK STUDIO CONNECTOR, MULTISTREAM & ZOOM LIVE */}
-            <div className="flex flex-wrap items-center justify-between gap-1.5 pt-1.5 border-t border-white/10">
-              {/* 🎵 TIKTOK LIVE STUDIO ID CONNECTOR */}
-              <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-xl bg-black/60 border border-pink-500/40 shadow-inner">
-                <input
-                  type="text"
-                  value={tiktokStudioId}
-                  onChange={(e) => setTiktokStudioId(e.target.value)}
-                  placeholder="ID TikTok Live..."
-                  className="w-28 sm:w-32 px-2 py-1 rounded-lg text-[11px] font-bold bg-white/10 text-white placeholder-gray-400 border border-white/10 focus:border-pink-500 outline-none transition-all"
-                  title="Nhập ID kênh TikTok của bạn để kết nối với TikTok LIVE Studio"
-                />
-                <button
-                  onClick={handleToggleTikTokStudioConnect}
-                  disabled={isTiktokConnecting}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-black transition-all flex items-center gap-1 cursor-pointer shadow-md ${
-                    isTiktokConnected
-                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-glow-emerald animate-pulse'
-                      : 'bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white shadow-glow-red'
-                  }`}
-                  title={isTiktokConnected ? "Bấm để ngắt kết nối" : "Bấm để kết nối trực tiếp với TikTok LIVE Studio"}
-                >
-                  {isTiktokConnecting ? (
-                    <RefreshCw className="w-3 h-3 animate-spin" />
-                  ) : isTiktokConnected ? (
-                    <CheckCircle2 className="w-3 h-3 text-white" />
-                  ) : (
-                    <Zap className="w-3 h-3 text-yellow-300" />
-                  )}
-                  <span>
-                    {isTiktokConnecting ? 'Đang nối...' : isTiktokConnected ? '🟢 Đã Kết Nối TikTok' : '⚡ Kết Nối TikTok Live'}
-                  </span>
-                </button>
-              </div>
-
-              <div className="flex items-center gap-1.5">
-                {/* 1-TOUCH MASTER MULTISTREAM BROADCAST BUTTON */}
-                <button
-                  onClick={handleToggleOneTouchMultistream}
-                  className={`px-2.5 py-1 rounded-xl font-bold text-[11px] transition-all flex items-center gap-1.5 cursor-pointer border ${
-                    isOneTouchLiveActive
-                      ? 'bg-gradient-to-r from-red-600 via-pink-600 to-purple-600 text-white border-red-400 shadow-glow-red animate-pulse'
-                      : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400/40 hover:opacity-90'
-                  }`}
-                  title="Phát trực tiếp 1-Chạm đồng thời lên Facebook, Fanpage, TikTok, YouTube, Shopee..."
-                >
-                  <Radio className="w-3 h-3 text-white animate-spin" />
-                  <span>{isOneTouchLiveActive ? 'Đang Phát Đa Kênh' : '🌐 Live Đa Nền Tảng'}</span>
-                </button>
-
-                {/* 1-TOUCH ZOOM LIVE CONNECTION BUTTON */}
-                <button
-                  onClick={handleToggleZoomLive}
-                  className={`px-2.5 py-1 rounded-xl font-bold text-[11px] transition-all flex items-center gap-1.5 cursor-pointer border ${
-                    isZoomLiveActive
-                      ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 text-white border-blue-300 shadow-glow-blue animate-pulse'
-                      : 'bg-gradient-to-r from-blue-600 to-sky-500 text-white border-blue-400/40 hover:opacity-90'
-                  }`}
-                  title="Kết nối phát trực tiếp 1-Chạm sang Zoom Meeting & Zoom Webinar 4K"
-                >
-                  <Video className="w-3 h-3 text-white" />
-                  <span>{isZoomLiveActive ? '🔴 Đang Phát Zoom' : '🎥 Live Zoom'}</span>
-                </button>
-              </div>
+            {/* 📱/📺 ASPECT RATIO CAPSULE SWITCHER (16:9 vs 9:16) */}
+            <div className="flex items-center gap-1 p-0.5 rounded-xl bg-black/60 border border-white/15 shadow-inner">
+              <button
+                onClick={() => handleToggleAspectRatio('16:9')}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-black transition-all flex items-center gap-1 ${
+                  stageAspectRatio === '16:9'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+                title="Khung hình Ngang 16:9 (YouTube, Facebook, PC)"
+              >
+                <span>📺 16:9 Ngang</span>
+              </button>
+              <button
+                onClick={() => handleToggleAspectRatio('9:16')}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-black transition-all flex items-center gap-1 ${
+                  stageAspectRatio === '9:16'
+                    ? 'bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-md shadow-pink-500/30 animate-pulse'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+                title="Khung hình Dọc 9:16 (TikTok LIVE, Shopee, Reels, Mobile)"
+              >
+                <span>📱 9:16 Dọc TikTok</span>
+              </button>
             </div>
           </div>
 
