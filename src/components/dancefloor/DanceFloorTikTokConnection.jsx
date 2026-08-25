@@ -12,7 +12,18 @@ export default function DanceFloorTikTokConnection({ onEvent }) {
   const [stats, setStats] = useState({ likes: 0, comments: 0, gifts: 0, members: 0 });
 
   useEffect(() => {
-    const newSocket = io('http://localhost:3001');
+    let backendUrl = '';
+    if (typeof window !== 'undefined') {
+      const customUrl = localStorage.getItem('aidol_backend_url') || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BACKEND_URL);
+      if (customUrl && customUrl.startsWith('http')) {
+        backendUrl = customUrl;
+      } else if (window.location.port === '5173') {
+        backendUrl = window.location.protocol + '//' + window.location.hostname + ':3001';
+      } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        backendUrl = 'http://127.0.0.1.nip.io:3001';
+      }
+    }
+    const newSocket = io(backendUrl || 'http://localhost:3001');
     setSocket(newSocket);
 
     newSocket.on('tiktok_connected', (data) => {
