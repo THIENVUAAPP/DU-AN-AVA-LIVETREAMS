@@ -93,7 +93,7 @@ export default function KOLLiveDashboard() {
               link.click();
               document.body.removeChild(link);
             }}
-            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-4 py-2 rounded-full text-sm font-bold shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all cursor-pointer whitespace-nowrap hidden lg:flex"
+            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white px-4 py-2 rounded-full text-xs font-bold shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all cursor-pointer whitespace-nowrap animate-pulse border border-cyan-300/30"
           >
             <Download className="w-4 h-4" />
             Tải Phần Mềm (ZIP)

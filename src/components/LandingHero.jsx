@@ -5,7 +5,7 @@ import {
   Volume2, Lock, Layers, Flame, Activity, Maximize2, TrendingUp, Cpu, Clock,
   DollarSign, HeartHandshake, Check, Star, Wifi, BarChart2, MessageSquare,
   Camera, Film, Mic, LayoutGrid, Sliders, Target, Rocket, Users, Shield,
-  Zap as Lightning, ChevronRight, Package, Truck, PhoneCall, Eye, ToggleLeft, RefreshCw
+  Zap as Lightning, ChevronRight, Package, Truck, PhoneCall, Eye, ToggleLeft, RefreshCw, Download
 } from 'lucide-react';
 
 // ─── Scroll Reveal Hook ───────────────────────────────────────────────────────
@@ -278,9 +278,16 @@ export default function LandingHero({ setActiveTab, setGoogleLoginModalOpen, aiA
 
         {/* CTA Buttons */}
         <div className="animate-fade-in-up delay-200 flex flex-wrap items-center justify-center gap-4">
+          <a
+            href="/Livestream_AI_Software.zip"
+            download="AvaLive_VIP_PRO_Full_Package_MacWin.zip"
+            className="px-8 py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black text-sm rounded-2xl shadow-xl shadow-blue-500/30 hover:scale-105 transition-all flex items-center gap-2.5 cursor-pointer border border-cyan-300/40 animate-pulse"
+          >
+            <Download className="w-5 h-5" /> TẢI PHẦN MỀM (MAC & WIN ZIP)
+          </a>
           <button
             onClick={() => { if (setGoogleLoginModalOpen) setGoogleLoginModalOpen(true); }}
-            className="px-8 py-4 bg-gradient-to-r from-[#EF4444] to-[#8B5CF6] text-white font-black text-sm rounded-2xl animate-cta-pulse hover:opacity-90 transition-all flex items-center gap-2 cursor-pointer"
+            className="px-8 py-4 bg-gradient-to-r from-[#EF4444] to-[#8B5CF6] text-white font-black text-sm rounded-2xl hover:opacity-90 transition-all flex items-center gap-2 cursor-pointer shadow-lg"
           >
             🚀 BẮT ĐẦU MIỄN PHÍ NGAY <ArrowRight className="w-5 h-5" />
           </button>

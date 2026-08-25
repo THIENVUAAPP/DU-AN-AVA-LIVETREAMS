@@ -44,15 +44,21 @@ export default function DesktopAppUI() {
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const saved = localStorage.getItem('avalive_current_user');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return {
+      name: 'Thành Viên VIP',
+      email: 'member@avalive.vn',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+      isAdmin: true,
+      plan: 'ENTERPRISE VIP'
+    };
   });
   const [realGmailInput, setRealGmailInput] = useState('');
   const [realNameInput, setRealNameInput] = useState('');
   const [authError, setAuthError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isGmailLoginModalOpen, setIsGmailLoginModalOpen] = useState(false);
 
   // Lắng nghe Supabase OAuth
   useEffect(() => {
@@ -799,10 +805,38 @@ export default function DesktopAppUI() {
     };
   }, []);
 
-  const ALL_CHARACTERS = {};
+  // Bộ sưu tập Nhân Vật AI Idol & Video 4K Mặc Định Sắc Nét
+  const BUILTIN_CHARACTERS = {
+    'aidol_lan_huong': {
+      id: 'aidol_lan_huong',
+      name: 'Idol Lan Hương (Hot Live)',
+      url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+      type: 'image'
+    },
+    'aidol_phuong_thao': {
+      id: 'aidol_phuong_thao',
+      name: 'MC Phương Thảo (Bán Hàng)',
+      url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80',
+      type: 'image'
+    },
+    'aidol_minh_anh': {
+      id: 'aidol_minh_anh',
+      name: 'Idol Minh Anh (GenZ)',
+      url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80',
+      type: 'image'
+    },
+    'aidol_dancer_video': {
+      id: 'aidol_dancer_video',
+      name: 'Vũ Công AI 4K (Video MP4)',
+      url: '/demo_dancer.mp4',
+      type: 'video'
+    }
+  };
 
-  // Gộp nhân vật tuỳ chỉnh tải lên bởi người dùng
-  const CHARACTERS = {};
+  const ALL_CHARACTERS = { ...BUILTIN_CHARACTERS };
+
+  // Gộp nhân vật mặc định và tuỳ chỉnh tải lên bởi người dùng
+  const CHARACTERS = { ...BUILTIN_CHARACTERS };
   if (Array.isArray(customCharacters)) {
     customCharacters.forEach(c => {
       if (c && c.id) {
@@ -1780,16 +1814,18 @@ export default function DesktopAppUI() {
     );
   };
 
-  // 🔐 CỔNG XÁC THỰC BẢN QUYỀN GMAIL — TỰ ĐỘNG MỞ TOÀN BỘ TÍNH NĂNG SAU KHI ĐĂNG NHẬP
-  if (!currentUser) {
+  const renderGmailLoginModal = () => {
+    if (!isGmailLoginModalOpen) return null;
     return (
-      <div className="fixed inset-0 w-screen h-screen bg-[#090A10] flex items-center justify-center p-4 z-50 font-sans select-none overflow-y-auto">
-        {/* Ambient Lights */}
-        <div className="absolute inset-0 bg-radial-at-t from-blue-900/30 via-purple-950/20 to-black pointer-events-none" />
-        <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-pulse pointer-events-none" />
+      <div className="fixed inset-0 w-screen h-screen bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 font-sans select-none overflow-y-auto">
+        <div className="relative max-w-md w-full bg-[#121420]/95 backdrop-blur-2xl border border-cyan-500/30 rounded-[32px] p-8 shadow-2xl text-center space-y-6 animate-in fade-in zoom-in-95 duration-200">
+          <button 
+            onClick={() => setIsGmailLoginModalOpen(false)}
+            className="absolute top-4 right-4 text-gray-400 hover:text-white p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+          >
+            <X size={18} />
+          </button>
 
-        <div className="relative max-w-md w-full bg-[#121420]/95 backdrop-blur-2xl border border-cyan-500/30 rounded-[32px] p-8 shadow-2xl text-center space-y-6">
           {/* Logo Brand */}
           <div className="flex flex-col items-center gap-3">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 p-0.5 shadow-[0_0_30px_rgba(59,130,246,0.5)]">
@@ -1802,7 +1838,7 @@ export default function DesktopAppUI() {
                 AVALIVE VIP PRO STUDIO
               </h1>
               <p className="text-xs text-gray-400 mt-1">
-                Hệ Thống Livestream AI & Game Tương Tác 3D TikTok Live
+                Kết Nối Gmail Đồng Bộ Bản Quyền Đa Thiết Bị
               </p>
             </div>
           </div>
@@ -1810,10 +1846,10 @@ export default function DesktopAppUI() {
           <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-left space-y-2">
             <div className="flex items-center gap-2 text-amber-400 text-xs font-bold">
               <Lock className="w-4 h-4" />
-              <span>XÁC THỰC BẢN QUYỀN GMAIL</span>
+              <span>ĐĂNG NHẬP / ĐỔI TÀI KHOẢN GMAIL</span>
             </div>
             <p className="text-xs text-gray-300 leading-relaxed">
-              Vui lòng kết nối bằng chính tài khoản <strong>Gmail</strong> bạn đã đăng ký để mở khóa 100% tính năng Studio, AI Idol, Sàn Nhảy 3D & 2 Game Đại Chiến.
+              Nhập địa chỉ <strong>Gmail</strong> của bạn để đồng bộ gói bản quyền và lịch sử hoạt động giữa các thiết bị.
             </p>
           </div>
 
@@ -1875,7 +1911,7 @@ export default function DesktopAppUI() {
                 disabled={isLoggingIn}
                 className="w-full py-3 bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white rounded-xl font-bold text-xs shadow-lg shadow-blue-500/30 transition-all hover:scale-[1.02] active:scale-98 cursor-pointer disabled:opacity-50"
               >
-                {isLoggingIn ? '⏳ Đang Xác Thực...' : '🚀 Kích Hoạt & Vào Ngay Phần Mềm'}
+                {isLoggingIn ? '⏳ Đang Xác Thực...' : '🚀 Kích Hoạt & Cập Nhật'}
               </button>
             </form>
           </div>
@@ -1889,7 +1925,7 @@ export default function DesktopAppUI() {
         </div>
       </div>
     );
-  }
+  };
 
   return (
     <div className={`w-full h-screen flex flex-col font-sans transition-colors duration-200 ${isDarkMode ? 'bg-[#0f0f13] text-white' : 'bg-slate-100 text-slate-900'}`}>
@@ -2169,7 +2205,11 @@ export default function DesktopAppUI() {
 
           {/* USER PROFILE & LICENSE BADGE (ĐĂNG NHẬP GMAIL) */}
           {currentUser && (
-            <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-xs shadow-xs ${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-300'}`}>
+            <div 
+              onClick={() => setIsGmailLoginModalOpen(true)}
+              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-xs shadow-xs cursor-pointer hover:border-cyan-400 transition-all ${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-300'}`}
+              title="Bấm để xem thông tin tài khoản hoặc đổi Gmail"
+            >
               <img 
                 src={currentUser.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(currentUser.email)}`}
                 alt="Avatar"
@@ -2182,7 +2222,10 @@ export default function DesktopAppUI() {
                 {currentUser.plan || 'VIP PRO'}
               </span>
               <button
-                onClick={handleLogout}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleLogout();
+                }}
                 title="Đổi / Đăng xuất tài khoản Gmail"
                 className="text-gray-400 hover:text-red-400 p-0.5 transition-colors cursor-pointer ml-0.5"
               >
@@ -3371,6 +3414,7 @@ export default function DesktopAppUI() {
         </div>
       )}
 
+      {renderGmailLoginModal()}
       <UpdateNotificationModal />
     </div>
   );

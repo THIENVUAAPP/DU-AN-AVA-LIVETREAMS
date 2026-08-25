@@ -57,6 +57,49 @@ export default function CleanLiveOverlay() {
   const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [currentSubtitle, setCurrentSubtitle] = useState('');
 
+  // 📷 Webcam Stream Support cho OBS Studio & TikTok Live Studio
+  const [overlayCamActive, setOverlayCamActive] = useState(() => {
+    const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    return urlParams?.get('cam') === '1' || urlParams?.get('webcam') === 'true';
+  });
+  const overlayWebcamVideoRef = useRef(null);
+  const overlayWebcamStreamRef = useRef(null);
+
+  const toggleOverlayCam = async () => {
+    if (overlayCamActive) {
+      if (overlayWebcamStreamRef.current) {
+        overlayWebcamStreamRef.current.getTracks().forEach(t => t.stop());
+        overlayWebcamStreamRef.current = null;
+      }
+      setOverlayCamActive(false);
+    } else {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        overlayWebcamStreamRef.current = stream;
+        if (overlayWebcamVideoRef.current) {
+          overlayWebcamVideoRef.current.srcObject = stream;
+        }
+        setOverlayCamActive(true);
+      } catch (err) {
+        console.warn('Overlay Camera notice:', err.message);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (overlayCamActive && overlayWebcamVideoRef.current && overlayWebcamStreamRef.current) {
+      overlayWebcamVideoRef.current.srcObject = overlayWebcamStreamRef.current;
+    }
+  }, [overlayCamActive]);
+
+  useEffect(() => {
+    return () => {
+      if (overlayWebcamStreamRef.current) {
+        overlayWebcamStreamRef.current.getTracks().forEach(t => t.stop());
+      }
+    };
+  }, []);
+
   useEffect(() => {
     document.title = 'AVA Live Output (Realtime Master Overlay) — TikTok LIVE Studio / OBS';
     document.documentElement.style.background = 'transparent';
@@ -436,22 +479,30 @@ export default function CleanLiveOverlay() {
         style={ratio === '9:16' ? { aspectRatio: '9 / 16', height: '100%', maxWidth: 'calc(100vh * 9 / 16)' } : { aspectRatio: '16 / 9', width: '100%' }}
       >
         
-        {/* Nguồn Video Trực Tiếp FLV / HLS nếu có */}
-        {activeStreamUrl ? (
+        {/* 1. Nguồn Webcam Live nếu được kích hoạt trên Overlay */}
+        {overlayCamActive ? (
+          <video
+            ref={overlayWebcamVideoRef}
+            autoPlay
+            playsInline
+            muted
+            className="w-full h-full object-cover select-none z-10 scale-x-[-1] bg-black"
+          />
+        ) : activeStreamUrl ? (
+          /* 2. Nguồn Video Trực Tiếp FLV / HLS nếu có */
           <video
             ref={flvVideoRef}
             key={activeStreamUrl}
             autoPlay
             muted={isAudioMuted}
             playsInline
-            className="w-full h-full object-contain select-none z-10"
-            style={{ background: 'black' }}
+            className="w-full h-full object-contain select-none z-10 bg-black"
           />
-        ) : masterState.isVideo ? (
-          /* Video MP4 Lặp Lại Mượt Mà 60FPS */
+        ) : (masterState.isVideo || (masterState.mediaUrl && masterState.mediaUrl.endsWith('.mp4'))) ? (
+          /* 3. Video MP4 Lặp Lại Mượt Mà 60FPS */
           <video
-            key={masterState.mediaUrl}
-            src={masterState.mediaUrl}
+            key={masterState.mediaUrl || '/demo_dancer.mp4'}
+            src={masterState.mediaUrl || '/demo_dancer.mp4'}
             autoPlay
             loop
             muted={isAudioMuted}
@@ -459,7 +510,7 @@ export default function CleanLiveOverlay() {
             className="w-full h-full object-contain select-none z-10 bg-black"
           />
         ) : (
-          /* Hình Ảnh AI Idol Sinh Động Có Chuyển Động Float & Ánh Sáng */
+          /* 4. Hình Ảnh AI Idol Sinh Động Có Chuyển Động Float & Ánh Sáng */
           <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-gradient-to-b from-[#0e101f] via-[#090b16] to-[#04050a]">
             {/* Ambient Avatar Glow */}
             <div className="absolute inset-0 bg-radial-at-c from-cyan-500/20 via-transparent to-transparent animate-pulse" />
@@ -513,8 +564,20 @@ export default function CleanLiveOverlay() {
           </div>
         )}
 
-        {/* Nút Điều Khiển Âm Thanh Overlay Góc Phải Dưới */}
-        <div className="absolute bottom-3 right-3 z-30 pointer-events-auto">
+        {/* Nút Điều Khiển Camera & Âm Thanh Overlay Góc Phải Dưới */}
+        <div className="absolute bottom-3 right-3 z-30 pointer-events-auto flex items-center gap-2">
+          <button
+            onClick={toggleOverlayCam}
+            className={`p-2.5 rounded-full border shadow-xl backdrop-blur-md transition-all hover:scale-110 cursor-pointer ${
+              overlayCamActive 
+                ? 'bg-pink-600/90 text-white border-pink-400 animate-pulse' 
+                : 'bg-black/70 hover:bg-black/90 text-gray-300 border-white/20'
+            }`}
+            title={overlayCamActive ? 'Tắt Camera Overlay' : 'Bật Camera Webcam Trực Tiếp trên Overlay'}
+          >
+            <Video className="w-4 h-4" />
+          </button>
+
           <button
             onClick={() => setIsAudioMuted(!isAudioMuted)}
             className="p-2.5 rounded-full bg-black/70 hover:bg-black/90 text-white border border-white/20 shadow-xl backdrop-blur-md transition-all hover:scale-110 cursor-pointer"
