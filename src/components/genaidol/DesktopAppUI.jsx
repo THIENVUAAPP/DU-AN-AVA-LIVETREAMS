@@ -3410,20 +3410,20 @@ export default function DesktopAppUI() {
       {/* Live Studio Fullscreen Modal (Ảnh 2) — Nằm trong phần mềm, đầy đủ tính năng phòng dựng */}
       {isLiveStudioOpen && (
         <div className="fixed inset-0 z-[99990] bg-[#0A0A0A] flex flex-col animate-in fade-in zoom-in-95 duration-200">
-          <div className="h-10 bg-[#121216] border-b border-white/10 flex items-center justify-between px-4 shrink-0 shadow-md">
+          <div className="h-8 bg-[#121216] border-b border-white/10 flex items-center justify-between px-3 shrink-0 shadow-md">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-pink-500 animate-pulse"></span>
-              <h2 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></span>
+              <h2 className="text-[11px] font-black text-white uppercase tracking-wider flex items-center gap-1.5">
                 <Tv className="w-3.5 h-3.5 text-pink-400" />
                 <span>PHÒNG DỰNG LIVE STUDIO PRO 4K (OBS / WEBCAM / BEAUTY)</span>
               </h2>
             </div>
             <button 
               onClick={() => setIsLiveStudioOpen(false)}
-              className="flex items-center gap-1 px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer"
+              className="flex items-center gap-1 px-2.5 py-0.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-[11px] font-bold transition-all shadow-md active:scale-95 cursor-pointer"
               title="Quay lại giao diện phần mềm chính"
             >
-              <X size={14} />
+              <X size={12} />
               <span>Đóng Live Studio</span>
             </button>
           </div>

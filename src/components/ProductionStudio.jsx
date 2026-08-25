@@ -1306,48 +1306,48 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3.5 p-2 sm:p-3">
       
-      {/* Sleek Executive Header Bar with Integrated Sub-Tabs */}
-      <div className="glass-panel p-4 lg:p-5 rounded-3xl border border-white/10 flex flex-col lg:flex-row items-center justify-between gap-4 bg-gradient-to-r from-[#121218] via-[#0A0A0A] to-[#141018]">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#EF4444]/20 border border-[#EF4444]/40 text-[#EF4444] text-xs font-black mb-1.5">
-            <Radio className="w-3.5 h-3.5 animate-pulse" /> LIVE MULTICAM 4K
+      {/* Sleek Compact Header Bar */}
+      <div className="glass-panel py-2 px-3 sm:px-4 rounded-2xl border border-white/10 flex flex-wrap items-center justify-between gap-2 bg-gradient-to-r from-[#121218] via-[#0A0A0A] to-[#141018] shadow-lg">
+        <div className="flex items-center gap-2">
+          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#EF4444]/20 border border-[#EF4444]/40 text-[#EF4444] text-[10px] font-black">
+            <Radio className="w-3 h-3 animate-pulse" /> LIVE 4K
           </div>
-          <h2 className="text-2xl font-black text-white tracking-wide">Bàn Dựng Multicam Studio</h2>
+          <h2 className="text-sm sm:text-base font-black text-white tracking-wide">Bàn Dựng Multicam Studio</h2>
         </div>
 
         {/* Integrated Master Sub-Tabs & Compact Guide */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex items-center gap-1.5 bg-black/60 p-1.5 rounded-2xl border border-white/10 text-xs font-bold">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 bg-black/60 p-1 rounded-xl border border-white/10 text-xs font-bold">
             <button
               onClick={() => setStudioSubTab('multicam')}
-              className={`px-5 py-2.5 rounded-xl text-xs font-black tracking-wide transition-all flex items-center gap-2 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-black tracking-wide transition-all flex items-center gap-1.5 cursor-pointer ${
                 studioSubTab === 'multicam'
-                  ? 'bg-gradient-to-r from-red-600 to-purple-600 text-white shadow-glow-purple scale-105'
+                  ? 'bg-gradient-to-r from-red-600 to-purple-600 text-white shadow-glow-purple'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
-              <Camera className="w-4 h-4" />
+              <Camera className="w-3.5 h-3.5" />
               <span>🎥 BÀN DỰNG 4K ({cameras.length})</span>
             </button>
 
             <button
               onClick={() => setStudioSubTab('commerce')}
-              className={`px-5 py-2.5 rounded-xl text-xs font-black tracking-wide transition-all flex items-center gap-2 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-black tracking-wide transition-all flex items-center gap-1.5 cursor-pointer ${
                 studioSubTab === 'commerce'
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-glow-emerald scale-105'
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-glow-emerald'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
-              <Zap className="w-4 h-4 text-yellow-300" />
+              <Zap className="w-3.5 h-3.5 text-yellow-300" />
               <span>🛍️ BÁN HÀNG AI</span>
             </button>
           </div>
 
           <button
             onClick={() => setShowGuideModal(true)}
-            className="px-4 py-2.5 rounded-2xl bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 border border-purple-500/40 text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-glow-purple"
+            className="px-3 py-1.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 border border-purple-500/40 text-xs font-black transition-all flex items-center gap-1 cursor-pointer shadow-glow-purple"
           >
             <Sparkles className="w-3.5 h-3.5 text-purple-400" />
             <span>📖 HƯỚNG DẪN</span>
