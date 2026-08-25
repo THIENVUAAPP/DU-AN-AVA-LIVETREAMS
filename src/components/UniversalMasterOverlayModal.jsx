@@ -28,7 +28,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
 
   // Lấy chính xác Origin hiện tại (hoạt động hoàn hảo trên cả Localhost, App Desktop macOS/Windows và Web Vercel)
   const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://127.0.0.1.nip.io:5173';
-  const masterLink = `${currentOrigin.replace('localhost', '127.0.0.1.nip.io').replace('127.0.0.1', '127.0.0.1.nip.io')}/?overlay=live`;
+  const masterLink = `${currentOrigin.replace(/(localhost|127\.0\.0\.1)(?!\.nip\.io)/, '127.0.0.1.nip.io')}/?overlay=live`;
 
   const handleCopy = () => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
