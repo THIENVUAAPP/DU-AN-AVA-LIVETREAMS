@@ -814,8 +814,17 @@ export default function DesktopAppUI() {
       const text = data.comment || '';
       setTiktokLogs(prev => [`[${timeStr}] 💬 ${author}: ${text}`, ...prev.slice(0, 49)]);
       
-      // 1. Chuyển tiếp tới Game Bản Đồ Chữ S & AI Commentary (Tự động đọc & trả lời DUY NHẤT 1 LẦN qua Global Speech Queue)
-      bandoEngine.handleUserComment(text, author);
+      // 1. Chuyển tiếp tới Game Bản Đồ Chữ S & Game Chiến Đấu
+      try {
+        bandoEngine.handleUserComment(text, author);
+      } catch (e) {}
+
+      // 2. Kích hoạt Kịch Bản Trả Lời Bình Luận & Chốt Đơn của AI Idol (theo đúng cấu trúc đã cài đặt)
+      const now = Date.now();
+      if (now - lastAiCommentTime.current > 2500) {
+        lastAiCommentTime.current = now;
+        handleLiveEventRef.current?.('COMMENT', { name: author, text });
+      }
     });
 
     socket.on('tiktok_gift', (data) => {
