@@ -38,11 +38,36 @@ if (fs.existsSync(zipFilePath)) fs.unlinkSync(zipFilePath);
 if (fs.existsSync(publicZip)) fs.unlinkSync(publicZip);
 if (fs.existsSync(distZip)) fs.unlinkSync(distZip);
 
-// 4. Chạy lệnh zip nén dist, backend, patches, launchers, docs, config (loại trừ các file zip lồng nhau)
+// 4. Tạo thư mục staging sạch sẽ để đóng gói
+const stagingDir = path.join(rootDir, '.temp_package_staging');
+if (fs.existsSync(stagingDir)) fs.rmSync(stagingDir, { recursive: true, force: true });
+fs.mkdirSync(stagingDir, { recursive: true });
+
+const appDataDir = path.join(stagingDir, 'app_data');
+fs.mkdirSync(appDataDir, { recursive: true });
+
+// Copy launchers và docs ra thư mục gốc
+fs.copyFileSync(path.join(rootDir, 'Chay_App_Mac_Linux.command'), path.join(stagingDir, 'Chay_App_Mac_Linux.command'));
+fs.chmodSync(path.join(stagingDir, 'Chay_App_Mac_Linux.command'), 0o755);
+
+fs.copyFileSync(path.join(rootDir, 'Chay_App_Windows.bat'), path.join(stagingDir, 'Chay_App_Windows.bat'));
+if (fs.existsSync(path.join(rootDir, 'Mo_Ung_Dung_Web.html'))) {
+  fs.copyFileSync(path.join(rootDir, 'Mo_Ung_Dung_Web.html'), path.join(stagingDir, 'Mo_Ung_Dung_Web.html'));
+}
+if (fs.existsSync(path.join(rootDir, 'HUONG_DAN_SU_DUNG.txt'))) {
+  fs.copyFileSync(path.join(rootDir, 'HUONG_DAN_SU_DUNG.txt'), path.join(stagingDir, 'HUONG_DAN_SU_DUNG.txt'));
+}
+
+// Copy toàn bộ dữ liệu cốt lõi vào app_data
+execSync(`cp -R dist backend patches package.json package-lock.json .env.example "${appDataDir}"`, { cwd: rootDir });
+
 try {
-  const zipCmd = `zip -r "${zipFileName}" dist backend patches Chay_App_Mac_Linux.command Chay_App_Windows.bat HUONG_DAN_SU_DUNG_OBS_TIKTOK_STUDIO.md package.json package-lock.json .env.example -x "dist/*.zip" -x "public/*.zip" -x "*.DS_Store"`;
-  execSync(zipCmd, { cwd: rootDir, stdio: 'inherit' });
+  const zipCmd = `cd "${stagingDir}" && zip -r "${zipFilePath}" . -x "*.DS_Store"`;
+  execSync(zipCmd, { stdio: 'inherit' });
   
+  // Dọn dẹp staging
+  fs.rmSync(stagingDir, { recursive: true, force: true });
+
   const stats = fs.statSync(zipFilePath);
   const sizeMb = (stats.size / (1024 * 1024)).toFixed(2);
 

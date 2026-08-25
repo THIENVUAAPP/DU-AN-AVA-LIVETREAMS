@@ -20,6 +20,11 @@ if %errorlevel% neq 0 (
 )
 
 echo ✅ Đã phát hiện Node.js
+echo.
+
+if exist "app_data" (
+    cd app_data
+)
 
 rem 2. Tạo file cấu hình .env nếu chưa có
 if not exist ".env" (

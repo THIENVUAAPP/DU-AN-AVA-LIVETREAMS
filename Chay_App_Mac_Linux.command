@@ -12,7 +12,10 @@ echo "  🚀 ĐANG KHỞI ĐỘNG HỆ THỐNG AVALIVE LIVESTREAM VIP PRO (MAC/L
 echo "================================================================="
 echo ""
 
-# 1. Kiểm tra Node.js
+# 1. Tự động gỡ cờ bảo mật Gatekeeper cho thư mục (nếu có)
+xattr -dr com.apple.quarantine . 2>/dev/null || true
+
+# 2. Kiểm tra Node.js
 if ! command -v node &> /dev/null; then
     # Thử tìm các đường dẫn Node.js phổ biến trên macOS (Homebrew M1/M2/M3 hoặc Intel hoặc NVM)
     if [ -f "/usr/local/bin/node" ]; then
@@ -36,7 +39,12 @@ fi
 
 echo "✅ Đã phát hiện Node.js phiên bản: $(node -v)"
 
-# 2. Tạo file cấu hình .env nếu chưa có
+# Đi vào thư mục dữ liệu app_data nếu có
+if [ -d "app_data" ]; then
+    cd app_data
+fi
+
+# 3. Tạo file cấu hình .env nếu chưa có
 if [ ! -f ".env" ] && [ -f ".env.example" ]; then
     cp .env.example .env
     echo "⚙️ Đã tự động khởi tạo file cấu hình .env"

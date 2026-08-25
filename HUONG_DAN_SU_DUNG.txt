@@ -1,0 +1,17 @@
+=================================================================
+  🚀 HƯỚNG DẪN MỞ AVALIVE LIVESTREAM VIP PRO (MAC & WINDOWS)
+=================================================================
+
+1. ĐỐI VỚI MÁY WINDOWS:
+   👉 Nhấp đúp chuột vào file: Chay_App_Windows.bat
+   -> Ứng dụng sẽ tự động mở trên trình duyệt tại http://localhost:3001
+
+2. ĐỐI VỚI MÁY MAC (macOS):
+   👉 Nhấp CHUỘT PHẢI (hoặc giữ phím Control + bấm chuột) vào file: Chay_App_Mac_Linux.command
+   👉 Chọn "Mở" (Open) -> Bấm "Mở" (Open)
+   -> Ứng dụng sẽ tự động chạy và mở trình duyệt!
+   (Lưu ý: Chỉ cần thao tác Chuột phải -> Mở 1 lần đầu tiên do cơ chế bảo mật Gatekeeper của Apple).
+
+3. ĐIỀU KIỆN SỬ DỤNG:
+   • Máy tính cần cài đặt Node.js (Tải miễn phí tại https://nodejs.org - Bản LTS khuyên dùng).
+   • Sau khi cài xong, chỉ cần mở file chạy là xong!
