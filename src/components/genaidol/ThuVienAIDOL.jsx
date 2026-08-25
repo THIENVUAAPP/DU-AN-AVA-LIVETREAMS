@@ -515,30 +515,29 @@ export default function ThuVienAIDOL() {
                 </div>
 
              </div>
-          )}
-
-          {/* AI Character Beauty & Background Remover Modal 4K */}
-          {isBeautyModalOpen && (
-            <AICharacterBeautyModal
-              initialImage={beautyModalImage}
-              characterName={newAidolName}
-              onSave={async (processedDataUrl) => {
-                try {
-                  const res = await fetch(processedDataUrl);
-                  const blob = await res.blob();
-                  const processedFile = new File([blob], `${newAidolName || 'aidol'}_ai_beauty.png`, { type: 'image/png' });
-                  setNewAidolMedia({ url: processedDataUrl, type: 'image' });
-                  setNewAidolFile(processedFile);
-                  setIsBeautyModalOpen(false);
-                } catch (e) {
-                  console.error('Lỗi convert blob:', e);
-                }
-              }}
-              onClose={() => setIsBeautyModalOpen(false)}
-            />
-          )}
           </div>
         </div>
+      )}
+
+      {/* AI Character Beauty & Background Remover Modal 4K */}
+      {isBeautyModalOpen && (
+        <AICharacterBeautyModal
+          initialImage={beautyModalImage}
+          characterName={newAidolName}
+          onSave={async (processedDataUrl) => {
+            try {
+              const res = await fetch(processedDataUrl);
+              const blob = await res.blob();
+              const processedFile = new File([blob], `${newAidolName || 'aidol'}_ai_beauty.png`, { type: 'image/png' });
+              setNewAidolMedia({ url: processedDataUrl, type: 'image' });
+              setNewAidolFile(processedFile);
+              setIsBeautyModalOpen(false);
+            } catch (e) {
+              console.error('Lỗi convert blob:', e);
+            }
+          }}
+          onClose={() => setIsBeautyModalOpen(false)}
+        />
       )}
 
     </div>
