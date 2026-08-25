@@ -20,7 +20,7 @@ export default function DanceFloorTikTokConnection({ onEvent }) {
       } else if (window.location.port === '5173') {
         backendUrl = window.location.protocol + '//' + window.location.hostname + ':3001';
       } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        backendUrl = 'http://127.0.0.1.nip.io:3001';
+        backendUrl = `${window.location.protocol}//${window.location.hostname}:3001`;
       }
     }
     const newSocket = io(backendUrl || 'http://localhost:3001');

@@ -50,11 +50,11 @@ if [ ! -d "node_modules" ] || [ ! -d "node_modules/express" ]; then
 fi
 
 echo "📡 Đang khởi chạy Server TikTok Live Connector & Giao Diện Game..."
-echo "🌐 Ứng dụng sẽ tự động mở tại: http://127.0.0.1.nip.io:3001"
+echo "🌐 Ứng dụng sẽ tự động mở tại: http://localhost:3001"
 echo ""
 
 # 4. Mở trình duyệt web sau 2 giây
-(sleep 2 && (open "http://127.0.0.1.nip.io:3001" || xdg-open "http://127.0.0.1.nip.io:3001")) &
+(sleep 2 && (open "http://localhost:3001" || xdg-open "http://localhost:3001")) &
 
 # 5. Chạy Backend Server
 node backend/server.cjs

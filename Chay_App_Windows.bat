@@ -37,11 +37,11 @@ if not exist "node_modules\express" (
 )
 
 echo 📡 Đang khởi động Server TikTok Live Connector & Giao Diện Game...
-echo 🌐 Ứng dụng sẽ tự động mở tại: http://127.0.0.1.nip.io:3001
+echo 🌐 Ứng dụng sẽ tự động mở tại: http://localhost:3001
 echo.
 
 rem 4. Mở trình duyệt web tự động sau 2 giây
-start "" http://127.0.0.1.nip.io:3001
+start "" http://localhost:3001
 
 rem 5. Khởi chạy Backend Server
 node backend/server.cjs

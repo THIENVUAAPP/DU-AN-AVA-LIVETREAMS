@@ -31,7 +31,7 @@ export default function DanceFloorStudio({ isLive, setIsLive, isAdminOpen: propA
     setLocalAdminOpen(false);
   };
 
-  const originUrl = typeof window !== 'undefined' ? window.location.origin.replace(/(localhost|127\.0\.0\.1)(?!\.nip\.io)/, '127.0.0.1.nip.io') : 'http://127.0.0.1.nip.io:5173';
+  const originUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
   const overlayLinksList = [
     {
       id: 'dancefloor',

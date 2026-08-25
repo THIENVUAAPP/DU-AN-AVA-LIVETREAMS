@@ -679,10 +679,10 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                 <div className="flex flex-wrap items-center gap-1.5 pt-1">
                   <span className="text-[10px] text-gray-400 font-bold">Thử nhanh link mẫu:</span>
                   {[
-                    { label: '💃 Sàn Nhảy 3D (Đã hợp nhất 1 Link)', url: `${typeof window !== 'undefined' ? window.location.origin.replace(/(localhost|127\.0\.0\.1)(?!\.nip\.io)/, '127.0.0.1.nip.io') : ''}/?overlay=live` },
-                    { label: '🌐 Sân Khấu Live Sạch (Khuyên dùng)', url: `${typeof window !== 'undefined' ? window.location.origin.replace(/(localhost|127\.0\.0\.1)(?!\.nip\.io)/, '127.0.0.1.nip.io') : ''}/?overlay=live` },
-                    { label: '⚔️ Đấu Trường PK (Đã hợp nhất 1 Link)', url: `${typeof window !== 'undefined' ? window.location.origin.replace(/(localhost|127\.0\.0\.1)(?!\.nip\.io)/, '127.0.0.1.nip.io') : ''}/?overlay=live` },
-                    { label: '🗺️ Bản Đồ Live (Đã hợp nhất 1 Link)', url: `${typeof window !== 'undefined' ? window.location.origin.replace(/(localhost|127\.0\.0\.1)(?!\.nip\.io)/, '127.0.0.1.nip.io') : ''}/?overlay=live` },
+                    { label: '💃 Sàn Nhảy 3D (Đã hợp nhất 1 Link)', url: `${typeof window !== 'undefined' ? window.location.origin : ''}/?overlay=live` },
+                    { label: '🌐 Sân Khấu Live Sạch (Khuyên dùng)', url: `${typeof window !== 'undefined' ? window.location.origin : ''}/?overlay=live` },
+                    { label: '⚔️ Đấu Trường PK (Đã hợp nhất 1 Link)', url: `${typeof window !== 'undefined' ? window.location.origin : ''}/?overlay=live` },
+                    { label: '🗺️ Bản Đồ Live (Đã hợp nhất 1 Link)', url: `${typeof window !== 'undefined' ? window.location.origin : ''}/?overlay=live` },
                     { label: '📹 Video Mẫu HD', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' },
                     { label: '🎵 Lo-fi YouTube 4K', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk' }
                   ].map((preset, idx) => (

@@ -116,9 +116,9 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
       } else if (window.location.port === '5173') {
         backendUrl = window.location.protocol + '//' + window.location.hostname + ':3001';
       } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        backendUrl = 'http://127.0.0.1.nip.io:3001';
+        backendUrl = `${window.location.protocol}//${window.location.hostname}:3001`;
       } else if (window.location.protocol === 'file:') {
-        backendUrl = 'http://127.0.0.1.nip.io:3001';
+        backendUrl = 'http://localhost:3001';
       }
     }
     
@@ -322,7 +322,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   const handleCopyOverlayUrl = (ratio = '9:16') => {
-    const url = `${window.location.origin.replace(/(localhost|127\.0\.0\.1)(?!\.nip\.io)/, '127.0.0.1.nip.io')}${window.location.pathname}?overlay=live`;
+    const url = `${window.location.origin}${window.location.pathname}?overlay=live`;
     navigator.clipboard.writeText(url);
     setCopiedLink(ratio);
     setTimeout(() => setCopiedLink(false), 2000);

@@ -308,10 +308,10 @@ export default function GeneralSettings({ onClose }) {
                       <button 
                         type="button"
                         onClick={() => {
-                          setSettings(prev => ({ ...prev, backendUrl: 'http://127.0.0.1.nip.io:3001' }));
+                          setSettings(prev => ({ ...prev, backendUrl: 'http://localhost:3001' }));
                           try {
                             if (typeof window !== 'undefined') {
-                              localStorage.setItem('aidol_backend_url', 'http://127.0.0.1.nip.io:3001');
+                              localStorage.setItem('aidol_backend_url', 'http://localhost:3001');
                             }
                           } catch (err) {}
                         }}
