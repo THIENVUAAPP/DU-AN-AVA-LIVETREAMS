@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Plus, Search, UserSquare2, PlayCircle, Mic, ChevronDown, ChevronRight, Music, Play, Image as ImageIcon, Check } from 'lucide-react';
+import { Sparkles, Plus, Search, UserSquare2, PlayCircle, Mic, ChevronDown, ChevronRight, Music, Play, Image as ImageIcon, Check, Wand2 } from 'lucide-react';
+import AICharacterBeautyModal from './AICharacterBeautyModal';
 
 // Cấu hình IndexedDB để lưu trữ Video/Audio (Local Storage giới hạn 5MB)
 const DB_NAME = 'AIDOL_DB';
@@ -53,6 +54,8 @@ export default function ThuVienAIDOL() {
   const [newAidolCategory, setNewAidolCategory] = useState('livestream');
   const [newAidolMedia, setNewAidolMedia] = useState(null);
   const [newAidolFile, setNewAidolFile] = useState(null);
+  const [isBeautyModalOpen, setIsBeautyModalOpen] = useState(false);
+  const [beautyModalImage, setBeautyModalImage] = useState(null);
   
   const [speed, setSpeed] = useState(1.0);
 
@@ -414,26 +417,47 @@ export default function ThuVienAIDOL() {
                       <div>
                         <h3 className="font-bold text-white text-sm">Tải lên File Media (Ảnh, Video, Âm thanh)</h3>
                       </div>
-                      <label className="flex items-center gap-2 px-4 py-2 border border-[#00FF66]/50 bg-[#00FF66]/10 text-[#00FF66] rounded-lg shadow-sm hover:bg-[#00FF66]/20 transition-colors cursor-pointer">
-                         <Plus className="w-4 h-4"/>
-                         <div className="text-[10px] font-bold">Chọn File từ máy</div>
-                         <input 
-                           type="file" 
-                           accept="image/*,video/*,audio/*"
-                           onChange={(e) => {
-                             if(e.target.files[0]) {
-                               const file = e.target.files[0];
-                               const url = URL.createObjectURL(file);
-                               let type = 'image';
-                               if (file.type.includes('video')) type = 'video';
-                               else if (file.type.includes('audio')) type = 'audio';
-                               setNewAidolMedia({ url, type });
-                               setNewAidolFile(file);
-                             }
-                           }}
-                           className="hidden" 
-                         />
-                      </label>
+                      <div className="flex items-center gap-2">
+                        {newAidolMedia?.type === 'image' && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setBeautyModalImage(newAidolMedia.url);
+                              setIsBeautyModalOpen(true);
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-2 border border-pink-500/50 bg-gradient-to-r from-pink-900/40 to-purple-900/40 text-pink-300 rounded-lg shadow-sm hover:from-pink-800/60 hover:to-purple-800/60 transition-all font-bold text-xs"
+                          >
+                            <Wand2 className="w-3.5 h-3.5 text-pink-400 animate-pulse" />
+                            <span>Xoá Phông & Làm Đẹp AI 4K</span>
+                          </button>
+                        )}
+                        <label className="flex items-center gap-2 px-4 py-2 border border-[#00FF66]/50 bg-[#00FF66]/10 text-[#00FF66] rounded-lg shadow-sm hover:bg-[#00FF66]/20 transition-colors cursor-pointer">
+                           <Plus className="w-4 h-4"/>
+                           <div className="text-[10px] font-bold">Chọn File từ máy</div>
+                           <input 
+                             type="file" 
+                             accept="image/*,video/*,audio/*"
+                             onChange={(e) => {
+                               if(e.target.files[0]) {
+                                 const file = e.target.files[0];
+                                 const url = URL.createObjectURL(file);
+                                 let type = 'image';
+                                 if (file.type.includes('video')) type = 'video';
+                                 else if (file.type.includes('audio')) type = 'audio';
+                                 setNewAidolMedia({ url, type });
+                                 setNewAidolFile(file);
+
+                                 // Nếu là ảnh tĩnh, tự động mở modal làm đẹp AI
+                                 if (type === 'image') {
+                                   setBeautyModalImage(url);
+                                   setIsBeautyModalOpen(true);
+                                 }
+                               }
+                             }}
+                             className="hidden" 
+                           />
+                        </label>
+                      </div>
                    </div>
 
                    <div className="flex-1 border-2 border-dashed border-white/10 rounded-xl flex flex-col items-center justify-center bg-black/40 relative hover:border-[#00FF66]/30 transition-colors overflow-hidden">
@@ -447,7 +471,20 @@ export default function ThuVienAIDOL() {
                                 <audio src={newAidolMedia.url} controls className="w-full max-w-[300px]" autoPlay />
                              </div>
                            ) : (
-                             <img src={newAidolMedia.url} className="max-h-[250px] rounded-lg object-contain shadow-lg" />
+                             <div className="relative group/preview flex flex-col items-center">
+                               <img src={newAidolMedia.url} className="max-h-[250px] rounded-lg object-contain shadow-2xl drop-shadow-[0_10px_25px_rgba(0,255,102,0.2)]" />
+                               <button
+                                 type="button"
+                                 onClick={() => {
+                                   setBeautyModalImage(newAidolMedia.url);
+                                   setIsBeautyModalOpen(true);
+                                 }}
+                                 className="absolute bottom-2 bg-black/80 hover:bg-black text-pink-300 border border-pink-500/50 px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5 transition-all opacity-90 group-hover/preview:opacity-100"
+                               >
+                                 <Wand2 size={12} className="text-pink-400" />
+                                 <span>Chỉnh sửa AI</span>
+                               </button>
+                             </div>
                            )}
                            <button onClick={() => {
                              setNewAidolMedia(null);
@@ -478,6 +515,28 @@ export default function ThuVienAIDOL() {
                 </div>
 
              </div>
+          )}
+
+          {/* AI Character Beauty & Background Remover Modal 4K */}
+          {isBeautyModalOpen && (
+            <AICharacterBeautyModal
+              initialImage={beautyModalImage}
+              characterName={newAidolName}
+              onSave={async (processedDataUrl) => {
+                try {
+                  const res = await fetch(processedDataUrl);
+                  const blob = await res.blob();
+                  const processedFile = new File([blob], `${newAidolName || 'aidol'}_ai_beauty.png`, { type: 'image/png' });
+                  setNewAidolMedia({ url: processedDataUrl, type: 'image' });
+                  setNewAidolFile(processedFile);
+                  setIsBeautyModalOpen(false);
+                } catch (e) {
+                  console.error('Lỗi convert blob:', e);
+                }
+              }}
+              onClose={() => setIsBeautyModalOpen(false)}
+            />
+          )}
           </div>
         </div>
       )}

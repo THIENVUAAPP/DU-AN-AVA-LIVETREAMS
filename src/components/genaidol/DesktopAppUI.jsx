@@ -31,6 +31,7 @@ import { stopVoiceAudio } from '../../utils/voiceSyncService';
 import AutoCaptchaSolver from '../AutoCaptchaSolver';
 import ProductionStudio from '../ProductionStudio';
 import AIVoiceModule from '../kol-live/AIVoiceModule';
+import AICharacterBeautyModal from './AICharacterBeautyModal';
 import { saveCharacterToIDB, loadAllCharactersFromIDB, deleteCharacterFromIDB } from '../../utils/idbHelper';
 import { SUPPORTED_LANGUAGES, getCurrentLanguage, setCurrentLanguage, t } from '../../utils/i18n';
 import UpdateNotificationModal, { APP_VERSION } from './UpdateNotificationModal';
@@ -141,6 +142,11 @@ export default function DesktopAppUI() {
   
   const [systemLogs, setSystemLogs] = useState([]);
   const [tiktokLogs, setTiktokLogs] = useState([]);
+
+  // ✨ States cho Modal Xoá Phông & Làm Đẹp Nhân Vật AI 4K
+  const [isBeautyModalOpen, setIsBeautyModalOpen] = useState(false);
+  const [beautyModalImage, setBeautyModalImage] = useState(null);
+  const [beautyModalCharName, setBeautyModalCharName] = useState('Nhân vật Live AI');
 
   const [toast, setToast] = useState(null);
   
@@ -1363,7 +1369,7 @@ export default function DesktopAppUI() {
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      const charName = prompt("Nhập tên cho nhân vật (để dễ quản lý):");
+      const charName = prompt("Nhập tên cho nhân vật (để dễ quản lý):", "Idol Live AI Pro");
       if (!charName) {
         if (fileInputRef.current) fileInputRef.current.value = '';
         return;
@@ -1371,27 +1377,63 @@ export default function DesktopAppUI() {
 
       const url = URL.createObjectURL(file);
       const isVideo = file.type.startsWith('video/');
-      const newChar = {
-        id: `custom_${Date.now()}`,
-        name: charName,
-        url,
-        type: isVideo ? 'video' : 'image'
-      };
       
-      // Update UI first
-      setCustomCharacters(prev => [...prev, newChar]);
-      setSelectedCharacter(newChar.id);
-
-      // Save to IDB
-      await saveCharacterToIDB({
-        id: newChar.id,
-        name: newChar.name,
-        type: newChar.type,
-        fileData: file
-      });
+      if (isVideo) {
+        // Video: Lưu trực tiếp
+        const newChar = {
+          id: `custom_${Date.now()}`,
+          name: charName,
+          url,
+          type: 'video'
+        };
+        setCustomCharacters(prev => [...prev, newChar]);
+        setSelectedCharacter(newChar.id);
+        await saveCharacterToIDB({
+          id: newChar.id,
+          name: newChar.name,
+          type: 'video',
+          fileData: file
+        });
+      } else {
+        // Ảnh: Mở Modal AI Xoá Phông & Làm Đẹp Siêu Nét 4K
+        setBeautyModalImage(url);
+        setBeautyModalCharName(charName);
+        setIsBeautyModalOpen(true);
+      }
     }
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  // Hàm xử lý lưu ảnh sau khi đã qua AI Xóa Phông & Làm Đẹp
+  const handleSaveBeautyProcessedImage = async (processedDataUrl) => {
+    const newCharId = `custom_${Date.now()}`;
+    const newChar = {
+      id: newCharId,
+      name: beautyModalCharName || 'Idol Live AI Pro',
+      url: processedDataUrl,
+      type: 'image'
+    };
+
+    setCustomCharacters(prev => [...prev, newChar]);
+    setSelectedCharacter(newCharId);
+    try { localStorage.setItem('avalive_selected_char', newCharId); } catch (e) {}
+
+    // Lưu vào IDB
+    try {
+      // Chuyển DataURL sang Blob
+      const res = await fetch(processedDataUrl);
+      const blob = await res.blob();
+      await saveCharacterToIDB({
+        id: newCharId,
+        name: newChar.name,
+        type: 'image',
+        fileData: blob
+      });
+      showToast('✨ Đã xoá phông & làm đẹp AI thành công cho nhân vật!', 'info');
+    } catch (err) {
+      console.error('Lỗi lưu ảnh IDB:', err);
     }
   };
 
@@ -1514,10 +1556,11 @@ export default function DesktopAppUI() {
       }
 
       return (
-        <div className="relative w-full h-full flex items-center justify-center bg-[#0d0d12] overflow-hidden select-none">
+        <div className="relative w-full h-full flex items-center justify-center bg-[#0d0d12] overflow-hidden select-none group/charStage">
           <img 
             src={selected.url} 
-            className="w-full h-full object-contain drop-shadow-2xl transition-all"
+            className="w-full h-full object-contain drop-shadow-[0_15px_35px_rgba(0,0,0,0.6)] transition-all duration-300 transform group-hover/charStage:scale-[1.01]"
+            style={{ imageRendering: '-webkit-optimize-contrast' }}
             alt={selected.name}
             onError={(e) => {
               e.currentTarget.onerror = null;
@@ -1525,7 +1568,21 @@ export default function DesktopAppUI() {
             }}
           />
           <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/60 via-transparent to-black/20" />
-    </div>
+          
+          {/* Nút Nhanh: Mở AI Làm Đẹp & Xoá Phông Siêu Sạch */}
+          <button
+            onClick={() => {
+              setBeautyModalImage(selected.url);
+              setBeautyModalCharName(selected.name || 'Idol Live AI Pro');
+              setIsBeautyModalOpen(true);
+            }}
+            className="absolute top-4 right-4 z-30 px-3 py-1.5 rounded-full bg-black/70 hover:bg-black/90 text-pink-300 border border-pink-500/50 shadow-xl backdrop-blur-md text-xs font-black flex items-center gap-1.5 transition-all opacity-80 hover:opacity-100 hover:scale-105"
+            title="Mở Bộ Công Cụ AI Xoá Phông & Làm Đẹp Da 4K cho nhân vật này"
+          >
+            <Sparkles size={13} className="text-pink-400 animate-pulse" />
+            <span>✨ Làm Đẹp AI 4K</span>
+          </button>
+        </div>
       );
     };
 
@@ -2013,6 +2070,24 @@ export default function DesktopAppUI() {
                   <Plus size={13} />
                 </button>
               )}
+              <button 
+                className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-black transition-all border shadow-xs active:scale-95 ${
+                  isDarkMode 
+                    ? 'border-pink-500/50 bg-gradient-to-r from-pink-900/40 to-purple-900/40 text-pink-300 hover:from-pink-800/60 hover:to-purple-800/60 shadow-pink-500/10' 
+                    : 'border-pink-300 bg-pink-50 text-pink-700 hover:bg-pink-100 shadow-pink-200'
+                }`}
+                onClick={() => {
+                  const currentSelected = CHARACTERS[selectedCharacter];
+                  setBeautyModalImage(currentSelected?.url || null);
+                  setBeautyModalCharName(currentSelected?.name || 'Nhân vật Live AI');
+                  setIsBeautyModalOpen(true);
+                }}
+                title="Mở Bộ Công Cụ AI Xoá Phông Siêu Sạch & Làm Mịn Da Nét Căng 4K"
+              >
+                <Sparkles size={12} className="text-pink-400 animate-pulse" />
+                <span>Làm Đẹp AI</span>
+              </button>
+
               <button 
                 className={`px-2 py-1 rounded text-xs font-medium transition-colors border ${isDarkMode ? 'border-purple-500/50 bg-purple-900/30 text-purple-300 hover:bg-purple-800/50' : 'border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100'}`}
                 onClick={() => setIsTemplateLibraryOpen(true)}
@@ -2709,6 +2784,16 @@ export default function DesktopAppUI() {
         <TokenHistoryModal 
           onClose={() => setShowTokenHistory(false)} 
           onOpenPayment={() => setActiveSettingsModal('coins')}
+        />
+      )}
+
+      {/* ✨ AI Character Beauty & Background Remover Modal 4K */}
+      {isBeautyModalOpen && (
+        <AICharacterBeautyModal
+          initialImage={beautyModalImage}
+          characterName={beautyModalCharName}
+          onSave={handleSaveBeautyProcessedImage}
+          onClose={() => setIsBeautyModalOpen(false)}
         />
       )}
 
