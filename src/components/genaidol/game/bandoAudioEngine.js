@@ -18,6 +18,7 @@ class BanDoAudioEngine {
     this.isMuted = false;
     this.isSfxMuted = false;
     this.isVoiceMuted = false;
+    this.isLocalSpeakerMuted = false; // Tắt tiếng loa máy tính cục bộ (nhưng TikTok Live Studio / OBS vẫn nghe 100%)
     this.isBgmLoop = true;
     this.isBgmEnabled = false; // By default disabled, loaded from localStorage
     this.bgmTimerMode = '24/7';
@@ -95,6 +96,25 @@ class BanDoAudioEngine {
       const savedSynth = localStorage.getItem('bando_synth_bgm_enabled');
       this.synthBgmEnabled = savedSynth === 'true';
 
+      // Kiểm tra xem trang hiện tại có phải là Overlay Browser Source trong OBS không
+      const isOverlayPage = typeof window !== 'undefined' && (
+        window.location.search.includes('overlay=') ||
+        window.location.pathname.includes('/overlay') ||
+        window.location.pathname.includes('/cleanlive') ||
+        window.location.pathname.includes('/idol') ||
+        window.location.pathname.includes('/battle') ||
+        window.location.pathname.includes('/bando')
+      );
+
+      if (isOverlayPage) {
+        // Trên Overlay OBS Studio / TikTok LIVE Studio, LUÔN BẬT ÂM THANH 100% để khán giả xem live nghe rõ
+        this.isLocalSpeakerMuted = false;
+      } else {
+        // Trên trang điều khiển của máy tính người dùng: đọc cài đặt tắt tiếng loa máy tính
+        const savedLocalMute = localStorage.getItem('avalive_local_speaker_muted');
+        this.isLocalSpeakerMuted = savedLocalMute === 'true';
+      }
+
       // Luôn bật âm thanh 100% khi khởi động để đảm bảo Window Capture / OBS nghe rõ
       this.isMuted = false;
       this.isSfxMuted = false;
@@ -129,8 +149,15 @@ class BanDoAudioEngine {
         if (!AudioContextClass) return null;
         this.ctx = new AudioContextClass();
 
+        const isOverlayPage = typeof window !== 'undefined' && (
+          window.location.search.includes('overlay=') ||
+          window.location.pathname.includes('/overlay') ||
+          window.location.pathname.includes('/cleanlive')
+        );
+        const effectiveMuted = isOverlayPage ? false : this.isLocalSpeakerMuted;
+
         this.masterGain = this.ctx.createGain();
-        this.masterGain.gain.value = 0.95;
+        this.masterGain.gain.value = effectiveMuted ? 0 : 0.95;
         this.masterGain.connect(this.ctx.destination);
 
         this.sfxGain = this.ctx.createGain();
@@ -159,6 +186,14 @@ class BanDoAudioEngine {
       this.isMuted = false;
       this.isSfxMuted = false;
       this.isVoiceMuted = false;
+
+      const isOverlayPage = typeof window !== 'undefined' && (
+        window.location.search.includes('overlay=') ||
+        window.location.pathname.includes('/overlay') ||
+        window.location.pathname.includes('/cleanlive')
+      );
+      const effectiveLocalMuted = isOverlayPage ? false : this.isLocalSpeakerMuted;
+
       const ctx = this.ensureContext();
       if (ctx) {
         if (ctx.state === 'suspended') {
@@ -174,7 +209,7 @@ class BanDoAudioEngine {
         } catch (e) {}
       }
       if (this.masterGain && this.ctx) {
-        this.masterGain.gain.setValueAtTime(0.95, this.ctx.currentTime);
+        this.masterGain.gain.setValueAtTime(effectiveLocalMuted ? 0 : 0.95, this.ctx.currentTime);
       }
       if (this.sfxGain && this.ctx) {
         this.sfxGain.gain.setValueAtTime(this.sfxVolume || 0.9, this.ctx.currentTime);
@@ -182,10 +217,54 @@ class BanDoAudioEngine {
       if (this.voiceGain && this.ctx) {
         this.voiceGain.gain.setValueAtTime(this.voiceVolume || 1.0, this.ctx.currentTime);
       }
-      if (this.customBgmAudio && this.bgmPlaying && this.customBgmAudio.paused) {
-        this.customBgmAudio.play().catch(() => {});
+      if (this.customBgmAudio) {
+        this.customBgmAudio.muted = effectiveLocalMuted;
+        if (this.bgmPlaying && this.customBgmAudio.paused) {
+          this.customBgmAudio.play().catch(() => {});
+        }
+      }
+      if (this.customSfxAudio) {
+        this.customSfxAudio.muted = effectiveLocalMuted;
       }
     } catch (e) {}
+  }
+
+  setLocalSpeakerMute(muted) {
+    this.isLocalSpeakerMuted = !!muted;
+    try {
+      localStorage.setItem('avalive_local_speaker_muted', this.isLocalSpeakerMuted ? 'true' : 'false');
+    } catch (e) {}
+
+    const isOverlayPage = typeof window !== 'undefined' && (
+      window.location.search.includes('overlay=') ||
+      window.location.pathname.includes('/overlay') ||
+      window.location.pathname.includes('/cleanlive')
+    );
+    if (isOverlayPage) {
+      this.isLocalSpeakerMuted = false;
+      return;
+    }
+
+    this.ensureContext();
+    if (this.masterGain && this.ctx) {
+      this.masterGain.gain.setValueAtTime(this.isLocalSpeakerMuted ? 0 : 0.95, this.ctx.currentTime);
+    }
+    if (this.customBgmAudio) {
+      this.customBgmAudio.muted = this.isLocalSpeakerMuted;
+    }
+    if (this.customSfxAudio) {
+      this.customSfxAudio.muted = this.isLocalSpeakerMuted;
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('avalive_local_mute_change', { detail: { isMuted: this.isLocalSpeakerMuted } }));
+    }
+    this.emitStatusUpdate();
+  }
+
+  toggleLocalSpeakerMute() {
+    this.setLocalSpeakerMute(!this.isLocalSpeakerMuted);
+    return this.isLocalSpeakerMuted;
   }
 
   setMuted(isMuted) {

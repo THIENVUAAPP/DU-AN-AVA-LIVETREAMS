@@ -36,6 +36,13 @@ import UpdateNotificationModal, { APP_VERSION } from './UpdateNotificationModal'
 
 export default function DesktopAppUI() {
   const [isLiveStudioOpen, setIsLiveStudioOpen] = useState(false);
+  const [isLocalSpeakerMuted, setIsLocalSpeakerMuted] = useState(() => {
+    try {
+      return localStorage.getItem('avalive_local_speaker_muted') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
   const [activeSettingsModal, setActiveSettingsModal] = useState(null); 
   const [isSettingsDropdownOpen, setIsSettingsDropdownOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -696,6 +703,35 @@ export default function DesktopAppUI() {
     }, 400);
     showToast('🔊 Đang phát kiểm tra âm thanh & Giọng đọc AI!', 'success');
   }, [unlockAllAudio]);
+
+  // 🔇 Xử lý Bật/Tắt chế độ Tắt Loa Máy tính Cục bộ (Vẫn phát đầy đủ âm thanh 100% trên OBS & TikTok Studio)
+  const handleToggleLocalSpeakerMute = useCallback(() => {
+    const nextState = !isLocalSpeakerMuted;
+    bandoAudio.setLocalSpeakerMute(nextState);
+    setIsLocalSpeakerMuted(nextState);
+    if (nextState) {
+      setToast({
+        type: 'success',
+        message: '🔇 ĐÃ TẮT LOA MÁY TÍNH CỦA BẠN! Phiên Live trên TikTok LIVE Studio & OBS vẫn nghe thấy đầy đủ 100% bình thường.'
+      });
+    } else {
+      setToast({
+        type: 'success',
+        message: '🔊 ĐÃ BẬT LẠI LOA MÁY TÍNH! Bạn và khán giả cùng nghe thấy âm thanh.'
+      });
+    }
+  }, [isLocalSpeakerMuted]);
+
+  // Đồng bộ trạng thái Local Mute nếu có component khác thay đổi
+  useEffect(() => {
+    const handleMuteSync = (e) => {
+      if (e.detail && typeof e.detail.isMuted === 'boolean') {
+        setIsLocalSpeakerMuted(e.detail.isMuted);
+      }
+    };
+    window.addEventListener('avalive_local_mute_change', handleMuteSync);
+    return () => window.removeEventListener('avalive_local_mute_change', handleMuteSync);
+  }, []);
 
   // Tự động mở khóa audio context khi tương tác
   useEffect(() => {
@@ -2033,6 +2069,33 @@ export default function DesktopAppUI() {
           >
             <Volume2 size={10} className="text-yellow-400" />
             <span className="whitespace-nowrap">Test Âm Thanh</span>
+          </button>
+
+          {/* 🔇 NÚT TẮT TIẾNG LOA MÁY TÍNH (VẪN PHÁT ĐỦ ÂM THANH 100% TRÊN TIKTOK / OBS) */}
+          <button 
+            onClick={handleToggleLocalSpeakerMute}
+            className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black transition-all border shadow-xs active:scale-95 cursor-pointer ${
+              isLocalSpeakerMuted
+                ? 'bg-gradient-to-r from-purple-700 via-indigo-700 to-pink-700 text-white border-yellow-300 ring-1 ring-yellow-400 shadow-purple-500/40 animate-pulse'
+                : (isDarkMode ? 'bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 border-emerald-500/40' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border-emerald-300')
+            }`}
+            title={
+              isLocalSpeakerMuted
+                ? "ĐANG TẮT TIẾNG LOA MÁY CỦA BẠN (Đỡ ồn khi ngủ/làm việc) — Khán giả trên TikTok Studio / OBS VẪN NGHE THẤY ĐẦY ĐỦ 100%!"
+                : "Bấm để Tắt Loa Máy tính của bạn (cho đỡ ồn khi phát live) mà TikTok / OBS vẫn nghe đầy đủ âm thanh 100%"
+            }
+          >
+            {isLocalSpeakerMuted ? (
+              <>
+                <VolumeX size={11} className="text-yellow-300" />
+                <span className="whitespace-nowrap font-black">🔇 Tắt Loa Máy (Live Có Tiếng)</span>
+              </>
+            ) : (
+              <>
+                <Volume2 size={11} className="text-emerald-400" />
+                <span className="whitespace-nowrap font-bold">🔊 Loa Máy: BẬT</span>
+              </>
+            )}
           </button>
 
           {/* Menu Theo dõi */}

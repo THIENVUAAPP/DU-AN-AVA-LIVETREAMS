@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import GameBanDoVietNam from './GameBanDoVietNam';
 import bandoEngine from './bandoGameEngine';
+import bandoAudio from './bandoAudioEngine';
 import { mapVoiceEngine } from './gameVoiceEngine';
 
 export default function GameBanDoOverlay() {
@@ -11,6 +12,11 @@ export default function GameBanDoOverlay() {
   const isClean = params ? params.get('clean') === 'true' : false;
 
   useEffect(() => {
+    // Trên Overlay OBS Studio / TikTok Live Studio: Luôn luôn mở khóa âm thanh 100%
+    try {
+      bandoAudio.setLocalSpeakerMute(false);
+      bandoAudio.unlock();
+    } catch (e) {}
     if (isClean && typeof localStorage !== 'undefined') {
       localStorage.setItem('avalive_bando_ultra_clean', 'true');
     }

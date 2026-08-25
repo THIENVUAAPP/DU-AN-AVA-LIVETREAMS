@@ -65,4 +65,18 @@ Hệ thống cung cấp các đường link **Overlay Trong Suốt Chuyên Dụn
 - **Máy tính để bàn / Laptop (Mac / Windows)**: Đồ họa 3D 60FPS sắc nét, hiệu ứng ánh sáng rực rỡ.
 
 ---
+
+## 🔇 5. Tính Năng Tắt Tiếng Loa Máy Tính (Live Vẫn Có Đầy Đủ Video & Âm Thanh 100%)
+
+- **Tại sao cần tính năng này?**
+  - Khi livestream 24/7 hoặc live nhiều giờ liên tục, tiếng nhạc nền BGM, tiếng Voice AI đọc bình luận và hiệu ứng quà tặng phát liên tục qua loa máy tính có thể gây ồn ào cho bạn khi làm việc, nghỉ ngơi hoặc đi ngủ.
+
+- **Cách sử dụng siêu đơn giản 1-chạm:**
+  1. Trên thanh công cụ trên cùng của phần mềm, bấm vào nút: **`🔇 Tắt Loa Máy (Live Có Tiếng)`**.
+  2. **Kết quả:**
+     - Loa trên máy tính của bạn sẽ **hoàn toàn im lặng 100%** (không còn bị ồn).
+     - **Phiên Live trên TikTok LIVE Studio & OBS Studio VẪN CÓ ĐẦY ĐỦ 100% ÂM THANH** (tiếng nhạc nền BGM, giọng nói AI Idol, bình luận viên, hiệu ứng quà tặng khán giả đều nghe to rõ bình thường).
+  3. Khi muốn nghe lại trên máy, bạn chỉ cần bấm lại nút: **`🔊 Loa Máy: BẬT`**.
+
+---
 *Chúc bạn có những buổi Livestream bùng nổ tương tác và vạn người xem cùng AvaLive VIP PRO!*

@@ -487,12 +487,23 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null) {
   // =========================================================================
   // TIER 2: Ultra-Reliable Streaming Audio TTS (Hoạt động 100% trên OBS, TikTok Studio & Trình duyệt)
   // =========================================================================
+  const isOverlayPage = typeof window !== 'undefined' && (
+    window.location.search.includes('overlay=') ||
+    window.location.pathname.includes('/overlay') ||
+    window.location.pathname.includes('/cleanlive') ||
+    window.location.pathname.includes('/idol') ||
+    window.location.pathname.includes('/battle') ||
+    window.location.pathname.includes('/bando')
+  );
+  const isLocalSpeakerMuted = !isOverlayPage && typeof localStorage !== 'undefined' && localStorage.getItem('avalive_local_speaker_muted') === 'true';
+
   const backendBase = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3001' : '';
   const serverTtsUrl = `${backendBase}/api/tts?text=${encodeURIComponent(textToSpeak.slice(0, 200))}&lang=${encodeURIComponent(shortLang || 'vi')}`;
   
   try {
     const streamAudio = new Audio(serverTtsUrl);
-    streamAudio.volume = voiceVolume;
+    streamAudio.volume = isLocalSpeakerMuted ? 0 : voiceVolume;
+    streamAudio.muted = isLocalSpeakerMuted;
     activePreviewAudio = streamAudio;
 
     const playPromise = new Promise((resolve) => {
@@ -556,7 +567,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null) {
           utterance.rate = voice?.rate || (isFemale ? 1.0 : 1.05);
           utterance.pitch = voice?.pitch || (isFemale ? 1.15 : 0.88);
         }
-        utterance.volume = voice?.volume || 1.0;
+        utterance.volume = isLocalSpeakerMuted ? 0 : (voice?.volume || 1.0);
 
         let hasEnded = false;
         const finish = (ok) => {
