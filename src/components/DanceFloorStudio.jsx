@@ -71,14 +71,14 @@ export default function DanceFloorStudio({ isLive, setIsLive, isAdminOpen: propA
   };
 
   return (
-    <div className="w-full h-full bg-black relative flex flex-col items-center justify-center overflow-hidden font-sans select-none">
+    <div className="w-full flex flex-col gap-4 font-sans select-none pb-6">
       
-      {/* FLOATING TOP CONTROL BAR */}
-      <div className="absolute top-3 left-3 right-3 z-40 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
-        <div className="flex items-center gap-2 pointer-events-auto">
+      {/* TOP CONTROL BAR */}
+      <div className="glass-panel p-3 rounded-2xl border border-pink-500/30 flex flex-wrap items-center justify-between gap-3 bg-black/85 backdrop-blur-xl shadow-xl">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setLocalAdminOpen(true)}
-            className="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-black text-xs shadow-xl shadow-pink-900/40 border border-pink-400/50 flex items-center gap-1.5 cursor-pointer transition-all hover:scale-105"
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-black text-xs shadow-lg shadow-pink-900/40 border border-pink-400/50 flex items-center gap-1.5 cursor-pointer transition-all hover:scale-105"
           >
             <Settings className="w-4 h-4 animate-spin-slow" />
             <span>⚙️ CÀI ĐẶT & KẾT NỐI TIKTOK</span>
@@ -86,17 +86,17 @@ export default function DanceFloorStudio({ isLive, setIsLive, isAdminOpen: propA
 
           <button
             onClick={() => setRenderMode(m => m === '2d' ? '3d' : '2d')}
-            className="px-3 py-2 rounded-2xl bg-black/80 hover:bg-black/95 text-pink-300 font-black text-xs border border-pink-500/30 flex items-center gap-1.5 cursor-pointer backdrop-blur-md transition-all"
+            className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-pink-300 font-black text-xs border border-pink-500/30 flex items-center gap-1.5 cursor-pointer backdrop-blur-md transition-all"
           >
             {renderMode === '2d' ? <Move3d className="w-4 h-4 text-purple-400" /> : <Box className="w-4 h-4 text-pink-400" />}
             <span>{renderMode === '2d' ? 'Chuyển sang 3D Stage' : 'Chuyển sang 2D Stage'}</span>
           </button>
         </div>
 
-        <div className="flex items-center gap-2 pointer-events-auto">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setLinksModalOpen(true)}
-            className="px-3.5 py-2 rounded-2xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-400/50 text-xs font-black flex items-center gap-1.5 cursor-pointer backdrop-blur-md transition-all shadow-glow-purple"
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600/30 to-pink-600/30 hover:from-purple-600/50 hover:to-pink-600/50 text-purple-200 border border-purple-400/50 text-xs font-black flex items-center gap-1.5 cursor-pointer backdrop-blur-md transition-all shadow-glow-purple"
           >
             <Share2 className="w-4 h-4 text-purple-300" />
             <span>🔗 LINK OVERLAY OBS / TIKTOK</span>
@@ -104,7 +104,7 @@ export default function DanceFloorStudio({ isLive, setIsLive, isAdminOpen: propA
 
           <button
             onClick={() => setIsLive && setIsLive(!isLive)}
-            className={`px-4 py-2 rounded-2xl text-xs font-black flex items-center gap-1.5 cursor-pointer transition-all ${
+            className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 cursor-pointer transition-all ${
               isLive 
                 ? 'bg-red-600 text-white shadow-glow-red animate-pulse' 
                 : 'bg-white/10 hover:bg-white/20 text-gray-200 border border-white/20'
@@ -116,11 +116,12 @@ export default function DanceFloorStudio({ isLive, setIsLive, isAdminOpen: propA
         </div>
       </div>
 
-      {/* STAGE CONTAINER */}
-      <div
-        ref={stageContainerRef}
-        className={`relative ${settings.stageAspectRatio === '9:16' ? 'h-full max-h-full aspect-[9/16] w-auto max-w-full' : 'w-full h-full'}`}
-      >
+      {/* STAGE CONTAINER WITH GUARANTEED RESPONSIVE HEIGHT */}
+      <div className="w-full h-[75vh] min-h-[580px] max-h-[880px] relative rounded-3xl overflow-hidden bg-black border border-white/15 shadow-2xl flex items-center justify-center">
+        <div
+          ref={stageContainerRef}
+          className={`relative ${settings.stageAspectRatio === '9:16' ? 'h-full aspect-[9/16] w-auto max-w-full' : 'w-full h-full'}`}
+        >
         {renderMode === '2d' ? (
           <DanceFloorStage
             instances={instances}
@@ -168,6 +169,7 @@ export default function DanceFloorStudio({ isLive, setIsLive, isAdminOpen: propA
         {/* Gift Showcase */}
         <DanceFloorGiftShowcase giftShowcase={giftShowcase} />
       </div>
+    </div>
 
       {/* MODAL LINK OVERLAY CHO OBS & TIKTOK LIVE STUDIO */}
       {linksModalOpen && (
