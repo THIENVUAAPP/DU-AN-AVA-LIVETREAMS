@@ -5,18 +5,15 @@ import Hls from 'hls.js';
 import GameBanDoVietNam from './game/GameBanDoVietNam';
 import GameChienDau from './game/GameChienDau';
 import DanceFloorOverlay from '../DanceFloorOverlay';
-import { Volume2, VolumeX, Sparkles, Video, Swords, Flag, Music } from 'lucide-react';
+import { supabase } from '../../lib/supabaseClient';
+import { Volume2, VolumeX, Sparkles, Video, Swords, Flag, Music, Radio, Mic } from 'lucide-react';
 
 /**
  * ⚡ CỬA SỔ MASTER OVERLAY 1 LINK DUY NHẤT TOÀN NĂNG — CHO TIKTOK LIVE STUDIO & OBS STUDIO
  * - URL: ?overlay=live hoặc /overlay-live hoặc /live
- * - Kết nối đa kênh: WebSocket (Socket.io) + REST API Polling + BroadcastChannel + LocalStorage
- * - Độ trễ: < 1ms (Real-time siêu tốc 0.00001s)
- * - Tự động đồng bộ ngay lập tức:
- *   1. Chuyển cảnh tức thì: AI Idol / Sàn Nhảy 3D TikTok / Game Bản Đồ 63 Tỉnh / Game Chiến Đấu PK / Live Camera Studio
- *   2. Tỷ lệ khung hình 9:16 (TikTok Dọc) và 16:9 (OBS Ngang)
- *   3. Sự kiện Quà tặng, Cắm cờ, Bảng xếp hạng, Âm nhạc BGM, Đòn đánh PK
- * - Sân khấu sạch 100% (Clean Stage), không có thanh menu hay nút bấm admin thừa
+ * - Đồng bộ 5 tầng: Supabase Cloud Realtime + WebSocket (Socket.io) + REST API Polling + BroadcastChannel + LocalStorage
+ * - Tự động chuyển đổi giữa: AI Idol / Sàn Nhảy 3D / Game Bản Đồ 63 Tỉnh / Game Chiến Đấu PK / Live Camera Studio
+ * - Hỗ trợ mượt mà trên macOS, Windows, Web Cloud Vercel, OBS Studio, TikTok LIVE Studio CEF
  */
 export default function CleanLiveOverlay() {
   const [masterState, setMasterState] = useState(() => {
@@ -28,14 +25,15 @@ export default function CleanLiveOverlay() {
 
     const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
     const overlayParam = urlParams ? urlParams.get('overlay') : '';
-    const ratioParam = urlParams ? urlParams.get('ratio') : '9:16';
+    const ratioParam = urlParams ? urlParams.get('ratio') : (saved?.aspectRatio || '9:16');
     const directVideoUrl = urlParams ? urlParams.get('v') : null;
     
-    let defaultStage = 'idol'; // Mặc định Idol
+    let defaultStage = 'idol'; // Mặc định AI Idol
     if (overlayParam === 'bando' || overlayParam === 'vietnam_map' || overlayParam === 'map') defaultStage = 'bando';
     else if (overlayParam === 'gamebattle' || overlayParam === 'battle' || overlayParam === 'game') defaultStage = 'battle';
-    else if (overlayParam === 'dancefloor' || overlayParam === 'dance') defaultStage = 'dancefloor';
+    else if (overlayParam === 'dancefloor' || overlayParam === 'dance' || overlayParam === 'dance-floor') defaultStage = 'dancefloor';
     else if (overlayParam === 'avatar' || overlayParam === 'idol') defaultStage = 'idol';
+    else if (overlayParam === 'broadcast' || overlayParam === 'studio') defaultStage = 'broadcast';
     else if (saved && saved.stage) {
       defaultStage = saved.stage;
     }
@@ -43,11 +41,13 @@ export default function CleanLiveOverlay() {
     return {
       stage: defaultStage, // 'idol' | 'dancefloor' | 'battle' | 'bando' | 'broadcast'
       aspectRatio: ratioParam || '9:16',
-      mediaUrl: saved?.mediaUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1200&auto=format&fit=crop&q=80',
+      mediaUrl: saved?.mediaUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
       flvUrl: directVideoUrl || saved?.flvUrl || null,
       isVideo: saved?.isVideo || false,
-      characterName: saved?.characterName || 'AI Idol Lan Hương',
+      characterName: saved?.characterName || 'AI Idol Linh Anh',
       isConnected: true,
+      isSpeaking: saved?.isSpeaking || false,
+      speechText: saved?.speechText || '',
       isDarkMode: true,
       currentLang: 'vi'
     };
@@ -55,36 +55,71 @@ export default function CleanLiveOverlay() {
 
   const [liveEvent, setLiveEvent] = useState(null);
   const [isAudioMuted, setIsAudioMuted] = useState(false);
+  const [currentSubtitle, setCurrentSubtitle] = useState('');
 
   useEffect(() => {
     document.title = 'AVA Live Output (Realtime Master Overlay) — TikTok LIVE Studio / OBS';
     document.documentElement.style.background = 'transparent';
     document.body.style.background = 'transparent';
 
-    const backendUrl = typeof window !== 'undefined' ? (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001' ? `${window.location.protocol}//${window.location.hostname}:3001` : window.location.origin) : 'http://127.0.0.1.nip.io:3001';
+    const backendUrl = typeof window !== 'undefined' ? (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001' ? `${window.location.protocol}//${window.location.hostname}:3001` : window.location.origin) : 'http://localhost:3001';
 
     const applyMasterState = (data) => {
       if (!data) return;
       setMasterState(prev => {
         const next = { ...prev, ...data };
-        // Giữ stage URL override nếu có tham số cố định
+        // URL Parameter Override check
         const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
         const overlayParam = urlParams ? urlParams.get('overlay') : '';
         if (overlayParam === 'bando' || overlayParam === 'vietnam_map' || overlayParam === 'map') {
           next.stage = 'bando';
         } else if (overlayParam === 'gamebattle' || overlayParam === 'battle' || overlayParam === 'game') {
           next.stage = 'battle';
+        } else if (overlayParam === 'dancefloor' || overlayParam === 'dance' || overlayParam === 'dance-floor') {
+          next.stage = 'dancefloor';
         }
         return next;
       });
+
+      if (data.speechText) {
+        setCurrentSubtitle(data.speechText);
+        setTimeout(() => setCurrentSubtitle(''), 8000);
+      }
     };
 
-    // 1. LẤY TRẠNG THÁI NGAY TỪ SERVER HTTP BACKEND
+    // 1. SUPABASE REALTIME CLOUD BROADCAST (Đồng bộ siêu tốc cho OBS & TikTok Live Studio từ khắp nơi trên thế giới)
+    let supabaseChannel = null;
+    try {
+      if (supabase && typeof supabase.channel === 'function') {
+        supabaseChannel = supabase.channel('avalive_master_live_realtime', {
+          config: { broadcast: { self: true } }
+        });
+
+        supabaseChannel.on('broadcast', { event: 'MASTER_LIVE_STATE_UPDATE' }, (payload) => {
+          if (payload?.payload) {
+            applyMasterState(payload.payload);
+          }
+        });
+
+        supabaseChannel.on('broadcast', { event: 'LIVE_EVENT' }, (payload) => {
+          if (payload?.payload) {
+            setLiveEvent(payload.payload);
+          }
+        });
+
+        supabaseChannel.subscribe();
+      }
+    } catch (e) {
+      console.warn('[Overlay] Supabase Realtime note:', e.message);
+    }
+
+    // 2. HTTP REST API POLING
     const fetchLiveState = () => {
-      fetch(`${backendUrl}/api/live-state`)
+      const endpoint = backendUrl ? `${backendUrl}/api/live-state` : '/api/live-state';
+      fetch(endpoint)
         .then(res => res.json())
         .then(data => {
-          if (data) {
+          if (data && data.stage) {
             applyMasterState(data);
           }
         })
@@ -92,7 +127,7 @@ export default function CleanLiveOverlay() {
     };
     fetchLiveState();
 
-    // 2. KẾT NỐI WEBSOCKET REALTIME (SOCKET.IO) CHO TIKTOK LIVE STUDIO CEF & OBS
+    // 3. WEBSOCKET REALTIME (SOCKET.IO)
     let socket = null;
     try {
       socket = io(backendUrl, {
@@ -117,6 +152,10 @@ export default function CleanLiveOverlay() {
         if (data) setLiveEvent(data);
       });
 
+      socket.on('battle_event', (data) => {
+        if (data) setLiveEvent(data);
+      });
+
       socket.on('tiktok_chat', (data) => {
         if (data) {
           setLiveEvent({ type: 'COMMENT', data: { username: data.username || data.nickname, text: data.comment } });
@@ -138,10 +177,10 @@ export default function CleanLiveOverlay() {
         }
       });
     } catch (err) {
-      console.warn('Socket.io error:', err);
+      console.warn('Socket.io note:', err);
     }
 
-    // 3. Kênh BroadcastChannel Master
+    // 4. BROADCAST CHANNELS
     let masterChannel = null;
     let bandoChannel = null;
     let battleChannel = null;
@@ -167,21 +206,16 @@ export default function CleanLiveOverlay() {
           }
         };
 
-        // Gửi yêu cầu xin trạng thái hiện tại ngay khi Overlay vừa mở
         masterChannel.postMessage({ type: 'REQUEST_MASTER_LIVE_STATE' });
 
         bandoChannel = new BroadcastChannel('avalive_bando_stage');
         bandoChannel.onmessage = (e) => {
-          if (e.data?.lastEvent) {
-            setLiveEvent(e.data.lastEvent);
-          }
+          if (e.data?.lastEvent) setLiveEvent(e.data.lastEvent);
         };
 
         battleChannel = new BroadcastChannel('avalive_gamebattle_stage');
         battleChannel.onmessage = (e) => {
-          if (e.data?.type === 'LIVE_EVENT') {
-            setLiveEvent(e.data.payload);
-          }
+          if (e.data?.type === 'LIVE_EVENT') setLiveEvent(e.data.payload);
         };
 
         cleanChannel = new BroadcastChannel('avalive_clean_stream_channel');
@@ -197,12 +231,10 @@ export default function CleanLiveOverlay() {
             }));
           }
         };
-      } catch (err) {
-        console.warn('BroadcastChannel error:', err);
-      }
+      } catch (err) {}
     }
 
-    // 4. LocalStorage Storage Event Fallback
+    // 5. LOCAL STORAGE SYNC
     const handleStorage = (e) => {
       if (e.key === 'avalive_master_live_state' && e.newValue) {
         try {
@@ -221,18 +253,11 @@ export default function CleanLiveOverlay() {
             isConnected: parsed.isConnected
           }));
         } catch (err) {}
-      } else if (e.key === 'avalive_bando_realtime_sync' && e.newValue) {
-        try {
-          const parsed = JSON.parse(e.newValue);
-          if (parsed.lastEvent) {
-            setLiveEvent(parsed.lastEvent);
-          }
-        } catch (err) {}
       }
     };
     window.addEventListener('storage', handleStorage);
 
-    // 5. Heartbeat Polling Interval: Đảm bảo OBS / TikTok Live Studio CEF luôn đồng bộ tức thì
+    // 6. HEARTBEAT POLLING
     let lastUpdatedTimestamp = 0;
     const pollInterval = setInterval(() => {
       try {
@@ -246,8 +271,9 @@ export default function CleanLiveOverlay() {
         }
       } catch (e) {}
 
-      // Polling REST API nhẹ mỗi 1 giây
-      fetch(`${backendUrl}/api/live-state`)
+      // Polling REST nhẹ
+      const endpoint = backendUrl ? `${backendUrl}/api/live-state` : '/api/live-state';
+      fetch(endpoint)
         .then(r => r.json())
         .then(data => {
           if (data && data.updatedAt && data.updatedAt !== lastUpdatedTimestamp) {
@@ -256,9 +282,10 @@ export default function CleanLiveOverlay() {
           }
         })
         .catch(() => {});
-    }, 1000);
+    }, 1500);
 
     return () => {
+      if (supabaseChannel) supabaseChannel.unsubscribe();
       if (socket) socket.disconnect();
       if (masterChannel) masterChannel.close();
       if (bandoChannel) bandoChannel.close();
@@ -273,89 +300,60 @@ export default function CleanLiveOverlay() {
   const flvCanvasRef = useRef(null);
   const flvPlayerRef = useRef(null);
   const hlsPlayerRef = useRef(null);
-  const currentPlayingUrlRef = useRef(null);
 
   const isStreamUrl = (u) => u && (u.includes('.flv') || u.includes('.m3u8') || u.includes('pull-flv') || u.includes('tiktokcdn.com') || u.includes('/stream') || u.includes('/game/') || u.includes('/stage/'));
   const activeStreamUrl = masterState.flvUrl || (isStreamUrl(masterState.mediaUrl) ? masterState.mediaUrl : null);
 
-  useEffect(() => {
-    let animId;
-    let timerId;
-    let isMounted = true;
-
-    const renderFrame = () => {
-      if (!isMounted) return;
-      const video = flvVideoRef.current;
-      const canvas = flvCanvasRef.current;
-      if (video && canvas && video.readyState >= 2 && video.videoWidth > 0) {
-        if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-        }
-        const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
-        if (ctx) {
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'high';
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        }
-      }
-      if (video && 'requestVideoFrameCallback' in video) {
-        video.requestVideoFrameCallback(renderFrame);
-      } else {
-        animId = requestAnimationFrame(renderFrame);
-      }
-    };
-
-    const video = flvVideoRef.current;
-    if (video && 'requestVideoFrameCallback' in video) {
-      video.requestVideoFrameCallback(renderFrame);
-    } else {
-      animId = requestAnimationFrame(renderFrame);
-    }
-
-    timerId = setInterval(() => {
-      const v = flvVideoRef.current;
-      const c = flvCanvasRef.current;
-      if (v && c && v.readyState >= 2 && v.videoWidth > 0 && !v.paused) {
-        if (c.width !== v.videoWidth || c.height !== v.videoHeight) {
-          c.width = v.videoWidth;
-          c.height = v.videoHeight;
-        }
-        const ctx = c.getContext('2d', { alpha: false, desynchronized: true });
-        if (ctx) {
-          ctx.drawImage(v, 0, 0, c.width, c.height);
-        }
-      }
-    }, 33);
-
-    return () => {
-      isMounted = false;
-      if (animId) cancelAnimationFrame(animId);
-      if (timerId) clearInterval(timerId);
-    };
-  }, [activeStreamUrl]);
-
-  const getPlayableStreamUrl = (rawUrl) => {
-    if (!rawUrl) return '';
-    if (rawUrl.includes('/api/stream-proxy')) return rawUrl;
-    
-    // Khi chạy trên HTTPS (Vercel Cloud), gọi API cùng nguồn HTTPS để trình duyệt không chặn Mixed Content
-    if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
-      return `/api/stream-proxy?url=${encodeURIComponent(rawUrl)}`;
-    }
-    let backendOrigin = typeof window !== 'undefined' ? (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001' ? `${window.location.protocol}//${window.location.hostname}:3001` : window.location.origin) : 'http://127.0.0.1.nip.io:3001';
-    if (typeof window !== 'undefined' && window.location.protocol === 'file:') backendOrigin = 'http://127.0.0.1.nip.io:3001';
-    return `${backendOrigin}/api/stream-proxy?url=${encodeURIComponent(rawUrl)}`;
-  };
-
   const attachFlvPlayer = (videoEl, url) => {
     if (!videoEl || !url) return;
-    if (currentPlayingUrlRef.current === url && (flvPlayerRef.current || hlsPlayerRef.current)) {
-      return;
-    }
-    currentPlayingUrlRef.current = url;
-
     try {
+      if (flvPlayerRef.current) {
+        flvPlayerRef.current.destroy();
+        flvPlayerRef.current = null;
+      }
+      if (hlsPlayerRef.current) {
+        hlsPlayerRef.current.destroy();
+        hlsPlayerRef.current = null;
+      }
+
+      if (url.includes('.m3u8') || url.includes('/hls')) {
+        if (Hls.isSupported()) {
+          const hls = new Hls({ enableWorker: true, lowLatencyMode: true });
+          hls.loadSource(url);
+          hls.attachMedia(videoEl);
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            videoEl.play().catch(() => {});
+          });
+          hlsPlayerRef.current = hls;
+        } else if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
+          videoEl.src = url;
+          videoEl.play().catch(() => {});
+        }
+      } else if (flvjs.isSupported()) {
+        const flvPlayer = flvjs.createPlayer({
+          type: 'flv',
+          url: url,
+          isLive: true,
+          cors: true,
+          enableWorker: true,
+          enableStashBuffer: false,
+          stashInitialSize: 128
+        });
+        flvPlayer.attachMediaElement(videoEl);
+        flvPlayer.load();
+        flvPlayer.play().catch(() => {});
+        flvPlayerRef.current = flvPlayer;
+      }
+    } catch (e) {
+      console.warn('[Overlay Player error]:', e);
+    }
+  };
+
+  useEffect(() => {
+    if (activeStreamUrl && flvVideoRef.current) {
+      attachFlvPlayer(flvVideoRef.current, activeStreamUrl);
+    }
+    return () => {
       if (flvPlayerRef.current) {
         try { flvPlayerRef.current.destroy(); } catch (e) {}
         flvPlayerRef.current = null;
@@ -364,133 +362,17 @@ export default function CleanLiveOverlay() {
         try { hlsPlayerRef.current.destroy(); } catch (e) {}
         hlsPlayerRef.current = null;
       }
-
-      const streamSrc = getPlayableStreamUrl(url);
-      const isFLV = url.includes('.flv') || url.includes('pull-flv') || url.includes('/flv') || url.includes('tiktokcdn.com') || url.includes('/game/') || url.includes('/stage/') || url.includes('/stream');
-      if (isFLV && flvjs.isSupported()) {
-        const flvPlayer = flvjs.createPlayer({
-          type: 'flv',
-          isLive: true,
-          hasAudio: true,
-          hasVideo: true,
-          url: streamSrc,
-          cors: true,
-          enableWorker: false,
-          enableStashBuffer: false,
-          stashInitialSize: 128,
-          lazyLoad: false,
-          seekType: 'range'
-        }, {
-          enableWorker: false,
-          enableStashBuffer: false,
-          stashInitialSize: 128,
-          lazyLoad: false,
-          autoCleanupSourceBuffer: true,
-          autoCleanupMaxBackwardDuration: 5,
-          autoCleanupMinBackwardDuration: 2,
-          fixAudioTimestampGap: false
-        });
-        flvPlayer.attachMediaElement(videoEl);
-        flvPlayer.load();
-        const playPromise = flvPlayer.play();
-        if (playPromise && playPromise.catch) {
-          playPromise.catch(() => {
-            videoEl.muted = true;
-            flvPlayer.play()?.catch(err => console.warn('Lỗi play flv overlay:', err));
-          });
-        }
-
-        const liveEdgeInterval = setInterval(() => {
-          if (videoEl && !videoEl.paused && videoEl.buffered && videoEl.buffered.length > 0) {
-            const end = videoEl.buffered.end(videoEl.buffered.length - 1);
-            const diff = end - videoEl.currentTime;
-            if (diff > 2.5) {
-              videoEl.currentTime = end - 0.3;
-            }
-          }
-          if (videoEl && videoEl.paused) {
-            videoEl.play()?.catch(() => {});
-          }
-        }, 2000);
-
-        flvPlayer.on(flvjs.Events.ERROR, (errType, errDetail, errInfo) => {
-          console.warn('[AvaLive Overlay FLV Error]:', errType, errDetail, errInfo);
-          if (errType === flvjs.ErrorTypes.NETWORK_ERROR) {
-            flvPlayer.unload();
-            flvPlayer.load();
-            flvPlayer.play()?.catch(() => {});
-          }
-        });
-        flvPlayerRef.current = flvPlayer;
-      } else if (Hls.isSupported()) {
-        const hls = new Hls({ enableWorker: false, lowLatencyMode: true, liveSyncDurationCount: 2 });
-        hls.loadSource(streamSrc);
-        hls.attachMedia(videoEl);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          videoEl.play().catch(() => {
-            videoEl.muted = true;
-            videoEl.play().catch(e => console.warn('Lỗi auto-play hls overlay:', e));
-          });
-        });
-        hls.on(Hls.Events.ERROR, (event, data) => {
-          console.warn('[HLS Error]:', data);
-          if (data.fatal) {
-            switch (data.type) {
-              case Hls.ErrorTypes.NETWORK_ERROR:
-                hls.startLoad();
-                break;
-              case Hls.ErrorTypes.MEDIA_ERROR:
-                hls.recoverMediaError();
-                break;
-              default:
-                hls.destroy();
-                break;
-            }
-          }
-        });
-        hlsPlayerRef.current = hls;
-      } else if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
-        videoEl.src = streamSrc;
-        videoEl.play().catch(() => {
-          videoEl.muted = true;
-          videoEl.play().catch(e => console.warn('Lỗi auto-play hls safari overlay:', e));
-        });
-      } else {
-        videoEl.src = streamSrc;
-        videoEl.play().catch(e => console.warn('Lỗi native video play overlay:', e));
-      }
-    } catch (err) {
-      console.error('Lỗi khởi tạo player overlay:', err);
-    }
-  };
-
-  useEffect(() => {
-    if (activeStreamUrl && flvVideoRef.current) {
-      attachFlvPlayer(flvVideoRef.current, activeStreamUrl);
-    }
-
-    return () => {
-      try {
-        currentPlayingUrlRef.current = null;
-        if (flvPlayerRef.current) {
-          flvPlayerRef.current.destroy();
-          flvPlayerRef.current = null;
-        }
-        if (hlsPlayerRef.current) {
-          hlsPlayerRef.current.destroy();
-          hlsPlayerRef.current = null;
-        }
-      } catch (e) {}
     };
   }, [activeStreamUrl]);
 
+  // Stage hiện tại
   const currentStage = masterState.stage || 'idol';
   const ratio = masterState.aspectRatio || '9:16';
 
-  // RENDER STAGE 1: GAME BẢN ĐỒ VIỆT NAM (CẮM CỜ 3 MIỀN)
+  // 1. RENDER STAGE: GAME BẢN ĐỒ VIỆT NAM (CẮM CỜ 63 TỈNH THÀNH)
   if (currentStage === 'bando' || currentStage === 'vietnam_map' || currentStage === 'map') {
     return (
-      <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent select-none flex items-center justify-center">
+      <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent select-none flex items-center justify-center pointer-events-auto">
         <GameBanDoVietNam 
           isPopout={true}
           aspectRatio={ratio}
@@ -501,10 +383,10 @@ export default function CleanLiveOverlay() {
     );
   }
 
-  // RENDER STAGE 2: GAME CHIẾN ĐẤU PK ĐẠI CHIẾN
+  // 2. RENDER STAGE: GAME CHIẾN ĐẤU PK ĐẠI CHIẾN
   if (currentStage === 'battle' || currentStage === 'gamebattle' || currentStage === 'game') {
     return (
-      <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent select-none flex items-center justify-center">
+      <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent select-none flex items-center justify-center pointer-events-auto">
         <GameChienDau 
           isPopout={true}
           aspectRatio={ratio}
@@ -515,18 +397,25 @@ export default function CleanLiveOverlay() {
     );
   }
 
-  // RENDER STAGE 3: SÀN NHẢY TIKTOK TƯƠNG TÁC 2D & 3D
+  // 3. RENDER STAGE: SÀN NHẢY TIKTOK TƯƠNG TÁC 2D & 3D
   if (currentStage === 'dancefloor' || currentStage === 'dance' || currentStage === 'dance-floor') {
     return (
-      <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent select-none flex items-center justify-center">
+      <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent select-none flex items-center justify-center pointer-events-auto">
         <DanceFloorOverlay />
       </div>
     );
   }
 
-  // RENDER STAGE 4: LIVE AI IDOL SẠCH / VIDEO STREAM / PHÒNG LIVE CHÍNH
+  // 4. RENDER STAGE: AI IDOL LIVESTREAM & PHÒNG DỰNG LIVE STUDIO CHUYÊN NGHIỆP
   return (
-    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-black flex items-center justify-center select-none">
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-[#070913] flex items-center justify-center select-none">
+      
+      {/* Background Dynamic Ambient Lighting */}
+      <div className="absolute inset-0 bg-radial-at-t from-blue-900/30 via-purple-950/20 to-black pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse pointer-events-none" />
+
+      {/* Frame Container Responsive theo Tỷ Lệ 9:16 (TikTok Dọc) hoặc 16:9 (OBS Ngang) */}
       <div 
         className={`relative flex items-center justify-center overflow-hidden transition-all duration-300 ${
           ratio === '9:16'
@@ -535,6 +424,8 @@ export default function CleanLiveOverlay() {
         }`}
         style={ratio === '9:16' ? { aspectRatio: '9 / 16', height: '100%', maxWidth: 'calc(100vh * 9 / 16)' } : { aspectRatio: '16 / 9', width: '100%' }}
       >
+        
+        {/* Nguồn Video Trực Tiếp FLV / HLS nếu có */}
         {activeStreamUrl ? (
           <video
             ref={flvVideoRef}
@@ -546,6 +437,7 @@ export default function CleanLiveOverlay() {
             style={{ background: 'black' }}
           />
         ) : masterState.isVideo ? (
+          /* Video MP4 Lặp Lại Mượt Mà 60FPS */
           <video
             key={masterState.mediaUrl}
             src={masterState.mediaUrl}
@@ -553,17 +445,87 @@ export default function CleanLiveOverlay() {
             loop
             muted={isAudioMuted}
             playsInline
-            className="w-full h-full object-contain select-none bg-black"
+            className="w-full h-full object-contain select-none z-10 bg-black"
           />
         ) : (
-          <img
-            key={masterState.mediaUrl}
-            src={masterState.mediaUrl}
-            alt={masterState.characterName || 'AI Idol'}
-            className="w-full h-full object-contain select-none"
-          />
+          /* Hình Ảnh AI Idol Sinh Động Có Chuyển Động Float & Ánh Sáng */
+          <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-gradient-to-b from-[#0e101f] via-[#090b16] to-[#04050a]">
+            {/* Ambient Avatar Glow */}
+            <div className="absolute inset-0 bg-radial-at-c from-cyan-500/20 via-transparent to-transparent animate-pulse" />
+            
+            <img
+              key={masterState.mediaUrl || 'default-avatar'}
+              src={masterState.mediaUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80'}
+              alt={masterState.characterName || 'AI Idol Linh Anh'}
+              className="w-full h-full object-contain select-none z-10 drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] transition-all duration-700 transform hover:scale-[1.02]"
+              style={{
+                animation: 'idolBreathing 4s ease-in-out infinite'
+              }}
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
+              }}
+            />
+
+            {/* Gradient Overlay phía dưới */}
+            <div className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-t from-black/80 via-transparent to-black/20" />
+          </div>
         )}
+
+        {/* 🔴 LIVE STATUS BADGE TOP-LEFT (CHỈNH CHU CHUẨN TIKTOK STUDIO) */}
+        <div className="absolute top-4 left-4 z-30 flex items-center gap-2 pointer-events-none">
+          <div className="px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-md border border-white/20 text-white text-xs font-black flex items-center gap-2 shadow-xl">
+            <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
+            <span className="text-red-400 uppercase tracking-wider text-[11px]">
+              {currentStage === 'broadcast' ? '🔴 LIVE STUDIO 4K' : '🔴 LIVE AI IDOL'}
+            </span>
+          </div>
+
+          <div className="px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-cyan-300 text-xs font-bold shadow-lg flex items-center gap-1">
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-spin" />
+            <span>{masterState.characterName || 'AI Idol Linh Anh'}</span>
+          </div>
+        </div>
+
+        {/* Phụ đề MC AI khi đọc thoại */}
+        {currentSubtitle && (
+          <div className="absolute bottom-6 left-4 right-4 z-40 animate-fadeIn pointer-events-none">
+            <div className="p-3.5 rounded-2xl bg-black/85 backdrop-blur-xl border border-cyan-400/50 text-white text-center shadow-2xl space-y-1">
+              <div className="flex items-center justify-center gap-1.5 text-[10px] font-black text-cyan-300 uppercase">
+                <Mic className="w-3 h-3 text-cyan-400 animate-bounce" />
+                <span>MC AI ĐANG NÓI:</span>
+              </div>
+              <p className="text-xs sm:text-sm font-bold text-yellow-200 leading-relaxed drop-shadow">
+                "{currentSubtitle}"
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Nút Điều Khiển Âm Thanh Overlay Góc Phải Dưới */}
+        <div className="absolute bottom-3 right-3 z-30 pointer-events-auto">
+          <button
+            onClick={() => setIsAudioMuted(!isAudioMuted)}
+            className="p-2.5 rounded-full bg-black/70 hover:bg-black/90 text-white border border-white/20 shadow-xl backdrop-blur-md transition-all hover:scale-110 cursor-pointer"
+            title={isAudioMuted ? 'Bật âm thanh Live' : 'Tắt tiếng Live'}
+          >
+            {isAudioMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
+          </button>
+        </div>
+
       </div>
+
+      {/* Animation Styles */}
+      <style>{`
+        @keyframes idolBreathing {
+          0%, 100% {
+            transform: scale(1) translateY(0px);
+          }
+          50% {
+            transform: scale(1.015) translateY(-4px);
+          }
+        }
+      `}</style>
     </div>
   );
 }

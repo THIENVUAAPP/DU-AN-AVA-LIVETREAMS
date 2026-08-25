@@ -50,6 +50,7 @@ import { listVideoInputDevices, openCameraStream, closeCameraStream } from '../l
 import { startScreenShare, stopScreenShare, onScreenShareNativeStop } from '../lib/screenShare';
 import { createBeautyEngine } from '../lib/beautyEngine/webglBeauty';
 import UniversalMasterOverlayModal from './UniversalMasterOverlayModal';
+import { syncMasterLiveState } from '../lib/masterLiveSync';
 
 export const BEAUTY_PRESETS_30 = [
   // Nhóm 1: Làn Da Rạng Rỡ & Căng Bóng (1-6)
@@ -159,18 +160,7 @@ export default function ProductionStudio({
     } catch (e) {}
 
     // ĐỒNG BỘ KHUNG HÌNH (ASPECT RATIO) CHO OBS OVERLAY
-    try {
-      const masterRaw = localStorage.getItem('avalive_master_live_state');
-      let masterState = masterRaw ? JSON.parse(masterRaw) : {};
-      masterState = { ...masterState, aspectRatio: ratio, stage: 'broadcast' };
-      localStorage.setItem('avalive_master_live_state', JSON.stringify(masterState));
-      
-      if (typeof BroadcastChannel !== 'undefined') {
-        const masterChannel = new BroadcastChannel('avalive_master_live_stream');
-        masterChannel.postMessage({ type: 'MASTER_LIVE_STATE_UPDATE', aspectRatio: ratio, stage: 'broadcast' });
-        setTimeout(() => masterChannel.close(), 100);
-      }
-    } catch (e) {}
+    syncMasterLiveState({ aspectRatio: ratio, stage: 'broadcast' });
   };
 
   // 🎵 TikTok Live Studio ID Connection State
@@ -185,29 +175,17 @@ export default function ProductionStudio({
   // --- THÊM LOGIC ĐỒNG BỘ MEDIA SANG OBS OVERLAY (CleanLiveOverlay) ---
   useEffect(() => {
     const payload = {
-      type: 'STREAM_MEDIA_UPDATE',
+      type: 'MASTER_LIVE_STATE_UPDATE',
+      stage: 'broadcast',
       mediaUrl: '',
       flvUrl: tiktokLiveFlvUrl,
       isVideo: false,
-      characterName: 'Live Studio',
+      characterName: 'Phòng Dựng Live Studio 4K',
       isConnected: isLive
     };
 
-    if (typeof BroadcastChannel !== 'undefined') {
-      try {
-        const cleanChannel = new BroadcastChannel('avalive_clean_stream_channel');
-        cleanChannel.postMessage(payload);
-        setTimeout(() => cleanChannel.close(), 100);
-      } catch (e) {}
-    }
-
-    try {
-      localStorage.setItem('aidol_clean_stream_state', JSON.stringify(payload));
-      const masterRaw = localStorage.getItem('avalive_master_live_state');
-      let masterState = masterRaw ? JSON.parse(masterRaw) : {};
-      masterState = { ...masterState, flvUrl: tiktokLiveFlvUrl };
-      localStorage.setItem('avalive_master_live_state', JSON.stringify(masterState));
-    } catch (e) {}
+    // Đồng bộ đa kênh toàn hệ thống (Supabase Realtime Cloud + Sockets + Local)
+    syncMasterLiveState(payload);
   }, [tiktokLiveFlvUrl, isLive]);
 
   // 🔲 Dual Live Display Mode (Đồng bộ hiển thị cả Camera Studio & Luồng TikTok Live Studio)

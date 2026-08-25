@@ -16,6 +16,7 @@ import {
   Power
 } from 'lucide-react';
 import UniversalFileUploader from './UniversalFileUploader';
+import { syncMasterLiveState } from '../lib/masterLiveSync';
 
 const DEFAULT_AVATARS = [
   { id: 'd1', name: 'Linh Anh', gender: 'female', style: 'Thời Trang & Xu Hướng', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80', voice: 'Nữ Hà Nội Chuẩn', tag: 'TOP SELLER', isDefault: true },
@@ -79,7 +80,7 @@ export default function AIAvatarStudio({ isLive, aiAvatarFeatureEnabled }) {
   useEffect(() => {
     let currentMediaUrl = '';
     let isVideo = false;
-    let characterName = 'AI Idol';
+    let characterName = 'AI Idol Linh Anh';
 
     if (activeTab === 'videos' && activeVideo) {
       currentMediaUrl = activeVideo.url;
@@ -92,29 +93,16 @@ export default function AIAvatarStudio({ isLive, aiAvatarFeatureEnabled }) {
     }
 
     const payload = {
-      type: 'STREAM_MEDIA_UPDATE',
+      type: 'MASTER_LIVE_STATE_UPDATE',
+      stage: 'idol',
       mediaUrl: currentMediaUrl,
       isVideo: isVideo,
       characterName: characterName,
       isConnected: isLive
     };
 
-    if (typeof BroadcastChannel !== 'undefined') {
-      try {
-        const cleanChannel = new BroadcastChannel('avalive_clean_stream_channel');
-        cleanChannel.postMessage(payload);
-        setTimeout(() => cleanChannel.close(), 100);
-      } catch (e) {}
-    }
-
-    try {
-      localStorage.setItem('aidol_clean_stream_state', JSON.stringify(payload));
-      // Đồng thời lưu vào master state để overlay đọc khi khởi động
-      const masterRaw = localStorage.getItem('avalive_master_live_state');
-      let masterState = masterRaw ? JSON.parse(masterRaw) : {};
-      masterState = { ...masterState, mediaUrl: currentMediaUrl, isVideo, characterName };
-      localStorage.setItem('avalive_master_live_state', JSON.stringify(masterState));
-    } catch (e) {}
+    // Đồng bộ đa kênh toàn hệ thống (Supabase Realtime Cloud + Sockets + Local)
+    syncMasterLiveState(payload);
   }, [activeAvatarId, activeVideoId, activeTab, isLive, activeAvatar, activeVideo]);
 
   // Callback when UniversalFileUploader processes an image

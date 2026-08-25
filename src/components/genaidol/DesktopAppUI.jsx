@@ -33,6 +33,7 @@ import ProductionStudio from '../ProductionStudio';
 import AIVoiceModule from '../kol-live/AIVoiceModule';
 import AICharacterBeautyModal from './AICharacterBeautyModal';
 import UniversalMasterOverlayModal from '../UniversalMasterOverlayModal';
+import { syncMasterLiveState } from '../../lib/masterLiveSync';
 import { saveCharacterToIDB, loadAllCharactersFromIDB, deleteCharacterFromIDB } from '../../utils/idbHelper';
 import { SUPPORTED_LANGUAGES, getCurrentLanguage, setCurrentLanguage, t } from '../../utils/i18n';
 import UpdateNotificationModal, { APP_VERSION } from './UpdateNotificationModal';
@@ -961,7 +962,16 @@ export default function DesktopAppUI() {
 
   // ⚡ MASTER REALTIME BROADCAST: Đồng bộ 100% thời gian thực sang TikTok LIVE Studio / OBS Studio
   useEffect(() => {
-    const stage = isGameBanDoActive ? 'bando' : isGameBattleActive ? 'battle' : 'idol';
+    const stage = isGameBanDoActive 
+      ? 'bando' 
+      : isGameBattleActive 
+      ? 'battle' 
+      : isDanceFloorActive 
+      ? 'dancefloor' 
+      : isLiveStudioActive 
+      ? 'broadcast' 
+      : 'idol';
+
     const char = CHARACTERS[selectedCharacter] || { url: '', type: 'image', name: 'AI Idol' };
     
     let currentMedia = char.url;
@@ -979,8 +989,8 @@ export default function DesktopAppUI() {
 
     const masterPayload = {
       type: 'MASTER_LIVE_STATE_UPDATE',
-      stage, // 'idol' | 'battle' | 'bando'
-      aspectRatio: globalAspectRatio, // '9:16' | '16:9'
+      stage, // 'idol' | 'battle' | 'bando' | 'dancefloor' | 'broadcast'
+      aspectRatio: globalAspectRatio || '9:16', // '9:16' | '16:9'
       selectedCharacter,
       characterName: char.name || 'AI Idol',
       mediaUrl: currentMedia,
@@ -992,67 +1002,23 @@ export default function DesktopAppUI() {
       updatedAt: Date.now()
     };
 
-    // 1. Lưu LocalStorage
-    try {
-      localStorage.setItem('avalive_master_live_state', JSON.stringify(masterPayload));
-      localStorage.setItem('aidol_clean_stream_state', JSON.stringify({
-        type: 'STREAM_MEDIA_UPDATE',
-        mediaUrl: currentMedia,
-        flvUrl: streamFlvUrl,
-        isVideo: !!isVid,
-        characterName: char.name || 'AI Idol',
-        isConnected: !!(isConnected || showSimulator)
-      }));
-    } catch (e) {}
-
-    // 2. Gửi REST API tới Backend
-    const backendUrl = typeof window !== 'undefined' && (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001') ? `${window.location.protocol}//${window.location.hostname}:3001` : '';
-    fetch(`${backendUrl}/api/live-state`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(masterPayload)
-    }).catch(() => {});
-
-    // 3. Gửi Socket.io Real-time tới TikTok Live Studio CEF & OBS
-    if (socketRef.current) {
-      socketRef.current.emit('MASTER_LIVE_STATE_UPDATE', masterPayload);
-    }
-
-    // 4. Gửi BroadcastChannel trong trình duyệt
-    let masterChannel = null;
-    let cleanChannel = null;
-
-    if (typeof BroadcastChannel !== 'undefined') {
-      try {
-        masterChannel = new BroadcastChannel('avalive_master_live_stream');
-        masterChannel.postMessage(masterPayload);
-
-        masterChannel.onmessage = (e) => {
-          if (e.data && e.data.type === 'REQUEST_MASTER_LIVE_STATE') {
-            masterChannel.postMessage({
-              ...masterPayload,
-              updatedAt: Date.now()
-            });
-          }
-        };
-
-        cleanChannel = new BroadcastChannel('avalive_clean_stream_channel');
-        cleanChannel.postMessage({
-          type: 'STREAM_MEDIA_UPDATE',
-          mediaUrl: currentMedia,
-          flvUrl: streamFlvUrl,
-          isVideo: !!isVid,
-          characterName: char.name || 'AI Idol',
-          isConnected: !!(isConnected || showSimulator)
-        });
-      } catch (e) {}
-    }
-
-    return () => {
-      if (masterChannel) masterChannel.close();
-      if (cleanChannel) cleanChannel.close();
-    };
-  }, [isGameBanDoActive, isGameBattleActive, selectedCharacter, activeVideoItem, isConnected, showSimulator, globalAspectRatio, isDarkMode, currentLang, CHARACTERS, flvUrl]);
+    // Đồng bộ tức thì đa kênh: Supabase Cloud Realtime + Socket.io + BroadcastChannel + LocalStorage + REST API
+    syncMasterLiveState(masterPayload, socketRef.current);
+  }, [
+    isGameBanDoActive, 
+    isGameBattleActive, 
+    isDanceFloorActive, 
+    isLiveStudioActive, 
+    selectedCharacter, 
+    activeVideoItem, 
+    isConnected, 
+    showSimulator, 
+    globalAspectRatio, 
+    isDarkMode, 
+    currentLang, 
+    CHARACTERS, 
+    flvUrl
+  ]);
 
   // Trích xuất TikTok Username từ Link Live / ID / @username
   const extractTikTokUsername = (input) => {
