@@ -35,5 +35,5 @@
   <body class="bg-[#0A0A0A] text-gray-100 antialiased selection:bg-[#EF4444] selection:text-white min-h-screen overflow-x-hidden pt-safe pb-safe">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-  </body>
+  <script>window.addEventListener("error", (e) => { document.body.innerHTML = "<div style=\"color:red;font-size:24px;z-index:9999;position:absolute;\">" + e.error.stack.replace(/\n/g,"<br>") + "</div>"; });</script></body>
 </html>

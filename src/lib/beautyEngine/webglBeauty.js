@@ -81,6 +81,7 @@ export function createBeautyEngine({ onError } = {}) {
     'u_tex', 'u_texel', 'u_faceDetected', 'u_leftEye', 'u_rightEye', 'u_eyeRadius',
     'u_cheekLeft', 'u_cheekRight', 'u_cheekRadius', 'u_faceCenter', 'u_faceRadius',
     'u_mouth', 'u_mouthRadius', 'u_eyeEnlarge', 'u_vline', 'u_skinSmooth',
+    'u_rosyBlush', 'u_eyeSparkle', 'u_skinBright',
   ];
   const uniforms = {};
   uNames.forEach((n) => { uniforms[n] = gl.getUniformLocation(program, n); });
@@ -170,6 +171,9 @@ export function createBeautyEngine({ onError } = {}) {
     gl.uniform1f(uniforms.u_eyeEnlarge, params.eyeEnlarge ?? 0);
     gl.uniform1f(uniforms.u_vline, params.vline ?? 0);
     gl.uniform1f(uniforms.u_skinSmooth, params.skinSmooth ?? 0);
+    gl.uniform1f(uniforms.u_rosyBlush, params.rosyBlush ?? 0);
+    gl.uniform1f(uniforms.u_eyeSparkle, params.eyeSparkle ?? 0);
+    gl.uniform1f(uniforms.u_skinBright, params.skinBright ?? 0);
 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     ready = true;

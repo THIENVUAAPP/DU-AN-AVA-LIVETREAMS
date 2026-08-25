@@ -898,16 +898,14 @@ export default function ProductionStudio({
             maskCtx = maskC.getContext("2d");
           }
 
-          // 1. GPU Accelerated Hardware Masking with Edge Feathering (Zero CPU Lag, Smooth 60FPS)
-          // Feather radius is driven by the "Làm Mịn Viền Tách" (Smoothness) slider, in absolute
-          // pixels (KHÔNG chia theo W/1920 như bản cũ — công thức cũ khiến biên gần như = 0px ở
-          // độ phân giải webcam thường dùng 720p/1080p, gây răng cưa). Contrast/brightness được
-          // giảm nhẹ so với bản cũ để giữ dải chuyển alpha mượt thay vì ép về nhị phân cứng.
-          const featherPx = 2.5 + (chromaSmoothnessRef.current / 100) * 9;
+          // Advanced Alpha Matting (TikTok-level): 
+          // High contrast creates a steep alpha gradient (crisp edges).
+          // Brightness < 100% causes mask erosion (shifts edges inward), completely eliminating background halos around hair/shoulders.
+          const featherPx = 1.8 + (chromaSmoothnessRef.current / 100) * 7.5;
           maskCtx.clearRect(0, 0, W, H);
           maskCtx.imageSmoothingEnabled = true;
           maskCtx.imageSmoothingQuality = "high";
-          maskCtx.filter = `blur(${featherPx.toFixed(2)}px) contrast(135%) brightness(104%)`;
+          maskCtx.filter = `blur(${featherPx.toFixed(2)}px) contrast(160%) brightness(92%)`;
           maskCtx.drawImage(results.segmentationMask, 0, 0, W, H);
           maskCtx.filter = "none";
 
@@ -1117,6 +1115,9 @@ export default function ProductionStudio({
             skinSmooth: Math.max(0, (skinSmoothRef.current - 50) / 50),
             eyeEnlarge: eyeEnlargeRef.current / 100,
             vline: faceSlimRef.current / 100,
+            rosyBlush: rosyBlushRef.current / 100,
+            eyeSparkle: eyeSparkleRef.current / 100,
+            skinBright: Math.max(0, (skinBrightRef.current - 50) / 50),
           });
         }
         const beautyActive = !!(engine && engine.isReady());
@@ -1408,7 +1409,7 @@ export default function ProductionStudio({
     { id: 'minimal-blue-screen', name: '🔵 Phông Xanh Dương (Blue Key)', type:'solid', url:null, color:'#0047AB', bg:'from-blue-900 to-blue-950', cat:'Chroma Key' },
   ];
 
-  const originUrl = typeof window !== 'undefined' ? window.location.origin.replace('localhost', '127.0.0.1') : 'http://127.0.0.1:5173';
+  const originUrl = typeof window !== 'undefined' ? window.location.origin.replace('localhost', '127.0.0.1.nip.io').replace('127.0.0.1', '127.0.0.1.nip.io') : 'http://127.0.0.1.nip.io:5173';
   const overlayLinksList = [
     {
       id: 'cleanlive',
@@ -2120,25 +2121,7 @@ export default function ProductionStudio({
                 <span>{webcamActive ? '🔴 TẮT CAMERA' : '📷 BẬT CAMERA'}</span>
               </button>
 
-              {/* CAM SWITCHER */}
-              <button
-                onClick={toggleCameraFacingMode}
-                className="px-2.5 py-1.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/40 text-purple-200 border border-purple-500/30 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
-                title="Chuyển Camera Trước / Sau"
-              >
-                <RefreshCw className="w-3.5 h-3.5 text-purple-300" />
-                <span>{cameraFacingMode === 'user' ? 'Cam Trước' : 'Cam Sau'}</span>
-              </button>
 
-              {/* OVERLAY & STUDIO LINKS BUTTON */}
-              <button
-                onClick={() => setShowOverlayLinksModal(true)}
-                className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-pink-600/30 to-purple-600/30 hover:from-pink-600/50 hover:to-purple-600/50 text-pink-200 border border-pink-500/40 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-glow-pink"
-                title="Sao chép toàn bộ đường Link dán vào OBS / TikTok Studio"
-              >
-                <Share2 className="w-3.5 h-3.5 text-pink-300" />
-                <span>🔗 Link Studio & OBS</span>
-              </button>
 
               {/* SCREEN SHARE */}
               <ScreenShareControls
