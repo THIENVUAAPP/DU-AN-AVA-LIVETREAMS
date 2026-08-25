@@ -38,9 +38,9 @@ if (fs.existsSync(zipFilePath)) fs.unlinkSync(zipFilePath);
 if (fs.existsSync(publicZip)) fs.unlinkSync(publicZip);
 if (fs.existsSync(distZip)) fs.unlinkSync(distZip);
 
-// 4. Chạy lệnh zip nén dist, backend, launchers, docs, config (loại trừ các file zip lồng nhau)
+// 4. Chạy lệnh zip nén dist, backend, patches, launchers, docs, config (loại trừ các file zip lồng nhau)
 try {
-  const zipCmd = `zip -r "${zipFileName}" dist backend Chay_App_Mac_Linux.command Chay_App_Windows.bat HUONG_DAN_SU_DUNG_OBS_TIKTOK_STUDIO.md package.json package-lock.json .env.example -x "dist/*.zip" -x "public/*.zip" -x "*.DS_Store"`;
+  const zipCmd = `zip -r "${zipFileName}" dist backend patches Chay_App_Mac_Linux.command Chay_App_Windows.bat HUONG_DAN_SU_DUNG_OBS_TIKTOK_STUDIO.md package.json package-lock.json .env.example -x "dist/*.zip" -x "public/*.zip" -x "*.DS_Store"`;
   execSync(zipCmd, { cwd: rootDir, stdio: 'inherit' });
   
   const stats = fs.statSync(zipFilePath);

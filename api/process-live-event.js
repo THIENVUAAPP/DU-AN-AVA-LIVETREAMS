@@ -1,8 +1,8 @@
-import { getSalesPrompt } from './brains/sales.js';
-import { getTalkPrompt } from './brains/talk.js';
-import { getDancePrompt } from './brains/dance.js';
-import { getSingPrompt } from './brains/sing.js';
-import { getCustomPrompt } from './brains/custom.js';
+import { getSalesPrompt } from './_brains/sales.js';
+import { getTalkPrompt } from './_brains/talk.js';
+import { getDancePrompt } from './_brains/dance.js';
+import { getSingPrompt } from './_brains/sing.js';
+import { getCustomPrompt } from './_brains/custom.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
