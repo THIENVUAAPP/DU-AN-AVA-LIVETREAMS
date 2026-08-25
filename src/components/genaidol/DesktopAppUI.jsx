@@ -37,7 +37,13 @@ import { SUPPORTED_LANGUAGES, getCurrentLanguage, setCurrentLanguage, t } from '
 import UpdateNotificationModal, { APP_VERSION } from './UpdateNotificationModal';
 
 export default function DesktopAppUI() {
-  const [isLiveStudioOpen, setIsLiveStudioOpen] = useState(false);
+  const [isLiveStudioActive, setIsLiveStudioActive] = useState(() => {
+    try {
+      return localStorage.getItem('avalive_active_stage') === 'studio';
+    } catch {
+      return false;
+    }
+  });
   const [isLocalSpeakerMuted, setIsLocalSpeakerMuted] = useState(() => {
     try {
       return localStorage.getItem('avalive_local_speaker_muted') === 'true';
@@ -1609,6 +1615,32 @@ export default function DesktopAppUI() {
   };
 
   const renderCharacterContent = () => {
+    // 0. Chế độ Live Studio Phòng Dựng 4K Chuyên Nghiệp (Tích hợp trực tiếp trong phần mềm)
+    if (isLiveStudioActive) {
+      return (
+        <div className="w-full h-full overflow-y-auto bg-[#07070a] relative">
+          <ProductionStudio 
+            isLive={isConnected} 
+            aiAvatarFeatureEnabled={true}
+            tiktokId={tiktokId}
+            setTiktokId={setTiktokId}
+            isConnecting={isConnecting}
+            isConnected={isConnected}
+            onConnectTikTok={(customId) => {
+              if (customId && customId !== tiktokId) {
+                setTiktokId(customId);
+                try { localStorage.setItem('aidol_tiktok_id', customId); } catch (e) {}
+              }
+              handleConnect();
+            }}
+            flvUrl={flvUrl}
+            globalAspectRatio={globalAspectRatio}
+            onToggleAspectRatio={toggleGlobalAspectRatio}
+          />
+        </div>
+      );
+    }
+
     // -1. Chế độ Game Chiến Đấu (TikTok LIVE Battle Overlay)
     if (isGameBattleActive) {
       return (
@@ -1638,7 +1670,6 @@ export default function DesktopAppUI() {
     }
 
     // -3. Chế độ Sàn Nhảy TikTok
-    // -3. Chế độ Sàn Nhảy TikTok
     if (isDanceFloorActive) {
       return (
         <div className="w-full h-full overflow-y-auto bg-black relative">
@@ -1648,7 +1679,7 @@ export default function DesktopAppUI() {
              isAdminOpen={isDanceFloorAdminOpen}
              onCloseAdmin={() => setIsDanceFloorAdminOpen(false)}
            />
-    </div>
+        </div>
       );
     }
 
@@ -1714,7 +1745,7 @@ export default function DesktopAppUI() {
           {/* Nút Chế độ Live AI Idol */}
           <button 
             className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs ${
-              !isGameBattleActive && !isGameBanDoActive && !isDanceFloorActive
+              !isGameBattleActive && !isGameBanDoActive && !isDanceFloorActive && !isLiveStudioActive
                 ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 text-white border-cyan-300 shadow-cyan-500/40 ring-1 ring-cyan-400/50' 
                 : (isDarkMode ? 'border-cyan-500/40 bg-cyan-950/30 text-cyan-300 hover:bg-cyan-900/50' : 'border-cyan-300 bg-cyan-50 text-cyan-700 hover:bg-cyan-100')
             }`}
@@ -1722,6 +1753,7 @@ export default function DesktopAppUI() {
               setIsGameBattleActive(false);
               setIsGameBanDoActive(false);
               setIsDanceFloorActive(false);
+              setIsLiveStudioActive(false);
               try { localStorage.setItem('avalive_active_stage', 'idol'); } catch (e) {}
               mapVoiceEngine.stopAll();
               battleVoiceEngine.stopAll();
@@ -1729,25 +1761,37 @@ export default function DesktopAppUI() {
             }}
             title="Chuyển sang màn hình Livestream AI Idol"
           >
-            <Video size={10} className={!isGameBattleActive && !isGameBanDoActive && !isDanceFloorActive ? 'text-yellow-300' : 'text-cyan-400'} />
+            <Video size={10} className={!isGameBattleActive && !isGameBanDoActive && !isDanceFloorActive && !isLiveStudioActive ? 'text-yellow-300' : 'text-cyan-400'} />
             <span className="whitespace-nowrap">Live AI Idol</span>
-            {!isGameBattleActive && !isGameBanDoActive && !isDanceFloorActive && (
+            {!isGameBattleActive && !isGameBanDoActive && !isDanceFloorActive && !isLiveStudioActive && (
               <span className="w-1 h-1 rounded-full bg-emerald-400 animate-ping"></span>
             )}
           </button>
 
-          {/* Nút Live Studio (Ảnh 2) - NẰM KẾ BÊN LIVE AI IDOL */}
+          {/* Nút Live Studio (Tích Hợp Trong Giao Diện Phần Mềm) */}
           <button 
             className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs ${
-              isLiveStudioOpen
+              isLiveStudioActive
                 ? 'bg-gradient-to-r from-pink-600 via-rose-600 to-purple-600 text-white border-pink-300 shadow-pink-500/40 ring-1 ring-pink-400/50 animate-pulse'
                 : (isDarkMode ? 'border-pink-500/40 bg-pink-950/30 text-pink-300 hover:bg-pink-900/50' : 'border-pink-300 bg-pink-50 text-pink-700 hover:bg-pink-100')
             }`}
-            onClick={() => setIsLiveStudioOpen(true)}
-            title="Mở phòng dựng Live Studio 4K chuyên nghiệp (Webcam, Bộ lọc làm đẹp, Video RTMP, Nguồn OBS)"
+            onClick={() => {
+              setIsLiveStudioActive(true);
+              setIsGameBattleActive(false);
+              setIsGameBanDoActive(false);
+              setIsDanceFloorActive(false);
+              try { localStorage.setItem('avalive_active_stage', 'studio'); } catch (e) {}
+              mapVoiceEngine.stopAll();
+              battleVoiceEngine.stopAll();
+              battleCommentary.stopAll();
+            }}
+            title="Chuyển sang phòng dựng Live Studio 4K chuyên nghiệp (Webcam, Bộ lọc làm đẹp, Video RTMP, Nguồn OBS)"
           >
-            <Tv size={10} className={isLiveStudioOpen ? 'text-yellow-300' : 'text-pink-400'} />
+            <Tv size={10} className={isLiveStudioActive ? 'text-yellow-300' : 'text-pink-400'} />
             <span className="whitespace-nowrap">Live Studio</span>
+            {isLiveStudioActive && (
+              <span className="w-1 h-1 rounded-full bg-emerald-400 animate-ping"></span>
+            )}
           </button>
 
           {/* Nút Kích hoạt Game Chiến Đấu */}
@@ -1761,6 +1805,7 @@ export default function DesktopAppUI() {
               setIsGameBattleActive(true);
               setIsGameBanDoActive(false);
               setIsDanceFloorActive(false);
+              setIsLiveStudioActive(false);
               try { localStorage.setItem('avalive_active_stage', 'battle'); } catch (e) {}
               mapVoiceEngine.stopAll();
               if (isMasterLiveRunning) {
@@ -1802,6 +1847,7 @@ export default function DesktopAppUI() {
               setIsGameBanDoActive(true);
               setIsGameBattleActive(false);
               setIsDanceFloorActive(false);
+              setIsLiveStudioActive(false);
               try { localStorage.setItem('avalive_active_stage', 'bando'); } catch (e) {}
               battleVoiceEngine.stopAll();
               battleCommentary.stopAll();
@@ -3404,32 +3450,6 @@ export default function DesktopAppUI() {
           <button onClick={() => setToast(null)} className="ml-2 opacity-70 hover:opacity-100 transition-opacity">
             <X size={14} />
           </button>
-        </div>
-      )}
-
-      {/* Live Studio Fullscreen Modal (Ảnh 2) — Nằm trong phần mềm, đầy đủ tính năng phòng dựng */}
-      {isLiveStudioOpen && (
-        <div className="fixed inset-0 z-[99990] bg-[#0A0A0A] flex flex-col animate-in fade-in zoom-in-95 duration-200">
-          <div className="h-8 bg-[#121216] border-b border-white/10 flex items-center justify-between px-3 shrink-0 shadow-md">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></span>
-              <h2 className="text-[11px] font-black text-white uppercase tracking-wider flex items-center gap-1.5">
-                <Tv className="w-3.5 h-3.5 text-pink-400" />
-                <span>PHÒNG DỰNG LIVE STUDIO PRO 4K (OBS / WEBCAM / BEAUTY)</span>
-              </h2>
-            </div>
-            <button 
-              onClick={() => setIsLiveStudioOpen(false)}
-              className="flex items-center gap-1 px-2.5 py-0.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-[11px] font-bold transition-all shadow-md active:scale-95 cursor-pointer"
-              title="Quay lại giao diện phần mềm chính"
-            >
-              <X size={12} />
-              <span>Đóng Live Studio</span>
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto bg-[#0A0A0A]">
-            <ProductionStudio isLive={isConnected} aiAvatarFeatureEnabled={true} />
-          </div>
         </div>
       )}
 

@@ -92,7 +92,20 @@ export const BEAUTY_PRESETS_30 = [
   { id: "b30", category: "👑 Spa & Celebrity Care", name: "30. Super Star Celebrity Filter", smooth: 85, bright: 66, blush: 30, sparkle: 75, warmth: 0, slim: 30, image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80", filter: "brightness(1.06) contrast(1.04) saturate(1.06)" },
 ];
 
-export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setActiveTab, currentUser }) {
+export default function ProductionStudio({ 
+  isLive = false, 
+  aiAvatarFeatureEnabled = true, 
+  setActiveTab, 
+  currentUser,
+  tiktokId: externalTiktokId,
+  setTiktokId: setExternalTiktokId,
+  isConnecting: externalIsConnecting,
+  isConnected: externalIsConnected,
+  onConnectTikTok,
+  flvUrl: externalFlvUrl,
+  globalAspectRatio = '16:9',
+  onToggleAspectRatio
+}) {
   const [studioSubTab, setStudioSubTab] = useState('multicam');
   const [activeBgCategory, setActiveBgCategory] = useState('Tất Cả'); // 'multicam' | 'commerce'
   const [activeCam, setActiveCam] = useState('cam1');
@@ -125,15 +138,18 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
 
   // 📱/📺 Aspect Ratio State (16:9 ngang / 9:16 dọc TikTok Studio)
   const [stageAspectRatio, setStageAspectRatio] = useState(() => {
-    try {
-      return localStorage.getItem('aidol_aspect_ratio') || '16:9';
-    } catch (e) {
-      return '16:9';
-    }
+    return globalAspectRatio || (typeof localStorage !== 'undefined' ? localStorage.getItem('aidol_aspect_ratio') : '') || '16:9';
   });
+
+  useEffect(() => {
+    if (globalAspectRatio) {
+      setStageAspectRatio(globalAspectRatio);
+    }
+  }, [globalAspectRatio]);
 
   const handleToggleAspectRatio = (ratio) => {
     setStageAspectRatio(ratio);
+    if (onToggleAspectRatio) onToggleAspectRatio(ratio);
     try {
       localStorage.setItem('aidol_aspect_ratio', ratio);
     } catch (e) {}
@@ -141,19 +157,35 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
 
   // 🎵 TikTok Live Studio ID Connection State
   const [tiktokStudioId, setTiktokStudioId] = useState(() => {
-    try {
-      return localStorage.getItem('aidol_tiktok_id') || '';
-    } catch (e) {
-      return '';
-    }
+    return externalTiktokId || (typeof localStorage !== 'undefined' ? localStorage.getItem('aidol_tiktok_id') : '') || '';
   });
   const [isTiktokConnecting, setIsTiktokConnecting] = useState(false);
   const [isTiktokConnected, setIsTiktokConnected] = useState(false);
   const [tiktokLiveFlvUrl, setTiktokLiveFlvUrl] = useState(null);
   const socketRef = useRef(null);
 
-  // Socket listener cho TikTok Studio
   useEffect(() => {
+    if (externalTiktokId !== undefined && externalTiktokId !== tiktokStudioId) {
+      setTiktokStudioId(externalTiktokId);
+    }
+  }, [externalTiktokId]);
+
+  useEffect(() => {
+    if (typeof externalIsConnected === 'boolean') {
+      setIsTiktokConnected(externalIsConnected);
+    }
+    if (typeof externalIsConnecting === 'boolean') {
+      setIsTiktokConnecting(externalIsConnecting);
+    }
+    if (externalFlvUrl) {
+      setTiktokLiveFlvUrl(externalFlvUrl);
+    }
+  }, [externalIsConnected, externalIsConnecting, externalFlvUrl]);
+
+  // Socket listener cho TikTok Studio độc lập (nếu chạy riêng)
+  useEffect(() => {
+    if (onConnectTikTok) return; // Nếu đã có coordinator thì dùng chung
+
     let backendUrl = '';
     if (typeof window !== 'undefined') {
       const customUrl = localStorage.getItem('aidol_backend_url') || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BACKEND_URL);
@@ -176,27 +208,30 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
       setIsTiktokConnecting(false);
       setIsTiktokConnected(true);
       if (data?.flvUrl) setTiktokLiveFlvUrl(data.flvUrl);
-      alert(`🎉 ĐÃ KẾT NỐI THÀNH CÔNG VỚI PHIÊN LIVE TIKTOK STUDIO: ${data?.username || tiktokStudioId}`);
     });
 
     socket.on('tiktok_error', (data) => {
       setIsTiktokConnecting(false);
       setIsTiktokConnected(false);
-      alert(`⚠️ LỖI KẾT NỐI TIKTOK: ${data?.message || 'Không thể kết nối tới kênh'}`);
     });
 
     return () => {
       socket.disconnect();
     };
-  }, [tiktokStudioId]);
+  }, [tiktokStudioId, onConnectTikTok]);
 
   const handleToggleTikTokStudioConnect = () => {
+    if (onConnectTikTok) {
+      if (setExternalTiktokId) setExternalTiktokId(tiktokStudioId);
+      onConnectTikTok(tiktokStudioId);
+      return;
+    }
+
     if (isTiktokConnected) {
       setIsTiktokConnected(false);
       setIsTiktokConnecting(false);
       setTiktokLiveFlvUrl(null);
       if (socketRef.current) socketRef.current.emit('disconnect_tiktok');
-      alert('Đã ngắt kết nối với TikTok Live Studio!');
       return;
     }
 
@@ -217,7 +252,6 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
       setTimeout(() => {
         setIsTiktokConnecting(false);
         setIsTiktokConnected(true);
-        alert(`🟢 ĐÃ KẾT NỐI TÍN HIỆU VỚI TIKTOK STUDIO: @${cleanId}`);
       }, 1000);
     }
   };
