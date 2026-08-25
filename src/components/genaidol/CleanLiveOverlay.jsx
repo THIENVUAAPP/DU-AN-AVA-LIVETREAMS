@@ -264,7 +264,7 @@ export default function CleanLiveOverlay() {
         const saved = localStorage.getItem('avalive_master_live_state');
         if (saved) {
           const parsed = JSON.parse(saved);
-          if (parsed.updatedAt && parsed.updatedAt !== lastUpdatedTimestamp) {
+          if (parsed.updatedAt && parsed.updatedAt > lastUpdatedTimestamp) {
             lastUpdatedTimestamp = parsed.updatedAt;
             applyMasterState(parsed);
           }
@@ -276,7 +276,7 @@ export default function CleanLiveOverlay() {
       fetch(endpoint)
         .then(r => r.json())
         .then(data => {
-          if (data && data.updatedAt && data.updatedAt !== lastUpdatedTimestamp) {
+          if (data && data.updatedAt && data.updatedAt > lastUpdatedTimestamp) {
             lastUpdatedTimestamp = data.updatedAt;
             applyMasterState(data);
           }
