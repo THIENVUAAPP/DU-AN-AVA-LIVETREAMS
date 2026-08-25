@@ -12,6 +12,7 @@ import ThuVienAIDOL from './genaidol/ThuVienAIDOL';
 import LivestreamAISetup from './genaidol/LivestreamAISetup';
 import AIDOLLiveConsole from './genaidol/AIDOLLiveConsole';
 import WorkspaceTacVu from './genaidol/WorkspaceTacVu';
+import AIVoiceModule from './kol-live/AIVoiceModule';
 
 // --- PLACEHOLDER COMPONENTS FOR PAGES ---
 const PlaceholderPage = ({ title }) => (
@@ -104,7 +105,7 @@ export default function KOLLiveDashboard() {
       {/* MAIN CONTENT AREA */}
       <main className="flex-1 relative z-10 overflow-y-auto">
         <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-          {activeTab === 'voice' && <WorkspaceTacVu defaultTab="voice" />}
+          {activeTab === 'voice' && <AIVoiceModule />}
           {activeTab === 'my-aidol' && <ThuVienAIDOL />}
           {activeTab === 'livestream-ai' && <LivestreamAISetup />}
           {activeTab === 'history' && <LichSuTao />}

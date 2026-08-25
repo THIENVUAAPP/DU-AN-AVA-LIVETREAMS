@@ -30,6 +30,7 @@ import battleCommentary from './game/battleCommentaryEngine';
 import { stopVoiceAudio } from '../../utils/voiceSyncService';
 import AutoCaptchaSolver from '../AutoCaptchaSolver';
 import ProductionStudio from '../ProductionStudio';
+import AIVoiceModule from '../kol-live/AIVoiceModule';
 import { saveCharacterToIDB, loadAllCharactersFromIDB, deleteCharacterFromIDB } from '../../utils/idbHelper';
 import { SUPPORTED_LANGUAGES, getCurrentLanguage, setCurrentLanguage, t } from '../../utils/i18n';
 import UpdateNotificationModal, { APP_VERSION } from './UpdateNotificationModal';
@@ -2080,6 +2081,20 @@ export default function DesktopAppUI() {
             <span className="whitespace-nowrap">Test Âm Thanh</span>
           </button>
 
+          {/* 🎙️ Nút Mở VoiceStudio (Phòng Thu & Soạn Kịch Bản Thoại) */}
+          <button 
+            onClick={() => setActiveSettingsModal('voice_studio')}
+            className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs active:scale-95 ${
+              activeSettingsModal === 'voice_studio'
+                ? 'bg-pink-600 text-white border-pink-400 shadow-pink-500/30'
+                : (isDarkMode ? 'bg-pink-500/20 text-pink-300 hover:bg-pink-500/30 border-pink-500/30' : 'bg-pink-50 text-pink-800 hover:bg-pink-100 border-pink-300')
+            }`}
+            title="Mở VoiceStudio: Phòng thu giọng đọc AI, soạn kịch bản livestream và điều chỉnh cảm xúc đa sắc thái"
+          >
+            <Mic size={10} className="text-pink-400" />
+            <span className="whitespace-nowrap font-bold">🎙️ Voice Studio</span>
+          </button>
+
           {/* 🔇 NÚT TẮT TIẾNG LOA MÁY TÍNH (VẪN PHÁT ĐỦ ÂM THANH 100% TRÊN TIKTOK / OBS) */}
           <button 
             onClick={handleToggleLocalSpeakerMute}
@@ -2584,6 +2599,30 @@ export default function DesktopAppUI() {
     </div>
         )}
     </div>
+
+      {/* VoiceStudio Modal (Phòng Thu Âm Thanh & Soạn Kịch Bản Thoại) */}
+      {activeSettingsModal === 'voice_studio' && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in zoom-in duration-200">
+          <div className="w-full max-w-7xl h-[92vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl bg-[#0d0d12] border border-pink-500/30 relative">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-white/10 bg-[#12121a]">
+              <div className="flex items-center gap-2 text-pink-400 font-black text-sm">
+                <Mic size={18} className="text-pink-400 animate-pulse" />
+                <span>PHÒNG THU GIỌNG NÓI & SOẠN KỊCH BẢN LIVESTREAM (VOICESTUDIO PRO)</span>
+              </div>
+              <button 
+                onClick={() => setActiveSettingsModal(null)}
+                className="p-1.5 rounded-lg bg-white/10 text-white/70 hover:bg-white/20 hover:text-white transition-colors"
+                title="Đóng"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <AIVoiceModule />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* General Settings Modal */}
       {activeSettingsModal === 'general' && (
