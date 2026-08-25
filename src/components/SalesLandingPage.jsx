@@ -164,9 +164,9 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
               <span className="text-[10px] font-bold text-purple-300 uppercase tracking-widest">NỀN TẢNG LIVESTREAM & BÁN HÀNG AI #1 VIỆT NAM</span>
             </div>
             
-            <h1 className="text-5xl md:text-[4rem] font-black text-white leading-[1.1] tracking-tight">
+            <h1 className="text-5xl md:text-[4rem] font-black text-white leading-[1.3] tracking-normal">
               LIVE STREAM ĐA NỀN TẢNG <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FBBF24] via-[#F59E0B] to-[#D97706]">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FBBF24] via-[#F59E0B] to-[#D97706] inline-block mt-2">
                 BÁN HÀNG TỰ ĐỘNG BẰNG AI 24/7
               </span>
             </h1>
