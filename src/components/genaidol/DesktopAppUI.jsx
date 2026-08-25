@@ -197,9 +197,9 @@ export default function DesktopAppUI() {
   const [isLiveAudioMuted, setIsLiveAudioMuted] = useState(true);
   const [selectedCharacter, setSelectedCharacter] = useState(() => {
     try {
-      return localStorage.getItem('avalive_selected_char') || null;
+      return localStorage.getItem('avalive_selected_char') || 'aidol_lan_huong';
     } catch (e) {
-      return null;
+      return 'aidol_lan_huong';
     }
   });
   const [showTokenHistory, setShowTokenHistory] = useState(false);
@@ -1120,10 +1120,14 @@ export default function DesktopAppUI() {
       ? 'broadcast' 
       : 'idol';
 
-    const char = CHARACTERS[selectedCharacter] || { url: '', type: 'image', name: 'AI Idol' };
+    const char = CHARACTERS[selectedCharacter] || CHARACTERS['aidol_lan_huong'] || { 
+      url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80', 
+      type: 'image', 
+      name: 'AI Idol Lan Hương' 
+    };
     
-    let currentMedia = char.url;
-    let isVid = char.type === 'video';
+    let currentMedia = char.url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
+    let isVid = char.type === 'video' || (typeof currentMedia === 'string' && currentMedia.endsWith('.mp4'));
     let streamFlvUrl = null;
 
     if (isConnected && flvUrl) {

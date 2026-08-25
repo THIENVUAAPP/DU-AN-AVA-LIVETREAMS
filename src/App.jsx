@@ -31,14 +31,7 @@ import { syncMasterLiveState } from "./lib/masterLiveSync";
 import { Lock, Sparkles, ShieldCheck, Mail, LogIn, ArrowRight } from "lucide-react";
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState(() => { 
-    try {
-      const saved = localStorage.getItem("avalive_current_user"); 
-      return saved ? "broadcast" : "overview"; 
-    } catch (e) {
-      return "overview";
-    }
-  });
+  const [activeTab, setActiveTab] = useState("overview");
   const [isLive, setIsLive] = useState(false);
   const [aiAvatarFeatureEnabled, setAiAvatarFeatureEnabled] = useState(false);
 
