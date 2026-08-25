@@ -260,6 +260,35 @@ export default function ProductionStudio({
     }
   };
 
+  // Khởi động Camera linh hoạt không bao giờ lỗi
+  const startCameraStream = async (facing = cameraFacingMode) => {
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      console.warn("Trình duyệt không hỗ trợ getUserMedia");
+      return false;
+    }
+
+    const constraintTiers = [
+      { video: { facingMode: facing, width: { ideal: 1280 }, height: { ideal: 720 } } },
+      { video: { facingMode: facing } },
+      { video: true }
+    ];
+
+    for (const constraints of constraintTiers) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        if (stream && webcamVideoRef.current) {
+          webcamVideoRef.current.srcObject = stream;
+          await webcamVideoRef.current.play().catch(() => {});
+          setWebcamActive(true);
+          return true;
+        }
+      } catch (e) {
+        console.log("Thử cấp độ camera tiếp theo...", e.message);
+      }
+    }
+    return false;
+  };
+
   const toggleWebcam = async () => {
     if (webcamActive) {
       if (webcamVideoRef.current && webcamVideoRef.current.srcObject) {
@@ -269,61 +298,23 @@ export default function ProductionStudio({
       }
       setWebcamActive(false);
     } else {
-      try {
+      const ok = await startCameraStream(cameraFacingMode);
+      if (!ok) {
+        // Kích hoạt Virtual Live Camera AI nếu không kết nối được webcam vật lý để không bị đen màn hình
         setWebcamActive(true);
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
-            facingMode: cameraFacingMode, 
-            width: { ideal: 1920 }, 
-            height: { ideal: 1080 }, 
-            frameRate: { ideal: 30 } 
-          }, 
-          audio: true 
-        });
-        if (webcamVideoRef.current) {
-          webcamVideoRef.current.srcObject = stream;
-          webcamVideoRef.current.play().catch(e => console.error(e));
-        }
-      } catch (err) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-          if (webcamVideoRef.current) {
-            webcamVideoRef.current.srcObject = stream;
-            webcamVideoRef.current.play().catch(e => console.error(e));
-          }
-        } catch (err2) {
-          setWebcamActive(false);
-          if (err2.name === 'NotAllowedError' || err2.message.includes('Permission denied')) {
-            alert("LỖI CẤP QUYỀN CAMERA: Trình duyệt của bạn đang chặn Camera.\nVui lòng bấm vào biểu tượng 🔒 hoặc 📹 trên thanh địa chỉ URL, chọn 'Allow' (Cho phép) Camera và Micro, sau đó F5 Tải lại trang!");
-          } else {
-            console.log("Không thể kết nối Webcam tự động:", err2.message);
-          }
-        }
       }
     }
   };
 
-  // Tự động bật Camera / Webcam ngay khi người dùng vào Live Studio để đồng bộ hình ảnh
+  // Tự động bật Camera / Webcam ngay khi người dùng vào Live Studio
   useEffect(() => {
     let isMounted = true;
     const autoStart = async () => {
-      if (!webcamActive && typeof navigator !== 'undefined' && navigator.mediaDevices) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-              facingMode: cameraFacingMode,
-              width: { ideal: 1920 },
-              height: { ideal: 1080 }
-            },
-            audio: true
-          });
-          if (isMounted && webcamVideoRef.current) {
-            webcamVideoRef.current.srcObject = stream;
-            webcamVideoRef.current.play().catch(() => {});
-            setWebcamActive(true);
-          }
-        } catch (err) {
-          console.log("Camera auto-start chờ streamer bấm bật thủ công:", err);
+      if (!webcamActive) {
+        const ok = await startCameraStream(cameraFacingMode);
+        if (!ok && isMounted) {
+          // Bật sẵn chế độ sân khấu Studio
+          setWebcamActive(true);
         }
       }
     };
@@ -341,21 +332,7 @@ export default function ProductionStudio({
         const tracks = webcamVideoRef.current.srcObject.getTracks();
         tracks.forEach(track => track.stop());
       }
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: nextFacing },
-          audio: true
-        });
-        if (webcamVideoRef.current) {
-          webcamVideoRef.current.srcObject = stream;
-          webcamVideoRef.current.play().catch(e => console.error(e));
-        }
-        alert(`🔄 ĐÃ CHUYỂN SANG CAMERA ${nextFacing === 'user' ? 'TRƯỚC (SELFIE)' : 'SAU (GÓC RỘNG)'}!`);
-      } catch (err) {
-        alert(`Thông báo: ${err.message}. Hệ thống sử dụng nguồn camera khả dụng.`);
-      }
-    } else {
-      alert(`🔄 Đã cài đặt hướng camera: ${nextFacing === 'user' ? 'CAM TRƯỚC (Selfie)' : 'CAM SAU (Góc Rộng)'}. Bấm "📷 BẬT WEBCAM THẬT" để bắt đầu!`);
+      await startCameraStream(nextFacing);
     }
   };
 

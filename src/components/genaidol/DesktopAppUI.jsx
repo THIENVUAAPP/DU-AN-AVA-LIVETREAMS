@@ -3168,33 +3168,45 @@ export default function DesktopAppUI() {
               {/* Nút chọn Nền Tảng: Local 127.0.0.1 vs Web Cloud Vercel */}
               <div className="flex items-center justify-between p-2 rounded-xl bg-gray-900/80 border border-cyan-500/40">
                 <span className="font-bold text-gray-300 text-xs pl-2">Chọn nguồn đường link bạn đang dùng:</span>
-                <div className="flex gap-1.5">
+                <div className="flex flex-wrap gap-1.5">
                   <button
                     type="button"
-                    onClick={() => setOverlayLinkBase('http://127.0.0.1:5173')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${overlayLinkBase === 'http://127.0.0.1:5173' ? 'bg-cyan-600 text-white shadow-md' : 'bg-white/5 text-gray-400 hover:text-white'}`}
+                    onClick={() => setOverlayLinkBase('http://127.0.0.1:3001')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${overlayLinkBase === 'http://127.0.0.1:3001' ? 'bg-cyan-600 text-white shadow-md shadow-cyan-500/30' : 'bg-white/5 text-gray-400 hover:text-white'}`}
                   >
-                    ⚡ Local (127.0.0.1)
+                    ⚡ Bản Cài Trên Máy (Local 3001)
                   </button>
                   <button
                     type="button"
                     onClick={() => setOverlayLinkBase('https://avalivepro.vercel.app')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${overlayLinkBase === 'https://avalivepro.vercel.app' ? 'bg-purple-600 text-white shadow-md' : 'bg-white/5 text-gray-400 hover:text-white'}`}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${overlayLinkBase === 'https://avalivepro.vercel.app' ? 'bg-purple-600 text-white shadow-md shadow-purple-500/30' : 'bg-white/5 text-gray-400 hover:text-white'}`}
                   >
                     🌐 Web Cloud (Vercel)
                   </button>
-    </div>
-    </div>
+                  <button
+                    type="button"
+                    onClick={() => setOverlayLinkBase(typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${overlayLinkBase === (typeof window !== 'undefined' ? window.location.origin : '') ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/30' : 'bg-white/5 text-gray-400 hover:text-white'}`}
+                  >
+                    💻 Tự Động Theo Trình Duyệt
+                  </button>
+                </div>
+              </div>
 
               <div className="p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-cyan-200">
                 <div className="font-bold flex items-center gap-1.5 mb-1 text-yellow-300">
                   <Sparkles size={14} className="text-yellow-400 animate-spin" />
-                  <span>Đồng Bộ Siêu Tốc 0.00001s:</span>
-    </div>
-                <p className="text-[11px] leading-relaxed text-gray-300">
+                  <span>Đồng Bộ TikTok LIVE Studio Siêu Tốc 0.00001s:</span>
+                </div>
+                <p className="text-[11px] leading-relaxed text-gray-300 mb-2">
                   Chỉ cần dán đường link vào mục <strong>Browser Source (Trình duyệt)</strong> trên TikTok LIVE Studio hoặc OBS Studio. Khi bạn thao tác đổi nhân vật Idol, mở Game Bản Đồ hay Game Chiến Đấu, âm thanh và quà tặng sẽ <strong>tự động đồng bộ thời gian thực</strong> lên phiên live!
                 </p>
-    </div>
+                <div className="text-[10.5px] bg-black/50 p-2 rounded-lg text-gray-300 font-mono space-y-0.5 border border-white/10">
+                  <div>👉 <strong>Bước 1:</strong> Mở TikTok LIVE Studio -&gt; Bấm <strong>Thêm nguồn (+ Add Source)</strong> -&gt; Chọn <strong>Trình duyệt (Browser)</strong>.</div>
+                  <div>👉 <strong>Bước 2:</strong> Dán đường link bên dưới vào ô <strong>URL</strong> (chọn độ phân giải 1080x1920 hoặc 1920x1080).</div>
+                  <div>👉 <strong>Bước 3:</strong> Bấm <strong>Áp dụng</strong>. Toàn bộ hình ảnh &amp; game sẽ hiển thị ngay tức thì!</div>
+                </div>
+              </div>
 
               {/* 1. LINK MASTER ĐỒNG BỘ TOÀN NĂNG (Khuyên Dùng) */}
               <div className="p-3 rounded-xl bg-gradient-to-r from-blue-950/60 to-cyan-950/60 border border-cyan-400/50 space-y-2">
