@@ -123,6 +123,22 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
   // Custom Uploaded Virtual Backgrounds List State
   const [customVirtualBgs, setCustomVirtualBgs] = useState([]);
 
+  // 📱/📺 Aspect Ratio State (16:9 ngang / 9:16 dọc TikTok Studio)
+  const [stageAspectRatio, setStageAspectRatio] = useState(() => {
+    try {
+      return localStorage.getItem('aidol_aspect_ratio') || '16:9';
+    } catch (e) {
+      return '16:9';
+    }
+  });
+
+  const handleToggleAspectRatio = (ratio) => {
+    setStageAspectRatio(ratio);
+    try {
+      localStorage.setItem('aidol_aspect_ratio', ratio);
+    } catch (e) {}
+  };
+
   // 🎵 TikTok Live Studio ID Connection State
   const [tiktokStudioId, setTiktokStudioId] = useState(() => {
     try {
@@ -1949,98 +1965,140 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
         {/* Main Preview Monitor (Left 2 Columns) */}
         <div className="lg:col-span-2 space-y-4">
           
-          {/* REAL-TIME TELEMETRY & WEBCAM CONTROL BAR */}
-          <div className="glass-panel p-3 rounded-2xl border border-white/10 flex flex-wrap items-center justify-between gap-3 bg-black/70 text-xs">
+          {/* REAL-TIME TELEMETRY & WEBCAM CONTROL BAR (COMPACT & CLEAN) */}
+          <div className="glass-panel p-2.5 rounded-2xl border border-white/10 space-y-2 bg-black/80 text-xs shadow-xl">
             
+            {/* ROW 1: CAMERA CONTROLS, SCREEN SHARE, FPS & ASPECT RATIO SWITCHER */}
+            <div className="flex flex-wrap items-center justify-between gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {/* WEBCAM TOGGLE */}
+                <button
+                  onClick={toggleWebcam}
+                  className={`px-2.5 py-1 rounded-xl font-bold text-[11px] transition-all flex items-center gap-1 cursor-pointer ${
+                    webcamActive
+                      ? 'bg-red-600 text-white shadow-glow-red animate-pulse'
+                      : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:opacity-90 shadow-glow-purple'
+                  }`}
+                  title="Bật/Tắt Webcam thật từ máy tính"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>{webcamActive ? '🔴 TẮT CAM' : '📷 WEBCAM'}</span>
+                </button>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={toggleWebcam}
-                className={`px-3 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
-                  webcamActive
-                    ? 'bg-red-600 text-white shadow-glow-red animate-pulse'
-                    : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:opacity-90 shadow-glow-purple'
-                }`}
-              >
-                <Camera className="w-3.5 h-3.5" />
-                <span>{webcamActive ? '🔴 TẮT WEBCAM THẬT' : '📷 BẬT WEBCAM THẬT'}</span>
-              </button>
+                {/* CAM SWITCHER */}
+                <button
+                  onClick={toggleCameraFacingMode}
+                  className="px-2 py-1 rounded-xl bg-purple-600/20 hover:bg-purple-600/40 text-purple-200 border border-purple-500/30 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                  title="Chuyển Camera Trước / Sau"
+                >
+                  <RefreshCw className="w-3 h-3 text-purple-300" />
+                  <span>{cameraFacingMode === 'user' ? 'Cam Trước' : 'Cam Sau'}</span>
+                </button>
 
-              {/* 1-Click Front / Back Camera Switcher */}
-              <button
-                onClick={toggleCameraFacingMode}
-                className="px-3 py-1.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/60 text-purple-200 border border-purple-500/40 text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-glow-purple"
-                title="Chuyển đổi giữa Camera Trước (Selfie) và Camera Sau (Góc Rộng)"
-              >
-                <RefreshCw className="w-3.5 h-3.5 text-purple-300" />
-                <span>{cameraFacingMode === 'user' ? '🔄 CAM TRƯỚC' : '🔄 CAM SAU'}</span>
-              </button>
+                {/* SCREEN SHARE */}
+                <ScreenShareControls
+                  isSharing={isScreenSharing}
+                  layout={screenShareLayout}
+                  onStart={handleStartScreenShare}
+                  onStop={handleStopScreenShare}
+                  onChangeLayout={setScreenShareLayout}
+                />
 
-              {/* Hardware Acceleration 60FPS Anti-Lag Switcher */}
-              <button
-                onClick={handleAutoOptimizeBitrate}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer border ${
-                  ultraAntiLagMode
-                    ? 'bg-emerald-600 text-white border-emerald-500 shadow-glow-emerald animate-pulse'
-                    : 'bg-gray-800 text-gray-400 border-gray-700'
-                }`}
-                title="Tăng tốc GPU phần cứng 60fps chống đứng hình giật lag"
-              >
-                <Zap className="w-3.5 h-3.5 text-yellow-300" />
-                <span>{ultraAntiLagMode ? '60FPS' : '⚪ MƯỢT THƯỜNG'}</span>
-              </button>
+                {/* 60FPS ACCELERATION */}
+                <button
+                  onClick={handleAutoOptimizeBitrate}
+                  className={`px-2 py-1 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer border ${
+                    ultraAntiLagMode
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm shadow-emerald-500/20'
+                      : 'bg-white/5 text-gray-400 border-white/10'
+                  }`}
+                  title="Bật tăng tốc phần cứng 60fps"
+                >
+                  <Zap className="w-3 h-3 text-emerald-400" />
+                  <span>60FPS</span>
+                </button>
 
-              {/* Anti-Scan AI Bypass Toggle */}
-              <button
-                onClick={() => {
-                  const newState = !isAntiScanActive;
-                  setIsAntiScanActive(newState);
-                  antiScanActiveRef.current = newState;
-                  if (newState) {
-                    alert('🛡️ ĐÃ BẬT CHẾ ĐỘ CHỐNG QUÉT AI (OBS BYPASS)!\n\nHệ thống sẽ tự động thêm nhiễu hạt động, lắc khung hình vi điểm và nhúng mã thời gian tàng hình vào luồng phát để đánh lừa thuật toán quét video phát lại của TikTok/Shopee.');
-                  } else {
-                    alert('🛑 Đã tắt chế độ Chống Quét AI.');
-                  }
-                }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer border ${
-                  isAntiScanActive
-                    ? 'bg-blue-600 text-white border-blue-400 shadow-glow-blue animate-pulse'
-                    : 'bg-gray-800 text-gray-400 border-gray-700 hover:bg-gray-700'
-                }`}
-                title="Bật chống quét AI (Bypass Algorithm) cho video phát lại"
-              >
-                <ShieldCheck className={`w-3.5 h-3.5 ${isAntiScanActive ? 'text-white' : 'text-blue-400'}`} />
-                <span>{isAntiScanActive ? '🛡️ ĐANG BẢO VỆ' : '🛡️ CHỐNG QUÉT AI'}</span>
-              </button>
+                {/* ANTI-SCAN BYPASS */}
+                <button
+                  onClick={() => {
+                    const newState = !isAntiScanActive;
+                    setIsAntiScanActive(newState);
+                    antiScanActiveRef.current = newState;
+                    if (newState) {
+                      alert('🛡️ ĐÃ BẬT CHẾ ĐỘ CHỐNG QUÉT AI (OBS BYPASS)!\n\nHệ thống sẽ tự động thêm nhiễu hạt động, lắc khung hình vi điểm và nhúng mã thời gian tàng hình vào luồng phát để đánh lừa thuật toán quét video phát lại của TikTok/Shopee.');
+                    } else {
+                      alert('🛑 Đã tắt chế độ Chống Quét AI.');
+                    }
+                  }}
+                  className={`px-2 py-1 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer border ${
+                    isAntiScanActive
+                      ? 'bg-blue-600/30 text-blue-300 border-blue-400 shadow-sm shadow-blue-500/20'
+                      : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'
+                  }`}
+                  title="Bật chống quét AI (Bypass Algorithm) cho video phát lại"
+                >
+                  <ShieldCheck className={`w-3 h-3 ${isAntiScanActive ? 'text-blue-300' : 'text-gray-400'}`} />
+                  <span>{isAntiScanActive ? '🛡️ Bảo Vệ' : '🛡️ Chống Quét'}</span>
+                </button>
 
-              {/* RECORD VIDEO BUTTON */}
-              <button
-                onClick={handleToggleRecording}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer border ${
-                  isRecording
-                    ? 'bg-red-600 text-white border-red-500 shadow-glow-red animate-pulse'
-                    : 'bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700'
-                }`}
-                title="Ghi hình luồng Live và tự động lưu vào máy"
-              >
-                <div className={`w-2.5 h-2.5 rounded-full ${isRecording ? 'bg-white' : 'bg-red-500'}`} />
-                <span>{isRecording ? 'ĐANG GHI HÌNH...' : 'GHI HÌNH (REC)'}</span>
-              </button>
+                {/* RECORD VIDEO */}
+                <button
+                  onClick={handleToggleRecording}
+                  className={`px-2 py-1 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer border ${
+                    isRecording
+                      ? 'bg-red-600 text-white border-red-500 shadow-glow-red animate-pulse'
+                      : 'bg-white/5 text-gray-300 border-white/10 hover:bg-white/10'
+                  }`}
+                  title="Ghi hình luồng Live và tự động lưu vào máy"
+                >
+                  <div className={`w-2 h-2 rounded-full ${isRecording ? 'bg-white' : 'bg-red-500'}`} />
+                  <span>{isRecording ? 'REC...' : 'REC'}</span>
+                </button>
+              </div>
 
+              {/* 📱/📺 ASPECT RATIO CAPSULE SWITCHER (16:9 vs 9:16) */}
+              <div className="flex items-center gap-1 p-0.5 rounded-xl bg-black/60 border border-white/15 shadow-inner">
+                <button
+                  onClick={() => handleToggleAspectRatio('16:9')}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-black transition-all flex items-center gap-1 ${
+                    stageAspectRatio === '16:9'
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                  title="Khung hình Ngang 16:9 (YouTube, Facebook, PC)"
+                >
+                  <span>📺 16:9 Ngang</span>
+                </button>
+                <button
+                  onClick={() => handleToggleAspectRatio('9:16')}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-black transition-all flex items-center gap-1 ${
+                    stageAspectRatio === '9:16'
+                      ? 'bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-md shadow-pink-500/30 animate-pulse'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                  title="Khung hình Dọc 9:16 (TikTok LIVE, Shopee, Reels, Mobile)"
+                >
+                  <span>📱 9:16 Dọc TikTok</span>
+                </button>
+              </div>
+            </div>
+
+            {/* ROW 2: TIKTOK STUDIO CONNECTOR, MULTISTREAM & ZOOM LIVE */}
+            <div className="flex flex-wrap items-center justify-between gap-1.5 pt-1.5 border-t border-white/10">
               {/* 🎵 TIKTOK LIVE STUDIO ID CONNECTOR */}
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-black/60 border border-pink-500/40 shadow-inner">
+              <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-xl bg-black/60 border border-pink-500/40 shadow-inner">
                 <input
                   type="text"
                   value={tiktokStudioId}
                   onChange={(e) => setTiktokStudioId(e.target.value)}
-                  placeholder="ID Kênh TikTok Studio..."
-                  className="w-36 px-2 py-1 rounded-lg text-xs font-bold bg-white/10 text-white placeholder-gray-400 border border-white/10 focus:border-pink-500 outline-none transition-all"
+                  placeholder="ID TikTok Live..."
+                  className="w-28 sm:w-32 px-2 py-1 rounded-lg text-[11px] font-bold bg-white/10 text-white placeholder-gray-400 border border-white/10 focus:border-pink-500 outline-none transition-all"
                   title="Nhập ID kênh TikTok của bạn để kết nối với TikTok LIVE Studio"
                 />
                 <button
                   onClick={handleToggleTikTokStudioConnect}
                   disabled={isTiktokConnecting}
-                  className={`px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-md ${
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-black transition-all flex items-center gap-1 cursor-pointer shadow-md ${
                     isTiktokConnected
                       ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-glow-emerald animate-pulse'
                       : 'bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white shadow-glow-red'
@@ -2048,53 +2106,47 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
                   title={isTiktokConnected ? "Bấm để ngắt kết nối" : "Bấm để kết nối trực tiếp với TikTok LIVE Studio"}
                 >
                   {isTiktokConnecting ? (
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <RefreshCw className="w-3 h-3 animate-spin" />
                   ) : isTiktokConnected ? (
-                    <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                    <CheckCircle2 className="w-3 h-3 text-white" />
                   ) : (
-                    <Zap className="w-3.5 h-3.5 text-yellow-300" />
+                    <Zap className="w-3 h-3 text-yellow-300" />
                   )}
                   <span>
-                    {isTiktokConnecting ? 'Đang Kết Nối...' : isTiktokConnected ? '🟢 Đã Kết Nối TikTok' : '⚡ Kết Nối TikTok Live'}
+                    {isTiktokConnecting ? 'Đang nối...' : isTiktokConnected ? '🟢 Đã Kết Nối TikTok' : '⚡ Kết Nối TikTok Live'}
                   </span>
                 </button>
               </div>
 
-              {/* 1-TOUCH MASTER MULTISTREAM BROADCAST BUTTON */}
-              <button
-                onClick={handleToggleOneTouchMultistream}
-                className={`px-3.5 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 cursor-pointer shadow-2xl border ${
-                  isOneTouchLiveActive
-                    ? 'bg-gradient-to-r from-red-600 via-pink-600 to-purple-600 text-white border-red-400 shadow-glow-red animate-pulse'
-                    : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400/50 hover:scale-105 shadow-glow-emerald'
-                }`}
-                title="Phát trực tiếp 1-Chạm đồng thời lên Facebook, Fanpage, TikTok, YouTube, Shopee..."
-              >
-                <Radio className="w-4 h-4 text-white animate-spin" />
-                <span>{isOneTouchLiveActive ? 'Đang Phát Đa Kênh' : 'Kết Nối Live Đa Nền Tảng'}</span>
-              </button>
+              <div className="flex items-center gap-1.5">
+                {/* 1-TOUCH MASTER MULTISTREAM BROADCAST BUTTON */}
+                <button
+                  onClick={handleToggleOneTouchMultistream}
+                  className={`px-2.5 py-1 rounded-xl font-bold text-[11px] transition-all flex items-center gap-1.5 cursor-pointer border ${
+                    isOneTouchLiveActive
+                      ? 'bg-gradient-to-r from-red-600 via-pink-600 to-purple-600 text-white border-red-400 shadow-glow-red animate-pulse'
+                      : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400/40 hover:opacity-90'
+                  }`}
+                  title="Phát trực tiếp 1-Chạm đồng thời lên Facebook, Fanpage, TikTok, YouTube, Shopee..."
+                >
+                  <Radio className="w-3 h-3 text-white animate-spin" />
+                  <span>{isOneTouchLiveActive ? 'Đang Phát Đa Kênh' : '🌐 Live Đa Nền Tảng'}</span>
+                </button>
 
-              {/* 1-TOUCH ZOOM LIVE CONNECTION BUTTON */}
-              <button
-                onClick={handleToggleZoomLive}
-                className={`px-3.5 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 cursor-pointer shadow-2xl border ${
-                  isZoomLiveActive
-                    ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 text-white border-blue-300 shadow-glow-blue animate-pulse'
-                    : 'bg-gradient-to-r from-blue-600 to-sky-500 text-white border-blue-400/50 hover:scale-105 shadow-glow-blue'
-                }`}
-                title="Kết nối phát trực tiếp 1-Chạm sang Zoom Meeting & Zoom Webinar 4K"
-              >
-                <Video className="w-4 h-4 text-white" />
-                <span>{isZoomLiveActive ? '🔴 ĐANG PHÁT LIVE TRÊN ZOOM (ACTIVE)' : '🎥 1-CHẠM KẾT NỐI LIVE ZOOM'}</span>
-              </button>
-
-              <ScreenShareControls
-                isSharing={isScreenSharing}
-                layout={screenShareLayout}
-                onStart={handleStartScreenShare}
-                onStop={handleStopScreenShare}
-                onChangeLayout={setScreenShareLayout}
-              />
+                {/* 1-TOUCH ZOOM LIVE CONNECTION BUTTON */}
+                <button
+                  onClick={handleToggleZoomLive}
+                  className={`px-2.5 py-1 rounded-xl font-bold text-[11px] transition-all flex items-center gap-1.5 cursor-pointer border ${
+                    isZoomLiveActive
+                      ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 text-white border-blue-300 shadow-glow-blue animate-pulse'
+                      : 'bg-gradient-to-r from-blue-600 to-sky-500 text-white border-blue-400/40 hover:opacity-90'
+                  }`}
+                  title="Kết nối phát trực tiếp 1-Chạm sang Zoom Meeting & Zoom Webinar 4K"
+                >
+                  <Video className="w-3 h-3 text-white" />
+                  <span>{isZoomLiveActive ? '🔴 Đang Phát Zoom' : '🎥 Live Zoom'}</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -2113,90 +2165,103 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
             </div>
           )}
 
-          {/* MASTER STUDIO PRODUCTION STAGE */}
-          <div className="relative aspect-video rounded-3xl overflow-hidden bg-black shadow-2xl transform-gpu border border-white/15">
+          {/* MASTER STUDIO PRODUCTION STAGE (RESPONSIVE 16:9 & 9:16 DỌC TIKTOK) */}
+          <div className={`w-full ${stageAspectRatio === '9:16' ? 'flex justify-center items-center py-2 bg-[#0b0b10] rounded-3xl border border-white/10 shadow-inner' : ''}`}>
+            <div className={`relative overflow-hidden bg-black shadow-2xl transform-gpu ${
+              stageAspectRatio === '9:16' 
+                ? 'aspect-[9/16] w-full max-w-[360px] sm:max-w-[400px] rounded-3xl border-2 border-pink-500/50 shadow-[0_20px_50px_rgba(236,72,153,0.25)]' 
+                : 'aspect-video w-full rounded-3xl border border-white/15'
+            }`}>
 
-            {/* Active Real-time Canvas Stage — full composite: BG + person + beauty */}
-            {(webcamActive || isScreenSharing || multiCamGridActive) ? (
-              <>
-                <video
-                  ref={webcamVideoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  style={{ opacity: 0, position: 'absolute', pointerEvents: 'none', width: '1px', height: '1px' }}
-                />
-                <canvas
-                  ref={canvasRef}
-                  className="absolute inset-0 w-full h-full object-cover transform-gpu"
-
-                />
-              </>
-            ) : (
-              /* Active Studio Model View */
-              <div className="relative w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#1E1E24] via-[#121216] to-[#0A0A0A]">
-                <img
-                  src={selectedStudioAvatar?.image}
-                  alt={selectedStudioAvatar?.name}
-                  className={`max-h-[85%] object-contain rounded-2xl drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] transition-all duration-300 ${
-                    viewMode === 'full-body' ? 'scale-100' : 'scale-125 translate-y-6'
-                  }`}
-                  style={{ filter: getCombinedBeautyFilterStyle() }}
-                />
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/80 backdrop-blur-md border border-white/20 text-white text-xs font-black flex items-center gap-1.5 whitespace-nowrap z-20">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  {selectedStudioAvatar?.name}
+              {/* Active Real-time Canvas Stage — full composite: BG + person + beauty */}
+              {(webcamActive || isScreenSharing || multiCamGridActive) ? (
+                <>
+                  <video
+                    ref={webcamVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    style={{ opacity: 0, position: 'absolute', pointerEvents: 'none', width: '1px', height: '1px' }}
+                  />
+                  <canvas
+                    ref={canvasRef}
+                    className="absolute inset-0 w-full h-full object-cover transform-gpu"
+                  />
+                </>
+              ) : (
+                /* Active Studio Model View */
+                <div className="relative w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#1E1E24] via-[#121216] to-[#0A0A0A]">
+                  <img
+                    src={selectedStudioAvatar?.image}
+                    alt={selectedStudioAvatar?.name}
+                    className={`max-h-[85%] object-contain rounded-2xl drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] transition-all duration-300 ${
+                      viewMode === 'full-body' ? 'scale-100' : 'scale-125 translate-y-6'
+                    }`}
+                    style={{ filter: getCombinedBeautyFilterStyle(), imageRendering: '-webkit-optimize-contrast' }}
+                  />
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/80 backdrop-blur-md border border-white/20 text-white text-xs font-black flex items-center gap-1.5 whitespace-nowrap z-20">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    {selectedStudioAvatar?.name}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* RingLight Studio Halo Glow Overlay */}
-            <div
-              className="absolute inset-0 pointer-events-none transition-all duration-300 rounded-3xl z-20"
-              style={{ boxShadow: `inset 0 0 ${ringLight * 1.5}px rgba(255, 255, 255, ${ringLight / 120})` }}
-            />
+              {/* RingLight Studio Halo Glow Overlay */}
+              <div
+                className="absolute inset-0 pointer-events-none transition-all duration-300 rounded-3xl z-20"
+                style={{ boxShadow: `inset 0 0 ${ringLight * 1.5}px rgba(255, 255, 255, ${ringLight / 120})` }}
+              />
 
-
-
-            {/* Live Indicator & Custom Stream Resolution Selector */}
-            <div className="absolute top-4 right-4 z-30">
+              {/* Live Indicator & Custom Stream Resolution Selector */}
+              <div className="absolute top-3 right-3 z-30">
                 <button
                   onClick={() => setFullscreenCamItem({
-                    title: "MÀN HÌNH CHÍNH LIVESTREAM (MASTER STAGE 4K)",
+                    title: `MÀN HÌNH CHÍNH LIVESTREAM (${stageAspectRatio === '9:16' ? 'TIKTOK DỌC 9:16' : 'MASTER STAGE 16:9'})`,
                     type: "stage",
-                    icon: "🎬",
-                    res: customResolution ? customResolution.toUpperCase() : "4K 60FPS"
+                    icon: stageAspectRatio === '9:16' ? "📱" : "🎬",
+                    res: customResolution ? customResolution.toUpperCase() : (stageAspectRatio === '9:16' ? "1080x1920 60FPS" : "4K 60FPS")
                   })}
-                  className="px-4 py-2 rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 hover:opacity-95 text-white font-black text-xs border-2 border-amber-300 transition-all cursor-pointer flex items-center gap-2 shadow-2xl animate-pulse"
+                  className="px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 hover:opacity-95 text-white font-black text-[11px] border border-amber-300 transition-all cursor-pointer flex items-center gap-1.5 shadow-xl"
                   title="Bấm xem FULL KHUNG HÌNH MÀN HÌNH CHÍNH"
                 >
-                  <Maximize className="w-4 h-4 text-white" />
-                  <span>🔍 XEM FULL MÀN HÌNH 4K</span>
+                  <Maximize className="w-3.5 h-3.5 text-white" />
+                  <span>{stageAspectRatio === '9:16' ? '🔍 FULL DỌC' : '🔍 FULL 4K'}</span>
                 </button>
               </div>
 
-              <div className="absolute top-4 left-4 flex flex-wrap items-center gap-2">
-              {isOneTouchLiveActive || isLive ? (
-                <span className="px-3 py-1 rounded-full bg-red-600 text-white text-xs font-black flex items-center gap-1.5 shadow-glow-red animate-pulse">
-                  <Radio className="w-3.5 h-3.5 animate-spin" /> Đang phát sóng
-                </span>
-              ) : (
-                <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-black flex items-center gap-1.5">
-                  <Eye className="w-3.5 h-3.5 text-emerald-400" /> Chế độ xem trước (Preview)
-                </span>
-              )}
-              
-              {/* Custom Resolution Dropdown Selector */}
-              <select
-                value={customResolution || '1080p60'}
-                onChange={(e) => setCustomResolution(e.target.value)}
-                className="px-3 py-1 rounded-full bg-black/80 backdrop-blur-md text-emerald-400 font-mono text-xs font-bold border border-emerald-500/40 focus:outline-none cursor-pointer"
-              >
-                <option value="4k60">🌟 4K 2160p60 (3840x2160 Ultra HD)</option>
-                <option value="2k60">💎 2K 1440p60 (2560x1440 Quad HD)</option>
-                <option value="1080p60">📺 Full HD 1080p60 (TikTok / FB / YT)</option>
-                <option value="720p30">⚡ HD 720p30 (1280x720 Tiết Kiệm Data)</option>
-              </select>
+              <div className="absolute top-3 left-3 flex flex-wrap items-center gap-1.5">
+                {isOneTouchLiveActive || isLive ? (
+                  <span className="px-2.5 py-0.5 rounded-full bg-red-600 text-white text-[11px] font-black flex items-center gap-1 shadow-glow-red animate-pulse">
+                    <Radio className="w-3 h-3 animate-spin" /> Live
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold flex items-center gap-1">
+                    <Eye className="w-3 h-3 text-emerald-400" /> Preview
+                  </span>
+                )}
+                
+                {/* Custom Resolution Dropdown Selector (Adaptive for 16:9 & 9:16) */}
+                <select
+                  value={customResolution || (stageAspectRatio === '9:16' ? '1080x1920' : '1080p60')}
+                  onChange={(e) => setCustomResolution(e.target.value)}
+                  className="px-2.5 py-0.5 rounded-full bg-black/80 backdrop-blur-md text-emerald-400 font-mono text-[10.5px] font-bold border border-emerald-500/40 focus:outline-none cursor-pointer"
+                >
+                  {stageAspectRatio === '9:16' ? (
+                    <>
+                      <option value="1080x1920">📱 TikTok Dọc 1080x1920 (60fps)</option>
+                      <option value="1440x2560">💎 TikTok Dọc 2K 1440x2560 (60fps)</option>
+                      <option value="720x1280">⚡ TikTok Dọc HD 720x1280 (30fps)</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="4k60">🌟 4K 2160p60 (3840x2160 Ultra HD)</option>
+                      <option value="2k60">💎 2K 1440p60 (2560x1440 Quad HD)</option>
+                      <option value="1080p60">📺 Full HD 1080p60 (TikTok / FB / YT)</option>
+                      <option value="720p30">⚡ HD 720p30 (1280x720 Data Saver)</option>
+                    </>
+                  )}
+                </select>
+              </div>
             </div>
           </div>
 
