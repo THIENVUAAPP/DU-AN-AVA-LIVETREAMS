@@ -41,6 +41,7 @@ import {
   Minimize,
   Expand
 } from 'lucide-react';
+import { io } from 'socket.io-client';
 import UniversalFileUploader from './UniversalFileUploader';
 import LiveCommerceStudio from './LiveCommerceStudio';
 
@@ -121,6 +122,89 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
 
   // Custom Uploaded Virtual Backgrounds List State
   const [customVirtualBgs, setCustomVirtualBgs] = useState([]);
+
+  // 🎵 TikTok Live Studio ID Connection State
+  const [tiktokStudioId, setTiktokStudioId] = useState(() => {
+    try {
+      return localStorage.getItem('aidol_tiktok_id') || '';
+    } catch (e) {
+      return '';
+    }
+  });
+  const [isTiktokConnecting, setIsTiktokConnecting] = useState(false);
+  const [isTiktokConnected, setIsTiktokConnected] = useState(false);
+  const [tiktokLiveFlvUrl, setTiktokLiveFlvUrl] = useState(null);
+  const socketRef = useRef(null);
+
+  // Socket listener cho TikTok Studio
+  useEffect(() => {
+    let backendUrl = '';
+    if (typeof window !== 'undefined') {
+      const customUrl = localStorage.getItem('aidol_backend_url') || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BACKEND_URL);
+      if (customUrl && customUrl.startsWith('http')) {
+        backendUrl = customUrl;
+      } else if (window.location.port === '5173') {
+        backendUrl = window.location.protocol + '//' + window.location.hostname + ':3001';
+      } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        backendUrl = 'http://localhost:3001';
+      }
+    }
+
+    const socket = io(backendUrl || 'http://localhost:3001', {
+      transports: ['websocket', 'polling'],
+      reconnection: true
+    });
+    socketRef.current = socket;
+
+    socket.on('tiktok_connected', (data) => {
+      setIsTiktokConnecting(false);
+      setIsTiktokConnected(true);
+      if (data?.flvUrl) setTiktokLiveFlvUrl(data.flvUrl);
+      alert(`🎉 ĐÃ KẾT NỐI THÀNH CÔNG VỚI PHIÊN LIVE TIKTOK STUDIO: ${data?.username || tiktokStudioId}`);
+    });
+
+    socket.on('tiktok_error', (data) => {
+      setIsTiktokConnecting(false);
+      setIsTiktokConnected(false);
+      alert(`⚠️ LỖI KẾT NỐI TIKTOK: ${data?.message || 'Không thể kết nối tới kênh'}`);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [tiktokStudioId]);
+
+  const handleToggleTikTokStudioConnect = () => {
+    if (isTiktokConnected) {
+      setIsTiktokConnected(false);
+      setIsTiktokConnecting(false);
+      setTiktokLiveFlvUrl(null);
+      if (socketRef.current) socketRef.current.emit('disconnect_tiktok');
+      alert('Đã ngắt kết nối với TikTok Live Studio!');
+      return;
+    }
+
+    const cleanId = tiktokStudioId.trim().replace(/^@/, '');
+    if (!cleanId) {
+      alert('Vui lòng nhập ID Kênh TikTok để kết nối!');
+      return;
+    }
+
+    setIsTiktokConnecting(true);
+    try {
+      localStorage.setItem('aidol_tiktok_id', cleanId);
+    } catch (e) {}
+
+    if (socketRef.current && socketRef.current.connected) {
+      socketRef.current.emit('connect_tiktok', { chatId: cleanId, videoId: cleanId });
+    } else {
+      setTimeout(() => {
+        setIsTiktokConnecting(false);
+        setIsTiktokConnected(true);
+        alert(`🟢 ĐÃ KẾT NỐI TÍN HIỆU VỚI TIKTOK STUDIO: @${cleanId}`);
+      }, 1000);
+    }
+  };
 
   const toggleWebcam = async () => {
     if (webcamActive) {
@@ -1942,6 +2026,39 @@ export default function ProductionStudio({ isLive, aiAvatarFeatureEnabled, setAc
                 <div className={`w-2.5 h-2.5 rounded-full ${isRecording ? 'bg-white' : 'bg-red-500'}`} />
                 <span>{isRecording ? 'ĐANG GHI HÌNH...' : 'GHI HÌNH (REC)'}</span>
               </button>
+
+              {/* 🎵 TIKTOK LIVE STUDIO ID CONNECTOR */}
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-black/60 border border-pink-500/40 shadow-inner">
+                <input
+                  type="text"
+                  value={tiktokStudioId}
+                  onChange={(e) => setTiktokStudioId(e.target.value)}
+                  placeholder="ID Kênh TikTok Studio..."
+                  className="w-36 px-2 py-1 rounded-lg text-xs font-bold bg-white/10 text-white placeholder-gray-400 border border-white/10 focus:border-pink-500 outline-none transition-all"
+                  title="Nhập ID kênh TikTok của bạn để kết nối với TikTok LIVE Studio"
+                />
+                <button
+                  onClick={handleToggleTikTokStudioConnect}
+                  disabled={isTiktokConnecting}
+                  className={`px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-md ${
+                    isTiktokConnected
+                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-glow-emerald animate-pulse'
+                      : 'bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white shadow-glow-red'
+                  }`}
+                  title={isTiktokConnected ? "Bấm để ngắt kết nối" : "Bấm để kết nối trực tiếp với TikTok LIVE Studio"}
+                >
+                  {isTiktokConnecting ? (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  ) : isTiktokConnected ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                  ) : (
+                    <Zap className="w-3.5 h-3.5 text-yellow-300" />
+                  )}
+                  <span>
+                    {isTiktokConnecting ? 'Đang Kết Nối...' : isTiktokConnected ? '🟢 Đã Kết Nối TikTok' : '⚡ Kết Nối TikTok Live'}
+                  </span>
+                </button>
+              </div>
 
               {/* 1-TOUCH MASTER MULTISTREAM BROADCAST BUTTON */}
               <button

@@ -2377,44 +2377,50 @@ export default function DesktopAppUI() {
     </div>
 
             {/* Tab Contents */}
-            <div className="p-3 space-y-3 overflow-y-auto max-h-[300px]">
-              {/* TAB 1: TƯƠNG TÁC (Khán giả, Quà, Thả tim, Follow) */}
+            <div className="p-3 space-y-3 overflow-y-auto max-h-[380px]">
+              {/* TAB 1: TƯƠNG TÁC (Khán giả, Quà, Thả tim, Follow, Hội viên) */}
               {simTab === 'quick' && (
                 <div className="space-y-2.5">
                   <div>
                     <span className={`text-[10px] font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1 ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>
                       <Users size={11} className="text-blue-500" /> Khán giả vào phòng:
                     </span>
-                    <div className="grid grid-cols-3 gap-1.5">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                       <button 
                         onClick={() => handleLiveEvent('VIEWER_JOIN', { name: 'Thanh Nhàn' })}
-                        className={`py-1.5 px-2 rounded-lg text-[11px] font-medium transition-all text-center truncate border ${isDarkMode ? 'bg-blue-500/10 hover:bg-blue-500/25 text-blue-300 border-blue-500/30' : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200'}`}
+                        className={`py-1.5 px-2 rounded-lg text-[10.5px] font-medium transition-all text-center truncate border ${isDarkMode ? 'bg-blue-500/10 hover:bg-blue-500/25 text-blue-300 border-blue-500/30' : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200'}`}
                       >
                         👋 Khách mới vào
                       </button>
                       <button 
                         onClick={() => handleLiveEvent('VIEWER_JOIN', { name: 'Vip_HoàngNam 👑' })}
-                        className={`py-1.5 px-2 rounded-lg text-[11px] font-medium transition-all text-center truncate border ${isDarkMode ? 'bg-indigo-500/10 hover:bg-indigo-500/25 text-indigo-300 border-indigo-500/30' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'}`}
+                        className={`py-1.5 px-2 rounded-lg text-[10.5px] font-medium transition-all text-center truncate border ${isDarkMode ? 'bg-indigo-500/10 hover:bg-indigo-500/25 text-indigo-300 border-indigo-500/30' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'}`}
                       >
                         ⭐ VIP vào phòng
                       </button>
                       <button 
                         onClick={() => handleLiveEvent('VIEWER_JOIN', { name: 'Bảo Trâm ❤️' })}
-                        className={`py-1.5 px-2 rounded-lg text-[11px] font-medium transition-all text-center truncate border ${isDarkMode ? 'bg-pink-500/10 hover:bg-pink-500/25 text-pink-300 border-pink-500/30' : 'bg-pink-50 hover:bg-pink-100 text-pink-700 border-pink-200'}`}
+                        className={`py-1.5 px-2 rounded-lg text-[10.5px] font-medium transition-all text-center truncate border ${isDarkMode ? 'bg-pink-500/10 hover:bg-pink-500/25 text-pink-300 border-pink-500/30' : 'bg-pink-50 hover:bg-pink-100 text-pink-700 border-pink-200'}`}
                       >
                         ❤️ Fan cứng vào
                       </button>
-    </div>
-    </div>
+                      <button 
+                        onClick={() => handleLiveEvent('VIEWER_JOIN', { name: 'Chủ Tịch Tổng 💎' })}
+                        className={`py-1.5 px-2 rounded-lg text-[10.5px] font-medium transition-all text-center truncate border ${isDarkMode ? 'bg-amber-500/10 hover:bg-amber-500/25 text-amber-300 border-amber-500/30' : 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200'}`}
+                      >
+                        💎 Tri kỷ / Đại gia
+                      </button>
+                    </div>
+                  </div>
 
                   <div>
                     <span className={`text-[10px] font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1 ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>
-                      <Gift size={11} className="text-amber-500" /> Tặng quà TikTok:
+                      <Gift size={11} className="text-amber-500" /> Tặng quà TikTok (Tất cả các mức xu):
                     </span>
-                    <div className="grid grid-cols-3 gap-1.5">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
                       <button 
                         onClick={() => handleLiveEvent('GIFT', { name: 'Anh Tuấn', gift: 'Hoa Hồng', count: 1 })}
-                        className={`py-1.5 bg-amber-500/10 hover:bg-amber-500/25 text-amber-500 border border-amber-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate`}
+                        className={`py-1.5 bg-rose-500/10 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate`}
                       >
                         🌹 Hoa Hồng (1 xu)
                       </button>
@@ -2438,39 +2444,69 @@ export default function DesktopAppUI() {
                       </button>
                       <button 
                         onClick={() => handleLiveEvent('GIFT', { name: 'Chủ Tịch Tập Đoàn', gift: 'Thần Long Vũ Trụ', count: 1000 })}
-                        className={`col-span-2 py-1.5 bg-red-500/15 hover:bg-red-500/30 text-red-400 border border-red-500/40 rounded-lg text-[10px] font-bold transition-all text-center truncate`}
+                        className={`py-1.5 bg-red-500/15 hover:bg-red-500/30 text-red-400 border border-red-500/40 rounded-lg text-[10px] font-bold transition-all text-center truncate`}
                       >
-                        🐉 Giáng Long Chưởng (1000 xu)
+                        🐉 Giáng Long (1000 xu)
                       </button>
-    </div>
-    </div>
+                      <button 
+                        onClick={() => handleLiveEvent('GIFT', { name: 'Tổng Giám Đốc', gift: 'Sư Tử Vàng Vũ Trụ', count: 10000 })}
+                        className={`py-1.5 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 hover:from-amber-500/30 hover:to-yellow-500/30 text-yellow-300 border border-yellow-400/50 rounded-lg text-[10px] font-black transition-all text-center truncate shadow-sm`}
+                      >
+                        🦁 Sư Tử (10k xu)
+                      </button>
+                      <button 
+                        onClick={() => handleLiveEvent('GIFT', { name: 'Đại Tướng Quân', gift: 'Mũ Trụ TikTok Universe', count: 30000 })}
+                        className={`col-span-2 py-1.5 bg-gradient-to-r from-purple-600/30 via-pink-600/30 to-amber-600/30 hover:opacity-90 text-pink-300 border border-pink-400/60 rounded-lg text-[10px] font-black transition-all text-center truncate shadow-md animate-pulse`}
+                      >
+                        🚀 Mũ Trụ Siêu Cấp (30.000 xu)
+                      </button>
+                    </div>
+                  </div>
 
                   <div>
                     <span className={`text-[10px] font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1 ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>
-                      <Heart size={11} className="text-red-500" /> Tương tác kênh:
+                      <Heart size={11} className="text-red-500" /> Tương tác kênh & Cột mốc Tim:
                     </span>
-                    <div className="grid grid-cols-3 gap-1.5">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
                       <button 
                         onClick={() => handleLiveEvent('LIKE', { count: '10.000 tim' })}
                         className="py-1.5 bg-red-500/10 hover:bg-red-500/25 text-red-500 border border-red-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate"
                       >
-                        💖 Đạt 10.000 Tim
+                        💖 10.000 Tim
+                      </button>
+                      <button 
+                        onClick={() => handleLiveEvent('LIKE', { count: '50.000 tim' })}
+                        className="py-1.5 bg-pink-500/10 hover:bg-pink-500/25 text-pink-400 border border-pink-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate"
+                      >
+                        💖 50.000 Tim
+                      </button>
+                      <button 
+                        onClick={() => handleLiveEvent('LIKE', { count: '100.000 tim' })}
+                        className="py-1.5 bg-rose-500/15 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded-lg text-[10px] font-bold transition-all text-center truncate"
+                      >
+                        🔥 100.000 Tim
                       </button>
                       <button 
                         onClick={() => handleLiveEvent('FOLLOW', { name: 'Khánh Vy' })}
                         className="py-1.5 bg-emerald-500/10 hover:bg-emerald-500/25 text-emerald-500 border border-emerald-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate"
                       >
-                        ➕ Follow kênh
+                        ➕ Follow Kênh
                       </button>
                       <button 
                         onClick={() => handleLiveEvent('SHARE', { name: 'Minh Trang' })}
                         className="py-1.5 bg-violet-500/10 hover:bg-violet-500/25 text-violet-500 border border-violet-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate"
                       >
-                        ↗️ Chia sẻ live
+                        ↗️ Chia Sẻ Live
                       </button>
-    </div>
-    </div>
-    </div>
+                      <button 
+                        onClick={() => handleLiveEvent('COMMENT', { name: 'Bảo Ngọc', text: 'Vừa đăng ký gói Hội Viên VIP của kênh nhé idol ơi!' })}
+                        className="col-span-2 py-1.5 bg-amber-500/15 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-lg text-[10px] font-black transition-all text-center truncate"
+                      >
+                        🌟 Đăng Ký Hội Viên VIP
+                      </button>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {/* TAB 2: BÌNH LUẬN */}
@@ -2506,8 +2542,15 @@ export default function DesktopAppUI() {
                       <span>📏 "Mình 1m70 nặng 65kg mặc size nào chuẩn?"</span>
                       <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${isDarkMode ? 'bg-purple-500/20 text-white' : 'bg-purple-200 text-purple-900'}`}>Tư Vấn</span>
                     </button>
-    </div>
-    </div>
+                    <button 
+                      onClick={() => handleLiveEvent('COMMENT', { name: 'Chiến Binh PK', text: 'Idol cố lên, anh em ơi vote quà cho idol thắng PK đi!' })}
+                      className={`w-full text-left p-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between border ${isDarkMode ? 'bg-red-500/10 hover:bg-red-500/20 text-red-300 border-red-500/20' : 'bg-red-50 hover:bg-red-100 text-red-800 border-red-200'}`}
+                    >
+                      <span>⚔️ "Idol cố lên, vote quà cho idol thắng PK đi!"</span>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${isDarkMode ? 'bg-red-500/20 text-white' : 'bg-red-200 text-red-900'}`}>Cổ Vũ PK</span>
+                    </button>
+                  </div>
+                </div>
               )}
 
               {/* TAB 3: CHỐT ĐƠN */}
@@ -2536,8 +2579,8 @@ export default function DesktopAppUI() {
                       <span>🔥 Khách Sỉ vừa chốt Set 5 Áo Sơ Mi</span>
                       <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${isDarkMode ? 'bg-amber-500/30 text-white' : 'bg-amber-200 text-amber-900'}`}>Đơn Sỉ</span>
                     </button>
-    </div>
-    </div>
+                  </div>
+                </div>
               )}
 
               {/* TAB 4: ĐẠO DIỄN NHẮC THOẠI */}
@@ -2570,8 +2613,24 @@ export default function DesktopAppUI() {
                       >
                         🎶 Hát / Kể chuyện vui
                       </button>
-    </div>
-    </div>
+                      <button 
+                        onClick={() => handleLiveEvent('CALL_TO_ACTION', { prompt: 'Kêu gọi anh em vào trận PK đối kháng ngay!' })}
+                        className={`p-1.5 rounded-lg text-[10px] font-medium text-left truncate border ${isDarkMode ? 'bg-red-500/10 hover:bg-red-500/20 text-red-300 border-red-500/30' : 'bg-red-50 hover:bg-red-100 text-red-800 border-red-200'}`}
+                      >
+                        ⚔️ Kích hoạt PK Đấu Trí
+                      </button>
+                      <button 
+                        onClick={() => {
+                          bandoAudio.unlock();
+                          bandoAudio.playBgmOnLive();
+                          handleLiveEvent('ASSISTANT_PROMPT', { prompt: 'Âm nhạc đang sôi động, cả nhà cùng quẩy và thả tim nhé!' });
+                        }}
+                        className={`p-1.5 rounded-lg text-[10px] font-medium text-left truncate border ${isDarkMode ? 'bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border-purple-500/30' : 'bg-purple-50 hover:bg-purple-100 text-purple-800 border-purple-200'}`}
+                      >
+                        🎵 Nhạc EDM Quẩy Live
+                      </button>
+                    </div>
+                  </div>
 
                   <div className={`pt-2 border-t ${isDarkMode ? 'border-white/10' : 'border-slate-200'}`}>
                     <label className={`text-[10px] font-medium flex items-center gap-1 mb-1.5 ${isDarkMode ? 'text-gray-400' : 'text-slate-600'}`}>
