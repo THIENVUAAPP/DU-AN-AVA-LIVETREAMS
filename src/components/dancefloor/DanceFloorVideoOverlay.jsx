@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Video, Camera, X, Move } from 'lucide-react';
+import { openCameraStream } from '../../lib/cameraDevices';
 
 const DEFAULT_TILE = { x: 68, y: 62, width: 26, height: 26 };
 
@@ -20,17 +21,21 @@ export default function DanceFloorVideoOverlay({ containerRef }) {
 
   const handleUseWebcam = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      const stream = await openCameraStream();
       setTile({ srcType: 'webcam', stream, ...DEFAULT_TILE });
       setMenuOpen(false);
     } catch (err) {
       console.error('Không mở được webcam:', err);
-      alert('Không thể truy cập webcam — vui lòng cấp quyền camera cho trình duyệt!');
+      alert('Không thể truy cập Camera vật lý — vui lòng kiểm tra quyền camera hoặc cắm thiết bị webcam!');
     }
   };
 
   const closeTile = () => {
-    if (tile?.stream) tile.stream.getTracks().forEach((t) => t.stop());
+    if (tile?.stream) {
+      try {
+        tile.stream.getTracks().forEach((t) => t.stop());
+      } catch (e) {}
+    }
     setTile(null);
   };
 

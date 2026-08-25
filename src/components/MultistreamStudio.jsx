@@ -36,50 +36,61 @@ import UniversalFileUploader from './UniversalFileUploader';
 import ReactPlayer from 'react-player';
 import { openOAuthPopup, getTikTokAuthUrl, getFacebookAuthUrl, getYouTubeAuthUrl, listenForOAuthCode } from '../lib/oauthService';
 import { loadLiveChannels, saveLiveChannels } from '../lib/platformChannels';
+import { openCameraStream, closeCameraStream } from '../lib/cameraDevices';
 
 let __global_local_stream = null;
-let __global_stream_promise = null;
 
 function LiveCameraFeed({ className = "w-full h-full object-cover" }) {
   const videoRef = React.useRef(null);
+  const [camError, setCamError] = React.useState(null);
+
+  const startFeed = async () => {
+    setCamError(null);
+    try {
+      if (__global_local_stream && __global_local_stream.active && __global_local_stream.getVideoTracks().length > 0) {
+        if (videoRef.current) {
+          videoRef.current.srcObject = __global_local_stream;
+          videoRef.current.muted = true;
+          await videoRef.current.play().catch(() => {});
+        }
+        return;
+      }
+
+      const stream = await openCameraStream();
+      __global_local_stream = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.muted = true;
+        await videoRef.current.play().catch(() => {});
+      }
+    } catch (e) {
+      console.error("Lỗi mở Camera:", e);
+      setCamError(e.message || "Không thể mở camera");
+    }
+  };
 
   React.useEffect(() => {
-    let active = true;
-
-    if (__global_local_stream) {
-      if (videoRef.current) {
-        videoRef.current.srcObject = __global_local_stream;
-        videoRef.current.play().catch(e => console.error("Error playing camera video:", e));
-      }
-    } else {
-      if (!__global_stream_promise && navigator.mediaDevices?.getUserMedia) {
-        __global_stream_promise = navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
-      }
-      
-      if (__global_stream_promise) {
-        __global_stream_promise.then(stream => {
-          if (!active) return;
-          __global_local_stream = stream;
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-            videoRef.current.play().catch(e => console.error("Error playing camera video:", e));
-          }
-        }).catch((e) => {
-          console.error("Error accessing camera: ", e);
-          __global_stream_promise = null;
-          if (e.name === 'NotAllowedError' || (e.message && e.message.includes('Permission denied'))) {
-             alert("LỖI CẤP QUYỀN CAMERA: Trình duyệt đang chặn Camera ở trang này.\nVui lòng bấm vào biểu tượng 🔒 ở thanh địa chỉ URL, bật Cho Phép Camera/Micro, rồi Tải lại (F5) trang!");
-          } else {
-             alert("Không thể kết nối Camera thật: " + e.message);
-          }
-        });
-      }
-    }
-
+    startFeed();
     return () => {
-      active = false;
+      // Keep stream active for other monitors or switchers
     };
   }, []);
+
+  if (camError) {
+    return (
+      <div className="relative w-full h-full bg-black/90 flex flex-col items-center justify-center p-4 text-center">
+        <Video className="w-8 h-8 text-red-400 mb-2 animate-pulse" />
+        <p className="text-white text-xs font-bold mb-1">Chưa thể mở Camera</p>
+        <p className="text-gray-400 text-[10px] max-w-xs mb-3">{camError}</p>
+        <button
+          onClick={startFeed}
+          className="px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-[11px] font-black cursor-pointer shadow-glow-red"
+        >
+          🔄 Thử lại kết nối Camera
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full h-full bg-black overflow-hidden flex items-center justify-center">
@@ -89,12 +100,16 @@ function LiveCameraFeed({ className = "w-full h-full object-cover" }) {
 }
 
 const renderUrlVideo = (urlInput, isMuted = false, controls = true) => {
-  if (urlInput.includes('tiktok.com')) {
-    const match = urlInput.match(/\/video\/(\d+)/);
-    if (match && match[1]) {
+  if (!urlInput || typeof urlInput !== 'string') return null;
+  const cleanUrl = urlInput.trim();
+
+  // 1. TikTok Links (Video, Profile Live, Embed)
+  if (cleanUrl.includes('tiktok.com')) {
+    const videoMatch = cleanUrl.match(/\/video\/(\d+)/);
+    if (videoMatch && videoMatch[1]) {
       return (
         <iframe
-          src={`https://www.tiktok.com/embed/v2/${match[1]}`}
+          src={`https://www.tiktok.com/embed/v2/${videoMatch[1]}`}
           className="absolute inset-0 w-full h-full object-cover"
           frameBorder="0"
           allowFullScreen
@@ -103,27 +118,92 @@ const renderUrlVideo = (urlInput, isMuted = false, controls = true) => {
         />
       );
     }
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-black/80 text-white font-bold text-xs text-center px-4 absolute inset-0">
-        ❌ Lỗi: Không thể lấy Video ID từ Link TikTok. Vui lòng nhập link dạng .../video/12345...
-      </div>
-    );
+    const userMatch = cleanUrl.match(/tiktok\.com\/@([^/?#]+)/);
+    if (userMatch && userMatch[1]) {
+      const username = userMatch[1].replace(/^@/, '');
+      return (
+        <iframe
+          src={`https://www.tiktok.com/@${username}/live`}
+          className="absolute inset-0 w-full h-full object-cover"
+          frameBorder="0"
+          allowFullScreen
+          allow="autoplay; encrypted-media"
+          scrolling="yes"
+        />
+      );
+    }
   }
-  if (urlInput.includes('facebook.com') || urlInput.includes('fb.watch')) {
+
+  // 2. YouTube Links (Watch, Shorts, Live, Embed)
+  if (cleanUrl.includes('youtube.com') || cleanUrl.includes('youtu.be')) {
+    let videoId = '';
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = cleanUrl.match(regExp);
+    if (match && match[2].length === 11) {
+      videoId = match[2];
+    } else if (cleanUrl.includes('/shorts/')) {
+      videoId = cleanUrl.split('/shorts/')[1]?.split('?')[0];
+    } else if (cleanUrl.includes('/live/')) {
+      videoId = cleanUrl.split('/live/')[1]?.split('?')[0];
+    }
+
+    if (videoId) {
+      return (
+        <iframe
+          src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${videoId}&controls=${controls ? 1 : 0}`}
+          className="absolute inset-0 w-full h-full object-cover border-0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+        />
+      );
+    }
+  }
+
+  // 3. Facebook Video & Live
+  if (cleanUrl.includes('facebook.com') || cleanUrl.includes('fb.watch')) {
     return (
       <iframe
-        src={`https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(urlInput)}&show_text=false&autoplay=true&mute=${isMuted ? '1' : '0'}`}
-        className="absolute inset-0 w-full h-full object-cover"
-        frameBorder="0"
+        src={`https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(cleanUrl)}&show_text=false&autoplay=true&mute=${isMuted ? '1' : '0'}`}
+        className="absolute inset-0 w-full h-full object-cover border-0"
         allowFullScreen
         allow="autoplay; encrypted-media; picture-in-picture; web-share"
         scrolling="no"
       />
     );
   }
+
+  // 4. Studio Internal Overlay URLs (e.g. /?overlay=live or http://localhost:5173/?overlay=...)
+  if (cleanUrl.includes('overlay=') || cleanUrl.includes('/overlay') || cleanUrl.startsWith('/') || cleanUrl.startsWith('http://localhost') || cleanUrl.startsWith('http://127.0.0.1')) {
+    return (
+      <iframe
+        src={cleanUrl}
+        className="absolute inset-0 w-full h-full object-cover border-0"
+        allow="autoplay; camera; microphone; display-capture"
+        allowFullScreen
+      />
+    );
+  }
+
+  // 5. Direct MP4, WebM, M3U8, HLS, or Generic Streams
+  const isDirectVideo = /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(cleanUrl) || cleanUrl.includes('.m3u8');
+  if (isDirectVideo) {
+    return (
+      <video
+        src={cleanUrl}
+        autoPlay
+        loop
+        playsInline
+        muted={isMuted}
+        controls={controls}
+        className="absolute inset-0 w-full h-full object-cover bg-black"
+      />
+    );
+  }
+
+  // 6. ReactPlayer Fallback
   return (
     <ReactPlayer
-      src={urlInput}
+      src={cleanUrl}
       playing
       loop
       muted={isMuted}
@@ -132,7 +212,7 @@ const renderUrlVideo = (urlInput, isMuted = false, controls = true) => {
       height="100%"
       className="absolute inset-0 object-cover"
       style={{ objectFit: 'cover' }}
-      onError={(e) => console.error('Lỗi phát video từ URL:', urlInput, e)}
+      onError={(e) => console.error('Lỗi phát video từ URL:', cleanUrl, e)}
     />
   );
 };
@@ -544,35 +624,83 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
 
             {streamSourceMode === "url" && (
               <div className="p-4 mt-4 rounded-2xl bg-amber-950/30 border border-amber-500/40 space-y-3 text-xs animate-fadeIn">
-                <label className="font-bold text-amber-300 block">DÁN LINK STREAM VIDEO HOẶC LUỒNG LIVE TRỰC TUYẾN (.m3u8, .mp4, RTSP, HLS Link):</label>
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-amber-300 block">DÁN LINK STREAM VIDEO HOẶC LUỒNG LIVE TRỰC TUYẾN (.m3u8, .mp4, RTSP, HLS, TikTok, YouTube, FB, Overlay):</label>
+                  <span className="text-[10px] font-bold text-amber-400">Tự động nhận diện mọi nền tảng</span>
+                </div>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="text"
                     value={videoUrlInput}
                     onChange={(e) => {
                       setVideoUrlInput(e.target.value);
-                      setIsPreviewingUrl(false);
+                      if (e.target.value.trim().length > 5) {
+                        setIsPreviewingUrl(true);
+                      }
                     }}
-                    placeholder="https://server.com/live-stream.m3u8..."
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        setIsPreviewingUrl(true);
+                      }
+                    }}
+                    placeholder="Dán link tại đây (VD: https://youtube.com/watch?v=..., https://tiktok.com/@user/video/..., .mp4, .m3u8, hoặc /?overlay=dancefloor)"
                     className="flex-1 bg-black/80 border border-amber-500/30 rounded-xl px-4 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-amber-400"
                   />
                   <div className="flex gap-2">
                     <button
-                      onClick={() => setIsPreviewingUrl(true)}
+                      onClick={() => {
+                        if (!videoUrlInput.trim()) {
+                          alert("Vui lòng dán hoặc chọn đường link trước!");
+                          return;
+                        }
+                        setIsPreviewingUrl(true);
+                      }}
                       className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-black text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-glow-amber"
                     >
                       ▶️ MỞ VIDEO
                     </button>
                     <button
-                      onClick={() => alert("🔗 ĐÃ ĐỒNG BỘ NGUỒN STREAM LINK VIDEO CHO TOÀN BỘ CÁC KÊNH LIVE!")}
+                      onClick={() => {
+                        if (!videoUrlInput.trim()) {
+                          alert("Vui lòng dán link trước khi đồng bộ!");
+                          return;
+                        }
+                        setIsPreviewingUrl(true);
+                        alert("🔗 ĐÃ ĐỒNG BỘ NGUỒN STREAM LINK VIDEO CHO TOÀN BỘ CÁC KÊNH LIVE!");
+                      }}
                       className="px-5 py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-black font-black text-xs rounded-xl transition-all cursor-pointer flex-shrink-0 flex items-center gap-2"
                     >
                       🚀 ĐỒNG BỘ
                     </button>
                   </div>
                 </div>
+
+                {/* Quick Link Presets */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[10px] text-gray-400 font-bold">Thử nhanh link mẫu:</span>
+                  {[
+                    { label: '💃 Sàn Nhảy 3D', url: `${typeof window !== 'undefined' ? window.location.origin : ''}/?overlay=dancefloor` },
+                    { label: '🌐 Sân Khấu Live Sạch', url: `${typeof window !== 'undefined' ? window.location.origin : ''}/?overlay=live` },
+                    { label: '⚔️ Đấu Trường PK', url: `${typeof window !== 'undefined' ? window.location.origin : ''}/?overlay=battle` },
+                    { label: '🗺️ Bản Đồ Live', url: `${typeof window !== 'undefined' ? window.location.origin : ''}/?overlay=bando` },
+                    { label: '📹 Video Mẫu HD', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' },
+                    { label: '🎵 Lo-fi YouTube 4K', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk' }
+                  ].map((preset, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setVideoUrlInput(preset.url);
+                        setIsPreviewingUrl(true);
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-amber-500/20 text-amber-200 border border-white/10 text-[10px] font-bold cursor-pointer transition-all hover:border-amber-400"
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+
                 <div className="flex items-center gap-2 text-amber-400/80 mt-2 text-[10px]">
-                  <CheckCircle2 className="w-4 h-4" /> <span>Vui lòng bấm MỞ VIDEO trước, sau đó bấm ĐỒNG BỘ. (Chỉ hỗ trợ: MP4, M3U8, Youtube, Tiktok Video. KHÔNG hỗ trợ Tiktok Live/Shopee Live do nền tảng chặn)</span>
+                  <CheckCircle2 className="w-4 h-4 shrink-0" /> <span>Hệ thống tự động liên kết và giải mã trực tiếp: MP4, M3U8, YouTube, TikTok Video/Live, Facebook Live và các Sân khấu Overlay nội bộ.</span>
                 </div>
               </div>
             )}

@@ -124,6 +124,9 @@ export default function ProductionStudio({
   const [webcamActive, setWebcamActive] = useState(false);
   const [cameraFacingMode, setCameraFacingMode] = useState('user'); // 'user' (camera trước) | 'environment' (camera sau)
   const webcamVideoRef = useRef(null);
+  const webcamStreamRef = useRef(null);
+  const [showOverlayLinksModal, setShowOverlayLinksModal] = useState(false);
+  const [overlayCopiedId, setOverlayCopiedId] = useState(null);
 
   // Stream Health & Telemetry State (Hardware Accelerated Ultra 60fps Anti-Lag Pipeline)
   const [bitrateMbps, setBitrateMbps] = useState(24.0);
@@ -239,9 +242,15 @@ export default function ProductionStudio({
       return;
     }
 
-    const cleanId = tiktokStudioId.trim().replace(/^@/, '');
+    let cleanId = tiktokStudioId.trim();
+    const urlMatch = cleanId.match(/tiktok\.com\/@([^/?#]+)/i);
+    if (urlMatch) {
+      cleanId = urlMatch[1];
+    }
+    cleanId = cleanId.replace(/^@/, '').trim();
+
     if (!cleanId) {
-      alert('Vui lòng nhập ID Kênh TikTok để kết nối!');
+      alert('Vui lòng nhập ID hoặc dán Link Kênh TikTok để kết nối!');
       return;
     }
 
@@ -260,40 +269,76 @@ export default function ProductionStudio({
     }
   };
 
-  // Khởi động Camera linh hoạt không bao giờ lỗi
+  // Khởi động Camera linh hoạt — Đảm bảo luôn mở được camera thật
   const startCameraStream = async (facing = cameraFacingMode) => {
     if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       console.warn("Trình duyệt không hỗ trợ getUserMedia");
+      alert("⚠️ Trình duyệt hiện tại không hỗ trợ hoặc đang chặn quyền truy cập Camera.\nVui lòng mở trang qua HTTPS / localhost và cấp quyền Camera.");
       return false;
     }
 
+    // Dừng luồng cũ nếu có
+    if (webcamStreamRef.current) {
+      try {
+        webcamStreamRef.current.getTracks().forEach(t => t.stop());
+      } catch (e) {}
+      webcamStreamRef.current = null;
+    }
+
     const constraintTiers = [
-      { video: { facingMode: facing, width: { ideal: 1280 }, height: { ideal: 720 } } },
-      { video: { facingMode: facing } },
-      { video: true }
+      { video: { facingMode: { ideal: facing }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false },
+      { video: { facingMode: facing }, audio: false },
+      { video: { width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false },
+      { video: true, audio: false }
     ];
 
+    let lastError = null;
     for (const constraints of constraintTiers) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        if (stream && webcamVideoRef.current) {
-          webcamVideoRef.current.srcObject = stream;
-          await webcamVideoRef.current.play().catch(() => {});
+        if (stream && stream.getVideoTracks().length > 0) {
+          webcamStreamRef.current = stream;
+          if (webcamVideoRef.current) {
+            webcamVideoRef.current.srcObject = stream;
+            webcamVideoRef.current.muted = true;
+            try {
+              await webcamVideoRef.current.play();
+            } catch (pErr) {
+              console.warn("Video play warning:", pErr);
+            }
+          }
           setWebcamActive(true);
+          try {
+            refreshMultiCamDevices();
+          } catch (e) {}
           return true;
         }
       } catch (e) {
+        lastError = e;
         console.log("Thử cấp độ camera tiếp theo...", e.message);
       }
+    }
+
+    console.error("Không thể mở Camera:", lastError);
+    if (lastError?.name === 'NotAllowedError' || lastError?.name === 'PermissionDeniedError') {
+      alert("⚠️ QUYỀN CAMERA ĐANG BỊ CHẶN!\nVui lòng bấm vào biểu tượng 🔒 hoặc 📷 ở thanh địa chỉ của trình duyệt, chọn 'Cho phép (Allow)' Camera rồi bật lại!");
+    } else if (lastError?.name === 'NotFoundError' || lastError?.name === 'DevicesNotFoundError') {
+      alert("⚠️ KHÔNG TÌM THẤY CAMERA: Vui lòng kiểm tra cáp cắm Webcam hoặc thiết bị Camera trên máy tính!");
+    } else if (lastError?.name === 'NotReadableError' || lastError?.name === 'TrackStartError') {
+      alert("⚠️ CAMERA ĐANG BỊ ỨNG DỤNG KHÁC SỬ DỤNG (Zoom/OBS/Meet/Teams): Vui lòng tắt các app khác đang dùng Camera rồi bấm bật lại!");
     }
     return false;
   };
 
   const toggleWebcam = async () => {
-    if (webcamActive) {
-      if (webcamVideoRef.current && webcamVideoRef.current.srcObject) {
-        const tracks = webcamVideoRef.current.srcObject.getTracks();
-        tracks.forEach(track => track.stop());
+    if (webcamActive && webcamStreamRef.current) {
+      if (webcamStreamRef.current) {
+        try {
+          webcamStreamRef.current.getTracks().forEach(track => track.stop());
+        } catch (e) {}
+        webcamStreamRef.current = null;
+      }
+      if (webcamVideoRef.current) {
         webcamVideoRef.current.srcObject = null;
       }
       setWebcamActive(false);
@@ -319,8 +364,20 @@ export default function ProductionStudio({
       }
     };
     autoStart();
-    return () => { isMounted = false; };
+    return () => { 
+      isMounted = false; 
+    };
   }, []);
+
+  // Đảm bảo stream luôn được gắn vào video element khi video element mount
+  useEffect(() => {
+    if (webcamActive && webcamStreamRef.current && webcamVideoRef.current) {
+      if (webcamVideoRef.current.srcObject !== webcamStreamRef.current) {
+        webcamVideoRef.current.srcObject = webcamStreamRef.current;
+        webcamVideoRef.current.play().catch(() => {});
+      }
+    }
+  }, [webcamActive]);
 
   // Switch between Front (Selfie) and Rear (Back Camera)
   const toggleCameraFacingMode = async () => {
@@ -328,9 +385,11 @@ export default function ProductionStudio({
     setCameraFacingMode(nextFacing);
 
     if (webcamActive) {
-      if (webcamVideoRef.current && webcamVideoRef.current.srcObject) {
-        const tracks = webcamVideoRef.current.srcObject.getTracks();
-        tracks.forEach(track => track.stop());
+      if (webcamStreamRef.current) {
+        try {
+          webcamStreamRef.current.getTracks().forEach(track => track.stop());
+        } catch (e) {}
+        webcamStreamRef.current = null;
       }
       await startCameraStream(nextFacing);
     }
@@ -1348,8 +1407,166 @@ export default function ProductionStudio({
     { id: 'minimal-blue-screen', name: '🔵 Phông Xanh Dương (Blue Key)', type:'solid', url:null, color:'#0047AB', bg:'from-blue-900 to-blue-950', cat:'Chroma Key' },
   ];
 
+  const originUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
+  const overlayLinksList = [
+    {
+      id: 'cleanlive',
+      title: '🌐 Sân Khấu Sạch (Clean Live Output)',
+      url: `${originUrl}/?overlay=live`,
+      tag: 'OBS / TIKTOK LIVE STUDIO',
+      color: 'from-blue-600 to-cyan-500',
+      desc: 'Màn hình phát sạch 100% không nút bấm, hiển thị AI Avatar, sản phẩm, và hiệu ứng live.'
+    },
+    {
+      id: 'dancefloor',
+      title: '💃 Sàn Nhảy TikTok Tương Tác 2D & 3D',
+      url: `${originUrl}/?overlay=dancefloor`,
+      tag: 'TƯƠNG TÁC TIKTOK LIVE',
+      color: 'from-pink-600 to-rose-500',
+      desc: 'Sàn diễn nhảy theo Quà, Like, Comment TikTok realtime với nhân vật 3D chuyển động.'
+    },
+    {
+      id: 'gamebattle',
+      title: '⚔️ Đấu Trường PK Quà Tặng Game Battle',
+      url: `${originUrl}/?overlay=gamebattle`,
+      tag: 'GAME PK THI ĐẤU',
+      color: 'from-purple-600 to-indigo-500',
+      desc: 'Màn hình PK 2 phe thi đấu so kè quà tặng và comment giữa các khán giả.'
+    },
+    {
+      id: 'bando',
+      title: '🗺️ Bản Đồ Việt Nam Check-in 63 Tỉnh Thành',
+      url: `${originUrl}/?overlay=bando`,
+      tag: 'VIETNAM MAP LIVE',
+      color: 'from-amber-600 to-red-500',
+      desc: 'Bản đồ tương tác tính điểm tỉnh thành theo comment người xem realtime.'
+    },
+    {
+      id: 'rtmp_tiktok',
+      title: '🎵 RTMP Server TikTok Live Upload',
+      url: 'rtmp://live-upload.tiktok.com/app/',
+      tag: 'SERVER STREAM RTMP',
+      color: 'from-red-600 to-pink-600',
+      desc: 'Địa chỉ RTMP Server chính thức dùng để phát từ OBS Studio lên TikTok Live.'
+    },
+    {
+      id: 'rtmp_fb',
+      title: '📘 RTMP Server Facebook Live RTMPS',
+      url: 'rtmps://live-api-s.facebook.com:443/rtmp/',
+      tag: 'SERVER STREAM RTMP',
+      color: 'from-blue-700 to-indigo-600',
+      desc: 'Địa chỉ Server RTMPS phát luồng trực tiếp lên Fanpage và Trang cá nhân Facebook.'
+    },
+    {
+      id: 'rtmp_yt',
+      title: '🔴 RTMP Server YouTube Live Stream',
+      url: 'rtmp://a.rtmp.youtube.com/live2',
+      tag: 'SERVER STREAM RTMP',
+      color: 'from-red-600 to-red-700',
+      desc: 'Địa chỉ RTMP Server luồng trực tiếp siêu nét 4K/FullHD lên YouTube Studio.'
+    }
+  ];
+
+  const handleCopyOverlayLink = (id, url) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(url);
+      setOverlayCopiedId(id);
+      setTimeout(() => setOverlayCopiedId(null), 2000);
+    }
+  };
+
   return (
     <div className="space-y-3 p-1 sm:p-2">
+      {/* Hidden Permanent Video Tag for Real Webcam Capture */}
+      <video
+        ref={webcamVideoRef}
+        autoPlay
+        playsInline
+        muted
+        style={{ position: 'fixed', top: -9999, left: -9999, width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
+      />
+
+      {/* MODAL DANH SÁCH TOÀN BỘ LINK LIÊN KẾT STUDIO & OVERLAY */}
+      {showOverlayLinksModal && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="glass-panel p-6 rounded-3xl border border-pink-500/40 max-w-2xl w-full text-left space-y-4 shadow-2xl bg-[#0A0A0A]/95 max-h-[90vh] overflow-y-auto animate-fadeIn">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-600 via-purple-600 to-indigo-600 flex items-center justify-center shadow-glow-purple">
+                  <Share2 className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-white">🔗 TOÀN BỘ ĐƯỜNG LINK DÁN VÀO STUDIO & OBS</h3>
+                  <p className="text-xs text-gray-400">Sử dụng ngay trong TikTok Live Studio, OBS Studio, vMix hoặc Trình duyệt</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowOverlayLinksModal(false)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {overlayLinksList.map((item) => (
+                <div key={item.id} className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-pink-500/40 transition-all space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-white flex items-center gap-1.5">
+                      {item.title}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-white/10 text-pink-300 border border-pink-500/30">
+                      {item.tag}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-400 leading-relaxed">{item.desc}</p>
+                  
+                  <div className="flex items-center gap-2 pt-1">
+                    <input 
+                      type="text" 
+                      readOnly 
+                      value={item.url}
+                      className="flex-1 px-3 py-2 rounded-xl bg-black/80 border border-white/15 text-xs text-pink-200 font-mono focus:outline-none select-all"
+                    />
+                    <button
+                      onClick={() => handleCopyOverlayLink(item.id, item.url)}
+                      className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-90 text-white font-black text-xs transition-all cursor-pointer flex items-center gap-1.5 shrink-0 shadow-glow-pink"
+                    >
+                      {overlayCopiedId === item.id ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-white" />
+                          <span>ĐÃ COPY!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5 text-white" />
+                          <span>COPY LINK</span>
+                        </>
+                      )}
+                    </button>
+                    {item.url.startsWith('http') && (
+                      <a
+                        href={item.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white transition-all"
+                        title="Mở tab mới xem trước"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-3 rounded-2xl bg-pink-500/10 border border-pink-500/30 text-[11px] text-pink-300 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-pink-400" />
+              <span>Hướng dẫn: Mở TikTok Live Studio hoặc OBS Studio → Thêm Nguồn (Source) → Chọn <strong>Trình duyệt (Browser Source)</strong> → Dán đường link vừa sao chép vào.</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL HƯỚNG DẪN & CẤU HÌNH ĐA CAMERA / ĐA LUỒNG */}
       {showGuideModal && (
@@ -1988,6 +2205,16 @@ export default function ProductionStudio({
                 <span>{cameraFacingMode === 'user' ? 'Cam Trước' : 'Cam Sau'}</span>
               </button>
 
+              {/* OVERLAY & STUDIO LINKS BUTTON */}
+              <button
+                onClick={() => setShowOverlayLinksModal(true)}
+                className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-pink-600/30 to-purple-600/30 hover:from-pink-600/50 hover:to-purple-600/50 text-pink-200 border border-pink-500/40 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-glow-pink"
+                title="Sao chép toàn bộ đường Link dán vào OBS / TikTok Studio"
+              >
+                <Share2 className="w-3.5 h-3.5 text-pink-300" />
+                <span>🔗 Link Studio & OBS</span>
+              </button>
+
               {/* SCREEN SHARE */}
               <ScreenShareControls
                 isSharing={isScreenSharing}
@@ -2142,19 +2369,10 @@ export default function ProductionStudio({
                 </div>
               ) : (webcamActive || isScreenSharing || multiCamGridActive) ? (
                 /* CHẾ ĐỘ 2: Camera Canvas Stage (Webcam / MultiCam) */
-                <>
-                  <video
-                    ref={webcamVideoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    style={{ opacity: 0, position: 'absolute', pointerEvents: 'none', width: '1px', height: '1px' }}
-                  />
-                  <canvas
-                    ref={canvasRef}
-                    className="absolute inset-0 w-full h-full object-cover transform-gpu"
-                  />
-                </>
+                <canvas
+                  ref={canvasRef}
+                  className="absolute inset-0 w-full h-full object-cover transform-gpu"
+                />
               ) : tiktokLiveFlvUrl ? (
                 /* CHẾ ĐỘ 3: TikTok Live Stream Source độc lập */
                 <div className="relative w-full h-full flex flex-col items-center justify-center bg-black">
