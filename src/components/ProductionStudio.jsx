@@ -1408,7 +1408,7 @@ export default function ProductionStudio({
     { id: 'minimal-blue-screen', name: '🔵 Phông Xanh Dương (Blue Key)', type:'solid', url:null, color:'#0047AB', bg:'from-blue-900 to-blue-950', cat:'Chroma Key' },
   ];
 
-  const originUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
+  const originUrl = typeof window !== 'undefined' ? window.location.origin.replace('localhost', '127.0.0.1') : 'http://127.0.0.1:5173';
   const overlayLinksList = [
     {
       id: 'cleanlive',

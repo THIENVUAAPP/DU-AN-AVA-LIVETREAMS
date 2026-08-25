@@ -27,7 +27,7 @@ import {
  * - Hoạt động hoàn hảo trên macOS, Windows và Cloud Web
  */
 export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
-  const defaultOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001';
+  const defaultOrigin = typeof window !== 'undefined' ? window.location.origin.replace('localhost', '127.0.0.1') : 'http://127.0.0.1:3001';
   const [sourceType, setSourceType] = useState(() => {
     if (typeof window !== 'undefined') {
       if (window.location.hostname.includes('vercel.app')) return 'cloud';
@@ -42,7 +42,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
 
   const getBaseUrl = () => {
     if (sourceType === 'cloud') return 'https://avalivepro.vercel.app';
-    if (sourceType === 'local') return 'http://localhost:3001';
+    if (sourceType === 'local') return 'http://127.0.0.1:3001';
     return defaultOrigin;
   };
 

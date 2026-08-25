@@ -380,7 +380,7 @@ export default function GameChienDauAdminModal({
 
   const handleCopyOverlayLink = () => {
     if (typeof window !== 'undefined') {
-      const url = `${window.location.origin}/?overlay=gamebattle`;
+      const url = `${window.location.origin.replace('localhost', '127.0.0.1')}/?overlay=gamebattle`;
       navigator.clipboard.writeText(url);
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2500);

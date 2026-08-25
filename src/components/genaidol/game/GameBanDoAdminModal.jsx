@@ -322,7 +322,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   const handleCopyOverlayUrl = (ratio = '9:16') => {
-    const url = `${window.location.origin}${window.location.pathname}?overlay=bando&ratio=${ratio}`;
+    const url = `${window.location.origin.replace('localhost', '127.0.0.1')}${window.location.pathname}?overlay=bando&ratio=${ratio}`;
     navigator.clipboard.writeText(url);
     setCopiedLink(ratio);
     setTimeout(() => setCopiedLink(false), 2000);

@@ -679,10 +679,10 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                 <div className="flex flex-wrap items-center gap-1.5 pt-1">
                   <span className="text-[10px] text-gray-400 font-bold">Thử nhanh link mẫu:</span>
                   {[
-                    { label: '💃 Sàn Nhảy 3D', url: `${typeof window !== 'undefined' ? window.location.origin : ''}/?overlay=dancefloor` },
-                    { label: '🌐 Sân Khấu Live Sạch', url: `${typeof window !== 'undefined' ? window.location.origin : ''}/?overlay=live` },
-                    { label: '⚔️ Đấu Trường PK', url: `${typeof window !== 'undefined' ? window.location.origin : ''}/?overlay=battle` },
-                    { label: '🗺️ Bản Đồ Live', url: `${typeof window !== 'undefined' ? window.location.origin : ''}/?overlay=bando` },
+                    { label: '💃 Sàn Nhảy 3D', url: `${typeof window !== 'undefined' ? window.location.origin.replace('localhost', '127.0.0.1') : ''}/?overlay=dancefloor` },
+                    { label: '🌐 Sân Khấu Live Sạch', url: `${typeof window !== 'undefined' ? window.location.origin.replace('localhost', '127.0.0.1') : ''}/?overlay=live` },
+                    { label: '⚔️ Đấu Trường PK', url: `${typeof window !== 'undefined' ? window.location.origin.replace('localhost', '127.0.0.1') : ''}/?overlay=battle` },
+                    { label: '🗺️ Bản Đồ Live', url: `${typeof window !== 'undefined' ? window.location.origin.replace('localhost', '127.0.0.1') : ''}/?overlay=bando` },
                     { label: '📹 Video Mẫu HD', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' },
                     { label: '🎵 Lo-fi YouTube 4K', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk' }
                   ].map((preset, idx) => (
