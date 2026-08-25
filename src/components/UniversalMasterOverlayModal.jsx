@@ -42,7 +42,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
 
   const getBaseUrl = () => {
     if (sourceType === 'cloud') return 'https://avalivepro.vercel.app';
-    if (sourceType === 'local') return 'http://127.0.0.1.nip.io:3001';
+    if (sourceType === 'local') return defaultOrigin;
     return defaultOrigin;
   };
 

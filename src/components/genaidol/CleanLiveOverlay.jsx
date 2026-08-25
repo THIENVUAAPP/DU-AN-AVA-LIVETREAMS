@@ -190,6 +190,7 @@ export default function CleanLiveOverlay() {
             setMasterState(prev => ({
               ...prev,
               mediaUrl: e.data.mediaUrl,
+              flvUrl: e.data.flvUrl,
               isVideo: e.data.isVideo,
               characterName: e.data.characterName,
               isConnected: e.data.isConnected
@@ -214,6 +215,7 @@ export default function CleanLiveOverlay() {
           setMasterState(prev => ({
             ...prev,
             mediaUrl: parsed.mediaUrl,
+            flvUrl: parsed.flvUrl,
             isVideo: parsed.isVideo,
             characterName: parsed.characterName,
             isConnected: parsed.isConnected

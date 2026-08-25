@@ -75,6 +75,48 @@ export default function AIAvatarStudio({ isLive, aiAvatarFeatureEnabled }) {
   const activeAvatar = allAvatars.find(a => a.id === activeAvatarId) || allAvatars[0];
   const activeVideo = uploadedVideos.find(v => v.id === activeVideoId);
 
+  // --- THÊM LOGIC ĐỒNG BỘ MEDIA SANG OBS OVERLAY (CleanLiveOverlay) ---
+  useEffect(() => {
+    let currentMediaUrl = '';
+    let isVideo = false;
+    let characterName = 'AI Idol';
+
+    if (activeTab === 'videos' && activeVideo) {
+      currentMediaUrl = activeVideo.url;
+      isVideo = true;
+      characterName = activeVideo.name || 'Video Phát Lại';
+    } else if (activeAvatar) {
+      currentMediaUrl = activeAvatar.image;
+      isVideo = false;
+      characterName = activeAvatar.name || 'AI Idol';
+    }
+
+    const payload = {
+      type: 'STREAM_MEDIA_UPDATE',
+      mediaUrl: currentMediaUrl,
+      isVideo: isVideo,
+      characterName: characterName,
+      isConnected: isLive
+    };
+
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        const cleanChannel = new BroadcastChannel('avalive_clean_stream_channel');
+        cleanChannel.postMessage(payload);
+        setTimeout(() => cleanChannel.close(), 100);
+      } catch (e) {}
+    }
+
+    try {
+      localStorage.setItem('aidol_clean_stream_state', JSON.stringify(payload));
+      // Đồng thời lưu vào master state để overlay đọc khi khởi động
+      const masterRaw = localStorage.getItem('avalive_master_live_state');
+      let masterState = masterRaw ? JSON.parse(masterRaw) : {};
+      masterState = { ...masterState, mediaUrl: currentMediaUrl, isVideo, characterName };
+      localStorage.setItem('avalive_master_live_state', JSON.stringify(masterState));
+    } catch (e) {}
+  }, [activeAvatarId, activeVideoId, activeTab, isLive, activeAvatar, activeVideo]);
+
   // Callback when UniversalFileUploader processes an image
   const handleImageUploaded = (fileObj) => {
     const newItem = {
