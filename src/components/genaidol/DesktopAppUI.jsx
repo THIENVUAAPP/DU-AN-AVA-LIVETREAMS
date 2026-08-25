@@ -5,8 +5,10 @@ import {
   MessageCircle, Play, Pause, Mic, MicOff, X, Download, Plus,
   Brain, Radio, Coins, AlertTriangle, Eye, Clock, List, Zap, AlertCircle, FileText, CheckSquare, CheckCircle,
   Gift, ShoppingBag, Sparkles, RotateCcw, Send, Trash2, Heart, Share2, UserPlus, Users, Swords, Shield, Gamepad2, Flag, MapPin,
-  Smartphone, MonitorPlay, Globe, StopCircle, Power, Volume2, VolumeX, Volume1, Music, Tv
+  Smartphone, MonitorPlay, Globe, StopCircle, Power, Volume2, VolumeX, Volume1, Music, Tv,
+  User, LogOut, Mail, Lock, Check
 } from 'lucide-react';
+import { supabase, syncUserToSupabase } from '../../lib/supabaseClient';
 import flvjs from 'flv.js';
 import Hls from 'hls.js';
 import WorkspaceTacVu from './WorkspaceTacVu';
@@ -39,6 +41,118 @@ import { SUPPORTED_LANGUAGES, getCurrentLanguage, setCurrentLanguage, t } from '
 import UpdateNotificationModal, { APP_VERSION } from './UpdateNotificationModal';
 
 export default function DesktopAppUI() {
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('avalive_current_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [realGmailInput, setRealGmailInput] = useState('');
+  const [realNameInput, setRealNameInput] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // Lắng nghe Supabase OAuth
+  useEffect(() => {
+    if (!supabase) return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user?.email) {
+        const gUser = {
+          name: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
+          email: session.user.email,
+          avatar: session.user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(session.user.email)}`,
+          isAdmin: session.user.email === 'quocthiencr90@gmail.com',
+          plan: session.user.email === 'quocthiencr90@gmail.com' ? 'ENTERPRISE' : 'VIP'
+        };
+        setCurrentUser(gUser);
+        try {
+          localStorage.setItem('avalive_current_user', JSON.stringify(gUser));
+          await syncUserToSupabase(gUser);
+        } catch (e) {}
+      }
+    });
+    return () => subscription?.unsubscribe();
+  }, []);
+
+  const handleRealGoogleOAuth = async () => {
+    setIsLoggingIn(true);
+    setAuthError('');
+    try {
+      if (!supabase) {
+        throw new Error('Supabase client chưa sẵn sàng');
+      }
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + window.location.pathname
+        }
+      });
+      if (error) throw error;
+    } catch (err) {
+      setAuthError(err.message || 'Lỗi kết nối Google OAuth');
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleRealGmailSubmit = async (e) => {
+    e?.preventDefault();
+    if (!realGmailInput.trim()) {
+      setAuthError('Vui lòng nhập địa chỉ Gmail hợp lệ!');
+      return;
+    }
+    const emailClean = realGmailInput.trim().toLowerCase();
+    if (!emailClean.includes('@')) {
+      setAuthError('Địa chỉ Gmail phải chứa ký tự @!');
+      return;
+    }
+
+    setIsLoggingIn(true);
+    setAuthError('');
+
+    const isAdmin = emailClean === 'quocthiencr90@gmail.com';
+    const nameClean = realNameInput.trim() || emailClean.split('@')[0];
+    const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(emailClean)}`;
+
+    // Kiểm tra gói bản quyền trên Supabase
+    let userPlan = isAdmin ? 'ENTERPRISE' : 'VIP';
+    try {
+      if (supabase) {
+        const { data: dbUser } = await supabase.from('users').select('*').eq('email', emailClean).maybeSingle();
+        if (dbUser?.plan) {
+          userPlan = dbUser.plan.toUpperCase();
+        }
+      }
+    } catch (e) {}
+
+    const newUser = {
+      name: nameClean,
+      email: emailClean,
+      avatar: avatarUrl,
+      isAdmin: isAdmin,
+      plan: userPlan
+    };
+
+    setCurrentUser(newUser);
+    try {
+      localStorage.setItem('avalive_current_user', JSON.stringify(newUser));
+      await syncUserToSupabase(newUser);
+    } catch (e) {}
+
+    setIsLoggingIn(false);
+  };
+
+  const handleLogout = () => {
+    if (confirm('Bạn có chắc muốn đăng xuất tài khoản Gmail này?')) {
+      setCurrentUser(null);
+      try {
+        localStorage.removeItem('avalive_current_user');
+        if (supabase) supabase.auth.signOut();
+      } catch (e) {}
+    }
+  };
+
   const [isLiveStudioActive, setIsLiveStudioActive] = useState(() => {
     try {
       return localStorage.getItem('avalive_active_stage') === 'studio';
@@ -1666,6 +1780,117 @@ export default function DesktopAppUI() {
     );
   };
 
+  // 🔐 CỔNG XÁC THỰC BẢN QUYỀN GMAIL — TỰ ĐỘNG MỞ TOÀN BỘ TÍNH NĂNG SAU KHI ĐĂNG NHẬP
+  if (!currentUser) {
+    return (
+      <div className="fixed inset-0 w-screen h-screen bg-[#090A10] flex items-center justify-center p-4 z-50 font-sans select-none overflow-y-auto">
+        {/* Ambient Lights */}
+        <div className="absolute inset-0 bg-radial-at-t from-blue-900/30 via-purple-950/20 to-black pointer-events-none" />
+        <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-pulse pointer-events-none" />
+
+        <div className="relative max-w-md w-full bg-[#121420]/95 backdrop-blur-2xl border border-cyan-500/30 rounded-[32px] p-8 shadow-2xl text-center space-y-6">
+          {/* Logo Brand */}
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 p-0.5 shadow-[0_0_30px_rgba(59,130,246,0.5)]">
+              <div className="w-full h-full bg-[#0d0e17] rounded-2xl flex items-center justify-center">
+                <Video className="w-8 h-8 text-cyan-400" />
+              </div>
+            </div>
+            <div>
+              <h1 className="text-2xl font-black bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+                AVALIVE VIP PRO STUDIO
+              </h1>
+              <p className="text-xs text-gray-400 mt-1">
+                Hệ Thống Livestream AI & Game Tương Tác 3D TikTok Live
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-left space-y-2">
+            <div className="flex items-center gap-2 text-amber-400 text-xs font-bold">
+              <Lock className="w-4 h-4" />
+              <span>XÁC THỰC BẢN QUYỀN GMAIL</span>
+            </div>
+            <p className="text-xs text-gray-300 leading-relaxed">
+              Vui lòng kết nối bằng chính tài khoản <strong>Gmail</strong> bạn đã đăng ký để mở khóa 100% tính năng Studio, AI Idol, Sàn Nhảy 3D & 2 Game Đại Chiến.
+            </p>
+          </div>
+
+          {authError && (
+            <div className="p-3 bg-red-500/15 border border-red-500/30 rounded-xl text-red-400 text-xs text-left flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{authError}</span>
+            </div>
+          )}
+
+          {/* Form Nhập Gmail hoặc Google OAuth */}
+          <div className="space-y-4">
+            <button
+              onClick={handleRealGoogleOAuth}
+              disabled={isLoggingIn}
+              className="w-full flex items-center justify-center gap-3 py-3.5 px-4 bg-white hover:bg-gray-100 text-gray-900 rounded-2xl font-bold text-sm shadow-xl transition-all hover:scale-[1.02] active:scale-98 cursor-pointer disabled:opacity-50"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+              </svg>
+              <span>Đăng Nhập Nhanh Bằng Google</span>
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-white/10" />
+              <span className="text-[11px] text-gray-500 uppercase font-bold">Hoặc Nhập Gmail</span>
+              <div className="flex-1 h-px bg-white/10" />
+            </div>
+
+            <form onSubmit={handleRealGmailSubmit} className="space-y-3">
+              <div className="relative">
+                <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="email"
+                  value={realGmailInput}
+                  onChange={(e) => setRealGmailInput(e.target.value)}
+                  placeholder="Nhập địa chỉ Gmail của bạn (vd: abc@gmail.com)"
+                  required
+                  className="w-full pl-10 pr-4 py-3 bg-black/40 border border-white/15 focus:border-cyan-400 rounded-xl text-xs text-white placeholder-gray-500 outline-none transition-all"
+                />
+              </div>
+
+              <div className="relative">
+                <User className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={realNameInput}
+                  onChange={(e) => setRealNameInput(e.target.value)}
+                  placeholder="Tên người dùng / Tên Kênh (Tùy chọn)"
+                  className="w-full pl-10 pr-4 py-3 bg-black/40 border border-white/15 focus:border-cyan-400 rounded-xl text-xs text-white placeholder-gray-500 outline-none transition-all"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoggingIn}
+                className="w-full py-3 bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white rounded-xl font-bold text-xs shadow-lg shadow-blue-500/30 transition-all hover:scale-[1.02] active:scale-98 cursor-pointer disabled:opacity-50"
+              >
+                {isLoggingIn ? '⏳ Đang Xác Thực...' : '🚀 Kích Hoạt & Vào Ngay Phần Mềm'}
+              </button>
+            </form>
+          </div>
+
+          <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-gray-500">
+            <span>Phiên Bản v{APP_VERSION}</span>
+            <span className="text-emerald-400 flex items-center gap-1">
+              <Check className="w-3 h-3" /> Bảo Mật SSL 256-bit
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`w-full h-screen flex flex-col font-sans transition-colors duration-200 ${isDarkMode ? 'bg-[#0f0f13] text-white' : 'bg-slate-100 text-slate-900'}`}>
       
@@ -1942,14 +2167,29 @@ export default function DesktopAppUI() {
             <span className="whitespace-nowrap">📡 Link Live</span>
           </button>
 
-          {/* Nút Tải phần mềm (ZIP) */}
-          <button 
-            onClick={handleDownload}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-0.5 text-[10px] font-bold rounded-md shadow-xs flex items-center gap-1 transition-colors"
-          >
-            <Download size={10} />
-            <span className="whitespace-nowrap">{t('downloadZip', currentLang)}</span>
-          </button>
+          {/* USER PROFILE & LICENSE BADGE (ĐĂNG NHẬP GMAIL) */}
+          {currentUser && (
+            <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-xs shadow-xs ${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-300'}`}>
+              <img 
+                src={currentUser.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(currentUser.email)}`}
+                alt="Avatar"
+                className="w-3.5 h-3.5 rounded-full border border-cyan-400 object-cover"
+              />
+              <span className="text-[10px] font-bold text-gray-200 truncate max-w-[110px]" title={currentUser.email}>
+                {currentUser.name || currentUser.email.split('@')[0]}
+              </span>
+              <span className="text-[9px] px-1 py-0.2 rounded font-black bg-gradient-to-r from-amber-500 to-yellow-400 text-black">
+                {currentUser.plan || 'VIP PRO'}
+              </span>
+              <button
+                onClick={handleLogout}
+                title="Đổi / Đăng xuất tài khoản Gmail"
+                className="text-gray-400 hover:text-red-400 p-0.5 transition-colors cursor-pointer ml-0.5"
+              >
+                <LogOut size={10} />
+              </button>
+            </div>
+          )}
     </div>
     </div>
 

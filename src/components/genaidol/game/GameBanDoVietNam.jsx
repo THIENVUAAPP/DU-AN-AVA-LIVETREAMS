@@ -1151,7 +1151,7 @@ export default function GameBanDoVietNam({
       ONE: isPanMode ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE,
       TWO: THREE.TOUCH.DOLLY_PAN,
     };
-    controls.autoRotate = !isPopout && autoRotate;
+    controls.autoRotate = autoRotate;
     controls.autoRotateSpeed = 0.8;
     
     // Tự do tương tác: Khi admin/streamer chủ động rê/xoay/zoom chuột, nhường quyền tức thì, không giằng co camera
@@ -1440,7 +1440,7 @@ export default function GameBanDoVietNam({
 
       // Update Auto-Rotate dynamically từ ref đảm bảo dừng/quay ngay lập tức không bị lag
       if (controls) {
-        controls.autoRotate = !isPopout && !!autoRotateRef.current;
+        controls.autoRotate = !!autoRotateRef.current;
       }
 
       // Handle 3-Stage Smart Camera Zoom:
@@ -2082,7 +2082,7 @@ export default function GameBanDoVietNam({
   // 2. Zoom toàn cảnh lãnh thổ quốc gia đó (5-10s, mặc định 7s)
   // Lưu ý: Tuyệt đối không xoay/zoom gián đoạn khi đang chạy Demo test quà
   useEffect(() => {
-    if (!viewMode3D || isPopout) return;
+    if (!viewMode3D) return;
     let standbyMode = 'flag_cluster'; // 'flag_cluster' hoặc 'overview'
 
     const directorInterval = setInterval(() => {

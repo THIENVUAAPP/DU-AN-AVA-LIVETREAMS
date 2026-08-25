@@ -145,20 +145,30 @@ export default function CleanLiveOverlay() {
       });
 
       socket.on('LIVE_EVENT', (data) => {
-        if (data) setLiveEvent(data);
+        if (data) setLiveEvent({ ...data, _ts: Date.now() });
       });
 
       socket.on('bando_event', (data) => {
-        if (data) setLiveEvent(data);
+        if (data) setLiveEvent({ ...data, _ts: Date.now() });
       });
 
       socket.on('battle_event', (data) => {
-        if (data) setLiveEvent(data);
+        if (data) setLiveEvent({ ...data, _ts: Date.now() });
       });
 
       socket.on('tiktok_chat', (data) => {
         if (data) {
-          setLiveEvent({ type: 'COMMENT', data: { username: data.username || data.nickname, text: data.comment } });
+          setLiveEvent({ 
+            type: 'COMMENT', 
+            data: { 
+              username: data.username || data.nickname, 
+              text: data.comment, 
+              comment: data.comment,
+              userId: data.userId || 'user_' + Date.now(),
+              avatar: data.profilePictureUrl || '',
+              _ts: Date.now() 
+            } 
+          });
         }
       });
 
@@ -167,11 +177,12 @@ export default function CleanLiveOverlay() {
           setLiveEvent({ 
             type: 'GIFT', 
             data: { 
-              giftId: data.giftName || 'rose', 
+              giftId: data.giftName || data.giftId || 'rose', 
               count: data.diamondCount || data.repeatCount || 1,
-              userId: data.userId || 'guest',
+              userId: data.userId || 'guest_' + Date.now(),
               username: data.username || data.nickname || 'Khách Live',
-              avatar: data.profilePictureUrl || ''
+              avatar: data.profilePictureUrl || '',
+              _ts: Date.now()
             } 
           });
         }

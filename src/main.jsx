@@ -59,7 +59,12 @@ class ErrorBoundary extends Component {
 }
 
 const pathname = window.location.pathname.toLowerCase();
-const isDesktopMode = pathname === '/desktop' || pathname.startsWith('/desktop') || window.location.hash.includes('desktop') || new URLSearchParams(window.location.search).get('mode') === 'desktop';
+const isDesktopMode = 
+  pathname === '/desktop' || 
+  pathname.startsWith('/desktop') || 
+  window.location.hash.includes('desktop') || 
+  new URLSearchParams(window.location.search).get('mode') === 'desktop' ||
+  window.location.port === '3001';
 
 
 ReactDOM.createRoot(document.getElementById('root')).render(
