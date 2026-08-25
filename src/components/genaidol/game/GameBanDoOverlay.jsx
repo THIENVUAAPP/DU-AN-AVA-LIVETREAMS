@@ -31,10 +31,11 @@ export default function GameBanDoOverlay() {
         backendUrl = customUrl;
       } else if (window.location.port === '5173') {
         backendUrl = window.location.protocol + '//' + window.location.hostname + ':3001';
-      } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        backendUrl = 'http://localhost:3001';
+      }
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        backendUrl = 'http://127.0.0.1.nip.io:3001';
       } else if (window.location.protocol === 'file:') {
-        backendUrl = 'http://localhost:3001'; // Fallback for double-clicking index.html
+        backendUrl = 'http://127.0.0.1.nip.io:3001'; // Fallback for double-clicking index.html
       }
     }
 

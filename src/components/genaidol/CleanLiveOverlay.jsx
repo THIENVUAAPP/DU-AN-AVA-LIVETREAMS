@@ -61,7 +61,7 @@ export default function CleanLiveOverlay() {
     document.documentElement.style.background = 'transparent';
     document.body.style.background = 'transparent';
 
-    const backendUrl = typeof window !== 'undefined' ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:3001' : 'http://localhost:3001') : 'http://localhost:3001';
+    const backendUrl = typeof window !== 'undefined' ? (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001' ? `${window.location.protocol}//${window.location.hostname}:3001` : window.location.origin) : 'http://127.0.0.1.nip.io:3001';
 
     const applyMasterState = (data) => {
       if (!data) return;
@@ -341,8 +341,8 @@ export default function CleanLiveOverlay() {
     if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
       return `/api/stream-proxy?url=${encodeURIComponent(rawUrl)}`;
     }
-    let backendOrigin = typeof window !== 'undefined' ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:3001' : window.location.origin) : 'http://localhost:3001';
-    if (typeof window !== 'undefined' && window.location.protocol === 'file:') backendOrigin = 'http://localhost:3001';
+    let backendOrigin = typeof window !== 'undefined' ? (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001' ? `${window.location.protocol}//${window.location.hostname}:3001` : window.location.origin) : 'http://127.0.0.1.nip.io:3001';
+    if (typeof window !== 'undefined' && window.location.protocol === 'file:') backendOrigin = 'http://127.0.0.1.nip.io:3001';
     return `${backendOrigin}/api/stream-proxy?url=${encodeURIComponent(rawUrl)}`;
   };
 

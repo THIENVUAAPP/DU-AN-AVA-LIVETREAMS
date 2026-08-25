@@ -60,7 +60,7 @@ export function syncMasterLiveState(partialState, socket = null) {
   }
 
   // 4. Gửi REST API tới Backend Server nếu có
-  const backendUrl = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3001' : '';
+  const backendUrl = typeof window !== 'undefined' && (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001') ? `${window.location.protocol}//${window.location.hostname}:3001` : '';
   if (backendUrl) {
     fetch(`${backendUrl}/api/live-state`, {
       method: 'POST',

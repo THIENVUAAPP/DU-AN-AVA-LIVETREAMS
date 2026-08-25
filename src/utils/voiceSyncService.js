@@ -497,7 +497,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null) {
   );
   const isLocalSpeakerMuted = !isOverlayPage && typeof localStorage !== 'undefined' && localStorage.getItem('avalive_local_speaker_muted') === 'true';
 
-  const backendBase = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3001' : '';
+  const backendBase = typeof window !== 'undefined' && (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001') ? `${window.location.protocol}//${window.location.hostname}:3001` : '';
   const serverTtsUrl = `${backendBase}/api/tts?text=${encodeURIComponent(textToSpeak.slice(0, 200))}&lang=${encodeURIComponent(shortLang || 'vi')}`;
   
   try {

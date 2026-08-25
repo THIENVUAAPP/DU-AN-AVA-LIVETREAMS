@@ -239,7 +239,7 @@ export default function DesktopAppUI() {
   const getPlayableStreamUrl = (rawUrl) => {
     if (!rawUrl) return '';
     if (rawUrl.includes('/api/stream-proxy')) return rawUrl;
-    const backendOrigin = typeof window !== 'undefined' ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:3001' : window.location.origin) : 'http://localhost:3001';
+    const backendOrigin = typeof window !== 'undefined' ? (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001' ? `${window.location.protocol}//${window.location.hostname}:3001` : window.location.origin) : 'http://127.0.0.1.nip.io:3001';
     return `${backendOrigin}/api/stream-proxy?url=${encodeURIComponent(rawUrl)}`;
   };
 
@@ -1006,7 +1006,7 @@ export default function DesktopAppUI() {
     } catch (e) {}
 
     // 2. Gửi REST API tới Backend
-    const backendUrl = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3001' : '';
+    const backendUrl = typeof window !== 'undefined' && (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001') ? `${window.location.protocol}//${window.location.hostname}:3001` : '';
     fetch(`${backendUrl}/api/live-state`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

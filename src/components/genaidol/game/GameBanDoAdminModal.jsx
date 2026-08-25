@@ -115,10 +115,10 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
         backendUrl = customUrl;
       } else if (window.location.port === '5173') {
         backendUrl = window.location.protocol + '//' + window.location.hostname + ':3001';
-      } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        backendUrl = 'http://localhost:3001';
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        backendUrl = 'http://127.0.0.1.nip.io:3001';
       } else if (window.location.protocol === 'file:') {
-        backendUrl = 'http://localhost:3001';
+        backendUrl = 'http://127.0.0.1.nip.io:3001';
       }
     }
     
@@ -178,7 +178,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
     if (adminSocket) {
       adminSocket.emit('connect_tiktok', cleanId);
     } else {
-      const backendUrl = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3001' : '';
+      const backendUrl = typeof window !== 'undefined' && (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001') ? `${window.location.protocol}//${window.location.hostname}:3001` : '';
       try {
         const socket = io(backendUrl || window.location.origin, { transports: ['websocket', 'polling'] });
         socket.emit('connect_tiktok', cleanId);
@@ -190,7 +190,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
     if (adminSocket) {
       adminSocket.emit('disconnect_tiktok');
     } else {
-      const backendUrl = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3001' : '';
+      const backendUrl = typeof window !== 'undefined' && (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001') ? `${window.location.protocol}//${window.location.hostname}:3001` : '';
       try {
         const socket = io(backendUrl || window.location.origin, { transports: ['websocket', 'polling'] });
         socket.emit('disconnect_tiktok');
@@ -201,7 +201,7 @@ export default function GameBanDoAdminModal({ isOpen, onClose }) {
   };
 
   const handleToggleSimulation = async () => {
-    const backendUrl = typeof window !== 'undefined' && window.location.port === '5173' ? 'http://localhost:3001' : '';
+    const backendUrl = typeof window !== 'undefined' && (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001') ? `${window.location.protocol}//${window.location.hostname}:3001` : '';
     const url = backendUrl || window.location.origin;
     try {
       if (isSimulationMode) {
