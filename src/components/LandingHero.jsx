@@ -299,6 +299,44 @@ export default function LandingHero({ setActiveTab, setGoogleLoginModalOpen, aiA
           </button>
         </div>
 
+        {/* DEDICATED STANDALONE SOFTWARE DOWNLOAD BOX TRÊN TRANG CHỦ */}
+        <div className="animate-fade-in-up delay-300 w-full max-w-4xl mx-auto p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#0e1224] via-[#11162c] to-[#0a0d1c] border border-cyan-500/30 shadow-2xl shadow-cyan-950/60 backdrop-blur-xl relative overflow-hidden group">
+          <div className="absolute -top-24 -right-24 w-60 h-60 bg-cyan-500/20 rounded-full blur-3xl group-hover:bg-cyan-500/30 transition-all pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-60 h-60 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 text-left">
+            <div className="space-y-2 max-w-xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-400/30 text-cyan-300 text-xs font-black uppercase tracking-wider">
+                <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-spin" />
+                <span>BỘ CÀI ĐẶT STANDALONE ĐỘC QUYỀN VIP PRO</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-wide">
+                Tải Phần Mềm AvaLive Studio (Mac & Windows)
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
+                Chạy độc lập trên máy tính, tích hợp sẵn Phòng Dựng Studio 4K, Game Bản Đồ 63 Tỉnh, PK Chiến Đấu & Kết Nối Trực Tiếp OBS Studio / TikTok LIVE Studio.
+              </p>
+              <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-gray-400 pt-1">
+                <span className="flex items-center gap-1.5 text-cyan-400"><Check className="w-4 h-4 text-cyan-400" /> Giải nén dùng ngay (0 Login)</span>
+                <span className="flex items-center gap-1.5 text-emerald-400"><Check className="w-4 h-4 text-emerald-400" /> Tự động trừ Token theo gói</span>
+                <span className="flex items-center gap-1.5 text-purple-400"><Check className="w-4 h-4 text-purple-400" /> Hỗ trợ Mac & Win</span>
+              </div>
+            </div>
+
+            <div className="shrink-0 flex flex-col items-center gap-2 w-full md:w-auto">
+              <a
+                href="/Livestream_AI_Software.zip"
+                download="AvaLive_VIP_PRO_Full_Package_MacWin.zip"
+                className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black text-sm rounded-2xl shadow-xl shadow-cyan-500/25 hover:scale-105 transition-all flex items-center justify-center gap-3 cursor-pointer border border-cyan-300/40 text-center"
+              >
+                <Download className="w-5 h-5" />
+                <span>TẢI BẢN ZIP TRỌN GÓI</span>
+              </a>
+              <span className="text-[11px] text-gray-400">Dung lượng siêu nhẹ (~43MB)</span>
+            </div>
+          </div>
+        </div>
+
         {/* Trust badges */}
         <div className="animate-fade-in-up delay-300 flex flex-wrap items-center justify-center gap-6">
           {[
