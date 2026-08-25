@@ -43,9 +43,8 @@ export default function Header({
     { id: 'affiliate-landing', label: 'Tiếp Thị 30%' },
   ];
 
-  // Navigation when LOGGED IN
+  // Navigation when LOGGED IN (Keep KOL Live only on homepage publicNavItems)
   const workspaceNavItems = [
-    { id: 'ai-storyteller', label: 'KOL LIVE' },
     ...(aiAvatarFeatureEnabled ? [{ id: 'avatars', label: 'MC AI' }] : []),
     ...(currentUser?.role === 'admin' ? [{ id: 'dance-floor', label: 'Sàn Nhảy' }] : []),
   ];
@@ -285,31 +284,6 @@ export default function Header({
               <span>VÀO WORKSPACE</span>
             </button>
           )}
-
-          {/* Master Live Button */}
-          <button
-            onClick={() => {
-              if (!currentUser) {
-                setGoogleLoginModalOpen(true);
-              } else {
-                const goingOffline = isLive;
-                setIsLive(!isLive);
-                if (goingOffline) {
-                  setTimeout(() => {
-                    alert("🔴 Đã kết thúc Phiên Livestream!\n\n⬇️ HỆ THỐNG ĐANG TỰ ĐỘNG KẾT XUẤT VÀ TẢI VỀ MÁY...\nToàn bộ Video Source Gốc của phiên Live đang được tự động tải về máy tính của bạn.\n(Dù người dùng có ẩn source hay ẩn live, hệ thống vẫn tự động tải về đầy đủ!)");
-                  }, 500);
-                }
-              }
-            }}
-            className={`flex items-center gap-2 px-5 py-2 rounded-full text-xs font-black transition-all shadow-lg ${
-              isLive
-                ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse shadow-glow-red'
-                : 'bg-gradient-to-r from-[#EF4444] via-[#8B5CF6] to-[#3B82F6] hover:opacity-95 text-white shadow-glow-red scale-105'
-            }`}
-          >
-            <Radio className={`w-4 h-4 ${isLive ? 'animate-spin' : ''}`} />
-            <span>{isLive ? '🔴 PHÁT LIVE' : '⚡ PHÁT LIVE'}</span>
-          </button>
         </div>
 
       </div>

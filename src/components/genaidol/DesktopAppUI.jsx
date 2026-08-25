@@ -2024,13 +2024,21 @@ export default function DesktopAppUI() {
     </div>
 
           <div className="flex items-center gap-1.5 px-1 shrink-0">
-            <input type="text" value={tiktokId} onChange={(e) => setTiktokId(e.target.value)} className={`w-28 px-2 py-1 rounded text-xs outline-none border ${isDarkMode ? 'bg-[#2a2a35] border-gray-700 text-white focus:border-blue-500' : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'}`} placeholder="ID lấy Chat" title="Nhập ID kênh TikTok của anh để đọc bình luận" />
-            <input type="text" value={videoTiktokId} onChange={(e) => setVideoTiktokId(e.target.value)} className={`w-28 px-2 py-1 rounded text-xs outline-none border ${isDarkMode ? 'bg-[#2a2a35] border-gray-700 text-white focus:border-emerald-500' : 'bg-white border-gray-300 text-gray-900 focus:border-emerald-500'}`} placeholder="ID lấy Video" title="Nhập ID kênh TikTok lấy video re-stream (bỏ trống nếu lấy video kênh chính)" />
+            <input 
+              type="text" 
+              value={tiktokId} 
+              onChange={(e) => setTiktokId(e.target.value)} 
+              className={`w-36 px-2.5 py-1 rounded-lg text-xs font-medium outline-none border transition-all ${
+                isDarkMode ? 'bg-[#2a2a35] border-gray-700 text-white focus:border-blue-500' : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+              }`} 
+              placeholder="ID Kênh TikTok..." 
+              title="Nhập ID kênh TikTok của bạn để kết nối" 
+            />
             <button onClick={handleConnect} className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold transition-colors ${isConnected ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-500/20'}`}>
               {isConnecting ? <span className="animate-spin text-sm leading-none">↻</span> : (isConnected ? <CheckCircle size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />)}
               <span>{isConnecting ? t('connecting', currentLang) : (isConnected ? t('stopAi', currentLang) : t('connect', currentLang))}</span>
             </button>
-    </div>
+          </div>
     </div>
 
         <div className="flex-1"></div>
@@ -2067,32 +2075,6 @@ export default function DesktopAppUI() {
           >
             <Zap size={13} className={isGlobalDemoRunning ? 'text-yellow-300 animate-bounce' : 'text-yellow-300'} />
             <span>{isGlobalDemoRunning ? t('stopDemo', currentLang) : t('runDemo', currentLang)}</span>
-          </button>
-
-          {/* Nút Test Âm Thanh & Voice AI (Nhỏ gọn, tinh tế) */}
-          <button 
-            onClick={handleAudioTest}
-            className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs active:scale-95 ${
-              isDarkMode ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border-amber-400/30' : 'bg-amber-100 text-amber-800 hover:bg-amber-200 border-amber-300'
-            }`}
-            title="Phát thử âm thanh tù và chiến trận & Giọng nói AI để kiểm tra loa / TikTok LIVE Studio"
-          >
-            <Volume2 size={10} className="text-yellow-400" />
-            <span className="whitespace-nowrap">Test Âm Thanh</span>
-          </button>
-
-          {/* 🎙️ Nút Mở VoiceStudio (Phòng Thu & Soạn Kịch Bản Thoại) */}
-          <button 
-            onClick={() => setActiveSettingsModal('voice_studio')}
-            className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs active:scale-95 ${
-              activeSettingsModal === 'voice_studio'
-                ? 'bg-pink-600 text-white border-pink-400 shadow-pink-500/30'
-                : (isDarkMode ? 'bg-pink-500/20 text-pink-300 hover:bg-pink-500/30 border-pink-500/30' : 'bg-pink-50 text-pink-800 hover:bg-pink-100 border-pink-300')
-            }`}
-            title="Mở VoiceStudio: Phòng thu giọng đọc AI, soạn kịch bản livestream và điều chỉnh cảm xúc đa sắc thái"
-          >
-            <Mic size={10} className="text-pink-400" />
-            <span className="whitespace-nowrap font-bold">🎙️ Voice Studio</span>
           </button>
 
           {/* 🔇 NÚT TẮT TIẾNG LOA MÁY TÍNH (VẪN PHÁT ĐỦ ÂM THANH 100% TRÊN TIKTOK / OBS) */}
