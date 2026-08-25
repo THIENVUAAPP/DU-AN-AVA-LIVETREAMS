@@ -164,6 +164,10 @@ export default function ProductionStudio({
   const [tiktokLiveFlvUrl, setTiktokLiveFlvUrl] = useState(null);
   const socketRef = useRef(null);
 
+  // 🔲 Dual Live Display Mode (Đồng bộ hiển thị cả Camera Studio & Luồng TikTok Live Studio)
+  const [dualLiveDisplayMode, setDualLiveDisplayMode] = useState('pip'); // 'pip' | 'sidebyside' | 'cam_only' | 'tiktok_only'
+  const [isSwappedPip, setIsSwappedPip] = useState(false);
+
   useEffect(() => {
     if (externalTiktokId !== undefined && externalTiktokId !== tiktokStudioId) {
       setTiktokStudioId(externalTiktokId);
@@ -2053,8 +2057,114 @@ export default function ProductionStudio({
                 : 'aspect-video w-full rounded-3xl border border-white/15'
             }`}>
 
-              {/* Active Real-time Canvas Stage — full composite: BG + person + beauty */}
-              {(webcamActive || isScreenSharing || multiCamGridActive) ? (
+              {/* 🔲 CHẾ ĐỘ 1: DUAL LIVE DISPLAY (Khi có cả Webcam và Luồng TikTok Live) */}
+              {(webcamActive && tiktokLiveFlvUrl) ? (
+                <div className="w-full h-full relative overflow-hidden bg-black">
+                  {dualLiveDisplayMode === 'sidebyside' ? (
+                    /* Side by Side (Chia đôi 50/50) */
+                    <div className="w-full h-full grid grid-cols-2 gap-1 p-1 bg-black">
+                      <div className="relative rounded-2xl overflow-hidden border border-purple-500/40 bg-black">
+                        <canvas ref={canvasRef} className="w-full h-full object-cover" />
+                        <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-purple-600/80 text-white text-[10px] font-black z-10 flex items-center gap-1">
+                          <Camera className="w-3 h-3" /> Camera Studio
+                        </div>
+                      </div>
+                      <div className="relative rounded-2xl overflow-hidden border border-pink-500/40 bg-black">
+                        <video src={tiktokLiveFlvUrl} autoPlay playsInline controls className="w-full h-full object-cover" />
+                        <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-red-600/80 text-white text-[10px] font-black z-10 flex items-center gap-1 animate-pulse">
+                          <Radio className="w-3 h-3" /> TikTok Live
+                        </div>
+                      </div>
+                    </div>
+                  ) : dualLiveDisplayMode === 'tiktok_only' ? (
+                    /* Toàn màn hình TikTok Live */
+                    <div className="w-full h-full relative">
+                      <video src={tiktokLiveFlvUrl} autoPlay playsInline controls className="w-full h-full object-cover" />
+                      <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-red-600 text-white text-[11px] font-black flex items-center gap-1 shadow-glow-red animate-pulse z-20">
+                        <Radio className="w-3 h-3 animate-spin" /> TikTok Live Stream
+                      </div>
+                    </div>
+                  ) : dualLiveDisplayMode === 'cam_only' ? (
+                    /* Toàn màn hình Camera Studio */
+                    <div className="w-full h-full relative">
+                      <canvas ref={canvasRef} className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    /* Mặc định: Picture-in-Picture (Góc Nổi) */
+                    <div className="w-full h-full relative">
+                      {isSwappedPip ? (
+                        <>
+                          <video src={tiktokLiveFlvUrl} autoPlay playsInline controls className="w-full h-full object-cover" />
+                          <div 
+                            onClick={() => setIsSwappedPip(!isSwappedPip)}
+                            className="absolute bottom-3 right-3 w-32 sm:w-40 aspect-video rounded-2xl overflow-hidden border-2 border-purple-400 shadow-2xl cursor-pointer hover:scale-105 transition-all z-30 group"
+                            title="Bấm để đổi màn hình chính"
+                          >
+                            <canvas ref={canvasRef} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] font-black transition-opacity">
+                              🔄 Đổi chỗ
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <canvas ref={canvasRef} className="w-full h-full object-cover" />
+                          <div 
+                            onClick={() => setIsSwappedPip(!isSwappedPip)}
+                            className="absolute bottom-3 right-3 w-32 sm:w-40 aspect-[9/16] rounded-2xl overflow-hidden border-2 border-pink-400 shadow-2xl cursor-pointer hover:scale-105 transition-all z-30 group"
+                            title="Bấm để đổi màn hình chính"
+                          >
+                            <video src={tiktokLiveFlvUrl} autoPlay playsInline muted className="w-full h-full object-cover" />
+                            <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-red-600 text-white text-[8px] font-black">
+                              LIVE
+                            </div>
+                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] font-black transition-opacity">
+                              🔄 Đổi chỗ
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Thanh nút chuyển đổi Dual View nhanh */}
+                  <div className="absolute bottom-3 left-3 z-30 flex items-center gap-1 bg-black/80 backdrop-blur-md p-1 rounded-xl border border-white/20">
+                    <button
+                      onClick={() => setDualLiveDisplayMode('pip')}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all ${
+                        dualLiveDisplayMode === 'pip' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      🖼️ Góc Nổi PiP
+                    </button>
+                    <button
+                      onClick={() => setDualLiveDisplayMode('sidebyside')}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all ${
+                        dualLiveDisplayMode === 'sidebyside' ? 'bg-emerald-600 text-white' : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      ◫ Chia Đôi Song Song
+                    </button>
+                    <button
+                      onClick={() => setDualLiveDisplayMode('cam_only')}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all ${
+                        dualLiveDisplayMode === 'cam_only' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      📷 Cam Studio
+                    </button>
+                    <button
+                      onClick={() => setDualLiveDisplayMode('tiktok_only')}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all ${
+                        dualLiveDisplayMode === 'tiktok_only' ? 'bg-pink-600 text-white' : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      📱 TikTok Live
+                    </button>
+                  </div>
+                </div>
+              ) : (webcamActive || isScreenSharing || multiCamGridActive) ? (
+                /* CHẾ ĐỘ 2: Camera Canvas Stage (Webcam / MultiCam) */
                 <>
                   <video
                     ref={webcamVideoRef}
@@ -2069,7 +2179,7 @@ export default function ProductionStudio({
                   />
                 </>
               ) : tiktokLiveFlvUrl ? (
-                /* TikTok Live Stream Source */
+                /* CHẾ ĐỘ 3: TikTok Live Stream Source độc lập */
                 <div className="relative w-full h-full flex flex-col items-center justify-center bg-black">
                   <video
                     src={tiktokLiveFlvUrl}
@@ -2083,7 +2193,7 @@ export default function ProductionStudio({
                   </div>
                 </div>
               ) : (
-                /* Sân khấu khi chưa bật camera: Hiển thị giao diện kích hoạt 1-chạm */
+                /* CHẾ ĐỘ 4: Sân khấu khi chưa bật camera: Hiển thị giao diện kích hoạt 1-chạm */
                 <div className="relative w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#1E1E24] via-[#121216] to-[#0A0A0A] p-4 text-center">
                   <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-purple-600 via-pink-600 to-red-500 flex items-center justify-center mb-3 shadow-glow-purple animate-pulse">
                     <Camera className="w-8 h-8 text-white" />
