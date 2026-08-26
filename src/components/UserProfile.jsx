@@ -14,24 +14,22 @@ export default function UserProfile({ currentUser, setActiveTab }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeSidebarTab, setActiveSidebarTab] = useState('overview');
 
-  // Token & Point Management State
-  const [userTokens, setUserTokens] = useState(() => {
-    const saved = localStorage.getItem('avalive_user_tokens');
-    return saved ? parseInt(saved) : 100000;
-  });
-  const [liveMinutesUsed, setLiveMinutesUsed] = useState(145);
-  const [liveMinutesRemaining, setLiveMinutesRemaining] = useState(4855);
+  // Token & Point Management State - Always synced with currentUser
+  const userTokens = currentUser?.tokens || 0;
+  
+  const liveMinutesUsed = currentUser?.liveMinutesUsed || 0;
+  const liveMinutesRemaining = currentUser?.liveMinutesRemaining || (currentUser?.plan === 'VIP PRO' ? 9999 : 4320);
 
-  const [profile, setProfile] = useState({
-    name: currentUser?.name || 'Nguyễn Quốc Thiện',
-    email: currentUser?.email || 'quocthiencr90@gmail.com',
-    phone: '0988.888.888',
-    planName: currentUser?.isAdmin ? 'SUPER ADMIN ENTERPRISE VIP' : (currentUser?.plan || 'GÓI STARTER PRO'),
+  const profile = {
+    name: currentUser?.name || 'Người dùng mới',
+    email: currentUser?.email || 'Chưa cập nhật',
+    phone: currentUser?.phone || 'Chưa cập nhật',
+    planName: currentUser?.isAdmin ? 'SUPER ADMIN ENTERPRISE VIP' : (currentUser?.plan || 'GÓI MIỄN PHÍ (DÙNG THỬ)'),
     planStatus: 'ACTIVE',
-    bankName: 'MBBank (Quân Đội)',
-    accountNumber: '998824419999',
-    accountHolder: 'NGUYEN QUOC THIEN'
-  });
+    bankName: 'MBBank',
+    accountNumber: 'Chưa cập nhật',
+    accountHolder: currentUser?.name || ''
+  };
   
   const [savedSuccess, setSavedSuccess] = useState(false);
   const handleSaveProfile = (e) => {
@@ -256,7 +254,7 @@ export default function UserProfile({ currentUser, setActiveTab }) {
                     </div>
                     <p className="text-xs text-gray-400 font-mono mt-0.5">{profile.email}</p>
                     <span className="inline-block mt-2 px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[10px] font-black">
-                      👑 {profile.planName}
+                      👑 GÓI HIỆN TẠI: {profile.planName}
                     </span>
                   </div>
                 </div>
@@ -303,7 +301,7 @@ export default function UserProfile({ currentUser, setActiveTab }) {
                     <Clock className="w-4 h-4" />
                   </div>
                   <p className="text-2xl font-black text-white font-mono">{liveMinutesUsed} phút</p>
-                  <p className="text-[10px] text-gray-400">Còn lại {liveMinutesRemaining} phút</p>
+                  <p className="text-[10px] text-gray-400">Còn lại {liveMinutesRemaining} phút {profile.planName.includes('MIỄN PHÍ') ? '(Dùng thử)' : ''}</p>
                 </div>
 
                 <div className="p-5 rounded-2xl bg-[#12141F] border border-purple-500/20 space-y-2">
