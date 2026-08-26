@@ -12,4 +12,6 @@ dist-ssr
 release/
 *.zip
 !public/Livestream_AI_Software.zip
+!public/AvaLive_VIP_PRO_Windows.zip
+!public/AvaLive_VIP_PRO_Mac.zip
 
