@@ -4,6 +4,7 @@ import flvjs from 'flv.js';
 import Hls from 'hls.js';
 import GameBanDoVietNam from './game/GameBanDoVietNam';
 import GameChienDau from './game/GameChienDau';
+import ProductionStudio from '../ProductionStudio';
 import { supabase } from '../../lib/supabaseClient';
 import { Volume2, VolumeX, Sparkles, Video, Swords, Flag, Music, Radio, Mic } from 'lucide-react';
 
@@ -418,6 +419,22 @@ export default function CleanLiveOverlay() {
     };
   }, [activeStreamUrl]);
 
+  // Handle autoPlay block in TikTok Live Studio / OBS CEF by forcing mute if play fails
+  useEffect(() => {
+    const videoElements = document.querySelectorAll('video');
+    videoElements.forEach(vid => {
+      const playPromise = vid.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Autoplay blocked (usually due to audio) -> force mute and retry
+          vid.muted = true;
+          setIsAudioMuted(true);
+          vid.play().catch(e => console.warn("Overlay Video Play Error:", e));
+        });
+      }
+    });
+  }, [masterState.mediaUrl, activeStreamUrl, overlayCamActive]);
+
   // Stage hiện tại
   const currentStage = masterState.stage || 'idol';
   const ratio = masterState.aspectRatio || '9:16';
@@ -450,8 +467,18 @@ export default function CleanLiveOverlay() {
     );
   }
 
+  // 3. RENDER STAGE: PHÒNG DỰNG LIVE STUDIO CHUYÊN NGHIỆP
+  if (currentStage === 'broadcast' || currentStage === 'studio') {
+    return (
+      <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent select-none flex items-center justify-center pointer-events-auto">
+        <ProductionStudio 
+          globalAspectRatio={ratio}
+        />
+      </div>
+    );
+  }
 
-  // 4. RENDER STAGE: AI IDOL LIVESTREAM & PHÒNG DỰNG LIVE STUDIO CHUYÊN NGHIỆP
+  // 4. RENDER STAGE: AI IDOL LIVESTREAM (CLEAN VIDEO ONLY)
   return (
     <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-[#070913] flex items-center justify-center select-none">
       

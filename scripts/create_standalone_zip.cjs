@@ -12,6 +12,10 @@ const winZipFileName = 'AvaLive_VIP_PRO_Windows.zip';
 const macZipFilePath = path.join(rootDir, 'public', macZipFileName);
 const winZipFilePath = path.join(rootDir, 'public', winZipFileName);
 
+// Xóa các file zip cũ để tránh Vite copy vào dist (gây lặp vô tận / Zip Bomb)
+if (fs.existsSync(macZipFilePath)) fs.unlinkSync(macZipFilePath);
+if (fs.existsSync(winZipFilePath)) fs.unlinkSync(winZipFilePath);
+
 // 1. Build frontend dist mới nhất
 console.log('\n[1/3] Đang biên dịch Frontend sang bản phát hành dist/ mới nhất...');
 try {
@@ -20,10 +24,6 @@ try {
   console.error('❌ Lỗi khi build frontend:', err);
   process.exit(1);
 }
-
-// Xóa các file zip cũ
-if (fs.existsSync(macZipFilePath)) fs.unlinkSync(macZipFilePath);
-if (fs.existsSync(winZipFilePath)) fs.unlinkSync(winZipFilePath);
 
 // 2. Tạo thư mục staging
 console.log('\n[2/3] Đang chuẩn bị dữ liệu phần mềm...');
