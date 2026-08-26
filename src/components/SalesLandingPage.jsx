@@ -141,10 +141,10 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
               </>
             ) : (
               <button 
-                onClick={() => setActiveTab('broadcast')}
+                onClick={() => setActiveTab('profile')}
                 className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#F59E0B] to-[#F43F5E] text-white font-black text-sm shadow-[0_0_15px_rgba(245,158,11,0.4)] hover:scale-105 transition-all flex items-center gap-2 cursor-pointer"
               >
-                VÀO STUDIO LIVE <ArrowRight className="w-4 h-4" />
+                VÀO QUẢN TRỊ <ArrowRight className="w-4 h-4" />
               </button>
             )}
           </div>

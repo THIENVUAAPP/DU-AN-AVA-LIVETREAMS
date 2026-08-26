@@ -44,15 +44,9 @@ export default function Header({
     { id: 'affiliate-landing', label: 'Tiếp Thị 30%' },
   ];
 
-  // Navigation when LOGGED IN (Chỉ hiển thị Quản Trị - Phần mềm Studio chỉ có trong bản ZIP tải về)
+  // Navigation when LOGGED IN (Chỉ hiển thị Trang Chủ và Tải Phần Mềm, các chức năng khác nằm trong menu Dropdown tài khoản)
   const workspaceNavItems = [
     { id: 'overview', label: '🏠 Trang Chủ' },
-    { id: 'profile', label: '👤 Hồ Sơ Người Dùng' },
-    { id: 'affiliate-dashboard', label: '🤝 Tiếp Thị 30%' },
-    { id: 'sales-analytics', label: '📊 Doanh Số & Đơn Hàng' },
-    { id: 'team', label: '🛡️ Phân Quyền Đội Ngũ' },
-    { id: 'captcha', label: '🤖 Captcha' },
-    ...((currentUser?.isAdmin || currentUser?.role === 'admin' || currentUser?.email === 'quocthiencr90@gmail.com') ? [{ id: 'admin', label: '👑 Admin VIP' }] : []),
     { id: 'ai-storyteller', label: '💻 Tải Phần Mềm (ZIP)' },
   ];
 
