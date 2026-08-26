@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Sparkles, CheckCircle2, ArrowRight, Zap, ShieldCheck, 
-  Tv, Users, CreditCard, ChevronRight, Crown, Star, 
+  Tv, Users, CreditCard, ChevronRight, ChevronDown, Crown, Star, 
   BarChart2, Share2, Globe, HeartHandshake, Building2,
   Play, MousePointerClick, MessageSquare, Smartphone, Facebook,
-  Bot, Clock, ShoppingCart, Lock, Headphones, Search, MonitorPlay,
-  DollarSign, TrendingUp, Layers, UserSquare2, Video, Activity, Brain, Image as ImageIcon, Mic, Download
+  Bot, Clock, ShoppingCart, ShoppingBag, Lock, Headphones, Search, MonitorPlay,
+  DollarSign, TrendingUp, Layers, User, UserSquare2, Video, Activity, Brain, Image as ImageIcon, Mic, Download
 } from 'lucide-react';
 import SePayModal from './SePayModal';
 import TechEcosystemMap from './TechEcosystemMap';
@@ -62,6 +62,8 @@ const RevealOnScroll = ({ children, className = '' }) => {
 
 export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser, setActiveTab }) {
   const [billingCycle, setBillingCycle] = useState('monthly');
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [sepayModalOpen, setSepayModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
@@ -140,12 +142,59 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
                 </button>
               </>
             ) : (
-              <button 
-                onClick={() => setActiveTab('profile')}
-                className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#F59E0B] to-[#F43F5E] text-white font-black text-sm shadow-[0_0_15px_rgba(245,158,11,0.4)] hover:scale-105 transition-all flex items-center gap-2 cursor-pointer"
-              >
-                VÀO QUẢN TRỊ <ArrowRight className="w-4 h-4" />
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#161622] border border-white/20 hover:border-[#EF4444] transition-all shadow-sm cursor-pointer group"
+                >
+                  <img 
+                    src={currentUser.avatar || "https://lh3.googleusercontent.com/a/default-user"} 
+                    alt={currentUser.name}
+                    className="w-7 h-7 rounded-full object-cover border border-[#EF4444]"
+                  />
+                  <span className="font-bold text-white text-sm max-w-[120px] truncate group-hover:text-red-400">{currentUser.name}</span>
+                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {profileDropdownOpen && (
+                  <div className="absolute right-0 mt-3 w-80 min-w-[320px] glass-panel p-4 rounded-3xl border border-white/20 shadow-2xl z-[150] space-y-2.5 text-xs bg-[#0A0A0A]/98 backdrop-blur-2xl animate-fadeIn">
+                    <div className="p-3.5 rounded-2xl bg-gradient-to-r from-purple-950/40 via-[#121218] to-black border border-white/15 space-y-1.5">
+                      <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block">TÀI KHOẢN ĐĂNG NHẬP:</span>
+                      <p className="font-mono text-emerald-400 font-black text-xs truncate">{currentUser.email}</p>
+                      <div className="flex items-center justify-between pt-1">
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[9px] font-black inline-block">
+                          {currentUser.isAdmin ? "👑 SUPER ADMIN VIP" : "🟢 BẢN QUYỀN VIP"}
+                        </span>
+                        <span className="text-[10px] text-amber-300 font-mono font-bold">
+                          🪙 {(currentUser.tokens || 100000).toLocaleString()} Tokens
+                        </span>
+                      </div>
+                    </div>
+                    <div className="space-y-1 pt-1">
+                      <button onClick={() => { setActiveTab("profile"); setProfileDropdownOpen(false); }} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-200 hover:text-white hover:bg-white/10 font-bold text-xs transition-all text-left cursor-pointer">
+                        <User className="w-4 h-4 text-[#EF4444]" /><span>Hồ Sơ Người Dùng & Nạp/Rút Tiền</span>
+                      </button>
+                      <button onClick={() => { setActiveTab("affiliate-dashboard"); setProfileDropdownOpen(false); }} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-200 hover:text-white hover:bg-white/10 font-bold text-xs transition-all text-left cursor-pointer">
+                        <Share2 className="w-4 h-4 text-emerald-400" /><span>Tiếp Thị Liên Kết 30% (Affiliate)</span>
+                      </button>
+                      <button onClick={() => { setActiveTab("sales-analytics"); setProfileDropdownOpen(false); }} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[#EF4444] hover:bg-[#EF4444]/10 font-black text-xs transition-all text-left cursor-pointer">
+                        <ShoppingBag className="w-4 h-4 text-[#EF4444]" /><span>Quản Lý Doanh Số & Đơn Hàng</span>
+                      </button>
+                      <button onClick={() => { setActiveTab("team"); setProfileDropdownOpen(false); }} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-200 hover:text-white hover:bg-white/10 font-bold text-xs transition-all text-left cursor-pointer">
+                        <ShieldCheck className="w-4 h-4 text-purple-400" /><span>Quản Lý Phân Quyền Đội Ngũ</span>
+                      </button>
+                      {(currentUser.isAdmin || currentUser?.email === 'quocthiencr90@gmail.com') && (
+                        <div className="space-y-1 pt-1.5 border-t border-white/10">
+                          <button onClick={() => { setActiveTab("admin"); setProfileDropdownOpen(false); }} className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 font-black text-xs transition-all text-left cursor-pointer">
+                            <div className="flex items-center gap-2.5"><ShieldCheck className="w-4 h-4 text-amber-400" /><span>Quản Trị Admin Toàn Hệ Thống [ADMIN]</span></div>
+                            <ArrowRight className="w-3.5 h-3.5 opacity-60" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -179,12 +228,12 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
             
             <div className="flex flex-wrap items-center gap-4 pt-4">
               <button 
-                onClick={() => currentUser ? setActiveTab('broadcast') : setGoogleLoginModalOpen(true)}
-                className="px-8 py-4 rounded-full bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] text-black font-black text-sm uppercase tracking-wider shadow-[0_0_30px_rgba(245,158,11,0.3)] hover:scale-105 transition-all"
+                onClick={() => currentUser ? setActiveTab('profile') : setGoogleLoginModalOpen(true)}
+                className="px-8 py-4 rounded-full bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] text-black font-black text-sm uppercase tracking-wider shadow-[0_0_30px_rgba(245,158,11,0.3)] hover:scale-105 transition-all cursor-pointer"
               >
-                DÙNG THỬ MIỄN PHÍ 7 NGÀY
+                {currentUser ? "VÀO BẢNG ĐIỀU KHIỂN QUẢN TRỊ" : "DÙNG THỬ MIỄN PHÍ 7 NGÀY"}
               </button>
-              <a href="#demo-section" className="px-8 py-4 rounded-full border border-white/20 text-white font-bold text-sm uppercase flex items-center gap-2 hover:bg-white/10 transition-all">
+              <a href="#demo-section" className="px-8 py-4 rounded-full border border-white/20 text-white font-bold text-sm uppercase flex items-center gap-2 hover:bg-white/10 transition-all cursor-pointer">
                 XEM VIDEO GIỚI THIỆU <Play className="w-4 h-4 text-[#FBBF24]" />
               </a>
             </div>
