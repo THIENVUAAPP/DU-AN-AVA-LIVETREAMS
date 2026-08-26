@@ -56,42 +56,12 @@ const macStaging = path.join(rootDir, '.temp_mac');
 if (fs.existsSync(macStaging)) fs.rmSync(macStaging, { recursive: true, force: true });
 fs.mkdirSync(macStaging, { recursive: true });
 
-// Create Mac .app Bundle
-const appName = 'AvaLive_VIP';
-const appDir = path.join(macStaging, `${appName}.app`);
-const contentsDir = path.join(appDir, 'Contents');
-const macOsDir = path.join(contentsDir, 'MacOS');
-const resourcesDir = path.join(contentsDir, 'Resources');
+// Create Mac Launcher
+const macLauncherPath = path.join(macStaging, 'Khoi_Dong_AvaLive_Mac.command');
+fs.copyFileSync(path.join(rootDir, 'Chay_App_Mac_Linux.command'), macLauncherPath);
+fs.chmodSync(macLauncherPath, 0o755);
 
-fs.mkdirSync(macOsDir, { recursive: true });
-fs.mkdirSync(resourcesDir, { recursive: true });
-
-// Move app_data INSIDE the .app bundle
-execSync(`cp -R "${appDataDir}" "${resourcesDir}/"`);
-
-const plistContent = `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>CFBundleExecutable</key>
-    <string>${appName}</string>
-    <key>CFBundleIdentifier</key>
-    <string>com.avalive.pro</string>
-    <key>CFBundleName</key>
-    <string>AvaLive VIP</string>
-    <key>CFBundlePackageType</key>
-    <string>APPL</string>
-    <key>CFBundleShortVersionString</key>
-    <string>1.0</string>
-    <key>LSMinimumSystemVersion</key>
-    <string>10.10</string>
-</dict>
-</plist>`;
-fs.writeFileSync(path.join(contentsDir, 'Info.plist'), plistContent);
-
-const executablePath = path.join(macOsDir, appName);
-fs.copyFileSync(path.join(rootDir, 'Chay_App_Mac_Linux.command'), executablePath);
-fs.chmodSync(executablePath, 0o755);
+execSync(`cp -R "${appDataDir}" "${macStaging}/"`);
 
 // Create Mac Instructions
 const macInstructionHtml = `
@@ -112,14 +82,14 @@ const macInstructionHtml = `
 <body>
     <div class="box">
         <h1>🍏 Hướng Dẫn Khởi Động AvaLive Trên Mac</h1>
-        <p>Để khởi động phần mềm, hãy <strong>Nhấp Đúp</strong> vào ứng dụng <code>AvaLive_VIP.app</code>.</p>
+        <p>Để khởi động phần mềm, hãy <strong>Nhấp Đúp</strong> vào file lệnh <code>Khoi_Dong_AvaLive_Mac.command</code>.</p>
         
         <div class="alert">
             <strong>⚠️ LƯU Ý QUAN TRỌNG KHI GẶP LỖI BẢO MẬT:</strong><br><br>
-            Nếu macOS hiện thông báo: <em>"Apple không thể xác minh ứng dụng..."</em> hoặc <em>"Ứng dụng bị hỏng (damaged)..."</em>, hãy làm theo cách sau để mở:
+            Nếu macOS hiện thông báo: <em>"Apple không thể xác minh nhà phát triển..."</em>, hãy làm theo cách sau để mở:
             <br><br>
-            <strong>Cách Mở Cấp Quyền:</strong><br>
-            1. <strong>Click Chuột Phải</strong> (hoặc nhấn giữ phím Control + Click) vào ứng dụng <code>AvaLive_VIP</code>.<br>
+            <strong>Cách Mở Cấp Quyền (Chỉ cần làm 1 lần đầu tiên):</strong><br>
+            1. <strong>Click Chuột Phải</strong> (hoặc nhấn giữ phím Control + Click) vào file <code>Khoi_Dong_AvaLive_Mac.command</code>.<br>
             2. Chọn <strong>Open (Mở)</strong>.<br>
             3. Nhấn <strong>Open (Mở)</strong> một lần nữa ở bảng cảnh báo. Phần mềm sẽ tự khởi chạy!
         </div>
