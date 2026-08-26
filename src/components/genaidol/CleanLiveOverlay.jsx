@@ -4,7 +4,6 @@ import flvjs from 'flv.js';
 import Hls from 'hls.js';
 import GameBanDoVietNam from './game/GameBanDoVietNam';
 import GameChienDau from './game/GameChienDau';
-import DanceFloorOverlay from '../DanceFloorOverlay';
 import { supabase } from '../../lib/supabaseClient';
 import { Volume2, VolumeX, Sparkles, Video, Swords, Flag, Music, Radio, Mic } from 'lucide-react';
 
@@ -451,14 +450,6 @@ export default function CleanLiveOverlay() {
     );
   }
 
-  // 3. RENDER STAGE: SÀN NHẢY TIKTOK TƯƠNG TÁC 2D & 3D
-  if (currentStage === 'dancefloor' || currentStage === 'dance' || currentStage === 'dance-floor') {
-    return (
-      <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent select-none flex items-center justify-center pointer-events-auto">
-        <DanceFloorOverlay />
-      </div>
-    );
-  }
 
   // 4. RENDER STAGE: AI IDOL LIVESTREAM & PHÒNG DỰNG LIVE STUDIO CHUYÊN NGHIỆP
   return (
