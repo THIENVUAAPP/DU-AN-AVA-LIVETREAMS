@@ -48,11 +48,16 @@ fs.mkdirSync(appDataDir, { recursive: true });
 
 // Copy launchers và docs ra thư mục gốc
 fs.copyFileSync(path.join(rootDir, 'Chay_App_Mac_Linux.command'), path.join(stagingDir, 'Chay_App_Mac_Linux.command'));
+fs.copyFileSync(path.join(rootDir, 'Chay_App_Mac_Linux.command'), path.join(stagingDir, 'Chay_Mac.command'));
 fs.chmodSync(path.join(stagingDir, 'Chay_App_Mac_Linux.command'), 0o755);
+fs.chmodSync(path.join(stagingDir, 'Chay_Mac.command'), 0o755);
 
 fs.copyFileSync(path.join(rootDir, 'Chay_App_Windows.bat'), path.join(stagingDir, 'Chay_App_Windows.bat'));
+fs.copyFileSync(path.join(rootDir, 'Chay_App_Windows.bat'), path.join(stagingDir, 'Chay_Windows.bat'));
+
 if (fs.existsSync(path.join(rootDir, 'Mo_Ung_Dung_Web.html'))) {
   fs.copyFileSync(path.join(rootDir, 'Mo_Ung_Dung_Web.html'), path.join(stagingDir, 'Mo_Ung_Dung_Web.html'));
+  fs.copyFileSync(path.join(rootDir, 'Mo_Ung_Dung_Web.html'), path.join(stagingDir, 'index.html'));
 }
 if (fs.existsSync(path.join(rootDir, 'HUONG_DAN_SU_DUNG.txt'))) {
   fs.copyFileSync(path.join(rootDir, 'HUONG_DAN_SU_DUNG.txt'), path.join(stagingDir, 'HUONG_DAN_SU_DUNG.txt'));
