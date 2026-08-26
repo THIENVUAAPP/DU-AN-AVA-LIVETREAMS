@@ -7,20 +7,12 @@ console.log('📦 BẮT ĐẦU ĐÓNG GÓI BỘ CÀI STANDALONE ZIP CHO MAC & WI
 console.log('===========================================================');
 
 const rootDir = path.join(__dirname, '..');
-const zipFileName = 'AvaLive_VIP_PRO_Full_Package_Mac_Win.zip';
-const zipFilePath = path.join(rootDir, zipFileName);
+const macZipFileName = 'AvaLive_VIP_PRO_Mac.zip';
+const winZipFileName = 'AvaLive_VIP_PRO_Windows.zip';
+const macZipFilePath = path.join(rootDir, 'public', macZipFileName);
+const winZipFilePath = path.join(rootDir, 'public', winZipFileName);
 
-// 1. Cấp quyền thực thi cho file launcher Mac
-try {
-  const macLauncher = path.join(rootDir, 'Chay_App_Mac_Linux.command');
-  if (fs.existsSync(macLauncher)) {
-    fs.chmodSync(macLauncher, 0o755);
-  }
-} catch (e) {
-  // Bỏ qua lỗi permission nếu trên Windows
-}
-
-// 2. Build frontend dist mới nhất
+// 1. Build frontend dist mới nhất
 console.log('\n[1/3] Đang biên dịch Frontend sang bản phát hành dist/ mới nhất...');
 try {
   execSync('npm run build', { cwd: rootDir, stdio: 'inherit' });
@@ -29,16 +21,12 @@ try {
   process.exit(1);
 }
 
-// 3. Xóa các file zip cũ trong dist & public để tránh phình dung lượng
-console.log('\n[2/3] Đang nén các thành phần cốt lõi vào file zip...');
-const publicZip = path.join(rootDir, 'public', 'Livestream_AI_Software.zip');
-const distZip = path.join(rootDir, 'dist', 'Livestream_AI_Software.zip');
+// Xóa các file zip cũ
+if (fs.existsSync(macZipFilePath)) fs.unlinkSync(macZipFilePath);
+if (fs.existsSync(winZipFilePath)) fs.unlinkSync(winZipFilePath);
 
-if (fs.existsSync(zipFilePath)) fs.unlinkSync(zipFilePath);
-if (fs.existsSync(publicZip)) fs.unlinkSync(publicZip);
-if (fs.existsSync(distZip)) fs.unlinkSync(distZip);
-
-// 4. Tạo thư mục staging sạch sẽ để đóng gói
+// 2. Tạo thư mục staging
+console.log('\n[2/3] Đang chuẩn bị dữ liệu phần mềm...');
 const stagingDir = path.join(rootDir, '.temp_package_staging');
 if (fs.existsSync(stagingDir)) fs.rmSync(stagingDir, { recursive: true, force: true });
 fs.mkdirSync(stagingDir, { recursive: true });
@@ -46,47 +34,81 @@ fs.mkdirSync(stagingDir, { recursive: true });
 const appDataDir = path.join(stagingDir, 'app_data');
 fs.mkdirSync(appDataDir, { recursive: true });
 
-// Copy launchers và docs ra thư mục gốc
-fs.copyFileSync(path.join(rootDir, 'Chay_App_Mac_Linux.command'), path.join(stagingDir, 'Chay_App_Mac_Linux.command'));
-fs.copyFileSync(path.join(rootDir, 'Chay_App_Mac_Linux.command'), path.join(stagingDir, 'Chay_Mac.command'));
-fs.chmodSync(path.join(stagingDir, 'Chay_App_Mac_Linux.command'), 0o755);
-fs.chmodSync(path.join(stagingDir, 'Chay_Mac.command'), 0o755);
-
-fs.copyFileSync(path.join(rootDir, 'Chay_App_Windows.bat'), path.join(stagingDir, 'Chay_App_Windows.bat'));
-fs.copyFileSync(path.join(rootDir, 'Chay_App_Windows.bat'), path.join(stagingDir, 'Chay_Windows.bat'));
-
-// Không tạo file HTML ở thư mục gốc để tránh người dùng click nhầm
-if (fs.existsSync(path.join(rootDir, 'HUONG_DAN_SU_DUNG.txt'))) {
-  fs.copyFileSync(path.join(rootDir, 'HUONG_DAN_SU_DUNG.txt'), path.join(stagingDir, 'HUONG_DAN_SU_DUNG.txt'));
-}
-
 // Copy toàn bộ dữ liệu cốt lõi vào app_data
 execSync(`cp -R dist backend patches package.json package-lock.json .env.example "${appDataDir}"`, { cwd: rootDir });
 
-try {
-  const zipCmd = `cd "${stagingDir}" && zip -r "${zipFilePath}" . -x "*.DS_Store"`;
-  execSync(zipCmd, { stdio: 'inherit' });
-  
-  // Dọn dẹp staging
-  fs.rmSync(stagingDir, { recursive: true, force: true });
-
-  const stats = fs.statSync(zipFilePath);
-  const sizeMb = (stats.size / (1024 * 1024)).toFixed(2);
-
-  // Đồng bộ file zip sang public và dist để nút tải trên Web App luôn tải bản mới nhất
-  fs.copyFileSync(zipFilePath, publicZip);
-  if (fs.existsSync(path.join(rootDir, 'dist'))) {
-    fs.copyFileSync(zipFilePath, distZip);
-  }
-  
-  console.log('\n===========================================================');
-  console.log(`✅ ĐÓNG GÓI HOÀN TẤT THÀNH CÔNG!`);
-  console.log(`📁 File Zip Hoàn Chỉnh: ${zipFileName}`);
-  console.log(`📊 Dung lượng siêu nhẹ & đầy đủ: ${sizeMb} MB`);
-  console.log(`📍 Đường dẫn file zip chính: ${zipFilePath}`);
-  console.log(`🌐 Đã đồng bộ sang Web Download: public/Livestream_AI_Software.zip & dist/Livestream_AI_Software.zip`);
-  console.log('===========================================================\n');
-} catch (err) {
-  console.error('❌ Lỗi khi tạo file zip:', err);
-  process.exit(1);
+// 3. Đóng gói cho Windows
+console.log('\n[3/3] Đang đóng gói cho Windows...');
+const winStaging = path.join(rootDir, '.temp_win');
+if (fs.existsSync(winStaging)) fs.rmSync(winStaging, { recursive: true, force: true });
+fs.mkdirSync(winStaging, { recursive: true });
+execSync(`cp -R "${appDataDir}" "${winStaging}/"`);
+fs.copyFileSync(path.join(rootDir, 'Chay_App_Windows.bat'), path.join(winStaging, 'Khoi_Dong_AvaLive.bat'));
+if (fs.existsSync(path.join(rootDir, 'HUONG_DAN_SU_DUNG.txt'))) {
+  fs.copyFileSync(path.join(rootDir, 'HUONG_DAN_SU_DUNG.txt'), path.join(winStaging, 'HUONG_DAN_SU_DUNG.txt'));
 }
+execSync(`cd "${winStaging}" && zip -r "${winZipFilePath}" . -x "*.DS_Store"`);
+fs.rmSync(winStaging, { recursive: true, force: true });
+
+// 4. Đóng gói cho Mac
+console.log('\n[3/3] Đang đóng gói cho Mac...');
+const macStaging = path.join(rootDir, '.temp_mac');
+if (fs.existsSync(macStaging)) fs.rmSync(macStaging, { recursive: true, force: true });
+fs.mkdirSync(macStaging, { recursive: true });
+execSync(`cp -R "${appDataDir}" "${macStaging}/"`);
+
+const macLauncherPath = path.join(macStaging, 'Khoi_Dong_AvaLive.command');
+fs.copyFileSync(path.join(rootDir, 'Chay_App_Mac_Linux.command'), macLauncherPath);
+fs.chmodSync(macLauncherPath, 0o755);
+
+// Create Mac Instructions
+const macInstructionHtml = `
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Hướng Dẫn Khởi Động Trên Mac</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 40px; background: #111; color: #fff; line-height: 1.6; }
+        .box { background: #222; border: 1px solid #444; border-radius: 12px; padding: 30px; max-width: 600px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h1 { color: #38bdf8; margin-top: 0; }
+        p { color: #ccc; }
+        .code { background: #000; padding: 10px 15px; border-radius: 6px; font-family: monospace; color: #a3e635; margin: 15px 0; border: 1px solid #333; }
+        .alert { background: rgba(239,68,68,0.1); border-left: 4px solid #ef4444; padding: 15px; color: #fca5a5; border-radius: 4px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>🍏 Hướng Dẫn Khởi Động AvaLive Trên Mac</h1>
+        <p>Để khởi động phần mềm, hãy <strong>Nhấp Đúp</strong> vào file <code>Khoi_Dong_AvaLive.command</code>.</p>
+        
+        <div class="alert">
+            <strong>⚠️ LƯU Ý QUAN TRỌNG KHI GẶP LỖI BẢO MẬT:</strong><br><br>
+            Nếu macOS hiện thông báo: <em>"Apple không thể xác minh phần mềm độc hại..."</em> hoặc <em>"Ứng dụng từ nhà phát triển không xác định..."</em>, hãy làm theo 1 trong 2 cách sau:
+            <br><br>
+            <strong>Cách 1 (Nhanh nhất):</strong><br>
+            1. Mở ứng dụng <strong>Terminal</strong> (Tìm trong Spotlight).<br>
+            2. Gõ chữ: <code>sh </code> (có 1 khoảng trắng ở cuối).<br>
+            3. Kéo thả file <code>Khoi_Dong_AvaLive.command</code> vào cửa sổ Terminal.<br>
+            4. Nhấn <strong>Enter</strong>.
+            <br><br>
+            <strong>Cách 2 (Mở thủ công):</strong><br>
+            1. <strong>Click Chuột Phải</strong> (hoặc nhấn giữ Control + Click) vào file <code>Khoi_Dong_AvaLive.command</code>.<br>
+            2. Chọn <strong>Open (Mở)</strong>.<br>
+            3. Nhấn <strong>Open (Mở)</strong> một lần nữa ở bảng cảnh báo.
+        </div>
+    </div>
+</body>
+</html>
+`;
+fs.writeFileSync(path.join(macStaging, '1_XEM_HUONG_DAN_CHO_MAC.html'), macInstructionHtml);
+
+execSync(`cd "${macStaging}" && zip -r "${macZipFilePath}" . -x "*.DS_Store"`);
+fs.rmSync(macStaging, { recursive: true, force: true });
+fs.rmSync(stagingDir, { recursive: true, force: true });
+
+console.log('\n===========================================================');
+console.log(`✅ ĐÓNG GÓI HOÀN TẤT THÀNH CÔNG CHO CẢ MAC & WINDOWS!`);
+console.log(`📁 Mac: public/${macZipFileName}`);
+console.log(`📁 Win: public/${winZipFileName}`);
+console.log('===========================================================\n');
