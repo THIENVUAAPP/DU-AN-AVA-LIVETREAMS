@@ -43,12 +43,7 @@ export default function UserProfile({ currentUser, setActiveTab }) {
     window.location.reload();
   };
 
-  const tokenLogs = [
-    { id: 'TK-9921', action: 'Livestream AI Idol Lan Hương (45 phút)', tokenCost: '-450 Tokens', time: '10 phút trước', type: 'deduct' },
-    { id: 'TK-9918', action: 'Tự động phản hồi Chatbot AI (28 bình luận)', tokenCost: '-140 Tokens', time: '25 phút trước', type: 'deduct' },
-    { id: 'TK-9905', action: 'Kích hoạt Game Sàn Nhảy 3D TikTok Live', tokenCost: '-200 Tokens', time: '1 giờ trước', type: 'deduct' },
-    { id: 'TK-8832', action: 'Nạp thêm Token Gói Doanh Nghiệp VIP', tokenCost: '+50,000 Tokens', time: 'Hôm qua', type: 'add' }
-  ];
+  const tokenLogs = [];
 
   return (
     <div className="w-full bg-[#07090E] text-gray-200 font-sans min-h-[85vh] rounded-3xl overflow-hidden border border-white/10 shadow-2xl flex flex-col md:flex-row">
@@ -347,7 +342,7 @@ export default function UserProfile({ currentUser, setActiveTab }) {
                 </div>
 
                 {/* Token Deduction Rules */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-white/10 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t border-white/10 text-xs">
                   <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1">
                     <span className="text-amber-300 font-bold">🎙️ Giọng Nói & Trò Chuyện:</span>
                     <p className="text-[11px] text-gray-400">Trừ 5 Tokens / câu thoại AI</p>
@@ -355,10 +350,6 @@ export default function UserProfile({ currentUser, setActiveTab }) {
                   <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1">
                     <span className="text-cyan-300 font-bold">🎬 Livestream AI Idol 4K:</span>
                     <p className="text-[11px] text-gray-400">Trừ 10 Tokens / phút phát sóng</p>
-                  </div>
-                  <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1">
-                    <span className="text-purple-300 font-bold">🕺 Game Sàn Nhảy 3D PK:</span>
-                    <p className="text-[11px] text-gray-400">Trừ 20 Tokens / bài nhảy tương tác</p>
                   </div>
                 </div>
               </div>
@@ -370,19 +361,25 @@ export default function UserProfile({ currentUser, setActiveTab }) {
                 </h3>
                 
                 <div className="divide-y divide-white/5">
-                  {tokenLogs.map((log) => (
-                    <div key={log.id} className="py-3.5 flex items-center justify-between gap-4">
-                      <div>
-                        <p className="text-xs font-bold text-white">{log.action}</p>
-                        <p className="text-[10px] text-gray-500 font-mono">{log.id} • {log.time}</p>
+                  {tokenLogs.length > 0 ? (
+                    tokenLogs.map((log) => (
+                      <div key={log.id} className="py-3.5 flex items-center justify-between gap-4">
+                        <div>
+                          <p className="text-xs font-bold text-white">{log.action}</p>
+                          <p className="text-[10px] text-gray-500 font-mono">{log.id} • {log.time}</p>
+                        </div>
+                        <span className={`font-mono text-xs font-black px-2.5 py-1 rounded-lg ${
+                          log.type === 'add' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
+                        }`}>
+                          {log.tokenCost}
+                        </span>
                       </div>
-                      <span className={`font-mono text-xs font-black px-2.5 py-1 rounded-lg ${
-                        log.type === 'add' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
-                      }`}>
-                        {log.tokenCost}
-                      </span>
+                    ))
+                  ) : (
+                    <div className="py-8 text-center text-gray-500 font-bold text-xs">
+                      Chưa có dữ liệu giao dịch
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
 

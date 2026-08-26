@@ -9,9 +9,7 @@ import AIAvatarStudio from "./components/AIAvatarStudio";
 import LiveCommerceStudio from "./components/LiveCommerceStudio";
 import MultistreamStudio from "./components/MultistreamStudio";
 import UnifiedChatHub from "./components/UnifiedChatHub";
-import DanceFloorStudio from "./components/DanceFloorStudio";
 import KOLLiveDashboard from "./components/KOLLiveDashboard";
-import DanceFloorOverlay from "./components/DanceFloorOverlay";
 import GameBattleOverlay from "./components/genaidol/game/GameBattleOverlay";
 import CleanLiveOverlay from "./components/genaidol/CleanLiveOverlay";
 import GameBanDoOverlay from "./components/genaidol/game/GameBanDoOverlay";
@@ -38,8 +36,7 @@ export default function App() {
   // Tự động đồng bộ trạng thái Master Live khi chuyển Tab
   useEffect(() => {
     let stage = 'idol';
-    if (activeTab === 'dance-floor') stage = 'dancefloor';
-    else if (activeTab === 'broadcast') stage = 'broadcast';
+    if (activeTab === 'broadcast') stage = 'broadcast';
     else if (activeTab === 'avatars') stage = 'idol';
     else if (activeTab === 'ai-storyteller') stage = 'bando';
     syncMasterLiveState({ stage });
@@ -190,12 +187,10 @@ export default function App() {
   const pathName = typeof window !== "undefined" ? window.location.pathname.toLowerCase() : "";
   const overlayType = searchParams?.get("overlay")?.toLowerCase();
 
-  const isOverlayDance = overlayType === "dancefloor" || pathName.includes("/overlay-dance") || pathName.includes("/overlay/dance") || pathName === "/dancefloor";
   const isOverlayBattle = overlayType === "gamebattle" || overlayType === "battle" || pathName.includes("/overlay-battle") || pathName.includes("/overlay/battle") || pathName === "/battle";
   const isOverlayBanDo = overlayType === "bando" || overlayType === "vietnam_map" || overlayType === "map" || overlayType === "vietnam" || pathName.includes("/overlay-bando") || pathName.includes("/overlay/bando") || pathName === "/bando";
   const isMasterLiveOverlay = overlayType === "live" || overlayType === "stage" || overlayType === "tiktok" || overlayType === "obs" || overlayType === "cleanlive" || overlayType === "avatar" || overlayType === "stream" || overlayType === "idol" || overlayType === "master" || pathName.includes("/overlay-live") || pathName.includes("/overlay-idol") || pathName.includes("/overlay") || pathName.includes("/live") || pathName === "/idol";
 
-  if (isOverlayDance) return <DanceFloorOverlay />;
   if (isOverlayBattle) return <GameBattleOverlay />;
   if (isOverlayBanDo) return <GameBanDoOverlay />;
   if (isMasterLiveOverlay) return <CleanLiveOverlay />;
@@ -260,9 +255,7 @@ export default function App() {
               <UnifiedChatHub isLive={isLive} />
             )}
 
-            {activeTab === "dance-floor" && (
-              <DanceFloorStudio isLive={isLive} setIsLive={setIsLive} />
-            )}
+
 
             {activeTab === "ai-storyteller" && (
               <KOLLiveDashboard />

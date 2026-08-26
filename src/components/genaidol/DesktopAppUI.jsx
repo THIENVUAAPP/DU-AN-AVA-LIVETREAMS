@@ -20,7 +20,7 @@ import { useLiveCoordinator } from '../../hooks/useLiveCoordinator';
 import AIAudioPlayer from './AIAudioPlayer';
 import QuickResponseModal from './QuickResponseModal';
 import TemplateLibraryModal from './TemplateLibraryModal';
-import DanceFloorStudio from '../DanceFloorStudio';
+import KOLLiveDashboard from '../KOLLiveDashboard';
 import GameChienDau from './game/GameChienDau';
 import GameChienDauAdminModal from './game/GameChienDauAdminModal';
 import GameBanDoVietNam from './game/GameBanDoVietNam';
@@ -1757,19 +1757,6 @@ export default function DesktopAppUI() {
       );
     }
 
-    // -3. Chế độ Sàn Nhảy TikTok
-    if (isDanceFloorActive) {
-      return (
-        <div className="w-full h-full overflow-y-auto bg-black relative">
-           <DanceFloorStudio 
-             isLive={isMasterLiveRunning} 
-             setIsLive={() => {}} 
-             isAdminOpen={isDanceFloorAdminOpen}
-             onCloseAdmin={() => setIsDanceFloorAdminOpen(false)}
-           />
-        </div>
-      );
-    }
 
     // 0. Chế độ AI Idol Livestream Video / Live Screen
     return (
