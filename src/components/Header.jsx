@@ -120,15 +120,14 @@ export default function Header({
               {/* Sleek User Pill Badge */}
               <button
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#161622] border border-white/20 hover:border-[#EF4444] transition-all shadow-sm cursor-pointer group text-xs"
+                className="w-9 h-9 rounded-full bg-[#161622] border-2 border-white/10 hover:border-[#EF4444] transition-all shadow-sm cursor-pointer p-0.5 group shrink-0"
+                title="Mở menu tài khoản"
               >
                 <img 
-                  src={currentUser.avatar || "https://lh3.googleusercontent.com/a/default-user"} 
-                  alt={currentUser.name}
-                  className="w-5 h-5 rounded-full object-cover border border-[#EF4444]"
+                  src={currentUser.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=fallback"} 
+                  className="w-full h-full rounded-full object-cover" 
+                  alt="Avatar" 
                 />
-                <span className="font-bold text-white max-w-[90px] truncate group-hover:text-red-400">{currentUser.name}</span>
-                <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {/* Profile & Account Quick Menu Dropdown */}

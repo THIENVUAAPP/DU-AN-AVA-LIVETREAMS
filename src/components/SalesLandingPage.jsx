@@ -5,7 +5,7 @@ import {
   BarChart2, Share2, Globe, HeartHandshake, Building2,
   Play, MousePointerClick, MessageSquare, Smartphone, Facebook,
   Bot, Clock, ShoppingCart, ShoppingBag, Lock, Headphones, Search, MonitorPlay,
-  DollarSign, TrendingUp, Layers, User, UserSquare2, Video, Activity, Brain, Image as ImageIcon, Mic, Download
+  DollarSign, TrendingUp, Layers, User, UserSquare2, Video, Activity, Brain, Image as ImageIcon, Mic, Download, LogOut
 } from 'lucide-react';
 import SePayModal from './SePayModal';
 import TechEcosystemMap from './TechEcosystemMap';
@@ -137,15 +137,14 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
               <div className="relative">
                 <button
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#161622] border border-white/20 hover:border-[#EF4444] transition-all shadow-sm cursor-pointer group"
+                  className="w-9 h-9 rounded-full bg-[#161622] border-2 border-white/10 hover:border-[#EF4444] transition-all shadow-sm cursor-pointer p-0.5 group shrink-0"
+                  title="Mở menu tài khoản"
                 >
                   <img 
-                    src={currentUser.avatar || "https://lh3.googleusercontent.com/a/default-user"} 
-                    alt={currentUser.name}
-                    className="w-7 h-7 rounded-full object-cover border border-[#EF4444]"
+                    src={currentUser?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=fallback"} 
+                    className="w-full h-full rounded-full object-cover" 
+                    alt="Avatar" 
                   />
-                  <span className="font-bold text-white text-sm max-w-[120px] truncate group-hover:text-red-400">{currentUser.name}</span>
-                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 {profileDropdownOpen && (

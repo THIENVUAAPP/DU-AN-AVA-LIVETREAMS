@@ -806,32 +806,7 @@ export default function DesktopAppUI() {
   }, []);
 
   // Bộ sưu tập Nhân Vật AI Idol & Video 4K Mặc Định Sắc Nét
-  const BUILTIN_CHARACTERS = {
-    'aidol_lan_huong': {
-      id: 'aidol_lan_huong',
-      name: 'Idol Lan Hương (Hot Live)',
-      url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
-      type: 'image'
-    },
-    'aidol_phuong_thao': {
-      id: 'aidol_phuong_thao',
-      name: 'MC Phương Thảo (Bán Hàng)',
-      url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80',
-      type: 'image'
-    },
-    'aidol_minh_anh': {
-      id: 'aidol_minh_anh',
-      name: 'Idol Minh Anh (GenZ)',
-      url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80',
-      type: 'image'
-    },
-    'aidol_dancer_video': {
-      id: 'aidol_dancer_video',
-      name: 'Vũ Công AI 4K (Video MP4)',
-      url: '/demo_dancer.mp4',
-      type: 'video'
-    }
-  };
+  const BUILTIN_CHARACTERS = {};
 
   const ALL_CHARACTERS = { ...BUILTIN_CHARACTERS };
 
