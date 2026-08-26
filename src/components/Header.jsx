@@ -40,7 +40,7 @@ export default function Header({
   // Navigation when LOGGED OUT (Public Visitors)
   const publicNavItems = [
     { id: 'overview', label: 'Trang Chủ' },
-    { id: 'ai-storyteller', label: 'KOL LIVE' },
+    { id: 'ai-storyteller', label: '💻 Tải Phần Mềm (ZIP)' },
     { id: 'affiliate-landing', label: 'Tiếp Thị 30%' },
   ];
 

@@ -1,120 +1,100 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { 
-  UserSquare2, Radio, Clock, BookOpen, Mic, Video, Sparkles, Download, 
-  ChevronRight, Shield, Zap, HelpCircle, Layers, MonitorPlay
+  Download, Sparkles, ShieldCheck, CheckCircle2, Terminal, Monitor, 
+  Apple, Laptop, Radio, Cpu, Zap, ArrowRight, PlayCircle
 } from 'lucide-react';
 
-import LichSuTao from './genaidol/LichSuTao';
-import HuongDanAcademy from './genaidol/HuongDanAcademy';
-import ThuVienAIDOL from './genaidol/ThuVienAIDOL';
-import LivestreamAISetup from './genaidol/LivestreamAISetup';
-import AIVoiceModule from './kol-live/AIVoiceModule';
-
 export default function KOLLiveDashboard() {
-  const [activeTab, setActiveTab] = useState('my-aidol');
-
-  const NAVIGATION = [
-    { id: 'my-aidol', label: 'Kho AIDOL Của Tôi', desc: 'Thư viện nhân vật AI Idol 4K', icon: UserSquare2, badge: 'HOT' },
-    { id: 'voice', label: 'Giọng Nói AI Voice', desc: 'Clone giọng & thu âm tiếng Việt', icon: Mic, badge: 'AI' },
-    { id: 'livestream-ai', label: 'Tạo Video & Live AI', desc: 'Phòng thu tạo video & kịch bản live', icon: Radio, badge: 'PRO' },
-    { id: 'history', label: 'Lịch Sử Hoạt Động', desc: 'Nhật ký tạo & dữ liệu phiên live', icon: Clock },
-    { id: 'guide', label: 'Học Viện & Hướng Dẫn', desc: '13 Bài học livestream kiếm tiền', icon: BookOpen, badge: 'VIP' },
-  ];
+  const triggerDownload = () => {
+    const link = document.createElement('a');
+    link.href = '/Livestream_AI_Software.zip';
+    link.download = 'AvaLive_VIP_PRO_Full_Package_MacWin.zip';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
-    <div className="min-h-screen bg-[#07090E] text-white font-sans flex flex-col lg:flex-row relative overflow-hidden">
-      {/* Background Glow */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none" />
+    <div className="min-h-[85vh] bg-[#07090E] text-white font-sans flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden">
+      {/* Background Glow Aura */}
+      <div className="absolute top-10 left-1/4 w-96 h-96 bg-cyan-500/15 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-purple-600/15 rounded-full blur-[120px] pointer-events-none" />
 
-      {/* ─── LEFT SIDEBAR NAVIGATION ─── */}
-      <aside className="w-full lg:w-72 bg-[#0C0F17]/95 backdrop-blur-2xl border-r border-white/10 flex flex-col shrink-0 z-30 shadow-2xl">
-        {/* Sidebar Header */}
-        <div className="p-5 border-b border-white/10 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-500 p-0.5 shadow-lg shadow-emerald-500/30">
-              <div className="w-full h-full bg-[#080B12] rounded-2xl flex items-center justify-center">
-                <Radio className="w-5 h-5 text-emerald-400" />
-              </div>
-            </div>
-            <div>
-              <h1 className="text-base font-black bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent uppercase tracking-wider">
-                AVA LIVE STUDIO
-              </h1>
-              <p className="text-[10px] text-gray-400 font-semibold">Trung Tâm Quản Trị AI Idol</p>
-            </div>
+      <div className="max-w-4xl w-full mx-auto space-y-8 relative z-10 text-center">
+        
+        {/* Header Badge */}
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-cyan-500/20 via-blue-500/15 to-purple-500/20 border border-cyan-400/30 text-cyan-300 text-xs font-black uppercase tracking-wider shadow-lg">
+          <Sparkles className="w-4 h-4 text-cyan-400 animate-spin" />
+          <span>BẢN QUYỀN PHẦN MỀM ĐỘC QUYỀN AVALIVE VIP PRO</span>
+        </div>
+
+        {/* Title & Description */}
+        <div className="space-y-3">
+          <h1 className="text-3xl sm:text-5xl font-black bg-gradient-to-r from-white via-cyan-200 to-blue-400 bg-clip-text text-transparent tracking-tight">
+            Tải Phần Mềm AvaLive Studio
+          </h1>
+          <p className="text-sm sm:text-base text-gray-300 max-w-2xl mx-auto leading-relaxed">
+            Phần mềm hoạt động độc lập trên máy tính Mac & Windows. Giải nén là sử dụng ngay 100% tất cả tính năng Studio 4K, AI Idol, Game Bản Đồ 63 Tỉnh & Kết Nối Trực Tiếp OBS Studio.
+          </p>
+        </div>
+
+        {/* Big Glow Download CTA Card */}
+        <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-b from-[#101426]/90 to-[#0c0f1d]/90 border border-cyan-500/40 shadow-2xl shadow-cyan-950/70 backdrop-blur-2xl space-y-6 relative overflow-hidden group">
+          <div className="absolute -top-32 -right-32 w-64 h-64 bg-cyan-500/20 rounded-full blur-3xl group-hover:bg-cyan-500/30 transition-all pointer-events-none" />
+          
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button
+              onClick={triggerDownload}
+              className="w-full sm:w-auto px-10 py-5 bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black text-base sm:text-lg rounded-2xl shadow-xl shadow-cyan-500/30 hover:scale-105 transition-all flex items-center justify-center gap-3 cursor-pointer border border-cyan-300/40 animate-pulse"
+            >
+              <Download className="w-6 h-6" />
+              <span>TẢI BẢN ZIP TRỌN GÓI (MAC & WIN)</span>
+            </button>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-gray-300 font-medium">
+            <span className="flex items-center gap-1.5 text-cyan-400">
+              <CheckCircle2 className="w-4 h-4 text-cyan-400" /> Dung lượng siêu nhẹ (~43.25 MB)
+            </span>
+            <span className="flex items-center gap-1.5 text-emerald-400">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Không cần đăng nhập (0-Login)
+            </span>
+            <span className="flex items-center gap-1.5 text-yellow-400">
+              <CheckCircle2 className="w-4 h-4 text-yellow-400" /> Tự động trừ Token theo gói
+            </span>
           </div>
         </div>
 
-        {/* Sidebar Nav Items */}
-        <nav className="flex-1 p-3.5 space-y-1.5 overflow-y-auto custom-scrollbar">
-          <div className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-gray-500">
-            CHỨC NĂNG CHÍNH
-          </div>
-          {NAVIGATION.map((item) => {
-            const isActive = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center justify-between p-3 rounded-2xl text-left transition-all duration-200 group cursor-pointer ${
-                  isActive
-                    ? 'bg-gradient-to-r from-emerald-500/20 via-teal-500/15 to-transparent border border-emerald-400/40 text-white shadow-lg shadow-emerald-500/10'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
-                }`}
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all ${
-                    isActive 
-                      ? 'bg-emerald-400 text-black shadow-md shadow-emerald-400/50' 
-                      : 'bg-white/5 text-gray-400 group-hover:text-emerald-400 group-hover:bg-white/10'
-                  }`}>
-                    <item.icon className="w-4 h-4" />
-                  </div>
-                  <div className="truncate">
-                    <div className="text-xs font-bold truncate group-hover:text-white flex items-center gap-1.5">
-                      <span>{item.label}</span>
-                      {item.badge && (
-                        <span className={`text-[9px] px-1.5 py-0.2 rounded font-black ${
-                          isActive ? 'bg-emerald-400 text-black' : 'bg-white/10 text-emerald-400'
-                        }`}>
-                          {item.badge}
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-[10px] text-gray-500 truncate">{item.desc}</div>
-                  </div>
-                </div>
-                <ChevronRight className={`w-3.5 h-3.5 shrink-0 transition-transform ${isActive ? 'text-emerald-400 translate-x-0.5' : 'text-gray-600 opacity-0 group-hover:opacity-100'}`} />
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* Sidebar Footer Card */}
-        <div className="p-4 border-t border-white/10 space-y-3">
-          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-blue-950/40 to-cyan-950/30 border border-cyan-500/20 space-y-2">
-            <div className="flex items-center gap-2 text-cyan-400 text-xs font-black">
-              <Sparkles className="w-4 h-4" />
-              <span>BẢN QUYỀN VIP PRO</span>
+        {/* 3-Step Simple Launch Instructions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+          {/* Mac Guide Card */}
+          <div className="p-6 rounded-2xl bg-[#0D101A] border border-white/10 hover:border-cyan-500/40 transition-all space-y-3">
+            <div className="flex items-center gap-2.5 text-cyan-300 font-bold text-sm">
+              <Apple className="w-5 h-5 text-cyan-400" />
+              <span>Dành cho Máy Mac (macOS / MacBook)</span>
             </div>
-            <p className="text-[10px] text-gray-400 leading-relaxed">
-              Mở khóa 100% tính năng phòng thu AI 4K, 63 tỉnh thành & game chiến đấu.
-            </p>
+            <ol className="text-xs text-gray-300 space-y-2 list-decimal list-inside leading-relaxed">
+              <li>Giải nén file ZIP vừa tải về.</li>
+              <li>Nhấp đúp chuột vào file: <code className="text-cyan-300 font-mono bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/40">Chay_App_Mac_Linux.command</code></li>
+              <li>Hệ thống sẽ tự động bật máy chủ và mở màn hình Studio dùng ngay.</li>
+            </ol>
+          </div>
+
+          {/* Windows Guide Card */}
+          <div className="p-6 rounded-2xl bg-[#0D101A] border border-white/10 hover:border-blue-500/40 transition-all space-y-3">
+            <div className="flex items-center gap-2.5 text-blue-300 font-bold text-sm">
+              <Monitor className="w-5 h-5 text-blue-400" />
+              <span>Dành cho Máy tính Windows (PC / Laptop)</span>
+            </div>
+            <ol className="text-xs text-gray-300 space-y-2 list-decimal list-inside leading-relaxed">
+              <li>Giải nén file ZIP vừa tải về.</li>
+              <li>Nhấp đúp chuột vào file: <code className="text-yellow-300 font-mono bg-yellow-950/60 px-1.5 py-0.5 rounded border border-yellow-800/40">Chay_App_Windows.bat</code></li>
+              <li>Ứng dụng sẽ tự động mở và sẵn sàng livestream ngay lập tức.</li>
+            </ol>
           </div>
         </div>
-      </aside>
 
-      {/* ─── MAIN CONTENT AREA ─── */}
-      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
-        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
-          {activeTab === 'voice' && <AIVoiceModule />}
-          {activeTab === 'my-aidol' && <ThuVienAIDOL />}
-          {activeTab === 'livestream-ai' && <LivestreamAISetup />}
-          {activeTab === 'history' && <LichSuTao />}
-          {activeTab === 'guide' && <HuongDanAcademy />}
-        </div>
-      </main>
+      </div>
     </div>
   );
 }
