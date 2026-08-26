@@ -317,16 +317,4 @@ export const GIFT_THANK_LINES = [
   "Tim tui đập nhanh vì món quà của {username} nè, quá là dễ thương!",
 ];
 
-export const DEFAULT_CHARACTERS = [
-  {
-    id: "char_video_1",
-    name: "Video Dancer",
-    style: "human",
-    personality: "cool",
-    callNames: ["dancer"],
-    tier: "normal",
-    mediaType: "video",
-    mediaUrl: "/demo_dancer.mp4",
-    chromaKeyColor: "#00FF00" // Mặc định phông xanh, có thể không chuẩn xác nếu video không có phông xanh
-  }
-];
+export const DEFAULT_CHARACTERS = [];

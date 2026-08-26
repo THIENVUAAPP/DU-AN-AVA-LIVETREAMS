@@ -191,11 +191,10 @@ export default function DesktopAppUI() {
   const [flvUrl, setFlvUrl] = useState(null);
   const [isLiveAudioMuted, setIsLiveAudioMuted] = useState(true);
   const [selectedCharacter, setSelectedCharacter] = useState(() => {
-    try {
-      return localStorage.getItem('avalive_selected_char') || 'aidol_lan_huong';
-    } catch (e) {
-      return 'aidol_lan_huong';
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('avalive_selected_char') || '';
     }
+    return '';
   });
   const [showTokenHistory, setShowTokenHistory] = useState(false);
   const [showSimulator, setShowSimulator] = useState(false);
@@ -500,8 +499,17 @@ export default function DesktopAppUI() {
   // Load & Sync custom characters from Unified AIDOL_DB
   const reloadCharacters = () => {
     loadAllCharactersFromIDB().then(chars => {
-      const loadedChars = chars.map(c => {
-        let url = c.url || c.mediaUrl;
+      // Tự động xóa hoặc ẩn các nhân vật ảo mặc định cũ nếu chúng đã bị lưu vào IDB của người dùng
+      const legacyIds = ['char_video_1', 'aidol_lan_huong', 'aidol_phuong_thao', 'aidol_minh_anh', 'aidol_dancer_video'];
+      
+      // Xoá ngầm khỏi IDB để dọn dẹp
+      chars.forEach(c => {
+        if (legacyIds.includes(c.id)) {
+          deleteCharacterFromIDB(c.id).catch(() => {});
+        }
+      });
+      
+      const loadedChars = chars.filter(c => !legacyIds.includes(c.id)).map(c => {
         if (c.fileData) {
           try {
             url = URL.createObjectURL(c.fileData);
@@ -1091,13 +1099,13 @@ export default function DesktopAppUI() {
       ? 'broadcast' 
       : 'idol';
 
-    const char = CHARACTERS[selectedCharacter] || CHARACTERS['aidol_lan_huong'] || { 
-      url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80', 
+    const char = CHARACTERS[selectedCharacter] || { 
+      url: '', 
       type: 'image', 
-      name: 'AI Idol Lan Hương' 
+      name: 'Chưa có nhân vật' 
     };
     
-    let currentMedia = char.url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
+    let currentMedia = char.url || '';
     let isVid = char.type === 'video' || (typeof currentMedia === 'string' && currentMedia.endsWith('.mp4'));
     let streamFlvUrl = null;
 
@@ -1536,9 +1544,7 @@ export default function DesktopAppUI() {
   const removeCustomCharacter = async (e, id) => {
     e.stopPropagation();
     setCustomCharacters(prev => prev.filter(c => c.id !== id));
-    if (selectedCharacter === id) {
-      setSelectedCharacter('aidol_lan_huong');
-    }
+      setSelectedCharacter(Object.keys(CHARACTERS)[0] || '');
     await deleteCharacterFromIDB(id);
   };
 
@@ -1660,7 +1666,7 @@ export default function DesktopAppUI() {
             alt={selected.name}
             onError={(e) => {
               e.currentTarget.onerror = null;
-              e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=80';
+              e.currentTarget.style.display = 'none';
             }}
           />
           <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/60 via-transparent to-black/20" />

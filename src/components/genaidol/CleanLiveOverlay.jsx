@@ -519,8 +519,8 @@ export default function CleanLiveOverlay() {
         ) : (masterState.isVideo || (masterState.mediaUrl && masterState.mediaUrl.endsWith('.mp4'))) ? (
           /* 3. Video MP4 Lặp Lại Mượt Mà 60FPS */
           <video
-            key={masterState.mediaUrl || '/demo_dancer.mp4'}
-            src={masterState.mediaUrl || '/demo_dancer.mp4'}
+            key={masterState.mediaUrl || ''}
+            src={masterState.mediaUrl || ''}
             autoPlay
             loop
             muted={isAudioMuted}
