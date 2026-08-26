@@ -219,10 +219,10 @@ export default function UserProfile({ currentUser, setActiveTab }) {
 
                 <div className="flex flex-wrap items-center gap-3 z-10">
                   <button 
-                    onClick={() => setActiveSidebarTab('points-tokens')}
+                    onClick={() => setActiveTab && setActiveTab('enterprise')}
                     className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-black text-xs rounded-xl shadow-lg shadow-orange-500/20 transition-all flex items-center gap-2 cursor-pointer"
                   >
-                    <Coins className="w-4 h-4" /> Nạp Thêm Token
+                    <Coins className="w-4 h-4" /> Nâng Cấp Gói
                   </button>
 
                 </div>
