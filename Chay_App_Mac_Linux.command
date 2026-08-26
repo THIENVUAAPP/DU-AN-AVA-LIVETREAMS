@@ -52,6 +52,20 @@ fi
 # 5. Khởi động Server
 if [ -n "$NODE_CMD" ]; then
     echo "✅ Đang chạy máy chủ với Node.js: $($NODE_CMD -v)"
+    
+    # Tự động cài đặt dependencies nếu chưa có
+    if [ ! -d "node_modules" ]; then
+        echo "⏳ Lần đầu chạy: Đang tự động cài đặt thư viện cần thiết (vui lòng đợi khoảng 1 phút)..."
+        NPM_CMD="$(dirname "$NODE_CMD")/npm"
+        if [ -x "$NPM_CMD" ]; then
+            "$NPM_CMD" install --omit=dev
+        else
+            npm install --omit=dev
+        fi
+        echo "✅ Cài đặt hoàn tất!"
+        echo ""
+    fi
+    
     echo "🌐 Giao diện ứng dụng đang mở tại: http://localhost:3001"
     echo ""
     "$NODE_CMD" backend/server.cjs

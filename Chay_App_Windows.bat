@@ -26,6 +26,15 @@ rem 3. Kiểm tra Node.js & Khởi chạy Backend Server
 where node >nul 2>nul
 if %errorlevel% equ 0 (
     echo ✅ Đã phát hiện Node.js
+    
+    rem Tự động cài đặt dependencies nếu chưa có
+    if not exist "node_modules\" (
+        echo ⏳ Lan dau chay: Dang tu dong cai dat thu vien can thiet ^(vui long doi 1-2 phut^)...
+        call npm install --omit=dev
+        echo ✅ Cai dat hoan tat!
+        echo.
+    )
+
     echo 📡 Đang khởi động Server TikTok Live Connector & Giao Diện Studio...
     echo 🌐 Ứng dụng đang mở tại: http://localhost:3001
     echo.

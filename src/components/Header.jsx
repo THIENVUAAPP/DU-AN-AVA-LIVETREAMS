@@ -44,16 +44,16 @@ export default function Header({
     { id: 'affiliate-landing', label: 'Tiếp Thị 30%' },
   ];
 
-  // Navigation when LOGGED IN (Workspace Modules only - No duplication with Profile Dropdown)
+  // Navigation when LOGGED IN (Chỉ hiển thị Quản Trị - Phần mềm Studio chỉ có trong bản ZIP tải về)
   const workspaceNavItems = [
-    { id: 'overview', label: 'Trang Chủ' },
-    { id: 'broadcast', label: 'Phòng Live Studio' },
-    { id: 'avatars', label: 'MC AI' },
-    { id: 'dance-floor', label: 'Sàn Nhảy 3D' },
-    { id: 'commerce', label: 'Giỏ Hàng' },
-    { id: 'multistream', label: 'Đa Kênh' },
-    { id: 'chat-hub', label: 'Chat Hub' },
-    { id: 'ai-storyteller', label: '💻 Tải Về (ZIP)' },
+    { id: 'overview', label: '🏠 Trang Chủ' },
+    { id: 'profile', label: '👤 Hồ Sơ Người Dùng' },
+    { id: 'affiliate-dashboard', label: '🤝 Tiếp Thị 30%' },
+    { id: 'sales-analytics', label: '📊 Doanh Số & Đơn Hàng' },
+    { id: 'team', label: '🛡️ Phân Quyền Đội Ngũ' },
+    { id: 'captcha', label: '🤖 Captcha' },
+    ...((currentUser?.isAdmin || currentUser?.role === 'admin' || currentUser?.email === 'quocthiencr90@gmail.com') ? [{ id: 'admin', label: '👑 Admin VIP' }] : []),
+    { id: 'ai-storyteller', label: '💻 Tải Phần Mềm (ZIP)' },
   ];
 
 
