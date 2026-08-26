@@ -11,7 +11,7 @@ import SePayModal from './SePayModal';
 import TechEcosystemMap from './TechEcosystemMap';
 import { getPlans } from '../lib/plansConfig';
 import { supabase } from '../lib/supabaseClient';
-import { MonitorPlay, Zap, Crown, Building2 } from 'lucide-react';
+
 
 const IconMap = {
   MonitorPlay,
