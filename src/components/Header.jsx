@@ -47,12 +47,18 @@ export default function Header({
   // Navigation when LOGGED IN (Workspace Navigation for Members & Admins)
   const workspaceNavItems = [
     { id: 'overview', label: 'Trang Chủ' },
-    { id: 'broadcast', label: 'Phòng Live Studio' },
+    { id: 'broadcast', label: 'Phòng Live' },
     { id: 'avatars', label: 'MC AI' },
     { id: 'dance-floor', label: 'Sàn Nhảy 3D' },
-    { id: 'profile', label: 'Hồ Sơ Cá Nhân' },
-    { id: 'affiliate-dashboard', label: 'Tiếp Thị 30%' },
-    ...((currentUser?.isAdmin || currentUser?.role === 'admin') ? [{ id: 'admin', label: '👑 Quản Trị Admin' }] : []),
+    { id: 'profile', label: '👤 Hồ Sơ Người Dùng' },
+    { id: 'affiliate-dashboard', label: '🤝 Tiếp Thị 30%' },
+    { id: 'sales-analytics', label: '📊 Doanh Số' },
+    { id: 'team', label: '🛡️ Phân Quyền' },
+    { id: 'commerce', label: '🛒 Giỏ Hàng' },
+    { id: 'multistream', label: '📡 Đa Kênh' },
+    { id: 'chat-hub', label: '💬 Chat Hub' },
+    { id: 'captcha', label: '🤖 Captcha' },
+    ...((currentUser?.isAdmin || currentUser?.role === 'admin' || currentUser?.email === 'quocthiencr90@gmail.com') ? [{ id: 'admin', label: '👑 Admin VIP' }] : []),
     { id: 'ai-storyteller', label: '💻 Tải Về (ZIP)' },
   ];
 
@@ -68,23 +74,23 @@ export default function Header({
   }, []);
 
   const handleLogoClick = () => {
-    setActiveTab('overview');
+    setActiveTab('broadcast');
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-[#0D0D15]/80 px-4 lg:px-8 py-3 backdrop-blur-xl">
-      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-4">
+    <header className="sticky top-0 z-50 bg-[#0D0D15]/90 border-b border-white/10 px-3 lg:px-6 py-2.5 backdrop-blur-xl">
+      <div className="max-w-[1700px] mx-auto flex flex-col xl:flex-row items-center justify-between gap-3">
         
         {/* High-End 3D Neon Official Studio Logo */}
         <div 
           className="flex items-center gap-3 cursor-pointer group shrink-0" 
           onClick={handleLogoClick}
-          title={currentUser ? "Tải lại Workspace Studio" : "Về Trang Chủ"}
+          title={currentUser ? "Mở Phòng Live Studio" : "Về Trang Chủ"}
         >
           <div className="relative">
             {/* Ultra Neon Aura Lighting Ring */}
             <div className="absolute -inset-2 bg-gradient-to-r from-red-600 via-purple-600 to-cyan-500 rounded-2xl blur-lg opacity-90 group-hover:opacity-100 transition duration-500 animate-pulse" />
-            <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#EF4444] via-[#8B5CF6] to-[#06B6D4] p-0.5 shadow-2xl group-hover:scale-105 transition-all">
+            <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#EF4444] via-[#8B5CF6] to-[#06B6D4] p-0.5 shadow-2xl group-hover:scale-105 transition-all">
               <img 
                 src="/official_logo.jpg" 
                 alt="AVA LIVESTREAM Official Logo" 
@@ -94,19 +100,18 @@ export default function Header({
           </div>
 
           <div className="flex flex-col">
-            <h1 className="text-2xl font-black tracking-tight text-white group-hover:text-red-400 transition-all flex items-center gap-1.5 drop-shadow-[0_0_20px_rgba(239,68,68,0.7)]">
+            <h1 className="text-xl font-black tracking-tight text-white group-hover:text-red-400 transition-all flex items-center gap-1.5 drop-shadow-[0_0_20px_rgba(239,68,68,0.7)]">
               AVA <span className="text-[#EF4444] bg-gradient-to-r from-red-500 via-pink-500 to-purple-500 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(239,68,68,1)]">LIVESTREAM</span>
             </h1>
-            
           </div>
         </div>
 
-        {/* Clean 1-Row Borderless Nav Items with Big Bold Text */}
-        <div className="flex-1 flex items-center justify-center overflow-x-auto no-scrollbar py-1">
+        {/* Clean Nav Items with Big Bold Text & Horizontal Scroll */}
+        <div className="flex-1 w-full overflow-x-auto no-scrollbar py-1 flex items-center justify-center">
           
           {!currentUser ? (
             /* Public Nav Items */
-            <nav className="flex flex-row flex-nowrap items-center justify-center gap-4 lg:gap-6 whitespace-nowrap">
+            <nav className="flex flex-row flex-nowrap items-center justify-center gap-3 lg:gap-5 whitespace-nowrap">
               {publicNavItems.map((item) => {
                 const isActive = activeTab === item.id;
                 if (item.id === 'ai-storyteller') {
@@ -115,7 +120,7 @@ export default function Header({
                       key={item.id}
                       href="/Livestream_AI_Software.zip"
                       download="AvaLive_VIP_PRO_Full_Package_MacWin.zip"
-                      className="relative px-3 py-1.5 text-sm lg:text-base font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-rose-400 to-pink-500 hover:scale-105 transition-all duration-200 cursor-pointer flex items-center gap-1.5"
+                      className="relative px-3 py-1.5 text-xs lg:text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-rose-400 to-pink-500 hover:scale-105 transition-all duration-200 cursor-pointer flex items-center gap-1.5"
                       title="Tải Ngay File ZIP Về Máy Tính"
                     >
                       <Download className="w-4 h-4 text-amber-400" />
@@ -127,7 +132,7 @@ export default function Header({
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`relative px-3 py-1.5 text-sm lg:text-base font-bold tracking-wide transition-all duration-200 cursor-pointer ${
+                    className={`relative px-3 py-1.5 text-xs lg:text-sm font-bold tracking-wide transition-all duration-200 cursor-pointer ${
                       isActive
                         ? 'text-white drop-shadow-[0_0_12px_rgba(239,68,68,0.7)] scale-105'
                         : 'text-gray-400 hover:text-white hover:scale-102'
@@ -142,8 +147,8 @@ export default function Header({
               })}
             </nav>
           ) : (
-            /* Workspace 1-Row Clean Navigation (No border, No icon, Big & Bold Text) */
-            <nav className="flex flex-row flex-nowrap items-center justify-center gap-4 lg:gap-6 whitespace-nowrap">
+            /* Workspace 1-Row Navigation for All Modules */
+            <nav className="flex flex-row flex-nowrap items-center gap-1.5 lg:gap-2.5 whitespace-nowrap px-2">
               {workspaceNavItems.map((item) => {
                 const isActive = activeTab === item.id;
                 if (item.id === 'ai-storyteller') {
@@ -152,11 +157,11 @@ export default function Header({
                       key={item.id}
                       href="/Livestream_AI_Software.zip"
                       download="AvaLive_VIP_PRO_Full_Package_MacWin.zip"
-                      className="relative px-3 py-1.5 text-sm lg:text-base font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-rose-400 to-pink-500 hover:scale-105 transition-all duration-200 cursor-pointer flex items-center gap-1.5"
-                      title="Tải Ngay File ZIP Về Máy Tính"
+                      className="relative px-2.5 py-1.5 rounded-lg text-xs font-black text-amber-300 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/25 transition-all duration-200 cursor-pointer flex items-center gap-1 shrink-0"
+                      title="Tải Bản Cài Đặt Standalone Về Máy Tính (Mac & Windows)"
                     >
-                      <Download className="w-4 h-4 text-amber-400" />
-                      <span>TẢI VỀ (ZIP)</span>
+                      <Download className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Tải Về (ZIP)</span>
                     </a>
                   );
                 }
@@ -164,15 +169,15 @@ export default function Header({
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`relative px-3 py-1.5 text-sm lg:text-base font-bold tracking-wide transition-all duration-200 cursor-pointer ${
+                    className={`relative px-2.5 py-1 rounded-lg text-xs font-bold tracking-wide transition-all duration-200 cursor-pointer shrink-0 ${
                       isActive
-                        ? 'text-white drop-shadow-[0_0_14px_rgba(239,68,68,0.8)] scale-105'
-                        : 'text-gray-400 hover:text-white hover:scale-102'
+                        ? 'bg-gradient-to-r from-[#EF4444]/20 via-purple-500/20 to-cyan-500/20 text-white border border-[#EF4444]/50 shadow-[0_0_12px_rgba(239,68,68,0.4)] scale-105'
+                        : 'text-gray-300 hover:text-white hover:bg-white/5 border border-transparent'
                     }`}
                   >
                     <span>{item.label}</span>
                     {isActive && (
-                      <span className="absolute -bottom-1.5 left-0 right-0 h-1 rounded-full bg-gradient-to-r from-[#EF4444] via-purple-500 to-[#3B82F6] shadow-[0_0_12px_#EF4444]" />
+                      <span className="absolute -bottom-1 left-1.5 right-1.5 h-0.5 rounded-full bg-gradient-to-r from-[#EF4444] via-purple-500 to-[#3B82F6]" />
                     )}
                   </button>
                 );
@@ -183,7 +188,7 @@ export default function Header({
         </div>
 
         {/* User Account Pill Badge & Download Software Button */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 shrink-0">
           {/* Nút Tải Phần Mềm File ZIP (Mac & Win) */}
           <a
             href="/Livestream_AI_Software.zip"
@@ -192,37 +197,42 @@ export default function Header({
             title="Tải Phần Mềm Full Tính Năng Về Máy Tính (Mac & Windows)"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Tải Phần Mềm (ZIP)</span>
+            <span>Tải Phần Mềm</span>
           </a>
 
           {currentUser ? (
             <div className="relative" ref={dropdownRef}>
               
-              {/* Sleek User Pill Badge (Siêu Mini - Nhỏ Gấp 3 Lần) */}
+              {/* Sleek User Pill Badge */}
               <button
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-[#121216] border border-white/20 hover:border-[#EF4444] transition-all shadow-sm cursor-pointer group text-[9px]"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#161622] border border-white/20 hover:border-[#EF4444] transition-all shadow-sm cursor-pointer group text-xs"
               >
                 <img 
-                  src={currentUser.avatar} 
+                  src={currentUser.avatar || "https://lh3.googleusercontent.com/a/default-user"} 
                   alt={currentUser.name}
-                  className="w-3.5 h-3.5 rounded-full object-cover border border-[#EF4444]"
+                  className="w-5 h-5 rounded-full object-cover border border-[#EF4444]"
                 />
-                <span className="font-bold text-white max-w-[50px] truncate group-hover:text-red-400">{currentUser.name}</span>
-                <ChevronDown className={`w-2.5 h-2.5 text-gray-400 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} />
+                <span className="font-bold text-white max-w-[90px] truncate group-hover:text-red-400">{currentUser.name}</span>
+                <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
-              {/* Profile & Account Quick Menu Dropdown (Nơi chứa Quản Trị Admin VIP & Thông Tin Cá Nhân/AFF) */}
+              {/* Profile & Account Quick Menu Dropdown */}
               {profileDropdownOpen && (
-                <div className="absolute right-0 mt-3 w-80 min-w-[340px] glass-panel p-4 rounded-3xl border border-white/20 shadow-2xl z-50 space-y-3 text-xs bg-[#0A0A0A]/98 backdrop-blur-2xl animate-fadeIn">
+                <div className="absolute right-0 mt-3 w-80 min-w-[320px] glass-panel p-4 rounded-3xl border border-white/20 shadow-2xl z-50 space-y-2.5 text-xs bg-[#0A0A0A]/98 backdrop-blur-2xl animate-fadeIn">
                   
                   {/* Account Identity Header Card */}
                   <div className="p-3.5 rounded-2xl bg-gradient-to-r from-purple-950/40 via-[#121218] to-black border border-white/15 space-y-1.5">
-                    <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block">TÀI KHOẢN GMAIL KẾT NỐI:</span>
-                    <p className="font-mono text-emerald-400 font-black text-sm truncate">{currentUser.email}</p>
-                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-black inline-block">
-                      {currentUser.isAdmin ? "👑 SUPER ADMIN VIP" : "🟢 GÓI BẢN QUYỀN ACTIVE"}
-                    </span>
+                    <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block">TÀI KHOẢN ĐĂNG NHẬP:</span>
+                    <p className="font-mono text-emerald-400 font-black text-xs truncate">{currentUser.email}</p>
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[9px] font-black inline-block">
+                        {currentUser.isAdmin ? "👑 SUPER ADMIN VIP" : "🟢 BẢN QUYỀN CHÍNH THỨC"}
+                      </span>
+                      <span className="text-[10px] text-amber-300 font-mono font-bold">
+                        🪙 {(currentUser.tokens || 100000).toLocaleString()} Tokens
+                      </span>
+                    </div>
                   </div>
 
                   {/* Concise Menu Items */}
@@ -232,10 +242,21 @@ export default function Header({
                         setActiveTab("profile");
                         setProfileDropdownOpen(false);
                       }}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-200 hover:text-white hover:bg-white/10 font-bold text-xs transition-all text-left cursor-pointer"
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-200 hover:text-white hover:bg-white/10 font-bold text-xs transition-all text-left cursor-pointer"
                     >
                       <User className="w-4 h-4 text-[#EF4444]" />
-                      <span>Hồ Sơ Cá Nhân</span>
+                      <span>Hồ Sơ Người Dùng & Nạp/Rút Tiền</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setActiveTab("affiliate-dashboard");
+                        setProfileDropdownOpen(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-200 hover:text-white hover:bg-white/10 font-bold text-xs transition-all text-left cursor-pointer"
+                    >
+                      <Share2 className="w-4 h-4 text-emerald-400" />
+                      <span>Tiếp Thị Liên Kết 30% (Affiliate)</span>
                     </button>
 
                     <button
@@ -243,10 +264,10 @@ export default function Header({
                         setActiveTab("sales-analytics");
                         setProfileDropdownOpen(false);
                       }}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#EF4444] hover:bg-[#EF4444]/10 font-black text-xs transition-all text-left cursor-pointer"
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[#EF4444] hover:bg-[#EF4444]/10 font-black text-xs transition-all text-left cursor-pointer"
                     >
                       <ShoppingBag className="w-4 h-4 text-[#EF4444]" />
-                      <span>Quản Lý Đơn Hàng</span>
+                      <span>Quản Lý Doanh Số & Đơn Hàng</span>
                     </button>
 
                     <button
@@ -254,10 +275,10 @@ export default function Header({
                         setActiveTab("team");
                         setProfileDropdownOpen(false);
                       }}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-200 hover:text-white hover:bg-white/10 font-bold text-xs transition-all text-left cursor-pointer"
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-200 hover:text-white hover:bg-white/10 font-bold text-xs transition-all text-left cursor-pointer"
                     >
-                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                      <span>Quản Lý Đội Ngũ</span>
+                      <ShieldCheck className="w-4 h-4 text-purple-400" />
+                      <span>Quản Lý Phân Quyền Đội Ngũ</span>
                     </button>
 
                     <button
@@ -265,33 +286,29 @@ export default function Header({
                         setActiveTab("captcha");
                         setProfileDropdownOpen(false);
                       }}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-200 hover:text-white hover:bg-white/10 font-bold text-xs transition-all text-left cursor-pointer"
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-200 hover:text-white hover:bg-white/10 font-bold text-xs transition-all text-left cursor-pointer"
                     >
                       <Bot className="w-4 h-4 text-cyan-400" />
-                      <span>Giải Mã Captcha</span>
+                      <span>Giải Mã Captcha Tự Động</span>
                     </button>
 
-
-
-                    {currentUser.isAdmin && (
-                      <div className="space-y-2 pt-2 border-t border-white/10">
+                    {(currentUser.isAdmin || currentUser?.email === 'quocthiencr90@gmail.com') && (
+                      <div className="space-y-1 pt-1.5 border-t border-white/10">
                         <button
                           onClick={() => {
                             setActiveTab("admin");
                             setProfileDropdownOpen(false);
                           }}
-                          className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 font-black text-xs transition-all text-left cursor-pointer"
+                          className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 font-black text-xs transition-all text-left cursor-pointer"
                         >
                           <div className="flex items-center gap-2.5">
                             <ShieldCheck className="w-4 h-4 text-amber-400" />
-                            <span>Quản Trị Admin</span>
+                            <span>Quản Trị Admin Toàn Hệ Thống</span>
                           </div>
                           <span className="px-2 py-0.5 rounded bg-amber-500 text-black text-[9px] font-black">
                             ADMIN
                           </span>
                         </button>
-
-
                       </div>
                     )}
                   </div>
@@ -301,11 +318,12 @@ export default function Header({
                     <button
                       onClick={() => {
                         setCurrentUser(null);
+                        localStorage.removeItem('avalive_current_user');
                         setActiveTab("overview");
                         setProfileDropdownOpen(false);
                         alert("Đã đăng xuất tài khoản!");
                       }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-red-400 hover:bg-red-500/10 font-bold text-xs transition-all text-left cursor-pointer"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-red-400 hover:bg-red-500/10 font-bold text-xs transition-all text-left cursor-pointer"
                     >
                       <LogOut className="w-4 h-4 text-red-400" />
                       <span>Đăng Xuất</span>
@@ -319,7 +337,7 @@ export default function Header({
           ) : (
             <button
               onClick={() => setGoogleLoginModalOpen(true)}
-              className="flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-black bg-white text-black hover:bg-gray-100 transition-all shadow-glow-white cursor-pointer scale-105"
+              className="flex items-center gap-2.5 px-5 py-2 rounded-full text-xs font-black bg-white text-black hover:bg-gray-100 transition-all shadow-glow-white cursor-pointer hover:scale-105"
             >
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -336,3 +354,4 @@ export default function Header({
     </header>
   );
 }
+

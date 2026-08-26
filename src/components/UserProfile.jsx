@@ -53,7 +53,7 @@ export default function UserProfile({ currentUser, setActiveTab }) {
   ];
 
   return (
-    <div className="flex h-screen bg-[#07090E] text-gray-200 font-sans overflow-hidden fixed inset-0 z-[200]">
+    <div className="w-full bg-[#07090E] text-gray-200 font-sans min-h-[85vh] rounded-3xl overflow-hidden border border-white/10 shadow-2xl flex flex-col md:flex-row">
       
       {/* ─── SIDEBAR ─── */}
       <aside className={`w-64 bg-[#0C0F17] border-r border-white/10 flex flex-col shrink-0 transition-all duration-300 z-30 shadow-2xl ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full absolute h-full'}`}>
@@ -200,7 +200,7 @@ export default function UserProfile({ currentUser, setActiveTab }) {
       </aside>
 
       {/* ─── MAIN WORKSPACE CONTENT ─── */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden bg-[#0A0A0E]">
+      <main className="flex-1 flex flex-col min-h-[85vh] overflow-hidden bg-[#0A0A0E]">
         
         {/* Top Navbar */}
         <header className="h-16 border-b border-white/10 flex items-center justify-between px-6 bg-[#0D0D15]/80 backdrop-blur-md shrink-0">

@@ -10,4 +10,6 @@ dist-ssr
 .idea
 *.log
 release/
+*.zip
 !public/Livestream_AI_Software.zip
+

@@ -394,7 +394,7 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
   const topAffiliates = [];
 
   return (
-    <div className="flex h-screen bg-[#0F0F13] text-gray-300 font-sans overflow-hidden fixed inset-0 z-[200]">
+    <div className="w-full bg-[#0F0F13] text-gray-300 font-sans min-h-[85vh] rounded-3xl overflow-hidden border border-white/10 shadow-2xl flex flex-col md:flex-row">
       
       {/* Sidebar */}
       <aside className={`w-64 bg-[#141419] border-r border-white/5 flex flex-col transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full absolute h-full z-20 shadow-2xl'}`}>
@@ -452,7 +452,8 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden bg-[#0A0A0E]">
+      <main className="flex-1 flex flex-col min-h-[85vh] overflow-hidden bg-[#0A0A0E]">
+
         {/* Top Navbar */}
         <header className="h-[72px] border-b border-white/5 flex items-center justify-between px-8 bg-[#111118]/50 backdrop-blur-md shrink-0">
           <div className="flex items-center gap-6">

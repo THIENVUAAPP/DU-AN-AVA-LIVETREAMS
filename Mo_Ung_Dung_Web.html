@@ -3,39 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AvaLive VIP PRO - Khởi Động Trực Tiếp</title>
+  <title>AvaLive VIP PRO - Khởi Động & Đồng Bộ Tài Khoản</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
     body { background: radial-gradient(circle at center, #101426, #07090e); color: #fff; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-    .card { background: rgba(16, 20, 34, 0.9); backdrop-filter: blur(24px); border: 1px solid rgba(6, 182, 212, 0.35); border-radius: 28px; padding: 36px 28px; max-width: 520px; width: 100%; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.85), 0 0 30px rgba(6, 182, 212, 0.15); }
-    .logo { width: 76px; height: 76px; border-radius: 22px; border: 2px solid #06b6d4; margin: 0 auto 16px; object-fit: cover; box-shadow: 0 0 30px rgba(6, 182, 212, 0.4); }
-    h1 { font-size: 24px; font-weight: 900; background: linear-gradient(135deg, #22d3ee, #3b82f6, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; letter-spacing: 0.5px; }
-    p.desc { font-size: 13px; color: #94a3b8; margin-bottom: 24px; line-height: 1.6; }
-    .btn-group { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+    .card { background: rgba(16, 20, 34, 0.95); backdrop-filter: blur(24px); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 28px; padding: 36px 28px; max-width: 540px; width: 100%; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.85), 0 0 30px rgba(239, 68, 68, 0.2); }
+    .logo-container { width: 80px; height: 80px; border-radius: 22px; background: linear-gradient(135deg, #ef4444, #8b5cf6, #06b6d4); padding: 2px; margin: 0 auto 16px; box-shadow: 0 0 35px rgba(239,68,68,0.5); }
+    h1 { font-size: 24px; font-weight: 900; background: linear-gradient(135deg, #ef4444, #a855f7, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; letter-spacing: 0.5px; }
+    p.desc { font-size: 13px; color: #94a3b8; margin-bottom: 20px; line-height: 1.6; }
+    .user-pill { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 18px; padding: 14px; margin-bottom: 20px; text-align: left; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .btn-group { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
     .btn { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 20px; border-radius: 16px; font-weight: 800; font-size: 14px; text-decoration: none; transition: all 0.2s; cursor: pointer; border: none; }
-    .btn-primary { background: linear-gradient(135deg, #06b6d4, #2563eb); color: #fff; box-shadow: 0 6px 24px rgba(6, 182, 212, 0.4); }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(6, 182, 212, 0.6); }
-    .btn-secondary { background: rgba(255, 255, 255, 0.06); color: #e2e8f0; border: 1px solid rgba(255, 255, 255, 0.12); }
-    .btn-secondary:hover { background: rgba(255, 255, 255, 0.12); color: #fff; transform: translateY(-2px); }
+    .btn-primary { background: linear-gradient(135deg, #ef4444, #8b5cf6); color: #fff; box-shadow: 0 6px 24px rgba(239, 68, 68, 0.4); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(239, 68, 68, 0.6); }
+    .btn-secondary { background: rgba(255, 255, 255, 0.08); color: #e2e8f0; border: 1px solid rgba(255, 255, 255, 0.15); }
+    .btn-secondary:hover { background: rgba(255, 255, 255, 0.15); color: #fff; transform: translateY(-2px); }
     .guide-box { background: rgba(0, 0, 0, 0.5); border-radius: 16px; padding: 16px; font-size: 12px; text-align: left; color: #cbd5e1; line-height: 1.7; border: 1px solid rgba(255, 255, 255, 0.08); }
     .guide-box strong { color: #38bdf8; }
     .guide-box .win { color: #facc15; }
+    .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; text-transform: uppercase; background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
   </style>
 </head>
 <body>
   <div class="card">
-    <div style="width: 80px; height: 80px; border-radius: 22px; background: linear-gradient(135deg, #ef4444, #8b5cf6, #06b6d4); padding: 2px; margin: 0 auto 16px; box-shadow: 0 0 35px rgba(239,68,68,0.5);">
+    <div class="logo-container">
       <img src="./app_data/dist/official_logo.jpg" onerror="this.onerror=null; this.src='https://raw.githubusercontent.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/main/public/official_logo.jpg'" alt="AVA LIVESTREAM" style="width: 100%; height: 100%; object-fit: cover; border-radius: 20px;" />
     </div>
     <h1>AVA LIVESTREAM VIP PRO</h1>
-    <p class="desc">Phần Mềm Livestream Idol AI, Phòng Studio 4K & Game 3D Tương Tác</p>
+    <p class="desc">Phần Mềm Livestream Idol AI, Phòng Studio 4K & Đồng Bộ Tài Khoản Real-Time</p>
     
+    <div class="user-pill" id="userCard">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 38px; height: 38px; border-radius: 50%; background: #ef4444; overflow: hidden; border: 1px solid #ef4444;">
+          <img id="userAvatar" src="https://lh3.googleusercontent.com/a/default-user" style="width: 100%; height: 100%; object-fit: cover;" />
+        </div>
+        <div>
+          <p id="userName" style="font-weight: 800; font-size: 13px; color: #fff;">Quốc Thiện Admin</p>
+          <p id="userEmail" style="font-size: 11px; color: #34d399; font-family: monospace;">quocthiencr90@gmail.com</p>
+        </div>
+      </div>
+      <div style="text-align: right;">
+        <span class="status-badge" id="planBadge">👑 VIP PRO</span>
+        <p id="tokenCount" style="font-size: 11px; color: #f59e0b; font-weight: 800; margin-top: 4px;">🪙 100,000 Tokens</p>
+      </div>
+    </div>
+
     <div class="btn-group">
-      <a href="http://localhost:3001" target="_blank" class="btn btn-primary">
-        💻 Mở Studio Chính (http://localhost:3001)
+      <a href="http://localhost:3001" id="launchLocalBtn" target="_blank" class="btn btn-primary">
+        💻 Khởi Chạy Local Studio (http://localhost:3001)
       </a>
       <a href="https://avalivepro.vercel.app" target="_blank" class="btn btn-secondary">
-        🌐 Truy Cập Bản Cloud Trực Tuyến
+        🌐 Mở Phiên Bản Cloud Trực Tuyến
       </a>
     </div>
 
@@ -48,6 +66,19 @@
   </div>
 
   <script>
+    // Đọc thông tin tài khoản từ localStorage nếu có
+    try {
+      var saved = localStorage.getItem('avalive_current_user');
+      if (saved) {
+        var user = JSON.parse(saved);
+        if (user.name) document.getElementById('userName').textContent = user.name;
+        if (user.email) document.getElementById('userEmail').textContent = user.email;
+        if (user.avatar) document.getElementById('userAvatar').src = user.avatar;
+        if (user.plan) document.getElementById('planBadge').textContent = '👑 ' + user.plan;
+        if (user.tokens) document.getElementById('tokenCount').textContent = '🪙 ' + Number(user.tokens).toLocaleString() + ' Tokens';
+      }
+    } catch (e) {}
+
     // Tự động kiểm tra và chuyển hướng đến localhost:3001 khi máy chủ chạy
     setInterval(function() {
       fetch('http://localhost:3001/api/health')
@@ -59,3 +90,4 @@
   </script>
 </body>
 </html>
+

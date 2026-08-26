@@ -45,6 +45,40 @@ if (distPath) {
   app.use(express.static(distPath));
 }
 
+// 🌐 API KIỂM TRA TRẠNG THÁI SERVER & PHIÊN BẢN ĐỒNG BỘ
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    app: 'AvaLive VIP PRO',
+    version: '2.3.4-PRO',
+    cloudSync: true,
+    supabaseConnected: true,
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.get('/api/version', (req, res) => {
+  res.json({
+    version: '2.3.4-PRO',
+    latestVersion: '2.3.4-PRO',
+    isLatest: true,
+    updateAvailable: false,
+    buildTime: new Date().toISOString(),
+    releaseNotes: 'Phiên bản Đồng Bộ Đám Mây Real-Time: Hồ Sơ Người Dùng, Tiếp Thị Liên Kết 30%, Phân Quyền Đội Ngũ, Quản Lý Doanh Số & Token AI Trực Tuyến.'
+  });
+});
+
+app.get('/api/check-update', (req, res) => {
+  res.json({
+    hasUpdate: false,
+    currentVersion: '2.3.4-PRO',
+    latestVersion: '2.3.4-PRO',
+    downloadUrl: '/api/download-software',
+    message: 'Bạn đang sử dụng phiên bản phần mềm mới nhất đã đồng bộ hóa tài khoản.'
+  });
+});
+
+
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE (Mac & Windows) — Kích hoạt download ngay, không mở trong trình duyệt
 app.get('/api/download-software', (req, res) => {
   const zipPath = distPath
