@@ -51,27 +51,13 @@ export default function App() {
       const saved = localStorage.getItem("avalive_current_user");
       if (saved) {
          let parsedUser = JSON.parse(saved);
-         // Realtime check plan expiration
-         if (parsedUser.plan !== 'FREE' && parsedUser.plan_expires_at) {
-             const expiresAt = new Date(parsedUser.plan_expires_at).getTime();
-             const now = new Date().getTime();
-             if (now > expiresAt) {
-                 // Downgrade to FREE
-                 parsedUser.plan = 'FREE';
-                 parsedUser.plan_expires_at = null;
-                 localStorage.setItem("avalive_current_user", JSON.stringify(parsedUser));
-             }
-         }
+         // Ensure plan always has a working value
+         if (!parsedUser.plan) parsedUser.plan = 'VIP PRO';
+         if (!parsedUser.tokens) parsedUser.tokens = parsedUser.isAdmin ? 999999 : 100000;
          return parsedUser;
       }
-      return {
-        name: "Quốc Thiên Admin",
-        email: "quocthiencr90@gmail.com",
-        avatar: "https://lh3.googleusercontent.com/a/default-user",
-        isAdmin: true,
-        plan: "FREE",
-        plan_expires_at: null
-      };
+      // Nếu chưa có user đã lưu => null (chưa đăng nhập)
+      return null;
     } catch (e) {
       return null;
     }
@@ -116,11 +102,14 @@ export default function App() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
+        const isAdminUser = session.user.email === "quocthiencr90@gmail.com";
         const gUser = {
           name: session.user.user_metadata?.full_name || session.user.email.split("@")[0],
           email: session.user.email,
           avatar: session.user.user_metadata?.avatar_url || "https://lh3.googleusercontent.com/a/default-user",
-          isAdmin: session.user.email === "quocthiencr90@gmail.com",
+          isAdmin: isAdminUser,
+          plan: isAdminUser ? "ENTERPRISE" : "VIP PRO",
+          tokens: isAdminUser ? 999999 : 100000,
         };
         setCurrentUser(gUser);
         localStorage.setItem("avalive_current_user", JSON.stringify(gUser));
@@ -130,11 +119,14 @@ export default function App() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
+        const isAdminUser = session.user.email === "quocthiencr90@gmail.com";
         const gUser = {
           name: session.user.user_metadata?.full_name || session.user.email.split("@")[0],
           email: session.user.email,
           avatar: session.user.user_metadata?.avatar_url || "https://lh3.googleusercontent.com/a/default-user",
-          isAdmin: session.user.email === "quocthiencr90@gmail.com",
+          isAdmin: isAdminUser,
+          plan: isAdminUser ? "ENTERPRISE" : "VIP PRO",
+          tokens: isAdminUser ? 999999 : 100000,
         };
         setCurrentUser(gUser);
         localStorage.setItem("avalive_current_user", JSON.stringify(gUser));
@@ -180,17 +172,17 @@ export default function App() {
       email: emailClean,
       avatar: avatarUrl,
       isAdmin: isAdmin,
-      plan: isAdmin ? "ENTERPRISE" : "STARTER"
+      plan: isAdmin ? "ENTERPRISE" : "VIP PRO",
+      tokens: isAdmin ? 999999 : 100000
     };
 
     setCurrentUser(newUser);
     localStorage.setItem("avalive_current_user", JSON.stringify(newUser));
     setGoogleLoginModalOpen(false);
-    setActiveTab(isAdmin ? "admin" : "profile");
+    setActiveTab("broadcast");
 
     // Sync directly to Supabase Database
     await syncUserToSupabase(newUser);
-    alert(`⚡ ĐÃ KẾT NỐI THÀNH CÔNG TÀI KHOẢN GOOGLE REAL-TIME!\n\n👤 Email: ${emailClean}\n👑 Quyền hạn: ${isAdmin ? "SUPER ADMIN VIP" : "THÀNH VIÊN GÓI CHÍNH THỨC"}\n\nHồ sơ đã được đồng bộ với Cơ sở dữ liệu Supabase!`);
   };
 
   // Cửa Sổ Master Live Overlay 1 Link Duy Nhất cho TikTok LIVE Studio & OBS Studio
@@ -245,7 +237,7 @@ export default function App() {
           <EnterprisePayment setActiveTab={setActiveTab} />
         )}
 
-        {/* WORKSPACE VIP STUDIO MODE (When User IS Logged In) */}
+        {/* WORKSPACE VIP STUDIO MODE (When User IS Logged In) - ALL MODULES UNLOCKED */}
         {currentUser && (
           <>
             {activeTab === "broadcast" && (
@@ -253,33 +245,23 @@ export default function App() {
             )}
 
             {activeTab === "avatars" && (
-              (currentUser?.plan === 'FREE' || currentUser?.plan === 'STARTER')
-                ? <UpgradePrompt featureName="AI Avatar Studio" requiredPlan="Gói PRO" setActiveTab={setActiveTab} />
-                : <AIAvatarStudio isLive={isLive} aiAvatarFeatureEnabled={aiAvatarFeatureEnabled} />
+              <AIAvatarStudio isLive={isLive} aiAvatarFeatureEnabled={aiAvatarFeatureEnabled} />
             )}
 
             {activeTab === "commerce" && (
-              (currentUser?.plan === 'FREE') 
-                ? <UpgradePrompt featureName="Live Commerce Chốt Đơn Đa Kênh" requiredPlan="Gói STARTER" setActiveTab={setActiveTab} />
-                : <LiveCommerceStudio isLive={isLive} />
+              <LiveCommerceStudio isLive={isLive} />
             )}
 
             {activeTab === "multistream" && (
-              (currentUser?.plan === 'FREE') 
-                ? <UpgradePrompt featureName="Phân Phối Luồng Restream Đa Kênh" requiredPlan="Gói STARTER" setActiveTab={setActiveTab} />
-                : <MultistreamStudio isLive={isLive} setIsLive={setIsLive} currentUser={currentUser} />
+              <MultistreamStudio isLive={isLive} setIsLive={setIsLive} currentUser={currentUser} />
             )}
 
             {activeTab === "chat-hub" && (
-              (currentUser?.plan === 'FREE')
-                ? <UpgradePrompt featureName="Hộp Thư Đa Nền Tảng (Chat Hub)" requiredPlan="Gói STARTER" setActiveTab={setActiveTab} />
-                : <UnifiedChatHub isLive={isLive} />
+              <UnifiedChatHub isLive={isLive} />
             )}
 
             {activeTab === "dance-floor" && (
-              (currentUser?.plan === 'FREE')
-                ? <UpgradePrompt featureName="Sàn Nhảy TikTok Tương Tác" requiredPlan="Gói STARTER" setActiveTab={setActiveTab} />
-                : <DanceFloorStudio isLive={isLive} setIsLive={setIsLive} />
+              <DanceFloorStudio isLive={isLive} setIsLive={setIsLive} />
             )}
 
             {activeTab === "ai-storyteller" && (
@@ -287,10 +269,7 @@ export default function App() {
             )}
 
             <div style={{ display: activeTab === "livestream-cloner" ? "block" : "none" }}>
-              {(currentUser?.plan === 'FREE' || currentUser?.plan === 'STARTER') 
-                ? (activeTab === "livestream-cloner" && <UpgradePrompt featureName="Sao Chép Livestream Clone" requiredPlan="Gói PRO" setActiveTab={setActiveTab} />)
-                : <LivestreamClonerStudio />
-              }
+              <LivestreamClonerStudio />
             </div>
 
             {activeTab === "team" && (
@@ -302,9 +281,7 @@ export default function App() {
             )}
 
             {activeTab === "accounts" && (
-              (currentUser?.plan === 'FREE')
-                ? <UpgradePrompt featureName="Quản Lý Đa Tài Khoản Mạng Xã Hội" requiredPlan="Gói STARTER" setActiveTab={setActiveTab} />
-                : <MultiAccountManager />
+              <MultiAccountManager />
             )}
 
             {activeTab === "affiliate-dashboard" && (

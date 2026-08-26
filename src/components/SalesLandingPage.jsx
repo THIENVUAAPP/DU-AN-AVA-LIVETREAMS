@@ -141,10 +141,10 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
               </>
             ) : (
               <button 
-                onClick={() => setGoogleLoginModalOpen(true)}
+                onClick={() => setActiveTab('broadcast')}
                 className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#F59E0B] to-[#F43F5E] text-white font-black text-sm shadow-[0_0_15px_rgba(245,158,11,0.4)] hover:scale-105 transition-all flex items-center gap-2 cursor-pointer"
               >
-                ĐĂNG NHẬP <ArrowRight className="w-4 h-4" />
+                VÀO STUDIO LIVE <ArrowRight className="w-4 h-4" />
               </button>
             )}
           </div>
@@ -241,12 +241,6 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
               {!isVideoPlaying ? (
                 <>
                   <div className="absolute inset-0 bg-gradient-to-tr from-[#1a103c] via-[#05050A] to-[#121c33] opacity-80"></div>
-                  {/* Faux Thumbnails */}
-                  <div className="absolute bottom-4 left-4 right-4 flex gap-2 overflow-hidden opacity-50 blur-sm">
-                    {[1,2,3,4,5].map(i => (
-                      <div key={i} className="h-16 flex-1 bg-white/10 rounded-lg border border-white/5"></div>
-                    ))}
-                  </div>
                   
                   {/* Central Play Button */}
                   <div className="relative z-10 w-20 h-20 rounded-full border border-purple-500/50 bg-purple-500/20 backdrop-blur-md flex items-center justify-center group-hover:scale-110 transition-transform shadow-[0_0_30px_rgba(139,92,246,0.4)]">
