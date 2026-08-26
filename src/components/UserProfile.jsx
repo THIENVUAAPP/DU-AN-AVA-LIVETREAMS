@@ -9,10 +9,11 @@ import {
 import TeamPermissionsManager from './TeamPermissionsManager';
 import SalesAnalyticsManager from './SalesAnalyticsManager';
 import AffiliateProgram from './AffiliateProgram';
+import { getPlans } from '../lib/plansConfig';
 
 export default function UserProfile({ currentUser, setActiveTab }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [activeSidebarTab, setActiveSidebarTab] = useState('account');
+  const [activeSidebarTab, setActiveSidebarTab] = useState('overview');
   const [isEditingBank, setIsEditingBank] = useState(false);
   const [bankInfo, setBankInfo] = useState({
     bankName: currentUser?.bankName || 'MBBank',
@@ -20,10 +21,18 @@ export default function UserProfile({ currentUser, setActiveTab }) {
     accountHolder: currentUser?.accountHolder || currentUser?.name || ''
   });
 
+  const currentPlanConfig = getPlans().find(p => p.name === currentUser?.plan || (currentUser?.plan === 'VIP PRO' && p.id === 'LIFETIME')) || getPlans()[0];
   const sysConfig = JSON.parse(localStorage.getItem('avalive_system_configs')) || { defaultTokens: 100, defaultLiveTime: 0, costVoice: 5, costLiveAI: 10 };
 
+  const liveMinutesRemaining = currentUser?.liveMinutes !== undefined 
+    ? currentUser.liveMinutes 
+    : (currentUser?.plan ? currentPlanConfig.liveMinutes : sysConfig.defaultLiveTime);
+
+  const tokensAmount = currentUser?.tokens !== undefined 
+    ? currentUser.tokens 
+    : (currentUser?.plan ? currentPlanConfig.tokens : sysConfig.defaultTokens);
+
   const handleSaveBank = () => {
-    // Save to local storage user object
     try {
       const saved = localStorage.getItem("avalive_current_user");
       if (saved) {
@@ -35,12 +44,6 @@ export default function UserProfile({ currentUser, setActiveTab }) {
     setIsEditingBank(false);
     alert("Đã lưu thông tin tài khoản ngân hàng!");
   };
-
-  // Token & Point Management State - Always synced with currentUser
-  const userTokens = currentUser?.tokens || 0;
-  
-  const liveMinutesUsed = currentUser?.liveMinutesUsed || 0;
-  const liveMinutesRemaining = currentUser?.liveMinutesRemaining || (currentUser?.plan === 'VIP PRO' ? 9999 : 4320);
 
   const profile = {
     name: currentUser?.name || 'Người dùng mới',
@@ -73,7 +76,6 @@ export default function UserProfile({ currentUser, setActiveTab }) {
       {/* ─── SIDEBAR ─── */}
       <aside className={`w-64 bg-[#0C0F17] border-r border-white/10 flex flex-col shrink-0 transition-all duration-300 z-30 shadow-2xl ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full absolute h-full'}`}>
         
-        {/* Brand Logo Header */}
         <div 
           onClick={() => setActiveTab && setActiveTab('overview')} 
           className="p-5 flex items-center justify-between border-b border-white/10 cursor-pointer hover:bg-white/5 transition-colors group"
@@ -91,12 +93,9 @@ export default function UserProfile({ currentUser, setActiveTab }) {
           <ChevronLeft className="w-4 h-4 text-gray-500 group-hover:text-white" />
         </div>
         
-        {/* Sidebar Nav Links */}
         <div className="flex-1 overflow-y-auto p-3 space-y-4 custom-scrollbar text-xs font-semibold">
-          
           <div className="space-y-1">
             <div className="px-3 py-1 text-[9px] font-black uppercase tracking-wider text-gray-500">TÀI KHOẢN & ĐIỂM</div>
-            
             <button 
               onClick={() => setActiveSidebarTab('overview')} 
               className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all cursor-pointer ${
@@ -108,7 +107,6 @@ export default function UserProfile({ currentUser, setActiveTab }) {
               <User className="w-4 h-4 text-red-400" /> 
               <span>Tổng Quan Hồ Sơ</span>
             </button>
-
             <button 
               onClick={() => setActiveSidebarTab('points-tokens')} 
               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all cursor-pointer ${
@@ -122,14 +120,13 @@ export default function UserProfile({ currentUser, setActiveTab }) {
                 <span>Điểm & Token Live</span>
               </div>
               <span className="px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300 font-mono text-[9px] font-black">
-                {userTokens.toLocaleString()}
+                {tokensAmount.toLocaleString()}
               </span>
             </button>
           </div>
 
           <div className="space-y-1">
             <div className="px-3 py-1 text-[9px] font-black uppercase tracking-wider text-gray-500">QUẢN TRỊ KINH DOANH</div>
-            
             <button 
               onClick={() => setActiveSidebarTab('affiliate-dashboard')} 
               className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all cursor-pointer ${
@@ -141,7 +138,6 @@ export default function UserProfile({ currentUser, setActiveTab }) {
               <Share2 className="w-4 h-4 text-emerald-400" /> 
               <span>Tiếp Thị 30% (Affiliate)</span>
             </button>
-
             <button 
               onClick={() => setActiveSidebarTab('sales-orders')} 
               className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all cursor-pointer ${
@@ -153,7 +149,6 @@ export default function UserProfile({ currentUser, setActiveTab }) {
               <TrendingUp className="w-4 h-4 text-blue-400" /> 
               <span>Quản Lý Đơn Hàng</span>
             </button>
-
             <button 
               onClick={() => setActiveSidebarTab('team')} 
               className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all cursor-pointer ${
@@ -168,7 +163,6 @@ export default function UserProfile({ currentUser, setActiveTab }) {
           </div>
         </div>
 
-        {/* Sidebar Footer */}
         <div className="p-3 border-t border-white/10 space-y-2">
           <button 
             onClick={() => setActiveTab && setActiveTab('overview')} 
@@ -176,7 +170,6 @@ export default function UserProfile({ currentUser, setActiveTab }) {
           >
             <ChevronLeft className="w-3.5 h-3.5" /> Về Trang Chủ Web
           </button>
-
           <button 
             onClick={handleLogout} 
             className="w-full py-2 bg-red-600/10 hover:bg-red-600/20 text-red-400 hover:text-red-300 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
@@ -186,10 +179,7 @@ export default function UserProfile({ currentUser, setActiveTab }) {
         </div>
       </aside>
 
-      {/* ─── MAIN WORKSPACE CONTENT ─── */}
       <main className="flex-1 flex flex-col min-h-[85vh] overflow-hidden bg-[#0A0A0E]">
-        
-        {/* Top Navbar */}
         <header className="h-16 border-b border-white/10 flex items-center justify-between px-6 bg-[#0D0D15]/80 backdrop-blur-md shrink-0">
           <div className="flex items-center gap-4">
             <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-gray-400 hover:text-white p-1 rounded-lg hover:bg-white/5 cursor-pointer">
@@ -200,22 +190,12 @@ export default function UserProfile({ currentUser, setActiveTab }) {
               <span className="text-xs font-bold text-gray-300">Tài khoản kết nối Realtime</span>
             </div>
           </div>
-
-          <div className="flex items-center gap-4">
-
-
-
-          </div>
         </header>
 
-        {/* ─── TAB CONTENT ROUTER ─── */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar">
           
-          {/* TAB 1: OVERVIEW */}
           {activeSidebarTab === 'overview' && (
             <div className="max-w-6xl mx-auto space-y-6 animate-fadeIn">
-              
-              {/* Profile Card & Membership Banner */}
               <div className="p-6 rounded-3xl bg-gradient-to-r from-purple-950/40 via-[#12121c] to-black border border-purple-500/30 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
                 <div className="flex items-center gap-4 z-10">
                   <div className="relative">
@@ -233,7 +213,6 @@ export default function UserProfile({ currentUser, setActiveTab }) {
                     </span>
                   </div>
                 </div>
-
                 <div className="flex flex-wrap items-center gap-3 z-10">
                   <button 
                     onClick={() => setActiveTab && setActiveTab('overview')}
@@ -241,21 +220,18 @@ export default function UserProfile({ currentUser, setActiveTab }) {
                   >
                     <Coins className="w-4 h-4" /> Nâng Cấp Gói
                   </button>
-
                 </div>
               </div>
 
-              {/* Stats Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="p-5 rounded-2xl bg-[#12141F] border border-amber-500/20 space-y-2">
                   <div className="flex items-center justify-between text-amber-400">
                     <span className="text-xs font-bold uppercase">Token Khả Dụng</span>
                     <Coins className="w-4 h-4" />
                   </div>
-                  <p className="text-2xl font-black text-white font-mono">{userTokens.toLocaleString()}</p>
+                  <p className="text-2xl font-black text-white font-mono">{tokensAmount.toLocaleString()}</p>
                   <p className="text-[10px] text-gray-400">Tự động trừ khi livestream AI</p>
                 </div>
-
                 <div className="p-5 rounded-2xl bg-[#12141F] border border-emerald-500/20 space-y-2">
                   <div className="flex items-center justify-between text-emerald-400">
                     <span className="text-xs font-bold uppercase">Hoa Hồng Tích Lũy</span>
@@ -264,16 +240,14 @@ export default function UserProfile({ currentUser, setActiveTab }) {
                   <p className="text-2xl font-black text-white font-mono">0đ</p>
                   <p className="text-[10px] text-gray-400">Tỉ lệ chia sẻ hoa hồng 30%</p>
                 </div>
-
                 <div className="p-5 rounded-2xl bg-[#12141F] border border-cyan-500/20 space-y-2">
                   <div className="flex items-center justify-between text-cyan-400">
                     <span className="text-xs font-bold uppercase">Thời Gian Live</span>
                     <Clock className="w-4 h-4" />
                   </div>
-                  <p className="text-2xl font-black text-white font-mono">{liveMinutesUsed} phút</p>
+                  <p className="text-2xl font-black text-white font-mono">{liveMinutesRemaining} phút</p>
                   <p className="text-[10px] text-gray-400">Còn lại {liveMinutesRemaining} phút {profile.planName.includes('MIỄN PHÍ') ? '(Dùng thử)' : ''}</p>
                 </div>
-
                 <div className="p-5 rounded-2xl bg-[#12141F] border border-purple-500/20 space-y-2">
                   <div className="flex items-center justify-between text-purple-400">
                     <span className="text-xs font-bold uppercase">Khách Đăng Ký</span>

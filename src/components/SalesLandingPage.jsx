@@ -9,8 +9,16 @@ import {
 } from 'lucide-react';
 import SePayModal from './SePayModal';
 import TechEcosystemMap from './TechEcosystemMap';
-import { plans } from '../lib/plansConfig';
+import { getPlans } from '../lib/plansConfig';
 import { supabase } from '../lib/supabaseClient';
+import { MonitorPlay, Zap, Crown, Building2 } from 'lucide-react';
+
+const IconMap = {
+  MonitorPlay,
+  Zap,
+  Crown,
+  Building2
+};
 
 const customStyles = `
   @keyframes marquee {
@@ -539,7 +547,9 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 max-w-7xl mx-auto w-full">
-          {plans.map((plan, i) => (
+          {getPlans().map((plan, i) => {
+            const Icon = IconMap[plan.iconName] || MonitorPlay;
+            return (
             <RevealOnScroll key={i} className={`relative flex flex-col h-full rounded-[2rem] border bg-[#0B0B13]/80 backdrop-blur-xl overflow-hidden transition-all duration-500 hover:-translate-y-3 cursor-pointer active:scale-90 group hover:border-blue-500/50 ${plan.borderColor} ${plan.isPopular ? 'shadow-[0_0_40px_rgba(59,130,246,0.25)] hover:shadow-[0_0_60px_rgba(59,130,246,0.4)] ring-1 ring-blue-500/50 md:-translate-y-4' : 'hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] hover:border-white/20'}`} onClick={() => handlePurchase(plan)}>
               
               {/* Glassmorphism shine effect */}
@@ -553,7 +563,7 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
 
               <div className="p-8 pb-6 text-center border-b border-white/5 relative z-10 flex flex-col items-center flex-shrink-0">
                 <div className={`w-12 h-12 rounded-xl mb-4 flex items-center justify-center bg-gradient-to-br ${plan.color} bg-opacity-10 shadow-lg group-hover:scale-110 transition-transform duration-500`}>
-                   {plan.icon}
+                   <Icon className="w-5 h-5" />
                 </div>
                 <h3 className="text-lg font-black text-white mb-2 uppercase tracking-widest">{plan.name}</h3>
                 <p className="text-gray-400 text-xs mb-6 min-h-[32px] font-medium leading-relaxed">{plan.desc}</p>
@@ -615,7 +625,8 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
                 ))}
               </div>
             </RevealOnScroll>
-          ))}
+            );
+          })}
         </div>
 
         {/* TOKEN ADDON PACKAGES SUB-SECTION */}

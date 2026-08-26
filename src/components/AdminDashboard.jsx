@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { User, Mail, Phone, MapPin, CheckCircle2, Copy, Link as LinkIcon, Menu, Bell, Crown, ShieldCheck, Database, Calendar, Search, CreditCard, DollarSign, Wallet, FileText, Share2, Zap, Settings, Save, ArrowUpRight, ArrowDownRight, ChevronDown, Package, Activity, Monitor, LogOut, TrendingUp, Download, Eye, RefreshCw, BarChart2, Home, ShoppingCart, Users, ChevronLeft, Bot, MonitorPlay, Coins } from 'lucide-react';
 import KOLLiveDashboard from './KOLLiveDashboard';
+import { getPlans } from '../lib/plansConfig';
 
 export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, setAiAvatarFeatureEnabled }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -88,6 +89,20 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
     alert("Đã lưu cấu hình hệ thống mặc định!");
   };
 
+  const handleSavePackagesConfig = () => {
+    const currentPlans = getPlans();
+    const newPlans = currentPlans.map(plan => {
+      const tokensInput = document.getElementById(`pkg_tokens_${plan.id}`);
+      const minutesInput = document.getElementById(`pkg_minutes_${plan.id}`);
+      return {
+        ...plan,
+        tokens: tokensInput ? parseInt(tokensInput.value, 10) : plan.tokens,
+        liveMinutes: minutesInput ? parseInt(minutesInput.value, 10) : plan.liveMinutes
+      };
+    });
+    localStorage.setItem('avalive_packages_configs', JSON.stringify(newPlans));
+    alert("Đã lưu cấu hình tài nguyên cho các gói! F5 để áp dụng.");
+  };
 
     const renderPlaceholder = (title) => {
     if (title === 'users') {

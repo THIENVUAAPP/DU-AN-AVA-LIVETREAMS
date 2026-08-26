@@ -1,5 +1,6 @@
 import { syncUserToSupabase, supabase } from "./lib/supabaseClient";
 import React, { useState, useEffect } from "react";
+import { getPlans } from "./lib/plansConfig";
 import RecentPurchasePopup from "./components/RecentPurchasePopup";
 import Header from "./components/Header";
 import LandingHero from "./components/LandingHero";
@@ -113,14 +114,17 @@ export default function App() {
     let sysConfig = { defaultTokens: 100, defaultLiveTime: 0 };
     try { sysConfig = JSON.parse(localStorage.getItem('avalive_system_configs')) || sysConfig; } catch(e) {}
     
+    let currentPlan = isAdminUser ? "ENTERPRISE" : "MIỄN PHÍ";
+    let planConfig = getPlans().find(p => p.name === currentPlan) || getPlans()[0];
+    
     let gUser = {
       name: sessionUser.user_metadata?.full_name || sessionUser.email.split("@")[0],
       email: sessionUser.email,
       avatar: sessionUser.user_metadata?.avatar_url || "https://lh3.googleusercontent.com/a/default-user",
       isAdmin: isAdminUser,
-      plan: isAdminUser ? "ENTERPRISE" : "MIỄN PHÍ",
-      tokens: isAdminUser ? 999999 : sysConfig.defaultTokens,
-      liveTime: isAdminUser ? 999999 : sysConfig.defaultLiveTime,
+      plan: currentPlan,
+      tokens: isAdminUser ? 999999 : (planConfig.tokens !== undefined ? planConfig.tokens : sysConfig.defaultTokens),
+      liveTime: isAdminUser ? 999999 : (planConfig.liveMinutes !== undefined ? planConfig.liveMinutes : sysConfig.defaultLiveTime),
       role: isAdminUser ? 'admin' : 'user'
     };
 

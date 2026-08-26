@@ -51,7 +51,7 @@ export default function AffiliateProgram({ currentUser, setGoogleLoginModalOpen 
 
   const handleRequestPayout = () => {
     setPayoutModalOpen(false);
-    alert("Đã gửi yêu cầu rút tiền hoa hồng 30% qua SePay VietQR! Admin sẽ duyệt trong 15 phút.");
+    alert("Đã gửi yêu cầu rút tiền hoa hồng 30%! Yêu cầu của bạn sẽ được xử lý vào 10:00 sáng Thứ 2 hàng tuần. Thời gian xử lý trong vòng 24h.");
   };
 
   return (
@@ -109,7 +109,7 @@ export default function AffiliateProgram({ currentUser, setGoogleLoginModalOpen 
               </div>
               <h3 className="text-sm font-bold text-white">Rút Tiền SePay 3s Tự Động</h3>
               <p className="text-xs text-gray-400">
-                Rút tiền hoa hồng về tài khoản ngân hàng cá nhân bất kỳ lúc nào qua cổng thanh toán tự động SePay VietQR.
+                Rút tiền hoa hồng về tài khoản ngân hàng. Tiền sẽ được xử lý rút vào 10:00 sáng Thứ 2 hàng tuần. Thời gian xử lý trong vòng 24h.
               </p>
             </div>
 
@@ -202,8 +202,11 @@ export default function AffiliateProgram({ currentUser, setGoogleLoginModalOpen 
                 onClick={() => setPayoutModalOpen(true)}
                 className="mt-1 px-3 py-1 bg-amber-500 text-black font-extrabold text-[10px] rounded-lg shadow-md hover:bg-amber-400 block"
               >
-                RÚT TIỀN SEPAY VIETQR 3S
+                RÚT TIỀN HOA HỒNG
               </button>
+              <p className="text-[10px] text-gray-500 text-center mt-2 font-medium">
+                *Rút tiền vào 10:00 sáng Thứ 2 hàng tuần. Thời gian xử lý trong vòng 24h.
+              </p>
             </div>
 
             <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-1">
