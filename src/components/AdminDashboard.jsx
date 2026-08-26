@@ -398,23 +398,7 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
       
       {/* Sidebar */}
       <aside className={`w-64 bg-[#141419] border-r border-white/5 flex flex-col transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full absolute h-full z-20 shadow-2xl'}`}>
-        <div onClick={() => window.location.href='/'} className="p-6 flex items-center gap-3 border-b border-white/5 cursor-pointer hover:bg-white/5 transition-colors group">
-          <div className="relative">
-            <div className="absolute -inset-1 bg-gradient-to-r from-red-600 via-purple-600 to-cyan-500 rounded-xl blur opacity-70 group-hover:opacity-100 transition duration-500 animate-pulse" />
-            <div className="relative w-10 h-10 rounded-xl bg-gradient-to-tr from-[#EF4444] via-[#8B5CF6] to-[#06B6D4] p-0.5 shadow-xl group-hover:scale-105 transition-all">
-              <img 
-                src="/official_logo.jpg" 
-                alt="AVA LIVESTREAM" 
-                className="w-full h-full object-cover rounded-[10px] border border-white/40"
-              />
-            </div>
-          </div>
-          <div className="flex flex-col">
-            <h2 className="text-white font-black text-xl leading-none tracking-tight flex items-center gap-1 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]">
-              AVA <span className="text-[#EF4444] bg-gradient-to-r from-red-500 via-pink-500 to-purple-500 bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]">LIVESTREAM</span>
-            </h2>
-          </div>
-        </div>
+        <div className="pt-6"></div>
         
         <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar text-sm font-medium">
           <div className="space-y-1">

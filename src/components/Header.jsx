@@ -63,7 +63,7 @@ export default function Header({
   }, []);
 
   const handleLogoClick = () => {
-    setActiveTab('broadcast');
+    setActiveTab('overview');
   };
 
   return (
@@ -74,7 +74,7 @@ export default function Header({
         <div 
           className="flex items-center gap-3 cursor-pointer group shrink-0" 
           onClick={handleLogoClick}
-          title={currentUser ? "Mở Phòng Live Studio" : "Về Trang Chủ"}
+          title="Về Trang Chủ"
         >
           <div className="relative">
             {/* Ultra Neon Aura Lighting Ring */}
