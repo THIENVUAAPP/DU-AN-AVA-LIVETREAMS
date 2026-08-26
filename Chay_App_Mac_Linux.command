@@ -36,9 +36,12 @@ do
     fi
 done
 
-# 3. Đi vào thư mục dữ liệu app_data nếu có
-if [ -d "app_data" ]; then
-    cd app_data
+# 3. Đi vào thư mục dữ liệu app_data
+# Kiểm tra xem có đang chạy trong MacOS .app bundle không
+if [ -d "../Resources/app_data" ]; then
+    cd "../Resources/app_data"
+elif [ -d "app_data" ]; then
+    cd "app_data"
 fi
 
 # Khởi tạo .env nếu chưa có

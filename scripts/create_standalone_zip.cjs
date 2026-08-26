@@ -55,11 +55,43 @@ console.log('\n[3/3] Đang đóng gói cho Mac...');
 const macStaging = path.join(rootDir, '.temp_mac');
 if (fs.existsSync(macStaging)) fs.rmSync(macStaging, { recursive: true, force: true });
 fs.mkdirSync(macStaging, { recursive: true });
-execSync(`cp -R "${appDataDir}" "${macStaging}/"`);
 
-const macLauncherPath = path.join(macStaging, 'Khoi_Dong_AvaLive.command');
-fs.copyFileSync(path.join(rootDir, 'Chay_App_Mac_Linux.command'), macLauncherPath);
-fs.chmodSync(macLauncherPath, 0o755);
+// Create Mac .app Bundle
+const appName = 'AvaLive_VIP';
+const appDir = path.join(macStaging, `${appName}.app`);
+const contentsDir = path.join(appDir, 'Contents');
+const macOsDir = path.join(contentsDir, 'MacOS');
+const resourcesDir = path.join(contentsDir, 'Resources');
+
+fs.mkdirSync(macOsDir, { recursive: true });
+fs.mkdirSync(resourcesDir, { recursive: true });
+
+// Move app_data INSIDE the .app bundle
+execSync(`cp -R "${appDataDir}" "${resourcesDir}/"`);
+
+const plistContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>
+    <string>${appName}</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.avalive.pro</string>
+    <key>CFBundleName</key>
+    <string>AvaLive VIP</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>10.10</string>
+</dict>
+</plist>`;
+fs.writeFileSync(path.join(contentsDir, 'Info.plist'), plistContent);
+
+const executablePath = path.join(macOsDir, appName);
+fs.copyFileSync(path.join(rootDir, 'Chay_App_Mac_Linux.command'), executablePath);
+fs.chmodSync(executablePath, 0o755);
 
 // Create Mac Instructions
 const macInstructionHtml = `
@@ -80,22 +112,16 @@ const macInstructionHtml = `
 <body>
     <div class="box">
         <h1>🍏 Hướng Dẫn Khởi Động AvaLive Trên Mac</h1>
-        <p>Để khởi động phần mềm, hãy <strong>Nhấp Đúp</strong> vào file <code>Khoi_Dong_AvaLive.command</code>.</p>
+        <p>Để khởi động phần mềm, hãy <strong>Nhấp Đúp</strong> vào ứng dụng <code>AvaLive_VIP.app</code>.</p>
         
         <div class="alert">
             <strong>⚠️ LƯU Ý QUAN TRỌNG KHI GẶP LỖI BẢO MẬT:</strong><br><br>
-            Nếu macOS hiện thông báo: <em>"Apple không thể xác minh phần mềm độc hại..."</em> hoặc <em>"Ứng dụng từ nhà phát triển không xác định..."</em>, hãy làm theo 1 trong 2 cách sau:
+            Nếu macOS hiện thông báo: <em>"Apple không thể xác minh ứng dụng..."</em> hoặc <em>"Ứng dụng bị hỏng (damaged)..."</em>, hãy làm theo cách sau để mở:
             <br><br>
-            <strong>Cách 1 (Nhanh nhất):</strong><br>
-            1. Mở ứng dụng <strong>Terminal</strong> (Tìm trong Spotlight).<br>
-            2. Gõ chữ: <code>sh </code> (có 1 khoảng trắng ở cuối).<br>
-            3. Kéo thả file <code>Khoi_Dong_AvaLive.command</code> vào cửa sổ Terminal.<br>
-            4. Nhấn <strong>Enter</strong>.
-            <br><br>
-            <strong>Cách 2 (Mở thủ công):</strong><br>
-            1. <strong>Click Chuột Phải</strong> (hoặc nhấn giữ Control + Click) vào file <code>Khoi_Dong_AvaLive.command</code>.<br>
+            <strong>Cách Mở Cấp Quyền:</strong><br>
+            1. <strong>Click Chuột Phải</strong> (hoặc nhấn giữ phím Control + Click) vào ứng dụng <code>AvaLive_VIP</code>.<br>
             2. Chọn <strong>Open (Mở)</strong>.<br>
-            3. Nhấn <strong>Open (Mở)</strong> một lần nữa ở bảng cảnh báo.
+            3. Nhấn <strong>Open (Mở)</strong> một lần nữa ở bảng cảnh báo. Phần mềm sẽ tự khởi chạy!
         </div>
     </div>
 </body>
