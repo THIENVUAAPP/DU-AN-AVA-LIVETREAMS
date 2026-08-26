@@ -5,7 +5,7 @@ import {
   BarChart2, Share2, Globe, HeartHandshake, Building2,
   Play, MousePointerClick, MessageSquare, Smartphone, Facebook,
   Bot, Clock, ShoppingCart, Lock, Headphones, Search, MonitorPlay,
-  DollarSign, TrendingUp, Layers, UserSquare2, Video, Activity, Brain, Image as ImageIcon, Mic
+  DollarSign, TrendingUp, Layers, UserSquare2, Video, Activity, Brain, Image as ImageIcon, Mic, Download
 } from 'lucide-react';
 import SePayModal from './SePayModal';
 import TechEcosystemMap from './TechEcosystemMap';
@@ -107,13 +107,15 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
 
           <nav className="hidden lg:flex items-center gap-6">
             <button onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})} className="text-sm font-semibold text-white hover:text-[#FBBF24] transition-all cursor-pointer">Trang chủ</button>
-            <button 
-              onClick={() => setActiveTab('ai-storyteller')} 
-              className="text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-rose-400 to-pink-500 hover:scale-105 transition-all cursor-pointer flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-amber-400/30 shadow-[0_0_12px_rgba(251,191,36,0.2)]"
+            <a 
+              href="/Livestream_AI_Software.zip"
+              download="AvaLive_VIP_PRO_Full_Package_MacWin.zip"
+              className="text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-rose-400 to-pink-500 hover:scale-105 transition-all cursor-pointer flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/5 border border-amber-400/30 shadow-[0_0_12px_rgba(251,191,36,0.2)]"
+              title="Tải Về File ZIP Phần Mềm (Mac & Win)"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-              <span>KOL LIVE</span>
-            </button>
+              <Download className="w-3.5 h-3.5 text-amber-400" />
+              <span>TẢI VỀ (ZIP)</span>
+            </a>
             <button onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-semibold text-gray-300 hover:text-white transition-all cursor-pointer">Tính năng</button>
             <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-semibold text-gray-300 hover:text-white transition-all cursor-pointer">Bảng giá</button>
             <button onClick={() => document.getElementById('guide')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-semibold text-gray-300 hover:text-white transition-all cursor-pointer">Hướng dẫn</button>
@@ -126,23 +128,23 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
               <>
                 <button 
                   onClick={() => setGoogleLoginModalOpen(true)}
-                  className="px-5 py-2 rounded-full border border-white/20 text-white font-semibold text-sm hover:bg-white/10 transition-all"
+                  className="px-5 py-2 rounded-full border border-white/20 text-white font-semibold text-sm hover:bg-white/10 transition-all cursor-pointer"
                 >
                   Đăng nhập
                 </button>
                 <button 
                   onClick={() => setGoogleLoginModalOpen(true)}
-                  className="px-5 py-2 rounded-full bg-gradient-to-r from-[#F59E0B] to-[#F43F5E] text-white font-bold text-sm shadow-[0_0_15px_rgba(245,158,11,0.4)] hover:shadow-[0_0_25px_rgba(245,158,11,0.6)] transition-all hover:scale-105"
+                  className="px-5 py-2 rounded-full bg-gradient-to-r from-[#F59E0B] to-[#F43F5E] text-white font-bold text-sm shadow-[0_0_15px_rgba(245,158,11,0.4)] hover:shadow-[0_0_25px_rgba(245,158,11,0.6)] transition-all hover:scale-105 cursor-pointer"
                 >
                   Dùng thử miễn phí
                 </button>
               </>
             ) : (
               <button 
-                onClick={() => setActiveTab('ai-storyteller')}
-                className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#F59E0B] to-[#F43F5E] text-white font-bold text-sm shadow-[0_0_15px_rgba(245,158,11,0.4)] hover:scale-105 transition-all flex items-center gap-2"
+                onClick={() => setGoogleLoginModalOpen(true)}
+                className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#F59E0B] to-[#F43F5E] text-white font-black text-sm shadow-[0_0_15px_rgba(245,158,11,0.4)] hover:scale-105 transition-all flex items-center gap-2 cursor-pointer"
               >
-                VÀO KOL LIVE <ArrowRight className="w-4 h-4" />
+                ĐĂNG NHẬP <ArrowRight className="w-4 h-4" />
               </button>
             )}
           </div>

@@ -9,6 +9,5 @@ dist-ssr
 .vscode
 .idea
 *.log
-*.zip
-public/*.zip
 release/
+!public/Livestream_AI_Software.zip
