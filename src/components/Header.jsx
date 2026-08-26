@@ -1,3 +1,4 @@
+import { handleOSDownload } from '../utils/downloadOS';
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Tv, 
@@ -106,8 +107,8 @@ export default function Header({
         <div className="flex items-center gap-2.5 shrink-0">
           {/* Nút Tải Phần Mềm File ZIP (Mac & Win) */}
           <a
-            href="/Livestream_AI_Software.zip"
-            download="AvaLive_VIP_PRO_Full_Package_MacWin.zip"
+            href="#" onClick={handleOSDownload}
+            
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white text-xs font-black shadow-lg shadow-blue-500/25 transition-all hover:scale-105 cursor-pointer border border-cyan-300/30 whitespace-nowrap"
             title="Tải Phần Mềm Full Tính Năng Về Máy Tính (Mac & Windows)"
           >

@@ -7,6 +7,8 @@ python_scripts/
 *.dmg
 *.zip
 !public/Livestream_AI_Software.zip
+!public/AvaLive_VIP_PRO_Windows.zip
+!public/AvaLive_VIP_PRO_Mac.zip
 *.exe
 *.tar.gz
 *.mp4

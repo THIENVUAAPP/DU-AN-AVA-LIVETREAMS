@@ -1,3 +1,4 @@
+import { handleOSDownload } from '../utils/downloadOS';
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Sparkles, Tv, ShoppingBag, Bot, Building2, Zap, ShieldCheck, CheckCircle2,
@@ -279,8 +280,8 @@ export default function LandingHero({ setActiveTab, setGoogleLoginModalOpen, aiA
         {/* CTA Buttons */}
         <div className="animate-fade-in-up delay-200 flex flex-wrap items-center justify-center gap-4">
           <a
-            href="/Livestream_AI_Software.zip"
-            download="AvaLive_VIP_PRO_Full_Package_MacWin.zip"
+            href="#" onClick={handleOSDownload}
+            
             className="px-8 py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black text-sm rounded-2xl shadow-xl shadow-blue-500/30 hover:scale-105 transition-all flex items-center gap-2.5 cursor-pointer border border-cyan-300/40 animate-pulse"
           >
             <Download className="w-5 h-5" /> TẢI PHẦN MỀM (MAC & WIN ZIP)
@@ -325,8 +326,8 @@ export default function LandingHero({ setActiveTab, setGoogleLoginModalOpen, aiA
 
             <div className="shrink-0 flex flex-col items-center gap-2 w-full md:w-auto">
               <a
-                href="/Livestream_AI_Software.zip"
-                download="AvaLive_VIP_PRO_Full_Package_MacWin.zip"
+                href="#" onClick={handleOSDownload}
+                
                 className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black text-sm rounded-2xl shadow-xl shadow-cyan-500/25 hover:scale-105 transition-all flex items-center justify-center gap-3 cursor-pointer border border-cyan-300/40 text-center"
               >
                 <Download className="w-5 h-5" />

@@ -1,3 +1,4 @@
+import { handleOSDownload } from '../utils/downloadOS';
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Sparkles, CheckCircle2, ArrowRight, Zap, ShieldCheck, 
@@ -119,8 +120,8 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
           <nav className="hidden lg:flex items-center gap-6">
             <button onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})} className="text-sm font-semibold text-white hover:text-[#FBBF24] transition-all cursor-pointer">Trang chủ</button>
             <a 
-              href="/Livestream_AI_Software.zip"
-              download="AvaLive_VIP_PRO_Full_Package_MacWin.zip"
+              href="#" onClick={handleOSDownload}
+              
               className="text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-rose-400 to-pink-500 hover:scale-105 transition-all cursor-pointer flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/5 border border-amber-400/30 shadow-[0_0_12px_rgba(251,191,36,0.2)]"
               title="Tải Về File ZIP Phần Mềm (Mac & Win)"
             >

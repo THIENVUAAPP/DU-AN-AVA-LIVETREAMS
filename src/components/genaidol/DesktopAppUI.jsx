@@ -1,3 +1,4 @@
+import { handleOSDownload } from '../../utils/downloadOS';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { 
@@ -1433,8 +1434,8 @@ export default function DesktopAppUI() {
 
   const handleDownload = () => {
     const link = document.createElement('a');
-    link.href = '/Livestream_AI_Software.zip';
-    link.download = 'AvaLive_VIP_PRO_Full_Package_MacWin.zip';
+    return handleOSDownload();
+    
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

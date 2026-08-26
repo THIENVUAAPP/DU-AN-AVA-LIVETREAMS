@@ -1,3 +1,4 @@
+import { handleOSDownload } from '../utils/downloadOS';
 import React from 'react';
 import { 
   Download, Sparkles, ShieldCheck, CheckCircle2, Terminal, Monitor, 
@@ -7,8 +8,8 @@ import {
 export default function KOLLiveDashboard() {
   const triggerDownload = () => {
     const link = document.createElement('a');
-    link.href = '/Livestream_AI_Software.zip';
-    link.download = 'AvaLive_VIP_PRO_Full_Package_MacWin.zip';
+    return handleOSDownload();
+    
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
