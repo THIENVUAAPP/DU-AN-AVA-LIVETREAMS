@@ -17,7 +17,8 @@ export default function UserProfile({ currentUser, setActiveTab }) {
   const [isEditingBank, setIsEditingBank] = useState(false);
   const [bankInfo, setBankInfo] = useState({
     bankName: currentUser?.bankName || 'MBBank',
-    accountNumber: currentUser?.accountNumber || 'Chưa cập nhật',
+    bankAddress: currentUser?.bankAddress || '',
+    accountNumber: currentUser?.accountNumber || '',
     accountHolder: currentUser?.accountHolder || currentUser?.name || ''
   });
 
@@ -298,10 +299,14 @@ export default function UserProfile({ currentUser, setActiveTab }) {
                   </div>
                   
                   {isEditingBank ? (
-                    <div className="space-y-3">
+                    <div className="space-y-3 mt-4">
                       <div>
                         <label className="text-[10px] text-gray-400">Ngân Hàng (VD: MBBank)</label>
                         <input type="text" value={bankInfo.bankName} onChange={e => setBankInfo({...bankInfo, bankName: e.target.value})} className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs mt-1" />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-gray-400">Chi Nhánh / Địa Chỉ Ngân Hàng</label>
+                        <input type="text" placeholder="VD: Chi nhánh HCM" value={bankInfo.bankAddress} onChange={e => setBankInfo({...bankInfo, bankAddress: e.target.value})} className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs mt-1" />
                       </div>
                       <div>
                         <label className="text-[10px] text-gray-400">Số Tài Khoản</label>
@@ -317,14 +322,18 @@ export default function UserProfile({ currentUser, setActiveTab }) {
                       </div>
                     </div>
                   ) : (
-                    <div className="space-y-2 text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Ngân Hàng:</span>
+                    <div className="space-y-2 mt-4 text-xs">
+                      <div className="flex justify-between border-b border-white/5 pb-2">
+                        <span className="text-gray-400">Ngân hàng:</span>
                         <span className="font-bold text-white">{bankInfo.bankName}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Số Tài Khoản:</span>
-                        <span className="font-bold text-emerald-400 font-mono">{bankInfo.accountNumber}</span>
+                      <div className="flex justify-between border-b border-white/5 pb-2">
+                        <span className="text-gray-400">Chi nhánh:</span>
+                        <span className="font-bold text-white text-right max-w-[150px] truncate">{bankInfo.bankAddress || 'Chưa cập nhật'}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-white/5 pb-2">
+                        <span className="text-gray-400">Số tài khoản:</span>
+                        <span className="font-bold text-emerald-400 font-mono">{bankInfo.accountNumber || 'Chưa cập nhật'}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Chủ Tài Khoản:</span>

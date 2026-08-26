@@ -155,6 +155,7 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
                              {u.bankName ? (
                                <div className="text-[10px]">
                                  <div className="text-white font-bold">{u.bankName}</div>
+                                 <div className="text-gray-400 max-w-[120px] truncate" title={u.bankAddress}>{u.bankAddress || 'Chưa cập nhật chi nhánh'}</div>
                                  <div className="text-emerald-400 font-mono">{u.accountNumber}</div>
                                </div>
                              ) : <span className="text-[10px] text-gray-500">-</span>}
