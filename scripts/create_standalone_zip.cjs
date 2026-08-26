@@ -57,7 +57,8 @@ if (fs.existsSync(macStaging)) fs.rmSync(macStaging, { recursive: true, force: t
 fs.mkdirSync(macStaging, { recursive: true });
 
 // Create Mac Launcher
-const macLauncherPath = path.join(macStaging, 'Khoi_Dong_AvaLive_Mac.command');
+const macLauncherName = '1_NHAP_CHUOT_PHAI_CHON_OPEN_DE_CHAY.command';
+const macLauncherPath = path.join(macStaging, macLauncherName);
 fs.copyFileSync(path.join(rootDir, 'Chay_App_Mac_Linux.command'), macLauncherPath);
 fs.chmodSync(macLauncherPath, 0o755);
 
@@ -82,16 +83,14 @@ const macInstructionHtml = `
 <body>
     <div class="box">
         <h1>🍏 Hướng Dẫn Khởi Động AvaLive Trên Mac</h1>
-        <p>Để khởi động phần mềm, hãy <strong>Nhấp Đúp</strong> vào file lệnh <code>Khoi_Dong_AvaLive_Mac.command</code>.</p>
+        <p>Để khởi động phần mềm, bạn <strong>KHÔNG ĐƯỢC NHẤP ĐÚP (Double-Click)</strong>.</p>
+        <p>Bắt buộc phải làm theo 2 bước sau để vượt qua bảo mật của Apple:</p>
         
         <div class="alert">
-            <strong>⚠️ LƯU Ý QUAN TRỌNG KHI GẶP LỖI BẢO MẬT:</strong><br><br>
-            Nếu macOS hiện thông báo: <em>"Apple không thể xác minh nhà phát triển..."</em>, hãy làm theo cách sau để mở:
-            <br><br>
-            <strong>Cách Mở Cấp Quyền (Chỉ cần làm 1 lần đầu tiên):</strong><br>
-            1. <strong>Click Chuột Phải</strong> (hoặc nhấn giữ phím Control + Click) vào file <code>Khoi_Dong_AvaLive_Mac.command</code>.<br>
+            <strong>Cách Khởi Động (Chỉ cần làm 1 lần đầu tiên):</strong><br><br>
+            1. <strong>Click Chuột Phải</strong> (hoặc nhấn giữ phím Control + Click) vào file lệnh <code>1_NHAP_CHUOT_PHAI_CHON_OPEN_DE_CHAY.command</code>.<br>
             2. Chọn <strong>Open (Mở)</strong>.<br>
-            3. Nhấn <strong>Open (Mở)</strong> một lần nữa ở bảng cảnh báo. Phần mềm sẽ tự khởi chạy!
+            3. Nhấn nút <strong>Open (Mở)</strong> một lần nữa ở bảng cảnh báo (Lúc này bảng cảnh báo sẽ hiện thêm nút Mở thay vì chỉ có nút Xóa).
         </div>
     </div>
 </body>
