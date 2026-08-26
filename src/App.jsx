@@ -186,7 +186,7 @@ export default function App() {
     setCurrentUser(newUser);
     localStorage.setItem("avalive_current_user", JSON.stringify(newUser));
     setGoogleLoginModalOpen(false);
-    setActiveTab("overview");
+    setActiveTab(isAdmin ? "admin" : "profile");
 
     // Sync directly to Supabase Database
     await syncUserToSupabase(newUser);

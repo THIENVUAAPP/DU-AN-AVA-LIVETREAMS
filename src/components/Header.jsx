@@ -44,10 +44,16 @@ export default function Header({
     { id: 'affiliate-landing', label: 'Tiếp Thị 30%' },
   ];
 
-  // Navigation when LOGGED IN (Keep KOL Live only on homepage publicNavItems)
+  // Navigation when LOGGED IN (Workspace Navigation for Members & Admins)
   const workspaceNavItems = [
-    ...(aiAvatarFeatureEnabled ? [{ id: 'avatars', label: 'MC AI' }] : []),
-    ...(currentUser?.role === 'admin' ? [{ id: 'dance-floor', label: 'Sàn Nhảy' }] : []),
+    { id: 'overview', label: 'Trang Chủ' },
+    { id: 'broadcast', label: 'Phòng Live Studio' },
+    { id: 'avatars', label: 'MC AI' },
+    { id: 'dance-floor', label: 'Sàn Nhảy 3D' },
+    { id: 'profile', label: 'Hồ Sơ Cá Nhân' },
+    { id: 'affiliate-dashboard', label: 'Tiếp Thị 30%' },
+    ...((currentUser?.isAdmin || currentUser?.role === 'admin') ? [{ id: 'admin', label: '👑 Quản Trị Admin' }] : []),
+    { id: 'ai-storyteller', label: '💻 Tải Về (ZIP)' },
   ];
 
   // Close dropdown on click outside
@@ -140,6 +146,20 @@ export default function Header({
             <nav className="flex flex-row flex-nowrap items-center justify-center gap-4 lg:gap-6 whitespace-nowrap">
               {workspaceNavItems.map((item) => {
                 const isActive = activeTab === item.id;
+                if (item.id === 'ai-storyteller') {
+                  return (
+                    <a
+                      key={item.id}
+                      href="/Livestream_AI_Software.zip"
+                      download="AvaLive_VIP_PRO_Full_Package_MacWin.zip"
+                      className="relative px-3 py-1.5 text-sm lg:text-base font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-rose-400 to-pink-500 hover:scale-105 transition-all duration-200 cursor-pointer flex items-center gap-1.5"
+                      title="Tải Ngay File ZIP Về Máy Tính"
+                    >
+                      <Download className="w-4 h-4 text-amber-400" />
+                      <span>TẢI VỀ (ZIP)</span>
+                    </a>
+                  );
+                }
                 return (
                   <button
                     key={item.id}
