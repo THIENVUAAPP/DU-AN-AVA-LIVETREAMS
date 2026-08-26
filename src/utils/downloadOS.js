@@ -1,10 +1,10 @@
 export const handleOSDownload = (e) => {
   if (e) e.preventDefault();
-  // Xác định hệ điều hành
-  const isMac = navigator.userAgent.toLowerCase().includes('mac');
   
-  // Tên file tương ứng
-  const fileName = isMac ? 'AvaLive_VIP_PRO_Mac.pkg' : 'AvaLive_VIP_PRO_Windows.zip';
+  const userAgent = window.navigator.userAgent.toLowerCase();
+  const isMac = userAgent.includes('mac');
+  
+  const fileName = isMac ? 'AvaLive_VIP_PRO_Mac.zip' : 'AvaLive_VIP_PRO_Windows.zip';
   const fileUrl = `/${fileName}`;
   
   const link = document.createElement('a');
