@@ -18,28 +18,7 @@ import {
 import UniversalFileUploader from './UniversalFileUploader';
 import { syncMasterLiveState } from '../lib/masterLiveSync';
 
-const DEFAULT_AVATARS = [
-  { id: 'd1', name: 'Linh Anh', gender: 'female', style: 'Thời Trang & Xu Hướng', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80', voice: 'Nữ Hà Nội Chuẩn', tag: 'TOP SELLER', isDefault: true },
-  { id: 'd2', name: 'Mai Phương', gender: 'female', style: 'Mỹ Phẩm & Skincare', image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80', voice: 'Nữ Sài Gòn Ngọt Ngào', tag: 'HOT', isDefault: true },
-  { id: 'd3', name: 'Thu Trang', gender: 'female', style: 'Gia Dụng & Mẹ Bé', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80', voice: 'Nữ Miền Trung Ấm Áp', tag: 'RECOMMENDED', isDefault: true },
-  { id: 'd4', name: 'Thanh Hằng', gender: 'female', style: 'Doanh Nhân & Đẳng Cấp', image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80', voice: 'Nữ Hà Nội Sang Trọng', tag: 'LUXURY', isDefault: true },
-  { id: 'd5', name: 'Bảo Ngọc', gender: 'female', style: 'GenZ Năng Động', image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=400&q=80', voice: 'Nữ Trẻ Năng Lượng', tag: 'GENZ', isDefault: true },
-  { id: 'd6', name: 'Yến Nhi', gender: 'female', style: 'Trợ Lý Công Nghệ', image: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=400&q=80', voice: 'Nữ AI Thông Minh', tag: 'TECH', isDefault: true },
-  { id: 'd7', name: 'Sophia Chen', gender: 'female', style: 'English Global Host', image: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=400&q=80', voice: 'English US Female', tag: 'GLOBAL', isDefault: true },
-  { id: 'd8', name: 'Yumi Takahashi', gender: 'female', style: 'Japanese Anime/Beauty', image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=400&q=80', voice: 'Japanese Female', tag: 'JAPAN', isDefault: true },
-  { id: 'd9', name: 'Lin Lin', gender: 'female', style: 'Chinese E-Commerce', image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=400&q=80', voice: 'Mandarin Female', tag: 'CHINA', isDefault: true },
-  { id: 'd10', name: 'Elena Rossi', gender: 'female', style: 'European Luxury', image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80', voice: 'Italian/Spanish Female', tag: 'EUROPE', isDefault: true },
-  { id: 'd11', name: 'Minh Đức', gender: 'male', style: 'Nam Thần Công Nghệ', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80', voice: 'Nam Hà Nội Chuẩn', tag: 'TOP MALE', isDefault: true },
-  { id: 'd12', name: 'Hoàng Nam', gender: 'male', style: 'Doanh Nhân Lịch Lãm', image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80', voice: 'Nam Sài Gòn Ấm Áp', tag: 'PREMIUM', isDefault: true },
-  { id: 'd13', name: 'Tuấn Kiệt', gender: 'male', style: 'Thời Trang Nam Năng Động', image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=400&q=80', voice: 'Nam Trẻ Trẻ Trung', tag: 'SPORT', isDefault: true },
-  { id: 'd14', name: 'Hải Đăng', gender: 'male', style: 'Đời Sống & Gia Dụng', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80', voice: 'Nam Miền Trung Truyền Cảm', tag: 'HOME', isDefault: true },
-  { id: 'd15', name: 'Bảo Long', gender: 'male', style: 'Streamer Game & Tech', image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80', voice: 'Nam Hào Hùng', tag: 'STREAMER', isDefault: true },
-  { id: 'd16', name: 'Quốc Anh', gender: 'male', style: 'Mỹ Phẩm & Care Nam', image: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=400&q=80', voice: 'Nam Sài Gòn Nhẹ Nhàng', tag: 'GROOMING', isDefault: true },
-  { id: 'd17', name: 'Alex Rivera', gender: 'male', style: 'English Global Host', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80', voice: 'English US Male', tag: 'GLOBAL', isDefault: true },
-  { id: 'd18', name: 'Kenji Tanaka', gender: 'male', style: 'Japanese Tech Male', image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80', voice: 'Japanese Male', tag: 'JAPAN', isDefault: true },
-  { id: 'd19', name: 'Chen Wei', gender: 'male', style: 'Chinese Streamer Male', image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80', voice: 'Mandarin Male', tag: 'CHINA', isDefault: true },
-  { id: 'd20', name: 'David Miller', gender: 'male', style: 'European Fashion Male', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80', voice: 'German/English Male', tag: 'EUROPE', isDefault: true },
-];
+const DEFAULT_AVATARS = [];
 
 export default function AIAvatarStudio({ isLive, aiAvatarFeatureEnabled }) {
   // If AI Avatar is locked by Admin, default to 'videos' tab
@@ -464,11 +443,17 @@ export default function AIAvatarStudio({ isLive, aiAvatarFeatureEnabled }) {
           <div className="space-y-4">
             <div className="glass-panel p-5 rounded-3xl border border-white/15 space-y-4 relative overflow-hidden bg-black/60">
               <div className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-white/10 bg-[#121216]">
-                <img 
-                  src={activeAvatar.image} 
-                  alt={activeAvatar.name}
-                  className={`w-full h-full object-cover transition-all ${isSpeaking ? 'scale-105 brightness-110' : ''}`}
-                />
+                {activeAvatar ? (
+                  <img 
+                    src={activeAvatar.image} 
+                    alt={activeAvatar.name}
+                    className={`w-full h-full object-cover transition-all ${isSpeaking ? 'scale-105 brightness-110' : ''}`}
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 bg-[#0A0A0A]">
+                    <span className="text-xs font-bold mt-2">Chưa tải nhân vật</span>
+                  </div>
+                )}
 
                 <div className="absolute top-3 right-3 z-30">
                   <button
@@ -495,8 +480,8 @@ export default function AIAvatarStudio({ isLive, aiAvatarFeatureEnabled }) {
 
                 <div className="absolute bottom-3 left-3 right-3 p-2.5 rounded-xl bg-black/80 backdrop-blur-md border border-white/10 flex items-center justify-between text-xs text-white">
                   <div>
-                    <span className="font-bold block text-white truncate max-w-[160px]">{activeAvatar.name}</span>
-                    <span className="text-[10px] text-gray-400 font-mono">{activeAvatar.voice}</span>
+                    <span className="font-bold block text-white truncate max-w-[160px]">{activeAvatar?.name || '---'}</span>
+                    <span className="text-[10px] text-gray-400 font-mono">{activeAvatar?.voice || '---'}</span>
                   </div>
                   <Volume2 className={`w-4 h-4 ${isSpeaking ? 'text-[#EF4444] animate-bounce' : 'text-gray-400'}`} />
                 </div>

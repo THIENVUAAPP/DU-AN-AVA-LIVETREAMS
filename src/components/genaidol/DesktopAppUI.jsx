@@ -46,13 +46,7 @@ export default function DesktopAppUI() {
       const saved = localStorage.getItem('avalive_current_user');
       if (saved) return JSON.parse(saved);
     } catch {}
-    return {
-      name: 'Thành Viên VIP',
-      email: 'member@avalive.vn',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-      isAdmin: true,
-      plan: 'ENTERPRISE VIP'
-    };
+    return null;
   });
   const [realGmailInput, setRealGmailInput] = useState('');
   const [realNameInput, setRealNameInput] = useState('');
