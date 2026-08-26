@@ -50,55 +50,99 @@ if (fs.existsSync(path.join(rootDir, 'HUONG_DAN_SU_DUNG.txt'))) {
 execSync(`cd "${winStaging}" && zip -r "${winZipFilePath}" . -x "*.DS_Store"`);
 fs.rmSync(winStaging, { recursive: true, force: true });
 
-// 4. Đóng gói cho Mac
-console.log('\n[3/3] Đang đóng gói cho Mac...');
+// 4. Đóng gói cho Mac (Tạo .pkg Installer để vượt Gatekeeper)
+console.log('\n[3/3] Đang đóng gói cho Mac (.pkg Installer)...');
 const macStaging = path.join(rootDir, '.temp_mac');
 if (fs.existsSync(macStaging)) fs.rmSync(macStaging, { recursive: true, force: true });
 fs.mkdirSync(macStaging, { recursive: true });
 
-// Create Mac Launcher
-const macLauncherName = '1_NHAP_CHUOT_PHAI_CHON_OPEN_DE_CHAY.command';
-const macLauncherPath = path.join(macStaging, macLauncherName);
-fs.copyFileSync(path.join(rootDir, 'Chay_App_Mac_Linux.command'), macLauncherPath);
-fs.chmodSync(macLauncherPath, 0o755);
+try {
+  // Tạo cấu trúc .app
+  const appName = 'AvaLive_VIP';
+  const payloadDir = path.join(macStaging, 'payload');
+  const applicationsDir = path.join(payloadDir, 'Applications');
+  const appDir = path.join(applicationsDir, `${appName}.app`);
+  const contentsDir = path.join(appDir, 'Contents');
+  const macOsDir = path.join(contentsDir, 'MacOS');
+  const resourcesDir = path.join(contentsDir, 'Resources');
 
-execSync(`cp -R "${appDataDir}" "${macStaging}/"`);
+  fs.mkdirSync(macOsDir, { recursive: true });
+  fs.mkdirSync(resourcesDir, { recursive: true });
 
-// Create Mac Instructions
-const macInstructionHtml = `
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>Hướng Dẫn Khởi Động Trên Mac</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 40px; background: #111; color: #fff; line-height: 1.6; }
-        .box { background: #222; border: 1px solid #444; border-radius: 12px; padding: 30px; max-width: 600px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        h1 { color: #38bdf8; margin-top: 0; }
-        p { color: #ccc; }
-        .code { background: #000; padding: 10px 15px; border-radius: 6px; font-family: monospace; color: #a3e635; margin: 15px 0; border: 1px solid #333; }
-        .alert { background: rgba(239,68,68,0.1); border-left: 4px solid #ef4444; padding: 15px; color: #fca5a5; border-radius: 4px; margin-top: 20px; }
-    </style>
-</head>
-<body>
-    <div class="box">
-        <h1>🍏 Hướng Dẫn Khởi Động AvaLive Trên Mac</h1>
-        <p>Để khởi động phần mềm, bạn <strong>KHÔNG ĐƯỢC NHẤP ĐÚP (Double-Click)</strong>.</p>
-        <p>Bắt buộc phải làm theo 2 bước sau để vượt qua bảo mật của Apple:</p>
-        
-        <div class="alert">
-            <strong>Cách Khởi Động (Chỉ cần làm 1 lần đầu tiên):</strong><br><br>
-            1. <strong>Click Chuột Phải</strong> (hoặc nhấn giữ phím Control + Click) vào file lệnh <code>1_NHAP_CHUOT_PHAI_CHON_OPEN_DE_CHAY.command</code>.<br>
-            2. Chọn <strong>Open (Mở)</strong>.<br>
-            3. Nhấn nút <strong>Open (Mở)</strong> một lần nữa ở bảng cảnh báo (Lúc này bảng cảnh báo sẽ hiện thêm nút Mở thay vì chỉ có nút Xóa).
-        </div>
-    </div>
-</body>
-</html>
+  // Copy data
+  execSync(`cp -R "${appDataDir}" "${resourcesDir}/"`);
+
+  // Info.plist
+  const plistContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>
+    <string>${appName}</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.avalive.pro</string>
+    <key>CFBundleName</key>
+    <string>AvaLive VIP</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>10.10</string>
+</dict>
+</plist>`;
+  fs.writeFileSync(path.join(contentsDir, 'Info.plist'), plistContent);
+
+  // Launcher script
+  const executablePath = path.join(macOsDir, appName);
+  const launcherContent = `#!/bin/bash
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR"
+if [ -d "../Resources/app_data" ]; then
+    cd "../Resources/app_data"
+fi
+(sleep 1 && (open "http://localhost:3001" 2>/dev/null || open "https://avalivepro.vercel.app")) &
+if [ -x "$(which node 2>/dev/null)" ]; then
+    node backend/server.cjs
+elif [ -x "/opt/homebrew/bin/node" ]; then
+    /opt/homebrew/bin/node backend/server.cjs
+elif [ -x "/usr/local/bin/node" ]; then
+    /usr/local/bin/node backend/server.cjs
+else
+    python3 -m http.server 3001 --directory dist
+fi
 `;
-fs.writeFileSync(path.join(macStaging, '1_XEM_HUONG_DAN_CHO_MAC.html'), macInstructionHtml);
+  fs.writeFileSync(executablePath, launcherContent);
+  fs.chmodSync(executablePath, 0o755);
 
-execSync(`cd "${macStaging}" && zip -r "${macZipFilePath}" . -x "*.DS_Store"`);
+  // Tạo postinstall script để gỡ Gatekeeper
+  const scriptsDir = path.join(macStaging, 'scripts');
+  fs.mkdirSync(scriptsDir, { recursive: true });
+  const postinstallPath = path.join(scriptsDir, 'postinstall');
+  const postinstallContent = `#!/bin/bash
+echo "Removing quarantine attribute to bypass Gatekeeper..."
+xattr -cr "/Applications/${appName}.app" 2>/dev/null || true
+echo "Opening the app..."
+open "/Applications/${appName}.app" 2>/dev/null || true
+exit 0
+`;
+  fs.writeFileSync(postinstallPath, postinstallContent);
+  fs.chmodSync(postinstallPath, 0o755);
+
+  // Build .pkg
+  const macPkgFileName = 'AvaLive_VIP_PRO_Mac.pkg';
+  const macPkgFilePath = path.join(rootDir, 'public', macPkgFileName);
+  if (fs.existsSync(macPkgFilePath)) fs.unlinkSync(macPkgFilePath);
+  
+  execSync(`pkgbuild --root "${payloadDir}" --scripts "${scriptsDir}" --identifier "com.avalive.pro" --version "1.0" --install-location "/" "${macPkgFilePath}"`);
+  
+  console.log(`✅ Đã tạo file cài đặt cho Mac: public/${macPkgFileName}`);
+} catch (error) {
+  console.log('⚠️ Không thể tạo file .pkg (Có thể bạn không chạy trên Mac). Sẽ tạo ZIP dự phòng.');
+  // Fallback to zip...
+  execSync(`cd "${macStaging}" && zip -r "${macZipFilePath}" . -x "*.DS_Store"`);
+}
+
 fs.rmSync(macStaging, { recursive: true, force: true });
 fs.rmSync(stagingDir, { recursive: true, force: true });
 
