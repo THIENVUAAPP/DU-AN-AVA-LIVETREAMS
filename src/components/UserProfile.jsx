@@ -149,25 +149,6 @@ export default function UserProfile({ currentUser, setActiveTab }) {
               <span>Phân Quyền Đội Ngũ</span>
             </button>
           </div>
-
-          <div className="space-y-1 pt-2 border-t border-white/10">
-            <div className="px-3 py-1 text-[9px] font-black uppercase tracking-wider text-gray-500">TRUY CẬP NHANH</div>
-            
-
-
-            {currentUser?.isAdmin && (
-              <button 
-                onClick={() => setActiveTab && setActiveTab('admin')} 
-                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-black transition-all cursor-pointer"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Crown className="w-4 h-4 text-amber-400" />
-                  <span>Trang Super Admin</span>
-                </div>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
         </div>
 
         {/* Sidebar Footer */}
@@ -206,14 +187,7 @@ export default function UserProfile({ currentUser, setActiveTab }) {
           <div className="flex items-center gap-4">
 
 
-            {/* User Pill */}
-            <div className="flex items-center gap-2.5 pl-4 border-l border-white/10">
-              <img src={currentUser?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=fallback"} className="w-8 h-8 rounded-full border border-red-500/50 object-cover" alt="Avatar" />
-              <div className="hidden sm:block text-xs text-left">
-                <p className="font-bold text-white leading-tight">{currentUser?.name || "Nguyễn Quốc Thiện"}</p>
-                <p className="text-[10px] text-emerald-400 font-mono leading-tight">{currentUser?.email || "quocthiencr90@gmail.com"}</p>
-              </div>
-            </div>
+
           </div>
         </header>
 
@@ -250,12 +224,7 @@ export default function UserProfile({ currentUser, setActiveTab }) {
                   >
                     <Coins className="w-4 h-4" /> Nạp Thêm Token
                   </button>
-                  <button 
-                    onClick={() => setActiveTab && setActiveTab('broadcast')}
-                    className="px-5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs rounded-xl transition-all flex items-center gap-2 cursor-pointer"
-                  >
-                    <Radio className="w-4 h-4 text-red-400" /> Bắt Đầu Live
-                  </button>
+
                 </div>
               </div>
 
