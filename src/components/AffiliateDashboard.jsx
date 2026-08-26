@@ -34,7 +34,7 @@ export default function AffiliateDashboard({ currentUser }) {
   const handleConfirmPayoutRequest = () => {
     setPayoutStatus('REQUESTED');
     setPayoutModalOpen(false);
-    alert("Đã gửi yêu cầu rút 7.494.000 VNĐ hoa hồng về tài khoản ngân hàng! Admin đang xử lý duyệt qua SePay VietQR 3s.");
+    alert("Đã gửi yêu cầu rút 0 VNĐ hoa hồng về tài khoản ngân hàng! Admin đang xử lý duyệt qua SePay VietQR 3s.");
   };
 
   return (
@@ -95,8 +95,8 @@ export default function AffiliateDashboard({ currentUser }) {
             <span>Tổng Click Chuột:</span>
             <MousePointer className="w-4 h-4 text-[#3B82F6]" />
           </div>
-          <span className="text-2xl font-black text-white">418 Clicks</span>
-          <p className="text-[10px] text-emerald-400 font-mono">Tỷ lệ chuyển đổi: 4.8%</p>
+          <span className="text-2xl font-black text-white">0 Clicks</span>
+          <p className="text-[10px] text-emerald-400 font-mono">Tỷ lệ chuyển đổi: 0%</p>
         </div>
 
         <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-1">
@@ -104,7 +104,7 @@ export default function AffiliateDashboard({ currentUser }) {
             <span>Tổng Hoa Hồng Tích Lũy:</span>
             <DollarSign className="w-4 h-4 text-[#EF4444]" />
           </div>
-          <span className="text-2xl font-black text-[#EF4444]">13.491.000₫</span>
+          <span className="text-2xl font-black text-[#EF4444]">0₫</span>
           <p className="text-[10px] text-emerald-400 font-mono">Quy tắc: 30% Hưởng 1 Lần</p>
         </div>
 
@@ -113,7 +113,7 @@ export default function AffiliateDashboard({ currentUser }) {
             <span>Số Tiền Chờ Duyệt Rút:</span>
             <QrCode className="w-4 h-4 text-amber-400" />
           </div>
-          <span className="text-2xl font-black text-amber-400">7.494.000₫</span>
+          <span className="text-2xl font-black text-amber-400">0₫</span>
           <p className="text-[10px] text-amber-400 font-mono">
             {payoutStatus === 'REQUESTED' ? '● Đang chờ Admin duyệt SePay' : '● Sẵn sàng gửi yêu cầu'}
           </p>
@@ -124,7 +124,7 @@ export default function AffiliateDashboard({ currentUser }) {
             <span>Đã Rút Về Ngân Hàng:</span>
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           </div>
-          <span className="text-2xl font-black text-emerald-400">5.997.000₫</span>
+          <span className="text-2xl font-black text-emerald-400">0₫</span>
           <p className="text-[10px] text-gray-400 font-mono">Đã nhận khoản qua SePay VietQR</p>
         </div>
       </div>
@@ -150,21 +150,27 @@ export default function AffiliateDashboard({ currentUser }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {referrals.map((ref) => (
-                <tr key={ref.id} className="hover:bg-white/5 transition-all">
-                  <td className="p-3 font-bold text-white">{ref.name}</td>
-                  <td className="p-3 text-[#EF4444] font-bold">{ref.package}</td>
-                  <td className="p-3 font-black text-emerald-400">{ref.commission}</td>
-                  <td className="p-3 text-gray-400 font-mono">{ref.date}</td>
-                  <td className="p-3">
-                    <span className={`px-2.5 py-1 rounded text-[10px] font-bold ${
-                      ref.status.includes('ĐÃ CHUYỂN') ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400 animate-pulse'
-                    }`}>
-                      {ref.status}
-                    </span>
-                  </td>
+              {referrals.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="p-8 text-center text-gray-500 font-bold">Chưa có khách hàng đăng ký</td>
                 </tr>
-              ))}
+              ) : (
+                referrals.map((ref) => (
+                  <tr key={ref.id} className="hover:bg-white/5 transition-all">
+                    <td className="p-3 font-bold text-white">{ref.name}</td>
+                    <td className="p-3 text-[#EF4444] font-bold">{ref.package}</td>
+                    <td className="p-3 font-black text-emerald-400">{ref.commission}</td>
+                    <td className="p-3 text-gray-400 font-mono">{ref.date}</td>
+                    <td className="p-3">
+                      <span className={`px-2.5 py-1 rounded text-[10px] font-bold ${
+                        ref.status.includes('ĐÃ CHUYỂN') ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400 animate-pulse'
+                      }`}>
+                        {ref.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -179,18 +185,18 @@ export default function AffiliateDashboard({ currentUser }) {
               Tài khoản Gmail Tiếp Thị: <strong className="text-emerald-400 font-mono">{userGmail}</strong>
             </p>
             <p className="text-xs text-gray-300">
-              Số tiền hoa hồng rút: <strong className="text-[#EF4444] font-mono text-base">7.494.000 VNĐ</strong>
+              Số tiền hoa hồng rút: <strong className="text-[#EF4444] font-mono text-base">0 VNĐ</strong>
             </p>
 
             <div className="p-3 bg-[#0A0A0A] rounded-xl border border-white/10 text-left font-mono text-xs space-y-1 text-gray-300">
-              <p>Ngân hàng nhận: <strong className="text-white">MBBank (Ngân Hàng Quân Đội)</strong></p>
-              <p>Số Tài Khoản: <strong className="text-[#3B82F6]">998124419999</strong></p>
-              <p>Chủ Tài Khoản: <strong className="text-white">QUOC THIEN</strong></p>
+              <p>Ngân hàng nhận: <strong className="text-white">...</strong></p>
+              <p>Số Tài Khoản: <strong className="text-[#3B82F6]">...</strong></p>
+              <p>Chủ Tài Khoản: <strong className="text-white">...</strong></p>
             </div>
 
             <div className="flex gap-2">
               <button onClick={() => setPayoutModalOpen(false)} className="flex-1 py-2.5 bg-gray-800 text-gray-300 rounded-xl text-xs font-bold">HỦY BỎ</button>
-              <button onClick={handleConfirmPayoutRequest} className="flex-1 py-2.5 bg-[#8B5CF6] hover:bg-purple-600 text-white rounded-xl text-xs font-black transition-all">GỬI YÊU CẦU RÚT 7.494.000 VNĐ</button>
+              <button onClick={handleConfirmPayoutRequest} className="flex-1 py-2.5 bg-[#8B5CF6] hover:bg-purple-600 text-white rounded-xl text-xs font-black transition-all">GỬI YÊU CẦU RÚT 0 VNĐ</button>
             </div>
           </div>
         </div>

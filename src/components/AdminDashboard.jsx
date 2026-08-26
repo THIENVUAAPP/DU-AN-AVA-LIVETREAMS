@@ -33,31 +33,47 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
     const email = form.email.value;
     const role = form.role.value;
     const plan = form.plan.value;
+    const tokens = form.tokens?.value;
+    const liveTime = form.liveTime?.value;
     
     if (!email) {
       alert("Vui lòng nhập Email!");
       return;
     }
     
-    const updateData = {};
+    // Save to local overrides
+    const overrides = JSON.parse(localStorage.getItem('avalive_user_overrides') || '{}');
+    const userOverride = overrides[email] || {};
+    
     if (role !== "Không Thay Đổi") {
-      updateData.role = role === "Quản Trị Viên (Admin)" ? "admin" : (role === "Cộng Tác Viên (Affiliate)" ? "affiliate" : "user");
+      userOverride.role = role === "Quản Trị Viên (Admin)" ? "admin" : (role === "Cộng Tác Viên (Affiliate)" ? "affiliate" : "user");
     }
     if (plan !== "Không Thay Đổi") {
-      updateData.plan = plan === "Gói STARTER" ? "STARTER" : (plan === "Gói PRO" ? "PRO" : (plan === "Gói VIP" || plan === "Gói SIÊU CẤP VIP PRO" ? "VIP PRO" : "FREE"));
+      userOverride.plan = plan === "Gói STARTER" ? "STARTER" : (plan === "Gói PRO" ? "PRO" : (plan === "Gói VIP" || plan === "Gói SIÊU CẤP VIP PRO" ? "VIP PRO" : "MIỄN PHÍ"));
+    }
+    if (tokens && tokens !== "") {
+      userOverride.tokens = parseInt(tokens, 10);
+    }
+    if (liveTime && liveTime !== "") {
+      userOverride.liveTime = parseInt(liveTime, 10);
     }
     
-    if (Object.keys(updateData).length > 0) {
-      const { error } = await supabase.from('users').update(updateData).eq('email', email);
-      if (error) {
-        alert("Lỗi cập nhật: " + error.message);
-      } else {
-        alert("Cập nhật quyền thành công!");
-        // Refresh users
-        const { data } = await supabase.from('users').select('*').order('created_at', { ascending: false });
-        if (data) setUsersList(data);
-      }
-    }
+    overrides[email] = userOverride;
+    localStorage.setItem('avalive_user_overrides', JSON.stringify(overrides));
+    alert(`Đã cấp phát thành công cho ${email}!\nVui lòng yêu cầu người dùng đăng nhập lại hoặc F5 tải lại trang để nhận cấu hình mới.`);
+    form.reset();
+  };
+
+  const handleSaveSystemConfig = () => {
+    const defaultTokensInput = document.getElementById('defaultTokensInput')?.value;
+    const defaultLiveTimeInput = document.getElementById('defaultLiveTimeInput')?.value;
+    
+    const sysConfig = JSON.parse(localStorage.getItem('avalive_system_configs')) || { defaultTokens: 100, defaultLiveTime: 0 };
+    if (defaultTokensInput !== undefined) sysConfig.defaultTokens = parseInt(defaultTokensInput, 10) || 0;
+    if (defaultLiveTimeInput !== undefined) sysConfig.defaultLiveTime = parseInt(defaultLiveTimeInput, 10) || 0;
+    
+    localStorage.setItem('avalive_system_configs', JSON.stringify(sysConfig));
+    alert("Đã lưu cấu hình hệ thống mặc định!");
   };
 
 
@@ -344,7 +360,7 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
               </div>
               
               <div className="flex justify-end">
-                 <button className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-black text-sm rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all">
+                 <button onClick={handleSaveSystemConfig} className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-black text-sm rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all">
                     LƯU CẤU HÌNH HỆ THỐNG
                  </button>
               </div>

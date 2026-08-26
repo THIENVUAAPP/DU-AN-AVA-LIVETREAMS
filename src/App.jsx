@@ -48,12 +48,23 @@ export default function App() {
       const saved = localStorage.getItem("avalive_current_user");
       if (saved) {
          let parsedUser = JSON.parse(saved);
-         // Ensure plan always has a working value
-         if (!parsedUser.plan) parsedUser.plan = 'VIP PRO';
-         if (!parsedUser.tokens) parsedUser.tokens = parsedUser.isAdmin ? 999999 : 100000;
+         // Build updated user based on overrides and defaults if needed
+         let sysConfig = { defaultTokens: 100, defaultLiveTime: 0 };
+         try { sysConfig = JSON.parse(localStorage.getItem('avalive_system_configs')) || sysConfig; } catch(e) {}
+         
+         const overrides = JSON.parse(localStorage.getItem('avalive_user_overrides') || '{}');
+         const override = overrides[parsedUser.email];
+         
+         if (override) {
+           parsedUser = { ...parsedUser, ...override };
+         } else if (!parsedUser.isAdmin && (!parsedUser.plan || parsedUser.plan === 'VIP PRO')) {
+            // Apply defaults for normal user if they seem to have the old hardcoded defaults
+            parsedUser.plan = "MIỄN PHÍ";
+            parsedUser.tokens = sysConfig.defaultTokens;
+            parsedUser.liveTime = sysConfig.defaultLiveTime;
+         }
          return parsedUser;
       }
-      // Nếu chưa có user đã lưu => null (chưa đăng nhập)
       return null;
     } catch (e) {
       return null;
@@ -95,19 +106,50 @@ export default function App() {
     }
   }, []);
 
+  // Helper to build User object from Supabase Session with Defaults & Overrides
+  const processSessionUser = (sessionUser) => {
+    const isAdminUser = sessionUser.email === "quocthiencr90@gmail.com";
+    
+    let sysConfig = { defaultTokens: 100, defaultLiveTime: 0 };
+    try { sysConfig = JSON.parse(localStorage.getItem('avalive_system_configs')) || sysConfig; } catch(e) {}
+    
+    let gUser = {
+      name: sessionUser.user_metadata?.full_name || sessionUser.email.split("@")[0],
+      email: sessionUser.email,
+      avatar: sessionUser.user_metadata?.avatar_url || "https://lh3.googleusercontent.com/a/default-user",
+      isAdmin: isAdminUser,
+      plan: isAdminUser ? "ENTERPRISE" : "MIỄN PHÍ",
+      tokens: isAdminUser ? 999999 : sysConfig.defaultTokens,
+      liveTime: isAdminUser ? 999999 : sysConfig.defaultLiveTime,
+      role: isAdminUser ? 'admin' : 'user'
+    };
+
+    try {
+      const overrides = JSON.parse(localStorage.getItem('avalive_user_overrides') || '{}');
+      const override = overrides[sessionUser.email];
+      if (override) {
+        gUser = { ...gUser, ...override };
+      }
+    } catch(e) {}
+
+    // Maintain existing local tokens if no override and user exists
+    try {
+      const existingUser = JSON.parse(localStorage.getItem("avalive_current_user"));
+      const overrides = JSON.parse(localStorage.getItem('avalive_user_overrides') || '{}');
+      if (existingUser && existingUser.email === sessionUser.email && !overrides[sessionUser.email]) {
+         gUser.tokens = existingUser.tokens ?? gUser.tokens;
+         gUser.liveTime = existingUser.liveTime ?? gUser.liveTime;
+      }
+    } catch(e) {}
+
+    return gUser;
+  };
+
   // Check Supabase Auth Session on mount
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        const isAdminUser = session.user.email === "quocthiencr90@gmail.com";
-        const gUser = {
-          name: session.user.user_metadata?.full_name || session.user.email.split("@")[0],
-          email: session.user.email,
-          avatar: session.user.user_metadata?.avatar_url || "https://lh3.googleusercontent.com/a/default-user",
-          isAdmin: isAdminUser,
-          plan: isAdminUser ? "ENTERPRISE" : "VIP PRO",
-          tokens: isAdminUser ? 999999 : 100000,
-        };
+        const gUser = processSessionUser(session.user);
         setCurrentUser(gUser);
         localStorage.setItem("avalive_current_user", JSON.stringify(gUser));
         syncUserToSupabase(gUser);
@@ -116,15 +158,7 @@ export default function App() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        const isAdminUser = session.user.email === "quocthiencr90@gmail.com";
-        const gUser = {
-          name: session.user.user_metadata?.full_name || session.user.email.split("@")[0],
-          email: session.user.email,
-          avatar: session.user.user_metadata?.avatar_url || "https://lh3.googleusercontent.com/a/default-user",
-          isAdmin: isAdminUser,
-          plan: isAdminUser ? "ENTERPRISE" : "VIP PRO",
-          tokens: isAdminUser ? 999999 : 100000,
-        };
+        const gUser = processSessionUser(session.user);
         setCurrentUser(gUser);
         localStorage.setItem("avalive_current_user", JSON.stringify(gUser));
         syncUserToSupabase(gUser);

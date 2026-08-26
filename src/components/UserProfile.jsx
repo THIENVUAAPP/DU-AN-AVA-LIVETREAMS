@@ -239,7 +239,7 @@ export default function UserProfile({ currentUser, setActiveTab }) {
                     <span className="text-xs font-bold uppercase">Hoa Hồng Tích Lũy</span>
                     <DollarSign className="w-4 h-4" />
                   </div>
-                  <p className="text-2xl font-black text-white font-mono">15.850.000đ</p>
+                  <p className="text-2xl font-black text-white font-mono">0đ</p>
                   <p className="text-[10px] text-gray-400">Tỉ lệ chia sẻ hoa hồng 30%</p>
                 </div>
 
@@ -257,7 +257,7 @@ export default function UserProfile({ currentUser, setActiveTab }) {
                     <span className="text-xs font-bold uppercase">Khách Đăng Ký</span>
                     <User className="w-4 h-4" />
                   </div>
-                  <p className="text-2xl font-black text-white font-mono">128 người</p>
+                  <p className="text-2xl font-black text-white font-mono">0 <span className="text-base text-gray-400 font-sans">người</span></p>
                   <p className="text-[10px] text-gray-400">Qua link giới thiệu Affiliate</p>
                 </div>
               </div>
