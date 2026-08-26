@@ -12,7 +12,29 @@ import AffiliateProgram from './AffiliateProgram';
 
 export default function UserProfile({ currentUser, setActiveTab }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [activeSidebarTab, setActiveSidebarTab] = useState('overview');
+  const [activeSidebarTab, setActiveSidebarTab] = useState('account');
+  const [isEditingBank, setIsEditingBank] = useState(false);
+  const [bankInfo, setBankInfo] = useState({
+    bankName: currentUser?.bankName || 'MBBank',
+    accountNumber: currentUser?.accountNumber || 'Chưa cập nhật',
+    accountHolder: currentUser?.accountHolder || currentUser?.name || ''
+  });
+
+  const sysConfig = JSON.parse(localStorage.getItem('avalive_system_configs')) || { defaultTokens: 100, defaultLiveTime: 0, costVoice: 5, costLiveAI: 10 };
+
+  const handleSaveBank = () => {
+    // Save to local storage user object
+    try {
+      const saved = localStorage.getItem("avalive_current_user");
+      if (saved) {
+        let parsedUser = JSON.parse(saved);
+        parsedUser = { ...parsedUser, ...bankInfo };
+        localStorage.setItem("avalive_current_user", JSON.stringify(parsedUser));
+      }
+    } catch (e) {}
+    setIsEditingBank(false);
+    alert("Đã lưu thông tin tài khoản ngân hàng!");
+  };
 
   // Token & Point Management State - Always synced with currentUser
   const userTokens = currentUser?.tokens || 0;
@@ -214,7 +236,7 @@ export default function UserProfile({ currentUser, setActiveTab }) {
 
                 <div className="flex flex-wrap items-center gap-3 z-10">
                   <button 
-                    onClick={() => setActiveTab && setActiveTab('enterprise')}
+                    onClick={() => setActiveTab && setActiveTab('overview')}
                     className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-black text-xs rounded-xl shadow-lg shadow-orange-500/20 transition-all flex items-center gap-2 cursor-pointer"
                   >
                     <Coins className="w-4 h-4" /> Nâng Cấp Gói
@@ -292,23 +314,50 @@ export default function UserProfile({ currentUser, setActiveTab }) {
 
                 {/* Bank Account for Payouts */}
                 <div className="p-6 rounded-2xl bg-[#12141F] border border-white/10 space-y-4">
-                  <div className="flex items-center gap-2 text-emerald-400 text-xs font-black uppercase">
-                    <CreditCard className="w-4 h-4" /> Tài Khoản Nhận Tiền Rút
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-emerald-400 text-xs font-black uppercase">
+                      <CreditCard className="w-4 h-4" /> Tài Khoản Nhận Tiền Rút
+                    </div>
+                    {!isEditingBank && (
+                      <button onClick={() => setIsEditingBank(true)} className="text-[10px] text-cyan-400 hover:text-cyan-300 font-bold">Cập Nhật</button>
+                    )}
                   </div>
-                  <div className="space-y-2 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Ngân Hàng:</span>
-                      <span className="font-bold text-white">{profile.bankName}</span>
+                  
+                  {isEditingBank ? (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-[10px] text-gray-400">Ngân Hàng (VD: MBBank)</label>
+                        <input type="text" value={bankInfo.bankName} onChange={e => setBankInfo({...bankInfo, bankName: e.target.value})} className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs mt-1" />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-gray-400">Số Tài Khoản</label>
+                        <input type="text" value={bankInfo.accountNumber} onChange={e => setBankInfo({...bankInfo, accountNumber: e.target.value})} className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs font-mono mt-1" />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-gray-400">Tên Chủ Tài Khoản</label>
+                        <input type="text" value={bankInfo.accountHolder} onChange={e => setBankInfo({...bankInfo, accountHolder: e.target.value.toUpperCase()})} className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs uppercase mt-1" />
+                      </div>
+                      <div className="flex gap-2 pt-2">
+                        <button onClick={() => setIsEditingBank(false)} className="flex-1 py-1.5 bg-gray-800 text-gray-300 rounded-lg text-xs font-bold">Hủy</button>
+                        <button onClick={handleSaveBank} className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold">Lưu</button>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Số Tài Khoản:</span>
-                      <span className="font-bold text-emerald-400 font-mono">{profile.accountNumber}</span>
+                  ) : (
+                    <div className="space-y-2 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Ngân Hàng:</span>
+                        <span className="font-bold text-white">{bankInfo.bankName}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Số Tài Khoản:</span>
+                        <span className="font-bold text-emerald-400 font-mono">{bankInfo.accountNumber}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Chủ Tài Khoản:</span>
+                        <span className="font-bold text-white uppercase">{bankInfo.accountHolder}</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Chủ Tài Khoản:</span>
-                      <span className="font-bold text-white uppercase">{profile.accountHolder}</span>
-                    </div>
-                  </div>
+                  )}
                 </div>
 
               </div>
@@ -334,7 +383,7 @@ export default function UserProfile({ currentUser, setActiveTab }) {
                   </div>
 
                   <button 
-                    onClick={() => alert("⚡ Đang mở cổng nạp VietQR SePay tự động...")}
+                    onClick={() => setActiveTab && setActiveTab('overview')}
                     className="px-6 py-3 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-black font-black text-sm rounded-2xl shadow-xl shadow-amber-500/30 transition-all hover:scale-105 cursor-pointer flex items-center gap-2"
                   >
                     <Coins className="w-5 h-5" /> NẠP THÊM TOKEN NGAY
@@ -345,11 +394,11 @@ export default function UserProfile({ currentUser, setActiveTab }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t border-white/10 text-xs">
                   <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1">
                     <span className="text-amber-300 font-bold">🎙️ Giọng Nói & Trò Chuyện:</span>
-                    <p className="text-[11px] text-gray-400">Trừ 5 Tokens / câu thoại AI</p>
+                    <p className="text-[11px] text-gray-400">Trừ {sysConfig.costVoice || 5} Tokens / câu thoại AI</p>
                   </div>
                   <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1">
-                    <span className="text-cyan-300 font-bold">🎬 Livestream AI Idol 4K:</span>
-                    <p className="text-[11px] text-gray-400">Trừ 10 Tokens / phút phát sóng</p>
+                    <span className="text-cyan-300 font-bold">🎥 Livestream AI Idol 4K:</span>
+                    <p className="text-[11px] text-gray-400">Trừ {sysConfig.costLiveAI || 10} Tokens / phút phát sóng</p>
                   </div>
                 </div>
               </div>

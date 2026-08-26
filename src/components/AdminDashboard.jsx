@@ -33,7 +33,9 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
     const email = form.email.value;
     const role = form.role.value;
     const plan = form.plan.value;
+    const tokenAction = form.tokenAction?.value || 'override';
     const tokens = form.tokens?.value;
+    const timeAction = form.timeAction?.value || 'override';
     const liveTime = form.liveTime?.value;
     
     if (!email) {
@@ -52,25 +54,35 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
       userOverride.plan = plan === "Gói STARTER" ? "STARTER" : (plan === "Gói PRO" ? "PRO" : (plan === "Gói VIP" || plan === "Gói SIÊU CẤP VIP PRO" ? "VIP PRO" : "MIỄN PHÍ"));
     }
     if (tokens && tokens !== "") {
-      userOverride.tokens = parseInt(tokens, 10);
+      const val = parseInt(tokens, 10);
+      if (tokenAction === 'add') userOverride.tokens = (userOverride.tokens || 0) + val;
+      else if (tokenAction === 'sub') userOverride.tokens = Math.max(0, (userOverride.tokens || 0) - val);
+      else userOverride.tokens = val;
     }
     if (liveTime && liveTime !== "") {
-      userOverride.liveTime = parseInt(liveTime, 10);
+      const val = parseInt(liveTime, 10);
+      if (timeAction === 'add') userOverride.liveTime = (userOverride.liveTime || 0) + val;
+      else if (timeAction === 'sub') userOverride.liveTime = Math.max(0, (userOverride.liveTime || 0) - val);
+      else userOverride.liveTime = val;
     }
     
     overrides[email] = userOverride;
     localStorage.setItem('avalive_user_overrides', JSON.stringify(overrides));
-    alert(`Đã cấp phát thành công cho ${email}!\nVui lòng yêu cầu người dùng đăng nhập lại hoặc F5 tải lại trang để nhận cấu hình mới.`);
+    alert(`Đã cập nhật thành công cho ${email}!\nVui lòng yêu cầu người dùng đăng nhập lại hoặc F5 tải lại trang để nhận cấu hình mới.`);
     form.reset();
   };
 
   const handleSaveSystemConfig = () => {
     const defaultTokensInput = document.getElementById('defaultTokensInput')?.value;
     const defaultLiveTimeInput = document.getElementById('defaultLiveTimeInput')?.value;
+    const costVoice = document.getElementById('costVoiceInput')?.value;
+    const costLiveAI = document.getElementById('costLiveAIInput')?.value;
     
-    const sysConfig = JSON.parse(localStorage.getItem('avalive_system_configs')) || { defaultTokens: 100, defaultLiveTime: 0 };
+    const sysConfig = JSON.parse(localStorage.getItem('avalive_system_configs')) || { defaultTokens: 100, defaultLiveTime: 0, costVoice: 5, costLiveAI: 10 };
     if (defaultTokensInput !== undefined) sysConfig.defaultTokens = parseInt(defaultTokensInput, 10) || 0;
     if (defaultLiveTimeInput !== undefined) sysConfig.defaultLiveTime = parseInt(defaultLiveTimeInput, 10) || 0;
+    if (costVoice !== undefined) sysConfig.costVoice = parseInt(costVoice, 10) || 5;
+    if (costLiveAI !== undefined) sysConfig.costLiveAI = parseInt(costLiveAI, 10) || 10;
     
     localStorage.setItem('avalive_system_configs', JSON.stringify(sysConfig));
     alert("Đã lưu cấu hình hệ thống mặc định!");
@@ -101,10 +113,10 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
                 <thead className="bg-[#1A1A24] text-gray-400">
                    <tr>
                       <th className="p-4 font-bold">Người Dùng</th>
-                      <th className="p-4 font-bold">Email</th>
-                      <th className="p-4 font-bold">Gói Hiện Tại</th>
-                      <th className="p-4 font-bold">Vai Trò</th>
-                      <th className="p-4 font-bold">Tham Gia AFF</th>
+                      <th className="p-4 font-bold">Gói & Vai Trò</th>
+                      <th className="p-4 font-bold">Tokens</th>
+                      <th className="p-4 font-bold">Live Time</th>
+                      <th className="p-4 font-bold">Ngân Hàng</th>
                       <th className="p-4 font-bold text-right">Thao Tác</th>
                    </tr>
                 </thead>
@@ -114,11 +126,24 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
                    ) : usersList.length > 0 ? (
                       usersList.map((u, i) => (
                         <tr key={i} className="hover:bg-white/5">
-                           <td className="p-4 font-bold text-white">{u.name || 'Người dùng'}</td>
-                           <td className="p-4 text-gray-400">{u.email}</td>
-                           <td className="p-4"><span className="px-2 py-1 bg-white/5 rounded text-[10px] font-bold uppercase">{u.plan || 'FREE'}</span></td>
-                           <td className="p-4 text-emerald-400 font-bold">{u.role === 'admin' ? 'Admin' : (u.role === 'affiliate' ? 'Affiliate' : 'User')}</td>
-                           <td className="p-4 text-center">{u.role === 'affiliate' ? '✅' : '-'}</td>
+                           <td className="p-4">
+                             <div className="font-bold text-white">{u.name || 'Người dùng'}</div>
+                             <div className="text-[10px] text-gray-400 font-mono">{u.email}</div>
+                           </td>
+                           <td className="p-4">
+                             <span className="px-2 py-1 bg-white/5 rounded text-[10px] font-bold uppercase block w-fit mb-1">{u.plan || 'FREE'}</span>
+                             <span className="text-[10px] text-emerald-400 font-bold">{u.role === 'admin' ? 'Admin' : (u.role === 'affiliate' ? 'Affiliate' : 'User')}</span>
+                           </td>
+                           <td className="p-4 font-bold text-amber-400 font-mono">{u.tokens || 0}</td>
+                           <td className="p-4 font-bold text-cyan-400 font-mono">{u.liveTime || 0}m</td>
+                           <td className="p-4">
+                             {u.bankName ? (
+                               <div className="text-[10px]">
+                                 <div className="text-white font-bold">{u.bankName}</div>
+                                 <div className="text-emerald-400 font-mono">{u.accountNumber}</div>
+                               </div>
+                             ) : <span className="text-[10px] text-gray-500">-</span>}
+                           </td>
                            <td className="p-4 text-right"><button className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded font-bold transition-colors">Xem</button></td>
                         </tr>
                       ))
@@ -253,8 +278,26 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
                       </select>
                    </div>
                    <div>
-                      <label className="text-xs text-gray-400 font-bold block mb-2">Hoa Hồng Tùy Chỉnh (%) - Để trống nếu dùng mặc định</label>
-                      <input name="commission" type="number" placeholder="VD: 40" className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:border-purple-500 focus:outline-none" />
+                      <label className="text-xs text-gray-400 font-bold block mb-2">Thao Tác Token</label>
+                      <div className="flex gap-2">
+                        <select name="tokenAction" className="bg-[#0A0A0A] border border-white/10 rounded-xl px-2 py-2 text-white text-sm focus:border-purple-500 focus:outline-none">
+                           <option value="override">Ghi Đè (=)</option>
+                           <option value="add">Cộng Thêm (+)</option>
+                           <option value="sub">Trừ Đi (-)</option>
+                        </select>
+                        <input name="tokens" type="number" placeholder="Số lượng Token" className="flex-1 bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:border-purple-500 focus:outline-none" />
+                      </div>
+                   </div>
+                   <div>
+                      <label className="text-xs text-gray-400 font-bold block mb-2">Thao Tác Thời Gian Live (Phút)</label>
+                      <div className="flex gap-2">
+                        <select name="timeAction" className="bg-[#0A0A0A] border border-white/10 rounded-xl px-2 py-2 text-white text-sm focus:border-purple-500 focus:outline-none">
+                           <option value="override">Ghi Đè (=)</option>
+                           <option value="add">Cộng Thêm (+)</option>
+                           <option value="sub">Trừ Đi (-)</option>
+                        </select>
+                        <input name="liveTime" type="number" placeholder="Số phút" className="flex-1 bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:border-purple-500 focus:outline-none" />
+                      </div>
                    </div>
                    <button type="submit" className="w-full py-3 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl text-xs font-bold text-white shadow-glow-purple mt-4 hover:scale-[1.02] transition-transform">
                       CẬP NHẬT QUYỀN
@@ -323,6 +366,31 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
                     <div className="space-y-2 col-span-2">
                        <label className="text-xs text-gray-400 font-bold block">Banner Trang Chủ (Mô Tả)</label>
                        <textarea rows="3" defaultValue="Giải Pháp Chốt Đơn Hàng Tự Động Hoàn Toàn 100%!" className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-2 text-white text-sm"></textarea>
+                    </div>
+                 </div>
+              </div>
+
+              <div className="bg-[#141419] border border-white/5 rounded-2xl p-6 space-y-4">
+                 <h3 className="text-sm font-bold text-white flex items-center gap-2 border-b border-white/5 pb-4"><Coins className="w-4 h-4 text-amber-400" /> Cấu Hình Token & Live Time Mặc Định</h3>
+                 <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                       <label className="text-xs text-gray-400 font-bold block">Tặng Token Mặc Định (Tài khoản mới)</label>
+                       <input id="defaultTokensInput" type="number" defaultValue="100" className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-2 text-white text-sm font-bold text-amber-400" />
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-xs text-gray-400 font-bold block">Thời Gian Live Mặc Định (Phút)</label>
+                       <input id="defaultLiveTimeInput" type="number" defaultValue="0" className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-2 text-white text-sm font-bold text-cyan-400" />
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-xs text-gray-400 font-bold block">Phí Trò Chuyện & Giọng Nói AI (Tokens/câu)</label>
+                       <input id="costVoiceInput" type="number" defaultValue="5" className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-2 text-white text-sm font-bold text-pink-400" />
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-xs text-gray-400 font-bold block">Phí Livestream AI (Tokens/phút)</label>
+                       <input id="costLiveAIInput" type="number" defaultValue="10" className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-2 text-white text-sm font-bold text-purple-400" />
+                    </div>
+                    <div className="col-span-2 text-right">
+                       <button onClick={handleSaveSystemConfig} className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold text-xs text-white">Lưu Cấu Hình</button>
                     </div>
                  </div>
               </div>

@@ -10,64 +10,89 @@ export const TOKEN_RATES = {
 };
 
 const STORAGE_KEY = 'avalive_token_data';
+const USER_KEY = 'avalive_current_user';
+const SYS_KEY = 'avalive_system_configs';
 const TokenContext = createContext(null);
 
 export function TokenProvider({ children }) {
   const [tokenData, setTokenData] = useState(() => {
+    // Read from USER_KEY for balance, STORAGE_KEY for history
+    let balance = 100;
+    let history = [];
+    
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && typeof parsed === 'object') {
-          const currentBal = typeof parsed.balance === 'number' ? parsed.balance : 0;
-          if (currentBal < 100000) {
-            parsed.balance = 100000;
-            parsed.history = [
-              { id: Date.now(), type: 'add', amount: 100000, reason: 'Cấp 100.000 Token tài khoản Quản trị Admin', time: new Date().toISOString() },
-              ...(Array.isArray(parsed.history) ? parsed.history : [])
-            ];
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
-          }
-          return {
-            balance: typeof parsed.balance === 'number' ? parsed.balance : 100000,
-            history: Array.isArray(parsed.history) ? parsed.history : []
-          };
+      const userSaved = localStorage.getItem(USER_KEY);
+      if (userSaved) {
+        const parsedUser = JSON.parse(userSaved);
+        if (typeof parsedUser.tokens === 'number') {
+          balance = parsedUser.tokens;
+        }
+      }
+      
+      const histSaved = localStorage.getItem(STORAGE_KEY);
+      if (histSaved) {
+        const parsedHist = JSON.parse(histSaved);
+        if (Array.isArray(parsedHist?.history)) {
+          history = parsedHist.history;
         }
       }
     } catch (e) {
       console.warn("Error parsing token data:", e);
     }
-    const initialAdminData = {
-      balance: 100000,
-      history: [
-        { id: Date.now(), type: 'add', amount: 100000, reason: 'Cấp 100.000 Token tài khoản Quản trị Admin', time: new Date().toISOString() }
-      ]
-    };
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(initialAdminData)); } catch (e) {}
-    return initialAdminData;
+    
+    return { balance, history };
   });
+
+  // Get dynamic rates from system config
+  const getDynamicRates = () => {
+    try {
+      const sysConfig = JSON.parse(localStorage.getItem(SYS_KEY)) || {};
+      return {
+        ...TOKEN_RATES,
+        TTS_PER_CHAR: sysConfig.costVoice || 5,
+        AI_LIVE_PER_30S: sysConfig.costLiveAI || 10
+      };
+    } catch (e) {
+      return { ...TOKEN_RATES, TTS_PER_CHAR: 5, AI_LIVE_PER_30S: 10 };
+    }
+  };
 
   const [lowBalanceWarned, setLowBalanceWarned] = useState(false);
   const notifyRef = useRef(null);
 
   useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(tokenData)); } catch (e) {}
+    // Sync balance to USER_KEY
+    try {
+      const userSaved = localStorage.getItem(USER_KEY);
+      if (userSaved) {
+        const parsedUser = JSON.parse(userSaved);
+        parsedUser.tokens = tokenData.balance;
+        localStorage.setItem(USER_KEY, JSON.stringify(parsedUser));
+      }
+      
+      // Sync history to STORAGE_KEY
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ history: tokenData.history }));
+      
+      // Dispatch custom event for UI updates (like UserProfile)
+      window.dispatchEvent(new Event('avalive:user_updated'));
+    } catch (e) {}
   }, [tokenData]);
 
   useEffect(() => {
-    const curBal = Number(tokenData?.balance ?? 100000);
-    if (curBal > 0 && curBal < TOKEN_RATES.LOW_BALANCE_WARN && !lowBalanceWarned) {
+    const curBal = Number(tokenData?.balance ?? 0);
+    const rates = getDynamicRates();
+    if (curBal > 0 && curBal < rates.LOW_BALANCE_WARN && !lowBalanceWarned) {
       setLowBalanceWarned(true);
       if (notifyRef.current) notifyRef.current({ type: 'warn', message: `⚠️ Số dư token sắp hết! Còn lại ${curBal} token. Vui lòng nạp thêm.` });
     }
-    if (curBal >= TOKEN_RATES.LOW_BALANCE_WARN) setLowBalanceWarned(false);
+    if (curBal >= rates.LOW_BALANCE_WARN) setLowBalanceWarned(false);
   }, [tokenData?.balance, lowBalanceWarned]);
 
   const addToken = useCallback((amount, reason = 'Nạp token') => {
     const validAmount = Number(amount) || 0;
     const entry = { id: Date.now(), type: 'add', amount: validAmount, reason, time: new Date().toISOString() };
     setTokenData(prev => {
-      const prevBal = Number(prev?.balance ?? 100000);
+      const prevBal = Number(prev?.balance ?? 0);
       const prevHist = Array.isArray(prev?.history) ? prev.history : [];
       return { balance: prevBal + validAmount, history: [entry, ...prevHist].slice(0, 200) };
     });
@@ -76,7 +101,7 @@ export function TokenProvider({ children }) {
   const deductToken = useCallback((amount, reason = 'Sử dụng dịch vụ') => {
     const validAmount = Number(amount) || 0;
     setTokenData(prev => {
-      const prevBal = Number(prev?.balance ?? 100000);
+      const prevBal = Number(prev?.balance ?? 0);
       const prevHist = Array.isArray(prev?.history) ? prev.history : [];
       const actual = Math.min(validAmount, prevBal);
       if (actual <= 0) return prev;
@@ -110,11 +135,11 @@ export function TokenProvider({ children }) {
   const setNotifyCallback = useCallback((fn) => { notifyRef.current = fn; }, []);
   const clearHistory = useCallback(() => { setTokenData(prev => ({ ...prev, history: [] })); }, []);
 
-  const safeBalance = Number(tokenData?.balance ?? 100000);
+  const safeBalance = Number(tokenData?.balance ?? 0);
   const safeHistory = Array.isArray(tokenData?.history) ? tokenData.history : [];
 
   return (
-    <TokenContext.Provider value={{ balance: safeBalance, history: safeHistory, addToken, deductToken, setNotifyCallback, clearHistory }}>
+    <TokenContext.Provider value={{ balance: safeBalance, history: safeHistory, addToken, deductToken, setNotifyCallback, clearHistory, getDynamicRates }}>
       {children}
     </TokenContext.Provider>
   );
@@ -124,12 +149,13 @@ export function useToken() {
   const ctx = useContext(TokenContext);
   if (!ctx) {
     return {
-      balance: 100000,
+      balance: 0,
       history: [],
       addToken: () => {},
       deductToken: () => {},
       setNotifyCallback: () => {},
-      clearHistory: () => {}
+      clearHistory: () => {},
+      getDynamicRates: () => ({ ...TOKEN_RATES, TTS_PER_CHAR: 5, AI_LIVE_PER_30S: 10 })
     };
   }
   return ctx;

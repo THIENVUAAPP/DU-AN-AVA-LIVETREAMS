@@ -198,14 +198,14 @@ export default function App() {
     const nameClean = realNameInput.trim() || emailClean.split("@")[0];
     const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(emailClean)}`;
 
-    const newUser = {
-      name: nameClean,
+    const mockSessionUser = {
       email: emailClean,
-      avatar: avatarUrl,
-      isAdmin: isAdmin,
-      plan: isAdmin ? "ENTERPRISE" : "VIP PRO",
-      tokens: isAdmin ? 999999 : 100000
+      user_metadata: {
+        full_name: nameClean,
+        avatar_url: avatarUrl
+      }
     };
+    const newUser = processSessionUser(mockSessionUser);
 
     setCurrentUser(newUser);
     localStorage.setItem("avalive_current_user", JSON.stringify(newUser));

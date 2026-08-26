@@ -15,7 +15,7 @@ import WorkspaceTacVu from './WorkspaceTacVu';
 import GeneralSettings from './GeneralSettings';
 import ThanhToanCoin from './ThanhToanCoin';
 import TokenHistoryModal from './TokenHistoryModal';
-import { useToken, TOKEN_RATES } from './TokenContext';
+import { useToken } from './TokenContext';
 import { useLiveCoordinator } from '../../hooks/useLiveCoordinator';
 import AIAudioPlayer from './AIAudioPlayer';
 import QuickResponseModal from './QuickResponseModal';
@@ -557,7 +557,7 @@ export default function DesktopAppUI() {
     return () => window.removeEventListener('avalive_language_changed', handleLang);
   }, []);
 
-  const { balance, deductToken, setNotifyCallback } = useToken();
+  const { balance, deductToken, setNotifyCallback, getDynamicRates } = useToken();
   
   // Audio Player Ref
   const audioPlayerRef = useRef(null);
@@ -639,11 +639,12 @@ export default function DesktopAppUI() {
   // Auto-deduct tokens when live session is active (AI Brain & Server 유지)
   useEffect(() => {
     if (!isConnected) return;
+    const rates = getDynamicRates();
     const timer = setInterval(() => {
-      deductToken(TOKEN_RATES.AI_LIVE_PER_30S || 5, 'AI LLM Brain & Duy trì Live (30s)');
+      deductToken(rates.AI_LIVE_PER_30S || 5, 'AI LLM Brain & Duy trì Live (30s)');
     }, 30000);
     return () => clearInterval(timer);
-  }, [isConnected, deductToken]);
+  }, [isConnected, deductToken, getDynamicRates]);
 
   // Stop session when tokens run out
   useEffect(() => {
@@ -2132,13 +2133,13 @@ export default function DesktopAppUI() {
             className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border ${
               balance === 0
                 ? 'bg-red-500/20 border-red-500/40 text-red-400 hover:bg-red-500/30'
-                : balance < TOKEN_RATES.LOW_BALANCE_WARN
+                : balance < getDynamicRates().LOW_BALANCE_WARN
                 ? 'bg-orange-500/20 border-orange-500/40 text-orange-400 hover:bg-orange-500/30'
                 : 'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20'
             }`}
             title="Xem lịch sử Token"
           >
-            {balance < TOKEN_RATES.LOW_BALANCE_WARN && <AlertTriangle size={10} />}
+            {balance < getDynamicRates().LOW_BALANCE_WARN && <AlertTriangle size={10} />}
             <Coins size={10} />
             <span className="whitespace-nowrap">{balance.toLocaleString()}</span>
           </button>
