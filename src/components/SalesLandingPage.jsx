@@ -10,6 +10,7 @@ import {
 import SePayModal from './SePayModal';
 import TechEcosystemMap from './TechEcosystemMap';
 import { plans } from '../lib/plansConfig';
+import { supabase } from '../lib/supabaseClient';
 
 const customStyles = `
   @keyframes marquee {
@@ -194,7 +195,8 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
                     {/* Logout Button */}
                     <div className="pt-2 border-t border-white/10">
                       <button
-                        onClick={() => {
+                        onClick={async () => {
+                          await supabase.auth.signOut();
                           localStorage.removeItem('avalive_current_user');
                           window.location.reload();
                         }}

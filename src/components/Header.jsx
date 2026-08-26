@@ -21,6 +21,7 @@ import {
   MessageSquare,
   Download
 } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
 
 export default function Header({ 
   activeTab, 
@@ -228,7 +229,8 @@ export default function Header({
                   {/* Logout Button */}
                   <div className="pt-2 border-t border-white/10">
                     <button
-                      onClick={() => {
+                      onClick={async () => {
+                        await supabase.auth.signOut();
                         setCurrentUser(null);
                         localStorage.removeItem('avalive_current_user');
                         setActiveTab("overview");
