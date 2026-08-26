@@ -55,16 +55,7 @@ fs.chmodSync(path.join(stagingDir, 'Chay_Mac.command'), 0o755);
 fs.copyFileSync(path.join(rootDir, 'Chay_App_Windows.bat'), path.join(stagingDir, 'Chay_App_Windows.bat'));
 fs.copyFileSync(path.join(rootDir, 'Chay_App_Windows.bat'), path.join(stagingDir, 'Chay_Windows.bat'));
 
-// Xóa index.html cũ nếu có, tạo file index.html hướng dẫn người dùng
-const warningHtml = `
-<!DOCTYPE html>
-<html lang="vi">
-<head><meta charset="UTF-8"><title>HƯỚNG DẪN MỞ PHẦN MỀM</title><style>body{background:#000;color:#fff;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;text-align:center}h1{color:#EF4444}p{font-size:18px}</style></head>
-<body><div><h1>⚠️ BẠN ĐANG MỞ SAI CÁCH!</h1><p>Vui lòng tắt trang này và <b>nhấn đúp chuột vào file <code>Chay_App_Windows.bat</code></b> (nếu dùng Windows)<br>hoặc <b><code>Chay_App_Mac_Linux.command</code></b> (nếu dùng Mac) để mở phần mềm.</p></div></body>
-</html>
-`;
-fs.writeFileSync(path.join(stagingDir, 'index.html'), warningHtml);
-fs.writeFileSync(path.join(stagingDir, 'Mo_Ung_Dung_Web.html'), warningHtml);
+// Không tạo file HTML ở thư mục gốc để tránh người dùng click nhầm
 if (fs.existsSync(path.join(rootDir, 'HUONG_DAN_SU_DUNG.txt'))) {
   fs.copyFileSync(path.join(rootDir, 'HUONG_DAN_SU_DUNG.txt'), path.join(stagingDir, 'HUONG_DAN_SU_DUNG.txt'));
 }
