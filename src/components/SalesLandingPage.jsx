@@ -127,20 +127,12 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
 
           <div className="flex items-center gap-4">
             {!currentUser ? (
-              <>
-                <button 
-                  onClick={() => setGoogleLoginModalOpen(true)}
-                  className="px-5 py-2 rounded-full border border-white/20 text-white font-semibold text-sm hover:bg-white/10 transition-all cursor-pointer"
-                >
-                  Đăng nhập
-                </button>
-                <button 
-                  onClick={() => setGoogleLoginModalOpen(true)}
-                  className="px-5 py-2 rounded-full bg-gradient-to-r from-[#F59E0B] to-[#F43F5E] text-white font-bold text-sm shadow-[0_0_15px_rgba(245,158,11,0.4)] hover:shadow-[0_0_25px_rgba(245,158,11,0.6)] transition-all hover:scale-105 cursor-pointer"
-                >
-                  Dùng thử miễn phí
-                </button>
-              </>
+              <button 
+                onClick={() => setGoogleLoginModalOpen(true)}
+                className="px-5 py-2 rounded-full border border-white/20 text-white font-semibold text-sm hover:bg-white/10 transition-all cursor-pointer"
+              >
+                Đăng nhập
+              </button>
             ) : (
               <div className="relative">
                 <button

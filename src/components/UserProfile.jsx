@@ -153,16 +153,7 @@ export default function UserProfile({ currentUser, setActiveTab }) {
           <div className="space-y-1 pt-2 border-t border-white/10">
             <div className="px-3 py-1 text-[9px] font-black uppercase tracking-wider text-gray-500">TRUY CẬP NHANH</div>
             
-            <button 
-              onClick={() => setActiveTab && setActiveTab('broadcast')} 
-              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-300 font-black transition-all cursor-pointer"
-            >
-              <div className="flex items-center gap-2.5">
-                <Radio className="w-4 h-4 text-red-400 animate-ping" />
-                <span>Phòng Live Studio 4K</span>
-              </div>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+
 
             {currentUser?.isAdmin && (
               <button 
@@ -213,14 +204,7 @@ export default function UserProfile({ currentUser, setActiveTab }) {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Quick Live studio button */}
-            <button 
-              onClick={() => setActiveTab && setActiveTab('broadcast')} 
-              className="px-4 py-1.5 bg-gradient-to-r from-red-600 to-purple-600 hover:from-red-500 hover:to-purple-500 text-white rounded-xl text-xs font-black shadow-lg shadow-red-600/30 transition-all flex items-center gap-1.5 cursor-pointer"
-            >
-              <Radio className="w-3.5 h-3.5" />
-              <span>Vào Studio Live</span>
-            </button>
+
 
             {/* User Pill */}
             <div className="flex items-center gap-2.5 pl-4 border-l border-white/10">
