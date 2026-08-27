@@ -4,7 +4,6 @@ import flvjs from 'flv.js';
 import Hls from 'hls.js';
 import GameBanDoVietNam from './game/GameBanDoVietNam';
 import GameChienDau from './game/GameChienDau';
-import ProductionStudio from '../ProductionStudio';
 import { supabase } from '../../lib/supabaseClient';
 import { Volume2, VolumeX, Sparkles, Video, Swords, Flag, Music, Radio, Mic } from 'lucide-react';
 
@@ -99,6 +98,15 @@ export default function CleanLiveOverlay() {
       }
     };
   }, []);
+
+  // Tự động bật Camera ngay khi vào tầng "Phòng Dựng Live Studio" — OBS/TikTok LIVE Studio
+  // chỉ cần khung hình camera sạch, không cần thao tác thêm
+  useEffect(() => {
+    if ((masterState.stage === 'broadcast' || masterState.stage === 'studio') && !overlayCamActive) {
+      toggleOverlayCam();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [masterState.stage]);
 
   useEffect(() => {
     document.title = 'AVA Live Output (Realtime Master Overlay) — TikTok LIVE Studio / OBS';
@@ -474,13 +482,47 @@ export default function CleanLiveOverlay() {
     );
   }
 
-  // 3. RENDER STAGE: PHÒNG DỰNG LIVE STUDIO CHUYÊN NGHIỆP
+  // 3. RENDER STAGE: PHÒNG DỰNG LIVE STUDIO — CHỈ KHUNG HÌNH CAMERA SẠCH,
+  // VỪA KHÍT KHUNG TIKTOK LIVE, KHÔNG KÈM BẢNG ĐIỀU KHIỂN (Director Suite chỉ dùng trên Dashboard)
   if (currentStage === 'broadcast' || currentStage === 'studio') {
     return (
-      <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent select-none flex items-center justify-center pointer-events-auto">
-        <ProductionStudio 
-          globalAspectRatio={ratio}
-        />
+      <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-black flex items-center justify-center select-none">
+        <div
+          className={`relative flex items-center justify-center overflow-hidden ${
+            ratio === '9:16'
+              ? 'h-full aspect-[9/16] w-auto max-w-full'
+              : 'w-full aspect-[16/9] h-auto max-h-full'
+          }`}
+          style={ratio === '9:16' ? { aspectRatio: '9 / 16', height: '100%', maxWidth: 'calc(100vh * 9 / 16)' } : { aspectRatio: '16 / 9', width: '100%' }}
+        >
+          {overlayCamActive ? (
+            <video
+              ref={overlayWebcamVideoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-cover select-none bg-black"
+            />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-[#0e101f] via-[#090b16] to-[#04050a] text-center p-8">
+              <Radio className="w-14 h-14 text-cyan-400 animate-pulse" />
+              <p className="text-cyan-200 text-sm max-w-xs">Đang yêu cầu quyền truy cập Camera cho Phòng Dựng Live Studio...</p>
+              <button
+                onClick={toggleOverlayCam}
+                className="px-4 py-2 rounded-full bg-cyan-600/80 hover:bg-cyan-500 text-white text-xs font-bold border border-cyan-400/50"
+              >
+                🎥 Kết Nối Lại Camera
+              </button>
+            </div>
+          )}
+
+          <div className="absolute top-4 left-4 z-30 flex items-center gap-2 pointer-events-none">
+            <div className="px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-md border border-white/20 text-white text-xs font-black flex items-center gap-2 shadow-xl">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
+              <span className="text-red-400 uppercase tracking-wider text-[11px]">🔴 LIVE STUDIO</span>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
