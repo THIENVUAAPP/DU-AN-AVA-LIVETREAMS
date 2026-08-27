@@ -531,24 +531,33 @@ export default function CleanLiveOverlay() {
             className="w-full h-full object-cover select-none z-10 bg-black"
           />
         ) : (
-          /* 4. Hình Ảnh AI Idol Sinh Động Có Chuyển Động Float & Ánh Sáng */
-          <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-gradient-to-b from-[#0e101f] via-[#090b16] to-[#04050a]">
+          /* 4. Hình Ảnh AI Idol Sinh Động Hoặc Màn Hình Chờ */
+          <div className="relative w-full h-full flex flex-col items-center justify-center overflow-hidden bg-gradient-to-b from-[#0e101f] via-[#090b16] to-[#04050a]">
             {/* Ambient Avatar Glow */}
             <div className="absolute inset-0 bg-radial-at-c from-cyan-500/20 via-transparent to-transparent animate-pulse" />
             
-            <img
-              key={masterState.mediaUrl || 'default-avatar'}
-              src={masterState.mediaUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80'}
-              alt={masterState.characterName || 'AI Idol Linh Anh'}
-              className="w-full h-full object-cover select-none z-10 drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] transition-all duration-700 transform hover:scale-[1.02]"
-              style={{
-                animation: 'idolBreathing 4s ease-in-out infinite'
-              }}
-              onError={(e) => {
-                e.currentTarget.onerror = null;
-                e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
-              }}
-            />
+            {masterState.mediaUrl && !masterState.mediaUrl.includes('unsplash.com') ? (
+              <img
+                key={masterState.mediaUrl}
+                src={masterState.mediaUrl}
+                alt={masterState.characterName || 'AI Idol Linh Anh'}
+                className="w-full h-full object-cover select-none z-10 drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] transition-all duration-700 transform hover:scale-[1.02]"
+                style={{ animation: 'idolBreathing 4s ease-in-out infinite' }}
+              />
+            ) : (
+              <div className="z-20 flex flex-col items-center justify-center text-center p-8 bg-black/40 backdrop-blur-md rounded-3xl border border-white/10 shadow-2xl">
+                <Radio className="w-16 h-16 text-cyan-400 animate-pulse mb-4" />
+                <h2 className="text-2xl font-bold text-white mb-2">ĐÃ KẾT NỐI TIKTOK LIVE STUDIO</h2>
+                <p className="text-cyan-200 text-sm max-w-xs">
+                  Vui lòng mở Bảng Điều Khiển AVA Live trên trình duyệt và chọn một AI Idol hoặc Game để bắt đầu phát sóng.
+                </p>
+                <div className="mt-6 flex gap-2 justify-center">
+                  <span className="w-2 h-2 rounded-full bg-cyan-500 animate-bounce delay-100" />
+                  <span className="w-2 h-2 rounded-full bg-cyan-500 animate-bounce delay-200" />
+                  <span className="w-2 h-2 rounded-full bg-cyan-500 animate-bounce delay-300" />
+                </div>
+              </div>
+            )}
 
             {/* Gradient Overlay phía dưới */}
             <div className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-t from-black/80 via-transparent to-black/20" />
