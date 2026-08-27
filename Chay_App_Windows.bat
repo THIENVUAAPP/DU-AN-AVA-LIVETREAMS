@@ -20,7 +20,8 @@ if not exist ".env" (
 )
 
 rem 2. Mở trình duyệt web tự động ngay
-start "" http://localhost:3001
+rem (Lần đầu mở sẽ hiện cảnh báo bảo mật do chứng chỉ tự ký - bấm "Nâng cao" > "Tiếp tục truy cập" là dùng được)
+start "" https://localhost:3001
 
 rem 3. Kiểm tra Node.js & Khởi chạy Backend Server
 where node >nul 2>nul
@@ -36,7 +37,7 @@ if %errorlevel% equ 0 (
     )
 
     echo 📡 Đang khởi động Server TikTok Live Connector & Giao Diện Studio...
-    echo 🌐 Ứng dụng đang mở tại: http://localhost:3001
+    echo 🌐 Ứng dụng đang mở tại: https://localhost:3001
     echo.
     node backend/server.cjs
 ) else (

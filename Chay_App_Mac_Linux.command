@@ -50,7 +50,8 @@ if [ ! -f ".env" ] && [ -f ".env.example" ]; then
 fi
 
 # 4. Mở trình duyệt web tự động
-(sleep 1 && (open "http://localhost:3001" 2>/dev/null || xdg-open "http://localhost:3001" 2>/dev/null || open "https://avalivepro.vercel.app")) &
+# (Lần đầu mở sẽ hiện cảnh báo bảo mật do chứng chỉ tự ký - bấm "Nâng cao" > "Tiếp tục truy cập" là dùng được)
+(sleep 1 && (open "https://localhost:3001" 2>/dev/null || xdg-open "https://localhost:3001" 2>/dev/null || open "https://avalivepro.vercel.app")) &
 
 # 5. Khởi động Server
 if [ -n "$NODE_CMD" ]; then
@@ -69,7 +70,7 @@ if [ -n "$NODE_CMD" ]; then
         echo ""
     fi
     
-    echo "🌐 Giao diện ứng dụng đang mở tại: http://localhost:3001"
+    echo "🌐 Giao diện ứng dụng đang mở tại: https://localhost:3001"
     echo ""
     "$NODE_CMD" backend/server.cjs
 elif command -v python3 &> /dev/null; then

@@ -4,7 +4,7 @@
 
 1. ĐỐI VỚI MÁY WINDOWS:
    👉 Nhấp đúp chuột vào file: Chay_App_Windows.bat
-   -> Ứng dụng sẽ tự động mở trên trình duyệt tại http://localhost:3001
+   -> Ứng dụng sẽ tự động mở trên trình duyệt tại https://localhost:3001
 
 2. ĐỐI VỚI MÁY MAC (macOS):
    👉 Nhấp CHUỘT PHẢI (hoặc giữ phím Control + bấm chuột) vào file: Chay_App_Mac_Linux.command
@@ -15,3 +15,8 @@
 3. ĐIỀU KIỆN SỬ DỤNG:
    • Máy tính cần cài đặt Node.js (Tải miễn phí tại https://nodejs.org - Bản LTS khuyên dùng).
    • Sau khi cài xong, chỉ cần mở file chạy là xong!
+
+4. LƯU Ý QUAN TRỌNG VỀ CẢNH BÁO BẢO MẬT:
+   • Lần đầu mở trình duyệt sẽ thấy cảnh báo đỏ "Kết nối này không riêng tư" — đây là bình thường
+     (do dùng chứng chỉ tự ký để bật được Camera cho OBS/TikTok LIVE Studio), KHÔNG PHẢI lỗi.
+   • Chỉ cần bấm "Nâng cao" (Advanced) -> "Tiếp tục truy cập" (Proceed) một lần duy nhất là dùng được.

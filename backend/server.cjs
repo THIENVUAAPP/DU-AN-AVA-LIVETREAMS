@@ -176,7 +176,8 @@ app.get('/api/stream-proxy', (req, res) => {
 // mọi request fetch/socket.io từ trang HTTPS gọi sang backend HTTP (Mixed Content Blocked).
 const devCertPath = path.join(__dirname, '../certs/dev-cert.pem');
 const devKeyPath = path.join(__dirname, '../certs/dev-key.pem');
-const httpServer = (fs.existsSync(devCertPath) && fs.existsSync(devKeyPath))
+const usingHttps = fs.existsSync(devCertPath) && fs.existsSync(devKeyPath);
+const httpServer = usingHttps
   ? https.createServer({ cert: fs.readFileSync(devCertPath), key: fs.readFileSync(devKeyPath) }, app)
   : createServer(app);
 const io = new Server(httpServer, { cors: { origin: '*' } });
@@ -1001,14 +1002,18 @@ if (distPath) {
 }
 
 const PORT = process.env.PORT || 3001;
+const scheme = usingHttps ? 'https' : 'http';
 httpServer.listen(PORT, () => {
   console.log(`\n===========================================================`);
   console.log(`🚀 HỆ THỐNG AVALIVE LIVESTREAM VIP PRO ĐANG HOẠT ĐỘNG!`);
-  console.log(`🌐 Màn Hình Chính: http://localhost:${PORT}`);
-  console.log(`🗺️ Overlay Bản Đồ: http://localhost:${PORT}/?overlay=bando`);
-  console.log(`⚔️ Overlay Chiến Đấu: http://localhost:${PORT}/?overlay=battle`);
-  console.log(`🎭 Test Gift: POST http://localhost:${PORT}/api/tiktok/test-gift`);
-  console.log(`💬 Test Chat: POST http://localhost:${PORT}/api/tiktok/test-chat`);
-  console.log(`🎬 Simulation: POST http://localhost:${PORT}/api/simulation/start`);
+  console.log(`🌐 Màn Hình Chính: ${scheme}://localhost:${PORT}`);
+  console.log(`🗺️ Overlay Bản Đồ: ${scheme}://localhost:${PORT}/?overlay=bando`);
+  console.log(`⚔️ Overlay Chiến Đấu: ${scheme}://localhost:${PORT}/?overlay=battle`);
+  console.log(`🎭 Test Gift: POST ${scheme}://localhost:${PORT}/api/tiktok/test-gift`);
+  console.log(`💬 Test Chat: POST ${scheme}://localhost:${PORT}/api/tiktok/test-chat`);
+  console.log(`🎬 Simulation: POST ${scheme}://localhost:${PORT}/api/simulation/start`);
+  if (usingHttps) {
+    console.log(`⚠️  Lần đầu mở trên trình duyệt sẽ hiện cảnh báo bảo mật (chứng chỉ tự ký) — bấm "Nâng cao" → "Tiếp tục truy cập" là dùng được.`);
+  }
   console.log(`===========================================================\n`);
 });

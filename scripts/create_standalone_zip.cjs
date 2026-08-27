@@ -35,7 +35,9 @@ const appDataDir = path.join(stagingDir, 'app_data');
 fs.mkdirSync(appDataDir, { recursive: true });
 
 // Copy toàn bộ dữ liệu cốt lõi vào app_data
-execSync(`cp -R dist backend patches package.json package-lock.json .env.example "${appDataDir}"`, { cwd: rootDir });
+// (kèm certs/ chứng chỉ HTTPS tự ký — bắt buộc để trình duyệt cấp quyền Camera/Chia sẻ màn hình
+// khi dùng link OBS/TikTok LIVE Studio, nếu không sẽ lặp lại lỗi "màn hình đen không có video")
+execSync(`cp -R dist backend patches package.json package-lock.json .env.example certs "${appDataDir}"`, { cwd: rootDir });
 
 // 3. Đóng gói cho Windows
 console.log('\n[3/3] Đang đóng gói cho Windows...');
