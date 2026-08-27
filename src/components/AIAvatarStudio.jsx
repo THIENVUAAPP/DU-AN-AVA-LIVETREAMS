@@ -42,6 +42,12 @@ export default function AIAvatarStudio({ isLive, aiAvatarFeatureEnabled }) {
   const [scriptText, setScriptText] = useState('Xin chào tất cả mọi người đang xem livestream! Hôm nay em có deal siêu hời giảm ngay 50%! Nhanh tay ấn vào nút MUA NGAY dưới màn hình nhé!');
   const [isSpeaking, setIsSpeaking] = useState(false);
 
+  const openOBSWindow = (ratio) => {
+    const w = ratio === '9:16' ? 450 : 1280;
+    const h = ratio === '9:16' ? 800 : 720;
+    window.open(`/?overlay=idol&ratio=${ratio}`, '_blank', `width=${w},height=${h},menubar=no,toolbar=no,location=no,status=no`);
+  };
+
   // Combine custom avatars (newest first) and default avatars
   const allAvatars = [...customAvatars, ...DEFAULT_AVATARS];
 
@@ -507,6 +513,27 @@ export default function AIAvatarStudio({ isLive, aiAvatarFeatureEnabled }) {
                   <span>{isSpeaking ? '🔴 MC AI ĐANG ĐỌC KỊCH BẢN...' : '⚡ PHÁT GIỌNG ĐỌC MC AI THẬT'}</span>
                 </button>
               </div>
+
+              {/* Lấy Link Màn Hình OBS Mở Rộng */}
+              <div className="pt-3 border-t border-white/10 space-y-2 mt-4">
+                <span className="text-[11px] font-bold text-gray-300 block uppercase tracking-wider">🖥️ MỞ CỬA SỔ LIVESTREAM SẠCH (CHO OBS/TIKTOK STUDIO):</span>
+                <div className="grid grid-cols-2 gap-2">
+                  <button 
+                    onClick={() => openOBSWindow('9:16')}
+                    className="p-2.5 rounded-xl bg-blue-600/30 border border-blue-500/50 text-white text-xs font-bold hover:bg-blue-600/60 transition-all shadow-glow-blue flex items-center justify-center gap-1.5"
+                  >
+                    <span>📱 DỌC (9:16)</span>
+                  </button>
+                  <button 
+                    onClick={() => openOBSWindow('16:9')}
+                    className="p-2.5 rounded-xl bg-purple-600/30 border border-purple-500/50 text-white text-xs font-bold hover:bg-purple-600/60 transition-all shadow-glow-purple flex items-center justify-center gap-1.5"
+                  >
+                    <span>📺 NGANG (16:9)</span>
+                  </button>
+                </div>
+                <p className="text-[10px] text-gray-400 mt-1">Bấm để mở 1 cửa sổ phụ chỉ chứa luồng video sạch (không có nút bấm). Sau đó dùng OBS hoặc TikTok Studio để quay cửa sổ (Window Capture) cửa sổ này.</p>
+              </div>
+
             </div>
           </div>
 
@@ -685,6 +712,26 @@ export default function AIAvatarStudio({ isLive, aiAvatarFeatureEnabled }) {
                   <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">● Shopee Live (ACTIVE)</span>
                   <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">● YouTube (ACTIVE)</span>
                 </div>
+              </div>
+
+              {/* Lấy Link Màn Hình OBS Mở Rộng */}
+              <div className="pt-3 border-t border-white/10 space-y-2 mt-4">
+                <span className="text-[11px] font-bold text-gray-300 block uppercase tracking-wider">🖥️ MỞ CỬA SỔ LIVESTREAM SẠCH (CHO OBS/TIKTOK STUDIO):</span>
+                <div className="grid grid-cols-2 gap-2">
+                  <button 
+                    onClick={() => openOBSWindow('9:16')}
+                    className="p-2.5 rounded-xl bg-blue-600/30 border border-blue-500/50 text-white text-xs font-bold hover:bg-blue-600/60 transition-all shadow-glow-blue flex items-center justify-center gap-1.5"
+                  >
+                    <span>📱 DỌC (9:16)</span>
+                  </button>
+                  <button 
+                    onClick={() => openOBSWindow('16:9')}
+                    className="p-2.5 rounded-xl bg-purple-600/30 border border-purple-500/50 text-white text-xs font-bold hover:bg-purple-600/60 transition-all shadow-glow-purple flex items-center justify-center gap-1.5"
+                  >
+                    <span>📺 NGANG (16:9)</span>
+                  </button>
+                </div>
+                <p className="text-[10px] text-gray-400 mt-1">Bấm để mở 1 cửa sổ phụ chỉ chứa luồng video sạch (không có nút bấm). Sau đó dùng OBS hoặc TikTok Studio để quay (Window Capture) cửa sổ này.</p>
               </div>
 
             </div>

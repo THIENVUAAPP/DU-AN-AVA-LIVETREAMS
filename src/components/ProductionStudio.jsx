@@ -192,6 +192,12 @@ export default function ProductionStudio({
   const [dualLiveDisplayMode, setDualLiveDisplayMode] = useState('pip'); // 'pip' | 'sidebyside' | 'cam_only' | 'tiktok_only'
   const [isSwappedPip, setIsSwappedPip] = useState(false);
 
+  const openOBSWindow = (ratio) => {
+    const w = ratio === '9:16' ? 450 : 1280;
+    const h = ratio === '9:16' ? 800 : 720;
+    window.open(`/?overlay=broadcast&ratio=${ratio}`, '_blank', `width=${w},height=${h},menubar=no,toolbar=no,location=no,status=no`);
+  };
+
   useEffect(() => {
     if (externalTiktokId !== undefined && externalTiktokId !== tiktokStudioId) {
       setTiktokStudioId(externalTiktokId);
@@ -2141,7 +2147,24 @@ export default function ProductionStudio({
                 <span>{webcamActive ? '🔴 TẮT CAMERA' : '📷 BẬT CAMERA'}</span>
               </button>
 
-
+              {/* MỞ CỬA SỔ OBS SẠCH */}
+              <div className="flex items-center gap-1.5 ml-2 border-l border-white/20 pl-2">
+                <span className="text-[10px] text-gray-400 font-bold mr-1 uppercase">Mở Cửa Sổ OBS:</span>
+                <button 
+                  onClick={() => openOBSWindow('9:16')}
+                  className="px-2.5 py-1.5 rounded-lg font-black text-[10px] bg-blue-600/30 text-white border border-blue-500/50 hover:bg-blue-600/60 transition-all cursor-pointer shadow-glow-blue flex items-center gap-1"
+                  title="Mở Video Dọc (9:16) cho OBS"
+                >
+                  📱 DỌC (9:16)
+                </button>
+                <button 
+                  onClick={() => openOBSWindow('16:9')}
+                  className="px-2.5 py-1.5 rounded-lg font-black text-[10px] bg-purple-600/30 text-white border border-purple-500/50 hover:bg-purple-600/60 transition-all cursor-pointer shadow-glow-purple flex items-center gap-1"
+                  title="Mở Video Ngang (16:9) cho OBS"
+                >
+                  📺 NGANG (16:9)
+                </button>
+              </div>
 
               {/* SCREEN SHARE */}
               <ScreenShareControls
