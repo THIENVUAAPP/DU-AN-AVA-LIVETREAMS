@@ -380,7 +380,8 @@ export default function GameChienDauAdminModal({
 
   const handleCopyOverlayLink = () => {
     if (typeof window !== 'undefined') {
-      const url = `${window.location.origin}/?overlay=live`;
+      const safeOrigin = window.location.origin.replace(/(localhost|127\.0\.0\.1)(?!\.nip\.io)/, '127.0.0.1.nip.io');
+      const url = `${safeOrigin}/live`;
       navigator.clipboard.writeText(url);
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2500);

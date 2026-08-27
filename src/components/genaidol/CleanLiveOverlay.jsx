@@ -480,12 +480,8 @@ export default function CleanLiveOverlay() {
 
   // 4. RENDER STAGE: AI IDOL LIVESTREAM (CLEAN VIDEO ONLY)
   return (
-    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-[#070913] flex items-center justify-center select-none">
-      
-      {/* Background Dynamic Ambient Lighting */}
-      <div className="absolute inset-0 bg-radial-at-t from-blue-900/30 via-purple-950/20 to-black pointer-events-none" />
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse pointer-events-none" />
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent flex items-center justify-center select-none">
+
 
       {/* Frame Container Responsive theo Tỷ Lệ 9:16 (TikTok Dọc) hoặc 16:9 (OBS Ngang) */}
       <div 
@@ -514,7 +510,7 @@ export default function CleanLiveOverlay() {
             autoPlay
             muted={isAudioMuted}
             playsInline
-            className="w-full h-full object-contain select-none z-10 bg-black"
+            className="w-full h-full object-cover select-none z-10 bg-black"
           />
         ) : (masterState.isVideo || (masterState.mediaUrl && masterState.mediaUrl.endsWith('.mp4'))) ? (
           /* 3. Video MP4 Lặp Lại Mượt Mà 60FPS */
@@ -525,7 +521,7 @@ export default function CleanLiveOverlay() {
             loop
             muted={isAudioMuted}
             playsInline
-            className="w-full h-full object-contain select-none z-10 bg-black"
+            className="w-full h-full object-cover select-none z-10 bg-black"
           />
         ) : (
           /* 4. Hình Ảnh AI Idol Sinh Động Có Chuyển Động Float & Ánh Sáng */
@@ -537,7 +533,7 @@ export default function CleanLiveOverlay() {
               key={masterState.mediaUrl || 'default-avatar'}
               src={masterState.mediaUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80'}
               alt={masterState.characterName || 'AI Idol Linh Anh'}
-              className="w-full h-full object-contain select-none z-10 drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] transition-all duration-700 transform hover:scale-[1.02]"
+              className="w-full h-full object-cover select-none z-10 drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] transition-all duration-700 transform hover:scale-[1.02]"
               style={{
                 animation: 'idolBreathing 4s ease-in-out infinite'
               }}

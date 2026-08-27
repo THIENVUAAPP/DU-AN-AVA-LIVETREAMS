@@ -26,9 +26,9 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  // Lấy chính xác Origin hiện tại (hoạt động hoàn hảo trên cả Localhost, App Desktop macOS/Windows và Web Vercel)
-  const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
-  const masterLink = `${currentOrigin}/?overlay=live`;
+  // Tự động chuyển đổi 'localhost' thành '127.0.0.1.nip.io' (DNS public) để vượt qua bộ lọc khắt khe của TikTok LIVE Studio
+  const currentOrigin = typeof window !== 'undefined' ? window.location.origin.replace(/(localhost|127\.0\.0\.1)(?!\.nip\.io)/, '127.0.0.1.nip.io') : 'http://127.0.0.1.nip.io:5173';
+  const masterLink = `${currentOrigin}/live`;
 
   const handleCopy = () => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
