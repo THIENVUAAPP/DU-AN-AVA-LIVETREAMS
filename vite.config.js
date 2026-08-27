@@ -8,7 +8,8 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
-    allowedHosts: true,
+    host: true,
+    allowedHosts: ['127.0.0.1.nip.io'],
   },
   resolve: {
     alias: {
