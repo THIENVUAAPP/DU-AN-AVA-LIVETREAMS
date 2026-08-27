@@ -171,7 +171,14 @@ app.get('/api/stream-proxy', (req, res) => {
   fetchStream(streamUrl);
 });
 
-const httpServer = createServer(app);
+// Dùng HTTPS khi có sẵn cert dev (certs/dev-cert.pem, certs/dev-key.pem) — bắt buộc phải cùng
+// giao thức với Frontend Vite (https://127.0.0.1.nip.io:5173), nếu không trình duyệt sẽ chặn
+// mọi request fetch/socket.io từ trang HTTPS gọi sang backend HTTP (Mixed Content Blocked).
+const devCertPath = path.join(__dirname, '../certs/dev-cert.pem');
+const devKeyPath = path.join(__dirname, '../certs/dev-key.pem');
+const httpServer = (fs.existsSync(devCertPath) && fs.existsSync(devKeyPath))
+  ? https.createServer({ cert: fs.readFileSync(devCertPath), key: fs.readFileSync(devKeyPath) }, app)
+  : createServer(app);
 const io = new Server(httpServer, { cors: { origin: '*' } });
 
 // ============================================================

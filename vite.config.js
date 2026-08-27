@@ -1,7 +1,17 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import fs from 'fs';
 import { spawn } from 'child_process';
+
+// HTTPS bắt buộc để trình duyệt cấp quyền Camera/Chia sẻ màn hình (navigator.mediaDevices)
+// cho domain "127.0.0.1.nip.io" dùng trong OBS/TikTok LIVE Studio — HTTP thường chỉ được
+// trình duyệt coi là "an toàn" với đúng chuỗi "localhost"/"127.0.0.1", không áp dụng cho nip.io.
+const devCertPath = path.resolve(__dirname, 'certs/dev-cert.pem');
+const devKeyPath = path.resolve(__dirname, 'certs/dev-key.pem');
+const httpsConfig = fs.existsSync(devCertPath) && fs.existsSync(devKeyPath)
+  ? { cert: fs.readFileSync(devCertPath), key: fs.readFileSync(devKeyPath) }
+  : undefined;
 
 export default defineConfig({
   base: './',
@@ -9,6 +19,7 @@ export default defineConfig({
     port: 3000,
     open: true,
     host: true,
+    https: httpsConfig,
     allowedHosts: ['127.0.0.1.nip.io'],
   },
   resolve: {
