@@ -20,13 +20,18 @@ try {
     });
 
     supabaseBroadcastChannel.on('broadcast', { event: 'REQUEST_MASTER_LIVE_STATE' }, () => {
-      const currentState = getMasterLiveState();
-      if (currentState) {
-        supabaseBroadcastChannel.send({
-          type: 'broadcast',
-          event: 'MASTER_LIVE_STATE_UPDATE',
-          payload: currentState
-        }).catch(() => {});
+      if (typeof window !== 'undefined') {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const currentState = JSON.parse(raw);
+            supabaseBroadcastChannel.send({
+              type: 'broadcast',
+              event: 'MASTER_LIVE_STATE_UPDATE',
+              payload: currentState
+            }).catch(() => {});
+          }
+        } catch (e) {}
       }
     });
 
