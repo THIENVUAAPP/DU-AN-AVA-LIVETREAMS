@@ -30,18 +30,32 @@ import { syncMasterLiveState } from "./lib/masterLiveSync";
 import { Lock, Sparkles, ShieldCheck, Mail, LogIn, ArrowRight } from "lucide-react";
 
 export default function App() {
+  // Cửa Sổ Master Live Overlay 1 Link Duy Nhất cho TikTok LIVE Studio & OBS Studio
+  // (Tính toán ngay từ đầu component — vì đây là cửa sổ overlay riêng biệt, KHÔNG phải Dashboard,
+  // nên các effect đồng bộ trạng thái/tài khoản chỉ dành cho Dashboard phải bỏ qua nó)
+  const overlaySearchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const overlayPathName = typeof window !== "undefined" ? window.location.pathname.toLowerCase() : "";
+  const overlayTypeParam = overlaySearchParams?.get("overlay")?.toLowerCase();
+
+  const isOverlayBattle = overlayTypeParam === "gamebattle" || overlayTypeParam === "battle" || overlayPathName.includes("/overlay-battle") || overlayPathName.includes("/overlay/battle") || overlayPathName === "/battle";
+  const isOverlayBanDo = overlayTypeParam === "bando" || overlayTypeParam === "vietnam_map" || overlayTypeParam === "map" || overlayTypeParam === "vietnam" || overlayPathName.includes("/overlay-bando") || overlayPathName.includes("/overlay/bando") || overlayPathName === "/bando";
+  const isMasterLiveOverlay = overlayTypeParam === "broadcast" || overlayTypeParam === "live" || overlayTypeParam === "stage" || overlayTypeParam === "tiktok" || overlayTypeParam === "obs" || overlayTypeParam === "cleanlive" || overlayTypeParam === "avatar" || overlayTypeParam === "stream" || overlayTypeParam === "idol" || overlayTypeParam === "master" || overlayPathName.includes("/overlay-live") || overlayPathName.includes("/overlay-idol") || overlayPathName.includes("/overlay") || overlayPathName.includes("/live") || overlayPathName === "/idol";
+  const isAnyOverlayWindow = isOverlayBattle || isOverlayBanDo || isMasterLiveOverlay;
+
   const [activeTab, setActiveTab] = useState("overview");
   const [isLive, setIsLive] = useState(false);
   const [aiAvatarFeatureEnabled, setAiAvatarFeatureEnabled] = useState(false);
 
-  // Tự động đồng bộ trạng thái Master Live khi chuyển Tab
+  // Tự động đồng bộ trạng thái Master Live khi chuyển Tab (chỉ áp dụng cho Dashboard,
+  // không chạy trong cửa sổ Overlay — nếu không nó sẽ tự ghi đè trạng thái thật bằng mặc định mỗi khi mở)
   useEffect(() => {
+    if (isAnyOverlayWindow) return;
     let stage = 'idol';
     if (activeTab === 'broadcast') stage = 'broadcast';
     else if (activeTab === 'avatars') stage = 'idol';
     else if (activeTab === 'ai-storyteller') stage = 'bando';
     syncMasterLiveState({ stage });
-  }, [activeTab]);
+  }, [activeTab, isAnyOverlayWindow]);
 
   // Real Google User State (Loaded from localStorage or Supabase session)
   const [currentUser, setCurrentUser] = useState(() => {
@@ -219,15 +233,6 @@ export default function App() {
     // Sync directly to Supabase Database
     await syncUserToSupabase(newUser);
   };
-
-  // Cửa Sổ Master Live Overlay 1 Link Duy Nhất cho TikTok LIVE Studio & OBS Studio
-  const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
-  const pathName = typeof window !== "undefined" ? window.location.pathname.toLowerCase() : "";
-  const overlayType = searchParams?.get("overlay")?.toLowerCase();
-
-  const isOverlayBattle = overlayType === "gamebattle" || overlayType === "battle" || pathName.includes("/overlay-battle") || pathName.includes("/overlay/battle") || pathName === "/battle";
-  const isOverlayBanDo = overlayType === "bando" || overlayType === "vietnam_map" || overlayType === "map" || overlayType === "vietnam" || pathName.includes("/overlay-bando") || pathName.includes("/overlay/bando") || pathName === "/bando";
-  const isMasterLiveOverlay = overlayType === "broadcast" || overlayType === "live" || overlayType === "stage" || overlayType === "tiktok" || overlayType === "obs" || overlayType === "cleanlive" || overlayType === "avatar" || overlayType === "stream" || overlayType === "idol" || overlayType === "master" || pathName.includes("/overlay-live") || pathName.includes("/overlay-idol") || pathName.includes("/overlay") || pathName.includes("/live") || pathName === "/idol";
 
   if (isOverlayBattle) return <GameBattleOverlay />;
   if (isOverlayBanDo) return <GameBanDoOverlay />;
