@@ -54,7 +54,7 @@ export default function CleanLiveOverlay() {
   });
 
   const [liveEvent, setLiveEvent] = useState(null);
-  const [isAudioMuted, setIsAudioMuted] = useState(false);
+  const [isAudioMuted, setIsAudioMuted] = useState(true);
   const [currentSubtitle, setCurrentSubtitle] = useState('');
 
   // 📷 Webcam Stream Support cho OBS Studio & TikTok Live Studio
