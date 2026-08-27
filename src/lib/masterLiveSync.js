@@ -18,6 +18,18 @@ try {
     supabaseBroadcastChannel = supabase.channel(SUPABASE_REALTIME_TOPIC, {
       config: { broadcast: { self: true } }
     });
+
+    supabaseBroadcastChannel.on('broadcast', { event: 'REQUEST_MASTER_LIVE_STATE' }, () => {
+      const currentState = getMasterLiveState();
+      if (currentState) {
+        supabaseBroadcastChannel.send({
+          type: 'broadcast',
+          event: 'MASTER_LIVE_STATE_UPDATE',
+          payload: currentState
+        }).catch(() => {});
+      }
+    });
+
     supabaseBroadcastChannel.subscribe();
   }
 } catch (e) {

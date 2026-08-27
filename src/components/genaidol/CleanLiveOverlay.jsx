@@ -150,7 +150,14 @@ export default function CleanLiveOverlay() {
           }
         });
 
-        supabaseChannel.subscribe();
+        supabaseChannel.subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            supabaseChannel.send({
+              type: 'broadcast',
+              event: 'REQUEST_MASTER_LIVE_STATE'
+            }).catch(() => {});
+          }
+        });
       }
     } catch (e) {
       console.warn('[Overlay] Supabase Realtime note:', e.message);
