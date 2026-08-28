@@ -48,7 +48,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       bgColor: 'border-pink-500/30 bg-pink-950/20 hover:border-pink-400/60',
       description: 'Phát video người Live / AI Idol 60FPS sạch 100% không dính rác, tự động lặp không bao giờ đen màn hình.',
       path: '/idol',
-      directUrl: `${activeBase}/idol`
+      directUrl: `${activeBase}/?overlay=idol`
     },
     {
       id: 'bando',
@@ -60,7 +60,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       bgColor: 'border-amber-500/30 bg-amber-950/20 hover:border-amber-400/60',
       description: 'Game cắm cờ 63 tỉnh thành Việt Nam 3D ghép cờ thời gian thực khi khán giả tặng quà TikTok Live.',
       path: '/bando',
-      directUrl: `${activeBase}/bando`
+      directUrl: `${activeBase}/?overlay=bando`
     },
     {
       id: 'battle',
@@ -72,7 +72,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       bgColor: 'border-red-500/30 bg-red-950/20 hover:border-red-400/60',
       description: 'Võ đài chiến đấu chia 2 phe PK kịch tính, tự động tung skill và hiệu ứng khi có tương tác bình luận & quà.',
       path: '/battle',
-      directUrl: `${activeBase}/battle`
+      directUrl: `${activeBase}/?overlay=battle`
     },
     {
       id: 'studio',
@@ -84,7 +84,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       bgColor: 'border-blue-500/30 bg-blue-950/20 hover:border-blue-400/60',
       description: 'Studio phát sóng 4K chuyên nghiệp tích hợp Webcam, phông nền ảo, hiệu ứng làm đẹp và video RTMP.',
       path: '/studio',
-      directUrl: `${activeBase}/studio`
+      directUrl: `${activeBase}/?overlay=studio`
     },
     {
       id: 'master',
@@ -96,7 +96,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       bgColor: 'border-cyan-400/60 bg-gradient-to-br from-cyan-950/40 via-[#0E1B33] to-blue-950/40 shadow-lg shadow-cyan-950/50',
       description: '1 Link thông minh tự động chuyển đổi giữa cả 4 dự án khi anh bấm nút trên phần mềm (không cần đổi link trong TikTok Live Studio).',
       path: '/live',
-      directUrl: `${activeBase}/live`
+      directUrl: `${activeBase}/?overlay=live`
     }
   ];
 

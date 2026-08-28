@@ -566,7 +566,7 @@ export default function CleanLiveOverlay() {
       };
     }
 
-    return { url: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-posing-in-neon-light-39832-large.mp4', isVideo: true };
+    return { url: null, isVideo: true };
   };
 
   const activeMedia = resolveActiveMedia();
