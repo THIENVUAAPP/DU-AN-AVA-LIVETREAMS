@@ -174,19 +174,24 @@ export default function ProductionStudio({
 
   // --- THÊM LOGIC ĐỒNG BỘ MEDIA SANG OBS OVERLAY (CleanLiveOverlay) ---
   useEffect(() => {
+    const allBgs = [...customVirtualBgs, ...virtualSets];
+    const currentVbg = allBgs.find(b => b.id === virtualBg) || virtualSets[0];
+    const currentMedia = currentVbg?.url || 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=1920&q=80';
+    const isVid = currentVbg?.type === 'video' || (typeof currentMedia === 'string' && currentMedia.endsWith('.mp4'));
+
     const payload = {
       type: 'MASTER_LIVE_STATE_UPDATE',
       stage: 'broadcast',
-      mediaUrl: '',
+      mediaUrl: currentMedia,
       flvUrl: tiktokLiveFlvUrl,
-      isVideo: false,
+      isVideo: !!isVid,
       characterName: 'Phòng Dựng Live Studio 4K',
       isConnected: isLive
     };
 
     // Đồng bộ đa kênh toàn hệ thống (Supabase Realtime Cloud + Sockets + Local)
     syncMasterLiveState(payload);
-  }, [tiktokLiveFlvUrl, isLive]);
+  }, [tiktokLiveFlvUrl, isLive, virtualBg, customVirtualBgs]);
 
   // 🔲 Dual Live Display Mode (Đồng bộ hiển thị cả Camera Studio & Luồng TikTok Live Studio)
   const [dualLiveDisplayMode, setDualLiveDisplayMode] = useState('pip'); // 'pip' | 'sidebyside' | 'cam_only' | 'tiktok_only'

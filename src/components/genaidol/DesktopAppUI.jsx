@@ -1116,23 +1116,23 @@ export default function DesktopAppUI() {
       ? 'broadcast' 
       : 'idol';
 
-    const char = CHARACTERS[selectedCharacter] || { 
-      url: '', 
-      type: 'image', 
-      name: 'Chưa có nhân vật' 
+    const char = CHARACTERS[selectedCharacter] || Object.values(CHARACTERS)[0] || { 
+      url: '/demo_dancer.mp4', 
+      type: 'video', 
+      name: 'AI Idol Linh Anh' 
     };
     
-    let currentMedia = char.url || '';
-    let isVid = char.type === 'video' || (typeof currentMedia === 'string' && currentMedia.endsWith('.mp4'));
+    let currentMedia = char.url || '/demo_dancer.mp4';
+    let isVid = char.type === 'video' || (typeof currentMedia === 'string' && (currentMedia.endsWith('.mp4') || currentMedia.includes('demo_dancer')));
     let streamFlvUrl = null;
 
     if (isConnected && flvUrl) {
       currentMedia = flvUrl;
       streamFlvUrl = flvUrl;
       isVid = true;
-    } else if ((isConnected || showSimulator) && activeVideoItem) {
+    } else if (activeVideoItem && activeVideoItem.mediaUrl) {
       currentMedia = activeVideoItem.mediaUrl;
-      isVid = activeVideoItem.type === 'video';
+      isVid = activeVideoItem.type === 'video' || (typeof currentMedia === 'string' && currentMedia.endsWith('.mp4'));
     }
 
     const masterPayload = {
