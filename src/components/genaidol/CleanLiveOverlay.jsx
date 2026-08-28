@@ -459,9 +459,48 @@ export default function CleanLiveOverlay() {
     );
   }
 
+  // Tự động kích hoạt Camera khi mở chế độ Studio
+  useEffect(() => {
+    const pathname = typeof window !== 'undefined' ? window.location.pathname.toLowerCase() : '';
+    const isStudioRoute = masterState.stage === 'broadcast' || masterState.stage === 'studio' || pathname.includes('/studio');
+    
+    if (isStudioRoute) {
+      if (!overlayWebcamStreamRef.current && typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false })
+          .then(stream => {
+            overlayWebcamStreamRef.current = stream;
+            if (overlayWebcamVideoRef.current) {
+              overlayWebcamVideoRef.current.srcObject = stream;
+            }
+            setOverlayCamActive(true);
+          })
+          .catch(err => {
+            console.warn('[Studio Camera] Notice:', err.message);
+          });
+      }
+    }
+  }, [masterState.stage]);
+
   // Helper giải mã URL media chính xác (tôn trọng 100% video/nhân vật người dùng chọn)
   const resolveActiveMedia = () => {
-    // 1. Kiểm tra trong danh sách custom characters người dùng đã tải lên
+    // 1. Kiểm tra trong danh sách nhân vật mẫu có sẵn theo selectedCharacter
+    const BUILTIN_PRESETS = {
+      'linhanh_4k': 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-posing-in-neon-light-39832-large.mp4',
+      'maihoa_4k': 'https://assets.mixkit.co/videos/preview/mixkit-young-woman-talking-on-a-video-call-with-her-phone-41484-large.mp4',
+      'ngoctran_4k': 'https://assets.mixkit.co/videos/preview/mixkit-girl-dancing-in-a-studio-under-colored-lights-41444-large.mp4',
+      'meo2k4': 'https://assets.mixkit.co/videos/preview/mixkit-woman-smiling-at-the-camera-while-wearing-headphones-41434-large.mp4',
+      'thuychi': 'https://assets.mixkit.co/videos/preview/mixkit-woman-singing-into-a-microphone-in-a-studio-41440-large.mp4',
+      'dancer_local': '/demo_dancer.mp4'
+    };
+
+    if (masterState.selectedCharacter && BUILTIN_PRESETS[masterState.selectedCharacter]) {
+      return {
+        url: BUILTIN_PRESETS[masterState.selectedCharacter],
+        isVideo: true
+      };
+    }
+
+    // 2. Kiểm tra trong danh sách custom characters người dùng đã tải lên
     try {
       const customRaw = localStorage.getItem('avalive_custom_characters');
       if (customRaw) {
@@ -476,7 +515,7 @@ export default function CleanLiveOverlay() {
       }
     } catch (e) {}
 
-    // 2. Tìm trong IndexedDB theo selectedCharacter
+    // 3. Tìm trong IndexedDB theo selectedCharacter
     if (masterState.selectedCharacter && localDbItems.length > 0) {
       const match = localDbItems.find(i => i.id === masterState.selectedCharacter);
       if (match && match.url) {
@@ -484,7 +523,7 @@ export default function CleanLiveOverlay() {
       }
     }
 
-    // 3. Nếu là blob URL, tìm item tương ứng trong DB
+    // 4. Nếu là blob URL, tìm item tương ứng trong DB
     if (masterState.mediaUrl && masterState.mediaUrl.startsWith('blob:')) {
       if (localDbItems.length > 0) {
         const match = localDbItems.find(i => i.mediaUrl === masterState.mediaUrl || i.id === masterState.selectedCharacter);
@@ -494,7 +533,7 @@ export default function CleanLiveOverlay() {
       }
     }
 
-    // 4. Nếu mediaUrl là HTTP URL bình thường hoặc base64 Data URL
+    // 5. Nếu mediaUrl là HTTP URL bình thường hoặc base64 Data URL
     if (masterState.mediaUrl) {
       const cleanUrl = masterState.mediaUrl.split('?')[0].toLowerCase();
       const isImg = cleanUrl.endsWith('.jpg') || cleanUrl.endsWith('.jpeg') || cleanUrl.endsWith('.png') || cleanUrl.endsWith('.webp') || cleanUrl.includes('unsplash') || masterState.mediaUrl.startsWith('data:image');
@@ -506,13 +545,13 @@ export default function CleanLiveOverlay() {
       };
     }
 
-    // 5. Fallback về video idol
-    return { url: '/demo_dancer.mp4', isVideo: true };
+    // 6. Fallback về video idol
+    return { url: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-posing-in-neon-light-39832-large.mp4', isVideo: true };
   };
 
   const activeMedia = resolveActiveMedia();
 
-  // 3. RENDER STAGE: PHÒNG DỰNG LIVE STUDIO 4K — 100% CLEAN BROADCAST FRAME (KHÔNG RÁC, ĐÚNG TỶ LỆ)
+  // 3. RENDER STAGE: PHÒNG DỰNG LIVE STUDIO 4K — 100% CAMERA THỰC & GÓC MÁY STUDIO
   if (currentStage === 'broadcast' || currentStage === 'studio') {
     return (
       <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-black flex items-center justify-center select-none">
@@ -524,43 +563,20 @@ export default function CleanLiveOverlay() {
           }`}
           style={ratio === '9:16' ? { aspectRatio: '9 / 16', height: '100%', maxWidth: 'calc(100vh * 9 / 16)' } : { aspectRatio: '16 / 9', width: '100%' }}
         >
-          {overlayCamActive ? (
-            <video
-              ref={overlayWebcamVideoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full h-full object-cover select-none scale-x-[-1] bg-black"
-            />
-          ) : activeStreamUrl ? (
-            <video
-              ref={flvVideoRef}
-              key={activeStreamUrl}
-              autoPlay
-              muted={isAudioMuted}
-              playsInline
-              className="w-full h-full object-cover select-none bg-black"
-            />
-          ) : activeMedia.isVideo ? (
-            <video
-              key={activeMedia.url}
-              src={activeMedia.url}
-              autoPlay
-              loop
-              muted={isAudioMuted}
-              playsInline
-              onCanPlay={(e) => {
-                e.target.play().catch(() => {});
-              }}
-              className="w-full h-full object-cover select-none bg-black"
-            />
-          ) : (
-            <img
-              src={activeMedia.url || 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&q=80&w=1920'}
-              alt="Studio Live Background"
-              className="w-full h-full object-cover select-none"
-            />
-          )}
+          {/* Màn hình Camera Studio 4K Trực Tiếp */}
+          <video
+            ref={overlayWebcamVideoRef}
+            autoPlay
+            playsInline
+            muted
+            className="w-full h-full object-cover select-none scale-x-[-1] bg-black"
+          />
+
+          {/* Badge trạng thái phát sóng góc màn hình */}
+          <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-red-500/40">
+            <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
+            <span className="text-[11px] font-black text-white tracking-wider uppercase">LIVE STUDIO 4K</span>
+          </div>
         </div>
       </div>
     );

@@ -815,20 +815,35 @@ export default function DesktopAppUI() {
     };
   }, []);
 
-  // Bộ sưu tập Nhân Vật AI Idol & Video 4K Mặc Định Sắc Nét
+  // Bộ sưu tập Nhân Vật AI Idol & Video 4K Mặc Định Sắc Nét (Mỗi nhân vật 1 video riêng biệt độc quyền)
   const BUILTIN_CHARACTERS = {
     'linhanh_4k': {
-      name: 'AI Idol Linh Anh (4K Live)',
-      url: '/demo_dancer.mp4',
+      name: 'AI Idol Linh Anh (4K Neon Live)',
+      url: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-posing-in-neon-light-39832-large.mp4',
       type: 'video'
     },
     'maihoa_4k': {
-      name: 'AI Idol Mai Hoa (Live Talk)',
-      url: '/demo_dancer.mp4',
+      name: 'AI Idol Mai Hoa (Live Talk Show)',
+      url: 'https://assets.mixkit.co/videos/preview/mixkit-young-woman-talking-on-a-video-call-with-her-phone-41484-large.mp4',
       type: 'video'
     },
     'ngoctran_4k': {
-      name: 'AI Idol Ngọc Trân (Studio 60FPS)',
+      name: 'AI Idol Ngọc Trân (Vũ Đạo K-Pop Studio)',
+      url: 'https://assets.mixkit.co/videos/preview/mixkit-girl-dancing-in-a-studio-under-colored-lights-41444-large.mp4',
+      type: 'video'
+    },
+    'meo2k4': {
+      name: 'AI Idol Mèo 2k4 (Gamer Streamer)',
+      url: 'https://assets.mixkit.co/videos/preview/mixkit-woman-smiling-at-the-camera-while-wearing-headphones-41434-large.mp4',
+      type: 'video'
+    },
+    'thuychi': {
+      name: 'AI Idol Thùy Chi (Acoustic Singer)',
+      url: 'https://assets.mixkit.co/videos/preview/mixkit-woman-singing-into-a-microphone-in-a-studio-41440-large.mp4',
+      type: 'video'
+    },
+    'dancer_local': {
+      name: 'Vũ Công AI Dance Floor (Local HD)',
       url: '/demo_dancer.mp4',
       type: 'video'
     }
