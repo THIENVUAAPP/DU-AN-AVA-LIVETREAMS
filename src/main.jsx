@@ -60,14 +60,20 @@ class ErrorBoundary extends Component {
 
 const pathname = window.location.pathname.toLowerCase();
 const searchParams = new URLSearchParams(window.location.search);
-const hasOverlayParam = searchParams.has('overlay') || pathname.includes('/live') || pathname.includes('/battle') || pathname.includes('/bando') || pathname.includes('/overlay');
+const hostname = typeof window !== 'undefined' ? window.location.hostname.toLowerCase() : '';
+const hasOverlayParam = searchParams.has('overlay') || pathname.includes('/live') || pathname.includes('/battle') || pathname.includes('/bando') || pathname.includes('/overlay') || pathname === '/idol' || pathname === '/studio';
+
+const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('127.0.0.1.nip.io') || hostname.startsWith('192.168.');
 
 const isDesktopMode = 
   !hasOverlayParam && (
+    isLocalHost ||
     pathname === '/desktop' || 
     pathname.startsWith('/desktop') || 
     window.location.hash.includes('desktop') || 
     searchParams.get('mode') === 'desktop' ||
+    window.location.port === '5173' ||
+    window.location.port === '3000' ||
     window.location.port === '3001'
   );
 
