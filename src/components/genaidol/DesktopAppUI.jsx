@@ -154,13 +154,22 @@ export default function DesktopAppUI() {
     }
   };
 
-  const [isLiveStudioActive, setIsLiveStudioActive] = useState(() => {
+  const savedStage = (() => {
     try {
-      return localStorage.getItem('avalive_active_stage') === 'studio';
+      return localStorage.getItem('avalive_active_stage') || 'bando';
     } catch {
-      return false;
+      return 'bando';
     }
-  });
+  })();
+
+  const [isLiveStudioActive, setIsLiveStudioActive] = useState(() => savedStage === 'studio');
+  const [isGameBattleActive, setIsGameBattleActive] = useState(() => savedStage === 'battle');
+  const [isGameBanDoActive, setIsGameBanDoActive] = useState(() => savedStage === 'bando');
+  const [isDanceFloorActive, setIsDanceFloorActive] = useState(() => savedStage === 'dancefloor');
+  const [isGameAdminOpen, setIsGameAdminOpen] = useState(false);
+  const [lastGameEvent, setLastGameEvent] = useState(null);
+  const [isGameBanDoAdminOpen, setIsGameBanDoAdminOpen] = useState(false);
+  const [isDanceFloorAdminOpen, setIsDanceFloorAdminOpen] = useState(false);
   const [isLocalSpeakerMuted, setIsLocalSpeakerMuted] = useState(() => {
     try {
       return localStorage.getItem('avalive_local_speaker_muted') === 'true';
@@ -202,38 +211,6 @@ export default function DesktopAppUI() {
   const [autoSimActive, setAutoSimActive] = useState(false);
   const [simTab, setSimTab] = useState('quick');
   const autoSimTimerRef = useRef(null);
-  
-  // Game Chiến Đấu States
-  const [isGameBattleActive, setIsGameBattleActive] = useState(() => {
-    try {
-      return localStorage.getItem('avalive_active_stage') === 'battle';
-    } catch {
-      return false;
-    }
-  });
-  const [isGameAdminOpen, setIsGameAdminOpen] = useState(false);
-  const [lastGameEvent, setLastGameEvent] = useState(null);
-
-  // Game Bản Đồ Hình Chữ S States (Mặc định hiển thị Bản Đồ Chữ S 3D tuyệt đẹp)
-  const [isGameBanDoActive, setIsGameBanDoActive] = useState(() => {
-    try {
-      const saved = localStorage.getItem('avalive_active_stage');
-      return saved ? saved === 'bando' : true;
-    } catch {
-      return true;
-    }
-  });
-  const [isGameBanDoAdminOpen, setIsGameBanDoAdminOpen] = useState(false);
-  const [isDanceFloorAdminOpen, setIsDanceFloorAdminOpen] = useState(false);
-
-  // Sàn Nhảy TikTok States
-  const [isDanceFloorActive, setIsDanceFloorActive] = useState(() => {
-    try {
-      return localStorage.getItem('avalive_active_stage') === 'dancefloor';
-    } catch {
-      return false;
-    }
-  });
 
   // Tỷ Lệ Khung Hình Toàn Cục (9:16 TikTok Dọc vs 16:9 OBS Ngang)
   const [globalAspectRatio, setGlobalAspectRatio] = useState(() => {
