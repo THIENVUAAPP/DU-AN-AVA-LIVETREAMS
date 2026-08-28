@@ -57,6 +57,7 @@ export default function CleanLiveOverlay() {
   const [liveEvent, setLiveEvent] = useState(null);
   const [isAudioMuted, setIsAudioMuted] = useState(true);
   const [localDbItems, setLocalDbItems] = useState([]);
+  const [liveStudioFrame, setLiveStudioFrame] = useState(null);
 
   // Tải danh sách item từ IndexedDB của cửa sổ này để tái tạo Blob URL cục bộ
   useEffect(() => {
@@ -218,12 +219,12 @@ export default function CleanLiveOverlay() {
         if (data) setLiveEvent({ ...data, _ts: Date.now() });
       });
 
-      socket.on('bando_event', (data) => {
+      socket.on('battle_event', (data) => {
         if (data) setLiveEvent({ ...data, _ts: Date.now() });
       });
 
-      socket.on('battle_event', (data) => {
-        if (data) setLiveEvent({ ...data, _ts: Date.now() });
+      socket.on('STUDIO_CAM_FRAME', (frameData) => {
+        if (frameData) setLiveStudioFrame(frameData);
       });
     } catch (err) {
       console.warn('Socket.io note:', err);
@@ -234,9 +235,17 @@ export default function CleanLiveOverlay() {
     let bandoChannel = null;
     let battleChannel = null;
     let cleanChannel = null;
+    let studioCamBc = null;
 
     if (typeof BroadcastChannel !== 'undefined') {
       try {
+        studioCamBc = new BroadcastChannel('avalive_studio_cam_feed');
+        studioCamBc.onmessage = (e) => {
+          if (e.data?.frame) {
+            setLiveStudioFrame(e.data.frame);
+          }
+        };
+
         masterChannel = new BroadcastChannel('avalive_master_live_stream');
         masterChannel.onmessage = (event) => {
           if (event.data) {
@@ -483,7 +492,41 @@ export default function CleanLiveOverlay() {
 
   // Helper giải mã URL media chính xác (tôn trọng 100% video/nhân vật người dùng chọn)
   const resolveActiveMedia = () => {
-    // 1. Kiểm tra trong danh sách nhân vật mẫu có sẵn theo selectedCharacter
+    // 1. ƯU TIÊN SỐ 1: Video do người dùng chọn hoặc đang phát trên phần mềm
+    if (masterState.mediaUrl) {
+      if (masterState.mediaUrl.startsWith('blob:') && localDbItems.length > 0) {
+        const match = localDbItems.find(i => i.mediaUrl === masterState.mediaUrl || i.id === masterState.selectedCharacter);
+        if (match && match.url) {
+          return { url: match.url, isVideo: match.type === 'video' };
+        }
+      }
+
+      const cleanUrl = masterState.mediaUrl.split('?')[0].toLowerCase();
+      const isImg = cleanUrl.endsWith('.jpg') || cleanUrl.endsWith('.jpeg') || cleanUrl.endsWith('.png') || cleanUrl.endsWith('.webp') || cleanUrl.includes('unsplash') || masterState.mediaUrl.startsWith('data:image');
+      const isVid = cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.endsWith('.mov') || cleanUrl.includes('preview/mixkit') || cleanUrl.includes('idols/');
+
+      return { 
+        url: masterState.mediaUrl, 
+        isVideo: isVid ? true : (isImg ? false : masterState.isVideo !== false)
+      };
+    }
+
+    // 2. Kiểm tra trong danh sách custom characters người dùng đã tải lên
+    try {
+      const customRaw = localStorage.getItem('avalive_custom_characters');
+      if (customRaw) {
+        const customList = JSON.parse(customRaw);
+        const customFound = customList.find(c => c.id === masterState.selectedCharacter);
+        if (customFound && customFound.url) {
+          return {
+            url: customFound.url,
+            isVideo: customFound.type === 'video' || (customFound.url.endsWith('.mp4') || customFound.url.endsWith('.webm'))
+          };
+        }
+      }
+    } catch (e) {}
+
+    // 3. Fallback theo danh sách nhân vật mẫu
     const BUILTIN_PRESETS = {
       'linhanh_4k': 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-posing-in-neon-light-39832-large.mp4',
       'maihoa_4k': 'https://assets.mixkit.co/videos/preview/mixkit-young-woman-talking-on-a-video-call-with-her-phone-41484-large.mp4',
@@ -500,52 +543,6 @@ export default function CleanLiveOverlay() {
       };
     }
 
-    // 2. Kiểm tra trong danh sách custom characters người dùng đã tải lên
-    try {
-      const customRaw = localStorage.getItem('avalive_custom_characters');
-      if (customRaw) {
-        const customList = JSON.parse(customRaw);
-        const customFound = customList.find(c => c.id === masterState.selectedCharacter || c.url === masterState.mediaUrl);
-        if (customFound && customFound.url) {
-          return {
-            url: customFound.url,
-            isVideo: customFound.type === 'video' || (customFound.url.endsWith('.mp4') || customFound.url.endsWith('.webm'))
-          };
-        }
-      }
-    } catch (e) {}
-
-    // 3. Tìm trong IndexedDB theo selectedCharacter
-    if (masterState.selectedCharacter && localDbItems.length > 0) {
-      const match = localDbItems.find(i => i.id === masterState.selectedCharacter);
-      if (match && match.url) {
-        return { url: match.url, isVideo: match.type === 'video' };
-      }
-    }
-
-    // 4. Nếu là blob URL, tìm item tương ứng trong DB
-    if (masterState.mediaUrl && masterState.mediaUrl.startsWith('blob:')) {
-      if (localDbItems.length > 0) {
-        const match = localDbItems.find(i => i.mediaUrl === masterState.mediaUrl || i.id === masterState.selectedCharacter);
-        if (match && match.url) {
-          return { url: match.url, isVideo: match.type === 'video' };
-        }
-      }
-    }
-
-    // 5. Nếu mediaUrl là HTTP URL bình thường hoặc base64 Data URL
-    if (masterState.mediaUrl) {
-      const cleanUrl = masterState.mediaUrl.split('?')[0].toLowerCase();
-      const isImg = cleanUrl.endsWith('.jpg') || cleanUrl.endsWith('.jpeg') || cleanUrl.endsWith('.png') || cleanUrl.endsWith('.webp') || cleanUrl.includes('unsplash') || masterState.mediaUrl.startsWith('data:image');
-      const isVid = cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.endsWith('.mov') || cleanUrl.includes('preview/mixkit') || cleanUrl.includes('idols/');
-
-      return { 
-        url: masterState.mediaUrl, 
-        isVideo: isVid ? true : (isImg ? false : masterState.isVideo !== false)
-      };
-    }
-
-    // 6. Fallback về video idol
     return { url: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-posing-in-neon-light-39832-large.mp4', isVideo: true };
   };
 
@@ -563,16 +560,22 @@ export default function CleanLiveOverlay() {
           }`}
           style={ratio === '9:16' ? { aspectRatio: '9 / 16', height: '100%', maxWidth: 'calc(100vh * 9 / 16)' } : { aspectRatio: '16 / 9', width: '100%' }}
         >
-          {/* Màn hình Camera Studio 4K Trực Tiếp */}
-          <video
-            ref={overlayWebcamVideoRef}
-            autoPlay
-            playsInline
-            muted
-            className="w-full h-full object-cover select-none scale-x-[-1] bg-black"
-          />
-
-          {!overlayCamActive && (
+          {liveStudioFrame ? (
+            /* Luồng Camera thật 30FPS trực tiếp từ Bảng điều khiển Studio */
+            <img
+              src={liveStudioFrame}
+              alt="Live Studio Realtime Camera Stream"
+              className="w-full h-full object-cover select-none bg-black transform-gpu"
+            />
+          ) : overlayCamActive ? (
+            <video
+              ref={overlayWebcamVideoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-cover select-none scale-x-[-1] bg-black"
+            />
+          ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#0F1016] via-[#151824] to-[#0A0A0F] text-center p-6 select-none">
               <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center mb-4 shadow-2xl shadow-blue-500/30 animate-pulse">
                 <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">

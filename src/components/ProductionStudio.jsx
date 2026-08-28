@@ -171,6 +171,21 @@ export default function ProductionStudio({
   const [isTiktokConnected, setIsTiktokConnected] = useState(false);
   const [tiktokLiveFlvUrl, setTiktokLiveFlvUrl] = useState(null);
   const socketRef = useRef(null);
+  const studioCamChannelRef = useRef(null);
+  const lastBroadcastTimeRef = useRef(0);
+
+  useEffect(() => {
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        studioCamChannelRef.current = new BroadcastChannel('avalive_studio_cam_feed');
+      } catch (e) {}
+    }
+    return () => {
+      if (studioCamChannelRef.current) {
+        studioCamChannelRef.current.close();
+      }
+    };
+  }, []);
 
   // --- THÊM LOGIC ĐỒNG BỘ MEDIA SANG OBS OVERLAY (CleanLiveOverlay) ---
   useEffect(() => {
@@ -1266,6 +1281,24 @@ export default function ProductionStudio({
       }
 
       applyAntiScan();
+
+      // 📡 REALTIME STREAM CANVAS FRAME TO OVERLAY (TIKTOK LIVE STUDIO & OBS)
+      if (webcamActive && canvasRef.current) {
+        const now = performance.now();
+        if (!lastBroadcastTimeRef.current || now - lastBroadcastTimeRef.current > 33) {
+          lastBroadcastTimeRef.current = now;
+          try {
+            const frameData = canvasRef.current.toDataURL('image/jpeg', 0.85);
+            if (studioCamChannelRef.current) {
+              studioCamChannelRef.current.postMessage({ type: 'STUDIO_CAM_FRAME', frame: frameData });
+            }
+            if (socketRef.current && socketRef.current.connected) {
+              socketRef.current.emit('STUDIO_CAM_FRAME', frameData);
+            }
+          } catch (e) {}
+        }
+      }
+
       animId = requestAnimationFrame(processFrame);
     };
 

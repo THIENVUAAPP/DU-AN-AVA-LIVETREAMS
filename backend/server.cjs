@@ -342,6 +342,10 @@ io.on('connection', (socket) => {
     socket.broadcast.emit('bando_sync', state);
   });
 
+  socket.on('STUDIO_CAM_FRAME', (frameData) => {
+    socket.broadcast.emit('STUDIO_CAM_FRAME', frameData);
+  });
+
   socket.on('battle_sync', (state) => {
     currentBattleGameState = state;
     socket.broadcast.emit('battle_sync', state);
