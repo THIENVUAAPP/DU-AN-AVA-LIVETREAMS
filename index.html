@@ -35,6 +35,23 @@
   </head>
   <body class="bg-[#0A0A0A] text-gray-100 antialiased selection:bg-[#EF4444] selection:text-white min-h-screen overflow-x-hidden pt-safe pb-safe">
     <div id="root"></div>
+    <script>
+      // Trình duyệt luôn chặn không cho chạy file JS dạng "module" khi mở trực tiếp file HTML
+      // (giao thức file://) — vì vậy nếu ai đó bấm đúp mở nhầm file index.html trong thư mục
+      // app_data/dist thay vì chạy đúng file khởi động, trang sẽ luôn trắng trơn không rõ lý do.
+      // Chặn sớm ở đây để hiện thông báo rõ ràng thay vì màn hình trắng im lặng.
+      if (window.location.protocol === 'file:') {
+        document.getElementById('root').innerHTML =
+          '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;font-family:sans-serif;text-align:center;background:#0A0A0A;color:#fff;">' +
+          '<div style="max-width:520px;">' +
+          '<div style="font-size:48px;margin-bottom:16px;">⚠️</div>' +
+          '<h1 style="font-size:20px;font-weight:800;color:#EF4444;margin-bottom:12px;">Vui lòng KHÔNG mở file này trực tiếp</h1>' +
+          '<p style="color:#ccc;line-height:1.6;">Đây là file dữ liệu nội bộ của phần mềm. Để khởi động AvaLive PRO đúng cách, hãy đóng tab này và chạy file:</p>' +
+          '<p style="margin-top:12px;font-weight:700;color:#38bdf8;">Khoi_Dong_AvaLive_Mac.command (Mac) &nbsp;hoặc&nbsp; Chay_App_Windows.bat (Windows)</p>' +
+          '<p style="margin-top:12px;color:#888;font-size:13px;">(File này nằm ở thư mục ngoài cùng sau khi giải nén, không phải trong thư mục app_data)</p>' +
+          '</div></div>';
+      }
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   <script>window.addEventListener("error", (e) => { document.body.innerHTML = "<div style=\"color:red;font-size:24px;z-index:9999;position:absolute;\">" + e.error.stack.replace(/\n/g,"<br>") + "</div>"; });</script></body>
 </html>
