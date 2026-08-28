@@ -814,17 +814,17 @@ export default function DesktopAppUI() {
   const BUILTIN_CHARACTERS = {
     'linhanh_4k': {
       name: 'AI Idol Linh Anh (4K Live)',
-      url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+      url: '/demo_dancer.mp4',
       type: 'video'
     },
     'maihoa_4k': {
       name: 'AI Idol Mai Hoa (Live Talk)',
-      url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+      url: '/demo_dancer.mp4',
       type: 'video'
     },
     'ngoctran_4k': {
       name: 'AI Idol Ngọc Trân (Studio 60FPS)',
-      url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyBlazes.mp4',
+      url: '/demo_dancer.mp4',
       type: 'video'
     }
   };

@@ -514,11 +514,16 @@ export default function CleanLiveOverlay() {
           ) : (
             <video
               key={masterState.mediaUrl || 'studio_default_loop'}
-              src={masterState.mediaUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyBlazes.mp4'}
+              src={masterState.mediaUrl || '/demo_dancer.mp4'}
               autoPlay
               loop
               muted={isAudioMuted}
               playsInline
+              crossOrigin="anonymous"
+              onLoadedMetadata={(e) => {
+                e.target.muted = true;
+                e.target.play().catch(() => {});
+              }}
               className="w-full h-full object-cover select-none z-10 bg-black"
             />
           )}
@@ -572,11 +577,16 @@ export default function CleanLiveOverlay() {
           /* 3. Video AI Idol MP4 60FPS Mặc Định Siêu Sắc Nét */
           <video
             key={masterState.mediaUrl || 'default_idol_loop'}
-            src={masterState.mediaUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'}
+            src={masterState.mediaUrl || '/demo_dancer.mp4'}
             autoPlay
             loop
             muted={isAudioMuted}
             playsInline
+            crossOrigin="anonymous"
+            onLoadedMetadata={(e) => {
+              e.target.muted = true;
+              e.target.play().catch(() => {});
+            }}
             className="w-full h-full object-cover select-none z-10 bg-black"
           />
         )}
