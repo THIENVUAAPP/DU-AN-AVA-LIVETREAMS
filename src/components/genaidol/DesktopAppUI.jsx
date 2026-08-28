@@ -693,20 +693,25 @@ export default function DesktopAppUI() {
     else if (isLiveStudioActive) currentStage = 'broadcast';
     else if (isDanceFloorActive) currentStage = 'dancefloor';
 
-    const selectedCharObj = CHARACTERS[selectedCharacter] || Object.values(CHARACTERS)[0] || null;
-    const mediaUrl = selectedCharObj?.url || (activeVideoItem?.mediaUrl) || null;
+    const selectedCharObj = CHARACTERS[selectedCharacter] || Object.values(CHARACTERS)[0] || {
+      name: 'AI Idol Linh Anh (4K Live)',
+      url: '/demo_dancer.mp4',
+      type: 'video'
+    };
+    const mediaUrl = selectedCharObj?.url || (activeVideoItem?.mediaUrl) || '/demo_dancer.mp4';
     const isVideo = selectedCharObj?.type === 'video' || (activeVideoItem?.mediaUrl ? true : false);
 
     syncMasterLiveState({
       stage: currentStage,
       aspectRatio: globalAspectRatio || '9:16',
+      selectedCharacter: selectedCharacter || Object.keys(CHARACTERS)[0] || 'linhanh_4k',
       characterName: selectedCharObj?.name || 'AI Idol Linh Anh',
       mediaUrl: mediaUrl,
       isVideo: isVideo,
       flvUrl: flvUrl || null,
       isConnected: isConnected,
       isDarkMode: isDarkMode
-    });
+    }, socketRef.current);
   }, [isGameBanDoActive, isGameBattleActive, isLiveStudioActive, isDanceFloorActive, selectedCharacter, customCharacters, globalAspectRatio, activeVideoItem, flvUrl, isConnected, isDarkMode]);
 
   // Trạng thái Chạy Demo / Test Toàn Cục (1 Nút Duy Nhất cho tất cả Game / Idol)
