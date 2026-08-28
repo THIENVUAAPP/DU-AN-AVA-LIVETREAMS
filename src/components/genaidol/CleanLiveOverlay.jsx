@@ -482,8 +482,7 @@ export default function CleanLiveOverlay() {
     );
   }
 
-  // 3. RENDER STAGE: PHÒNG DỰNG LIVE STUDIO — CHỈ KHUNG HÌNH CAMERA SẠCH,
-  // VỪA KHÍT KHUNG TIKTOK LIVE, KHÔNG KÈM BẢNG ĐIỀU KHIỂN (Director Suite chỉ dùng trên Dashboard)
+  // 3. RENDER STAGE: PHÒNG DỰNG LIVE STUDIO — KHUNG HÌNH CAMERA / VIDEO SẠCH 60FPS
   if (currentStage === 'broadcast' || currentStage === 'studio') {
     return (
       <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-black flex items-center justify-center select-none">
@@ -503,23 +502,31 @@ export default function CleanLiveOverlay() {
               muted
               className="w-full h-full object-cover select-none bg-black"
             />
+          ) : activeStreamUrl ? (
+            <video
+              ref={flvVideoRef}
+              key={activeStreamUrl}
+              autoPlay
+              muted={isAudioMuted}
+              playsInline
+              className="w-full h-full object-cover select-none z-10 bg-black"
+            />
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-[#0e101f] via-[#090b16] to-[#04050a] text-center p-8">
-              <Radio className="w-14 h-14 text-cyan-400 animate-pulse" />
-              <p className="text-cyan-200 text-sm max-w-xs">Đang yêu cầu quyền truy cập Camera cho Phòng Dựng Live Studio...</p>
-              <button
-                onClick={toggleOverlayCam}
-                className="px-4 py-2 rounded-full bg-cyan-600/80 hover:bg-cyan-500 text-white text-xs font-bold border border-cyan-400/50"
-              >
-                🎥 Kết Nối Lại Camera
-              </button>
-            </div>
+            <video
+              key={masterState.mediaUrl || 'studio_default_loop'}
+              src={masterState.mediaUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyBlazes.mp4'}
+              autoPlay
+              loop
+              muted={isAudioMuted}
+              playsInline
+              className="w-full h-full object-cover select-none z-10 bg-black"
+            />
           )}
 
           <div className="absolute top-4 left-4 z-30 flex items-center gap-2 pointer-events-none">
             <div className="px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-md border border-white/20 text-white text-xs font-black flex items-center gap-2 shadow-xl">
               <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
-              <span className="text-red-400 uppercase tracking-wider text-[11px]">🔴 LIVE STUDIO</span>
+              <span className="text-red-400 uppercase tracking-wider text-[11px]">🔴 LIVE STUDIO 4K</span>
             </div>
           </div>
         </div>
