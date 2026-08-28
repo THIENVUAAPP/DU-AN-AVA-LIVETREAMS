@@ -4,6 +4,7 @@ import flvjs from 'flv.js';
 import Hls from 'hls.js';
 import GameBanDoVietNam from './game/GameBanDoVietNam';
 import GameChienDau from './game/GameChienDau';
+import ProductionStudio from '../ProductionStudio';
 import { supabase } from '../../lib/supabaseClient';
 import { loadAllAidolItems } from '../../utils/idbHelper';
 
@@ -512,71 +513,19 @@ export default function CleanLiveOverlay() {
 
   const activeMedia = resolveActiveMedia();
 
-  // 3. RENDER STAGE: PHÒNG DỰNG LIVE STUDIO — 100% CLEAN VIDEO KHÔNG RÁC
+  // 3. RENDER STAGE: PHÒNG DỰNG LIVE STUDIO 4K CHUYÊN NGHIỆP
   if (currentStage === 'broadcast' || currentStage === 'studio') {
     return (
-      <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-black flex items-center justify-center select-none">
-        <div
-          className={`relative flex items-center justify-center overflow-hidden transition-all duration-300 ${
-            ratio === '9:16'
-              ? 'h-full aspect-[9/16] w-auto max-w-full'
-              : 'w-full aspect-[16/9] h-auto max-h-full'
-          }`}
-          style={ratio === '9:16' ? { aspectRatio: '9 / 16', height: '100%', maxWidth: 'calc(100vh * 9 / 16)' } : { aspectRatio: '16 / 9', width: '100%' }}
-        >
-          {overlayCamActive ? (
-            <video
-              ref={overlayWebcamVideoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full h-full object-cover select-none bg-black"
-            />
-          ) : activeStreamUrl ? (
-            <video
-              ref={flvVideoRef}
-              key={activeStreamUrl}
-              autoPlay
-              muted={isAudioMuted}
-              playsInline
-              className="w-full h-full object-cover select-none bg-black"
-            />
-          ) : activeMedia.isVideo ? (
-            <video
-              key={activeMedia.url}
-              src={activeMedia.url}
-              autoPlay
-              loop
-              muted={isAudioMuted}
-              playsInline
-              onError={(e) => {
-                if (e.target.src !== window.location.origin + '/demo_dancer.mp4') {
-                  e.target.src = '/demo_dancer.mp4';
-                  e.target.play().catch(() => {});
-                }
-              }}
-              onCanPlay={(e) => {
-                e.target.play().catch(() => {});
-              }}
-              className="w-full h-full object-cover select-none bg-black"
-            />
-          ) : (
-            <img
-              src={activeMedia.url}
-              alt="Studio Background"
-              className="w-full h-full object-cover select-none"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = '/demo_dancer.mp4';
-              }}
-            />
-          )}
-        </div>
+      <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-black select-none flex items-center justify-center">
+        <ProductionStudio 
+          isLive={true}
+          globalAspectRatio={ratio}
+        />
       </div>
     );
   }
 
-  // 4. RENDER STAGE: AI IDOL LIVESTREAM — 100% CLEAN VIDEO / NGƯỜI DUY NHẤT (KHÔNG BADGE, KHÔNG RÁC)
+  // 4. RENDER STAGE: AI IDOL LIVESTREAM — 100% CLEAN VIDEO / NGƯỜI DUY NHẤT (THEO VIDEO NGƯỜI DÙNG CHỌN)
   return (
     <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-black flex items-center justify-center select-none">
       {/* Frame Container Responsive theo Tỷ Lệ 9:16 (TikTok Dọc) hoặc 16:9 (OBS Ngang) */}

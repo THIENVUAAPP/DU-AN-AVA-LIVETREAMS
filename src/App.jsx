@@ -39,8 +39,10 @@ export default function App() {
 
   const isOverlayBattle = overlayTypeParam === "gamebattle" || overlayTypeParam === "battle" || overlayPathName.includes("/overlay-battle") || overlayPathName.includes("/overlay/battle") || overlayPathName.includes("/battle");
   const isOverlayBanDo = overlayTypeParam === "bando" || overlayTypeParam === "vietnam_map" || overlayTypeParam === "map" || overlayTypeParam === "vietnam" || overlayPathName.includes("/overlay-bando") || overlayPathName.includes("/overlay/bando") || overlayPathName.includes("/bando");
-  const isMasterLiveOverlay = overlayTypeParam === "broadcast" || overlayTypeParam === "live" || overlayTypeParam === "stage" || overlayTypeParam === "tiktok" || overlayTypeParam === "obs" || overlayTypeParam === "cleanlive" || overlayTypeParam === "avatar" || overlayTypeParam === "stream" || overlayTypeParam === "idol" || overlayTypeParam === "master" || overlayTypeParam === "studio" || overlayTypeParam === "dance" || overlayPathName.includes("/overlay-live") || overlayPathName.includes("/overlay-idol") || overlayPathName.includes("/overlay") || overlayPathName.includes("/live") || overlayPathName.includes("/idol") || overlayPathName.includes("/studio") || overlayPathName.includes("/dance");
-  const isAnyOverlayWindow = isOverlayBattle || isOverlayBanDo || isMasterLiveOverlay;
+  const isOverlayStudio = overlayTypeParam === "studio" || overlayTypeParam === "broadcast" || overlayPathName.includes("/overlay-studio") || overlayPathName.includes("/studio");
+  const isOverlayIdol = overlayTypeParam === "idol" || overlayTypeParam === "avatar" || overlayPathName.includes("/overlay-idol") || overlayPathName.includes("/idol");
+  const isMasterLiveOverlay = overlayTypeParam === "live" || overlayTypeParam === "stage" || overlayTypeParam === "tiktok" || overlayTypeParam === "obs" || overlayTypeParam === "cleanlive" || overlayTypeParam === "master" || overlayPathName.includes("/overlay-live") || overlayPathName.includes("/live");
+  const isAnyOverlayWindow = isOverlayBattle || isOverlayBanDo || isOverlayStudio || isOverlayIdol || isMasterLiveOverlay;
 
   const [activeTab, setActiveTab] = useState("overview");
   const [isLive, setIsLive] = useState(false);
@@ -57,6 +59,14 @@ export default function App() {
          // Build updated user based on overrides and defaults if needed
          let sysConfig = { defaultTokens: 100, defaultLiveTime: 0 };
          try { sysConfig = JSON.parse(localStorage.getItem('avalive_system_configs')) || sysConfig; } catch(e) {}
+         
+         const defaultTokens = sysConfig.defaultTokens !== undefined ? Number(sysConfig.defaultTokens) : 100;
+         const defaultLiveTime = sysConfig.defaultLiveTime !== undefined ? Number(sysConfig.defaultLiveTime) : 0;
+         
+         // Priority: sysConfig defaults on top of existing if missing
+         if (parsedUser.tokens === undefined || parsedUser.tokens === null) parsedUser.tokens = defaultTokens;
+         if (parsedUser.liveTimeHours === undefined || parsedUser.liveTimeHours === null) parsedUser.liveTimeHours = defaultLiveTime;
+         if (parsedUser.vipStatus === undefined) parsedUser.vipStatus = "Gói Cơ Bản";
          
          const overrides = JSON.parse(localStorage.getItem('avalive_user_overrides') || '{}');
          const override = overrides[parsedUser.email];
@@ -227,7 +237,12 @@ export default function App() {
 
   if (isOverlayBattle) return <GameBattleOverlay />;
   if (isOverlayBanDo) return <GameBanDoOverlay />;
-  if (isMasterLiveOverlay) return <CleanLiveOverlay />;
+  if (isOverlayStudio) return (
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-black select-none flex items-center justify-center">
+      <ProductionStudio isLive={true} globalAspectRatio="9:16" />
+    </div>
+  );
+  if (isOverlayIdol || isMasterLiveOverlay) return <CleanLiveOverlay />;
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-gray-100 flex flex-col font-sans selection:bg-[#EF4444] selection:text-white">
