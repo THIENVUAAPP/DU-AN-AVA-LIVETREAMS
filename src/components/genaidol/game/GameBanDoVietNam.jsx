@@ -1443,6 +1443,14 @@ export default function GameBanDoVietNam({
         controls.autoRotate = !!autoRotateRef.current;
       }
 
+      // 🌊 CHUYỂN ĐỘNG MỀM MẠI LIÊN TỤC CHO CAMERA (LUÔN CHUYỂN ĐỘNG ĐỘNG 60FPS TRÊN OBS / TIKTOK STUDIO)
+      if (!state.tween && !controls.state && !isPanMode) {
+        const floatSpeed = 0.0008;
+        const floatAmp = 0.6;
+        camera.position.x += Math.sin(time * floatSpeed) * (floatAmp * dt);
+        camera.position.y += Math.cos(time * floatSpeed * 0.7) * (floatAmp * dt * 0.5);
+      }
+
       // Handle 3-Stage Smart Camera Zoom:
       // Giai đoạn 1: Zoom Cận Cảnh 4s (Thấy rõ tên ID và lá cờ sắc nét chuẩn màu không phát sáng chói lóa)
       // Giai đoạn 2: Zoom Khu Vực (Tỉnh/vùng lân cận) khoảng 6s (Tổng 10s)

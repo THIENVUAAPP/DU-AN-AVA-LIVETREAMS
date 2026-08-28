@@ -59,13 +59,17 @@ class ErrorBoundary extends Component {
 }
 
 const pathname = window.location.pathname.toLowerCase();
-const isDesktopMode = 
-  pathname === '/desktop' || 
-  pathname.startsWith('/desktop') || 
-  window.location.hash.includes('desktop') || 
-  new URLSearchParams(window.location.search).get('mode') === 'desktop' ||
-  window.location.port === '3001';
+const searchParams = new URLSearchParams(window.location.search);
+const hasOverlayParam = searchParams.has('overlay') || pathname.includes('/live') || pathname.includes('/battle') || pathname.includes('/bando') || pathname.includes('/overlay');
 
+const isDesktopMode = 
+  !hasOverlayParam && (
+    pathname === '/desktop' || 
+    pathname.startsWith('/desktop') || 
+    window.location.hash.includes('desktop') || 
+    searchParams.get('mode') === 'desktop' ||
+    window.location.port === '3001'
+  );
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
