@@ -87,18 +87,6 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       directUrl: `${activeBase}/studio`
     },
     {
-      id: 'dance',
-      name: 'DỰ ÁN 5: SÀN NHẢY 3D DANCE FLOOR',
-      tag: 'ÂM NHẠC SÔI ĐỘNG',
-      tagColor: 'from-purple-500 to-fuchsia-600',
-      icon: Music,
-      iconColor: 'text-purple-400',
-      bgColor: 'border-purple-500/30 bg-purple-950/20 hover:border-purple-400/60',
-      description: 'Sàn nhảy vũ đạo 3D chuyển động theo điệu nhạc sôi động và hiệu ứng ánh sáng bắt mắt.',
-      path: '/dance',
-      directUrl: `${activeBase}/dance`
-    },
-    {
       id: 'master',
       name: 'DỰ ÁN TOÀN NĂNG: 1 LINK DUY NHẤT (TỰ ĐỔI CẢNH THEO PHẦN MỀM)',
       tag: 'TIỆN LỢI NHẤT',
@@ -106,7 +94,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       icon: Radio,
       iconColor: 'text-cyan-300',
       bgColor: 'border-cyan-400/60 bg-gradient-to-br from-cyan-950/40 via-[#0E1B33] to-blue-950/40 shadow-lg shadow-cyan-950/50',
-      description: '1 Link thông minh tự động chuyển đổi giữa cả 5 dự án khi anh bấm nút trên phần mềm (không cần đổi link trong TikTok Live Studio).',
+      description: '1 Link thông minh tự động chuyển đổi giữa cả 4 dự án khi anh bấm nút trên phần mềm (không cần đổi link trong TikTok Live Studio).',
       path: '/live',
       directUrl: `${activeBase}/live`
     }
