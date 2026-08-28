@@ -41,7 +41,7 @@ export default function CleanLiveOverlay() {
     return {
       stage: defaultStage, // 'idol' | 'dancefloor' | 'battle' | 'bando' | 'broadcast'
       aspectRatio: ratioParam || '9:16',
-      mediaUrl: saved?.mediaUrl || '/demo_dancer.mp4',
+      mediaUrl: saved?.mediaUrl || null,
       flvUrl: directVideoUrl || saved?.flvUrl || null,
       isVideo: saved?.isVideo !== false,
       selectedCharacter: saved?.selectedCharacter || '',
@@ -564,23 +564,6 @@ export default function CleanLiveOverlay() {
       }
     } catch (e) {}
 
-    // 3. Fallback theo danh sách nhân vật mẫu
-    const BUILTIN_PRESETS = {
-      'linhanh_4k': 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-posing-in-neon-light-39832-large.mp4',
-      'maihoa_4k': 'https://assets.mixkit.co/videos/preview/mixkit-young-woman-talking-on-a-video-call-with-her-phone-41484-large.mp4',
-      'ngoctran_4k': 'https://assets.mixkit.co/videos/preview/mixkit-girl-dancing-in-a-studio-under-colored-lights-41444-large.mp4',
-      'meo2k4': 'https://assets.mixkit.co/videos/preview/mixkit-woman-smiling-at-the-camera-while-wearing-headphones-41434-large.mp4',
-      'thuychi': 'https://assets.mixkit.co/videos/preview/mixkit-woman-singing-into-a-microphone-in-a-studio-41440-large.mp4',
-      'dancer_local': '/demo_dancer.mp4'
-    };
-
-    if (masterState.selectedCharacter && BUILTIN_PRESETS[masterState.selectedCharacter]) {
-      return {
-        url: BUILTIN_PRESETS[masterState.selectedCharacter],
-        isVideo: true
-      };
-    }
-
     return { url: null, isVideo: true };
   };
 
@@ -607,7 +590,12 @@ export default function CleanLiveOverlay() {
             />
           ) : overlayCamActive ? (
             <video
-              ref={overlayWebcamVideoRef}
+              ref={(el) => {
+                overlayWebcamVideoRef.current = el;
+                if (el && overlayWebcamStreamRef.current && el.srcObject !== overlayWebcamStreamRef.current) {
+                  el.srcObject = overlayWebcamStreamRef.current;
+                }
+              }}
               autoPlay
               playsInline
               muted
@@ -653,7 +641,12 @@ export default function CleanLiveOverlay() {
       >
         {overlayCamActive ? (
           <video
-            ref={overlayWebcamVideoRef}
+            ref={(el) => {
+              overlayWebcamVideoRef.current = el;
+              if (el && overlayWebcamStreamRef.current && el.srcObject !== overlayWebcamStreamRef.current) {
+                el.srcObject = overlayWebcamStreamRef.current;
+              }
+            }}
             autoPlay
             playsInline
             muted
@@ -668,7 +661,7 @@ export default function CleanLiveOverlay() {
             playsInline
             className="w-full h-full object-cover select-none bg-black"
           />
-        ) : activeMedia.isVideo ? (
+        ) : activeMedia.url && activeMedia.isVideo ? (
           <video
             key={activeMedia.url}
             src={activeMedia.url}
@@ -681,7 +674,7 @@ export default function CleanLiveOverlay() {
             }}
             className="w-full h-full object-cover select-none bg-black"
           />
-        ) : (
+        ) : activeMedia.url ? (
           /* Ảnh Idol Sắc Nét 4K (Chống Màn Hình Đen Tuyệt Đối) */
           <img 
             src={activeMedia.url} 
@@ -693,6 +686,8 @@ export default function CleanLiveOverlay() {
               e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
             }}
           />
+        ) : (
+          <div className="w-full h-full bg-black select-none"></div>
         )}
       </div>
 
