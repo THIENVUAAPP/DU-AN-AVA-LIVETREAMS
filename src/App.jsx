@@ -237,12 +237,7 @@ export default function App() {
 
   if (isOverlayBattle) return <GameBattleOverlay />;
   if (isOverlayBanDo) return <GameBanDoOverlay />;
-  if (isOverlayStudio) return (
-    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-black select-none flex items-center justify-center">
-      <ProductionStudio isLive={true} globalAspectRatio="9:16" />
-    </div>
-  );
-  if (isOverlayIdol || isMasterLiveOverlay) return <CleanLiveOverlay />;
+  if (isOverlayStudio || isOverlayIdol || isMasterLiveOverlay) return <CleanLiveOverlay />;
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-gray-100 flex flex-col font-sans selection:bg-[#EF4444] selection:text-white">
