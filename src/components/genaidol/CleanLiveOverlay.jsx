@@ -459,19 +459,22 @@ export default function CleanLiveOverlay() {
     );
   }
 
-  // Helper giải mã URL media chính xác (xử lý cross-window IndexedDB Blob)
+  // Helper giải mã URL media chính xác (tôn trọng 100% video/nhân vật người dùng chọn)
   const resolveActiveMedia = () => {
-    // 1. Nếu mediaUrl là HTTP URL bình thường hoặc base64 Data URL
-    if (masterState.mediaUrl && !masterState.mediaUrl.startsWith('blob:')) {
-      const cleanUrl = masterState.mediaUrl.split('?')[0].toLowerCase();
-      const isImg = cleanUrl.endsWith('.jpg') || cleanUrl.endsWith('.jpeg') || cleanUrl.endsWith('.png') || cleanUrl.endsWith('.webp') || cleanUrl.includes('unsplash') || masterState.mediaUrl.startsWith('data:image');
-      const isVid = cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.endsWith('.mov') || cleanUrl.includes('demo_dancer') || cleanUrl.includes('preview/mixkit');
-
-      return { 
-        url: masterState.mediaUrl, 
-        isVideo: isVid ? true : (isImg ? false : masterState.isVideo !== false)
-      };
-    }
+    // 1. Kiểm tra trong danh sách custom characters người dùng đã tải lên
+    try {
+      const customRaw = localStorage.getItem('avalive_custom_characters');
+      if (customRaw) {
+        const customList = JSON.parse(customRaw);
+        const customFound = customList.find(c => c.id === masterState.selectedCharacter || c.url === masterState.mediaUrl);
+        if (customFound && customFound.url) {
+          return {
+            url: customFound.url,
+            isVideo: customFound.type === 'video' || (customFound.url.endsWith('.mp4') || customFound.url.endsWith('.webm'))
+          };
+        }
+      }
+    } catch (e) {}
 
     // 2. Tìm trong IndexedDB theo selectedCharacter
     if (masterState.selectedCharacter && localDbItems.length > 0) {
@@ -491,7 +494,19 @@ export default function CleanLiveOverlay() {
       }
     }
 
-    // 4. Mặc định Video Idol Dance Loop cực sắc nét
+    // 4. Nếu mediaUrl là HTTP URL bình thường hoặc base64 Data URL
+    if (masterState.mediaUrl) {
+      const cleanUrl = masterState.mediaUrl.split('?')[0].toLowerCase();
+      const isImg = cleanUrl.endsWith('.jpg') || cleanUrl.endsWith('.jpeg') || cleanUrl.endsWith('.png') || cleanUrl.endsWith('.webp') || cleanUrl.includes('unsplash') || masterState.mediaUrl.startsWith('data:image');
+      const isVid = cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.endsWith('.mov') || cleanUrl.includes('preview/mixkit') || cleanUrl.includes('idols/');
+
+      return { 
+        url: masterState.mediaUrl, 
+        isVideo: isVid ? true : (isImg ? false : masterState.isVideo !== false)
+      };
+    }
+
+    // 5. Fallback về video idol
     return { url: '/demo_dancer.mp4', isVideo: true };
   };
 

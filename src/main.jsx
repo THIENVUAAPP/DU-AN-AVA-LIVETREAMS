@@ -58,10 +58,19 @@ class ErrorBoundary extends Component {
   }
 }
 
-const pathname = window.location.pathname.toLowerCase();
-const searchParams = new URLSearchParams(window.location.search);
+const pathname = typeof window !== 'undefined' ? window.location.pathname.toLowerCase() : '';
+const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
 const hostname = typeof window !== 'undefined' ? window.location.hostname.toLowerCase() : '';
-const hasOverlayParam = searchParams.has('overlay') || pathname.includes('/live') || pathname.includes('/battle') || pathname.includes('/bando') || pathname.includes('/overlay') || pathname === '/idol' || pathname === '/studio';
+
+const hasOverlayParam = 
+  searchParams.has('overlay') || 
+  pathname.includes('/live') || 
+  pathname.includes('/battle') || 
+  pathname.includes('/bando') || 
+  pathname.includes('/overlay') || 
+  pathname.includes('/idol') || 
+  pathname.includes('/studio') || 
+  pathname.includes('/dance');
 
 const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('127.0.0.1.nip.io') || hostname.startsWith('192.168.');
 
