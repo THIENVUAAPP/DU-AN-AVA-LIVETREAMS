@@ -36,6 +36,10 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
   const cloudBase = 'https://avalivepro.vercel.app';
   const activeBase = linkEnv === 'local' ? localBase : cloudBase;
 
+  // Lấy backendUrl hiện tại của Dashboard để truyền cho Overlay (đảm bảo đồng bộ 100% kể cả khi khác origin)
+  const currentBackendUrl = typeof window !== 'undefined' ? (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001' ? `${window.location.protocol}//${window.location.hostname}:3001` : window.location.origin) : 'http://localhost:3001';
+  const backendParam = `&backend=${encodeURIComponent(currentBackendUrl)}`;
+
   // Danh sách các dự án với đường link riêng biệt 100%
   const projects = [
     {
@@ -48,7 +52,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       bgColor: 'border-pink-500/30 bg-pink-950/20 hover:border-pink-400/60',
       description: 'Phát video người Live / AI Idol 60FPS sạch 100% không dính rác, tự động lặp không bao giờ đen màn hình.',
       path: '/idol',
-      directUrl: `${activeBase}/?overlay=idol`
+      directUrl: `${activeBase}/?overlay=idol${backendParam}`
     },
     {
       id: 'bando',
@@ -60,7 +64,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       bgColor: 'border-amber-500/30 bg-amber-950/20 hover:border-amber-400/60',
       description: 'Game cắm cờ 63 tỉnh thành Việt Nam 3D ghép cờ thời gian thực khi khán giả tặng quà TikTok Live.',
       path: '/bando',
-      directUrl: `${activeBase}/?overlay=bando`
+      directUrl: `${activeBase}/?overlay=bando${backendParam}`
     },
     {
       id: 'battle',
@@ -72,7 +76,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       bgColor: 'border-red-500/30 bg-red-950/20 hover:border-red-400/60',
       description: 'Võ đài chiến đấu chia 2 phe PK kịch tính, tự động tung skill và hiệu ứng khi có tương tác bình luận & quà.',
       path: '/battle',
-      directUrl: `${activeBase}/?overlay=battle`
+      directUrl: `${activeBase}/?overlay=battle${backendParam}`
     },
     {
       id: 'studio',
@@ -84,7 +88,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       bgColor: 'border-blue-500/30 bg-blue-950/20 hover:border-blue-400/60',
       description: 'Studio phát sóng 4K chuyên nghiệp tích hợp Webcam, phông nền ảo, hiệu ứng làm đẹp và video RTMP.',
       path: '/studio',
-      directUrl: `${activeBase}/?overlay=studio`
+      directUrl: `${activeBase}/?overlay=studio${backendParam}`
     },
     {
       id: 'master',
@@ -96,7 +100,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       bgColor: 'border-cyan-400/60 bg-gradient-to-br from-cyan-950/40 via-[#0E1B33] to-blue-950/40 shadow-lg shadow-cyan-950/50',
       description: '1 Link thông minh tự động chuyển đổi giữa cả 4 dự án khi anh bấm nút trên phần mềm (không cần đổi link trong TikTok Live Studio).',
       path: '/live',
-      directUrl: `${activeBase}/?overlay=live`
+      directUrl: `${activeBase}/?overlay=live${backendParam}`
     }
   ];
 

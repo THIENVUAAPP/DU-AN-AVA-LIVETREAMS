@@ -126,7 +126,10 @@ export default function CleanLiveOverlay() {
     document.documentElement.style.background = 'transparent';
     document.body.style.background = 'transparent';
 
-    const backendUrl = typeof window !== 'undefined' ? (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001' ? `${window.location.protocol}//${window.location.hostname}:3001` : window.location.origin) : 'http://localhost:3001';
+    const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const backendParam = urlParams ? urlParams.get('backend') : null;
+    const autoBackendUrl = typeof window !== 'undefined' ? (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001' ? `${window.location.protocol}//${window.location.hostname}:3001` : window.location.origin) : 'http://localhost:3001';
+    const backendUrl = backendParam || autoBackendUrl;
 
     const applyMasterState = (data) => {
       if (!data) return;
@@ -147,6 +150,14 @@ export default function CleanLiveOverlay() {
         } else if (overlayParam === 'broadcast' || overlayParam === 'studio' || pathname.includes('/studio')) {
           next.stage = 'broadcast';
         }
+        
+        // Cập nhật lại IDB nếu nhân vật thay đổi (vì sự kiện tải file không bắn chéo cửa sổ được)
+        if (prev.selectedCharacter !== next.selectedCharacter) {
+           loadAllAidolItems().then(items => {
+             if (Array.isArray(items) && items.length > 0) setLocalDbItems(items);
+           }).catch(() => {});
+        }
+        
         return next;
       });
     };
@@ -515,15 +526,19 @@ export default function CleanLiveOverlay() {
 
   // Helper giải mã URL media chính xác (tôn trọng 100% video/nhân vật người dùng chọn)
   const resolveActiveMedia = () => {
-    // 1. ƯU TIÊN SỐ 1: Video do người dùng chọn hoặc đang phát trên phần mềm
-    if (masterState.mediaUrl) {
-      if (masterState.mediaUrl.startsWith('blob:') && localDbItems.length > 0) {
-        const match = localDbItems.find(i => i.mediaUrl === masterState.mediaUrl || i.id === masterState.selectedCharacter);
-        if (match && match.url) {
-          return { url: match.url, isVideo: match.type === 'video' };
-        }
+    // 1. ƯU TIÊN SỐ 1: Video do người dùng tải lên (tìm theo ID trong IndexedDB)
+    if (masterState.selectedCharacter && localDbItems.length > 0) {
+      const match = localDbItems.find(i => i.id === masterState.selectedCharacter);
+      if (match && match.url) {
+        return { url: match.url, isVideo: match.type === 'video' || match.url.endsWith('.mp4') };
       }
+    }
 
+    if (masterState.mediaUrl) {
+      if (masterState.mediaUrl.startsWith('blob:')) {
+         // Url blob từ cửa sổ khác sẽ không dùng được. Phải chờ IDB tải xong (bên trên).
+         return { url: null, isVideo: true };
+      }
       const cleanUrl = masterState.mediaUrl.split('?')[0].toLowerCase();
       const isImg = cleanUrl.endsWith('.jpg') || cleanUrl.endsWith('.jpeg') || cleanUrl.endsWith('.png') || cleanUrl.endsWith('.webp') || cleanUrl.includes('unsplash') || masterState.mediaUrl.startsWith('data:image');
       const isVid = cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.endsWith('.mov') || cleanUrl.includes('preview/mixkit') || cleanUrl.includes('idols/');
