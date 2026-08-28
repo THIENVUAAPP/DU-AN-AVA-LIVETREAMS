@@ -172,11 +172,10 @@ app.get('/api/stream-proxy', (req, res) => {
 });
 
 // Dùng HTTPS khi có sẵn cert dev (certs/dev-cert.pem, certs/dev-key.pem) — bắt buộc phải cùng
-// giao thức với Frontend Vite (https://127.0.0.1.nip.io:5173), nếu không trình duyệt sẽ chặn
-// mọi request fetch/socket.io từ trang HTTPS gọi sang backend HTTP (Mixed Content Blocked).
+const useHttpsEnv = process.env.USE_HTTPS === 'true';
 const devCertPath = path.join(__dirname, '../certs/dev-cert.pem');
 const devKeyPath = path.join(__dirname, '../certs/dev-key.pem');
-const usingHttps = fs.existsSync(devCertPath) && fs.existsSync(devKeyPath);
+const usingHttps = useHttpsEnv && fs.existsSync(devCertPath) && fs.existsSync(devKeyPath);
 const httpServer = usingHttps
   ? https.createServer({ cert: fs.readFileSync(devCertPath), key: fs.readFileSync(devKeyPath) }, app)
   : createServer(app);
@@ -993,10 +992,12 @@ app.post('/api/generate-script', async (req, res) => {
   }
 });
 
-// SPA Fallback
+// SPA Fallback cho tất cả các route (Overlay, Game, Live Studio, Live Idol)
 if (distPath) {
   app.use((req, res, next) => {
-    if (req.method !== 'GET' || req.path.startsWith('/api') || req.path.startsWith('/socket.io')) return next();
+    if (req.method !== 'GET') return next();
+    if (req.url.startsWith('/api') || req.url.startsWith('/socket.io')) return next();
+    if (req.url.includes('.') && !req.url.includes('.html')) return next();
     res.sendFile(path.join(distPath, 'index.html'));
   });
 }
