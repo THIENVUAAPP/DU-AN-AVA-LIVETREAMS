@@ -401,6 +401,25 @@ export default function GameBanDoVietNam({
     return { x: 10, y: 70 };
   });
 
+  // Đồng bộ vị trí và tỉ lệ BXH từ Bảng điều khiển sang OBS Overlay Real-time
+  useEffect(() => {
+    const handleStorage = (e) => {
+      if (e.key === 'bando_hud_leaderboard_pos' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (parsed) setLeaderboardPos(parsed);
+        } catch (err) {}
+      } else if (e.key === 'bando_hud_leaderboard_scale' && e.newValue) {
+        try {
+          const parsedScale = parseFloat(e.newValue);
+          if (!isNaN(parsedScale)) setLeaderboardScale(parsedScale);
+        } catch (err) {}
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
   const handleLeaderboardScaleChange = (delta) => {
     setLeaderboardScale(prev => {
       const next = Math.round(Math.max(0.5, Math.min(2.0, prev + delta)) * 10) / 10;

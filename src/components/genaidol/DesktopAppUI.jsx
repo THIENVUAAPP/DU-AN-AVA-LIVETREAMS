@@ -811,7 +811,23 @@ export default function DesktopAppUI() {
   }, []);
 
   // Bộ sưu tập Nhân Vật AI Idol & Video 4K Mặc Định Sắc Nét
-  const BUILTIN_CHARACTERS = {};
+  const BUILTIN_CHARACTERS = {
+    'linhanh_4k': {
+      name: 'AI Idol Linh Anh (4K Live)',
+      url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+      type: 'video'
+    },
+    'maihoa_4k': {
+      name: 'AI Idol Mai Hoa (Live Talk)',
+      url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+      type: 'video'
+    },
+    'ngoctran_4k': {
+      name: 'AI Idol Ngọc Trân (Studio 60FPS)',
+      url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyBlazes.mp4',
+      type: 'video'
+    }
+  };
 
   const ALL_CHARACTERS = { ...BUILTIN_CHARACTERS };
 
@@ -820,7 +836,7 @@ export default function DesktopAppUI() {
   if (Array.isArray(customCharacters)) {
     customCharacters.forEach(c => {
       if (c && c.id) {
-        CHARACTERS[c.id] = { name: c.name || 'AI Idol', url: c.url, type: c.type || 'image' };
+        CHARACTERS[c.id] = { name: c.name || 'AI Idol', url: c.url, type: c.type || 'video' };
       }
     });
   }

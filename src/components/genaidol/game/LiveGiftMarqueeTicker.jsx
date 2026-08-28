@@ -57,7 +57,7 @@ export default function LiveGiftMarqueeTicker({
   const resizeStartRef = useRef({ startX: 0, startScale: 1.0 });
   const scrollContainerRef = useRef(null);
 
-  // Lắng nghe cập nhật cấu hình quà
+  // Lắng nghe cập nhật cấu hình quà & vị trí kéo thả từ các cửa sổ khác
   useEffect(() => {
     const handleUpdate = (e) => {
       if (e.detail?.config) {
@@ -68,10 +68,23 @@ export default function LiveGiftMarqueeTicker({
     };
     window.addEventListener('avalive_gift_config_updated', handleUpdate);
     
-    // Cross-window storage sync
+    // Cross-window storage sync cho vị trí kéo thả, tỉ lệ zoom và cấu hình
     const handleStorage = (e) => {
       if (e.key === `avalive_gift_config_${mode}`) {
         setConfig(getGiftConfig(mode));
+      } else if (e.key === `avalive_gift_box_pos_${mode}` && e.newValue) {
+        try {
+          const parsedPos = JSON.parse(e.newValue);
+          if (parsedPos) {
+            setFloatingPos(parsedPos);
+            latestPosRef.current = parsedPos;
+          }
+        } catch (err) {}
+      } else if (e.key === `avalive_gift_box_scale_${mode}` && e.newValue) {
+        try {
+          const parsedScale = parseFloat(e.newValue);
+          if (!isNaN(parsedScale)) setScale(parsedScale);
+        } catch (err) {}
       }
     };
     window.addEventListener('storage', handleStorage);
