@@ -292,6 +292,29 @@ export default function CleanLiveOverlay() {
       } catch (err) {}
     }
 
+    // 5. POLLING REALTIME STUDIO CAM FRAME (Hỗ trợ 100% CEF Browser Source trong TikTok LIVE Studio)
+    const frameInterval = setInterval(() => {
+      const endpoint = backendUrl ? `${backendUrl}/api/studio-frame` : '/api/studio-frame';
+      fetch(endpoint)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.frame) {
+            setLiveStudioFrame(data.frame);
+          }
+        })
+        .catch(() => {});
+    }, 100);
+
+    return () => {
+      clearInterval(frameInterval);
+      if (studioCamBc) studioCamBc.close();
+      if (masterChannel) masterChannel.close();
+      if (bandoChannel) bandoChannel.close();
+      if (battleChannel) battleChannel.close();
+      if (cleanChannel) cleanChannel.close();
+      if (socket) socket.disconnect();
+    };
+
     // 5. LOCAL STORAGE SYNC
     const handleStorage = (e) => {
       if (e.key === 'avalive_master_live_state' && e.newValue) {
@@ -631,7 +654,6 @@ export default function CleanLiveOverlay() {
             className="w-full h-full object-cover select-none bg-black"
           />
         ) : activeMedia.isVideo ? (
-          /* Video AI Idol MP4 60FPS Mặc Định Siêu Sắc Nét */
           <video
             key={activeMedia.url}
             src={activeMedia.url}
@@ -639,12 +661,6 @@ export default function CleanLiveOverlay() {
             loop
             muted={isAudioMuted}
             playsInline
-            onError={(e) => {
-              if (e.target.src !== window.location.origin + '/demo_dancer.mp4') {
-                e.target.src = '/demo_dancer.mp4';
-                e.target.play().catch(() => {});
-              }
-            }}
             onCanPlay={(e) => {
               e.target.play().catch(() => {});
             }}

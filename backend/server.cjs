@@ -207,6 +207,7 @@ let currentMasterLiveState = {
 };
 let currentBandoGameState = null;
 let currentBattleGameState = null;
+let globalLatestStudioCamFrame = null;
 
 // Pool tên thật TikTok cho simulation
 const SIMULATION_USERS = [
@@ -342,7 +343,11 @@ io.on('connection', (socket) => {
     socket.broadcast.emit('bando_sync', state);
   });
 
+  let latestStudioCamFrame = null;
+
   socket.on('STUDIO_CAM_FRAME', (frameData) => {
+    latestStudioCamFrame = frameData;
+    globalLatestStudioCamFrame = frameData;
     socket.broadcast.emit('STUDIO_CAM_FRAME', frameData);
   });
 
@@ -915,6 +920,18 @@ app.post('/api/live-state', (req, res) => {
     io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
   }
   res.json({ success: true, state: currentMasterLiveState });
+});
+
+app.get('/api/studio-frame', (req, res) => {
+  res.json({ frame: globalLatestStudioCamFrame, timestamp: Date.now() });
+});
+
+app.post('/api/studio-frame', (req, res) => {
+  if (req.body && req.body.frame) {
+    globalLatestStudioCamFrame = req.body.frame;
+    io.emit('STUDIO_CAM_FRAME', globalLatestStudioCamFrame);
+  }
+  res.json({ success: true });
 });
 
 app.get('/api/bando-state', (req, res) => { res.json(currentBandoGameState || {}); });

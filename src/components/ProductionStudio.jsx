@@ -237,17 +237,16 @@ export default function ProductionStudio({
   }, [externalIsConnected, externalIsConnecting, externalFlvUrl]);
 
   // Socket listener cho TikTok Studio độc lập (nếu chạy riêng)
+  // Socket listener cho Realtime Camera Streaming và TikTok Studio
   useEffect(() => {
-    if (onConnectTikTok) return; // Nếu đã có coordinator thì dùng chung
-
     let backendUrl = '';
     if (typeof window !== 'undefined') {
       const customUrl = localStorage.getItem('aidol_backend_url') || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BACKEND_URL);
       if (customUrl && customUrl.startsWith('http')) {
         backendUrl = customUrl;
-      } else if (window.location.port === '5173') {
+      } else if (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001') {
         backendUrl = window.location.protocol + '//' + window.location.hostname + ':3001';
-      } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.includes('nip.io')) {
         backendUrl = 'http://localhost:3001';
       }
     }
@@ -258,21 +257,23 @@ export default function ProductionStudio({
     });
     socketRef.current = socket;
 
-    socket.on('tiktok_connected', (data) => {
-      setIsTiktokConnecting(false);
-      setIsTiktokConnected(true);
-      if (data?.flvUrl) setTiktokLiveFlvUrl(data.flvUrl);
-    });
+    if (!onConnectTikTok) {
+      socket.on('tiktok_connected', (data) => {
+        setIsTiktokConnecting(false);
+        setIsTiktokConnected(true);
+        if (data?.flvUrl) setTiktokLiveFlvUrl(data.flvUrl);
+      });
 
-    socket.on('tiktok_error', (data) => {
-      setIsTiktokConnecting(false);
-      setIsTiktokConnected(false);
-    });
+      socket.on('tiktok_error', (data) => {
+        setIsTiktokConnecting(false);
+        setIsTiktokConnected(false);
+      });
+    }
 
     return () => {
       socket.disconnect();
     };
-  }, [tiktokStudioId, onConnectTikTok]);
+  }, [tiktokStudioId]);
 
   const handleToggleTikTokStudioConnect = () => {
     if (onConnectTikTok) {
