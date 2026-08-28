@@ -5,14 +5,14 @@ import Hls from 'hls.js';
 import GameBanDoVietNam from './game/GameBanDoVietNam';
 import GameChienDau from './game/GameChienDau';
 import { supabase } from '../../lib/supabaseClient';
-import { Volume2, VolumeX, Sparkles, Video, Swords, Flag, Music, Radio, Mic } from 'lucide-react';
+import { loadAllAidolItems } from '../../utils/idbHelper';
 
 /**
  * ⚡ CỬA SỔ MASTER OVERLAY 1 LINK DUY NHẤT TOÀN NĂNG — CHO TIKTOK LIVE STUDIO & OBS STUDIO
  * - URL: ?overlay=live hoặc /overlay-live hoặc /live
  * - Đồng bộ 5 tầng: Supabase Cloud Realtime + WebSocket (Socket.io) + REST API Polling + BroadcastChannel + LocalStorage
  * - Tự động chuyển đổi giữa: AI Idol / Sàn Nhảy 3D / Game Bản Đồ 63 Tỉnh / Game Chiến Đấu PK / Live Camera Studio
- * - Hỗ trợ mượt mà trên macOS, Windows, Web Cloud Vercel, OBS Studio, TikTok LIVE Studio CEF
+ * - Hiển thị 100% VIDEO / STREAM SẠCH, không dính bất kỳ badge hay rác thông tin nào
  */
 export default function CleanLiveOverlay() {
   const [masterState, setMasterState] = useState(() => {
@@ -40,9 +40,10 @@ export default function CleanLiveOverlay() {
     return {
       stage: defaultStage, // 'idol' | 'dancefloor' | 'battle' | 'bando' | 'broadcast'
       aspectRatio: ratioParam || '9:16',
-      mediaUrl: saved?.mediaUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+      mediaUrl: saved?.mediaUrl || '/demo_dancer.mp4',
       flvUrl: directVideoUrl || saved?.flvUrl || null,
-      isVideo: saved?.isVideo || false,
+      isVideo: saved?.isVideo !== false,
+      selectedCharacter: saved?.selectedCharacter || '',
       characterName: saved?.characterName || 'AI Idol Linh Anh',
       isConnected: true,
       isSpeaking: saved?.isSpeaking || false,
@@ -54,7 +55,26 @@ export default function CleanLiveOverlay() {
 
   const [liveEvent, setLiveEvent] = useState(null);
   const [isAudioMuted, setIsAudioMuted] = useState(true);
-  const [currentSubtitle, setCurrentSubtitle] = useState('');
+  const [localDbItems, setLocalDbItems] = useState([]);
+
+  // Tải danh sách item từ IndexedDB của cửa sổ này để tái tạo Blob URL cục bộ
+  useEffect(() => {
+    loadAllAidolItems().then(items => {
+      if (Array.isArray(items) && items.length > 0) {
+        setLocalDbItems(items);
+      }
+    }).catch(() => {});
+
+    const handleDbUpdate = () => {
+      loadAllAidolItems().then(items => {
+        if (Array.isArray(items) && items.length > 0) {
+          setLocalDbItems(items);
+        }
+      }).catch(() => {});
+    };
+    window.addEventListener('aidol_db_updated', handleDbUpdate);
+    return () => window.removeEventListener('aidol_db_updated', handleDbUpdate);
+  }, []);
 
   // 📷 Webcam Stream Support cho OBS Studio & TikTok Live Studio
   const [overlayCamActive, setOverlayCamActive] = useState(() => {
@@ -99,8 +119,6 @@ export default function CleanLiveOverlay() {
     };
   }, []);
 
-  // Overlay Camera được bật chủ động qua nút bấm hoặc tham số URL (?cam=1)
-
   useEffect(() => {
     document.title = 'AVA Live Output (Realtime Master Overlay) — TikTok LIVE Studio / OBS';
     document.documentElement.style.background = 'transparent';
@@ -124,14 +142,9 @@ export default function CleanLiveOverlay() {
         }
         return next;
       });
-
-      if (data.speechText) {
-        setCurrentSubtitle(data.speechText);
-        setTimeout(() => setCurrentSubtitle(''), 8000);
-      }
     };
 
-    // 1. SUPABASE REALTIME CLOUD BROADCAST (Đồng bộ siêu tốc cho OBS & TikTok Live Studio từ khắp nơi trên thế giới)
+    // 1. SUPABASE REALTIME CLOUD BROADCAST
     let supabaseChannel = null;
     try {
       if (supabase && typeof supabase.channel === 'function') {
@@ -205,38 +218,6 @@ export default function CleanLiveOverlay() {
 
       socket.on('battle_event', (data) => {
         if (data) setLiveEvent({ ...data, _ts: Date.now() });
-      });
-
-      socket.on('tiktok_chat', (data) => {
-        if (data) {
-          setLiveEvent({ 
-            type: 'COMMENT', 
-            data: { 
-              username: data.username || data.nickname, 
-              text: data.comment, 
-              comment: data.comment,
-              userId: data.userId || 'user_' + Date.now(),
-              avatar: data.profilePictureUrl || '',
-              _ts: Date.now() 
-            } 
-          });
-        }
-      });
-
-      socket.on('tiktok_gift', (data) => {
-        if (data) {
-          setLiveEvent({ 
-            type: 'GIFT', 
-            data: { 
-              giftId: data.giftName || data.giftId || 'rose', 
-              count: data.diamondCount || data.repeatCount || 1,
-              userId: data.userId || 'guest_' + Date.now(),
-              username: data.username || data.nickname || 'Khách Live',
-              avatar: data.profilePictureUrl || '',
-              _ts: Date.now()
-            } 
-          });
-        }
       });
     } catch (err) {
       console.warn('Socket.io note:', err);
@@ -333,7 +314,6 @@ export default function CleanLiveOverlay() {
         }
       } catch (e) {}
 
-      // Polling REST nhẹ
       const endpoint = backendUrl ? `${backendUrl}/api/live-state` : '/api/live-state';
       fetch(endpoint)
         .then(r => r.json())
@@ -359,7 +339,6 @@ export default function CleanLiveOverlay() {
   }, []);
 
   const flvVideoRef = useRef(null);
-  const flvCanvasRef = useRef(null);
   const flvPlayerRef = useRef(null);
   const hlsPlayerRef = useRef(null);
 
@@ -427,21 +406,20 @@ export default function CleanLiveOverlay() {
     };
   }, [activeStreamUrl]);
 
-  // Handle autoPlay block in TikTok Live Studio / OBS CEF by forcing mute if play fails
+  // Tự động phát video liên tục chống dừng
   useEffect(() => {
     const videoElements = document.querySelectorAll('video');
     videoElements.forEach(vid => {
+      vid.muted = isAudioMuted;
       const playPromise = vid.play();
       if (playPromise !== undefined) {
         playPromise.catch(() => {
-          // Autoplay blocked (usually due to audio) -> force mute and retry
           vid.muted = true;
-          setIsAudioMuted(true);
-          vid.play().catch(e => console.warn("Overlay Video Play Error:", e));
+          vid.play().catch(() => {});
         });
       }
     });
-  }, [masterState.mediaUrl, activeStreamUrl, overlayCamActive]);
+  }, [masterState.mediaUrl, activeStreamUrl, overlayCamActive, isAudioMuted]);
 
   // Stage hiện tại
   const currentStage = masterState.stage || 'idol';
@@ -475,27 +453,48 @@ export default function CleanLiveOverlay() {
     );
   }
 
-  // Helper check if media is video
-  const checkIsVideoMedia = (url, isVideoFlag) => {
-    if (isVideoFlag === true) return true;
-    if (!url || typeof url !== 'string') return false;
-    const cleanUrl = url.split('?')[0].toLowerCase();
-    if (cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.endsWith('.mov') || cleanUrl.endsWith('.m4v') || cleanUrl.includes('/videos/') || cleanUrl.includes('preview/mixkit') || cleanUrl.includes('demo_dancer')) {
-      return true;
+  // Helper giải mã URL media chính xác (xử lý cross-window IndexedDB Blob)
+  const resolveActiveMedia = () => {
+    // 1. Tìm trong IndexedDB theo selectedCharacter
+    if (masterState.selectedCharacter && localDbItems.length > 0) {
+      const match = localDbItems.find(i => i.id === masterState.selectedCharacter);
+      if (match && match.url) {
+        return { url: match.url, isVideo: match.type === 'video' };
+      }
     }
-    if (cleanUrl.endsWith('.jpg') || cleanUrl.endsWith('.jpeg') || cleanUrl.endsWith('.png') || cleanUrl.endsWith('.webp') || cleanUrl.endsWith('.gif') || cleanUrl.includes('images.unsplash.com') || cleanUrl.includes('api.dicebear.com') || cleanUrl.startsWith('data:image')) {
-      return false;
+
+    // 2. Nếu mediaUrl là HTTP URL bình thường hoặc base64 Data URL
+    if (masterState.mediaUrl) {
+      const cleanUrl = masterState.mediaUrl.split('?')[0].toLowerCase();
+      const isImg = cleanUrl.endsWith('.jpg') || cleanUrl.endsWith('.jpeg') || cleanUrl.endsWith('.png') || cleanUrl.endsWith('.webp') || cleanUrl.includes('unsplash') || masterState.mediaUrl.startsWith('data:image');
+      const isVid = cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.endsWith('.mov') || cleanUrl.includes('demo_dancer') || cleanUrl.includes('preview/mixkit');
+
+      if (!masterState.mediaUrl.startsWith('blob:')) {
+        return { 
+          url: masterState.mediaUrl, 
+          isVideo: isVid ? true : (isImg ? false : masterState.isVideo !== false)
+        };
+      }
+
+      // Nếu là blob URL nhưng không tìm thấy trong DB, thử tìm item bất kỳ trong DB
+      if (localDbItems.length > 0) {
+        const match = localDbItems.find(i => i.mediaUrl === masterState.mediaUrl || i.id === masterState.selectedCharacter);
+        if (match && match.url) {
+          return { url: match.url, isVideo: match.type === 'video' };
+        }
+      }
     }
-    return isVideoFlag !== false;
+
+    // 3. Mặc định Video Idol Dance Loop cực sắc nét
+    return { url: '/demo_dancer.mp4', isVideo: true };
   };
 
-  const isCurrentVideo = checkIsVideoMedia(masterState.mediaUrl, masterState.isVideo);
-  const effectiveMediaUrl = masterState.mediaUrl || '/demo_dancer.mp4';
+  const activeMedia = resolveActiveMedia();
 
-  // 3. RENDER STAGE: PHÒNG DỰNG LIVE STUDIO — KHUNG HÌNH CAMERA / VIDEO SẠCH 60FPS
+  // 3. RENDER STAGE: PHÒNG DỰNG LIVE STUDIO — 100% CLEAN VIDEO KHÔNG RÁC
   if (currentStage === 'broadcast' || currentStage === 'studio') {
     return (
-      <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-[#07070a] flex items-center justify-center select-none">
+      <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-black flex items-center justify-center select-none">
         <div
           className={`relative flex items-center justify-center overflow-hidden transition-all duration-300 ${
             ratio === '9:16'
@@ -519,12 +518,12 @@ export default function CleanLiveOverlay() {
               autoPlay
               muted={isAudioMuted}
               playsInline
-              className="w-full h-full object-cover select-none z-10 bg-black"
+              className="w-full h-full object-cover select-none bg-black"
             />
-          ) : isCurrentVideo ? (
+          ) : activeMedia.isVideo ? (
             <video
-              key={effectiveMediaUrl}
-              src={effectiveMediaUrl}
+              key={activeMedia.url}
+              src={activeMedia.url}
               autoPlay
               loop
               muted={isAudioMuted}
@@ -540,62 +539,27 @@ export default function CleanLiveOverlay() {
                 e.target.muted = isAudioMuted;
                 e.target.play().catch(() => {});
               }}
-              className="w-full h-full object-cover select-none z-10 bg-black"
+              className="w-full h-full object-cover select-none bg-black"
             />
           ) : (
-            <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-gradient-to-br from-indigo-950/80 via-purple-950/60 to-black">
-              <img
-                src={effectiveMediaUrl}
-                alt="Studio Background"
-                className="w-full h-full object-cover select-none z-10"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=1920&q=80';
-                }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 z-20 pointer-events-none" />
-            </div>
+            <img
+              src={activeMedia.url}
+              alt="Studio Background"
+              className="w-full h-full object-cover select-none"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = '/demo_dancer.mp4';
+              }}
+            />
           )}
-
-          {/* Badge Studio Góc Trái */}
-          <div className="absolute top-4 left-4 z-30 flex items-center gap-2 pointer-events-none">
-            <div className="px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-white/20 text-white text-xs font-black flex items-center gap-2 shadow-xl">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
-              <span className="text-red-400 uppercase tracking-wider text-[11px]">🔴 LIVE STUDIO 4K</span>
-            </div>
-          </div>
-
-          {/* Nút Điều Khiển Camera & Âm Thanh Overlay Góc Phải Dưới */}
-          <div className="absolute bottom-3 right-3 z-30 pointer-events-auto flex items-center gap-2">
-            <button
-              onClick={toggleOverlayCam}
-              className={`p-2.5 rounded-full border shadow-xl backdrop-blur-md transition-all hover:scale-110 cursor-pointer ${
-                overlayCamActive 
-                  ? 'bg-pink-600/90 text-white border-pink-400 animate-pulse' 
-                  : 'bg-black/70 hover:bg-black/90 text-gray-300 border-white/20'
-              }`}
-              title={overlayCamActive ? 'Tắt Camera Overlay' : 'Bật Camera Webcam Trực Tiếp trên Overlay'}
-            >
-              <Video className="w-4 h-4" />
-            </button>
-
-            <button
-              onClick={() => setIsAudioMuted(!isAudioMuted)}
-              className="p-2.5 rounded-full bg-black/70 hover:bg-black/90 text-white border border-white/20 shadow-xl backdrop-blur-md transition-all hover:scale-110 cursor-pointer"
-              title={isAudioMuted ? 'Bật âm thanh Live' : 'Tắt tiếng Live'}
-            >
-              {isAudioMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
-            </button>
-          </div>
         </div>
       </div>
     );
   }
 
-  // 4. RENDER STAGE: AI IDOL LIVESTREAM (CLEAN VIDEO / IMAGE / STREAM)
+  // 4. RENDER STAGE: AI IDOL LIVESTREAM — 100% CLEAN VIDEO / NGƯỜI DUY NHẤT (KHÔNG BADGE, KHÔNG RÁC)
   return (
     <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent flex items-center justify-center select-none">
-
       {/* Frame Container Responsive theo Tỷ Lệ 9:16 (TikTok Dọc) hoặc 16:9 (OBS Ngang) */}
       <div 
         className={`relative flex items-center justify-center overflow-hidden transition-all duration-300 ${
@@ -605,31 +569,28 @@ export default function CleanLiveOverlay() {
         }`}
         style={ratio === '9:16' ? { aspectRatio: '9 / 16', height: '100%', maxWidth: 'calc(100vh * 9 / 16)' } : { aspectRatio: '16 / 9', width: '100%' }}
       >
-        
-        {/* 1. Nguồn Webcam Live nếu được kích hoạt trên Overlay */}
         {overlayCamActive ? (
           <video
             ref={overlayWebcamVideoRef}
             autoPlay
             playsInline
             muted
-            className="w-full h-full object-cover select-none z-10 scale-x-[-1] bg-black"
+            className="w-full h-full object-cover select-none scale-x-[-1] bg-black"
           />
         ) : activeStreamUrl ? (
-          /* 2. Nguồn Video Trực Tiếp FLV / HLS nếu có */
           <video
             ref={flvVideoRef}
             key={activeStreamUrl}
             autoPlay
             muted={isAudioMuted}
             playsInline
-            className="w-full h-full object-cover select-none z-10 bg-black"
+            className="w-full h-full object-cover select-none bg-black"
           />
-        ) : isCurrentVideo ? (
-          /* 3. Video AI Idol MP4 60FPS Mặc Định Siêu Sắc Nét */
+        ) : activeMedia.isVideo ? (
+          /* Video AI Idol MP4 60FPS Mặc Định Siêu Sắc Nét */
           <video
-            key={effectiveMediaUrl}
-            src={effectiveMediaUrl}
+            key={activeMedia.url}
+            src={activeMedia.url}
             autoPlay
             loop
             muted={isAudioMuted}
@@ -645,78 +606,21 @@ export default function CleanLiveOverlay() {
               e.target.muted = isAudioMuted;
               e.target.play().catch(() => {});
             }}
-            className="w-full h-full object-cover select-none z-10 bg-black"
+            className="w-full h-full object-cover select-none bg-black"
           />
         ) : (
-          /* 4. Ảnh Idol Sắc Nét 4K (Xử lý chống màn hình đen cho Ảnh) */
-          <div className="relative w-full h-full flex items-center justify-center bg-[#0d0d12] overflow-hidden select-none">
-            <img 
-              src={effectiveMediaUrl} 
-              className="w-full h-full object-contain drop-shadow-[0_15px_35px_rgba(0,0,0,0.6)] z-10"
-              style={{ imageRendering: '-webkit-optimize-contrast', animation: 'idolBreathing 4s ease-in-out infinite' }}
-              alt={masterState.characterName || 'AI Idol'}
-              onError={(e) => {
-                e.currentTarget.onerror = null;
-                e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
-              }}
-            />
-            <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/60 via-transparent to-black/20 z-20" />
-          </div>
+          /* Ảnh Idol Sắc Nét 4K (Chống Màn Hình Đen Tuyệt Đối) */
+          <img 
+            src={activeMedia.url} 
+            className="w-full h-full object-contain select-none"
+            style={{ imageRendering: '-webkit-optimize-contrast', animation: 'idolBreathing 4s ease-in-out infinite' }}
+            alt="AI Idol"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
+            }}
+          />
         )}
-
-        {/* 🔴 LIVE STATUS BADGE TOP-LEFT (CHỈNH CHU CHUẨN TIKTOK STUDIO) */}
-        <div className="absolute top-4 left-4 z-30 flex items-center gap-2 pointer-events-none">
-          <div className="px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-md border border-white/20 text-white text-xs font-black flex items-center gap-2 shadow-xl">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
-            <span className="text-red-400 uppercase tracking-wider text-[11px]">
-              🔴 LIVE AI IDOL
-            </span>
-          </div>
-
-          <div className="px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-cyan-300 text-xs font-bold shadow-lg flex items-center gap-1">
-            <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-spin" />
-            <span>{masterState.characterName || 'AI Idol Linh Anh'}</span>
-          </div>
-        </div>
-
-        {/* Phụ đề MC AI khi đọc thoại */}
-        {currentSubtitle && (
-          <div className="absolute bottom-6 left-4 right-4 z-40 animate-fadeIn pointer-events-none">
-            <div className="p-3.5 rounded-2xl bg-black/85 backdrop-blur-xl border border-cyan-400/50 text-white text-center shadow-2xl space-y-1">
-              <div className="flex items-center justify-center gap-1.5 text-[10px] font-black text-cyan-300 uppercase">
-                <Mic className="w-3 h-3 text-cyan-400 animate-bounce" />
-                <span>MC AI ĐANG NÓI:</span>
-              </div>
-              <p className="text-xs sm:text-sm font-bold text-yellow-200 leading-relaxed drop-shadow">
-                "{currentSubtitle}"
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Nút Điều Khiển Camera & Âm Thanh Overlay Góc Phải Dưới */}
-        <div className="absolute bottom-3 right-3 z-30 pointer-events-auto flex items-center gap-2">
-          <button
-            onClick={toggleOverlayCam}
-            className={`p-2.5 rounded-full border shadow-xl backdrop-blur-md transition-all hover:scale-110 cursor-pointer ${
-              overlayCamActive 
-                ? 'bg-pink-600/90 text-white border-pink-400 animate-pulse' 
-                : 'bg-black/70 hover:bg-black/90 text-gray-300 border-white/20'
-            }`}
-            title={overlayCamActive ? 'Tắt Camera Overlay' : 'Bật Camera Webcam Trực Tiếp trên Overlay'}
-          >
-            <Video className="w-4 h-4" />
-          </button>
-
-          <button
-            onClick={() => setIsAudioMuted(!isAudioMuted)}
-            className="p-2.5 rounded-full bg-black/70 hover:bg-black/90 text-white border border-white/20 shadow-xl backdrop-blur-md transition-all hover:scale-110 cursor-pointer"
-            title={isAudioMuted ? 'Bật âm thanh Live' : 'Tắt tiếng Live'}
-          >
-            {isAudioMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
-          </button>
-        </div>
-
       </div>
 
       {/* Animation Styles */}
