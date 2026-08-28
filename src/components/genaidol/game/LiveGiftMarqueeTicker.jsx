@@ -327,17 +327,29 @@ export default function LiveGiftMarqueeTicker({
         </div>
       ) : (
         /* 2. KHUNG BOX WIDGET ĐẦY ĐỦ (TINH GỌN, KHÔNG CHE KHUẤT MÀN HÌNH) */
-        <div className="w-24 sm:w-26 bg-black/40 backdrop-blur-[4px] hover:bg-black/60 border border-amber-500/30 hover:border-amber-400/60 rounded-xl p-1 shadow-2xl text-white transition-all flex flex-col">
+        <div className="w-24 sm:w-26 bg-black/50 backdrop-blur-[4px] hover:bg-black/70 border border-amber-500/40 hover:border-amber-400/80 rounded-xl p-1 shadow-2xl text-white transition-all flex flex-col">
           
           {/* HEADER: KÉO THẢ + ZOOM +/- + THU NHỎ + ĐÓNG */}
-          {/* VÙNG KÉO THẢ VÔ HÌNH (DRAG HANDLE) */}
           <div 
-            className="absolute top-0 left-0 w-full h-4 cursor-move z-10"
+            className="flex items-center justify-between px-1 py-0.5 mb-1 border-b border-white/10 cursor-move select-none bg-white/5 rounded-t-lg"
             onMouseDown={handleDragStart}
             onTouchStart={handleDragStart}
             title="Kéo thả để di chuyển Bảng Quà"
-          />
-          <div className="pt-2"></div>
+          >
+            <div className="flex items-center gap-0.5">
+              <Gift size={9} className="text-yellow-400" />
+              <span className="text-[7.5px] font-black uppercase tracking-wider text-amber-300">Quà Tặng</span>
+            </div>
+            <div className="flex items-center gap-0.5">
+              <button
+                onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }}
+                className="p-0.5 rounded text-gray-300 hover:text-white hover:bg-white/20 text-[7px]"
+                title="Thu nhỏ bảng quà"
+              >
+                −
+              </button>
+            </div>
+          </div>
 
           {/* KHỐI 1: CẮM CỜ 3 MIỀN BẮC - TRUNG - NAM HOẶC BUFF 3 MIỀN (Thẻ Vùng Miền Sắc Nét) */}
           <div className="grid grid-cols-3 gap-1 mb-1 select-none">

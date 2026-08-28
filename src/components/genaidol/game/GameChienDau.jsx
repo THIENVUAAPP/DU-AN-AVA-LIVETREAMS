@@ -110,6 +110,21 @@ export default function GameChienDau({
     } catch (e) {}
     return { x: 10, y: 70 };
   });
+
+  // Cross-window sync cho vị trí BXH Game Chiến Đấu
+  useEffect(() => {
+    const handleStorage = (e) => {
+      if (e.key === 'battle_hud_leaderboard_pos' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (parsed) setLeaderboardPos(parsed);
+        } catch (err) {}
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
   const [giftHudPos, setGiftHudPos] = useState(() => {
     try {
       const saved = localStorage.getItem('battle_hud_gift_pos');
