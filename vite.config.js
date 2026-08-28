@@ -19,7 +19,7 @@ export default defineConfig({
     open: true,
     host: true,
     https: httpsConfig,
-    allowedHosts: ['127.0.0.1.nip.io', 'localhost', '127.0.0.1'],
+    allowedHosts: true,
   },
   resolve: {
     alias: {

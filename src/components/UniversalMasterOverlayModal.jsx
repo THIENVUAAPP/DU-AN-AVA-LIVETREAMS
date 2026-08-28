@@ -31,7 +31,8 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   const currentPort = typeof window !== 'undefined' && window.location.port ? window.location.port : '5173';
-  const localBase = `http://127.0.0.1:${currentPort}`;
+  // Dùng 127.0.0.1.nip.io để TikTok LIVE Studio nhận diện là Domain FQDN hợp lệ và không báo đỏ 'Hãy nhập URL chính xác'
+  const localBase = `http://127.0.0.1.nip.io:${currentPort}`;
   const cloudBase = 'https://avalivepro.vercel.app';
   const activeBase = linkEnv === 'local' ? localBase : cloudBase;
 
