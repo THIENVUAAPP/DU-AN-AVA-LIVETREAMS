@@ -19,8 +19,13 @@ if not exist ".env" (
     )
 )
 
+rem 1.5. Tự động tin cậy chứng chỉ HTTPS nội bộ vào kho chứng chỉ của tài khoản hiện tại
+rem (để trình duyệt KHÔNG hiện cảnh báo bảo mật khi mở app - không cần quyền Administrator)
+if exist "certs\dev-cert.pem" (
+    certutil -addstore -f -user "ROOT" "certs\dev-cert.pem" >nul 2>nul
+)
+
 rem 2. Mở trình duyệt web tự động ngay
-rem (Lần đầu mở sẽ hiện cảnh báo bảo mật do chứng chỉ tự ký - bấm "Nâng cao" > "Tiếp tục truy cập" là dùng được)
 start "" https://localhost:3001
 
 rem 3. Kiểm tra Node.js & Khởi chạy Backend Server

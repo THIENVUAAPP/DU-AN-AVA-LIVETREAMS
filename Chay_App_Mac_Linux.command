@@ -49,8 +49,13 @@ if [ ! -f ".env" ] && [ -f ".env.example" ]; then
     cp .env.example .env 2>/dev/null || true
 fi
 
+# 3.5. Tự động tin cậy chứng chỉ HTTPS nội bộ vào Keychain của tài khoản hiện tại
+# (để trình duyệt KHÔNG hiện cảnh báo bảo mật khi mở app — cần thiết để Camera hoạt động qua HTTPS)
+if [ -f "certs/dev-cert.pem" ]; then
+    security add-trusted-cert -r trustRoot -p ssl -k "$HOME/Library/Keychains/login.keychain-db" "certs/dev-cert.pem" >/dev/null 2>&1 || true
+fi
+
 # 4. Mở trình duyệt web tự động
-# (Lần đầu mở sẽ hiện cảnh báo bảo mật do chứng chỉ tự ký - bấm "Nâng cao" > "Tiếp tục truy cập" là dùng được)
 (sleep 1 && (open "https://localhost:3001" 2>/dev/null || xdg-open "https://localhost:3001" 2>/dev/null || open "https://avalivepro.vercel.app")) &
 
 # 5. Khởi động Server
