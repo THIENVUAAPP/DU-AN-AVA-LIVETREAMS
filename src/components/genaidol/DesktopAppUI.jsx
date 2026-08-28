@@ -708,6 +708,30 @@ export default function DesktopAppUI() {
     isMasterLiveRunningRef.current = isMasterLiveRunning;
   }, [isMasterLiveRunning]);
 
+  // ⚡ TỰ ĐỘNG ĐỒNG BỘ STAGE, VIDEO/IDOL, TỶ LỆ SANG CỬA SỔ OVERLAY OBS & TIKTOK STUDIO
+  useEffect(() => {
+    let currentStage = 'idol';
+    if (isGameBanDoActive) currentStage = 'bando';
+    else if (isGameBattleActive) currentStage = 'battle';
+    else if (isLiveStudioActive) currentStage = 'broadcast';
+    else if (isDanceFloorActive) currentStage = 'dancefloor';
+
+    const selectedCharObj = CHARACTERS[selectedCharacter] || Object.values(CHARACTERS)[0] || null;
+    const mediaUrl = selectedCharObj?.url || (activeVideoItem?.mediaUrl) || null;
+    const isVideo = selectedCharObj?.type === 'video' || (activeVideoItem?.mediaUrl ? true : false);
+
+    syncMasterLiveState({
+      stage: currentStage,
+      aspectRatio: globalAspectRatio || '9:16',
+      characterName: selectedCharObj?.name || 'AI Idol Linh Anh',
+      mediaUrl: mediaUrl,
+      isVideo: isVideo,
+      flvUrl: flvUrl || null,
+      isConnected: isConnected,
+      isDarkMode: isDarkMode
+    });
+  }, [isGameBanDoActive, isGameBattleActive, isLiveStudioActive, isDanceFloorActive, selectedCharacter, customCharacters, globalAspectRatio, activeVideoItem, flvUrl, isConnected, isDarkMode]);
+
   // Trạng thái Chạy Demo / Test Toàn Cục (1 Nút Duy Nhất cho tất cả Game / Idol)
   const [isGlobalDemoRunning, setIsGlobalDemoRunning] = useState(false);
   const globalDemoTimerRef = useRef(null);
