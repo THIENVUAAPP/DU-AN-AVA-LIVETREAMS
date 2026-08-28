@@ -455,7 +455,19 @@ export default function CleanLiveOverlay() {
 
   // Helper giải mã URL media chính xác (xử lý cross-window IndexedDB Blob)
   const resolveActiveMedia = () => {
-    // 1. Tìm trong IndexedDB theo selectedCharacter
+    // 1. Nếu mediaUrl là HTTP URL bình thường hoặc base64 Data URL
+    if (masterState.mediaUrl && !masterState.mediaUrl.startsWith('blob:')) {
+      const cleanUrl = masterState.mediaUrl.split('?')[0].toLowerCase();
+      const isImg = cleanUrl.endsWith('.jpg') || cleanUrl.endsWith('.jpeg') || cleanUrl.endsWith('.png') || cleanUrl.endsWith('.webp') || cleanUrl.includes('unsplash') || masterState.mediaUrl.startsWith('data:image');
+      const isVid = cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.endsWith('.mov') || cleanUrl.includes('demo_dancer') || cleanUrl.includes('preview/mixkit');
+
+      return { 
+        url: masterState.mediaUrl, 
+        isVideo: isVid ? true : (isImg ? false : masterState.isVideo !== false)
+      };
+    }
+
+    // 2. Tìm trong IndexedDB theo selectedCharacter
     if (masterState.selectedCharacter && localDbItems.length > 0) {
       const match = localDbItems.find(i => i.id === masterState.selectedCharacter);
       if (match && match.url) {
@@ -463,20 +475,8 @@ export default function CleanLiveOverlay() {
       }
     }
 
-    // 2. Nếu mediaUrl là HTTP URL bình thường hoặc base64 Data URL
-    if (masterState.mediaUrl) {
-      const cleanUrl = masterState.mediaUrl.split('?')[0].toLowerCase();
-      const isImg = cleanUrl.endsWith('.jpg') || cleanUrl.endsWith('.jpeg') || cleanUrl.endsWith('.png') || cleanUrl.endsWith('.webp') || cleanUrl.includes('unsplash') || masterState.mediaUrl.startsWith('data:image');
-      const isVid = cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.endsWith('.mov') || cleanUrl.includes('demo_dancer') || cleanUrl.includes('preview/mixkit');
-
-      if (!masterState.mediaUrl.startsWith('blob:')) {
-        return { 
-          url: masterState.mediaUrl, 
-          isVideo: isVid ? true : (isImg ? false : masterState.isVideo !== false)
-        };
-      }
-
-      // Nếu là blob URL nhưng không tìm thấy trong DB, thử tìm item bất kỳ trong DB
+    // 3. Nếu là blob URL, tìm item tương ứng trong DB
+    if (masterState.mediaUrl && masterState.mediaUrl.startsWith('blob:')) {
       if (localDbItems.length > 0) {
         const match = localDbItems.find(i => i.mediaUrl === masterState.mediaUrl || i.id === masterState.selectedCharacter);
         if (match && match.url) {
@@ -485,7 +485,7 @@ export default function CleanLiveOverlay() {
       }
     }
 
-    // 3. Mặc định Video Idol Dance Loop cực sắc nét
+    // 4. Mặc định Video Idol Dance Loop cực sắc nét
     return { url: '/demo_dancer.mp4', isVideo: true };
   };
 
@@ -528,15 +528,13 @@ export default function CleanLiveOverlay() {
               loop
               muted={isAudioMuted}
               playsInline
-              crossOrigin="anonymous"
               onError={(e) => {
                 if (e.target.src !== window.location.origin + '/demo_dancer.mp4') {
                   e.target.src = '/demo_dancer.mp4';
                   e.target.play().catch(() => {});
                 }
               }}
-              onLoadedMetadata={(e) => {
-                e.target.muted = isAudioMuted;
+              onCanPlay={(e) => {
                 e.target.play().catch(() => {});
               }}
               className="w-full h-full object-cover select-none bg-black"
@@ -559,7 +557,7 @@ export default function CleanLiveOverlay() {
 
   // 4. RENDER STAGE: AI IDOL LIVESTREAM — 100% CLEAN VIDEO / NGƯỜI DUY NHẤT (KHÔNG BADGE, KHÔNG RÁC)
   return (
-    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent flex items-center justify-center select-none">
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-black flex items-center justify-center select-none">
       {/* Frame Container Responsive theo Tỷ Lệ 9:16 (TikTok Dọc) hoặc 16:9 (OBS Ngang) */}
       <div 
         className={`relative flex items-center justify-center overflow-hidden transition-all duration-300 ${
@@ -595,15 +593,13 @@ export default function CleanLiveOverlay() {
             loop
             muted={isAudioMuted}
             playsInline
-            crossOrigin="anonymous"
             onError={(e) => {
               if (e.target.src !== window.location.origin + '/demo_dancer.mp4') {
                 e.target.src = '/demo_dancer.mp4';
                 e.target.play().catch(() => {});
               }
             }}
-            onLoadedMetadata={(e) => {
-              e.target.muted = isAudioMuted;
+            onCanPlay={(e) => {
               e.target.play().catch(() => {});
             }}
             className="w-full h-full object-cover select-none bg-black"

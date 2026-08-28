@@ -46,16 +46,7 @@ export default function App() {
   const [isLive, setIsLive] = useState(false);
   const [aiAvatarFeatureEnabled, setAiAvatarFeatureEnabled] = useState(false);
 
-  // Tự động đồng bộ trạng thái Master Live khi chuyển Tab (chỉ áp dụng cho Dashboard,
-  // không chạy trong cửa sổ Overlay — nếu không nó sẽ tự ghi đè trạng thái thật bằng mặc định mỗi khi mở)
-  useEffect(() => {
-    if (isAnyOverlayWindow) return;
-    let stage = 'idol';
-    if (activeTab === 'broadcast') stage = 'broadcast';
-    else if (activeTab === 'avatars') stage = 'idol';
-    else if (activeTab === 'ai-storyteller') stage = 'bando';
-    syncMasterLiveState({ stage });
-  }, [activeTab, isAnyOverlayWindow]);
+  // Không tự động ghi đè stage trong App.jsx để bảo toàn chế độ Game / Live Studio / Idol của người dùng
 
   // Real Google User State (Loaded from localStorage or Supabase session)
   const [currentUser, setCurrentUser] = useState(() => {

@@ -10,24 +10,33 @@ const DB_VERSION = 1;
 let dbPromise = null;
 
 export const initAidolDB = () => {
+  if (typeof window === 'undefined' || typeof indexedDB === 'undefined') {
+    return Promise.resolve(null);
+  }
   if (!dbPromise) {
-    dbPromise = new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB_NAME, DB_VERSION);
+    dbPromise = new Promise((resolve) => {
+      try {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-      request.onupgradeneeded = (event) => {
-        const db = event.target.result;
-        if (!db.objectStoreNames.contains(STORE_NAME)) {
-          db.createObjectStore(STORE_NAME, { keyPath: 'id' });
-        }
-      };
+        request.onupgradeneeded = (event) => {
+          try {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+              db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            }
+          } catch (e) {}
+        };
 
-      request.onsuccess = (event) => {
-        resolve(event.target.result);
-      };
+        request.onsuccess = (event) => {
+          resolve(event.target.result);
+        };
 
-      request.onerror = (event) => {
-        reject(event.target.error);
-      };
+        request.onerror = () => {
+          resolve(null);
+        };
+      } catch (err) {
+        resolve(null);
+      }
     });
   }
   return dbPromise;
@@ -37,31 +46,36 @@ export const initAidolDB = () => {
 export const saveAidolItem = async (item) => {
   try {
     const db = await initAidolDB();
+    if (!db) return null;
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction([STORE_NAME], 'readwrite');
-      const store = transaction.objectStore(STORE_NAME);
-      
-      const record = {
-        id: item.id || `aidol_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-        name: item.name || 'AIDOL của tôi',
-        category: item.category || 'livestream',
-        type: item.type || (item.fileBlob?.type?.includes('video') ? 'video' : 'image'),
-        fileBlob: item.fileBlob || item.fileData || null,
-        mediaUrl: item.mediaUrl || item.url || '',
-        createdAt: item.createdAt || new Date().toISOString(),
-        isPersonal: true
-      };
+      try {
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        
+        const record = {
+          id: item.id || `aidol_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+          name: item.name || 'Chưa đặt tên',
+          type: item.type || 'image',
+          fileBlob: item.fileBlob || item.fileData || null,
+          mediaUrl: item.mediaUrl || item.url || '',
+          url: item.url || item.mediaUrl || '',
+          tags: item.tags || [],
+          aspectRatio: item.aspectRatio || '9:16',
+          isLiveReady: true,
+          createdAt: new Date().toISOString()
+        };
 
-      const request = store.put(record);
-
-      request.onsuccess = () => {
-        // Dispatch custom event để đồng bộ ngay lập tức các component đang mở
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('aidol_db_updated', { detail: { action: 'save', item: record } }));
-        }
-        resolve(record);
-      };
-      request.onerror = () => reject(request.error);
+        const request = store.put(record);
+        request.onsuccess = () => {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('aidol_db_updated', { detail: { action: 'save', item: record } }));
+          }
+          resolve(record);
+        };
+        request.onerror = () => resolve(null);
+      } catch (err) {
+        resolve(null);
+      }
     });
   } catch (error) {
     console.error('Failed to save to AIDOL_DB:', error);
@@ -72,25 +86,29 @@ export const saveAidolItem = async (item) => {
 export const loadAllAidolItems = async () => {
   try {
     const db = await initAidolDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([STORE_NAME], 'readonly');
-      const store = transaction.objectStore(STORE_NAME);
-      const request = store.getAll();
+    if (!db) return [];
+    return new Promise((resolve) => {
+      try {
+        const transaction = db.transaction([STORE_NAME], 'readonly');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.getAll();
 
-      request.onsuccess = () => {
-        const rawItems = request.result || [];
-        const items = rawItems.map(item => ({
-          ...item,
-          url: item.fileBlob ? URL.createObjectURL(item.fileBlob) : (item.mediaUrl || item.url),
-          mediaUrl: item.fileBlob ? URL.createObjectURL(item.fileBlob) : (item.mediaUrl || item.url),
-          isPersonal: true
-        }));
-        resolve(items.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '')));
-      };
-      request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          const rawItems = request.result || [];
+          const items = rawItems.map(item => ({
+            ...item,
+            url: item.fileBlob ? URL.createObjectURL(item.fileBlob) : (item.mediaUrl || item.url),
+            mediaUrl: item.fileBlob ? URL.createObjectURL(item.fileBlob) : (item.mediaUrl || item.url),
+            isPersonal: true
+          }));
+          resolve(items.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '')));
+        };
+        request.onerror = () => resolve([]);
+      } catch (e) {
+        resolve([]);
+      }
     });
   } catch (error) {
-    console.error('Failed to load from AIDOL_DB:', error);
     return [];
   }
 };
