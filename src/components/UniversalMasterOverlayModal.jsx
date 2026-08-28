@@ -23,18 +23,32 @@ import {
  */
 export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
   const [copied, setCopied] = useState(false);
+  const [selectedLinkType, setSelectedLinkType] = useState('ip'); // 'ip' | 'localhost' | 'cloud'
+  const [copiedLink, setCopiedLink] = useState('');
 
   if (!isOpen) return null;
 
-  // Tự động chuyển đổi 'localhost' thành '127.0.0.1.nip.io' (DNS public) để vượt qua bộ lọc khắt khe của TikTok LIVE Studio
-  const currentOrigin = typeof window !== 'undefined' ? window.location.origin.replace(/(localhost|127\.0\.0\.1)(?!\.nip\.io)/, '127.0.0.1.nip.io') : 'http://127.0.0.1.nip.io:5173';
-  const masterLink = `${currentOrigin}/live`;
+  const currentPort = typeof window !== 'undefined' && window.location.port ? window.location.port : '5173';
+  const currentProtocol = typeof window !== 'undefined' && window.location.protocol ? window.location.protocol : 'http:';
 
-  const handleCopy = () => {
+  // 3 Phương án đường link chuẩn tuyệt đối (Không phụ thuộc DNS bên ngoài như nip.io)
+  const linkOptions = {
+    ip: `${currentProtocol}//127.0.0.1:${currentPort}/live`,
+    localhost: `${currentProtocol}//localhost:${currentPort}/live`,
+    cloud: 'https://avalivepro.vercel.app/live'
+  };
+
+  const activeLink = linkOptions[selectedLinkType] || linkOptions.ip;
+
+  const handleCopy = (link, typeKey) => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(masterLink);
+      navigator.clipboard.writeText(link);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
+      setCopiedLink(typeKey);
+      setTimeout(() => {
+        setCopied(false);
+        setCopiedLink('');
+      }, 2500);
     }
   };
 
@@ -83,16 +97,50 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
             Dán <strong>DUY NHẤT 1 ĐƯỜNG LINK NÀY</strong> vào phần mềm <strong>TikTok LIVE Studio</strong> hoặc <strong>OBS Studio</strong>. Khi bạn chọn AI Idol, Sàn Nhảy, Game Bản Đồ hay Game Chiến Đấu trên bảng điều khiển, màn hình Live sẽ <strong>tự động chuyển cảnh tức thì</strong> mà không cần đổi link!
           </p>
 
+          {/* Tab chọn loại link */}
+          <div className="flex items-center gap-1.5 p-1 bg-black/60 rounded-xl border border-white/10 text-xs">
+            <button
+              onClick={() => setSelectedLinkType('ip')}
+              className={`flex-1 py-1.5 px-2.5 rounded-lg font-bold transition-all ${
+                selectedLinkType === 'ip'
+                  ? 'bg-cyan-500 text-white shadow-md'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              1. Link IP Local (127.0.0.1 - Khuyên Dùng)
+            </button>
+            <button
+              onClick={() => setSelectedLinkType('localhost')}
+              className={`flex-1 py-1.5 px-2.5 rounded-lg font-bold transition-all ${
+                selectedLinkType === 'localhost'
+                  ? 'bg-cyan-500 text-white shadow-md'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              2. Link Localhost
+            </button>
+            <button
+              onClick={() => setSelectedLinkType('cloud')}
+              className={`flex-1 py-1.5 px-2.5 rounded-lg font-bold transition-all ${
+                selectedLinkType === 'cloud'
+                  ? 'bg-indigo-600 text-white shadow-md'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              3. Link Cloud Vercel (Online)
+            </button>
+          </div>
+
           <div className="flex flex-col sm:flex-row items-center gap-2 pt-1">
             <input
               type="text"
               readOnly
-              value={masterLink}
+              value={activeLink}
               className="w-full sm:flex-1 px-3.5 py-3 rounded-xl bg-black/80 border border-cyan-500/50 text-xs sm:text-sm text-cyan-200 font-mono font-bold focus:outline-none select-all shadow-inner"
             />
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <button
-                onClick={handleCopy}
+                onClick={() => handleCopy(activeLink, selectedLinkType)}
                 className="flex-1 sm:flex-none px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-2 shadow-glow-cyan active:scale-95"
               >
                 {copied ? (
@@ -109,7 +157,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
               </button>
 
               <a
-                href={masterLink}
+                href={activeLink}
                 target="_blank"
                 rel="noreferrer"
                 className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-gray-200 hover:text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5"
