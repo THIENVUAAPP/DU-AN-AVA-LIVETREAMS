@@ -23,16 +23,17 @@ export default function CleanLiveOverlay() {
     } catch (e) {}
 
     const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const pathname = typeof window !== 'undefined' ? window.location.pathname.toLowerCase() : '';
     const overlayParam = urlParams ? urlParams.get('overlay') : '';
     const ratioParam = urlParams ? urlParams.get('ratio') : (saved?.aspectRatio || '9:16');
     const directVideoUrl = urlParams ? urlParams.get('v') : null;
     
     let defaultStage = 'idol'; // Mặc định AI Idol
-    if (overlayParam === 'bando' || overlayParam === 'vietnam_map' || overlayParam === 'map') defaultStage = 'bando';
-    else if (overlayParam === 'gamebattle' || overlayParam === 'battle' || overlayParam === 'game') defaultStage = 'battle';
-    else if (overlayParam === 'dancefloor' || overlayParam === 'dance' || overlayParam === 'dance-floor') defaultStage = 'dancefloor';
-    else if (overlayParam === 'avatar' || overlayParam === 'idol') defaultStage = 'idol';
-    else if (overlayParam === 'broadcast' || overlayParam === 'studio') defaultStage = 'broadcast';
+    if (overlayParam === 'bando' || overlayParam === 'vietnam_map' || overlayParam === 'map' || pathname.includes('/bando')) defaultStage = 'bando';
+    else if (overlayParam === 'gamebattle' || overlayParam === 'battle' || overlayParam === 'game' || pathname.includes('/battle')) defaultStage = 'battle';
+    else if (overlayParam === 'dancefloor' || overlayParam === 'dance' || overlayParam === 'dance-floor' || pathname.includes('/dance')) defaultStage = 'dancefloor';
+    else if (overlayParam === 'avatar' || overlayParam === 'idol' || pathname.includes('/idol')) defaultStage = 'idol';
+    else if (overlayParam === 'broadcast' || overlayParam === 'studio' || pathname.includes('/studio')) defaultStage = 'broadcast';
     else if (saved && saved.stage) {
       defaultStage = saved.stage;
     }
@@ -130,15 +131,20 @@ export default function CleanLiveOverlay() {
       if (!data) return;
       setMasterState(prev => {
         const next = { ...prev, ...data };
-        // URL Parameter Override check
+        // URL Parameter & Path Override check (nếu link là link chuyên dụng của 1 dự án thì cố định dự án đó)
         const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+        const pathname = typeof window !== 'undefined' ? window.location.pathname.toLowerCase() : '';
         const overlayParam = urlParams ? urlParams.get('overlay') : '';
-        if (overlayParam === 'bando' || overlayParam === 'vietnam_map' || overlayParam === 'map') {
+        if (overlayParam === 'bando' || overlayParam === 'vietnam_map' || overlayParam === 'map' || pathname.includes('/bando')) {
           next.stage = 'bando';
-        } else if (overlayParam === 'gamebattle' || overlayParam === 'battle' || overlayParam === 'game') {
+        } else if (overlayParam === 'gamebattle' || overlayParam === 'battle' || overlayParam === 'game' || pathname.includes('/battle')) {
           next.stage = 'battle';
-        } else if (overlayParam === 'dancefloor' || overlayParam === 'dance' || overlayParam === 'dance-floor') {
+        } else if (overlayParam === 'dancefloor' || overlayParam === 'dance' || overlayParam === 'dance-floor' || pathname.includes('/dance')) {
           next.stage = 'dancefloor';
+        } else if (overlayParam === 'avatar' || overlayParam === 'idol' || pathname.includes('/idol')) {
+          next.stage = 'idol';
+        } else if (overlayParam === 'broadcast' || overlayParam === 'studio' || pathname.includes('/studio')) {
+          next.stage = 'broadcast';
         }
         return next;
       });
