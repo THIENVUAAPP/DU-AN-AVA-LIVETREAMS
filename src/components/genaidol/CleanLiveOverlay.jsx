@@ -305,8 +305,8 @@ export default function CleanLiveOverlay() {
 
     // 5. POLLING REALTIME STUDIO CAM FRAME (Hỗ trợ 100% CEF Browser Source trong TikTok LIVE Studio)
     const frameInterval = setInterval(() => {
-      const endpoint = backendUrl ? `${backendUrl}/api/studio-frame` : '/api/studio-frame';
-      fetch(endpoint)
+      const endpoint = backendUrl ? `${backendUrl}/api/studio-frame?t=${Date.now()}` : `/api/studio-frame?t=${Date.now()}`;
+      fetch(endpoint, { cache: 'no-store' })
         .then(res => res.json())
         .then(data => {
           if (data && data.frame) {
@@ -535,10 +535,6 @@ export default function CleanLiveOverlay() {
     }
 
     if (masterState.mediaUrl) {
-      if (masterState.mediaUrl.startsWith('blob:')) {
-         // Url blob từ cửa sổ khác sẽ không dùng được. Phải chờ IDB tải xong (bên trên).
-         return { url: null, isVideo: true };
-      }
       const cleanUrl = masterState.mediaUrl.split('?')[0].toLowerCase();
       const isImg = cleanUrl.endsWith('.jpg') || cleanUrl.endsWith('.jpeg') || cleanUrl.endsWith('.png') || cleanUrl.endsWith('.webp') || cleanUrl.includes('unsplash') || masterState.mediaUrl.startsWith('data:image');
       const isVid = cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.endsWith('.mov') || cleanUrl.includes('preview/mixkit') || cleanUrl.includes('idols/');
