@@ -107,10 +107,10 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
           </div>
           <div>
             <h2 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
-              <span>DANH SÁCH ĐƯỜNG LINK TỪNG DỰ ÁN CHO TIKTOK LIVE STUDIO</span>
+              <span>DANH SÁCH ĐƯỜNG LINK CHO TIKTOK LIVE STUDIO & OBS STUDIO</span>
             </h2>
             <p className="text-[11.5px] text-gray-400 mt-0.5">
-              Mỗi dự án 1 đường link riêng biệt — Tự động kết nối 100% thời gian thực
+              Mỗi dự án 1 đường link độc lập — Tự động đồng bộ 100% thời gian thực
             </p>
           </div>
         </div>
@@ -223,19 +223,30 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
           })}
         </div>
 
-        {/* Hướng dẫn 3 bước */}
-        <div className="p-3 rounded-2xl bg-black/50 border border-white/10 text-xs shrink-0 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-yellow-300 font-bold text-[11.5px]">
-            <Zap className="w-4 h-4 text-yellow-400 shrink-0 animate-pulse" />
-            <span>Cách dùng: Mở TikTok LIVE Studio → Thêm nguồn "Trình duyệt" → Dán link của dự án cần phát!</span>
+        {/* Hướng dẫn chi tiết cho OBS Studio & TikTok Live Studio */}
+        <div className="p-3 rounded-2xl bg-black/70 border border-white/15 text-xs shrink-0 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-yellow-300 font-bold text-[12px]">
+              <Zap className="w-4 h-4 text-yellow-400 shrink-0 animate-pulse" />
+              <span>HƯỚNG DẪN KẾT NỐI OBS STUDIO & TIKTOK LIVE STUDIO (100% KHÔNG ĐEN MÀN HÌNH):</span>
+            </div>
+            <button
+              onClick={onClose}
+              className="px-4 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-gray-200 font-bold text-xs cursor-pointer transition-all"
+            >
+              Đóng
+            </button>
           </div>
-
-          <button
-            onClick={onClose}
-            className="px-5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-gray-200 font-bold text-xs cursor-pointer transition-all"
-          >
-            Đóng
-          </button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-gray-300">
+            <div className="p-2 rounded-xl bg-white/5 border border-white/10 space-y-1">
+              <span className="font-bold text-cyan-300 flex items-center gap-1">🌐 Cách 1: Nguồn Trình Duyệt / Browser Source (Khuyên dùng)</span>
+              <p className="text-gray-400">Trên OBS hoặc TikTok Studio: Thêm nguồn <b>Trình duyệt (Browser Source)</b> → Dán link đã sao chép ở trên → Đặt kích thước <b>1080x1920</b> (9:16) hoặc <b>1920x1080</b> (16:9). Tự động phát video và chuyển cảnh mượt mà 60FPS!</p>
+            </div>
+            <div className="p-2 rounded-xl bg-white/5 border border-white/10 space-y-1">
+              <span className="font-bold text-pink-300 flex items-center gap-1">🖥️ Cách 2: Quay Cửa Sổ (Window Capture trong OBS)</span>
+              <p className="text-gray-400">Nếu quay cửa sổ phần mềm trên OBS: Nhấp đúp vào nguồn <b>Window Capture</b> → Tại mục <b>Capture Method</b> chọn <b>"Windows 10 (1903 and up)"</b> hoặc dùng <b>Display Capture (Quay toàn màn hình)</b> để không bị đen video!</p>
+            </div>
+          </div>
         </div>
 
       </div>
