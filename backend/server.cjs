@@ -80,6 +80,14 @@ app.post('/api/upload-media', upload.single('file'), (req, res) => {
   }
   
   const fileUrl = `/uploads/${req.file.filename}`;
+  currentMasterLiveState = {
+    ...currentMasterLiveState,
+    stage: 'idol',
+    mediaUrl: fileUrl,
+    isVideo: true,
+    updatedAt: Date.now()
+  };
+  io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
   res.json({ url: fileUrl, filename: req.file.filename, success: true });
 });
 
@@ -233,15 +241,15 @@ let simulationTimer = null;
 let isConnectingTikTok = false; // 🔒 Connection Lock — Ngăn race condition
 
 let currentMasterLiveState = {
-  stage: 'bando',
+  stage: 'idol',
   aspectRatio: '9:16',
-  characterId: 'char_1',
-  characterName: 'Mèo 2k4',
-  mediaUrl: '/idols/meo2k4.mp4',
+  characterId: 'linhanh_4k',
+  characterName: 'AI Idol Linh Anh (4K)',
+  mediaUrl: '/demo_dancer.mp4',
   isVideo: true,
   isAudioMuted: false,
   isDarkMode: true,
-  updatedAt: 0
+  updatedAt: Date.now()
 };
 let currentBandoGameState = null;
 let currentBattleGameState = null;

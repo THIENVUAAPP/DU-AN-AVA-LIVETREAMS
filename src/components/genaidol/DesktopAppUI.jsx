@@ -2309,6 +2309,17 @@ export default function DesktopAppUI() {
                         try { localStorage.setItem('avalive_selected_char', charId); } catch (e) {}
                         setIsGameBattleActive(false);
                         setIsGameBanDoActive(false);
+                        const targetChar = CHARACTERS[charId];
+                        if (targetChar && targetChar.url) {
+                          syncMasterLiveState({
+                            stage: 'idol',
+                            selectedCharacter: charId,
+                            characterName: targetChar.name || 'AI Idol',
+                            mediaUrl: targetChar.url,
+                            isVideo: targetChar.type === 'video' || (typeof targetChar.url === 'string' && (targetChar.url.endsWith('.mp4') || targetChar.url.includes('/uploads/') || targetChar.url.includes('demo_dancer'))),
+                            aspectRatio: globalAspectRatio || '9:16'
+                          }, socketRef.current);
+                        }
                       }}
                       className={`w-7 h-7 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 relative group ${selectedCharacter === charId ? 'border-2 border-blue-500 shadow-md shadow-blue-500/30' : 'border border-gray-600 opacity-60 hover:opacity-100'}`}
                       title={CHARACTERS[charId]?.name || ''}
@@ -3256,6 +3267,23 @@ export default function DesktopAppUI() {
         onAddTemplate={(newChar) => {
           setCustomCharacters(prev => [...prev, newChar]);
           setSelectedCharacter(newChar.id);
+          try {
+            localStorage.setItem('avalive_selected_char', newChar.id);
+            const savedCustom = localStorage.getItem('avalive_custom_characters');
+            const list = savedCustom ? JSON.parse(savedCustom) : [];
+            list.push(newChar);
+            localStorage.setItem('avalive_custom_characters', JSON.stringify(list));
+          } catch (e) {}
+          if (newChar && newChar.url) {
+            syncMasterLiveState({
+              stage: 'idol',
+              selectedCharacter: newChar.id,
+              characterName: newChar.name || 'AI Idol',
+              mediaUrl: newChar.url,
+              isVideo: newChar.type === 'video' || (typeof newChar.url === 'string' && (newChar.url.endsWith('.mp4') || newChar.url.includes('/uploads/') || newChar.url.includes('preview/mixkit'))),
+              aspectRatio: globalAspectRatio || '9:16'
+            }, socketRef.current);
+          }
         }}
       />
 

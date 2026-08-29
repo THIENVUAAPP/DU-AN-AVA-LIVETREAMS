@@ -46,6 +46,21 @@ export default defineConfig({
               res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
               res.setHeader('Access-Control-Allow-Headers', '*');
 
+              if (req.method === 'OPTIONS') {
+                res.statusCode = 204;
+                res.end();
+                return;
+              }
+
+              if (req.method === 'HEAD') {
+                res.setHeader('Content-Length', fileSize);
+                res.setHeader('Content-Type', contentType);
+                res.setHeader('Accept-Ranges', 'bytes');
+                res.statusCode = 200;
+                res.end();
+                return;
+              }
+
               if (range) {
                 const parts = range.replace(/bytes=/, "").split("-");
                 const start = parseInt(parts[0], 10);
