@@ -59,12 +59,32 @@ export default function DesktopAppUI() {
     if (!supabase) return;
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user?.email) {
+        const emailClean = session.user.email.toLowerCase().trim();
+        const isSuperAdmin = emailClean === 'quocthiencr90@gmail.com';
+        
+        let userPlan = isSuperAdmin ? 'SUPER ADMIN ENTERPRISE VIP' : 'VIP PRO';
+        let userTokens = isSuperAdmin ? 999999999 : 50000;
+        let userLiveMinutes = isSuperAdmin ? 999999 : 6000;
+
+        try {
+          const { data: dbUser } = await supabase.from('users').select('*').eq('email', emailClean).maybeSingle();
+          if (dbUser) {
+            if (dbUser.plan) userPlan = dbUser.plan.toUpperCase();
+            if (typeof dbUser.tokens === 'number') userTokens = dbUser.tokens;
+            if (typeof dbUser.live_minutes === 'number') userLiveMinutes = dbUser.live_minutes;
+            else if (typeof dbUser.liveMinutes === 'number') userLiveMinutes = dbUser.liveMinutes;
+          }
+        } catch (e) {}
+
         const gUser = {
           name: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
-          email: session.user.email,
+          email: emailClean,
           avatar: session.user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(session.user.email)}`,
-          isAdmin: session.user.email === 'quocthiencr90@gmail.com',
-          plan: session.user.email === 'quocthiencr90@gmail.com' ? 'ENTERPRISE' : 'VIP'
+          isAdmin: isSuperAdmin,
+          plan: userPlan,
+          tokens: userTokens,
+          liveMinutes: userLiveMinutes,
+          liveTimeHours: Math.round(userLiveMinutes / 60)
         };
         setCurrentUser(gUser);
         try {
@@ -75,6 +95,57 @@ export default function DesktopAppUI() {
     });
     return () => subscription?.unsubscribe();
   }, []);
+
+  // Đồng bộ Realtime tài khoản & Gói bản quyền & Token từ Supabase Cloud
+  useEffect(() => {
+    if (!supabase || !currentUser?.email) return;
+    const emailClean = currentUser.email.toLowerCase().trim();
+
+    const refreshUserData = async () => {
+      try {
+        const { data: dbUser } = await supabase
+          .from('users')
+          .select('*')
+          .eq('email', emailClean)
+          .maybeSingle();
+
+        if (dbUser) {
+          const isSuperAdmin = emailClean === 'quocthiencr90@gmail.com' || dbUser.role === 'admin';
+          const updatedUser = {
+            ...currentUser,
+            name: dbUser.name || currentUser.name,
+            avatar: dbUser.avatar_url || currentUser.avatar,
+            isAdmin: isSuperAdmin,
+            plan: isSuperAdmin ? 'SUPER ADMIN ENTERPRISE VIP' : (dbUser.plan || currentUser.plan || 'VIP PRO'),
+            tokens: typeof dbUser.tokens === 'number' ? dbUser.tokens : (currentUser.tokens || 50000),
+            liveMinutes: typeof dbUser.live_minutes === 'number' ? dbUser.live_minutes : (currentUser.liveMinutes || 6000),
+            liveTimeHours: Math.round((typeof dbUser.live_minutes === 'number' ? dbUser.live_minutes : (currentUser.liveMinutes || 6000)) / 60)
+          };
+          setCurrentUser(updatedUser);
+          try { localStorage.setItem('avalive_current_user', JSON.stringify(updatedUser)); } catch (e) {}
+        }
+      } catch (err) {
+        console.warn('Lỗi đồng bộ Supabase User:', err);
+      }
+    };
+
+    refreshUserData();
+
+    // Lắng nghe thay đổi trực tiếp từ Supabase Realtime
+    let userChannel = null;
+    try {
+      userChannel = supabase
+        .channel(`user_sync_${emailClean}`)
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `email=eq.${emailClean}` }, () => {
+          refreshUserData();
+        })
+        .subscribe();
+    } catch (e) {}
+
+    return () => {
+      if (userChannel) supabase.removeChannel(userChannel);
+    };
+  }, [currentUser?.email]);
 
   const handleRealGoogleOAuth = async () => {
     setIsLoggingIn(true);

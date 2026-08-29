@@ -661,99 +661,86 @@ export default function CleanLiveOverlay() {
 
   // 4. RENDER STAGE: AI IDOL LIVESTREAM — 100% CLEAN VIDEO / NGƯỜI DUY NHẤT (THEO VIDEO NGƯỜI DÙNG CHỌN)
   return (
-    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-black flex items-center justify-center select-none">
-      {/* Frame Container Responsive theo Tỷ Lệ 9:16 (TikTok Dọc) hoặc 16:9 (OBS Ngang) */}
-      <div 
-        className={`relative flex items-center justify-center overflow-hidden transition-all duration-300 ${
-          ratio === '9:16'
-            ? 'h-full aspect-[9/16] w-auto max-w-full'
-            : 'w-full aspect-[16/9] h-auto max-h-full'
-        }`}
-        style={ratio === '9:16' ? { aspectRatio: '9 / 16', height: '100%', maxWidth: 'calc(100vh * 9 / 16)' } : { aspectRatio: '16 / 9', width: '100%' }}
-      >
-        {activeStreamUrl ? (
-          <video
-            ref={flvVideoRef}
-            key={activeStreamUrl}
-            autoPlay
-            muted={isAudioMuted}
-            playsInline
-            className="w-full h-full object-cover select-none bg-black"
-          />
-        ) : activeMedia.url && activeMedia.isVideo ? (
-          <video
-            ref={(el) => {
-              if (el) {
-                el.muted = true;
-                el.defaultMuted = true;
-                el.playsInline = true;
-                const playPromise = el.play();
-                if (playPromise !== undefined) {
-                  playPromise.catch(() => {
-                    el.muted = true;
-                    el.play().catch(() => {});
-                  });
-                }
+    <div 
+      className="fixed inset-0 w-screen h-screen overflow-hidden flex items-center justify-center select-none bg-black"
+      style={{ width: '100vw', height: '100vh', position: 'fixed', inset: 0 }}
+    >
+      {activeStreamUrl ? (
+        <video
+          ref={flvVideoRef}
+          key={activeStreamUrl}
+          autoPlay
+          muted
+          playsInline
+          className="w-full h-full object-cover select-none bg-black absolute inset-0"
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      ) : activeMedia.url && activeMedia.isVideo ? (
+        <video
+          ref={(el) => {
+            if (el) {
+              el.muted = true;
+              el.defaultMuted = true;
+              el.playsInline = true;
+              const playPromise = el.play();
+              if (playPromise !== undefined) {
+                playPromise.catch(() => {
+                  el.muted = true;
+                  el.play().catch(() => {});
+                });
               }
-            }}
-            key={activeMedia.url}
-            src={activeMedia.url}
-            autoPlay
-            loop
-            muted
-            playsInline
-            onLoadedMetadata={(e) => {
-              e.target.muted = true;
+            }
+          }}
+          key={activeMedia.url}
+          src={activeMedia.url}
+          autoPlay
+          loop
+          muted
+          playsInline
+          onLoadedMetadata={(e) => {
+            e.target.muted = true;
+            e.target.play().catch(() => {});
+          }}
+          onCanPlay={(e) => {
+            e.target.muted = true;
+            e.target.play().catch(() => {});
+          }}
+          onEnded={(e) => {
+            e.target.currentTime = 0;
+            e.target.play().catch(() => {});
+          }}
+          onError={(e) => {
+            console.warn('[CleanLiveOverlay] Video playback note, fallback to demo_dancer.mp4:', e);
+            if (e.target.src && !e.target.src.endsWith('/demo_dancer.mp4')) {
+              e.target.src = '/demo_dancer.mp4';
               e.target.play().catch(() => {});
-            }}
-            onCanPlay={(e) => {
-              e.target.muted = true;
-              e.target.play().catch(() => {});
-            }}
-            onEnded={(e) => {
-              e.target.currentTime = 0;
-              e.target.play().catch(() => {});
-            }}
-            onError={(e) => {
-              console.warn('[CleanLiveOverlay] Video playback note:', e);
-            }}
-            className="w-full h-full object-cover select-none bg-black"
-          />
-        ) : activeMedia.url ? (
-          /* Ảnh Idol Sắc Nét 4K (Chống Màn Hình Đen Tuyệt Đối) */
-          <img 
-            src={activeMedia.url} 
-            className="w-full h-full object-contain select-none"
-            style={{ imageRendering: '-webkit-optimize-contrast', animation: 'idolBreathing 4s ease-in-out infinite' }}
-            alt="AI Idol"
-            onError={(e) => {
-              e.currentTarget.onerror = null;
-              e.currentTarget.src = '/demo_dancer.mp4';
-            }}
-          />
-        ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#0F1016] via-[#151824] to-[#0A0A0F] text-center p-6 select-none border border-white/5 rounded-3xl m-2">
-            <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-pink-600 via-rose-600 to-red-600 flex items-center justify-center mb-5 shadow-2xl shadow-rose-500/30 animate-pulse">
-              <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <h3 className="text-xl sm:text-2xl font-black text-white tracking-wide uppercase">MÀN HÌNH CHỜ LIVE IDOL</h3>
-            
-            <div className="mt-4 p-4 rounded-2xl bg-white/5 border border-white/10 max-w-sm backdrop-blur-md">
-              <p className="text-[13px] sm:text-sm text-gray-300 leading-relaxed font-medium">
-                Hệ thống đang chờ kết nối video từ Bảng Điều Khiển.<br/><br/>
-                Nếu màn hình này hiện liên tục, <strong className="text-rose-400 font-bold">Video cũ của bạn có thể đã hết hạn hoặc chưa được tải lên Server nội bộ.</strong>
-              </p>
-            </div>
-
-            <div className="mt-5 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] sm:text-xs font-black flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
-              <span>CÁCH SỬA: XÓA VIDEO CŨ & TẢI LÊN LẠI VIDEO MỚI</span>
-            </div>
+            }
+          }}
+          className="w-full h-full object-cover select-none bg-black absolute inset-0"
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      ) : activeMedia.url ? (
+        /* Ảnh Idol Sắc Nét 4K (Chống Màn Hình Đen Tuyệt Đối) */
+        <img 
+          src={activeMedia.url} 
+          className="w-full h-full object-cover select-none absolute inset-0"
+          style={{ width: '100%', height: '100%', objectFit: 'cover', imageRendering: '-webkit-optimize-contrast' }}
+          alt="AI Idol"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = '/demo_dancer.mp4';
+          }}
+        />
+      ) : (
+        <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#0F1016] via-[#151824] to-[#0A0A0F] text-center p-6 select-none">
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-pink-600 via-rose-600 to-red-600 flex items-center justify-center mb-5 shadow-2xl shadow-rose-500/30 animate-pulse">
+            <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
           </div>
-        )}
-      </div>
+          <h3 className="text-xl sm:text-2xl font-black text-white tracking-wide uppercase">MÀN HÌNH CHỜ LIVE IDOL</h3>
+        </div>
+      )}
 
       {/* Animation Styles */}
       <style>{`
