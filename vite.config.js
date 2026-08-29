@@ -32,6 +32,47 @@ export default defineConfig({
       name: 'local-vercel-api',
       configureServer(server) {
         server.middlewares.use(async (req, res, next) => {
+          if (req.url.startsWith('/uploads/')) {
+            const cleanPath = req.url.split('?')[0];
+            const filePath = path.resolve(__dirname, 'backend' + cleanPath);
+            if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+              const stat = fs.statSync(filePath);
+              const fileSize = stat.size;
+              const range = req.headers.range;
+              const ext = path.extname(filePath).toLowerCase();
+              const contentType = ext === '.mp4' ? 'video/mp4' : ext === '.webm' ? 'video/webm' : ext === '.mov' ? 'video/quicktime' : ext === '.png' ? 'image/png' : ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'application/octet-stream';
+
+              res.setHeader('Access-Control-Allow-Origin', '*');
+              res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+              res.setHeader('Access-Control-Allow-Headers', '*');
+
+              if (range) {
+                const parts = range.replace(/bytes=/, "").split("-");
+                const start = parseInt(parts[0], 10);
+                const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+                const chunksize = (end - start) + 1;
+                const file = fs.createReadStream(filePath, { start, end });
+                const head = {
+                  'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+                  'Accept-Ranges': 'bytes',
+                  'Content-Length': chunksize,
+                  'Content-Type': contentType,
+                };
+                res.writeHead(206, head);
+                file.pipe(res);
+              } else {
+                const head = {
+                  'Content-Length': fileSize,
+                  'Content-Type': contentType,
+                  'Accept-Ranges': 'bytes',
+                };
+                res.writeHead(200, head);
+                fs.createReadStream(filePath).pipe(res);
+              }
+              return;
+            }
+          }
+
           if (req.url.startsWith('/proxy-page')) {
             const queryUrl = new URL(req.url, 'http://localhost').searchParams.get('url');
             if (!queryUrl) return next();

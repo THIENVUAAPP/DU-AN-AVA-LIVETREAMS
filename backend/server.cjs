@@ -67,16 +67,20 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-app.use('/uploads', express.static(uploadsDir));
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', '*');
+  next();
+}, express.static(uploadsDir));
 
 app.post('/api/upload-media', upload.single('file'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
   
-  // Trả về URL dạng http://localhost:3001/uploads/... cho Universal Link
-  const fileUrl = `http://localhost:${req.socket.localPort || 3001}/uploads/${req.file.filename}`;
-  res.json({ url: fileUrl, success: true });
+  const fileUrl = `/uploads/${req.file.filename}`;
+  res.json({ url: fileUrl, filename: req.file.filename, success: true });
 });
 
 // 🌐 API KIỂM TRA TRẠNG THÁI SERVER & PHIÊN BẢN ĐỒNG BỘ

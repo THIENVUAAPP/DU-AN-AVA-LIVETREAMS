@@ -548,41 +548,57 @@ export default function CleanLiveOverlay() {
 
   // Helper giải mã URL media chính xác (tôn trọng 100% video/nhân vật người dùng chọn)
   const resolveActiveMedia = () => {
-    // 1. ƯU TIÊN SỐ 1: Video do người dùng tải lên (tìm theo ID trong IndexedDB)
+    let candidateUrl = null;
+    let isVideo = true;
+
+    // 1. Ưu tiên số 1: Video do người dùng tải lên (tìm theo ID trong IndexedDB)
     if (masterState.selectedCharacter && localDbItems.length > 0) {
       const match = localDbItems.find(i => i.id === masterState.selectedCharacter);
-      if (match && match.url) {
-        return { url: match.url, isVideo: match.type === 'video' || match.url.endsWith('.mp4') };
+      if (match && (match.mediaUrl || match.url)) {
+        candidateUrl = match.mediaUrl || match.url;
+        isVideo = match.type === 'video' || (typeof candidateUrl === 'string' && (candidateUrl.endsWith('.mp4') || candidateUrl.endsWith('.webm') || candidateUrl.includes('/uploads/')));
       }
     }
 
-    if (masterState.mediaUrl) {
-      const cleanUrl = masterState.mediaUrl.split('?')[0].toLowerCase();
-      const isImg = cleanUrl.endsWith('.jpg') || cleanUrl.endsWith('.jpeg') || cleanUrl.endsWith('.png') || cleanUrl.endsWith('.webp') || cleanUrl.includes('unsplash') || masterState.mediaUrl.startsWith('data:image');
-      const isVid = cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.endsWith('.mov') || cleanUrl.includes('preview/mixkit') || cleanUrl.includes('idols/');
-
-      return { 
-        url: masterState.mediaUrl, 
-        isVideo: isVid ? true : (isImg ? false : masterState.isVideo !== false)
-      };
+    if (!candidateUrl && masterState.mediaUrl) {
+      candidateUrl = masterState.mediaUrl;
+      const cleanUrl = candidateUrl.split('?')[0].toLowerCase();
+      const isImg = cleanUrl.endsWith('.jpg') || cleanUrl.endsWith('.jpeg') || cleanUrl.endsWith('.png') || cleanUrl.endsWith('.webp') || cleanUrl.includes('unsplash') || candidateUrl.startsWith('data:image');
+      const isVid = cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.endsWith('.mov') || cleanUrl.includes('preview/mixkit') || cleanUrl.includes('/uploads/') || cleanUrl.includes('idols/');
+      isVideo = isVid ? true : (isImg ? false : masterState.isVideo !== false);
     }
 
     // 2. Kiểm tra trong danh sách custom characters người dùng đã tải lên
-    try {
-      const customRaw = localStorage.getItem('avalive_custom_characters');
-      if (customRaw) {
-        const customList = JSON.parse(customRaw);
-        const customFound = customList.find(c => c.id === masterState.selectedCharacter);
-        if (customFound && customFound.url) {
-          return {
-            url: customFound.url,
-            isVideo: customFound.type === 'video' || (customFound.url.endsWith('.mp4') || customFound.url.endsWith('.webm'))
-          };
+    if (!candidateUrl) {
+      try {
+        const customRaw = localStorage.getItem('avalive_custom_characters');
+        if (customRaw) {
+          const customList = JSON.parse(customRaw);
+          const customFound = customList.find(c => c.id === masterState.selectedCharacter);
+          if (customFound && (customFound.url || customFound.mediaUrl)) {
+            candidateUrl = customFound.url || customFound.mediaUrl;
+            isVideo = customFound.type === 'video' || (typeof candidateUrl === 'string' && (candidateUrl.endsWith('.mp4') || candidateUrl.endsWith('.webm') || candidateUrl.includes('/uploads/')));
+          }
         }
-      }
-    } catch (e) {}
+      } catch (e) {}
+    }
 
-    return { url: null, isVideo: true };
+    // 3. Fallback video idol mặc định
+    if (!candidateUrl) {
+      candidateUrl = '/demo_dancer.mp4';
+      isVideo = true;
+    }
+
+    // Làm sạch và chuẩn hóa URL (Loại bỏ các tiền tố http lặp lại nếu có)
+    if (typeof candidateUrl === 'string') {
+      if (candidateUrl.includes('http://') && candidateUrl.lastIndexOf('http://') > 0) {
+        candidateUrl = candidateUrl.substring(candidateUrl.lastIndexOf('http://'));
+      } else if (candidateUrl.includes('https://') && candidateUrl.lastIndexOf('https://') > 0) {
+        candidateUrl = candidateUrl.substring(candidateUrl.lastIndexOf('https://'));
+      }
+    }
+
+    return { url: candidateUrl, isVideo };
   };
 
   const activeMedia = resolveActiveMedia();
@@ -677,6 +693,13 @@ export default function CleanLiveOverlay() {
             onCanPlay={(e) => {
               e.target.play().catch(() => {});
             }}
+            onError={(e) => {
+              console.warn('[CleanLiveOverlay] Video error, fallback to demo_dancer.mp4:', e);
+              if (e.target.src && !e.target.src.endsWith('/demo_dancer.mp4')) {
+                e.target.src = '/demo_dancer.mp4';
+                e.target.play().catch(() => {});
+              }
+            }}
             className="w-full h-full object-cover select-none bg-black"
           />
         ) : activeMedia.url ? (
@@ -688,7 +711,7 @@ export default function CleanLiveOverlay() {
             alt="AI Idol"
             onError={(e) => {
               e.currentTarget.onerror = null;
-              e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
+              e.currentTarget.src = '/demo_dancer.mp4';
             }}
           />
         ) : (

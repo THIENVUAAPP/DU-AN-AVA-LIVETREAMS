@@ -816,7 +816,23 @@ export default function DesktopAppUI() {
   }, []);
 
   // Bộ sưu tập Nhân Vật AI Idol & Video 4K Mặc Định Sắc Nét (Mỗi nhân vật 1 video riêng biệt độc quyền)
-  const BUILTIN_CHARACTERS = {};
+  const BUILTIN_CHARACTERS = {
+    'linhanh_4k': {
+      name: 'AI Idol Linh Anh (4K)',
+      url: '/demo_dancer.mp4',
+      type: 'video'
+    },
+    'aidol_greenscreen': {
+      name: 'AI Idol Thời Trang (GreenScreen)',
+      url: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-a-green-dress-41315-large.mp4',
+      type: 'video'
+    },
+    'aidol_dance_pro': {
+      name: 'AI Idol Vũ Đạo (Dance Pro)',
+      url: 'https://assets.mixkit.co/videos/preview/mixkit-girl-dancing-in-front-of-a-camera-40742-large.mp4',
+      type: 'video'
+    }
+  };
   
   const ALL_CHARACTERS = { ...BUILTIN_CHARACTERS };
 
@@ -1501,7 +1517,12 @@ export default function DesktopAppUI() {
           });
           const data = await res.json();
           if (data && data.url) {
-            url = `${autoBackendUrl}${data.url}`; // Bắt buộc dùng đường dẫn tuyệt đối kèm port 3001
+            let serverUrl = data.url;
+            if (serverUrl.startsWith('http://') || serverUrl.startsWith('https://')) {
+              url = serverUrl;
+            } else {
+              url = `${autoBackendUrl}${serverUrl.startsWith('/') ? '' : '/'}${serverUrl}`;
+            }
           }
         } catch (error) {
           console.error("Lỗi upload video:", error);
@@ -1517,6 +1538,13 @@ export default function DesktopAppUI() {
         };
         setCustomCharacters(prev => [...prev, newChar]);
         setSelectedCharacter(newChar.id);
+        try {
+          localStorage.setItem('avalive_selected_char', newChar.id);
+          const savedCustom = localStorage.getItem('avalive_custom_characters');
+          const list = savedCustom ? JSON.parse(savedCustom) : [];
+          list.push(newChar);
+          localStorage.setItem('avalive_custom_characters', JSON.stringify(list));
+        } catch (e) {}
         await saveCharacterToIDB({
           id: newChar.id,
           name: newChar.name,
