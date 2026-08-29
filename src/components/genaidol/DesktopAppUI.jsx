@@ -773,33 +773,7 @@ export default function DesktopAppUI() {
     isMasterLiveRunningRef.current = isMasterLiveRunning;
   }, [isMasterLiveRunning]);
 
-  // ⚡ TỰ ĐỘNG ĐỒNG BỘ STAGE, VIDEO/IDOL, TỶ LỆ SANG CỬA SỔ OVERLAY OBS & TIKTOK STUDIO
-  useEffect(() => {
-    let currentStage = 'idol';
-    if (isGameBanDoActive) currentStage = 'bando';
-    else if (isGameBattleActive) currentStage = 'battle';
-    else if (isLiveStudioActive) currentStage = 'studio';
 
-    const selectedCharObj = CHARACTERS[selectedCharacter] || Object.values(CHARACTERS)[0] || {
-      name: 'Chưa Chọn Video',
-      url: null,
-      type: 'video'
-    };
-    const mediaUrl = selectedCharObj?.url || (activeVideoItem?.mediaUrl) || null;
-    const isVideo = selectedCharObj?.type === 'video' || (activeVideoItem?.mediaUrl ? true : false);
-
-    syncMasterLiveState({
-      stage: currentStage,
-      aspectRatio: globalAspectRatio || '9:16',
-      selectedCharacter: selectedCharacter || Object.keys(CHARACTERS)[0] || 'linhanh_4k',
-      characterName: isLiveStudioActive ? 'Phòng Dựng Live Studio 4K' : (selectedCharObj?.name || 'AI Idol Linh Anh'),
-      mediaUrl: mediaUrl,
-      isVideo: isVideo,
-      flvUrl: flvUrl || null,
-      isConnected: isConnected,
-      isDarkMode: isDarkMode
-    }, socketRef.current);
-  }, [isGameBanDoActive, isGameBattleActive, isLiveStudioActive, selectedCharacter, customCharacters, globalAspectRatio, activeVideoItem, flvUrl, isConnected, isDarkMode]);
 
   // Trạng thái Chạy Demo / Test Toàn Cục (1 Nút Duy Nhất cho tất cả Game / Idol)
   const [isGlobalDemoRunning, setIsGlobalDemoRunning] = useState(false);
@@ -1208,14 +1182,16 @@ export default function DesktopAppUI() {
       ? 'broadcast' 
       : 'idol';
 
-    const char = CHARACTERS[selectedCharacter] || Object.values(CHARACTERS)[0] || { 
-      url: '/demo_dancer.mp4', 
+    const customMatch = (customCharacters && Array.isArray(customCharacters)) ? customCharacters.find(c => c.id === selectedCharacter) : null;
+    const firstCustom = (customCharacters && Array.isArray(customCharacters) && customCharacters.length > 0) ? customCharacters[0] : null;
+    const char = customMatch || CHARACTERS[selectedCharacter] || firstCustom || Object.values(CHARACTERS)[0] || { 
+      url: '', 
       type: 'video', 
-      name: 'AI Idol Linh Anh' 
+      name: 'Video Người Dùng' 
     };
     
-    let currentMedia = char.url || (activeVideoItem?.mediaUrl) || '/demo_dancer.mp4';
-    let isVid = char.type === 'video' || (typeof currentMedia === 'string' && (currentMedia.endsWith('.mp4') || currentMedia.includes('demo_dancer') || currentMedia.includes('/uploads/')));
+    let currentMedia = char.url || (activeVideoItem?.mediaUrl) || '';
+    let isVid = char.type === 'video' || (typeof currentMedia === 'string' && (currentMedia.endsWith('.mp4') || currentMedia.includes('/uploads/') || currentMedia.startsWith('http')));
     let streamFlvUrl = null;
 
     if (isConnected && flvUrl) {
@@ -1231,7 +1207,7 @@ export default function DesktopAppUI() {
       type: 'MASTER_LIVE_STATE_UPDATE',
       stage, // 'idol' | 'battle' | 'bando' | 'dancefloor' | 'broadcast'
       aspectRatio: globalAspectRatio || '9:16', // '9:16' | '16:9'
-      selectedCharacter,
+      selectedCharacter: char.id || selectedCharacter,
       characterName: char.name || 'AI Idol',
       mediaUrl: currentMedia,
       flvUrl: streamFlvUrl,
@@ -1250,6 +1226,7 @@ export default function DesktopAppUI() {
     isDanceFloorActive, 
     isLiveStudioActive, 
     selectedCharacter, 
+    customCharacters,
     activeVideoItem, 
     isConnected, 
     showSimulator, 

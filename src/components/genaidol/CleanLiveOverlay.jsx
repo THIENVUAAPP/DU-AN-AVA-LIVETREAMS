@@ -333,17 +333,6 @@ export default function CleanLiveOverlay() {
         .catch(() => {});
     }, 100);
 
-    return () => {
-      clearInterval(httpPollInterval);
-      clearInterval(frameInterval);
-      if (studioCamBc) studioCamBc.close();
-      if (masterChannel) masterChannel.close();
-      if (bandoChannel) bandoChannel.close();
-      if (battleChannel) battleChannel.close();
-      if (cleanChannel) cleanChannel.close();
-      if (socket) socket.disconnect();
-    };
-
     // 5. LOCAL STORAGE SYNC
     const handleStorage = (e) => {
       if (e.key === 'avalive_master_live_state' && e.newValue) {
@@ -394,14 +383,17 @@ export default function CleanLiveOverlay() {
     }, 1500);
 
     return () => {
+      clearInterval(httpPollInterval);
+      clearInterval(frameInterval);
+      clearInterval(pollInterval);
       if (supabaseChannel) supabaseChannel.unsubscribe();
       if (socket) socket.disconnect();
+      if (studioCamBc) studioCamBc.close();
       if (masterChannel) masterChannel.close();
       if (bandoChannel) bandoChannel.close();
       if (battleChannel) battleChannel.close();
       if (cleanChannel) cleanChannel.close();
       window.removeEventListener('storage', handleStorage);
-      clearInterval(pollInterval);
     };
   }, []);
 
