@@ -809,14 +809,23 @@ export default function DesktopAppUI() {
         bandoAudio.unlock();
         bandoEngine.startAutoTestLoop();
         window.dispatchEvent(new CustomEvent('bando-trigger-demo'));
+        if (socketRef.current && socketRef.current.connected) {
+          socketRef.current.emit('bando_action', { type: 'TRIGGER_DEMO' });
+        }
       } catch (e) {
         console.error('Error starting bando demo loop:', e);
       }
     } else if (isGameBattleActive) {
       // 2. Kích hoạt Demo Game Chiến Đấu PK
       window.dispatchEvent(new CustomEvent('battle-trigger-demo'));
+      if (socketRef.current && socketRef.current.connected) {
+        socketRef.current.emit('battle_trigger_demo');
+      }
       globalDemoTimerRef.current = setInterval(() => {
         window.dispatchEvent(new CustomEvent('battle-trigger-demo'));
+        if (socketRef.current && socketRef.current.connected) {
+          socketRef.current.emit('battle_trigger_demo');
+        }
       }, 1500);
     } else {
       // 3. Kích hoạt Demo AI Idol Live

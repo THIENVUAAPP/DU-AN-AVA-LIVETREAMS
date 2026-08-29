@@ -2953,6 +2953,22 @@ export default function GameChienDau({
           addLiveFeedItem(nickname, `tặng quà tiếp sức & mở vũ điệu! 🎁`, assignedFaction);
         }
       });
+
+      socket.on('battle_trigger_demo', () => {
+        const gifts = [1, 50, 200, 500, 1000];
+        const fac = Math.random() < 0.5 ? 'blue' : 'red';
+        const randomCoin = gifts[Math.floor(Math.random() * gifts.length)];
+        handleTestGift(randomCoin, fac);
+      });
+
+      socket.on('battle_action', (action) => {
+        if (action?.type === 'TRIGGER_DEMO') {
+          const gifts = [1, 50, 200, 500, 1000];
+          const fac = Math.random() < 0.5 ? 'blue' : 'red';
+          const randomCoin = gifts[Math.floor(Math.random() * gifts.length)];
+          handleTestGift(randomCoin, fac);
+        }
+      });
     } catch (e) {
       console.warn('Battle socket note:', e);
     }

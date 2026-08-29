@@ -465,6 +465,14 @@ io.on('connection', (socket) => {
     io.emit('LIVE_EVENT', evt);
   });
 
+  socket.on('bando_action', (action) => {
+    socket.broadcast.emit('bando_action', action);
+  });
+
+  socket.on('battle_trigger_demo', (data) => {
+    socket.broadcast.emit('battle_trigger_demo', data);
+  });
+
   socket.on('battle_event', (evt) => {
     io.emit('battle_event', evt);
     io.emit('LIVE_EVENT', evt);

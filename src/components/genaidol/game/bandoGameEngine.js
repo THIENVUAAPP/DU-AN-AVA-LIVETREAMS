@@ -1,3 +1,4 @@
+import { io } from 'socket.io-client';
 import bandoAudio from './bandoAudioEngine';
 import { mapVoiceEngine } from './gameVoiceEngine';
 import { WORLD_COUNTRIES, COUNTRIES_BY_ID, CONTINENTS } from './worldCountriesData';
@@ -259,6 +260,7 @@ class BanDoGameEngine {
     this.isLoaded = false;
     this.listeners = new Set();
     this.broadcastChannel = null;
+    this.socket = null;
     this._lastSyncTimestamp = 0;
     this._isApplyingRemoteSync = false;
     
@@ -267,6 +269,52 @@ class BanDoGameEngine {
     this.queueTimer = null;
     this.processedGiftSignatures = new Map();
     this.processedCommentSignatures = new Map();
+
+    // 1. KẾT NỐI SOCKET.IO ĐỒNG BỘ THỜI GIAN THỰC (Cho OBS Studio, TikTok LIVE Studio, Browser Sources)
+    if (typeof window !== 'undefined') {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const customBackend = urlParams.get('backend') || localStorage.getItem('aidol_backend_url');
+        let backendUrl = '';
+        if (customBackend && customBackend.startsWith('http')) {
+          backendUrl = customBackend;
+        } else {
+          backendUrl = `${window.location.protocol}//${window.location.hostname}:3001`;
+        }
+
+        this.socket = io(backendUrl, {
+          transports: ['websocket', 'polling'],
+          reconnection: true,
+          reconnectionAttempts: Infinity,
+          reconnectionDelay: 1000,
+          timeout: 10000
+        });
+
+        this.socket.on('bando_sync', (remoteState) => {
+          if (remoteState && !this._isApplyingRemoteSync) {
+            this.applyRemoteState(remoteState);
+          }
+        });
+
+        this.socket.on('tiktok_gift', (giftData) => {
+          if (giftData) {
+            this.processGift(giftData);
+          }
+        });
+
+        this.socket.on('tiktok_chat', (chatData) => {
+          if (chatData) {
+            this.processComment(chatData.comment || chatData.text, {
+              id: chatData.userId || chatData.uniqueId || 'chat_user',
+              username: chatData.nickname || chatData.username || 'Khán Giả',
+              avatar: chatData.profilePictureUrl || chatData.avatar || ''
+            });
+          }
+        });
+      } catch (err) {
+        console.warn('[bandoGameEngine] Socket.io init warning:', err);
+      }
+    }
 
     if (typeof BroadcastChannel !== 'undefined') {
       try {
@@ -922,6 +970,10 @@ class BanDoGameEngine {
     }
   }
 
+  syncFromRemote(remoteState, lastEvent = null) {
+    this.applyRemoteState(remoteState, lastEvent);
+  }
+
   notify(lastEvent = null) {
     if (this._isApplyingRemoteSync) return;
     // Tạo bản sao cellsById MỚI để React detect change qua === reference comparison
@@ -935,6 +987,13 @@ class BanDoGameEngine {
 
     const now = Date.now();
     this._lastSyncTimestamp = now;
+
+    // 1. Đồng bộ qua Socket.io (Hỗ trợ OBS Studio / TikTok LIVE Studio xuyên Domain)
+    if (this.socket && this.socket.connected) {
+      try {
+        this.socket.emit('bando_sync', this.state);
+      } catch (e) {}
+    }
 
     if (this.broadcastChannel) {
       try {
@@ -1095,19 +1154,19 @@ class BanDoGameEngine {
     const targetKey = String(giftId || '').toLowerCase().trim();
     const targetName = String(giftNameInput || '').toLowerCase().trim();
 
-    const msgId = String(typeof giftId === 'object' ? giftId.msgId : '') || `${user.id || user.username}_${targetKey || targetName}_${count}_${diamondCountInput}`;
-    
-    // Khử trùng lặp sự kiện quà tặng (Deduplication) bằng MsgID duy nhất từ TikTok + fallbacks
-    const giftSig = `gift_${msgId}_${count}`;
-    const lastGiftTime = this.processedGiftSignatures?.get(giftSig) || 0;
-    if (now - lastGiftTime < 2500) {
-      return; // Bỏ qua sự kiện trùng lặp trong vòng 2.5 giây
-    }
-    if (!this.processedGiftSignatures) this.processedGiftSignatures = new Map();
-    this.processedGiftSignatures.set(giftSig, now);
-    if (this.processedGiftSignatures.size > 500) {
-      const first = this.processedGiftSignatures.keys().next().value;
-      this.processedGiftSignatures.delete(first);
+    const hasRealMsgId = typeof giftId === 'object' && Boolean(giftId?.msgId);
+    if (hasRealMsgId) {
+      const giftSig = `msg_${giftId.msgId}`;
+      const lastGiftTime = this.processedGiftSignatures?.get(giftSig) || 0;
+      if (now - lastGiftTime < 1500) {
+        return; // Bỏ qua trùng lặp gói tin mạng thực từ TikTok Webcast
+      }
+      if (!this.processedGiftSignatures) this.processedGiftSignatures = new Map();
+      this.processedGiftSignatures.set(giftSig, now);
+      if (this.processedGiftSignatures.size > 500) {
+        const first = this.processedGiftSignatures.keys().next().value;
+        this.processedGiftSignatures.delete(first);
+      }
     }
 
     let giftDef = allKnownGifts.find(g => {
