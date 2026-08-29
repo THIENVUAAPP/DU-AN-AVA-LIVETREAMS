@@ -1963,12 +1963,12 @@ export default function DesktopAppUI() {
             </div>
           )}
 
-          {/* Form Nhập Gmail hoặc Google OAuth */}
-          <div className="space-y-4">
+          {/* 1 Nút Đăng Nhập Trực Tiếp Google / Gmail Duy Nhất */}
+          <div className="space-y-4 pt-2">
             <button
               onClick={handleRealGoogleOAuth}
               disabled={isLoggingIn}
-              className="w-full flex items-center justify-center gap-3 py-3.5 px-4 bg-white hover:bg-gray-100 text-gray-900 rounded-2xl font-bold text-sm shadow-xl transition-all hover:scale-[1.02] active:scale-98 cursor-pointer disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-3 py-4 px-4 bg-white hover:bg-gray-100 text-gray-900 rounded-2xl font-bold text-sm shadow-xl transition-all hover:scale-[1.02] active:scale-98 cursor-pointer disabled:opacity-50"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -1976,47 +1976,8 @@ export default function DesktopAppUI() {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
               </svg>
-              <span>Đăng Nhập Nhanh Bằng Google</span>
+              <span>{isLoggingIn ? '⏳ Đang Kết Nối...' : '🚀 Kết Nối Trực Tiếp Bằng Gmail (Google)'}</span>
             </button>
-
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-white/10" />
-              <span className="text-[11px] text-gray-500 uppercase font-bold">Hoặc Nhập Gmail</span>
-              <div className="flex-1 h-px bg-white/10" />
-            </div>
-
-            <form onSubmit={handleRealGmailSubmit} className="space-y-3">
-              <div className="relative">
-                <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  type="email"
-                  value={realGmailInput}
-                  onChange={(e) => setRealGmailInput(e.target.value)}
-                  placeholder="Nhập địa chỉ Gmail của bạn (vd: abc@gmail.com)"
-                  required
-                  className="w-full pl-10 pr-4 py-3 bg-black/40 border border-white/15 focus:border-cyan-400 rounded-xl text-xs text-white placeholder-gray-500 outline-none transition-all"
-                />
-              </div>
-
-              <div className="relative">
-                <User className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  type="text"
-                  value={realNameInput}
-                  onChange={(e) => setRealNameInput(e.target.value)}
-                  placeholder="Tên người dùng / Tên Kênh (Tùy chọn)"
-                  className="w-full pl-10 pr-4 py-3 bg-black/40 border border-white/15 focus:border-cyan-400 rounded-xl text-xs text-white placeholder-gray-500 outline-none transition-all"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoggingIn}
-                className="w-full py-3 bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white rounded-xl font-bold text-xs shadow-lg shadow-blue-500/30 transition-all hover:scale-[1.02] active:scale-98 cursor-pointer disabled:opacity-50"
-              >
-                {isLoggingIn ? '⏳ Đang Xác Thực...' : '🚀 Kích Hoạt & Cập Nhật'}
-              </button>
-            </form>
           </div>
 
           <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-gray-500">
@@ -2408,75 +2369,114 @@ export default function DesktopAppUI() {
         {/* Middle: Controls */}
         <div className="flex items-center justify-center gap-2 shrink-0">
           
+          {/* 3 Ô NHÂN VẬT / VIDEO TẢI LÊN (HIỂN THỊ 3 Ô CHUẨN) */}
           <div className="flex items-center gap-1.5 border-r border-gray-500/30 pr-2">
             <span className="text-xs font-medium text-gray-400">{t('characters', currentLang)}</span>
-            <div className="flex items-center gap-1.5 overflow-x-auto max-w-[420px] py-0.5">
-              {/* Nút Tải Video/Ảnh mới lên từ máy tính */}
-              <button 
-                onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-1 px-2 py-1 rounded-md border border-dashed border-blue-500/50 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-[10px] font-bold transition-all hover:scale-105 shrink-0"
-                title="Tải video hoặc ảnh nhân vật mới từ máy tính của bạn"
-              >
-                <Plus size={11} />
-                <span>+ Tải Video/Ảnh</span>
-              </button>
+            <div className="flex items-center gap-1.5 py-0.5">
+              {/* 3 Ô Cố Định / Mở Rộng */}
+              {Array.from({ length: Math.max(3, customCharacters.length) }).map((_, index) => {
+                const charItem = customCharacters[index];
+                const isSelected = charItem ? selectedCharacter === charItem.id : (index === 0 && (!selectedCharacter || selectedCharacter === 'linhanh_4k'));
 
-              {/* Nút Mở Kho Thư Viện AIDOL & Video Mẫu */}
-              <button 
-                onClick={() => setIsTemplateLibraryOpen(true)}
-                className="flex items-center gap-1 px-2 py-1 rounded-md border border-purple-500/50 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-[10px] font-bold transition-all hover:scale-105 shrink-0"
-                title="Chọn video mẫu siêu nét từ Kho Thư Viện AIDOL"
-              >
-                <Sparkles size={11} className="text-yellow-300" />
-                <span>Kho Mẫu Video</span>
-              </button>
-
-              {/* Danh sách các nhân vật / video đang có */}
-              {Object.keys(CHARACTERS).map((charId) => (
-                CHARACTERS[charId] ? (
-                  <div 
-                    key={charId}
-                    onClick={() => {
-                      setSelectedCharacter(charId);
-                      try { localStorage.setItem('avalive_selected_char', charId); } catch (e) {}
-                      setIsGameBattleActive(false);
-                      setIsGameBanDoActive(false);
-                      const targetChar = CHARACTERS[charId];
-                      if (targetChar && targetChar.url) {
-                        syncMasterLiveState({
-                          stage: 'idol',
-                          selectedCharacter: charId,
-                          characterName: targetChar.name || 'AI Idol',
-                          mediaUrl: targetChar.url,
-                          isVideo: targetChar.type === 'video' || (typeof targetChar.url === 'string' && (targetChar.url.endsWith('.mp4') || targetChar.url.includes('/uploads/') || targetChar.url.includes('mixkit'))),
-                          aspectRatio: globalAspectRatio || '9:16'
-                        }, socketRef.current);
-                      }
-                    }}
-                    className={`w-7 h-7 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 relative group ${selectedCharacter === charId ? 'border-2 border-blue-500 shadow-md shadow-blue-500/30 ring-1 ring-blue-400' : 'border border-gray-600 opacity-60 hover:opacity-100'}`}
-                    title={CHARACTERS[charId]?.name || ''}
-                  >
-                    {CHARACTERS[charId]?.type === 'video' ? (
-                      <video src={CHARACTERS[charId]?.url} className="w-full h-full object-cover" muted />
-                    ) : (
-                      <img src={CHARACTERS[charId]?.url} className="w-full h-full object-cover" alt={CHARACTERS[charId]?.name || ''} />
-                    )}
-                    {charId.startsWith('custom_') && (
+                if (charItem) {
+                  return (
+                    <div
+                      key={charItem.id || index}
+                      onClick={() => {
+                        setSelectedCharacter(charItem.id);
+                        try { localStorage.setItem('avalive_selected_char', charItem.id); } catch (e) {}
+                        setIsGameBattleActive(false);
+                        setIsGameBanDoActive(false);
+                        if (charItem.url) {
+                          syncMasterLiveState({
+                            stage: 'idol',
+                            selectedCharacter: charItem.id,
+                            characterName: charItem.name || 'AI Idol',
+                            mediaUrl: charItem.url,
+                            isVideo: charItem.type === 'video' || (typeof charItem.url === 'string' && (charItem.url.endsWith('.mp4') || charItem.url.includes('/uploads/') || charItem.url.includes('blob:'))),
+                            aspectRatio: globalAspectRatio || '9:16'
+                          }, socketRef.current);
+                        }
+                      }}
+                      className={`w-8 h-8 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 relative group transition-all ${
+                        isSelected 
+                          ? 'border-2 border-cyan-400 shadow-md shadow-cyan-500/40 ring-2 ring-cyan-400/50 scale-105' 
+                          : 'border border-gray-600 opacity-70 hover:opacity-100 hover:border-gray-400'
+                      }`}
+                      title={`Ô ${index + 1}: ${charItem.name || 'Video Nhân Vật'}`}
+                    >
+                      {charItem.type === 'video' || (typeof charItem.url === 'string' && (charItem.url.endsWith('.mp4') || charItem.url.includes('/uploads/'))) ? (
+                        <video src={charItem.url} className="w-full h-full object-cover" muted />
+                      ) : (
+                        <img src={charItem.url} className="w-full h-full object-cover" alt={charItem.name || ''} />
+                      )}
+                      
+                      {/* Nút Xoá Video khỏi Ô */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          removeCustomCharacter(e, charId);
+                          removeCustomCharacter(e, charItem.id);
                         }}
-                        className="absolute top-0 right-0 p-0.5 bg-red-600 hover:bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-all duration-150 rounded-bl"
-                        title={`Xoá ${CHARACTERS[charId]?.name || ''}`}
+                        className="absolute top-0 right-0 p-0.5 bg-red-600 hover:bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-all duration-150 rounded-bl z-10"
+                        title={`Xoá video ở Ô ${index + 1}`}
                       >
                         <X size={8} />
                       </button>
-                    )}
-                  </div>
-                ) : null
-              ))}
-              <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="video/*,image/*" onChange={handleFileUpload} />
+                    </div>
+                  );
+                }
+
+                // Nếu chưa có custom video nào và là Ô 1, hiển thị video mẫu ban đầu
+                if (index === 0 && customCharacters.length === 0) {
+                  return (
+                    <div
+                      key="slot_default_1"
+                      onClick={() => {
+                        setSelectedCharacter('linhanh_4k');
+                        try { localStorage.setItem('avalive_selected_char', 'linhanh_4k'); } catch (e) {}
+                        setIsGameBattleActive(false);
+                        setIsGameBanDoActive(false);
+                        syncMasterLiveState({
+                          stage: 'idol',
+                          selectedCharacter: 'linhanh_4k',
+                          characterName: 'AI Idol Linh Anh (4K)',
+                          mediaUrl: '/demo_dancer.mp4',
+                          isVideo: true,
+                          aspectRatio: globalAspectRatio || '9:16'
+                        }, socketRef.current);
+                      }}
+                      className={`w-8 h-8 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 relative group transition-all ${
+                        (!selectedCharacter || selectedCharacter === 'linhanh_4k')
+                          ? 'border-2 border-cyan-400 shadow-md shadow-cyan-500/40 ring-2 ring-cyan-400/50 scale-105'
+                          : 'border border-gray-600 opacity-70 hover:opacity-100'
+                      }`}
+                      title="Ô 1: AI Idol Linh Anh (Mẫu)"
+                    >
+                      <video src="/demo_dancer.mp4" className="w-full h-full object-cover" muted />
+                    </div>
+                  );
+                }
+
+                // Ô Trống: Bấm để tải video/nhân vật trực tiếp vào ô này
+                return (
+                  <button
+                    key={`empty_slot_${index}`}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-8 h-8 rounded-lg border-2 border-dashed border-gray-600 hover:border-cyan-400 hover:bg-cyan-500/10 flex flex-col items-center justify-center text-gray-400 hover:text-cyan-300 transition-all duration-200 cursor-pointer shrink-0 group"
+                    title={`Ô ${index + 1} (Trống) — Bấm để tải video/ảnh nhân vật lên`}
+                  >
+                    <Plus size={13} className="group-hover:scale-125 transition-transform" />
+                  </button>
+                );
+              })}
+
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                style={{ display: 'none' }} 
+                accept="video/*,image/*" 
+                onChange={handleFileUpload} 
+              />
             </div>
           </div>
 

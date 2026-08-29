@@ -587,6 +587,12 @@ export default function CleanLiveOverlay() {
       } else if (candidateUrl.includes('https://') && candidateUrl.lastIndexOf('https://') > 0) {
         candidateUrl = candidateUrl.substring(candidateUrl.lastIndexOf('https://'));
       }
+
+      // Nếu là đường dẫn tương đối /uploads/ và đang mở từ cổng khác, trỏ về backend port 3001
+      if (candidateUrl.startsWith('/uploads/')) {
+        const backendBase = backendUrl ? backendUrl.replace(/\/$/, '') : (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:3001` : 'http://127.0.0.1:3001');
+        candidateUrl = `${backendBase}${candidateUrl}`;
+      }
     }
 
     // Xác định chính xác video hay ảnh
