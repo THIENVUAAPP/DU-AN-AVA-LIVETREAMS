@@ -2219,7 +2219,7 @@ export default function DesktopAppUI() {
               title="Số dư Token AI hiện tại — Bấm để xem chi tiết / nạp thêm"
             >
               <Coins size={11} className="text-yellow-400 animate-pulse" />
-              <span>{currentUser?.isAdmin ? 'Vô Hạn Token' : `${((currentUser?.tokens !== undefined ? currentUser.tokens : tokenBalance) || 50000).toLocaleString()} Token`}</span>
+              <span>{currentUser?.isAdmin ? 'Vô Hạn Token' : `${((currentUser?.tokens !== undefined ? currentUser.tokens : balance) || 50000).toLocaleString()} Token`}</span>
             </div>
 
             {/* Live Time Remaining */}
