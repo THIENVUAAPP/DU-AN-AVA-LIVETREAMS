@@ -1768,7 +1768,8 @@ export default function DesktopAppUI() {
         );
       }
       
-      const selected = CHARACTERS[selectedCharacter] || Object.values(CHARACTERS)[0];
+      const customMatch = customCharacters.find(c => c.id === selectedCharacter);
+      const selected = customMatch || CHARACTERS[selectedCharacter] || Object.values(CHARACTERS)[0];
 
       if (isProcessingEvent && activeVideoItem && activeVideoItem.mediaUrl) {
         return (
@@ -2372,67 +2373,77 @@ export default function DesktopAppUI() {
         {/* Middle: Controls */}
         <div className="flex items-center justify-center gap-2 shrink-0">
           
-          {/* BỘ CHỌN NHÂN VẬT & NÚT TẢI VIDEO LÊN TỪ THIẾT BỊ */}
+          {/* 3 Ô NHÂN VẬT / VIDEO TẢI LÊN (CỐ ĐỊNH 3 Ô THEO YÊU CẦU) */}
           <div className="flex items-center gap-1.5 border-r border-gray-500/30 pr-2">
-            <button 
-              onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-blue-500/50 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-[10.5px] font-bold shadow-md shadow-blue-500/20 transition-all hover:scale-105 shrink-0 cursor-pointer"
-              title="Tải video hoặc ảnh nhân vật từ máy tính / thiết bị của bạn lên"
-            >
-              <Plus size={12} />
-              <span>+ Tải Video Lên</span>
-            </button>
+            <span className="text-xs font-medium text-gray-400">{t('characters', currentLang)}</span>
+            <div className="flex items-center gap-1.5 py-0.5">
+              {/* 3 Ô Cố Định */}
+              {Array.from({ length: 3 }).map((_, index) => {
+                // Ô đầu tiên mặc định là Linh Anh nếu chưa có gì, các ô sau lấy từ customCharacters tải lên
+                let charItem = customCharacters[index];
+                if (index === 0 && !charItem && customCharacters.length === 0) {
+                  charItem = CHARACTERS['linhanh_4k'];
+                }
 
-            <span className="text-xs font-medium text-gray-400 ml-1">{t('characters', currentLang)}</span>
-            <div className="flex items-center gap-1.5 py-0.5 overflow-x-auto max-w-[450px]">
-              {/* Danh sách các nhân vật / video đang có */}
-              {Object.keys(CHARACTERS).map((charId) => {
-                const targetChar = CHARACTERS[charId];
-                if (!targetChar) return null;
-                const isSelected = selectedCharacter === charId;
+                // Nếu ô trống, hiển thị nút bấm để tải lên
+                if (!charItem) {
+                  return (
+                    <button
+                      key={`empty_slot_${index}`}
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-10 h-10 rounded-lg border-2 border-dashed border-gray-600 hover:border-cyan-400 hover:bg-cyan-500/10 flex flex-col items-center justify-center text-gray-400 hover:text-cyan-300 transition-all duration-200 cursor-pointer shrink-0 group"
+                      title={`Ô ${index + 1} (Trống) — Bấm để tải video/ảnh nhân vật lên`}
+                    >
+                      <Plus size={16} className="group-hover:scale-125 transition-transform" />
+                    </button>
+                  );
+                }
+
+                const isSelected = selectedCharacter === charItem.id || (index === 0 && (!selectedCharacter && charItem.id === 'linhanh_4k'));
 
                 return (
                   <div
-                    key={charId}
+                    key={charItem.id || index}
                     onClick={() => {
-                      setSelectedCharacter(charId);
-                      try { localStorage.setItem('avalive_selected_char', charId); } catch (e) {}
+                      setSelectedCharacter(charItem.id);
+                      try { localStorage.setItem('avalive_selected_char', charItem.id); } catch (e) {}
                       setIsGameBattleActive(false);
                       setIsGameBanDoActive(false);
-                      if (targetChar && targetChar.url) {
+                      if (charItem.url) {
                         syncMasterLiveState({
                           stage: 'idol',
-                          selectedCharacter: charId,
-                          characterName: targetChar.name || 'AI Idol',
-                          mediaUrl: targetChar.url,
-                          isVideo: targetChar.type === 'video' || (typeof targetChar.url === 'string' && (targetChar.url.endsWith('.mp4') || targetChar.url.includes('/uploads/') || targetChar.url.includes('mixkit') || targetChar.url.includes('blob:'))),
+                          selectedCharacter: charItem.id,
+                          characterName: charItem.name || 'AI Idol',
+                          mediaUrl: charItem.url,
+                          isVideo: charItem.type === 'video' || (typeof charItem.url === 'string' && (charItem.url.endsWith('.mp4') || charItem.url.includes('/uploads/') || charItem.url.includes('blob:'))),
                           aspectRatio: globalAspectRatio || '9:16'
                         }, socketRef.current);
                       }
                     }}
-                    className={`w-8 h-8 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 relative group transition-all ${
+                    className={`w-10 h-10 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 relative group transition-all ${
                       isSelected 
                         ? 'border-2 border-cyan-400 shadow-md shadow-cyan-500/40 ring-2 ring-cyan-400/50 scale-105' 
                         : 'border border-gray-600 opacity-70 hover:opacity-100 hover:border-gray-400'
                     }`}
-                    title={targetChar.name || `Nhân vật ${charId}`}
+                    title={`Ô ${index + 1}: ${charItem.name || 'Video Nhân Vật'}`}
                   >
-                    {targetChar.type === 'video' || (typeof targetChar.url === 'string' && (targetChar.url.endsWith('.mp4') || targetChar.url.includes('/uploads/') || targetChar.url.includes('mixkit') || targetChar.url.includes('blob:'))) ? (
-                      <video src={targetChar.url} className="w-full h-full object-cover" muted />
+                    {charItem.type === 'video' || (typeof charItem.url === 'string' && (charItem.url.endsWith('.mp4') || charItem.url.includes('/uploads/'))) ? (
+                      <video src={charItem.url} className="w-full h-full object-cover" muted />
                     ) : (
-                      <img src={targetChar.url} className="w-full h-full object-cover" alt={targetChar.name || ''} />
+                      <img src={charItem.url} className="w-full h-full object-cover" alt={charItem.name || ''} />
                     )}
-
-                    {charId.startsWith('custom_') && (
+                    
+                    {/* Nút Xoá Video khỏi Ô (Chỉ hiện cho video do người dùng tải lên) */}
+                    {charItem.id.startsWith('custom_') && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          removeCustomCharacter(e, charId);
+                          removeCustomCharacter(e, charItem.id);
                         }}
-                        className="absolute top-0 right-0 p-0.5 bg-red-600 hover:bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-all duration-150 rounded-bl z-10"
-                        title={`Xoá ${targetChar.name || ''}`}
+                        className="absolute top-0 right-0 p-1 bg-red-600 hover:bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-all duration-150 rounded-bl z-10"
+                        title={`Xoá video tải lên ở Ô ${index + 1}`}
                       >
-                        <X size={8} />
+                        <X size={10} />
                       </button>
                     )}
                   </div>
