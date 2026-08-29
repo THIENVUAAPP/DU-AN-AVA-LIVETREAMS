@@ -2232,7 +2232,7 @@ export default function DesktopAppUI() {
                   {currentUser.name || currentUser.email.split('@')[0]}
                 </span>
                 <span className="text-[8px] px-1 py-0.2 rounded font-black bg-gradient-to-r from-amber-400 to-yellow-400 text-black leading-tight">
-                  {currentUser.isAdmin ? 'SUPER ADMIN' : (currentUser.plan || 'VIP PRO')}
+                  {currentUser.isAdmin ? 'SUPER ADMIN' : (currentUser.plan || 'Free')}
                 </span>
               </div>
             ) : (
@@ -2246,29 +2246,32 @@ export default function DesktopAppUI() {
               </button>
             )}
 
-            <div className="w-px h-3 bg-gray-600/50" />
+            {currentUser && (currentUser.isAdmin || (currentUser.tokens !== undefined && currentUser.liveMinutes !== undefined)) && (
+              <>
+                <div className="w-px h-3 bg-gray-600/50" />
+                {/* Token */}
+                <div 
+                  onClick={() => setShowTokenHistory(true)}
+                  className="flex items-center gap-0.5 font-bold text-amber-300 cursor-pointer hover:text-amber-200 transition-colors whitespace-nowrap"
+                  title="Số dư Token AI — Bấm xem lịch sử"
+                >
+                  <Coins size={10} className="text-yellow-400" />
+                  <span>{currentUser.isAdmin ? 'Vô Hạn' : `${(currentUser.tokens || 0).toLocaleString()}`} Token</span>
+                </div>
 
-            {/* Token */}
-            <div 
-              onClick={() => setShowTokenHistory(true)}
-              className="flex items-center gap-0.5 font-bold text-amber-300 cursor-pointer hover:text-amber-200 transition-colors whitespace-nowrap"
-              title="Số dư Token AI — Bấm xem lịch sử"
-            >
-              <Coins size={10} className="text-yellow-400" />
-              <span>{currentUser?.isAdmin ? 'Vô Hạn' : `${((currentUser?.tokens !== undefined ? currentUser.tokens : balance) || 50000).toLocaleString()}`} Token</span>
-            </div>
+                <div className="w-px h-3 bg-gray-600/50" />
 
-            <div className="w-px h-3 bg-gray-600/50" />
-
-            {/* Live Time */}
-            <div 
-              onClick={() => setActiveSettingsModal('payment')}
-              className="flex items-center gap-0.5 font-bold text-emerald-400 cursor-pointer hover:text-emerald-300 transition-colors whitespace-nowrap"
-              title="Thời gian Live còn lại — Bấm để gia hạn"
-            >
-              <Clock size={10} className="text-emerald-400" />
-              <span>{currentUser?.isAdmin ? 'Vô Hạn Live' : `${currentUser?.liveTimeHours || Math.round((currentUser?.liveMinutes || 6000) / 60) || 100}h Live`}</span>
-            </div>
+                {/* Live Time */}
+                <div 
+                  onClick={() => setActiveSettingsModal('payment')}
+                  className="flex items-center gap-0.5 font-bold text-emerald-400 cursor-pointer hover:text-emerald-300 transition-colors whitespace-nowrap"
+                  title="Thời gian Live còn lại — Bấm để gia hạn"
+                >
+                  <Clock size={10} className="text-emerald-400" />
+                  <span>{currentUser.isAdmin ? 'Vô Hạn Live' : `${Math.round((currentUser.liveMinutes || 0) / 60)}h Live`}</span>
+                </div>
+              </>
+            )}
 
             {currentUser && (
               <>
