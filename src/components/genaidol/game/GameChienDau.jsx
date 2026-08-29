@@ -1287,8 +1287,62 @@ export default function GameChienDau({
         isSuperVip: false
       };
 
-      engineRef.current.fighters.blue = [blueLeader];
-      engineRef.current.fighters.red = [redLeader];
+      const blueVanguard1 = {
+        userId: 'vg_blue_01',
+        nickname: 'Chiến Binh Xanh 1',
+        score: 50,
+        rank: 1,
+        gender: 'female',
+        factionId: 'blue',
+        x: centerX - 55,
+        y: h * 0.55,
+        targetX: centerX - 55,
+        targetY: h * 0.55,
+        isVipStage: false,
+        isDuelFront: true,
+        duelPairIdx: 0,
+        assignedSlotIdx: 1,
+        bobPhase: 1.2,
+        pulseUntil: 0,
+        maxHp: 400,
+        currentHp: 400,
+        isKnockedOut: false,
+        knockoutTime: 0,
+        knockbackVx: 0,
+        revivedAt: 0,
+        hasGift: false,
+        isSuperVip: false
+      };
+
+      const redVanguard1 = {
+        userId: 'vg_red_01',
+        nickname: 'Chiến Binh Đỏ 1',
+        score: 50,
+        rank: 1,
+        gender: 'male',
+        factionId: 'red',
+        x: centerX + 55,
+        y: h * 0.55,
+        targetX: centerX + 55,
+        targetY: h * 0.55,
+        isVipStage: false,
+        isDuelFront: true,
+        duelPairIdx: 0,
+        assignedSlotIdx: 1,
+        bobPhase: 2.4,
+        pulseUntil: 0,
+        maxHp: 400,
+        currentHp: 400,
+        isKnockedOut: false,
+        knockoutTime: 0,
+        knockbackVx: 0,
+        revivedAt: 0,
+        hasGift: false,
+        isSuperVip: false
+      };
+
+      engineRef.current.fighters.blue = [blueLeader, blueVanguard1];
+      engineRef.current.fighters.red = [redLeader, redVanguard1];
       updateFormation(w, h);
     }
   }, [config.blueName, config.redName, updateFormation]);
