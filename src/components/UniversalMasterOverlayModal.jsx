@@ -43,21 +43,21 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
   // Danh sách các dự án với đường link riêng biệt 100%
   const projects = [
     {
-      id: 'idol',
-      name: 'DỰ ÁN 1: LIVE AI IDOL & VIDEO NỀN',
-      tag: 'HOT NHẤT',
-      tagColor: 'from-pink-500 to-rose-600',
-      icon: Video,
-      iconColor: 'text-pink-400',
-      bgColor: 'border-pink-500/30 bg-pink-950/20 hover:border-pink-400/60',
-      description: 'Phát video người Live / AI Idol 60FPS sạch 100% không dính rác, tự động lặp không bao giờ đen màn hình.',
-      path: '/idol',
-      directUrl: `${activeBase}/?overlay=idol${backendParam}`
+      id: 'master',
+      name: '👑 SÂN KHẤU TỰ ĐỘNG MASTER (KHUYÊN DÙNG NHẤT)',
+      tag: 'TỰ ĐỘNG 100%',
+      tagColor: 'from-cyan-500 to-blue-600',
+      icon: Radio,
+      iconColor: 'text-cyan-400',
+      bgColor: 'border-cyan-500/40 bg-cyan-950/20 hover:border-cyan-400/70 shadow-lg shadow-cyan-950/30',
+      description: 'Chỉ cần dán 1 link duy nhất này vào OBS / TikTok LIVE Studio: Mở Game Bản Đồ, Game Chiến Đấu hay Idol là OBS tự động chuyển màn hình ngay lập tức!',
+      path: '/live',
+      directUrl: `${activeBase}/?overlay=live${backendParam}`
     },
     {
       id: 'bando',
-      name: 'DỰ ÁN 2: GAME BẢN ĐỒ VIỆT NAM (63 TỈNH THÀNH)',
-      tag: 'TƯƠNG TÁC CAO',
+      name: 'DỰ ÁN 1: GAME BẢN ĐỒ VIỆT NAM (63 TỈNH THÀNH)',
+      tag: 'CẮM CỜ 3D',
       tagColor: 'from-amber-500 to-yellow-600',
       icon: Flag,
       iconColor: 'text-amber-400',
@@ -68,7 +68,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
     },
     {
       id: 'battle',
-      name: 'DỰ ÁN 3: GAME CHIẾN ĐẤU PK (TIKTOK LIVE BATTLE)',
+      name: 'DỰ ÁN 2: GAME CHIẾN ĐẤU PK (TIKTOK LIVE BATTLE)',
       tag: 'HÚT QUÀ TẶNG',
       tagColor: 'from-red-500 to-purple-600',
       icon: Swords,
@@ -77,6 +77,18 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       description: 'Võ đài chiến đấu chia 2 phe PK kịch tính, tự động tung skill và hiệu ứng khi có tương tác bình luận & quà.',
       path: '/battle',
       directUrl: `${activeBase}/?overlay=battle${backendParam}`
+    },
+    {
+      id: 'idol',
+      name: 'DỰ ÁN 3: LIVE AI IDOL & VIDEO NỀN',
+      tag: 'VIDEO 60FPS',
+      tagColor: 'from-pink-500 to-rose-600',
+      icon: Video,
+      iconColor: 'text-pink-400',
+      bgColor: 'border-pink-500/30 bg-pink-950/20 hover:border-pink-400/60',
+      description: 'Phát video người Live / AI Idol 60FPS sạch 100% không dính rác, tự động lặp không bao giờ đen màn hình.',
+      path: '/idol',
+      directUrl: `${activeBase}/?overlay=idol${backendParam}`
     }
   ];
 

@@ -2198,6 +2198,16 @@ export default function DesktopAppUI() {
             </button>
           )}
 
+          {/* Nút Mở Danh Sách Link Chia Sẻ OBS & TikTok LIVE Studio */}
+          <button
+            onClick={() => setShowOverlayModal(true)}
+            className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 hover:from-cyan-500 hover:to-blue-500 text-white border border-cyan-400/80 shadow-md shadow-cyan-950/40 ring-1 ring-cyan-400/50 transition-all active:scale-95 cursor-pointer animate-pulse"
+            title="Mở Danh Sách Đường Link Chia Sẻ Màn Hình Cho OBS Studio & TikTok LIVE Studio"
+          >
+            <Radio size={11} className="text-yellow-300 animate-spin" />
+            <span className="whitespace-nowrap uppercase tracking-tight">📡 Chia Sẻ OBS / TikTok Live</span>
+          </button>
+
           {/* 1 Nút Chuyển Tỷ Lệ Khung Hình Toàn Cục DUY NHẤT CHO TOÀN BỘ HỆ THỐNG: 9:16 (TikTok Dọc) vs 16:9 (OBS Ngang) */}
           <button
             onClick={toggleGlobalAspectRatio}
