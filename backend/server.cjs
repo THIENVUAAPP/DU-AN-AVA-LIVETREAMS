@@ -959,10 +959,38 @@ app.post('/api/tiktok/test-chat', (req, res) => {
 });
 
 // Live State APIs
-app.get('/api/live-state', (req, res) => { res.json(currentMasterLiveState); });
+app.get('/api/live-state', (req, res) => {
+  if (!currentMasterLiveState.mediaUrl || currentMasterLiveState.mediaUrl.startsWith('blob:')) {
+    try {
+      if (fs.existsSync(uploadsDir)) {
+        const files = fs.readdirSync(uploadsDir).filter(f => !f.startsWith('.') && (f.endsWith('.mp4') || f.endsWith('.webm') || f.endsWith('.mov') || f.endsWith('.jpg') || f.endsWith('.png')));
+        if (files.length > 0) {
+          const sorted = files.map(f => ({ f, mtime: fs.statSync(path.join(uploadsDir, f)).mtimeMs })).sort((a, b) => b.mtime - a.mtime);
+          currentMasterLiveState.mediaUrl = `/uploads/${sorted[0].f}`;
+          currentMasterLiveState.isVideo = sorted[0].f.endsWith('.mp4') || sorted[0].f.endsWith('.webm') || sorted[0].f.endsWith('.mov');
+        }
+      }
+    } catch (e) {}
+  }
+  res.json(currentMasterLiveState);
+});
+
 app.post('/api/live-state', (req, res) => {
   if (req.body) {
-    currentMasterLiveState = { ...currentMasterLiveState, ...req.body, updatedAt: Date.now() };
+    let payload = { ...req.body };
+    if (payload.mediaUrl && payload.mediaUrl.startsWith('blob:')) {
+      try {
+        if (fs.existsSync(uploadsDir)) {
+          const files = fs.readdirSync(uploadsDir).filter(f => !f.startsWith('.') && (f.endsWith('.mp4') || f.endsWith('.webm') || f.endsWith('.mov') || f.endsWith('.jpg') || f.endsWith('.png')));
+          if (files.length > 0) {
+            const sorted = files.map(f => ({ f, mtime: fs.statSync(path.join(uploadsDir, f)).mtimeMs })).sort((a, b) => b.mtime - a.mtime);
+            payload.mediaUrl = `/uploads/${sorted[0].f}`;
+            payload.isVideo = sorted[0].f.endsWith('.mp4') || sorted[0].f.endsWith('.webm') || sorted[0].f.endsWith('.mov');
+          }
+        }
+      } catch (e) {}
+    }
+    currentMasterLiveState = { ...currentMasterLiveState, ...payload, updatedAt: Date.now() };
     io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
   }
   res.json({ success: true, state: currentMasterLiveState });

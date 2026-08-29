@@ -678,23 +678,16 @@ export default function CleanLiveOverlay() {
       className="fixed inset-0 w-screen h-screen overflow-hidden flex items-center justify-center select-none bg-black"
       style={{ width: '100vw', height: '100vh', position: 'fixed', inset: 0 }}
     >
-      {activeStreamUrl ? (
-        <video
-          ref={flvVideoRef}
-          key={activeStreamUrl}
-          autoPlay
-          muted
-          playsInline
-          className="w-full h-full object-cover select-none bg-black absolute inset-0"
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-        />
-      ) : activeMedia.url && activeMedia.isVideo ? (
+      {activeMedia.url && activeMedia.isVideo ? (
         <video
           ref={(el) => {
             if (el) {
               el.muted = true;
               el.defaultMuted = true;
               el.playsInline = true;
+              el.setAttribute('muted', '');
+              el.setAttribute('playsinline', '');
+              el.setAttribute('autoplay', '');
               const playPromise = el.play();
               if (playPromise !== undefined) {
                 playPromise.catch(() => {
@@ -710,6 +703,7 @@ export default function CleanLiveOverlay() {
           loop
           muted
           playsInline
+          controls={false}
           onLoadedMetadata={(e) => {
             e.target.muted = true;
             e.target.play().catch(() => {});
@@ -724,22 +718,26 @@ export default function CleanLiveOverlay() {
           }}
           onError={(e) => {
             console.warn('[CleanLiveOverlay] Video playback failed:', e);
-            // Bỏ fallback mặc định theo yêu cầu
           }}
+          className="w-full h-full object-cover select-none absolute inset-0"
+          style={{ width: '100vw', height: '100vh', objectFit: 'cover' }}
+        />
+      ) : activeStreamUrl ? (
+        <video
+          ref={flvVideoRef}
+          key={activeStreamUrl}
+          autoPlay
+          muted
+          playsInline
           className="w-full h-full object-cover select-none bg-black absolute inset-0"
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
       ) : activeMedia.url ? (
-        /* Ảnh Idol Sắc Nét 4K (Chống Màn Hình Đen Tuyệt Đối) */
         <img 
           src={activeMedia.url} 
           className="w-full h-full object-cover select-none absolute inset-0"
           style={{ width: '100%', height: '100%', objectFit: 'cover', imageRendering: '-webkit-optimize-contrast' }}
           alt="AI Idol"
-          onError={(e) => {
-            e.currentTarget.onerror = null;
-            e.currentTarget.src = '/demo_dancer.mp4';
-          }}
         />
       ) : (
         <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#0F1016] via-[#151824] to-[#0A0A0F] text-center p-6 select-none">
@@ -749,6 +747,7 @@ export default function CleanLiveOverlay() {
             </svg>
           </div>
           <h3 className="text-xl sm:text-2xl font-black text-white tracking-wide uppercase">MÀN HÌNH CHỜ LIVE IDOL</h3>
+          <p className="text-gray-400 text-xs mt-2">Đang kết nối nhận video từ phần mềm...</p>
         </div>
       )}
 

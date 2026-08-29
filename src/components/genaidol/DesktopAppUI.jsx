@@ -572,9 +572,11 @@ export default function DesktopAppUI() {
         }
       });
       
-      const loadedChars = chars.filter(c => !legacyIds.includes(c.id)).map(c => {
+      const filtered = chars.filter(c => !legacyIds.includes(c.id));
+      const autoBackendUrl = typeof window !== 'undefined' ? (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001' ? `${window.location.protocol}//${window.location.hostname}:3001` : window.location.origin) : 'http://localhost:3001';
+
+      const loadedChars = filtered.map(c => {
         let finalUrl = c.mediaUrl || c.url;
-        // Nếu không có link HTTP thật thì mới fallback tạo link blob ảo (blob sẽ bị lỗi trên màn hình OBS)
         if (!finalUrl && c.fileData) {
           try {
             finalUrl = URL.createObjectURL(c.fileData);
@@ -586,10 +588,28 @@ export default function DesktopAppUI() {
           id: c.id,
           name: c.name || 'AIDOL của tôi',
           type: c.type || 'image',
-          url: finalUrl
+          url: finalUrl,
+          fileData: c.fileData
         };
       });
       setCustomCharacters(loadedChars);
+
+      // Tự động nâng cấp fileData lên máy chủ để lấy link HTTP vĩnh viễn (chống đen màn hình trên OBS / TikTok Live Studio)
+      filtered.forEach(async (c) => {
+        if (c.fileData && (!c.mediaUrl || c.mediaUrl.startsWith('blob:'))) {
+          try {
+            const formData = new FormData();
+            formData.append('file', c.fileData);
+            const res = await fetch(`${autoBackendUrl}/api/upload-media`, { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data && data.url) {
+              const fullUrl = data.url.startsWith('http') ? data.url : `${autoBackendUrl}${data.url.startsWith('/') ? '' : '/'}${data.url}`;
+              await saveCharacterToIDB({ ...c, mediaUrl: fullUrl, url: fullUrl });
+              setCustomCharacters(prev => prev.map(item => item.id === c.id ? { ...item, url: fullUrl } : item));
+            }
+          } catch (e) {}
+        }
+      });
     });
   };
 
