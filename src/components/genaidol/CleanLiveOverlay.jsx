@@ -14,12 +14,13 @@ import { loadAllAidolItems } from '../../utils/idbHelper';
  * - Tự động chuyển đổi giữa: AI Idol / Sàn Nhảy 3D / Game Bản Đồ 63 Tỉnh / Game Chiến Đấu PK / Live Camera Studio
  * - Hiển thị 100% VIDEO / STREAM SẠCH, không dính bất kỳ badge hay rác thông tin nào
  */
-export default function CleanLiveOverlay() {
+const getBackendUrl = () => {
   const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
   const backendParam = urlParams ? urlParams.get('backend') : null;
-  const autoBackendUrl = typeof window !== 'undefined' ? (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001' ? `${window.location.protocol}//${window.location.hostname}:3001` : window.location.origin) : 'http://localhost:3001';
-  const backendUrl = backendParam || autoBackendUrl;
+  return backendParam || (typeof window !== 'undefined' ? (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001' ? `${window.location.protocol}//${window.location.hostname}:3001` : window.location.origin) : 'http://localhost:3001');
+};
 
+export default function CleanLiveOverlay() {
   const [masterState, setMasterState] = useState(() => {
     let saved = null;
     try {
@@ -210,7 +211,7 @@ export default function CleanLiveOverlay() {
 
     // 2. HTTP REST API POLING
     const fetchLiveState = () => {
-      const endpoint = backendUrl ? `${backendUrl}/api/live-state` : '/api/live-state';
+      const endpoint = getBackendUrl() ? `${getBackendUrl()}/api/live-state` : '/api/live-state';
       fetch(endpoint)
         .then(res => res.json())
         .then(data => {
@@ -228,7 +229,7 @@ export default function CleanLiveOverlay() {
     // 3. WEBSOCKET REALTIME (SOCKET.IO)
     let socket = null;
     try {
-      socket = io(backendUrl, {
+      socket = io(getBackendUrl(), {
         transports: ['websocket', 'polling'],
         reconnection: true,
         reconnectionDelay: 1000
@@ -320,8 +321,8 @@ export default function CleanLiveOverlay() {
     }
 
     // 5. POLLING REALTIME STUDIO CAM FRAME (Hỗ trợ 100% CEF Browser Source trong TikTok LIVE Studio)
-    const frameInterval = setInterval(() => {
-      const endpoint = backendUrl ? `${backendUrl}/api/studio-frame?t=${Date.now()}` : `/api/studio-frame?t=${Date.now()}`;
+    const fetchStudioFrame = () => {
+      const endpoint = getBackendUrl() ? `${getBackendUrl()}/api/studio-frame?t=${Date.now()}` : `/api/studio-frame?t=${Date.now()}`;
       fetch(endpoint, { cache: 'no-store' })
         .then(res => res.json())
         .then(data => {
@@ -380,7 +381,7 @@ export default function CleanLiveOverlay() {
         }
       } catch (e) {}
 
-      const endpoint = backendUrl ? `${backendUrl}/api/live-state` : '/api/live-state';
+      const endpoint = getBackendUrl() ? `${getBackendUrl()}/api/live-state` : '/api/live-state';
       fetch(endpoint)
         .then(r => r.json())
         .then(data => {
@@ -598,7 +599,7 @@ export default function CleanLiveOverlay() {
       // Chuẩn hoá URL video tải lên (Đồng bộ hostname để tránh CORS trên OBS / CEF browser)
       if (candidateUrl.includes('/uploads/')) {
         const pathPart = candidateUrl.substring(candidateUrl.indexOf('/uploads/'));
-        const backendBase = backendUrl ? backendUrl.replace(/\/$/, '') : (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:3001` : 'http://127.0.0.1:3001');
+        const backendBase = getBackendUrl() ? getBackendUrl().replace(/\/$/, '') : (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:3001` : 'http://127.0.0.1:3001');
         candidateUrl = `${backendBase}${pathPart}`;
       }
 
