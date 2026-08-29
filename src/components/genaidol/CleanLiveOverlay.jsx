@@ -531,6 +531,18 @@ export default function CleanLiveOverlay() {
             console.warn('[Studio Camera] Notice:', err.message);
           });
       }
+    } else {
+      // STOP NATIVE CAMERA WHEN LEAVING STUDIO MODE TO PREVENT OVERRIDING
+      if (overlayWebcamStreamRef.current) {
+        overlayWebcamStreamRef.current.getTracks().forEach(track => {
+          try { track.stop(); } catch (e) {}
+        });
+        overlayWebcamStreamRef.current = null;
+      }
+      if (overlayWebcamVideoRef.current) {
+        overlayWebcamVideoRef.current.srcObject = null;
+      }
+      setOverlayCamActive(false);
     }
   }, [masterState.stage]);
 
@@ -645,20 +657,7 @@ export default function CleanLiveOverlay() {
         }`}
         style={ratio === '9:16' ? { aspectRatio: '9 / 16', height: '100%', maxWidth: 'calc(100vh * 9 / 16)' } : { aspectRatio: '16 / 9', width: '100%' }}
       >
-        {overlayCamActive ? (
-          <video
-            ref={(el) => {
-              overlayWebcamVideoRef.current = el;
-              if (el && overlayWebcamStreamRef.current && el.srcObject !== overlayWebcamStreamRef.current) {
-                el.srcObject = overlayWebcamStreamRef.current;
-              }
-            }}
-            autoPlay
-            playsInline
-            muted
-            className="w-full h-full object-cover select-none scale-x-[-1] bg-black"
-          />
-        ) : activeStreamUrl ? (
+        {activeStreamUrl ? (
           <video
             ref={flvVideoRef}
             key={activeStreamUrl}
