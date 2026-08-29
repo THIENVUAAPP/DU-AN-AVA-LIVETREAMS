@@ -1,8 +1,9 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 
-// Vô hiệu hoá tăng tốc phần cứng (Hardware Acceleration) để cho phép OBS / TikTok Studio quay màn hình cửa sổ (Window Capture) không bị đen
-app.disableHardwareAcceleration();
+// Tăng tốc phần cứng (Hardware Acceleration) được BẬT để đảm bảo game WebGL và Video mượt mà.
+// KHUYẾN CÁO: Với OBS, hãy dùng tính năng Browser Source (Web Source) với link http://127.0.0.1:5173/idol
+// thay vì Window Capture để có chất lượng tốt nhất và không bị đen màn hình.
 
 function createWindow () {
   const win = new BrowserWindow({

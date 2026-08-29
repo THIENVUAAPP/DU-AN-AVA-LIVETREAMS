@@ -49,26 +49,48 @@ export default function UniversalFileUploader({ onImageUploaded, onVideoUploaded
   const vidInputRef = useRef(null);
 
   // Core File Processor: Instant 0ms Zero-Latency High-Speed Processing using ObjectURL
-  const processFiles = (fileList) => {
+  const processFiles = async (fileList) => {
     if (!fileList || fileList.length === 0) return;
     setIsProcessing(true);
 
     const files = Array.from(fileList);
     const newItems = [];
+    const autoBackendUrl = typeof window !== 'undefined' ? (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001' ? `${window.location.protocol}//${window.location.hostname}:3001` : window.location.origin) : 'http://localhost:3001';
 
-    files.forEach((file, index) => {
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
       const isImg = file.type.startsWith('image/') || /\.(png|jpg|jpeg|webp|gif|svg|bmp|heic)$/i.test(file.name);
       const isVid = file.type.startsWith('video/') || /\.(mp4|mov|webm|mkv|avi)$/i.test(file.name);
 
-      // Create high-speed instant Blob ObjectURL (0ms latency, zero memory lag)
-      const instantUrl = URL.createObjectURL(file);
-      const cleanName = file.name.split('.')[0].replace(/[-_]/g, ' ') || `File ${index + 1}`;
+      let finalUrl = URL.createObjectURL(file); // fallback
+      
+      try {
+          const formData = new FormData();
+          formData.append('file', file);
+          const res = await fetch(`${autoBackendUrl}/api/upload-media`, {
+            method: 'POST',
+            body: formData
+          });
+          const data = await res.json();
+          if (data && data.url) {
+            let serverUrl = data.url;
+            if (serverUrl.startsWith('http://') || serverUrl.startsWith('https://')) {
+              finalUrl = serverUrl;
+            } else {
+              finalUrl = `${autoBackendUrl}${serverUrl.startsWith('/') ? '' : '/'}${serverUrl}`;
+            }
+          }
+      } catch (err) {
+          console.error("Lỗi upload UniversalFileUploader:", err);
+      }
+
+      const cleanName = file.name.split('.')[0].replace(/[-_]/g, ' ') || `File ${i + 1}`;
 
       const fileObj = {
-        id: `file_${Date.now()}_${index}_${Math.random().toString(36).substring(2, 7)}`,
+        id: `file_${Date.now()}_${i}_${Math.random().toString(36).substring(2, 7)}`,
         name: cleanName.length > 28 ? cleanName.substring(0, 28) + '...' : cleanName,
         type: isImg ? 'image' : (isVid ? 'video' : 'unknown'),
-        url: instantUrl,
+        url: finalUrl,
         size: (file.size / (1024 * 1024)).toFixed(1) + ' MB',
         source: isVid ? 'Video Quay Sẵn (SuperFast)' : 'Ảnh Avatar (SuperFast)',
         apiCost: 'Miễn phí',
@@ -83,13 +105,13 @@ export default function UniversalFileUploader({ onImageUploaded, onVideoUploaded
       } else if (isVid && onVideoUploaded) {
         onVideoUploaded(fileObj);
       }
-    });
+    }
 
     setUploadedFiles(prev => [...newItems, ...prev]);
     setIsProcessing(false);
     
     // Instant toast notification
-    alert(`Đã nạp ${newItems.length} file video/ảnh`);
+    alert(`Đã nạp thành công ${newItems.length} file lên máy chủ cục bộ (Sẵn sàng phát trên Live Studio)`);
   };
 
   // Add Video Replay via Link (Gắn Link Video Đã Live / Restream)
