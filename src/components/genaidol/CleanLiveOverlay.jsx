@@ -524,39 +524,7 @@ export default function CleanLiveOverlay() {
     });
   }, [masterState.mediaUrl, activeStreamUrl, overlayCamActive, isAudioMuted]);
 
-  // Stage hiện tại
-  const currentStage = masterState.stage || 'idol';
-  const ratio = masterState.aspectRatio || '9:16';
-
-  // 1. RENDER STAGE: GAME BẢN ĐỒ VIỆT NAM (CẮM CỜ 63 TỈNH THÀNH)
-  if (currentStage === 'bando' || currentStage === 'vietnam_map' || currentStage === 'map') {
-    return (
-      <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent select-none flex items-center justify-center pointer-events-auto">
-        <GameBanDoVietNam 
-          isPopout={true}
-          aspectRatio={ratio}
-          externalLiveEvent={liveEvent}
-          isDarkMode={masterState.isDarkMode !== false}
-        />
-      </div>
-    );
-  }
-
-  // 2. RENDER STAGE: GAME CHIẾN ĐẤU PK ĐẠI CHIẾN
-  if (currentStage === 'battle' || currentStage === 'gamebattle' || currentStage === 'game') {
-    return (
-      <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent select-none flex items-center justify-center pointer-events-auto">
-        <GameChienDau 
-          isPopout={true}
-          aspectRatio={ratio}
-          externalLiveEvent={liveEvent}
-          isDarkMode={masterState.isDarkMode !== false}
-        />
-      </div>
-    );
-  }
-
-  // Tự động kích hoạt Camera khi mở chế độ Studio
+  // Tự động kích hoạt Camera khi mở chế độ Studio (phải nằm trước các early return để tuân thủ React Rules of Hooks)
   useEffect(() => {
     const pathname = typeof window !== 'undefined' ? window.location.pathname.toLowerCase() : '';
     const isStudioRoute = masterState.stage === 'broadcast' || masterState.stage === 'studio' || pathname.includes('/studio');
@@ -648,15 +616,50 @@ export default function CleanLiveOverlay() {
 
     // Xác định chính xác video hay ảnh
     if (typeof candidateUrl === 'string') {
-      const cleanLower = candidateUrl.split('?')[0].toLowerCase();
-      const isExplicitImg = cleanLower.endsWith('.jpg') || cleanLower.endsWith('.jpeg') || cleanLower.endsWith('.png') || cleanLower.endsWith('.webp') || cleanLower.endsWith('.svg') || cleanLower.endsWith('.gif') || candidateUrl.startsWith('data:image');
-      isVideo = !isExplicitImg;
+      const lower = candidateUrl.toLowerCase();
+      if (lower.endsWith('.mp4') || lower.endsWith('.webm') || lower.endsWith('.mov') || lower.includes('/uploads/media-')) {
+        isVideo = true;
+      } else if (lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.webp')) {
+        isVideo = false;
+      }
     }
 
     return { url: candidateUrl, isVideo };
   };
 
   const activeMedia = resolveActiveMedia();
+
+  // Stage hiện tại
+  const currentStage = masterState.stage || 'idol';
+  const ratio = masterState.aspectRatio || '9:16';
+
+  // 1. RENDER STAGE: GAME BẢN ĐỒ VIỆT NAM (CẮM CỜ 63 TỈNH THÀNH)
+  if (currentStage === 'bando' || currentStage === 'vietnam_map' || currentStage === 'map') {
+    return (
+      <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent select-none flex items-center justify-center pointer-events-auto">
+        <GameBanDoVietNam 
+          isPopout={true}
+          aspectRatio={ratio}
+          externalLiveEvent={liveEvent}
+          isDarkMode={masterState.isDarkMode !== false}
+        />
+      </div>
+    );
+  }
+
+  // 2. RENDER STAGE: GAME CHIẾN ĐẤU PK ĐẠI CHIẾN
+  if (currentStage === 'battle' || currentStage === 'gamebattle' || currentStage === 'game') {
+    return (
+      <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent select-none flex items-center justify-center pointer-events-auto">
+        <GameChienDau 
+          isPopout={true}
+          aspectRatio={ratio}
+          externalLiveEvent={liveEvent}
+          isDarkMode={masterState.isDarkMode !== false}
+        />
+      </div>
+    );
+  }
 
   // 3. RENDER STAGE: PHÒNG DỰNG LIVE STUDIO 4K — 100% CAMERA THỰC & GÓC MÁY STUDIO
   if (currentStage === 'broadcast' || currentStage === 'studio') {

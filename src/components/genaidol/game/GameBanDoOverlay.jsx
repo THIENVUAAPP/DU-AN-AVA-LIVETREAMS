@@ -26,16 +26,12 @@ export default function GameBanDoOverlay() {
 
     let backendUrl = '';
     if (typeof window !== 'undefined') {
-      const customUrl = localStorage.getItem('aidol_backend_url') || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BACKEND_URL);
+      const urlParams = new URLSearchParams(window.location.search);
+      const customUrl = urlParams.get('backend') || localStorage.getItem('aidol_backend_url') || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BACKEND_URL);
       if (customUrl && customUrl.startsWith('http')) {
         backendUrl = customUrl;
-      } else if (window.location.port === '5173') {
-        backendUrl = window.location.protocol + '//' + window.location.hostname + ':3001';
-      }
-      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      } else {
         backendUrl = `${window.location.protocol}//${window.location.hostname}:3001`;
-      } else if (window.location.protocol === 'file:') {
-        backendUrl = 'http://localhost:3001';
       }
     }
 

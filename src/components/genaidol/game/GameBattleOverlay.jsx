@@ -18,9 +18,11 @@ export default function GameBattleOverlay() {
     // BroadcastChannel/localStorage không còn hoạt động do khác origin)
     let backendUrl = '';
     if (typeof window !== 'undefined') {
-      if (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001') {
-        backendUrl = `${window.location.protocol}//${window.location.hostname}:3001`;
-      } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const customBackend = urlParams.get('backend') || localStorage.getItem('aidol_backend_url');
+      if (customBackend && customBackend.startsWith('http')) {
+        backendUrl = customBackend;
+      } else {
         backendUrl = `${window.location.protocol}//${window.location.hostname}:3001`;
       }
     }
