@@ -15,6 +15,11 @@ import { loadAllAidolItems } from '../../utils/idbHelper';
  * - Hiển thị 100% VIDEO / STREAM SẠCH, không dính bất kỳ badge hay rác thông tin nào
  */
 export default function CleanLiveOverlay() {
+  const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const backendParam = urlParams ? urlParams.get('backend') : null;
+  const autoBackendUrl = typeof window !== 'undefined' ? (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001' ? `${window.location.protocol}//${window.location.hostname}:3001` : window.location.origin) : 'http://localhost:3001';
+  const backendUrl = backendParam || autoBackendUrl;
+
   const [masterState, setMasterState] = useState(() => {
     let saved = null;
     try {
@@ -136,10 +141,8 @@ export default function CleanLiveOverlay() {
     document.documentElement.style.background = 'transparent';
     document.body.style.background = 'transparent';
 
-    const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-    const backendParam = urlParams ? urlParams.get('backend') : null;
-    const autoBackendUrl = typeof window !== 'undefined' ? (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001' ? `${window.location.protocol}//${window.location.hostname}:3001` : window.location.origin) : 'http://localhost:3001';
-    const backendUrl = backendParam || autoBackendUrl;
+    // 5 TẦNG ĐỒNG BỘ: KẾT NỐI VÀ TỰ ĐỘNG PHỤC HỒI
+    let isSubscribed = true;
 
     const applyMasterState = (data) => {
       if (!data) return;

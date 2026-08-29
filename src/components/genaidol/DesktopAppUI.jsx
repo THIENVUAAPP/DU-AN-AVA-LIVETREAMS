@@ -1965,17 +1965,31 @@ export default function DesktopAppUI() {
           </div>
 
           {currentUser ? (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white/5 border border-amber-500/30 rounded-2xl p-4 flex flex-col items-center gap-2">
-                <Coins className="w-6 h-6 text-amber-400" />
-                <span className="text-xs text-gray-400 font-medium">Số Dư Token</span>
-                <span className="text-lg font-black text-amber-300">{displayTokens}</span>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/5 border border-amber-500/30 rounded-2xl p-4 flex flex-col items-center gap-2">
+                  <Coins className="w-6 h-6 text-amber-400" />
+                  <span className="text-xs text-gray-400 font-medium">Số Dư Token</span>
+                  <span className="text-lg font-black text-amber-300">{displayTokens}</span>
+                </div>
+                <div className="bg-white/5 border border-emerald-500/30 rounded-2xl p-4 flex flex-col items-center gap-2">
+                  <Clock className="w-6 h-6 text-emerald-400" />
+                  <span className="text-xs text-gray-400 font-medium">Thời Gian Live</span>
+                  <span className="text-lg font-black text-emerald-300">{displayLiveTime}</span>
+                </div>
               </div>
-              <div className="bg-white/5 border border-emerald-500/30 rounded-2xl p-4 flex flex-col items-center gap-2">
-                <Clock className="w-6 h-6 text-emerald-400" />
-                <span className="text-xs text-gray-400 font-medium">Thời Gian Live</span>
-                <span className="text-lg font-black text-emerald-300">{displayLiveTime}</span>
-              </div>
+              
+              {/* Nút Nâng Cấp Gói */}
+              <button
+                onClick={() => {
+                  setIsGmailLoginModalOpen(false);
+                  setActiveSettingsModal('payment');
+                }}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-amber-500/20 transition-all hover:scale-[1.02] active:scale-98"
+              >
+                <Zap className="w-4 h-4 text-yellow-100" />
+                <span>Bảng Giá & Nâng Cấp Gói</span>
+              </button>
             </div>
           ) : (
             <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-left space-y-2">
