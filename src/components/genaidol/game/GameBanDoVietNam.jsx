@@ -1158,6 +1158,7 @@ export default function GameBanDoVietNam({
     const renderer = new THREE.WebGLRenderer({ 
       antialias: true, 
       alpha: true, 
+      preserveDrawingBuffer: true,
       powerPreference: 'high-performance',
       precision: 'mediump'
     });
@@ -1730,11 +1731,18 @@ export default function GameBanDoVietNam({
     renderer.domElement.addEventListener('pointerdown', handleDomPointerDown);
     renderer.domElement.addEventListener('pointerup', handleDomPointerUp);
 
-    // Kích hoạt Render Loop của Three.js
+    // Kích hoạt Render Loop của Three.js (Hỗ trợ cả chế độ chạy nền khi chia sẻ màn hình qua OBS / TikTok LIVE Studio)
     state.animFrameId = requestAnimationFrame(animate);
+
+    const bgInterval = setInterval(() => {
+      if (document.hidden && !state.disposed) {
+        animate(performance.now());
+      }
+    }, 16);
 
     return () => {
       state.disposed = true;
+      clearInterval(bgInterval);
       if (state.animFrameId) cancelAnimationFrame(state.animFrameId);
       cancelAnimationFrame(animFrameResizeId);
       clearTimeout(initialResizeTimer);

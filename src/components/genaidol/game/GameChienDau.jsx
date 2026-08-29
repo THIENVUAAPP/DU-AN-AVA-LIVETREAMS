@@ -2796,8 +2796,15 @@ export default function GameChienDau({
 
     engineRef.current.rAfId = requestAnimationFrame(renderLoop);
 
+    const bgBattleInterval = setInterval(() => {
+      if (document.hidden) {
+        renderLoop();
+      }
+    }, 16);
+
     return () => {
       window.removeEventListener('resize', handleResize);
+      clearInterval(bgBattleInterval);
       cancelAnimationFrame(animFrameId);
       clearTimeout(initialTimer);
       if (resizeObserver) resizeObserver.disconnect();
