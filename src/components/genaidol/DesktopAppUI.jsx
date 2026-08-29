@@ -1484,10 +1484,29 @@ export default function DesktopAppUI() {
         return;
       }
 
-      const url = URL.createObjectURL(file);
       const isVideo = file.type.startsWith('video/');
+      let url = URL.createObjectURL(file);
       
       if (isVideo) {
+        // Đẩy video lên backend nội bộ để tạo link HTTP (Giúp chạy được trên trình duyệt OBS)
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          const autoBackendUrl = typeof window !== 'undefined' ? (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001' ? `${window.location.protocol}//${window.location.hostname}:3001` : window.location.origin) : 'http://localhost:3001';
+          
+          const res = await fetch(`${autoBackendUrl}/api/upload-media`, {
+            method: 'POST',
+            body: formData
+          });
+          const data = await res.json();
+          if (data && data.url) {
+            url = data.url; // Sử dụng link HTTP thật thay vì blob:
+          }
+        } catch (error) {
+          console.error("Lỗi upload video:", error);
+          alert("Lỗi tải lên video! Đảm bảo server backend đang chạy (port 3001).");
+        }
+
         // Video: Lưu trực tiếp
         const newChar = {
           id: `custom_${Date.now()}`,
@@ -1501,7 +1520,8 @@ export default function DesktopAppUI() {
           id: newChar.id,
           name: newChar.name,
           type: 'video',
-          fileData: file
+          fileData: file, // Vẫn lưu dự phòng vào IDB
+          mediaUrl: url
         });
       } else {
         // Ảnh: Mở Modal AI Xoá Phông & Làm Đẹp Siêu Nét 4K

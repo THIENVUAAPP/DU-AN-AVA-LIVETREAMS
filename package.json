@@ -49,6 +49,7 @@
     "hls.js": "^1.7.1",
     "lucide-react": "^0.469.0",
     "mammoth": "^1.12.1",
+    "multer": "^2.3.0",
     "patch-package": "8.0.1",
     "pdfjs-dist": "^6.2.108",
     "postinstall-postinstall": "2.1.0",

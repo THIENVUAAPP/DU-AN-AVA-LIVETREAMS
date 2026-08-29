@@ -45,6 +45,40 @@ if (distPath) {
   app.use(express.static(distPath));
 }
 
+const multer = require('multer');
+
+// ============================================================
+// UPLOAD FILE CONFIGURATION
+// ============================================================
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadsDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname) || '.mp4';
+    cb(null, 'media-' + uniqueSuffix + ext);
+  }
+});
+const upload = multer({ storage: storage });
+
+app.use('/uploads', express.static(uploadsDir));
+
+app.post('/api/upload-media', upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+  
+  // Trả về URL dạng http://localhost:3001/uploads/... cho Universal Link
+  const fileUrl = `http://localhost:${req.socket.localPort || 3001}/uploads/${req.file.filename}`;
+  res.json({ url: fileUrl, success: true });
+});
+
 // 🌐 API KIỂM TRA TRẠNG THÁI SERVER & PHIÊN BẢN ĐỒNG BỘ
 app.get('/api/health', (req, res) => {
   res.json({

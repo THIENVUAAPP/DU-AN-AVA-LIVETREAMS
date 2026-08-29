@@ -577,14 +577,7 @@ export default function CleanLiveOverlay() {
           }`}
           style={ratio === '9:16' ? { aspectRatio: '9 / 16', height: '100%', maxWidth: 'calc(100vh * 9 / 16)' } : { aspectRatio: '16 / 9', width: '100%' }}
         >
-          {liveStudioFrame ? (
-            /* Luồng Camera thật 30FPS trực tiếp từ Bảng điều khiển Studio */
-            <img
-              src={liveStudioFrame}
-              alt="Live Studio Realtime Camera Stream"
-              className="w-full h-full object-cover select-none bg-black transform-gpu"
-            />
-          ) : overlayCamActive ? (
+          {overlayCamActive ? (
             <video
               ref={(el) => {
                 overlayWebcamVideoRef.current = el;
@@ -596,6 +589,13 @@ export default function CleanLiveOverlay() {
               playsInline
               muted
               className="w-full h-full object-cover select-none scale-x-[-1] bg-black"
+            />
+          ) : liveStudioFrame ? (
+            /* Luồng Camera thật 30FPS trực tiếp từ Bảng điều khiển Studio */
+            <img
+              src={liveStudioFrame}
+              alt="Live Studio Realtime Camera Stream"
+              className="w-full h-full object-cover select-none bg-black transform-gpu"
             />
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#0F1016] via-[#151824] to-[#0A0A0F] text-center p-6 select-none">
