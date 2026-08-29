@@ -77,7 +77,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       description: 'Võ đài chiến đấu chia 2 phe PK kịch tính, tự động tung skill và hiệu ứng khi có tương tác bình luận & quà.',
       path: '/battle',
       directUrl: `${activeBase}/?overlay=battle${backendParam}`
-
+    }
   ];
 
   const handleCopy = (url, id) => {
