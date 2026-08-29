@@ -32,7 +32,6 @@ import { mapVoiceEngine, battleVoiceEngine } from './game/gameVoiceEngine';
 import battleCommentary from './game/battleCommentaryEngine';
 import { stopVoiceAudio } from '../../utils/voiceSyncService';
 import AutoCaptchaSolver from '../AutoCaptchaSolver';
-import ProductionStudio from '../ProductionStudio';
 import AIVoiceModule from '../kol-live/AIVoiceModule';
 import AICharacterBeautyModal from './AICharacterBeautyModal';
 import UniversalMasterOverlayModal from '../UniversalMasterOverlayModal';
@@ -162,7 +161,7 @@ export default function DesktopAppUI() {
     }
   })();
 
-  const [isLiveStudioActive, setIsLiveStudioActive] = useState(() => savedStage === 'studio');
+  const [isLiveStudioActive, setIsLiveStudioActive] = useState(false);
   const [isGameBattleActive, setIsGameBattleActive] = useState(() => savedStage === 'battle');
   const [isGameBanDoActive, setIsGameBanDoActive] = useState(() => savedStage === 'bando');
   const [isDanceFloorActive, setIsDanceFloorActive] = useState(() => savedStage === 'dancefloor');
@@ -1738,32 +1737,6 @@ export default function DesktopAppUI() {
   };
 
   const renderCharacterContent = () => {
-    // 0. Chế độ Live Studio Phòng Dựng 4K Chuyên Nghiệp (Tích hợp trực tiếp trong phần mềm)
-    if (isLiveStudioActive) {
-      return (
-        <div className="w-full h-full overflow-y-auto bg-[#07070a] relative">
-          <ProductionStudio 
-            isLive={isConnected} 
-            aiAvatarFeatureEnabled={true}
-            tiktokId={tiktokId}
-            setTiktokId={setTiktokId}
-            isConnecting={isConnecting}
-            isConnected={isConnected}
-            onConnectTikTok={(customId) => {
-              if (customId && customId !== tiktokId) {
-                setTiktokId(customId);
-                try { localStorage.setItem('aidol_tiktok_id', customId); } catch (e) {}
-              }
-              handleConnect();
-            }}
-            flvUrl={flvUrl}
-            globalAspectRatio={globalAspectRatio}
-            onToggleAspectRatio={toggleGlobalAspectRatio}
-          />
-        </div>
-      );
-    }
-
     // -1. Chế độ Game Chiến Đấu (TikTok LIVE Battle Overlay)
     if (isGameBattleActive) {
       return (
