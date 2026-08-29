@@ -1,6 +1,9 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 
+// Vô hiệu hoá tăng tốc phần cứng (Hardware Acceleration) để cho phép OBS / TikTok Studio quay màn hình cửa sổ (Window Capture) không bị đen
+app.disableHardwareAcceleration();
+
 function createWindow () {
   const win = new BrowserWindow({
     width: 1280,

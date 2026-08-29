@@ -601,6 +601,12 @@ export default function CleanLiveOverlay() {
         const backendBase = backendUrl ? backendUrl.replace(/\/$/, '') : (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:3001` : 'http://127.0.0.1:3001');
         candidateUrl = `${backendBase}${pathPart}`;
       }
+
+      // TỪ CHỐI TUYỆT ĐỐI BLOB URL NẾU NÓ ĐẾN TỪ CỬA SỔ KHÁC (vì CEF TikTok Studio không đọc được blob của Chrome)
+      if (candidateUrl.startsWith('blob:')) {
+        console.warn('[CleanLiveOverlay] Blob URL is not supported across windows. Falling back to default.');
+        candidateUrl = '/demo_dancer.mp4';
+      }
     }
 
     // Xác định chính xác video hay ảnh
