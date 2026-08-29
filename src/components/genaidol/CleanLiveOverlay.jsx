@@ -218,6 +218,9 @@ export default function CleanLiveOverlay() {
         .catch(() => {});
     };
     fetchLiveState();
+    
+    // Polling liên tục mỗi 2s để đề phòng WebSocket bị chặn trên OBS / TikTok Studio CEF
+    const httpPollInterval = setInterval(fetchLiveState, 2000);
 
     // 3. WEBSOCKET REALTIME (SOCKET.IO)
     let socket = null;
@@ -327,6 +330,7 @@ export default function CleanLiveOverlay() {
     }, 100);
 
     return () => {
+      clearInterval(httpPollInterval);
       clearInterval(frameInterval);
       if (studioCamBc) studioCamBc.close();
       if (masterChannel) masterChannel.close();
@@ -588,10 +592,11 @@ export default function CleanLiveOverlay() {
         candidateUrl = candidateUrl.substring(candidateUrl.lastIndexOf('https://'));
       }
 
-      // Nếu là đường dẫn tương đối /uploads/ và đang mở từ cổng khác, trỏ về backend port 3001
-      if (candidateUrl.startsWith('/uploads/')) {
+      // Chuẩn hoá URL video tải lên (Đồng bộ hostname để tránh CORS trên OBS / CEF browser)
+      if (candidateUrl.includes('/uploads/')) {
+        const pathPart = candidateUrl.substring(candidateUrl.indexOf('/uploads/'));
         const backendBase = backendUrl ? backendUrl.replace(/\/$/, '') : (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:3001` : 'http://127.0.0.1:3001');
-        candidateUrl = `${backendBase}${candidateUrl}`;
+        candidateUrl = `${backendBase}${pathPart}`;
       }
     }
 

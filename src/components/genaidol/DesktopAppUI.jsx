@@ -1920,6 +1920,15 @@ export default function DesktopAppUI() {
 
   const renderGmailLoginModal = () => {
     if (!isGmailLoginModalOpen) return null;
+
+    const displayTokens = currentUser 
+      ? (currentUser.isAdmin ? 'Vô Hạn' : ((currentUser.plan === 'Free' || !currentUser.plan) ? '100' : (currentUser.tokens || 0).toLocaleString())) 
+      : '0';
+
+    const displayLiveTime = currentUser 
+      ? (currentUser.isAdmin ? 'Vô Hạn' : ((currentUser.plan === 'Free' || !currentUser.plan) ? '10h' : `${Math.round((currentUser.liveMinutes || 0) / 60)}h`)) 
+      : '0h';
+
     return (
       <div className="fixed inset-0 w-screen h-screen bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 font-sans select-none overflow-y-auto">
         <div className="relative max-w-md w-full bg-[#121420]/95 backdrop-blur-2xl border border-cyan-500/30 rounded-[32px] p-8 shadow-2xl text-center space-y-6 animate-in fade-in zoom-in-95 duration-200">
@@ -1933,29 +1942,52 @@ export default function DesktopAppUI() {
           {/* Logo Brand */}
           <div className="flex flex-col items-center gap-3">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 p-0.5 shadow-[0_0_30px_rgba(59,130,246,0.5)]">
-              <div className="w-full h-full bg-[#0d0e17] rounded-2xl flex items-center justify-center">
-                <Video className="w-8 h-8 text-cyan-400" />
-              </div>
+              {currentUser ? (
+                <img 
+                  src={currentUser.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(currentUser.email)}`}
+                  alt="Avatar"
+                  className="w-full h-full rounded-xl object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-[#0d0e17] rounded-2xl flex items-center justify-center">
+                  <Video className="w-8 h-8 text-cyan-400" />
+                </div>
+              )}
             </div>
             <div>
-              <h1 className="text-2xl font-black bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-                AVALIVE VIP PRO STUDIO
+              <h1 className="text-xl font-black bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+                {currentUser ? currentUser.email : 'AVALIVE VIP PRO STUDIO'}
               </h1>
-              <p className="text-xs text-gray-400 mt-1">
-                Kết Nối Gmail Đồng Bộ Bản Quyền Đa Thiết Bị
+              <p className="text-xs text-gray-400 mt-1 font-bold">
+                {currentUser ? `Gói Hiện Tại: ${currentUser.isAdmin ? 'SUPER ADMIN' : (currentUser.plan || 'Free')}` : 'Kết Nối Gmail Đồng Bộ Bản Quyền'}
               </p>
             </div>
           </div>
 
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-left space-y-2">
-            <div className="flex items-center gap-2 text-amber-400 text-xs font-bold">
-              <Lock className="w-4 h-4" />
-              <span>ĐĂNG NHẬP / ĐỔI TÀI KHOẢN GMAIL</span>
+          {currentUser ? (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white/5 border border-amber-500/30 rounded-2xl p-4 flex flex-col items-center gap-2">
+                <Coins className="w-6 h-6 text-amber-400" />
+                <span className="text-xs text-gray-400 font-medium">Số Dư Token</span>
+                <span className="text-lg font-black text-amber-300">{displayTokens}</span>
+              </div>
+              <div className="bg-white/5 border border-emerald-500/30 rounded-2xl p-4 flex flex-col items-center gap-2">
+                <Clock className="w-6 h-6 text-emerald-400" />
+                <span className="text-xs text-gray-400 font-medium">Thời Gian Live</span>
+                <span className="text-lg font-black text-emerald-300">{displayLiveTime}</span>
+              </div>
             </div>
-            <p className="text-xs text-gray-300 leading-relaxed">
-              Nhập địa chỉ <strong>Gmail</strong> của bạn để đồng bộ gói bản quyền và lịch sử hoạt động giữa các thiết bị.
-            </p>
-          </div>
+          ) : (
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-left space-y-2">
+              <div className="flex items-center gap-2 text-amber-400 text-xs font-bold">
+                <Lock className="w-4 h-4" />
+                <span>ĐĂNG NHẬP / ĐỔI TÀI KHOẢN GMAIL</span>
+              </div>
+              <p className="text-xs text-gray-300 leading-relaxed">
+                Nhập địa chỉ <strong>Gmail</strong> của bạn để đồng bộ gói bản quyền và lịch sử hoạt động giữa các thiết bị.
+              </p>
+            </div>
+          )}
 
           {authError && (
             <div className="p-3 bg-red-500/15 border border-red-500/30 rounded-xl text-red-400 text-xs text-left flex items-center gap-2">
@@ -1964,21 +1996,35 @@ export default function DesktopAppUI() {
             </div>
           )}
 
-          {/* 1 Nút Đăng Nhập Trực Tiếp Google / Gmail Duy Nhất */}
+          {/* Nút Đăng Nhập / Đăng Xuất */}
           <div className="space-y-4 pt-2">
-            <button
-              onClick={handleRealGoogleOAuth}
-              disabled={isLoggingIn}
-              className="w-full flex items-center justify-center gap-3 py-4 px-4 bg-white hover:bg-gray-100 text-gray-900 rounded-2xl font-bold text-sm shadow-xl transition-all hover:scale-[1.02] active:scale-98 cursor-pointer disabled:opacity-50"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-              </svg>
-              <span>{isLoggingIn ? '⏳ Đang Kết Nối...' : '🚀 Kết Nối Trực Tiếp Bằng Gmail (Google)'}</span>
-            </button>
+            {!currentUser ? (
+              <button
+                onClick={handleRealGoogleOAuth}
+                disabled={isLoggingIn}
+                className="w-full flex items-center justify-center gap-3 py-4 px-4 bg-white hover:bg-gray-100 text-gray-900 rounded-2xl font-bold text-sm shadow-xl transition-all hover:scale-[1.02] active:scale-98 cursor-pointer disabled:opacity-50"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                </svg>
+                <span>{isLoggingIn ? '⏳ Đang Kết Nối...' : '🚀 Kết Nối Trực Tiếp Bằng Gmail (Google)'}</span>
+              </button>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleLogout();
+                  setIsGmailLoginModalOpen(false);
+                }}
+                className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-2xl font-bold text-sm transition-all hover:scale-[1.02] active:scale-98 cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Đăng Xuất Tài Khoản</span>
+              </button>
+            )}
           </div>
 
           <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-gray-500">
@@ -2216,23 +2262,20 @@ export default function DesktopAppUI() {
             <span className="whitespace-nowrap">📡 Link Live</span>
           </button>
 
-          {/* 👑 1 Ô DUY NHẤT: TÀI KHOẢN GMAIL + GÓI + TOKEN + THỜI GIAN LIVE (GỌN 70% TINH TẾ) */}
+          {/* 👑 1 Ô DUY NHẤT: LOGO TÀI KHOẢN + GÓI (GỌN GÀNG) */}
           <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-[9.5px] shadow-xs shrink-0 ${isDarkMode ? 'bg-[#12131d]/90 border-cyan-500/30' : 'bg-white border-gray-300'}`}>
             {currentUser ? (
               <div 
                 onClick={() => setIsGmailLoginModalOpen(true)}
-                className="flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity"
+                className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity"
                 title="Bấm để xem chi tiết tài khoản hoặc đổi Gmail"
               >
                 <img 
                   src={currentUser.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(currentUser.email)}`}
                   alt="Avatar"
-                  className="w-3.5 h-3.5 rounded-full border border-cyan-400 object-cover shrink-0"
+                  className="w-4 h-4 rounded-full border-2 border-cyan-400 object-cover shrink-0"
                 />
-                <span className="font-bold text-gray-200 truncate max-w-[75px]" title={currentUser.email}>
-                  {currentUser.name || currentUser.email.split('@')[0]}
-                </span>
-                <span className="text-[8px] px-1 py-0.2 rounded font-black bg-gradient-to-r from-amber-400 to-yellow-400 text-black leading-tight">
+                <span className="text-[9px] px-1.5 py-0.5 rounded-md font-black bg-gradient-to-r from-amber-400 to-yellow-400 text-black leading-tight shadow-md">
                   {currentUser.isAdmin ? 'SUPER ADMIN' : (currentUser.plan || 'Free')}
                 </span>
               </div>
@@ -2245,33 +2288,6 @@ export default function DesktopAppUI() {
                 <User size={10} className="text-yellow-300" />
                 <span className="whitespace-nowrap">🔑 Đăng Nhập Gmail</span>
               </button>
-            )}
-
-            {currentUser && (currentUser.isAdmin || (currentUser.tokens !== undefined && currentUser.liveMinutes !== undefined)) && (
-              <>
-                <div className="w-px h-3 bg-gray-600/50" />
-                {/* Token */}
-                <div 
-                  onClick={() => setShowTokenHistory(true)}
-                  className="flex items-center gap-0.5 font-bold text-amber-300 cursor-pointer hover:text-amber-200 transition-colors whitespace-nowrap"
-                  title="Số dư Token AI — Bấm xem lịch sử"
-                >
-                  <Coins size={10} className="text-yellow-400" />
-                  <span>{currentUser.isAdmin ? 'Vô Hạn' : `${(currentUser.tokens || 0).toLocaleString()}`} Token</span>
-                </div>
-
-                <div className="w-px h-3 bg-gray-600/50" />
-
-                {/* Live Time */}
-                <div 
-                  onClick={() => setActiveSettingsModal('payment')}
-                  className="flex items-center gap-0.5 font-bold text-emerald-400 cursor-pointer hover:text-emerald-300 transition-colors whitespace-nowrap"
-                  title="Thời gian Live còn lại — Bấm để gia hạn"
-                >
-                  <Clock size={10} className="text-emerald-400" />
-                  <span>{currentUser.isAdmin ? 'Vô Hạn Live' : `${Math.round((currentUser.liveMinutes || 0) / 60)}h Live`}</span>
-                </div>
-              </>
             )}
 
             {currentUser && (
@@ -2288,6 +2304,7 @@ export default function DesktopAppUI() {
                   <LogOut size={9} />
                 </button>
               </>
+
             )}
           </div>
     </div>
@@ -2410,12 +2427,13 @@ export default function DesktopAppUI() {
                       setIsGameBattleActive(false);
                       setIsGameBanDoActive(false);
                       if (charItem.url) {
+                        const isVid = charItem.type === 'video' || (typeof charItem.url === 'string' && (charItem.url.endsWith('.mp4') || charItem.url.endsWith('.webm') || charItem.url.endsWith('.mov')));
                         syncMasterLiveState({
                           stage: 'idol',
                           selectedCharacter: charItem.id,
                           characterName: charItem.name || 'AI Idol',
                           mediaUrl: charItem.url,
-                          isVideo: charItem.type === 'video' || (typeof charItem.url === 'string' && (charItem.url.endsWith('.mp4') || charItem.url.includes('/uploads/') || charItem.url.includes('blob:'))),
+                          isVideo: isVid,
                           aspectRatio: globalAspectRatio || '9:16'
                         }, socketRef.current);
                       }
