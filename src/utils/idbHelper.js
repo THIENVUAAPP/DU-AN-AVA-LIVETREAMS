@@ -95,12 +95,20 @@ export const loadAllAidolItems = async () => {
 
         request.onsuccess = () => {
           const rawItems = request.result || [];
-          const items = rawItems.map(item => ({
-            ...item,
-            url: item.fileBlob ? URL.createObjectURL(item.fileBlob) : (item.mediaUrl || item.url),
-            mediaUrl: item.fileBlob ? URL.createObjectURL(item.fileBlob) : (item.mediaUrl || item.url),
-            isPersonal: true
-          }));
+          const items = rawItems.map(item => {
+            let finalUrl = item.mediaUrl || item.url;
+            if (!finalUrl && item.fileBlob) {
+               try {
+                 finalUrl = URL.createObjectURL(item.fileBlob);
+               } catch(e) {}
+            }
+            return {
+              ...item,
+              url: finalUrl,
+              mediaUrl: finalUrl,
+              isPersonal: true
+            };
+          });
           resolve(items.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '')));
         };
         request.onerror = () => resolve([]);

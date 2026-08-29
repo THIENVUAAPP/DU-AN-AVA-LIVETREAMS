@@ -1289,7 +1289,7 @@ export default function ProductionStudio({
         if (!lastBroadcastTimeRef.current || now - lastBroadcastTimeRef.current > 33) {
           lastBroadcastTimeRef.current = now;
           try {
-            const frameData = canvasRef.current.toDataURL('image/jpeg', 0.85);
+            const frameData = canvasRef.current.toDataURL('image/webp', 0.6);
             if (studioCamChannelRef.current) {
               studioCamChannelRef.current.postMessage({ type: 'STUDIO_CAM_FRAME', frame: frameData });
             }

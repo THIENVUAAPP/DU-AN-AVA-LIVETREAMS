@@ -57,7 +57,17 @@ export default function CleanLiveOverlay() {
   const [liveEvent, setLiveEvent] = useState(null);
   const [isAudioMuted, setIsAudioMuted] = useState(true);
   const [localDbItems, setLocalDbItems] = useState([]);
-  const [liveStudioFrame, setLiveStudioFrame] = useState(null);
+  const [hasStudioFrame, setHasStudioFrame] = useState(false);
+  const studioImageRef = useRef(null);
+
+  const updateStudioFrame = (frameData) => {
+    if (frameData) {
+      if (!hasStudioFrame) setHasStudioFrame(true);
+      if (studioImageRef.current) {
+        studioImageRef.current.src = frameData;
+      }
+    }
+  };
 
   // Tải danh sách item từ IndexedDB của cửa sổ này để tái tạo Blob URL cục bộ
   useEffect(() => {
@@ -235,7 +245,7 @@ export default function CleanLiveOverlay() {
       });
 
       socket.on('STUDIO_CAM_FRAME', (frameData) => {
-        if (frameData) setLiveStudioFrame(frameData);
+        if (frameData) updateStudioFrame(frameData);
       });
     } catch (err) {
       console.warn('Socket.io note:', err);
@@ -253,7 +263,7 @@ export default function CleanLiveOverlay() {
         studioCamBc = new BroadcastChannel('avalive_studio_cam_feed');
         studioCamBc.onmessage = (e) => {
           if (e.data?.frame) {
-            setLiveStudioFrame(e.data.frame);
+            updateStudioFrame(e.data.frame);
           }
         };
 
@@ -310,7 +320,7 @@ export default function CleanLiveOverlay() {
         .then(res => res.json())
         .then(data => {
           if (data && data.frame) {
-            setLiveStudioFrame(data.frame);
+            updateStudioFrame(data.frame);
           }
         })
         .catch(() => {});
@@ -590,10 +600,10 @@ export default function CleanLiveOverlay() {
               muted
               className="w-full h-full object-cover select-none scale-x-[-1] bg-black"
             />
-          ) : liveStudioFrame ? (
+          ) : hasStudioFrame ? (
             /* Luồng Camera thật 30FPS trực tiếp từ Bảng điều khiển Studio */
             <img
-              src={liveStudioFrame}
+              ref={studioImageRef}
               alt="Live Studio Realtime Camera Stream"
               className="w-full h-full object-cover select-none bg-black transform-gpu"
             />

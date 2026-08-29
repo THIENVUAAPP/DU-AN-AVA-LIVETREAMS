@@ -487,18 +487,20 @@ export default function DesktopAppUI() {
       });
       
       const loadedChars = chars.filter(c => !legacyIds.includes(c.id)).map(c => {
-        if (c.fileData) {
+        let finalUrl = c.mediaUrl || c.url;
+        // Nếu không có link HTTP thật thì mới fallback tạo link blob ảo (blob sẽ bị lỗi trên màn hình OBS)
+        if (!finalUrl && c.fileData) {
           try {
-            url = URL.createObjectURL(c.fileData);
+            finalUrl = URL.createObjectURL(c.fileData);
           } catch (e) {
-            url = c.url || c.mediaUrl;
+            finalUrl = '';
           }
         }
         return {
           id: c.id,
           name: c.name || 'AIDOL của tôi',
           type: c.type || 'image',
-          url
+          url: finalUrl
         };
       });
       setCustomCharacters(loadedChars);
