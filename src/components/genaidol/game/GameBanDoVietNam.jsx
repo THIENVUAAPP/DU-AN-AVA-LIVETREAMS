@@ -968,7 +968,29 @@ export default function GameBanDoVietNam({
         });
       };
 
-      // Không đăng ký lại listener trùng lặp ở đây vì DesktopAppUI.jsx và GameBanDoOverlay.jsx đã lắng nghe và truyền xuống thông qua bandoEngine / externalLiveEvent.
+      // Đăng ký trực tiếp listener để Game Bản Đồ tự động nhận diện quà/bình luận ở mọi cửa sổ Overlay
+      socket.on('tiktok_gift', handleIncomingGift);
+
+      socket.on('tiktok_chat', (data) => {
+        if (!data) return;
+        const text = data.comment || data.text || '';
+        const author = data.nickname || data.username || data.uniqueId || 'Khán Giả';
+        const userId = data.userId || data.uniqueId || 'chat_user';
+        const avatar = data.profilePictureUrl || data.avatar || '';
+        if (text) {
+          try {
+            bandoEngine.processComment(text, { id: userId, username: author, avatar });
+          } catch (e) {}
+        }
+      });
+
+      socket.on('bando_sync', (data) => {
+        if (data && data.cellsById) {
+          try {
+            bandoEngine.syncFromRemote(data);
+          } catch (e) {}
+        }
+      });
     } catch (e) {
       console.warn('Socket connection error:', e);
     }

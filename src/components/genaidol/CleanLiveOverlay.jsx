@@ -251,6 +251,46 @@ export default function CleanLiveOverlay() {
         if (data) setLiveEvent({ ...data, _ts: Date.now() });
       });
 
+      socket.on('tiktok_gift', (data) => {
+        if (!data) return;
+        setLiveEvent({
+          type: 'GIFT',
+          data: {
+            giftId: data.giftId,
+            giftName: data.giftName,
+            count: data.repeatCount || data.count || 1,
+            diamondCount: data.diamondCount || 1,
+            userId: data.userId || data.uniqueId || 'tiktok_guest',
+            username: data.nickname || data.username || data.uniqueId || 'Khách Live',
+            avatar: data.profilePictureUrl || data.avatar || '',
+            regionTarget: data.regionTarget || null,
+            faction: data.faction || (Math.random() < 0.5 ? 'blue' : 'red')
+          },
+          _ts: Date.now()
+        });
+      });
+
+      socket.on('tiktok_chat', (data) => {
+        if (!data) return;
+        const text = data.comment || data.text || '';
+        const author = data.nickname || data.username || data.uniqueId || 'Khán Giả';
+        const userId = data.userId || data.uniqueId || 'chat_user';
+        const avatar = data.profilePictureUrl || data.avatar || '';
+        setLiveEvent({
+          type: 'COMMENT',
+          data: { comment: text, text, username: author, nickname: author, userId, avatar },
+          _ts: Date.now()
+        });
+      });
+
+      socket.on('bando_sync', (data) => {
+        if (data) setLiveEvent({ type: 'BANDO_SYNC', data, _ts: Date.now() });
+      });
+
+      socket.on('battle_sync', (data) => {
+        if (data) setLiveEvent({ type: 'BATTLE_SYNC', data, _ts: Date.now() });
+      });
+
       socket.on('STUDIO_CAM_FRAME', (frameData) => {
         if (frameData) updateStudioFrame(frameData);
       });

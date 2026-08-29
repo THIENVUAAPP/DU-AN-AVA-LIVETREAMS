@@ -1498,7 +1498,7 @@ export default function ProductionStudio({
     {
       id: 'cleanlive',
       title: '🌐 Sân Khấu Sạch (Clean Live Output)',
-      url: `${originUrl}/live`,
+      url: `${originUrl}/?overlay=live`,
       tag: 'OBS / TIKTOK LIVE STUDIO',
       color: 'from-blue-600 to-cyan-500',
       desc: 'Màn hình phát sạch 100% không nút bấm, hiển thị AI Avatar, sản phẩm, và hiệu ứng live.'
@@ -1506,7 +1506,7 @@ export default function ProductionStudio({
     {
       id: 'dancefloor',
       title: '💃 Sàn Nhảy TikTok Tương Tác 2D & 3D',
-      url: `${originUrl}/live`,
+      url: `${originUrl}/?overlay=dancefloor`,
       tag: 'TƯƠNG TÁC TIKTOK LIVE',
       color: 'from-pink-600 to-rose-500',
       desc: 'Sàn diễn nhảy theo Quà, Like, Comment TikTok realtime với nhân vật 3D chuyển động.'
@@ -1514,7 +1514,7 @@ export default function ProductionStudio({
     {
       id: 'gamebattle',
       title: '⚔️ Đấu Trường PK Quà Tặng Game Battle',
-      url: `${originUrl}/live`,
+      url: `${originUrl}/?overlay=battle`,
       tag: 'GAME PK THI ĐẤU',
       color: 'from-purple-600 to-indigo-500',
       desc: 'Màn hình PK 2 phe thi đấu so kè quà tặng và comment giữa các khán giả.'
@@ -1522,7 +1522,7 @@ export default function ProductionStudio({
     {
       id: 'bando',
       title: '🗺️ Bản Đồ Việt Nam Check-in 63 Tỉnh Thành',
-      url: `${originUrl}/live`,
+      url: `${originUrl}/?overlay=bando`,
       tag: 'VIETNAM MAP LIVE',
       color: 'from-amber-600 to-red-500',
       desc: 'Bản đồ tương tác tính điểm tỉnh thành theo comment người xem realtime.'

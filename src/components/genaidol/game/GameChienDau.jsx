@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { io } from 'socket.io-client';
 import { 
   Trophy, Volume2, VolumeX, Shield, Swords, Sparkles, 
   Crown, Play, Pause, RotateCcw, Settings, Flame, Zap, CheckCircle2, Mic, MicOff, Music, Music2,
@@ -2777,9 +2778,6 @@ export default function GameChienDau({
       if (typeof window !== 'undefined' && window.speechSynthesis) {
         window.speechSynthesis.cancel();
       }
-      if (socket) {
-        socket.emit('toggle_simulation', false);
-      }
     };
     window.addEventListener('avalive_emergency_stop_all', handleEmergencyStop);
 
@@ -2789,6 +2787,90 @@ export default function GameChienDau({
       if (autoTestTimerRef.current) clearInterval(autoTestTimerRef.current);
     };
   }, []);
+
+  // Direct Socket.io Realtime Listener for TikTok Live Gifts & Comments
+  useEffect(() => {
+    let socket = null;
+    const getSocketTargetUrl = () => {
+      if (typeof window === 'undefined') return 'http://localhost:3001';
+      const customUrl = localStorage.getItem('aidol_backend_url');
+      if (customUrl && customUrl.startsWith('http')) return customUrl;
+      if (window.location.port === '5173') {
+        return window.location.protocol + '//' + window.location.hostname + ':3001';
+      }
+      return window.location.origin;
+    };
+
+    try {
+      socket = io(getSocketTargetUrl(), {
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        timeout: 10000
+      });
+
+      socket.on('tiktok_chat', (data) => {
+        if (!data) return;
+        const commentText = (data.comment || data.text || '').toLowerCase().trim();
+        const nickname = data.nickname || data.username || 'Khán giả';
+        if (commentText.includes('xanh') || commentText.includes('blue') || commentText.includes('1')) {
+          addOrUpdateFighter('blue', nickname, 15);
+          addLiveFeedItem(nickname, `chọn ${config.blueName} (Xanh 🔵)`, 'blue');
+        } else if (commentText.includes('đỏ') || commentText.includes('do') || commentText.includes('red') || commentText.includes('2')) {
+          addOrUpdateFighter('red', nickname, 15);
+          addLiveFeedItem(nickname, `chọn ${config.redName} (Đỏ 🔴)`, 'red');
+        } else {
+          addLiveFeedItem(nickname, data.comment || data.text || 'cổ vũ trận đấu 🔥', 'neutral');
+        }
+      });
+
+      socket.on('tiktok_gift', (data) => {
+        if (!data) return;
+        battleAudio.unlock();
+        const nickname = data.nickname || data.username || 'VIP Supporter';
+        const diamondCount = data.diamondCount || data.repeatCount || data.count || 1;
+        const assignedFaction = data.faction || (Math.random() < 0.5 ? 'blue' : 'red');
+
+        if (diamondCount >= 10000) {
+          triggerNhuLai(assignedFaction, nickname);
+          triggerGiangLong(assignedFaction, nickname);
+          battleCommentary.triggerGiftCommentary(nickname, 'Vũ Trụ Thần Thoại', 'Chí Tôn Thần Giới', assignedFaction);
+          addLiveFeedItem(nickname, `tặng quà thần thoại kích hoạt NHƯ LAI THẦN CHƯỞNG (${diamondCount} xu)! ✋🪐`, assignedFaction);
+        } else if (diamondCount >= 3000) {
+          triggerDocCo(assignedFaction, nickname);
+          triggerLucMach(assignedFaction, nickname);
+          battleCommentary.triggerGiftCommentary(nickname, 'Thần Thú Huyền Thoại', 'Độc Cô Kiếm Tôn', assignedFaction);
+          addLiveFeedItem(nickname, `tặng quà huyền thoại kích hoạt ĐỘC CÔ CỬU KIẾM (${diamondCount} xu)! 🌪️⚔️`, assignedFaction);
+        } else if (diamondCount >= 1000) {
+          triggerGiangLong(assignedFaction, nickname);
+          battleCommentary.triggerGiftCommentary(nickname, 'Thần Long Vũ Trụ', 'Chí Tôn Thiên Tôn', assignedFaction);
+          addLiveFeedItem(nickname, `tặng quà lớn triệu hồi GIÁNG LONG CHƯỞNG (${diamondCount} xu)! 🐉`, assignedFaction);
+        } else if (diamondCount >= 500) {
+          triggerVanKiem(assignedFaction, nickname);
+          battleCommentary.triggerGiftCommentary(nickname, 'Chiến Xa / Sét', 'Chiến Thần Vạn Kiếm', assignedFaction);
+          addLiveFeedItem(nickname, `tặng quà kích hoạt VẠN KIẾM QUY TÔNG (${diamondCount} xu)! ⚔️`, assignedFaction);
+        } else if (diamondCount >= 200) {
+          triggerHeroUpgrade(assignedFaction, nickname, 3);
+          triggerThaiCuc(assignedFaction, nickname);
+          battleCommentary.triggerGiftCommentary(nickname, 'Vương Miện Hoàng Kim', 'Kim Khải Thần Tướng', assignedFaction);
+          addLiveFeedItem(nickname, `thăng cấp KIM KHẢI THẦN TƯỚNG + THÁI CỰC TRẬN (${diamondCount} xu)! 👑`, assignedFaction);
+        } else if (diamondCount >= 50) {
+          triggerHeroUpgrade(assignedFaction, nickname, 2);
+          battleCommentary.triggerGiftCommentary(nickname, 'Nước Hoa Thiết Giáp', 'Thiết Giáp Kiếm Hiệp', assignedFaction);
+          addLiveFeedItem(nickname, `thăng cấp THIẾT GIÁP KIẾM HIỆP (${diamondCount} xu)! 🛡️`, assignedFaction);
+        } else {
+          addOrUpdateFighter(assignedFaction, nickname, Math.max(20, diamondCount * 2));
+          triggerDance(assignedFaction, nickname);
+          addLiveFeedItem(nickname, `tặng quà tiếp sức & mở vũ điệu! 🎁`, assignedFaction);
+        }
+      });
+    } catch (e) {
+      console.warn('Battle socket note:', e);
+    }
+
+    return () => {
+      if (socket) socket.disconnect();
+    };
+  }, [config.blueName, config.redName, addOrUpdateFighter, triggerDance, triggerVanKiem, triggerGiangLong, triggerThaiCuc, triggerLucMach, triggerDocCo, triggerNhuLai, triggerHeroUpgrade, addLiveFeedItem]);
 
   // HÀM RENDER SÂN KHẤU LIVE SẠCH 100% (Khung Hình Không Chứa Bất Kỳ Nút Quản Trị Nào)
   const renderCleanStage = () => (
