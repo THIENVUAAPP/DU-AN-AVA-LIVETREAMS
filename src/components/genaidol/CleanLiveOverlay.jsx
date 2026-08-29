@@ -321,7 +321,7 @@ export default function CleanLiveOverlay() {
     }
 
     // 5. POLLING REALTIME STUDIO CAM FRAME (Hỗ trợ 100% CEF Browser Source trong TikTok LIVE Studio)
-    const fetchStudioFrame = () => {
+    const frameInterval = setInterval(() => {
       const endpoint = getBackendUrl() ? `${getBackendUrl()}/api/studio-frame?t=${Date.now()}` : `/api/studio-frame?t=${Date.now()}`;
       fetch(endpoint, { cache: 'no-store' })
         .then(res => res.json())
