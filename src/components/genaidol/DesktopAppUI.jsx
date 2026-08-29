@@ -2369,104 +2369,70 @@ export default function DesktopAppUI() {
         {/* Middle: Controls */}
         <div className="flex items-center justify-center gap-2 shrink-0">
           
-          {/* 3 Ô NHÂN VẬT / VIDEO TẢI LÊN (HIỂN THỊ 3 Ô CHUẨN) */}
+          {/* BỘ CHỌN NHÂN VẬT & NÚT TẢI VIDEO LÊN TỪ THIẾT BỊ */}
           <div className="flex items-center gap-1.5 border-r border-gray-500/30 pr-2">
-            <span className="text-xs font-medium text-gray-400">{t('characters', currentLang)}</span>
-            <div className="flex items-center gap-1.5 py-0.5">
-              {/* 3 Ô Cố Định / Mở Rộng */}
-              {Array.from({ length: Math.max(3, customCharacters.length) }).map((_, index) => {
-                const charItem = customCharacters[index];
-                const isSelected = charItem ? selectedCharacter === charItem.id : (index === 0 && (!selectedCharacter || selectedCharacter === 'linhanh_4k'));
+            <button 
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-blue-500/50 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-[10.5px] font-bold shadow-md shadow-blue-500/20 transition-all hover:scale-105 shrink-0 cursor-pointer"
+              title="Tải video hoặc ảnh nhân vật từ máy tính / thiết bị của bạn lên"
+            >
+              <Plus size={12} />
+              <span>+ Tải Video Lên</span>
+            </button>
 
-                if (charItem) {
-                  return (
-                    <div
-                      key={charItem.id || index}
-                      onClick={() => {
-                        setSelectedCharacter(charItem.id);
-                        try { localStorage.setItem('avalive_selected_char', charItem.id); } catch (e) {}
-                        setIsGameBattleActive(false);
-                        setIsGameBanDoActive(false);
-                        if (charItem.url) {
-                          syncMasterLiveState({
-                            stage: 'idol',
-                            selectedCharacter: charItem.id,
-                            characterName: charItem.name || 'AI Idol',
-                            mediaUrl: charItem.url,
-                            isVideo: charItem.type === 'video' || (typeof charItem.url === 'string' && (charItem.url.endsWith('.mp4') || charItem.url.includes('/uploads/') || charItem.url.includes('blob:'))),
-                            aspectRatio: globalAspectRatio || '9:16'
-                          }, socketRef.current);
-                        }
-                      }}
-                      className={`w-8 h-8 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 relative group transition-all ${
-                        isSelected 
-                          ? 'border-2 border-cyan-400 shadow-md shadow-cyan-500/40 ring-2 ring-cyan-400/50 scale-105' 
-                          : 'border border-gray-600 opacity-70 hover:opacity-100 hover:border-gray-400'
-                      }`}
-                      title={`Ô ${index + 1}: ${charItem.name || 'Video Nhân Vật'}`}
-                    >
-                      {charItem.type === 'video' || (typeof charItem.url === 'string' && (charItem.url.endsWith('.mp4') || charItem.url.includes('/uploads/'))) ? (
-                        <video src={charItem.url} className="w-full h-full object-cover" muted />
-                      ) : (
-                        <img src={charItem.url} className="w-full h-full object-cover" alt={charItem.name || ''} />
-                      )}
-                      
-                      {/* Nút Xoá Video khỏi Ô */}
+            <span className="text-xs font-medium text-gray-400 ml-1">{t('characters', currentLang)}</span>
+            <div className="flex items-center gap-1.5 py-0.5 overflow-x-auto max-w-[450px]">
+              {/* Danh sách các nhân vật / video đang có */}
+              {Object.keys(CHARACTERS).map((charId) => {
+                const targetChar = CHARACTERS[charId];
+                if (!targetChar) return null;
+                const isSelected = selectedCharacter === charId;
+
+                return (
+                  <div
+                    key={charId}
+                    onClick={() => {
+                      setSelectedCharacter(charId);
+                      try { localStorage.setItem('avalive_selected_char', charId); } catch (e) {}
+                      setIsGameBattleActive(false);
+                      setIsGameBanDoActive(false);
+                      if (targetChar && targetChar.url) {
+                        syncMasterLiveState({
+                          stage: 'idol',
+                          selectedCharacter: charId,
+                          characterName: targetChar.name || 'AI Idol',
+                          mediaUrl: targetChar.url,
+                          isVideo: targetChar.type === 'video' || (typeof targetChar.url === 'string' && (targetChar.url.endsWith('.mp4') || targetChar.url.includes('/uploads/') || targetChar.url.includes('mixkit') || targetChar.url.includes('blob:'))),
+                          aspectRatio: globalAspectRatio || '9:16'
+                        }, socketRef.current);
+                      }
+                    }}
+                    className={`w-8 h-8 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 relative group transition-all ${
+                      isSelected 
+                        ? 'border-2 border-cyan-400 shadow-md shadow-cyan-500/40 ring-2 ring-cyan-400/50 scale-105' 
+                        : 'border border-gray-600 opacity-70 hover:opacity-100 hover:border-gray-400'
+                    }`}
+                    title={targetChar.name || `Nhân vật ${charId}`}
+                  >
+                    {targetChar.type === 'video' || (typeof targetChar.url === 'string' && (targetChar.url.endsWith('.mp4') || targetChar.url.includes('/uploads/') || targetChar.url.includes('mixkit') || targetChar.url.includes('blob:'))) ? (
+                      <video src={targetChar.url} className="w-full h-full object-cover" muted />
+                    ) : (
+                      <img src={targetChar.url} className="w-full h-full object-cover" alt={targetChar.name || ''} />
+                    )}
+
+                    {charId.startsWith('custom_') && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          removeCustomCharacter(e, charItem.id);
+                          removeCustomCharacter(e, charId);
                         }}
                         className="absolute top-0 right-0 p-0.5 bg-red-600 hover:bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-all duration-150 rounded-bl z-10"
-                        title={`Xoá video ở Ô ${index + 1}`}
+                        title={`Xoá ${targetChar.name || ''}`}
                       >
                         <X size={8} />
                       </button>
-                    </div>
-                  );
-                }
-
-                // Nếu chưa có custom video nào và là Ô 1, hiển thị video mẫu ban đầu
-                if (index === 0 && customCharacters.length === 0) {
-                  return (
-                    <div
-                      key="slot_default_1"
-                      onClick={() => {
-                        setSelectedCharacter('linhanh_4k');
-                        try { localStorage.setItem('avalive_selected_char', 'linhanh_4k'); } catch (e) {}
-                        setIsGameBattleActive(false);
-                        setIsGameBanDoActive(false);
-                        syncMasterLiveState({
-                          stage: 'idol',
-                          selectedCharacter: 'linhanh_4k',
-                          characterName: 'AI Idol Linh Anh (4K)',
-                          mediaUrl: '/demo_dancer.mp4',
-                          isVideo: true,
-                          aspectRatio: globalAspectRatio || '9:16'
-                        }, socketRef.current);
-                      }}
-                      className={`w-8 h-8 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 relative group transition-all ${
-                        (!selectedCharacter || selectedCharacter === 'linhanh_4k')
-                          ? 'border-2 border-cyan-400 shadow-md shadow-cyan-500/40 ring-2 ring-cyan-400/50 scale-105'
-                          : 'border border-gray-600 opacity-70 hover:opacity-100'
-                      }`}
-                      title="Ô 1: AI Idol Linh Anh (Mẫu)"
-                    >
-                      <video src="/demo_dancer.mp4" className="w-full h-full object-cover" muted />
-                    </div>
-                  );
-                }
-
-                // Ô Trống: Bấm để tải video/nhân vật trực tiếp vào ô này
-                return (
-                  <button
-                    key={`empty_slot_${index}`}
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-8 h-8 rounded-lg border-2 border-dashed border-gray-600 hover:border-cyan-400 hover:bg-cyan-500/10 flex flex-col items-center justify-center text-gray-400 hover:text-cyan-300 transition-all duration-200 cursor-pointer shrink-0 group"
-                    title={`Ô ${index + 1} (Trống) — Bấm để tải video/ảnh nhân vật lên`}
-                  >
-                    <Plus size={13} className="group-hover:scale-125 transition-transform" />
-                  </button>
+                    )}
+                  </div>
                 );
               })}
 
