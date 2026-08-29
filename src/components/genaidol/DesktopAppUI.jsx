@@ -1502,7 +1502,7 @@ export default function DesktopAppUI() {
           });
           const data = await res.json();
           if (data && data.url) {
-            url = data.url; // Sử dụng link HTTP thật thay vì blob:
+            url = `${autoBackendUrl}${data.url}`; // Bắt buộc dùng đường dẫn tuyệt đối kèm port 3001
           }
         } catch (error) {
           console.error("Lỗi upload video:", error);
@@ -1991,31 +1991,6 @@ export default function DesktopAppUI() {
             )}
           </button>
 
-          {/* Nút Live Studio (Tích Hợp Trong Giao Diện Phần Mềm) */}
-          <button 
-            className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs ${
-              isLiveStudioActive
-                ? 'bg-gradient-to-r from-pink-600 via-rose-600 to-purple-600 text-white border-pink-300 shadow-pink-500/40 ring-1 ring-pink-400/50 animate-pulse'
-                : (isDarkMode ? 'border-pink-500/40 bg-pink-950/30 text-pink-300 hover:bg-pink-900/50' : 'border-pink-300 bg-pink-50 text-pink-700 hover:bg-pink-100')
-            }`}
-            onClick={() => {
-              setIsLiveStudioActive(true);
-              setIsGameBattleActive(false);
-              setIsGameBanDoActive(false);
-              setIsDanceFloorActive(false);
-              try { localStorage.setItem('avalive_active_stage', 'studio'); } catch (e) {}
-              mapVoiceEngine.stopAll();
-              battleVoiceEngine.stopAll();
-              battleCommentary.stopAll();
-            }}
-            title="Chuyển sang phòng dựng Live Studio 4K chuyên nghiệp (Webcam, Bộ lọc làm đẹp, Video RTMP, Nguồn OBS)"
-          >
-            <Tv size={10} className={isLiveStudioActive ? 'text-yellow-300' : 'text-pink-400'} />
-            <span className="whitespace-nowrap">Live Studio</span>
-            {isLiveStudioActive && (
-              <span className="w-1 h-1 rounded-full bg-emerald-400 animate-ping"></span>
-            )}
-          </button>
 
           {/* Nút Kích hoạt Game Chiến Đấu */}
           <button 

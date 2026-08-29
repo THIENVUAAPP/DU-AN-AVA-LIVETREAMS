@@ -77,31 +77,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       description: 'Võ đài chiến đấu chia 2 phe PK kịch tính, tự động tung skill và hiệu ứng khi có tương tác bình luận & quà.',
       path: '/battle',
       directUrl: `${activeBase}/?overlay=battle${backendParam}`
-    },
-    {
-      id: 'studio',
-      name: 'DỰ ÁN 4: PHÒNG DỰNG LIVE STUDIO 4K',
-      tag: 'CHUYÊN NGHIỆP',
-      tagColor: 'from-blue-500 to-indigo-600',
-      icon: Tv,
-      iconColor: 'text-blue-400',
-      bgColor: 'border-blue-500/30 bg-blue-950/20 hover:border-blue-400/60',
-      description: 'Studio phát sóng 4K chuyên nghiệp tích hợp Webcam, phông nền ảo, hiệu ứng làm đẹp và video RTMP.',
-      path: '/studio',
-      directUrl: `${activeBase}/?overlay=studio${backendParam}`
-    },
-    {
-      id: 'master',
-      name: 'DỰ ÁN TOÀN NĂNG: 1 LINK DUY NHẤT (TỰ ĐỔI CẢNH THEO PHẦN MỀM)',
-      tag: 'TIỆN LỢI NHẤT',
-      tagColor: 'from-cyan-500 to-emerald-500',
-      icon: Radio,
-      iconColor: 'text-cyan-300',
-      bgColor: 'border-cyan-400/60 bg-gradient-to-br from-cyan-950/40 via-[#0E1B33] to-blue-950/40 shadow-lg shadow-cyan-950/50',
-      description: '1 Link thông minh tự động chuyển đổi giữa cả 4 dự án khi anh bấm nút trên phần mềm (không cần đổi link trong TikTok Live Studio).',
-      path: '/live',
-      directUrl: `${activeBase}/?overlay=live${backendParam}`
-    }
+
   ];
 
   const handleCopy = (url, id) => {
