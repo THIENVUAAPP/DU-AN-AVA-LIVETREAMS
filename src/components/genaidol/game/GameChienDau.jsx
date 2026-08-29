@@ -1670,6 +1670,101 @@ export default function GameChienDau({
       // 2. Update & Draw Fighters (Chiến binh Kiếm Hiệp 3D: Đội hình Viên Kim Cương Đối Xứng)
       const lerpFactor = Math.min(1, dt * 3.8);
 
+      // 2. Continuous Martial Arts Auto-Skirmish Combat Engine (Tự Động Giao Tranh Võ Thuật 60FPS Không Bao Giờ Đứng Hình)
+      const now = performance.now();
+      if (!gameState.isPaused && !gameState.winner && pairCount > 0) {
+        if (!engineRef.current.lastAutoSkirmishTime) engineRef.current.lastAutoSkirmishTime = now;
+        if (now - engineRef.current.lastAutoSkirmishTime > 950) {
+          engineRef.current.lastAutoSkirmishTime = now;
+          const attackingFaction = Math.random() < 0.5 ? 'blue' : 'red';
+          const defendingFaction = attackingFaction === 'blue' ? 'red' : 'blue';
+          const attackers = engineRef.current.fighters[attackingFaction].filter(f => !f.isKnockedOut);
+          const defenders = engineRef.current.fighters[defendingFaction].filter(f => !f.isKnockedOut);
+
+          if (attackers.length > 0 && defenders.length > 0) {
+            const attacker = attackers[Math.floor(Math.random() * attackers.length)];
+            const defender = defenders[Math.floor(Math.random() * defenders.length)];
+
+            attacker.pulseUntil = now + 500;
+            attacker.bobPhase += 1.2;
+            defender.bobPhase += 0.8;
+
+            const isCrit = Math.random() < 0.28;
+            const baseDmg = 8 + Math.floor(Math.random() * 16);
+            const finalDmg = isCrit ? baseDmg * 2 : baseDmg;
+
+            const martialArtsMoves = attackingFaction === 'blue'
+              ? ['⚔️ TẬT PHONG KIẾM', '⚡ THIÊN PHI TIÊN', '🗡️ SONG LIÊN KIẾM', '💥 BÁ VƯƠNG HẤT', '🌀 LƯỠNG NGHI']
+              : ['🪓 PHÁCH SƠN ĐAO', '🌪️ CUỒNG PHONG TRẢM', '🔥 LIÊN HOÀN TRẢM', '⚡ CỰ LỰC ĐẬP', '🐉 LONG QUYỀN'];
+            const moveName = martialArtsMoves[Math.floor(Math.random() * martialArtsMoves.length)];
+
+            const clashX = (attacker.x + defender.x) / 2 + (Math.random() - 0.5) * 18;
+            const clashY = (attacker.y + defender.y) / 2 - 12;
+
+            // 1. Floating Damage & Move Text
+            engineRef.current.floatingTexts.push({
+              id: 'dmg_' + Math.random(),
+              text: isCrit ? `💥 ${moveName} -${finalDmg} HP` : `-${finalDmg}`,
+              x: clashX,
+              y: clashY,
+              vy: isCrit ? -48 : -36,
+              color: isCrit ? '#facc15' : (attackingFaction === 'blue' ? '#38bdf8' : '#fb7185'),
+              font: isCrit ? 'bold 13px sans-serif' : 'bold 11.5px sans-serif',
+              spawnedAt: now,
+              lifespanMs: isCrit ? 900 : 650
+            });
+
+            // 2. Combat Sparks & Blade Slash Arc
+            for (let sp = 0; sp < (isCrit ? 8 : 4); sp++) {
+              engineRef.current.particles.push({
+                x: clashX + (Math.random() - 0.5) * 16,
+                y: clashY + (Math.random() - 0.5) * 16,
+                vx: (Math.random() - 0.5) * 140,
+                vy: (Math.random() - 0.5) * 100 - 25,
+                size: 2.5 + Math.random() * 3.5,
+                color: Math.random() < 0.6 ? (attackingFaction === 'blue' ? '#38bdf8' : '#ff3b4e') : '#fde047',
+                isFlash: true,
+                lifespanMs: 380,
+                spawnedAt: now
+              });
+            }
+
+            // 3. Dynamic HP Tug-of-War
+            setGameState(prev => {
+              const currentDefHp = prev.hp[defendingFaction] !== undefined ? prev.hp[defendingFaction] : 1000;
+              let nextHp = currentDefHp - finalDmg;
+              // Comeback surge if HP gets too low without actual gift
+              if (nextHp <= 80) {
+                nextHp = 550;
+                engineRef.current.floatingTexts.push({
+                  id: 'surge_' + Math.random(),
+                  text: `✨ HỒI SINH TIẾP SỨC +450 HP! 🛡️`,
+                  x: defender.x,
+                  y: defender.y - 28,
+                  vy: -35,
+                  color: '#22c55e',
+                  font: 'bold 12.5px sans-serif',
+                  spawnedAt: now,
+                  lifespanMs: 1100
+                });
+              }
+              return {
+                ...prev,
+                hp: {
+                  ...prev.hp,
+                  [defendingFaction]: Math.max(50, nextHp)
+                }
+              };
+            });
+
+            if (now - engineRef.current.lastClashSoundTime > 280) {
+              playSfx('hit');
+              engineRef.current.lastClashSoundTime = now;
+            }
+          }
+        }
+      }
+
       // Spawn sparks for active dueling pairs across the screen
       if (pairCount > 0 && Math.random() < 0.65) {
         const randPair = Math.floor(Math.random() * pairCount);
@@ -1689,11 +1784,6 @@ export default function GameChienDau({
             lifespanMs: 380,
             spawnedAt: performance.now()
           });
-        }
-
-        if (performance.now() - engineRef.current.lastClashSoundTime > 300) {
-          playSfx('hit');
-          engineRef.current.lastClashSoundTime = performance.now();
         }
       }
 

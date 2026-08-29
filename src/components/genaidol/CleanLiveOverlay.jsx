@@ -360,8 +360,12 @@ export default function CleanLiveOverlay() {
       } catch (err) {}
     }
 
-    // 5. POLLING REALTIME STUDIO CAM FRAME (Hỗ trợ 100% CEF Browser Source trong TikTok LIVE Studio)
+    // 5. POLLING REALTIME STUDIO CAM FRAME (Chỉ chạy khi ở chế độ Studio để tiết kiệm tài nguyên và giữ video 60FPS mượt mà)
     const frameInterval = setInterval(() => {
+      const pathname = typeof window !== 'undefined' ? window.location.pathname.toLowerCase() : '';
+      const isStudio = pathname.includes('/studio') || window.location.search.includes('studio') || window.location.search.includes('broadcast');
+      if (!isStudio) return;
+
       const endpoint = getBackendUrl() ? `${getBackendUrl()}/api/studio-frame?t=${Date.now()}` : `/api/studio-frame?t=${Date.now()}`;
       fetch(endpoint, { cache: 'no-store' })
         .then(res => res.json())
@@ -371,7 +375,7 @@ export default function CleanLiveOverlay() {
           }
         })
         .catch(() => {});
-    }, 100);
+    }, 400);
 
     // 5. LOCAL STORAGE SYNC
     const handleStorage = (e) => {
@@ -744,6 +748,8 @@ export default function CleanLiveOverlay() {
           muted
           playsInline
           controls={false}
+          preload="auto"
+          disablePictureInPicture
           onLoadedMetadata={(e) => {
             e.target.muted = true;
             e.target.play().catch(() => {});
@@ -757,10 +763,17 @@ export default function CleanLiveOverlay() {
             e.target.play().catch(() => {});
           }}
           onError={(e) => {
-            console.warn('[CleanLiveOverlay] Video playback failed:', e);
+            console.warn('[CleanLiveOverlay] Video playback notice:', e);
           }}
-          className="w-full h-full object-cover select-none absolute inset-0"
-          style={{ width: '100vw', height: '100vh', objectFit: 'cover' }}
+          className="w-full h-full object-cover select-none absolute inset-0 transform-gpu"
+          style={{ 
+            width: '100vw', 
+            height: '100vh', 
+            objectFit: 'cover',
+            transform: 'translateZ(0)',
+            willChange: 'transform',
+            backfaceVisibility: 'hidden'
+          }}
         />
       ) : activeStreamUrl ? (
         <video

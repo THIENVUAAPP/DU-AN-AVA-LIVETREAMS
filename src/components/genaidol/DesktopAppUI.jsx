@@ -353,7 +353,6 @@ export default function DesktopAppUI() {
 
   useEffect(() => {
     let animId;
-    let timerId;
     let isMounted = true;
 
     const renderFrame = () => {
@@ -379,32 +378,16 @@ export default function DesktopAppUI() {
       }
     };
 
-    const video = flvVideoRef.current;
-    if (video && 'requestVideoFrameCallback' in video) {
-      video.requestVideoFrameCallback(renderFrame);
+    const videoEl = flvVideoRef.current;
+    if (videoEl && 'requestVideoFrameCallback' in videoEl) {
+      videoEl.requestVideoFrameCallback(renderFrame);
     } else {
       animId = requestAnimationFrame(renderFrame);
     }
 
-    timerId = setInterval(() => {
-      const v = flvVideoRef.current;
-      const c = flvCanvasRef.current;
-      if (v && c && v.readyState >= 2 && v.videoWidth > 0 && !v.paused) {
-        if (c.width !== v.videoWidth || c.height !== v.videoHeight) {
-          c.width = v.videoWidth;
-          c.height = v.videoHeight;
-        }
-        const ctx = c.getContext('2d', { alpha: false, desynchronized: true });
-        if (ctx) {
-          ctx.drawImage(v, 0, 0, c.width, c.height);
-        }
-      }
-    }, 33);
-
     return () => {
       isMounted = false;
       if (animId) cancelAnimationFrame(animId);
-      if (timerId) clearInterval(timerId);
     };
   }, [flvUrl]);
   const lastAiCommentTime = useRef(0);
@@ -1806,11 +1789,14 @@ export default function DesktopAppUI() {
           <video 
             key={selected.url}
             src={selected.url} 
-            className="w-full h-full object-contain bg-black"
+            className="w-full h-full object-contain bg-black transform-gpu"
+            style={{ transform: 'translateZ(0)', willChange: 'transform' }}
             autoPlay 
             loop 
             muted 
             controls 
+            preload="auto"
+            disablePictureInPicture
             playsInline 
           />
         );
