@@ -548,24 +548,17 @@ export default function CleanLiveOverlay() {
 
   // Helper giải mã URL media chính xác (tôn trọng 100% video/nhân vật người dùng chọn)
   const resolveActiveMedia = () => {
-    let candidateUrl = null;
-    let isVideo = true;
+    let candidateUrl = masterState.mediaUrl || null;
+    let isVideo = masterState.isVideo !== false;
 
-    // 1. Ưu tiên số 1: Video do người dùng tải lên (tìm theo ID trong IndexedDB)
-    if (masterState.selectedCharacter && localDbItems.length > 0) {
+    // 1. Ưu tiên số 1: Trực tiếp từ masterState.mediaUrl (được Dashboard bắn sang thời gian thực)
+    if (masterState.mediaUrl) {
+      candidateUrl = masterState.mediaUrl;
+    } else if (masterState.selectedCharacter && localDbItems.length > 0) {
       const match = localDbItems.find(i => i.id === masterState.selectedCharacter);
       if (match && (match.mediaUrl || match.url)) {
         candidateUrl = match.mediaUrl || match.url;
-        isVideo = match.type === 'video' || (typeof candidateUrl === 'string' && (candidateUrl.endsWith('.mp4') || candidateUrl.endsWith('.webm') || candidateUrl.includes('/uploads/')));
       }
-    }
-
-    if (!candidateUrl && masterState.mediaUrl) {
-      candidateUrl = masterState.mediaUrl;
-      const cleanUrl = candidateUrl.split('?')[0].toLowerCase();
-      const isImg = cleanUrl.endsWith('.jpg') || cleanUrl.endsWith('.jpeg') || cleanUrl.endsWith('.png') || cleanUrl.endsWith('.webp') || cleanUrl.includes('unsplash') || candidateUrl.startsWith('data:image');
-      const isVid = cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.endsWith('.mov') || cleanUrl.includes('preview/mixkit') || cleanUrl.includes('/uploads/') || cleanUrl.includes('idols/');
-      isVideo = isVid ? true : (isImg ? false : masterState.isVideo !== false);
     }
 
     // 2. Kiểm tra trong danh sách custom characters người dùng đã tải lên
@@ -577,16 +570,14 @@ export default function CleanLiveOverlay() {
           const customFound = customList.find(c => c.id === masterState.selectedCharacter);
           if (customFound && (customFound.url || customFound.mediaUrl)) {
             candidateUrl = customFound.url || customFound.mediaUrl;
-            isVideo = customFound.type === 'video' || (typeof candidateUrl === 'string' && (candidateUrl.endsWith('.mp4') || candidateUrl.endsWith('.webm') || candidateUrl.includes('/uploads/')));
           }
         }
       } catch (e) {}
     }
 
-    // 3. Fallback video idol mặc định
+    // 3. Fallback video idol mặc định nếu chưa chọn video
     if (!candidateUrl) {
       candidateUrl = '/demo_dancer.mp4';
-      isVideo = true;
     }
 
     // Làm sạch và chuẩn hóa URL (Loại bỏ các tiền tố http lặp lại nếu có)
@@ -596,6 +587,13 @@ export default function CleanLiveOverlay() {
       } else if (candidateUrl.includes('https://') && candidateUrl.lastIndexOf('https://') > 0) {
         candidateUrl = candidateUrl.substring(candidateUrl.lastIndexOf('https://'));
       }
+    }
+
+    // Xác định chính xác video hay ảnh
+    if (typeof candidateUrl === 'string') {
+      const cleanLower = candidateUrl.split('?')[0].toLowerCase();
+      const isExplicitImg = cleanLower.endsWith('.jpg') || cleanLower.endsWith('.jpeg') || cleanLower.endsWith('.png') || cleanLower.endsWith('.webp') || cleanLower.endsWith('.svg') || cleanLower.endsWith('.gif') || candidateUrl.startsWith('data:image');
+      isVideo = !isExplicitImg;
     }
 
     return { url: candidateUrl, isVideo };
@@ -684,21 +682,40 @@ export default function CleanLiveOverlay() {
           />
         ) : activeMedia.url && activeMedia.isVideo ? (
           <video
+            ref={(el) => {
+              if (el) {
+                el.muted = true;
+                el.defaultMuted = true;
+                el.playsInline = true;
+                const playPromise = el.play();
+                if (playPromise !== undefined) {
+                  playPromise.catch(() => {
+                    el.muted = true;
+                    el.play().catch(() => {});
+                  });
+                }
+              }
+            }}
             key={activeMedia.url}
             src={activeMedia.url}
             autoPlay
             loop
-            muted={isAudioMuted}
+            muted
             playsInline
+            onLoadedMetadata={(e) => {
+              e.target.muted = true;
+              e.target.play().catch(() => {});
+            }}
             onCanPlay={(e) => {
+              e.target.muted = true;
+              e.target.play().catch(() => {});
+            }}
+            onEnded={(e) => {
+              e.target.currentTime = 0;
               e.target.play().catch(() => {});
             }}
             onError={(e) => {
-              console.warn('[CleanLiveOverlay] Video error, fallback to demo_dancer.mp4:', e);
-              if (e.target.src && !e.target.src.endsWith('/demo_dancer.mp4')) {
-                e.target.src = '/demo_dancer.mp4';
-                e.target.play().catch(() => {});
-              }
+              console.warn('[CleanLiveOverlay] Video playback note:', e);
             }}
             className="w-full h-full object-cover select-none bg-black"
           />

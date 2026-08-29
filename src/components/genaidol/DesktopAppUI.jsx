@@ -1127,15 +1127,15 @@ export default function DesktopAppUI() {
       name: 'AI Idol Linh Anh' 
     };
     
-    let currentMedia = char.url || '/demo_dancer.mp4';
-    let isVid = char.type === 'video' || (typeof currentMedia === 'string' && (currentMedia.endsWith('.mp4') || currentMedia.includes('demo_dancer')));
+    let currentMedia = char.url || (activeVideoItem?.mediaUrl) || '/demo_dancer.mp4';
+    let isVid = char.type === 'video' || (typeof currentMedia === 'string' && (currentMedia.endsWith('.mp4') || currentMedia.includes('demo_dancer') || currentMedia.includes('/uploads/')));
     let streamFlvUrl = null;
 
     if (isConnected && flvUrl) {
       currentMedia = flvUrl;
       streamFlvUrl = flvUrl;
       isVid = true;
-    } else if (activeVideoItem && activeVideoItem.mediaUrl) {
+    } else if (isProcessingEvent && activeVideoItem && activeVideoItem.mediaUrl) {
       currentMedia = activeVideoItem.mediaUrl;
       isVid = activeVideoItem.type === 'video' || (typeof currentMedia === 'string' && currentMedia.endsWith('.mp4'));
     }
@@ -1661,7 +1661,9 @@ export default function DesktopAppUI() {
         );
       }
       
-      if (isConnected && activeVideoItem && activeVideoItem.mediaUrl) {
+      const selected = CHARACTERS[selectedCharacter] || Object.values(CHARACTERS)[0];
+
+      if (isProcessingEvent && activeVideoItem && activeVideoItem.mediaUrl) {
         return (
           <video 
             key={activeVideoItem.id || activeVideoItem.mediaUrl}
@@ -1672,15 +1674,13 @@ export default function DesktopAppUI() {
             controls={false}
             onEnded={handleVideoEnded}
             onError={() => {
-              console.warn('Lỗi tải video nền live');
+              console.warn('Lỗi tải video phản hồi');
               setActiveVideoItem(null);
             }}
             playsInline 
           />
         );
       }
-
-      const selected = CHARACTERS[selectedCharacter] || Object.values(CHARACTERS)[0];
   
       if (!selected || !selected.url) {
         return (
