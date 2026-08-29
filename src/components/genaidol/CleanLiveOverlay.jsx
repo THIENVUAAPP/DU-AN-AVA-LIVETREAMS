@@ -583,9 +583,9 @@ export default function CleanLiveOverlay() {
       } catch (e) {}
     }
 
-    // 3. Fallback video idol mặc định nếu chưa chọn video
+    // 3. Không dùng fallback mặc định nữa theo yêu cầu của user
     if (!candidateUrl) {
-      candidateUrl = '/demo_dancer.mp4';
+      candidateUrl = '';
     }
 
     // Làm sạch và chuẩn hóa URL (Loại bỏ các tiền tố http lặp lại nếu có)
@@ -605,8 +605,8 @@ export default function CleanLiveOverlay() {
 
       // TỪ CHỐI TUYỆT ĐỐI BLOB URL NẾU NÓ ĐẾN TỪ CỬA SỔ KHÁC (vì CEF TikTok Studio không đọc được blob của Chrome)
       if (candidateUrl.startsWith('blob:')) {
-        console.warn('[CleanLiveOverlay] Blob URL is not supported across windows. Falling back to default.');
-        candidateUrl = '/demo_dancer.mp4';
+        console.warn('[CleanLiveOverlay] Blob URL is not supported across windows. Falling back to empty.');
+        candidateUrl = '';
       }
     }
 
@@ -731,11 +731,8 @@ export default function CleanLiveOverlay() {
             e.target.play().catch(() => {});
           }}
           onError={(e) => {
-            console.warn('[CleanLiveOverlay] Video playback note, fallback to demo_dancer.mp4:', e);
-            if (e.target.src && !e.target.src.endsWith('/demo_dancer.mp4')) {
-              e.target.src = '/demo_dancer.mp4';
-              e.target.play().catch(() => {});
-            }
+            console.warn('[CleanLiveOverlay] Video playback failed:', e);
+            // Bỏ fallback mặc định theo yêu cầu
           }}
           className="w-full h-full object-cover select-none bg-black absolute inset-0"
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
