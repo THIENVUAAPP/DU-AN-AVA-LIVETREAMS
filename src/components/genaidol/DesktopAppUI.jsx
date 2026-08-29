@@ -115,13 +115,18 @@ export default function DesktopAppUI() {
     const nameClean = realNameInput.trim() || emailClean.split('@')[0];
     const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(emailClean)}`;
 
-    // Kiểm tra gói bản quyền trên Supabase
-    let userPlan = isAdmin ? 'ENTERPRISE' : 'VIP';
+    // Kiểm tra gói bản quyền & Token & Thời gian Live trên Supabase
+    let userPlan = isAdmin ? 'ENTERPRISE' : 'VIP PRO';
+    let userTokens = isAdmin ? 999999999 : 50000;
+    let userLiveMinutes = isAdmin ? 999999 : 6000;
     try {
       if (supabase) {
         const { data: dbUser } = await supabase.from('users').select('*').eq('email', emailClean).maybeSingle();
-        if (dbUser?.plan) {
-          userPlan = dbUser.plan.toUpperCase();
+        if (dbUser) {
+          if (dbUser.plan) userPlan = dbUser.plan.toUpperCase();
+          if (typeof dbUser.tokens === 'number') userTokens = dbUser.tokens;
+          if (typeof dbUser.live_minutes === 'number') userLiveMinutes = dbUser.live_minutes;
+          else if (typeof dbUser.liveMinutes === 'number') userLiveMinutes = dbUser.liveMinutes;
         }
       }
     } catch (e) {}
@@ -131,7 +136,10 @@ export default function DesktopAppUI() {
       email: emailClean,
       avatar: avatarUrl,
       isAdmin: isAdmin,
-      plan: userPlan
+      plan: userPlan,
+      tokens: userTokens,
+      liveMinutes: userLiveMinutes,
+      liveTimeHours: Math.round(userLiveMinutes / 60)
     };
 
     setCurrentUser(newUser);
@@ -141,6 +149,7 @@ export default function DesktopAppUI() {
     } catch (e) {}
 
     setIsLoggingIn(false);
+    setIsGmailLoginModalOpen(false);
   };
 
   const handleLogout = () => {
@@ -248,7 +257,14 @@ export default function DesktopAppUI() {
 
   const [toast, setToast] = useState(null);
   
-  const [customCharacters, setCustomCharacters] = useState([]);
+  const [customCharacters, setCustomCharacters] = useState(() => {
+    try {
+      const saved = localStorage.getItem('avalive_custom_characters');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
   const [hiddenBuiltins, setHiddenBuiltins] = useState(() => {
     try {
       const saved = localStorage.getItem('aidol_hidden_builtins');
@@ -1552,6 +1568,16 @@ export default function DesktopAppUI() {
           fileData: file, // Vẫn lưu dự phòng vào IDB
           mediaUrl: url
         });
+
+        // 🚀 BẮN PHÁT SÓNG REALTIME TỨC THÌ ĐẾN TIKTOK LIVE STUDIO / OBS
+        syncMasterLiveState({
+          stage: 'idol',
+          selectedCharacter: newChar.id,
+          characterName: newChar.name,
+          mediaUrl: url,
+          isVideo: true,
+          aspectRatio: globalAspectRatio || '9:16'
+        }, socketRef.current);
       } else {
         // Ảnh: Mở Modal AI Xoá Phông & Làm Đẹp Siêu Nét 4K
         setBeautyModalImage(url);
@@ -1577,6 +1603,16 @@ export default function DesktopAppUI() {
     setCustomCharacters(prev => [...prev, newChar]);
     setSelectedCharacter(newCharId);
     try { localStorage.setItem('avalive_selected_char', newCharId); } catch (e) {}
+
+    // 🚀 BẮN PHÁT SÓNG REALTIME TỨC THÌ ĐẾN TIKTOK LIVE STUDIO / OBS
+    syncMasterLiveState({
+      stage: 'idol',
+      selectedCharacter: newCharId,
+      characterName: newChar.name,
+      mediaUrl: processedDataUrl,
+      isVideo: false,
+      aspectRatio: globalAspectRatio || '9:16'
+    }, socketRef.current);
 
     // Lưu vào IDB
     try {
@@ -2174,8 +2210,31 @@ export default function DesktopAppUI() {
             <span className="whitespace-nowrap">📡 Link Live</span>
           </button>
 
+          {/* TOKENS & LIVE TIME DISPLAY (HIỂN THỊ ĐẦY ĐỦ TOKEN & THỜI GIAN LIVE) */}
+          <div className="flex items-center gap-1.5 border-l border-r border-gray-500/30 px-2">
+            {/* Token Balance */}
+            <div 
+              onClick={() => setShowTokenHistory(true)}
+              className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-[10px] font-bold cursor-pointer transition-all hover:scale-105"
+              title="Số dư Token AI hiện tại — Bấm để xem chi tiết / nạp thêm"
+            >
+              <Coins size={11} className="text-yellow-400 animate-pulse" />
+              <span>{currentUser?.isAdmin ? 'Vô Hạn Token' : `${((currentUser?.tokens !== undefined ? currentUser.tokens : tokenBalance) || 50000).toLocaleString()} Token`}</span>
+            </div>
+
+            {/* Live Time Remaining */}
+            <div 
+              onClick={() => setActiveSettingsModal('payment')}
+              className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold cursor-pointer transition-all hover:scale-105"
+              title="Thời gian Livestream còn lại của gói — Bấm để gia hạn"
+            >
+              <Clock size={11} className="text-emerald-400" />
+              <span>{currentUser?.isAdmin ? 'Vô Hạn Live' : `${currentUser?.liveTimeHours || Math.round((currentUser?.liveMinutes || 6000) / 60) || 100} Giờ Live`}</span>
+            </div>
+          </div>
+
           {/* USER PROFILE & LICENSE BADGE (ĐĂNG NHẬP GMAIL) */}
-          {currentUser && (
+          {currentUser ? (
             <div 
               onClick={() => setIsGmailLoginModalOpen(true)}
               className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-xs shadow-xs cursor-pointer hover:border-cyan-400 transition-all ${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-300'}`}
@@ -2203,6 +2262,15 @@ export default function DesktopAppUI() {
                 <LogOut size={10} />
               </button>
             </div>
+          ) : (
+            <button
+              onClick={() => setIsGmailLoginModalOpen(true)}
+              className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white border border-blue-400/50 shadow-md shadow-blue-500/20 transition-all hover:scale-105 animate-pulse"
+              title="Đăng nhập tài khoản Gmail để kết nối gói bản quyền đã mua"
+            >
+              <User size={10} className="text-yellow-300" />
+              <span className="whitespace-nowrap">🔑 Đăng Nhập Gmail (Kết Nối Gói)</span>
+            </button>
           )}
     </div>
     </div>

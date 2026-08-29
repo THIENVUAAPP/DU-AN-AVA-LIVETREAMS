@@ -401,8 +401,8 @@ export default function CleanLiveOverlay() {
   const flvPlayerRef = useRef(null);
   const hlsPlayerRef = useRef(null);
 
-  const isStreamUrl = (u) => u && (u.includes('.flv') || u.includes('.m3u8') || u.includes('pull-flv') || u.includes('tiktokcdn.com') || u.includes('/stream') || u.includes('/game/') || u.includes('/stage/'));
-  const activeStreamUrl = masterState.flvUrl || (isStreamUrl(masterState.mediaUrl) ? masterState.mediaUrl : null);
+  const isStreamUrl = (u) => typeof u === 'string' && (u.endsWith('.flv') || u.endsWith('.m3u8') || u.includes('.flv?') || u.includes('.m3u8?') || u.includes('pull-flv'));
+  const activeStreamUrl = masterState.flvUrl && isStreamUrl(masterState.flvUrl) ? masterState.flvUrl : null;
 
   const attachFlvPlayer = (videoEl, url) => {
     if (!videoEl || !url) return;
