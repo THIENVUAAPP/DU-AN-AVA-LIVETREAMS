@@ -2244,33 +2244,6 @@ export default function DesktopAppUI() {
             {isDarkMode ? <Sun size={10} /> : <Moon size={10} />}
           </button>
 
-          {/* Token Widget */}
-          <button
-            onClick={() => setShowTokenHistory(true)}
-            className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border ${
-              balance === 0
-                ? 'bg-red-500/20 border-red-500/40 text-red-400 hover:bg-red-500/30'
-                : balance < getDynamicRates().LOW_BALANCE_WARN
-                ? 'bg-orange-500/20 border-orange-500/40 text-orange-400 hover:bg-orange-500/30'
-                : 'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20'
-            }`}
-            title="Xem lịch sử Token"
-          >
-            {balance < getDynamicRates().LOW_BALANCE_WARN && <AlertTriangle size={10} />}
-            <Coins size={10} />
-            <span className="whitespace-nowrap">{balance.toLocaleString()}</span>
-          </button>
-
-          <button className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium transition-colors ${isDarkMode ? 'bg-[#0088cc]/20 text-[#0088cc] hover:bg-[#0088cc]/30' : 'bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc]/20'}`}>
-            <MessageCircle size={10} />
-            <span>Zalo</span>
-          </button>
-
-          <button onClick={() => setActiveSettingsModal('payment')} className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium transition-colors ${isDarkMode ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-green-500/10 text-green-700 hover:bg-green-500/20'}`}>
-            <CreditCard size={10} />
-            <span className="whitespace-nowrap">{t('payment', currentLang)}</span>
-          </button>
-
           {/* Nút Mở Link Realtime TikTok LIVE Studio & OBS Studio - Nhỏ gọn tinh tế */}
           <button
             onClick={() => setShowOverlayModal(true)}
@@ -2281,68 +2254,77 @@ export default function DesktopAppUI() {
             <span className="whitespace-nowrap">📡 Link Live</span>
           </button>
 
-          {/* TOKENS & LIVE TIME DISPLAY (HIỂN THỊ ĐẦY ĐỦ TOKEN & THỜI GIAN LIVE) */}
-          <div className="flex items-center gap-1.5 border-l border-r border-gray-500/30 px-2">
-            {/* Token Balance */}
+          {/* 👑 1 Ô DUY NHẤT: TÀI KHOẢN GMAIL + GÓI + TOKEN + THỜI GIAN LIVE (GỌN 70% TINH TẾ) */}
+          <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-[9.5px] shadow-xs shrink-0 ${isDarkMode ? 'bg-[#12131d]/90 border-cyan-500/30' : 'bg-white border-gray-300'}`}>
+            {currentUser ? (
+              <div 
+                onClick={() => setIsGmailLoginModalOpen(true)}
+                className="flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity"
+                title="Bấm để xem chi tiết tài khoản hoặc đổi Gmail"
+              >
+                <img 
+                  src={currentUser.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(currentUser.email)}`}
+                  alt="Avatar"
+                  className="w-3.5 h-3.5 rounded-full border border-cyan-400 object-cover shrink-0"
+                />
+                <span className="font-bold text-gray-200 truncate max-w-[75px]" title={currentUser.email}>
+                  {currentUser.name || currentUser.email.split('@')[0]}
+                </span>
+                <span className="text-[8px] px-1 py-0.2 rounded font-black bg-gradient-to-r from-amber-400 to-yellow-400 text-black leading-tight">
+                  {currentUser.isAdmin ? 'SUPER ADMIN' : (currentUser.plan || 'VIP PRO')}
+                </span>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsGmailLoginModalOpen(true)}
+                className="flex items-center gap-1 font-bold text-cyan-400 hover:text-cyan-300 transition-colors"
+                title="Đăng nhập Gmail kết nối gói bản quyền"
+              >
+                <User size={10} className="text-yellow-300" />
+                <span className="whitespace-nowrap">🔑 Đăng Nhập Gmail</span>
+              </button>
+            )}
+
+            <div className="w-px h-3 bg-gray-600/50" />
+
+            {/* Token */}
             <div 
               onClick={() => setShowTokenHistory(true)}
-              className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-[10px] font-bold cursor-pointer transition-all hover:scale-105"
-              title="Số dư Token AI hiện tại — Bấm để xem chi tiết / nạp thêm"
+              className="flex items-center gap-0.5 font-bold text-amber-300 cursor-pointer hover:text-amber-200 transition-colors whitespace-nowrap"
+              title="Số dư Token AI — Bấm xem lịch sử"
             >
-              <Coins size={11} className="text-yellow-400 animate-pulse" />
-              <span>{currentUser?.isAdmin ? 'Vô Hạn Token' : `${((currentUser?.tokens !== undefined ? currentUser.tokens : balance) || 50000).toLocaleString()} Token`}</span>
+              <Coins size={10} className="text-yellow-400" />
+              <span>{currentUser?.isAdmin ? 'Vô Hạn' : `${((currentUser?.tokens !== undefined ? currentUser.tokens : balance) || 50000).toLocaleString()}`} Token</span>
             </div>
 
-            {/* Live Time Remaining */}
+            <div className="w-px h-3 bg-gray-600/50" />
+
+            {/* Live Time */}
             <div 
               onClick={() => setActiveSettingsModal('payment')}
-              className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold cursor-pointer transition-all hover:scale-105"
-              title="Thời gian Livestream còn lại của gói — Bấm để gia hạn"
+              className="flex items-center gap-0.5 font-bold text-emerald-400 cursor-pointer hover:text-emerald-300 transition-colors whitespace-nowrap"
+              title="Thời gian Live còn lại — Bấm để gia hạn"
             >
-              <Clock size={11} className="text-emerald-400" />
-              <span>{currentUser?.isAdmin ? 'Vô Hạn Live' : `${currentUser?.liveTimeHours || Math.round((currentUser?.liveMinutes || 6000) / 60) || 100} Giờ Live`}</span>
+              <Clock size={10} className="text-emerald-400" />
+              <span>{currentUser?.isAdmin ? 'Vô Hạn Live' : `${currentUser?.liveTimeHours || Math.round((currentUser?.liveMinutes || 6000) / 60) || 100}h Live`}</span>
             </div>
-          </div>
 
-          {/* USER PROFILE & LICENSE BADGE (ĐĂNG NHẬP GMAIL) */}
-          {currentUser ? (
-            <div 
-              onClick={() => setIsGmailLoginModalOpen(true)}
-              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-xs shadow-xs cursor-pointer hover:border-cyan-400 transition-all ${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-300'}`}
-              title="Bấm để xem thông tin tài khoản hoặc đổi Gmail"
-            >
-              <img 
-                src={currentUser.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(currentUser.email)}`}
-                alt="Avatar"
-                className="w-3.5 h-3.5 rounded-full border border-cyan-400 object-cover"
-              />
-              <span className="text-[10px] font-bold text-gray-200 truncate max-w-[110px]" title={currentUser.email}>
-                {currentUser.name || currentUser.email.split('@')[0]}
-              </span>
-              <span className="text-[9px] px-1 py-0.2 rounded font-black bg-gradient-to-r from-amber-500 to-yellow-400 text-black">
-                {currentUser.plan || 'VIP PRO'}
-              </span>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleLogout();
-                }}
-                title="Đổi / Đăng xuất tài khoản Gmail"
-                className="text-gray-400 hover:text-red-400 p-0.5 transition-colors cursor-pointer ml-0.5"
-              >
-                <LogOut size={10} />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setIsGmailLoginModalOpen(true)}
-              className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white border border-blue-400/50 shadow-md shadow-blue-500/20 transition-all hover:scale-105 animate-pulse"
-              title="Đăng nhập tài khoản Gmail để kết nối gói bản quyền đã mua"
-            >
-              <User size={10} className="text-yellow-300" />
-              <span className="whitespace-nowrap">🔑 Đăng Nhập Gmail (Kết Nối Gói)</span>
-            </button>
-          )}
+            {currentUser && (
+              <>
+                <div className="w-px h-3 bg-gray-600/50" />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleLogout();
+                  }}
+                  title="Đăng xuất tài khoản"
+                  className="text-gray-400 hover:text-red-400 transition-colors p-0.5"
+                >
+                  <LogOut size={9} />
+                </button>
+              </>
+            )}
+          </div>
     </div>
     </div>
 
@@ -2428,46 +2410,58 @@ export default function DesktopAppUI() {
           
           <div className="flex items-center gap-1.5 border-r border-gray-500/30 pr-2">
             <span className="text-xs font-medium text-gray-400">{t('characters', currentLang)}</span>
-            <div className="flex items-center gap-1.5">
-              {Object.keys(CHARACTERS).length === 0 ? (
-                <button 
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-1 px-2 py-0.5 rounded-md border border-dashed border-blue-500/50 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-[10.5px] font-bold transition-all hover:scale-105"
-                  title="Tải ảnh hoặc video nhân vật của bạn"
-                >
-                  <Plus size={12} />
-                  <span>+ Tải Nhân Vật</span>
-                </button>
-              ) : (
-                Object.keys(CHARACTERS).map((charId) => (
-                  CHARACTERS[charId] ? (
-                    <div 
-                      key={charId}
-                      onClick={() => {
-                        setSelectedCharacter(charId);
-                        try { localStorage.setItem('avalive_selected_char', charId); } catch (e) {}
-                        setIsGameBattleActive(false);
-                        setIsGameBanDoActive(false);
-                        const targetChar = CHARACTERS[charId];
-                        if (targetChar && targetChar.url) {
-                          syncMasterLiveState({
-                            stage: 'idol',
-                            selectedCharacter: charId,
-                            characterName: targetChar.name || 'AI Idol',
-                            mediaUrl: targetChar.url,
-                            isVideo: targetChar.type === 'video' || (typeof targetChar.url === 'string' && (targetChar.url.endsWith('.mp4') || targetChar.url.includes('/uploads/') || targetChar.url.includes('demo_dancer'))),
-                            aspectRatio: globalAspectRatio || '9:16'
-                          }, socketRef.current);
-                        }
-                      }}
-                      className={`w-7 h-7 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 relative group ${selectedCharacter === charId ? 'border-2 border-blue-500 shadow-md shadow-blue-500/30' : 'border border-gray-600 opacity-60 hover:opacity-100'}`}
-                      title={CHARACTERS[charId]?.name || ''}
-                    >
-                      {CHARACTERS[charId]?.type === 'video' ? (
-                        <video src={CHARACTERS[charId]?.url} className="w-full h-full object-cover" muted />
-                      ) : (
-                        <img src={CHARACTERS[charId]?.url} className="w-full h-full object-cover" alt={CHARACTERS[charId]?.name || ''} />
-                      )}
+            <div className="flex items-center gap-1.5 overflow-x-auto max-w-[420px] py-0.5">
+              {/* Nút Tải Video/Ảnh mới lên từ máy tính */}
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-1 px-2 py-1 rounded-md border border-dashed border-blue-500/50 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-[10px] font-bold transition-all hover:scale-105 shrink-0"
+                title="Tải video hoặc ảnh nhân vật mới từ máy tính của bạn"
+              >
+                <Plus size={11} />
+                <span>+ Tải Video/Ảnh</span>
+              </button>
+
+              {/* Nút Mở Kho Thư Viện AIDOL & Video Mẫu */}
+              <button 
+                onClick={() => setIsTemplateLibraryOpen(true)}
+                className="flex items-center gap-1 px-2 py-1 rounded-md border border-purple-500/50 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-[10px] font-bold transition-all hover:scale-105 shrink-0"
+                title="Chọn video mẫu siêu nét từ Kho Thư Viện AIDOL"
+              >
+                <Sparkles size={11} className="text-yellow-300" />
+                <span>Kho Mẫu Video</span>
+              </button>
+
+              {/* Danh sách các nhân vật / video đang có */}
+              {Object.keys(CHARACTERS).map((charId) => (
+                CHARACTERS[charId] ? (
+                  <div 
+                    key={charId}
+                    onClick={() => {
+                      setSelectedCharacter(charId);
+                      try { localStorage.setItem('avalive_selected_char', charId); } catch (e) {}
+                      setIsGameBattleActive(false);
+                      setIsGameBanDoActive(false);
+                      const targetChar = CHARACTERS[charId];
+                      if (targetChar && targetChar.url) {
+                        syncMasterLiveState({
+                          stage: 'idol',
+                          selectedCharacter: charId,
+                          characterName: targetChar.name || 'AI Idol',
+                          mediaUrl: targetChar.url,
+                          isVideo: targetChar.type === 'video' || (typeof targetChar.url === 'string' && (targetChar.url.endsWith('.mp4') || targetChar.url.includes('/uploads/') || targetChar.url.includes('mixkit'))),
+                          aspectRatio: globalAspectRatio || '9:16'
+                        }, socketRef.current);
+                      }
+                    }}
+                    className={`w-7 h-7 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 relative group ${selectedCharacter === charId ? 'border-2 border-blue-500 shadow-md shadow-blue-500/30 ring-1 ring-blue-400' : 'border border-gray-600 opacity-60 hover:opacity-100'}`}
+                    title={CHARACTERS[charId]?.name || ''}
+                  >
+                    {CHARACTERS[charId]?.type === 'video' ? (
+                      <video src={CHARACTERS[charId]?.url} className="w-full h-full object-cover" muted />
+                    ) : (
+                      <img src={CHARACTERS[charId]?.url} className="w-full h-full object-cover" alt={CHARACTERS[charId]?.name || ''} />
+                    )}
+                    {charId.startsWith('custom_') && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -2478,25 +2472,13 @@ export default function DesktopAppUI() {
                       >
                         <X size={8} />
                       </button>
-    </div>
-                  ) : null
-                ))
-              )}
-              {Object.keys(CHARACTERS).length > 0 && (
-                <button className="w-7 h-7 rounded border border-dashed border-gray-500 flex items-center justify-center text-gray-400 hover:text-white cursor-pointer transition-colors hover:bg-gray-700/50 shrink-0" onClick={() => fileInputRef.current?.click()} title="Tải thêm nhân vật mới">
-                  <Plus size={13} />
-                </button>
-              )}
-
-              <button 
-                className={`px-2 py-1 rounded text-xs font-medium transition-colors border ${isDarkMode ? 'border-purple-500/50 bg-purple-900/30 text-purple-300 hover:bg-purple-800/50' : 'border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100'}`}
-                onClick={() => setIsTemplateLibraryOpen(true)}
-              >
-                {t('templates', currentLang)}
-              </button>
+                    )}
+                  </div>
+                ) : null
+              ))}
               <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="video/*,image/*" onChange={handleFileUpload} />
-    </div>
-    </div>
+            </div>
+          </div>
 
           <div className="flex items-center gap-1.5 px-1 shrink-0">
             <input 
