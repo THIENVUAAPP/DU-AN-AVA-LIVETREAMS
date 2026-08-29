@@ -2466,7 +2466,7 @@ export default function DesktopAppUI() {
                     )}
                     
                     {/* Nút Xoá Video khỏi Ô (Chỉ hiện cho video do người dùng tải lên) */}
-                    {charItem.id.startsWith('custom_') && (
+                    {charItem.id && charItem.id.startsWith('custom_') && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
