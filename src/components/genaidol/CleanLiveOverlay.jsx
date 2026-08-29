@@ -693,7 +693,26 @@ export default function CleanLiveOverlay() {
             }}
           />
         ) : (
-          <div className="w-full h-full bg-black select-none"></div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#0F1016] via-[#151824] to-[#0A0A0F] text-center p-6 select-none border border-white/5 rounded-3xl m-2">
+            <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-pink-600 via-rose-600 to-red-600 flex items-center justify-center mb-5 shadow-2xl shadow-rose-500/30 animate-pulse">
+              <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-black text-white tracking-wide uppercase">MÀN HÌNH CHỜ LIVE IDOL</h3>
+            
+            <div className="mt-4 p-4 rounded-2xl bg-white/5 border border-white/10 max-w-sm backdrop-blur-md">
+              <p className="text-[13px] sm:text-sm text-gray-300 leading-relaxed font-medium">
+                Hệ thống đang chờ kết nối video từ Bảng Điều Khiển.<br/><br/>
+                Nếu màn hình này hiện liên tục, <strong className="text-rose-400 font-bold">Video cũ của bạn có thể đã hết hạn hoặc chưa được tải lên Server nội bộ.</strong>
+              </p>
+            </div>
+
+            <div className="mt-5 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] sm:text-xs font-black flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+              <span>CÁCH SỬA: XÓA VIDEO CŨ & TẢI LÊN LẠI VIDEO MỚI</span>
+            </div>
+          </div>
         )}
       </div>
 

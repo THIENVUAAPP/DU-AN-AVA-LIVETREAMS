@@ -1097,9 +1097,9 @@ export default function ProductionStudio({
     }
   };
 
-  // Smooth 60FPS Frame Loop with 33ms Non-Blocking Cadence
+  // Smooth 30FPS Frame Loop (Chống đóng băng ngầm bằng Web Worker)
   useEffect(() => {
-    let animId;
+    let worker = null;
     let chromaC = null;
     let chromaCtx = null;
 
@@ -1133,13 +1133,11 @@ export default function ProductionStudio({
       if (isScreenSharingRef.current) {
         drawScreenShareComposite(canvasRef.current);
         applyAntiScan();
-        animId = requestAnimationFrame(processFrame);
         return;
       }
       if (multiCamGridActiveRef.current) {
         drawMultiCamGrid(canvasRef.current);
         applyAntiScan();
-        animId = requestAnimationFrame(processFrame);
         return;
       }
 
@@ -1299,12 +1297,33 @@ export default function ProductionStudio({
           } catch (e) {}
         }
       }
-
-      animId = requestAnimationFrame(processFrame);
     };
 
-    animId = requestAnimationFrame(processFrame);
-    return () => cancelAnimationFrame(animId);
+    if (webcamActive || multiCamGridActiveRef.current || isScreenSharingRef.current) {
+      const workerCode = `
+        let interval;
+        self.onmessage = function(e) {
+          if (e.data === 'start') {
+            interval = setInterval(() => self.postMessage('tick'), 33);
+          } else if (e.data === 'stop') {
+            clearInterval(interval);
+          }
+        };
+      `;
+      const blob = new Blob([workerCode], { type: 'application/javascript' });
+      worker = new Worker(URL.createObjectURL(blob));
+      worker.onmessage = () => {
+        processFrame();
+      };
+      worker.postMessage('start');
+    }
+
+    return () => {
+      if (worker) {
+        worker.postMessage('stop');
+        worker.terminate();
+      }
+    };
   }, [webcamActive, bgRemovalMode]);
 
 
