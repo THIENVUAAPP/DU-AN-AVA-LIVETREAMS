@@ -313,6 +313,7 @@ export default function DesktopAppUI() {
   const [activeMonitorModal, setActiveMonitorModal] = useState(null);
   const [quickResponseActiveVideo, setQuickResponseActiveVideo] = useState(null);
   const [showOverlayModal, setShowOverlayModal] = useState(false);
+
   const [overlayLinkBase, setOverlayLinkBase] = useState(() => {
     return 'https://avalivepro.vercel.app';
   });
@@ -2087,6 +2088,8 @@ export default function DesktopAppUI() {
             )}
           </button>
 
+
+
           {/* Nút Chế độ Live AI Idol */}
           <button 
             className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs ${
@@ -3520,6 +3523,8 @@ export default function DesktopAppUI() {
         isOpen={showOverlayModal}
         onClose={() => setShowOverlayModal(false)}
       />
+
+
 
       {/* Toast Notification */}
       {toast && (

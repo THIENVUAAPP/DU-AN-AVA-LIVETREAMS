@@ -12,11 +12,16 @@ function createWindow () {
     autoHideMenuBar: true,
     webPreferences: {
       nodeIntegration: false,
-      contextIsolation: true
+      contextIsolation: true,
+      backgroundThrottling: false
     }
   });
 
-  win.loadFile(path.join(__dirname, 'dist', 'index.html'));
+  // Hiển thị toàn bộ giao diện điều khiển (Dashboard)
+  win.loadURL('http://localhost:5173/').catch(() => {
+    console.log("Không tìm thấy server dev, đang tải file build...");
+    win.loadFile(path.join(__dirname, 'dist', 'index.html'));
+  });
 }
 
 app.whenReady().then(createWindow);
