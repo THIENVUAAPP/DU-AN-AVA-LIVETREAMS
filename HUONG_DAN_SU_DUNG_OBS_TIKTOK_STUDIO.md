@@ -31,15 +31,21 @@ Hệ thống cung cấp các đường link **Overlay Trong Suốt Chuyên Dụn
 | **⚔️ Game Chiến Đấu Bang Phái (3D/2D)** | `http://localhost:3001/?overlay=battle` | 1080 x 1920 (Dọc 9:16) hoặc 1920 x 1080 (Ngang) |
 | **🎛️ Bảng Điều Khiển Admin & Giọng Nói AI** | `http://localhost:3001` | Mở trên trình duyệt máy tính hoặc điện thoại |
 
-### 🛠️ Các Bước Thêm Vào OBS Studio:
+### 🛠️ Các Bước Thêm Vào OBS Studio (Nguồn Trình Duyệt - KHUYÊN DÙNG):
 1. Mở **OBS Studio** -> Trong bảng **Sources (Nguồn)** -> Bấm dấu **`+`** -> Chọn **Browser (Trình duyệt)**.
-2. Dán link: `http://localhost:3001/?overlay=bando` (cho Game Bản Đồ) hoặc `http://localhost:3001/?overlay=battle` (cho Game Chiến Đấu).
+2. Dán link: `http://localhost:3001/?overlay=bando` (cho Game Bản Đồ) hoặc `http://localhost:3001/?overlay=battle` (cho Game Chiến Đấu) hoặc `http://localhost:3001/?overlay=live` (Live Studio Toàn Năng).
 3. Đặt kích thước: **Width: 1080**, **Height: 1920** (nếu live TikTok/Facebook Reels) hoặc **Width: 1920**, **Height: 1080** (nếu live YouTube/Facebook Ngang).
 4. Tích chọn **"Shutdown source when not visible"** và **"Refresh browser when scene becomes active"**.
 
-### 🛠️ Các Bước Thêm Vào TikTok LIVE Studio:
+### 🛠️ Các Bước Quay Cửa Sổ Chrome/Cốc Cốc Bằng OBS Studio (Window Capture):
+1. Mở **OBS Studio** -> Bấm **`+`** -> Chọn **Window Capture (Quay Cửa Sổ)** -> Chọn **Google Chrome** hoặc **Cốc Cốc**.
+2. **LƯU Ý QUAN TRỌNG:** Tại mục **Capture Method (Phương thức bắt hình)**, chọn **`Windows 10 (1903 trở lên)`** hoặc **`Windows Graphics Capture`** (KHÔNG để BitBlt). Điều này giúp video và game chuyển động 60FPS mượt mà kể cả khi bật Tăng Tốc Phần Cứng trên Chrome!
+3. Trong OBS Studio -> Bấm nút **"Start Virtual Camera" (Bật Cam Ảo)**.
+4. Trong **TikTok LIVE Studio** -> Bấm **Thêm Nguồn** -> Chọn **Camera** -> Chọn **OBS Virtual Camera**. Mọi video, game, chuyển động sẽ truyền thẳng sang TikTok Live Studio 100%!
+
+### 🛠️ Các Bước Thêm Trực Tiếp Vào TikTok LIVE Studio:
 1. Mở **TikTok LIVE Studio** -> Bấm **Thêm Nguồn** -> Chọn **Liên kết web / Link Web / Browser**.
-2. Dán đường link tương ứng ở trên và điều chỉnh kích thước vừa vặn với khung livestream.
+2. Dán đường link `http://localhost:3001/?overlay=live` (hoặc `?overlay=bando`, `?overlay=battle`) và điều chỉnh kích thước vừa vặn với khung livestream.
 
 ---
 
