@@ -360,10 +360,10 @@ export default function CleanLiveOverlay() {
       } catch (err) {}
     }
 
-    // 5. POLLING REALTIME STUDIO CAM FRAME (Chỉ chạy khi ở chế độ Studio để tiết kiệm tài nguyên và giữ video 60FPS mượt mà)
+    // 5. POLLING REALTIME STUDIO CAM FRAME (Truyền hình thời gian thực cho OBS & TikTok Live Studio)
     const frameInterval = setInterval(() => {
       const pathname = typeof window !== 'undefined' ? window.location.pathname.toLowerCase() : '';
-      const isStudio = pathname.includes('/studio') || window.location.search.includes('studio') || window.location.search.includes('broadcast');
+      const isStudio = pathname.includes('/studio') || window.location.search.includes('studio') || window.location.search.includes('broadcast') || masterState?.stage === 'broadcast' || masterState?.stage === 'studio' || masterState?.isScreenSharing;
       if (!isStudio) return;
 
       const endpoint = getBackendUrl() ? `${getBackendUrl()}/api/studio-frame?t=${Date.now()}` : `/api/studio-frame?t=${Date.now()}`;
@@ -375,7 +375,7 @@ export default function CleanLiveOverlay() {
           }
         })
         .catch(() => {});
-    }, 400);
+    }, 100);
 
     // 5. LOCAL STORAGE SYNC
     const handleStorage = (e) => {
@@ -646,10 +646,14 @@ export default function CleanLiveOverlay() {
         candidateUrl = `${backendBase}${pathPart}`;
       }
 
-      // TỪ CHỐI TUYỆT ĐỐI BLOB URL NẾU NÓ ĐẾN TỪ CỬA SỔ KHÁC (vì CEF TikTok Studio không đọc được blob của Chrome)
+      // Khôi phục Blob URL từ IndexedDB nếu là video tùy chỉnh
       if (candidateUrl.startsWith('blob:')) {
-        console.warn('[CleanLiveOverlay] Blob URL is not supported across windows. Falling back to empty.');
-        candidateUrl = '';
+        const match = localDbItems.find(i => i.id === masterState.selectedCharacter);
+        if (match && match.fileBlob) {
+          try {
+            candidateUrl = URL.createObjectURL(match.fileBlob);
+          } catch (e) {}
+        }
       }
     }
 

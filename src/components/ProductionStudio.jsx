@@ -635,6 +635,7 @@ export default function ProductionStudio({
         handleStopScreenShare();
       });
       setIsScreenSharing(true);
+      syncMasterLiveState({ stage: 'broadcast', isScreenSharing: true });
     } catch (err) {
       console.error('Lỗi chia sẻ màn hình:', err);
       alert(`Không thể chia sẻ màn hình: ${err.message}`);
@@ -650,6 +651,7 @@ export default function ProductionStudio({
     screenShareStreamRef.current = null;
     if (screenShareVideoRef.current) screenShareVideoRef.current.srcObject = null;
     setIsScreenSharing(false);
+    syncMasterLiveState({ isScreenSharing: false });
   };
 
   useEffect(() => {
@@ -1132,18 +1134,12 @@ export default function ProductionStudio({
 
       if (isScreenSharingRef.current) {
         drawScreenShareComposite(canvasRef.current);
-        applyAntiScan();
-        return;
-      }
-      if (multiCamGridActiveRef.current) {
+      } else if (multiCamGridActiveRef.current) {
         drawMultiCamGrid(canvasRef.current);
-        applyAntiScan();
-        return;
-      }
-
-      const video = webcamVideoRef.current;
-      const canvas = canvasRef.current;
-      if (webcamActive && video && canvas && video.readyState >= 2 && video.videoWidth > 0) {
+      } else {
+        const video = webcamVideoRef.current;
+        const canvas = canvasRef.current;
+        if (webcamActive && video && canvas && video.readyState >= 2 && video.videoWidth > 0) {
         const W = video.videoWidth;
         const H = video.videoHeight;
         if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; }
@@ -1229,10 +1225,6 @@ export default function ProductionStudio({
             ctx.clearRect(0, 0, W, H);
             drawVirtualBg(ctx, W, H);
 
-            // Higher keying resolution (was 640x360, then 960x540) further reduces
-            // upscaled block/stair-step edges around the subject when composited
-            // onto 4K canvases — 1280x720 balances sharpness vs CPU cost since this
-            // path runs a per-pixel getImageData loop on the CPU every frame.
             const CW = Math.min(1280, W), CH = Math.min(720, H);
             if (!chromaC || chromaC.width !== CW || chromaC.height !== CH) {
               chromaC = document.createElement("canvas");
@@ -1248,14 +1240,8 @@ export default function ProductionStudio({
             const cd = imgData.data;
             const tol = chromaToleranceRef.current || 45;
             const greenThresh = 25 + tol * 0.4;
-            // Feather band width around the threshold — driven by the Smoothness slider —
-            // turns the old hard 0/255 alpha cutoff (jagged, aliased edge) into a soft
-            // gradient ramp so hair strands and silhouette edges key out cleanly.
             const smoothPct = chromaSmoothnessRef.current || 30;
             const band = 6 + smoothPct * 0.3;
-            // Trước đây thuật toán chỉ nhận diện phông XANH LÁ (greenDiff) dù UI có sẵn
-            // preset "🔵 Phông Xanh Dương (Blue Key)" — chọn preset đó sẽ không tách được
-            // gì cả. Giờ tự đổi kênh khoá theo màu nền ảo đang chọn.
             const isBlueKey = (currentVbgRef.current?.id === 'minimal-blue-screen') ||
               (currentVbgRef.current?.cat === 'Chroma Key' && /blue|xanh d/i.test(currentVbgRef.current?.name || ''));
 
@@ -1278,21 +1264,31 @@ export default function ProductionStudio({
           }
         }
       }
+      }
 
       applyAntiScan();
 
       // 📡 REALTIME STREAM CANVAS FRAME TO OVERLAY (TIKTOK LIVE STUDIO & OBS)
-      if (webcamActive && canvasRef.current) {
+      const hasActiveContent = webcamActive || isScreenSharingRef.current || multiCamGridActiveRef.current;
+      if (hasActiveContent && canvasRef.current) {
         const now = performance.now();
         if (!lastBroadcastTimeRef.current || now - lastBroadcastTimeRef.current > 33) {
           lastBroadcastTimeRef.current = now;
           try {
-            const frameData = canvasRef.current.toDataURL('image/jpeg', 0.5);
+            const frameData = canvasRef.current.toDataURL('image/jpeg', 0.6);
             if (studioCamChannelRef.current) {
               studioCamChannelRef.current.postMessage({ type: 'STUDIO_CAM_FRAME', frame: frameData });
             }
             if (socketRef.current && socketRef.current.connected) {
               socketRef.current.emit('STUDIO_CAM_FRAME', frameData);
+            }
+            if (!lastHttpStudioFrameTimeRef.current || now - lastHttpStudioFrameTimeRef.current > 200) {
+              lastHttpStudioFrameTimeRef.current = now;
+              fetch('/api/studio-frame', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ frame: frameData })
+              }).catch(() => {});
             }
           } catch (e) {}
         }
