@@ -163,25 +163,16 @@ export default function GameBanDoOverlay() {
   }, []);
 
   // 🎯 WINDOW SURFACE INVALIDATOR — Ép Chrome flush frame cho TikTok LIVE Studio bắt hình
-  const surfaceInvalidatorRef = useRef(null);
   useEffect(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 1;
-    canvas.height = 1;
-    canvas.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;pointer-events:none;opacity:0.01;z-index:99999;';
-    document.body.appendChild(canvas);
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    let rafId, fc = 0;
-    const tick = () => {
+    const div = document.createElement('div');
+    div.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;pointer-events:none;opacity:0.001;z-index:99999;background:white;';
+    document.body.appendChild(div);
+    let fc = 0;
+    const interval = setInterval(() => {
       fc++;
-      ctx.fillStyle = fc % 2 === 0 ? 'rgba(0,0,0,0.01)' : 'rgba(0,0,0,0.02)';
-      ctx.fillRect(0, 0, 1, 1);
-      ctx.getImageData(0, 0, 1, 1);
-      rafId = requestAnimationFrame(tick);
-    };
-    rafId = requestAnimationFrame(tick);
-    surfaceInvalidatorRef.current = canvas;
-    return () => { cancelAnimationFrame(rafId); if (canvas.parentNode) canvas.parentNode.removeChild(canvas); };
+      div.style.background = fc % 2 === 0 ? '#000000' : '#ffffff';
+    }, 100);
+    return () => { clearInterval(interval); if (div.parentNode) div.parentNode.removeChild(div); };
   }, []);
 
   return (
