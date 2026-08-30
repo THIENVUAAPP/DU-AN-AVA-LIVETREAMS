@@ -1737,13 +1737,13 @@ export default function GameBanDoVietNam({
     let workerTimer = null;
     try {
       const blob = new Blob([
-        "let t; self.onmessage=e=>{ if(e.data==='start'){ if(!t) t=setInterval(()=>self.postMessage('tick'), 16); } else if(e.data==='stop'){ clearInterval(t); t=null; } };"
+        "let t; self.onmessage=e=>{ if(e.data==='start'){ if(!t) t=setInterval(()=>self.postMessage('tick'), 33); } else if(e.data==='stop'){ clearInterval(t); t=null; } };"
       ], { type: 'application/javascript' });
       workerTimer = new Worker(URL.createObjectURL(blob));
       workerTimer.onmessage = () => {
-        if (!state.disposed) {
+        if (!state.disposed && document.hidden) {
           const now = performance.now();
-          if (document.hidden || now - lastTime >= 15) {
+          if (now - lastTime >= 30) {
             animate(now);
           }
         }

@@ -46,11 +46,11 @@
           document.head.appendChild(style);
         }
 
-        // Global Web Worker 60FPS Keep-Alive for Chrome / Cốc Cốc / Edge / macOS / Windows
-        // Eliminates static image freeze when Chrome tab goes to background or is captured by OBS / TikTok Studio
+        // Global Lightweight Keep-Alive for Chrome / Cốc Cốc / Edge / macOS / Windows
+        // Prevents browser from freezing videos when tab goes to background without CPU overhead
         try {
           var blob = new Blob([
-            "let t; self.onmessage=e=>{ if(e.data==='start'){ if(!t) t=setInterval(()=>self.postMessage('tick'), 16); } };"
+            "let t; self.onmessage=e=>{ if(e.data==='start'){ if(!t) t=setInterval(()=>self.postMessage('tick'), 500); } };"
           ], { type: 'application/javascript' });
           var worker = new Worker(URL.createObjectURL(blob));
           worker.onmessage = function() {

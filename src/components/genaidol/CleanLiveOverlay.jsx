@@ -571,22 +571,25 @@ export default function CleanLiveOverlay() {
       antiSleepDiv.style.background = frameCount % 2 === 0 ? '#000000' : '#ffffff';
     };
 
-    // Web Worker 60FPS Ticker (Không bao giờ bị Chrome đình chỉ khi ẩn tab hoặc thu nhỏ trình duyệt)
+    // Web Worker Lightweight Keep-Alive (Không ngốn CPU, giữ video hoạt động mượt 60FPS)
     let bgWorker = null;
     try {
       const blob = new Blob([
-        "let t; self.onmessage=e=>{ if(e.data==='start'){ if(!t) t=setInterval(()=>self.postMessage('tick'), 16); } else if(e.data==='stop'){ clearInterval(t); t=null; } };"
+        "let t; self.onmessage=e=>{ if(e.data==='start'){ if(!t) t=setInterval(()=>self.postMessage('tick'), 200); } else if(e.data==='stop'){ clearInterval(t); t=null; } };"
       ], { type: 'application/javascript' });
       bgWorker = new Worker(URL.createObjectURL(blob));
+      let tickCounter = 0;
       bgWorker.onmessage = () => {
         invalidate();
-        // Ép các video tiếp tục phát nếu trình duyệt tự động tạm dừng khi ẩn tab
-        const videos = document.querySelectorAll('video');
-        videos.forEach(v => {
-          if (v.paused && !v.ended && v.readyState >= 2) {
-            v.play().catch(() => {});
-          }
-        });
+        tickCounter++;
+        if (tickCounter % 3 === 0 && document.hidden) {
+          const videos = document.querySelectorAll('video');
+          videos.forEach(v => {
+            if (v.paused && !v.ended && v.readyState >= 2) {
+              v.play().catch(() => {});
+            }
+          });
+        }
       };
       bgWorker.postMessage('start');
     } catch (e) {}

@@ -172,6 +172,8 @@ export default function ProductionStudio({
   const [tiktokLiveFlvUrl, setTiktokLiveFlvUrl] = useState(null);
   const socketRef = useRef(null);
   const studioCamChannelRef = useRef(null);
+  const streamOffscreenCanvasRef = useRef(null);
+  const lastHttpStudioFrameTimeRef = useRef(0);
   const lastBroadcastTimeRef = useRef(0);
 
   useEffect(() => {
@@ -1268,27 +1270,41 @@ export default function ProductionStudio({
 
       applyAntiScan();
 
-      // 📡 REALTIME STREAM CANVAS FRAME TO OVERLAY (TIKTOK LIVE STUDIO & OBS)
+      // 📡 REALTIME STREAM CANVAS FRAME TO OVERLAY (TIKTOK LIVE STUDIO & OBS - LIGHTWEIGHT 60FPS STREAM)
       const hasActiveContent = webcamActive || isScreenSharingRef.current || multiCamGridActiveRef.current;
       if (hasActiveContent && canvasRef.current) {
         const now = performance.now();
-        if (!lastBroadcastTimeRef.current || now - lastBroadcastTimeRef.current > 33) {
+        if (!lastBroadcastTimeRef.current || now - lastBroadcastTimeRef.current > 66) {
           lastBroadcastTimeRef.current = now;
           try {
-            const frameData = canvasRef.current.toDataURL('image/jpeg', 0.6);
-            if (studioCamChannelRef.current) {
-              studioCamChannelRef.current.postMessage({ type: 'STUDIO_CAM_FRAME', frame: frameData });
+            if (!streamOffscreenCanvasRef.current) {
+              streamOffscreenCanvasRef.current = document.createElement('canvas');
             }
-            if (socketRef.current && socketRef.current.connected) {
-              socketRef.current.emit('STUDIO_CAM_FRAME', frameData);
+            const offC = streamOffscreenCanvasRef.current;
+            const targetW = 960;
+            const targetH = Math.round(targetW * (canvasRef.current.height / (canvasRef.current.width || 1)));
+            if (offC.width !== targetW || offC.height !== targetH) {
+              offC.width = targetW;
+              offC.height = targetH;
             }
-            if (!lastHttpStudioFrameTimeRef.current || now - lastHttpStudioFrameTimeRef.current > 200) {
-              lastHttpStudioFrameTimeRef.current = now;
-              fetch('/api/studio-frame', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ frame: frameData })
-              }).catch(() => {});
+            const offCtx = offC.getContext('2d');
+            if (offCtx) {
+              offCtx.drawImage(canvasRef.current, 0, 0, targetW, targetH);
+              const frameData = offC.toDataURL('image/jpeg', 0.45);
+              if (studioCamChannelRef.current) {
+                studioCamChannelRef.current.postMessage({ type: 'STUDIO_CAM_FRAME', frame: frameData });
+              }
+              if (socketRef.current && socketRef.current.connected) {
+                socketRef.current.emit('STUDIO_CAM_FRAME', frameData);
+              }
+              if (!lastHttpStudioFrameTimeRef.current || now - lastHttpStudioFrameTimeRef.current > 300) {
+                lastHttpStudioFrameTimeRef.current = now;
+                fetch('/api/studio-frame', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ frame: frameData })
+                }).catch(() => {});
+              }
             }
           } catch (e) {}
         }
