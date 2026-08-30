@@ -2796,15 +2796,25 @@ export default function GameChienDau({
 
     engineRef.current.rAfId = requestAnimationFrame(renderLoop);
 
-    const bgBattleInterval = setInterval(() => {
-      if (document.hidden) {
-        renderLoop();
-      }
-    }, 16);
+    let workerTimer = null;
+    try {
+      const blob = new Blob([
+        "let t; self.onmessage=e=>{ if(e.data==='start'){ if(!t) t=setInterval(()=>self.postMessage('tick'), 16); } else if(e.data==='stop'){ clearInterval(t); t=null; } };"
+      ], { type: 'application/javascript' });
+      workerTimer = new Worker(URL.createObjectURL(blob));
+      workerTimer.onmessage = () => {
+        if (document.hidden) {
+          renderLoop();
+        }
+      };
+      workerTimer.postMessage('start');
+    } catch (e) {}
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      clearInterval(bgBattleInterval);
+      if (workerTimer) {
+        try { workerTimer.postMessage('stop'); workerTimer.terminate(); } catch (e) {}
+      }
       cancelAnimationFrame(animFrameId);
       clearTimeout(initialTimer);
       if (resizeObserver) resizeObserver.disconnect();

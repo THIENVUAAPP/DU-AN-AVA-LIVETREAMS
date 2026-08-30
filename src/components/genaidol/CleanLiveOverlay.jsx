@@ -560,23 +560,36 @@ export default function CleanLiveOverlay() {
 
   // 🎯 WINDOW SURFACE INVALIDATOR & ANTI-THROTTLING
   // Giúp OBS/TikTok Studio bắt được hình khi dùng Window Capture, kể cả khi Chrome bị ẩn (minimized/background).
-  // Thay vì dùng getImageData gây đơ trình duyệt, ta dùng 1 thẻ div nhỏ tàng hình thay đổi liên tục.
   useEffect(() => {
     const antiSleepDiv = document.createElement('div');
     antiSleepDiv.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;pointer-events:none;opacity:0.001;z-index:99999;background:white;';
     document.body.appendChild(antiSleepDiv);
     
-    let rafId;
     let frameCount = 0;
-
     const invalidate = () => {
       frameCount++;
-      // Đổi màu cực nhẹ mỗi frame để ép Chrome composite lại cửa sổ mà không gây lag
       antiSleepDiv.style.background = frameCount % 2 === 0 ? '#000000' : '#ffffff';
-      
-      rafId = requestAnimationFrame(invalidate);
     };
-    rafId = requestAnimationFrame(invalidate);
+
+    // Web Worker 60FPS Ticker (Không bao giờ bị Chrome đình chỉ khi ẩn tab hoặc thu nhỏ trình duyệt)
+    let bgWorker = null;
+    try {
+      const blob = new Blob([
+        "let t; self.onmessage=e=>{ if(e.data==='start'){ if(!t) t=setInterval(()=>self.postMessage('tick'), 16); } else if(e.data==='stop'){ clearInterval(t); t=null; } };"
+      ], { type: 'application/javascript' });
+      bgWorker = new Worker(URL.createObjectURL(blob));
+      bgWorker.onmessage = () => {
+        invalidate();
+        // Ép các video tiếp tục phát nếu trình duyệt tự động tạm dừng khi ẩn tab
+        const videos = document.querySelectorAll('video');
+        videos.forEach(v => {
+          if (v.paused && !v.ended && v.readyState >= 2) {
+            v.play().catch(() => {});
+          }
+        });
+      };
+      bgWorker.postMessage('start');
+    } catch (e) {}
 
     // Kích hoạt silent audio loop để chống Chrome đình chỉ (throttle) tab khi bị ẩn
     let audioCtx = null;
@@ -591,7 +604,9 @@ export default function CleanLiveOverlay() {
     } catch (e) {}
 
     return () => {
-      cancelAnimationFrame(rafId);
+      if (bgWorker) {
+        try { bgWorker.postMessage('stop'); bgWorker.terminate(); } catch (e) {}
+      }
       if (antiSleepDiv.parentNode) antiSleepDiv.parentNode.removeChild(antiSleepDiv);
       if (audioCtx) audioCtx.close().catch(() => {});
     };

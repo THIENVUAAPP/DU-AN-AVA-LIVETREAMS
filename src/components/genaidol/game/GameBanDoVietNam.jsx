@@ -1731,18 +1731,31 @@ export default function GameBanDoVietNam({
     renderer.domElement.addEventListener('pointerdown', handleDomPointerDown);
     renderer.domElement.addEventListener('pointerup', handleDomPointerUp);
 
-    // Kích hoạt Render Loop của Three.js (Hỗ trợ cả chế độ chạy nền khi chia sẻ màn hình qua OBS / TikTok LIVE Studio)
+    // Kích hoạt Render Loop của Three.js (Dùng Web Worker 60FPS Ticker chống sập/đóng băng khi tab bị ẩn hoặc thu nhỏ)
     state.animFrameId = requestAnimationFrame(animate);
 
-    const bgInterval = setInterval(() => {
-      if (document.hidden && !state.disposed) {
-        animate(performance.now());
-      }
-    }, 16);
+    let workerTimer = null;
+    try {
+      const blob = new Blob([
+        "let t; self.onmessage=e=>{ if(e.data==='start'){ if(!t) t=setInterval(()=>self.postMessage('tick'), 16); } else if(e.data==='stop'){ clearInterval(t); t=null; } };"
+      ], { type: 'application/javascript' });
+      workerTimer = new Worker(URL.createObjectURL(blob));
+      workerTimer.onmessage = () => {
+        if (!state.disposed) {
+          const now = performance.now();
+          if (document.hidden || now - lastTime >= 15) {
+            animate(now);
+          }
+        }
+      };
+      workerTimer.postMessage('start');
+    } catch (e) {}
 
     return () => {
       state.disposed = true;
-      clearInterval(bgInterval);
+      if (workerTimer) {
+        try { workerTimer.postMessage('stop'); workerTimer.terminate(); } catch (e) {}
+      }
       if (state.animFrameId) cancelAnimationFrame(state.animFrameId);
       cancelAnimationFrame(animFrameResizeId);
       clearTimeout(initialResizeTimer);

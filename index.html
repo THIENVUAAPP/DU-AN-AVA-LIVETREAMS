@@ -32,7 +32,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js" crossorigin="anonymous"></script>
 
-    <!-- OBS & TIKTOK STUDIO ANTI-STATIC-IMAGE FIX -->
+    <!-- OBS & TIKTOK STUDIO ANTI-STATIC-IMAGE & BACKGROUND UNTHROTTLE FIX -->
     <script>
       (function() {
         var isOverlay = window.location.search.includes('overlay=') || window.location.pathname.includes('/overlay');
@@ -45,6 +45,26 @@
           `;
           document.head.appendChild(style);
         }
+
+        // Global Web Worker 60FPS Keep-Alive for Chrome / Cốc Cốc / Edge / macOS / Windows
+        // Eliminates static image freeze when Chrome tab goes to background or is captured by OBS / TikTok Studio
+        try {
+          var blob = new Blob([
+            "let t; self.onmessage=e=>{ if(e.data==='start'){ if(!t) t=setInterval(()=>self.postMessage('tick'), 16); } };"
+          ], { type: 'application/javascript' });
+          var worker = new Worker(URL.createObjectURL(blob));
+          worker.onmessage = function() {
+            if (document.hidden) {
+              var videos = document.querySelectorAll('video');
+              for (var i = 0; i < videos.length; i++) {
+                if (videos[i].paused && !videos[i].ended && videos[i].readyState >= 2) {
+                  videos[i].play().catch(function() {});
+                }
+              }
+            }
+          };
+          worker.postMessage('start');
+        } catch(e) {}
       })();
     </script>
   </head>
