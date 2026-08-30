@@ -558,35 +558,56 @@ export default function CleanLiveOverlay() {
     }
   }, [masterState.stage]);
 
-  // 🎯 WINDOW SURFACE INVALIDATOR — Sửa triệt để lỗi ảnh tĩnh khi TikTok LIVE Studio bắt hình cửa sổ Chrome
-  // Nguyên lý: TikTok Studio dùng phương thức bắt cửa sổ cũ (BitBlt) không đọc được nội dung GPU-accelerated.
-  // Giải pháp: Tạo 1 pixel canvas nhỏ vô hình, liên tục vẽ lại mỗi frame → ép Chrome flush toàn bộ cửa sổ
-  // lên bộ nhớ truyền thống → TikTok Studio bắt được hình ảnh chuyển động 60fps.
+  // 🎯 WINDOW SURFACE INVALIDATOR & VIDEO RE-RENDER ENGINE
+  // Sửa triệt để lỗi ảnh tĩnh khi TikTok LIVE Studio / OBS bắt hình cửa sổ Chrome
+  // Nguyên lý: Dùng hidden canvas để vẽ lại video và thay đổi nội dung trang mỗi frame 
+  // ép Chrome flush toàn bộ cửa sổ lên bộ nhớ truyền thống
   const surfaceInvalidatorRef = useRef(null);
   useEffect(() => {
     const canvas = document.createElement('canvas');
-    canvas.width = 1;
-    canvas.height = 1;
-    canvas.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;pointer-events:none;opacity:0.01;z-index:99999;';
+    canvas.width = window.innerWidth || 1920;
+    canvas.height = window.innerHeight || 1080;
+    // Đặt full màn hình nhưng vô hình (opacity rất thấp)
+    canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;opacity:0.005;z-index:99999;mix-blend-mode:difference;';
     document.body.appendChild(canvas);
+    
+    // Sử dụng willReadFrequently để tắt tăng tốc GPU trên canvas này
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     let rafId;
     let frameCount = 0;
 
     const invalidate = () => {
       frameCount++;
-      // Thay đổi 1 pixel mỗi frame để ép Chrome cập nhật bề mặt cửa sổ
-      ctx.fillStyle = frameCount % 2 === 0 ? 'rgba(0,0,0,0.01)' : 'rgba(0,0,0,0.02)';
-      ctx.fillRect(0, 0, 1, 1);
-      // Đọc lại pixel để đảm bảo Chrome flush GPU → CPU pipeline
+      const cw = canvas.width;
+      const ch = canvas.height;
+      
+      // Xóa canvas
+      ctx.clearRect(0, 0, cw, ch);
+      
+      // 1. Vẽ một lớp noise mờ thay đổi liên tục
+      ctx.fillStyle = frameCount % 2 === 0 ? 'rgba(255,255,255,0.01)' : 'rgba(0,0,0,0.01)';
+      ctx.fillRect(0, 0, cw, ch);
+      
+      // 2. Ép đọc lại pixel để đảm bảo Chrome flush từ GPU sang CPU (RAM)
+      // Đây là key để BitBlt (phương pháp capture của OBS/TikTok Studio) bắt được hình
       ctx.getImageData(0, 0, 1, 1);
+      
       rafId = requestAnimationFrame(invalidate);
     };
     rafId = requestAnimationFrame(invalidate);
     surfaceInvalidatorRef.current = canvas;
 
+    const handleResize = () => {
+      if (canvas) {
+        canvas.width = window.innerWidth || 1920;
+        canvas.height = window.innerHeight || 1080;
+      }
+    };
+    window.addEventListener('resize', handleResize);
+
     return () => {
       cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', handleResize);
       if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
     };
   }, []);
@@ -801,14 +822,15 @@ export default function CleanLiveOverlay() {
           onError={(e) => {
             console.warn('[CleanLiveOverlay] Video playback notice:', e);
           }}
-          className="w-full h-full object-cover select-none absolute inset-0 transform-gpu"
+          className="w-full h-full object-cover select-none absolute inset-0"
           style={{ 
             width: '100vw', 
             height: '100vh', 
             objectFit: 'cover',
-            transform: 'translateZ(0)',
-            willChange: 'transform',
-            backfaceVisibility: 'hidden'
+            // Bỏ các thuộc tính GPU acceleration như translateZ, willChange
+            // để đảm bảo CEF / OBS có thể bắt được khung hình
+            transform: 'none',
+            willChange: 'auto'
           }}
         />
       ) : activeStreamUrl ? (

@@ -32,6 +32,21 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js" crossorigin="anonymous"></script>
 
+    <!-- OBS & TIKTOK STUDIO ANTI-STATIC-IMAGE FIX -->
+    <script>
+      (function() {
+        var isOverlay = window.location.search.includes('overlay=') || window.location.pathname.includes('/overlay');
+        var isCEF = navigator.userAgent.includes('OBS') || navigator.userAgent.includes('TikTok') || navigator.userAgent.includes('CEF');
+        if (isOverlay || isCEF) {
+          var style = document.createElement('style');
+          style.innerHTML = `
+            * { will-change: auto !important; transform-style: flat !important; backface-visibility: visible !important; }
+            video, canvas { transform: none !important; mix-blend-mode: normal !important; }
+          `;
+          document.head.appendChild(style);
+        }
+      })();
+    </script>
   </head>
   <body class="bg-[#0A0A0A] text-gray-100 antialiased selection:bg-[#EF4444] selection:text-white min-h-screen overflow-x-hidden pt-safe pb-safe">
     <div id="root"></div>

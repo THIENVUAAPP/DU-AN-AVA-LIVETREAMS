@@ -7,8 +7,20 @@ export async function startScreenShare() {
   }
   try {
     const stream = await navigator.mediaDevices.getDisplayMedia({
-      video: { cursor: 'always' },
-      audio: true,
+      video: { 
+        cursor: 'always',
+        frameRate: { ideal: 60, max: 60 },
+        displaySurface: 'monitor',
+      },
+      audio: {
+        autoGainControl: false,
+        echoCancellation: false,
+        noiseSuppression: false,
+      },
+      systemAudio: 'include',
+      selfBrowserSurface: 'include',
+      surfaceSwitching: 'include',
+      preferCurrentTab: false,
     });
     return stream;
   } catch (err) {
