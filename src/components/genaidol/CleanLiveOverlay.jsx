@@ -558,6 +558,39 @@ export default function CleanLiveOverlay() {
     }
   }, [masterState.stage]);
 
+  // 🎯 WINDOW SURFACE INVALIDATOR — Sửa triệt để lỗi ảnh tĩnh khi TikTok LIVE Studio bắt hình cửa sổ Chrome
+  // Nguyên lý: TikTok Studio dùng phương thức bắt cửa sổ cũ (BitBlt) không đọc được nội dung GPU-accelerated.
+  // Giải pháp: Tạo 1 pixel canvas nhỏ vô hình, liên tục vẽ lại mỗi frame → ép Chrome flush toàn bộ cửa sổ
+  // lên bộ nhớ truyền thống → TikTok Studio bắt được hình ảnh chuyển động 60fps.
+  const surfaceInvalidatorRef = useRef(null);
+  useEffect(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1;
+    canvas.height = 1;
+    canvas.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;pointer-events:none;opacity:0.01;z-index:99999;';
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    let rafId;
+    let frameCount = 0;
+
+    const invalidate = () => {
+      frameCount++;
+      // Thay đổi 1 pixel mỗi frame để ép Chrome cập nhật bề mặt cửa sổ
+      ctx.fillStyle = frameCount % 2 === 0 ? 'rgba(0,0,0,0.01)' : 'rgba(0,0,0,0.02)';
+      ctx.fillRect(0, 0, 1, 1);
+      // Đọc lại pixel để đảm bảo Chrome flush GPU → CPU pipeline
+      ctx.getImageData(0, 0, 1, 1);
+      rafId = requestAnimationFrame(invalidate);
+    };
+    rafId = requestAnimationFrame(invalidate);
+    surfaceInvalidatorRef.current = canvas;
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+    };
+  }, []);
+
   // Helper giải mã URL media chính xác (tôn trọng 100% video/nhân vật người dùng chọn)
   const resolveActiveMedia = () => {
     let candidateUrl = masterState.mediaUrl || null;
