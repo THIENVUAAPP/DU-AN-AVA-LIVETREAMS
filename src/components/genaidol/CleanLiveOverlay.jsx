@@ -558,57 +558,42 @@ export default function CleanLiveOverlay() {
     }
   }, [masterState.stage]);
 
-  // 🎯 WINDOW SURFACE INVALIDATOR & VIDEO RE-RENDER ENGINE
-  // Sửa triệt để lỗi ảnh tĩnh khi TikTok LIVE Studio / OBS bắt hình cửa sổ Chrome
-  // Nguyên lý: Dùng hidden canvas để vẽ lại video và thay đổi nội dung trang mỗi frame 
-  // ép Chrome flush toàn bộ cửa sổ lên bộ nhớ truyền thống
-  const surfaceInvalidatorRef = useRef(null);
+  // 🎯 WINDOW SURFACE INVALIDATOR & ANTI-THROTTLING
+  // Giúp OBS/TikTok Studio bắt được hình khi dùng Window Capture, kể cả khi Chrome bị ẩn (minimized/background).
+  // Thay vì dùng getImageData gây đơ trình duyệt, ta dùng 1 thẻ div nhỏ tàng hình thay đổi liên tục.
   useEffect(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = window.innerWidth || 1920;
-    canvas.height = window.innerHeight || 1080;
-    // Đặt full màn hình nhưng vô hình (opacity rất thấp)
-    canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;opacity:0.005;z-index:99999;mix-blend-mode:difference;';
-    document.body.appendChild(canvas);
+    const antiSleepDiv = document.createElement('div');
+    antiSleepDiv.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;pointer-events:none;opacity:0.001;z-index:99999;background:white;';
+    document.body.appendChild(antiSleepDiv);
     
-    // Sử dụng willReadFrequently để tắt tăng tốc GPU trên canvas này
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
     let rafId;
     let frameCount = 0;
 
     const invalidate = () => {
       frameCount++;
-      const cw = canvas.width;
-      const ch = canvas.height;
-      
-      // Xóa canvas
-      ctx.clearRect(0, 0, cw, ch);
-      
-      // 1. Vẽ một lớp noise mờ thay đổi liên tục
-      ctx.fillStyle = frameCount % 2 === 0 ? 'rgba(255,255,255,0.01)' : 'rgba(0,0,0,0.01)';
-      ctx.fillRect(0, 0, cw, ch);
-      
-      // 2. Ép đọc lại pixel để đảm bảo Chrome flush từ GPU sang CPU (RAM)
-      // Đây là key để BitBlt (phương pháp capture của OBS/TikTok Studio) bắt được hình
-      ctx.getImageData(0, 0, 1, 1);
+      // Đổi màu cực nhẹ mỗi frame để ép Chrome composite lại cửa sổ mà không gây lag
+      antiSleepDiv.style.background = frameCount % 2 === 0 ? '#000000' : '#ffffff';
       
       rafId = requestAnimationFrame(invalidate);
     };
     rafId = requestAnimationFrame(invalidate);
-    surfaceInvalidatorRef.current = canvas;
 
-    const handleResize = () => {
-      if (canvas) {
-        canvas.width = window.innerWidth || 1920;
-        canvas.height = window.innerHeight || 1080;
-      }
-    };
-    window.addEventListener('resize', handleResize);
+    // Kích hoạt silent audio loop để chống Chrome đình chỉ (throttle) tab khi bị ẩn
+    let audioCtx = null;
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      gainNode.gain.value = 0.001; // Âm thanh siêu nhỏ không nghe được
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      oscillator.start();
+    } catch (e) {}
 
     return () => {
       cancelAnimationFrame(rafId);
-      window.removeEventListener('resize', handleResize);
-      if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+      if (antiSleepDiv.parentNode) antiSleepDiv.parentNode.removeChild(antiSleepDiv);
+      if (audioCtx) audioCtx.close().catch(() => {});
     };
   }, []);
 
