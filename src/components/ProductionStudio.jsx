@@ -918,7 +918,7 @@ export default function ProductionStudio({
           canvas.width = W; 
           canvas.height = H; 
         }
-          const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
+          const ctx = canvas.getContext("2d", { alpha: false });
           if (!ctx) return;
 
           const mode = bgRemovalModeRef.current;

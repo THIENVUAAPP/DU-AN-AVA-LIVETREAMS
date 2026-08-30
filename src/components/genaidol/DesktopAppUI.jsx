@@ -364,7 +364,7 @@ export default function DesktopAppUI() {
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
         }
-        const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+        const ctx = canvas.getContext('2d', { alpha: false });
         if (ctx) {
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = 'high';
