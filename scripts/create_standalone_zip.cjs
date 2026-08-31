@@ -45,11 +45,20 @@ const winStaging = path.join(rootDir, '.temp_win');
 if (fs.existsSync(winStaging)) fs.rmSync(winStaging, { recursive: true, force: true });
 fs.mkdirSync(winStaging, { recursive: true });
 execSync(`cp -R "${appDataDir}" "${winStaging}/"`);
+
+console.log('   -> Đang tải Node.js Portable cho Windows (để phần mềm tự chạy không cần cài)...');
+const nodeZipPath = path.join(winStaging, 'node.zip');
+execSync(`curl -sL -o "${nodeZipPath}" "https://nodejs.org/dist/v20.11.1/node-v20.11.1-win-x64.zip"`);
+console.log('   -> Giải nén Node.js...');
+execSync(`unzip -q "${nodeZipPath}" -d "${winStaging}"`);
+fs.renameSync(path.join(winStaging, 'node-v20.11.1-win-x64'), path.join(winStaging, 'node_portable'));
+fs.unlinkSync(nodeZipPath);
+
 fs.copyFileSync(path.join(rootDir, 'Chay_App_Windows.bat'), path.join(winStaging, 'Khoi_Dong_AvaLive.bat'));
 if (fs.existsSync(path.join(rootDir, 'HUONG_DAN_SU_DUNG.txt'))) {
   fs.copyFileSync(path.join(rootDir, 'HUONG_DAN_SU_DUNG.txt'), path.join(winStaging, 'HUONG_DAN_SU_DUNG.txt'));
 }
-execSync(`cd "${winStaging}" && zip -r "${winZipFilePath}" . -x "*.DS_Store"`);
+execSync(`cd "${winStaging}" && zip -q -r "${winZipFilePath}" . -x "*.DS_Store"`);
 fs.rmSync(winStaging, { recursive: true, force: true });
 
 // 4. Đóng gói cho Mac
