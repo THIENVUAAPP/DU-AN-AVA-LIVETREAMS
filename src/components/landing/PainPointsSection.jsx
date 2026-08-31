@@ -1,14 +1,17 @@
 import React from 'react';
 import RevealOnScroll from './RevealOnScroll';
 import { Clock, BatteryWarning, Layers, DollarSign, MessageSquareOff, TrendingDown, AlertTriangle } from 'lucide-react';
+import { landingTranslations } from './landingTranslations';
 
-export default function PainPointsSection() {
+export default function PainPointsSection({ currentLang = 'vi' }) {
+  const t = landingTranslations[currentLang] || landingTranslations.vi;
+
   const painPoints = [
     {
       icon: <Clock />,
       emoji: "⏳",
-      title: "Chủ Shop Quá Bận Rộn",
-      desc: "Muốn lên hình để tăng niềm tin nhưng phải liên tục chuẩn bị, nói chuyện khàn giọng, giới thiệu sản phẩm và trả lời từng bình luận.",
+      title: t.pain1Title,
+      desc: t.pain1Desc,
       gradient: "from-[#EC4899]/20 via-[#9333EA]/10 to-transparent",
       borderColor: "border-[#EC4899]/40 hover:border-[#EC4899]",
       glowColor: "shadow-[0_0_30px_rgba(236,72,153,0.25)] hover:shadow-[0_0_40px_rgba(236,72,153,0.5)]",
@@ -18,8 +21,8 @@ export default function PainPointsSection() {
     {
       icon: <BatteryWarning />,
       emoji: "🔋",
-      title: "Kiệt Sức Vì Phải Live Liên Tục",
-      desc: "Livestream 4-8 tiếng mỗi ngày khiến người vận hành nhanh chóng kiệt sức, phong độ giảm sút và khó duy trì lịch phát sóng ổn định.",
+      title: t.pain2Title,
+      desc: t.pain2Desc,
       gradient: "from-[#F59E0B]/20 via-[#EF4444]/10 to-transparent",
       borderColor: "border-[#F59E0B]/40 hover:border-[#F59E0B]",
       glowColor: "shadow-[0_0_30px_rgba(245,158,11,0.25)] hover:shadow-[0_0_40px_rgba(245,158,11,0.5)]",
@@ -29,8 +32,8 @@ export default function PainPointsSection() {
     {
       icon: <Layers />,
       emoji: "🎭",
-      title: "Nội Dung Thiếu Nhất Quán",
-      desc: "Mỗi ngày nói một kiểu, kịch bản chắp vá, phong cách thay đổi tùy hứng làm giảm uy tín thương hiệu và tỷ lệ chuyển đổi đơn hàng.",
+      title: t.pain3Title,
+      desc: t.pain3Desc,
       gradient: "from-[#00F0FF]/20 via-[#3B82F6]/10 to-transparent",
       borderColor: "border-[#00F0FF]/40 hover:border-[#00F0FF]",
       glowColor: "shadow-[0_0_30px_rgba(0,240,255,0.25)] hover:shadow-[0_0_40px_rgba(0,240,255,0.5)]",
@@ -40,8 +43,8 @@ export default function PainPointsSection() {
     {
       icon: <DollarSign />,
       emoji: "💸",
-      title: "Chi Phí Nhân Sự Quá Tốn Kém",
-      desc: "Thuê KOL, Idol, nhân viên trực chat, kỹ thuật viên live ngốn hàng chục đến hàng trăm triệu mỗi tháng nhưng hiệu quả bấp bênh.",
+      title: t.pain4Title,
+      desc: t.pain4Desc,
       gradient: "from-[#EF4444]/20 via-[#9333EA]/10 to-transparent",
       borderColor: "border-[#EF4444]/40 hover:border-[#EF4444]",
       glowColor: "shadow-[0_0_30px_rgba(239,68,68,0.25)] hover:shadow-[0_0_40px_rgba(239,68,68,0.5)]",
@@ -51,8 +54,8 @@ export default function PainPointsSection() {
     {
       icon: <MessageSquareOff />,
       emoji: "💬",
-      title: "Bỏ Lỡ Hàng Ngàn Khách Hàng",
-      desc: "Hàng trăm bình luận hỏi mua hàng trôi qua trong vài giây. Không kịp trả lời đồng nghĩa với việc dâng khách hàng cho đối thủ.",
+      title: t.pain5Title,
+      desc: t.pain5Desc,
       gradient: "from-[#A855F7]/20 via-[#EC4899]/10 to-transparent",
       borderColor: "border-[#A855F7]/40 hover:border-[#A855F7]",
       glowColor: "shadow-[0_0_30px_rgba(168,85,247,0.25)] hover:shadow-[0_0_40px_rgba(168,85,247,0.5)]",
@@ -62,8 +65,8 @@ export default function PainPointsSection() {
     {
       icon: <TrendingDown />,
       emoji: "📉",
-      title: "Khó Mở Rộng Đa Kênh",
-      desc: "Muốn live cùng lúc trên TikTok, Shopee, Facebook nhưng không đủ người và thiết bị, dẫn tới bỏ lỡ doanh thu khổng lồ.",
+      title: t.pain6Title,
+      desc: t.pain6Desc,
       gradient: "from-[#8B5CF6]/20 via-[#00F0FF]/10 to-transparent",
       borderColor: "border-[#8B5CF6]/40 hover:border-[#8B5CF6]",
       glowColor: "shadow-[0_0_30px_rgba(139,92,246,0.25)] hover:shadow-[0_0_40px_rgba(139,92,246,0.5)]",
@@ -86,18 +89,18 @@ export default function PainPointsSection() {
             <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-[#EC4899]/50 bg-[#EC4899]/10 backdrop-blur-xl shadow-[0_0_20px_rgba(236,72,153,0.3)] mb-6">
               <AlertTriangle className="w-4 h-4 text-[#EC4899] animate-bounce" />
               <span className="text-xs font-black text-transparent bg-clip-text bg-gradient-to-r from-[#EC4899] via-white to-[#00F0FF] uppercase tracking-[0.2em]">
-                BẠN CÓ ĐANG GẶP PHẢI NHỮNG VẤN ĐỀ NÀY?
+                {t.painBadge}
               </span>
             </div>
             
             <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tight mb-6 leading-tight drop-shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
-              LIVESTREAM TRUYỀN THỐNG ĐANG TIÊU TỐN <br className="hidden md:block" />
+              {t.painTitle1} <br className="hidden md:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#EF4444] via-[#EC4899] to-[#F59E0B]">
-                QUÁ NHIỀU THỜI GIAN, CÔNG SỨC & TIỀN BẠC!
+                {t.painTitle2}
               </span>
             </h2>
             <p className="text-gray-300 text-base md:text-lg max-w-2xl mx-auto font-light">
-              Đừng để những rào cản cũ làm chậm bước tiến doanh thu của bạn khi thời đại AI đã đến.
+              {t.painSubtitle}
             </p>
           </RevealOnScroll>
         </div>
@@ -117,7 +120,7 @@ export default function PainPointsSection() {
                     <span>{point.emoji}</span>
                   </div>
                   <span className="text-xs font-black px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-gray-300 uppercase tracking-widest">
-                    VẤN ĐỀ #{index + 1}
+                    {t.painIssue} #{index + 1}
                   </span>
                 </div>
                 
@@ -132,7 +135,7 @@ export default function PainPointsSection() {
                 {/* Bottom Status bar */}
                 <div className="mt-6 pt-4 border-t border-white/10 flex items-center gap-2 relative z-10">
                   <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
-                  <span className="text-xs font-bold text-red-400">Gây thất thoát doanh số</span>
+                  <span className="text-xs font-bold text-red-400">{t.painLoss}</span>
                 </div>
 
               </div>

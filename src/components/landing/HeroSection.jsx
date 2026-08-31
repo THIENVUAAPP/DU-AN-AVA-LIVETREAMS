@@ -1,8 +1,11 @@
 import React from 'react';
 import { Play, Sparkles, Zap, ShieldCheck, Flame } from 'lucide-react';
 import TechEcosystemMap from '../TechEcosystemMap';
+import { landingTranslations } from './landingTranslations';
 
-export default function HeroSection({ currentUser, setActiveTab, setGoogleLoginModalOpen }) {
+export default function HeroSection({ currentUser, setActiveTab, setGoogleLoginModalOpen, currentLang = 'vi' }) {
+  const t = landingTranslations[currentLang] || landingTranslations.vi;
+
   return (
     <section className="relative pt-36 pb-24 overflow-hidden flex flex-col items-center px-4 bg-[#080512]">
       {/* Dynamic Multi-Color Ambient Neon Glows */}
@@ -25,21 +28,21 @@ export default function HeroSection({ currentUser, setActiveTab, setGoogleLoginM
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#00F0FF] shadow-[0_0_10px_#00F0FF]"></span>
             </span>
             <span className="text-xs font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-[#00F0FF] to-[#EC4899] uppercase tracking-[0.2em] drop-shadow-sm">
-              ✨ NỀN TẢNG AI LIVESTREAM TỶ ĐÔ THẾ HỆ MỚI
+              {t.heroBadge}
             </span>
           </div>
           
           {/* Main Title */}
           <h1 className="text-5xl md:text-[4.2rem] lg:text-[4.8rem] font-black text-white leading-[1.1] tracking-tight drop-shadow-[0_4px_30px_rgba(0,0,0,0.8)]">
-            ĐỪNG CHỈ LIVE.<br />
+            {t.heroTitleLine1}<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00F0FF] via-[#EC4899] to-[#A855F7] inline-block mt-3 filter drop-shadow-[0_0_35px_rgba(236,72,153,0.5)]">
-              XÂY DỰNG CỖ MÁY <br className="hidden md:block"/> LIVESTREAM AI.
+              {t.heroTitleLine2} <br className="hidden md:block"/> {t.heroTitleLine3}
             </span>
           </h1>
           
           {/* Subtitle */}
           <p className="text-gray-300 text-lg md:text-xl leading-relaxed max-w-xl font-normal drop-shadow">
-            Hợp nhất sức mạnh của <span className="text-[#00F0FF] font-bold drop-shadow-[0_0_10px_rgba(0,240,255,0.6)]">AI Idol</span>, <span className="text-[#EC4899] font-bold drop-shadow-[0_0_10px_rgba(236,72,153,0.6)]">AI Voice</span>, <span className="text-[#A855F7] font-bold drop-shadow-[0_0_10px_rgba(168,85,247,0.6)]">AI Brain</span> và luồng bán hàng tự động 24/7 để tạo ra doanh số đột phá!
+            {t.heroDesc1} <span className="text-[#00F0FF] font-bold drop-shadow-[0_0_10px_rgba(0,240,255,0.6)]">{t.heroDescIdol}</span>, <span className="text-[#EC4899] font-bold drop-shadow-[0_0_10px_rgba(236,72,153,0.6)]">{t.heroDescVoice}</span>, <span className="text-[#A855F7] font-bold drop-shadow-[0_0_10px_rgba(168,85,247,0.6)]">{t.heroDescBrain}</span> {t.heroDesc2}
           </p>
           
           {/* CTA Buttons with Neon Radiance */}
@@ -51,7 +54,7 @@ export default function HeroSection({ currentUser, setActiveTab, setGoogleLoginM
               <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
               <span className="relative z-10 flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-white animate-spin" style={{ animationDuration: '4s' }} />
-                {currentUser ? "VÀO BẢNG ĐIỀU KHIỂN QUẢN TRỊ" : "BẮT ĐẦU VỚI AVA LIVE NGAY"}
+                {currentUser ? t.dashboardAdmin : t.heroCtaStart}
               </span>
             </button>
             
@@ -59,7 +62,7 @@ export default function HeroSection({ currentUser, setActiveTab, setGoogleLoginM
               href="#demo-section" 
               className="group px-8 py-4 rounded-2xl border-2 border-[#8B5CF6]/50 hover:border-[#00F0FF] text-white font-bold text-sm uppercase tracking-widest flex items-center gap-3 bg-gradient-to-r from-[#1E113F]/80 to-[#120A2B]/80 hover:bg-[#2A1859] backdrop-blur-xl shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_30px_rgba(0,240,255,0.4)] transition-all duration-300 cursor-pointer"
             >
-              KHÁM PHÁ <Play className="w-4 h-4 text-[#00F0FF] group-hover:scale-125 transition-transform drop-shadow-[0_0_8px_#00F0FF]" />
+              {t.heroCtaExplore} <Play className="w-4 h-4 text-[#00F0FF] group-hover:scale-125 transition-transform drop-shadow-[0_0_8px_#00F0FF]" />
             </a>
           </div>
 
@@ -67,15 +70,15 @@ export default function HeroSection({ currentUser, setActiveTab, setGoogleLoginM
           <div className="pt-6 flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#170E33] to-[#110A26] border border-[#00F0FF]/30 shadow-[0_0_15px_rgba(0,240,255,0.15)]">
               <Zap className="w-4 h-4 text-[#00F0FF]" />
-              <span className="text-xs font-bold text-white">Tương Tác Real-time &lt; 0.5s</span>
+              <span className="text-xs font-bold text-white">{t.heroPillRealtime}</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#170E33] to-[#110A26] border border-[#EC4899]/30 shadow-[0_0_15px_rgba(236,72,153,0.15)]">
               <Flame className="w-4 h-4 text-[#EC4899]" />
-              <span className="text-xs font-bold text-white">Live 24/7 Không Nghỉ</span>
+              <span className="text-xs font-bold text-white">{t.heroPill247}</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#170E33] to-[#110A26] border border-[#A855F7]/30 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
               <ShieldCheck className="w-4 h-4 text-[#A855F7]" />
-              <span className="text-xs font-bold text-white">Bảo Mật Chuẩn Doanh Nghiệp</span>
+              <span className="text-xs font-bold text-white">{t.heroPillSecurity}</span>
             </div>
           </div>
 

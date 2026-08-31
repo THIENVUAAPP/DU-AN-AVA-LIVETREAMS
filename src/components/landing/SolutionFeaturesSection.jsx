@@ -1,14 +1,17 @@
 import React from 'react';
 import RevealOnScroll from './RevealOnScroll';
 import { UserSquare2, Mic, Brain, Zap, FileText, ShoppingCart, Share2, BarChart2, ArrowRight, Sparkles } from 'lucide-react';
+import { landingTranslations } from './landingTranslations';
 
-export default function SolutionFeaturesSection() {
+export default function SolutionFeaturesSection({ currentLang = 'vi' }) {
+  const t = landingTranslations[currentLang] || landingTranslations.vi;
+
   const modules = [
     { 
       id: 1, 
       emoji: "👸",
-      title: 'AI IDOL SIÊU THỰC', 
-      desc: 'Tạo nhân vật AI đại diện thương hiệu với biểu cảm sống động, diện mạo đỉnh cao và phong cách thời thượng.', 
+      title: t.mod1Title, 
+      desc: t.mod1Desc, 
       icon: <UserSquare2 />, 
       gradient: 'from-[#A855F7]/30 via-[#EC4899]/10 to-transparent',
       badgeBg: 'bg-gradient-to-br from-[#A855F7] to-[#EC4899]',
@@ -19,8 +22,8 @@ export default function SolutionFeaturesSection() {
     { 
       id: 2, 
       emoji: "🎙️",
-      title: 'AI VOICE CẢM XÚC', 
-      desc: 'Giọng đọc chuẩn MC tự nhiên, biểu cảm chân thực, hỗ trợ đa ngôn ngữ, tự động ngắt nghỉ và xử lý ngữ điệu.', 
+      title: t.mod2Title, 
+      desc: t.mod2Desc, 
       icon: <Mic />, 
       gradient: 'from-[#00F0FF]/30 via-[#3B82F6]/10 to-transparent',
       badgeBg: 'bg-gradient-to-br from-[#00F0FF] to-[#3B82F6]',
@@ -31,8 +34,8 @@ export default function SolutionFeaturesSection() {
     { 
       id: 3, 
       emoji: "🧠",
-      title: 'BỘ NÃO AI THÔNG MINH', 
-      desc: 'Hiểu ngữ cảnh khách hàng trong 0.2s, phân tích câu hỏi và tạo câu trả lời chốt sale siêu thông minh và tự nhiên.', 
+      title: t.mod3Title, 
+      desc: t.mod3Desc, 
       icon: <Brain />, 
       gradient: 'from-[#10B981]/30 via-[#00F0FF]/10 to-transparent',
       badgeBg: 'bg-gradient-to-br from-[#10B981] to-[#00F0FF]',
@@ -43,8 +46,8 @@ export default function SolutionFeaturesSection() {
     { 
       id: 4, 
       emoji: "⚡",
-      title: 'EVENT ENGINE REALTIME', 
-      desc: 'Tự động bắt sự kiện Comment, Tặng Quà, Thả Tim, Follow để ngay lập tức phản hồi và tung kịch bản tương ứng.', 
+      title: t.mod4Title, 
+      desc: t.mod4Desc, 
       icon: <Zap />, 
       gradient: 'from-[#F59E0B]/30 via-[#EC4899]/10 to-transparent',
       badgeBg: 'bg-gradient-to-br from-[#F59E0B] to-[#EC4899]',
@@ -55,8 +58,8 @@ export default function SolutionFeaturesSection() {
     { 
       id: 5, 
       emoji: "📜",
-      title: 'KỊCH BẢN BÁN HÀNG ĐỘNG', 
-      desc: 'Hàng trăm mẫu kịch bản bán hàng chốt đơn, kích thích mua sắm liên tục và chống khoảng lặng (Dead-air).', 
+      title: t.mod5Title, 
+      desc: t.mod5Desc, 
       icon: <FileText />, 
       gradient: 'from-[#EC4899]/30 via-[#8B5CF6]/10 to-transparent',
       badgeBg: 'bg-gradient-to-br from-[#EC4899] to-[#8B5CF6]',
@@ -67,8 +70,8 @@ export default function SolutionFeaturesSection() {
     { 
       id: 6, 
       emoji: "🛒",
-      title: 'COMMERCE CHỐT ĐƠN', 
-      desc: 'Tự động ghim sản phẩm, hiển thị mã giảm giá theo thời gian thực và dẫn link giỏ hàng thúc đẩy thanh toán.', 
+      title: t.mod6Title, 
+      desc: t.mod6Desc, 
       icon: <ShoppingCart />, 
       gradient: 'from-[#3B82F6]/30 via-[#00F0FF]/10 to-transparent',
       badgeBg: 'bg-gradient-to-br from-[#3B82F6] to-[#00F0FF]',
@@ -79,8 +82,8 @@ export default function SolutionFeaturesSection() {
     { 
       id: 7, 
       emoji: "🌐",
-      title: 'PHÁT LIVE ĐA NỀN TẢNG', 
-      desc: 'Quản trị tập trung và phát sóng đồng thời lên TikTok Studio, Shopee Live, Facebook Live mượt mà không độ trễ.', 
+      title: t.mod7Title, 
+      desc: t.mod7Desc, 
       icon: <Share2 />, 
       gradient: 'from-[#8B5CF6]/30 via-[#EC4899]/10 to-transparent',
       badgeBg: 'bg-gradient-to-br from-[#8B5CF6] to-[#EC4899]',
@@ -91,8 +94,8 @@ export default function SolutionFeaturesSection() {
     { 
       id: 8, 
       emoji: "📊",
-      title: 'ANALYTICS DOANH THU', 
-      desc: 'Biểu đồ trực quan đo lường số lượt xem, tỷ lệ giữ chân, bình luận và doanh số theo thời gian thực.', 
+      title: t.mod8Title, 
+      desc: t.mod8Desc, 
       icon: <BarChart2 />, 
       gradient: 'from-[#EC4899]/30 via-[#00F0FF]/10 to-transparent',
       badgeBg: 'bg-gradient-to-br from-[#EC4899] to-[#00F0FF]',
@@ -115,18 +118,18 @@ export default function SolutionFeaturesSection() {
             <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-[#00F0FF]/50 bg-[#00F0FF]/10 backdrop-blur-xl shadow-[0_0_20px_rgba(0,240,255,0.3)] mb-6">
               <Sparkles className="w-4 h-4 text-[#00F0FF] animate-spin" style={{ animationDuration: '6s' }} />
               <span className="text-xs font-black text-transparent bg-clip-text bg-gradient-to-r from-[#00F0FF] via-white to-[#EC4899] uppercase tracking-[0.2em]">
-                HỆ SINH THÁI 8 MODULES TOÀN DIỆN
+                {t.solutionBadge}
               </span>
             </div>
             
             <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tight mb-6 leading-tight drop-shadow-[0_4px_25px_rgba(0,0,0,0.8)]">
-              AVA LIVE BIẾN LIVESTREAM THÀNH <br className="hidden md:block"/>
+              {t.solutionTitle1} <br className="hidden md:block"/>
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00F0FF] via-[#EC4899] to-[#9333EA]">
-                CỖ MÁY BÁN HÀNG TỰ ĐỘNG TỶ ĐÔ
+                {t.solutionTitle2}
               </span>
             </h2>
             <p className="text-gray-300 text-base md:text-lg font-light leading-relaxed">
-              Kết nối liền mạch toàn bộ chuỗi mắt xích vận hành từ AI Idol, giọng nói, kịch bản chốt đơn đến phân tích doanh thu.
+              {t.solutionSubtitle}
             </p>
           </RevealOnScroll>
         </div>
@@ -146,7 +149,7 @@ export default function SolutionFeaturesSection() {
                     <span>{mod.emoji}</span>
                   </div>
                   <div>
-                    <span className="text-[10px] font-black px-2 py-0.5 rounded bg-white/10 text-gray-300 uppercase tracking-widest border border-white/10">MOD #{mod.id}</span>
+                    <span className="text-[10px] font-black px-2 py-0.5 rounded bg-white/10 text-gray-300 uppercase tracking-widest border border-white/10">{t.solutionMod} #{mod.id}</span>
                     <h3 className="text-sm font-black text-white tracking-wider uppercase mt-1 group-hover:text-[#00F0FF] transition-colors">{mod.title}</h3>
                   </div>
                 </div>
@@ -155,10 +158,10 @@ export default function SolutionFeaturesSection() {
                 
                 <div className="mt-auto pt-4 border-t border-white/10 relative z-10 flex items-center justify-between">
                   <span className={`text-xs font-bold ${mod.accentColor} flex items-center gap-1.5`}>
-                    Hoạt động 24/7
+                    {t.solution247}
                   </span>
                   <button className="text-[11px] font-black text-white hover:text-[#00F0FF] uppercase tracking-wider flex items-center gap-1 transition-colors">
-                    CHI TIẾT <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                    {t.solutionDetails} <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                   </button>
                 </div>
 

@@ -4,19 +4,22 @@ import {
   Zap, MessagesSquare, Repeat, ShoppingBag, Mic2, 
   Wand2, BrainCircuit, Users2, Workflow, Speaker, Sparkles
 } from 'lucide-react';
+import { landingTranslations } from './landingTranslations';
 
-export default function SuperPowersSection() {
+export default function SuperPowersSection({ currentLang = 'vi' }) {
+  const t = landingTranslations[currentLang] || landingTranslations.vi;
+
   const powers = [
-    { num: '01', emoji: '💬', title: 'ĐA TƯƠNG TÁC', desc: 'Không chỉ phản hồi comment; hệ thống phản ứng với quà tặng, lượt thích, chia sẻ.', icon: <MessagesSquare />, color: 'from-[#00F0FF] to-[#3B82F6]', border: 'border-[#00F0FF]/40 hover:border-[#00F0FF]', glow: 'shadow-[0_0_20px_rgba(0,240,255,0.25)] hover:shadow-[0_0_30px_rgba(0,240,255,0.5)]' },
-    { num: '02', emoji: '⚡', title: 'REAL-TIME 0.2S', desc: 'Xử lý sự kiện gần như tức thì để tạo trải nghiệm hội thoại mượt mà tự nhiên.', icon: <Zap />, color: 'from-[#F59E0B] to-[#EF4444]', border: 'border-[#F59E0B]/40 hover:border-[#F59E0B]', glow: 'shadow-[0_0_20px_rgba(245,158,11,0.25)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)]' },
-    { num: '03', emoji: '🛍️', title: 'AUTO COMMERCE', desc: 'Phát hiện tín hiệu mua hàng và lập tức kích hoạt quy trình chốt sale tự động.', icon: <ShoppingBag />, color: 'from-[#EC4899] to-[#9333EA]', border: 'border-[#EC4899]/40 hover:border-[#EC4899]', glow: 'shadow-[0_0_20px_rgba(236,72,153,0.25)] hover:shadow-[0_0_30px_rgba(236,72,153,0.5)]' },
-    { num: '04', emoji: '🎙️', title: 'VAD ĐÀM THOẠI', desc: 'Nhận diện giọng nói thông minh để tương tác hai chiều với khán giả phiên live.', icon: <Mic2 />, color: 'from-[#10B981] to-[#00F0FF]', border: 'border-[#10B981]/40 hover:border-[#10B981]', glow: 'shadow-[0_0_20px_rgba(16,185,129,0.25)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)]' },
-    { num: '05', emoji: '🎁', title: 'EVENT RESPONSE', desc: 'Thiết lập phản ứng cảm xúc độc quyền cho từng loại quà tặng hoặc từ khóa.', icon: <Wand2 />, color: 'from-[#A855F7] to-[#EC4899]', border: 'border-[#A855F7]/40 hover:border-[#A855F7]', glow: 'shadow-[0_0_20px_rgba(168,85,247,0.25)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)]' },
-    { num: '06', emoji: '🔊', title: 'AI VOICE PRO', desc: 'Hàng trăm giọng đọc tự nhiên đa vùng miền và phong cách giao tiếp lôi cuốn.', icon: <Speaker />, color: 'from-[#00F0FF] to-[#8B5CF6]', border: 'border-[#00F0FF]/40 hover:border-[#8B5CF6]', glow: 'shadow-[0_0_20px_rgba(0,240,255,0.25)] hover:shadow-[0_0_30px_rgba(139,92,246,0.5)]' },
-    { num: '07', emoji: '🧠', title: 'AI BRAIN TỶ ĐÔ', desc: 'Quản lý ngữ cảnh, kho tri thức sản phẩm và logic chốt đơn không góc chết.', icon: <BrainCircuit />, color: 'from-[#EC4899] to-[#F59E0B]', border: 'border-[#EC4899]/40 hover:border-[#EC4899]', glow: 'shadow-[0_0_20px_rgba(236,72,153,0.25)] hover:shadow-[0_0_30px_rgba(236,72,153,0.5)]' },
-    { num: '08', emoji: '👥', title: 'HỆ PROFILE IDOL', desc: 'Lưu trữ không giới hạn các AI Idol, giọng nói, kịch bản và kho media riêng.', icon: <Users2 />, color: 'from-[#8B5CF6] to-[#00F0FF]', border: 'border-[#8B5CF6]/40 hover:border-[#8B5CF6]', glow: 'shadow-[0_0_20px_rgba(139,92,246,0.25)] hover:shadow-[0_0_30px_rgba(139,92,246,0.5)]' },
-    { num: '09', emoji: '🌐', title: 'MULTI-CHANNEL', desc: 'Mở rộng livestream đồng thời trên tất cả các nền tảng video ngắn phổ biến.', icon: <Workflow />, color: 'from-[#3B82F6] to-[#00F0FF]', border: 'border-[#3B82F6]/40 hover:border-[#3B82F6]', glow: 'shadow-[0_0_20px_rgba(59,130,246,0.25)] hover:shadow-[0_0_30px_rgba(0,240,255,0.5)]' },
-    { num: '10', emoji: '🔥', title: 'ANTI DEAD-AIR', desc: 'Tự động kích hoạt kịch bản khuấy động khi phòng live giảm tương tác.', icon: <Repeat />, color: 'from-[#EF4444] to-[#EC4899]', border: 'border-[#EF4444]/40 hover:border-[#EF4444]', glow: 'shadow-[0_0_20px_rgba(239,68,68,0.25)] hover:shadow-[0_0_30px_rgba(239,68,68,0.5)]' }
+    { num: '01', emoji: '💬', title: t.power1Title, desc: t.power1Desc, icon: <MessagesSquare />, color: 'from-[#00F0FF] to-[#3B82F6]', border: 'border-[#00F0FF]/40 hover:border-[#00F0FF]', glow: 'shadow-[0_0_20px_rgba(0,240,255,0.25)] hover:shadow-[0_0_30px_rgba(0,240,255,0.5)]' },
+    { num: '02', emoji: '⚡', title: t.power2Title, desc: t.power2Desc, icon: <Zap />, color: 'from-[#F59E0B] to-[#EF4444]', border: 'border-[#F59E0B]/40 hover:border-[#F59E0B]', glow: 'shadow-[0_0_20px_rgba(245,158,11,0.25)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)]' },
+    { num: '03', emoji: '🛍️', title: t.power3Title, desc: t.power3Desc, icon: <ShoppingBag />, color: 'from-[#EC4899] to-[#9333EA]', border: 'border-[#EC4899]/40 hover:border-[#EC4899]', glow: 'shadow-[0_0_20px_rgba(236,72,153,0.25)] hover:shadow-[0_0_30px_rgba(236,72,153,0.5)]' },
+    { num: '04', emoji: '🎙️', title: t.power4Title, desc: t.power4Desc, icon: <Mic2 />, color: 'from-[#10B981] to-[#00F0FF]', border: 'border-[#10B981]/40 hover:border-[#10B981]', glow: 'shadow-[0_0_20px_rgba(16,185,129,0.25)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)]' },
+    { num: '05', emoji: '🎁', title: t.power5Title, desc: t.power5Desc, icon: <Wand2 />, color: 'from-[#A855F7] to-[#EC4899]', border: 'border-[#A855F7]/40 hover:border-[#A855F7]', glow: 'shadow-[0_0_20px_rgba(168,85,247,0.25)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)]' },
+    { num: '06', emoji: '🔊', title: t.power6Title, desc: t.power6Desc, icon: <Speaker />, color: 'from-[#00F0FF] to-[#8B5CF6]', border: 'border-[#00F0FF]/40 hover:border-[#8B5CF6]', glow: 'shadow-[0_0_20px_rgba(0,240,255,0.25)] hover:shadow-[0_0_30px_rgba(139,92,246,0.5)]' },
+    { num: '07', emoji: '🧠', title: t.power7Title, desc: t.power7Desc, icon: <BrainCircuit />, color: 'from-[#EC4899] to-[#F59E0B]', border: 'border-[#EC4899]/40 hover:border-[#EC4899]', glow: 'shadow-[0_0_20px_rgba(236,72,153,0.25)] hover:shadow-[0_0_30px_rgba(236,72,153,0.5)]' },
+    { num: '08', emoji: '👥', title: t.power8Title, desc: t.power8Desc, icon: <Users2 />, color: 'from-[#8B5CF6] to-[#00F0FF]', border: 'border-[#8B5CF6]/40 hover:border-[#8B5CF6]', glow: 'shadow-[0_0_20px_rgba(139,92,246,0.25)] hover:shadow-[0_0_30px_rgba(139,92,246,0.5)]' },
+    { num: '09', emoji: '🌐', title: t.power9Title, desc: t.power9Desc, icon: <Workflow />, color: 'from-[#3B82F6] to-[#00F0FF]', border: 'border-[#3B82F6]/40 hover:border-[#3B82F6]', glow: 'shadow-[0_0_20px_rgba(59,130,246,0.25)] hover:shadow-[0_0_30px_rgba(0,240,255,0.5)]' },
+    { num: '10', emoji: '🔥', title: t.power10Title, desc: t.power10Desc, icon: <Repeat />, color: 'from-[#EF4444] to-[#EC4899]', border: 'border-[#EF4444]/40 hover:border-[#EF4444]', glow: 'shadow-[0_0_20px_rgba(239,68,68,0.25)] hover:shadow-[0_0_30px_rgba(239,68,68,0.5)]' }
   ];
 
   return (
@@ -33,14 +36,14 @@ export default function SuperPowersSection() {
             <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-[#A855F7]/50 bg-[#A855F7]/10 backdrop-blur-xl shadow-[0_0_20px_rgba(168,85,247,0.3)] mb-6">
               <Sparkles className="w-4 h-4 text-[#A855F7]" />
               <span className="text-xs font-black text-transparent bg-clip-text bg-gradient-to-r from-[#A855F7] via-white to-[#00F0FF] uppercase tracking-[0.2em]">
-                CÔNG NGHỆ VƯỢT TRỘI
+                {t.superBadge}
               </span>
             </div>
             
             <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tight mb-6 leading-tight drop-shadow-[0_4px_25px_rgba(0,0,0,0.8)]">
-              10 SIÊU NĂNG LỰC ĐỘC QUYỀN <br className="hidden md:block" />
+              {t.superTitle1} <br className="hidden md:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00F0FF] via-[#EC4899] to-[#9333EA]">
-                CỦA CỖ MÁY AVA LIVE
+                {t.superTitle2}
               </span>
             </h2>
             <div className="w-36 h-2 bg-gradient-to-r from-[#00F0FF] via-[#EC4899] to-[#9333EA] mx-auto rounded-full shadow-[0_0_20px_rgba(236,72,153,0.8)]"></div>
