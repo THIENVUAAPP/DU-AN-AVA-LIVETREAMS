@@ -6,18 +6,18 @@ console.log('===========================================================');
 console.log('🛡️  ĐÓNG GÓI PHẦN MỀM BẢO MẬT CAO - KHÔNG LỘ MÃ NGUỒN');
 console.log('===========================================================');
 
-const rootDir = path.join(__dirname, '..');
+const rootDir = path.resolve(__dirname, '..');
 const publicDir = path.join(rootDir, 'public');
-const macZipFileName = 'AvaLive_VIP_PRO_Mac.zip';
-const winZipFileName = 'AvaLive_VIP_PRO_Windows.zip';
-const macZipFilePath = path.join(publicDir, macZipFileName);
-const winZipFilePath = path.join(publicDir, winZipFileName);
+const winZipFilePath = path.join(publicDir, 'AvaLive_VIP_PRO_Windows.zip');
+const macZipFilePath = path.join(publicDir, 'AvaLive_VIP_PRO_Mac.zip');
 
-// 0. Dọn dẹp các file zip cũ
-if (fs.existsSync(macZipFilePath)) fs.unlinkSync(macZipFilePath);
+// Xóa file ZIP cũ và dist cũ trước khi build để tránh Vite copy đè làm phình to dung lượng
 if (fs.existsSync(winZipFilePath)) fs.unlinkSync(winZipFilePath);
+if (fs.existsSync(macZipFilePath)) fs.unlinkSync(macZipFilePath);
+const distDir = path.join(rootDir, 'dist');
+if (fs.existsSync(distDir)) fs.rmSync(distDir, { recursive: true, force: true });
 
-// 1. Biên dịch Frontend
+// 1. Biên dịch Vite Frontend
 console.log('\n[1/4] Đang biên dịch Frontend (Vite Production Build)...');
 try {
   execSync('npm run build', { cwd: rootDir, stdio: 'inherit' });
@@ -26,42 +26,50 @@ try {
   process.exit(1);
 }
 
-// 2. Biên dịch & Mã hóa (Bundle + Minify) Backend thành 1 file nhị phân duy nhất
+// 2. Biên dịch & Mã hóa toàn bộ Backend Core bằng esbuild (Giấu kín 100% mã nguồn)
 console.log('\n[2/4] Đang biên dịch & mã hóa toàn bộ Backend Core (Bảo mật mã nguồn)...');
-const tempBundleDir = path.join(rootDir, '.temp_bundle_staging');
-if (fs.existsSync(tempBundleDir)) fs.rmSync(tempBundleDir, { recursive: true, force: true });
-fs.mkdirSync(tempBundleDir, { recursive: true });
+const stagingDir = path.join(rootDir, '.temp_bundle_staging');
+if (fs.existsSync(stagingDir)) fs.rmSync(stagingDir, { recursive: true, force: true });
+fs.mkdirSync(stagingDir, { recursive: true });
 
-const bundledCorePath = path.join(tempBundleDir, 'core.cjs');
+const bundledCorePath = path.join(stagingDir, 'core.cjs');
+
 try {
-  execSync(`npx esbuild backend/server.cjs --bundle --platform=node --target=node18 --format=cjs --minify --outfile="${bundledCorePath}"`, { cwd: rootDir, stdio: 'inherit' });
+  execSync(`npx esbuild backend/server.cjs --bundle --platform=node --target=node18 --format=cjs --minify --outfile="${bundledCorePath}"`, {
+    cwd: rootDir,
+    stdio: 'inherit'
+  });
   console.log('   -> ✅ Đã mã hóa và đóng gói Backend Core thành công (Không lộ source code)!');
 } catch (err) {
   console.error('❌ Lỗi khi bundle backend:', err);
   process.exit(1);
 }
 
-// 3. Chuẩn bị nội dung Hướng dẫn sử dụng
+// 3. Chuẩn bị nội dung Hướng dẫn sử dụng ngắn gọn
 const huongDanContent = `=================================================================
   🚀 HƯỚNG DẪN SỬ DỤNG PHẦN MỀM AVALIVE LIVESTREAM VIP PRO
 =================================================================
 
 1. ĐỐI VỚI MÁY TÍNH WINDOWS:
-   👉 Cách 1 (Khuyên dùng): Nhấp đúp vào file [ Khoi_Dong_AvaLive.vbs ] hoặc [ Khoi_Dong_AvaLive.bat ]
+   👉 Nhấp đúp chuột vào file duy nhất: [ AvaLive.bat ]
    -> Phần mềm sẽ tự động mở giao diện ứng dụng để sử dụng ngay!
 
-   💡 MẸO MỞ KHÓA NẾU WINDOWS HIỆN CẢNH BÁO SMART APP CONTROL / DEFENDER:
-      • Bước 1: Click chuột phải vào file nén [ AvaLive_VIP_PRO_Windows.zip ] (trước khi giải nén)
-      • Bước 2: Chọn "Properties" (Thuộc tính)
-      • Bước 3: Tích chọn vào ô "Unblock" (Bỏ chặn) ở góc dưới -> Bấm "OK".
-      • Bước 4: Giải nén và mở [ Khoi_Dong_AvaLive.bat ] là chạy siêu mượt 100%!
+   💡 MẸO NẾU WINDOWS 11 HIỆN THÔNG BÁO BẢO VỆ SMART APPS:
+      • Nhấp chuột phải vào file nén [ AvaLive_VIP_PRO_Windows.zip ] (trước khi giải nén)
+      • Chọn "Properties" (Thuộc tính) -> Tích chọn ô "Unblock" (Bỏ chặn) ở góc dưới -> Bấm "OK".
+      • Giải nén và mở [ AvaLive.bat ] là chạy siêu mượt 100%!
 
-2. ĐỐI VỚI MÁY TÍNH MAC (macOS):
-   👉 Nhấp đúp chuột vào file: [ Khoi_Dong_AvaLive_Mac.command ]
+2. KẾT NỐI TÀI KHOẢN GMAIL & ĐỒNG BỘ BẢN QUYỀN:
+   • Bấm vào ô "🔑 Đăng Nhập Gmail" ở góc trên giao diện phần mềm.
+   • Đăng nhập 1-Click hoặc nhập địa chỉ Gmail bạn đã đăng ký/mua gói trên web để nhận diện ngay gói VIP & Token AI.
+   • Gói Miễn Phí (Dùng Thử): Tự động nhận 100 Token AI và full tính năng để sử dụng ngay.
+
+3. ĐỐI VỚI MÁY TÍNH MAC (macOS):
+   👉 Nhấp đúp chuột vào file: [ AvaLive_Mac.command ]
    -> Phần mềm sẽ tự động khởi chạy.
    (Nếu macOS hiện thông báo bảo mật lần đầu: Click chuột phải vào file -> Chọn "Open" -> Bấm "Open").
 
-3. ĐỒNG BỘ VỚI TIKTOK LIVE STUDIO & OBS:
+4. ĐỒNG BỘ VỚI TIKTOK LIVE STUDIO & OBS:
    • Sau khi mở app, vào mục "Studio Phát Sóng" để lấy link nguồn trình duyệt (Browser Source).
    • Dán link vào OBS hoặc TikTok LIVE Studio để đồng bộ hình ảnh, âm thanh, giọng đọc và bình luận tự động.
 
@@ -70,10 +78,10 @@ HỖ TRỢ KỸ THUẬT 24/7: support@avalive.com | Website: https://avalivepro.
 =================================================================
 `;
 
-// Tạo Batch Launcher cho Windows (Siêu ổn định & Tương thích 100% mọi máy Windows 10/11)
+// Tạo Batch Launcher 1-Click duy nhất cho Windows
 const winBatLauncher = `@echo off
 chcp 65001 >nul
-title AVALIVE LIVESTREAM VIP PRO - PHẦN MỀM LIVESTREAM AI
+title AVALIVE VIP PRO - PHẦN MỀM LIVESTREAM AI
 cd /d "%~dp0"
 
 echo =================================================================
@@ -81,12 +89,15 @@ echo   🚀 ĐANG KHỞI ĐỘNG HỆ THỐNG AVALIVE LIVESTREAM VIP PRO
 echo =================================================================
 echo.
 
-rem 1. Dọn dẹp các phiên bản cũ bị treo cổng 3001 nếu có
+rem 1. Tự động gỡ bỏ cờ chặn bảo mật của Windows (Unblock Mark-of-the-Web)
+powershell -NoProfile -Command "Get-ChildItem -Path '%~dp0' -Recurse | Unblock-File" >nul 2>nul
+
+rem 2. Dọn dẹp các phiên bản cũ bị treo cổng 3001 nếu có
 for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr ":3001" ^| findstr "LISTENING"') do (
     taskkill /F /PID %%a >nul 2>nul
 )
 
-rem 2. Kiểm tra bộ chạy Node.js
+rem 3. Kiểm tra bộ chạy Node.js
 set "NODE_EXE=node"
 if exist "%~dp0system\\node_portable\\node.exe" (
     set "NODE_EXE=%~dp0system\\node_portable\\node.exe"
@@ -103,12 +114,12 @@ if exist "%~dp0system\\node_portable\\node.exe" (
     )
 )
 
-rem 3. Khởi chạy máy chủ Backend xử lý TikTok Live
+rem 4. Khởi chạy máy chủ Backend xử lý TikTok Live
 echo [1/2] Đang kích hoạt Bộ xử lý Tín hiệu & TikTok Live Engine...
 cd /d "%~dp0system"
 start "AvaLive_Backend_Server" /b "%NODE_EXE%" core.cjs
 
-rem 4. Chờ 1.5 giây để Server sẵn sàng
+rem 5. Chờ 1.5 giây để Server sẵn sàng
 timeout /t 2 /nobreak >nul 2>nul
 
 echo [2/2] Đang mở giao diện Phần mềm AvaLive Studio...
@@ -121,7 +132,7 @@ echo =================================================================
 
 set "APP_URL=http://localhost:3001"
 
-rem 5. Mở ứng dụng ở chế độ Cửa Sổ Desktop Native App
+rem 6. Mở ứng dụng ở chế độ Cửa Sổ Desktop Native App
 if exist "%ProgramFiles(x86)%\\Microsoft\\Edge\\Application\\msedge.exe" (
     start "" "%ProgramFiles(x86)%\\Microsoft\\Edge\\Application\\msedge.exe" --app=%APP_URL%
     goto launched
@@ -205,22 +216,8 @@ if (fs.existsSync(path.join(rootDir, 'certs'))) {
 // Create empty uploads directory
 fs.mkdirSync(path.join(winSystemDir, 'uploads'), { recursive: true });
 
-// Launcher files in root of Windows ZIP
-fs.writeFileSync(path.join(winStaging, 'Khoi_Dong_AvaLive.bat'), winBatLauncher);
-
-const winVbsLauncher = `Set WshShell = CreateObject("WScript.Shell")
-currentDir = CreateObject("Scripting.FileSystemObject").GetParentFolderName(WScript.ScriptFullName)
-WshShell.Run "cmd.exe /c """ & currentDir & "\\Khoi_Dong_AvaLive.bat""", 0, False
-`;
-fs.writeFileSync(path.join(winStaging, 'Khoi_Dong_AvaLive.vbs'), winVbsLauncher);
-
-const winUrlShortcut = `[InternetShortcut]
-URL=http://localhost:3001/
-IconIndex=0
-IconFile=C:\\Windows\\System32\\shell32.dll
-`;
-fs.writeFileSync(path.join(winStaging, 'Mo_AvaLive_Studio.url'), winUrlShortcut);
-
+// Chỉ có đúng 1 file launcher duy nhất ở thư mục gốc Windows
+fs.writeFileSync(path.join(winStaging, 'AvaLive.bat'), winBatLauncher);
 fs.writeFileSync(path.join(winStaging, 'HUONG_DAN_SU_DUNG.txt'), huongDanContent);
 
 // Tải Node.js Portable cho Windows
@@ -238,6 +235,7 @@ try {
   if (fs.existsSync(nodeZipPath)) fs.unlinkSync(nodeZipPath);
 }
 
+if (fs.existsSync(winZipFilePath)) fs.unlinkSync(winZipFilePath);
 execSync(`cd "${winStaging}" && zip -q -r "${winZipFilePath}" . -x "*.DS_Store"`);
 fs.rmSync(winStaging, { recursive: true, force: true });
 
@@ -264,21 +262,24 @@ if (fs.existsSync(path.join(rootDir, 'certs'))) {
 // Create empty uploads directory
 fs.mkdirSync(path.join(macSystemDir, 'uploads'), { recursive: true });
 
-const macLauncher = path.join(macStaging, 'Khoi_Dong_AvaLive_Mac.command');
-fs.writeFileSync(macLauncher, macCommandLauncher);
-fs.chmodSync(macLauncher, 0o755);
+// Chỉ có đúng 1 file launcher duy nhất ở thư mục gốc Mac
+fs.writeFileSync(path.join(macStaging, 'AvaLive_Mac.command'), macCommandLauncher);
+fs.chmodSync(path.join(macStaging, 'AvaLive_Mac.command'), '755');
 fs.writeFileSync(path.join(macStaging, 'HUONG_DAN_SU_DUNG.txt'), huongDanContent);
 
+if (fs.existsSync(macZipFilePath)) fs.unlinkSync(macZipFilePath);
 execSync(`cd "${macStaging}" && zip -q -r "${macZipFilePath}" . -x "*.DS_Store"`);
 fs.rmSync(macStaging, { recursive: true, force: true });
-fs.rmSync(tempBundleDir, { recursive: true, force: true });
 
-const winSizeMB = (fs.statSync(winZipFilePath).size / (1024 * 1024)).toFixed(1);
-const macSizeMB = (fs.statSync(macZipFilePath).size / (1024 * 1024)).toFixed(1);
+// Dọn dẹp staging
+fs.rmSync(stagingDir, { recursive: true, force: true });
+
+const winSize = (fs.statSync(winZipFilePath).size / (1024 * 1024)).toFixed(1);
+const macSize = (fs.statSync(macZipFilePath).size / (1024 * 1024)).toFixed(1);
 
 console.log('\n===========================================================');
-console.log(`🎉 ĐÓNG GÓI BẢO MẬT HOÀN TẤT THÀNH CÔNG!`);
-console.log(`🔒 Tuyệt đối không lộ source code dự án`);
-console.log(`📁 Windows ZIP: public/${winZipFileName} (${winSizeMB} MB)`);
-console.log(`📁 Mac ZIP:     public/${macZipFileName} (${macSizeMB} MB)`);
+console.log('🎉 ĐÓNG GÓI BẢO MẬT HOÀN TẤT THÀNH CÔNG!');
+console.log('🔒 Tuyệt đối không lộ source code dự án');
+console.log(`📁 Windows ZIP: public/AvaLive_VIP_PRO_Windows.zip (${winSize} MB)`);
+console.log(`📁 Mac ZIP:     public/AvaLive_VIP_PRO_Mac.zip (${macSize} MB)`);
 console.log('===========================================================\n');

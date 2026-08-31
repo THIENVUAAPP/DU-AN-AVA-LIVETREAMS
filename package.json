@@ -6,23 +6,26 @@
   "main": "electron-main.cjs",
   "build": {
     "appId": "com.avalive.vippro",
-    "productName": "LivestreamAI",
+    "productName": "AvaLive_Studio",
     "directories": {
       "output": "release"
     },
     "mac": {
       "target": [
-        "dmg"
+        "dmg",
+        "zip"
       ]
     },
     "win": {
       "target": [
-        "nsis",
+        "dir",
         "zip"
       ]
     },
     "files": [
       "dist/**/*",
+      "backend/**/*",
+      "!backend/uploads/**/*",
       "electron-main.cjs"
     ]
   },

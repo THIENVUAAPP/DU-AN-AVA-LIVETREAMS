@@ -1,27 +1,41 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 
-// Tăng tốc phần cứng (Hardware Acceleration) được BẬT để đảm bảo game WebGL và Video mượt mà.
-// KHUYẾN CÁO: Với OBS, hãy dùng tính năng Browser Source (Web Source) với link http://127.0.0.1:5173/idol
-// thay vì Window Capture để có chất lượng tốt nhất và không bị đen màn hình.
+// Khởi chạy Backend Server tích hợp
+try {
+  process.env.PORT = process.env.PORT || '3001';
+  require('./backend/server.cjs');
+} catch (err) {
+  console.log('[AvaLive Desktop] Backend note:', err.message);
+}
 
 function createWindow () {
   const win = new BrowserWindow({
-    width: 1280,
-    height: 720,
+    width: 1440,
+    height: 900,
+    minWidth: 1024,
+    minHeight: 700,
+    title: 'AvaLive VIP PRO - Livestream Studio AI',
     autoHideMenuBar: true,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      backgroundThrottling: false
+      backgroundThrottling: false,
+      webSecurity: false
     }
   });
 
-  // Hiển thị toàn bộ giao diện điều khiển (Dashboard)
-  win.loadURL('http://localhost:5173/').catch(() => {
-    console.log("Không tìm thấy server dev, đang tải file build...");
-    win.loadFile(path.join(__dirname, 'dist', 'index.html'));
-  });
+  const loadApp = () => {
+    win.loadURL('http://localhost:3001/desktop').catch(() => {
+      setTimeout(() => {
+        win.loadURL('http://localhost:3001/desktop').catch(() => {
+          win.loadFile(path.join(__dirname, 'dist', 'index.html'));
+        });
+      }, 800);
+    });
+  };
+
+  loadApp();
 }
 
 app.whenReady().then(createWindow);
@@ -37,3 +51,4 @@ app.on('activate', () => {
     createWindow();
   }
 });
+
