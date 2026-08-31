@@ -8,8 +8,8 @@ console.log('===========================================================');
 
 const rootDir = path.resolve(__dirname, '..');
 const publicDir = path.join(rootDir, 'public');
-const winZipFilePath = path.join(publicDir, 'AvaLive_VIP_PRO_Windows.zip');
-const macZipFilePath = path.join(publicDir, 'AvaLive_VIP_PRO_Mac.zip');
+const winZipFilePath = path.join(publicDir, 'AvaLive_VIP_PRO_Windows_v2.zip');
+const macZipFilePath = path.join(publicDir, 'AvaLive_VIP_PRO_Mac_v2.zip');
 
 // Xóa file ZIP cũ và dist cũ trước khi build để tránh Vite copy đè làm phình to dung lượng
 if (fs.existsSync(winZipFilePath)) fs.unlinkSync(winZipFilePath);
@@ -56,7 +56,7 @@ const huongDanContent = `=======================================================
    -> Phần mềm sẽ tự động mở giao diện ứng dụng để sử dụng ngay!
 
    💡 MẸO NẾU WINDOWS 11 HIỆN THÔNG BÁO BẢO VỆ SMART APPS:
-      • Nhấp chuột phải vào file nén [ AvaLive_VIP_PRO_Windows.zip ] (trước khi giải nén)
+      • Nhấp chuột phải vào file nén [ AvaLive_VIP_PRO_Windows_v2.zip ] (trước khi giải nén)
       • Chọn "Properties" (Thuộc tính) -> Tích chọn ô "Unblock" (Bỏ chặn) ở góc dưới -> Bấm "OK".
       • Giải nén file ZIP (Click chuột phải chọn Extract All...)
       • Mở file [ 1_Khoi_Dong_AvaLive_Windows.bat ] là chạy siêu mượt 100%!
@@ -299,8 +299,8 @@ fs.rmSync(stagingDir, { recursive: true, force: true });
 
 // BẮT BUỘC: Copy file ZIP sang thư mục dist/ để Server tĩnh (Express) có thể cho phép người dùng tải xuống đúng file thực tế thay vì bị lỗi 404 trả về trang HTML.
 if (fs.existsSync(distDir)) {
-  fs.copyFileSync(winZipFilePath, path.join(distDir, 'AvaLive_VIP_PRO_Windows.zip'));
-  fs.copyFileSync(macZipFilePath, path.join(distDir, 'AvaLive_VIP_PRO_Mac.zip'));
+  fs.copyFileSync(winZipFilePath, path.join(distDir, 'AvaLive_VIP_PRO_Windows_v2.zip'));
+  fs.copyFileSync(macZipFilePath, path.join(distDir, 'AvaLive_VIP_PRO_Mac_v2.zip'));
   console.log('\n[INFO] Đã copy thành công các file ZIP sang thư mục dist/ để phục vụ tải xuống trực tuyến.');
 }
 
@@ -310,6 +310,6 @@ const macSize = (fs.statSync(macZipFilePath).size / (1024 * 1024)).toFixed(1);
 console.log('\n===========================================================');
 console.log('🎉 ĐÓNG GÓI BẢO MẬT HOÀN TẤT THÀNH CÔNG!');
 console.log('🔒 Tuyệt đối không lộ source code dự án');
-console.log(`📁 Windows ZIP: public/AvaLive_VIP_PRO_Windows.zip (${winSize} MB)`);
-console.log(`📁 Mac ZIP:     public/AvaLive_VIP_PRO_Mac.zip (${macSize} MB)`);
+console.log(`📁 Windows ZIP: public/AvaLive_VIP_PRO_Windows_v2.zip (${winSize} MB)`);
+console.log(`📁 Mac ZIP:     public/AvaLive_VIP_PRO_Mac_v2.zip (${macSize} MB)`);
 console.log('===========================================================\n');

@@ -4,7 +4,7 @@ export const handleOSDownload = (e) => {
   const userAgent = window.navigator.userAgent.toLowerCase();
   const isMac = userAgent.includes('mac');
   
-  const fileName = isMac ? 'AvaLive_VIP_PRO_Mac.zip' : 'AvaLive_VIP_PRO_Windows.zip';
+  const fileName = isMac ? 'AvaLive_VIP_PRO_Mac_v2.zip' : 'AvaLive_VIP_PRO_Windows_v2.zip';
   const fileUrl = `/${fileName}?t=${Date.now()}`;
   
   const link = document.createElement('a');
