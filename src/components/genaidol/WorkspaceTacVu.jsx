@@ -149,9 +149,9 @@ const getDefaultEventConfigs = () => {
 
       // Checkout Products
       checkoutProducts: ev.id === 'checkout' ? [
-        { id: 1, active: true, productName: 'aidol', keywords: 'aidol;phần mềm;giá;liên hệ', videoFolder: 'bình luận', supportVideoFolder: '', useAi: true, useTTS: false, muteSourceVideo: true, aiPrompt: 'TRong vai là một nhân viên sale chuyên nghiệp hãy đọc bình luận và đem ra câu trả lời để chốt đơn, giá phần mềm là 3 triệu rưỡi/1 năm, hoặc gói dùng thử là 500000 đồng trên 1 tháng. Chốt sale hoặc cần tư vấn thêm thì hãy liên hệ với đội ngũ admin' },
-        { id: 2, active: false, productName: '', keywords: '', videoFolder: '', supportVideoFolder: '', useAi: false, useTTS: false, muteSourceVideo: false, aiPrompt: '' },
-        { id: 3, active: false, productName: '', keywords: '', videoFolder: '', supportVideoFolder: '', useAi: false, useTTS: false, muteSourceVideo: false, aiPrompt: '' }
+        { id: 1, active: true, productName: 'aidol', keywords: 'aidol;phần mềm;giá;liên hệ', videoFolder: 'bình luận', supportVideoFolder: '', useAi: true, useTTS: false, ttsVoiceRole: 'idol', muteSourceVideo: true, aiPrompt: 'TRong vai là một nhân viên sale chuyên nghiệp hãy đọc bình luận và đem ra câu trả lời để chốt đơn, giá phần mềm là 3 triệu rưỡi/1 năm, hoặc gói dùng thử là 500000 đồng trên 1 tháng. Chốt sale hoặc cần tư vấn thêm thì hãy liên hệ với đội ngũ admin' },
+        { id: 2, active: false, productName: '', keywords: '', videoFolder: '', supportVideoFolder: '', useAi: false, useTTS: false, ttsVoiceRole: 'idol', muteSourceVideo: false, aiPrompt: '' },
+        { id: 3, active: false, productName: '', keywords: '', videoFolder: '', supportVideoFolder: '', useAi: false, useTTS: false, ttsVoiceRole: 'idol', muteSourceVideo: false, aiPrompt: '' }
       ] : []
     };
   });
@@ -267,6 +267,46 @@ export default function WorkspaceTacVu() {
         [selectedEventId]: {
           ...prev[selectedEventId],
           checkoutProducts: newProducts
+        }
+      };
+    });
+  };
+
+  const handleAddProduct = () => {
+    setEventConfigs(prev => {
+      const currentProducts = prev[selectedEventId].checkoutProducts || [];
+      const nextId = currentProducts.length > 0 ? Math.max(...currentProducts.map(p => p.id)) + 1 : 1;
+      const newProduct = { 
+        id: nextId, 
+        active: true, 
+        productName: `Sản phẩm mới ${nextId}`, 
+        keywords: '', 
+        videoFolder: '', 
+        supportVideoFolder: '', 
+        useAi: true, 
+        useTTS: true, 
+        ttsVoiceRole: 'idol', 
+        muteSourceVideo: true, 
+        aiPrompt: '' 
+      };
+      return {
+        ...prev,
+        [selectedEventId]: {
+          ...prev[selectedEventId],
+          checkoutProducts: [...currentProducts, newProduct]
+        }
+      };
+    });
+  };
+
+  const handleDeleteProduct = (productId) => {
+    setEventConfigs(prev => {
+      const currentProducts = prev[selectedEventId].checkoutProducts || [];
+      return {
+        ...prev,
+        [selectedEventId]: {
+          ...prev[selectedEventId],
+          checkoutProducts: currentProducts.filter(p => p.id !== productId)
         }
       };
     });
@@ -738,6 +778,13 @@ const FieldLabel = ({ icon, text, helpKey, customHelpText, minW = "min-w-[220px]
                         Sản phẩm {prod.id}
                       </legend>
                       
+                      <button 
+                        onClick={() => handleDeleteProduct(prod.id)}
+                        className="absolute top-2 right-2 text-xs text-red-500 hover:text-white hover:bg-red-500 border border-red-500 px-2 py-1 rounded transition-colors font-semibold"
+                      >
+                        Xóa
+                      </button>
+
                       <div className="grid grid-cols-[200px_1fr] gap-y-3 gap-x-4 items-center">
                         <div className="flex items-center gap-1">
                           <label className="text-[13px] font-semibold text-gray-700">Tên sản phẩm:</label>
@@ -767,17 +814,32 @@ const FieldLabel = ({ icon, text, helpKey, customHelpText, minW = "min-w-[220px]
                         <div className="flex flex-col gap-2 mt-2">
                           <textarea value={prod.aiPrompt} onChange={(e) => handleProductChange(prod.id, 'aiPrompt', e.target.value)} className="w-full h-[60px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-white focus:outline-blue-500" />
                           
-                          <div className="flex items-center justify-center gap-6 mt-1">
+                          <div className="flex items-center justify-center gap-6 mt-1 flex-wrap">
                             <label className="flex items-center gap-1.5 cursor-pointer">
                               <input type="checkbox" checked={prod.useAi} onChange={(e) => handleProductChange(prod.id, 'useAi', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded"/> 
                               <span className="text-[13px] font-medium">Dùng AI</span>
                               <HelpTooltip helpKey="useAi" />
                             </label>
-                            <label className="flex items-center gap-1.5 cursor-pointer">
-                              <input type="checkbox" checked={prod.useTTS} onChange={(e) => handleProductChange(prod.id, 'useTTS', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded"/> 
-                              <span className="text-[13px] font-medium">Dùng TTS</span>
-                              <HelpTooltip helpKey="useTTS" />
-                            </label>
+                            
+                            <div className="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded border border-gray-300">
+                              <label className="flex items-center gap-1.5 cursor-pointer">
+                                <input type="checkbox" checked={prod.useTTS} onChange={(e) => handleProductChange(prod.id, 'useTTS', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded"/> 
+                                <span className="text-[13px] font-medium text-blue-700">Dùng Giọng Đọc (TTS)</span>
+                                <HelpTooltip helpKey="useTTS" />
+                              </label>
+                              {prod.useTTS && (
+                                <select 
+                                  value={prod.ttsVoiceRole || 'idol'} 
+                                  onChange={(e) => handleProductChange(prod.id, 'ttsVoiceRole', e.target.value)}
+                                  className="border border-blue-300 rounded px-1.5 py-0.5 text-xs bg-white text-blue-800 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                >
+                                  <option value="idol">🎤 Giọng Idol Chính</option>
+                                  <option value="assistant">💬 Giọng Trợ Lý</option>
+                                  <option value="game">🎮 Giọng BLV Game</option>
+                                </select>
+                              )}
+                            </div>
+
                             <label className="flex items-center gap-1.5 cursor-pointer">
                               <input type="checkbox" checked={prod.muteSourceVideo} onChange={(e) => handleProductChange(prod.id, 'muteSourceVideo', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded"/> 
                               <span className="text-[13px] font-medium">Tắt âm gốc video</span>
@@ -788,6 +850,13 @@ const FieldLabel = ({ icon, text, helpKey, customHelpText, minW = "min-w-[220px]
                       </div>
                     </fieldset>
                   ))}
+                  
+                  <button 
+                    onClick={handleAddProduct}
+                    className="w-full py-2 border-2 border-dashed border-blue-300 text-blue-600 hover:bg-blue-50 hover:border-blue-500 rounded-lg font-bold text-sm flex justify-center items-center gap-2 transition-all"
+                  >
+                    <Plus size={16} /> Thêm Sản Phẩm Mới Để Bán
+                  </button>
                 </div>
               </div>
             </>
