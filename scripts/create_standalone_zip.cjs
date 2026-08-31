@@ -47,8 +47,14 @@ const huongDanContent = `=======================================================
 =================================================================
 
 1. ĐỐI VỚI MÁY TÍNH WINDOWS:
-   👉 Nhấp đúp chuột vào file: [ Khoi_Dong_AvaLive.bat ]
-   -> Phần mềm sẽ tự động khởi động và mở giao diện ứng dụng để sử dụng ngay!
+   👉 Cách 1 (Khuyên dùng): Nhấp đúp vào file [ Khoi_Dong_AvaLive.vbs ] hoặc [ Khoi_Dong_AvaLive.bat ]
+   -> Phần mềm sẽ tự động mở giao diện ứng dụng để sử dụng ngay!
+
+   💡 MẸO MỞ KHÓA NẾU WINDOWS HIỆN CẢNH BÁO SMART APP CONTROL / DEFENDER:
+      • Bước 1: Click chuột phải vào file nén [ AvaLive_VIP_PRO_Windows.zip ] (trước khi giải nén)
+      • Bước 2: Chọn "Properties" (Thuộc tính)
+      • Bước 3: Tích chọn vào ô "Unblock" (Bỏ chặn) ở góc dưới -> Bấm "OK".
+      • Bước 4: Giải nén và mở [ Khoi_Dong_AvaLive.bat ] là chạy siêu mượt 100%!
 
 2. ĐỐI VỚI MÁY TÍNH MAC (macOS):
    👉 Nhấp đúp chuột vào file: [ Khoi_Dong_AvaLive_Mac.command ]
@@ -201,6 +207,20 @@ fs.mkdirSync(path.join(winSystemDir, 'uploads'), { recursive: true });
 
 // Launcher files in root of Windows ZIP
 fs.writeFileSync(path.join(winStaging, 'Khoi_Dong_AvaLive.bat'), winBatLauncher);
+
+const winVbsLauncher = `Set WshShell = CreateObject("WScript.Shell")
+currentDir = CreateObject("Scripting.FileSystemObject").GetParentFolderName(WScript.ScriptFullName)
+WshShell.Run "cmd.exe /c """ & currentDir & "\\Khoi_Dong_AvaLive.bat""", 0, False
+`;
+fs.writeFileSync(path.join(winStaging, 'Khoi_Dong_AvaLive.vbs'), winVbsLauncher);
+
+const winUrlShortcut = `[InternetShortcut]
+URL=http://localhost:3001/
+IconIndex=0
+IconFile=C:\\Windows\\System32\\shell32.dll
+`;
+fs.writeFileSync(path.join(winStaging, 'Mo_AvaLive_Studio.url'), winUrlShortcut);
+
 fs.writeFileSync(path.join(winStaging, 'HUONG_DAN_SU_DUNG.txt'), huongDanContent);
 
 // Tải Node.js Portable cho Windows
