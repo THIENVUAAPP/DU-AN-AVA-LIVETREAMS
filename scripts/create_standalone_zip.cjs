@@ -51,13 +51,15 @@ const huongDanContent = `=======================================================
 =================================================================
 
 1. ĐỐI VỚI MÁY TÍNH WINDOWS:
-   👉 Nhấp đúp chuột vào file duy nhất: [ AvaLive.bat ]
+   👉 BẮT BUỘC: Hãy giải nén file ZIP này (Chuột phải chọn Extract All...)
+   👉 Sau khi giải nén, nhấp đúp chuột vào file: [ 1_Khoi_Dong_AvaLive_Windows.bat ]
    -> Phần mềm sẽ tự động mở giao diện ứng dụng để sử dụng ngay!
 
    💡 MẸO NẾU WINDOWS 11 HIỆN THÔNG BÁO BẢO VỆ SMART APPS:
       • Nhấp chuột phải vào file nén [ AvaLive_VIP_PRO_Windows.zip ] (trước khi giải nén)
       • Chọn "Properties" (Thuộc tính) -> Tích chọn ô "Unblock" (Bỏ chặn) ở góc dưới -> Bấm "OK".
-      • Giải nén và mở [ AvaLive.bat ] là chạy siêu mượt 100%!
+      • Giải nén file ZIP (Click chuột phải chọn Extract All...)
+      • Mở file [ 1_Khoi_Dong_AvaLive_Windows.bat ] là chạy siêu mượt 100%!
 
 2. KẾT NỐI TÀI KHOẢN GMAIL & ĐỒNG BỘ BẢN QUYỀN:
    • Bấm vào ô "🔑 Đăng Nhập Gmail" ở góc trên giao diện phần mềm.
@@ -65,7 +67,7 @@ const huongDanContent = `=======================================================
    • Gói Miễn Phí (Dùng Thử): Tự động nhận 100 Token AI và full tính năng để sử dụng ngay.
 
 3. ĐỐI VỚI MÁY TÍNH MAC (macOS):
-   👉 Nhấp đúp chuột vào file: [ AvaLive_Mac.command ]
+   👉 Nhấp đúp chuột vào file: [ 1_Khoi_Dong_AvaLive_Mac.command ]
    -> Phần mềm sẽ tự động khởi chạy.
    (Nếu macOS hiện thông báo bảo mật lần đầu: Click chuột phải vào file -> Chọn "Open" -> Bấm "Open").
 
@@ -88,6 +90,26 @@ echo =================================================================
 echo   🚀 ĐANG KHỞI ĐỘNG HỆ THỐNG AVALIVE LIVESTREAM VIP PRO
 echo =================================================================
 echo.
+
+rem 0. Kiểm tra xem người dùng đã giải nén chưa
+if not exist "%~dp0system" (
+    color 4F
+    echo.
+    echo ==============================================================================
+    echo   [LOI] BAN CHUA GIAI NEN PHAN MEM! (YOU HAVEN'T EXTRACTED THE ZIP FILE)
+    echo ==============================================================================
+    echo.
+    echo VUI LONG LAM THEO HUONG DAN SAU DE SU DUNG:
+    echo 1. Nhan chuot phai vao file ZIP ban vua tai ve.
+    echo 2. Chon "Extract All..." (Giai nen tat ca...).
+    echo 3. Mo thu muc vua duoc giai nen.
+    echo 4. Chay lai file nay.
+    echo.
+    echo KHONG THE CHAY TRUC TIEP TU TRONG FILE ZIP!
+    echo.
+    pause
+    exit /b
+)
 
 rem 1. Tự động gỡ bỏ cờ chặn bảo mật của Windows (Unblock Mark-of-the-Web) và ẩn thư mục hệ thống
 powershell -NoProfile -Command "Get-ChildItem -Path '%~dp0' -Recurse | Unblock-File" >nul 2>nul
@@ -218,7 +240,7 @@ if (fs.existsSync(path.join(rootDir, 'certs'))) {
 fs.mkdirSync(path.join(winSystemDir, 'uploads'), { recursive: true });
 
 // Chỉ có đúng 1 file launcher duy nhất ở thư mục gốc Windows
-fs.writeFileSync(path.join(winStaging, 'AvaLive.bat'), winBatLauncher);
+fs.writeFileSync(path.join(winStaging, '1_Khoi_Dong_AvaLive_Windows.bat'), winBatLauncher);
 fs.writeFileSync(path.join(winStaging, 'HUONG_DAN_SU_DUNG.txt'), huongDanContent);
 
 // Tải Node.js Portable cho Windows
@@ -264,8 +286,8 @@ if (fs.existsSync(path.join(rootDir, 'certs'))) {
 fs.mkdirSync(path.join(macSystemDir, 'uploads'), { recursive: true });
 
 // Chỉ có đúng 1 file launcher duy nhất ở thư mục gốc Mac
-fs.writeFileSync(path.join(macStaging, 'AvaLive_Mac.command'), macCommandLauncher);
-fs.chmodSync(path.join(macStaging, 'AvaLive_Mac.command'), '755');
+fs.writeFileSync(path.join(macStaging, '1_Khoi_Dong_AvaLive_Mac.command'), macCommandLauncher);
+fs.chmodSync(path.join(macStaging, '1_Khoi_Dong_AvaLive_Mac.command'), '755');
 fs.writeFileSync(path.join(macStaging, 'HUONG_DAN_SU_DUNG.txt'), huongDanContent);
 
 if (fs.existsSync(macZipFilePath)) fs.unlinkSync(macZipFilePath);
