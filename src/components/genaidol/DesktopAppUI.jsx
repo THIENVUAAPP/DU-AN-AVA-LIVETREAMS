@@ -46,7 +46,16 @@ export default function DesktopAppUI() {
       const saved = localStorage.getItem('avalive_current_user');
       if (saved) return JSON.parse(saved);
     } catch {}
-    return null;
+    return {
+      name: 'Khách Hàng Dùng Thử',
+      email: 'khachhang@avalive.com',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=guest',
+      isAdmin: false,
+      plan: 'Free',
+      tokens: 100,
+      liveMinutes: 600,
+      liveTimeHours: 10
+    };
   });
   const [realGmailInput, setRealGmailInput] = useState('');
   const [realNameInput, setRealNameInput] = useState('');
@@ -1924,7 +1933,7 @@ export default function DesktopAppUI() {
 
     return (
       <div className="fixed inset-0 w-screen h-screen bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 font-sans select-none overflow-y-auto">
-        <div className="relative max-w-md w-full bg-[#121420]/95 backdrop-blur-2xl border border-cyan-500/30 rounded-[32px] p-8 shadow-2xl text-center space-y-6 animate-in fade-in zoom-in-95 duration-200">
+        <div className="relative max-w-md w-full bg-[#121420]/98 backdrop-blur-2xl border border-cyan-500/30 rounded-[32px] p-6 sm:p-8 shadow-2xl text-center space-y-5 animate-in fade-in zoom-in-95 duration-200">
           <button 
             onClick={() => setIsGmailLoginModalOpen(false)}
             className="absolute top-4 right-4 text-gray-400 hover:text-white p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
@@ -1933,13 +1942,13 @@ export default function DesktopAppUI() {
           </button>
 
           {/* Logo Brand */}
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 p-0.5 shadow-[0_0_30px_rgba(59,130,246,0.5)]">
-              {currentUser ? (
+          <div className="flex flex-col items-center gap-2.5">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 via-indigo-600 to-pink-500 p-0.5 shadow-[0_0_30px_rgba(0,240,255,0.4)]">
+              {currentUser && currentUser.email !== 'khachhang@avalive.com' ? (
                 <img 
                   src={currentUser.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(currentUser.email)}`}
                   alt="Avatar"
-                  className="w-full h-full rounded-xl object-cover"
+                  className="w-full h-full rounded-2xl object-cover"
                 />
               ) : (
                 <div className="w-full h-full bg-[#0d0e17] rounded-2xl flex items-center justify-center">
@@ -1948,27 +1957,29 @@ export default function DesktopAppUI() {
               )}
             </div>
             <div>
-              <h1 className="text-xl font-black bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-                {currentUser ? currentUser.email : 'AVALIVE VIP PRO STUDIO'}
+              <h1 className="text-xl font-black bg-gradient-to-r from-cyan-400 via-blue-400 to-pink-400 bg-clip-text text-transparent">
+                {currentUser && currentUser.email !== 'khachhang@avalive.com' ? currentUser.email : 'AVALIVE VIP PRO STUDIO'}
               </h1>
-              <p className="text-xs text-gray-400 mt-1 font-bold">
-                {currentUser ? `Gói Hiện Tại: ${currentUser.isAdmin ? 'SUPER ADMIN' : (currentUser.plan || 'Free')}` : 'Kết Nối Gmail Đồng Bộ Bản Quyền'}
+              <p className="text-xs text-gray-400 mt-0.5 font-bold">
+                {currentUser && currentUser.email !== 'khachhang@avalive.com' 
+                  ? `Gói Hiện Tại: ${currentUser.isAdmin ? 'SUPER ADMIN ENTERPRISE' : (currentUser.plan || 'Gói Cơ Bản')}` 
+                  : 'Đồng Bộ Bản Quyền Gmail & Quản Trị Doanh Số'}
               </p>
             </div>
           </div>
 
-          {currentUser ? (
+          {currentUser && currentUser.email !== 'khachhang@avalive.com' ? (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white/5 border border-amber-500/30 rounded-2xl p-4 flex flex-col items-center gap-2">
-                  <Coins className="w-6 h-6 text-amber-400" />
-                  <span className="text-xs text-gray-400 font-medium">Số Dư Token</span>
-                  <span className="text-lg font-black text-amber-300">{displayTokens}</span>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white/5 border border-amber-500/30 rounded-2xl p-3.5 flex flex-col items-center gap-1.5">
+                  <Coins className="w-5 h-5 text-amber-400" />
+                  <span className="text-[11px] text-gray-400 font-medium">Số Dư Token AI</span>
+                  <span className="text-base font-black text-amber-300">{displayTokens}</span>
                 </div>
-                <div className="bg-white/5 border border-emerald-500/30 rounded-2xl p-4 flex flex-col items-center gap-2">
-                  <Clock className="w-6 h-6 text-emerald-400" />
-                  <span className="text-xs text-gray-400 font-medium">Thời Gian Live</span>
-                  <span className="text-lg font-black text-emerald-300">{displayLiveTime}</span>
+                <div className="bg-white/5 border border-emerald-500/30 rounded-2xl p-3.5 flex flex-col items-center gap-1.5">
+                  <Clock className="w-5 h-5 text-emerald-400" />
+                  <span className="text-[11px] text-gray-400 font-medium">Thời Gian Live</span>
+                  <span className="text-base font-black text-emerald-300">{displayLiveTime}</span>
                 </div>
               </div>
               
@@ -1978,61 +1989,118 @@ export default function DesktopAppUI() {
                   setIsGmailLoginModalOpen(false);
                   setActiveSettingsModal('payment');
                 }}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-amber-500/20 transition-all hover:scale-[1.02] active:scale-98"
+                className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-white rounded-xl font-bold text-xs shadow-lg shadow-amber-500/20 transition-all hover:scale-[1.02] active:scale-98 cursor-pointer"
               >
                 <Zap className="w-4 h-4 text-yellow-100" />
-                <span>Bảng Giá & Nâng Cấp Gói</span>
+                <span>Bảng Giá & Nâng Cấp Gói VIP</span>
               </button>
-            </div>
-          ) : (
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-left space-y-2">
-              <div className="flex items-center gap-2 text-amber-400 text-xs font-bold">
-                <Lock className="w-4 h-4" />
-                <span>ĐĂNG NHẬP / ĐỔI TÀI KHOẢN GMAIL</span>
-              </div>
-              <p className="text-xs text-gray-300 leading-relaxed">
-                Nhập địa chỉ <strong>Gmail</strong> của bạn để đồng bộ gói bản quyền và lịch sử hoạt động giữa các thiết bị.
-              </p>
-            </div>
-          )}
 
-          {authError && (
-            <div className="p-3 bg-red-500/15 border border-red-500/30 rounded-xl text-red-400 text-xs text-left flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{authError}</span>
-            </div>
-          )}
-
-          {/* Nút Đăng Nhập / Đăng Xuất */}
-          <div className="space-y-4 pt-2">
-            {!currentUser ? (
-              <button
-                onClick={handleRealGoogleOAuth}
-                disabled={isLoggingIn}
-                className="w-full flex items-center justify-center gap-3 py-4 px-4 bg-white hover:bg-gray-100 text-gray-900 rounded-2xl font-bold text-sm shadow-xl transition-all hover:scale-[1.02] active:scale-98 cursor-pointer disabled:opacity-50"
-              >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                </svg>
-                <span>{isLoggingIn ? '⏳ Đang Kết Nối...' : '🚀 Kết Nối Trực Tiếp Bằng Gmail (Google)'}</span>
-              </button>
-            ) : (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   handleLogout();
                   setIsGmailLoginModalOpen(false);
                 }}
-                className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-2xl font-bold text-sm transition-all hover:scale-[1.02] active:scale-98 cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl font-bold text-xs transition-all hover:scale-[1.02] active:scale-98 cursor-pointer"
               >
-                <LogOut className="w-4 h-4" />
-                <span>Đăng Xuất Tài Khoản</span>
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Đổi Tài Khoản / Đăng Xuất</span>
               </button>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Lựa chọn 1: Google OAuth */}
+              <button
+                onClick={handleRealGoogleOAuth}
+                disabled={isLoggingIn}
+                className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white hover:bg-gray-100 text-gray-900 rounded-2xl font-black text-xs shadow-xl transition-all hover:scale-[1.02] active:scale-98 cursor-pointer disabled:opacity-50 border border-gray-300"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                </svg>
+                <span>{isLoggingIn ? '⏳ Đang Kết Nối...' : 'ĐĂNG NHẬP 1-CLICK BẰNG GOOGLE'}</span>
+              </button>
+
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-white/10" />
+                <span className="text-[10px] text-gray-500 font-bold uppercase">HOẶC NHẬP GMAIL ĐỒNG BỘ</span>
+                <div className="flex-1 h-px bg-white/10" />
+              </div>
+
+              {/* Lựa chọn 2: Nhập Gmail trực tiếp để đồng bộ tức thì */}
+              <form onSubmit={handleRealGmailSubmit} className="space-y-2.5 text-left">
+                <div>
+                  <label className="text-[10px] text-gray-400 font-bold block mb-1">
+                    ✉️ ĐỊA CHỈ GMAIL ĐÃ ĐĂNG KÝ / MUA GÓI:
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={realGmailInput}
+                    onChange={(e) => setRealGmailInput(e.target.value)}
+                    placeholder="ví dụ: yourname@gmail.com"
+                    className="w-full bg-[#1b1e30] border border-cyan-500/40 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-gray-400 font-bold block mb-1">
+                    👤 TÊN HIỂN THỊ (TÙY CHỌN):
+                  </label>
+                  <input
+                    type="text"
+                    value={realNameInput}
+                    onChange={(e) => setRealNameInput(e.target.value)}
+                    placeholder="Tên shop hoặc tên cá nhân"
+                    className="w-full bg-[#1b1e30] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoggingIn}
+                  className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-xl font-black text-xs shadow-lg shadow-cyan-500/25 transition-all hover:scale-[1.02] active:scale-98 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  <Sparkles size={14} />
+                  <span>{isLoggingIn ? '⏳ Đang Đồng Bộ...' : 'KẾT NỐI & ĐỒNG BỘ GÓI BẢN QUYỀN'}</span>
+                </button>
+              </form>
+
+              {/* Lựa chọn 3: Tiếp tục dùng miễn phí */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (!currentUser) {
+                    const guestUser = {
+                      name: 'Khách Hàng AvaLive',
+                      email: 'khachhang@avalive.com',
+                      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=guest',
+                      isAdmin: false,
+                      plan: 'Free',
+                      tokens: 100,
+                      liveMinutes: 600,
+                      liveTimeHours: 10
+                    };
+                    setCurrentUser(guestUser);
+                    try { localStorage.setItem('avalive_current_user', JSON.stringify(guestUser)); } catch (e) {}
+                  }
+                  setIsGmailLoginModalOpen(false);
+                }}
+                className="w-full py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl font-bold text-xs border border-white/10 transition-colors cursor-pointer"
+              >
+                🎁 Tiếp Tục Sử Dụng Gói Miễn Phí (100 Token)
+              </button>
+            </div>
+          )}
+
+          {authError && (
+            <div className="p-2.5 bg-red-500/15 border border-red-500/30 rounded-xl text-red-400 text-xs text-left flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{authError}</span>
+            </div>
+          )}
 
           <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-gray-500">
             <span>Phiên Bản v{APP_VERSION}</span>

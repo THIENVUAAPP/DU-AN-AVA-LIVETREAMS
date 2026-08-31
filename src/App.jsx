@@ -389,7 +389,71 @@ export default function App() {
               <span>ĐĂNG NHẬP BẰNG GOOGLE</span>
             </button>
 
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-white/10" />
+              <span className="text-[10px] text-gray-500 font-bold uppercase">HOẶC NHẬP GMAIL ĐÃ ĐĂNG KÝ</span>
+              <div className="flex-1 h-px bg-white/10" />
+            </div>
 
+            {/* OPTION 2: NHẬP GMAIL TRỰC TIẾP */}
+            <form onSubmit={handleRealGmailSubmit} className="space-y-3 text-left">
+              <div>
+                <label className="text-[10px] text-gray-400 font-bold block mb-1">
+                  ✉️ ĐỊA CHỈ GMAIL:
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={realGmailInput}
+                  onChange={(e) => setRealGmailInput(e.target.value)}
+                  placeholder="ví dụ: yourname@gmail.com"
+                  className="w-full bg-[#161828] border border-blue-500/30 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-blue-400 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-gray-400 font-bold block mb-1">
+                  👤 TÊN HIỂN THỊ (TÙY CHỌN):
+                </label>
+                <input
+                  type="text"
+                  value={realNameInput}
+                  onChange={(e) => setRealNameInput(e.target.value)}
+                  placeholder="Tên shop hoặc tên cá nhân"
+                  className="w-full bg-[#161828] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-blue-400 transition-colors"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-black text-xs shadow-lg shadow-blue-500/25 transition-all hover:scale-[1.02] active:scale-98 cursor-pointer flex items-center justify-center gap-2"
+              >
+                <Sparkles size={14} />
+                <span>KẾT NỐI & ĐỒNG BỘ TÀI KHOẢN</span>
+              </button>
+            </form>
+
+            <button
+              onClick={() => {
+                if (!currentUser) {
+                  const guestUser = {
+                    name: 'Khách Hàng Dùng Thử',
+                    email: 'khachhang@avalive.com',
+                    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=guest',
+                    isAdmin: false,
+                    plan: 'MIỄN PHÍ',
+                    tokens: 100,
+                    liveTimeHours: 10
+                  };
+                  setCurrentUser(guestUser);
+                  localStorage.setItem("avalive_current_user", JSON.stringify(guestUser));
+                  setActiveTab("broadcast");
+                }
+                setGoogleLoginModalOpen(false);
+              }}
+              className="w-full py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl font-bold text-xs border border-white/10 transition-colors cursor-pointer"
+            >
+              🎁 Dùng Thử Miễn Phí (100 Token + Full Tính Năng)
+            </button>
 
             <button
               onClick={() => setGoogleLoginModalOpen(false)}
