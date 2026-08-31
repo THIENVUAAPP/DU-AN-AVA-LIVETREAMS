@@ -33,8 +33,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Phục vụ frontend từ thư mục dist
-const distPath = fs.existsSync(path.join(__dirname, '../dist'))
+// Phục vụ frontend từ thư mục app hoặc dist
+const distPath = fs.existsSync(path.join(__dirname, 'app'))
+  ? path.join(__dirname, 'app')
+  : fs.existsSync(path.join(__dirname, '../app'))
+  ? path.join(__dirname, '../app')
+  : fs.existsSync(path.join(__dirname, '../dist'))
   ? path.join(__dirname, '../dist')
   : fs.existsSync(path.join(__dirname, './dist'))
   ? path.join(__dirname, './dist')
