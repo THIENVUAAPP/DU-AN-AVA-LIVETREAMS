@@ -297,6 +297,13 @@ fs.rmSync(macStaging, { recursive: true, force: true });
 // Dọn dẹp staging
 fs.rmSync(stagingDir, { recursive: true, force: true });
 
+// BẮT BUỘC: Copy file ZIP sang thư mục dist/ để Server tĩnh (Express) có thể cho phép người dùng tải xuống đúng file thực tế thay vì bị lỗi 404 trả về trang HTML.
+if (fs.existsSync(distDir)) {
+  fs.copyFileSync(winZipFilePath, path.join(distDir, 'AvaLive_VIP_PRO_Windows.zip'));
+  fs.copyFileSync(macZipFilePath, path.join(distDir, 'AvaLive_VIP_PRO_Mac.zip'));
+  console.log('\n[INFO] Đã copy thành công các file ZIP sang thư mục dist/ để phục vụ tải xuống trực tuyến.');
+}
+
 const winSize = (fs.statSync(winZipFilePath).size / (1024 * 1024)).toFixed(1);
 const macSize = (fs.statSync(macZipFilePath).size / (1024 * 1024)).toFixed(1);
 
