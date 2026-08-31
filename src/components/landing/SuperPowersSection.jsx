@@ -2,56 +2,78 @@ import React from 'react';
 import RevealOnScroll from './RevealOnScroll';
 import { 
   Zap, MessagesSquare, Repeat, ShoppingBag, Mic2, 
-  Wand2, BrainCircuit, Users2, Workflow, Speaker 
+  Wand2, BrainCircuit, Users2, Workflow, Speaker, Sparkles
 } from 'lucide-react';
 
 export default function SuperPowersSection() {
   const powers = [
-    { num: '01', title: 'ĐA TƯƠNG TÁC', desc: 'Không chỉ phản hồi comment; hệ thống phản ứng với nhiều tín hiệu tương tác.', icon: <MessagesSquare /> },
-    { num: '02', title: 'REAL-TIME', desc: 'Xử lý sự kiện gần thời gian thực để tạo trải nghiệm hội thoại tự nhiên.', icon: <Zap /> },
-    { num: '03', title: 'AUTO COMMERCE', desc: 'Phát hiện tín hiệu mua hàng và kích hoạt workflow bán hàng.', icon: <ShoppingBag /> },
-    { num: '04', title: 'VAD ĐÀM THOẠI', desc: 'Cho phép tương tác bằng giọng nói với hệ thống khi được cấu hình.', icon: <Mic2 /> },
-    { num: '05', title: 'EVENT RESPONSE', desc: 'Thiết lập phản ứng riêng cho từng loại quà tặng, từ khóa hoặc hành động.', icon: <Wand2 /> },
-    { num: '06', title: 'AI VOICE', desc: 'Nhiều lựa chọn giọng nói và phong cách giao tiếp.', icon: <Speaker /> },
-    { num: '07', title: 'AI BRAIN', desc: 'Quản lý context, kiến thức, kịch bản và logic phản hồi.', icon: <BrainCircuit /> },
-    { num: '08', title: 'PROFILE SYSTEM', desc: 'Lưu nhiều AI Idol, giọng nói, kịch bản và cấu hình.', icon: <Users2 /> },
-    { num: '09', title: 'MULTI-CHANNEL', desc: 'Khả năng mở rộng cho nhiều kênh được nền tảng hỗ trợ.', icon: <Workflow /> },
-    { num: '10', title: 'ANTI DEAD AIR', desc: 'Khi tương tác giảm, hệ thống kích hoạt nội dung kéo tương tác.', icon: <Repeat /> }
+    { num: '01', emoji: '💬', title: 'ĐA TƯƠNG TÁC', desc: 'Không chỉ phản hồi comment; hệ thống phản ứng với quà tặng, lượt thích, chia sẻ.', icon: <MessagesSquare />, color: 'from-[#00F0FF] to-[#3B82F6]', border: 'border-[#00F0FF]/40 hover:border-[#00F0FF]', glow: 'shadow-[0_0_20px_rgba(0,240,255,0.25)] hover:shadow-[0_0_30px_rgba(0,240,255,0.5)]' },
+    { num: '02', emoji: '⚡', title: 'REAL-TIME 0.2S', desc: 'Xử lý sự kiện gần như tức thì để tạo trải nghiệm hội thoại mượt mà tự nhiên.', icon: <Zap />, color: 'from-[#F59E0B] to-[#EF4444]', border: 'border-[#F59E0B]/40 hover:border-[#F59E0B]', glow: 'shadow-[0_0_20px_rgba(245,158,11,0.25)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)]' },
+    { num: '03', emoji: '🛍️', title: 'AUTO COMMERCE', desc: 'Phát hiện tín hiệu mua hàng và lập tức kích hoạt quy trình chốt sale tự động.', icon: <ShoppingBag />, color: 'from-[#EC4899] to-[#9333EA]', border: 'border-[#EC4899]/40 hover:border-[#EC4899]', glow: 'shadow-[0_0_20px_rgba(236,72,153,0.25)] hover:shadow-[0_0_30px_rgba(236,72,153,0.5)]' },
+    { num: '04', emoji: '🎙️', title: 'VAD ĐÀM THOẠI', desc: 'Nhận diện giọng nói thông minh để tương tác hai chiều với khán giả phiên live.', icon: <Mic2 />, color: 'from-[#10B981] to-[#00F0FF]', border: 'border-[#10B981]/40 hover:border-[#10B981]', glow: 'shadow-[0_0_20px_rgba(16,185,129,0.25)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)]' },
+    { num: '05', emoji: '🎁', title: 'EVENT RESPONSE', desc: 'Thiết lập phản ứng cảm xúc độc quyền cho từng loại quà tặng hoặc từ khóa.', icon: <Wand2 />, color: 'from-[#A855F7] to-[#EC4899]', border: 'border-[#A855F7]/40 hover:border-[#A855F7]', glow: 'shadow-[0_0_20px_rgba(168,85,247,0.25)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)]' },
+    { num: '06', emoji: '🔊', title: 'AI VOICE PRO', desc: 'Hàng trăm giọng đọc tự nhiên đa vùng miền và phong cách giao tiếp lôi cuốn.', icon: <Speaker />, color: 'from-[#00F0FF] to-[#8B5CF6]', border: 'border-[#00F0FF]/40 hover:border-[#8B5CF6]', glow: 'shadow-[0_0_20px_rgba(0,240,255,0.25)] hover:shadow-[0_0_30px_rgba(139,92,246,0.5)]' },
+    { num: '07', emoji: '🧠', title: 'AI BRAIN TỶ ĐÔ', desc: 'Quản lý ngữ cảnh, kho tri thức sản phẩm và logic chốt đơn không góc chết.', icon: <BrainCircuit />, color: 'from-[#EC4899] to-[#F59E0B]', border: 'border-[#EC4899]/40 hover:border-[#EC4899]', glow: 'shadow-[0_0_20px_rgba(236,72,153,0.25)] hover:shadow-[0_0_30px_rgba(236,72,153,0.5)]' },
+    { num: '08', emoji: '👥', title: 'HỆ PROFILE IDOL', desc: 'Lưu trữ không giới hạn các AI Idol, giọng nói, kịch bản và kho media riêng.', icon: <Users2 />, color: 'from-[#8B5CF6] to-[#00F0FF]', border: 'border-[#8B5CF6]/40 hover:border-[#8B5CF6]', glow: 'shadow-[0_0_20px_rgba(139,92,246,0.25)] hover:shadow-[0_0_30px_rgba(139,92,246,0.5)]' },
+    { num: '09', emoji: '🌐', title: 'MULTI-CHANNEL', desc: 'Mở rộng livestream đồng thời trên tất cả các nền tảng video ngắn phổ biến.', icon: <Workflow />, color: 'from-[#3B82F6] to-[#00F0FF]', border: 'border-[#3B82F6]/40 hover:border-[#3B82F6]', glow: 'shadow-[0_0_20px_rgba(59,130,246,0.25)] hover:shadow-[0_0_30px_rgba(0,240,255,0.5)]' },
+    { num: '10', emoji: '🔥', title: 'ANTI DEAD-AIR', desc: 'Tự động kích hoạt kịch bản khuấy động khi phòng live giảm tương tác.', icon: <Repeat />, color: 'from-[#EF4444] to-[#EC4899]', border: 'border-[#EF4444]/40 hover:border-[#EF4444]', glow: 'shadow-[0_0_20px_rgba(239,68,68,0.25)] hover:shadow-[0_0_30px_rgba(239,68,68,0.5)]' }
   ];
 
   return (
-    <section className="py-32 px-4 bg-[#030305] relative z-10 border-t border-white/5 overflow-hidden">
-      {/* Premium accent lights */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-cyan-900/10 blur-[150px] rounded-full pointer-events-none"></div>
-      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-violet-900/10 blur-[150px] rounded-full pointer-events-none"></div>
+    <section className="py-28 px-4 bg-[#0A0618] relative z-10 border-t border-[#8B5CF6]/20 overflow-hidden">
+      {/* Background Glows */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#00F0FF]/15 blur-[160px] rounded-full pointer-events-none"></div>
+      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-[#EC4899]/15 blur-[160px] rounded-full pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto relative z-10">
+        
+        {/* Section Header */}
         <div className="text-center mb-20">
           <RevealOnScroll>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-100 to-indigo-200 uppercase tracking-tight mb-6">
-              10 SIÊU NĂNG LỰC CỦA AVA LIVE
+            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-[#A855F7]/50 bg-[#A855F7]/10 backdrop-blur-xl shadow-[0_0_20px_rgba(168,85,247,0.3)] mb-6">
+              <Sparkles className="w-4 h-4 text-[#A855F7]" />
+              <span className="text-xs font-black text-transparent bg-clip-text bg-gradient-to-r from-[#A855F7] via-white to-[#00F0FF] uppercase tracking-[0.2em]">
+                CÔNG NGHỆ VƯỢT TRỘI
+              </span>
+            </div>
+            
+            <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tight mb-6 leading-tight drop-shadow-[0_4px_25px_rgba(0,0,0,0.8)]">
+              10 SIÊU NĂNG LỰC ĐỘC QUYỀN <br className="hidden md:block" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00F0FF] via-[#EC4899] to-[#9333EA]">
+                CỦA CỖ MÁY AVA LIVE
+              </span>
             </h2>
-            <div className="w-32 h-1.5 bg-gradient-to-r from-cyan-500 via-indigo-500 to-violet-500 mx-auto rounded-full shadow-[0_0_15px_rgba(99,102,241,0.5)]"></div>
+            <div className="w-36 h-2 bg-gradient-to-r from-[#00F0FF] via-[#EC4899] to-[#9333EA] mx-auto rounded-full shadow-[0_0_20px_rgba(236,72,153,0.8)]"></div>
           </RevealOnScroll>
         </div>
 
+        {/* 10 Grid Items */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
           {powers.map((power, index) => (
             <RevealOnScroll key={index} className="h-full">
-              <div className="bg-white/[0.02] backdrop-blur-sm border border-white/[0.05] hover:border-cyan-500/30 rounded-3xl p-6 hover:bg-white/[0.04] transition-all duration-500 h-full group flex flex-col hover:shadow-[0_10px_30px_rgba(34,211,238,0.1)] hover:-translate-y-1 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="flex items-center justify-between mb-6 relative z-10">
-                  <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center group-hover:scale-110 group-hover:bg-cyan-500/20 transition-all duration-500 shadow-inner">
-                    {React.cloneElement(power.icon, { className: 'w-5 h-5' })}
+              <div className={`bg-gradient-to-b from-[#191038]/95 via-[#110B27]/95 to-[#0A0619]/98 backdrop-blur-xl border-2 ${power.border} rounded-[26px] p-6 transition-all duration-500 h-full group flex flex-col ${power.glow} hover:-translate-y-2 relative overflow-hidden`}>
+                
+                <div className="flex items-center justify-between mb-5 relative z-10">
+                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${power.color} flex items-center justify-center text-2xl shadow-[0_0_15px_rgba(0,0,0,0.5)] group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 border border-white/40`}>
+                    <span>{power.emoji}</span>
                   </div>
-                  <span className="text-3xl font-black text-white/5 group-hover:text-cyan-500/20 transition-colors duration-500 font-mono tracking-tighter">{power.num}</span>
+                  <span className="text-3xl font-black text-white/20 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-[#00F0FF] group-hover:to-[#EC4899] transition-all font-mono">
+                    {power.num}
+                  </span>
                 </div>
-                <h3 className="text-[14px] font-black text-white/90 mb-3 relative z-10 tracking-wide uppercase">{power.title}</h3>
-                <p className="text-[13px] text-gray-400/80 font-light leading-relaxed flex-1 relative z-10">{power.desc}</p>
+                
+                <h3 className="text-[15px] font-black text-white mb-2 relative z-10 tracking-wide uppercase group-hover:text-[#00F0FF] transition-colors">
+                  {power.title}
+                </h3>
+                <p className="text-[13px] text-gray-300/90 font-light leading-relaxed flex-1 relative z-10">
+                  {power.desc}
+                </p>
+
               </div>
             </RevealOnScroll>
           ))}
         </div>
+
       </div>
     </section>
   );

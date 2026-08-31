@@ -102,48 +102,47 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
 
 
   return (
-    <div className="min-h-screen bg-[#05050A] text-gray-100 font-sans overflow-x-hidden selection:bg-[#EF4444] selection:text-white">
+    <div className="min-h-screen bg-[#070410] text-gray-100 font-sans overflow-x-hidden selection:bg-[#EC4899] selection:text-white">
       <style>{customStyles}</style>
       
       {/* HEADER */}
-      <header className="fixed top-0 left-0 right-0 z-[100] bg-[#05050A]/90 backdrop-blur-md border-b border-white/5 py-4 px-6 transition-all">
+      <header className="fixed top-0 left-0 right-0 z-[100] bg-[#070410]/95 backdrop-blur-2xl border-b border-[#8B5CF6]/30 py-4 px-6 transition-all shadow-[0_4px_30px_rgba(0,0,0,0.8)]">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo(0, 0)}>
             <div className="relative">
-              <div className="absolute -inset-1 bg-gradient-to-r from-red-600 via-purple-600 to-cyan-500 rounded-2xl blur opacity-70 group-hover:opacity-100 transition duration-500"></div>
-              <div className="relative w-10 h-10 rounded-xl bg-[#111] p-0.5 shadow-2xl group-hover:scale-105 transition-all">
-                <img src="/official_logo.jpg" alt="AvaLive" className="w-full h-full object-cover rounded-[10px] border border-white/20" />
+              <div className="absolute -inset-1.5 bg-gradient-to-r from-[#00F0FF] via-[#EC4899] to-[#9333EA] rounded-2xl blur-sm opacity-80 group-hover:opacity-100 transition duration-500 animate-pulse"></div>
+              <div className="relative w-11 h-11 rounded-xl bg-[#0F0A20] p-0.5 shadow-2xl group-hover:scale-105 transition-all border border-white/30">
+                <img src="/official_logo.jpg" alt="AvaLive" className="w-full h-full object-cover rounded-[10px]" />
               </div>
             </div>
-            <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-1.5 leading-none">
-              <span className="text-[#FBBF24] drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]">AVA</span>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 font-black drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]">LIVESTREAM</span>
+            <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-1.5 leading-none">
+              <span className="text-[#00F0FF] drop-shadow-[0_0_12px_rgba(0,240,255,0.8)]">AVA</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#EC4899] via-[#A855F7] to-white font-black drop-shadow-[0_0_12px_rgba(236,72,153,0.8)]">LIVE</span>
             </h1>
           </div>
 
-          <nav className="hidden lg:flex items-center gap-6">
-            <button onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})} className="text-sm font-semibold text-white hover:text-[#FBBF24] transition-all cursor-pointer">Trang chủ</button>
+          <nav className="hidden lg:flex items-center gap-7">
+            <button onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})} className="text-sm font-bold text-white hover:text-[#00F0FF] transition-all cursor-pointer">Trang chủ</button>
             <a 
               href="#" onClick={handleOSDownload}
-              
-              className="text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-rose-400 to-pink-500 hover:scale-105 transition-all cursor-pointer flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/5 border border-amber-400/30 shadow-[0_0_12px_rgba(251,191,36,0.2)]"
+              className="text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-[#00F0FF] via-[#EC4899] to-[#A855F7] hover:scale-105 transition-all cursor-pointer flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white/5 border border-[#EC4899]/40 shadow-[0_0_15px_rgba(236,72,153,0.3)] hover:shadow-[0_0_25px_rgba(0,240,255,0.5)]"
               title="Tải Về File ZIP Phần Mềm (Mac & Win)"
             >
-              <Download className="w-3.5 h-3.5 text-amber-400" />
+              <Download className="w-4 h-4 text-[#00F0FF]" />
               <span>TẢI VỀ (ZIP)</span>
             </a>
-            <button onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-semibold text-gray-300 hover:text-white transition-all cursor-pointer">Tính năng</button>
-            <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-semibold text-gray-300 hover:text-white transition-all cursor-pointer">Bảng giá</button>
-            <button onClick={() => document.getElementById('guide')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-semibold text-gray-300 hover:text-white transition-all cursor-pointer">Hướng dẫn</button>
-            <button onClick={() => document.getElementById('affiliate-intro')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-semibold text-gray-300 hover:text-[#FBBF24] transition-all cursor-pointer">Affiliate</button>
-            <button onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-semibold text-gray-300 hover:text-white transition-all cursor-pointer">Liên hệ</button>
+            <button onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-bold text-gray-300 hover:text-white transition-all cursor-pointer">Tính năng</button>
+            <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-bold text-gray-300 hover:text-white transition-all cursor-pointer">Bảng giá</button>
+            <button onClick={() => document.getElementById('guide')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-bold text-gray-300 hover:text-white transition-all cursor-pointer">Hướng dẫn</button>
+            <button onClick={() => document.getElementById('affiliate-intro')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00F0FF] to-[#EC4899] hover:opacity-80 transition-all cursor-pointer">Affiliate 30%</button>
+            <button onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-bold text-gray-300 hover:text-white transition-all cursor-pointer">Liên hệ</button>
           </nav>
 
           <div className="flex items-center gap-4">
             {!currentUser ? (
               <button 
                 onClick={() => setGoogleLoginModalOpen(true)}
-                className="px-5 py-2 rounded-full border border-white/20 text-white font-semibold text-sm hover:bg-white/10 transition-all cursor-pointer"
+                className="px-6 py-2.5 rounded-full border-2 border-[#00F0FF]/50 hover:border-[#EC4899] bg-gradient-to-r from-[#00F0FF]/10 to-[#EC4899]/10 text-white font-bold text-sm hover:scale-105 shadow-[0_0_20px_rgba(0,240,255,0.3)] hover:shadow-[0_0_30px_rgba(236,72,153,0.5)] transition-all cursor-pointer"
               >
                 Đăng nhập
               </button>
@@ -917,12 +916,12 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
 // Subcomponents for cleaner code
 function RibbonItem({ icon, title, subtitle, color, borderCol }) {
   return (
-    <div className="flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-all cursor-pointer group min-w-max mx-8 border border-transparent hover:border-white/10 hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] shrink-0 min-w-max">
-      <div className={`p-3 rounded-xl bg-[#111] border border-white/10 ${color} group-hover:scale-110 group-hover:border-[${borderCol.replace('border-', '')}] transition-transform shadow-lg`}>
-        {React.cloneElement(icon, { className: "w-6 h-6" })}
+    <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#140C2E]/60 backdrop-blur-xl border border-[#8B5CF6]/30 hover:border-[#00F0FF] hover:shadow-[0_0_25px_rgba(0,240,255,0.4)] transition-all cursor-pointer group shrink-0 min-w-max mx-6">
+      <div className={`p-3.5 rounded-xl bg-gradient-to-br from-[#1E113F] to-[#100926] border border-white/20 ${color} group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(0,0,0,0.5)]`}>
+        {React.cloneElement(icon, { className: "w-7 h-7" })}
       </div>
       <div>
-        <h4 className="text-white text-sm font-black leading-tight uppercase tracking-wide">{title} <br/><span className="text-gray-400 font-bold">{subtitle}</span></h4>
+        <h4 className="text-white text-sm font-black leading-tight uppercase tracking-wide group-hover:text-[#00F0FF] transition-colors">{title} <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#EC4899] to-[#00F0FF] font-extrabold">{subtitle}</span></h4>
       </div>
     </div>
   );
@@ -931,22 +930,22 @@ function RibbonItem({ icon, title, subtitle, color, borderCol }) {
 function PlatformLogo({ icon, text, hoverColor }) {
   const colorClass = hoverColor ? hoverColor.replace('hover:', '') : 'text-white';
   return (
-    <div className={`flex items-center gap-3 transition-all duration-500 cursor-pointer min-w-max mx-12 group drop-shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:drop-shadow-[0_0_30px_rgba(255,255,255,0.4)] hover:scale-110 active:scale-95 ${colorClass}`}>
-      {React.cloneElement(icon, { className: "w-9 h-9 group-hover:scale-110 transition-transform" })}
-      <span className="text-3xl font-black tracking-wider uppercase">{text}</span>
+    <div className={`flex items-center gap-3 transition-all duration-500 cursor-pointer min-w-max mx-12 group drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:drop-shadow-[0_0_35px_rgba(0,240,255,0.6)] hover:scale-110 active:scale-95 ${colorClass}`}>
+      {React.cloneElement(icon, { className: "w-10 h-10 group-hover:scale-110 transition-transform" })}
+      <span className="text-3xl font-black tracking-wider uppercase drop-shadow">{text}</span>
     </div>
   );
 }
 
 function FeatureCard({ icon, title, desc, color, bg, border }) {
   return (
-    <div className={`p-5 rounded-2xl border ${border} ${bg} flex gap-4 hover:scale-[1.02] transition-transform`}>
-      <div className={`p-3 rounded-xl bg-black/50 backdrop-blur-md h-max border ${border} ${color}`}>
-        {React.cloneElement(icon, { className: "w-6 h-6" })}
+    <div className={`p-6 rounded-2xl border-2 ${border} ${bg} flex gap-4 hover:scale-[1.03] transition-all backdrop-blur-xl shadow-[0_0_20px_rgba(0,0,0,0.3)] hover:shadow-[0_0_30px_rgba(236,72,153,0.3)] group`}>
+      <div className={`p-3.5 rounded-xl bg-gradient-to-br from-[#1C103B] to-[#0D071E] h-max border border-white/20 ${color} group-hover:scale-110 transition-transform shadow-lg`}>
+        {React.cloneElement(icon, { className: "w-7 h-7" })}
       </div>
       <div>
-        <h4 className="text-white font-bold text-sm mb-1">{title}</h4>
-        <p className="text-gray-400 text-xs leading-relaxed">{desc}</p>
+        <h4 className="text-white font-black text-sm md:text-base mb-1.5 uppercase tracking-wide group-hover:text-[#00F0FF] transition-colors">{title}</h4>
+        <p className="text-gray-300/90 text-xs md:text-[13px] leading-relaxed font-light">{desc}</p>
       </div>
     </div>
   );
@@ -954,12 +953,12 @@ function FeatureCard({ icon, title, desc, color, bg, border }) {
 
 function StatItem({ icon, value, label, color }) {
   return (
-    <div className="flex flex-col items-center justify-center p-4 rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-md hover:bg-white/[0.04] transition-colors text-center hover:border-white/10 transition-colors">
-      <div className={`p-2 rounded-full bg-black border border-white/10 ${color} mb-3 shadow-[0_0_15px_currentColor]`}>
-        {React.cloneElement(icon, { className: "w-5 h-5 opacity-80" })}
+    <div className="flex flex-col items-center justify-center p-5 rounded-2xl border-2 border-[#8B5CF6]/30 bg-gradient-to-b from-[#180F33]/80 to-[#0C071C]/90 backdrop-blur-xl hover:border-[#00F0FF] hover:shadow-[0_0_25px_rgba(0,240,255,0.3)] text-center transition-all">
+      <div className={`p-3 rounded-2xl bg-[#090514] border border-white/20 ${color} mb-3 shadow-[0_0_20px_rgba(0,0,0,0.8)]`}>
+        {React.cloneElement(icon, { className: "w-6 h-6" })}
       </div>
-      <h4 className="text-xl font-black text-white mb-1">{value}</h4>
-      <p className="text-gray-500 text-[10px] uppercase font-bold tracking-wider">{label}</p>
+      <h4 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-[#00F0FF] to-[#EC4899] mb-1 drop-shadow">{value}</h4>
+      <p className="text-gray-400 text-[11px] uppercase font-black tracking-wider">{label}</p>
     </div>
   );
 }
