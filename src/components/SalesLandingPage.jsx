@@ -13,7 +13,11 @@ import TechEcosystemMap from './TechEcosystemMap';
 import { getPlans } from '../lib/plansConfig';
 import { supabase } from '../lib/supabaseClient';
 
-
+import HeroSection from './landing/HeroSection';
+import PainPointsSection from './landing/PainPointsSection';
+import SolutionFeaturesSection from './landing/SolutionFeaturesSection';
+import SuperPowersSection from './landing/SuperPowersSection';
+import ArchitectureSection from './landing/ArchitectureSection';
 const IconMap = {
   MonitorPlay,
   Zap,
@@ -224,55 +228,20 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
       </header>
 
       {/* 1. HERO SECTION */}
-      <section className="relative pt-32 pb-16 overflow-hidden flex flex-col items-center px-4" style={{
-        backgroundImage: 'radial-gradient(circle at 50% 0%, #1c103f 0%, #05050A 50%)'
-      }}>
-        {/* Background Grid Lines */}
-        <div className="absolute inset-0 bg-[url('https://transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none"></div>
+      <HeroSection 
+        currentUser={currentUser} 
+        setActiveTab={setActiveTab} 
+        setGoogleLoginModalOpen={setGoogleLoginModalOpen} 
+      />
 
-        <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
-          
-          {/* Left Text Content */}
-          <div className="flex flex-col items-start text-left space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#8B5CF6]/40 bg-[#8B5CF6]/10 backdrop-blur-sm">
-              <span className="text-[10px] font-bold text-purple-300 uppercase tracking-widest">NỀN TẢNG LIVESTREAM & BÁN HÀNG AI #1 VIỆT NAM</span>
-            </div>
-            
-            <h1 className="text-5xl md:text-[4rem] font-black text-white leading-[1.3] tracking-normal">
-              LIVE STREAM ĐA NỀN TẢNG <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FBBF24] via-[#F59E0B] to-[#D97706] inline-block mt-2">
-                BÁN HÀNG TỰ ĐỘNG BẰNG AI 24/7
-              </span>
-            </h1>
-            
-            <p className="text-gray-400 text-lg leading-relaxed max-w-xl">
-              Công nghệ AI thông minh giúp bạn livestream đa nền tảng, chốt đơn tự động, chatbot AI chăm sóc khách hàng 24/7 và tối ưu doanh số vượt trội!
-            </p>
-            
-            <div className="flex flex-wrap items-center gap-4 pt-4">
-              <button 
-                onClick={() => currentUser ? setActiveTab('profile') : setGoogleLoginModalOpen(true)}
-                className="px-8 py-4 rounded-full bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] text-black font-black text-sm uppercase tracking-wider shadow-[0_0_30px_rgba(245,158,11,0.3)] hover:scale-105 transition-all cursor-pointer"
-              >
-                {currentUser ? "VÀO BẢNG ĐIỀU KHIỂN QUẢN TRỊ" : "DÙNG THỬ MIỄN PHÍ 7 NGÀY"}
-              </button>
-              <a href="#demo-section" className="px-8 py-4 rounded-full border border-white/20 text-white font-bold text-sm uppercase flex items-center gap-2 hover:bg-white/10 transition-all cursor-pointer">
-                XEM VIDEO GIỚI THIỆU <Play className="w-4 h-4 text-[#FBBF24]" />
-              </a>
-            </div>
+      {/* 1.1 PAIN POINTS */}
+      <PainPointsSection />
 
-          </div>
+      {/* 1.2 SOLUTION FEATURES */}
+      <SolutionFeaturesSection />
 
-          {/* Right AI Robot Illustration (CSS Based mockup) */}
-          <div className="relative h-[600px] flex items-center justify-center">
-             <TechEcosystemMap />
-          {/* Bottom Podium Badge */}
-            <div className="absolute -bottom-8 px-6 py-2 rounded-full border border-[#FBBF24]/40 bg-[#FBBF24]/10 backdrop-blur-md z-30 shadow-[0_0_20px_rgba(251,191,36,0.3)]">
-              <span className="text-xs font-bold text-[#FBBF24] uppercase tracking-widest">HOẠT ĐỘNG LIÊN TỤC KHÔNG GIÁN ĐOẠN</span>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* 1.3 SUPER POWERS */}
+      <SuperPowersSection />
 
       {/* 2. FEATURES RIBBON (MARQUEE) */}
       <section id="features" className="border-y border-white/5 bg-[#0a0a10] py-8 relative z-20 overflow-hidden marquee-container">
@@ -522,6 +491,9 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
             </div>
          </div>
       </section>
+
+      {/* 5.1 ARCHITECTURE SECTION */}
+      <ArchitectureSection />
 
       {/* 6. PRICING SECTION */}
       <section id="pricing" className="py-20 px-4 max-w-7xl mx-auto relative z-10">
