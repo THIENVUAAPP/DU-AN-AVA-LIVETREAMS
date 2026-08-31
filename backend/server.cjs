@@ -1169,6 +1169,19 @@ if (distPath) {
 
 const PORT = process.env.PORT || 3001;
 const scheme = usingHttps ? 'https' : 'http';
+
+httpServer.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`\n⚠️  Cảnh báo: Cổng ${PORT} đang được sử dụng bởi phiên khác.`);
+    console.error(`💡 Đang tự động chuyển sang cổng ${Number(PORT) + 1}...`);
+    httpServer.listen(Number(PORT) + 1, () => {
+      console.log(`🌐 Màn Hình Chính: ${scheme}://localhost:${Number(PORT) + 1}`);
+    });
+  } else {
+    console.error('Server error:', err);
+  }
+});
+
 httpServer.listen(PORT, () => {
   console.log(`\n===========================================================`);
   console.log(`🚀 HỆ THỐNG AVALIVE LIVESTREAM VIP PRO ĐANG HOẠT ĐỘNG!`);

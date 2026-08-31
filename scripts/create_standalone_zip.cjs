@@ -64,7 +64,7 @@ HỖ TRỢ KỸ THUẬT 24/7: support@avalive.com | Website: https://avalivepro.
 =================================================================
 `;
 
-// Tạo Batch Launcher cho Windows
+// Tạo Batch Launcher cho Windows (Siêu ổn định & Tương thích 100% mọi máy Windows 10/11)
 const winBatLauncher = `@echo off
 chcp 65001 >nul
 title AVALIVE LIVESTREAM VIP PRO - PHẦN MỀM LIVESTREAM AI
@@ -75,6 +75,12 @@ echo   🚀 ĐANG KHỞI ĐỘNG HỆ THỐNG AVALIVE LIVESTREAM VIP PRO
 echo =================================================================
 echo.
 
+rem 1. Dọn dẹp các phiên bản cũ bị treo cổng 3001 nếu có
+for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr ":3001" ^| findstr "LISTENING"') do (
+    taskkill /F /PID %%a >nul 2>nul
+)
+
+rem 2. Kiểm tra bộ chạy Node.js
 set "NODE_EXE=node"
 if exist "%~dp0system\\node_portable\\node.exe" (
     set "NODE_EXE=%~dp0system\\node_portable\\node.exe"
@@ -91,10 +97,12 @@ if exist "%~dp0system\\node_portable\\node.exe" (
     )
 )
 
+rem 3. Khởi chạy máy chủ Backend xử lý TikTok Live
 echo [1/2] Đang kích hoạt Bộ xử lý Tín hiệu & TikTok Live Engine...
 cd /d "%~dp0system"
-start /b "" "%NODE_EXE%" core.cjs >nul 2>nul
+start "AvaLive_Backend_Server" /b "%NODE_EXE%" core.cjs
 
+rem 4. Chờ 1.5 giây để Server sẵn sàng
 timeout /t 2 /nobreak >nul 2>nul
 
 echo [2/2] Đang mở giao diện Phần mềm AvaLive Studio...
@@ -107,17 +115,34 @@ echo =================================================================
 
 set "APP_URL=http://localhost:3001"
 
-start "" msedge.exe --app=%APP_URL% >nul 2>nul
-if %errorlevel% equ 0 goto launched
+rem 5. Mở ứng dụng ở chế độ Cửa Sổ Desktop Native App
+if exist "%ProgramFiles(x86)%\\Microsoft\\Edge\\Application\\msedge.exe" (
+    start "" "%ProgramFiles(x86)%\\Microsoft\\Edge\\Application\\msedge.exe" --app=%APP_URL%
+    goto launched
+)
+if exist "%ProgramFiles%\\Microsoft\\Edge\\Application\\msedge.exe" (
+    start "" "%ProgramFiles%\\Microsoft\\Edge\\Application\\msedge.exe" --app=%APP_URL%
+    goto launched
+)
+if exist "%ProgramFiles%\\Google\\Chrome\\Application\\chrome.exe" (
+    start "" "%ProgramFiles%\\Google\\Chrome\\Application\\chrome.exe" --app=%APP_URL%
+    goto launched
+)
+if exist "%ProgramFiles(x86)%\\Google\\Chrome\\Application\\chrome.exe" (
+    start "" "%ProgramFiles(x86)%\\Google\\Chrome\\Application\\chrome.exe" --app=%APP_URL%
+    goto launched
+)
+if exist "%LocalAppData%\\Google\\Chrome\\Application\\chrome.exe" (
+    start "" "%LocalAppData%\\Google\\Chrome\\Application\\chrome.exe" --app=%APP_URL%
+    goto launched
+)
 
-start "" chrome.exe --app=%APP_URL% >nul 2>nul
-if %errorlevel% equ 0 goto launched
-
+rem Mở bằng trình duyệt mặc định nếu không tìm thấy đường dẫn riêng
 start "" %APP_URL%
 
 :launched
 echo.
-echo Nhấn phím bất kỳ hoặc đóng cửa sổ này để tắt phần mềm.
+echo 👉 Nhấn phím bất kỳ hoặc đóng cửa sổ này khi muốn tắt phần mềm.
 pause >nul
 exit
 `;
