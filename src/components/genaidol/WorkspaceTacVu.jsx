@@ -3,6 +3,7 @@ import {
   CheckSquare, MessageCircle, Plus, Gift, Clock, Megaphone, 
   Hand, ShoppingCart, Share, Sparkles, Mic, Heart, Play, HelpCircle, ChevronDown
 } from 'lucide-react';
+import WorkspaceKeywordPanel from './WorkspaceKeywordPanel';
 
 const EVENTS = [
   { id: 'checkout', label: 'Chốt đơn', icon: ShoppingCart, color: 'text-blue-500', desc: 'Aldol sẽ thực hiện các câu kêu gọi mua hàng, chốt đơn khi có người hỏi mua.' },
@@ -136,6 +137,8 @@ const getDefaultEventConfigs = () => {
       smartSpamFilter: ev.id === 'comment' ? true : false,
       waitBetweenSpam: ev.id === 'comment' ? 3 : '',
       maxRepeatChars: ev.id === 'comment' ? 0.7 : '',
+      keywordRules: ev.id === 'comment' ? [] : undefined,
+      prompts: ev.id === 'comment' ? [] : undefined,
       speakAfterIdleSeconds: ev.id === 'idle' ? 5 : '',
       likeThreshold: ev.id === 'thanks_heart' ? 10 : '',
       
@@ -225,15 +228,16 @@ export default function WorkspaceTacVu() {
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+  const updateEventConfig = (id, partial) => {
     setEventConfigs(prev => ({
       ...prev,
-      [selectedEventId]: {
-        ...prev[selectedEventId],
-        [name]: type === 'checkbox' ? checked : value
-      }
+      [id]: { ...prev[id], ...partial }
     }));
+  };
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    updateEventConfig(selectedEventId, { [name]: type === 'checkbox' ? checked : value });
   };
 
   const handleSlotChange = (slotId, name, value, isCheckbox = false) => {
@@ -1025,6 +1029,17 @@ const FieldLabel = ({ icon, text, helpKey, customHelpText, minW = "min-w-[220px]
                               <input type="number" step="0.1" name="maxRepeatChars" value={currentConfig.maxRepeatChars} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
                             </div>
                           </>
+                        )}
+
+                        {selectedEventId === 'comment' && (
+                          <div className="mt-6 pt-4 border-t border-gray-200">
+                            <WorkspaceKeywordPanel 
+                              currentConfig={currentConfig}
+                              onUpdateConfig={(partial) => {
+                                updateEventConfig(selectedEventId, partial);
+                              }}
+                            />
+                          </div>
                         )}
 
                         {selectedEventId === 'idle' && (
