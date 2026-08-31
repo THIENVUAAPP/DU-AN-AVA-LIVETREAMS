@@ -244,9 +244,9 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
       <SuperPowersSection />
 
       {/* 2. FEATURES RIBBON (MARQUEE) */}
-      <section id="features" className="border-y border-white/5 bg-[#0a0a10] py-8 relative z-20 overflow-hidden marquee-container">
-        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#0a0a10] to-transparent z-10 pointer-events-none"></div>
-        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#0a0a10] to-transparent z-10 pointer-events-none"></div>
+      <section id="features" className="border-y border-white/[0.02] bg-[#030305] py-8 relative z-20 overflow-hidden marquee-container shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+        <div className="absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-[#030305] to-transparent z-10 pointer-events-none"></div>
+        <div className="absolute inset-y-0 right-0 w-40 bg-gradient-to-l from-[#030305] to-transparent z-10 pointer-events-none"></div>
         
         <div className="flex w-max animate-marquee">
           <div className="flex w-max justify-around items-center px-4 gap-8">
@@ -273,7 +273,7 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
           {/* Left: Video Player */}
-          <RevealOnScroll className="rounded-3xl border border-white/10 bg-[#0d0d16] p-6 shadow-2xl relative overflow-hidden flex flex-col">
+          <RevealOnScroll className="rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-md hover:bg-white/[0.04] transition-colors p-6 shadow-2xl relative overflow-hidden flex flex-col">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-white uppercase tracking-wider">XEM VIDEO GIỚI THIỆU AVA LIVE</h3>
             </div>
@@ -307,7 +307,7 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
           </RevealOnScroll>
 
           {/* Right: Why Choose Us */}
-          <RevealOnScroll className="rounded-3xl border border-white/10 bg-[#0d0d16] p-8 shadow-2xl">
+          <RevealOnScroll className="rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-md hover:bg-white/[0.04] transition-colors p-8 shadow-2xl">
             <h3 className="text-xl font-bold text-white uppercase tracking-wider mb-8">VÌ SAO NÊN CHỌN AVA LIVE?</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -326,7 +326,7 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
 
       {/* 4. REALTIME AI CORE SECTION (From KOL Live) */}
       <section className="py-20 px-4 max-w-7xl mx-auto relative z-10">
-         <div className="bg-[#121216]/80 backdrop-blur-md rounded-3xl border border-white/10 shadow-lg p-8 lg:p-12 relative overflow-hidden">
+         <div className="bg-white/[0.02] backdrop-blur-md rounded-3xl border border-white/10 shadow-lg p-8 lg:p-12 relative overflow-hidden">
             {/* Background connecting lines */}
             <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
                <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
@@ -410,7 +410,7 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
 
       {/* 5. MULTI-CONTENT SECTION (From KOL Live) */}
       <section className="py-20 px-4 max-w-7xl mx-auto relative z-10">
-         <div className="bg-[#121216]/80 backdrop-blur-md rounded-3xl border border-white/10 shadow-lg p-8 lg:p-16 text-center">
+         <div className="bg-white/[0.02] backdrop-blur-md rounded-3xl border border-white/10 shadow-lg p-8 lg:p-16 text-center">
             <span className="inline-block px-3 py-1 bg-[#00FF66]/10 text-[#00FF66] rounded-full text-[10px] font-bold mb-4 border border-[#00FF66]/30 uppercase tracking-widest shadow-glow-green">
                HÀNH TRÌNH PHÁT TRIỂN AIDOL
             </span>
@@ -500,7 +500,7 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
         <div className="text-center mb-12 flex flex-col items-center">
           <h2 className="text-3xl font-black text-white uppercase tracking-wider mb-8">BẢNG GIÁ AVA LIVE</h2>
           
-          <div className="flex items-center gap-2 bg-[#0d0d16] p-1.5 rounded-full border border-white/10 relative">
+          <div className="flex items-center gap-2 bg-white/[0.02] backdrop-blur-md hover:bg-white/[0.04] transition-colors p-1.5 rounded-full border border-white/10 relative">
             <button 
               onClick={() => setBillingCycle('monthly')}
               className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${billingCycle === 'monthly' ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
@@ -804,7 +804,7 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
           
           {/* Top Footer Banner Cards */}
           <div id="guide" className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
-            <div className="rounded-2xl border border-white/10 bg-[#0d0d16] p-8 flex items-center justify-between group cursor-pointer hover:border-purple-500/30 transition-colors">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md hover:bg-white/[0.04] transition-colors p-8 flex items-center justify-between group cursor-pointer hover:border-purple-500/30 transition-colors">
               <div>
                 <h4 className="text-xl font-bold text-white mb-2 uppercase">HƯỚNG DẪN SỬ DỤNG</h4>
                 <p className="text-gray-400 text-sm mb-4">Xem video hướng dẫn chi tiết để bắt đầu sử dụng AVA LIVE một cách dễ dàng</p>
@@ -815,7 +815,7 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
               </div>
             </div>
             
-            <div className="rounded-2xl border border-white/10 bg-[#0d0d16] p-8 flex items-center justify-between group cursor-pointer hover:border-blue-500/30 transition-colors">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md hover:bg-white/[0.04] transition-colors p-8 flex items-center justify-between group cursor-pointer hover:border-blue-500/30 transition-colors">
               <div>
                 <h4 className="text-xl font-bold text-white mb-2 uppercase">HỖ TRỢ 24/7</h4>
                 <p className="text-gray-400 text-sm mb-4">Đội ngũ hỗ trợ chuyên nghiệp luôn sẵn sàng giúp bạn thành công với AVA LIVE</p>
@@ -954,7 +954,7 @@ function FeatureCard({ icon, title, desc, color, bg, border }) {
 
 function StatItem({ icon, value, label, color }) {
   return (
-    <div className="flex flex-col items-center justify-center p-4 rounded-2xl border border-white/5 bg-[#0d0d16] text-center hover:border-white/10 transition-colors">
+    <div className="flex flex-col items-center justify-center p-4 rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-md hover:bg-white/[0.04] transition-colors text-center hover:border-white/10 transition-colors">
       <div className={`p-2 rounded-full bg-black border border-white/10 ${color} mb-3 shadow-[0_0_15px_currentColor]`}>
         {React.cloneElement(icon, { className: "w-5 h-5 opacity-80" })}
       </div>
