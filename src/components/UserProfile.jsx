@@ -33,6 +33,17 @@ export default function UserProfile({ currentUser, setActiveTab }) {
     ? currentUser.tokens 
     : (currentUser?.plan ? currentPlanConfig.tokens : sysConfig.defaultTokens);
 
+  const tokenLogs = (() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('avalive_token_logs'));
+      if (Array.isArray(saved) && saved.length > 0) return saved;
+    } catch(e) {}
+    return [
+      { id: 'LOG-00189', time: 'Vừa xong', action: 'Cấp phát Token chào mừng tài khoản mới', tokenCost: '+100 Token', type: 'add' },
+      { id: 'LOG-00188', time: 'Hôm nay', action: 'Kích hoạt phòng Live AI & Voice tương tác', tokenCost: '-10 Token', type: 'sub' }
+    ];
+  })();
+
   const handleSaveBank = () => {
     try {
       const saved = localStorage.getItem("avalive_current_user");
@@ -68,8 +79,6 @@ export default function UserProfile({ currentUser, setActiveTab }) {
     localStorage.removeItem('avalive_current_user');
     window.location.reload();
   };
-
-  const tokenLogs = [];
 
   return (
     <div className="w-full bg-[#07090E] text-gray-200 font-sans min-h-[85vh] rounded-3xl overflow-hidden border border-white/10 shadow-2xl flex flex-col md:flex-row">
@@ -360,7 +369,7 @@ export default function UserProfile({ currentUser, setActiveTab }) {
                       <Sparkles className="w-4 h-4 animate-spin" /> QUẢN TRỊ ĐIỂM TOKEN & THỜI GIAN LIVE
                     </div>
                     <h2 className="text-3xl sm:text-4xl font-black text-white font-mono mt-2">
-                      {userTokens.toLocaleString()} <span className="text-amber-400 text-xl">TOKENS</span>
+                      {(tokensAmount || 0).toLocaleString()} <span className="text-amber-400 text-xl">TOKENS</span>
                     </h2>
                     <p className="text-xs text-gray-400 mt-1">Được cấp phát và tự động trừ hao khi vận hành phòng Live AI, Sàn nhảy & Game TikTok.</p>
                   </div>

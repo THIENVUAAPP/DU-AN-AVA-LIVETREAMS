@@ -43,7 +43,7 @@ class ErrorBoundary extends Component {
                       for (let reg of regs) await reg.unregister();
                     }
                   } catch(e) {}
-                  window.location.href = window.location.origin + window.location.pathname + (window.location.pathname.includes('desktop') ? '' : '/desktop') + '?v=' + Date.now();
+                  window.location.reload();
                 }}
                 style={{ backgroundColor: '#2563eb', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', boxShadow: '0 4px 12px rgba(37,99,235,0.4)' }}
               >
