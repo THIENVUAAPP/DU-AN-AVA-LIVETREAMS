@@ -72,16 +72,7 @@ export default function GeneralSettings({ onClose }) {
     }).catch(console.error);
   }, []);
 
-  // Tự động lưu bền vững vĩnh viễn cấu hình chung
-  useEffect(() => {
-    if (settings) {
-      try {
-        const json = JSON.stringify(settings);
-        localStorage.setItem('aidol_general_settings', json);
-        localStorage.setItem('aidol_general_settings_backup', json);
-      } catch (e) {}
-    }
-  }, [settings]);
+
 
   const handleSave = () => {
     try {

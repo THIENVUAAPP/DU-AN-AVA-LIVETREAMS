@@ -210,18 +210,7 @@ export default function WorkspaceTacVu() {
     return defaults;
   });
 
-  // Tự động sao lưu và bảo lưu liên tục vào LocalStorage mỗi khi có thay đổi
-  useEffect(() => {
-    if (eventConfigs && Object.keys(eventConfigs).length > 0) {
-      try {
-        const json = JSON.stringify(eventConfigs);
-        localStorage.setItem('aidol_event_configs', json);
-        localStorage.setItem('aidol_event_configs_backup', json);
-      } catch (e) {
-        console.warn("Lỗi tự động lưu cấu hình:", e);
-      }
-    }
-  }, [eventConfigs]);
+
 
   const currentConfig = eventConfigs[selectedEventId] || {};
 
