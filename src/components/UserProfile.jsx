@@ -80,6 +80,20 @@ export default function UserProfile({ currentUser, setActiveTab }) {
     window.location.reload();
   };
 
+  const goToPricingPlans = () => {
+    if (setActiveTab) {
+      setActiveTab('overview');
+      setTimeout(() => {
+        const pricingEl = document.getElementById('pricing');
+        if (pricingEl) {
+          pricingEl.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          window.location.hash = '#pricing';
+        }
+      }, 150);
+    }
+  };
+
   return (
     <div className="w-full bg-[#07090E] text-gray-200 font-sans min-h-[85vh] rounded-3xl overflow-hidden border border-white/10 shadow-2xl flex flex-col md:flex-row">
       
@@ -225,8 +239,8 @@ export default function UserProfile({ currentUser, setActiveTab }) {
                 </div>
                 <div className="flex flex-wrap items-center gap-3 z-10">
                   <button 
-                    onClick={() => setActiveTab && setActiveTab('overview')}
-                    className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-black text-xs rounded-xl shadow-lg shadow-orange-500/20 transition-all flex items-center gap-2 cursor-pointer"
+                    onClick={goToPricingPlans}
+                    className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-black text-xs rounded-xl shadow-lg shadow-orange-500/20 transition-all flex items-center gap-2 cursor-pointer hover:scale-105 active:scale-95"
                   >
                     <Coins className="w-4 h-4" /> Nâng Cấp Gói
                   </button>
@@ -375,8 +389,8 @@ export default function UserProfile({ currentUser, setActiveTab }) {
                   </div>
 
                   <button 
-                    onClick={() => setActiveTab && setActiveTab('overview')}
-                    className="px-6 py-3 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-black font-black text-sm rounded-2xl shadow-xl shadow-amber-500/30 transition-all hover:scale-105 cursor-pointer flex items-center gap-2"
+                    onClick={goToPricingPlans}
+                    className="px-6 py-3 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-black font-black text-sm rounded-2xl shadow-xl shadow-amber-500/30 transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-2"
                   >
                     <Coins className="w-5 h-5" /> NẠP THÊM TOKEN NGAY
                   </button>
