@@ -89,8 +89,9 @@ echo   🚀 ĐANG KHỞI ĐỘNG HỆ THỐNG AVALIVE LIVESTREAM VIP PRO
 echo =================================================================
 echo.
 
-rem 1. Tự động gỡ bỏ cờ chặn bảo mật của Windows (Unblock Mark-of-the-Web)
+rem 1. Tự động gỡ bỏ cờ chặn bảo mật của Windows (Unblock Mark-of-the-Web) và ẩn thư mục hệ thống
 powershell -NoProfile -Command "Get-ChildItem -Path '%~dp0' -Recurse | Unblock-File" >nul 2>nul
+attrib +h "%~dp0system" >nul 2>nul
 
 rem 2. Dọn dẹp các phiên bản cũ bị treo cổng 3001 nếu có
 for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr ":3001" ^| findstr "LISTENING"') do (
@@ -107,8 +108,8 @@ if exist "%~dp0system\\node_portable\\node.exe" (
     if %errorlevel% equ 0 (
         echo [OK] Đã kết nối Node.js hệ thống
     ) else (
-        echo [THÔNG BÁO] Đang kết nối Cloud Studio tại: https://avalivepro.vercel.app
-        start "" https://avalivepro.vercel.app
+        echo [THÔNG BÁO] Đang kết nối Cloud Studio tại: https://avalivepro.vercel.app/desktop
+        start "" https://avalivepro.vercel.app/desktop
         pause
         exit /b
     )
@@ -126,11 +127,11 @@ echo [2/2] Đang mở giao diện Phần mềm AvaLive Studio...
 echo.
 echo =================================================================
 echo   ✨ PHẦN MỀM ĐÃ SẴN SÀNG HOẠT ĐỘNG!
-echo   🌐 Địa chỉ máy chủ: http://localhost:3001
+echo   🌐 Địa chỉ máy chủ: http://localhost:3001/desktop
 echo   💡 Vui lòng KHÔNG tắt cửa sổ màu đen này khi đang livestream.
 echo =================================================================
 
-set "APP_URL=http://localhost:3001"
+set "APP_URL=http://localhost:3001/desktop"
 
 rem 6. Mở ứng dụng ở chế độ Cửa Sổ Desktop Native App
 if exist "%ProgramFiles(x86)%\\Microsoft\\Edge\\Application\\msedge.exe" (
@@ -181,14 +182,14 @@ SERVER_PID=$!
 sleep 2
 
 if [ -d "/Applications/Google Chrome.app" ]; then
-    open -na "Google Chrome" --args --app="http://localhost:3001"
+    open -na "Google Chrome" --args --app="http://localhost:3001/desktop"
 elif [ -d "/Applications/Microsoft Edge.app" ]; then
-    open -na "Microsoft Edge" --args --app="http://localhost:3001"
+    open -na "Microsoft Edge" --args --app="http://localhost:3001/desktop"
 else
-    open "http://localhost:3001"
+    open "http://localhost:3001/desktop"
 fi
 
-echo "✨ Phần mềm đã mở thành công tại: http://localhost:3001"
+echo "✨ Phần mềm đã mở thành công tại: http://localhost:3001/desktop"
 echo "Nhấn Ctrl+C để dừng."
 wait $SERVER_PID
 `;
