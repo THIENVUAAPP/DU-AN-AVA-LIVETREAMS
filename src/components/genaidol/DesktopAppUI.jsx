@@ -1293,8 +1293,7 @@ export default function DesktopAppUI() {
       isVid = activeVideoItem.type === 'video' || (typeof currentMedia === 'string' && currentMedia.endsWith('.mp4'));
     }
 
-    // Đảm bảo không bao giờ gửi URL rỗng hoặc blob URL sang TikTok Studio / OBS
-    if (!currentMedia || currentMedia.startsWith('blob:')) {
+    if (!currentMedia) {
       currentMedia = '/demo_dancer.mp4';
       isVid = true;
     }

@@ -645,7 +645,7 @@ export default function CleanLiveOverlay() {
     }
 
     // 3. Fallback video AI Idol mặc định có sẵn (đảm bảo luôn luôn có video khi mở trên TikTok Studio / OBS)
-    if (!candidateUrl || candidateUrl.startsWith('blob:')) {
+    if (!candidateUrl) {
       candidateUrl = '/demo_dancer.mp4';
       isVideo = true;
     }
@@ -663,6 +663,16 @@ export default function CleanLiveOverlay() {
         const pathPart = candidateUrl.substring(candidateUrl.indexOf('/uploads/'));
         const backendBase = getBackendUrl() ? getBackendUrl().replace(/\/$/, '') : (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:3001` : 'http://127.0.0.1:3001');
         candidateUrl = `${backendBase}${pathPart}`;
+      }
+
+      // Khôi phục Blob URL từ IndexedDB nếu là video tùy chỉnh
+      if (candidateUrl.startsWith('blob:')) {
+        const match = localDbItems.find(i => i.id === masterState.selectedCharacter);
+        if (match && match.fileBlob) {
+          try {
+            candidateUrl = URL.createObjectURL(match.fileBlob);
+          } catch (e) {}
+        }
       }
 
       // Đảm bảo video demo có thể phát được cả trên Cloud Vercel

@@ -26,22 +26,34 @@ import {
  */
 export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
   const [copiedId, setCopiedId] = useState(null);
-  const [linkEnv, setLinkEnv] = useState('localhost'); // 'localhost' | 'ip' | 'cloud'
+  const [linkEnv, setLinkEnv] = useState('local'); // 'local' | 'cloud'
 
   if (!isOpen) return null;
 
   const currentPort = typeof window !== 'undefined' && window.location.port ? window.location.port : '3001';
-  const localhostBase = `http://localhost:${currentPort}`;
-  const localIpBase = `http://127.0.0.1:${currentPort}`;
+  // Dùng 127.0.0.1.nip.io để TikTok LIVE Studio nhận diện là Domain FQDN hợp lệ và không báo đỏ 'Hãy nhập URL chính xác'
+  const localBase = `http://127.0.0.1.nip.io:${currentPort}`;
   const cloudBase = 'https://avalivepro.vercel.app';
-  const activeBase = linkEnv === 'localhost' ? localhostBase : linkEnv === 'ip' ? localIpBase : cloudBase;
+  const activeBase = linkEnv === 'local' ? localBase : cloudBase;
 
   // Lấy backendUrl hiện tại của Dashboard để truyền cho Overlay (đảm bảo đồng bộ 100% kể cả khi khác origin)
   const currentBackendUrl = typeof window !== 'undefined' ? (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001' ? `${window.location.protocol}//${window.location.hostname}:3001` : window.location.origin) : 'http://localhost:3001';
-  const backendParam = linkEnv === 'cloud' ? `&backend=${encodeURIComponent(currentBackendUrl)}` : '';
+  const backendParam = `&backend=${encodeURIComponent(currentBackendUrl)}`;
 
   // Danh sách các dự án với đường link riêng biệt 100%
   const projects = [
+    {
+      id: 'master',
+      name: '👑 SÂN KHẤU TỰ ĐỘNG MASTER (KHUYÊN DÙNG NHẤT)',
+      tag: 'TỰ ĐỘNG 100%',
+      tagColor: 'from-cyan-500 to-blue-600',
+      icon: Radio,
+      iconColor: 'text-cyan-400',
+      bgColor: 'border-cyan-500/40 bg-cyan-950/20 hover:border-cyan-400/70 shadow-lg shadow-cyan-950/30',
+      description: 'Chỉ cần dán 1 link duy nhất này vào OBS / TikTok LIVE Studio: Mở Game Bản Đồ, Game Chiến Đấu hay Idol là OBS tự động chuyển màn hình ngay lập tức!',
+      path: '/live',
+      directUrl: `${activeBase}/?overlay=live${backendParam}`
+    },
     {
       id: 'idol',
       name: 'DỰ ÁN 1: LIVE AI IDOL & VIDEO NỀN',
@@ -57,7 +69,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
     {
       id: 'bando',
       name: 'DỰ ÁN 2: GAME BẢN ĐỒ VIỆT NAM (63 TỈNH THÀNH)',
-      tag: 'TƯƠNG TÁC CAO',
+      tag: 'CẮM CỜ 3D',
       tagColor: 'from-amber-500 to-yellow-600',
       icon: Flag,
       iconColor: 'text-amber-400',
@@ -119,39 +131,27 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
         <div className="flex items-center justify-between gap-2 p-1.5 bg-black/70 rounded-2xl border border-white/10 shrink-0">
           <div className="flex items-center gap-1.5 flex-1">
             <button
-              onClick={() => setLinkEnv('localhost')}
-              className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                linkEnv === 'localhost'
+              onClick={() => setLinkEnv('local')}
+              className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                linkEnv === 'local'
                   ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-950/50'
                   : 'text-gray-400 hover:text-white bg-transparent'
               }`}
             >
               <Monitor className="w-3.5 h-3.5" />
-              <span>Link Localhost (Khuyên Dùng)</span>
-            </button>
-
-            <button
-              onClick={() => setLinkEnv('ip')}
-              className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                linkEnv === 'ip'
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-950/50'
-                  : 'text-gray-400 hover:text-white bg-transparent'
-              }`}
-            >
-              <Monitor className="w-3.5 h-3.5" />
-              <span>Link IP (127.0.0.1)</span>
+              <span>Link Chạy Máy Local (127.0.0.1.nip.io)</span>
             </button>
 
             <button
               onClick={() => setLinkEnv('cloud')}
-              className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 linkEnv === 'cloud'
                   ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-950/50'
                   : 'text-gray-400 hover:text-white bg-transparent'
               }`}
             >
               <Globe className="w-3.5 h-3.5" />
-              <span>Link Cloud (Online)</span>
+              <span>Link Cloud Vercel (Online)</span>
             </button>
           </div>
         </div>
