@@ -4,13 +4,12 @@ export const handleOSDownload = (e) => {
   const userAgent = window.navigator.userAgent.toLowerCase();
   const isMac = userAgent.includes('mac');
   
-  const fileName = isMac ? 'AvaLive_VIP_PRO_Mac_v2.zip' : 'AvaLive_VIP_PRO_Windows_v2.zip';
-  const fileUrl = `/${fileName}?t=${Date.now()}`;
+  // Tải từ GitHub Releases - ổn định, nhanh, không bị chặn bởi trình duyệt/antivirus
+  const GITHUB_RELEASE_BASE = 'https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v2.1.0';
   
-  const link = document.createElement('a');
-  link.href = fileUrl;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  const fileName = isMac ? 'AvaLive_VIP_PRO_Mac_v2.zip' : 'AvaLive_VIP_PRO_Windows_v2.zip';
+  const fileUrl = `${GITHUB_RELEASE_BASE}/${fileName}`;
+  
+  // Mở tab mới để GitHub xử lý download trực tiếp - đáng tin cậy nhất
+  window.open(fileUrl, '_blank');
 };

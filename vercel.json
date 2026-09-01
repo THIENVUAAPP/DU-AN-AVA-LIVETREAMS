@@ -2,26 +2,25 @@
   "framework": "vite",
   "buildCommand": "vite build",
   "outputDirectory": "dist",
-  "headers": [
-    {
-      "source": "/(.*\\.zip)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate, max-age=0"
-        }
-      ]
-    }
-  ],
   "redirects": [
     {
       "source": "/AvaLive_VIP_PRO_Windows.zip",
-      "destination": "/AvaLive_VIP_PRO_Windows_v2.zip",
+      "destination": "https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v2.1.0/AvaLive_VIP_PRO_Windows_v2.zip",
+      "permanent": false
+    },
+    {
+      "source": "/AvaLive_VIP_PRO_Windows_v2.zip",
+      "destination": "https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v2.1.0/AvaLive_VIP_PRO_Windows_v2.zip",
       "permanent": false
     },
     {
       "source": "/AvaLive_VIP_PRO_Mac.zip",
-      "destination": "/AvaLive_VIP_PRO_Mac_v2.zip",
+      "destination": "https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v2.1.0/AvaLive_VIP_PRO_Mac_v2.zip",
+      "permanent": false
+    },
+    {
+      "source": "/AvaLive_VIP_PRO_Mac_v2.zip",
+      "destination": "https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v2.1.0/AvaLive_VIP_PRO_Mac_v2.zip",
       "permanent": false
     }
   ],
@@ -29,10 +28,6 @@
     {
       "source": "/api/(.*)",
       "destination": "/api/$1"
-    },
-    {
-      "source": "/(.*\\.zip)",
-      "destination": "/$1"
     },
     {
       "source": "/(.*)",
