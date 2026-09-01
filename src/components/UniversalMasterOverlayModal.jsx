@@ -27,22 +27,9 @@ import {
  */
 export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
   const [copiedId, setCopiedId] = useState(null);
-  const [selectedLinkType, setSelectedLinkType] = useState('ip'); // 'ip' | 'cloud' | 'domain' | 'localhost'
+  // Chỉ sử dụng định dạng Domain nip.io
+  const activeBase = `http://127.0.0.1.nip.io:${currentPort}`;
 
-  if (!isOpen) return null;
-
-  const currentPort = typeof window !== 'undefined' && window.location.port ? window.location.port : '3001';
-  const currentProtocol = typeof window !== 'undefined' && window.location.protocol ? window.location.protocol : 'http:';
-
-  // 4 Định dạng link tương thích 100% mọi phiên bản TikTok LIVE Studio & OBS
-  const baseMap = {
-    ip: `${currentProtocol}//127.0.0.1:${currentPort}`,
-    cloud: 'https://avalivepro.vercel.app',
-    domain: `http://127.0.0.1.nip.io:${currentPort}`,
-    localhost: `${currentProtocol}//localhost:${currentPort}`
-  };
-
-  const activeBase = baseMap[selectedLinkType] || baseMap.ip;
   const masterLink = `${activeBase}/live`;
 
   // Danh sách các dự án với đường link riêng biệt 100%
@@ -82,18 +69,6 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       description: 'Võ đài chiến đấu chia 2 phe PK kịch tính chuẩn kích thước 9:16 (1080x1920) khi có quà & bình luận.',
       path: '/battle',
       directUrl: `${activeBase}/battle`
-    },
-    {
-      id: 'studio',
-      name: 'DỰ ÁN 4: PHÒNG DỰNG LIVE STUDIO 4K',
-      tag: 'CHUYÊN NGHIỆP',
-      tagColor: 'from-blue-500 to-indigo-600',
-      icon: Tv,
-      iconColor: 'text-blue-400',
-      bgColor: 'border-blue-500/30 bg-blue-950/20 hover:border-blue-400/60',
-      description: 'Studio phát sóng 4K chuyên nghiệp tích hợp Webcam thực, phông nền ảo và hiệu ứng làm đẹp.',
-      path: '/studio',
-      directUrl: `${activeBase}/studio`
     }
   ];
 
@@ -149,57 +124,6 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
           <p className="text-[11.5px] text-gray-200 leading-relaxed">
             Dán <strong>DUY NHẤT 1 ĐƯỜNG LINK NÀY</strong> vào TikTok LIVE Studio hoặc OBS Studio: Khi bấm chọn <strong>Video Live Idol, Game Bản Đồ hay Game Chiến Đấu</strong> trên phần mềm, màn hình Live sẽ <strong>tự động chuyển cảnh tức thì</strong> mà không cần đổi link!
           </p>
-
-          {/* 4 Tab Chọn Kiểu Kết Nối */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1 bg-black/70 rounded-xl border border-white/10 text-xs">
-            <button
-              onClick={() => setSelectedLinkType('ip')}
-              className={`py-1.5 px-2 rounded-lg font-bold text-[11px] transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                selectedLinkType === 'ip'
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-950/60 font-black'
-                  : 'text-gray-400 hover:text-white bg-transparent'
-              }`}
-            >
-              <Monitor className="w-3 h-3" />
-              <span>1. Link IP (Khuyên dùng)</span>
-            </button>
-
-            <button
-              onClick={() => setSelectedLinkType('cloud')}
-              className={`py-1.5 px-2 rounded-lg font-bold text-[11px] transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                selectedLinkType === 'cloud'
-                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-950/60 font-black'
-                  : 'text-gray-400 hover:text-white bg-transparent'
-              }`}
-            >
-              <Globe className="w-3 h-3" />
-              <span>2. Link Cloud Online</span>
-            </button>
-
-            <button
-              onClick={() => setSelectedLinkType('domain')}
-              className={`py-1.5 px-2 rounded-lg font-bold text-[11px] transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                selectedLinkType === 'domain'
-                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md shadow-cyan-950/60 font-black'
-                  : 'text-gray-400 hover:text-white bg-transparent'
-              }`}
-            >
-              <Monitor className="w-3 h-3" />
-              <span>3. Link Domain nip.io</span>
-            </button>
-
-            <button
-              onClick={() => setSelectedLinkType('localhost')}
-              className={`py-1.5 px-2 rounded-lg font-bold text-[11px] transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                selectedLinkType === 'localhost'
-                  ? 'bg-gradient-to-r from-gray-700 to-gray-800 text-white shadow-md font-black'
-                  : 'text-gray-400 hover:text-white bg-transparent'
-              }`}
-            >
-              <Monitor className="w-3 h-3" />
-              <span>4. Link Localhost</span>
-            </button>
-          </div>
 
           {/* Ô Hiển Thị Link Toàn Năng & Nút Bấm */}
           <div className="flex flex-col sm:flex-row items-center gap-2 pt-0.5">
@@ -347,7 +271,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
             </div>
             <div className="p-2 rounded-xl bg-white/5 border border-white/10 space-y-1">
               <span className="font-bold text-pink-300 flex items-center gap-1">💡 Mẹo xử lý khi báo lỗi đỏ:</span>
-              <p className="text-gray-400 leading-relaxed">Nếu TikTok Studio báo đỏ <i>"Hãy nhập URL chính xác"</i>, hãy chọn tab <b>2. Link Cloud Online</b> hoặc <b>3. Link Domain nip.io</b> để nhận diện tên miền 100%!</p>
+              <p className="text-gray-400 leading-relaxed">Đường link <b>Domain nip.io</b> đã được thiết kế chuẩn tên miền để TikTok Studio nhận diện 100% không báo lỗi URL!</p>
             </div>
           </div>
         </div>
