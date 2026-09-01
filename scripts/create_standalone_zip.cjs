@@ -52,24 +52,20 @@ const huongDanContent = `=======================================================
 
 1. ĐỐI VỚI MÁY TÍNH WINDOWS:
    👉 BẮT BUỘC: Hãy giải nén file ZIP này (Chuột phải chọn Extract All...)
-   👉 Sau khi giải nén, nhấp đúp chuột vào file: [ 1_Khoi_Dong_AvaLive_Windows.bat ]
+   👉 Sau khi giải nén, bạn có thể nhấp đúp chuột vào:
+      ⭐ [ AvaLive_Studio.exe ] (Khuyên dùng - Chạy 1-Click trực tiếp siêu mượt)
+      ⭐ [ 1_Khoi_Dong_AvaLive_Windows.bat ] (Hoặc file CHAY_PHAN_MEM.bat)
+      ⭐ [ 2_Chay_Nhanh_An_Cua_So_Den.vbs ] (Chạy ngầm không hiện cửa sổ đen)
    -> Phần mềm sẽ tự động mở giao diện ứng dụng để sử dụng ngay!
-
-   💡 MẸO NẾU WINDOWS 11 HIỆN THÔNG BÁO BẢO VỆ SMART APPS:
-      • Nhấp chuột phải vào file nén [ AvaLive_VIP_PRO_Windows_v2.zip ] (trước khi giải nén)
-      • Chọn "Properties" (Thuộc tính) -> Tích chọn ô "Unblock" (Bỏ chặn) ở góc dưới -> Bấm "OK".
-      • Giải nén file ZIP (Click chuột phải chọn Extract All...)
-      • Mở file [ 1_Khoi_Dong_AvaLive_Windows.bat ] là chạy siêu mượt 100%!
 
 2. KẾT NỐI TÀI KHOẢN GMAIL & ĐỒNG BỘ BẢN QUYỀN:
    • Bấm vào ô "🔑 Đăng Nhập Gmail" ở góc trên giao diện phần mềm.
-   • Đăng nhập 1-Click hoặc nhập địa chỉ Gmail bạn đã đăng ký/mua gói trên web để nhận diện ngay gói VIP & Token AI.
-   • Gói Miễn Phí (Dùng Thử): Tự động nhận 100 Token AI và full tính năng để sử dụng ngay.
+   • Đăng nhập 1-Click hoặc nhập địa chỉ Gmail bạn đã đăng ký trên web để nhận diện ngay gói VIP & Token AI.
+   • Gói Miễn Phí: Tự động nhận Token AI và full tính năng để sử dụng ngay.
 
 3. ĐỐI VỚI MÁY TÍNH MAC (macOS):
    👉 Nhấp đúp chuột vào file: [ 1_Khoi_Dong_AvaLive_Mac.command ]
    -> Phần mềm sẽ tự động khởi chạy.
-   (Nếu macOS hiện thông báo bảo mật lần đầu: Click chuột phải vào file -> Chọn "Open" -> Bấm "Open").
 
 4. ĐỒNG BỘ VỚI TIKTOK LIVE STUDIO & OBS:
    • Sau khi mở app, vào mục "Studio Phát Sóng" để lấy link nguồn trình duyệt (Browser Source).
@@ -83,17 +79,21 @@ HỖ TRỢ KỸ THUẬT 24/7: support@avalive.com | Website: https://avalivepro.
 // Tạo Batch Launcher 1-Click duy nhất cho Windows
 const winBatLauncher = `@echo off
 title AvaLive VIP PRO - Livestream Studio AI
-
-pushd "%~dp0" 2>nul
+cd /d "%~dp0"
 
 for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr ":3001" ^| findstr "LISTENING"') do (
     taskkill /F /PID %%a >nul 2>nul
 )
 
+if exist "AvaLive_Studio.exe" (
+    start "" "AvaLive_Studio.exe"
+    exit /b
+)
+
 if exist "system\node_portable\node.exe" (
-    start "" /b "system\node_portable\node.exe" "system\core.cjs"
+    powershell -WindowStyle Hidden -Command "Start-Process -FilePath '%~dp0system\node_portable\node.exe' -ArgumentList '%~dp0system\core.cjs' -WorkingDirectory '%~dp0system'"
 ) else (
-    start "" /b node "system\core.cjs"
+    powershell -WindowStyle Hidden -Command "Start-Process -FilePath 'node' -ArgumentList '%~dp0system\core.cjs' -WorkingDirectory '%~dp0system'"
 )
 
 timeout /t 2 /nobreak >nul 2>nul
@@ -114,10 +114,6 @@ if exist "%ProgramFiles%\Google\Chrome\Application\chrome.exe" (
 )
 if exist "%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe" (
     start "" "%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe" --app=%URL%
-    exit /b
-)
-if exist "%LocalAppData%\Google\Chrome\Application\chrome.exe" (
-    start "" "%LocalAppData%\Google\Chrome\Application\chrome.exe" --app=%URL%
     exit /b
 )
 
@@ -183,8 +179,15 @@ if (fs.existsSync(path.join(rootDir, 'certs'))) {
 // Create empty uploads directory
 fs.mkdirSync(path.join(winSystemDir, 'uploads'), { recursive: true });
 
-// Chỉ có đúng 1 file launcher duy nhất ở thư mục gốc Windows
+// Tạo file chạy EXE, BAT, CMD, VBS ở thư mục gốc Windows
+console.log('   -> Đang tích hợp Native Windows Launcher (.exe)...');
+if (fs.existsSync(path.join(rootDir, 'AvaLive_Studio.exe'))) {
+  fs.copyFileSync(path.join(rootDir, 'AvaLive_Studio.exe'), path.join(winStaging, 'AvaLive_Studio.exe'));
+}
+
 fs.writeFileSync(path.join(winStaging, '1_Khoi_Dong_AvaLive_Windows.bat'), winBatLauncher);
+fs.writeFileSync(path.join(winStaging, 'CHAY_PHAN_MEM.bat'), winBatLauncher);
+fs.writeFileSync(path.join(winStaging, 'Khoi_Dong_AvaLive.cmd'), winBatLauncher);
 fs.writeFileSync(path.join(winStaging, '2_Chay_Nhanh_An_Cua_So_Den.vbs'), winVbsLauncher);
 fs.writeFileSync(path.join(winStaging, 'HUONG_DAN_SU_DUNG.txt'), huongDanContent);
 
