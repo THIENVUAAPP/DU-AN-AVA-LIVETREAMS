@@ -340,6 +340,25 @@ export default defineConfig({
           next();
         });
       }
+    },
+    {
+      name: 'remove-large-zips-for-vercel',
+      closeBundle() {
+        if (process.env.VERCEL) {
+          const distDir = path.resolve(__dirname, 'dist');
+          if (fs.existsSync(distDir)) {
+            const files = fs.readdirSync(distDir);
+            for (const file of files) {
+              if (file.endsWith('.zip') || file.endsWith('.exe')) {
+                try {
+                  fs.unlinkSync(path.join(distDir, file));
+                  console.log(`[Vercel Build Optimizer] Removed ${file} from dist to comply with Vercel 50MB limit.`);
+                } catch (e) {}
+              }
+            }
+          }
+        }
+      }
     }
   ],
 });

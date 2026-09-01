@@ -6,11 +6,9 @@ node_modules/
 python_scripts/
 *.dmg
 *.zip
-!**/Livestream_AI_Software.zip
-!**/AvaLive_VIP_PRO_Windows.zip
-!**/AvaLive_VIP_PRO_Mac.zip
-!**/AvaLive_VIP_PRO_Windows_v2.zip
-!**/AvaLive_VIP_PRO_Mac_v2.zip
+**/*.zip
+public/*.zip
+dist/*.zip
 *.exe
 *.tar.gz
 *.mp4
