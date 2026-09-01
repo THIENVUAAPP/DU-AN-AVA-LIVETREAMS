@@ -661,17 +661,50 @@ export default function DesktopAppUI() {
           try {
             const formData = new FormData();
             formData.append('file', c.fileData);
-            const res = await fetch(`${autoBackendUrl}/api/upload-media`, { method: 'POST', body: formData });
-            const data = await res.json();
-            if (data && data.url) {
-              const fullUrl = data.url.startsWith('http') ? data.url : `${autoBackendUrl}${data.url.startsWith('/') ? '' : '/'}${data.url}`;
-              await saveCharacterToIDB({ ...c, mediaUrl: fullUrl, url: fullUrl });
-              setCustomCharacters(prev => prev.map(item => item.id === c.id ? { ...item, url: fullUrl } : item));
+            
+            const currentPort = typeof window !== 'undefined' && window.location.port ? window.location.port : '3001';
+            const currentHost = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : '127.0.0.1';
+            const currentProto = typeof window !== 'undefined' && window.location.protocol ? window.location.protocol : 'http:';
+
+            const candidateEndpoints = [
+              '/api/upload-media',
+              `${currentProto}//${currentHost}:${currentPort}/api/upload-media`,
+              `${currentProto}//${currentHost}:3001/api/upload-media`,
+              'http://127.0.0.1.nip.io:3001/api/upload-media',
+              'http://127.0.0.1:3001/api/upload-media',
+              'http://localhost:3001/api/upload-media'
+            ];
+
+            let uploadedServerUrl = null;
+            for (const ep of candidateEndpoints) {
+              try {
+                const res = await fetch(ep, { method: 'POST', body: formData });
+                if (res.ok) {
+                  const data = await res.json();
+                  if (data && data.url) {
+                    let serverUrl = data.url;
+                    if (serverUrl.startsWith('http://') || serverUrl.startsWith('https://')) {
+                      uploadedServerUrl = serverUrl;
+                    } else {
+                      const baseDomain = currentHost === 'localhost' || currentHost === '127.0.0.1' ? 'http://127.0.0.1.nip.io:3001' : `${currentProto}//${currentHost}:${currentPort === '5173' ? '3001' : currentPort}`;
+                      uploadedServerUrl = `${baseDomain}${serverUrl.startsWith('/') ? '' : '/'}${serverUrl}`;
+                    }
+                    break;
+                  }
+                }
+              } catch (err) {}
+            }
+
+            if (uploadedServerUrl) {
+              await saveCharacterToIDB({ ...c, mediaUrl: uploadedServerUrl, url: uploadedServerUrl });
+              setCustomCharacters(prev => prev.map(item => item.id === c.id ? { ...item, url: uploadedServerUrl } : item));
               
-              // ĐỒNG BỘ NGAY NẾU VIDEO VỪA UPLOAD LÀ VIDEO ĐANG ĐƯỢC CHỌN (Tránh lỗi fallback video khác trên Live)
+              // ĐỒNG BỘ NGAY NẾU VIDEO VỪA UPLOAD LÀ VIDEO ĐANG ĐƯỢC CHỌN
               if (selectedCharacter === c.id) {
                  syncMasterLiveState({
-                    mediaUrl: fullUrl
+                    mediaUrl: uploadedServerUrl,
+                    videoPlaybackEvent: 'play',
+                    isPlaying: true
                  }, socketRef.current);
               }
             }
@@ -1661,41 +1694,55 @@ export default function DesktopAppUI() {
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      const charName = prompt("Nhập tên cho nhân vật (để dễ quản lý):", "Idol Live AI Pro");
-      if (!charName) {
-        if (fileInputRef.current) fileInputRef.current.value = '';
-        return;
-      }
-
-      const isVideo = file.type.startsWith('video/');
+      const charName = file.name.replace(/\.[^/.]+$/, "") || "Idol Live AI Pro";
+      const isVideo = file.type.startsWith('video/') || /\.(mp4|webm|mov|mkv|avi)$/i.test(file.name);
       let url = URL.createObjectURL(file);
       
       if (isVideo) {
-        // Đẩy video lên backend nội bộ để tạo link HTTP (Giúp chạy được trên trình duyệt OBS)
+        // Tải video lên backend nội bộ để tạo link HTTP chuẩn (chống lỗi kết nối OBS / TikTok Live Studio)
         try {
           const formData = new FormData();
           formData.append('file', file);
-          const autoBackendUrl = typeof window !== 'undefined' ? (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001' ? `${window.location.protocol}//${window.location.hostname}:3001` : window.location.origin) : 'http://localhost:3001';
           
-          const res = await fetch(`${autoBackendUrl}/api/upload-media`, {
-            method: 'POST',
-            body: formData
-          });
-          const data = await res.json();
-          if (data && data.url) {
-            let serverUrl = data.url;
-            if (serverUrl.startsWith('http://') || serverUrl.startsWith('https://')) {
-              url = serverUrl;
-            } else {
-              url = `${autoBackendUrl}${serverUrl.startsWith('/') ? '' : '/'}${serverUrl}`;
-            }
+          const currentPort = typeof window !== 'undefined' && window.location.port ? window.location.port : '3001';
+          const currentHost = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : '127.0.0.1';
+          const currentProto = typeof window !== 'undefined' && window.location.protocol ? window.location.protocol : 'http:';
+
+          const candidateEndpoints = [
+            '/api/upload-media',
+            `${currentProto}//${currentHost}:${currentPort}/api/upload-media`,
+            `${currentProto}//${currentHost}:3001/api/upload-media`,
+            'http://127.0.0.1.nip.io:3001/api/upload-media',
+            'http://127.0.0.1:3001/api/upload-media',
+            'http://localhost:3001/api/upload-media'
+          ];
+
+          for (const ep of candidateEndpoints) {
+            try {
+              const res = await fetch(ep, {
+                method: 'POST',
+                body: formData
+              });
+              if (res.ok) {
+                const data = await res.json();
+                if (data && data.url) {
+                  let serverUrl = data.url;
+                  if (serverUrl.startsWith('http://') || serverUrl.startsWith('https://')) {
+                    url = serverUrl;
+                  } else {
+                    const baseDomain = currentHost === 'localhost' || currentHost === '127.0.0.1' ? 'http://127.0.0.1.nip.io:3001' : `${currentProto}//${currentHost}:${currentPort === '5173' ? '3001' : currentPort}`;
+                    url = `${baseDomain}${serverUrl.startsWith('/') ? '' : '/'}${serverUrl}`;
+                  }
+                  break;
+                }
+              }
+            } catch (err) {}
           }
         } catch (error) {
-          console.error("Lỗi upload video:", error);
-          alert("Lỗi tải lên video! Đảm bảo server backend đang chạy (port 3001).");
+          console.warn("Upload fallback notice:", error);
         }
 
-        // Video: Lưu trực tiếp
+        // Video: Lưu trực tiếp & Kích hoạt tức thì
         const newChar = {
           id: `custom_${Date.now()}`,
           name: charName,
@@ -1715,7 +1762,7 @@ export default function DesktopAppUI() {
           id: newChar.id,
           name: newChar.name,
           type: 'video',
-          fileData: file, // Vẫn lưu dự phòng vào IDB
+          fileData: file,
           mediaUrl: url
         });
 
@@ -1726,6 +1773,8 @@ export default function DesktopAppUI() {
           characterName: newChar.name,
           mediaUrl: url,
           isVideo: true,
+          videoPlaybackEvent: 'play',
+          isPlaying: true,
           aspectRatio: globalAspectRatio || '9:16'
         }, socketRef.current);
       } else {
@@ -1897,6 +1946,26 @@ export default function DesktopAppUI() {
             preload="auto"
             disablePictureInPicture
             playsInline 
+            onPlay={(e) => {
+              syncMasterLiveState({
+                videoPlaybackEvent: 'play',
+                videoCurrentTime: e.currentTarget.currentTime,
+                isPlaying: true
+              }, socketRef.current);
+            }}
+            onPause={(e) => {
+              syncMasterLiveState({
+                videoPlaybackEvent: 'pause',
+                videoCurrentTime: e.currentTarget.currentTime,
+                isPlaying: false
+              }, socketRef.current);
+            }}
+            onSeeked={(e) => {
+              syncMasterLiveState({
+                videoPlaybackEvent: 'seeked',
+                videoCurrentTime: e.currentTarget.currentTime
+              }, socketRef.current);
+            }}
           />
         );
       }
@@ -2129,20 +2198,35 @@ export default function DesktopAppUI() {
           ) : (
             <div className="space-y-4">
               {/* DUY NHẤT 1 Ô KẾT NỐI TÀI KHOẢN GOOGLE / GMAIL */}
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-[#121528] via-[#0f111f] to-[#181a32] border border-cyan-500/40 text-center space-y-4 shadow-xl">
-                <div className="flex items-center justify-center gap-2 text-cyan-300 font-black text-sm uppercase tracking-wide">
-                  <svg className="w-5 h-5" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                  </svg>
-                  <span>KẾT NỐI TÀI KHOẢN GOOGLE / GMAIL</span>
+              <div className="p-5 rounded-2xl bg-gradient-to-br from-[#121528] via-[#0f111f] to-[#181a32] border border-cyan-500/40 text-center space-y-4 shadow-xl relative overflow-hidden">
+                {/* Glow decor */}
+                <div className="absolute -top-10 -left-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                {/* Logo AvaLive & Google kết hợp sang trọng */}
+                <div className="flex items-center justify-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-cyan-400/60 shadow-[0_0_15px_rgba(6,182,212,0.4)] bg-black flex items-center justify-center p-0.5">
+                    <img src="/official_logo.jpg" alt="AvaLive Logo" className="w-full h-full object-cover rounded-xl" />
+                  </div>
+                  <div className="text-gray-400 font-bold text-xs">✕</div>
+                  <div className="w-12 h-12 rounded-2xl bg-white/95 border border-white/40 shadow-[0_0_15px_rgba(255,255,255,0.3)] flex items-center justify-center p-2.5">
+                    <svg className="w-full h-full" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                    </svg>
+                  </div>
                 </div>
-                
-                <p className="text-xs text-gray-300 leading-relaxed max-w-sm mx-auto">
-                  Kết nối trực tiếp 1-chạm với tài khoản Google đang dùng để tự động đồng bộ ngay <b>Gói VIP PRO</b>, <b>Token AI</b> và <b>Thời gian Live</b> từ Supabase vào phần mềm.
-                </p>
+
+                <div className="space-y-1">
+                  <div className="text-cyan-300 font-black text-sm uppercase tracking-wide flex items-center justify-center gap-1.5">
+                    <span>KẾT NỐI TÀI KHOẢN GOOGLE / GMAIL</span>
+                  </div>
+                  <p className="text-xs text-gray-300 leading-relaxed max-w-sm mx-auto">
+                    Kết nối trực tiếp 1-chạm với tài khoản Google đang dùng để tự động đồng bộ ngay <b>Gói VIP PRO</b>, <b>Token AI</b> và <b>Thời gian Live</b> từ Supabase vào phần mềm.
+                  </p>
+                </div>
 
                 {authError && (
                   <div className="p-2.5 rounded-xl bg-red-500/20 border border-red-500/40 text-red-300 text-xs font-bold text-left">

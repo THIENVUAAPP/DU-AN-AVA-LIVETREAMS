@@ -512,8 +512,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     };
   }, [activeStreamUrl]);
 
-  // Tự động phát video liên tục chống dừng
+  // Tự động phát hoặc tạm dừng video theo điều khiển từ Dashboard
   useEffect(() => {
+    if (masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false) {
+      if (overlayVideoRef.current && !overlayVideoRef.current.paused) {
+        overlayVideoRef.current.pause();
+      }
+      return;
+    }
     const videoElements = document.querySelectorAll('video');
     videoElements.forEach(vid => {
       vid.muted = isAudioMuted;
@@ -525,7 +531,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         });
       }
     });
-  }, [masterState.mediaUrl, activeStreamUrl, overlayCamActive, isAudioMuted]);
+  }, [masterState.mediaUrl, activeStreamUrl, overlayCamActive, isAudioMuted, masterState.videoPlaybackEvent, masterState.isPlaying]);
 
   // Tự động kích hoạt Camera khi mở chế độ Studio (phải nằm trước các early return để tuân thủ React Rules of Hooks)
   useEffect(() => {
@@ -607,12 +613,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         invalidate();
         tickCounter++;
         if (tickCounter % 3 === 0 && document.hidden) {
-          const videos = document.querySelectorAll('video');
-          videos.forEach(v => {
-            if (v.paused && !v.ended && v.readyState >= 2) {
-              v.play().catch(() => {});
-            }
-          });
+          if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
+            const videos = document.querySelectorAll('video');
+            videos.forEach(v => {
+              if (v.paused && !v.ended && v.readyState >= 2) {
+                v.play().catch(() => {});
+              }
+            });
+          }
         }
       };
       bgWorker.postMessage('start');
