@@ -98,12 +98,34 @@ export default function DesktopAppUI() {
           liveTimeHours: Math.round(userLiveMinutes / 60)
         };
         setCurrentUser(gUser);
+        setIsGmailLoginModalOpen(false);
+        setIsLoggingIn(false);
         try {
           localStorage.setItem('avalive_current_user', JSON.stringify(gUser));
           await syncUserToSupabase(gUser);
         } catch (e) {}
       }
     });
+
+    // Bắt token từ Google OAuth Redirect nếu có trong URL Hash
+    if (typeof window !== 'undefined' && window.location.hash && window.location.hash.includes('access_token')) {
+      try {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        if (accessToken) {
+          supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || ''
+          }).then(() => {
+            try {
+              window.history.replaceState(null, '', window.location.pathname + window.location.search);
+            } catch(e) {}
+          }).catch(() => {});
+        }
+      } catch (e) {}
+    }
+
     return () => subscription?.unsubscribe();
   }, []);
 
@@ -179,34 +201,20 @@ export default function DesktopAppUI() {
         throw new Error('Supabase client chưa sẵn sàng');
       }
 
-      // Mở Popup OAuth để không làm redirect trang Desktop chính!
+      const isLocal = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1');
+      const targetRedirect = isLocal
+        ? 'https://avalivepro.vercel.app/desktop?desktop_bridge=true'
+        : window.location.origin + '/desktop';
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + '/desktop',
-          skipBrowserRedirect: true
+          redirectTo: targetRedirect
         }
       });
       if (error) throw error;
-
       if (data?.url) {
-        const width = 500;
-        const height = 650;
-        const left = window.screenX + (window.outerWidth - width) / 2;
-        const top = window.screenY + (window.outerHeight - height) / 2;
-
-        const popup = window.open(
-          data.url,
-          'GoogleSignIn',
-          `width=${width},height=${height},left=${left},top=${top},status=no,resizable=yes`
-        );
-
-        const timer = setInterval(() => {
-          if (!popup || popup.closed) {
-            clearInterval(timer);
-            setIsLoggingIn(false);
-          }
-        }, 1000);
+        window.location.href = data.url;
       }
     } catch (err) {
       setAuthError(err.message || 'Lỗi kết nối Google OAuth');
@@ -2116,7 +2124,7 @@ export default function DesktopAppUI() {
                 </div>
                 
                 <p className="text-xs text-gray-300 leading-relaxed max-w-sm mx-auto">
-                  Nhập địa chỉ Gmail Google của bạn để tự động kết nối và đồng bộ ngay <b>Gói VIP PRO</b>, <b>Token AI</b> và <b>Thời gian Live</b> từ Supabase vào phần mềm.
+                  Kết nối trực tiếp 1-chạm với tài khoản Google đang dùng để tự động đồng bộ ngay <b>Gói VIP PRO</b>, <b>Token AI</b> và <b>Thời gian Live</b> từ Supabase vào phần mềm.
                 </p>
 
                 {authError && (
@@ -2125,41 +2133,21 @@ export default function DesktopAppUI() {
                   </div>
                 )}
 
-                {/* Form kết nối Gmail Google */}
-                <form onSubmit={handleRealGmailSubmit} className="space-y-3 text-left">
-                  <div>
-                    <label className="text-[11px] text-cyan-300 font-bold block mb-1.5">
-                      ✉️ ĐỊA CHỈ GMAIL GOOGLE CỦA BẠN:
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="email"
-                        required
-                        value={realGmailInput}
-                        onChange={(e) => setRealGmailInput(e.target.value)}
-                        placeholder="ví dụ: yourname@gmail.com"
-                        className="w-full bg-[#0b0d18] border border-cyan-500/50 rounded-xl pl-3.5 pr-10 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors shadow-inner"
-                      />
-                      <div className="absolute right-3 top-3 text-gray-400 pointer-events-none">
-                        <svg className="w-5 h-5" viewBox="0 0 24 24">
-                          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isLoggingIn}
-                    className="w-full py-3.5 bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white rounded-xl font-black text-xs sm:text-sm shadow-xl shadow-cyan-500/25 transition-all hover:scale-[1.02] active:scale-98 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    <Sparkles size={16} />
-                    <span>{isLoggingIn ? '⏳ Đang Kết Nối Supabase...' : '⚡ KẾT NỐI & ĐỒNG BỘ 1-CHẠM VỚI GOOGLE'}</span>
-                  </button>
-                </form>
+                {/* NÚT BẤM 1-CHẠM DUY NHẤT KẾT NỐI TRỰC TIẾP GOOGLE (KHÔNG CẦN NHẬP ĐỊA CHỈ) */}
+                <button
+                  type="button"
+                  onClick={handleRealGoogleOAuth}
+                  disabled={isLoggingIn}
+                  className="w-full py-4 px-6 bg-white hover:bg-gray-50 text-gray-900 rounded-2xl font-black text-sm shadow-2xl shadow-cyan-500/25 transition-all hover:scale-[1.02] active:scale-98 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-3 border border-gray-100"
+                >
+                  <svg className="w-6 h-6" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                  </svg>
+                  <span>{isLoggingIn ? '⏳ Đang Kết Nối Google...' : 'KẾT NỐI TRỰC TIẾP VỚI GOOGLE'}</span>
+                </button>
               </div>
 
               {/* Lựa chọn 3: Tiếp tục dùng miễn phí */}

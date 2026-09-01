@@ -31,7 +31,8 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   const currentPort = typeof window !== 'undefined' && window.location.port ? window.location.port : '3001';
-  const localBase = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:${currentPort}` : 'http://localhost:3001';
+  // Dùng 127.0.0.1.nip.io để TikTok LIVE Studio nhận diện là Domain FQDN hợp lệ và không báo đỏ 'Hãy nhập URL chính xác'
+  const localBase = `http://127.0.0.1.nip.io:${currentPort}`;
   const cloudBase = 'https://avalivepro.vercel.app';
   const activeBase = linkEnv === 'local' ? localBase : cloudBase;
 
@@ -43,7 +44,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
   const projects = [
     {
       id: 'idol',
-      name: 'DỰ ÁN 1: LIVE AI IDOL & VIDEO NỀN (CHUYÊN TIKTOK 9:16)',
+      name: 'DỰ ÁN 1: LIVE AI IDOL & VIDEO NỀN',
       tag: 'HOT NHẤT',
       tagColor: 'from-pink-500 to-rose-600',
       icon: Video,
@@ -51,7 +52,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       bgColor: 'border-pink-500/30 bg-pink-950/20 hover:border-pink-400/60',
       description: 'Phát video người Live / AI Idol chuẩn kích thước 9:16 (1080x1920) 60FPS sạch 100% không lệch khung hình.',
       path: '/idol',
-      directUrl: `${activeBase}/?overlay=idol&ratio=9:16&v=/demo_dancer.mp4${backendParam}`
+      directUrl: `${activeBase}/?overlay=idol${backendParam}`
     },
     {
       id: 'bando',
@@ -63,7 +64,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       bgColor: 'border-amber-500/30 bg-amber-950/20 hover:border-amber-400/60',
       description: 'Game cắm cờ 63 tỉnh thành Việt Nam 3D chuẩn kích thước 9:16 (1080x1920) khi khán giả tặng quà.',
       path: '/bando',
-      directUrl: `${activeBase}/?overlay=bando&ratio=9:16${backendParam}`
+      directUrl: `${activeBase}/?overlay=bando${backendParam}`
     },
     {
       id: 'battle',
@@ -75,7 +76,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       bgColor: 'border-red-500/30 bg-red-950/20 hover:border-red-400/60',
       description: 'Võ đài chiến đấu chia 2 phe PK kịch tính chuẩn kích thước 9:16 (1080x1920) khi có quà & bình luận.',
       path: '/battle',
-      directUrl: `${activeBase}/?overlay=battle&ratio=9:16${backendParam}`
+      directUrl: `${activeBase}/?overlay=battle${backendParam}`
     }
   ];
 

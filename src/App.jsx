@@ -122,6 +122,15 @@ export default function App() {
     }
   }, []);
 
+  // Bridge tự động chuyển tiếp đăng nhập Google về phần mềm máy tính (localhost:3001/desktop)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get('desktop_bridge') === 'true' && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
+      window.location.replace('http://localhost:3001/desktop' + window.location.hash + window.location.search);
+    }
+  }, []);
+
   // Helper to build User object from Supabase Session with Defaults & Overrides
   const processSessionUser = (sessionUser) => {
     const isAdminUser = sessionUser.email === "quocthiencr90@gmail.com";
