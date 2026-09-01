@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { 
-  Sparkles, 
-  Copy, 
-  Check, 
-  ExternalLink, 
-  Radio, 
-  Zap, 
+import React, { useState } from "react";
+import {
+  Sparkles,
+  Copy,
+  Check,
+  ExternalLink,
+  Radio,
+  Zap,
   CheckCircle2,
   X,
   Video,
@@ -19,8 +19,8 @@ import {
   MonitorPlay,
   Map,
   Monitor,
-  ShieldCheck
-} from 'lucide-react';
+  ShieldCheck,
+} from "lucide-react";
 
 /**
  * 👑 MODAL LIÊN KẾT TIKTOK LIVE STUDIO & OBS STUDIO ĐẲNG CẤP CHUYÊN NGHIỆP
@@ -30,64 +30,66 @@ import {
  */
 export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
   const [copiedId, setCopiedId] = useState(null);
-  const [selectedLinkType, setSelectedLinkType] = useState('domain'); // only 'domain' now
 
   if (!isOpen) return null;
 
-  const currentPort = typeof window !== 'undefined' && window.location.port ? window.location.port : '3001';
-  const currentProtocol = typeof window !== 'undefined' && window.location.protocol ? window.location.protocol : 'http:';
+  const currentPort =
+    typeof window !== "undefined" && window.location.port
+      ? window.location.port
+      : "3001";
+  const currentProtocol =
+    typeof window !== "undefined" && window.location.protocol
+      ? window.location.protocol
+      : "http:";
 
-  // 4 Định dạng link tương thích 100% mọi phiên bản TikTok LIVE Studio & OBS
-  const baseMap = {
-    ip: `${currentProtocol}//127.0.0.1:${currentPort}`,
-    domain: `http://127.0.0.1.nip.io:${currentPort}`,
-  };
-
-  const activeBase = baseMap.domain;
-  const masterLink = `${activeBase}/live`;
+  // Link chuẩn 100% hoạt động trên TikTok Studio
+  const activeBase = `${currentProtocol}//127.0.0.1.nip.io:${currentPort}`;
 
   // Danh sách các dự án với đường link riêng biệt 100%
   const projects = [
     {
-      id: 'idol',
-      name: 'DỰ ÁN 1: LIVE AI IDOL & VIDEO NỀN',
-      tag: 'HOT NHẤT',
-      tagColor: 'from-pink-500 to-rose-600',
+      id: "idol",
+      name: "DỰ ÁN 1: LIVE AI IDOL & VIDEO NỀN",
+      tag: "HOT NHẤT",
+      tagColor: "from-pink-500 to-rose-600",
       icon: MonitorPlay,
-      iconColor: 'text-pink-400',
-      bgColor: 'bg-[#1a0f14]/80 border-pink-500/20 hover:border-pink-500/40',
-      description: 'Phát video người Live / AI Idol chuẩn kích thước 9:16 (1080x1920) 60FPS sạch 100% không lệch khung hình.',
-      path: '/idol',
-      directUrl: `${activeBase}/idol`
+      iconColor: "text-pink-400",
+      bgColor: "bg-[#1a0f14]/80 border-pink-500/20 hover:border-pink-500/40",
+      description:
+        "Phát video người Live / AI Idol chuẩn kích thước 9:16 (1080x1920) 60FPS sạch 100% không lệch khung hình.",
+      path: "/idol",
+      directUrl: `${activeBase}/idol`,
     },
     {
-      id: 'bando',
-      name: 'DỰ ÁN 2: GAME BẢN ĐỒ VIỆT NAM (63 TỈNH THÀNH)',
-      tag: 'CẮM CỜ 3D',
-      tagColor: 'from-amber-500 to-orange-600',
+      id: "bando",
+      name: "DỰ ÁN 2: GAME BẢN ĐỒ VIỆT NAM (63 TỈNH THÀNH)",
+      tag: "CẮM CỜ 3D",
+      tagColor: "from-amber-500 to-orange-600",
       icon: Map,
-      iconColor: 'text-amber-400',
-      bgColor: 'bg-[#1a150f]/80 border-amber-500/20 hover:border-amber-500/40',
-      description: 'Game cắm cờ 63 tỉnh thành Việt Nam 3D chuẩn kích thước 9:16 (1080x1920) khi khán giả tặng quà.',
-      path: '/bando',
-      directUrl: `${activeBase}/bando`
+      iconColor: "text-amber-400",
+      bgColor: "bg-[#1a150f]/80 border-amber-500/20 hover:border-amber-500/40",
+      description:
+        "Game cắm cờ 63 tỉnh thành Việt Nam 3D chuẩn kích thước 9:16 (1080x1920) khi khán giả tặng quà.",
+      path: "/bando",
+      directUrl: `${activeBase}/bando`,
     },
     {
-      id: 'battle',
-      name: 'DỰ ÁN 3: GAME CHIẾN ĐẤU PK (TIKTOK LIVE BATTLE)',
-      tag: 'HÚT QUÀ TẶNG',
-      tagColor: 'from-red-500 to-rose-600',
+      id: "battle",
+      name: "DỰ ÁN 3: GAME CHIẾN ĐẤU PK (TIKTOK LIVE BATTLE)",
+      tag: "HÚT QUÀ TẶNG",
+      tagColor: "from-red-500 to-rose-600",
       icon: Swords,
-      iconColor: 'text-red-400',
-      bgColor: 'bg-[#1a0f0f]/80 border-red-500/20 hover:border-red-500/40',
-      description: 'Võ đài chiến đấu chia 2 phe PK kịch tính chuẩn kích thước 9:16 (1080x1920) khi có quà & bình luận.',
-      path: '/battle',
-      directUrl: `${activeBase}/battle`
-    }
+      iconColor: "text-red-400",
+      bgColor: "bg-[#1a0f0f]/80 border-red-500/20 hover:border-red-500/40",
+      description:
+        "Võ đài chiến đấu chia 2 phe PK kịch tính chuẩn kích thước 9:16 (1080x1920) khi có quà & bình luận.",
+      path: "/battle",
+      directUrl: `${activeBase}/battle`,
+    },
   ];
 
   const handleCopy = (url, id) => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
       navigator.clipboard.writeText(url);
       setCopiedId(id);
       setTimeout(() => setCopiedId(null), 2500);
@@ -97,7 +99,6 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-3 sm:p-5 animate-fadeIn select-none font-sans">
       <div className="glass-panel p-5 sm:p-7 rounded-[32px] border border-cyan-500/40 max-w-3xl w-full text-left space-y-4 shadow-2xl bg-[#090A10]/98 max-h-[92vh] flex flex-col relative">
-        
         {/* Nút Đóng Modal */}
         <button
           onClick={onClose}
@@ -113,92 +114,23 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
           </div>
           <div>
             <h2 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
-              <span>DANH SÁCH ĐƯỜNG LINK CHO TIKTOK LIVE STUDIO & OBS STUDIO</span>
+              <span>
+                DANH SÁCH ĐƯỜNG LINK TIKTOK LIVE STUDIO (DOMAIN NIP.IO)
+              </span>
             </h2>
             <p className="text-[11.5px] text-gray-400 mt-0.5">
-              Tự động kết nối 100% thời gian thực — Mở Game hay Video là TikTok Studio tự chuyển cảnh ngay
+              Tự động cập nhật 100% thời gian thực từ phần mềm lên phiên Live
             </p>
           </div>
         </div>
 
-        {/* 🌟 1 ĐƯỜNG LINK DUY NHẤT TOÀN NĂNG */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-cyan-950/70 via-[#0D1628] to-blue-950/70 border-2 border-cyan-400/80 shadow-xl shadow-cyan-950/50 space-y-3 shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-cyan-400 animate-spin" />
-              <span className="text-xs font-black text-cyan-300 uppercase tracking-wider">
-                👑 1 LINK DUY NHẤT TOÀN NĂNG
-              </span>
-            </div>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse">
-              ● TỰ ĐỘNG 100%
-            </span>
-          </div>
-
-          <p className="text-[11.5px] text-gray-200 leading-relaxed">
-            Dán <strong>DUY NHẤT 1 ĐƯỜNG LINK NÀY</strong> vào TikTok LIVE Studio hoặc OBS Studio.
-          </p>
-
-          {/* 1 Tab Chọn Kiểu Kết Nối */}
-          <div className="grid grid-cols-1 gap-1.5 p-1 bg-black/70 rounded-xl border border-white/10 text-xs">
-            <button
-              className={`flex items-center justify-center gap-2 py-2.5 rounded-lg transition-all bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600 text-white shadow-[0_0_15px_rgba(99,102,241,0.5)] font-black uppercase tracking-wider`}
-            >
-              <Globe2 className="w-4 h-4" />
-              <span>Máy Chủ Liên Kết Ảo Đa Nền Tảng (Siêu Tốc)</span>
-            </button>
-          </div>
-
-          {/* Ô Hiển Thị Link Toàn Năng & Nút Bấm */}
-          <div className="flex flex-col sm:flex-row items-center gap-2 pt-0.5">
-            <input
-              type="text"
-              readOnly
-              value={masterLink}
-              className="w-full sm:flex-1 px-3.5 py-2.5 rounded-xl bg-black/80 border border-cyan-400/60 text-xs sm:text-sm text-cyan-200 font-mono font-bold focus:outline-none select-all shadow-inner"
-            />
-
-            <div className="flex items-center gap-1.5 w-full sm:w-auto">
-              <button
-                onClick={() => handleCopy(masterLink, 'master')}
-                className={`flex-1 sm:flex-none px-5 py-2.5 rounded-xl font-black text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-lg active:scale-95 ${
-                  copiedId === 'master'
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold shadow-cyan-950/60'
-                }`}
-              >
-                {copiedId === 'master' ? (
-                  <>
-                    <Check className="w-4 h-4 text-white" />
-                    <span>ĐÃ SAO CHÉP!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4 text-white" />
-                    <span>SAO CHÉP LINK TOÀN NĂNG</span>
-                  </>
-                )}
-              </button>
-
-              <a
-                href={masterLink}
-                target="_blank"
-                rel="noreferrer"
-                className="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-gray-200 hover:text-white font-bold text-xs transition-all flex items-center justify-center gap-1"
-                title="Mở tab mới xem thử ngay"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                <span>Xem Thử</span>
-              </a>
-            </div>
-          </div>
-        </div>
-
-        {/* Danh sách các Dự án Độc Lập (Nếu ai cần link tĩnh cố định) */}
+        {/* Danh sách các Dự án Độc Lập */}
         <div className="space-y-2.5 overflow-y-auto flex-1 pr-1 custom-scrollbar">
           <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5 px-1">
             <Layers className="w-3.5 h-3.5 text-gray-500" />
-            <span>HOẶC CHỌN LINK RIÊNG TỪNG DỰ ÁN (NẾU CẦN CỐ ĐỊNH 1 MÀN HÌNH):</span>
+            <span>
+              SAO CHÉP ĐƯỜNG LINK TƯƠNG ỨNG VÀO TRÌNH DUYỆT TIKTOK STUDIO:
+            </span>
           </div>
 
           {projects.map((proj) => {
@@ -206,7 +138,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
             const isCopied = copiedId === proj.id;
 
             return (
-              <div 
+              <div
                 key={proj.id}
                 className={`p-3 rounded-2xl border transition-all ${proj.bgColor} space-y-2 relative`}
               >
@@ -221,7 +153,9 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
                     </span>
                   </div>
 
-                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase text-white bg-gradient-to-r ${proj.tagColor} shadow-xs`}>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase text-white bg-gradient-to-r ${proj.tagColor} shadow-xs`}
+                  >
                     {proj.tag}
                   </span>
                 </div>
@@ -239,9 +173,9 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
                     <button
                       onClick={() => handleCopy(proj.directUrl, proj.id)}
                       className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-md active:scale-95 ${
-                        isCopied 
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-white/15 hover:bg-white/25 text-white'
+                        isCopied
+                          ? "bg-emerald-600 text-white"
+                          : "bg-white/15 hover:bg-white/25 text-white"
                       }`}
                     >
                       {isCopied ? (
@@ -279,7 +213,9 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-yellow-300 font-bold text-[11.5px]">
               <Zap className="w-4 h-4 text-yellow-400 shrink-0 animate-pulse" />
-              <span>HƯỚNG DẪN KẾT NỐI TIKTOK LIVE STUDIO (CHỐNG LỖI 100%):</span>
+              <span>
+                HƯỚNG DẪN KẾT NỐI TIKTOK LIVE STUDIO (CHỐNG LỖI 100%):
+              </span>
             </div>
             <button
               onClick={onClose}
@@ -290,16 +226,27 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-gray-300">
             <div className="p-2 rounded-xl bg-white/5 border border-white/10 space-y-1">
-              <span className="font-bold text-cyan-300 flex items-center gap-1">🌐 Cách dán vào TikTok Studio:</span>
-              <p className="text-gray-400 leading-relaxed">Thêm nguồn <b>Trình duyệt (Browser)</b> → Dán link đã sao chép → Đặt kích thước: <b>Chiều Rộng = 1080, Chiều Cao = 1920</b> (Chuẩn 9:16 dọc không bao giờ bị méo hình).</p>
+              <span className="font-bold text-cyan-300 flex items-center gap-1">
+                🌐 Cách dán vào TikTok Studio:
+              </span>
+              <p className="text-gray-400 leading-relaxed">
+                Thêm nguồn <b>Trình duyệt (Browser)</b> → Dán link đã sao chép →
+                Đặt kích thước: <b>Chiều Rộng = 1080, Chiều Cao = 1920</b>{" "}
+                (Chuẩn 9:16 dọc không bao giờ bị méo hình).
+              </p>
             </div>
             <div className="p-2 rounded-xl bg-white/5 border border-white/10 space-y-1">
-              <span className="font-bold text-pink-300 flex items-center gap-1">💡 Mẹo xử lý khi báo lỗi đỏ:</span>
-              <p className="text-gray-400 leading-relaxed">Nếu TikTok Studio báo đỏ <i>"Hãy nhập URL chính xác"</i>, hãy sử dụng <b>Link Domain nip.io</b> để nhận diện tên miền 100%!</p>
+              <span className="font-bold text-pink-300 flex items-center gap-1">
+                💡 Đã vượt qua kiểm duyệt 100%:
+              </span>
+              <p className="text-gray-400 leading-relaxed">
+                Các đường link đã được tự động cấp phát dạng{" "}
+                <b>Domain nip.io</b>. Trình duyệt TikTok Studio sẽ nhận diện tên
+                miền chính thức và không bao giờ báo lỗi!
+              </p>
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );
