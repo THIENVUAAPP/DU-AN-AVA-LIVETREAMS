@@ -112,7 +112,7 @@ if not exist "%~dp0system" (
 )
 
 rem 1. Tự động gỡ bỏ cờ chặn bảo mật của Windows (Unblock Mark-of-the-Web) và ẩn thư mục hệ thống
-powershell -NoProfile -Command "Get-ChildItem -Path '%~dp0' -Recurse | Unblock-File" >nul 2>nul
+powershell -NoProfile -Command "Get-ChildItem -Path '%~dp0' -Recurse ^| Unblock-File" >nul 2>nul
 attrib +h "%~dp0system" >nul 2>nul
 
 rem 2. Dọn dẹp các phiên bản cũ bị treo cổng 3001 nếu có
@@ -124,21 +124,25 @@ rem 3. Kiểm tra bộ chạy Node.js
 set "NODE_EXE=node"
 if exist "%~dp0system\\node_portable\\node.exe" (
     set "NODE_EXE=%~dp0system\\node_portable\\node.exe"
-    echo [OK] Đã kết nối Hệ thống Runtime Portable tích hợp sẵn
-) else (
-    where node >nul 2>nul
-    if %errorlevel% equ 0 (
-        echo [OK] Đã kết nối Node.js hệ thống
-    ) else (
-        echo [THÔNG BÁO] Đang kết nối Cloud Studio tại: https://avalivepro.vercel.app/desktop
-        start "" https://avalivepro.vercel.app/desktop
-        pause
-        exit /b
-    )
+    echo [OK] Da ket noi He thong Runtime Portable tich hop san
+    goto start_server
 )
 
+where node >nul 2>nul
+if not errorlevel 1 (
+    echo [OK] Da ket noi Node.js he thong
+    goto start_server
+)
+
+echo [THONG BAO] Đang ket noi Cloud Studio tai: https://avalivepro.vercel.app/desktop
+start "" https://avalivepro.vercel.app/desktop
+pause
+exit /b
+
+:start_server
+
 rem 4. Khởi chạy máy chủ Backend xử lý TikTok Live
-echo [1/2] Đang kích hoạt Bộ xử lý Tín hiệu & TikTok Live Engine...
+echo [1/2] Đang kích hoạt Bộ xử lý Tín hiệu ^& TikTok Live Engine...
 cd /d "%~dp0system"
 start "AvaLive_Backend_Server" /b "%NODE_EXE%" core.cjs
 
@@ -185,7 +189,7 @@ echo.
 echo 👉 Nhấn phím bất kỳ hoặc đóng cửa sổ này khi muốn tắt phần mềm.
 pause >nul
 exit
-`;
+`.replace(/\n/g, "\r\n");
 
 // Tạo Command Launcher cho Mac
 const macCommandLauncher = `#!/bin/bash
