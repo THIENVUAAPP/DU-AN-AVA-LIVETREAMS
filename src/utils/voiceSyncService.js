@@ -7,6 +7,8 @@
  * Hỗ trợ trọn vẹn 20 ngôn ngữ phổ biến trên thế giới với đầy đủ Giọng Nam & Giọng Nữ (Miễn phí & Pro)
  */
 
+import { globalLipSyncEngine } from '../lib/avatar-sync/AvatarLipSyncEngine';
+
 export const ELEVENLABS_VOICES = [
   // ==================== 1. GIỌNG NỮ (Idol Livestream / Giao lưu / Bán hàng) ====================
   { id: 'el_rachel', name: 'Rachel (Nữ - Ngọt ngào, Tự nhiên)', provider: 'elevenlabs', voiceId: '21m00Tcm4TlvDq8ikWAM', gender: 'Female', lang: 'vi-VN', recommendedFor: 'idol', desc: 'Giọng nữ trẻ trung, ấm áp, cực kỳ hợp cho Idol Livestream.' },
@@ -463,6 +465,11 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null) {
         const audioUrl = URL.createObjectURL(blob);
         const audio = new Audio(audioUrl);
         audio.volume = voiceVolume;
+        audio.crossOrigin = 'anonymous'; // Yêu cầu cho Web Audio API
+        
+        // Kết nối Audio vào Avatar Lip Sync Engine
+        try { globalLipSyncEngine.connectAudioElement(audio); } catch(e) {}
+        
         activePreviewAudio = audio;
         return new Promise((resolve) => {
           let finished = false;
@@ -504,6 +511,11 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null) {
     const streamAudio = new Audio(serverTtsUrl);
     streamAudio.volume = isLocalSpeakerMuted ? 0 : voiceVolume;
     streamAudio.muted = isLocalSpeakerMuted;
+    streamAudio.crossOrigin = 'anonymous';
+    
+    // Kết nối Audio vào Avatar Lip Sync Engine
+    try { globalLipSyncEngine.connectAudioElement(streamAudio); } catch(e) {}
+    
     activePreviewAudio = streamAudio;
 
     const playPromise = new Promise((resolve) => {

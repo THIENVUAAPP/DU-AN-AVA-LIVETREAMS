@@ -3,7 +3,8 @@ import { io } from 'socket.io-client';
 import flvjs from 'flv.js';
 import Hls from 'hls.js';
 import GameBanDoVietNam from './game/GameBanDoVietNam';
-import GameChienDau from './game/GameChienDau';
+import GameBattleOverlay from './game/GameBattleOverlay';
+import { useAvatarLipSync } from '../../hooks/useAvatarLipSync';
 import { supabase } from '../../lib/supabaseClient';
 import { loadAllAidolItems } from '../../utils/idbHelper';
 
@@ -20,7 +21,8 @@ const getBackendUrl = () => {
   return backendParam || (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:${window.location.port || '3001'}` : 'http://127.0.0.1:3001');
 };
 
-export default function CleanLiveOverlay() {
+export default function CleanLiveOverlay({ customStyle = {} }) {
+  const { blendshapes, currentVolume } = useAvatarLipSync();
   const [masterState, setMasterState] = useState(() => {
     let saved = null;
     try {
@@ -803,6 +805,14 @@ export default function CleanLiveOverlay() {
               el.muted = true;
               el.defaultMuted = true;
               el.playsInline = true;
+              // Audio-reactive playback: Tăng nhẹ tốc độ video khi AI nói để tạo cảm giác nhép môi
+              try {
+                const targetRate = currentVolume > 0.1 ? 1.0 + (currentVolume * 0.3) : 1.0;
+                if (Math.abs(el.playbackRate - targetRate) > 0.1) {
+                  el.playbackRate = targetRate;
+                }
+              } catch(e) {}
+              
               el.setAttribute('muted', '');
               el.setAttribute('playsinline', '');
               el.setAttribute('autoplay', '');
@@ -848,8 +858,10 @@ export default function CleanLiveOverlay() {
             width: '100vw', 
             height: '100vh', 
             objectFit: 'cover',
-            transform: 'none',
-            willChange: 'auto'
+            // Ánh xạ ARKit JawOpen và Âm lượng vào biến dạng hình ảnh nhẹ (Audio-reactive)
+            transform: currentVolume > 0.05 ? `scale(${1 + currentVolume * 0.015}) translateY(${currentVolume * -2}px)` : 'none',
+            transition: 'transform 0.05s ease-out',
+            willChange: 'transform'
           }}
         />
       ) : activeStreamUrl ? (
