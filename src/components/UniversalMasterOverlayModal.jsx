@@ -27,9 +27,20 @@ import {
  */
 export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
   const [copiedId, setCopiedId] = useState(null);
-  // Chỉ sử dụng định dạng Domain nip.io
-  const activeBase = `http://127.0.0.1.nip.io:${currentPort}`;
+  const [selectedLinkType, setSelectedLinkType] = useState('domain'); // only 'domain' now
 
+  if (!isOpen) return null;
+
+  const currentPort = typeof window !== 'undefined' && window.location.port ? window.location.port : '3001';
+  const currentProtocol = typeof window !== 'undefined' && window.location.protocol ? window.location.protocol : 'http:';
+
+  // 4 Định dạng link tương thích 100% mọi phiên bản TikTok LIVE Studio & OBS
+  const baseMap = {
+    ip: `${currentProtocol}//127.0.0.1:${currentPort}`,
+    domain: `http://127.0.0.1.nip.io:${currentPort}`,
+  };
+
+  const activeBase = baseMap.domain;
   const masterLink = `${activeBase}/live`;
 
   // Danh sách các dự án với đường link riêng biệt 100%
@@ -39,9 +50,9 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       name: 'DỰ ÁN 1: LIVE AI IDOL & VIDEO NỀN',
       tag: 'HOT NHẤT',
       tagColor: 'from-pink-500 to-rose-600',
-      icon: Video,
+      icon: MonitorPlay,
       iconColor: 'text-pink-400',
-      bgColor: 'border-pink-500/30 bg-pink-950/20 hover:border-pink-400/60',
+      bgColor: 'bg-[#1a0f14]/80 border-pink-500/20 hover:border-pink-500/40',
       description: 'Phát video người Live / AI Idol chuẩn kích thước 9:16 (1080x1920) 60FPS sạch 100% không lệch khung hình.',
       path: '/idol',
       directUrl: `${activeBase}/idol`
@@ -50,10 +61,10 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       id: 'bando',
       name: 'DỰ ÁN 2: GAME BẢN ĐỒ VIỆT NAM (63 TỈNH THÀNH)',
       tag: 'CẮM CỜ 3D',
-      tagColor: 'from-amber-500 to-yellow-600',
-      icon: Flag,
+      tagColor: 'from-amber-500 to-orange-600',
+      icon: Map,
       iconColor: 'text-amber-400',
-      bgColor: 'border-amber-500/30 bg-amber-950/20 hover:border-amber-400/60',
+      bgColor: 'bg-[#1a150f]/80 border-amber-500/20 hover:border-amber-500/40',
       description: 'Game cắm cờ 63 tỉnh thành Việt Nam 3D chuẩn kích thước 9:16 (1080x1920) khi khán giả tặng quà.',
       path: '/bando',
       directUrl: `${activeBase}/bando`
@@ -62,10 +73,10 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       id: 'battle',
       name: 'DỰ ÁN 3: GAME CHIẾN ĐẤU PK (TIKTOK LIVE BATTLE)',
       tag: 'HÚT QUÀ TẶNG',
-      tagColor: 'from-red-500 to-purple-600',
+      tagColor: 'from-red-500 to-rose-600',
       icon: Swords,
       iconColor: 'text-red-400',
-      bgColor: 'border-red-500/30 bg-red-950/20 hover:border-red-400/60',
+      bgColor: 'bg-[#1a0f0f]/80 border-red-500/20 hover:border-red-500/40',
       description: 'Võ đài chiến đấu chia 2 phe PK kịch tính chuẩn kích thước 9:16 (1080x1920) khi có quà & bình luận.',
       path: '/battle',
       directUrl: `${activeBase}/battle`
@@ -107,13 +118,13 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
           </div>
         </div>
 
-        {/* 🌟 1 ĐƯỜNG LINK DUY NHẤT TOÀN NĂNG (HERO CARD DUY NHẤT - KHUYÊN DÙNG NHẤT) */}
+        {/* 🌟 1 ĐƯỜNG LINK DUY NHẤT TOÀN NĂNG */}
         <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-cyan-950/70 via-[#0D1628] to-blue-950/70 border-2 border-cyan-400/80 shadow-xl shadow-cyan-950/50 space-y-3 shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-cyan-400 animate-spin" />
               <span className="text-xs font-black text-cyan-300 uppercase tracking-wider">
-                👑 1 LINK DUY NHẤT TOÀN NĂNG (TỰ ĐỔI CẢNH THEO PHẦN MỀM)
+                👑 1 LINK DUY NHẤT TOÀN NĂNG
               </span>
             </div>
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse">
@@ -122,8 +133,18 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
           </div>
 
           <p className="text-[11.5px] text-gray-200 leading-relaxed">
-            Dán <strong>DUY NHẤT 1 ĐƯỜNG LINK NÀY</strong> vào TikTok LIVE Studio hoặc OBS Studio: Khi bấm chọn <strong>Video Live Idol, Game Bản Đồ hay Game Chiến Đấu</strong> trên phần mềm, màn hình Live sẽ <strong>tự động chuyển cảnh tức thì</strong> mà không cần đổi link!
+            Dán <strong>DUY NHẤT 1 ĐƯỜNG LINK NÀY</strong> vào TikTok LIVE Studio hoặc OBS Studio.
           </p>
+
+          {/* 1 Tab Chọn Kiểu Kết Nối */}
+          <div className="grid grid-cols-1 gap-1.5 p-1 bg-black/70 rounded-xl border border-white/10 text-xs">
+            <button
+              className={`flex items-center justify-center gap-1.5 py-2 rounded-lg transition-all bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)] font-black`}
+            >
+              <Globe2 className="w-3 h-3" />
+              <span>1. Link Domain nip.io (Khuyên dùng)</span>
+            </button>
+          </div>
 
           {/* Ô Hiển Thị Link Toàn Năng & Nút Bấm */}
           <div className="flex flex-col sm:flex-row items-center gap-2 pt-0.5">
@@ -271,7 +292,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
             </div>
             <div className="p-2 rounded-xl bg-white/5 border border-white/10 space-y-1">
               <span className="font-bold text-pink-300 flex items-center gap-1">💡 Mẹo xử lý khi báo lỗi đỏ:</span>
-              <p className="text-gray-400 leading-relaxed">Đường link <b>Domain nip.io</b> đã được thiết kế chuẩn tên miền để TikTok Studio nhận diện 100% không báo lỗi URL!</p>
+              <p className="text-gray-400 leading-relaxed">Nếu TikTok Studio báo đỏ <i>"Hãy nhập URL chính xác"</i>, hãy sử dụng <b>Link Domain nip.io</b> để nhận diện tên miền 100%!</p>
             </div>
           </div>
         </div>

@@ -132,7 +132,7 @@ export default function App() {
     if (typeof window === 'undefined') return;
     const searchParams = new URLSearchParams(window.location.search);
     if (searchParams.get('desktop_bridge') === 'true' && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
-      window.location.replace('http://127.0.0.1.nip.io:3001/desktop' + window.location.hash + window.location.search);
+      window.location.replace('http://127.0.0.1.nip.io:3001/' + window.location.hash + window.location.search);
     }
   }, []);
 
@@ -206,7 +206,7 @@ export default function App() {
     try {
       const isLocal = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1');
       const targetRedirect = isLocal
-        ? 'https://avalivepro.vercel.app/desktop?desktop_bridge=true'
+        ? 'https://avalivepro.vercel.app/?desktop_bridge=true'
         : window.location.origin;
 
       const { error } = await supabase.auth.signInWithOAuth({

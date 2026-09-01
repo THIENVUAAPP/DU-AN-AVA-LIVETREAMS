@@ -208,7 +208,7 @@ export default function DesktopAppUI() {
 
       const isLocal = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1');
       const targetRedirect = isLocal
-        ? 'https://avalivepro.vercel.app/desktop?desktop_bridge=true'
+        ? 'https://avalivepro.vercel.app/?desktop_bridge=true'
         : window.location.origin + '/desktop';
 
       const { data, error } = await supabase.auth.signInWithOAuth({
