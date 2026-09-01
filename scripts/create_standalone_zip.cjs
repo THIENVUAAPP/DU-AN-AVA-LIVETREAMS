@@ -92,7 +92,7 @@ echo =================================================================
 echo.
 
 rem 0. Kiểm tra xem người dùng đã giải nén chưa
-if not exist "%~dp0system" (
+if not exist "system" (
     color 4F
     echo.
     echo ==============================================================================
@@ -112,8 +112,8 @@ if not exist "%~dp0system" (
 )
 
 rem 1. Tự động gỡ bỏ cờ chặn bảo mật của Windows (Unblock Mark-of-the-Web) và ẩn thư mục hệ thống
-powershell -NoProfile -Command "Get-ChildItem -Path '%~dp0' -Recurse ^| Unblock-File" >nul 2>nul
-attrib +h "%~dp0system" >nul 2>nul
+powershell -NoProfile -Command "Get-ChildItem -Path '.' -Recurse ^| Unblock-File" >nul 2>nul
+attrib +h "system" >nul 2>nul
 
 rem 2. Dọn dẹp các phiên bản cũ bị treo cổng 3001 nếu có
 for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr ":3001" ^| findstr "LISTENING"') do (
@@ -122,8 +122,8 @@ for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr ":3001" ^| findstr "LI
 
 rem 3. Kiểm tra bộ chạy Node.js
 set "NODE_EXE=node"
-if exist "%~dp0system\\node_portable\\node.exe" (
-    set "NODE_EXE=%~dp0system\\node_portable\\node.exe"
+if exist "system\\node_portable\\node.exe" (
+    set "NODE_EXE=node_portable\\node.exe"
     echo [OK] Da ket noi He thong Runtime Portable tich hop san
     goto start_server
 )
@@ -143,7 +143,7 @@ exit /b
 
 rem 4. Khởi chạy máy chủ Backend xử lý TikTok Live
 echo [1/2] Đang kích hoạt Bộ xử lý Tín hiệu ^& TikTok Live Engine...
-cd /d "%~dp0system"
+cd /d "system"
 start "AvaLive_Backend_Server" /b "%NODE_EXE%" core.cjs
 
 rem 5. Chờ 1.5 giây để Server sẵn sàng
