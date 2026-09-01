@@ -1166,9 +1166,12 @@ app.post('/api/generate-script', async (req, res) => {
 // SPA Fallback cho tất cả các route (Overlay, Game, Live Studio, Live Idol)
 if (distPath) {
   app.use((req, res, next) => {
-    if (req.method !== 'GET') return next();
+    if (req.method !== 'GET' && req.method !== 'HEAD') return next();
     if (req.url.startsWith('/api') || req.url.startsWith('/socket.io')) return next();
     if (req.url.includes('.') && !req.url.includes('.html')) return next();
+    if (req.method === 'HEAD') {
+      return res.status(200).type('text/html').end();
+    }
     res.sendFile(path.join(distPath, 'index.html'));
   });
 }

@@ -23,7 +23,7 @@ export default function GameBattleOverlay() {
       if (customBackend && customBackend.startsWith('http')) {
         backendUrl = customBackend;
       } else {
-        backendUrl = `${window.location.protocol}//${window.location.hostname}:3001`;
+        backendUrl = `${window.location.protocol}//${window.location.hostname}:${window.location.port || '3001'}`;
       }
     }
 

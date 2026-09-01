@@ -17,7 +17,7 @@ import { loadAllAidolItems } from '../../utils/idbHelper';
 const getBackendUrl = () => {
   const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
   const backendParam = urlParams ? urlParams.get('backend') : null;
-  return backendParam || (typeof window !== 'undefined' ? (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001' ? `${window.location.protocol}//${window.location.hostname}:3001` : window.location.origin) : 'http://localhost:3001');
+  return backendParam || (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:${window.location.port || '3001'}` : 'http://127.0.0.1:3001');
 };
 
 export default function CleanLiveOverlay() {
