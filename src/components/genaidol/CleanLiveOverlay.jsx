@@ -47,7 +47,7 @@ export default function CleanLiveOverlay() {
     return {
       stage: defaultStage, // 'idol' | 'dancefloor' | 'battle' | 'bando' | 'broadcast'
       aspectRatio: ratioParam || '9:16',
-      mediaUrl: saved?.mediaUrl || null,
+      mediaUrl: directVideoUrl || saved?.mediaUrl || '/demo_dancer.mp4',
       flvUrl: directVideoUrl || saved?.flvUrl || null,
       isVideo: saved?.isVideo !== false,
       selectedCharacter: saved?.selectedCharacter || '',
@@ -644,9 +644,10 @@ export default function CleanLiveOverlay() {
       } catch (e) {}
     }
 
-    // 3. Không dùng fallback mặc định nữa theo yêu cầu của user
+    // 3. Fallback video AI Idol mặc định có sẵn (đảm bảo luôn luôn có video khi mở trên TikTok Studio / OBS)
     if (!candidateUrl) {
-      candidateUrl = '';
+      candidateUrl = '/demo_dancer.mp4';
+      isVideo = true;
     }
 
     // Làm sạch và chuẩn hóa URL (Loại bỏ các tiền tố http lặp lại nếu có)
@@ -790,107 +791,86 @@ export default function CleanLiveOverlay() {
       className="fixed inset-0 w-screen h-screen overflow-hidden flex items-center justify-center select-none bg-black"
       style={{ width: '100vw', height: '100vh', position: 'fixed', inset: 0, backgroundColor: '#000' }}
     >
-      <div 
-        className="relative w-full h-full flex items-center justify-center overflow-hidden bg-black"
-        style={
-          isVertical 
-            ? { 
-                aspectRatio: '9 / 16', 
-                width: '100%', 
-                height: '100%', 
-                maxWidth: 'calc(100vh * 9 / 16)',
-                maxHeight: '100vh' 
+      {activeMedia.url && activeMedia.isVideo ? (
+        <video
+          ref={(el) => {
+            if (el) {
+              el.muted = true;
+              el.defaultMuted = true;
+              el.playsInline = true;
+              el.setAttribute('muted', '');
+              el.setAttribute('playsinline', '');
+              el.setAttribute('autoplay', '');
+              const playPromise = el.play();
+              if (playPromise !== undefined) {
+                playPromise.catch(() => {
+                  el.muted = true;
+                  el.play().catch(() => {});
+                });
               }
-            : { 
-                aspectRatio: '16 / 9', 
-                width: '100%', 
-                height: '100%', 
-                maxWidth: '100vw',
-                maxHeight: 'calc(100vw * 9 / 16)' 
-              }
-        }
-      >
-        {activeMedia.url && activeMedia.isVideo ? (
-          <video
-            ref={(el) => {
-              if (el) {
-                el.muted = true;
-                el.defaultMuted = true;
-                el.playsInline = true;
-                el.setAttribute('muted', '');
-                el.setAttribute('playsinline', '');
-                el.setAttribute('autoplay', '');
-                const playPromise = el.play();
-                if (playPromise !== undefined) {
-                  playPromise.catch(() => {
-                    el.muted = true;
-                    el.play().catch(() => {});
-                  });
-                }
-              }
-            }}
-            key={activeMedia.url}
-            src={activeMedia.url}
-            autoPlay
-            loop
-            muted
-            playsInline
-            controls={false}
-            preload="auto"
-            disablePictureInPicture
-            onLoadedMetadata={(e) => {
-              e.target.muted = true;
-              e.target.play().catch(() => {});
-            }}
-            onCanPlay={(e) => {
-              e.target.muted = true;
-              e.target.play().catch(() => {});
-            }}
-            onEnded={(e) => {
-              e.target.currentTime = 0;
-              e.target.play().catch(() => {});
-            }}
-            onError={(e) => {
-              console.warn('[CleanLiveOverlay] Video playback notice:', e);
-            }}
-            className="w-full h-full select-none"
-            style={{ 
-              width: '100%', 
-              height: '100%', 
-              objectFit: objectFitMode,
-              transform: 'none',
-              willChange: 'auto'
-            }}
-          />
-        ) : activeStreamUrl ? (
-          <video
-            ref={flvVideoRef}
-            key={activeStreamUrl}
-            autoPlay
-            muted
-            playsInline
-            className="w-full h-full select-none bg-black"
-            style={{ width: '100%', height: '100%', objectFit: objectFitMode }}
-          />
-        ) : activeMedia.url ? (
-          <img 
-            src={activeMedia.url} 
-            className="w-full h-full select-none"
-            style={{ width: '100%', height: '100%', objectFit: objectFitMode, imageRendering: '-webkit-optimize-contrast' }}
-            alt="AI Idol"
-          />
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#0F1016] via-[#151824] to-[#0A0A0F] text-center p-6 select-none">
-            <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-pink-600 via-rose-600 to-red-600 flex items-center justify-center mb-5 shadow-2xl shadow-rose-500/30 animate-pulse">
-              <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <h3 className="text-xl sm:text-2xl font-black text-white tracking-wide uppercase">MÀN HÌNH CHỜ LIVE IDOL (9:16)</h3>
-            <p className="text-gray-400 text-xs mt-2">Đang kết nối nhận video chuẩn 1080x1920 từ phần mềm...</p>
+            }
+          }}
+          key={activeMedia.url}
+          src={activeMedia.url}
+          autoPlay
+          loop
+          muted
+          playsInline
+          controls={false}
+          preload="auto"
+          disablePictureInPicture
+          onLoadedMetadata={(e) => {
+            e.target.muted = true;
+            e.target.play().catch(() => {});
+          }}
+          onCanPlay={(e) => {
+            e.target.muted = true;
+            e.target.play().catch(() => {});
+          }}
+          onEnded={(e) => {
+            e.target.currentTime = 0;
+            e.target.play().catch(() => {});
+          }}
+          onError={(e) => {
+            console.warn('[CleanLiveOverlay] Video playback notice:', e);
+          }}
+          className="w-full h-full select-none absolute inset-0"
+          style={{ 
+            width: '100vw', 
+            height: '100vh', 
+            objectFit: 'cover',
+            transform: 'none',
+            willChange: 'auto'
+          }}
+        />
+      ) : activeStreamUrl ? (
+        <video
+          ref={flvVideoRef}
+          key={activeStreamUrl}
+          autoPlay
+          muted
+          playsInline
+          className="w-full h-full object-cover select-none bg-black absolute inset-0"
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      ) : activeMedia.url ? (
+        <img 
+          src={activeMedia.url} 
+          className="w-full h-full object-cover select-none absolute inset-0"
+          style={{ width: '100%', height: '100%', objectFit: 'cover', imageRendering: '-webkit-optimize-contrast' }}
+          alt="AI Idol"
+        />
+      ) : (
+        <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#0F1016] via-[#151824] to-[#0A0A0F] text-center p-6 select-none">
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-pink-600 via-rose-600 to-red-600 flex items-center justify-center mb-5 shadow-2xl shadow-rose-500/30 animate-pulse">
+            <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
           </div>
-        )}
-      </div>
+          <h3 className="text-xl sm:text-2xl font-black text-white tracking-wide uppercase">MÀN HÌNH CHỜ LIVE IDOL (9:16)</h3>
+          <p className="text-gray-400 text-xs mt-2">Đang kết nối nhận video chuẩn 1080x1920 từ phần mềm...</p>
+        </div>
+      )}
 
       {/* Animation Styles */}
       <style>{`

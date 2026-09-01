@@ -30,9 +30,8 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  const currentPort = typeof window !== 'undefined' && window.location.port ? window.location.port : '5173';
-  // Dùng 127.0.0.1.nip.io để TikTok LIVE Studio nhận diện là Domain FQDN hợp lệ và không báo đỏ 'Hãy nhập URL chính xác'
-  const localBase = `http://127.0.0.1.nip.io:${currentPort}`;
+  const currentPort = typeof window !== 'undefined' && window.location.port ? window.location.port : '3001';
+  const localBase = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:${currentPort}` : 'http://localhost:3001';
   const cloudBase = 'https://avalivepro.vercel.app';
   const activeBase = linkEnv === 'local' ? localBase : cloudBase;
 
@@ -52,7 +51,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       bgColor: 'border-pink-500/30 bg-pink-950/20 hover:border-pink-400/60',
       description: 'Phát video người Live / AI Idol chuẩn kích thước 9:16 (1080x1920) 60FPS sạch 100% không lệch khung hình.',
       path: '/idol',
-      directUrl: `${activeBase}/?overlay=idol&ratio=9:16${backendParam}`
+      directUrl: `${activeBase}/?overlay=idol&ratio=9:16&v=/demo_dancer.mp4${backendParam}`
     },
     {
       id: 'bando',
