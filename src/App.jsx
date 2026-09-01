@@ -27,9 +27,14 @@ import LivestreamClonerStudio from "./components/LivestreamClonerStudio";
 import UpgradePrompt from "./components/UpgradePrompt";
 import AutoCaptchaSolver from "./components/AutoCaptchaSolver";
 import UpdateNotificationModal from "./components/genaidol/UpdateNotificationModal";
+import { bootstrapDefaultPresets } from "./utils/defaultPresetsBootstrap";
 import { Lock, Sparkles, ShieldCheck, Mail, LogIn, ArrowRight } from "lucide-react";
 
 export default function App() {
+  useEffect(() => {
+    bootstrapDefaultPresets();
+  }, []);
+
   // Cửa Sổ Master Live Overlay 1 Link Duy Nhất cho TikTok LIVE Studio & OBS Studio
   // (Tính toán ngay từ đầu component — vì đây là cửa sổ overlay riêng biệt, KHÔNG phải Dashboard,
   // nên các effect đồng bộ trạng thái/tài khoản chỉ dành cho Dashboard phải bỏ qua nó)

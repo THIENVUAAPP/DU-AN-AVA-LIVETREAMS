@@ -55,11 +55,87 @@ export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack 
 
 // Helper đọc cấu hình sự kiện đã lưu từ WorkspaceTacVu
 function getSavedEventConfigs() {
+  const defaultEventConfigs = {
+    checkout: {
+      priority: 100,
+      active: true,
+      useVoice: true,
+      muteSourceVideo: true,
+      videoCategory: 'checkout',
+      useAi: true,
+      checkoutProducts: [
+        {
+          id: 1,
+          active: true,
+          productName: 'aidol',
+          keywords: 'aidol;phần mềm;giá;liên hệ;bao nhiêu',
+          videoFolder: 'bình luận',
+          supportVideoFolder: '',
+          useAi: true,
+          useTTS: true,
+          ttsVoiceRole: 'idol',
+          muteSourceVideo: true,
+          aiPrompt: 'Trong vai là một nhân viên sale chuyên nghiệp hãy đọc bình luận và đem ra câu trả lời để chốt đơn, giá phần mềm là 3 triệu rưỡi/1 năm, hoặc gói dùng thử là 500000 đồng trên 1 tháng. Chốt sale hoặc cần tư vấn thêm thì hãy liên hệ với đội ngũ admin'
+        }
+      ]
+    },
+    comment: {
+      priority: 50,
+      active: true,
+      useVoice: true,
+      muteSourceVideo: true,
+      videoCategory: 'comment',
+      useAi: true,
+      aiPrompt: '### NHIỆM VỤ: Trả lời bình luận của người dùng tên {user} ngắn gọn, thông minh, lịch sự và thu hút.',
+      sampleAnswers: 'Cảm ơn bạn {user} đã bình luận nhé!\nMình đã nhận được bình luận của {user} rồi ạ.',
+      assistantPrompt: 'A, có bạn {user} vừa mới bình luận là: {comment}'
+    },
+    gift: {
+      priority: 90,
+      active: true,
+      useVoice: true,
+      muteSourceVideo: false,
+      videoCategory: 'gift',
+      useAi: true,
+      aiPrompt: 'Bạn là streamer AI. Hãy viết lời cảm ơn sáng tạo và chân thành tới {user} vì đã tặng {gift_name}.'
+    },
+    follow: {
+      priority: 70,
+      active: true,
+      useVoice: true,
+      muteSourceVideo: true,
+      videoCategory: 'follow',
+      useAi: true,
+      aiPrompt: 'Hãy nói một câu cảm ơn bạn {user} đã theo dõi kênh.',
+      sampleAnswers: 'A, cảm ơn bạn {user} đã theo dõi mình. Yêu bạn!\nCảm ơn {user} đã follow kênh của mình nhé!'
+    },
+    welcome: {
+      priority: 60,
+      active: true,
+      useVoice: false,
+      muteSourceVideo: false,
+      videoCategory: 'join',
+      sampleAnswers: 'Chào mừng bạn {user} và {count} người mới đã đến với livestream!\nXin chào {user} và mọi người mới vào xem nhé! Chúc mọi người xem live vui vẻ.'
+    },
+    apology: {
+      priority: 20,
+      active: true,
+      useVoice: true,
+      muteSourceVideo: true,
+      sampleAnswers: 'Cả nhà ơi, đôi khi bình luận đông quá em không chào hết được, có lỡ bỏ sót ai thì mọi người thông cảm cho em nhé. Yêu cả nhà nhiều!'
+    }
+  };
+
   try {
     const raw = localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup');
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        return { ...defaultEventConfigs, ...parsed };
+      }
+    }
   } catch (e) {}
-  return null;
+  return defaultEventConfigs;
 }
 
 function getRandomSample(sampleAnswers, fallback = '') {

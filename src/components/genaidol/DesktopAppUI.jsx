@@ -39,8 +39,13 @@ import { syncMasterLiveState } from '../../lib/masterLiveSync';
 import { saveCharacterToIDB, loadAllCharactersFromIDB, deleteCharacterFromIDB } from '../../utils/idbHelper';
 import { SUPPORTED_LANGUAGES, getCurrentLanguage, setCurrentLanguage, t } from '../../utils/i18n';
 import UpdateNotificationModal, { APP_VERSION } from './UpdateNotificationModal';
+import { bootstrapDefaultPresets } from '../../utils/defaultPresetsBootstrap';
 
 export default function DesktopAppUI() {
+  useEffect(() => {
+    bootstrapDefaultPresets();
+  }, []);
+
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const saved = localStorage.getItem('avalive_current_user');
@@ -1286,6 +1291,12 @@ export default function DesktopAppUI() {
     } else if (isProcessingEvent && activeVideoItem && activeVideoItem.mediaUrl) {
       currentMedia = activeVideoItem.mediaUrl;
       isVid = activeVideoItem.type === 'video' || (typeof currentMedia === 'string' && currentMedia.endsWith('.mp4'));
+    }
+
+    // Đảm bảo không bao giờ gửi URL rỗng hoặc blob URL sang TikTok Studio / OBS
+    if (!currentMedia || currentMedia.startsWith('blob:')) {
+      currentMedia = '/demo_dancer.mp4';
+      isVid = true;
     }
 
     const masterPayload = {

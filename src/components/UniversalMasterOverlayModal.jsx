@@ -26,19 +26,19 @@ import {
  */
 export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
   const [copiedId, setCopiedId] = useState(null);
-  const [linkEnv, setLinkEnv] = useState('local'); // 'local' | 'cloud'
+  const [linkEnv, setLinkEnv] = useState('localhost'); // 'localhost' | 'ip' | 'cloud'
 
   if (!isOpen) return null;
 
   const currentPort = typeof window !== 'undefined' && window.location.port ? window.location.port : '3001';
-  // Dùng 127.0.0.1.nip.io để TikTok LIVE Studio nhận diện là Domain FQDN hợp lệ và không báo đỏ 'Hãy nhập URL chính xác'
-  const localBase = `http://127.0.0.1.nip.io:${currentPort}`;
+  const localhostBase = `http://localhost:${currentPort}`;
+  const localIpBase = `http://127.0.0.1:${currentPort}`;
   const cloudBase = 'https://avalivepro.vercel.app';
-  const activeBase = linkEnv === 'local' ? localBase : cloudBase;
+  const activeBase = linkEnv === 'localhost' ? localhostBase : linkEnv === 'ip' ? localIpBase : cloudBase;
 
   // Lấy backendUrl hiện tại của Dashboard để truyền cho Overlay (đảm bảo đồng bộ 100% kể cả khi khác origin)
   const currentBackendUrl = typeof window !== 'undefined' ? (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001' ? `${window.location.protocol}//${window.location.hostname}:3001` : window.location.origin) : 'http://localhost:3001';
-  const backendParam = `&backend=${encodeURIComponent(currentBackendUrl)}`;
+  const backendParam = linkEnv === 'cloud' ? `&backend=${encodeURIComponent(currentBackendUrl)}` : '';
 
   // Danh sách các dự án với đường link riêng biệt 100%
   const projects = [
@@ -119,27 +119,39 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
         <div className="flex items-center justify-between gap-2 p-1.5 bg-black/70 rounded-2xl border border-white/10 shrink-0">
           <div className="flex items-center gap-1.5 flex-1">
             <button
-              onClick={() => setLinkEnv('local')}
-              className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                linkEnv === 'local'
+              onClick={() => setLinkEnv('localhost')}
+              className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                linkEnv === 'localhost'
                   ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-950/50'
                   : 'text-gray-400 hover:text-white bg-transparent'
               }`}
             >
               <Monitor className="w-3.5 h-3.5" />
-              <span>Link Chạy Máy Local (127.0.0.1)</span>
+              <span>Link Localhost (Khuyên Dùng)</span>
+            </button>
+
+            <button
+              onClick={() => setLinkEnv('ip')}
+              className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                linkEnv === 'ip'
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-950/50'
+                  : 'text-gray-400 hover:text-white bg-transparent'
+              }`}
+            >
+              <Monitor className="w-3.5 h-3.5" />
+              <span>Link IP (127.0.0.1)</span>
             </button>
 
             <button
               onClick={() => setLinkEnv('cloud')}
-              className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 linkEnv === 'cloud'
                   ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-950/50'
                   : 'text-gray-400 hover:text-white bg-transparent'
               }`}
             >
               <Globe className="w-3.5 h-3.5" />
-              <span>Link Cloud Vercel (Online)</span>
+              <span>Link Cloud (Online)</span>
             </button>
           </div>
         </div>

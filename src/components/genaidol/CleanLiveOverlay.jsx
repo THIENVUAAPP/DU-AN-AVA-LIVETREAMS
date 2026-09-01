@@ -645,7 +645,7 @@ export default function CleanLiveOverlay() {
     }
 
     // 3. Fallback video AI Idol mặc định có sẵn (đảm bảo luôn luôn có video khi mở trên TikTok Studio / OBS)
-    if (!candidateUrl) {
+    if (!candidateUrl || candidateUrl.startsWith('blob:')) {
       candidateUrl = '/demo_dancer.mp4';
       isVideo = true;
     }
@@ -665,14 +665,9 @@ export default function CleanLiveOverlay() {
         candidateUrl = `${backendBase}${pathPart}`;
       }
 
-      // Khôi phục Blob URL từ IndexedDB nếu là video tùy chỉnh
-      if (candidateUrl.startsWith('blob:')) {
-        const match = localDbItems.find(i => i.id === masterState.selectedCharacter);
-        if (match && match.fileBlob) {
-          try {
-            candidateUrl = URL.createObjectURL(match.fileBlob);
-          } catch (e) {}
-        }
+      // Đảm bảo video demo có thể phát được cả trên Cloud Vercel
+      if (candidateUrl === '/demo_dancer.mp4' && typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
+        candidateUrl = 'https://raw.githubusercontent.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/main/public/demo_dancer.mp4';
       }
     }
 
@@ -833,6 +828,10 @@ export default function CleanLiveOverlay() {
           }}
           onError={(e) => {
             console.warn('[CleanLiveOverlay] Video playback notice:', e);
+            if (e.target && !e.target.src.includes('demo_dancer.mp4')) {
+              e.target.src = '/demo_dancer.mp4';
+              e.target.play().catch(() => {});
+            }
           }}
           className="w-full h-full select-none absolute inset-0"
           style={{ 

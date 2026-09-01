@@ -1048,7 +1048,8 @@ app.get('/api/live-state', (req, res) => {
 app.post('/api/live-state', (req, res) => {
   if (req.body) {
     let payload = { ...req.body };
-    if (payload.mediaUrl && payload.mediaUrl.startsWith('blob:')) {
+    if (!payload.mediaUrl || payload.mediaUrl.startsWith('blob:')) {
+      let foundUpload = false;
       try {
         if (fs.existsSync(uploadsDir)) {
           const files = fs.readdirSync(uploadsDir).filter(f => !f.startsWith('.') && (f.endsWith('.mp4') || f.endsWith('.webm') || f.endsWith('.mov') || f.endsWith('.jpg') || f.endsWith('.png')));
@@ -1056,9 +1057,14 @@ app.post('/api/live-state', (req, res) => {
             const sorted = files.map(f => ({ f, mtime: fs.statSync(path.join(uploadsDir, f)).mtimeMs })).sort((a, b) => b.mtime - a.mtime);
             payload.mediaUrl = `/uploads/${sorted[0].f}`;
             payload.isVideo = sorted[0].f.endsWith('.mp4') || sorted[0].f.endsWith('.webm') || sorted[0].f.endsWith('.mov');
+            foundUpload = true;
           }
         }
       } catch (e) {}
+      if (!foundUpload) {
+        payload.mediaUrl = '/demo_dancer.mp4';
+        payload.isVideo = true;
+      }
     }
     currentMasterLiveState = { ...currentMasterLiveState, ...payload, updatedAt: Date.now() };
     io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);

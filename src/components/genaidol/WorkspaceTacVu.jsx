@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   CheckSquare, MessageCircle, Plus, Gift, Clock, Megaphone, 
-  Hand, ShoppingCart, Share, Sparkles, Mic, Heart, Play, HelpCircle, ChevronDown
+  Hand, ShoppingCart, Share, Sparkles, Mic, Heart, Play, HelpCircle, ChevronDown,
+  Download, Upload
 } from 'lucide-react';
 import WorkspaceKeywordPanel from './WorkspaceKeywordPanel';
 
@@ -226,6 +227,41 @@ export default function WorkspaceTacVu() {
     } catch (e) {
       alert('Lỗi lưu cấu hình: ' + e.message);
     }
+  };
+
+  const handleExportEvents = () => {
+    try {
+      const blob = new Blob([JSON.stringify(eventConfigs, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `AvaLive_CauHinh_SuKien_${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      alert('Lỗi xuất file: ' + e.message);
+    }
+  };
+
+  const handleImportEvents = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const imported = JSON.parse(event.target?.result);
+        if (imported && typeof imported === 'object') {
+          setEventConfigs(imported);
+          localStorage.setItem('aidol_event_configs', JSON.stringify(imported));
+          localStorage.setItem('aidol_event_configs_backup', JSON.stringify(imported));
+          alert('✅ Đã nạp thành công toàn bộ cấu hình sự kiện mới!');
+        }
+      } catch (err) {
+        alert('File không hợp lệ: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   };
 
   const updateEventConfig = (id, partial) => {
@@ -1151,14 +1187,28 @@ const FieldLabel = ({ icon, text, helpKey, customHelpText, minW = "min-w-[220px]
 
         </div>
 
-        {/* Footer Save Button */}
-        <div className="mt-3">
+        {/* Footer Save & Export/Import Buttons */}
+        <div className="mt-3 flex flex-col sm:flex-row gap-2">
           <button 
             onClick={handleSave}
-            className="w-full py-3 bg-[#4caf50] hover:bg-[#43a047] text-white font-bold rounded shadow transition-colors text-[14px] uppercase tracking-wide flex justify-center items-center gap-2"
+            className="flex-1 py-3 bg-[#4caf50] hover:bg-[#43a047] text-white font-bold rounded-xl shadow transition-colors text-[14px] uppercase tracking-wide flex justify-center items-center gap-2 cursor-pointer"
           >
-            <CheckSquare size={18} /> Lưu thay đổi cho sự kiện này
+            <CheckSquare size={18} /> Lưu cấu hình sự kiện
           </button>
+          <button 
+            onClick={handleExportEvents}
+            title="Lưu cấu hình sự kiện thành file mới để dùng lại bất kỳ lúc nào"
+            className="px-4 py-3 bg-cyan-600/30 hover:bg-cyan-600/50 text-cyan-200 border border-cyan-500/40 font-bold rounded-xl shadow transition-all text-xs flex justify-center items-center gap-1.5 cursor-pointer"
+          >
+            <Download size={16} /> Xuất File Mới
+          </button>
+          <label 
+            title="Nạp file cấu hình sự kiện đã lưu trước đó"
+            className="px-4 py-3 bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 font-bold rounded-xl shadow transition-all text-xs flex justify-center items-center gap-1.5 cursor-pointer"
+          >
+            <Upload size={16} /> Nạp File
+            <input type="file" accept=".json" className="hidden" onChange={handleImportEvents} />
+          </label>
         </div>
 
       </div>

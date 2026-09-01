@@ -14,6 +14,7 @@ import {
 } from '../../utils/voiceSyncService';
 import { askGeminiLiveAi } from '../../lib/geminiClient';
 import { COUNTRY_FILTERS } from './game/GameVoiceConfigPanel';
+import { DEFAULT_BRAIN_PACKS } from '../../utils/defaultPresetsBootstrap';
 
 // ──────────────────────────────────────────────
 // AIDOL_DB (dùng lại kho AIDOL của tôi)
@@ -179,6 +180,67 @@ export default function AIDOLLiveConsole() {
     saveVoiceConfig(newConfig);
   };
 
+  const handleExportBrainAndScripts = () => {
+    try {
+      const data = {
+        version: '2.2.0',
+        exportedAt: new Date().toISOString(),
+        brains: allBrains,
+        prompts: {
+          sales: localStorage.getItem('aidol_prompt_sales') || DEFAULT_BRAIN_PACKS[0].prompt,
+          talk: localStorage.getItem('aidol_prompt_talk') || DEFAULT_BRAIN_PACKS[1].prompt,
+          dance: localStorage.getItem('aidol_prompt_dance') || DEFAULT_BRAIN_PACKS[2].prompt,
+          sing: localStorage.getItem('aidol_prompt_sing') || DEFAULT_BRAIN_PACKS[3].prompt
+        },
+        presetScripts: JSON.parse(localStorage.getItem('aidol_custom_preset_scripts') || '[]'),
+        eventConfigs: JSON.parse(localStorage.getItem('aidol_event_configs') || '{}'),
+        voiceConfig: JSON.parse(localStorage.getItem('ava_live_voice_config_v2') || '{}')
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `AvaLive_KichBan_BoNao_${activeBrainPack}_${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      alert('Lỗi xuất file: ' + e.message);
+    }
+  };
+
+  const handleImportBrainAndScripts = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const imported = JSON.parse(event.target?.result);
+        if (imported) {
+          if (imported.prompts) {
+            Object.keys(imported.prompts).forEach(k => {
+              localStorage.setItem(`aidol_prompt_${k}`, imported.prompts[k]);
+            });
+          }
+          if (imported.presetScripts) {
+            localStorage.setItem('aidol_custom_preset_scripts', JSON.stringify(imported.presetScripts));
+          }
+          if (imported.eventConfigs) {
+            localStorage.setItem('aidol_event_configs', JSON.stringify(imported.eventConfigs));
+          }
+          if (imported.voiceConfig) {
+            localStorage.setItem('ava_live_voice_config_v2', JSON.stringify(imported.voiceConfig));
+          }
+          alert('✅ Đã nạp thành công bộ kịch bản & cấu hình mới!');
+          window.location.reload();
+        }
+      } catch (err) {
+        alert('File không hợp lệ: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   const handlePreviewRoleVoice = (voice, sampleText = null, configOverride = null) => {
     if (previewingVoiceId === voice.id) {
       stopVoiceAudio();
@@ -219,7 +281,7 @@ export default function AIDOLLiveConsole() {
           payload,
           viewerHistory,
           brainPack: activeBrainPack,
-          systemPrompt: localStorage.getItem(`aidol_prompt_${activeBrainPack}`) || ''
+          systemPrompt: localStorage.getItem(`aidol_prompt_${activeBrainPack}`) || (DEFAULT_BRAIN_PACKS.find(b => b.id === activeBrainPack)?.prompt || '')
         })
       });
       const data = await res.json();
@@ -1262,9 +1324,37 @@ export default function AIDOLLiveConsole() {
                 </div>
 
                 {/* ── CHỌN BRAIN PACK ── */}
-                <div className="bg-[#1a1b26] border border-slate-700 rounded-xl p-4">
-                  <div className="text-xs font-black text-white mb-3">🧠 Bộ não Chủ đề (Brain Pack)</div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div className="bg-[#1a1b26] border border-slate-700 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-black text-white flex items-center gap-1.5">
+                      <span>🧠 Bộ Não AI & Kịch Bản Mẫu</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleExportBrainAndScripts}
+                        title="Xuất file kịch bản & bộ não để lưu sang file mới hoặc chuyển sang máy khác"
+                        className="px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer"
+                      >
+                        <Download className="w-3 h-3" />
+                        <span>Xuất File Mới</span>
+                      </button>
+                      <label
+                        title="Mở file kịch bản & bộ não đã lưu (.json) vào phần mềm"
+                        className="px-2.5 py-1 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-all"
+                      >
+                        <Upload className="w-3 h-3" />
+                        <span>Nạp File</span>
+                        <input
+                          type="file"
+                          accept=".json"
+                          className="hidden"
+                          onChange={handleImportBrainAndScripts}
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {allBrains.map(pack => (
                       <button key={pack.id} onClick={() => setActiveBrainPack(pack.id)}
                         className={`flex items-center gap-2 px-3 py-2 rounded-lg text-[10px] font-bold transition-all border ${activeBrainPack === pack.id ? 'bg-[#00FF66]/20 text-[#00FF66] border-[#00FF66]/50 shadow-glow-green' : 'bg-[#0D0F1A] text-slate-400 border-slate-700 hover:text-white'}`}>
@@ -1272,6 +1362,18 @@ export default function AIDOLLiveConsole() {
                         {pack.label}
                       </button>
                     ))}
+                  </div>
+
+                  {/* Hiển thị tóm tắt kịch bản của bộ não đang chọn */}
+                  <div className="p-2.5 rounded-lg bg-black/40 border border-white/5 text-[11px] text-gray-300 flex items-start gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-yellow-400 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold text-white">Đang áp dụng: </span>
+                      <span>{DEFAULT_BRAIN_PACKS.find(b => b.id === activeBrainPack)?.name || 'Bộ não chuyên gia'}</span>
+                      <p className="text-[10px] text-gray-400 mt-0.5">
+                        {DEFAULT_BRAIN_PACKS.find(b => b.id === activeBrainPack)?.desc || 'Tự động phản hồi thông minh theo kịch bản chuẩn của hệ thống.'}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
