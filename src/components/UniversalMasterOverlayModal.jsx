@@ -28,7 +28,7 @@ import {
  * - Đầy đủ các link dự án độc lập (/idol, /bando, /battle, /studio)
  * - Đa kênh kết nối: IP 127.0.0.1 (không lỗi DNS), Cloud Vercel, Domain nip.io, Localhost
  */
-export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
+export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUser, onOpenLogin }) {
   const [copiedId, setCopiedId] = useState(null);
 
   if (!isOpen) return null;
@@ -124,14 +124,42 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
           </div>
         </div>
 
-        {/* Danh sách các Dự án Độc Lập */}
-        <div className="space-y-2.5 overflow-y-auto flex-1 pr-1 custom-scrollbar">
-          <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5 px-1">
-            <Layers className="w-3.5 h-3.5 text-gray-500" />
-            <span>
-              SAO CHÉP ĐƯỜNG LINK TƯƠNG ỨNG VÀO TRÌNH DUYỆT TIKTOK STUDIO:
-            </span>
+        {/* NẾU CHƯA KẾT NỐI TÀI KHOẢN GOOGLE/GMAIL: HIỆN KHÓA BẢO VỆ */}
+        {!currentUser ? (
+          <div className="p-8 rounded-3xl bg-gradient-to-br from-[#121528] via-[#0f111f] to-[#181a32] border border-cyan-500/40 text-center space-y-5 shadow-2xl my-auto">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 via-red-500 to-pink-500 mx-auto flex items-center justify-center p-3 shadow-glow-cyan border-2 border-white/30 animate-bounce">
+              <ShieldCheck className="w-8 h-8 text-white" />
+            </div>
+
+            <div className="space-y-1.5">
+              <h3 className="text-lg font-black text-white uppercase tracking-wider">
+                🔒 YÊU CẦU KẾT NỐI TÀI KHOẢN GOOGLE / GMAIL
+              </h3>
+              <p className="text-xs text-gray-300 max-w-md mx-auto leading-relaxed">
+                Để mở khóa và sao chép danh sách đường link kết nối <b>TikTok LIVE Studio & OBS Studio</b>, bạn vui lòng kết nối tài khoản Google hoặc Gmail của bạn vào phần mềm.
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                if (onOpenLogin) onOpenLogin();
+                onClose();
+              }}
+              className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-black text-xs shadow-xl shadow-cyan-500/30 flex items-center justify-center gap-2.5 mx-auto transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              <Zap className="w-4 h-4 text-yellow-300 animate-pulse" />
+              <span>KẾT NỐI GOOGLE / GMAIL ĐỂ MỞ KHÓA NGAY</span>
+            </button>
           </div>
+        ) : (
+          /* Danh sách các Dự án Độc Lập */
+          <div className="space-y-2.5 overflow-y-auto flex-1 pr-1 custom-scrollbar">
+            <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5 px-1">
+              <Layers className="w-3.5 h-3.5 text-gray-500" />
+              <span>
+                SAO CHÉP ĐƯỜNG LINK TƯƠNG ỨNG VÀO TRÌNH DUYỆT TIKTOK STUDIO:
+              </span>
+            </div>
 
           {projects.map((proj) => {
             const Icon = proj.icon;
@@ -207,6 +235,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
             );
           })}
         </div>
+        )}
 
         {/* Hướng dẫn chi tiết cho OBS Studio & TikTok Live Studio */}
         <div className="p-3 rounded-2xl bg-black/70 border border-white/15 text-xs shrink-0 space-y-1.5">

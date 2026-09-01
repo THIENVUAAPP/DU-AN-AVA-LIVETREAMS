@@ -57,6 +57,27 @@ class ErrorBoundary extends Component {
     return this.props.children;
   }
 }
+// 🧹 TỰ ĐỘNG DỌN DẸP DỮ LIỆU CŨ & CACHE KHI CẬP NHẬT PHIÊN BẢN MỚI
+const CURRENT_APP_VERSION = '1.0.0';
+try {
+  const savedVer = localStorage.getItem('avalive_installed_version');
+  if (savedVer && savedVer !== CURRENT_APP_VERSION) {
+    console.log(`[AvaLive] Nâng cấp từ ${savedVer} lên ${CURRENT_APP_VERSION}. Đang dọn dẹp cache cũ...`);
+    const preserved = {};
+    ['avalive_real_user', 'avalive_current_user', 'supabase.auth.token'].forEach(k => {
+      const v = localStorage.getItem(k);
+      if (v) preserved[k] = v;
+    });
+    localStorage.clear();
+    Object.keys(preserved).forEach(k => localStorage.setItem(k, preserved[k]));
+    localStorage.setItem('avalive_installed_version', CURRENT_APP_VERSION);
+    if ('caches' in window) {
+      caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+    }
+  } else if (!savedVer) {
+    localStorage.setItem('avalive_installed_version', CURRENT_APP_VERSION);
+  }
+} catch (e) {}
 
 const pathname = typeof window !== 'undefined' ? window.location.pathname.toLowerCase() : '';
 const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();

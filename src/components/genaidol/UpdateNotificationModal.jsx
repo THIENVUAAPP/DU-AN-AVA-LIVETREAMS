@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star } from 'lucide-react';
 
-export const APP_VERSION = '2.2.1';
+export const APP_VERSION = '1.0.0';
 export const UPDATE_NOTES = [
-  "⭐ Khởi chạy 1-Click độc quyền: Đóng gói duy nhất 1 file AvaLive_Studio.exe siêu mượt, loại bỏ toàn bộ file thừa.",
-  "🔗 Đăng nhập 1-Chạm bằng Google: Kết nối tức thì tài khoản Google để đồng bộ Gói bản quyền VIP PRO, Token AI & Giờ Live từ Supabase Cloud.",
-  "📐 Chuẩn hóa tuyệt đối 9:16 (1080x1920): Tối ưu 100% cho TikTok LIVE Studio & OBS Studio, không bao giờ bị lệch khung hình.",
-  "🚀 Nâng cấp hiệu năng v2.2.1: Tự động đồng bộ và hiển thị thông báo bản cập nhật mới nhất cho người dùng."
+  "⭐ Khởi chạy 1-Click độc quyền: Đóng gói duy nhất 1 file AvaLive_Studio siêu mượt, tối ưu hoá tối đa hiệu năng.",
+  "🔗 Đăng nhập 1-Chạm bằng Google / Gmail: Kết nối tài khoản Google để mở khóa Danh Sách Đường Link Live và đồng bộ Supabase Cloud.",
+  "📐 Chuẩn hóa tuyệt đối 9:16 (1080x1920): Tối ưu 100% cho TikTok LIVE Studio & OBS Studio, đồng bộ Play/Pause thời gian thực.",
+  "🚀 Phiên bản chuẩn v1.0.0: Nâng cấp toàn diện cơ chế giao tiếp luồng sâu đa nền tảng không độ trễ."
 ];
 
 export default function UpdateNotificationModal() {
