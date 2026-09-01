@@ -15,6 +15,9 @@ import {
   Layers,
   Tv,
   Globe,
+  Globe2,
+  MonitorPlay,
+  Map,
   Monitor,
   ShieldCheck
 } from 'lucide-react';
@@ -139,10 +142,10 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
           {/* 1 Tab Chọn Kiểu Kết Nối */}
           <div className="grid grid-cols-1 gap-1.5 p-1 bg-black/70 rounded-xl border border-white/10 text-xs">
             <button
-              className={`flex items-center justify-center gap-1.5 py-2 rounded-lg transition-all bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)] font-black`}
+              className={`flex items-center justify-center gap-2 py-2.5 rounded-lg transition-all bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600 text-white shadow-[0_0_15px_rgba(99,102,241,0.5)] font-black uppercase tracking-wider`}
             >
-              <Globe2 className="w-3 h-3" />
-              <span>1. Link Domain nip.io (Khuyên dùng)</span>
+              <Globe2 className="w-4 h-4" />
+              <span>Máy Chủ Liên Kết Ảo Đa Nền Tảng (Siêu Tốc)</span>
             </button>
           </div>
 
