@@ -49,8 +49,8 @@
     </div>
 
     <div class="btn-group">
-      <a href="http://localhost:3001" id="launchLocalBtn" target="_blank" class="btn btn-primary">
-        💻 Khởi Chạy Local Studio (http://localhost:3001)
+      <a href="http://127.0.0.1.nip.io:3001" id="launchLocalBtn" target="_blank" class="btn btn-primary">
+        💻 Khởi Chạy Local Studio (http://127.0.0.1.nip.io:3001)
       </a>
       <a href="https://avalivepro.vercel.app" target="_blank" class="btn btn-secondary">
         🌐 Mở Phiên Bản Cloud Trực Tuyến
@@ -82,9 +82,9 @@
 
     // Tự động kiểm tra và chuyển hướng đến localhost:3001 khi máy chủ chạy
     setInterval(function() {
-      fetch('http://localhost:3001/api/health')
+      fetch('http://127.0.0.1.nip.io:3001/api/health')
         .then(function(res) {
-          if (res.ok) window.location.href = 'http://localhost:3001';
+          if (res.ok) window.location.href = 'http://127.0.0.1.nip.io:3001';
         })
         .catch(function() {});
     }, 1500);

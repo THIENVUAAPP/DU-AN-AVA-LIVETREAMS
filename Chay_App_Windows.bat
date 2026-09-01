@@ -51,11 +51,11 @@ echo [2/2] Đang mở giao diện Phần mềm AvaLive Studio...
 echo.
 echo =================================================================
 echo   ✨ PHẦN MỀM ĐÃ SẴN SÀNG HOẠT ĐỘNG!
-echo   🌐 Địa chỉ máy chủ: http://localhost:3001
+echo   🌐 Địa chỉ máy chủ: http://127.0.0.1.nip.io:3001
 echo   💡 Vui lòng KHÔNG tắt cửa sổ màu đen này khi đang livestream.
 echo =================================================================
 
-set "APP_URL=http://localhost:3001"
+set "APP_URL=http://127.0.0.1.nip.io:3001"
 
 rem 5. Mở ứng dụng ở chế độ Cửa Sổ Desktop Native App
 if exist "%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe" (

@@ -61,7 +61,7 @@ export default function CleanLiveOverlay() {
   });
 
   const [liveEvent, setLiveEvent] = useState(null);
-  const [isAudioMuted, setIsAudioMuted] = useState(true);
+  const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [localDbItems, setLocalDbItems] = useState([]);
   const [hasStudioFrame, setHasStudioFrame] = useState(false);
   const studioImageRef = useRef(null);
