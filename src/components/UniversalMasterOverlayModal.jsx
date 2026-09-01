@@ -34,7 +34,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   const currentPort =
-    typeof window !== "undefined" && window.location.port
+    typeof window !== "undefined" && window.location.port && window.location.port !== "5173" && window.location.port !== "3000"
       ? window.location.port
       : "3001";
   const currentProtocol =

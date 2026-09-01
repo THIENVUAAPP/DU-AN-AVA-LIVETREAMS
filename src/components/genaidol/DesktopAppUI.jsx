@@ -1412,16 +1412,12 @@ export default function DesktopAppUI() {
     }
 
     bandoAudio.unlock();
-    const cleanId = extractTikTokUsername(tiktokId);
-    const cleanVideoId = extractTikTokUsername(videoTiktokId);
+    let cleanId = extractTikTokUsername(tiktokId);
+    let cleanVideoId = extractTikTokUsername(videoTiktokId);
 
     if (!cleanId && !cleanVideoId) {
-      setToast({
-        type: 'error',
-        message: 'LỖI KẾT NỐI: Bạn phải nhập ID Kênh Lấy Bình Luận hoặc Video!'
-      });
-      if (isMasterLiveRunning) setIsMasterLiveRunning(false);
-      return;
+      cleanId = 'avalive_studio';
+      setTiktokId('avalive_studio');
     }
 
     setIsConnecting(true);
@@ -1696,90 +1692,109 @@ export default function DesktopAppUI() {
     if (file) {
       const charName = file.name.replace(/\.[^/.]+$/, "") || "Idol Live AI Pro";
       const isVideo = file.type.startsWith('video/') || /\.(mp4|webm|mov|mkv|avi)$/i.test(file.name);
-      let url = URL.createObjectURL(file);
+      const localUrl = URL.createObjectURL(file);
+      const newCharId = `custom_${Date.now()}`;
       
       if (isVideo) {
-        // Tải video lên backend nội bộ để tạo link HTTP chuẩn (chống lỗi kết nối OBS / TikTok Live Studio)
-        try {
-          const formData = new FormData();
-          formData.append('file', file);
-          
-          const currentPort = typeof window !== 'undefined' && window.location.port ? window.location.port : '3001';
-          const currentHost = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : '127.0.0.1';
-          const currentProto = typeof window !== 'undefined' && window.location.protocol ? window.location.protocol : 'http:';
-
-          const candidateEndpoints = [
-            '/api/upload-media',
-            `${currentProto}//${currentHost}:${currentPort}/api/upload-media`,
-            `${currentProto}//${currentHost}:3001/api/upload-media`,
-            'http://127.0.0.1.nip.io:3001/api/upload-media',
-            'http://127.0.0.1:3001/api/upload-media',
-            'http://localhost:3001/api/upload-media'
-          ];
-
-          for (const ep of candidateEndpoints) {
-            try {
-              const res = await fetch(ep, {
-                method: 'POST',
-                body: formData
-              });
-              if (res.ok) {
-                const data = await res.json();
-                if (data && data.url) {
-                  let serverUrl = data.url;
-                  if (serverUrl.startsWith('http://') || serverUrl.startsWith('https://')) {
-                    url = serverUrl;
-                  } else {
-                    const baseDomain = currentHost === 'localhost' || currentHost === '127.0.0.1' ? 'http://127.0.0.1.nip.io:3001' : `${currentProto}//${currentHost}:${currentPort === '5173' ? '3001' : currentPort}`;
-                    url = `${baseDomain}${serverUrl.startsWith('/') ? '' : '/'}${serverUrl}`;
-                  }
-                  break;
-                }
-              }
-            } catch (err) {}
-          }
-        } catch (error) {
-          console.warn("Upload fallback notice:", error);
-        }
-
-        // Video: Lưu trực tiếp & Kích hoạt tức thì
+        // ⚡ 1. HIỂN THỊ TỨC THÌ 0MS TRÊN MÀN HÌNH & GIAO DIỆN (KHÔNG CHỜ ĐỢI)
         const newChar = {
-          id: `custom_${Date.now()}`,
+          id: newCharId,
           name: charName,
-          url,
+          url: localUrl,
           type: 'video'
         };
         setCustomCharacters(prev => [...prev, newChar]);
-        setSelectedCharacter(newChar.id);
+        setSelectedCharacter(newCharId);
         try {
-          localStorage.setItem('avalive_selected_char', newChar.id);
+          localStorage.setItem('avalive_selected_char', newCharId);
           const savedCustom = localStorage.getItem('avalive_custom_characters');
           const list = savedCustom ? JSON.parse(savedCustom) : [];
           list.push(newChar);
           localStorage.setItem('avalive_custom_characters', JSON.stringify(list));
         } catch (e) {}
-        await saveCharacterToIDB({
-          id: newChar.id,
-          name: newChar.name,
+
+        saveCharacterToIDB({
+          id: newCharId,
+          name: charName,
           type: 'video',
           fileData: file,
-          mediaUrl: url
-        });
+          mediaUrl: localUrl
+        }).catch(() => {});
 
         // 🚀 BẮN PHÁT SÓNG REALTIME TỨC THÌ ĐẾN TIKTOK LIVE STUDIO / OBS
         syncMasterLiveState({
           stage: 'idol',
-          selectedCharacter: newChar.id,
-          characterName: newChar.name,
-          mediaUrl: url,
+          selectedCharacter: newCharId,
+          characterName: charName,
+          mediaUrl: localUrl,
           isVideo: true,
           videoPlaybackEvent: 'play',
           isPlaying: true,
           aspectRatio: globalAspectRatio || '9:16'
         }, socketRef.current);
+
+        // 🔄 2. CHẠY UPLOAD LÊN MÁY CHỦ TRONG NỀN ĐỂ LẤY LINK HTTP VĨNH VIỄN
+        (async () => {
+          try {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const currentPort = typeof window !== 'undefined' && window.location.port ? window.location.port : '3001';
+            const currentHost = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : '127.0.0.1';
+            const currentProto = typeof window !== 'undefined' && window.location.protocol ? window.location.protocol : 'http:';
+
+            const candidateEndpoints = [
+              '/api/upload-media',
+              `${currentProto}//${currentHost}:${currentPort}/api/upload-media`,
+              `${currentProto}//${currentHost}:3001/api/upload-media`,
+              'http://127.0.0.1.nip.io:3001/api/upload-media',
+              'http://127.0.0.1:3001/api/upload-media',
+              'http://localhost:3001/api/upload-media'
+            ];
+
+            for (const ep of candidateEndpoints) {
+              try {
+                const res = await fetch(ep, {
+                  method: 'POST',
+                  body: formData
+                });
+                if (res.ok) {
+                  const data = await res.json();
+                  if (data && data.url) {
+                    let serverUrl = data.url;
+                    let fullServerUrl = serverUrl;
+                    if (!serverUrl.startsWith('http://') && !serverUrl.startsWith('https://')) {
+                      const baseDomain = currentHost === 'localhost' || currentHost === '127.0.0.1' ? 'http://127.0.0.1.nip.io:3001' : `${currentProto}//${currentHost}:${currentPort === '5173' ? '3001' : currentPort}`;
+                      fullServerUrl = `${baseDomain}${serverUrl.startsWith('/') ? '' : '/'}${serverUrl}`;
+                    }
+
+                    // Cập nhật link HTTP vĩnh viễn cho nhân vật
+                    setCustomCharacters(prev => prev.map(c => c.id === newCharId ? { ...c, url: fullServerUrl } : c));
+                    saveCharacterToIDB({
+                      id: newCharId,
+                      name: charName,
+                      type: 'video',
+                      fileData: file,
+                      mediaUrl: fullServerUrl
+                    }).catch(() => {});
+
+                    syncMasterLiveState({
+                      mediaUrl: fullServerUrl,
+                      videoPlaybackEvent: 'play',
+                      isPlaying: true
+                    }, socketRef.current);
+                    break;
+                  }
+                }
+              } catch (err) {}
+            }
+          } catch (error) {
+            console.warn("Background upload error:", error);
+          }
+        })();
       } else {
         // Ảnh: Mở Modal AI Xoá Phông & Làm Đẹp Siêu Nét 4K
-        setBeautyModalImage(url);
+        setBeautyModalImage(localUrl);
         setBeautyModalCharName(charName);
         setIsBeautyModalOpen(true);
       }

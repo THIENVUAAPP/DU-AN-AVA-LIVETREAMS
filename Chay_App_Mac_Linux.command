@@ -56,7 +56,7 @@ if [ -f "certs/dev-cert.pem" ]; then
 fi
 
 # 4. Mở trình duyệt web tự động
-(sleep 1 && (open "https://127.0.0.1.nip.io:3001" 2>/dev/null || xdg-open "https://127.0.0.1.nip.io:3001" 2>/dev/null || open "https://avalivepro.vercel.app")) &
+(sleep 1 && (open "http://127.0.0.1.nip.io:3001" 2>/dev/null || xdg-open "http://127.0.0.1.nip.io:3001" 2>/dev/null || open "https://avalivepro.vercel.app")) &
 
 # 5. Khởi động Server
 if [ -n "$NODE_CMD" ]; then
