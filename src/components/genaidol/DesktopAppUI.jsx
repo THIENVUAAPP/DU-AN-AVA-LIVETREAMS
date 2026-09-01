@@ -667,6 +667,13 @@ export default function DesktopAppUI() {
               const fullUrl = data.url.startsWith('http') ? data.url : `${autoBackendUrl}${data.url.startsWith('/') ? '' : '/'}${data.url}`;
               await saveCharacterToIDB({ ...c, mediaUrl: fullUrl, url: fullUrl });
               setCustomCharacters(prev => prev.map(item => item.id === c.id ? { ...item, url: fullUrl } : item));
+              
+              // ĐỒNG BỘ NGAY NẾU VIDEO VỪA UPLOAD LÀ VIDEO ĐANG ĐƯỢC CHỌN (Tránh lỗi fallback video khác trên Live)
+              if (selectedCharacter === c.id) {
+                 syncMasterLiveState({
+                    mediaUrl: fullUrl
+                 }, socketRef.current);
+              }
             }
           } catch (e) {}
         }

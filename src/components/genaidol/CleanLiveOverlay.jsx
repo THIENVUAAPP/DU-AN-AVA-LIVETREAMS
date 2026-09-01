@@ -23,6 +23,7 @@ const getBackendUrl = () => {
 
 export default function CleanLiveOverlay({ customStyle = {} }) {
   const { blendshapes, currentVolume } = useAvatarLipSync();
+  const overlayVideoRef = useRef(null);
   const [masterState, setMasterState] = useState(() => {
     let saved = null;
     try {
@@ -560,6 +561,27 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     }
   }, [masterState.stage]);
 
+  // Đồng bộ Play/Pause theo thời gian thực từ phần mềm (Dashboard)
+  useEffect(() => {
+    if (overlayVideoRef.current && masterState.videoPlaybackEvent) {
+      try {
+        const v = overlayVideoRef.current;
+        if (masterState.videoPlaybackEvent === 'play' && v.paused) {
+          v.play().catch(() => {});
+        } else if (masterState.videoPlaybackEvent === 'pause' && !v.paused) {
+          v.pause();
+        }
+        
+        if (masterState.videoCurrentTime !== undefined) {
+           const timeDiff = Math.abs(v.currentTime - masterState.videoCurrentTime);
+           if (timeDiff > 1.0) { // Nếu lệch quá 1s thì đồng bộ lại để mượt
+              v.currentTime = masterState.videoCurrentTime;
+           }
+        }
+      } catch (e) {}
+    }
+  }, [masterState.videoPlaybackEvent, masterState.videoCurrentTime]);
+
   // 🎯 WINDOW SURFACE INVALIDATOR & ANTI-THROTTLING
   // Giúp OBS/TikTok Studio bắt được hình khi dùng Window Capture, kể cả khi Chrome bị ẩn (minimized/background).
   useEffect(() => {
@@ -801,33 +823,41 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       {activeMedia.url && activeMedia.isVideo ? (
         <video
           ref={(el) => {
+            overlayVideoRef.current = el;
             if (el) {
               el.muted = true;
               el.defaultMuted = true;
               el.playsInline = true;
               // Audio-reactive playback: Tăng nhẹ tốc độ video khi AI nói để tạo cảm giác nhép môi
               try {
-                const targetRate = currentVolume > 0.1 ? 1.0 + (currentVolume * 0.3) : 1.0;
-                if (Math.abs(el.playbackRate - targetRate) > 0.1) {
-                  el.playbackRate = targetRate;
+                // Chỉ áp dụng đổi speed nếu video ĐANG CHẠY (không bị pause từ phần mềm)
+                if (!el.paused) {
+                  const targetRate = currentVolume > 0.1 ? 1.0 + (currentVolume * 0.3) : 1.0;
+                  if (Math.abs(el.playbackRate - targetRate) > 0.1) {
+                    el.playbackRate = targetRate;
+                  }
                 }
               } catch(e) {}
               
               el.setAttribute('muted', '');
               el.setAttribute('playsinline', '');
-              el.setAttribute('autoplay', '');
-              const playPromise = el.play();
-              if (playPromise !== undefined) {
-                playPromise.catch(() => {
-                  el.muted = true;
-                  el.play().catch(() => {});
-                });
+              
+              // Chỉ autoPlay nếu không có lệnh Pause từ phần mềm
+              if (masterState.videoPlaybackEvent !== 'pause') {
+                el.setAttribute('autoplay', '');
+                const playPromise = el.play();
+                if (playPromise !== undefined) {
+                  playPromise.catch(() => {
+                    el.muted = true;
+                    el.play().catch(() => {});
+                  });
+                }
               }
             }
           }}
           key={activeMedia.url}
           src={activeMedia.url}
-          autoPlay
+          autoPlay={masterState.videoPlaybackEvent !== 'pause'}
           loop
           muted
           playsInline
