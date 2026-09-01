@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star } from 'lucide-react';
 
-export const APP_VERSION = '2.1.0';
+export const APP_VERSION = '2.2.0';
 export const UPDATE_NOTES = [
-  "🌟 Tối ưu hoá logic Bản Đồ: Quà tặng lạ tự động tính ô cờ chuẩn xác theo xu (1 xu = 1 ô).",
-  "🚀 Thêm cơ chế cắm cờ mượt mà (Queue) chống giật lag: Quà lớn (hàng chục ngàn xu) sẽ được phân bổ cắm lan toả từ từ, kết hợp hiệu ứng bảng xếp hạng nhảy số dần dần.",
-  "✨ Loại bỏ Sàn Nhảy (Dance Floor) để tối ưu hoá giao diện gọn gàng hơn.",
-  "🛠 Bổ sung nút Bật/Tắt Toàn Bộ đồng bộ mọi hoạt động (Game, Nhạc, BGM, BLV) ngay lập tức."
+  "⭐ Khởi chạy 1-Click độc quyền: Đóng gói duy nhất 1 file AvaLive_Studio.exe siêu mượt, loại bỏ toàn bộ file thừa.",
+  "🔗 Đăng nhập 1-Chạm bằng Google: Kết nối tức thì tài khoản Google để đồng bộ Gói bản quyền VIP PRO, Token AI & Giờ Live từ Supabase Cloud.",
+  "📐 Chuẩn hóa tuyệt đối 9:16 (1080x1920): Tối ưu 100% cho TikTok LIVE Studio & OBS Studio, không bao giờ bị lệch khung hình.",
+  "🚀 Nâng cấp hiệu năng v2.2.0: Tự động đồng bộ và hiển thị thông báo bản cập nhật mới nhất cho người dùng."
 ];
 
 export default function UpdateNotificationModal() {

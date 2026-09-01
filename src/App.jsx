@@ -26,7 +26,7 @@ import SalesAnalyticsManager from "./components/SalesAnalyticsManager";
 import LivestreamClonerStudio from "./components/LivestreamClonerStudio";
 import UpgradePrompt from "./components/UpgradePrompt";
 import AutoCaptchaSolver from "./components/AutoCaptchaSolver";
-import { syncMasterLiveState } from "./lib/masterLiveSync";
+import UpdateNotificationModal from "./components/genaidol/UpdateNotificationModal";
 import { Lock, Sparkles, ShieldCheck, Mail, LogIn, ArrowRight } from "lucide-react";
 
 export default function App() {
@@ -465,7 +465,8 @@ export default function App() {
         </div>
       )}
 
+      {/* Thông báo cập nhật phiên bản mới v2.2.0 */}
+      <UpdateNotificationModal />
     </div>
   );
 }
-
