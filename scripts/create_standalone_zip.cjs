@@ -82,114 +82,54 @@ HỖ TRỢ KỸ THUẬT 24/7: support@avalive.com | Website: https://avalivepro.
 
 // Tạo Batch Launcher 1-Click duy nhất cho Windows
 const winBatLauncher = `@echo off
-chcp 65001 >nul
-title AVALIVE VIP PRO - PHẦN MỀM LIVESTREAM AI
-cd /d "%~dp0"
+title AvaLive VIP PRO - Livestream Studio AI
 
-echo =================================================================
-echo   🚀 ĐANG KHỞI ĐỘNG HỆ THỐNG AVALIVE LIVESTREAM VIP PRO
-echo =================================================================
-echo.
+pushd "%~dp0" 2>nul
 
-rem 0. Kiểm tra xem người dùng đã giải nén chưa
-if not exist "system" (
-    color 4F
-    echo.
-    echo ==============================================================================
-    echo   [LOI] BAN CHUA GIAI NEN PHAN MEM! (YOU HAVEN'T EXTRACTED THE ZIP FILE)
-    echo ==============================================================================
-    echo.
-    echo VUI LONG LAM THEO HUONG DAN SAU DE SU DUNG:
-    echo 1. Nhan chuot phai vao file ZIP ban vua tai ve.
-    echo 2. Chon "Extract All..." (Giai nen tat ca...).
-    echo 3. Mo thu muc vua duoc giai nen.
-    echo 4. Chay lai file nay.
-    echo.
-    echo KHONG THE CHAY TRUC TIEP TU TRONG FILE ZIP!
-    echo.
-    pause
-    exit /b
-)
-
-rem 1. Tự động gỡ bỏ cờ chặn bảo mật của Windows (Unblock Mark-of-the-Web) và ẩn thư mục hệ thống
-powershell -NoProfile -Command "Get-ChildItem -Path '.' -Recurse ^| Unblock-File" >nul 2>nul
-attrib +h "system" >nul 2>nul
-
-rem 2. Dọn dẹp các phiên bản cũ bị treo cổng 3001 nếu có
 for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr ":3001" ^| findstr "LISTENING"') do (
     taskkill /F /PID %%a >nul 2>nul
 )
 
-rem 3. Kiểm tra bộ chạy Node.js
-set "NODE_EXE=node"
-if exist "system\\node_portable\\node.exe" (
-    set "NODE_EXE=node_portable\\node.exe"
-    echo [OK] Da ket noi He thong Runtime Portable tich hop san
-    goto start_server
+if exist "system\node_portable\node.exe" (
+    start "" /b "system\node_portable\node.exe" "system\core.cjs"
+) else (
+    start "" /b node "system\core.cjs"
 )
 
-where node >nul 2>nul
-if not errorlevel 1 (
-    echo [OK] Da ket noi Node.js he thong
-    goto start_server
-)
-
-echo [THONG BAO] Đang ket noi Cloud Studio tai: https://avalivepro.vercel.app/desktop
-start "" https://avalivepro.vercel.app/desktop
-pause
-exit /b
-
-:start_server
-
-rem 4. Khởi chạy máy chủ Backend xử lý TikTok Live
-echo [1/2] Đang kích hoạt Bộ xử lý Tín hiệu ^& TikTok Live Engine...
-cd /d "system"
-start "AvaLive_Backend_Server" /b "%NODE_EXE%" core.cjs
-
-rem 5. Chờ 1.5 giây để Server sẵn sàng
 timeout /t 2 /nobreak >nul 2>nul
 
-echo [2/2] Đang mở giao diện Phần mềm AvaLive Studio...
-echo.
-echo =================================================================
-echo   ✨ PHẦN MỀM ĐÃ SẴN SÀNG HOẠT ĐỘNG!
-echo   🌐 Địa chỉ máy chủ: http://localhost:3001/desktop
-echo   💡 Vui lòng KHÔNG tắt cửa sổ màu đen này khi đang livestream.
-echo =================================================================
+set "URL=http://localhost:3001/desktop"
 
-set "APP_URL=http://localhost:3001/desktop"
-
-rem 6. Mở ứng dụng ở chế độ Cửa Sổ Desktop Native App
-if exist "%ProgramFiles(x86)%\\Microsoft\\Edge\\Application\\msedge.exe" (
-    start "" "%ProgramFiles(x86)%\\Microsoft\\Edge\\Application\\msedge.exe" --app=%APP_URL%
-    goto launched
+if exist "%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe" (
+    start "" "%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe" --app=%URL%
+    exit /b
 )
-if exist "%ProgramFiles%\\Microsoft\\Edge\\Application\\msedge.exe" (
-    start "" "%ProgramFiles%\\Microsoft\\Edge\\Application\\msedge.exe" --app=%APP_URL%
-    goto launched
+if exist "%ProgramFiles%\Microsoft\Edge\Application\msedge.exe" (
+    start "" "%ProgramFiles%\Microsoft\Edge\Application\msedge.exe" --app=%URL%
+    exit /b
 )
-if exist "%ProgramFiles%\\Google\\Chrome\\Application\\chrome.exe" (
-    start "" "%ProgramFiles%\\Google\\Chrome\\Application\\chrome.exe" --app=%APP_URL%
-    goto launched
+if exist "%ProgramFiles%\Google\Chrome\Application\chrome.exe" (
+    start "" "%ProgramFiles%\Google\Chrome\Application\chrome.exe" --app=%URL%
+    exit /b
 )
-if exist "%ProgramFiles(x86)%\\Google\\Chrome\\Application\\chrome.exe" (
-    start "" "%ProgramFiles(x86)%\\Google\\Chrome\\Application\\chrome.exe" --app=%APP_URL%
-    goto launched
+if exist "%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe" (
+    start "" "%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe" --app=%URL%
+    exit /b
 )
-if exist "%LocalAppData%\\Google\\Chrome\\Application\\chrome.exe" (
-    start "" "%LocalAppData%\\Google\\Chrome\\Application\\chrome.exe" --app=%APP_URL%
-    goto launched
+if exist "%LocalAppData%\Google\Chrome\Application\chrome.exe" (
+    start "" "%LocalAppData%\Google\Chrome\Application\chrome.exe" --app=%URL%
+    exit /b
 )
 
-rem Mở bằng trình duyệt mặc định nếu không tìm thấy đường dẫn riêng
-start "" %APP_URL%
+start "" "%URL%"
+exit /b
+`.split('\n').join('\r\n');
 
-:launched
-echo.
-echo 👉 Nhấn phím bất kỳ hoặc đóng cửa sổ này khi muốn tắt phần mềm.
-pause >nul
-exit
-`.replace(/\n/g, "\r\n");
+// VBScript chạy ngầm không hiện cửa sổ CMD đen
+const winVbsLauncher = `Set WshShell = CreateObject("WScript.Shell")
+WshShell.Run "1_Khoi_Dong_AvaLive_Windows.bat", 0, False
+`.split('\n').join('\r\n');
+
 
 // Tạo Command Launcher cho Mac
 const macCommandLauncher = `#!/bin/bash
@@ -245,6 +185,7 @@ fs.mkdirSync(path.join(winSystemDir, 'uploads'), { recursive: true });
 
 // Chỉ có đúng 1 file launcher duy nhất ở thư mục gốc Windows
 fs.writeFileSync(path.join(winStaging, '1_Khoi_Dong_AvaLive_Windows.bat'), winBatLauncher);
+fs.writeFileSync(path.join(winStaging, '2_Chay_Nhanh_An_Cua_So_Den.vbs'), winVbsLauncher);
 fs.writeFileSync(path.join(winStaging, 'HUONG_DAN_SU_DUNG.txt'), huongDanContent);
 
 // Tải Node.js Portable cho Windows
