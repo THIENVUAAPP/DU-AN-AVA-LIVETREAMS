@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { updateUserTokens } from '../../lib/supabaseClient';
 
 // ============================================================
 // CẤU HÌNH TỶ LỆ TOKEN (Chuẩn hóa Biên Lợi Nhuận Gộp 65% - Chi Phí API <= 35%)
@@ -96,6 +97,17 @@ export function TokenProvider({ children }) {
       const prevHist = Array.isArray(prev?.history) ? prev.history : [];
       return { balance: prevBal + validAmount, history: [entry, ...prevHist].slice(0, 200) };
     });
+
+    // Đồng bộ tức thì lên Supabase cho tài khoản Gmail hiện tại
+    try {
+      const userSaved = localStorage.getItem(USER_KEY);
+      if (userSaved) {
+        const u = JSON.parse(userSaved);
+        if (u?.email && u.email !== 'khachhang@avalive.com') {
+          updateUserTokens(u.email, validAmount, reason);
+        }
+      }
+    } catch (e) {}
   }, []);
 
   const deductToken = useCallback((amount, reason = 'Sử dụng dịch vụ') => {
@@ -106,6 +118,18 @@ export function TokenProvider({ children }) {
       const actual = Math.min(validAmount, prevBal);
       if (actual <= 0) return prev;
       const entry = { id: Date.now(), type: 'deduct', amount: actual, reason, time: new Date().toISOString() };
+
+      // Đồng bộ tức thì trừ token trên Supabase cho tài khoản Gmail
+      try {
+        const userSaved = localStorage.getItem(USER_KEY);
+        if (userSaved) {
+          const u = JSON.parse(userSaved);
+          if (u?.email && u.email !== 'khachhang@avalive.com') {
+            updateUserTokens(u.email, -actual, reason);
+          }
+        }
+      } catch (e) {}
+
       return { balance: Math.max(0, prevBal - actual), history: [entry, ...prevHist].slice(0, 200) };
     });
   }, []);

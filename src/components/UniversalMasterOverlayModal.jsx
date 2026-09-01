@@ -44,15 +44,15 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
   const projects = [
     {
       id: 'idol',
-      name: 'DỰ ÁN 1: LIVE AI IDOL & VIDEO NỀN',
+      name: 'DỰ ÁN 1: LIVE AI IDOL & VIDEO NỀN (CHUYÊN TIKTOK 9:16)',
       tag: 'HOT NHẤT',
       tagColor: 'from-pink-500 to-rose-600',
       icon: Video,
       iconColor: 'text-pink-400',
       bgColor: 'border-pink-500/30 bg-pink-950/20 hover:border-pink-400/60',
-      description: 'Phát video người Live / AI Idol 60FPS sạch 100% không dính rác, tự động lặp không bao giờ đen màn hình.',
+      description: 'Phát video người Live / AI Idol chuẩn kích thước 9:16 (1080x1920) 60FPS sạch 100% không lệch khung hình.',
       path: '/idol',
-      directUrl: `${activeBase}/?overlay=idol${backendParam}`
+      directUrl: `${activeBase}/?overlay=idol&ratio=9:16${backendParam}`
     },
     {
       id: 'bando',
@@ -62,9 +62,9 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       icon: Flag,
       iconColor: 'text-amber-400',
       bgColor: 'border-amber-500/30 bg-amber-950/20 hover:border-amber-400/60',
-      description: 'Game cắm cờ 63 tỉnh thành Việt Nam 3D ghép cờ thời gian thực khi khán giả tặng quà TikTok Live.',
+      description: 'Game cắm cờ 63 tỉnh thành Việt Nam 3D chuẩn kích thước 9:16 (1080x1920) khi khán giả tặng quà.',
       path: '/bando',
-      directUrl: `${activeBase}/?overlay=bando${backendParam}`
+      directUrl: `${activeBase}/?overlay=bando&ratio=9:16${backendParam}`
     },
     {
       id: 'battle',
@@ -74,9 +74,9 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
       icon: Swords,
       iconColor: 'text-red-400',
       bgColor: 'border-red-500/30 bg-red-950/20 hover:border-red-400/60',
-      description: 'Võ đài chiến đấu chia 2 phe PK kịch tính, tự động tung skill và hiệu ứng khi có tương tác bình luận & quà.',
+      description: 'Võ đài chiến đấu chia 2 phe PK kịch tính chuẩn kích thước 9:16 (1080x1920) khi có quà & bình luận.',
       path: '/battle',
-      directUrl: `${activeBase}/?overlay=battle${backendParam}`
+      directUrl: `${activeBase}/?overlay=battle&ratio=9:16${backendParam}`
     }
   ];
 
@@ -239,8 +239,8 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose }) {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-gray-300">
             <div className="p-2 rounded-xl bg-white/5 border border-white/10 space-y-1">
-              <span className="font-bold text-cyan-300 flex items-center gap-1">🌐 Cách 1: Nguồn Trình Duyệt / Browser Source (Khuyên dùng)</span>
-              <p className="text-gray-400">Trên OBS hoặc TikTok Studio: Thêm nguồn <b>Trình duyệt (Browser Source)</b> → Dán link đã sao chép ở trên → Đặt kích thước <b>1080x1920</b> (9:16) hoặc <b>1920x1080</b> (16:9). Tự động phát video và chuyển cảnh mượt mà 60FPS!</p>
+              <span className="font-bold text-cyan-300 flex items-center gap-1">🌐 Cách 1: Nguồn Trình Duyệt / Browser Source (Chuẩn TikTok 9:16)</span>
+              <p className="text-gray-400">Trên OBS hoặc TikTok Live Studio: Thêm nguồn <b>Trình duyệt (Browser Source)</b> → Dán link đã sao chép ở trên → Đặt kích thước chính xác: <b>Chiều Rộng = 1080, Chiều Cao = 1920</b> (Tỉ lệ chuẩn 9:16 dọc không bao giờ bị lệch khung hình). Video tự động phát mượt mà 60FPS!</p>
             </div>
             <div className="p-2 rounded-xl bg-white/5 border border-white/10 space-y-1">
               <span className="font-bold text-pink-300 flex items-center gap-1">🖥️ Cách 2: Quay Cửa Sổ (Window Capture trong OBS)</span>

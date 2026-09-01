@@ -192,24 +192,38 @@ export default function DesktopAppUI() {
     setAuthError('');
 
     const isAdmin = emailClean === 'quocthiencr90@gmail.com';
-    const nameClean = realNameInput.trim() || emailClean.split('@')[0];
-    const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(emailClean)}`;
+    let nameClean = realNameInput.trim() || emailClean.split('@')[0];
+    let avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(emailClean)}`;
 
     // Kiểm tra gói bản quyền & Token & Thời gian Live trên Supabase
     let userPlan = isAdmin ? 'ENTERPRISE' : 'VIP PRO';
-    let userTokens = isAdmin ? 999999999 : 50000;
+    let userTokens = isAdmin ? 999999999 : 100000;
     let userLiveMinutes = isAdmin ? 999999 : 6000;
+
     try {
       if (supabase) {
         const { data: dbUser } = await supabase.from('users').select('*').eq('email', emailClean).maybeSingle();
         if (dbUser) {
+          if (dbUser.name) nameClean = dbUser.name;
+          if (dbUser.avatar_url) avatarUrl = dbUser.avatar_url;
           if (dbUser.plan) userPlan = dbUser.plan.toUpperCase();
           if (typeof dbUser.tokens === 'number') userTokens = dbUser.tokens;
           if (typeof dbUser.live_minutes === 'number') userLiveMinutes = dbUser.live_minutes;
           else if (typeof dbUser.liveMinutes === 'number') userLiveMinutes = dbUser.liveMinutes;
+        } else {
+          // Tạo mới tài khoản trên Supabase nếu chưa có
+          await syncUserToSupabase({
+            email: emailClean,
+            name: nameClean,
+            avatar: avatarUrl,
+            plan: userPlan,
+            tokens: userTokens
+          });
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Supabase query note:', e);
+    }
 
     const newUser = {
       name: nameClean,
@@ -225,7 +239,8 @@ export default function DesktopAppUI() {
     setCurrentUser(newUser);
     try {
       localStorage.setItem('avalive_current_user', JSON.stringify(newUser));
-      await syncUserToSupabase(newUser);
+      localStorage.setItem('avalive_user_tokens', userTokens.toString());
+      window.dispatchEvent(new Event('avalive:user_updated'));
     } catch (e) {}
 
     setIsLoggingIn(false);
@@ -1995,6 +2010,45 @@ export default function DesktopAppUI() {
                 <span>Bảng Giá & Nâng Cấp Gói VIP</span>
               </button>
 
+              {/* Nút Làm Mới Dữ Liệu Từ Supabase */}
+              <button
+                onClick={async () => {
+                  setIsLoggingIn(true);
+                  try {
+                    if (supabase && currentUser?.email) {
+                      const { data: dbUser } = await supabase.from('users').select('*').eq('email', currentUser.email.toLowerCase().trim()).maybeSingle();
+                      if (dbUser) {
+                        const updatedUser = {
+                          ...currentUser,
+                          name: dbUser.name || currentUser.name,
+                          avatar: dbUser.avatar_url || currentUser.avatar,
+                          plan: dbUser.plan ? dbUser.plan.toUpperCase() : currentUser.plan,
+                          tokens: typeof dbUser.tokens === 'number' ? dbUser.tokens : currentUser.tokens,
+                          liveMinutes: typeof dbUser.live_minutes === 'number' ? dbUser.live_minutes : currentUser.liveMinutes,
+                          liveTimeHours: Math.round((typeof dbUser.live_minutes === 'number' ? dbUser.live_minutes : (currentUser.liveMinutes || 6000)) / 60)
+                        };
+                        setCurrentUser(updatedUser);
+                        localStorage.setItem('avalive_current_user', JSON.stringify(updatedUser));
+                        if (typeof dbUser.tokens === 'number') localStorage.setItem('avalive_user_tokens', dbUser.tokens.toString());
+                        window.dispatchEvent(new Event('avalive:user_updated'));
+                        alert('✅ Đã đồng bộ thành công dữ liệu mới nhất từ Supabase!');
+                      } else {
+                        alert('Đã kiểm tra: Dữ liệu tài khoản của bạn đang ở trạng thái mới nhất.');
+                      }
+                    }
+                  } catch(e) {
+                    alert('Lỗi kiểm tra dữ liệu Supabase: ' + e.message);
+                  } finally {
+                    setIsLoggingIn(false);
+                  }
+                }}
+                disabled={isLoggingIn}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded-xl font-bold text-xs transition-all hover:scale-[1.02] active:scale-98 cursor-pointer disabled:opacity-50"
+              >
+                <RotateCcw className={`w-3.5 h-3.5 ${isLoggingIn ? 'animate-spin' : ''}`} />
+                <span>{isLoggingIn ? 'Đang Kiểm Tra Supabase...' : '🔄 Làm Mới & Đồng Bộ Lại Dữ Liệu'}</span>
+              </button>
+
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -2009,32 +2063,26 @@ export default function DesktopAppUI() {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Lựa chọn 1: Google OAuth */}
-              <button
-                onClick={handleRealGoogleOAuth}
-                disabled={isLoggingIn}
-                className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white hover:bg-gray-100 text-gray-900 rounded-2xl font-black text-xs shadow-xl transition-all hover:scale-[1.02] active:scale-98 cursor-pointer disabled:opacity-50 border border-gray-300"
-              >
-                <svg className="w-4 h-4" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                </svg>
-                <span>{isLoggingIn ? '⏳ Đang Kết Nối...' : 'ĐĂNG NHẬP 1-CLICK BẰNG GOOGLE'}</span>
-              </button>
-
-              <div className="flex items-center gap-3">
-                <div className="flex-1 h-px bg-white/10" />
-                <span className="text-[10px] text-gray-500 font-bold uppercase">HOẶC NHẬP GMAIL ĐỒNG BỘ</span>
-                <div className="flex-1 h-px bg-white/10" />
+              <div className="p-3.5 rounded-2xl bg-cyan-950/40 border border-cyan-500/30 text-left space-y-1">
+                <div className="flex items-center gap-2 text-cyan-300 font-bold text-xs">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                  </svg>
+                  <span>ĐỒNG BỘ TÀI KHOẢN GMAIL TỪ SUPABASE</span>
+                </div>
+                <p className="text-[11px] text-gray-400 leading-relaxed">
+                  Nhập địa chỉ Gmail bạn đã đăng ký hoặc mua gói trên website. Phần mềm sẽ tự động tải toàn bộ <b>Gói bản quyền</b>, <b>Token AI</b> và <b>Thời gian Live</b> vào phần mềm ngay lập tức.
+                </p>
               </div>
 
-              {/* Lựa chọn 2: Nhập Gmail trực tiếp để đồng bộ tức thì */}
-              <form onSubmit={handleRealGmailSubmit} className="space-y-2.5 text-left">
+              {/* Form nhập Gmail kết nối tức thì */}
+              <form onSubmit={handleRealGmailSubmit} className="space-y-3 text-left">
                 <div>
-                  <label className="text-[10px] text-gray-400 font-bold block mb-1">
-                    ✉️ ĐỊA CHỈ GMAIL ĐÃ ĐĂNG KÝ / MUA GÓI:
+                  <label className="text-[11px] text-cyan-300 font-bold block mb-1">
+                    ✉️ ĐỊA CHỈ GMAIL ĐÃ ĐĂNG KÝ:
                   </label>
                   <input
                     type="email"
@@ -2042,18 +2090,18 @@ export default function DesktopAppUI() {
                     value={realGmailInput}
                     onChange={(e) => setRealGmailInput(e.target.value)}
                     placeholder="ví dụ: yourname@gmail.com"
-                    className="w-full bg-[#1b1e30] border border-cyan-500/40 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors"
+                    className="w-full bg-[#1b1e30] border border-cyan-500/50 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-gray-400 font-bold block mb-1">
+                  <label className="text-[11px] text-gray-400 font-bold block mb-1">
                     👤 TÊN HIỂN THỊ (TÙY CHỌN):
                   </label>
                   <input
                     type="text"
                     value={realNameInput}
                     onChange={(e) => setRealNameInput(e.target.value)}
-                    placeholder="Tên shop hoặc tên cá nhân"
+                    placeholder="Tên cá nhân hoặc thương hiệu"
                     className="w-full bg-[#1b1e30] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors"
                   />
                 </div>
@@ -2064,7 +2112,7 @@ export default function DesktopAppUI() {
                   className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-xl font-black text-xs shadow-lg shadow-cyan-500/25 transition-all hover:scale-[1.02] active:scale-98 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   <Sparkles size={14} />
-                  <span>{isLoggingIn ? '⏳ Đang Đồng Bộ...' : 'KẾT NỐI & ĐỒNG BỘ GÓI BẢN QUYỀN'}</span>
+                  <span>{isLoggingIn ? '⏳ Đang Kết Nối Supabase...' : 'KẾT NỐI & ĐỒNG BỘ DỮ LIỆU TỨC THÌ'}</span>
                 </button>
               </form>
 

@@ -16,3 +16,5 @@ release/
 !public/AvaLive_VIP_PRO_Mac_v2.zip
 backend/uploads/*
 !backend/uploads/.gitkeep
+*.exe
+

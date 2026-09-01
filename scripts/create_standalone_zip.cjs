@@ -52,15 +52,13 @@ const huongDanContent = `=======================================================
 
 1. ĐỐI VỚI MÁY TÍNH WINDOWS:
    👉 BẮT BUỘC: Hãy giải nén file ZIP này (Chuột phải chọn Extract All...)
-   👉 Sau khi giải nén, bạn có thể nhấp đúp chuột vào:
-      ⭐ [ AvaLive_Studio.exe ] (Khuyên dùng - Chạy 1-Click trực tiếp siêu mượt)
-      ⭐ [ 1_Khoi_Dong_AvaLive_Windows.bat ] (Hoặc file CHAY_PHAN_MEM.bat)
-      ⭐ [ 2_Chay_Nhanh_An_Cua_So_Den.vbs ] (Chạy ngầm không hiện cửa sổ đen)
-   -> Phần mềm sẽ tự động mở giao diện ứng dụng để sử dụng ngay!
+   👉 Sau khi giải nén, nhấp đúp chuột vào file ứng dụng duy nhất:
+      ⭐ [ AvaLive_Studio.exe ]
+   -> Phần mềm sẽ tự động mở giao diện ứng dụng để sử dụng ngay lập tức!
 
 2. KẾT NỐI TÀI KHOẢN GMAIL & ĐỒNG BỘ BẢN QUYỀN:
    • Bấm vào ô "🔑 Đăng Nhập Gmail" ở góc trên giao diện phần mềm.
-   • Đăng nhập 1-Click hoặc nhập địa chỉ Gmail bạn đã đăng ký trên web để nhận diện ngay gói VIP & Token AI.
+   • Nhập địa chỉ Gmail bạn đã đăng ký hoặc mua gói trên website để nhận diện ngay gói VIP & Token AI.
    • Gói Miễn Phí: Tự động nhận Token AI và full tính năng để sử dụng ngay.
 
 3. ĐỐI VỚI MÁY TÍNH MAC (macOS):
@@ -68,8 +66,8 @@ const huongDanContent = `=======================================================
    -> Phần mềm sẽ tự động khởi chạy.
 
 4. ĐỒNG BỘ VỚI TIKTOK LIVE STUDIO & OBS:
-   • Sau khi mở app, vào mục "Studio Phát Sóng" để lấy link nguồn trình duyệt (Browser Source).
-   • Dán link vào OBS hoặc TikTok LIVE Studio để đồng bộ hình ảnh, âm thanh, giọng đọc và bình luận tự động.
+   • Sau khi mở app, bấm nút "📡 Link Live" để lấy link nguồn trình duyệt (Browser Source).
+   • Cài đặt độ phân giải trên TikTok Studio / OBS: 1080x1920 (Chuẩn tỷ lệ 9:16 dọc).
 
 -----------------------------------------------------------------
 HỖ TRỢ KỸ THUẬT 24/7: support@avalive.com | Website: https://avalivepro.vercel.app
@@ -179,16 +177,21 @@ if (fs.existsSync(path.join(rootDir, 'certs'))) {
 // Create empty uploads directory
 fs.mkdirSync(path.join(winSystemDir, 'uploads'), { recursive: true });
 
-// Tạo file chạy EXE, BAT, CMD, VBS ở thư mục gốc Windows
-console.log('   -> Đang tích hợp Native Windows Launcher (.exe)...');
-if (fs.existsSync(path.join(rootDir, 'AvaLive_Studio.exe'))) {
-  fs.copyFileSync(path.join(rootDir, 'AvaLive_Studio.exe'), path.join(winStaging, 'AvaLive_Studio.exe'));
-}
+// Tạo file chạy EXE DUY NHẤT cho Windows (Gọn gàng, chuyên nghiệp, không file rác)
+console.log('   -> Đang chuẩn bị Native Windows Launcher (.exe duy nhất)...');
+const cachedExe = path.join(rootDir, 'AvaLive_Studio.exe');
+const targetExe = path.join(winStaging, 'AvaLive_Studio.exe');
 
-fs.writeFileSync(path.join(winStaging, '1_Khoi_Dong_AvaLive_Windows.bat'), winBatLauncher);
-fs.writeFileSync(path.join(winStaging, 'CHAY_PHAN_MEM.bat'), winBatLauncher);
-fs.writeFileSync(path.join(winStaging, 'Khoi_Dong_AvaLive.cmd'), winBatLauncher);
-fs.writeFileSync(path.join(winStaging, '2_Chay_Nhanh_An_Cua_So_Den.vbs'), winVbsLauncher);
+if (!fs.existsSync(cachedExe)) {
+  console.log('   -> Đang biên dịch AvaLive_Studio.exe từ scripts/win_launcher_template.cjs...');
+  execSync(`npx pkg scripts/win_launcher_template.cjs --target node18-win-x64 --output "${cachedExe}"`, {
+    cwd: rootDir,
+    stdio: 'inherit'
+  });
+}
+fs.copyFileSync(cachedExe, targetExe);
+
+// Chỉ giữ lại 1 file EXE duy nhất và file Hướng dẫn sử dụng
 fs.writeFileSync(path.join(winStaging, 'HUONG_DAN_SU_DUNG.txt'), huongDanContent);
 
 // Tải Node.js Portable cho Windows
