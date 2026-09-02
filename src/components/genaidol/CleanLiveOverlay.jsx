@@ -250,6 +250,16 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       console.warn('[Overlay] Supabase Realtime note:', e.message);
     }
 
+    // Xoá Fast Preload Media sau khi React đã mount và chuẩn bị phát video thật (tránh màn hình đen 0.5s)
+    setTimeout(() => {
+      const preload = document.getElementById('fast-preload-media');
+      if (preload) {
+        preload.style.transition = 'opacity 0.3s ease';
+        preload.style.opacity = '0';
+        setTimeout(() => preload.remove(), 300);
+      }
+    }, 800);
+
     // 2. HTTP REST API POLING
     const fetchLiveState = () => {
       const endpoint = getBackendUrl() ? `${getBackendUrl()}/api/live-state` : '/api/live-state';
