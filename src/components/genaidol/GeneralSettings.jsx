@@ -1408,23 +1408,23 @@ NGHE
                   <div className="flex flex-col gap-2">
                     <label className="text-sm font-semibold text-gray-700 flex justify-between">
                       <span>Âm lượng (Volume)</span>
-                      <span className="text-blue-600 font-bold">{Math.round((settings.mainVoiceVolume || 1) * 100)}%</span>
+                      <span className="text-blue-600 font-bold">{Math.round((settings.mainVoiceVolume !== undefined ? settings.mainVoiceVolume : 1) * 100)}%</span>
                     </label>
-                    <input type="range" min="0" max="2" step="0.1" name="mainVoiceVolume" value={settings.mainVoiceVolume || 1} onChange={handleChange} className="w-full accent-blue-600" />
+                    <input type="range" min="0" max="2" step="0.1" name="mainVoiceVolume" value={settings.mainVoiceVolume !== undefined ? settings.mainVoiceVolume : 1} onChange={handleChange} className="w-full accent-blue-600" />
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-sm font-semibold text-gray-700 flex justify-between">
                       <span>Tốc độ (Speed)</span>
-                      <span className="text-blue-600 font-bold">{settings.mainVoiceRate || 1}x</span>
+                      <span className="text-blue-600 font-bold">{settings.mainVoiceRate !== undefined ? settings.mainVoiceRate : 1}x</span>
                     </label>
-                    <input type="range" min="0.5" max="2" step="0.1" name="mainVoiceRate" value={settings.mainVoiceRate || 1} onChange={handleChange} className="w-full accent-blue-600" />
+                    <input type="range" min="0.5" max="2" step="0.1" name="mainVoiceRate" value={settings.mainVoiceRate !== undefined ? settings.mainVoiceRate : 1} onChange={handleChange} className="w-full accent-blue-600" />
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-sm font-semibold text-gray-700 flex justify-between">
                       <span>Độ trầm bổng (Pitch)</span>
-                      <span className="text-blue-600 font-bold">{settings.mainVoicePitch || 1}</span>
+                      <span className="text-blue-600 font-bold">{settings.mainVoicePitch !== undefined ? settings.mainVoicePitch : 1}</span>
                     </label>
-                    <input type="range" min="0.5" max="2" step="0.1" name="mainVoicePitch" value={settings.mainVoicePitch || 1} onChange={handleChange} className="w-full accent-blue-600" />
+                    <input type="range" min="0.5" max="2" step="0.1" name="mainVoicePitch" value={settings.mainVoicePitch !== undefined ? settings.mainVoicePitch : 1} onChange={handleChange} className="w-full accent-blue-600" />
                   </div>
                 </div>
               </div>
@@ -1509,23 +1509,23 @@ NGHE
                   <div className="flex flex-col gap-2">
                     <label className="text-sm font-semibold text-gray-700 flex justify-between">
                       <span>Âm lượng (Volume)</span>
-                      <span className="text-red-600 font-bold">{Math.round((settings.assistantVoiceVolume || 1) * 100)}%</span>
+                      <span className="text-red-600 font-bold">{Math.round((settings.assistantVoiceVolume !== undefined ? settings.assistantVoiceVolume : 1) * 100)}%</span>
                     </label>
-                    <input type="range" min="0" max="2" step="0.1" name="assistantVoiceVolume" value={settings.assistantVoiceVolume || 1} onChange={handleChange} className="w-full accent-red-600" />
+                    <input type="range" min="0" max="2" step="0.1" name="assistantVoiceVolume" value={settings.assistantVoiceVolume !== undefined ? settings.assistantVoiceVolume : 1} onChange={handleChange} className="w-full accent-red-600" />
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-sm font-semibold text-gray-700 flex justify-between">
                       <span>Tốc độ (Speed)</span>
-                      <span className="text-red-600 font-bold">{settings.assistantVoiceRate || 1}x</span>
+                      <span className="text-red-600 font-bold">{settings.assistantVoiceRate !== undefined ? settings.assistantVoiceRate : 1}x</span>
                     </label>
-                    <input type="range" min="0.5" max="2" step="0.1" name="assistantVoiceRate" value={settings.assistantVoiceRate || 1} onChange={handleChange} className="w-full accent-red-600" />
+                    <input type="range" min="0.5" max="2" step="0.1" name="assistantVoiceRate" value={settings.assistantVoiceRate !== undefined ? settings.assistantVoiceRate : 1} onChange={handleChange} className="w-full accent-red-600" />
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-sm font-semibold text-gray-700 flex justify-between">
                       <span>Độ trầm bổng (Pitch)</span>
-                      <span className="text-red-600 font-bold">{settings.assistantVoicePitch || 1}</span>
+                      <span className="text-red-600 font-bold">{settings.assistantVoicePitch !== undefined ? settings.assistantVoicePitch : 1}</span>
                     </label>
-                    <input type="range" min="0.5" max="2" step="0.1" name="assistantVoicePitch" value={settings.assistantVoicePitch || 1} onChange={handleChange} className="w-full accent-red-600" />
+                    <input type="range" min="0.5" max="2" step="0.1" name="assistantVoicePitch" value={settings.assistantVoicePitch !== undefined ? settings.assistantVoicePitch : 1} onChange={handleChange} className="w-full accent-red-600" />
                   </div>
                 </div>
               </div>
@@ -1595,23 +1595,23 @@ NGHE
                   <div className="flex flex-col gap-2">
                     <label className="text-sm font-semibold text-gray-700 flex justify-between">
                       <span>Âm lượng (Volume)</span>
-                      <span className="text-purple-600 font-bold">{Math.round((settings.gameVoiceVolume || 1) * 100)}%</span>
+                      <span className="text-purple-600 font-bold">{Math.round((settings.gameVoiceVolume !== undefined ? settings.gameVoiceVolume : 1) * 100)}%</span>
                     </label>
-                    <input type="range" min="0" max="2" step="0.1" name="gameVoiceVolume" value={settings.gameVoiceVolume || 1} onChange={handleChange} className="w-full accent-purple-600" />
+                    <input type="range" min="0" max="2" step="0.1" name="gameVoiceVolume" value={settings.gameVoiceVolume !== undefined ? settings.gameVoiceVolume : 1} onChange={handleChange} className="w-full accent-purple-600" />
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-sm font-semibold text-gray-700 flex justify-between">
                       <span>Tốc độ (Speed)</span>
-                      <span className="text-purple-600 font-bold">{settings.gameVoiceRate || 1}x</span>
+                      <span className="text-purple-600 font-bold">{settings.gameVoiceRate !== undefined ? settings.gameVoiceRate : 1}x</span>
                     </label>
-                    <input type="range" min="0.5" max="2" step="0.1" name="gameVoiceRate" value={settings.gameVoiceRate || 1} onChange={handleChange} className="w-full accent-purple-600" />
+                    <input type="range" min="0.5" max="2" step="0.1" name="gameVoiceRate" value={settings.gameVoiceRate !== undefined ? settings.gameVoiceRate : 1} onChange={handleChange} className="w-full accent-purple-600" />
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-sm font-semibold text-gray-700 flex justify-between">
                       <span>Độ trầm bổng (Pitch)</span>
-                      <span className="text-purple-600 font-bold">{settings.gameVoicePitch || 1}</span>
+                      <span className="text-purple-600 font-bold">{settings.gameVoicePitch !== undefined ? settings.gameVoicePitch : 1}</span>
                     </label>
-                    <input type="range" min="0.5" max="2" step="0.1" name="gameVoicePitch" value={settings.gameVoicePitch || 1} onChange={handleChange} className="w-full accent-purple-600" />
+                    <input type="range" min="0.5" max="2" step="0.1" name="gameVoicePitch" value={settings.gameVoicePitch !== undefined ? settings.gameVoicePitch : 1} onChange={handleChange} className="w-full accent-purple-600" />
                   </div>
                 </div>
               </div>
