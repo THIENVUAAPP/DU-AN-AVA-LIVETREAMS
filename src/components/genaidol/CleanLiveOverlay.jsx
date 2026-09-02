@@ -24,29 +24,39 @@ const getBackendUrl = () => {
   
   const hostname = window.location.hostname;
   const port = window.location.port;
+  const proto = window.location.protocol;
   
-  // Tunnel domains (trycloudflare.com, loca.lt, ngrok.io, v.v.) — KHÔNG có port số
-  // => overlay đang được truy cập từ xa qua tunnel
-  // => Backend luôn chạy trên cùng máy tại localhost:3001
+  // Tunnel domains (trycloudflare.com, loca.lt, ngrok.io, v.v.)
+  // => Cloudflare Tunnel PROXY MỌI REQUEST (HTTP + WebSocket) về localhost:3001 tự động
+  // => PHẢI dùng same-origin (cùng domain tunnel), KHÔNG dùng localhost
+  // => Vì HTTPS page → HTTP localhost = MIXED CONTENT bị chặn 100%!
   const isTunnelDomain = (
     hostname.includes('trycloudflare.com') ||
     hostname.includes('loca.lt') ||
     hostname.includes('ngrok') ||
-    hostname.includes('serveo.net') ||
+    hostname.includes('serveo.net')
+  );
+  
+  const isCloudDomain = (
     hostname.includes('vercel.app') ||
-    hostname.includes('netlify.app') ||
-    (!port && hostname !== 'localhost' && hostname !== '127.0.0.1' && !hostname.match(/^\d+\.\d+\.\d+\.\d+$/))
+    hostname.includes('netlify.app')
   );
   
   if (isTunnelDomain) {
-    // Kết nối về backend local — cùng máy, luôn đúng
-    return 'http://localhost:3001';
+    // Same-origin: tất cả request đi qua tunnel → proxy về localhost:3001
+    // WebSocket: wss://xxx.trycloudflare.com → tunnel → ws://localhost:3001
+    // API: https://xxx.trycloudflare.com/api/... → tunnel → http://localhost:3001/api/...
+    return `${proto}//${hostname}`;
+  }
+  
+  if (isCloudDomain) {
+    // Cloud deployment: API và WS cũng ở cùng origin
+    return `${proto}//${hostname}`;
   }
   
   // Trường hợp chạy trực tiếp trên máy (localhost / IP local)
   const usePort = port && port !== '5173' && port !== '3000' ? port : '3001';
-  const proto = window.location.protocol.startsWith('https') ? 'https' : 'http';
-  return `${proto}//${hostname}:${usePort}`;
+  return `http://${hostname}:${usePort}`;
 };
 
 export default function CleanLiveOverlay({ customStyle = {} }) {

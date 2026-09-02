@@ -44,6 +44,7 @@
     "@react-three/drei": "^9.122.0",
     "@react-three/fiber": "^8.18.0",
     "@supabase/supabase-js": "^2.110.8",
+    "cloudflared": "^0.7.3",
     "clsx": "^2.1.1",
     "concurrently": "^10.0.4",
     "cors": "^2.8.6",

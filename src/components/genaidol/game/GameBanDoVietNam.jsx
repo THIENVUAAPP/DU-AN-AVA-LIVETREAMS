@@ -284,8 +284,8 @@ export default function GameBanDoVietNam({
   const [autoTestStep, setAutoTestStep] = useState(0);
   const [showSidePanels, setShowSidePanels] = useState(true);
   const [activeCameraPreset, setActiveCameraPreset] = useState('overview');
-  const [autoRotate, setAutoRotate] = useState(() => bandoEngine.state.autoRotate !== undefined ? bandoEngine.state.autoRotate : true);
-  const autoRotateRef = useRef(true);
+  const [autoRotate, setAutoRotate] = useState(() => bandoEngine.state.autoRotate !== undefined ? bandoEngine.state.autoRotate : false);
+  const autoRotateRef = useRef(false);
   useEffect(() => {
     autoRotateRef.current = autoRotate;
   }, [autoRotate]);
