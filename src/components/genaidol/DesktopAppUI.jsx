@@ -2147,6 +2147,38 @@ export default function DesktopAppUI() {
                 </div>
               </div>
               
+              {/* Nút Kho Template Video / Ảnh Mẫu (Chỉ mở khi đã mua gói VIP / PRO) */}
+              <button
+                onClick={() => {
+                  const isPaidPlan = currentUser.isAdmin || (currentUser.plan && currentUser.plan.toUpperCase() !== 'FREE' && currentUser.plan.toUpperCase() !== 'MIỄN PHÍ');
+                  setIsGmailLoginModalOpen(false);
+                  if (!isPaidPlan) {
+                    setToast({
+                      type: 'error',
+                      message: '🔒 Kho Template Video & Ảnh Mẫu chỉ dành riêng cho tài khoản đã mua gói VIP PRO!'
+                    });
+                    setActiveSettingsModal('payment');
+                  } else {
+                    setIsTemplateLibraryOpen(true);
+                  }
+                }}
+                className="w-full flex items-center justify-between py-2.5 px-4 bg-gradient-to-r from-purple-600/30 to-pink-600/30 hover:from-purple-600/50 hover:to-pink-600/50 border border-purple-400/40 text-white rounded-xl font-bold text-xs shadow-md transition-all hover:scale-[1.02] active:scale-98 cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <Video className="w-4 h-4 text-pink-400" />
+                  <span>🎬 Kho Template Video & Ảnh Mẫu</span>
+                </div>
+                {currentUser.isAdmin || (currentUser.plan && currentUser.plan.toUpperCase() !== 'FREE' && currentUser.plan.toUpperCase() !== 'MIỄN PHÍ') ? (
+                  <span className="px-1.5 py-0.5 rounded bg-emerald-500 text-black text-[9px] font-black">
+                    VIP
+                  </span>
+                ) : (
+                  <span className="px-1.5 py-0.5 rounded bg-amber-500/30 text-amber-300 text-[9px] font-black">
+                    🔒 Mua Gói
+                  </span>
+                )}
+              </button>
+
               {/* Nút Nâng Cấp Gói */}
               <button
                 onClick={() => {

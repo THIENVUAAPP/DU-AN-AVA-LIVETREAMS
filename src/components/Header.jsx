@@ -171,37 +171,38 @@ export default function Header({
                       <span>Hồ Sơ Người Dùng & Nạp/Rút Tiền</span>
                     </button>
 
+                    {/* Tab Template Hồ Sơ Video (Chỉ khả dụng cho tài khoản đã mua gói VIP / PRO) */}
                     <button
                       onClick={() => {
-                        setActiveTab("affiliate-dashboard");
+                        const isPaidPlan = currentUser.isAdmin || (currentUser.plan && currentUser.plan.toUpperCase() !== 'FREE' && currentUser.plan.toUpperCase() !== 'MIỄN PHÍ');
+                        if (!isPaidPlan) {
+                          alert('🔒 TÍNH NĂNG VIP PRO: Kho Template Video & Ảnh Mẫu độc quyền dành riêng cho tài khoản đã MUA GÓI.\nVui lòng bấm "Nâng Cấp Gói" để mở khóa toàn bộ kho template!');
+                          setActiveTab("payment");
+                        } else {
+                          window.dispatchEvent(new CustomEvent('avalive:open_template_library'));
+                          setActiveTab("avatar");
+                        }
                         setProfileDropdownOpen(false);
                       }}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-200 hover:text-white hover:bg-white/10 font-bold text-xs transition-all text-left cursor-pointer"
+                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs transition-all text-left cursor-pointer ${
+                        currentUser.isAdmin || (currentUser.plan && currentUser.plan.toUpperCase() !== 'FREE' && currentUser.plan.toUpperCase() !== 'MIỄN PHÍ')
+                          ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-purple-200 hover:text-white hover:bg-purple-500/30'
+                          : 'bg-white/5 border border-white/5 text-gray-400 hover:text-gray-200'
+                      }`}
                     >
-                      <Share2 className="w-4 h-4 text-emerald-400" />
-                      <span>Tiếp Thị Liên Kết 30% (Affiliate)</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setActiveTab("sales-analytics");
-                        setProfileDropdownOpen(false);
-                      }}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[#EF4444] hover:bg-[#EF4444]/10 font-black text-xs transition-all text-left cursor-pointer"
-                    >
-                      <ShoppingBag className="w-4 h-4 text-[#EF4444]" />
-                      <span>Quản Lý Doanh Số & Đơn Hàng</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setActiveTab("team");
-                        setProfileDropdownOpen(false);
-                      }}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-200 hover:text-white hover:bg-white/10 font-bold text-xs transition-all text-left cursor-pointer"
-                    >
-                      <ShieldCheck className="w-4 h-4 text-purple-400" />
-                      <span>Quản Lý Phân Quyền Đội Ngũ</span>
+                      <div className="flex items-center gap-2.5">
+                        <Video className="w-4 h-4 text-pink-400" />
+                        <span>🎬 Kho Template Video & Ảnh Mẫu</span>
+                      </div>
+                      {currentUser.isAdmin || (currentUser.plan && currentUser.plan.toUpperCase() !== 'FREE' && currentUser.plan.toUpperCase() !== 'MIỄN PHÍ') ? (
+                        <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[9px] font-black border border-emerald-500/30">
+                          VIP
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[9px] font-black border border-amber-500/30">
+                          🔒 Mua Gói
+                        </span>
+                      )}
                     </button>
 
 

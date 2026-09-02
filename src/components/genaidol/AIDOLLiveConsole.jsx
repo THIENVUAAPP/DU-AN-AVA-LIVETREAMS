@@ -183,7 +183,7 @@ export default function AIDOLLiveConsole() {
   const handleExportBrainAndScripts = () => {
     try {
       const data = {
-        version: '1.0.1',
+        version: '1.0.2',
         exportedAt: new Date().toISOString(),
         brains: allBrains,
         prompts: {
@@ -837,8 +837,9 @@ export default function AIDOLLiveConsole() {
                   {[
                     { id: 'idol', label: '👑 1. Giọng Live Idol Chính', roleKey: 'idolVoice', icon: Sparkles, color: 'text-purple-400' },
                     { id: 'manager', label: '💼 2. Giọng Trợ Lý & Bán Hàng', roleKey: 'managerVoice', icon: Zap, color: 'text-blue-400' },
-                    { id: 'comment', label: '💬 3. Giọng Trả Lời Bình Luận AI', roleKey: 'commentVoice', icon: Bot, color: 'text-pink-400' },
-                    { id: 'events', label: '⚡ 4. Kịch Bản Câu Thoại Sự Kiện', roleKey: null, icon: Radio, color: 'text-yellow-400' },
+                    { id: 'caster', label: '🎙️ 3. Giọng Bình Luận Viên Game PK', roleKey: 'casterVoice', icon: Radio, color: 'text-amber-400' },
+                    { id: 'comment', label: '💬 4. Giọng Trả Lời Bình Luận AI', roleKey: 'commentVoice', icon: Bot, color: 'text-pink-400' },
+                    { id: 'events', label: '⚡ 5. Kịch Bản Câu Thoại Sự Kiện', roleKey: null, icon: Radio, color: 'text-yellow-400' },
                   ].map(tab => {
                     const Icon = tab.icon;
                     const isActive = activeVoiceRoleTab === tab.id;
@@ -873,7 +874,7 @@ export default function AIDOLLiveConsole() {
                   <div className="space-y-4">
                     {/* Active Voice Card */}
                     {(() => {
-                      const roleKey = activeVoiceRoleTab === 'idol' ? 'idolVoice' : (activeVoiceRoleTab === 'manager' ? 'managerVoice' : 'commentVoice');
+                      const roleKey = activeVoiceRoleTab === 'idol' ? 'idolVoice' : (activeVoiceRoleTab === 'manager' ? 'managerVoice' : (activeVoiceRoleTab === 'caster' ? 'casterVoice' : 'commentVoice'));
                       const currentVoice = voiceConfig[roleKey] || {
                         id: 'free_vi_female',
                         name: 'Hoài My 🇻🇳 (Nữ)',
@@ -887,7 +888,7 @@ export default function AIDOLLiveConsole() {
                         <div className="p-4 rounded-2xl bg-gradient-to-tr from-purple-950/40 via-slate-900 to-indigo-950/40 border border-purple-500/30 shadow-xl space-y-3">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-black text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
-                              🎙️ Giọng Đang Chọn Cho: {activeVoiceRoleTab === 'idol' ? 'Idol Chính' : (activeVoiceRoleTab === 'manager' ? 'Trợ Lý Bán Hàng' : 'Trả Lời Bình Luận')}
+                              🎙️ Giọng Đang Chọn Cho: {activeVoiceRoleTab === 'idol' ? 'Idol Chính' : (activeVoiceRoleTab === 'manager' ? 'Trợ Lý Bán Hàng' : (activeVoiceRoleTab === 'caster' ? 'Bình Luận Viên Game' : 'Trả Lời Bình Luận'))}
                             </span>
                             <button
                               onClick={() => {
@@ -1180,11 +1181,23 @@ export default function AIDOLLiveConsole() {
                               <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs font-black text-white">{p.event}</span>
-                                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                                    p.role === 'idol' ? 'bg-purple-500/20 text-purple-300' : p.role === 'comment' ? 'bg-pink-500/20 text-pink-300' : 'bg-blue-500/20 text-blue-300'
-                                  }`}>
-                                    {p.role === 'idol' ? '👑 Giọng Idol' : p.role === 'comment' ? '💬 Giọng Trả Lời' : '💼 Giọng Trợ Lý'}
-                                  </span>
+                                  
+                                  {/* Dropdown Lựa Chọn Người Đọc (Idol, Trợ Lý, Caster, Tương Tác) */}
+                                  <select
+                                    value={p.role || 'idol'}
+                                    onChange={(e) => {
+                                      const newRole = e.target.value;
+                                      const updated = eventPrompts.map(item => item.id === p.id ? { ...item, role: newRole } : item);
+                                      setEventPrompts(updated);
+                                      try { localStorage.setItem('aidol_custom_event_prompts', JSON.stringify(updated)); } catch(err) {}
+                                    }}
+                                    className="text-[10px] px-2 py-0.5 rounded-lg font-black bg-black/60 border border-purple-400/40 text-purple-200 outline-none cursor-pointer"
+                                  >
+                                    <option value="idol" className="bg-[#121420] text-purple-300">👑 Giọng AI Idol Chính</option>
+                                    <option value="manager" className="bg-[#121420] text-blue-300">💼 Giọng Trợ Lý Bán Hàng</option>
+                                    <option value="caster" className="bg-[#121420] text-amber-300">🎙️ Giọng Bình Luận Viên Game</option>
+                                    <option value="comment" className="bg-[#121420] text-pink-300">💬 Giọng Trả Lời Bình Luận</option>
+                                  </select>
                                 </div>
 
                                 <div className="flex items-center gap-1.5">
@@ -1206,7 +1219,9 @@ export default function AIDOLLiveConsole() {
                                     onClick={() => {
                                       const voice = p.role === 'idol' 
                                         ? voiceConfig.idolVoice 
-                                        : (p.role === 'comment' ? voiceConfig.commentVoice : voiceConfig.managerVoice);
+                                        : (p.role === 'manager' 
+                                            ? voiceConfig.managerVoice 
+                                            : (p.role === 'caster' ? (voiceConfig.casterVoice || voiceConfig.managerVoice) : voiceConfig.commentVoice));
                                       handlePreviewRoleVoice(voice, p.text.replace(/\[user\]/gi, 'Khán Giả').replace(/\[gift\]/gi, 'Hoa Hồng'));
                                     }}
                                     className="p-1.5 rounded-lg bg-purple-500/20 text-purple-300 hover:bg-purple-500/40"
