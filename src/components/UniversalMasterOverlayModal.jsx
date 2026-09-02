@@ -51,11 +51,10 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
   if (!isOpen) return null;
 
-  const cloudBase = "https://avalivepro.vercel.app";
-
   const getProjectUrl = (path) => {
     if (tunnelData?.tunnelUrl) {
-      return `${cloudBase}/${path}?backend=${tunnelData.tunnelUrl}`;
+      // Return the Cloudflare Tunnel URL directly
+      return `${tunnelData.tunnelUrl}/${path}`;
     }
     return null;
   };
@@ -123,10 +122,10 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
           </div>
           <div>
             <h2 className="text-lg font-black text-white tracking-tight">
-              ĐƯỜNG LINK TIKTOK LIVE STUDIO (CHÍNH THỨC)
+              ĐƯỜNG LINK TIKTOK LIVE STUDIO (CLOUDFLARE TUNNEL)
             </h2>
             <p className="text-[11px] text-cyan-300 font-bold">
-              Link Đám Mây Vercel (avalivepro.vercel.app) — Tự động đồng bộ với máy tính của bạn qua đường hầm!
+              Link HTTPS công khai *.trycloudflare.com — TikTok Studio chấp nhận ngay, không cần nhập IP
             </p>
           </div>
         </div>
