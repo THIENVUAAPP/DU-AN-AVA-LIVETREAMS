@@ -697,7 +697,11 @@ export default function DesktopAppUI() {
 
             if (uploadedServerUrl) {
               await saveCharacterToIDB({ ...c, mediaUrl: uploadedServerUrl, url: uploadedServerUrl });
-              setCustomCharacters(prev => prev.map(item => item.id === c.id ? { ...item, url: uploadedServerUrl } : item));
+              setCustomCharacters(prev => {
+                const updatedList = prev.map(item => item.id === c.id ? { ...item, url: uploadedServerUrl } : item);
+                try { localStorage.setItem('avalive_custom_characters', JSON.stringify(updatedList)); } catch (e) {}
+                return updatedList;
+              });
               
               // ĐỒNG BỘ NGAY NẾU VIDEO VỪA UPLOAD LÀ VIDEO ĐANG ĐƯỢC CHỌN
               if (selectedCharacter === c.id) {
@@ -1777,7 +1781,11 @@ export default function DesktopAppUI() {
                     }
 
                     // Cập nhật link HTTP vĩnh viễn cho nhân vật
-                    setCustomCharacters(prev => prev.map(c => c.id === newCharId ? { ...c, url: fullServerUrl } : c));
+                    setCustomCharacters(prev => {
+                      const updatedList = prev.map(c => c.id === newCharId ? { ...c, url: fullServerUrl } : c);
+                      try { localStorage.setItem('avalive_custom_characters', JSON.stringify(updatedList)); } catch (e) {}
+                      return updatedList;
+                    });
                     saveCharacterToIDB({
                       id: newCharId,
                       name: charName,
@@ -2755,6 +2763,8 @@ export default function DesktopAppUI() {
                           characterName: charItem.name || 'AI Idol',
                           mediaUrl: charItem.url,
                           isVideo: isVid,
+                          videoPlaybackEvent: 'play',
+                          isPlaying: true,
                           aspectRatio: globalAspectRatio || '9:16'
                         }, socketRef.current);
                       }

@@ -1030,6 +1030,9 @@ app.post('/api/tiktok/test-chat', (req, res) => {
 
 // Live State APIs
 app.get('/api/live-state', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   res.json(currentMasterLiveState);
 });
 
