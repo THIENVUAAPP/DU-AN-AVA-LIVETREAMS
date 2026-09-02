@@ -183,7 +183,7 @@ export default function AIDOLLiveConsole() {
   const handleExportBrainAndScripts = () => {
     try {
       const data = {
-        version: '1.0.6',
+        version: '1.0.7',
         exportedAt: new Date().toISOString(),
         brains: allBrains,
         prompts: {

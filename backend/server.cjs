@@ -1187,3 +1187,12 @@ httpServer.listen(PORT, '0.0.0.0', () => {
   }
   console.log(`===========================================================\n`);
 });
+
+// Hỗ trợ song song cả cổng 5173 để dù người dùng nhập 127.0.0.1:5173 hay 3001 đều chạy 100%
+try {
+  const http5173 = http.createServer(app);
+  http5173.on('error', () => {}); // Tự động bỏ qua nếu Vite dev đang chiếm cổng 5173
+  http5173.listen(5173, '0.0.0.0', () => {
+    console.log(`🌐 Hỗ trợ kết nối song song qua cổng 5173: ${scheme}://127.0.0.1:5173`);
+  });
+} catch (e) {}

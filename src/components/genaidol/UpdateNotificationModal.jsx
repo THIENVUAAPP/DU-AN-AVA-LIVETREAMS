@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star } from 'lucide-react';
 
-export const APP_VERSION = '1.0.6';
+export const APP_VERSION = '1.0.7';
 export const UPDATE_NOTES = [
   "⭐ Khởi chạy 1-Click độc quyền: Đóng gói duy nhất 1 file AvaLive_Studio siêu mượt, tối ưu hoá tối đa hiệu năng.",
-  "🔗 Mở Kho Template Toàn Cục: Bấm mở kho template trực tiếp từ bất kỳ đâu (Hồ sơ, Header, Trang chủ, App).",
-  "📐 Xóa sạch 100% các menu cũ: Loại bỏ triệt để Quản lý đơn hàng & Phân quyền trên tất cả các trang.",
-  "🚀 Đồng bộ Template Video VIP: Mở khóa kho video mẫu, tải lên, xem trước mượt mà và đồng bộ ngay vào luồng Live."
+  "🔗 Hỗ trợ song song cả 2 cổng 3001 & 5173: Mở 127.0.0.1:5173 hay 3001 đều vào ứng dụng ngay lập tức 100%.",
+  "📐 Đồng bộ toàn diện Kho Template: Mở và quản lý video mẫu từ mọi giao diện trang web và phần mềm.",
+  "🚀 Lưu tự động cấu hình Admin: Mọi cập nhật kịch bản, não AI và template được đồng bộ mặc định vào phần mềm."
 ];
 
 export default function UpdateNotificationModal() {
