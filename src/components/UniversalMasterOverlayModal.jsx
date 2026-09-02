@@ -8,10 +8,8 @@ import {
   X,
   Swords,
   Layers,
-  Globe,
   MonitorPlay,
   Map,
-  Monitor,
   Lock,
   Wifi,
   WifiOff,
@@ -20,16 +18,14 @@ import {
 } from "lucide-react";
 
 /**
- * 👑 MODAL LIÊN KẾT TIKTOK LIVE STUDIO & OBS STUDIO
- * - Tab 1: HTTPS Tunnel (localtunnel) — TikTok Studio chấp nhận 100%
- * - Tab 2: Cloud Vercel — Dự phòng khi tunnel lỗi
- * - Tab 3: Local — Chỉ xem thử trên trình duyệt thường
+ * 👑 MODAL LIÊN KẾT TIKTOK LIVE STUDIO
+ * - Cloudflare Quick Tunnel: trycloudflare.com — không có trang cảnh báo IP
+ * - TikTok Studio chấp nhận 100%, không bị lỗi Invalid URL
  */
 export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUser, onOpenLogin }) {
   const [copiedId, setCopiedId] = useState(null);
   const [tunnelData, setTunnelData] = useState(null);
   const [tunnelLoading, setTunnelLoading] = useState(true);
-  const [urlMode, setUrlMode] = useState("tunnel"); // "tunnel" | "cloud" | "local"
 
   const fetchTunnelUrl = useCallback(async () => {
     try {
@@ -39,7 +35,6 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
       const data = await res.json();
       setTunnelData(data);
       setTunnelLoading(false);
-      // Nếu tunnel chưa active, thử lại sau 3 giây
       if (data.status !== "active") {
         setTimeout(fetchTunnelUrl, 3000);
       }
@@ -56,15 +51,9 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
   if (!isOpen) return null;
 
-  const cloudBase = "https://avalivepro.vercel.app";
-  const localBase = "http://localhost:3001";
-
   const getProjectUrl = (path) => {
-    if (urlMode === "tunnel" && tunnelData?.projects?.[path]) {
-      return tunnelData.projects[path];
-    }
-    if (urlMode === "cloud") return `${cloudBase}/${path}`;
-    return `${localBase}/${path}`;
+    if (tunnelData?.projects?.[path]) return tunnelData.projects[path];
+    return null;
   };
 
   const projects = [
@@ -130,10 +119,10 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
           </div>
           <div>
             <h2 className="text-lg font-black text-white tracking-tight">
-              ĐƯỜNG LINK TIKTOK LIVE STUDIO (CHỐNG LỖI 100%)
+              ĐƯỜNG LINK TIKTOK LIVE STUDIO (CLOUDFLARE TUNNEL)
             </h2>
             <p className="text-[11px] text-cyan-300 font-bold">
-              Tự động tạo link HTTPS công khai — TikTok Studio chấp nhận ngay
+              Link HTTPS công khai *.trycloudflare.com — TikTok Studio chấp nhận ngay, không cần nhập IP
             </p>
           </div>
         </div>
@@ -160,114 +149,59 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
           </div>
         ) : (
           <>
-            {/* === TABS === */}
-            <div className="flex gap-2 p-1 rounded-2xl bg-black/50 border border-white/10">
-              <button
-                onClick={() => setUrlMode("tunnel")}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                  urlMode === "tunnel"
-                    ? "bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg"
-                    : "text-gray-400 hover:text-white hover:bg-white/10"
-                }`}
-              >
-                {isTunnelActive ? <Wifi className="w-3.5 h-3.5" /> : tunnelConnecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <WifiOff className="w-3.5 h-3.5" />}
-                <span>🌐 HTTPS Tunnel{isTunnelActive ? " ✅" : tunnelConnecting ? " ⏳" : " ❌"}</span>
-              </button>
-              <button
-                onClick={() => setUrlMode("cloud")}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                  urlMode === "cloud"
-                    ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg"
-                    : "text-gray-400 hover:text-white hover:bg-white/10"
-                }`}
-              >
-                <Globe className="w-3.5 h-3.5" />
-                <span>☁️ Cloud Vercel</span>
-              </button>
-              <button
-                onClick={() => setUrlMode("local")}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                  urlMode === "local"
-                    ? "bg-gradient-to-r from-slate-600 to-gray-600 text-white shadow-lg"
-                    : "text-gray-400 hover:text-white hover:bg-white/10"
-                }`}
-              >
-                <Monitor className="w-3.5 h-3.5" />
-                <span>💻 Local</span>
-              </button>
+            {/* === TRẠNG THÁI TUNNEL === */}
+            <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl border text-xs font-bold ${
+              isTunnelActive
+                ? "bg-emerald-900/40 border-emerald-500/40 text-emerald-300"
+                : tunnelConnecting
+                ? "bg-yellow-900/40 border-yellow-500/40 text-yellow-300"
+                : "bg-red-900/40 border-red-500/40 text-red-300"
+            }`}>
+              {isTunnelActive ? (
+                <>
+                  <Wifi className="w-4 h-4 shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-black">✅ CLOUDFLARE TUNNEL ĐANG HOẠT ĐỘNG — KHÔNG CẦN NHẬP IP!</p>
+                    <p className="font-normal text-emerald-400/80 mt-0.5 font-mono text-[10px]">{tunnelData.tunnelUrl}</p>
+                  </div>
+                  <button onClick={fetchTunnelUrl} className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-all cursor-pointer" title="Làm mới">
+                    <RefreshCw className="w-3.5 h-3.5" />
+                  </button>
+                </>
+              ) : tunnelConnecting ? (
+                <>
+                  <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+                  <div className="flex-1">
+                    <p className="font-black">⏳ ĐANG KHỞI ĐỘNG CLOUDFLARE TUNNEL...</p>
+                    <p className="font-normal text-yellow-400/80 mt-0.5">Đợi khoảng 5-15 giây. Tự động cập nhật khi sẵn sàng.</p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <WifiOff className="w-4 h-4 shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-black">❌ TUNNEL CHƯA SẴN SÀNG</p>
+                    <p className="font-normal text-red-400/80 mt-0.5">Khởi động lại phần mềm và thử lại.</p>
+                  </div>
+                  <button onClick={fetchTunnelUrl} className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-all cursor-pointer">
+                    <RefreshCw className="w-3.5 h-3.5" />
+                  </button>
+                </>
+              )}
             </div>
-
-            {/* === TRẠNG THÁI === */}
-            {urlMode === "tunnel" && (
-              <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl border text-xs font-bold ${
-                isTunnelActive
-                  ? "bg-emerald-900/40 border-emerald-500/40 text-emerald-300"
-                  : tunnelConnecting
-                  ? "bg-yellow-900/40 border-yellow-500/40 text-yellow-300"
-                  : "bg-red-900/40 border-red-500/40 text-red-300"
-              }`}>
-                {isTunnelActive ? (
-                  <>
-                    <Wifi className="w-4 h-4 shrink-0" />
-                    <div className="flex-1">
-                      <p className="font-black">✅ ĐƯỜNG HẦM HTTPS ĐANG HOẠT ĐỘNG</p>
-                      <p className="font-normal text-emerald-400/80 mt-0.5 font-mono">{tunnelData.tunnelUrl}</p>
-                    </div>
-                    <button onClick={fetchTunnelUrl} className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-all cursor-pointer" title="Làm mới">
-                      <RefreshCw className="w-3.5 h-3.5" />
-                    </button>
-                  </>
-                ) : tunnelConnecting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
-                    <div className="flex-1">
-                      <p className="font-black">⏳ ĐANG TẠO ĐƯỜNG HẦM HTTPS...</p>
-                      <p className="font-normal text-yellow-400/80 mt-0.5">Đợi khoảng 5-15 giây. Tự động cập nhật khi sẵn sàng.</p>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <WifiOff className="w-4 h-4 shrink-0" />
-                    <div className="flex-1">
-                      <p className="font-black">❌ TUNNEL CHƯA SẴN SÀNG</p>
-                      <p className="font-normal text-red-400/80 mt-0.5">Dùng tab "Cloud Vercel" hoặc khởi động lại phần mềm.</p>
-                    </div>
-                    <button onClick={fetchTunnelUrl} className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-all cursor-pointer">
-                      <RefreshCw className="w-3.5 h-3.5" />
-                    </button>
-                  </>
-                )}
-              </div>
-            )}
-
-            {urlMode === "cloud" && (
-              <div className="flex items-center gap-3 px-4 py-3 rounded-2xl border bg-blue-900/40 border-blue-500/40 text-blue-300 text-xs font-bold">
-                <Globe className="w-4 h-4 shrink-0" />
-                <p>☁️ Link Vercel công khai — TikTok Studio chấp nhận. Cần có internet để truyền dữ liệu live.</p>
-              </div>
-            )}
-
-            {urlMode === "local" && (
-              <div className="flex items-center gap-3 px-4 py-3 rounded-2xl border bg-orange-900/40 border-orange-500/40 text-orange-300 text-xs font-bold">
-                <Monitor className="w-4 h-4 shrink-0" />
-                <p>⚠️ Link Local — <b>TikTok Studio từ chối</b>. Chỉ dùng để xem thử trên trình duyệt thường.</p>
-              </div>
-            )}
 
             {/* === DANH SÁCH DỰ ÁN === */}
             <div className="space-y-2.5 overflow-y-auto flex-1 pr-1 custom-scrollbar">
               <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5 px-1">
                 <Layers className="w-3.5 h-3.5 text-gray-500" />
-                <span>
-                  {urlMode === "tunnel" ? "SAO CHÉP LINK HTTPS NÀY VÀO TIKTOK STUDIO:" : urlMode === "cloud" ? "LINK CLOUD VERCEL:" : "LINK LOCAL (CHỈ XEM THỬ TRÊN TRÌNH DUYỆT):"}
-                </span>
+                <span>SAO CHÉP LINK CLOUDFLARE NÀY VÀO TIKTOK STUDIO (BROWSER SOURCE):</span>
               </div>
 
               {projects.map((proj) => {
                 const Icon = proj.icon;
                 const isCopied = copiedId === proj.id;
                 const url = getProjectUrl(proj.path);
-                const isLoading = urlMode === "tunnel" && !isTunnelActive && tunnelConnecting;
+                const isLoading = !isTunnelActive && tunnelConnecting;
 
                 return (
                   <div key={proj.id} className={`p-3 rounded-2xl border transition-all ${proj.bgColor} space-y-2 relative`}>
@@ -289,15 +223,11 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                       <input
                         type="text"
                         readOnly
-                        value={isLoading ? "⏳ Đang tạo link HTTPS..." : (url || "⏳ Đang kết nối...")}
+                        value={isLoading ? "⏳ Đang tạo link Cloudflare..." : (url || "⏳ Đang kết nối tunnel...")}
                         className={`w-full sm:flex-1 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold focus:outline-none select-all transition-colors ${
                           isLoading || !url
                             ? "bg-black/40 border-yellow-500/30 text-yellow-400/70"
-                            : urlMode === "tunnel"
-                            ? "bg-black/70 border-emerald-500/30 text-emerald-300"
-                            : urlMode === "cloud"
-                            ? "bg-black/70 border-blue-500/30 text-blue-300"
-                            : "bg-black/70 border-white/15 text-gray-400"
+                            : "bg-black/70 border-emerald-500/30 text-emerald-300"
                         }`}
                       />
 
@@ -346,15 +276,15 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-gray-300">
                 <div className="p-2 rounded-xl bg-white/5 border border-white/10 space-y-1">
-                  <span className="font-bold text-green-300">🌐 Tab HTTPS Tunnel (Khuyến nghị):</span>
+                  <span className="font-bold text-green-300">🌐 Cách dán vào TikTok Studio:</span>
                   <p className="text-gray-400 leading-relaxed">
-                    Đợi link xanh ✅ → Sao chép link → Dán vào TikTok Studio <b>Browser Source</b> → Kích thước <b>1080×1920</b> → Xong!
+                    Đợi link xanh ✅ sẵn sàng → Sao chép link <b>trycloudflare.com</b> → Thêm nguồn <b>Browser Source</b> trong TikTok Studio → Dán link vào → Kích thước <b>1080×1920</b> → Xong!
                   </p>
                 </div>
                 <div className="p-2 rounded-xl bg-white/5 border border-white/10 space-y-1">
-                  <span className="font-bold text-blue-300">☁️ Tab Cloud Vercel (Dự phòng):</span>
+                  <span className="font-bold text-cyan-300">🔄 Đồng bộ video tự động:</span>
                   <p className="text-gray-400 leading-relaxed">
-                    Nếu Tunnel lỗi → Chuyển sang tab <b>☁️ Cloud Vercel</b>. Link cloud luôn hoạt động, cần internet.
+                    Phần mềm phát video gì, TikTok Studio hiển thị video đó ngay lập tức. Đồng bộ qua <b>WebSocket + API Polling 500ms</b>.
                   </p>
                 </div>
               </div>

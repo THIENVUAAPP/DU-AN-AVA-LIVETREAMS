@@ -16,12 +16,37 @@ import { loadAllAidolItems } from '../../utils/idbHelper';
  * - Hiển thị 100% VIDEO / STREAM SẠCH, không dính bất kỳ badge hay rác thông tin nào
  */
 const getBackendUrl = () => {
-  const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-  const backendParam = urlParams ? urlParams.get('backend') : null;
-  const port = typeof window !== 'undefined' && window.location.port && window.location.port !== '5173' && window.location.port !== '3000' ? window.location.port : '3001';
-  const host = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1';
-  const proto = typeof window !== 'undefined' ? window.location.protocol : 'http:';
-  return backendParam || `${proto}//${host}:${port}`;
+  if (typeof window === 'undefined') return 'http://localhost:3001';
+  const urlParams = new URLSearchParams(window.location.search);
+  // Nếu có tham số ?backend= thì dùng luôn (override thủ công)
+  const backendParam = urlParams.get('backend');
+  if (backendParam) return backendParam;
+  
+  const hostname = window.location.hostname;
+  const port = window.location.port;
+  
+  // Tunnel domains (trycloudflare.com, loca.lt, ngrok.io, v.v.) — KHÔNG có port số
+  // => overlay đang được truy cập từ xa qua tunnel
+  // => Backend luôn chạy trên cùng máy tại localhost:3001
+  const isTunnelDomain = (
+    hostname.includes('trycloudflare.com') ||
+    hostname.includes('loca.lt') ||
+    hostname.includes('ngrok') ||
+    hostname.includes('serveo.net') ||
+    hostname.includes('vercel.app') ||
+    hostname.includes('netlify.app') ||
+    (!port && hostname !== 'localhost' && hostname !== '127.0.0.1' && !hostname.match(/^\d+\.\d+\.\d+\.\d+$/))
+  );
+  
+  if (isTunnelDomain) {
+    // Kết nối về backend local — cùng máy, luôn đúng
+    return 'http://localhost:3001';
+  }
+  
+  // Trường hợp chạy trực tiếp trên máy (localhost / IP local)
+  const usePort = port && port !== '5173' && port !== '3000' ? port : '3001';
+  const proto = window.location.protocol.startsWith('https') ? 'https' : 'http';
+  return `${proto}//${hostname}:${usePort}`;
 };
 
 export default function CleanLiveOverlay({ customStyle = {} }) {
