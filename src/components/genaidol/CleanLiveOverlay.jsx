@@ -563,7 +563,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   // Tự động phát hoặc tạm dừng video theo điều khiển từ Dashboard
   useEffect(() => {
     if (masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false) {
-      if (overlayVideoRef.current && !overlayVideoRef.current.paused) {
+      if (overlayVideoRef.current) {
         overlayVideoRef.current.dataset.userPaused = 'true';
         overlayVideoRef.current.pause();
       }
@@ -621,12 +621,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     if (overlayVideoRef.current && masterState.videoPlaybackEvent) {
       try {
         const v = overlayVideoRef.current;
-        if (masterState.videoPlaybackEvent === 'play' && v.paused) {
+        if (masterState.videoPlaybackEvent === 'play') {
           v.dataset.userPaused = 'false';
-          v.play().catch(() => {});
-        } else if (masterState.videoPlaybackEvent === 'pause' && !v.paused) {
+          if (v.paused) v.play().catch(() => {});
+        } else if (masterState.videoPlaybackEvent === 'pause') {
           v.dataset.userPaused = 'true';
-          v.pause();
+          if (!v.paused) v.pause();
         }
         
         if (masterState.videoCurrentTime !== undefined) {
@@ -874,15 +874,10 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               el.muted = true;
               el.defaultMuted = true;
               el.playsInline = true;
-              // Audio-reactive playback: Tăng nhẹ tốc độ video khi AI nói để tạo cảm giác nhép môi
+              // Disabled audio-reactive playbackRate to prevent "giật giật" (jerky) video.
+              // Video should play at constant 1.0 speed unless explicitly changed.
               try {
-                // Chỉ áp dụng đổi speed nếu video ĐANG CHẠY (không bị pause từ phần mềm)
-                if (!el.paused) {
-                  const targetRate = currentVolume > 0.1 ? 1.0 + (currentVolume * 0.3) : 1.0;
-                  if (Math.abs(el.playbackRate - targetRate) > 0.1) {
-                    el.playbackRate = targetRate;
-                  }
-                }
+                if (el.playbackRate !== 1.0) el.playbackRate = 1.0;
               } catch(e) {}
               
               el.setAttribute('muted', '');
@@ -913,13 +908,21 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           onLoadedMetadata={(e) => {
             e.target.muted = true;
             if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
+              e.target.dataset.userPaused = 'false';
               e.target.play().catch(() => {});
+            } else {
+              e.target.dataset.userPaused = 'true';
+              e.target.pause();
             }
           }}
           onCanPlay={(e) => {
             e.target.muted = true;
             if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
+              e.target.dataset.userPaused = 'false';
               e.target.play().catch(() => {});
+            } else {
+              e.target.dataset.userPaused = 'true';
+              e.target.pause();
             }
           }}
           onEnded={(e) => {
@@ -940,9 +943,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             width: '100vw', 
             height: '100vh', 
             objectFit: 'cover',
-            // Ánh xạ ARKit JawOpen và Âm lượng vào biến dạng hình ảnh nhẹ (Audio-reactive)
-            transform: currentVolume > 0.05 ? `scale(${1 + currentVolume * 0.015}) translateY(${currentVolume * -2}px)` : 'none',
-            transition: 'transform 0.05s ease-out',
+            transform: 'none',
             willChange: 'transform'
           }}
         />

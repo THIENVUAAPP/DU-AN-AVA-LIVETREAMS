@@ -1332,13 +1332,16 @@ export default function DesktopAppUI() {
       name: 'Video Người Dùng' 
     };
     
-    let currentMedia = char.url || (activeVideoItem?.mediaUrl) || '';
-    let isVid = char.type === 'video' || (typeof currentMedia === 'string' && (currentMedia.endsWith('.mp4') || currentMedia.includes('/uploads/') || currentMedia.startsWith('http')));
+    let currentMedia = lipSyncVideoUrl || (activeVideoItem?.mediaUrl) || char.url || '';
+    let isVid = char.type === 'video' || (typeof currentMedia === 'string' && (currentMedia.endsWith('.mp4') || currentMedia.includes('/uploads/') || currentMedia.startsWith('http') || currentMedia.startsWith('blob:')));
     let streamFlvUrl = null;
 
     if (isConnected && flvUrl) {
       currentMedia = flvUrl;
       streamFlvUrl = flvUrl;
+      isVid = true;
+    } else if (lipSyncVideoUrl) {
+      currentMedia = lipSyncVideoUrl;
       isVid = true;
     } else if (isProcessingEvent && activeVideoItem && activeVideoItem.mediaUrl) {
       currentMedia = activeVideoItem.mediaUrl;
@@ -1381,7 +1384,8 @@ export default function DesktopAppUI() {
     isDarkMode, 
     currentLang, 
     CHARACTERS, 
-    flvUrl
+    flvUrl,
+    lipSyncVideoUrl
   ]);
 
   // Trích xuất TikTok Username từ Link Live / ID / @username
