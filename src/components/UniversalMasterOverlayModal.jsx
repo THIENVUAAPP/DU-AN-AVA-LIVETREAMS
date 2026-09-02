@@ -57,7 +57,8 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
     if (tunnelData?.tunnelUrl) {
       return `${cloudBase}/${path}?backend=${tunnelData.tunnelUrl}`;
     }
-    return null;
+    // Fallback: Nếu tunnel bị lỗi hoặc chạy trên máy Local Windows, dùng luôn link Localhost
+    return `http://127.0.0.1.nip.io:3001/${path}`;
   };
 
   const projects = [
