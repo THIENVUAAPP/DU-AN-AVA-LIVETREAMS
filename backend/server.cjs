@@ -1144,8 +1144,14 @@ app.post('/api/generate-script', async (req, res) => {
   }
 });
 
-// SPA Fallback cho tất cả các route (Overlay, Game, Live Studio, Live Idol)
+// SPA Fallback & Tuyến đường chuyên dụng cho TikTok LIVE Studio & OBS Studio
 if (distPath) {
+  app.get(['/idol', '/bando', '/battle', '/live', '/overlay-idol', '/overlay-bando', '/overlay-battle'], (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+
   app.use((req, res, next) => {
     if (req.method !== 'GET' && req.method !== 'HEAD') return next();
     if (req.url.startsWith('/api') || req.url.startsWith('/socket.io')) return next();
@@ -1153,6 +1159,8 @@ if (distPath) {
     if (req.method === 'HEAD') {
       return res.status(200).type('text/html').end();
     }
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.sendFile(path.join(distPath, 'index.html'));
   });
 }

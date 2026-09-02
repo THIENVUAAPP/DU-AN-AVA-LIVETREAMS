@@ -58,7 +58,7 @@ class ErrorBoundary extends Component {
   }
 }
 // 🧹 TỰ ĐỘNG DỌN DẸP DỮ LIỆU CŨ & CACHE KHI CẬP NHẬT PHIÊN BẢN MỚI
-const CURRENT_APP_VERSION = '1.0.9';
+const CURRENT_APP_VERSION = '1.1.0';
 try {
   const savedVer = localStorage.getItem('avalive_installed_version');
   if (savedVer && savedVer !== CURRENT_APP_VERSION) {

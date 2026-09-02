@@ -80,11 +80,14 @@
       }
     } catch (e) {}
 
-    // Tự động kiểm tra và chuyển hướng đến 127.0.0.1.nip.io:3001 khi máy chủ chạy
+    // Tự động kiểm tra và chuyển hướng đến 127.0.0.1:3001 khi máy chủ chạy
     setInterval(function() {
-      fetch('http://127.0.0.1.nip.io:3001/api/health')
+      fetch('http://127.0.0.1:3001/api/live-state')
         .then(function(res) {
-          if (res.ok) window.location.href = 'http://127.0.0.1.nip.io:3001';
+          if (res.ok) {
+            var btn = document.getElementById('launchLocalBtn');
+            if (btn) btn.style.boxShadow = '0 0 30px #00ff66';
+          }
         })
         .catch(function() {});
     }, 1500);

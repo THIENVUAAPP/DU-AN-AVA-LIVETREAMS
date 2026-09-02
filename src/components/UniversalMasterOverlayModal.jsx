@@ -34,11 +34,8 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
   if (!isOpen) return null;
 
-  // Tự động nhận diện Web Cloud Vercel hoặc Local IP để mọi người dùng trong cộng đồng đều dán vào TikTok Studio dùng được 100%
-  const isLocal = typeof window !== "undefined" && (window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') || window.location.hostname === '');
-  const activeBase = typeof window !== "undefined"
-    ? (isLocal ? `http://127.0.0.1:${currentPort}` : window.location.origin)
-    : 'http://127.0.0.1:3001';
+  // Định dạng đường link Local chuẩn 100% cho phần mềm chạy trên máy người dùng (Mac & Windows)
+  const activeBase = "http://127.0.0.1:3001";
 
   // Danh sách 3 Dự án Độc Lập chuẩn 100%
   const projects = [
