@@ -49,8 +49,8 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
       bgColor: "bg-[#1a0f14]/80 border-pink-500/20 hover:border-pink-500/40",
       description:
         "Phát video người Live / AI Idol chuẩn kích thước 9:16 (1080x1920) 60FPS sạch 100% không lệch khung hình.",
-      path: "/idol",
-      directUrl: `${activeBase}/idol`,
+      path: "/?overlay=idol",
+      directUrl: `${activeBase}/?overlay=idol`,
     },
     {
       id: "bando",
@@ -62,8 +62,8 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
       bgColor: "bg-[#1a150f]/80 border-amber-500/20 hover:border-amber-500/40",
       description:
         "Game cắm cờ 63 tỉnh thành Việt Nam 3D chuẩn kích thước 9:16 (1080x1920) khi khán giả tặng quà.",
-      path: "/bando",
-      directUrl: `${activeBase}/bando`,
+      path: "/?overlay=bando",
+      directUrl: `${activeBase}/?overlay=bando`,
     },
     {
       id: "battle",
@@ -75,8 +75,8 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
       bgColor: "bg-[#1a0f0f]/80 border-red-500/20 hover:border-red-500/40",
       description:
         "Võ đài chiến đấu chia 2 phe PK kịch tính chuẩn kích thước 9:16 (1080x1920) khi có quà & bình luận.",
-      path: "/battle",
-      directUrl: `${activeBase}/battle`,
+      path: "/?overlay=battle",
+      directUrl: `${activeBase}/?overlay=battle`,
     },
   ];
 

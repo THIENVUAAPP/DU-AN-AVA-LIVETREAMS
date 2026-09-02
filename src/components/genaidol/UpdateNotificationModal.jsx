@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star } from 'lucide-react';
 
-export const APP_VERSION = '1.1.1';
+export const APP_VERSION = '1.1.2';
 export const UPDATE_NOTES = [
   "⭐ Khởi chạy 1-Click độc quyền: Đóng gói duy nhất 1 file AvaLive_Studio siêu mượt, tối ưu hoá tối đa hiệu năng.",
-  "👑 Thiết lập Mặc định Ngọc Nhi (24 tuổi): Nạp sẵn System Prompt, Kiến thức nền & Kịch bản từ khóa AVA LIVE.",
-  "🎙️ 3 Kênh Giọng Đọc Độc Lập: Giọng Idol Live, Giọng Quản Lý/Trợ Lý, Giọng BLV Game có thanh gạt Volume & Speed.",
-  "🔗 Đường link TikTok Live Studio 100% không lỗi: Hỗ trợ kết nối trực tiếp http://127.0.0.1:3001 mượt mà."
+  "🔊 Khắc phục triệt để Âm lượng & Tốc độ đọc: Tùy chỉnh Volume (0-100%) và Speed (0.5x-2.0x) có hiệu lực 100%.",
+  "🔗 Chuẩn hóa đường link TikTok Live Studio: Định dạng http://127.0.0.1:3001/?overlay= tương thích mọi phiên bản CEF.",
+  "🚀 Tự động kích hoạt bản mới: Khởi chạy phần mềm là tự động nạp cấu hình mới nhất không dính cache cũ."
 ];
 
 export default function UpdateNotificationModal() {

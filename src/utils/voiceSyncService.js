@@ -566,20 +566,10 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null) {
         const isMale = voice?.gender === 'Male' || voice?.gender === 'Nam';
         const isFemale = !isMale;
 
-        if (voice?.id === 'free_vi_male') {
-          utterance.rate = 1.08;
-          utterance.pitch = 0.85;
-        } else if (voice?.id === 'free_vi_female2') {
-          utterance.rate = 0.98;
-          utterance.pitch = 1.25;
-        } else if (voice?.id === 'free_vi_female') {
-          utterance.rate = 1.0;
-          utterance.pitch = 1.12;
-        } else {
-          utterance.rate = voice?.rate || (isFemale ? 1.0 : 1.05);
-          utterance.pitch = voice?.pitch || (isFemale ? 1.15 : 0.88);
-        }
-        utterance.volume = isLocalSpeakerMuted ? 0 : (voice?.volume || 1.0);
+        // Tôn trọng 100% tốc độ đọc (rate), cao độ (pitch) và âm lượng (volume) người dùng tùy chỉnh
+        utterance.rate = voice?.rate !== undefined ? Number(voice.rate) : (isFemale ? 1.0 : 1.05);
+        utterance.pitch = voice?.pitch !== undefined ? Number(voice.pitch) : (isFemale ? 1.12 : 0.88);
+        utterance.volume = isLocalSpeakerMuted ? 0 : (voice?.volume !== undefined ? Math.max(0, Math.min(1, Number(voice.volume))) : 1.0);
 
         let hasEnded = false;
         const finish = (ok) => {
