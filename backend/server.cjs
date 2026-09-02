@@ -1172,10 +1172,11 @@ httpServer.on('error', (err) => {
   }
 });
 
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`\n===========================================================`);
   console.log(`🚀 HỆ THỐNG AVALIVE LIVESTREAM VIP PRO ĐANG HOẠT ĐỘNG!`);
   console.log(`🌐 Màn Hình Chính: ${scheme}://localhost:${PORT}`);
+  console.log(`🌐 Màn Hình Local IP: ${scheme}://127.0.0.1:${PORT}`);
   console.log(`🗺️ Overlay Bản Đồ: ${scheme}://localhost:${PORT}/?overlay=bando`);
   console.log(`⚔️ Overlay Chiến Đấu: ${scheme}://localhost:${PORT}/?overlay=battle`);
   console.log(`🎭 Test Gift: POST ${scheme}://localhost:${PORT}/api/tiktok/test-gift`);

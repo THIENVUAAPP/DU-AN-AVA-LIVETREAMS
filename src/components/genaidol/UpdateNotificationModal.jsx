@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star } from 'lucide-react';
 
-export const APP_VERSION = '1.0.3';
+export const APP_VERSION = '1.0.4';
 export const UPDATE_NOTES = [
   "⭐ Khởi chạy 1-Click độc quyền: Đóng gói duy nhất 1 file AvaLive_Studio siêu mượt, tối ưu hoá tối đa hiệu năng.",
-  "🔗 Đa định dạng IP 127.0.0.1 & Domain: Chống lỗi URL trên TikTok LIVE Studio 100% không phụ thuộc DNS.",
-  "📐 Kho Template Video & Ảnh Mẫu VIP: Xem trước Video Thumbnail siêu nét, hover phát mượt mà không lo màn hình đen.",
-  "🚀 Đồng bộ Tiếp Thị Liên Kết 30%: Giữ nguyên phân mục Affiliate trong Hồ sơ người dùng và loại bỏ toàn bộ tab dư thừa."
+  "🔗 Sửa lỗi Video icon trong Hồ sơ: Khắc phục triệt để lỗi ReferenceError khi truy cập Hồ sơ người dùng & Nạp rút tiền.",
+  "📐 Chạy Localhost 3001 ổn định trên Mac: Tự động phát hiện máy chủ sẵn sàng trước khi mở trình duyệt, chống lỗi Connection Refused.",
+  "🚀 Kho Template Video & Ảnh Mẫu VIP: Xem trước video mượt mà, loại bỏ triệt để các tab chức năng thừa."
 ];
 
 export default function UpdateNotificationModal() {

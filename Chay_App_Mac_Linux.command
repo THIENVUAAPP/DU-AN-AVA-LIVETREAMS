@@ -55,8 +55,17 @@ if [ -f "certs/dev-cert.pem" ]; then
     security add-trusted-cert -r trustRoot -p ssl -k "$HOME/Library/Keychains/login.keychain-db" "certs/dev-cert.pem" >/dev/null 2>&1 || true
 fi
 
-# 4. Mở trình duyệt web tự động
-(sleep 1 && (open "http://127.0.0.1:3001" 2>/dev/null || open "http://localhost:3001" 2>/dev/null || open "http://127.0.0.1.nip.io:3001" 2>/dev/null || xdg-open "http://127.0.0.1:3001" 2>/dev/null || open "https://avalivepro.vercel.app")) &
+# 4. Mở trình duyệt web tự động ngay khi máy chủ sẵn sàng
+(
+    for i in {1..30}; do
+        if curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:3001" 2>/dev/null | grep -qE "200|304|302|301"; then
+            open "http://127.0.0.1:3001" 2>/dev/null || open "http://localhost:3001" 2>/dev/null || xdg-open "http://127.0.0.1:3001" 2>/dev/null
+            exit 0
+        fi
+        sleep 0.5
+    done
+    open "http://127.0.0.1:3001" 2>/dev/null || open "http://localhost:3001" 2>/dev/null || open "https://avalivepro.vercel.app" 2>/dev/null
+) &
 
 # 5. Khởi động Server
 if [ -n "$NODE_CMD" ]; then

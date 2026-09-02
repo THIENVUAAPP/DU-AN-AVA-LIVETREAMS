@@ -4,7 +4,7 @@ import {
   ShieldCheck, Database, Calendar, Search, CreditCard, DollarSign, Wallet, FileText, 
   Share2, Zap, Settings, Save, ArrowUpRight, ArrowDownRight, ChevronDown, Package, 
   Activity, Monitor, LogOut, TrendingUp, Download, Eye, RefreshCw, Smartphone, Laptop, 
-  History, LogIn, Lock, Camera, ChevronLeft, Radio, Coins, Clock, Sparkles, ArrowRight
+  History, LogIn, Lock, Camera, ChevronLeft, Radio, Coins, Clock, Sparkles, ArrowRight, Video
 } from 'lucide-react';
 import TeamPermissionsManager from './TeamPermissionsManager';
 import SalesAnalyticsManager from './SalesAnalyticsManager';
