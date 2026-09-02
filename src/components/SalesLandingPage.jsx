@@ -230,11 +230,24 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
                       <button onClick={() => { setActiveTab("affiliate-dashboard"); setProfileDropdownOpen(false); }} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-200 hover:text-white hover:bg-white/10 font-bold text-xs transition-all text-left cursor-pointer">
                         <Share2 className="w-4 h-4 text-emerald-400" /><span>{t.affiliateProgram}</span>
                       </button>
-                      <button onClick={() => { setActiveTab("sales-analytics"); setProfileDropdownOpen(false); }} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[#EF4444] hover:bg-[#EF4444]/10 font-black text-xs transition-all text-left cursor-pointer">
-                        <ShoppingBag className="w-4 h-4 text-[#EF4444]" /><span>{t.salesManagement}</span>
-                      </button>
-                      <button onClick={() => { setActiveTab("team"); setProfileDropdownOpen(false); }} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-200 hover:text-white hover:bg-white/10 font-bold text-xs transition-all text-left cursor-pointer">
-                        <ShieldCheck className="w-4 h-4 text-purple-400" /><span>{t.teamPermissions}</span>
+                      <button 
+                        onClick={() => {
+                          const isPaidPlan = currentUser.isAdmin || (currentUser.plan && currentUser.plan.toUpperCase() !== 'FREE' && currentUser.plan.toUpperCase() !== 'MIỄN PHÍ');
+                          if (!isPaidPlan) {
+                            alert('🔒 TÍNH NĂNG VIP PRO: Kho Template Video & Ảnh Mẫu độc quyền dành riêng cho tài khoản đã MUA GÓI.\nVui lòng bấm "Nâng Cấp Gói" để mở khóa toàn bộ kho template!');
+                            setActiveTab("payment");
+                          } else {
+                            window.dispatchEvent(new CustomEvent('avalive:open_template_library'));
+                          }
+                          setProfileDropdownOpen(false);
+                        }} 
+                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/5 hover:bg-purple-500/20 text-purple-200 hover:text-white border border-purple-500/30 font-bold text-xs transition-all text-left cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Video className="w-4 h-4 text-pink-400" />
+                          <span>🎬 Kho Template Video Mẫu</span>
+                        </div>
+                        <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[9px] font-black border border-emerald-500/30">VIP</span>
                       </button>
                       {(currentUser.isAdmin || currentUser?.email === 'quocthiencr90@gmail.com') && (
                         <div className="space-y-1 pt-1.5 border-t border-white/10">

@@ -46,6 +46,15 @@ export default function TemplateLibraryModal({ isOpen, onClose, onAddTemplate })
 
   useEffect(() => {
     if (isOpen) {
+      try {
+        const savedUserStr = localStorage.getItem('avalive_current_user');
+        if (savedUserStr) {
+          const u = JSON.parse(savedUserStr);
+          const isPaid = u?.isAdmin || (u?.plan && u?.plan.toUpperCase() !== 'FREE' && u?.plan.toUpperCase() !== 'MIỄN PHÍ');
+          setIsVIPUser(!!isPaid);
+        }
+      } catch (e) {}
+
       refreshCategories();
       refreshItems();
 
@@ -202,9 +211,14 @@ export default function TemplateLibraryModal({ isOpen, onClose, onAddTemplate })
       url: tpl.mediaUrl || tpl.url
     };
 
-    onAddTemplate(charData);
+    if (typeof onAddTemplate === 'function') {
+      onAddTemplate(charData);
+    }
+    window.dispatchEvent(new CustomEvent('avalive:select_template_media', { detail: charData }));
     showToast(`✅ Đã đồng bộ "${tpl.name}" vào luồng Live!`);
-    onClose();
+    if (typeof onClose === 'function') {
+      onClose();
+    }
   };
 
   return (

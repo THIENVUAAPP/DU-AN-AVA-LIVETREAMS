@@ -27,12 +27,19 @@ import LivestreamClonerStudio from "./components/LivestreamClonerStudio";
 import UpgradePrompt from "./components/UpgradePrompt";
 import AutoCaptchaSolver from "./components/AutoCaptchaSolver";
 import UpdateNotificationModal from "./components/genaidol/UpdateNotificationModal";
+import TemplateLibraryModal from "./components/genaidol/TemplateLibraryModal";
 import { bootstrapDefaultPresets } from "./utils/defaultPresetsBootstrap";
 import { Lock, Sparkles, ShieldCheck, Mail, LogIn, ArrowRight } from "lucide-react";
 
 export default function App() {
+  const [templateLibraryOpen, setTemplateLibraryOpen] = useState(false);
+
   useEffect(() => {
     bootstrapDefaultPresets();
+
+    const handleOpenTemplate = () => setTemplateLibraryOpen(true);
+    window.addEventListener('avalive:open_template_library', handleOpenTemplate);
+    return () => window.removeEventListener('avalive:open_template_library', handleOpenTemplate);
   }, []);
 
   // Cửa Sổ Master Live Overlay 1 Link Duy Nhất cho TikTok LIVE Studio & OBS Studio
@@ -420,7 +427,14 @@ export default function App() {
         </div>
       )}
 
-      {/* Thông báo cập nhật phiên bản mới v2.2.1 */}
+      {/* Kho Template Video & Ảnh Mẫu Toàn Cục */}
+      <TemplateLibraryModal
+        isOpen={templateLibraryOpen}
+        onClose={() => setTemplateLibraryOpen(false)}
+        onAddTemplate={() => setTemplateLibraryOpen(false)}
+      />
+
+      {/* Thông báo cập nhật phiên bản mới */}
       <UpdateNotificationModal />
     </div>
   );
