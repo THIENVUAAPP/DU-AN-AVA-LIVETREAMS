@@ -886,7 +886,7 @@ const FieldLabel = ({ icon, text, helpKey, customHelpText, minW = "min-w-[220px]
                           </div>
                         </div>
                         <div className="flex flex-col gap-2 mt-2">
-                          <textarea value={prod.aiPrompt} onChange={(e) => handleProductChange(prod.id, 'aiPrompt', e.target.value)} className="w-full h-[60px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-white focus:outline-blue-500" />
+                          <textarea value={prod.aiPrompt} onChange={(e) => handleProductChange(prod.id, 'aiPrompt', e.target.value)} className="w-full h-[300px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-white focus:outline-blue-500" />
                           
                           <div className="flex items-center justify-center gap-6 mt-1 flex-wrap">
                             <label className="flex items-center gap-1.5 cursor-pointer">
