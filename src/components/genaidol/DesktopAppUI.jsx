@@ -2781,7 +2781,10 @@ export default function DesktopAppUI() {
                     title={`Ô ${index + 1}: ${charItem.name || 'Video Nhân Vật'}`}
                   >
                     {charItem.type === 'video' || (typeof charItem.url === 'string' && (charItem.url.endsWith('.mp4') || charItem.url.includes('/uploads/'))) ? (
-                      <video src={charItem.url} className="w-full h-full object-cover" muted />
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-gray-800 text-gray-300">
+                        <Video size={16} className={isSelected ? "text-cyan-400" : ""} />
+                        <span className="text-[8px] font-medium truncate w-full px-0.5 text-center leading-tight mt-0.5">{charItem.name || 'Video'}</span>
+                      </div>
                     ) : (
                       <img src={charItem.url} className="w-full h-full object-cover" alt={charItem.name || ''} />
                     )}
