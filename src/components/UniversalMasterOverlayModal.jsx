@@ -51,8 +51,12 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
   if (!isOpen) return null;
 
+  const cloudBase = "https://avalivepro.vercel.app";
+
   const getProjectUrl = (path) => {
-    if (tunnelData?.projects?.[path]) return tunnelData.projects[path];
+    if (tunnelData?.tunnelUrl) {
+      return `${cloudBase}/${path}?backend=${tunnelData.tunnelUrl}`;
+    }
     return null;
   };
 
@@ -119,10 +123,10 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
           </div>
           <div>
             <h2 className="text-lg font-black text-white tracking-tight">
-              ĐƯỜNG LINK TIKTOK LIVE STUDIO (CLOUDFLARE TUNNEL)
+              ĐƯỜNG LINK TIKTOK LIVE STUDIO (CHÍNH THỨC)
             </h2>
             <p className="text-[11px] text-cyan-300 font-bold">
-              Link HTTPS công khai *.trycloudflare.com — TikTok Studio chấp nhận ngay, không cần nhập IP
+              Link Đám Mây Vercel (avalivepro.vercel.app) — Tự động đồng bộ với máy tính của bạn qua đường hầm!
             </p>
           </div>
         </div>
@@ -278,13 +282,13 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                 <div className="p-2 rounded-xl bg-white/5 border border-white/10 space-y-1">
                   <span className="font-bold text-green-300">🌐 Cách dán vào TikTok Studio:</span>
                   <p className="text-gray-400 leading-relaxed">
-                    Đợi link xanh ✅ sẵn sàng → Sao chép link <b>trycloudflare.com</b> → Thêm nguồn <b>Browser Source</b> trong TikTok Studio → Dán link vào → Kích thước <b>1080×1920</b> → Xong!
+                    Sao chép link <b>avalivepro.vercel.app</b> ở trên → Thêm nguồn <b>Browser Source</b> trong TikTok Studio → Dán link vào → Kích thước <b>1080×1920</b>.
                   </p>
                 </div>
                 <div className="p-2 rounded-xl bg-white/5 border border-white/10 space-y-1">
-                  <span className="font-bold text-cyan-300">🔄 Đồng bộ video tự động:</span>
+                  <span className="font-bold text-cyan-300">🔄 Tự động đồng bộ:</span>
                   <p className="text-gray-400 leading-relaxed">
-                    Phần mềm phát video gì, TikTok Studio hiển thị video đó ngay lập tức. Đồng bộ qua <b>WebSocket + API Polling 500ms</b>.
+                    Link đã tự động nhúng mã đường hầm để kết nối với máy tính này. Video/Âm thanh sẽ <b>đồng bộ lập tức</b> khi bạn bấm chạy trên phần mềm!
                   </p>
                 </div>
               </div>
