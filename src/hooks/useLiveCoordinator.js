@@ -359,9 +359,13 @@ function fillTemplate(template, vars = {}) {
           baseVideoItem: activeVideoItem,
           preRecordedCat: shouldAction === 'gift_reaction' ? 'reaction' : null
         });
+      } else {
+        // Không có cấu hình kịch bản phản hồi -> Bỏ qua và kết thúc sự kiện
+        setIsProcessingEvent(false);
       }
     } catch (err) {
       console.warn('Lỗi xử lý sự kiện live kịch bản:', err);
+      setIsProcessingEvent(false);
     }
   };
 
@@ -383,11 +387,8 @@ function fillTemplate(template, vars = {}) {
       setActiveVideoItem(previousVideoItem);
       setPreviousVideoItem(null);
     } else {
-      // Loop video nền (story)
-      const storyItems = liveMedia.filter(i => i.category === 'story' && i.type === 'video');
-      if (storyItems.length > 0) {
-        setActiveVideoItem(storyItems[Math.floor(Math.random() * storyItems.length)]);
-      }
+      // Về mặc định video gốc mà người dùng đã chọn
+      setActiveVideoItem(null);
     }
   };
 

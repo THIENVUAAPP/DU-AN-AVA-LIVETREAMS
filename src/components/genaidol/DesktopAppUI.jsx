@@ -638,7 +638,8 @@ export default function DesktopAppUI() {
 
       const loadedChars = filtered.map(c => {
         let finalUrl = c.mediaUrl || c.url;
-        if (!finalUrl && c.fileData) {
+        // Nếu URL là blob: thì chắc chắn nó là của phiên cũ đã chết, phải tạo lại từ fileData!
+        if ((!finalUrl || finalUrl.startsWith('blob:')) && c.fileData) {
           try {
             finalUrl = URL.createObjectURL(c.fileData);
           } catch (e) {
