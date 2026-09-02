@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star } from 'lucide-react';
 
-export const APP_VERSION = '1.1.2';
+export const APP_VERSION = '1.1.3';
 export const UPDATE_NOTES = [
   "⭐ Khởi chạy 1-Click độc quyền: Đóng gói duy nhất 1 file AvaLive_Studio siêu mượt, tối ưu hoá tối đa hiệu năng.",
-  "🔊 Khắc phục triệt để Âm lượng & Tốc độ đọc: Tùy chỉnh Volume (0-100%) và Speed (0.5x-2.0x) có hiệu lực 100%.",
-  "🔗 Chuẩn hóa đường link TikTok Live Studio: Định dạng http://127.0.0.1:3001/?overlay= tương thích mọi phiên bản CEF.",
+  "🔗 Chuẩn hóa 100% link TikTok LIVE Studio: Sử dụng http://localhost:3001/idol, /bando, /battle vượt qua mọi bộ lọc URL.",
+  "🔊 Âm lượng & Tốc độ đọc độc lập: Tùy chỉnh Volume (0-100%) và Speed (0.5x-2.0x) cho từng giọng đọc mượt mà.",
   "🚀 Tự động kích hoạt bản mới: Khởi chạy phần mềm là tự động nạp cấu hình mới nhất không dính cache cũ."
 ];
 
