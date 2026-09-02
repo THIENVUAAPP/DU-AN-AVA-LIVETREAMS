@@ -1,20 +1,17 @@
 const fs = require('fs');
-const path = require('path');
+let content = fs.readFileSync('src/utils/defaultPresetsBootstrap.js', 'utf8');
+const newPrompt = fs.readFileSync('/tmp/prompt.txt', 'utf8');
 
-const targetFile = '/Users/nguyenthien/Downloads/DỰ ÁN AVA LIVETREAMS/src/components/genaidol/GeneralSettings.jsx';
-const mdFile = '/Users/nguyenthien/Downloads/SỰ KIỆN NGỌC NHI.md';
+const oldStr = "aiPrompt: 'Bạn đang đóng vai NGỌC NHI – một nữ AI Sales Host 24 tuổi, chuyên nghiệp, thông minh, thân thiện, duyên dáng, hài hước vừa phải và có khả năng tư vấn bán hàng tự nhiên.'";
 
-let content = fs.readFileSync(targetFile, 'utf8');
-const mdContent = fs.readFileSync(mdFile, 'utf8');
+const escapedPrompt = newPrompt.replace(/`/g, '\\`').replace(/\$/g, '\\$');
 
-// We need to escape backticks and ${} in the markdown content to safely put it inside a template literal
-const escapedMdContent = mdContent.replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
+const newStr = `aiPrompt: \`${escapedPrompt}\``;
 
-const regex = /backgroundContext:\s*`[\s\S]*?`,/;
-if (regex.test(content)) {
-    content = content.replace(regex, `backgroundContext: \`${escapedMdContent}\`,`);
-    fs.writeFileSync(targetFile, content, 'utf8');
-    console.log("Successfully updated backgroundContext");
+if (content.includes(oldStr)) {
+  content = content.replace(oldStr, newStr);
+  fs.writeFileSync('src/utils/defaultPresetsBootstrap.js', content, 'utf8');
+  console.log('Successfully updated defaultPresetsBootstrap.js');
 } else {
-    console.error("Could not find backgroundContext");
+  console.log('oldStr not found!');
 }

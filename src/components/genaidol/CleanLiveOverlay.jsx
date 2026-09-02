@@ -664,24 +664,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       bgWorker.postMessage('start');
     } catch (e) {}
 
-    // Kích hoạt silent audio loop để chống Chrome đình chỉ (throttle) tab khi bị ẩn
-    let audioCtx = null;
-    try {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
-      gainNode.gain.value = 0.001; // Âm thanh siêu nhỏ không nghe được
-      oscillator.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-      oscillator.start();
-    } catch (e) {}
-
     return () => {
       if (bgWorker) {
         try { bgWorker.postMessage('stop'); bgWorker.terminate(); } catch (e) {}
       }
       if (antiSleepDiv.parentNode) antiSleepDiv.parentNode.removeChild(antiSleepDiv);
-      if (audioCtx) audioCtx.close().catch(() => {});
     };
   }, []);
 

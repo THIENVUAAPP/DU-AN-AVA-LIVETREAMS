@@ -30,7 +30,7 @@ import bandoEngine from './game/bandoGameEngine';
 import bandoAudio from './game/bandoAudioEngine';
 import { mapVoiceEngine, battleVoiceEngine } from './game/gameVoiceEngine';
 import battleCommentary from './game/battleCommentaryEngine';
-import { stopVoiceAudio } from '../../utils/voiceSyncService';
+import { clearGlobalSpeechQueue } from '../../utils/voiceSyncService';
 import AutoCaptchaSolver from '../AutoCaptchaSolver';
 import AIVoiceModule from '../kol-live/AIVoiceModule';
 import AICharacterBeautyModal from './AICharacterBeautyModal';
@@ -1497,7 +1497,7 @@ export default function DesktopAppUI() {
       mapVoiceEngine.stopAll();
       battleVoiceEngine.stopAll();
       battleCommentary.stopAll();
-      stopVoiceAudio();
+      clearGlobalSpeechQueue();
       
       // 5. Dừng toàn bộ vòng lặp game, auto 24/7, demo, battle
       bandoEngine.stopAuto247Loop();
