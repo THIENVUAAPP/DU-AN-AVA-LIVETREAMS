@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star } from 'lucide-react';
 
-export const APP_VERSION = '1.0.4';
+export const APP_VERSION = '1.0.5';
 export const UPDATE_NOTES = [
   "⭐ Khởi chạy 1-Click độc quyền: Đóng gói duy nhất 1 file AvaLive_Studio siêu mượt, tối ưu hoá tối đa hiệu năng.",
-  "🔗 Sửa lỗi Video icon trong Hồ sơ: Khắc phục triệt để lỗi ReferenceError khi truy cập Hồ sơ người dùng & Nạp rút tiền.",
-  "📐 Chạy Localhost 3001 ổn định trên Mac: Tự động phát hiện máy chủ sẵn sàng trước khi mở trình duyệt, chống lỗi Connection Refused.",
-  "🚀 Kho Template Video & Ảnh Mẫu VIP: Xem trước video mượt mà, loại bỏ triệt để các tab chức năng thừa."
+  "🔗 Đăng nhập Google 1-Chạm sang trọng: Chuẩn hóa giao diện chỉ duy nhất 1 nút bấm Google, loại bỏ form nhập liệu rườm rà.",
+  "📐 Đồng bộ Supabase Database: Toàn bộ tài khoản kết nối Google tự động lưu và đồng bộ thời gian thực.",
+  "🚀 Tối giản hóa Menu: Xóa bỏ triệt để các tab dư thừa theo đúng giao diện chuẩn của Admin."
 ];
 
 export default function UpdateNotificationModal() {
