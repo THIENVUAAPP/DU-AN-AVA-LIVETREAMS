@@ -4,6 +4,7 @@ import {
   Hand, ShoppingCart, Share, Sparkles, Mic, Heart, Play, HelpCircle, ChevronDown,
   Download, Upload
 } from 'lucide-react';
+import { NEW_AI_PROMPT } from '../../utils/defaultAIPrompt';
 import WorkspaceKeywordPanel from './WorkspaceKeywordPanel';
 
 const EVENTS = [
@@ -200,7 +201,12 @@ export default function WorkspaceTacVu() {
                   ? parsed[key].specialGiftSlots
                   : defaults[key].specialGiftSlots,
                 checkoutProducts: (Array.isArray(parsed[key]?.checkoutProducts) && parsed[key].checkoutProducts.length > 0)
-                  ? parsed[key].checkoutProducts
+                  ? parsed[key].checkoutProducts.map(p => {
+                      if (p.id === 1 && p.aiPrompt && (p.aiPrompt.includes('TRong vai là một nhân viên sale') || p.aiPrompt.includes('Bạn đang đóng vai NGỌC NHI'))) {
+                        return { ...p, aiPrompt: NEW_AI_PROMPT };
+                      }
+                      return p;
+                    })
                   : defaults[key].checkoutProducts,
               };
             }
@@ -382,6 +388,18 @@ export default function WorkspaceTacVu() {
     } catch (e) {
       console.log('Folder selection cancelled');
     }
+  };
+
+  const handleLoadPromptFile = (productId, event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target.result;
+      handleProductChange(productId, 'aiPrompt', content);
+    };
+    reader.readAsText(file);
+    event.target.value = '';
   };
 
   const selectProductFolder = async (productId) => {
@@ -847,9 +865,25 @@ const FieldLabel = ({ icon, text, helpKey, customHelpText, minW = "min-w-[220px]
                           <button onClick={() => selectProductFolder(prod.id)} className="text-[13px] text-gray-600 font-medium hover:text-gray-900 transition-colors underline decoration-dotted bg-gray-200 px-3 py-1 rounded">Chọn...</button>
                         </div>
 
-                        <div className="flex items-center gap-1 mt-2 self-start">
-                          <label className="text-[13px] font-semibold text-gray-700">Kịch bản cho AI:</label>
-                          <HelpTooltip helpKey="aiPrompt" />
+                        <div className="flex items-center gap-1 mt-2 self-start justify-between w-full">
+                          <div className="flex items-center gap-1">
+                            <label className="text-[13px] font-semibold text-gray-700">Kịch bản cho AI:</label>
+                            <HelpTooltip helpKey="aiPrompt" />
+                          </div>
+                          <div>
+                            <input 
+                              type="file" 
+                              id={`upload-prompt-${prod.id}`}
+                              className="hidden" 
+                              onChange={(e) => handleLoadPromptFile(prod.id, e)} 
+                            />
+                            <label 
+                              htmlFor={`upload-prompt-${prod.id}`}
+                              className="text-[12px] text-blue-600 cursor-pointer hover:underline flex items-center gap-1 bg-blue-50 px-2 py-1 rounded border border-blue-200"
+                            >
+                              <Upload size={12} /> Tải file lên
+                            </label>
+                          </div>
                         </div>
                         <div className="flex flex-col gap-2 mt-2">
                           <textarea value={prod.aiPrompt} onChange={(e) => handleProductChange(prod.id, 'aiPrompt', e.target.value)} className="w-full h-[60px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-white focus:outline-blue-500" />
