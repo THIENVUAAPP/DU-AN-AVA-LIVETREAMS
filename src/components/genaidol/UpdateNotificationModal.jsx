@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star } from 'lucide-react';
 
-export const APP_VERSION = '1.1.3';
+export const APP_VERSION = '1.1.4';
 export const UPDATE_NOTES = [
-  "⭐ Khởi chạy 1-Click độc quyền: Đóng gói duy nhất 1 file AvaLive_Studio siêu mượt, tối ưu hoá tối đa hiệu năng.",
-  "🔗 Chuẩn hóa 100% link TikTok LIVE Studio: Sử dụng http://localhost:3001/idol, /bando, /battle vượt qua mọi bộ lọc URL.",
-  "🔊 Âm lượng & Tốc độ đọc độc lập: Tùy chỉnh Volume (0-100%) và Speed (0.5x-2.0x) cho từng giọng đọc mượt mà.",
-  "🚀 Tự động kích hoạt bản mới: Khởi chạy phần mềm là tự động nạp cấu hình mới nhất không dính cache cũ."
+  "🌐 HTTPS Tunnel TikTok Studio: Tự động tạo đường hầm công khai (loca.lt) khi khởi động — TikTok Studio chấp nhận 100%, không còn lỗi URL!",
+  "🔗 3 chế độ URL: HTTPS Tunnel (TikTok Studio), Cloud Vercel (dự phòng), Local (xem thử) — tất cả trong 1 giao diện.",
+  "🔊 Âm lượng & Tốc độ đọc độc lập: Tùy chỉnh Volume và Speed riêng cho từng kênh giọng đọc mượt mà.",
+  "🚀 Tự động kết nối lại: Tunnel tự reconnect khi mất kết nối, không cần khởi động lại phần mềm."
 ];
 
 export default function UpdateNotificationModal() {
