@@ -31,7 +31,8 @@ export default function GameBanDoOverlay() {
       if (customUrl && customUrl.startsWith('http')) {
         backendUrl = customUrl;
       } else {
-        backendUrl = `${window.location.protocol}//${window.location.hostname}:${window.location.port || '3001'}`;
+        const port = window.location.port && window.location.port !== '5173' && window.location.port !== '3000' ? window.location.port : '3001';
+        backendUrl = `${window.location.protocol}//${window.location.hostname}:${port}`;
       }
     }
 

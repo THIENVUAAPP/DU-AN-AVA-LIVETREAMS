@@ -45,7 +45,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
   // Link chuẩn 100% hoạt động trên TikTok Studio
   const activeBase = `${currentProtocol}//127.0.0.1.nip.io:${currentPort}`;
 
-  // Danh sách các dự án với đường link riêng biệt 100%
+  // Danh sách 3 Dự án Độc Lập chuẩn 100%
   const projects = [
     {
       id: "idol",
@@ -102,7 +102,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
         {/* Nút Đóng Modal */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer transition-all hover:scale-105"
+          className="absolute top-5 right-5 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer transition-all hover:scale-105 z-10"
         >
           <X className="w-5 h-5" />
         </button>
@@ -124,7 +124,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
           </div>
         </div>
 
-        {/* NẾU CHƯA KẾT NỐI TÀI KHOẢN GOOGLE/GMAIL: HIỆN KHÓA BẢO VỆ */}
+        {/* NẾU CHƯA KẾT NỐI TÀI KHOẢN GOOGLE/GMAIL: TUYỆT ĐỐI KHÔNG HIỆN ĐƯỜNG LINK HAY TAB NÀO */}
         {!currentUser ? (
           <div className="p-8 rounded-3xl bg-gradient-to-br from-[#121528] via-[#0f111f] to-[#181a32] border border-cyan-500/40 text-center space-y-5 shadow-2xl my-auto">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 via-red-500 to-pink-500 mx-auto flex items-center justify-center p-3 shadow-glow-cyan border-2 border-white/30 animate-bounce">
@@ -152,130 +152,132 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
             </button>
           </div>
         ) : (
-          /* Danh sách các Dự án Độc Lập */
-          <div className="space-y-2.5 overflow-y-auto flex-1 pr-1 custom-scrollbar">
-            <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5 px-1">
-              <Layers className="w-3.5 h-3.5 text-gray-500" />
-              <span>
-                SAO CHÉP ĐƯỜNG LINK TƯƠNG ỨNG VÀO TRÌNH DUYỆT TIKTOK STUDIO:
-              </span>
+          <>
+            {/* Danh sách 3 Dự án Độc Lập */}
+            <div className="space-y-2.5 overflow-y-auto flex-1 pr-1 custom-scrollbar">
+              <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5 px-1">
+                <Layers className="w-3.5 h-3.5 text-gray-500" />
+                <span>
+                  SAO CHÉP ĐƯỜNG LINK TƯƠNG ỨNG VÀO TRÌNH DUYỆT TIKTOK STUDIO:
+                </span>
+              </div>
+
+              {projects.map((proj) => {
+                const Icon = proj.icon;
+                const isCopied = copiedId === proj.id;
+
+                return (
+                  <div
+                    key={proj.id}
+                    className={`p-3 rounded-2xl border transition-all ${proj.bgColor} space-y-2 relative`}
+                  >
+                    {/* Header Dự Án */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1 rounded-lg bg-black/40 border border-white/10">
+                          <Icon className={`w-3.5 h-3.5 ${proj.iconColor}`} />
+                        </div>
+                        <span className="text-xs font-black text-white tracking-wide">
+                          {proj.name}
+                        </span>
+                      </div>
+
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase text-white bg-gradient-to-r ${proj.tagColor} shadow-xs`}
+                      >
+                        {proj.tag}
+                      </span>
+                    </div>
+
+                    {/* Input Link & Nút Bấm */}
+                    <div className="flex flex-col sm:flex-row items-center gap-2 pt-0.5">
+                      <input
+                        type="text"
+                        readOnly
+                        value={proj.directUrl}
+                        className="w-full sm:flex-1 px-3 py-1.5 rounded-xl bg-black/70 border border-white/15 text-xs text-cyan-200 font-mono font-bold focus:outline-none select-all"
+                      />
+
+                      <div className="flex items-center gap-1.5 w-full sm:w-auto">
+                        <button
+                          onClick={() => handleCopy(proj.directUrl, proj.id)}
+                          className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-md active:scale-95 ${
+                            isCopied
+                              ? "bg-emerald-600 text-white"
+                              : "bg-white/15 hover:bg-white/25 text-white"
+                          }`}
+                        >
+                          {isCopied ? (
+                            <>
+                              <Check className="w-3.5 h-3.5 text-white" />
+                              <span>ĐÃ SAO CHÉP</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>Sao chép</span>
+                            </>
+                          )}
+                        </button>
+
+                        <a
+                          href={proj.directUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white font-bold text-xs transition-all flex items-center justify-center gap-1"
+                          title="Mở tab mới xem thử"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span>Xem</span>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
-          {projects.map((proj) => {
-            const Icon = proj.icon;
-            const isCopied = copiedId === proj.id;
-
-            return (
-              <div
-                key={proj.id}
-                className={`p-3 rounded-2xl border transition-all ${proj.bgColor} space-y-2 relative`}
-              >
-                {/* Header Dự Án */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1 rounded-lg bg-black/40 border border-white/10">
-                      <Icon className={`w-3.5 h-3.5 ${proj.iconColor}`} />
-                    </div>
-                    <span className="text-xs font-black text-white tracking-wide">
-                      {proj.name}
-                    </span>
-                  </div>
-
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase text-white bg-gradient-to-r ${proj.tagColor} shadow-xs`}
-                  >
-                    {proj.tag}
+            {/* Hướng dẫn chi tiết cho OBS Studio & TikTok Live Studio */}
+            <div className="p-3 rounded-2xl bg-black/70 border border-white/15 text-xs shrink-0 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-yellow-300 font-bold text-[11.5px]">
+                  <Zap className="w-4 h-4 text-yellow-400 shrink-0 animate-pulse" />
+                  <span>
+                    HƯỚNG DẪN KẾT NỐI TIKTOK LIVE STUDIO (CHỐNG LỖI 100%):
                   </span>
                 </div>
-
-                {/* Input Link & Nút Bấm */}
-                <div className="flex flex-col sm:flex-row items-center gap-2 pt-0.5">
-                  <input
-                    type="text"
-                    readOnly
-                    value={proj.directUrl}
-                    className="w-full sm:flex-1 px-3 py-1.5 rounded-xl bg-black/70 border border-white/15 text-xs text-cyan-200 font-mono font-bold focus:outline-none select-all"
-                  />
-
-                  <div className="flex items-center gap-1.5 w-full sm:w-auto">
-                    <button
-                      onClick={() => handleCopy(proj.directUrl, proj.id)}
-                      className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-md active:scale-95 ${
-                        isCopied
-                          ? "bg-emerald-600 text-white"
-                          : "bg-white/15 hover:bg-white/25 text-white"
-                      }`}
-                    >
-                      {isCopied ? (
-                        <>
-                          <Check className="w-3.5 h-3.5 text-white" />
-                          <span>ĐÃ SAO CHÉP</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5" />
-                          <span>Sao chép</span>
-                        </>
-                      )}
-                    </button>
-
-                    <a
-                      href={proj.directUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white font-bold text-xs transition-all flex items-center justify-center gap-1"
-                      title="Mở tab mới xem thử"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                      <span>Xem</span>
-                    </a>
-                  </div>
+                <button
+                  onClick={onClose}
+                  className="px-3.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-gray-200 font-bold text-xs cursor-pointer transition-all"
+                >
+                  Đóng
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-gray-300">
+                <div className="p-2 rounded-xl bg-white/5 border border-white/10 space-y-1">
+                  <span className="font-bold text-cyan-300 flex items-center gap-1">
+                    🌐 Cách dán vào TikTok Studio:
+                  </span>
+                  <p className="text-gray-400 leading-relaxed">
+                    Thêm nguồn <b>Trình duyệt (Browser)</b> → Dán link đã sao chép →
+                    Đặt kích thước: <b>Chiều Rộng = 1080, Chiều Cao = 1920</b>{" "}
+                    (Chuẩn 9:16 dọc không bao giờ bị méo hình).
+                  </p>
+                </div>
+                <div className="p-2 rounded-xl bg-white/5 border border-white/10 space-y-1">
+                  <span className="font-bold text-pink-300 flex items-center gap-1">
+                    💡 Đã vượt qua kiểm duyệt 100%:
+                  </span>
+                  <p className="text-gray-400 leading-relaxed">
+                    Các đường link đã được tự động cấp phát dạng{" "}
+                    <b>Domain nip.io</b>. Trình duyệt TikTok Studio sẽ nhận diện tên
+                    miền chính thức và không bao giờ báo lỗi!
+                  </p>
                 </div>
               </div>
-            );
-          })}
-        </div>
+            </div>
+          </>
         )}
-
-        {/* Hướng dẫn chi tiết cho OBS Studio & TikTok Live Studio */}
-        <div className="p-3 rounded-2xl bg-black/70 border border-white/15 text-xs shrink-0 space-y-1.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-yellow-300 font-bold text-[11.5px]">
-              <Zap className="w-4 h-4 text-yellow-400 shrink-0 animate-pulse" />
-              <span>
-                HƯỚNG DẪN KẾT NỐI TIKTOK LIVE STUDIO (CHỐNG LỖI 100%):
-              </span>
-            </div>
-            <button
-              onClick={onClose}
-              className="px-3.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-gray-200 font-bold text-xs cursor-pointer transition-all"
-            >
-              Đóng
-            </button>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-gray-300">
-            <div className="p-2 rounded-xl bg-white/5 border border-white/10 space-y-1">
-              <span className="font-bold text-cyan-300 flex items-center gap-1">
-                🌐 Cách dán vào TikTok Studio:
-              </span>
-              <p className="text-gray-400 leading-relaxed">
-                Thêm nguồn <b>Trình duyệt (Browser)</b> → Dán link đã sao chép →
-                Đặt kích thước: <b>Chiều Rộng = 1080, Chiều Cao = 1920</b>{" "}
-                (Chuẩn 9:16 dọc không bao giờ bị méo hình).
-              </p>
-            </div>
-            <div className="p-2 rounded-xl bg-white/5 border border-white/10 space-y-1">
-              <span className="font-bold text-pink-300 flex items-center gap-1">
-                💡 Đã vượt qua kiểm duyệt 100%:
-              </span>
-              <p className="text-gray-400 leading-relaxed">
-                Các đường link đã được tự động cấp phát dạng{" "}
-                <b>Domain nip.io</b>. Trình duyệt TikTok Studio sẽ nhận diện tên
-                miền chính thức và không bao giờ báo lỗi!
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

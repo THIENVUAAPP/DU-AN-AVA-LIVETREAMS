@@ -18,7 +18,10 @@ import { loadAllAidolItems } from '../../utils/idbHelper';
 const getBackendUrl = () => {
   const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
   const backendParam = urlParams ? urlParams.get('backend') : null;
-  return backendParam || (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:${window.location.port || '3001'}` : 'http://127.0.0.1:3001');
+  const port = typeof window !== 'undefined' && window.location.port && window.location.port !== '5173' && window.location.port !== '3000' ? window.location.port : '3001';
+  const host = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1';
+  const proto = typeof window !== 'undefined' ? window.location.protocol : 'http:';
+  return backendParam || `${proto}//${host}:${port}`;
 };
 
 export default function CleanLiveOverlay({ customStyle = {} }) {
@@ -226,8 +229,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     };
     fetchLiveState();
     
-    // Polling liên tục mỗi 2s để đề phòng WebSocket bị chặn trên OBS / TikTok Studio CEF
-    const httpPollInterval = setInterval(fetchLiveState, 2000);
+    // Polling siêu tốc mỗi 500ms để đề phòng WebSocket bị chặn trên OBS / TikTok Studio CEF
+    const httpPollInterval = setInterval(fetchLiveState, 500);
 
     // 3. WEBSOCKET REALTIME (SOCKET.IO)
     let socket = null;
@@ -874,15 +877,21 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           disablePictureInPicture
           onLoadedMetadata={(e) => {
             e.target.muted = true;
-            e.target.play().catch(() => {});
+            if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
+              e.target.play().catch(() => {});
+            }
           }}
           onCanPlay={(e) => {
             e.target.muted = true;
-            e.target.play().catch(() => {});
+            if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
+              e.target.play().catch(() => {});
+            }
           }}
           onEnded={(e) => {
             e.target.currentTime = 0;
-            e.target.play().catch(() => {});
+            if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
+              e.target.play().catch(() => {});
+            }
           }}
           onError={(e) => {
             console.warn('[CleanLiveOverlay] Video playback notice:', e);
