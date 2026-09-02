@@ -15,6 +15,7 @@ import {
 import { askGeminiLiveAi } from '../../lib/geminiClient';
 import { COUNTRY_FILTERS } from './game/GameVoiceConfigPanel';
 import { DEFAULT_BRAIN_PACKS } from '../../utils/defaultPresetsBootstrap';
+import { syncMasterLiveState } from '../../lib/masterLiveSync';
 
 // ──────────────────────────────────────────────
 // AIDOL_DB (dùng lại kho AIDOL của tôi)
@@ -183,7 +184,7 @@ export default function AIDOLLiveConsole() {
   const handleExportBrainAndScripts = () => {
     try {
       const data = {
-        version: '1.0.7',
+        version: '1.0.8',
         exportedAt: new Date().toISOString(),
         brains: allBrains,
         prompts: {
@@ -381,6 +382,14 @@ export default function AIDOLLiveConsole() {
       videoRef.current.src = item.mediaUrl;
       videoRef.current.play().catch(() => {});
     }
+    syncMasterLiveState({
+      stage: 'idol',
+      mediaUrl: item.mediaUrl,
+      isVideo: item.type === 'video',
+      characterName: item.name,
+      isPlaying: true,
+      updatedAt: Date.now()
+    });
   };
 
   // ── Build video queue for live ──
@@ -390,8 +399,15 @@ export default function AIDOLLiveConsole() {
       setVideoQueue(storyItems);
       setCurrentVideoIdx(0);
       handlePlayFromKho(storyItems[0]);
+    } else if (activeVideoItem) {
+      handlePlayFromKho(activeVideoItem);
     }
     setIsAILive(true);
+    syncMasterLiveState({
+      stage: 'idol',
+      isPlaying: true,
+      updatedAt: Date.now()
+    });
   };
 
   // ── Auto-next video in queue or resume previous ──

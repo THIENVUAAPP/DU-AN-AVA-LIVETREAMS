@@ -20,6 +20,7 @@ import {
   Map,
   Monitor,
   ShieldCheck,
+  Lock,
 } from "lucide-react";
 
 /**
@@ -30,7 +31,6 @@ import {
  */
 export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUser, onOpenLogin }) {
   const [copiedId, setCopiedId] = useState(null);
-  const [hostMode, setHostMode] = useState('ip'); // 'ip' (127.0.0.1) | 'nipio' (127.0.0.1.nip.io) | 'localhost'
 
   if (!isOpen) return null;
 
@@ -38,13 +38,9 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
     typeof window !== "undefined" && window.location.port && window.location.port !== "5173" && window.location.port !== "3000"
       ? window.location.port
       : "3001";
-  const currentProtocol =
-    typeof window !== "undefined" && window.location.protocol
-      ? window.location.protocol
-      : "http:";
 
-  const activeHost = hostMode === 'ip' ? '127.0.0.1' : (hostMode === 'nipio' ? '127.0.0.1.nip.io' : 'localhost');
-  const activeBase = `${currentProtocol}//${activeHost}:${currentPort}`;
+  // Luôn dùng HTTP và 127.0.0.1 cho TikTok Live Studio & OBS để 100% không lỗi SSL/DNS
+  const activeBase = `http://127.0.0.1:${currentPort}`;
 
   // Danh sách 3 Dự án Độc Lập chuẩn 100%
   const projects = [
@@ -108,45 +104,42 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
           <X className="w-5 h-5" />
         </button>
 
-        {/* Modal Header */}
-        <div className="flex items-center gap-3 border-b border-white/10 pb-3.5 shrink-0">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-cyan-600 via-blue-600 to-indigo-600 flex items-center justify-center shadow-glow-cyan">
-            <Radio className="w-5 h-5 text-white animate-pulse" />
+        {/* Tiêu đề Modal */}
+        <div className="flex items-center gap-3 pr-10">
+          <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+            <Radio className="w-5 h-5 text-cyan-400 animate-pulse" />
           </div>
           <div>
-            <h2 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
-              <span>
-                DANH SÁCH ĐƯỜNG LINK TIKTOK LIVE STUDIO (DOMAIN NIP.IO)
-              </span>
+            <h2 className="text-lg font-black text-white tracking-tight flex items-center gap-2">
+              DANH SÁCH ĐƯỜNG LINK TIKTOK LIVE STUDIO (CHỐNG LỖI 100%)
             </h2>
-            <p className="text-[11.5px] text-gray-400 mt-0.5">
-              Tự động cập nhật 100% thời gian thực từ phần mềm lên phiên Live
+            <p className="text-[11px] text-cyan-300 font-bold">
+              Tự động kết nối & đồng bộ thời gian thực từ phần mềm lên phiên Live
             </p>
           </div>
         </div>
 
-        {/* NẾU CHƯA KẾT NỐI TÀI KHOẢN GOOGLE/GMAIL: TUYỆT ĐỐI KHÔNG HIỆN ĐƯỜNG LINK HAY TAB NÀO */}
+        {/* Cảnh báo Chưa Đăng Nhập */}
         {!currentUser ? (
-          <div className="p-8 rounded-3xl bg-gradient-to-br from-[#121528] via-[#0f111f] to-[#181a32] border border-cyan-500/40 text-center space-y-5 shadow-2xl my-auto">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 via-red-500 to-pink-500 mx-auto flex items-center justify-center p-3 shadow-glow-cyan border-2 border-white/30 animate-bounce">
-              <ShieldCheck className="w-8 h-8 text-white" />
+          <div className="p-6 rounded-2xl bg-[#16130e] border border-amber-500/40 text-center space-y-3 my-auto">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center mx-auto">
+              <Lock className="w-6 h-6 text-amber-400" />
             </div>
-
-            <div className="space-y-1.5">
-              <h3 className="text-lg font-black text-white uppercase tracking-wider">
-                🔒 YÊU CẦU KẾT NỐI TÀI KHOẢN GOOGLE / GMAIL
+            <div className="space-y-1">
+              <h3 className="text-base font-black text-white">
+                BẠN CHƯA KẾT NỐI TÀI KHOẢN GOOGLE
               </h3>
-              <p className="text-xs text-gray-300 max-w-md mx-auto leading-relaxed">
-                Để mở khóa và sao chép danh sách đường link kết nối <b>TikTok LIVE Studio & OBS Studio</b>, bạn vui lòng kết nối tài khoản Google hoặc Gmail của bạn vào phần mềm.
+              <p className="text-xs text-gray-400 max-w-md mx-auto leading-relaxed">
+                Vui lòng đăng nhập bằng Google để mở khóa Danh Sách Đường Link
+                Kết Nối dành riêng cho tài khoản của bạn.
               </p>
             </div>
-
             <button
               onClick={() => {
-                if (onOpenLogin) onOpenLogin();
                 onClose();
+                onOpenLogin && onOpenLogin();
               }}
-              className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-black text-xs shadow-xl shadow-cyan-500/30 flex items-center justify-center gap-2.5 mx-auto transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black font-black text-xs shadow-lg shadow-amber-500/25 transition-all hover:scale-[1.02] cursor-pointer inline-flex items-center gap-2"
             >
               <Zap className="w-4 h-4 text-yellow-300 animate-pulse" />
               <span>KẾT NỐI GOOGLE / GMAIL ĐỂ MỞ KHÓA NGAY</span>
@@ -154,32 +147,6 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
           </div>
         ) : (
           <>
-            {/* Chọn Định Dạng Domain / IP */}
-            <div className="flex items-center justify-between gap-2 p-2 bg-black/50 rounded-2xl border border-white/10 flex-wrap">
-              <span className="text-[11px] font-bold text-gray-400 pl-1 flex items-center gap-1.5">
-                🌐 Định dạng Link:
-              </span>
-              <div className="flex items-center gap-1.5">
-                {[
-                  { id: 'ip', label: '127.0.0.1 (Khuyên dùng - 100% Không lỗi)', desc: 'Chống lỗi DNS' },
-                  { id: 'nipio', label: 'Domain nip.io', desc: 'Tương thích web' },
-                  { id: 'localhost', label: 'localhost', desc: 'Máy chủ nội bộ' }
-                ].map((mode) => (
-                  <button
-                    key={mode.id}
-                    onClick={() => setHostMode(mode.id)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      hostMode === mode.id
-                        ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md'
-                        : 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    {mode.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Danh sách 3 Dự án Độc Lập */}
             <div className="space-y-2.5 overflow-y-auto flex-1 pr-1 custom-scrollbar">
               <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5 px-1">
