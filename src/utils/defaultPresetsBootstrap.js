@@ -135,15 +135,15 @@ export function bootstrapDefaultPresets() {
             {
               id: 1,
               active: true,
-              productName: 'aidol',
-              keywords: 'aidol;phần mềm;giá;liên hệ;bao nhiêu',
+              productName: 'AVA LIVE',
+              keywords: 'ava live;ava;phần mềm ava live;phần mềm livestream ai;livestream ai;livestream bằng ai;nhân vật',
               videoFolder: 'bình luận',
               supportVideoFolder: '',
               useAi: true,
               useTTS: true,
-              ttsVoiceRole: 'idol',
+              ttsVoiceRole: 'comment',
               muteSourceVideo: true,
-              aiPrompt: 'Trong vai là một nhân viên sale chuyên nghiệp hãy đọc bình luận và đem ra câu trả lời để chốt đơn, giá phần mềm là 3 triệu rưỡi/1 năm, hoặc gói dùng thử là 500000 đồng trên 1 tháng. Chốt sale hoặc cần tư vấn thêm thì hãy liên hệ với đội ngũ admin'
+              aiPrompt: 'Bạn đang đóng vai NGỌC NHI – một nữ AI Sales Host 24 tuổi, chuyên nghiệp, thông minh, thân thiện, duyên dáng, hài hước vừa phải và có khả năng tư vấn bán hàng tự nhiên.'
             }
           ]
         },

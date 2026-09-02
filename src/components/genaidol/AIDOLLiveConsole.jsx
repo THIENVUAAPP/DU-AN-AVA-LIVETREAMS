@@ -2,7 +2,7 @@ import {
   Settings, Eye, Play, Square, RefreshCw, Download, Upload, Trash2,
   Video, Mic2, Volume2, Wifi, WifiOff, Radio, CheckCircle, AlertCircle,
   Plus, Search, X, ChevronDown, Monitor, Zap, SkipForward, Pause,
-  Sliders, Globe, Sparkles, Bot, VolumeX, Edit3, Check, MonitorPlay, StopCircle
+  Sliders, Globe, Sparkles, Bot, VolumeX, Edit3, Check, MonitorPlay, StopCircle, User
 } from 'lucide-react';
 import AIAudioPlayer from './AIAudioPlayer';
 import WorkspaceTacVu from './WorkspaceTacVu';
@@ -184,7 +184,7 @@ export default function AIDOLLiveConsole() {
   const handleExportBrainAndScripts = () => {
     try {
       const data = {
-        version: '1.1.0',
+        version: '1.1.1',
         exportedAt: new Date().toISOString(),
         brains: allBrains,
         prompts: {
@@ -851,11 +851,10 @@ export default function AIDOLLiveConsole() {
                 {/* Sub Role Navigation */}
                 <div className="flex items-center gap-2 border-b border-white/10 pb-2 overflow-x-auto custom-scrollbar">
                   {[
-                    { id: 'idol', label: '👑 1. Giọng Live Idol Chính', roleKey: 'idolVoice', icon: Sparkles, color: 'text-purple-400' },
-                    { id: 'manager', label: '💼 2. Giọng Trợ Lý & Bán Hàng', roleKey: 'managerVoice', icon: Zap, color: 'text-blue-400' },
-                    { id: 'caster', label: '🎙️ 3. Giọng Bình Luận Viên Game PK', roleKey: 'casterVoice', icon: Radio, color: 'text-amber-400' },
-                    { id: 'comment', label: '💬 4. Giọng Trả Lời Bình Luận AI', roleKey: 'commentVoice', icon: Bot, color: 'text-pink-400' },
-                    { id: 'events', label: '⚡ 5. Kịch Bản Câu Thoại Sự Kiện', roleKey: null, icon: Radio, color: 'text-yellow-400' },
+                    { id: 'idol', label: 'Giọng Idol Live', roleKey: 'idolVoice', icon: User, color: 'text-blue-400' },
+                    { id: 'manager', label: 'Giọng Quản Lý / Trợ Lý', roleKey: 'managerVoice', icon: Mic2, color: 'text-red-400' },
+                    { id: 'caster', label: 'Giọng BLV Game', roleKey: 'casterVoice', icon: Volume2, color: 'text-purple-400' },
+                    { id: 'events', label: '⚡ Kịch Bản Câu Thoại Sự Kiện', roleKey: null, icon: Radio, color: 'text-yellow-400' },
                   ].map(tab => {
                     const Icon = tab.icon;
                     const isActive = activeVoiceRoleTab === tab.id;
