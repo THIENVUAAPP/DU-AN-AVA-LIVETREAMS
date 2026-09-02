@@ -197,18 +197,20 @@ export const DEFAULT_AIDOL_CATEGORIES = [
 export const DEFAULT_SYSTEM_TEMPLATES = [
   {
     id: 'sys_aidol_1',
-    name: 'AIDOL Livestream 01 (GreenScreen)',
+    name: 'AIDOL Vũ Đạo Hot Trend 01',
     type: 'video',
-    mediaUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-a-green-dress-41315-large.mp4',
-    url: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-a-green-dress-41315-large.mp4',
-    category: 'livestream',
+    poster: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=600&q=80',
+    mediaUrl: '/demo_dancer.mp4',
+    url: '/demo_dancer.mp4',
+    category: 'dance',
     isVIP: false,
     isPersonal: false
   },
   {
     id: 'sys_aidol_2',
-    name: 'AIDOL Tư Vấn Bán Hàng 02',
+    name: 'AIDOL Tư Vấn Bán Hàng & Chốt Đơn 02',
     type: 'image',
+    poster: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
     mediaUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=80',
     url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=80',
     category: 'sales',
@@ -217,21 +219,34 @@ export const DEFAULT_SYSTEM_TEMPLATES = [
   },
   {
     id: 'sys_aidol_3',
-    name: 'AIDOL Vũ Đạo Dance 03',
+    name: 'AIDOL Livestream Duyên Dáng 03',
     type: 'video',
-    mediaUrl: 'https://assets.mixkit.co/videos/preview/mixkit-girl-dancing-in-front-of-a-camera-40742-large.mp4',
-    url: 'https://assets.mixkit.co/videos/preview/mixkit-girl-dancing-in-front-of-a-camera-40742-large.mp4',
-    category: 'dance',
+    poster: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=600&q=80',
+    mediaUrl: '/demo_dancer.mp4',
+    url: '/demo_dancer.mp4',
+    category: 'livestream',
     isVIP: true,
     isPersonal: false
   },
   {
     id: 'sys_aidol_4',
-    name: 'AIDOL Tâm Sự & Kể Chuyện 04',
+    name: 'AIDOL Tâm Sự & Kể Chuyện Đêm 04',
     type: 'image',
+    poster: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80',
     mediaUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1200&q=80',
     url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1200&q=80',
     category: 'story',
+    isVIP: false,
+    isPersonal: false
+  },
+  {
+    id: 'sys_aidol_5',
+    name: 'AIDOL Cảm Ơn Quà Tặng & Follower 05',
+    type: 'image',
+    poster: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=600&q=80',
+    mediaUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=1200&q=80',
+    url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=1200&q=80',
+    category: 'thankyou',
     isVIP: false,
     isPersonal: false
   }

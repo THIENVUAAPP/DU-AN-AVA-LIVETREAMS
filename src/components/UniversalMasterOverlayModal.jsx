@@ -30,6 +30,7 @@ import {
  */
 export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUser, onOpenLogin }) {
   const [copiedId, setCopiedId] = useState(null);
+  const [hostMode, setHostMode] = useState('ip'); // 'ip' (127.0.0.1) | 'nipio' (127.0.0.1.nip.io) | 'localhost'
 
   if (!isOpen) return null;
 
@@ -42,8 +43,8 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
       ? window.location.protocol
       : "http:";
 
-  // Link chuẩn 100% hoạt động trên TikTok Studio
-  const activeBase = `${currentProtocol}//127.0.0.1.nip.io:${currentPort}`;
+  const activeHost = hostMode === 'ip' ? '127.0.0.1' : (hostMode === 'nipio' ? '127.0.0.1.nip.io' : 'localhost');
+  const activeBase = `${currentProtocol}//${activeHost}:${currentPort}`;
 
   // Danh sách 3 Dự án Độc Lập chuẩn 100%
   const projects = [
@@ -153,6 +154,32 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
           </div>
         ) : (
           <>
+            {/* Chọn Định Dạng Domain / IP */}
+            <div className="flex items-center justify-between gap-2 p-2 bg-black/50 rounded-2xl border border-white/10 flex-wrap">
+              <span className="text-[11px] font-bold text-gray-400 pl-1 flex items-center gap-1.5">
+                🌐 Định dạng Link:
+              </span>
+              <div className="flex items-center gap-1.5">
+                {[
+                  { id: 'ip', label: '127.0.0.1 (Khuyên dùng - 100% Không lỗi)', desc: 'Chống lỗi DNS' },
+                  { id: 'nipio', label: 'Domain nip.io', desc: 'Tương thích web' },
+                  { id: 'localhost', label: 'localhost', desc: 'Máy chủ nội bộ' }
+                ].map((mode) => (
+                  <button
+                    key={mode.id}
+                    onClick={() => setHostMode(mode.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      hostMode === mode.id
+                        ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md'
+                        : 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    {mode.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Danh sách 3 Dự án Độc Lập */}
             <div className="space-y-2.5 overflow-y-auto flex-1 pr-1 custom-scrollbar">
               <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5 px-1">

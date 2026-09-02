@@ -150,7 +150,7 @@ export default function UserProfile({ currentUser, setActiveTab }) {
           </div>
 
           <div className="space-y-1">
-            <div className="px-3 py-1 text-[9px] font-black uppercase tracking-wider text-gray-500">QUẢN TRỊ KINH DOANH</div>
+            <div className="px-3 py-1 text-[9px] font-black uppercase tracking-wider text-gray-500">TIẾP THỊ & TÀI NGUYÊN</div>
             <button 
               onClick={() => setActiveSidebarTab('affiliate-dashboard')} 
               className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all cursor-pointer ${
@@ -160,29 +160,30 @@ export default function UserProfile({ currentUser, setActiveTab }) {
               }`}
             >
               <Share2 className="w-4 h-4 text-emerald-400" /> 
-              <span>Tiếp Thị 30% (Affiliate)</span>
+              <span>Tiếp Thị Liên Kết 30% (Affiliate)</span>
             </button>
             <button 
-              onClick={() => setActiveSidebarTab('sales-orders')} 
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all cursor-pointer ${
-                activeSidebarTab === 'sales-orders' 
-                  ? 'bg-gradient-to-r from-blue-500/20 to-transparent text-white border-l-2 border-blue-500 font-bold' 
-                  : 'hover:bg-white/5 text-gray-400 hover:text-white'
-              }`}
+              onClick={() => {
+                const isPaidPlan = currentUser?.isAdmin || (currentUser?.plan && currentUser?.plan.toUpperCase() !== 'FREE' && currentUser?.plan.toUpperCase() !== 'MIỄN PHÍ');
+                if (!isPaidPlan) {
+                  alert('🔒 TÍNH NĂNG VIP PRO: Kho Template Video & Ảnh Mẫu độc quyền dành riêng cho tài khoản đã MUA GÓI.\nVui lòng bấm "Nâng Cấp Gói" để mở khóa toàn bộ kho template!');
+                  setActiveTab && setActiveTab('payment');
+                } else {
+                  window.dispatchEvent(new CustomEvent('avalive:open_template_library'));
+                  setActiveTab && setActiveTab('avatar');
+                }
+              }} 
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all cursor-pointer hover:bg-white/5 text-gray-400 hover:text-white`}
             >
-              <TrendingUp className="w-4 h-4 text-blue-400" /> 
-              <span>Quản Lý Đơn Hàng</span>
-            </button>
-            <button 
-              onClick={() => setActiveSidebarTab('team')} 
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all cursor-pointer ${
-                activeSidebarTab === 'team' 
-                  ? 'bg-gradient-to-r from-purple-500/20 to-transparent text-white border-l-2 border-purple-500 font-bold' 
-                  : 'hover:bg-white/5 text-gray-400 hover:text-white'
-              }`}
-            >
-              <ShieldCheck className="w-4 h-4 text-purple-400" /> 
-              <span>Phân Quyền Đội Ngũ</span>
+              <div className="flex items-center gap-2.5">
+                <Video className="w-4 h-4 text-pink-400" /> 
+                <span>Kho Template Video Mẫu</span>
+              </div>
+              {currentUser?.isAdmin || (currentUser?.plan && currentUser?.plan.toUpperCase() !== 'FREE' && currentUser?.plan.toUpperCase() !== 'MIỄN PHÍ') ? (
+                <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[8.5px] font-black border border-emerald-500/30">VIP</span>
+              ) : (
+                <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[8.5px] font-black border border-amber-500/30">🔒 Mua Gói</span>
+              )}
             </button>
           </div>
         </div>

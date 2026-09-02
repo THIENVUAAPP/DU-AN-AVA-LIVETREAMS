@@ -367,20 +367,28 @@ export default function TemplateLibraryModal({ isOpen, onClose, onAddTemplate })
                   }`}
                 >
                   {/* Media Container with realistic Video/Image Preview */}
-                  <div className="aspect-[3/4] relative bg-black/60 flex items-center justify-center overflow-hidden">
+                  <div className="aspect-[3/4] relative bg-[#151928] flex items-center justify-center overflow-hidden">
                     {isVideo ? (
                       <video 
                         src={tpl.mediaUrl || tpl.url} 
+                        poster={tpl.poster || tpl.thumbnail || 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=600&q=80'}
                         className="w-full h-full object-cover" 
-                        controls 
                         playsInline 
-                        preload="metadata"
+                        muted
+                        loop
+                        preload="auto"
+                        onMouseEnter={(e) => { e.target.play().catch(() => {}); }}
+                        onMouseLeave={(e) => { e.target.pause(); e.target.currentTime = 0; }}
                       />
                     ) : (
                       <img 
                         src={tpl.mediaUrl || tpl.url} 
                         alt={tpl.name} 
                         className="w-full h-full object-cover" 
+                        loading="lazy"
+                        onError={(e) => {
+                          e.target.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80';
+                        }}
                       />
                     )}
                     

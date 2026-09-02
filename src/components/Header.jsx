@@ -171,6 +171,18 @@ export default function Header({
                       <span>Hồ Sơ Người Dùng & Nạp/Rút Tiền</span>
                     </button>
 
+                    {/* Tiếp Thị Liên Kết 30% (Affiliate) */}
+                    <button
+                      onClick={() => {
+                        setActiveTab("affiliate-dashboard");
+                        setProfileDropdownOpen(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-gray-200 hover:text-white hover:bg-white/10 font-bold text-xs transition-all text-left cursor-pointer"
+                    >
+                      <Share2 className="w-4 h-4 text-emerald-400" />
+                      <span>Tiếp Thị Liên Kết 30% (Affiliate)</span>
+                    </button>
+
                     {/* Tab Template Hồ Sơ Video (Chỉ khả dụng cho tài khoản đã mua gói VIP / PRO) */}
                     <button
                       onClick={() => {

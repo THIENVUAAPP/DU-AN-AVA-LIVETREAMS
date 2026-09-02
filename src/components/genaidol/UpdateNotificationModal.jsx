@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star } from 'lucide-react';
 
-export const APP_VERSION = '1.0.2';
+export const APP_VERSION = '1.0.3';
 export const UPDATE_NOTES = [
   "⭐ Khởi chạy 1-Click độc quyền: Đóng gói duy nhất 1 file AvaLive_Studio siêu mượt, tối ưu hoá tối đa hiệu năng.",
-  "🔗 Đăng nhập 1-Chạm bằng Google / Gmail: Kết nối tài khoản Google để mở khóa Danh Sách Đường Link Live và đồng bộ Supabase Cloud.",
-  "📐 Kho Template Video & Ảnh Mẫu VIP: Mở khóa kho tài nguyên đồ sộ dành riêng cho thành viên đã mua gói.",
-  "🚀 Tùy chỉnh Giọng đọc đa vai trò: Tùy chỉnh riêng biệt Giọng Idol, Trợ lý bán hàng, Bình luận viên Game với bộ điều khiển Âm lượng & Tốc độ đọc."
+  "🔗 Đa định dạng IP 127.0.0.1 & Domain: Chống lỗi URL trên TikTok LIVE Studio 100% không phụ thuộc DNS.",
+  "📐 Kho Template Video & Ảnh Mẫu VIP: Xem trước Video Thumbnail siêu nét, hover phát mượt mà không lo màn hình đen.",
+  "🚀 Đồng bộ Tiếp Thị Liên Kết 30%: Giữ nguyên phân mục Affiliate trong Hồ sơ người dùng và loại bỏ toàn bộ tab dư thừa."
 ];
 
 export default function UpdateNotificationModal() {
