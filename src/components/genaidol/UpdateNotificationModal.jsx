@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star } from 'lucide-react';
 
-export const APP_VERSION = '1.0.8';
+export const APP_VERSION = '1.0.9';
 export const UPDATE_NOTES = [
   "⭐ Khởi chạy 1-Click độc quyền: Đóng gói duy nhất 1 file AvaLive_Studio siêu mượt, tối ưu hoá tối đa hiệu năng.",
-  "🔗 Đường link TikTok Live Studio 100% chuẩn: Tinh gọn chỉ 1 định dạng duy nhất http://127.0.0.1:3001 kết nối cực nhanh.",
-  "📐 Đồng bộ Video & Âm Thanh Realtime: Khi phần mềm phát/dừng thì TikTok Live Studio đồng bộ 100% theo thời gian thực.",
-  "🚀 Tự động kích hoạt bản mới nhất: Xóa bỏ hoàn toàn cache cũ khi tải phần mềm về giải nén và khởi động."
+  "🌐 Tự động tương thích toàn cầu: Mọi người dùng trên Web Cloud hay Local đều dán link vào TikTok Live Studio chạy 100%.",
+  "🎬 Xóa bỏ hoàn toàn template mẫu cứng: Kho video mẫu chỉ hiển thị tài nguyên do Admin/User tải lên trực tiếp.",
+  "🚀 Khởi chạy Mac/Windows siêu tốc: Hỗ trợ mở trực tiếp http://127.0.0.1:3001 và http://127.0.0.1:5173 mượt mà."
 ];
 
 export default function UpdateNotificationModal() {

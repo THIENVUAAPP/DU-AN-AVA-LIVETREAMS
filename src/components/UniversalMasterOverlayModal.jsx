@@ -34,13 +34,11 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
   if (!isOpen) return null;
 
-  const currentPort =
-    typeof window !== "undefined" && window.location.port && window.location.port !== "5173" && window.location.port !== "3000"
-      ? window.location.port
-      : "3001";
-
-  // Luôn dùng HTTP và 127.0.0.1 cho TikTok Live Studio & OBS để 100% không lỗi SSL/DNS
-  const activeBase = `http://127.0.0.1:${currentPort}`;
+  // Tự động nhận diện Web Cloud Vercel hoặc Local IP để mọi người dùng trong cộng đồng đều dán vào TikTok Studio dùng được 100%
+  const isLocal = typeof window !== "undefined" && (window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') || window.location.hostname === '');
+  const activeBase = typeof window !== "undefined"
+    ? (isLocal ? `http://127.0.0.1:${currentPort}` : window.location.origin)
+    : 'http://127.0.0.1:3001';
 
   // Danh sách 3 Dự án Độc Lập chuẩn 100%
   const projects = [
