@@ -49,14 +49,32 @@
         // Global Lightweight Keep-Alive for Chrome / Cốc Cốc / Edge / macOS / Windows
         // Prevents browser from freezing videos when tab goes to background without CPU overhead
         try {
+          // Track intentional user pauses so we don't force play them
+          document.addEventListener('pause', function(e) {
+            if (e.target && e.target.tagName === 'VIDEO') {
+              if (!document.hidden) {
+                e.target.dataset.userPaused = 'true';
+              }
+            }
+          }, true);
+          
+          document.addEventListener('play', function(e) {
+            if (e.target && e.target.tagName === 'VIDEO') {
+              e.target.dataset.userPaused = 'false';
+            }
+          }, true);
+
           var blob = new Blob([
             "let t; self.onmessage=e=>{ if(e.data==='start'){ if(!t) t=setInterval(()=>self.postMessage('tick'), 500); } };"
           ], { type: 'application/javascript' });
           var worker = new Worker(URL.createObjectURL(blob));
           worker.onmessage = function() {
             if (document.hidden) {
-              // Removed aggressive auto-play here because it overrides user's explicit 'Pause' commands.
-              // CleanLiveOverlay handles background playing safely with state checks.
+              document.querySelectorAll('video').forEach(function(v) {
+                if (v.dataset.userPaused !== 'true' && v.paused && !v.ended) {
+                  v.play().catch(function(){});
+                }
+              });
             }
           };
           worker.postMessage('start');
