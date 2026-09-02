@@ -1050,13 +1050,21 @@ export default function DesktopAppUI() {
     } catch (e) {}
   }, []);
 
-  const handleAudioTest = useCallback(async () => {
+  const handleAudioTest = useCallback(async (role = 'game') => {
     await unlockAllAudio();
-    bandoAudio.playWarHorn({ force: true });
+    let text = 'Hệ thống âm thanh nhạc nền, hiệu ứng và Voice AI đã kích hoạt sẵn sàng trên livestream!';
+    if (role === 'idol') {
+      text = 'Chào mọi người, mình là Idol đây! Các bạn nghe giọng mình có rõ không ạ? Nhớ thả tim ủng hộ mình nha!';
+    } else if (role === 'manager') {
+      text = 'Xin chào, tôi là quản lý phiên live. Hệ thống giỏ hàng và chốt đơn đã sẵn sàng!';
+    } else {
+      bandoAudio.playWarHorn({ force: true });
+    }
+    
     setTimeout(() => {
-      mapVoiceEngine.speak('Hệ thống âm thanh nhạc nền, hiệu ứng và Voice AI đã kích hoạt sẵn sàng trên livestream!', 'game', true);
-    }, 400);
-    showToast('🔊 Đang phát kiểm tra âm thanh & Giọng đọc AI!', 'success');
+      mapVoiceEngine.speak(text, role, true);
+    }, role === 'game' ? 400 : 100);
+    showToast(`🔊 Đang phát kiểm tra âm thanh Giọng ${role === 'idol' ? 'Nhân vật chính' : role === 'manager' ? 'Trợ lý' : 'Game'}!`, 'success');
   }, [unlockAllAudio]);
 
   // 🔇 Xử lý Bật/Tắt chế độ Tắt Loa Máy tính Cục bộ (Vẫn phát đầy đủ âm thanh 100% trên OBS & TikTok Studio)
@@ -3066,6 +3074,14 @@ export default function DesktopAppUI() {
               >
                 <Mic size={12} /> Đạo diễn
               </button>
+              <button
+                onClick={() => setSimTab('voice')}
+                className={`flex-1 py-1.5 rounded-lg text-center transition-all flex items-center justify-center gap-1 ${
+                  simTab === 'voice' ? 'bg-purple-600 text-white shadow-md' : (isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-slate-600 hover:text-slate-900')
+                }`}
+              >
+                <Volume2 size={12} /> Voice
+              </button>
     </div>
 
             {/* Tab Contents */}
@@ -3356,6 +3372,41 @@ export default function DesktopAppUI() {
     </div>
     </div>
     </div>
+              )}
+
+              {/* TAB 5: TEST GIỌNG NÓI */}
+              {simTab === 'voice' && (
+                <div className="space-y-2.5">
+                  <div>
+                    <span className={`text-[10px] font-bold uppercase tracking-wider block mb-1.5 ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>Test âm thanh & Giọng đọc:</span>
+                    <div className="grid grid-cols-1 gap-2">
+                      <button 
+                        onClick={() => handleAudioTest('idol')}
+                        className={`p-2 rounded-lg text-[11px] font-medium text-left truncate border flex items-center justify-between ${isDarkMode ? 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border-blue-500/30' : 'bg-blue-50 hover:bg-blue-100 text-blue-800 border-blue-200'}`}
+                      >
+                        <span className="flex items-center gap-1.5"><Volume2 size={14} /> Test giọng Nhân vật Chính (Idol)</span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${isDarkMode ? 'bg-blue-500/20 text-white' : 'bg-blue-200 text-blue-900'}`}>Phát</span>
+                      </button>
+                      <button 
+                        onClick={() => handleAudioTest('manager')}
+                        className={`p-2 rounded-lg text-[11px] font-medium text-left truncate border flex items-center justify-between ${isDarkMode ? 'bg-red-500/10 hover:bg-red-500/20 text-red-300 border-red-500/30' : 'bg-red-50 hover:bg-red-100 text-red-800 border-red-200'}`}
+                      >
+                        <span className="flex items-center gap-1.5"><Volume2 size={14} /> Test giọng Quản lý / Trợ lý</span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${isDarkMode ? 'bg-red-500/20 text-white' : 'bg-red-200 text-red-900'}`}>Phát</span>
+                      </button>
+                      <button 
+                        onClick={() => handleAudioTest('game')}
+                        className={`p-2 rounded-lg text-[11px] font-medium text-left truncate border flex items-center justify-between ${isDarkMode ? 'bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border-purple-500/30' : 'bg-purple-50 hover:bg-purple-100 text-purple-800 border-purple-200'}`}
+                      >
+                        <span className="flex items-center gap-1.5"><Volume2 size={14} /> Test giọng Bình Luận Viên Game</span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${isDarkMode ? 'bg-purple-500/20 text-white' : 'bg-purple-200 text-purple-900'}`}>Phát</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div className={`p-2 rounded border text-[10px] ${isDarkMode ? 'bg-white/5 border-white/10 text-gray-400' : 'bg-gray-50 border-gray-200 text-gray-500'}`}>
+                    ⓘ Hệ thống sẽ đọc một đoạn văn bản mẫu ngẫu nhiên để kiểm tra âm lượng, tốc độ, và độ trầm bổng đã cài đặt.
+                  </div>
+                </div>
               )}
 
               {/* Status processing indicator */}

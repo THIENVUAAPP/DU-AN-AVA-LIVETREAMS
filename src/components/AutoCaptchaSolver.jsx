@@ -264,7 +264,6 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
                  </div>
               </div>
 
-              {/* Bổ sung phần Cấu Hình Ghim Sản Phẩm Tự Động */}
               <div className="bg-[#141419] border border-white/5 rounded-2xl p-6">
                  <h4 className="text-sm font-black text-white border-b border-white/5 pb-4 mb-4 flex items-center gap-2">
                    <Zap className="w-4 h-4 text-emerald-400" /> Auto Ghim Sản Phẩm
@@ -280,19 +279,25 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
                       </button>
                    </div>
                    
-                   <div className="flex flex-col gap-2 p-3 rounded-xl bg-black/20 border border-white/5">
-                      <span className="text-xs text-gray-300 font-bold">Thời gian lặp lại (Giây)</span>
-                      <div className="flex items-center gap-2">
+                   <div className={`space-y-4 transition-opacity duration-300 ${captchaConfig.autoPin ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
+                     <div className="flex items-center justify-between p-3 rounded-xl bg-black/20 border border-white/5">
+                        <span className="text-xs text-gray-300 font-bold">Thời gian mỗi lần ghim (giây)</span>
                         <input 
-                          type="range" 
-                          min="5" 
-                          max="120" 
+                          type="number" min="10" max="300" 
                           value={captchaConfig.pinInterval || 30}
-                          onChange={(e) => setCaptchaConfig(prev => ({...prev, pinInterval: parseInt(e.target.value)}))}
-                          className="flex-1 accent-emerald-500 h-1 bg-gray-700 rounded-lg appearance-none"
+                          onChange={(e) => setCaptchaConfig(prev => ({...prev, pinInterval: parseInt(e.target.value) || 30}))}
+                          className="w-20 bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-xs text-white text-center focus:outline-none focus:border-cyan-500"
                         />
-                        <span className="text-xs font-black text-emerald-400 w-8 text-right">{captchaConfig.pinInterval || 30}s</span>
-                      </div>
+                     </div>
+                     <div className="flex items-center justify-between p-3 rounded-xl bg-black/20 border border-white/5">
+                        <span className="text-xs text-gray-300 font-bold">Số lượng sản phẩm cần ghim</span>
+                        <input 
+                          type="number" min="1" max="100" 
+                          value={captchaConfig.pinCount || 1}
+                          onChange={(e) => setCaptchaConfig(prev => ({...prev, pinCount: parseInt(e.target.value) || 1}))}
+                          className="w-20 bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-xs text-white text-center focus:outline-none focus:border-cyan-500"
+                        />
+                     </div>
                    </div>
                  </div>
               </div>
