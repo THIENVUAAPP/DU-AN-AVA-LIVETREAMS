@@ -55,12 +55,8 @@
           var worker = new Worker(URL.createObjectURL(blob));
           worker.onmessage = function() {
             if (document.hidden) {
-              var videos = document.querySelectorAll('video');
-              for (var i = 0; i < videos.length; i++) {
-                if (videos[i].paused && !videos[i].ended && videos[i].readyState >= 2) {
-                  videos[i].play().catch(function() {});
-                }
-              }
+              // Removed aggressive auto-play here because it overrides user's explicit 'Pause' commands.
+              // CleanLiveOverlay handles background playing safely with state checks.
             }
           };
           worker.postMessage('start');

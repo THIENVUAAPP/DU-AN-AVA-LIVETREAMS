@@ -640,6 +640,17 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null) {
   return true;
 }
 
+export function updateActiveVoiceAudio(volume, rate, pitch) {
+  if (activePreviewAudio) {
+    try {
+      if (volume !== undefined) activePreviewAudio.volume = Math.max(0, Math.min(1, volume));
+      if (rate !== undefined) activePreviewAudio.playbackRate = Math.max(0.1, rate);
+      // NOTE: Pitch cannot be easily changed on HTMLAudioElement without Web Audio API trickery, 
+      // so we just update volume and rate.
+    } catch (e) {}
+  }
+}
+
 export const speakVoiceAudio = previewVoiceAudio;
 export const getDualVoiceConfig = getSavedVoiceConfig;
 export const saveDualVoiceConfig = saveVoiceConfig;
@@ -657,7 +668,8 @@ export default {
   getElevenLabsApiKey,
   stopVoiceAudio,
   previewVoiceAudio,
-  speakVoiceAudio
+  speakVoiceAudio,
+  updateActiveVoiceAudio
 };
 
 

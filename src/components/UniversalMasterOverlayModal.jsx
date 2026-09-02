@@ -94,10 +94,28 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
   ];
 
   const handleCopy = (url, id) => {
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
+    if (typeof navigator !== "undefined" && navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(url);
       setCopiedId(id);
       setTimeout(() => setCopiedId(null), 2500);
+    } else {
+      // Fallback cho môi trường HTTP (VD: 127.0.0.1.nip.io)
+      const textArea = document.createElement("textarea");
+      textArea.value = url;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        setCopiedId(id);
+        setTimeout(() => setCopiedId(null), 2500);
+      } catch (err) {
+        console.error('Lỗi copy:', err);
+      }
+      textArea.remove();
     }
   };
 

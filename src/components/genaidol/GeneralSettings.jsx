@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Search, CheckCircle2, FolderOpen, Brain, Upload } from 'lucide-react';
 import { getLiveMediaByCategory } from '../../lib/liveKhoDB';
-import { saveDualVoiceConfig, ALL_SYSTEM_VOICES, ELEVENLABS_VOICES, previewVoiceAudio } from '../../utils/voiceSyncService';
+import { saveDualVoiceConfig, ALL_SYSTEM_VOICES, ELEVENLABS_VOICES, previewVoiceAudio, updateActiveVoiceAudio } from '../../utils/voiceSyncService';
 
 const MAIN_VOICES = [...ALL_SYSTEM_VOICES];
 const ASSISTANT_VOICES = [...ALL_SYSTEM_VOICES];
@@ -1059,7 +1059,18 @@ NGHE
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setSettings(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    const finalValue = type === 'checkbox' ? checked : value;
+    setSettings(prev => {
+      // Gọi real-time update cho giọng đọc đang test (nếu có)
+      if (['mainVoiceVolume', 'assistantVoiceVolume', 'gameVoiceVolume'].includes(name)) {
+        updateActiveVoiceAudio(Number(finalValue), undefined, undefined);
+      } else if (['mainVoiceRate', 'assistantVoiceRate', 'gameVoiceRate'].includes(name)) {
+        updateActiveVoiceAudio(undefined, Number(finalValue), undefined);
+      } else if (['mainVoicePitch', 'assistantVoicePitch', 'gameVoicePitch'].includes(name)) {
+        updateActiveVoiceAudio(undefined, undefined, Number(finalValue));
+      }
+      return { ...prev, [name]: finalValue };
+    });
   };
 
   const handleMainVoiceFilter = (filter) => setSettings(prev => ({ ...prev, mainVoiceFilter: filter }));
@@ -1129,7 +1140,7 @@ NGHE
   };
 
   // Helper renderers for Tables with Instant Audio Preview
-  const renderVoiceTable = (voices, currentFilter, selectedId, onSelect) => {
+  const renderVoiceTable = (voices, currentFilter, selectedId, onSelect, roleType) => {
     const filtered = voices.filter(v => {
       if (currentFilter === 'male') return v.gender === 'Male';
       if (currentFilter === 'female') return v.gender === 'Female';
@@ -1167,7 +1178,21 @@ NGHE
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
-                        previewVoiceAudio(v);
+                        let vol = 1.0, rate = 1.0, pitch = 1.0;
+                        if (roleType === 'idol') {
+                          vol = settings.mainVoiceVolume !== undefined ? settings.mainVoiceVolume : 1.0;
+                          rate = settings.mainVoiceRate !== undefined ? settings.mainVoiceRate : 1.0;
+                          pitch = settings.mainVoicePitch !== undefined ? settings.mainVoicePitch : 1.0;
+                        } else if (roleType === 'manager') {
+                          vol = settings.assistantVoiceVolume !== undefined ? settings.assistantVoiceVolume : 1.0;
+                          rate = settings.assistantVoiceRate !== undefined ? settings.assistantVoiceRate : 1.0;
+                          pitch = settings.assistantVoicePitch !== undefined ? settings.assistantVoicePitch : 1.0;
+                        } else if (roleType === 'game') {
+                          vol = settings.gameVoiceVolume !== undefined ? settings.gameVoiceVolume : 1.0;
+                          rate = settings.gameVoiceRate !== undefined ? settings.gameVoiceRate : 1.0;
+                          pitch = settings.gameVoicePitch !== undefined ? settings.gameVoicePitch : 1.0;
+                        }
+                        previewVoiceAudio({ ...v, volume: vol, rate, pitch });
                       }}
                       title="Nghe thử giọng này"
                       className={`p-1.5 rounded-full ${isSelected ? 'bg-white text-green-700 hover:bg-gray-100 shadow' : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200'} transition-all`}
@@ -1391,7 +1416,7 @@ NGHE
                 </div>
                 
                 <div className="flex-1 overflow-auto p-4">
-                  {renderVoiceTable([...settings.customVoices, ...MAIN_VOICES], settings.mainVoiceFilter, settings.mainVoiceId, (id) => setSettings(prev => ({...prev, mainVoiceId: id})))}
+                  {renderVoiceTable([...settings.customVoices, ...MAIN_VOICES], settings.mainVoiceFilter, settings.mainVoiceId, (id) => setSettings(prev => ({...prev, mainVoiceId: id})), 'idol')}
                 </div>
                 
                 <div className="px-4 py-2 bg-gray-50 border-t border-gray-300 text-xs text-gray-500 italic">
@@ -1492,7 +1517,7 @@ NGHE
                 </div>
                 
                 <div className="flex-1 overflow-auto p-4">
-                  {renderVoiceTable([...settings.customVoices, ...ASSISTANT_VOICES], settings.assistantVoiceFilter, settings.assistantVoiceId, (id) => setSettings(prev => ({...prev, assistantVoiceId: id})))}
+                  {renderVoiceTable([...settings.customVoices, ...ASSISTANT_VOICES], settings.assistantVoiceFilter, settings.assistantVoiceId, (id) => setSettings(prev => ({...prev, assistantVoiceId: id})), 'manager')}
                 </div>
 
                 <div className="px-4 py-2 bg-gray-50 border-t border-gray-300 text-xs text-gray-500 italic">
@@ -1578,7 +1603,7 @@ NGHE
                 </div>
                 
                 <div className="flex-1 overflow-auto p-4">
-                  {renderVoiceTable([...settings.customVoices, ...GAME_VOICES], settings.gameVoiceFilter, settings.gameVoiceId, (id) => setSettings(prev => ({...prev, gameVoiceId: id})))}
+                  {renderVoiceTable([...settings.customVoices, ...GAME_VOICES], settings.gameVoiceFilter, settings.gameVoiceId, (id) => setSettings(prev => ({...prev, gameVoiceId: id})), 'game')}
                 </div>
 
                 <div className="px-4 py-2 bg-purple-50 border-t border-gray-300 text-xs text-purple-700 italic flex items-center gap-1">
