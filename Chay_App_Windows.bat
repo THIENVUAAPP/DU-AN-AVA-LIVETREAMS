@@ -55,7 +55,7 @@ echo   🌐 Địa chỉ máy chủ: http://127.0.0.1.nip.io:3001
 echo   💡 Vui lòng KHÔNG tắt cửa sổ màu đen này khi đang livestream.
 echo =================================================================
 
-set "APP_URL=http://127.0.0.1.nip.io:3001"
+set "APP_URL=http://127.0.0.1.nip.io:3001/?update_cache=%RANDOM%"
 
 rem 5. Mở ứng dụng ở chế độ Cửa Sổ Desktop Native App
 if exist "%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe" (

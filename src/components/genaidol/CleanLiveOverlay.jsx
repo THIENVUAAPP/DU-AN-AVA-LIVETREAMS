@@ -554,6 +554,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   useEffect(() => {
     if (masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false) {
       if (overlayVideoRef.current && !overlayVideoRef.current.paused) {
+        overlayVideoRef.current.dataset.userPaused = 'true';
         overlayVideoRef.current.pause();
       }
       return;
@@ -611,8 +612,10 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       try {
         const v = overlayVideoRef.current;
         if (masterState.videoPlaybackEvent === 'play' && v.paused) {
+          v.dataset.userPaused = 'false';
           v.play().catch(() => {});
         } else if (masterState.videoPlaybackEvent === 'pause' && !v.paused) {
+          v.dataset.userPaused = 'true';
           v.pause();
         }
         

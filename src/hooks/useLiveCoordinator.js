@@ -362,8 +362,6 @@ function fillTemplate(template, vars = {}) {
       }
     } catch (err) {
       console.warn('Lỗi xử lý sự kiện live kịch bản:', err);
-    } finally {
-      setIsProcessingEvent(false);
     }
   };
 
@@ -378,6 +376,7 @@ function fillTemplate(template, vars = {}) {
   };
 
   const handleVideoEnded = () => {
+    setIsProcessingEvent(false);
     if (lipSyncVideoUrl) {
       setLipSyncVideoUrl(null); // Trở về video nền
     } else if (previousVideoItem) {
