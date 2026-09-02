@@ -2727,8 +2727,8 @@ export default function DesktopAppUI() {
           <div className="flex items-center gap-1.5 border-r border-gray-500/30 pr-2">
             <span className="text-xs font-medium text-gray-400">{t('characters', currentLang)}</span>
             <div className="flex items-center gap-1.5 py-0.5">
-              {/* 3 Ô Cố Định */}
-              {Array.from({ length: 3 }).map((_, index) => {
+              {/* Ô Nhân Vật (Linh hoạt số lượng 3, 5, 10...) */}
+              {Array.from({ length: Math.max(3, customCharacters.length + 1) }).map((_, index) => {
                 // Ô đầu tiên mặc định là Linh Anh nếu chưa có gì, các ô sau lấy từ customCharacters tải lên
                 let charItem = customCharacters[index];
                 if (index === 0 && !charItem && customCharacters.length === 0) {
@@ -2781,9 +2781,17 @@ export default function DesktopAppUI() {
                     title={`Ô ${index + 1}: ${charItem.name || 'Video Nhân Vật'}`}
                   >
                     {charItem.type === 'video' || (typeof charItem.url === 'string' && (charItem.url.endsWith('.mp4') || charItem.url.includes('/uploads/'))) ? (
-                      <div className="w-full h-full flex flex-col items-center justify-center bg-gray-800 text-gray-300">
-                        <Video size={16} className={isSelected ? "text-cyan-400" : ""} />
-                        <span className="text-[8px] font-medium truncate w-full px-0.5 text-center leading-tight mt-0.5">{charItem.name || 'Video'}</span>
+                      <div className="w-full h-full relative bg-gray-800 flex items-center justify-center">
+                        <video 
+                          src={charItem.url} 
+                          className="w-full h-full object-cover absolute inset-0" 
+                          muted 
+                          playsInline 
+                          preload="metadata" 
+                        />
+                        <div className="absolute bottom-0 inset-x-0 bg-black/60 text-[8px] font-medium text-white truncate px-0.5 text-center leading-tight py-0.5 z-10">
+                          {charItem.name || 'Video'}
+                        </div>
                       </div>
                     ) : (
                       <img src={charItem.url} className="w-full h-full object-cover" alt={charItem.name || ''} />
