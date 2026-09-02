@@ -1226,50 +1226,103 @@ try {
 } catch (e) {}
 
 // ============================================================
-// 🌐 LOCALTUNNEL — Tự động tạo đường hầm HTTPS công khai
-// Giúp TikTok Live Studio chấp nhận URL (không bị lỗi "Invalid URL")
+// 🌐 CLOUDFLARE QUICK TUNNEL — Tự động tạo đường hầm HTTPS
+// ✅ Không có trang cảnh báo IP như localtunnel
+// ✅ TikTok Studio chấp nhận *.trycloudflare.com ngay lập tức
+// ✅ Không cần đăng ký, không cần account
 // ============================================================
-async function startTunnel(port) {
+const { spawn } = require('child_process');
+
+function startCloudflaredTunnel(port) {
+  // Tìm cloudflared: trong thư mục project hoặc /tmp
+  const cloudflaredPaths = [
+    path.join(__dirname, '..', 'cloudflared'),   // project root
+    path.join(__dirname, 'cloudflared'),           // backend dir
+    '/tmp/cloudflared',
+    '/usr/local/bin/cloudflared',
+    'cloudflared'                                  // từ PATH
+  ];
+
+  let cloudflaredBin = null;
+  for (const p of cloudflaredPaths) {
+    try {
+      if (fs.existsSync(p)) { cloudflaredBin = p; break; }
+    } catch (e) {}
+  }
+
+  if (!cloudflaredBin) {
+    console.warn('\n⚠️  [Tunnel] Không tìm thấy cloudflared. Đang thử localtunnel dự phòng...');
+    startLocaltunnelFallback(port);
+    return;
+  }
+
+  console.log('\n🔗 [Tunnel] Khởi động Cloudflare Quick Tunnel...');
+  tunnelStatus = 'connecting';
+
+  const proc = spawn(cloudflaredBin, [
+    'tunnel', '--url', `http://localhost:${port}`,
+    '--no-autoupdate'
+  ], { stdio: ['ignore', 'pipe', 'pipe'] });
+
+  const parseUrl = (data) => {
+    const str = data.toString();
+    // Cloudflared in logs: https://xxx.trycloudflare.com
+    const match = str.match(/https:\/\/[a-z0-9\-]+\.trycloudflare\.com/);
+    if (match && !currentTunnelUrl) {
+      currentTunnelUrl = match[0];
+      tunnelStatus = 'active';
+
+      console.log('\n╔══════════════════════════════════════════════════════╗');
+      console.log('║  🎉 CLOUDFLARE TUNNEL ĐÃ SẴN SÀNG (KHÔNG CẦN IP)!   ║');
+      console.log('╠══════════════════════════════════════════════════════╣');
+      console.log(`║  🌐 Base URL:  ${currentTunnelUrl.padEnd(38)}║`);
+      console.log(`║  👑 AI Idol:   ${(currentTunnelUrl + '/idol').padEnd(38)}║`);
+      console.log(`║  🗺️  Bản Đồ:   ${(currentTunnelUrl + '/bando').padEnd(38)}║`);
+      console.log(`║  ⚔️  Battle:   ${(currentTunnelUrl + '/battle').padEnd(38)}║`);
+      console.log('╠══════════════════════════════════════════════════════╣');
+      console.log('║  ✅ Dán link trên vào TikTok Live Studio - 100% OK!  ║');
+      console.log('╚══════════════════════════════════════════════════════╝\n');
+    }
+  };
+
+  proc.stdout.on('data', parseUrl);
+  proc.stderr.on('data', parseUrl);
+
+  proc.on('exit', (code) => {
+    console.log(`\n⚠️  [Tunnel] Cloudflared thoát (code ${code}). Đang khởi động lại...`);
+    currentTunnelUrl = null;
+    tunnelStatus = 'connecting';
+    setTimeout(() => startCloudflaredTunnel(port), 5000);
+  });
+
+  proc.on('error', (err) => {
+    console.error('❌ [Tunnel] Lỗi cloudflared:', err.message);
+    tunnelStatus = 'error';
+    startLocaltunnelFallback(port);
+  });
+}
+
+// Fallback: localtunnel nếu cloudflared không hoạt động
+async function startLocaltunnelFallback(port) {
   try {
     const localtunnel = require('localtunnel');
-    console.log('\n🔗 [Tunnel] Đang tạo đường hầm HTTPS công khai cho TikTok Studio...');
-    tunnelStatus = 'connecting';
-    
+    console.log('🔗 [Tunnel Fallback] Thử localtunnel...');
     const tunnel = await localtunnel({ port });
     currentTunnelUrl = tunnel.url;
     tunnelStatus = 'active';
-    
-    console.log('\n╔══════════════════════════════════════════════════════╗');
-    console.log('║  🎉 ĐƯỜNG HẦM HTTPS CÔNG KHAI ĐÃ SẴN SÀNG!          ║');
-    console.log('╠══════════════════════════════════════════════════════╣');
-    console.log(`║  🌐 Base URL:  ${tunnel.url.padEnd(38)}║`);
-    console.log(`║  👑 AI Idol:   ${(tunnel.url + '/idol').padEnd(38)}║`);
-    console.log(`║  🗺️  Bản Đồ:   ${(tunnel.url + '/bando').padEnd(38)}║`);
-    console.log(`║  ⚔️  Battle:   ${(tunnel.url + '/battle').padEnd(38)}║`);
-    console.log('╠══════════════════════════════════════════════════════╣');
-    console.log('║  ✅ Dán link trên vào TikTok Live Studio - 100% OK!  ║');
-    console.log('╚══════════════════════════════════════════════════════╝\n');
-    
+    console.log(`🌐 [Tunnel Fallback] URL: ${tunnel.url} (lưu ý: cần nhập IP khi lần đầu truy cập)`);
     tunnel.on('close', () => {
-      console.log('\n⚠️  [Tunnel] Đường hầm đã đóng. Đang kết nối lại...');
       currentTunnelUrl = null;
       tunnelStatus = 'connecting';
-      setTimeout(() => startTunnel(port), 3000);
+      setTimeout(() => startLocaltunnelFallback(port), 3000);
     });
-    
-    tunnel.on('error', (err) => {
-      console.error('❌ [Tunnel] Lỗi:', err.message);
-      tunnelStatus = 'error';
-      setTimeout(() => startTunnel(port), 5000);
-    });
-    
   } catch (err) {
-    console.error('❌ [Tunnel] Không thể tạo tunnel:', err.message);
+    console.error('❌ [Tunnel] Tất cả phương thức tunnel đều thất bại:', err.message);
     tunnelStatus = 'error';
-    // Thử lại sau 10 giây
-    setTimeout(() => startTunnel(port), 10000);
+    setTimeout(() => startCloudflaredTunnel(port), 15000);
   }
 }
 
 // Khởi động tunnel sau 2 giây để server ổn định trước
-setTimeout(() => startTunnel(Number(PORT)), 2000);
+setTimeout(() => startCloudflaredTunnel(Number(PORT)), 2000);
+
