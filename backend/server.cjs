@@ -1168,6 +1168,26 @@ if (distPath) {
 const PORT = process.env.PORT || 3001;
 const scheme = usingHttps ? 'https' : 'http';
 
+// ============================================================
+// TUNNEL URL — Lưu URL công khai do localtunnel cấp
+// ============================================================
+let currentTunnelUrl = null;
+let tunnelStatus = 'connecting'; // 'connecting' | 'active' | 'error'
+
+// API: Cho phép frontend lấy tunnel URL để dán vào TikTok Studio
+app.get('/api/tunnel-url', (req, res) => {
+  res.json({
+    tunnelUrl: currentTunnelUrl,
+    status: tunnelStatus,
+    localUrl: `http://localhost:${PORT}`,
+    projects: {
+      idol:   currentTunnelUrl ? `${currentTunnelUrl}/idol`   : null,
+      bando:  currentTunnelUrl ? `${currentTunnelUrl}/bando`  : null,
+      battle: currentTunnelUrl ? `${currentTunnelUrl}/battle` : null,
+    }
+  });
+});
+
 httpServer.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
     console.error(`\n⚠️  Cảnh báo: Cổng ${PORT} đang được sử dụng bởi phiên khác.`);
@@ -1204,3 +1224,52 @@ try {
     console.log(`🌐 Hỗ trợ kết nối song song qua cổng 5173: ${scheme}://127.0.0.1:5173`);
   });
 } catch (e) {}
+
+// ============================================================
+// 🌐 LOCALTUNNEL — Tự động tạo đường hầm HTTPS công khai
+// Giúp TikTok Live Studio chấp nhận URL (không bị lỗi "Invalid URL")
+// ============================================================
+async function startTunnel(port) {
+  try {
+    const localtunnel = require('localtunnel');
+    console.log('\n🔗 [Tunnel] Đang tạo đường hầm HTTPS công khai cho TikTok Studio...');
+    tunnelStatus = 'connecting';
+    
+    const tunnel = await localtunnel({ port });
+    currentTunnelUrl = tunnel.url;
+    tunnelStatus = 'active';
+    
+    console.log('\n╔══════════════════════════════════════════════════════╗');
+    console.log('║  🎉 ĐƯỜNG HẦM HTTPS CÔNG KHAI ĐÃ SẴN SÀNG!          ║');
+    console.log('╠══════════════════════════════════════════════════════╣');
+    console.log(`║  🌐 Base URL:  ${tunnel.url.padEnd(38)}║`);
+    console.log(`║  👑 AI Idol:   ${(tunnel.url + '/idol').padEnd(38)}║`);
+    console.log(`║  🗺️  Bản Đồ:   ${(tunnel.url + '/bando').padEnd(38)}║`);
+    console.log(`║  ⚔️  Battle:   ${(tunnel.url + '/battle').padEnd(38)}║`);
+    console.log('╠══════════════════════════════════════════════════════╣');
+    console.log('║  ✅ Dán link trên vào TikTok Live Studio - 100% OK!  ║');
+    console.log('╚══════════════════════════════════════════════════════╝\n');
+    
+    tunnel.on('close', () => {
+      console.log('\n⚠️  [Tunnel] Đường hầm đã đóng. Đang kết nối lại...');
+      currentTunnelUrl = null;
+      tunnelStatus = 'connecting';
+      setTimeout(() => startTunnel(port), 3000);
+    });
+    
+    tunnel.on('error', (err) => {
+      console.error('❌ [Tunnel] Lỗi:', err.message);
+      tunnelStatus = 'error';
+      setTimeout(() => startTunnel(port), 5000);
+    });
+    
+  } catch (err) {
+    console.error('❌ [Tunnel] Không thể tạo tunnel:', err.message);
+    tunnelStatus = 'error';
+    // Thử lại sau 10 giây
+    setTimeout(() => startTunnel(port), 10000);
+  }
+}
+
+// Khởi động tunnel sau 2 giây để server ổn định trước
+setTimeout(() => startTunnel(Number(PORT)), 2000);
