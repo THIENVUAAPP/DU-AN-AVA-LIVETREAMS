@@ -5,7 +5,7 @@ import {
   Settings, CreditCard, Video, Moon, Sun, 
   MessageCircle, Play, Pause, Mic, MicOff, X, Download, Plus,
   Brain, Radio, Coins, AlertTriangle, Eye, Clock, List, Zap, AlertCircle, FileText, CheckSquare, CheckCircle,
-  Gift, ShoppingBag, Sparkles, RotateCcw, Send, Trash2, Heart, Share2, UserPlus, Users, Swords, Shield, Gamepad2, Flag, MapPin,
+  Gift, ShoppingBag, ShoppingCart, Sparkles, RotateCcw, Send, Trash2, Heart, Share2, UserPlus, Users, Swords, Shield, Gamepad2, Flag, MapPin,
   Smartphone, MonitorPlay, Globe, StopCircle, Power, Volume2, VolumeX, Volume1, Music, Tv,
   User, LogOut, Mail, Lock, Check
 } from 'lucide-react';
@@ -1931,6 +1931,7 @@ export default function DesktopAppUI() {
             autoPlay 
             loop={!isProcessingEvent}
             controls={false}
+            muted={true}
             onEnded={handleVideoEnded}
             onError={() => {
               console.warn('Lỗi tải video phản hồi');
@@ -3015,9 +3016,9 @@ export default function DesktopAppUI() {
     </div>
                 <div>
                   <h3 className={`text-xs font-black uppercase tracking-wider flex items-center gap-1.5 ${isDarkMode ? 'text-white' : 'text-purple-950'}`}>
-                    Công cụ Giả lập Live
+                    Lựa chọn mô hình phát live
                   </h3>
-                  <p className={`text-[10px] ${isDarkMode ? 'text-purple-200/70' : 'text-purple-700/80'}`}>Test phản hồi AI, âm thanh & video trước khi Live</p>
+                  <p className={`text-[10px] ${isDarkMode ? 'text-purple-200/70' : 'text-purple-700/80'}`}>Điều phối các kịch bản Live trực tiếp</p>
     </div>
     </div>
               <div className="flex items-center gap-2">
