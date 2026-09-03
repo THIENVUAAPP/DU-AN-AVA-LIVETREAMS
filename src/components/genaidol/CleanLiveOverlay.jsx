@@ -718,24 +718,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     return () => clearInterval(watchdogTimer);
   }, [masterState.videoPlaybackEvent, masterState.isPlaying]);
 
-  // 🎬 TỰ ĐỘNG PHÁT NGAY KHI ĐỔI VIDEO / NHÂN VẬT TỪ PHẦN MỀM
-  useEffect(() => {
-    const vid = overlayVideoRef.current;
-    if (vid && activeMedia.url && activeMedia.isVideo) {
-      if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
-        vid.dataset.userPaused = 'false';
-        vid.muted = true;
-        const playPromise = vid.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(() => {
-            vid.muted = true;
-            vid.play().catch(() => {});
-          });
-        }
-      }
-    }
-  }, [activeMedia.url]);
-
   // Helper giải mã URL media chính xác (tôn trọng 100% video/nhân vật người dùng chọn)
   const resolveActiveMedia = () => {
     let candidateUrl = masterState.mediaUrl || null;
@@ -826,6 +808,24 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   };
 
   const activeMedia = resolveActiveMedia();
+
+  // 🎬 TỰ ĐỘNG PHÁT NGAY KHI ĐỔI VIDEO / NHÂN VẬT TỪ PHẦN MỀM
+  useEffect(() => {
+    const vid = overlayVideoRef.current;
+    if (vid && activeMedia.url && activeMedia.isVideo) {
+      if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
+        vid.dataset.userPaused = 'false';
+        vid.muted = true;
+        const playPromise = vid.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {
+            vid.muted = true;
+            vid.play().catch(() => {});
+          });
+        }
+      }
+    }
+  }, [activeMedia.url]);
 
   // Stage hiện tại
   const currentStage = masterState.stage || 'idol';

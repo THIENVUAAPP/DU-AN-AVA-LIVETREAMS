@@ -70,19 +70,21 @@ try {
 
 // 3. Chuẩn bị nội dung Hướng dẫn sử dụng ngắn gọn
 const huongDanContent = `=================================================================
-  🚀 HƯỚNG DẪN SỬ DỤNG PHẦN MỀM AVALIVE LIVESTREAM VIP PRO
+  🚀 HƯỚNG DẪN MỞ PHẦN MỀM AVALIVE STUDIO VIP PRO (1-CLICK)
 =================================================================
 
 1. ĐỐI VỚI MÁY TÍNH WINDOWS:
-   👉 BẮT BUỘC: Hãy giải nén file ZIP này (Chuột phải chọn Extract All...)
-   👉 Sau khi giải nén, nhấp đúp chuột vào file ứng dụng duy nhất:
-      ⭐ [ AvaLive_Studio.exe ]
-   -> Phần mềm sẽ tự động mở giao diện ứng dụng để sử dụng ngay lập tức!
+   👉 BƯỚC 1: Chuột phải vào file ZIP -> Chọn "Extract All..." (Giải nén)
+   👉 BƯỚC 2: Nhấp đúp chuột vào file khởi động ngay ở đầu thư mục:
+      ⭐ [ 1_KHOI_DONG_AVALIVE.exe ] hoặc [ 1_CLICK_CHAY_NGAY.bat ]
+      (Hoặc file [ AvaLive_Studio.exe ])
+   -> Giao diện AvaLive Studio sẽ mở lên ngay lập tức!
+   ⚠️ LƯU Ý: KHÔNG cần mở thư mục "system" hay tìm kiếm file ở thư mục con.
 
 2. KẾT NỐI TÀI KHOẢN GMAIL & ĐỒNG BỘ BẢN QUYỀN:
    • Bấm vào ô "🔑 Đăng Nhập Gmail" ở góc trên giao diện phần mềm.
-   • Nhập địa chỉ Gmail bạn đã đăng ký hoặc mua gói trên website để nhận diện ngay gói VIP & Token AI.
-   • Gói Miễn Phí: Tự động nhận Token AI và full tính năng để sử dụng ngay.
+   • Nhập địa chỉ Gmail bạn đã đăng ký trên website để nhận ngay gói VIP & Token AI.
+   • Gói Miễn Phí: Nhận Token AI tự động để trải nghiệm ngay.
 
 3. ĐỐI VỚI MÁY TÍNH MAC (macOS):
    👉 Nhấp đúp chuột vào file: [ 1_Khoi_Dong_AvaLive_Mac.command ]
@@ -92,7 +94,7 @@ const huongDanContent = `=======================================================
    • Sau khi mở app, bấm nút "📡 Link Live" để lấy link nguồn trình duyệt (Browser Source).
    • Cài đặt độ phân giải trên TikTok Studio / OBS: 1080x1920 (Chuẩn tỷ lệ 9:16 dọc).
 
------------------------------------------------------------------
+=================================================================
 HỖ TRỢ KỸ THUẬT 24/7: support@avalive.com | Website: https://avalivepro.vercel.app
 =================================================================
 `;
@@ -201,18 +203,16 @@ if (fs.existsSync(path.join(rootDir, 'certs'))) {
 // Create empty uploads directory
 fs.mkdirSync(path.join(winSystemDir, 'uploads'), { recursive: true });
 
-// Copy cloudflared.exe cho Windows Tunnel
+// Copy cloudflared.exe cho Windows Tunnel vào thư mục system
 const winCloudflaredSrc = path.join(rootDir, 'scripts', 'bin', 'cloudflared.exe');
 if (fs.existsSync(winCloudflaredSrc)) {
   fs.copyFileSync(winCloudflaredSrc, path.join(winSystemDir, 'cloudflared.exe'));
-  fs.copyFileSync(winCloudflaredSrc, path.join(winStaging, 'cloudflared.exe'));
   console.log('   -> ✅ Đã tích hợp Cloudflare Tunnel (cloudflared.exe) cho Windows!');
 }
 
-// Tạo file chạy EXE DUY NHẤT cho Windows (Gọn gàng, chuyên nghiệp, không file rác)
+// Tạo file chạy EXE 1-CLICK cho Windows (Nổi bật ngay trên cùng khi giải nén)
 console.log('   -> Đang chuẩn bị Native Windows Launcher (.exe duy nhất)...');
 const cachedExe = path.join(rootDir, 'AvaLive_Studio.exe');
-const targetExe = path.join(winStaging, 'AvaLive_Studio.exe');
 
 if (!fs.existsSync(cachedExe)) {
   console.log('   -> Đang biên dịch AvaLive_Studio.exe từ scripts/win_launcher_template.cjs...');
@@ -221,9 +221,28 @@ if (!fs.existsSync(cachedExe)) {
     stdio: 'inherit'
   });
 }
-fs.copyFileSync(cachedExe, targetExe);
 
-// Chỉ giữ lại 1 file EXE duy nhất và file Hướng dẫn sử dụng
+// 1. File EXE chính
+fs.copyFileSync(cachedExe, path.join(winStaging, 'AvaLive_Studio.exe'));
+// 2. File EXE bắt đầu bằng 1_ để luôn xuất hiện trên cùng khi giải nén
+fs.copyFileSync(cachedExe, path.join(winStaging, '1_KHOI_DONG_AVALIVE.exe'));
+
+// 3. File BAT 1-Click dự phòng cực nhanh
+const oneClickBat = `@echo off
+title AvaLive Studio VIP PRO
+cd /d "%~dp0"
+if exist "AvaLive_Studio.exe" (
+    start "" "AvaLive_Studio.exe"
+    exit /b
+)
+if exist "1_KHOI_DONG_AVALIVE.exe" (
+    start "" "1_KHOI_DONG_AVALIVE.exe"
+    exit /b
+)
+`.split('\n').join('\r\n');
+fs.writeFileSync(path.join(winStaging, '1_CLICK_CHAY_NGAY.bat'), oneClickBat);
+
+// 4. File Hướng dẫn sử dụng
 fs.writeFileSync(path.join(winStaging, 'HUONG_DAN_SU_DUNG.txt'), huongDanContent);
 
 // Tải Node.js Portable cho Windows

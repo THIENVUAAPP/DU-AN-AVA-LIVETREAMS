@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 
-export const APP_VERSION = '1.3.0';
+export const APP_VERSION = '1.3.1';
 export const UPDATE_NOTES = [
-  "🚫 Xoá sạch hoàn toàn video nền: Loại bỏ triệt để mọi video nền, không còn bất kỳ video nền nào tồn tại trong hệ thống.",
-  "⚡ Phát video phần mềm ngay lập tức trên TikTok Live Studio: Ngay khi dán link vào TikTok Studio, hệ thống tự động kết nối và phát ngay video thực tế phần mềm đang mở.",
-  "🧹 Xoá sạch bộ nhớ Cache cũ: Tự động dọn dẹp cache trình duyệt và dữ liệu lưu tạm cũ, đảm bảo nạp dữ liệu và mã nguồn mới nhất 100%.",
-  "💾 Lưu trữ trạng thái phát video trên ổ đĩa máy chủ: Dù tắt mở lại app hay khởi động lại máy, video đang phát luôn được bảo toàn.",
-  "⏯️ Đồng bộ Chạy / Dừng (Play/Pause) siêu mượt: Bấm chạy trên phần mềm ➔ TikTok Studio chạy ngay, bấm dừng ➔ TikTok Studio dừng ngay."
+  "🔥 Sửa triệt để lỗi màn hình đỏ 'Cannot access A before initialization': Tối ưu hóa thứ tự khởi tạo video, đảm bảo TikTok Live Studio nhận luồng mượt mà 100%.",
+  "⭐ Rút ngắn quá trình giải nén 1-Click: Thêm trực tiếp [ 1_KHOI_DONG_AVALIVE.exe ] và [ 1_CLICK_CHAY_NGAY.bat ] ngay ở đầu thư mục giải nén, nhấp đúp là dùng ngay không cần tìm file.",
+  "⚡ Kết nối Browser Source tức thì: Dán link vào TikTok Live Studio nhận ngay video thực tế phần mềm đang mở, siêu mượt và không gián đoạn.",
+  "🚫 Xoá sạch hoàn toàn video nền và cache cũ, tự động nạp phiên bản mới nhất."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
