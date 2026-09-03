@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star } from 'lucide-react';
 
-export const APP_VERSION = '1.1.4';
+export const APP_VERSION = '1.1.6';
 export const UPDATE_NOTES = [
-  "🌐 HTTPS Tunnel TikTok Studio: Tự động tạo đường hầm công khai (loca.lt) khi khởi động — TikTok Studio chấp nhận 100%, không còn lỗi URL!",
-  "🔗 3 chế độ URL: HTTPS Tunnel (TikTok Studio), Cloud Vercel (dự phòng), Local (xem thử) — tất cả trong 1 giao diện.",
-  "🔊 Âm lượng & Tốc độ đọc độc lập: Tùy chỉnh Volume và Speed riêng cho từng kênh giọng đọc mượt mà.",
-  "🚀 Tự động kết nối lại: Tunnel tự reconnect khi mất kết nối, không cần khởi động lại phần mềm."
+  "🚀 Sửa triệt để lỗi Màn hình đen 0:00: Hệ thống tự động phục hồi video gốc từ máy người dùng, tắt bật lại máy tính vẫn hiển thị chuẩn xác không bị mất video.",
+  "✨ Không còn nhảy video lung tung: Cố định 100% video người dùng đang chọn, xóa bỏ hoàn toàn tình trạng tự chuyển sang video khác sau 1 phút.",
+  "⚡ Tối ưu hệ thống hiển thị ảnh thu nhỏ: Tải 100 video cũng không làm nặng hay sập card màn hình máy tính.",
+  "💎 Giao diện tài khoản chính xác: Hiển thị minh bạch chữ 'Free' cho gói miễn phí và tên cụ thể cho các gói VIP/PRO/Doanh nghiệp."
 ];
 
 export default function UpdateNotificationModal() {

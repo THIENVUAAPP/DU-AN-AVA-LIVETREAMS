@@ -8,8 +8,20 @@ console.log('===========================================================');
 
 const rootDir = path.resolve(__dirname, '..');
 const publicDir = path.join(rootDir, 'public');
-const winZipFilePath = path.join(publicDir, 'AvaLive_VIP_PRO_Windows_v2.zip');
-const macZipFilePath = path.join(publicDir, 'AvaLive_VIP_PRO_Mac_v2.zip');
+
+// Đọc phiên bản từ package.json
+const packageJsonPath = path.join(rootDir, 'package.json');
+let appVersion = '1.0.0';
+if (fs.existsSync(packageJsonPath)) {
+  const pkgData = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+  if (pkgData.version) appVersion = pkgData.version;
+}
+
+const winZipFileName = `AvaLive_VIP_PRO_Windows_v${appVersion}.zip`;
+const macZipFileName = `AvaLive_VIP_PRO_Mac_v${appVersion}.zip`;
+
+const winZipFilePath = path.join(publicDir, winZipFileName);
+const macZipFilePath = path.join(publicDir, macZipFileName);
 
 // Xóa file ZIP cũ và dist cũ trước khi build để tránh Vite copy đè làm phình to dung lượng
 if (fs.existsSync(winZipFilePath)) fs.unlinkSync(winZipFilePath);
@@ -250,8 +262,8 @@ fs.rmSync(stagingDir, { recursive: true, force: true });
 
 // BẮT BUỘC: Copy file ZIP sang thư mục dist/ để Server tĩnh (Express) có thể cho phép người dùng tải xuống đúng file thực tế thay vì bị lỗi 404 trả về trang HTML.
 if (fs.existsSync(distDir)) {
-  fs.copyFileSync(winZipFilePath, path.join(distDir, 'AvaLive_VIP_PRO_Windows_v2.zip'));
-  fs.copyFileSync(macZipFilePath, path.join(distDir, 'AvaLive_VIP_PRO_Mac_v2.zip'));
+  fs.copyFileSync(winZipFilePath, path.join(distDir, winZipFileName));
+  fs.copyFileSync(macZipFilePath, path.join(distDir, macZipFileName));
   console.log('\n[INFO] Đã copy thành công các file ZIP sang thư mục dist/ để phục vụ tải xuống trực tuyến.');
 }
 
@@ -261,6 +273,6 @@ const macSize = (fs.statSync(macZipFilePath).size / (1024 * 1024)).toFixed(1);
 console.log('\n===========================================================');
 console.log('🎉 ĐÓNG GÓI BẢO MẬT HOÀN TẤT THÀNH CÔNG!');
 console.log('🔒 Tuyệt đối không lộ source code dự án');
-console.log(`📁 Windows ZIP: public/AvaLive_VIP_PRO_Windows_v2.zip (${winSize} MB)`);
-console.log(`📁 Mac ZIP:     public/AvaLive_VIP_PRO_Mac_v2.zip (${macSize} MB)`);
+console.log(`📁 Windows ZIP: public/${winZipFileName} (${winSize} MB)`);
+console.log(`📁 Mac ZIP:     public/${macZipFileName} (${macSize} MB)`);
 console.log('===========================================================\n');
