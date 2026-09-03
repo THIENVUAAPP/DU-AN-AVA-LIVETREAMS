@@ -116,9 +116,23 @@ export function syncMasterLiveState(partialState, socket = null) {
     } catch (e) {}
   }
 
-  // 5. Gửi REST API tới Backend Server hoặc Vercel Serverless
-  const backendUrl = typeof window !== 'undefined' && (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001') ? `${window.location.protocol}//${window.location.hostname}:3001` : '';
-  const apiEndpoint = backendUrl ? `${backendUrl}/api/live-state` : '/api/live-state';
+  // 5. Gửi REST API tới Backend Server (Đồng bộ tức thì trên Electron, Web, Mac & Windows)
+  let backendUrl = 'http://localhost:3001';
+  if (typeof window !== 'undefined') {
+    const custom = localStorage.getItem('aidol_backend_url');
+    if (custom && custom.startsWith('http')) {
+      backendUrl = custom;
+    } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      backendUrl = `${window.location.protocol}//${window.location.hostname}:3001`;
+    } else if (window.location.protocol === 'file:') {
+      backendUrl = 'http://localhost:3001';
+    } else if (window.location.port === '5173' || window.location.port === '3000') {
+      backendUrl = `${window.location.protocol}//${window.location.hostname}:3001`;
+    } else if (window.location.origin && window.location.origin.startsWith('http')) {
+      backendUrl = window.location.origin;
+    }
+  }
+  const apiEndpoint = `${backendUrl.replace(/\/$/, '')}/api/live-state`;
   fetch(apiEndpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

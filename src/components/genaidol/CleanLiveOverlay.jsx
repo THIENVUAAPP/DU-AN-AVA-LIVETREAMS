@@ -274,8 +274,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     };
     fetchLiveState();
     
-    // Polling siêu tốc mỗi 500ms để đề phòng WebSocket bị chặn trên OBS / TikTok Studio CEF
-    const httpPollInterval = setInterval(fetchLiveState, 500);
+    // Polling siêu tốc mỗi 200ms để đảm bảo nhận video mới ngay lập tức
+    const httpPollInterval = setInterval(fetchLiveState, 200);
 
     // 3. WEBSOCKET REALTIME (SOCKET.IO)
     let socket = null;
@@ -896,7 +896,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               }
             }
           }}
-          key={activeMedia.url}
           src={activeMedia.url}
           autoPlay={masterState.videoPlaybackEvent !== 'pause'}
           loop

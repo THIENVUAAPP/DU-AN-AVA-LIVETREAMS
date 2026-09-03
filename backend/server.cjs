@@ -1272,11 +1272,17 @@ async function startCloudflaredTunnel(port) {
       path.join(__dirname, '..', 'scripts', 'bin', 'cloudflared.exe'),
       'cloudflared.exe'
     ] : [
+      path.join(process.cwd(), 'system', 'cloudflared'),
+      path.join(__dirname, '..', 'system', 'cloudflared'),
+      path.join(process.cwd(), 'bin', 'cloudflared'),
+      path.join(__dirname, '..', 'bin', 'cloudflared'),
       path.join(__dirname, 'cloudflared'),
       path.join(__dirname, '..', 'cloudflared'),
       path.join(process.cwd(), 'cloudflared'),
       path.join(__dirname, '..', 'node_modules', 'cloudflared', 'bin', 'cloudflared'),
+      path.join(process.cwd(), 'node_modules', 'cloudflared', 'bin', 'cloudflared'),
       '/usr/local/bin/cloudflared',
+      '/opt/homebrew/bin/cloudflared',
       '/tmp/cloudflared',
       'cloudflared'
     ];
@@ -1292,6 +1298,9 @@ async function startCloudflaredTunnel(port) {
 
   // 3. Khởi chạy binary an toàn 100% không bao giờ gây crash
   if (cloudflaredBin) {
+    if (process.platform !== 'win32' && fs.existsSync(cloudflaredBin)) {
+      try { fs.chmodSync(cloudflaredBin, 0o755); } catch (e) {}
+    }
     console.log(`📎 [Tunnel] Sử dụng binary: ${cloudflaredBin}`);
     try {
       const proc = spawn(cloudflaredBin, [

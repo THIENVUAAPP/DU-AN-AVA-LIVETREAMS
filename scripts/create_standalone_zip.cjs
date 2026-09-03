@@ -266,6 +266,27 @@ if (fs.existsSync(path.join(rootDir, 'certs'))) {
 // Create empty uploads directory
 fs.mkdirSync(path.join(macSystemDir, 'uploads'), { recursive: true });
 
+// Copy cloudflared binary cho Mac Tunnel (Hỗ trợ TikTok Live Studio trên Mac)
+const macCloudflaredCandidates = [
+  path.join(rootDir, 'node_modules', 'cloudflared', 'bin', 'cloudflared'),
+  path.join(rootDir, 'system', 'cloudflared'),
+  path.join(rootDir, 'cloudflared')
+];
+let macCloudflaredFound = false;
+for (const cand of macCloudflaredCandidates) {
+  if (fs.existsSync(cand)) {
+    const dest = path.join(macSystemDir, 'cloudflared');
+    fs.copyFileSync(cand, dest);
+    fs.chmodSync(dest, 0o755);
+    console.log('   -> ✅ Đã tích hợp Cloudflare Tunnel (cloudflared) cho macOS!');
+    macCloudflaredFound = true;
+    break;
+  }
+}
+if (!macCloudflaredFound) {
+  console.warn('   ⚠️ Không tìm thấy binary cloudflared cho Mac');
+}
+
 // Chỉ có đúng 1 file launcher duy nhất ở thư mục gốc Mac
 fs.writeFileSync(path.join(macStaging, '1_Khoi_Dong_AvaLive_Mac.command'), macCommandLauncher);
 fs.chmodSync(path.join(macStaging, '1_Khoi_Dong_AvaLive_Mac.command'), '755');

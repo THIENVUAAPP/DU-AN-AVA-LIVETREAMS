@@ -471,42 +471,36 @@ export default function GameChienDau({
     const clampX = (x) => Math.max(w * 0.12, Math.min(w * 0.88, x));
     const clampY = (y) => Math.max(h * 0.26, Math.min(h * 0.86, y));
 
-    // Dynamic Multi-Tier Diamond Grid Slots (13 Điểm Kim Cương Đa Tầng Cố Định Tuyệt Đối)
-    // Tọa độ mỗi điểm hoàn toàn khác nhau về cả X và Y, tạo thành hình quả trám / kim cương tuyệt đẹp
-    const diamondSlots = [
-      // 0: Đài VIP Đỉnh Trên Cùng (Cặp VIP / Tướng Quân 1)
-      { id: 0, x: centerX, y: h * 0.28, isTopVip: true },
-      
-      // 1 & 2: Tầng 2 (Thượng Cánh Trái & Phải)
-      { id: 1, x: centerX - 200 * crowdScaleFactor, y: h * 0.40, isTopVip: false },
-      { id: 2, x: centerX + 200 * crowdScaleFactor, y: h * 0.40, isTopVip: false },
-      
-      // 3: Tầng 3 (Tâm Sân Khấu)
-      { id: 3, x: centerX, y: h * 0.52, isTopVip: false },
-      
-      // 4 & 5: Tầng 3 (Cánh Xa Trái & Phải)
-      { id: 4, x: centerX - 300 * crowdScaleFactor, y: h * 0.55, isTopVip: false },
-      { id: 5, x: centerX + 300 * crowdScaleFactor, y: h * 0.55, isTopVip: false },
-      
-      // 6 & 7: Tầng 4 (Hạ Cánh Trái & Phải)
-      { id: 6, x: centerX - 190 * crowdScaleFactor, y: h * 0.68, isTopVip: false },
-      { id: 7, x: centerX + 190 * crowdScaleFactor, y: h * 0.68, isTopVip: false },
-      
-      // 8: Tầng 5 (Đỉnh Dưới Cùng Kim Cương)
-      { id: 8, x: centerX, y: h * 0.80, isTopVip: false },
-      
-      // 9, 10: Tầng Phụ Giữa Thượng
-      { id: 9, x: centerX - 100 * crowdScaleFactor, y: h * 0.46, isTopVip: false },
-      { id: 10, x: centerX + 100 * crowdScaleFactor, y: h * 0.46, isTopVip: false },
-      
-      // 11, 12: Tầng Phụ Giữa Hạ
-      { id: 11, x: centerX - 100 * crowdScaleFactor, y: h * 0.62, isTopVip: false },
-      { id: 12, x: centerX + 100 * crowdScaleFactor, y: h * 0.62, isTopVip: false },
+    // Dynamic Multi-Tier Diamond Grid Pairs (13 Cặp Đấu Đối Xứng Kim Cương Tuyệt Đối)
+    // Phe Xanh luôn ở bên TRÁI, Phe Đỏ luôn ở bên PHẢI, đối đầu 1v1 chuẩn võ thuật
+    const diamondPairs = [
+      // 0: Cặp VIP Tướng Quân (Đài Đỉnh Thượng)
+      { id: 0, offsetX: 44, y: h * 0.28, isTopVip: true },
+      // 1: Cặp Tiên Phong 1 (Tầng 2 Thượng)
+      { id: 1, offsetX: 110, y: h * 0.40, isTopVip: false },
+      // 2: Cặp Trung Quân (Tâm Sân Khấu)
+      { id: 2, offsetX: 50, y: h * 0.52, isTopVip: false },
+      // 3: Cặp Tiên Phong 2 (Tầng 4 Hạ Cánh)
+      { id: 3, offsetX: 115, y: h * 0.64, isTopVip: false },
+      // 4: Cặp Hậu Quân (Đỉnh Dưới Cùng Kim Cương)
+      { id: 4, offsetX: 55, y: h * 0.76, isTopVip: false },
+      // 5: Cánh Xa Thượng Trái / Phải
+      { id: 5, offsetX: 190, y: h * 0.45, isTopVip: false },
+      // 6: Cánh Xa Hạ Trái / Phải
+      { id: 6, offsetX: 190, y: h * 0.59, isTopVip: false },
+      // 7: Cực Cánh Thượng
+      { id: 7, offsetX: 270, y: h * 0.36, isTopVip: false },
+      // 8: Cực Cánh Hạ
+      { id: 8, offsetX: 270, y: h * 0.68, isTopVip: false },
+      // 9: Phụ Trợ Thượng
+      { id: 9, offsetX: 80, y: h * 0.34, isTopVip: false },
+      // 10: Phụ Trợ Hạ
+      { id: 10, offsetX: 80, y: h * 0.70, isTopVip: false },
+      // 11: Phụ Trợ Cánh 1
+      { id: 11, offsetX: 150, y: h * 0.52, isTopVip: false },
+      // 12: Phụ Trợ Cánh 2
+      { id: 12, offsetX: 230, y: h * 0.52, isTopVip: false }
     ];
-
-    // Khoảng cách 1v1 cận chiến: 2 kiếm CHẠM NHAU (Sword-to-Sword Melee Clash)
-    // 34px mỗi bên -> Tổng khoảng cách giữa 2 đấu thủ là 68px. Kiếm dài 35px sẽ va chạm tóe lửa ngay tâm slot!
-    const gap = 34 * crowdScaleFactor;
 
     // Slot reservation tracker: ensure stable persistent slot IDs
     const usedBlueSlots = new Set();
@@ -536,7 +530,7 @@ export default function GameChienDau({
         while (usedBlueSlots.has(nextBlueSlot)) {
           nextBlueSlot++;
         }
-        f.assignedSlotIdx = nextBlueSlot % diamondSlots.length;
+        f.assignedSlotIdx = nextBlueSlot % diamondPairs.length;
         usedBlueSlots.add(nextBlueSlot);
       }
     });
@@ -547,40 +541,40 @@ export default function GameChienDau({
         while (usedRedSlots.has(nextRedSlot)) {
           nextRedSlot++;
         }
-        f.assignedSlotIdx = nextRedSlot % diamondSlots.length;
+        f.assignedSlotIdx = nextRedSlot % diamondPairs.length;
         usedRedSlots.add(nextRedSlot);
       }
     });
 
-    // 3. Cập nhật vị trí targetX, targetY cho toàn bộ nhân vật (CỐ ĐỊNH, KHÔNG BAO GIỜ BỊ NHẢY)
+    // 3. Cập nhật vị trí targetX, targetY cho toàn bộ nhân vật (Chuẩn Phe: Xanh Trái - Đỏ Phải)
     activeBlue.forEach(f => {
-      const slotIdx = f.assignedSlotIdx % diamondSlots.length;
-      const slot = diamondSlots[slotIdx];
-      const isTop = (slotIdx === 0);
+      const pairIdx = f.assignedSlotIdx % diamondPairs.length;
+      const pair = diamondPairs[pairIdx];
+      const isTop = (pairIdx === 0);
       const hasOpponent = activeRed.some(r => r.assignedSlotIdx === f.assignedSlotIdx);
 
       f.isVipStage = isTop;
       f.isDuelFront = hasOpponent;
-      f.duelPairIdx = slotIdx;
-      f.duelSpotX = slot.x;
-      f.duelSpotY = slot.y;
-      f.targetX = clampX(slot.x - gap);
-      f.targetY = clampY(slot.y);
+      f.duelPairIdx = pairIdx;
+      f.duelSpotX = centerX;
+      f.duelSpotY = pair.y;
+      f.targetX = clampX(centerX - pair.offsetX * crowdScaleFactor);
+      f.targetY = clampY(pair.y);
     });
 
     activeRed.forEach(f => {
-      const slotIdx = f.assignedSlotIdx % diamondSlots.length;
-      const slot = diamondSlots[slotIdx];
-      const isTop = (slotIdx === 0);
+      const pairIdx = f.assignedSlotIdx % diamondPairs.length;
+      const pair = diamondPairs[pairIdx];
+      const isTop = (pairIdx === 0);
       const hasOpponent = activeBlue.some(b => b.assignedSlotIdx === f.assignedSlotIdx);
 
       f.isVipStage = isTop;
       f.isDuelFront = hasOpponent;
-      f.duelPairIdx = slotIdx;
-      f.duelSpotX = slot.x;
-      f.duelSpotY = slot.y;
-      f.targetX = clampX(slot.x + gap);
-      f.targetY = clampY(slot.y);
+      f.duelPairIdx = pairIdx;
+      f.duelSpotX = centerX;
+      f.duelSpotY = pair.y;
+      f.targetX = clampX(centerX + pair.offsetX * crowdScaleFactor);
+      f.targetY = clampY(pair.y);
     });
   }, []);
 
@@ -1676,8 +1670,17 @@ export default function GameChienDau({
 
     const renderLoop = (time) => {
       try {
-        const dt = Math.min(0.05, (time - engineRef.current.lastTime) / 1000);
-        engineRef.current.lastTime = time;
+        const currentTime = typeof time === 'number' && !isNaN(time) ? time : performance.now();
+        const lastTime = typeof engineRef.current.lastTime === 'number' && !isNaN(engineRef.current.lastTime) ? engineRef.current.lastTime : currentTime;
+        
+        // Cố định tốc độ mượt mà 60 FPS (~16ms), chống quá tải GPU trên màn hình Windows 144Hz-240Hz
+        if (currentTime - lastTime < 14) {
+          engineRef.current.rAfId = requestAnimationFrame(renderLoop);
+          return;
+        }
+
+        const dt = Math.max(0.001, Math.min(0.033, (currentTime - lastTime) / 1000));
+        engineRef.current.lastTime = currentTime;
 
         const w = engineRef.current.w || (canvas.width / (window.devicePixelRatio || 1));
         const h = engineRef.current.h || (canvas.height / (window.devicePixelRatio || 1));
@@ -1844,40 +1847,38 @@ export default function GameChienDau({
         }
       }
 
-      // Spawn sparks for active dueling pairs across the screen
-      if (pairCount > 0 && Math.random() < 0.65) {
+      // Spawn tiny light sparks for active dueling pairs (nhẹ 100%, không bị tụ thành đám mây bụi)
+      if (pairCount > 0 && Math.random() < 0.25 && engineRef.current.particles.length < 20) {
         const randPair = Math.floor(Math.random() * pairCount);
         const fPair = activeBlue[randPair];
-        const clashX = fPair?.duelSpotX || (fPair?.x + 40);
+        const clashX = fPair?.duelSpotX || (fPair?.x + 35);
         const clashY = fPair?.duelSpotY || fPair?.y || centerY;
 
-        for (let sp = 0; sp < 3; sp++) {
-          engineRef.current.particles.push({
-            x: clashX + (Math.random() - 0.5) * 16,
-            y: clashY + (Math.random() - 0.5) * 18,
-            vx: (Math.random() - 0.5) * 110,
-            vy: (Math.random() - 0.5) * 90 - 20,
-            size: 2.5 + Math.random() * 3,
-            color: Math.random() < 0.6 ? '#fde047' : '#ffffff',
-            isFlash: true,
-            lifespanMs: 380,
-            spawnedAt: performance.now()
-          });
-        }
+        engineRef.current.particles.push({
+          x: clashX + (Math.random() - 0.5) * 8,
+          y: clashY + (Math.random() - 0.5) * 8,
+          vx: (Math.random() - 0.5) * 90,
+          vy: (Math.random() - 0.5) * 70 - 15,
+          size: 0.8 + Math.random() * 0.8,
+          color: Math.random() < 0.6 ? '#fde047' : '#ffffff',
+          isFlash: true,
+          lifespanMs: 140,
+          spawnedAt: performance.now()
+        });
       }
 
-      // Also VIP clash sparks between top rings
+      // Also VIP clash sparks
       const hasVipDuel = activeBlue.some(f => f.isVipStage) && activeRed.some(f => f.isVipStage);
-      if (hasVipDuel && Math.random() < 0.35) {
+      if (hasVipDuel && Math.random() < 0.2 && engineRef.current.particles.length < 20) {
         engineRef.current.particles.push({
-          x: centerX + (Math.random() - 0.5) * 40,
-          y: daisY + (Math.random() - 0.5) * 20,
-          vx: (Math.random() - 0.5) * 130,
-          vy: (Math.random() - 0.5) * 100 - 30,
-          size: 3.5 + Math.random() * 3.5,
+          x: centerX + (Math.random() - 0.5) * 14,
+          y: daisY + (Math.random() - 0.5) * 10,
+          vx: (Math.random() - 0.5) * 100,
+          vy: (Math.random() - 0.5) * 80 - 20,
+          size: 1.0 + Math.random() * 0.6,
           color: Math.random() < 0.5 ? '#fde047' : '#38bdf8',
           isFlash: true,
-          lifespanMs: 450,
+          lifespanMs: 150,
           spawnedAt: performance.now()
         });
       }
@@ -1893,7 +1894,20 @@ export default function GameChienDau({
       });
 
       allFighters.forEach(f => {
-        if (f.isKnockedOut) return; // Disappear immediately upon death as requested by user
+        if (f.isKnockedOut) {
+          const koTime = f.knockoutTime || now;
+          // Tự động hồi sinh sau 2.5s để trận đấu liên tục, các nhân vật không bị mất tích
+          if (now - koTime > 2500) {
+            f.isKnockedOut = false;
+            f.currentHp = f.maxHp || 400;
+            f.revivedAt = now;
+            f.knockoutTime = 0;
+            f.knockbackVx = 0;
+            updateFormation(w, h);
+          } else {
+            return;
+          }
+        }
 
         const factionId = f.factionId || 'blue';
         const color = factionId === 'blue' ? config.blueColor : config.redColor;
@@ -1903,14 +1917,19 @@ export default function GameChienDau({
         const targetX = f.targetX !== undefined ? f.targetX : (factionId === 'blue' ? centerX - 44 : centerX + 44);
         const targetY = f.targetY !== undefined ? f.targetY : (f.isVipStage ? daisY : centerY);
 
+        // Chống tuyệt đối lỗi tọa độ NaN làm mất nhân vật
+        if (isNaN(f.x) || !isFinite(f.x)) f.x = targetX;
+        if (isNaN(f.y) || !isFinite(f.y)) f.y = targetY;
+        if (isNaN(f.bobPhase) || !isFinite(f.bobPhase)) f.bobPhase = 0;
+
         f.x += (targetX - f.x) * lerpFactor;
         f.y += (targetY - f.y) * lerpFactor;
 
         // Strict Safe Area Clamping: Guaranteed zero off-screen drift or overshoot across Mobile/Tablet/PC
-        const minX = w * 0.16;
-        const maxX = w * 0.84;
-        const minY = h * 0.30;
-        const maxY = h * 0.82;
+        const minX = w * 0.14;
+        const maxX = w * 0.86;
+        const minY = h * 0.24;
+        const maxY = h * 0.84;
         f.x = Math.max(minX, Math.min(maxX, f.x));
         f.y = Math.max(minY, Math.min(maxY, f.y));
 
@@ -1964,7 +1983,7 @@ export default function GameChienDau({
           ctx.strokeStyle = factionId === 'blue' ? 'rgba(56, 189, 248, 0.85)' : 'rgba(244, 63, 94, 0.85)';
           ctx.lineWidth = 3.5 * scale;
           ctx.shadowColor = factionId === 'blue' ? '#38bdf8' : '#f43f5e';
-          ctx.shadowBlur = 18;
+          ctx.shadowBlur = 4;
           ctx.stroke();
 
           // Dragon Head Crest / Flaming Beast Eye
@@ -1975,7 +1994,7 @@ export default function GameChienDau({
           ctx.arc(hx, hy, 5 * scale, 0, Math.PI * 2);
           ctx.fillStyle = '#fef08a';
           ctx.shadowColor = '#facc15';
-          ctx.shadowBlur = 14;
+          ctx.shadowBlur = 3;
           ctx.fill();
           ctx.restore();
         }
@@ -2064,7 +2083,7 @@ export default function GameChienDau({
 
           ctx.save();
           ctx.shadowColor = (f.hasArmor || tier === 5) ? '#facc15' : (factionId === 'blue' ? '#38bdf8' : '#f43f5e');
-          ctx.shadowBlur = 22;
+          ctx.shadowBlur = 4;
 
           // Outer shimmering protective sphere
           ctx.strokeStyle = (f.hasArmor || tier === 5) ? 'rgba(250, 204, 21, 0.95)' : (factionId === 'blue' ? 'rgba(56, 189, 248, 0.85)' : 'rgba(244, 63, 94, 0.85)');
@@ -2099,7 +2118,7 @@ export default function GameChienDau({
 
           ctx.save();
           ctx.shadowColor = tier === 5 ? '#fbbf24' : wingGlow;
-          ctx.shadowBlur = 18;
+          ctx.shadowBlur = 4;
 
           // Left Wing
           const leftWingGrad = ctx.createLinearGradient(-4, 0, -28, -14);
@@ -2272,7 +2291,7 @@ export default function GameChienDau({
           ctx.translate(curX, curY);
           ctx.rotate(angle);
           ctx.shadowColor = sw.color;
-          ctx.shadowBlur = 16;
+          ctx.shadowBlur = 4;
 
           // Glowing Sword Laser Body
           ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
@@ -2370,7 +2389,7 @@ export default function GameChienDau({
         ctx.translate(dBeast.x, dBeast.y + waveY);
         ctx.scale(isBlue ? 3.0 : -3.0, 3.0);
         ctx.shadowColor = '#facc15';
-        ctx.shadowBlur = 32;
+        ctx.shadowBlur = 5;
 
         // Golden Dragon Head & Body
         ctx.fillStyle = '#facc15';
@@ -2453,7 +2472,7 @@ export default function GameChienDau({
           ctx.translate(tc.x, tc.y);
           ctx.rotate(time * 0.003);
           ctx.shadowColor = '#38bdf8';
-          ctx.shadowBlur = 20;
+          ctx.shadowBlur = 4;
 
           // Yin Yang Outer Ring
           ctx.strokeStyle = `rgba(56, 189, 248, ${1 - progress})`;
@@ -2487,7 +2506,7 @@ export default function GameChienDau({
 
               ctx.save();
               ctx.shadowColor = b.color;
-              ctx.shadowBlur = 24;
+              ctx.shadowBlur = 4;
               ctx.strokeStyle = b.color;
               ctx.lineWidth = b.width * 2;
               ctx.beginPath();
@@ -2548,7 +2567,7 @@ export default function GameChienDau({
           ctx.translate(storm.x, storm.y);
           ctx.rotate(time * 0.008);
           ctx.shadowColor = '#06b6d4';
-          ctx.shadowBlur = 28;
+          ctx.shadowBlur = 4;
 
           // Swirling vortex rings
           ctx.strokeStyle = `rgba(6, 182, 212, ${1 - progress})`;
@@ -2616,7 +2635,7 @@ export default function GameChienDau({
           ctx.save();
           ctx.translate(palm.x, palm.y);
           ctx.shadowColor = '#eab308';
-          ctx.shadowBlur = 40;
+          ctx.shadowBlur = 5;
 
           // Radiant Sun Halo Rings
           ctx.strokeStyle = `rgba(234, 179, 8, ${alpha * 0.8})`;
@@ -2679,7 +2698,7 @@ export default function GameChienDau({
         if (tf.progress < 1.3) {
           ctx.save();
           ctx.shadowColor = tf.color;
-          ctx.shadowBlur = 30;
+          ctx.shadowBlur = 5;
           ctx.strokeStyle = '#ffffff';
           ctx.lineWidth = 3;
 
@@ -2739,7 +2758,7 @@ export default function GameChienDau({
           ctx.save();
           ctx.translate(bell.x, bell.y);
           ctx.shadowColor = '#facc15';
-          ctx.shadowBlur = 35;
+          ctx.shadowBlur = 5;
 
           // Golden Bell Dome
           ctx.strokeStyle = `rgba(250, 204, 21, ${1 - progress * 0.8})`;
@@ -2774,7 +2793,7 @@ export default function GameChienDau({
 
         const bossColor = boss.factionId === 'blue' ? '#38bdf8' : '#fb7185';
         ctx.shadowColor = bossColor;
-        ctx.shadowBlur = 24;
+        ctx.shadowBlur = 4;
         ctx.fillStyle = bossColor;
 
         ctx.beginPath();
@@ -2859,8 +2878,11 @@ export default function GameChienDau({
 
 
 
-      // 5. Update & Draw Particles
+      // 5. Update & Draw Particles (Siêu nhẹ, không tích tụ thành mây bụi)
       const particles = engineRef.current.particles;
+      if (particles.length > 25) {
+        particles.splice(0, particles.length - 25);
+      }
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.x += p.vx * dt;
@@ -2868,35 +2890,35 @@ export default function GameChienDau({
 
         ctx.fillStyle = p.color;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, Math.min(2.0, p.size || 1.0), 0, Math.PI * 2);
         ctx.fill();
 
-          if (performance.now() - p.spawnedAt > p.lifespanMs) {
-            particles.splice(i, 1);
-          }
+        if (performance.now() - p.spawnedAt > p.lifespanMs) {
+          particles.splice(i, 1);
         }
-      } catch (err) {
-        console.error('Battlefield renderLoop error:', err);
-      } finally {
-        engineRef.current.rAfId = requestAnimationFrame(renderLoop);
+      }
+    } catch (err) {
+      console.error('Battlefield renderLoop error:', err);
+    } finally {
+      engineRef.current.rAfId = requestAnimationFrame(renderLoop);
+    }
+  };
+
+  engineRef.current.rAfId = requestAnimationFrame(renderLoop);
+
+  let workerTimer = null;
+  try {
+    const blob = new Blob([
+      "let t; self.onmessage=e=>{ if(e.data==='start'){ if(!t) t=setInterval(()=>self.postMessage('tick'), 40); } else if(e.data==='stop'){ clearInterval(t); t=null; } };"
+    ], { type: 'application/javascript' });
+    workerTimer = new Worker(URL.createObjectURL(blob));
+    workerTimer.onmessage = () => {
+      if (document.hidden) {
+        renderLoop(performance.now());
       }
     };
-
-    engineRef.current.rAfId = requestAnimationFrame(renderLoop);
-
-    let workerTimer = null;
-    try {
-      const blob = new Blob([
-        "let t; self.onmessage=e=>{ if(e.data==='start'){ if(!t) t=setInterval(()=>self.postMessage('tick'), 33); } else if(e.data==='stop'){ clearInterval(t); t=null; } };"
-      ], { type: 'application/javascript' });
-      workerTimer = new Worker(URL.createObjectURL(blob));
-      workerTimer.onmessage = () => {
-        if (document.hidden) {
-          renderLoop();
-        }
-      };
-      workerTimer.postMessage('start');
-    } catch (e) {}
+    workerTimer.postMessage('start');
+  } catch (e) {}
 
     return () => {
       window.removeEventListener('resize', handleResize);
