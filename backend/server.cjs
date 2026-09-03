@@ -1369,6 +1369,6 @@ async function startLocaltunnelFallback(port) {
   }
 }
 
-// Khởi động tunnel sau 2 giây để server ổn định trước
-setTimeout(() => startCloudflaredTunnel(Number(PORT)), 2000);
+// Khởi động tunnel ngay sau khi server chạy
+setTimeout(() => startCloudflaredTunnel(Number(PORT)), 500);
 

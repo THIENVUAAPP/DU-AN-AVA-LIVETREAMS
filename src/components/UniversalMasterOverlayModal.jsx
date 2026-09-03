@@ -30,28 +30,39 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
   const fetchTunnelUrl = useCallback(async () => {
     try {
       setTunnelLoading(true);
-      const res = await fetch("http://localhost:3001/api/tunnel-url");
-      if (!res.ok) throw new Error("Server không phản hồi");
-      const data = await res.json();
-      setTunnelData(data);
-      setTunnelLoading(false);
-      if (data.status !== "active") {
+      const host = typeof window !== 'undefined' && window.location.origin.includes('http')
+        ? window.location.origin
+        : 'http://127.0.0.1:3001';
+      let res;
+      try {
+        res = await fetch(`${host}/api/tunnel-url`);
+      } catch (e) {
+        res = await fetch('http://127.0.0.1:3001/api/tunnel-url');
+      }
+      if (res && res.ok) {
+        const data = await res.json();
+        setTunnelData(data);
+        setTunnelLoading(false);
+        if (data.status !== "active") {
+          setTimeout(fetchTunnelUrl, 2000);
+        }
+      } else {
+        setTunnelLoading(false);
         setTimeout(fetchTunnelUrl, 3000);
       }
     } catch (err) {
       setTunnelLoading(false);
+      setTimeout(fetchTunnelUrl, 3000);
     }
   }, []);
 
   useEffect(() => {
-    if (isOpen && currentUser) {
+    if (isOpen) {
       fetchTunnelUrl();
     }
-  }, [isOpen, currentUser, fetchTunnelUrl]);
+  }, [isOpen, fetchTunnelUrl]);
 
   if (!isOpen) return null;
-
-  const cloudBase = "https://avalivepro.vercel.app";
 
   const getProjectUrl = (path) => {
     if (tunnelData?.projects?.[path]) {
@@ -60,7 +71,10 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
     if (tunnelData?.tunnelUrl) {
       return `${tunnelData.tunnelUrl}/${path}`;
     }
-    return `${cloudBase}/${path}`;
+    const host = typeof window !== 'undefined' && window.location.origin.includes('http')
+      ? window.location.origin
+      : 'http://127.0.0.1:3001';
+    return `${host}/${path}`;
   };
 
   const projects = [
@@ -152,28 +166,6 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
           </div>
         </div>
 
-        {/* Chưa đăng nhập */}
-        {!currentUser ? (
-          <div className="p-6 rounded-2xl bg-[#16130e] border border-amber-500/40 text-center space-y-3 my-auto">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center mx-auto">
-              <Lock className="w-6 h-6 text-amber-400" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-base font-black text-white">BẠN CHƯA KẾT NỐI TÀI KHOẢN GOOGLE</h3>
-              <p className="text-xs text-gray-400 max-w-md mx-auto leading-relaxed">
-                Vui lòng đăng nhập bằng Google để mở khóa Danh Sách Đường Link dành riêng cho tài khoản của bạn.
-              </p>
-            </div>
-            <button
-              onClick={() => { onClose(); onOpenLogin && onOpenLogin(); }}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black font-black text-xs shadow-lg shadow-amber-500/25 transition-all hover:scale-[1.02] cursor-pointer inline-flex items-center gap-2"
-            >
-              <Zap className="w-4 h-4 text-yellow-300 animate-pulse" />
-              <span>KẾT NỐI GOOGLE / GMAIL ĐỂ MỞ KHÓA NGAY</span>
-            </button>
-          </div>
-        ) : (
-          <>
             {/* === TRẠNG THÁI TUNNEL === */}
             <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl border text-xs font-bold ${
               isTunnelActive
@@ -243,24 +235,23 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                       </span>
                     </div>
 
-                    {/* Input & Buttons */}
+                      {/* Input & Buttons */}
                     <div className="flex flex-col sm:flex-row items-center gap-2 pt-0.5">
                       <input
                         type="text"
                         readOnly
-                        value={isLoading ? "⏳ Đang tạo link Cloudflare..." : (url || "⏳ Đang kết nối tunnel...")}
+                        value={url}
                         className={`w-full sm:flex-1 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold focus:outline-none select-all transition-colors ${
-                          isLoading || !url
-                            ? "bg-black/40 border-yellow-500/30 text-yellow-400/70"
-                            : "bg-black/70 border-emerald-500/30 text-emerald-300"
+                          isTunnelActive
+                            ? "bg-black/70 border-emerald-500/30 text-emerald-300"
+                            : "bg-black/40 border-yellow-500/30 text-yellow-300"
                         }`}
                       />
 
                       <div className="flex items-center gap-1.5 w-full sm:w-auto">
                         <button
-                          onClick={() => url && handleCopy(url, proj.id)}
-                          disabled={!url || isLoading}
-                          className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-md active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${
+                          onClick={() => handleCopy(url, proj.id)}
+                          className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-md active:scale-95 ${
                             isCopied ? "bg-emerald-600 text-white" : "bg-white/15 hover:bg-white/25 text-white"
                           }`}
                         >
@@ -314,8 +305,6 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                 </div>
               </div>
             </div>
-          </>
-        )}
       </div>
     </div>
   );

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star } from 'lucide-react';
 
-export const APP_VERSION = '1.2.1';
+export const APP_VERSION = '1.2.2';
 export const UPDATE_NOTES = [
-  "🌐 Tích hợp sẵn Cloudflare Tunnel Portable (cloudflared.exe) trên Windows: Tự động cấp link HTTPS (*.trycloudflare.com) giống hệt máy Mac!",
-  "🎯 Dán link Cloudflare vào TikTok Live Studio nhận diện 100% không bao giờ bị báo lỗi link local, phát video & game lập tức.",
+  "🔓 Mở khóa 100% đường link TikTok Studio: Không còn bắt buộc đăng nhập, bất kỳ ai mở phần mềm đều sao chép được link để live ngay lập tức.",
+  "🌐 Tự động cấp link Cloudflare (*.trycloudflare.com) trực tiếp trên Windows và Mac, dán vào TikTok Live Studio nhận diện và phát video ngay.",
   "🧠 Cố định vĩnh viễn Bộ Não Tính Cách Ngọc Nhi (SỰ KIỆN NGỌC NHI) & Kịch bản Chốt Đơn AVA LIVE cho mọi bản tải về Windows & Mac.",
   "✨ Đăng nhập Google 1-Chạm sang trọng với Logo AvaLive chính thức, tối giản hoàn toàn không cần nhập liệu."
 ];
