@@ -57,8 +57,8 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
     if (tunnelData?.tunnelUrl) {
       return `${cloudBase}/${path}?backend=${tunnelData.tunnelUrl}`;
     }
-    // Link Localhost chuẩn xác 100% không qua DNS ngoài, TikTok Studio & OBS nhận ngay lập tức
-    return `http://localhost:3001/${path}`;
+    // TikTok Live Studio yêu cầu link HTTPS trực tuyến hợp lệ (avalivepro.vercel.app)
+    return `${cloudBase}/${path}`;
   };
 
   const projects = [

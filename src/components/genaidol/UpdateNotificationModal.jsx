@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star } from 'lucide-react';
 
-export const APP_VERSION = '1.1.9';
+export const APP_VERSION = '1.2.0';
 export const UPDATE_NOTES = [
-  "🎯 Khắc phục triệt để lỗi đường link phát video Idol & Game trên TikTok Live Studio / OBS: Sử dụng kết nối nội bộ mượt mà 100%, không bị chặn DNS.",
-  "🧠 Cố định vĩnh viễn Bộ Não Tính Cách Ngọc Nhi (SỰ KIỆN NGỌC NHI) & Kịch bản Chốt Đơn AVA LIVE: Tải về trên Windows hay Mac đều có sẵn đầy đủ 100%.",
-  "✨ Đăng nhập Google 1-Chạm sang trọng: Giao diện kết nối tinh gọn chỉ với Logo AvaLive chính thức và 1 nút kết nối nhanh, bỏ hoàn toàn các ô nhập liệu.",
-  "⚡ Tối ưu tốc độ tải và dung lượng siêu nhẹ cho cả Windows và Mac."
+  "🌐 Cung cấp 100% đường link kết nối TikTok Live Studio chuẩn HTTPS chính thức (avalivepro.vercel.app), được TikTok Studio kiểm duyệt và nhận diện ngay lập tức mà không bao giờ bị báo lỗi link local.",
+  "🔄 Tự động đồng bộ thời gian thực video & âm thanh giữa phần mềm trên máy tính và TikTok Live Studio qua Cloudflare Tunnel + Supabase Cloud Realtime.",
+  "🧠 Cố định vĩnh viễn Bộ Não Tính Cách Ngọc Nhi (SỰ KIỆN NGỌC NHI) & Kịch bản Chốt Đơn AVA LIVE cho mọi bản tải về Windows & Mac.",
+  "✨ Đăng nhập Google 1-Chạm sang trọng với Logo AvaLive chính thức, tối giản hoàn toàn không cần nhập liệu."
 ];
 
 export default function UpdateNotificationModal() {
