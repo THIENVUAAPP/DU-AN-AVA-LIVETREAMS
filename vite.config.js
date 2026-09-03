@@ -13,7 +13,7 @@ const httpsConfig = useHttpsEnv && fs.existsSync(devCertPath) && fs.existsSync(d
   : undefined;
 
 export default defineConfig({
-  base: './',
+  base: '/',
   server: {
     port: 5173,
     open: true,

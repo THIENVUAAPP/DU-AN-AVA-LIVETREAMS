@@ -98,13 +98,19 @@
               if (state.isVideo === false) isVideo = false;
             }
             if (url) {
+              if (url.includes('/uploads/')) {
+                url = window.location.origin + url.substring(url.indexOf('/uploads/'));
+              } else if (url.startsWith('/')) {
+                url = window.location.origin + url;
+              }
               var el = document.createElement(isVideo ? 'video' : 'img');
               el.id = 'fast-preload-media';
               el.src = url;
-              el.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;object-fit:cover;z-index:999999;background:black;pointer-events:none;';
+              el.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;object-fit:cover;z-index:999999;pointer-events:none;';
               if (isVideo) {
                 el.autoplay = true; el.loop = true; el.muted = true; el.playsInline = true;
               }
+              el.onerror = function() { try { el.remove(); } catch(e){} };
               document.body.appendChild(el);
             }
           }

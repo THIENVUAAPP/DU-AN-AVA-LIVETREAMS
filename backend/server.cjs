@@ -1051,8 +1051,12 @@ app.post('/api/live-state', (req, res) => {
     const payload = { ...req.body };
     
     // Nếu payload có chứa mediaUrl hợp lệ thì mới cập nhật, ngược lại giữ nguyên mediaUrl hiện tại
-    if (payload.mediaUrl && payload.mediaUrl.startsWith('blob:')) {
-      delete payload.mediaUrl; // Không lưu blob URL tạm thời
+    if (payload.mediaUrl && typeof payload.mediaUrl === 'string') {
+      if (payload.mediaUrl.startsWith('blob:')) {
+        delete payload.mediaUrl; // Không lưu blob URL tạm thời
+      } else if (payload.mediaUrl.includes('/uploads/')) {
+        payload.mediaUrl = payload.mediaUrl.substring(payload.mediaUrl.indexOf('/uploads/'));
+      }
     }
 
     currentMasterLiveState = { 
@@ -1159,6 +1163,11 @@ app.post('/api/generate-script', async (req, res) => {
 
 // SPA Fallback & Tuyến đường chuyên dụng cho TikTok LIVE Studio & OBS Studio
 if (distPath) {
+  const assetsDir = path.join(distPath, 'assets');
+  if (fs.existsSync(assetsDir)) {
+    app.use(['/assets', '/idol/assets', '/bando/assets', '/battle/assets', '/live/assets'], express.static(assetsDir, { maxAge: '1d' }));
+  }
+
   app.get(['/idol', '/bando', '/battle', '/live', '/overlay-idol', '/overlay-bando', '/overlay-battle'], (req, res) => {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Access-Control-Allow-Origin', '*');

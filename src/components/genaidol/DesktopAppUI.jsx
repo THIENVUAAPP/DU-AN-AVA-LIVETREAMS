@@ -1379,6 +1379,8 @@ export default function DesktopAppUI() {
     if (!currentMedia) {
       currentMedia = '/demo_dancer.mp4';
       isVid = true;
+    } else if (typeof currentMedia === 'string' && currentMedia.includes('/uploads/')) {
+      currentMedia = currentMedia.substring(currentMedia.indexOf('/uploads/'));
     }
 
     const masterPayload = {
@@ -1391,6 +1393,8 @@ export default function DesktopAppUI() {
       flvUrl: streamFlvUrl,
       isVideo: !!isVid,
       isConnected: !!(isConnected || showSimulator),
+      videoPlaybackEvent: 'play',
+      isPlaying: true,
       isDarkMode,
       currentLang,
       updatedAt: Date.now()

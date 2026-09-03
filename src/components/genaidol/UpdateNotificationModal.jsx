@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 
-export const APP_VERSION = '1.2.6';
+export const APP_VERSION = '1.2.7';
 export const UPDATE_NOTES = [
-  "🪟 Khôi phục 100% đường link chạy trên Windows cho TikTok Live Studio: Khắc phục triệt để lỗi kết nối IPv6, chuyển định tuyến về 127.0.0.1 giúp TikTok Studio nhận diện và phát video ngay lập tức.",
-  "⚡ Sửa lỗi kết nối Socket.IO trên Game Bản Đồ & Game PK qua Tunnel: Loại bỏ cổng 3001 khi chạy qua domain *.trycloudflare.com, đảm bảo 2 game nhận quà và bình luận mượt mà 100%.",
-  "🌐 Khôi phục giao diện Modal Đường Link TikTok Live Studio chuẩn Chính Thức theo mẫu: Đầy đủ 3 dự án (Live AI Idol, Bản Đồ 63 Tỉnh, PK Battle) và hướng dẫn chi tiết.",
-  "🔓 Mở khóa toàn bộ đường link Live Overlay: Không bắt buộc đăng nhập Gmail, bấm '📡 Link Live' là sao chép được ngay trên cả Windows và macOS.",
-  "🚀 Tối ưu hóa 85% tải GPU & khóa 60 FPS: Loại bỏ cảnh báo nặng máy trên TikTok Live Studio Windows.",
-  "⚡ Tăng tốc độ đồng bộ video 200ms: Tái sử dụng thẻ video phát ngay sau 50ms, không bị nháy màn hình đen."
+  "🎬 Sửa triệt để lỗi màn hình đen trên TikTok Live Studio Windows: Chuẩn hoá 100% URL video thành HTTPS Origin, loại bỏ hoàn toàn lỗi chặn Mixed Content của trình duyệt CEF.",
+  "⚡ Đồng bộ video tức thì giữa Phần Mềm và TikTok Live Studio: Phần mềm chọn video hay đổi nhân vật gì, TikTok Studio mở ngay video đó trong chớp mắt.",
+  "🕒 Phát video liên tục 24/24 không ngừng nghỉ: Tích hợp cơ chế Watchdog Heartbeat tự động kiểm tra và phục hồi phát lặp vô tận (Loop), không lo đứng hình khi treo live ngày đêm.",
+  "🌐 Sửa lỗi đường dẫn tài nguyên tĩnh (/assets) trên Cloudflare Tunnel: Đảm bảo tải đầy đủ mã nguồn và video dù link có dấu gạch chéo cuối trang hay không.",
+  "🪟 Tối ưu hóa toàn diện cho Windows: Đầy đủ binary cloudflared.exe, cố định IPv4 127.0.0.1 và khởi chạy 1 chạm qua AvaLive_Studio.exe."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

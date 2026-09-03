@@ -685,6 +685,25 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     };
   }, []);
 
+  // 🕒 24/7 CONTINUOUS PLAYBACK WATCHDOG (TỰ ĐỘNG PHỤC HỒI & PHÁT LIÊN TỤC 24/24)
+  useEffect(() => {
+    const watchdogTimer = setInterval(() => {
+      const vid = overlayVideoRef.current;
+      if (!vid) return;
+
+      // Nếu không có lệnh tạm dừng từ streamer và video đang bị pause hoặc kết thúc
+      if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
+        if (vid.paused || vid.ended) {
+          if (vid.ended) vid.currentTime = 0;
+          vid.muted = true;
+          vid.play().catch(() => {});
+        }
+      }
+    }, 1500);
+
+    return () => clearInterval(watchdogTimer);
+  }, [masterState.videoPlaybackEvent, masterState.isPlaying]);
+
   // Helper giải mã URL media chính xác (tôn trọng 100% video/nhân vật người dùng chọn)
   const resolveActiveMedia = () => {
     let candidateUrl = masterState.mediaUrl || null;
@@ -714,47 +733,69 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       } catch (e) {}
     }
 
-    // 3. Fallback video AI Idol mặc định có sẵn (đảm bảo luôn luôn có video khi mở trên TikTok Studio / OBS)
+    // 3. Khôi phục Blob URL từ IndexedDB nếu là video tùy chỉnh, hoặc fallback nếu blob không tồn tại ở cửa sổ này
+    if (typeof candidateUrl === 'string' && candidateUrl.startsWith('blob:')) {
+      const match = localDbItems.find(i => i.id === masterState.selectedCharacter);
+      if (match && match.fileBlob) {
+        try {
+          candidateUrl = URL.createObjectURL(match.fileBlob);
+        } catch (e) {}
+      } else if (match && (match.mediaUrl || match.url) && !match.mediaUrl?.startsWith('blob:')) {
+        candidateUrl = match.mediaUrl || match.url;
+      } else {
+        // Blob này thuộc phiên trình duyệt khác không thể truy cập tại overlay -> fallback video mặc định
+        candidateUrl = '/demo_dancer.mp4';
+        isVideo = true;
+      }
+    }
+
+    // 4. Fallback video AI Idol mặc định có sẵn
     if (!candidateUrl) {
       candidateUrl = '/demo_dancer.mp4';
       isVideo = true;
     }
 
-    // Làm sạch và chuẩn hóa URL (Loại bỏ các tiền tố http lặp lại nếu có)
+    // 5. Chuẩn hoá tuyệt đối URL cho HTTPS Overlay (TikTok Live Studio / OBS Browser Source)
     if (typeof candidateUrl === 'string') {
+      const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+
+      // Loại bỏ tiền tố http/https lặp lại
       if (candidateUrl.includes('http://') && candidateUrl.lastIndexOf('http://') > 0) {
         candidateUrl = candidateUrl.substring(candidateUrl.lastIndexOf('http://'));
       } else if (candidateUrl.includes('https://') && candidateUrl.lastIndexOf('https://') > 0) {
         candidateUrl = candidateUrl.substring(candidateUrl.lastIndexOf('https://'));
       }
 
-      // Chuẩn hoá URL video tải lên (Đồng bộ hostname để tránh CORS trên OBS / CEF browser)
+      // Chuẩn hoá đường dẫn file upload sang origin hiện tại (Tránh Mixed Content và CORS 100%)
       if (candidateUrl.includes('/uploads/')) {
         const pathPart = candidateUrl.substring(candidateUrl.indexOf('/uploads/'));
-        const backendBase = getBackendUrl() ? getBackendUrl().replace(/\/$/, '') : (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:3001` : 'http://127.0.0.1:3001');
-        candidateUrl = `${backendBase}${pathPart}`;
+        candidateUrl = currentOrigin ? `${currentOrigin}${pathPart}` : pathPart;
+      } else if (candidateUrl.includes('demo_dancer.mp4')) {
+        candidateUrl = currentOrigin ? `${currentOrigin}/demo_dancer.mp4` : '/demo_dancer.mp4';
+      } else if (candidateUrl.startsWith('/')) {
+        candidateUrl = currentOrigin ? `${currentOrigin}${candidateUrl}` : candidateUrl;
+      } else if (isHttps && candidateUrl.startsWith('http://')) {
+        // Nếu trang hiện tại là HTTPS (Tunnel) nhưng URL là HTTP localhost/127.0.0.1/nip.io:
+        // Chuyển sang HTTPS cùng origin để CEF / Chrome không chặn Mixed Content
+        try {
+          const parsed = new URL(candidateUrl);
+          if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1' || parsed.hostname.includes('nip.io')) {
+            candidateUrl = `${currentOrigin}${parsed.pathname}${parsed.search}`;
+          }
+        } catch (e) {}
       }
 
-      // Khôi phục Blob URL từ IndexedDB nếu là video tùy chỉnh
-      if (candidateUrl.startsWith('blob:')) {
-        const match = localDbItems.find(i => i.id === masterState.selectedCharacter);
-        if (match && match.fileBlob) {
-          try {
-            candidateUrl = URL.createObjectURL(match.fileBlob);
-          } catch (e) {}
-        }
-      }
-
-      // Đảm bảo video demo có thể phát được cả trên Cloud Vercel
-      if (candidateUrl === '/demo_dancer.mp4' && typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
+      // Đảm bảo video demo chạy được cả trên Vercel Cloud
+      if (candidateUrl.includes('/demo_dancer.mp4') && typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
         candidateUrl = 'https://raw.githubusercontent.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/main/public/demo_dancer.mp4';
       }
     }
 
-    // Xác định chính xác video hay ảnh
+    // 6. Xác định chính xác video hay ảnh
     if (typeof candidateUrl === 'string') {
       const lower = candidateUrl.toLowerCase();
-      if (lower.endsWith('.mp4') || lower.endsWith('.webm') || lower.endsWith('.mov') || lower.includes('/uploads/media-')) {
+      if (lower.endsWith('.mp4') || lower.endsWith('.webm') || lower.endsWith('.mov') || lower.includes('/uploads/')) {
         isVideo = true;
       } else if (lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.webp')) {
         isVideo = false;
@@ -932,9 +973,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           }}
           onError={(e) => {
             console.warn('[CleanLiveOverlay] Video playback notice:', e);
-            if (e.target && !e.target.src.includes('demo_dancer.mp4')) {
-              e.target.src = '/demo_dancer.mp4';
-              e.target.play().catch(() => {});
+            if (e.target) {
+              const fallback = typeof window !== 'undefined' ? `${window.location.origin}/demo_dancer.mp4` : '/demo_dancer.mp4';
+              if (e.target.src !== fallback) {
+                e.target.src = fallback;
+                e.target.muted = true;
+                e.target.play().catch(() => {});
+              }
             }
           }}
           className="w-full h-full select-none absolute inset-0"
