@@ -2598,28 +2598,16 @@ export default function DesktopAppUI() {
             {isDarkMode ? <Sun size={10} /> : <Moon size={10} />}
           </button>
 
-          {/* Nút Mở Link Realtime TikTok LIVE Studio & OBS Studio - Yêu cầu đăng nhập Google/Gmail */}
+          {/* Nút Mở Link Realtime TikTok LIVE Studio & OBS Studio (Cloudflare Tunnel) */}
           <button
             onClick={() => {
-              if (!currentUser) {
-                setToast({
-                  type: 'error',
-                  message: '🔒 Vui lòng kết nối tài khoản Google / Gmail để mở khóa Danh Sách Đường Link Live!'
-                });
-                setIsGmailLoginModalOpen(true);
-                return;
-              }
               setShowOverlayModal(true);
             }}
-            className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold border shadow-xs transition-all hover:scale-105 cursor-pointer ${
-              currentUser
-                ? 'bg-cyan-600/80 hover:bg-cyan-500 text-white border-cyan-400/50'
-                : 'bg-amber-600/30 hover:bg-amber-600/50 text-amber-300 border-amber-500/40'
-            }`}
-            title={currentUser ? "Mở & Sao chép Link Live Overlay cho TikTok LIVE Studio / OBS Studio" : "🔒 Vui lòng kết nối Google/Gmail để mở khóa đường link"}
+            className="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold border shadow-xs transition-all hover:scale-105 cursor-pointer bg-cyan-600/80 hover:bg-cyan-500 text-white border-cyan-400/50"
+            title="Mở & Sao chép Link Live Overlay Cloudflare Tunnel cho TikTok LIVE Studio / OBS Studio"
           >
-            <Radio size={10} className={currentUser ? "text-yellow-300 animate-pulse" : "text-amber-400"} />
-            <span className="whitespace-nowrap">{currentUser ? '📡 Link Live' : '🔒 Link Live (Cần Gmail)'}</span>
+            <Radio size={10} className="text-yellow-300 animate-pulse" />
+            <span className="whitespace-nowrap">📡 Link Live</span>
           </button>
 
           {/* 👑 1 Ô DUY NHẤT: LOGO TÀI KHOẢN + GÓI (GỌN GÀNG) */}

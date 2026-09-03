@@ -159,6 +159,7 @@ echo "================================================================="
 echo ""
 
 cd "$DIR/system"
+chmod +x "$DIR/system/cloudflared" 2>/dev/null || true
 node core.cjs &
 SERVER_PID=$!
 
