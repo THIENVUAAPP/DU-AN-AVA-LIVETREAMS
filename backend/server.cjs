@@ -157,6 +157,8 @@ app.post('/api/upload-media', upload.single('file'), (req, res) => {
     stage: 'idol',
     mediaUrl: fileUrl,
     isVideo: true,
+    videoPlaybackEvent: 'play',
+    isPlaying: true,
     updatedAt: Date.now()
   };
   io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);

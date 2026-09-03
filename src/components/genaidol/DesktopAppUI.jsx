@@ -1360,13 +1360,16 @@ export default function DesktopAppUI() {
       name: 'Video Người Dùng' 
     };
     
-    let currentMedia = lipSyncVideoUrl || (activeVideoItem?.mediaUrl) || char.url || '';
+    let currentMedia = quickResponseActiveVideo?.url || lipSyncVideoUrl || (activeVideoItem?.mediaUrl) || char.mediaUrl || char.url || '';
     let isVid = char.type === 'video' || (typeof currentMedia === 'string' && (currentMedia.endsWith('.mp4') || currentMedia.includes('/uploads/') || currentMedia.startsWith('http') || currentMedia.startsWith('blob:')));
     let streamFlvUrl = null;
 
     if (isConnected && flvUrl) {
       currentMedia = flvUrl;
       streamFlvUrl = flvUrl;
+      isVid = true;
+    } else if (quickResponseActiveVideo?.url) {
+      currentMedia = quickResponseActiveVideo.url;
       isVid = true;
     } else if (lipSyncVideoUrl) {
       currentMedia = lipSyncVideoUrl;
@@ -1388,7 +1391,7 @@ export default function DesktopAppUI() {
       stage, // 'idol' | 'battle' | 'bando' | 'dancefloor' | 'broadcast'
       aspectRatio: globalAspectRatio || '9:16', // '9:16' | '16:9'
       selectedCharacter: char.id || selectedCharacter,
-      characterName: char.name || 'AI Idol',
+      characterName: quickResponseActiveVideo?.name || char.name || 'AI Idol',
       mediaUrl: currentMedia,
       flvUrl: streamFlvUrl,
       isVideo: !!isVid,
@@ -1417,7 +1420,8 @@ export default function DesktopAppUI() {
     currentLang, 
     CHARACTERS, 
     flvUrl,
-    lipSyncVideoUrl
+    lipSyncVideoUrl,
+    quickResponseActiveVideo
   ]);
 
   // Trích xuất TikTok Username từ Link Live / ID / @username
@@ -1744,61 +1748,33 @@ export default function DesktopAppUI() {
       const newCharId = `custom_${Date.now()}`;
       
       if (isVideo) {
-        // ⚡ 1. HIỂN THỊ TỨC THÌ 0MS TRÊN MÀN HÌNH & GIAO DIỆN (KHÔNG CHỜ ĐỢI)
-        const newChar = {
+        // ⚡ 1. HIỂN THỊ TỨC THÌ TRÊN MÀN HÌNH & GIAO DIỆN
+        const tempChar = {
           id: newCharId,
           name: charName,
           url: localUrl,
+          mediaUrl: localUrl,
           type: 'video'
         };
-        setCustomCharacters(prev => [...prev, newChar]);
+        setCustomCharacters(prev => [...prev, tempChar]);
         setSelectedCharacter(newCharId);
-        try {
-          localStorage.setItem('avalive_selected_char', newCharId);
-          const savedCustom = localStorage.getItem('avalive_custom_characters');
-          const list = savedCustom ? JSON.parse(savedCustom) : [];
-          list.push(newChar);
-          localStorage.setItem('avalive_custom_characters', JSON.stringify(list));
-        } catch (e) {}
+        try { localStorage.setItem('avalive_selected_char', newCharId); } catch (e) {}
 
-        saveCharacterToIDB({
-          id: newCharId,
-          name: charName,
-          type: 'video',
-          fileData: file,
-          mediaUrl: localUrl
-        }).catch(() => {});
+        showToast(`⏳ Đang đồng bộ video "${charName}" sang TikTok Live Studio...`, 'info');
 
-        // 🚀 BẮN PHÁT SÓNG REALTIME TỨC THÌ ĐẾN TIKTOK LIVE STUDIO / OBS
-        syncMasterLiveState({
-          stage: 'idol',
-          selectedCharacter: newCharId,
-          characterName: charName,
-          mediaUrl: localUrl,
-          isVideo: true,
-          videoPlaybackEvent: 'play',
-          isPlaying: true,
-          aspectRatio: globalAspectRatio || '9:16'
-        }, socketRef.current);
-
-        // 🔄 2. CHẠY UPLOAD LÊN MÁY CHỦ TRONG NỀN ĐỂ LẤY LINK HTTP VĨNH VIỄN
+        // 🔄 2. UPLOAD TRỰC TIẾP LÊN SERVER ĐỂ CÓ ĐƯỜNG DẪN TĨNH PHÁT CHO TIKTOK STUDIO
         (async () => {
           try {
             const formData = new FormData();
             formData.append('file', file);
-            
-            const currentPort = typeof window !== 'undefined' && window.location.port ? window.location.port : '3001';
-            const currentHost = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : '127.0.0.1';
-            const currentProto = typeof window !== 'undefined' && window.location.protocol ? window.location.protocol : 'http:';
 
             const candidateEndpoints = [
               '/api/upload-media',
-              `${currentProto}//${currentHost}:${currentPort}/api/upload-media`,
-              `${currentProto}//${currentHost}:3001/api/upload-media`,
               'http://127.0.0.1:3001/api/upload-media',
               'http://localhost:3001/api/upload-media'
             ];
 
+            let serverRelativeUrl = null;
             for (const ep of candidateEndpoints) {
               try {
                 const res = await fetch(ep, {
@@ -1808,39 +1784,53 @@ export default function DesktopAppUI() {
                 if (res.ok) {
                   const data = await res.json();
                   if (data && data.url) {
-                    let serverUrl = data.url;
-                    let fullServerUrl = serverUrl;
-                    if (!serverUrl.startsWith('http://') && !serverUrl.startsWith('https://')) {
-                      const baseDomain = currentHost === 'localhost' || currentHost === '127.0.0.1' ? 'http://127.0.0.1:3001' : `${currentProto}//${currentHost}:${currentPort === '5173' ? '3001' : currentPort}`;
-                      fullServerUrl = `${baseDomain}${serverUrl.startsWith('/') ? '' : '/'}${serverUrl}`;
-                    }
-
-                    // Cập nhật link HTTP vĩnh viễn cho nhân vật
-                    setCustomCharacters(prev => {
-                      const updatedList = prev.map(c => c.id === newCharId ? { ...c, url: fullServerUrl } : c);
-                      try { localStorage.setItem('avalive_custom_characters', JSON.stringify(updatedList)); } catch (e) {}
-                      return updatedList;
-                    });
-                    saveCharacterToIDB({
-                      id: newCharId,
-                      name: charName,
-                      type: 'video',
-                      fileData: file,
-                      mediaUrl: fullServerUrl
-                    }).catch(() => {});
-
-                    syncMasterLiveState({
-                      mediaUrl: fullServerUrl,
-                      videoPlaybackEvent: 'play',
-                      isPlaying: true
-                    }, socketRef.current);
+                    serverRelativeUrl = data.url.includes('/uploads/')
+                      ? data.url.substring(data.url.indexOf('/uploads/'))
+                      : data.url;
                     break;
                   }
                 }
               } catch (err) {}
             }
+
+            const finalMediaUrl = serverRelativeUrl || localUrl;
+            const updatedChar = {
+              id: newCharId,
+              name: charName,
+              url: finalMediaUrl,
+              mediaUrl: finalMediaUrl,
+              type: 'video'
+            };
+
+            setCustomCharacters(prev => {
+              const updatedList = prev.map(c => c.id === newCharId ? updatedChar : c);
+              try { localStorage.setItem('avalive_custom_characters', JSON.stringify(updatedList)); } catch (e) {}
+              return updatedList;
+            });
+
+            saveCharacterToIDB({
+              id: newCharId,
+              name: charName,
+              type: 'video',
+              fileData: file,
+              mediaUrl: finalMediaUrl
+            }).catch(() => {});
+
+            // 🚀 BẮN PHÁT SÓNG REALTIME VIDEO THẬT ĐẾN TIKTOK LIVE STUDIO / OBS
+            syncMasterLiveState({
+              stage: 'idol',
+              selectedCharacter: newCharId,
+              characterName: charName,
+              mediaUrl: finalMediaUrl,
+              isVideo: true,
+              videoPlaybackEvent: 'play',
+              isPlaying: true,
+              aspectRatio: globalAspectRatio || '9:16'
+            }, socketRef.current);
+
+            showToast(`✅ Video "${charName}" đã phát sóng trực tiếp sang TikTok Live Studio!`, 'success');
           } catch (error) {
-            console.warn("Background upload error:", error);
+            console.warn("Upload error:", error);
           }
         })();
       } else {
@@ -1919,11 +1909,29 @@ export default function DesktopAppUI() {
             onEnded={() => {
               if (!quickResponseActiveVideo.loop) {
                 setQuickResponseActiveVideo(null);
+                const currentFallback = customCharacters.find(c => c.id === selectedCharacter)?.url || '/nhep_mieng.mp4';
+                syncMasterLiveState({
+                  stage: 'idol',
+                  mediaUrl: currentFallback,
+                  characterName: 'AI Idol',
+                  isVideo: true,
+                  videoPlaybackEvent: 'play',
+                  isPlaying: true
+                }, socketRef.current);
                 showToast('Đã phát xong video phản hồi nhanh!', 'info');
               }
             }}
             onError={() => {
               setQuickResponseActiveVideo(null);
+              const currentFallback = customCharacters.find(c => c.id === selectedCharacter)?.url || '/nhep_mieng.mp4';
+              syncMasterLiveState({
+                stage: 'idol',
+                mediaUrl: currentFallback,
+                characterName: 'AI Idol',
+                isVideo: true,
+                videoPlaybackEvent: 'play',
+                isPlaying: true
+              }, socketRef.current);
               showToast('Lỗi tải video phản hồi nhanh!', 'warn');
             }}
             playsInline 
@@ -1933,6 +1941,15 @@ export default function DesktopAppUI() {
             <button 
               onClick={() => {
                 setQuickResponseActiveVideo(null);
+                const currentFallback = customCharacters.find(c => c.id === selectedCharacter)?.url || '/nhep_mieng.mp4';
+                syncMasterLiveState({
+                  stage: 'idol',
+                  mediaUrl: currentFallback,
+                  characterName: 'AI Idol',
+                  isVideo: true,
+                  videoPlaybackEvent: 'play',
+                  isPlaying: true
+                }, socketRef.current);
                 showToast('Đã dừng video phản hồi!', 'warn');
               }}
               className="ml-2 bg-black/40 hover:bg-black/60 px-2 py-0.5 rounded text-[10px] text-white"
@@ -2015,14 +2032,26 @@ export default function DesktopAppUI() {
             disablePictureInPicture
             playsInline 
             onPlay={(e) => {
+              let playUrl = selected.url;
+              if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
+                playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
+              }
               syncMasterLiveState({
+                mediaUrl: playUrl,
+                isVideo: true,
                 videoPlaybackEvent: 'play',
                 videoCurrentTime: e.currentTarget.currentTime,
                 isPlaying: true
               }, socketRef.current);
             }}
             onPause={(e) => {
+              let playUrl = selected.url;
+              if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
+                playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
+              }
               syncMasterLiveState({
+                mediaUrl: playUrl,
+                isVideo: true,
                 videoPlaybackEvent: 'pause',
                 videoCurrentTime: e.currentTarget.currentTime,
                 isPlaying: false
@@ -3566,9 +3595,28 @@ export default function DesktopAppUI() {
         handleLiveEvent={handleLiveEvent}
         onPlayLiveVideo={(videoData) => {
           setQuickResponseActiveVideo(videoData);
+          if (videoData && videoData.url) {
+            syncMasterLiveState({
+              stage: 'idol',
+              mediaUrl: videoData.url,
+              characterName: videoData.name || 'Video Phản Hồi',
+              isVideo: true,
+              videoPlaybackEvent: 'play',
+              isPlaying: true
+            }, socketRef.current);
+          }
         }}
         onStopLiveVideo={() => {
           setQuickResponseActiveVideo(null);
+          const currentFallback = customCharacters.find(c => c.id === selectedCharacter)?.url || '/nhep_mieng.mp4';
+          syncMasterLiveState({
+            stage: 'idol',
+            mediaUrl: currentFallback,
+            characterName: 'AI Idol',
+            isVideo: true,
+            videoPlaybackEvent: 'play',
+            isPlaying: true
+          }, socketRef.current);
         }}
         activeQuickVideo={quickResponseActiveVideo}
         showToast={showToast}

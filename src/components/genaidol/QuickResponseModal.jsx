@@ -387,15 +387,33 @@ export default function QuickResponseModal({
     }
   };
 
-  const handleSendVideoToLive = () => {
+  const handleSendVideoToLive = async () => {
     if (!videoUrl) {
       showToast('Vui lòng chọn video trước khi phát!', 'warn');
       return;
     }
 
+    let finalPlayUrl = videoUrl;
+    if (videoFile) {
+      try {
+        showToast('⏳ Đang đồng bộ video sang TikTok Live Studio...', 'info');
+        const formData = new FormData();
+        formData.append('file', videoFile);
+        const res = await fetch('/api/upload-media', { method: 'POST', body: formData });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.url) {
+            finalPlayUrl = data.url.includes('/uploads/') ? data.url.substring(data.url.indexOf('/uploads/')) : data.url;
+          }
+        }
+      } catch (err) {
+        console.warn('Upload Quick Video failed, using local preview:', err);
+      }
+    }
+
     if (onPlayLiveVideo) {
       onPlayLiveVideo({
-        url: videoUrl,
+        url: finalPlayUrl,
         name: videoName || 'Video Phản Hồi',
         muted: videoAudioMode === 'mute' || videoAudioMode === 'tts',
         loop: videoLoop,

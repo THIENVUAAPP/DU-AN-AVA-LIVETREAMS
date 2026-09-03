@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 
-export const APP_VERSION = '1.2.8';
+export const APP_VERSION = '1.2.9';
 export const UPDATE_NOTES = [
-  "✨ Xoá bỏ hoàn toàn video cô gái nhảy múa: Thay thế mặc định bằng video AI Idol Nhép Miệng chính thức sắc nét chất lượng cao.",
-  "⚡ Đồng bộ Play / Pause tức thì giữa Phần Mềm và TikTok Live Studio: Phần mềm bấm Chạy -> TikTok Studio chạy ngay; Phần mềm bấm Dừng -> TikTok Studio dừng ngay lập tức.",
-  "🎬 Đồng bộ đổi video 1 chạm: Phần mềm mở video gì hoặc chọn nhân vật nào, TikTok Studio lập tức chuyển sang video đó không độ trễ.",
-  "🕒 Cơ chế tự phục hồi Watchdog 24/24: Duy trì vòng lặp phát video liên tục ngày đêm không lo bị gián đoạn hay đứng khung hình.",
-  "🪟 Tối ưu hóa 100% cho TikTok Live Studio Windows: Hoàn toàn không bị chặn Mixed Content, tương thích tuyệt đối với Browser Source."
+  "🎬 Phát Video Thực Tế Real-Time 100%: Phần mềm mở video nào, tải video gì hay phát video từ Kho Live/Phản Hồi Nhanh thì TikTok Live Studio lập tức phát chính xác video đó (tuyệt đối không bị phát video nền).",
+  "⚡ Tự động nạp file video thực tế lên máy chủ: Chuyển đổi toàn bộ blob tạm thành link HTTP tĩnh tương thích 100% với TikTok Live Studio và OBS.",
+  "⏯️ Đồng bộ Play / Pause 2 chiều tức thì: Phần mềm bấm phát là TikTok Studio phát ngay, phần mềm bấm tạm dừng là TikTok Studio dừng ngay lập tức.",
+  "✨ Xoá bỏ hoàn toàn video cô gái nhảy múa: Mặc định chuẩn hoá theo video AI Idol Nhép Miệng chính thức sắc nét chất lượng cao.",
+  "🕒 Watchdog tự động phục hồi 24/24: Duy trì phát liên tục không lo gián đoạn hay đứng khung hình."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
