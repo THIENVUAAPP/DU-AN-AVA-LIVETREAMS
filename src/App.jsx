@@ -139,7 +139,31 @@ export default function App() {
     if (typeof window === 'undefined') return;
     const searchParams = new URLSearchParams(window.location.search);
     if (searchParams.get('desktop_bridge') === 'true' && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
-      window.location.replace('http://127.0.0.1.nip.io:3001/' + window.location.hash + window.location.search);
+      const hash = window.location.hash || '';
+      const search = window.location.search || '';
+
+      // Nếu mở bằng Popup từ Desktop App: gửi token về cửa sổ mẹ và tự đóng
+      if (window.opener && window.opener !== window) {
+        try {
+          const hashParams = new URLSearchParams(hash.startsWith('#') ? hash.substring(1) : hash);
+          const accessToken = hashParams.get('access_token');
+          const refreshToken = hashParams.get('refresh_token');
+          if (accessToken) {
+            window.opener.postMessage({
+              type: 'OAUTH_CALLBACK',
+              accessToken,
+              refreshToken
+            }, '*');
+            setTimeout(() => {
+              try { window.close(); } catch(e) {}
+            }, 800);
+            return;
+          }
+        } catch (e) {}
+      }
+
+      // Chuyển tiếp trực tiếp về localhost:3001/desktop an toàn tuyệt đối, không dùng nip.io
+      window.location.replace('http://localhost:3001/desktop' + search + hash);
     }
   }, []);
 

@@ -43,11 +43,11 @@ try {
   process.exit(1);
 }
 
-const publicDir = path.join(rootDir, 'public');
+const releaseDir = path.join(rootDir, 'release_zips');
 const winZipFileName = `AvaLive_VIP_PRO_Windows_v${version}.zip`;
 const macZipFileName = `AvaLive_VIP_PRO_Mac_v${version}.zip`;
-const winZipFilePath = path.join(publicDir, winZipFileName);
-const macZipFilePath = path.join(publicDir, macZipFileName);
+const winZipFilePath = path.join(releaseDir, winZipFileName);
+const macZipFilePath = path.join(releaseDir, macZipFileName);
 
 if (!fs.existsSync(winZipFilePath) || !fs.existsSync(macZipFilePath)) {
   console.error('❌ Không tìm thấy các file zip vừa tạo!');

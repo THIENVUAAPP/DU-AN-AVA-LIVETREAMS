@@ -1597,6 +1597,10 @@ IDOL MỈM CƯỜI + GESTURE
         if (!parsed.apiModel || parsed.apiModel === 'Model AvaLive') {
           parsed.apiModel = 'gemini-1.5-flash';
         }
+        // Luôn bảo lưu trọn vẹn Kiến thức Bối cảnh & Bộ não bán hàng mặc định
+        if (!parsed.backgroundContext || parsed.backgroundContext.length < 500 || !parsed.backgroundContext.includes('MODULE: AI AUTO REPLY COMMENT')) {
+          delete parsed.backgroundContext;
+        }
         setSettings(prev => ({ ...prev, ...parsed }));
       } catch (e) {
         console.error("Failed to parse settings", e);

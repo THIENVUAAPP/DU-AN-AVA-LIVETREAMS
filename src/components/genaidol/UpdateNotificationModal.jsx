@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star } from 'lucide-react';
 
-export const APP_VERSION = '1.1.7';
+export const APP_VERSION = '1.1.8';
 export const UPDATE_NOTES = [
-  "💬 Tính năng Trả lời bình luận bằng văn bản (AI Auto Reply Comment): Tự động phát hiện ý định khách hàng và phản hồi văn bản siêu tốc.",
-  "🧠 Tích hợp Kiến thức Bối cảnh & Bộ não Bán hàng chuyên nghiệp: Nạp sẵn kịch bản tư vấn, chốt đơn, cross-sell và xử lý từ chối cho Ngọc Nhi.",
-  "🚀 Sửa triệt để lỗi Màn hình đen 0:00: Hệ thống tự động phục hồi video gốc từ máy người dùng, tắt bật lại máy tính vẫn hiển thị chuẩn xác không bị mất video.",
-  "✨ Cố định video: Không còn tình trạng tự chuyển nhảy video lung tung trong phiên livestream."
+  "🚀 Sửa triệt để lỗi kết nối tài khoản Gmail trên Windows: Cho phép nhập Gmail trực tiếp 1-chạm để đồng bộ ngay gói bản quyền và token mà không bị lỗi trình duyệt.",
+  "🧠 Cố định vĩnh viễn Bộ Não Bán Hàng & Bối Cảnh Ngọc Nhi: Bất kỳ ai tải về cũng có sẵn 100% kịch bản chốt đơn, bảng size và kỹ năng tư vấn chuyên sâu.",
+  "💬 Tính năng Trả lời bình luận bằng văn bản (AI Auto Reply Comment): Tự động phát hiện ý định khách hàng và phản hồi siêu tốc.",
+  "🔔 Thông báo minh bạch phiên bản v1.1.8 khi bấm tải về máy tính (Windows & Mac)."
 ];
 
 export default function UpdateNotificationModal() {

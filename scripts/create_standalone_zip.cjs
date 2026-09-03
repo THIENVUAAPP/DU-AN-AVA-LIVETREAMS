@@ -17,13 +17,24 @@ if (fs.existsSync(packageJsonPath)) {
   if (pkgData.version) appVersion = pkgData.version;
 }
 
+const releaseDir = path.join(rootDir, 'release_zips');
+if (!fs.existsSync(releaseDir)) fs.mkdirSync(releaseDir, { recursive: true });
+
 const winZipFileName = `AvaLive_VIP_PRO_Windows_v${appVersion}.zip`;
 const macZipFileName = `AvaLive_VIP_PRO_Mac_v${appVersion}.zip`;
 
-const winZipFilePath = path.join(publicDir, winZipFileName);
-const macZipFilePath = path.join(publicDir, macZipFileName);
+const winZipFilePath = path.join(releaseDir, winZipFileName);
+const macZipFilePath = path.join(releaseDir, macZipFileName);
 
-// Xóa file ZIP cũ và dist cũ trước khi build để tránh Vite copy đè làm phình to dung lượng
+// Xóa file ZIP cũ trong release_zips và trong public để tránh Vite copy đè làm phình to dung lượng
+if (fs.existsSync(publicDir)) {
+  const pubFiles = fs.readdirSync(publicDir);
+  pubFiles.forEach(f => {
+    if (f.endsWith('.zip')) {
+      try { fs.unlinkSync(path.join(publicDir, f)); } catch(e) {}
+    }
+  });
+}
 if (fs.existsSync(winZipFilePath)) fs.unlinkSync(winZipFilePath);
 if (fs.existsSync(macZipFilePath)) fs.unlinkSync(macZipFilePath);
 const distDir = path.join(rootDir, 'dist');
@@ -260,19 +271,12 @@ fs.rmSync(macStaging, { recursive: true, force: true });
 // Dọn dẹp staging
 fs.rmSync(stagingDir, { recursive: true, force: true });
 
-// BẮT BUỘC: Copy file ZIP sang thư mục dist/ để Server tĩnh (Express) có thể cho phép người dùng tải xuống đúng file thực tế thay vì bị lỗi 404 trả về trang HTML.
-if (fs.existsSync(distDir)) {
-  fs.copyFileSync(winZipFilePath, path.join(distDir, winZipFileName));
-  fs.copyFileSync(macZipFilePath, path.join(distDir, macZipFileName));
-  console.log('\n[INFO] Đã copy thành công các file ZIP sang thư mục dist/ để phục vụ tải xuống trực tuyến.');
-}
-
 const winSize = (fs.statSync(winZipFilePath).size / (1024 * 1024)).toFixed(1);
 const macSize = (fs.statSync(macZipFilePath).size / (1024 * 1024)).toFixed(1);
 
 console.log('\n===========================================================');
 console.log('🎉 ĐÓNG GÓI BẢO MẬT HOÀN TẤT THÀNH CÔNG!');
 console.log('🔒 Tuyệt đối không lộ source code dự án');
-console.log(`📁 Windows ZIP: public/${winZipFileName} (${winSize} MB)`);
-console.log(`📁 Mac ZIP:     public/${macZipFileName} (${macSize} MB)`);
+console.log(`📁 Windows ZIP: release_zips/${winZipFileName} (${winSize} MB)`);
+console.log(`📁 Mac ZIP:     release_zips/${macZipFileName} (${macSize} MB)`);
 console.log('===========================================================\n');

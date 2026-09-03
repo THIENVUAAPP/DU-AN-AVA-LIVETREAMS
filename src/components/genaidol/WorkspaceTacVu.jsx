@@ -202,7 +202,7 @@ export default function WorkspaceTacVu() {
                   : defaults[key].specialGiftSlots,
                 checkoutProducts: (Array.isArray(parsed[key]?.checkoutProducts) && parsed[key].checkoutProducts.length > 0)
                   ? parsed[key].checkoutProducts.map(p => {
-                      if (p.id === 1 && p.aiPrompt && (p.aiPrompt.includes('TRong vai là một nhân viên sale') || p.aiPrompt.includes('Bạn đang đóng vai NGỌC NHI'))) {
+                      if (p.id === 1 && (!p.aiPrompt || p.aiPrompt.length < 200 || p.aiPrompt.includes('TRong vai là một nhân viên sale') || p.aiPrompt.includes('Bạn đang đóng vai NGỌC NHI'))) {
                         return { ...p, aiPrompt: NEW_AI_PROMPT };
                       }
                       return p;

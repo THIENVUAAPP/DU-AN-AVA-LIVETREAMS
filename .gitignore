@@ -18,3 +18,4 @@ backend/uploads/*
 !backend/uploads/.gitkeep
 *.exe
 cloudflared
+release_zips/
