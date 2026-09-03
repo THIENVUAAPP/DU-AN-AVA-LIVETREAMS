@@ -316,9 +316,11 @@ let currentMasterLiveState = {
   stage: 'idol',
   aspectRatio: '9:16',
   characterId: 'linhanh_4k',
-  characterName: 'AI Idol Linh Anh (4K)',
-  mediaUrl: '/demo_dancer.mp4',
+  characterName: 'AI Idol Nhép Miệng (Chính Thức)',
+  mediaUrl: '/nhep_mieng.mp4',
   isVideo: true,
+  videoPlaybackEvent: 'play',
+  isPlaying: true,
   isAudioMuted: false,
   isDarkMode: true,
   updatedAt: Date.now()

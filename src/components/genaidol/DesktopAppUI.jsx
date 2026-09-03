@@ -1041,8 +1041,8 @@ export default function DesktopAppUI() {
   // Bộ sưu tập Nhân Vật AI Idol & Video 4K Mặc Định Sắc Nét (Mỗi nhân vật 1 video riêng biệt độc quyền)
   const BUILTIN_CHARACTERS = {
     'linhanh_4k': {
-      name: 'AI Idol Linh Anh (4K)',
-      url: '/demo_dancer.mp4',
+      name: 'AI Idol Nhép Miệng (Chính Thức)',
+      url: '/nhep_mieng.mp4',
       type: 'video'
     },
     'aidol_greenscreen': {
@@ -1377,7 +1377,7 @@ export default function DesktopAppUI() {
     }
 
     if (!currentMedia) {
-      currentMedia = '/demo_dancer.mp4';
+      currentMedia = '/nhep_mieng.mp4';
       isVid = true;
     } else if (typeof currentMedia === 'string' && currentMedia.includes('/uploads/')) {
       currentMedia = currentMedia.substring(currentMedia.indexOf('/uploads/'));
@@ -2785,12 +2785,16 @@ export default function DesktopAppUI() {
                       setIsGameBattleActive(false);
                       setIsGameBanDoActive(false);
                       if (charItem.url) {
-                        const isVid = charItem.type === 'video' || (typeof charItem.url === 'string' && (charItem.url.endsWith('.mp4') || charItem.url.endsWith('.webm') || charItem.url.endsWith('.mov')));
+                        let cleanUrl = charItem.url;
+                        if (typeof cleanUrl === 'string' && cleanUrl.includes('/uploads/')) {
+                          cleanUrl = cleanUrl.substring(cleanUrl.indexOf('/uploads/'));
+                        }
+                        const isVid = charItem.type === 'video' || (typeof cleanUrl === 'string' && (cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.endsWith('.mov')));
                         syncMasterLiveState({
                           stage: 'idol',
                           selectedCharacter: charItem.id,
                           characterName: charItem.name || 'AI Idol',
-                          mediaUrl: charItem.url,
+                          mediaUrl: cleanUrl,
                           isVideo: isVid,
                           videoPlaybackEvent: 'play',
                           isPlaying: true,

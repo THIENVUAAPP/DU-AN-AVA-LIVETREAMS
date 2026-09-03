@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 
-export const APP_VERSION = '1.2.7';
+export const APP_VERSION = '1.2.8';
 export const UPDATE_NOTES = [
-  "🎬 Sửa triệt để lỗi màn hình đen trên TikTok Live Studio Windows: Chuẩn hoá 100% URL video thành HTTPS Origin, loại bỏ hoàn toàn lỗi chặn Mixed Content của trình duyệt CEF.",
-  "⚡ Đồng bộ video tức thì giữa Phần Mềm và TikTok Live Studio: Phần mềm chọn video hay đổi nhân vật gì, TikTok Studio mở ngay video đó trong chớp mắt.",
-  "🕒 Phát video liên tục 24/24 không ngừng nghỉ: Tích hợp cơ chế Watchdog Heartbeat tự động kiểm tra và phục hồi phát lặp vô tận (Loop), không lo đứng hình khi treo live ngày đêm.",
-  "🌐 Sửa lỗi đường dẫn tài nguyên tĩnh (/assets) trên Cloudflare Tunnel: Đảm bảo tải đầy đủ mã nguồn và video dù link có dấu gạch chéo cuối trang hay không.",
-  "🪟 Tối ưu hóa toàn diện cho Windows: Đầy đủ binary cloudflared.exe, cố định IPv4 127.0.0.1 và khởi chạy 1 chạm qua AvaLive_Studio.exe."
+  "✨ Xoá bỏ hoàn toàn video cô gái nhảy múa: Thay thế mặc định bằng video AI Idol Nhép Miệng chính thức sắc nét chất lượng cao.",
+  "⚡ Đồng bộ Play / Pause tức thì giữa Phần Mềm và TikTok Live Studio: Phần mềm bấm Chạy -> TikTok Studio chạy ngay; Phần mềm bấm Dừng -> TikTok Studio dừng ngay lập tức.",
+  "🎬 Đồng bộ đổi video 1 chạm: Phần mềm mở video gì hoặc chọn nhân vật nào, TikTok Studio lập tức chuyển sang video đó không độ trễ.",
+  "🕒 Cơ chế tự phục hồi Watchdog 24/24: Duy trì vòng lặp phát video liên tục ngày đêm không lo bị gián đoạn hay đứng khung hình.",
+  "🪟 Tối ưu hóa 100% cho TikTok Live Studio Windows: Hoàn toàn không bị chặn Mixed Content, tương thích tuyệt đối với Browser Source."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

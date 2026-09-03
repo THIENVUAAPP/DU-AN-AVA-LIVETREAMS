@@ -50,9 +50,11 @@ export function getMasterLiveState() {
   return {
     stage: 'idol', // 'idol' | 'dancefloor' | 'bando' | 'battle' | 'camera' | 'broadcast'
     aspectRatio: '9:16',
-    characterName: 'AI Idol Linh Anh (4K)',
-    mediaUrl: '/demo_dancer.mp4',
+    characterName: 'AI Idol Nhép Miệng (Chính Thức)',
+    mediaUrl: '/nhep_mieng.mp4',
     isVideo: true,
+    videoPlaybackEvent: 'play',
+    isPlaying: true,
     flvUrl: null,
     isConnected: true,
     isDarkMode: true,

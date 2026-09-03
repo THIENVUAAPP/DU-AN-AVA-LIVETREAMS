@@ -88,11 +88,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     return {
       stage: defaultStage, // 'idol' | 'dancefloor' | 'battle' | 'bando' | 'broadcast'
       aspectRatio: ratioParam || '9:16',
-      mediaUrl: directVideoUrl || saved?.mediaUrl || '/demo_dancer.mp4',
+      mediaUrl: directVideoUrl || saved?.mediaUrl || '/nhep_mieng.mp4',
       flvUrl: directVideoUrl || saved?.flvUrl || null,
       isVideo: saved?.isVideo !== false,
       selectedCharacter: saved?.selectedCharacter || '',
-      characterName: saved?.characterName || 'AI Idol Linh Anh',
+      characterName: saved?.characterName || 'AI Idol Nhép Miệng',
       isConnected: true,
       isSpeaking: saved?.isSpeaking || false,
       speechText: saved?.speechText || '',
@@ -188,6 +188,20 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
     const applyMasterState = (data) => {
       if (!data) return;
+
+      // 🎬 ĐỒNG BỘ PLAY / PAUSE LẬP TỨC VỚI PHẦN MỀM (Phần mềm chạy -> TikTok Studio chạy, phần mềm dừng -> dừng)
+      const vid = overlayVideoRef.current;
+      if (vid) {
+        if (data.videoPlaybackEvent === 'pause' || data.isPlaying === false) {
+          vid.dataset.userPaused = 'true';
+          vid.pause();
+        } else if (data.videoPlaybackEvent === 'play' || data.isPlaying === true) {
+          vid.dataset.userPaused = 'false';
+          vid.muted = true;
+          vid.play().catch(() => {});
+        }
+      }
+
       setMasterState(prev => {
         const next = { ...prev, ...data };
         // URL Parameter & Path Override check (nếu link là link chuyên dụng của 1 dự án thì cố định dự án đó)
@@ -704,6 +718,24 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     return () => clearInterval(watchdogTimer);
   }, [masterState.videoPlaybackEvent, masterState.isPlaying]);
 
+  // 🎬 TỰ ĐỘNG PHÁT NGAY KHI ĐỔI VIDEO / NHÂN VẬT TỪ PHẦN MỀM
+  useEffect(() => {
+    const vid = overlayVideoRef.current;
+    if (vid && activeMedia.url && activeMedia.isVideo) {
+      if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
+        vid.dataset.userPaused = 'false';
+        vid.muted = true;
+        const playPromise = vid.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {
+            vid.muted = true;
+            vid.play().catch(() => {});
+          });
+        }
+      }
+    }
+  }, [activeMedia.url]);
+
   // Helper giải mã URL media chính xác (tôn trọng 100% video/nhân vật người dùng chọn)
   const resolveActiveMedia = () => {
     let candidateUrl = masterState.mediaUrl || null;
@@ -744,14 +776,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         candidateUrl = match.mediaUrl || match.url;
       } else {
         // Blob này thuộc phiên trình duyệt khác không thể truy cập tại overlay -> fallback video mặc định
-        candidateUrl = '/demo_dancer.mp4';
+        candidateUrl = '/nhep_mieng.mp4';
         isVideo = true;
       }
     }
 
     // 4. Fallback video AI Idol mặc định có sẵn
     if (!candidateUrl) {
-      candidateUrl = '/demo_dancer.mp4';
+      candidateUrl = '/nhep_mieng.mp4';
       isVideo = true;
     }
 
@@ -771,8 +803,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       if (candidateUrl.includes('/uploads/')) {
         const pathPart = candidateUrl.substring(candidateUrl.indexOf('/uploads/'));
         candidateUrl = currentOrigin ? `${currentOrigin}${pathPart}` : pathPart;
-      } else if (candidateUrl.includes('demo_dancer.mp4')) {
-        candidateUrl = currentOrigin ? `${currentOrigin}/demo_dancer.mp4` : '/demo_dancer.mp4';
+      } else if (candidateUrl.includes('nhep_mieng.mp4') || candidateUrl.includes('demo_dancer.mp4')) {
+        candidateUrl = currentOrigin ? `${currentOrigin}/nhep_mieng.mp4` : '/nhep_mieng.mp4';
       } else if (candidateUrl.startsWith('/')) {
         candidateUrl = currentOrigin ? `${currentOrigin}${candidateUrl}` : candidateUrl;
       } else if (isHttps && candidateUrl.startsWith('http://')) {
@@ -784,11 +816,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             candidateUrl = `${currentOrigin}${parsed.pathname}${parsed.search}`;
           }
         } catch (e) {}
-      }
-
-      // Đảm bảo video demo chạy được cả trên Vercel Cloud
-      if (candidateUrl.includes('/demo_dancer.mp4') && typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
-        candidateUrl = 'https://raw.githubusercontent.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/main/public/demo_dancer.mp4';
       }
     }
 
@@ -974,7 +1001,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           onError={(e) => {
             console.warn('[CleanLiveOverlay] Video playback notice:', e);
             if (e.target) {
-              const fallback = typeof window !== 'undefined' ? `${window.location.origin}/demo_dancer.mp4` : '/demo_dancer.mp4';
+              const fallback = typeof window !== 'undefined' ? `${window.location.origin}/nhep_mieng.mp4` : '/nhep_mieng.mp4';
               if (e.target.src !== fallback) {
                 e.target.src = fallback;
                 e.target.muted = true;
