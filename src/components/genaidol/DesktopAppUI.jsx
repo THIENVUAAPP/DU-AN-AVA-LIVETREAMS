@@ -505,7 +505,7 @@ export default function DesktopAppUI() {
   const getPlayableStreamUrl = (rawUrl) => {
     if (!rawUrl) return '';
     if (rawUrl.includes('/api/stream-proxy')) return rawUrl;
-    const backendOrigin = typeof window !== 'undefined' ? (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001' ? `${window.location.protocol}//${window.location.hostname}:3001` : window.location.origin) : 'http://127.0.0.1.nip.io:3001';
+    const backendOrigin = typeof window !== 'undefined' ? (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001' ? `${window.location.protocol}//${window.location.hostname}:3001` : window.location.origin) : 'http://127.0.0.1:3001';
     return `${backendOrigin}/api/stream-proxy?url=${encodeURIComponent(rawUrl)}`;
   };
 
@@ -698,7 +698,6 @@ export default function DesktopAppUI() {
               '/api/upload-media',
               `${currentProto}//${currentHost}:${currentPort}/api/upload-media`,
               `${currentProto}//${currentHost}:3001/api/upload-media`,
-              'http://127.0.0.1.nip.io:3001/api/upload-media',
               'http://127.0.0.1:3001/api/upload-media',
               'http://localhost:3001/api/upload-media'
             ];
@@ -714,7 +713,7 @@ export default function DesktopAppUI() {
                     if (serverUrl.startsWith('http://') || serverUrl.startsWith('https://')) {
                       uploadedServerUrl = serverUrl;
                     } else {
-                      const baseDomain = currentHost === 'localhost' || currentHost === '127.0.0.1' ? 'http://127.0.0.1.nip.io:3001' : `${currentProto}//${currentHost}:${currentPort === '5173' ? '3001' : currentPort}`;
+                      const baseDomain = currentHost === 'localhost' || currentHost === '127.0.0.1' ? 'http://127.0.0.1:3001' : `${currentProto}//${currentHost}:${currentPort === '5173' ? '3001' : currentPort}`;
                       uploadedServerUrl = `${baseDomain}${serverUrl.startsWith('/') ? '' : '/'}${serverUrl}`;
                     }
                     break;
@@ -1791,7 +1790,6 @@ export default function DesktopAppUI() {
               '/api/upload-media',
               `${currentProto}//${currentHost}:${currentPort}/api/upload-media`,
               `${currentProto}//${currentHost}:3001/api/upload-media`,
-              'http://127.0.0.1.nip.io:3001/api/upload-media',
               'http://127.0.0.1:3001/api/upload-media',
               'http://localhost:3001/api/upload-media'
             ];
@@ -1808,7 +1806,7 @@ export default function DesktopAppUI() {
                     let serverUrl = data.url;
                     let fullServerUrl = serverUrl;
                     if (!serverUrl.startsWith('http://') && !serverUrl.startsWith('https://')) {
-                      const baseDomain = currentHost === 'localhost' || currentHost === '127.0.0.1' ? 'http://127.0.0.1.nip.io:3001' : `${currentProto}//${currentHost}:${currentPort === '5173' ? '3001' : currentPort}`;
+                      const baseDomain = currentHost === 'localhost' || currentHost === '127.0.0.1' ? 'http://127.0.0.1:3001' : `${currentProto}//${currentHost}:${currentPort === '5173' ? '3001' : currentPort}`;
                       fullServerUrl = `${baseDomain}${serverUrl.startsWith('/') ? '' : '/'}${serverUrl}`;
                     }
 
@@ -2293,18 +2291,25 @@ export default function DesktopAppUI() {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* PHƯƠNG THỨC 1: NHẬP GMAIL TRỰC TIẾP (AN TOÀN & 100% KHÔNG LỖI) */}
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-[#121528] via-[#0f111f] to-[#181a32] border border-cyan-500/40 text-left space-y-3.5 shadow-xl relative overflow-hidden">
+              {/* KHỐI KẾT NỐI 1-CHẠM DUY NHẤT VỚI LOGO AVALIVE */}
+              <div className="p-6 rounded-2xl bg-gradient-to-br from-[#121528] via-[#0f111f] to-[#181a32] border border-cyan-500/40 text-center space-y-4 shadow-xl relative overflow-hidden">
                 {/* Glow decor */}
                 <div className="absolute -top-10 -left-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
 
-                <div className="text-center space-y-1">
-                  <div className="text-cyan-300 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5">
-                    <span>🔑 KẾT NỐI TÀI KHOẢN GMAIL BẢN QUYỀN</span>
+                {/* Logo AvaLive Duy Nhất */}
+                <div className="flex items-center justify-center">
+                  <div className="w-20 h-20 rounded-3xl overflow-hidden border-2 border-cyan-400/60 shadow-[0_0_30px_rgba(6,182,212,0.4)] bg-black flex items-center justify-center p-1">
+                    <img src="/official_logo.jpg" alt="AvaLive Logo" className="w-full h-full object-cover rounded-2xl" />
                   </div>
-                  <p className="text-[11px] text-gray-400">
-                    Nhập Gmail bạn đã đăng ký để tự động đồng bộ <b>Gói VIP PRO</b>, <b>Token AI</b> và <b>Thời gian Live</b>.
+                </div>
+
+                <div className="space-y-1">
+                  <div className="text-cyan-300 font-black text-sm uppercase tracking-wider flex items-center justify-center gap-1.5">
+                    <span>ĐĂNG NHẬP & KẾT NỐI TÀI KHOẢN GOOGLE</span>
+                  </div>
+                  <p className="text-xs text-gray-300 leading-relaxed max-w-sm mx-auto">
+                    Kết nối trực tiếp 1-chạm với tài khoản Google đang dùng để tự động đồng bộ ngay <b>Gói VIP PRO</b>, <b>Token AI</b> và <b>Thời gian Live</b> vào phần mềm.
                   </p>
                 </div>
 
@@ -2314,69 +2319,24 @@ export default function DesktopAppUI() {
                   </div>
                 )}
 
-                <form onSubmit={handleRealGmailSubmit} className="space-y-3">
-                  <div>
-                    <label className="text-[10px] text-cyan-300 font-bold block mb-1">
-                      ✉️ ĐỊA CHỈ GMAIL:
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={realGmailInput}
-                      onChange={(e) => setRealGmailInput(e.target.value)}
-                      placeholder="ví dụ: yourname@gmail.com"
-                      className="w-full bg-[#161828] border border-cyan-500/30 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] text-gray-400 font-bold block mb-1">
-                      👤 TÊN HIỂN THỊ (TÙY CHỌN):
-                    </label>
-                    <input
-                      type="text"
-                      value={realNameInput}
-                      onChange={(e) => setRealNameInput(e.target.value)}
-                      placeholder="Tên shop hoặc thương hiệu của bạn"
-                      className="w-full bg-[#161828] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isLoggingIn}
-                    className="w-full py-3 bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white rounded-xl font-black text-xs shadow-lg shadow-cyan-500/25 transition-all hover:scale-[1.02] active:scale-98 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    <Sparkles size={14} />
-                    <span>{isLoggingIn ? '⏳ Đang Đồng Bộ Dữ Liệu...' : 'KẾT NỐI & ĐỒNG BỘ GMAIL NGAY'}</span>
-                  </button>
-                </form>
-              </div>
-
-              {/* PHƯƠNG THỨC 2: HOẶC ĐĂNG NHẬP BẰNG GOOGLE OAUTH POPUP */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-px bg-white/10" />
-                  <span className="text-[9px] text-gray-500 font-bold uppercase">HOẶC ĐĂNG NHẬP 1-CHẠM BẰNG GOOGLE</span>
-                  <div className="flex-1 h-px bg-white/10" />
-                </div>
-
+                {/* NÚT BẤM 1-CHẠM DUY NHẤT KẾT NỐI TRỰC TIẾP GOOGLE */}
                 <button
                   type="button"
                   onClick={handleRealGoogleOAuth}
                   disabled={isLoggingIn}
-                  className="w-full py-2.5 px-4 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold text-xs shadow transition-all hover:scale-[1.01] active:scale-98 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 border border-white/10"
+                  className="w-full py-4 px-6 bg-white hover:bg-gray-50 text-gray-900 rounded-2xl font-black text-sm shadow-2xl shadow-cyan-500/25 transition-all hover:scale-[1.02] active:scale-98 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-3 border border-gray-100"
                 >
-                  <svg className="w-4 h-4" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 shrink-0" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                   </svg>
-                  <span>Mở Cửa Sổ Đăng Nhập Google (1-Click)</span>
+                  <span>{isLoggingIn ? '⏳ ĐANG KẾT NỐI GOOGLE...' : 'KẾT NỐI TRỰC TIẾP VỚI GOOGLE (1-CHẠM)'}</span>
                 </button>
               </div>
 
-              {/* Lựa chọn 3: Tiếp tục dùng miễn phí */}
+              {/* Lựa chọn dùng miễn phí */}
               <button
                 type="button"
                 onClick={() => {
@@ -2396,7 +2356,7 @@ export default function DesktopAppUI() {
                   }
                   setIsGmailLoginModalOpen(false);
                 }}
-                className="w-full py-2 bg-white/5 hover:bg-white/10 text-gray-400 rounded-xl font-medium text-xs border border-white/5 transition-colors cursor-pointer"
+                className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-gray-400 rounded-xl font-medium text-xs border border-white/5 transition-colors cursor-pointer"
               >
                 🎁 Tiếp Tục Dùng Bản Dùng Thử (100 Token)
               </button>

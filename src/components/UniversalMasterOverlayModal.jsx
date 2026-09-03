@@ -57,8 +57,8 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
     if (tunnelData?.tunnelUrl) {
       return `${cloudBase}/${path}?backend=${tunnelData.tunnelUrl}`;
     }
-    // Fallback: Nếu tunnel bị lỗi hoặc chạy trên máy Local Windows, dùng luôn link Localhost
-    return `http://127.0.0.1.nip.io:3001/${path}`;
+    // Link Localhost chuẩn xác 100% không qua DNS ngoài, TikTok Studio & OBS nhận ngay lập tức
+    return `http://localhost:3001/${path}`;
   };
 
   const projects = [

@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star } from 'lucide-react';
 
-export const APP_VERSION = '1.1.8';
+export const APP_VERSION = '1.1.9';
 export const UPDATE_NOTES = [
-  "🚀 Sửa triệt để lỗi kết nối tài khoản Gmail trên Windows: Cho phép nhập Gmail trực tiếp 1-chạm để đồng bộ ngay gói bản quyền và token mà không bị lỗi trình duyệt.",
-  "🧠 Cố định vĩnh viễn Bộ Não Bán Hàng & Bối Cảnh Ngọc Nhi: Bất kỳ ai tải về cũng có sẵn 100% kịch bản chốt đơn, bảng size và kỹ năng tư vấn chuyên sâu.",
-  "💬 Tính năng Trả lời bình luận bằng văn bản (AI Auto Reply Comment): Tự động phát hiện ý định khách hàng và phản hồi siêu tốc.",
-  "🔔 Thông báo minh bạch phiên bản v1.1.8 khi bấm tải về máy tính (Windows & Mac)."
+  "🎯 Khắc phục triệt để lỗi đường link phát video Idol & Game trên TikTok Live Studio / OBS: Sử dụng kết nối nội bộ mượt mà 100%, không bị chặn DNS.",
+  "🧠 Cố định vĩnh viễn Bộ Não Tính Cách Ngọc Nhi (SỰ KIỆN NGỌC NHI) & Kịch bản Chốt Đơn AVA LIVE: Tải về trên Windows hay Mac đều có sẵn đầy đủ 100%.",
+  "✨ Đăng nhập Google 1-Chạm sang trọng: Giao diện kết nối tinh gọn chỉ với Logo AvaLive chính thức và 1 nút kết nối nhanh, bỏ hoàn toàn các ô nhập liệu.",
+  "⚡ Tối ưu tốc độ tải và dung lượng siêu nhẹ cho cả Windows và Mac."
 ];
 
 export default function UpdateNotificationModal() {

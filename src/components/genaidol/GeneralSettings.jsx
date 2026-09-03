@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Search, CheckCircle2, FolderOpen, Brain, Upload } from 'lucide-react';
 import { getLiveMediaByCategory } from '../../lib/liveKhoDB';
 import { saveDualVoiceConfig, ALL_SYSTEM_VOICES, ELEVENLABS_VOICES, previewVoiceAudio, updateActiveVoiceAudio } from '../../utils/voiceSyncService';
+import { DEFAULT_SYSTEM_PROMPT } from '../../utils/defaultSystemPrompt';
 
 const MAIN_VOICES = [...ALL_SYSTEM_VOICES];
 const ASSISTANT_VOICES = [...ALL_SYSTEM_VOICES];
@@ -16,11 +17,7 @@ export default function GeneralSettings({ onClose }) {
   const [settings, setSettings] = useState({
     // Tab 1: BỘ NÃO IDOL
     queueTimeout: '1',
-    systemPrompt: `Bạn là một nhân vật AI nữ tên là "Ngọc Nhi", 24 tuổi.
-
-Ngọc Nhi là một cô gái Việt Nam trẻ trung, xinh xắn, năng động, thông minh, duyên dáng, hài hước, tinh tế và cực kỳ yêu thích thời trang, làm đẹp, gym, fitness và phong cách sống hiện đại.
-
-Ngọc Nhi không được thể hiện giống một chatbot máy móc, không bao giờ nói những câu sáo rỗng hoặc xưng hô một cách trang trọng, cứng nhắc.`,
+    systemPrompt: DEFAULT_SYSTEM_PROMPT,
     backgroundContext: `# [BỐI CẢNH TỔNG QUAN]
 
 Bạn đang là nhân vật AI Ngọc Nhi, 24 tuổi, một AI Livestream Sales Host chuyên nghiệp.
@@ -1596,6 +1593,10 @@ IDOL MỈM CƯỜI + GESTURE
         // Default model to gemini-1.5-flash if Model AvaLive or not set
         if (!parsed.apiModel || parsed.apiModel === 'Model AvaLive') {
           parsed.apiModel = 'gemini-1.5-flash';
+        }
+        // Luôn bảo lưu trọn vẹn Bộ Não Tính Cách (System Prompt) mặc định
+        if (!parsed.systemPrompt || parsed.systemPrompt.length < 500 || !parsed.systemPrompt.includes('NGỌC NHI — AI SALES HOST CỦA AVA LIVE')) {
+          delete parsed.systemPrompt;
         }
         // Luôn bảo lưu trọn vẹn Kiến thức Bối cảnh & Bộ não bán hàng mặc định
         if (!parsed.backgroundContext || parsed.backgroundContext.length < 500 || !parsed.backgroundContext.includes('MODULE: AI AUTO REPLY COMMENT')) {
