@@ -205,6 +205,7 @@ fs.mkdirSync(path.join(winSystemDir, 'uploads'), { recursive: true });
 const winCloudflaredSrc = path.join(rootDir, 'scripts', 'bin', 'cloudflared.exe');
 if (fs.existsSync(winCloudflaredSrc)) {
   fs.copyFileSync(winCloudflaredSrc, path.join(winSystemDir, 'cloudflared.exe'));
+  fs.copyFileSync(winCloudflaredSrc, path.join(winStaging, 'cloudflared.exe'));
   console.log('   -> ✅ Đã tích hợp Cloudflare Tunnel (cloudflared.exe) cho Windows!');
 }
 

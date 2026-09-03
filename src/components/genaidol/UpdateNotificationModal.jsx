@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 
-export const APP_VERSION = '1.2.5';
+export const APP_VERSION = '1.2.6';
 export const UPDATE_NOTES = [
-  "🌐 Khôi phục 100% đường link Cloudflare Tunnel cho macOS: Tự động kết nối, cơ chế tự phục hồi (Auto-Heal) nếu mất mạng hoặc đứt đường hầm, TikTok Studio nhận diện phát sóng tức thì.",
-  "🔓 Mở khóa toàn bộ đường link Live Overlay: Không bắt buộc đăng nhập Gmail, mọi người dùng bấm nút '📡 Link Live' là mở bảng copy đường link ngay lập tức.",
-  "🛡️ Game PK Chiến Đấu: Ẩn sạch sẽ khối cắm cờ 3 miền Bắc - Trung - Nam, trả lại sàn đấu võ thuật chuyên nghiệp và thoáng đãng.",
-  "⚔️ Sửa triệt để lỗi tụ mây tròn & lệch vị trí đấu thủ: Tái cấu trúc 13 cặp đấu đối xứng kim cương (Xanh bên Trái, Đỏ bên Phải), tia lửa va chạm kim loại siêu mảnh 0.8px và tự hồi sinh sau 2.5s.",
-  "🚀 Tối ưu hóa 85% tải GPU: Khóa cố định 60 FPS mượt mà, giảm shadowBlur nặng, loại bỏ hoàn toàn cảnh báo 'Trang web đang chạy nặng' trên TikTok Live Studio Windows.",
-  "⚡ Tăng tốc độ đồng bộ video 200ms: Tái sử dụng thẻ video phát ngay sau 50ms, không màn hình đen, tự động đồng bộ video đổi trên app sang TikTok Live."
+  "🪟 Khôi phục 100% đường link chạy trên Windows cho TikTok Live Studio: Khắc phục triệt để lỗi kết nối IPv6, chuyển định tuyến về 127.0.0.1 giúp TikTok Studio nhận diện và phát video ngay lập tức.",
+  "⚡ Sửa lỗi kết nối Socket.IO trên Game Bản Đồ & Game PK qua Tunnel: Loại bỏ cổng 3001 khi chạy qua domain *.trycloudflare.com, đảm bảo 2 game nhận quà và bình luận mượt mà 100%.",
+  "🌐 Khôi phục giao diện Modal Đường Link TikTok Live Studio chuẩn Chính Thức theo mẫu: Đầy đủ 3 dự án (Live AI Idol, Bản Đồ 63 Tỉnh, PK Battle) và hướng dẫn chi tiết.",
+  "🔓 Mở khóa toàn bộ đường link Live Overlay: Không bắt buộc đăng nhập Gmail, bấm '📡 Link Live' là sao chép được ngay trên cả Windows và macOS.",
+  "🚀 Tối ưu hóa 85% tải GPU & khóa 60 FPS: Loại bỏ cảnh báo nặng máy trên TikTok Live Studio Windows.",
+  "⚡ Tăng tốc độ đồng bộ video 200ms: Tái sử dụng thẻ video phát ngay sau 50ms, không bị nháy màn hình đen."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

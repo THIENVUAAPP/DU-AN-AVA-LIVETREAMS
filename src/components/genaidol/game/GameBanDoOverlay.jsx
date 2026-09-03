@@ -28,8 +28,16 @@ export default function GameBanDoOverlay() {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const customUrl = urlParams.get('backend') || localStorage.getItem('aidol_backend_url') || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BACKEND_URL);
+      const hostname = window.location.hostname.toLowerCase();
+      const isTunnel = hostname.includes('trycloudflare.com') ||
+                       hostname.includes('loca.lt') ||
+                       hostname.includes('ngrok') ||
+                       hostname.includes('serveo.net') ||
+                       hostname.includes('vercel.app');
       if (customUrl && customUrl.startsWith('http')) {
         backendUrl = customUrl;
+      } else if (isTunnel) {
+        backendUrl = window.location.origin;
       } else {
         const port = window.location.port && window.location.port !== '5173' && window.location.port !== '3000' ? window.location.port : '3001';
         backendUrl = `${window.location.protocol}//${window.location.hostname}:${port}`;

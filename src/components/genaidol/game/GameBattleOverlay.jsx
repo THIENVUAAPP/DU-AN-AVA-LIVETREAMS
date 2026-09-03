@@ -20,8 +20,16 @@ export default function GameBattleOverlay() {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const customBackend = urlParams.get('backend') || localStorage.getItem('aidol_backend_url');
+      const hostname = window.location.hostname.toLowerCase();
+      const isTunnel = hostname.includes('trycloudflare.com') ||
+                       hostname.includes('loca.lt') ||
+                       hostname.includes('ngrok') ||
+                       hostname.includes('serveo.net') ||
+                       hostname.includes('vercel.app');
       if (customBackend && customBackend.startsWith('http')) {
         backendUrl = customBackend;
+      } else if (isTunnel) {
+        backendUrl = window.location.origin;
       } else {
         const port = window.location.port && window.location.port !== '5173' && window.location.port !== '3000' ? window.location.port : '3001';
         backendUrl = `${window.location.protocol}//${window.location.hostname}:${port}`;

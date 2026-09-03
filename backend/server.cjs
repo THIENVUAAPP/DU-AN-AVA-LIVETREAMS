@@ -1291,11 +1291,16 @@ async function startCloudflaredTunnel(port) {
   if (!cloudflaredBin) {
     const isWin = process.platform === 'win32';
     const candidatePaths = isWin ? [
-      path.join(__dirname, 'cloudflared.exe'),
-      path.join(__dirname, '..', 'cloudflared.exe'),
       path.join(process.cwd(), 'cloudflared.exe'),
+      path.join(__dirname, 'cloudflared.exe'),
       path.join(process.cwd(), 'system', 'cloudflared.exe'),
+      path.join(__dirname, 'system', 'cloudflared.exe'),
+      path.join(__dirname, '..', 'system', 'cloudflared.exe'),
+      path.join(process.cwd(), '..', 'system', 'cloudflared.exe'),
+      path.join(process.cwd(), '..', 'cloudflared.exe'),
+      path.join(__dirname, '..', 'cloudflared.exe'),
       path.join(__dirname, '..', 'scripts', 'bin', 'cloudflared.exe'),
+      path.join(process.cwd(), 'scripts', 'bin', 'cloudflared.exe'),
       'cloudflared.exe'
     ] : [
       path.join(process.cwd(), 'system', 'cloudflared'),
@@ -1330,7 +1335,7 @@ async function startCloudflaredTunnel(port) {
     console.log(`📎 [Tunnel] Sử dụng binary: ${cloudflaredBin}`);
     try {
       const proc = spawn(cloudflaredBin, [
-        'tunnel', '--url', `http://localhost:${port}`,
+        'tunnel', '--url', `http://127.0.0.1:${port}`,
         '--no-autoupdate'
       ], { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
       activeCloudflaredProc = proc;
