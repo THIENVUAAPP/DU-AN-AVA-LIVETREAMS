@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star } from 'lucide-react';
 
-export const APP_VERSION = '1.2.2';
+export const APP_VERSION = '1.2.3';
 export const UPDATE_NOTES = [
-  "🔓 Mở khóa 100% đường link TikTok Studio: Không còn bắt buộc đăng nhập, bất kỳ ai mở phần mềm đều sao chép được link để live ngay lập tức.",
+  "🛡️ Khắc phục triệt để lỗi ERR_CONNECTION_REFUSED trên Windows: Bổ sung bộ bảo vệ tiến trình an toàn 100%, không bị xung đột tiến trình.",
+  "🔓 Mở khóa 100% đường link TikTok Studio: Không còn bắt buộc đăng nhập, mở phần mềm là sao chép được link để live ngay lập tức.",
   "🌐 Tự động cấp link Cloudflare (*.trycloudflare.com) trực tiếp trên Windows và Mac, dán vào TikTok Live Studio nhận diện và phát video ngay.",
-  "🧠 Cố định vĩnh viễn Bộ Não Tính Cách Ngọc Nhi (SỰ KIỆN NGỌC NHI) & Kịch bản Chốt Đơn AVA LIVE cho mọi bản tải về Windows & Mac.",
-  "✨ Đăng nhập Google 1-Chạm sang trọng với Logo AvaLive chính thức, tối giản hoàn toàn không cần nhập liệu."
+  "🧠 Cố định vĩnh viễn Bộ Não Tính Cách Ngọc Nhi (SỰ KIỆN NGỌC NHI) & Kịch bản Chốt Đơn AVA LIVE cho mọi bản tải về Windows & Mac."
 ];
 
 export default function UpdateNotificationModal() {

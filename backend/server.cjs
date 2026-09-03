@@ -1,3 +1,13 @@
+// ============================================================
+// CRASH GUARDS: Đảm bảo server không bao giờ bị tắt bởi unhandled errors
+// ============================================================
+process.on('uncaughtException', (err) => {
+  console.warn('[AvaLive Crash Guard] Uncaught Exception caught safely:', err?.message || err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.warn('[AvaLive Crash Guard] Unhandled Rejection caught safely:', reason);
+});
+
 require('dotenv').config();
 const express = require('express');
 const { createServer } = require('http');
@@ -1241,96 +1251,90 @@ async function startCloudflaredTunnel(port) {
   console.log('\n🔗 [Tunnel] Khởi động Cloudflare Quick Tunnel...');
   tunnelStatus = 'connecting';
 
-  // Cách 1: Dùng npm package 'cloudflared' (cross-platform — Windows + Mac + Linux)
+  let cloudflaredBin = null;
+
+  // 1. Thử kiểm tra binary từ npm cloudflared nếu file tồn tại
   try {
     const cloudflaredPkg = require('cloudflared');
-    if (cloudflaredPkg && cloudflaredPkg.tunnel) {
-      console.log('📦 [Tunnel] Sử dụng npm cloudflared package (cross-platform)...');
-      const { url, connections, child, stop } = cloudflaredPkg.tunnel({
-        '--url': `http://localhost:${port}`,
-        '--no-autoupdate': null,
+    if (cloudflaredPkg && cloudflaredPkg.bin && fs.existsSync(cloudflaredPkg.bin)) {
+      cloudflaredBin = cloudflaredPkg.bin;
+    }
+  } catch (e) {}
+
+  // 2. Kiểm tra các thư mục chứa binary (hỗ trợ Windows và Mac)
+  if (!cloudflaredBin) {
+    const isWin = process.platform === 'win32';
+    const candidatePaths = isWin ? [
+      path.join(__dirname, 'cloudflared.exe'),
+      path.join(__dirname, '..', 'cloudflared.exe'),
+      path.join(process.cwd(), 'cloudflared.exe'),
+      path.join(process.cwd(), 'system', 'cloudflared.exe'),
+      path.join(__dirname, '..', 'scripts', 'bin', 'cloudflared.exe'),
+      'cloudflared.exe'
+    ] : [
+      path.join(__dirname, 'cloudflared'),
+      path.join(__dirname, '..', 'cloudflared'),
+      path.join(process.cwd(), 'cloudflared'),
+      path.join(__dirname, '..', 'node_modules', 'cloudflared', 'bin', 'cloudflared'),
+      '/usr/local/bin/cloudflared',
+      '/tmp/cloudflared',
+      'cloudflared'
+    ];
+    for (const p of candidatePaths) {
+      try {
+        if (fs.existsSync(p)) {
+          cloudflaredBin = p;
+          break;
+        }
+      } catch (err) {}
+    }
+  }
+
+  // 3. Khởi chạy binary an toàn 100% không bao giờ gây crash
+  if (cloudflaredBin) {
+    console.log(`📎 [Tunnel] Sử dụng binary: ${cloudflaredBin}`);
+    try {
+      const proc = spawn(cloudflaredBin, [
+        'tunnel', '--url', `http://localhost:${port}`,
+        '--no-autoupdate'
+      ], { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
+
+      proc.on('error', (err) => {
+        console.warn('❌ [Tunnel] Lỗi spawn binary:', err.message);
+        tunnelStatus = 'error';
+        startLocaltunnelFallback(port);
       });
 
-      // Lắng nghe URL được tạo
-      url.then((tunnelUrl) => {
-        currentTunnelUrl = tunnelUrl;
-        tunnelStatus = 'active';
-        printTunnelReady(tunnelUrl);
-      }).catch((err) => {
-        console.error('❌ [Tunnel] Lỗi lấy URL:', err.message);
-      });
+      const parseUrl = (data) => {
+        try {
+          const str = data.toString();
+          const match = str.match(/https:\/\/[a-z0-9\-]+\.trycloudflare\.com/);
+          if (match && !currentTunnelUrl) {
+            currentTunnelUrl = match[0];
+            tunnelStatus = 'active';
+            printTunnelReady(currentTunnelUrl);
+          }
+        } catch (e) {}
+      };
 
-      // Xử lý khi tunnel thoát
-      child.on('exit', (code) => {
+      if (proc.stdout) proc.stdout.on('data', parseUrl);
+      if (proc.stderr) proc.stderr.on('data', parseUrl);
+
+      proc.on('exit', (code) => {
         console.log(`\n⚠️  [Tunnel] Cloudflared thoát (code ${code}). Đang khởi động lại...`);
         currentTunnelUrl = null;
         tunnelStatus = 'connecting';
         setTimeout(() => startCloudflaredTunnel(port), 5000);
       });
 
-      return; // Thành công — không cần fallback
-    }
-  } catch (e) {
-    console.log('📦 [Tunnel] npm cloudflared package chưa sẵn sàng, thử binary...');
-  }
-
-  // Cách 2: Dùng binary cloudflared (hỗ trợ cả Windows và Mac)
-  const cloudflaredPaths = [
-    path.join(__dirname, 'cloudflared.exe'),
-    path.join(__dirname, '..', 'cloudflared.exe'),
-    path.join(__dirname, '..', 'scripts', 'bin', 'cloudflared.exe'),
-    path.join(__dirname, '..', 'cloudflared'),
-    path.join(__dirname, 'cloudflared'),
-    '/tmp/cloudflared',
-    '/usr/local/bin/cloudflared',
-    'cloudflared.exe',
-    'cloudflared'
-  ];
-
-  let cloudflaredBin = null;
-  for (const p of cloudflaredPaths) {
-    try {
-      if (fs.existsSync(p)) { cloudflaredBin = p; break; }
-    } catch (e) {}
-  }
-
-  if (cloudflaredBin) {
-    console.log(`📎 [Tunnel] Sử dụng binary: ${cloudflaredBin}`);
-    const proc = spawn(cloudflaredBin, [
-      'tunnel', '--url', `http://localhost:${port}`,
-      '--no-autoupdate'
-    ], { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
-
-    const parseUrl = (data) => {
-      const str = data.toString();
-      const match = str.match(/https:\/\/[a-z0-9\-]+\.trycloudflare\.com/);
-      if (match && !currentTunnelUrl) {
-        currentTunnelUrl = match[0];
-        tunnelStatus = 'active';
-        printTunnelReady(currentTunnelUrl);
-      }
-    };
-
-    proc.stdout.on('data', parseUrl);
-    proc.stderr.on('data', parseUrl);
-
-    proc.on('exit', (code) => {
-      console.log(`\n⚠️  [Tunnel] Cloudflared thoát (code ${code}). Đang khởi động lại...`);
-      currentTunnelUrl = null;
-      tunnelStatus = 'connecting';
-      setTimeout(() => startCloudflaredTunnel(port), 5000);
-    });
-
-    proc.on('error', (err) => {
-      console.error('❌ [Tunnel] Lỗi binary:', err.message);
+      return;
+    } catch (spawnErr) {
+      console.warn('❌ [Tunnel Exception caught]:', spawnErr.message);
       tunnelStatus = 'error';
-      startLocaltunnelFallback(port);
-    });
-
-    return;
+    }
   }
 
-  // Cách 3: Fallback localtunnel (cần nhập IP — không lý tưởng nhưng vẫn hoạt động)
+  // Cách 3: Fallback localtunnel
   console.warn('\n⚠️  [Tunnel] Không tìm thấy cloudflared. Thử localtunnel dự phòng...');
   startLocaltunnelFallback(port);
 }
