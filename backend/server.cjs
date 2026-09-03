@@ -1247,9 +1247,35 @@ try {
 // ============================================================
 const { spawn } = require('child_process');
 
+let activeCloudflaredProc = null;
+let healthCheckTimer = null;
+
+// API: Làm mới tunnel thủ công khi cần
+app.post('/api/refresh-tunnel', (req, res) => {
+  console.log('🔄 [Tunnel] Yêu cầu cấp lại đường link tunnel mới...');
+  if (activeCloudflaredProc) {
+    try { activeCloudflaredProc.kill('SIGKILL'); } catch (e) {}
+    activeCloudflaredProc = null;
+  }
+  currentTunnelUrl = null;
+  tunnelStatus = 'connecting';
+  io.emit('TUNNEL_URL_UPDATE', {
+    status: 'connecting',
+    tunnelUrl: null,
+    projects: {}
+  });
+  setTimeout(() => startCloudflaredTunnel(PORT), 800);
+  res.json({ success: true, message: 'Đang khởi tạo đường link Cloudflare mới...' });
+});
+
 async function startCloudflaredTunnel(port) {
   console.log('\n🔗 [Tunnel] Khởi động Cloudflare Quick Tunnel...');
   tunnelStatus = 'connecting';
+
+  if (activeCloudflaredProc) {
+    try { activeCloudflaredProc.kill('SIGKILL'); } catch (e) {}
+    activeCloudflaredProc = null;
+  }
 
   let cloudflaredBin = null;
 
@@ -1307,6 +1333,7 @@ async function startCloudflaredTunnel(port) {
         'tunnel', '--url', `http://localhost:${port}`,
         '--no-autoupdate'
       ], { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
+      activeCloudflaredProc = proc;
 
       proc.on('error', (err) => {
         console.warn('❌ [Tunnel] Lỗi spawn binary:', err.message);
@@ -1322,6 +1349,16 @@ async function startCloudflaredTunnel(port) {
             currentTunnelUrl = match[0];
             tunnelStatus = 'active';
             printTunnelReady(currentTunnelUrl);
+            io.emit('TUNNEL_URL_UPDATE', {
+              status: 'active',
+              tunnelUrl: currentTunnelUrl,
+              projects: {
+                idol: `${currentTunnelUrl}/idol`,
+                bando: `${currentTunnelUrl}/bando`,
+                battle: `${currentTunnelUrl}/battle`
+              }
+            });
+            startTunnelLivenessMonitor(currentTunnelUrl, port);
           }
         } catch (e) {}
       };
@@ -1333,7 +1370,8 @@ async function startCloudflaredTunnel(port) {
         console.log(`\n⚠️  [Tunnel] Cloudflared thoát (code ${code}). Đang khởi động lại...`);
         currentTunnelUrl = null;
         tunnelStatus = 'connecting';
-        setTimeout(() => startCloudflaredTunnel(port), 5000);
+        activeCloudflaredProc = null;
+        setTimeout(() => startCloudflaredTunnel(port), 3000);
       });
 
       return;
@@ -1380,6 +1418,44 @@ async function startLocaltunnelFallback(port) {
     tunnelStatus = 'error';
     setTimeout(() => startCloudflaredTunnel(port), 15000);
   }
+}
+
+function startTunnelLivenessMonitor(tunnelUrl, port) {
+  if (healthCheckTimer) clearInterval(healthCheckTimer);
+  let failedChecks = 0;
+  healthCheckTimer = setInterval(() => {
+    if (!tunnelUrl || tunnelStatus !== 'active') return;
+    const httpsMod = require('https');
+    const req = httpsMod.get(`${tunnelUrl}/api/health`, { timeout: 8000 }, (res) => {
+      if (res.statusCode === 200) {
+        failedChecks = 0;
+      } else {
+        failedChecks++;
+      }
+      if (failedChecks >= 2) {
+        console.warn('⚠️  [Tunnel] Cloudflare tunnel phản hồi bất thường. Tự động cấp lại link mới...');
+        clearInterval(healthCheckTimer);
+        startCloudflaredTunnel(port);
+      }
+    });
+    req.on('error', () => {
+      failedChecks++;
+      if (failedChecks >= 2) {
+        console.warn('⚠️  [Tunnel] Mất kết nối tới Cloudflare Edge. Tự động cấp lại link mới...');
+        clearInterval(healthCheckTimer);
+        startCloudflaredTunnel(port);
+      }
+    });
+    req.on('timeout', () => {
+      req.destroy();
+      failedChecks++;
+      if (failedChecks >= 2) {
+        console.warn('⚠️  [Tunnel] Timeout kết nối Cloudflare Edge. Tự động cấp lại link mới...');
+        clearInterval(healthCheckTimer);
+        startCloudflaredTunnel(port);
+      }
+    });
+  }, 35000);
 }
 
 // Khởi động tunnel ngay sau khi server chạy

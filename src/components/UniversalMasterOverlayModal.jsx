@@ -24,12 +24,18 @@ import {
  */
 export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUser, onOpenLogin }) {
   const [copiedId, setCopiedId] = useState(null);
-  const [tunnelData, setTunnelData] = useState(null);
-  const [tunnelLoading, setTunnelLoading] = useState(true);
+  const [tunnelData, setTunnelData] = useState(() => {
+    try {
+      const saved = localStorage.getItem('avalive_tunnel_data');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const [tunnelLoading, setTunnelLoading] = useState(false);
 
   const fetchTunnelUrl = useCallback(async () => {
     try {
-      setTunnelLoading(true);
       const host = typeof window !== 'undefined' && window.location.origin.includes('http')
         ? window.location.origin
         : 'http://127.0.0.1:3001';
@@ -43,24 +49,40 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
         const data = await res.json();
         setTunnelData(data);
         setTunnelLoading(false);
+        if (data.status === 'active' && data.tunnelUrl) {
+          try { localStorage.setItem('avalive_tunnel_data', JSON.stringify(data)); } catch (e) {}
+        }
         if (data.status !== "active") {
           setTimeout(fetchTunnelUrl, 2000);
         }
-      } else {
-        setTunnelLoading(false);
-        setTimeout(fetchTunnelUrl, 3000);
       }
     } catch (err) {
       setTunnelLoading(false);
-      setTimeout(fetchTunnelUrl, 3000);
     }
   }, []);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchTunnelUrl();
+  const handleRefreshTunnel = async () => {
+    try {
+      setTunnelLoading(true);
+      const host = typeof window !== 'undefined' && window.location.origin.includes('http')
+        ? window.location.origin
+        : 'http://127.0.0.1:3001';
+      try {
+        await fetch(`${host}/api/refresh-tunnel`, { method: 'POST' });
+      } catch (e) {
+        await fetch('http://127.0.0.1:3001/api/refresh-tunnel', { method: 'POST' }).catch(() => {});
+      }
+      setTimeout(fetchTunnelUrl, 1500);
+    } catch (e) {
+      setTimeout(fetchTunnelUrl, 1500);
     }
-  }, [isOpen, fetchTunnelUrl]);
+  };
+
+  useEffect(() => {
+    fetchTunnelUrl();
+    const interval = setInterval(fetchTunnelUrl, 6000);
+    return () => clearInterval(interval);
+  }, [fetchTunnelUrl]);
 
   if (!isOpen) return null;
 
@@ -181,8 +203,8 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                     <p className="font-black">✅ CLOUDFLARE TUNNEL ĐANG HOẠT ĐỘNG — KHÔNG CẦN NHẬP IP!</p>
                     <p className="font-normal text-emerald-400/80 mt-0.5 font-mono text-[10px]">{tunnelData.tunnelUrl}</p>
                   </div>
-                  <button onClick={fetchTunnelUrl} className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-all cursor-pointer" title="Làm mới">
-                    <RefreshCw className="w-3.5 h-3.5" />
+                  <button onClick={handleRefreshTunnel} className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-all cursor-pointer" title="Cấp lại link mới">
+                    <RefreshCw className={`w-3.5 h-3.5 ${tunnelLoading ? 'animate-spin text-cyan-400' : ''}`} />
                   </button>
                 </>
               ) : tunnelConnecting ? (
@@ -198,10 +220,10 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                   <WifiOff className="w-4 h-4 shrink-0" />
                   <div className="flex-1">
                     <p className="font-black">❌ TUNNEL CHƯA SẴN SÀNG</p>
-                    <p className="font-normal text-red-400/80 mt-0.5">Khởi động lại phần mềm và thử lại.</p>
+                    <p className="font-normal text-red-400/80 mt-0.5">Bấm nút bên cạnh để cấp đường link mới.</p>
                   </div>
-                  <button onClick={fetchTunnelUrl} className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-all cursor-pointer">
-                    <RefreshCw className="w-3.5 h-3.5" />
+                  <button onClick={handleRefreshTunnel} className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-all cursor-pointer" title="Cấp lại link mới">
+                    <RefreshCw className={`w-3.5 h-3.5 ${tunnelLoading ? 'animate-spin text-cyan-400' : ''}`} />
                   </button>
                 </>
               )}
