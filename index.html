@@ -83,40 +83,6 @@
     </script>
   </head>
   <body class="bg-[#0A0A0A] text-gray-100 antialiased selection:bg-[#EF4444] selection:text-white min-h-screen overflow-x-hidden pt-safe pb-safe">
-    <!-- 🔥 0ms INSTANT VIDEO LOADER CHO TIKTOK STUDIO & OBS -->
-    <script>
-      (function(){
-        try {
-          var isOverlay = window.location.search.includes('overlay=') || window.location.pathname.includes('/idol');
-          if (isOverlay) {
-            var raw = localStorage.getItem('avalive_master_live_state');
-            var url = '/nhep_mieng.mp4';
-            var isVideo = true;
-            if (raw) {
-              var state = JSON.parse(raw);
-              if (state.mediaUrl && !state.mediaUrl.startsWith('blob:')) url = state.mediaUrl;
-              if (state.isVideo === false) isVideo = false;
-            }
-            if (url) {
-              if (url.includes('/uploads/')) {
-                url = window.location.origin + url.substring(url.indexOf('/uploads/'));
-              } else if (url.startsWith('/')) {
-                url = window.location.origin + url;
-              }
-              var el = document.createElement(isVideo ? 'video' : 'img');
-              el.id = 'fast-preload-media';
-              el.src = url;
-              el.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;object-fit:cover;z-index:999999;pointer-events:none;';
-              if (isVideo) {
-                el.autoplay = true; el.loop = true; el.muted = true; el.playsInline = true;
-              }
-              el.onerror = function() { try { el.remove(); } catch(e){} };
-              document.body.appendChild(el);
-            }
-          }
-        } catch(e) {}
-      })();
-    </script>
     <div id="root"></div>
     <script>
       // Trình duyệt luôn chặn không cho chạy file JS dạng "module" khi mở trực tiếp file HTML

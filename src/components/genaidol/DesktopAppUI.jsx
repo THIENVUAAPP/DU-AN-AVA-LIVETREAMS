@@ -1041,8 +1041,8 @@ export default function DesktopAppUI() {
   // Bộ sưu tập Nhân Vật AI Idol & Video 4K Mặc Định Sắc Nét (Mỗi nhân vật 1 video riêng biệt độc quyền)
   const BUILTIN_CHARACTERS = {
     'linhanh_4k': {
-      name: 'AI Idol Nhép Miệng (Chính Thức)',
-      url: '/nhep_mieng.mp4',
+      name: 'AI Idol Live PRO',
+      url: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-a-green-dress-41315-large.mp4',
       type: 'video'
     },
     'aidol_greenscreen': {
@@ -1379,11 +1379,10 @@ export default function DesktopAppUI() {
       isVid = activeVideoItem.type === 'video' || (typeof currentMedia === 'string' && currentMedia.endsWith('.mp4'));
     }
 
-    if (!currentMedia) {
-      currentMedia = '/nhep_mieng.mp4';
-      isVid = true;
-    } else if (typeof currentMedia === 'string' && currentMedia.includes('/uploads/')) {
+    if (typeof currentMedia === 'string' && currentMedia.includes('/uploads/')) {
       currentMedia = currentMedia.substring(currentMedia.indexOf('/uploads/'));
+    } else if (typeof currentMedia === 'string' && (currentMedia.includes('nhep_mieng.mp4') || currentMedia.includes('demo_dancer.mp4'))) {
+      currentMedia = null;
     }
 
     const masterPayload = {
@@ -1909,7 +1908,7 @@ export default function DesktopAppUI() {
             onEnded={() => {
               if (!quickResponseActiveVideo.loop) {
                 setQuickResponseActiveVideo(null);
-                const currentFallback = customCharacters.find(c => c.id === selectedCharacter)?.url || '/nhep_mieng.mp4';
+                const currentFallback = customCharacters.find(c => c.id === selectedCharacter)?.url || null;
                 syncMasterLiveState({
                   stage: 'idol',
                   mediaUrl: currentFallback,
@@ -1923,7 +1922,7 @@ export default function DesktopAppUI() {
             }}
             onError={() => {
               setQuickResponseActiveVideo(null);
-              const currentFallback = customCharacters.find(c => c.id === selectedCharacter)?.url || '/nhep_mieng.mp4';
+              const currentFallback = customCharacters.find(c => c.id === selectedCharacter)?.url || null;
               syncMasterLiveState({
                 stage: 'idol',
                 mediaUrl: currentFallback,
@@ -1941,7 +1940,7 @@ export default function DesktopAppUI() {
             <button 
               onClick={() => {
                 setQuickResponseActiveVideo(null);
-                const currentFallback = customCharacters.find(c => c.id === selectedCharacter)?.url || '/nhep_mieng.mp4';
+                const currentFallback = customCharacters.find(c => c.id === selectedCharacter)?.url || null;
                 syncMasterLiveState({
                   stage: 'idol',
                   mediaUrl: currentFallback,
@@ -3608,7 +3607,7 @@ export default function DesktopAppUI() {
         }}
         onStopLiveVideo={() => {
           setQuickResponseActiveVideo(null);
-          const currentFallback = customCharacters.find(c => c.id === selectedCharacter)?.url || '/nhep_mieng.mp4';
+          const currentFallback = customCharacters.find(c => c.id === selectedCharacter)?.url || null;
           syncMasterLiveState({
             stage: 'idol',
             mediaUrl: currentFallback,

@@ -162,6 +162,7 @@ app.post('/api/upload-media', upload.single('file'), (req, res) => {
     updatedAt: Date.now()
   };
   io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+  saveLiveStateToFile();
   res.json({ url: fileUrl, filename: req.file.filename, success: true });
 });
 
@@ -314,12 +315,36 @@ let isSimulationMode = false;
 let simulationTimer = null;
 let isConnectingTikTok = false; // 🔒 Connection Lock — Ngăn race condition
 
-let currentMasterLiveState = {
+const stateFilePath = path.join(__dirname, 'live_state.json');
+
+function saveLiveStateToFile() {
+  try {
+    fs.writeFileSync(stateFilePath, JSON.stringify(currentMasterLiveState, null, 2), 'utf8');
+  } catch (err) {}
+}
+
+function loadLiveStateFromFile() {
+  try {
+    if (fs.existsSync(stateFilePath)) {
+      const data = JSON.parse(fs.readFileSync(stateFilePath, 'utf8'));
+      if (data && typeof data === 'object') {
+        if (typeof data.mediaUrl === 'string' && (data.mediaUrl.includes('nhep_mieng.mp4') || data.mediaUrl.includes('demo_dancer.mp4'))) {
+          data.mediaUrl = null;
+        }
+        return data;
+      }
+    }
+  } catch (err) {}
+  return null;
+}
+
+let savedState = loadLiveStateFromFile();
+let currentMasterLiveState = savedState || {
   stage: 'idol',
   aspectRatio: '9:16',
   characterId: 'linhanh_4k',
-  characterName: 'AI Idol Nhép Miệng (Chính Thức)',
-  mediaUrl: '/nhep_mieng.mp4',
+  characterName: 'AvaLive VIP PRO',
+  mediaUrl: null,
   isVideo: true,
   videoPlaybackEvent: 'play',
   isPlaying: true,
@@ -327,6 +352,19 @@ let currentMasterLiveState = {
   isDarkMode: true,
   updatedAt: Date.now()
 };
+
+// Nếu mediaUrl trống, tìm video mới nhất trong thư mục uploads để phát ngay
+if (!currentMasterLiveState.mediaUrl && fs.existsSync(uploadsDir)) {
+  try {
+    const files = fs.readdirSync(uploadsDir)
+      .filter(f => /\.(mp4|webm|mov)$/i.test(f))
+      .map(f => ({ name: f, time: fs.statSync(path.join(uploadsDir, f)).mtimeMs }))
+      .sort((a, b) => b.time - a.time);
+    if (files.length > 0) {
+      currentMasterLiveState.mediaUrl = `/uploads/${files[0].name}`;
+    }
+  } catch (e) {}
+}
 let currentBandoGameState = null;
 let currentBattleGameState = null;
 let globalLatestStudioCamFrame = null;
@@ -1070,6 +1108,7 @@ app.post('/api/live-state', (req, res) => {
     };
 
     io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+    saveLiveStateToFile();
   }
   res.json({ success: true, state: currentMasterLiveState });
 });

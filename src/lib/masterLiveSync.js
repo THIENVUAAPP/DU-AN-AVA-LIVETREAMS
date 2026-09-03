@@ -50,8 +50,8 @@ export function getMasterLiveState() {
   return {
     stage: 'idol', // 'idol' | 'dancefloor' | 'bando' | 'battle' | 'camera' | 'broadcast'
     aspectRatio: '9:16',
-    characterName: 'AI Idol Nhép Miệng (Chính Thức)',
-    mediaUrl: '/nhep_mieng.mp4',
+    characterName: 'AvaLive VIP PRO',
+    mediaUrl: null,
     isVideo: true,
     videoPlaybackEvent: 'play',
     isPlaying: true,

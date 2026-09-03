@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 
-export const APP_VERSION = '1.2.9';
+export const APP_VERSION = '1.3.0';
 export const UPDATE_NOTES = [
-  "🎬 Phát Video Thực Tế Real-Time 100%: Phần mềm mở video nào, tải video gì hay phát video từ Kho Live/Phản Hồi Nhanh thì TikTok Live Studio lập tức phát chính xác video đó (tuyệt đối không bị phát video nền).",
-  "⚡ Tự động nạp file video thực tế lên máy chủ: Chuyển đổi toàn bộ blob tạm thành link HTTP tĩnh tương thích 100% với TikTok Live Studio và OBS.",
-  "⏯️ Đồng bộ Play / Pause 2 chiều tức thì: Phần mềm bấm phát là TikTok Studio phát ngay, phần mềm bấm tạm dừng là TikTok Studio dừng ngay lập tức.",
-  "✨ Xoá bỏ hoàn toàn video cô gái nhảy múa: Mặc định chuẩn hoá theo video AI Idol Nhép Miệng chính thức sắc nét chất lượng cao.",
-  "🕒 Watchdog tự động phục hồi 24/24: Duy trì phát liên tục không lo gián đoạn hay đứng khung hình."
+  "🚫 Xoá sạch hoàn toàn video nền: Loại bỏ triệt để mọi video nền, không còn bất kỳ video nền nào tồn tại trong hệ thống.",
+  "⚡ Phát video phần mềm ngay lập tức trên TikTok Live Studio: Ngay khi dán link vào TikTok Studio, hệ thống tự động kết nối và phát ngay video thực tế phần mềm đang mở.",
+  "🧹 Xoá sạch bộ nhớ Cache cũ: Tự động dọn dẹp cache trình duyệt và dữ liệu lưu tạm cũ, đảm bảo nạp dữ liệu và mã nguồn mới nhất 100%.",
+  "💾 Lưu trữ trạng thái phát video trên ổ đĩa máy chủ: Dù tắt mở lại app hay khởi động lại máy, video đang phát luôn được bảo toàn.",
+  "⏯️ Đồng bộ Chạy / Dừng (Play/Pause) siêu mượt: Bấm chạy trên phần mềm ➔ TikTok Studio chạy ngay, bấm dừng ➔ TikTok Studio dừng ngay."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

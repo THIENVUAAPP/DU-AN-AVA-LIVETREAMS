@@ -88,11 +88,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     return {
       stage: defaultStage, // 'idol' | 'dancefloor' | 'battle' | 'bando' | 'broadcast'
       aspectRatio: ratioParam || '9:16',
-      mediaUrl: directVideoUrl || saved?.mediaUrl || '/nhep_mieng.mp4',
+      mediaUrl: directVideoUrl || (saved?.mediaUrl && !saved.mediaUrl.includes('nhep_mieng.mp4') && !saved.mediaUrl.includes('demo_dancer.mp4') ? saved.mediaUrl : null),
       flvUrl: directVideoUrl || saved?.flvUrl || null,
       isVideo: saved?.isVideo !== false,
       selectedCharacter: saved?.selectedCharacter || '',
-      characterName: saved?.characterName || 'AI Idol Nhép Miệng',
+      characterName: saved?.characterName || 'AvaLive VIP PRO',
       isConnected: true,
       isSpeaking: saved?.isSpeaking || false,
       speechText: saved?.speechText || '',
@@ -765,7 +765,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       } catch (e) {}
     }
 
-    // 3. Khôi phục Blob URL từ IndexedDB nếu là video tùy chỉnh, hoặc fallback nếu blob không tồn tại ở cửa sổ này
+    // 3. Khôi phục Blob URL từ IndexedDB nếu là video tùy chỉnh, hoặc bỏ qua nếu blob không tồn tại ở cửa sổ này
     if (typeof candidateUrl === 'string' && candidateUrl.startsWith('blob:')) {
       const match = localDbItems.find(i => i.id === masterState.selectedCharacter);
       if (match && match.fileBlob) {
@@ -775,16 +775,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       } else if (match && (match.mediaUrl || match.url) && !match.mediaUrl?.startsWith('blob:')) {
         candidateUrl = match.mediaUrl || match.url;
       } else {
-        // Blob này thuộc phiên trình duyệt khác không thể truy cập tại overlay -> fallback video mặc định
-        candidateUrl = '/nhep_mieng.mp4';
-        isVideo = true;
+        candidateUrl = null;
       }
     }
 
-    // 4. Fallback video AI Idol mặc định có sẵn
-    if (!candidateUrl) {
-      candidateUrl = '/nhep_mieng.mp4';
-      isVideo = true;
+    // 4. Tuyệt đối loại bỏ video nền cũ nếu có trong cache
+    if (typeof candidateUrl === 'string' && (candidateUrl.includes('nhep_mieng.mp4') || candidateUrl.includes('demo_dancer.mp4'))) {
+      candidateUrl = null;
     }
 
     // 5. Chuẩn hoá tuyệt đối URL cho HTTPS Overlay (TikTok Live Studio / OBS Browser Source)
@@ -803,13 +800,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       if (candidateUrl.includes('/uploads/')) {
         const pathPart = candidateUrl.substring(candidateUrl.indexOf('/uploads/'));
         candidateUrl = currentOrigin ? `${currentOrigin}${pathPart}` : pathPart;
-      } else if (candidateUrl.includes('nhep_mieng.mp4') || candidateUrl.includes('demo_dancer.mp4')) {
-        candidateUrl = currentOrigin ? `${currentOrigin}/nhep_mieng.mp4` : '/nhep_mieng.mp4';
       } else if (candidateUrl.startsWith('/')) {
         candidateUrl = currentOrigin ? `${currentOrigin}${candidateUrl}` : candidateUrl;
       } else if (isHttps && candidateUrl.startsWith('http://')) {
-        // Nếu trang hiện tại là HTTPS (Tunnel) nhưng URL là HTTP localhost/127.0.0.1/nip.io:
-        // Chuyển sang HTTPS cùng origin để CEF / Chrome không chặn Mixed Content
         try {
           const parsed = new URL(candidateUrl);
           if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1' || parsed.hostname.includes('nip.io')) {
@@ -999,15 +992,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             }
           }}
           onError={(e) => {
-            console.warn('[CleanLiveOverlay] Video playback notice:', e);
-            if (e.target) {
-              const fallback = typeof window !== 'undefined' ? `${window.location.origin}/nhep_mieng.mp4` : '/nhep_mieng.mp4';
-              if (e.target.src !== fallback) {
-                e.target.src = fallback;
-                e.target.muted = true;
-                e.target.play().catch(() => {});
-              }
-            }
+            console.warn('[CleanLiveOverlay] Video stream notice:', e);
           }}
           className="w-full h-full select-none absolute inset-0"
           style={{ 
