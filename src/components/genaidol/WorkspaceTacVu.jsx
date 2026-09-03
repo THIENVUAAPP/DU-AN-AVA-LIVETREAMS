@@ -1075,6 +1075,10 @@ const FieldLabel = ({ icon, text, helpKey, customHelpText, minW = "min-w-[220px]
                         {selectedEventId === 'comment' && (
                           <>
                             <div className="flex items-center">
+                              <FieldLabel icon="💬" text="Tự động trả lời bình luận bằng văn bản" helpKey="autoReplyText" customTitle="Auto Reply Comment" customText="Tự động gửi câu trả lời bằng văn bản (Text) vào phần bình luận của phiên Live." />
+                              <input type="checkbox" name="autoReplyText" checked={currentConfig.autoReplyText || false} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded" />
+                            </div>
+                            <div className="flex items-center mt-1">
                               <FieldLabel icon="📊" text="Tỷ lệ trả lời (%)" helpKey="replyRate" />
                               <input type="number" name="replyRate" value={currentConfig.replyRate} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
                             </div>
