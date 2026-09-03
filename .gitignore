@@ -19,3 +19,4 @@ backend/uploads/*
 *.exe
 cloudflared
 release_zips/
+scripts/bin/

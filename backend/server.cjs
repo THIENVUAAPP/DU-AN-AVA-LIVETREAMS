@@ -1274,12 +1274,16 @@ async function startCloudflaredTunnel(port) {
     console.log('📦 [Tunnel] npm cloudflared package chưa sẵn sàng, thử binary...');
   }
 
-  // Cách 2: Dùng binary cloudflared (nếu có sẵn trên máy)
+  // Cách 2: Dùng binary cloudflared (hỗ trợ cả Windows và Mac)
   const cloudflaredPaths = [
+    path.join(__dirname, 'cloudflared.exe'),
+    path.join(__dirname, '..', 'cloudflared.exe'),
+    path.join(__dirname, '..', 'scripts', 'bin', 'cloudflared.exe'),
     path.join(__dirname, '..', 'cloudflared'),
     path.join(__dirname, 'cloudflared'),
     '/tmp/cloudflared',
     '/usr/local/bin/cloudflared',
+    'cloudflared.exe',
     'cloudflared'
   ];
 
@@ -1295,7 +1299,7 @@ async function startCloudflaredTunnel(port) {
     const proc = spawn(cloudflaredBin, [
       'tunnel', '--url', `http://localhost:${port}`,
       '--no-autoupdate'
-    ], { stdio: ['ignore', 'pipe', 'pipe'] });
+    ], { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
 
     const parseUrl = (data) => {
       const str = data.toString();

@@ -54,10 +54,12 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
   const cloudBase = "https://avalivepro.vercel.app";
 
   const getProjectUrl = (path) => {
-    if (tunnelData?.tunnelUrl) {
-      return `${cloudBase}/${path}?backend=${tunnelData.tunnelUrl}`;
+    if (tunnelData?.projects?.[path]) {
+      return tunnelData.projects[path];
     }
-    // TikTok Live Studio yêu cầu link HTTPS trực tuyến hợp lệ (avalivepro.vercel.app)
+    if (tunnelData?.tunnelUrl) {
+      return `${tunnelData.tunnelUrl}/${path}`;
+    }
     return `${cloudBase}/${path}`;
   };
 
@@ -145,7 +147,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
               ĐƯỜNG LINK TIKTOK LIVE STUDIO (CHÍNH THỨC)
             </h2>
             <p className="text-[11px] text-cyan-300 font-bold">
-              Link Đám Mây Vercel (avalivepro.vercel.app) — Tự động đồng bộ với máy tính của bạn qua đường hầm!
+              Link HTTPS Cloudflare (*.trycloudflare.com) — TikTok Studio nhận diện và phát video ngay lập tức!
             </p>
           </div>
         </div>
@@ -301,7 +303,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                 <div className="p-2 rounded-xl bg-white/5 border border-white/10 space-y-1">
                   <span className="font-bold text-green-300">🌐 Cách dán vào TikTok Studio:</span>
                   <p className="text-gray-400 leading-relaxed">
-                    Sao chép link <b>avalivepro.vercel.app</b> ở trên → Thêm nguồn <b>Browser Source</b> trong TikTok Studio → Dán link vào → Kích thước <b>1080×1920</b>.
+                    Sao chép link ở trên → Thêm nguồn <b>Browser Source</b> trong TikTok Studio → Dán link vào → Kích thước <b>1080×1920</b>.
                   </p>
                 </div>
                 <div className="p-2 rounded-xl bg-white/5 border border-white/10 space-y-1">

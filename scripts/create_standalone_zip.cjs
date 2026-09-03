@@ -200,6 +200,13 @@ if (fs.existsSync(path.join(rootDir, 'certs'))) {
 // Create empty uploads directory
 fs.mkdirSync(path.join(winSystemDir, 'uploads'), { recursive: true });
 
+// Copy cloudflared.exe cho Windows Tunnel
+const winCloudflaredSrc = path.join(rootDir, 'scripts', 'bin', 'cloudflared.exe');
+if (fs.existsSync(winCloudflaredSrc)) {
+  fs.copyFileSync(winCloudflaredSrc, path.join(winSystemDir, 'cloudflared.exe'));
+  console.log('   -> ✅ Đã tích hợp Cloudflare Tunnel (cloudflared.exe) cho Windows!');
+}
+
 // Tạo file chạy EXE DUY NHẤT cho Windows (Gọn gàng, chuyên nghiệp, không file rác)
 console.log('   -> Đang chuẩn bị Native Windows Launcher (.exe duy nhất)...');
 const cachedExe = path.join(rootDir, 'AvaLive_Studio.exe');
