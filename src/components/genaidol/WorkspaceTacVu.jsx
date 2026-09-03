@@ -207,7 +207,7 @@ export default function WorkspaceTacVu() {
                           ...p,
                           productName: (!p.productName || p.productName === 'aidol') ? 'AVA LIVE' : p.productName,
                           keywords: (!p.keywords || p.keywords === 'aidol;phần mềm;giá;liên hệ') ? 'ava live;phần mềm;giá;liên hệ;tư vấn;mua;dùng thử;gói;bản quyền' : p.keywords,
-                          aiPrompt: (!p.aiPrompt || p.aiPrompt.length < 200 || p.aiPrompt.includes('TRong vai là một nhân viên sale') || p.aiPrompt.includes('Bạn đang đóng vai NGỌC NHI')) ? NEW_AI_PROMPT : p.aiPrompt
+                          aiPrompt: (!p.aiPrompt || p.aiPrompt.length < 5000 || p.aiPrompt.includes('\\[BẢN SẮC') || p.aiPrompt.includes('TRong vai là một nhân viên sale') || p.aiPrompt.includes('Bạn đang đóng vai NGỌC NHI')) ? NEW_AI_PROMPT : p.aiPrompt
                         };
                       }
                       return p;

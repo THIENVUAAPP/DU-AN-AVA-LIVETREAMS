@@ -354,8 +354,23 @@ export default function LiveGiftMarqueeTicker({
           {/* KHỐI 1: CẮM CỜ 3 MIỀN BẮC - TRUNG - NAM HOẶC BUFF 3 MIỀN (Thẻ Vùng Miền Sắc Nét) */}
           <div className="grid grid-cols-3 gap-1 mb-1 select-none">
             <div 
-              className="py-1 px-0.5 rounded-lg bg-gradient-to-b from-red-950/90 to-red-900/60 border border-red-500/70 text-center shadow-sm hover:scale-105 transition-transform"
-              title={mode === 'battle' ? 'Tăng kích thước x3 (Miền Bắc)' : 'Cắm cờ Miền Bắc (+5 ô)'}
+              onClick={(e) => {
+                e.stopPropagation();
+                bandoAudio.unlock();
+                const randIdx = Math.floor(Math.random() * 900 + 100);
+                window.dispatchEvent(new CustomEvent('avalive_tiktok_gift', { detail: {
+                  giftId: 'gift_region_north',
+                  giftName: 'Ngón Tay Tim',
+                  diamondCount: 5,
+                  count: 1,
+                  buffType: 'x3',
+                  userId: `user_${randIdx}`,
+                  username: `Chiến Binh #${randIdx}`,
+                  regionTarget: 'north'
+                }}));
+              }}
+              className="py-1 px-0.5 rounded-lg bg-gradient-to-b from-red-950/90 to-red-900/60 border border-red-500/70 text-center shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              title={mode === 'battle' ? 'Tặng Ngón Tay Tim: Tăng sát thương x3 & Bảo Kiếm' : 'Cắm cờ Miền Bắc (+5 ô)'}
             >
               <div className="text-[7px] font-black text-red-300 uppercase tracking-tighter mb-0.5">M. Bắc</div>
               <div className="text-[13px] leading-none mb-0.5 drop-shadow">🫰</div>
@@ -363,8 +378,23 @@ export default function LiveGiftMarqueeTicker({
             </div>
 
             <div 
-              className="py-1 px-0.5 rounded-lg bg-gradient-to-b from-amber-950/90 to-amber-900/60 border border-amber-500/70 text-center shadow-sm hover:scale-105 transition-transform"
-              title={mode === 'battle' ? 'Nâng cấp Giáp (Miền Trung)' : 'Cắm cờ Miền Trung (+5 ô)'}
+              onClick={(e) => {
+                e.stopPropagation();
+                bandoAudio.unlock();
+                const randIdx = Math.floor(Math.random() * 900 + 100);
+                window.dispatchEvent(new CustomEvent('avalive_tiktok_gift', { detail: {
+                  giftId: 'gift_region_central',
+                  giftName: 'Bánh Donut',
+                  diamondCount: 5,
+                  count: 1,
+                  buffType: 'armor',
+                  userId: `user_${randIdx}`,
+                  username: `Chiến Binh #${randIdx}`,
+                  regionTarget: 'central'
+                }}));
+              }}
+              className="py-1 px-0.5 rounded-lg bg-gradient-to-b from-amber-950/90 to-amber-900/60 border border-amber-500/70 text-center shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              title={mode === 'battle' ? 'Tặng Bánh Donut: Trang bị Thiết Giáp Kim Cang (+500 HP)' : 'Cắm cờ Miền Trung (+5 ô)'}
             >
               <div className="text-[7px] font-black text-amber-300 uppercase tracking-tighter mb-0.5">M. Trung</div>
               <div className="text-[13px] leading-none mb-0.5 drop-shadow">🍩</div>
@@ -372,8 +402,23 @@ export default function LiveGiftMarqueeTicker({
             </div>
 
             <div 
-              className="py-1 px-0.5 rounded-lg bg-gradient-to-b from-emerald-950/90 to-emerald-900/60 border border-emerald-500/70 text-center shadow-sm hover:scale-105 transition-transform"
-              title={mode === 'battle' ? 'Nâng cấp Thú Cưỡi (Miền Nam)' : 'Cắm cờ Miền Nam (+5 ô)'}
+              onClick={(e) => {
+                e.stopPropagation();
+                bandoAudio.unlock();
+                const randIdx = Math.floor(Math.random() * 900 + 100);
+                window.dispatchEvent(new CustomEvent('avalive_tiktok_gift', { detail: {
+                  giftId: 'gift_region_south',
+                  giftName: 'Gấu Bông',
+                  diamondCount: 5,
+                  count: 1,
+                  buffType: 'mount',
+                  userId: `user_${randIdx}`,
+                  username: `Chiến Binh #${randIdx}`,
+                  regionTarget: 'south'
+                }}));
+              }}
+              className="py-1 px-0.5 rounded-lg bg-gradient-to-b from-emerald-950/90 to-emerald-900/60 border border-emerald-500/70 text-center shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              title={mode === 'battle' ? 'Tặng Gấu Bông: Trang bị Thần Thú Chiến Cưỡng' : 'Cắm cờ Miền Nam (+5 ô)'}
             >
               <div className="text-[7px] font-black text-emerald-300 uppercase tracking-tighter mb-0.5">M. Nam</div>
               <div className="text-[13px] leading-none mb-0.5 drop-shadow">🧸</div>

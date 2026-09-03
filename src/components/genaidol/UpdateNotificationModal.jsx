@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star } from 'lucide-react';
 
-export const APP_VERSION = '1.2.3';
+export const APP_VERSION = '1.2.4';
 export const UPDATE_NOTES = [
-  "🛡️ Khắc phục triệt để lỗi ERR_CONNECTION_REFUSED trên Windows: Bổ sung bộ bảo vệ tiến trình an toàn 100%, không bị xung đột tiến trình.",
-  "🔓 Mở khóa 100% đường link TikTok Studio: Không còn bắt buộc đăng nhập, mở phần mềm là sao chép được link để live ngay lập tức.",
-  "🌐 Tự động cấp link Cloudflare (*.trycloudflare.com) trực tiếp trên Windows và Mac, dán vào TikTok Live Studio nhận diện và phát video ngay.",
-  "🧠 Cố định vĩnh viễn Bộ Não Tính Cách Ngọc Nhi (SỰ KIỆN NGỌC NHI) & Kịch bản Chốt Đơn AVA LIVE cho mọi bản tải về Windows & Mac."
+  "⚔️ Game PK Chiến Đấu: Cập nhật chuẩn xác 100% trang bị tương ứng với từng phần quà: 🍩 Bánh Donut (Thiết Giáp Kim Cang +500 HP), 🧸 Gấu Bông (Thần Thú Chiến Cưỡng), 🫰 Ngón Tay Tim (Tăng sát thương x3 & Bảo Kiếm), 🌹 Hoa Hồng (Bảo Kiếm Hiệp Khách).",
+  "🔇 Xử lý triệt để tiếng động lạ: Mặc định tắt bình luận viên tự động ngẫu nhiên, tắt tiếng video lipsync khi đang ở chế độ Mute, đảm bảo không gian yên tĩnh 100%.",
+  "📝 Nạp toàn bộ 591 dòng Kịch Bản Chốt Đơn AI Siêu Cấp vào ô kịch bản của Tab Chốt Đơn trên cả Mac và Windows.",
+  "🔒 Khóa cố định toàn bộ hệ thống đường link chuẩn Cloudflare (*.trycloudflare.com/idol, /bando, /battle) trên cả Windows và Mac, ổn định vĩnh viễn kết nối với TikTok Live Studio."
 ];
 
 export default function UpdateNotificationModal() {

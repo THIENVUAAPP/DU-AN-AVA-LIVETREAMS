@@ -1157,7 +1157,7 @@ export default function GameChienDau({
     playSfx('join');
   }, [addOrUpdateFighter, updateFormation, playSfx]);
 
-  const triggerHeroUpgrade = useCallback((factionId, donorName = 'VIP Chiến Binh 3D', tierLevel = 3) => {
+  const triggerHeroUpgrade = useCallback((factionId, donorName = 'VIP Chiến Binh 3D', tierLevel = 3, equipType = '') => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     
@@ -1171,9 +1171,20 @@ export default function GameChienDau({
 
     if (fighter) {
       fighter.score = Math.max(fighter.score, targetScore);
-      fighter.pulseUntil = performance.now() + 3500;
+      fighter.pulseUntil = performance.now() + 4500;
       fighter.hasGift = true;
-      fighter.isSuperVip = tierLevel >= 3;
+      fighter.isSuperVip = tierLevel >= 3 || equipType === 'x3' || equipType === 'mount';
+      if (equipType === 'armor') {
+        fighter.hasArmor = true;
+        fighter.maxHp = (fighter.maxHp || 280) + 500;
+        fighter.currentHp = Math.min(fighter.maxHp, (fighter.currentHp || 280) + 500);
+      } else if (equipType === 'mount') {
+        fighter.hasMount = true;
+      } else if (equipType === 'x3') {
+        fighter.isDamageX3 = true;
+      } else if (equipType === 'sword') {
+        fighter.hasSword = true;
+      }
     } else {
       const startX = factionId === 'blue' ? canvas.width * 0.35 : canvas.width * 0.65;
       const startY = canvas.height * 0.62;
@@ -1187,9 +1198,15 @@ export default function GameChienDau({
         targetX: startX,
         targetY: startY,
         bobPhase: 0,
-        pulseUntil: performance.now() + 3500,
+        pulseUntil: performance.now() + 4500,
         hasGift: true,
-        isSuperVip: tierLevel >= 3
+        isSuperVip: tierLevel >= 3 || equipType === 'x3' || equipType === 'mount',
+        hasArmor: equipType === 'armor',
+        hasMount: equipType === 'mount',
+        isDamageX3: equipType === 'x3',
+        hasSword: equipType === 'sword',
+        maxHp: equipType === 'armor' ? 780 : 280,
+        currentHp: equipType === 'armor' ? 780 : 280
       };
       list.push(fighter);
     }
@@ -1220,9 +1237,18 @@ export default function GameChienDau({
       5: 'CHÍ TÔN THIÊN TÔN 3D (THẦN LONG) 🐉'
     };
 
+    const equipTitles = {
+      armor: 'THIẾT GIÁP KIM CANG (+500 MÁU) 🛡️',
+      mount: 'THẦN THÚ CHIẾN CƯỠNG 🦄',
+      x3: 'SÁT THƯƠNG X3 & BẢO KIẾM 💥',
+      sword: 'BẢO KIẾM HIỆP KHÁCH ⚔️'
+    };
+
+    const displayTitle = equipTitles[equipType] || tierTitles[tierLevel] || 'HOÀNG KIM 3D';
+
     setGameState(prev => ({
       ...prev,
-      recentSpotlight: { name: donorName, gift: `Trang Bị: ${tierTitles[tierLevel] || 'HOÀNG KIM 3D'}`, faction: factionId }
+      recentSpotlight: { name: donorName, gift: `Trang Bị: ${displayTitle}`, faction: factionId }
     }));
     setTimeout(() => setGameState(prev => ({ ...prev, recentSpotlight: null })), 4500);
   }, [updateFormation, playSfx]);
@@ -1373,6 +1399,94 @@ export default function GameChienDau({
     });
   }, [config.maxHp, initDefaultChampions]);
 
+  // Bộ xử lý quà tặng TikTok chuẩn xác 100% theo đúng trang bị nhân vật (Giáp, Thú, x3 Công, Kiếm...)
+  const processGiftEvent = useCallback((data) => {
+    if (!data) return;
+    battleAudio.unlock();
+    const nickname = data.nickname || data.username || data.name || 'VIP Supporter';
+    const diamondCount = data.diamondCount || data.repeatCount || data.count || data.coins || 1;
+    const assignedFaction = data.faction || (Math.random() < 0.5 ? 'blue' : 'red');
+    const gName = String(data.giftName || data.name || '').toLowerCase();
+    const gId = String(data.giftId || '').toLowerCase();
+    const buffType = data.buffType || '';
+
+    // 1. DONUT / GIÁP (🍩): Bánh donut, giáp, khiên, mũ cối
+    if (buffType === 'armor' || gId.includes('donut') || gName.includes('donut') || gName.includes('giáp') || gName.includes('giap') || gId === 'gift_region_central' || gId.includes('helmet') || gName.includes('cối') || gName.includes('shield')) {
+      triggerHeroUpgrade(assignedFaction, nickname, 2, 'armor');
+      triggerKimCang(assignedFaction, nickname);
+      battleCommentary.triggerGiftCommentary(nickname, 'Thiết Giáp Kim Cang', 'Thiết Giáp Kiếm Hiệp', assignedFaction);
+      addLiveFeedItem(nickname, `tặng Bánh Donut trang bị THIẾT GIÁP KIM CANG (+500 MÁU) 🛡️!`, assignedFaction);
+      return;
+    }
+
+    // 2. BEAR / THẦN THÚ CHIẾN CƯỠNG (🧸): Gấu bông, thú, pet, ngựa, rồng
+    if (buffType === 'mount' || gId.includes('bear') || gName.includes('bear') || gName.includes('gấu') || gName.includes('gau') || gName.includes('thú') || gName.includes('thu') || gId === 'gift_region_south') {
+      triggerHeroUpgrade(assignedFaction, nickname, 3, 'mount');
+      triggerBossSummon(assignedFaction, nickname);
+      battleCommentary.triggerGiftCommentary(nickname, 'Thần Thú Chiến Cưỡng', 'Độc Cô Kiếm Tôn', assignedFaction);
+      addLiveFeedItem(nickname, `tặng Gấu Bông triệu hồi THẦN THÚ CHIẾN CƯỠNG 🦄!`, assignedFaction);
+      return;
+    }
+
+    // 3. FINGER HEART / X3 / TIM (🫰): Bắn tim, ngón tay tim, x3 sát thương
+    if (buffType === 'x3' || gId.includes('finger') || gName.includes('ngón tay') || gName.includes('tim') || gId === 'gift_region_north' || gName.includes('x3')) {
+      triggerHeroUpgrade(assignedFaction, nickname, 4, 'x3');
+      triggerVanKiem(assignedFaction, nickname);
+      battleCommentary.triggerGiftCommentary(nickname, 'Sát Thương x3', 'Chiến Thần Vạn Kiếm', assignedFaction);
+      addLiveFeedItem(nickname, `tặng Ngón Tay Tim kích hoạt SÁT THƯƠNG X3 & BẢO KIẾM 💥!`, assignedFaction);
+      return;
+    }
+
+    // 4. ROSE / BẢO KIẾM (🌹): Hoa hồng
+    if (gId.includes('rose') || gName.includes('hồng') || gName.includes('hoa') || gName.includes('kiếm')) {
+      triggerHeroUpgrade(assignedFaction, nickname, 2, 'sword');
+      addLiveFeedItem(nickname, `tặng Hoa Hồng trang bị BẢO KIẾM HIỆP KHÁCH ⚔️!`, assignedFaction);
+      return;
+    }
+
+    // 5. CROWN / VƯƠNG MIỆN (👑):
+    if (gId.includes('crown') || gName.includes('miện') || diamondCount >= 200) {
+      triggerHeroUpgrade(assignedFaction, nickname, 3, 'crown');
+      triggerThaiCuc(assignedFaction, nickname);
+      battleCommentary.triggerGiftCommentary(nickname, 'Vương Miện Hoàng Kim', 'Kim Khải Thần Tướng', assignedFaction);
+      addLiveFeedItem(nickname, `thăng cấp KIM KHẢI THẦN TƯỚNG + THÁI CỰC TRẬN (${diamondCount} xu)! 👑`, assignedFaction);
+      return;
+    }
+
+    // 6. DRAGON / THẦN LONG (🐉):
+    if (gId.includes('dragon') || gName.includes('long') || gName.includes('rồng') || diamondCount >= 1000) {
+      triggerGiangLong(assignedFaction, nickname);
+      battleCommentary.triggerGiftCommentary(nickname, 'Thần Long Vũ Trụ', 'Chí Tôn Thiên Tôn', assignedFaction);
+      addLiveFeedItem(nickname, `tặng quà lớn triệu hồi GIÁNG LONG CHƯỞNG (${diamondCount} xu)! 🐉`, assignedFaction);
+      return;
+    }
+
+    // 7. HIGH VALUE TIER GIFTS:
+    if (diamondCount >= 10000) {
+      triggerNhuLai(assignedFaction, nickname);
+      triggerGiangLong(assignedFaction, nickname);
+      battleCommentary.triggerGiftCommentary(nickname, 'Vũ Trụ Thần Thoại', 'Chí Tôn Thần Giới', assignedFaction);
+      addLiveFeedItem(nickname, `tặng quà thần thoại kích hoạt NHƯ LAI THẦN CHƯỞNG (${diamondCount} xu)! ✋🪐`, assignedFaction);
+    } else if (diamondCount >= 3000) {
+      triggerDocCo(assignedFaction, nickname);
+      triggerLucMach(assignedFaction, nickname);
+      battleCommentary.triggerGiftCommentary(nickname, 'Thần Thú Huyền Thoại', 'Độc Cô Kiếm Tôn', assignedFaction);
+      addLiveFeedItem(nickname, `tặng quà huyền thoại kích hoạt ĐỘC CÔ CỬU KIẾM (${diamondCount} xu)! 🌪️⚔️`, assignedFaction);
+    } else if (diamondCount >= 500) {
+      triggerVanKiem(assignedFaction, nickname);
+      battleCommentary.triggerGiftCommentary(nickname, 'Chiến Xa / Sét', 'Chiến Thần Vạn Kiếm', assignedFaction);
+      addLiveFeedItem(nickname, `tặng quà kích hoạt VẠN KIẾM QUY TÔNG (${diamondCount} xu)! ⚔️`, assignedFaction);
+    } else if (diamondCount >= 50) {
+      triggerHeroUpgrade(assignedFaction, nickname, 2);
+      battleCommentary.triggerGiftCommentary(nickname, 'Nước Hoa Thiết Giáp', 'Thiết Giáp Kiếm Hiệp', assignedFaction);
+      addLiveFeedItem(nickname, `thăng cấp THIẾT GIÁP KIẾM HIỆP (${diamondCount} xu)! 🛡️`, assignedFaction);
+    } else {
+      addOrUpdateFighter(assignedFaction, nickname, Math.max(20, diamondCount * 2));
+      triggerDance(assignedFaction, nickname);
+      addLiveFeedItem(nickname, `tặng quà tiếp sức & mở vũ điệu! 🎁`, assignedFaction);
+    }
+  }, [addOrUpdateFighter, triggerDance, triggerVanKiem, triggerGiangLong, triggerThaiCuc, triggerLucMach, triggerDocCo, triggerNhuLai, triggerKimCang, triggerBossSummon, triggerHeroUpgrade, addLiveFeedItem]);
+
   // Handle external TikTok live events
   useEffect(() => {
     if (!externalLiveEvent) return;
@@ -1504,44 +1618,9 @@ export default function GameChienDau({
         addLiveFeedItem(nickname, commentText || 'cổ vũ trận đấu 🔥', 'neutral');
       }
     } else if (type === 'GIFT') {
-      const nickname = data.nickname || data.name || 'VIP Supporter';
-      const diamondCount = data.diamondCount || data.coins || 1;
-      const assignedFaction = data.faction || (Math.random() < 0.5 ? 'blue' : 'red');
-
-      if (diamondCount >= 10000) {
-        triggerNhuLai(assignedFaction, nickname);
-        triggerGiangLong(assignedFaction, nickname);
-        battleCommentary.triggerGiftCommentary(nickname, 'Vũ Trụ Thần Thoại', 'Chí Tôn Thần Giới', assignedFaction);
-        addLiveFeedItem(nickname, `tặng quà thần thoại kích hoạt NHƯ LAI THẦN CHƯỞNG (${diamondCount} xu)! ✋🪐`, assignedFaction);
-      } else if (diamondCount >= 3000) {
-        triggerDocCo(assignedFaction, nickname);
-        triggerLucMach(assignedFaction, nickname);
-        battleCommentary.triggerGiftCommentary(nickname, 'Thần Thú Huyền Thoại', 'Độc Cô Kiếm Tôn', assignedFaction);
-        addLiveFeedItem(nickname, `tặng quà huyền thoại kích hoạt ĐỘC CÔ CỬU KIẾM (${diamondCount} xu)! 🌪️⚔️`, assignedFaction);
-      } else if (diamondCount >= 1000) {
-        triggerGiangLong(assignedFaction, nickname);
-        battleCommentary.triggerGiftCommentary(nickname, 'Thần Long Vũ Trụ', 'Chí Tôn Thiên Tôn', assignedFaction);
-        addLiveFeedItem(nickname, `tặng quà lớn triệu hồi GIÁNG LONG CHƯỞNG (${diamondCount} xu)! 🐉`, assignedFaction);
-      } else if (diamondCount >= 500) {
-        triggerVanKiem(assignedFaction, nickname);
-        battleCommentary.triggerGiftCommentary(nickname, 'Chiến Xa / Sét', 'Chiến Thần Vạn Kiếm', assignedFaction);
-        addLiveFeedItem(nickname, `tặng quà kích hoạt VẠN KIẾM QUY TÔNG (${diamondCount} xu)! ⚔️`, assignedFaction);
-      } else if (diamondCount >= 200) {
-        triggerHeroUpgrade(assignedFaction, nickname, 3);
-        triggerThaiCuc(assignedFaction, nickname);
-        battleCommentary.triggerGiftCommentary(nickname, 'Vương Miện Hoàng Kim', 'Kim Khải Thần Tướng', assignedFaction);
-        addLiveFeedItem(nickname, `thăng cấp KIM KHẢI THẦN TƯỚNG + THÁI CỰC TRẬN (${diamondCount} xu)! 👑`, assignedFaction);
-      } else if (diamondCount >= 50) {
-        triggerHeroUpgrade(assignedFaction, nickname, 2);
-        battleCommentary.triggerGiftCommentary(nickname, 'Nước Hoa Thiết Giáp', 'Thiết Giáp Kiếm Hiệp', assignedFaction);
-        addLiveFeedItem(nickname, `thăng cấp THIẾT GIÁP KIẾM HIỆP (${diamondCount} xu)! 🛡️`, assignedFaction);
-      } else {
-        addOrUpdateFighter(assignedFaction, nickname, Math.max(20, diamondCount * 2));
-        triggerDance(assignedFaction, nickname);
-        addLiveFeedItem(nickname, `tặng quà tiếp sức & mở vũ điệu! 🎁`, assignedFaction);
-      }
+      processGiftEvent(data);
     }
-  }, [externalLiveEvent, config.blueName, config.redName, addOrUpdateFighter, triggerDance, triggerAoeSkill, triggerBossSummon, triggerVanKiem, triggerGiangLong, triggerThaiCuc, triggerLucMach, triggerDocCo, triggerNhuLai, triggerThienNgoai, triggerKimCang, triggerReinforcements, triggerHeroUpgrade, resetMatch, playSfx, addLiveFeedItem]);
+  }, [externalLiveEvent, config.blueName, config.redName, addOrUpdateFighter, processGiftEvent, addLiveFeedItem]);
 
   // Main Canvas Rendering Loop
   useEffect(() => {
@@ -1849,14 +1928,14 @@ export default function GameChienDau({
         // User Audio Rule: Tặng quà giá trị cao thì x3 nhân vật TO LÊN đi đấu
         let baseScale = 0.88 * crowdScaleFactor; // Kích thước chuẩn cho nhân vật bình thường
         if (hasGiftAura) {
-          if (tier >= 5 || f.score >= 5000) {
-            baseScale = 2.65 * crowdScaleFactor; // x3 Siêu Tướng VIP Chí Tôn
+          if (f.isDamageX3 || tier >= 5 || f.score >= 5000) {
+            baseScale = 2.65 * crowdScaleFactor; // x3 Siêu Tướng VIP Chí Tôn & Sát Thương x3
           } else if (tier === 4 || f.score >= 2000) {
             baseScale = 2.25 * crowdScaleFactor; // x2.5 Chiến Thần Vạn Kiếm
-          } else if (tier === 3 || f.score >= 500) {
-            baseScale = 1.60 * crowdScaleFactor; // x1.8 Thần Tướng
-          } else if (tier === 2 || f.score >= 100) {
-            baseScale = 1.15 * crowdScaleFactor; // x1.3 Hiệp Khách
+          } else if (f.hasMount || tier === 3 || f.score >= 500) {
+            baseScale = 1.60 * crowdScaleFactor; // x1.8 Thần Tướng & Thần Thú Cưỡi
+          } else if (f.hasArmor || tier === 2 || f.score >= 100) {
+            baseScale = 1.30 * crowdScaleFactor; // x1.3 Thiết Giáp Kim Cang
           }
         } else if (f.isVipStage && isTopRank) {
           baseScale = 1.05 * crowdScaleFactor; // Đội trưởng khởi đầu gọn gàng
@@ -1872,8 +1951,8 @@ export default function GameChienDau({
         ctx.fill();
         ctx.restore();
 
-        // Sacred Beast Mount / Celestial Dragon Energy Ring ONLY for VIP Heroes with Gifts
-        if (hasGiftAura && (tier >= 3 || f.isSuperVip)) {
+        // Sacred Beast Mount / Celestial Dragon Energy Ring ONLY for VIP Heroes with Gifts / Mount
+        if (hasGiftAura && (f.hasMount || tier >= 3 || f.isSuperVip)) {
           ctx.save();
           ctx.translate(f.x, f.y + 14 * scale);
           const dragonAngle = time * 0.0025;
@@ -1904,7 +1983,7 @@ export default function GameChienDau({
         // Name tag, Title & Health Bar (Tạo khoảng cách thông thoáng, không che khuất nhân vật)
         ctx.save();
         const tagDist = (36 + (hasGiftAura && tier >= 3 ? 12 : 0)) * scale;
-        const isVip = (hasGiftAura && tier >= 3) || f.isSuperVip;
+        const isVip = (hasGiftAura && (tier >= 3 || f.isDamageX3 || f.hasMount)) || f.isSuperVip;
 
         ctx.font = `${isVip ? 'bold 11px' : 'bold 9.5px'} 'Be Vietnam Pro', sans-serif`;
         ctx.textAlign = 'center';
@@ -1912,7 +1991,16 @@ export default function GameChienDau({
         ctx.strokeStyle = 'rgba(0,0,0,0.95)';
         
         let tierBadge = '';
-        if (hasGiftAura && tier >= 5) {
+        if (f.hasArmor) {
+          tierBadge = '🛡️ [GIÁP] ';
+          ctx.fillStyle = '#fde047';
+        } else if (f.hasMount) {
+          tierBadge = '🦄 [THÚ] ';
+          ctx.fillStyle = '#a7f3d0';
+        } else if (f.isDamageX3) {
+          tierBadge = '💥 [x3 CÔNG] ';
+          ctx.fillStyle = '#fca5a5';
+        } else if (hasGiftAura && tier >= 5) {
           tierBadge = '👑 [CHÍ TÔN] ';
           ctx.fillStyle = '#fef08a';
         } else if (hasGiftAura && tier === 4) {
@@ -1970,17 +2058,17 @@ export default function GameChienDau({
         ctx.translate(f.x, f.y);
         ctx.scale(scale, scale);
 
-        if (hasGiftAura && (tier >= 3 || isPulsing)) {
+        if (f.hasArmor || (hasGiftAura && (tier >= 3 || isPulsing))) {
           const auraPulse = Math.sin(time * 0.003) * 0.08 + 1.0;
           const auraScale = (1.2 + (tier >= 4 ? 0.25 : 0)) * auraPulse;
 
           ctx.save();
-          ctx.shadowColor = tier === 5 ? '#facc15' : (factionId === 'blue' ? '#38bdf8' : '#f43f5e');
+          ctx.shadowColor = (f.hasArmor || tier === 5) ? '#facc15' : (factionId === 'blue' ? '#38bdf8' : '#f43f5e');
           ctx.shadowBlur = 22;
 
           // Outer shimmering protective sphere
-          ctx.strokeStyle = tier === 5 ? 'rgba(250, 204, 21, 0.85)' : (factionId === 'blue' ? 'rgba(56, 189, 248, 0.85)' : 'rgba(244, 63, 94, 0.85)');
-          ctx.lineWidth = 2.0;
+          ctx.strokeStyle = (f.hasArmor || tier === 5) ? 'rgba(250, 204, 21, 0.95)' : (factionId === 'blue' ? 'rgba(56, 189, 248, 0.85)' : 'rgba(244, 63, 94, 0.85)');
+          ctx.lineWidth = f.hasArmor ? 3.0 : 2.0;
           ctx.beginPath();
           ctx.ellipse(0, 0, 28 * auraScale, 32 * auraScale, 0, 0, Math.PI * 2);
           ctx.stroke();
@@ -2876,7 +2964,14 @@ export default function GameChienDau({
       handleTestGift(randomCoin, fac);
     };
 
+    const handleDirectGiftEvent = (e) => {
+      if (e.detail) {
+        processGiftEvent(e.detail);
+      }
+    };
+
     window.addEventListener('battle-trigger-demo', handleTriggerDemo);
+    window.addEventListener('avalive_tiktok_gift', handleDirectGiftEvent);
 
     const handleEmergencyStop = () => {
       battleCommentary.stopAll();
@@ -2890,10 +2985,11 @@ export default function GameChienDau({
 
     return () => {
       window.removeEventListener('battle-trigger-demo', handleTriggerDemo);
+      window.removeEventListener('avalive_tiktok_gift', handleDirectGiftEvent);
       window.removeEventListener('avalive_emergency_stop_all', handleEmergencyStop);
       if (autoTestTimerRef.current) clearInterval(autoTestTimerRef.current);
     };
-  }, []);
+  }, [processGiftEvent]);
 
   // Direct Socket.io Realtime Listener for TikTok Live Gifts & Comments
   useEffect(() => {
@@ -2932,43 +3028,7 @@ export default function GameChienDau({
 
       socket.on('tiktok_gift', (data) => {
         if (!data) return;
-        battleAudio.unlock();
-        const nickname = data.nickname || data.username || 'VIP Supporter';
-        const diamondCount = data.diamondCount || data.repeatCount || data.count || 1;
-        const assignedFaction = data.faction || (Math.random() < 0.5 ? 'blue' : 'red');
-
-        if (diamondCount >= 10000) {
-          triggerNhuLai(assignedFaction, nickname);
-          triggerGiangLong(assignedFaction, nickname);
-          battleCommentary.triggerGiftCommentary(nickname, 'Vũ Trụ Thần Thoại', 'Chí Tôn Thần Giới', assignedFaction);
-          addLiveFeedItem(nickname, `tặng quà thần thoại kích hoạt NHƯ LAI THẦN CHƯỞNG (${diamondCount} xu)! ✋🪐`, assignedFaction);
-        } else if (diamondCount >= 3000) {
-          triggerDocCo(assignedFaction, nickname);
-          triggerLucMach(assignedFaction, nickname);
-          battleCommentary.triggerGiftCommentary(nickname, 'Thần Thú Huyền Thoại', 'Độc Cô Kiếm Tôn', assignedFaction);
-          addLiveFeedItem(nickname, `tặng quà huyền thoại kích hoạt ĐỘC CÔ CỬU KIẾM (${diamondCount} xu)! 🌪️⚔️`, assignedFaction);
-        } else if (diamondCount >= 1000) {
-          triggerGiangLong(assignedFaction, nickname);
-          battleCommentary.triggerGiftCommentary(nickname, 'Thần Long Vũ Trụ', 'Chí Tôn Thiên Tôn', assignedFaction);
-          addLiveFeedItem(nickname, `tặng quà lớn triệu hồi GIÁNG LONG CHƯỞNG (${diamondCount} xu)! 🐉`, assignedFaction);
-        } else if (diamondCount >= 500) {
-          triggerVanKiem(assignedFaction, nickname);
-          battleCommentary.triggerGiftCommentary(nickname, 'Chiến Xa / Sét', 'Chiến Thần Vạn Kiếm', assignedFaction);
-          addLiveFeedItem(nickname, `tặng quà kích hoạt VẠN KIẾM QUY TÔNG (${diamondCount} xu)! ⚔️`, assignedFaction);
-        } else if (diamondCount >= 200) {
-          triggerHeroUpgrade(assignedFaction, nickname, 3);
-          triggerThaiCuc(assignedFaction, nickname);
-          battleCommentary.triggerGiftCommentary(nickname, 'Vương Miện Hoàng Kim', 'Kim Khải Thần Tướng', assignedFaction);
-          addLiveFeedItem(nickname, `thăng cấp KIM KHẢI THẦN TƯỚNG + THÁI CỰC TRẬN (${diamondCount} xu)! 👑`, assignedFaction);
-        } else if (diamondCount >= 50) {
-          triggerHeroUpgrade(assignedFaction, nickname, 2);
-          battleCommentary.triggerGiftCommentary(nickname, 'Nước Hoa Thiết Giáp', 'Thiết Giáp Kiếm Hiệp', assignedFaction);
-          addLiveFeedItem(nickname, `thăng cấp THIẾT GIÁP KIẾM HIỆP (${diamondCount} xu)! 🛡️`, assignedFaction);
-        } else {
-          addOrUpdateFighter(assignedFaction, nickname, Math.max(20, diamondCount * 2));
-          triggerDance(assignedFaction, nickname);
-          addLiveFeedItem(nickname, `tặng quà tiếp sức & mở vũ điệu! 🎁`, assignedFaction);
-        }
+        processGiftEvent(data);
       });
 
       socket.on('battle_trigger_demo', () => {
@@ -2993,7 +3053,7 @@ export default function GameChienDau({
     return () => {
       if (socket) socket.disconnect();
     };
-  }, [config.blueName, config.redName, addOrUpdateFighter, triggerDance, triggerVanKiem, triggerGiangLong, triggerThaiCuc, triggerLucMach, triggerDocCo, triggerNhuLai, triggerHeroUpgrade, addLiveFeedItem]);
+  }, [config.blueName, config.redName, addOrUpdateFighter, processGiftEvent, addLiveFeedItem]);
 
   // HÀM RENDER SÂN KHẤU LIVE SẠCH 100% (Khung Hình Không Chứa Bất Kỳ Nút Quản Trị Nào)
   const renderCleanStage = () => (

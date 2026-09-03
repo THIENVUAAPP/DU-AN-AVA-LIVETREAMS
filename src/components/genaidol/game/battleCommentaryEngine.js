@@ -15,7 +15,7 @@ const DEFAULT_COMMENTARY_SCRIPTS = [
 
 class BattleCommentaryEngine {
   constructor() {
-    this.isEnabled = true;
+    this.isEnabled = false; // Mặc định TẮT để không phát tiếng động ngẫu nhiên
     this.intervalSeconds = 15;
     this.volume = 0.9;
     this.pitch = 1.05;

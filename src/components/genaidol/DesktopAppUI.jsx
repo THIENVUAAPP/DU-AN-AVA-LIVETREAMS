@@ -1627,8 +1627,8 @@ export default function DesktopAppUI() {
           bandoAudio.playBgmOnLive();
           mapVoiceEngine.startPeriodicCommentary(true);
         } else if (isGameBattleActive) {
-          battleCommentary.startPeriodicCommentary(true);
-          battleVoiceEngine.startPeriodicCommentary(true);
+          if (battleCommentary.isEnabled) battleCommentary.startPeriodicCommentary(true);
+          if (battleVoiceEngine.isAutoEnabled) battleVoiceEngine.startPeriodicCommentary(true);
         }
       } catch (e) {}
 
@@ -1947,6 +1947,7 @@ export default function DesktopAppUI() {
             className="w-full h-full object-contain bg-black"
             autoPlay 
             controls={false}
+            muted={isLocalSpeakerMuted}
             onEnded={handleVideoEnded}
             onError={() => {
               setLipSyncVideoUrl(null);
@@ -2469,8 +2470,8 @@ export default function DesktopAppUI() {
               mapVoiceEngine.stopAll();
               if (isMasterLiveRunning) {
                 bandoAudio.unlock();
-                battleCommentary.startPeriodicCommentary(true);
-                battleVoiceEngine.startPeriodicCommentary(true);
+                if (battleCommentary.isEnabled) battleCommentary.startPeriodicCommentary(true);
+                if (battleVoiceEngine.isAutoEnabled) battleVoiceEngine.startPeriodicCommentary(true);
               }
             }}
             title="Chuyển sang chế độ Game Chiến Đấu (TikTok LIVE Battle Game) trên màn hình chính"
