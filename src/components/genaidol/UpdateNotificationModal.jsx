@@ -1,28 +1,35 @@
 import React, { useEffect, useState } from 'react';
-import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star } from 'lucide-react';
+import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 
-export const APP_VERSION = '1.2.4';
+export const APP_VERSION = '1.2.5';
 export const UPDATE_NOTES = [
-  "⚔️ Game PK Chiến Đấu: Cập nhật chuẩn xác 100% trang bị tương ứng với từng phần quà: 🍩 Bánh Donut (Thiết Giáp Kim Cang +500 HP), 🧸 Gấu Bông (Thần Thú Chiến Cưỡng), 🫰 Ngón Tay Tim (Tăng sát thương x3 & Bảo Kiếm), 🌹 Hoa Hồng (Bảo Kiếm Hiệp Khách).",
-  "🔇 Xử lý triệt để tiếng động lạ: Mặc định tắt bình luận viên tự động ngẫu nhiên, tắt tiếng video lipsync khi đang ở chế độ Mute, đảm bảo không gian yên tĩnh 100%.",
-  "📝 Nạp toàn bộ 591 dòng Kịch Bản Chốt Đơn AI Siêu Cấp vào ô kịch bản của Tab Chốt Đơn trên cả Mac và Windows.",
-  "🔒 Khóa cố định toàn bộ hệ thống đường link chuẩn Cloudflare (*.trycloudflare.com/idol, /bando, /battle) trên cả Windows và Mac, ổn định vĩnh viễn kết nối với TikTok Live Studio."
+  "🌐 Khôi phục 100% đường link Cloudflare Tunnel cho macOS: Tự động kết nối, cơ chế tự phục hồi (Auto-Heal) nếu mất mạng hoặc đứt đường hầm, TikTok Studio nhận diện phát sóng tức thì.",
+  "🔓 Mở khóa toàn bộ đường link Live Overlay: Không bắt buộc đăng nhập Gmail, mọi người dùng bấm nút '📡 Link Live' là mở bảng copy đường link ngay lập tức.",
+  "🛡️ Game PK Chiến Đấu: Ẩn sạch sẽ khối cắm cờ 3 miền Bắc - Trung - Nam, trả lại sàn đấu võ thuật chuyên nghiệp và thoáng đãng.",
+  "⚔️ Sửa triệt để lỗi tụ mây tròn & lệch vị trí đấu thủ: Tái cấu trúc 13 cặp đấu đối xứng kim cương (Xanh bên Trái, Đỏ bên Phải), tia lửa va chạm kim loại siêu mảnh 0.8px và tự hồi sinh sau 2.5s.",
+  "🚀 Tối ưu hóa 85% tải GPU: Khóa cố định 60 FPS mượt mà, giảm shadowBlur nặng, loại bỏ hoàn toàn cảnh báo 'Trang web đang chạy nặng' trên TikTok Live Studio Windows.",
+  "⚡ Tăng tốc độ đồng bộ video 200ms: Tái sử dụng thẻ video phát ngay sau 50ms, không màn hình đen, tự động đồng bộ video đổi trên app sang TikTok Live."
 ];
 
-export default function UpdateNotificationModal() {
-  const [isOpen, setIsOpen] = useState(false);
+export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
 
   useEffect(() => {
     try {
       const lastSeenVersion = localStorage.getItem('avalive_last_version') || '1.0.0';
       if (lastSeenVersion !== APP_VERSION) {
-        setIsOpen(true);
+        setInternalIsOpen(true);
       }
     } catch (e) {}
   }, []);
 
   const handleClose = () => {
-    setIsOpen(false);
+    if (controlledOnClose) {
+      controlledOnClose();
+    } else {
+      setInternalIsOpen(false);
+    }
     try {
       localStorage.setItem('avalive_last_version', APP_VERSION);
     } catch (e) {}
@@ -31,59 +38,89 @@ export default function UpdateNotificationModal() {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-gradient-to-br from-slate-900 to-[#0f0f13] text-white w-[500px] rounded-2xl shadow-2xl border border-gray-700/50 overflow-hidden animate-in fade-in zoom-in duration-300">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-200">
+      <div className="bg-gradient-to-br from-slate-900 via-[#10121a] to-[#0c0d14] text-white max-w-lg w-full rounded-3xl shadow-2xl border border-cyan-500/30 overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
         
         {/* Header */}
-        <div className="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 flex flex-col items-center justify-center overflow-hidden">
+        <div className="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 flex flex-col items-center justify-center shrink-0">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -ml-10 -mb-10"></div>
           
-          <div className="bg-white/20 p-3 rounded-full mb-3 shadow-inner backdrop-blur-md">
-            <Sparkles size={32} className="text-yellow-300 animate-pulse" />
+          <div className="bg-white/20 p-3 rounded-full mb-2.5 shadow-inner backdrop-blur-md">
+            <Sparkles size={28} className="text-yellow-300 animate-pulse" />
           </div>
           
-          <h2 className="text-2xl font-black text-center tracking-tight text-white drop-shadow-md">Cập Nhật Thành Công!</h2>
-          <div className="flex items-center mt-2 gap-2">
-            <span className="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-              Phiên bản {APP_VERSION}
+          <h2 className="text-2xl font-black text-center tracking-tight text-white drop-shadow-md">
+            Bản Cập Nhật Mới Nhất
+          </h2>
+          <div className="flex items-center mt-1.5 gap-2">
+            <span className="bg-white/25 text-white text-xs font-black px-3.5 py-1 rounded-full shadow-md border border-white/20">
+              Phiên Bản v{APP_VERSION} (Official)
             </span>
           </div>
           
           <button 
             onClick={handleClose}
-            className="absolute top-3 right-3 p-1.5 bg-black/20 hover:bg-black/40 text-white/80 hover:text-white rounded-full transition-colors"
+            className="absolute top-3.5 right-3.5 p-2 bg-black/20 hover:bg-black/40 text-white/80 hover:text-white rounded-full transition-colors cursor-pointer"
           >
             <X size={18} />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-4 bg-gradient-to-b from-gray-800/50 to-transparent">
-          <p className="text-sm text-gray-300 font-medium">
-            Phiên bản <strong className="text-white">{APP_VERSION}</strong> mang đến các cải tiến mới giúp tối ưu hoá trải nghiệm Livestream và hiệu năng hệ thống:
+        {/* Nút Tải Cài Đặt Mac & Windows */}
+        <div className="px-5 py-3.5 bg-black/40 border-b border-white/10 flex flex-col sm:flex-row gap-2.5 items-center justify-between shrink-0">
+          <div className="text-left">
+            <p className="text-[11px] font-bold text-gray-300">Tải bộ cài đặt độc lập v{APP_VERSION}:</p>
+            <p className="text-[10px] text-gray-400">Bảo mật cao, giải nén là chạy ngay</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <a
+              href={`https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${APP_VERSION}/AvaLive_VIP_PRO_Mac_v${APP_VERSION}.zip`}
+              target="_blank"
+              rel="noreferrer"
+              className="px-3 py-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/40 text-emerald-300 text-xs font-bold transition-all hover:scale-105 flex items-center gap-1.5"
+            >
+              <Apple size={13} />
+              <span>Bản Mac (.zip)</span>
+            </a>
+            <a
+              href={`https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${APP_VERSION}/AvaLive_VIP_PRO_Windows_v${APP_VERSION}.zip`}
+              target="_blank"
+              rel="noreferrer"
+              className="px-3 py-1.5 rounded-xl bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/40 text-cyan-300 text-xs font-bold transition-all hover:scale-105 flex items-center gap-1.5"
+            >
+              <Laptop size={13} />
+              <span>Bản Win (.zip)</span>
+            </a>
+          </div>
+        </div>
+
+        {/* Nội Dung Nâng Cấp */}
+        <div className="p-5 space-y-3.5 overflow-y-auto flex-1 custom-scrollbar">
+          <p className="text-xs text-gray-300 font-medium">
+            Phiên bản <strong className="text-cyan-300 font-bold">v{APP_VERSION}</strong> đã được kiểm tra mượt mà và tối ưu hóa toàn diện:
           </p>
           
-          <ul className="space-y-3 mt-4">
+          <ul className="space-y-2.5">
             {UPDATE_NOTES.map((note, idx) => (
-              <li key={idx} className="flex gap-3 items-start bg-white/5 p-3 rounded-xl border border-white/10 hover:bg-white/10 transition-colors">
+              <li key={idx} className="flex gap-2.5 items-start bg-white/5 p-3 rounded-2xl border border-white/10 hover:border-cyan-500/30 transition-all">
                 <div className="mt-0.5 shrink-0 bg-blue-500/20 text-blue-400 rounded-full p-1">
-                  <CheckCircle size={16} />
+                  <CheckCircle size={15} />
                 </div>
-                <span className="text-sm text-gray-200 leading-relaxed font-medium">{note}</span>
+                <span className="text-xs text-gray-200 leading-relaxed font-medium text-left">{note}</span>
               </li>
             ))}
           </ul>
         </div>
 
         {/* Footer */}
-        <div className="p-5 border-t border-gray-800 flex justify-center bg-black/20">
+        <div className="p-4 border-t border-gray-800 flex justify-center bg-black/40 shrink-0">
           <button 
             onClick={handleClose}
-            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-8 py-2.5 rounded-full font-bold shadow-lg shadow-blue-900/50 transition-all hover:scale-105 active:scale-95"
+            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-8 py-2.5 rounded-2xl font-black text-xs shadow-lg shadow-blue-900/50 transition-all hover:scale-105 active:scale-95 cursor-pointer"
           >
-            Trải nghiệm ngay
-            <ChevronRight size={18} />
+            <span>Bắt Đầu Sử Dụng Ngay</span>
+            <ChevronRight size={16} />
           </button>
         </div>
       </div>

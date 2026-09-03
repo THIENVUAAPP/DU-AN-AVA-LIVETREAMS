@@ -417,6 +417,7 @@ export default function DesktopAppUI() {
   const [activeMonitorModal, setActiveMonitorModal] = useState(null);
   const [quickResponseActiveVideo, setQuickResponseActiveVideo] = useState(null);
   const [showOverlayModal, setShowOverlayModal] = useState(false);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
 
   const [overlayLinkBase, setOverlayLinkBase] = useState(() => {
     return 'https://avalivepro.vercel.app';
@@ -2394,9 +2395,14 @@ export default function DesktopAppUI() {
           <span className="text-[11px] font-bold truncate max-w-[220px]">
             Profile: {CHARACTERS[selectedCharacter]?.name || (Object.keys(CHARACTERS).length > 0 ? Object.values(CHARACTERS)[0]?.name : 'Live Idol Pro (Chưa đặt tên)')}
           </span>
-          <span className="text-[9px] bg-blue-600/20 text-blue-400 px-1.5 py-0.5 rounded-sm font-semibold border border-blue-500/20">
-            v{APP_VERSION}
-          </span>
+          <button
+            onClick={() => setShowUpdateModal(true)}
+            className="text-[9px] bg-gradient-to-r from-blue-600/30 to-indigo-600/30 hover:from-blue-600/50 hover:to-indigo-600/50 text-cyan-300 px-1.5 py-0.5 rounded font-black border border-cyan-500/40 cursor-pointer flex items-center gap-1 transition-all hover:scale-105 shadow-xs"
+            title="Bấm để xem thông báo cập nhật mới nhất & tải bản cài đặt"
+          >
+            <Sparkles size={9} className="text-yellow-400 animate-pulse" />
+            <span>v{APP_VERSION} Mới Nhất</span>
+          </button>
     </div>
         
         <div className="flex items-center gap-1">
@@ -3799,7 +3805,10 @@ export default function DesktopAppUI() {
       )}
 
       {renderGmailLoginModal()}
-      <UpdateNotificationModal />
+      <UpdateNotificationModal 
+        isOpen={showUpdateModal} 
+        onClose={() => setShowUpdateModal(false)} 
+      />
     </div>
   );
 }
