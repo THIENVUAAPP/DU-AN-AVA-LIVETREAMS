@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star } from 'lucide-react';
 
-export const APP_VERSION = '1.1.6';
+export const APP_VERSION = '1.1.7';
 export const UPDATE_NOTES = [
+  "💬 Tính năng Trả lời bình luận bằng văn bản (AI Auto Reply Comment): Tự động phát hiện ý định khách hàng và phản hồi văn bản siêu tốc.",
+  "🧠 Tích hợp Kiến thức Bối cảnh & Bộ não Bán hàng chuyên nghiệp: Nạp sẵn kịch bản tư vấn, chốt đơn, cross-sell và xử lý từ chối cho Ngọc Nhi.",
   "🚀 Sửa triệt để lỗi Màn hình đen 0:00: Hệ thống tự động phục hồi video gốc từ máy người dùng, tắt bật lại máy tính vẫn hiển thị chuẩn xác không bị mất video.",
-  "✨ Không còn nhảy video lung tung: Cố định 100% video người dùng đang chọn, xóa bỏ hoàn toàn tình trạng tự chuyển sang video khác sau 1 phút.",
-  "⚡ Tối ưu hệ thống hiển thị ảnh thu nhỏ: Tải 100 video cũng không làm nặng hay sập card màn hình máy tính.",
-  "💎 Giao diện tài khoản chính xác: Hiển thị minh bạch chữ 'Free' cho gói miễn phí và tên cụ thể cho các gói VIP/PRO/Doanh nghiệp."
+  "✨ Cố định video: Không còn tình trạng tự chuyển nhảy video lung tung trong phiên livestream."
 ];
 
 export default function UpdateNotificationModal() {

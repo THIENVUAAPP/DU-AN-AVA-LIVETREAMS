@@ -1,7 +1,7 @@
 {
   "name": "avalive-vip-pro",
   "private": true,
-  "version": "1.1.6",
+  "version": "1.1.7",
   "type": "module",
   "main": "electron-main.cjs",
   "build": {
@@ -33,6 +33,7 @@
     "start:desktop": "vite build && electron .",
     "build:electron": "vite build && electron-builder -mw",
     "package:zip": "node scripts/create_standalone_zip.cjs",
+    "release": "node scripts/auto_release.cjs",
     "dev": "concurrently \"vite --port 5173 --strictPort\" \"node backend/server.cjs\"",
     "build": "vite build",
     "lint": "echo 'No lint errors'",
