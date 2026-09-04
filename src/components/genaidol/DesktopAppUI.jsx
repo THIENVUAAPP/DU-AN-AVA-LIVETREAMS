@@ -3585,12 +3585,12 @@ export default function DesktopAppUI() {
             {isLocalSpeakerMuted ? (
               <>
                 <VolumeX size={12} className="text-yellow-300" />
-                <span className="whitespace-nowrap font-black">🔇 Âm Thanh: ĐÃ TẮT (Đồng bộ OBS)</span>
+                <span className="whitespace-nowrap font-black">Tắt Tiếng</span>
               </>
             ) : (
               <>
                 <Volume2 size={12} className="text-white" />
-                <span className="whitespace-nowrap font-black">🔊 Âm Thanh: BẬT (Đồng bộ OBS)</span>
+                <span className="whitespace-nowrap font-black">Mở Tiếng</span>
               </>
             )}
           </button>

@@ -42,7 +42,7 @@ export const TRANSLATIONS = {
     runDemo: 'Chạy Demo',
     stopDemo: 'Dừng Demo',
     monitor: 'Theo dõi ▼',
-    testTools: 'Lựa chọn mô hình phát live',
+    testTools: 'Mô Hình Live',
     tiktokPlaceholder: 'ID TikTok...',
     connect: 'Kết nối',
     connecting: 'Đang kết nối...',
