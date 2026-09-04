@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 
-export const APP_VERSION = '1.3.8';
+export const APP_VERSION = '1.3.9';
 export const UPDATE_NOTES = [
   "⚡ Nâng cấp toàn diện thanh Top Control Dock cho OBS Window Capture: Toàn bộ các nút bấm Tạm Dừng/Tiếp Tục [Space], Mở/Tắt Tiếng HD [M], Chỉnh Âm Lượng 0-100%, Đổi Tỷ Lệ [R], Fit Khung Hình [F], Chuyển Sân Khấu [1-4] hoạt động siêu mượt tức thì 100%.",
   "🛡️ Chống xung đột Polling & Ghi đè State: Khắc phục triệt để tình trạng nút bấm bị nhảy về vị trí cũ do polling server trễ. Tích hợp công nghệ bảo vệ thao tác người dùng thời gian thực.",
