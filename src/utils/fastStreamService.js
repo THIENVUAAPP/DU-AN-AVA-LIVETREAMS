@@ -65,7 +65,7 @@ export async function fastStreamUpload(file, options = {}) {
     };
 
     // BƯỚC 2: Nạp ưu tiên Head (0-4MB) & Tail (4MB cuối chứa moov atom)
-    // Giúp TikTok Live Studio đọc được đầy đủ metadata và phát ngay frame 0 trong 100ms!
+    // Đảm bảo server có sẵn metadata và khung hình 0:00 trước khi kích hoạt phát luồng
     const chunk0 = file.slice(0, Math.min(CHUNK_SIZE, file.size));
     await sendChunk(chunk0, 0, 0);
 
@@ -73,6 +73,11 @@ export async function fastStreamUpload(file, options = {}) {
       const tailOffset = Math.max(CHUNK_SIZE, file.size - CHUNK_SIZE);
       const tailBlob = file.slice(tailOffset, file.size);
       await sendChunk(tailBlob, tailOffset, totalChunks - 1, true);
+    }
+
+    // BÁO SẴN SÀNG: File đã có header và metadata hoàn chỉnh, TikTok Live Studio phát hình ngay lập tức 0ms!
+    if (onInit) {
+      onInit({ fileUrl, uploadId, totalChunks });
     }
 
     if (onProgress) onProgress(Math.round((2 / totalChunks) * 100) || 10);

@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 
-export const APP_VERSION = '1.3.3';
+export const APP_VERSION = '1.3.4';
 export const UPDATE_NOTES = [
-  "⚡ Công nghệ Fast-Stream Progressive Chunking: Nạp và phát tức thì 0ms cho Video dài 1-2 tiếng hoặc nhiều GB lên TikTok Live Studio giống OBS Studio.",
-  "🚀 Tách luồng thông minh (Head & Tail First): Đẩy ngay 4MB đầu và đuôi (chứa moov atom) trong 100ms đầu tiên để TikTok Studio phát hình ngay lập tức, các khối dữ liệu còn lại nạp ngầm mượt mà.",
-  "🛡️ Khắc phục triệt để lỗi nghẽn mạng & giới hạn tải file: Loại bỏ hoàn toàn tình trạng chờ đợi upload file nặng nhiều GB qua Cloudflare Tunnel hay mạng nội bộ.",
-  "🎬 Giữ nguyên chất lượng gốc siêu nét: Video sắc nét chuẩn 1080p/4K, không bị giật lag, tua mượt mà và đồng bộ hoàn hảo 24/24."
+  "🔒 Cơ chế Bảo Toàn Video Cố Định 24/24 (Persistent Media Lock): Video người dùng mở được lưu vĩnh viễn, phát liên tục trên TikTok Live Studio & OBS, tuyệt đối không tự ý mất, không tự ý tắt hay đổi ngầm khi chưa có yêu cầu.",
+  "🖥️ Tích hợp Bắt Cửa Sổ 1-Click (Window Capture Mode): Giải pháp xuất hình ảnh siêu mượt 60FPS, độ trễ 0ms trực tiếp sang TikTok Live Studio trên máy tính Windows mà không cần cấu hình mạng.",
+  "⚡ Động cơ Giảm Tải & Giải Nén Video Siêu Nhẹ (Lightweight Stream Buffer): Cho phép phát các video dài nhiều tiếng đồng hồ, dung lượng hàng chục GB qua 1 đường link cực nhẹ, dán vào là chạy ngay mà không ngốn RAM hay nghẽn mạng.",
+  "🚀 Nạp khối đầu & đuôi trước (Head & Tail First): Ghi đệm MP4 header và moov atom trước để TikTok Studio bắt sóng ngay lập tức, loại bỏ hoàn toàn hiện tượng chập chờn lúc hiện lúc không."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

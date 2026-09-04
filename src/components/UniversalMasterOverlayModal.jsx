@@ -15,6 +15,10 @@ import {
   WifiOff,
   RefreshCw,
   Loader2,
+  Monitor,
+  Tv,
+  Laptop,
+  CheckCircle2,
 } from "lucide-react";
 
 /**
@@ -33,6 +37,20 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
     }
   });
   const [tunnelLoading, setTunnelLoading] = useState(false);
+  const [activeModalTab, setActiveModalTab] = useState("window_capture");
+
+  const handleOpenWindowCapture = () => {
+    const width = 450;
+    const height = 800;
+    const left = Math.round((window.screen.width - width) / 2);
+    const top = Math.round((window.screen.height - height) / 2);
+    const captureUrl = `${window.location.origin}/live?mode=window_capture`;
+    window.open(
+      captureUrl,
+      'avalive_window_capture_target',
+      `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes`
+    );
+  };
 
   const fetchTunnelUrl = useCallback(async () => {
     try {
@@ -180,14 +198,113 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
           </div>
           <div>
             <h2 className="text-lg font-black text-white tracking-tight">
-              ĐƯỜNG LINK TIKTOK LIVE STUDIO (CHÍNH THỨC)
+              TRUNG TÂM PHÁT LUỒNG TIKTOK LIVE STUDIO & OBS
             </h2>
             <p className="text-[11px] text-cyan-300 font-bold">
-              Link HTTPS Cloudflare (*.trycloudflare.com) — TikTok Studio nhận diện và phát video ngay lập tức!
+              Hỗ trợ 2 phương thức: Bắt Cửa Sổ (Window Capture - 0ms) & Nguồn Trình Duyệt (Browser Source)
             </p>
           </div>
         </div>
 
+        {/* === TAB CHUYỂN ĐỔI: WINDOW CAPTURE VS BROWSER SOURCE === */}
+        <div className="flex bg-black/60 p-1.5 rounded-2xl border border-white/10 gap-1.5">
+          <button
+            onClick={() => setActiveModalTab('window_capture')}
+            className={`flex-1 py-2.5 px-3 sm:px-4 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              activeModalTab === 'window_capture'
+                ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25 border border-cyan-400/40'
+                : 'text-gray-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Monitor className="w-4 h-4 text-yellow-300" />
+            <span>🖥️ BẮT CỬA SỔ (WINDOW CAPTURE)</span>
+            <span className="text-[9px] bg-yellow-400/20 text-yellow-300 px-2 py-0.5 rounded-full font-extrabold hidden sm:inline">KHUYÊN DÙNG CHO WINDOWS</span>
+          </button>
+
+          <button
+            onClick={() => setActiveModalTab('browser_source')}
+            className={`flex-1 py-2.5 px-3 sm:px-4 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              activeModalTab === 'browser_source'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/25 border border-purple-400/40'
+                : 'text-gray-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Wifi className="w-4 h-4 text-cyan-300" />
+            <span>🌐 NGUỒN TRÌNH DUYỆT (BROWSER SOURCE)</span>
+          </button>
+        </div>
+
+        {activeModalTab === 'window_capture' ? (
+          /* === TAB 1: WINDOW CAPTURE CHO TIKTOK LIVE STUDIO (KHUYÊN DÙNG) === */
+          <div className="space-y-3.5 overflow-y-auto flex-1 pr-1 custom-scrollbar">
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-cyan-950/40 via-[#0e1322] to-black/80 border border-cyan-500/30 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-cyan-300 font-bold text-xs">
+                  <Monitor className="w-4 h-4 text-cyan-400" />
+                  <span>CỬA SỔ LIVE 9:16 TRỰC TIẾP — DỄ DÀNG 100% TRÊN MÁY WINDOWS</span>
+                </div>
+                <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/20 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                  60 FPS • 0ms Delay • Siêu Nét
+                </span>
+              </div>
+
+              <button
+                onClick={handleOpenWindowCapture}
+                className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-black text-sm shadow-xl shadow-cyan-500/30 flex items-center justify-center gap-2.5 transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer border border-cyan-300/40"
+              >
+                <Monitor className="w-5 h-5 text-yellow-300 animate-pulse" />
+                <span>🖥️ BẤM VÀO ĐÂY ĐỂ MỞ CỬA SỔ LIVE 9:16 (TIKTOK STUDIO)</span>
+                <ExternalLink className="w-4 h-4 ml-1" />
+              </button>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                <div className="p-2.5 rounded-xl bg-black/60 border border-white/10 space-y-1 text-xs">
+                  <div className="flex items-center gap-1.5 text-yellow-400 font-black">
+                    <span className="w-4 h-4 rounded-full bg-yellow-400/20 flex items-center justify-center text-[10px]">1</span>
+                    <span>Mở Cửa Sổ Live</span>
+                  </div>
+                  <p className="text-gray-400 text-[11px] leading-relaxed">
+                    Bấm nút ở trên. Cửa sổ Live 9:16 mang tên <b>[AvaLive VIP PRO]</b> sẽ hiện lên màn hình.
+                  </p>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-black/60 border border-white/10 space-y-1 text-xs">
+                  <div className="flex items-center gap-1.5 text-cyan-400 font-black">
+                    <span className="w-4 h-4 rounded-full bg-cyan-400/20 flex items-center justify-center text-[10px]">2</span>
+                    <span>Mở TikTok Studio</span>
+                  </div>
+                  <p className="text-gray-400 text-[11px] leading-relaxed">
+                    Trong TikTok Live Studio, bấm <b>Thêm Nguồn</b> → Chọn <b>Bắt Cửa Sổ (Window Capture)</b>.
+                  </p>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-black/60 border border-white/10 space-y-1 text-xs">
+                  <div className="flex items-center gap-1.5 text-emerald-400 font-black">
+                    <span className="w-4 h-4 rounded-full bg-emerald-400/20 flex items-center justify-center text-[10px]">3</span>
+                    <span>Chọn AvaLive</span>
+                  </div>
+                  <p className="text-gray-400 text-[11px] leading-relaxed">
+                    Tại danh sách chọn: <b>[AvaLive VIP PRO] - Cửa Sổ Live 9:16</b> → Phát ngay lập tức 60FPS!
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 text-[11px] text-emerald-300 space-y-1">
+              <p className="font-black flex items-center gap-1.5 text-emerald-400">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>Tại sao nên dùng Bắt Cửa Sổ (Window Capture) trên Windows?</span>
+              </p>
+              <p className="text-gray-300 leading-relaxed">
+                • Không phụ thuộc mạng Internet, không lo bị chặn cổng hay lỗi URL.<br />
+                • Tận dụng trực tiếp sức mạnh Card màn hình GPU (NVIDIA/Intel), video mượt 60FPS không giật lag.<br />
+                • Video chạy bền bỉ 24/24, không bao giờ bị đứt kết nối hoặc tự động mất.
+              </p>
+            </div>
+          </div>
+        ) : (
+          /* === TAB 2: NGUỒN TRÌNH DUYỆT (BROWSER SOURCE 1 LINK) === */
+          <>
             {/* === TRẠNG THÁI TUNNEL === */}
             <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl border text-xs font-bold ${
               isTunnelActive
@@ -300,6 +417,8 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                 );
               })}
             </div>
+          </>
+        )}
 
             {/* === HƯỚNG DẪN === */}
             <div className="p-3 rounded-2xl bg-black/70 border border-white/15 text-xs shrink-0 space-y-1.5">

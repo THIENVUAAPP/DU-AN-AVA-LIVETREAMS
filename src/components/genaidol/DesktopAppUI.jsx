@@ -6,7 +6,7 @@ import {
   MessageCircle, Play, Pause, Mic, MicOff, X, Download, Plus,
   Brain, Radio, Coins, AlertTriangle, Eye, Clock, List, Zap, AlertCircle, FileText, CheckSquare, CheckCircle,
   Gift, ShoppingBag, ShoppingCart, Sparkles, RotateCcw, Send, Trash2, Heart, Share2, UserPlus, Users, Swords, Shield, Gamepad2, Flag, MapPin,
-  Smartphone, MonitorPlay, Globe, StopCircle, Power, Volume2, VolumeX, Volume1, Music, Tv,
+  Smartphone, MonitorPlay, Monitor, Globe, StopCircle, Power, Volume2, VolumeX, Volume1, Music, Tv,
   User, LogOut, Mail, Lock, Check
 } from 'lucide-react';
 import { supabase, syncUserToSupabase } from '../../lib/supabaseClient';
@@ -419,6 +419,43 @@ export default function DesktopAppUI() {
   const [quickResponseActiveVideo, setQuickResponseActiveVideo] = useState(null);
   const [showOverlayModal, setShowOverlayModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+
+  // 🔒 Trạng thái video được khoá bởi người dùng (Bảo vệ không bị mất, không bị đổi ngầm)
+  const [userLockedMediaUrl, setUserLockedMediaUrl] = useState(() => {
+    try {
+      return localStorage.getItem('avalive_user_locked_media') || null;
+    } catch(e) {
+      return null;
+    }
+  });
+
+  const handleClearActiveVideo = async () => {
+    setUserLockedMediaUrl(null);
+    try { localStorage.removeItem('avalive_user_locked_media'); } catch (e) {}
+    try {
+      fetch('/api/clear-media', { method: 'POST' }).catch(() => {});
+    } catch (e) {}
+    syncMasterLiveState({
+      stage: 'idol',
+      mediaUrl: null,
+      clearMedia: true,
+      isVideo: false
+    }, socketRef.current);
+    showToast('Đã dừng và xóa video phát trực tiếp!', 'info');
+  };
+
+  const handleOpenWindowCapture = () => {
+    const width = 450;
+    const height = 800;
+    const left = Math.round((window.screen.width - width) / 2);
+    const top = Math.round((window.screen.height - height) / 2);
+    window.open(
+      `${window.location.origin}/live?mode=window_capture`,
+      'avalive_window_capture_target',
+      `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes`
+    );
+    showToast('🖥️ Đã mở Cửa Sổ Live 9:16! Hãy vào TikTok Studio chọn Bắt Cửa Sổ (Window Capture).', 'success');
+  };
 
   const [overlayLinkBase, setOverlayLinkBase] = useState(() => {
     return 'https://avalivepro.vercel.app';
@@ -1361,8 +1398,8 @@ export default function DesktopAppUI() {
       name: 'Video Người Dùng' 
     };
     
-    let currentMedia = quickResponseActiveVideo?.url || lipSyncVideoUrl || (activeVideoItem?.mediaUrl) || char.mediaUrl || char.url || '';
-    let isVid = char.type === 'video' || (typeof currentMedia === 'string' && (currentMedia.endsWith('.mp4') || currentMedia.includes('/uploads/') || currentMedia.startsWith('http') || currentMedia.startsWith('blob:')));
+    let currentMedia = quickResponseActiveVideo?.url || lipSyncVideoUrl || (activeVideoItem?.mediaUrl) || userLockedMediaUrl || char.mediaUrl || char.url || '';
+    let isVid = !!userLockedMediaUrl || char.type === 'video' || (typeof currentMedia === 'string' && (currentMedia.endsWith('.mp4') || currentMedia.includes('/uploads/') || currentMedia.startsWith('http') || currentMedia.startsWith('blob:')));
     let streamFlvUrl = null;
 
     if (isConnected && flvUrl) {
@@ -1413,6 +1450,7 @@ export default function DesktopAppUI() {
     selectedCharacter, 
     customCharacters,
     activeVideoItem, 
+    userLockedMediaUrl,
     isConnected, 
     showSimulator, 
     globalAspectRatio, 
@@ -1774,6 +1812,10 @@ export default function DesktopAppUI() {
               type: 'video'
             };
 
+            // 🔒 KHOÁ CỐ ĐỊNH VIDEO CỦA NGƯỜI DÙNG: Bảo vệ 100% không bao giờ tự ý mất hoặc đổi ngầm
+            setUserLockedMediaUrl(fileUrl);
+            try { localStorage.setItem('avalive_user_locked_media', fileUrl); } catch (e) {}
+
             setCustomCharacters(prev => {
               const updatedList = prev.map(c => c.id === newCharId ? updatedChar : c);
               try { localStorage.setItem('avalive_custom_characters', JSON.stringify(updatedList)); } catch (e) {}
@@ -1817,6 +1859,8 @@ export default function DesktopAppUI() {
                 const data = await res.json();
                 if (data && data.url) {
                   const fallbackUrl = data.url.includes('/uploads/') ? data.url.substring(data.url.indexOf('/uploads/')) : data.url;
+                  setUserLockedMediaUrl(fallbackUrl);
+                  try { localStorage.setItem('avalive_user_locked_media', fallbackUrl); } catch (e) {}
                   syncMasterLiveState({
                     stage: 'idol',
                     selectedCharacter: newCharId,
@@ -1979,7 +2023,7 @@ export default function DesktopAppUI() {
       }
       
       const customMatch = customCharacters.find(c => c.id === selectedCharacter);
-      const selected = customMatch || CHARACTERS[selectedCharacter] || Object.values(CHARACTERS)[0];
+      const selected = customMatch || (userLockedMediaUrl ? { id: 'locked_video', name: 'Video Đang Phát', url: userLockedMediaUrl, type: 'video' } : null) || CHARACTERS[selectedCharacter] || Object.values(CHARACTERS)[0];
 
       if (isProcessingEvent && activeVideoItem && activeVideoItem.mediaUrl) {
         return (
@@ -2017,50 +2061,68 @@ export default function DesktopAppUI() {
   
       if (selected.type === 'video') {
         return (
-          <video 
-            key={selected.url}
-            src={selected.url} 
-            className="w-full h-full object-contain bg-black transform-gpu"
-            style={{ transform: 'translateZ(0)', willChange: 'transform' }}
-            autoPlay 
-            loop 
-            muted 
-            controls 
-            preload="metadata"
-            disablePictureInPicture
-            playsInline 
-            onPlay={(e) => {
-              let playUrl = selected.url;
-              if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
-                playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
-              }
-              syncMasterLiveState({
-                mediaUrl: playUrl,
-                isVideo: true,
-                videoPlaybackEvent: 'play',
-                isPlaying: true
-              }, socketRef.current);
-            }}
-            onPause={(e) => {
-              let playUrl = selected.url;
-              if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
-                playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
-              }
-              syncMasterLiveState({
-                mediaUrl: playUrl,
-                isVideo: true,
-                videoPlaybackEvent: 'pause',
-                videoCurrentTime: e.currentTarget.currentTime,
-                isPlaying: false
-              }, socketRef.current);
-            }}
-            onSeeked={(e) => {
-              syncMasterLiveState({
-                videoPlaybackEvent: 'seeked',
-                videoCurrentTime: e.currentTarget.currentTime
-              }, socketRef.current);
-            }}
-          />
+          <div className="relative w-full h-full">
+            <video 
+              key={selected.url}
+              src={selected.url} 
+              className="w-full h-full object-contain bg-black transform-gpu"
+              style={{ transform: 'translateZ(0)', willChange: 'transform' }}
+              autoPlay 
+              loop 
+              muted 
+              controls 
+              preload="auto"
+              disablePictureInPicture
+              playsInline 
+              onPlay={(e) => {
+                let playUrl = selected.url;
+                if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
+                  playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
+                }
+                syncMasterLiveState({
+                  mediaUrl: playUrl,
+                  isVideo: true,
+                  videoPlaybackEvent: 'play',
+                  isPlaying: true
+                }, socketRef.current);
+              }}
+              onPause={(e) => {
+                let playUrl = selected.url;
+                if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
+                  playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
+                }
+                syncMasterLiveState({
+                  mediaUrl: playUrl,
+                  isVideo: true,
+                  videoPlaybackEvent: 'pause',
+                  videoCurrentTime: e.currentTarget.currentTime,
+                  isPlaying: false
+                }, socketRef.current);
+              }}
+              onSeeked={(e) => {
+                syncMasterLiveState({
+                  videoPlaybackEvent: 'seeked',
+                  videoCurrentTime: e.currentTarget.currentTime
+                }, socketRef.current);
+              }}
+            />
+            {userLockedMediaUrl && (
+              <div className="absolute top-3 right-3 z-30 flex items-center gap-2">
+                <span className="bg-emerald-600/90 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md border border-emerald-400/40 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+                  🔒 ĐÃ KHOÁ PHÁT VIDEO CỐ ĐỊNH (24/24)
+                </span>
+                <button
+                  onClick={handleClearActiveVideo}
+                  className="bg-red-600/90 hover:bg-red-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md transition-all cursor-pointer flex items-center gap-1"
+                  title="Xoá video đang phát để chọn video hoặc nhân vật khác"
+                >
+                  <Trash2 size={11} />
+                  <span>Xoá / Đổi video</span>
+                </button>
+              </div>
+            )}
+          </div>
         );
       }
 
@@ -2644,6 +2706,16 @@ export default function DesktopAppUI() {
           >
             <Radio size={10} className="text-yellow-300 animate-pulse" />
             <span className="whitespace-nowrap">📡 Link Live</span>
+          </button>
+
+          {/* Nút Bắt Cửa Sổ (Window Capture) 1-Click cho TikTok LIVE Studio & OBS */}
+          <button
+            onClick={handleOpenWindowCapture}
+            className="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold border shadow-xs transition-all hover:scale-105 cursor-pointer bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-emerald-400/50"
+            title="Mở Cửa Sổ Live 9:16 để TikTok Live Studio / OBS bắt hình trực tiếp (Window Capture 60FPS)"
+          >
+            <Monitor size={10} className="text-yellow-300 animate-pulse" />
+            <span className="whitespace-nowrap">🖥️ Cửa Sổ Live (Window)</span>
           </button>
 
           {/* 👑 1 Ô DUY NHẤT: LOGO TÀI KHOẢN + GÓI (GỌN GÀNG) */}

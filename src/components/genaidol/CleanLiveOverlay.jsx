@@ -177,7 +177,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   }, []);
 
   useEffect(() => {
-    document.title = 'AVA Live Output (Realtime Master Overlay) — TikTok LIVE Studio / OBS';
+    const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const isCapture = urlParams?.get('mode') === 'window_capture' || urlParams?.get('capture') === '1';
+    if (isCapture) {
+      document.title = '[AvaLive VIP PRO] - Cửa Sổ Live 9:16 (Window Capture)';
+    } else {
+      document.title = 'AVA Live Output (Realtime Master Overlay) — TikTok LIVE Studio / OBS';
+    }
     document.documentElement.style.background = 'transparent';
     document.body.style.background = 'transparent';
 
@@ -761,6 +767,16 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       } catch (e) {}
     }
 
+    // 2.5. Kiểm tra video đã được người dùng chọn phát cố định (Persistent Lock)
+    if (!candidateUrl) {
+      try {
+        const locked = localStorage.getItem('avalive_user_locked_media');
+        if (locked && typeof locked === 'string') {
+          candidateUrl = locked;
+        }
+      } catch (e) {}
+    }
+
     // 3. Khôi phục Blob URL từ IndexedDB nếu là video tùy chỉnh, hoặc bỏ qua nếu blob không tồn tại ở cửa sổ này
     if (typeof candidateUrl === 'string' && candidateUrl.startsWith('blob:')) {
       const match = localDbItems.find(i => i.id === masterState.selectedCharacter);
@@ -951,7 +967,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           muted
           playsInline
           controls={false}
-          preload="metadata"
+          preload="auto"
           disablePictureInPicture
           disableRemotePlayback
           onLoadedMetadata={(e) => {
@@ -974,7 +990,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             }
           }}
           onWaiting={() => {
-            // Đang đệm chunk tiếp theo, không reset currentTime
+            // Đang đệm progressive chunk tiếp theo trong nền, bảo toàn currentTime
           }}
           onStalled={() => {
             const v = overlayVideoRef.current;
@@ -983,20 +999,22 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             }
           }}
           onEnded={(e) => {
+            // Lặp lại liên tục 24/24 mượt mà, không bao giờ dừng
             e.currentTarget.currentTime = 0;
             if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
               e.currentTarget.play().catch(() => {});
             }
           }}
           onError={(e) => {
-            console.warn('[CleanLiveOverlay] Video reconnecting in 1s...', e);
+            console.warn('[CleanLiveOverlay] Video reconnecting in 500ms...', e);
             setTimeout(() => {
               const v = overlayVideoRef.current;
               if (v && activeMedia.url) {
+                v.src = activeMedia.url;
                 v.load();
                 v.play().catch(() => {});
               }
-            }, 1000);
+            }, 500);
           }}
           className="w-full h-full select-none absolute inset-0"
           style={{ 

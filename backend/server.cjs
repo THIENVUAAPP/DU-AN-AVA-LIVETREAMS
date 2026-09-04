@@ -256,18 +256,25 @@ app.post('/api/upload-stream-init', (req, res) => {
     const filename = 'media-' + Date.now() + '-' + Math.round(Math.random() * 1E9) + ext;
     const filePath = path.join(uploadsDir, filename);
     const uploadId = 'up_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+    const totalSize = parseInt(fileSize, 10) || 0;
     
-    // Mở file ghi sẵn sàng (w+)
+    // Mở file ghi sẵn sàng (w+) và cấp phát kích thước file thực tế ngay lập tức (sparse file)
     const fd = fs.openSync(filePath, 'w+');
+    if (totalSize > 0) {
+      try {
+        fs.ftruncateSync(fd, totalSize);
+      } catch(e) {}
+    }
 
     activeStreamUploads[uploadId] = {
       uploadId,
       filename,
       filePath,
-      fileSize: parseInt(fileSize, 10) || 0,
+      fileSize: totalSize,
       fd,
       writtenBytes: 0,
       chunksCount: 0,
+      isHeadReady: false,
       createdAt: Date.now(),
       timer: setTimeout(() => {
         try { if (activeStreamUploads[uploadId]?.fd) fs.closeSync(activeStreamUploads[uploadId].fd); } catch(e) {}
@@ -276,20 +283,6 @@ app.post('/api/upload-stream-init', (req, res) => {
     };
 
     const fileUrl = `/uploads/${filename}`;
-
-    // 🚀 BẮN PHÁT SÓNG REALTIME NGAY LẬP TỨC (0MS DELAY)
-    // TikTok Live Studio nhận ngay link và chuẩn bị phát, không cần chờ nạp xong 2GB!
-    currentMasterLiveState = {
-      ...currentMasterLiveState,
-      stage: 'idol',
-      mediaUrl: fileUrl,
-      isVideo: true,
-      videoPlaybackEvent: 'play',
-      isPlaying: true,
-      updatedAt: Date.now()
-    };
-    io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
-    saveLiveStateToFile();
 
     res.json({
       success: true,
@@ -331,6 +324,25 @@ app.post('/api/upload-chunk', (req, res) => {
       }
       session.writtenBytes += buffer.length;
       session.chunksCount++;
+
+      // 🚀 KHI KHỐI ĐẦU TIÊN (OFFSET 0) ĐÃ GHI XONG:
+      // File đã có header MP4 hợp lệ, server lập tức phát sóng sang TikTok Live Studio!
+      if (offset === 0 && !session.isHeadReady) {
+        session.isHeadReady = true;
+        currentMasterLiveState = {
+          ...currentMasterLiveState,
+          stage: 'idol',
+          mediaUrl: `/uploads/${session.filename}`,
+          isVideo: true,
+          videoPlaybackEvent: 'play',
+          isPlaying: true,
+          isUserExplicitMediaLocked: true,
+          updatedAt: Date.now()
+        };
+        io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+        saveLiveStateToFile();
+        console.log(`[FastStream] 🚀 Chunk 0 đã sẵn sàng! Bắn phát sóng tức thì sang TikTok Live Studio: ${session.filename}`);
+      }
 
       // Nếu đã ghi đủ tất cả các chunks
       if (!isNaN(totalChunks) && totalChunks > 0 && session.chunksCount >= totalChunks) {
@@ -695,8 +707,16 @@ io.on('connection', (socket) => {
 
   socket.on('MASTER_LIVE_STATE_UPDATE', (state) => {
     if (state && typeof state === 'object') {
-      currentMasterLiveState = { ...currentMasterLiveState, ...state, updatedAt: Date.now() };
+      const nextState = { ...currentMasterLiveState, ...state, updatedAt: Date.now() };
+      // BẢO VỆ TUYỆT ĐỐI VIDEO ĐANG PHÁT: Không bao giờ tự ý xoá mediaUrl hiện tại nếu client gửi null/undefined
+      // Chỉ xoá khi người dùng bấm xoá với cờ rõ ràng clearMedia: true
+      if (!state.mediaUrl && !state.clearMedia && currentMasterLiveState.mediaUrl) {
+        nextState.mediaUrl = currentMasterLiveState.mediaUrl;
+        nextState.isVideo = currentMasterLiveState.isVideo;
+      }
+      currentMasterLiveState = nextState;
       io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+      saveLiveStateToFile();
     }
   });
 
@@ -1305,6 +1325,8 @@ app.post('/api/live-state', (req, res) => {
       } else if (payload.mediaUrl.includes('/uploads/')) {
         payload.mediaUrl = payload.mediaUrl.substring(payload.mediaUrl.indexOf('/uploads/'));
       }
+    } else if (!payload.mediaUrl && !payload.clearMedia && currentMasterLiveState.mediaUrl) {
+      delete payload.mediaUrl; // Bảo vệ video hiện tại không bị gán đè null
     }
 
     currentMasterLiveState = { 
@@ -1317,6 +1339,20 @@ app.post('/api/live-state', (req, res) => {
     saveLiveStateToFile();
   }
   res.json({ success: true, state: currentMasterLiveState });
+});
+
+// Endpoint cho phép xóa/dừng video rõ ràng khi người dùng bấm nút xóa
+app.post('/api/clear-media', (req, res) => {
+  currentMasterLiveState = {
+    ...currentMasterLiveState,
+    mediaUrl: null,
+    clearMedia: true,
+    isUserExplicitMediaLocked: false,
+    updatedAt: Date.now()
+  };
+  io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+  saveLiveStateToFile();
+  res.json({ success: true, message: 'Đã xóa video phát trực tiếp theo yêu cầu người dùng' });
 });
 
 app.get('/api/studio-frame', (req, res) => {
