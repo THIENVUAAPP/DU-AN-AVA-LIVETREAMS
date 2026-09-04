@@ -4,8 +4,13 @@ import flvjs from 'flv.js';
 import Hls from 'hls.js';
 import GameBanDoVietNam from './game/GameBanDoVietNam';
 import GameBattleOverlay from './game/GameBattleOverlay';
+import GameChienDau from './game/GameChienDau';
 import { supabase } from '../../lib/supabaseClient';
 import { loadAllAidolItems } from '../../utils/idbHelper';
+import { 
+  Play, Pause, Volume2, VolumeX, 
+  Video, Flag, Swords, Tv, Eye, EyeOff, Sparkles, Monitor
+} from 'lucide-react';
 
 /**
  * ⚡ CỬA SỔ MASTER OVERLAY 1 LINK DUY NHẤT TOÀN NĂNG — CHO TIKTOK LIVE STUDIO & OBS STUDIO
@@ -99,8 +104,127 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     };
   });
 
+  const socketRef = useRef(null);
   const [liveEvent, setLiveEvent] = useState(null);
-  const [isAudioMuted, setIsAudioMuted] = useState(false);
+  const [isVideoAudioMuted, setIsVideoAudioMuted] = useState(() => {
+    try {
+      return localStorage.getItem('avalive_overlay_audio_muted') === 'true';
+    } catch (e) {
+      return false; // Mặc định mở tiếng để phát âm thanh
+    }
+  });
+  const [videoVolume, setVideoVolume] = useState(() => {
+    try {
+      const v = localStorage.getItem('avalive_overlay_volume');
+      return v ? parseFloat(v) : 1.0;
+    } catch (e) {
+      return 1.0;
+    }
+  });
+  const [isPlayingState, setIsPlayingState] = useState(true);
+  const [showControlDock, setShowControlDock] = useState(() => {
+    const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    if (params?.get('clean') === '1' || params?.get('controls') === '0') return false;
+    return true; // Mặc định hiển thị thanh điều khiển ngoại khung
+  });
+  const [objectFitState, setObjectFitState] = useState(() => {
+    const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    return params?.get('fit') === 'contain' ? 'contain' : 'cover';
+  });
+
+  const togglePlayPause = () => {
+    const vid = overlayVideoRef.current;
+    if (vid) {
+      if (vid.paused) {
+        vid.dataset.userPaused = 'false';
+        vid.play().then(() => setIsPlayingState(true)).catch(() => {});
+        if (socketRef.current) {
+          socketRef.current.emit('UPDATE_MASTER_LIVE_STATE', { videoPlaybackEvent: 'play', isPlaying: true });
+        }
+        try {
+          const bc = new BroadcastChannel('avalive_master_sync');
+          bc.postMessage({ type: 'UPDATE_MASTER_LIVE_STATE', payload: { videoPlaybackEvent: 'play', isPlaying: true } });
+          bc.close();
+        } catch (e) {}
+      } else {
+        vid.dataset.userPaused = 'true';
+        vid.pause();
+        setIsPlayingState(false);
+        if (socketRef.current) {
+          socketRef.current.emit('UPDATE_MASTER_LIVE_STATE', { videoPlaybackEvent: 'pause', isPlaying: false, videoCurrentTime: vid.currentTime });
+        }
+        try {
+          const bc = new BroadcastChannel('avalive_master_sync');
+          bc.postMessage({ type: 'UPDATE_MASTER_LIVE_STATE', payload: { videoPlaybackEvent: 'pause', isPlaying: false, videoCurrentTime: vid.currentTime } });
+          bc.close();
+        } catch (e) {}
+      }
+    }
+  };
+
+  const toggleAudioMute = () => {
+    setIsVideoAudioMuted(prev => {
+      const next = !prev;
+      try { localStorage.setItem('avalive_overlay_audio_muted', String(next)); } catch (e) {}
+      const allVideos = document.querySelectorAll('video');
+      allVideos.forEach(v => {
+        try {
+          v.muted = next;
+          if (!next) {
+            v.volume = videoVolume;
+          }
+        } catch (e) {}
+      });
+      return next;
+    });
+  };
+
+  const handleVolumeChange = (newVol) => {
+    setVideoVolume(newVol);
+    try { localStorage.setItem('avalive_overlay_volume', String(newVol)); } catch (e) {}
+    const allVideos = document.querySelectorAll('video');
+    allVideos.forEach(v => {
+      try {
+        v.volume = newVol;
+        if (newVol > 0) {
+          v.muted = false;
+        }
+      } catch (e) {}
+    });
+    if (newVol > 0 && isVideoAudioMuted) {
+      setIsVideoAudioMuted(false);
+      try { localStorage.setItem('avalive_overlay_audio_muted', 'false'); } catch (e) {}
+    }
+  };
+
+  const handleStageSwitch = (newStage) => {
+    setMasterState(prev => ({ ...prev, stage: newStage }));
+    if (socketRef.current) {
+      socketRef.current.emit('UPDATE_MASTER_LIVE_STATE', { stage: newStage });
+    }
+    try {
+      const bc = new BroadcastChannel('avalive_master_sync');
+      bc.postMessage({ type: 'UPDATE_MASTER_LIVE_STATE', payload: { stage: newStage } });
+      bc.close();
+    } catch (e) {}
+    try {
+      localStorage.setItem('avalive_active_stage', newStage);
+    } catch (e) {}
+  };
+
+  const toggleFitMode = () => {
+    setObjectFitState(prev => prev === 'cover' ? 'contain' : 'cover');
+  };
+
+  const toggleAspectRatio = () => {
+    setMasterState(prev => {
+      const nextRatio = prev.aspectRatio === '9:16' ? '16:9' : '9:16';
+      if (socketRef.current) {
+        socketRef.current.emit('UPDATE_MASTER_LIVE_STATE', { aspectRatio: nextRatio });
+      }
+      return { ...prev, aspectRatio: nextRatio };
+    });
+  };
   const [localDbItems, setLocalDbItems] = useState([]);
   const [hasStudioFrame, setHasStudioFrame] = useState(false);
   const studioImageRef = useRef(null);
@@ -301,10 +425,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         if (data.videoPlaybackEvent === 'pause' || data.isPlaying === false) {
           vid.dataset.userPaused = 'true';
           if (!vid.paused) vid.pause();
+          setIsPlayingState(false);
         } else if (data.videoPlaybackEvent === 'play' || data.isPlaying === true) {
           vid.dataset.userPaused = 'false';
-          vid.muted = true;
-          if (vid.paused) vid.play().catch(() => {});
+          vid.muted = isVideoAudioMuted;
+          vid.volume = videoVolume;
+          if (vid.paused) vid.play().then(() => setIsPlayingState(true)).catch(() => {});
+          setIsPlayingState(true);
         }
       }
 
@@ -420,6 +547,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         reconnection: true,
         reconnectionDelay: 1000
       });
+      socketRef.current = socket;
 
       socket.on('connect', () => {
         socket.emit('REQUEST_MASTER_LIVE_STATE');
@@ -618,6 +746,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       clearInterval(pollInterval);
       if (supabaseChannel) supabaseChannel.unsubscribe();
       if (socket) socket.disconnect();
+      socketRef.current = null;
       if (studioCamBc) studioCamBc.close();
       if (masterChannel) masterChannel.close();
       if (bandoChannel) bandoChannel.close();
@@ -706,7 +835,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     }
     const videoElements = document.querySelectorAll('video');
     videoElements.forEach(vid => {
-      vid.muted = isAudioMuted;
+      vid.muted = isVideoAudioMuted;
+      if (!isVideoAudioMuted) vid.volume = videoVolume;
       const playPromise = vid.play();
       if (playPromise !== undefined) {
         playPromise.catch(() => {
@@ -715,7 +845,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         });
       }
     });
-  }, [masterState.mediaUrl, activeStreamUrl, overlayCamActive, isAudioMuted, masterState.videoPlaybackEvent, masterState.isPlaying]);
+  }, [masterState.mediaUrl, activeStreamUrl, overlayCamActive, isVideoAudioMuted, videoVolume, masterState.videoPlaybackEvent, masterState.isPlaying]);
 
   // Tự động kích hoạt Camera khi mở chế độ Studio (phải nằm trước các early return để tuân thủ React Rules of Hooks)
   useEffect(() => {
@@ -831,14 +961,18 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       // Nếu không có lệnh tạm dừng từ streamer và video bị dừng ngoài ý muốn trong khi đã nạp đủ buffer
       if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
         if (vid.paused && vid.readyState >= 2 && !vid.seeking) {
-          vid.muted = true;
-          vid.play().catch(() => {});
+          vid.muted = isVideoAudioMuted;
+          if (!isVideoAudioMuted) vid.volume = videoVolume;
+          vid.play().catch(() => {
+            vid.muted = true;
+            vid.play().catch(() => {});
+          });
         }
       }
     }, 2000);
 
     return () => clearInterval(watchdogTimer);
-  }, [masterState.videoPlaybackEvent, masterState.isPlaying]);
+  }, [masterState.videoPlaybackEvent, masterState.isPlaying, isVideoAudioMuted, videoVolume]);
 
   // Helper giải mã URL media chính xác (tôn trọng 100% video/nhân vật người dùng chọn)
   const resolveActiveMedia = () => {
@@ -947,7 +1081,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     if (vid && activeMedia.url && activeMedia.isVideo) {
       if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
         vid.dataset.userPaused = 'false';
-        vid.muted = true;
+        vid.muted = isVideoAudioMuted;
+        if (!isVideoAudioMuted) vid.volume = videoVolume;
         const playPromise = vid.play();
         if (playPromise !== undefined) {
           playPromise.catch(() => {
@@ -957,218 +1092,374 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         }
       }
     }
-  }, [activeMedia.url]);
+  }, [activeMedia.url, isVideoAudioMuted, videoVolume]);
 
-  // Stage hiện tại
+  // 4 SÂN KHẤU: ĐƯỢC LỒNG TRONG KHUNG PHÁT SÓNG SẠCH 100% CỐ ĐỊNH TỈ LỆ
+  // BÊN TRÊN LÀ THANH ĐIỀU KHIỂN NGOẠI KHUNG (NẰM NGOÀI KHUNG HÌNH LIVE ĐỂ KHÔNG CHÈN VÀO OBS)
   const currentStage = masterState.stage || 'idol';
   const ratio = masterState.aspectRatio || '9:16';
 
-  // 1. RENDER STAGE: GAME BẢN ĐỒ VIỆT NAM (CẮM CỜ 63 TỈNH THÀNH)
-  if (currentStage === 'bando' || currentStage === 'vietnam_map' || currentStage === 'map') {
-    return (
-      <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent select-none flex items-center justify-center pointer-events-auto">
-        <GameBanDoVietNam 
-          isPopout={true}
-          aspectRatio={ratio}
-          externalLiveEvent={liveEvent}
-          isDarkMode={masterState.isDarkMode !== false}
-        />
-      </div>
-    );
-  }
+  return (
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden flex flex-col bg-black select-none font-sans">
+      {/* 1. THANH ĐIỀU KHIỂN NGOẠI KHUNG (NẰM HOÀN TOÀN BÊN NGOÀI KHUNG HÌNH PHÁT VIDEO OBS) */}
+      {showControlDock && (
+        <header className="w-full h-12 min-h-[48px] bg-gradient-to-r from-[#0a0c16] via-[#101426] to-[#0a0c16] border-b border-cyan-500/40 px-3 flex items-center justify-between z-50 text-white shadow-2xl select-none">
+          {/* Trái: Trạng thái Live & Tỷ lệ */}
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-600/20 border border-red-500/50 text-red-400 text-[10px] font-black uppercase tracking-wider shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+              <span>LIVE 60FPS</span>
+            </div>
+            <button
+              onClick={toggleAspectRatio}
+              className="text-[10px] font-bold text-cyan-300 bg-cyan-950/70 hover:bg-cyan-900 border border-cyan-500/50 px-2 py-1 rounded-md transition-all cursor-pointer"
+              title="Chuyển đổi tỷ lệ: 9:16 Dọc (TikTok Live) vs 16:9 Ngang (OBS)"
+            >
+              {ratio === '9:16' ? '📱 9:16 DỌC (TIKTOK)' : '🖥️ 16:9 NGANG (OBS)'}
+            </button>
+          </div>
 
-  // 2. RENDER STAGE: GAME CHIẾN ĐẤU PK ĐẠI CHIẾN
-  if (currentStage === 'battle' || currentStage === 'gamebattle' || currentStage === 'game') {
-    return (
-      <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent select-none flex items-center justify-center pointer-events-auto">
-        <GameChienDau 
-          isPopout={true}
-          aspectRatio={ratio}
-          externalLiveEvent={liveEvent}
-          isDarkMode={masterState.isDarkMode !== false}
-        />
-      </div>
-    );
-  }
+          {/* Giữa: CÁC NÚT ĐIỀU KHIỂN CỐT LÕI (DỪNG/CHẠY, BẬT/TẮT ÂM THANH, CHUYỂN SÂN KHẤU) */}
+          <div className="flex items-center gap-2 overflow-x-auto py-1">
+            {/* Nút Play / Pause */}
+            <button
+              onClick={togglePlayPause}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-black text-xs transition-all shadow-md active:scale-95 cursor-pointer shrink-0 ${
+                isPlayingState 
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-500/30 border border-emerald-400/50' 
+                  : 'bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white shadow-amber-500/30 border border-amber-400/50 animate-pulse'
+              }`}
+              title={isPlayingState ? "Tạm dừng video phát sóng" : "Tiếp tục phát video"}
+            >
+              {isPlayingState ? <Pause size={13} className="fill-white" /> : <Play size={13} className="fill-white" />}
+              <span>{isPlayingState ? 'TẠM DỪNG' : 'TIẾP TỤC'}</span>
+            </button>
 
-  // 3. RENDER STAGE: PHÒNG DỰNG LIVE STUDIO 4K — 100% CAMERA THỰC & GÓC MÁY STUDIO
-  if (currentStage === 'broadcast' || currentStage === 'studio') {
-    return (
-      <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-black flex items-center justify-center select-none">
-        <div
-          className={`relative flex items-center justify-center overflow-hidden transition-all duration-300 ${
+            {/* Nút Bật / Tắt Âm Thanh (Mute / Unmute) */}
+            <button
+              onClick={toggleAudioMute}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-black text-xs transition-all shadow-md active:scale-95 cursor-pointer shrink-0 ${
+                !isVideoAudioMuted 
+                  ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-cyan-500/30 border border-cyan-400/50' 
+                  : 'bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-500/50'
+              }`}
+              title={isVideoAudioMuted ? "Bấm để MỞ TIẾNG cho video (Phát âm thanh siêu thực ra loa / OBS)" : "Bấm để TẮT TIẾNG (Mute)"}
+            >
+              {!isVideoAudioMuted ? <Volume2 size={14} className="text-yellow-300 animate-pulse" /> : <VolumeX size={14} className="text-rose-400" />}
+              <span>{!isVideoAudioMuted ? 'MỞ TIẾNG (HD)' : 'TẮT TIẾNG'}</span>
+            </button>
+
+            {/* Thanh chỉnh âm lượng (khi đang mở tiếng) */}
+            {!isVideoAudioMuted && (
+              <div className="flex items-center gap-1.5 bg-black/60 px-2 py-1 rounded-lg border border-white/10 shrink-0" title="Chỉnh âm lượng">
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="1" 
+                  step="0.05" 
+                  value={videoVolume} 
+                  onChange={(e) => handleVolumeChange(parseFloat(e.target.value))} 
+                  className="w-16 h-1.5 accent-cyan-400 cursor-pointer"
+                />
+                <span className="text-[9.5px] font-mono font-bold text-gray-300 w-6 text-right">
+                  {Math.round(videoVolume * 100)}%
+                </span>
+              </div>
+            )}
+
+            {/* Vách ngăn */}
+            <div className="w-px h-5 bg-white/20 mx-1 shrink-0"></div>
+
+            {/* BỘ CHUYỂN TRANG / SÂN KHẤU LIVE 1-CLICK (KHÔNG GÂY LỆCH TỌA ĐỘ TRÊN OBS) */}
+            <div className="flex items-center gap-1 bg-black/60 p-0.5 rounded-lg border border-white/10 shrink-0">
+              <button
+                onClick={() => handleStageSwitch('idol')}
+                className={`px-2.5 py-1 rounded-md text-[10.5px] font-black transition-all flex items-center gap-1.5 cursor-pointer ${
+                  currentStage === 'idol' 
+                    ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-cyan-500/30' 
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+                title="Chuyển sang màn hình Idol AI Livestream"
+              >
+                <Video size={12} className={currentStage === 'idol' ? 'text-yellow-300' : 'text-gray-400'} />
+                <span>Idol AI</span>
+              </button>
+
+              <button
+                onClick={() => handleStageSwitch('bando')}
+                className={`px-2.5 py-1 rounded-md text-[10.5px] font-black transition-all flex items-center gap-1.5 cursor-pointer ${
+                  (currentStage === 'bando' || currentStage === 'vietnam_map' || currentStage === 'map') 
+                    ? 'bg-gradient-to-r from-amber-600 to-yellow-500 text-white shadow-md shadow-amber-500/30' 
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+                title="Chuyển sang Game Ghép Cờ Bản Đồ Việt Nam"
+              >
+                <Flag size={12} className={(currentStage === 'bando' || currentStage === 'vietnam_map' || currentStage === 'map') ? 'text-yellow-200' : 'text-gray-400'} />
+                <span>Bản Đồ</span>
+              </button>
+
+              <button
+                onClick={() => handleStageSwitch('battle')}
+                className={`px-2.5 py-1 rounded-md text-[10.5px] font-black transition-all flex items-center gap-1.5 cursor-pointer ${
+                  (currentStage === 'battle' || currentStage === 'gamebattle' || currentStage === 'game') 
+                    ? 'bg-gradient-to-r from-red-600 to-purple-600 text-white shadow-md shadow-purple-500/30' 
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+                title="Chuyển sang Game Chiến Đấu PK Đại Chiến"
+              >
+                <Swords size={12} className={(currentStage === 'battle' || currentStage === 'gamebattle' || currentStage === 'game') ? 'text-yellow-300' : 'text-gray-400'} />
+                <span>Chiến Đấu</span>
+              </button>
+
+              <button
+                onClick={() => handleStageSwitch('broadcast')}
+                className={`px-2.5 py-1 rounded-md text-[10.5px] font-black transition-all flex items-center gap-1.5 cursor-pointer ${
+                  (currentStage === 'broadcast' || currentStage === 'studio') 
+                    ? 'bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-md shadow-pink-500/30' 
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+                title="Chuyển sang Phòng Dựng Camera Studio 4K"
+              >
+                <Tv size={12} className={(currentStage === 'broadcast' || currentStage === 'studio') ? 'text-yellow-300' : 'text-gray-400'} />
+                <span>Studio 4K</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Phải: Chế độ Fit & Thu gọn bar */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={toggleFitMode}
+              className="px-2 py-1 rounded-md bg-white/5 hover:bg-white/10 border border-white/15 text-[10px] font-bold text-gray-300 hover:text-white transition-colors cursor-pointer"
+              title="Chuyển đổi cách hiển thị video: Cover (Phủ kín 100%) vs Contain (Vừa vặn nguyên bản)"
+            >
+              {objectFitState === 'contain' ? 'Fit: Vừa Vặn' : 'Fit: Phủ Kín'}
+            </button>
+
+            <button
+              onClick={() => setShowControlDock(false)}
+              className="p-1 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              title="Thu gọn thanh điều khiển (Di chuột lên mép trên để mở lại)"
+            >
+              <EyeOff size={14} />
+            </button>
+          </div>
+        </header>
+      )}
+
+      {/* Floating Toggle Button khi thanh Dock bị thu gọn */}
+      {!showControlDock && (
+        <button
+          onClick={() => setShowControlDock(true)}
+          className="absolute top-2 right-2 z-50 px-2.5 py-1 rounded-lg bg-black/80 hover:bg-black text-cyan-400 hover:text-white border border-cyan-500/40 text-[10px] font-bold shadow-lg transition-all opacity-40 hover:opacity-100 flex items-center gap-1 cursor-pointer"
+          title="Mở thanh điều khiển Play/Pause, Âm thanh & Chuyển Sân Khấu"
+        >
+          <Eye size={12} />
+          <span>Mở Điều Khiển</span>
+        </button>
+      )}
+
+      {/* 2. KHUNG PHÁT SÓNG SẠCH 100% (CHUẨN 9:16 HOẶC 16:9 - KHÔNG CÓ BẤT KỲ NÚT BẤM NÀO ĐÈ LÊN) */}
+      <main className="flex-1 w-full h-full relative overflow-hidden flex items-center justify-center bg-black">
+        <div 
+          className={`relative flex items-center justify-center overflow-hidden transition-all duration-200 ${
             ratio === '9:16'
               ? 'h-full aspect-[9/16] w-auto max-w-full'
               : 'w-full aspect-[16/9] h-auto max-h-full'
           }`}
-          style={ratio === '9:16' ? { aspectRatio: '9 / 16', height: '100%', maxWidth: 'calc(100vh * 9 / 16)' } : { aspectRatio: '16 / 9', width: '100%' }}
+          style={
+            ratio === '9:16' 
+              ? { 
+                  aspectRatio: '9 / 16', 
+                  height: '100%', 
+                  maxWidth: showControlDock ? 'calc((100vh - 48px) * 9 / 16)' : 'calc(100vh * 9 / 16)' 
+                } 
+              : { aspectRatio: '16 / 9', width: '100%' }
+          }
         >
-          {overlayCamActive ? (
-            <video
-              ref={(el) => {
-                overlayWebcamVideoRef.current = el;
-                if (el && overlayWebcamStreamRef.current && el.srcObject !== overlayWebcamStreamRef.current) {
-                  el.srcObject = overlayWebcamStreamRef.current;
-                }
-              }}
-              autoPlay
-              playsInline
-              muted
-              className="w-full h-full object-cover select-none scale-x-[-1] bg-black"
-            />
-          ) : hasStudioFrame ? (
-            /* Luồng Camera thật 30FPS trực tiếp từ Bảng điều khiển Studio */
-            <img
-              ref={studioImageRef}
-              alt="Live Studio Realtime Camera Stream"
-              className="w-full h-full object-cover select-none bg-black transform-gpu"
-            />
-          ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#0F1016] via-[#151824] to-[#0A0A0F] text-center p-6 select-none">
-              <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center mb-4 shadow-2xl shadow-blue-500/30 animate-pulse">
-                <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
+          {/* SÂN KHẤU 1: LIVE AI IDOL (Duy trì thường trực trong DOM để không bao giờ bị reset video) */}
+          <div 
+            style={{ display: currentStage === 'idol' ? 'flex' : 'none' }}
+            className="w-full h-full absolute inset-0 items-center justify-center overflow-hidden bg-black"
+          >
+            {activeMedia.url && activeMedia.isVideo ? (
+              <video
+                ref={overlayVideoRef}
+                key={activeMedia.url}
+                src={activeMedia.url}
+                autoPlay={masterState.videoPlaybackEvent !== 'pause'}
+                loop
+                muted={isVideoAudioMuted}
+                playsInline
+                controls={false}
+                preload="auto"
+                disablePictureInPicture
+                disableRemotePlayback
+                onLoadedMetadata={(e) => {
+                  const v = e.currentTarget;
+                  v.muted = isVideoAudioMuted;
+                  v.volume = videoVolume;
+                  if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
+                    v.dataset.userPaused = 'false';
+                    v.play().then(() => setIsPlayingState(true)).catch(() => {});
+                  } else {
+                    v.dataset.userPaused = 'true';
+                    v.pause();
+                    setIsPlayingState(false);
+                  }
+                }}
+                onPlay={() => setIsPlayingState(true)}
+                onPause={() => setIsPlayingState(false)}
+                onCanPlay={(e) => {
+                  const v = e.currentTarget;
+                  v.muted = isVideoAudioMuted;
+                  v.volume = videoVolume;
+                  if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false && v.paused) {
+                    v.dataset.userPaused = 'false';
+                    v.play().then(() => setIsPlayingState(true)).catch(() => {});
+                  }
+                }}
+                onWaiting={() => {}}
+                onStalled={() => {
+                  const v = overlayVideoRef.current;
+                  if (v && v.paused && masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
+                    v.play().then(() => setIsPlayingState(true)).catch(() => {});
+                  }
+                }}
+                onEnded={(e) => {
+                  e.currentTarget.currentTime = 0;
+                  if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
+                    e.currentTarget.play().then(() => setIsPlayingState(true)).catch(() => {});
+                  }
+                }}
+                onError={(e) => {
+                  console.warn('[CleanLiveOverlay] Video reconnecting in 500ms...', e);
+                  setTimeout(() => {
+                    const v = overlayVideoRef.current;
+                    if (v && activeMedia.url) {
+                      v.src = activeMedia.url;
+                      v.load();
+                      v.play().catch(() => {});
+                    }
+                  }, 500);
+                }}
+                className="w-full h-full select-none absolute inset-0 transform-gpu"
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  objectFit: objectFitState || 'cover',
+                  transform: 'translateZ(0)',
+                  WebkitTransform: 'translateZ(0)',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  imageRendering: '-webkit-optimize-contrast',
+                  willChange: 'transform'
+                }}
+              />
+            ) : activeStreamUrl ? (
+              <video
+                ref={flvVideoRef}
+                key={activeStreamUrl}
+                autoPlay
+                muted={isVideoAudioMuted}
+                playsInline
+                className="w-full h-full object-cover select-none bg-black absolute inset-0"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            ) : activeMedia.url ? (
+              <img 
+                src={activeMedia.url} 
+                className="w-full h-full object-cover select-none absolute inset-0"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', imageRendering: '-webkit-optimize-contrast' }}
+                alt="AI Idol"
+              />
+            ) : (
+              <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#0F1016] via-[#151824] to-[#0A0A0F] text-center p-6 select-none">
+                <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-pink-600 via-rose-600 to-red-600 flex items-center justify-center mb-5 shadow-2xl shadow-rose-500/30 animate-pulse">
+                  <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-white tracking-wide uppercase">MÀN HÌNH CHỜ LIVE IDOL (9:16)</h3>
+                <p className="text-gray-400 text-xs mt-2">Đang kết nối nhận video chuẩn 1080x1920 từ phần mềm...</p>
               </div>
-              <h3 className="text-lg font-black text-white tracking-wide">PHÒNG DỰNG LIVE STUDIO 4K</h3>
-              <p className="text-xs text-gray-400 mt-1 max-w-xs">Góc máy Camera đang chờ tín hiệu kết nối từ Bảng điều khiển Studio...</p>
-              <div className="mt-4 px-3.5 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10.5px] font-black flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                <span>TÍN HIỆU LIVE STUDIO SẴN SÀNG</span>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* Badge trạng thái phát sóng góc màn hình */}
-          <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-red-500/40">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
-            <span className="text-[11px] font-black text-white tracking-wider uppercase">LIVE STUDIO 4K</span>
+          {/* SÂN KHẤU 2: GAME BẢN ĐỒ VIỆT NAM (CẮM CỜ 63 TỈNH THÀNH) */}
+          <div 
+            style={{ display: (currentStage === 'bando' || currentStage === 'vietnam_map' || currentStage === 'map') ? 'block' : 'none' }}
+            className="w-full h-full absolute inset-0 overflow-hidden bg-transparent select-none pointer-events-auto"
+          >
+            <GameBanDoVietNam 
+              isPopout={true}
+              aspectRatio={ratio}
+              externalLiveEvent={liveEvent}
+              isDarkMode={masterState.isDarkMode !== false}
+            />
+          </div>
+
+          {/* SÂN KHẤU 3: GAME CHIẾN ĐẤU PK ĐẠI CHIẾN */}
+          <div 
+            style={{ display: (currentStage === 'battle' || currentStage === 'gamebattle' || currentStage === 'game') ? 'block' : 'none' }}
+            className="w-full h-full absolute inset-0 overflow-hidden bg-transparent select-none pointer-events-auto"
+          >
+            <GameChienDau 
+              isPopout={true}
+              aspectRatio={ratio}
+              externalLiveEvent={liveEvent}
+              isDarkMode={masterState.isDarkMode !== false}
+            />
+          </div>
+
+          {/* SÂN KHẤU 4: PHÒNG DỰNG LIVE STUDIO 4K */}
+          <div 
+            style={{ display: (currentStage === 'broadcast' || currentStage === 'studio') ? 'block' : 'none' }}
+            className="w-full h-full absolute inset-0 overflow-hidden bg-black flex items-center justify-center select-none"
+          >
+            {overlayCamActive ? (
+              <video
+                ref={(el) => {
+                  overlayWebcamVideoRef.current = el;
+                  if (el && overlayWebcamStreamRef.current && el.srcObject !== overlayWebcamStreamRef.current) {
+                    el.srcObject = overlayWebcamStreamRef.current;
+                  }
+                }}
+                autoPlay
+                playsInline
+                muted={isVideoAudioMuted}
+                className="w-full h-full object-cover select-none scale-x-[-1] bg-black"
+              />
+            ) : hasStudioFrame ? (
+              <img
+                ref={studioImageRef}
+                alt="Live Studio Realtime Camera Stream"
+                className="w-full h-full object-cover select-none bg-black transform-gpu"
+              />
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#0F1016] via-[#151824] to-[#0A0A0F] text-center p-6 select-none">
+                <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center mb-4 shadow-2xl shadow-blue-500/30 animate-pulse">
+                  <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-black text-white tracking-wide">PHÒNG DỰNG LIVE STUDIO 4K</h3>
+                <p className="text-xs text-gray-400 mt-1 max-w-xs">Góc máy Camera đang chờ tín hiệu kết nối từ Bảng điều khiển Studio...</p>
+                <div className="mt-4 px-3.5 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10.5px] font-black flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                  <span>TÍN HIỆU LIVE STUDIO SẴN SÀNG</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      </div>
-    );
-  }
-
-  // 4. RENDER STAGE: AI IDOL LIVESTREAM — 100% CLEAN VIDEO / NGƯỜI DUY NHẤT (CHUẨN 9:16 TIKTOK 1080x1920)
-  const isVertical = ratio === '9:16';
-  const overlayUrlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-  const objectFitMode = overlayUrlParams?.get('fit') === 'contain' ? 'contain' : 'cover';
-
-  return (
-    <div 
-      className="fixed inset-0 w-screen h-screen overflow-hidden flex items-center justify-center select-none bg-black"
-      style={{ width: '100vw', height: '100vh', position: 'fixed', inset: 0, backgroundColor: '#000' }}
-    >
-      {activeMedia.url && activeMedia.isVideo ? (
-        <video
-          ref={overlayVideoRef}
-          key={activeMedia.url}
-          src={activeMedia.url}
-          autoPlay={masterState.videoPlaybackEvent !== 'pause'}
-          loop
-          muted
-          playsInline
-          controls={false}
-          preload="auto"
-          disablePictureInPicture
-          disableRemotePlayback
-          onLoadedMetadata={(e) => {
-            const v = e.currentTarget;
-            v.muted = true;
-            if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
-              v.dataset.userPaused = 'false';
-              v.play().catch(() => {});
-            } else {
-              v.dataset.userPaused = 'true';
-              v.pause();
-            }
-          }}
-          onCanPlay={(e) => {
-            const v = e.currentTarget;
-            v.muted = true;
-            if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false && v.paused) {
-              v.dataset.userPaused = 'false';
-              v.play().catch(() => {});
-            }
-          }}
-          onWaiting={() => {
-            // Đang đệm progressive chunk tiếp theo trong nền, bảo toàn currentTime
-          }}
-          onStalled={() => {
-            const v = overlayVideoRef.current;
-            if (v && v.paused && masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
-              v.play().catch(() => {});
-            }
-          }}
-          onEnded={(e) => {
-            // Lặp lại liên tục 24/24 mượt mà, không bao giờ dừng
-            e.currentTarget.currentTime = 0;
-            if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
-              e.currentTarget.play().catch(() => {});
-            }
-          }}
-          onError={(e) => {
-            console.warn('[CleanLiveOverlay] Video reconnecting in 500ms...', e);
-            setTimeout(() => {
-              const v = overlayVideoRef.current;
-              if (v && activeMedia.url) {
-                v.src = activeMedia.url;
-                v.load();
-                v.play().catch(() => {});
-              }
-            }, 500);
-          }}
-          className="w-full h-full select-none absolute inset-0 transform-gpu"
-          style={{ 
-            width: '100vw', 
-            height: '100vh', 
-            objectFit: objectFitMode || 'cover',
-            transform: 'translateZ(0)',
-            WebkitTransform: 'translateZ(0)',
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden',
-            imageRendering: '-webkit-optimize-contrast',
-            willChange: 'transform'
-          }}
-        />
-      ) : activeStreamUrl ? (
-        <video
-          ref={flvVideoRef}
-          key={activeStreamUrl}
-          autoPlay
-          muted
-          playsInline
-          className="w-full h-full object-cover select-none bg-black absolute inset-0"
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-        />
-      ) : activeMedia.url ? (
-        <img 
-          src={activeMedia.url} 
-          className="w-full h-full object-cover select-none absolute inset-0"
-          style={{ width: '100%', height: '100%', objectFit: 'cover', imageRendering: '-webkit-optimize-contrast' }}
-          alt="AI Idol"
-        />
-      ) : (
-        <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#0F1016] via-[#151824] to-[#0A0A0F] text-center p-6 select-none">
-          <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-pink-600 via-rose-600 to-red-600 flex items-center justify-center mb-5 shadow-2xl shadow-rose-500/30 animate-pulse">
-            <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <h3 className="text-xl sm:text-2xl font-black text-white tracking-wide uppercase">MÀN HÌNH CHỜ LIVE IDOL (9:16)</h3>
-          <p className="text-gray-400 text-xs mt-2">Đang kết nối nhận video chuẩn 1080x1920 từ phần mềm...</p>
-        </div>
-      )}
+      </main>
 
       {/* Animation Styles */}
       <style>{`
         @keyframes idolBreathing {
-          0%, 100% {
-            transform: scale(1) translateY(0px);
-          }
-          50% {
-            transform: scale(1.015) translateY(-4px);
-          }
+          0%, 100% { transform: scale(1) translateY(0px); }
+          50% { transform: scale(1.015) translateY(-4px); }
         }
       `}</style>
     </div>

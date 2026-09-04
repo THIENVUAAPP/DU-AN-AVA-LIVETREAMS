@@ -446,7 +446,7 @@ export default function DesktopAppUI() {
 
   const handleOpenWindowCapture = () => {
     const width = 540;
-    const height = 960;
+    const height = 1008; // 48px dock ngoại khung + 960px 9:16 clean stage
     const left = Math.round((window.screen.width - width) / 2);
     const top = Math.round((window.screen.height - height) / 2);
     window.open(
@@ -454,7 +454,7 @@ export default function DesktopAppUI() {
       'avalive_window_capture_target',
       `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes`
     );
-    showToast('🖥️ Đã mở Cửa Sổ Live 9:16 Siêu Nét 60FPS! Hãy vào TikTok Studio chọn Bắt Cửa Sổ (Window Capture).', 'success');
+    showToast('🖥️ Đã mở Cửa Sổ Live 9:16 Siêu Nét! Thanh điều khiển (Play/Pause, Âm thanh HD) nằm bên ngoài khung live.', 'success');
   };
 
   const [overlayLinkBase, setOverlayLinkBase] = useState(() => {

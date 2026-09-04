@@ -41,7 +41,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
   const handleOpenWindowCapture = () => {
     const width = 540;
-    const height = 960;
+    const height = 1008; // 48px thanh điều khiển ngoại khung + 960px khung hình live 9:16
     const left = Math.round((window.screen.width - width) / 2);
     const top = Math.round((window.screen.height - height) / 2);
     const captureUrl = `${window.location.origin}/live?mode=window_capture`;

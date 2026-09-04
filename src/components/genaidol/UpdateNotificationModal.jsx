@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 
-export const APP_VERSION = '1.3.5';
+export const APP_VERSION = '1.3.6';
 export const UPDATE_NOTES = [
-  "🚀 Sửa triệt để lỗi phát qua Link tắt sau 1-2 phút: Động cơ Contiguous Streaming 8MB tuần tự liền mạch, khai báo dung lượng chuẩn xác, video phát liên tục 24/24 giờ xuyên suốt không bao giờ bị ngắt hay tắt giữa chừng.",
-  "🖥️ Window Capture Siêu Nét & Chống Đứng Hình (Anti-Occlusion 60FPS): Tích hợp luồng Web Worker độc lập và Silent Audio Heartbeat, cửa sổ chỉ cần mở là TikTok Live Studio bắt hình liên tục, không bị đóng băng khi bị che khuất hay di chuyển.",
-  "⚡ Bảo toàn video khi chuyển Tab: Giữ nguyên cây DOM và timestamp khi chuyển đổi giữa Live AI Idol, Game Chiến Đấu, Bản Đồ Chữ S, video tiếp tục phát liên tục trong thời gian thực, không bao giờ quay lại từ đầu (0:00)."
+  "🎮 Thanh Điều Khiển Ngoại Khung (Top Control Dock): Đặt toàn bộ nút bấm Play/Pause, Mở/Tắt âm thanh HD & chuyển sân khấu ra ngoài mép trên khung hình video, đảm bảo video livestream 9:16 sạch 100%, không bị chèn nút xấu vào phiên live OBS/TikTok.",
+  "🔊 Mở Tiếng Siêu Nét Full HD: Tích hợp nút bật âm thanh trực tiếp và thanh kéo Volume cho video phát qua Window Capture, âm thanh sắc nét trung thực 48kHz không còn bị câm tiếng.",
+  "⚡ Chuyển Sân Khấu Bất Biến Tọa Độ: Cố định tuyệt đối khung hình 9:16 chuẩn 1080x1920, chuyển đổi 1-click giữa Idol AI, Game Bản Đồ Chữ S, Game Chiến Đấu PK và Studio 4K mượt mà 0ms không làm lệch khung hay gián đoạn phiên live."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
