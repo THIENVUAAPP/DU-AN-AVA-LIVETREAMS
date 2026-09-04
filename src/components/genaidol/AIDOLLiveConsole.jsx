@@ -16,6 +16,7 @@ import { askGeminiLiveAi } from '../../lib/geminiClient';
 import { COUNTRY_FILTERS } from './game/GameVoiceConfigPanel';
 import { DEFAULT_BRAIN_PACKS } from '../../utils/defaultPresetsBootstrap';
 import { syncMasterLiveState } from '../../lib/masterLiveSync';
+import { fastStreamUpload } from '../../utils/fastStreamService';
 
 // ──────────────────────────────────────────────
 // AIDOL_DB (dùng lại kho AIDOL của tôi)
@@ -335,17 +336,24 @@ export default function AIDOLLiveConsole() {
         else if (file.type.startsWith('image')) type = 'image';
 
         let mediaUrl = URL.createObjectURL(file);
-        try {
-          const formData = new FormData();
-          formData.append('file', file);
-          const res = await fetch('/api/upload-media', { method: 'POST', body: formData });
-          if (res.ok) {
-            const data = await res.json();
-            if (data && data.url) {
-              mediaUrl = data.url.includes('/uploads/') ? data.url.substring(data.url.indexOf('/uploads/')) : data.url;
+        if (type === 'video') {
+          try {
+            const res = await fastStreamUpload(file);
+            if (res && res.fileUrl) mediaUrl = res.fileUrl;
+          } catch (e) {}
+        } else {
+          try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await fetch('/api/upload-media', { method: 'POST', body: formData });
+            if (res.ok) {
+              const data = await res.json();
+              if (data && data.url) {
+                mediaUrl = data.url.includes('/uploads/') ? data.url.substring(data.url.indexOf('/uploads/')) : data.url;
+              }
             }
-          }
-        } catch (err) {}
+          } catch (err) {}
+        }
 
         const item = {
           id: 'live_' + Date.now() + '_' + Math.random().toString(36).slice(2),
@@ -393,19 +401,14 @@ export default function AIDOLLiveConsole() {
   const handlePlayFromKho = async (item) => {
     let playUrl = item.mediaUrl;
 
-    // Nếu mediaUrl là blob, tự động upload lên server để TikTok Studio phát được
+    // Nếu mediaUrl là blob, tự động nạp fast-stream lên server để TikTok Studio phát được ngay
     if (playUrl && playUrl.startsWith('blob:') && item.fileBlob) {
       try {
-        const formData = new FormData();
-        formData.append('file', item.fileBlob);
-        const res = await fetch('/api/upload-media', { method: 'POST', body: formData });
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.url) {
-            playUrl = data.url.includes('/uploads/') ? data.url.substring(data.url.indexOf('/uploads/')) : data.url;
-            item.mediaUrl = playUrl;
-            addLiveMedia(item).catch(() => {});
-          }
+        const res = await fastStreamUpload(item.fileBlob);
+        if (res && res.fileUrl) {
+          playUrl = res.fileUrl;
+          item.mediaUrl = playUrl;
+          addLiveMedia(item).catch(() => {});
         }
       } catch (err) {}
     }

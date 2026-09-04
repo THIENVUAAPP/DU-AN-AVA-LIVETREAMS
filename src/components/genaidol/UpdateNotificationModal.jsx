@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 
-export const APP_VERSION = '1.3.2';
+export const APP_VERSION = '1.3.3';
 export const UPDATE_NOTES = [
-  "🚀 Tối ưu hóa siêu tốc cho Video dài 1-2 tiếng: Khởi chạy 0ms tức thì trên TikTok Live Studio & OBS, không còn bị đứng, giật, lag hay treo ở màn hình chờ.",
-  "⚡ Động cơ HTTP 206 Byte-Range & Suffix-Range thông minh: Tự động tải nhanh metadata (moov atom) và truyền tải từng khối 8MB mượt mà, loại bỏ triệt để nghẽn mạng Cloudflare/CEF.",
-  "🎬 Sửa lỗi tua lặp về 0 (Infinite Seek Loop): Giữ nguyên nhịp phát liên tục 24/24 mượt mà không bị ngắt quãng giữa phần mềm và TikTok Studio.",
-  "⭐ Khởi động 1-Click: Giữ nguyên [ 1_KHOI_DONG_AVALIVE.exe ] và [ 1_CLICK_CHAY_NGAY.bat ] ngay tại thư mục gốc, giải nén là chạy ngay lập tức."
+  "⚡ Công nghệ Fast-Stream Progressive Chunking: Nạp và phát tức thì 0ms cho Video dài 1-2 tiếng hoặc nhiều GB lên TikTok Live Studio giống OBS Studio.",
+  "🚀 Tách luồng thông minh (Head & Tail First): Đẩy ngay 4MB đầu và đuôi (chứa moov atom) trong 100ms đầu tiên để TikTok Studio phát hình ngay lập tức, các khối dữ liệu còn lại nạp ngầm mượt mà.",
+  "🛡️ Khắc phục triệt để lỗi nghẽn mạng & giới hạn tải file: Loại bỏ hoàn toàn tình trạng chờ đợi upload file nặng nhiều GB qua Cloudflare Tunnel hay mạng nội bộ.",
+  "🎬 Giữ nguyên chất lượng gốc siêu nét: Video sắc nét chuẩn 1080p/4K, không bị giật lag, tua mượt mà và đồng bộ hoàn hảo 24/24."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

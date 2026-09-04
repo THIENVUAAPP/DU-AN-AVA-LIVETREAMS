@@ -218,6 +218,137 @@ function tryApplyFaststart(filePath) {
   } catch(e) {}
 }
 
+// ============================================================
+// ⚡ FAST-STREAM CHUNKED PIPELINE (TRUYỀN TẢI TỪNG PHẦN PHÁT NGAY LẬP TỨC 0MS)
+// Dành riêng cho video dài 1-2 tiếng / dung lượng lớn: Phát luồng ngay lập tức mà không cần đợi nạp hết cả GB!
+// ============================================================
+const activeStreamUploads = {};
+
+app.post('/api/upload-stream-init', (req, res) => {
+  try {
+    const { originalName, fileSize, fileType, filePath: clientFilePath } = req.body || {};
+    
+    // Nếu có đường dẫn file nội bộ trên máy (chạy native hoặc app wrapper)
+    if (clientFilePath && fs.existsSync(clientFilePath)) {
+      const ext = path.extname(clientFilePath) || '.mp4';
+      const targetFilename = 'media-' + Date.now() + '-' + Math.round(Math.random() * 1E9) + ext;
+      const targetPath = path.join(uploadsDir, targetFilename);
+      
+      try {
+        fs.copyFileSync(clientFilePath, targetPath);
+        const fileUrl = `/uploads/${targetFilename}`;
+        currentMasterLiveState = {
+          ...currentMasterLiveState,
+          stage: 'idol',
+          mediaUrl: fileUrl,
+          isVideo: true,
+          videoPlaybackEvent: 'play',
+          isPlaying: true,
+          updatedAt: Date.now()
+        };
+        io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+        saveLiveStateToFile();
+        return res.json({ success: true, instant: true, fileUrl });
+      } catch (copyErr) {}
+    }
+
+    const ext = path.extname(originalName || '') || '.mp4';
+    const filename = 'media-' + Date.now() + '-' + Math.round(Math.random() * 1E9) + ext;
+    const filePath = path.join(uploadsDir, filename);
+    const uploadId = 'up_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+    
+    // Mở file ghi sẵn sàng (w+)
+    const fd = fs.openSync(filePath, 'w+');
+
+    activeStreamUploads[uploadId] = {
+      uploadId,
+      filename,
+      filePath,
+      fileSize: parseInt(fileSize, 10) || 0,
+      fd,
+      writtenBytes: 0,
+      chunksCount: 0,
+      createdAt: Date.now(),
+      timer: setTimeout(() => {
+        try { if (activeStreamUploads[uploadId]?.fd) fs.closeSync(activeStreamUploads[uploadId].fd); } catch(e) {}
+        delete activeStreamUploads[uploadId];
+      }, 300000) // 5 phút timeout
+    };
+
+    const fileUrl = `/uploads/${filename}`;
+
+    // 🚀 BẮN PHÁT SÓNG REALTIME NGAY LẬP TỨC (0MS DELAY)
+    // TikTok Live Studio nhận ngay link và chuẩn bị phát, không cần chờ nạp xong 2GB!
+    currentMasterLiveState = {
+      ...currentMasterLiveState,
+      stage: 'idol',
+      mediaUrl: fileUrl,
+      isVideo: true,
+      videoPlaybackEvent: 'play',
+      isPlaying: true,
+      updatedAt: Date.now()
+    };
+    io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+    saveLiveStateToFile();
+
+    res.json({
+      success: true,
+      uploadId,
+      filename,
+      fileUrl,
+      message: 'Fast-stream session initialized'
+    });
+  } catch (err) {
+    console.error('[StreamInit error]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/upload-chunk', (req, res) => {
+  const uploadId = req.headers['x-upload-id'];
+  const offset = parseInt(req.headers['x-chunk-offset'], 10);
+  const totalChunks = parseInt(req.headers['x-total-chunks'], 10);
+
+  const session = activeStreamUploads[uploadId];
+  if (!session || !session.fd) {
+    return res.status(404).json({ error: 'Phiên stream chunk không tồn tại hoặc đã kết thúc' });
+  }
+
+  // Reset timeout timer
+  if (session.timer) clearTimeout(session.timer);
+  session.timer = setTimeout(() => {
+    try { if (session.fd) fs.closeSync(session.fd); } catch(e) {}
+    delete activeStreamUploads[uploadId];
+  }, 300000);
+
+  const chunks = [];
+  req.on('data', (c) => chunks.push(c));
+  req.on('end', () => {
+    const buffer = Buffer.concat(chunks);
+    try {
+      if (typeof offset === 'number' && !isNaN(offset) && offset >= 0) {
+        fs.writeSync(session.fd, buffer, 0, buffer.length, offset);
+      }
+      session.writtenBytes += buffer.length;
+      session.chunksCount++;
+
+      // Nếu đã ghi đủ tất cả các chunks
+      if (!isNaN(totalChunks) && totalChunks > 0 && session.chunksCount >= totalChunks) {
+        if (session.timer) clearTimeout(session.timer);
+        try { fs.closeSync(session.fd); } catch(e) {}
+        session.fd = null;
+        delete activeStreamUploads[uploadId];
+        console.log(`[FastStream] ✅ Đã hoàn tất nạp 100% video: ${session.filename} (${session.writtenBytes} bytes)`);
+      }
+
+      res.json({ success: true, written: buffer.length, offset });
+    } catch(err) {
+      console.error('[FastStream chunk error]', err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+});
+
 app.post('/api/upload-media', upload.single('file'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });

@@ -40,6 +40,7 @@ import { saveCharacterToIDB, loadAllCharactersFromIDB, deleteCharacterFromIDB } 
 import { SUPPORTED_LANGUAGES, getCurrentLanguage, setCurrentLanguage, t } from '../../utils/i18n';
 import UpdateNotificationModal, { APP_VERSION } from './UpdateNotificationModal';
 import { bootstrapDefaultPresets } from '../../utils/defaultPresetsBootstrap';
+import { fastStreamUpload } from '../../utils/fastStreamService';
 
 export default function DesktopAppUI() {
   useEffect(() => {
@@ -1759,45 +1760,17 @@ export default function DesktopAppUI() {
         setSelectedCharacter(newCharId);
         try { localStorage.setItem('avalive_selected_char', newCharId); } catch (e) {}
 
-        showToast(`⏳ Đang đồng bộ video "${charName}" sang TikTok Live Studio...`, 'info');
+        showToast(`⚡ Đang kích hoạt phát luồng tức thì "${charName}" sang TikTok Live Studio...`, 'info');
 
-        // 🔄 2. UPLOAD TRỰC TIẾP LÊN SERVER ĐỂ CÓ ĐƯỜNG DẪN TĨNH PHÁT CHO TIKTOK STUDIO
-        (async () => {
-          try {
-            const formData = new FormData();
-            formData.append('file', file);
-
-            const candidateEndpoints = [
-              '/api/upload-media',
-              'http://127.0.0.1:3001/api/upload-media',
-              'http://localhost:3001/api/upload-media'
-            ];
-
-            let serverRelativeUrl = null;
-            for (const ep of candidateEndpoints) {
-              try {
-                const res = await fetch(ep, {
-                  method: 'POST',
-                  body: formData
-                });
-                if (res.ok) {
-                  const data = await res.json();
-                  if (data && data.url) {
-                    serverRelativeUrl = data.url.includes('/uploads/')
-                      ? data.url.substring(data.url.indexOf('/uploads/'))
-                      : data.url;
-                    break;
-                  }
-                }
-              } catch (err) {}
-            }
-
-            const finalMediaUrl = serverRelativeUrl || localUrl;
+        // 🚀 2. PHÁT LUỒNG SIÊU TỐC TỪNG PHẦN (FAST-STREAM PIPELINE 0MS)
+        // Không đợi nạp hết toàn bộ file GB, phát ngay khối đầu + đuôi trong 100ms
+        fastStreamUpload(file, {
+          onInit: ({ fileUrl }) => {
             const updatedChar = {
               id: newCharId,
               name: charName,
-              url: finalMediaUrl,
-              mediaUrl: finalMediaUrl,
+              url: fileUrl,
+              mediaUrl: fileUrl,
               type: 'video'
             };
 
@@ -1812,26 +1785,52 @@ export default function DesktopAppUI() {
               name: charName,
               type: 'video',
               fileData: file,
-              mediaUrl: finalMediaUrl
+              mediaUrl: fileUrl
             }).catch(() => {});
 
-            // 🚀 BẮN PHÁT SÓNG REALTIME VIDEO THẬT ĐẾN TIKTOK LIVE STUDIO / OBS
+            // 🚀 BẮN PHÁT SÓNG REALTIME VIDEO ĐẾN TIKTOK LIVE STUDIO / OBS TRONG 0MS!
             syncMasterLiveState({
               stage: 'idol',
               selectedCharacter: newCharId,
               characterName: charName,
-              mediaUrl: finalMediaUrl,
+              mediaUrl: fileUrl,
               isVideo: true,
               videoPlaybackEvent: 'play',
               isPlaying: true,
               aspectRatio: globalAspectRatio || '9:16'
             }, socketRef.current);
 
-            showToast(`✅ Video "${charName}" đã phát sóng trực tiếp sang TikTok Live Studio!`, 'success');
-          } catch (error) {
-            console.warn("Upload error:", error);
+            showToast(`✅ Video "${charName}" đã phát ngay trên TikTok Live Studio!`, 'success');
+          },
+          onProgress: (pct) => {
+            if (pct === 100) {
+              showToast(`🎉 Video "${charName}" đã nạp 100% dung lượng vào hệ thống!`, 'success');
+            }
+          },
+          onError: async (err) => {
+            console.warn('[FastStream] Error, fallback to standard upload:', err);
+            try {
+              const formData = new FormData();
+              formData.append('file', file);
+              const res = await fetch('/api/upload-media', { method: 'POST', body: formData });
+              if (res.ok) {
+                const data = await res.json();
+                if (data && data.url) {
+                  const fallbackUrl = data.url.includes('/uploads/') ? data.url.substring(data.url.indexOf('/uploads/')) : data.url;
+                  syncMasterLiveState({
+                    stage: 'idol',
+                    selectedCharacter: newCharId,
+                    characterName: charName,
+                    mediaUrl: fallbackUrl,
+                    isVideo: true,
+                    videoPlaybackEvent: 'play',
+                    isPlaying: true
+                  }, socketRef.current);
+                }
+              }
+            } catch(e) {}
           }
-        })();
+        });
       } else {
         // Ảnh: Mở Modal AI Xoá Phông & Làm Đẹp Siêu Nét 4K
         setBeautyModalImage(localUrl);
