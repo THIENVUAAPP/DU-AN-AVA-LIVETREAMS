@@ -495,6 +495,7 @@ export default function DesktopAppUI() {
   const flvCanvasRef = useRef(null);
   const currentPlayingUrlRef = useRef(null);
   const lastPlaybackTimeRef = useRef(0);
+  const desktopVideoRef = useRef(null);
 
   useEffect(() => {
     let animId;
@@ -1167,6 +1168,149 @@ export default function DesktopAppUI() {
     return () => window.removeEventListener('avalive_local_mute_change', handleMuteSync);
   }, []);
 
+  // 🔄 ĐỒNG BỘ 2 CHIỀU GIỮA PHẦN MỀM CHÍNH VÀ CỬA SỔ WINDOW CAPTURE OBS
+  useEffect(() => {
+    let bc = null;
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        bc = new BroadcastChannel('avalive_master_live_stream');
+        bc.onmessage = (event) => {
+          if (!event.data) return;
+
+          // 1. Đồng bộ Play / Pause từ Window Capture sang Phần Mềm Chính
+          if (event.data.type === 'GLOBAL_PLAYBACK_CHANGE') {
+            const shouldPlay = !!event.data.isPlaying;
+            setIsMasterLiveRunning(shouldPlay);
+            if (!shouldPlay) {
+              try { 
+                localStorage.setItem('avalive_user_paused', 'true');
+                localStorage.setItem('avalive_window_capture_paused', 'true');
+              } catch (e) {}
+              if (desktopVideoRef.current) {
+                desktopVideoRef.current.dataset.userPaused = 'true';
+                try { desktopVideoRef.current.pause(); } catch (e) {}
+              }
+              const allMedia = document.querySelectorAll('video, audio');
+              allMedia.forEach(el => {
+                try {
+                  el.dataset.userPaused = 'true';
+                  el.pause();
+                } catch (e) {}
+              });
+              if (typeof bandoAudio.pauseAll === 'function') bandoAudio.pauseAll();
+              if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
+            } else {
+              try { 
+                localStorage.removeItem('avalive_user_paused');
+                localStorage.removeItem('avalive_window_capture_paused');
+              } catch (e) {}
+              if (desktopVideoRef.current) {
+                desktopVideoRef.current.dataset.userPaused = 'false';
+                try { desktopVideoRef.current.play().catch(() => {}); } catch (e) {}
+              }
+              const allVideos = document.querySelectorAll('video');
+              allVideos.forEach(el => {
+                try {
+                  el.dataset.userPaused = 'false';
+                  el.play().catch(() => {});
+                } catch (e) {}
+              });
+            }
+          }
+
+          // 2. Đồng bộ Âm Lượng & Tắt Tiếng từ Window Capture sang Phần Mềm Chính
+          if (event.data.type === 'GLOBAL_AUDIO_CHANGE') {
+            const isMuted = !!event.data.isMuted;
+            const vol = typeof event.data.volume === 'number' ? event.data.volume : 1;
+            setIsLocalSpeakerMuted(isMuted);
+            if (desktopVideoRef.current) {
+              desktopVideoRef.current.muted = isMuted;
+              desktopVideoRef.current.volume = vol;
+            }
+            if (flvVideoRef.current) {
+              flvVideoRef.current.muted = isMuted;
+              flvVideoRef.current.volume = vol;
+            }
+            const allMedia = document.querySelectorAll('video, audio');
+            allMedia.forEach(el => {
+              try {
+                el.muted = isMuted;
+                el.volume = vol;
+              } catch (e) {}
+            });
+            bandoAudio.setLocalSpeakerMute(isMuted);
+            bandoAudio.setMuted(isMuted);
+            bandoAudio.setMasterVolume(vol);
+          }
+        };
+      } catch (err) {}
+    }
+
+    // Lắng nghe qua Storage Event (Dành cho đa cửa sổ trên hệ điều hành Windows)
+    const handleStorage = (e) => {
+      if (e.key === 'avalive_user_paused') {
+        const isPaused = e.newValue === 'true';
+        setIsMasterLiveRunning(!isPaused);
+        if (isPaused) {
+          if (desktopVideoRef.current) {
+            desktopVideoRef.current.dataset.userPaused = 'true';
+            try { desktopVideoRef.current.pause(); } catch (e) {}
+          }
+          document.querySelectorAll('video, audio').forEach(el => {
+            try {
+              el.dataset.userPaused = 'true';
+              el.pause();
+            } catch (err) {}
+          });
+          if (typeof bandoAudio.pauseAll === 'function') bandoAudio.pauseAll();
+          if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
+        } else {
+          if (desktopVideoRef.current) {
+            desktopVideoRef.current.dataset.userPaused = 'false';
+            try { desktopVideoRef.current.play().catch(() => {}); } catch (e) {}
+          }
+          document.querySelectorAll('video').forEach(el => {
+            try {
+              el.dataset.userPaused = 'false';
+              el.play().catch(() => {});
+            } catch (err) {}
+          });
+        }
+      }
+
+      if (e.key === 'avalive_audio_muted' || e.key === 'avalive_local_speaker_muted') {
+        const isMuted = e.newValue === 'true';
+        setIsLocalSpeakerMuted(isMuted);
+        if (desktopVideoRef.current) desktopVideoRef.current.muted = isMuted;
+        if (flvVideoRef.current) flvVideoRef.current.muted = isMuted;
+        document.querySelectorAll('video, audio').forEach(el => {
+          try { el.muted = isMuted; } catch (err) {}
+        });
+        bandoAudio.setLocalSpeakerMute(isMuted);
+        bandoAudio.setMuted(isMuted);
+      }
+
+      if (e.key === 'avalive_video_volume') {
+        const vol = parseFloat(e.newValue || '1');
+        if (desktopVideoRef.current) desktopVideoRef.current.volume = vol;
+        if (flvVideoRef.current) flvVideoRef.current.volume = vol;
+        document.querySelectorAll('video, audio').forEach(el => {
+          try { el.volume = vol; } catch (err) {}
+        });
+        bandoAudio.setMasterVolume(vol);
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      if (bc) {
+        try { bc.close(); } catch (e) {}
+      }
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
+
   // Tự động mở khóa audio context khi tương tác
   useEffect(() => {
     const handleGesture = () => {
@@ -1604,10 +1748,16 @@ export default function DesktopAppUI() {
         const mediaElements = document.querySelectorAll('audio, video');
         mediaElements.forEach(el => {
           try {
+            el.dataset.userPaused = 'true';
             el.pause();
             // KHÔNG reset currentTime để có thể phát tiếp từ chỗ đang dừng
           } catch (e) {}
         });
+      }
+
+      if (desktopVideoRef.current) {
+        desktopVideoRef.current.dataset.userPaused = 'true';
+        try { desktopVideoRef.current.pause(); } catch (e) {}
       }
 
       // 9. Phát tín hiệu dừng toàn cục (BroadcastChannel, CustomEvent, LocalStorage) cho OBS/TikTok Live Studio Overlay
@@ -1615,6 +1765,8 @@ export default function DesktopAppUI() {
         window.dispatchEvent(new CustomEvent('avalive_emergency_stop_all'));
         window.dispatchEvent(new CustomEvent('global-stop-demo'));
         try {
+          localStorage.setItem('avalive_user_paused', 'true');
+          localStorage.setItem('avalive_window_capture_paused', 'true');
           localStorage.setItem('avalive_emergency_stop_trigger', Date.now().toString());
           localStorage.setItem('avalive_master_live_running', 'false');
         } catch (e) {}
@@ -1623,6 +1775,7 @@ export default function DesktopAppUI() {
       if (typeof BroadcastChannel !== 'undefined') {
         try {
           const bc = new BroadcastChannel('avalive_master_live_stream');
+          bc.postMessage({ type: 'GLOBAL_PLAYBACK_CHANGE', isPlaying: false, userPaused: true, timestamp: Date.now() });
           bc.postMessage({ type: 'EMERGENCY_STOP_ALL', timestamp: Date.now() });
           bc.close();
         } catch (e) {}
@@ -1637,6 +1790,11 @@ export default function DesktopAppUI() {
           bcBattle.close();
         } catch (e) {}
       }
+
+      syncMasterLiveState({
+        videoPlaybackEvent: 'pause',
+        isPlaying: false
+      }, socketRef.current);
 
       // Toast thông báo
       setToast({
@@ -1654,8 +1812,15 @@ export default function DesktopAppUI() {
       // --- BẬT TẤT CẢ ---
       setIsMasterLiveRunning(true);
       try {
+        localStorage.removeItem('avalive_user_paused');
+        localStorage.removeItem('avalive_window_capture_paused');
         localStorage.setItem('avalive_master_live_running', 'true');
       } catch (e) {}
+
+      if (desktopVideoRef.current) {
+        desktopVideoRef.current.dataset.userPaused = 'false';
+        try { desktopVideoRef.current.play().catch(() => {}); } catch (e) {}
+      }
 
       // 1. Reset Bảng Xếp Hạng về 0 để cập nhật thông tin người tặng Live mới nhất
       try {
@@ -1688,6 +1853,7 @@ export default function DesktopAppUI() {
       if (typeof BroadcastChannel !== 'undefined') {
         try {
           const bc = new BroadcastChannel('avalive_master_live_stream');
+          bc.postMessage({ type: 'GLOBAL_PLAYBACK_CHANGE', isPlaying: true, userPaused: false, timestamp: Date.now() });
           bc.postMessage({ 
             type: 'RESUME_ALL', 
             stage: isGameBanDoActive ? 'bando' : (isGameBattleActive ? 'battle' : 'idol'),
@@ -1696,6 +1862,11 @@ export default function DesktopAppUI() {
           bc.close();
         } catch (e) {}
       }
+
+      syncMasterLiveState({
+        videoPlaybackEvent: 'play',
+        isPlaying: true
+      }, socketRef.current);
 
       setToast({
         type: 'success',
@@ -2008,9 +2179,10 @@ export default function DesktopAppUI() {
       if (lipSyncVideoUrl) {
         return (
           <video 
+            ref={desktopVideoRef}
             src={lipSyncVideoUrl} 
             className="w-full h-full object-contain bg-black"
-            autoPlay 
+            autoPlay={localStorage.getItem('avalive_user_paused') !== 'true' && isMasterLiveRunning} 
             controls={false}
             muted={isLocalSpeakerMuted}
             onEnded={handleVideoEnded}
@@ -2029,13 +2201,14 @@ export default function DesktopAppUI() {
       if (isProcessingEvent && activeVideoItem && activeVideoItem.mediaUrl) {
         return (
           <video 
+            ref={desktopVideoRef}
             key={activeVideoItem.id || activeVideoItem.mediaUrl}
             src={activeVideoItem.mediaUrl} 
             className="w-full h-full object-contain bg-black"
-            autoPlay 
+            autoPlay={localStorage.getItem('avalive_user_paused') !== 'true' && isMasterLiveRunning} 
             loop={!isProcessingEvent}
             controls={false}
-            muted={true}
+            muted={isLocalSpeakerMuted}
             onEnded={handleVideoEnded}
             onError={() => {
               console.warn('Lỗi tải video phản hồi');
@@ -2064,13 +2237,14 @@ export default function DesktopAppUI() {
         return (
           <div className="relative w-full h-full">
             <video 
+              ref={desktopVideoRef}
               key={selected.url}
               src={selected.url} 
               className="w-full h-full object-contain bg-black transform-gpu"
               style={{ transform: 'translateZ(0)', willChange: 'transform' }}
-              autoPlay 
+              autoPlay={localStorage.getItem('avalive_user_paused') !== 'true' && isMasterLiveRunning} 
               loop 
-              muted 
+              muted={isLocalSpeakerMuted} 
               controls 
               preload="auto"
               disablePictureInPicture
@@ -2086,8 +2260,19 @@ export default function DesktopAppUI() {
                     e.currentTarget.currentTime = lastPlaybackTimeRef.current;
                   } catch (err) {}
                 }
+                const isPaused = localStorage.getItem('avalive_user_paused') === 'true' || !isMasterLiveRunning;
+                if (isPaused) {
+                  e.currentTarget.dataset.userPaused = 'true';
+                  e.currentTarget.pause();
+                }
               }} 
               onPlay={(e) => {
+                if (localStorage.getItem('avalive_user_paused') === 'true' || !isMasterLiveRunning) {
+                  e.currentTarget.dataset.userPaused = 'true';
+                  e.currentTarget.pause();
+                  return;
+                }
+                e.currentTarget.dataset.userPaused = 'false';
                 let playUrl = selected.url;
                 if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
                   playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
@@ -2098,12 +2283,21 @@ export default function DesktopAppUI() {
                   videoPlaybackEvent: 'play',
                   isPlaying: true
                 }, socketRef.current);
+                try {
+                  const bc = new BroadcastChannel('avalive_master_live_stream');
+                  bc.postMessage({ type: 'GLOBAL_PLAYBACK_CHANGE', isPlaying: true, userPaused: false, timestamp: Date.now() });
+                  setTimeout(() => bc.close(), 100);
+                } catch (err) {}
               }}
               onPause={(e) => {
                 let playUrl = selected.url;
                 if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
                   playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
                 }
+                try {
+                  localStorage.setItem('avalive_user_paused', 'true');
+                  localStorage.setItem('avalive_window_capture_paused', 'true');
+                } catch (err) {}
                 syncMasterLiveState({
                   mediaUrl: playUrl,
                   isVideo: true,
@@ -2111,6 +2305,32 @@ export default function DesktopAppUI() {
                   videoCurrentTime: e.currentTarget.currentTime,
                   isPlaying: false
                 }, socketRef.current);
+                try {
+                  const bc = new BroadcastChannel('avalive_master_live_stream');
+                  bc.postMessage({ type: 'GLOBAL_PLAYBACK_CHANGE', isPlaying: false, userPaused: true, timestamp: Date.now() });
+                  setTimeout(() => bc.close(), 100);
+                } catch (err) {}
+              }}
+              onVolumeChange={(e) => {
+                const isMuted = e.currentTarget.muted;
+                const vol = e.currentTarget.volume;
+                setIsLocalSpeakerMuted(isMuted);
+                bandoAudio.setLocalSpeakerMute(isMuted);
+                bandoAudio.setMuted(isMuted);
+                bandoAudio.setMasterVolume(vol);
+                try {
+                  localStorage.setItem('avalive_audio_muted', String(isMuted));
+                  localStorage.setItem('avalive_video_volume', String(vol));
+                } catch (err) {}
+                syncMasterLiveState({
+                  isVideoAudioMuted: isMuted,
+                  videoVolume: vol
+                }, socketRef.current);
+                try {
+                  const bc = new BroadcastChannel('avalive_master_live_stream');
+                  bc.postMessage({ type: 'GLOBAL_AUDIO_CHANGE', isMuted, volume: vol, timestamp: Date.now() });
+                  setTimeout(() => bc.close(), 100);
+                } catch (err) {}
               }}
               onSeeked={(e) => {
                 syncMasterLiveState({

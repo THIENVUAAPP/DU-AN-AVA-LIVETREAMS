@@ -273,6 +273,12 @@ class BanDoAudioEngine {
     if (this.masterGain && this.ctx) {
       this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 0.95, this.ctx.currentTime);
     }
+    if (this.customBgmAudio) {
+      this.customBgmAudio.muted = this.isMuted;
+    }
+    if (this.customSfxAudio) {
+      this.customSfxAudio.muted = this.isMuted;
+    }
     if (this.isMuted) {
       this.stopBgmOnLive();
     }
@@ -478,8 +484,15 @@ class BanDoAudioEngine {
 
   setMasterVolume(val) {
     this.ensureContext();
+    const v = Math.max(0, Math.min(1, val));
     if (this.masterGain && this.ctx) {
-      this.masterGain.gain.setValueAtTime(Math.max(0, Math.min(1, val)), this.ctx.currentTime);
+      this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : v, this.ctx.currentTime);
+    }
+    if (this.customBgmAudio) {
+      this.customBgmAudio.volume = v;
+    }
+    if (this.customSfxAudio) {
+      this.customSfxAudio.volume = v;
     }
   }
 
