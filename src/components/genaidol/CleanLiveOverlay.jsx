@@ -4,7 +4,6 @@ import flvjs from 'flv.js';
 import Hls from 'hls.js';
 import GameBanDoVietNam from './game/GameBanDoVietNam';
 import GameBattleOverlay from './game/GameBattleOverlay';
-import { useAvatarLipSync } from '../../hooks/useAvatarLipSync';
 import { supabase } from '../../lib/supabaseClient';
 import { loadAllAidolItems } from '../../utils/idbHelper';
 
@@ -60,7 +59,6 @@ const getBackendUrl = () => {
 };
 
 export default function CleanLiveOverlay({ customStyle = {} }) {
-  const { blendshapes, currentVolume } = useAvatarLipSync();
   const overlayVideoRef = useRef(null);
   const [masterState, setMasterState] = useState(() => {
     let saved = null;
@@ -194,15 +192,30 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       if (vid) {
         if (data.videoPlaybackEvent === 'pause' || data.isPlaying === false) {
           vid.dataset.userPaused = 'true';
-          vid.pause();
+          if (!vid.paused) vid.pause();
         } else if (data.videoPlaybackEvent === 'play' || data.isPlaying === true) {
           vid.dataset.userPaused = 'false';
           vid.muted = true;
-          vid.play().catch(() => {});
+          if (vid.paused) vid.play().catch(() => {});
         }
       }
 
       setMasterState(prev => {
+        // Kiểm tra xem có trường dữ liệu quan trọng nào thực sự thay đổi không
+        let hasDiff = false;
+        const keys = ['stage', 'aspectRatio', 'mediaUrl', 'flvUrl', 'isVideo', 'selectedCharacter', 'characterName', 'videoPlaybackEvent', 'isPlaying', 'isDarkMode'];
+        for (const k of keys) {
+          if (data[k] !== undefined && data[k] !== prev[k]) {
+            hasDiff = true;
+            break;
+          }
+        }
+        if (data.videoPlaybackEvent === 'seeked' && data.videoCurrentTime !== undefined) {
+          hasDiff = true;
+        }
+
+        if (!hasDiff) return prev; // Không thay đổi thì giữ nguyên reference, tránh kích hoạt re-render
+
         const next = { ...prev, ...data };
         // URL Parameter & Path Override check (nếu link là link chuyên dụng của 1 dự án thì cố định dự án đó)
         const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
@@ -630,28 +643,30 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     }
   }, [masterState.stage]);
 
-  // Đồng bộ Play/Pause theo thời gian thực từ phần mềm (Dashboard)
+  // Đồng bộ Play/Pause & Tua video theo thời gian thực từ phần mềm (Dashboard)
   useEffect(() => {
     if (overlayVideoRef.current && masterState.videoPlaybackEvent) {
       try {
         const v = overlayVideoRef.current;
-        if (masterState.videoPlaybackEvent === 'play') {
+        if (masterState.videoPlaybackEvent === 'play' || masterState.isPlaying === true) {
           v.dataset.userPaused = 'false';
           if (v.paused) v.play().catch(() => {});
-        } else if (masterState.videoPlaybackEvent === 'pause') {
+        } else if (masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false) {
           v.dataset.userPaused = 'true';
           if (!v.paused) v.pause();
         }
         
-        if (masterState.videoCurrentTime !== undefined) {
+        // 🚀 CHỈ ĐỒNG BỘ SEEK KHI STREAMER THỰC SỰ TUA (seeked)
+        // Tuyệt đối không can thiệp currentTime khi đang phát bình thường, tránh loop reset về 0 làm đứng/giật video 1-2 tiếng!
+        if (masterState.videoPlaybackEvent === 'seeked' && typeof masterState.videoCurrentTime === 'number') {
            const timeDiff = Math.abs(v.currentTime - masterState.videoCurrentTime);
-           if (timeDiff > 1.0) { // Nếu lệch quá 1s thì đồng bộ lại để mượt
+           if (timeDiff > 2.0) {
               v.currentTime = masterState.videoCurrentTime;
            }
         }
       } catch (e) {}
     }
-  }, [masterState.videoPlaybackEvent, masterState.videoCurrentTime]);
+  }, [masterState.videoPlaybackEvent, masterState.videoCurrentTime, masterState.isPlaying]);
 
   // 🎯 WINDOW SURFACE INVALIDATOR & ANTI-THROTTLING
   // Giúp OBS/TikTok Studio bắt được hình khi dùng Window Capture, kể cả khi Chrome bị ẩn (minimized/background).
@@ -705,15 +720,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       const vid = overlayVideoRef.current;
       if (!vid) return;
 
-      // Nếu không có lệnh tạm dừng từ streamer và video đang bị pause hoặc kết thúc
+      // Nếu không có lệnh tạm dừng từ streamer và video bị dừng ngoài ý muốn trong khi đã nạp đủ buffer
       if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
-        if (vid.paused || vid.ended) {
-          if (vid.ended) vid.currentTime = 0;
+        if (vid.paused && vid.readyState >= 2 && !vid.seeking) {
           vid.muted = true;
           vid.play().catch(() => {});
         }
       }
-    }, 1500);
+    }, 2000);
 
     return () => clearInterval(watchdogTimer);
   }, [masterState.videoPlaybackEvent, masterState.isPlaying]);
@@ -929,76 +943,66 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     >
       {activeMedia.url && activeMedia.isVideo ? (
         <video
-          ref={(el) => {
-            overlayVideoRef.current = el;
-            if (el) {
-              el.muted = true;
-              el.defaultMuted = true;
-              el.playsInline = true;
-              // Disabled audio-reactive playbackRate to prevent "giật giật" (jerky) video.
-              // Video should play at constant 1.0 speed unless explicitly changed.
-              try {
-                if (el.playbackRate !== 1.0) el.playbackRate = 1.0;
-              } catch(e) {}
-              
-              el.setAttribute('muted', '');
-              el.setAttribute('playsinline', '');
-              
-              // Chỉ autoPlay nếu không có lệnh Pause từ phần mềm
-              if (masterState.videoPlaybackEvent !== 'pause') {
-                el.setAttribute('autoplay', '');
-                const playPromise = el.play();
-                if (playPromise !== undefined) {
-                  playPromise.catch(() => {
-                    el.muted = true;
-                    el.play().catch(() => {});
-                  });
-                }
-              }
-            }
-          }}
+          ref={overlayVideoRef}
+          key={activeMedia.url}
           src={activeMedia.url}
           autoPlay={masterState.videoPlaybackEvent !== 'pause'}
           loop
           muted
           playsInline
           controls={false}
-          preload="auto"
+          preload="metadata"
           disablePictureInPicture
+          disableRemotePlayback
           onLoadedMetadata={(e) => {
-            e.target.muted = true;
+            const v = e.currentTarget;
+            v.muted = true;
             if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
-              e.target.dataset.userPaused = 'false';
-              e.target.play().catch(() => {});
+              v.dataset.userPaused = 'false';
+              v.play().catch(() => {});
             } else {
-              e.target.dataset.userPaused = 'true';
-              e.target.pause();
+              v.dataset.userPaused = 'true';
+              v.pause();
             }
           }}
           onCanPlay={(e) => {
-            e.target.muted = true;
-            if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
-              e.target.dataset.userPaused = 'false';
-              e.target.play().catch(() => {});
-            } else {
-              e.target.dataset.userPaused = 'true';
-              e.target.pause();
+            const v = e.currentTarget;
+            v.muted = true;
+            if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false && v.paused) {
+              v.dataset.userPaused = 'false';
+              v.play().catch(() => {});
+            }
+          }}
+          onWaiting={() => {
+            // Đang đệm chunk tiếp theo, không reset currentTime
+          }}
+          onStalled={() => {
+            const v = overlayVideoRef.current;
+            if (v && v.paused && masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
+              v.play().catch(() => {});
             }
           }}
           onEnded={(e) => {
-            e.target.currentTime = 0;
+            e.currentTarget.currentTime = 0;
             if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
-              e.target.play().catch(() => {});
+              e.currentTarget.play().catch(() => {});
             }
           }}
           onError={(e) => {
-            console.warn('[CleanLiveOverlay] Video stream notice:', e);
+            console.warn('[CleanLiveOverlay] Video reconnecting in 1s...', e);
+            setTimeout(() => {
+              const v = overlayVideoRef.current;
+              if (v && activeMedia.url) {
+                v.load();
+                v.play().catch(() => {});
+              }
+            }, 1000);
           }}
           className="w-full h-full select-none absolute inset-0"
           style={{ 
             width: '100vw', 
             height: '100vh', 
-            objectFit: 'cover',
+            objectFit: objectFitMode || 'cover',
             transform: 'none',
             willChange: 'transform'
           }}

@@ -1,0 +1,18 @@
+{
+  "stage": "idol",
+  "aspectRatio": "9:16",
+  "characterId": "linhanh_4k",
+  "characterName": "Idol Live AI Pro",
+  "mediaUrl": "/uploads/media-1788141109808-459255190.mp4",
+  "isVideo": true,
+  "videoPlaybackEvent": "play",
+  "isPlaying": true,
+  "isAudioMuted": false,
+  "isDarkMode": true,
+  "updatedAt": 1788486215945,
+  "flvUrl": null,
+  "isConnected": true,
+  "type": "MASTER_LIVE_STATE_UPDATE",
+  "currentLang": "vi",
+  "selectedCharacter": "custom_1788141109789"
+}

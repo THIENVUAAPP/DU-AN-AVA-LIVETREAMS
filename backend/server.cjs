@@ -82,8 +82,10 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // ⚡ HIGH-PERFORMANCE VIDEO STREAMING ENGINE (HTTP 206 Byte-Range Partial Content)
-// Giúp video MP4/WebM load ngay lập tức 0ms, không lag, không giật, hỗ trợ tua mượt mà
-app.get('/uploads/:filename', (req, res, next) => {
+// Giúp video MP4/WebM load ngay lập tức 0ms, không lag, không giật, hỗ trợ video 1-2 tiếng siêu mượt trên TikTok Live Studio & OBS
+app.all('/uploads/:filename', (req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') return next();
+
   const filePath = path.join(uploadsDir, req.params.filename);
   if (!fs.existsSync(filePath)) return next();
 
@@ -97,6 +99,11 @@ app.get('/uploads/:filename', (req, res, next) => {
     res.setHeader('Access-Control-Allow-Headers', '*');
     res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
     res.setHeader('Accept-Ranges', 'bytes');
+
+    if (req.method === 'OPTIONS') {
+      res.statusCode = 204;
+      return res.end();
+    }
 
     const ext = path.extname(filePath).toLowerCase();
     const mimeTypes = {
@@ -113,44 +120,112 @@ app.get('/uploads/:filename', (req, res, next) => {
 
     if (range && (ext === '.mp4' || ext === '.webm' || ext === '.mov')) {
       const parts = range.replace(/bytes=/, "").split("-");
-      const start = parseInt(parts[0], 10);
-      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      let start = 0;
+      let end = fileSize - 1;
+
+      // 1. Hỗ trợ Suffix Range: bytes=-N (Đọc N byte cuối file để lấy moov atom cho video dài 1-2 tiếng)
+      if (parts[0] === '' && parts[1]) {
+        const suffix = parseInt(parts[1], 10);
+        if (!isNaN(suffix) && suffix > 0) {
+          start = Math.max(0, fileSize - suffix);
+          end = fileSize - 1;
+        }
+      } else {
+        start = parseInt(parts[0], 10);
+        if (isNaN(start) || start < 0 || start >= fileSize) {
+          res.status(416).set('Content-Range', `bytes */${fileSize}`).end();
+          return;
+        }
+
+        if (parts[1] && parts[1].trim() !== '') {
+          // Range cụ thể: bytes=START-END
+          end = parseInt(parts[1], 10);
+          if (isNaN(end) || end >= fileSize) end = fileSize - 1;
+        } else {
+          // Open Range: bytes=START-
+          // 🚀 CHUNK STREAMING THÔNG MINH CHO VIDEO DÀI 1-2 TIẾNG:
+          // Chỉ gửi 8MB mỗi request để video nạp 0ms ngay lập tức, không làm nghẽn socket hoặc tràn RAM CEF TikTok Live Studio.
+          const CHUNK_SIZE = 8 * 1024 * 1024; // 8MB
+          end = Math.min(start + CHUNK_SIZE - 1, fileSize - 1);
+        }
+      }
+
       const chunksize = (end - start) + 1;
-      const file = fs.createReadStream(filePath, { start, end });
-      const head = {
+      res.writeHead(206, {
         'Content-Range': `bytes ${start}-${end}/${fileSize}`,
         'Accept-Ranges': 'bytes',
         'Content-Length': chunksize,
         'Content-Type': contentType,
-      };
-      res.writeHead(206, head);
-      file.pipe(res);
+      });
+
+      if (req.method === 'HEAD') {
+        return res.end();
+      }
+
+      const stream = fs.createReadStream(filePath, { start, end });
+      req.on('close', () => {
+        try { stream.destroy(); } catch (e) {}
+      });
+      stream.on('error', () => {
+        try { stream.destroy(); } catch (e) {}
+      });
+      stream.pipe(res);
     } else {
-      const head = {
+      res.writeHead(200, {
         'Content-Length': fileSize,
         'Content-Type': contentType,
-      };
-      res.writeHead(200, head);
-      fs.createReadStream(filePath).pipe(res);
+        'Accept-Ranges': 'bytes',
+        'Cache-Control': 'public, max-age=86400, immutable'
+      });
+      if (req.method === 'HEAD') {
+        return res.end();
+      }
+      const stream = fs.createReadStream(filePath);
+      req.on('close', () => {
+        try { stream.destroy(); } catch (e) {}
+      });
+      stream.on('error', () => {
+        try { stream.destroy(); } catch (e) {}
+      });
+      stream.pipe(res);
     }
   } catch (err) {
     next(err);
   }
 });
 
-app.use('/uploads', (req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', '*');
-  res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
-  next();
-}, express.static(uploadsDir, { maxAge: '1d', acceptRanges: true }));
+// Static fallback cho thư mục uploads
+app.use('/uploads', express.static(uploadsDir, { maxAge: '1d', acceptRanges: true }));
+
+// Tự động tối ưu hoá Moov Atom lên đầu file (FastStart) nếu có ffmpeg trên máy
+function tryApplyFaststart(filePath) {
+  try {
+    const { exec } = require('child_process');
+    exec('ffmpeg -version', (err) => {
+      if (err) return; // Không có ffmpeg, bỏ qua (Range handler đã xử lý mượt)
+      const tempPath = filePath + '.faststart.mp4';
+      exec(`ffmpeg -y -i "${filePath}" -c copy -movflags +faststart "${tempPath}"`, (err2) => {
+        if (!err2 && fs.existsSync(tempPath) && fs.statSync(tempPath).size > 1000) {
+          try {
+            fs.renameSync(tempPath, filePath);
+            console.log(`[FastStart] ✅ Đã tối ưu moov atom lên đầu cho video: ${path.basename(filePath)}`);
+          } catch(e) {}
+        } else if (fs.existsSync(tempPath)) {
+          try { fs.unlinkSync(tempPath); } catch(e) {}
+        }
+      });
+    });
+  } catch(e) {}
+}
 
 app.post('/api/upload-media', upload.single('file'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
   
+  const savedFilePath = path.join(uploadsDir, req.file.filename);
+  tryApplyFaststart(savedFilePath);
+
   const fileUrl = `/uploads/${req.file.filename}`;
   currentMasterLiveState = {
     ...currentMasterLiveState,
@@ -1264,6 +1339,9 @@ httpServer.on('error', (err) => {
     console.error('Server error:', err);
   }
 });
+
+httpServer.timeout = 300000; // 5 phút (hỗ trợ upload & stream video 1-2 tiếng dung lượng lớn)
+httpServer.keepAliveTimeout = 65000;
 
 httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`\n===========================================================`);

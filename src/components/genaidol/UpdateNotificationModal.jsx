@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 
-export const APP_VERSION = '1.3.1';
+export const APP_VERSION = '1.3.2';
 export const UPDATE_NOTES = [
-  "🔥 Sửa triệt để lỗi màn hình đỏ 'Cannot access A before initialization': Tối ưu hóa thứ tự khởi tạo video, đảm bảo TikTok Live Studio nhận luồng mượt mà 100%.",
-  "⭐ Rút ngắn quá trình giải nén 1-Click: Thêm trực tiếp [ 1_KHOI_DONG_AVALIVE.exe ] và [ 1_CLICK_CHAY_NGAY.bat ] ngay ở đầu thư mục giải nén, nhấp đúp là dùng ngay không cần tìm file.",
-  "⚡ Kết nối Browser Source tức thì: Dán link vào TikTok Live Studio nhận ngay video thực tế phần mềm đang mở, siêu mượt và không gián đoạn.",
-  "🚫 Xoá sạch hoàn toàn video nền và cache cũ, tự động nạp phiên bản mới nhất."
+  "🚀 Tối ưu hóa siêu tốc cho Video dài 1-2 tiếng: Khởi chạy 0ms tức thì trên TikTok Live Studio & OBS, không còn bị đứng, giật, lag hay treo ở màn hình chờ.",
+  "⚡ Động cơ HTTP 206 Byte-Range & Suffix-Range thông minh: Tự động tải nhanh metadata (moov atom) và truyền tải từng khối 8MB mượt mà, loại bỏ triệt để nghẽn mạng Cloudflare/CEF.",
+  "🎬 Sửa lỗi tua lặp về 0 (Infinite Seek Loop): Giữ nguyên nhịp phát liên tục 24/24 mượt mà không bị ngắt quãng giữa phần mềm và TikTok Studio.",
+  "⭐ Khởi động 1-Click: Giữ nguyên [ 1_KHOI_DONG_AVALIVE.exe ] và [ 1_CLICK_CHAY_NGAY.bat ] ngay tại thư mục gốc, giải nén là chạy ngay lập tức."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

@@ -102,7 +102,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
   const projects = [
     {
       id: "idol",
-      name: "DỰ ÁN 1: LIVE AI IDOL & VIDEO NỀN",
+      name: "DỰ ÁN 1: LIVE AI IDOL & PHÁT VIDEO TRỰC TIẾP",
       tag: "HOT NHẤT",
       tagColor: "from-pink-500 to-rose-600",
       icon: MonitorPlay,

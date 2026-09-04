@@ -2027,7 +2027,7 @@ export default function DesktopAppUI() {
             loop 
             muted 
             controls 
-            preload="auto"
+            preload="metadata"
             disablePictureInPicture
             playsInline 
             onPlay={(e) => {
@@ -2039,7 +2039,6 @@ export default function DesktopAppUI() {
                 mediaUrl: playUrl,
                 isVideo: true,
                 videoPlaybackEvent: 'play',
-                videoCurrentTime: e.currentTarget.currentTime,
                 isPlaying: true
               }, socketRef.current);
             }}
