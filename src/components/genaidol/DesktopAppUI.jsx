@@ -1336,6 +1336,17 @@ export default function DesktopAppUI() {
       localStorage.setItem('avalive_overlay_audio_muted', String(nextMuted));
     } catch (e) {}
 
+    // Bật/tắt âm thanh trực tiếp trên video của phần mềm quản lý
+    if (desktopVideoRef.current) {
+      desktopVideoRef.current.muted = nextMuted;
+      if (!nextMuted) {
+        desktopVideoRef.current.volume = liveVolume;
+      }
+    }
+    if (flvVideoRef.current) {
+      flvVideoRef.current.muted = nextMuted;
+    }
+
     bandoAudio.setLocalSpeakerMute(nextMuted);
     bandoAudio.setMuted(nextMuted);
 
@@ -1357,7 +1368,7 @@ export default function DesktopAppUI() {
       videoVolume: liveVolume
     }, socketRef.current);
 
-    showToast(nextMuted ? '🔇 Đã TẮT TIẾNG phát ra Cửa Sổ Live (OBS)!' : '🔊 Đã MỞ TIẾNG phát ra Cửa Sổ Live (OBS)!', nextMuted ? 'info' : 'success');
+    showToast(nextMuted ? '🔇 Đã TẮT ÂM THANH!' : '🔊 Đã BẬT ÂM THANH!', nextMuted ? 'info' : 'success');
   }, [liveAudioMuted, liveVolume]);
 
   const handleLiveVolumeChange = useCallback((newVol) => {
@@ -2429,7 +2440,7 @@ export default function DesktopAppUI() {
             className="w-full h-full object-contain bg-black"
             autoPlay={localStorage.getItem('avalive_user_paused') !== 'true' && isMasterLiveRunning} 
             controls={false}
-            muted={true}
+            muted={liveAudioMuted}
             onEnded={handleVideoEnded}
             onError={() => {
               setLipSyncVideoUrl(null);
@@ -2453,7 +2464,7 @@ export default function DesktopAppUI() {
             autoPlay={localStorage.getItem('avalive_user_paused') !== 'true' && isMasterLiveRunning} 
             loop={!isProcessingEvent}
             controls={false}
-            muted={true}
+            muted={liveAudioMuted}
             onEnded={handleVideoEnded}
             onError={() => {
               console.warn('Lỗi tải video phản hồi');
@@ -2490,7 +2501,7 @@ export default function DesktopAppUI() {
               style={{ transform: 'translateZ(0)', willChange: 'transform' }}
               autoPlay={localStorage.getItem('avalive_user_paused') !== 'true' && isMasterLiveRunning} 
               loop 
-              muted={true} 
+              muted={liveAudioMuted} 
               controls={false}
               preload="auto"
               disablePictureInPicture
@@ -2503,6 +2514,10 @@ export default function DesktopAppUI() {
                 }
               }}
               onLoadedMetadata={(e) => {
+                e.currentTarget.muted = liveAudioMuted;
+                if (!liveAudioMuted) {
+                  e.currentTarget.volume = liveVolume;
+                }
                 if (lastPlaybackTimeRef.current > 0) {
                   try {
                     e.currentTarget.currentTime = lastPlaybackTimeRef.current;
@@ -2612,93 +2627,34 @@ export default function DesktopAppUI() {
               }}
             />
 
-            {/* NÚT PHÁT TRÒN LỚN Ở CHÍNH GIỮA MÀN HÌNH (HIỆN LÊN KHI VIDEO ĐANG TẠM DỪNG) */}
-            {!isVideoPlaying && (
-              <div 
-                onClick={toggleDesktopVideoPlayback}
-                className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px] cursor-pointer z-20 hover:bg-black/30 transition-all"
-                title="Bấm vào đây hoặc nhấn [Phím Cách / Space] để tiếp tục phát video"
-              >
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white flex items-center justify-center shadow-[0_0_40px_rgba(16,185,129,0.7)] border-2 border-white/60 transform hover:scale-110 active:scale-95 transition-all animate-pulse">
-                  <Play size={32} className="fill-white translate-x-0.5" />
-                </div>
-              </div>
-            )}
-
-            {/* THANH ĐIỀU KHIỂN ĐỘC QUYỀN TRÊN KHUNG HÌNH VIDEO (MASTER LIVE CONTROLLER) */}
-            <div className="absolute top-3 left-3 z-30 flex flex-wrap items-center gap-2 pointer-events-auto bg-black/75 backdrop-blur-md p-1.5 rounded-2xl border border-white/15 shadow-2xl">
+            {/* 2 NÚT CHÌM TỰ ĐỘNG ẨN: CHỈ HIỆN KHI RÊ CHUỘT HOẶC CHẠM VÀO VIDEO (GIỮ KHUNG HÌNH 100% SẠCH SẼ & ĐẸP MẮT) */}
+            <div className="absolute top-3 left-3 z-30 flex items-center gap-2 pointer-events-none group-hover/videoContainer:pointer-events-auto opacity-0 group-hover/videoContainer:opacity-100 transition-all duration-300">
               {/* Nút 1: Tạm dừng / Tiếp tục */}
               <button
                 onClick={toggleDesktopVideoPlayback}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black shadow-lg border transition-all cursor-pointer active:scale-95 ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-2xl border backdrop-blur-md transition-all cursor-pointer active:scale-95 ${
                   isVideoPlaying
-                    ? 'bg-emerald-600/95 hover:bg-emerald-500 text-white border-emerald-400/60 shadow-emerald-600/40'
-                    : 'bg-amber-600/95 hover:bg-amber-500 text-white border-amber-400/60 shadow-amber-600/40 animate-pulse'
+                    ? 'bg-black/60 hover:bg-black/80 text-white border-white/20'
+                    : 'bg-emerald-600/90 hover:bg-emerald-500 text-white border-emerald-400/60 animate-pulse'
                 }`}
-                title={isVideoPlaying ? "Tạm dừng phát video live [Phím tắt: Phím Cách / Space]" : "Tiếp tục phát video live [Phím tắt: Phím Cách / Space]"}
+                title={isVideoPlaying ? "Tạm dừng phát video [Phím tắt: Space]" : "Tiếp tục phát video [Phím tắt: Space]"}
               >
                 {isVideoPlaying ? <Pause size={13} className="fill-white" /> : <Play size={13} className="fill-white" />}
                 <span>{isVideoPlaying ? 'TẠM DỪNG' : 'TIẾP TỤC'}</span>
-                <kbd className="px-1 py-0.2 bg-black/40 text-[9px] rounded font-mono font-bold">Space</kbd>
               </button>
 
-              {/* Vách ngăn */}
-              <div className="w-px h-5 bg-white/20"></div>
-
-              {/* Nút 2: Mở / Tắt Tiếng Cửa Sổ Live (OBS) */}
+              {/* Nút 2: Mở / Tắt Âm Thanh */}
               <button
                 onClick={toggleLiveAudioMute}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-black shadow-lg border transition-all cursor-pointer active:scale-95 ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-2xl border backdrop-blur-md transition-all cursor-pointer active:scale-95 ${
                   !liveAudioMuted
-                    ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white border-cyan-400/60 shadow-cyan-600/40'
-                    : 'bg-rose-950/95 hover:bg-rose-900 text-rose-300 border-rose-500/60 shadow-rose-950/40'
+                    ? 'bg-black/60 hover:bg-black/80 text-cyan-300 border-cyan-400/30'
+                    : 'bg-rose-950/85 hover:bg-rose-900 text-rose-300 border-rose-500/50'
                 }`}
-                title={liveAudioMuted ? "Bấm để MỞ TIẾNG phát ra Cửa Sổ Live (OBS) & loa ngoài" : "Bấm để TẮT TIẾNG Cửa Sổ Live (Mute)"}
+                title={liveAudioMuted ? "Bấm để MỞ ÂM THANH" : "Bấm để TẮT ÂM THANH"}
               >
-                {!liveAudioMuted ? <Volume2 size={13} className="text-yellow-300 animate-pulse" /> : <VolumeX size={13} className="text-rose-400" />}
-                <span>{!liveAudioMuted ? 'MỞ TIẾNG (OBS)' : 'TẮT TIẾNG (OBS)'}</span>
-              </button>
-
-              {/* Slider Âm lượng Cửa Sổ Live */}
-              <div className="flex items-center gap-1.5 px-2 py-1 bg-black/60 rounded-lg border border-white/10" title="Chỉnh âm lượng phát ra Cửa Sổ Live (OBS)">
-                <input 
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value={liveAudioMuted ? 0 : liveVolume}
-                  onChange={(e) => handleLiveVolumeChange(parseFloat(e.target.value))}
-                  className="w-16 sm:w-20 h-1.5 accent-cyan-400 cursor-pointer"
-                />
-                <span className={`text-[10px] font-mono font-black w-7 text-right ${liveAudioMuted ? 'text-gray-500 line-through' : 'text-cyan-300'}`}>
-                  {liveAudioMuted ? '0%' : `${Math.round(liveVolume * 100)}%`}
-                </span>
-              </div>
-            </div>
-
-            {/* DÒNG THÔNG BÁO THÔNG MINH Ở CHÂN KHUNG VIDEO */}
-            <div className="absolute bottom-3 inset-x-3 z-30 flex items-center justify-between pointer-events-none">
-              <div className="bg-black/80 backdrop-blur-md px-3 py-1 rounded-full border border-cyan-500/30 text-[10px] font-bold text-cyan-300 flex items-center gap-1.5 shadow-lg">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-                <span>Âm thanh phát 1 bên từ Cửa Sổ Live (OBS) • Video preview tự động tắt tiếng chống dội âm</span>
-              </div>
-            </div>
-
-            {/* NÚT KHOÁ / XOÁ ĐỔI VIDEO NẰM GÓC TRÊN BÊN PHẢI */}
-            <div className="absolute top-3 right-3 z-30 flex items-center gap-2 pointer-events-auto">
-              {userLockedMediaUrl && (
-                <span className="bg-emerald-600/90 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md border border-emerald-400/40 flex items-center gap-1 backdrop-blur-md">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
-                  🔒 ĐÃ KHOÁ PHÁT VIDEO CỐ ĐỊNH (24/24)
-                </span>
-              )}
-              <button
-                onClick={handleClearActiveVideo}
-                className="bg-red-600/90 hover:bg-red-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md transition-all cursor-pointer flex items-center gap-1 backdrop-blur-md"
-                title="Xoá video đang phát để chọn video hoặc nhân vật khác"
-              >
-                <Trash2 size={11} />
-                <span>Xoá / Đổi video</span>
+                {!liveAudioMuted ? <Volume2 size={13} className="text-cyan-400" /> : <VolumeX size={13} className="text-rose-400" />}
+                <span>{!liveAudioMuted ? 'MỞ TIẾNG' : 'TẮT TIẾNG'}</span>
               </button>
             </div>
           </div>
