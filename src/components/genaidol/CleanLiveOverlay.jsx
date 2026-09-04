@@ -176,6 +176,108 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     };
   }, []);
 
+  // ⚡ ANTI-OCCLUSION & ANTI-FREEZE KEEP-ALIVE ENGINE CHO TIKTOK LIVE STUDIO & OBS WINDOW CAPTURE
+  // Khắc phục triệt để lỗi đứng hình khi cửa sổ bị che khuất hoặc không nằm đè lên trên
+  useEffect(() => {
+    // 1. Silent Web Audio API Heartbeat: Báo cho Chromium biết cửa sổ đang phát âm thanh ngầm
+    // khiến Chromium KHÔNG BAO GIỜ ngắt / đóng băng tiến trình dù bị che khuất hoặc nằm dưới
+    let audioCtx = null;
+    let osc = null;
+    const startAudioKeepAlive = () => {
+      try {
+        const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtxClass && !audioCtx) {
+          audioCtx = new AudioCtxClass();
+          osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          gain.gain.value = 0.00001; // Âm lượng siêu nhỏ không thể nghe thấy
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume().catch(() => {});
+        }
+      } catch (e) {}
+    };
+    startAudioKeepAlive();
+    window.addEventListener('click', startAudioKeepAlive, { once: true });
+    window.addEventListener('focus', startAudioKeepAlive);
+
+    // 2. Off-Thread Web Worker 60FPS Ticker: Web Worker chạy trên luồng riêng, không bị ảnh hưởng bởi Windows DWM Occlusion
+    let worker = null;
+    let flushCanvas = null;
+    try {
+      const workerCode = `
+        let t = null;
+        self.onmessage = function(e) {
+          if (e.data === 'start') {
+            if (t) clearInterval(t);
+            t = setInterval(function() { self.postMessage('tick'); }, 16.6); // 60 FPS
+          } else if (e.data === 'stop') {
+            if (t) clearInterval(t);
+            t = null;
+          }
+        };
+      `;
+      const blob = new Blob([workerCode], { type: 'application/javascript' });
+      worker = new Worker(URL.createObjectURL(blob));
+
+      // Tạo canvas 2x2 siêu nhẹ ép Windows Compositor luôn nhận khung hình mới liên tục
+      flushCanvas = document.createElement('canvas');
+      flushCanvas.width = 2;
+      flushCanvas.height = 2;
+      flushCanvas.style.cssText = 'position:fixed;bottom:0;right:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:999999;';
+      document.body.appendChild(flushCanvas);
+      const ctx = flushCanvas.getContext('2d');
+      let flip = false;
+
+      worker.onmessage = () => {
+        if (ctx) {
+          flip = !flip;
+          ctx.fillStyle = flip ? 'rgba(0,0,0,0.01)' : 'rgba(255,255,255,0.01)';
+          ctx.fillRect(0, 0, 2, 2);
+        }
+        // Kiểm tra giữ luồng video luôn chạy
+        const v = overlayVideoRef.current;
+        if (v && v.paused && v.dataset.userPaused !== 'true') {
+          v.play().catch(() => {});
+        }
+      };
+      worker.postMessage('start');
+    } catch (e) {
+      console.warn('[KeepAlive Worker] Note:', e);
+    }
+
+    // 3. Spoof Document Visibility: Đánh lừa Chromium để luôn báo cửa sổ đang hiển thị chính
+    try {
+      Object.defineProperty(document, 'hidden', { get: () => false, configurable: true });
+      Object.defineProperty(document, 'visibilityState', { get: () => 'visible', configurable: true });
+    } catch (e) {}
+
+    // 4. Wake Lock: Chống tắt màn hình / sleep máy
+    if ('wakeLock' in navigator) {
+      navigator.wakeLock.request('screen').catch(() => {});
+    }
+
+    return () => {
+      if (worker) {
+        worker.postMessage('stop');
+        worker.terminate();
+      }
+      if (flushCanvas && flushCanvas.parentNode) {
+        flushCanvas.parentNode.removeChild(flushCanvas);
+      }
+      if (osc) {
+        try { osc.stop(); } catch (e) {}
+      }
+      if (audioCtx) {
+        try { audioCtx.close(); } catch (e) {}
+      }
+      window.removeEventListener('focus', startAudioKeepAlive);
+    };
+  }, []);
+
   useEffect(() => {
     const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
     const isCapture = urlParams?.get('mode') === 'window_capture' || urlParams?.get('capture') === '1';
@@ -1016,12 +1118,16 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               }
             }, 500);
           }}
-          className="w-full h-full select-none absolute inset-0"
+          className="w-full h-full select-none absolute inset-0 transform-gpu"
           style={{ 
             width: '100vw', 
             height: '100vh', 
             objectFit: objectFitMode || 'cover',
-            transform: 'none',
+            transform: 'translateZ(0)',
+            WebkitTransform: 'translateZ(0)',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            imageRendering: '-webkit-optimize-contrast',
             willChange: 'transform'
           }}
         />

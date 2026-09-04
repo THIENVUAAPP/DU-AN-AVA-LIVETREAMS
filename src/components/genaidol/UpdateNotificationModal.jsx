@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 
-export const APP_VERSION = '1.3.4';
+export const APP_VERSION = '1.3.5';
 export const UPDATE_NOTES = [
-  "🔒 Cơ chế Bảo Toàn Video Cố Định 24/24 (Persistent Media Lock): Video người dùng mở được lưu vĩnh viễn, phát liên tục trên TikTok Live Studio & OBS, tuyệt đối không tự ý mất, không tự ý tắt hay đổi ngầm khi chưa có yêu cầu.",
-  "🖥️ Tích hợp Bắt Cửa Sổ 1-Click (Window Capture Mode): Giải pháp xuất hình ảnh siêu mượt 60FPS, độ trễ 0ms trực tiếp sang TikTok Live Studio trên máy tính Windows mà không cần cấu hình mạng.",
-  "⚡ Động cơ Giảm Tải & Giải Nén Video Siêu Nhẹ (Lightweight Stream Buffer): Cho phép phát các video dài nhiều tiếng đồng hồ, dung lượng hàng chục GB qua 1 đường link cực nhẹ, dán vào là chạy ngay mà không ngốn RAM hay nghẽn mạng.",
-  "🚀 Nạp khối đầu & đuôi trước (Head & Tail First): Ghi đệm MP4 header và moov atom trước để TikTok Studio bắt sóng ngay lập tức, loại bỏ hoàn toàn hiện tượng chập chờn lúc hiện lúc không."
+  "🚀 Sửa triệt để lỗi phát qua Link tắt sau 1-2 phút: Động cơ Contiguous Streaming 8MB tuần tự liền mạch, khai báo dung lượng chuẩn xác, video phát liên tục 24/24 giờ xuyên suốt không bao giờ bị ngắt hay tắt giữa chừng.",
+  "🖥️ Window Capture Siêu Nét & Chống Đứng Hình (Anti-Occlusion 60FPS): Tích hợp luồng Web Worker độc lập và Silent Audio Heartbeat, cửa sổ chỉ cần mở là TikTok Live Studio bắt hình liên tục, không bị đóng băng khi bị che khuất hay di chuyển.",
+  "⚡ Bảo toàn video khi chuyển Tab: Giữ nguyên cây DOM và timestamp khi chuyển đổi giữa Live AI Idol, Game Chiến Đấu, Bản Đồ Chữ S, video tiếp tục phát liên tục trong thời gian thực, không bao giờ quay lại từ đầu (0:00)."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

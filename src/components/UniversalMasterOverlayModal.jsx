@@ -40,8 +40,8 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
   const [activeModalTab, setActiveModalTab] = useState("window_capture");
 
   const handleOpenWindowCapture = () => {
-    const width = 450;
-    const height = 800;
+    const width = 540;
+    const height = 960;
     const left = Math.round((window.screen.width - width) / 2);
     const top = Math.round((window.screen.height - height) / 2);
     const captureUrl = `${window.location.origin}/live?mode=window_capture`;

@@ -91,7 +91,9 @@ app.all('/uploads/:filename', (req, res, next) => {
 
   try {
     const stat = fs.statSync(filePath);
-    const fileSize = stat.size;
+    const activeUpload = Object.values(activeStreamUploads).find(s => s && s.filename === req.params.filename);
+    const declaredFileSize = (activeUpload && activeUpload.fileSize > 0) ? activeUpload.fileSize : stat.size;
+    const currentOnDiskSize = stat.size;
     const range = req.headers.range;
 
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -121,38 +123,43 @@ app.all('/uploads/:filename', (req, res, next) => {
     if (range && (ext === '.mp4' || ext === '.webm' || ext === '.mov')) {
       const parts = range.replace(/bytes=/, "").split("-");
       let start = 0;
-      let end = fileSize - 1;
+      let end = currentOnDiskSize - 1;
 
       // 1. Hỗ trợ Suffix Range: bytes=-N (Đọc N byte cuối file để lấy moov atom cho video dài 1-2 tiếng)
       if (parts[0] === '' && parts[1]) {
         const suffix = parseInt(parts[1], 10);
         if (!isNaN(suffix) && suffix > 0) {
-          start = Math.max(0, fileSize - suffix);
-          end = fileSize - 1;
+          start = Math.max(0, currentOnDiskSize - suffix);
+          end = currentOnDiskSize - 1;
         }
       } else {
         start = parseInt(parts[0], 10);
-        if (isNaN(start) || start < 0 || start >= fileSize) {
-          res.status(416).set('Content-Range', `bytes */${fileSize}`).end();
+        if (isNaN(start) || start < 0 || (start >= currentOnDiskSize && start >= declaredFileSize)) {
+          res.status(416).set('Content-Range', `bytes */${declaredFileSize}`).end();
           return;
         }
 
         if (parts[1] && parts[1].trim() !== '') {
           // Range cụ thể: bytes=START-END
           end = parseInt(parts[1], 10);
-          if (isNaN(end) || end >= fileSize) end = fileSize - 1;
+          if (isNaN(end) || end >= currentOnDiskSize) end = currentOnDiskSize - 1;
         } else {
           // Open Range: bytes=START-
           // 🚀 CHUNK STREAMING THÔNG MINH CHO VIDEO DÀI 1-2 TIẾNG:
-          // Chỉ gửi 8MB mỗi request để video nạp 0ms ngay lập tức, không làm nghẽn socket hoặc tràn RAM CEF TikTok Live Studio.
+          // Gửi 8MB mỗi request để video nạp 0ms ngay lập tức, báo cáo tổng dung lượng đầy đủ
+          // để TikTok Live Studio KHÔNG bị dừng ở phút 1-2 mà phát tiếp 24/24.
           const CHUNK_SIZE = 8 * 1024 * 1024; // 8MB
-          end = Math.min(start + CHUNK_SIZE - 1, fileSize - 1);
+          end = Math.min(start + CHUNK_SIZE - 1, currentOnDiskSize - 1);
         }
+      }
+
+      if (end < start) {
+        end = start;
       }
 
       const chunksize = (end - start) + 1;
       res.writeHead(206, {
-        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+        'Content-Range': `bytes ${start}-${end}/${declaredFileSize}`,
         'Accept-Ranges': 'bytes',
         'Content-Length': chunksize,
         'Content-Type': contentType,
@@ -258,13 +265,8 @@ app.post('/api/upload-stream-init', (req, res) => {
     const uploadId = 'up_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
     const totalSize = parseInt(fileSize, 10) || 0;
     
-    // Mở file ghi sẵn sàng (w+) và cấp phát kích thước file thực tế ngay lập tức (sparse file)
+    // Mở file ghi sẵn sàng (w+) ghi tuần tự liền mạch, không tạo sparse hole byte 0
     const fd = fs.openSync(filePath, 'w+');
-    if (totalSize > 0) {
-      try {
-        fs.ftruncateSync(fd, totalSize);
-      } catch(e) {}
-    }
 
     activeStreamUploads[uploadId] = {
       uploadId,
@@ -351,6 +353,7 @@ app.post('/api/upload-chunk', (req, res) => {
         session.fd = null;
         delete activeStreamUploads[uploadId];
         console.log(`[FastStream] ✅ Đã hoàn tất nạp 100% video: ${session.filename} (${session.writtenBytes} bytes)`);
+        tryApplyFaststart(session.filePath);
       }
 
       res.json({ success: true, written: buffer.length, offset });

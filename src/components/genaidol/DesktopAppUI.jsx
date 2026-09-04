@@ -445,8 +445,8 @@ export default function DesktopAppUI() {
   };
 
   const handleOpenWindowCapture = () => {
-    const width = 450;
-    const height = 800;
+    const width = 540;
+    const height = 960;
     const left = Math.round((window.screen.width - width) / 2);
     const top = Math.round((window.screen.height - height) / 2);
     window.open(
@@ -454,7 +454,7 @@ export default function DesktopAppUI() {
       'avalive_window_capture_target',
       `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes`
     );
-    showToast('🖥️ Đã mở Cửa Sổ Live 9:16! Hãy vào TikTok Studio chọn Bắt Cửa Sổ (Window Capture).', 'success');
+    showToast('🖥️ Đã mở Cửa Sổ Live 9:16 Siêu Nét 60FPS! Hãy vào TikTok Studio chọn Bắt Cửa Sổ (Window Capture).', 'success');
   };
 
   const [overlayLinkBase, setOverlayLinkBase] = useState(() => {
@@ -494,6 +494,7 @@ export default function DesktopAppUI() {
   const flvVideoRef = useRef(null);
   const flvCanvasRef = useRef(null);
   const currentPlayingUrlRef = useRef(null);
+  const lastPlaybackTimeRef = useRef(0);
 
   useEffect(() => {
     let animId;
@@ -2074,6 +2075,18 @@ export default function DesktopAppUI() {
               preload="auto"
               disablePictureInPicture
               playsInline 
+              onTimeUpdate={(e) => {
+                if (e.currentTarget.currentTime > 0) {
+                  lastPlaybackTimeRef.current = e.currentTarget.currentTime;
+                }
+              }}
+              onLoadedMetadata={(e) => {
+                if (lastPlaybackTimeRef.current > 0) {
+                  try {
+                    e.currentTarget.currentTime = lastPlaybackTimeRef.current;
+                  } catch (err) {}
+                }
+              }} 
               onPlay={(e) => {
                 let playUrl = selected.url;
                 if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
@@ -2180,48 +2193,56 @@ export default function DesktopAppUI() {
   };
 
   const renderCharacterContent = () => {
-    // -1. Chế độ Game Chiến Đấu (TikTok LIVE Battle Overlay)
-    if (isGameBattleActive) {
-      return (
-        <GameChienDau 
-          isPopout={false}
-          onOpenAdmin={() => setIsGameAdminOpen(true)}
-          externalLiveEvent={lastGameEvent}
-          aspectRatio={globalAspectRatio}
-          onToggleAspectRatio={toggleGlobalAspectRatio}
-          isDarkMode={isDarkMode}
-        />
-      );
-    }
+    const isIdolActive = !isGameBattleActive && !isGameBanDoActive;
 
-    // -2. Chế độ Game Đất Nước Bản Đồ Hình Chữ S (Việt Nam Ghép Cờ LIVE)
-    if (isGameBanDoActive) {
-      return (
-        <GameBanDoVietNam 
-          isPopout={false}
-          onOpenAdmin={() => setIsGameBanDoAdminOpen(true)}
-          externalLiveEvent={lastGameEvent}
-          aspectRatio={globalAspectRatio}
-          onToggleAspectRatio={toggleGlobalAspectRatio}
-          isDarkMode={isDarkMode}
-        />
-      );
-    }
-
-
-    // 0. Chế độ AI Idol Livestream Video / Live Screen
     return (
-      <div className={`w-full h-full flex items-center justify-center p-2 sm:p-3 overflow-hidden ${isDarkMode ? 'bg-[#05070c]' : 'bg-slate-200'}`}>
+      <div className="w-full h-full relative overflow-hidden flex items-center justify-center">
+        {/* -1. Chế độ Game Chiến Đấu (TikTok LIVE Battle Overlay) */}
         <div 
-          className={`relative flex flex-col overflow-hidden transition-all duration-300 ${
-            globalAspectRatio === '9:16'
-              ? 'h-full max-h-full aspect-[9/16] w-auto max-w-full mx-auto rounded-2xl md:rounded-3xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-black'
-              : 'w-full max-w-[1200px] h-auto max-h-full aspect-[16/9] rounded-2xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-black'
-          }`}
+          style={{ display: isGameBattleActive ? 'block' : 'none', width: '100%', height: '100%' }}
+          className="w-full h-full"
         >
-          {renderAiIdolLiveStage()}
-    </div>
-    </div>
+          <GameChienDau 
+            isPopout={false}
+            onOpenAdmin={() => setIsGameAdminOpen(true)}
+            externalLiveEvent={lastGameEvent}
+            aspectRatio={globalAspectRatio}
+            onToggleAspectRatio={toggleGlobalAspectRatio}
+            isDarkMode={isDarkMode}
+          />
+        </div>
+
+        {/* -2. Chế độ Game Đất Nước Bản Đồ Hình Chữ S (Việt Nam Ghép Cờ LIVE) */}
+        <div 
+          style={{ display: isGameBanDoActive ? 'block' : 'none', width: '100%', height: '100%' }}
+          className="w-full h-full"
+        >
+          <GameBanDoVietNam 
+            isPopout={false}
+            onOpenAdmin={() => setIsGameBanDoAdminOpen(true)}
+            externalLiveEvent={lastGameEvent}
+            aspectRatio={globalAspectRatio}
+            onToggleAspectRatio={toggleGlobalAspectRatio}
+            isDarkMode={isDarkMode}
+          />
+        </div>
+
+        {/* 0. Chế độ AI Idol Livestream Video / Live Screen (Luôn giữ nguyên trong DOM để video chạy liên tục 24/24, không bao giờ bị reset về 0:00 khi chuyển tab) */}
+        <div 
+          style={{ display: isIdolActive ? 'flex' : 'none', width: '100%', height: '100%' }}
+          className={`w-full h-full items-center justify-center p-2 sm:p-3 overflow-hidden ${isDarkMode ? 'bg-[#05070c]' : 'bg-slate-200'}`}
+        >
+          <div 
+            className={`relative flex flex-col overflow-hidden transition-all duration-300 ${
+              globalAspectRatio === '9:16'
+                ? 'h-full max-h-full aspect-[9/16] w-auto max-w-full mx-auto rounded-2xl md:rounded-3xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-black'
+                : 'w-full max-w-[1200px] h-auto max-h-full aspect-[16/9] rounded-2xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-black'
+            }`}
+          >
+            {renderAiIdolLiveStage()}
+          </div>
+        </div>
+      </div>
     );
   };
 
