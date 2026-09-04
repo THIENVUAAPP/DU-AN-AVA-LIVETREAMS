@@ -64,9 +64,9 @@ export default function GameChienDau({
       comebackThreshold: 30,
       charScale: 1.15,
       animSpeed: 0.55,
-      musicVolume: 0.4,
-      sfxVolume: 0.7,
-      soundEnabled: true,
+      musicVolume: 0,
+      sfxVolume: 0,
+      soundEnabled: false,
       showGiftHud: true,
       gifts: [
         { id: 1, name: 'Hoa Hồng / Tim', icon: '🌸', coins: 1, tier: 'Tân Binh', buff: '+10 HP Xung Trận', skill: 'Vào Trận' },
@@ -89,7 +89,7 @@ export default function GameChienDau({
     recentSpotlight: null
   });
 
-  const [soundMuted, setSoundMuted] = useState(false);
+  const [soundMuted, setSoundMuted] = useState(true);
   const [flashSide, setFlashSide] = useState(null);
   const [liveFeed, setLiveFeed] = useState([]); // Array of recent live comments & gifts
   const [isGiftHudMinimized, setIsGiftHudMinimized] = useState(false);
@@ -261,15 +261,17 @@ export default function GameChienDau({
       battleAudio.duckBgm(shouldDuck);
     };
 
-    // Start periodic AI commentary
-    battleCommentary.isEnabled = config.commentaryEnabled !== false;
+    // Start periodic AI commentary (Chỉ khi streamer cấu hình rõ ràng)
+    battleCommentary.isEnabled = config.commentaryEnabled === true;
     battleCommentary.intervalSeconds = config.commentaryInterval || 15;
-    battleCommentary.volume = config.commentaryVolume !== undefined ? config.commentaryVolume : 0.9;
-    battleCommentary.startPeriodicCommentary(!gameState.isPaused && !gameState.winner);
+    battleCommentary.volume = config.commentaryVolume !== undefined ? config.commentaryVolume : 0;
+    if (config.commentaryEnabled === true) {
+      battleCommentary.startPeriodicCommentary(!gameState.isPaused && !gameState.winner);
+    }
 
     return () => {
       battleCommentary.stopAll();
-      battleAudio.stopBgm();
+      battleAudio.stopAll();
       if (broadcastChannelRef.current) {
         broadcastChannelRef.current.close();
       }

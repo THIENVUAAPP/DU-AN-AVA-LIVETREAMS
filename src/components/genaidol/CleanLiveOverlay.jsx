@@ -122,10 +122,20 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     }
   });
   const [isPlayingState, setIsPlayingState] = useState(true);
+  const isWindowCapture = typeof window !== 'undefined' ? (() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('mode') === 'window_capture' || params.get('capture') === '1';
+  })() : false;
+
   const [showControlDock, setShowControlDock] = useState(() => {
+    // ⚠️ QUY TẮC BẮT BUỘC:
+    // - Khi phát qua ĐƯỜNG LINK (Browser Source / URL): 100% KHÔNG CÓ THANH ĐIỀU KHIỂN / KHÔNG CÓ NÚT BẤM NÀO
+    // - CHỈ hiển thị khi người dùng mở Cửa Sổ Live (Window Capture: mode=window_capture)
     const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const isCapture = params?.get('mode') === 'window_capture' || params?.get('capture') === '1';
+    if (!isCapture) return false;
     if (params?.get('clean') === '1' || params?.get('controls') === '0') return false;
-    return true; // Mặc định hiển thị thanh điều khiển ngoại khung
+    return true;
   });
   const [objectFitState, setObjectFitState] = useState(() => {
     const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
@@ -328,70 +338,18 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     window.addEventListener('click', startAudioKeepAlive, { once: true });
     window.addEventListener('focus', startAudioKeepAlive);
 
-    // 2. Off-Thread Web Worker 60FPS Ticker: Web Worker chạy trên luồng riêng, không bị ảnh hưởng bởi Windows DWM Occlusion
-    let worker = null;
-    let flushCanvas = null;
-    try {
-      const workerCode = `
-        let t = null;
-        self.onmessage = function(e) {
-          if (e.data === 'start') {
-            if (t) clearInterval(t);
-            t = setInterval(function() { self.postMessage('tick'); }, 16.6); // 60 FPS
-          } else if (e.data === 'stop') {
-            if (t) clearInterval(t);
-            t = null;
-          }
-        };
-      `;
-      const blob = new Blob([workerCode], { type: 'application/javascript' });
-      worker = new Worker(URL.createObjectURL(blob));
-
-      // Tạo canvas 2x2 siêu nhẹ ép Windows Compositor luôn nhận khung hình mới liên tục
-      flushCanvas = document.createElement('canvas');
-      flushCanvas.width = 2;
-      flushCanvas.height = 2;
-      flushCanvas.style.cssText = 'position:fixed;bottom:0;right:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:999999;';
-      document.body.appendChild(flushCanvas);
-      const ctx = flushCanvas.getContext('2d');
-      let flip = false;
-
-      worker.onmessage = () => {
-        if (ctx) {
-          flip = !flip;
-          ctx.fillStyle = flip ? 'rgba(0,0,0,0.01)' : 'rgba(255,255,255,0.01)';
-          ctx.fillRect(0, 0, 2, 2);
-        }
-        // Kiểm tra giữ luồng video luôn chạy
-        const v = overlayVideoRef.current;
-        if (v && v.paused && v.dataset.userPaused !== 'true') {
-          v.play().catch(() => {});
-        }
-      };
-      worker.postMessage('start');
-    } catch (e) {
-      console.warn('[KeepAlive Worker] Note:', e);
-    }
-
-    // 3. Spoof Document Visibility: Đánh lừa Chromium để luôn báo cửa sổ đang hiển thị chính
+    // 2. Spoof Document Visibility: Đánh lừa Chromium để luôn báo cửa sổ đang hiển thị chính
     try {
       Object.defineProperty(document, 'hidden', { get: () => false, configurable: true });
       Object.defineProperty(document, 'visibilityState', { get: () => 'visible', configurable: true });
     } catch (e) {}
 
-    // 4. Wake Lock: Chống tắt màn hình / sleep máy
+    // 3. Wake Lock: Chống tắt màn hình / sleep máy
     if ('wakeLock' in navigator) {
       navigator.wakeLock.request('screen').catch(() => {});
     }
 
     return () => {
-      if (worker) {
-        worker.postMessage('stop');
-        worker.terminate();
-      }
-      if (flushCanvas && flushCanvas.parentNode) {
-        flushCanvas.parentNode.removeChild(flushCanvas);
-      }
       if (osc) {
         try { osc.stop(); } catch (e) {}
       }
@@ -923,7 +881,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     let bgWorker = null;
     try {
       const blob = new Blob([
-        "let t; self.onmessage=e=>{ if(e.data==='start'){ if(!t) t=setInterval(()=>self.postMessage('tick'), 200); } else if(e.data==='stop'){ clearInterval(t); t=null; } };"
+        "let t; self.onmessage=e=>{ if(e.data==='start'){ if(!t) t=setInterval(()=>self.postMessage('tick'), 1000); } else if(e.data==='stop'){ clearInterval(t); t=null; } };"
       ], { type: 'application/javascript' });
       bgWorker = new Worker(URL.createObjectURL(blob));
       let tickCounter = 0;
@@ -1101,9 +1059,10 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
   return (
     <div className="fixed inset-0 w-screen h-screen overflow-hidden flex flex-col bg-black select-none font-sans">
-      {/* 1. THANH ĐIỀU KHIỂN NGOẠI KHUNG (NẰM HOÀN TOÀN BÊN NGOÀI KHUNG HÌNH PHÁT VIDEO OBS) */}
-      {showControlDock && (
-        <header className="w-full h-12 min-h-[48px] bg-gradient-to-r from-[#0a0c16] via-[#101426] to-[#0a0c16] border-b border-cyan-500/40 px-3 flex items-center justify-between z-50 text-white shadow-2xl select-none">
+      {/* 1. THANH ĐIỀU KHIỂN NGOẠI KHUNG (CHỈ HIỂN THỊ KHI Ở CỬA SỔ WINDOW CAPTURE) */}
+      {showControlDock && isWindowCapture && (
+        <>
+          <header className="w-full h-12 min-h-[48px] bg-gradient-to-r from-[#0a0c16] via-[#101426] to-[#0a0c16] border-b border-cyan-500/40 px-3 flex items-center justify-between z-50 text-white shadow-2xl select-none">
           {/* Trái: Trạng thái Live & Tỷ lệ */}
           <div className="flex items-center gap-2 shrink-0">
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-600/20 border border-red-500/50 text-red-400 text-[10px] font-black uppercase tracking-wider shadow-sm">
@@ -1245,10 +1204,25 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             </button>
           </div>
         </header>
+
+        {/* VÙNG KHOẢNG CÁCH ĐỆM RÕ RÀNG: CÁCH XA KHUNG HÌNH RA ĐỂ DỄ DÀNG CẮT CROP TRÊN OBS / TIKTOK STUDIO */}
+        <div className="w-full h-8 min-h-[32px] bg-[#05060a] border-b border-dashed border-gray-800 flex items-center justify-between px-3.5 text-[10px] font-mono select-none shrink-0 z-40">
+          <div className="flex items-center gap-2 text-gray-400">
+            <span className="text-yellow-400 font-bold">✂️ VẠCH CẮT CROP OBS / TIKTOK STUDIO:</span>
+            <span className="text-[9.5px] text-gray-500 font-sans">Kéo cắt trên vạch này để lấy 100% video sạch không dính nút</span>
+          </div>
+          <button
+            onClick={() => setShowControlDock(false)}
+            className="text-[10px] text-cyan-400 hover:text-cyan-200 underline cursor-pointer"
+          >
+            Ẩn thanh này (Chỉ xem Video)
+          </button>
+        </div>
+        </>
       )}
 
-      {/* Floating Toggle Button khi thanh Dock bị thu gọn */}
-      {!showControlDock && (
+      {/* Floating Toggle Button CHỈ HIỂN THỊ KHI Ở CỬA SỔ WINDOW CAPTURE VÀ ĐÃ BẤM ẨN DOCK */}
+      {!showControlDock && isWindowCapture && (
         <button
           onClick={() => setShowControlDock(true)}
           className="absolute top-2 right-2 z-50 px-2.5 py-1 rounded-lg bg-black/80 hover:bg-black text-cyan-400 hover:text-white border border-cyan-500/40 text-[10px] font-bold shadow-lg transition-all opacity-40 hover:opacity-100 flex items-center gap-1 cursor-pointer"
@@ -1272,16 +1246,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               ? { 
                   aspectRatio: '9 / 16', 
                   height: '100%', 
-                  maxWidth: showControlDock ? 'calc((100vh - 48px) * 9 / 16)' : 'calc(100vh * 9 / 16)' 
+                  maxWidth: (isWindowCapture && showControlDock) ? 'calc((100vh - 80px) * 9 / 16)' : '100%' 
                 } 
               : { aspectRatio: '16 / 9', width: '100%' }
           }
         >
-          {/* SÂN KHẤU 1: LIVE AI IDOL (Duy trì thường trực trong DOM để không bao giờ bị reset video) */}
-          <div 
-            style={{ display: currentStage === 'idol' ? 'flex' : 'none' }}
-            className="w-full h-full absolute inset-0 items-center justify-center overflow-hidden bg-black"
-          >
+          {/* SÂN KHẤU 1: LIVE AI IDOL (CHỈ RENDER KHI Ở TAB IDOL ĐỂ TỐI ƯU 100% TÀI NGUYÊN) */}
+          {currentStage === 'idol' && (
+            <div className="w-full h-full absolute inset-0 flex items-center justify-center overflow-hidden bg-black">
             {activeMedia.url && activeMedia.isVideo ? (
               <video
                 ref={overlayVideoRef}
@@ -1385,12 +1357,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               </div>
             )}
           </div>
+        )}
 
-          {/* SÂN KHẤU 2: GAME BẢN ĐỒ VIỆT NAM (CẮM CỜ 63 TỈNH THÀNH) */}
-          <div 
-            style={{ display: (currentStage === 'bando' || currentStage === 'vietnam_map' || currentStage === 'map') ? 'block' : 'none' }}
-            className="w-full h-full absolute inset-0 overflow-hidden bg-transparent select-none pointer-events-auto"
-          >
+        {/* SÂN KHẤU 2: GAME BẢN ĐỒ VIỆT NAM (CẮM CỜ 63 TỈNH THÀNH) - CHỈ MOUNT KHI BẬT TAB BẢN ĐỒ */}
+        {(currentStage === 'bando' || currentStage === 'vietnam_map' || currentStage === 'map') && (
+          <div className="w-full h-full absolute inset-0 overflow-hidden bg-transparent select-none pointer-events-auto">
             <GameBanDoVietNam 
               isPopout={true}
               aspectRatio={ratio}
@@ -1398,12 +1369,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               isDarkMode={masterState.isDarkMode !== false}
             />
           </div>
+        )}
 
-          {/* SÂN KHẤU 3: GAME CHIẾN ĐẤU PK ĐẠI CHIẾN */}
-          <div 
-            style={{ display: (currentStage === 'battle' || currentStage === 'gamebattle' || currentStage === 'game') ? 'block' : 'none' }}
-            className="w-full h-full absolute inset-0 overflow-hidden bg-transparent select-none pointer-events-auto"
-          >
+        {/* SÂN KHẤU 3: GAME CHIẾN ĐẤU PK ĐẠI CHIẾN - CHỈ MOUNT KHI BẬT TAB CHIẾN ĐẤU */}
+        {(currentStage === 'battle' || currentStage === 'gamebattle' || currentStage === 'game') && (
+          <div className="w-full h-full absolute inset-0 overflow-hidden bg-transparent select-none pointer-events-auto">
             <GameChienDau 
               isPopout={true}
               aspectRatio={ratio}
@@ -1411,12 +1381,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               isDarkMode={masterState.isDarkMode !== false}
             />
           </div>
+        )}
 
-          {/* SÂN KHẤU 4: PHÒNG DỰNG LIVE STUDIO 4K */}
-          <div 
-            style={{ display: (currentStage === 'broadcast' || currentStage === 'studio') ? 'block' : 'none' }}
-            className="w-full h-full absolute inset-0 overflow-hidden bg-black flex items-center justify-center select-none"
-          >
+        {/* SÂN KHẤU 4: PHÒNG DỰNG LIVE STUDIO 4K - CHỈ MOUNT KHI BẬT TAB STUDIO */}
+        {(currentStage === 'broadcast' || currentStage === 'studio') && (
+          <div className="w-full h-full absolute inset-0 overflow-hidden bg-black flex items-center justify-center select-none">
             {overlayCamActive ? (
               <video
                 ref={(el) => {
@@ -1452,6 +1421,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               </div>
             )}
           </div>
+        )}
         </div>
       </main>
 

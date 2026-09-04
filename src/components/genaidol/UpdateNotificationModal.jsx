@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 
-export const APP_VERSION = '1.3.6';
+export const APP_VERSION = '1.3.7';
 export const UPDATE_NOTES = [
-  "🎮 Thanh Điều Khiển Ngoại Khung (Top Control Dock): Đặt toàn bộ nút bấm Play/Pause, Mở/Tắt âm thanh HD & chuyển sân khấu ra ngoài mép trên khung hình video, đảm bảo video livestream 9:16 sạch 100%, không bị chèn nút xấu vào phiên live OBS/TikTok.",
-  "🔊 Mở Tiếng Siêu Nét Full HD: Tích hợp nút bật âm thanh trực tiếp và thanh kéo Volume cho video phát qua Window Capture, âm thanh sắc nét trung thực 48kHz không còn bị câm tiếng.",
-  "⚡ Chuyển Sân Khấu Bất Biến Tọa Độ: Cố định tuyệt đối khung hình 9:16 chuẩn 1080x1920, chuyển đổi 1-click giữa Idol AI, Game Bản Đồ Chữ S, Game Chiến Đấu PK và Studio 4K mượt mà 0ms không làm lệch khung hay gián đoạn phiên live."
+  "⚡ Khắc phục triệt để giật lag & đứng hình: Tối ưu 100% CPU/GPU bằng cơ chế Lazy Stage Mounting. Khi đang live AI Idol, toàn bộ engine game nặng được ngắt hoàn toàn, video phát siêu nhẹ, siêu mượt 60FPS không còn bị đơ máy.",
+  "🔇 Mặc định tắt âm thanh Game PK: Toàn bộ âm thanh nhạc nền, hiệu ứng chiêu thức và bình luận AI của Game Chiến Đấu PK được mặc định tắt hoàn toàn, chỉ phát khi streamer vào game và mở loa.",
+  "🌐 Phát qua Link Sạch 100% & Vạch Cắt An Toàn Window Capture: Phát qua đường link (Browser Source) đảm bảo hiển thị đúng 100% khung hình video không rìa, không nút bấm; phát qua Window Capture có thêm vạch đệm cách xa khung hình để dễ dàng crop trên OBS / TikTok Live Studio."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
