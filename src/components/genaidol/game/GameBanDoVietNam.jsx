@@ -1152,15 +1152,26 @@ export default function GameBanDoVietNam({
     state.camera = camera;
 
     // Renderer with balanced tone mapping & optimized 60fps performance for live streaming
-    const renderer = new THREE.WebGLRenderer({ 
-      antialias: true, 
-      alpha: true, 
-      preserveDrawingBuffer: true,
-      powerPreference: 'high-performance',
-      precision: 'mediump'
-    });
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ 
+        antialias: true, 
+        alpha: true, 
+        preserveDrawingBuffer: true,
+        powerPreference: 'high-performance',
+        precision: 'mediump'
+      });
+    } catch (e1) {
+      console.warn('[GameBanDo] WebGL high-performance failed, retrying standard mode:', e1);
+      try {
+        renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
+      } catch (e2) {
+        console.error('[GameBanDo] Critical: WebGL context creation failed:', e2);
+        return;
+      }
+    }
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
     renderer.shadowMap.enabled = false; // Tắt tính toán bóng đổ cho 15,000+ voxel để giữ 60fps siêu mượt khi phát Live
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = (gameState.settings.brightness || 1.25) * (isLightTheme ? 1.05 : 1.0);

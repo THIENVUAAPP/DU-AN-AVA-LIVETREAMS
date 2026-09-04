@@ -538,7 +538,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           vid.dataset.userPaused = 'false';
           vid.muted = isVideoAudioMuted;
           vid.volume = videoVolume;
-          if (vid.paused) vid.play().catch(() => {});
+          if (vid.paused) {
+            vid.play().catch(() => {
+              vid.muted = true;
+              vid.play().catch(() => {});
+            });
+          }
         }
         setIsPlayingState(true);
       }
@@ -554,18 +559,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         bandoAudio.setMasterVolume(data.videoVolume);
       }
 
-      const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true';
-
       setMasterState(prev => {
         // Kiểm tra xem có trường dữ liệu quan trọng nào thực sự thay đổi không
         let hasDiff = false;
         const keys = ['stage', 'aspectRatio', 'mediaUrl', 'flvUrl', 'isVideo', 'selectedCharacter', 'characterName', 'videoPlaybackEvent', 'isPlaying', 'isDarkMode'];
         for (const k of keys) {
           if (data[k] !== undefined && data[k] !== prev[k]) {
-            // Nếu người dùng đang tạm dừng thì bỏ qua cập nhật isPlaying / videoPlaybackEvent từ xa
-            if (isUserPaused && (k === 'isPlaying' || k === 'videoPlaybackEvent')) {
-              continue;
-            }
             hasDiff = true;
             break;
           }
@@ -577,10 +576,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         if (!hasDiff) return prev; // Không thay đổi thì giữ nguyên reference, tránh kích hoạt re-render
 
         const next = { ...prev, ...data };
-        if (isUserPaused) {
-          next.isPlaying = false;
-          next.videoPlaybackEvent = 'pause';
-        }
 
         // URL Parameter & Path Override check (nếu link là link chuyên dụng của 1 dự án thì cố định dự án đó)
         const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
@@ -1346,6 +1341,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       }
     }
 
+    // 7. SIÊU AN TOÀN: NẾU KHÔNG CÓ URL HOẶC URL LÀ RÁC/NULL -> FALLBACK NGAY VỀ VIDEO MẪU CHUẨN 4K
+    if (!candidateUrl) {
+      candidateUrl = 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-a-green-dress-41315-large.mp4';
+      isVideo = true;
+    }
+
     return { url: candidateUrl, isVideo };
   };
 
@@ -1418,7 +1419,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
                   if (!isUserPaused) {
                     v.dataset.userPaused = 'false';
-                    v.play().then(() => setIsPlayingState(true)).catch(() => {});
+                    const p = v.play();
+                    if (p !== undefined) {
+                      p.then(() => setIsPlayingState(true)).catch(() => {
+                        v.muted = true;
+                        v.play().then(() => setIsPlayingState(true)).catch(() => {});
+                      });
+                    }
                   } else {
                     v.dataset.userPaused = 'true';
                     v.pause();
@@ -1448,7 +1455,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
                   if (!isUserPaused && v.paused) {
                     v.dataset.userPaused = 'false';
-                    v.play().then(() => setIsPlayingState(true)).catch(() => {});
+                    const p = v.play();
+                    if (p !== undefined) {
+                      p.then(() => setIsPlayingState(true)).catch(() => {
+                        v.muted = true;
+                        v.play().then(() => setIsPlayingState(true)).catch(() => {});
+                      });
+                    }
                   } else if (isUserPaused) {
                     v.dataset.userPaused = 'true';
                     v.pause();
@@ -1459,28 +1472,36 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   const v = overlayVideoRef.current;
                   const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
                   if (v && v.paused && !isUserPaused) {
-                    v.play().then(() => setIsPlayingState(true)).catch(() => {});
+                    v.play().then(() => setIsPlayingState(true)).catch(() => {
+                      v.muted = true;
+                      v.play().then(() => setIsPlayingState(true)).catch(() => {});
+                    });
                   }
                 }}
                 onEnded={(e) => {
                   e.currentTarget.currentTime = 0;
                   const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
                   if (!isUserPaused) {
-                    e.currentTarget.play().then(() => setIsPlayingState(true)).catch(() => {});
+                    e.currentTarget.play().then(() => setIsPlayingState(true)).catch(() => {
+                      e.currentTarget.muted = true;
+                      e.currentTarget.play().then(() => setIsPlayingState(true)).catch(() => {});
+                    });
                   } else {
                     e.currentTarget.pause();
                   }
                 }}
                 onError={(e) => {
-                  console.warn('[CleanLiveOverlay] Video reconnecting in 500ms...', e);
-                  setTimeout(() => {
-                    const v = overlayVideoRef.current;
-                    if (v && activeMedia.url) {
-                      v.src = activeMedia.url;
-                      v.load();
+                  console.warn('[CleanLiveOverlay] Lỗi tải video, tự động chuyển về video chuẩn chống đen hình');
+                  const v = overlayVideoRef.current || e.currentTarget;
+                  const fallback = 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-a-green-dress-41315-large.mp4';
+                  if (v && v.src !== fallback) {
+                    v.src = fallback;
+                    v.load();
+                    v.play().catch(() => {
+                      v.muted = true;
                       v.play().catch(() => {});
-                    }
-                  }, 500);
+                    });
+                  }
                 }}
                 className="w-full h-full select-none absolute inset-0 transform-gpu"
                 style={{ 

@@ -56,26 +56,27 @@ echo   💡 Vui lòng KHÔNG tắt cửa sổ màu đen này khi đang livestrea
 echo =================================================================
 
 set "APP_URL=http://127.0.0.1:3001/?update_cache=%RANDOM%"
+set "BROWSER_FLAGS=--autoplay-policy=no-user-gesture-required --disable-features=CalculateNativeWinOcclusion --disable-backgrounding-occluded-windows --disable-renderer-backgrounding"
 
-rem 5. Mở ứng dụng ở chế độ Cửa Sổ Desktop Native App
+rem 5. Mở ứng dụng ở chế độ Cửa Sổ Desktop Native App (Đã tối ưu 100% cho OBS Window Capture)
 if exist "%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe" (
-    start "" "%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe" --app=%APP_URL%
+    start "" "%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe" --app=%APP_URL% %BROWSER_FLAGS%
     goto launched
 )
 if exist "%ProgramFiles%\Microsoft\Edge\Application\msedge.exe" (
-    start "" "%ProgramFiles%\Microsoft\Edge\Application\msedge.exe" --app=%APP_URL%
+    start "" "%ProgramFiles%\Microsoft\Edge\Application\msedge.exe" --app=%APP_URL% %BROWSER_FLAGS%
     goto launched
 )
 if exist "%ProgramFiles%\Google\Chrome\Application\chrome.exe" (
-    start "" "%ProgramFiles%\Google\Chrome\Application\chrome.exe" --app=%APP_URL%
+    start "" "%ProgramFiles%\Google\Chrome\Application\chrome.exe" --app=%APP_URL% %BROWSER_FLAGS%
     goto launched
 )
 if exist "%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe" (
-    start "" "%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe" --app=%APP_URL%
+    start "" "%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe" --app=%APP_URL% %BROWSER_FLAGS%
     goto launched
 )
 if exist "%LocalAppData%\Google\Chrome\Application\chrome.exe" (
-    start "" "%LocalAppData%\Google\Chrome\Application\chrome.exe" --app=%APP_URL%
+    start "" "%LocalAppData%\Google\Chrome\Application\chrome.exe" --app=%APP_URL% %BROWSER_FLAGS%
     goto launched
 )
 

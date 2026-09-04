@@ -87,7 +87,9 @@ app.all('/uploads/:filename', (req, res, next) => {
   if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') return next();
 
   const filePath = path.join(uploadsDir, req.params.filename);
-  if (!fs.existsSync(filePath)) return next();
+  if (!fs.existsSync(filePath)) {
+    return res.redirect('https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-a-green-dress-41315-large.mp4');
+  }
 
   try {
     const stat = fs.statSync(filePath);

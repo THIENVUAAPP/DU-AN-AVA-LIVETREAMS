@@ -276,8 +276,12 @@ class BanDoGameEngine {
         const urlParams = new URLSearchParams(window.location.search);
         const customBackend = urlParams.get('backend') || localStorage.getItem('aidol_backend_url');
         let backendUrl = '';
+        const hostname = (window.location.hostname || '').toLowerCase();
+        const isTunnelOrCloud = hostname.includes('trycloudflare.com') || hostname.includes('vercel.app') || hostname.includes('loca.lt') || hostname.includes('ngrok') || hostname.includes('serveo.net');
         if (customBackend && customBackend.startsWith('http')) {
           backendUrl = customBackend;
+        } else if (isTunnelOrCloud) {
+          backendUrl = window.location.origin;
         } else {
           backendUrl = `${window.location.protocol}//${window.location.hostname}:3001`;
         }
