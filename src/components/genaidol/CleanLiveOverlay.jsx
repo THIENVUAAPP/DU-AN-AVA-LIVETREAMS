@@ -566,6 +566,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         bandoAudio.setMasterVolume(data.videoVolume);
       }
 
+      const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true';
+
       setMasterState(prev => {
         // Kiểm tra xem có trường dữ liệu quan trọng nào thực sự thay đổi không
         let hasDiff = false;
