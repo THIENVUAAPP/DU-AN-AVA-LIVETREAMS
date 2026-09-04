@@ -9,11 +9,12 @@
   "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1788502512914,
+  "updatedAt": 1788503460445,
   "flvUrl": null,
   "isConnected": false,
   "type": "MASTER_LIVE_STATE_UPDATE",
   "currentLang": "vi",
   "selectedCharacter": "custom_1788334783075",
-  "isUserExplicitMediaLocked": true
+  "isUserExplicitMediaLocked": true,
+  "videoCurrentTime": 0
 }

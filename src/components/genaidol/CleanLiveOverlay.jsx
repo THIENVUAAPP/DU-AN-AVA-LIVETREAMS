@@ -9,8 +9,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { loadAllAidolItems } from '../../utils/idbHelper';
 import { syncMasterLiveState, getMasterLiveState } from '../../lib/masterLiveSync';
 import { 
-  Play, Pause, Volume2, VolumeX, 
-  Video, Flag, Swords, Tv, Eye, EyeOff, Sparkles, Monitor
+  Play, Pause, Volume2, VolumeX, Eye, EyeOff 
 } from 'lucide-react';
 
 /**
@@ -292,7 +291,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     syncMasterLiveState({ aspectRatio: nextRatio }, socketRef.current);
   };
 
-  // 7. PHÍM TẮT THÔNG MINH (HOTKEYS) — Tiện lợi cho Streamer điều khiển nhanh
+  // 5. PHÍM TẮT THÔNG MINH (HOTKEYS) — Tiện lợi cho Streamer điều khiển nhanh
   useEffect(() => {
     if (!isWindowCapture) return;
     const handleKeyDown = (e) => {
@@ -309,29 +308,17 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       } else if (key === 'h' || key === 'd') {
         e.preventDefault();
         setShowControlDock(prev => !prev);
-      } else if (key === '1') {
+      } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        handleStageSwitch('idol');
-      } else if (key === '2') {
+        handleVolumeChange(Math.min(1.0, Math.round((videoVolume + 0.05) * 100) / 100));
+      } else if (e.key === 'ArrowDown') {
         e.preventDefault();
-        handleStageSwitch('bando');
-      } else if (key === '3') {
-        e.preventDefault();
-        handleStageSwitch('battle');
-      } else if (key === '4') {
-        e.preventDefault();
-        handleStageSwitch('broadcast');
-      } else if (key === 'f') {
-        e.preventDefault();
-        toggleFitMode();
-      } else if (key === 'r') {
-        e.preventDefault();
-        toggleAspectRatio();
+        handleVolumeChange(Math.max(0.0, Math.round((videoVolume - 0.05) * 100) / 100));
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isWindowCapture, isPlayingState, isVideoAudioMuted, videoVolume, masterState.aspectRatio]);
+  }, [isWindowCapture, isPlayingState, isVideoAudioMuted, videoVolume]);
   const [localDbItems, setLocalDbItems] = useState([]);
   const [hasStudioFrame, setHasStudioFrame] = useState(false);
   const studioImageRef = useRef(null);
@@ -501,8 +488,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         const keys = ['stage', 'aspectRatio', 'mediaUrl', 'flvUrl', 'isVideo', 'selectedCharacter', 'characterName', 'videoPlaybackEvent', 'isPlaying', 'isDarkMode'];
         for (const k of keys) {
           if (data[k] !== undefined && data[k] !== prev[k]) {
-            // Nếu người dùng vừa bấm trực tiếp trên cửa sổ Window Capture thì không bị ghi đè
-            if (isRecentAction && (k === 'stage' || k === 'aspectRatio' || k === 'isPlaying' || k === 'videoPlaybackEvent')) {
+            // Nếu người dùng vừa bấm Play/Pause trực tiếp trên cửa sổ Window Capture thì bảo vệ trạng thái này
+            if (isRecentAction && (k === 'isPlaying' || k === 'videoPlaybackEvent')) {
               continue;
             }
             hasDiff = true;
@@ -517,8 +504,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
         const next = { ...prev, ...data };
         if (isRecentAction) {
-          next.stage = prev.stage;
-          next.aspectRatio = prev.aspectRatio;
           next.isPlaying = prev.isPlaying;
           next.videoPlaybackEvent = prev.videoPlaybackEvent;
         }
@@ -1178,152 +1163,74 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       {showControlDock && isWindowCapture && (
         <>
           <header className="w-full h-12 min-h-[48px] bg-gradient-to-r from-[#0a0c16] via-[#101426] to-[#0a0c16] border-b border-cyan-500/40 px-3 flex items-center justify-between z-50 text-white shadow-2xl select-none">
-          {/* Trái: Trạng thái Live & Tỷ lệ */}
+          {/* Trái: Trạng thái Live 60FPS */}
           <div className="flex items-center gap-2 shrink-0">
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-600/20 border border-red-500/50 text-red-400 text-[10px] font-black uppercase tracking-wider shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600/20 border border-red-500/50 text-red-400 text-[10.5px] font-black uppercase tracking-wider shadow-sm">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
               <span>LIVE 60FPS</span>
             </div>
-            <button
-              onClick={toggleAspectRatio}
-              className="text-[10px] font-bold text-cyan-300 bg-cyan-950/70 hover:bg-cyan-900 border border-cyan-500/50 px-2.5 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1.5 shadow-sm active:scale-95"
-              title="Chuyển đổi tỷ lệ: 9:16 Dọc (TikTok Live) vs 16:9 Ngang (OBS) [Phím tắt: R]"
-            >
-              <span>{ratio === '9:16' ? '📱 9:16 DỌC (TIKTOK)' : '🖥️ 16:9 NGANG (OBS)'}</span>
-              <kbd className="px-1 py-0.2 bg-cyan-800/80 text-[8.5px] rounded text-cyan-100 font-mono">R</kbd>
-            </button>
           </div>
 
-          {/* Giữa: CÁC NÚT ĐIỀU KHIỂN CỐT LÕI (DỪNG/CHẠY, BẬT/TẮT ÂM THANH, CHUYỂN SÂN KHẤU) */}
-          <div className="flex items-center gap-2 overflow-x-auto py-1">
-            {/* Nút Play / Pause */}
+          {/* Giữa: 2 CHỨC NĂNG CỐT LÕI (1. TẠM DỪNG / TIẾP TỤC & 2. BẬT/TẮT + TĂNG/GIẢM ÂM LƯỢNG) */}
+          <div className="flex items-center gap-3 py-1">
+            {/* 1. Nút Tạm Dừng / Tiếp Tục */}
             <button
               onClick={togglePlayPause}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-black text-xs transition-all shadow-md active:scale-95 cursor-pointer shrink-0 ${
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg font-black text-xs transition-all shadow-md active:scale-95 cursor-pointer shrink-0 ${
                 isPlayingState 
                   ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-500/30 border border-emerald-400/50' 
                   : 'bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white shadow-amber-500/30 border border-amber-400/50 animate-pulse'
               }`}
-              title={isPlayingState ? "Tạm dừng video phát sóng [Phím tắt: Phím Cách / Space]" : "Tiếp tục phát video [Phím tắt: Phím Cách / Space]"}
+              title={isPlayingState ? "Tạm dừng phát sóng [Phím tắt: Phím Cách / Space]" : "Tiếp tục phát sóng [Phím tắt: Phím Cách / Space]"}
             >
-              {isPlayingState ? <Pause size={13} className="fill-white" /> : <Play size={13} className="fill-white" />}
+              {isPlayingState ? <Pause size={14} className="fill-white" /> : <Play size={14} className="fill-white" />}
               <span>{isPlayingState ? 'TẠM DỪNG' : 'TIẾP TỤC'}</span>
-              <kbd className="px-1 py-0.2 bg-black/40 text-[8.5px] rounded text-white/90 font-mono">Space</kbd>
+              <kbd className="px-1.5 py-0.5 bg-black/40 text-[9px] rounded text-white/90 font-mono font-bold">Space</kbd>
             </button>
 
-            {/* Nút Bật / Tắt Âm Thanh (Mute / Unmute) */}
+            {/* Vách ngăn */}
+            <div className="w-px h-6 bg-white/20 shrink-0"></div>
+
+            {/* 2. Nút Bật / Tắt Âm Thanh (Mute / Unmute) */}
             <button
               onClick={toggleAudioMute}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-black text-xs transition-all shadow-md active:scale-95 cursor-pointer shrink-0 ${
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg font-black text-xs transition-all shadow-md active:scale-95 cursor-pointer shrink-0 ${
                 !isVideoAudioMuted 
                   ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-cyan-500/30 border border-cyan-400/50' 
                   : 'bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-500/50'
               }`}
-              title={isVideoAudioMuted ? "Bấm để MỞ TIẾNG cho video (Phát âm thanh siêu thực ra loa / OBS) [Phím tắt: M]" : "Bấm để TẮT TIẾNG (Mute) [Phím tắt: M]"}
+              title={isVideoAudioMuted ? "Bấm để MỞ TIẾNG (Phát âm thanh ra loa & OBS) [Phím tắt: M]" : "Bấm để TẮT TIẾNG (Mute) [Phím tắt: M]"}
             >
-              {!isVideoAudioMuted ? <Volume2 size={14} className="text-yellow-300 animate-pulse" /> : <VolumeX size={14} className="text-rose-400" />}
+              {!isVideoAudioMuted ? <Volume2 size={15} className="text-yellow-300 animate-pulse" /> : <VolumeX size={15} className="text-rose-400" />}
               <span>{!isVideoAudioMuted ? 'MỞ TIẾNG (HD)' : 'TẮT TIẾNG'}</span>
-              <kbd className="px-1 py-0.2 bg-black/40 text-[8.5px] rounded text-white/90 font-mono">M</kbd>
+              <kbd className="px-1.5 py-0.5 bg-black/40 text-[9px] rounded text-white/90 font-mono font-bold">M</kbd>
             </button>
 
-            {/* Thanh chỉnh âm lượng (khi đang mở tiếng) */}
-            {!isVideoAudioMuted && (
-              <div className="flex items-center gap-1.5 bg-black/60 px-2 py-1 rounded-lg border border-white/10 shrink-0" title="Chỉnh âm lượng ra loa / OBS">
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="1" 
-                  step="0.05" 
-                  value={videoVolume} 
-                  onChange={(e) => handleVolumeChange(parseFloat(e.target.value))} 
-                  className="w-16 h-1.5 accent-cyan-400 cursor-pointer"
-                />
-                <span className="text-[9.5px] font-mono font-bold text-gray-300 w-6 text-right">
-                  {Math.round(videoVolume * 100)}%
-                </span>
-              </div>
-            )}
-
-            {/* Vách ngăn */}
-            <div className="w-px h-5 bg-white/20 mx-1 shrink-0"></div>
-
-            {/* BỘ CHUYỂN TRANG / SÂN KHẤU LIVE 1-CLICK (KHÔNG GÂY LỆCH TỌA ĐỘ TRÊN OBS) */}
-            <div className="flex items-center gap-1 bg-black/60 p-0.5 rounded-lg border border-white/10 shrink-0">
-              <button
-                onClick={() => handleStageSwitch('idol')}
-                className={`px-2.5 py-1 rounded-md text-[10.5px] font-black transition-all flex items-center gap-1.5 cursor-pointer ${
-                  currentStage === 'idol' 
-                    ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-cyan-500/30' 
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-                title="Chuyển sang màn hình Idol AI Livestream [Phím tắt: 1]"
-              >
-                <Video size={12} className={currentStage === 'idol' ? 'text-yellow-300' : 'text-gray-400'} />
-                <span>Idol AI</span>
-                <kbd className="px-1 py-0.2 bg-black/40 text-[8px] rounded text-white/70 font-mono">1</kbd>
-              </button>
-
-              <button
-                onClick={() => handleStageSwitch('bando')}
-                className={`px-2.5 py-1 rounded-md text-[10.5px] font-black transition-all flex items-center gap-1.5 cursor-pointer ${
-                  (currentStage === 'bando' || currentStage === 'vietnam_map' || currentStage === 'map') 
-                    ? 'bg-gradient-to-r from-amber-600 to-yellow-500 text-white shadow-md shadow-amber-500/30' 
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-                title="Chuyển sang Game Ghép Cờ Bản Đồ Việt Nam [Phím tắt: 2]"
-              >
-                <Flag size={12} className={(currentStage === 'bando' || currentStage === 'vietnam_map' || currentStage === 'map') ? 'text-yellow-200' : 'text-gray-400'} />
-                <span>Bản Đồ</span>
-                <kbd className="px-1 py-0.2 bg-black/40 text-[8px] rounded text-white/70 font-mono">2</kbd>
-              </button>
-
-              <button
-                onClick={() => handleStageSwitch('battle')}
-                className={`px-2.5 py-1 rounded-md text-[10.5px] font-black transition-all flex items-center gap-1.5 cursor-pointer ${
-                  (currentStage === 'battle' || currentStage === 'gamebattle' || currentStage === 'game') 
-                    ? 'bg-gradient-to-r from-red-600 to-purple-600 text-white shadow-md shadow-purple-500/30' 
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-                title="Chuyển sang Game Chiến Đấu PK Đại Chiến [Phím tắt: 3]"
-              >
-                <Swords size={12} className={(currentStage === 'battle' || currentStage === 'gamebattle' || currentStage === 'game') ? 'text-yellow-300' : 'text-gray-400'} />
-                <span>Chiến Đấu</span>
-                <kbd className="px-1 py-0.2 bg-black/40 text-[8px] rounded text-white/70 font-mono">3</kbd>
-              </button>
-
-              <button
-                onClick={() => handleStageSwitch('broadcast')}
-                className={`px-2.5 py-1 rounded-md text-[10.5px] font-black transition-all flex items-center gap-1.5 cursor-pointer ${
-                  (currentStage === 'broadcast' || currentStage === 'studio') 
-                    ? 'bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-md shadow-pink-500/30' 
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-                title="Chuyển sang Phòng Dựng Camera Studio 4K [Phím tắt: 4]"
-              >
-                <Tv size={12} className={(currentStage === 'broadcast' || currentStage === 'studio') ? 'text-yellow-300' : 'text-gray-400'} />
-                <span>Studio 4K</span>
-                <kbd className="px-1 py-0.2 bg-black/40 text-[8px] rounded text-white/70 font-mono">4</kbd>
-              </button>
+            {/* 3. Thanh Kéo Tăng / Giảm Âm Lượng (0% - 100%) */}
+            <div className="flex items-center gap-2 bg-black/70 px-3 py-1.5 rounded-lg border border-white/15 shrink-0 shadow-inner" title="Kéo để tăng / giảm âm lượng ra loa & OBS">
+              <input 
+                type="range" 
+                min="0" 
+                max="1" 
+                step="0.05" 
+                value={videoVolume} 
+                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))} 
+                className="w-24 sm:w-32 h-2 accent-cyan-400 cursor-pointer"
+              />
+              <span className={`text-xs font-mono font-black w-9 text-right ${isVideoAudioMuted ? 'text-gray-500 line-through' : 'text-cyan-300'}`}>
+                {Math.round(videoVolume * 100)}%
+              </span>
             </div>
           </div>
 
-          {/* Phải: Chế độ Fit & Thu gọn bar */}
+          {/* Phải: Thu gọn thanh điều khiển */}
           <div className="flex items-center gap-1.5 shrink-0">
             <button
-              onClick={toggleFitMode}
-              className="px-2.5 py-1 rounded-md bg-white/5 hover:bg-white/10 border border-white/15 text-[10px] font-bold text-gray-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1 active:scale-95"
-              title="Chuyển đổi cách hiển thị video: Cover (Phủ kín 100%) vs Contain (Vừa vặn nguyên bản) [Phím tắt: F]"
-            >
-              <span>{objectFitState === 'contain' ? 'Fit: Vừa Vặn' : 'Fit: Phủ Kín'}</span>
-              <kbd className="px-1 py-0.2 bg-white/10 text-[8px] rounded text-gray-400 font-mono">F</kbd>
-            </button>
-
-            <button
               onClick={() => setShowControlDock(false)}
-              className="p-1 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer flex items-center gap-1"
-              title="Thu gọn thanh điều khiển [Phím tắt: H hoặc D]"
+              className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer flex items-center gap-1"
+              title="Thu gọn thanh điều khiển (Chỉ phát Video sạch) [Phím tắt: H hoặc D]"
             >
-              <EyeOff size={14} />
+              <EyeOff size={15} />
               <kbd className="px-1 py-0.2 bg-white/10 text-[8px] rounded text-gray-400 font-mono">H</kbd>
             </button>
           </div>
@@ -1340,7 +1247,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[9px] text-gray-500 font-mono hidden sm:inline">Phím tắt: [H] Ẩn/Hiện • [Space] Dừng • [M] Tiếng • [1-4] Sân Khấu</span>
+            <span className="text-[9px] text-gray-500 font-mono hidden sm:inline">Phím tắt: [H] Ẩn/Hiện • [Space] Tạm dừng / Tiếp tục • [M] Mở/Tắt âm thanh</span>
             <button
               onClick={() => setShowControlDock(false)}
               className="text-[10px] text-cyan-400 hover:text-cyan-200 underline cursor-pointer font-bold"
@@ -1357,7 +1264,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         <button
           onClick={() => setShowControlDock(true)}
           className="absolute top-2 right-2 z-50 px-3 py-1.5 rounded-lg bg-black/80 hover:bg-black text-cyan-400 hover:text-white border border-cyan-500/40 text-[10px] font-bold shadow-2xl transition-all opacity-30 hover:opacity-100 flex items-center gap-1.5 cursor-pointer backdrop-blur-sm"
-          title="Mở thanh điều khiển Play/Pause, Âm thanh & Chuyển Sân Khấu [Phím tắt: H hoặc D]"
+          title="Mở thanh điều khiển Play/Pause & Âm thanh [Phím tắt: H hoặc D]"
         >
           <Eye size={13} />
           <span>Mở Điều Khiển</span>
