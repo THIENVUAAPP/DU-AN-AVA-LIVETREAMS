@@ -59,6 +59,20 @@ if (distPath) {
   app.use(express.static(distPath));
 }
 
+// Route phục vụ video mặc định chống màn hình đen cho TikTok Live Studio & OBS
+app.get(['/default_idol.mp4', '/idol/default_idol.mp4', '/live/default_idol.mp4', '/stage/default_idol.mp4'], (req, res) => {
+  const localDefault = path.join(__dirname, 'default_idol.mp4');
+  const publicDefault = path.join(__dirname, '../public/default_idol.mp4');
+  const distDefault = path.join(__dirname, '../dist/default_idol.mp4');
+  const target = fs.existsSync(localDefault) ? localDefault : fs.existsSync(publicDefault) ? publicDefault : distDefault;
+  if (fs.existsSync(target)) {
+    res.setHeader('Content-Type', 'video/mp4');
+    res.setHeader('Accept-Ranges', 'bytes');
+    return res.sendFile(path.resolve(target));
+  }
+  res.status(404).send('Default video not found');
+});
+
 const multer = require('multer');
 
 // ============================================================
@@ -88,7 +102,7 @@ app.all('/uploads/:filename', (req, res, next) => {
 
   const filePath = path.join(uploadsDir, req.params.filename);
   if (!fs.existsSync(filePath)) {
-    return res.redirect('https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-a-green-dress-41315-large.mp4');
+    return res.redirect('/default_idol.mp4');
   }
 
   try {
@@ -576,7 +590,7 @@ let currentMasterLiveState = savedState || {
   updatedAt: Date.now()
 };
 
-// Nếu mediaUrl trống, tìm video mới nhất trong thư mục uploads để phát ngay
+// Nếu mediaUrl trống hoặc không tồn tại, tìm video mới nhất trong thư mục uploads để phát ngay
 if (!currentMasterLiveState.mediaUrl && fs.existsSync(uploadsDir)) {
   try {
     const files = fs.readdirSync(uploadsDir)
@@ -587,6 +601,10 @@ if (!currentMasterLiveState.mediaUrl && fs.existsSync(uploadsDir)) {
       currentMasterLiveState.mediaUrl = `/uploads/${files[0].name}`;
     }
   } catch (e) {}
+}
+
+if (!currentMasterLiveState.mediaUrl) {
+  currentMasterLiveState.mediaUrl = '/default_idol.mp4';
 }
 let currentBandoGameState = null;
 let currentBattleGameState = null;

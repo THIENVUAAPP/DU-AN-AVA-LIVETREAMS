@@ -134,6 +134,41 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     return params.get('mode') === 'window_capture' || params.get('capture') === '1';
   })() : false;
 
+  const [hasAutoplayStarted, setHasAutoplayStarted] = useState(false);
+  const [showCaptureTip, setShowCaptureTip] = useState(true);
+
+  // ⚡ CLICK / TOUCH / INTERACT UNLOCK: Mở khóa âm thanh và kích hoạt phát ngay khi người dùng chạm vào cửa sổ
+  useEffect(() => {
+    const handleInteractUnlock = () => {
+      setHasAutoplayStarted(true);
+      const vid = overlayVideoRef.current;
+      if (vid) {
+        if (vid.paused && localStorage.getItem('avalive_user_paused') !== 'true') {
+          vid.play().catch(() => {});
+        }
+        if (!isVideoAudioMuted) {
+          vid.muted = false;
+          vid.volume = videoVolume;
+        }
+      }
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx && window.__avaLiveAudioContext?.state === 'suspended') {
+          window.__avaLiveAudioContext.resume().catch(() => {});
+        }
+      } catch (e) {}
+    };
+
+    window.addEventListener('pointerdown', handleInteractUnlock);
+    window.addEventListener('click', handleInteractUnlock);
+    window.addEventListener('keydown', handleInteractUnlock);
+    return () => {
+      window.removeEventListener('pointerdown', handleInteractUnlock);
+      window.removeEventListener('click', handleInteractUnlock);
+      window.removeEventListener('keydown', handleInteractUnlock);
+    };
+  }, [isVideoAudioMuted, videoVolume]);
+
   const [objectFitState, setObjectFitState] = useState(() => {
     try {
       const saved = localStorage.getItem('avalive_overlay_fit');
@@ -1341,9 +1376,10 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       }
     }
 
-    // 7. SIÊU AN TOÀN: NẾU KHÔNG CÓ URL HOẶC URL LÀ RÁC/NULL -> FALLBACK NGAY VỀ VIDEO MẪU CHUẨN 4K
-    if (!candidateUrl) {
-      candidateUrl = 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-a-green-dress-41315-large.mp4';
+    // 7. SIÊU AN TOÀN: NẾU KHÔNG CÓ URL HOẶC URL LÀ RÁC/NULL/MIXKIT -> FALLBACK NGAY VỀ VIDEO NỘI BỘ 100% HOẠT ĐỘNG
+    if (!candidateUrl || candidateUrl.includes('mixkit.co')) {
+      const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+      candidateUrl = currentOrigin ? `${currentOrigin}/default_idol.mp4` : '/default_idol.mp4';
       isVideo = true;
     }
 
@@ -1378,6 +1414,34 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
   return (
     <div className="fixed inset-0 w-screen h-screen overflow-hidden flex items-center justify-center bg-black select-none font-sans">
+      {/* 🚀 BANNER HỖ TRỢ BẬT TIẾNG & FIX OBS CHO WINDOW CAPTURE */}
+      {isWindowCapture && showCaptureTip && (
+        <div 
+          onClick={() => {
+            setShowCaptureTip(false);
+            setHasAutoplayStarted(true);
+            const v = overlayVideoRef.current;
+            if (v) {
+              if (v.paused) v.play().catch(() => {});
+              if (!isVideoAudioMuted) { v.muted = false; v.volume = videoVolume; }
+            }
+          }}
+          className="fixed top-2 left-1/2 -translate-x-1/2 z-50 bg-gradient-to-r from-emerald-600 via-cyan-600 to-blue-600 text-white px-4 py-2 rounded-2xl shadow-2xl border border-white/30 text-xs font-bold flex items-center gap-2.5 cursor-pointer animate-bounce hover:opacity-95"
+        >
+          <span className="text-base animate-pulse">🔊</span>
+          <span>BẤM ĐÂY ĐỂ BẬT TIẾNG & PHÁT 60FPS</span>
+          <span className="text-[10px] bg-black/40 px-2 py-0.5 rounded-full text-yellow-300 font-extrabold hidden sm:inline">
+            OBS: Chọn Capture Method "Windows 10 (1903 trở lên)"
+          </span>
+          <button 
+            onClick={(e) => { e.stopPropagation(); setShowCaptureTip(false); }}
+            className="ml-1 text-white/80 hover:text-white p-0.5 rounded-full hover:bg-white/20"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* KHUNG PHÁT SÓNG SẠCH 100% (CHUẨN 9:16 HOẶC 16:9 - SIÊU SẮC NÉT OBS WINDOW CAPTURE, KHÔNG CÓ BẤT KỲ NÚT BẤM NÀO ĐÈ LÊN) */}
       <main className="w-full h-full relative overflow-hidden flex items-center justify-center bg-black">
         <div 
@@ -1400,122 +1464,151 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           {currentStage === 'idol' && (
             <div className="w-full h-full absolute inset-0 flex items-center justify-center overflow-hidden bg-black">
             {activeMedia.url && activeMedia.isVideo ? (
-              <video
-                ref={overlayVideoRef}
-                key={activeMedia.url}
-                src={activeMedia.url}
-                autoPlay={localStorage.getItem('avalive_user_paused') !== 'true' && masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false}
-                loop
-                muted={isVideoAudioMuted}
-                playsInline
-                controls={false}
-                preload="auto"
-                disablePictureInPicture
-                disableRemotePlayback
-                onLoadedMetadata={(e) => {
-                  const v = e.currentTarget;
-                  v.muted = isVideoAudioMuted;
-                  v.volume = videoVolume;
-                  const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
-                  if (!isUserPaused) {
-                    v.dataset.userPaused = 'false';
-                    const p = v.play();
-                    if (p !== undefined) {
-                      p.then(() => setIsPlayingState(true)).catch(() => {
-                        v.muted = true;
-                        v.play().then(() => setIsPlayingState(true)).catch(() => {});
-                      });
+              <>
+                <video
+                  ref={overlayVideoRef}
+                  key={activeMedia.url}
+                  src={activeMedia.url}
+                  autoPlay={localStorage.getItem('avalive_user_paused') !== 'true' && masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false}
+                  loop
+                  muted={!hasAutoplayStarted ? true : isVideoAudioMuted}
+                  defaultMuted={true}
+                  playsInline
+                  controls={false}
+                  preload="auto"
+                  crossOrigin="anonymous"
+                  disablePictureInPicture
+                  disableRemotePlayback
+                  onLoadedMetadata={(e) => {
+                    const v = e.currentTarget;
+                    const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
+                    if (!isUserPaused) {
+                      v.dataset.userPaused = 'false';
+                      v.muted = !hasAutoplayStarted ? true : isVideoAudioMuted;
+                      const p = v.play();
+                      if (p !== undefined) {
+                        p.then(() => {
+                          setIsPlayingState(true);
+                          if (!isVideoAudioMuted && !hasAutoplayStarted) {
+                            setTimeout(() => {
+                              try { v.muted = false; v.volume = videoVolume; } catch (err) {}
+                            }, 200);
+                          }
+                        }).catch(() => {
+                          v.muted = true;
+                          v.play().then(() => setIsPlayingState(true)).catch(() => {});
+                        });
+                      }
+                    } else {
+                      v.dataset.userPaused = 'true';
+                      v.pause();
+                      setIsPlayingState(false);
                     }
-                  } else {
-                    v.dataset.userPaused = 'true';
-                    v.pause();
-                    setIsPlayingState(false);
-                  }
-                }}
-                onPlay={() => {
-                  const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true';
-                  if (isUserPaused) {
+                  }}
+                  onPlay={() => {
+                    const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true';
+                    if (isUserPaused) {
+                      const v = overlayVideoRef.current;
+                      if (v) { v.dataset.userPaused = 'true'; v.pause(); }
+                      setIsPlayingState(false);
+                      return;
+                    }
+                    setIsPlayingState(true);
+                    if (!hasAutoplayStarted) {
+                      setHasAutoplayStarted(true);
+                      if (!isVideoAudioMuted) {
+                        setTimeout(() => {
+                          const v = overlayVideoRef.current;
+                          if (v) {
+                            try { v.muted = false; v.volume = videoVolume; } catch (e) {}
+                          }
+                        }, 200);
+                      }
+                    }
+                  }}
+                  onPause={() => {
+                    const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
+                    if (isUserPaused) {
+                      setIsPlayingState(false);
+                    }
+                  }}
+                  onCanPlay={(e) => {
+                    const v = e.currentTarget;
+                    const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
+                    if (!isUserPaused && v.paused) {
+                      v.dataset.userPaused = 'false';
+                      v.muted = !hasAutoplayStarted ? true : isVideoAudioMuted;
+                      const p = v.play();
+                      if (p !== undefined) {
+                        p.then(() => setIsPlayingState(true)).catch(() => {
+                          v.muted = true;
+                          v.play().then(() => setIsPlayingState(true)).catch(() => {});
+                        });
+                      }
+                    } else if (isUserPaused) {
+                      v.dataset.userPaused = 'true';
+                      v.pause();
+                    }
+                  }}
+                  onWaiting={() => {}}
+                  onStalled={() => {
                     const v = overlayVideoRef.current;
-                    if (v) { v.dataset.userPaused = 'true'; v.pause(); }
-                    setIsPlayingState(false);
-                    return;
-                  }
-                  setIsPlayingState(true);
-                }}
-                onPause={() => {
-                  const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
-                  if (isUserPaused) {
-                    setIsPlayingState(false);
-                  }
-                }}
-                onCanPlay={(e) => {
-                  const v = e.currentTarget;
-                  v.muted = isVideoAudioMuted;
-                  v.volume = videoVolume;
-                  const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
-                  if (!isUserPaused && v.paused) {
-                    v.dataset.userPaused = 'false';
-                    const p = v.play();
-                    if (p !== undefined) {
-                      p.then(() => setIsPlayingState(true)).catch(() => {
+                    const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
+                    if (v && v.paused && !isUserPaused) {
+                      v.play().then(() => setIsPlayingState(true)).catch(() => {
                         v.muted = true;
                         v.play().then(() => setIsPlayingState(true)).catch(() => {});
                       });
                     }
-                  } else if (isUserPaused) {
-                    v.dataset.userPaused = 'true';
-                    v.pause();
-                  }
-                }}
-                onWaiting={() => {}}
-                onStalled={() => {
-                  const v = overlayVideoRef.current;
-                  const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
-                  if (v && v.paused && !isUserPaused) {
-                    v.play().then(() => setIsPlayingState(true)).catch(() => {
-                      v.muted = true;
-                      v.play().then(() => setIsPlayingState(true)).catch(() => {});
-                    });
-                  }
-                }}
-                onEnded={(e) => {
-                  e.currentTarget.currentTime = 0;
-                  const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
-                  if (!isUserPaused) {
-                    e.currentTarget.play().then(() => setIsPlayingState(true)).catch(() => {
-                      e.currentTarget.muted = true;
-                      e.currentTarget.play().then(() => setIsPlayingState(true)).catch(() => {});
-                    });
-                  } else {
-                    e.currentTarget.pause();
-                  }
-                }}
-                onError={(e) => {
-                  console.warn('[CleanLiveOverlay] Lỗi tải video, tự động chuyển về video chuẩn chống đen hình');
-                  const v = overlayVideoRef.current || e.currentTarget;
-                  const fallback = 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-a-green-dress-41315-large.mp4';
-                  if (v && v.src !== fallback) {
-                    v.src = fallback;
-                    v.load();
-                    v.play().catch(() => {
-                      v.muted = true;
-                      v.play().catch(() => {});
-                    });
-                  }
-                }}
-                className="w-full h-full select-none absolute inset-0 transform-gpu"
-                style={{ 
-                  width: '100%', 
-                  height: '100%', 
-                  objectFit: objectFitState || 'cover',
-                  transform: 'translateZ(0)',
-                  WebkitTransform: 'translateZ(0)',
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                  imageRendering: '-webkit-optimize-contrast',
-                  willChange: 'transform'
-                }}
-              />
+                  }}
+                  onEnded={(e) => {
+                    e.currentTarget.currentTime = 0;
+                    const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
+                    if (!isUserPaused) {
+                      e.currentTarget.play().then(() => setIsPlayingState(true)).catch(() => {
+                        e.currentTarget.muted = true;
+                        e.currentTarget.play().then(() => setIsPlayingState(true)).catch(() => {});
+                      });
+                    } else {
+                      e.currentTarget.pause();
+                    }
+                  }}
+                  onError={(e) => {
+                    console.warn('[CleanLiveOverlay] Lỗi tải video, tự động chuyển về video chuẩn chống đen hình');
+                    const v = overlayVideoRef.current || e.currentTarget;
+                    const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+                    const fallback = currentOrigin ? `${currentOrigin}/default_idol.mp4` : '/default_idol.mp4';
+                    if (v && v.src !== fallback) {
+                      v.src = fallback;
+                      v.load();
+                      v.play().catch(() => {
+                        v.muted = true;
+                        v.play().catch(() => {});
+                      });
+                    }
+                  }}
+                  className="w-full h-full select-none absolute inset-0 transform-gpu"
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    objectFit: objectFitState || 'cover',
+                    transform: 'translateZ(0)',
+                    WebkitTransform: 'translateZ(0)',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    imageRendering: '-webkit-optimize-contrast',
+                    willChange: 'transform'
+                  }}
+                />
+
+                {/* 🎯 Surface Invalidator Canvas: Giúp OBS BitBlt & DWM không bị đen hình trên Windows */}
+                <canvas 
+                  id="obs-dwm-surface-helper" 
+                  width={32} 
+                  height={32} 
+                  className="absolute bottom-0 right-0 opacity-[0.005] pointer-events-none"
+                />
+              </>
             ) : activeStreamUrl ? (
               <video
                 ref={flvVideoRef}

@@ -1092,17 +1092,17 @@ export default function DesktopAppUI() {
   const BUILTIN_CHARACTERS = {
     'linhanh_4k': {
       name: 'AI Idol Live PRO',
-      url: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-a-green-dress-41315-large.mp4',
+      url: '/default_idol.mp4',
       type: 'video'
     },
     'aidol_greenscreen': {
       name: 'AI Idol Thời Trang (GreenScreen)',
-      url: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-a-green-dress-41315-large.mp4',
+      url: '/default_idol.mp4',
       type: 'video'
     },
     'aidol_dance_pro': {
       name: 'AI Idol Vũ Đạo (Dance Pro)',
-      url: 'https://assets.mixkit.co/videos/preview/mixkit-girl-dancing-in-front-of-a-camera-40742-large.mp4',
+      url: '/default_idol.mp4',
       type: 'video'
     }
   };

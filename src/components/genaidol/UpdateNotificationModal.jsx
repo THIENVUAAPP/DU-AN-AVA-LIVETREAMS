@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 
-export const APP_VERSION = '1.4.0';
+export const APP_VERSION = '1.4.1';
 export const UPDATE_NOTES = [
-  "🚀 Khắc phục triệt để màn hình đen trên Windows: Tối ưu hóa toàn diện luồng video kết nối sang TikTok Live Studio và OBS Browser Source. Bổ sung cơ chế Fallback Video 4K thông minh tự động chống lỗi 404, vượt qua rào cản chặn Autoplay Chromium CEF giúp video phát liên tục 24/7.",
-  "🖥️ Đồng bộ siêu tốc Window Capture OBS: Nút [Tạm Dừng / Tiếp Tục] và [Mở Tiếng / Tắt Tiếng] phản hồi 0ms hai chiều giữa Phần Mềm Quản Lý và Cửa Sổ Live OBS. Khóa chặt trạng thái, khi streamer dừng là dừng đồng bộ cả 2 bên.",
-  "🗺️ Nâng cấp Game Bản Đồ Cắm Cờ 63 Tỉnh Thành: Tương thích 100% card đồ họa và WebGL trên Windows, chống crash Three.js, kết nối WebSocket và nhận quà TikTok Live ổn định không độ trễ.",
-  "🍏 Khóa bảo toàn môi trường macOS: Giữ nguyên 100% cấu hình và tính năng đang hoạt động hoàn hảo trên máy Mac, đảm bảo đồng bộ giao diện hiển thị giữa Windows và Mac."
+  "🎯 Sửa triệt để lỗi đường link TikTok Live Studio: Khắc phục lỗi CEF chặn Autoplay âm thanh và loại bỏ hoàn toàn link video ngoại tuyến bị lỗi 403 Forbidden. Bổ sung nguồn video chuẩn nội bộ /default_idol.mp4 luôn sẵn sàng 100%.",
+  "⚡ Bổ sung Link Máy Tính Trực Tiếp (127.0.0.1:3001): Tối ưu 0ms delay, mượt mà 60FPS khi chạy TikTok Live Studio trên cùng máy Windows, không phụ thuộc mạng hay đường truyền Cloudflare.",
+  "🖥️ Tối ưu Bắt Cửa Sổ (Window Capture) OBS: Khắc phục lỗi màn hình đen với Canvas DWM surface refresher, tích hợp nút kích hoạt âm thanh 1-Click và hướng dẫn đổi phương thức sang 'Windows 10 (1903 trở lên)'.",
+  "🔄 Đồng bộ Realtime tức thì: Tự động cập nhật 0.1s đa kênh giữa Phần mềm chính và Cửa sổ Live / Link phát trực tiếp khi đổi video, đổi nhân vật hoặc điều khiển âm lượng."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
