@@ -418,7 +418,14 @@ export default function DesktopAppUI() {
   const [activeMonitorModal, setActiveMonitorModal] = useState(null);
   const [quickResponseActiveVideo, setQuickResponseActiveVideo] = useState(null);
   const [showOverlayModal, setShowOverlayModal] = useState(false);
-  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [showUpdateModal, setShowUpdateModal] = useState(() => {
+    try {
+      const lastSeen = localStorage.getItem('avalive_last_version');
+      return lastSeen !== APP_VERSION;
+    } catch (e) {
+      return false;
+    }
+  });
 
   // 🔒 Trạng thái video được khoá bởi người dùng (Bảo vệ không bị mất, không bị đổi ngầm)
   const [userLockedMediaUrl, setUserLockedMediaUrl] = useState(() => {
@@ -4495,7 +4502,12 @@ export default function DesktopAppUI() {
       {renderGmailLoginModal()}
       <UpdateNotificationModal 
         isOpen={showUpdateModal} 
-        onClose={() => setShowUpdateModal(false)} 
+        onClose={() => {
+          setShowUpdateModal(false);
+          try {
+            localStorage.setItem('avalive_last_version', APP_VERSION);
+          } catch (e) {}
+        }} 
       />
     </div>
   );
