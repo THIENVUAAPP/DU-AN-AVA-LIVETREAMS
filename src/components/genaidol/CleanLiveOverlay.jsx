@@ -8,9 +8,7 @@ import GameChienDau from './game/GameChienDau';
 import { supabase } from '../../lib/supabaseClient';
 import { loadAllAidolItems } from '../../utils/idbHelper';
 import { syncMasterLiveState, getMasterLiveState } from '../../lib/masterLiveSync';
-import { 
-  Play, Pause, Volume2, VolumeX, Eye, EyeOff 
-} from 'lucide-react';
+// Clean Live Overlay - Ultra HD OBS Window Capture
 import bandoAudio from './game/bandoAudioEngine';
 
 /**
@@ -136,13 +134,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     return params.get('mode') === 'window_capture' || params.get('capture') === '1';
   })() : false;
 
-  const [showControlDock, setShowControlDock] = useState(() => {
-    const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-    const isCapture = params?.get('mode') === 'window_capture' || params?.get('capture') === '1';
-    if (!isCapture) return false;
-    if (params?.get('clean') === '1' || params?.get('controls') === '0') return false;
-    return true;
-  });
   const [objectFitState, setObjectFitState] = useState(() => {
     try {
       const saved = localStorage.getItem('avalive_overlay_fit');
@@ -373,9 +364,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       } else if (key === 'm') {
         e.preventDefault();
         toggleAudioMute();
-      } else if (key === 'h' || key === 'd') {
-        e.preventDefault();
-        setShowControlDock(prev => !prev);
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         handleVolumeChange(Math.min(1.0, Math.round((videoVolume + 0.05) * 100) / 100));
@@ -1382,122 +1370,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   const ratio = masterState.aspectRatio || '9:16';
 
   return (
-    <div className="fixed inset-0 w-screen h-screen overflow-hidden flex flex-col bg-black select-none font-sans">
-      {/* 1. THANH ĐIỀU KHIỂN NGOẠI KHUNG (CHỈ HIỂN THỊ KHI Ở CỬA SỔ WINDOW CAPTURE) */}
-      {showControlDock && isWindowCapture && (
-        <>
-          <header className="w-full h-12 min-h-[48px] bg-gradient-to-r from-[#0a0c16] via-[#101426] to-[#0a0c16] border-b border-cyan-500/40 px-3 flex items-center justify-between z-50 text-white shadow-2xl select-none">
-          {/* Trái: Trạng thái Live 60FPS */}
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600/20 border border-red-500/50 text-red-400 text-[10.5px] font-black uppercase tracking-wider shadow-sm">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
-              <span>LIVE 60FPS</span>
-            </div>
-          </div>
-
-          {/* Giữa: 2 CHỨC NĂNG CỐT LÕI (1. TẠM DỪNG / TIẾP TỤC & 2. BẬT/TẮT + TĂNG/GIẢM ÂM LƯỢNG) */}
-          <div className="flex items-center gap-3 py-1">
-            {/* 1. Nút Tạm Dừng / Tiếp Tục */}
-            <button
-              onClick={togglePlayPause}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg font-black text-xs transition-all shadow-md active:scale-95 cursor-pointer shrink-0 ${
-                isPlayingState 
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-500/30 border border-emerald-400/50' 
-                  : 'bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white shadow-amber-500/30 border border-amber-400/50 animate-pulse'
-              }`}
-              title={isPlayingState ? "Tạm dừng phát sóng [Phím tắt: Phím Cách / Space]" : "Tiếp tục phát sóng [Phím tắt: Phím Cách / Space]"}
-            >
-              {isPlayingState ? <Pause size={14} className="fill-white" /> : <Play size={14} className="fill-white" />}
-              <span>{isPlayingState ? 'TẠM DỪNG' : 'TIẾP TỤC'}</span>
-              <kbd className="px-1.5 py-0.5 bg-black/40 text-[9px] rounded text-white/90 font-mono font-bold">Space</kbd>
-            </button>
-
-            {/* Vách ngăn */}
-            <div className="w-px h-6 bg-white/20 shrink-0"></div>
-
-            {/* 2. Nút Bật / Tắt Âm Thanh (Mute / Unmute) */}
-            <button
-              onClick={toggleAudioMute}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg font-black text-xs transition-all shadow-md active:scale-95 cursor-pointer shrink-0 ${
-                !isVideoAudioMuted 
-                  ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-cyan-500/30 border border-cyan-400/50' 
-                  : 'bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-500/50'
-              }`}
-              title={isVideoAudioMuted ? "Bấm để MỞ TIẾNG (Phát âm thanh ra loa & OBS) [Phím tắt: M]" : "Bấm để TẮT TIẾNG (Mute) [Phím tắt: M]"}
-            >
-              {!isVideoAudioMuted ? <Volume2 size={15} className="text-yellow-300 animate-pulse" /> : <VolumeX size={15} className="text-rose-400" />}
-              <span>{!isVideoAudioMuted ? 'MỞ TIẾNG (HD)' : 'TẮT TIẾNG'}</span>
-              <kbd className="px-1.5 py-0.5 bg-black/40 text-[9px] rounded text-white/90 font-mono font-bold">M</kbd>
-            </button>
-
-            {/* 3. Thanh Kéo Tăng / Giảm Âm Lượng (0% - 100%) */}
-            <div className="flex items-center gap-2 bg-black/70 px-3 py-1.5 rounded-lg border border-white/15 shrink-0 shadow-inner" title="Kéo để tăng / giảm âm lượng ra loa & OBS">
-              <input 
-                type="range" 
-                min="0" 
-                max="1" 
-                step="0.05" 
-                value={videoVolume} 
-                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))} 
-                className="w-24 sm:w-32 h-2 accent-cyan-400 cursor-pointer"
-              />
-              <span className={`text-xs font-mono font-black w-9 text-right ${isVideoAudioMuted ? 'text-gray-500 line-through' : 'text-cyan-300'}`}>
-                {Math.round(videoVolume * 100)}%
-              </span>
-            </div>
-          </div>
-
-          {/* Phải: Thu gọn thanh điều khiển */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              onClick={() => setShowControlDock(false)}
-              className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer flex items-center gap-1"
-              title="Thu gọn thanh điều khiển (Chỉ phát Video sạch) [Phím tắt: H hoặc D]"
-            >
-              <EyeOff size={15} />
-              <kbd className="px-1 py-0.2 bg-white/10 text-[8px] rounded text-gray-400 font-mono">H</kbd>
-            </button>
-          </div>
-        </header>
-
-        {/* VÙNG KHOẢNG CÁCH ĐỆM RÕ RÀNG: CÁCH XA KHUNG HÌNH RA ĐỂ DỄ DÀNG CẮT CROP TRÊN OBS / TIKTOK STUDIO */}
-        <div className="w-full h-8 min-h-[32px] bg-[#05060a] border-b-2 border-dashed border-amber-500/60 flex items-center justify-between px-3.5 text-[10px] font-mono select-none shrink-0 z-40">
-          <div className="flex items-center gap-2 text-gray-300">
-            <span className="text-yellow-400 font-black tracking-wider flex items-center gap-1">
-              ✂️ VẠCH CẮT OBS / TIKTOK STUDIO:
-            </span>
-            <span className="text-[9.5px] text-gray-400 font-sans">
-              Kéo crop mép trên chạm vào đường đứt nét này để lấy 100% video sạch đẹp
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[9px] text-gray-500 font-mono hidden sm:inline">Phím tắt: [H] Ẩn/Hiện • [Space] Tạm dừng / Tiếp tục • [M] Mở/Tắt âm thanh</span>
-            <button
-              onClick={() => setShowControlDock(false)}
-              className="text-[10px] text-cyan-400 hover:text-cyan-200 underline cursor-pointer font-bold"
-            >
-              Ẩn thanh này
-            </button>
-          </div>
-        </div>
-        </>
-      )}
-
-      {/* Floating Toggle Button CHỈ HIỂN THỊ KHI Ở CỬA SỔ WINDOW CAPTURE VÀ ĐÃ BẤM ẨN DOCK */}
-      {!showControlDock && isWindowCapture && (
-        <button
-          onClick={() => setShowControlDock(true)}
-          className="absolute top-2 right-2 z-50 px-3 py-1.5 rounded-lg bg-black/80 hover:bg-black text-cyan-400 hover:text-white border border-cyan-500/40 text-[10px] font-bold shadow-2xl transition-all opacity-30 hover:opacity-100 flex items-center gap-1.5 cursor-pointer backdrop-blur-sm"
-          title="Mở thanh điều khiển Play/Pause & Âm thanh [Phím tắt: H hoặc D]"
-        >
-          <Eye size={13} />
-          <span>Mở Điều Khiển</span>
-          <kbd className="px-1 py-0.2 bg-cyan-900/60 text-[8px] rounded text-cyan-200 font-mono">H</kbd>
-        </button>
-      )}
-
-      {/* 2. KHUNG PHÁT SÓNG SẠCH 100% (CHUẨN 9:16 HOẶC 16:9 - KHÔNG CÓ BẤT KỲ NÚT BẤM NÀO ĐÈ LÊN) */}
-      <main className="flex-1 w-full h-full relative overflow-hidden flex items-center justify-center bg-black">
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden flex items-center justify-center bg-black select-none font-sans">
+      {/* KHUNG PHÁT SÓNG SẠCH 100% (CHUẨN 9:16 HOẶC 16:9 - SIÊU SẮC NÉT OBS WINDOW CAPTURE, KHÔNG CÓ BẤT KỲ NÚT BẤM NÀO ĐÈ LÊN) */}
+      <main className="w-full h-full relative overflow-hidden flex items-center justify-center bg-black">
         <div 
           className={`relative flex items-center justify-center overflow-hidden transition-all duration-200 ${
             ratio === '9:16'
@@ -1509,9 +1384,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               ? { 
                   aspectRatio: '9 / 16', 
                   height: '100%', 
-                  maxWidth: (isWindowCapture && showControlDock) ? 'calc((100vh - 80px) * 9 / 16)' : '100%' 
+                  maxWidth: '100%' 
                 } 
-              : { aspectRatio: '16 / 9', width: '100%' }
+              : { aspectRatio: '16 / 9', width: '100%', maxHeight: '100%' }
           }
         >
           {/* SÂN KHẤU 1: LIVE AI IDOL (CHỈ RENDER KHI Ở TAB IDOL ĐỂ TỐI ƯU 100% TÀI NGUYÊN) */}
@@ -1621,8 +1496,18 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 autoPlay
                 muted={isVideoAudioMuted}
                 playsInline
-                className="w-full h-full select-none bg-black absolute inset-0"
-                style={{ width: '100%', height: '100%', objectFit: objectFitState || 'cover' }}
+                className="w-full h-full select-none bg-black absolute inset-0 transform-gpu block"
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  objectFit: objectFitState || 'cover',
+                  transform: 'translateZ(0)',
+                  WebkitTransform: 'translateZ(0)',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  imageRendering: '-webkit-optimize-contrast',
+                  willChange: 'transform'
+                }}
               />
             ) : activeMedia.url ? (
               <img 
@@ -1683,8 +1568,18 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 autoPlay
                 playsInline
                 muted={isVideoAudioMuted}
-                className="w-full h-full select-none scale-x-[-1] bg-black"
-                style={{ width: '100%', height: '100%', objectFit: objectFitState || 'cover' }}
+                className="w-full h-full select-none scale-x-[-1] bg-black transform-gpu block"
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  objectFit: objectFitState || 'cover',
+                  transform: 'translateZ(0)',
+                  WebkitTransform: 'translateZ(0)',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  imageRendering: '-webkit-optimize-contrast',
+                  willChange: 'transform'
+                }}
               />
             ) : hasStudioFrame ? (
               <img
