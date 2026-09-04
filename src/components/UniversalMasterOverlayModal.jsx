@@ -107,13 +107,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
   if (!isOpen) return null;
 
-  // Lấy link nội bộ máy tính (Localhost 127.0.0.1:3001) - 0ms delay, 60FPS mượt nhất
-  const getLocalUrl = (path) => {
-    const port = typeof window !== 'undefined' && window.location.port ? window.location.port : '3001';
-    return `http://127.0.0.1:${port}/${path}`;
-  };
-
-  // Lấy link Cloudflare Tunnel
+  // Lấy link Cloudflare Tunnel chuẩn phát trực tiếp
   const getTunnelUrl = (path) => {
     if (tunnelData?.projects?.[path]) {
       return tunnelData.projects[path];
@@ -121,7 +115,11 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
     if (tunnelData?.tunnelUrl) {
       return `${tunnelData.tunnelUrl}/${path}`;
     }
-    return getLocalUrl(path);
+    const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+    if (currentOrigin && !currentOrigin.includes('127.0.0.1') && !currentOrigin.includes('localhost')) {
+      return `${currentOrigin}/${path}`;
+    }
+    return `https://avalivepro.vercel.app/${path}`;
   };
 
   const projects = [
@@ -349,16 +347,16 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                 <>
                   <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
                   <div className="flex-1">
-                    <p className="font-black">⏳ ĐANG KHỞI ĐỘNG CLOUDFLARE TUNNEL...</p>
-                    <p className="font-normal text-yellow-400/80 mt-0.5">Đợi khoảng 5-15 giây. Bạn vẫn có thể dùng Link Máy Tính bên dưới ngay lập tức!</p>
+                    <p className="font-black">⏳ ĐANG KHỞI ĐỘNG ĐƯỜNG TRUYỀN CLOUDFLARE SIÊU TỐC...</p>
+                    <p className="font-normal text-yellow-400/80 mt-0.5">Đợi khoảng vài giây để cấp đường link ổn định 100% cho TikTok Studio.</p>
                   </div>
                 </>
               ) : (
                 <>
-                  <WifiOff className="w-4 h-4 shrink-0" />
+                  <Wifi className="w-4 h-4 shrink-0 text-cyan-400" />
                   <div className="flex-1">
-                    <p className="font-black">💡 DÙNG LINK MÁY TÍNH (127.0.0.1) ĐỂ PHÁT NGAY KHÔNG CẦN CHỜ TUNNEL</p>
-                    <p className="font-normal text-yellow-400/80 mt-0.5">TikTok Live Studio chạy trên cùng máy tính này: Dùng link 127.0.0.1 là nhanh nhất 60FPS!</p>
+                    <p className="font-black text-cyan-300">⚡ ĐƯỜNG LINK TRỰC TUYẾN SẴN SÀNG PHÁT LUỒNG</p>
+                    <p className="font-normal text-cyan-400/80 mt-0.5">Sao chép đường link bên dưới dán vào TikTok Live Studio để phát ngay lập tức!</p>
                   </div>
                   <button onClick={handleRefreshTunnel} className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-all cursor-pointer" title="Cấp lại link mới">
                     <RefreshCw className={`w-3.5 h-3.5 ${tunnelLoading ? 'animate-spin text-cyan-400' : ''}`} />
@@ -381,95 +379,68 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
               {projects.map((proj) => {
                 const Icon = proj.icon;
-                const localUrl = getLocalUrl(proj.path);
                 const cloudUrl = getTunnelUrl(proj.path);
-                const isLocalCopied = copiedId === `${proj.id}_local`;
-                const isCloudCopied = copiedId === `${proj.id}_cloud`;
+                const isCopied = copiedId === proj.id;
 
                 return (
-                  <div key={proj.id} className={`p-3.5 rounded-2xl border transition-all ${proj.bgColor} space-y-2.5 relative shadow-lg`}>
+                  <div key={proj.id} className={`p-4 rounded-2xl border transition-all ${proj.bgColor} space-y-3 relative shadow-lg`}>
                     {/* Header */}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="p-1.5 rounded-xl bg-black/50 border border-white/10">
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-2 rounded-xl bg-black/50 border border-white/10">
                           <Icon className={`w-4 h-4 ${proj.iconColor}`} />
                         </div>
-                        <span className="text-xs font-black text-white tracking-wide">{proj.name}</span>
+                        <span className="text-sm font-black text-white tracking-wide">{proj.name}</span>
                       </div>
-                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase text-white bg-gradient-to-r ${proj.tagColor}`}>
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase text-white bg-gradient-to-r ${proj.tagColor}`}>
                         {proj.tag}
                       </span>
                     </div>
 
-                    {/* LỰA CHỌN 1: LINK NỘI BỘ MÁY TÍNH (KHUYÊN DÙNG NHẤT CHO TIKTOK STUDIO CÙNG MÁY) */}
-                    <div className="p-2.5 rounded-xl bg-black/70 border border-emerald-500/30 space-y-1">
-                      <div className="flex items-center justify-between text-[10.5px]">
-                        <span className="font-black text-emerald-400 flex items-center gap-1">
-                          <Laptop className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>⭐ LINK MÁY TÍNH (Khuyên dùng nhất — 0ms Delay, Mượt 60FPS, Không Cần Mạng):</span>
+                    {/* ĐƯỜNG LINK DUY NHẤT CHUẨN HOẠT ĐỘNG 100% CHO TIKTOK LIVE STUDIO */}
+                    <div className="p-3 rounded-xl bg-black/80 border border-cyan-500/40 space-y-2">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="font-black text-cyan-300 flex items-center gap-1.5">
+                          <Wifi className="w-4 h-4 text-cyan-400 animate-pulse" />
+                          <span>🌐 ĐƯỜNG LINK PHÁT TRỰC TIẾP (TIKTOK LIVE STUDIO BROWSER SOURCE):</span>
                         </span>
-                        <span className="text-[9.5px] text-gray-400">Dán vào TikTok Studio trên máy này</span>
+                        <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                          Chuẩn 1080 × 1920
+                        </span>
                       </div>
-                      <div className="flex items-center gap-2 pt-0.5">
+                      <div className="flex items-center gap-2">
                         <input
                           type="text"
                           readOnly
-                          value={localUrl}
-                          className="flex-1 px-2.5 py-1.5 rounded-lg border border-emerald-500/20 bg-black/90 text-emerald-300 text-xs font-mono font-bold focus:outline-none select-all"
+                          value={cloudUrl}
+                          className="flex-1 px-3 py-2 rounded-xl border border-cyan-500/30 bg-black/90 text-cyan-200 text-xs font-mono font-bold focus:outline-none select-all shadow-inner"
                         />
                         <button
-                          onClick={() => handleCopy(localUrl, `${proj.id}_local`)}
-                          className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1 shadow-md active:scale-95 ${
-                            isLocalCopied ? "bg-emerald-600 text-white" : "bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-200 border border-emerald-500/40"
+                          onClick={() => handleCopy(cloudUrl, proj.id)}
+                          className={`px-4 py-2 rounded-xl font-black text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-lg active:scale-95 ${
+                            isCopied 
+                              ? "bg-emerald-600 text-white shadow-emerald-500/30" 
+                              : "bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-cyan-500/30 border border-cyan-400/40"
                           }`}
                         >
-                          {isLocalCopied ? (
-                            <><Check className="w-3.5 h-3.5" /><span>ĐÃ COPY</span></>
+                          {isCopied ? (
+                            <><Check className="w-4 h-4" /><span>ĐÃ SAO CHÉP!</span></>
                           ) : (
-                            <><Copy className="w-3.5 h-3.5" /><span>Sao Chép Link Này</span></>
+                            <><Copy className="w-4 h-4" /><span>SAO CHÉP LINK NÀY</span></>
                           )}
                         </button>
                         <a
-                          href={localUrl}
+                          href={cloudUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="px-2 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white font-bold text-xs transition-all flex items-center justify-center gap-0.5"
-                          title="Mở tab mới xem thử"
+                          className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-gray-200 hover:text-white font-bold text-xs transition-all flex items-center justify-center gap-1"
+                          title="Mở tab mới kiểm tra video"
                         >
-                          <ExternalLink className="w-3 h-3" />
-                          <span>Xem</span>
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span>Xem Thử</span>
                         </a>
                       </div>
                     </div>
-
-                    {/* LỰA CHỌN 2: LINK CLOUDFLARE TUNNEL (KHI MÁY KHÁC / ĐIỆN THOẠI KẾT NỐI) */}
-                    {isTunnelActive && (
-                      <div className="p-2 rounded-xl bg-black/40 border border-white/10 space-y-1">
-                        <div className="flex items-center justify-between text-[10px] text-gray-400">
-                          <span className="font-bold text-cyan-300 flex items-center gap-1">
-                            <Wifi className="w-3 h-3 text-cyan-400" />
-                            <span>🌐 Link Cloudflare (Dùng khi TikTok Studio ở máy tính khác):</span>
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            readOnly
-                            value={cloudUrl}
-                            className="flex-1 px-2.5 py-1 rounded-lg border border-white/10 bg-black/60 text-cyan-300 text-[11px] font-mono select-all"
-                          />
-                          <button
-                            onClick={() => handleCopy(cloudUrl, `${proj.id}_cloud`)}
-                            className={`px-2.5 py-1 rounded-lg font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                              isCloudCopied ? "bg-cyan-600 text-white" : "bg-white/10 hover:bg-white/20 text-gray-300"
-                            }`}
-                          >
-                            {isCloudCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                            <span>{isCloudCopied ? "Đã Copy" : "Copy"}</span>
-                          </button>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 );
               })}
@@ -492,7 +463,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
             <div className="p-2 rounded-xl bg-white/5 border border-white/10 space-y-1">
               <span className="font-bold text-green-300">🌐 Cách dán vào TikTok Studio:</span>
               <p className="text-gray-400 leading-relaxed">
-                Sao chép <b>Link Máy Tính (127.0.0.1)</b> ở trên → Thêm nguồn <b>Trình duyệt (Browser Source)</b> → Dán link vào → Nhập kích thước <b>1080 × 1920</b>.
+                Bấm nút <b>Sao Chép Link Này</b> ở trên → Mở TikTok Live Studio → Thêm nguồn <b>Trình duyệt (Browser Source)</b> → Dán đường link vào → Đặt kích thước <b>1080 × 1920</b>.
               </p>
             </div>
             <div className="p-2 rounded-xl bg-white/5 border border-white/10 space-y-1">

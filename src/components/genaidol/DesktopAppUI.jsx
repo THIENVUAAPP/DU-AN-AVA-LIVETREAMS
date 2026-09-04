@@ -503,6 +503,7 @@ export default function DesktopAppUI() {
   const currentPlayingUrlRef = useRef(null);
   const lastPlaybackTimeRef = useRef(0);
   const desktopVideoRef = useRef(null);
+  const desktopCanvasRef = useRef(null);
   const lastTimeBroadcastRef = useRef(0);
   const isInternalAudioChangeRef = useRef(false);
   const isInternalPlaybackChangeRef = useRef(false);
@@ -546,6 +547,57 @@ export default function DesktopAppUI() {
       if (animId) cancelAnimationFrame(animId);
     };
   }, [flvUrl]);
+
+  // 🔄 TỰ ĐỘNG KHÔI PHỤC VÀ ĐỒNG BỘ VIDEO TỪ BACKEND KHI MỞ LẠI PHẦN MỀM
+  useEffect(() => {
+    fetch('/api/live-state')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.mediaUrl && !data.clearMedia) {
+          setUserLockedMediaUrl(prev => {
+            if (!prev) {
+              try { localStorage.setItem('avalive_user_locked_media', data.mediaUrl); } catch (e) {}
+              return data.mediaUrl;
+            }
+            return prev;
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // 🎯 VÒNG LẶP RENDER CANVAS 2D GƯƠNG 60FPS CHO VIDEO MP4 TRÊN PHẦN MỀM
+  // Giúp OBS Studio & TikTok Live Studio khi dùng Bắt Cửa Sổ (Window Capture) chụp cửa sổ phần mềm không bị màn hình đen
+  useEffect(() => {
+    let animId;
+    let isMounted = true;
+
+    const renderDesktopVideo = () => {
+      if (!isMounted) return;
+      const video = desktopVideoRef.current;
+      const canvas = desktopCanvasRef.current;
+      if (video && canvas && video.readyState >= 2 && video.videoWidth > 0 && !video.paused) {
+        if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+        }
+        const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+        if (ctx) {
+          try {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          } catch (e) {}
+        }
+      }
+      animId = requestAnimationFrame(renderDesktopVideo);
+    };
+
+    animId = requestAnimationFrame(renderDesktopVideo);
+
+    return () => {
+      isMounted = false;
+      if (animId) cancelAnimationFrame(animId);
+    };
+  });
   const lastAiCommentTime = useRef(0);
   const lastAiGreetingTime = useRef(0);
   const greetedUsernamesRef = useRef(new Set());
@@ -810,10 +862,9 @@ export default function DesktopAppUI() {
   }, [hiddenBuiltins]);
 
   useEffect(() => {
-    // Luôn reset về trạng thái 0 (tắt) khi tải lại trang, chờ user bấm "Bật Tất Cả"
-    setIsMasterLiveRunning(false);
+    setIsMasterLiveRunning(true);
     try {
-      localStorage.setItem('avalive_master_live_running', 'false');
+      localStorage.setItem('avalive_master_live_running', 'true');
       // Reset cả bản đồ và bảng xếp hạng
       if (bandoEngine && typeof bandoEngine.resetGame === 'function') {
         bandoEngine.resetGame();
@@ -969,12 +1020,27 @@ export default function DesktopAppUI() {
     };
   }, [isDraggingWebcam]);
 
-  // 🛑/▶️ Trạng thái Tắt / Bật Toàn Bộ Phiên Live Master (Mặc định ở trạng thái Chờ/Tắt, chỉ bật khi Streamer bấm)
-  const [isMasterLiveRunning, setIsMasterLiveRunning] = useState(false);
+  // 🛑/▶️ Trạng thái Tắt / Bật Toàn Bộ Phiên Live Master (Mặc định ở trạng thái BẬT để phát ngay video khi mở phần mềm)
+  const [isMasterLiveRunning, setIsMasterLiveRunning] = useState(true);
   const isMasterLiveRunningRef = useRef(isMasterLiveRunning);
   useEffect(() => {
     isMasterLiveRunningRef.current = isMasterLiveRunning;
   }, [isMasterLiveRunning]);
+
+  // 🎬 TỰ ĐỘNG ĐỒNG BỘ VIDEO GẦN NHẤT TỪ MÁY CHỦ KHI KHỞI CHẠY PHẦN MỀM
+  useEffect(() => {
+    fetch('/api/live-state')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.mediaUrl && typeof data.mediaUrl === 'string' && !data.clearMedia && !data.mediaUrl.includes('default_idol.mp4')) {
+          const remoteUrl = data.mediaUrl;
+          setUserLockedMediaUrl(remoteUrl);
+          try { localStorage.setItem('avalive_user_locked_media', remoteUrl); } catch (e) {}
+          setIsMasterLiveRunning(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
 
 
@@ -2653,6 +2719,13 @@ export default function DesktopAppUI() {
                   setTimeout(() => bc.close(), 50);
                 } catch (err) {}
               }}
+            />
+
+            {/* CANVAS 2D MIRROR 60FPS: ÉP CHROMIUM VẼ FRAME VÀO WINDOW BUFFER ĐỂ WINDOW CAPTURE OBS / TIKTOK LIVE STUDIO KHÔNG BỊ ĐEN MÀN HÌNH */}
+            <canvas 
+              ref={desktopCanvasRef}
+              className="w-full h-full object-contain absolute inset-0 pointer-events-none select-none z-10"
+              style={{ width: '100%', height: '100%' }}
             />
 
             {/* 2 NÚT CHÌM TỰ ĐỘNG ẨN: CHỈ HIỆN KHI RÊ CHUỘT HOẶC CHẠM VÀO VIDEO (GIỮ KHUNG HÌNH 100% SẠCH SẼ & ĐẸP MẮT) */}

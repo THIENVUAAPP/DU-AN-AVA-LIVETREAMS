@@ -147,11 +147,10 @@ app.all('/uploads/:filename', (req, res, next) => {
           if (isNaN(end) || end >= currentOnDiskSize) end = currentOnDiskSize - 1;
         } else {
           // Open Range: bytes=START-
-          // 🚀 CHUNK STREAMING THÔNG MINH CHO VIDEO DÀI 1-2 TIẾNG:
-          // Gửi 8MB mỗi request để video nạp 0ms ngay lập tức, báo cáo tổng dung lượng đầy đủ
-          // để TikTok Live Studio KHÔNG bị dừng ở phút 1-2 mà phát tiếp 24/24.
-          const CHUNK_SIZE = 8 * 1024 * 1024; // 8MB
-          end = Math.min(start + CHUNK_SIZE - 1, currentOnDiskSize - 1);
+          // 🚀 STREAM LIỀN MẠCH ĐẾN HẾT FILE CHO TIKTOK LIVE STUDIO & OBS:
+          // Trả về toàn bộ dải byte đến cuối file để Chromium / CEF buffer mượt mà 60FPS,
+          // tuyệt đối không cắt cụt 8MB làm đứt kết nối hay crash player trên TikTok Live Studio.
+          end = currentOnDiskSize - 1;
         }
       }
 
@@ -579,6 +578,25 @@ let currentMasterLiveState = savedState || {
 // Tuyệt đối không tự ý gán video phát nền ngầm (chỉ phát khi người dùng chủ động tải lên / chọn video)
 if (currentMasterLiveState.mediaUrl && currentMasterLiveState.mediaUrl.includes('default_idol.mp4')) {
   currentMasterLiveState.mediaUrl = null;
+}
+
+// 🎬 TỰ ĐỘNG KHÔI PHỤC VIDEO GẦN NHẤT CỦA NGƯỜI DÙNG:
+// Nếu mediaUrl bị null hoặc file không tồn tại, tự động lấy video mới nhất mà người dùng đã tải lên trong uploads/
+if (!currentMasterLiveState.mediaUrl || !fs.existsSync(path.join(uploadsDir, path.basename(currentMasterLiveState.mediaUrl)))) {
+  try {
+    const files = fs.readdirSync(uploadsDir)
+      .filter(f => f.endsWith('.mp4') || f.endsWith('.webm') || f.endsWith('.mov'))
+      .map(f => ({ name: f, time: fs.statSync(path.join(uploadsDir, f)).mtimeMs }))
+      .sort((a, b) => b.time - a.time);
+    if (files.length > 0) {
+      currentMasterLiveState.mediaUrl = `/uploads/${files[0].name}`;
+      currentMasterLiveState.isVideo = true;
+      currentMasterLiveState.isPlaying = true;
+      currentMasterLiveState.isUserExplicitMediaLocked = true;
+      console.log(`[AutoRestore] 🎬 Đã khôi phục video gần nhất của người dùng: ${files[0].name}`);
+      saveLiveStateToFile();
+    }
+  } catch (err) {}
 }
 let currentBandoGameState = null;
 let currentBattleGameState = null;

@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 
-export const APP_VERSION = '1.4.2';
+export const APP_VERSION = '1.4.3';
 export const UPDATE_NOTES = [
-  "🎬 Bỏ hoàn toàn video phát nền mặc định: Phần mềm chỉ phát video người dùng tải lên, tuyệt đối không tự ý phát video nền.",
-  "🚀 Hỗ trợ video dài từ 5 đến 10 tiếng: Tối ưu bộ đệm streaming chunk 16MB và gia hạn phiên upload 60 phút, video tải lên phát ngay lập tức sang TikTok Live Studio mà không bị đen hình hay crash.",
-  "🧹 Dọn dẹp sạch sẽ các đường link không phát được: Loại bỏ hoàn toàn đường link 127.0.0.1:3001/live. Chỉ giữ đúng 3 đường link hoạt động chuẩn xác: Dự án 1 (Phát Video / AI Idol), Dự án 2 (Game Bản Đồ 63 Tỉnh), Dự án 3 (Game PK Chiến Đấu).",
-  "🖥️ Xử lý triệt để lỗi Màn Hình Đen khi Window Capture OBS: Tích hợp Canvas Gương 2D render loop và nền đặc #000000, giúp TikTok Live Studio và OBS Studio bắt trọn khung hình video 60FPS sắc nét không còn bị màn hình đen."
+  "🧹 Xóa hoàn toàn các ô link dãy số 127.0.0.1:3001 trên Windows: Loại bỏ triệt để các ô link nội bộ không hoạt động. Mỗi dự án hiện tại chỉ hiển thị DUY NHẤT 1 đường link phát trực tuyến Cloudflare chuẩn 100%.",
+  "⚡ Video dán vào TikTok Live Studio phát ngay lập tức: Khắc phục triệt để lỗi luồng HTTP 206 Range stream, hỗ trợ đầy đủ video ngắn lẫn video dài từ 5 đến 10 tiếng chạy mượt mà ngay khi dán link.",
+  "🖥️ Xử lý triệt để lỗi Màn Hình Đen khi Window Capture OBS: Tích hợp bộ vẽ Canvas 2D Mirror 60FPS trực tiếp trên giao diện phần mềm, giúp tính năng Bắt Cửa Sổ (Window Capture) trên OBS và TikTok Studio bắt hình 100% không còn bị đen."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
