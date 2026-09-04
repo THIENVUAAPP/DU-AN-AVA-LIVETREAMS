@@ -497,6 +497,8 @@ export default function DesktopAppUI() {
   const lastPlaybackTimeRef = useRef(0);
   const desktopVideoRef = useRef(null);
   const lastTimeBroadcastRef = useRef(0);
+  const isInternalAudioChangeRef = useRef(false);
+  const isInternalPlaybackChangeRef = useRef(false);
 
   useEffect(() => {
     let animId;
@@ -1234,10 +1236,11 @@ export default function DesktopAppUI() {
           // 1. Đồng bộ Play / Pause / Seek từ Window Capture sang Phần Mềm Chính
           if (event.data.type === 'GLOBAL_PLAYBACK_CHANGE') {
             const shouldPlay = !!event.data.isPlaying;
+            isInternalPlaybackChangeRef.current = true;
             setIsMasterLiveRunning(shouldPlay);
 
             if (typeof event.data.currentTime === 'number' && desktopVideoRef.current) {
-              if (Math.abs(desktopVideoRef.current.currentTime - event.data.currentTime) > 0.15) {
+              if (Math.abs(desktopVideoRef.current.currentTime - event.data.currentTime) > 0.4) {
                 try {
                   desktopVideoRef.current.currentTime = event.data.currentTime;
                 } catch (e) {}
@@ -1279,12 +1282,14 @@ export default function DesktopAppUI() {
                 } catch (e) {}
               });
             }
+            setTimeout(() => { isInternalPlaybackChangeRef.current = false; }, 300);
           }
 
           // 2. Đồng bộ Âm Lượng & Tắt Tiếng từ Window Capture sang Phần Mềm Chính
           if (event.data.type === 'GLOBAL_AUDIO_CHANGE') {
             const isMuted = !!event.data.isMuted;
             const vol = typeof event.data.volume === 'number' ? event.data.volume : 1;
+            isInternalAudioChangeRef.current = true;
             setIsLocalSpeakerMuted(isMuted);
             if (desktopVideoRef.current) {
               desktopVideoRef.current.muted = isMuted;
@@ -1304,6 +1309,7 @@ export default function DesktopAppUI() {
             bandoAudio.setLocalSpeakerMute(isMuted);
             bandoAudio.setMuted(isMuted);
             bandoAudio.setMasterVolume(vol);
+            setTimeout(() => { isInternalAudioChangeRef.current = false; }, 300);
           }
         };
       } catch (err) {}
@@ -1313,6 +1319,7 @@ export default function DesktopAppUI() {
     const handleStorage = (e) => {
       if (e.key === 'avalive_user_paused') {
         const isPaused = e.newValue === 'true';
+        isInternalPlaybackChangeRef.current = true;
         setIsMasterLiveRunning(!isPaused);
         if (isPaused) {
           if (desktopVideoRef.current) {
@@ -1339,10 +1346,12 @@ export default function DesktopAppUI() {
             } catch (err) {}
           });
         }
+        setTimeout(() => { isInternalPlaybackChangeRef.current = false; }, 300);
       }
 
       if (e.key === 'avalive_audio_muted' || e.key === 'avalive_local_speaker_muted') {
         const isMuted = e.newValue === 'true';
+        isInternalAudioChangeRef.current = true;
         setIsLocalSpeakerMuted(isMuted);
         if (desktopVideoRef.current) desktopVideoRef.current.muted = isMuted;
         if (flvVideoRef.current) flvVideoRef.current.muted = isMuted;
@@ -1351,16 +1360,19 @@ export default function DesktopAppUI() {
         });
         bandoAudio.setLocalSpeakerMute(isMuted);
         bandoAudio.setMuted(isMuted);
+        setTimeout(() => { isInternalAudioChangeRef.current = false; }, 300);
       }
 
       if (e.key === 'avalive_video_volume') {
         const vol = parseFloat(e.newValue || '1');
+        isInternalAudioChangeRef.current = true;
         if (desktopVideoRef.current) desktopVideoRef.current.volume = vol;
         if (flvVideoRef.current) flvVideoRef.current.volume = vol;
         document.querySelectorAll('video, audio').forEach(el => {
           try { el.volume = vol; } catch (err) {}
         });
         bandoAudio.setMasterVolume(vol);
+        setTimeout(() => { isInternalAudioChangeRef.current = false; }, 300);
       }
     };
 
@@ -2345,6 +2357,7 @@ export default function DesktopAppUI() {
                 }
               }} 
               onPlay={(e) => {
+                if (isInternalPlaybackChangeRef.current) return;
                 if (localStorage.getItem('avalive_user_paused') === 'true' || !isMasterLiveRunning) {
                   e.currentTarget.dataset.userPaused = 'true';
                   e.currentTarget.pause();
@@ -2370,12 +2383,14 @@ export default function DesktopAppUI() {
                     isPlaying: true, 
                     userPaused: false, 
                     currentTime: curTime, 
+                    source: 'desktop',
                     timestamp: Date.now() 
                   });
                   setTimeout(() => bc.close(), 100);
                 } catch (err) {}
               }}
               onPause={(e) => {
+                if (isInternalPlaybackChangeRef.current) return;
                 const curTime = e.currentTarget.currentTime;
                 let playUrl = selected.url;
                 if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
@@ -2399,12 +2414,14 @@ export default function DesktopAppUI() {
                     isPlaying: false, 
                     userPaused: true, 
                     currentTime: curTime, 
+                    source: 'desktop',
                     timestamp: Date.now() 
                   });
                   setTimeout(() => bc.close(), 100);
                 } catch (err) {}
               }}
               onVolumeChange={(e) => {
+                if (isInternalAudioChangeRef.current) return;
                 const isMuted = e.currentTarget.muted;
                 const vol = e.currentTarget.volume;
                 setIsLocalSpeakerMuted(isMuted);
@@ -2421,7 +2438,7 @@ export default function DesktopAppUI() {
                 }, socketRef.current);
                 try {
                   const bc = new BroadcastChannel('avalive_master_live_stream');
-                  bc.postMessage({ type: 'GLOBAL_AUDIO_CHANGE', isMuted, volume: vol, timestamp: Date.now() });
+                  bc.postMessage({ type: 'GLOBAL_AUDIO_CHANGE', isMuted, volume: vol, source: 'desktop', timestamp: Date.now() });
                   setTimeout(() => bc.close(), 100);
                 } catch (err) {}
               }}

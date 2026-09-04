@@ -151,6 +151,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
     return params?.get('fit') === 'contain' ? 'contain' : 'cover';
   });
+  const isInternalAudioChangeRef = useRef(false);
+  const isInternalPlaybackChangeRef = useRef(false);
 
   // 1. TẠM DỪNG / TIẾP TỤC PHÁT (Play / Pause) — Tác động tức thì mọi video và đồng bộ 2 chiều sang Phần Mềm Chính
   const togglePlayPause = () => {
@@ -182,7 +184,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       // Bắn tín hiệu sang Phần Mềm Chính để dừng đồng thời
       try {
         const bc = new BroadcastChannel('avalive_master_live_stream');
-        bc.postMessage({ type: 'GLOBAL_PLAYBACK_CHANGE', isPlaying: false, userPaused: true, currentTime: curTime, timestamp: Date.now() });
+        bc.postMessage({ type: 'GLOBAL_PLAYBACK_CHANGE', isPlaying: false, userPaused: true, currentTime: curTime, source: 'overlay', timestamp: Date.now() });
         setTimeout(() => bc.close(), 100);
       } catch (e) {}
     } else {
@@ -209,7 +211,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       // Bắn tín hiệu sang Phần Mềm Chính để tiếp tục phát đồng thời
       try {
         const bc = new BroadcastChannel('avalive_master_live_stream');
-        bc.postMessage({ type: 'GLOBAL_PLAYBACK_CHANGE', isPlaying: true, userPaused: false, currentTime: curTime, timestamp: Date.now() });
+        bc.postMessage({ type: 'GLOBAL_PLAYBACK_CHANGE', isPlaying: true, userPaused: false, currentTime: curTime, source: 'overlay', timestamp: Date.now() });
         setTimeout(() => bc.close(), 100);
       } catch (e) {}
     }
@@ -256,7 +258,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     // Bắn tín hiệu sang Phần Mềm Chính để tắt / mở tiếng đồng bộ
     try {
       const bc = new BroadcastChannel('avalive_master_live_stream');
-      bc.postMessage({ type: 'GLOBAL_AUDIO_CHANGE', isMuted: nextMuted, volume: videoVolume, timestamp: Date.now() });
+      bc.postMessage({ type: 'GLOBAL_AUDIO_CHANGE', isMuted: nextMuted, volume: videoVolume, source: 'overlay', timestamp: Date.now() });
       setTimeout(() => bc.close(), 100);
     } catch (e) {}
 
@@ -300,7 +302,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     // Bắn tín hiệu sang Phần Mềm Chính để chỉnh âm lượng đồng bộ
     try {
       const bc = new BroadcastChannel('avalive_master_live_stream');
-      bc.postMessage({ type: 'GLOBAL_AUDIO_CHANGE', isMuted: isMutedNow, volume: newVol, timestamp: Date.now() });
+      bc.postMessage({ type: 'GLOBAL_AUDIO_CHANGE', isMuted: isMutedNow, volume: newVol, source: 'overlay', timestamp: Date.now() });
       setTimeout(() => bc.close(), 100);
     } catch (e) {}
 
@@ -527,22 +529,41 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     const applyMasterState = (data) => {
       if (!data) return;
 
-      const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true';
-
-      // 🎬 ĐỒNG BỘ PLAY / PAUSE LẬP TỨC VỚI PHẦN MỀM (Phần mềm chạy -> TikTok Studio chạy, phần mềm dừng -> dừng)
+      // 🎬 ĐỒNG BỘ PLAY / PAUSE LẬP TỨC THEO PHẦN MỀM GỐC
       const vid = overlayVideoRef.current;
-      if (vid) {
-        if (isUserPaused || data.videoPlaybackEvent === 'pause' || data.isPlaying === false) {
+      if (data.isPlaying === false || data.videoPlaybackEvent === 'pause') {
+        try {
+          localStorage.setItem('avalive_user_paused', 'true');
+          localStorage.setItem('avalive_window_capture_paused', 'true');
+        } catch (e) {}
+        if (vid) {
           vid.dataset.userPaused = 'true';
           if (!vid.paused) vid.pause();
-          setIsPlayingState(false);
-        } else if (!isUserPaused && (data.videoPlaybackEvent === 'play' || data.isPlaying === true)) {
+        }
+        setIsPlayingState(false);
+      } else if (data.isPlaying === true || data.videoPlaybackEvent === 'play') {
+        try {
+          localStorage.removeItem('avalive_user_paused');
+          localStorage.removeItem('avalive_window_capture_paused');
+        } catch (e) {}
+        if (vid) {
           vid.dataset.userPaused = 'false';
           vid.muted = isVideoAudioMuted;
           vid.volume = videoVolume;
-          if (vid.paused) vid.play().then(() => setIsPlayingState(true)).catch(() => {});
-          setIsPlayingState(true);
+          if (vid.paused) vid.play().catch(() => {});
         }
+        setIsPlayingState(true);
+      }
+
+      // Đồng bộ Âm thanh & Âm lượng từ Phần Mềm Chính
+      if (typeof data.isVideoAudioMuted === 'boolean') {
+        setIsVideoAudioMuted(data.isVideoAudioMuted);
+        bandoAudio.setLocalSpeakerMute(data.isVideoAudioMuted);
+        bandoAudio.setMuted(data.isVideoAudioMuted);
+      }
+      if (typeof data.videoVolume === 'number') {
+        setVideoVolume(data.videoVolume);
+        bandoAudio.setMasterVolume(data.videoVolume);
       }
 
       setMasterState(prev => {
@@ -764,18 +785,22 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               const v = overlayVideoRef.current;
               if (v && typeof masterTime === 'number' && !isNaN(masterTime)) {
                 const drift = Math.abs(v.currentTime - masterTime);
-                if (drift > 0.15 || event.data.force) {
+                if (drift > 0.4 || event.data.force) {
                   try {
                     v.currentTime = masterTime;
                   } catch (e) {}
                 }
-                if (isMasterPlaying && v.paused && localStorage.getItem('avalive_user_paused') !== 'true') {
+                if (isMasterPlaying) {
                   v.dataset.userPaused = 'false';
-                  v.play().catch(() => {});
+                  if (v.paused && localStorage.getItem('avalive_user_paused') !== 'true') {
+                    v.play().catch(() => {});
+                  }
                   setIsPlayingState(true);
-                } else if (!isMasterPlaying && !v.paused) {
+                } else {
                   v.dataset.userPaused = 'true';
-                  v.pause();
+                  if (!v.paused) {
+                    v.pause();
+                  }
                   setIsPlayingState(false);
                 }
               }
@@ -785,11 +810,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 bandoAudio.setMuted(event.data.isMuted);
               }
             } else if (event.data.type === 'GLOBAL_PLAYBACK_CHANGE') {
+              if (event.data.source === 'overlay') return;
               const shouldPlay = !!event.data.isPlaying;
+              isInternalPlaybackChangeRef.current = true;
               setIsPlayingState(shouldPlay);
 
               if (typeof event.data.currentTime === 'number' && overlayVideoRef.current) {
-                if (Math.abs(overlayVideoRef.current.currentTime - event.data.currentTime) > 0.15) {
+                if (Math.abs(overlayVideoRef.current.currentTime - event.data.currentTime) > 0.4) {
                   try {
                     overlayVideoRef.current.currentTime = event.data.currentTime;
                   } catch (e) {}
@@ -824,9 +851,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   } catch (e) {}
                 });
               }
+              setTimeout(() => { isInternalPlaybackChangeRef.current = false; }, 300);
             } else if (event.data.type === 'GLOBAL_AUDIO_CHANGE') {
+              if (event.data.source === 'overlay') return;
               const isMuted = !!event.data.isMuted;
               const vol = typeof event.data.volume === 'number' ? event.data.volume : videoVolume;
+              isInternalAudioChangeRef.current = true;
               setIsVideoAudioMuted(isMuted);
               setVideoVolume(vol);
               try {
@@ -843,6 +873,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               bandoAudio.setLocalSpeakerMute(isMuted);
               bandoAudio.setMuted(isMuted);
               bandoAudio.setMasterVolume(vol);
+              setTimeout(() => { isInternalAudioChangeRef.current = false; }, 300);
             } else if (event.data.type === 'MASTER_LIVE_STATE_UPDATE' || event.data.stage) {
               applyMasterState(event.data);
             } else if (event.data.type === 'LIVE_EVENT') {
@@ -1501,7 +1532,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   const v = e.currentTarget;
                   v.muted = isVideoAudioMuted;
                   v.volume = videoVolume;
-                  const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false || isPlayingState === false;
+                  const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
                   if (!isUserPaused) {
                     v.dataset.userPaused = 'false';
                     v.play().then(() => setIsPlayingState(true)).catch(() => {});
@@ -1512,7 +1543,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   }
                 }}
                 onPlay={() => {
-                  if (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true') {
+                  const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true';
+                  if (isUserPaused) {
                     const v = overlayVideoRef.current;
                     if (v) { v.dataset.userPaused = 'true'; v.pause(); }
                     setIsPlayingState(false);
@@ -1520,12 +1552,17 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   }
                   setIsPlayingState(true);
                 }}
-                onPause={() => setIsPlayingState(false)}
+                onPause={() => {
+                  const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
+                  if (isUserPaused) {
+                    setIsPlayingState(false);
+                  }
+                }}
                 onCanPlay={(e) => {
                   const v = e.currentTarget;
                   v.muted = isVideoAudioMuted;
                   v.volume = videoVolume;
-                  const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false || isPlayingState === false;
+                  const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
                   if (!isUserPaused && v.paused) {
                     v.dataset.userPaused = 'false';
                     v.play().then(() => setIsPlayingState(true)).catch(() => {});
@@ -1537,14 +1574,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 onWaiting={() => {}}
                 onStalled={() => {
                   const v = overlayVideoRef.current;
-                  const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false || isPlayingState === false;
+                  const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
                   if (v && v.paused && !isUserPaused) {
                     v.play().then(() => setIsPlayingState(true)).catch(() => {});
                   }
                 }}
                 onEnded={(e) => {
                   e.currentTarget.currentTime = 0;
-                  const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false || isPlayingState === false;
+                  const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
                   if (!isUserPaused) {
                     e.currentTarget.play().then(() => setIsPlayingState(true)).catch(() => {});
                   } else {

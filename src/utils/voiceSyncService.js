@@ -377,8 +377,17 @@ async function processGlobalSpeechQueue() {
   isProcessingGlobalQueue = false;
 }
 
-async function executeSingleSpeech(voice, sampleText = null, onEnd = null) {
+async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTest = false) {
   stopVoiceAudio();
+
+  const isUserPaused = typeof localStorage !== 'undefined' && (
+    localStorage.getItem('avalive_user_paused') === 'true' || 
+    localStorage.getItem('avalive_window_capture_paused') === 'true'
+  );
+  if (isUserPaused && !isTest && !voice?.isTest) {
+    if (onEnd) onEnd();
+    return true;
+  }
 
   const rawLang = voice?.lang || (
     voice?.id?.includes('_us_') || voice?.id?.includes('_en_') ? 'en-US' :
@@ -502,14 +511,21 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null) {
     window.location.pathname.includes('/battle') ||
     window.location.pathname.includes('/bando')
   );
-  const isLocalSpeakerMuted = !isOverlayPage && typeof localStorage !== 'undefined' && localStorage.getItem('avalive_local_speaker_muted') === 'true';
+  const isGlobalMuted = typeof localStorage !== 'undefined' && (
+    localStorage.getItem('avalive_audio_muted') === 'true' ||
+    localStorage.getItem('avalive_local_speaker_muted') === 'true' ||
+    localStorage.getItem('avalive_overlay_audio_muted') === 'true'
+  );
+  const isLocalSpeakerMuted = isGlobalMuted || (!isOverlayPage && typeof localStorage !== 'undefined' && localStorage.getItem('avalive_local_speaker_muted') === 'true');
+  const savedGlobalVol = typeof localStorage !== 'undefined' ? parseFloat(localStorage.getItem('avalive_video_volume') || localStorage.getItem('avalive_overlay_volume') || '1') : 1;
+  const effectiveVoiceVolume = isLocalSpeakerMuted ? 0 : Math.max(0, Math.min(1, voiceVolume * savedGlobalVol));
 
   const backendBase = typeof window !== 'undefined' && (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001') ? `${window.location.protocol}//${window.location.hostname}:3001` : '';
   const serverTtsUrl = `${backendBase}/api/tts?text=${encodeURIComponent(textToSpeak.slice(0, 200))}&lang=${encodeURIComponent(shortLang || 'vi')}`;
   
   try {
     const streamAudio = new Audio(serverTtsUrl);
-    streamAudio.volume = isLocalSpeakerMuted ? 0 : voiceVolume;
+    streamAudio.volume = effectiveVoiceVolume;
     streamAudio.muted = isLocalSpeakerMuted;
     streamAudio.crossOrigin = 'anonymous';
     
@@ -569,7 +585,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null) {
         // Tôn trọng 100% tốc độ đọc (rate), cao độ (pitch) và âm lượng (volume) người dùng tùy chỉnh
         utterance.rate = voice?.rate !== undefined ? Number(voice.rate) : (isFemale ? 1.0 : 1.05);
         utterance.pitch = voice?.pitch !== undefined ? Number(voice.pitch) : (isFemale ? 1.12 : 0.88);
-        utterance.volume = isLocalSpeakerMuted ? 0 : (voice?.volume !== undefined ? Math.max(0, Math.min(1, Number(voice.volume))) : 1.0);
+        utterance.volume = effectiveVoiceVolume;
 
         let hasEnded = false;
         const finish = (ok) => {
