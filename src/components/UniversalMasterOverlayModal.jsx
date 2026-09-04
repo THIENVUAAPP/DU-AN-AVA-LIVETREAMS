@@ -47,7 +47,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
     const height = 1040; // 80px dock & vạch cắt an toàn + 960px khung hình live 9:16
     const left = Math.round((window.screen.width - width) / 2);
     const top = Math.round((window.screen.height - height) / 2);
-    const captureUrl = `${window.location.origin}/live?mode=window_capture`;
+    const captureUrl = `${window.location.origin}/idol?mode=window_capture`;
     window.open(
       captureUrl,
       'avalive_window_capture_target',
@@ -126,19 +126,9 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
   const projects = [
     {
-      id: "live",
-      name: "MASTER LIVE TOÀN NĂNG (TỰ ĐỘNG ĐỔI THEO TAB BẠN ĐANG CHỌN)",
-      tag: "KHUYÊN DÙNG ⭐",
-      tagColor: "from-cyan-500 to-blue-600",
-      icon: Radio,
-      iconColor: "text-cyan-400",
-      bgColor: "bg-[#0b1329]/90 border-cyan-500/40 hover:border-cyan-400/60",
-      path: "live",
-    },
-    {
       id: "idol",
       name: "DỰ ÁN 1: LIVE AI IDOL & PHÁT VIDEO TRỰC TIẾP",
-      tag: "HOT NHẤT 🔥",
+      tag: "PHÁT VIDEO & IDOL 🎬",
       tagColor: "from-pink-500 to-rose-600",
       icon: MonitorPlay,
       iconColor: "text-pink-400",

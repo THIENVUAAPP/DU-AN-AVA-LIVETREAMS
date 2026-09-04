@@ -59,20 +59,6 @@ if (distPath) {
   app.use(express.static(distPath));
 }
 
-// Route phục vụ video mặc định chống màn hình đen cho TikTok Live Studio & OBS
-app.get(['/default_idol.mp4', '/idol/default_idol.mp4', '/live/default_idol.mp4', '/stage/default_idol.mp4'], (req, res) => {
-  const localDefault = path.join(__dirname, 'default_idol.mp4');
-  const publicDefault = path.join(__dirname, '../public/default_idol.mp4');
-  const distDefault = path.join(__dirname, '../dist/default_idol.mp4');
-  const target = fs.existsSync(localDefault) ? localDefault : fs.existsSync(publicDefault) ? publicDefault : distDefault;
-  if (fs.existsSync(target)) {
-    res.setHeader('Content-Type', 'video/mp4');
-    res.setHeader('Accept-Ranges', 'bytes');
-    return res.sendFile(path.resolve(target));
-  }
-  res.status(404).send('Default video not found');
-});
-
 const multer = require('multer');
 
 // ============================================================
@@ -96,13 +82,13 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // ⚡ HIGH-PERFORMANCE VIDEO STREAMING ENGINE (HTTP 206 Byte-Range Partial Content)
-// Giúp video MP4/WebM load ngay lập tức 0ms, không lag, không giật, hỗ trợ video 1-2 tiếng siêu mượt trên TikTok Live Studio & OBS
+// Giúp video MP4/WebM load ngay lập tức 0ms, không lag, không giật, hỗ trợ video 5-10 tiếng siêu mượt trên TikTok Live Studio & OBS
 app.all('/uploads/:filename', (req, res, next) => {
   if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') return next();
 
   const filePath = path.join(uploadsDir, req.params.filename);
   if (!fs.existsSync(filePath)) {
-    return res.redirect('/default_idol.mp4');
+    return res.status(404).send('Media not found');
   }
 
   try {
@@ -297,7 +283,7 @@ app.post('/api/upload-stream-init', (req, res) => {
       timer: setTimeout(() => {
         try { if (activeStreamUploads[uploadId]?.fd) fs.closeSync(activeStreamUploads[uploadId].fd); } catch(e) {}
         delete activeStreamUploads[uploadId];
-      }, 300000) // 5 phút timeout
+      }, 3600000) // 60 phút timeout hỗ trợ video 5-10 tiếng dung lượng lớn
     };
 
     const fileUrl = `/uploads/${filename}`;
@@ -325,12 +311,12 @@ app.post('/api/upload-chunk', (req, res) => {
     return res.status(404).json({ error: 'Phiên stream chunk không tồn tại hoặc đã kết thúc' });
   }
 
-  // Reset timeout timer
+  // Reset timeout timer (60 phút)
   if (session.timer) clearTimeout(session.timer);
   session.timer = setTimeout(() => {
     try { if (session.fd) fs.closeSync(session.fd); } catch(e) {}
     delete activeStreamUploads[uploadId];
-  }, 300000);
+  }, 3600000);
 
   const chunks = [];
   req.on('data', (c) => chunks.push(c));
@@ -590,21 +576,9 @@ let currentMasterLiveState = savedState || {
   updatedAt: Date.now()
 };
 
-// Nếu mediaUrl trống hoặc không tồn tại, tìm video mới nhất trong thư mục uploads để phát ngay
-if (!currentMasterLiveState.mediaUrl && fs.existsSync(uploadsDir)) {
-  try {
-    const files = fs.readdirSync(uploadsDir)
-      .filter(f => /\.(mp4|webm|mov)$/i.test(f))
-      .map(f => ({ name: f, time: fs.statSync(path.join(uploadsDir, f)).mtimeMs }))
-      .sort((a, b) => b.time - a.time);
-    if (files.length > 0) {
-      currentMasterLiveState.mediaUrl = `/uploads/${files[0].name}`;
-    }
-  } catch (e) {}
-}
-
-if (!currentMasterLiveState.mediaUrl) {
-  currentMasterLiveState.mediaUrl = '/default_idol.mp4';
+// Tuyệt đối không tự ý gán video phát nền ngầm (chỉ phát khi người dùng chủ động tải lên / chọn video)
+if (currentMasterLiveState.mediaUrl && currentMasterLiveState.mediaUrl.includes('default_idol.mp4')) {
+  currentMasterLiveState.mediaUrl = null;
 }
 let currentBandoGameState = null;
 let currentBattleGameState = null;

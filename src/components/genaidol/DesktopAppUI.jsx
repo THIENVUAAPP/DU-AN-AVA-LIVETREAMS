@@ -457,7 +457,7 @@ export default function DesktopAppUI() {
     const left = Math.round((window.screen.width - width) / 2);
     const top = Math.round((window.screen.height - height) / 2);
     window.open(
-      `${window.location.origin}/live?mode=window_capture`,
+      `${window.location.origin}/idol?mode=window_capture`,
       'avalive_window_capture_target',
       `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes`
     );
@@ -1088,21 +1088,21 @@ export default function DesktopAppUI() {
     };
   }, []);
 
-  // Bộ sưu tập Nhân Vật AI Idol & Video 4K Mặc Định Sắc Nét (Mỗi nhân vật 1 video riêng biệt độc quyền)
+  // Danh mục Nhân Vật AI Idol (Chờ video tải lên từ người dùng, tuyệt đối không tự ý phát video nền)
   const BUILTIN_CHARACTERS = {
     'linhanh_4k': {
       name: 'AI Idol Live PRO',
-      url: '/default_idol.mp4',
+      url: '',
       type: 'video'
     },
     'aidol_greenscreen': {
       name: 'AI Idol Thời Trang (GreenScreen)',
-      url: '/default_idol.mp4',
+      url: '',
       type: 'video'
     },
     'aidol_dance_pro': {
       name: 'AI Idol Vũ Đạo (Dance Pro)',
-      url: '/default_idol.mp4',
+      url: '',
       type: 'video'
     }
   };

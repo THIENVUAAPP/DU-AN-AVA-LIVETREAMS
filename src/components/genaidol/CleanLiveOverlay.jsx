@@ -64,6 +64,7 @@ const getBackendUrl = () => {
 
 export default function CleanLiveOverlay({ customStyle = {} }) {
   const overlayVideoRef = useRef(null);
+  const captureCanvasRef = useRef(null);
   const [masterState, setMasterState] = useState(() => {
     let saved = null;
     try {
@@ -90,7 +91,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     return {
       stage: defaultStage, // 'idol' | 'dancefloor' | 'battle' | 'bando' | 'broadcast'
       aspectRatio: ratioParam || '9:16',
-      mediaUrl: directVideoUrl || (saved?.mediaUrl && !saved.mediaUrl.includes('nhep_mieng.mp4') && !saved.mediaUrl.includes('demo_dancer.mp4') ? saved.mediaUrl : null),
+      mediaUrl: directVideoUrl || (saved?.mediaUrl && !saved.mediaUrl.includes('nhep_mieng.mp4') && !saved.mediaUrl.includes('demo_dancer.mp4') && !saved.mediaUrl.includes('default_idol.mp4') ? saved.mediaUrl : null),
       flvUrl: directVideoUrl || saved?.flvUrl || null,
       isVideo: saved?.isVideo !== false,
       selectedCharacter: saved?.selectedCharacter || '',
@@ -540,11 +541,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     const isCapture = urlParams?.get('mode') === 'window_capture' || urlParams?.get('capture') === '1';
     if (isCapture) {
       document.title = '[AvaLive VIP PRO] - Cửa Sổ Live 9:16 (Window Capture)';
+      document.documentElement.style.background = '#000000';
+      document.body.style.background = '#000000';
     } else {
       document.title = 'AVA Live Output (Realtime Master Overlay) — TikTok LIVE Studio / OBS';
+      document.documentElement.style.background = 'transparent';
+      document.body.style.background = 'transparent';
     }
-    document.documentElement.style.background = 'transparent';
-    document.body.style.background = 'transparent';
 
     // 5 TẦNG ĐỒNG BỘ: KẾT NỐI VÀ TỰ ĐỘNG PHỤC HỒI
     let isSubscribed = true;
@@ -1334,7 +1337,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     }
 
     // 4. Tuyệt đối loại bỏ video nền cũ nếu có trong cache
-    if (typeof candidateUrl === 'string' && (candidateUrl.includes('nhep_mieng.mp4') || candidateUrl.includes('demo_dancer.mp4'))) {
+    if (typeof candidateUrl === 'string' && (candidateUrl.includes('nhep_mieng.mp4') || candidateUrl.includes('demo_dancer.mp4') || candidateUrl.includes('default_idol.mp4'))) {
       candidateUrl = null;
     }
 
@@ -1376,17 +1379,50 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       }
     }
 
-    // 7. SIÊU AN TOÀN: NẾU KHÔNG CÓ URL HOẶC URL LÀ RÁC/NULL/MIXKIT -> FALLBACK NGAY VỀ VIDEO NỘI BỘ 100% HOẠT ĐỘNG
-    if (!candidateUrl || candidateUrl.includes('mixkit.co')) {
-      const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
-      candidateUrl = currentOrigin ? `${currentOrigin}/default_idol.mp4` : '/default_idol.mp4';
-      isVideo = true;
+    // 7. TUYỆT ĐỐI KHÔNG DÙNG VIDEO NỀN MẶC ĐỊNH KHI CHƯA YÊU CẦU: NẾU KHÔNG CÓ URL HOẶC URL LÀ RÁC/NULL -> TRẢ VỀ NULL
+    if (!candidateUrl || candidateUrl.includes('mixkit.co') || candidateUrl.includes('default_idol.mp4')) {
+      candidateUrl = null;
+      isVideo = false;
     }
 
     return { url: candidateUrl, isVideo };
   };
 
   const activeMedia = resolveActiveMedia();
+
+  // 🎯 VÒNG LẶP RENDER CANVAS 2D ĐỒNG BỘ VIDEO — FIX 100% LỖI MÀN HÌNH ĐEN TRÊN OBS / TIKTOK LIVE STUDIO (WINDOW CAPTURE)
+  useEffect(() => {
+    let animId;
+    const canvas = captureCanvasRef.current;
+    const video = overlayVideoRef.current;
+    if (!canvas || !video || !activeMedia.url || !activeMedia.isVideo) return;
+
+    const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+    if (!ctx) return;
+
+    let isRunning = true;
+    const renderLoop = () => {
+      if (!isRunning) return;
+      if (video.readyState >= 2 && !video.paused) {
+        if (canvas.width !== video.videoWidth && video.videoWidth > 0) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+        }
+        if (canvas.width > 0 && canvas.height > 0) {
+          try {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          } catch (e) {}
+        }
+      }
+      animId = requestAnimationFrame(renderLoop);
+    };
+
+    animId = requestAnimationFrame(renderLoop);
+    return () => {
+      isRunning = false;
+      if (animId) cancelAnimationFrame(animId);
+    };
+  }, [activeMedia.url, activeMedia.isVideo]);
 
   // 🎬 TỰ ĐỘNG PHÁT NGAY KHI ĐỔI VIDEO / NHÂN VẬT TỪ PHẦN MỀM
   useEffect(() => {
@@ -1574,18 +1610,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     }
                   }}
                   onError={(e) => {
-                    console.warn('[CleanLiveOverlay] Lỗi tải video, tự động chuyển về video chuẩn chống đen hình');
-                    const v = overlayVideoRef.current || e.currentTarget;
-                    const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
-                    const fallback = currentOrigin ? `${currentOrigin}/default_idol.mp4` : '/default_idol.mp4';
-                    if (v && v.src !== fallback) {
-                      v.src = fallback;
-                      v.load();
-                      v.play().catch(() => {
-                        v.muted = true;
-                        v.play().catch(() => {});
-                      });
-                    }
+                    console.warn('[CleanLiveOverlay] Lỗi tải video');
                   }}
                   className="w-full h-full select-none absolute inset-0 transform-gpu"
                   style={{ 
@@ -1601,12 +1626,15 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   }}
                 />
 
-                {/* 🎯 Surface Invalidator Canvas: Giúp OBS BitBlt & DWM không bị đen hình trên Windows */}
+                {/* 🎯 Canvas Gương 2D: Khắc phục triệt để lỗi Màn Hình Đen khi Window Capture trên OBS Studio & TikTok Live Studio */}
                 <canvas 
-                  id="obs-dwm-surface-helper" 
-                  width={32} 
-                  height={32} 
-                  className="absolute bottom-0 right-0 opacity-[0.005] pointer-events-none"
+                  ref={captureCanvasRef}
+                  className="w-full h-full select-none absolute inset-0 pointer-events-none"
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    objectFit: objectFitState || 'cover'
+                  }}
                 />
               </>
             ) : activeStreamUrl ? (
@@ -1637,14 +1665,20 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 alt="AI Idol"
               />
             ) : (
-              <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#0F1016] via-[#151824] to-[#0A0A0F] text-center p-6 select-none">
+              <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#07080d] via-[#0d1017] to-[#040508] text-center p-6 select-none">
                 <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-pink-600 via-rose-600 to-red-600 flex items-center justify-center mb-5 shadow-2xl shadow-rose-500/30 animate-pulse">
                   <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <h3 className="text-xl sm:text-2xl font-black text-white tracking-wide uppercase">MÀN HÌNH CHỜ LIVE IDOL (9:16)</h3>
-                <p className="text-gray-400 text-xs mt-2">Đang kết nối nhận video chuẩn 1080x1920 từ phần mềm...</p>
+                <h3 className="text-xl sm:text-2xl font-black text-white tracking-wide uppercase">SẴN SÀNG PHÁT LUỒNG (9:16)</h3>
+                <p className="text-gray-400 text-xs mt-2 max-w-xs leading-relaxed">
+                  Vui lòng tải lên hoặc chọn video trên phần mềm để bắt đầu phát trực tiếp
+                </p>
+                <div className="mt-4 px-3.5 py-1.5 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-[11px] text-cyan-300 font-mono flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                  <span>Đang kết nối Realtime với phần mềm AvaLive...</span>
+                </div>
               </div>
             )}
           </div>

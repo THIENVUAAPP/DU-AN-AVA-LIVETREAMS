@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 
-export const APP_VERSION = '1.4.1';
+export const APP_VERSION = '1.4.2';
 export const UPDATE_NOTES = [
-  "🎯 Sửa triệt để lỗi đường link TikTok Live Studio: Khắc phục lỗi CEF chặn Autoplay âm thanh và loại bỏ hoàn toàn link video ngoại tuyến bị lỗi 403 Forbidden. Bổ sung nguồn video chuẩn nội bộ /default_idol.mp4 luôn sẵn sàng 100%.",
-  "⚡ Bổ sung Link Máy Tính Trực Tiếp (127.0.0.1:3001): Tối ưu 0ms delay, mượt mà 60FPS khi chạy TikTok Live Studio trên cùng máy Windows, không phụ thuộc mạng hay đường truyền Cloudflare.",
-  "🖥️ Tối ưu Bắt Cửa Sổ (Window Capture) OBS: Khắc phục lỗi màn hình đen với Canvas DWM surface refresher, tích hợp nút kích hoạt âm thanh 1-Click và hướng dẫn đổi phương thức sang 'Windows 10 (1903 trở lên)'.",
-  "🔄 Đồng bộ Realtime tức thì: Tự động cập nhật 0.1s đa kênh giữa Phần mềm chính và Cửa sổ Live / Link phát trực tiếp khi đổi video, đổi nhân vật hoặc điều khiển âm lượng."
+  "🎬 Bỏ hoàn toàn video phát nền mặc định: Phần mềm chỉ phát video người dùng tải lên, tuyệt đối không tự ý phát video nền.",
+  "🚀 Hỗ trợ video dài từ 5 đến 10 tiếng: Tối ưu bộ đệm streaming chunk 16MB và gia hạn phiên upload 60 phút, video tải lên phát ngay lập tức sang TikTok Live Studio mà không bị đen hình hay crash.",
+  "🧹 Dọn dẹp sạch sẽ các đường link không phát được: Loại bỏ hoàn toàn đường link 127.0.0.1:3001/live. Chỉ giữ đúng 3 đường link hoạt động chuẩn xác: Dự án 1 (Phát Video / AI Idol), Dự án 2 (Game Bản Đồ 63 Tỉnh), Dự án 3 (Game PK Chiến Đấu).",
+  "🖥️ Xử lý triệt để lỗi Màn Hình Đen khi Window Capture OBS: Tích hợp Canvas Gương 2D render loop và nền đặc #000000, giúp TikTok Live Studio và OBS Studio bắt trọn khung hình video 60FPS sắc nét không còn bị màn hình đen."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

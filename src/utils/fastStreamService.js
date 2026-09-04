@@ -8,7 +8,7 @@
 
 export async function fastStreamUpload(file, options = {}) {
   const { onInit, onProgress, onError } = options;
-  const CHUNK_SIZE = 8 * 1024 * 1024; // 8MB tối ưu cho 1080p stream
+  const CHUNK_SIZE = 16 * 1024 * 1024; // 16MB tối ưu siêu tốc cho video 5-10 tiếng
   const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
   const getBackendUrl = () => {
@@ -41,9 +41,8 @@ export async function fastStreamUpload(file, options = {}) {
     const fileUrl = initData.fileUrl;
     const uploadId = initData.uploadId;
 
-    if (onInit) onInit({ fileUrl, uploadId, totalChunks });
-
     if (initData.instant || !uploadId) {
+      if (onInit) onInit({ fileUrl, uploadId, totalChunks });
       if (onProgress) onProgress(100);
       return { success: true, fileUrl };
     }
@@ -64,12 +63,12 @@ export async function fastStreamUpload(file, options = {}) {
       });
     };
 
-    // BƯỚC 2: Nạp tuần tự liền mạch (In-Order Contiguous Pipeline) với khối 8MB
-    // Khối 0 (0-8MB) được nạp trước để lấy toàn bộ header/metadata và 3-4 phút đầu video
+    // BƯỚC 2: Nạp khối 0 (0-16MB) để lấy toàn bộ header/metadata và những phút đầu video
+    // Chỉ sau khi khối này ghi xong thành công lên đĩa thì mới thông báo phát sóng!
     const chunk0 = file.slice(0, Math.min(CHUNK_SIZE, file.size));
     await sendChunk(chunk0, 0, 0);
 
-    // BÁO SẴN SÀNG: Server đã có đủ 8MB đầu tiên liền mạch, TikTok Live Studio phát hình ngay lập tức 0ms!
+    // BÁO SẴN SÀNG: Server đã có đủ dữ liệu mở đầu hợp lệ, TikTok Live Studio phát hình ngay lập tức 0ms!
     if (onInit) {
       onInit({ fileUrl, uploadId, totalChunks });
     }
