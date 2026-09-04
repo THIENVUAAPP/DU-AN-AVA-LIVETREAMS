@@ -1195,6 +1195,123 @@ export default function DesktopAppUI() {
     }
   }, [isLocalSpeakerMuted]);
 
+  // Quản lý trạng thái Play / Pause của video live trên khung hình phần mềm
+  const [isVideoPlaying, setIsVideoPlaying] = useState(() => {
+    try {
+      return localStorage.getItem('avalive_user_paused') !== 'true';
+    } catch (e) {
+      return true;
+    }
+  });
+
+  // ⏯️ HÀM BẬT / TẮT (TẠM DỪNG / TIẾP TỤC) VIDEO TRỰC TIẾP TRÊN KHUNG HÌNH VIDEO
+  const toggleDesktopVideoPlayback = useCallback((e) => {
+    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+    const vid = desktopVideoRef.current;
+    if (!vid) return;
+
+    const isCurrentlyPaused = vid.paused || vid.dataset.userPaused === 'true';
+
+    if (isCurrentlyPaused) {
+      // Đang dừng -> BẤM ĐỂ TIẾP TỤC PHÁT
+      vid.dataset.userPaused = 'false';
+      try {
+        localStorage.removeItem('avalive_user_paused');
+        localStorage.removeItem('avalive_window_capture_paused');
+        localStorage.setItem('avalive_master_live_running', 'true');
+      } catch (err) {}
+      if (!isMasterLiveRunning) {
+        setIsMasterLiveRunning(true);
+      }
+      vid.play().then(() => {
+        setIsVideoPlaying(true);
+      }).catch(() => {
+        vid.muted = true;
+        vid.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+      });
+      setIsVideoPlaying(true);
+      showToast('▶️ Đang tiếp tục phát video Live!', 'success');
+
+      const curTime = vid.currentTime || 0;
+      let playUrl = userLockedMediaUrl || (customCharacters.find(c => c.id === selectedCharacter)?.url) || CHARACTERS[selectedCharacter]?.url || '';
+      if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
+        playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
+      }
+      syncMasterLiveState({
+        stage: 'idol',
+        mediaUrl: playUrl,
+        isVideo: true,
+        videoPlaybackEvent: 'play',
+        videoCurrentTime: curTime,
+        isPlaying: true
+      }, socketRef.current);
+      try {
+        const bc = new BroadcastChannel('avalive_master_live_stream');
+        bc.postMessage({ 
+          type: 'GLOBAL_PLAYBACK_CHANGE', 
+          isPlaying: true, 
+          userPaused: false, 
+          currentTime: curTime, 
+          source: 'desktop',
+          timestamp: Date.now() 
+        });
+        setTimeout(() => bc.close(), 100);
+      } catch (err) {}
+    } else {
+      // Đang phát -> BẤM ĐỂ TẠM DỪNG
+      vid.dataset.userPaused = 'true';
+      try {
+        localStorage.setItem('avalive_user_paused', 'true');
+        localStorage.setItem('avalive_window_capture_paused', 'true');
+      } catch (err) {}
+      try { vid.pause(); } catch (err) {}
+      setIsVideoPlaying(false);
+      showToast('⏸ Đã tạm dừng video Live!', 'info');
+
+      const curTime = vid.currentTime || 0;
+      let playUrl = userLockedMediaUrl || (customCharacters.find(c => c.id === selectedCharacter)?.url) || CHARACTERS[selectedCharacter]?.url || '';
+      if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
+        playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
+      }
+      syncMasterLiveState({
+        stage: 'idol',
+        mediaUrl: playUrl,
+        isVideo: true,
+        videoPlaybackEvent: 'pause',
+        videoCurrentTime: curTime,
+        isPlaying: false
+      }, socketRef.current);
+      try {
+        const bc = new BroadcastChannel('avalive_master_live_stream');
+        bc.postMessage({ 
+          type: 'GLOBAL_PLAYBACK_CHANGE', 
+          isPlaying: false, 
+          userPaused: true, 
+          currentTime: curTime, 
+          source: 'desktop',
+          timestamp: Date.now() 
+        });
+        setTimeout(() => bc.close(), 100);
+      } catch (err) {}
+    }
+  }, [isMasterLiveRunning, userLockedMediaUrl, customCharacters, selectedCharacter]);
+
+  // Phím tắt thông minh [Phím Cách / Space] điều khiển Tạm dừng / Tiếp tục Video trên khung hình
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+      if (e.target.isContentEditable) return;
+      if (isGameBattleActive || isGameBanDoActive) return;
+
+      if (e.key === ' ' || e.code === 'Space') {
+        e.preventDefault();
+        toggleDesktopVideoPlayback();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [toggleDesktopVideoPlayback, isGameBattleActive, isGameBanDoActive]);
+
   // Đồng bộ trạng thái Local Mute nếu có component khác thay đổi
   useEffect(() => {
     const handleMuteSync = (e) => {
@@ -1248,6 +1365,7 @@ export default function DesktopAppUI() {
             }
 
             if (!shouldPlay) {
+              setIsVideoPlaying(false);
               try { 
                 localStorage.setItem('avalive_user_paused', 'true');
                 localStorage.setItem('avalive_window_capture_paused', 'true');
@@ -1266,6 +1384,7 @@ export default function DesktopAppUI() {
               if (typeof bandoAudio.pauseAll === 'function') bandoAudio.pauseAll();
               if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
             } else {
+              setIsVideoPlaying(true);
               try { 
                 localStorage.removeItem('avalive_user_paused');
                 localStorage.removeItem('avalive_window_capture_paused');
@@ -1322,6 +1441,7 @@ export default function DesktopAppUI() {
         isInternalPlaybackChangeRef.current = true;
         setIsMasterLiveRunning(!isPaused);
         if (isPaused) {
+          setIsVideoPlaying(false);
           if (desktopVideoRef.current) {
             desktopVideoRef.current.dataset.userPaused = 'true';
             try { desktopVideoRef.current.pause(); } catch (e) {}
@@ -1335,6 +1455,7 @@ export default function DesktopAppUI() {
           if (typeof bandoAudio.pauseAll === 'function') bandoAudio.pauseAll();
           if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
         } else {
+          setIsVideoPlaying(true);
           if (desktopVideoRef.current) {
             desktopVideoRef.current.dataset.userPaused = 'false';
             try { desktopVideoRef.current.play().catch(() => {}); } catch (e) {}
@@ -1834,6 +1955,7 @@ export default function DesktopAppUI() {
         desktopVideoRef.current.dataset.userPaused = 'true';
         try { desktopVideoRef.current.pause(); } catch (e) {}
       }
+      setIsVideoPlaying(false);
 
       // 9. Phát tín hiệu dừng toàn cục (BroadcastChannel, CustomEvent, LocalStorage) cho OBS/TikTok Live Studio Overlay
       if (typeof window !== 'undefined') {
@@ -1886,6 +2008,7 @@ export default function DesktopAppUI() {
     } else {
       // --- BẬT TẤT CẢ ---
       setIsMasterLiveRunning(true);
+      setIsVideoPlaying(true);
       try {
         localStorage.removeItem('avalive_user_paused');
         localStorage.removeItem('avalive_window_capture_paused');
@@ -2310,12 +2433,12 @@ export default function DesktopAppUI() {
   
       if (selected.type === 'video') {
         return (
-          <div className="relative w-full h-full">
+          <div className="relative w-full h-full group/videoContainer select-none overflow-hidden bg-black flex items-center justify-center">
             <video 
               ref={desktopVideoRef}
               key={selected.url}
               src={selected.url} 
-              className="w-full h-full object-contain bg-black transform-gpu"
+              className="w-full h-full object-contain bg-black transform-gpu cursor-pointer"
               style={{ transform: 'translateZ(0)', willChange: 'transform' }}
               autoPlay={localStorage.getItem('avalive_user_paused') !== 'true' && isMasterLiveRunning} 
               loop 
@@ -2324,6 +2447,7 @@ export default function DesktopAppUI() {
               preload="auto"
               disablePictureInPicture
               playsInline 
+              onClick={toggleDesktopVideoPlayback}
               onTimeUpdate={(e) => {
                 const curTime = e.currentTarget.currentTime;
                 if (curTime > 0) {
@@ -2350,26 +2474,37 @@ export default function DesktopAppUI() {
                     e.currentTarget.currentTime = lastPlaybackTimeRef.current;
                   } catch (err) {}
                 }
-                const isPaused = localStorage.getItem('avalive_user_paused') === 'true' || !isMasterLiveRunning;
+                const isPaused = localStorage.getItem('avalive_user_paused') === 'true';
                 if (isPaused) {
                   e.currentTarget.dataset.userPaused = 'true';
                   e.currentTarget.pause();
+                  setIsVideoPlaying(false);
+                } else if (isMasterLiveRunning) {
+                  e.currentTarget.dataset.userPaused = 'false';
+                  e.currentTarget.play().then(() => setIsVideoPlaying(true)).catch(() => {});
                 }
               }} 
               onPlay={(e) => {
                 if (isInternalPlaybackChangeRef.current) return;
-                if (localStorage.getItem('avalive_user_paused') === 'true' || !isMasterLiveRunning) {
-                  e.currentTarget.dataset.userPaused = 'true';
-                  e.currentTarget.pause();
-                  return;
+                // Người dùng chủ động bấm Play trên video: Gỡ bỏ toàn bộ cờ tạm dừng và phát ngay
+                try {
+                  localStorage.removeItem('avalive_user_paused');
+                  localStorage.removeItem('avalive_window_capture_paused');
+                  localStorage.setItem('avalive_master_live_running', 'true');
+                } catch (err) {}
+                if (!isMasterLiveRunning) {
+                  setIsMasterLiveRunning(true);
                 }
                 e.currentTarget.dataset.userPaused = 'false';
+                setIsVideoPlaying(true);
+                
                 const curTime = e.currentTarget.currentTime;
                 let playUrl = selected.url;
                 if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
                   playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
                 }
                 syncMasterLiveState({
+                  stage: 'idol',
                   mediaUrl: playUrl,
                   isVideo: true,
                   videoPlaybackEvent: 'play',
@@ -2400,7 +2535,11 @@ export default function DesktopAppUI() {
                   localStorage.setItem('avalive_user_paused', 'true');
                   localStorage.setItem('avalive_window_capture_paused', 'true');
                 } catch (err) {}
+                e.currentTarget.dataset.userPaused = 'true';
+                setIsVideoPlaying(false);
+                
                 syncMasterLiveState({
+                  stage: 'idol',
                   mediaUrl: playUrl,
                   isVideo: true,
                   videoPlaybackEvent: 'pause',
@@ -2461,22 +2600,69 @@ export default function DesktopAppUI() {
                 } catch (err) {}
               }}
             />
-            {userLockedMediaUrl && (
-              <div className="absolute top-3 right-3 z-30 flex items-center gap-2">
-                <span className="bg-emerald-600/90 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md border border-emerald-400/40 flex items-center gap-1">
+
+            {/* NÚT PHÁT TRÒN LỚN Ở CHÍNH GIỮA MÀN HÌNH (HIỆN LÊN KHI VIDEO ĐANG TẠM DỪNG) */}
+            {!isVideoPlaying && (
+              <div 
+                onClick={toggleDesktopVideoPlayback}
+                className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px] cursor-pointer z-20 hover:bg-black/30 transition-all"
+                title="Bấm vào đây hoặc nhấn [Phím Cách / Space] để tiếp tục phát video"
+              >
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white flex items-center justify-center shadow-[0_0_40px_rgba(16,185,129,0.7)] border-2 border-white/60 transform hover:scale-110 active:scale-95 transition-all animate-pulse">
+                  <Play size={32} className="fill-white translate-x-0.5" />
+                </div>
+              </div>
+            )}
+
+            {/* THANH ĐIỀU KHIỂN NHANH NẰM TRỰC TIẾP TRÊN KHUNG HÌNH VIDEO (QUICK OVERLAY BAR) */}
+            <div className="absolute top-3 left-3 z-30 flex items-center gap-2 pointer-events-auto">
+              {/* Nút 1: Tạm dừng / Tiếp tục */}
+              <button
+                onClick={toggleDesktopVideoPlayback}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black shadow-xl border backdrop-blur-md transition-all cursor-pointer active:scale-95 ${
+                  isVideoPlaying
+                    ? 'bg-emerald-600/90 hover:bg-emerald-500 text-white border-emerald-400/60 shadow-emerald-600/40'
+                    : 'bg-amber-600/90 hover:bg-amber-500 text-white border-amber-400/60 shadow-amber-600/40 animate-pulse'
+                }`}
+                title={isVideoPlaying ? "Tạm dừng phát video này [Phím tắt: Space]" : "Tiếp tục phát video này [Phím tắt: Space]"}
+              >
+                {isVideoPlaying ? <Pause size={13} className="fill-white" /> : <Play size={13} className="fill-white" />}
+                <span>{isVideoPlaying ? 'TẠM DỪNG' : 'TIẾP TỤC'}</span>
+                <kbd className="px-1 py-0.2 bg-black/40 text-[9px] rounded font-mono font-bold">Space</kbd>
+              </button>
+
+              {/* Nút 2: Mở / Tắt tiếng */}
+              <button
+                onClick={handleToggleLocalSpeakerMute}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-black shadow-xl border backdrop-blur-md transition-all cursor-pointer active:scale-95 ${
+                  !isLocalSpeakerMuted
+                    ? 'bg-cyan-600/90 hover:bg-cyan-500 text-white border-cyan-400/60 shadow-cyan-600/40'
+                    : 'bg-rose-900/90 hover:bg-rose-800 text-rose-200 border-rose-400/60 shadow-rose-900/40'
+                }`}
+                title={isLocalSpeakerMuted ? "Bấm để MỞ TIẾNG video ra loa & OBS" : "Bấm để TẮT TIẾNG (Mute)"}
+              >
+                {!isLocalSpeakerMuted ? <Volume2 size={13} className="text-yellow-300" /> : <VolumeX size={13} className="text-rose-400" />}
+                <span>{!isLocalSpeakerMuted ? 'MỞ TIẾNG' : 'TẮT TIẾNG'}</span>
+              </button>
+            </div>
+
+            {/* NÚT KHOÁ / XOÁ ĐỔI VIDEO NẰM GÓC TRÊN BÊN PHẢI */}
+            <div className="absolute top-3 right-3 z-30 flex items-center gap-2 pointer-events-auto">
+              {userLockedMediaUrl && (
+                <span className="bg-emerald-600/90 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md border border-emerald-400/40 flex items-center gap-1 backdrop-blur-md">
                   <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
                   🔒 ĐÃ KHOÁ PHÁT VIDEO CỐ ĐỊNH (24/24)
                 </span>
-                <button
-                  onClick={handleClearActiveVideo}
-                  className="bg-red-600/90 hover:bg-red-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md transition-all cursor-pointer flex items-center gap-1"
-                  title="Xoá video đang phát để chọn video hoặc nhân vật khác"
-                >
-                  <Trash2 size={11} />
-                  <span>Xoá / Đổi video</span>
-                </button>
-              </div>
-            )}
+              )}
+              <button
+                onClick={handleClearActiveVideo}
+                className="bg-red-600/90 hover:bg-red-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md transition-all cursor-pointer flex items-center gap-1 backdrop-blur-md"
+                title="Xoá video đang phát để chọn video hoặc nhân vật khác"
+              >
+                <Trash2 size={11} />
+                <span>Xoá / Đổi video</span>
+              </button>
+            </div>
           </div>
         );
       }
@@ -3070,15 +3256,6 @@ export default function DesktopAppUI() {
             <span className="whitespace-nowrap">📡 Link Live</span>
           </button>
 
-          {/* Nút Bắt Cửa Sổ (Window Capture) 1-Click cho TikTok LIVE Studio & OBS */}
-          <button
-            onClick={handleOpenWindowCapture}
-            className="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold border shadow-xs transition-all hover:scale-105 cursor-pointer bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-emerald-400/50"
-            title="Mở Cửa Sổ Live 9:16 để TikTok Live Studio / OBS bắt hình trực tiếp (Window Capture 60FPS)"
-          >
-            <Monitor size={10} className="text-yellow-300 animate-pulse" />
-            <span className="whitespace-nowrap">🖥️ Cửa Sổ Live (Window)</span>
-          </button>
 
           {/* 👑 1 Ô DUY NHẤT: LOGO TÀI KHOẢN + GÓI (GỌN GÀNG) */}
           <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-[9.5px] shadow-xs shrink-0 ${isDarkMode ? 'bg-[#12131d]/90 border-cyan-500/30' : 'bg-white border-gray-300'}`}>
