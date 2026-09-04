@@ -48,7 +48,7 @@ export function getMasterLiveState() {
     if (raw) return JSON.parse(raw);
   } catch (e) {}
   return {
-    stage: 'idol', // 'idol' | 'dancefloor' | 'bando' | 'battle' | 'camera' | 'broadcast'
+    stage: 'idol', // 'idol' | 'bando' | 'battle' | 'camera' | 'broadcast'
     aspectRatio: '9:16',
     characterName: 'AvaLive VIP PRO',
     mediaUrl: null,

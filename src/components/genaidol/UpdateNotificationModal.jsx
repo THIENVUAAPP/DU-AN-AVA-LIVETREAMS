@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 
-export const APP_VERSION = '1.4.3';
+export const APP_VERSION = '1.4.4';
 export const UPDATE_NOTES = [
-  "🧹 Xóa hoàn toàn các ô link dãy số 127.0.0.1:3001 trên Windows: Loại bỏ triệt để các ô link nội bộ không hoạt động. Mỗi dự án hiện tại chỉ hiển thị DUY NHẤT 1 đường link phát trực tuyến Cloudflare chuẩn 100%.",
-  "⚡ Video dán vào TikTok Live Studio phát ngay lập tức: Khắc phục triệt để lỗi luồng HTTP 206 Range stream, hỗ trợ đầy đủ video ngắn lẫn video dài từ 5 đến 10 tiếng chạy mượt mà ngay khi dán link.",
-  "🖥️ Xử lý triệt để lỗi Màn Hình Đen khi Window Capture OBS: Tích hợp bộ vẽ Canvas 2D Mirror 60FPS trực tiếp trên giao diện phần mềm, giúp tính năng Bắt Cửa Sổ (Window Capture) trên OBS và TikTok Studio bắt hình 100% không còn bị đen."
+  "🚀 Tối ưu hóa siêu mượt & Giảm tải tài nguyên: Tách module code-splitting, tạm dừng các luồng vẽ nền khi chơi game, giúp Game Bản Đồ và Game Chiến Đấu đạt 60FPS siêu mượt không còn bị giật lag.",
+  "🗺️ Sửa triệt để lỗi Game Bản Đồ Việt Nam: Khắc phục lỗi thiếu biến mô phỏng và xung đột sự kiện kéo thả HUD, kết nối Socket IO quản trị mượt mà 100%.",
+  "🧹 Xóa vĩnh viễn Game Nhảy & Dọn sạch toàn bộ code thừa: Loại bỏ hoàn toàn các thư viện, file model, animation và logic cũ của Game Nhảy, tối giản dung lượng phần mềm tối đa."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

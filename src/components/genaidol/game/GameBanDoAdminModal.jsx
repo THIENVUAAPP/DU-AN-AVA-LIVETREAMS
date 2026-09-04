@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { io } from 'socket.io-client';
 import { 
   X, Shield, Play, Pause, Square, RotateCcw, Repeat, Award, Globe, Music, Music2, Volume2, 
   Sparkles, Gift, MapPin, Flag, CheckCircle, Copy, AlertTriangle, 

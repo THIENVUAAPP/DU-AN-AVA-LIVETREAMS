@@ -6,7 +6,14 @@
 // không có khả năng "diễn cảm" như giọng AI thần kinh (neural TTS) thật. Muốn giọng tự nhiên/nhấn nhá
 // như người thật 100%, cần tích hợp API TTS trả phí (ElevenLabs, Google Cloud TTS, Azure Speech) —
 // đây là quyết định cần anh cung cấp API key riêng, không phải giới hạn có thể sửa bằng code không.
-import { VOICE_PROFILES } from "./danceFloorData";
+export const VOICE_PROFILES = {
+  cute: { pitch: 1.7, rate: 1.05 },
+  cool: { pitch: 0.75, rate: 0.92 },
+  funny: { pitch: 1.5, rate: 1.15 },
+  luxury: { pitch: 0.85, rate: 0.85 },
+  energetic: { pitch: 1.4, rate: 1.25 },
+  sassy: { pitch: 1.25, rate: 1.05 },
+};
 
 let cachedVoices = [];
 

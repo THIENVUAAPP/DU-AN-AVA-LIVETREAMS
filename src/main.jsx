@@ -90,8 +90,7 @@ const hasOverlayParam =
   pathname.includes('/bando') || 
   pathname.includes('/overlay') || 
   pathname.includes('/idol') || 
-  pathname.includes('/studio') || 
-  pathname.includes('/dance');
+  pathname.includes('/studio');
 
 const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('127.0.0.1.nip.io') || hostname.startsWith('192.168.');
 

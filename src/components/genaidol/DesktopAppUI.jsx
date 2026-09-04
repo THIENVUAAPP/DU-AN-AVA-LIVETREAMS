@@ -340,20 +340,18 @@ export default function DesktopAppUI() {
 
   const savedStage = (() => {
     try {
-      return localStorage.getItem('avalive_active_stage') || 'bando';
+      return localStorage.getItem('avalive_active_stage') || 'idol';
     } catch {
-      return 'bando';
+      return 'idol';
     }
   })();
 
   const [isLiveStudioActive, setIsLiveStudioActive] = useState(false);
   const [isGameBattleActive, setIsGameBattleActive] = useState(() => savedStage === 'battle');
   const [isGameBanDoActive, setIsGameBanDoActive] = useState(() => savedStage === 'bando');
-  const [isDanceFloorActive, setIsDanceFloorActive] = useState(() => savedStage === 'dancefloor');
   const [isGameAdminOpen, setIsGameAdminOpen] = useState(false);
   const [lastGameEvent, setLastGameEvent] = useState(null);
   const [isGameBanDoAdminOpen, setIsGameBanDoAdminOpen] = useState(false);
-  const [isDanceFloorAdminOpen, setIsDanceFloorAdminOpen] = useState(false);
   const [isLocalSpeakerMuted, setIsLocalSpeakerMuted] = useState(() => {
     try {
       return localStorage.getItem('avalive_local_speaker_muted') === 'true';
@@ -568,7 +566,10 @@ export default function DesktopAppUI() {
 
   // 🎯 VÒNG LẶP RENDER CANVAS 2D GƯƠNG 60FPS CHO VIDEO MP4 TRÊN PHẦN MỀM
   // Giúp OBS Studio & TikTok Live Studio khi dùng Bắt Cửa Sổ (Window Capture) chụp cửa sổ phần mềm không bị màn hình đen
+  // Tự động tạm dừng 100% khi người dùng chuyển sang Game Bản Đồ hoặc Game Chiến Đấu để dồn toàn bộ GPU/CPU cho Game 3D
   useEffect(() => {
+    if (isGameBanDoActive || isGameBattleActive) return;
+
     let animId;
     let isMounted = true;
 
@@ -597,7 +598,7 @@ export default function DesktopAppUI() {
       isMounted = false;
       if (animId) cancelAnimationFrame(animId);
     };
-  });
+  }, [isGameBanDoActive, isGameBattleActive]);
   const lastAiCommentTime = useRef(0);
   const lastAiGreetingTime = useRef(0);
   const greetedUsernamesRef = useRef(new Set());
@@ -1019,6 +1020,14 @@ export default function DesktopAppUI() {
       window.removeEventListener('mouseup', handleDragEnd);
     };
   }, [isDraggingWebcam]);
+
+  const handleDragStart = (e) => {
+    setIsDraggingWebcam(true);
+    dragStartPos.current = {
+      x: e.clientX - webcamPos.x,
+      y: e.clientY - webcamPos.y
+    };
+  };
 
   // 🛑/▶️ Trạng thái Tắt / Bật Toàn Bộ Phiên Live Master (Mặc định ở trạng thái BẬT để phát ngay video khi mở phần mềm)
   const [isMasterLiveRunning, setIsMasterLiveRunning] = useState(true);
@@ -1877,8 +1886,6 @@ export default function DesktopAppUI() {
       ? 'bando' 
       : isGameBattleActive 
       ? 'battle' 
-      : isDanceFloorActive 
-      ? 'dancefloor' 
       : isLiveStudioActive 
       ? 'broadcast' 
       : 'idol';
@@ -1938,7 +1945,6 @@ export default function DesktopAppUI() {
   }, [
     isGameBanDoActive, 
     isGameBattleActive, 
-    isDanceFloorActive, 
     isLiveStudioActive, 
     selectedCharacter, 
     customCharacters,
@@ -3180,14 +3186,13 @@ export default function DesktopAppUI() {
           {/* Nút Chế độ Live AI Idol */}
           <button 
             className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs ${
-              !isGameBattleActive && !isGameBanDoActive && !isDanceFloorActive && !isLiveStudioActive
+              !isGameBattleActive && !isGameBanDoActive && !isLiveStudioActive
                 ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 text-white border-cyan-300 shadow-cyan-500/40 ring-1 ring-cyan-400/50' 
                 : (isDarkMode ? 'border-cyan-500/40 bg-cyan-950/30 text-cyan-300 hover:bg-cyan-900/50' : 'border-cyan-300 bg-cyan-50 text-cyan-700 hover:bg-cyan-100')
             }`}
             onClick={() => {
               setIsGameBattleActive(false);
               setIsGameBanDoActive(false);
-              setIsDanceFloorActive(false);
               setIsLiveStudioActive(false);
               try { localStorage.setItem('avalive_active_stage', 'idol'); } catch (e) {}
               mapVoiceEngine.stopAll();
@@ -3196,9 +3201,9 @@ export default function DesktopAppUI() {
             }}
             title="Chuyển sang màn hình Livestream AI Idol"
           >
-            <Video size={10} className={!isGameBattleActive && !isGameBanDoActive && !isDanceFloorActive && !isLiveStudioActive ? 'text-yellow-300' : 'text-cyan-400'} />
+            <Video size={10} className={!isGameBattleActive && !isGameBanDoActive && !isLiveStudioActive ? 'text-yellow-300' : 'text-cyan-400'} />
             <span className="whitespace-nowrap">Live AI Idol</span>
-            {!isGameBattleActive && !isGameBanDoActive && !isDanceFloorActive && !isLiveStudioActive && (
+            {!isGameBattleActive && !isGameBanDoActive && !isLiveStudioActive && (
               <span className="w-1 h-1 rounded-full bg-emerald-400 animate-ping"></span>
             )}
           </button>
@@ -3214,7 +3219,6 @@ export default function DesktopAppUI() {
             onClick={() => {
               setIsGameBattleActive(true);
               setIsGameBanDoActive(false);
-              setIsDanceFloorActive(false);
               setIsLiveStudioActive(false);
               try { localStorage.setItem('avalive_active_stage', 'battle'); } catch (e) {}
               mapVoiceEngine.stopAll();
@@ -3256,7 +3260,6 @@ export default function DesktopAppUI() {
             onClick={() => {
               setIsGameBanDoActive(true);
               setIsGameBattleActive(false);
-              setIsDanceFloorActive(false);
               setIsLiveStudioActive(false);
               try { localStorage.setItem('avalive_active_stage', 'bando'); } catch (e) {}
               battleVoiceEngine.stopAll();

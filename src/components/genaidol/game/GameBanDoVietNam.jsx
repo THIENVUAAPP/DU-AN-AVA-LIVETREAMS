@@ -11,7 +11,7 @@ import {
   Bookmark, BookmarkPlus, BookmarkCheck, Edit2, Trash2, Plus, Save, Check, X, Crosshair,
   Crown, Medal, Music, Mic, Clock, Smartphone, Gift as GiftIcon
 } from 'lucide-react';
-import bandoEngine, { getHonorTier, COUNTRY_PRESETS } from './bandoGameEngine';
+import bandoEngine, { getHonorTier, COUNTRY_PRESETS, DEFAULT_MAP_GIFTS, MOCK_WARRIORS_POOL } from './bandoGameEngine';
 import bandoAudio from './bandoAudioEngine';
 import { mapVoiceEngine } from './gameVoiceEngine';
 import { getGameTranslation } from './gameTranslations';
@@ -529,6 +529,21 @@ export default function GameBanDoVietNam({
     }
   };
 
+  // 2D Canvas & 3D Container Refs (Khai báo trước để dùng trong mọi Event Listeners)
+  const containerRef = useRef(null);
+  const canvas2dRef = useRef(null);
+  const labelsLayerRef = useRef(null);
+  const claimBadgesLayerRef = useRef(null);
+  const labelRefs = useRef({});
+  const badgeRefs = useRef({});
+  const recentClaimBadgesRef = useRef(recentClaimBadges);
+
+  // 2D Canvas Pan & Zoom State
+  const [zoom2D, setZoom2D] = useState(1.0);
+  const [pan2D, setPan2D] = useState({ x: 0, y: 0 });
+  const isDragging2DRef = useRef(false);
+  const dragStart2DRef = useRef({ x: 0, y: 0 });
+
   useEffect(() => {
     const handlePointerMove = (e) => {
       if (!draggingHudRef.current || !containerRef.current) return;
@@ -546,10 +561,6 @@ export default function GameBanDoVietNam({
         const newPos = { x: Math.round(newX), y: Math.round(newY) };
         setLeaderboardPos(newPos);
         try { localStorage.setItem('bando_hud_leaderboard_pos', JSON.stringify(newPos)); } catch (err) {}
-      } else if (draggingHudRef.current === 'gift') {
-        const newPos = { x: Math.round(newX), y: Math.round(newY), right: null };
-        setGiftHudPos(newPos);
-        try { localStorage.setItem('bando_hud_gift_pos', JSON.stringify(newPos)); } catch (err) {}
       }
     };
 
@@ -568,20 +579,6 @@ export default function GameBanDoVietNam({
       window.removeEventListener('touchend', handlePointerUp);
     };
   }, []);
-
-  // 2D Canvas Pan & Zoom State
-  const [zoom2D, setZoom2D] = useState(1.0);
-  const [pan2D, setPan2D] = useState({ x: 0, y: 0 });
-  const isDragging2DRef = useRef(false);
-  const dragStart2DRef = useRef({ x: 0, y: 0 });
-
-  const containerRef = useRef(null);
-  const canvas2dRef = useRef(null);
-  const labelsLayerRef = useRef(null);
-  const claimBadgesLayerRef = useRef(null);
-  const labelRefs = useRef({});
-  const badgeRefs = useRef({});
-  const recentClaimBadgesRef = useRef(recentClaimBadges);
 
   useEffect(() => {
     recentClaimBadgesRef.current = recentClaimBadges;
