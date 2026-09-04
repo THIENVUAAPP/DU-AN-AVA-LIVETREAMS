@@ -774,8 +774,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               const isMasterPlaying = !!event.data.isPlaying;
               const v = overlayVideoRef.current;
               if (v && typeof masterTime === 'number' && !isNaN(masterTime)) {
-                const drift = Math.abs(v.currentTime - masterTime);
-                if (drift > 0.4 || event.data.force) {
+                // Chỉ đồng bộ tua khi người dùng chủ động tua (force === true) hoặc lệch lớn (> 3.0s)
+                // Tuyệt đối không can thiệp micro-drift để tránh giật khựng video và vấp tiếng
+                if (event.data.force || Math.abs(v.currentTime - masterTime) > 3.0) {
                   try {
                     v.currentTime = masterTime;
                   } catch (e) {}
@@ -806,7 +807,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               setIsPlayingState(shouldPlay);
 
               if (typeof event.data.currentTime === 'number' && overlayVideoRef.current) {
-                if (Math.abs(overlayVideoRef.current.currentTime - event.data.currentTime) > 0.4) {
+                if (event.data.force || Math.abs(overlayVideoRef.current.currentTime - event.data.currentTime) > 3.0) {
                   try {
                     overlayVideoRef.current.currentTime = event.data.currentTime;
                   } catch (e) {}

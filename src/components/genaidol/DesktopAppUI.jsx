@@ -1149,16 +1149,13 @@ export default function DesktopAppUI() {
     bandoAudio.setMuted(nextState);
     setIsLocalSpeakerMuted(nextState);
 
+    // Đảm bảo video preview trên phần mềm luôn MUTE (âm thanh chỉ phát 1 bên duy nhất từ Window Capture OBS)
     if (desktopVideoRef.current) {
-      desktopVideoRef.current.muted = nextState;
+      desktopVideoRef.current.muted = true;
     }
     if (flvVideoRef.current) {
-      flvVideoRef.current.muted = nextState;
+      flvVideoRef.current.muted = true;
     }
-    const allMedia = document.querySelectorAll('video, audio');
-    allMedia.forEach(el => {
-      try { el.muted = nextState; } catch (e) {}
-    });
 
     try {
       localStorage.setItem('avalive_audio_muted', String(nextState));
@@ -1312,6 +1309,89 @@ export default function DesktopAppUI() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [toggleDesktopVideoPlayback, isGameBattleActive, isGameBanDoActive]);
 
+  // 🔊 QUẢN LÝ ÂM THANH PHÁT 1 BÊN DUY NHẤT (WINDOW CAPTURE OBS LÀ NƠI PHÁT TIẾNG THẬT)
+  const [liveAudioMuted, setLiveAudioMuted] = useState(() => {
+    try {
+      const saved = localStorage.getItem('avalive_audio_muted');
+      return saved !== null ? saved === 'true' : false;
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const [liveVolume, setLiveVolume] = useState(() => {
+    try {
+      const v = localStorage.getItem('avalive_video_volume');
+      return v ? parseFloat(v) : 1.0;
+    } catch (e) {
+      return 1.0;
+    }
+  });
+
+  const toggleLiveAudioMute = useCallback(() => {
+    const nextMuted = !liveAudioMuted;
+    setLiveAudioMuted(nextMuted);
+    try {
+      localStorage.setItem('avalive_audio_muted', String(nextMuted));
+      localStorage.setItem('avalive_overlay_audio_muted', String(nextMuted));
+    } catch (e) {}
+
+    bandoAudio.setLocalSpeakerMute(nextMuted);
+    bandoAudio.setMuted(nextMuted);
+
+    // Đồng bộ ngay lập tức sang Cửa Sổ Window Capture OBS
+    try {
+      const bc = new BroadcastChannel('avalive_master_live_stream');
+      bc.postMessage({
+        type: 'GLOBAL_AUDIO_CHANGE',
+        isMuted: nextMuted,
+        volume: liveVolume,
+        source: 'desktop',
+        timestamp: Date.now()
+      });
+      setTimeout(() => bc.close(), 100);
+    } catch (e) {}
+
+    syncMasterLiveState({
+      isVideoAudioMuted: nextMuted,
+      videoVolume: liveVolume
+    }, socketRef.current);
+
+    showToast(nextMuted ? '🔇 Đã TẮT TIẾNG phát ra Cửa Sổ Live (OBS)!' : '🔊 Đã MỞ TIẾNG phát ra Cửa Sổ Live (OBS)!', nextMuted ? 'info' : 'success');
+  }, [liveAudioMuted, liveVolume]);
+
+  const handleLiveVolumeChange = useCallback((newVol) => {
+    setLiveVolume(newVol);
+    const isMutedNow = newVol === 0;
+    setLiveAudioMuted(isMutedNow);
+    try {
+      localStorage.setItem('avalive_video_volume', String(newVol));
+      localStorage.setItem('avalive_overlay_volume', String(newVol));
+      localStorage.setItem('avalive_audio_muted', String(isMutedNow));
+      localStorage.setItem('avalive_overlay_audio_muted', String(isMutedNow));
+    } catch (e) {}
+
+    bandoAudio.setMasterVolume(newVol);
+    bandoAudio.setMuted(isMutedNow);
+
+    try {
+      const bc = new BroadcastChannel('avalive_master_live_stream');
+      bc.postMessage({
+        type: 'GLOBAL_AUDIO_CHANGE',
+        isMuted: isMutedNow,
+        volume: newVol,
+        source: 'desktop',
+        timestamp: Date.now()
+      });
+      setTimeout(() => bc.close(), 100);
+    } catch (e) {}
+
+    syncMasterLiveState({
+      isVideoAudioMuted: isMutedNow,
+      videoVolume: newVol
+    }, socketRef.current);
+  }, []);
+
   // Đồng bộ trạng thái Local Mute nếu có component khác thay đổi
   useEffect(() => {
     const handleMuteSync = (e) => {
@@ -1350,18 +1430,17 @@ export default function DesktopAppUI() {
             return;
           }
 
-          // 1. Đồng bộ Play / Pause / Seek từ Window Capture sang Phần Mềm Chính
+          // 1. Chỉ nhận từ nguồn điều khiển hợp lệ (Bỏ qua tin nhắn từ chính DesktopApp hoặc Window Capture gửi ngược)
           if (event.data.type === 'GLOBAL_PLAYBACK_CHANGE') {
+            if (event.data.source === 'desktop' || event.data.source === 'overlay') return;
             const shouldPlay = !!event.data.isPlaying;
             isInternalPlaybackChangeRef.current = true;
             setIsMasterLiveRunning(shouldPlay);
 
-            if (typeof event.data.currentTime === 'number' && desktopVideoRef.current) {
-              if (Math.abs(desktopVideoRef.current.currentTime - event.data.currentTime) > 0.4) {
-                try {
-                  desktopVideoRef.current.currentTime = event.data.currentTime;
-                } catch (e) {}
-              }
+            if (typeof event.data.currentTime === 'number' && desktopVideoRef.current && event.data.force) {
+              try {
+                desktopVideoRef.current.currentTime = event.data.currentTime;
+              } catch (e) {}
             }
 
             if (!shouldPlay) {
@@ -1374,15 +1453,6 @@ export default function DesktopAppUI() {
                 desktopVideoRef.current.dataset.userPaused = 'true';
                 try { desktopVideoRef.current.pause(); } catch (e) {}
               }
-              const allMedia = document.querySelectorAll('video, audio');
-              allMedia.forEach(el => {
-                try {
-                  el.dataset.userPaused = 'true';
-                  el.pause();
-                } catch (e) {}
-              });
-              if (typeof bandoAudio.pauseAll === 'function') bandoAudio.pauseAll();
-              if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
             } else {
               setIsVideoPlaying(true);
               try { 
@@ -1393,41 +1463,25 @@ export default function DesktopAppUI() {
                 desktopVideoRef.current.dataset.userPaused = 'false';
                 try { desktopVideoRef.current.play().catch(() => {}); } catch (e) {}
               }
-              const allVideos = document.querySelectorAll('video');
-              allVideos.forEach(el => {
-                try {
-                  el.dataset.userPaused = 'false';
-                  el.play().catch(() => {});
-                } catch (e) {}
-              });
             }
             setTimeout(() => { isInternalPlaybackChangeRef.current = false; }, 300);
           }
 
-          // 2. Đồng bộ Âm Lượng & Tắt Tiếng từ Window Capture sang Phần Mềm Chính
+          // 2. Quản lý Âm Lượng & Mute: Đảm bảo preview trên phần mềm luôn MUTE (âm thanh chỉ phát 1 bên duy nhất từ Window Capture OBS)
           if (event.data.type === 'GLOBAL_AUDIO_CHANGE') {
+            if (event.data.source === 'desktop' || event.data.source === 'overlay') return;
             const isMuted = !!event.data.isMuted;
             const vol = typeof event.data.volume === 'number' ? event.data.volume : 1;
             isInternalAudioChangeRef.current = true;
             setIsLocalSpeakerMuted(isMuted);
+            setLiveAudioMuted(isMuted);
+            setLiveVolume(vol);
             if (desktopVideoRef.current) {
-              desktopVideoRef.current.muted = isMuted;
-              desktopVideoRef.current.volume = vol;
+              desktopVideoRef.current.muted = true; // Preview trên phần mềm luôn luôn im lặng
             }
             if (flvVideoRef.current) {
-              flvVideoRef.current.muted = isMuted;
-              flvVideoRef.current.volume = vol;
+              flvVideoRef.current.muted = true;
             }
-            const allMedia = document.querySelectorAll('video, audio');
-            allMedia.forEach(el => {
-              try {
-                el.muted = isMuted;
-                el.volume = vol;
-              } catch (e) {}
-            });
-            bandoAudio.setLocalSpeakerMute(isMuted);
-            bandoAudio.setMuted(isMuted);
-            bandoAudio.setMasterVolume(vol);
             setTimeout(() => { isInternalAudioChangeRef.current = false; }, 300);
           }
         };
@@ -1474,25 +1528,18 @@ export default function DesktopAppUI() {
         const isMuted = e.newValue === 'true';
         isInternalAudioChangeRef.current = true;
         setIsLocalSpeakerMuted(isMuted);
-        if (desktopVideoRef.current) desktopVideoRef.current.muted = isMuted;
-        if (flvVideoRef.current) flvVideoRef.current.muted = isMuted;
-        document.querySelectorAll('video, audio').forEach(el => {
-          try { el.muted = isMuted; } catch (err) {}
-        });
-        bandoAudio.setLocalSpeakerMute(isMuted);
-        bandoAudio.setMuted(isMuted);
+        setLiveAudioMuted(isMuted);
+        if (desktopVideoRef.current) desktopVideoRef.current.muted = true;
+        if (flvVideoRef.current) flvVideoRef.current.muted = true;
         setTimeout(() => { isInternalAudioChangeRef.current = false; }, 300);
       }
 
       if (e.key === 'avalive_video_volume') {
         const vol = parseFloat(e.newValue || '1');
         isInternalAudioChangeRef.current = true;
+        setLiveVolume(vol);
         if (desktopVideoRef.current) desktopVideoRef.current.volume = vol;
         if (flvVideoRef.current) flvVideoRef.current.volume = vol;
-        document.querySelectorAll('video, audio').forEach(el => {
-          try { el.volume = vol; } catch (err) {}
-        });
-        bandoAudio.setMasterVolume(vol);
         setTimeout(() => { isInternalAudioChangeRef.current = false; }, 300);
       }
     };
@@ -2382,7 +2429,7 @@ export default function DesktopAppUI() {
             className="w-full h-full object-contain bg-black"
             autoPlay={localStorage.getItem('avalive_user_paused') !== 'true' && isMasterLiveRunning} 
             controls={false}
-            muted={isLocalSpeakerMuted}
+            muted={true}
             onEnded={handleVideoEnded}
             onError={() => {
               setLipSyncVideoUrl(null);
@@ -2406,7 +2453,7 @@ export default function DesktopAppUI() {
             autoPlay={localStorage.getItem('avalive_user_paused') !== 'true' && isMasterLiveRunning} 
             loop={!isProcessingEvent}
             controls={false}
-            muted={isLocalSpeakerMuted}
+            muted={true}
             onEnded={handleVideoEnded}
             onError={() => {
               console.warn('Lỗi tải video phản hồi');
@@ -2434,6 +2481,7 @@ export default function DesktopAppUI() {
       if (selected.type === 'video') {
         return (
           <div className="relative w-full h-full group/videoContainer select-none overflow-hidden bg-black flex items-center justify-center">
+            {/* THẺ VIDEO PREVIEW TRÊN PHẦN MỀM: LUÔN MUTE ĐỂ CHỈ CÓ CỬA SỔ LIVE (OBS) PHÁT TIẾNG, TRÁNH DỘI ÂM */}
             <video 
               ref={desktopVideoRef}
               key={selected.url}
@@ -2442,8 +2490,8 @@ export default function DesktopAppUI() {
               style={{ transform: 'translateZ(0)', willChange: 'transform' }}
               autoPlay={localStorage.getItem('avalive_user_paused') !== 'true' && isMasterLiveRunning} 
               loop 
-              muted={isLocalSpeakerMuted} 
-              controls 
+              muted={true} 
+              controls={false}
               preload="auto"
               disablePictureInPicture
               playsInline 
@@ -2452,20 +2500,6 @@ export default function DesktopAppUI() {
                 const curTime = e.currentTarget.currentTime;
                 if (curTime > 0) {
                   lastPlaybackTimeRef.current = curTime;
-                }
-                const now = Date.now();
-                if (now - lastTimeBroadcastRef.current >= 400 && !e.currentTarget.paused) {
-                  lastTimeBroadcastRef.current = now;
-                  try {
-                    const bc = new BroadcastChannel('avalive_master_live_stream');
-                    bc.postMessage({
-                      type: 'MASTER_TIME_SYNC',
-                      currentTime: curTime,
-                      isPlaying: !e.currentTarget.paused,
-                      timestamp: now
-                    });
-                    setTimeout(() => bc.close(), 50);
-                  } catch (err) {}
                 }
               }}
               onLoadedMetadata={(e) => {
@@ -2486,7 +2520,6 @@ export default function DesktopAppUI() {
               }} 
               onPlay={(e) => {
                 if (isInternalPlaybackChangeRef.current) return;
-                // Người dùng chủ động bấm Play trên video: Gỡ bỏ toàn bộ cờ tạm dừng và phát ngay
                 try {
                   localStorage.removeItem('avalive_user_paused');
                   localStorage.removeItem('avalive_window_capture_paused');
@@ -2559,28 +2592,6 @@ export default function DesktopAppUI() {
                   setTimeout(() => bc.close(), 100);
                 } catch (err) {}
               }}
-              onVolumeChange={(e) => {
-                if (isInternalAudioChangeRef.current) return;
-                const isMuted = e.currentTarget.muted;
-                const vol = e.currentTarget.volume;
-                setIsLocalSpeakerMuted(isMuted);
-                bandoAudio.setLocalSpeakerMute(isMuted);
-                bandoAudio.setMuted(isMuted);
-                bandoAudio.setMasterVolume(vol);
-                try {
-                  localStorage.setItem('avalive_audio_muted', String(isMuted));
-                  localStorage.setItem('avalive_video_volume', String(vol));
-                } catch (err) {}
-                syncMasterLiveState({
-                  isVideoAudioMuted: isMuted,
-                  videoVolume: vol
-                }, socketRef.current);
-                try {
-                  const bc = new BroadcastChannel('avalive_master_live_stream');
-                  bc.postMessage({ type: 'GLOBAL_AUDIO_CHANGE', isMuted, volume: vol, source: 'desktop', timestamp: Date.now() });
-                  setTimeout(() => bc.close(), 100);
-                } catch (err) {}
-              }}
               onSeeked={(e) => {
                 const curTime = e.currentTarget.currentTime;
                 syncMasterLiveState({
@@ -2614,36 +2625,63 @@ export default function DesktopAppUI() {
               </div>
             )}
 
-            {/* THANH ĐIỀU KHIỂN NHANH NẰM TRỰC TIẾP TRÊN KHUNG HÌNH VIDEO (QUICK OVERLAY BAR) */}
-            <div className="absolute top-3 left-3 z-30 flex items-center gap-2 pointer-events-auto">
+            {/* THANH ĐIỀU KHIỂN ĐỘC QUYỀN TRÊN KHUNG HÌNH VIDEO (MASTER LIVE CONTROLLER) */}
+            <div className="absolute top-3 left-3 z-30 flex flex-wrap items-center gap-2 pointer-events-auto bg-black/75 backdrop-blur-md p-1.5 rounded-2xl border border-white/15 shadow-2xl">
               {/* Nút 1: Tạm dừng / Tiếp tục */}
               <button
                 onClick={toggleDesktopVideoPlayback}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black shadow-xl border backdrop-blur-md transition-all cursor-pointer active:scale-95 ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black shadow-lg border transition-all cursor-pointer active:scale-95 ${
                   isVideoPlaying
-                    ? 'bg-emerald-600/90 hover:bg-emerald-500 text-white border-emerald-400/60 shadow-emerald-600/40'
-                    : 'bg-amber-600/90 hover:bg-amber-500 text-white border-amber-400/60 shadow-amber-600/40 animate-pulse'
+                    ? 'bg-emerald-600/95 hover:bg-emerald-500 text-white border-emerald-400/60 shadow-emerald-600/40'
+                    : 'bg-amber-600/95 hover:bg-amber-500 text-white border-amber-400/60 shadow-amber-600/40 animate-pulse'
                 }`}
-                title={isVideoPlaying ? "Tạm dừng phát video này [Phím tắt: Space]" : "Tiếp tục phát video này [Phím tắt: Space]"}
+                title={isVideoPlaying ? "Tạm dừng phát video live [Phím tắt: Phím Cách / Space]" : "Tiếp tục phát video live [Phím tắt: Phím Cách / Space]"}
               >
                 {isVideoPlaying ? <Pause size={13} className="fill-white" /> : <Play size={13} className="fill-white" />}
                 <span>{isVideoPlaying ? 'TẠM DỪNG' : 'TIẾP TỤC'}</span>
                 <kbd className="px-1 py-0.2 bg-black/40 text-[9px] rounded font-mono font-bold">Space</kbd>
               </button>
 
-              {/* Nút 2: Mở / Tắt tiếng */}
+              {/* Vách ngăn */}
+              <div className="w-px h-5 bg-white/20"></div>
+
+              {/* Nút 2: Mở / Tắt Tiếng Cửa Sổ Live (OBS) */}
               <button
-                onClick={handleToggleLocalSpeakerMute}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-black shadow-xl border backdrop-blur-md transition-all cursor-pointer active:scale-95 ${
-                  !isLocalSpeakerMuted
-                    ? 'bg-cyan-600/90 hover:bg-cyan-500 text-white border-cyan-400/60 shadow-cyan-600/40'
-                    : 'bg-rose-900/90 hover:bg-rose-800 text-rose-200 border-rose-400/60 shadow-rose-900/40'
+                onClick={toggleLiveAudioMute}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-black shadow-lg border transition-all cursor-pointer active:scale-95 ${
+                  !liveAudioMuted
+                    ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white border-cyan-400/60 shadow-cyan-600/40'
+                    : 'bg-rose-950/95 hover:bg-rose-900 text-rose-300 border-rose-500/60 shadow-rose-950/40'
                 }`}
-                title={isLocalSpeakerMuted ? "Bấm để MỞ TIẾNG video ra loa & OBS" : "Bấm để TẮT TIẾNG (Mute)"}
+                title={liveAudioMuted ? "Bấm để MỞ TIẾNG phát ra Cửa Sổ Live (OBS) & loa ngoài" : "Bấm để TẮT TIẾNG Cửa Sổ Live (Mute)"}
               >
-                {!isLocalSpeakerMuted ? <Volume2 size={13} className="text-yellow-300" /> : <VolumeX size={13} className="text-rose-400" />}
-                <span>{!isLocalSpeakerMuted ? 'MỞ TIẾNG' : 'TẮT TIẾNG'}</span>
+                {!liveAudioMuted ? <Volume2 size={13} className="text-yellow-300 animate-pulse" /> : <VolumeX size={13} className="text-rose-400" />}
+                <span>{!liveAudioMuted ? 'MỞ TIẾNG (OBS)' : 'TẮT TIẾNG (OBS)'}</span>
               </button>
+
+              {/* Slider Âm lượng Cửa Sổ Live */}
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-black/60 rounded-lg border border-white/10" title="Chỉnh âm lượng phát ra Cửa Sổ Live (OBS)">
+                <input 
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={liveAudioMuted ? 0 : liveVolume}
+                  onChange={(e) => handleLiveVolumeChange(parseFloat(e.target.value))}
+                  className="w-16 sm:w-20 h-1.5 accent-cyan-400 cursor-pointer"
+                />
+                <span className={`text-[10px] font-mono font-black w-7 text-right ${liveAudioMuted ? 'text-gray-500 line-through' : 'text-cyan-300'}`}>
+                  {liveAudioMuted ? '0%' : `${Math.round(liveVolume * 100)}%`}
+                </span>
+              </div>
+            </div>
+
+            {/* DÒNG THÔNG BÁO THÔNG MINH Ở CHÂN KHUNG VIDEO */}
+            <div className="absolute bottom-3 inset-x-3 z-30 flex items-center justify-between pointer-events-none">
+              <div className="bg-black/80 backdrop-blur-md px-3 py-1 rounded-full border border-cyan-500/30 text-[10px] font-bold text-cyan-300 flex items-center gap-1.5 shadow-lg">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                <span>Âm thanh phát 1 bên từ Cửa Sổ Live (OBS) • Video preview tự động tắt tiếng chống dội âm</span>
+              </div>
             </div>
 
             {/* NÚT KHOÁ / XOÁ ĐỔI VIDEO NẰM GÓC TRÊN BÊN PHẢI */}
