@@ -1203,69 +1203,34 @@ export default function DesktopAppUI() {
 
   // ⏯️ HÀM BẬT / TẮT (TẠM DỪNG / TIẾP TỤC) VIDEO TRỰC TIẾP TRÊN KHUNG HÌNH VIDEO
   const toggleDesktopVideoPlayback = useCallback((e) => {
-    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
     const vid = desktopVideoRef.current;
-    if (!vid) return;
 
-    const isCurrentlyPaused = vid.paused || vid.dataset.userPaused === 'true';
-
-    if (isCurrentlyPaused) {
-      // Đang dừng -> BẤM ĐỂ TIẾP TỤC PHÁT
-      vid.dataset.userPaused = 'false';
-      try {
-        localStorage.removeItem('avalive_user_paused');
-        localStorage.removeItem('avalive_window_capture_paused');
-        localStorage.setItem('avalive_master_live_running', 'true');
-      } catch (err) {}
-      if (!isMasterLiveRunning) {
-        setIsMasterLiveRunning(true);
-      }
-      vid.play().then(() => {
-        setIsVideoPlaying(true);
-      }).catch(() => {
-        vid.muted = true;
-        vid.play().then(() => setIsVideoPlaying(true)).catch(() => {});
-      });
-      setIsVideoPlaying(true);
-      showToast('▶️ Đang tiếp tục phát video Live!', 'success');
-
-      const curTime = vid.currentTime || 0;
-      let playUrl = userLockedMediaUrl || (customCharacters.find(c => c.id === selectedCharacter)?.url) || CHARACTERS[selectedCharacter]?.url || '';
-      if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
-        playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
-      }
-      syncMasterLiveState({
-        stage: 'idol',
-        mediaUrl: playUrl,
-        isVideo: true,
-        videoPlaybackEvent: 'play',
-        videoCurrentTime: curTime,
-        isPlaying: true
-      }, socketRef.current);
-      try {
-        const bc = new BroadcastChannel('avalive_master_live_stream');
-        bc.postMessage({ 
-          type: 'GLOBAL_PLAYBACK_CHANGE', 
-          isPlaying: true, 
-          userPaused: false, 
-          currentTime: curTime, 
-          source: 'desktop',
-          timestamp: Date.now() 
-        });
-        setTimeout(() => bc.close(), 100);
-      } catch (err) {}
-    } else {
-      // Đang phát -> BẤM ĐỂ TẠM DỪNG
-      vid.dataset.userPaused = 'true';
+    if (isVideoPlaying) {
+      // ⏸️ ĐANG PHÁT -> BẤM ĐỂ TẠM DỪNG NGAY LẬP TỨC
+      setIsVideoPlaying(false);
       try {
         localStorage.setItem('avalive_user_paused', 'true');
         localStorage.setItem('avalive_window_capture_paused', 'true');
       } catch (err) {}
-      try { vid.pause(); } catch (err) {}
-      setIsVideoPlaying(false);
+      if (vid) {
+        vid.dataset.userPaused = 'true';
+        try { vid.pause(); } catch (err) {}
+      }
+      document.querySelectorAll('video, audio').forEach(el => {
+        try {
+          el.dataset.userPaused = 'true';
+          el.pause();
+        } catch (e) {}
+      });
+      if (typeof bandoAudio.pauseAll === 'function') bandoAudio.pauseAll();
+
       showToast('⏸ Đã tạm dừng video Live!', 'info');
 
-      const curTime = vid.currentTime || 0;
+      const curTime = vid ? vid.currentTime : 0;
       let playUrl = userLockedMediaUrl || (customCharacters.find(c => c.id === selectedCharacter)?.url) || CHARACTERS[selectedCharacter]?.url || '';
       if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
         playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
@@ -1278,6 +1243,7 @@ export default function DesktopAppUI() {
         videoCurrentTime: curTime,
         isPlaying: false
       }, socketRef.current);
+
       try {
         const bc = new BroadcastChannel('avalive_master_live_stream');
         bc.postMessage({ 
@@ -1290,8 +1256,63 @@ export default function DesktopAppUI() {
         });
         setTimeout(() => bc.close(), 100);
       } catch (err) {}
+    } else {
+      // ▶️ ĐANG DỪNG -> BẤM ĐỂ TIẾP TỤC PHÁT
+      setIsVideoPlaying(true);
+      try {
+        localStorage.removeItem('avalive_user_paused');
+        localStorage.removeItem('avalive_window_capture_paused');
+        localStorage.setItem('avalive_master_live_running', 'true');
+      } catch (err) {}
+      if (!isMasterLiveRunning) {
+        setIsMasterLiveRunning(true);
+      }
+      if (vid) {
+        vid.dataset.userPaused = 'false';
+        vid.muted = liveAudioMuted;
+        if (!liveAudioMuted) vid.volume = liveVolume;
+        vid.play().catch(() => {
+          vid.muted = true;
+          vid.play().catch(() => {});
+        });
+      }
+      document.querySelectorAll('video').forEach(el => {
+        try {
+          el.dataset.userPaused = 'false';
+          el.play().catch(() => {});
+        } catch (e) {}
+      });
+
+      showToast('▶️ Đang tiếp tục phát video Live!', 'success');
+
+      const curTime = vid ? vid.currentTime : 0;
+      let playUrl = userLockedMediaUrl || (customCharacters.find(c => c.id === selectedCharacter)?.url) || CHARACTERS[selectedCharacter]?.url || '';
+      if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
+        playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
+      }
+      syncMasterLiveState({
+        stage: 'idol',
+        mediaUrl: playUrl,
+        isVideo: true,
+        videoPlaybackEvent: 'play',
+        videoCurrentTime: curTime,
+        isPlaying: true
+      }, socketRef.current);
+
+      try {
+        const bc = new BroadcastChannel('avalive_master_live_stream');
+        bc.postMessage({ 
+          type: 'GLOBAL_PLAYBACK_CHANGE', 
+          isPlaying: true, 
+          userPaused: false, 
+          currentTime: curTime, 
+          source: 'desktop',
+          timestamp: Date.now() 
+        });
+        setTimeout(() => bc.close(), 100);
+      } catch (err) {}
     }
-  }, [isMasterLiveRunning, userLockedMediaUrl, customCharacters, selectedCharacter]);
+  }, [isVideoPlaying, isMasterLiveRunning, liveAudioMuted, liveVolume, userLockedMediaUrl, customCharacters, selectedCharacter]);
 
   // Phím tắt thông minh [Phím Cách / Space] điều khiển Tạm dừng / Tiếp tục Video trên khung hình
   useEffect(() => {
@@ -2628,11 +2649,19 @@ export default function DesktopAppUI() {
             />
 
             {/* 2 NÚT CHÌM TỰ ĐỘNG ẨN: CHỈ HIỆN KHI RÊ CHUỘT HOẶC CHẠM VÀO VIDEO (GIỮ KHUNG HÌNH 100% SẠCH SẼ & ĐẸP MẮT) */}
-            <div className="absolute top-3 left-3 z-30 flex items-center gap-2 pointer-events-none group-hover/videoContainer:pointer-events-auto opacity-0 group-hover/videoContainer:opacity-100 transition-all duration-300">
+            <div 
+              onClick={(e) => e.stopPropagation()}
+              className={`absolute top-3 left-3 z-30 flex items-center gap-2 pointer-events-auto transition-all duration-200 ${
+                !isVideoPlaying 
+                  ? 'opacity-100' 
+                  : 'opacity-0 hover:opacity-100 group-hover/videoContainer:opacity-100'
+              }`}
+            >
               {/* Nút 1: Tạm dừng / Tiếp tục */}
               <button
+                type="button"
                 onClick={toggleDesktopVideoPlayback}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-2xl border backdrop-blur-md transition-all cursor-pointer active:scale-95 ${
+                className={`pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-2xl border backdrop-blur-md transition-all cursor-pointer active:scale-95 select-none ${
                   isVideoPlaying
                     ? 'bg-black/60 hover:bg-black/80 text-white border-white/20'
                     : 'bg-emerald-600/90 hover:bg-emerald-500 text-white border-emerald-400/60 animate-pulse'
@@ -2645,8 +2674,9 @@ export default function DesktopAppUI() {
 
               {/* Nút 2: Mở / Tắt Âm Thanh */}
               <button
+                type="button"
                 onClick={toggleLiveAudioMute}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-2xl border backdrop-blur-md transition-all cursor-pointer active:scale-95 ${
+                className={`pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-2xl border backdrop-blur-md transition-all cursor-pointer active:scale-95 select-none ${
                   !liveAudioMuted
                     ? 'bg-black/60 hover:bg-black/80 text-cyan-300 border-cyan-400/30'
                     : 'bg-rose-950/85 hover:bg-rose-900 text-rose-300 border-rose-500/50'

@@ -805,6 +805,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               const shouldPlay = !!event.data.isPlaying;
               isInternalPlaybackChangeRef.current = true;
               setIsPlayingState(shouldPlay);
+              setMasterState(prev => ({
+                ...prev,
+                videoPlaybackEvent: shouldPlay ? 'play' : 'pause',
+                isPlaying: shouldPlay
+              }));
 
               if (typeof event.data.currentTime === 'number' && overlayVideoRef.current) {
                 if (event.data.force || Math.abs(overlayVideoRef.current.currentTime - event.data.currentTime) > 3.0) {
