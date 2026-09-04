@@ -175,13 +175,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       if (typeof window !== 'undefined' && window.speechSynthesis) {
         window.speechSynthesis.cancel();
       }
-      setMasterState(prev => ({ ...prev, videoPlaybackEvent: 'pause', isPlaying: false }));
-      syncMasterLiveState({ videoPlaybackEvent: 'pause', isPlaying: false }, socketRef.current);
+      const curTime = overlayVideoRef.current ? overlayVideoRef.current.currentTime : 0;
+      setMasterState(prev => ({ ...prev, videoPlaybackEvent: 'pause', videoCurrentTime: curTime, isPlaying: false }));
+      syncMasterLiveState({ videoPlaybackEvent: 'pause', videoCurrentTime: curTime, isPlaying: false }, socketRef.current);
 
       // Bắn tín hiệu sang Phần Mềm Chính để dừng đồng thời
       try {
         const bc = new BroadcastChannel('avalive_master_live_stream');
-        bc.postMessage({ type: 'GLOBAL_PLAYBACK_CHANGE', isPlaying: false, userPaused: true, timestamp: Date.now() });
+        bc.postMessage({ type: 'GLOBAL_PLAYBACK_CHANGE', isPlaying: false, userPaused: true, currentTime: curTime, timestamp: Date.now() });
         setTimeout(() => bc.close(), 100);
       } catch (e) {}
     } else {
@@ -201,13 +202,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           });
         } catch (e) {}
       });
-      setMasterState(prev => ({ ...prev, videoPlaybackEvent: 'play', isPlaying: true }));
-      syncMasterLiveState({ videoPlaybackEvent: 'play', isPlaying: true }, socketRef.current);
+      const curTime = overlayVideoRef.current ? overlayVideoRef.current.currentTime : 0;
+      setMasterState(prev => ({ ...prev, videoPlaybackEvent: 'play', videoCurrentTime: curTime, isPlaying: true }));
+      syncMasterLiveState({ videoPlaybackEvent: 'play', videoCurrentTime: curTime, isPlaying: true }, socketRef.current);
 
       // Bắn tín hiệu sang Phần Mềm Chính để tiếp tục phát đồng thời
       try {
         const bc = new BroadcastChannel('avalive_master_live_stream');
-        bc.postMessage({ type: 'GLOBAL_PLAYBACK_CHANGE', isPlaying: true, userPaused: false, timestamp: Date.now() });
+        bc.postMessage({ type: 'GLOBAL_PLAYBACK_CHANGE', isPlaying: true, userPaused: false, currentTime: curTime, timestamp: Date.now() });
         setTimeout(() => bc.close(), 100);
       } catch (e) {}
     }
@@ -756,9 +758,44 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               const mediaElements = document.querySelectorAll('audio, video');
               mediaElements.forEach(el => { try { el.pause(); el.currentTime = 0; } catch (e) {} });
               setIsPlayingState(false);
+            } else if (event.data.type === 'MASTER_TIME_SYNC') {
+              const masterTime = event.data.currentTime;
+              const isMasterPlaying = !!event.data.isPlaying;
+              const v = overlayVideoRef.current;
+              if (v && typeof masterTime === 'number' && !isNaN(masterTime)) {
+                const drift = Math.abs(v.currentTime - masterTime);
+                if (drift > 0.15 || event.data.force) {
+                  try {
+                    v.currentTime = masterTime;
+                  } catch (e) {}
+                }
+                if (isMasterPlaying && v.paused && localStorage.getItem('avalive_user_paused') !== 'true') {
+                  v.dataset.userPaused = 'false';
+                  v.play().catch(() => {});
+                  setIsPlayingState(true);
+                } else if (!isMasterPlaying && !v.paused) {
+                  v.dataset.userPaused = 'true';
+                  v.pause();
+                  setIsPlayingState(false);
+                }
+              }
+              if (typeof event.data.isMuted === 'boolean') {
+                setIsVideoAudioMuted(event.data.isMuted);
+                bandoAudio.setLocalSpeakerMute(event.data.isMuted);
+                bandoAudio.setMuted(event.data.isMuted);
+              }
             } else if (event.data.type === 'GLOBAL_PLAYBACK_CHANGE') {
               const shouldPlay = !!event.data.isPlaying;
               setIsPlayingState(shouldPlay);
+
+              if (typeof event.data.currentTime === 'number' && overlayVideoRef.current) {
+                if (Math.abs(overlayVideoRef.current.currentTime - event.data.currentTime) > 0.15) {
+                  try {
+                    overlayVideoRef.current.currentTime = event.data.currentTime;
+                  } catch (e) {}
+                }
+              }
+
               if (!shouldPlay) {
                 try { 
                   localStorage.setItem('avalive_user_paused', 'true'); 

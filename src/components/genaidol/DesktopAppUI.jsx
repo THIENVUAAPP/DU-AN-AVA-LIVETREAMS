@@ -496,6 +496,7 @@ export default function DesktopAppUI() {
   const currentPlayingUrlRef = useRef(null);
   const lastPlaybackTimeRef = useRef(0);
   const desktopVideoRef = useRef(null);
+  const lastTimeBroadcastRef = useRef(0);
 
   useEffect(() => {
     let animId;
@@ -1139,20 +1140,55 @@ export default function DesktopAppUI() {
     showToast(`🔊 Đang phát kiểm tra âm thanh Giọng ${role === 'idol' ? 'Nhân vật chính' : role === 'manager' ? 'Trợ lý' : 'Game'}!`, 'success');
   }, [unlockAllAudio]);
 
-  // 🔇 Xử lý Bật/Tắt chế độ Tắt Loa Máy tính Cục bộ (Vẫn phát đầy đủ âm thanh 100% trên OBS & TikTok Studio)
+  // 🔇 Xử lý Bật/Tắt chế độ Âm thanh Đồng bộ Tuyệt đối (Phần mềm + OBS Window Capture là MỘT)
   const handleToggleLocalSpeakerMute = useCallback(() => {
     const nextState = !isLocalSpeakerMuted;
     bandoAudio.setLocalSpeakerMute(nextState);
+    bandoAudio.setMuted(nextState);
     setIsLocalSpeakerMuted(nextState);
+
+    if (desktopVideoRef.current) {
+      desktopVideoRef.current.muted = nextState;
+    }
+    if (flvVideoRef.current) {
+      flvVideoRef.current.muted = nextState;
+    }
+    const allMedia = document.querySelectorAll('video, audio');
+    allMedia.forEach(el => {
+      try { el.muted = nextState; } catch (e) {}
+    });
+
+    try {
+      localStorage.setItem('avalive_audio_muted', String(nextState));
+      localStorage.setItem('avalive_local_speaker_muted', String(nextState));
+    } catch (e) {}
+
+    // Đồng bộ tức thời sang OBS Window Capture qua Supabase / Socket.io
+    syncMasterLiveState({
+      isVideoAudioMuted: nextState
+    }, socketRef.current);
+
+    // Đồng bộ tức thời siêu tốc qua BroadcastChannel
+    try {
+      const bc = new BroadcastChannel('avalive_master_live_stream');
+      bc.postMessage({ 
+        type: 'GLOBAL_AUDIO_CHANGE', 
+        isMuted: nextState, 
+        volume: 1, 
+        timestamp: Date.now() 
+      });
+      setTimeout(() => bc.close(), 100);
+    } catch (err) {}
+
     if (nextState) {
       setToast({
         type: 'success',
-        message: '🔇 ĐÃ TẮT LOA MÁY TÍNH CỦA BẠN! Phiên Live trên TikTok LIVE Studio & OBS vẫn nghe thấy đầy đủ 100% bình thường.'
+        message: '🔇 ĐÃ TẮT TOÀN BỘ ÂM THANH! Đồng bộ cả Phần Mềm và OBS Window Capture im lặng hoàn toàn.'
       });
     } else {
       setToast({
         type: 'success',
-        message: '🔊 ĐÃ BẬT LẠI LOA MÁY TÍNH! Bạn và khán giả cùng nghe thấy âm thanh.'
+        message: '🔊 ĐÃ BẬT ÂM THANH! Phần Mềm và OBS Window Capture cùng phát âm thanh đồng bộ 100%.'
       });
     }
   }, [isLocalSpeakerMuted]);
@@ -1168,7 +1204,7 @@ export default function DesktopAppUI() {
     return () => window.removeEventListener('avalive_local_mute_change', handleMuteSync);
   }, []);
 
-  // 🔄 ĐỒNG BỘ 2 CHIỀU GIỮA PHẦN MỀM CHÍNH VÀ CỬA SỔ WINDOW CAPTURE OBS
+  // 🔄 ĐỒNG BỘ 2 CHIỀU KHỚP TỪNG KHUNG HÌNH GIỮA PHẦN MỀM CHÍNH VÀ CỬA SỔ WINDOW CAPTURE OBS
   useEffect(() => {
     let bc = null;
     if (typeof BroadcastChannel !== 'undefined') {
@@ -1177,10 +1213,37 @@ export default function DesktopAppUI() {
         bc.onmessage = (event) => {
           if (!event.data) return;
 
-          // 1. Đồng bộ Play / Pause từ Window Capture sang Phần Mềm Chính
+          // 0. Phản hồi yêu cầu lấy mốc thời gian & trạng thái gốc từ Window Capture OBS vừa mở
+          if (event.data.type === 'REQUEST_MASTER_LIVE_STATE') {
+            const vid = desktopVideoRef.current;
+            const curTime = vid ? vid.currentTime : (lastPlaybackTimeRef.current || 0);
+            const isPlaying = vid ? !vid.paused : isMasterLiveRunning;
+            try {
+              bc.postMessage({
+                type: 'MASTER_TIME_SYNC',
+                currentTime: curTime,
+                isPlaying: isPlaying,
+                force: true,
+                isMuted: isLocalSpeakerMuted,
+                timestamp: Date.now()
+              });
+            } catch (e) {}
+            return;
+          }
+
+          // 1. Đồng bộ Play / Pause / Seek từ Window Capture sang Phần Mềm Chính
           if (event.data.type === 'GLOBAL_PLAYBACK_CHANGE') {
             const shouldPlay = !!event.data.isPlaying;
             setIsMasterLiveRunning(shouldPlay);
+
+            if (typeof event.data.currentTime === 'number' && desktopVideoRef.current) {
+              if (Math.abs(desktopVideoRef.current.currentTime - event.data.currentTime) > 0.15) {
+                try {
+                  desktopVideoRef.current.currentTime = event.data.currentTime;
+                } catch (e) {}
+              }
+            }
+
             if (!shouldPlay) {
               try { 
                 localStorage.setItem('avalive_user_paused', 'true');
@@ -2250,8 +2313,23 @@ export default function DesktopAppUI() {
               disablePictureInPicture
               playsInline 
               onTimeUpdate={(e) => {
-                if (e.currentTarget.currentTime > 0) {
-                  lastPlaybackTimeRef.current = e.currentTarget.currentTime;
+                const curTime = e.currentTarget.currentTime;
+                if (curTime > 0) {
+                  lastPlaybackTimeRef.current = curTime;
+                }
+                const now = Date.now();
+                if (now - lastTimeBroadcastRef.current >= 400 && !e.currentTarget.paused) {
+                  lastTimeBroadcastRef.current = now;
+                  try {
+                    const bc = new BroadcastChannel('avalive_master_live_stream');
+                    bc.postMessage({
+                      type: 'MASTER_TIME_SYNC',
+                      currentTime: curTime,
+                      isPlaying: !e.currentTarget.paused,
+                      timestamp: now
+                    });
+                    setTimeout(() => bc.close(), 50);
+                  } catch (err) {}
                 }
               }}
               onLoadedMetadata={(e) => {
@@ -2273,6 +2351,7 @@ export default function DesktopAppUI() {
                   return;
                 }
                 e.currentTarget.dataset.userPaused = 'false';
+                const curTime = e.currentTarget.currentTime;
                 let playUrl = selected.url;
                 if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
                   playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
@@ -2281,15 +2360,23 @@ export default function DesktopAppUI() {
                   mediaUrl: playUrl,
                   isVideo: true,
                   videoPlaybackEvent: 'play',
+                  videoCurrentTime: curTime,
                   isPlaying: true
                 }, socketRef.current);
                 try {
                   const bc = new BroadcastChannel('avalive_master_live_stream');
-                  bc.postMessage({ type: 'GLOBAL_PLAYBACK_CHANGE', isPlaying: true, userPaused: false, timestamp: Date.now() });
+                  bc.postMessage({ 
+                    type: 'GLOBAL_PLAYBACK_CHANGE', 
+                    isPlaying: true, 
+                    userPaused: false, 
+                    currentTime: curTime, 
+                    timestamp: Date.now() 
+                  });
                   setTimeout(() => bc.close(), 100);
                 } catch (err) {}
               }}
               onPause={(e) => {
+                const curTime = e.currentTarget.currentTime;
                 let playUrl = selected.url;
                 if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
                   playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
@@ -2302,12 +2389,18 @@ export default function DesktopAppUI() {
                   mediaUrl: playUrl,
                   isVideo: true,
                   videoPlaybackEvent: 'pause',
-                  videoCurrentTime: e.currentTarget.currentTime,
+                  videoCurrentTime: curTime,
                   isPlaying: false
                 }, socketRef.current);
                 try {
                   const bc = new BroadcastChannel('avalive_master_live_stream');
-                  bc.postMessage({ type: 'GLOBAL_PLAYBACK_CHANGE', isPlaying: false, userPaused: true, timestamp: Date.now() });
+                  bc.postMessage({ 
+                    type: 'GLOBAL_PLAYBACK_CHANGE', 
+                    isPlaying: false, 
+                    userPaused: true, 
+                    currentTime: curTime, 
+                    timestamp: Date.now() 
+                  });
                   setTimeout(() => bc.close(), 100);
                 } catch (err) {}
               }}
@@ -2333,10 +2426,22 @@ export default function DesktopAppUI() {
                 } catch (err) {}
               }}
               onSeeked={(e) => {
+                const curTime = e.currentTarget.currentTime;
                 syncMasterLiveState({
                   videoPlaybackEvent: 'seeked',
-                  videoCurrentTime: e.currentTarget.currentTime
+                  videoCurrentTime: curTime
                 }, socketRef.current);
+                try {
+                  const bc = new BroadcastChannel('avalive_master_live_stream');
+                  bc.postMessage({
+                    type: 'MASTER_TIME_SYNC',
+                    currentTime: curTime,
+                    isPlaying: !e.currentTarget.paused,
+                    force: true,
+                    timestamp: Date.now()
+                  });
+                  setTimeout(() => bc.close(), 50);
+                } catch (err) {}
               }}
             />
             {userLockedMediaUrl && (
@@ -3245,29 +3350,29 @@ export default function DesktopAppUI() {
             <span>{isGlobalDemoRunning ? t('stopDemo', currentLang) : t('runDemo', currentLang)}</span>
           </button>
 
-          {/* 🔇 NÚT TẮT TIẾNG LOA MÁY TÍNH (VẪN PHÁT ĐỦ ÂM THANH 100% TRÊN TIKTOK / OBS) */}
+          {/* 🔊 NÚT BẬT / TẮT ÂM THANH TOÀN CỤC ĐỒNG BỘ 1:1 VỚI OBS WINDOW CAPTURE */}
           <button 
             onClick={handleToggleLocalSpeakerMute}
-            className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black transition-all border shadow-xs active:scale-95 cursor-pointer ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-black transition-all border shadow-sm active:scale-95 cursor-pointer ${
               isLocalSpeakerMuted
-                ? 'bg-gradient-to-r from-purple-700 via-indigo-700 to-pink-700 text-white border-yellow-300 ring-1 ring-yellow-400 shadow-purple-500/40 animate-pulse'
-                : (isDarkMode ? 'bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 border-emerald-500/40' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border-emerald-300')
+                ? 'bg-gradient-to-r from-red-600 via-rose-600 to-pink-600 text-white border-yellow-300 ring-2 ring-yellow-400 shadow-red-500/30 animate-pulse'
+                : (isDarkMode ? 'bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-600 hover:to-teal-600 text-white border-emerald-400/50 shadow-emerald-500/20' : 'bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-400')
             }`}
             title={
               isLocalSpeakerMuted
-                ? "ĐANG TẮT TIẾNG LOA MÁY CỦA BẠN (Đỡ ồn khi ngủ/làm việc) — Khán giả trên TikTok Studio / OBS VẪN NGHE THẤY ĐẦY ĐỦ 100%!"
-                : "Bấm để Tắt Loa Máy tính của bạn (cho đỡ ồn khi phát live) mà TikTok / OBS vẫn nghe đầy đủ âm thanh 100%"
+                ? "ĐANG TẮT TOÀN BỘ ÂM THANH (Đồng bộ 1:1 giữa Phần Mềm và OBS Window Capture) — Bấm để Bật lại âm thanh."
+                : "ĐANG BẬT TOÀN BỘ ÂM THANH (Đồng bộ 1:1 giữa Phần Mềm và OBS Window Capture) — Bấm để Tắt âm thanh."
             }
           >
             {isLocalSpeakerMuted ? (
               <>
-                <VolumeX size={11} className="text-yellow-300" />
-                <span className="whitespace-nowrap font-black">🔇 Tắt Loa Máy (Live Có Tiếng)</span>
+                <VolumeX size={12} className="text-yellow-300" />
+                <span className="whitespace-nowrap font-black">🔇 Âm Thanh: ĐÃ TẮT (Đồng bộ OBS)</span>
               </>
             ) : (
               <>
-                <Volume2 size={11} className="text-emerald-400" />
-                <span className="whitespace-nowrap font-bold">🔊 Loa Máy: BẬT</span>
+                <Volume2 size={12} className="text-white" />
+                <span className="whitespace-nowrap font-black">🔊 Âm Thanh: BẬT (Đồng bộ OBS)</span>
               </>
             )}
           </button>
