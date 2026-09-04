@@ -708,7 +708,7 @@ io.on('connection', (socket) => {
     simulationMode: isSimulationMode
   });
 
-  socket.on('MASTER_LIVE_STATE_UPDATE', (state) => {
+  const handleMasterStateUpdate = (state) => {
     if (state && typeof state === 'object') {
       const nextState = { ...currentMasterLiveState, ...state, updatedAt: Date.now() };
       // BẢO VỆ TUYỆT ĐỐI VIDEO ĐANG PHÁT: Không bao giờ tự ý xoá mediaUrl hiện tại nếu client gửi null/undefined
@@ -721,7 +721,10 @@ io.on('connection', (socket) => {
       io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
       saveLiveStateToFile();
     }
-  });
+  };
+
+  socket.on('MASTER_LIVE_STATE_UPDATE', handleMasterStateUpdate);
+  socket.on('UPDATE_MASTER_LIVE_STATE', handleMasterStateUpdate);
 
   socket.on('REQUEST_MASTER_LIVE_STATE', () => {
     socket.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);

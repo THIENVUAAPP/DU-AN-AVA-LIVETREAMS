@@ -7,6 +7,7 @@ import GameBattleOverlay from './game/GameBattleOverlay';
 import GameChienDau from './game/GameChienDau';
 import { supabase } from '../../lib/supabaseClient';
 import { loadAllAidolItems } from '../../utils/idbHelper';
+import { syncMasterLiveState, getMasterLiveState } from '../../lib/masterLiveSync';
 import { 
   Play, Pause, Volume2, VolumeX, 
   Video, Flag, Swords, Tv, Eye, EyeOff, Sparkles, Monitor
@@ -105,12 +106,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   });
 
   const socketRef = useRef(null);
+  const lastUserActionTimeRef = useRef(0);
   const [liveEvent, setLiveEvent] = useState(null);
   const [isVideoAudioMuted, setIsVideoAudioMuted] = useState(() => {
     try {
-      return localStorage.getItem('avalive_overlay_audio_muted') === 'true';
+      const saved = localStorage.getItem('avalive_overlay_audio_muted');
+      return saved !== null ? saved === 'true' : false; // Mặc định mở tiếng để phát âm thanh
     } catch (e) {
-      return false; // Mặc định mở tiếng để phát âm thanh
+      return false;
     }
   });
   const [videoVolume, setVideoVolume] = useState(() => {
@@ -121,16 +124,19 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       return 1.0;
     }
   });
-  const [isPlayingState, setIsPlayingState] = useState(true);
+  const [isPlayingState, setIsPlayingState] = useState(() => {
+    try {
+      return localStorage.getItem('avalive_user_paused') !== 'true';
+    } catch (e) {
+      return true;
+    }
+  });
   const isWindowCapture = typeof window !== 'undefined' ? (() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('mode') === 'window_capture' || params.get('capture') === '1';
   })() : false;
 
   const [showControlDock, setShowControlDock] = useState(() => {
-    // ⚠️ QUY TẮC BẮT BUỘC:
-    // - Khi phát qua ĐƯỜNG LINK (Browser Source / URL): 100% KHÔNG CÓ THANH ĐIỀU KHIỂN / KHÔNG CÓ NÚT BẤM NÀO
-    // - CHỈ hiển thị khi người dùng mở Cửa Sổ Live (Window Capture: mode=window_capture)
     const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
     const isCapture = params?.get('mode') === 'window_capture' || params?.get('capture') === '1';
     if (!isCapture) return false;
@@ -138,103 +144,194 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     return true;
   });
   const [objectFitState, setObjectFitState] = useState(() => {
+    try {
+      const saved = localStorage.getItem('avalive_overlay_fit');
+      if (saved === 'contain' || saved === 'cover') return saved;
+    } catch (e) {}
     const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
     return params?.get('fit') === 'contain' ? 'contain' : 'cover';
   });
 
+  // 1. TẠM DỪNG / TIẾP TỤC PHÁT (Play / Pause) — Tác động tức thì mọi video và đồng bộ 5 tầng
   const togglePlayPause = () => {
-    const vid = overlayVideoRef.current;
-    if (vid) {
-      if (vid.paused) {
-        vid.dataset.userPaused = 'false';
-        vid.play().then(() => setIsPlayingState(true)).catch(() => {});
-        if (socketRef.current) {
-          socketRef.current.emit('UPDATE_MASTER_LIVE_STATE', { videoPlaybackEvent: 'play', isPlaying: true });
-        }
+    lastUserActionTimeRef.current = Date.now();
+    const nextPlay = !isPlayingState;
+    setIsPlayingState(nextPlay);
+
+    const allVideos = document.querySelectorAll('video');
+    if (!nextPlay) {
+      // Streamer bấm TẠM DỪNG:
+      try { localStorage.setItem('avalive_user_paused', 'true'); } catch (e) {}
+      allVideos.forEach(v => {
         try {
-          const bc = new BroadcastChannel('avalive_master_sync');
-          bc.postMessage({ type: 'UPDATE_MASTER_LIVE_STATE', payload: { videoPlaybackEvent: 'play', isPlaying: true } });
-          bc.close();
+          v.dataset.userPaused = 'true';
+          v.pause();
         } catch (e) {}
-      } else {
-        vid.dataset.userPaused = 'true';
-        vid.pause();
-        setIsPlayingState(false);
-        if (socketRef.current) {
-          socketRef.current.emit('UPDATE_MASTER_LIVE_STATE', { videoPlaybackEvent: 'pause', isPlaying: false, videoCurrentTime: vid.currentTime });
-        }
+      });
+      setMasterState(prev => ({ ...prev, videoPlaybackEvent: 'pause', isPlaying: false }));
+      syncMasterLiveState({ videoPlaybackEvent: 'pause', isPlaying: false }, socketRef.current);
+    } else {
+      // Streamer bấm TIẾP TỤC:
+      try { localStorage.removeItem('avalive_user_paused'); } catch (e) {}
+      allVideos.forEach(v => {
         try {
-          const bc = new BroadcastChannel('avalive_master_sync');
-          bc.postMessage({ type: 'UPDATE_MASTER_LIVE_STATE', payload: { videoPlaybackEvent: 'pause', isPlaying: false, videoCurrentTime: vid.currentTime } });
-          bc.close();
+          v.dataset.userPaused = 'false';
+          v.muted = isVideoAudioMuted;
+          if (!isVideoAudioMuted) v.volume = videoVolume;
+          v.play().catch(() => {
+            v.muted = true;
+            v.play().catch(() => {});
+          });
         } catch (e) {}
-      }
+      });
+      setMasterState(prev => ({ ...prev, videoPlaybackEvent: 'play', isPlaying: true }));
+      syncMasterLiveState({ videoPlaybackEvent: 'play', isPlaying: true }, socketRef.current);
     }
   };
 
+  // 2. BẬT / TẮT ÂM THANH (Mute / Unmute HD) — Phục hồi âm thanh ra OBS và loa ngoài siêu mượt
   const toggleAudioMute = () => {
-    setIsVideoAudioMuted(prev => {
-      const next = !prev;
-      try { localStorage.setItem('avalive_overlay_audio_muted', String(next)); } catch (e) {}
-      const allVideos = document.querySelectorAll('video');
-      allVideos.forEach(v => {
-        try {
-          v.muted = next;
-          if (!next) {
-            v.volume = videoVolume;
-          }
-        } catch (e) {}
-      });
-      return next;
-    });
-  };
+    lastUserActionTimeRef.current = Date.now();
+    const nextMuted = !isVideoAudioMuted;
+    setIsVideoAudioMuted(nextMuted);
+    try { localStorage.setItem('avalive_overlay_audio_muted', String(nextMuted)); } catch (e) {}
 
-  const handleVolumeChange = (newVol) => {
-    setVideoVolume(newVol);
-    try { localStorage.setItem('avalive_overlay_volume', String(newVol)); } catch (e) {}
-    const allVideos = document.querySelectorAll('video');
-    allVideos.forEach(v => {
+    const allMedia = document.querySelectorAll('video, audio');
+    allMedia.forEach(el => {
       try {
-        v.volume = newVol;
-        if (newVol > 0) {
-          v.muted = false;
+        el.muted = nextMuted;
+        if (!nextMuted) {
+          el.volume = videoVolume > 0 ? videoVolume : 1.0;
+          if (el.paused && isPlayingState) {
+            el.play().catch(() => {});
+          }
         }
       } catch (e) {}
     });
+
+    // Kích hoạt Web Audio API nếu trình duyệt đang treo AudioContext
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        if (!window.__avaLiveAudioContext) {
+          window.__avaLiveAudioContext = new AudioCtx();
+        }
+        if (window.__avaLiveAudioContext.state === 'suspended' && !nextMuted) {
+          window.__avaLiveAudioContext.resume().catch(() => {});
+        }
+      }
+    } catch (e) {}
+  };
+
+  // 3. ĐIỀU CHỈNH ÂM LƯỢNG (Volume Slider) — Cập nhật mượt mà 0% -> 100%
+  const handleVolumeChange = (newVol) => {
+    lastUserActionTimeRef.current = Date.now();
+    setVideoVolume(newVol);
+    try { localStorage.setItem('avalive_overlay_volume', String(newVol)); } catch (e) {}
+
+    const allMedia = document.querySelectorAll('video, audio');
+    allMedia.forEach(el => {
+      try {
+        el.volume = newVol;
+        if (newVol > 0) {
+          el.muted = false;
+        }
+      } catch (e) {}
+    });
+
     if (newVol > 0 && isVideoAudioMuted) {
       setIsVideoAudioMuted(false);
       try { localStorage.setItem('avalive_overlay_audio_muted', 'false'); } catch (e) {}
     }
   };
 
+  // 4. CHUYỂN ĐỔI SÂN KHẤU TỨC THÌ (Idol AI / Bản Đồ / Chiến Đấu / Studio 4K) — 1-Click đồng bộ không giật lag
   const handleStageSwitch = (newStage) => {
+    lastUserActionTimeRef.current = Date.now();
     setMasterState(prev => ({ ...prev, stage: newStage }));
-    if (socketRef.current) {
-      socketRef.current.emit('UPDATE_MASTER_LIVE_STATE', { stage: newStage });
-    }
-    try {
-      const bc = new BroadcastChannel('avalive_master_sync');
-      bc.postMessage({ type: 'UPDATE_MASTER_LIVE_STATE', payload: { stage: newStage } });
-      bc.close();
-    } catch (e) {}
     try {
       localStorage.setItem('avalive_active_stage', newStage);
     } catch (e) {}
-  };
 
-  const toggleFitMode = () => {
-    setObjectFitState(prev => prev === 'cover' ? 'contain' : 'cover');
-  };
+    // Đồng bộ chuẩn 5 tầng với timestamp mới nhất Date.now() để chống Polling server đè ngược lại
+    syncMasterLiveState({ stage: newStage }, socketRef.current);
 
-  const toggleAspectRatio = () => {
-    setMasterState(prev => {
-      const nextRatio = prev.aspectRatio === '9:16' ? '16:9' : '9:16';
-      if (socketRef.current) {
-        socketRef.current.emit('UPDATE_MASTER_LIVE_STATE', { aspectRatio: nextRatio });
+    // Kích hoạt ngay camera Studio nếu chuyển sang Studio 4K
+    if (newStage === 'broadcast' || newStage === 'studio') {
+      if (navigator.mediaDevices?.getUserMedia && !overlayWebcamStreamRef.current) {
+        navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false })
+          .then(stream => {
+            overlayWebcamStreamRef.current = stream;
+            if (overlayWebcamVideoRef.current) {
+              overlayWebcamVideoRef.current.srcObject = stream;
+            }
+            setOverlayCamActive(true);
+          })
+          .catch(() => {});
       }
-      return { ...prev, aspectRatio: nextRatio };
+    }
+  };
+
+  // 5. CHUYỂN ĐỔI CHẾ ĐỘ HIỂN THỊ (Fit: Phủ Kín / Fit: Vừa Vặn)
+  const toggleFitMode = () => {
+    lastUserActionTimeRef.current = Date.now();
+    setObjectFitState(prev => {
+      const nextFit = prev === 'cover' ? 'contain' : 'cover';
+      try { localStorage.setItem('avalive_overlay_fit', nextFit); } catch (e) {}
+      return nextFit;
     });
   };
+
+  // 6. CHUYỂN ĐỔI TỶ LỆ KHUNG HÌNH (9:16 Dọc vs 16:9 Ngang) — Cố định khung hình chuẩn OBS
+  const toggleAspectRatio = () => {
+    lastUserActionTimeRef.current = Date.now();
+    const currentRatio = masterState.aspectRatio || '9:16';
+    const nextRatio = currentRatio === '9:16' ? '16:9' : '9:16';
+    setMasterState(prev => ({ ...prev, aspectRatio: nextRatio }));
+    try { localStorage.setItem('avalive_active_aspect_ratio', nextRatio); } catch (e) {}
+    syncMasterLiveState({ aspectRatio: nextRatio }, socketRef.current);
+  };
+
+  // 7. PHÍM TẮT THÔNG MINH (HOTKEYS) — Tiện lợi cho Streamer điều khiển nhanh
+  useEffect(() => {
+    if (!isWindowCapture) return;
+    const handleKeyDown = (e) => {
+      // Bỏ qua nếu đang gõ input
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+
+      const key = e.key.toLowerCase();
+      if (key === ' ' || e.code === 'Space') {
+        e.preventDefault();
+        togglePlayPause();
+      } else if (key === 'm') {
+        e.preventDefault();
+        toggleAudioMute();
+      } else if (key === 'h' || key === 'd') {
+        e.preventDefault();
+        setShowControlDock(prev => !prev);
+      } else if (key === '1') {
+        e.preventDefault();
+        handleStageSwitch('idol');
+      } else if (key === '2') {
+        e.preventDefault();
+        handleStageSwitch('bando');
+      } else if (key === '3') {
+        e.preventDefault();
+        handleStageSwitch('battle');
+      } else if (key === '4') {
+        e.preventDefault();
+        handleStageSwitch('broadcast');
+      } else if (key === 'f') {
+        e.preventDefault();
+        toggleFitMode();
+      } else if (key === 'r') {
+        e.preventDefault();
+        toggleAspectRatio();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isWindowCapture, isPlayingState, isVideoAudioMuted, videoVolume, masterState.aspectRatio]);
   const [localDbItems, setLocalDbItems] = useState([]);
   const [hasStudioFrame, setHasStudioFrame] = useState(false);
   const studioImageRef = useRef(null);
@@ -377,19 +474,24 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     const applyMasterState = (data) => {
       if (!data) return;
 
+      const timeSinceLastAction = Date.now() - (lastUserActionTimeRef.current || 0);
+      const isRecentAction = isWindowCapture && timeSinceLastAction < 4000;
+
       // 🎬 ĐỒNG BỘ PLAY / PAUSE LẬP TỨC VỚI PHẦN MỀM (Phần mềm chạy -> TikTok Studio chạy, phần mềm dừng -> dừng)
-      const vid = overlayVideoRef.current;
-      if (vid) {
-        if (data.videoPlaybackEvent === 'pause' || data.isPlaying === false) {
-          vid.dataset.userPaused = 'true';
-          if (!vid.paused) vid.pause();
-          setIsPlayingState(false);
-        } else if (data.videoPlaybackEvent === 'play' || data.isPlaying === true) {
-          vid.dataset.userPaused = 'false';
-          vid.muted = isVideoAudioMuted;
-          vid.volume = videoVolume;
-          if (vid.paused) vid.play().then(() => setIsPlayingState(true)).catch(() => {});
-          setIsPlayingState(true);
+      if (!isRecentAction) {
+        const vid = overlayVideoRef.current;
+        if (vid) {
+          if (data.videoPlaybackEvent === 'pause' || data.isPlaying === false) {
+            vid.dataset.userPaused = 'true';
+            if (!vid.paused) vid.pause();
+            setIsPlayingState(false);
+          } else if (data.videoPlaybackEvent === 'play' || data.isPlaying === true) {
+            vid.dataset.userPaused = 'false';
+            vid.muted = isVideoAudioMuted;
+            vid.volume = videoVolume;
+            if (vid.paused) vid.play().then(() => setIsPlayingState(true)).catch(() => {});
+            setIsPlayingState(true);
+          }
         }
       }
 
@@ -399,6 +501,10 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         const keys = ['stage', 'aspectRatio', 'mediaUrl', 'flvUrl', 'isVideo', 'selectedCharacter', 'characterName', 'videoPlaybackEvent', 'isPlaying', 'isDarkMode'];
         for (const k of keys) {
           if (data[k] !== undefined && data[k] !== prev[k]) {
+            // Nếu người dùng vừa bấm trực tiếp trên cửa sổ Window Capture thì không bị ghi đè
+            if (isRecentAction && (k === 'stage' || k === 'aspectRatio' || k === 'isPlaying' || k === 'videoPlaybackEvent')) {
+              continue;
+            }
             hasDiff = true;
             break;
           }
@@ -410,6 +516,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         if (!hasDiff) return prev; // Không thay đổi thì giữ nguyên reference, tránh kích hoạt re-render
 
         const next = { ...prev, ...data };
+        if (isRecentAction) {
+          next.stage = prev.stage;
+          next.aspectRatio = prev.aspectRatio;
+          next.isPlaying = prev.isPlaying;
+          next.videoPlaybackEvent = prev.videoPlaybackEvent;
+        }
+
         // URL Parameter & Path Override check (nếu link là link chuyên dụng của 1 dự án thì cố định dự án đó)
         const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
         const pathname = typeof window !== 'undefined' ? window.location.pathname.toLowerCase() : '';
@@ -889,10 +1002,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         invalidate();
         tickCounter++;
         if (tickCounter % 3 === 0 && document.hidden) {
-          if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
+          const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || isPlayingState === false || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
+          if (!isUserPaused) {
             const videos = document.querySelectorAll('video');
             videos.forEach(v => {
-              if (v.paused && !v.ended && v.readyState >= 2) {
+              if (v.paused && !v.ended && v.readyState >= 2 && v.dataset.userPaused !== 'true') {
                 v.play().catch(() => {});
               }
             });
@@ -908,29 +1022,30 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       }
       if (antiSleepDiv.parentNode) antiSleepDiv.parentNode.removeChild(antiSleepDiv);
     };
-  }, []);
+  }, [isPlayingState, masterState.videoPlaybackEvent, masterState.isPlaying]);
 
-  // 🕒 24/7 CONTINUOUS PLAYBACK WATCHDOG (TỰ ĐỘNG PHỤC HỒI & PHÁT LIÊN TỤC 24/24)
+  // 🕒 24/7 CONTINUOUS PLAYBACK WATCHDOG (TỰ ĐỘNG PHỤC HỒI & PHÁT LIÊN TỤC 24/24 KHI STREAMING)
   useEffect(() => {
     const watchdogTimer = setInterval(() => {
       const vid = overlayVideoRef.current;
       if (!vid) return;
 
-      // Nếu không có lệnh tạm dừng từ streamer và video bị dừng ngoài ý muốn trong khi đã nạp đủ buffer
-      if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
-        if (vid.paused && vid.readyState >= 2 && !vid.seeking) {
-          vid.muted = isVideoAudioMuted;
-          if (!isVideoAudioMuted) vid.volume = videoVolume;
-          vid.play().catch(() => {
-            vid.muted = true;
-            vid.play().catch(() => {});
-          });
-        }
+      // Nếu streamer đã bấm tạm dừng (userPaused) thì TUYỆT ĐỐI KHÔNG TỰ ĐỘNG PHÁT LẠI
+      const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || isPlayingState === false || vid.dataset.userPaused === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
+      if (isUserPaused) return;
+
+      if (vid.paused && vid.readyState >= 2 && !vid.seeking) {
+        vid.muted = isVideoAudioMuted;
+        if (!isVideoAudioMuted) vid.volume = videoVolume;
+        vid.play().catch(() => {
+          vid.muted = true;
+          vid.play().catch(() => {});
+        });
       }
     }, 2000);
 
     return () => clearInterval(watchdogTimer);
-  }, [masterState.videoPlaybackEvent, masterState.isPlaying, isVideoAudioMuted, videoVolume]);
+  }, [masterState.videoPlaybackEvent, masterState.isPlaying, isPlayingState, isVideoAudioMuted, videoVolume]);
 
   // Helper giải mã URL media chính xác (tôn trọng 100% video/nhân vật người dùng chọn)
   const resolveActiveMedia = () => {
@@ -1071,10 +1186,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             </div>
             <button
               onClick={toggleAspectRatio}
-              className="text-[10px] font-bold text-cyan-300 bg-cyan-950/70 hover:bg-cyan-900 border border-cyan-500/50 px-2 py-1 rounded-md transition-all cursor-pointer"
-              title="Chuyển đổi tỷ lệ: 9:16 Dọc (TikTok Live) vs 16:9 Ngang (OBS)"
+              className="text-[10px] font-bold text-cyan-300 bg-cyan-950/70 hover:bg-cyan-900 border border-cyan-500/50 px-2.5 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1.5 shadow-sm active:scale-95"
+              title="Chuyển đổi tỷ lệ: 9:16 Dọc (TikTok Live) vs 16:9 Ngang (OBS) [Phím tắt: R]"
             >
-              {ratio === '9:16' ? '📱 9:16 DỌC (TIKTOK)' : '🖥️ 16:9 NGANG (OBS)'}
+              <span>{ratio === '9:16' ? '📱 9:16 DỌC (TIKTOK)' : '🖥️ 16:9 NGANG (OBS)'}</span>
+              <kbd className="px-1 py-0.2 bg-cyan-800/80 text-[8.5px] rounded text-cyan-100 font-mono">R</kbd>
             </button>
           </div>
 
@@ -1088,10 +1204,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-500/30 border border-emerald-400/50' 
                   : 'bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white shadow-amber-500/30 border border-amber-400/50 animate-pulse'
               }`}
-              title={isPlayingState ? "Tạm dừng video phát sóng" : "Tiếp tục phát video"}
+              title={isPlayingState ? "Tạm dừng video phát sóng [Phím tắt: Phím Cách / Space]" : "Tiếp tục phát video [Phím tắt: Phím Cách / Space]"}
             >
               {isPlayingState ? <Pause size={13} className="fill-white" /> : <Play size={13} className="fill-white" />}
               <span>{isPlayingState ? 'TẠM DỪNG' : 'TIẾP TỤC'}</span>
+              <kbd className="px-1 py-0.2 bg-black/40 text-[8.5px] rounded text-white/90 font-mono">Space</kbd>
             </button>
 
             {/* Nút Bật / Tắt Âm Thanh (Mute / Unmute) */}
@@ -1102,15 +1219,16 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-cyan-500/30 border border-cyan-400/50' 
                   : 'bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-500/50'
               }`}
-              title={isVideoAudioMuted ? "Bấm để MỞ TIẾNG cho video (Phát âm thanh siêu thực ra loa / OBS)" : "Bấm để TẮT TIẾNG (Mute)"}
+              title={isVideoAudioMuted ? "Bấm để MỞ TIẾNG cho video (Phát âm thanh siêu thực ra loa / OBS) [Phím tắt: M]" : "Bấm để TẮT TIẾNG (Mute) [Phím tắt: M]"}
             >
               {!isVideoAudioMuted ? <Volume2 size={14} className="text-yellow-300 animate-pulse" /> : <VolumeX size={14} className="text-rose-400" />}
               <span>{!isVideoAudioMuted ? 'MỞ TIẾNG (HD)' : 'TẮT TIẾNG'}</span>
+              <kbd className="px-1 py-0.2 bg-black/40 text-[8.5px] rounded text-white/90 font-mono">M</kbd>
             </button>
 
             {/* Thanh chỉnh âm lượng (khi đang mở tiếng) */}
             {!isVideoAudioMuted && (
-              <div className="flex items-center gap-1.5 bg-black/60 px-2 py-1 rounded-lg border border-white/10 shrink-0" title="Chỉnh âm lượng">
+              <div className="flex items-center gap-1.5 bg-black/60 px-2 py-1 rounded-lg border border-white/10 shrink-0" title="Chỉnh âm lượng ra loa / OBS">
                 <input 
                   type="range" 
                   min="0" 
@@ -1138,10 +1256,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-cyan-500/30' 
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
-                title="Chuyển sang màn hình Idol AI Livestream"
+                title="Chuyển sang màn hình Idol AI Livestream [Phím tắt: 1]"
               >
                 <Video size={12} className={currentStage === 'idol' ? 'text-yellow-300' : 'text-gray-400'} />
                 <span>Idol AI</span>
+                <kbd className="px-1 py-0.2 bg-black/40 text-[8px] rounded text-white/70 font-mono">1</kbd>
               </button>
 
               <button
@@ -1151,10 +1270,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     ? 'bg-gradient-to-r from-amber-600 to-yellow-500 text-white shadow-md shadow-amber-500/30' 
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
-                title="Chuyển sang Game Ghép Cờ Bản Đồ Việt Nam"
+                title="Chuyển sang Game Ghép Cờ Bản Đồ Việt Nam [Phím tắt: 2]"
               >
                 <Flag size={12} className={(currentStage === 'bando' || currentStage === 'vietnam_map' || currentStage === 'map') ? 'text-yellow-200' : 'text-gray-400'} />
                 <span>Bản Đồ</span>
+                <kbd className="px-1 py-0.2 bg-black/40 text-[8px] rounded text-white/70 font-mono">2</kbd>
               </button>
 
               <button
@@ -1164,10 +1284,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     ? 'bg-gradient-to-r from-red-600 to-purple-600 text-white shadow-md shadow-purple-500/30' 
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
-                title="Chuyển sang Game Chiến Đấu PK Đại Chiến"
+                title="Chuyển sang Game Chiến Đấu PK Đại Chiến [Phím tắt: 3]"
               >
                 <Swords size={12} className={(currentStage === 'battle' || currentStage === 'gamebattle' || currentStage === 'game') ? 'text-yellow-300' : 'text-gray-400'} />
                 <span>Chiến Đấu</span>
+                <kbd className="px-1 py-0.2 bg-black/40 text-[8px] rounded text-white/70 font-mono">3</kbd>
               </button>
 
               <button
@@ -1177,10 +1298,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     ? 'bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-md shadow-pink-500/30' 
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
-                title="Chuyển sang Phòng Dựng Camera Studio 4K"
+                title="Chuyển sang Phòng Dựng Camera Studio 4K [Phím tắt: 4]"
               >
                 <Tv size={12} className={(currentStage === 'broadcast' || currentStage === 'studio') ? 'text-yellow-300' : 'text-gray-400'} />
                 <span>Studio 4K</span>
+                <kbd className="px-1 py-0.2 bg-black/40 text-[8px] rounded text-white/70 font-mono">4</kbd>
               </button>
             </div>
           </div>
@@ -1189,34 +1311,43 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           <div className="flex items-center gap-1.5 shrink-0">
             <button
               onClick={toggleFitMode}
-              className="px-2 py-1 rounded-md bg-white/5 hover:bg-white/10 border border-white/15 text-[10px] font-bold text-gray-300 hover:text-white transition-colors cursor-pointer"
-              title="Chuyển đổi cách hiển thị video: Cover (Phủ kín 100%) vs Contain (Vừa vặn nguyên bản)"
+              className="px-2.5 py-1 rounded-md bg-white/5 hover:bg-white/10 border border-white/15 text-[10px] font-bold text-gray-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1 active:scale-95"
+              title="Chuyển đổi cách hiển thị video: Cover (Phủ kín 100%) vs Contain (Vừa vặn nguyên bản) [Phím tắt: F]"
             >
-              {objectFitState === 'contain' ? 'Fit: Vừa Vặn' : 'Fit: Phủ Kín'}
+              <span>{objectFitState === 'contain' ? 'Fit: Vừa Vặn' : 'Fit: Phủ Kín'}</span>
+              <kbd className="px-1 py-0.2 bg-white/10 text-[8px] rounded text-gray-400 font-mono">F</kbd>
             </button>
 
             <button
               onClick={() => setShowControlDock(false)}
-              className="p-1 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-              title="Thu gọn thanh điều khiển (Di chuột lên mép trên để mở lại)"
+              className="p-1 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer flex items-center gap-1"
+              title="Thu gọn thanh điều khiển [Phím tắt: H hoặc D]"
             >
               <EyeOff size={14} />
+              <kbd className="px-1 py-0.2 bg-white/10 text-[8px] rounded text-gray-400 font-mono">H</kbd>
             </button>
           </div>
         </header>
 
         {/* VÙNG KHOẢNG CÁCH ĐỆM RÕ RÀNG: CÁCH XA KHUNG HÌNH RA ĐỂ DỄ DÀNG CẮT CROP TRÊN OBS / TIKTOK STUDIO */}
-        <div className="w-full h-8 min-h-[32px] bg-[#05060a] border-b border-dashed border-gray-800 flex items-center justify-between px-3.5 text-[10px] font-mono select-none shrink-0 z-40">
-          <div className="flex items-center gap-2 text-gray-400">
-            <span className="text-yellow-400 font-bold">✂️ VẠCH CẮT CROP OBS / TIKTOK STUDIO:</span>
-            <span className="text-[9.5px] text-gray-500 font-sans">Kéo cắt trên vạch này để lấy 100% video sạch không dính nút</span>
+        <div className="w-full h-8 min-h-[32px] bg-[#05060a] border-b-2 border-dashed border-amber-500/60 flex items-center justify-between px-3.5 text-[10px] font-mono select-none shrink-0 z-40">
+          <div className="flex items-center gap-2 text-gray-300">
+            <span className="text-yellow-400 font-black tracking-wider flex items-center gap-1">
+              ✂️ VẠCH CẮT OBS / TIKTOK STUDIO:
+            </span>
+            <span className="text-[9.5px] text-gray-400 font-sans">
+              Kéo crop mép trên chạm vào đường đứt nét này để lấy 100% video sạch đẹp
+            </span>
           </div>
-          <button
-            onClick={() => setShowControlDock(false)}
-            className="text-[10px] text-cyan-400 hover:text-cyan-200 underline cursor-pointer"
-          >
-            Ẩn thanh này (Chỉ xem Video)
-          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-[9px] text-gray-500 font-mono hidden sm:inline">Phím tắt: [H] Ẩn/Hiện • [Space] Dừng • [M] Tiếng • [1-4] Sân Khấu</span>
+            <button
+              onClick={() => setShowControlDock(false)}
+              className="text-[10px] text-cyan-400 hover:text-cyan-200 underline cursor-pointer font-bold"
+            >
+              Ẩn thanh này
+            </button>
+          </div>
         </div>
         </>
       )}
@@ -1225,11 +1356,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       {!showControlDock && isWindowCapture && (
         <button
           onClick={() => setShowControlDock(true)}
-          className="absolute top-2 right-2 z-50 px-2.5 py-1 rounded-lg bg-black/80 hover:bg-black text-cyan-400 hover:text-white border border-cyan-500/40 text-[10px] font-bold shadow-lg transition-all opacity-40 hover:opacity-100 flex items-center gap-1 cursor-pointer"
-          title="Mở thanh điều khiển Play/Pause, Âm thanh & Chuyển Sân Khấu"
+          className="absolute top-2 right-2 z-50 px-3 py-1.5 rounded-lg bg-black/80 hover:bg-black text-cyan-400 hover:text-white border border-cyan-500/40 text-[10px] font-bold shadow-2xl transition-all opacity-30 hover:opacity-100 flex items-center gap-1.5 cursor-pointer backdrop-blur-sm"
+          title="Mở thanh điều khiển Play/Pause, Âm thanh & Chuyển Sân Khấu [Phím tắt: H hoặc D]"
         >
-          <Eye size={12} />
+          <Eye size={13} />
           <span>Mở Điều Khiển</span>
+          <kbd className="px-1 py-0.2 bg-cyan-900/60 text-[8px] rounded text-cyan-200 font-mono">H</kbd>
         </button>
       )}
 
@@ -1335,14 +1467,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 autoPlay
                 muted={isVideoAudioMuted}
                 playsInline
-                className="w-full h-full object-cover select-none bg-black absolute inset-0"
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                className="w-full h-full select-none bg-black absolute inset-0"
+                style={{ width: '100%', height: '100%', objectFit: objectFitState || 'cover' }}
               />
             ) : activeMedia.url ? (
               <img 
                 src={activeMedia.url} 
-                className="w-full h-full object-cover select-none absolute inset-0"
-                style={{ width: '100%', height: '100%', objectFit: 'cover', imageRendering: '-webkit-optimize-contrast' }}
+                className="w-full h-full select-none absolute inset-0"
+                style={{ width: '100%', height: '100%', objectFit: objectFitState || 'cover', imageRendering: '-webkit-optimize-contrast' }}
                 alt="AI Idol"
               />
             ) : (
@@ -1397,13 +1529,15 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 autoPlay
                 playsInline
                 muted={isVideoAudioMuted}
-                className="w-full h-full object-cover select-none scale-x-[-1] bg-black"
+                className="w-full h-full select-none scale-x-[-1] bg-black"
+                style={{ width: '100%', height: '100%', objectFit: objectFitState || 'cover' }}
               />
             ) : hasStudioFrame ? (
               <img
                 ref={studioImageRef}
                 alt="Live Studio Realtime Camera Stream"
-                className="w-full h-full object-cover select-none bg-black transform-gpu"
+                className="w-full h-full select-none bg-black transform-gpu"
+                style={{ width: '100%', height: '100%', objectFit: objectFitState || 'cover' }}
               />
             ) : (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#0F1016] via-[#151824] to-[#0A0A0F] text-center p-6 select-none">

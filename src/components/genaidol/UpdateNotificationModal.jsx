@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 
-export const APP_VERSION = '1.3.7';
+export const APP_VERSION = '1.3.8';
 export const UPDATE_NOTES = [
-  "⚡ Khắc phục triệt để giật lag & đứng hình: Tối ưu 100% CPU/GPU bằng cơ chế Lazy Stage Mounting. Khi đang live AI Idol, toàn bộ engine game nặng được ngắt hoàn toàn, video phát siêu nhẹ, siêu mượt 60FPS không còn bị đơ máy.",
-  "🔇 Mặc định tắt âm thanh Game PK: Toàn bộ âm thanh nhạc nền, hiệu ứng chiêu thức và bình luận AI của Game Chiến Đấu PK được mặc định tắt hoàn toàn, chỉ phát khi streamer vào game và mở loa.",
-  "🌐 Phát qua Link Sạch 100% & Vạch Cắt An Toàn Window Capture: Phát qua đường link (Browser Source) đảm bảo hiển thị đúng 100% khung hình video không rìa, không nút bấm; phát qua Window Capture có thêm vạch đệm cách xa khung hình để dễ dàng crop trên OBS / TikTok Live Studio."
+  "⚡ Nâng cấp toàn diện thanh Top Control Dock cho OBS Window Capture: Toàn bộ các nút bấm Tạm Dừng/Tiếp Tục [Space], Mở/Tắt Tiếng HD [M], Chỉnh Âm Lượng 0-100%, Đổi Tỷ Lệ [R], Fit Khung Hình [F], Chuyển Sân Khấu [1-4] hoạt động siêu mượt tức thì 100%.",
+  "🛡️ Chống xung đột Polling & Ghi đè State: Khắc phục triệt để tình trạng nút bấm bị nhảy về vị trí cũ do polling server trễ. Tích hợp công nghệ bảo vệ thao tác người dùng thời gian thực.",
+  "⌨️ Hỗ trợ Phím Tắt Thông Minh (Hotkeys): Thao tác nhanh không cần rê chuột vào màn hình — [Space] Phát/Dừng, [M] Âm thanh, [H] Ẩn/Hiện Dock, [1-4] Đổi Sân Khấu."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
