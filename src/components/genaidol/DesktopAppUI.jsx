@@ -1192,6 +1192,25 @@ export default function DesktopAppUI() {
     }
   }, [isLocalSpeakerMuted]);
 
+  // 🔊 QUẢN LÝ ÂM THANH PHÁT ĐỒNG BỘ GIỮA PHẦN MỀM VÀ WINDOW CAPTURE OBS
+  const [liveAudioMuted, setLiveAudioMuted] = useState(() => {
+    try {
+      const saved = localStorage.getItem('avalive_audio_muted');
+      return saved !== null ? saved === 'true' : false;
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const [liveVolume, setLiveVolume] = useState(() => {
+    try {
+      const v = localStorage.getItem('avalive_video_volume');
+      return v ? parseFloat(v) : 1.0;
+    } catch (e) {
+      return 1.0;
+    }
+  });
+
   // Quản lý trạng thái Play / Pause của video live trên khung hình phần mềm
   const [isVideoPlaying, setIsVideoPlaying] = useState(() => {
     try {
@@ -1329,25 +1348,6 @@ export default function DesktopAppUI() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [toggleDesktopVideoPlayback, isGameBattleActive, isGameBanDoActive]);
-
-  // 🔊 QUẢN LÝ ÂM THANH PHÁT 1 BÊN DUY NHẤT (WINDOW CAPTURE OBS LÀ NƠI PHÁT TIẾNG THẬT)
-  const [liveAudioMuted, setLiveAudioMuted] = useState(() => {
-    try {
-      const saved = localStorage.getItem('avalive_audio_muted');
-      return saved !== null ? saved === 'true' : false;
-    } catch (e) {
-      return false;
-    }
-  });
-
-  const [liveVolume, setLiveVolume] = useState(() => {
-    try {
-      const v = localStorage.getItem('avalive_video_volume');
-      return v ? parseFloat(v) : 1.0;
-    } catch (e) {
-      return 1.0;
-    }
-  });
 
   const toggleLiveAudioMute = useCallback(() => {
     const nextMuted = !liveAudioMuted;
