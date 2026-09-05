@@ -455,12 +455,44 @@ export default function DesktopAppUI() {
     const height = 1040; // 80px dock & vạch cắt an toàn + 960px 9:16 clean stage
     const left = Math.round((window.screen.width - width) / 2);
     const top = Math.round((window.screen.height - height) / 2);
+
+    // ⚡ Đồng bộ ngay lập tức video hiện tại vào cửa sổ Window Capture
+    let activeUrl = userLockedMediaUrl || desktopVideoRef.current?.src || '';
+    if (!activeUrl && selectedCharacter && Array.isArray(customCharacters)) {
+      const match = customCharacters.find(c => c.id === selectedCharacter);
+      if (match && (match.mediaUrl || match.url)) activeUrl = match.mediaUrl || match.url;
+    }
+    if (!activeUrl && Array.isArray(customCharacters) && customCharacters.length > 0) {
+      activeUrl = customCharacters[0].mediaUrl || customCharacters[0].url || '';
+    }
+    if (activeUrl && typeof activeUrl === 'string' && activeUrl.includes('/uploads/')) {
+      activeUrl = activeUrl.substring(activeUrl.indexOf('/uploads/'));
+    }
+
+    try {
+      localStorage.removeItem('avalive_user_paused');
+      localStorage.removeItem('avalive_window_capture_paused');
+      localStorage.setItem('avalive_master_live_running', 'true');
+    } catch (e) {}
+
+    if (activeUrl) {
+      syncMasterLiveState({
+        stage: 'idol',
+        mediaUrl: activeUrl,
+        isVideo: true,
+        videoPlaybackEvent: 'play',
+        isPlaying: true,
+        aspectRatio: globalAspectRatio || '9:16'
+      }, socketRef.current);
+    }
+
+    const query = activeUrl ? `&v=${encodeURIComponent(activeUrl)}` : '';
     window.open(
-      `${window.location.origin}/idol?mode=window_capture`,
+      `${window.location.origin}/idol?mode=window_capture${query}`,
       'avalive_window_capture_target',
       `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes`
     );
-    showToast('🖥️ Đã mở Cửa Sổ Live 9:16 Siêu Nét! Thanh điều khiển có vạch cắt an toàn để tách trọn vẹn video live.', 'success');
+    showToast('🖥️ Đã mở Cửa Sổ Live 9:16! Video hiển thị ngay lập tức trên TikTok Studio.', 'success');
   };
 
   const [overlayLinkBase, setOverlayLinkBase] = useState(() => {

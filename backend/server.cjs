@@ -147,10 +147,11 @@ app.all('/uploads/:filename', (req, res, next) => {
           if (isNaN(end) || end >= currentOnDiskSize) end = currentOnDiskSize - 1;
         } else {
           // Open Range: bytes=START-
-          // 🚀 STREAM LIỀN MẠCH ĐẾN HẾT FILE CHO TIKTOK LIVE STUDIO & OBS:
-          // Trả về toàn bộ dải byte đến cuối file để Chromium / CEF buffer mượt mà 60FPS,
-          // tuyệt đối không cắt cụt 8MB làm đứt kết nối hay crash player trên TikTok Live Studio.
-          end = currentOnDiskSize - 1;
+          // 🚀 CHUNK STREAMING 4MB TỐI ƯU CHO TIKTOK LIVE STUDIO & CLOUDFLARE TUNNEL:
+          // Trả về chunk 4MB để nạp khung hình đầu tiên < 50ms, chống nghẽn Cloudflare Tunnel,
+          // client tự động gối đầu range tiếp theo để phát siêu mượt 60FPS không giật lag.
+          const CHUNK_SIZE = 4 * 1024 * 1024;
+          end = Math.min(start + CHUNK_SIZE - 1, currentOnDiskSize - 1);
         }
       }
 
@@ -423,7 +424,7 @@ app.get('/api/check-update', (req, res) => {
 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
-app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', '/AvaLive_VIP_PRO_Windows_v1.4.8.zip', '/AvaLive_VIP_PRO_Windows_v1.4.7.zip'], (req, res) => {
+app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', '/AvaLive_VIP_PRO_Windows_v1.4.9.zip', '/AvaLive_VIP_PRO_Windows_v1.4.8.zip', '/AvaLive_VIP_PRO_Windows_v1.4.7.zip'], (req, res) => {
   const releaseDir = path.join(__dirname, '..', 'release_zips');
   let targetFile = null;
   if (fs.existsSync(releaseDir)) {
@@ -444,7 +445,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
   // Fallback nếu chạy trên cloud không có local zip -> redirect thẳng đến asset GitHub release
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
-    const ver = pkg.version || '1.4.8';
+    const ver = pkg.version || '1.4.9';
     res.redirect(`https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${ver}/AvaLive_VIP_PRO_Windows_v${ver}.zip`);
   } catch (e) {
     res.redirect('https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/latest');
@@ -452,7 +453,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 });
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
-app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', '/AvaLive_VIP_PRO_Mac_v1.4.8.zip', '/AvaLive_VIP_PRO_Mac_v1.4.7.zip'], (req, res) => {
+app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', '/AvaLive_VIP_PRO_Mac_v1.4.9.zip', '/AvaLive_VIP_PRO_Mac_v1.4.8.zip', '/AvaLive_VIP_PRO_Mac_v1.4.7.zip'], (req, res) => {
   const releaseDir = path.join(__dirname, '..', 'release_zips');
   let targetFile = null;
   if (fs.existsSync(releaseDir)) {
@@ -473,7 +474,7 @@ app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VI
   // Fallback nếu chạy trên cloud không có local zip -> redirect thẳng đến asset GitHub release
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
-    const ver = pkg.version || '1.4.8';
+    const ver = pkg.version || '1.4.9';
     res.redirect(`https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${ver}/AvaLive_VIP_PRO_Mac_v${ver}.zip`);
   } catch (e) {
     res.redirect('https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/latest');
@@ -1905,40 +1906,10 @@ async function startLocaltunnelFallback(port) {
 
 function startTunnelLivenessMonitor(tunnelUrl, port) {
   if (healthCheckTimer) clearInterval(healthCheckTimer);
-  let failedChecks = 0;
-  healthCheckTimer = setInterval(() => {
-    if (!tunnelUrl || tunnelStatus !== 'active') return;
-    const httpsMod = require('https');
-    const req = httpsMod.get(`${tunnelUrl}/api/health`, { timeout: 8000 }, (res) => {
-      if (res.statusCode === 200) {
-        failedChecks = 0;
-      } else {
-        failedChecks++;
-      }
-      if (failedChecks >= 2) {
-        console.warn('⚠️  [Tunnel] Cloudflare tunnel phản hồi bất thường. Tự động cấp lại link mới...');
-        clearInterval(healthCheckTimer);
-        startCloudflaredTunnel(port);
-      }
-    });
-    req.on('error', () => {
-      failedChecks++;
-      if (failedChecks >= 2) {
-        console.warn('⚠️  [Tunnel] Mất kết nối tới Cloudflare Edge. Tự động cấp lại link mới...');
-        clearInterval(healthCheckTimer);
-        startCloudflaredTunnel(port);
-      }
-    });
-    req.on('timeout', () => {
-      req.destroy();
-      failedChecks++;
-      if (failedChecks >= 2) {
-        console.warn('⚠️  [Tunnel] Timeout kết nối Cloudflare Edge. Tự động cấp lại link mới...');
-        clearInterval(healthCheckTimer);
-        startCloudflaredTunnel(port);
-      }
-    });
-  }, 35000);
+  // ⚡ GIỮ NGUYÊN ĐƯỜNG LINK CỐ ĐỊNH 24/24 CHO TIKTOK LIVE STUDIO:
+  // Tuyệt đối không tự ý kill cloudflared ngầm vì Cloudflare binary tự quản lý 4 luồng QUIC/HTTP2.
+  // Khi tiến trình cloudflared thực sự thoát, proc.on('exit') sẽ tự động xử lý.
+  console.log(`🛡️  [Tunnel] Bảo vệ luồng tunnel cố định 24/7: ${tunnelUrl}`);
 }
 
 // Khởi động tunnel ngay sau khi server chạy

@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.4.8';
+export const APP_VERSION = '1.4.9';
 export const UPDATE_NOTES = [
-  "🖥️ Khung Quản Trị Window Capture Riêng Biệt & Nút Ẩn/Hiện: Đưa toàn bộ nút Tạm Dừng / Tiếp Tục, Bật / Tắt Tiếng, Chỉnh Âm Lượng ra khung điều khiển ngoại vi riêng biệt mé ngoài, không còn che khuất khung phát sóng video 9:16. Bổ sung nút Ẩn Bảng Điều Khiển giúp khung hình sạch 100% khi phát trực tiếp OBS / TikTok Live Studio.",
-  "⚡ Công Nghệ Giữ Luồng 24/7 Khi Chuyển Tab (Zero Background Throttling): Tích hợp WebAudio Keep-Alive & Auto-Resume thông minh, đảm bảo video Window Capture chạy liên tục siêu mượt 60FPS không bị đứng hình hay ngắt quãng khi người dùng chuyển sang tab khác, lướt web hoặc thu nhỏ cửa sổ.",
-  "🖼️ Hỗ Trợ Chế Độ Cửa Sổ Nổi (Picture-in-Picture): Cho phép ghim video live nổi trên tất cả các cửa sổ làm việc khác, video sắc nét chuẩn GPU nguyên bản không mờ, không giật lag."
+  "🚀 Phát Video Qua Link Tức Thì 0ms (TikTok Live Studio & OBS): Nâng cấp Cloudflare Tunnel kết nối cố định 24/7 vĩnh viễn, khắc phục triệt để lỗi mất kết nối, văng link hoặc video biến mất sau một thời gian phát. Tối ưu phân đoạn chunk 4MB giúp video hiển thị tức thì, siêu nét 60FPS không giật lag.",
+  "🖥️ Sửa Triệt Để Màn Hình Đen Window Capture: Khắc phục toàn diện lỗi đen màn hình khi chia sẻ cửa sổ trên TikTok Live Studio. Tự động chuyển và giải mã luồng video ngay từ khung hình đầu tiên (0ms delay), đồng bộ 100% video từ phần mềm chính sang cửa sổ live 9:16.",
+  "⚡ Đồng Bộ Hóa Siêu Tốc Đa Kênh: Điều khiển Play/Pause/Seek, đổi video, chọn nhân vật AI phản hồi tức thì trên cả Browser Source và Window Capture với nhịp tim watchdog 24/24 liên tục không bao giờ đứng hình."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

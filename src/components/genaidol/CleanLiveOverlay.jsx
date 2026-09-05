@@ -1411,24 +1411,27 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   useEffect(() => {
     const watchdogTimer = setInterval(() => {
       const vid = overlayVideoRef.current;
-      if (!vid) return;
+      if (!vid || !activeMedia.url) return;
 
-      // Nếu streamer đã bấm tạm dừng (userPaused) thì TUYỆT ĐỐI KHÔNG TỰ ĐỘNG PHÁT LẠI
-      const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || isPlayingState === false || vid.dataset.userPaused === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
+      // Nếu streamer đã bấm tạm dừng thì TUYỆT ĐỐI KHÔNG TỰ ĐỘNG PHÁT LẠI
+      const isUserPaused = (localStorage.getItem('avalive_user_paused') === 'true' && masterState.isPlaying === false) || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
       if (isUserPaused) return;
 
-      if (vid.paused && vid.readyState >= 2 && !vid.seeking) {
-        vid.muted = isVideoAudioMuted;
-        if (!isVideoAudioMuted) vid.volume = videoVolume;
-        vid.play().catch(() => {
+      if (vid.paused && !vid.seeking) {
+        vid.muted = !hasAutoplayStarted ? true : isVideoAudioMuted;
+        if (!isVideoAudioMuted && hasAutoplayStarted) vid.volume = videoVolume;
+        if (vid.readyState === 0) {
+          try { vid.load(); } catch (e) {}
+        }
+        vid.play().then(() => setIsPlayingState(true)).catch(() => {
           vid.muted = true;
-          vid.play().catch(() => {});
+          vid.play().then(() => setIsPlayingState(true)).catch(() => {});
         });
       }
-    }, 2000);
+    }, 1500);
 
     return () => clearInterval(watchdogTimer);
-  }, [masterState.videoPlaybackEvent, masterState.isPlaying, isPlayingState, isVideoAudioMuted, videoVolume]);
+  }, [masterState.videoPlaybackEvent, masterState.isPlaying, isPlayingState, isVideoAudioMuted, videoVolume, activeMedia.url, hasAutoplayStarted]);
 
   // Helper giải mã URL media chính xác (tôn trọng 100% video/nhân vật người dùng chọn)
   const resolveActiveMedia = () => {
@@ -1674,24 +1677,35 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     };
   }, [isPlayingState, masterState.videoPlaybackEvent, masterState.isPlaying]);
 
-  // 🎬 TỰ ĐỘNG PHÁT NGAY KHI ĐỔI VIDEO / NHÂN VẬT TỪ PHẦN MỀM
+  // 🎬 TỰ ĐỘNG PHÁT NGAY KHI ĐỔI VIDEO / NHÂN VẬT TỪ PHẦN MỀM (0MS DELAY)
   useEffect(() => {
     const vid = overlayVideoRef.current;
     if (vid && activeMedia.url && activeMedia.isVideo) {
       if (masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false) {
         vid.dataset.userPaused = 'false';
-        vid.muted = isVideoAudioMuted;
-        if (!isVideoAudioMuted) vid.volume = videoVolume;
+        vid.muted = !hasAutoplayStarted ? true : isVideoAudioMuted;
+        if (!isVideoAudioMuted && hasAutoplayStarted) vid.volume = videoVolume;
+        try { vid.load(); } catch (e) {}
         const playPromise = vid.play();
         if (playPromise !== undefined) {
-          playPromise.catch(() => {
+          playPromise.then(() => {
+            setIsPlayingState(true);
+            if (!hasAutoplayStarted) {
+              setHasAutoplayStarted(true);
+              if (!isVideoAudioMuted) {
+                setTimeout(() => {
+                  try { vid.muted = false; vid.volume = videoVolume; } catch (e) {}
+                }, 150);
+              }
+            }
+          }).catch(() => {
             vid.muted = true;
-            vid.play().catch(() => {});
+            vid.play().then(() => setIsPlayingState(true)).catch(() => {});
           });
         }
       }
     }
-  }, [activeMedia.url, isVideoAudioMuted, videoVolume]);
+  }, [activeMedia.url, isVideoAudioMuted, videoVolume, masterState.videoPlaybackEvent, masterState.isPlaying]);
 
   // 4 SÂN KHẤU: ĐƯỢC LỒNG TRONG KHUNG PHÁT SÓNG SẠCH 100% CỐ ĐỊNH TỈ LỆ
   // BÊN TRÊN LÀ THANH ĐIỀU KHIỂN NGOẠI KHUNG (NẰM NGOÀI KHUNG HÌNH LIVE ĐỂ KHÔNG CHÈN VÀO OBS)
@@ -1716,7 +1730,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   WINDOW CAPTURE (60FPS)
                 </span>
                 <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[9px] font-bold text-cyan-300">
-                  v1.4.8
+                  v1.4.9
                 </span>
               </div>
               <span className="text-[9.5px] text-emerald-400/90 font-medium">
@@ -1864,6 +1878,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               <>
                 <video
                   ref={overlayVideoRef}
+                  key={activeMedia.url}
                   src={activeMedia.url}
                   autoPlay={true}
                   loop
@@ -1875,7 +1890,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   disableRemotePlayback
                   onLoadedMetadata={(e) => {
                     const v = e.currentTarget;
-                    const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' && masterState.isPlaying === false;
+                    const isUserPaused = (localStorage.getItem('avalive_user_paused') === 'true' && masterState.isPlaying === false) || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
                     if (!isUserPaused) {
                       v.dataset.userPaused = 'false';
                       v.muted = !hasAutoplayStarted ? true : isVideoAudioMuted;
@@ -1886,7 +1901,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                           if (!isVideoAudioMuted && !hasAutoplayStarted) {
                             setTimeout(() => {
                               try { v.muted = false; v.volume = videoVolume; } catch (err) {}
-                            }, 200);
+                            }, 150);
                           }
                         }).catch(() => {
                           v.muted = true;
@@ -1900,13 +1915,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     }
                   }}
                   onPlay={() => {
-                    const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true';
-                    if (isUserPaused) {
-                      const v = overlayVideoRef.current;
-                      if (v) { v.dataset.userPaused = 'true'; v.pause(); }
-                      setIsPlayingState(false);
-                      return;
-                    }
                     setIsPlayingState(true);
                     if (!hasAutoplayStarted) {
                       setHasAutoplayStarted(true);
@@ -1916,16 +1924,16 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                           if (v) {
                             try { v.muted = false; v.volume = videoVolume; } catch (e) {}
                           }
-                        }, 200);
+                        }, 150);
                       }
                     }
                   }}
                   onPause={() => {
-                    const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
+                    const isUserPaused = (localStorage.getItem('avalive_user_paused') === 'true' && masterState.isPlaying === false) || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
                     if (isUserPaused) {
                       setIsPlayingState(false);
                     } else {
-                      // Ngăn chặn trình duyệt tự ngắt video khi chuyển tab hoặc tối ưu tài nguyên
+                      // Ngăn chặn Chromium tự ngắt video khi cửa sổ bị che khuất
                       const v = overlayVideoRef.current;
                       if (v && !isUserPaused) {
                         v.play().catch(() => {
@@ -1937,7 +1945,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   }}
                   onCanPlay={(e) => {
                     const v = e.currentTarget;
-                    const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
+                    const isUserPaused = (localStorage.getItem('avalive_user_paused') === 'true' && masterState.isPlaying === false) || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
                     if (!isUserPaused && v.paused) {
                       v.dataset.userPaused = 'false';
                       v.muted = !hasAutoplayStarted ? true : isVideoAudioMuted;
@@ -1953,11 +1961,20 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                       v.pause();
                     }
                   }}
-                  onWaiting={() => {}}
+                  onWaiting={() => {
+                    const v = overlayVideoRef.current;
+                    const isUserPaused = masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
+                    if (v && !isUserPaused) {
+                      v.play().catch(() => {
+                        v.muted = true;
+                        v.play().catch(() => {});
+                      });
+                    }
+                  }}
                   onStalled={() => {
                     const v = overlayVideoRef.current;
-                    const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
-                    if (v && v.paused && !isUserPaused) {
+                    const isUserPaused = masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
+                    if (v && !isUserPaused) {
                       v.play().then(() => setIsPlayingState(true)).catch(() => {
                         v.muted = true;
                         v.play().then(() => setIsPlayingState(true)).catch(() => {});
@@ -1966,7 +1983,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   }}
                   onEnded={(e) => {
                     e.currentTarget.currentTime = 0;
-                    const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
+                    const isUserPaused = masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
                     if (!isUserPaused) {
                       e.currentTarget.play().then(() => setIsPlayingState(true)).catch(() => {
                         e.currentTarget.muted = true;
@@ -1977,7 +1994,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     }
                   }}
                   onError={(e) => {
-                    console.warn('[CleanLiveOverlay] Lỗi tải video');
+                    console.warn('[CleanLiveOverlay] Tải lại nguồn video...');
+                    const v = e.currentTarget;
+                    if (v && !v.dataset.retried) {
+                      v.dataset.retried = 'true';
+                      setTimeout(() => { try { v.load(); v.play().catch(() => {}); } catch(err){} }, 500);
+                    }
                   }}
                   className="w-full h-full select-none absolute inset-0 transform-gpu"
                   style={{ 

@@ -47,7 +47,22 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
     const height = 1040; // 80px dock & vạch cắt an toàn + 960px khung hình live 9:16
     const left = Math.round((window.screen.width - width) / 2);
     const top = Math.round((window.screen.height - height) / 2);
-    const captureUrl = `${window.location.origin}/idol?mode=window_capture`;
+
+    let activeUrl = '';
+    try {
+      const saved = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
+      if (saved.mediaUrl) activeUrl = saved.mediaUrl;
+      if (!activeUrl) activeUrl = localStorage.getItem('avalive_user_locked_media') || '';
+    } catch (e) {}
+
+    try {
+      localStorage.removeItem('avalive_user_paused');
+      localStorage.removeItem('avalive_window_capture_paused');
+      localStorage.setItem('avalive_master_live_running', 'true');
+    } catch (e) {}
+
+    const query = activeUrl ? `&v=${encodeURIComponent(activeUrl)}` : '';
+    const captureUrl = `${window.location.origin}/idol?mode=window_capture${query}`;
     window.open(
       captureUrl,
       'avalive_window_capture_target',
