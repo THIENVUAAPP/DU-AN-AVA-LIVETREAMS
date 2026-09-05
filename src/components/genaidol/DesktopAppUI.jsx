@@ -2863,7 +2863,7 @@ export default function DesktopAppUI() {
                 }
                 // ⚡ ĐỒNG BỘ REALTIME TỪNG ĐỢT CHO TIKTOK LIVE STUDIO & OBS (GIỮ CHUẨN 1X SPEED KHÔNG GIẬT KHỰNG)
                 const now = Date.now();
-                if (now - lastTimeBroadcastRef.current > 3000) {
+                if (now - lastTimeBroadcastRef.current > 5000) {
                   lastTimeBroadcastRef.current = now;
                   let playUrl = selected.url;
                   if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {

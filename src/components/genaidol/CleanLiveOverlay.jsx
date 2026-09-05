@@ -64,6 +64,7 @@ const getBackendUrl = () => {
 
 export default function CleanLiveOverlay({ customStyle = {} }) {
   const overlayVideoRef = useRef(null);
+  const blobUrlMapRef = useRef(new Map());
   const [masterState, setMasterState] = useState(() => {
     let saved = null;
     try {
@@ -578,7 +579,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     // ⚡ XỬ LÝ ĐIỀU KHIỂN VIDEO REAL-TIME KHÓA CHẶT LOCKSTEP VỚI PHẦN MỀM CHÍNH
     const handleVideoPlaybackControl = (control) => {
       if (!control) return;
-      const vid = overlayVideoRef.current;
+      const vid = overlayVideoRef.current || document.querySelector('video');
       const action = control.action || control.videoPlaybackEvent;
       const targetTime = typeof control.currentTime === 'number' ? control.currentTime : control.videoCurrentTime;
       const isPlaying = control.isPlaying !== undefined ? control.isPlaying : action === 'play';
@@ -640,11 +641,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           try { vid.currentTime = targetTime; } catch (e) {}
         }
       } else if (action === 'time_sync') {
-        // Chỉ đồng bộ nếu độ lệch quá lớn (> 2.5s) để video chạy mượt từ đầu đến đuôi
-        if (typeof targetTime === 'number' && !isNaN(targetTime)) {
-          if (Math.abs(vid.currentTime - targetTime) > 2.5) {
-            try { vid.currentTime = targetTime; } catch (e) {}
-          }
+        // TUYỆT ĐỐI KHÔNG TUA KHI ĐANG PHÁT BÌNH THƯỜNG - TRÁNH LẶP LẠI VÀ CHỚP NHẢY
+        if (control.force && typeof targetTime === 'number' && !isNaN(targetTime)) {
+          try { vid.currentTime = targetTime; } catch (e) {}
         }
         if (isPlaying && vid.paused && localStorage.getItem('avalive_user_paused') !== 'true') {
           vid.play().catch(() => {});
@@ -673,7 +672,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       if (!data) return;
 
       // 🎬 ĐỒNG BỘ PLAY / PAUSE / TIME LẬP TỨC THEO PHẦN MỀM GỐC
-      const vid = overlayVideoRef.current;
+      const vid = overlayVideoRef.current || document.querySelector('video');
       if (data.isPlaying === false || data.videoPlaybackEvent === 'pause') {
         try {
           localStorage.setItem('avalive_user_paused', 'true');
@@ -707,7 +706,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           }
         }
         setIsPlayingState(true);
-      } else if (data.videoPlaybackEvent === 'seeked' && typeof data.videoCurrentTime === 'number' && vid) {
+      } else if (data.videoPlaybackEvent === 'seeked' && data.force && typeof data.videoCurrentTime === 'number' && vid) {
         try { vid.currentTime = data.videoCurrentTime; } catch (e) {}
       }
 
@@ -729,14 +728,17 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       setMasterState(prev => {
         // Kiểm tra xem có trường dữ liệu quan trọng nào thực sự thay đổi không
         let hasDiff = false;
-        const keys = ['stage', 'aspectRatio', 'mediaUrl', 'flvUrl', 'isVideo', 'selectedCharacter', 'characterName', 'videoPlaybackEvent', 'isPlaying', 'isDarkMode', 'tunnelUrl'];
+        const keys = ['stage', 'aspectRatio', 'mediaUrl', 'flvUrl', 'isVideo', 'selectedCharacter', 'characterName', 'isPlaying', 'isDarkMode', 'tunnelUrl'];
         for (const k of keys) {
           if (data[k] !== undefined && data[k] !== prev[k]) {
             hasDiff = true;
             break;
           }
         }
-        if (data.videoPlaybackEvent === 'seeked' && data.videoCurrentTime !== undefined) {
+        if (data.videoPlaybackEvent && data.videoPlaybackEvent !== 'time_sync' && data.videoPlaybackEvent !== prev.videoPlaybackEvent) {
+          hasDiff = true;
+        }
+        if (data.force && data.videoPlaybackEvent === 'seeked' && data.videoCurrentTime !== undefined) {
           hasDiff = true;
         }
 
@@ -955,8 +957,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               const isMasterPlaying = !!event.data.isPlaying;
               const v = overlayVideoRef.current;
               if (v && typeof masterTime === 'number' && !isNaN(masterTime)) {
-                // Khóa chặt thời gian (drift > 0.35s lập tức kéo về đồng bộ chuẩn)
-                if (event.data.force || Math.abs(v.currentTime - masterTime) > 0.35) {
+                if (event.data.force) {
                   try {
                     v.currentTime = masterTime;
                   } catch (e) {}
@@ -991,12 +992,10 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 isPlaying: shouldPlay
               }));
 
-              if (typeof event.data.currentTime === 'number' && overlayVideoRef.current) {
-                if (event.data.force || Math.abs(overlayVideoRef.current.currentTime - event.data.currentTime) > 0.35) {
-                  try {
-                    overlayVideoRef.current.currentTime = event.data.currentTime;
-                  } catch (e) {}
-                }
+              if (event.data.force && typeof event.data.currentTime === 'number' && overlayVideoRef.current) {
+                try {
+                  overlayVideoRef.current.currentTime = event.data.currentTime;
+                } catch (e) {}
               }
 
               if (!shouldPlay) {
@@ -1310,49 +1309,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     };
   }, [activeStreamUrl]);
 
-  // 🎬 ĐỒNG BỘ PLAY / PAUSE / SEEK THEO THỜI GIAN THỰC (ĐỒNG BỘ 2 CHIỀU)
+  // 🎬 ĐỒNG BỘ TUA (SEEK) THỜI GIAN THỰC KHI CÓ LỆNH FORCE TỪ PHẦN MỀM
   useEffect(() => {
-    const isPaused = localStorage.getItem('avalive_user_paused') === 'true' || 
-                     masterState.videoPlaybackEvent === 'pause' || 
-                     masterState.isPlaying === false || 
-                     isPlayingState === false;
-
-    const allVideos = document.querySelectorAll('video');
-    if (isPaused) {
-      allVideos.forEach(v => {
-        try {
-          v.dataset.userPaused = 'true';
-          if (!v.paused) v.pause();
-        } catch (e) {}
-      });
-      return;
+    const v = overlayVideoRef.current;
+    if (!v) return;
+    if (masterState.force && masterState.videoPlaybackEvent === 'seeked' && typeof masterState.videoCurrentTime === 'number') {
+      try { v.currentTime = masterState.videoCurrentTime; } catch (e) {}
     }
-
-    // Nếu không bị tạm dừng: phát video mượt mà
-    allVideos.forEach(v => {
-      try {
-        v.dataset.userPaused = 'false';
-        v.muted = isVideoAudioMuted;
-        if (!isVideoAudioMuted) v.volume = videoVolume;
-        if (v.paused) {
-          v.play().catch(() => {
-            v.muted = true;
-            v.play().catch(() => {});
-          });
-        }
-      } catch (e) {}
-    });
-
-    // Đồng bộ Tua (Seek) nếu streamer tua video trên phần mềm
-    if (masterState.videoPlaybackEvent === 'seeked' && typeof masterState.videoCurrentTime === 'number') {
-      if (overlayVideoRef.current) {
-        const timeDiff = Math.abs(overlayVideoRef.current.currentTime - masterState.videoCurrentTime);
-        if (timeDiff > 0.35) {
-          overlayVideoRef.current.currentTime = masterState.videoCurrentTime;
-        }
-      }
-    }
-  }, [masterState.mediaUrl, activeStreamUrl, masterState.videoPlaybackEvent, masterState.isPlaying, isPlayingState]);
+  }, [masterState.videoPlaybackEvent, masterState.videoCurrentTime, masterState.force]);
 
   // 🔊 CẬP NHẬT ÂM LƯỢNG & MUTE RIÊNG BIỆT (TUYỆT ĐỐI KHÔNG CAN THIỆP PLAY/PAUSE)
   useEffect(() => {
@@ -1487,17 +1451,23 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       } catch (e) {}
     }
 
-    // 3. Khôi phục Blob URL từ IndexedDB nếu là video tùy chỉnh, hoặc bỏ qua nếu blob không tồn tại ở cửa sổ này
+    // 3. Khôi phục Blob URL từ IndexedDB nếu là video tùy chỉnh, và dùng Cache để không tạo URL mới liên tục
     if (typeof candidateUrl === 'string' && candidateUrl.startsWith('blob:')) {
-      const match = localDbItems.find(i => i.id === masterState.selectedCharacter);
-      if (match && match.fileBlob) {
-        try {
-          candidateUrl = URL.createObjectURL(match.fileBlob);
-        } catch (e) {}
-      } else if (match && (match.mediaUrl || match.url) && !match.mediaUrl?.startsWith('blob:')) {
-        candidateUrl = match.mediaUrl || match.url;
+      const charId = masterState.selectedCharacter || candidateUrl;
+      if (blobUrlMapRef.current && blobUrlMapRef.current.has(charId)) {
+        candidateUrl = blobUrlMapRef.current.get(charId);
       } else {
-        candidateUrl = null;
+        const match = localDbItems.find(i => i.id === masterState.selectedCharacter);
+        if (match && match.fileBlob) {
+          try {
+            candidateUrl = URL.createObjectURL(match.fileBlob);
+            if (blobUrlMapRef.current) blobUrlMapRef.current.set(charId, candidateUrl);
+          } catch (e) {}
+        } else if (match && (match.mediaUrl || match.url) && !match.mediaUrl?.startsWith('blob:')) {
+          candidateUrl = match.mediaUrl || match.url;
+        } else {
+          candidateUrl = null;
+        }
       }
     }
 
@@ -1580,20 +1550,17 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       if (isUserPaused) return;
 
       if (vid.paused && !vid.seeking) {
-        vid.muted = !hasAutoplayStarted ? true : isVideoAudioMuted;
-        if (!isVideoAudioMuted && hasAutoplayStarted) vid.volume = videoVolume;
-        if (vid.readyState === 0) {
-          try { vid.load(); } catch (e) {}
-        }
+        vid.muted = isVideoAudioMuted;
+        if (!isVideoAudioMuted) vid.volume = videoVolume;
         vid.play().then(() => setIsPlayingState(true)).catch(() => {
           vid.muted = true;
           vid.play().then(() => setIsPlayingState(true)).catch(() => {});
         });
       }
-    }, 1500);
+    }, 2000);
 
     return () => clearInterval(watchdogTimer);
-  }, [masterState.videoPlaybackEvent, masterState.isPlaying, isPlayingState, isVideoAudioMuted, videoVolume, activeMedia.url, hasAutoplayStarted]);
+  }, [isVideoAudioMuted, videoVolume, activeMedia.url]);
 
   // 🖼️ HỖ TRỢ CHẾ ĐỘ CỬA SỔ NỔI (PICTURE-IN-PICTURE)
   const togglePip = async () => {
@@ -1800,7 +1767,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   WINDOW CAPTURE (60FPS)
                 </span>
                 <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[9px] font-bold text-cyan-300">
-                  v1.6.1
+                  v1.6.2
                 </span>
               </div>
               <span className="text-[9.5px] text-emerald-400/90 font-medium">
@@ -1952,7 +1919,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               <>
                 <video
                   ref={overlayVideoRef}
-                  key={activeMedia.url}
+                  key="avalive_overlay_main_video"
                   src={activeMedia.url}
                   autoPlay={true}
                   loop

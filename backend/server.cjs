@@ -1550,15 +1550,18 @@ app.post('/api/video-control', (req, res) => {
     if (typeof control.volume === 'number') {
       currentMasterLiveState.videoVolume = control.volume;
     }
-    currentMasterLiveState.updatedAt = Date.now();
-
     const broadcastPayload = {
       ...control,
       timestamp: control.timestamp || Date.now()
     };
     io.emit('VIDEO_PLAYBACK_CONTROL', broadcastPayload);
-    io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
-    saveLiveStateToFile(false);
+
+    // Chỉ cập nhật và phát MASTER_LIVE_STATE_UPDATE khi không phải nhịp tim time_sync
+    if (control.action !== 'time_sync') {
+      currentMasterLiveState.updatedAt = Date.now();
+      io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+      saveLiveStateToFile(false);
+    }
   }
   res.json({ success: true, state: currentMasterLiveState });
 });

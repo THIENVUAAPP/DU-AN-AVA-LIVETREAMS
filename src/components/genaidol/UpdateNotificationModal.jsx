@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.6.1';
+export const APP_VERSION = '1.6.2';
 export const UPDATE_NOTES = [
-  "⭐ Đồng Bộ Tuyệt Đối 100% Video & Âm Thanh Giữa Phần Mềm Và TikTok Live: Khi phần mềm phát video nào thì TikTok Live / OBS phát video đó; bấm tạm dừng thì dừng tất cả; đổi video lập tức đổi theo thời gian thực 0ms.",
-  "🛡️ Khắc Phục Triệt Để Hiện Tượng Đứng Hình / Tắt Video Khi Chuyển Tab: Tích hợp Background Keep-Alive AudioContext 20Hz siêu trầm và Web Worker chạy nền độc lập giúp Window Capture và đường link phát liên tục 24/7 không bao giờ bị Chromium đóng băng hay ngắt luồng.",
-  "🎬 1 Đường Link Duy Nhất Cho Mọi Dự Án & Window Capture 60FPS: Tự động điều chỉnh tỉ lệ khung hình 9:16 và 16:9 sắc nét, hỗ trợ phát trực tiếp ổn định tuyệt đối trên TikTok Live Studio và OBS Studio."
+  "⭐ Khắc Phục Triệt Để Hiện Tượng Lặp Video / Chớp Nháy Sau Vài Giây: Xóa bỏ hoàn toàn xung đột chồng chéo giữa các tầng đồng bộ, cố định bộ nhớ đệm video và khóa định danh ổn định giúp video trên TikTok Live & Window Capture chạy liên tục mượt mà từ đầu đến cuối 100%.",
+  "🛡️ Đồng Bộ Video & Âm Thanh Khóa Chặt Tuyệt Đối 0ms: Phần mềm phát bài nào, TikTok Live phát bài đó; bấm tạm dừng thì dừng tất cả; đổi video lập tức đổi theo thời gian thực không bị gián đoạn hay reset về 0:00.",
+  "🎬 Hoạt Động Bền Bỉ 24/7 Dù Chuyển Tab Hay Thu Nhỏ Cửa Sổ: Hỗ trợ phát trực tiếp song song cả qua Đường Link Duy Nhất và Window Capture 60FPS sắc nét cho TikTok Live Studio & OBS."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
