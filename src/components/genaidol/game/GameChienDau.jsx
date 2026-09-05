@@ -1686,7 +1686,9 @@ export default function GameChienDau({
       resizeObserver.observe(containerRef.current);
     }
 
+    let isLoopActive = true;
     const renderLoop = (time) => {
+      if (!isLoopActive) return;
       try {
         const currentTime = typeof time === 'number' && !isNaN(time) ? time : performance.now();
         const lastTime = typeof engineRef.current.lastTime === 'number' && !isNaN(engineRef.current.lastTime) ? engineRef.current.lastTime : currentTime;
@@ -2917,7 +2919,8 @@ export default function GameChienDau({
       }
     } catch (err) {
       console.error('Battlefield renderLoop error:', err);
-    } finally {
+    }
+    if (isLoopActive) {
       engineRef.current.rAfId = requestAnimationFrame(renderLoop);
     }
   };
@@ -2931,7 +2934,7 @@ export default function GameChienDau({
     ], { type: 'application/javascript' });
     workerTimer = new Worker(URL.createObjectURL(blob));
     workerTimer.onmessage = () => {
-      if (document.hidden) {
+      if (document.hidden && isLoopActive) {
         renderLoop(performance.now());
       }
     };
@@ -2939,6 +2942,7 @@ export default function GameChienDau({
   } catch (e) {}
 
     return () => {
+      isLoopActive = false;
       window.removeEventListener('resize', handleResize);
       if (workerTimer) {
         try { workerTimer.postMessage('stop'); workerTimer.terminate(); } catch (e) {}
@@ -2946,7 +2950,10 @@ export default function GameChienDau({
       cancelAnimationFrame(animFrameId);
       clearTimeout(initialTimer);
       if (resizeObserver) resizeObserver.disconnect();
-      if (engineRef.current.rAfId) cancelAnimationFrame(engineRef.current.rAfId);
+      if (engineRef.current.rAfId) {
+        cancelAnimationFrame(engineRef.current.rAfId);
+        engineRef.current.rAfId = null;
+      }
     };
   }, [config, updateFormation, initDefaultChampions, isDarkMode]);
 
