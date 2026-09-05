@@ -1730,7 +1730,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   WINDOW CAPTURE (60FPS)
                 </span>
                 <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[9px] font-bold text-cyan-300">
-                  v1.4.9
+                  v1.5.0
                 </span>
               </div>
               <span className="text-[9.5px] text-emerald-400/90 font-medium">
@@ -1857,18 +1857,22 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       }`}>
         <div 
           className={`relative flex items-center justify-center overflow-hidden transition-all duration-200 ${
-            ratio === '9:16'
-              ? 'h-full aspect-[9/16] w-auto max-w-full'
-              : 'w-full aspect-[16/9] h-auto max-h-full'
+            !isWindowCapture
+              ? 'w-full h-full'
+              : ratio === '9:16'
+                ? 'h-full aspect-[9/16] w-auto max-w-full'
+                : 'w-full aspect-[16/9] h-auto max-h-full'
           } ${isWindowCapture && !isControlDockCollapsed ? 'ring-1 ring-cyan-500/30 rounded-lg shadow-[0_0_40px_rgba(0,0,0,0.85)]' : ''}`}
           style={
-            ratio === '9:16' 
-              ? { 
-                  aspectRatio: '9 / 16', 
-                  height: '100%', 
-                  maxWidth: '100%' 
-                } 
-              : { aspectRatio: '16 / 9', width: '100%', maxHeight: '100%' }
+            !isWindowCapture
+              ? { width: '100%', height: '100%' }
+              : ratio === '9:16' 
+                ? { 
+                    aspectRatio: '9 / 16', 
+                    height: '100%', 
+                    maxWidth: '100%' 
+                  } 
+                : { aspectRatio: '16 / 9', width: '100%', maxHeight: '100%' }
           }
         >
           {/* SÂN KHẤU 1: LIVE AI IDOL (CHỈ RENDER KHI Ở TAB IDOL ĐỂ TỐI ƯU 100% TÀI NGUYÊN) */}

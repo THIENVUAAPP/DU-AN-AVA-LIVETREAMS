@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.4.9';
+export const APP_VERSION = '1.5.0';
 export const UPDATE_NOTES = [
-  "🚀 Phát Video Qua Link Tức Thì 0ms (TikTok Live Studio & OBS): Nâng cấp Cloudflare Tunnel kết nối cố định 24/7 vĩnh viễn, khắc phục triệt để lỗi mất kết nối, văng link hoặc video biến mất sau một thời gian phát. Tối ưu phân đoạn chunk 4MB giúp video hiển thị tức thì, siêu nét 60FPS không giật lag.",
-  "🖥️ Sửa Triệt Để Màn Hình Đen Window Capture: Khắc phục toàn diện lỗi đen màn hình khi chia sẻ cửa sổ trên TikTok Live Studio. Tự động chuyển và giải mã luồng video ngay từ khung hình đầu tiên (0ms delay), đồng bộ 100% video từ phần mềm chính sang cửa sổ live 9:16.",
-  "⚡ Đồng Bộ Hóa Siêu Tốc Đa Kênh: Điều khiển Play/Pause/Seek, đổi video, chọn nhân vật AI phản hồi tức thì trên cả Browser Source và Window Capture với nhịp tim watchdog 24/24 liên tục không bao giờ đứng hình."
+  "🚀 Đột Phá Phát Video Qua Link Nguồn Trình Duyệt 0ms: Hỗ trợ 2 đường link chuyên dụng — Link 1 (Nội bộ 0ms không cần internet, mở phát ngay lập tức, hỗ trợ video nặng 5-10 tiếng 4K không bao giờ lag hay hết hạn) và Link 2 (Cloudflare Tunnel từ xa có cơ chế DNS Watchdog tự cấp lại link khi quá hạn).",
+  "🖥️ Tối Ưu Khung Hình 9:16 (1080 × 1920) Chuẩn Tuyệt Đối: Hiển thị tràn viền sắc nét 100% không vệt đen trên TikTok Live Studio. Cho phép streamer chuyển tab, ẩn cửa sổ làm việc khác 24/24 mà phiên live vẫn phát liên tục không bao giờ bị dừng.",
+  "⚡ Động Cơ Chunk Streaming 8MB Siêu Tốc Cho Video Dài 5-10 Tiếng: Tải đa luồng song song, tối ưu hoá đọc dải byte HTTP 206 chống lỗi demuxer, nạp tức thì khung hình đầu tiên và phát bền bỉ 24/7."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

@@ -80,22 +80,30 @@ export async function fastStreamUpload(file, options = {}) {
 
     if (onProgress) onProgress(Math.round((1 / totalChunks) * 100) || 10);
 
-    // BƯỚC 3: Nạp các khối tiếp theo (1, 2, 3...) LIÊN TỤC THEO THỨ TỰ TĂNG DẦN
-    // Tuyệt đối KHÔNG nhảy cóc đuôi file để tránh tạo lỗ hổng rỗng (sparse holes byte 0) gây đứt luồng ở phút 1-2
+    // BƯỚC 3: Nạp các khối tiếp theo (1, 2, 3...) LIÊN TỤC VỚI 2 LUỒNG SONG SONG
+    // Đẩy tốc độ nạp lên tối đa trên ổ đĩa SSD/NVMe mà không làm nghẽn mạng
     (async () => {
       let uploaded = 1;
-      for (let i = 1; i < totalChunks; i++) {
-        const start = i * CHUNK_SIZE;
-        const end = Math.min(start + CHUNK_SIZE, file.size);
-        const chunkBlob = file.slice(start, end);
-        try {
-          await sendChunk(chunkBlob, start, i);
-          uploaded++;
-          if (onProgress) onProgress(Math.round((uploaded / totalChunks) * 100));
-        } catch (e) {
-          console.warn('[FastStream Chunk error]', i, e);
+      const CONCURRENCY = 2;
+      let currentIndex = 1;
+
+      const worker = async () => {
+        while (currentIndex < totalChunks) {
+          const i = currentIndex++;
+          const start = i * CHUNK_SIZE;
+          const end = Math.min(start + CHUNK_SIZE, file.size);
+          const chunkBlob = file.slice(start, end);
+          try {
+            await sendChunk(chunkBlob, start, i);
+            uploaded++;
+            if (onProgress) onProgress(Math.round((uploaded / totalChunks) * 100));
+          } catch (e) {
+            console.warn('[FastStream Chunk error]', i, e);
+          }
         }
-      }
+      };
+
+      await Promise.all(Array.from({ length: Math.min(CONCURRENCY, totalChunks - 1) }, () => worker()));
       if (onProgress) onProgress(100);
     })();
 
