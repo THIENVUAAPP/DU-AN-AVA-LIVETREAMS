@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 
-export const APP_VERSION = '1.4.4';
+export const APP_VERSION = '1.4.5';
 export const UPDATE_NOTES = [
+  "⚔️ Sửa triệt để lỗi Game Chiến Đấu (PK Battle): Bổ sung hàm stopAll() và bảo vệ an toàn luồng âm thanh Audio Engine khi chuyển tab hoặc kết thúc trận đấu, loại bỏ 100% lỗi TypeError: battleAudio.stopAll is not a function.",
   "🚀 Tối ưu hóa siêu mượt & Giảm tải tài nguyên: Tách module code-splitting, tạm dừng các luồng vẽ nền khi chơi game, giúp Game Bản Đồ và Game Chiến Đấu đạt 60FPS siêu mượt không còn bị giật lag.",
-  "🗺️ Sửa triệt để lỗi Game Bản Đồ Việt Nam: Khắc phục lỗi thiếu biến mô phỏng và xung đột sự kiện kéo thả HUD, kết nối Socket IO quản trị mượt mà 100%.",
-  "🧹 Xóa vĩnh viễn Game Nhảy & Dọn sạch toàn bộ code thừa: Loại bỏ hoàn toàn các thư viện, file model, animation và logic cũ của Game Nhảy, tối giản dung lượng phần mềm tối đa."
+  "🗺️ Sửa triệt để lỗi Game Bản Đồ Việt Nam: Khắc phục lỗi thiếu biến mô phỏng và xung đột sự kiện kéo thả HUD, kết nối Socket IO quản trị mượt mà 100%."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

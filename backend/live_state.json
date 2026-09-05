@@ -1,5 +1,5 @@
 {
-  "stage": "idol",
+  "stage": "battle",
   "aspectRatio": "9:16",
   "characterId": "linhanh_4k",
   "characterName": "noname (5)",
@@ -9,7 +9,7 @@
   "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1788536298613,
+  "updatedAt": 1788568803635,
   "flvUrl": null,
   "isConnected": false,
   "type": "MASTER_LIVE_STATE_UPDATE",

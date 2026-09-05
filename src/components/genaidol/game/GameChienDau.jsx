@@ -270,8 +270,14 @@ export default function GameChienDau({
     }
 
     return () => {
-      battleCommentary.stopAll();
-      battleAudio.stopAll();
+      if (battleCommentary && typeof battleCommentary.stopAll === 'function') {
+        battleCommentary.stopAll();
+      }
+      if (battleAudio && typeof battleAudio.stopAll === 'function') {
+        battleAudio.stopAll();
+      } else if (battleAudio && typeof battleAudio.stopBgm === 'function') {
+        battleAudio.stopBgm();
+      }
       if (broadcastChannelRef.current) {
         broadcastChannelRef.current.close();
       }
@@ -2998,9 +3004,10 @@ export default function GameChienDau({
     window.addEventListener('avalive_tiktok_gift', handleDirectGiftEvent);
 
     const handleEmergencyStop = () => {
-      battleCommentary.stopAll();
-      battleVoiceEngine.stopAll();
-      battleAudio.stopAll();
+      if (battleCommentary && typeof battleCommentary.stopAll === 'function') battleCommentary.stopAll();
+      if (battleVoiceEngine && typeof battleVoiceEngine.stopAll === 'function') battleVoiceEngine.stopAll();
+      if (battleAudio && typeof battleAudio.stopAll === 'function') battleAudio.stopAll();
+      else if (battleAudio && typeof battleAudio.stopBgm === 'function') battleAudio.stopBgm();
       if (typeof window !== 'undefined' && window.speechSynthesis) {
         window.speechSynthesis.cancel();
       }

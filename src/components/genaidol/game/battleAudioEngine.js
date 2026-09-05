@@ -521,6 +521,22 @@ export const battleAudio = {
     }
   },
 
+  stopAll() {
+    this.stopBgm();
+    if (bgmAudioElement) {
+      try {
+        bgmAudioElement.pause();
+        bgmAudioElement.currentTime = 0;
+      } catch (e) {}
+    }
+    if (duckTimer) {
+      clearTimeout(duckTimer);
+      duckTimer = null;
+    }
+    isDucked = false;
+    this.emitStatus();
+  },
+
   setBgmVolume(volume) {
     currentBgmVolume = Math.max(0, Math.min(1, volume));
     try {
