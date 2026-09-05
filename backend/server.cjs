@@ -1324,6 +1324,52 @@ app.post('/api/tiktok/test-chat', (req, res) => {
   res.json({ success: true, chat: chatPayload });
 });
 
+// Shopee Live Bridge State & APIs
+let shopeeLiveState = {
+  connected: false,
+  rtmpUrl: 'rtmp://live.shopee.vn/live/',
+  streamKey: '',
+  roomUrl: '',
+  shopName: 'Gian Hàng Shopee Mall',
+  connectedAt: null
+};
+
+app.post('/api/shopee/connect', (req, res) => {
+  const { rtmpUrl, streamKey, roomUrl, shopName } = req.body || {};
+  shopeeLiveState = {
+    connected: true,
+    rtmpUrl: rtmpUrl || shopeeLiveState.rtmpUrl,
+    streamKey: streamKey || shopeeLiveState.streamKey,
+    roomUrl: roomUrl || '',
+    shopName: shopName || shopeeLiveState.shopName,
+    connectedAt: Date.now()
+  };
+  io.emit('shopee_live_status', shopeeLiveState);
+  res.json({ success: true, state: shopeeLiveState });
+});
+
+app.post('/api/shopee/disconnect', (req, res) => {
+  shopeeLiveState.connected = false;
+  io.emit('shopee_live_status', shopeeLiveState);
+  res.json({ success: true, message: 'Đã ngắt kết nối Shopee Live' });
+});
+
+app.get('/api/shopee/status', (req, res) => {
+  res.json({ success: true, state: shopeeLiveState });
+});
+
+app.post('/api/shopee/test-order', (req, res) => {
+  const { customerName, productName, price } = req.body || {};
+  const orderEvent = {
+    name: customerName || 'Khách Shopee VIP',
+    item: productName || 'Combo Váy Thiết Kế Shopee Mall',
+    price: price || '399.000đ',
+    platform: 'Shopee Live'
+  };
+  io.emit('shopee_order_event', orderEvent);
+  res.json({ success: true, order: orderEvent });
+});
+
 // Live State APIs
 app.get('/api/live-state', (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');

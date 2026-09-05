@@ -41,6 +41,7 @@ import { SUPPORTED_LANGUAGES, getCurrentLanguage, setCurrentLanguage, t } from '
 import UpdateNotificationModal, { APP_VERSION } from './UpdateNotificationModal';
 import { bootstrapDefaultPresets } from '../../utils/defaultPresetsBootstrap';
 import { fastStreamUpload } from '../../utils/fastStreamService';
+import ShopeeLiveConnectModal from './ShopeeLiveConnectModal';
 
 export default function DesktopAppUI() {
   useEffect(() => {
@@ -3442,6 +3443,17 @@ export default function DesktopAppUI() {
                   <Radio size={16} />
                   <span>{t('idolConnect', currentLang)}</span>
                 </button>
+                {/* 🟠 KẾT NỐI SHOPEE LIVE (URL & KEY) - NẰM NGAY BÊN DƯỚI IDOL / SỰ KIỆN IDOL THEO YÊU CẦU */}
+                <button 
+                  onClick={() => { setActiveSettingsModal('shopee_live'); setIsSettingsDropdownOpen(false); }}
+                  className={`w-full text-left px-3 py-2.5 mb-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-between gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-orange-950/60 to-amber-900/40 hover:from-orange-600 hover:to-amber-600 text-orange-200 hover:text-white border border-orange-700/60 shadow-md' : 'bg-orange-50 hover:bg-orange-500 text-orange-800 hover:text-white border border-orange-200'}`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <ShoppingBag size={16} className="text-[#EE4D2D]" />
+                    <span>KẾT NỐI SHOPEE LIVE (URL & KEY)</span>
+                  </div>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-[#EE4D2D] text-white shadow-xs">MỚI</span>
+                </button>
                 <button 
                   onClick={() => { setActiveSettingsModal('captcha'); setIsSettingsDropdownOpen(false); }}
                   className={`w-full text-left px-3 py-2.5 mb-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-emerald-900/50 to-teal-800/30 hover:from-emerald-600 hover:to-teal-500 text-emerald-200 hover:text-white border border-emerald-700/60 shadow-lg' : 'bg-emerald-50 hover:bg-emerald-500 text-emerald-800 hover:text-white'}`}
@@ -3873,6 +3885,14 @@ export default function DesktopAppUI() {
               >
                 <Brain size={12} /> Chuyên AI
               </button>
+              <button
+                onClick={() => setSimTab('shopee_live')}
+                className={`flex-1 py-1.5 rounded-lg text-center transition-all flex items-center justify-center gap-1 ${
+                  simTab === 'shopee_live' ? 'bg-[#EE4D2D] text-white shadow-md' : (isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-slate-600 hover:text-slate-900')
+                }`}
+              >
+                <ShoppingBag size={12} /> Shopee
+              </button>
             </div>
 
             {/* Tab Contents */}
@@ -4066,6 +4086,57 @@ export default function DesktopAppUI() {
                 </div>
               )}
 
+              {/* TAB 5: SHOPEE LIVE (URL & Key & Chốt Đơn) */}
+              {simTab === 'shopee_live' && (
+                <div className="space-y-3">
+                  <div className={`p-3 rounded-xl border flex items-center justify-between ${isDarkMode ? 'bg-orange-500/10 border-orange-500/30 text-orange-200' : 'bg-orange-50 border-orange-200 text-orange-900'}`}>
+                    <div>
+                      <div className="text-xs font-bold flex items-center gap-1.5 text-[#EE4D2D]">
+                        <ShoppingBag size={14} /> Shopee Live Kết Nối RTMP
+                      </div>
+                      <div className="text-[10px] text-gray-400 mt-0.5">
+                        {localStorage.getItem('avalive_shopee_connected') === 'true' ? '🟢 Đã kết nối luồng Shopee Live' : '⚪ Chưa kết nối (Bấm cài đặt để nhập Key)'}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setActiveSettingsModal('shopee_live')}
+                      className="px-2.5 py-1 bg-[#EE4D2D] hover:bg-[#d83f20] text-white rounded-lg text-[10px] font-bold shadow-xs transition-all flex items-center gap-1"
+                    >
+                      <span>Cài đặt URL & Key</span>
+                    </button>
+                  </div>
+
+                  <div>
+                    <span className={`text-[10px] font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1 ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>
+                      <ShoppingCart size={11} className="text-[#EE4D2D]" /> Giả lập Khách Chốt Đơn Shopee:
+                    </span>
+                    <div className="space-y-1.5">
+                      <button 
+                        onClick={() => handleLiveEvent('PURCHASE', { name: 'Ngọc Mai VIP 🛍️', item: 'Combo 2 Set Váy Thiết Kế Shopee Mall' })} 
+                        className={`w-full text-left p-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between border ${isDarkMode ? 'bg-orange-500/10 hover:bg-orange-500/20 text-orange-300 border-orange-500/30' : 'bg-orange-50 hover:bg-orange-100 text-orange-800 border-orange-200'}`}
+                      >
+                        <span>🛒 Khách Ngọc Mai chốt Combo Váy Shopee Mall</span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-[#EE4D2D] text-white">599k</span>
+                      </button>
+                      <button 
+                        onClick={() => handleLiveEvent('PURCHASE', { name: 'Thanh Hằng 👑', item: 'Áo Thun Polo Shopee Live Hỏa Tốc' })} 
+                        className={`w-full text-left p-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between border ${isDarkMode ? 'bg-orange-500/10 hover:bg-orange-500/20 text-orange-300 border-orange-500/30' : 'bg-orange-50 hover:bg-orange-100 text-orange-800 border-orange-200'}`}
+                      >
+                        <span>🛒 Khách Thanh Hằng chốt Áo Thun Shopee</span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-[#EE4D2D] text-white">250k</span>
+                      </button>
+                      <button 
+                        onClick={() => handleLiveEvent('COMMENT', { name: 'Minh Thư', text: 'Shop ơi có voucher giảm 50k của Shopee Live không ạ?' })} 
+                        className={`w-full text-left p-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between border ${isDarkMode ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/20' : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200'}`}
+                      >
+                        <span>🎟️ "Shop ơi có voucher Shopee Live không?"</span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-amber-500 text-white">Voucher</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Status processing indicator */}
               {isProcessingEvent && (
                 <div className="flex items-center justify-center gap-2 py-1.5 bg-purple-500/10 border border-purple-500/20 rounded-lg text-purple-500 text-[11px] font-semibold animate-pulse">
@@ -4237,6 +4308,13 @@ export default function DesktopAppUI() {
     </div>
     </div>
       )}
+
+      {/* Shopee Live Connect Modal (RTMP URL & Stream Key) */}
+      <ShopeeLiveConnectModal
+        isOpen={activeSettingsModal === 'shopee_live'}
+        onClose={() => setActiveSettingsModal(null)}
+        isDarkMode={isDarkMode}
+      />
 
       {/* Token History Modal */}
       {showTokenHistory && (

@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { 
   CheckSquare, MessageCircle, Plus, Gift, Clock, Megaphone, 
   Hand, ShoppingCart, Share, Sparkles, Mic, Heart, Play, HelpCircle, ChevronDown,
-  Download, Upload
+  Download, Upload, ShoppingBag
 } from 'lucide-react';
 import { NEW_AI_PROMPT } from '../../utils/defaultAIPrompt';
 import WorkspaceKeywordPanel from './WorkspaceKeywordPanel';
+import ShopeeLiveConnectModal from './ShopeeLiveConnectModal';
 
 const EVENTS = [
+  { id: 'shopee_live', label: '🟠 Shopee Live (URL & Key)', icon: ShoppingBag, color: 'text-[#EE4D2D]', desc: 'Cấu hình URL máy chủ RTMP và Khóa Luồng (Stream Key) kết nối với Kênh Người Bán Shopee Live để đồng bộ phiên phát trực tiếp.' },
   { id: 'checkout', label: 'Chốt đơn', icon: ShoppingCart, color: 'text-blue-500', desc: 'Aldol sẽ thực hiện các câu kêu gọi mua hàng, chốt đơn khi có người hỏi mua.' },
   { id: 'special_gift', label: 'Quà tặng Đặc biệt', icon: Sparkles, color: 'text-yellow-500', desc: 'Tạo ra các phản ứng độc đáo và ấn tượng cho những món quà giá trị (Sư tử, Du thuyền...) để tri ân những người hâm mộ lớn.' },
   { id: 'gift', label: 'Quà tặng (Thường)', icon: Gift, color: 'text-yellow-500', desc: 'Cấu hình phản ứng chung của Aldol khi nhận được các món quà không được liệt kê trong mục "Quà tặng Đặc biệt".' },
@@ -690,8 +692,12 @@ const FieldLabel = ({ icon, text, helpKey, customHelpText, minW = "min-w-[220px]
         {/* Scrollable Config Area */}
         <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
           
-          {/* SPECIAL GIFT */}
-          {selectedEventId === 'special_gift' ? (
+          {/* SHOPEE LIVE CONFIG */}
+          {selectedEventId === 'shopee_live' ? (
+            <div className="w-full pb-8">
+              <ShopeeLiveConnectModal inline={true} isDarkMode={false} />
+            </div>
+          ) : selectedEventId === 'special_gift' ? (
             <>
               <div className="border border-gray-300 rounded-md bg-white mb-3 shadow-sm px-3 py-4">
                 <fieldset className="border border-gray-300 rounded p-4 pt-4 mt-2 relative">

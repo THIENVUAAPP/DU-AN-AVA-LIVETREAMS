@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 
-export const APP_VERSION = '1.4.5';
+export const APP_VERSION = '1.4.6';
 export const UPDATE_NOTES = [
+  "🛍️ Tích hợp Cổng Kết Nối Shopee Live (RTMP URL & Stream Key): Thiết lập trực tiếp trong Menu (nằm ngay dưới mục Idol / Sự kiện Idol) và Sự kiện Livestream, hỗ trợ kết nối tức thì tới Kênh Người Bán Shopee, tự động xướng tên cảm ơn khách chốt đơn giỏ hàng Shopee Live 1-chạm.",
   "⚔️ Sửa triệt để lỗi Game Chiến Đấu (PK Battle): Bổ sung hàm stopAll() và bảo vệ an toàn luồng âm thanh Audio Engine khi chuyển tab hoặc kết thúc trận đấu, loại bỏ 100% lỗi TypeError: battleAudio.stopAll is not a function.",
-  "🚀 Tối ưu hóa siêu mượt & Giảm tải tài nguyên: Tách module code-splitting, tạm dừng các luồng vẽ nền khi chơi game, giúp Game Bản Đồ và Game Chiến Đấu đạt 60FPS siêu mượt không còn bị giật lag.",
-  "🗺️ Sửa triệt để lỗi Game Bản Đồ Việt Nam: Khắc phục lỗi thiếu biến mô phỏng và xung đột sự kiện kéo thả HUD, kết nối Socket IO quản trị mượt mà 100%."
+  "🚀 Tối ưu hóa siêu mượt & Giảm tải tài nguyên: Tách module code-splitting, tạm dừng các luồng vẽ nền khi chơi game, giúp Game Bản Đồ và Game Chiến Đấu đạt 60FPS siêu mượt không còn bị giật lag."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
