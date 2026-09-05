@@ -20,3 +20,4 @@ backend/uploads/*
 cloudflared
 release_zips/
 scripts/bin/
+screenshot_*.png
