@@ -1407,32 +1407,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     };
   }, [isPlayingState, masterState.videoPlaybackEvent, masterState.isPlaying]);
 
-  // 🕒 24/7 CONTINUOUS PLAYBACK WATCHDOG (TỰ ĐỘNG PHỤC HỒI & PHÁT LIÊN TỤC 24/24 KHI STREAMING)
-  useEffect(() => {
-    const watchdogTimer = setInterval(() => {
-      const vid = overlayVideoRef.current;
-      if (!vid || !activeMedia.url) return;
-
-      // Nếu streamer đã bấm tạm dừng thì TUYỆT ĐỐI KHÔNG TỰ ĐỘNG PHÁT LẠI
-      const isUserPaused = (localStorage.getItem('avalive_user_paused') === 'true' && masterState.isPlaying === false) || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
-      if (isUserPaused) return;
-
-      if (vid.paused && !vid.seeking) {
-        vid.muted = !hasAutoplayStarted ? true : isVideoAudioMuted;
-        if (!isVideoAudioMuted && hasAutoplayStarted) vid.volume = videoVolume;
-        if (vid.readyState === 0) {
-          try { vid.load(); } catch (e) {}
-        }
-        vid.play().then(() => setIsPlayingState(true)).catch(() => {
-          vid.muted = true;
-          vid.play().then(() => setIsPlayingState(true)).catch(() => {});
-        });
-      }
-    }, 1500);
-
-    return () => clearInterval(watchdogTimer);
-  }, [masterState.videoPlaybackEvent, masterState.isPlaying, isPlayingState, isVideoAudioMuted, videoVolume, activeMedia.url, hasAutoplayStarted]);
-
   // Helper giải mã URL media chính xác (tôn trọng 100% video/nhân vật người dùng chọn)
   const resolveActiveMedia = () => {
     let candidateUrl = masterState.mediaUrl || null;
@@ -1539,6 +1513,32 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   };
 
   const activeMedia = resolveActiveMedia();
+
+  // 🕒 24/7 CONTINUOUS PLAYBACK WATCHDOG (TỰ ĐỘNG PHỤC HỒI & PHÁT LIÊN TỤC 24/24 KHI STREAMING)
+  useEffect(() => {
+    const watchdogTimer = setInterval(() => {
+      const vid = overlayVideoRef.current;
+      if (!vid || !activeMedia.url) return;
+
+      // Nếu streamer đã bấm tạm dừng thì TUYỆT ĐỐI KHÔNG TỰ ĐỘNG PHÁT LẠI
+      const isUserPaused = (localStorage.getItem('avalive_user_paused') === 'true' && masterState.isPlaying === false) || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
+      if (isUserPaused) return;
+
+      if (vid.paused && !vid.seeking) {
+        vid.muted = !hasAutoplayStarted ? true : isVideoAudioMuted;
+        if (!isVideoAudioMuted && hasAutoplayStarted) vid.volume = videoVolume;
+        if (vid.readyState === 0) {
+          try { vid.load(); } catch (e) {}
+        }
+        vid.play().then(() => setIsPlayingState(true)).catch(() => {
+          vid.muted = true;
+          vid.play().then(() => setIsPlayingState(true)).catch(() => {});
+        });
+      }
+    }, 1500);
+
+    return () => clearInterval(watchdogTimer);
+  }, [masterState.videoPlaybackEvent, masterState.isPlaying, isPlayingState, isVideoAudioMuted, videoVolume, activeMedia.url, hasAutoplayStarted]);
 
   // 🖼️ HỖ TRỢ CHẾ ĐỘ CỬA SỔ NỔI (PICTURE-IN-PICTURE)
   const togglePip = async () => {
