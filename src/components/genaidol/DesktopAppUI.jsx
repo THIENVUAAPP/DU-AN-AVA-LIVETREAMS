@@ -632,6 +632,105 @@ export default function DesktopAppUI() {
       if (animId) cancelAnimationFrame(animId);
     };
   }, [isGameBanDoActive, isGameBattleActive]);
+
+  // 🛡️ BACKGROUND KEEP-ALIVE CHO PHẦN MỀM CHÍNH: CHỐNG ĐÓNG BĂNG/DỪNG VIDEO KHI CHUYỂN TAB HOẶC ẨN CỬA SỔ
+  useEffect(() => {
+    let keepAliveCtx = null;
+    let osc = null;
+    let gain = null;
+    let wakeLock = null;
+    let bgWorker = null;
+
+    const startAudioKeepAlive = () => {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx && (!keepAliveCtx || keepAliveCtx.state === 'closed')) {
+          keepAliveCtx = new AudioCtx();
+          osc = keepAliveCtx.createOscillator();
+          gain = keepAliveCtx.createGain();
+          osc.frequency.value = 20;
+          gain.gain.value = 0.00001;
+          osc.connect(gain);
+          gain.connect(keepAliveCtx.destination);
+          osc.start();
+        }
+        if (keepAliveCtx && keepAliveCtx.state === 'suspended') {
+          keepAliveCtx.resume().catch(() => {});
+        }
+      } catch (e) {}
+
+      if ('wakeLock' in navigator && !wakeLock) {
+        try {
+          navigator.wakeLock.request('screen').then(s => { wakeLock = s; }).catch(() => {});
+        } catch (e) {}
+      }
+    };
+
+    startAudioKeepAlive();
+    window.addEventListener('click', startAudioKeepAlive);
+    window.addEventListener('pointerdown', startAudioKeepAlive);
+
+    try {
+      const blob = new Blob([
+        "let t; self.onmessage=e=>{ if(e.data==='start'){ if(!t) t=setInterval(()=>self.postMessage('tick'), 1000); } else if(e.data==='stop'){ clearInterval(t); t=null; } };"
+      ], { type: 'application/javascript' });
+      bgWorker = new Worker(URL.createObjectURL(blob));
+      bgWorker.onmessage = () => {
+        const vid = desktopVideoRef.current;
+        if (vid && document.hidden) {
+          const isPaused = vid.dataset.userPaused === 'true' || localStorage.getItem('avalive_user_paused') === 'true';
+          if (!isPaused && vid.paused && !vid.ended && vid.readyState >= 2) {
+            vid.play().catch(() => {});
+          }
+        }
+      };
+      bgWorker.postMessage('start');
+    } catch (e) {}
+
+    const handleVisibility = () => {
+      const vid = desktopVideoRef.current;
+      if (!vid) return;
+      const isPaused = vid.dataset.userPaused === 'true' || localStorage.getItem('avalive_user_paused') === 'true';
+      if (!isPaused && vid.paused) {
+        vid.play().catch(() => {});
+      }
+      if (document.visibilityState === 'visible') {
+        if (!wakeLock && 'wakeLock' in navigator) {
+          navigator.wakeLock.request('screen').then(s => { wakeLock = s; }).catch(() => {});
+        }
+        if (keepAliveCtx && keepAliveCtx.state === 'suspended') {
+          keepAliveCtx.resume().catch(() => {});
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('blur', handleVisibility);
+    window.addEventListener('focus', handleVisibility);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('blur', handleVisibility);
+      window.removeEventListener('focus', handleVisibility);
+      window.removeEventListener('click', startAudioKeepAlive);
+      window.removeEventListener('pointerdown', startAudioKeepAlive);
+      if (bgWorker) {
+        try { bgWorker.postMessage('stop'); bgWorker.terminate(); } catch (e) {}
+      }
+      if (osc) {
+        try { osc.stop(); osc.disconnect(); } catch (e) {}
+      }
+      if (gain) {
+        try { gain.disconnect(); } catch (e) {}
+      }
+      if (keepAliveCtx) {
+        try { keepAliveCtx.close(); } catch (e) {}
+      }
+      if (wakeLock) {
+        try { wakeLock.release(); } catch (e) {}
+      }
+    };
+  }, []);
   const lastAiCommentTime = useRef(0);
   const lastAiGreetingTime = useRef(0);
   const greetedUsernamesRef = useRef(new Set());
@@ -1521,6 +1620,11 @@ export default function DesktopAppUI() {
       isVideoAudioMuted: nextMuted,
       videoVolume: liveVolume
     }, socketRef.current);
+    sendVideoControl({
+      action: 'audio_sync',
+      isMuted: nextMuted,
+      volume: liveVolume
+    }, socketRef.current);
 
     showToast(nextMuted ? '🔇 Đã TẮT ÂM THANH!' : '🔊 Đã BẬT ÂM THANH!', nextMuted ? 'info' : 'success');
   }, [liveAudioMuted, liveVolume]);
@@ -1554,6 +1658,11 @@ export default function DesktopAppUI() {
     syncMasterLiveState({
       isVideoAudioMuted: isMutedNow,
       videoVolume: newVol
+    }, socketRef.current);
+    sendVideoControl({
+      action: 'audio_sync',
+      isMuted: isMutedNow,
+      volume: newVol
     }, socketRef.current);
   }, []);
 
@@ -2838,7 +2947,16 @@ export default function DesktopAppUI() {
               }}
               onPause={(e) => {
                 if (isInternalPlaybackChangeRef.current) return;
-                const curTime = e.currentTarget.currentTime;
+                const v = e.currentTarget;
+                // 🛡️ CHỈ XỬ LÝ NẾU ĐÂY THỰC SỰ LÀ LỆNH TẠM DỪNG DO NGƯỜI DÙNG BẤM
+                // (Tránh Chromium tự ngắt video do người dùng chuyển tab / ẩn cửa sổ)
+                const isUserDeliberatePause = v.dataset.userPaused === 'true' || localStorage.getItem('avalive_user_paused') === 'true';
+                if (!isUserDeliberatePause) {
+                  v.play().catch(() => {});
+                  return;
+                }
+
+                const curTime = v.currentTime;
                 let playUrl = selected.url;
                 if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
                   playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
@@ -2847,7 +2965,7 @@ export default function DesktopAppUI() {
                   localStorage.setItem('avalive_user_paused', 'true');
                   localStorage.setItem('avalive_window_capture_paused', 'true');
                 } catch (err) {}
-                e.currentTarget.dataset.userPaused = 'true';
+                v.dataset.userPaused = 'true';
                 setIsVideoPlaying(false);
                 
                 sendVideoControl({
@@ -3397,6 +3515,7 @@ export default function DesktopAppUI() {
               mapVoiceEngine.stopAll();
               battleVoiceEngine.stopAll();
               battleCommentary.stopAll();
+              syncMasterLiveState({ stage: 'idol' }, socketRef.current);
             }}
             title="Chuyển sang màn hình Livestream AI Idol"
           >
@@ -3426,6 +3545,7 @@ export default function DesktopAppUI() {
                 if (battleCommentary.isEnabled) battleCommentary.startPeriodicCommentary(true);
                 if (battleVoiceEngine.isAutoEnabled) battleVoiceEngine.startPeriodicCommentary(true);
               }
+              syncMasterLiveState({ stage: 'battle' }, socketRef.current);
             }}
             title="Chuyển sang chế độ Game Chiến Đấu (TikTok LIVE Battle Game) trên màn hình chính"
           >
@@ -3468,6 +3588,7 @@ export default function DesktopAppUI() {
                 bandoAudio.playBgmOnLive();
                 mapVoiceEngine.startPeriodicCommentary(true);
               }
+              syncMasterLiveState({ stage: 'bando' }, socketRef.current);
             }}
             title="Chuyển sang Game Ghép Cờ Bản Đồ Việt Nam (Đất Nước Hình Chữ S) trên màn hình chính"
           >

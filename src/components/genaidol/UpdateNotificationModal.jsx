@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.6.0';
+export const APP_VERSION = '1.6.1';
 export const UPDATE_NOTES = [
-  "⭐ 1 Đường Link Duy Nhất Cho Mỗi Dự Án (Idol, Bản Đồ, Battle PK): Chuẩn hóa giao diện phát trực tiếp cho TikTok Live Studio & OBS — mỗi dự án chỉ dùng đúng 1 đường link duy nhất, sao chép dán vào là phát ngay tức thì 60FPS không cần cài đặt rườm rà.",
-  "🎬 Đồng Bộ Âm Thanh, Hình Ảnh & Video 4K Siêu Nét Không Độ Trễ (0ms): Kết nối đồng bộ trực tiếp video, âm thanh, quà tặng từ bảng điều khiển sang luồng phát TikTok Live theo thời gian thực. Hỗ trợ chạy video 5-10 tiếng dung lượng nhiều Gigabyte siêu mượt 24/24.",
-  "🛡️ Khắc Phục Triệt Để Giới Hạn TikTok Live Studio: Loại bỏ hoàn toàn lỗi chặn link nội bộ (127.0.0.1) trên Windows, tự động tối ưu hóa đường truyền HTTPS bảo mật cao giúp phiên live luôn ổn định bền bỉ."
+  "⭐ Đồng Bộ Tuyệt Đối 100% Video & Âm Thanh Giữa Phần Mềm Và TikTok Live: Khi phần mềm phát video nào thì TikTok Live / OBS phát video đó; bấm tạm dừng thì dừng tất cả; đổi video lập tức đổi theo thời gian thực 0ms.",
+  "🛡️ Khắc Phục Triệt Để Hiện Tượng Đứng Hình / Tắt Video Khi Chuyển Tab: Tích hợp Background Keep-Alive AudioContext 20Hz siêu trầm và Web Worker chạy nền độc lập giúp Window Capture và đường link phát liên tục 24/7 không bao giờ bị Chromium đóng băng hay ngắt luồng.",
+  "🎬 1 Đường Link Duy Nhất Cho Mọi Dự Án & Window Capture 60FPS: Tự động điều chỉnh tỉ lệ khung hình 9:16 và 16:9 sắc nét, hỗ trợ phát trực tiếp ổn định tuyệt đối trên TikTok Live Studio và OBS Studio."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

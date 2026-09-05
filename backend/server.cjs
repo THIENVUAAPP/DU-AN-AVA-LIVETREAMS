@@ -789,6 +789,15 @@ io.on('connection', (socket) => {
       }
       currentMasterLiveState = nextState;
       io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+      if (state.videoPlaybackEvent || typeof state.isPlaying === 'boolean') {
+        io.emit('VIDEO_PLAYBACK_CONTROL', {
+          action: state.videoPlaybackEvent || (state.isPlaying ? 'play' : 'pause'),
+          isPlaying: state.isPlaying,
+          currentTime: state.videoCurrentTime,
+          mediaUrl: currentMasterLiveState.mediaUrl,
+          timestamp: Date.now()
+        });
+      }
       saveLiveStateToFile();
     }
   };
@@ -815,6 +824,12 @@ io.on('connection', (socket) => {
       if (control.mediaUrl && typeof control.mediaUrl === 'string') {
         currentMasterLiveState.mediaUrl = control.mediaUrl;
         currentMasterLiveState.isVideo = true;
+      }
+      if (typeof control.isMuted === 'boolean') {
+        currentMasterLiveState.isVideoAudioMuted = control.isMuted;
+      }
+      if (typeof control.volume === 'number') {
+        currentMasterLiveState.videoVolume = control.volume;
       }
       currentMasterLiveState.updatedAt = Date.now();
 
@@ -1498,6 +1513,15 @@ app.post('/api/live-state', (req, res) => {
     };
 
     io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+    if (payload.videoPlaybackEvent || typeof payload.isPlaying === 'boolean') {
+      io.emit('VIDEO_PLAYBACK_CONTROL', {
+        action: payload.videoPlaybackEvent || (payload.isPlaying ? 'play' : 'pause'),
+        isPlaying: payload.isPlaying,
+        currentTime: payload.videoCurrentTime,
+        mediaUrl: currentMasterLiveState.mediaUrl,
+        timestamp: Date.now()
+      });
+    }
     saveLiveStateToFile(false);
   }
   res.json({ success: true, state: currentMasterLiveState });
@@ -1519,6 +1543,12 @@ app.post('/api/video-control', (req, res) => {
     if (control.mediaUrl && typeof control.mediaUrl === 'string') {
       currentMasterLiveState.mediaUrl = control.mediaUrl;
       currentMasterLiveState.isVideo = true;
+    }
+    if (typeof control.isMuted === 'boolean') {
+      currentMasterLiveState.isVideoAudioMuted = control.isMuted;
+    }
+    if (typeof control.volume === 'number') {
+      currentMasterLiveState.videoVolume = control.volume;
     }
     currentMasterLiveState.updatedAt = Date.now();
 
