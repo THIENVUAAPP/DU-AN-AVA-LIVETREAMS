@@ -34,20 +34,26 @@ console.log(`\n===========================================================`);
 console.log(`🚀 TỰ ĐỘNG PHÁT HÀNH BẢN CẬP NHẬT GITHUB: ${tagName}`);
 console.log(`===========================================================\n`);
 
-// 3. Make sure package:zip is built
-console.log(`[1/3] Đang đóng gói bản ZIP độc lập cho Windows & Mac...`);
-try {
-  execSync('npm run package:zip', { cwd: rootDir, stdio: 'inherit' });
-} catch (err) {
-  console.error('❌ Lỗi đóng gói zip:', err);
-  process.exit(1);
-}
-
 const releaseDir = path.join(rootDir, 'release_zips');
 const winZipFileName = `AvaLive_VIP_PRO_Windows_v${version}.zip`;
 const macZipFileName = `AvaLive_VIP_PRO_Mac_v${version}.zip`;
 const winZipFilePath = path.join(releaseDir, winZipFileName);
 const macZipFilePath = path.join(releaseDir, macZipFileName);
+
+// 3. Make sure package:zip is built
+if (!fs.existsSync(winZipFilePath) || !fs.existsSync(macZipFilePath) || process.argv.includes('--build')) {
+  console.log(`[1/3] Đang đóng gói bản ZIP độc lập cho Windows & Mac...`);
+  try {
+    execSync('npm run package:zip', { cwd: rootDir, stdio: 'inherit' });
+  } catch (err) {
+    console.error('❌ Lỗi đóng gói zip:', err);
+    process.exit(1);
+  }
+} else {
+  console.log(`[1/3] ✅ Sử dụng các file ZIP đã có sẵn trong release_zips/:`);
+  console.log(`   - ${winZipFileName}`);
+  console.log(`   - ${macZipFileName}`);
+}
 
 if (!fs.existsSync(winZipFilePath) || !fs.existsSync(macZipFilePath)) {
   console.error('❌ Không tìm thấy các file zip vừa tạo!');
@@ -113,6 +119,21 @@ async function uploadReleaseAsset(uploadUrlTemplate, filePath, fileName) {
     req.on('error', reject);
 
     const readStream = fs.createReadStream(filePath);
+    readStream.on('error', reject);
+
+    let uploadedBytes = 0;
+    let lastLogTime = Date.now();
+    readStream.on('data', (chunk) => {
+      uploadedBytes += chunk.length;
+      const now = Date.now();
+      if (now - lastLogTime > 3000) {
+        lastLogTime = now;
+        const pct = ((uploadedBytes / fileStats.size) * 100).toFixed(0);
+        const curMB = (uploadedBytes / (1024 * 1024)).toFixed(1);
+        console.log(`      ⏳ Đang tải lên ${fileName}: ${curMB} MB / ${fileSizeInMB} MB (${pct}%)...`);
+      }
+    });
+
     readStream.pipe(req);
   });
 }
