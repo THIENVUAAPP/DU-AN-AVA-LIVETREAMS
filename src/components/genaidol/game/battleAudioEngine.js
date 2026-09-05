@@ -637,7 +637,7 @@ export const battleAudio = {
 
   emitStatus() {
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('battle-audio-status', {
+       window.dispatchEvent(new CustomEvent('battle-audio-status', {
         detail: {
           isBgmPlaying,
           isSfxMuted,
@@ -651,3 +651,9 @@ export const battleAudio = {
     }
   }
 };
+
+if (typeof window !== 'undefined') {
+  window.battleAudio = battleAudio;
+}
+
+export default battleAudio;

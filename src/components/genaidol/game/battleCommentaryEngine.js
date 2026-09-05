@@ -197,6 +197,9 @@ class BattleCommentaryEngine {
     this.cancelSpeech();
     this.isGameActive = false;
     this.isSpeaking = false;
+    if (this.onDuckAudio) {
+      try { this.onDuckAudio(false); } catch (e) {}
+    }
   }
 
   speakRandomPrompt() {
@@ -246,12 +249,6 @@ class BattleCommentaryEngine {
   triggerVictoryCommentary(winnerFactionName) {
     const line = `Khải hoàn toàn thắng! Xin chúc mừng ${winnerFactionName} đã xuất sắc giành chiến thắng oanh liệt trong trận đại chiến này!`;
     this.speak(line, true);
-  }
-
-  stopAll() {
-    this.stopPeriodicCommentary();
-    this.cancelSpeech();
-    if (this.onDuckAudio) this.onDuckAudio(false);
   }
 }
 

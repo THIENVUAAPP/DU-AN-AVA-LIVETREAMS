@@ -270,17 +270,27 @@ export default function GameChienDau({
     }
 
     return () => {
-      if (battleCommentary && typeof battleCommentary.stopAll === 'function') {
-        battleCommentary.stopAll();
+      try {
+        if (typeof battleCommentary?.stopAll === 'function') {
+          battleCommentary.stopAll();
+        }
+      } catch (e) {
+        console.warn('battleCommentary stop error:', e);
       }
-      if (battleAudio && typeof battleAudio.stopAll === 'function') {
-        battleAudio.stopAll();
-      } else if (battleAudio && typeof battleAudio.stopBgm === 'function') {
-        battleAudio.stopBgm();
+      try {
+        if (typeof battleAudio?.stopAll === 'function') {
+          battleAudio.stopAll();
+        } else if (typeof battleAudio?.stopBgm === 'function') {
+          battleAudio.stopBgm();
+        }
+      } catch (e) {
+        console.warn('battleAudio stop error:', e);
       }
-      if (broadcastChannelRef.current) {
-        broadcastChannelRef.current.close();
-      }
+      try {
+        if (broadcastChannelRef.current) {
+          broadcastChannelRef.current.close();
+        }
+      } catch (e) {}
     };
   }, []);
 
@@ -3004,12 +3014,20 @@ export default function GameChienDau({
     window.addEventListener('avalive_tiktok_gift', handleDirectGiftEvent);
 
     const handleEmergencyStop = () => {
-      if (battleCommentary && typeof battleCommentary.stopAll === 'function') battleCommentary.stopAll();
-      if (battleVoiceEngine && typeof battleVoiceEngine.stopAll === 'function') battleVoiceEngine.stopAll();
-      if (battleAudio && typeof battleAudio.stopAll === 'function') battleAudio.stopAll();
-      else if (battleAudio && typeof battleAudio.stopBgm === 'function') battleAudio.stopBgm();
+      try {
+        if (typeof battleCommentary?.stopAll === 'function') battleCommentary.stopAll();
+      } catch (e) {}
+      try {
+        if (typeof battleVoiceEngine?.stopAll === 'function') battleVoiceEngine.stopAll();
+      } catch (e) {}
+      try {
+        if (typeof battleAudio?.stopAll === 'function') battleAudio.stopAll();
+        else if (typeof battleAudio?.stopBgm === 'function') battleAudio.stopBgm();
+      } catch (e) {}
       if (typeof window !== 'undefined' && window.speechSynthesis) {
-        window.speechSynthesis.cancel();
+        try {
+          window.speechSynthesis.cancel();
+        } catch (e) {}
       }
     };
     window.addEventListener('avalive_emergency_stop_all', handleEmergencyStop);
