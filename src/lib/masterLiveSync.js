@@ -66,9 +66,25 @@ export function syncMasterLiveState(partialState, socket = null) {
   if (typeof window === 'undefined') return;
 
   const current = getMasterLiveState() || {};
+  let tunnelUrl = partialState.tunnelUrl || current.tunnelUrl;
+  if (!tunnelUrl && typeof window !== 'undefined') {
+    try {
+      const savedTunnel = localStorage.getItem('avalive_tunnel_data');
+      if (savedTunnel) {
+        const parsed = JSON.parse(savedTunnel);
+        if (parsed.tunnelUrl) tunnelUrl = parsed.tunnelUrl;
+      }
+      if (!tunnelUrl) {
+        const directTunnel = localStorage.getItem('avalive_tunnel_url');
+        if (directTunnel) tunnelUrl = directTunnel;
+      }
+    } catch (e) {}
+  }
+
   const updated = {
     ...current,
     ...partialState,
+    tunnelUrl: tunnelUrl || current.tunnelUrl || null,
     type: 'MASTER_LIVE_STATE_UPDATE',
     updatedAt: Date.now()
   };

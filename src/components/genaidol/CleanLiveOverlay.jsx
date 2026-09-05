@@ -691,10 +691,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         bandoAudio.setMasterVolume(data.videoVolume);
       }
 
+      if (data.tunnelUrl) {
+        try { localStorage.setItem('avalive_tunnel_url', data.tunnelUrl); } catch (e) {}
+      }
+
       setMasterState(prev => {
         // Kiểm tra xem có trường dữ liệu quan trọng nào thực sự thay đổi không
         let hasDiff = false;
-        const keys = ['stage', 'aspectRatio', 'mediaUrl', 'flvUrl', 'isVideo', 'selectedCharacter', 'characterName', 'videoPlaybackEvent', 'isPlaying', 'isDarkMode'];
+        const keys = ['stage', 'aspectRatio', 'mediaUrl', 'flvUrl', 'isVideo', 'selectedCharacter', 'characterName', 'videoPlaybackEvent', 'isPlaying', 'isDarkMode', 'tunnelUrl'];
         for (const k of keys) {
           if (data[k] !== undefined && data[k] !== prev[k]) {
             hasDiff = true;
@@ -747,6 +751,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         supabaseChannel.on('broadcast', { event: 'MASTER_LIVE_STATE_UPDATE' }, (payload) => {
           if (payload?.payload) {
             applyMasterState(payload.payload);
+          }
+        });
+
+        supabaseChannel.on('broadcast', { event: 'VIDEO_PLAYBACK_CONTROL' }, (payload) => {
+          if (payload?.payload) {
+            handleVideoPlaybackControl(payload.payload);
           }
         });
 
@@ -1477,17 +1487,31 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         candidateUrl = candidateUrl.substring(candidateUrl.lastIndexOf('https://'));
       }
 
-      // Chuẩn hoá đường dẫn file upload sang origin hiện tại (Tránh Mixed Content và CORS 100%)
+      // Chuẩn hoá đường dẫn file upload sang origin hiện tại hoặc Cloudflare Tunnel (Tránh Mixed Content và CORS 100%)
+      const tunnelBase = masterState.tunnelUrl || (typeof window !== 'undefined' && (localStorage.getItem('avalive_tunnel_url') || (JSON.parse(localStorage.getItem('avalive_tunnel_data') || '{}')?.tunnelUrl))) || null;
+
       if (candidateUrl.includes('/uploads/')) {
         const pathPart = candidateUrl.substring(candidateUrl.indexOf('/uploads/'));
-        candidateUrl = currentOrigin ? `${currentOrigin}${pathPart}` : pathPart;
+        if (currentOrigin.includes('vercel.app') && tunnelBase) {
+          candidateUrl = `${tunnelBase.replace(/\/$/, '')}${pathPart}`;
+        } else {
+          candidateUrl = currentOrigin ? `${currentOrigin}${pathPart}` : pathPart;
+        }
       } else if (candidateUrl.startsWith('/')) {
-        candidateUrl = currentOrigin ? `${currentOrigin}${candidateUrl}` : candidateUrl;
+        if (currentOrigin.includes('vercel.app') && tunnelBase && (candidateUrl.endsWith('.mp4') || candidateUrl.endsWith('.webm') || candidateUrl.endsWith('.mov'))) {
+          candidateUrl = `${tunnelBase.replace(/\/$/, '')}${candidateUrl}`;
+        } else {
+          candidateUrl = currentOrigin ? `${currentOrigin}${candidateUrl}` : candidateUrl;
+        }
       } else if (isHttps && candidateUrl.startsWith('http://')) {
         try {
           const parsed = new URL(candidateUrl);
           if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1' || parsed.hostname.includes('nip.io')) {
-            candidateUrl = `${currentOrigin}${parsed.pathname}${parsed.search}`;
+            if (currentOrigin.includes('vercel.app') && tunnelBase) {
+              candidateUrl = `${tunnelBase.replace(/\/$/, '')}${parsed.pathname}${parsed.search}`;
+            } else {
+              candidateUrl = `${currentOrigin}${parsed.pathname}${parsed.search}`;
+            }
           }
         } catch (e) {}
       }

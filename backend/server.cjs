@@ -1465,6 +1465,9 @@ app.get('/api/live-state', (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
+  if (currentTunnelUrl) {
+    currentMasterLiveState.tunnelUrl = currentTunnelUrl;
+  }
   res.json(currentMasterLiveState);
 });
 
@@ -1483,9 +1486,14 @@ app.post('/api/live-state', (req, res) => {
       delete payload.mediaUrl; // Bảo vệ video hiện tại không bị gán đè null
     }
 
+    if (currentTunnelUrl && !payload.tunnelUrl) {
+      payload.tunnelUrl = currentTunnelUrl;
+    }
+
     currentMasterLiveState = { 
       ...currentMasterLiveState, 
       ...payload, 
+      tunnelUrl: payload.tunnelUrl || currentTunnelUrl || currentMasterLiveState.tunnelUrl || null,
       updatedAt: Date.now() 
     };
 
@@ -1834,6 +1842,7 @@ async function startCloudflaredTunnel(port) {
           if (match && !currentTunnelUrl) {
             currentTunnelUrl = match[0];
             tunnelStatus = 'active';
+            currentMasterLiveState.tunnelUrl = currentTunnelUrl;
             printTunnelReady(currentTunnelUrl);
             io.emit('TUNNEL_URL_UPDATE', {
               status: 'active',
@@ -1844,6 +1853,8 @@ async function startCloudflaredTunnel(port) {
                 battle: `${currentTunnelUrl}/battle`
               }
             });
+            io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+            saveLiveStateToFile(false);
             startTunnelLivenessMonitor(currentTunnelUrl, port);
           }
         } catch (e) {}
