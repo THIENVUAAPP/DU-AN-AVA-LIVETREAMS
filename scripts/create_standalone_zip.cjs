@@ -74,21 +74,22 @@ const huongDanContent = `=======================================================
 =================================================================
 
 1. ĐỐI VỚI MÁY TÍNH WINDOWS:
-   👉 BƯỚC 1: Chuột phải vào file ZIP -> Chọn "Extract All..." (Giải nén)
-   👉 BƯỚC 2: Nhấp đúp chuột vào file khởi động ngay ở đầu thư mục:
-      ⭐ [ 1_KHOI_DONG_AVALIVE.exe ] hoặc [ 1_CLICK_CHAY_NGAY.bat ]
-      (Hoặc file [ AvaLive_Studio.exe ])
+   👉 BƯỚC 1: Chuột phải vào file ZIP -> Chọn "Extract All..." (Giải nén toàn bộ)
+   👉 BƯỚC 2: Nhấp đúp chuột vào 1 trong 2 file khởi động ngay ở đầu thư mục:
+      ⭐ [ 1_KHOI_DONG_AVALIVE.exe ] (Khuyên dùng - Mở cực nhanh)
+      ⭐ Hoặc [ 1_CLICK_CHAY_NGAY.bat ] (Khởi động dự phòng an toàn)
    -> Giao diện AvaLive Studio sẽ mở lên ngay lập tức!
    ⚠️ LƯU Ý: KHÔNG cần mở thư mục "system" hay tìm kiếm file ở thư mục con.
 
-2. KẾT NỐI TÀI KHOẢN GMAIL & ĐỒNG BỘ BẢN QUYỀN:
+2. ĐỐI VỚI MÁY TÍNH MAC (macOS):
+   👉 BƯỚC 1: Nhấp đúp chuột để giải nén file ZIP
+   👉 BƯỚC 2: Nhấp đúp chuột vào file: [ 1_Khoi_Dong_AvaLive_Mac.command ]
+   -> Phần mềm sẽ tự động khởi chạy và mở trình duyệt.
+
+3. KẾT NỐI TÀI KHOẢN GMAIL & ĐỒNG BỘ BẢN QUYỀN:
    • Bấm vào ô "🔑 Đăng Nhập Gmail" ở góc trên giao diện phần mềm.
    • Nhập địa chỉ Gmail bạn đã đăng ký trên website để nhận ngay gói VIP & Token AI.
    • Gói Miễn Phí: Nhận Token AI tự động để trải nghiệm ngay.
-
-3. ĐỐI VỚI MÁY TÍNH MAC (macOS):
-   👉 Nhấp đúp chuột vào file: [ 1_Khoi_Dong_AvaLive_Mac.command ]
-   -> Phần mềm sẽ tự động khởi chạy.
 
 4. ĐỒNG BỘ VỚI TIKTOK LIVE STUDIO & OBS:
    • Sau khi mở app, bấm nút "📡 Link Live" để lấy link nguồn trình duyệt (Browser Source).
@@ -99,7 +100,7 @@ HỖ TRỢ KỸ THUẬT 24/7: support@avalive.com | Website: https://avalivepro.
 =================================================================
 `;
 
-// Tạo Batch Launcher 1-Click duy nhất cho Windows
+// Tạo Batch Launcher 1-Click duy nhất cho Windows (Bao gồm fallback nếu EXE bị chặn)
 const winBatLauncher = `@echo off
 title AvaLive VIP PRO - Livestream Studio AI
 cd /d "%~dp0"
@@ -108,77 +109,41 @@ for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr ":3001" ^| findstr "LI
     taskkill /F /PID %%a >nul 2>nul
 )
 
-if exist "AvaLive_Studio.exe" (
-    start "" "AvaLive_Studio.exe"
+if exist "1_KHOI_DONG_AVALIVE.exe" (
+    start "" "1_KHOI_DONG_AVALIVE.exe"
     exit /b
 )
 
-if exist "system\node_portable\node.exe" (
-    powershell -WindowStyle Hidden -Command "Start-Process -FilePath '%~dp0system\node_portable\node.exe' -ArgumentList '%~dp0system\core.cjs' -WorkingDirectory '%~dp0system'"
+if exist "system\\node_portable\\node.exe" (
+    powershell -WindowStyle Hidden -Command "Start-Process -FilePath '%~dp0system\\node_portable\\node.exe' -ArgumentList '%~dp0system\\core.cjs' -WorkingDirectory '%~dp0system'"
 ) else (
-    powershell -WindowStyle Hidden -Command "Start-Process -FilePath 'node' -ArgumentList '%~dp0system\core.cjs' -WorkingDirectory '%~dp0system'"
+    powershell -WindowStyle Hidden -Command "Start-Process -FilePath 'node' -ArgumentList '%~dp0system\\core.cjs' -WorkingDirectory '%~dp0system'"
 )
 
 timeout /t 2 /nobreak >nul 2>nul
 
 set "URL=http://localhost:3001/desktop"
 
-if exist "%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe" (
-    start "" "%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe" --app=%URL%
+if exist "%ProgramFiles(x86)%\\Microsoft\\Edge\\Application\\msedge.exe" (
+    start "" "%ProgramFiles(x86)%\\Microsoft\\Edge\\Application\\msedge.exe" --app=%URL%
     exit /b
 )
-if exist "%ProgramFiles%\Microsoft\Edge\Application\msedge.exe" (
-    start "" "%ProgramFiles%\Microsoft\Edge\Application\msedge.exe" --app=%URL%
+if exist "%ProgramFiles%\\Microsoft\\Edge\\Application\\msedge.exe" (
+    start "" "%ProgramFiles%\\Microsoft\\Edge\\Application\\msedge.exe" --app=%URL%
     exit /b
 )
-if exist "%ProgramFiles%\Google\Chrome\Application\chrome.exe" (
-    start "" "%ProgramFiles%\Google\Chrome\Application\chrome.exe" --app=%URL%
+if exist "%ProgramFiles%\\Google\\Chrome\\Application\\chrome.exe" (
+    start "" "%ProgramFiles%\\Google\\Chrome\\Application\\chrome.exe" --app=%URL%
     exit /b
 )
-if exist "%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe" (
-    start "" "%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe" --app=%URL%
+if exist "%ProgramFiles(x86)%\\Google\\Chrome\\Application\\chrome.exe" (
+    start "" "%ProgramFiles(x86)%\\Google\\Chrome\\Application\\chrome.exe" --app=%URL%
     exit /b
 )
 
 start "" "%URL%"
 exit /b
 `.split('\n').join('\r\n');
-
-// VBScript chạy ngầm không hiện cửa sổ CMD đen
-const winVbsLauncher = `Set WshShell = CreateObject("WScript.Shell")
-WshShell.Run "1_Khoi_Dong_AvaLive_Windows.bat", 0, False
-`.split('\n').join('\r\n');
-
-
-// Tạo Command Launcher cho Mac
-const macCommandLauncher = `#!/bin/bash
-DIR="$( cd "$( dirname "\${BASH_SOURCE[0]}" )" && pwd )"
-cd "$DIR"
-
-echo "================================================================="
-echo "  🍏 ĐANG KHỞI ĐỘNG HỆ THỐNG AVALIVE LIVESTREAM VIP PRO (macOS)"
-echo "================================================================="
-echo ""
-
-cd "$DIR/system"
-chmod +x "$DIR/system/cloudflared" 2>/dev/null || true
-node core.cjs &
-SERVER_PID=$!
-
-sleep 2
-
-if [ -d "/Applications/Google Chrome.app" ]; then
-    open -na "Google Chrome" --args --app="http://localhost:3001/desktop"
-elif [ -d "/Applications/Microsoft Edge.app" ]; then
-    open -na "Microsoft Edge" --args --app="http://localhost:3001/desktop"
-else
-    open "http://localhost:3001/desktop"
-fi
-
-echo "✨ Phần mềm đã mở thành công tại: http://localhost:3001/desktop"
-echo "Nhấn Ctrl+C để dừng."
-wait $SERVER_PID
-`;
 
 // 3. ĐÓNG GÓI BẢN WINDOWS
 console.log('\n[3/4] Đang đóng gói bản Windows an toàn & bảo mật...');
@@ -210,7 +175,7 @@ if (fs.existsSync(winCloudflaredSrc)) {
   console.log('   -> ✅ Đã tích hợp Cloudflare Tunnel (cloudflared.exe) cho Windows!');
 }
 
-// Tạo file chạy EXE 1-CLICK cho Windows (Nổi bật ngay trên cùng khi giải nén)
+// Tạo file chạy EXE 1-CLICK cho Windows (Duy nhất 1 file, không trùng lặp)
 console.log('   -> Đang chuẩn bị Native Windows Launcher (.exe duy nhất)...');
 const cachedExe = path.join(rootDir, 'AvaLive_Studio.exe');
 
@@ -222,27 +187,13 @@ if (!fs.existsSync(cachedExe)) {
   });
 }
 
-// 1. File EXE chính
-fs.copyFileSync(cachedExe, path.join(winStaging, 'AvaLive_Studio.exe'));
-// 2. File EXE bắt đầu bằng 1_ để luôn xuất hiện trên cùng khi giải nén
+// File EXE bắt đầu bằng 1_ để luôn xuất hiện trên cùng khi giải nén (Chỉ 1 file duy nhất)
 fs.copyFileSync(cachedExe, path.join(winStaging, '1_KHOI_DONG_AVALIVE.exe'));
 
-// 3. File BAT 1-Click dự phòng cực nhanh
-const oneClickBat = `@echo off
-title AvaLive Studio VIP PRO
-cd /d "%~dp0"
-if exist "AvaLive_Studio.exe" (
-    start "" "AvaLive_Studio.exe"
-    exit /b
-)
-if exist "1_KHOI_DONG_AVALIVE.exe" (
-    start "" "1_KHOI_DONG_AVALIVE.exe"
-    exit /b
-)
-`.split('\n').join('\r\n');
-fs.writeFileSync(path.join(winStaging, '1_CLICK_CHAY_NGAY.bat'), oneClickBat);
+// File BAT 1-Click dự phòng cực nhanh & tin cậy
+fs.writeFileSync(path.join(winStaging, '1_CLICK_CHAY_NGAY.bat'), winBatLauncher);
 
-// 4. File Hướng dẫn sử dụng
+// File Hướng dẫn sử dụng
 fs.writeFileSync(path.join(winStaging, 'HUONG_DAN_SU_DUNG.txt'), huongDanContent);
 
 // Tải Node.js Portable cho Windows
@@ -261,8 +212,49 @@ try {
 }
 
 if (fs.existsSync(winZipFilePath)) fs.unlinkSync(winZipFilePath);
-execSync(`cd "${winStaging}" && zip -q -r "${winZipFilePath}" . -x "*.DS_Store"`);
+execSync(`cd "${winStaging}" && zip -q -r "${winZipFilePath}" . -x "*.DS_Store" -x "*__MACOSX*" -x "*.tmp" -x "Thumbs.db"`);
 fs.rmSync(winStaging, { recursive: true, force: true });
+
+// Tạo Command Launcher cho Mac
+const macCommandLauncher = `#!/bin/bash
+DIR="$( cd "$( dirname "\${BASH_SOURCE[0]}" )" && pwd )"
+cd "$DIR"
+
+echo "================================================================="
+echo "  🍏 ĐANG KHỞI ĐỘNG HỆ THỐNG AVALIVE LIVESTREAM VIP PRO (macOS)"
+echo "================================================================="
+echo ""
+
+# Tự động đóng tiến trình cũ đang chiếm cổng 3001 nếu có
+lsof -ti:3001 | xargs kill -9 2>/dev/null || true
+
+cd "$DIR/system"
+chmod +x "$DIR/system/cloudflared" 2>/dev/null || true
+
+if ! command -v node &> /dev/null; then
+    echo "⚠️ Không tìm thấy Node.js trên máy Mac của bạn."
+    echo "👉 Vui lòng tải và cài đặt Node.js từ: https://nodejs.org để tiếp tục."
+    open "https://nodejs.org"
+    exit 1
+fi
+
+node core.cjs &
+SERVER_PID=$!
+
+sleep 2
+
+if [ -d "/Applications/Google Chrome.app" ]; then
+    open -na "Google Chrome" --args --app="http://localhost:3001/desktop"
+elif [ -d "/Applications/Microsoft Edge.app" ]; then
+    open -na "Microsoft Edge" --args --app="http://localhost:3001/desktop"
+else
+    open "http://localhost:3001/desktop"
+fi
+
+echo "✨ Phần mềm đã mở thành công tại: http://localhost:3001/desktop"
+echo "Nhấn Ctrl+C để dừng."
+wait $SERVER_PID
+`;
 
 // 4. ĐÓNG GÓI BẢN MAC
 console.log('\n[4/4] Đang đóng gói bản Mac an toàn & bảo mật...');
@@ -314,7 +306,7 @@ fs.chmodSync(path.join(macStaging, '1_Khoi_Dong_AvaLive_Mac.command'), '755');
 fs.writeFileSync(path.join(macStaging, 'HUONG_DAN_SU_DUNG.txt'), huongDanContent);
 
 if (fs.existsSync(macZipFilePath)) fs.unlinkSync(macZipFilePath);
-execSync(`cd "${macStaging}" && zip -q -r "${macZipFilePath}" . -x "*.DS_Store"`);
+execSync(`cd "${macStaging}" && zip -q -r "${macZipFilePath}" . -x "*.DS_Store" -x "*__MACOSX*" -x "*.tmp" -x "Thumbs.db"`);
 fs.rmSync(macStaging, { recursive: true, force: true });
 
 // Dọn dẹp staging
