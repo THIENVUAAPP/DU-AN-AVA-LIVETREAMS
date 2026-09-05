@@ -57,22 +57,20 @@ class ErrorBoundary extends Component {
     return this.props.children;
   }
 }
-// 🧹 TỰ ĐỘNG DỌN DẸP DỮ LIỆU CŨ & CACHE KHI CẬP NHẬT PHIÊN BẢN MỚI
-const CURRENT_APP_VERSION = '1.3.8';
+// 🧹 TỰ ĐỘNG DỌN DẸP CACHE KHI CẬP NHẬT PHIÊN BẢN MỚI
+import { APP_VERSION } from './components/genaidol/UpdateNotificationModal';
+const CURRENT_APP_VERSION = APP_VERSION;
 try {
   const savedVer = localStorage.getItem('avalive_installed_version');
   if (savedVer && savedVer !== CURRENT_APP_VERSION) {
-    console.log(`[AvaLive] Nâng cấp từ ${savedVer} lên ${CURRENT_APP_VERSION}. Đang dọn dẹp cache cũ...`);
-    const preserved = {};
-    ['avalive_real_user', 'avalive_current_user', 'supabase.auth.token'].forEach(k => {
-      const v = localStorage.getItem(k);
-      if (v) preserved[k] = v;
+    console.log(`[AvaLive] Nâng cấp từ ${savedVer} lên ${CURRENT_APP_VERSION}. Tối ưu cache phiên bản mới...`);
+    // Chỉ dọn dẹp các cache tác vụ tạm thời, TUYỆT ĐỐI KHÔNG xóa dữ liệu người dùng & cấu hình
+    ['aidol_active_job', 'aidol_quick_recent_actions', 'avalive_temp_cache'].forEach(k => {
+      try { localStorage.removeItem(k); } catch (e) {}
     });
-    localStorage.clear();
-    Object.keys(preserved).forEach(k => localStorage.setItem(k, preserved[k]));
     localStorage.setItem('avalive_installed_version', CURRENT_APP_VERSION);
     if ('caches' in window) {
-      caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+      caches.keys().then(keys => keys.forEach(k => caches.delete(k))).catch(() => {});
     }
   } else if (!savedVer) {
     localStorage.setItem('avalive_installed_version', CURRENT_APP_VERSION);
