@@ -539,10 +539,22 @@ let isConnectingTikTok = false; // 🔒 Connection Lock — Ngăn race condition
 
 const stateFilePath = path.join(__dirname, 'live_state.json');
 
-function saveLiveStateToFile() {
-  try {
-    fs.writeFileSync(stateFilePath, JSON.stringify(currentMasterLiveState, null, 2), 'utf8');
-  } catch (err) {}
+let saveFileTimeout = null;
+function saveLiveStateToFile(immediate = false) {
+  if (saveFileTimeout) {
+    clearTimeout(saveFileTimeout);
+    saveFileTimeout = null;
+  }
+  const doSave = () => {
+    try {
+      fs.writeFile(stateFilePath, JSON.stringify(currentMasterLiveState, null, 2), 'utf8', () => {});
+    } catch (err) {}
+  };
+  if (immediate) {
+    doSave();
+  } else {
+    saveFileTimeout = setTimeout(doSave, 800);
+  }
 }
 
 function loadLiveStateFromFile() {
@@ -740,6 +752,38 @@ io.on('connection', (socket) => {
 
   socket.on('REQUEST_MASTER_LIVE_STATE', () => {
     socket.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+  });
+
+  // ⚡ ĐỒNG BỘ VIDEO REALTIME 0MS CHO TIKTOK LIVE STUDIO & OBS
+  socket.on('VIDEO_PLAYBACK_CONTROL', (control) => {
+    if (control && typeof control === 'object') {
+      if (typeof control.isPlaying === 'boolean') {
+        currentMasterLiveState.isPlaying = control.isPlaying;
+      }
+      if (control.action) {
+        currentMasterLiveState.videoPlaybackEvent = control.action;
+      }
+      if (typeof control.currentTime === 'number') {
+        currentMasterLiveState.videoCurrentTime = control.currentTime;
+      }
+      if (control.mediaUrl && typeof control.mediaUrl === 'string') {
+        currentMasterLiveState.mediaUrl = control.mediaUrl;
+        currentMasterLiveState.isVideo = true;
+      }
+      currentMasterLiveState.updatedAt = Date.now();
+
+      // Broadcast ngay lập tức tới TẤT CẢ các client khác (Overlay Browser Source, OBS, TikTok Studio)
+      socket.broadcast.emit('VIDEO_PLAYBACK_CONTROL', {
+        ...control,
+        timestamp: control.timestamp || Date.now()
+      });
+
+      // Nếu là sự kiện play, pause, seek thì emit MASTER_LIVE_STATE_UPDATE
+      if (control.action === 'play' || control.action === 'pause' || control.action === 'seek') {
+        io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+        saveLiveStateToFile(false);
+      }
+    }
   });
 
   socket.on('bando_sync', (state) => {
@@ -1400,7 +1444,37 @@ app.post('/api/live-state', (req, res) => {
     };
 
     io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
-    saveLiveStateToFile();
+    saveLiveStateToFile(false);
+  }
+  res.json({ success: true, state: currentMasterLiveState });
+});
+
+// Endpoint điều khiển video thời gian thực siêu tốc 0ms cho OBS & TikTok Live Studio
+app.post('/api/video-control', (req, res) => {
+  const control = req.body;
+  if (control && typeof control === 'object') {
+    if (typeof control.isPlaying === 'boolean') {
+      currentMasterLiveState.isPlaying = control.isPlaying;
+    }
+    if (control.action) {
+      currentMasterLiveState.videoPlaybackEvent = control.action;
+    }
+    if (typeof control.currentTime === 'number') {
+      currentMasterLiveState.videoCurrentTime = control.currentTime;
+    }
+    if (control.mediaUrl && typeof control.mediaUrl === 'string') {
+      currentMasterLiveState.mediaUrl = control.mediaUrl;
+      currentMasterLiveState.isVideo = true;
+    }
+    currentMasterLiveState.updatedAt = Date.now();
+
+    const broadcastPayload = {
+      ...control,
+      timestamp: control.timestamp || Date.now()
+    };
+    io.emit('VIDEO_PLAYBACK_CONTROL', broadcastPayload);
+    io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+    saveLiveStateToFile(false);
   }
   res.json({ success: true, state: currentMasterLiveState });
 });

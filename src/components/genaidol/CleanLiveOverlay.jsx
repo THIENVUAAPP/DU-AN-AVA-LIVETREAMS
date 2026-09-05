@@ -552,10 +552,88 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     // 5 TẦNG ĐỒNG BỘ: KẾT NỐI VÀ TỰ ĐỘNG PHỤC HỒI
     let isSubscribed = true;
 
+    // ⚡ XỬ LÝ ĐIỀU KHIỂN VIDEO REAL-TIME KHÓA CHẶT LOCKSTEP VỚI PHẦN MỀM CHÍNH
+    const handleVideoPlaybackControl = (control) => {
+      if (!control) return;
+      const vid = overlayVideoRef.current;
+      const action = control.action || control.videoPlaybackEvent;
+      const targetTime = typeof control.currentTime === 'number' ? control.currentTime : control.videoCurrentTime;
+      const isPlaying = control.isPlaying !== undefined ? control.isPlaying : action === 'play';
+
+      // 1. Đồng bộ URL media nếu có file mới được chọn trên phần mềm
+      if (control.mediaUrl) {
+        let cleanMediaUrl = control.mediaUrl;
+        if (typeof cleanMediaUrl === 'string' && cleanMediaUrl.includes('/uploads/')) {
+          cleanMediaUrl = cleanMediaUrl.substring(cleanMediaUrl.indexOf('/uploads/'));
+        }
+        setMasterState(prev => {
+          if (prev.mediaUrl !== cleanMediaUrl) {
+            return { ...prev, mediaUrl: cleanMediaUrl, isVideo: true };
+          }
+          return prev;
+        });
+      }
+
+      if (!vid) return;
+
+      // 2. Đồng bộ Pause / Play / Tua / Nhịp tim thời gian thực
+      if (action === 'pause' || isPlaying === false) {
+        try {
+          localStorage.setItem('avalive_user_paused', 'true');
+          localStorage.setItem('avalive_window_capture_paused', 'true');
+        } catch (e) {}
+        vid.dataset.userPaused = 'true';
+        if (!vid.paused) {
+          try { vid.pause(); } catch (e) {}
+        }
+        if (typeof targetTime === 'number' && !isNaN(targetTime)) {
+          try { vid.currentTime = targetTime; } catch (e) {}
+        }
+        setIsPlayingState(false);
+      } else if (action === 'play' || isPlaying === true) {
+        try {
+          localStorage.removeItem('avalive_user_paused');
+          localStorage.removeItem('avalive_window_capture_paused');
+        } catch (e) {}
+        vid.dataset.userPaused = 'false';
+        vid.muted = isVideoAudioMuted;
+        if (!isVideoAudioMuted) vid.volume = videoVolume;
+        if (typeof targetTime === 'number' && !isNaN(targetTime)) {
+          if (Math.abs(vid.currentTime - targetTime) > 0.35) {
+            try { vid.currentTime = targetTime; } catch (e) {}
+          }
+        }
+        if (vid.paused) {
+          vid.play().catch(() => {
+            vid.muted = true;
+            vid.play().catch(() => {});
+          });
+        }
+        setIsPlayingState(true);
+      } else if (action === 'seek') {
+        if (typeof targetTime === 'number' && !isNaN(targetTime)) {
+          try { vid.currentTime = targetTime; } catch (e) {}
+        }
+      } else if (action === 'time_sync') {
+        if (typeof targetTime === 'number' && !isNaN(targetTime)) {
+          if (Math.abs(vid.currentTime - targetTime) > 0.35) {
+            try { vid.currentTime = targetTime; } catch (e) {}
+          }
+        }
+        if (isPlaying && vid.paused && localStorage.getItem('avalive_user_paused') !== 'true') {
+          vid.play().catch(() => {});
+          setIsPlayingState(true);
+        } else if (!isPlaying && !vid.paused) {
+          try { vid.pause(); } catch (e) {}
+          setIsPlayingState(false);
+        }
+      }
+    };
+
     const applyMasterState = (data) => {
       if (!data) return;
 
-      // 🎬 ĐỒNG BỘ PLAY / PAUSE LẬP TỨC THEO PHẦN MỀM GỐC
+      // 🎬 ĐỒNG BỘ PLAY / PAUSE / TIME LẬP TỨC THEO PHẦN MỀM GỐC
       const vid = overlayVideoRef.current;
       if (data.isPlaying === false || data.videoPlaybackEvent === 'pause') {
         try {
@@ -564,7 +642,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         } catch (e) {}
         if (vid) {
           vid.dataset.userPaused = 'true';
-          if (!vid.paused) vid.pause();
+          if (!vid.paused) {
+            try { vid.pause(); } catch (e) {}
+          }
+          if (typeof data.videoCurrentTime === 'number' && !isNaN(data.videoCurrentTime)) {
+            try { vid.currentTime = data.videoCurrentTime; } catch (e) {}
+          }
         }
         setIsPlayingState(false);
       } else if (data.isPlaying === true || data.videoPlaybackEvent === 'play') {
@@ -575,7 +658,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         if (vid) {
           vid.dataset.userPaused = 'false';
           vid.muted = isVideoAudioMuted;
-          vid.volume = videoVolume;
+          if (!isVideoAudioMuted) vid.volume = videoVolume;
+          if (typeof data.videoCurrentTime === 'number' && !isNaN(data.videoCurrentTime)) {
+            if (Math.abs(vid.currentTime - data.videoCurrentTime) > 0.35) {
+              try { vid.currentTime = data.videoCurrentTime; } catch (e) {}
+            }
+          }
           if (vid.paused) {
             vid.play().catch(() => {
               vid.muted = true;
@@ -584,6 +672,10 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           }
         }
         setIsPlayingState(true);
+      } else if (typeof data.videoCurrentTime === 'number' && vid) {
+        if (Math.abs(vid.currentTime - data.videoCurrentTime) > 0.35) {
+          try { vid.currentTime = data.videoCurrentTime; } catch (e) {}
+        }
       }
 
       // Đồng bộ Âm thanh & Âm lượng từ Phần Mềm Chính
@@ -699,8 +791,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     };
     fetchLiveState();
     
-    // Polling siêu tốc mỗi 200ms để đảm bảo nhận video mới ngay lập tức
-    const httpPollInterval = setInterval(fetchLiveState, 200);
+    // Polling nhịp tim nền dự phòng (2s/lần, không spam mạng để chống giật lag video)
+    const httpPollInterval = setInterval(fetchLiveState, 2000);
 
     // 3. WEBSOCKET REALTIME (SOCKET.IO)
     let socket = null;
@@ -714,6 +806,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
       socket.on('connect', () => {
         socket.emit('REQUEST_MASTER_LIVE_STATE');
+      });
+
+      // ⚡ Nhận lệnh điều khiển video trực tiếp tức thì 0ms từ phần mềm chính
+      socket.on('VIDEO_PLAYBACK_CONTROL', (control) => {
+        if (control) handleVideoPlaybackControl(control);
       });
 
       socket.on('MASTER_LIVE_STATE_UPDATE', (data) => {
@@ -781,9 +878,17 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     let battleChannel = null;
     let cleanChannel = null;
     let studioCamBc = null;
+    let videoControlBc = null;
 
     if (typeof BroadcastChannel !== 'undefined') {
       try {
+        videoControlBc = new BroadcastChannel('avalive_video_control');
+        videoControlBc.onmessage = (e) => {
+          if (e.data) {
+            handleVideoPlaybackControl(e.data);
+          }
+        };
+
         studioCamBc = new BroadcastChannel('avalive_studio_cam_feed');
         studioCamBc.onmessage = (e) => {
           if (e.data?.frame) {
@@ -807,9 +912,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               const isMasterPlaying = !!event.data.isPlaying;
               const v = overlayVideoRef.current;
               if (v && typeof masterTime === 'number' && !isNaN(masterTime)) {
-                // Chỉ đồng bộ tua khi người dùng chủ động tua (force === true) hoặc lệch lớn (> 3.0s)
-                // Tuyệt đối không can thiệp micro-drift để tránh giật khựng video và vấp tiếng
-                if (event.data.force || Math.abs(v.currentTime - masterTime) > 3.0) {
+                // Khóa chặt thời gian (drift > 0.35s lập tức kéo về đồng bộ chuẩn)
+                if (event.data.force || Math.abs(v.currentTime - masterTime) > 0.35) {
                   try {
                     v.currentTime = masterTime;
                   } catch (e) {}
@@ -845,7 +949,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               }));
 
               if (typeof event.data.currentTime === 'number' && overlayVideoRef.current) {
-                if (event.data.force || Math.abs(overlayVideoRef.current.currentTime - event.data.currentTime) > 3.0) {
+                if (event.data.force || Math.abs(overlayVideoRef.current.currentTime - event.data.currentTime) > 0.35) {
                   try {
                     overlayVideoRef.current.currentTime = event.data.currentTime;
                   } catch (e) {}
@@ -1046,6 +1150,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       if (socket) socket.disconnect();
       socketRef.current = null;
       if (studioCamBc) studioCamBc.close();
+      if (videoControlBc) videoControlBc.close();
       if (masterChannel) masterChannel.close();
       if (bandoChannel) bandoChannel.close();
       if (battleChannel) battleChannel.close();
@@ -1159,7 +1264,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     if (masterState.videoPlaybackEvent === 'seeked' && typeof masterState.videoCurrentTime === 'number') {
       if (overlayVideoRef.current) {
         const timeDiff = Math.abs(overlayVideoRef.current.currentTime - masterState.videoCurrentTime);
-        if (timeDiff > 2.0) {
+        if (timeDiff > 0.35) {
           overlayVideoRef.current.currentTime = masterState.videoCurrentTime;
         }
       }
@@ -1390,8 +1495,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
   const activeMedia = resolveActiveMedia();
 
-  // 🎯 VÒNG LẶP RENDER CANVAS 2D ĐỒNG BỘ VIDEO — FIX 100% LỖI MÀN HÌNH ĐEN TRÊN OBS / TIKTOK LIVE STUDIO (WINDOW CAPTURE)
+  // 🎯 VÒNG LẶP RENDER CANVAS 2D ĐỒNG BỘ VIDEO — CHỈ DÙNG CHO CHẾ ĐỘ WINDOW CAPTURE
+  // ĐỐI VỚI BROWSER SOURCE TRÊN TIKTOK LIVE STUDIO & OBS: DÙNG NATIVE GPU VIDEO NGUYÊN BẢN ĐỂ ĐẠT 60-120FPS SIÊU MƯỢT, 0% CPU
   useEffect(() => {
+    if (!isWindowCapture) return;
+
     let animId;
     const canvas = captureCanvasRef.current;
     const video = overlayVideoRef.current;
@@ -1422,7 +1530,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       isRunning = false;
       if (animId) cancelAnimationFrame(animId);
     };
-  }, [activeMedia.url, activeMedia.isVideo]);
+  }, [activeMedia.url, activeMedia.isVideo, isWindowCapture]);
 
   // 🎬 TỰ ĐỘNG PHÁT NGAY KHI ĐỔI VIDEO / NHÂN VẬT TỪ PHẦN MỀM
   useEffect(() => {
@@ -1626,16 +1734,18 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   }}
                 />
 
-                {/* 🎯 Canvas Gương 2D: Khắc phục triệt để lỗi Màn Hình Đen khi Window Capture trên OBS Studio & TikTok Live Studio */}
-                <canvas 
-                  ref={captureCanvasRef}
-                  className="w-full h-full select-none absolute inset-0 pointer-events-none"
-                  style={{ 
-                    width: '100%', 
-                    height: '100%', 
-                    objectFit: objectFitState || 'cover'
-                  }}
-                />
+                {/* 🎯 Canvas Gương 2D: CHỈ render khi ở chế độ Window Capture để loại bỏ hoàn toàn tải CPU cho đường link live */}
+                {isWindowCapture && (
+                  <canvas 
+                    ref={captureCanvasRef}
+                    className="w-full h-full select-none absolute inset-0 pointer-events-none"
+                    style={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      objectFit: objectFitState || 'cover'
+                    }}
+                  />
+                )}
               </>
             ) : activeStreamUrl ? (
               <video

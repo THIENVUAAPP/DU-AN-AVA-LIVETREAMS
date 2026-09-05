@@ -115,6 +115,15 @@ export function syncMasterLiveState(partialState, socket = null) {
   if (socket && socket.connected) {
     try {
       socket.emit('MASTER_LIVE_STATE_UPDATE', updated);
+      if (partialState.videoPlaybackEvent || typeof partialState.isPlaying === 'boolean' || typeof partialState.videoCurrentTime === 'number') {
+        socket.emit('VIDEO_PLAYBACK_CONTROL', {
+          action: partialState.videoPlaybackEvent || (partialState.isPlaying ? 'play' : 'pause'),
+          isPlaying: partialState.isPlaying !== undefined ? partialState.isPlaying : updated.isPlaying,
+          currentTime: partialState.videoCurrentTime !== undefined ? partialState.videoCurrentTime : updated.videoCurrentTime,
+          mediaUrl: updated.mediaUrl,
+          timestamp: Date.now()
+        });
+      }
     } catch (e) {}
   }
 
@@ -147,4 +156,62 @@ export function syncMasterLiveState(partialState, socket = null) {
   } catch (e) {}
 
   return updated;
+}
+
+export function sendVideoControl(control, socket = null) {
+  if (typeof window === 'undefined' || !control) return;
+
+  const payload = {
+    ...control,
+    timestamp: control.timestamp || Date.now()
+  };
+
+  // 1. Gửi qua socket.io
+  if (socket && socket.connected) {
+    try {
+      socket.emit('VIDEO_PLAYBACK_CONTROL', payload);
+    } catch (e) {}
+  }
+
+  // 2. Gửi qua BroadcastChannel
+  if (typeof BroadcastChannel !== 'undefined') {
+    try {
+      const bc = new BroadcastChannel(BROADCAST_CHANNEL_NAME);
+      bc.postMessage({
+        type: 'VIDEO_PLAYBACK_CONTROL',
+        ...payload
+      });
+      setTimeout(() => bc.close(), 50);
+    } catch (e) {}
+  }
+
+  // 3. Gửi qua Supabase Realtime
+  try {
+    if (supabaseBroadcastChannel) {
+      supabaseBroadcastChannel.send({
+        type: 'broadcast',
+        event: 'VIDEO_PLAYBACK_CONTROL',
+        payload
+      }).catch(() => {});
+    }
+  } catch (e) {}
+
+  // 4. Gửi REST API nhanh
+  let backendUrl = 'http://localhost:3001';
+  if (typeof window !== 'undefined') {
+    const custom = localStorage.getItem('aidol_backend_url');
+    if (custom && custom.startsWith('http')) {
+      backendUrl = custom;
+    } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      backendUrl = `${window.location.protocol}//${window.location.hostname}:3001`;
+    } else if (window.location.origin && window.location.origin.startsWith('http')) {
+      backendUrl = window.location.origin;
+    }
+  }
+  const endpoint = `${backendUrl.replace(/\/$/, '')}/api/video-control`;
+  fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).catch(() => {});
 }

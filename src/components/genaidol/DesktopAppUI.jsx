@@ -35,7 +35,7 @@ import AutoCaptchaSolver from '../AutoCaptchaSolver';
 import AIVoiceModule from '../kol-live/AIVoiceModule';
 import AICharacterBeautyModal from './AICharacterBeautyModal';
 import UniversalMasterOverlayModal from '../UniversalMasterOverlayModal';
-import { syncMasterLiveState } from '../../lib/masterLiveSync';
+import { syncMasterLiveState, sendVideoControl } from '../../lib/masterLiveSync';
 import { saveCharacterToIDB, loadAllCharactersFromIDB, deleteCharacterFromIDB } from '../../utils/idbHelper';
 import { SUPPORTED_LANGUAGES, getCurrentLanguage, setCurrentLanguage, t } from '../../utils/i18n';
 import UpdateNotificationModal, { APP_VERSION } from './UpdateNotificationModal';
@@ -1337,6 +1337,14 @@ export default function DesktopAppUI() {
       if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
         playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
       }
+      sendVideoControl({
+        action: 'pause',
+        currentTime: curTime,
+        isPlaying: false,
+        mediaUrl: playUrl,
+        timestamp: Date.now()
+      }, socketRef.current);
+
       syncMasterLiveState({
         stage: 'idol',
         mediaUrl: playUrl,
@@ -1392,6 +1400,14 @@ export default function DesktopAppUI() {
       if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
         playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
       }
+      sendVideoControl({
+        action: 'play',
+        currentTime: curTime,
+        isPlaying: true,
+        mediaUrl: playUrl,
+        timestamp: Date.now()
+      }, socketRef.current);
+
       syncMasterLiveState({
         stage: 'idol',
         mediaUrl: playUrl,
@@ -2147,6 +2163,12 @@ export default function DesktopAppUI() {
         } catch (e) {}
       }
 
+      sendVideoControl({
+        action: 'pause',
+        isPlaying: false,
+        timestamp: Date.now()
+      }, socketRef.current);
+
       syncMasterLiveState({
         videoPlaybackEvent: 'pause',
         isPlaying: false
@@ -2219,6 +2241,12 @@ export default function DesktopAppUI() {
           bc.close();
         } catch (e) {}
       }
+
+      sendVideoControl({
+        action: 'play',
+        isPlaying: true,
+        timestamp: Date.now()
+      }, socketRef.current);
 
       syncMasterLiveState({
         videoPlaybackEvent: 'play',
@@ -2360,6 +2388,13 @@ export default function DesktopAppUI() {
             }).catch(() => {});
 
             // 🚀 BẮN PHÁT SÓNG REALTIME VIDEO ĐẾN TIKTOK LIVE STUDIO / OBS TRONG 0MS!
+            sendVideoControl({
+              action: 'play',
+              currentTime: 0,
+              isPlaying: true,
+              mediaUrl: fileUrl,
+              timestamp: Date.now()
+            }, socketRef.current);
             syncMasterLiveState({
               stage: 'idol',
               selectedCharacter: newCharId,
@@ -2390,6 +2425,13 @@ export default function DesktopAppUI() {
                   const fallbackUrl = data.url.includes('/uploads/') ? data.url.substring(data.url.indexOf('/uploads/')) : data.url;
                   setUserLockedMediaUrl(fallbackUrl);
                   try { localStorage.setItem('avalive_user_locked_media', fallbackUrl); } catch (e) {}
+                  sendVideoControl({
+                    action: 'play',
+                    currentTime: 0,
+                    isPlaying: true,
+                    mediaUrl: fallbackUrl,
+                    timestamp: Date.now()
+                  }, socketRef.current);
                   syncMasterLiveState({
                     stage: 'idol',
                     selectedCharacter: newCharId,
@@ -2613,6 +2655,22 @@ export default function DesktopAppUI() {
                 if (curTime > 0) {
                   lastPlaybackTimeRef.current = curTime;
                 }
+                // ⚡ ĐỒNG BỘ REALTIME TỪNG GIÂY CHO TIKTOK LIVE STUDIO & OBS (TRÁNH LỆCH PHA & LỆCH THỜI GIAN)
+                const now = Date.now();
+                if (now - lastTimeBroadcastRef.current > 1200) {
+                  lastTimeBroadcastRef.current = now;
+                  let playUrl = selected.url;
+                  if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
+                    playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
+                  }
+                  sendVideoControl({
+                    action: 'time_sync',
+                    currentTime: curTime,
+                    isPlaying: !e.currentTarget.paused,
+                    mediaUrl: playUrl,
+                    timestamp: now
+                  }, socketRef.current);
+                }
               }}
               onLoadedMetadata={(e) => {
                 e.currentTarget.muted = liveAudioMuted;
@@ -2652,6 +2710,14 @@ export default function DesktopAppUI() {
                 if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
                   playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
                 }
+                sendVideoControl({
+                  action: 'play',
+                  currentTime: curTime,
+                  isPlaying: true,
+                  mediaUrl: playUrl,
+                  timestamp: Date.now()
+                }, socketRef.current);
+
                 syncMasterLiveState({
                   stage: 'idol',
                   mediaUrl: playUrl,
@@ -2687,6 +2753,14 @@ export default function DesktopAppUI() {
                 e.currentTarget.dataset.userPaused = 'true';
                 setIsVideoPlaying(false);
                 
+                sendVideoControl({
+                  action: 'pause',
+                  currentTime: curTime,
+                  isPlaying: false,
+                  mediaUrl: playUrl,
+                  timestamp: Date.now()
+                }, socketRef.current);
+
                 syncMasterLiveState({
                   stage: 'idol',
                   mediaUrl: playUrl,
@@ -2710,6 +2784,18 @@ export default function DesktopAppUI() {
               }}
               onSeeked={(e) => {
                 const curTime = e.currentTarget.currentTime;
+                let playUrl = selected.url;
+                if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
+                  playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
+                }
+                sendVideoControl({
+                  action: 'seek',
+                  currentTime: curTime,
+                  isPlaying: !e.currentTarget.paused,
+                  mediaUrl: playUrl,
+                  timestamp: Date.now()
+                }, socketRef.current);
+
                 syncMasterLiveState({
                   videoPlaybackEvent: 'seeked',
                   videoCurrentTime: curTime
@@ -2725,6 +2811,21 @@ export default function DesktopAppUI() {
                   });
                   setTimeout(() => bc.close(), 50);
                 } catch (err) {}
+              }}
+              onEnded={(e) => {
+                e.currentTarget.currentTime = 0;
+                let playUrl = selected.url;
+                if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
+                  playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
+                }
+                sendVideoControl({
+                  action: 'seek',
+                  currentTime: 0,
+                  isPlaying: true,
+                  mediaUrl: playUrl,
+                  timestamp: Date.now()
+                }, socketRef.current);
+                e.currentTarget.play().catch(() => {});
               }}
             />
 
@@ -3546,6 +3647,13 @@ export default function DesktopAppUI() {
                           cleanUrl = cleanUrl.substring(cleanUrl.indexOf('/uploads/'));
                         }
                         const isVid = charItem.type === 'video' || (typeof cleanUrl === 'string' && (cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.endsWith('.mov')));
+                        sendVideoControl({
+                          action: 'play',
+                          currentTime: 0,
+                          isPlaying: true,
+                          mediaUrl: cleanUrl,
+                          timestamp: Date.now()
+                        }, socketRef.current);
                         syncMasterLiveState({
                           stage: 'idol',
                           selectedCharacter: charItem.id,
