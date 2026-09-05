@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
+import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
 export const APP_VERSION = '1.4.7';
 export const UPDATE_NOTES = [
@@ -71,24 +72,22 @@ export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onCl
             <p className="text-[10px] text-gray-400">Bảo mật cao, giải nén là chạy ngay</p>
           </div>
           <div className="flex items-center gap-2">
-            <a
-              href={`https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${APP_VERSION}/AvaLive_VIP_PRO_Mac_v${APP_VERSION}.zip`}
-              target="_blank"
-              rel="noreferrer"
-              className="px-3 py-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/40 text-emerald-300 text-xs font-bold transition-all hover:scale-105 flex items-center gap-1.5"
+            <button
+              onClick={downloadMac}
+              className="px-3 py-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/40 text-emerald-300 text-xs font-bold transition-all hover:scale-105 flex items-center gap-1.5 cursor-pointer active:scale-95"
+              title="Tải trực tiếp bản cài đặt Mac (.zip)"
             >
               <Apple size={13} />
               <span>Bản Mac (.zip)</span>
-            </a>
-            <a
-              href={`https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${APP_VERSION}/AvaLive_VIP_PRO_Windows_v${APP_VERSION}.zip`}
-              target="_blank"
-              rel="noreferrer"
-              className="px-3 py-1.5 rounded-xl bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/40 text-cyan-300 text-xs font-bold transition-all hover:scale-105 flex items-center gap-1.5"
+            </button>
+            <button
+              onClick={downloadWindows}
+              className="px-3 py-1.5 rounded-xl bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/40 text-cyan-300 text-xs font-bold transition-all hover:scale-105 flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-lg shadow-cyan-500/20"
+              title="Tải trực tiếp bản cài đặt Windows (.zip) về máy ngay lập tức"
             >
               <Laptop size={13} />
               <span>Bản Win (.zip)</span>
-            </a>
+            </button>
           </div>
         </div>
 

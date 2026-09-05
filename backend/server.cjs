@@ -422,34 +422,77 @@ app.get('/api/check-update', (req, res) => {
 });
 
 
-// 📦 ROUTE TẢI PHẦN MỀM STANDALONE (Mac & Windows) — Kích hoạt download ngay, không mở trong trình duyệt
-app.get('/api/download-software', (req, res) => {
-  const zipPath = distPath
-    ? path.join(distPath, 'Livestream_AI_Software.zip')
-    : null;
-
-  if (!zipPath || !fs.existsSync(zipPath)) {
-    return res.status(404).json({ error: 'File phần mềm chưa được đóng gói. Vui lòng liên hệ quản trị viên.' });
+// 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
+app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', '/AvaLive_VIP_PRO_Windows_v1.4.7.zip'], (req, res) => {
+  const releaseDir = path.join(__dirname, '..', 'release_zips');
+  let targetFile = null;
+  if (fs.existsSync(releaseDir)) {
+    const files = fs.readdirSync(releaseDir).filter(f => f.startsWith('AvaLive_VIP_PRO_Windows') && f.endsWith('.zip'));
+    if (files.length > 0) {
+      files.sort().reverse();
+      targetFile = path.join(releaseDir, files[0]);
+    }
   }
 
-  res.setHeader('Content-Type', 'application/zip');
-  res.setHeader('Content-Disposition', 'attachment; filename="AvaLive_VIP_PRO_Full_Package_MacWin.zip"');
-  res.sendFile(zipPath);
+  if (targetFile && fs.existsSync(targetFile)) {
+    const fileName = path.basename(targetFile);
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    return res.sendFile(targetFile);
+  }
+
+  // Fallback nếu chạy trên cloud không có local zip -> redirect thẳng đến asset GitHub release
+  try {
+    const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
+    const ver = pkg.version || '1.4.7';
+    res.redirect(`https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${ver}/AvaLive_VIP_PRO_Windows_v${ver}.zip`);
+  } catch (e) {
+    res.redirect('https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/latest');
+  }
+});
+
+// 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
+app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', '/AvaLive_VIP_PRO_Mac_v1.4.7.zip'], (req, res) => {
+  const releaseDir = path.join(__dirname, '..', 'release_zips');
+  let targetFile = null;
+  if (fs.existsSync(releaseDir)) {
+    const files = fs.readdirSync(releaseDir).filter(f => f.startsWith('AvaLive_VIP_PRO_Mac') && f.endsWith('.zip'));
+    if (files.length > 0) {
+      files.sort().reverse();
+      targetFile = path.join(releaseDir, files[0]);
+    }
+  }
+
+  if (targetFile && fs.existsSync(targetFile)) {
+    const fileName = path.basename(targetFile);
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    return res.sendFile(targetFile);
+  }
+
+  // Fallback nếu chạy trên cloud không có local zip -> redirect thẳng đến asset GitHub release
+  try {
+    const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
+    const ver = pkg.version || '1.4.7';
+    res.redirect(`https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${ver}/AvaLive_VIP_PRO_Mac_v${ver}.zip`);
+  } catch (e) {
+    res.redirect('https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/latest');
+  }
+});
+
+// 📦 ROUTE TẢI PHẦN MỀM STANDALONE (Mac & Windows) — Kích hoạt download ngay, không mở trong trình duyệt
+app.get('/api/download-software', (req, res) => {
+  const userAgent = (req.headers['user-agent'] || '').toLowerCase();
+  const isMac = userAgent.includes('mac');
+  if (isMac) {
+    return res.redirect('/api/download/mac');
+  }
+  return res.redirect('/api/download/windows');
 });
 
 // Alias trực tiếp: /Livestream_AI_Software.zip -> download với đúng tên file
 app.get('/Livestream_AI_Software.zip', (req, res) => {
-  const zipPath = distPath
-    ? path.join(distPath, 'Livestream_AI_Software.zip')
-    : null;
-
-  if (!zipPath || !fs.existsSync(zipPath)) {
-    return res.status(404).send('File phần mềm không tìm thấy.');
-  }
-
-  res.setHeader('Content-Type', 'application/zip');
-  res.setHeader('Content-Disposition', 'attachment; filename="AvaLive_VIP_PRO_Full_Package_MacWin.zip"');
-  res.sendFile(zipPath);
+  return res.redirect('/api/download/windows');
 });
 
 // 🚀 PROXY STREAM TIÊU CHUẨN: Vượt qua hoàn toàn rào cản CORS & Xử lý tự động chuyển hướng (Redirect 302) của TikTok CDN
