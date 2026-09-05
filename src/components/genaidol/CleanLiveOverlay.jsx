@@ -1009,6 +1009,46 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               bandoAudio.setMuted(isMuted);
               bandoAudio.setMasterVolume(vol);
               setTimeout(() => { isInternalAudioChangeRef.current = false; }, 300);
+            } else if (event.data.type === 'GLOBAL_MEDIA_CHANGE') {
+              if (event.data.source === 'overlay') return;
+              const newUrl = event.data.mediaUrl;
+              if (newUrl) {
+                let cleanUrl = newUrl;
+                if (typeof cleanUrl === 'string' && cleanUrl.includes('/uploads/')) {
+                  cleanUrl = cleanUrl.substring(cleanUrl.indexOf('/uploads/'));
+                }
+                try {
+                  localStorage.removeItem('avalive_user_paused');
+                  localStorage.removeItem('avalive_window_capture_paused');
+                  localStorage.setItem('avalive_user_locked_media', cleanUrl);
+                } catch (e) {}
+
+                setMasterState(prev => ({
+                  ...prev,
+                  mediaUrl: cleanUrl,
+                  selectedCharacter: event.data.characterId || prev.selectedCharacter,
+                  characterName: event.data.characterName || prev.characterName,
+                  stage: 'idol',
+                  isVideo: event.data.isVideo !== false,
+                  isPlaying: true,
+                  videoPlaybackEvent: 'play',
+                  videoCurrentTime: 0
+                }));
+
+                const v = overlayVideoRef.current;
+                if (v) {
+                  v.dataset.userPaused = 'false';
+                  v.src = cleanUrl;
+                  v.currentTime = 0;
+                  v.muted = isVideoAudioMuted;
+                  if (!isVideoAudioMuted) v.volume = videoVolume;
+                  v.play().catch(() => {
+                    v.muted = true;
+                    v.play().catch(() => {});
+                  });
+                }
+                setIsPlayingState(true);
+              }
             } else if (event.data.type === 'MASTER_LIVE_STATE_UPDATE' || event.data.stage) {
               applyMasterState(event.data);
             } else if (event.data.type === 'LIVE_EVENT') {
@@ -1662,6 +1702,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     <div className="fixed inset-0 w-screen h-screen overflow-hidden flex flex-col bg-black select-none font-sans">
       {/* 👑 KHUNG QUẢN TRỊ WINDOW CAPTURE NGOẠI VI RIÊNG BIỆT (NẰM HOÀN TOÀN MÉ NGOÀI - TUYỆT ĐỐI KHÔNG CHE KHUNG LIVE) */}
       {isWindowCapture && !isControlDockCollapsed && (
+        <>
         <header className="w-full shrink-0 bg-[#0c0f17]/95 backdrop-blur-md border-b border-cyan-500/30 px-3 sm:px-4 py-2 z-40 flex items-center justify-between gap-3 shadow-2xl transition-all duration-200">
           {/* Trạng thái Live & Khung hình */}
           <div className="flex items-center gap-2.5">
@@ -1762,6 +1803,24 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             </button>
           </div>
         </header>
+        {/* ✂️ BẢNG VẠCH CẮT CÁCH LY AN TOÀN CHO OBS / TIKTOK LIVE STUDIO (CÁCH XA KHUNG 9:16) */}
+        <div className="w-full shrink-0 bg-[#06080d] border-b-2 border-dashed border-amber-500/50 py-2.5 px-3 sm:px-4 flex items-center justify-between text-[11px] text-amber-300 select-none shadow-md">
+          <div className="flex items-center gap-2">
+            <span className="text-sm">✂️</span>
+            <span className="font-mono font-bold uppercase tracking-wider text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/40">
+              KHOẢNG CẮT CÁCH LY AN TOÀN CHO OBS / TIKTOK LIVE STUDIO
+            </span>
+            <span className="hidden md:inline text-[10.5px] text-gray-400 font-normal">
+              (Kéo crop mép trên đến dải này để tách biệt 100% thanh điều khiển khỏi khung Live 9:16)
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-cyan-300/90 font-mono bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/50">
+              Khung video 9:16 bắt đầu bên dưới ⬇️
+            </span>
+          </div>
+        </div>
+        </>
       )}
 
       {/* NÚT THU GỌN NGOẠI VI: KHI ĐÃ ẨN BẢNG ĐIỀU KHIỂN, NÚT GỌN NÀY CHO PHÉP MỞ LẠI BẤT KỲ LÚC NÀO */}
@@ -1779,13 +1838,15 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       )}
 
       {/* KHUNG PHÁT SÓNG SẠCH 100% (CHUẨN 9:16 HOẶC 16:9 - SIÊU SẮC NÉT OBS / TIKTOK STUDIO, 100% NGUYÊN BẢN KHÔNG DÍNH BẤT KỲ GIAO DIỆN NÀO) */}
-      <main className="w-full flex-1 min-h-0 relative overflow-hidden flex items-center justify-center bg-black">
+      <main className={`w-full flex-1 min-h-0 relative overflow-hidden flex items-center justify-center bg-black transition-all duration-200 ${
+        isWindowCapture && !isControlDockCollapsed ? 'p-3 sm:p-5 pt-3 pb-3' : ''
+      }`}>
         <div 
           className={`relative flex items-center justify-center overflow-hidden transition-all duration-200 ${
             ratio === '9:16'
               ? 'h-full aspect-[9/16] w-auto max-w-full'
               : 'w-full aspect-[16/9] h-auto max-h-full'
-          }`}
+          } ${isWindowCapture && !isControlDockCollapsed ? 'ring-1 ring-cyan-500/30 rounded-lg shadow-[0_0_40px_rgba(0,0,0,0.85)]' : ''}`}
           style={
             ratio === '9:16' 
               ? { 

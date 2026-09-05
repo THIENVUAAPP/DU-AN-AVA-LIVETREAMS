@@ -1333,7 +1333,8 @@ export default function DesktopAppUI() {
       showToast('⏸ Đã tạm dừng video Live!', 'info');
 
       const curTime = vid ? vid.currentTime : 0;
-      let playUrl = userLockedMediaUrl || (customCharacters.find(c => c.id === selectedCharacter)?.url) || CHARACTERS[selectedCharacter]?.url || '';
+      const charMatch = customCharacters.find(c => c.id === selectedCharacter);
+      let playUrl = userLockedMediaUrl || (charMatch ? (charMatch.url || charMatch.mediaUrl) : '') || CHARACTERS[selectedCharacter]?.url || '';
       if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
         playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
       }
@@ -1396,7 +1397,8 @@ export default function DesktopAppUI() {
       showToast('▶️ Đang tiếp tục phát video Live!', 'success');
 
       const curTime = vid ? vid.currentTime : 0;
-      let playUrl = userLockedMediaUrl || (customCharacters.find(c => c.id === selectedCharacter)?.url) || CHARACTERS[selectedCharacter]?.url || '';
+      const charMatchPlay = customCharacters.find(c => c.id === selectedCharacter);
+      let playUrl = userLockedMediaUrl || (charMatchPlay ? (charMatchPlay.url || charMatchPlay.mediaUrl) : '') || CHARACTERS[selectedCharacter]?.url || '';
       if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
         playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
       }
@@ -1561,21 +1563,23 @@ export default function DesktopAppUI() {
             return;
           }
 
-          // 1. Chỉ nhận từ nguồn điều khiển hợp lệ (Bỏ qua tin nhắn từ chính DesktopApp hoặc Window Capture gửi ngược)
+          // 1. Đồng bộ Phát / Tạm dừng 2 chiều giữa Phần Mềm và Window Capture / TikTok Live Studio
           if (event.data.type === 'GLOBAL_PLAYBACK_CHANGE') {
-            if (event.data.source === 'desktop' || event.data.source === 'overlay') return;
+            if (event.data.source === 'desktop') return;
             const shouldPlay = !!event.data.isPlaying;
             isInternalPlaybackChangeRef.current = true;
             setIsMasterLiveRunning(shouldPlay);
+            setIsVideoPlaying(shouldPlay);
 
-            if (typeof event.data.currentTime === 'number' && desktopVideoRef.current && event.data.force) {
+            if (typeof event.data.currentTime === 'number' && desktopVideoRef.current) {
               try {
-                desktopVideoRef.current.currentTime = event.data.currentTime;
+                if (event.data.force || Math.abs(desktopVideoRef.current.currentTime - event.data.currentTime) > 0.3) {
+                  desktopVideoRef.current.currentTime = event.data.currentTime;
+                }
               } catch (e) {}
             }
 
             if (!shouldPlay) {
-              setIsVideoPlaying(false);
               try { 
                 localStorage.setItem('avalive_user_paused', 'true');
                 localStorage.setItem('avalive_window_capture_paused', 'true');
@@ -1585,7 +1589,6 @@ export default function DesktopAppUI() {
                 try { desktopVideoRef.current.pause(); } catch (e) {}
               }
             } else {
-              setIsVideoPlaying(true);
               try { 
                 localStorage.removeItem('avalive_user_paused');
                 localStorage.removeItem('avalive_window_capture_paused');
@@ -1598,9 +1601,32 @@ export default function DesktopAppUI() {
             setTimeout(() => { isInternalPlaybackChangeRef.current = false; }, 300);
           }
 
-          // 2. Quản lý Âm Lượng & Mute: Đảm bảo preview trên phần mềm luôn MUTE (âm thanh chỉ phát 1 bên duy nhất từ Window Capture OBS)
+          // 1.5. Đồng bộ đổi Video Nhân Vật tức thì từ Window Capture sang Phần Mềm
+          if (event.data.type === 'GLOBAL_MEDIA_CHANGE') {
+            if (event.data.source === 'desktop') return;
+            const newUrl = event.data.mediaUrl;
+            const newCharId = event.data.characterId || event.data.selectedCharacter;
+            if (newUrl) {
+              setUserLockedMediaUrl(newUrl);
+              try { localStorage.setItem('avalive_user_locked_media', newUrl); } catch (e) {}
+              if (newCharId) {
+                setSelectedCharacter(newCharId);
+                try { localStorage.setItem('avalive_selected_char', newCharId); } catch (e) {}
+              }
+              if (desktopVideoRef.current) {
+                desktopVideoRef.current.src = newUrl;
+                desktopVideoRef.current.currentTime = 0;
+                desktopVideoRef.current.dataset.userPaused = 'false';
+                desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+              }
+              setIsVideoPlaying(true);
+              setIsMasterLiveRunning(true);
+            }
+          }
+
+          // 2. Quản lý Âm Lượng & Mute đồng bộ 2 chiều
           if (event.data.type === 'GLOBAL_AUDIO_CHANGE') {
-            if (event.data.source === 'desktop' || event.data.source === 'overlay') return;
+            if (event.data.source === 'desktop') return;
             const isMuted = !!event.data.isMuted;
             const vol = typeof event.data.volume === 'number' ? event.data.volume : 1;
             isInternalAudioChangeRef.current = true;
@@ -1608,7 +1634,7 @@ export default function DesktopAppUI() {
             setLiveAudioMuted(isMuted);
             setLiveVolume(vol);
             if (desktopVideoRef.current) {
-              desktopVideoRef.current.muted = true; // Preview trên phần mềm luôn luôn im lặng
+              desktopVideoRef.current.muted = true; // Preview trên phần mềm luôn luôn im lặng để tránh vọng âm
             }
             if (flvVideoRef.current) {
               flvVideoRef.current.muted = true;
@@ -2624,7 +2650,19 @@ export default function DesktopAppUI() {
       }
       
       const customMatch = customCharacters.find(c => c.id === selectedCharacter);
-      const selected = customMatch || (selectedCharacter && CHARACTERS[selectedCharacter]) || (customCharacters.length > 0 ? customCharacters[0] : null) || (userLockedMediaUrl ? { id: 'locked_video', name: 'Video Đang Phát', url: userLockedMediaUrl, type: 'video' } : null) || (Object.keys(CHARACTERS).length > 0 ? Object.values(CHARACTERS)[0] : null);
+      let selected = customMatch || (selectedCharacter && CHARACTERS[selectedCharacter]) || (customCharacters.length > 0 ? customCharacters[0] : null) || (userLockedMediaUrl ? { id: 'locked_video', name: 'Video Đang Phát', url: userLockedMediaUrl, type: 'video' } : null) || (Object.keys(CHARACTERS).length > 0 ? Object.values(CHARACTERS)[0] : null);
+
+      if (selected) {
+        const resolvedUrl = selected.url || selected.mediaUrl;
+        if (resolvedUrl) {
+          selected = {
+            ...selected,
+            url: resolvedUrl,
+            mediaUrl: resolvedUrl,
+            type: selected.type || (resolvedUrl.match(/\.(mp4|webm|mov)(\?.*)?$/i) ? 'video' : 'image')
+          };
+        }
+      }
 
       if (isProcessingEvent && activeVideoItem && activeVideoItem.mediaUrl) {
         return (
@@ -3664,18 +3702,62 @@ export default function DesktopAppUI() {
                   <div
                     key={charItem.id || index}
                     onClick={() => {
+                      const charUrl = charItem.url || charItem.mediaUrl;
                       setSelectedCharacter(charItem.id);
                       try { localStorage.setItem('avalive_selected_char', charItem.id); } catch (e) {}
                       setIsGameBattleActive(false);
                       setIsGameBanDoActive(false);
-                      if (charItem.url) {
-                        let cleanUrl = charItem.url;
+                      if (charUrl) {
+                        let cleanUrl = charUrl;
                         if (typeof cleanUrl === 'string' && cleanUrl.includes('/uploads/')) {
                           cleanUrl = cleanUrl.substring(cleanUrl.indexOf('/uploads/'));
                         }
                         const isVid = charItem.type === 'video' || (typeof cleanUrl === 'string' && (cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.endsWith('.mov')));
                         setUserLockedMediaUrl(cleanUrl);
                         try { localStorage.setItem('avalive_user_locked_media', cleanUrl); } catch (e) {}
+
+                        // ⚡ 1. CẬP NHẬT TRÌNH CHIẾU GIAO DIỆN PHẦN MỀM NGAY LẬP TỨC
+                        if (desktopVideoRef.current) {
+                          desktopVideoRef.current.src = cleanUrl;
+                          desktopVideoRef.current.currentTime = 0;
+                          desktopVideoRef.current.dataset.userPaused = 'false';
+                          desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+                        }
+                        setIsVideoPlaying(true);
+                        setIsMasterLiveRunning(true);
+                        try {
+                          localStorage.removeItem('avalive_user_paused');
+                          localStorage.removeItem('avalive_window_capture_paused');
+                          localStorage.setItem('avalive_master_live_running', 'true');
+                        } catch (e) {}
+
+                        // ⚡ 2. PHÁT SÓNG REALTIME BROADCAST CHANNEL ĐỒNG BỘ 100% CỬA SỔ LIVE / TIKTOK STUDIO
+                        try {
+                          const bc = new BroadcastChannel('avalive_master_live_stream');
+                          bc.postMessage({
+                            type: 'GLOBAL_MEDIA_CHANGE',
+                            mediaUrl: cleanUrl,
+                            characterId: charItem.id,
+                            characterName: charItem.name || 'AI Idol',
+                            isVideo: isVid,
+                            isPlaying: true,
+                            currentTime: 0,
+                            force: true,
+                            source: 'desktop',
+                            timestamp: Date.now()
+                          });
+                          bc.postMessage({
+                            type: 'GLOBAL_PLAYBACK_CHANGE',
+                            isPlaying: true,
+                            currentTime: 0,
+                            force: true,
+                            source: 'desktop',
+                            timestamp: Date.now()
+                          });
+                          setTimeout(() => bc.close(), 100);
+                        } catch (e) {}
+
+                        // ⚡ 3. GỬI TÍN HIỆU WEBSOCKET & SUPABASE MASTER LIVE STATE
                         sendVideoControl({
                           action: 'play',
                           currentTime: 0,
@@ -3691,9 +3773,11 @@ export default function DesktopAppUI() {
                           mediaUrl: cleanUrl,
                           isVideo: isVid,
                           videoPlaybackEvent: 'play',
+                          videoCurrentTime: 0,
                           isPlaying: true,
                           aspectRatio: globalAspectRatio || '9:16'
                         }, socketRef.current);
+                        showToast(`🎬 Đã phát video "${charItem.name || 'Nhân Vật'}" đồng bộ lên TikTok Live Studio!`, 'success');
                       }
                     }}
                     className={`w-10 h-10 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 relative group transition-all ${
