@@ -64,7 +64,6 @@ const getBackendUrl = () => {
 
 export default function CleanLiveOverlay({ customStyle = {} }) {
   const overlayVideoRef = useRef(null);
-  const captureCanvasRef = useRef(null);
   const [masterState, setMasterState] = useState(() => {
     let saved = null;
     try {
@@ -132,11 +131,19 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   });
   const isWindowCapture = typeof window !== 'undefined' ? (() => {
     const params = new URLSearchParams(window.location.search);
-    return params.get('mode') === 'window_capture' || params.get('capture') === '1';
+    return params.get('mode') === 'window_capture' || params.get('capture') === '1' || window.location.pathname.includes('/window-capture');
   })() : false;
 
+  const [isControlDockCollapsed, setIsControlDockCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('avalive_window_capture_dock_collapsed') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+
   const [hasAutoplayStarted, setHasAutoplayStarted] = useState(false);
-  const [showCaptureTip, setShowCaptureTip] = useState(true);
+  const [showCaptureTip, setShowCaptureTip] = useState(false);
 
   // ⚡ CLICK / TOUCH / INTERACT UNLOCK: Mở khóa âm thanh và kích hoạt phát ngay khi người dùng chạm vào cửa sổ
   useEffect(() => {
@@ -1490,42 +1497,142 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
   const activeMedia = resolveActiveMedia();
 
-  // 🎯 VÒNG LẶP RENDER CANVAS 2D ĐỒNG BỘ VIDEO — CHỈ DÙNG CHO CHẾ ĐỘ WINDOW CAPTURE
-  // ĐỐI VỚI BROWSER SOURCE TRÊN TIKTOK LIVE STUDIO & OBS: DÙNG NATIVE GPU VIDEO NGUYÊN BẢN ĐỂ ĐẠT 60-120FPS SIÊU MƯỢT, 0% CPU
+  // 🖼️ HỖ TRỢ CHẾ ĐỘ CỬA SỔ NỔI (PICTURE-IN-PICTURE)
+  const togglePip = async () => {
+    const v = overlayVideoRef.current;
+    if (!v) return;
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+      } else if (document.pictureInPictureEnabled && !v.disablePictureInPicture) {
+        await v.requestPictureInPicture();
+      }
+    } catch (err) {
+      console.warn('[CleanLiveOverlay] Picture-in-Picture error:', err);
+    }
+  };
+
+  // ⌨️ PHÍM TẮT TIỆN LỢI CHO WINDOW CAPTURE: H (Ẩn/Hiện Điều Khiển), Space (Play/Pause), M (Mute/Unmute)
   useEffect(() => {
     if (!isWindowCapture) return;
+    const handleKeyDown = (e) => {
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+      if (e.key === 'h' || e.key === 'H') {
+        setIsControlDockCollapsed(prev => {
+          const next = !prev;
+          try { localStorage.setItem('avalive_window_capture_dock_collapsed', String(next)); } catch (err) {}
+          return next;
+        });
+      } else if (e.key === ' ' || e.code === 'Space') {
+        e.preventDefault();
+        togglePlayPause();
+      } else if (e.key === 'm' || e.key === 'M') {
+        toggleAudioMute();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isWindowCapture, isPlayingState, isVideoAudioMuted, videoVolume]);
 
-    let animId;
-    const canvas = captureCanvasRef.current;
-    const video = overlayVideoRef.current;
-    if (!canvas || !video || !activeMedia.url || !activeMedia.isVideo) return;
+  // 🛡️ BACKGROUND KEEP-ALIVE & ANTI-THROTTLING: GIỮ LUỒNG VIDEO CHẠY LIÊN TỤC KHI CHUYỂN TAB HOẶC ẨN CỬA SỔ
+  // Khi người dùng chuyển sang tab khác trong trình duyệt, Chromium thường ngưng timer & đình chỉ video
+  // WebAudio sub-audible node + Visibility Auto-Resume + MediaSession giữ luồng phát sống 100% không đứng hình!
+  useEffect(() => {
+    let keepAliveAudioCtx = null;
+    let oscillatorNode = null;
+    let gainNode = null;
+    let wakeLockSentinel = null;
 
-    const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
-    if (!ctx) return;
-
-    let isRunning = true;
-    const renderLoop = () => {
-      if (!isRunning) return;
-      if (video.readyState >= 2 && !video.paused) {
-        if (canvas.width !== video.videoWidth && video.videoWidth > 0) {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
+    const startKeepAlive = () => {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          if (!keepAliveAudioCtx || keepAliveAudioCtx.state === 'closed') {
+            keepAliveAudioCtx = new AudioCtx();
+            oscillatorNode = keepAliveAudioCtx.createOscillator();
+            gainNode = keepAliveAudioCtx.createGain();
+            // Âm thanh dưới ngưỡng nghe (0.00001) để Chromium nhận dạng tab phát âm thanh liên tục
+            gainNode.gain.value = 0.00001;
+            oscillatorNode.connect(gainNode);
+            gainNode.connect(keepAliveAudioCtx.destination);
+            oscillatorNode.start();
+          }
+          if (keepAliveAudioCtx.state === 'suspended') {
+            keepAliveAudioCtx.resume().catch(() => {});
+          }
         }
-        if (canvas.width > 0 && canvas.height > 0) {
-          try {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          } catch (e) {}
+      } catch (e) {}
+
+      if ('wakeLock' in navigator && !wakeLockSentinel) {
+        try {
+          navigator.wakeLock.request('screen').then(sentinel => {
+            wakeLockSentinel = sentinel;
+          }).catch(() => {});
+        } catch (e) {}
+      }
+
+      if ('mediaSession' in navigator) {
+        try {
+          navigator.mediaSession.playbackState = isPlayingState ? 'playing' : 'paused';
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: 'AvaLive VIP PRO - Window Capture 60FPS',
+            artist: 'AvaLive Master Studio',
+            album: 'Live TikTok Studio / OBS'
+          });
+        } catch (e) {}
+      }
+    };
+
+    startKeepAlive();
+    window.addEventListener('click', startKeepAlive);
+    window.addEventListener('pointerdown', startKeepAlive);
+
+    // Bắt sự kiện chuyển tab hoặc thu nhỏ cửa sổ
+    const handleVisibilityChange = () => {
+      const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
+      const vid = overlayVideoRef.current;
+      if (!isUserPaused && vid) {
+        if (vid.paused) {
+          vid.play().catch(() => {
+            vid.muted = true;
+            vid.play().catch(() => {});
+          });
         }
       }
-      animId = requestAnimationFrame(renderLoop);
+      if (document.visibilityState === 'visible') {
+        if (!wakeLockSentinel && 'wakeLock' in navigator) {
+          navigator.wakeLock.request('screen').then(s => { wakeLockSentinel = s; }).catch(() => {});
+        }
+        if (keepAliveAudioCtx && keepAliveAudioCtx.state === 'suspended') {
+          keepAliveAudioCtx.resume().catch(() => {});
+        }
+      }
     };
 
-    animId = requestAnimationFrame(renderLoop);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleVisibilityChange);
+    window.addEventListener('focus', handleVisibilityChange);
+
     return () => {
-      isRunning = false;
-      if (animId) cancelAnimationFrame(animId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleVisibilityChange);
+      window.removeEventListener('focus', handleVisibilityChange);
+      window.removeEventListener('click', startKeepAlive);
+      window.removeEventListener('pointerdown', startKeepAlive);
+      if (oscillatorNode) {
+        try { oscillatorNode.stop(); oscillatorNode.disconnect(); } catch (e) {}
+      }
+      if (gainNode) {
+        try { gainNode.disconnect(); } catch (e) {}
+      }
+      if (keepAliveAudioCtx) {
+        try { keepAliveAudioCtx.close(); } catch (e) {}
+      }
+      if (wakeLockSentinel) {
+        try { wakeLockSentinel.release(); } catch (e) {}
+      }
     };
-  }, [activeMedia.url, activeMedia.isVideo, isWindowCapture]);
+  }, [isPlayingState, masterState.videoPlaybackEvent, masterState.isPlaying]);
 
   // 🎬 TỰ ĐỘNG PHÁT NGAY KHI ĐỔI VIDEO / NHÂN VẬT TỪ PHẦN MỀM
   useEffect(() => {
@@ -1552,37 +1659,127 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   const ratio = masterState.aspectRatio || '9:16';
 
   return (
-    <div className="fixed inset-0 w-screen h-screen overflow-hidden flex items-center justify-center bg-black select-none font-sans">
-      {/* 🚀 BANNER HỖ TRỢ BẬT TIẾNG & FIX OBS CHO WINDOW CAPTURE */}
-      {isWindowCapture && showCaptureTip && (
-        <div 
-          onClick={() => {
-            setShowCaptureTip(false);
-            setHasAutoplayStarted(true);
-            const v = overlayVideoRef.current;
-            if (v) {
-              if (v.paused) v.play().catch(() => {});
-              if (!isVideoAudioMuted) { v.muted = false; v.volume = videoVolume; }
-            }
-          }}
-          className="fixed top-2 left-1/2 -translate-x-1/2 z-50 bg-gradient-to-r from-emerald-600 via-cyan-600 to-blue-600 text-white px-4 py-2 rounded-2xl shadow-2xl border border-white/30 text-xs font-bold flex items-center gap-2.5 cursor-pointer animate-bounce hover:opacity-95"
-        >
-          <span className="text-base animate-pulse">🔊</span>
-          <span>BẤM ĐÂY ĐỂ BẬT TIẾNG & PHÁT 60FPS</span>
-          <span className="text-[10px] bg-black/40 px-2 py-0.5 rounded-full text-yellow-300 font-extrabold hidden sm:inline">
-            OBS: Chọn Capture Method "Windows 10 (1903 trở lên)"
-          </span>
-          <button 
-            onClick={(e) => { e.stopPropagation(); setShowCaptureTip(false); }}
-            className="ml-1 text-white/80 hover:text-white p-0.5 rounded-full hover:bg-white/20"
-          >
-            ✕
-          </button>
-        </div>
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden flex flex-col bg-black select-none font-sans">
+      {/* 👑 KHUNG QUẢN TRỊ WINDOW CAPTURE NGOẠI VI RIÊNG BIỆT (NẰM HOÀN TOÀN MÉ NGOÀI - TUYỆT ĐỐI KHÔNG CHE KHUNG LIVE) */}
+      {isWindowCapture && !isControlDockCollapsed && (
+        <header className="w-full shrink-0 bg-[#0c0f17]/95 backdrop-blur-md border-b border-cyan-500/30 px-3 sm:px-4 py-2 z-40 flex items-center justify-between gap-3 shadow-2xl transition-all duration-200">
+          {/* Trạng thái Live & Khung hình */}
+          <div className="flex items-center gap-2.5">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+            </span>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-black text-white tracking-wider uppercase">
+                  WINDOW CAPTURE (60FPS)
+                </span>
+                <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[9px] font-bold text-cyan-300">
+                  v1.4.7
+                </span>
+              </div>
+              <span className="text-[9.5px] text-emerald-400/90 font-medium">
+                ⚡ Giữ luồng chạy liên tục 24/7 khi đổi tab
+              </span>
+            </div>
+          </div>
+
+          {/* Cụm nút điều khiển Quản trị */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* 1. NÚT PHÁT / TẠM DỪNG */}
+            <button
+              onClick={togglePlayPause}
+              className={`px-3 py-1.5 rounded-xl font-black text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-all transform active:scale-95 ${
+                isPlayingState
+                  ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40'
+                  : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-500/30 animate-pulse'
+              }`}
+              title="Phím tắt: Space (Dấu cách)"
+            >
+              <span>{isPlayingState ? '⏸️ Tạm Dừng' : '▶️ Tiếp Tục Phát'}</span>
+            </button>
+
+            {/* 2. NÚT BẬT / TẮT TIẾNG */}
+            <button
+              onClick={toggleAudioMute}
+              className={`px-3 py-1.5 rounded-xl font-black text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-all transform active:scale-95 ${
+                !isVideoAudioMuted
+                  ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-cyan-500/30'
+                  : 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40'
+              }`}
+              title="Phím tắt: Phím M"
+            >
+              <span>{!isVideoAudioMuted ? `🔊 Đang Bật Tiếng (${Math.round(videoVolume * 100)}%)` : '🔇 Đang Tắt Tiếng'}</span>
+            </button>
+
+            {/* 3. THANH TRƯỢT ÂM LƯỢNG */}
+            <div className="hidden md:flex items-center gap-1.5 bg-white/5 px-2.5 py-1.2 rounded-xl border border-white/10">
+              <span className="text-[10px] text-gray-400 font-mono">Vol</span>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={isVideoAudioMuted ? 0 : videoVolume}
+                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                className="w-16 lg:w-20 h-1 accent-cyan-400 cursor-pointer"
+                title="Âm lượng video"
+              />
+            </div>
+
+            {/* 4. CHẾ ĐỘ CỬA SỔ NỔI (PiP) */}
+            <button
+              onClick={togglePip}
+              className="hidden sm:flex px-2.5 py-1.5 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 border border-indigo-500/40 text-xs font-bold items-center gap-1 cursor-pointer transition-all"
+              title="Mở video nổi trên màn hình máy tính"
+            >
+              <span>🖼️ Cửa Sổ Nổi (PiP)</span>
+            </button>
+
+            {/* 5. TỈ LỆ KHUNG HÌNH FIT */}
+            <button
+              onClick={() => {
+                const nextFit = objectFitState === 'cover' ? 'contain' : 'cover';
+                setObjectFitState(nextFit);
+                try { localStorage.setItem('avalive_overlay_fit', nextFit); } catch (e) {}
+              }}
+              className="px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 text-xs font-medium cursor-pointer transition-all"
+              title="Chuyển đổi Tràn Viền / Vừa Khung"
+            >
+              <span>📐 {objectFitState === 'cover' ? 'Tràn Viền' : 'Vừa Khung'}</span>
+            </button>
+
+            {/* 6. NÚT ẨN BẢNG ĐIỀU KHIỂN */}
+            <button
+              onClick={() => {
+                setIsControlDockCollapsed(true);
+                try { localStorage.setItem('avalive_window_capture_dock_collapsed', 'true'); } catch (e) {}
+              }}
+              className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-black flex items-center gap-1.5 border border-white/20 cursor-pointer transition-all hover:border-cyan-400/50"
+              title="Ẩn bảng điều khiển để khung phát 100% video live (Phím tắt: H)"
+            >
+              <span>👁️ Ẩn Bảng Điều Khiển</span>
+            </button>
+          </div>
+        </header>
       )}
 
-      {/* KHUNG PHÁT SÓNG SẠCH 100% (CHUẨN 9:16 HOẶC 16:9 - SIÊU SẮC NÉT OBS WINDOW CAPTURE, KHÔNG CÓ BẤT KỲ NÚT BẤM NÀO ĐÈ LÊN) */}
-      <main className="w-full h-full relative overflow-hidden flex items-center justify-center bg-black">
+      {/* NÚT THU GỌN NGOẠI VI: KHI ĐÃ ẨN BẢNG ĐIỀU KHIỂN, NÚT GỌN NÀY CHO PHÉP MỞ LẠI BẤT KỲ LÚC NÀO */}
+      {isWindowCapture && isControlDockCollapsed && (
+        <button
+          onClick={() => {
+            setIsControlDockCollapsed(false);
+            try { localStorage.setItem('avalive_window_capture_dock_collapsed', 'false'); } catch (e) {}
+          }}
+          className="fixed top-2 right-2 z-50 px-2.5 py-1 rounded-xl bg-black/75 hover:bg-black/95 text-cyan-300 hover:text-cyan-100 border border-cyan-500/40 text-[11px] font-bold backdrop-blur-md shadow-2xl flex items-center gap-1.5 opacity-60 hover:opacity-100 transition-all cursor-pointer"
+          title="Bấm để hiện lại bảng điều khiển (Phím tắt: H)"
+        >
+          <span>👁️ Hiện Điều Khiển (H)</span>
+        </button>
+      )}
+
+      {/* KHUNG PHÁT SÓNG SẠCH 100% (CHUẨN 9:16 HOẶC 16:9 - SIÊU SẮC NÉT OBS / TIKTOK STUDIO, 100% NGUYÊN BẢN KHÔNG DÍNH BẤT KỲ GIAO DIỆN NÀO) */}
+      <main className="w-full flex-1 min-h-0 relative overflow-hidden flex items-center justify-center bg-black">
         <div 
           className={`relative flex items-center justify-center overflow-hidden transition-all duration-200 ${
             ratio === '9:16'
@@ -1615,7 +1812,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   controls={false}
                   preload="auto"
                   crossOrigin="anonymous"
-                  disablePictureInPicture
                   disableRemotePlayback
                   onLoadedMetadata={(e) => {
                     const v = e.currentTarget;
@@ -1668,6 +1864,15 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
                     if (isUserPaused) {
                       setIsPlayingState(false);
+                    } else {
+                      // Ngăn chặn trình duyệt tự ngắt video khi chuyển tab hoặc tối ưu tài nguyên
+                      const v = overlayVideoRef.current;
+                      if (v && !isUserPaused) {
+                        v.play().catch(() => {
+                          v.muted = true;
+                          v.play().catch(() => {});
+                        });
+                      }
                     }
                   }}
                   onCanPlay={(e) => {
@@ -1727,19 +1932,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     willChange: 'transform'
                   }}
                 />
-
-                {/* 🎯 Canvas Gương 2D: CHỈ render khi ở chế độ Window Capture để loại bỏ hoàn toàn tải CPU cho đường link live */}
-                {isWindowCapture && (
-                  <canvas 
-                    ref={captureCanvasRef}
-                    className="w-full h-full select-none absolute inset-0 pointer-events-none"
-                    style={{ 
-                      width: '100%', 
-                      height: '100%', 
-                      objectFit: objectFitState || 'cover'
-                    }}
-                  />
-                )}
               </>
             ) : activeStreamUrl ? (
               <video

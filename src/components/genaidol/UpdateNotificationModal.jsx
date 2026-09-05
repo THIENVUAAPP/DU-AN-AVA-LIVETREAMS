@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 
-export const APP_VERSION = '1.4.6';
+export const APP_VERSION = '1.4.7';
 export const UPDATE_NOTES = [
-  "🛍️ Tích hợp Cổng Kết Nối Shopee Live (RTMP URL & Stream Key): Thiết lập trực tiếp trong Menu (nằm ngay dưới mục Idol / Sự kiện Idol) và Sự kiện Livestream, hỗ trợ kết nối tức thì tới Kênh Người Bán Shopee, tự động xướng tên cảm ơn khách chốt đơn giỏ hàng Shopee Live 1-chạm.",
-  "⚔️ Sửa triệt để lỗi Game Chiến Đấu (PK Battle): Bổ sung hàm stopAll() và bảo vệ an toàn luồng âm thanh Audio Engine khi chuyển tab hoặc kết thúc trận đấu, loại bỏ 100% lỗi TypeError: battleAudio.stopAll is not a function.",
-  "🚀 Tối ưu hóa siêu mượt & Giảm tải tài nguyên: Tách module code-splitting, tạm dừng các luồng vẽ nền khi chơi game, giúp Game Bản Đồ và Game Chiến Đấu đạt 60FPS siêu mượt không còn bị giật lag."
+  "🖥️ Khung Quản Trị Window Capture Riêng Biệt & Nút Ẩn/Hiện: Đưa toàn bộ nút Tạm Dừng / Tiếp Tục, Bật / Tắt Tiếng, Chỉnh Âm Lượng ra khung điều khiển ngoại vi riêng biệt mé ngoài, không còn che khuất khung phát sóng video 9:16. Bổ sung nút Ẩn Bảng Điều Khiển giúp khung hình sạch 100% khi phát trực tiếp OBS / TikTok Live Studio.",
+  "⚡ Công Nghệ Giữ Luồng 24/7 Khi Chuyển Tab (Zero Background Throttling): Tích hợp WebAudio Keep-Alive & Auto-Resume thông minh, đảm bảo video Window Capture chạy liên tục siêu mượt 60FPS không bị đứng hình hay ngắt quãng khi người dùng chuyển sang tab khác, lướt web hoặc thu nhỏ cửa sổ.",
+  "🖼️ Hỗ Trợ Chế Độ Cửa Sổ Nổi (Picture-in-Picture): Cho phép ghim video live nổi trên tất cả các cửa sổ làm việc khác, video sắc nét chuẩn GPU nguyên bản không mờ, không giật lag."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
