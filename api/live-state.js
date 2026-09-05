@@ -4,13 +4,15 @@
 let globalLiveState = {
   stage: 'idol',
   aspectRatio: '9:16',
-  characterName: 'AI Idol Linh Anh',
-  mediaUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
-  isVideo: false,
+  characterName: 'AvaLive VIP PRO',
+  mediaUrl: null,
+  isVideo: true,
   flvUrl: null,
   isConnected: true,
   isDarkMode: true,
-  updatedAt: 0
+  isPlaying: true,
+  tunnelUrl: null,
+  updatedAt: Date.now()
 };
 
 export default async function handler(req, res) {

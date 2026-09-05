@@ -122,23 +122,21 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
   if (!isOpen) return null;
 
-  // Lấy link Đám Mây Toàn Cầu Vercel CDN 24/7 (100% tương thích TikTok Live Studio)
-  const getCloudGlobalUrl = (path) => {
-    return `https://avalivepro.vercel.app/${path}`;
-  };
-
-  // Lấy link Cloudflare Tunnel chuẩn phát trực tiếp từ máy tính
-  const getTunnelUrl = (path) => {
+  // Lấy đường link Overlay 1 link duy nhất cho mỗi dự án (100% tương thích TikTok Live & OBS)
+  const getProjectOverlayUrl = (path) => {
+    // 1. Ưu tiên cao nhất: Link Cloudflare HTTPS trực tiếp từ máy streamer (kết nối trực tiếp video cục bộ, 0ms delay)
     if (tunnelData?.projects?.[path]) {
       return tunnelData.projects[path];
     }
     if (tunnelData?.tunnelUrl) {
-      return `${tunnelData.tunnelUrl}/${path}`;
+      return `${tunnelData.tunnelUrl.replace(/\/$/, '')}/${path}`;
     }
+    // 2. Nếu đang chạy trên domain ngoài (HTTPS)
     const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
     if (currentOrigin && !currentOrigin.includes('127.0.0.1') && !currentOrigin.includes('localhost')) {
       return `${currentOrigin}/${path}`;
     }
+    // 3. Dự phòng Vercel
     return `https://avalivepro.vercel.app/${path}`;
   };
 
@@ -328,7 +326,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                   <b className="text-emerald-300">✅ Cách 1 (Dùng Window Capture):</b> Bấm phím <b>H</b> (hoặc nút "Ẩn Điều Khiển") trên cửa sổ live để chuyển sang chế độ tràn viền 100%. Sau đó <b>để cửa sổ nằm phía sau các ứng dụng khác</b> (mở TikTok Studio, Chrome, Game đè lên trên). Cửa sổ vẫn phát 60FPS ngầm liên tục!
                 </p>
                 <p>
-                  <b className="text-cyan-300">👑 Cách 2 (TIỆN LỢI NHẤT — DÙNG NGUỒN TRÌNH DUYỆT):</b> Bấm chọn tab <b>"🌐 NGUỒN TRÌNH DUYỆT"</b> ở trên → Copy <b>Link 1 Đám Mây Toàn Cầu (https://avalivepro.vercel.app/idol)</b> dán vào TikTok Studio. <b>HOÀN TOÀN KHÔNG CẦN CỬA SỔ NÀO TRÊN MÀN HÌNH</b>, TikTok Studio tự nạp ngầm 100%, chuyển tab hoặc làm việc khác cực kỳ linh hoạt!
+                  <b className="text-cyan-300">👑 Cách 2 (TIỆN LỢI NHẤT — DÙNG NGUỒN TRÌNH DUYỆT):</b> Bấm chọn tab <b>"🌐 NGUỒN TRÌNH DUYỆT"</b> ở trên → Sao chép <b>1 Đường Link Duy Nhất</b> dán vào TikTok Studio. <b>HOÀN TOÀN KHÔNG CẦN CỬA SỔ NÀO TRÊN MÀN HÌNH</b>, TikTok Studio tự nạp ngầm 100%, chuyển tab hoặc làm việc khác cực kỳ linh hoạt!
                 </p>
               </div>
             </div>
@@ -404,15 +402,15 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
               )}
             </div>
 
-            {/* 🛡️ BANNER CẢNH BÁO TIKTOK LIVE STUDIO KHÔNG DÙNG LOCAL 127.0.0.1 */}
-            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-950/60 via-black/80 to-purple-950/50 border border-amber-500/40 text-xs space-y-1.5 shadow-lg">
-              <div className="flex items-center gap-2 text-amber-300 font-black text-[12px]">
+            {/* 🛡️ BANNER HƯỚNG DẪN 1 LINK DUY NHẤT */}
+            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-cyan-950/60 via-black/80 to-blue-950/50 border border-cyan-500/40 text-xs space-y-1.5 shadow-lg">
+              <div className="flex items-center gap-2 text-cyan-300 font-black text-[12px]">
                 <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>🛡️ LƯU Ý ĐẶC BIỆT KHI PHÁT TRÊN TIKTOK LIVE STUDIO (WINDOWS & MAC):</span>
+                <span>⭐ MỖI DỰ ÁN DÙNG 1 ĐƯỜNG LINK DUY NHẤT — TƯƠNG THÍCH 100% TIKTOK LIVE & OBS:</span>
               </div>
               <p className="text-gray-200 text-[11.5px] leading-relaxed">
-                • <b className="text-red-400">Tuyệt đối không dùng link local (127.0.0.1)</b>: TikTok Live Studio trên Windows có cơ chế sandbox bảo mật tự động chặn các link IP nội bộ máy tính, gây lỗi màn hình trắng hoặc không load được.<br />
-                • <b className="text-emerald-400">Giải pháp 100% thành công</b>: Sử dụng <b>Link 1 (Đám Mây Toàn Cầu 24/7)</b> hoặc <b>Link 2 (Cloudflare HTTPS)</b> dưới đây để phát mượt mà trên hàng nghìn thiết bị streamer cùng lúc!
+                • <b>Chỉ cần sao chép đúng 1 đường link bên dưới</b> dán vào nguồn <b>Trình duyệt (Browser / Link Source)</b> trong TikTok Live Studio hoặc OBS.<br />
+                • Hệ thống tự động đồng bộ video, âm thanh, hình ảnh 4K siêu nét và hiệu ứng từ phần mềm. Hỗ trợ video dài 5-10 tiếng dung lượng nhiều Gigabyte 24/24!
               </p>
             </div>
 
@@ -430,10 +428,8 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
               {projects.map((proj) => {
                 const Icon = proj.icon;
-                const cloudGlobalUrl = getCloudGlobalUrl(proj.path);
-                const cloudDirectUrl = getTunnelUrl(proj.path);
-                const isCopiedGlobal = copiedId === `${proj.id}_global`;
-                const isCopiedDirect = copiedId === `${proj.id}_direct` || copiedId === proj.id;
+                const overlayUrl = getProjectOverlayUrl(proj.path);
+                const isCopied = copiedId === proj.id;
 
                 return (
                   <div key={proj.id} className={`p-4 rounded-2xl border transition-all ${proj.bgColor} space-y-3 relative shadow-lg`}>
@@ -450,40 +446,40 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                       </span>
                     </div>
 
-                    {/* 🌍 LINK 1: KHUYÊN DÙNG SỐ 1 CHO TIKTOK LIVE STUDIO (CHẠY 24/24 TOÀN CẦU, KHÔNG BỊ CHẶN LOCAL) */}
+                    {/* 👑 1 ĐƯỜNG LINK DUY NHẤT CHUYÊN DÙNG PHÁT LIVE */}
                     <div className="p-3 rounded-xl bg-black/90 border-2 border-emerald-500/60 space-y-2 shadow-emerald-950/40 shadow-lg">
                       <div className="flex items-center justify-between text-[11px]">
                         <span className="font-black text-emerald-300 flex items-center gap-1.5">
                           <Zap className="w-4 h-4 text-yellow-400 animate-pulse" />
-                          <span>🌍 LINK 1: ĐÁM MÂY TOÀN CẦU 24/7 (KHUYÊN DÙNG SỐ 1 CHO TIKTOK LIVE STUDIO):</span>
+                          <span>👑 ĐƯỜNG LINK DUY NHẤT CHO TIKTOK LIVE & OBS (1080 × 1920):</span>
                         </span>
                         <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                          1080 × 1920 • Toàn Cầu 24/7
+                          60 FPS • 0ms Delay • Siêu Nét
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input
                           type="text"
                           readOnly
-                          value={cloudGlobalUrl}
+                          value={overlayUrl}
                           className="flex-1 px-3 py-2 rounded-xl border border-emerald-500/50 bg-black text-emerald-200 text-xs font-mono font-bold focus:outline-none select-all shadow-inner"
                         />
                         <button
-                          onClick={() => handleCopy(cloudGlobalUrl, `${proj.id}_global`)}
+                          onClick={() => handleCopy(overlayUrl, proj.id)}
                           className={`px-4 py-2 rounded-xl font-black text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-lg active:scale-95 ${
-                            isCopiedGlobal 
+                            isCopied 
                               ? "bg-emerald-600 text-white shadow-emerald-500/30" 
                               : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-500/30 border border-emerald-400/50"
                           }`}
                         >
-                          {isCopiedGlobal ? (
+                          {isCopied ? (
                             <><Check className="w-4 h-4" /><span>ĐÃ SAO CHÉP!</span></>
                           ) : (
-                            <><Copy className="w-4 h-4" /><span>SAO CHÉP LINK 1</span></>
+                            <><Copy className="w-4 h-4" /><span>SAO CHÉP LINK</span></>
                           )}
                         </button>
                         <a
-                          href={cloudGlobalUrl}
+                          href={overlayUrl}
                           target="_blank"
                           rel="noreferrer"
                           className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-gray-200 hover:text-white font-bold text-xs transition-all flex items-center justify-center gap-1"
@@ -494,55 +490,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                         </a>
                       </div>
                       <p className="text-[10.5px] text-emerald-400/90 leading-tight">
-                        ⚡ <b>100% Không bao giờ bị chặn Sandbox trên TikTok Live Studio Windows</b>: Chạy 24/24 xuyên suốt, tự động đồng bộ thời gian thực siêu tốc qua Supabase Cloud trên hàng nghìn thiết bị!
-                      </p>
-                    </div>
-
-                    {/* 🚀 LINK 2: ĐƯỜNG TRUYỀN CLOUDFLARE HTTPS TRỰC TIẾP (CHO VIDEO NẶNG 5-10 TIẾNG NHIỀU GB) */}
-                    <div className="p-3 rounded-xl bg-black/70 border border-cyan-500/30 space-y-2">
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="font-black text-cyan-300 flex items-center gap-1.5">
-                          <Wifi className="w-4 h-4 text-cyan-400" />
-                          <span>🚀 LINK 2: ĐƯỜNG TRUYỀN CLOUDFLARE TRỰC TIẾP (CHO VIDEO NẶNG NHIỀU GB 5-10 TIẾNG):</span>
-                        </span>
-                        <span className="text-[10px] font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/20">
-                          Cloudflare HTTPS • Multi-GB
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          readOnly
-                          value={cloudDirectUrl}
-                          className="flex-1 px-3 py-2 rounded-xl border border-cyan-500/30 bg-black/90 text-cyan-200 text-xs font-mono font-bold focus:outline-none select-all shadow-inner"
-                        />
-                        <button
-                          onClick={() => handleCopy(cloudDirectUrl, `${proj.id}_direct`)}
-                          className={`px-4 py-2 rounded-xl font-black text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-lg active:scale-95 ${
-                            isCopiedDirect 
-                              ? "bg-cyan-600 text-white shadow-cyan-500/30" 
-                              : "bg-white/10 hover:bg-white/20 text-gray-200 hover:text-white border border-white/20"
-                          }`}
-                        >
-                          {isCopiedDirect ? (
-                            <><Check className="w-4 h-4" /><span>ĐÃ SAO CHÉP!</span></>
-                          ) : (
-                            <><Copy className="w-4 h-4" /><span>SAO CHÉP LINK 2</span></>
-                          )}
-                        </button>
-                        <a
-                          href={cloudDirectUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-gray-200 hover:text-white font-bold text-xs transition-all flex items-center justify-center gap-1"
-                          title="Mở tab mới kiểm tra video"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                          <span>Xem Thử</span>
-                        </a>
-                      </div>
-                      <p className="text-[10.5px] text-gray-400 leading-tight">
-                        🌐 Kết nối HTTPS mã hóa trực tiếp từ máy của bạn qua Cloudflare CDN toàn cầu. Tải siêu mượt mà cho các video 5-10 tiếng dung lượng nhiều Gigabyte!
+                        ⚡ <b>1 Đường Link Duy Nhất</b>: Tự động đồng bộ video, hình ảnh, âm thanh từ phần mềm sang TikTok Live Studio. Hỗ trợ chạy video 5-10 tiếng 4K không giật lag!
                       </p>
                     </div>
                   </div>

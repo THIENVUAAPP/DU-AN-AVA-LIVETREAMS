@@ -1754,7 +1754,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   WINDOW CAPTURE (60FPS)
                 </span>
                 <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[9px] font-bold text-cyan-300">
-                  v1.5.0
+                  v1.6.0
                 </span>
               </div>
               <span className="text-[9.5px] text-emerald-400/90 font-medium">

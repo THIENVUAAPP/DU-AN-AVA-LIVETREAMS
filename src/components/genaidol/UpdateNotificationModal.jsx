@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.5.0';
+export const APP_VERSION = '1.6.0';
 export const UPDATE_NOTES = [
-  "🚀 Đột Phá Phát Video Qua Link Nguồn Trình Duyệt 0ms: Hỗ trợ 2 đường link chuyên dụng — Link 1 (Nội bộ 0ms không cần internet, mở phát ngay lập tức, hỗ trợ video nặng 5-10 tiếng 4K không bao giờ lag hay hết hạn) và Link 2 (Cloudflare Tunnel từ xa có cơ chế DNS Watchdog tự cấp lại link khi quá hạn).",
-  "🖥️ Tối Ưu Khung Hình 9:16 (1080 × 1920) Chuẩn Tuyệt Đối: Hiển thị tràn viền sắc nét 100% không vệt đen trên TikTok Live Studio. Cho phép streamer chuyển tab, ẩn cửa sổ làm việc khác 24/24 mà phiên live vẫn phát liên tục không bao giờ bị dừng.",
-  "⚡ Động Cơ Chunk Streaming 8MB Siêu Tốc Cho Video Dài 5-10 Tiếng: Tải đa luồng song song, tối ưu hoá đọc dải byte HTTP 206 chống lỗi demuxer, nạp tức thì khung hình đầu tiên và phát bền bỉ 24/7."
+  "⭐ 1 Đường Link Duy Nhất Cho Mỗi Dự Án (Idol, Bản Đồ, Battle PK): Chuẩn hóa giao diện phát trực tiếp cho TikTok Live Studio & OBS — mỗi dự án chỉ dùng đúng 1 đường link duy nhất, sao chép dán vào là phát ngay tức thì 60FPS không cần cài đặt rườm rà.",
+  "🎬 Đồng Bộ Âm Thanh, Hình Ảnh & Video 4K Siêu Nét Không Độ Trễ (0ms): Kết nối đồng bộ trực tiếp video, âm thanh, quà tặng từ bảng điều khiển sang luồng phát TikTok Live theo thời gian thực. Hỗ trợ chạy video 5-10 tiếng dung lượng nhiều Gigabyte siêu mượt 24/24.",
+  "🛡️ Khắc Phục Triệt Để Giới Hạn TikTok Live Studio: Loại bỏ hoàn toàn lỗi chặn link nội bộ (127.0.0.1) trên Windows, tự động tối ưu hóa đường truyền HTTPS bảo mật cao giúp phiên live luôn ổn định bền bỉ."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
