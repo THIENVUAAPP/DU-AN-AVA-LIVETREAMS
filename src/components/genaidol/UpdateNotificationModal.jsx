@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.4.7';
+export const APP_VERSION = '1.4.8';
 export const UPDATE_NOTES = [
   "🖥️ Khung Quản Trị Window Capture Riêng Biệt & Nút Ẩn/Hiện: Đưa toàn bộ nút Tạm Dừng / Tiếp Tục, Bật / Tắt Tiếng, Chỉnh Âm Lượng ra khung điều khiển ngoại vi riêng biệt mé ngoài, không còn che khuất khung phát sóng video 9:16. Bổ sung nút Ẩn Bảng Điều Khiển giúp khung hình sạch 100% khi phát trực tiếp OBS / TikTok Live Studio.",
   "⚡ Công Nghệ Giữ Luồng 24/7 Khi Chuyển Tab (Zero Background Throttling): Tích hợp WebAudio Keep-Alive & Auto-Resume thông minh, đảm bảo video Window Capture chạy liên tục siêu mượt 60FPS không bị đứng hình hay ngắt quãng khi người dùng chuyển sang tab khác, lướt web hoặc thu nhỏ cửa sổ.",

@@ -9,7 +9,7 @@
   "isPlaying": false,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1788581844984,
+  "updatedAt": 1788584085334,
   "flvUrl": null,
   "isConnected": false,
   "type": "MASTER_LIVE_STATE_UPDATE",
@@ -19,5 +19,5 @@
   "videoCurrentTime": 0,
   "isVideoAudioMuted": true,
   "videoVolume": 1,
-  "clearMedia": true
+  "clearMedia": false
 }

@@ -1716,7 +1716,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   WINDOW CAPTURE (60FPS)
                 </span>
                 <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[9px] font-bold text-cyan-300">
-                  v1.4.7
+                  v1.4.8
                 </span>
               </div>
               <span className="text-[9.5px] text-emerald-400/90 font-medium">
@@ -1865,18 +1865,17 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 <video
                   ref={overlayVideoRef}
                   src={activeMedia.url}
-                  autoPlay={localStorage.getItem('avalive_user_paused') !== 'true' && masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false}
+                  autoPlay={true}
                   loop
                   muted={!hasAutoplayStarted ? true : isVideoAudioMuted}
                   defaultMuted={true}
                   playsInline
                   controls={false}
                   preload="auto"
-                  crossOrigin="anonymous"
                   disableRemotePlayback
                   onLoadedMetadata={(e) => {
                     const v = e.currentTarget;
-                    const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true' || masterState.videoPlaybackEvent === 'pause' || masterState.isPlaying === false;
+                    const isUserPaused = localStorage.getItem('avalive_user_paused') === 'true' && masterState.isPlaying === false;
                     if (!isUserPaused) {
                       v.dataset.userPaused = 'false';
                       v.muted = !hasAutoplayStarted ? true : isVideoAudioMuted;

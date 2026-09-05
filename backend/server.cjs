@@ -180,7 +180,7 @@ app.all('/uploads/:filename', (req, res, next) => {
       stream.pipe(res);
     } else {
       res.writeHead(200, {
-        'Content-Length': fileSize,
+        'Content-Length': currentOnDiskSize,
         'Content-Type': contentType,
         'Accept-Ranges': 'bytes',
         'Cache-Control': 'public, max-age=86400, immutable'
@@ -423,7 +423,7 @@ app.get('/api/check-update', (req, res) => {
 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
-app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', '/AvaLive_VIP_PRO_Windows_v1.4.7.zip'], (req, res) => {
+app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', '/AvaLive_VIP_PRO_Windows_v1.4.8.zip', '/AvaLive_VIP_PRO_Windows_v1.4.7.zip'], (req, res) => {
   const releaseDir = path.join(__dirname, '..', 'release_zips');
   let targetFile = null;
   if (fs.existsSync(releaseDir)) {
@@ -444,7 +444,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
   // Fallback nếu chạy trên cloud không có local zip -> redirect thẳng đến asset GitHub release
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
-    const ver = pkg.version || '1.4.7';
+    const ver = pkg.version || '1.4.8';
     res.redirect(`https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${ver}/AvaLive_VIP_PRO_Windows_v${ver}.zip`);
   } catch (e) {
     res.redirect('https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/latest');
@@ -452,7 +452,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 });
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
-app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', '/AvaLive_VIP_PRO_Mac_v1.4.7.zip'], (req, res) => {
+app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', '/AvaLive_VIP_PRO_Mac_v1.4.8.zip', '/AvaLive_VIP_PRO_Mac_v1.4.7.zip'], (req, res) => {
   const releaseDir = path.join(__dirname, '..', 'release_zips');
   let targetFile = null;
   if (fs.existsSync(releaseDir)) {
@@ -473,7 +473,7 @@ app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VI
   // Fallback nếu chạy trên cloud không có local zip -> redirect thẳng đến asset GitHub release
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
-    const ver = pkg.version || '1.4.7';
+    const ver = pkg.version || '1.4.8';
     res.redirect(`https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${ver}/AvaLive_VIP_PRO_Mac_v${ver}.zip`);
   } catch (e) {
     res.redirect('https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/latest');
