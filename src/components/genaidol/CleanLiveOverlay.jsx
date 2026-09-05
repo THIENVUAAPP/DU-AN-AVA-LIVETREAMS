@@ -567,7 +567,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           cleanMediaUrl = cleanMediaUrl.substring(cleanMediaUrl.indexOf('/uploads/'));
         }
         setMasterState(prev => {
-          if (prev.mediaUrl !== cleanMediaUrl) {
+          let prevClean = prev.mediaUrl;
+          if (typeof prevClean === 'string' && prevClean.includes('/uploads/')) {
+            prevClean = prevClean.substring(prevClean.indexOf('/uploads/'));
+          }
+          if (prevClean !== cleanMediaUrl) {
             return { ...prev, mediaUrl: cleanMediaUrl, isVideo: true };
           }
           return prev;
@@ -586,9 +590,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         if (!vid.paused) {
           try { vid.pause(); } catch (e) {}
         }
-        if (typeof targetTime === 'number' && !isNaN(targetTime)) {
-          try { vid.currentTime = targetTime; } catch (e) {}
-        }
         setIsPlayingState(false);
       } else if (action === 'play' || isPlaying === true) {
         try {
@@ -598,10 +599,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         vid.dataset.userPaused = 'false';
         vid.muted = isVideoAudioMuted;
         if (!isVideoAudioMuted) vid.volume = videoVolume;
-        if (typeof targetTime === 'number' && !isNaN(targetTime)) {
-          if (Math.abs(vid.currentTime - targetTime) > 0.35) {
-            try { vid.currentTime = targetTime; } catch (e) {}
-          }
+        // CHỈ TUA KHI CÓ LỆNH ÉP BUỘC (ĐỔI VIDEO MỚI HOẶC CHỦ ĐỘNG TUA)
+        if (control.force && typeof targetTime === 'number' && !isNaN(targetTime)) {
+          try { vid.currentTime = targetTime; } catch (e) {}
         }
         if (vid.paused) {
           vid.play().catch(() => {
@@ -615,8 +615,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           try { vid.currentTime = targetTime; } catch (e) {}
         }
       } else if (action === 'time_sync') {
+        // Chỉ đồng bộ nếu độ lệch quá lớn (> 2.5s) để video chạy mượt từ đầu đến đuôi
         if (typeof targetTime === 'number' && !isNaN(targetTime)) {
-          if (Math.abs(vid.currentTime - targetTime) > 0.35) {
+          if (Math.abs(vid.currentTime - targetTime) > 2.5) {
             try { vid.currentTime = targetTime; } catch (e) {}
           }
         }
@@ -645,9 +646,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           if (!vid.paused) {
             try { vid.pause(); } catch (e) {}
           }
-          if (typeof data.videoCurrentTime === 'number' && !isNaN(data.videoCurrentTime)) {
-            try { vid.currentTime = data.videoCurrentTime; } catch (e) {}
-          }
         }
         setIsPlayingState(false);
       } else if (data.isPlaying === true || data.videoPlaybackEvent === 'play') {
@@ -659,10 +657,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           vid.dataset.userPaused = 'false';
           vid.muted = isVideoAudioMuted;
           if (!isVideoAudioMuted) vid.volume = videoVolume;
-          if (typeof data.videoCurrentTime === 'number' && !isNaN(data.videoCurrentTime)) {
-            if (Math.abs(vid.currentTime - data.videoCurrentTime) > 0.35) {
-              try { vid.currentTime = data.videoCurrentTime; } catch (e) {}
-            }
+          // Chỉ tua thời gian khi có lệnh ép buộc từ phần mềm (đổi bài hoặc chủ động tua)
+          if (data.force && typeof data.videoCurrentTime === 'number' && !isNaN(data.videoCurrentTime)) {
+            try { vid.currentTime = data.videoCurrentTime; } catch (e) {}
           }
           if (vid.paused) {
             vid.play().catch(() => {
@@ -672,10 +669,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           }
         }
         setIsPlayingState(true);
-      } else if (typeof data.videoCurrentTime === 'number' && vid) {
-        if (Math.abs(vid.currentTime - data.videoCurrentTime) > 0.35) {
-          try { vid.currentTime = data.videoCurrentTime; } catch (e) {}
-        }
+      } else if (data.videoPlaybackEvent === 'seeked' && typeof data.videoCurrentTime === 'number' && vid) {
+        try { vid.currentTime = data.videoCurrentTime; } catch (e) {}
       }
 
       // Đồng bộ Âm thanh & Âm lượng từ Phần Mềm Chính
@@ -1611,7 +1606,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               <>
                 <video
                   ref={overlayVideoRef}
-                  key={activeMedia.url}
                   src={activeMedia.url}
                   autoPlay={localStorage.getItem('avalive_user_paused') !== 'true' && masterState.videoPlaybackEvent !== 'pause' && masterState.isPlaying !== false}
                   loop

@@ -115,11 +115,13 @@ export function syncMasterLiveState(partialState, socket = null) {
   if (socket && socket.connected) {
     try {
       socket.emit('MASTER_LIVE_STATE_UPDATE', updated);
-      if (partialState.videoPlaybackEvent || typeof partialState.isPlaying === 'boolean' || typeof partialState.videoCurrentTime === 'number') {
+      // Chỉ bắn sự kiện điều khiển video khi người dùng thực sự bấm Play/Pause/Seek
+      if (partialState.videoPlaybackEvent || (partialState.force && typeof partialState.videoCurrentTime === 'number')) {
         socket.emit('VIDEO_PLAYBACK_CONTROL', {
           action: partialState.videoPlaybackEvent || (partialState.isPlaying ? 'play' : 'pause'),
           isPlaying: partialState.isPlaying !== undefined ? partialState.isPlaying : updated.isPlaying,
-          currentTime: partialState.videoCurrentTime !== undefined ? partialState.videoCurrentTime : updated.videoCurrentTime,
+          currentTime: partialState.videoCurrentTime,
+          force: !!partialState.force,
           mediaUrl: updated.mediaUrl,
           timestamp: Date.now()
         });

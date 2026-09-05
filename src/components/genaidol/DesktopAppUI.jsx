@@ -1909,13 +1909,14 @@ export default function DesktopAppUI() {
 
     const customMatch = (customCharacters && Array.isArray(customCharacters)) ? customCharacters.find(c => c.id === selectedCharacter) : null;
     const firstCustom = (customCharacters && Array.isArray(customCharacters) && customCharacters.length > 0) ? customCharacters[0] : null;
-    const char = customMatch || CHARACTERS[selectedCharacter] || firstCustom || Object.values(CHARACTERS)[0] || { 
+    const char = customMatch || (selectedCharacter && CHARACTERS[selectedCharacter]) || firstCustom || (Object.keys(CHARACTERS).length > 0 ? Object.values(CHARACTERS)[0] : null) || { 
       url: '', 
       type: 'video', 
       name: 'Video Người Dùng' 
     };
     
-    let currentMedia = quickResponseActiveVideo?.url || lipSyncVideoUrl || (activeVideoItem?.mediaUrl) || userLockedMediaUrl || char.mediaUrl || char.url || '';
+    // Ưu tiên video nhân vật đang chọn -> video khóa người dùng -> các nguồn phản hồi
+    let currentMedia = quickResponseActiveVideo?.url || lipSyncVideoUrl || (activeVideoItem?.mediaUrl) || char.mediaUrl || char.url || userLockedMediaUrl || '';
     let isVid = !!userLockedMediaUrl || char.type === 'video' || (typeof currentMedia === 'string' && (currentMedia.endsWith('.mp4') || currentMedia.includes('/uploads/') || currentMedia.startsWith('http') || currentMedia.startsWith('blob:')));
     let streamFlvUrl = null;
 
@@ -1936,7 +1937,7 @@ export default function DesktopAppUI() {
 
     if (typeof currentMedia === 'string' && currentMedia.includes('/uploads/')) {
       currentMedia = currentMedia.substring(currentMedia.indexOf('/uploads/'));
-    } else if (typeof currentMedia === 'string' && (currentMedia.includes('nhep_mieng.mp4') || currentMedia.includes('demo_dancer.mp4'))) {
+    } else if (typeof currentMedia === 'string' && (currentMedia.includes('nhep_mieng.mp4') || currentMedia.includes('demo_dancer.mp4') || currentMedia.includes('default_idol.mp4'))) {
       currentMedia = null;
     }
 
@@ -1950,8 +1951,7 @@ export default function DesktopAppUI() {
       flvUrl: streamFlvUrl,
       isVideo: !!isVid,
       isConnected: !!(isConnected || showSimulator),
-      videoPlaybackEvent: 'play',
-      isPlaying: true,
+      isPlaying: isVideoPlaying,
       isDarkMode,
       currentLang,
       updatedAt: Date.now()
@@ -2501,8 +2501,37 @@ export default function DesktopAppUI() {
 
   const removeCustomCharacter = async (e, id) => {
     e.stopPropagation();
-    setCustomCharacters(prev => prev.filter(c => c.id !== id));
-      setSelectedCharacter(Object.keys(CHARACTERS)[0] || '');
+    const remaining = customCharacters.filter(c => c.id !== id);
+    setCustomCharacters(remaining);
+    try { localStorage.setItem('avalive_custom_characters', JSON.stringify(remaining)); } catch (err) {}
+
+    if (selectedCharacter === id) {
+      const nextChar = remaining.length > 0 ? remaining[0] : null;
+      const nextId = nextChar ? nextChar.id : '';
+      const nextUrl = nextChar ? (nextChar.url || nextChar.mediaUrl || '') : '';
+      setSelectedCharacter(nextId);
+      setUserLockedMediaUrl(nextUrl);
+      try {
+        localStorage.setItem('avalive_selected_char', nextId);
+        if (nextUrl) localStorage.setItem('avalive_user_locked_media', nextUrl);
+        else localStorage.removeItem('avalive_user_locked_media');
+      } catch (err) {}
+
+      syncMasterLiveState({
+        stage: 'idol',
+        selectedCharacter: nextId,
+        mediaUrl: nextUrl,
+        isVideo: !!nextUrl,
+        isPlaying: !!nextUrl
+      }, socketRef.current);
+      sendVideoControl({
+        action: nextUrl ? 'play' : 'pause',
+        mediaUrl: nextUrl,
+        currentTime: 0,
+        force: true,
+        isPlaying: !!nextUrl
+      }, socketRef.current);
+    }
     await deleteCharacterFromIDB(id);
   };
 
@@ -2595,13 +2624,12 @@ export default function DesktopAppUI() {
       }
       
       const customMatch = customCharacters.find(c => c.id === selectedCharacter);
-      const selected = customMatch || (userLockedMediaUrl ? { id: 'locked_video', name: 'Video Đang Phát', url: userLockedMediaUrl, type: 'video' } : null) || CHARACTERS[selectedCharacter] || Object.values(CHARACTERS)[0];
+      const selected = customMatch || (selectedCharacter && CHARACTERS[selectedCharacter]) || (customCharacters.length > 0 ? customCharacters[0] : null) || (userLockedMediaUrl ? { id: 'locked_video', name: 'Video Đang Phát', url: userLockedMediaUrl, type: 'video' } : null) || (Object.keys(CHARACTERS).length > 0 ? Object.values(CHARACTERS)[0] : null);
 
       if (isProcessingEvent && activeVideoItem && activeVideoItem.mediaUrl) {
         return (
           <video 
             ref={desktopVideoRef}
-            key={activeVideoItem.id || activeVideoItem.mediaUrl}
             src={activeVideoItem.mediaUrl} 
             className="w-full h-full object-contain bg-black"
             autoPlay={localStorage.getItem('avalive_user_paused') !== 'true' && isMasterLiveRunning} 
@@ -2626,9 +2654,9 @@ export default function DesktopAppUI() {
           >
              <div className="w-16 h-16 rounded-2xl bg-blue-600/15 group-hover:bg-blue-600/30 border border-blue-500/30 flex items-center justify-center mb-3 text-blue-400 shadow-lg">
                <Plus size={30} />
-    </div>
+             </div>
              <h3 className="text-base font-bold text-white mb-1">Tải Ảnh / Video Idol Của Bạn</h3>
-    </div>
+          </div>
         );
       }
   
@@ -2638,7 +2666,6 @@ export default function DesktopAppUI() {
             {/* THẺ VIDEO PREVIEW TRÊN PHẦN MỀM: LUÔN MUTE ĐỂ CHỈ CÓ CỬA SỔ LIVE (OBS) PHÁT TIẾNG, TRÁNH DỘI ÂM */}
             <video 
               ref={desktopVideoRef}
-              key={selected.url}
               src={selected.url} 
               className="w-full h-full object-contain bg-black transform-gpu cursor-pointer"
               style={{ transform: 'translateZ(0)', willChange: 'transform' }}
@@ -2655,9 +2682,9 @@ export default function DesktopAppUI() {
                 if (curTime > 0) {
                   lastPlaybackTimeRef.current = curTime;
                 }
-                // ⚡ ĐỒNG BỘ REALTIME TỪNG GIÂY CHO TIKTOK LIVE STUDIO & OBS (TRÁNH LỆCH PHA & LỆCH THỜI GIAN)
+                // ⚡ ĐỒNG BỘ REALTIME TỪNG ĐỢT CHO TIKTOK LIVE STUDIO & OBS (GIỮ CHUẨN 1X SPEED KHÔNG GIẬT KHỰNG)
                 const now = Date.now();
-                if (now - lastTimeBroadcastRef.current > 1200) {
+                if (now - lastTimeBroadcastRef.current > 3000) {
                   lastTimeBroadcastRef.current = now;
                   let playUrl = selected.url;
                   if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
@@ -3647,9 +3674,12 @@ export default function DesktopAppUI() {
                           cleanUrl = cleanUrl.substring(cleanUrl.indexOf('/uploads/'));
                         }
                         const isVid = charItem.type === 'video' || (typeof cleanUrl === 'string' && (cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.endsWith('.mov')));
+                        setUserLockedMediaUrl(cleanUrl);
+                        try { localStorage.setItem('avalive_user_locked_media', cleanUrl); } catch (e) {}
                         sendVideoControl({
                           action: 'play',
                           currentTime: 0,
+                          force: true,
                           isPlaying: true,
                           mediaUrl: cleanUrl,
                           timestamp: Date.now()
@@ -3668,26 +3698,31 @@ export default function DesktopAppUI() {
                     }}
                     className={`w-10 h-10 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 relative group transition-all ${
                       isSelected 
-                        ? 'border-2 border-cyan-400 shadow-md shadow-cyan-500/40 ring-2 ring-cyan-400/50 scale-105' 
+                        ? 'border-2 border-cyan-400 shadow-md shadow-cyan-500/60 ring-2 ring-cyan-400/50 scale-105' 
                         : 'border border-gray-600 opacity-70 hover:opacity-100 hover:border-gray-400'
                     }`}
-                    title={`Ô ${index + 1}: ${charItem.name || 'Video Nhân Vật'}`}
+                    title={`Ô ${index + 1}: ${charItem.name || 'Video Nhân Vật'}${isSelected ? ' (Đang phát Live)' : ''}`}
                   >
+                    {isSelected && (
+                      <div className="absolute top-0.5 left-0.5 px-1 py-0.2 bg-cyan-500 text-[7px] font-extrabold text-black rounded z-20 shadow-sm leading-tight uppercase">
+                        Live
+                      </div>
+                    )}
                     {charItem.type === 'video' || (typeof charItem.url === 'string' && (charItem.url.endsWith('.mp4') || charItem.url.includes('/uploads/'))) ? (
                       <div className="w-full h-full relative bg-gray-800 flex items-center justify-center">
                         <video 
                           src={charItem.url} 
-                          className="w-full h-full object-cover absolute inset-0" 
+                          className="w-full h-full object-cover absolute inset-0 pointer-events-none" 
                           muted 
                           playsInline 
                           preload="metadata" 
                         />
-                        <div className="absolute bottom-0 inset-x-0 bg-black/60 text-[8px] font-medium text-white truncate px-0.5 text-center leading-tight py-0.5 z-10">
+                        <div className="absolute bottom-0 inset-x-0 bg-black/60 text-[8px] font-medium text-white truncate px-0.5 text-center leading-tight py-0.5 z-10 pointer-events-none">
                           {charItem.name || 'Video'}
                         </div>
                       </div>
                     ) : (
-                      <img src={charItem.url} className="w-full h-full object-cover" alt={charItem.name || ''} />
+                      <img src={charItem.url} className="w-full h-full object-cover pointer-events-none" alt={charItem.name || ''} />
                     )}
                     
                     {/* Nút Xoá Video khỏi Ô (Chỉ hiện cho video do người dùng tải lên) */}
