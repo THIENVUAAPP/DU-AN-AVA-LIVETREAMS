@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.7.7';
+export const APP_VERSION = '1.7.8';
 export const UPDATE_NOTES = [
-  "⚡ Siêu Tốc 0ms TikTok Studio (Link Nội Bộ LAN 10Gbps): Tự động nhận diện mạng nội bộ, stream video trực tiếp từ SSD NVMe với tốc độ 10Gbps, 0ms latency, không tốn data mạng, 100% không bao giờ lag hay đứng hình!",
-  "🚀 Smart 8MB Chunk Streaming: Nâng cấp động cơ HTTP 206 Partial Content, chia mảnh 8MB tải xong trong 0.02s qua Cloudflare Tunnel, triệt tiêu hoàn toàn lỗi TCP backpressure và timeout gây đứng hình.",
-  "🎨 Bảo Toàn 100% Độ Sắc Nét & Ánh Sáng Gốc: Loại bỏ hoàn toàn cờ transform 3D giả lập gây mờ texture, giữ nguyên dải màu, ánh sáng gamma và độ phân giải Full HD 1080p 60FPS sắc nét từng sợi tóc khớp 100% video gốc.",
-  "🔊 Đồng Bộ Âm Thanh Hoàn Hảo & Instant 0ms Playback: Bắt sự kiện onCanPlay nạp frame đầu phát tức thì trong vài mili-giây; tự động mở tiếng, đồng bộ mức âm lượng và seamless loop không khựng một khung hình nào."
+  "🚀 Khắc Phục Triệt Để Đứng Hình Video Dài & Nặng: Tối ưu cơ chế stream HTTP 206 chunk 32MB adaptive, xóa bỏ seek thụ động trong time_sync giúp video 1-2 tiếng (vài GB) không bao giờ bị xả buffer hay nghẽn bộ giải mã GPU CEF.",
+  "🕒 24/7 Smart Freeze & Stuck Detector: Hệ thống tự động giám sát nhịp frame liên tục; nếu phát hiện video bị khựng/đứng hình quá 2-3s sẽ lập tức đánh thức GPU Decoder Stream để video tiếp tục phát siêu mượt.",
+  "👑 Window Capture Floating Dock Siêu Gọn (-50%): Thu nhỏ toàn bộ cụm nút 50% (Phát/Dừng, Bật/Tắt Tiếng, Volume...), đưa sát rìa mép ngoài cùng, cách xa khung hình phát video để không bao giờ che khuất luồng live.",
+  "👁️ Nút Ẩn Điều Khiển Cực Gọn: Nút '✕ Ẩn (H)' siêu nhỏ nhẹ; khi ẩn chỉ để lại icon 22px sát góc rìa mép ngoài cùng (hoặc phím tắt H) giúp OBS và TikTok Studio bắt trọn vẹn 100% video sạch sẽ."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

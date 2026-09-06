@@ -164,13 +164,11 @@ app.all('/uploads/:filename', (req, res, next) => {
           end = parseInt(parts[1], 10);
           if (isNaN(end) || end >= currentOnDiskSize) end = currentOnDiskSize - 1;
         } else {
-          // ⚡ SMART ADAPTIVE HIGH-SPEED VIDEO CHUNK SLICING (8MB CHUNKS):
-          // Khi CEF TikTok Studio / OBS / Edge yêu cầu open range "bytes=START-":
-          // Cấp chunk 8MB tối ưu (khoảng 8-15 giây video 1080p 60fps). 
-          // 8MB tải xong trong 0.02s qua kết nối LAN nội bộ hoặc Cloudflare, không bị nghẽn socket,
-          // giải phóng kết nối ngay để CEF liên tục request các dải tiếp theo mượt mà,
-          // triệt tiêu 100% hiện tượng Cloudflare Timeout, TCP Stalled và đứng hình!
-          const CHUNK_SIZE = 8 * 1024 * 1024; // 8MB
+          // ⚡ SMART HIGH-SPEED ADAPTIVE CHUNKING CHO VIDEO RẤT DÀI & NẶNG (100MB - 5GB):
+          // Với video dung lượng lớn (> 50MB): Cấp chunk 32MB để trình duyệt có đủ buffer 30-60 giây Full HD,
+          // tránh việc phải request dải quá dày đặc gây nghẽn, xả buffer và đứng hình!
+          // Với video nhỏ (< 50MB): Cấp chunk 12MB.
+          const CHUNK_SIZE = currentOnDiskSize > 50 * 1024 * 1024 ? 32 * 1024 * 1024 : 12 * 1024 * 1024;
           end = Math.min(start + CHUNK_SIZE - 1, currentOnDiskSize - 1);
         }
       }
@@ -187,6 +185,8 @@ app.all('/uploads/:filename', (req, res, next) => {
         'Content-Length': chunksize,
         'Content-Type': contentType,
         'Cache-Control': 'public, max-age=86400, no-transform',
+        'Connection': 'keep-alive',
+        'Keep-Alive': 'timeout=120, max=1000',
         'X-Content-Type-Options': 'nosniff',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Expose-Headers': 'Content-Range, Accept-Ranges, Content-Length'
@@ -196,7 +196,7 @@ app.all('/uploads/:filename', (req, res, next) => {
         return res.end();
       }
 
-      const stream = fs.createReadStream(filePath, { start, end, highWaterMark: 512 * 1024 });
+      const stream = fs.createReadStream(filePath, { start, end, highWaterMark: 1024 * 1024 });
       req.on('close', () => {
         try { stream.destroy(); } catch (e) {}
       });

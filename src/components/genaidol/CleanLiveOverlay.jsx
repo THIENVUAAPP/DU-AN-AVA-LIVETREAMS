@@ -108,6 +108,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   const lastLoadedMediaUrlRef = useRef(null);
   const lastUserActionTimeRef = useRef(0);
   const isUserPausedRef = useRef(false);
+  const lastObservedTimeRef = useRef(-1);
+  const freezeTickCountRef = useRef(0);
   const masterStateRef = useRef(masterState);
   useEffect(() => {
     masterStateRef.current = masterState;
@@ -672,16 +674,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       } else if (action === 'time_sync') {
         // 🎯 DUY TRÌ NHỊP PHÁT NGUYÊN BẢN 1.0X SIÊU MƯỢT (NATIVE 60FPS SMOOTH PLAYBACK):
         // Tuyệt đối không thay đổi playbackRate liên tục mỗi giây để tránh hiện tượng Chromium resample âm thanh gây giật khựng!
-        // Video chạy ở tốc độ 1.0x nguyên bản chuẩn xác, hình ảnh và âm thanh ăn khớp hoàn hảo từng mili-giây.
+        // Với video dài/nặng (vài tiếng, hàng GB): TUYỆT ĐỐI KHÔNG seek thụ động trong nhịp time_sync để tránh xả sạch bộ đệm (flushing buffer) gây gián đoạn GPU decoder làm đứng hình!
+        // Chỉ seek khi streamer chủ động tua trên phần mềm chính (control.force === true).
         if (typeof targetTime === 'number' && !isNaN(targetTime)) {
           if (control.force) {
             try { vid.currentTime = targetTime; } catch (e) {}
-          } else {
-            const absDiff = Math.abs(targetTime - vid.currentTime);
-            if (absDiff > 15.0) {
-              // Chỉ đồng bộ lại khi lệch cực lớn (> 15s) do streamer đổi clip hoặc mất mạng lâu
-              try { vid.currentTime = targetTime; } catch (e) {}
-            }
           }
         }
         if (vid.playbackRate !== 1.0) {
@@ -1567,7 +1564,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
   const activeMedia = resolveActiveMedia();
 
-  // 🕒 24/7 CONTINUOUS PLAYBACK WATCHDOG (TỰ ĐỘNG PHỤC HỒI & PHÁT LIÊN TỤC 24/24 KHI STREAMING)
+  // 🕒 24/7 CONTINUOUS PLAYBACK & SMART FREEZE/STUCK DETECTOR (GIẢI CỨU ĐỨNG HÌNH CHO VIDEO DÀI & NẶNG)
   useEffect(() => {
     const watchdogTimer = setInterval(() => {
       const vid = overlayVideoRef.current;
@@ -1575,8 +1572,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
       // Nếu streamer đã bấm tạm dừng thì TUYỆT ĐỐI KHÔNG TỰ ĐỘNG PHÁT LẠI
       const isUserPaused = checkIfUserPaused();
-      if (isUserPaused) return;
+      if (isUserPaused) {
+        lastObservedTimeRef.current = -1;
+        freezeTickCountRef.current = 0;
+        return;
+      }
 
+      // 1. Phục hồi khi video bị paused ngoài ý muốn (Autoplay Policy hoặc buffer restart)
       if (vid.paused && !vid.seeking) {
         vid.muted = isVideoAudioMuted;
         if (!isVideoAudioMuted) vid.volume = videoVolume;
@@ -1584,11 +1586,37 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           vid.muted = true;
           vid.play().then(() => setIsPlayingState(true)).catch(() => {});
         });
+        return;
       }
-    }, 2000);
+
+      // 2. 🚨 SMART FREEZE DETECTOR: Video đang ở trạng thái play nhưng bị ĐỨNG HÌNH (currentTime không tăng)
+      // Thường xảy ra trên Chromium CEF / OBS Browser Source / TikTok Live Studio khi giải mã video 1-2 tiếng dung lượng lớn
+      if (!vid.paused && !vid.seeking && vid.readyState >= 2) {
+        const curTime = vid.currentTime;
+        if (lastObservedTimeRef.current >= 0 && Math.abs(curTime - lastObservedTimeRef.current) < 0.03) {
+          freezeTickCountRef.current += 1;
+          // Nếu đứng hình liên tục >= 2 chu kỳ (~3 giây)
+          if (freezeTickCountRef.current >= 2) {
+            console.warn('[CleanLiveOverlay] 🚨 Phát hiện video bị đứng hình! Đang kích hoạt giải cứu GPU Decoder...');
+            try {
+              // Nudge nhẹ 0.02s để ép GPU refresh render frame tiếp theo
+              if (vid.duration && curTime + 0.05 < vid.duration) {
+                vid.currentTime += 0.02;
+              }
+              vid.play().catch(() => {});
+            } catch (err) {}
+            freezeTickCountRef.current = 0;
+          }
+        } else {
+          // Video đang phát trơn tru, reset bộ đếm đứng hình
+          freezeTickCountRef.current = 0;
+        }
+        lastObservedTimeRef.current = curTime;
+      }
+    }, 1500);
 
     return () => clearInterval(watchdogTimer);
-  }, [isVideoAudioMuted, videoVolume, activeMedia.url]);
+  }, [isVideoAudioMuted, videoVolume, activeMedia.url, activeMedia.isVideo]);
 
   // 🖼️ HỖ TRỢ CHẾ ĐỘ CỬA SỔ NỔI (PICTURE-IN-PICTURE)
   const togglePip = async () => {
@@ -1757,136 +1785,130 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
   return (
     <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-black select-none font-sans relative">
-      {/* 👑 KHUNG QUẢN TRỊ WINDOW CAPTURE NỔI (FLOATING DOCK - KHÔNG LÀM CO KHUNG HÌNH 9:16, KHÔNG TẠO VIỀN ĐEN) */}
+      {/* 👑 KHUNG QUẢN TRỊ WINDOW CAPTURE NỔI SIÊU GỌN (THU NHỎ 50%, ĐẶT Ở RÌA MÉP NGOÀI CÙNG, KHÔNG LẤN KHUNG HÌNH VIDEO) */}
       {isWindowCapture && !isControlDockCollapsed && (
-        <header className="absolute top-0 left-0 right-0 z-50 bg-black/80 hover:bg-black/95 backdrop-blur-md border-b border-cyan-500/30 px-3 sm:px-4 py-2 flex items-center justify-between gap-3 shadow-2xl transition-all duration-300 opacity-40 hover:opacity-100">
-          {/* Trạng thái Live & Khung hình */}
-          <div className="flex items-center gap-2.5">
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-            </span>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[11px] font-black text-white tracking-wider uppercase">
-                  WINDOW CAPTURE (60FPS)
-                </span>
-                <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[9px] font-bold text-cyan-300">
-                  v1.7.6
-                </span>
-              </div>
-              <span className="text-[9.5px] text-emerald-400/90 font-medium">
-                ⚡ 100% Pure Full-Frame Siêu Nét 1080p
+        <div className="fixed top-1 left-2 right-2 z-50 pointer-events-none flex justify-center">
+          <header className="pointer-events-auto bg-black/85 hover:bg-black/95 backdrop-blur-md border border-cyan-500/30 px-2 py-0.5 rounded-full flex items-center gap-1.5 shadow-2xl transition-all duration-300 opacity-40 hover:opacity-100 max-w-[98%]">
+            {/* Trạng thái Live & Khung hình thu nhỏ */}
+            <div className="flex items-center gap-1.5 pl-1">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-[9.5px] font-black text-white tracking-wider uppercase hidden sm:inline">
+                WINDOW CAPTURE
+              </span>
+              <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
+                v1.7.8
               </span>
             </div>
-          </div>
 
-          {/* Cụm nút điều khiển Quản trị */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* 1. NÚT PHÁT / TẠM DỪNG */}
-            <button
-              onClick={togglePlayPause}
-              className={`px-3 py-1.5 rounded-xl font-black text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-all transform active:scale-95 ${
-                isPlayingState
-                  ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40'
-                  : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-500/30 animate-pulse'
-              }`}
-              title={isPlayingState ? 'Bấm để Tạm dừng video (Space)' : 'Bấm để Tiếp tục phát (Space)'}
-            >
-              <span>{isPlayingState ? '⏸️ Tạm Dừng' : '▶️ Tiếp Tục Phát'}</span>
-            </button>
+            {/* Cụm nút điều khiển Quản trị thu nhỏ 50% */}
+            <div className="flex items-center gap-1 flex-wrap">
+              {/* 1. NÚT PHÁT / TẠM DỪNG (NHỎ GỌN) */}
+              <button
+                onClick={togglePlayPause}
+                className={`px-2 py-0.5 rounded-full font-bold text-[9.5px] h-5.5 flex items-center gap-1 shadow-sm cursor-pointer transition-all transform active:scale-95 ${
+                  isPlayingState
+                    ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40'
+                    : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-500/30 animate-pulse'
+                }`}
+                title={isPlayingState ? 'Bấm để Tạm dừng video (Space)' : 'Bấm để Tiếp tục phát (Space)'}
+              >
+                <span>{isPlayingState ? '⏸️ Dừng' : '▶️ Phát'}</span>
+              </button>
 
-            {/* 2. NÚT BẬT / TẮT ÂM THANH */}
-            <button
-              onClick={toggleAudioMute}
-              className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm cursor-pointer transition-all ${
-                isVideoAudioMuted
-                  ? 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40'
-                  : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-cyan-500/30'
-              }`}
-              title="Phím tắt: M"
-            >
-              <span>{!isVideoAudioMuted ? `🔊 Bật Tiếng (${Math.round(videoVolume * 100)}%)` : '🔇 Đang Tắt Tiếng'}</span>
-            </button>
+              {/* 2. NÚT BẬT / TẮT ÂM THANH (NHỎ GỌN) */}
+              <button
+                onClick={toggleAudioMute}
+                className={`px-2 py-0.5 rounded-full font-bold text-[9.5px] h-5.5 flex items-center gap-1 shadow-sm cursor-pointer transition-all ${
+                  isVideoAudioMuted
+                    ? 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40'
+                    : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-cyan-500/30'
+                }`}
+                title="Phím tắt: M"
+              >
+                <span>{!isVideoAudioMuted ? `🔊 ${Math.round(videoVolume * 100)}%` : '🔇 Tắt Tiếng'}</span>
+              </button>
 
-            {/* 3. THANH TRƯỢT ÂM LƯỢNG */}
-            <div className="hidden md:flex items-center gap-1.5 bg-white/5 px-2.5 py-1.2 rounded-xl border border-white/10">
-              <span className="text-[10px] text-gray-400 font-mono">Vol</span>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.05"
-                value={isVideoAudioMuted ? 0 : videoVolume}
-                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-                className="w-16 lg:w-20 h-1 accent-cyan-400 cursor-pointer"
-                title="Âm lượng video"
-              />
+              {/* 3. THANH TRƯỢT ÂM LƯỢNG (MINI) */}
+              <div className="hidden md:flex items-center gap-1 bg-white/5 px-1.5 py-0.5 rounded-full border border-white/10 h-5.5">
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={isVideoAudioMuted ? 0 : videoVolume}
+                  onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                  className="w-12 h-1 accent-cyan-400 cursor-pointer"
+                  title="Âm lượng video"
+                />
+              </div>
+
+              {/* 4. TOÀN MÀN HÌNH FULL HD 1080P OBS (MINI) */}
+              <button
+                onClick={() => {
+                  if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(() => {});
+                  } else {
+                    document.exitFullscreen().catch(() => {});
+                  }
+                }}
+                className="hidden sm:flex px-1.5 py-0.5 rounded-full bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 text-[9px] font-bold h-5.5 items-center gap-0.5 cursor-pointer transition-all"
+                title="Phóng to toàn màn hình 1080p cho OBS / TikTok Studio"
+              >
+                <span>🖥️ 1080p</span>
+              </button>
+
+              {/* 5. CHẾ ĐỘ CỬA SỔ NỔI (PiP MINI) */}
+              <button
+                onClick={togglePip}
+                className="hidden sm:flex px-1.5 py-0.5 rounded-full bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 border border-indigo-500/40 text-[9px] font-bold h-5.5 items-center gap-0.5 cursor-pointer transition-all"
+                title="Mở video nổi trên màn hình máy tính"
+              >
+                <span>🖼️ PiP</span>
+              </button>
+
+              {/* 6. TỈ LỆ KHUNG HÌNH FIT (MINI) */}
+              <button
+                onClick={() => {
+                  const nextFit = objectFitState === 'cover' ? 'contain' : 'cover';
+                  setObjectFitState(nextFit);
+                  try { localStorage.setItem('avalive_overlay_fit', nextFit); } catch (e) {}
+                }}
+                className="px-1.5 py-0.5 rounded-full bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 text-[9px] font-medium h-5.5 cursor-pointer transition-all"
+                title="Chuyển đổi Tràn Viền / Vừa Khung"
+              >
+                <span>📐 {objectFitState === 'cover' ? 'Tràn' : 'Vừa'}</span>
+              </button>
+
+              {/* 7. NÚT ẨN BẢNG ĐIỀU KHIỂN: CỰC NHỎ VÀ CỰC GỌN THEO YÊU CẦU */}
+              <button
+                onClick={() => {
+                  setIsControlDockCollapsed(true);
+                  try { localStorage.setItem('avalive_window_capture_dock_collapsed', 'true'); } catch (e) {}
+                }}
+                className="px-1.5 py-0.5 rounded-full bg-rose-600/30 hover:bg-rose-600/60 text-rose-200 text-[8.5px] font-bold flex items-center gap-0.5 border border-rose-500/40 cursor-pointer transition-all hover:scale-105 h-5.5"
+                title="Ẩn hoàn toàn bảng điều khiển (Phím tắt: H)"
+              >
+                <span>✕ Ẩn (H)</span>
+              </button>
             </div>
-
-            {/* 4. TOÀN MÀN HÌNH FULL HD 1080P OBS */}
-            <button
-              onClick={() => {
-                if (!document.fullscreenElement) {
-                  document.documentElement.requestFullscreen().catch(() => {});
-                } else {
-                  document.exitFullscreen().catch(() => {});
-                }
-              }}
-              className="hidden sm:flex px-2.5 py-1.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 text-xs font-bold items-center gap-1 cursor-pointer transition-all"
-              title="Phóng to toàn màn hình chuẩn Full HD 1080p cho OBS / TikTok Studio chụp siêu sắc nét"
-            >
-              <span>🖥️ Toàn Màn Hình (1080p)</span>
-            </button>
-
-            {/* 5. CHẾ ĐỘ CỬA SỔ NỔI (PiP) */}
-            <button
-              onClick={togglePip}
-              className="hidden sm:flex px-2.5 py-1.5 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 border border-indigo-500/40 text-xs font-bold items-center gap-1 cursor-pointer transition-all"
-              title="Mở video nổi trên màn hình máy tính"
-            >
-              <span>🖼️ Cửa Sổ Nổi (PiP)</span>
-            </button>
-
-            {/* 5. TỈ LỆ KHUNG HÌNH FIT */}
-            <button
-              onClick={() => {
-                const nextFit = objectFitState === 'cover' ? 'contain' : 'cover';
-                setObjectFitState(nextFit);
-                try { localStorage.setItem('avalive_overlay_fit', nextFit); } catch (e) {}
-              }}
-              className="px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 text-xs font-medium cursor-pointer transition-all"
-              title="Chuyển đổi Tràn Viền / Vừa Khung"
-            >
-              <span>📐 {objectFitState === 'cover' ? 'Tràn Viền' : 'Vừa Khung'}</span>
-            </button>
-
-            {/* 6. NÚT ẨN BẢNG ĐIỀU KHIỂN */}
-            <button
-              onClick={() => {
-                setIsControlDockCollapsed(true);
-                try { localStorage.setItem('avalive_window_capture_dock_collapsed', 'true'); } catch (e) {}
-              }}
-              className="px-3 py-1.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-black flex items-center gap-1.5 border border-cyan-400/40 cursor-pointer transition-all hover:scale-105"
-              title="Ẩn hoàn toàn bảng điều khiển để OBS / TikTok Studio bắt 100% video sạch sẽ (Phím tắt: H)"
-            >
-              <span>👁️ Ẩn Điều Khiển (H)</span>
-            </button>
-          </div>
-        </header>
+          </header>
+        </div>
       )}
 
-      {/* NÚT THU GỌN NGOẠI VI: KHI ĐÃ ẨN BẢNG ĐIỀU KHIỂN, NÚT NÀY CHO PHÉP MỞ LẠI BẤT KỲ LÚC NÀO */}
+      {/* NÚT HIỆN LẠI NGOẠI VI: SIÊU NHỎ GỌN (22px) Ở GÓC RÌA MÉP NGOÀI CÙNG, HOÀN TOÀN KHÔNG CHE KHUNG HÌNH */}
       {isWindowCapture && isControlDockCollapsed && (
         <button
           onClick={() => {
             setIsControlDockCollapsed(false);
             try { localStorage.setItem('avalive_window_capture_dock_collapsed', 'false'); } catch (e) {}
           }}
-          className="fixed top-2 right-2 z-50 px-2.5 py-1 rounded-xl bg-black/60 hover:bg-black/90 text-cyan-300 hover:text-cyan-100 border border-cyan-500/30 text-[11px] font-bold backdrop-blur-md shadow-2xl flex items-center gap-1.5 opacity-30 hover:opacity-100 transition-all cursor-pointer"
+          className="fixed top-1 right-1 z-50 w-5.5 h-5.5 rounded-full bg-black/60 hover:bg-black/95 text-cyan-300 hover:text-cyan-100 border border-cyan-500/30 text-[10px] font-bold backdrop-blur-md shadow-md flex items-center justify-center opacity-20 hover:opacity-100 transition-all cursor-pointer"
           title="Bấm để hiện lại bảng điều khiển (Phím tắt: H)"
         >
-          <span>👁️ Hiện Điều Khiển (H)</span>
+          <span>👁️</span>
         </button>
       )}
 
