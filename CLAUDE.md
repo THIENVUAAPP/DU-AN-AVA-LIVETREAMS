@@ -589,6 +589,17 @@ Im lặng bỏ qua 3 câu này = vi phạm Mục 0.7 và Mục 1.
 | **3. Bảo Toàn 100% Độ Sắc Nét 1080p & Ánh Sáng Gamma Gốc** | `CleanLiveOverlay.jsx` | ✅ PASS 100% | - Loại bỏ hoàn toàn các cờ transform 3D giả lập (`transform: translateZ(0)`, `willChange: transform`) vốn ép CEF rasterize video thành texture bitmap nén gây mờ hạt và lệch gamma màu sắc/ánh sáng.<br>- Giữ nguyên pipeline giải mã phần cứng GPU gốc, hiển thị video sắc nét từng sợi tóc, dải màu và ánh sáng rực rỡ khớp 100% với video đang phát trong phần mềm chính.<br>- Đặt mặc định `objectFit: 'contain'` bảo toàn độ phân giải gốc 1:1, không bị zoom cắt mép. |
 | **4. Đồng Bộ Âm Thanh Hoàn Hảo & Instant 0ms Playback** | `CleanLiveOverlay.jsx` | ✅ PASS 100% | - Bắt sự kiện `onCanPlay` để phát video ngay tức khắc frame đầu tiên (0ms delay) mà không cần chờ nạp metadata.<br>- Hỗ trợ tham số `sound=1`, tự động áp dụng âm lượng `videoVolume` và `isVideoAudioMuted` từ phần mềm chính.<br>- Loại bỏ xung đột giữa `loop` và `onEnded` (xóa lệnh seek thô bạo gây khựng hình ở điểm giao giữa 2 vòng lặp).<br>- Tích hợp Smart Stutter & Stalled Auto-Recovery tự động khôi phục luồng trong 0.8s nếu mạng bị gián đoạn. |
 
+---
+
+### 🚀 13. Nhật Ký Bản Cập Nhật v1.7.8 (Official Release)
+| Hạng Mục Cải Tiến | File Thay Đổi | Trạng Thái | Chi Tiết Kỹ Thuật |
+| :--- | :--- | :---: | :--- |
+| **1. Khắc Phục Triệt Để Đứng Hình Video Dài & Nặng (1-2 Tiếng, Vài GB)** | `CleanLiveOverlay.jsx`, `server.cjs` | ✅ PASS 100% | - **Nguyên nhân gốc rễ**: Lệnh seek thụ động `absDiff > 15.0` kích hoạt liên tục trong `time_sync` thụ động ép Chromium CEF xả sạch buffer và treo GPU decoder stream.<br>- **Giải pháp**: Xóa bỏ hoàn toàn seek trong time_sync thụ động, chỉ seek khi streamer chủ động tua (`control.force`). Nâng cấp HTTP 206 chunk 32MB adaptive cho video lớn (>50MB) kèm `Connection: keep-alive` và buffer 1MB. |
+| **2. 24/7 Smart Freeze & Stuck Detector** | `CleanLiveOverlay.jsx` | ✅ PASS 100% | Giám sát nhịp frame liên tục mỗi 1.5s. Nếu phát hiện `currentTime` đứng yên 2-3 chu kỳ liên tiếp khi đang phát (decoder bị khựng), tự động nudge 0.02s đánh thức GPU video pipeline, đảm bảo phát sóng trơn tru 24/24. |
+| **3. Cụm Nút Window Capture Siêu Gọn (-50%) & Đưa Ra Rìa Mép Ngoài** | `CleanLiveOverlay.jsx` | ✅ PASS 100% | Thiết kế lại Floating Dock dạng capsule siêu mỏng sát mép trên cùng (`top-1 left-2 right-2`). Giảm 50% kích thước toàn bộ các nút bấm (`text-[9.5px]`, h-5.5). Đưa ra ngoài rìa khung viền, cách xa vùng video phát sóng, không che lấn khung hình. |
+| **4. Nút Ẩn Điều Khiển Cực Nhỏ Gọn & Nút Hiện Lại 22px** | `CleanLiveOverlay.jsx` | ✅ PASS 100% | Nút '✕ Ẩn (H)' siêu gọn nhẹ. Khi ẩn chỉ để lại icon 22px ở góc ngoài cùng bên phải (`top-1 right-1`), hỗ trợ phím tắt H để ẩn/hiện tức thì. |
+| **5. Cập Nhật Hệ Thống Tải Phần Mềm & Vercel Deploy v1.7.8** | `server.cjs`, `vercel.json`, `Mo_Ung_Dung_Web.html` | ✅ PASS 100% | Cập nhật đồng bộ các route và redirect tải phần mềm trực tiếp phiên bản v1.7.8 cho cả Windows & Mac. |
+
 
 
 
