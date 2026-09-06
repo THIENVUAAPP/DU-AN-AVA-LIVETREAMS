@@ -666,11 +666,30 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           try { vid.currentTime = targetTime; } catch (e) {}
         }
       } else if (action === 'time_sync') {
-        // 🎯 ĐỒNG BỘ KHUNG HÌNH THỜI GIAN THỰC ĐỊNH KỲ (LOCKSTEP SYNC)
-        // TUYỆT ĐỐI KHÔNG can thiệp đổi nút Chạy/Dừng ở nhịp tim định kỳ
+        // 🎯 ĐỒNG BỘ KHUNG HÌNH MỀM (SMOOTH CLOCK DRIFT COMPENSATION)
+        // Tuyệt đối không giật dây currentTime khi lệch nhỏ (< 2.5s) để loại bỏ 100% hiện tượng khựng giật/lag/đứng hình!
         if (typeof targetTime === 'number' && !isNaN(targetTime)) {
-          if (control.force || Math.abs(vid.currentTime - targetTime) > 0.4) {
+          if (control.force) {
             try { vid.currentTime = targetTime; } catch (e) {}
+            try { vid.playbackRate = 1.0; } catch (e) {}
+          } else {
+            const diff = targetTime - vid.currentTime;
+            const absDiff = Math.abs(diff);
+            if (absDiff > 2.5) {
+              // Lệch rất lớn do mạng trễ đột biến hoặc tab bị sleep quá lâu -> seek 1 lần
+              try { vid.currentTime = targetTime; } catch (e) {}
+              try { vid.playbackRate = 1.0; } catch (e) {}
+            } else if (absDiff > 0.35) {
+              // Lệch nhẹ từ 0.35s - 2.5s: Bù trôi mềm bằng 3% playbackRate siêu mượt 60FPS không khựng gián đoạn
+              try {
+                vid.playbackRate = diff > 0 ? 1.03 : 0.97;
+              } catch (e) {}
+            } else {
+              // Khớp sát (< 0.35s): Duy trì chuẩn 1.0x
+              try {
+                if (vid.playbackRate !== 1.0) vid.playbackRate = 1.0;
+              } catch (e) {}
+            }
           }
         }
         if (!isUserPausedRef.current && vid.paused) {
@@ -720,7 +739,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             vid.muted = isVideoAudioMuted;
             if (!isVideoAudioMuted) vid.volume = videoVolume;
             if (typeof data.videoCurrentTime === 'number' && !isNaN(data.videoCurrentTime)) {
-              if (data.force || Math.abs(vid.currentTime - data.videoCurrentTime) > 0.4) {
+              if (data.force || Math.abs(vid.currentTime - data.videoCurrentTime) > 2.5) {
                 try { vid.currentTime = data.videoCurrentTime; } catch (e) {}
               }
             }
@@ -1780,7 +1799,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   WINDOW CAPTURE (60FPS)
                 </span>
                 <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[9px] font-bold text-cyan-300">
-                  v1.6.9
+                  v1.7.0
                 </span>
               </div>
               <span className="text-[9.5px] text-emerald-400/90 font-medium">
@@ -1799,22 +1818,22 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40'
                   : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-500/30 animate-pulse'
               }`}
-              title="Phím tắt: Space (Dấu cách)"
+              title={isPlayingState ? 'Bấm để Tạm dừng video (Space)' : 'Bấm để Tiếp tục phát (Space)'}
             >
               <span>{isPlayingState ? '⏸️ Tạm Dừng' : '▶️ Tiếp Tục Phát'}</span>
             </button>
 
-            {/* 2. NÚT BẬT / TẮT TIẾNG */}
+            {/* 2. NÚT BẬT / TẮT ÂM THANH */}
             <button
               onClick={toggleAudioMute}
-              className={`px-3 py-1.5 rounded-xl font-black text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-all transform active:scale-95 ${
-                !isVideoAudioMuted
-                  ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-cyan-500/30'
-                  : 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40'
+              className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm cursor-pointer transition-all ${
+                isVideoAudioMuted
+                  ? 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40'
+                  : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-cyan-500/30'
               }`}
-              title="Phím tắt: Phím M"
+              title="Phím tắt: M"
             >
-              <span>{!isVideoAudioMuted ? `🔊 Đang Bật Tiếng (${Math.round(videoVolume * 100)}%)` : '🔇 Đang Tắt Tiếng'}</span>
+              <span>{!isVideoAudioMuted ? `🔊 Bật Tiếng (${Math.round(videoVolume * 100)}%)` : '🔇 Đang Tắt Tiếng'}</span>
             </button>
 
             {/* 3. THANH TRƯỢT ÂM LƯỢNG */}
@@ -1832,7 +1851,22 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               />
             </div>
 
-            {/* 4. CHẾ ĐỘ CỬA SỔ NỔI (PiP) */}
+            {/* 4. TOÀN MÀN HÌNH FULL HD 1080P OBS */}
+            <button
+              onClick={() => {
+                if (!document.fullscreenElement) {
+                  document.documentElement.requestFullscreen().catch(() => {});
+                } else {
+                  document.exitFullscreen().catch(() => {});
+                }
+              }}
+              className="hidden sm:flex px-2.5 py-1.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 text-xs font-bold items-center gap-1 cursor-pointer transition-all"
+              title="Phóng to toàn màn hình chuẩn Full HD 1080p cho OBS / TikTok Studio chụp siêu sắc nét"
+            >
+              <span>🖥️ Toàn Màn Hình (1080p)</span>
+            </button>
+
+            {/* 5. CHẾ ĐỘ CỬA SỔ NỔI (PiP) */}
             <button
               onClick={togglePip}
               className="hidden sm:flex px-2.5 py-1.5 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 border border-indigo-500/40 text-xs font-bold items-center gap-1 cursor-pointer transition-all"
@@ -1902,17 +1936,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       )}
 
       {/* KHUNG PHÁT SÓNG SẠCH 100% (CHUẨN 9:16 HOẶC 16:9 - SIÊU SẮC NÉT OBS / TIKTOK STUDIO, 100% NGUYÊN BẢN KHÔNG DÍNH BẤT KỲ GIAO DIỆN NÀO) */}
-      <main className={`w-full flex-1 min-h-0 relative overflow-hidden flex items-center justify-center bg-black transition-all duration-200 ${
-        isWindowCapture && !isControlDockCollapsed ? 'p-3 sm:p-5 pt-3 pb-3' : ''
-      }`}>
+      <main className="w-full flex-1 min-h-0 relative overflow-hidden flex items-center justify-center bg-black">
         <div 
-          className={`relative flex items-center justify-center overflow-hidden transition-all duration-200 ${
-            !isWindowCapture
-              ? 'w-full h-full'
-              : ratio === '9:16'
-                ? 'h-full aspect-[9/16] w-auto max-w-full'
-                : 'w-full aspect-[16/9] h-auto max-h-full'
-          } ${isWindowCapture && !isControlDockCollapsed ? 'ring-1 ring-cyan-500/30 rounded-lg shadow-[0_0_40px_rgba(0,0,0,0.85)]' : ''}`}
+          className="relative flex items-center justify-center overflow-hidden w-full h-full"
           style={
             !isWindowCapture
               ? { width: '100%', height: '100%' }
@@ -2001,17 +2027,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                       setTimeout(() => { try { v.load(); v.play().catch(() => {}); } catch(err){} }, 500);
                     }
                   }}
-                  className="w-full h-full select-none absolute inset-0 transform-gpu"
+                  className="w-full h-full select-none absolute inset-0 block"
                   style={{ 
                     width: '100%', 
                     height: '100%', 
                     objectFit: objectFitState || 'cover',
-                    transform: 'translateZ(0)',
-                    WebkitTransform: 'translateZ(0)',
-                    backfaceVisibility: 'hidden',
-                    WebkitBackfaceVisibility: 'hidden',
-                    imageRendering: '-webkit-optimize-contrast',
-                    willChange: 'transform'
+                    imageRendering: 'auto',
+                    filter: 'contrast(1.02) saturate(1.03)',
                   }}
                 />
               </>
@@ -2022,17 +2044,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 autoPlay
                 muted={isVideoAudioMuted}
                 playsInline
-                className="w-full h-full select-none bg-black absolute inset-0 transform-gpu block"
+                className="w-full h-full select-none bg-black absolute inset-0 block"
                 style={{ 
                   width: '100%', 
                   height: '100%', 
                   objectFit: objectFitState || 'cover',
-                  transform: 'translateZ(0)',
-                  WebkitTransform: 'translateZ(0)',
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                  imageRendering: '-webkit-optimize-contrast',
-                  willChange: 'transform'
+                  imageRendering: 'auto',
+                  filter: 'contrast(1.02) saturate(1.03)',
                 }}
               />
             ) : activeMedia.url ? (

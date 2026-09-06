@@ -43,8 +43,9 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
   const [activeModalTab, setActiveModalTab] = useState("window_capture");
 
   const handleOpenWindowCapture = () => {
-    const width = 540;
-    const height = 1040; // 80px dock & vạch cắt an toàn + 960px khung hình live 9:16
+    // 🎯 ĐỘ PHÂN GIẢI CHUẨN CAO 1080P SẮC NÉT (CHO OBS / TIKTOK LIVE STUDIO CHỤP KHÔNG BỊ VỠ NÉT)
+    const width = Math.min(608, window.screen.width);
+    const height = Math.min(1080, window.screen.height);
     const left = Math.round((window.screen.width - width) / 2);
     const top = Math.round((window.screen.height - height) / 2);
 

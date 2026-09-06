@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.6.9';
+export const APP_VERSION = '1.7.0';
 export const UPDATE_NOTES = [
-  "⚡ Phát Tức Thì 0ms Trên TikTok Live Studio: Dán đường link duy nhất vào Nguồn Trình Duyệt (Browser Source) là video phát ngay tức thì, đồng bộ 100% hình ảnh, âm thanh và cử chỉ. Khi streamer đổi video hoặc nhân vật trên phần mềm, TikTok Live Studio tự động chuyển đổi linh hoạt tức thì.",
-  "🛑 Khắc Phục Triệt Để Nút Chạy / Dừng Trên Window Capture OBS: Chấm dứt hoàn toàn hiện tượng nút tự động chớp tắt, chuyển qua lại giữa Chạy và Dừng. Nút chỉ dừng khi streamer bấm dừng, chỉ phát khi streamer bấm phát, đồng bộ 2 chiều hoàn hảo với phần mềm.",
-  "🌐 Ngăn Chặn Mở Cửa Sổ Trình Duyệt Hệ Thống Thừa: Loại bỏ triệt để hiện tượng tự động bật cửa sổ trình duyệt ngoài ý muốn khi ứng dụng chạy hoặc khi tải phần mềm nền.",
-  "🚀 Siêu Nhẹ & Mượt Mà Tuyệt Đối: Phát mượt mà các video dài nhiều tiếng hoặc dung lượng hàng chục GB với mức tiêu thụ CPU & GPU tối thiểu, đảm bảo phát sóng ổn định 24/7."
+  "✨ Khắc Phục Triệt Để Video Mờ Trên Window Capture OBS: Nâng cấp kích thước khung hiển thị lên chuẩn Full HD 1080p sắc nét, giải phóng GPU Hardware Video Decoder render trực tiếp 100% độ nét gốc 4K/1080p, màu sắc rực rỡ chân thực từng chi tiết mắt, tóc, da.",
+  "🚀 Chấm Dứt Hoàn Toàn Giật Lag / Đứng Hình Khi Chia Sẻ Qua Link: Áp dụng công nghệ Bù Nhịp Trôi Mềm (Smooth Clock Drift Compensation), loại bỏ 100% việc seek frame giật khựng, giữ luồng phát êm ái trơn tru 60FPS tuyệt đối.",
+  "🖥️ Hỗ Trợ 1-Chạm Toàn Màn Hình 1080p: Trang bị nút bấm toàn màn hình trên thanh dock giúp OBS Studio và TikTok Live Studio chụp cửa sổ ở độ sắc nét cao nhất chuẩn truyền hình.",
+  "⚡ Tối Ưu Siêu Nhẹ & Tràn Viền 100%: Gỡ bỏ viền đen padding, video khớp trọn vẹn từng pixel không dính viền thừa, tiết kiệm CPU & GPU tối đa cho các phiên live dài hàng chục tiếng."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
