@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.6.2';
+export const APP_VERSION = '1.6.3';
 export const UPDATE_NOTES = [
-  "⭐ Khắc Phục Triệt Để Hiện Tượng Lặp Video / Chớp Nháy Sau Vài Giây: Xóa bỏ hoàn toàn xung đột chồng chéo giữa các tầng đồng bộ, cố định bộ nhớ đệm video và khóa định danh ổn định giúp video trên TikTok Live & Window Capture chạy liên tục mượt mà từ đầu đến cuối 100%.",
-  "🛡️ Đồng Bộ Video & Âm Thanh Khóa Chặt Tuyệt Đối 0ms: Phần mềm phát bài nào, TikTok Live phát bài đó; bấm tạm dừng thì dừng tất cả; đổi video lập tức đổi theo thời gian thực không bị gián đoạn hay reset về 0:00.",
-  "🎬 Hoạt Động Bền Bỉ 24/7 Dù Chuyển Tab Hay Thu Nhỏ Cửa Sổ: Hỗ trợ phát trực tiếp song song cả qua Đường Link Duy Nhất và Window Capture 60FPS sắc nét cho TikTok Live Studio & OBS."
+  "⭐ Khắc Phục Triệt Để Lỗi Lặp Video 1-2 Giây & Tự Tua Về Đầu: Gỡ bỏ hoàn toàn vòng lặp xung đột lệnh seek trên mạng. Video phát mượt mà, liên tục 100%, lặp lại (loop) êm dịu từ đầu đến cuối không bị giật lùi hay chớp nháy.",
+  "⚡ Hiển Thị & Phát Video Tức Thì 0ms Khi Tải Lên: Tải video lên từ ô nhân vật lập tức hiển thị và trình chiếu ngay trên giao diện phần mềm mà không phải chờ đợi nạp file.",
+  "🛡️ Đồng Bộ Realtime 100% Giữa Phần Mềm Và TikTok Live Studio / OBS: Phát chính xác video người dùng đang mở, tuyệt đối không phát video ngầm hay video nền. Đồng bộ tức thì Tạm Dừng (Pause), Tiếp Tục (Play) và Âm thanh.",
+  "🎬 Window Capture & Đa Nhiệm Tab Linh Hoạt 24/7: Tự do chuyển đổi tab, thu nhỏ hoặc che khuất cửa sổ trình duyệt mà luồng phát livestream trên TikTok Live Studio / OBS vẫn duy trì ổn định, không bị ngắt hay đứng hình."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
