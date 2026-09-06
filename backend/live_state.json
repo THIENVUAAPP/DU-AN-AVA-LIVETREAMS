@@ -5,11 +5,11 @@
   "characterName": "Livestream_video_generation_prompt_1080p_202608131258",
   "mediaUrl": "/uploads/media-1788330401564-514109629.mp4",
   "isVideo": true,
-  "videoPlaybackEvent": "play",
-  "isPlaying": true,
+  "videoPlaybackEvent": "pause",
+  "isPlaying": false,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1788665110049,
+  "updatedAt": 1788700544520,
   "flvUrl": null,
   "isConnected": false,
   "type": "MASTER_LIVE_STATE_UPDATE",
@@ -20,5 +20,5 @@
   "isVideoAudioMuted": true,
   "videoVolume": 1,
   "clearMedia": false,
-  "tunnelUrl": "https://double-doing-status-peer.trycloudflare.com"
+  "tunnelUrl": "https://valves-packard-another-including.trycloudflare.com"
 }

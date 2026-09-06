@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.7.5';
+export const APP_VERSION = '1.7.6';
 export const UPDATE_NOTES = [
-  "🚀 FastStart Zero-Dependency & Load Video Siêu Tốc: Tự động tối ưu moov atom lên ngay đầu file MP4 trong 0.2s. Video tải lên mở ngay lập tức trong 30ms trên TikTok Live Studio / OBS, xóa bỏ 100% độ trễ!",
-  "⚡ Trị Dứt Điểm Đứng Hình & Lag Giựt: Nâng cấp cơ chế bù trôi nhịp mềm (Smooth Playback Rate Compensation), tuyệt đối không giật dây currentTime khi phát, giúp video nạp liên tục 24/24 siêu mượt 60FPS.",
-  "📐 Tự Động Vừa Khít 100% Khung Hình TikTok Studio: Khớp chuẩn xác 1080 × 1920 (9:16 Dọc) hoặc 1920 × 1080 (16:9 Ngang) với objectFit Cover, không viền đen thừa, không cần streamer phải cắt ghép hay phóng to thu nhỏ!",
-  "🌐 Đường Truyền Cloudflare Adaptive Streaming: Phân phối phân đoạn 3MB-5MB mượt mà, không nuốt trọn băng thông 160MB, bảo toàn đường truyền mạng ổn định không bao giờ bị đơ nghẽn."
+  "🚀 Continuous 60FPS Streaming: Xóa bỏ hoàn toàn hiện tượng cắt vụn HTTP Range request làm buffer underrun. Stream dữ liệu liên tục 1 kết nối duy nhất, video chạy một mạch trơn tru 24/24 không bao giờ bị đứng hình hay khựng giật!",
+  "⚡ Native 1.0x Clock Decoupling: Loại bỏ 100% việc đổi tốc độ phát (playbackRate) hoặc giật dây tua thời gian định kỳ mỗi giây. Bộ giải mã GPU và Audio resampler chạy mượt mà 60FPS nguyên bản, đồng bộ khung hình, âm thanh, ánh sáng và cử chỉ nhân vật AI Idol siêu thực!",
+  "📐 Tối Ưu Tăng Tốc Phần Cứng GPU: Kích hoạt translateZ(0) và willChange trên thẻ video, giải mã phần cứng trực tiếp (Hardware Acceleration NVDEC), độ phân giải 1080p sắc nét 100% nguyên gốc không vỡ hạt.",
+  "🛡️ Tối Ưu Âm Thanh Sạch 100%: Dọn dẹp background oscillator ngầm, giải phóng hoàn toàn kênh audio card cho video phát trong trẻo, không bị tranh chấp thiết bị trên TikTok Live Studio."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

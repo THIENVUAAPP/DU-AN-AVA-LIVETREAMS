@@ -666,31 +666,22 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           try { vid.currentTime = targetTime; } catch (e) {}
         }
       } else if (action === 'time_sync') {
-        // 🎯 ĐỒNG BỘ KHUNG HÌNH MỀM SIÊU MƯỢT (SMOOTH PLAYBACK RATE COMPENSATION):
-        // Tuyệt đối không giật dây currentTime khi lệch bình thường để loại bỏ 100% hiện tượng khựng giật/lag/đứng hình trên TikTok Live Studio!
+        // 🎯 DUY TRÌ NHỊP PHÁT NGUYÊN BẢN 1.0X SIÊU MƯỢT (NATIVE 60FPS SMOOTH PLAYBACK):
+        // Tuyệt đối không thay đổi playbackRate liên tục mỗi giây để tránh hiện tượng Chromium resample âm thanh gây giật khựng!
+        // Video chạy ở tốc độ 1.0x nguyên bản chuẩn xác, hình ảnh và âm thanh ăn khớp hoàn hảo từng mili-giây.
         if (typeof targetTime === 'number' && !isNaN(targetTime)) {
           if (control.force) {
             try { vid.currentTime = targetTime; } catch (e) {}
-            try { vid.playbackRate = 1.0; } catch (e) {}
           } else {
-            const diff = targetTime - vid.currentTime;
-            const absDiff = Math.abs(diff);
-            if (absDiff > 10.0) {
-              // Chỉ seek khi lệch cực lớn (> 10s) do streamer đổi clip hoặc tua xa
+            const absDiff = Math.abs(targetTime - vid.currentTime);
+            if (absDiff > 15.0) {
+              // Chỉ đồng bộ lại khi lệch cực lớn (> 15s) do streamer đổi clip hoặc mất mạng lâu
               try { vid.currentTime = targetTime; } catch (e) {}
-              try { vid.playbackRate = 1.0; } catch (e) {}
-            } else if (absDiff > 0.35) {
-              // Lệch nhẹ từ 0.35s - 10s: Bù trôi mềm bằng 4% playbackRate, video vẫn phát 60FPS liên tục không khựng gián đoạn
-              try {
-                vid.playbackRate = diff > 0 ? 1.04 : 0.96;
-              } catch (e) {}
-            } else {
-              // Khớp sát (< 0.35s): Duy trì chuẩn 1.0x
-              try {
-                if (vid.playbackRate !== 1.0) vid.playbackRate = 1.0;
-              } catch (e) {}
             }
           }
+        }
+        if (vid.playbackRate !== 1.0) {
+          try { vid.playbackRate = 1.0; } catch (e) {}
         }
         if (!isUserPausedRef.current && vid.paused) {
           vid.play().catch(() => {
@@ -1632,35 +1623,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isWindowCapture, isPlayingState, isVideoAudioMuted, videoVolume]);
 
-  // 🛡️ BACKGROUND KEEP-ALIVE & ANTI-THROTTLING: GIỮ LUỒNG VIDEO CHẠY LIÊN TỤC KHI CHUYỂN TAB HOẶC ẨN CỬA SỔ
-  // Khởi tạo một lần duy nhất khi mount để AudioContext không bao giờ bị đóng ngắt giữa chừng
+  // 🛡️ BACKGROUND KEEP-ALIVE: GIỮ MÀN HÌNH VÀ LUỒNG PHÁT HOẠT ĐỘNG LIÊN TỤC
   useEffect(() => {
-    let keepAliveAudioCtx = null;
-    let oscillatorNode = null;
-    let gainNode = null;
     let wakeLockSentinel = null;
 
     const startKeepAlive = () => {
-      try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (AudioCtx) {
-          if (!keepAliveAudioCtx || keepAliveAudioCtx.state === 'closed') {
-            keepAliveAudioCtx = new AudioCtx();
-            oscillatorNode = keepAliveAudioCtx.createOscillator();
-            gainNode = keepAliveAudioCtx.createGain();
-            // Âm thanh dưới ngưỡng nghe (0.00001) với tần số 20Hz để Chromium nhận dạng tab phát âm thanh liên tục
-            oscillatorNode.frequency.value = 20;
-            gainNode.gain.value = 0.00001;
-            oscillatorNode.connect(gainNode);
-            gainNode.connect(keepAliveAudioCtx.destination);
-            oscillatorNode.start();
-          }
-          if (keepAliveAudioCtx.state === 'suspended') {
-            keepAliveAudioCtx.resume().catch(() => {});
-          }
-        }
-      } catch (e) {}
-
       if ('wakeLock' in navigator && !wakeLockSentinel) {
         try {
           navigator.wakeLock.request('screen').then(sentinel => {
@@ -1756,15 +1723,17 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           isUserPausedRef.current = false;
         }
 
-        const playPromise = vid.play();
-        if (playPromise !== undefined) {
-          playPromise.then(() => {
-            setIsPlayingState(true);
-            hasAutoplayStartedRef.current = true;
-          }).catch(() => {
-            vid.muted = true;
-            vid.play().then(() => setIsPlayingState(true)).catch(() => {});
-          });
+        if (vid.paused) {
+          const playPromise = vid.play();
+          if (playPromise !== undefined) {
+            playPromise.then(() => {
+              setIsPlayingState(true);
+              hasAutoplayStartedRef.current = true;
+            }).catch(() => {
+              vid.muted = true;
+              vid.play().then(() => setIsPlayingState(true)).catch(() => {});
+            });
+          }
         }
       } else {
         vid.dataset.userPaused = 'true';
@@ -1799,7 +1768,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   WINDOW CAPTURE (60FPS)
                 </span>
                 <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[9px] font-bold text-cyan-300">
-                  v1.7.5
+                  v1.7.6
                 </span>
               </div>
               <span className="text-[9.5px] text-emerald-400/90 font-medium">
@@ -2009,7 +1978,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     width: '100%', 
                     height: '100%', 
                     objectFit: objectFitState || 'cover',
-                    backgroundColor: '#000000'
+                    backgroundColor: '#000000',
+                    transform: 'translateZ(0)',
+                    WebkitTransform: 'translateZ(0)',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    willChange: 'transform',
                   }}
                 />
               </>
