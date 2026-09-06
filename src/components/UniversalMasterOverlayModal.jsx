@@ -29,7 +29,7 @@ import {
  * - Cung cấp đồng thời Link Nội Bộ (Localhost 127.0.0.1:3001) siêu tốc 0ms delay và Link Cloudflare Quick Tunnel
  * - Hướng dẫn chi tiết khắc phục lỗi màn hình đen trong OBS / TikTok Studio khi Window Capture
  */
-export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUser, onOpenLogin }) {
+export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUser, onOpenLogin, activeMediaUrl }) {
   const [copiedId, setCopiedId] = useState(null);
   const [tunnelData, setTunnelData] = useState(() => {
     try {
@@ -124,20 +124,48 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
   // Lấy đường link Overlay 1 link duy nhất cho mỗi dự án (100% tương thích TikTok Live & OBS)
   const getProjectOverlayUrl = (path) => {
+    let baseUrl = '';
     // 1. Ưu tiên cao nhất: Link Cloudflare HTTPS trực tiếp từ máy streamer (kết nối trực tiếp video cục bộ, 0ms delay)
     if (tunnelData?.projects?.[path]) {
-      return tunnelData.projects[path];
+      baseUrl = tunnelData.projects[path];
+    } else if (tunnelData?.tunnelUrl) {
+      baseUrl = `${tunnelData.tunnelUrl.replace(/\/$/, '')}/${path}`;
+    } else {
+      // 2. Nếu đang chạy trên domain ngoài (HTTPS)
+      const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+      if (currentOrigin && !currentOrigin.includes('127.0.0.1') && !currentOrigin.includes('localhost')) {
+        baseUrl = `${currentOrigin}/${path}`;
+      } else {
+        // 3. Dự phòng Vercel
+        baseUrl = `https://avalivepro.vercel.app/${path}`;
+      }
     }
-    if (tunnelData?.tunnelUrl) {
-      return `${tunnelData.tunnelUrl.replace(/\/$/, '')}/${path}`;
+
+    // Luôn gắn video media nếu có để TikTok Live Studio phát video ngay tức khắc từ frame đầu tiên
+    let finalMedia = activeMediaUrl;
+    if (!finalMedia) {
+      try {
+        const saved = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
+        if (saved.mediaUrl) finalMedia = saved.mediaUrl;
+        if (!finalMedia) finalMedia = localStorage.getItem('avalive_user_locked_media') || '';
+      } catch (e) {}
     }
-    // 2. Nếu đang chạy trên domain ngoài (HTTPS)
-    const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
-    if (currentOrigin && !currentOrigin.includes('127.0.0.1') && !currentOrigin.includes('localhost')) {
-      return `${currentOrigin}/${path}`;
+
+    let glue = baseUrl.includes('?') ? '&' : '?';
+    if (finalMedia && typeof finalMedia === 'string' && (path === 'idol' || path === 'studio' || path === 'overlay')) {
+      if (finalMedia.includes('/uploads/')) {
+        finalMedia = finalMedia.substring(finalMedia.indexOf('/uploads/'));
+      }
+      baseUrl = `${baseUrl}${glue}v=${encodeURIComponent(finalMedia)}`;
+      glue = '&';
     }
-    // 3. Dự phòng Vercel
-    return `https://avalivepro.vercel.app/${path}`;
+
+    const tunnelUrl = tunnelData?.tunnelUrl || '';
+    if (tunnelUrl && !baseUrl.includes(tunnelUrl)) {
+      baseUrl = `${baseUrl}${glue}backend=${encodeURIComponent(tunnelUrl)}`;
+    }
+
+    return baseUrl;
   };
 
   const projects = [

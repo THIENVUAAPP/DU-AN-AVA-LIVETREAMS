@@ -1441,6 +1441,8 @@ export default function DesktopAppUI() {
       if (typeof e.stopPropagation === 'function') e.stopPropagation();
     }
     const vid = desktopVideoRef.current;
+    isInternalPlaybackChangeRef.current = true;
+    setTimeout(() => { isInternalPlaybackChangeRef.current = false; }, 300);
 
     if (isVideoPlaying) {
       // ⏸️ ĐANG PHÁT -> BẤM ĐỂ TẠM DỪNG NGAY LẬP TỨC
@@ -2985,14 +2987,6 @@ export default function DesktopAppUI() {
               onPause={(e) => {
                 if (isInternalPlaybackChangeRef.current) return;
                 const v = e.currentTarget;
-                // 🛡️ CHỈ XỬ LÝ NẾU ĐÂY THỰC SỰ LÀ LỆNH TẠM DỪNG DO NGƯỜI DÙNG BẤM
-                // (Tránh Chromium tự ngắt video do người dùng chuyển tab / ẩn cửa sổ)
-                const isUserDeliberatePause = v.dataset.userPaused === 'true' || localStorage.getItem('avalive_user_paused') === 'true';
-                if (!isUserDeliberatePause) {
-                  v.play().catch(() => {});
-                  return;
-                }
-
                 const curTime = v.currentTime;
                 let playUrl = selected.url;
                 if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
@@ -5020,6 +5014,7 @@ export default function DesktopAppUI() {
         onClose={() => setShowOverlayModal(false)}
         currentUser={currentUser}
         onOpenLogin={() => setIsGmailLoginModalOpen(true)}
+        activeMediaUrl={userLockedMediaUrl || (customCharacters.find(c => c.id === selectedCharacter)?.mediaUrl || customCharacters.find(c => c.id === selectedCharacter)?.url) || CHARACTERS[selectedCharacter]?.url || ''}
       />
 
 

@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.6.5';
+export const APP_VERSION = '1.6.6';
 export const UPDATE_NOTES = [
-  "⚡ Tải Trực Tiếp Phần Mềm Về Máy Tính 100%: Khắc phục triệt để lỗi bấm tải về bị chuyển hướng sang trang web GitHub. Giờ đây bấm Tải Về là phần mềm ZIP tự động tải trực tiếp về máy tính tức thì, không bao giờ bị nhảy trang.",
-  "⭐ Khắc Phục Triệt Để Lỗi Lặp Video 1-2 Giây & Tự Tua Về Đầu: Gỡ bỏ hoàn toàn vòng lặp xung đột lệnh seek trên mạng. Video phát mượt mà, liên tục 100%, lặp lại (loop) êm dịu từ đầu đến cuối không bị giật lùi hay chớp nháy.",
-  "⚡ Hiển Thị & Phát Video Tức Thì 0ms Khi Tải Lên: Tải video lên từ ô nhân vật lập tức hiển thị và trình chiếu ngay trên giao diện phần mềm mà không phải chờ đợi nạp file.",
-  "🛡️ Đồng Bộ Realtime 100% Giữa Phần Mềm Và TikTok Live Studio / OBS: Phát chính xác video người dùng đang mở, tuyệt đối không phát video ngầm hay video nền. Đồng bộ tức thì Tạm Dừng (Pause), Tiếp Tục (Play) và Âm thanh."
+  "🎬 Khắc Phục Triệt Để Lỗi Video Không Hiển Thị Trên TikTok Live Studio: Tất cả đường link khi dán vào TikTok Live Studio hoặc OBS Browser Source đều hiển thị chính xác 100% video đang phát trên phần mềm, phát tức thì 0ms không bao giờ bị đứng ở màn hình chờ.",
+  "🛡️ Chấm Dứt Hoàn Toàn Tình Trạng Video Tắt Mở Nhấp Nhá Liên Tục: Loại bỏ triệt để xung đột play/pause ngầm. Thao tác Tạm Dừng và Tiếp Tục hoạt động dứt khoát, êm dịu mượt mà 60FPS trên cả Window Capture OBS và TikTok Live Studio.",
+  "⚡ Tự Động Gắn Mã Video Trực Tiếp Vào Đường Link Live: Mọi đường link phát Live tạo ra từ hệ thống đều tự động tích hợp video đang chọn và cổng Backend Cloudflare Tunnel, mở trên bất kỳ máy nào cũng phát ngay lập tức.",
+  "⭐ Khắc Phục Triệt Để Lỗi Lặp Video 1-2 Giây: Video phát liên tục 100%, lặp lại (loop) êm dịu từ đầu đến cuối không bị giật lùi hay chớp nháy."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
