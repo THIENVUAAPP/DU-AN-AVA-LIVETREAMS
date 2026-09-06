@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.7.8';
+export const APP_VERSION = '1.7.9';
 export const UPDATE_NOTES = [
-  "🚀 Khắc Phục Triệt Để Đứng Hình Video Dài & Nặng: Tối ưu cơ chế stream HTTP 206 chunk 32MB adaptive, xóa bỏ seek thụ động trong time_sync giúp video 1-2 tiếng (vài GB) không bao giờ bị xả buffer hay nghẽn bộ giải mã GPU CEF.",
-  "🕒 24/7 Smart Freeze & Stuck Detector: Hệ thống tự động giám sát nhịp frame liên tục; nếu phát hiện video bị khựng/đứng hình quá 2-3s sẽ lập tức đánh thức GPU Decoder Stream để video tiếp tục phát siêu mượt.",
-  "👑 Window Capture Floating Dock Siêu Gọn (-50%): Thu nhỏ toàn bộ cụm nút 50% (Phát/Dừng, Bật/Tắt Tiếng, Volume...), đưa sát rìa mép ngoài cùng, cách xa khung hình phát video để không bao giờ che khuất luồng live.",
-  "👁️ Nút Ẩn Điều Khiển Cực Gọn: Nút '✕ Ẩn (H)' siêu nhỏ nhẹ; khi ẩn chỉ để lại icon 22px sát góc rìa mép ngoài cùng (hoặc phím tắt H) giúp OBS và TikTok Studio bắt trọn vẹn 100% video sạch sẽ."
+  "🎯 Khắc Phục Triệt Để Lỗi Video Lặp Lại Sau 25-30 Giây: Tối ưu hoá luồng HTTP Range Stream toàn phần, loại bỏ việc cắt chunk cố định giúp video phát liền mạch từ 0:00 đến tận cuối clip (dù là video dài 1-2 tiếng).",
+  "🔄 Seamless Video Loop: Video tự động lặp lại từ đầu đến cuối một cách trơn tru chỉ khi phát hết clip, không bao giờ bị ngắt quãng hay lặp sớm giữa chừng.",
+  "🌐 Duy Nhất 1 Đường Link Cloudflare HTTPS Chống Chặn: Loại bỏ hoàn toàn đường link mạng nội bộ LAN bị TikTok Live Studio chặn. Link Cloudflare SSL 100% bảo mật, tốc độ cao, siêu nét 60 FPS.",
+  "⚡ Đồng Bộ Thời Gian Thực Chuẩn Xác: Loại bỏ tham số thời gian cố định trên link copy, đảm bảo video trên TikTok Studio luôn đồng bộ mượt mà với phần mềm gốc mà không bị giật lag."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

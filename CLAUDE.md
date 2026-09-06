@@ -600,6 +600,18 @@ Im lặng bỏ qua 3 câu này = vi phạm Mục 0.7 và Mục 1.
 | **4. Nút Ẩn Điều Khiển Cực Nhỏ Gọn & Nút Hiện Lại 22px** | `CleanLiveOverlay.jsx` | ✅ PASS 100% | Nút '✕ Ẩn (H)' siêu gọn nhẹ. Khi ẩn chỉ để lại icon 22px ở góc ngoài cùng bên phải (`top-1 right-1`), hỗ trợ phím tắt H để ẩn/hiện tức thì. |
 | **5. Cập Nhật Hệ Thống Tải Phần Mềm & Vercel Deploy v1.7.8** | `server.cjs`, `vercel.json`, `Mo_Ung_Dung_Web.html` | ✅ PASS 100% | Cập nhật đồng bộ các route và redirect tải phần mềm trực tiếp phiên bản v1.7.8 cho cả Windows & Mac. |
 
+---
+
+### 🚀 14. Nhật Ký Bản Cập Nhật v1.7.9 (Official Release)
+| Hạng Mục Cải Tiến | File Thay Đổi | Trạng Thái | Chi Tiết Kỹ Thuật |
+| :--- | :--- | :---: | :--- |
+| **1. Khắc Phục Triệt Để Video Bị Lặp Lại Sau 25-30 Giây** | `backend/server.cjs` | ✅ PASS 100% | - **Nguyên nhân gốc rễ**: Khi client gửi `Range: bytes=0-`, server cắt chunk 32MB (`Math.min(start + CHUNK_SIZE - 1, ...)`). Khi stream hết 32MB (~25-30s video 1080p 60fps), kết nối đóng lại, trình duyệt coi là EOF và tự động kích hoạt `ended` nhảy về `0:00`.<br>- **Giải pháp**: Phục vụ trọn vẹn dải byte `end = currentOnDiskSize - 1` khi client gửi open range, cho phép phát liền mạch từ đầu đến cuối (1-2 tiếng) không bị ngắt quãng. |
+| **2. Xóa Hoàn Toàn Chế Độ LAN / Localhost Bị TikTok Live Studio Chặn** | `UniversalMasterOverlayModal.jsx` | ✅ PASS 100% | TikTok Live Studio cấm truy cập mạng riêng tư/cục bộ (`192.168.x.x`). Đã loại bỏ hoàn toàn chế độ `local_fast`, chỉ giữ 1 đường link Cloudflare HTTPS chính thức 100% mã hóa SSL, chống chặn và tương thích tuyệt đối. |
+| **3. Bỏ Tham Số `&t=` Khi Sao Chép Link & Tránh Tua Lặp Lại** | `UniversalMasterOverlayModal.jsx`, `CleanLiveOverlay.jsx` | ✅ PASS 100% | Không gắn cứng `&t=${curTime}` vào link copy để tránh link bắt đầu từ giữa chừng và bị lặp lại ở điểm đó. `CleanLiveOverlay` chỉ seek khởi tạo 1 lần duy nhất (`hasInitialSeekDoneRef`) và reset về 0, không can thiệp vào chu trình loop tự nhiên của video. |
+| **4. Bỏ Lệnh Tua Cưỡng Bức Từ Local Desktop Khi Video Kết Thúc** | `DesktopAppUI.jsx` | ✅ PASS 100% | Trong `onEnded` của desktop player, chỉ loop nội bộ mà không phát `sendVideoControl({ action: 'seek', currentTime: 0, force: true })` sang WebSocket, tránh gây gián đoạn luồng video đang chạy trên overlay. |
+| **5. Cập Nhật Toàn Bộ Hệ Thống Tải Phần Mềm v1.7.9** | `server.cjs`, `vercel.json`, `Mo_Ung_Dung_Web.html`, `package.json` | ✅ PASS 100% | Đồng bộ hóa version v1.7.9 trên toàn bộ hệ thống launcher, route API download, và redirect Vercel. |
+
+
 
 
 

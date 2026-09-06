@@ -42,7 +42,6 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
   });
   const [tunnelLoading, setTunnelLoading] = useState(false);
   const [activeModalTab, setActiveModalTab] = useState("browser_source");
-  const [linkMode, setLinkMode] = useState("local_fast"); // 'local_fast' (Khuyên dùng số 1) | 'cloudflare_tunnel'
 
   const handleOpenWindowCapture = () => {
     // 🎯 ĐỘ PHÂN GIẢI CHUẨN CAO 1080P SẮC NÉT (CHO OBS / TIKTOK LIVE STUDIO CHỤP KHÔNG BỊ VỠ NÉT)
@@ -164,35 +163,21 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
   if (!isOpen) return null;
 
-  // 👑 TẠO ĐƯỜNG LINK THEO 2 CHẾ ĐỘ: NỘI BỘ SIÊU TỐC 0MS HOẶC CLOUDFLARE HTTPS
-  const getProjectOverlayUrl = (path, targetMode = linkMode) => {
+  // 👑 TẠO ĐƯỜNG LINK LIVESTREAM CLOUDFLARE HTTPS CÔNG KHAI 100% (TIKTOK LIVE STUDIO CHẤP THUẬN)
+  const getProjectOverlayUrl = (path) => {
     let baseUrl = '';
 
-    if (targetMode === 'local_fast') {
-      // ⚡ 1. Ưu tiên số 1: Link Nội Bộ LAN / Loopback (0ms, 10Gbps NVMe trực tiếp)
-      if (tunnelData?.localProjects?.[path]) {
-        baseUrl = tunnelData.localProjects[path];
-      } else if (tunnelData?.localLanUrl) {
-        baseUrl = `${tunnelData.localLanUrl}/${path}`;
-      } else {
-        const host = typeof window !== 'undefined' && window.location.origin.includes('http')
-          ? window.location.origin
-          : 'http://localhost:3001';
-        baseUrl = `${host}/${path}`;
-      }
+    // 🌐 Link Đám Mây Cloudflare Tunnel HTTPS (Công khai, vượt mọi rào cản bảo mật của TikTok Live Studio)
+    if (tunnelData?.projects?.[path]) {
+      baseUrl = tunnelData.projects[path];
+    } else if (tunnelData?.tunnelUrl) {
+      baseUrl = `${tunnelData.tunnelUrl.replace(/\/$/, '')}/${path}`;
     } else {
-      // 🌐 2. Link Đám Mây Cloudflare Tunnel HTTPS (Phát từ xa hoặc vượt tường lửa)
-      if (tunnelData?.projects?.[path]) {
-        baseUrl = tunnelData.projects[path];
-      } else if (tunnelData?.tunnelUrl) {
-        baseUrl = `${tunnelData.tunnelUrl.replace(/\/$/, '')}/${path}`;
+      const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+      if (currentOrigin && !currentOrigin.includes('127.0.0.1') && !currentOrigin.includes('localhost')) {
+        baseUrl = `${currentOrigin}/${path}`;
       } else {
-        const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
-        if (currentOrigin && !currentOrigin.includes('127.0.0.1') && !currentOrigin.includes('localhost')) {
-          baseUrl = `${currentOrigin}/${path}`;
-        } else {
-          baseUrl = '';
-        }
+        baseUrl = '';
       }
     }
 
@@ -220,25 +205,14 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
        glue = '&';
     }
 
-    let curTime = 0;
-    try {
-      const deskVid = document.querySelector('video');
-      if (deskVid && typeof deskVid.currentTime === 'number' && deskVid.currentTime > 0) {
-        curTime = deskVid.currentTime;
-      }
-    } catch (e) {}
-    if (curTime > 0 && (path === 'idol' || path === 'studio' || path === 'overlay')) {
-      baseUrl = `${baseUrl}${glue}t=${Math.round(curTime * 100) / 100}`;
-      glue = '&';
-    }
-
     // 📐 TỰ ĐỘNG KHỚP 100% KHUNG HÌNH TIKTOK LIVE STUDIO (1080x1920 DỌC 9:16)
     // fit=contain giữ nguyên 100% độ sắc nét 1:1 không co kéo méo hình, sound=1 mở sẵn âm thanh
+    // TUYỆT ĐỐI KHÔNG gắn tham số ?t= để video luôn phát từ đầu 0:00 đến hết đuôi và lặp lại trọn vẹn
     baseUrl = `${baseUrl}${glue}fit=contain&ratio=9:16&sound=1&autoplay=1`;
     glue = '&';
 
     const tunnelUrl = tunnelData?.tunnelUrl || '';
-    if (tunnelUrl && !baseUrl.includes(tunnelUrl) && targetMode === 'cloudflare_tunnel') {
+    if (tunnelUrl && !baseUrl.includes(tunnelUrl)) {
       baseUrl = `${baseUrl}${glue}backend=${encodeURIComponent(tunnelUrl)}`;
     }
 
@@ -469,106 +443,45 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                 👉 <b>Hình ảnh sẽ hiển thị ngay lập tức 100%</b>, không bao giờ bị đen hình hay đứng hình!
               </p>
             </div>
-
-            <div className="p-3 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 text-[11px] text-emerald-300 space-y-1">
-              <p className="font-black flex items-center gap-1.5 text-emerald-400">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>Ưu điểm vượt trội của Bắt Cửa Sổ (Window Capture) trên Windows:</span>
-              </p>
-              <p className="text-gray-300 leading-relaxed">
-                • Không phụ thuộc mạng Internet, không lo bị chặn cổng hay lỗi URL.<br />
-                • Tận dụng trực tiếp sức mạnh Card màn hình GPU (NVIDIA/Intel), video mượt 60FPS không giật lag.<br />
-                • Video chạy bền bỉ 24/24, không bao giờ bị đứt kết nối hoặc tự động mất.
-              </p>
-            </div>
           </div>
         ) : (
-          /* === TAB 2: NGUỒN TRÌNH DUYỆT (BROWSER SOURCE - HỖ TRỢ 2 CHẾ ĐỘ LINK) === */
+          /* === TAB 2: NGUỒN TRÌNH DUYỆT (BROWSER SOURCE - CLOUDFLARE HTTPS DUY NHẤT) === */
           <>
-            {/* === CHỌN CHẾ ĐỘ LINK: NỘI BỘ SIÊU TỐC 0MS VS ĐÁM MÂY CLOUDFLARE === */}
-            <div className="flex bg-[#0D111A] p-1.5 rounded-2xl border border-white/10 gap-1.5">
-              <button
-                type="button"
-                onClick={() => setLinkMode('local_fast')}
-                className={`flex-1 py-2 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                  linkMode === 'local_fast'
-                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-600/30 border border-emerald-400/50'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Zap className="w-4 h-4 text-yellow-300 animate-pulse" />
-                <span>⚡ LINK SIÊU TỐC NỘI BỘ (0ms - 10Gbps)</span>
-                <span className="text-[9px] bg-yellow-400 text-black px-2 py-0.5 rounded-full font-black hidden sm:inline">KHUYÊN DÙNG SỐ 1</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setLinkMode('cloudflare_tunnel')}
-                className={`flex-1 py-2 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                  linkMode === 'cloudflare_tunnel'
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30 border border-blue-400/50'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Wifi className="w-4 h-4 text-cyan-300" />
-                <span>🌐 LINK ĐÁM MÂY CLOUDFLARE HTTPS</span>
-                <span className="text-[9px] bg-blue-400/20 text-blue-300 px-2 py-0.5 rounded-full font-bold hidden sm:inline">DỰ PHÒNG</span>
-              </button>
+            {/* === BANNER ĐƯỜNG LINK CLOUDFLARE HTTPS CHÍNH THỨC 100% CHỐNG CHẶN === */}
+            <div className={`p-3.5 rounded-2xl border text-xs space-y-1.5 shadow-lg ${
+              isTunnelActive
+                ? "bg-gradient-to-r from-blue-950/70 via-black/80 to-indigo-950/60 border-blue-500/50 text-blue-200"
+                : "bg-yellow-950/60 border-yellow-500/50 text-yellow-200"
+            }`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-cyan-300 font-black text-[12px]">
+                  <Wifi className="w-4 h-4 text-cyan-400 shrink-0 animate-pulse" />
+                  <span>🌐 ĐƯỜNG LINK LIVESTREAM CLOUDFLARE HTTPS (CHÍNH THỨC 100% CHỐNG CHẶN):</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {isTunnelActive ? (
+                    <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/20 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                      Cloudflare SSL Ready
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-black text-yellow-300 bg-yellow-500/20 border border-yellow-500/30 px-2.5 py-0.5 rounded-full animate-pulse">
+                      Đang khởi tạo SSL...
+                    </span>
+                  )}
+                  <button 
+                    onClick={handleRefreshTunnel} 
+                    className="p-1 rounded-lg bg-white/10 hover:bg-white/20 text-cyan-300 transition-all cursor-pointer"
+                    title="Làm mới đường truyền Cloudflare"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${tunnelLoading ? 'animate-spin' : ''}`} />
+                  </button>
+                </div>
+              </div>
+              <p className="text-gray-300 text-[11.5px] leading-relaxed">
+                • <b>Tối ưu 100% cho TikTok Live Studio & OBS:</b> Phát video liền mạch từ đầu đến đuôi không bao giờ bị ngắt giữa chừng, tự động lặp lại khi hết video, chống giật lag và đứng hình 24/24.<br />
+                • <b>URL Đám Mây:</b> <code className="text-cyan-300 font-mono text-[10.5px]">{tunnelData?.tunnelUrl || 'Đang cấp đường truyền...'}</code>
+              </p>
             </div>
-
-            {/* === BANNER TRẠNG THÁI THEO CHẾ ĐỘ LINK ĐANG CHỌN === */}
-            {linkMode === 'local_fast' ? (
-              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-950/70 via-[#0a1814] to-teal-950/60 border border-emerald-500/50 text-xs space-y-1.5 shadow-lg shadow-emerald-950/30">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-emerald-300 font-black text-[12px]">
-                    <Zap className="w-4 h-4 text-yellow-400 shrink-0 animate-bounce" />
-                    <span>⚡ CHẾ ĐỘ SIÊU TỐC 0MS — ĐỌC TRỰC TIẾP TỪ SSD NVMe (BĂNG THÔNG 10Gbps+):</span>
-                  </div>
-                  <span className="text-[10px] font-black text-emerald-300 bg-emerald-500/20 border border-emerald-400/30 px-2 py-0.5 rounded-full">
-                    IP LAN: {tunnelData?.lanIp || '127.0.0.1'} • 0ms Delay
-                  </span>
-                </div>
-                <p className="text-gray-200 text-[11.5px] leading-relaxed">
-                  • <b>Dành cho TikTok Live Studio / OBS chạy trên cùng máy tính:</b> Video nạp trực tiếp qua cổng mạng máy tính, <b>100% không tốn data internet</b>, không bao giờ bị nghẽn hay gián đoạn bởi cáp quang.<br />
-                  • <b>Tốc độ xử lý siêu nhanh:</b> Mở video phát ngay tức thì 0ms, hình ảnh siêu nét chuẩn Full HD 1080p 60FPS, màu sắc và âm thanh khớp 100% video gốc!
-                </p>
-              </div>
-            ) : (
-              <div className={`p-3.5 rounded-2xl border text-xs space-y-1.5 shadow-lg ${
-                isTunnelActive
-                  ? "bg-gradient-to-r from-blue-950/70 via-black/80 to-indigo-950/60 border-blue-500/50 text-blue-200"
-                  : "bg-yellow-950/60 border-yellow-500/50 text-yellow-200"
-              }`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-cyan-300 font-black text-[12px]">
-                    <Wifi className="w-4 h-4 text-cyan-400 shrink-0 animate-pulse" />
-                    <span>🌐 CHẾ ĐỘ CLOUDFLARE TUNNEL HTTPS — VƯỢT TƯỜNG LỬA (SMART 8MB STREAMING):</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    {isTunnelActive ? (
-                      <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/20 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
-                        Cloudflare SSL Ready
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-black text-yellow-300 bg-yellow-500/20 border border-yellow-500/30 px-2 py-0.5 rounded-full animate-pulse">
-                        Đang khởi tạo SSL...
-                      </span>
-                    )}
-                    <button 
-                      onClick={handleRefreshTunnel} 
-                      className="p-1 rounded-lg bg-white/10 hover:bg-white/20 text-cyan-300 transition-all cursor-pointer"
-                      title="Làm mới đường truyền Cloudflare"
-                    >
-                      <RefreshCw className={`w-3 h-3 ${tunnelLoading ? 'animate-spin' : ''}`} />
-                    </button>
-                  </div>
-                </div>
-                <p className="text-gray-300 text-[11.5px] leading-relaxed">
-                  • <b>Dành cho máy TikTok Live Studio phát từ xa qua internet:</b> Tự động chia mảnh video thông minh (Smart 8MB Chunk Slicing), nạp tức thì trong 0.02s, chống timeout và chống đứng hình 24/24.<br />
-                  • <b>URL Cloudflare:</b> <code className="text-cyan-300 font-mono text-[10.5px]">{tunnelData?.tunnelUrl || 'Đang cấp đường truyền...'}</code>
-                </p>
-              </div>
-            )}
 
             {/* === DANH SÁCH DỰ ÁN === */}
             <div className="space-y-4 overflow-y-auto flex-1 pr-1 custom-scrollbar">
@@ -584,7 +497,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
               {projects.map((proj) => {
                 const Icon = proj.icon;
-                const overlayUrl = getProjectOverlayUrl(proj.path, linkMode);
+                const overlayUrl = getProjectOverlayUrl(proj.path);
                 const isCopied = copiedId === proj.id;
                 const hasUrl = Boolean(overlayUrl && overlayUrl.startsWith('http'));
 
@@ -607,15 +520,11 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                     <div className="p-3 rounded-xl bg-black/90 border-2 border-cyan-500/60 space-y-2 shadow-cyan-950/40 shadow-lg">
                       <div className="flex items-center justify-between text-[11px]">
                         <span className="font-black text-cyan-300 flex items-center gap-1.5">
-                          <Zap className="w-4 h-4 text-yellow-400 animate-pulse" />
-                          <span>
-                            {linkMode === 'local_fast' 
-                              ? '⚡ ĐƯỜNG LINK NỘI BỘ SIÊU TỐC 0MS CHO TIKTOK STUDIO (CÙNG MÁY / LAN):' 
-                              : '🌐 ĐƯỜNG LINK CLOUDFLARE HTTPS CHO TIKTOK LIVE STUDIO (CHỐNG CHẶN):'}
-                          </span>
+                          <Wifi className="w-4 h-4 text-cyan-400 animate-pulse" />
+                          <span>🌐 ĐƯỜNG LINK CLOUDFLARE HTTPS CHO TIKTOK LIVE STUDIO (CHỐNG CHẶN):</span>
                         </span>
                         <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/20 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-                          {linkMode === 'local_fast' ? '⚡ 0ms Delay • 10Gbps NVMe' : (hasUrl ? 'Cloudflare SSL • 60 FPS' : 'Đang Cấp Link...')}
+                          {hasUrl ? 'Cloudflare SSL • 60 FPS' : 'Đang Cấp Link...'}
                         </span>
                       </div>
 
@@ -667,11 +576,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                       </div>
 
                       <p className="text-[10.5px] text-cyan-300/90 leading-tight">
-                        {linkMode === 'local_fast' ? (
-                          <span>⚡ <b>Mẹo vàng:</b> Sao chép link này dán vào nguồn Browser trong TikTok Live Studio. Tốc độ đọc trực tiếp từ máy tính đạt 60FPS tuyệt đối không khựng hình hay đứng hình, tải tức thì 0ms!</span>
-                        ) : (
-                          <span>🌐 <b>Đường link Cloudflare HTTPS:</b> Chấp nhận 100% trên mọi phiên bản TikTok Live Studio, công nghệ Smart 8MB Chunk Streaming giúp video nạp mượt mà không bị timeout.</span>
-                        )}
+                        <span>🌐 <b>Đường link Cloudflare HTTPS:</b> Chấp nhận 100% trên mọi phiên bản TikTok Live Studio, công nghệ Smart Video Streaming giúp phát liên tục từ đầu đến cuối không bị ngắt quãng hay lặp sớm.</span>
                       </p>
                     </div>
                   </div>

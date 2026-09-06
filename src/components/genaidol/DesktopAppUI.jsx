@@ -3088,20 +3088,11 @@ export default function DesktopAppUI() {
                 }
               }}
               onEnded={(e) => {
-                e.currentTarget.currentTime = 0;
-                e.currentTarget.play().catch(() => {});
-                let playUrl = selected.url;
-                if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
-                  playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
-                }
-                sendVideoControl({
-                  action: 'seek',
-                  currentTime: 0,
-                  isPlaying: true,
-                  force: true,
-                  mediaUrl: playUrl,
-                  timestamp: Date.now()
-                }, socketRef.current);
+                // Tự động lặp lại liền mạch (Seamless Loop) tại local
+                try {
+                  e.currentTarget.currentTime = 0;
+                  e.currentTarget.play().catch(() => {});
+                } catch (err) {}
               }}
             />
 

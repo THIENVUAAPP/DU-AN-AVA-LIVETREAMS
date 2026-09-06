@@ -164,12 +164,11 @@ app.all('/uploads/:filename', (req, res, next) => {
           end = parseInt(parts[1], 10);
           if (isNaN(end) || end >= currentOnDiskSize) end = currentOnDiskSize - 1;
         } else {
-          // ⚡ SMART HIGH-SPEED ADAPTIVE CHUNKING CHO VIDEO RẤT DÀI & NẶNG (100MB - 5GB):
-          // Với video dung lượng lớn (> 50MB): Cấp chunk 32MB để trình duyệt có đủ buffer 30-60 giây Full HD,
-          // tránh việc phải request dải quá dày đặc gây nghẽn, xả buffer và đứng hình!
-          // Với video nhỏ (< 50MB): Cấp chunk 12MB.
-          const CHUNK_SIZE = currentOnDiskSize > 50 * 1024 * 1024 ? 32 * 1024 * 1024 : 12 * 1024 * 1024;
-          end = Math.min(start + CHUNK_SIZE - 1, currentOnDiskSize - 1);
+          // ⚡ CHUẨN HTTP RFC 7233 CHO PHÁT VIDEO LIỀN MẠCH TỪ ĐẦU ĐẾN ĐUÔI:
+          // Khi trình duyệt yêu cầu "bytes=START-", server phục vụ toàn bộ dải đến hết file.
+          // Tuyệt đối không cắt vụn dải byte (không cắt 8MB hay 32MB) vì sẽ khiến trình duyệt tưởng hết file
+          // và tự động quay lại phát từ đầu sau đúng 25-30 giây!
+          end = currentOnDiskSize - 1;
         }
       }
 
@@ -441,10 +440,10 @@ app.get('/api/check-update', (req, res) => {
 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
-app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', '/AvaLive_VIP_PRO_Windows_v1.7.8.zip', '/AvaLive_VIP_PRO_Windows_v1.7.7.zip', '/AvaLive_VIP_PRO_Windows_v1.7.6.zip', '/AvaLive_VIP_PRO_Windows_v1.7.5.zip', '/AvaLive_VIP_PRO_Windows_v1.7.4.zip', '/AvaLive_VIP_PRO_Windows_v1.7.3.zip', '/AvaLive_VIP_PRO_Windows_v1.7.2.zip', '/AvaLive_VIP_PRO_Windows_v1.7.1.zip', '/AvaLive_VIP_PRO_Windows_v1.7.0.zip', '/AvaLive_VIP_PRO_Windows_v1.6.9.zip', '/AvaLive_VIP_PRO_Windows_v1.6.8.zip', '/AvaLive_VIP_PRO_Windows_v1.6.7.zip', '/AvaLive_VIP_PRO_Windows_v1.6.6.zip', '/AvaLive_VIP_PRO_Windows_v1.6.5.zip', '/AvaLive_VIP_PRO_Windows_v1.6.4.zip', '/AvaLive_VIP_PRO_Windows_v1.6.3.zip', '/AvaLive_VIP_PRO_Windows_v1.6.2.zip', '/AvaLive_VIP_PRO_Windows_v1.5.0.zip'], (req, res) => {
+app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', '/AvaLive_VIP_PRO_Windows_v1.7.9.zip', '/AvaLive_VIP_PRO_Windows_v1.7.8.zip', '/AvaLive_VIP_PRO_Windows_v1.7.7.zip', '/AvaLive_VIP_PRO_Windows_v1.7.6.zip', '/AvaLive_VIP_PRO_Windows_v1.7.5.zip', '/AvaLive_VIP_PRO_Windows_v1.7.4.zip', '/AvaLive_VIP_PRO_Windows_v1.7.3.zip', '/AvaLive_VIP_PRO_Windows_v1.7.2.zip', '/AvaLive_VIP_PRO_Windows_v1.7.1.zip', '/AvaLive_VIP_PRO_Windows_v1.7.0.zip', '/AvaLive_VIP_PRO_Windows_v1.6.9.zip', '/AvaLive_VIP_PRO_Windows_v1.6.8.zip', '/AvaLive_VIP_PRO_Windows_v1.6.7.zip', '/AvaLive_VIP_PRO_Windows_v1.6.6.zip', '/AvaLive_VIP_PRO_Windows_v1.6.5.zip', '/AvaLive_VIP_PRO_Windows_v1.6.4.zip', '/AvaLive_VIP_PRO_Windows_v1.6.3.zip', '/AvaLive_VIP_PRO_Windows_v1.6.2.zip', '/AvaLive_VIP_PRO_Windows_v1.5.0.zip'], (req, res) => {
   const releaseDir = path.join(__dirname, '..', 'release_zips');
   let targetFile = null;
-  let ver = '1.7.8';
+  let ver = '1.7.9';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -475,10 +474,10 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 });
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
-app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', '/AvaLive_VIP_PRO_Mac_v1.7.8.zip', '/AvaLive_VIP_PRO_Mac_v1.7.7.zip', '/AvaLive_VIP_PRO_Mac_v1.7.6.zip', '/AvaLive_VIP_PRO_Mac_v1.7.5.zip', '/AvaLive_VIP_PRO_Mac_v1.7.4.zip', '/AvaLive_VIP_PRO_Mac_v1.7.3.zip', '/AvaLive_VIP_PRO_Mac_v1.7.2.zip', '/AvaLive_VIP_PRO_Mac_v1.7.1.zip', '/AvaLive_VIP_PRO_Mac_v1.7.0.zip', '/AvaLive_VIP_PRO_Mac_v1.6.9.zip', '/AvaLive_VIP_PRO_Mac_v1.6.8.zip', '/AvaLive_VIP_PRO_Mac_v1.6.7.zip', '/AvaLive_VIP_PRO_Mac_v1.6.6.zip', '/AvaLive_VIP_PRO_Mac_v1.6.5.zip', '/AvaLive_VIP_PRO_Mac_v1.6.4.zip', '/AvaLive_VIP_PRO_Mac_v1.6.3.zip', '/AvaLive_VIP_PRO_Mac_v1.6.2.zip', '/AvaLive_VIP_PRO_Mac_v1.5.0.zip'], (req, res) => {
+app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', '/AvaLive_VIP_PRO_Mac_v1.7.9.zip', '/AvaLive_VIP_PRO_Mac_v1.7.8.zip', '/AvaLive_VIP_PRO_Mac_v1.7.7.zip', '/AvaLive_VIP_PRO_Mac_v1.7.6.zip', '/AvaLive_VIP_PRO_Mac_v1.7.5.zip', '/AvaLive_VIP_PRO_Mac_v1.7.4.zip', '/AvaLive_VIP_PRO_Mac_v1.7.3.zip', '/AvaLive_VIP_PRO_Mac_v1.7.2.zip', '/AvaLive_VIP_PRO_Mac_v1.7.1.zip', '/AvaLive_VIP_PRO_Mac_v1.7.0.zip', '/AvaLive_VIP_PRO_Mac_v1.6.9.zip', '/AvaLive_VIP_PRO_Mac_v1.6.8.zip', '/AvaLive_VIP_PRO_Mac_v1.6.7.zip', '/AvaLive_VIP_PRO_Mac_v1.6.6.zip', '/AvaLive_VIP_PRO_Mac_v1.6.5.zip', '/AvaLive_VIP_PRO_Mac_v1.6.4.zip', '/AvaLive_VIP_PRO_Mac_v1.6.3.zip', '/AvaLive_VIP_PRO_Mac_v1.6.2.zip', '/AvaLive_VIP_PRO_Mac_v1.5.0.zip'], (req, res) => {
   const releaseDir = path.join(__dirname, '..', 'release_zips');
   let targetFile = null;
-  let ver = '1.7.8';
+  let ver = '1.7.9';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;

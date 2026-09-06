@@ -183,6 +183,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     }
     return 0;
   })());
+  const hasInitialSeekDoneRef = useRef(false);
 
   const hasAutoplayStartedRef = useRef(false);
   const [showCaptureTip, setShowCaptureTip] = useState(false);
@@ -1799,7 +1800,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 WINDOW CAPTURE
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.7.8
+                v1.7.9
               </span>
             </div>
 
@@ -1957,10 +1958,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   }}
                   onLoadedMetadata={(e) => {
                     const v = e.currentTarget;
-                    // ⚡ ĐỒNG BỘ NGAY KHUNG HÌNH THỜI GIAN THẬT TỪ PHẦN MỀM (URL ?t= HOẶC MASTER STATE)
-                    const targetStartTime = initialTimeParamRef.current || (typeof masterState.videoCurrentTime === 'number' ? masterState.videoCurrentTime : 0);
-                    if (targetStartTime > 0 && Math.abs(v.currentTime - targetStartTime) > 0.3) {
-                      try { v.currentTime = targetStartTime; } catch (err) {}
+                    // ⚡ CHỈ SEEK 1 LẦN DUY NHẤT LÚC KHỞI TẠO NẾU CÓ THAM SỐ ?t= TỪ LINK
+                    if (!hasInitialSeekDoneRef.current && initialTimeParamRef.current > 0) {
+                      try {
+                        v.currentTime = initialTimeParamRef.current;
+                      } catch (err) {}
+                      hasInitialSeekDoneRef.current = true;
+                      initialTimeParamRef.current = 0;
                     }
                     const isUserPaused = checkIfUserPaused();
                     if (!isUserPaused) {
