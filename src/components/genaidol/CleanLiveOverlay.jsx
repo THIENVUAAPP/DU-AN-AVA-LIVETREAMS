@@ -636,8 +636,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           });
         }
         setIsPlayingState(true);
-      } else if (action === 'seek') {
-        if (typeof targetTime === 'number' && !isNaN(targetTime)) {
+      } else if (action === 'seek' || action === 'user_restart') {
+        // CHỈ TUA KHI LÀ LỆNH ÉP BUỘC RÕ RÀNG TỪ NGƯỜI DÙNG HOẶC RESTART
+        if ((control.force || action === 'user_restart') && typeof targetTime === 'number' && !isNaN(targetTime)) {
           try { vid.currentTime = targetTime; } catch (e) {}
         }
       } else if (action === 'time_sync') {
@@ -694,10 +695,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           vid.dataset.userPaused = 'false';
           vid.muted = isVideoAudioMuted;
           if (!isVideoAudioMuted) vid.volume = videoVolume;
-          // Chỉ tua thời gian khi có lệnh ép buộc từ phần mềm (đổi bài hoặc chủ động tua)
-          if (data.force && typeof data.videoCurrentTime === 'number' && !isNaN(data.videoCurrentTime)) {
-            try { vid.currentTime = data.videoCurrentTime; } catch (e) {}
-          }
+          // TUYỆT ĐỐI KHÔNG TUA THỜI GIAN TRONG POLLING ĐỊNH KỲ — ĐỂ VIDEO CHẠY LIÊN TỤC KHÔNG BỊ KHỞI ĐỘNG LẠI
           if (vid.paused) {
             vid.play().catch(() => {
               vid.muted = true;
@@ -706,8 +704,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           }
         }
         setIsPlayingState(true);
-      } else if (data.videoPlaybackEvent === 'seeked' && data.force && typeof data.videoCurrentTime === 'number' && vid) {
-        try { vid.currentTime = data.videoCurrentTime; } catch (e) {}
       }
 
       // Đồng bộ Âm thanh & Âm lượng từ Phần Mềm Chính

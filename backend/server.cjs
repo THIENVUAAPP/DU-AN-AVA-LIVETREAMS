@@ -780,20 +780,23 @@ io.on('connection', (socket) => {
 
   const handleMasterStateUpdate = (state) => {
     if (state && typeof state === 'object') {
-      const nextState = { ...currentMasterLiveState, ...state, updatedAt: Date.now() };
+      const cleanState = { ...state };
+      delete cleanState.force; // Không lưu cờ force vào file state vĩnh viễn
+      const nextState = { ...currentMasterLiveState, ...cleanState, updatedAt: Date.now() };
+      delete nextState.force;
       // BẢO VỆ TUYỆT ĐỐI VIDEO ĐANG PHÁT: Không bao giờ tự ý xoá mediaUrl hiện tại nếu client gửi null/undefined
       // Chỉ xoá khi người dùng bấm xoá với cờ rõ ràng clearMedia: true
-      if (!state.mediaUrl && !state.clearMedia && currentMasterLiveState.mediaUrl) {
+      if (!cleanState.mediaUrl && !cleanState.clearMedia && currentMasterLiveState.mediaUrl) {
         nextState.mediaUrl = currentMasterLiveState.mediaUrl;
         nextState.isVideo = currentMasterLiveState.isVideo;
       }
       currentMasterLiveState = nextState;
       io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
-      if (state.videoPlaybackEvent || typeof state.isPlaying === 'boolean') {
+      // CHỈ PHÁT SỰ KIỆN ĐIỀU KHIỂN VIDEO KHI LÀ LỆNH PLAY HOẶC PAUSE RÕ RÀNG (TRÁNH LẶP VIDEO VÀ TUA VỀ ĐẦU)
+      if (cleanState.videoPlaybackEvent === 'play' || cleanState.videoPlaybackEvent === 'pause') {
         io.emit('VIDEO_PLAYBACK_CONTROL', {
-          action: state.videoPlaybackEvent || (state.isPlaying ? 'play' : 'pause'),
-          isPlaying: state.isPlaying,
-          currentTime: state.videoCurrentTime,
+          action: cleanState.videoPlaybackEvent,
+          isPlaying: cleanState.isPlaying,
           mediaUrl: currentMasterLiveState.mediaUrl,
           timestamp: Date.now()
         });
@@ -1489,6 +1492,7 @@ app.get('/api/live-state', (req, res) => {
 app.post('/api/live-state', (req, res) => {
   if (req.body && typeof req.body === 'object') {
     const payload = { ...req.body };
+    delete payload.force; // Không lưu cờ force vào live state
     
     // Nếu payload có chứa mediaUrl hợp lệ thì mới cập nhật, ngược lại giữ nguyên mediaUrl hiện tại
     if (payload.mediaUrl && typeof payload.mediaUrl === 'string') {
@@ -1511,13 +1515,14 @@ app.post('/api/live-state', (req, res) => {
       tunnelUrl: payload.tunnelUrl || currentTunnelUrl || currentMasterLiveState.tunnelUrl || null,
       updatedAt: Date.now() 
     };
+    delete currentMasterLiveState.force;
 
     io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
-    if (payload.videoPlaybackEvent || typeof payload.isPlaying === 'boolean') {
+    // CHỈ BẮN VIDEO_PLAYBACK_CONTROL KHI CÓ SỰ KIỆN PLAY HOẶC PAUSE RÕ RÀNG (TRÁNH LẶP VIDEO VÀ TUA VỀ ĐẦU)
+    if (payload.videoPlaybackEvent === 'play' || payload.videoPlaybackEvent === 'pause') {
       io.emit('VIDEO_PLAYBACK_CONTROL', {
-        action: payload.videoPlaybackEvent || (payload.isPlaying ? 'play' : 'pause'),
+        action: payload.videoPlaybackEvent,
         isPlaying: payload.isPlaying,
-        currentTime: payload.videoCurrentTime,
         mediaUrl: currentMasterLiveState.mediaUrl,
         timestamp: Date.now()
       });

@@ -2510,7 +2510,7 @@ export default function DesktopAppUI() {
       const newCharId = `custom_${Date.now()}`;
       
       if (isVideo) {
-        // ⚡ 1. HIỂN THỊ TỨC THÌ TRÊN MÀN HÌNH & GIAO DIỆN
+        // ⚡ 1. HIỂN THỊ VÀ PHÁT TỨC THÌ 0MS TRÊN MÀN HÌNH & GIAO DIỆN
         const tempChar = {
           id: newCharId,
           name: charName,
@@ -2520,12 +2520,48 @@ export default function DesktopAppUI() {
         };
         setCustomCharacters(prev => [...prev, tempChar]);
         setSelectedCharacter(newCharId);
-        try { localStorage.setItem('avalive_selected_char', newCharId); } catch (e) {}
+        setUserLockedMediaUrl(localUrl);
+        setIsVideoPlaying(true);
+        setIsMasterLiveRunning(true);
+        lastPlaybackTimeRef.current = 0;
 
-        showToast(`⚡ Đang kích hoạt phát luồng tức thì "${charName}" sang TikTok Live Studio...`, 'info');
+        try {
+          localStorage.setItem('avalive_selected_char', newCharId);
+          localStorage.setItem('avalive_user_locked_media', localUrl);
+          localStorage.removeItem('avalive_user_paused');
+          localStorage.removeItem('avalive_window_capture_paused');
+          localStorage.setItem('avalive_master_live_running', 'true');
+        } catch (e) {}
 
-        // 🚀 2. PHÁT LUỒNG SIÊU TỐC TỪNG PHẦN (FAST-STREAM PIPELINE 0MS)
-        // Không đợi nạp hết toàn bộ file GB, phát ngay khối đầu + đuôi trong 100ms
+        // Kích hoạt ngay lập tức trên phần tử video Desktop trong 0ms
+        if (desktopVideoRef.current) {
+          desktopVideoRef.current.src = localUrl;
+          desktopVideoRef.current.currentTime = 0;
+          desktopVideoRef.current.dataset.userPaused = 'false';
+          desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+        }
+
+        // Bắn broadcast cục bộ ngay lập tức để mọi tab overlay cùng máy hiển thị tức thì
+        try {
+          const bc = new BroadcastChannel('avalive_master_live_stream');
+          bc.postMessage({
+            type: 'GLOBAL_MEDIA_CHANGE',
+            mediaUrl: localUrl,
+            characterId: newCharId,
+            characterName: charName,
+            isVideo: true,
+            isPlaying: true,
+            currentTime: 0,
+            force: true,
+            source: 'desktop',
+            timestamp: Date.now()
+          });
+          setTimeout(() => bc.close(), 100);
+        } catch (err) {}
+
+        showToast(`⚡ Đã phát ngay video "${charName}" trên giao diện phần mềm!`, 'success');
+
+        // 🚀 2. PHÁT LUỒNG SIÊU TỐC TỪNG PHẦN (FAST-STREAM PIPELINE) LÊN SERVER & TIKTOK LIVE STUDIO
         fastStreamUpload(file, {
           onInit: ({ fileUrl }) => {
             const updatedChar = {
@@ -2536,7 +2572,7 @@ export default function DesktopAppUI() {
               type: 'video'
             };
 
-            // 🔒 KHOÁ CỐ ĐỊNH VIDEO CỦA NGƯỜI DÙNG: Bảo vệ 100% không bao giờ tự ý mất hoặc đổi ngầm
+            // 🔒 KHOÁ CỐ ĐỊNH VIDEO CỦA NGƯỜI DÙNG: Cập nhật đường dẫn server vĩnh viễn
             setUserLockedMediaUrl(fileUrl);
             try { localStorage.setItem('avalive_user_locked_media', fileUrl); } catch (e) {}
 
@@ -2554,7 +2590,7 @@ export default function DesktopAppUI() {
               mediaUrl: fileUrl
             }).catch(() => {});
 
-            // 🚀 BẮN PHÁT SÓNG REALTIME VIDEO ĐẾN TIKTOK LIVE STUDIO / OBS TRONG 0MS!
+            // 🚀 BẮN PHÁT SÓNG REALTIME VIDEO ĐẾN TIKTOK LIVE STUDIO / OBS
             sendVideoControl({
               action: 'play',
               currentTime: 0,
@@ -2573,7 +2609,7 @@ export default function DesktopAppUI() {
               aspectRatio: globalAspectRatio || '9:16'
             }, socketRef.current);
 
-            showToast(`✅ Video "${charName}" đã phát ngay trên TikTok Live Studio!`, 'success');
+            showToast(`✅ Video "${charName}" đã sẵn sàng trên TikTok Live Studio!`, 'success');
           },
           onProgress: (pct) => {
             if (pct === 100) {
@@ -2790,8 +2826,14 @@ export default function DesktopAppUI() {
         );
       }
       
-      const customMatch = customCharacters.find(c => c.id === selectedCharacter);
-      let selected = customMatch || (selectedCharacter && CHARACTERS[selectedCharacter]) || (customCharacters.length > 0 ? customCharacters[0] : null) || (userLockedMediaUrl ? { id: 'locked_video', name: 'Video Đang Phát', url: userLockedMediaUrl, type: 'video' } : null) || (Object.keys(CHARACTERS).length > 0 ? Object.values(CHARACTERS)[0] : null);
+      const customMatch = (customCharacters && Array.isArray(customCharacters)) 
+        ? customCharacters.find(c => c.id === selectedCharacter && (c.url || c.mediaUrl)) 
+        : null;
+      let selected = customMatch || 
+        (userLockedMediaUrl ? { id: 'locked_video', name: 'Video Đang Phát', url: userLockedMediaUrl, mediaUrl: userLockedMediaUrl, type: 'video' } : null) ||
+        (selectedCharacter && CHARACTERS[selectedCharacter]?.url ? { id: selectedCharacter, ...CHARACTERS[selectedCharacter] } : null) || 
+        (customCharacters.find(c => c.url || c.mediaUrl) || null) || 
+        (Object.entries(CHARACTERS).find(([k, v]) => v.url)?.[1] ? { id: Object.entries(CHARACTERS).find(([k, v]) => v.url)[0], ...Object.entries(CHARACTERS).find(([k, v]) => v.url)[1] } : null);
 
       if (selected) {
         const resolvedUrl = selected.url || selected.mediaUrl;
@@ -2882,11 +2924,6 @@ export default function DesktopAppUI() {
                 e.currentTarget.muted = liveAudioMuted;
                 if (!liveAudioMuted) {
                   e.currentTarget.volume = liveVolume;
-                }
-                if (lastPlaybackTimeRef.current > 0) {
-                  try {
-                    e.currentTarget.currentTime = lastPlaybackTimeRef.current;
-                  } catch (err) {}
                 }
                 const isPaused = localStorage.getItem('avalive_user_paused') === 'true';
                 if (isPaused) {
@@ -2999,47 +3036,14 @@ export default function DesktopAppUI() {
               }}
               onSeeked={(e) => {
                 const curTime = e.currentTarget.currentTime;
-                let playUrl = selected.url;
-                if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
-                  playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
+                if (curTime > 0) {
+                  lastPlaybackTimeRef.current = curTime;
                 }
-                sendVideoControl({
-                  action: 'seek',
-                  currentTime: curTime,
-                  isPlaying: !e.currentTarget.paused,
-                  mediaUrl: playUrl,
-                  timestamp: Date.now()
-                }, socketRef.current);
-
-                syncMasterLiveState({
-                  videoPlaybackEvent: 'seeked',
-                  videoCurrentTime: curTime
-                }, socketRef.current);
-                try {
-                  const bc = new BroadcastChannel('avalive_master_live_stream');
-                  bc.postMessage({
-                    type: 'MASTER_TIME_SYNC',
-                    currentTime: curTime,
-                    isPlaying: !e.currentTarget.paused,
-                    force: true,
-                    timestamp: Date.now()
-                  });
-                  setTimeout(() => bc.close(), 50);
-                } catch (err) {}
+                // TUYỆT ĐỐI KHÔNG BẮN LỆNH SEEK TỰ ĐỘNG LÊN MẠNG KHI PHÁT BÌNH THƯỜNG
+                // Tránh tạo vòng lặp ping-pong làm video bị nhảy giật hoặc khởi động lại mỗi 1-2 giây
               }}
               onEnded={(e) => {
                 e.currentTarget.currentTime = 0;
-                let playUrl = selected.url;
-                if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
-                  playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
-                }
-                sendVideoControl({
-                  action: 'seek',
-                  currentTime: 0,
-                  isPlaying: true,
-                  mediaUrl: playUrl,
-                  timestamp: Date.now()
-                }, socketRef.current);
                 e.currentTarget.play().catch(() => {});
               }}
             />
@@ -3856,6 +3860,10 @@ export default function DesktopAppUI() {
                     key={charItem.id || index}
                     onClick={() => {
                       const charUrl = charItem.url || charItem.mediaUrl;
+                      if (!charUrl) {
+                        fileInputRef.current?.click();
+                        return;
+                      }
                       setSelectedCharacter(charItem.id);
                       try { localStorage.setItem('avalive_selected_char', charItem.id); } catch (e) {}
                       setIsGameBattleActive(false);
