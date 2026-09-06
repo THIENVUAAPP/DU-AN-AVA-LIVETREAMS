@@ -724,7 +724,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         isUserPausedRef.current = true;
         if (vid) {
           vid.dataset.userPaused = 'true';
-          if (typeof data.videoCurrentTime === 'number' && !isNaN(data.videoCurrentTime)) {
+          if (typeof data.videoCurrentTime === 'number' && !isNaN(data.videoCurrentTime) && (data.force || data.videoPlaybackEvent === 'pause')) {
             try { vid.currentTime = data.videoCurrentTime; } catch (e) {}
           }
           if (!vid.paused) {
@@ -738,8 +738,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             vid.dataset.userPaused = 'false';
             vid.muted = isVideoAudioMuted;
             if (!isVideoAudioMuted) vid.volume = videoVolume;
-            if (typeof data.videoCurrentTime === 'number' && !isNaN(data.videoCurrentTime)) {
-              if (data.force || Math.abs(vid.currentTime - data.videoCurrentTime) > 2.5) {
+            // 🎯 CHỈ SEEK THỜI GIAN KHI CÓ CỜ FORCE CHỦ ĐỘNG HOẶC CHUYỂN BÀI (TRÁNH TRIỆT ĐỂ POLLING TUA VỀ 0 LẶP CÂU ĐẦU TIÊN)
+            if (data.force && typeof data.videoCurrentTime === 'number' && !isNaN(data.videoCurrentTime)) {
+              if (Math.abs(vid.currentTime - data.videoCurrentTime) > 0.5) {
                 try { vid.currentTime = data.videoCurrentTime; } catch (e) {}
               }
             }
@@ -1799,7 +1800,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   WINDOW CAPTURE (60FPS)
                 </span>
                 <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[9px] font-bold text-cyan-300">
-                  v1.7.2
+                  v1.7.3
                 </span>
               </div>
               <span className="text-[9.5px] text-emerald-400/90 font-medium">
@@ -1942,6 +1943,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   disableRemotePlayback
                   onLoadedMetadata={(e) => {
                     const v = e.currentTarget;
+                    // ⚡ ĐỒNG BỘ NGAY KHUNG HÌNH THỜI GIAN THẬT TỪ PHẦN MỀM (URL ?t= HOẶC MASTER STATE)
+                    const targetStartTime = initialTimeParamRef.current || (typeof masterState.videoCurrentTime === 'number' ? masterState.videoCurrentTime : 0);
+                    if (targetStartTime > 0 && Math.abs(v.currentTime - targetStartTime) > 0.3) {
+                      try { v.currentTime = targetStartTime; } catch (err) {}
+                    }
                     const isUserPaused = checkIfUserPaused();
                     if (!isUserPaused) {
                       v.dataset.userPaused = 'false';
@@ -2003,13 +2009,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   style={{ 
                     width: '100%', 
                     height: '100%', 
-                    objectFit: objectFitState || 'cover',
-                    transform: 'translateZ(0)',
-                    WebkitTransform: 'translateZ(0)',
-                    backfaceVisibility: 'hidden',
-                    WebkitBackfaceVisibility: 'hidden',
-                    willChange: 'transform',
-                    imageRendering: '-webkit-optimize-contrast',
+                    objectFit: objectFitState || 'cover'
                   }}
                 />
               </>

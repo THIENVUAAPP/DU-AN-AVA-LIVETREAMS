@@ -452,10 +452,12 @@ export default function DesktopAppUI() {
 
   const handleOpenWindowCapture = () => {
     // 🎯 ĐỘ PHÂN GIẢI CHUẨN CAO 1080P SẮC NÉT (CHO OBS / TIKTOK LIVE STUDIO CHỤP KHÔNG BỊ VỠ NÉT)
-    const width = Math.min(608, window.screen.width);
-    const height = Math.min(1080, window.screen.height);
-    const left = Math.round((window.screen.width - width) / 2);
-    const top = Math.round((window.screen.height - height) / 2);
+    const screenW = window.screen.availWidth || window.screen.width || 1920;
+    const screenH = window.screen.availHeight || window.screen.height || 1080;
+    const height = Math.min(1080, Math.max(720, screenH - 40));
+    const width = Math.min(screenW, Math.round((height * 9) / 16));
+    const left = Math.max(0, Math.round((screenW - width) / 2));
+    const top = Math.max(0, Math.round((screenH - height) / 2));
 
     // ⚡ Đồng bộ ngay lập tức video hiện tại vào cửa sổ Window Capture
     let activeUrl = userLockedMediaUrl || desktopVideoRef.current?.src || '';
@@ -2916,9 +2918,9 @@ export default function DesktopAppUI() {
                 if (curTime > 0) {
                   lastPlaybackTimeRef.current = curTime;
                 }
-                // ⚡ ĐỒNG BỘ REALTIME ĐỊNH KỲ CHO TIKTOK LIVE STUDIO & OBS (GIỮ CHUẨN 1X SPEED KHÔNG GIẬT KHỰNG)
+                // ⚡ ĐỒNG BỘ REALTIME ĐỊNH KỲ CHO TIKTOK LIVE STUDIO & OBS (BÁM SÁT REALTIME 100% TỪNG GIÂY)
                 const now = Date.now();
-                if (now - lastTimeBroadcastRef.current > 5000) {
+                if (now - lastTimeBroadcastRef.current > 1500) {
                   lastTimeBroadcastRef.current = now;
                   let playUrl = selected.url;
                   if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
@@ -3050,12 +3052,45 @@ export default function DesktopAppUI() {
                 if (curTime > 0) {
                   lastPlaybackTimeRef.current = curTime;
                 }
-                // TUYỆT ĐỐI KHÔNG BẮN LỆNH SEEK TỰ ĐỘNG LÊN MẠNG KHI PHÁT BÌNH THƯỜNG
-                // Tránh tạo vòng lặp ping-pong làm video bị nhảy giật hoặc khởi động lại mỗi 1-2 giây
+                // ⚡ ĐỒNG BỘ TỨC THÌ KHI STREAMER TUA KHUNG HÌNH (BÁM SÁT KHUNG HÌNH THỜI GIAN THẬT)
+                if (!isInternalPlaybackChangeRef.current) {
+                  let playUrl = selected.url;
+                  if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
+                    playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
+                  }
+                  sendVideoControl({
+                    action: 'seek',
+                    currentTime: curTime,
+                    isPlaying: !e.currentTarget.paused,
+                    force: true,
+                    mediaUrl: playUrl,
+                    timestamp: Date.now()
+                  }, socketRef.current);
+                  syncMasterLiveState({
+                    stage: 'idol',
+                    mediaUrl: playUrl,
+                    videoPlaybackEvent: 'seek',
+                    videoCurrentTime: curTime,
+                    force: true,
+                    isPlaying: !e.currentTarget.paused
+                  }, socketRef.current);
+                }
               }}
               onEnded={(e) => {
                 e.currentTarget.currentTime = 0;
                 e.currentTarget.play().catch(() => {});
+                let playUrl = selected.url;
+                if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
+                  playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
+                }
+                sendVideoControl({
+                  action: 'seek',
+                  currentTime: 0,
+                  isPlaying: true,
+                  force: true,
+                  mediaUrl: playUrl,
+                  timestamp: Date.now()
+                }, socketRef.current);
               }}
             />
 
@@ -4111,13 +4146,9 @@ export default function DesktopAppUI() {
                   <List size={13} className="text-purple-400" /> 
                   <span>{t('aiQueue', currentLang)}</span>
                 </button>
-                <button onClick={() => { setActiveMonitorModal('tiktok_log'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-2.5 py-1.5 mb-1 rounded text-xs font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}>
+                <button onClick={() => { setActiveMonitorModal('tiktok_log'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-2.5 py-1.5 rounded text-xs font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}>
                   <FileText size={13} className="text-pink-400" /> 
                   <span>{t('tiktokLog', currentLang)}</span>
-                </button>
-                <button onClick={() => { setActiveMonitorModal('sys_log'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-2.5 py-1.5 rounded text-xs font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}>
-                  <AlertCircle size={13} className="text-orange-400" /> 
-                  <span>{t('sysLog', currentLang)}</span>
                 </button>
     </div>
             )}
@@ -4846,29 +4877,7 @@ export default function DesktopAppUI() {
     </div>
       )}
 
-      {activeMonitorModal === 'sys_log' && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-200">
-          <div className={`rounded-xl shadow-2xl w-[800px] h-[500px] flex flex-col border ${isDarkMode ? 'bg-[#1c1c24] text-white border-gray-700' : 'bg-white text-slate-800 border-slate-300'}`}>
-            <div className={`flex items-center justify-between px-4 py-2.5 border-b ${isDarkMode ? 'border-gray-700 bg-[#252532]' : 'border-slate-200 bg-slate-100'}`}>
-              <h2 className="text-sm font-bold flex items-center gap-2">
-                <AlertCircle size={16} className="text-orange-500" /> Log Hệ thống Lỗi
-              </h2>
-              <button onClick={() => setActiveMonitorModal(null)} className={`p-1 rounded transition-colors ${isDarkMode ? 'hover:bg-gray-700 text-gray-400 hover:text-white' : 'hover:bg-slate-200 text-gray-600'}`}><X size={16} /></button>
-    </div>
-            <div className={`flex-1 overflow-auto p-4 text-sm ${isDarkMode ? 'bg-[#16161e]' : 'bg-white'}`}>
-              {systemLogs.length === 0 ? (
-                <div className="text-gray-500 italic flex items-center justify-center h-full">Hệ thống đang hoạt động ổn định. Chưa ghi nhận lỗi nào.</div>
-              ) : (
-                systemLogs.map((log, idx) => (
-                  <div key={idx} className="mb-2 p-2 bg-red-500/10 border border-red-500/30 rounded">
-                    <span className="opacity-70 text-xs font-mono">[{log.time}]</span> <span className="font-bold text-red-500">ERROR:</span> <span className="text-red-400">{log.message}</span>
-    </div>
-                ))
-              )}
-    </div>
-    </div>
-    </div>
-      )}
+
 
       {activeMonitorModal === 'tiktok_log' && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-200">

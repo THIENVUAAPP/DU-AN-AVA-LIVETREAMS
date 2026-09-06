@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.7.2';
+export const APP_VERSION = '1.7.3';
 export const UPDATE_NOTES = [
-  "🚀 Chuyển Đổi Đường Link Cloudflare HTTPS Cho TikTok Live: Tối ưu 100% đường link chuyển đổi Cloudflare HTTPS tương thích hoàn hảo với cơ chế bảo mật của TikTok Live Studio, khắc phục hoàn toàn lỗi chặn bộ nhớ máy (Sandbox/Localhost).",
-  "⚡ Tối Ưu Phân Đoạn Chunk Video Adaptive: Tải 1.5MB đầu tiên trong 50ms giúp video phát lập tức khi dán link vào TikTok Live Studio, các chunk tiếp theo 3MB duy trì stream 60FPS siêu mượt mà không bị khựng.",
-  "🔗 Cập Nhật Endpoint & Realtime Sync 0ms: Sửa triệt để lỗi khi bấm vào lấy link/xem link, tự động đồng bộ đường dẫn phát với backend qua Socket.IO ngay lập tức.",
-  "🎯 Thao Tác 1-Click An Toàn: Nút Xem Thử & Sao Chép Link thông minh, tự động kiểm tra trạng thái đường truyền Cloudflare trước khi phát."
+  "🎯 Đồng Bộ Khung Hình Thời Gian Thực 100%: Khắc phục triệt để lỗi đường link bị giật, lag hoặc lặp lại câu đầu tiên. Video trên link bám sát chính xác từng giây, từng khung hình và âm thanh của phần mềm máy tính theo thời gian thực.",
+  "⚡ Cửa Sổ Window Capture Siêu Nét Full HD: Tối ưu kích thước mở cửa sổ Window Capture chuẩn cao 9:16 sắc nét theo màn hình, nguyên bản 100% không bị mờ hay vỡ hạt khi truyền lên TikTok Live Studio và OBS.",
+  "🧹 Tinh Gọn Giao Diện, Loại Bỏ Tab Rác: Đã loại bỏ hoàn toàn các tab và thông báo hệ thống không liên quan, đảm bảo giao diện tập trung 100% vào điều khiển phiên live mượt mà, ổn định.",
+  "🚀 Nhịp Tim Đồng Bộ Siêu Tốc 1.5s: Cập nhật nhịp tim và trạng thái tua video (seek) tức thì qua Socket.IO, giúp TikTok Live Studio bắt nhịp ngay lập tức từng khoảnh khắc của luồng live."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

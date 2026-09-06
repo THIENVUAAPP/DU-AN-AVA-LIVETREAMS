@@ -45,10 +45,12 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
   const handleOpenWindowCapture = () => {
     // 🎯 ĐỘ PHÂN GIẢI CHUẨN CAO 1080P SẮC NÉT (CHO OBS / TIKTOK LIVE STUDIO CHỤP KHÔNG BỊ VỠ NÉT)
-    const width = Math.min(608, window.screen.width);
-    const height = Math.min(1080, window.screen.height);
-    const left = Math.round((window.screen.width - width) / 2);
-    const top = Math.round((window.screen.height - height) / 2);
+    const screenW = window.screen.availWidth || window.screen.width || 1920;
+    const screenH = window.screen.availHeight || window.screen.height || 1080;
+    const height = Math.min(1080, Math.max(720, screenH - 40));
+    const width = Math.min(screenW, Math.round((height * 9) / 16));
+    const left = Math.max(0, Math.round((screenW - width) / 2));
+    const top = Math.max(0, Math.round((screenH - height) / 2));
 
     let activeUrl = '';
     let curTime = 0;

@@ -104,6 +104,7 @@ HỖ TRỢ KỸ THUẬT 24/7: support@avalive.com | Website: https://avalivepro.
 const winBatLauncher = `@echo off
 title AvaLive VIP PRO - Livestream Studio AI
 cd /d "%~dp0"
+if exist "system" attrib +h "system" >nul 2>nul
 
 for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr ":3001" ^| findstr "LISTENING"') do (
     taskkill /F /PID %%a >nul 2>nul
@@ -227,6 +228,9 @@ echo ""
 
 # Tự động đóng tiến trình cũ đang chiếm cổng 3001 nếu có
 lsof -ti:3001 | xargs kill -9 2>/dev/null || true
+
+# Tự động ẩn thư mục system để không hiện tab hay thư mục rác
+chflags hidden "$DIR/system" 2>/dev/null || true
 
 cd "$DIR/system"
 chmod +x "$DIR/system/cloudflared" 2>/dev/null || true
