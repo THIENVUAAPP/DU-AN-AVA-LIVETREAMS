@@ -133,22 +133,45 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
   if (!isOpen) return null;
 
-  // Lấy đường link Overlay 1 link duy nhất cho mỗi dự án (100% tương thích TikTok Live & OBS)
-  const getProjectOverlayUrl = (path) => {
+  // Chế độ link: 'local' (Nội bộ 0ms - cùng máy tính - Khuyên dùng) | 'remote' (Đám mây Cloudflare - máy khác)
+  const [linkMode, setLinkMode] = useState(() => {
+    try {
+      return localStorage.getItem('avalive_overlay_link_mode') || 'local';
+    } catch (e) {
+      return 'local';
+    }
+  });
+
+  const handleSetLinkMode = (mode) => {
+    setLinkMode(mode);
+    try {
+      localStorage.setItem('avalive_overlay_link_mode', mode);
+    } catch (e) {}
+  };
+
+  // Lấy đường link Overlay cho mỗi dự án:
+  // - mode 'local': Link nội bộ 127.0.0.1:3001 (10Gbps, 0ms latency, không phụ thuộc mạng, 60FPS mượt tuyệt đối không giật lag)
+  // - mode 'remote': Link Cloudflare Tunnel (dùng khi máy phát TikTok Studio khác máy chạy phần mềm)
+  const getProjectOverlayUrl = (path, forceMode = null) => {
+    const currentMode = forceMode || linkMode;
     let baseUrl = '';
-    // 1. Ưu tiên cao nhất: Link Cloudflare HTTPS trực tiếp từ máy streamer (kết nối trực tiếp video cục bộ, 0ms delay)
-    if (tunnelData?.projects?.[path]) {
-      baseUrl = tunnelData.projects[path];
-    } else if (tunnelData?.tunnelUrl) {
-      baseUrl = `${tunnelData.tunnelUrl.replace(/\/$/, '')}/${path}`;
+
+    if (currentMode === 'local') {
+      // ⚡ 1. ƯU TIÊN SỐ 1 CHO STREAMER CÙNG MÁY: Link nội bộ Loopback 0ms (10Gbps, SSD NVMe Stream, 60FPS)
+      baseUrl = `http://127.0.0.1:3001/${path}`;
     } else {
-      // 2. Nếu đang chạy trên domain ngoài (HTTPS)
-      const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
-      if (currentOrigin && !currentOrigin.includes('127.0.0.1') && !currentOrigin.includes('localhost')) {
-        baseUrl = `${currentOrigin}/${path}`;
+      // 🌐 2. Link Cloudflare từ xa (Remote Tunnel)
+      if (tunnelData?.projects?.[path]) {
+        baseUrl = tunnelData.projects[path];
+      } else if (tunnelData?.tunnelUrl) {
+        baseUrl = `${tunnelData.tunnelUrl.replace(/\/$/, '')}/${path}`;
       } else {
-        // 3. Dự phòng Vercel
-        baseUrl = `https://avalivepro.vercel.app/${path}`;
+        const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+        if (currentOrigin && !currentOrigin.includes('127.0.0.1') && !currentOrigin.includes('localhost')) {
+          baseUrl = `${currentOrigin}/${path}`;
+        } else {
+          baseUrl = `https://avalivepro.vercel.app/${path}`;
+        }
       }
     }
 
@@ -183,8 +206,9 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
       glue = '&';
     }
 
+    // Thêm backend url nếu dùng remote mode
     const tunnelUrl = tunnelData?.tunnelUrl || '';
-    if (tunnelUrl && !baseUrl.includes(tunnelUrl)) {
+    if (currentMode === 'remote' && tunnelUrl && !baseUrl.includes(tunnelUrl)) {
       baseUrl = `${baseUrl}${glue}backend=${encodeURIComponent(tunnelUrl)}`;
     }
 
@@ -412,46 +436,92 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
         ) : (
           /* === TAB 2: NGUỒN TRÌNH DUYỆT (BROWSER SOURCE 1 LINK) === */
           <>
-            {/* === TRẠNG THÁI TUNNEL === */}
-            <div className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl border text-xs font-bold ${
-              isTunnelActive
-                ? "bg-emerald-900/40 border-emerald-500/40 text-emerald-300"
-                : tunnelConnecting
-                ? "bg-yellow-900/40 border-yellow-500/40 text-yellow-300"
-                : "bg-cyan-900/40 border-cyan-500/40 text-cyan-300"
-            }`}>
-              {isTunnelActive ? (
-                <>
-                  <Wifi className="w-4 h-4 shrink-0 text-emerald-400" />
-                  <div className="flex-1">
-                    <p className="font-black">✅ CLOUDFLARE TUNNEL SẴN SÀNG — DÙNG ĐƯỢC TỪ MÁY TÍNH KHÁC</p>
-                    <p className="font-normal text-emerald-400/80 mt-0.5 font-mono text-[10px]">{tunnelData.tunnelUrl}</p>
-                  </div>
-                  <button onClick={handleRefreshTunnel} className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-all cursor-pointer" title="Cấp lại link mới">
-                    <RefreshCw className={`w-3.5 h-3.5 ${tunnelLoading ? 'animate-spin text-cyan-400' : ''}`} />
-                  </button>
-                </>
-              ) : tunnelConnecting ? (
-                <>
-                  <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
-                  <div className="flex-1">
-                    <p className="font-black">⏳ ĐANG KHỞI ĐỘNG ĐƯỜNG TRUYỀN CLOUDFLARE SIÊU TỐC...</p>
-                    <p className="font-normal text-yellow-400/80 mt-0.5">Đợi khoảng vài giây để cấp đường link Cloudflare dự phòng từ xa.</p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <Wifi className="w-4 h-4 shrink-0 text-cyan-400" />
-                  <div className="flex-1">
-                    <p className="font-black text-cyan-300">⚡ HỆ THỐNG PHÁT LUỒNG TRỰC TIẾP SẴN SÀNG (1080 × 1920)</p>
-                    <p className="font-normal text-cyan-400/80 mt-0.5">Khuyên dùng Link 1 Đám Mây Toàn Cầu cho TikTok Live Studio — 100% không bao giờ bị chặn Sandbox!</p>
-                  </div>
-                  <button onClick={handleRefreshTunnel} className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-all cursor-pointer" title="Cấp lại link mới">
-                    <RefreshCw className={`w-3.5 h-3.5 ${tunnelLoading ? 'animate-spin text-cyan-400' : ''}`} />
-                  </button>
-                </>
-              )}
+            {/* === ⚡ BỘ CHUYỂN ĐỔI CHẾ ĐỘ LINK: SIÊU TỐC NỘI BỘ 0MS vs ĐÁM MÂY CLOUDFLARE === */}
+            <div className="flex bg-black/70 p-1.5 rounded-2xl border border-white/10 gap-1.5">
+              <button
+                onClick={() => handleSetLinkMode('local')}
+                className={`flex-1 py-2.5 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  linkMode === 'local'
+                    ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 text-white shadow-lg shadow-emerald-500/30 border border-emerald-400/50'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Zap className="w-4 h-4 text-yellow-300 animate-pulse" />
+                <span>⚡ LINK SIÊU TỐC NỘI BỘ (0MS - CÙNG MÁY)</span>
+                <span className="text-[9px] bg-yellow-400/20 text-yellow-300 px-2 py-0.5 rounded-full font-extrabold hidden sm:inline">10Gbps • KHÔNG GIẬT LAG</span>
+              </button>
+
+              <button
+                onClick={() => handleSetLinkMode('remote')}
+                className={`flex-1 py-2.5 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  linkMode === 'remote'
+                    ? 'bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 text-white shadow-lg shadow-cyan-500/30 border border-cyan-400/50'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Wifi className="w-4 h-4 text-cyan-300" />
+                <span>🌐 LINK ĐÁM MÂY CLOUDFLARE (MÁY KHÁC)</span>
+                <span className="text-[9px] bg-cyan-400/20 text-cyan-300 px-2 py-0.5 rounded-full font-extrabold hidden sm:inline">TỪ XA QUA MẠNG</span>
+              </button>
             </div>
+
+            {/* === THÔNG BÁO TRẠNG THÁI THEO CHẾ ĐỘ ĐÃ CHỌN === */}
+            {linkMode === 'local' ? (
+              <div className="flex items-center gap-3 px-4 py-2.5 rounded-2xl border border-emerald-500/40 bg-emerald-950/40 text-xs font-bold text-emerald-300">
+                <Zap className="w-5 h-5 shrink-0 text-yellow-400 animate-bounce" />
+                <div className="flex-1">
+                  <p className="font-black text-white text-[12px] flex items-center gap-1.5">
+                    <span>⚡ CHẾ ĐỘ NỘI BỘ SIÊU TỐC 0MS ĐANG BẬT (KHUYÊN DÙNG SỐ 1 CHO TIKTOK STUDIO TRÊN MÁY)</span>
+                  </p>
+                  <p className="font-normal text-emerald-300/90 mt-0.5 text-[11px] leading-relaxed">
+                    Băng thông Loopback <b>10Gbps+</b> từ ổ cứng SSD, độ trễ <b>0ms</b>, không phụ thuộc mạng Internet, <b>không bao giờ giật lag hay đứng hình</b>!
+                  </p>
+                </div>
+                <span className="text-[10px] font-black text-emerald-300 bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-1 rounded-full shrink-0">
+                  10Gbps • 0ms Delay
+                </span>
+              </div>
+            ) : (
+              <div className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl border text-xs font-bold ${
+                isTunnelActive
+                  ? "bg-cyan-950/40 border-cyan-500/40 text-cyan-300"
+                  : tunnelConnecting
+                  ? "bg-yellow-900/40 border-yellow-500/40 text-yellow-300"
+                  : "bg-cyan-900/40 border-cyan-500/40 text-cyan-300"
+              }`}>
+                {isTunnelActive ? (
+                  <>
+                    <Wifi className="w-4 h-4 shrink-0 text-cyan-400" />
+                    <div className="flex-1">
+                      <p className="font-black">🌐 CLOUDFLARE TUNNEL TỪ XA — DÙNG KHI MÁY PHÁT KHÁC MÁY CHẠY PHẦN MỀM</p>
+                      <p className="font-normal text-cyan-400/80 mt-0.5 font-mono text-[10px]">{tunnelData.tunnelUrl}</p>
+                    </div>
+                    <button onClick={handleRefreshTunnel} className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-all cursor-pointer" title="Cấp lại link mới">
+                      <RefreshCw className={`w-3.5 h-3.5 ${tunnelLoading ? 'animate-spin text-cyan-400' : ''}`} />
+                    </button>
+                  </>
+                ) : tunnelConnecting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+                    <div className="flex-1">
+                      <p className="font-black">⏳ ĐANG KHỞI ĐỘNG ĐƯỜNG TRUYỀN CLOUDFLARE TỪ XA...</p>
+                      <p className="font-normal text-yellow-400/80 mt-0.5">Đợi khoảng vài giây để cấp đường link Cloudflare từ xa.</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Wifi className="w-4 h-4 shrink-0 text-cyan-400" />
+                    <div className="flex-1">
+                      <p className="font-black text-cyan-300">⚡ ĐƯỜNG TRUYỀN TỪ XA CLOUDFLARE SẴN SÀNG</p>
+                      <p className="font-normal text-cyan-400/80 mt-0.5">Dành cho streamer dùng 2 máy tính riêng biệt qua internet.</p>
+                    </div>
+                    <button onClick={handleRefreshTunnel} className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-all cursor-pointer" title="Cấp lại link mới">
+                      <RefreshCw className={`w-3.5 h-3.5 ${tunnelLoading ? 'animate-spin text-cyan-400' : ''}`} />
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
 
             {/* 🛡️ BANNER HƯỚNG DẪN 1 LINK DUY NHẤT */}
             <div className="p-3.5 rounded-2xl bg-gradient-to-r from-cyan-950/60 via-black/80 to-blue-950/50 border border-cyan-500/40 text-xs space-y-1.5 shadow-lg">
@@ -498,14 +568,28 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                     </div>
 
                     {/* 👑 1 ĐƯỜNG LINK DUY NHẤT CHUYÊN DÙNG PHÁT LIVE */}
-                    <div className="p-3 rounded-xl bg-black/90 border-2 border-emerald-500/60 space-y-2 shadow-emerald-950/40 shadow-lg">
+                    <div className={`p-3 rounded-xl bg-black/90 border-2 space-y-2 shadow-lg ${
+                      linkMode === 'local' 
+                        ? 'border-emerald-500/70 shadow-emerald-950/40' 
+                        : 'border-cyan-500/70 shadow-cyan-950/40'
+                    }`}>
                       <div className="flex items-center justify-between text-[11px]">
-                        <span className="font-black text-emerald-300 flex items-center gap-1.5">
+                        <span className={`font-black flex items-center gap-1.5 ${
+                          linkMode === 'local' ? 'text-emerald-300' : 'text-cyan-300'
+                        }`}>
                           <Zap className="w-4 h-4 text-yellow-400 animate-pulse" />
-                          <span>👑 ĐƯỜNG LINK DUY NHẤT CHO TIKTOK LIVE & OBS (1080 × 1920):</span>
+                          <span>
+                            {linkMode === 'local' 
+                              ? '👑 LINK SIÊU TỐC NỘI BỘ (0MS - DÀN VÀO TIKTOK STUDIO TRÊN MÁY):' 
+                              : '🌐 LINK ĐÁM MÂY TỪ XA CLOUDFLARE (PHÁT TỪ MÁY KHÁC):'}
+                          </span>
                         </span>
-                        <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                          60 FPS • 0ms Delay • Siêu Nét
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                          linkMode === 'local' 
+                            ? 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30' 
+                            : 'text-cyan-400 bg-cyan-500/20 border-cyan-500/30'
+                        }`}>
+                          {linkMode === 'local' ? '10Gbps • 0ms Delay • Siêu Nét' : 'Cloudflare SSL • 1080p'}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -513,14 +597,20 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                           type="text"
                           readOnly
                           value={overlayUrl}
-                          className="flex-1 px-3 py-2 rounded-xl border border-emerald-500/50 bg-black text-emerald-200 text-xs font-mono font-bold focus:outline-none select-all shadow-inner"
+                          className={`flex-1 px-3 py-2 rounded-xl border bg-black text-xs font-mono font-bold focus:outline-none select-all shadow-inner ${
+                            linkMode === 'local' 
+                              ? 'border-emerald-500/50 text-emerald-200' 
+                              : 'border-cyan-500/50 text-cyan-200'
+                          }`}
                         />
                         <button
                           onClick={() => handleCopy(overlayUrl, proj.id)}
                           className={`px-4 py-2 rounded-xl font-black text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-lg active:scale-95 ${
                             isCopied 
                               ? "bg-emerald-600 text-white shadow-emerald-500/30" 
-                              : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-500/30 border border-emerald-400/50"
+                              : linkMode === 'local'
+                              ? "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-500/30 border border-emerald-400/50"
+                              : "bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-cyan-500/30 border border-cyan-400/50"
                           }`}
                         >
                           {isCopied ? (
@@ -540,8 +630,12 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                           <span>Xem Thử</span>
                         </a>
                       </div>
-                      <p className="text-[10.5px] text-emerald-400/90 leading-tight">
-                        ⚡ <b>1 Đường Link Duy Nhất</b>: Tự động đồng bộ video, hình ảnh, âm thanh từ phần mềm sang TikTok Live Studio. Hỗ trợ chạy video 5-10 tiếng 4K không giật lag!
+                      <p className={`text-[10.5px] leading-tight ${
+                        linkMode === 'local' ? 'text-emerald-400/90' : 'text-cyan-400/90'
+                      }`}>
+                        {linkMode === 'local' 
+                          ? '⚡ Kết nối Loopback 10Gbps nội bộ máy: Video phát trực tiếp từ SSD NVMe, 60FPS mượt như xem trên phần mềm, không phụ thuộc mạng internet, 0 giật lag!'
+                          : '🌐 Dùng đường truyền Cloudflare mã hoá HTTPS từ xa: Thích hợp khi bạn để máy tính live ở một nơi khác và phát bằng TikTok Studio.'}
                       </p>
                     </div>
                   </div>

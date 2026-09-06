@@ -1777,16 +1777,16 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   }, [activeMedia.url, isVideoAudioMuted, videoVolume, masterState.videoPlaybackEvent, masterState.isPlaying]);
 
   // 4 SÂN KHẤU: ĐƯỢC LỒNG TRONG KHUNG PHÁT SÓNG SẠCH 100% CỐ ĐỊNH TỈ LỆ
-  // BÊN TRÊN LÀ THANH ĐIỀU KHIỂN NGOẠI KHUNG (NẰM NGOÀI KHUNG HÌNH LIVE ĐỂ KHÔNG CHÈN VÀO OBS)
+  // 4 SÂN KHẤU: ĐƯỢC LỒNG TRONG KHUNG PHÁT SÓNG SẠCH 100% PURE FULL-FRAME
+  // THANH ĐIỀU KHIỂN NẰM NỔI (FLOATING OVERLAY) HOẶC ẨN HOÀN TOÀN (H) ĐỂ OBS / TIKTOK STUDIO CHỤP SIÊU SẮC NÉT 100% KHÔNG VIỀN ĐEN
   const currentStage = masterState.stage || 'idol';
   const ratio = masterState.aspectRatio || '9:16';
 
   return (
-    <div className="fixed inset-0 w-screen h-screen overflow-hidden flex flex-col bg-black select-none font-sans">
-      {/* 👑 KHUNG QUẢN TRỊ WINDOW CAPTURE NGOẠI VI RIÊNG BIỆT (NẰM HOÀN TOÀN MÉ NGOÀI - TUYỆT ĐỐI KHÔNG CHE KHUNG LIVE) */}
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-black select-none font-sans relative">
+      {/* 👑 KHUNG QUẢN TRỊ WINDOW CAPTURE NỔI (FLOATING DOCK - KHÔNG LÀM CO KHUNG HÌNH 9:16, KHÔNG TẠO VIỀN ĐEN) */}
       {isWindowCapture && !isControlDockCollapsed && (
-        <>
-        <header className="w-full shrink-0 bg-[#0c0f17]/95 backdrop-blur-md border-b border-cyan-500/30 px-3 sm:px-4 py-2 z-40 flex items-center justify-between gap-3 shadow-2xl transition-all duration-200">
+        <header className="absolute top-0 left-0 right-0 z-50 bg-black/80 hover:bg-black/95 backdrop-blur-md border-b border-cyan-500/30 px-3 sm:px-4 py-2 flex items-center justify-between gap-3 shadow-2xl transition-all duration-300 opacity-40 hover:opacity-100">
           {/* Trạng thái Live & Khung hình */}
           <div className="flex items-center gap-2.5">
             <span className="relative flex h-3 w-3">
@@ -1799,11 +1799,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   WINDOW CAPTURE (60FPS)
                 </span>
                 <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[9px] font-bold text-cyan-300">
-                  v1.7.0
+                  v1.7.1
                 </span>
               </div>
               <span className="text-[9.5px] text-emerald-400/90 font-medium">
-                ⚡ Giữ luồng chạy liên tục 24/7 khi đổi tab
+                ⚡ 100% Pure Full-Frame Siêu Nét 1080p
               </span>
             </div>
           </div>
@@ -1894,62 +1894,34 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 setIsControlDockCollapsed(true);
                 try { localStorage.setItem('avalive_window_capture_dock_collapsed', 'true'); } catch (e) {}
               }}
-              className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-black flex items-center gap-1.5 border border-white/20 cursor-pointer transition-all hover:border-cyan-400/50"
-              title="Ẩn bảng điều khiển để khung phát 100% video live (Phím tắt: H)"
+              className="px-3 py-1.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-black flex items-center gap-1.5 border border-cyan-400/40 cursor-pointer transition-all hover:scale-105"
+              title="Ẩn hoàn toàn bảng điều khiển để OBS / TikTok Studio bắt 100% video sạch sẽ (Phím tắt: H)"
             >
-              <span>👁️ Ẩn Bảng Điều Khiển</span>
+              <span>👁️ Ẩn Điều Khiển (H)</span>
             </button>
           </div>
         </header>
-        {/* ✂️ BẢNG VẠCH CẮT CÁCH LY AN TOÀN CHO OBS / TIKTOK LIVE STUDIO (CÁCH XA KHUNG 9:16) */}
-        <div className="w-full shrink-0 bg-[#06080d] border-b-2 border-dashed border-amber-500/50 py-2.5 px-3 sm:px-4 flex items-center justify-between text-[11px] text-amber-300 select-none shadow-md">
-          <div className="flex items-center gap-2">
-            <span className="text-sm">✂️</span>
-            <span className="font-mono font-bold uppercase tracking-wider text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/40">
-              KHOẢNG CẮT CÁCH LY AN TOÀN CHO OBS / TIKTOK LIVE STUDIO
-            </span>
-            <span className="hidden md:inline text-[10.5px] text-gray-400 font-normal">
-              (Kéo crop mép trên đến dải này để tách biệt 100% thanh điều khiển khỏi khung Live 9:16)
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] text-cyan-300/90 font-mono bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/50">
-              Khung video 9:16 bắt đầu bên dưới ⬇️
-            </span>
-          </div>
-        </div>
-        </>
       )}
 
-      {/* NÚT THU GỌN NGOẠI VI: KHI ĐÃ ẨN BẢNG ĐIỀU KHIỂN, NÚT GỌN NÀY CHO PHÉP MỞ LẠI BẤT KỲ LÚC NÀO */}
+      {/* NÚT THU GỌN NGOẠI VI: KHI ĐÃ ẨN BẢNG ĐIỀU KHIỂN, NÚT NÀY CHO PHÉP MỞ LẠI BẤT KỲ LÚC NÀO */}
       {isWindowCapture && isControlDockCollapsed && (
         <button
           onClick={() => {
             setIsControlDockCollapsed(false);
             try { localStorage.setItem('avalive_window_capture_dock_collapsed', 'false'); } catch (e) {}
           }}
-          className="fixed top-2 right-2 z-50 px-2.5 py-1 rounded-xl bg-black/75 hover:bg-black/95 text-cyan-300 hover:text-cyan-100 border border-cyan-500/40 text-[11px] font-bold backdrop-blur-md shadow-2xl flex items-center gap-1.5 opacity-60 hover:opacity-100 transition-all cursor-pointer"
+          className="fixed top-2 right-2 z-50 px-2.5 py-1 rounded-xl bg-black/60 hover:bg-black/90 text-cyan-300 hover:text-cyan-100 border border-cyan-500/30 text-[11px] font-bold backdrop-blur-md shadow-2xl flex items-center gap-1.5 opacity-30 hover:opacity-100 transition-all cursor-pointer"
           title="Bấm để hiện lại bảng điều khiển (Phím tắt: H)"
         >
           <span>👁️ Hiện Điều Khiển (H)</span>
         </button>
       )}
 
-      {/* KHUNG PHÁT SÓNG SẠCH 100% (CHUẨN 9:16 HOẶC 16:9 - SIÊU SẮC NÉT OBS / TIKTOK STUDIO, 100% NGUYÊN BẢN KHÔNG DÍNH BẤT KỲ GIAO DIỆN NÀO) */}
-      <main className="w-full flex-1 min-h-0 relative overflow-hidden flex items-center justify-center bg-black">
+      {/* KHUNG PHÁT SÓNG SẠCH 100% PURE FULL-FRAME (CHUẨN 9:16 HOẶC 16:9 - SIÊU SẮC NÉT OBS / TIKTOK STUDIO, 100% NGUYÊN BẢN KHÔNG CO MÉO, KHÔNG VIỀN ĐEN) */}
+      <main className="absolute inset-0 w-full h-full overflow-hidden flex items-center justify-center bg-black z-0">
         <div 
           className="relative flex items-center justify-center overflow-hidden w-full h-full"
-          style={
-            !isWindowCapture
-              ? { width: '100%', height: '100%' }
-              : ratio === '9:16' 
-                ? { 
-                    aspectRatio: '9 / 16', 
-                    height: '100%', 
-                    maxWidth: '100%' 
-                  } 
-                : { aspectRatio: '16 / 9', width: '100%', maxHeight: '100%' }
-          }
+          style={{ width: '100%', height: '100%' }}
         >
           {/* SÂN KHẤU 1: LIVE AI IDOL (CHỈ RENDER KHI Ở TAB IDOL ĐỂ TỐI ƯU 100% TÀI NGUYÊN) */}
           {currentStage === 'idol' && (
@@ -2032,8 +2004,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     width: '100%', 
                     height: '100%', 
                     objectFit: objectFitState || 'cover',
-                    imageRendering: 'auto',
-                    filter: 'contrast(1.02) saturate(1.03)',
+                    transform: 'translateZ(0)',
+                    WebkitTransform: 'translateZ(0)',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    willChange: 'transform',
+                    imageRendering: '-webkit-optimize-contrast',
                   }}
                 />
               </>
@@ -2049,8 +2025,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   width: '100%', 
                   height: '100%', 
                   objectFit: objectFitState || 'cover',
-                  imageRendering: 'auto',
-                  filter: 'contrast(1.02) saturate(1.03)',
+                  transform: 'translateZ(0)',
+                  WebkitTransform: 'translateZ(0)',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  willChange: 'transform',
+                  imageRendering: '-webkit-optimize-contrast',
                 }}
               />
             ) : activeMedia.url ? (
