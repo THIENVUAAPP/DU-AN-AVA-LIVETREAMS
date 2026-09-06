@@ -610,9 +610,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       const isPlaying = control.isPlaying !== undefined ? control.isPlaying : action === 'play';
 
       // 1. Đồng bộ URL media nếu có file mới được chọn trên phần mềm
-      if (control.mediaUrl) {
+      if (control.mediaUrl && typeof control.mediaUrl === 'string' && !control.mediaUrl.startsWith('blob:')) {
         let cleanMediaUrl = control.mediaUrl;
-        if (typeof cleanMediaUrl === 'string' && cleanMediaUrl.includes('/uploads/')) {
+        if (cleanMediaUrl.includes('/uploads/')) {
           cleanMediaUrl = cleanMediaUrl.substring(cleanMediaUrl.indexOf('/uploads/'));
         }
         setMasterState(prev => {
@@ -791,7 +791,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
         const next = { ...prev, ...data };
 
-        if (data.mediaUrl && typeof data.mediaUrl === 'string') {
+        if (data.mediaUrl && typeof data.mediaUrl === 'string' && !data.mediaUrl.startsWith('blob:')) {
           let cleanMedia = data.mediaUrl;
           if (cleanMedia.includes('/uploads/')) {
             cleanMedia = cleanMedia.substring(cleanMedia.indexOf('/uploads/'));
@@ -1754,7 +1754,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         if (isNewUrl) {
           lastLoadedMediaUrlRef.current = activeMedia.url;
           isUserPausedRef.current = false;
-          try { vid.load(); } catch (e) {}
         }
 
         const playPromise = vid.play();
@@ -1800,7 +1799,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   WINDOW CAPTURE (60FPS)
                 </span>
                 <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[9px] font-bold text-cyan-300">
-                  v1.7.3
+                  v1.7.4
                 </span>
               </div>
               <span className="text-[9.5px] text-emerald-400/90 font-medium">
@@ -2005,11 +2004,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                       setTimeout(() => { try { v.load(); v.play().catch(() => {}); } catch(err){} }, 500);
                     }
                   }}
-                  className="w-full h-full select-none absolute inset-0 block"
+                  className="w-full h-full select-none absolute inset-0 block bg-black"
                   style={{ 
                     width: '100%', 
                     height: '100%', 
-                    objectFit: objectFitState || 'cover'
+                    objectFit: objectFitState || 'contain',
+                    backgroundColor: '#000000'
                   }}
                 />
               </>

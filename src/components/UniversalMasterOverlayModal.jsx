@@ -188,16 +188,19 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
     // Luôn gắn video media nếu có để TikTok Live Studio phát video ngay tức khắc từ frame đầu tiên
     let finalMedia = activeMediaUrl;
-    if (!finalMedia) {
+    if (!finalMedia || (typeof finalMedia === 'string' && finalMedia.startsWith('blob:'))) {
       try {
         const saved = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
-        if (saved.mediaUrl) finalMedia = saved.mediaUrl;
-        if (!finalMedia) finalMedia = localStorage.getItem('avalive_user_locked_media') || '';
+        if (saved.mediaUrl && !saved.mediaUrl.startsWith('blob:')) finalMedia = saved.mediaUrl;
+        if (!finalMedia || (typeof finalMedia === 'string' && finalMedia.startsWith('blob:'))) {
+          const locked = localStorage.getItem('avalive_user_locked_media') || '';
+          if (locked && !locked.startsWith('blob:')) finalMedia = locked;
+        }
       } catch (e) {}
     }
 
     let glue = baseUrl.includes('?') ? '&' : '?';
-    if (finalMedia && typeof finalMedia === 'string' && (path === 'idol' || path === 'studio' || path === 'overlay')) {
+    if (finalMedia && typeof finalMedia === 'string' && !finalMedia.startsWith('blob:') && (path === 'idol' || path === 'studio' || path === 'overlay')) {
        if (finalMedia.includes('/uploads/')) {
          finalMedia = finalMedia.substring(finalMedia.indexOf('/uploads/'));
        }

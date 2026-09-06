@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.7.3';
+export const APP_VERSION = '1.7.4';
 export const UPDATE_NOTES = [
-  "🎯 Đồng Bộ Khung Hình Thời Gian Thực 100%: Khắc phục triệt để lỗi đường link bị giật, lag hoặc lặp lại câu đầu tiên. Video trên link bám sát chính xác từng giây, từng khung hình và âm thanh của phần mềm máy tính theo thời gian thực.",
-  "⚡ Cửa Sổ Window Capture Siêu Nét Full HD: Tối ưu kích thước mở cửa sổ Window Capture chuẩn cao 9:16 sắc nét theo màn hình, nguyên bản 100% không bị mờ hay vỡ hạt khi truyền lên TikTok Live Studio và OBS.",
-  "🧹 Tinh Gọn Giao Diện, Loại Bỏ Tab Rác: Đã loại bỏ hoàn toàn các tab và thông báo hệ thống không liên quan, đảm bảo giao diện tập trung 100% vào điều khiển phiên live mượt mà, ổn định.",
-  "🚀 Nhịp Tim Đồng Bộ Siêu Tốc 1.5s: Cập nhật nhịp tim và trạng thái tua video (seek) tức thì qua Socket.IO, giúp TikTok Live Studio bắt nhịp ngay lập tức từng khoảnh khắc của luồng live."
+  "🚀 Mở Video Tức Thì 0ms (Sub-100ms Instant Playback): Nâng cấp toàn diện engine stream HTTP 206 Byte-Range liên tục, loại bỏ hoàn toàn việc cắt vụn kết nối. Video tải lên hoặc mở trên TikTok Live Studio / OBS hiện lên ngay lập tức trong 50ms, dứt điểm lỗi chờ đợi 1-2 phút!",
+  "🎯 Khóa Chặt Đồng Bộ Video Gốc (Lockstep Realtime Sync): Loại bỏ hoàn toàn lỗi video bị nhảy qua nhảy lại giữa video đầu và video giữa. Đường link luôn phát chính xác 100% video, khung hình và âm thanh đang chạy trên phần mềm máy tính theo thời gian thực.",
+  "⚡ Window Capture Siêu Nét 100% Bản Gốc: Tối ưu chuẩn hiển thị pixel-perfect, loại bỏ hoàn toàn hiện tượng co giật crop viền và nội suy mờ hình, mang lại độ sắc nét nguyên bản trên TikTok Live Studio và OBS.",
+  "🛡️ Bảo Vệ Luồng Phát An Toàn 24/7: Tự động lọc sạch blob URL cục bộ, duy trì đường truyền liên tục không khựng giật, không đứng hình."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

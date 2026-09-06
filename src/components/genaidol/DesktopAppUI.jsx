@@ -461,12 +461,17 @@ export default function DesktopAppUI() {
 
     // ⚡ Đồng bộ ngay lập tức video hiện tại vào cửa sổ Window Capture
     let activeUrl = userLockedMediaUrl || desktopVideoRef.current?.src || '';
+    if (activeUrl && typeof activeUrl === 'string' && activeUrl.startsWith('blob:')) {
+      const match = customCharacters.find(c => (c.mediaUrl && !c.mediaUrl.startsWith('blob:')) || (c.url && !c.url.startsWith('blob:')));
+      activeUrl = match ? (match.mediaUrl || match.url) : '';
+    }
     if (!activeUrl && selectedCharacter && Array.isArray(customCharacters)) {
-      const match = customCharacters.find(c => c.id === selectedCharacter);
+      const match = customCharacters.find(c => c.id === selectedCharacter && ((c.mediaUrl && !c.mediaUrl.startsWith('blob:')) || (c.url && !c.url.startsWith('blob:'))));
       if (match && (match.mediaUrl || match.url)) activeUrl = match.mediaUrl || match.url;
     }
     if (!activeUrl && Array.isArray(customCharacters) && customCharacters.length > 0) {
-      activeUrl = customCharacters[0].mediaUrl || customCharacters[0].url || '';
+      const match = customCharacters.find(c => (c.mediaUrl && !c.mediaUrl.startsWith('blob:')) || (c.url && !c.url.startsWith('blob:')));
+      if (match) activeUrl = match.mediaUrl || match.url || '';
     }
     if (activeUrl && typeof activeUrl === 'string' && activeUrl.includes('/uploads/')) {
       activeUrl = activeUrl.substring(activeUrl.indexOf('/uploads/'));
@@ -2542,7 +2547,6 @@ export default function DesktopAppUI() {
 
         try {
           localStorage.setItem('avalive_selected_char', newCharId);
-          localStorage.setItem('avalive_user_locked_media', localUrl);
           localStorage.removeItem('avalive_user_paused');
           localStorage.removeItem('avalive_window_capture_paused');
           localStorage.setItem('avalive_master_live_running', 'true');
@@ -2923,16 +2927,23 @@ export default function DesktopAppUI() {
                 if (now - lastTimeBroadcastRef.current > 1500) {
                   lastTimeBroadcastRef.current = now;
                   let playUrl = selected.url;
+                  if (typeof playUrl === 'string' && playUrl.startsWith('blob:')) {
+                    const sMatch = customCharacters.find(c => c.id === selectedCharacter && c.mediaUrl && !c.mediaUrl.startsWith('blob:'));
+                    playUrl = sMatch ? sMatch.mediaUrl : (userLockedMediaUrl && !userLockedMediaUrl.startsWith('blob:') ? userLockedMediaUrl : null);
+                  }
                   if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
                     playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
                   }
-                  sendVideoControl({
+                  const syncData = {
                     action: 'time_sync',
                     currentTime: curTime,
                     isPlaying: !e.currentTarget.paused,
-                    mediaUrl: playUrl,
                     timestamp: now
-                  }, socketRef.current);
+                  };
+                  if (playUrl && typeof playUrl === 'string' && !playUrl.startsWith('blob:')) {
+                    syncData.mediaUrl = playUrl;
+                  }
+                  sendVideoControl(syncData, socketRef.current);
                 }
               }}
               onLoadedMetadata={(e) => {
