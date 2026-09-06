@@ -11,6 +11,42 @@ export const triggerDirectDownload = (url, fileName) => {
   try {
     const finalFileName = fileName || `AvaLive_VIP_PRO_v${APP_VERSION}.zip`;
 
+    // Hiển thị thông báo tải về tức thì cho người dùng
+    try {
+      let toast = document.getElementById('avalive-download-toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'avalive-download-toast';
+        toast.style.position = 'fixed';
+        toast.style.bottom = '24px';
+        toast.style.right = '24px';
+        toast.style.zIndex = '999999';
+        toast.style.padding = '14px 22px';
+        toast.style.background = 'linear-gradient(135deg, #0f172a, #1e1b4b)';
+        toast.style.color = '#fff';
+        toast.style.borderRadius = '16px';
+        toast.style.border = '1px solid rgba(6, 182, 212, 0.5)';
+        toast.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(6, 182, 212, 0.3)';
+        toast.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+        toast.style.fontSize = '13px';
+        toast.style.fontWeight = 'bold';
+        toast.style.display = 'flex';
+        toast.style.alignItems = 'center';
+        toast.style.gap = '10px';
+        toast.style.transition = 'all 0.3s ease';
+        document.body.appendChild(toast);
+      }
+      toast.innerHTML = `<span style="font-size: 20px;">🚀</span> <div><div>Đang tải trực tiếp file cài đặt về máy tính!</div><div style="font-size: 11px; color: #38bdf8; font-weight: normal; margin-top: 2px;">${finalFileName}</div></div>`;
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+      setTimeout(() => {
+        try {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(10px)';
+        } catch (e) {}
+      }, 5000);
+    } catch (e) {}
+
     // 1. Kỹ thuật 1: Sử dụng iframe ẩn chuyên dụng tải file nhị phân
     // Trình duyệt sẽ nhận diện Content-Disposition: attachment và lưu file vào máy
     // Trang web cha hiện tại được giữ nguyên 100%, tuyệt đối không reload hay nhảy trang
@@ -28,10 +64,13 @@ export const triggerDirectDownload = (url, fileName) => {
     }
     iframe.src = url;
 
-    // 2. Kỹ thuật 2: Sử dụng thẻ <a> với thuộc tính download song song
+    // 2. Kỹ thuật 2: Thẻ <a> hỗ trợ với thuộc tính download & target _blank
+    // Đảm bảo không bao giờ chiếm quyền trang hiện tại
     const a = document.createElement('a');
     a.href = url;
     a.setAttribute('download', finalFileName);
+    a.setAttribute('target', '_blank');
+    a.setAttribute('rel', 'noopener noreferrer');
     a.style.display = 'none';
     document.body.appendChild(a);
     a.click();

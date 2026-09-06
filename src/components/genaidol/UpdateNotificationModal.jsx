@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.6.6';
+export const APP_VERSION = '1.6.7';
 export const UPDATE_NOTES = [
+  "🚀 Khắc Phục Triệt Để Lỗi Tải Phần Mềm Bị Nhảy Sang GitHub: Nút 'Tải Về' kích hoạt tải trực tiếp 100% file ZIP bản cài đặt (Windows & Mac) về máy tính ngay lập tức, tuyệt đối không chuyển hướng sang trang web GitHub.",
   "🎬 Khắc Phục Triệt Để Lỗi Video Không Hiển Thị Trên TikTok Live Studio: Tất cả đường link khi dán vào TikTok Live Studio hoặc OBS Browser Source đều hiển thị chính xác 100% video đang phát trên phần mềm, phát tức thì 0ms không bao giờ bị đứng ở màn hình chờ.",
   "🛡️ Chấm Dứt Hoàn Toàn Tình Trạng Video Tắt Mở Nhấp Nhá Liên Tục: Loại bỏ triệt để xung đột play/pause ngầm. Thao tác Tạm Dừng và Tiếp Tục hoạt động dứt khoát, êm dịu mượt mà 60FPS trên cả Window Capture OBS và TikTok Live Studio.",
-  "⚡ Tự Động Gắn Mã Video Trực Tiếp Vào Đường Link Live: Mọi đường link phát Live tạo ra từ hệ thống đều tự động tích hợp video đang chọn và cổng Backend Cloudflare Tunnel, mở trên bất kỳ máy nào cũng phát ngay lập tức.",
-  "⭐ Khắc Phục Triệt Để Lỗi Lặp Video 1-2 Giây: Video phát liên tục 100%, lặp lại (loop) êm dịu từ đầu đến cuối không bị giật lùi hay chớp nháy."
+  "⚡ Tự Động Gắn Mã Video Trực Tiếp Vào Đường Link Live: Mọi đường link phát Live tạo ra từ hệ thống đều tự động tích hợp video đang chọn và cổng Backend Cloudflare Tunnel, mở trên bất kỳ máy nào cũng phát ngay lập tức."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
