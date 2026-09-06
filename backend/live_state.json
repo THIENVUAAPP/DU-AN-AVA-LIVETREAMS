@@ -3,13 +3,13 @@
   "aspectRatio": "9:16",
   "characterId": "linhanh_4k",
   "characterName": "Livestream_video_generation_prompt_1080p_202608131258",
-  "mediaUrl": "/uploads/media-1788334783498-333955245.mp4",
+  "mediaUrl": "/uploads/media-1788330401564-514109629.mp4",
   "isVideo": true,
-  "videoPlaybackEvent": "play",
-  "isPlaying": true,
+  "videoPlaybackEvent": "pause",
+  "isPlaying": false,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1788661737074,
+  "updatedAt": 1788665110049,
   "flvUrl": null,
   "isConnected": false,
   "type": "MASTER_LIVE_STATE_UPDATE",
@@ -20,5 +20,5 @@
   "isVideoAudioMuted": true,
   "videoVolume": 1,
   "clearMedia": false,
-  "tunnelUrl": "https://pop-pat-neutral-response.trycloudflare.com"
+  "tunnelUrl": "https://nov-map-supplements-reliable.trycloudflare.com"
 }

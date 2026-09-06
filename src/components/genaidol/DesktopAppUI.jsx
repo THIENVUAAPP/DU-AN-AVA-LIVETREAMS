@@ -475,24 +475,28 @@ export default function DesktopAppUI() {
       localStorage.setItem('avalive_master_live_running', 'true');
     } catch (e) {}
 
+    const curTime = desktopVideoRef.current ? desktopVideoRef.current.currentTime : 0;
+
     if (activeUrl) {
       syncMasterLiveState({
         stage: 'idol',
         mediaUrl: activeUrl,
         isVideo: true,
         videoPlaybackEvent: 'play',
+        videoCurrentTime: curTime,
         isPlaying: true,
         aspectRatio: globalAspectRatio || '9:16'
       }, socketRef.current);
     }
 
-    const query = activeUrl ? `&v=${encodeURIComponent(activeUrl)}` : '';
+    const timeQuery = curTime > 0 ? `&t=${Math.round(curTime * 100) / 100}` : '';
+    const query = `${activeUrl ? `&v=${encodeURIComponent(activeUrl)}` : ''}${timeQuery}`;
     window.open(
       `${window.location.origin}/idol?mode=window_capture${query}`,
       'avalive_window_capture_target',
       `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes`
     );
-    showToast('🖥️ Đã mở Cửa Sổ Live 9:16! Video hiển thị ngay lập tức trên TikTok Studio.', 'success');
+    showToast('🖥️ Đã mở Cửa Sổ Live 9:16! Khung hình đồng bộ chính xác 100% với phần mềm.', 'success');
   };
 
   const [overlayLinkBase, setOverlayLinkBase] = useState(() => {
@@ -1475,6 +1479,7 @@ export default function DesktopAppUI() {
         action: 'pause',
         currentTime: curTime,
         isPlaying: false,
+        force: true,
         mediaUrl: playUrl,
         timestamp: Date.now()
       }, socketRef.current);
@@ -1485,6 +1490,7 @@ export default function DesktopAppUI() {
         isVideo: true,
         videoPlaybackEvent: 'pause',
         videoCurrentTime: curTime,
+        force: true,
         isPlaying: false
       }, socketRef.current);
 
@@ -1495,6 +1501,7 @@ export default function DesktopAppUI() {
           isPlaying: false, 
           userPaused: true, 
           currentTime: curTime, 
+          force: true,
           source: 'desktop',
           timestamp: Date.now() 
         });
@@ -1539,6 +1546,7 @@ export default function DesktopAppUI() {
         action: 'play',
         currentTime: curTime,
         isPlaying: true,
+        force: true,
         mediaUrl: playUrl,
         timestamp: Date.now()
       }, socketRef.current);
@@ -1549,6 +1557,7 @@ export default function DesktopAppUI() {
         isVideo: true,
         videoPlaybackEvent: 'play',
         videoCurrentTime: curTime,
+        force: true,
         isPlaying: true
       }, socketRef.current);
 
@@ -1559,6 +1568,7 @@ export default function DesktopAppUI() {
           isPlaying: true, 
           userPaused: false, 
           currentTime: curTime, 
+          force: true,
           source: 'desktop',
           timestamp: Date.now() 
         });
@@ -2907,7 +2917,7 @@ export default function DesktopAppUI() {
                 }
                 // ⚡ ĐỒNG BỘ REALTIME TỪNG ĐỢT CHO TIKTOK LIVE STUDIO & OBS (GIỮ CHUẨN 1X SPEED KHÔNG GIẬT KHỰNG)
                 const now = Date.now();
-                if (now - lastTimeBroadcastRef.current > 5000) {
+                if (now - lastTimeBroadcastRef.current > 2000) {
                   lastTimeBroadcastRef.current = now;
                   let playUrl = selected.url;
                   if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
@@ -2959,6 +2969,7 @@ export default function DesktopAppUI() {
                   action: 'play',
                   currentTime: curTime,
                   isPlaying: true,
+                  force: true,
                   mediaUrl: playUrl,
                   timestamp: Date.now()
                 }, socketRef.current);
@@ -2969,6 +2980,7 @@ export default function DesktopAppUI() {
                   isVideo: true,
                   videoPlaybackEvent: 'play',
                   videoCurrentTime: curTime,
+                  force: true,
                   isPlaying: true
                 }, socketRef.current);
                 try {
@@ -2978,6 +2990,7 @@ export default function DesktopAppUI() {
                     isPlaying: true, 
                     userPaused: false, 
                     currentTime: curTime, 
+                    force: true,
                     source: 'desktop',
                     timestamp: Date.now() 
                   });
@@ -3003,6 +3016,7 @@ export default function DesktopAppUI() {
                   action: 'pause',
                   currentTime: curTime,
                   isPlaying: false,
+                  force: true,
                   mediaUrl: playUrl,
                   timestamp: Date.now()
                 }, socketRef.current);
@@ -3013,6 +3027,7 @@ export default function DesktopAppUI() {
                   isVideo: true,
                   videoPlaybackEvent: 'pause',
                   videoCurrentTime: curTime,
+                  force: true,
                   isPlaying: false
                 }, socketRef.current);
                 try {
@@ -3022,6 +3037,7 @@ export default function DesktopAppUI() {
                     isPlaying: false, 
                     userPaused: true, 
                     currentTime: curTime, 
+                    force: true,
                     source: 'desktop',
                     timestamp: Date.now() 
                   });

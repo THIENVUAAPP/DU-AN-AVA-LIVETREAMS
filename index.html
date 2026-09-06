@@ -51,7 +51,7 @@
         try {
           // Track intentional user pauses so we don't force play them
           document.addEventListener('pause', function(e) {
-            if (e.target && e.target.tagName === 'VIDEO') {
+            if (e.target && e.target.tagName === 'VIDEO' && !e.target.seeking && !e.target.ended) {
               e.target.dataset.userPaused = 'true';
             }
           }, true);

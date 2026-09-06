@@ -172,21 +172,32 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     }
   });
 
-  const [hasAutoplayStarted, setHasAutoplayStarted] = useState(false);
+  const initialTimeParamRef = useRef((() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const t = parseFloat(params.get('t') || '0');
+      return isNaN(t) ? 0 : t;
+    }
+    return 0;
+  })());
+
+  const hasAutoplayStartedRef = useRef(false);
   const [showCaptureTip, setShowCaptureTip] = useState(false);
 
   // ⚡ CLICK / TOUCH / INTERACT UNLOCK: Mở khóa âm thanh và kích hoạt phát ngay khi người dùng chạm vào cửa sổ
   useEffect(() => {
     const handleInteractUnlock = () => {
-      setHasAutoplayStarted(true);
+      hasAutoplayStartedRef.current = true;
       const vid = overlayVideoRef.current;
       if (vid) {
         if (vid.paused && localStorage.getItem('avalive_user_paused') !== 'true') {
           vid.play().catch(() => {});
         }
         if (!isVideoAudioMuted) {
-          vid.muted = false;
-          vid.volume = videoVolume;
+          try {
+            vid.muted = false;
+            vid.volume = videoVolume;
+          } catch (e) {}
         }
       }
       try {
@@ -244,13 +255,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       }
       const curTime = overlayVideoRef.current ? overlayVideoRef.current.currentTime : 0;
       setMasterState(prev => ({ ...prev, videoPlaybackEvent: 'pause', videoCurrentTime: curTime, isPlaying: false }));
-      syncMasterLiveState({ videoPlaybackEvent: 'pause', videoCurrentTime: curTime, isPlaying: false }, socketRef.current);
-      sendVideoControl({ action: 'pause', isPlaying: false, currentTime: curTime }, socketRef.current);
+      syncMasterLiveState({ videoPlaybackEvent: 'pause', videoCurrentTime: curTime, force: true, isPlaying: false }, socketRef.current);
+      sendVideoControl({ action: 'pause', isPlaying: false, force: true, currentTime: curTime }, socketRef.current);
 
       // Bắn tín hiệu sang Phần Mềm Chính để dừng đồng thời
       try {
         const bc = new BroadcastChannel('avalive_master_live_stream');
-        bc.postMessage({ type: 'GLOBAL_PLAYBACK_CHANGE', isPlaying: false, userPaused: true, currentTime: curTime, source: 'overlay', timestamp: Date.now() });
+        bc.postMessage({ type: 'GLOBAL_PLAYBACK_CHANGE', isPlaying: false, userPaused: true, currentTime: curTime, force: true, source: 'overlay', timestamp: Date.now() });
         setTimeout(() => bc.close(), 100);
       } catch (e) {}
     } else {
@@ -273,13 +284,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       });
       const curTime = overlayVideoRef.current ? overlayVideoRef.current.currentTime : 0;
       setMasterState(prev => ({ ...prev, videoPlaybackEvent: 'play', videoCurrentTime: curTime, isPlaying: true }));
-      syncMasterLiveState({ videoPlaybackEvent: 'play', videoCurrentTime: curTime, isPlaying: true }, socketRef.current);
-      sendVideoControl({ action: 'play', isPlaying: true, currentTime: curTime }, socketRef.current);
+      syncMasterLiveState({ videoPlaybackEvent: 'play', videoCurrentTime: curTime, force: true, isPlaying: true }, socketRef.current);
+      sendVideoControl({ action: 'play', isPlaying: true, force: true, currentTime: curTime }, socketRef.current);
 
       // Bắn tín hiệu sang Phần Mềm Chính để tiếp tục phát đồng thời
       try {
         const bc = new BroadcastChannel('avalive_master_live_stream');
-        bc.postMessage({ type: 'GLOBAL_PLAYBACK_CHANGE', isPlaying: true, userPaused: false, currentTime: curTime, source: 'overlay', timestamp: Date.now() });
+        bc.postMessage({ type: 'GLOBAL_PLAYBACK_CHANGE', isPlaying: true, userPaused: false, currentTime: curTime, force: true, source: 'overlay', timestamp: Date.now() });
         setTimeout(() => bc.close(), 100);
       } catch (e) {}
     }
@@ -630,6 +641,10 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         } catch (e) {}
         vid.dataset.userPaused = 'true';
         setMasterState(prev => ({ ...prev, isPlaying: false, videoPlaybackEvent: 'pause' }));
+        // 🎯 ĐỒNG BỘ CHÍNH XÁC 100% KHUNG HÌNH (TIMESTAMP / FRAME) KHI TẠM DỪNG
+        if (typeof targetTime === 'number' && !isNaN(targetTime)) {
+          try { vid.currentTime = targetTime; } catch (e) {}
+        }
         if (!vid.paused) {
           try { vid.pause(); } catch (e) {}
         }
@@ -644,9 +659,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         setMasterState(prev => ({ ...prev, isPlaying: true, videoPlaybackEvent: 'play' }));
         vid.muted = isVideoAudioMuted;
         if (!isVideoAudioMuted) vid.volume = videoVolume;
-        // CHỈ TUA KHI CÓ LỆNH ÉP BUỘC (ĐỔI VIDEO MỚI HOẶC CHỦ ĐỘNG TUA)
-        if (control.force && typeof targetTime === 'number' && !isNaN(targetTime)) {
-          try { vid.currentTime = targetTime; } catch (e) {}
+        // 🎯 ĐỒNG BỘ CHÍNH XÁC 100% KHUNG HÌNH KHI TIẾP TỤC PHÁT (TRÁNH LỆCH ĐẦU - ĐUÔI)
+        if (typeof targetTime === 'number' && !isNaN(targetTime)) {
+          if (control.force || Math.abs(vid.currentTime - targetTime) > 0.25) {
+            try { vid.currentTime = targetTime; } catch (e) {}
+          }
         }
         if (vid.paused) {
           vid.play().catch(() => {
@@ -656,17 +673,21 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         }
         setIsPlayingState(true);
       } else if (action === 'seek' || action === 'user_restart') {
-        // CHỈ TUA KHI LÀ LỆNH ÉP BUỘC RÕ RÀNG TỪ NGƯỜI DÙNG HOẶC RESTART
-        if ((control.force || action === 'user_restart') && typeof targetTime === 'number' && !isNaN(targetTime)) {
+        if (typeof targetTime === 'number' && !isNaN(targetTime)) {
           try { vid.currentTime = targetTime; } catch (e) {}
         }
       } else if (action === 'time_sync') {
-        // TUYỆT ĐỐI KHÔNG TUA KHI ĐANG PHÁT BÌNH THƯỜNG - TRÁNH LẶP LẠI VÀ CHỚP NHẢY
-        if (control.force && typeof targetTime === 'number' && !isNaN(targetTime)) {
-          try { vid.currentTime = targetTime; } catch (e) {}
+        // 🎯 ĐỒNG BỘ KHUNG HÌNH THỜI GIAN THỰC ĐỊNH KỲ (LOCKSTEP SYNC)
+        if (typeof targetTime === 'number' && !isNaN(targetTime)) {
+          if (control.force || Math.abs(vid.currentTime - targetTime) > 0.35) {
+            try { vid.currentTime = targetTime; } catch (e) {}
+          }
         }
         if (isPlaying && vid.paused && isUserPausedRef.current !== true && localStorage.getItem('avalive_user_paused') !== 'true') {
-          vid.play().catch(() => {});
+          vid.play().catch(() => {
+            vid.muted = true;
+            vid.play().catch(() => {});
+          });
           setIsPlayingState(true);
         } else if (!isPlaying && !vid.paused) {
           try { vid.pause(); } catch (e) {}
@@ -701,6 +722,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         } catch (e) {}
         if (vid) {
           vid.dataset.userPaused = 'true';
+          if (typeof data.videoCurrentTime === 'number' && !isNaN(data.videoCurrentTime)) {
+            try { vid.currentTime = data.videoCurrentTime; } catch (e) {}
+          }
           if (!vid.paused) {
             try { vid.pause(); } catch (e) {}
           }
@@ -716,7 +740,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           vid.dataset.userPaused = 'false';
           vid.muted = isVideoAudioMuted;
           if (!isVideoAudioMuted) vid.volume = videoVolume;
-          // TUYỆT ĐỐI KHÔNG TUA THỜI GIAN TRONG POLLING ĐỊNH KỲ — ĐỂ VIDEO CHẠY LIÊN TỤC KHÔNG BỊ KHỞI ĐỘNG LẠI
+          if (typeof data.videoCurrentTime === 'number' && !isNaN(data.videoCurrentTime)) {
+            if (data.force || Math.abs(vid.currentTime - data.videoCurrentTime) > 0.35) {
+              try { vid.currentTime = data.videoCurrentTime; } catch (e) {}
+            }
+          }
           if (vid.paused) {
             vid.play().catch(() => {
               vid.muted = true;
@@ -831,7 +859,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       }
     }, 800);
 
-    // 2. HTTP REST API POLING
+    // 2. HTTP REST API POLING (Lấy trạng thái khởi đầu)
     const fetchLiveState = () => {
       const endpoint = getBackendUrl() ? `${getBackendUrl()}/api/live-state` : '/api/live-state';
       fetch(endpoint)
@@ -844,9 +872,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         .catch(() => {});
     };
     fetchLiveState();
-    
-    // Polling nhịp tim nền dự phòng (2s/lần, không spam mạng để chống giật lag video)
-    const httpPollInterval = setInterval(fetchLiveState, 2000);
 
     // 3. WEBSOCKET REALTIME (SOCKET.IO)
     let socket = null;
@@ -1234,7 +1259,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     }, 1500);
 
     return () => {
-      clearInterval(httpPollInterval);
       clearInterval(frameInterval);
       clearInterval(pollInterval);
       if (supabaseChannel) supabaseChannel.unsubscribe();
@@ -1721,8 +1745,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       const isUserPaused = checkIfUserPaused();
       if (!isUserPaused) {
         vid.dataset.userPaused = 'false';
-        vid.muted = !hasAutoplayStarted ? true : isVideoAudioMuted;
-        if (!isVideoAudioMuted && hasAutoplayStarted) vid.volume = videoVolume;
+        vid.muted = isVideoAudioMuted;
+        try { vid.volume = videoVolume; } catch (e) {}
         
         // CHỈ GỌI vid.load() KHI URL THỰC SỰ THAY ĐỔI
         // TUYỆT ĐỐI KHÔNG GỌI vid.load() KHI CHUYỂN TAB ĐỂ TRÁNH RESET 0:00 HOẶC MẤT VIDEO
@@ -1736,14 +1760,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         if (playPromise !== undefined) {
           playPromise.then(() => {
             setIsPlayingState(true);
-            if (!hasAutoplayStarted) {
-              setHasAutoplayStarted(true);
-              if (!isVideoAudioMuted) {
-                setTimeout(() => {
-                  try { vid.muted = false; vid.volume = videoVolume; } catch (e) {}
-                }, 150);
-              }
-            }
+            hasAutoplayStartedRef.current = true;
           }).catch(() => {
             vid.muted = true;
             vid.play().then(() => setIsPlayingState(true)).catch(() => {});
@@ -1782,7 +1799,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   WINDOW CAPTURE (60FPS)
                 </span>
                 <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[9px] font-bold text-cyan-300">
-                  v1.6.7
+                  v1.6.8
                 </span>
               </div>
               <span className="text-[9.5px] text-emerald-400/90 font-medium">
@@ -1938,7 +1955,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   src={activeMedia.url}
                   autoPlay={true}
                   loop
-                  muted={!hasAutoplayStarted ? true : isVideoAudioMuted}
+                  muted={isVideoAudioMuted}
                   defaultMuted={true}
                   playsInline
                   controls={false}
@@ -1949,16 +1966,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     const isUserPaused = checkIfUserPaused();
                     if (!isUserPaused) {
                       v.dataset.userPaused = 'false';
-                      v.muted = !hasAutoplayStarted ? true : isVideoAudioMuted;
+                      v.muted = isVideoAudioMuted;
+                      try { v.volume = videoVolume; } catch (err) {}
                       const p = v.play();
                       if (p !== undefined) {
                         p.then(() => {
                           setIsPlayingState(true);
-                          if (!isVideoAudioMuted && !hasAutoplayStarted) {
-                            setTimeout(() => {
-                              try { v.muted = false; v.volume = videoVolume; } catch (err) {}
-                            }, 150);
-                          }
+                          hasAutoplayStartedRef.current = true;
                         }).catch(() => {
                           v.muted = true;
                           v.play().then(() => setIsPlayingState(true)).catch(() => {});
@@ -1972,41 +1986,10 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   }}
                   onPlay={() => {
                     setIsPlayingState(true);
-                    if (!hasAutoplayStarted) {
-                      setHasAutoplayStarted(true);
-                      if (!isVideoAudioMuted) {
-                        setTimeout(() => {
-                          const v = overlayVideoRef.current;
-                          if (v) {
-                            try { v.muted = false; v.volume = videoVolume; } catch (e) {}
-                          }
-                        }, 150);
-                      }
-                    }
+                    hasAutoplayStartedRef.current = true;
                   }}
                   onPause={() => {
                     setIsPlayingState(false);
-                  }}
-                  onCanPlay={(e) => {
-                    const v = e.currentTarget;
-                    const isUserPaused = checkIfUserPaused();
-                    if (!isUserPaused && v.paused) {
-                      v.dataset.userPaused = 'false';
-                      v.muted = !hasAutoplayStarted ? true : isVideoAudioMuted;
-                      const p = v.play();
-                      if (p !== undefined) {
-                        p.then(() => setIsPlayingState(true)).catch(() => {
-                          v.muted = true;
-                          v.play().then(() => setIsPlayingState(true)).catch(() => {});
-                        });
-                      }
-                    } else if (isUserPaused) {
-                      v.dataset.userPaused = 'true';
-                      if (!v.paused) {
-                        try { v.pause(); } catch (err) {}
-                      }
-                      setIsPlayingState(false);
-                    }
                   }}
                   onWaiting={() => {
                     // Để Chromium tự nạp buffer mượt mà, không ép gọi play() gây xung đột
@@ -2024,6 +2007,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                       });
                     } else {
                       e.currentTarget.pause();
+                      setIsPlayingState(false);
                     }
                   }}
                   onError={(e) => {

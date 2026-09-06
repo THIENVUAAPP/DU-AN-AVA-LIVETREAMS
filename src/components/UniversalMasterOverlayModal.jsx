@@ -49,10 +49,19 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
     const top = Math.round((window.screen.height - height) / 2);
 
     let activeUrl = '';
+    let curTime = 0;
     try {
       const saved = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
       if (saved.mediaUrl) activeUrl = saved.mediaUrl;
+      if (typeof saved.videoCurrentTime === 'number') curTime = saved.videoCurrentTime;
       if (!activeUrl) activeUrl = localStorage.getItem('avalive_user_locked_media') || '';
+    } catch (e) {}
+
+    try {
+      const deskVid = document.querySelector('video');
+      if (deskVid && typeof deskVid.currentTime === 'number' && deskVid.currentTime > 0) {
+        curTime = deskVid.currentTime;
+      }
     } catch (e) {}
 
     try {
@@ -61,7 +70,8 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
       localStorage.setItem('avalive_master_live_running', 'true');
     } catch (e) {}
 
-    const query = activeUrl ? `&v=${encodeURIComponent(activeUrl)}` : '';
+    const timeQuery = curTime > 0 ? `&t=${Math.round(curTime * 100) / 100}` : '';
+    const query = `${activeUrl ? `&v=${encodeURIComponent(activeUrl)}` : ''}${timeQuery}`;
     const captureUrl = `${window.location.origin}/idol?mode=window_capture${query}`;
     window.open(
       captureUrl,
@@ -153,10 +163,22 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
     let glue = baseUrl.includes('?') ? '&' : '?';
     if (finalMedia && typeof finalMedia === 'string' && (path === 'idol' || path === 'studio' || path === 'overlay')) {
-      if (finalMedia.includes('/uploads/')) {
-        finalMedia = finalMedia.substring(finalMedia.indexOf('/uploads/'));
+       if (finalMedia.includes('/uploads/')) {
+         finalMedia = finalMedia.substring(finalMedia.indexOf('/uploads/'));
+       }
+       baseUrl = `${baseUrl}${glue}v=${encodeURIComponent(finalMedia)}`;
+       glue = '&';
+    }
+
+    let curTime = 0;
+    try {
+      const deskVid = document.querySelector('video');
+      if (deskVid && typeof deskVid.currentTime === 'number' && deskVid.currentTime > 0) {
+        curTime = deskVid.currentTime;
       }
-      baseUrl = `${baseUrl}${glue}v=${encodeURIComponent(finalMedia)}`;
+    } catch (e) {}
+    if (curTime > 0 && (path === 'idol' || path === 'studio' || path === 'overlay')) {
+      baseUrl = `${baseUrl}${glue}t=${Math.round(curTime * 100) / 100}`;
       glue = '&';
     }
 
