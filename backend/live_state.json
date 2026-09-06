@@ -5,8 +5,8 @@
   "characterName": "Livestream_video_generation_prompt_1080p_202608131258",
   "mediaUrl": "/uploads/media-1788330401564-514109629.mp4",
   "isVideo": true,
-  "videoPlaybackEvent": "pause",
-  "isPlaying": false,
+  "videoPlaybackEvent": "play",
+  "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
   "updatedAt": 1788665110049,
@@ -20,5 +20,5 @@
   "isVideoAudioMuted": true,
   "videoVolume": 1,
   "clearMedia": false,
-  "tunnelUrl": "https://nov-map-supplements-reliable.trycloudflare.com"
+  "tunnelUrl": "https://mineral-ends-holders-wallet.trycloudflare.com"
 }

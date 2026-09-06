@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.6.8';
+export const APP_VERSION = '1.6.9';
 export const UPDATE_NOTES = [
-  "🎬 Khắc Phục Triệt Để Lỗi Video Tắt Mở Nhấp Nhá Liên Tục: Loại bỏ hoàn toàn xung đột chính sách Autoplay CEF trên TikTok Live Studio và Window Capture OBS. Video phát liên tục 100%, êm dịu mượt mà 60FPS không gián đoạn.",
-  "⏱️ Đồng Bộ Khung Hình Chuẩn Xác 100% (Frame Lockstep): Dù phát qua Link Live hay Window Capture OBS, video luôn khóa khớp chính xác 1:1 từng mili-giây với phần mềm chính. Khi tạm dừng hoặc phát tiếp, hình ảnh hiển thị đúng ngay khung hình đó, chấm dứt hoàn toàn tình trạng 'đầu này đuôi kia'.",
-  "⚡ Khởi Động Tức Thì Siêu Tốc (Timestamp URL Sync): Mở Window Capture hoặc dán link phát sóng sang TikTok Live Studio tự động nhận diện mốc thời gian đang chạy, tải video ngay lập tức với tốc độ nhanh hơn ánh sáng.",
-  "🛡️ Tối Ưu Siêu Nhẹ - Chạy Bền Bỉ 24/7 Không Nóng Nặng Máy: Tinh giản toàn bộ tiến trình ngầm và polling thừa, giải phóng bộ nhớ RAM & CPU để live liên tục hàng chục tiếng đồng hồ ổn định tuyệt đối."
+  "⚡ Phát Tức Thì 0ms Trên TikTok Live Studio: Dán đường link duy nhất vào Nguồn Trình Duyệt (Browser Source) là video phát ngay tức thì, đồng bộ 100% hình ảnh, âm thanh và cử chỉ. Khi streamer đổi video hoặc nhân vật trên phần mềm, TikTok Live Studio tự động chuyển đổi linh hoạt tức thì.",
+  "🛑 Khắc Phục Triệt Để Nút Chạy / Dừng Trên Window Capture OBS: Chấm dứt hoàn toàn hiện tượng nút tự động chớp tắt, chuyển qua lại giữa Chạy và Dừng. Nút chỉ dừng khi streamer bấm dừng, chỉ phát khi streamer bấm phát, đồng bộ 2 chiều hoàn hảo với phần mềm.",
+  "🌐 Ngăn Chặn Mở Cửa Sổ Trình Duyệt Hệ Thống Thừa: Loại bỏ triệt để hiện tượng tự động bật cửa sổ trình duyệt ngoài ý muốn khi ứng dụng chạy hoặc khi tải phần mềm nền.",
+  "🚀 Siêu Nhẹ & Mượt Mà Tuyệt Đối: Phát mượt mà các video dài nhiều tiếng hoặc dung lượng hàng chục GB với mức tiêu thụ CPU & GPU tối thiểu, đảm bảo phát sóng ổn định 24/7."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

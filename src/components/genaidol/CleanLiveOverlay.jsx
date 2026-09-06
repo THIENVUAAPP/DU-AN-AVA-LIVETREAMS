@@ -113,26 +113,23 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     masterStateRef.current = masterState;
   }, [masterState]);
 
-  // 🎯 KIỂM TRA CHÍNH XÁC XEM NGƯỜI DÙNG CÓ CHỦ ĐỘNG BẤM TẠM DỪNG HAY KHÔNG (TRÁNH CHROMIUM BỊ THROTTLED / NGẮT NHẦM KHI CHUYỂN TAB)
+  // 🎯 KIỂM TRA CHÍNH XÁC XEM STREAMER CÓ CHỦ ĐỘNG BẤM TẠM DỪNG HAY KHÔNG (MẶC ĐỊNH LUÔN PHÁT 0MS KHI MỞ LINK)
   const checkIfUserPaused = () => {
-    if (isUserPausedRef.current === true) return true;
-    try {
-      if (localStorage.getItem('avalive_user_paused') === 'true') return true;
-      if (localStorage.getItem('avalive_window_capture_paused') === 'true') return true;
-    } catch (e) {}
-    if (overlayVideoRef.current && overlayVideoRef.current.dataset && overlayVideoRef.current.dataset.userPaused === 'true') return true;
-    if (masterStateRef.current?.videoPlaybackEvent === 'pause') return true;
-    if (masterStateRef.current?.isPlaying === false) return true;
-    return false;
+    return isUserPausedRef.current === true;
   };
 
-  // Khởi tạo kiểm tra cờ tạm dừng từ storage
+  // Khởi tạo: Trừ khi URL cố ý truyền ?paused=true, còn lại mặc định luôn PHÁT NGAY LẬP TỨC 0ms
   useEffect(() => {
     try {
-      if (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_window_capture_paused') === 'true') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('paused') === 'true') {
         isUserPausedRef.current = true;
+      } else {
+        isUserPausedRef.current = false;
       }
-    } catch (e) {}
+    } catch (e) {
+      isUserPausedRef.current = false;
+    }
   }, []);
 
   const [liveEvent, setLiveEvent] = useState(null);
@@ -633,12 +630,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       if (!vid) return;
 
       // 2. Đồng bộ Pause / Play / Tua / Nhịp tim thời gian thực
-      if (action === 'pause' || isPlaying === false) {
+      if (action === 'pause' || (control.userPaused === true && isPlaying === false)) {
         isUserPausedRef.current = true;
-        try {
-          localStorage.setItem('avalive_user_paused', 'true');
-          localStorage.setItem('avalive_window_capture_paused', 'true');
-        } catch (e) {}
         vid.dataset.userPaused = 'true';
         setMasterState(prev => ({ ...prev, isPlaying: false, videoPlaybackEvent: 'pause' }));
         // 🎯 ĐỒNG BỘ CHÍNH XÁC 100% KHUNG HÌNH (TIMESTAMP / FRAME) KHI TẠM DỪNG
@@ -649,19 +642,15 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           try { vid.pause(); } catch (e) {}
         }
         setIsPlayingState(false);
-      } else if (action === 'play' || isPlaying === true) {
+      } else if (action === 'play' || (action !== 'time_sync' && isPlaying === true)) {
         isUserPausedRef.current = false;
-        try {
-          localStorage.removeItem('avalive_user_paused');
-          localStorage.removeItem('avalive_window_capture_paused');
-        } catch (e) {}
         vid.dataset.userPaused = 'false';
         setMasterState(prev => ({ ...prev, isPlaying: true, videoPlaybackEvent: 'play' }));
         vid.muted = isVideoAudioMuted;
         if (!isVideoAudioMuted) vid.volume = videoVolume;
         // 🎯 ĐỒNG BỘ CHÍNH XÁC 100% KHUNG HÌNH KHI TIẾP TỤC PHÁT (TRÁNH LỆCH ĐẦU - ĐUÔI)
         if (typeof targetTime === 'number' && !isNaN(targetTime)) {
-          if (control.force || Math.abs(vid.currentTime - targetTime) > 0.25) {
+          if (control.force || Math.abs(vid.currentTime - targetTime) > 0.3) {
             try { vid.currentTime = targetTime; } catch (e) {}
           }
         }
@@ -678,20 +667,17 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         }
       } else if (action === 'time_sync') {
         // 🎯 ĐỒNG BỘ KHUNG HÌNH THỜI GIAN THỰC ĐỊNH KỲ (LOCKSTEP SYNC)
+        // TUYỆT ĐỐI KHÔNG can thiệp đổi nút Chạy/Dừng ở nhịp tim định kỳ
         if (typeof targetTime === 'number' && !isNaN(targetTime)) {
-          if (control.force || Math.abs(vid.currentTime - targetTime) > 0.35) {
+          if (control.force || Math.abs(vid.currentTime - targetTime) > 0.4) {
             try { vid.currentTime = targetTime; } catch (e) {}
           }
         }
-        if (isPlaying && vid.paused && isUserPausedRef.current !== true && localStorage.getItem('avalive_user_paused') !== 'true') {
+        if (!isUserPausedRef.current && vid.paused) {
           vid.play().catch(() => {
             vid.muted = true;
             vid.play().catch(() => {});
           });
-          setIsPlayingState(true);
-        } else if (!isPlaying && !vid.paused) {
-          try { vid.pause(); } catch (e) {}
-          setIsPlayingState(false);
         }
       }
 
@@ -714,12 +700,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
       // 🎬 ĐỒNG BỘ PLAY / PAUSE / TIME LẬP TỨC THEO PHẦN MỀM GỐC
       const vid = overlayVideoRef.current || document.querySelector('video');
-      if (data.isPlaying === false || data.videoPlaybackEvent === 'pause') {
+      const isExplicitPause = (data.userPaused === true) || (data.force && data.videoPlaybackEvent === 'pause');
+      if (isExplicitPause) {
         isUserPausedRef.current = true;
-        try {
-          localStorage.setItem('avalive_user_paused', 'true');
-          localStorage.setItem('avalive_window_capture_paused', 'true');
-        } catch (e) {}
         if (vid) {
           vid.dataset.userPaused = 'true';
           if (typeof data.videoCurrentTime === 'number' && !isNaN(data.videoCurrentTime)) {
@@ -730,29 +713,26 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           }
         }
         setIsPlayingState(false);
-      } else if (data.isPlaying === true || data.videoPlaybackEvent === 'play') {
-        isUserPausedRef.current = false;
-        try {
-          localStorage.removeItem('avalive_user_paused');
-          localStorage.removeItem('avalive_window_capture_paused');
-        } catch (e) {}
-        if (vid) {
-          vid.dataset.userPaused = 'false';
-          vid.muted = isVideoAudioMuted;
-          if (!isVideoAudioMuted) vid.volume = videoVolume;
-          if (typeof data.videoCurrentTime === 'number' && !isNaN(data.videoCurrentTime)) {
-            if (data.force || Math.abs(vid.currentTime - data.videoCurrentTime) > 0.35) {
-              try { vid.currentTime = data.videoCurrentTime; } catch (e) {}
+      } else if (data.isPlaying === true || data.videoPlaybackEvent === 'play' || data.mediaUrl) {
+        if (!isUserPausedRef.current) {
+          if (vid) {
+            vid.dataset.userPaused = 'false';
+            vid.muted = isVideoAudioMuted;
+            if (!isVideoAudioMuted) vid.volume = videoVolume;
+            if (typeof data.videoCurrentTime === 'number' && !isNaN(data.videoCurrentTime)) {
+              if (data.force || Math.abs(vid.currentTime - data.videoCurrentTime) > 0.4) {
+                try { vid.currentTime = data.videoCurrentTime; } catch (e) {}
+              }
+            }
+            if (vid.paused) {
+              vid.play().catch(() => {
+                vid.muted = true;
+                vid.play().catch(() => {});
+              });
             }
           }
-          if (vid.paused) {
-            vid.play().catch(() => {
-              vid.muted = true;
-              vid.play().catch(() => {});
-            });
-          }
+          setIsPlayingState(true);
         }
-        setIsPlayingState(true);
       }
 
       // Đồng bộ Âm thanh & Âm lượng từ Phần Mềm Chính
@@ -998,12 +978,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 }
                 if (isMasterPlaying) {
                   v.dataset.userPaused = 'false';
-                  if (v.paused && localStorage.getItem('avalive_user_paused') !== 'true') {
+                  if (v.paused && !isUserPausedRef.current) {
                     v.play().catch(() => {});
                   }
-                  setIsPlayingState(true);
-                } else {
+                } else if (event.data.userPaused === true) {
                   v.dataset.userPaused = 'true';
+                  isUserPausedRef.current = true;
                   if (!v.paused) {
                     v.pause();
                   }
@@ -1753,6 +1733,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         const isNewUrl = lastLoadedMediaUrlRef.current !== activeMedia.url;
         if (isNewUrl) {
           lastLoadedMediaUrlRef.current = activeMedia.url;
+          isUserPausedRef.current = false;
           try { vid.load(); } catch (e) {}
         }
 
@@ -1799,7 +1780,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   WINDOW CAPTURE (60FPS)
                 </span>
                 <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[9px] font-bold text-cyan-300">
-                  v1.6.8
+                  v1.6.9
                 </span>
               </div>
               <span className="text-[9.5px] text-emerald-400/90 font-medium">
@@ -1988,7 +1969,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     setIsPlayingState(true);
                     hasAutoplayStartedRef.current = true;
                   }}
-                  onPause={() => {
+                  onPause={(e) => {
+                    if (e.target && e.target.seeking) return;
+                    if (!isUserPausedRef.current) return;
                     setIsPlayingState(false);
                   }}
                   onWaiting={() => {

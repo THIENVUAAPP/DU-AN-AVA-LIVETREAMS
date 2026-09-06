@@ -69,7 +69,6 @@ export const triggerDirectDownload = (url, fileName) => {
     const a = document.createElement('a');
     a.href = url;
     a.setAttribute('download', finalFileName);
-    a.setAttribute('target', '_blank');
     a.setAttribute('rel', 'noopener noreferrer');
     a.style.display = 'none';
     document.body.appendChild(a);
