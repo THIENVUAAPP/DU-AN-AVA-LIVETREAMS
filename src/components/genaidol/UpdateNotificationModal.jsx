@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.6.4';
+export const APP_VERSION = '1.6.5';
 export const UPDATE_NOTES = [
+  "⚡ Tải Trực Tiếp Phần Mềm Về Máy Tính 100%: Khắc phục triệt để lỗi bấm tải về bị chuyển hướng sang trang web GitHub. Giờ đây bấm Tải Về là phần mềm ZIP tự động tải trực tiếp về máy tính tức thì, không bao giờ bị nhảy trang.",
   "⭐ Khắc Phục Triệt Để Lỗi Lặp Video 1-2 Giây & Tự Tua Về Đầu: Gỡ bỏ hoàn toàn vòng lặp xung đột lệnh seek trên mạng. Video phát mượt mà, liên tục 100%, lặp lại (loop) êm dịu từ đầu đến cuối không bị giật lùi hay chớp nháy.",
   "⚡ Hiển Thị & Phát Video Tức Thì 0ms Khi Tải Lên: Tải video lên từ ô nhân vật lập tức hiển thị và trình chiếu ngay trên giao diện phần mềm mà không phải chờ đợi nạp file.",
-  "🛡️ Đồng Bộ Realtime 100% Giữa Phần Mềm Và TikTok Live Studio / OBS: Phát chính xác video người dùng đang mở, tuyệt đối không phát video ngầm hay video nền. Đồng bộ tức thì Tạm Dừng (Pause), Tiếp Tục (Play) và Âm thanh.",
-  "🎬 Window Capture & Đa Nhiệm Tab Linh Hoạt 24/7: Tự do chuyển đổi tab, thu nhỏ hoặc che khuất cửa sổ trình duyệt mà luồng phát livestream trên TikTok Live Studio / OBS vẫn duy trì ổn định, không bị ngắt hay đứng hình."
+  "🛡️ Đồng Bộ Realtime 100% Giữa Phần Mềm Và TikTok Live Studio / OBS: Phát chính xác video người dùng đang mở, tuyệt đối không phát video ngầm hay video nền. Đồng bộ tức thì Tạm Dừng (Pause), Tiếp Tục (Play) và Âm thanh."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

@@ -1,16 +1,37 @@
 import { APP_VERSION } from '../components/genaidol/UpdateNotificationModal';
 
 /**
- * ⚡ KÍCH HOẠT TẢI XUỐNG TRỰC TIẾP VỀ MÁY TÍNH
- * - Tự động tải file ZIP về máy ngay lập tức (Direct Stream download)
- * - Tuyệt đối KHÔNG mở tab mới hoặc chuyển hướng hiển thị trang GitHub
- * - Tự động nhận diện Windows (.zip) hoặc macOS (.zip)
+ * ⚡ KÍCH HOẠT TẢI XUỐNG TRỰC TIẾP VỀ MÁY TÍNH 100%
+ * - Tự động tải file ZIP trực tiếp về máy tính (Direct Stream download)
+ * - Tuyệt đối KHÔNG BAO GIỜ chuyển hướng hoặc nhảy sang trang web GitHub
+ * - Sử dụng kỹ thuật iframe ẩn chuyên dụng kết hợp anchor download
+ * - Tự động nhận diện hệ điều hành Windows (.zip) hoặc macOS (.zip)
  */
 export const triggerDirectDownload = (url, fileName) => {
   try {
+    const finalFileName = fileName || `AvaLive_VIP_PRO_v${APP_VERSION}.zip`;
+
+    // 1. Kỹ thuật 1: Sử dụng iframe ẩn chuyên dụng tải file nhị phân
+    // Trình duyệt sẽ nhận diện Content-Disposition: attachment và lưu file vào máy
+    // Trang web cha hiện tại được giữ nguyên 100%, tuyệt đối không reload hay nhảy trang
+    let iframe = document.getElementById('avalive-direct-downloader-frame');
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.id = 'avalive-direct-downloader-frame';
+      iframe.style.display = 'none';
+      iframe.style.position = 'fixed';
+      iframe.style.width = '0px';
+      iframe.style.height = '0px';
+      iframe.style.border = 'none';
+      iframe.style.opacity = '0';
+      document.body.appendChild(iframe);
+    }
+    iframe.src = url;
+
+    // 2. Kỹ thuật 2: Sử dụng thẻ <a> với thuộc tính download song song
     const a = document.createElement('a');
     a.href = url;
-    a.setAttribute('download', fileName || 'AvaLive_VIP_PRO.zip');
+    a.setAttribute('download', finalFileName);
     a.style.display = 'none';
     document.body.appendChild(a);
     a.click();
@@ -18,10 +39,9 @@ export const triggerDirectDownload = (url, fileName) => {
       try {
         if (a.parentNode) a.parentNode.removeChild(a);
       } catch (e) {}
-    }, 1000);
+    }, 2000);
   } catch (err) {
-    // Fallback an toàn nếu trình duyệt chặn tự động click
-    window.location.href = url;
+    console.error('Lỗi khi kích hoạt tải phần mềm:', err);
   }
 };
 
@@ -31,22 +51,22 @@ export const getDownloadInfo = (targetOS) => {
   const osType = isMac ? 'mac' : 'windows';
   const fileName = isMac ? `AvaLive_VIP_PRO_Mac_v${APP_VERSION}.zip` : `AvaLive_VIP_PRO_Windows_v${APP_VERSION}.zip`;
 
-  // Kiểm tra môi trường local / private IP
-  const isLocal = typeof window !== 'undefined' && (
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1' ||
-    window.location.hostname.startsWith('192.168.') ||
-    window.location.hostname.startsWith('10.') ||
-    window.location.port === '3001'
-  );
+  // Xác định URL tải về:
+  // Luôn ưu tiên endpoint nội bộ cùng host (/api/download/windows hoặc /api/download/mac)
+  // để đảm bảo tính an toàn Same-Origin và kích hoạt download trực tiếp
+  let directUrl = `/api/download/${osType}`;
 
-  let directUrl;
-  if (isLocal) {
-    const origin = window.location.port === '5173' ? 'http://localhost:3001' : window.location.origin;
-    directUrl = `${origin}/api/download/${osType}`;
-  } else {
-    // Tải trực tiếp từ GitHub Releases Asset (Đã cấu hình Content-Disposition: attachment)
-    directUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${APP_VERSION}/${fileName}`;
+  if (typeof window !== 'undefined') {
+    if (window.location.protocol === 'file:') {
+      // Khi mở bằng file HTML cục bộ -> gọi trực tiếp backend localhost:3001
+      directUrl = `http://localhost:3001/api/download/${osType}`;
+    } else if (window.location.port === '5173') {
+      // Khi chạy Vite dev server -> gọi trực tiếp backend localhost:3001
+      directUrl = `http://localhost:3001/api/download/${osType}`;
+    } else {
+      // Khi chạy qua localhost:3001, TryCloudflare tunnel, domain riêng hoặc Vercel
+      directUrl = `/api/download/${osType}`;
+    }
   }
 
   return { url: directUrl, fileName, isMac, osType };
