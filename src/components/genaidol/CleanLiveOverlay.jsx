@@ -135,6 +135,10 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   const [liveEvent, setLiveEvent] = useState(null);
   const [isVideoAudioMuted, setIsVideoAudioMuted] = useState(() => {
     try {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('sound') === '1' || params.get('unmute') === '1') return false;
+      }
       const saved = localStorage.getItem('avalive_overlay_audio_muted');
       return saved !== null ? saved === 'true' : false; // Mặc định mở tiếng để phát âm thanh
     } catch (e) {
@@ -683,7 +687,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         if (vid.playbackRate !== 1.0) {
           try { vid.playbackRate = 1.0; } catch (e) {}
         }
-        if (!isUserPausedRef.current && vid.paused) {
+        if (!isUserPausedRef.current && vid.paused && vid.readyState >= 2) {
           vid.play().catch(() => {
             vid.muted = true;
             vid.play().catch(() => {});
@@ -1909,6 +1913,26 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   controls={false}
                   preload="auto"
                   disableRemotePlayback
+                  onCanPlay={(e) => {
+                    // ⚡ INSTANT 0MS PLAYBACK: Phát ngay lập tức khi frame đầu tiên sẵn sàng
+                    const v = e.currentTarget;
+                    const isUserPaused = checkIfUserPaused();
+                    if (!isUserPaused && v.paused) {
+                      v.dataset.userPaused = 'false';
+                      v.muted = isVideoAudioMuted;
+                      try { v.volume = videoVolume; } catch (err) {}
+                      const p = v.play();
+                      if (p !== undefined) {
+                        p.then(() => {
+                          setIsPlayingState(true);
+                          hasAutoplayStartedRef.current = true;
+                        }).catch(() => {
+                          v.muted = true;
+                          v.play().then(() => setIsPlayingState(true)).catch(() => {});
+                        });
+                      }
+                    }
+                  }}
                   onLoadedMetadata={(e) => {
                     const v = e.currentTarget;
                     // ⚡ ĐỒNG BỘ NGAY KHUNG HÌNH THỜI GIAN THẬT TỪ PHẦN MỀM (URL ?t= HOẶC MASTER STATE)
@@ -1946,14 +1970,30 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     if (!isUserPausedRef.current) return;
                     setIsPlayingState(false);
                   }}
-                  onWaiting={() => {
-                    // Để Chromium tự nạp buffer mượt mà, không ép gọi play() gây xung đột
+                  onWaiting={(e) => {
+                    // 🛡️ SMART BUFFER RECOVERY: Tự động khôi phục nếu video bị khựng do mạng
+                    const v = e.currentTarget;
+                    if (v && !checkIfUserPaused()) {
+                      setTimeout(() => {
+                        if (v.paused || v.readyState < 3) {
+                          try { v.play().catch(() => {}); } catch(err){}
+                        }
+                      }, 800);
+                    }
                   }}
-                  onStalled={() => {
-                    // Giữ nguyên trạng thái để Chromium giải phóng bộ đệm mạng
+                  onStalled={(e) => {
+                    // 🛡️ SMART STALL RECOVERY: Tự động kickstart lại decoder nếu bị kẹt
+                    const v = e.currentTarget;
+                    if (v && !checkIfUserPaused()) {
+                      setTimeout(() => {
+                        if (v.paused) {
+                          try { v.play().catch(() => {}); } catch(err){}
+                        }
+                      }, 1000);
+                    }
                   }}
                   onEnded={(e) => {
-                    e.currentTarget.currentTime = 0;
+                    // SEAMLESS LOOP: Đã có thuộc tính loop, đảm bảo trạng thái play không bị khựng frame
                     const isUserPaused = checkIfUserPaused();
                     if (!isUserPaused) {
                       e.currentTarget.play().then(() => setIsPlayingState(true)).catch(() => {
@@ -1977,13 +2017,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   style={{ 
                     width: '100%', 
                     height: '100%', 
-                    objectFit: objectFitState || 'cover',
+                    objectFit: objectFitState || 'contain',
                     backgroundColor: '#000000',
-                    transform: 'translateZ(0)',
-                    WebkitTransform: 'translateZ(0)',
-                    backfaceVisibility: 'hidden',
-                    WebkitBackfaceVisibility: 'hidden',
-                    willChange: 'transform',
+                    imageRendering: 'auto',
                   }}
                 />
               </>
@@ -1998,13 +2034,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 style={{ 
                   width: '100%', 
                   height: '100%', 
-                  objectFit: objectFitState || 'cover',
-                  transform: 'translateZ(0)',
-                  WebkitTransform: 'translateZ(0)',
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                  willChange: 'transform',
-                  imageRendering: '-webkit-optimize-contrast',
+                  objectFit: objectFitState || 'contain',
+                  backgroundColor: '#000000',
+                  imageRendering: 'auto',
                 }}
               />
             ) : activeMedia.url ? (
