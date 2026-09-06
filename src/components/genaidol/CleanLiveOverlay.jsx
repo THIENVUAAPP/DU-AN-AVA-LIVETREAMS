@@ -666,8 +666,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           try { vid.currentTime = targetTime; } catch (e) {}
         }
       } else if (action === 'time_sync') {
-        // 🎯 ĐỒNG BỘ KHUNG HÌNH MỀM (SMOOTH CLOCK DRIFT COMPENSATION)
-        // Tuyệt đối không giật dây currentTime khi lệch nhỏ (< 2.5s) để loại bỏ 100% hiện tượng khựng giật/lag/đứng hình!
+        // 🎯 ĐỒNG BỘ KHUNG HÌNH MỀM SIÊU MƯỢT (SMOOTH PLAYBACK RATE COMPENSATION):
+        // Tuyệt đối không giật dây currentTime khi lệch bình thường để loại bỏ 100% hiện tượng khựng giật/lag/đứng hình trên TikTok Live Studio!
         if (typeof targetTime === 'number' && !isNaN(targetTime)) {
           if (control.force) {
             try { vid.currentTime = targetTime; } catch (e) {}
@@ -675,14 +675,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           } else {
             const diff = targetTime - vid.currentTime;
             const absDiff = Math.abs(diff);
-            if (absDiff > 2.5) {
-              // Lệch rất lớn do mạng trễ đột biến hoặc tab bị sleep quá lâu -> seek 1 lần
+            if (absDiff > 10.0) {
+              // Chỉ seek khi lệch cực lớn (> 10s) do streamer đổi clip hoặc tua xa
               try { vid.currentTime = targetTime; } catch (e) {}
               try { vid.playbackRate = 1.0; } catch (e) {}
             } else if (absDiff > 0.35) {
-              // Lệch nhẹ từ 0.35s - 2.5s: Bù trôi mềm bằng 3% playbackRate siêu mượt 60FPS không khựng gián đoạn
+              // Lệch nhẹ từ 0.35s - 10s: Bù trôi mềm bằng 4% playbackRate, video vẫn phát 60FPS liên tục không khựng gián đoạn
               try {
-                vid.playbackRate = diff > 0 ? 1.03 : 0.97;
+                vid.playbackRate = diff > 0 ? 1.04 : 0.96;
               } catch (e) {}
             } else {
               // Khớp sát (< 0.35s): Duy trì chuẩn 1.0x
@@ -1799,7 +1799,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   WINDOW CAPTURE (60FPS)
                 </span>
                 <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[9px] font-bold text-cyan-300">
-                  v1.7.4
+                  v1.7.5
                 </span>
               </div>
               <span className="text-[9.5px] text-emerald-400/90 font-medium">
@@ -2008,7 +2008,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   style={{ 
                     width: '100%', 
                     height: '100%', 
-                    objectFit: objectFitState || 'contain',
+                    objectFit: objectFitState || 'cover',
                     backgroundColor: '#000000'
                   }}
                 />

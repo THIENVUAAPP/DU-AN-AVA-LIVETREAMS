@@ -220,6 +220,10 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
       glue = '&';
     }
 
+    // 📐 TỰ ĐỘNG KHỚP 100% KHUNG HÌNH TIKTOK LIVE STUDIO (1080x1920 DỌC 9:16 HOẶC 1920x1080 NGANG 16:9)
+    baseUrl = `${baseUrl}${glue}fit=cover&ratio=9:16`;
+    glue = '&';
+
     const tunnelUrl = tunnelData?.tunnelUrl || '';
     if (tunnelUrl && !baseUrl.includes(tunnelUrl)) {
       baseUrl = `${baseUrl}${glue}backend=${encodeURIComponent(tunnelUrl)}`;
@@ -538,7 +542,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                   <span>DANH SÁCH ĐƯỜNG LINK DÁN VÀO BROWSER SOURCE (TIKTOK STUDIO):</span>
                 </span>
                 <span className="text-[10px] text-emerald-400 font-extrabold bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                  Kích thước chuẩn: 1080 × 1920
+                  Chuẩn: 1080 × 1920 (9:16) hoặc 1920 × 1080 (16:9) • Khớp 100% không cần cắt ghép
                 </span>
               </div>
 
