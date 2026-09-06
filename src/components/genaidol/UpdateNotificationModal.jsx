@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.6.3';
+export const APP_VERSION = '1.6.4';
 export const UPDATE_NOTES = [
   "⭐ Khắc Phục Triệt Để Lỗi Lặp Video 1-2 Giây & Tự Tua Về Đầu: Gỡ bỏ hoàn toàn vòng lặp xung đột lệnh seek trên mạng. Video phát mượt mà, liên tục 100%, lặp lại (loop) êm dịu từ đầu đến cuối không bị giật lùi hay chớp nháy.",
   "⚡ Hiển Thị & Phát Video Tức Thì 0ms Khi Tải Lên: Tải video lên từ ô nhân vật lập tức hiển thị và trình chiếu ngay trên giao diện phần mềm mà không phải chờ đợi nạp file.",
