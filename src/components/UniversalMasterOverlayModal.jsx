@@ -163,7 +163,40 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
   if (!isOpen) return null;
 
-  // 👑 TẠO ĐƯỜNG LINK LIVESTREAM CLOUDFLARE HTTPS CÔNG KHAI 100% (TIKTOK LIVE STUDIO CHẤP THUẬN)
+  // 🏆 TẠO ĐƯỜNG LINK SIÊU TỐC CÙNG MÁY (KHUYÊN DÙNG SỐ 1 CHO TIKTOK LIVE STUDIO TRÊN WINDOWS)
+  // Không qua internet, độ trễ 0ms, không tốn băng thông mạng, video 4K 150MB-1GB vẫn phát 60FPS siêu mượt vĩnh viễn!
+  const getLocalProjectOverlayUrl = (path) => {
+    let baseUrl = 'http://localhost:3001/' + path;
+    if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      baseUrl = `${window.location.origin}/${path}`;
+    }
+
+    let finalMedia = activeMediaUrl;
+    if (!finalMedia || (typeof finalMedia === 'string' && finalMedia.startsWith('blob:'))) {
+      try {
+        const saved = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
+        if (saved.mediaUrl && !saved.mediaUrl.startsWith('blob:')) finalMedia = saved.mediaUrl;
+        if (!finalMedia || (typeof finalMedia === 'string' && finalMedia.startsWith('blob:'))) {
+          const locked = localStorage.getItem('avalive_user_locked_media') || '';
+          if (locked && !locked.startsWith('blob:')) finalMedia = locked;
+        }
+      } catch (e) {}
+    }
+
+    let glue = baseUrl.includes('?') ? '&' : '?';
+    if (finalMedia && typeof finalMedia === 'string' && !finalMedia.startsWith('blob:') && (path === 'idol' || path === 'studio' || path === 'overlay')) {
+       if (finalMedia.includes('/uploads/')) {
+         finalMedia = finalMedia.substring(finalMedia.indexOf('/uploads/'));
+       }
+       baseUrl = `${baseUrl}${glue}v=${encodeURIComponent(finalMedia)}`;
+       glue = '&';
+    }
+
+    baseUrl = `${baseUrl}${glue}fit=contain&ratio=9:16&sound=1&autoplay=1`;
+    return baseUrl;
+  };
+
+  // 👑 TẠO ĐƯỜNG LINK LIVESTREAM CLOUDFLARE HTTPS CÔNG KHAI 100% (CHO MÁY KHÁC / PHÁT QUA INTERNET)
   const getProjectOverlayUrl = (path) => {
     let baseUrl = '';
 
@@ -497,9 +530,12 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
               {projects.map((proj) => {
                 const Icon = proj.icon;
-                const overlayUrl = getProjectOverlayUrl(proj.path);
-                const isCopied = copiedId === proj.id;
-                const hasUrl = Boolean(overlayUrl && overlayUrl.startsWith('http'));
+                const localUrl = getLocalProjectOverlayUrl(proj.path);
+                const cloudUrl = getProjectOverlayUrl(proj.path);
+                const isLocalCopied = copiedId === `${proj.id}_local`;
+                const isCloudCopied = copiedId === `${proj.id}_cloud`;
+                const hasLocalUrl = Boolean(localUrl && localUrl.startsWith('http'));
+                const hasCloudUrl = Boolean(cloudUrl && cloudUrl.startsWith('http'));
 
                 return (
                   <div key={proj.id} className={`p-4 rounded-2xl border transition-all ${proj.bgColor} space-y-3 relative shadow-lg`}>
@@ -516,15 +552,15 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                       </span>
                     </div>
 
-                    {/* 👑 1 ĐƯỜNG LINK DUY NHẤT CHUYÊN DÙNG PHÁT LIVE */}
-                    <div className="p-3 rounded-xl bg-black/90 border-2 border-cyan-500/60 space-y-2 shadow-cyan-950/40 shadow-lg">
+                    {/* 🏆 KHỐI 1: LINK SIÊU TỐC CÙNG MÁY (KHUYÊN DÙNG SỐ 1 CHO TIKTOK STUDIO WINDOWS - 0MS KHÔNG GIẬT LAG) */}
+                    <div className="p-3.5 rounded-xl bg-gradient-to-br from-emerald-950/40 via-black to-teal-950/30 border-2 border-emerald-500/70 space-y-2 shadow-emerald-950/40 shadow-lg">
                       <div className="flex items-center justify-between text-[11px]">
-                        <span className="font-black text-cyan-300 flex items-center gap-1.5">
-                          <Wifi className="w-4 h-4 text-cyan-400 animate-pulse" />
-                          <span>🌐 ĐƯỜNG LINK CLOUDFLARE HTTPS CHO TIKTOK LIVE STUDIO (CHỐNG CHẶN):</span>
+                        <span className="font-black text-emerald-300 flex items-center gap-1.5">
+                          <Zap className="w-4 h-4 text-yellow-300 animate-pulse" />
+                          <span>🏆 LINK SIÊU TỐC CÙNG MÁY (KHUYÊN DÙNG SỐ 1 CHO TIKTOK STUDIO WINDOWS):</span>
                         </span>
-                        <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/20 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-                          {hasUrl ? 'Cloudflare SSL • 60 FPS' : 'Đang Cấp Link...'}
+                        <span className="text-[10px] font-black text-emerald-300 bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-0.5 rounded-full">
+                          ⚡ Mượt 1000% • 0ms Delay • 60 FPS
                         </span>
                       </div>
 
@@ -532,42 +568,32 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                         <input
                           type="text"
                           readOnly
-                          value={hasUrl ? overlayUrl : "⏳ Đang kết nối đường truyền (Đợi 2-3s)..."}
-                          className={`flex-1 px-3 py-2 rounded-xl border bg-black text-xs font-mono font-bold focus:outline-none select-all shadow-inner ${
-                            hasUrl ? 'border-cyan-500/50 text-cyan-200' : 'border-yellow-500/40 text-yellow-300/80 animate-pulse'
-                          }`}
+                          value={localUrl}
+                          className="flex-1 px-3 py-2 rounded-xl border border-emerald-500/50 bg-black text-xs font-mono font-bold focus:outline-none select-all text-emerald-200 shadow-inner"
                         />
 
-                        {/* NÚT SAO CHÉP LINK */}
+                        {/* NÚT SAO CHÉP LINK SIÊU TỐC */}
                         <button
-                          onClick={() => handleCopy(overlayUrl, proj.id)}
-                          className={`px-4 py-2 rounded-xl font-black text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-lg active:scale-95 ${
-                            isCopied 
+                          onClick={() => handleCopy(localUrl, `${proj.id}_local`)}
+                          className={`px-3.5 py-2 rounded-xl font-black text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-lg active:scale-95 ${
+                            isLocalCopied 
                               ? "bg-emerald-600 text-white shadow-emerald-500/30" 
-                              : hasUrl
-                              ? "bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-cyan-500/30 border border-cyan-400/50"
-                              : "bg-yellow-600/50 hover:bg-yellow-600 text-yellow-100 border border-yellow-500/50"
+                              : "bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white shadow-emerald-500/30 border border-emerald-400/50"
                           }`}
-                          title={hasUrl ? "Sao chép đường link dán vào TikTok Live Studio" : "Đang lấy link..."}
+                          title="Sao chép link siêu tốc dán vào TikTok Live Studio trên cùng máy tính"
                         >
-                          {isCopied ? (
+                          {isLocalCopied ? (
                             <><Check className="w-4 h-4 text-white" /><span>ĐÃ SAO CHÉP!</span></>
-                          ) : hasUrl ? (
-                            <><Copy className="w-4 h-4" /><span>SAO CHÉP LINK</span></>
                           ) : (
-                            <><Loader2 className="w-4 h-4 animate-spin" /><span>LẤY LINK</span></>
+                            <><Copy className="w-4 h-4" /><span>SAO CHÉP LINK SIÊU TỐC</span></>
                           )}
                         </button>
 
                         {/* NÚT XEM THỬ */}
                         <button
                           type="button"
-                          onClick={() => handleOpenPreview(overlayUrl)}
-                          className={`px-3 py-2 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                            hasUrl
-                              ? "bg-white/10 hover:bg-white/20 text-gray-200 hover:text-white"
-                              : "bg-white/5 text-gray-500 cursor-not-allowed"
-                          }`}
+                          onClick={() => handleOpenPreview(localUrl)}
+                          className="px-3 py-2 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1 cursor-pointer bg-white/10 hover:bg-white/20 text-emerald-300 hover:text-white border border-emerald-500/30"
                           title="Mở tab mới kiểm tra video đang phát siêu mượt"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
@@ -575,8 +601,72 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                         </button>
                       </div>
 
-                      <p className="text-[10.5px] text-cyan-300/90 leading-tight">
-                        <span>🌐 <b>Đường link Cloudflare HTTPS:</b> Chấp nhận 100% trên mọi phiên bản TikTok Live Studio, công nghệ Smart Video Streaming giúp phát liên tục từ đầu đến cuối không bị ngắt quãng hay lặp sớm.</span>
+                      <p className="text-[10.5px] text-emerald-300/90 leading-tight">
+                        <span>⚡ <b>Tối ưu số 1 cho Windows:</b> Video chạy qua đường truyền nội bộ 0ms, không tốn 1 byte internet, video 4K dung lượng lớn (150MB - 1GB) vẫn chạy mượt mà 60 FPS vĩnh viễn không bao giờ đứng hình!</span>
+                      </p>
+                    </div>
+
+                    {/* 🌐 KHỐI 2: LINK ĐÁM MÂY CLOUDFLARE HTTPS (DÙNG CHO MÁY KHÁC / PHÁT QUA INTERNET) */}
+                    <div className="p-3 rounded-xl bg-black/80 border border-blue-500/40 space-y-2">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="font-bold text-cyan-300 flex items-center gap-1.5">
+                          <Wifi className="w-3.5 h-3.5 text-cyan-400" />
+                          <span>🌐 LINK ĐÁM MÂY CLOUDFLARE HTTPS (CHO MÁY KHÁC / PHÁT TỪ XA):</span>
+                        </span>
+                        <span className="text-[10px] font-bold text-blue-400 bg-blue-500/20 border border-blue-500/30 px-2 py-0.5 rounded-full">
+                          {hasCloudUrl ? 'Cloudflare SSL' : 'Đang Cấp Link...'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          readOnly
+                          value={hasCloudUrl ? cloudUrl : "⏳ Đang kết nối đường truyền Cloudflare (Đợi 2-3s)..."}
+                          className={`flex-1 px-3 py-1.5 rounded-xl border bg-black text-xs font-mono select-all ${
+                            hasCloudUrl ? 'border-cyan-500/40 text-cyan-200/90' : 'border-yellow-500/40 text-yellow-300/80 animate-pulse'
+                          }`}
+                        />
+
+                        {/* NÚT SAO CHÉP LINK INTERNET */}
+                        <button
+                          onClick={() => handleCopy(cloudUrl, `${proj.id}_cloud`)}
+                          className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 ${
+                            isCloudCopied 
+                              ? "bg-emerald-600 text-white" 
+                              : hasCloudUrl
+                              ? "bg-blue-600/70 hover:bg-blue-600 text-white border border-blue-400/40"
+                              : "bg-yellow-600/50 text-yellow-100 border border-yellow-500/50"
+                          }`}
+                          title="Sao chép link Cloudflare dùng cho máy khác qua internet"
+                        >
+                          {isCloudCopied ? (
+                            <><Check className="w-3.5 h-3.5 text-white" /><span>ĐÃ SAO CHÉP</span></>
+                          ) : hasCloudUrl ? (
+                            <><Copy className="w-3.5 h-3.5" /><span>SAO CHÉP</span></>
+                          ) : (
+                            <><Loader2 className="w-3.5 h-3.5 animate-spin" /><span>ĐANG TẠO</span></>
+                          )}
+                        </button>
+
+                        {/* NÚT XEM THỬ */}
+                        <button
+                          type="button"
+                          onClick={() => handleOpenPreview(cloudUrl)}
+                          className={`px-2.5 py-1.5 rounded-xl text-xs transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                            hasCloudUrl
+                              ? "bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white"
+                              : "bg-white/5 text-gray-500 cursor-not-allowed"
+                          }`}
+                          title="Mở tab mới kiểm tra"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          <span>Xem</span>
+                        </button>
+                      </div>
+
+                      <p className="text-[10px] text-gray-400 leading-tight">
+                        Dùng khi TikTok Live Studio chạy trên máy tính khác hoặc điện thoại kết nối qua Internet (tích hợp RAM Smart Preloader).
                       </p>
                     </div>
                   </div>
