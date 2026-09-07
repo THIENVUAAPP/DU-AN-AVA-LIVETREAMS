@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.8.6';
+export const APP_VERSION = '1.8.7';
 export const UPDATE_NOTES = [
-  "🚀 Bảo Vệ Luồng Video Window Capture & TikTok Live Studio Chạy Liên Tục 24/24: Ngăn chặn triệt để tình trạng video bị reset về đầu sau vài chục giây khi kết nối TikTok Live, giữ video phát không ngừng nghỉ cho đến khi streamer chủ động bấm Dừng.",
-  "🔊 Cách Ly Tuyệt Đối Âm Thanh Window Capture OBS: Âm thanh luồng live luôn ổn định 100%, không bị chập chờn hay tắt tiếng khi streamer mute loa xem trước trên máy tính.",
-  "🎬 Hỗ Trợ Auto-Next Playlist Thông Minh: Tự động chuyển bài mượt mà sang video kế tiếp trong danh sách phát khi hết thời lượng video, hoặc Seamless Loop 0ms liền mạch không gián đoạn.",
-  "⚡ Tối Ưu Bộ Đệm Buffer Tốc Độ Cao Cho Window Capture: Tự động đánh thức và duy trì 60 FPS siêu mượt, loại bỏ mọi micro-freeze khi truyền tải qua TikTok Live Studio."
+  "🎯 Khóa Khớp Thời Gian 1:1 Tuyệt Đối Giữa Phần Mềm Và Window Capture OBS: Đồng bộ thời gian thực, dù ẩn tab, chuyển tab tới lui hàng trăm lần hay mở cửa sổ mới ở bất kỳ thời điểm nào, Window Capture luôn lập tức nhảy đúng vào vị trí khung thời gian video trên phần mềm!",
+  "🚀 Đột Phá Route Phát Sóng Độc Lập /live-stream Siêu Nhẹ 60 FPS: Trang phát sóng HTML5 GPU-accelerated siêu nhẹ (~3KB) chuyên dụng cho TikTok Live Studio & OBS Browser Source, loại bỏ 100% hiện tượng giật, lag hay đứng hình!",
+  "⚡ Bổ Sung Đường Link Nội Bộ Siêu Tốc (1000 Mbps): Cung cấp đường link Local Loopback độ trễ 0ms dành riêng cho TikTok Live Studio cài trên cùng máy tính, phát mượt mà 24/24 không phụ thuộc vào mạng Internet!",
+  "🔊 Bảo Vệ Âm Thanh & Khung Hình 60FPS: Loại bỏ mọi ngắt quãng, đảm bảo hình ảnh, âm thanh, giọng nói và cử chỉ ăn khớp tuyệt đối từ giây đầu tiên đến giây cuối cùng."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

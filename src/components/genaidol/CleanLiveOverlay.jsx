@@ -982,8 +982,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               const isMasterPlaying = !!event.data.isPlaying;
               const v = overlayVideoRef.current;
               if (v && typeof masterTime === 'number' && !isNaN(masterTime)) {
-                // 🎯 CHỈ SEEK THỜI GIAN KHI STREAMER CHỦ ĐỘNG TUA HOẶC RESTART (CỜ FORCE)
-                if (event.data.force) {
+                // 🎯 ĐỒNG BỘ THỜI GIAN THỰC 100%: NẾU LỆCH > 0.6 GIÂY (DO ẨN TAB/CHUYỂN TAB) HOẶC CÓ CỜ FORCE -> KÉO KHỚP NGAY LẬP TỨC
+                const cur = v.currentTime || 0;
+                const diff = Math.abs(cur - masterTime);
+                if (isWindowCapture) {
+                  if (event.data.force || diff > 0.6) {
+                    try { v.currentTime = masterTime; } catch (e) {}
+                  }
+                } else if (event.data.force || diff > 1.5) {
                   try { v.currentTime = masterTime; } catch (e) {}
                 }
                 if (isMasterPlaying) {
@@ -1138,13 +1144,10 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 if (v) {
                   v.dataset.userPaused = 'false';
                   v.src = cleanUrl;
-                  v.currentTime = 0;
+                  v.currentTime = typeof event.data.currentTime === 'number' ? event.data.currentTime : 0;
                   v.muted = isVideoAudioMuted;
                   if (!isVideoAudioMuted) v.volume = videoVolume;
-                  v.play().catch(() => {
-                    v.muted = true;
-                    v.play().catch(() => {});
-                  });
+                  v.play().catch(() => {});
                 }
                 setIsPlayingState(true);
               }
@@ -1723,10 +1726,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
       const isUserPaused = checkIfUserPaused();
       if (!isUserPaused && vid.paused) {
-        vid.play().catch(() => {
-          vid.muted = true;
-          vid.play().catch(() => {});
-        });
+        vid.play().catch(() => {});
       }
 
       if (document.visibilityState === 'visible') {
@@ -1736,6 +1736,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         if (keepAliveAudioCtx && keepAliveAudioCtx.state === 'suspended') {
           keepAliveAudioCtx.resume().catch(() => {});
         }
+        // 🎯 ĐỒNG BỘ TỨC THÌ KHI STREAMER ACTIVE LẠI CỬA SỔ
+        try {
+          const bc = new BroadcastChannel('avalive_master_live_stream');
+          bc.postMessage({ type: 'REQUEST_MASTER_LIVE_STATE' });
+          setTimeout(() => bc.close(), 100);
+        } catch (e) {}
       }
     };
 
@@ -1841,7 +1847,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 WINDOW CAPTURE
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.8.6
+                v1.8.7
               </span>
             </div>
 
@@ -1990,10 +1996,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                         p.then(() => {
                           setIsPlayingState(true);
                           hasAutoplayStartedRef.current = true;
-                        }).catch(() => {
-                          v.muted = true;
-                          v.play().then(() => setIsPlayingState(true)).catch(() => {});
-                        });
+                        }).catch(() => {});
                       }
                     }
                   }}
@@ -2017,10 +2020,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                         p.then(() => {
                           setIsPlayingState(true);
                           hasAutoplayStartedRef.current = true;
-                        }).catch(() => {
-                          v.muted = true;
-                          v.play().then(() => setIsPlayingState(true)).catch(() => {});
-                        });
+                        }).catch(() => {});
                       }
                     } else {
                       v.dataset.userPaused = 'true';

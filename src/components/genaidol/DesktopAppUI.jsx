@@ -483,7 +483,12 @@ export default function DesktopAppUI() {
       localStorage.setItem('avalive_master_live_running', 'true');
     } catch (e) {}
 
-    const curTime = desktopVideoRef.current ? desktopVideoRef.current.currentTime : 0;
+    let curTime = 0;
+    if (desktopVideoRef.current && typeof desktopVideoRef.current.currentTime === 'number' && !isNaN(desktopVideoRef.current.currentTime)) {
+      curTime = desktopVideoRef.current.currentTime;
+    } else if (lastPlaybackTimeRef.current > 0) {
+      curTime = lastPlaybackTimeRef.current;
+    }
 
     if (activeUrl) {
       syncMasterLiveState({
@@ -2906,8 +2911,9 @@ export default function DesktopAppUI() {
             {/* THẺ VIDEO PREVIEW TRÊN PHẦN MỀM: LUÔN MUTE ĐỂ CHỈ CÓ CỬA SỔ LIVE (OBS) PHÁT TIẾNG, TRÁNH DỘI ÂM */}
             <video 
               ref={desktopVideoRef}
+              data-main-player="true"
               src={selected.url} 
-              className="w-full h-full object-contain bg-black transform-gpu cursor-pointer"
+              className="w-full h-full object-contain bg-black transform-gpu cursor-pointer main-video-player"
               style={{ transform: 'translateZ(0)', willChange: 'transform' }}
               autoPlay={localStorage.getItem('avalive_user_paused') !== 'true' && isMasterLiveRunning} 
               loop 
