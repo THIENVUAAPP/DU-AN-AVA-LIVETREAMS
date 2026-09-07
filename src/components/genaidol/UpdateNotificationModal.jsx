@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.9.1';
+export const APP_VERSION = '1.9.2';
 export const UPDATE_NOTES = [
-  "🛠️ Sửa Triệt Để Lỗi Bấm Vào Link & Window Capture: Khắc phục lỗi tham chiếu biểu tượng khiến Trung Tâm Phát Sóng bị báo lỗi khi bấm nút lấy link hoặc mở Window Capture trên phần mềm Windows!",
-  "🌐 Toàn Bộ Đường Link & Cửa Sổ Live Mở Thông Suốt 100%: Tối ưu hóa bộ xử lý Origin và mở cửa sổ Live 9:16 (Window Capture), lấy link Online HTTPS dán vào TikTok Live Studio siêu mượt.",
-  "🚀 Đồng Bộ Real-Time 0ms & 60 FPS: Phát sóng trực tiếp không giật lag, không đứng hình, đồng bộ video và âm thanh trọn vẹn giữa AvaLive và TikTok Live Studio.",
-  "🔊 Tách Biệt Âm Thanh Độc Lập: Streamer tắt loa máy tính để tránh hú mic nhưng TikTok Live Studio và khán giả vẫn nghe tiếng đầy đủ 100%!"
+  "💎 100.000 Token & 100.000 Giờ Live Cho Quản Trị Viên: Tài khoản Admin (quocthiencr90@gmail.com) được tự động cấp 100k Token và 100.000 Giờ Live (6.000.000 phút) chạy liên tục vĩnh viễn.",
+  "⏱️ Hệ Thống Tính Toán Thời Gian & Trừ Điểm Token Realtime: Tự động quản trị thời gian phát sóng và trừ điểm token khi chạy AI Idol/tương tác, tự động dừng và cảnh báo khi hết thời gian dùng thử (Gói Free).",
+  "🔇 Đồng Bộ Quản Trị Tắt / Mở Tiếng Window Capture & TikTok Live: Bấm Tắt tiếng trên phần mềm là tắt tiếng cả trên phiên live và Window Capture, bấm Mở tiếng là mở tiếng toàn bộ siêu mượt.",
+  "🎬 Giữ Nguyên Vị Trí Phát Khi Chuyển Tab / Chế Độ: Tất cả video đang phát tiếp tục chạy từ vị trí hiện tại, tuyệt đối không bị tua lại từ đầu (0:00) khi chuyển đổi Game / Bản đồ hay chuyển tab trình duyệt!"
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

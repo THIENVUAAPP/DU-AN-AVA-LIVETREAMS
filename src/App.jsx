@@ -185,8 +185,8 @@ export default function App() {
       avatar: sessionUser.user_metadata?.avatar_url || "https://lh3.googleusercontent.com/a/default-user",
       isAdmin: isAdminUser,
       plan: currentPlan,
-      tokens: isAdminUser ? 999999 : (planConfig.tokens !== undefined ? planConfig.tokens : sysConfig.defaultTokens),
-      liveTime: isAdminUser ? 999999 : (planConfig.liveMinutes !== undefined ? planConfig.liveMinutes : sysConfig.defaultLiveTime),
+      tokens: isAdminUser ? 100000 : (planConfig.tokens !== undefined ? planConfig.tokens : sysConfig.defaultTokens),
+      liveTime: isAdminUser ? 6000000 : (planConfig.liveMinutes !== undefined ? planConfig.liveMinutes : sysConfig.defaultLiveTime),
       role: isAdminUser ? 'admin' : 'user'
     };
 

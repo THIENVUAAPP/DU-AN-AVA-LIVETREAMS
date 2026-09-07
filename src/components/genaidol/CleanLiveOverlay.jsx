@@ -195,9 +195,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     }
     return 0;
   })());
-  const hasInitialSeekDoneRef = useRef(false);
-
   const hasAutoplayStartedRef = useRef(false);
+  const lastOverlayTimeRef = useRef(0);
   const [showCaptureTip, setShowCaptureTip] = useState(false);
 
   // ⚡ CLICK / TOUCH / INTERACT UNLOCK: Mở khóa âm thanh và kích hoạt phát ngay khi người dùng chạm vào cửa sổ
@@ -691,18 +690,16 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         }
       }
 
-      // 3. Đồng bộ Mute & Volume tức thì (TikTok Live Studio & Window Capture luôn phát âm thanh 100% cho khán giả)
+      // 3. Đồng bộ Mute & Volume tức thì (Đồng bộ trực tiếp từ phần mềm điều khiển sang Window Capture & Khán giả)
       if (typeof control.isMuted === 'boolean') {
-        if (!isLiveStreamAudienceTarget) {
-          setIsVideoAudioMuted(control.isMuted);
-          if (vid) vid.muted = control.isMuted;
-          bandoAudio.setLocalSpeakerMute(control.isMuted);
-          bandoAudio.setMuted(control.isMuted);
-        }
+        setIsVideoAudioMuted(control.isMuted);
+        if (vid) vid.muted = control.isMuted;
+        bandoAudio.setLocalSpeakerMute(control.isMuted);
+        bandoAudio.setMuted(control.isMuted);
       }
       if (typeof control.volume === 'number') {
         setVideoVolume(control.volume);
-        if (vid && !isVideoAudioMuted) vid.volume = control.volume;
+        if (vid && !control.isMuted) vid.volume = control.volume;
         bandoAudio.setMasterVolume(control.volume);
       }
     };
@@ -745,16 +742,16 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         }
       }
 
-      // Đồng bộ Âm thanh & Âm lượng từ Phần Mềm Chính (TikTok Live Studio & Window Capture luôn phát âm thanh 100% cho khán giả)
+      // Đồng bộ Âm thanh & Âm lượng từ Phần Mềm Chính (Đồng bộ trực tiếp sang Window Capture & Khán giả)
       if (typeof data.isVideoAudioMuted === 'boolean') {
-        if (!isLiveStreamAudienceTarget) {
-          setIsVideoAudioMuted(data.isVideoAudioMuted);
-          bandoAudio.setLocalSpeakerMute(data.isVideoAudioMuted);
-          bandoAudio.setMuted(data.isVideoAudioMuted);
-        }
+        setIsVideoAudioMuted(data.isVideoAudioMuted);
+        if (vid) vid.muted = data.isVideoAudioMuted;
+        bandoAudio.setLocalSpeakerMute(data.isVideoAudioMuted);
+        bandoAudio.setMuted(data.isVideoAudioMuted);
       }
       if (typeof data.videoVolume === 'number') {
         setVideoVolume(data.videoVolume);
+        if (vid && !data.isVideoAudioMuted) vid.volume = data.videoVolume;
         bandoAudio.setMasterVolume(data.videoVolume);
       }
 
@@ -1013,12 +1010,10 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 }
               }
               if (typeof event.data.isMuted === 'boolean') {
-                if (!isLiveStreamAudienceTarget) {
-                  setIsVideoAudioMuted(event.data.isMuted);
-                  if (v) v.muted = event.data.isMuted;
-                  bandoAudio.setLocalSpeakerMute(event.data.isMuted);
-                  bandoAudio.setMuted(event.data.isMuted);
-                }
+                setIsVideoAudioMuted(event.data.isMuted);
+                if (v) v.muted = event.data.isMuted;
+                bandoAudio.setLocalSpeakerMute(event.data.isMuted);
+                bandoAudio.setMuted(event.data.isMuted);
               }
               if (typeof event.data.volume === 'number') {
                 setVideoVolume(event.data.volume);
@@ -1034,12 +1029,10 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             } else if (event.data.type === 'GLOBAL_AUDIO_CHANGE') {
               const v = overlayVideoRef.current;
               if (typeof event.data.isMuted === 'boolean') {
-                if (!isLiveStreamAudienceTarget || event.data.source === 'overlay') {
-                  setIsVideoAudioMuted(event.data.isMuted);
-                  if (v) v.muted = event.data.isMuted;
-                  bandoAudio.setLocalSpeakerMute(event.data.isMuted);
-                  bandoAudio.setMuted(event.data.isMuted);
-                }
+                setIsVideoAudioMuted(event.data.isMuted);
+                if (v) v.muted = event.data.isMuted;
+                bandoAudio.setLocalSpeakerMute(event.data.isMuted);
+                bandoAudio.setMuted(event.data.isMuted);
               }
               if (typeof event.data.volume === 'number') {
                 setVideoVolume(event.data.volume);
@@ -2006,14 +1999,23 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                       }
                     }
                   }}
+                  onTimeUpdate={(e) => {
+                    const ct = e.currentTarget.currentTime;
+                    if (ct > 0) {
+                      lastOverlayTimeRef.current = ct;
+                    }
+                  }}
                   onLoadedMetadata={(e) => {
                     const v = e.currentTarget;
-                    // ⚡ CHỈ SEEK 1 LẦN DUY NHẤT LÚC KHỞI TẠO NẾU CÓ THAM SỐ ?t= TỪ LINK
-                    if (!hasInitialSeekDoneRef.current && initialTimeParamRef.current > 0) {
+                    // ⚡ Khôi phục thời gian đang phát nếu có chuyển stage hoặc reload tab (Không phát lại từ đầu 0:00)
+                    if (lastOverlayTimeRef.current > 0) {
+                      try {
+                        v.currentTime = lastOverlayTimeRef.current;
+                      } catch (err) {}
+                    } else if (initialTimeParamRef.current > 0) {
                       try {
                         v.currentTime = initialTimeParamRef.current;
                       } catch (err) {}
-                      hasInitialSeekDoneRef.current = true;
                       initialTimeParamRef.current = 0;
                     }
                     const isUserPaused = checkIfUserPaused();

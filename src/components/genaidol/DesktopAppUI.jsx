@@ -60,8 +60,8 @@ export default function DesktopAppUI() {
       isAdmin: false,
       plan: 'Free',
       tokens: 100,
-      liveMinutes: 600,
-      liveTimeHours: 10
+      liveMinutes: 60,
+      liveTimeHours: 1
     };
   });
   const [realGmailInput, setRealGmailInput] = useState(() => {
@@ -81,16 +81,16 @@ export default function DesktopAppUI() {
         const isSuperAdmin = emailClean === 'quocthiencr90@gmail.com';
         
         let userPlan = isSuperAdmin ? 'SUPER ADMIN ENTERPRISE VIP' : 'VIP PRO';
-        let userTokens = isSuperAdmin ? 999999999 : 50000;
-        let userLiveMinutes = isSuperAdmin ? 999999 : 6000;
+        let userTokens = isSuperAdmin ? 100000 : 50000;
+        let userLiveMinutes = isSuperAdmin ? 6000000 : 6000;
 
         try {
           const { data: dbUser } = await supabase.from('users').select('*').eq('email', emailClean).maybeSingle();
           if (dbUser) {
             if (dbUser.plan) userPlan = dbUser.plan.toUpperCase();
-            if (typeof dbUser.tokens === 'number') userTokens = dbUser.tokens;
-            if (typeof dbUser.live_minutes === 'number') userLiveMinutes = dbUser.live_minutes;
-            else if (typeof dbUser.liveMinutes === 'number') userLiveMinutes = dbUser.liveMinutes;
+            if (typeof dbUser.tokens === 'number') userTokens = isSuperAdmin ? Math.max(100000, dbUser.tokens) : dbUser.tokens;
+            if (typeof dbUser.live_minutes === 'number') userLiveMinutes = isSuperAdmin ? Math.max(6000000, dbUser.live_minutes) : dbUser.live_minutes;
+            else if (typeof dbUser.liveMinutes === 'number') userLiveMinutes = isSuperAdmin ? Math.max(6000000, dbUser.liveMinutes) : dbUser.liveMinutes;
           }
         } catch (e) {}
 
@@ -157,9 +157,9 @@ export default function DesktopAppUI() {
             avatar: dbUser.avatar_url || currentUser.avatar,
             isAdmin: isSuperAdmin,
             plan: isSuperAdmin ? 'SUPER ADMIN ENTERPRISE VIP' : (dbUser.plan || currentUser.plan || 'VIP PRO'),
-            tokens: typeof dbUser.tokens === 'number' ? dbUser.tokens : (currentUser.tokens || 50000),
-            liveMinutes: typeof dbUser.live_minutes === 'number' ? dbUser.live_minutes : (currentUser.liveMinutes || 6000),
-            liveTimeHours: Math.round((typeof dbUser.live_minutes === 'number' ? dbUser.live_minutes : (currentUser.liveMinutes || 6000)) / 60)
+            tokens: isSuperAdmin ? Math.max(100000, typeof dbUser.tokens === 'number' ? dbUser.tokens : 100000) : (typeof dbUser.tokens === 'number' ? dbUser.tokens : (currentUser.tokens || 50000)),
+            liveMinutes: isSuperAdmin ? Math.max(6000000, typeof dbUser.live_minutes === 'number' ? dbUser.live_minutes : 6000000) : (typeof dbUser.live_minutes === 'number' ? dbUser.live_minutes : (currentUser.liveMinutes || 6000)),
+            liveTimeHours: Math.round((isSuperAdmin ? 6000000 : (typeof dbUser.live_minutes === 'number' ? dbUser.live_minutes : (currentUser.liveMinutes || 6000))) / 60)
           };
           setCurrentUser(updatedUser);
           try { localStorage.setItem('avalive_current_user', JSON.stringify(updatedUser)); } catch (e) {}
@@ -276,9 +276,9 @@ export default function DesktopAppUI() {
     let avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(emailClean)}`;
 
     // Kiểm tra gói bản quyền & Token & Thời gian Live trên Supabase
-    let userPlan = isAdmin ? 'ENTERPRISE' : 'VIP PRO';
-    let userTokens = isAdmin ? 999999999 : 100000;
-    let userLiveMinutes = isAdmin ? 999999 : 6000;
+    let userPlan = isAdmin ? 'SUPER ADMIN ENTERPRISE VIP' : 'VIP PRO';
+    let userTokens = isAdmin ? 100000 : 50000;
+    let userLiveMinutes = isAdmin ? 6000000 : 6000;
 
     try {
       if (supabase) {
@@ -287,9 +287,9 @@ export default function DesktopAppUI() {
           if (dbUser.name) nameClean = dbUser.name;
           if (dbUser.avatar_url) avatarUrl = dbUser.avatar_url;
           if (dbUser.plan) userPlan = dbUser.plan.toUpperCase();
-          if (typeof dbUser.tokens === 'number') userTokens = dbUser.tokens;
-          if (typeof dbUser.live_minutes === 'number') userLiveMinutes = dbUser.live_minutes;
-          else if (typeof dbUser.liveMinutes === 'number') userLiveMinutes = dbUser.liveMinutes;
+          if (typeof dbUser.tokens === 'number') userTokens = isAdmin ? Math.max(100000, dbUser.tokens) : dbUser.tokens;
+          if (typeof dbUser.live_minutes === 'number') userLiveMinutes = isAdmin ? Math.max(6000000, dbUser.live_minutes) : dbUser.live_minutes;
+          else if (typeof dbUser.liveMinutes === 'number') userLiveMinutes = isAdmin ? Math.max(6000000, dbUser.liveMinutes) : dbUser.liveMinutes;
         } else {
           // Tạo mới tài khoản trên Supabase nếu chưa có
           await syncUserToSupabase({
@@ -326,7 +326,7 @@ export default function DesktopAppUI() {
 
     setIsLoggingIn(false);
     setIsGmailLoginModalOpen(false);
-    alert(`✅ Kết nối thành công tài khoản Google: ${emailClean}\n- Gói Bản Quyền: ${userPlan}\n- Số Dư Token: ${userTokens.toLocaleString()}\n- Thời Gian Live: ${Math.round(userLiveMinutes / 60)} Giờ`);
+    showToast(`✅ Đã đăng nhập: ${emailClean} (${userPlan}) - Token: ${userTokens.toLocaleString()}`, 'success');
   };
 
   const handleLogout = () => {
@@ -1134,7 +1134,43 @@ export default function DesktopAppUI() {
     setNotifyCallback(({ message }) => showToast(message, 'warn'));
   }, [setNotifyCallback]);
 
-  // Auto-deduct tokens when live session is active (AI Brain & Server 유지)
+  // ⏱️ QUẢN LÝ THỜI GIAN LIVE VÀ TRỪ ĐIỂM TOKEN REALTIME
+  useEffect(() => {
+    if (!isMasterLiveRunning) return;
+
+    // Định kỳ 60 giây (1 phút) trừ 1 phút phát Live
+    const liveTimer = setInterval(() => {
+      setCurrentUser(prevUser => {
+        if (!prevUser) return prevUser;
+        // Tài khoản Quản trị viên (Admin) không bao giờ hết hạn
+        if (prevUser.isAdmin || prevUser.email === 'quocthiencr90@gmail.com') {
+          return prevUser;
+        }
+
+        const currentMinutes = typeof prevUser.liveMinutes === 'number' ? prevUser.liveMinutes : 60;
+        const newMinutes = Math.max(0, currentMinutes - 1);
+
+        if (newMinutes <= 0) {
+          setIsMasterLiveRunning(false);
+          showToast('🔴 Hết thời gian phát Live dùng thử (1 Giờ)! Vui lòng nâng cấp gói VIP để tiếp tục phát live.', 'error');
+        }
+
+        const updated = {
+          ...prevUser,
+          liveMinutes: newMinutes,
+          liveTimeHours: Math.round(newMinutes / 60)
+        };
+        try {
+          localStorage.setItem('avalive_current_user', JSON.stringify(updated));
+        } catch (e) {}
+        return updated;
+      });
+    }, 60000);
+
+    return () => clearInterval(liveTimer);
+  }, [isMasterLiveRunning]);
+
+  // Auto-deduct tokens when live session is active (AI Brain & Server)
   useEffect(() => {
     if (!isConnected) return;
     const rates = getDynamicRates();
@@ -1393,13 +1429,13 @@ export default function DesktopAppUI() {
     showToast(`🔊 Đang phát kiểm tra âm thanh Giọng ${role === 'idol' ? 'Nhân vật chính' : role === 'manager' ? 'Trợ lý' : 'Game'}!`, 'success');
   }, [unlockAllAudio]);
 
-  // 🔇 Xử lý Bật/Tắt Âm Thanh Loa Máy Tính Streamer (TIKTOK LIVE STUDIO VẪN PHÁT TIẾNG 100% CHO KHÁN GIẢ)
+  // 🔇 Xử lý Bật/Tắt Âm Thanh Toàn Diện (Đồng bộ trực tiếp cả Máy Streamer, Window Capture & TikTok Live)
   const handleToggleLocalSpeakerMute = useCallback(() => {
     const nextState = !isLocalSpeakerMuted;
     setIsLocalSpeakerMuted(nextState);
     setLiveAudioMuted(nextState);
 
-    // Chỉ tắt tiếng loa máy tính của streamer trên phần mềm quản lý để tránh vọng micro
+    // Tắt/Mở tiếng video trên màn hình điều khiển
     if (desktopVideoRef.current) {
       desktopVideoRef.current.muted = nextState;
       if (!nextState) {
@@ -1413,29 +1449,42 @@ export default function DesktopAppUI() {
       }
     }
 
-    // Chỉ tắt tiếng loa máy tính của audio engine (không ảnh hưởng luồng TikTok Live)
+    // Tắt/Mở tiếng Audio Engine và Loa máy
     bandoAudio.setLocalSpeakerMute(nextState);
+    bandoAudio.setMuted(nextState);
 
     try {
       localStorage.setItem('avalive_local_speaker_muted', String(nextState));
     } catch (e) {}
 
-    // ⚠️ QUY TẮC BẤT DI BẤT DỊCH: TIKTOK LIVE STUDIO & LUỒNG LIVE CHO NGƯỜI XEM LUÔN CÓ TIẾNG 100%!
-    // Tuyệt đối không gửi isVideoAudioMuted: true sang TikTok Live Studio / OBS
+    // ⚡ Đồng bộ trực tiếp trạng thái Tắt/Mở tiếng sang Window Capture & TikTok Live Overlay
     syncMasterLiveState({
-      isVideoAudioMuted: false,
-      videoVolume: 1.0
+      isVideoAudioMuted: nextState,
+      isMuted: nextState,
+      videoVolume: nextState ? 0 : (liveVolume || 1.0)
     }, socketRef.current);
+
+    // Phát sự kiện BroadcastChannel lập tức cho Window Capture
+    try {
+      const bc = new BroadcastChannel('avalive_master_live_stream');
+      bc.postMessage({
+        type: 'GLOBAL_AUDIO_CHANGE',
+        isMuted: nextState,
+        volume: nextState ? 0 : (liveVolume || 1.0),
+        source: 'desktop'
+      });
+      setTimeout(() => bc.close(), 100);
+    } catch (e) {}
 
     if (nextState) {
       setToast({
         type: 'info',
-        message: '🔇 Đã TẮT LOA MÁY TÍNH streamer! (TikTok Live Studio & người xem vẫn nghe tiếng bình thường 100%)'
+        message: '🔇 Đã TẮT TIẾNG TOÀN BỘ (Đồng bộ Window Capture & Khán giả TikTok Live đã tắt tiếng)'
       });
     } else {
       setToast({
         type: 'success',
-        message: '🔊 Đã BẬT LOA MÁY TÍNH streamer! (Cả máy tính và TikTok Live Studio đều có tiếng)'
+        message: '🔊 Đã BẬT TIẾNG TOÀN BỘ (Window Capture & TikTok Live đã phát âm thanh)'
       });
     }
   }, [isLocalSpeakerMuted, liveVolume]);
@@ -2925,6 +2974,12 @@ export default function DesktopAppUI() {
                 if (!liveAudioMuted) {
                   e.currentTarget.volume = liveVolume;
                 }
+                // ⚡ Khôi phục vị trí đang phát nếu người dùng đổi tab hoặc đổi stage quay lại (Không bị tua lại từ đầu)
+                if (lastPlaybackTimeRef.current && lastPlaybackTimeRef.current > 0) {
+                  try {
+                    e.currentTarget.currentTime = lastPlaybackTimeRef.current;
+                  } catch (err) {}
+                }
                 const isPaused = localStorage.getItem('avalive_user_paused') === 'true';
                 if (isPaused) {
                   e.currentTarget.dataset.userPaused = 'true';
@@ -3113,19 +3168,19 @@ export default function DesktopAppUI() {
                 <span>{isVideoPlaying ? 'TẠM DỪNG' : 'TIẾP TỤC'}</span>
               </button>
 
-              {/* Nút 2: Mở / Tắt Âm Thanh Loa Máy Tính (TikTok Live Vẫn Có Tiếng 100%) */}
+              {/* Nút 2: Mở / Tắt Âm Thanh Toàn Diện (Đồng Bộ Cả Live & Loa Máy) */}
               <button
                 type="button"
                 onClick={handleToggleLocalSpeakerMute}
                 className={`pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-2xl border backdrop-blur-md transition-all cursor-pointer active:scale-95 select-none ${
                   !isLocalSpeakerMuted
                     ? 'bg-black/70 hover:bg-black/90 text-cyan-300 border-cyan-400/30'
-                    : 'bg-amber-950/85 hover:bg-amber-900 text-amber-300 border-amber-500/50'
+                    : 'bg-rose-950/85 hover:bg-rose-900 text-rose-300 border-rose-500/50'
                 }`}
-                title={isLocalSpeakerMuted ? "Loa máy đang tắt (TikTok Live vẫn phát tiếng 100%) — Bấm để bật loa máy" : "Loa máy đang bật — Bấm để tắt loa máy (tránh vọng micro khi live)"}
+                title={isLocalSpeakerMuted ? "Âm thanh đang TẮT (Live & Máy) — Bấm để BẬT tiếng toàn bộ" : "Âm thanh đang BẬT (Live & Máy) — Bấm để TẮT tiếng toàn bộ"}
               >
-                {!isLocalSpeakerMuted ? <Volume2 size={13} className="text-cyan-400" /> : <VolumeX size={13} className="text-amber-400" />}
-                <span>{!isLocalSpeakerMuted ? 'LOA MÁY: BẬT' : 'LOA MÁY: TẮT'}</span>
+                {!isLocalSpeakerMuted ? <Volume2 size={13} className="text-cyan-400 animate-pulse" /> : <VolumeX size={13} className="text-rose-400" />}
+                <span>{!isLocalSpeakerMuted ? 'TIẾNG: ĐANG BẬT' : 'TIẾNG: ĐÃ TẮT'}</span>
               </button>
             </div>
           </div>
@@ -4085,29 +4140,29 @@ export default function DesktopAppUI() {
             <span>{isGlobalDemoRunning ? t('stopDemo', currentLang) : t('runDemo', currentLang)}</span>
           </button>
 
-          {/* 🔊 NÚT BẬT / TẮT ÂM THANH LOA MÁY TÍNH STREAMER (TIKTOK LIVE STUDIO VẪN CÓ TIẾNG 100%) */}
+          {/* 🔊 NÚT BẬT / TẮT ÂM THANH TOÀN DIỆN (ĐỒNG BỘ CẢ WINDOW CAPTURE & TIKTOK LIVE) */}
           <button 
             onClick={handleToggleLocalSpeakerMute}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-black transition-all border shadow-sm active:scale-95 cursor-pointer ${
               isLocalSpeakerMuted
-                ? 'bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600 text-white border-amber-300 ring-2 ring-amber-400 shadow-amber-500/30'
+                ? 'bg-gradient-to-r from-red-600 via-rose-600 to-pink-600 text-white border-red-300 ring-2 ring-red-400 shadow-red-500/30 animate-pulse'
                 : (isDarkMode ? 'bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-600 hover:to-teal-600 text-white border-emerald-400/50 shadow-emerald-500/20' : 'bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-400')
             }`}
             title={
               isLocalSpeakerMuted
-                ? "ĐANG TẮT LOA MÁY TÍNH (TikTok Live Studio vẫn phát tiếng 100% cho khán giả) — Bấm để Mở lại loa máy."
-                : "ĐANG BẬT LOA MÁY TÍNH (Khán giả TikTok và loa máy đều có tiếng) — Bấm để Tắt loa máy tránh vọng micro khi live."
+                ? "ĐANG TẮT TIẾNG TOÀN BỘ (Window Capture & TikTok Live Overlay đều tắt) — Bấm để Mở lại âm thanh."
+                : "ĐANG BẬT TIẾNG TOÀN BỘ (Window Capture & TikTok Live đều có tiếng) — Bấm để Tắt tiếng toàn bộ."
             }
           >
             {isLocalSpeakerMuted ? (
               <>
                 <VolumeX size={12} className="text-yellow-300" />
-                <span className="whitespace-nowrap font-black">🔇 Tắt Loa Máy (TikTok Có Tiếng)</span>
+                <span className="whitespace-nowrap font-black">🔇 Đã Tắt Tiếng (Live & Máy)</span>
               </>
             ) : (
               <>
-                <Volume2 size={12} className="text-white" />
-                <span className="whitespace-nowrap font-black">🔊 Bật Loa Máy</span>
+                <Volume2 size={12} className="text-white animate-pulse" />
+                <span className="whitespace-nowrap font-black">🔊 Đang Bật Tiếng (Live & Máy)</span>
               </>
             )}
           </button>
