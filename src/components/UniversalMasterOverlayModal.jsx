@@ -76,7 +76,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
     const timeQuery = curTime > 0 ? `&t=${Math.round(curTime * 100) / 100}` : '';
     const query = `${activeUrl ? `&v=${encodeURIComponent(activeUrl)}` : ''}${timeQuery}`;
-    const captureUrl = `${window.location.origin}/idol?mode=window_capture${query}`;
+    const captureUrl = `${window.location.origin}/idol?mode=window_capture&sound=1&autoplay=1${query}`;
     window.open(
       captureUrl,
       'avalive_window_capture_target',

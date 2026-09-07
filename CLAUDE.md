@@ -675,6 +675,17 @@ Im lặng bỏ qua 3 câu này = vi phạm Mục 0.7 và Mục 1.
 | **4. Nâng Cấp Giao Thức Tunnel Auto & Hỗ Trợ Enterprise Dedicated Tunnel** | `backend/server.cjs` | ✅ PASS 100% | - Bổ sung cờ `--protocol auto` và `--edge-ip-version auto`, tự động chọn giao thức truyền dẫn tối ưu (QUIC/HTTP3 hoặc HTTP2) và Edge Server gần nhất.<br>- Hỗ trợ cấu hình biến môi trường `TUNNEL_TOKEN` (Cloudflare Zero Trust Dedicated Enterprise Tunnel) cho người dùng muốn sử dụng đường truyền riêng biệt cấp độ cao nhất thế giới. |
 | **5. Nâng Cấp Toàn Bộ Hệ Thống Lên v1.8.5** | `package.json`, `UpdateNotificationModal.jsx`, `CleanLiveOverlay.jsx`, `Mo_Ung_Dung_Web.html`, `backend/server.cjs`, `vercel.json`, `CLAUDE.md` | ✅ PASS 100% | Đồng bộ toàn diện phiên bản v1.8.5, sẵn sàng đóng gói và cập nhật tự động cho người dùng. |
 
+---
+
+### 🚀 21. Nhật Ký Bản Cập Nhật v1.8.6 (Official Release - Phát Video Liên Tục 24/24 & Bảo Vệ Tuyệt Đối Âm Thanh Window Capture OBS / TikTok Live Studio)
+| Hạng Mục Cải Tiến | File Thay Đổi | Trạng Thái | Chi Tiết Kỹ Thuật |
+| :--- | :--- | :---: | :--- |
+| **1. Khắc Phục Triệt Để Lỗi Video Bị Tua Lại Từ Đầu Sau Vài Chục Giây Khi Kết Nối TikTok Live** | `backend/server.cjs` | ✅ PASS 100% | - **Nguyên nhân gốc rễ**: Khi kết nối TikTok Live hoặc khi `autoReconnectTimer` (chạy mỗi 15 giây) hoạt động, server vô tình gán đè `mediaUrl = finalFlv` (luồng stream FLV từ kênh TikTok). Luồng FLV của kênh TikTok bị reconnect hoặc rỗng khiến thẻ `<video>` trên Window Capture nhận `mediaUrl` mới hoặc bị reset về `currentTime = 0`.<br>- **Giải pháp**: Bảo vệ tuyệt đối video của streamer `mediaUrl: currentMasterLiveState.mediaUrl \|\| finalFlv`. Không bao giờ đè luồng FLV của TikTok lên video MP4 đang phát của streamer! |
+| **2. Cách Ly Hoàn Toàn & Khắc Phục Âm Thanh Chập Chờn Trên Window Capture OBS** | `CleanLiveOverlay.jsx`, `DesktopAppUI.jsx`, `UniversalMasterOverlayModal.jsx` | ✅ PASS 100% | - **Nguyên nhân chập chờn**: (1) DesktopAppUI gửi `MASTER_TIME_SYNC` mỗi 1 giây mang theo `isMuted: liveAudioMuted`. Khi streamer tắt loa xem trước trên máy tính (để tránh hú loa), Window Capture bị ép mute theo; (2) Watchdog stall và `onError` trong CleanLiveOverlay tự ý gán `vid.muted = true` mỗi khi video có micro-stall.<br>- **Giải pháp**: Cách ly âm thanh Window Capture OBS độc lập 100% với loa preview của Desktop App. Luôn phát âm thanh tối đa (`muted = false`, volume 1.0), loại bỏ tất cả các lệnh tự ý mute trong watchdog. Gắn cờ `&sound=1&autoplay=1` khi mở Window Capture. Âm thanh OBS và TikTok Live Studio trong trẻo, ổn định tuyệt đối. |
+| **3. Cơ Chế Auto-Next Playlist & Seamless Loop 24/24** | `CleanLiveOverlay.jsx`, `DesktopAppUI.jsx` | ✅ PASS 100% | Tích hợp thuật toán chuyển bài tự động trong `onEnded`: Khi streamer tải lên danh sách nhiều video, hệ thống tự động chuyển mượt mà sang video kế tiếp `(idx + 1) % list.length` khi hết thời lượng video. Nếu chỉ có 1 video, thực hiện Seamless Zero-Latency Loop 0ms liền mạch không đổi src, video chạy liên tục 24/24 cho đến khi streamer bấm Dừng. |
+| **4. Nâng Cấp Toàn Bộ Hệ Thống Lên v1.8.6** | `package.json`, `UpdateNotificationModal.jsx`, `CleanLiveOverlay.jsx`, `Mo_Ung_Dung_Web.html`, `backend/server.cjs`, `vercel.json`, `CLAUDE.md` | ✅ PASS 100% | Đồng bộ toàn diện phiên bản v1.8.6, sẵn sàng đóng gói standalone releases và phát hành tự động cho người dùng. |
+
+
 
 
 

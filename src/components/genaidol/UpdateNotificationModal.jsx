@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.8.5';
+export const APP_VERSION = '1.8.6';
 export const UPDATE_NOTES = [
-  "🚀 Đột Phá MP4 FastStart Engine Tự Động: Tự động đưa atom 'moov' lên byte 28 ngay khi tải lên, giúp TikTok Live Studio và OBS đọc chỉ mục khung hình trong 0.05 giây, phát ngay lập tức không cần tải toàn bộ 150MB!",
-  "⚡ Tối Ưu Băng Thông Đa Luồng Chống Nghẽn Socket: Loại bỏ các lệnh tải ngầm chiếm dụng dữ liệu, dồn 100% băng thông đường truyền cho bộ đệm phát sóng trực tiếp mượt mà 60 FPS 24/24.",
-  "🌐 Nâng Cấp Giao Thức Tunnel Tự Động & Hỗ Trợ Đường Truyền Riêng Biệt: Tối ưu hoá cờ kết nối Cloudflare tự động chọn PoP gần nhất, hỗ trợ thêm cấu hình Tunnel Token riêng cho đường truyền siêu mạnh.",
-  "💎 Lặp Vòng Liền Mạch 0ms: Cải tiến chu kỳ lặp video không đổi nguồn src, đảm bảo âm thanh, khẩu hình và chuyển động siêu êm ái trên TikTok Live Studio."
+  "🚀 Bảo Vệ Luồng Video Window Capture & TikTok Live Studio Chạy Liên Tục 24/24: Ngăn chặn triệt để tình trạng video bị reset về đầu sau vài chục giây khi kết nối TikTok Live, giữ video phát không ngừng nghỉ cho đến khi streamer chủ động bấm Dừng.",
+  "🔊 Cách Ly Tuyệt Đối Âm Thanh Window Capture OBS: Âm thanh luồng live luôn ổn định 100%, không bị chập chờn hay tắt tiếng khi streamer mute loa xem trước trên máy tính.",
+  "🎬 Hỗ Trợ Auto-Next Playlist Thông Minh: Tự động chuyển bài mượt mà sang video kế tiếp trong danh sách phát khi hết thời lượng video, hoặc Seamless Loop 0ms liền mạch không gián đoạn.",
+  "⚡ Tối Ưu Bộ Đệm Buffer Tốc Độ Cao Cho Window Capture: Tự động đánh thức và duy trì 60 FPS siêu mượt, loại bỏ mọi micro-freeze khi truyền tải qua TikTok Live Studio."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

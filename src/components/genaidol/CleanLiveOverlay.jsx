@@ -143,7 +143,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     try {
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
-        if (params.get('sound') === '1' || params.get('unmute') === '1') return false;
+        if (params.get('sound') === '1' || params.get('unmute') === '1' || params.get('mode') === 'window_capture' || params.get('capture') === '1' || window.location.pathname.includes('/window-capture')) {
+          return false;
+        }
       }
       const saved = localStorage.getItem('avalive_overlay_audio_muted');
       return saved !== null ? saved === 'true' : false; // Mặc định mở tiếng để phát âm thanh
@@ -664,10 +666,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           try { vid.currentTime = targetTime; } catch (e) {}
         }
         if (vid.paused) {
-          vid.play().catch(() => {
-            vid.muted = true;
-            vid.play().catch(() => {});
-          });
+          vid.play().catch(() => {});
         }
         setIsPlayingState(true);
       } else if (action === 'seek' || action === 'user_restart') {
@@ -682,19 +681,18 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         }
         // Đảm bảo video tiếp tục phát nếu phần mềm chính đang phát
         if (!isUserPausedRef.current && vid.paused && vid.readyState >= 2) {
-          vid.play().catch(() => {
-            vid.muted = true;
-            vid.play().catch(() => {});
-          });
+          vid.play().catch(() => {});
         }
       }
 
-      // 3. Đồng bộ Mute & Volume tức thì nếu có trong control payload
+      // 3. Đồng bộ Mute & Volume tức thì nếu có trong control payload (Cửa sổ Window Capture giữ âm thanh độc lập)
       if (typeof control.isMuted === 'boolean') {
-        setIsVideoAudioMuted(control.isMuted);
-        if (vid) vid.muted = control.isMuted;
-        bandoAudio.setLocalSpeakerMute(control.isMuted);
-        bandoAudio.setMuted(control.isMuted);
+        if (!isWindowCapture) {
+          setIsVideoAudioMuted(control.isMuted);
+          if (vid) vid.muted = control.isMuted;
+          bandoAudio.setLocalSpeakerMute(control.isMuted);
+          bandoAudio.setMuted(control.isMuted);
+        }
       }
       if (typeof control.volume === 'number') {
         setVideoVolume(control.volume);
@@ -734,21 +732,20 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               }
             }
             if (vid.paused) {
-              vid.play().catch(() => {
-                vid.muted = true;
-                vid.play().catch(() => {});
-              });
+              vid.play().catch(() => {});
             }
           }
           setIsPlayingState(true);
         }
       }
 
-      // Đồng bộ Âm thanh & Âm lượng từ Phần Mềm Chính
+      // Đồng bộ Âm thanh & Âm lượng từ Phần Mềm Chính (Window Capture không bị ép mute do tắt loa Desktop)
       if (typeof data.isVideoAudioMuted === 'boolean') {
-        setIsVideoAudioMuted(data.isVideoAudioMuted);
-        bandoAudio.setLocalSpeakerMute(data.isVideoAudioMuted);
-        bandoAudio.setMuted(data.isVideoAudioMuted);
+        if (!isWindowCapture) {
+          setIsVideoAudioMuted(data.isVideoAudioMuted);
+          bandoAudio.setLocalSpeakerMute(data.isVideoAudioMuted);
+          bandoAudio.setMuted(data.isVideoAudioMuted);
+        }
       }
       if (typeof data.videoVolume === 'number') {
         setVideoVolume(data.videoVolume);
@@ -1004,10 +1001,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 }
               }
               if (typeof event.data.isMuted === 'boolean') {
-                setIsVideoAudioMuted(event.data.isMuted);
-                if (v) v.muted = event.data.isMuted;
-                bandoAudio.setLocalSpeakerMute(event.data.isMuted);
-                bandoAudio.setMuted(event.data.isMuted);
+                if (!isWindowCapture) {
+                  setIsVideoAudioMuted(event.data.isMuted);
+                  if (v) v.muted = event.data.isMuted;
+                  bandoAudio.setLocalSpeakerMute(event.data.isMuted);
+                  bandoAudio.setMuted(event.data.isMuted);
+                }
               }
               if (typeof event.data.volume === 'number') {
                 setVideoVolume(event.data.volume);
@@ -1023,10 +1022,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             } else if (event.data.type === 'GLOBAL_AUDIO_CHANGE') {
               const v = overlayVideoRef.current;
               if (typeof event.data.isMuted === 'boolean') {
-                setIsVideoAudioMuted(event.data.isMuted);
-                if (v) v.muted = event.data.isMuted;
-                bandoAudio.setLocalSpeakerMute(event.data.isMuted);
-                bandoAudio.setMuted(event.data.isMuted);
+                if (!isWindowCapture || event.data.source === 'overlay') {
+                  setIsVideoAudioMuted(event.data.isMuted);
+                  if (v) v.muted = event.data.isMuted;
+                  bandoAudio.setLocalSpeakerMute(event.data.isMuted);
+                  bandoAudio.setMuted(event.data.isMuted);
+                }
               }
               if (typeof event.data.volume === 'number') {
                 setVideoVolume(event.data.volume);
@@ -1633,10 +1634,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       if (vid.paused && !vid.seeking) {
         vid.muted = isVideoAudioMuted;
         if (!isVideoAudioMuted) vid.volume = videoVolume;
-        vid.play().then(() => setIsPlayingState(true)).catch(() => {
-          vid.muted = true;
-          vid.play().then(() => setIsPlayingState(true)).catch(() => {});
-        });
+        vid.play().then(() => setIsPlayingState(true)).catch(() => {});
         return;
       }
 
@@ -1647,11 +1645,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           // Video chưa tăng thời gian (đang nạp buffer hoặc decoder bị trễ)
           freezeTickCountRef.current = (freezeTickCountRef.current || 0) + 1;
           if (freezeTickCountRef.current >= 4 && vid.readyState >= 2) {
-            // Đánh thức nhẹ decoder mà TUYỆT ĐỐI KHÔNG reload src làm ngắt kết nối dở dang
-            vid.play().catch(() => {
-              vid.muted = true;
-              vid.play().catch(() => {});
-            });
+            // Đánh thức nhẹ decoder mà TUYỆT ĐỐI KHÔNG reload src và KHÔNG làm tắt tiếng
+            vid.play().catch(() => {});
             freezeTickCountRef.current = 0;
           }
         } else {
@@ -1846,7 +1841,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 WINDOW CAPTURE
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.8.5
+                v1.8.6
               </span>
             </div>
 
@@ -2055,10 +2050,39 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     }
                   }}
                   onEnded={(e) => {
-                    // ⚡ SEAMLESS ZERO-LATENCY LOOP KHÔNG ĐỔI SRC
+                    // ⚡ PHÁT LIÊN TỤC 24/24 KHÔNG DỪNG CHO ĐẾN KHI STREAMER BẤM DỪNG
                     const isUserPaused = checkIfUserPaused();
                     if (!isUserPaused) {
                       const v = e.currentTarget;
+                      // Kiểm tra xem streamer có danh sách nhiều video (Playlist Auto-Next) không
+                      try {
+                        const customRaw = localStorage.getItem('avalive_custom_characters');
+                        const customList = customRaw ? JSON.parse(customRaw) : [];
+                        const validVideos = Array.isArray(customList) 
+                          ? customList.filter(c => (c.url || c.mediaUrl) && !c.url?.startsWith('blob:')) 
+                          : [];
+                        
+                        if (validVideos.length > 1) {
+                          const curUrl = v.currentSrc || v.src || '';
+                          const currentIndex = validVideos.findIndex(item => (item.url && curUrl.includes(item.url)) || (item.mediaUrl && curUrl.includes(item.mediaUrl)));
+                          const nextIndex = (currentIndex >= 0 && currentIndex < validVideos.length - 1) ? currentIndex + 1 : 0;
+                          const nextItem = validVideos[nextIndex];
+                          const nextUrl = nextItem.url || nextItem.mediaUrl;
+                          if (nextUrl) {
+                            setMasterState(prev => ({
+                              ...prev,
+                              selectedCharacter: nextItem.id,
+                              mediaUrl: nextUrl,
+                              videoPlaybackEvent: 'play',
+                              videoCurrentTime: 0,
+                              force: true
+                            }));
+                            return;
+                          }
+                        }
+                      } catch (err) {}
+
+                      // Mặc định lặp lại 0ms liền mạch (Seamless Zero-Latency Loop) cho video đơn
                       try {
                         v.currentTime = 0;
                         v.play().catch(() => {});
@@ -2076,7 +2100,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     const err = v?.error;
                     console.warn('[CleanLiveOverlay] Video playback notification:', err ? `${err.code} - ${err.message}` : '');
                     if (v && !checkIfUserPaused()) {
-                      if (!v.muted) v.muted = true;
                       setTimeout(() => {
                         try { v.play().catch(() => {}); } catch(err) {}
                       }, 500);

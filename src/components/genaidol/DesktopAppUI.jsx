@@ -500,7 +500,7 @@ export default function DesktopAppUI() {
     const timeQuery = curTime > 0 ? `&t=${Math.round(curTime * 100) / 100}` : '';
     const query = `${activeUrl ? `&v=${encodeURIComponent(activeUrl)}` : ''}${timeQuery}`;
     window.open(
-      `${window.location.origin}/idol?mode=window_capture${query}`,
+      `${window.location.origin}/idol?mode=window_capture&sound=1&autoplay=1${query}`,
       'avalive_window_capture_target',
       `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes`
     );
@@ -2953,7 +2953,6 @@ export default function DesktopAppUI() {
                       type: 'MASTER_TIME_SYNC',
                       currentTime: curTime,
                       isPlaying: !e.currentTarget.paused,
-                      isMuted: liveAudioMuted,
                       volume: liveVolume,
                       source: 'desktop',
                       timestamp: now
@@ -3104,7 +3103,19 @@ export default function DesktopAppUI() {
                 }
               }}
               onEnded={(e) => {
-                // Tự động lặp lại liền mạch (Seamless Loop) tại local
+                // Tự động chuyển bài kế tiếp trong playlist nếu có nhiều video, hoặc lặp 0ms liền mạch (24/24)
+                const validVideos = Array.isArray(customCharacters) 
+                  ? customCharacters.filter(c => (c.url || c.mediaUrl) && !c.url?.startsWith('blob:')) 
+                  : [];
+                if (validVideos.length > 1) {
+                  const currentIndex = validVideos.findIndex(c => c.id === selectedCharacter);
+                  const nextIndex = (currentIndex >= 0 && currentIndex < validVideos.length - 1) ? currentIndex + 1 : 0;
+                  const nextChar = validVideos[nextIndex];
+                  if (nextChar) {
+                    handleSelectCharacter(nextChar.id);
+                    return;
+                  }
+                }
                 try {
                   e.currentTarget.currentTime = 0;
                   e.currentTarget.play().catch(() => {});
