@@ -1186,12 +1186,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       } catch (err) {}
     }
 
-    // 5. POLLING REALTIME STUDIO CAM FRAME (Truyền hình thời gian thực cho OBS & TikTok Live Studio)
+    // 5. POLLING REALTIME STUDIO CAM FRAME (Chỉ chạy khi thực sự ở chế độ Studio/Broadcast)
+    let isFetchingStudioFrame = false;
     const frameInterval = setInterval(() => {
       const pathname = typeof window !== 'undefined' ? window.location.pathname.toLowerCase() : '';
       const isStudio = pathname.includes('/studio') || window.location.search.includes('studio') || window.location.search.includes('broadcast') || masterState?.stage === 'broadcast' || masterState?.stage === 'studio' || masterState?.isScreenSharing;
-      if (!isStudio) return;
+      if (!isStudio || isFetchingStudioFrame) return;
 
+      isFetchingStudioFrame = true;
       const endpoint = getBackendUrl() ? `${getBackendUrl()}/api/studio-frame?t=${Date.now()}` : `/api/studio-frame?t=${Date.now()}`;
       fetch(endpoint, { cache: 'no-store' })
         .then(res => res.json())
@@ -1200,8 +1202,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             updateStudioFrame(data.frame);
           }
         })
-        .catch(() => {});
-    }, 100);
+        .catch(() => {})
+        .finally(() => {
+          isFetchingStudioFrame = false;
+        });
+    }, 200);
 
     // 5. LOCAL STORAGE SYNC
     const handleStorage = (e) => {
@@ -1259,8 +1264,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     };
     window.addEventListener('storage', handleStorage);
 
-    // 6. HEARTBEAT POLLING
+    // 6. HEARTBEAT POLLING (Có khóa chống dồn ứ request khi phát sóng hàng chục tiếng)
     let lastUpdatedTimestamp = 0;
+    let isFetchingLiveState = false;
     const pollInterval = setInterval(() => {
       try {
         const saved = localStorage.getItem('avalive_master_live_state');
@@ -1273,6 +1279,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         }
       } catch (e) {}
 
+      if (isFetchingLiveState) return;
+      isFetchingLiveState = true;
       const endpoint = getBackendUrl() ? `${getBackendUrl()}/api/live-state` : '/api/live-state';
       fetch(endpoint)
         .then(r => r.json())
@@ -1282,8 +1290,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             applyMasterState(data);
           }
         })
-        .catch(() => {});
-    }, 1500);
+        .catch(() => {})
+        .finally(() => {
+          isFetchingLiveState = false;
+        });
+    }, 2500);
 
     return () => {
       clearInterval(frameInterval);
@@ -1432,33 +1443,22 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     antiSleepDiv.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;pointer-events:none;opacity:0.001;z-index:99999;background:white;';
     document.body.appendChild(antiSleepDiv);
     
-    let frameCount = 0;
-    const invalidate = () => {
-      frameCount++;
-      antiSleepDiv.style.background = frameCount % 2 === 0 ? '#000000' : '#ffffff';
-    };
-
     // Web Worker Lightweight Keep-Alive (Không ngốn CPU, giữ video hoạt động mượt 60FPS)
     let bgWorker = null;
     try {
       const blob = new Blob([
-        "let t; self.onmessage=e=>{ if(e.data==='start'){ if(!t) t=setInterval(()=>self.postMessage('tick'), 1000); } else if(e.data==='stop'){ clearInterval(t); t=null; } };"
+        "let t; self.onmessage=e=>{ if(e.data==='start'){ if(!t) t=setInterval(()=>self.postMessage('tick'), 2000); } else if(e.data==='stop'){ clearInterval(t); t=null; } };"
       ], { type: 'application/javascript' });
       bgWorker = new Worker(URL.createObjectURL(blob));
-      let tickCounter = 0;
       bgWorker.onmessage = () => {
-        invalidate();
-        tickCounter++;
-        if (tickCounter % 2 === 0) {
-          const isUserPaused = checkIfUserPaused();
-          if (!isUserPaused) {
-            const videos = document.querySelectorAll('video');
-            videos.forEach(v => {
-              if (v.paused && !v.ended && v.readyState >= 2 && v.dataset.userPaused !== 'true') {
-                v.play().catch(() => {});
-              }
-            });
-          }
+        const isUserPaused = checkIfUserPaused();
+        if (!isUserPaused) {
+          const videos = document.querySelectorAll('video');
+          videos.forEach(v => {
+            if (v.paused && !v.ended && v.readyState >= 2 && v.dataset.userPaused !== 'true') {
+              v.play().catch(() => {});
+            }
+          });
         }
       };
       bgWorker.postMessage('start');
@@ -1977,11 +1977,24 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   autoPlay={true}
                   loop
                   muted={isVideoAudioMuted}
-                  defaultMuted={true}
                   playsInline
+                  crossOrigin="anonymous"
                   controls={false}
                   preload="auto"
                   disableRemotePlayback
+                  className="w-full h-full object-contain select-none pointer-events-none transform-gpu"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: objectFitState || 'contain',
+                    backgroundColor: '#000000',
+                    transform: 'translate3d(0, 0, 0)',
+                    WebkitTransform: 'translate3d(0, 0, 0)',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    willChange: 'transform',
+                    imageRendering: 'auto'
+                  }}
                   onCanPlay={(e) => {
                     // ⚡ INSTANT 0MS PLAYBACK: Phát ngay lập tức khi frame đầu tiên sẵn sàng
                     const v = e.currentTarget;
@@ -2112,14 +2125,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                         try { v.play().catch(() => {}); } catch(err) {}
                       }, 500);
                     }
-                  }}
-                  className="w-full h-full select-none absolute inset-0 block bg-black"
-                  style={{ 
-                    width: '100%', 
-                    height: '100%', 
-                    objectFit: objectFitState || 'contain',
-                    backgroundColor: '#000000',
-                    imageRendering: 'auto',
                   }}
                 />
               </>

@@ -43,6 +43,18 @@ import { bootstrapDefaultPresets } from '../../utils/defaultPresetsBootstrap';
 import { fastStreamUpload } from '../../utils/fastStreamService';
 import ShopeeLiveConnectModal from './ShopeeLiveConnectModal';
 
+// 📡 SINGLETON BROADCAST CHANNELS (Tái sử dụng vĩnh viễn, chống rò rỉ bộ nhớ khi phát nhiều giờ)
+let globalMasterBc = null;
+const postMasterBroadcast = (payload) => {
+  try {
+    if (typeof BroadcastChannel === 'undefined') return;
+    if (!globalMasterBc) {
+      globalMasterBc = new BroadcastChannel('avalive_master_live_stream');
+    }
+    globalMasterBc.postMessage(payload);
+  } catch (e) {}
+};
+
 export default function DesktopAppUI() {
   useEffect(() => {
     bootstrapDefaultPresets();
@@ -1465,16 +1477,12 @@ export default function DesktopAppUI() {
     }, socketRef.current);
 
     // Phát sự kiện BroadcastChannel lập tức cho Window Capture
-    try {
-      const bc = new BroadcastChannel('avalive_master_live_stream');
-      bc.postMessage({
-        type: 'GLOBAL_AUDIO_CHANGE',
-        isMuted: nextState,
-        volume: nextState ? 0 : (liveVolume || 1.0),
-        source: 'desktop'
-      });
-      setTimeout(() => bc.close(), 100);
-    } catch (e) {}
+    postMasterBroadcast({
+      type: 'GLOBAL_AUDIO_CHANGE',
+      isMuted: nextState,
+      volume: nextState ? 0 : (liveVolume || 1.0),
+      source: 'desktop'
+    });
 
     if (nextState) {
       setToast({
@@ -2955,18 +2963,14 @@ export default function DesktopAppUI() {
                   }
                   sendVideoControl(syncData, socketRef.current);
                   // 📡 BẮN CẢ BROADCAST CHANNEL CHO CỬA SỔ LIVE 9:16 (WINDOW CAPTURE TRÊN CÙNG MÁY KHÓA CHẶT TỪNG FRAME)
-                  try {
-                    const bc = new BroadcastChannel('avalive_master_live_stream');
-                    bc.postMessage({
-                      type: 'MASTER_TIME_SYNC',
-                      currentTime: curTime,
-                      isPlaying: !e.currentTarget.paused,
-                      volume: liveVolume,
-                      source: 'desktop',
-                      timestamp: now
-                    });
-                    setTimeout(() => bc.close(), 100);
-                  } catch (err) {}
+                  postMasterBroadcast({
+                    type: 'MASTER_TIME_SYNC',
+                    currentTime: curTime,
+                    isPlaying: !e.currentTarget.paused,
+                    volume: liveVolume,
+                    source: 'desktop',
+                    timestamp: now
+                  });
                 }
               }}
               onLoadedMetadata={(e) => {
@@ -3608,7 +3612,7 @@ export default function DesktopAppUI() {
               mapVoiceEngine.stopAll();
               battleVoiceEngine.stopAll();
               battleCommentary.stopAll();
-              syncMasterLiveState({ stage: 'idol' }, socketRef.current); try { const bc = new BroadcastChannel('avalive_master_live_stream'); bc.postMessage({ type: 'GLOBAL_STAGE_CHANGE', stage: 'idol' }); setTimeout(() => bc.close(), 100); } catch(e){}
+              syncMasterLiveState({ stage: 'idol' }, socketRef.current); postMasterBroadcast({ type: 'GLOBAL_STAGE_CHANGE', stage: 'idol' });
             }}
             title="Chuyển sang màn hình Livestream AI Idol"
           >
@@ -3638,7 +3642,7 @@ export default function DesktopAppUI() {
                 if (battleCommentary.isEnabled) battleCommentary.startPeriodicCommentary(true);
                 if (battleVoiceEngine.isAutoEnabled) battleVoiceEngine.startPeriodicCommentary(true);
               }
-              syncMasterLiveState({ stage: 'battle' }, socketRef.current); try { const bc = new BroadcastChannel('avalive_master_live_stream'); bc.postMessage({ type: 'GLOBAL_STAGE_CHANGE', stage: 'battle' }); setTimeout(() => bc.close(), 100); } catch(e){}
+              syncMasterLiveState({ stage: 'battle' }, socketRef.current); postMasterBroadcast({ type: 'GLOBAL_STAGE_CHANGE', stage: 'battle' });
             }}
             title="Chuyển sang chế độ Game Chiến Đấu (TikTok LIVE Battle Game) trên màn hình chính"
           >
@@ -3681,7 +3685,7 @@ export default function DesktopAppUI() {
                 bandoAudio.playBgmOnLive();
                 mapVoiceEngine.startPeriodicCommentary(true);
               }
-              syncMasterLiveState({ stage: 'bando' }, socketRef.current); try { const bc = new BroadcastChannel('avalive_master_live_stream'); bc.postMessage({ type: 'GLOBAL_STAGE_CHANGE', stage: 'bando' }); setTimeout(() => bc.close(), 100); } catch(e){}
+              syncMasterLiveState({ stage: 'bando' }, socketRef.current); postMasterBroadcast({ type: 'GLOBAL_STAGE_CHANGE', stage: 'bando' });
             }}
             title="Chuyển sang Game Ghép Cờ Bản Đồ Việt Nam (Đất Nước Hình Chữ S) trên màn hình chính"
           >

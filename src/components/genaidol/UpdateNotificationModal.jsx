@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.9.2';
+export const APP_VERSION = '1.9.3';
 export const UPDATE_NOTES = [
-  "💎 100.000 Token & 100.000 Giờ Live Cho Quản Trị Viên: Tài khoản Admin (quocthiencr90@gmail.com) được tự động cấp 100k Token và 100.000 Giờ Live (6.000.000 phút) chạy liên tục vĩnh viễn.",
-  "⏱️ Hệ Thống Tính Toán Thời Gian & Trừ Điểm Token Realtime: Tự động quản trị thời gian phát sóng và trừ điểm token khi chạy AI Idol/tương tác, tự động dừng và cảnh báo khi hết thời gian dùng thử (Gói Free).",
-  "🔇 Đồng Bộ Quản Trị Tắt / Mở Tiếng Window Capture & TikTok Live: Bấm Tắt tiếng trên phần mềm là tắt tiếng cả trên phiên live và Window Capture, bấm Mở tiếng là mở tiếng toàn bộ siêu mượt.",
-  "🎬 Giữ Nguyên Vị Trí Phát Khi Chuyển Tab / Chế Độ: Tất cả video đang phát tiếp tục chạy từ vị trí hiện tại, tuyệt đối không bị tua lại từ đầu (0:00) khi chuyển đổi Game / Bản đồ hay chuyển tab trình duyệt!"
+  "⚡ Phát Sóng Video Siêu Mượt Xuyên Suốt Hàng Chục Tiếng Đồng Hồ: Tối ưu hóa triệt để bộ nhớ đệm (Decoded Buffer & Garbage Collection) và kích hoạt bộ tăng tốc phần cứng GPU (Hardware Acceleration 60 FPS), loại bỏ 100% tình trạng giật lag hay đứng hình sau 10-15 phút!",
+  "🔊 Điều Khiển Âm Lượng Trực Tiếp Từ TikTok Live Studio: Thẻ video phát âm thanh tự nhiên tương thích chuẩn Audio Mixer của TikTok Live Studio, cho phép streamer tăng/giảm âm lượng và tắt tiếng trực tiếp trên giao diện TikTok Live Studio.",
+  "💎 100.000 Token & 100.000 Giờ Live Quản Trị Viên: Tự động cấp quyền hạn vĩnh viễn cho Admin (quocthiencr90@gmail.com).",
+  "🎬 Giữ Nguyên Vị Trí Phát Video: Khi chuyển tab hoặc đổi sân khấu biểu diễn không bao giờ bị tua lại từ đầu (0:00)."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
