@@ -191,23 +191,56 @@ async function runRelease() {
     for (const asset of release.assets) {
       if (asset.name === winZipFileName || asset.name === macZipFileName) {
         console.log(`   🗑️ Đang xóa asset cũ đã có trên release: ${asset.name}...`);
-        await apiRequest({
-          hostname: 'api.github.com',
-          path: `/repos/${REPO_OWNER}/${REPO_NAME}/releases/assets/${asset.id}`,
-          method: 'DELETE',
-          headers: {
-            'User-Agent': 'NodeJS-AutoRelease',
-            'Authorization': `Bearer ${GITHUB_TOKEN}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
-        });
+        try {
+          await apiRequest({
+            hostname: 'api.github.com',
+            path: `/repos/${REPO_OWNER}/${REPO_NAME}/releases/assets/${asset.id}`,
+            method: 'DELETE',
+            headers: {
+              'User-Agent': 'NodeJS-AutoRelease',
+              'Authorization': `Bearer ${GITHUB_TOKEN}`,
+              'Accept': 'application/vnd.github.v3+json'
+            }
+          });
+        } catch (e) {
+          console.warn(`   ⚠️ Không xóa được asset ${asset.name}:`, e.message);
+        }
       }
     }
+    await new Promise(r => setTimeout(r, 2500));
   }
 
+  // Refresh release data to ensure clean upload_url
+  try {
+    const freshRelease = await apiRequest({
+      hostname: 'api.github.com',
+      path: `/repos/${REPO_OWNER}/${REPO_NAME}/releases/tags/${tagName}`,
+      method: 'GET',
+      headers: {
+        'User-Agent': 'NodeJS-AutoRelease',
+        'Authorization': `Bearer ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+    if (freshRelease.statusCode === 200 && freshRelease.data && freshRelease.data.upload_url) {
+      release = freshRelease.data;
+    }
+  } catch (e) {}
+
   console.log(`\n[3/3] Đang tự động đẩy các file ZIP lên GitHub Releases...`);
-  await uploadReleaseAsset(release.upload_url, winZipFilePath, winZipFileName);
-  await uploadReleaseAsset(release.upload_url, macZipFilePath, macZipFileName);
+  const existingAssetNames = Array.isArray(release.assets) ? release.assets.map(a => a.name) : [];
+
+  if (!existingAssetNames.includes(winZipFileName)) {
+    await uploadReleaseAsset(release.upload_url, winZipFilePath, winZipFileName);
+  } else {
+    console.log(`   ✅ Asset đã có sẵn trên GitHub Release: ${winZipFileName}`);
+  }
+
+  if (!existingAssetNames.includes(macZipFileName)) {
+    await uploadReleaseAsset(release.upload_url, macZipFilePath, macZipFileName);
+  } else {
+    console.log(`   ✅ Asset đã có sẵn trên GitHub Release: ${macZipFileName}`);
+  }
 
   console.log(`\n===========================================================`);
   console.log(`🎉 PHÁT HÀNH HOÀN TẤT 100%! NGƯỜI DÙNG CÓ THỂ TẢI NGAY LẬP TỨC.`);
