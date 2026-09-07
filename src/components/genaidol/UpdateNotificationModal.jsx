@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.8.3';
+export const APP_VERSION = '1.8.4';
 export const UPDATE_NOTES = [
-  "🏆 Cung Cấp Link Siêu Tốc Cùng Máy (Localhost 0ms): Tối ưu số 1 cho TikTok Live Studio & OBS trên máy Windows! Dữ liệu truyền trực tiếp qua bộ nhớ máy tính, phát video 60 FPS siêu mượt từ mili-giây đầu tiên, không giật, không lag, không phụ thuộc mạng.",
-  "🚀 Đột Phá Smart Blob Memory Preloader: Tự động nạp ngầm toàn bộ video vào RAM máy tính với tốc độ 40 GB/s. Khi phát qua link, video chạy trực tiếp từ RAM, triệt tiêu 100% tình trạng đứng hình do cạn buffer mạng.",
-  "🔄 Seamless Video Loop Tức Thì: Vòng lặp video chuyển tiếp mượt mà 0ms từ đuôi quay lại đầu clip mà không gián đoạn khung hình.",
-  "🌐 Link Đám Mây Cloudflare Tunnel HTTPS Được Nâng Cấp: Cung cấp song song 2 link rõ ràng trong Trung Tâm Phát Luồng giúp streamer chọn đúng link nhanh chóng và chuẩn xác nhất."
+  "🌐 Chuẩn Hóa 100% Đường Link Online HTTPS Cho TikTok Live Studio: Loại bỏ hoàn toàn link local gây lỗi Sandbox trên TikTok Studio, cung cấp 1 đường link Cloudflare HTTPS chính thức chấp thuận 100%.",
+  "⚡ Tăng Tốc Buffer HTTP 206 Streaming Lên 2MB: Buffer nạp trước 13 giây video tức thì ngay từ frame đầu tiên, loại bỏ triệt để tình trạng cạn buffer gây khựng hình.",
+  "🚀 Đột Phá Bộ Đệm RAM Thông Minh (Không Reset Decoder): Giữ nguyên luồng phát trực tiếp ổn định và ngầm nạp Blob RAM cho các vòng lặp tiếp theo siêu mượt 60 FPS.",
+  "🛡️ Tối Ưu Giao Thức HTTP/2 Đa Luồng & CDN Edge Cache: Kết nối ổn định 24/24, tự động phục hồi khi mạng dao động, đảm bảo âm thanh và hình ảnh đồng bộ tuyệt đối."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

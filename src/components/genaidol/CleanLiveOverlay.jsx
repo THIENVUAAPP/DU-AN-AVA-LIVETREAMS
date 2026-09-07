@@ -1597,6 +1597,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   const activeMedia = resolveActiveMedia();
 
   // 🚀 HIGH-PERFORMANCE SMART BLOB MEMORY BUFFER:
+  // 🚀 HIGH-PERFORMANCE SMART BLOB MEMORY BUFFER:
   // Tự động tải ngầm toàn bộ video vào RAM máy tính để phát mượt mà 60 FPS,
   // loại bỏ 100% tình trạng giật, lag, đứng hình do mạng qua link Cloudflare Tunnel / Internet
   useEffect(() => {
@@ -1606,7 +1607,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       return;
     }
 
-    // Nếu video đã có sẵn trong RAM Blob Cache -> Dùng ngay lập tức 0ms!
+    // Nếu video đã có sẵn trong RAM Blob Cache từ trước -> Dùng ngay lập tức 0ms từ frame đầu tiên!
     if (blobCacheMapRef.current.has(rawUrl)) {
       const cached = blobCacheMapRef.current.get(rawUrl);
       setBlobVideoUrl(cached);
@@ -1623,9 +1624,10 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    const startPreload = async () => {
+    // Delay 2 giây để nhường 100% băng thông cho thẻ video bắt đầu phát frame đầu tiên 0ms không nghẽn
+    const timer = setTimeout(async () => {
       try {
-        console.log(`[SmartBlob] 🚀 Đang nạp video vào RAM máy tính để phát siêu mượt 60 FPS...`, rawUrl);
+        console.log(`[SmartBlob] 🚀 Đang nạp ngầm video vào RAM máy tính để chuẩn bị vòng lặp siêu mượt 60 FPS...`, rawUrl);
         const res = await fetch(rawUrl, { signal: controller.signal });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
@@ -1640,32 +1642,18 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
         const blobUrl = URL.createObjectURL(blob);
         blobCacheMapRef.current.set(rawUrl, blobUrl);
-        console.log(`[SmartBlob] ✅ Đã nạp 100% video vào RAM (${(blob.size / 1024 / 1024).toFixed(1)}MB)! Bắt đầu phát từ RAM siêu mượt!`);
-
-        // Đổi sang Blob URL
-        const vid = overlayVideoRef.current;
-        if (vid) {
-          const curTime = vid.currentTime;
-          setBlobVideoUrl(blobUrl);
-          requestAnimationFrame(() => {
-            if (vid) {
-              if (curTime > 0) try { vid.currentTime = curTime; } catch(e) {}
-              if (!checkIfUserPaused()) vid.play().catch(() => {});
-            }
-          });
-        }
+        console.log(`[SmartBlob] ✅ Đã nạp 100% video vào RAM (${(blob.size / 1024 / 1024).toFixed(1)}MB)! Sẵn sàng lặp vòng từ RAM siêu mượt!`);
       } catch (err) {
         if (err.name !== 'AbortError') {
-          console.warn(`[SmartBlob warning] Tiếp tục phát qua Range stream:`, err.message);
+          console.warn(`[SmartBlob] Tiếp tục duy trì phát qua Range stream:`, err.message);
         }
       } finally {
         preloadingUrlRef.current = null;
       }
-    };
-
-    startPreload();
+    }, 2000);
 
     return () => {
+      clearTimeout(timer);
       try { controller.abort(); } catch (e) {}
     };
   }, [activeMedia.url, activeMedia.isVideo]);
@@ -1901,7 +1889,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 WINDOW CAPTURE
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.8.3
+                v1.8.4
               </span>
             </div>
 

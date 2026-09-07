@@ -183,7 +183,9 @@ app.all('/uploads/:filename', (req, res, next) => {
         'Accept-Ranges': 'bytes',
         'Content-Length': chunksize,
         'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=86400, no-transform',
+        'Cache-Control': 'public, max-age=31536000, immutable',
+        'Cloudflare-CDN-Cache-Control': 'max-age=31536000',
+        'CDN-Cache-Control': 'max-age=31536000',
         'Connection': 'keep-alive',
         'Keep-Alive': 'timeout=120, max=1000',
         'X-Content-Type-Options': 'nosniff',
@@ -195,7 +197,8 @@ app.all('/uploads/:filename', (req, res, next) => {
         return res.end();
       }
 
-      const stream = fs.createReadStream(filePath, { start, end, highWaterMark: 256 * 1024 });
+      // ⚡ BUFFER 2MB SIÊU TỐC CHO VIDEO DUNG LƯỢNG LỚN & BITRATE CAO
+      const stream = fs.createReadStream(filePath, { start, end, highWaterMark: 2 * 1024 * 1024 });
       req.on('close', () => {
         try { stream.destroy(); } catch (e) {}
       });
@@ -1890,7 +1893,9 @@ async function startCloudflaredTunnel(port) {
     try {
       const proc = spawn(cloudflaredBin, [
         'tunnel', '--url', `http://127.0.0.1:${port}`,
-        '--no-autoupdate'
+        '--no-autoupdate',
+        '--protocol', 'http2',
+        '--retries', '5'
       ], { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
       activeCloudflaredProc = proc;
 
