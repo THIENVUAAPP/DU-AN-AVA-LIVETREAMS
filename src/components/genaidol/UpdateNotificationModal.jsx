@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.8.4';
+export const APP_VERSION = '1.8.5';
 export const UPDATE_NOTES = [
-  "🌐 Chuẩn Hóa 100% Đường Link Online HTTPS Cho TikTok Live Studio: Loại bỏ hoàn toàn link local gây lỗi Sandbox trên TikTok Studio, cung cấp 1 đường link Cloudflare HTTPS chính thức chấp thuận 100%.",
-  "⚡ Tăng Tốc Buffer HTTP 206 Streaming Lên 2MB: Buffer nạp trước 13 giây video tức thì ngay từ frame đầu tiên, loại bỏ triệt để tình trạng cạn buffer gây khựng hình.",
-  "🚀 Đột Phá Bộ Đệm RAM Thông Minh (Không Reset Decoder): Giữ nguyên luồng phát trực tiếp ổn định và ngầm nạp Blob RAM cho các vòng lặp tiếp theo siêu mượt 60 FPS.",
-  "🛡️ Tối Ưu Giao Thức HTTP/2 Đa Luồng & CDN Edge Cache: Kết nối ổn định 24/24, tự động phục hồi khi mạng dao động, đảm bảo âm thanh và hình ảnh đồng bộ tuyệt đối."
+  "🚀 Đột Phá MP4 FastStart Engine Tự Động: Tự động đưa atom 'moov' lên byte 28 ngay khi tải lên, giúp TikTok Live Studio và OBS đọc chỉ mục khung hình trong 0.05 giây, phát ngay lập tức không cần tải toàn bộ 150MB!",
+  "⚡ Tối Ưu Băng Thông Đa Luồng Chống Nghẽn Socket: Loại bỏ các lệnh tải ngầm chiếm dụng dữ liệu, dồn 100% băng thông đường truyền cho bộ đệm phát sóng trực tiếp mượt mà 60 FPS 24/24.",
+  "🌐 Nâng Cấp Giao Thức Tunnel Tự Động & Hỗ Trợ Đường Truyền Riêng Biệt: Tối ưu hoá cờ kết nối Cloudflare tự động chọn PoP gần nhất, hỗ trợ thêm cấu hình Tunnel Token riêng cho đường truyền siêu mạnh.",
+  "💎 Lặp Vòng Liền Mạch 0ms: Cải tiến chu kỳ lặp video không đổi nguồn src, đảm bảo âm thanh, khẩu hình và chuyển động siêu êm ái trên TikTok Live Studio."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

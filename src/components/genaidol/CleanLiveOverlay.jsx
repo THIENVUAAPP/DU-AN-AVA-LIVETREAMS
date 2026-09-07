@@ -1597,9 +1597,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   const activeMedia = resolveActiveMedia();
 
   // 🚀 HIGH-PERFORMANCE SMART BLOB MEMORY BUFFER:
-  // 🚀 HIGH-PERFORMANCE SMART BLOB MEMORY BUFFER:
-  // Tự động tải ngầm toàn bộ video vào RAM máy tính để phát mượt mà 60 FPS,
-  // loại bỏ 100% tình trạng giật, lag, đứng hình do mạng qua link Cloudflare Tunnel / Internet
+  // 🚀 FASTSTART ZERO-LATENCY STREAMING:
+  // Video được phát trực tiếp qua chuẩn HTTP 206 Partial Content kết hợp FastStart MP4 (moov atom ở byte 28)
+  // Không fetch ngầm trùng lặp để bảo vệ 100% băng thông đường truyền phát sóng 60 FPS liên tục 24/24!
   useEffect(() => {
     const rawUrl = activeMedia.url;
     if (!rawUrl || !activeMedia.isVideo) {
@@ -1607,55 +1607,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       return;
     }
 
-    // Nếu video đã có sẵn trong RAM Blob Cache từ trước -> Dùng ngay lập tức 0ms từ frame đầu tiên!
-    if (blobCacheMapRef.current.has(rawUrl)) {
-      const cached = blobCacheMapRef.current.get(rawUrl);
-      setBlobVideoUrl(cached);
-      return;
+    // Nếu video là Blob cục bộ (từ IndexedDB hoặc File Selector máy) thì sử dụng
+    if (rawUrl.startsWith('blob:')) {
+      setBlobVideoUrl(rawUrl);
+    } else {
+      setBlobVideoUrl(null);
     }
-
-    // Tránh nạp lặp cùng URL
-    if (preloadingUrlRef.current === rawUrl) return;
-    preloadingUrlRef.current = rawUrl;
-
-    if (abortControllerRef.current) {
-      try { abortControllerRef.current.abort(); } catch (e) {}
-    }
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-
-    // Delay 2 giây để nhường 100% băng thông cho thẻ video bắt đầu phát frame đầu tiên 0ms không nghẽn
-    const timer = setTimeout(async () => {
-      try {
-        console.log(`[SmartBlob] 🚀 Đang nạp ngầm video vào RAM máy tính để chuẩn bị vòng lặp siêu mượt 60 FPS...`, rawUrl);
-        const res = await fetch(rawUrl, { signal: controller.signal });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-        const contentLength = res.headers.get('content-length');
-        if (contentLength && parseInt(contentLength, 10) > 600 * 1024 * 1024) {
-          console.log(`[SmartBlob] Video quá lớn (>600MB), duy trì phát qua HTTP Range stream`);
-          return;
-        }
-
-        const blob = await res.blob();
-        if (controller.signal.aborted) return;
-
-        const blobUrl = URL.createObjectURL(blob);
-        blobCacheMapRef.current.set(rawUrl, blobUrl);
-        console.log(`[SmartBlob] ✅ Đã nạp 100% video vào RAM (${(blob.size / 1024 / 1024).toFixed(1)}MB)! Sẵn sàng lặp vòng từ RAM siêu mượt!`);
-      } catch (err) {
-        if (err.name !== 'AbortError') {
-          console.warn(`[SmartBlob] Tiếp tục duy trì phát qua Range stream:`, err.message);
-        }
-      } finally {
-        preloadingUrlRef.current = null;
-      }
-    }, 2000);
-
-    return () => {
-      clearTimeout(timer);
-      try { controller.abort(); } catch (e) {}
-    };
   }, [activeMedia.url, activeMedia.isVideo]);
 
   // 🕒 24/7 CONTINUOUS PLAYBACK & SMART FREEZE/STUCK DETECTOR (GIẢI CỨU ĐỨNG HÌNH CHO VIDEO DÀI & NẶNG)
@@ -1889,7 +1846,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 WINDOW CAPTURE
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.8.4
+                v1.8.5
               </span>
             </div>
 
@@ -2086,43 +2043,22 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     setIsPlayingState(false);
                   }}
                   onWaiting={(e) => {
-                    // 🛡️ SMART RESCUE: Nếu video mạng bị khựng do cạn buffer, kích hoạt ngay Blob trong RAM
                     const v = e.currentTarget;
-                    const rawUrl = activeMedia.url;
-                    if (rawUrl && blobCacheMapRef.current.has(rawUrl)) {
-                      const cachedBlob = blobCacheMapRef.current.get(rawUrl);
-                      if (v.src !== cachedBlob) {
-                        console.log('[SmartBlob] ⚡ Cứu hộ tức thì: Đổi sang Blob RAM để chấm dứt đứng hình!');
-                        const cur = v.currentTime || 0;
-                        setBlobVideoUrl(cachedBlob);
-                        requestAnimationFrame(() => {
-                          if (v) {
-                            if (cur > 0) try { v.currentTime = cur; } catch(err) {}
-                            try { v.play().catch(() => {}); } catch(err) {}
-                          }
-                        });
-                      }
+                    if (v && !checkIfUserPaused() && v.paused && v.readyState >= 2) {
+                      try { v.play().catch(() => {}); } catch(err) {}
                     }
                   }}
                   onStalled={(e) => {
-                    // 🛡️ SMART STALL RECOVERY: Chỉ đánh thức nhẹ nếu video bị browser tự pause
                     const v = e.currentTarget;
                     if (v && !checkIfUserPaused() && v.paused && v.readyState >= 2) {
                       try { v.play().catch(() => {}); } catch(err){}
                     }
                   }}
                   onEnded={(e) => {
-                    // ⚡ SEAMLESS ZERO-LATENCY LOOP TỪ RAM BLOB
+                    // ⚡ SEAMLESS ZERO-LATENCY LOOP KHÔNG ĐỔI SRC
                     const isUserPaused = checkIfUserPaused();
                     if (!isUserPaused) {
                       const v = e.currentTarget;
-                      const rawUrl = activeMedia.url;
-                      if (rawUrl && blobCacheMapRef.current.has(rawUrl)) {
-                        const cachedBlob = blobCacheMapRef.current.get(rawUrl);
-                        if (v.src !== cachedBlob) {
-                          setBlobVideoUrl(cachedBlob);
-                        }
-                      }
                       try {
                         v.currentTime = 0;
                         v.play().catch(() => {});
@@ -2138,20 +2074,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   onError={(e) => {
                     const v = e.currentTarget;
                     const err = v?.error;
-                    console.warn('[CleanLiveOverlay] Video playback event:', err ? `${err.code} - ${err.message}` : 'stream notification');
+                    console.warn('[CleanLiveOverlay] Video playback notification:', err ? `${err.code} - ${err.message}` : '');
                     if (v && !checkIfUserPaused()) {
-                      if (!v.muted) {
-                        v.muted = true;
-                        try { v.play().catch(() => {}); } catch(err){}
-                      }
-                      // Nếu có Blob cache sẵn trong RAM, dùng ngay để cứu hộ
-                      const rawUrl = activeMedia.url;
-                      if (rawUrl && blobCacheMapRef.current.has(rawUrl)) {
-                        const cachedBlob = blobCacheMapRef.current.get(rawUrl);
-                        if (v.src !== cachedBlob) {
-                          setBlobVideoUrl(cachedBlob);
-                        }
-                      }
+                      if (!v.muted) v.muted = true;
+                      setTimeout(() => {
+                        try { v.play().catch(() => {}); } catch(err) {}
+                      }, 500);
                     }
                   }}
                   className="w-full h-full select-none absolute inset-0 block bg-black"

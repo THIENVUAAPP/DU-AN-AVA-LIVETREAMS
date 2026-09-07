@@ -197,24 +197,33 @@ fs.writeFileSync(path.join(winStaging, '1_CLICK_CHAY_NGAY.bat'), winBatLauncher)
 // File Hướng dẫn sử dụng
 fs.writeFileSync(path.join(winStaging, 'HUONG_DAN_SU_DUNG.txt'), huongDanContent);
 
-// Tải Node.js Portable cho Windows
+// Tải hoặc copy Node.js Portable cho Windows
 const nodePortableDir = path.join(winSystemDir, 'node_portable');
 fs.mkdirSync(nodePortableDir, { recursive: true });
-const nodeZipPath = path.join(winStaging, 'node.zip');
+const cachedNodeExe = path.join(rootDir, '.cache_bin', 'node.exe');
 
-try {
-  console.log('   -> Đang tích hợp Node.js Portable (~35MB)...');
-  execSync(`curl -sL -o "${nodeZipPath}" "https://nodejs.org/dist/v20.11.1/node-v20.11.1-win-x64.zip"`);
-  execSync(`unzip -q -j "${nodeZipPath}" "node-v20.11.1-win-x64/node.exe" -d "${nodePortableDir}"`);
-  fs.unlinkSync(nodeZipPath);
-} catch (e) {
-  console.warn('   ⚠️ Không tải được node portable:', e.message);
-  if (fs.existsSync(nodeZipPath)) fs.unlinkSync(nodeZipPath);
+if (fs.existsSync(cachedNodeExe)) {
+  console.log('   -> ✅ Đã tích hợp Node.js Portable từ local cache!');
+  fs.copyFileSync(cachedNodeExe, path.join(nodePortableDir, 'node.exe'));
+} else {
+  const nodeZipPath = path.join(winStaging, 'node.zip');
+  try {
+    console.log('   -> Đang tải Node.js Portable (~35MB)...');
+    execSync(`curl -sL -o "${nodeZipPath}" "https://nodejs.org/dist/v20.11.1/node-v20.11.1-win-x64.zip"`);
+    execSync(`unzip -q -j "${nodeZipPath}" "node-v20.11.1-win-x64/node.exe" -d "${nodePortableDir}"`);
+    fs.unlinkSync(nodeZipPath);
+    // Cache lại cho các lần build sau
+    fs.mkdirSync(path.join(rootDir, '.cache_bin'), { recursive: true });
+    fs.copyFileSync(path.join(nodePortableDir, 'node.exe'), cachedNodeExe);
+  } catch (e) {
+    console.warn('   ⚠️ Không tải được node portable:', e.message);
+    if (fs.existsSync(nodeZipPath)) fs.unlinkSync(nodeZipPath);
+  }
 }
 
 if (fs.existsSync(winZipFilePath)) fs.unlinkSync(winZipFilePath);
 try {
-  execSync(`cd "${winStaging}" && zip -q -r "${winZipFilePath}" . -x "*.DS_Store" -x "*__MACOSX*" -x "*.tmp" -x "Thumbs.db"`);
+  execSync(`cd "${winStaging}" && zip -q -r -y "${winZipFilePath}" . -x "*.DS_Store" -x "*__MACOSX*" -x "*.tmp" -x "Thumbs.db"`);
 } catch (err) {
   if (!fs.existsSync(winZipFilePath) || fs.statSync(winZipFilePath).size < 1024 * 1024) {
     throw err;
@@ -317,7 +326,7 @@ fs.writeFileSync(path.join(macStaging, 'HUONG_DAN_SU_DUNG.txt'), huongDanContent
 
 if (fs.existsSync(macZipFilePath)) fs.unlinkSync(macZipFilePath);
 try {
-  execSync(`cd "${macStaging}" && zip -q -r "${macZipFilePath}" . -x "*.DS_Store" -x "*__MACOSX*" -x "*.tmp" -x "Thumbs.db"`);
+  execSync(`cd "${macStaging}" && zip -q -r -y "${macZipFilePath}" . -x "*.DS_Store" -x "*__MACOSX*" -x "*.tmp" -x "Thumbs.db"`);
 } catch (err) {
   if (!fs.existsSync(macZipFilePath) || fs.statSync(macZipFilePath).size < 1024 * 1024) {
     throw err;
