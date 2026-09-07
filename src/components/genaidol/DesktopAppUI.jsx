@@ -520,8 +520,11 @@ export default function DesktopAppUI() {
 
     const timeQuery = curTime > 0 ? `&t=${Math.round(curTime * 100) / 100}` : '';
     const query = `${activeUrl ? `&v=${encodeURIComponent(activeUrl)}` : ''}${timeQuery}`;
+    const origin = typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')
+      ? window.location.origin
+      : 'http://localhost:3001';
     window.open(
-      `${window.location.origin}/idol?mode=window_capture&sound=1&autoplay=1${query}`,
+      `${origin}/idol?mode=window_capture&sound=1&autoplay=1${query}`,
       'avalive_window_capture_target',
       `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes`
     );

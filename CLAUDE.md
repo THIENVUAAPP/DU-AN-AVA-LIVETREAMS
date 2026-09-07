@@ -718,6 +718,13 @@ Im lặng bỏ qua 3 câu này = vi phạm Mục 0.7 và Mục 1.
 | **2. Nâng Cấp Cơ Chế Phục Hồi An Toàn (Safe Reset) Trong Error Boundary** | `src/main.jsx` | ✅ PASS 100% | Bổ sung nút **🧹 Xóa Sạch Dữ Liệu Cũ (Safe Reset)** trong `ErrorBoundary` cho phép dọn sạch toàn bộ bộ nhớ tạm localStorage/sessionStorage trong trường hợp trình duyệt lưu cache cấu hình lỗi từ phiên cũ, đảm bảo người dùng không bao giờ bị kẹt ở màn hình lỗi. |
 | **3. Nâng Cấp Toàn Bộ Hệ Thống Lên v1.9.0** | `package.json`, `UpdateNotificationModal.jsx`, `UniversalMasterOverlayModal.jsx`, `Mo_Ung_Dung_Web.html`, `backend/server.cjs`, `vercel.json`, `CLAUDE.md` | ✅ PASS 100% | Đồng bộ toàn diện phiên bản v1.9.0, tự động kích hoạt `UpdateNotificationModal` thông báo cập nhật cho người dùng, đóng gói Standalone ZIPs (Windows & Mac) và phát hành GitHub Release v1.9.0. |
 
+### 🚀 26. Nhật Ký Bản Cập Nhật v1.9.1 (Official Release - Sửa Triệt Để Lỗi Bấm Vào Link & Mở Cửa Sổ Live Window Capture)
+| Hạng Mục Cải Tiến | File Thay Đổi | Trạng Thái | Chi Tiết Kỹ Thuật |
+| :--- | :--- | :---: | :--- |
+| **1. Sửa Lỗi Bấm Vào Link Live & Window Capture Bị Báo Lỗi** | `UniversalMasterOverlayModal.jsx`, `DesktopAppUI.jsx` | ✅ PASS 100% | - **Nguyên nhân**: Khi bấm vào nút `📡 Link Live` hoặc mở Trung Tâm Phát Sóng trên phần mềm, component `UniversalMasterOverlayModal` bị ném ngoại lệ `ReferenceError: Cast is not defined` và `Globe is not defined` do thiếu import trong danh sách biểu tượng `lucide-react`. Điều này làm modal không thể hiển thị và làm crash giao diện.<br>- **Giải pháp**: Bổ sung đầy đủ `Globe, Cast` vào import của `UniversalMasterOverlayModal.jsx`. Chuẩn hóa bộ phân giải `origin` an toàn cho các lệnh mở Window Capture (`window.open`) và lấy đường link phát trực tiếp. Toàn bộ các nút mở link, lấy link, xem thử và Window Capture hoạt động trơn tru 100%! |
+| **2. Nâng Cấp Toàn Bộ Hệ Thống Lên v1.9.1** | `package.json`, `UpdateNotificationModal.jsx`, `UniversalMasterOverlayModal.jsx`, `Mo_Ung_Dung_Web.html`, `backend/server.cjs`, `vercel.json`, `CLAUDE.md` | ✅ PASS 100% | Đồng bộ toàn diện phiên bản v1.9.1, đóng gói 2 Standalone ZIPs (Windows & Mac) và phát hành GitHub Release v1.9.1. |
+
+
 
 
 

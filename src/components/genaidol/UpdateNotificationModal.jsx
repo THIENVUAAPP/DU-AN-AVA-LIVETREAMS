@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.9.0';
+export const APP_VERSION = '1.9.1';
 export const UPDATE_NOTES = [
-  "🛠️ Sửa Dứt Điểm Lỗi Khởi Động Khi Giải Nén: Khắc phục triệt để lỗi báo 'Đã phát hiện xung đột dữ liệu phiên cũ' (do xung đột thứ tự khởi tạo biến), mở ứng dụng chạy mượt mà ngay lập tức 100%!",
-  "⚡ Khởi Động An Toàn & Tự Phục Hồi: Nâng cấp Error Boundary với cơ chế Safe Reset và phục hồi dữ liệu tự động, loại bỏ hoàn toàn tình trạng kẹt màn hình báo lỗi khi mở lại.",
-  "🔊 Tách Biệt Âm Thanh & Điều Khiển Độc Lập: Nút Tắt Tiếng ở khung theo dõi chỉ tắt loa máy streamer, trong khi TikTok Live Studio và khán giả xem live VẪN NGHE TIẾNG ĐẦY ĐỦ 100%!",
-  "🚀 Đồng Bộ Standalone Player 60 FPS Siêu Mượt: Liên kết trình duyệt trực tuyến phát video không giật lag, đứng hình, tải và đồng bộ thời gian thực 0ms với phần mềm AvaLive."
+  "🛠️ Sửa Triệt Để Lỗi Bấm Vào Link & Window Capture: Khắc phục lỗi tham chiếu biểu tượng khiến Trung Tâm Phát Sóng bị báo lỗi khi bấm nút lấy link hoặc mở Window Capture trên phần mềm Windows!",
+  "🌐 Toàn Bộ Đường Link & Cửa Sổ Live Mở Thông Suốt 100%: Tối ưu hóa bộ xử lý Origin và mở cửa sổ Live 9:16 (Window Capture), lấy link Online HTTPS dán vào TikTok Live Studio siêu mượt.",
+  "🚀 Đồng Bộ Real-Time 0ms & 60 FPS: Phát sóng trực tiếp không giật lag, không đứng hình, đồng bộ video và âm thanh trọn vẹn giữa AvaLive và TikTok Live Studio.",
+  "🔊 Tách Biệt Âm Thanh Độc Lập: Streamer tắt loa máy tính để tránh hú mic nhưng TikTok Live Studio và khán giả vẫn nghe tiếng đầy đủ 100%!"
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
