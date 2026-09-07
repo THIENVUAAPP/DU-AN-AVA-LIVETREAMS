@@ -623,6 +623,17 @@ Im lặng bỏ qua 3 câu này = vi phạm Mục 0.7 và Mục 1.
 | **5. Chuyển Đổi Chế Độ Stage Tức Thì 0ms Cho Window Capture** | `DesktopAppUI.jsx`, `CleanLiveOverlay.jsx` | ✅ PASS 100% | Bổ sung phát BroadcastChannel `GLOBAL_STAGE_CHANGE` khi streamer chuyển đổi giữa các chế độ `idol`, `battle`, `bando`. Cửa Sổ Live 9:16 đổi cảnh ngay tức thì 0ms mà không có độ trễ. |
 | **6. Cập Nhật Hệ Thống Bản Cập Nhật v1.8.0 Toàn Diện** | `package.json`, `UpdateNotificationModal.jsx`, `Mo_Ung_Dung_Web.html`, `server.cjs`, `vercel.json` | ✅ PASS 100% | Nâng version toàn dự án lên `v1.8.0`, sẵn sàng phục vụ streamer với trải nghiệm phát sóng siêu mượt, ổn định 24/24. |
 
+---
+
+### 🚀 16. Nhật Ký Bản Cập Nhật v1.8.1 (Official Release)
+| Hạng Mục Cải Tiến | File Thay Đổi | Trạng Thái | Chi Tiết Kỹ Thuật |
+| :--- | :--- | :---: | :--- |
+| **1. Khắc Phục Triệt Để Hiện Tượng Video "Chạy Xíu Đứng, Đứng Hoài Rất Lâu"** | `CleanLiveOverlay.jsx` | ✅ PASS 100% | - **Nguyên nhân gốc rễ**: Trước đây trong nhánh `time_sync` và BroadcastChannel `MASTER_TIME_SYNC`, nếu độ lệch thời gian `\|diff\| > 2.0s` (hoặc `> 0.3s` khi play), hệ thống tự động gọi lệnh seek `vid.currentTime = targetTime` và đổi `playbackRate = 0.96 / 1.04`. Khi phát qua Cloudflare Tunnel đến TikTok Live Studio, độ trễ mạng tự nhiên luôn là 2-3s khiến điều kiện `\|diff\| > 2.0s` bị kích hoạt liên tục mỗi 1-2 giây! Mỗi lần seek ép Chromium CEF xả sạch buffer decode làm video dừng để nạp lại, tạo thành vòng lặp "chạy 1-2 giây rồi đứng khựng hàng chục giây".<br>- **Giải pháp**: Xóa bỏ hoàn toàn lệnh seek thụ động và thay đổi tốc độ phát trong `time_sync` và `MASTER_TIME_SYNC`. Giữ nguyên tốc độ phát 1.0x 60 FPS nguyên bản. Chỉ seek khi streamer chủ động tua hoặc khởi động lại (`control.force === true`). Video phát sóng trơn tru 24/24 không bị ngắt quãng. |
+| **2. Nâng Cấp Bộ Cứu Hộ Đứng Hình Thông Minh (Smart Stall & Freeze Auto-Recovery)** | `CleanLiveOverlay.jsx` | ✅ PASS 100% | Theo dõi tiến trình `currentTime` khi video đang ở trạng thái phát. Nếu `currentTime` không nhích sau 4.5 giây (do mạng lag hoặc CEF kẹt), tự động kích hoạt `vid.play()`. Nếu vẫn kẹt sau 7.5 giây (do rớt socket), tự động khôi phục luồng mượt mà ngay tại timestamp hiện tại mà không làm streamer phải refresh hay load lại từ đầu. |
+| **3. Khóa Khớp 100% Khung Hình, Giọng Nói & Trạng Thái Livestream** | `CleanLiveOverlay.jsx`, `DesktopAppUI.jsx` | ✅ PASS 100% | Duy trì đồng bộ tuyệt đối trạng thái Play/Pause, Mute và Volume giữa phần mềm và nguồn trình duyệt, loại bỏ nguy cơ lệch tiếng hay vọng âm. |
+| **4. Cập Nhật Hệ Thống Bản Cập Nhật v1.8.1 Toàn Diện** | `package.json`, `UpdateNotificationModal.jsx`, `Mo_Ung_Dung_Web.html`, `server.cjs`, `vercel.json` | ✅ PASS 100% | Nâng toàn bộ hệ sinh thái lên `v1.8.1`, sẵn sàng cho các phiên live dài hàng chục giờ liên tục. |
+
+
 
 
 

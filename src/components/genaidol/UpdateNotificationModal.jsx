@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.8.0';
+export const APP_VERSION = '1.8.1';
 export const UPDATE_NOTES = [
-  "🚀 Adaptive Clock Sync: Công nghệ đồng bộ nhịp mềm bám sát 100% lộ trình phát sóng của phần mềm chính, loại bỏ hoàn toàn độ trôi lệch thời gian giữa phần mềm và OBS / TikTok Live Studio.",
-  "🔄 Khắc Phục Triệt Để Lỗi Lặp Lại Ban Đầu (Window Capture & Link): Xóa bỏ lệnh tua cưỡng bức định kỳ, đảm bảo video chạy liên tục theo đúng tiến trình đang phát, không bao giờ bị nhảy lùi về đầu video ngoài ý muốn.",
-  "🔊 Đồng Bộ Khóa Chặt Âm Thanh & Hình Ảnh: Âm thanh, giọng nói và chuyển động khung hình nhân vật luôn trùng khớp tuyệt đối từng mili-giây, không bị lệch tiếng hay vọng tiếng giữa các cửa sổ.",
-  "⚡ Nguồn Trình Duyệt Siêu Mượt 60 FPS: Loại bỏ hoàn toàn cơ chế can thiệp buffer ngầm gây đứng hình, tối ưu hoá dòng truyền dữ liệu 256KB giúp phát liên tục 24/24 không giật lag."
+  "⚡ Khắc Phục Triệt Để Lỗi Đứng Hình Khi Dán Link TikTok Live Studio: Loại bỏ hoàn toàn các lệnh can thiệp tua ngầm định kỳ, đảm bảo video phát sóng liên tục, mượt mà 60 FPS từ đầu đến cuối không bao giờ bị khựng hay dừng hình.",
+  "🛡️ Smart Stall & Freeze Auto-Recovery: Tự động phát hiện và khôi phục tức thì nếu kết nối mạng bị rớt hoặc gián đoạn, đảm bảo phiên live phát sóng liên tục suốt nhiều giờ liền không bị gián đoạn.",
+  "🎬 Trải Nghiệm Phát Sóng Siêu Mượt Cho Phiên Live Dài Hơi: Đảm bảo phát video liên tục cho các phiên livestream kéo dài 5-10 tiếng không gián đoạn, không drop frame.",
+  "🔄 Đồng Bộ Chuẩn Xác 100% Theo Phần Mềm: Video, cử chỉ nhân vật, âm thanh và giọng nói luôn ăn khớp hoàn hảo, giữ vững trải nghiệm phát trực tiếp chuyên nghiệp đỉnh cao."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

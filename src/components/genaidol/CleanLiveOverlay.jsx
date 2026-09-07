@@ -655,11 +655,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         setMasterState(prev => ({ ...prev, isPlaying: true, videoPlaybackEvent: 'play' }));
         vid.muted = isVideoAudioMuted;
         if (!isVideoAudioMuted) vid.volume = videoVolume;
-        // 🎯 ĐỒNG BỘ CHÍNH XÁC 100% KHUNG HÌNH KHI TIẾP TỤC PHÁT (TRÁNH LỆCH ĐẦU - ĐUÔI)
-        if (typeof targetTime === 'number' && !isNaN(targetTime)) {
-          if (control.force || Math.abs(vid.currentTime - targetTime) > 0.3) {
-            try { vid.currentTime = targetTime; } catch (e) {}
-          }
+        // 🎯 CHỈ SEEK THỜI GIAN KHI CÓ CỜ FORCE CHỦ ĐỘNG (STREAMER TUA HOẶC RESTART)
+        if (control.force && typeof targetTime === 'number' && !isNaN(targetTime)) {
+          try { vid.currentTime = targetTime; } catch (e) {}
         }
         if (vid.paused) {
           vid.play().catch(() => {
@@ -673,41 +671,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           try { vid.currentTime = targetTime; } catch (e) {}
         }
       } else if (action === 'time_sync') {
-        // 🎯 ADAPTIVE CLOCK SYNC (ĐỒNG BỘ NHỊP THÍCH ỨNG SIÊU MƯỢT 100% THEO PHẦN MỀM GỐC):
-        // Khóa chặt theo lộ trình phát sóng của phần mềm chính mà không bao giờ giật lag hay khựng hình
-        if (typeof targetTime === 'number' && !isNaN(targetTime)) {
-          if (control.force) {
-            try { vid.currentTime = targetTime; } catch (e) {}
-            try { vid.playbackRate = 1.0; } catch (e) {}
-          } else {
-            const diff = vid.currentTime - targetTime;
-            // 1. Sai số rất nhỏ (|diff| <= 0.3s): Hoàn toàn trùng khớp, giữ nguyên tốc độ chuẩn 1.0x
-            if (Math.abs(diff) <= 0.3) {
-              if (vid.playbackRate !== 1.0) {
-                try { vid.playbackRate = 1.0; } catch (e) {}
-              }
-            }
-            // 2. Overlay hơi chạy nhanh hơn Master (0.3s < diff <= 2.0s):
-            // Giảm nhẹ tốc độ phát xuống 0.96 trong tích tắc để Master bắt kịp êm ái mà không gây khựng hình
-            else if (diff > 0.3 && diff <= 2.0) {
-              if (vid.playbackRate !== 0.96) {
-                try { vid.playbackRate = 0.96; } catch (e) {}
-              }
-            }
-            // 3. Overlay hơi chạy chậm hơn Master (-2.0s <= diff < -0.3s):
-            // Tăng nhẹ tốc độ phát lên 1.04 trong tích tắc để bắt kịp Master êm ái mà không gây giật
-            else if (diff >= -2.0 && diff < -0.3) {
-              if (vid.playbackRate !== 1.04) {
-                try { vid.playbackRate = 1.04; } catch (e) {}
-              }
-            }
-            // 4. Lệch lớn (> 2.0s): Streamer tua xa hoặc mới mở -> seek nhẹ nhàng đến đúng timestamp
-            else if (Math.abs(diff) > 2.0) {
-              try { vid.currentTime = targetTime; } catch (e) {}
-              try { vid.playbackRate = 1.0; } catch (e) {}
-            }
-          }
+        // 🎯 ĐỒNG BỘ THỜI GIAN THỰC (SIÊU MƯỢT 60 FPS, TUYỆT ĐỐI KHÔNG SEEK THỤ ĐỘNG GÂY GIẬT ĐỨNG HÌNH)
+        // Video chạy liên tục ở tốc độ 1.0x nguyên bản không giật lag. Chỉ seek khi streamer chủ động tua (force).
+        if (control.force && typeof targetTime === 'number' && !isNaN(targetTime)) {
+          try { vid.currentTime = targetTime; } catch (e) {}
         }
+        // Đảm bảo video tiếp tục phát nếu phần mềm chính đang phát
         if (!isUserPausedRef.current && vid.paused && vid.readyState >= 2) {
           vid.play().catch(() => {
             vid.muted = true;
@@ -1007,21 +976,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               const isMasterPlaying = !!event.data.isPlaying;
               const v = overlayVideoRef.current;
               if (v && typeof masterTime === 'number' && !isNaN(masterTime)) {
+                // 🎯 CHỈ SEEK THỜI GIAN KHI STREAMER CHỦ ĐỘNG TUA HOẶC RESTART (CỜ FORCE)
                 if (event.data.force) {
                   try { v.currentTime = masterTime; } catch (e) {}
-                  try { v.playbackRate = 1.0; } catch (e) {}
-                } else {
-                  const diff = v.currentTime - masterTime;
-                  if (Math.abs(diff) <= 0.3) {
-                    if (v.playbackRate !== 1.0) try { v.playbackRate = 1.0; } catch (e) {}
-                  } else if (diff > 0.3 && diff <= 2.0) {
-                    if (v.playbackRate !== 0.96) try { v.playbackRate = 0.96; } catch (e) {}
-                  } else if (diff >= -2.0 && diff < -0.3) {
-                    if (v.playbackRate !== 1.04) try { v.playbackRate = 1.04; } catch (e) {}
-                  } else if (Math.abs(diff) > 2.0) {
-                    try { v.currentTime = masterTime; } catch (e) {}
-                    try { v.playbackRate = 1.0; } catch (e) {}
-                  }
                 }
                 if (isMasterPlaying) {
                   v.dataset.userPaused = 'false';
@@ -1655,10 +1612,34 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         return;
       }
 
-      // 2. 🛡️ SMART AUDIO & RECOVERY DETECTOR: Đảm bảo video luôn ở trạng thái phát mượt mà
-      if (!vid.paused && !vid.seeking && vid.readyState >= 3) {
-        freezeTickCountRef.current = 0;
-        lastObservedTimeRef.current = vid.currentTime;
+      // 2. 🛡️ SMART STALL & FREEZE RECOVERY: Phát hiện đứng hình khi đang phát (do mạng/CEF kẹt)
+      if (!vid.paused && !vid.seeking) {
+        const cur = vid.currentTime;
+        if (lastObservedTimeRef.current >= 0 && Math.abs(cur - lastObservedTimeRef.current) < 0.01) {
+          // Video chưa tăng thời gian (đang bị đứng hình)
+          freezeTickCountRef.current = (freezeTickCountRef.current || 0) + 1;
+          if (freezeTickCountRef.current >= 3) {
+            // Đứng hình 4.5s -> Đánh thức decoder ngay lập tức
+            vid.play().catch(() => {
+              vid.muted = true;
+              vid.play().catch(() => {});
+            });
+          }
+          if (freezeTickCountRef.current >= 5) {
+            // Đứng hình 7.5s do rớt kết nối mạng socket -> Nạp lại luồng mượt mà tại vị trí hiện tại
+            freezeTickCountRef.current = 0;
+            try {
+              const saveTime = vid.currentTime;
+              vid.src = activeMedia.url;
+              if (saveTime > 0) vid.currentTime = saveTime;
+              vid.play().catch(() => {});
+            } catch (e) {}
+          }
+        } else {
+          // Đang phát mượt mà 60 FPS
+          freezeTickCountRef.current = 0;
+          lastObservedTimeRef.current = cur;
+        }
       }
     }, 1500);
 
@@ -1846,7 +1827,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 WINDOW CAPTURE
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.8.0
+                v1.8.1
               </span>
             </div>
 
