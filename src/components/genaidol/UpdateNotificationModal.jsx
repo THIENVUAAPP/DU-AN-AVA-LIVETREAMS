@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.8.7';
+export const APP_VERSION = '1.8.8';
 export const UPDATE_NOTES = [
-  "🎯 Khóa Khớp Thời Gian 1:1 Tuyệt Đối Giữa Phần Mềm Và Window Capture OBS: Đồng bộ thời gian thực, dù ẩn tab, chuyển tab tới lui hàng trăm lần hay mở cửa sổ mới ở bất kỳ thời điểm nào, Window Capture luôn lập tức nhảy đúng vào vị trí khung thời gian video trên phần mềm!",
-  "🚀 Đột Phá Route Phát Sóng Độc Lập /live-stream Siêu Nhẹ 60 FPS: Trang phát sóng HTML5 GPU-accelerated siêu nhẹ (~3KB) chuyên dụng cho TikTok Live Studio & OBS Browser Source, loại bỏ 100% hiện tượng giật, lag hay đứng hình!",
-  "⚡ Bổ Sung Đường Link Nội Bộ Siêu Tốc (1000 Mbps): Cung cấp đường link Local Loopback độ trễ 0ms dành riêng cho TikTok Live Studio cài trên cùng máy tính, phát mượt mà 24/24 không phụ thuộc vào mạng Internet!",
-  "🔊 Bảo Vệ Âm Thanh & Khung Hình 60FPS: Loại bỏ mọi ngắt quãng, đảm bảo hình ảnh, âm thanh, giọng nói và cử chỉ ăn khớp tuyệt đối từ giây đầu tiên đến giây cuối cùng."
+  "🌐 Nền Tảng Phát Sóng Online Độc Lập Siêu Mượt 60 FPS Cho TikTok Live Studio: Tích hợp Web Player siêu nhẹ (~3KB) chuyên dụng, tận dụng 100% GPU Hardware Acceleration, loại bỏ hoàn toàn link nội bộ local theo đúng yêu cầu.",
+  "⚡ Thuật Toán Clock Drift Compensation (Bù Trôi Đồng Hồ Vi Mô Chuẩn Đài Truyền Hình): Triệt tiêu hoàn toàn hiện tượng ép seek giật khựng, bù trôi nhịp mượt mà 60 FPS, không còn rớt khung hình hay đứng hình khi phát qua mạng Online!",
+  "🔄 Đồng Bộ Tự Động Real-Time 0ms: Cập nhật load video theo thời gian thực đồng bộ với phần mềm AvaLive; đổi video, tạm dừng (Pause), phát tiếp (Play) hay tua khung hình đều tức thì 100%!",
+  "🛡️ Watchdog & Tự Động Phục Hồi (Auto-Heal 24/7): Tự động đánh thức và duy trì dòng phát sóng liên tục nhiều giờ liền trên TikTok Live Studio mà không bị gián đoạn hay mất kết nối."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

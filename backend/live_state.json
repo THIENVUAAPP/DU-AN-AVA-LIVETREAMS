@@ -5,11 +5,11 @@
   "characterName": "NHÉP MIỆNG",
   "mediaUrl": "/uploads/media-1788761429720-81937763.mp4",
   "isVideo": true,
-  "videoPlaybackEvent": "seek",
+  "videoPlaybackEvent": "pause",
   "isPlaying": false,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1788762169757,
+  "updatedAt": 1788777736512,
   "flvUrl": null,
   "isConnected": false,
   "type": "MASTER_LIVE_STATE_UPDATE",
@@ -20,5 +20,5 @@
   "isVideoAudioMuted": true,
   "videoVolume": 1,
   "clearMedia": false,
-  "tunnelUrl": "https://sounds-vertex-playlist-requirement.trycloudflare.com"
+  "tunnelUrl": "https://karma-personnel-salmon-units.trycloudflare.com"
 }

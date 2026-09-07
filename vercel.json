@@ -4,8 +4,18 @@
   "outputDirectory": "dist",
   "redirects": [
     {
+      "source": "/AvaLive_VIP_PRO_Windows_v1.8.8.zip",
+      "destination": "https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v1.8.8/AvaLive_VIP_PRO_Windows_v1.8.8.zip",
+      "permanent": false
+    },
+    {
+      "source": "/AvaLive_VIP_PRO_Mac_v1.8.8.zip",
+      "destination": "https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v1.8.8/AvaLive_VIP_PRO_Mac_v1.8.8.zip",
+      "permanent": false
+    },
+    {
       "source": "/AvaLive_VIP_PRO_Windows_v1.8.7.zip",
-      "destination": "https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v1.8.7/AvaLive_VIP_PRO_Windows_v1.8.7.zip",
+      "destination": "https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v1.8.8/AvaLive_VIP_PRO_Windows_v1.8.8.zip",
       "permanent": false
     },
     {
@@ -255,12 +265,12 @@
     },
     {
       "source": "/api/download/windows",
-      "destination": "https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v1.8.7/AvaLive_VIP_PRO_Windows_v1.8.7.zip",
+      "destination": "https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v1.8.8/AvaLive_VIP_PRO_Windows_v1.8.8.zip",
       "permanent": false
     },
     {
       "source": "/api/download/mac",
-      "destination": "https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v1.8.7/AvaLive_VIP_PRO_Mac_v1.8.7.zip",
+      "destination": "https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v1.8.8/AvaLive_VIP_PRO_Mac_v1.8.8.zip",
       "permanent": false
     }
   ],
