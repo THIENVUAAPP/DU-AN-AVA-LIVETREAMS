@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.8.8';
+export const APP_VERSION = '1.8.9';
 export const UPDATE_NOTES = [
-  "🌐 Nền Tảng Phát Sóng Online Độc Lập Siêu Mượt 60 FPS Cho TikTok Live Studio: Tích hợp Web Player siêu nhẹ (~3KB) chuyên dụng, tận dụng 100% GPU Hardware Acceleration, loại bỏ hoàn toàn link nội bộ local theo đúng yêu cầu.",
-  "⚡ Thuật Toán Clock Drift Compensation (Bù Trôi Đồng Hồ Vi Mô Chuẩn Đài Truyền Hình): Triệt tiêu hoàn toàn hiện tượng ép seek giật khựng, bù trôi nhịp mượt mà 60 FPS, không còn rớt khung hình hay đứng hình khi phát qua mạng Online!",
-  "🔄 Đồng Bộ Tự Động Real-Time 0ms: Cập nhật load video theo thời gian thực đồng bộ với phần mềm AvaLive; đổi video, tạm dừng (Pause), phát tiếp (Play) hay tua khung hình đều tức thì 100%!",
-  "🛡️ Watchdog & Tự Động Phục Hồi (Auto-Heal 24/7): Tự động đánh thức và duy trì dòng phát sóng liên tục nhiều giờ liền trên TikTok Live Studio mà không bị gián đoạn hay mất kết nối."
+  "🔊 Tách Biệt Hoàn Toàn Loa Máy Tính & TikTok Live: Nút Tắt Tiếng ở ô theo dõi giờ đây chỉ tắt âm thanh loa máy tính của streamer (chống vọng mic, không gây ồn), trong khi TikTok Live Studio và khán giả xem live VẪN NGHE TIẾNG ĐẦY ĐỦ 100%!",
+  "🚀 Sửa Dứt Điểm Lỗi Mở Đường Link Phát Sóng: Khắc phục lỗi chặn popup của trình duyệt, bổ sung liên kết trực tiếp mở tab mới tức thì, kết nối ổn định 100% đến Player 60 FPS siêu mượt.",
+  "⚡ Tối Ưu Hóa LiveStream Standalone Player: Hỗ trợ bộ phát trực tiếp siêu nhẹ 60 FPS cả trên backend Express lẫn client-side React SPA, tối ưu hóa phần cứng GPU và tự động phục hồi khi mất kết nối.",
+  "🔄 Đồng Bộ Real-Time 0ms: Cập nhật load video theo thời gian thực đồng bộ với phần mềm AvaLive; đổi video, tạm dừng (Pause), phát tiếp (Play) hay tua khung hình đều tức thì 100%!"
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

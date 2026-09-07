@@ -175,11 +175,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
         baseUrl = `${tunnelData.tunnelUrl.replace(/\/$/, '')}/live-stream`;
       } else {
         const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
-        if (currentOrigin && !currentOrigin.includes('127.0.0.1') && !currentOrigin.includes('localhost')) {
-          baseUrl = `${currentOrigin}/live-stream`;
-        } else {
-          baseUrl = '';
-        }
+        baseUrl = `${currentOrigin || 'http://localhost:3001'}/live-stream`;
       }
     } else {
       // 🌐 Link Đám Mây Cloudflare Tunnel HTTPS cho các dự án game khác
@@ -189,11 +185,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
         baseUrl = `${tunnelData.tunnelUrl.replace(/\/$/, '')}/${path}`;
       } else {
         const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
-        if (currentOrigin && !currentOrigin.includes('127.0.0.1') && !currentOrigin.includes('localhost')) {
-          baseUrl = `${currentOrigin}/${path}`;
-        } else {
-          baseUrl = '';
-        }
+        baseUrl = `${currentOrigin || 'http://localhost:3001'}/${path}`;
       }
     }
 
@@ -270,7 +262,11 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
   const handleOpenPreview = (url) => {
     if (!url) return;
-    window.open(url, '_blank', 'width=450,height=800,menubar=no,toolbar=no,location=no,status=no');
+    try {
+      window.open(url, '_blank');
+    } catch (e) {
+      window.location.href = url;
+    }
   };
 
   const isTunnelActive = tunnelData?.status === "active";
@@ -289,7 +285,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
               <h2 className="text-base font-black text-white tracking-wide flex items-center gap-2">
                 <span>TRUNG TÂM PHÁT SÓNG TIKTOK LIVE STUDIO & OBS</span>
                 <span className="text-[10px] bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-2 py-0.5 rounded-full font-bold">
-                  v1.8.8 ONLINE
+                  v1.8.9 ONLINE
                 </span>
               </h2>
               <p className="text-xs text-gray-400 font-medium">
@@ -449,19 +445,25 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                         </button>
 
                         {/* NÚT XEM THỬ */}
-                        <button
-                          type="button"
-                          onClick={() => handleOpenPreview(cloudUrl)}
-                          className={`px-3 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                        <a
+                          href={hasUrl ? cloudUrl : '#'}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => {
+                            if (!hasUrl) {
+                              e.preventDefault();
+                            }
+                          }}
+                          className={`px-3.5 py-2.5 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer no-underline ${
                             hasUrl
-                              ? "bg-white/10 hover:bg-white/20 text-gray-200 hover:text-white border border-white/15"
+                              ? "bg-cyan-500/20 hover:bg-cyan-500/35 text-cyan-300 hover:text-white border border-cyan-400/40 shadow-sm active:scale-95"
                               : "bg-white/5 text-gray-500 cursor-not-allowed"
                           }`}
-                          title="Mở tab mới kiểm tra video đang phát siêu mượt"
+                          title={hasUrl ? "Mở tab mới trên trình duyệt kiểm tra video đang phát siêu mượt" : "Đang kết nối Cloudflare..."}
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
                           <span>Xem Thử</span>
-                        </button>
+                        </a>
                       </div>
 
                       <p className="text-[10.5px] text-cyan-300/90 leading-tight">

@@ -1373,55 +1373,52 @@ export default function DesktopAppUI() {
     showToast(`🔊 Đang phát kiểm tra âm thanh Giọng ${role === 'idol' ? 'Nhân vật chính' : role === 'manager' ? 'Trợ lý' : 'Game'}!`, 'success');
   }, [unlockAllAudio]);
 
-  // 🔇 Xử lý Bật/Tắt chế độ Âm thanh Đồng bộ Tuyệt đối (Phần mềm + OBS Window Capture là MỘT)
+  // 🔇 Xử lý Bật/Tắt Âm Thanh Loa Máy Tính Streamer (TIKTOK LIVE STUDIO VẪN PHÁT TIẾNG 100% CHO KHÁN GIẢ)
   const handleToggleLocalSpeakerMute = useCallback(() => {
     const nextState = !isLocalSpeakerMuted;
-    bandoAudio.setLocalSpeakerMute(nextState);
-    bandoAudio.setMuted(nextState);
     setIsLocalSpeakerMuted(nextState);
+    setLiveAudioMuted(nextState);
 
-    // Đảm bảo video preview trên phần mềm luôn MUTE (âm thanh chỉ phát 1 bên duy nhất từ Window Capture OBS)
+    // Chỉ tắt tiếng loa máy tính của streamer trên phần mềm quản lý để tránh vọng micro
     if (desktopVideoRef.current) {
-      desktopVideoRef.current.muted = true;
+      desktopVideoRef.current.muted = nextState;
+      if (!nextState) {
+        desktopVideoRef.current.volume = liveVolume || 1.0;
+      }
     }
     if (flvVideoRef.current) {
-      flvVideoRef.current.muted = true;
+      flvVideoRef.current.muted = nextState;
+      if (!nextState) {
+        flvVideoRef.current.volume = liveVolume || 1.0;
+      }
     }
 
+    // Chỉ tắt tiếng loa máy tính của audio engine (không ảnh hưởng luồng TikTok Live)
+    bandoAudio.setLocalSpeakerMute(nextState);
+
     try {
-      localStorage.setItem('avalive_audio_muted', String(nextState));
       localStorage.setItem('avalive_local_speaker_muted', String(nextState));
     } catch (e) {}
 
-    // Đồng bộ tức thời sang OBS Window Capture qua Supabase / Socket.io
+    // ⚠️ QUY TẮC BẤT DI BẤT DỊCH: TIKTOK LIVE STUDIO & LUỒNG LIVE CHO NGƯỜI XEM LUÔN CÓ TIẾNG 100%!
+    // Tuyệt đối không gửi isVideoAudioMuted: true sang TikTok Live Studio / OBS
     syncMasterLiveState({
-      isVideoAudioMuted: nextState
+      isVideoAudioMuted: false,
+      videoVolume: 1.0
     }, socketRef.current);
-
-    // Đồng bộ tức thời siêu tốc qua BroadcastChannel
-    try {
-      const bc = new BroadcastChannel('avalive_master_live_stream');
-      bc.postMessage({ 
-        type: 'GLOBAL_AUDIO_CHANGE', 
-        isMuted: nextState, 
-        volume: 1, 
-        timestamp: Date.now() 
-      });
-      setTimeout(() => bc.close(), 100);
-    } catch (err) {}
 
     if (nextState) {
       setToast({
-        type: 'success',
-        message: '🔇 ĐÃ TẮT TOÀN BỘ ÂM THANH! Đồng bộ cả Phần Mềm và OBS Window Capture im lặng hoàn toàn.'
+        type: 'info',
+        message: '🔇 Đã TẮT LOA MÁY TÍNH streamer! (TikTok Live Studio & người xem vẫn nghe tiếng bình thường 100%)'
       });
     } else {
       setToast({
         type: 'success',
-        message: '🔊 ĐÃ BẬT ÂM THANH! Phần Mềm và OBS Window Capture cùng phát âm thanh đồng bộ 100%.'
+        message: '🔊 Đã BẬT LOA MÁY TÍNH streamer! (Cả máy tính và TikTok Live Studio đều có tiếng)'
       });
     }
-  }, [isLocalSpeakerMuted]);
+  }, [isLocalSpeakerMuted, liveVolume]);
 
   // 🔊 QUẢN LÝ ÂM THANH PHÁT ĐỒNG BỘ GIỮA PHẦN MỀM VÀ WINDOW CAPTURE OBS
   const [liveAudioMuted, setLiveAudioMuted] = useState(() => {
@@ -1607,52 +1604,8 @@ export default function DesktopAppUI() {
   }, [toggleDesktopVideoPlayback, isGameBattleActive, isGameBanDoActive]);
 
   const toggleLiveAudioMute = useCallback(() => {
-    const nextMuted = !liveAudioMuted;
-    setLiveAudioMuted(nextMuted);
-    try {
-      localStorage.setItem('avalive_audio_muted', String(nextMuted));
-      localStorage.setItem('avalive_overlay_audio_muted', String(nextMuted));
-    } catch (e) {}
-
-    // Bật/tắt âm thanh trực tiếp trên video của phần mềm quản lý
-    if (desktopVideoRef.current) {
-      desktopVideoRef.current.muted = nextMuted;
-      if (!nextMuted) {
-        desktopVideoRef.current.volume = liveVolume;
-      }
-    }
-    if (flvVideoRef.current) {
-      flvVideoRef.current.muted = nextMuted;
-    }
-
-    bandoAudio.setLocalSpeakerMute(nextMuted);
-    bandoAudio.setMuted(nextMuted);
-
-    // Đồng bộ ngay lập tức sang Cửa Sổ Window Capture OBS
-    try {
-      const bc = new BroadcastChannel('avalive_master_live_stream');
-      bc.postMessage({
-        type: 'GLOBAL_AUDIO_CHANGE',
-        isMuted: nextMuted,
-        volume: liveVolume,
-        source: 'desktop',
-        timestamp: Date.now()
-      });
-      setTimeout(() => bc.close(), 100);
-    } catch (e) {}
-
-    syncMasterLiveState({
-      isVideoAudioMuted: nextMuted,
-      videoVolume: liveVolume
-    }, socketRef.current);
-    sendVideoControl({
-      action: 'audio_sync',
-      isMuted: nextMuted,
-      volume: liveVolume
-    }, socketRef.current);
-
-    showToast(nextMuted ? '🔇 Đã TẮT ÂM THANH!' : '🔊 Đã BẬT ÂM THANH!', nextMuted ? 'info' : 'success');
-  }, [liveAudioMuted, liveVolume]);
+    handleToggleLocalSpeakerMute();
+  }, [handleToggleLocalSpeakerMute]);
 
   const handleLiveVolumeChange = useCallback((newVol) => {
     setLiveVolume(newVol);
@@ -3160,19 +3113,19 @@ export default function DesktopAppUI() {
                 <span>{isVideoPlaying ? 'TẠM DỪNG' : 'TIẾP TỤC'}</span>
               </button>
 
-              {/* Nút 2: Mở / Tắt Âm Thanh */}
+              {/* Nút 2: Mở / Tắt Âm Thanh Loa Máy Tính (TikTok Live Vẫn Có Tiếng 100%) */}
               <button
                 type="button"
-                onClick={toggleLiveAudioMute}
+                onClick={handleToggleLocalSpeakerMute}
                 className={`pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-2xl border backdrop-blur-md transition-all cursor-pointer active:scale-95 select-none ${
-                  !liveAudioMuted
-                    ? 'bg-black/60 hover:bg-black/80 text-cyan-300 border-cyan-400/30'
-                    : 'bg-rose-950/85 hover:bg-rose-900 text-rose-300 border-rose-500/50'
+                  !isLocalSpeakerMuted
+                    ? 'bg-black/70 hover:bg-black/90 text-cyan-300 border-cyan-400/30'
+                    : 'bg-amber-950/85 hover:bg-amber-900 text-amber-300 border-amber-500/50'
                 }`}
-                title={liveAudioMuted ? "Bấm để MỞ ÂM THANH" : "Bấm để TẮT ÂM THANH"}
+                title={isLocalSpeakerMuted ? "Loa máy đang tắt (TikTok Live vẫn phát tiếng 100%) — Bấm để bật loa máy" : "Loa máy đang bật — Bấm để tắt loa máy (tránh vọng micro khi live)"}
               >
-                {!liveAudioMuted ? <Volume2 size={13} className="text-cyan-400" /> : <VolumeX size={13} className="text-rose-400" />}
-                <span>{!liveAudioMuted ? 'MỞ TIẾNG' : 'TẮT TIẾNG'}</span>
+                {!isLocalSpeakerMuted ? <Volume2 size={13} className="text-cyan-400" /> : <VolumeX size={13} className="text-amber-400" />}
+                <span>{!isLocalSpeakerMuted ? 'LOA MÁY: BẬT' : 'LOA MÁY: TẮT'}</span>
               </button>
             </div>
           </div>
@@ -4132,29 +4085,29 @@ export default function DesktopAppUI() {
             <span>{isGlobalDemoRunning ? t('stopDemo', currentLang) : t('runDemo', currentLang)}</span>
           </button>
 
-          {/* 🔊 NÚT BẬT / TẮT ÂM THANH TOÀN CỤC ĐỒNG BỘ 1:1 VỚI OBS WINDOW CAPTURE */}
+          {/* 🔊 NÚT BẬT / TẮT ÂM THANH LOA MÁY TÍNH STREAMER (TIKTOK LIVE STUDIO VẪN CÓ TIẾNG 100%) */}
           <button 
             onClick={handleToggleLocalSpeakerMute}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-black transition-all border shadow-sm active:scale-95 cursor-pointer ${
               isLocalSpeakerMuted
-                ? 'bg-gradient-to-r from-red-600 via-rose-600 to-pink-600 text-white border-yellow-300 ring-2 ring-yellow-400 shadow-red-500/30 animate-pulse'
+                ? 'bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600 text-white border-amber-300 ring-2 ring-amber-400 shadow-amber-500/30'
                 : (isDarkMode ? 'bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-600 hover:to-teal-600 text-white border-emerald-400/50 shadow-emerald-500/20' : 'bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-400')
             }`}
             title={
               isLocalSpeakerMuted
-                ? "ĐANG TẮT TOÀN BỘ ÂM THANH (Đồng bộ 1:1 giữa Phần Mềm và OBS Window Capture) — Bấm để Bật lại âm thanh."
-                : "ĐANG BẬT TOÀN BỘ ÂM THANH (Đồng bộ 1:1 giữa Phần Mềm và OBS Window Capture) — Bấm để Tắt âm thanh."
+                ? "ĐANG TẮT LOA MÁY TÍNH (TikTok Live Studio vẫn phát tiếng 100% cho khán giả) — Bấm để Mở lại loa máy."
+                : "ĐANG BẬT LOA MÁY TÍNH (Khán giả TikTok và loa máy đều có tiếng) — Bấm để Tắt loa máy tránh vọng micro khi live."
             }
           >
             {isLocalSpeakerMuted ? (
               <>
                 <VolumeX size={12} className="text-yellow-300" />
-                <span className="whitespace-nowrap font-black">Tắt Tiếng</span>
+                <span className="whitespace-nowrap font-black">🔇 Tắt Loa Máy (TikTok Có Tiếng)</span>
               </>
             ) : (
               <>
                 <Volume2 size={12} className="text-white" />
-                <span className="whitespace-nowrap font-black">Mở Tiếng</span>
+                <span className="whitespace-nowrap font-black">🔊 Bật Loa Máy</span>
               </>
             )}
           </button>

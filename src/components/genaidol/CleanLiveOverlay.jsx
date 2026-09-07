@@ -173,6 +173,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     return params.get('mode') === 'window_capture' || params.get('capture') === '1' || window.location.pathname.includes('/window-capture');
   })() : false;
 
+  // 🎯 LUỒNG LIVE CHO TIKTOK LIVE STUDIO & KHÁN GIẢ: LUÔN PHÁT ÂM THANH 100%, KHÔNG BỊ ÉP MUTE BỞI LOA MÁY TÍNH CỦA STREAMER
+  const isLiveStreamAudienceTarget = typeof window !== 'undefined' ? (() => {
+    const params = new URLSearchParams(window.location.search);
+    return isWindowCapture || params.get('sound') === '1' || params.get('mode') === 'window_capture' || window.location.pathname.includes('/live') || window.location.pathname.includes('/idol') || window.location.pathname.includes('/studio');
+  })() : false;
+
   const [isControlDockCollapsed, setIsControlDockCollapsed] = useState(() => {
     try {
       return localStorage.getItem('avalive_window_capture_dock_collapsed') === 'true';
@@ -685,9 +691,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         }
       }
 
-      // 3. Đồng bộ Mute & Volume tức thì nếu có trong control payload (Cửa sổ Window Capture giữ âm thanh độc lập)
+      // 3. Đồng bộ Mute & Volume tức thì (TikTok Live Studio & Window Capture luôn phát âm thanh 100% cho khán giả)
       if (typeof control.isMuted === 'boolean') {
-        if (!isWindowCapture) {
+        if (!isLiveStreamAudienceTarget) {
           setIsVideoAudioMuted(control.isMuted);
           if (vid) vid.muted = control.isMuted;
           bandoAudio.setLocalSpeakerMute(control.isMuted);
@@ -739,9 +745,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         }
       }
 
-      // Đồng bộ Âm thanh & Âm lượng từ Phần Mềm Chính (Window Capture không bị ép mute do tắt loa Desktop)
+      // Đồng bộ Âm thanh & Âm lượng từ Phần Mềm Chính (TikTok Live Studio & Window Capture luôn phát âm thanh 100% cho khán giả)
       if (typeof data.isVideoAudioMuted === 'boolean') {
-        if (!isWindowCapture) {
+        if (!isLiveStreamAudienceTarget) {
           setIsVideoAudioMuted(data.isVideoAudioMuted);
           bandoAudio.setLocalSpeakerMute(data.isVideoAudioMuted);
           bandoAudio.setMuted(data.isVideoAudioMuted);
@@ -1007,7 +1013,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 }
               }
               if (typeof event.data.isMuted === 'boolean') {
-                if (!isWindowCapture) {
+                if (!isLiveStreamAudienceTarget) {
                   setIsVideoAudioMuted(event.data.isMuted);
                   if (v) v.muted = event.data.isMuted;
                   bandoAudio.setLocalSpeakerMute(event.data.isMuted);
@@ -1028,7 +1034,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             } else if (event.data.type === 'GLOBAL_AUDIO_CHANGE') {
               const v = overlayVideoRef.current;
               if (typeof event.data.isMuted === 'boolean') {
-                if (!isWindowCapture || event.data.source === 'overlay') {
+                if (!isLiveStreamAudienceTarget || event.data.source === 'overlay') {
                   setIsVideoAudioMuted(event.data.isMuted);
                   if (v) v.muted = event.data.isMuted;
                   bandoAudio.setLocalSpeakerMute(event.data.isMuted);

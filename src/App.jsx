@@ -28,6 +28,7 @@ import UpgradePrompt from "./components/UpgradePrompt";
 import AutoCaptchaSolver from "./components/AutoCaptchaSolver";
 import UpdateNotificationModal from "./components/genaidol/UpdateNotificationModal";
 import TemplateLibraryModal from "./components/genaidol/TemplateLibraryModal";
+import LiveStreamStandalonePlayer from "./components/genaidol/LiveStreamStandalonePlayer";
 import { bootstrapDefaultPresets } from "./utils/defaultPresetsBootstrap";
 import { Lock, Sparkles, ShieldCheck, Mail, LogIn, ArrowRight } from "lucide-react";
 
@@ -49,12 +50,13 @@ export default function App() {
   const overlayPathName = typeof window !== "undefined" ? window.location.pathname.toLowerCase() : "";
   const overlayTypeParam = overlaySearchParams?.get("overlay")?.toLowerCase();
 
+  const isLiveStreamStandalone = overlayPathName.includes("/live-stream") || overlayPathName.includes("/live-player") || overlayPathName.includes("/stream-player");
   const isOverlayBattle = overlayTypeParam === "gamebattle" || overlayTypeParam === "battle" || overlayPathName.includes("/overlay-battle") || overlayPathName.includes("/overlay/battle") || overlayPathName.includes("/battle");
   const isOverlayBanDo = overlayTypeParam === "bando" || overlayTypeParam === "vietnam_map" || overlayTypeParam === "map" || overlayTypeParam === "vietnam" || overlayPathName.includes("/overlay-bando") || overlayPathName.includes("/overlay/bando") || overlayPathName.includes("/bando");
   const isOverlayStudio = overlayTypeParam === "studio" || overlayTypeParam === "broadcast" || overlayPathName.includes("/overlay-studio") || overlayPathName.includes("/studio");
   const isOverlayIdol = overlayTypeParam === "idol" || overlayTypeParam === "avatar" || overlayPathName.includes("/overlay-idol") || overlayPathName.includes("/idol");
-  const isMasterLiveOverlay = overlayTypeParam === "live" || overlayTypeParam === "stage" || overlayTypeParam === "tiktok" || overlayTypeParam === "obs" || overlayTypeParam === "cleanlive" || overlayTypeParam === "master" || overlayPathName.includes("/overlay-live") || overlayPathName.includes("/live");
-  const isAnyOverlayWindow = isOverlayBattle || isOverlayBanDo || isOverlayStudio || isOverlayIdol || isMasterLiveOverlay;
+  const isMasterLiveOverlay = (!isLiveStreamStandalone) && (overlayTypeParam === "live" || overlayTypeParam === "stage" || overlayTypeParam === "tiktok" || overlayTypeParam === "obs" || overlayTypeParam === "cleanlive" || overlayTypeParam === "master" || overlayPathName.includes("/overlay-live") || overlayPathName.includes("/live"));
+  const isAnyOverlayWindow = isLiveStreamStandalone || isOverlayBattle || isOverlayBanDo || isOverlayStudio || isOverlayIdol || isMasterLiveOverlay;
 
   const [activeTab, setActiveTab] = useState("overview");
   const [isLive, setIsLive] = useState(false);
@@ -285,6 +287,7 @@ export default function App() {
     await syncUserToSupabase(newUser);
   };
 
+  if (isLiveStreamStandalone) return <LiveStreamStandalonePlayer />;
   if (isOverlayBattle) return <GameBattleOverlay />;
   if (isOverlayBanDo) return <GameBanDoOverlay />;
   if (isOverlayStudio || isOverlayIdol || isMasterLiveOverlay) return <CleanLiveOverlay />;
