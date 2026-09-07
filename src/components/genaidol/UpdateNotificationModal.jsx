@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.7.9';
+export const APP_VERSION = '1.8.0';
 export const UPDATE_NOTES = [
-  "🎯 Khắc Phục Triệt Để Lỗi Video Lặp Lại Sau 25-30 Giây: Tối ưu hoá luồng HTTP Range Stream toàn phần, loại bỏ việc cắt chunk cố định giúp video phát liền mạch từ 0:00 đến tận cuối clip (dù là video dài 1-2 tiếng).",
-  "🔄 Seamless Video Loop: Video tự động lặp lại từ đầu đến cuối một cách trơn tru chỉ khi phát hết clip, không bao giờ bị ngắt quãng hay lặp sớm giữa chừng.",
-  "🌐 Duy Nhất 1 Đường Link Cloudflare HTTPS Chống Chặn: Loại bỏ hoàn toàn đường link mạng nội bộ LAN bị TikTok Live Studio chặn. Link Cloudflare SSL 100% bảo mật, tốc độ cao, siêu nét 60 FPS.",
-  "⚡ Đồng Bộ Thời Gian Thực Chuẩn Xác: Loại bỏ tham số thời gian cố định trên link copy, đảm bảo video trên TikTok Studio luôn đồng bộ mượt mà với phần mềm gốc mà không bị giật lag."
+  "🚀 Adaptive Clock Sync: Công nghệ đồng bộ nhịp mềm bám sát 100% lộ trình phát sóng của phần mềm chính, loại bỏ hoàn toàn độ trôi lệch thời gian giữa phần mềm và OBS / TikTok Live Studio.",
+  "🔄 Khắc Phục Triệt Để Lỗi Lặp Lại Ban Đầu (Window Capture & Link): Xóa bỏ lệnh tua cưỡng bức định kỳ, đảm bảo video chạy liên tục theo đúng tiến trình đang phát, không bao giờ bị nhảy lùi về đầu video ngoài ý muốn.",
+  "🔊 Đồng Bộ Khóa Chặt Âm Thanh & Hình Ảnh: Âm thanh, giọng nói và chuyển động khung hình nhân vật luôn trùng khớp tuyệt đối từng mili-giây, không bị lệch tiếng hay vọng tiếng giữa các cửa sổ.",
+  "⚡ Nguồn Trình Duyệt Siêu Mượt 60 FPS: Loại bỏ hoàn toàn cơ chế can thiệp buffer ngầm gây đứng hình, tối ưu hoá dòng truyền dữ liệu 256KB giúp phát liên tục 24/24 không giật lag."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

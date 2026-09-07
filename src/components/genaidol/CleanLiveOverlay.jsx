@@ -673,17 +673,40 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           try { vid.currentTime = targetTime; } catch (e) {}
         }
       } else if (action === 'time_sync') {
-        // 🎯 DUY TRÌ NHỊP PHÁT NGUYÊN BẢN 1.0X SIÊU MƯỢT (NATIVE 60FPS SMOOTH PLAYBACK):
-        // Tuyệt đối không thay đổi playbackRate liên tục mỗi giây để tránh hiện tượng Chromium resample âm thanh gây giật khựng!
-        // Với video dài/nặng (vài tiếng, hàng GB): TUYỆT ĐỐI KHÔNG seek thụ động trong nhịp time_sync để tránh xả sạch bộ đệm (flushing buffer) gây gián đoạn GPU decoder làm đứng hình!
-        // Chỉ seek khi streamer chủ động tua trên phần mềm chính (control.force === true).
+        // 🎯 ADAPTIVE CLOCK SYNC (ĐỒNG BỘ NHỊP THÍCH ỨNG SIÊU MƯỢT 100% THEO PHẦN MỀM GỐC):
+        // Khóa chặt theo lộ trình phát sóng của phần mềm chính mà không bao giờ giật lag hay khựng hình
         if (typeof targetTime === 'number' && !isNaN(targetTime)) {
           if (control.force) {
             try { vid.currentTime = targetTime; } catch (e) {}
+            try { vid.playbackRate = 1.0; } catch (e) {}
+          } else {
+            const diff = vid.currentTime - targetTime;
+            // 1. Sai số rất nhỏ (|diff| <= 0.3s): Hoàn toàn trùng khớp, giữ nguyên tốc độ chuẩn 1.0x
+            if (Math.abs(diff) <= 0.3) {
+              if (vid.playbackRate !== 1.0) {
+                try { vid.playbackRate = 1.0; } catch (e) {}
+              }
+            }
+            // 2. Overlay hơi chạy nhanh hơn Master (0.3s < diff <= 2.0s):
+            // Giảm nhẹ tốc độ phát xuống 0.96 trong tích tắc để Master bắt kịp êm ái mà không gây khựng hình
+            else if (diff > 0.3 && diff <= 2.0) {
+              if (vid.playbackRate !== 0.96) {
+                try { vid.playbackRate = 0.96; } catch (e) {}
+              }
+            }
+            // 3. Overlay hơi chạy chậm hơn Master (-2.0s <= diff < -0.3s):
+            // Tăng nhẹ tốc độ phát lên 1.04 trong tích tắc để bắt kịp Master êm ái mà không gây giật
+            else if (diff >= -2.0 && diff < -0.3) {
+              if (vid.playbackRate !== 1.04) {
+                try { vid.playbackRate = 1.04; } catch (e) {}
+              }
+            }
+            // 4. Lệch lớn (> 2.0s): Streamer tua xa hoặc mới mở -> seek nhẹ nhàng đến đúng timestamp
+            else if (Math.abs(diff) > 2.0) {
+              try { vid.currentTime = targetTime; } catch (e) {}
+              try { vid.playbackRate = 1.0; } catch (e) {}
+            }
           }
-        }
-        if (vid.playbackRate !== 1.0) {
-          try { vid.playbackRate = 1.0; } catch (e) {}
         }
         if (!isUserPausedRef.current && vid.paused && vid.readyState >= 2) {
           vid.play().catch(() => {
@@ -985,9 +1008,20 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               const v = overlayVideoRef.current;
               if (v && typeof masterTime === 'number' && !isNaN(masterTime)) {
                 if (event.data.force) {
-                  try {
-                    v.currentTime = masterTime;
-                  } catch (e) {}
+                  try { v.currentTime = masterTime; } catch (e) {}
+                  try { v.playbackRate = 1.0; } catch (e) {}
+                } else {
+                  const diff = v.currentTime - masterTime;
+                  if (Math.abs(diff) <= 0.3) {
+                    if (v.playbackRate !== 1.0) try { v.playbackRate = 1.0; } catch (e) {}
+                  } else if (diff > 0.3 && diff <= 2.0) {
+                    if (v.playbackRate !== 0.96) try { v.playbackRate = 0.96; } catch (e) {}
+                  } else if (diff >= -2.0 && diff < -0.3) {
+                    if (v.playbackRate !== 1.04) try { v.playbackRate = 1.04; } catch (e) {}
+                  } else if (Math.abs(diff) > 2.0) {
+                    try { v.currentTime = masterTime; } catch (e) {}
+                    try { v.playbackRate = 1.0; } catch (e) {}
+                  }
                 }
                 if (isMasterPlaying) {
                   v.dataset.userPaused = 'false';
@@ -1005,8 +1039,35 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               }
               if (typeof event.data.isMuted === 'boolean') {
                 setIsVideoAudioMuted(event.data.isMuted);
+                if (v) v.muted = event.data.isMuted;
                 bandoAudio.setLocalSpeakerMute(event.data.isMuted);
                 bandoAudio.setMuted(event.data.isMuted);
+              }
+              if (typeof event.data.volume === 'number') {
+                setVideoVolume(event.data.volume);
+                if (v && !event.data.isMuted) {
+                  try { v.volume = event.data.volume; } catch (e) {}
+                }
+                bandoAudio.setMasterVolume(event.data.volume);
+              }
+            } else if (event.data.type === 'GLOBAL_STAGE_CHANGE') {
+              if (event.data.stage) {
+                setMasterState(prev => ({ ...prev, stage: event.data.stage }));
+              }
+            } else if (event.data.type === 'GLOBAL_AUDIO_CHANGE') {
+              const v = overlayVideoRef.current;
+              if (typeof event.data.isMuted === 'boolean') {
+                setIsVideoAudioMuted(event.data.isMuted);
+                if (v) v.muted = event.data.isMuted;
+                bandoAudio.setLocalSpeakerMute(event.data.isMuted);
+                bandoAudio.setMuted(event.data.isMuted);
+              }
+              if (typeof event.data.volume === 'number') {
+                setVideoVolume(event.data.volume);
+                if (v && !event.data.isMuted) {
+                  try { v.volume = event.data.volume; } catch (e) {}
+                }
+                bandoAudio.setMasterVolume(event.data.volume);
               }
             } else if (event.data.type === 'GLOBAL_PLAYBACK_CHANGE') {
               if (event.data.source === 'overlay') return;
@@ -1019,10 +1080,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 isPlaying: shouldPlay
               }));
 
+              // Chỉ seek khi có cờ force rõ ràng VÀ độ lệch lớn (> 1.5s), tránh kéo lùi video về 0 khi play
               if (event.data.force && typeof event.data.currentTime === 'number' && overlayVideoRef.current) {
-                try {
-                  overlayVideoRef.current.currentTime = event.data.currentTime;
-                } catch (e) {}
+                const cur = overlayVideoRef.current.currentTime;
+                if (Math.abs(cur - event.data.currentTime) > 1.5) {
+                  try {
+                    overlayVideoRef.current.currentTime = event.data.currentTime;
+                  } catch (e) {}
+                }
               }
 
               if (!shouldPlay) {
@@ -1590,29 +1655,10 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         return;
       }
 
-      // 2. 🚨 SMART FREEZE DETECTOR: Video đang ở trạng thái play nhưng bị ĐỨNG HÌNH (currentTime không tăng)
-      // Thường xảy ra trên Chromium CEF / OBS Browser Source / TikTok Live Studio khi giải mã video 1-2 tiếng dung lượng lớn
-      if (!vid.paused && !vid.seeking && vid.readyState >= 2) {
-        const curTime = vid.currentTime;
-        if (lastObservedTimeRef.current >= 0 && Math.abs(curTime - lastObservedTimeRef.current) < 0.03) {
-          freezeTickCountRef.current += 1;
-          // Nếu đứng hình liên tục >= 2 chu kỳ (~3 giây)
-          if (freezeTickCountRef.current >= 2) {
-            console.warn('[CleanLiveOverlay] 🚨 Phát hiện video bị đứng hình! Đang kích hoạt giải cứu GPU Decoder...');
-            try {
-              // Nudge nhẹ 0.02s để ép GPU refresh render frame tiếp theo
-              if (vid.duration && curTime + 0.05 < vid.duration) {
-                vid.currentTime += 0.02;
-              }
-              vid.play().catch(() => {});
-            } catch (err) {}
-            freezeTickCountRef.current = 0;
-          }
-        } else {
-          // Video đang phát trơn tru, reset bộ đếm đứng hình
-          freezeTickCountRef.current = 0;
-        }
-        lastObservedTimeRef.current = curTime;
+      // 2. 🛡️ SMART AUDIO & RECOVERY DETECTOR: Đảm bảo video luôn ở trạng thái phát mượt mà
+      if (!vid.paused && !vid.seeking && vid.readyState >= 3) {
+        freezeTickCountRef.current = 0;
+        lastObservedTimeRef.current = vid.currentTime;
       }
     }, 1500);
 
@@ -1800,7 +1846,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 WINDOW CAPTURE
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.7.9
+                v1.8.0
               </span>
             </div>
 

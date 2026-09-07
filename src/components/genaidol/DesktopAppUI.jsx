@@ -2924,7 +2924,7 @@ export default function DesktopAppUI() {
                 }
                 // ⚡ ĐỒNG BỘ REALTIME ĐỊNH KỲ CHO TIKTOK LIVE STUDIO & OBS (BÁM SÁT REALTIME 100% TỪNG GIÂY)
                 const now = Date.now();
-                if (now - lastTimeBroadcastRef.current > 1500) {
+                if (now - lastTimeBroadcastRef.current > 1000) {
                   lastTimeBroadcastRef.current = now;
                   let playUrl = selected.url;
                   if (typeof playUrl === 'string' && playUrl.startsWith('blob:')) {
@@ -2938,12 +2938,28 @@ export default function DesktopAppUI() {
                     action: 'time_sync',
                     currentTime: curTime,
                     isPlaying: !e.currentTarget.paused,
+                    isMuted: liveAudioMuted,
+                    volume: liveVolume,
                     timestamp: now
                   };
                   if (playUrl && typeof playUrl === 'string' && !playUrl.startsWith('blob:')) {
                     syncData.mediaUrl = playUrl;
                   }
                   sendVideoControl(syncData, socketRef.current);
+                  // 📡 BẮN CẢ BROADCAST CHANNEL CHO CỬA SỔ LIVE 9:16 (WINDOW CAPTURE TRÊN CÙNG MÁY KHÓA CHẶT TỪNG FRAME)
+                  try {
+                    const bc = new BroadcastChannel('avalive_master_live_stream');
+                    bc.postMessage({
+                      type: 'MASTER_TIME_SYNC',
+                      currentTime: curTime,
+                      isPlaying: !e.currentTarget.paused,
+                      isMuted: liveAudioMuted,
+                      volume: liveVolume,
+                      source: 'desktop',
+                      timestamp: now
+                    });
+                    setTimeout(() => bc.close(), 100);
+                  } catch (err) {}
                 }
               }}
               onLoadedMetadata={(e) => {
@@ -2983,7 +2999,7 @@ export default function DesktopAppUI() {
                   action: 'play',
                   currentTime: curTime,
                   isPlaying: true,
-                  force: true,
+                  force: false,
                   mediaUrl: playUrl,
                   timestamp: Date.now()
                 }, socketRef.current);
@@ -2994,7 +3010,7 @@ export default function DesktopAppUI() {
                   isVideo: true,
                   videoPlaybackEvent: 'play',
                   videoCurrentTime: curTime,
-                  force: true,
+                  force: false,
                   isPlaying: true
                 }, socketRef.current);
                 try {
@@ -3004,7 +3020,7 @@ export default function DesktopAppUI() {
                     isPlaying: true, 
                     userPaused: false, 
                     currentTime: curTime, 
-                    force: true,
+                    force: false,
                     source: 'desktop',
                     timestamp: Date.now() 
                   });
@@ -3567,7 +3583,7 @@ export default function DesktopAppUI() {
               mapVoiceEngine.stopAll();
               battleVoiceEngine.stopAll();
               battleCommentary.stopAll();
-              syncMasterLiveState({ stage: 'idol' }, socketRef.current);
+              syncMasterLiveState({ stage: 'idol' }, socketRef.current); try { const bc = new BroadcastChannel('avalive_master_live_stream'); bc.postMessage({ type: 'GLOBAL_STAGE_CHANGE', stage: 'idol' }); setTimeout(() => bc.close(), 100); } catch(e){}
             }}
             title="Chuyển sang màn hình Livestream AI Idol"
           >
@@ -3597,7 +3613,7 @@ export default function DesktopAppUI() {
                 if (battleCommentary.isEnabled) battleCommentary.startPeriodicCommentary(true);
                 if (battleVoiceEngine.isAutoEnabled) battleVoiceEngine.startPeriodicCommentary(true);
               }
-              syncMasterLiveState({ stage: 'battle' }, socketRef.current);
+              syncMasterLiveState({ stage: 'battle' }, socketRef.current); try { const bc = new BroadcastChannel('avalive_master_live_stream'); bc.postMessage({ type: 'GLOBAL_STAGE_CHANGE', stage: 'battle' }); setTimeout(() => bc.close(), 100); } catch(e){}
             }}
             title="Chuyển sang chế độ Game Chiến Đấu (TikTok LIVE Battle Game) trên màn hình chính"
           >
@@ -3640,7 +3656,7 @@ export default function DesktopAppUI() {
                 bandoAudio.playBgmOnLive();
                 mapVoiceEngine.startPeriodicCommentary(true);
               }
-              syncMasterLiveState({ stage: 'bando' }, socketRef.current);
+              syncMasterLiveState({ stage: 'bando' }, socketRef.current); try { const bc = new BroadcastChannel('avalive_master_live_stream'); bc.postMessage({ type: 'GLOBAL_STAGE_CHANGE', stage: 'bando' }); setTimeout(() => bc.close(), 100); } catch(e){}
             }}
             title="Chuyển sang Game Ghép Cờ Bản Đồ Việt Nam (Đất Nước Hình Chữ S) trên màn hình chính"
           >
