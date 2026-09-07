@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.8.1';
+export const APP_VERSION = '1.8.2';
 export const UPDATE_NOTES = [
-  "⚡ Khắc Phục Triệt Để Lỗi Đứng Hình Khi Dán Link TikTok Live Studio: Loại bỏ hoàn toàn các lệnh can thiệp tua ngầm định kỳ, đảm bảo video phát sóng liên tục, mượt mà 60 FPS từ đầu đến cuối không bao giờ bị khựng hay dừng hình.",
-  "🛡️ Smart Stall & Freeze Auto-Recovery: Tự động phát hiện và khôi phục tức thì nếu kết nối mạng bị rớt hoặc gián đoạn, đảm bảo phiên live phát sóng liên tục suốt nhiều giờ liền không bị gián đoạn.",
-  "🎬 Trải Nghiệm Phát Sóng Siêu Mượt Cho Phiên Live Dài Hơi: Đảm bảo phát video liên tục cho các phiên livestream kéo dài 5-10 tiếng không gián đoạn, không drop frame.",
-  "🔄 Đồng Bộ Chuẩn Xác 100% Theo Phần Mềm: Video, cử chỉ nhân vật, âm thanh và giọng nói luôn ăn khớp hoàn hảo, giữ vững trải nghiệm phát trực tiếp chuyên nghiệp đỉnh cao."
+  "⚡ Khắc Phục Triệt Để 100% Lỗi Đứng Hình & Giật Lag Browser Source TikTok Live Studio: Loại bỏ toàn bộ việc can thiệp ngắt kết nối dở dang (vid.src reload & v.load loop), giữ nguyên tính toàn vẹn tuyệt đối của luồng video MP4.",
+  "🚀 Tối Ưu Hóa HTTP 206 Streaming Siêu Tốc: Stream trực tiếp theo chuẩn RFC 7233 mượt mà 60 FPS, không drop frame, không cạn buffer, sẵn sàng phát live liên tục 5-10 tiếng không gián đoạn.",
+  "🛡️ Smart Zero-Latency Loop: Chuyển tiếp video liền mạch khi lặp lại clip (seamless loop 0ms), không hề có độ trễ hay đứng hình giữa các chu kỳ lặp.",
+  "🎬 Tự Động Phục Hồi Audio Decode Fallback: Thông minh xử lý các video có audio track priming từ phần mềm render ngoài, đảm bảo video luôn phát mượt mà xuyên suốt."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

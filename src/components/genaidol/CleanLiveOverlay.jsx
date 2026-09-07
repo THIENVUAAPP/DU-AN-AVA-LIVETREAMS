@@ -800,6 +800,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         } else if (overlayParam === 'broadcast' || overlayParam === 'studio' || pathname.includes('/studio')) {
           next.stage = 'broadcast';
         }
+
+        const directVideoUrl = urlParams ? urlParams.get('v') : null;
+        if (directVideoUrl && !data.force) {
+          next.mediaUrl = directVideoUrl;
+        }
         
         // Cập nhật lại IDB nếu nhân vật thay đổi (vì sự kiện tải file không bắn chéo cửa sổ được)
         if (prev.selectedCharacter !== next.selectedCharacter) {
@@ -1612,28 +1617,19 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         return;
       }
 
-      // 2. 🛡️ SMART STALL & FREEZE RECOVERY: Phát hiện đứng hình khi đang phát (do mạng/CEF kẹt)
+      // 2. 🛡️ SMART STALL & FREEZE RECOVERY: Đảm bảo phát mượt mà 60 FPS liên tục hàng giờ
       if (!vid.paused && !vid.seeking) {
         const cur = vid.currentTime;
         if (lastObservedTimeRef.current >= 0 && Math.abs(cur - lastObservedTimeRef.current) < 0.01) {
-          // Video chưa tăng thời gian (đang bị đứng hình)
+          // Video chưa tăng thời gian (đang nạp buffer hoặc decoder bị trễ)
           freezeTickCountRef.current = (freezeTickCountRef.current || 0) + 1;
-          if (freezeTickCountRef.current >= 3) {
-            // Đứng hình 4.5s -> Đánh thức decoder ngay lập tức
+          if (freezeTickCountRef.current >= 4 && vid.readyState >= 2) {
+            // Đánh thức nhẹ decoder mà TUYỆT ĐỐI KHÔNG reload src làm ngắt kết nối dở dang
             vid.play().catch(() => {
               vid.muted = true;
               vid.play().catch(() => {});
             });
-          }
-          if (freezeTickCountRef.current >= 5) {
-            // Đứng hình 7.5s do rớt kết nối mạng socket -> Nạp lại luồng mượt mà tại vị trí hiện tại
             freezeTickCountRef.current = 0;
-            try {
-              const saveTime = vid.currentTime;
-              vid.src = activeMedia.url;
-              if (saveTime > 0) vid.currentTime = saveTime;
-              vid.play().catch(() => {});
-            } catch (e) {}
           }
         } else {
           // Đang phát mượt mà 60 FPS
@@ -1827,7 +1823,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 WINDOW CAPTURE
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.8.1
+                v1.8.2
               </span>
             </div>
 
@@ -2023,47 +2019,60 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     if (!isUserPausedRef.current) return;
                     setIsPlayingState(false);
                   }}
-                  onWaiting={(e) => {
-                    // 🛡️ SMART BUFFER RECOVERY: Tự động khôi phục nếu video bị khựng do mạng
-                    const v = e.currentTarget;
-                    if (v && !checkIfUserPaused()) {
-                      setTimeout(() => {
-                        if (v.paused || v.readyState < 3) {
-                          try { v.play().catch(() => {}); } catch(err){}
-                        }
-                      }, 800);
-                    }
+                  onWaiting={() => {
+                    // Trình duyệt đang chờ nạp chunk tiếp theo từ mạng, để yên cho HTTP Range nạp tự nhiên
                   }}
                   onStalled={(e) => {
-                    // 🛡️ SMART STALL RECOVERY: Tự động kickstart lại decoder nếu bị kẹt
+                    // 🛡️ SMART STALL RECOVERY: Chỉ đánh thức nhẹ nếu video bị browser tự pause
                     const v = e.currentTarget;
-                    if (v && !checkIfUserPaused()) {
-                      setTimeout(() => {
-                        if (v.paused) {
-                          try { v.play().catch(() => {}); } catch(err){}
-                        }
-                      }, 1000);
+                    if (v && !checkIfUserPaused() && v.paused && v.readyState >= 2) {
+                      try { v.play().catch(() => {}); } catch(err){}
                     }
                   }}
                   onEnded={(e) => {
-                    // SEAMLESS LOOP: Đã có thuộc tính loop, đảm bảo trạng thái play không bị khựng frame
+                    // ⚡ SEAMLESS ZERO-LATENCY LOOP
                     const isUserPaused = checkIfUserPaused();
                     if (!isUserPaused) {
-                      e.currentTarget.play().then(() => setIsPlayingState(true)).catch(() => {
-                        e.currentTarget.muted = true;
-                        e.currentTarget.play().then(() => setIsPlayingState(true)).catch(() => {});
-                      });
+                      const v = e.currentTarget;
+                      try {
+                        v.currentTime = 0;
+                        v.play().catch(() => {});
+                      } catch (err) {}
                     } else {
                       e.currentTarget.pause();
                       setIsPlayingState(false);
                     }
                   }}
-                  onError={(e) => {
-                    console.warn('[CleanLiveOverlay] Tải lại nguồn video...');
+                  onPlaying={(e) => {
                     const v = e.currentTarget;
-                    if (v && !v.dataset.retried) {
-                      v.dataset.retried = 'true';
-                      setTimeout(() => { try { v.load(); v.play().catch(() => {}); } catch(err){} }, 500);
+                    if (v) v.dataset.retryCount = '0';
+                    setIsPlayingState(true);
+                  }}
+                  onError={(e) => {
+                    const v = e.currentTarget;
+                    const err = v?.error;
+                    console.warn('[CleanLiveOverlay] Video playback notification:', err ? `${err.code} - ${err.message}` : 'stream event');
+                    if (v && !checkIfUserPaused()) {
+                      if (!v.muted) {
+                        v.muted = true;
+                        try { v.play().catch(() => {}); } catch(err){}
+                      }
+                      if (!v.dataset.retryCount) v.dataset.retryCount = '0';
+                      const count = parseInt(v.dataset.retryCount, 10);
+                      if (count < 5) {
+                        v.dataset.retryCount = String(count + 1);
+                        setTimeout(() => {
+                          try {
+                            const curTime = v.currentTime || 0;
+                            v.load();
+                            if (curTime > 0) v.currentTime = curTime;
+                            v.play().catch(() => {
+                              v.muted = true;
+                              v.play().catch(() => {});
+                            });
+                          } catch (err) {}
+                        }, 1000);
+                      }
                     }
                   }}
                   className="w-full h-full select-none absolute inset-0 block bg-black"

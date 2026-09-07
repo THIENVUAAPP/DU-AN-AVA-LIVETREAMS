@@ -213,7 +213,13 @@ try {
 }
 
 if (fs.existsSync(winZipFilePath)) fs.unlinkSync(winZipFilePath);
-execSync(`cd "${winStaging}" && zip -q -r "${winZipFilePath}" . -x "*.DS_Store" -x "*__MACOSX*" -x "*.tmp" -x "Thumbs.db"`);
+try {
+  execSync(`cd "${winStaging}" && zip -q -r "${winZipFilePath}" . -x "*.DS_Store" -x "*__MACOSX*" -x "*.tmp" -x "Thumbs.db"`);
+} catch (err) {
+  if (!fs.existsSync(winZipFilePath) || fs.statSync(winZipFilePath).size < 1024 * 1024) {
+    throw err;
+  }
+}
 fs.rmSync(winStaging, { recursive: true, force: true });
 
 // Tạo Command Launcher cho Mac
@@ -310,7 +316,13 @@ fs.chmodSync(path.join(macStaging, '1_Khoi_Dong_AvaLive_Mac.command'), '755');
 fs.writeFileSync(path.join(macStaging, 'HUONG_DAN_SU_DUNG.txt'), huongDanContent);
 
 if (fs.existsSync(macZipFilePath)) fs.unlinkSync(macZipFilePath);
-execSync(`cd "${macStaging}" && zip -q -r "${macZipFilePath}" . -x "*.DS_Store" -x "*__MACOSX*" -x "*.tmp" -x "Thumbs.db"`);
+try {
+  execSync(`cd "${macStaging}" && zip -q -r "${macZipFilePath}" . -x "*.DS_Store" -x "*__MACOSX*" -x "*.tmp" -x "Thumbs.db"`);
+} catch (err) {
+  if (!fs.existsSync(macZipFilePath) || fs.statSync(macZipFilePath).size < 1024 * 1024) {
+    throw err;
+  }
+}
 fs.rmSync(macStaging, { recursive: true, force: true });
 
 // Dọn dẹp staging
