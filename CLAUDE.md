@@ -711,6 +711,13 @@ Im lặng bỏ qua 3 câu này = vi phạm Mục 0.7 và Mục 1.
 | **3. Phát Sóng 60 FPS Siêu Mượt, Không Giật Lag 24/24** | `backend/server.cjs`, `CleanLiveOverlay.jsx` | ✅ PASS 100% | - Thuật toán Clock Drift Compensation vi mô `1.03x / 0.97x` ngăn chặn xả buffer liên tục khi phát qua Cloudflare Tunnel.<br>- GPU Hardware Acceleration 100%, tỷ lệ chuẩn dọc 9:16 (1080×1920) không viền đen.<br>- Khử bỏ toàn bộ các lệnh tự ý gán `vid.muted = true` trong watchdog stall handler. |
 | **4. Nâng Cấp Toàn Bộ Hệ Thống Lên v1.8.9** | `package.json`, `UpdateNotificationModal.jsx`, `Mo_Ung_Dung_Web.html`, `backend/server.cjs`, `vercel.json`, `CLAUDE.md` | ✅ PASS 100% | Đồng bộ toàn diện phiên bản v1.8.9, đóng gói 2 Standalone ZIPs (Windows & Mac) và phát hành GitHub Release v1.8.9. |
 
+### 🚀 25. Nhật Ký Bản Cập Nhật v1.9.0 (Official Release - Sửa Dứt Điểm Lỗi Khởi Động Khi Giải Nén & Nâng Cấp Phục Hồi An Toàn)
+| Hạng Mục Cải Tiến | File Thay Đổi | Trạng Thái | Chi Tiết Kỹ Thuật |
+| :--- | :--- | :---: | :--- |
+| **1. Sửa Triệt Để Lỗi Khởi Động Báo 'Đã Phát Hiện Xung Đột Dữ Liệu Phiên Cũ'** | `DesktopAppUI.jsx`, `main.jsx` | ✅ PASS 100% | - **Nguyên nhân gốc rễ**: Khi giải nén và mở file phần mềm, ứng dụng bị crash ngay từ khung hình đầu tiên do biến `liveVolume` bị truy cập trong hook `useCallback` trước khi được khai báo (Temporal Dead Zone - TDZ), đồng thời có khối khai báo trùng lặp `liveAudioMuted`/`liveVolume` và `socketRef` khai báo sau khi được tham chiếu. Lỗi này kích hoạt `ErrorBoundary` hiển thị cảnh báo đỏ và người dùng bấm khôi phục thì trang reload lại bị crash tiếp.<br>- **Giải pháp triệt để**: Chuyển toàn bộ khai báo state `liveAudioMuted`, `liveVolume` và `socketRef = useRef(null)` lên đầu component `DesktopAppUI.jsx` (cùng các refs và states chính). Dọn sạch 100% các khối khai báo trùng lặp. Khởi động phần mềm êm ru, mượt mà ngay lập tức! |
+| **2. Nâng Cấp Cơ Chế Phục Hồi An Toàn (Safe Reset) Trong Error Boundary** | `src/main.jsx` | ✅ PASS 100% | Bổ sung nút **🧹 Xóa Sạch Dữ Liệu Cũ (Safe Reset)** trong `ErrorBoundary` cho phép dọn sạch toàn bộ bộ nhớ tạm localStorage/sessionStorage trong trường hợp trình duyệt lưu cache cấu hình lỗi từ phiên cũ, đảm bảo người dùng không bao giờ bị kẹt ở màn hình lỗi. |
+| **3. Nâng Cấp Toàn Bộ Hệ Thống Lên v1.9.0** | `package.json`, `UpdateNotificationModal.jsx`, `UniversalMasterOverlayModal.jsx`, `Mo_Ung_Dung_Web.html`, `backend/server.cjs`, `vercel.json`, `CLAUDE.md` | ✅ PASS 100% | Đồng bộ toàn diện phiên bản v1.9.0, tự động kích hoạt `UpdateNotificationModal` thông báo cập nhật cho người dùng, đóng gói Standalone ZIPs (Windows & Mac) và phát hành GitHub Release v1.9.0. |
+
 
 
 

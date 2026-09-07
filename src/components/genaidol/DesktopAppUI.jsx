@@ -360,6 +360,22 @@ export default function DesktopAppUI() {
       return false;
     }
   });
+  const [liveAudioMuted, setLiveAudioMuted] = useState(() => {
+    try {
+      const saved = localStorage.getItem('avalive_audio_muted');
+      return saved !== null ? saved === 'true' : false;
+    } catch (e) {
+      return false;
+    }
+  });
+  const [liveVolume, setLiveVolume] = useState(() => {
+    try {
+      const v = localStorage.getItem('avalive_video_volume');
+      return v ? parseFloat(v) : 1.0;
+    } catch (e) {
+      return 1.0;
+    }
+  });
   const [activeSettingsModal, setActiveSettingsModal] = useState(null); 
   const [isSettingsDropdownOpen, setIsSettingsDropdownOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -544,6 +560,7 @@ export default function DesktopAppUI() {
     }
   });
   const fileInputRef = useRef(null);
+  const socketRef = useRef(null);
   const flvPlayerRef = useRef(null);
   const hlsPlayerRef = useRef(null);
   const flvVideoRef = useRef(null);
@@ -1420,25 +1437,6 @@ export default function DesktopAppUI() {
     }
   }, [isLocalSpeakerMuted, liveVolume]);
 
-  // 🔊 QUẢN LÝ ÂM THANH PHÁT ĐỒNG BỘ GIỮA PHẦN MỀM VÀ WINDOW CAPTURE OBS
-  const [liveAudioMuted, setLiveAudioMuted] = useState(() => {
-    try {
-      const saved = localStorage.getItem('avalive_audio_muted');
-      return saved !== null ? saved === 'true' : false;
-    } catch (e) {
-      return false;
-    }
-  });
-
-  const [liveVolume, setLiveVolume] = useState(() => {
-    try {
-      const v = localStorage.getItem('avalive_video_volume');
-      return v ? parseFloat(v) : 1.0;
-    } catch (e) {
-      return 1.0;
-    }
-  });
-
   // Quản lý trạng thái Play / Pause của video live trên khung hình phần mềm
   const [isVideoPlaying, setIsVideoPlaying] = useState(() => {
     try {
@@ -1844,7 +1842,6 @@ export default function DesktopAppUI() {
   }, [unlockAllAudio]);
 
   // ⚡ SOCKET.IO REALTIME KẾT NỐI VỚI BACKEND & TIKTOK LIVE CONNECTOR
-  const socketRef = useRef(null);
   const handleLiveEventRef = useRef(handleLiveEvent);
   handleLiveEventRef.current = handleLiveEvent;
 

@@ -28,7 +28,7 @@ class ErrorBoundary extends Component {
                 {this.state.error.toString()}
               </pre>
             )}
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
               <button 
                 onClick={async () => {
                   try {
@@ -45,9 +45,21 @@ class ErrorBoundary extends Component {
                   } catch(e) {}
                   window.location.reload();
                 }}
-                style={{ backgroundColor: '#2563eb', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', boxShadow: '0 4px 12px rgba(37,99,235,0.4)' }}
+                style={{ backgroundColor: '#2563eb', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', boxShadow: '0 4px 12px rgba(37,99,235,0.4)' }}
               >
-                🔄 Khôi Phục & Làm Mới (Xóa Cache)
+                🔄 Khôi Phục & Làm Mới
+              </button>
+              <button 
+                onClick={() => {
+                  try {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                  } catch(e) {}
+                  window.location.reload();
+                }}
+                style={{ backgroundColor: '#dc2626', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', boxShadow: '0 4px 12px rgba(220,38,38,0.4)' }}
+              >
+                🧹 Xóa Sạch Dữ Liệu Cũ (Safe Reset)
               </button>
             </div>
           </div>

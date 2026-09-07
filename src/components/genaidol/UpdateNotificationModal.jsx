@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.8.9';
+export const APP_VERSION = '1.9.0';
 export const UPDATE_NOTES = [
-  "🔊 Tách Biệt Hoàn Toàn Loa Máy Tính & TikTok Live: Nút Tắt Tiếng ở ô theo dõi giờ đây chỉ tắt âm thanh loa máy tính của streamer (chống vọng mic, không gây ồn), trong khi TikTok Live Studio và khán giả xem live VẪN NGHE TIẾNG ĐẦY ĐỦ 100%!",
-  "🚀 Sửa Dứt Điểm Lỗi Mở Đường Link Phát Sóng: Khắc phục lỗi chặn popup của trình duyệt, bổ sung liên kết trực tiếp mở tab mới tức thì, kết nối ổn định 100% đến Player 60 FPS siêu mượt.",
-  "⚡ Tối Ưu Hóa LiveStream Standalone Player: Hỗ trợ bộ phát trực tiếp siêu nhẹ 60 FPS cả trên backend Express lẫn client-side React SPA, tối ưu hóa phần cứng GPU và tự động phục hồi khi mất kết nối.",
-  "🔄 Đồng Bộ Real-Time 0ms: Cập nhật load video theo thời gian thực đồng bộ với phần mềm AvaLive; đổi video, tạm dừng (Pause), phát tiếp (Play) hay tua khung hình đều tức thì 100%!"
+  "🛠️ Sửa Dứt Điểm Lỗi Khởi Động Khi Giải Nén: Khắc phục triệt để lỗi báo 'Đã phát hiện xung đột dữ liệu phiên cũ' (do xung đột thứ tự khởi tạo biến), mở ứng dụng chạy mượt mà ngay lập tức 100%!",
+  "⚡ Khởi Động An Toàn & Tự Phục Hồi: Nâng cấp Error Boundary với cơ chế Safe Reset và phục hồi dữ liệu tự động, loại bỏ hoàn toàn tình trạng kẹt màn hình báo lỗi khi mở lại.",
+  "🔊 Tách Biệt Âm Thanh & Điều Khiển Độc Lập: Nút Tắt Tiếng ở khung theo dõi chỉ tắt loa máy streamer, trong khi TikTok Live Studio và khán giả xem live VẪN NGHE TIẾNG ĐẦY ĐỦ 100%!",
+  "🚀 Đồng Bộ Standalone Player 60 FPS Siêu Mượt: Liên kết trình duyệt trực tuyến phát video không giật lag, đứng hình, tải và đồng bộ thời gian thực 0ms với phần mềm AvaLive."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
