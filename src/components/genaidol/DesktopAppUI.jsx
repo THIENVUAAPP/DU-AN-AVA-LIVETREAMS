@@ -56,6 +56,13 @@ const postMasterBroadcast = (payload) => {
 };
 
 export default function DesktopAppUI() {
+  // 🛑/▶️ Trạng thái Tắt / Bật Toàn Bộ Phiên Live Master
+  const [isMasterLiveRunning, setIsMasterLiveRunning] = useState(true);
+  const isMasterLiveRunningRef = useRef(isMasterLiveRunning);
+  useEffect(() => {
+    isMasterLiveRunningRef.current = isMasterLiveRunning;
+  }, [isMasterLiveRunning]);
+
   useEffect(() => {
     bootstrapDefaultPresets();
   }, []);
@@ -1246,12 +1253,6 @@ export default function DesktopAppUI() {
     };
   };
 
-  // 🛑/▶️ Trạng thái Tắt / Bật Toàn Bộ Phiên Live Master (Mặc định ở trạng thái BẬT để phát ngay video khi mở phần mềm)
-  const [isMasterLiveRunning, setIsMasterLiveRunning] = useState(true);
-  const isMasterLiveRunningRef = useRef(isMasterLiveRunning);
-  useEffect(() => {
-    isMasterLiveRunningRef.current = isMasterLiveRunning;
-  }, [isMasterLiveRunning]);
 
   // 🎬 TỰ ĐỘNG ĐỒNG BỘ VIDEO GẦN NHẤT TỪ MÁY CHỦ KHI KHỞI CHẠY PHẦN MỀM
   useEffect(() => {

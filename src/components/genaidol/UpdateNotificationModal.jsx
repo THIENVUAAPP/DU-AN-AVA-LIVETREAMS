@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.9.4';
+export const APP_VERSION = '1.9.5';
 export const UPDATE_NOTES = [
   "⚡ Khắc Phục Lỗi Tải File ZIP: Sửa dứt điểm lỗi tải file bộ cài đặt hiển thị trang 404 GitHub. Giờ đây khi bấm tải, trình duyệt sẽ tự động download file ZIP trực tiếp và siêu mượt mà từ máy chủ ẩn mà không bao giờ mở trang web thứ 3 (Bảo mật tuyệt đối mã nguồn).",
   "⚡ Phát Sóng Video Siêu Mượt Xuyên Suốt Hàng Chục Tiếng Đồng Hồ: Tối ưu hóa triệt để bộ nhớ đệm (Decoded Buffer & Garbage Collection) và kích hoạt bộ tăng tốc phần cứng GPU (Hardware Acceleration 60 FPS), loại bỏ 100% tình trạng giật lag hay đứng hình sau 10-15 phút!",
