@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.9.3';
+export const APP_VERSION = '1.9.4';
 export const UPDATE_NOTES = [
+  "⚡ Khắc Phục Lỗi Tải File ZIP: Sửa dứt điểm lỗi tải file bộ cài đặt hiển thị trang 404 GitHub. Giờ đây khi bấm tải, trình duyệt sẽ tự động download file ZIP trực tiếp và siêu mượt mà từ máy chủ ẩn mà không bao giờ mở trang web thứ 3 (Bảo mật tuyệt đối mã nguồn).",
   "⚡ Phát Sóng Video Siêu Mượt Xuyên Suốt Hàng Chục Tiếng Đồng Hồ: Tối ưu hóa triệt để bộ nhớ đệm (Decoded Buffer & Garbage Collection) và kích hoạt bộ tăng tốc phần cứng GPU (Hardware Acceleration 60 FPS), loại bỏ 100% tình trạng giật lag hay đứng hình sau 10-15 phút!",
   "🔊 Điều Khiển Âm Lượng Trực Tiếp Từ TikTok Live Studio: Thẻ video phát âm thanh tự nhiên tương thích chuẩn Audio Mixer của TikTok Live Studio, cho phép streamer tăng/giảm âm lượng và tắt tiếng trực tiếp trên giao diện TikTok Live Studio.",
-  "💎 100.000 Token & 100.000 Giờ Live Quản Trị Viên: Tự động cấp quyền hạn vĩnh viễn cho Admin (quocthiencr90@gmail.com).",
-  "🎬 Giữ Nguyên Vị Trí Phát Video: Khi chuyển tab hoặc đổi sân khấu biểu diễn không bao giờ bị tua lại từ đầu (0:00)."
+  "💎 100.000 Token & 100.000 Giờ Live Quản Trị Viên: Tự động cấp quyền hạn vĩnh viễn cho Admin (quocthiencr90@gmail.com)."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
