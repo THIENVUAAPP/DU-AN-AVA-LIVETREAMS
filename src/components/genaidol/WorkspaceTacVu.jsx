@@ -25,6 +25,62 @@ const toast = {
   }
 };
 
+function UniversalFileUploadButton({ 
+  onLoaded, 
+  label = "Nạp File", 
+  accept = ".txt,.md,.docx,.doc,.pdf,.csv,.json,.xlsx,.xls", 
+  title = "Tải file lên (Word, PDF, Excel, TXT, JSON...)" 
+}) {
+  const [loading, setLoading] = useState(false);
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLoading(true);
+    try {
+      const parsed = await readUniversalFile(file);
+      let text = '';
+      if (Array.isArray(parsed)) {
+        text = parsed.join('\n');
+      } else if (typeof parsed === 'string') {
+        text = parsed;
+      } else if (parsed && typeof parsed === 'object') {
+        text = JSON.stringify(parsed, null, 2);
+      }
+      if (text !== undefined && text !== null) {
+        onLoaded(text, file.name);
+        toast.success(`Đã nạp file thành công: ${file.name}`);
+      }
+    } catch (err) {
+      console.error('Lỗi đọc file:', err);
+      toast.error('Không thể đọc file: ' + (err.message || 'Lỗi định dạng'));
+    } finally {
+      setLoading(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  return (
+    <label 
+      title={title}
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50/90 hover:bg-blue-100 text-blue-700 hover:text-blue-900 border border-blue-200 rounded-lg text-[11px] font-bold shadow-2xs transition-all cursor-pointer active:scale-95 shrink-0"
+    >
+      {loading ? (
+        <span className="inline-block animate-spin text-[10px]">⏳</span>
+      ) : (
+        <Upload size={12} className="text-blue-600" />
+      )}
+      <span>{loading ? 'Đang đọc...' : label}</span>
+      <input
+        type="file"
+        accept={accept}
+        className="hidden"
+        onChange={handleFileChange}
+      />
+    </label>
+  );
+}
+
 const EVENTS = [
   { id: 'script_broadcast', label: '📜 Kịch bản Idol', icon: FileText, color: 'text-indigo-600', desc: 'Thiết lập kịch bản bán hàng tuần tự (Fixed Script) hoặc bộ não AI tư vấn từ Kho Tri Thức Doanh Nghiệp.' },
   { id: 'checkout', label: '🛒 Chốt đơn', icon: ShoppingCart, color: 'text-blue-500', desc: 'Khai báo các sản phẩm có trong giỏ hàng để AI tự động nhận diện từ khóa, phát video minh họa và tư vấn chốt đơn cho từng sản phẩm.' },
@@ -1301,7 +1357,13 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
 
                           {/* 2. Câu cảm ơn mẫu (Mỗi câu 1 dòng) */}
                           <div>
-                            <label className="text-xs font-bold text-gray-700 block mb-1">📄 Câu cảm ơn mẫu (Mỗi câu 1 dòng):</label>
+                            <div className="flex items-center justify-between mb-1">
+                              <label className="text-xs font-bold text-gray-700">📄 Câu cảm ơn mẫu (Mỗi câu 1 dòng):</label>
+                              <UniversalFileUploadButton 
+                                onLoaded={(text) => handleSlotChange(slot.id, 'sampleAnswers', text)} 
+                                label="Nạp File" 
+                              />
+                            </div>
                             <textarea 
                               value={slot.sampleAnswers || ''} 
                               onChange={(e) => handleSlotChange(slot.id, 'sampleAnswers', e.target.value)} 
@@ -1416,12 +1478,18 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                         </div>
 
                         <div>
-                          <label className="text-xs font-bold text-gray-700 block mb-1">📄 Câu cảm ơn mẫu (Mỗi câu 1 dòng):</label>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="text-xs font-bold text-gray-700">📄 Câu cảm ơn mẫu (Mỗi câu 1 dòng):</label>
+                            <UniversalFileUploadButton 
+                              onLoaded={(text) => handleGiftSlotChange(gSlot.id, 'sampleAnswers', text)} 
+                              label="Nạp File" 
+                            />
+                          </div>
                           <textarea 
                             value={gSlot.sampleAnswers || ''} 
                             onChange={(e) => handleGiftSlotChange(gSlot.id, 'sampleAnswers', e.target.value)} 
                             placeholder="Cảm ơn bạn {user} đã tặng {gift_name} nha!"
-                            className="w-full h-[60px] border border-gray-300 rounded-lg p-2 text-xs resize-none bg-white focus:outline-blue-500" 
+                            className="w-full h-[60px] border border-gray-300 rounded-lg p-2 text-xs resize-none bg-white focus:outline-blue-500 font-medium" 
                           />
                         </div>
 
@@ -1650,20 +1718,11 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                               <HelpTooltip helpKey="presetScript" />
                             </div>
 
-                            <div className="flex items-center gap-2 shrink-0">
-                              <input 
-                                type="file" 
-                                id="upload-fixed-script-file"
-                                className="hidden" 
-                                accept=".txt,.md,.docx,.doc,.pdf,.csv,.json,.xlsx,.xls"
-                                onChange={handleLoadUniversalScriptFile}
+                            <div className="shrink-0">
+                              <UniversalFileUploadButton 
+                                onLoaded={(text) => handleSimpleChange('fixedScriptText', text)}
+                                label="Nạp File (.docx, .pdf, .txt, .json)"
                               />
-                              <label 
-                                htmlFor="upload-fixed-script-file"
-                                className="text-xs text-blue-700 cursor-pointer hover:bg-blue-100 flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-300 font-black shadow-2xs transition-all"
-                              >
-                                <Upload size={14} /> Nạp File (.docx, .pdf, .txt, .json)
-                              </label>
                             </div>
                           </div>
 
@@ -1693,15 +1752,24 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                         </div>
 
                         {/* TEXTAREA KỊCH BẢN */}
-                        <div className="relative">
-                          <textarea 
-                            value={currentConfig.fixedScriptText !== undefined ? currentConfig.fixedScriptText : MASTER_SCRIPTS.cosmetics} 
-                            onChange={(e) => handleSimpleChange('fixedScriptText', e.target.value)} 
-                            placeholder="Nhập chuỗi các câu thoại kịch bản bán hàng (mỗi dòng là một câu thoại). Idol sẽ đọc tuần tự từng câu theo đúng kịch bản..."
-                            className="w-full h-[240px] border border-gray-300 rounded-xl p-3.5 text-xs resize-y bg-white focus:outline-blue-500 font-sans leading-relaxed shadow-inner" 
-                          />
-                          <div className="absolute bottom-3 right-3 text-[11px] text-gray-500 bg-white/90 px-2 py-0.5 rounded-md border border-gray-200 font-bold shadow-2xs">
-                            {(currentConfig.fixedScriptText || MASTER_SCRIPTS.cosmetics).split(/\r?\n/).filter(Boolean).length} câu thoại
+                        <div className="flex flex-col gap-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-gray-700">📜 Nội dung kịch bản cố định:</span>
+                            <UniversalFileUploadButton 
+                              onLoaded={(text) => handleSimpleChange('fixedScriptText', text)}
+                              label="Nạp File Kịch Bản (.docx, .pdf, .txt, .json, .xlsx)"
+                            />
+                          </div>
+                          <div className="relative">
+                            <textarea 
+                              value={currentConfig.fixedScriptText !== undefined ? currentConfig.fixedScriptText : MASTER_SCRIPTS.cosmetics} 
+                              onChange={(e) => handleSimpleChange('fixedScriptText', e.target.value)} 
+                              placeholder="Nhập chuỗi các câu thoại kịch bản bán hàng (mỗi dòng là một câu thoại). Idol sẽ đọc tuần tự từng câu theo đúng kịch bản..."
+                              className="w-full h-[240px] border border-gray-300 rounded-xl p-3.5 text-xs resize-y bg-white focus:outline-blue-500 font-sans leading-relaxed shadow-inner" 
+                            />
+                            <div className="absolute bottom-3 right-3 text-[11px] text-gray-500 bg-white/90 px-2 py-0.5 rounded-md border border-gray-200 font-bold shadow-2xs">
+                              {(currentConfig.fixedScriptText || MASTER_SCRIPTS.cosmetics).split(/\r?\n/).filter(Boolean).length} câu thoại
+                            </div>
                           </div>
                         </div>
 
@@ -1791,20 +1859,14 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                             )}
                           </div>
 
-                          <div className="flex items-center gap-2 shrink-0">
-                            <input 
-                              type="file" 
-                              id="upload-knowledge-doc-file"
-                              className="hidden" 
-                              accept=".txt,.md,.docx,.doc,.pdf,.csv,.json,.xlsx,.xls"
-                              onChange={handleLoadUniversalKnowledgeFile}
+                          <div className="shrink-0">
+                            <UniversalFileUploadButton 
+                              onLoaded={(text, fileName) => {
+                                handleSimpleChange('companyKnowledgeText', text);
+                                if (fileName) handleSimpleChange('companyKnowledgeFileName', fileName);
+                              }}
+                              label="Nạp File Tri Thức (.docx, .pdf, .txt...)"
                             />
-                            <label 
-                              htmlFor="upload-knowledge-doc-file"
-                              className="text-xs text-purple-700 cursor-pointer hover:bg-purple-100 flex items-center gap-1.5 bg-purple-50 px-3 py-2 rounded-xl border border-purple-300 font-black shadow-2xs transition-all"
-                            >
-                              <Upload size={14} /> Nạp File Tri Thức (.docx, .pdf, .txt...)
-                            </label>
                           </div>
                         </div>
 
@@ -1853,9 +1915,15 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                           </div>
 
                           <div>
-                            <div className="flex items-center text-xs font-bold text-gray-700 mb-1">
-                              <span>🎁 Quà Tặng Kèm & Khuyến Mãi:</span>
-                              <HelpTooltip helpKey="promotions" />
+                            <div className="flex items-center justify-between text-xs font-bold text-gray-700 mb-1">
+                              <div className="flex items-center">
+                                <span>🎁 Quà Tặng Kèm & Khuyến Mãi:</span>
+                                <HelpTooltip helpKey="promotions" />
+                              </div>
+                              <UniversalFileUploadButton 
+                                onLoaded={(text) => handleSimpleChange('promotions', text)}
+                                label="Nạp File"
+                              />
                             </div>
                             <input 
                               type="text" 
@@ -1872,25 +1940,13 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                           <div>
                             <div className="flex items-center justify-between mb-1">
                               <div className="flex items-center text-xs font-bold text-gray-700">
-                                <span>✨ Tính Năng, Thành Phần & Công Dụng Nổi Bật:</span>
+                                <span>✨ Tính Năng, Thành Phần & Công Dụng:</span>
                                 <HelpTooltip helpKey="keyFeatures" />
                               </div>
-                              <div className="flex items-center gap-1">
-                                <input 
-                                  type="file" 
-                                  id="upload-key-features-file"
-                                  className="hidden" 
-                                  accept=".txt,.md,.docx,.doc,.pdf,.csv,.json,.xlsx,.xls"
-                                  onChange={handleLoadKeyFeaturesFile}
-                                />
-                                <label 
-                                  htmlFor="upload-key-features-file"
-                                  className="text-[11px] text-purple-700 cursor-pointer hover:underline flex items-center gap-1 font-bold"
-                                  title="Nạp file (.docx, .pdf, .txt...) tự động sắp xếp theo thứ tự 1. 2. 3."
-                                >
-                                  <Upload size={12} /> Nạp File (.docx, .pdf, .txt...)
-                                </label>
-                              </div>
+                              <UniversalFileUploadButton 
+                                onLoaded={(text) => handleSimpleChange('keyFeatures', text)}
+                                label="Nạp File (.docx, .pdf, .txt...)"
+                              />
                             </div>
                             <textarea 
                               value={currentConfig.keyFeatures || `1. Tinh chất Serum tế bào gốc phục hồi làn da căng bóng sau 7 ngày.\n2. Nước hoa Pháp hương thơm ngọt ngào, sang trọng lưu hương suốt 12 tiếng.\n3. Thành phần tự nhiên 100% đạt chuẩn y khoa da liễu, an toàn cho mọi loại da.`} 
@@ -1906,22 +1962,10 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                                 <span>🛡️ Chính Sách Bảo Hành / Đổi Trả / Vận Chuyển:</span>
                                 <HelpTooltip helpKey="warrantyPolicy" />
                               </div>
-                              <div className="flex items-center gap-1">
-                                <input 
-                                  type="file" 
-                                  id="upload-warranty-policy-file"
-                                  className="hidden" 
-                                  accept=".txt,.md,.docx,.doc,.pdf,.csv,.json,.xlsx,.xls"
-                                  onChange={handleLoadWarrantyPolicyFile}
-                                />
-                                <label 
-                                  htmlFor="upload-warranty-policy-file"
-                                  className="text-[11px] text-purple-700 cursor-pointer hover:underline flex items-center gap-1 font-bold"
-                                  title="Nạp file chính sách (.docx, .pdf, .txt...)"
-                                >
-                                  <Upload size={12} /> Nạp File (.docx, .pdf, .txt...)
-                                </label>
-                              </div>
+                              <UniversalFileUploadButton 
+                                onLoaded={(text) => handleSimpleChange('warrantyPolicy', text)}
+                                label="Nạp File (.docx, .pdf, .txt...)"
+                              />
                             </div>
                             <textarea 
                               value={currentConfig.warrantyPolicy || 'Bảo hành 1 đổi 1 trong 30 ngày, hoàn tiền 200% nếu phát hiện hàng giả, miễn phí vận chuyển tận nhà trên toàn quốc'} 
@@ -1995,22 +2039,10 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                                 <span>📚 Nội Dung Tri Thức Doanh Nghiệp Tự Do (Tùy chọn):</span>
                                 <HelpTooltip helpKey="companyKnowledgeText" />
                               </div>
-                              <div className="flex items-center gap-1">
-                                <input 
-                                  type="file" 
-                                  id="upload-free-knowledge-file"
-                                  className="hidden" 
-                                  accept=".txt,.md,.docx,.doc,.pdf,.csv,.json,.xlsx,.xls"
-                                  onChange={handleLoadFreeKnowledgeFile}
-                                />
-                                <label 
-                                  htmlFor="upload-free-knowledge-file"
-                                  className="text-[11px] text-purple-700 cursor-pointer hover:underline flex items-center gap-1 font-bold"
-                                  title="Nạp file tri thức tự do (.docx, .pdf, .txt, .json, .xlsx...)"
-                                >
-                                  <Upload size={12} /> Nạp File Tri Thức (.docx, .pdf, .txt...)
-                                </label>
-                              </div>
+                              <UniversalFileUploadButton 
+                                onLoaded={(text) => handleSimpleChange('companyKnowledgeText', text)}
+                                label="Nạp File Tri Thức (.docx, .pdf, .txt...)"
+                              />
                             </div>
                             <textarea 
                               value={currentConfig.companyKnowledgeText || ''} 
@@ -2027,21 +2059,10 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                                 <span>🧠 System Prompt Kịch Bản Đóng Vai AI:</span>
                                 <HelpTooltip helpKey="aiPrompt" />
                               </div>
-                              <div className="flex items-center gap-2">
-                                <input 
-                                  type="file" 
-                                  id="upload-ai-prompt-file"
-                                  className="hidden" 
-                                  accept=".txt,.md,.json,.docx,.doc,.pdf,.csv,.xlsx,.xls"
-                                  onChange={handleLoadAiPromptUniversalFile}
-                                />
-                                <label 
-                                  htmlFor="upload-ai-prompt-file"
-                                  className="text-[11px] text-purple-700 cursor-pointer hover:underline flex items-center gap-1 font-bold"
-                                >
-                                  <Upload size={12} /> Nạp Prompt (.docx, .pdf, .txt, .json)
-                                </label>
-                              </div>
+                              <UniversalFileUploadButton 
+                                onLoaded={(text) => handleSimpleChange('aiPrompt', text)}
+                                label="Nạp Prompt (.docx, .pdf, .txt, .json)"
+                              />
                             </div>
 
                             <textarea 
@@ -2149,9 +2170,18 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                             </div>
 
                             <div>
-                              <div className="flex items-center text-xs font-bold text-[#a53b3b] mb-1">
-                                <span>🔑 Từ khóa chốt đơn (cách nhau bởi ;):</span>
-                                <HelpTooltip helpKey="keywords" />
+                              <div className="flex items-center justify-between text-xs font-bold text-[#a53b3b] mb-1">
+                                <div className="flex items-center">
+                                  <span>🔑 Từ khóa chốt đơn (cách nhau bởi ;):</span>
+                                  <HelpTooltip helpKey="keywords" />
+                                </div>
+                                <UniversalFileUploadButton 
+                                  onLoaded={(text) => {
+                                    const cleaned = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean).join('; ');
+                                    handleProductChange(prod.id, 'keywords', cleaned || text);
+                                  }}
+                                  label="Nạp File Từ Khóa"
+                                />
                               </div>
                               <input 
                                 type="text" 
@@ -2378,14 +2408,63 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                             <FieldLabel icon="📊" text="Tỷ lệ trả lời (%)" helpKey="replyRate" />
                             <input type="number" name="replyRate" value={currentConfig.replyRate} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
                           </div>
-                          <div className="flex items-start mt-1">
-                            <FieldLabel icon="🚫" text="Từ khóa cấm" helpKey="bannedWords" />
-                            <textarea name="bannedWords" value={currentConfig.bannedWords} onChange={handleChange} className="flex-1 h-[60px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                          
+                          {/* Từ khóa cấm */}
+                          <div className="flex flex-col sm:flex-row sm:items-start gap-2 mt-1">
+                            <div className="flex items-center justify-between sm:justify-start sm:min-w-[170px]">
+                              <FieldLabel icon="🚫" text="Từ khóa cấm" helpKey="bannedWords" />
+                              <div className="sm:hidden">
+                                <UniversalFileUploadButton 
+                                  onLoaded={(text) => handleSimpleChange('bannedWords', text)} 
+                                  label="Nạp File" 
+                                />
+                              </div>
+                            </div>
+                            <div className="flex-1 flex flex-col gap-1">
+                              <div className="hidden sm:flex justify-end">
+                                <UniversalFileUploadButton 
+                                  onLoaded={(text) => handleSimpleChange('bannedWords', text)} 
+                                  label="Nạp File Từ Khóa Cấm (.docx, .pdf, .txt, .json, .xlsx)" 
+                                />
+                              </div>
+                              <textarea 
+                                name="bannedWords" 
+                                value={currentConfig.bannedWords} 
+                                onChange={handleChange} 
+                                placeholder="Nhập hoặc nạp danh sách từ khóa cấm (mỗi dòng 1 từ hoặc cách nhau bởi dấu phẩy)..."
+                                className="w-full h-[65px] border border-gray-300 rounded-lg p-2 text-xs resize-none bg-gray-50 focus:bg-white focus:outline-blue-500 font-medium" 
+                              />
+                            </div>
                           </div>
-                          <div className="flex items-start mt-1">
-                            <FieldLabel icon="⭐" text="Từ khóa ưu tiên" helpKey="priorityWords" />
-                            <textarea name="priorityWords" value={currentConfig.priorityWords} onChange={handleChange} className="flex-1 h-[60px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-gray-50 focus:bg-white focus:outline-blue-500" />
+
+                          {/* Từ khóa ưu tiên */}
+                          <div className="flex flex-col sm:flex-row sm:items-start gap-2 mt-1">
+                            <div className="flex items-center justify-between sm:justify-start sm:min-w-[170px]">
+                              <FieldLabel icon="⭐" text="Từ khóa ưu tiên" helpKey="priorityWords" />
+                              <div className="sm:hidden">
+                                <UniversalFileUploadButton 
+                                  onLoaded={(text) => handleSimpleChange('priorityWords', text)} 
+                                  label="Nạp File" 
+                                />
+                              </div>
+                            </div>
+                            <div className="flex-1 flex flex-col gap-1">
+                              <div className="hidden sm:flex justify-end">
+                                <UniversalFileUploadButton 
+                                  onLoaded={(text) => handleSimpleChange('priorityWords', text)} 
+                                  label="Nạp File Từ Khóa Ưu Tiên (.docx, .pdf, .txt, .json, .xlsx)" 
+                                />
+                              </div>
+                              <textarea 
+                                name="priorityWords" 
+                                value={currentConfig.priorityWords} 
+                                onChange={handleChange} 
+                                placeholder="Nhập hoặc nạp danh sách từ khóa ưu tiên trả lời trước..."
+                                className="w-full h-[65px] border border-gray-300 rounded-lg p-2 text-xs resize-none bg-gray-50 focus:bg-white focus:outline-blue-500 font-medium" 
+                              />
+                            </div>
                           </div>
+
                           <div className="flex items-center mt-1">
                             <FieldLabel icon="🛡️" text="Bật bộ lọc spam thông minh" helpKey="smartSpamFilter" />
                             <input type="checkbox" name="smartSpamFilter" checked={currentConfig.smartSpamFilter} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer" />
@@ -2421,19 +2500,63 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                       )}
 
                       {currentConfig.aiPrompt !== undefined && selectedEventId !== 'idle' && selectedEventId !== 'apology' && selectedEventId !== 'welcome' && (
-                        <div className="flex items-start mt-2">
-                          <FieldLabel icon="✍️" text="Kịch bản cho AI" helpKey="aiPrompt" />
-                          <textarea name="aiPrompt" value={currentConfig.aiPrompt} onChange={handleChange} className="flex-1 min-h-[120px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                        <div className="flex flex-col sm:flex-row sm:items-start gap-2 mt-2">
+                          <div className="flex items-center justify-between sm:justify-start sm:min-w-[170px]">
+                            <FieldLabel icon="✍️" text="Kịch bản cho AI" helpKey="aiPrompt" />
+                            <div className="sm:hidden">
+                              <UniversalFileUploadButton 
+                                onLoaded={(text) => handleSimpleChange('aiPrompt', text)} 
+                                label="Nạp File" 
+                              />
+                            </div>
+                          </div>
+                          <div className="flex-1 flex flex-col gap-1">
+                            <div className="hidden sm:flex justify-end">
+                              <UniversalFileUploadButton 
+                                onLoaded={(text) => handleSimpleChange('aiPrompt', text)} 
+                                label="Nạp File Kịch Bản / Prompt (.docx, .pdf, .txt, .json)" 
+                              />
+                            </div>
+                            <textarea 
+                              name="aiPrompt" 
+                              value={currentConfig.aiPrompt} 
+                              onChange={handleChange} 
+                              placeholder="Nhập hoặc nạp file kịch bản chỉ đạo AI phản hồi..."
+                              className="w-full min-h-[110px] border border-gray-300 rounded-lg p-2.5 text-xs resize-y bg-gray-50 focus:bg-white focus:outline-blue-500 font-medium leading-relaxed" 
+                            />
+                          </div>
                         </div>
                       )}
 
                       {currentConfig.sampleAnswers !== undefined && selectedEventId !== 'idle' && (
                         <div className="flex flex-col gap-2 mt-2">
-                          <div className="flex items-start">
-                            <FieldLabel icon="📄" text="Câu trả lời mẫu (mỗi câu 1 dòng)" helpKey="sampleAnswers" />
-                            <textarea name="sampleAnswers" value={currentConfig.sampleAnswers} onChange={handleChange} className="flex-1 min-h-[90px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                          <div className="flex flex-col sm:flex-row sm:items-start gap-2">
+                            <div className="flex items-center justify-between sm:justify-start sm:min-w-[170px]">
+                              <FieldLabel icon="📄" text="Câu trả lời mẫu (mỗi câu 1 dòng)" helpKey="sampleAnswers" />
+                              <div className="sm:hidden">
+                                <UniversalFileUploadButton 
+                                  onLoaded={(text) => handleSimpleChange('sampleAnswers', text)} 
+                                  label="Nạp File" 
+                                />
+                              </div>
+                            </div>
+                            <div className="flex-1 flex flex-col gap-1">
+                              <div className="hidden sm:flex justify-end">
+                                <UniversalFileUploadButton 
+                                  onLoaded={(text) => handleSimpleChange('sampleAnswers', text)} 
+                                  label="Nạp File Câu Thoại Mẫu (.docx, .pdf, .txt, .json, .xlsx)" 
+                                />
+                              </div>
+                              <textarea 
+                                name="sampleAnswers" 
+                                value={currentConfig.sampleAnswers} 
+                                onChange={handleChange} 
+                                placeholder="Nhập hoặc nạp file các câu trả lời mẫu (mỗi dòng 1 câu)..."
+                                className="w-full min-h-[90px] border border-gray-300 rounded-lg p-2.5 text-xs resize-y bg-gray-50 focus:bg-white focus:outline-blue-500 font-medium leading-relaxed" 
+                              />
+                            </div>
                           </div>
-                          <div className="ml-0 sm:ml-[220px]">
+                          <div className="ml-0 sm:ml-[170px]">
                             <EventVoiceTester 
                               text={currentConfig.sampleAnswers || 'Xin chào và cảm ơn bạn đã tương tác cùng phiên livestream nhé!'}
                               defaultVoiceId={selectedEventId === 'follow' ? 'free_vi_female2' : 'free_vi_female'}
@@ -2602,9 +2725,15 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                       <HelpTooltip helpKey="useAssistant" />
                     </legend>
                     <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-1">
-                        <label className="text-[13px] text-gray-700 font-semibold">Câu mẫu của Trợ lý:</label>
-                        <HelpTooltip helpKey="assistantPrompt" />
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                        <div className="flex items-center gap-1">
+                          <label className="text-[13px] text-gray-700 font-semibold">Câu mẫu của Trợ lý:</label>
+                          <HelpTooltip helpKey="assistantPrompt" />
+                        </div>
+                        <UniversalFileUploadButton 
+                          onLoaded={(text) => handleChange({ target: { name: 'assistantPrompt', value: text } })}
+                          label="Nạp File Câu Mẫu (.docx, .pdf, .txt, .json, .xlsx)"
+                        />
                       </div>
                       <textarea 
                         name="assistantPrompt" value={currentConfig.assistantPrompt} onChange={handleChange}
