@@ -45,7 +45,10 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
     }
     
     // Save to local overrides
-    const overrides = JSON.parse(localStorage.getItem('avalive_user_overrides') || '{}');
+    let overrides = {};
+    try {
+      overrides = JSON.parse(localStorage.getItem('avalive_user_overrides') || '{}');
+    } catch(e) {}
     const userOverride = overrides[email] || {};
     
     if (role !== "Không Thay Đổi") {
@@ -79,7 +82,11 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
     const costVoice = document.getElementById('costVoiceInput')?.value;
     const costLiveAI = document.getElementById('costLiveAIInput')?.value;
     
-    const sysConfig = JSON.parse(localStorage.getItem('avalive_system_configs')) || { defaultTokens: 100, defaultLiveTime: 0, costVoice: 5, costLiveAI: 10 };
+    let sysConfig = { defaultTokens: 100, defaultLiveTime: 0, costVoice: 5, costLiveAI: 10 };
+    try {
+      const raw = localStorage.getItem('avalive_system_configs');
+      if (raw) sysConfig = JSON.parse(raw) || sysConfig;
+    } catch(e) {}
     if (defaultTokensInput !== undefined) sysConfig.defaultTokens = parseInt(defaultTokensInput, 10) || 0;
     if (defaultLiveTimeInput !== undefined) sysConfig.defaultLiveTime = parseInt(defaultLiveTimeInput, 10) || 0;
     if (costVoice !== undefined) sysConfig.costVoice = parseInt(costVoice, 10) || 5;

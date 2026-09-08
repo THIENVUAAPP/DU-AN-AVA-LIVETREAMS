@@ -1549,7 +1549,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       }
 
       // Chuẩn hoá đường dẫn file upload sang origin hiện tại hoặc Cloudflare Tunnel (Tránh Mixed Content và CORS 100%)
-      const tunnelBase = masterState.tunnelUrl || (typeof window !== 'undefined' && (localStorage.getItem('avalive_tunnel_url') || (JSON.parse(localStorage.getItem('avalive_tunnel_data') || '{}')?.tunnelUrl))) || null;
+      let tunnelBase = masterState.tunnelUrl || null;
+      if (!tunnelBase && typeof window !== 'undefined') {
+        try {
+          tunnelBase = localStorage.getItem('avalive_tunnel_url') || (JSON.parse(localStorage.getItem('avalive_tunnel_data') || '{}')?.tunnelUrl) || null;
+        } catch(e) {
+          tunnelBase = null;
+        }
+      }
 
       if (candidateUrl.includes('/uploads/')) {
         const pathPart = candidateUrl.substring(candidateUrl.indexOf('/uploads/'));

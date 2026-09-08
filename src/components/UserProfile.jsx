@@ -23,7 +23,11 @@ export default function UserProfile({ currentUser, setActiveTab }) {
   });
 
   const currentPlanConfig = getPlans().find(p => p.name === currentUser?.plan || (currentUser?.plan === 'VIP PRO' && p.id === 'LIFETIME')) || getPlans()[0];
-  const sysConfig = JSON.parse(localStorage.getItem('avalive_system_configs')) || { defaultTokens: 100, defaultLiveTime: 0, costVoice: 5, costLiveAI: 10 };
+  let sysConfig = { defaultTokens: 100, defaultLiveTime: 0, costVoice: 5, costLiveAI: 10 };
+  try {
+    const rawSys = localStorage.getItem('avalive_system_configs');
+    if (rawSys) sysConfig = JSON.parse(rawSys) || sysConfig;
+  } catch(e) {}
 
   const liveMinutesRemaining = currentUser?.liveMinutes !== undefined 
     ? currentUser.liveMinutes 
