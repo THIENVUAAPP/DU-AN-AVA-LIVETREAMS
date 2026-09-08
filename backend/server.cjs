@@ -2136,6 +2136,33 @@ app.get('/api/tts', (req, res) => {
   });
 });
 
+app.post('/api/tts', async (req, res) => {
+  const { text, platform, voiceId } = req.body || {};
+  const txt = (text || '').toString().trim();
+  if (!txt) return res.status(400).json({ error: 'Missing text parameter' });
+
+  const encodedText = encodeURIComponent(txt.slice(0, 200));
+  const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=vi&client=tw-ob`;
+
+  https.get(ttsUrl, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'audio/mpeg'
+    }
+  }, (proxyRes) => {
+    const chunks = [];
+    proxyRes.on('data', chunk => chunks.push(chunk));
+    proxyRes.on('end', () => {
+      const buffer = Buffer.concat(chunks);
+      const audioBase64 = buffer.toString('base64');
+      res.json({ success: true, audioBase64 });
+    });
+  }).on('error', (err) => {
+    console.warn('POST TTS proxy error:', err);
+    res.status(500).json({ error: err.message });
+  });
+});
+
 // AI Script Generation
 app.post('/api/generate-script', async (req, res) => {
   try {

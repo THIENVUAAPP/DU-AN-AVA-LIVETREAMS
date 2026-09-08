@@ -62,15 +62,16 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
     const targetVoice = ALL_SYSTEM_VOICES.find(v => v.id === role || v.id === rule.voiceId) || 
       (role === 'idol' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'idol') : 
        role === 'game' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'game') : 
-       ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'assistant' || v.id === 'free_vi_female'));
+       ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'assistant' || v.id === 'free_vi_female2'));
 
-    previewVoiceAudio(targetVoice || { id: 'free_vi_female', lang: 'vi-VN' }, sampleText, {
-      volume: 1.0,
-      rate: 1.0,
-      apiKey: localStorage.getItem('elevenlabs_api_key') || ''
-    }, () => {
-      setPreviewingRuleId(null);
-    });
+    previewVoiceAudio(
+      targetVoice || { id: 'free_vi_female', lang: 'vi-VN', provider: 'system', gender: 'Female' },
+      sampleText,
+      () => {
+        setPreviewingRuleId(null);
+      },
+      true
+    );
   };
 
   const copyToClipboard = (text, id) => {

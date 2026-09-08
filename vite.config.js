@@ -299,6 +299,39 @@ export default defineConfig({
           }
 
           if (req.url.startsWith('/api/tts')) {
+            if (req.method === 'POST') {
+              let bodyStr = '';
+              req.on('data', chunk => { bodyStr += chunk; });
+              req.on('end', async () => {
+                try {
+                  const body = JSON.parse(bodyStr || '{}');
+                  const text = (body.text || '').toString().trim() || 'Xin chào';
+                  const googleUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=vi&q=${encodeURIComponent(text.slice(0, 200))}`;
+                  const https = await import('https');
+                  https.get(googleUrl, {
+                    headers: {
+                      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                    }
+                  }, (gRes) => {
+                    const chunks = [];
+                    gRes.on('data', c => chunks.push(c));
+                    gRes.on('end', () => {
+                      const buffer = Buffer.concat(chunks);
+                      res.setHeader('Content-Type', 'application/json');
+                      res.end(JSON.stringify({ success: true, audioBase64: buffer.toString('base64') }));
+                    });
+                  }).on('error', (err) => {
+                    res.statusCode = 500;
+                    res.end(JSON.stringify({ error: err.message }));
+                  });
+                } catch (err) {
+                  res.statusCode = 500;
+                  res.end(JSON.stringify({ error: err.message }));
+                }
+              });
+              return;
+            }
+
             try {
               const urlObj = new URL(req.url, 'http://localhost');
               const text = urlObj.searchParams.get('text') || 'Xin chào';

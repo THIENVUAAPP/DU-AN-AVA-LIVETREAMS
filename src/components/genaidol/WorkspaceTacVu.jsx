@@ -7,6 +7,7 @@ import {
 import { NEW_AI_PROMPT } from '../../utils/defaultAIPrompt';
 import WorkspaceKeywordPanel from './WorkspaceKeywordPanel';
 import ShopeeLiveConnectModal from './ShopeeLiveConnectModal';
+import EventVoiceTester from './EventVoiceTester';
 
 const EVENTS = [
   { id: 'shopee_live', label: '🟠 Shopee Live (URL & Key)', icon: ShoppingBag, color: 'text-[#EE4D2D]', desc: 'Cấu hình URL máy chủ RTMP và Khóa Luồng (Stream Key) kết nối với Kênh Người Bán Shopee Live để đồng bộ phiên phát trực tiếp.' },
@@ -870,7 +871,15 @@ export default function WorkspaceTacVu() {
                                   <label className="text-[13px] font-semibold text-gray-700">Câu mẫu của Trợ lý:</label>
                                   <HelpTooltip helpKey="assistantPrompt" />
                                 </div>
-                                <textarea value={slot.assistantPrompt} onChange={(e) => handleSlotChange(slot.id, 'assistantPrompt', e.target.value)} className="w-full h-[60px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-white focus:outline-blue-500" />
+                                <div className="space-y-2">
+                                  <textarea value={slot.assistantPrompt} onChange={(e) => handleSlotChange(slot.id, 'assistantPrompt', e.target.value)} placeholder="Ví dụ: Ôi đại gia {user} vừa tặng {gift_name}! Cảm ơn đại gia rất nhiều!" className="w-full h-[60px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-white focus:outline-blue-500" />
+                                  <EventVoiceTester 
+                                    text={slot.assistantPrompt || `Ôi đại gia {user} vừa tặng ${slot.giftName || 'quà đặc biệt'}! Cảm ơn đại gia rất nhiều!`}
+                                    defaultVoiceId="free_vi_female2"
+                                    label={`Nghe thử câu thoại Quà đặc biệt (${slot.giftName?.split('(')[0] || 'Slot ' + slot.id})`}
+                                    compact={false}
+                                  />
+                                </div>
                                 
                                 <div className="flex items-center gap-1">
                                   <label className="text-[13px] font-semibold text-gray-700">Video của Trợ lý:</label>
@@ -995,12 +1004,20 @@ export default function WorkspaceTacVu() {
                           <div className="flex items-start">
                             <label className="text-[13px] font-semibold text-gray-700 mt-1">📄 Câu trả lời mẫu (mỗi câu 1 dòng):</label>
                           </div>
-                          <textarea 
-                            value={gSlot.sampleAnswers || ''} 
-                            onChange={(e) => handleGiftSlotChange(gSlot.id, 'sampleAnswers', e.target.value)} 
-                            placeholder="Cảm ơn bạn {user} đã gửi tặng {gift_name} nha!&#10;Cảm ơn món quà ngọt ngào của {user}!"
-                            className="w-full h-[80px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-white focus:outline-blue-500" 
-                          />
+                          <div className="space-y-2">
+                            <textarea 
+                              value={gSlot.sampleAnswers || ''} 
+                              onChange={(e) => handleGiftSlotChange(gSlot.id, 'sampleAnswers', e.target.value)} 
+                              placeholder="Cảm ơn bạn {user} đã gửi tặng {gift_name} nha!&#10;Cảm ơn món quà ngọt ngào của {user}!"
+                              className="w-full h-[80px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-white focus:outline-blue-500" 
+                            />
+                            <EventVoiceTester 
+                              text={gSlot.sampleAnswers || 'Cảm ơn bạn {user} đã gửi tặng {gift_name} nha! Cảm ơn món quà ngọt ngào của {user}!'}
+                              defaultVoiceId="free_vi_female"
+                              label={`Nghe thử câu thoại mẫu (${gSlot.name || 'Slot ' + gSlot.id})`}
+                              compact={false}
+                            />
+                          </div>
 
                           <div className="flex items-start">
                             <label className="text-[13px] font-semibold text-gray-700 mt-1">✍️ Kịch bản cho AI:</label>
@@ -1043,7 +1060,15 @@ export default function WorkspaceTacVu() {
                           {gSlot.useAssistant && (
                             <div className="pl-6 grid grid-cols-[150px_1fr] gap-y-2 gap-x-4">
                               <label className="text-[13px] font-semibold text-gray-700">Câu mẫu Trợ lý:</label>
-                              <textarea value={gSlot.assistantPrompt || ''} onChange={(e) => handleGiftSlotChange(gSlot.id, 'assistantPrompt', e.target.value)} className="w-full h-[50px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-white focus:outline-blue-500" />
+                              <div className="space-y-2">
+                                <textarea value={gSlot.assistantPrompt || ''} onChange={(e) => handleGiftSlotChange(gSlot.id, 'assistantPrompt', e.target.value)} placeholder="Ví dụ: Cảm ơn bạn {user} đã ủng hộ quà cho phòng live nhé!" className="w-full h-[50px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-white focus:outline-blue-500" />
+                                <EventVoiceTester 
+                                  text={gSlot.assistantPrompt || 'Cảm ơn bạn {user} đã ủng hộ quà cho phòng live nhé!'}
+                                  defaultVoiceId="free_vi_female2"
+                                  label={`Nghe thử Trợ lý (${gSlot.name || 'Slot ' + gSlot.id})`}
+                                  compact={false}
+                                />
+                              </div>
                               <label className="text-[13px] font-semibold text-gray-700">Video Trợ lý:</label>
                               <div className="flex items-center gap-2">
                                 <span className="text-[13px] font-medium min-w-[150px] truncate max-w-xs">{gSlot.assistantVideoFolder || 'Chưa chọn'}</span>
@@ -1141,8 +1166,15 @@ export default function WorkspaceTacVu() {
                           </div>
                         </div>
                         <div className="flex flex-col gap-2 mt-2">
-                          <textarea value={prod.aiPrompt} onChange={(e) => handleProductChange(prod.id, 'aiPrompt', e.target.value)} className="w-full h-[300px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-white focus:outline-blue-500" />
+                          <textarea value={prod.aiPrompt} onChange={(e) => handleProductChange(prod.id, 'aiPrompt', e.target.value)} className="w-full h-[220px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-white focus:outline-blue-500 font-mono" />
                           
+                          <EventVoiceTester 
+                            text={`Dạ em chào bạn {user}! Sản phẩm ${prod.productName || 'AVA LIVE'} đang có khuyến mãi cực hot trong giỏ hàng góc trái màn hình, bạn bấm vào đặt hàng ngay nhé!`}
+                            defaultVoiceId="free_vi_female"
+                            label={`Nghe thử kịch bản chốt đơn (${prod.productName || 'Sản phẩm ' + prod.id})`}
+                            compact={false}
+                          />
+
                           <div className="flex items-center justify-center gap-6 mt-1 flex-wrap">
                             <label className="flex items-center gap-1.5 cursor-pointer">
                               <input type="checkbox" checked={prod.useAi} onChange={(e) => handleProductChange(prod.id, 'useAi', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded cursor-pointer"/> 
@@ -1390,9 +1422,19 @@ export default function WorkspaceTacVu() {
                       )}
 
                       {currentConfig.sampleAnswers !== undefined && selectedEventId !== 'idle' && (
-                        <div className="flex items-start mt-2">
-                          <FieldLabel icon="📄" text="Câu trả lời mẫu (mỗi câu 1 dòng)" helpKey="sampleAnswers" />
-                          <textarea name="sampleAnswers" value={currentConfig.sampleAnswers} onChange={handleChange} className="flex-1 min-h-[100px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                        <div className="flex flex-col gap-2 mt-2">
+                          <div className="flex items-start">
+                            <FieldLabel icon="📄" text="Câu trả lời mẫu (mỗi câu 1 dòng)" helpKey="sampleAnswers" />
+                            <textarea name="sampleAnswers" value={currentConfig.sampleAnswers} onChange={handleChange} className="flex-1 min-h-[90px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                          </div>
+                          <div className="ml-0 sm:ml-[220px]">
+                            <EventVoiceTester 
+                              text={currentConfig.sampleAnswers || 'Xin chào và cảm ơn bạn đã tương tác cùng phiên livestream nhé!'}
+                              defaultVoiceId={selectedEventId === 'checkout' ? 'free_vi_female' : selectedEventId === 'follow' ? 'free_vi_female2' : 'free_vi_female'}
+                              label={`Nghe thử câu thoại mẫu (${selectedEventInfo?.label || 'Sự kiện'})`}
+                              compact={false}
+                            />
+                          </div>
                         </div>
                       )}
                       
@@ -1468,6 +1510,12 @@ export default function WorkspaceTacVu() {
                       <textarea 
                         name="assistantPrompt" value={currentConfig.assistantPrompt} onChange={handleChange}
                         className="w-full h-[80px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-gray-50 focus:bg-white focus:outline-blue-500" 
+                      />
+                      <EventVoiceTester 
+                        text={currentConfig.assistantPrompt || 'Dạ vâng, cảm ơn mọi người đã theo dõi live nha!'}
+                        defaultVoiceId="free_vi_female2"
+                        label={`Nghe thử câu Trợ lý (${selectedEventInfo?.label || 'Sự kiện'})`}
+                        compact={false}
                       />
                       <label className="flex items-center gap-2 justify-center mt-2 cursor-pointer">
                         <input type="checkbox" name="assistantUseMainVoice" checked={currentConfig.assistantUseMainVoice} onChange={handleChange} className="w-4 h-4 rounded cursor-pointer" />

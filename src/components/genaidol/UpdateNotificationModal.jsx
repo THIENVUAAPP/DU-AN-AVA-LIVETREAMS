@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.0.0';
+export const APP_VERSION = '2.0.1';
 export const UPDATE_NOTES = [
-  "🎁 Quà Tặng Đặc Biệt (Multi-Slot Không Giới Hạn): Bổ sung nút '➕ Thêm Slot Quà Tặng Đặc Biệt' cho phép tạo số lượng slot tùy thích, tích chọn bật/tắt, nút xóa slot và tùy chỉnh đầy đủ quà TikTok, video chính, video nền, TTS, trợ lý riêng.",
-  "🎀 Quà Tặng (Thường) Nâng Cấp Hệ Thống Multi-Slot: Bổ sung chức năng thêm slot quà thường tùy thích với nút tích chọn bật/tắt từng slot, tùy biến kịch bản câu trả lời mẫu, kịch bản AI, video hành động & video nền hỗ trợ.",
-  "💬 Quản Lý Bình Luận Chuyên Nghiệp (Chuẩn Ảnh 4): Bổ sung lựa chọn chế độ trả lời (1️⃣ Chỉ Từ khóa có sẵn / 2️⃣ Chỉ Dùng AI Gemini / 3️⃣ Kết hợp thông minh), lựa chọn hình thức trả lời (Voice / Text / Cả 2).",
-  "📁 Tải File Từ Khóa Đa Định Dạng: Hỗ trợ nạp file kịch bản bất kỳ định dạng nào (.txt, .md, .docx, .doc, .pdf, .csv, .json) tự động phân tích và sắp xếp thứ tự từ khóa và câu phản hồi ngăn nắp.",
-  "🔊 Nghe Thử Giọng Đọc Trực Tiếp & Lựa Chọn Giọng Riêng: Cho phép nghe thử âm thanh trực tiếp từng quy tắc từ khóa (TTS / ElevenLabs / Hệ thống) và chọn giọng đọc riêng biệt (Idol / Trợ Lý / BLV Game / Giọng Quốc Tế)."
+  "🔊 Hệ Thống Nghe Thử Âm Thanh & Chọn Giọng Toàn Diện: Tích hợp bộ chọn giọng đọc (Idol, Trợ Lý, BLV Game, ElevenLabs, Quốc tế) và nút 'Nghe Thử' trực tiếp cho 100% tất cả các tab phản hồi sự kiện và kịch bản cài sẵn (Quà đặc biệt, Quà thường, Bình luận, Chốt đơn, Theo dõi, Chia sẻ, Cảm ơn Tim, Chào người mới, Kêu gọi, Nói chuyện, Xin lỗi).",
+  "🛡️ Xử Lý Triệt Để Lỗi Giọng Đọc & Tự Động Fallback 3 Tầng: Khắc phục triệt để lỗi REFERENCE_AUDIO_MISSING, tự động chuyển đổi mượt mà giữa ElevenLabs Pro -> TTS Stream -> Web Speech API -> Harmonic Chime, đảm bảo không bao giờ bị đơ, lag hay lỗi âm thanh.",
+  "🎁 Multi-Slot Quà Tặng Đặc Biệt & Quà Thường: Cho phép tạo không giới hạn slot quà tặng, kiểm soát bật/tắt, gán thư mục video hành động, video nền hỗ trợ và trợ lý riêng cho từng slot.",
+  "💬 Quản Lý Bình Luận Thông Minh & Tải File Kịch Bản Đa Định Dạng: Hỗ trợ nạp file .txt, .md, .docx, .pdf, .csv, .json tự động chia tách từ khóa và câu trả lời, hỗ trợ 3 chế độ phản hồi (Từ khóa / AI Gemini / Kết hợp) và hình thức (Voice / Text / Cả 2).",
+  "⚡ Tối Ưu Hóa 60 FPS Siêu Mượt: Đảm bảo toàn bộ hệ thống sự kiện livestream vận hành đồng bộ, mượt mà trên Desktop App, Trình duyệt Web và TikTok Live Studio."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

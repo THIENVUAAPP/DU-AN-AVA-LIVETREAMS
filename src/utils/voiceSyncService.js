@@ -316,22 +316,59 @@ function playFallbackHarmonicChime(gender = 'Female') {
 /**
  * Phát Voice AI Âm Thanh Cho Mọi Mục Đích (Preview, Idol nói, Game BLV, Trợ lý)
  * Đồng bộ qua Global Queue để không bao giờ bị nói đè, nói chồng chéo.
+ * Hỗ trợ đa hình: previewVoiceAudio(voice, text, onEnd, priority) HOẶC previewVoiceAudio(voice, text, options, onEnd)
  */
-export async function previewVoiceAudio(voice, sampleText = null, onEnd = null, priority = false) {
+export async function previewVoiceAudio(voiceOrId, sampleText = null, optionsOrOnEnd = null, onEndOrPriority = null) {
   if (typeof window === 'undefined') {
-    if (onEnd) onEnd();
-    return;
+    if (typeof optionsOrOnEnd === 'function') optionsOrOnEnd();
+    if (typeof onEndOrPriority === 'function') onEndOrPriority();
+    return true;
   }
 
+  // Chuẩn hóa voice object từ string ID hoặc role nếu cần
+  let voiceObj = voiceOrId;
+  if (typeof voiceOrId === 'string') {
+    voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === voiceOrId) ||
+      (voiceOrId === 'idol' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'idol') :
+       voiceOrId === 'manager' || voiceOrId === 'assistant' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'manager' || v.id === 'free_vi_female2') :
+       voiceOrId === 'game' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'game') :
+       ALL_SYSTEM_VOICES.find(v => v.id === 'free_vi_female'));
+  }
+  voiceObj = voiceObj || { id: 'free_vi_female', name: 'Hoài My 🇻🇳', lang: 'vi-VN', provider: 'system', gender: 'Female' };
+
+  // Chuẩn hóa callback onEnd và options
+  let onEnd = null;
+  let priority = false;
+  let customOptions = {};
+
+  if (typeof optionsOrOnEnd === 'function') {
+    onEnd = optionsOrOnEnd;
+    if (typeof onEndOrPriority === 'boolean') priority = onEndOrPriority;
+  } else if (typeof optionsOrOnEnd === 'object' && optionsOrOnEnd !== null) {
+    customOptions = optionsOrOnEnd;
+    onEnd = typeof onEndOrPriority === 'function' ? onEndOrPriority : optionsOrOnEnd.onEnd;
+    priority = !!optionsOrOnEnd.priority;
+  } else if (typeof onEndOrPriority === 'function') {
+    onEnd = onEndOrPriority;
+  }
+
+  const mergedVoice = {
+    ...voiceObj,
+    volume: customOptions.volume !== undefined ? customOptions.volume : (voiceObj.volume !== undefined ? voiceObj.volume : 1.0),
+    rate: customOptions.rate !== undefined ? customOptions.rate : (voiceObj.rate !== undefined ? voiceObj.rate : 1.0),
+    pitch: customOptions.pitch !== undefined ? customOptions.pitch : (voiceObj.pitch !== undefined ? voiceObj.pitch : 1.0),
+    apiKey: customOptions.apiKey || voiceObj.apiKey || getElevenLabsApiKey()
+  };
+
   // Kiểm tra nếu kênh giọng này bị tắt hoặc âm lượng về 0
-  if (voice?.enabled === false || voice?.isMuted === true || (voice?.volume !== undefined && voice.volume <= 0.001)) {
+  if (mergedVoice?.enabled === false || mergedVoice?.isMuted === true || (mergedVoice?.volume !== undefined && mergedVoice.volume <= 0.001)) {
     if (onEnd) onEnd();
     return true;
   }
 
   if (priority) {
     clearGlobalSpeechQueue();
-    return executeSingleSpeech(voice, sampleText, onEnd);
+    return executeSingleSpeech(mergedVoice, sampleText, onEnd);
   }
 
   return new Promise((resolve) => {
@@ -341,7 +378,7 @@ export async function previewVoiceAudio(voice, sampleText = null, onEnd = null, 
     }
 
     globalSpeechQueue.push({
-      voice,
+      voice: mergedVoice,
       sampleText,
       onEnd,
       resolve
@@ -370,8 +407,8 @@ async function processGlobalSpeechQueue() {
       isGlobalSpeaking = false;
     }
 
-    // Khoảng cách thời gian nghỉ giữa 2 lần đọc / trả lời (1.2 giây) để không bị chồng chéo
-    await new Promise((r) => setTimeout(r, 1200));
+    // Khoảng cách thời gian nghỉ giữa 2 lần đọc / trả lời (0.6 giây) để mượt mà không bị ngắt quãng
+    await new Promise((r) => setTimeout(r, 600));
   }
 
   isProcessingGlobalQueue = false;
