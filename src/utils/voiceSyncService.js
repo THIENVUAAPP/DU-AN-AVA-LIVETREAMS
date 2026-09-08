@@ -571,7 +571,20 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
   const textToSpeak = cleanTextForVoiceSpeech(rawCandidate) || rawCandidate;
   const apiKey = getElevenLabsApiKey();
   const voiceId = voice?.voiceId || '21m00Tcm4TlvDq8ikWAM';
-  const voiceVolume = voice?.volume !== undefined ? Math.max(0, Math.min(1, voice.volume)) : 1.0;
+  
+  const savedGlobalVol = typeof localStorage !== 'undefined' && localStorage.getItem('avalive_global_volume') 
+    ? parseFloat(localStorage.getItem('avalive_global_volume')) 
+    : (typeof localStorage !== 'undefined' && localStorage.getItem('avalive_video_volume') ? parseFloat(localStorage.getItem('avalive_video_volume')) : 1.0);
+  const isLocalSpeakerMuted = typeof localStorage !== 'undefined' && (
+    localStorage.getItem('avalive_local_speaker_muted') === 'true' ||
+    localStorage.getItem('avalive_audio_muted') === 'true'
+  );
+
+  const requestedVolume = voice?.volume !== undefined ? Math.max(0, Math.min(1.0, Number(voice.volume))) : 1.0;
+  const requestedRate = voice?.rate !== undefined ? Math.max(0.5, Math.min(2.0, Number(voice.rate))) : 1.0;
+  const effectiveVoiceVolume = isTestingMode 
+    ? requestedVolume 
+    : (isLocalSpeakerMuted ? 0 : Math.max(0, Math.min(1.0, requestedVolume * (savedGlobalVol !== null && !isNaN(savedGlobalVol) ? savedGlobalVol : 1.0))));
 
   // =========================================================================
   // TIER 1: ElevenLabs API (Chỉ khi cấu hình ElevenLabs và có API Key hợp lệ)
@@ -642,17 +655,6 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     window.location.pathname.includes('/battle') ||
     window.location.pathname.includes('/bando')
   );
-  const isGlobalMuted = typeof localStorage !== 'undefined' && (
-    localStorage.getItem('avalive_audio_muted') === 'true' ||
-    localStorage.getItem('avalive_local_speaker_muted') === 'true' ||
-    localStorage.getItem('avalive_overlay_audio_muted') === 'true'
-  );
-  
-  const requestedVolume = voice?.volume !== undefined ? Math.max(0, Math.min(1.0, Number(voice.volume))) : 1.0;
-  const requestedRate = voice?.rate !== undefined ? Math.max(0.5, Math.min(2.0, Number(voice.rate))) : 1.0;
-  const effectiveVoiceVolume = isTestingMode 
-    ? requestedVolume 
-    : (isLocalSpeakerMuted ? 0 : Math.max(0, Math.min(1.0, requestedVolume * (savedGlobalVol !== null ? savedGlobalVol : 1.0))));
 
   // Danh sách các endpoints TTS thử nghiệm tuần tự để đảm bảo 100% phát được âm thanh
   const ttsCandidateUrls = [];

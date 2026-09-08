@@ -1833,6 +1833,13 @@ export default function DesktopAppUI() {
             }
             setTimeout(() => { isInternalAudioChangeRef.current = false; }, 300);
           }
+
+          // 2.5. Đồng bộ Âm lượng Voice AI giữa các cửa sổ
+          if (event.data.type === 'GLOBAL_VOICE_VOLUME_CHANGE') {
+            if (event.data.source === 'desktop') return;
+            const vVol = typeof event.data.voiceVolume === 'number' ? event.data.voiceVolume : 1;
+            try { localStorage.setItem('avalive_voice_volume', String(vVol)); } catch (e) {}
+          }
         };
       } catch (err) {}
     }

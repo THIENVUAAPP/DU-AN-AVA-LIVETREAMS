@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.1.1';
+export const APP_VERSION = '2.1.2';
 export const UPDATE_NOTES = [
-  "🎬 Video Thumbnail Live Preview Trực Quan: Tất cả các ô tải video (Trợ lý, Quà tặng, Sản phẩm, Video nền, Video sự kiện) đều có khung hiển thị Thumbnail Video trực tiếp, di chuột để xem trước hoặc bấm để phóng to full HD.",
-  "📁 Đồng Bộ 100% Các Ô Tải Video: Tích hợp đầy đủ Universal Media Picker vào Cài đặt chung Trợ Lý, Quà tặng và tất cả các tab tác vụ.",
-  "➕ Mở Rộng Danh Mục Video & Thêm Clip Chen Ngang: Dễ dàng chuyển đổi danh mục sự kiện và mở rộng thêm vô hạn các ô Video Bổ Trợ / Clip Chen Ngang linh hoạt."
+  "⚡ Siêu Sắc Nét Ultra HD 4K (60FPS): Tối ưu hóa bộ lọc tăng cường độ nét và tương phản cho Cửa Sổ Live 9:16 Window Capture trên TikTok Live Studio & OBS, không còn bị mờ nhòe.",
+  "🎙️ Điều Khiển Âm Lượng Đa Kênh: Bộ Mixer độc lập cho Voice AI (Giọng đọc Trợ lý / Idol TTS) và Video Nền BGM (0% - 100%), đồng bộ tức thì trên TikTok Live Studio.",
+  "🎬 Phát Video Liền Mạch Không Khựng Giật: Nâng cấp luồng phát video liên tục 24/24 xuyên suốt, loại bỏ tình trạng giật lag, nhảy câu hoặc lặp video bất thường."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

@@ -233,6 +233,35 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     };
   }, [isVideoAudioMuted, videoVolume]);
 
+  const [isUltraSharp, setIsUltraSharp] = useState(() => {
+    try {
+      const saved = localStorage.getItem('avalive_ultra_sharp');
+      return saved !== null ? saved === 'true' : true; // Mặc định BẬT siêu sắc nét Ultra HD cho TikTok Live / OBS
+    } catch (e) {
+      return true;
+    }
+  });
+  const [voiceVolume, setVoiceVolume] = useState(() => {
+    try {
+      const saved = localStorage.getItem('avalive_voice_volume');
+      return saved ? parseFloat(saved) : 1.0;
+    } catch (e) {
+      return 1.0;
+    }
+  });
+
+  const handleVoiceVolumeChange = (newVol) => {
+    setVoiceVolume(newVol);
+    try {
+      localStorage.setItem('avalive_voice_volume', String(newVol));
+    } catch (e) {}
+    try {
+      const bc = new BroadcastChannel('avalive_master_live_stream');
+      bc.postMessage({ type: 'GLOBAL_VOICE_VOLUME_CHANGE', voiceVolume: newVol, source: 'overlay', timestamp: Date.now() });
+      setTimeout(() => bc.close(), 100);
+    } catch (e) {}
+  };
+
   const [objectFitState, setObjectFitState] = useState(() => {
     try {
       const saved = localStorage.getItem('avalive_overlay_fit');
@@ -1838,22 +1867,22 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       {/* 👑 KHUNG QUẢN TRỊ WINDOW CAPTURE NỔI SIÊU GỌN (THU NHỎ 50%, ĐẶT Ở RÌA MÉP NGOÀI CÙNG, KHÔNG LẤN KHUNG HÌNH VIDEO) */}
       {isWindowCapture && !isControlDockCollapsed && (
         <div className="fixed top-1 left-2 right-2 z-50 pointer-events-none flex justify-center">
-          <header className="pointer-events-auto bg-black/85 hover:bg-black/95 backdrop-blur-md border border-cyan-500/30 px-2 py-0.5 rounded-full flex items-center gap-1.5 shadow-2xl transition-all duration-300 opacity-40 hover:opacity-100 max-w-[98%]">
+          <header className="pointer-events-auto bg-black/90 hover:bg-black/98 backdrop-blur-lg border border-cyan-500/40 px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-2xl transition-all duration-300 opacity-40 hover:opacity-100 max-w-[99%]">
             {/* Trạng thái Live & Khung hình thu nhỏ */}
-            <div className="flex items-center gap-1.5 pl-1">
+            <div className="flex items-center gap-1 pl-1">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
               <span className="text-[9.5px] font-black text-white tracking-wider uppercase hidden sm:inline">
-                WINDOW CAPTURE
+                LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.8.7
+                v2.1.2
               </span>
             </div>
 
-            {/* Cụm nút điều khiển Quản trị thu nhỏ 50% */}
+            {/* Cụm nút điều khiển Quản trị thu nhỏ */}
             <div className="flex items-center gap-1 flex-wrap">
               {/* 1. NÚT PHÁT / TẠM DỪNG (NHỎ GỌN) */}
               <button
@@ -1868,21 +1897,39 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 <span>{isPlayingState ? '⏸️ Dừng' : '▶️ Phát'}</span>
               </button>
 
-              {/* 2. NÚT BẬT / TẮT ÂM THANH (NHỎ GỌN) */}
+              {/* 2. CHẾ ĐỘ SIÊU SẮC NÉT ULTRA HD 4K (60FPS) */}
+              <button
+                onClick={() => {
+                  const nextSharp = !isUltraSharp;
+                  setIsUltraSharp(nextSharp);
+                  try { localStorage.setItem('avalive_ultra_sharp', String(nextSharp)); } catch(e) {}
+                }}
+                className={`px-2 py-0.5 rounded-full font-bold text-[9px] h-5.5 flex items-center gap-1 shadow-sm cursor-pointer transition-all ${
+                  isUltraSharp
+                    ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white border border-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.5)]'
+                    : 'bg-white/5 hover:bg-white/10 text-gray-400 border border-white/10'
+                }`}
+                title="Bật/Tắt Bộ lọc Siêu Sắc Nét Ultra HD 60FPS tăng cường tương phản và độ nét cho TikTok Live Studio & OBS"
+              >
+                <span>⚡ {isUltraSharp ? 'Siêu Nét 4K' : 'HD Thường'}</span>
+              </button>
+
+              {/* 3. NÚT BẬT / TẮT ÂM THANH TỔNG */}
               <button
                 onClick={toggleAudioMute}
                 className={`px-2 py-0.5 rounded-full font-bold text-[9.5px] h-5.5 flex items-center gap-1 shadow-sm cursor-pointer transition-all ${
                   isVideoAudioMuted
                     ? 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40'
-                    : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-cyan-500/30'
+                    : 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white shadow-indigo-500/30'
                 }`}
-                title="Phím tắt: M"
+                title="Bật/Tắt âm thanh toàn bộ (Phím tắt: M)"
               >
                 <span>{!isVideoAudioMuted ? `🔊 ${Math.round(videoVolume * 100)}%` : '🔇 Tắt Tiếng'}</span>
               </button>
 
-              {/* 3. THANH TRƯỢT ÂM LƯỢNG (MINI) */}
-              <div className="hidden md:flex items-center gap-1 bg-white/5 px-1.5 py-0.5 rounded-full border border-white/10 h-5.5">
+              {/* 4. THANH TRƯỢT ÂM LƯỢNG VIDEO NỀN / BGM */}
+              <div className="hidden lg:flex items-center gap-1 bg-white/5 px-1.5 py-0.5 rounded-full border border-white/10 h-5.5" title="Âm lượng Video Nền BGM">
+                <span className="text-[8.5px] text-gray-300 font-bold">🎵 BGM</span>
                 <input
                   type="range"
                   min="0"
@@ -1890,12 +1937,26 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   step="0.05"
                   value={isVideoAudioMuted ? 0 : videoVolume}
                   onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-                  className="w-12 h-1 accent-cyan-400 cursor-pointer"
-                  title="Âm lượng video"
+                  className="w-10 h-1 accent-cyan-400 cursor-pointer"
                 />
               </div>
 
-              {/* 4. TOÀN MÀN HÌNH FULL HD 1080P OBS (MINI) */}
+              {/* 5. THANH TRƯỢT ÂM LƯỢNG VOICE AI (GIỌNG ĐỌC TRỢ LÝ / IDOL) */}
+              <div className="hidden md:flex items-center gap-1 bg-white/5 px-1.5 py-0.5 rounded-full border border-white/10 h-5.5" title="Âm lượng Giọng Đọc Voice AI (Idol / Kịch bản / Chốt đơn)">
+                <span className="text-[8.5px] text-cyan-300 font-bold">🎙️ Voice</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={voiceVolume}
+                  onChange={(e) => handleVoiceVolumeChange(parseFloat(e.target.value))}
+                  className="w-10 h-1 accent-indigo-400 cursor-pointer"
+                />
+                <span className="text-[8px] text-gray-400 font-mono">{Math.round(voiceVolume * 100)}%</span>
+              </div>
+
+              {/* 6. TOÀN MÀN HÌNH FULL HD 1080P OBS (MINI) */}
               <button
                 onClick={() => {
                   if (!document.fullscreenElement) {
@@ -1910,7 +1971,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 <span>🖥️ 1080p</span>
               </button>
 
-              {/* 5. CHẾ ĐỘ CỬA SỔ NỔI (PiP MINI) */}
+              {/* 7. CHẾ ĐỘ CỬA SỔ NỔI (PiP MINI) */}
               <button
                 onClick={togglePip}
                 className="hidden sm:flex px-1.5 py-0.5 rounded-full bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 border border-indigo-500/40 text-[9px] font-bold h-5.5 items-center gap-0.5 cursor-pointer transition-all"
@@ -1919,7 +1980,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 <span>🖼️ PiP</span>
               </button>
 
-              {/* 6. TỈ LỆ KHUNG HÌNH FIT (MINI) */}
+              {/* 8. TỈ LỆ KHUNG HÌNH FIT (MINI) */}
               <button
                 onClick={() => {
                   const nextFit = objectFitState === 'cover' ? 'contain' : 'cover';
@@ -1932,7 +1993,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 <span>📐 {objectFitState === 'cover' ? 'Tràn' : 'Vừa'}</span>
               </button>
 
-              {/* 7. NÚT ẨN BẢNG ĐIỀU KHIỂN: CỰC NHỎ VÀ CỰC GỌN THEO YÊU CẦU */}
+              {/* 9. NÚT ẨN BẢNG ĐIỀU KHIỂN */}
               <button
                 onClick={() => {
                   setIsControlDockCollapsed(true);
@@ -1978,7 +2039,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   key="avalive_overlay_main_video"
                   src={blobVideoUrl || activeMedia.url}
                   autoPlay={true}
-                  loop
+                  loop={true}
                   muted={isVideoAudioMuted}
                   playsInline
                   crossOrigin="anonymous"
@@ -1996,7 +2057,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     backfaceVisibility: 'hidden',
                     WebkitBackfaceVisibility: 'hidden',
                     willChange: 'transform',
-                    imageRendering: 'auto'
+                    imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto',
+                    filter: isUltraSharp ? 'contrast(1.04) saturate(1.06) brightness(1.01)' : 'none'
                   }}
                   onCanPlay={(e) => {
                     // ⚡ INSTANT 0MS PLAYBACK: Phát ngay lập tức khi frame đầu tiên sẵn sàng
