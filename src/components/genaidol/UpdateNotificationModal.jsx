@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.0.9';
+export const APP_VERSION = '2.1.0';
 export const UPDATE_NOTES = [
-  "🧹 Tự Động Lọc Bỏ 100% Tag Cử Chỉ [Vỗ tay], [Cười tươi], [Chỉ giỏ hàng], [Đếm ngược]: Nhân vật AI chỉ đọc đúng câu thoại chính của phiên live, không đọc thừa các chỉ dẫn sân khấu.",
-  "⚡ Tốc Độ & Âm Lượng Tương Tác Tức Thì (0ms Lag): Kéo thanh trượt âm lượng hoặc chuyển tốc độ đọc phản hồi âm thanh ngay lập tức trong thời gian thực.",
-  "📜 Chuẩn Hóa Kịch Bản Cài Sẵn & Phân Bổ Thời Lượng Phiên Live Thông Minh: Tích hợp 10 phong cách livestream, phân chia thời gian phát live chính xác và đồng bộ hàng đợi giọng nói (không bị chồng chéo)."
+  "🎬 Universal Media Picker: Tất cả các ô tải video (Quà tặng, Sản phẩm giỏ hàng, Video chính & Video nền) đều hỗ trợ tải file video trực tiếp, chọn thư mục hoặc chọn ngay 5 Video Mẫu Idol AI dựng sẵn.",
+  "🎭 Đồng Bộ Tức Thì 10 Phong Cách Livestream & 10 Kịch Bản Mẫu: Khi chuyển phong cách AI, hệ thống tự động tải mẫu kịch bản chuyên nghiệp, văn phong cuốn hút, chốt deal thần tốc.",
+  "📐 Chuẩn Khung Hình TikTok Live Studio 9:16 (1080x1920): Cơ chế chuyển đổi video AI đa trạng thái liền mạch (Crossfade 0ms), không đứng hình, không đen màn hình khi phát live."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

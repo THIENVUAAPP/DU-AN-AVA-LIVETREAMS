@@ -112,30 +112,93 @@ const GIFT_OPTIONS = [
   { id: 'adam_dream', name: 'Giấc Mơ Của Adam', icon: '💫', coins: 25999, label: '💫 Giấc Mơ Của Adam (25999 xu)' },
   { id: 'dragon_flame', name: 'Ngọn Lửa Rồng Thiêng', icon: '🐲', coins: 26999, label: '🐲 Ngọn Lửa Rồng Thiêng (26999 xu)' },
   { id: 'lion_king', name: 'Sư Tử', icon: '🦁', coins: 29999, label: '🦁 Sư Tử (29999 xu)' },
-  { id: 'leon_lion', name: 'Leon và Sư Tử', icon: '👑🦁', coins: 34000, label: '👑🦁 Leon và Sư Tử (34000 xu)' },
-  { id: 'tiktok_stars', name: 'TikTok Stars', icon: '✨💫', coins: 39999, label: '✨💫 TikTok Stars (39999 xu)' },
-  { id: 'tiktok_universe', name: 'TikTok Universe', icon: '🪐🌌', coins: 44999, label: '🪐🌌 TikTok Universe (44999 xu)' }
 ];
 
-// ==================== 10 MẪU KỊCH BẢN BÁN HÀNG 60 PHÚT CHUẨN XỊN ====================
+// ==================== DANH SÁCH VIDEO MẪU IDOL AI CHUẨN DỌC 9:16 ====================
+export const SAMPLE_IDOL_VIDEOS = [
+  { id: 'sample_idle', name: '🎬 Idol Đứng Chờ (Idle Loop 60fps)', desc: 'Nhân vật đứng thở nhẹ, mỉm cười tự nhiên khi chưa có thoại', url: '/videos/sample_idle.mp4', folder: 'video_mau_idol_idle' },
+  { id: 'sample_talking', name: '🎬 Idol Đang Nói & Bán Hàng (Talk 60fps)', desc: 'Khớp khẩu hình miệng 60 FPS khi đọc kịch bản hoặc trả lời khách', url: '/videos/sample_talking.mp4', folder: 'video_mau_idol_talking' },
+  { id: 'sample_thanks', name: '🎬 Idol Cảm Ơn Quà / Follow (Thanking)', desc: 'Cử chỉ vỗ tay, thả tim, cúi chào tri ân người xem', url: '/videos/sample_thanks.mp4', folder: 'video_mau_idol_thanks' },
+  { id: 'sample_selling', name: '🎬 Idol Chốt Đơn & Flash Sale (Selling Deal)', desc: 'Chỉ tay vào giỏ hàng góc trái, đếm ngược deal nóng', url: '/videos/sample_selling.mp4', folder: 'video_mau_idol_selling' },
+  { id: 'sample_bg', name: '🎬 Video Nền Studio 4K Sang Trọng', desc: 'Phông nền livestream chuẩn phòng thu thương mại', url: '/videos/sample_bg.mp4', folder: 'video_mau_studio_bg' }
+];
+
+// ==================== 10 MẪU KỊCH BẢN BÁN HÀNG 60 PHÚT CHUẨN XỊN THEO TỪNG PHONG CÁCH & NGÀNH HÀNG ====================
 const MASTER_SCRIPTS = {
+  // --- 10 PHONG CÁCH LIVESTREAM AI ---
+  sales_fast: `LOA LOA LOA! 500 anh chị em ơi, cơn bão Flash Sale Xả Kho Cháy Hàng Giờ Vàng chính thức bắt đầu rồi cả nhà ơi!
+Duy nhất trong phiên livestream hôm nay, nhãn hàng trợ giá kịch sàn giảm sâu 50% trọn bộ sản phẩm cao cấp độc quyền!
+Không giới hạn số lượng nhưng mỗi mã chỉ có đúng 20 suất vàng dành riêng cho ai nhanh tay nhất phiên live!
+Cam kết hàng chính hãng 100% nguyên đai nguyên kiện, phát hiện hàng không chuẩn bên em đền gấp 10 lần giá trị!
+Tất cả các đơn hàng chốt ngay trên live hôm nay đều được tự động áp mã Giảm Thêm 50K + Miễn Phí Giao Hàng Toàn Quốc!
+Cả nhà hãy nhìn ngay xuống Giỏ Hàng góc trái màn hình, chuẩn bị sẵn sàng, em bắt đầu đếm ngược 3 2 1 là xả hàng liền tay nha!`,
+
+  skincare_expert: `Dạ em xin kính chào tất cả các chị em đang theo dõi phiên tư vấn chăm sóc da chuyên sâu hôm nay ạ!
+Các chị có biết tại sao dù mình dưỡng kem rất đắt tiền nhưng làn da vẫn bị sạm và khô ráp không ạ? Đó là vì tầng biểu bì thiếu ẩm sâu và chưa được phục hồi từ gốc rễ tế bào!
+Và giải pháp phục hồi da chuẩn y khoa hôm nay em mang đến chính là Bộ Đôi Tinh Chất Tế Bào Gốc & Phục Hồi Chuyên Sâu!
+Tinh chất thẩm thấu cực nhanh, chỉ sau đúng 7 ngày là các chị sẽ cảm nhận làn da căng bóng mịn màng và mướt mát rõ rệt!
+Duy nhất trong phiên live hôm nay, nhãn hàng trợ giá đặc quyền giảm 50% chỉ còn 890.000đ, kèm quà tặng kem dưỡng mini và freeship toàn quốc!
+Bên em cam kết bảo hành vàng 1 đổi 1 trong 30 ngày và tư vấn 1-1 suốt quá trình chăm sóc da cho các chị yêu nhé!`,
+
+  tiktok_funny: `Ú òa! Em chào 500 anh chị em đang lướt TikTok lọt ngay vào phiên live siêu cấp vũ trụ ngày hôm nay nha!
+Ai mà đi ngang lướt qua không dừng lại thả tim là tí nữa tiếc hùi hụi đứt ruột luôn á, vì hôm nay có cơn bão deal sốc chấn động địa cầu!
+Em lên sàn ngay siêu phẩm cực hot đang làm mưa làm gió khắp cõi mạng, vừa đẹp vừa sang mà giá lại hạt dẻ như cho không luôn!
+Bình thường giá ở store tiền triệu, hôm nay em xin phép cắt lỗ chơi lớn xả sốc chỉ bằng vài cốc trà sữa thôi cả nhà ơi!
+Bấm ngay vào giỏ hàng góc trái màn hình, múc liền tay kẻo 1 nốt nhạc là bay sạch kho hàng nha cả nhà ơi!`,
+
+  luxury_elegant: `Kính chào toàn thể quý vị khách quý đang hiện diện trong không gian phong cách sống thượng lưu hôm nay!
+Đẳng cấp và khí chất của một người thành đạt luôn được thể hiện qua những chi tiết tinh tế và giá trị trường tồn theo thời gian!
+Hôm nay, chúng tôi trân trọng giới thiệu Bộ Sưu Tập Giới Hạn được chế tác tinh xảo từ những nguyên liệu thượng hạng bậc nhất thế giới!
+Từng đường nét, từng chi tiết đều là tuyệt tác nghệ thuật mang lại sự tự tin và vị thế vượt trội cho chủ nhân sở hữu!
+Đặc quyền tri ân dành riêng cho quý khách theo dõi trực tiếp: Trợ giá 40% cùng hộp quà sang trọng dát vàng và dịch vụ chăm sóc VIP trọn đời!
+Kính mời quý vị chọn ngay biểu tượng Giỏ Hàng để ghi danh nhận suất ưu đãi đặc quyền hôm nay!`,
+
+  tech_expert: `Chào mừng tất cả các anh chị em doanh chủ, nhà sáng tạo nội dung đang có mặt trong buổi chia sẻ giải pháp công nghệ AI hôm nay!
+Anh chị nào muốn tăng doanh thu bán hàng tự động 24/7 mà không tốn chi phí thuê nhân sự hàng chục triệu mỗi tháng thì hãy xem hết phiên live này nhé!
+Hôm nay Thiên Vua App giới thiệu giải pháp Phần Mềm AvaLive VIP PRO - Công nghệ Livestream Idol AI siêu thực tế thế hệ mới nhất!
+Phần mềm tích hợp bộ não AI đa ngôn ngữ, tự động đồng bộ khẩu hình miệng 60 FPS, tự động trả lời bình luận và chốt đơn thông minh theo thời gian thực!
+Duy nhất trong phiên live hôm nay giảm 50% chỉ còn 1.750.000đ trọn gói bản quyền 1 năm kèm 100,000 Tokens AI và hỗ trợ kỹ thuật 24/7!
+Anh chị hãy nhấp ngay vào giỏ hàng bên dưới để kích hoạt bản quyền chính thức nhé!`,
+
+  countdown_urgent: `ĐỒNG HỒ ĐANG ĐẾM NGƯỢC RỒI CẢ NHÀ ƠI! Chỉ còn đúng 120 giây cuối cùng cho phiên trợ giá không tưởng này thôi!
+Hệ thống báo về kho chỉ còn đúng 5 suất quà tặng độc quyền cuối cùng cho 5 người nhanh tay nhất!
+Ai chậm tay 1 giây thôi là giá sẽ tự động nhảy về giá gốc ban đầu, không ai có thể can thiệp được nữa đâu ạ!
+Nhìn ngay xuống góc trái màn hình, nhấp vào Giỏ Hàng, chọn mã ưu đãi và bấm ĐẶT HÀNG NGAY LẬP TỨC!
+3... 2... 1... Em xin chúc mừng các anh chị đã kịp giữ suất flash sale thành công hôm nay nha!`,
+
+  emotional_story: `Thực sự chia sẻ với cả nhà, để có được phiên live ngày hôm nay là cả một hành trình dài đầy tâm huyết của em và toàn bộ đội ngũ!
+Em hiểu rằng mỗi đồng tiền anh chị bỏ ra đều là mồ hôi công sức, nên sản phẩm em đưa lên live phải là thứ tốt nhất, chất lượng nhất mà em dám cam kết bằng cả uy tín của mình!
+Khi anh chị nhận hàng về, mở hộp ra và thấy sự thay đổi tích cực của bản thân, đó chính là niềm hạnh phúc lớn nhất của em!
+Hôm nay em xin gửi trọn tấm lòng tri ân với mức giá hữu duyên nhất, bao kiểm tra hàng và đồng hành trọn đời cùng anh chị!
+Cảm ơn mọi người đã luôn yêu thương và ủng hộ em trong suốt thời gian qua!`,
+
+  motivational_fire: `Chào mừng những chiến binh xuất chúng đang có mặt trong phiên phát sóng bùng nổ năng lượng ngày hôm nay!
+Cuộc đời này không có chỗ cho sự do dự! Người thành công là người nhìn thấy cơ hội và nắm bắt nó ngay trong tích tắc!
+Hôm nay chính là thời khắc để bạn nâng tầm bản thân, bứt phá mọi giới hạn với giải pháp tối tân nhất mà chúng tôi mang lại!
+Đừng chờ đợi ngày mai, hãy hành động ngay bây giờ, bấm vào giỏ hàng và tạo nên bước ngoặt vượt trội cho chính bạn!
+Chúng tôi tin bạn làm được, và chúng tôi cam kết sẽ là bệ phóng vững chắc nhất đưa bạn đến đỉnh cao thành công!`,
+
+  gen_z_vibes: `Hello cả nhà iu của kem! Hôm nay lên sóng set đồ và phụ kiện siêu slay chuẩn vibe Gen Z cho mấy bồ đây nha!
+Ai muốn hóa thân thành idol TikTok hay flex phong cách chất chơi người dơi thì bơi ngay vào đây với tui nào!
+Item này phối với gì cũng đỉnh chóp, mặc đi học, đi chơi hay đi quẩy đều thu hút trọn vẹn mọi ánh nhìn luôn á!
+Giá hôm nay tui xin hãng deal hời tụt quần, lại còn áp mã freeship extra nữa chứ, không chốt là hơi bị có lỗi với bản thân đó nhen!
+Nhấn liền vô giỏ hàng góc trái lẹ lẹ nè mấy bồ ơi!`,
+
+  vip_master: `Kính chào toàn thể quý khán giả và các khách hàng VIP thân thiết đang theo dõi phiên phát sóng đặc biệt hôm nay!
+Với tư cách là Chuyên Gia & Master Streamer, tôi khẳng định đây là cơ hội đầu tư và sở hữu sản phẩm tuyệt vời nhất trong năm của quý vị!
+Sự kết hợp hoàn hảo giữa công nghệ đột phá, chất lượng chuẩn quốc tế và chính sách bảo hành thượng hạng tạo nên giá trị độc bản không thể so sánh!
+Chúng tôi chỉ mở bán số lượng giới hạn cho những khách hàng thực sự thấu hiểu giá trị của sản phẩm!
+Hãy đưa ra quyết định thông thái ngay lúc này bằng cách nhấn vào giỏ hàng góc trái màn hình để sở hữu ngay hôm nay!`,
+
+  // --- 10 MẪU NGÀNH HÀNG CÀI SẴN ---
   cosmetics: `Chào mừng tất cả các tình yêu đã có mặt trong phiên livestream làm đẹp đặc biệt ngày hôm nay của shop em nha!
 Các chị đẹp ơi, ai đang lướt qua phiên live thì cho em xin một nút thả tim và một lượt chia sẻ để nhận quà mở bát đầu live nào!
 Hôm nay shop em mang đến cho cả nhà một siêu phẩm chăm sóc sắc đẹp và nâng tầm khí chất cực kỳ đỉnh cao luôn ạ!
 Đó chính là Bộ Đôi Tinh Chất Serum Tế Bào Gốc Phục Hồi Da Trẻ Hóa và Nước Hoa Pháp Cao Cấp lưu hương suốt 12 giờ đồng hồ!
 Chị nào mà da đang bị khô ráp, thâm sạm, không đều màu hoặc bắt đầu xuất hiện nếp nhăn lão hóa thì nhất định không được bỏ qua live này nhé!
 Chỉ sau đúng 7 ngày sử dụng, làn da của các chị sẽ căng bóng, mịn màng và mướt như da em bé luôn ạ!
-Còn chai nước hoa Pháp với nốt hương đầu ngọt ngào quyến rũ, nốt hương giữa sang trọng và nốt hương cuối ấm áp sẽ giúp các chị tự tin tỏa sáng mọi lúc mọi nơi!
-Bình thường giá niêm yết của bộ đôi này tại showroom chính hãng là 1.850.000 VNĐ một set!
-Nhưng duy nhất trong phiên livestream ngày hôm nay, em xin phép chơi lớn tri ân cho 20 chị nhanh tay nhất với mức giá giảm sốc 50% chỉ còn 890.000 VNĐ thôi ạ!
-Chưa hết đâu cả nhà ơi, chị nào chốt đơn ngay bây giờ còn được tặng kèm thêm 1 tuýp kem dưỡng ẩm trắng da mini và miễn phí giao hàng tận nhà trên toàn quốc!
-Bên em cam kết 100% hàng chính hãng có đầy đủ tem chống hàng giả của Bộ Công An và mã QR quét kiểm tra xuất xứ nguồn gốc rõ ràng!
-Chính sách bảo hành vàng bên em là 1 đổi 1 trong vòng 30 ngày nếu có bất kỳ lỗi nào, hoặc hoàn tiền 200% nếu phát hiện hàng không chuẩn nhé các chị yêu!
-Số lượng ưu đãi Flash Sale này em chỉ có đúng 20 suất được trợ giá từ nhãn hàng thôi ạ!
-Hiện tại hệ thống đã ghi nhận 10 chị bấm vào giỏ hàng rồi, chỉ còn đúng 10 suất cuối cùng thôi cả nhà ơi!
-Các chị hãy nhìn ngay xuống góc trái màn hình, nhấp vào biểu tượng Giỏ Hàng, chọn mã số 01 và bấm Đặt Hàng ngay để kịp giữ voucher giảm giá 50% nhé!
-Chị em nào có câu hỏi về loại da dầu, da khô, da nhạy cảm hay cách sử dụng nước hoa thì cứ để lại bình luận, em sẽ tư vấn chi tiết từng người ngay trên live này luôn ạ!
-Nhanh tay lên các chị ơi, đồng hồ đếm ngược Flash Sale chỉ còn 3 phút nữa là kết thúc, em xin chúc mừng các chị đã săn được deal hời ngày hôm nay nha!`,
+Duy nhất trong phiên livestream ngày hôm nay, giảm sốc 50% chỉ còn 890.000đ tặng kèm kem dưỡng ẩm mini và freeship toàn quốc!
+Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày, bấm vào Giỏ Hàng góc trái săn ngay nhé!`,
 
   perfume: `Kính chào toàn thể quý vị và các bạn đam mê nghệ thuật mùi hương đang hiện diện trong buổi livestream độc quyền hôm nay!
 Mùi hương chính là danh thiếp vô hình tinh tế nhất của mỗi người, thể hiện đẳng cấp và sự quyến rũ khác biệt!
@@ -143,73 +206,49 @@ Hôm nay, em xin giới thiệu Bộ Sưu Tập Nước Hoa Niche Cao Cấp nh�
 Từng giọt tinh dầu nước hoa được chưng cất tỉ mỉ từ hoa hồng de Mai, gỗ tuyết tùng và hổ phách tự nhiên quý hiếm!
 Khả năng lưu hương vượt trội từ 12 đến 24 tiếng, tỏa hương xa tới 2 mét khiến ai lướt qua cũng phải ngoái nhìn trầm trồ!
 Phiên bản 100ml chính hãng hôm nay được hãng trợ giá độc quyền giảm từ 2.400.000đ xuống chỉ còn 1.190.000đ trọn bộ!
-Đặc biệt tặng ngay set 3 ống chiết nước hoa du lịch 10ml trị giá 450.000đ và hộp quà cao cấp dát vàng sang trọng!
-Cam kết phát hiện hàng không chuẩn bên em đền bù gấp 10 lần giá trị đơn hàng, miễn phí đổi trả trong 15 ngày!
-Chỉ có 15 suất quà tặng giới hạn cho khách hàng nhấn vào Giỏ Hàng góc trái màn hình ngay trong phiên live này thôi ạ!`,
+Đặc biệt tặng ngay set 3 ống chiết nước hoa du lịch 10ml trị giá 450.000đ, bấm vào Giỏ Hàng góc trái nhận ngay nhé!`,
 
   women_fashion: `Dạ em chào toàn thể các tình yêu đã ghé thăm phiên livestream thời trang thiết kế cao cấp của shop em ngày hôm nay ạ!
-Các nàng ơi, hãy nhanh tay thả tim nhiệt tình lên màn hình giúp em để mở khóa voucher giảm giá sốc 50% cho bộ sưu tập mới nhất nhé!
 Hôm nay em lên cho các nàng siêu phẩm đầm thiết kế tiểu thư thanh lịch kết hợp cùng túi xách da cao cấp đang làm mưa làm gió thị trường!
 Chất liệu vải lụa tơ tằm nhập khẩu cực kỳ mềm mịn, thoáng mát, đường may chuẩn chỉ từng milimet giúp tôn dáng và che khuyết điểm vòng 2 hoàn hảo luôn ạ!
 Bình thường set này bán tại store là 1.200.000đ, nhưng duy nhất trên live hôm nay em giảm chạm đáy chỉ còn 599.000đ thôi nha!
-Đặc biệt tặng ngay 1 chiếc thắt lưng da thời thượng và freeship toàn quốc cho 15 nàng đầu tiên bấm vào giỏ hàng!
-Bên em cam kết nhận hàng được kiểm tra, mặc thử thoải mái trước khi thanh toán, hỗ trợ đổi size tận nhà trong 7 ngày nếu không vừa vặn ạ!
-Nhanh tay bấm vào Giỏ Hàng góc trái màn hình để sở hữu ngay nhé các nàng ơi, số lượng size S và M đang sắp hết rồi ạ!`,
+Tặng ngay 1 thắt lưng da thời thượng và freeship toàn quốc, nhận hàng kiểm tra thử đồ thoải mái trước khi thanh toán ạ!`,
 
   men_fashion: `Chào mừng toàn thể các quý ông lịch lãm và các chị em đang săn đồ hiệu cho chồng và người yêu vào phiên live hôm nay!
 Hôm nay shop em ra mắt Bộ Sưu Tập Áo Polo Nam Dệt Kim Cao Cấp và Quần Âu Co Giãn 4 Chiều Chuẩn Form Quý Ông!
 Chất vải sợi tre Bamboo kháng khuẩn, thấm hút mồ hôi tuyệt đối, chống nhăn xù và giữ màu bền đẹp sau hàng trăm lần giặt máy!
-Form dáng Regular Fit chuẩn chỉ từng đường kim mũi chỉ, tôn bờ vai vững chãi và vóc dáng phong độ chuẩn nam thần!
-Giá niêm yết tại showroom là 850.000đ/áo, duy nhất hôm nay trên live combo 2 áo chỉ còn 499.000đ trọn gói!
-Tặng kèm 1 ví da bò cao cấp và miễn phí vận chuyển tận tay khi mua từ combo 2 sản phẩm trở lên!
-Bên em cho kiểm tra hàng thoải mái trước khi nhận, bảo hành đường may và đổi size miễn phí trong 14 ngày!
+Giá niêm yết tại showroom là 850.000đ/áo, duy nhất hôm nay trên live combo 2 áo chỉ còn 499.000đ trọn gói kèm ví da cao cấp!
 Anh em nhanh tay bấm vào giỏ hàng chọn size từ 50kg đến 90kg ngay nhé, số lượng ưu đãi có hạn!`,
 
   tech_ai: `Chào mừng tất cả các anh chị em doanh chủ, nhà sáng tạo nội dung đang có mặt trong buổi chia sẻ giải pháp Livestream AI hôm nay!
-Anh chị nào muốn tăng doanh thu bán hàng tự động 24/7 mà không tốn chi phí thuê idol hàng chục triệu mỗi tháng thì hãy nán lại xem hết phiên live này nhé!
 Hôm nay Thiên Vua App giới thiệu giải pháp Phần Mềm AvaLive VIP PRO - Công nghệ Livestream Idol AI siêu thực tế thế hệ mới nhất!
 Phần mềm tích hợp bộ não AI đa ngôn ngữ, tự động đồng bộ khẩu hình miệng 60 FPS, tự động trả lời bình luận và chốt đơn thông minh theo thời gian thực!
-Bình thường bản quyền 1 năm là 3.500.000đ, duy nhất trong phiên live hôm nay giảm 50% chỉ còn 1.750.000đ trọn gói!
-Đặc biệt tặng kèm 100,000 Tokens AI + Khóa đào tạo kỹ thuật xây dựng hệ thống Livestream tự động từ A đến Z!
-Bên em hỗ trợ cài đặt từ xa qua Ultraview/AnyDesk 24/7 và cam kết bảo hành nâng cấp tính năng trọn đời!
-Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăng ký nhận bản quyền chính thức nhé!`,
+Bình thường bản quyền 1 năm là 3.500.000đ, duy nhất trong phiên live hôm nay giảm 50% chỉ còn 1.750.000đ trọn gói tặng kèm 100,000 Tokens AI!
+Bên em hỗ trợ cài đặt từ xa qua Ultraview/AnyDesk 24/7 và cam kết bảo hành nâng cấp trọn đời, nhấp vào giỏ hàng bên dưới để kích hoạt ngay nhé!`,
 
   smart_home: `Dạ em chào cả nhà yêu gia dụng thông minh! Ai muốn công việc nội trợ thảnh thơi, nhà cửa thơm tho sạch bóng thì vào ngay live em nha!
 Hôm nay em mang đến Nồi Chiên Không Dầu Hơi Nước 15 Lít và Robot Hút Bụi Lau Nhà Tự Giặt Giẻ Thông Minh thế hệ mới!
 Nồi chiên công nghệ kép đối lưu 360 độ giúp thực phẩm giòn rụm bên ngoài mọng nước bên trong, giảm 95% lượng dầu mỡ thừa có hại!
-Robot hút bụi tích hợp cảm biến laser LiDAR vẽ bản đồ 3D chuẩn xác, lực hút siêu mạnh 6000Pa hút sạch mọi bụi mịn và lông thú cưng!
-Giá niêm yết 6.800.000đ, duy nhất trên phiên live hôm nay em giảm sốc 45% chỉ còn 3.790.000đ cho cả combo!
-Tặng kèm bộ phụ kiện 5 món nấu nướng cao cấp và 2 năm bảo hành chính hãng đổi mới tận nhà 100%!
-Các mẹ nội trợ nhanh tay bấm vào giỏ hàng góc trái săn ngay trước khi hết suất trợ giá nhé!`,
+Giá niêm yết 6.800.000đ, duy nhất trên live hôm nay em giảm sốc 45% chỉ còn 3.790.000đ cho cả combo tặng kèm bộ phụ kiện 5 món và bảo hành 2 năm đổi mới!`,
 
   health_wellness: `Xin kính chào toàn thể quý khán giả đang theo dõi phiên livestream Chăm Sóc Sức Khỏe Chủ Động hôm nay!
 Sức khỏe chính là tài sản vô giá nhất. Đầu tư cho sức khỏe của bản thân và cha mẹ là khoản đầu tư sinh lời bền vững nhất!
 Hôm nay em xin giới thiệu Hộp Quà Đông Trùng Hạ Thảo Thượng Hạng kết hợp Collagen Yến Tươi Trẻ Hóa Tế Bào!
 Hàm lượng Cordycepin và Adenosine nguyên chất giúp tăng cường hệ miễn dịch, ngủ sâu giấc, bồi bổ khí huyết và chống suy nhược cơ thể!
-Collagen Peptide siêu phân tử hấp thụ gấp 10 lần collagen thường, nuôi dưỡng xương khớp dẻo dai và làn da mịn màng từ bên trong!
-Hộp quà biếu cao cấp giá niêm yết 1.950.000đ, ưu đãi tri ân khách hàng live chỉ còn 990.000đ/hộp!
-Mua từ 2 hộp tặng ngay 1 hộp trà thảo mộc hoàng gia và miễn phí giao hàng hỏa tốc toàn quốc!
-Bên em cam kết 100% chứng nhận kiểm nghiệm chất lượng của Viện Kiểm Nghiệm An Toàn Thực Phẩm Quốc Gia!`,
+Hộp quà biếu cao cấp giá niêm yết 1.950.000đ, ưu đãi tri ân khách hàng live chỉ còn 990.000đ/hộp tặng kèm hộp trà thảo mộc hoàng gia và freeship toàn quốc!`,
 
   jewelry_fengshui: `Chào đón toàn thể các quý khách hữu duyên đã ghé vào không gian Trang Sức Phong Thủy Chiêu Tài Tấn Lộc hôm nay!
 Hôm nay em xin thỉnh gửi tới cả nhà Vòng Tay Trầm Hương Tự Nhiên Bọc Vàng 10K và Nhẫn Tỳ Hưu Thạch Anh Tóc Vàng Linh Ứng!
-Trầm hương tự nhiên mang linh khí đất trời hàng chục năm, xua tan năng lượng tiêu cực, mang lại bình an, may mắn và vượng khí cho gia chủ!
-Đá thạch anh tóc vàng chuẩn tự nhiên 100%, ánh kim lấp lánh hút tài lộc mạnh mẽ, đặc biệt hỗ trợ cực tốt cho người kinh doanh buôn bán!
-Tất cả sản phẩm đều được các thầy khai quang điểm nhãn chu đáo và kiểm định đá quý uy tín kèm giấy chứng nhận!
-Hôm nay trên live trợ giá hữu duyên giảm 50% từ 2.200.000đ chỉ còn 1.100.000đ/set trọn bộ!
-Tặng kèm hộp gấm nhung cao cấp, khăn lau trang sức và miễn phí bảo hành trọn đời!`,
+Trầm hương tự nhiên mang linh khí đất trời, xua tan năng lượng tiêu cực, mang lại bình an, may mắn và vượng khí cho gia chủ!
+Hôm nay trên live trợ giá hữu duyên giảm 50% từ 2.200.000đ chỉ còn 1.100.000đ/set trọn bộ tặng kèm hộp gấm nhung và chứng thư kiểm định đá quý!`,
 
   food_specialty: `Ú òa! Chào mừng các tín đồ ẩm thực đã có mặt trong phiên live Đặc Sản 3 Miền thơm ngon khó cưỡng hôm nay nha!
-Ai đang đói bụng hay muốn tìm món ăn vặt ngon đỉnh chóp cho cả gia đình nhâm nhi thì bơi hết vào đây với em nào!
 Hôm nay em lên kệ Bò Khô Miếng Mềm Tây Bắc Thượng Hạng và Hạt Điều Rang Củi Bình Phước loại 1 hạt tròn mẩy giòn rụm!
-Bò khô làm từ 100% thịt bắp bò tươi nguyên chất tẩm ướp mắc khén, hạt dổi rừng chuẩn vị Tây Bắc cay cay ngọt ngọt đậm đà!
-Hạt điều loại A xuất khẩu béo ngậy, ngọt bùi tự nhiên, không chất bảo quản, ăn là mê không lối thoát luôn ạ!
-Combo 1kg bò khô + 500g hạt điều giá thị trường 750.000đ, hôm nay trên live xả sốc chỉ còn 399.000đ trọn gói!
-Bên em bao ăn thử, không ngon hoàn tiền 100% không cần lý do, các bác yên tâm đặt ngay trong giỏ hàng nha!`,
+Bò khô làm từ 100% thịt bắp bò tươi nguyên chất tẩm ướp mắc khén rừng cay ngọt đậm đà, hạt điều loại A béo ngậy giòn rụm!
+Combo 1kg bò khô + 500g hạt điều giá thị trường 750.000đ, hôm nay trên live xả sốc chỉ còn 399.000đ bao ăn thử không ngon hoàn tiền 100%!`,
 
   flash_sale: `LOA LOA LOA! 500 anh chị em ơi, cơn bão Flash Sale Xả Kho Cháy Hàng Giờ Vàng chính thức bắt đầu rồi cả nhà ơi!
 Duy nhất trong 60 phút phiên livestream hôm nay, kho bên em xả toàn bộ hàng nghìn mã hàng hot với giá đồng giá từ 99k!
-Không giới hạn số lượng nhưng mỗi mã chỉ có đúng 50 suất giảm sâu kịch sàn đến 70% dành cho ai nhanh tay nhất!
 Hàng hiệu giá chợ, cam kết mới 100% nguyên đai nguyên kiện, phát hiện hàng kém chất lượng đền tiền gấp 10 lần!
 Tất cả các đơn hàng chốt trong 15 phút đầu tiên đều được tự động áp mã Giảm 30K + Miễn Phí Vận Chuyển Toàn Quốc!
 Cả nhà hãy nhìn ngay xuống Giỏ Hàng góc trái màn hình, chuẩn bị sẵn sàng, em bắt đầu đếm ngược 3 2 1 là xả hàng liền tay nha!`
@@ -340,6 +379,157 @@ const getDefaultEventConfigs = () => {
 
   return defaults;
 };
+
+/**
+ * 🎬 BỘ CHỌN & NẠP VIDEO / THƯ MỤC / VIDEO MẪU ĐA NĂNG
+ * Hỗ trợ 100%: Tải file video trực tiếp (.mp4, .webm, .mov, .mkv), duyệt thư mục trên máy, và nạp nhanh 5 Video Mẫu Idol AI chuẩn dọc 9:16
+ */
+export function UniversalMediaPicker({
+  value = '',
+  fileName = '',
+  url = '',
+  onChange,
+  onFolderSelect,
+  placeholder = 'Chưa chọn video / thư mục',
+  accept = 'video/mp4,video/webm,video/quicktime,video/x-matroska,video/*',
+  showSamplePicker = true,
+  className = ''
+}) {
+  const [showSamples, setShowSamples] = useState(false);
+  const fileInputRef = React.useRef(null);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const objUrl = URL.createObjectURL(file);
+    if (onChange) {
+      onChange({
+        folder: file.name,
+        fileName: file.name,
+        url: objUrl
+      });
+    }
+    e.target.value = '';
+  };
+
+  const handlePickSample = (sample) => {
+    if (onChange) {
+      onChange({
+        folder: sample.folder,
+        fileName: sample.name,
+        url: sample.url
+      });
+    }
+    setShowSamples(false);
+  };
+
+  const handleClear = () => {
+    if (onChange) {
+      onChange({
+        folder: '',
+        fileName: '',
+        url: ''
+      });
+    }
+  };
+
+  const hasValue = !!(value || fileName || url);
+  const displayName = fileName ? (fileName.startsWith('🎬') ? fileName : `🎬 ${fileName}`) : (value || placeholder);
+
+  return (
+    <div className={`relative flex items-center gap-1.5 flex-wrap w-full ${className}`}>
+      {/* Input file ẩn */}
+      <input 
+        ref={fileInputRef}
+        type="file" 
+        className="hidden" 
+        accept={accept}
+        onChange={handleFileChange}
+      />
+
+      {/* Hiển thị giá trị đang chọn */}
+      <span className={`font-medium text-xs truncate flex-1 min-w-[140px] px-2.5 py-1.5 rounded-lg border transition-all ${
+        hasValue 
+          ? 'bg-blue-50/80 border-blue-300 text-blue-900 font-bold shadow-2xs' 
+          : 'bg-gray-50 border-gray-200 text-gray-500'
+      }`}>
+        {displayName}
+      </span>
+
+      {/* Nút 1: Tải Video Trực Tiếp */}
+      <button 
+        type="button"
+        onClick={() => fileInputRef.current?.click()}
+        title="Tải trực tiếp file video (.mp4, .webm, .mov, .mkv) từ máy tính"
+        className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1 cursor-pointer transition-all shadow-2xs active:scale-95 shrink-0"
+      >
+        <Video size={13} /> Tải Clip...
+      </button>
+
+      {/* Nút 2: Chọn Thư Mục */}
+      {onFolderSelect && (
+        <button 
+          type="button"
+          onClick={onFolderSelect}
+          title="Chọn thư mục chứa chuỗi video động tác trên máy"
+          className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1 cursor-pointer transition-all shrink-0"
+        >
+          <Film size={13} /> Thư Mục...
+        </button>
+      )}
+
+      {/* Nút 3: Nạp Video Mẫu Idol AI */}
+      {showSamplePicker && (
+        <div className="relative shrink-0">
+          <button 
+            type="button"
+            onClick={() => setShowSamples(!showSamples)}
+            title="Nạp nhanh các video mẫu Idol chuẩn 9:16 có sẵn"
+            className="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1 cursor-pointer transition-all shadow-2xs shrink-0"
+          >
+            <Sparkles size={13} className="text-amber-600" /> Video Mẫu <ChevronDown size={12} />
+          </button>
+
+          {showSamples && (
+            <div className="absolute right-0 top-full mt-1.5 w-72 bg-white rounded-xl shadow-xl border border-amber-200 p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+              <div className="text-[11px] font-black text-amber-900 px-2 py-1 mb-1 border-b border-amber-100 flex items-center justify-between">
+                <span>🌟 5 VIDEO MẪU IDOL AI CHUẨN 9:16:</span>
+                <span className="text-[9px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded font-bold">Demo 60fps</span>
+              </div>
+              <div className="space-y-1">
+                {SAMPLE_IDOL_VIDEOS.map(sample => (
+                  <button
+                    key={sample.id}
+                    type="button"
+                    onClick={() => handlePickSample(sample)}
+                    className="w-full text-left p-2 rounded-lg hover:bg-amber-50 text-xs transition-colors cursor-pointer group"
+                  >
+                    <div className="font-bold text-gray-800 group-hover:text-amber-800 flex items-center gap-1.5">
+                      {sample.name}
+                    </div>
+                    <div className="text-[10.5px] text-gray-500 line-clamp-1 mt-0.5">{sample.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Nút 4: Xóa */}
+      {hasValue && (
+        <button 
+          type="button"
+          onClick={handleClear}
+          title="Xóa video / thư mục đã chọn"
+          className="text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition-colors cursor-pointer shrink-0"
+        >
+          <Trash2 size={13} />
+        </button>
+      )}
+    </div>
+  );
+}
 
 export default function WorkspaceTacVu() {
   const [selectedEventId, setSelectedEventId] = useState('script_broadcast');
@@ -837,6 +1027,15 @@ export default function WorkspaceTacVu() {
   const applyMasterScript = (type) => {
     if (MASTER_SCRIPTS[type]) {
       handleSimpleChange('fixedScriptText', MASTER_SCRIPTS[type]);
+      toast.success('Đã nạp mẫu kịch bản bán hàng thành công!');
+    }
+  };
+
+  const handleStyleChange = (styleKey) => {
+    handleSimpleChange('aiLiveStyle', styleKey);
+    if (MASTER_SCRIPTS[styleKey]) {
+      handleSimpleChange('fixedScriptText', MASTER_SCRIPTS[styleKey]);
+      toast.success(`Đã nạp kịch bản phong cách: ${styleKey}`);
     }
   };
 
@@ -1152,11 +1351,22 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                           </div>
 
                           <div>
-                            <label className="font-bold text-gray-700 block mb-1">📁 Thư mục Video Idol Diễn:</label>
-                            <div className="flex items-center gap-2 w-full">
-                              <span className="font-medium text-gray-600 truncate flex-1 bg-gray-50 border border-gray-200 px-2 py-1 rounded-lg">{slot.videoFolder || 'Chưa chọn'}</span>
-                              <button onClick={() => selectSpecialGiftSlotFolder(slot.id, 'videoFolder')} className="text-gray-700 font-bold hover:text-gray-900 transition-colors bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-lg cursor-pointer">Chọn...</button>
+                            <div className="flex items-center text-xs font-bold text-gray-700 mb-1">
+                              <span>📁 Video Idol Diễn / Thư Mục:</span>
+                              <HelpTooltip helpKey="videoFolder" />
                             </div>
+                            <UniversalMediaPicker
+                              value={slot.videoFolder}
+                              fileName={slot.videoFileName}
+                              url={slot.videoUrl}
+                              onChange={({ folder, fileName, url }) => {
+                                handleSlotChange(slot.id, 'videoFolder', folder);
+                                handleSlotChange(slot.id, 'videoFileName', fileName);
+                                handleSlotChange(slot.id, 'videoUrl', url);
+                              }}
+                              onFolderSelect={() => selectSpecialGiftSlotFolder(slot.id, 'videoFolder')}
+                              placeholder="Chưa chọn video / thư mục"
+                            />
                           </div>
                         </div>
 
@@ -1233,6 +1443,26 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                             onChange={(e) => handleGiftSlotChange(gSlot.id, 'sampleAnswers', e.target.value)} 
                             placeholder="Cảm ơn bạn {user} đã tặng {gift_name} nha!"
                             className="w-full h-[60px] border border-gray-300 rounded-lg p-2 text-xs resize-none bg-white focus:outline-blue-500" 
+                          />
+                        </div>
+
+                        {/* Tải Video Idol cho Slot quà thường */}
+                        <div>
+                          <div className="flex items-center text-xs font-bold text-gray-700 mb-1">
+                            <span>📁 Video Idol Diễn / Thư Mục:</span>
+                            <HelpTooltip helpKey="videoFolder" />
+                          </div>
+                          <UniversalMediaPicker
+                            value={gSlot.videoFolder}
+                            fileName={gSlot.videoFileName}
+                            url={gSlot.videoUrl}
+                            onChange={({ folder, fileName, url }) => {
+                              handleGiftSlotChange(gSlot.id, 'videoFolder', folder);
+                              handleGiftSlotChange(gSlot.id, 'videoFileName', fileName);
+                              handleGiftSlotChange(gSlot.id, 'videoUrl', url);
+                            }}
+                            onFolderSelect={() => selectGiftSlotFolder(gSlot.id, 'videoFolder')}
+                            placeholder="Chưa chọn video / thư mục"
                           />
                         </div>
 
@@ -1387,7 +1617,7 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                               </div>
                               <select
                                 value={currentConfig.aiLiveStyle || 'sales_fast'}
-                                onChange={(e) => handleSimpleChange('aiLiveStyle', e.target.value)}
+                                onChange={(e) => handleStyleChange(e.target.value)}
                                 className="w-full border border-blue-300 rounded-lg px-2.5 py-1.5 text-xs bg-white font-bold text-blue-900 focus:outline-blue-500 cursor-pointer shadow-2xs"
                               >
                                 <option value="sales_fast">🔥 1. Hào Hứng - Năng Động - Chốt Sale Thần Tốc</option>
@@ -1723,7 +1953,7 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                               </div>
                               <select
                                 value={currentConfig.aiLiveStyle || 'sales_fast'}
-                                onChange={(e) => handleSimpleChange('aiLiveStyle', e.target.value)}
+                                onChange={(e) => handleStyleChange(e.target.value)}
                                 className="w-full border border-purple-300 rounded-lg px-2.5 py-1.5 text-xs bg-white font-bold text-purple-900 focus:outline-purple-500 cursor-pointer"
                               >
                                 <option value="sales_fast">🔥 1. Hào Hứng - Năng Động - Chốt Sale Thần Tốc</option>
@@ -1957,39 +2187,38 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                               />
                             </div>
 
-                            {/* CHỌN THƯ MỤC HOẶC TẢI VIDEO MINH HỌA TRỰC TIẾP */}
-                            <div>
-                              <div className="flex items-center text-xs font-bold text-gray-700 mb-1">
-                                <span>📁 Thư mục Video Minh Họa / Tải Video Lên:</span>
-                                <HelpTooltip helpKey="videoFolder" />
-                              </div>
-                              <div className="flex items-center gap-1.5 w-full">
-                                <span className="font-medium text-gray-600 truncate flex-1 bg-gray-50 border border-gray-200 px-2 py-1.5 rounded-lg text-xs">
-                                  {prod.videoFileName ? `🎬 ${prod.videoFileName}` : (prod.videoFolder || 'Chưa chọn thư mục')}
-                                </span>
-                                <button 
-                                  type="button"
-                                  onClick={() => selectProductFolder(prod.id)} 
-                                  className="text-gray-700 font-bold hover:text-gray-900 transition-colors bg-gray-200 hover:bg-gray-300 px-2.5 py-1.5 rounded-lg text-xs cursor-pointer shrink-0"
-                                >
-                                  Chọn...
-                                </button>
-                                
-                                <input 
-                                  type="file" 
-                                  id={`upload-video-${prod.id}`}
-                                  className="hidden" 
-                                  accept="video/mp4,video/webm,video/quicktime"
-                                  onChange={(e) => handleProductVideoUpload(prod.id, e)}
-                                />
-                                <label 
-                                  htmlFor={`upload-video-${prod.id}`}
-                                  title="Tải trực tiếp video clip minh họa cho sản phẩm này"
-                                  className="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-300 px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all flex items-center gap-1 shrink-0"
-                                >
-                                  <Video size={13} /> Tải Clip
-                                </label>
-                              </div>
+                            {/* CHỌN THƯ MỤC HOẶC TẢI VIDEO MINH HỌA TRỰC TIẾP HOẶC CHỌN MẪU */}
+                            <div className="col-span-1 md:col-span-2">
+                              <UniversalMediaPicker 
+                                label="Thư mục / File Video Minh Họa Sản Phẩm"
+                                currentPath={prod.videoFileName ? `🎬 ${prod.videoFileName}` : (prod.videoFolder || '')}
+                                defaultText="Chưa chọn video minh họa (Dùng video Idol mặc định)"
+                                onSelectFile={(file) => {
+                                  const localUrl = URL.createObjectURL(file);
+                                  handleProductChange(prod.id, 'videoFile', localUrl);
+                                  handleProductChange(prod.id, 'videoFileName', file.name);
+                                  handleProductChange(prod.id, 'videoFolder', file.name);
+                                  toast.success(`Đã nạp video minh họa: ${file.name}`);
+                                }}
+                                onSelectFolder={(folderPath) => {
+                                  handleProductChange(prod.id, 'videoFolder', folderPath);
+                                  handleProductChange(prod.id, 'videoFileName', '');
+                                  toast.success(`Đã chọn thư mục: ${folderPath}`);
+                                }}
+                                onSelectSample={(sample) => {
+                                  handleProductChange(prod.id, 'videoFolder', sample.label);
+                                  handleProductChange(prod.id, 'videoFileName', sample.label);
+                                  handleProductChange(prod.id, 'videoFile', sample.url);
+                                  toast.success(`Đã chọn video mẫu: ${sample.label}`);
+                                }}
+                                onClear={() => {
+                                  handleProductChange(prod.id, 'videoFolder', '');
+                                  handleProductChange(prod.id, 'videoFileName', '');
+                                  handleProductChange(prod.id, 'videoFile', null);
+                                  toast.success('Đã xóa video minh họa sản phẩm');
+                                }}
+                                inputId={`upload-video-prod-${prod.id}`}
+                              />
                             </div>
                           </div>
 
@@ -2251,7 +2480,7 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                     <span>🎬 Cấu hình Video Chính & Video Nền Hỗ Trợ Phiên Live</span>
                     <HelpTooltip helpKey="videoFolder" />
                   </legend>
-                  <div className="flex flex-col gap-3.5">
+                  <div className="flex flex-col gap-4">
                     <div className="flex items-center gap-4">
                       <span className="text-[13px] text-[#a53b3b] font-semibold min-w-[200px]">Danh mục video cho sự kiện này:</span>
                       <select name="videoCategory" value={currentConfig.videoCategory} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-white focus:outline-blue-500 cursor-pointer">
@@ -2259,24 +2488,62 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                       </select>
                     </div>
                     
-                    <div className="flex items-center justify-between border-t border-gray-200 pt-3">
-                      <div className="flex items-center gap-4">
-                        <span className="text-[13px] text-[#a53b3b] font-semibold min-w-[200px]">Thư mục video hành động:</span>
-                        <span className="text-[13px] text-gray-800 font-medium truncate max-w-sm bg-gray-50 px-2 py-0.5 rounded border border-gray-200">{currentConfig.videoFolder || 'Chưa chọn thư mục'}</span>
-                      </div>
-                      <button onClick={() => selectFolder('videoFolder')} className="text-[13px] text-blue-600 font-semibold hover:text-blue-800 transition-colors underline decoration-dotted cursor-pointer">
-                        Chọn thư mục...
-                      </button>
+                    <div className="border-t border-gray-200 pt-3">
+                      <UniversalMediaPicker 
+                        label="Thư mục Video Hành Động / File Clip Sự Kiện"
+                        currentPath={currentConfig.videoFolder || ''}
+                        defaultText="Chưa chọn thư mục (Dùng video mặc định theo danh mục)"
+                        onSelectFile={(file) => {
+                          const localUrl = URL.createObjectURL(file);
+                          handleChange({ target: { name: 'videoFolder', value: file.name } });
+                          handleChange({ target: { name: 'videoFile', value: localUrl } });
+                          toast.success(`Đã chọn clip hành động: ${file.name}`);
+                        }}
+                        onSelectFolder={(folderPath) => {
+                          handleChange({ target: { name: 'videoFolder', value: folderPath } });
+                          toast.success(`Đã chọn thư mục: ${folderPath}`);
+                        }}
+                        onSelectSample={(sample) => {
+                          handleChange({ target: { name: 'videoFolder', value: sample.label } });
+                          handleChange({ target: { name: 'videoFile', value: sample.url } });
+                          toast.success(`Đã nạp video mẫu: ${sample.label}`);
+                        }}
+                        onClear={() => {
+                          handleChange({ target: { name: 'videoFolder', value: '' } });
+                          handleChange({ target: { name: 'videoFile', value: null } });
+                          toast.success('Đã đặt lại video hành động');
+                        }}
+                        inputId={`upload-action-video-${selectedEventId}`}
+                      />
                     </div>
 
-                    <div className="flex items-center justify-between border-t border-gray-200 pt-3">
-                      <div className="flex items-center gap-4">
-                        <span className="text-[13px] text-[#1e40af] font-semibold min-w-[200px]">Thư mục video nền hỗ trợ:</span>
-                        <span className="text-[13px] text-gray-800 font-medium truncate max-w-sm bg-gray-50 px-2 py-0.5 rounded border border-gray-200">{currentConfig.supportVideoFolder || 'Chưa chọn (Dùng video nền mặc định)'}</span>
-                      </div>
-                      <button onClick={() => selectFolder('supportVideoFolder')} className="text-[13px] text-indigo-600 font-semibold hover:text-indigo-800 transition-colors underline decoration-dotted cursor-pointer">
-                        Chọn video nền...
-                      </button>
+                    <div className="border-t border-gray-200 pt-3">
+                      <UniversalMediaPicker 
+                        label="Thư mục Video Nền Hỗ Trợ / File Nền Studio"
+                        currentPath={currentConfig.supportVideoFolder || ''}
+                        defaultText="Chưa chọn (Dùng video nền mặc định)"
+                        onSelectFile={(file) => {
+                          const localUrl = URL.createObjectURL(file);
+                          handleChange({ target: { name: 'supportVideoFolder', value: file.name } });
+                          handleChange({ target: { name: 'supportVideoFile', value: localUrl } });
+                          toast.success(`Đã chọn clip nền: ${file.name}`);
+                        }}
+                        onSelectFolder={(folderPath) => {
+                          handleChange({ target: { name: 'supportVideoFolder', value: folderPath } });
+                          toast.success(`Đã chọn thư mục nền: ${folderPath}`);
+                        }}
+                        onSelectSample={(sample) => {
+                          handleChange({ target: { name: 'supportVideoFolder', value: sample.label } });
+                          handleChange({ target: { name: 'supportVideoFile', value: sample.url } });
+                          toast.success(`Đã nạp video nền mẫu: ${sample.label}`);
+                        }}
+                        onClear={() => {
+                          handleChange({ target: { name: 'supportVideoFolder', value: '' } });
+                          handleChange({ target: { name: 'supportVideoFile', value: null } });
+                          toast.success('Đã đặt lại video nền');
+                        }}
+                        inputId={`upload-support-video-${selectedEventId}`}
+                      />
                     </div>
                   </div>
                 </fieldset>
