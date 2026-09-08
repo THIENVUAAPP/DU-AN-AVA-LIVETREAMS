@@ -2,39 +2,13 @@
   "framework": "vite",
   "buildCommand": "vite build",
   "outputDirectory": "dist",
-  "redirects": [],
   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
-    {
-      "source": "/download/mac",
-      "destination": "/api/download/mac"
-    },
-    {
-      "source": "/download/windows",
-      "destination": "/api/download/windows"
-    },
-    {
-      "source": "/download/(.*)",
-      "destination": "/api/download/$1"
-    },
-    {
-      "source": "/AvaLive_VIP_PRO_Mac(.*).zip",
-      "destination": "/api/download/mac"
-    },
-    {
-      "source": "/AvaLive_VIP_PRO_Windows(.*).zip",
-      "destination": "/api/download/windows"
-    },
-    {
-      "source": "/Livestream_AI_Software.zip",
-      "destination": "/api/download/windows"
-    },
-    {
-      "source": "/((?!.*\\.).*)",
-      "destination": "/index.html"
-    }
+    { "source": "/download/mac", "destination": "/api/download-mac" },
+    { "source": "/download/windows", "destination": "/api/download-windows" },
+    { "source": "/download/(.*)", "destination": "/api/download" },
+    { "source": "/AvaLive_VIP_PRO_Mac:slug*.zip", "destination": "/api/download-mac" },
+    { "source": "/AvaLive_VIP_PRO_Windows:slug*.zip", "destination": "/api/download-windows" },
+    { "source": "/Livestream_AI_Software.zip", "destination": "/api/download-windows" },
+    { "source": "/((?!api/|assets/|uploads/|favicon.ico).*)", "destination": "/index.html" }
   ]
 }

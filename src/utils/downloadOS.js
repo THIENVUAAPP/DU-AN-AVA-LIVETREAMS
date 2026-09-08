@@ -90,20 +90,20 @@ export const getDownloadInfo = (targetOS) => {
   const fileName = isMac ? `AvaLive_VIP_PRO_Mac_v${APP_VERSION}.zip` : `AvaLive_VIP_PRO_Windows_v${APP_VERSION}.zip`;
 
   // Xác định URL tải về:
-  // Luôn ưu tiên endpoint nội bộ cùng host (/api/download/windows hoặc /api/download/mac)
+  // Luôn ưu tiên endpoint nội bộ cùng host (/api/download-windows hoặc /api/download-mac)
   // để đảm bảo tính an toàn Same-Origin và kích hoạt download trực tiếp
-  let directUrl = `/api/download/${osType}`;
+  let directUrl = `/api/download-${osType}`;
 
   if (typeof window !== 'undefined') {
     if (window.location.protocol === 'file:') {
       // Khi mở bằng file HTML cục bộ -> gọi trực tiếp backend localhost:3001
-      directUrl = `http://localhost:3001/api/download/${osType}`;
+      directUrl = `http://localhost:3001/api/download-${osType}`;
     } else if (window.location.port === '5173') {
       // Khi chạy Vite dev server -> gọi trực tiếp backend localhost:3001
-      directUrl = `http://localhost:3001/api/download/${osType}`;
+      directUrl = `http://localhost:3001/api/download-${osType}`;
     } else {
       // Khi chạy qua localhost:3001, TryCloudflare tunnel, domain riêng hoặc Vercel
-      directUrl = `/api/download/${osType}`;
+      directUrl = `/api/download-${osType}`;
     }
   }
 
