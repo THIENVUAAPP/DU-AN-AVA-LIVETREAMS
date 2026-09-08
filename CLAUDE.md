@@ -747,6 +747,13 @@ Im lặng bỏ qua 3 câu này = vi phạm Mục 0.7 và Mục 1.
 | **2. Tối Ưu Bộ Nhớ Đệm & Phần Cứng GPU 60 FPS Xuyên Suốt Hàng Chục Tiếng** | `CleanLiveOverlay.jsx`, `UniversalMasterOverlayModal.jsx` | ✅ PASS 100% | - Tăng tốc GPU Hardware Acceleration với `translate3d(0, 0, 0)`, `willChange: transform`, và `backfaceVisibility: hidden`.<br>- Tự động khôi phục timestamp thời gian đang phát khi đổi stage/chuyển tab, không phát lại từ đầu (0:00).<br>- Tương thích hoàn toàn với TikTok Live Studio Audio Mixer, cho phép điều chỉnh âm lượng và tắt tiếng mượt mà. |
 | **3. Nâng Cấp Toàn Bộ Hệ Thống Lên v1.9.7** | `package.json`, `UpdateNotificationModal.jsx`, `UniversalMasterOverlayModal.jsx`, `Mo_Ung_Dung_Web.html`, `backend/server.cjs`, `vercel.json`, `CLAUDE.md` | ✅ PASS 100% | Đồng bộ toàn diện phiên bản v1.9.7, đóng gói 2 Standalone ZIPs (Windows & Mac) và phát hành GitHub Release v1.9.7. |
 
+### 🚀 30. Nhật Ký Bản Cập Nhật v1.9.8 (Official Release - Tự Động Phục Hồi Dữ Liệu & Safe Storage Sanitizer Khắc Phục Xung Đột Phiên Bản Cũ)
+| Hạng Mục Cải Tiến | File Thay Đổi | Trạng Thái | Chi Tiết Kỹ Thuật |
+| :--- | :--- | :---: | :--- |
+| **1. Tự Động Phục Hồi Thông Minh & Safe Storage Sanitizer** | `src/utils/safeStorage.js`, `src/main.jsx`, `CleanLiveOverlay.jsx`, `UserProfile.jsx`, `AdminDashboard.jsx` | ✅ PASS 100% | - Tích hợp tiện ích `safeStorage.js` bảo vệ toàn bộ các thao tác đọc/ghi `localStorage` an toàn (try-catch, auto JSON repair, sanitizer).<br>- `ErrorBoundary` trong `main.jsx` tự động kích hoạt cơ chế Auto-Self-Healing dọn dẹp các cache tác vụ cũ bị xung đột giữa các phiên bản phần mềm mà giữ nguyên 100% tài khoản, token và email của người dùng.<br>- Bổ sung nút "🚀 Mở Phần Mềm Ngay (1-Click)" với hiệu ứng giao diện hiện đại, chuyên nghiệp. |
+| **2. Nâng Cấp Toàn Bộ Hệ Thống Lên v1.9.8** | `package.json`, `UpdateNotificationModal.jsx`, `UniversalMasterOverlayModal.jsx`, `Mo_Ung_Dung_Web.html`, `backend/server.cjs`, `CLAUDE.md` | ✅ PASS 100% | Đồng bộ toàn diện phiên bản v1.9.8, kích hoạt UpdateNotificationModal, đóng gói 2 Standalone ZIPs (Windows & Mac) và phát hành GitHub Release v1.9.8. |
+
+
 
 
 
