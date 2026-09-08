@@ -3,6 +3,7 @@ import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Search, CheckCir
 import { getLiveMediaByCategory } from '../../lib/liveKhoDB';
 import { saveDualVoiceConfig, ALL_SYSTEM_VOICES, ELEVENLABS_VOICES, previewVoiceAudio, updateActiveVoiceAudio } from '../../utils/voiceSyncService';
 import { DEFAULT_SYSTEM_PROMPT } from '../../utils/defaultSystemPrompt';
+import UniversalMediaPicker from './UniversalMediaPicker';
 
 const MAIN_VOICES = [...ALL_SYSTEM_VOICES];
 const ASSISTANT_VOICES = [...ALL_SYSTEM_VOICES];
@@ -2056,17 +2057,42 @@ IDOL MỈM CƯỜI + GESTURE
                     <span className="text-sm font-bold text-gray-800">Bật Trợ lý</span>
                   </label>
 
-                  <div className="flex items-center justify-between border-t border-gray-200 pt-3">
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <span>Thư mục Video Trợ lý (cho video 'listening'):</span>
-                      <span className="font-semibold text-gray-900">{idleVideoCount === 0 ? 'im lặng (0 video)' : `im lặng (${idleVideoCount} video)`}</span>
-                    </div>
-                    <button 
-                      onClick={selectFolder}
-                      className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-100 text-sm font-medium transition-colors"
-                    >
-                      <FolderOpen size={16} /> Chọn thư mục...
-                    </button>
+                  <div className="border-t border-gray-200 pt-3">
+                    <UniversalMediaPicker 
+                      label="Thư mục / File Video Trợ Lý (cho trạng thái 'listening'):"
+                      currentPath={settings.assistantVideoFolder || (idleVideoCount === 0 ? '' : `im lặng (${idleVideoCount} video)`)}
+                      videoUrl={settings.assistantVideoUrl || ''}
+                      defaultText="Chưa chọn video / thư mục Trợ Lý"
+                      onSelectFile={(file, objectUrl) => {
+                        setSettings(prev => ({ 
+                          ...prev, 
+                          assistantVideoFolder: file.name,
+                          assistantVideoUrl: objectUrl
+                        }));
+                      }}
+                      onSelectFolder={(folderName) => {
+                        setSettings(prev => ({ 
+                          ...prev, 
+                          assistantVideoFolder: folderName,
+                          assistantVideoUrl: ''
+                        }));
+                      }}
+                      onSelectSample={(sample) => {
+                        setSettings(prev => ({ 
+                          ...prev, 
+                          assistantVideoFolder: sample.name,
+                          assistantVideoUrl: sample.url
+                        }));
+                      }}
+                      onClear={() => {
+                        setSettings(prev => ({ 
+                          ...prev, 
+                          assistantVideoFolder: '',
+                          assistantVideoUrl: ''
+                        }));
+                      }}
+                      inputId="upload-assistant-video-settings"
+                    />
                   </div>
                 </div>
               </div>

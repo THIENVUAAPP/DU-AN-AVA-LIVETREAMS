@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.1.0';
+export const APP_VERSION = '2.1.1';
 export const UPDATE_NOTES = [
-  "🎬 Universal Media Picker: Tất cả các ô tải video (Quà tặng, Sản phẩm giỏ hàng, Video chính & Video nền) đều hỗ trợ tải file video trực tiếp, chọn thư mục hoặc chọn ngay 5 Video Mẫu Idol AI dựng sẵn.",
-  "🎭 Đồng Bộ Tức Thì 10 Phong Cách Livestream & 10 Kịch Bản Mẫu: Khi chuyển phong cách AI, hệ thống tự động tải mẫu kịch bản chuyên nghiệp, văn phong cuốn hút, chốt deal thần tốc.",
-  "📐 Chuẩn Khung Hình TikTok Live Studio 9:16 (1080x1920): Cơ chế chuyển đổi video AI đa trạng thái liền mạch (Crossfade 0ms), không đứng hình, không đen màn hình khi phát live."
+  "🎬 Video Thumbnail Live Preview Trực Quan: Tất cả các ô tải video (Trợ lý, Quà tặng, Sản phẩm, Video nền, Video sự kiện) đều có khung hiển thị Thumbnail Video trực tiếp, di chuột để xem trước hoặc bấm để phóng to full HD.",
+  "📁 Đồng Bộ 100% Các Ô Tải Video: Tích hợp đầy đủ Universal Media Picker vào Cài đặt chung Trợ Lý, Quà tặng và tất cả các tab tác vụ.",
+  "➕ Mở Rộng Danh Mục Video & Thêm Clip Chen Ngang: Dễ dàng chuyển đổi danh mục sự kiện và mở rộng thêm vô hạn các ô Video Bổ Trợ / Clip Chen Ngang linh hoạt."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

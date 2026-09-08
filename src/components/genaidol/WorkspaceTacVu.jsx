@@ -10,6 +10,20 @@ import { NEW_AI_PROMPT } from '../../utils/defaultAIPrompt';
 import { readUniversalFile } from '../../utils/universalDocumentParser';
 import WorkspaceKeywordPanel from './WorkspaceKeywordPanel';
 import EventVoiceTester from './EventVoiceTester';
+import UniversalMediaPicker, { SAMPLE_IDOL_VIDEOS } from './UniversalMediaPicker';
+
+const toast = {
+  success: (message) => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('avalive_toast', { detail: { type: 'success', message } }));
+    }
+  },
+  error: (message) => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('avalive_toast', { detail: { type: 'error', message } }));
+    }
+  }
+};
 
 const EVENTS = [
   { id: 'script_broadcast', label: '📜 Kịch bản Idol', icon: FileText, color: 'text-indigo-600', desc: 'Thiết lập kịch bản bán hàng tuần tự (Fixed Script) hoặc bộ não AI tư vấn từ Kho Tri Thức Doanh Nghiệp.' },
@@ -114,14 +128,6 @@ const GIFT_OPTIONS = [
   { id: 'lion_king', name: 'Sư Tử', icon: '🦁', coins: 29999, label: '🦁 Sư Tử (29999 xu)' },
 ];
 
-// ==================== DANH SÁCH VIDEO MẪU IDOL AI CHUẨN DỌC 9:16 ====================
-export const SAMPLE_IDOL_VIDEOS = [
-  { id: 'sample_idle', name: '🎬 Idol Đứng Chờ (Idle Loop 60fps)', desc: 'Nhân vật đứng thở nhẹ, mỉm cười tự nhiên khi chưa có thoại', url: '/videos/sample_idle.mp4', folder: 'video_mau_idol_idle' },
-  { id: 'sample_talking', name: '🎬 Idol Đang Nói & Bán Hàng (Talk 60fps)', desc: 'Khớp khẩu hình miệng 60 FPS khi đọc kịch bản hoặc trả lời khách', url: '/videos/sample_talking.mp4', folder: 'video_mau_idol_talking' },
-  { id: 'sample_thanks', name: '🎬 Idol Cảm Ơn Quà / Follow (Thanking)', desc: 'Cử chỉ vỗ tay, thả tim, cúi chào tri ân người xem', url: '/videos/sample_thanks.mp4', folder: 'video_mau_idol_thanks' },
-  { id: 'sample_selling', name: '🎬 Idol Chốt Đơn & Flash Sale (Selling Deal)', desc: 'Chỉ tay vào giỏ hàng góc trái, đếm ngược deal nóng', url: '/videos/sample_selling.mp4', folder: 'video_mau_idol_selling' },
-  { id: 'sample_bg', name: '🎬 Video Nền Studio 4K Sang Trọng', desc: 'Phông nền livestream chuẩn phòng thu thương mại', url: '/videos/sample_bg.mp4', folder: 'video_mau_studio_bg' }
-];
 
 // ==================== 10 MẪU KỊCH BẢN BÁN HÀNG 60 PHÚT CHUẨN XỊN THEO TỪNG PHONG CÁCH & NGÀNH HÀNG ====================
 const MASTER_SCRIPTS = {
@@ -379,157 +385,6 @@ const getDefaultEventConfigs = () => {
 
   return defaults;
 };
-
-/**
- * 🎬 BỘ CHỌN & NẠP VIDEO / THƯ MỤC / VIDEO MẪU ĐA NĂNG
- * Hỗ trợ 100%: Tải file video trực tiếp (.mp4, .webm, .mov, .mkv), duyệt thư mục trên máy, và nạp nhanh 5 Video Mẫu Idol AI chuẩn dọc 9:16
- */
-export function UniversalMediaPicker({
-  value = '',
-  fileName = '',
-  url = '',
-  onChange,
-  onFolderSelect,
-  placeholder = 'Chưa chọn video / thư mục',
-  accept = 'video/mp4,video/webm,video/quicktime,video/x-matroska,video/*',
-  showSamplePicker = true,
-  className = ''
-}) {
-  const [showSamples, setShowSamples] = useState(false);
-  const fileInputRef = React.useRef(null);
-
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const objUrl = URL.createObjectURL(file);
-    if (onChange) {
-      onChange({
-        folder: file.name,
-        fileName: file.name,
-        url: objUrl
-      });
-    }
-    e.target.value = '';
-  };
-
-  const handlePickSample = (sample) => {
-    if (onChange) {
-      onChange({
-        folder: sample.folder,
-        fileName: sample.name,
-        url: sample.url
-      });
-    }
-    setShowSamples(false);
-  };
-
-  const handleClear = () => {
-    if (onChange) {
-      onChange({
-        folder: '',
-        fileName: '',
-        url: ''
-      });
-    }
-  };
-
-  const hasValue = !!(value || fileName || url);
-  const displayName = fileName ? (fileName.startsWith('🎬') ? fileName : `🎬 ${fileName}`) : (value || placeholder);
-
-  return (
-    <div className={`relative flex items-center gap-1.5 flex-wrap w-full ${className}`}>
-      {/* Input file ẩn */}
-      <input 
-        ref={fileInputRef}
-        type="file" 
-        className="hidden" 
-        accept={accept}
-        onChange={handleFileChange}
-      />
-
-      {/* Hiển thị giá trị đang chọn */}
-      <span className={`font-medium text-xs truncate flex-1 min-w-[140px] px-2.5 py-1.5 rounded-lg border transition-all ${
-        hasValue 
-          ? 'bg-blue-50/80 border-blue-300 text-blue-900 font-bold shadow-2xs' 
-          : 'bg-gray-50 border-gray-200 text-gray-500'
-      }`}>
-        {displayName}
-      </span>
-
-      {/* Nút 1: Tải Video Trực Tiếp */}
-      <button 
-        type="button"
-        onClick={() => fileInputRef.current?.click()}
-        title="Tải trực tiếp file video (.mp4, .webm, .mov, .mkv) từ máy tính"
-        className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1 cursor-pointer transition-all shadow-2xs active:scale-95 shrink-0"
-      >
-        <Video size={13} /> Tải Clip...
-      </button>
-
-      {/* Nút 2: Chọn Thư Mục */}
-      {onFolderSelect && (
-        <button 
-          type="button"
-          onClick={onFolderSelect}
-          title="Chọn thư mục chứa chuỗi video động tác trên máy"
-          className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1 cursor-pointer transition-all shrink-0"
-        >
-          <Film size={13} /> Thư Mục...
-        </button>
-      )}
-
-      {/* Nút 3: Nạp Video Mẫu Idol AI */}
-      {showSamplePicker && (
-        <div className="relative shrink-0">
-          <button 
-            type="button"
-            onClick={() => setShowSamples(!showSamples)}
-            title="Nạp nhanh các video mẫu Idol chuẩn 9:16 có sẵn"
-            className="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1 cursor-pointer transition-all shadow-2xs shrink-0"
-          >
-            <Sparkles size={13} className="text-amber-600" /> Video Mẫu <ChevronDown size={12} />
-          </button>
-
-          {showSamples && (
-            <div className="absolute right-0 top-full mt-1.5 w-72 bg-white rounded-xl shadow-xl border border-amber-200 p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
-              <div className="text-[11px] font-black text-amber-900 px-2 py-1 mb-1 border-b border-amber-100 flex items-center justify-between">
-                <span>🌟 5 VIDEO MẪU IDOL AI CHUẨN 9:16:</span>
-                <span className="text-[9px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded font-bold">Demo 60fps</span>
-              </div>
-              <div className="space-y-1">
-                {SAMPLE_IDOL_VIDEOS.map(sample => (
-                  <button
-                    key={sample.id}
-                    type="button"
-                    onClick={() => handlePickSample(sample)}
-                    className="w-full text-left p-2 rounded-lg hover:bg-amber-50 text-xs transition-colors cursor-pointer group"
-                  >
-                    <div className="font-bold text-gray-800 group-hover:text-amber-800 flex items-center gap-1.5">
-                      {sample.name}
-                    </div>
-                    <div className="text-[10.5px] text-gray-500 line-clamp-1 mt-0.5">{sample.desc}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Nút 4: Xóa */}
-      {hasValue && (
-        <button 
-          type="button"
-          onClick={handleClear}
-          title="Xóa video / thư mục đã chọn"
-          className="text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition-colors cursor-pointer shrink-0"
-        >
-          <Trash2 size={13} />
-        </button>
-      )}
-    </div>
-  );
-}
 
 export default function WorkspaceTacVu() {
   const [selectedEventId, setSelectedEventId] = useState('script_broadcast');
@@ -1039,6 +894,32 @@ export default function WorkspaceTacVu() {
     }
   };
 
+  const handleAddExtraVideoSlot = () => {
+    const currentSlots = currentConfig.extraVideoSlots || [];
+    const newSlot = {
+      id: Date.now(),
+      name: `Clip Chen Ngang #${currentSlots.length + 1}`,
+      folder: '',
+      url: ''
+    };
+    updateEventConfig(selectedEventId, { extraVideoSlots: [...currentSlots, newSlot] });
+    toast.success('Đã thêm ô video bổ trợ cho sự kiện!');
+  };
+
+  const handleUpdateExtraVideoSlot = (index, partial) => {
+    const currentSlots = [...(currentConfig.extraVideoSlots || [])];
+    if (currentSlots[index]) {
+      currentSlots[index] = { ...currentSlots[index], ...partial };
+      updateEventConfig(selectedEventId, { extraVideoSlots: currentSlots });
+    }
+  };
+
+  const handleRemoveExtraVideoSlot = (index) => {
+    const currentSlots = (currentConfig.extraVideoSlots || []).filter((_, i) => i !== index);
+    updateEventConfig(selectedEventId, { extraVideoSlots: currentSlots });
+    toast.success('Đã xóa ô video bổ trợ');
+  };
+
   const handleGenerateAiScript = () => {
     const company = currentConfig.companyName || 'Shop Mỹ Phẩm & Làm Đẹp Cao Cấp';
     const product = currentConfig.productName || 'Bộ Đôi Serum Tế Bào Gốc & Nước Hoa Pháp';
@@ -1351,21 +1232,31 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                           </div>
 
                           <div>
-                            <div className="flex items-center text-xs font-bold text-gray-700 mb-1">
-                              <span>📁 Video Idol Diễn / Thư Mục:</span>
-                              <HelpTooltip helpKey="videoFolder" />
-                            </div>
                             <UniversalMediaPicker
-                              value={slot.videoFolder}
-                              fileName={slot.videoFileName}
-                              url={slot.videoUrl}
-                              onChange={({ folder, fileName, url }) => {
-                                handleSlotChange(slot.id, 'videoFolder', folder);
-                                handleSlotChange(slot.id, 'videoFileName', fileName);
-                                handleSlotChange(slot.id, 'videoUrl', url);
+                              label="Video Idol Diễn / Clip Cảm Ơn Quà"
+                              currentPath={slot.videoFileName ? `🎬 ${slot.videoFileName}` : (slot.videoFolder || '')}
+                              videoUrl={slot.videoUrl || ''}
+                              defaultText="Chưa chọn video / thư mục"
+                              onSelectFile={(file, objectUrl) => {
+                                handleSlotChange(slot.id, 'videoFolder', file.name);
+                                handleSlotChange(slot.id, 'videoFileName', file.name);
+                                handleSlotChange(slot.id, 'videoUrl', objectUrl);
                               }}
-                              onFolderSelect={() => selectSpecialGiftSlotFolder(slot.id, 'videoFolder')}
-                              placeholder="Chưa chọn video / thư mục"
+                              onSelectFolder={(folderName) => {
+                                handleSlotChange(slot.id, 'videoFolder', folderName);
+                                handleSlotChange(slot.id, 'videoFileName', '');
+                              }}
+                              onSelectSample={(sample) => {
+                                handleSlotChange(slot.id, 'videoFolder', sample.name);
+                                handleSlotChange(slot.id, 'videoFileName', sample.name);
+                                handleSlotChange(slot.id, 'videoUrl', sample.url);
+                              }}
+                              onClear={() => {
+                                handleSlotChange(slot.id, 'videoFolder', '');
+                                handleSlotChange(slot.id, 'videoFileName', '');
+                                handleSlotChange(slot.id, 'videoUrl', '');
+                              }}
+                              inputId={`upload-special-gift-${slot.id}`}
                             />
                           </div>
                         </div>
@@ -1448,21 +1339,31 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
 
                         {/* Tải Video Idol cho Slot quà thường */}
                         <div>
-                          <div className="flex items-center text-xs font-bold text-gray-700 mb-1">
-                            <span>📁 Video Idol Diễn / Thư Mục:</span>
-                            <HelpTooltip helpKey="videoFolder" />
-                          </div>
                           <UniversalMediaPicker
-                            value={gSlot.videoFolder}
-                            fileName={gSlot.videoFileName}
-                            url={gSlot.videoUrl}
-                            onChange={({ folder, fileName, url }) => {
-                              handleGiftSlotChange(gSlot.id, 'videoFolder', folder);
-                              handleGiftSlotChange(gSlot.id, 'videoFileName', fileName);
-                              handleGiftSlotChange(gSlot.id, 'videoUrl', url);
+                            label="Video Idol Diễn / Clip Cảm Ơn Quà"
+                            currentPath={gSlot.videoFileName ? `🎬 ${gSlot.videoFileName}` : (gSlot.videoFolder || '')}
+                            videoUrl={gSlot.videoUrl || ''}
+                            defaultText="Chưa chọn video / thư mục"
+                            onSelectFile={(file, objectUrl) => {
+                              handleGiftSlotChange(gSlot.id, 'videoFolder', file.name);
+                              handleGiftSlotChange(gSlot.id, 'videoFileName', file.name);
+                              handleGiftSlotChange(gSlot.id, 'videoUrl', objectUrl);
                             }}
-                            onFolderSelect={() => selectGiftSlotFolder(gSlot.id, 'videoFolder')}
-                            placeholder="Chưa chọn video / thư mục"
+                            onSelectFolder={(folderName) => {
+                              handleGiftSlotChange(gSlot.id, 'videoFolder', folderName);
+                              handleGiftSlotChange(gSlot.id, 'videoFileName', '');
+                            }}
+                            onSelectSample={(sample) => {
+                              handleGiftSlotChange(gSlot.id, 'videoFolder', sample.name);
+                              handleGiftSlotChange(gSlot.id, 'videoFileName', sample.name);
+                              handleGiftSlotChange(gSlot.id, 'videoUrl', sample.url);
+                            }}
+                            onClear={() => {
+                              handleGiftSlotChange(gSlot.id, 'videoFolder', '');
+                              handleGiftSlotChange(gSlot.id, 'videoFileName', '');
+                              handleGiftSlotChange(gSlot.id, 'videoUrl', '');
+                            }}
+                            inputId={`upload-gift-slot-${gSlot.id}`}
                           />
                         </div>
 
@@ -2477,14 +2378,30 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
               <div className="border border-gray-300 rounded-md bg-white mb-3 shadow-sm px-3 py-4">
                 <fieldset className="border border-gray-300 rounded p-4 pt-4 mt-2 relative">
                   <legend className="absolute -top-3 left-3 bg-white px-1 text-sm font-semibold text-gray-700 flex items-center gap-1">
-                    <span>🎬 Cấu hình Video Chính & Video Nền Hỗ Trợ Phiên Live</span>
+                    <span>🎬 Cấu hình Video Chính, Video Nền & Video Bổ Trợ Phiên Live</span>
                     <HelpTooltip helpKey="videoFolder" />
                   </legend>
                   <div className="flex flex-col gap-4">
                     <div className="flex items-center gap-4">
                       <span className="text-[13px] text-[#a53b3b] font-semibold min-w-[200px]">Danh mục video cho sự kiện này:</span>
-                      <select name="videoCategory" value={currentConfig.videoCategory} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-white focus:outline-blue-500 cursor-pointer">
-                        <option value={currentConfig.videoCategory}>{currentConfig.videoCategory}</option>
+                      <select 
+                        name="videoCategory" 
+                        value={currentConfig.videoCategory || selectedEventId} 
+                        onChange={handleChange} 
+                        className="flex-1 border border-gray-300 rounded px-2.5 py-1.5 text-xs bg-white font-bold text-blue-900 focus:outline-blue-500 cursor-pointer shadow-2xs"
+                      >
+                        <option value="comment">💬 comment - Trả Lời Bình Luận Khách Hàng</option>
+                        <option value="talking">🗣️ talking - Nhân Vật Nói Chuyện / Dẫn Live</option>
+                        <option value="idle">⏱️ idle - Đứng Chờ / Nghỉ Giữa Hiệp (Loop)</option>
+                        <option value="follow">➕ follow - Cảm Ơn Người Theo Dõi Kênh</option>
+                        <option value="gift">🎁 gift - Cảm Ơn Quà Tặng (Thường)</option>
+                        <option value="special_gift">🌟 special_gift - Cảm Ơn Quà Tặng Đặc Biệt</option>
+                        <option value="share">🔄 share - Cảm Ơn Chia Sẻ Phiên Live</option>
+                        <option value="thanks_heart">❤️ thanks_heart - Cảm Ơn Thả Tim Nhiều</option>
+                        <option value="welcome">👋 welcome - Chào Người Mới Vào Phòng</option>
+                        <option value="apology">🙏 apology - Xin Lỗi & Phản Hồi Khi Lỗi</option>
+                        <option value="call_to_action">📢 call_to_action - Kêu Gọi Tương Tác Giờ Vàng</option>
+                        <option value="custom_action">🎬 custom_action - Động Tác / Sự Kiện Tùy Chỉnh</option>
                       </select>
                     </div>
                     
@@ -2492,21 +2409,22 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                       <UniversalMediaPicker 
                         label="Thư mục Video Hành Động / File Clip Sự Kiện"
                         currentPath={currentConfig.videoFolder || ''}
+                        videoUrl={currentConfig.videoFile || ''}
                         defaultText="Chưa chọn thư mục (Dùng video mặc định theo danh mục)"
-                        onSelectFile={(file) => {
-                          const localUrl = URL.createObjectURL(file);
+                        onSelectFile={(file, objectUrl) => {
                           handleChange({ target: { name: 'videoFolder', value: file.name } });
-                          handleChange({ target: { name: 'videoFile', value: localUrl } });
+                          handleChange({ target: { name: 'videoFile', value: objectUrl } });
                           toast.success(`Đã chọn clip hành động: ${file.name}`);
                         }}
                         onSelectFolder={(folderPath) => {
                           handleChange({ target: { name: 'videoFolder', value: folderPath } });
+                          handleChange({ target: { name: 'videoFile', value: '' } });
                           toast.success(`Đã chọn thư mục: ${folderPath}`);
                         }}
                         onSelectSample={(sample) => {
-                          handleChange({ target: { name: 'videoFolder', value: sample.label } });
+                          handleChange({ target: { name: 'videoFolder', value: sample.name } });
                           handleChange({ target: { name: 'videoFile', value: sample.url } });
-                          toast.success(`Đã nạp video mẫu: ${sample.label}`);
+                          toast.success(`Đã nạp video mẫu: ${sample.name}`);
                         }}
                         onClear={() => {
                           handleChange({ target: { name: 'videoFolder', value: '' } });
@@ -2521,21 +2439,22 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                       <UniversalMediaPicker 
                         label="Thư mục Video Nền Hỗ Trợ / File Nền Studio"
                         currentPath={currentConfig.supportVideoFolder || ''}
+                        videoUrl={currentConfig.supportVideoFile || ''}
                         defaultText="Chưa chọn (Dùng video nền mặc định)"
-                        onSelectFile={(file) => {
-                          const localUrl = URL.createObjectURL(file);
+                        onSelectFile={(file, objectUrl) => {
                           handleChange({ target: { name: 'supportVideoFolder', value: file.name } });
-                          handleChange({ target: { name: 'supportVideoFile', value: localUrl } });
+                          handleChange({ target: { name: 'supportVideoFile', value: objectUrl } });
                           toast.success(`Đã chọn clip nền: ${file.name}`);
                         }}
                         onSelectFolder={(folderPath) => {
                           handleChange({ target: { name: 'supportVideoFolder', value: folderPath } });
+                          handleChange({ target: { name: 'supportVideoFile', value: '' } });
                           toast.success(`Đã chọn thư mục nền: ${folderPath}`);
                         }}
                         onSelectSample={(sample) => {
-                          handleChange({ target: { name: 'supportVideoFolder', value: sample.label } });
+                          handleChange({ target: { name: 'supportVideoFolder', value: sample.name } });
                           handleChange({ target: { name: 'supportVideoFile', value: sample.url } });
-                          toast.success(`Đã nạp video nền mẫu: ${sample.label}`);
+                          toast.success(`Đã nạp video nền mẫu: ${sample.name}`);
                         }}
                         onClear={() => {
                           handleChange({ target: { name: 'supportVideoFolder', value: '' } });
@@ -2544,6 +2463,43 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                         }}
                         inputId={`upload-support-video-${selectedEventId}`}
                       />
+                    </div>
+
+                    {/* Danh mục video mở rộng / Video bổ trợ */}
+                    {currentConfig.extraVideoSlots && currentConfig.extraVideoSlots.map((eSlot, idx) => (
+                      <div key={eSlot.id || idx} className="border-t border-gray-200 pt-3 bg-purple-50/30 p-2.5 rounded-xl">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-xs font-bold text-purple-900">🎬 Video Bổ Trợ #{idx + 1}: {eSlot.name || 'Clip Chen Ngang'}</span>
+                          <button 
+                            type="button"
+                            onClick={() => handleRemoveExtraVideoSlot(idx)}
+                            className="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer"
+                          >
+                            Xóa
+                          </button>
+                        </div>
+                        <UniversalMediaPicker 
+                          label={`Video Bổ Trợ / Clip Chen Ngang #${idx + 1}`}
+                          currentPath={eSlot.folder || ''}
+                          videoUrl={eSlot.url || ''}
+                          defaultText="Chưa chọn video bổ trợ"
+                          onSelectFile={(file, objectUrl) => handleUpdateExtraVideoSlot(idx, { folder: file.name, url: objectUrl })}
+                          onSelectFolder={(folderName) => handleUpdateExtraVideoSlot(idx, { folder: folderName, url: '' })}
+                          onSelectSample={(sample) => handleUpdateExtraVideoSlot(idx, { folder: sample.name, url: sample.url })}
+                          onClear={() => handleUpdateExtraVideoSlot(idx, { folder: '', url: '' })}
+                          inputId={`upload-extra-video-${idx}`}
+                        />
+                      </div>
+                    ))}
+
+                    <div className="pt-2">
+                      <button
+                        type="button"
+                        onClick={handleAddExtraVideoSlot}
+                        className="px-3.5 py-2 bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 text-purple-800 border border-dashed border-purple-300 rounded-xl text-xs font-bold cursor-pointer transition-all flex items-center gap-1.5 shadow-2xs"
+                      >
+                        <Plus size={14} className="text-purple-600" /> ➕ Mở Rộng Thêm Ô Video Bổ Trợ / Clip Chen Ngang Cho Sự Kiện Này
+                      </button>
                     </div>
                   </div>
                 </fieldset>
