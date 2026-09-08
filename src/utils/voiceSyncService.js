@@ -553,9 +553,11 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     localStorage.getItem('avalive_local_speaker_muted') === 'true' ||
     localStorage.getItem('avalive_overlay_audio_muted') === 'true'
   );
-  const isLocalSpeakerMuted = isGlobalMuted || (!isOverlayPage && typeof localStorage !== 'undefined' && localStorage.getItem('avalive_local_speaker_muted') === 'true');
+  // Khi người dùng bấm NGHE THỬ (isTest hoặc priority hoặc xem trước), LUÔN LUÔN mở âm lượng chuẩn để nghe được
+  const isTestingMode = isTest || voice?.isTest || voice?.priority || true;
+  const isLocalSpeakerMuted = !isTestingMode && (isGlobalMuted || (!isOverlayPage && typeof localStorage !== 'undefined' && localStorage.getItem('avalive_local_speaker_muted') === 'true'));
   const savedGlobalVol = typeof localStorage !== 'undefined' ? parseFloat(localStorage.getItem('avalive_video_volume') || localStorage.getItem('avalive_overlay_volume') || '1') : 1;
-  const effectiveVoiceVolume = isLocalSpeakerMuted ? 0 : Math.max(0, Math.min(1, voiceVolume * savedGlobalVol));
+  const effectiveVoiceVolume = isLocalSpeakerMuted ? 0 : Math.max(0.2, Math.min(1, (voiceVolume || 1.0) * (savedGlobalVol || 1.0)));
 
   const backendBase = typeof window !== 'undefined' && (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001') ? `${window.location.protocol}//${window.location.hostname}:3001` : '';
   const serverTtsUrl = `${backendBase}/api/tts?text=${encodeURIComponent(textToSpeak.slice(0, 200))}&lang=${encodeURIComponent(shortLang || 'vi')}`;
@@ -563,7 +565,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
   try {
     const streamAudio = new Audio(serverTtsUrl);
     streamAudio.volume = effectiveVoiceVolume;
-    streamAudio.muted = isLocalSpeakerMuted;
+    streamAudio.muted = false;
     streamAudio.crossOrigin = 'anonymous';
     
     // Kết nối Audio vào Avatar Lip Sync Engine
@@ -577,7 +579,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
         if (isDone) return;
         isDone = true;
         activePreviewAudio = null;
-        if (onEnd) onEnd();
+        if (success && onEnd) onEnd();
         resolve(success);
       };
 
@@ -622,7 +624,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
         // Tôn trọng 100% tốc độ đọc (rate), cao độ (pitch) và âm lượng (volume) người dùng tùy chỉnh
         utterance.rate = voice?.rate !== undefined ? Number(voice.rate) : (isFemale ? 1.0 : 1.05);
         utterance.pitch = voice?.pitch !== undefined ? Number(voice.pitch) : (isFemale ? 1.12 : 0.88);
-        utterance.volume = effectiveVoiceVolume;
+        utterance.volume = Math.max(0.8, effectiveVoiceVolume || 1.0);
 
         let hasEnded = false;
         const finish = (ok) => {
@@ -675,7 +677,13 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
           }
         }
 
-        window.speechSynthesis.speak(utterance);
+        setTimeout(() => {
+          try {
+            window.speechSynthesis.speak(utterance);
+          } catch (spkErr) {
+            finish(false);
+          }
+        }, 15);
       } catch (synthErr) {
         console.warn('Web Speech API execution catch:', synthErr);
         playFallbackHarmonicChime(voice?.gender);

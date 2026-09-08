@@ -697,7 +697,10 @@ export default function DesktopAppUI() {
     let wakeLock = null;
     let bgWorker = null;
 
+    let isAudioKeepAliveActive = false;
     const startAudioKeepAlive = () => {
+      if (isAudioKeepAliveActive && keepAliveCtx && keepAliveCtx.state === 'running' && wakeLock) return;
+      isAudioKeepAliveActive = true;
       try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (AudioCtx && (!keepAliveCtx || keepAliveCtx.state === 'closed')) {
@@ -717,14 +720,17 @@ export default function DesktopAppUI() {
 
       if ('wakeLock' in navigator && !wakeLock) {
         try {
-          navigator.wakeLock.request('screen').then(s => { wakeLock = s; }).catch(() => {});
+          navigator.wakeLock.request('screen').then(s => { 
+            wakeLock = s;
+            s.addEventListener('release', () => { wakeLock = null; });
+          }).catch(() => {});
         } catch (e) {}
       }
     };
 
     startAudioKeepAlive();
-    window.addEventListener('click', startAudioKeepAlive);
-    window.addEventListener('pointerdown', startAudioKeepAlive);
+    window.addEventListener('click', startAudioKeepAlive, { passive: true, once: true });
+    window.addEventListener('pointerdown', startAudioKeepAlive, { passive: true, once: true });
 
     try {
       const blob = new Blob([
