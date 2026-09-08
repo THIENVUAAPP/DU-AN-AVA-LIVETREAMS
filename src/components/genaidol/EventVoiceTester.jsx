@@ -53,7 +53,7 @@ export default function EventVoiceTester({
     const rawText = (text && text.trim()) ? text : 'Dạ em chào bạn nha! Chúc bạn xem livestream thật vui vẻ!';
     const cleanedText = rawText
       .replace(/\[user\]|\{user\}/gi, 'Quốc Thiện')
-      .replace(/\{comment\}|\[comment\]/gi, 'Áo này còn size L không shop?')
+      .replace(/\{comment\}|\[comment\]/gi, 'Sản phẩm này giá bao nhiêu shop?')
       .replace(/\{gift_name\}|\[gift_name\]/gi, 'Cờ Tổ Quốc')
       .replace(/\{count\}|\[count\]/gi, '5')
       .replace(/\{milestone\}|\[milestone\]/gi, '10,000')
@@ -61,8 +61,9 @@ export default function EventVoiceTester({
       .replace(/\{product\}|\[product\]/gi, 'AvaLive Pro')
       .trim();
 
-    // Lấy câu đầu tiên nếu có nhiều dòng câu trả lời mẫu
-    const firstSentence = cleanedText.split('\n').filter(Boolean)[0] || cleanedText || 'Xin chào bạn, chúc bạn xem live vui vẻ!';
+    // Đọc TOÀN BỘ kịch bản (nối các câu lại liền mạch tự nhiên để giọng đọc AI phát trọn vẹn từ đầu đến cuối)
+    const sentences = cleanedText.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    const fullSpeechText = sentences.length > 0 ? sentences.join('. ') : cleanedText;
 
     const voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === selectedVoiceId) || 
       (selectedVoiceId === 'idol' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'idol') :
@@ -72,7 +73,7 @@ export default function EventVoiceTester({
     setIsPlaying(true);
     previewVoiceAudio(
       voiceObj || { id: 'free_vi_female', lang: 'vi-VN', provider: 'system', gender: 'Female' },
-      firstSentence,
+      fullSpeechText,
       {
         priority: true,
         isTest: true,

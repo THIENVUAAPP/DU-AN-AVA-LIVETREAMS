@@ -3,7 +3,8 @@ import {
   CheckSquare, MessageCircle, Plus, Gift, Clock, Megaphone, 
   Hand, ShoppingCart, Share, Sparkles, Mic, Heart, Play, HelpCircle, ChevronDown,
   Download, Upload, ShoppingBag, Trash2, Zap, Bot, Volume2, MessageSquare, FileText,
-  BookOpen, Layers, Smile, Flame, Crown, Tag, FileUp, Sparkle, RefreshCw, CheckCircle2
+  BookOpen, Layers, Smile, Flame, Crown, Tag, FileUp, Sparkle, RefreshCw, CheckCircle2,
+  Video, Film, AlertCircle
 } from 'lucide-react';
 import { NEW_AI_PROMPT } from '../../utils/defaultAIPrompt';
 import { readUniversalFile } from '../../utils/universalDocumentParser';
@@ -13,7 +14,8 @@ import EventVoiceTester from './EventVoiceTester';
 
 const EVENTS = [
   { id: 'shopee_live', label: '🟠 Shopee Live (URL & Key)', icon: ShoppingBag, color: 'text-[#EE4D2D]', desc: 'Cấu hình URL máy chủ RTMP và Khóa Luồng (Stream Key) kết nối với Kênh Người Bán Shopee Live để đồng bộ phiên phát trực tiếp.' },
-  { id: 'checkout', label: 'Chốt đơn', icon: ShoppingCart, color: 'text-blue-500', desc: 'Aldol sẽ thực hiện các câu kêu gọi mua hàng, chốt đơn khi có người hỏi mua.' },
+  { id: 'script_broadcast', label: '📜 Kịch bản Idol', icon: FileText, color: 'text-indigo-600', desc: 'Thiết lập kịch bản bán hàng tuần tự (Fixed Script) hoặc bộ não AI tư vấn từ Kho Tri Thức Doanh Nghiệp.' },
+  { id: 'checkout', label: '🛒 Chốt đơn', icon: ShoppingCart, color: 'text-blue-500', desc: 'Khai báo các sản phẩm có trong giỏ hàng để AI tự động nhận diện từ khóa, phát video minh họa và tư vấn chốt đơn cho từng sản phẩm.' },
   { id: 'special_gift', label: 'Quà tặng Đặc biệt', icon: Sparkles, color: 'text-yellow-500', desc: 'Tạo ra các phản ứng độc đáo và ấn tượng cho những món quà giá trị (Sư tử, Du thuyền...) để tri ân những người hâm mộ lớn.' },
   { id: 'gift', label: 'Quà tặng (Thường)', icon: Gift, color: 'text-yellow-500', desc: 'Cấu hình phản ứng chung của Aldol khi nhận được các món quà không được liệt kê trong mục "Quà tặng Đặc biệt".' },
   { id: 'comment', label: 'Bình luận', icon: MessageCircle, color: 'text-gray-400', desc: 'Aldol sẽ tự động đọc và trả lời các bình luận của người xem trên phiên live.' },
@@ -117,11 +119,109 @@ const GIFT_OPTIONS = [
   { id: 'tiktok_universe', name: 'TikTok Universe', icon: '🪐🌌', coins: 44999, label: '🪐🌌 TikTok Universe (44999 xu)' }
 ];
 
+// ==================== 10 MẪU KỊCH BẢN BÁN HÀNG 60 PHÚT CHUẨN XỊN ====================
+const MASTER_SCRIPTS = {
+  cosmetics: `Chào mừng tất cả các tình yêu đã có mặt trong phiên livestream làm đẹp đặc biệt ngày hôm nay của shop em nha!
+Các chị đẹp ơi, ai đang lướt qua phiên live thì cho em xin một nút thả tim và một lượt chia sẻ để nhận quà mở bát đầu live nào!
+Hôm nay shop em mang đến cho cả nhà một siêu phẩm chăm sóc sắc đẹp và nâng tầm khí chất cực kỳ đỉnh cao luôn ạ!
+Đó chính là Bộ Đôi Tinh Chất Serum Tế Bào Gốc Phục Hồi Da Trẻ Hóa và Nước Hoa Pháp Cao Cấp lưu hương suốt 12 giờ đồng hồ!
+Chị nào mà da đang bị khô ráp, thâm sạm, không đều màu hoặc bắt đầu xuất hiện nếp nhăn lão hóa thì nhất định không được bỏ qua live này nhé!
+Chỉ sau đúng 7 ngày sử dụng, làn da của các chị sẽ căng bóng, mịn màng và mướt như da em bé luôn ạ!
+Còn chai nước hoa Pháp với nốt hương đầu ngọt ngào quyến rũ, nốt hương giữa sang trọng và nốt hương cuối ấm áp sẽ giúp các chị tự tin tỏa sáng mọi lúc mọi nơi!
+Bình thường giá niêm yết của bộ đôi này tại showroom chính hãng là 1.850.000 VNĐ một set!
+Nhưng duy nhất trong phiên livestream ngày hôm nay, em xin phép chơi lớn tri ân cho 20 chị nhanh tay nhất với mức giá giảm sốc 50% chỉ còn 890.000 VNĐ thôi ạ!
+Chưa hết đâu cả nhà ơi, chị nào chốt đơn ngay bây giờ còn được tặng kèm thêm 1 tuýp kem dưỡng ẩm trắng da mini và miễn phí giao hàng tận nhà trên toàn quốc!
+Bên em cam kết 100% hàng chính hãng có đầy đủ tem chống hàng giả của Bộ Công An và mã QR quét kiểm tra xuất xứ nguồn gốc rõ ràng!
+Chính sách bảo hành vàng bên em là 1 đổi 1 trong vòng 30 ngày nếu có bất kỳ lỗi nào, hoặc hoàn tiền 200% nếu phát hiện hàng không chuẩn nhé các chị yêu!
+Số lượng ưu đãi Flash Sale này em chỉ có đúng 20 suất được trợ giá từ nhãn hàng thôi ạ!
+Hiện tại hệ thống đã ghi nhận 10 chị bấm vào giỏ hàng rồi, chỉ còn đúng 10 suất cuối cùng thôi cả nhà ơi!
+Các chị hãy nhìn ngay xuống góc trái màn hình, nhấp vào biểu tượng Giỏ Hàng, chọn mã số 01 và bấm Đặt Hàng ngay để kịp giữ voucher giảm giá 50% nhé!
+Chị em nào có câu hỏi về loại da dầu, da khô, da nhạy cảm hay cách sử dụng nước hoa thì cứ để lại bình luận, em sẽ tư vấn chi tiết từng người ngay trên live này luôn ạ!
+Nhanh tay lên các chị ơi, đồng hồ đếm ngược Flash Sale chỉ còn 3 phút nữa là kết thúc, em xin chúc mừng các chị đã săn được deal hời ngày hôm nay nha!`,
+
+  perfume: `Kính chào toàn thể quý vị và các bạn đam mê nghệ thuật mùi hương đang hiện diện trong buổi livestream độc quyền hôm nay!
+Mùi hương chính là danh thiếp vô hình tinh tế nhất của mỗi người, thể hiện đẳng cấp và sự quyến rũ khác biệt!
+Hôm nay, em xin giới thiệu Bộ Sưu Tập Nước Hoa Niche Cao Cấp nhập khẩu trực tiếp từ kinh đô Grasse nước Pháp!
+Từng giọt tinh dầu nước hoa được chưng cất tỉ mỉ từ hoa hồng de Mai, gỗ tuyết tùng và hổ phách tự nhiên quý hiếm!
+Khả năng lưu hương vượt trội từ 12 đến 24 tiếng, tỏa hương xa tới 2 mét khiến ai lướt qua cũng phải ngoái nhìn trầm trồ!
+Phiên bản 100ml chính hãng hôm nay được hãng trợ giá độc quyền giảm từ 2.400.000đ xuống chỉ còn 1.190.000đ trọn bộ!
+Đặc biệt tặng ngay set 3 ống chiết nước hoa du lịch 10ml trị giá 450.000đ và hộp quà cao cấp dát vàng sang trọng!
+Cam kết phát hiện hàng không chuẩn bên em đền bù gấp 10 lần giá trị đơn hàng, miễn phí đổi trả trong 15 ngày!
+Chỉ có 15 suất quà tặng giới hạn cho khách hàng nhấn vào Giỏ Hàng góc trái màn hình ngay trong phiên live này thôi ạ!`,
+
+  women_fashion: `Dạ em chào toàn thể các tình yêu đã ghé thăm phiên livestream thời trang thiết kế cao cấp của shop em ngày hôm nay ạ!
+Các nàng ơi, hãy nhanh tay thả tim nhiệt tình lên màn hình giúp em để mở khóa voucher giảm giá sốc 50% cho bộ sưu tập mới nhất nhé!
+Hôm nay em lên cho các nàng siêu phẩm đầm thiết kế tiểu thư thanh lịch kết hợp cùng túi xách da cao cấp đang làm mưa làm gió thị trường!
+Chất liệu vải lụa tơ tằm nhập khẩu cực kỳ mềm mịn, thoáng mát, đường may chuẩn chỉ từng milimet giúp tôn dáng và che khuyết điểm vòng 2 hoàn hảo luôn ạ!
+Bình thường set này bán tại store là 1.200.000đ, nhưng duy nhất trên live hôm nay em giảm chạm đáy chỉ còn 599.000đ thôi nha!
+Đặc biệt tặng ngay 1 chiếc thắt lưng da thời thượng và freeship toàn quốc cho 15 nàng đầu tiên bấm vào giỏ hàng!
+Bên em cam kết nhận hàng được kiểm tra, mặc thử thoải mái trước khi thanh toán, hỗ trợ đổi size tận nhà trong 7 ngày nếu không vừa vặn ạ!
+Nhanh tay bấm vào Giỏ Hàng góc trái màn hình để sở hữu ngay nhé các nàng ơi, số lượng size S và M đang sắp hết rồi ạ!`,
+
+  men_fashion: `Chào mừng toàn thể các quý ông lịch lãm và các chị em đang săn đồ hiệu cho chồng và người yêu vào phiên live hôm nay!
+Hôm nay shop em ra mắt Bộ Sưu Tập Áo Polo Nam Dệt Kim Cao Cấp và Quần Âu Co Giãn 4 Chiều Chuẩn Form Quý Ông!
+Chất vải sợi tre Bamboo kháng khuẩn, thấm hút mồ hôi tuyệt đối, chống nhăn xù và giữ màu bền đẹp sau hàng trăm lần giặt máy!
+Form dáng Regular Fit chuẩn chỉ từng đường kim mũi chỉ, tôn bờ vai vững chãi và vóc dáng phong độ chuẩn nam thần!
+Giá niêm yết tại showroom là 850.000đ/áo, duy nhất hôm nay trên live combo 2 áo chỉ còn 499.000đ trọn gói!
+Tặng kèm 1 ví da bò cao cấp và miễn phí vận chuyển tận tay khi mua từ combo 2 sản phẩm trở lên!
+Bên em cho kiểm tra hàng thoải mái trước khi nhận, bảo hành đường may và đổi size miễn phí trong 14 ngày!
+Anh em nhanh tay bấm vào giỏ hàng chọn size từ 50kg đến 90kg ngay nhé, số lượng ưu đãi có hạn!`,
+
+  tech_ai: `Chào mừng tất cả các anh chị em doanh chủ, nhà sáng tạo nội dung đang có mặt trong buổi chia sẻ giải pháp Livestream AI hôm nay!
+Anh chị nào muốn tăng doanh thu bán hàng tự động 24/7 mà không tốn chi phí thuê idol hàng chục triệu mỗi tháng thì hãy nán lại xem hết phiên live này nhé!
+Hôm nay Thiên Vua App giới thiệu giải pháp Phần Mềm AvaLive VIP PRO - Công nghệ Livestream Idol AI siêu thực tế thế hệ mới nhất!
+Phần mềm tích hợp bộ não AI đa ngôn ngữ, tự động đồng bộ khẩu hình miệng 60 FPS, tự động trả lời bình luận và chốt đơn thông minh theo thời gian thực!
+Bình thường bản quyền 1 năm là 3.500.000đ, duy nhất trong phiên live hôm nay giảm 50% chỉ còn 1.750.000đ trọn gói!
+Đặc biệt tặng kèm 100,000 Tokens AI + Khóa đào tạo kỹ thuật xây dựng hệ thống Livestream tự động từ A đến Z!
+Bên em hỗ trợ cài đặt từ xa qua Ultraview/AnyDesk 24/7 và cam kết bảo hành nâng cấp tính năng trọn đời!
+Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăng ký nhận bản quyền chính thức nhé!`,
+
+  smart_home: `Dạ em chào cả nhà yêu gia dụng thông minh! Ai muốn công việc nội trợ thảnh thơi, nhà cửa thơm tho sạch bóng thì vào ngay live em nha!
+Hôm nay em mang đến Nồi Chiên Không Dầu Hơi Nước 15 Lít và Robot Hút Bụi Lau Nhà Tự Giặt Giẻ Thông Minh thế hệ mới!
+Nồi chiên công nghệ kép đối lưu 360 độ giúp thực phẩm giòn rụm bên ngoài mọng nước bên trong, giảm 95% lượng dầu mỡ thừa có hại!
+Robot hút bụi tích hợp cảm biến laser LiDAR vẽ bản đồ 3D chuẩn xác, lực hút siêu mạnh 6000Pa hút sạch mọi bụi mịn và lông thú cưng!
+Giá niêm yết 6.800.000đ, duy nhất trên phiên live hôm nay em giảm sốc 45% chỉ còn 3.790.000đ cho cả combo!
+Tặng kèm bộ phụ kiện 5 món nấu nướng cao cấp và 2 năm bảo hành chính hãng đổi mới tận nhà 100%!
+Các mẹ nội trợ nhanh tay bấm vào giỏ hàng góc trái săn ngay trước khi hết suất trợ giá nhé!`,
+
+  health_wellness: `Xin kính chào toàn thể quý khán giả đang theo dõi phiên livestream Chăm Sóc Sức Khỏe Chủ Động hôm nay!
+Sức khỏe chính là tài sản vô giá nhất. Đầu tư cho sức khỏe của bản thân và cha mẹ là khoản đầu tư sinh lời bền vững nhất!
+Hôm nay em xin giới thiệu Hộp Quà Đông Trùng Hạ Thảo Thượng Hạng kết hợp Collagen Yến Tươi Trẻ Hóa Tế Bào!
+Hàm lượng Cordycepin và Adenosine nguyên chất giúp tăng cường hệ miễn dịch, ngủ sâu giấc, bồi bổ khí huyết và chống suy nhược cơ thể!
+Collagen Peptide siêu phân tử hấp thụ gấp 10 lần collagen thường, nuôi dưỡng xương khớp dẻo dai và làn da mịn màng từ bên trong!
+Hộp quà biếu cao cấp giá niêm yết 1.950.000đ, ưu đãi tri ân khách hàng live chỉ còn 990.000đ/hộp!
+Mua từ 2 hộp tặng ngay 1 hộp trà thảo mộc hoàng gia và miễn phí giao hàng hỏa tốc toàn quốc!
+Bên em cam kết 100% chứng nhận kiểm nghiệm chất lượng của Viện Kiểm Nghiệm An Toàn Thực Phẩm Quốc Gia!`,
+
+  jewelry_fengshui: `Chào đón toàn thể các quý khách hữu duyên đã ghé vào không gian Trang Sức Phong Thủy Chiêu Tài Tấn Lộc hôm nay!
+Hôm nay em xin thỉnh gửi tới cả nhà Vòng Tay Trầm Hương Tự Nhiên Bọc Vàng 10K và Nhẫn Tỳ Hưu Thạch Anh Tóc Vàng Linh Ứng!
+Trầm hương tự nhiên mang linh khí đất trời hàng chục năm, xua tan năng lượng tiêu cực, mang lại bình an, may mắn và vượng khí cho gia chủ!
+Đá thạch anh tóc vàng chuẩn tự nhiên 100%, ánh kim lấp lánh hút tài lộc mạnh mẽ, đặc biệt hỗ trợ cực tốt cho người kinh doanh buôn bán!
+Tất cả sản phẩm đều được các thầy khai quang điểm nhãn chu đáo và kiểm định đá quý uy tín kèm giấy chứng nhận!
+Hôm nay trên live trợ giá hữu duyên giảm 50% từ 2.200.000đ chỉ còn 1.100.000đ/set trọn bộ!
+Tặng kèm hộp gấm nhung cao cấp, khăn lau trang sức và miễn phí bảo hành trọn đời!`,
+
+  food_specialty: `Ú òa! Chào mừng các tín đồ ẩm thực đã có mặt trong phiên live Đặc Sản 3 Miền thơm ngon khó cưỡng hôm nay nha!
+Ai đang đói bụng hay muốn tìm món ăn vặt ngon đỉnh chóp cho cả gia đình nhâm nhi thì bơi hết vào đây với em nào!
+Hôm nay em lên kệ Bò Khô Miếng Mềm Tây Bắc Thượng Hạng và Hạt Điều Rang Củi Bình Phước loại 1 hạt tròn mẩy giòn rụm!
+Bò khô làm từ 100% thịt bắp bò tươi nguyên chất tẩm ướp mắc khén, hạt dổi rừng chuẩn vị Tây Bắc cay cay ngọt ngọt đậm đà!
+Hạt điều loại A xuất khẩu béo ngậy, ngọt bùi tự nhiên, không chất bảo quản, ăn là mê không lối thoát luôn ạ!
+Combo 1kg bò khô + 500g hạt điều giá thị trường 750.000đ, hôm nay trên live xả sốc chỉ còn 399.000đ trọn gói!
+Bên em bao ăn thử, không ngon hoàn tiền 100% không cần lý do, các bác yên tâm đặt ngay trong giỏ hàng nha!`,
+
+  flash_sale: `LOA LOA LOA! 500 anh chị em ơi, cơn bão Flash Sale Xả Kho Cháy Hàng Giờ Vàng chính thức bắt đầu rồi cả nhà ơi!
+Duy nhất trong 60 phút phiên livestream hôm nay, kho bên em xả toàn bộ hàng nghìn mã hàng hot với giá đồng giá từ 99k!
+Không giới hạn số lượng nhưng mỗi mã chỉ có đúng 50 suất giảm sâu kịch sàn đến 70% dành cho ai nhanh tay nhất!
+Hàng hiệu giá chợ, cam kết mới 100% nguyên đai nguyên kiện, phát hiện hàng kém chất lượng đền tiền gấp 10 lần!
+Tất cả các đơn hàng chốt trong 15 phút đầu tiên đều được tự động áp mã Giảm 30K + Miễn Phí Vận Chuyển Toàn Quốc!
+Cả nhà hãy nhìn ngay xuống Giỏ Hàng góc trái màn hình, chuẩn bị sẵn sàng, em bắt đầu đếm ngược 3 2 1 là xả hàng liền tay nha!`
+};
+
 const getDefaultEventConfigs = () => {
   const defaults = {};
   EVENTS.forEach(ev => {
     defaults[ev.id] = {
-      priority: ev.id === 'apology' ? 20 : ev.id === 'comment' ? 50 : ev.id === 'follow' ? 70 : ev.id === 'gift' ? 90 : ev.id === 'welcome' ? 60 : ev.id === 'special_gift' ? 999 : ev.id === 'checkout' ? 100 : ev.id === 'share' ? 50 : ev.id === 'thanks_heart' ? 15 : 50,
+      priority: ev.id === 'apology' ? 20 : ev.id === 'comment' ? 50 : ev.id === 'follow' ? 70 : ev.id === 'gift' ? 90 : ev.id === 'welcome' ? 60 : ev.id === 'special_gift' ? 999 : ev.id === 'checkout' ? 100 : ev.id === 'script_broadcast' ? 80 : ev.id === 'share' ? 50 : ev.id === 'thanks_heart' ? 15 : 50,
       active: ev.id !== 'welcome' && ev.id !== 'share' && ev.id !== 'thanks_heart', 
       useVoice: ev.id !== 'gift' && ev.id !== 'welcome',
       muteSourceVideo: ev.id !== 'gift' && ev.id !== 'welcome',
@@ -151,6 +251,25 @@ const getDefaultEventConfigs = () => {
       speakAfterIdleSeconds: ev.id === 'idle' ? 5 : '',
       likeThreshold: ev.id === 'thanks_heart' ? 10 : '',
       
+      // Script Broadcast settings
+      broadcastMode: ev.id === 'script_broadcast' ? 'fixed_script' : undefined,
+      interruptOnComment: ev.id === 'script_broadcast' ? true : undefined,
+      commentReplySource: ev.id === 'script_broadcast' ? 'knowledge_base' : undefined,
+      fixedScriptText: ev.id === 'script_broadcast' ? MASTER_SCRIPTS.cosmetics : undefined,
+      pauseBetweenSentences: ev.id === 'script_broadcast' ? 3 : undefined,
+      scriptDurationMinutes: ev.id === 'script_broadcast' ? 60 : undefined,
+      loopScript: ev.id === 'script_broadcast' ? true : undefined,
+      aiLiveStyle: ev.id === 'script_broadcast' ? 'sales_fast' : undefined,
+      aiLiveDuration: ev.id === 'script_broadcast' ? 60 : undefined,
+      companyName: ev.id === 'script_broadcast' ? 'Shop Mỹ Phẩm & Làm Đẹp Cao Cấp' : undefined,
+      productName: ev.id === 'script_broadcast' ? 'Bộ Đôi Serum Tế Bào Gốc & Nước Hoa Pháp' : undefined,
+      productPrice: ev.id === 'script_broadcast' ? '1.850.000đ - Flash Sale chỉ còn 890.000đ' : undefined,
+      promotions: ev.id === 'script_broadcast' ? 'Tặng kèm kem dưỡng ẩm mini + Freeship toàn quốc' : undefined,
+      keyFeatures: ev.id === 'script_broadcast' ? '1. Dưỡng da căng bóng mịn màng sau 7 ngày.\n2. Nước hoa lưu hương 12 giờ.\n3. An toàn lành tính cho mọi loại da.' : undefined,
+      warrantyPolicy: ev.id === 'script_broadcast' ? 'Bảo hành 1 đổi 1 trong 30 ngày, hoàn tiền 200% nếu phát hiện hàng không chuẩn' : undefined,
+      companyKnowledgeText: ev.id === 'script_broadcast' ? '' : undefined,
+      companyKnowledgeFileName: ev.id === 'script_broadcast' ? '' : undefined,
+
       // Special gifts slots (unlimited customizable slots)
       specialGiftSlots: ev.id === 'special_gift' ? [
         { id: 1, active: true, giftName: '🇻🇳 Cờ Tổ Quốc (1 xu)', videoFolder: '', supportVideoFolder: '', useTTS: false, muteSourceVideo: false, useAssistant: true, assistantPrompt: '', assistantVideoFolder: '', useMainVoice: true },
@@ -199,9 +318,9 @@ const getDefaultEventConfigs = () => {
 
       // Checkout Products
       checkoutProducts: ev.id === 'checkout' ? [
-        { id: 1, active: true, productName: 'AVA LIVE', keywords: 'ava live;phần mềm;giá;liên hệ;tư vấn;mua;dùng thử;gói;bản quyền', videoFolder: 'bình luận', supportVideoFolder: '', useAi: true, useTTS: false, ttsVoiceRole: 'idol', muteSourceVideo: true, aiPrompt: NEW_AI_PROMPT },
-        { id: 2, active: false, productName: '', keywords: '', videoFolder: '', supportVideoFolder: '', useAi: false, useTTS: false, ttsVoiceRole: 'idol', muteSourceVideo: false, aiPrompt: '' },
-        { id: 3, active: false, productName: '', keywords: '', videoFolder: '', supportVideoFolder: '', useAi: false, useTTS: false, ttsVoiceRole: 'idol', muteSourceVideo: false, aiPrompt: '' }
+        { id: 1, active: true, productName: 'AVA LIVE', keywords: 'ava live;phần mềm;giá;liên hệ;tư vấn;mua;dùng thử;gói;bản quyền', priceInfo: 'Giá gốc 3.500.000đ - Giá live 1.750.000đ', videoFolder: 'bình luận', videoUrl: '', useAi: true, useTTS: true, ttsVoiceRole: 'idol', muteSourceVideo: true, aiPrompt: NEW_AI_PROMPT },
+        { id: 2, active: false, productName: '', keywords: '', priceInfo: '', videoFolder: '', videoUrl: '', useAi: false, useTTS: false, ttsVoiceRole: 'idol', muteSourceVideo: false, aiPrompt: '' },
+        { id: 3, active: false, productName: '', keywords: '', priceInfo: '', videoFolder: '', videoUrl: '', useAi: false, useTTS: false, ttsVoiceRole: 'idol', muteSourceVideo: false, aiPrompt: '' }
       ] : []
     };
   });
@@ -225,7 +344,7 @@ const getDefaultEventConfigs = () => {
 };
 
 export default function WorkspaceTacVu() {
-  const [selectedEventId, setSelectedEventId] = useState('checkout');
+  const [selectedEventId, setSelectedEventId] = useState('script_broadcast');
   
   // Khởi tạo và nạp bền vững vĩnh viễn dữ liệu người dùng đã cài đặt
   const [eventConfigs, setEventConfigs] = useState(() => {
@@ -241,11 +360,9 @@ export default function WorkspaceTacVu() {
               merged[key] = {
                 ...defaults[key],
                 ...parsed[key],
-                // Giữ nguyên các slot quà tặng đặc biệt
                 specialGiftSlots: (Array.isArray(parsed[key]?.specialGiftSlots) && parsed[key].specialGiftSlots.length > 0)
                   ? parsed[key].specialGiftSlots
                   : defaults[key].specialGiftSlots,
-                // Giữ nguyên các slot quà tặng thường
                 giftSlots: (Array.isArray(parsed[key]?.giftSlots) && parsed[key].giftSlots.length > 0)
                   ? parsed[key].giftSlots
                   : (defaults[key].giftSlots || []),
@@ -334,6 +451,10 @@ export default function WorkspaceTacVu() {
     updateEventConfig(selectedEventId, { [name]: type === 'checkbox' ? checked : value });
   };
 
+  const handleSimpleChange = (field, value) => {
+    updateEventConfig(selectedEventId, { [field]: value });
+  };
+
   // ==================== SPECIAL GIFT SLOTS HANDLERS ====================
   const handleSlotChange = (slotId, name, value, isCheckbox = false) => {
     setEventConfigs(prev => {
@@ -361,7 +482,7 @@ export default function WorkspaceTacVu() {
       const newSlot = {
         id: nextId,
         active: true,
-        giftName: GIFT_OPTIONS[0]?.label || '🇻🇳 Cờ Tổ Quốc (1 xu)',
+        giftName: '🌹 Hoa Hồng (1 xu)',
         videoFolder: '',
         supportVideoFolder: '',
         useTTS: false,
@@ -382,7 +503,7 @@ export default function WorkspaceTacVu() {
   };
 
   const handleDeleteSpecialGiftSlot = (slotId) => {
-    if (!window.confirm(`Anh có chắc muốn xóa Slot ${slotId} này không?`)) return;
+    if (!window.confirm(`Anh có chắc muốn xóa Slot quà ${slotId} này không?`)) return;
     setEventConfigs(prev => {
       const currentSlots = prev.special_gift?.specialGiftSlots || [];
       return {
@@ -395,13 +516,13 @@ export default function WorkspaceTacVu() {
     });
   };
 
-  const selectSlotFolder = async (slotId, fieldName) => {
+  const selectSpecialGiftSlotFolder = async (slotId, fieldName) => {
     try {
       if (window.showDirectoryPicker) {
         const dirHandle = await window.showDirectoryPicker();
         handleSlotChange(slotId, fieldName, dirHandle.name);
       } else {
-        const folderPath = prompt("Hãy nhập đường dẫn thư mục cho Slot này:", "C:/Videos/");
+        const folderPath = prompt("Hãy nhập đường dẫn thư mục cho Slot quà này:", "C:/Videos/");
         if (folderPath) {
           handleSlotChange(slotId, fieldName, folderPath);
         }
@@ -438,15 +559,15 @@ export default function WorkspaceTacVu() {
       const newSlot = {
         id: nextId,
         active: true,
-        name: `Slot ${nextId}: Quà Thường Tùy Biến`,
+        name: `Slot ${nextId}: Quà Tặng Mới`,
         videoFolder: '',
         supportVideoFolder: '',
         useAi: true,
         useTTS: false,
         useVoice: true,
         muteSourceVideo: false,
-        aiPrompt: 'Bạn là streamer AI. Hãy cảm ơn {user} vì đã tặng {gift_name}.',
-        sampleAnswers: 'Cảm ơn bạn {user} đã gửi tặng {gift_name} x{count} nhé!\nCảm ơn món quà siêu ngọt ngào của {user}!',
+        aiPrompt: 'Bạn là streamer AI. Hãy viết lời cảm ơn ngọt ngào và hài hước khi người xem tặng quà.',
+        sampleAnswers: 'Cảm ơn bạn {user} đã gửi tặng món quà tuyệt vời này cho em nhé!',
         useAssistant: false,
         assistantPrompt: '',
         assistantVideoFolder: '',
@@ -495,7 +616,8 @@ export default function WorkspaceTacVu() {
   // ==================== CHECKOUT PRODUCTS HANDLERS ====================
   const handleProductChange = (productId, name, value, isCheckbox = false) => {
     setEventConfigs(prev => {
-      const newProducts = prev[selectedEventId].checkoutProducts.map(prod => {
+      const targetEvent = 'checkout';
+      const newProducts = (prev[targetEvent]?.checkoutProducts || []).map(prod => {
         if (prod.id === productId) {
           return { ...prod, [name]: isCheckbox ? value : value };
         }
@@ -503,8 +625,8 @@ export default function WorkspaceTacVu() {
       });
       return {
         ...prev,
-        [selectedEventId]: {
-          ...prev[selectedEventId],
+        [targetEvent]: {
+          ...prev[targetEvent],
           checkoutProducts: newProducts
         }
       };
@@ -513,14 +635,17 @@ export default function WorkspaceTacVu() {
 
   const handleAddProduct = () => {
     setEventConfigs(prev => {
-      const currentProducts = prev[selectedEventId].checkoutProducts || [];
+      const targetEvent = 'checkout';
+      const currentProducts = prev[targetEvent]?.checkoutProducts || [];
       const nextId = currentProducts.length > 0 ? Math.max(...currentProducts.map(p => p.id)) + 1 : 1;
       const newProduct = { 
         id: nextId, 
         active: true, 
         productName: `Sản phẩm mới ${nextId}`, 
         keywords: '', 
+        priceInfo: '',
         videoFolder: '', 
+        videoUrl: '',
         supportVideoFolder: '', 
         useAi: true, 
         useTTS: true, 
@@ -530,8 +655,8 @@ export default function WorkspaceTacVu() {
       };
       return {
         ...prev,
-        [selectedEventId]: {
-          ...prev[selectedEventId],
+        [targetEvent]: {
+          ...prev[targetEvent],
           checkoutProducts: [...currentProducts, newProduct]
         }
       };
@@ -540,15 +665,45 @@ export default function WorkspaceTacVu() {
 
   const handleDeleteProduct = (productId) => {
     setEventConfigs(prev => {
-      const currentProducts = prev[selectedEventId].checkoutProducts || [];
+      const targetEvent = 'checkout';
+      const currentProducts = prev[targetEvent]?.checkoutProducts || [];
       return {
         ...prev,
-        [selectedEventId]: {
-          ...prev[selectedEventId],
+        [targetEvent]: {
+          ...prev[targetEvent],
           checkoutProducts: currentProducts.filter(p => p.id !== productId)
         }
       };
     });
+  };
+
+  const selectProductFolder = async (productId) => {
+    try {
+      if (window.showDirectoryPicker) {
+        const dirHandle = await window.showDirectoryPicker();
+        handleProductChange(productId, 'videoFolder', dirHandle.name);
+      } else {
+        const folderPath = prompt("Hãy nhập đường dẫn thư mục video cho sản phẩm này:", "C:/Videos/");
+        if (folderPath) {
+          handleProductChange(productId, 'videoFolder', folderPath);
+        }
+      }
+    } catch (e) {
+      console.log('Folder selection cancelled');
+    }
+  };
+
+  const handleProductVideoUpload = (productId, event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const objectUrl = URL.createObjectURL(file);
+    handleProductChange(productId, 'videoUrl', objectUrl);
+    handleProductChange(productId, 'videoFileName', file.name);
+    const existingFolder = currentConfig.checkoutProducts?.find(p => p.id === productId)?.videoFolder;
+    if (!existingFolder) {
+      handleProductChange(productId, 'videoFolder', file.name);
+    }
+    event.target.value = '';
   };
 
   const selectFolder = async (fieldName = 'videoFolder') => {
@@ -578,42 +733,6 @@ export default function WorkspaceTacVu() {
     reader.readAsText(file);
     event.target.value = '';
   };
-
-  const COSMETICS_MASTER_SCRIPT = `Chào mừng tất cả các tình yêu đã có mặt trong phiên livestream làm đẹp đặc biệt ngày hôm nay của shop em nha!
-Các chị đẹp ơi, ai đang lướt qua phiên live thì cho em xin một nút thả tim và một lượt chia sẻ để nhận quà mở bát đầu live nào!
-Hôm nay shop em mang đến cho cả nhà một siêu phẩm chăm sóc sắc đẹp và nâng tầm khí chất cực kỳ đỉnh cao luôn ạ!
-Đó chính là Bộ Đôi Tinh Chất Serum Tế Bào Gốc Phục Hồi Da Trẻ Hóa và Nước Hoa Pháp Cao Cấp lưu hương suốt 12 giờ đồng hồ!
-Chị nào mà da đang bị khô ráp, thâm sạm, không đều màu hoặc bắt đầu xuất hiện nếp nhăn lão hóa thì nhất định không được bỏ qua live này nhé!
-Chỉ sau đúng 7 ngày sử dụng, làn da của các chị sẽ căng bóng, mịn màng và mướt như da em bé luôn ạ!
-Còn chai nước hoa Pháp với nốt hương đầu ngọt ngào quyến rũ, nốt hương giữa sang trọng và nốt hương cuối ấm áp sẽ giúp các chị tự tin tỏa sáng mọi lúc mọi nơi!
-Bình thường giá niêm yết của bộ đôi này tại showroom chính hãng là 1.850.000 VNĐ một set!
-Nhưng duy nhất trong phiên livestream ngày hôm nay, em xin phép chơi lớn tri ân cho 20 chị nhanh tay nhất với mức giá giảm sốc 50% chỉ còn 890.000 VNĐ thôi ạ!
-Chưa hết đâu cả nhà ơi, chị nào chốt đơn ngay bây giờ còn được tặng kèm thêm 1 tuýp kem dưỡng ẩm trắng da mini và miễn phí giao hàng tận nhà trên toàn quốc!
-Bên em cam kết 100% hàng chính hãng có đầy đủ tem chống hàng giả của Bộ Công An và mã QR quét kiểm tra xuất xứ nguồn gốc rõ ràng!
-Chính sách bảo hành vàng bên em là 1 đổi 1 trong vòng 30 ngày nếu có bất kỳ lỗi nào, hoặc hoàn tiền 200% nếu phát hiện hàng không chuẩn nhé các chị yêu!
-Số lượng ưu đãi Flash Sale này em chỉ có đúng 20 suất được trợ giá từ nhãn hàng thôi ạ!
-Hiện tại hệ thống đã ghi nhận 10 chị bấm vào giỏ hàng rồi, chỉ còn đúng 10 suất cuối cùng thôi cả nhà ơi!
-Các chị hãy nhìn ngay xuống góc trái màn hình, nhấp vào biểu tượng Giỏ Hàng, chọn mã số 01 và bấm Đặt Hàng ngay để kịp giữ voucher giảm giá 50% nhé!
-Chị em nào có câu hỏi về loại da dầu, da khô, da nhạy cảm hay cách sử dụng nước hoa thì cứ để lại bình luận, em sẽ tư vấn chi tiết từng người ngay trên live này luôn ạ!
-Nhanh tay lên các chị ơi, đồng hồ đếm ngược Flash Sale chỉ còn 3 phút nữa là kết thúc, em xin chúc mừng các chị đã săn được deal hời ngày hôm nay nha!`;
-
-  const FASHION_MASTER_SCRIPT = `Dạ em chào toàn thể các tình yêu đã ghé thăm phiên livestream thời trang thiết kế cao cấp của shop em ngày hôm nay ạ!
-Các nàng ơi, hãy nhanh tay thả tim nhiệt tình lên màn hình giúp em để mở khóa voucher giảm giá sốc 50% cho bộ sưu tập mới nhất nhé!
-Hôm nay em lên cho các nàng siêu phẩm đầm thiết kế tiểu thư thanh lịch kết hợp cùng túi xách da cao cấp đang làm mưa làm gió thị trường!
-Chất liệu vải lụa tơ tằm nhập khẩu cực kỳ mềm mịn, thoáng mát, đường may chuẩn chỉ từng milimet giúp tôn dáng và che khuyết điểm vòng 2 hoàn hảo luôn ạ!
-Bình thường set này bán tại store là 1.200.000đ, nhưng duy nhất trên live hôm nay em giảm chạm đáy chỉ còn 599.000đ thôi nha!
-Đặc biệt tặng ngay 1 chiếc thắt lưng da thời thượng và freeship toàn quốc cho 15 nàng đầu tiên bấm vào giỏ hàng!
-Bên em cam kết nhận hàng được kiểm tra, mặc thử thoải mái trước khi thanh toán, hỗ trợ đổi size tận nhà trong 7 ngày nếu không vừa vặn ạ!
-Nhanh tay bấm vào Giỏ Hàng góc trái màn hình để sở hữu ngay nhé các nàng ơi, số lượng size S và M đang sắp hết rồi ạ!`;
-
-  const TECH_AI_MASTER_SCRIPT = `Chào mừng tất cả các anh chị em doanh chủ, nhà sáng tạo nội dung đang có mặt trong buổi chia sẻ giải pháp Livestream AI hôm nay!
-Anh chị nào muốn tăng doanh thu bán hàng tự động 24/7 mà không tốn chi phí thuê idol hàng chục triệu mỗi tháng thì hãy nán lại xem hết phiên live này nhé!
-Hôm nay Thiên Vua App giới thiệu giải pháp Phần Mềm AvaLive VIP PRO - Công nghệ Livestream Idol AI siêu thực tế thế hệ mới nhất!
-Phần mềm tích hợp bộ não AI đa ngôn ngữ, tự động đồng bộ khẩu hình miệng 60 FPS, tự động trả lời bình luận và chốt đơn thông minh theo thời gian thực!
-Bình thường bản quyền 1 năm là 3.500.000đ, duy nhất trong phiên live hôm nay giảm 50% chỉ còn 1.750.000đ trọn gói!
-Đặc biệt tặng kèm 100,000 Tokens AI + Khóa đào tạo kỹ thuật xây dựng hệ thống Livestream tự động từ A đến Z!
-Bên em hỗ trợ cài đặt từ xa qua Ultraview/AnyDesk 24/7 và cam kết bảo hành nâng cấp tính năng trọn đời!
-Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăng ký nhận bản quyền chính thức nhé!`;
 
   const handleLoadUniversalScriptFile = async (event) => {
     const file = event.target.files?.[0];
@@ -649,12 +768,8 @@ Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăn
   };
 
   const applyMasterScript = (type) => {
-    if (type === 'cosmetics') {
-      handleSimpleChange('fixedScriptText', COSMETICS_MASTER_SCRIPT);
-    } else if (type === 'fashion') {
-      handleSimpleChange('fixedScriptText', FASHION_MASTER_SCRIPT);
-    } else if (type === 'tech') {
-      handleSimpleChange('fixedScriptText', TECH_AI_MASTER_SCRIPT);
+    if (MASTER_SCRIPTS[type]) {
+      handleSimpleChange('fixedScriptText', MASTER_SCRIPTS[type]);
     }
   };
 
@@ -669,13 +784,81 @@ Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăn
     
     let generated = '';
     if (style === 'skincare_expert') {
-      generated = `Dạ em xin chào tất cả các chị em đang theo dõi phiên tư vấn chăm sóc da chuyên sâu hôm nay của ${company} ạ!\nCác chị có biết tại sao dù dưỡng kem đắt tiền nhưng da vẫn sạm và khô ráp không ạ? Đó là do lớp biểu bì thiếu ẩm và chưa được phục hồi từ gốc rễ tế bào!\nVà giải pháp vàng hôm nay em mang đến cho cả nhà chính là ${product}!\nSản phẩm với ưu điểm nổi bật: ${features.split('\n')[0] || features}!\nHôm nay ${company} trợ giá đặc biệt: ${price}, kèm quà tặng: ${promo}!\nBên em cam kết chính sách: ${warranty}!\nCác chị hãy bấm vào giỏ hàng góc trái màn hình, chọn mã 01 để làn da được tái sinh ngay hôm nay nhé!`;
+      generated = `Dạ em xin chào tất cả các chị em đang theo dõi phiên tư vấn chăm sóc da chuyên sâu hôm nay của ${company} ạ!
+Các chị có biết tại sao dù dưỡng kem đắt tiền nhưng da vẫn sạm và khô ráp không ạ? Đó là do lớp biểu bì thiếu ẩm và chưa được phục hồi từ gốc rễ tế bào!
+Và giải pháp vàng hôm nay em mang đến cho cả nhà chính là ${product}!
+Sản phẩm với ưu điểm nổi bật: ${features.split('\n')[0] || features}!
+Hôm nay ${company} trợ giá đặc biệt: ${price}, kèm quà tặng: ${promo}!
+Bên em cam kết chính sách: ${warranty}!
+Các chị hãy bấm vào giỏ hàng góc trái màn hình, chọn mã 01 để làn da được tái sinh ngay hôm nay nhé!`;
     } else if (style === 'tiktok_funny') {
-      generated = `Ú òa! Em chào 500 anh em đang lướt TikTok lọt ngay vào phiên live siêu cấp vũ trụ của ${company} nha!\nAi mà đi ngang không dừng lại thả tim là tí nữa tiếc hùi hụi luôn á, vì hôm nay có deal sốc chấn động địa cầu!\nEm lên ngay siêu phẩm ${product} đang làm mưa làm gió khắp cõi mạng!\nGiá bình thường tiền triệu, hôm nay trên live chỉ: ${price} thôi cả nhà ơi! Cứ bấm giỏ hàng là có quà: ${promo}!\nCam kết cực kỳ uy tín: ${warranty}!\nTay đâu tay đâu, nhấp liền vào giỏ hàng góc trái góc phải để săn deal nào cả nhà ơi!`;
+      generated = `Ú òa! Em chào 500 anh em đang lướt TikTok lọt ngay vào phiên live siêu cấp vũ trụ của ${company} nha!
+Ai mà đi ngang không dừng lại thả tim là tí nữa tiếc hùi hụi luôn á, vì hôm nay có deal sốc chấn động địa cầu!
+Em lên ngay siêu phẩm ${product} đang làm mưa làm gió khắp cõi mạng!
+Giá bình thường tiền triệu, hôm nay trên live chỉ: ${price} thôi cả nhà ơi! Cứ bấm giỏ hàng là có quà: ${promo}!
+Cam kết cực kỳ uy tín: ${warranty}!
+Tay đâu tay đâu, nhấp liền vào giỏ hàng góc trái góc phải để săn deal nào cả nhà ơi!`;
     } else if (style === 'luxury_elegant') {
-      generated = `Kính chào quý khách hàng thượng lưu đang hiện diện trong không gian livestream độc quyền của thương hiệu ${company}.\nĐẳng cấp và khí chất của người phụ nữ hiện đại luôn được tôn vinh qua diện mạo rạng ngời và mùi hương tinh tế.\nHôm nay, chúng tôi trân trọng giới thiệu kiệt tác ${product} - sự kết hợp hoàn hảo giữa công nghệ sinh học và nghệ thuật chế tác hương thơm đỉnh cao.\nƯu đãi độc quyền dành riêng cho khách hàng phiên live: ${price}, cùng bộ quà tặng thượng hạng: ${promo}.\nCam kết chất lượng chuẩn quốc tế: ${warranty}.\nKính mời quý khách chạm vào giỏ hàng góc trái màn hình để sở hữu ngay trải nghiệm làm đẹp đẳng cấp này.`;
+      generated = `Kính chào quý khách hàng thượng lưu đang hiện diện trong không gian livestream độc quyền của thương hiệu ${company}.
+Đẳng cấp và khí chất của người phụ nữ hiện đại luôn được tôn vinh qua diện mạo rạng ngời và mùi hương tinh tế.
+Hôm nay, chúng tôi trân trọng giới thiệu kiệt tác ${product} - sự kết hợp hoàn hảo giữa công nghệ sinh học và nghệ thuật chế tác hương thơm đỉnh cao.
+Ưu đãi độc quyền dành riêng cho khách hàng phiên live: ${price}, cùng bộ quà tặng thượng hạng: ${promo}.
+Cam kết chất lượng chuẩn quốc tế: ${warranty}.
+Kính mời quý khách chạm vào giỏ hàng góc trái màn hình để sở hữu ngay trải nghiệm làm đẹp đẳng cấp này.`;
+    } else if (style === 'tech_expert') {
+      generated = `Chào mừng toàn thể các anh chị em đang theo dõi buổi chia sẻ công nghệ đột phá của ${company}!
+Trong kỷ nguyên số, việc tối ưu hóa hiệu suất và tự động hóa quy trình chính là chìa khóa then chốt để nhân đôi doanh thu!
+Hôm nay ${company} trân trọng giới thiệu siêu phẩm ${product} - giải pháp tiên phong ứng dụng trí tuệ nhân tạo thế hệ mới!
+Tính năng vượt trội: ${features.split('\n')[0] || features}!
+Mức giá đầu tư cực kỳ ưu đãi trên live: ${price}, tặng kèm gói quà tặng đặc quyền: ${promo}!
+Chính sách bảo hành và cam kết chất lượng: ${warranty}!
+Anh chị hãy nhấp vào giỏ hàng bên dưới để trải nghiệm ngay công nghệ tuyệt vời này!`;
+    } else if (style === 'countdown_urgent') {
+      generated = `KHẨN CẤP KHẨN CẤP CẢ NHÀ ƠI! Đồng hồ đếm ngược Flash Sale của ${company} chỉ còn đúng 3 phút cuối cùng!
+Siêu phẩm ${product} đang cháy hàng liên tục trên mọi mặt trận!
+Giá gốc tiền triệu, duy nhất trên live hôm nay giảm sốc: ${price}!
+Chỉ còn đúng 5 suất quà tặng độc quyền: ${promo}!
+Bên em cam kết vàng: ${warranty}!
+Nhanh tay bấm vào Giỏ Hàng góc trái màn hình, chọn ngay mã sản phẩm và bấm Đặt Hàng trước khi hệ thống đóng cổng ưu đãi nhé!`;
+    } else if (style === 'emotional_story') {
+      generated = `Dạ em xin chào mọi người. Hôm nay ngồi lại trên phiên live này, em muốn tâm sự chân thành với cả nhà một chút.
+Là phụ nữ, ai cũng mong muốn bản thân mình được yêu thương, tự tin và rạng rỡ mỗi ngày.
+Và đó cũng chính là tâm huyết mà ${company} gửi gắm vào sản phẩm ${product}.
+Không chỉ là ${features.split('\n')[0] || features}, mà là món quà mang lại sự tự tin cho chính bạn.
+Hôm nay em xin phép tri ân mức giá yêu thương nhất: ${price}, kèm phần quà: ${promo}.
+Cam kết đổi trả và bảo hành chân tình: ${warranty}.
+Hãy yêu thương bản thân bằng cách bấm vào giỏ hàng và mang món quà này về nhà nhé!`;
+    } else if (style === 'motivational_fire') {
+      generated = `CHÀO TẤT CẢ CÁC CHIẾN BINH NĂNG LƯỢNG ĐỈNH CAO CỦA PHIÊN LIVE ${company}!
+Hôm nay chúng ta ở đây để cùng nhau bứt phá giới hạn và chạm tới những đỉnh cao mới!
+Siêu phẩm ${product} chính là vũ khí bí mật giúp bạn nâng tầm vị thế và tỏa sáng rực rỡ!
+Sức mạnh vượt trội: ${features.split('\n')[0] || features}!
+Cơ hội duy nhất trong đời chỉ có tại live hôm nay: ${price}, đi kèm bộ quà tặng đỉnh chóp: ${promo}!
+Cam kết vững chắc như kiềng 3 chân: ${warranty}!
+Hành động ngay, chạm vào giỏ hàng và bứt phá thành công ngay bây giờ nào!`;
+    } else if (style === 'gen_z_vibes') {
+      generated = `Hế lô các keo lì, các đồng boi đang lướt tới live của ${company} nha!
+Hôm nay shop em drop một siêu phẩm đỉnh nóc kịch trần bay phấp phới luôn á!
+Đó chính là em ${product} bao mượt bao cháy phố!
+Công dụng xịn mịn hết nước chấm: ${features.split('\n')[0] || features}!
+Giá rẻ hú hồn chim én: ${price}, lại còn được tặng kèm: ${promo}!
+Bảo hành uy tín 100 điểm không có nhưng: ${warranty}!
+Mấy bồ nhấp liền vào giỏ hàng góc trái góc phải để múc liền tay kẻo sold out nha!`;
+    } else if (style === 'vip_master') {
+      generated = `Chào mừng quý khách hàng VIP đã tham gia phiên trình diễn và đấu giá ưu đãi đặc biệt của thương hiệu ${company}.
+Chúng tôi tự hào là đơn vị tiên phong kiến tạo nên chuẩn mực mới với kiệt tác ${product}.
+Sản phẩm hội tụ tinh hoa công nghệ và giá trị thực chứng: ${features.split('\n')[0] || features}.
+Trong khung giờ vàng hôm nay, chúng tôi dành tặng mức trợ giá độc quyền: ${price}, cùng bộ quà tặng cao cấp: ${promo}.
+Chính sách bảo chứng chất lượng và chăm sóc khách hàng trọn đời: ${warranty}.
+Kính mời quý vị bấm vào Giỏ Hàng để hoàn tất đăng ký đặc quyền ngay hôm nay.`;
     } else {
-      generated = `Dạ em chào toàn thể các tình yêu đã có mặt trong phiên livestream săn deal cực khủng của ${company} hôm nay nha!\nCác chị em nhanh tay thả tim và chia sẻ live để em mở bát tung quà tặng siêu to khổng lồ nào!\nHôm nay em mang đến siêu phẩm vạn người mê: ${product}!\nTính năng và công dụng vượt trội: ${features.split('\n')[0] || features}!\nGiá niêm yết tiền triệu, hôm nay giảm 50% chỉ còn: ${price}! Đặc biệt: ${promo} cho 20 chị chốt nhanh nhất!\nChính sách cam kết vàng: ${warranty}!\nChỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trái màn hình bấm vào Giỏ Hàng để chốt đơn ngay nhé!`;
+      generated = `Dạ em chào toàn thể các tình yêu đã có mặt trong phiên livestream săn deal cực khủng của ${company} hôm nay nha!
+Các chị em nhanh tay thả tim và chia sẻ live để em mở bát tung quà tặng siêu to khổng lồ nào!
+Hôm nay em mang đến siêu phẩm vạn người mê: ${product}!
+Tính năng và công dụng vượt trội: ${features.split('\n')[0] || features}!
+Giá niêm yết tiền triệu, hôm nay giảm 50% chỉ còn: ${price}! Đặc biệt: ${promo} cho 20 chị chốt nhanh nhất!
+Chính sách cam kết vàng: ${warranty}!
+Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trái màn hình bấm vào Giỏ Hàng để chốt đơn ngay nhé!`;
     }
     
     handleSimpleChange('fixedScriptText', generated);
@@ -718,478 +901,126 @@ Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăn
     const info = HELP_DATA[helpKey] || {
       title: customTitle || 'Hướng dẫn chức năng',
       desc: customText || 'Chức năng hỗ trợ tùy chỉnh hoạt động của Idol trong phiên livestream.',
-      tip: 'Nhấp để xem hướng dẫn chi tiết.'
+      tip: 'Thiết lập đúng để phiên live mượt mà và tự nhiên nhất.'
     };
 
     return (
-      <div className={`relative inline-flex items-center ${className}`}>
+      <div className={`relative inline-flex items-center ml-1.5 ${className}`}>
         <button
           type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setIsOpen(!isOpen);
-          }}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsOpen(!isOpen); }}
           onMouseEnter={() => setIsOpen(true)}
           onMouseLeave={() => setIsOpen(false)}
-          className="w-4 h-4 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 flex items-center justify-center text-[10px] font-bold transition-all shadow-xs ml-1 focus:outline-none ring-1 ring-blue-300 hover:scale-110 cursor-pointer"
-          title="Bấm hoặc rê chuột để xem hướng dẫn"
+          className="text-gray-400 hover:text-blue-600 focus:outline-none transition-colors p-0.5 rounded-full hover:bg-blue-50 cursor-pointer"
         >
-          ?
+          <HelpCircle size={14} className="opacity-70 hover:opacity-100" />
         </button>
 
         {isOpen && (
-          <div 
-            onMouseEnter={() => setIsOpen(true)}
-            onMouseLeave={() => setIsOpen(false)}
-            className="absolute z-50 left-6 -top-2 w-72 p-3 bg-[#1e293b] text-white rounded-lg shadow-2xl border border-blue-500/40 text-left pointer-events-auto backdrop-blur-md animate-in fade-in zoom-in-95 duration-150"
-          >
-            <div className="flex items-center justify-between pb-1.5 border-b border-gray-700/60 mb-2">
-              <span className="font-bold text-xs text-blue-300 flex items-center gap-1.5">
-                {info.title}
-              </span>
-              <span className="text-[10px] bg-blue-900/60 text-blue-200 px-1.5 py-0.5 rounded font-mono border border-blue-400/30">
-                HDSD
-              </span>
+          <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-72 p-3 bg-gray-900 text-white text-xs rounded-xl shadow-2xl border border-gray-700 pointer-events-none backdrop-blur-md animate-in fade-in duration-200">
+            <div className="font-bold text-amber-300 flex items-center gap-1.5 mb-1 text-[13px]">
+              {info.title}
             </div>
-
-            <p className="text-[11.5px] text-gray-200 leading-relaxed mb-2 font-normal">
+            <div className="text-gray-200 leading-relaxed mb-1.5">
               {info.desc}
-            </p>
-
+            </div>
             {info.tip && (
-              <div className="bg-blue-950/70 p-2 rounded border border-blue-800/50 text-[10.5px] text-cyan-200 flex items-start gap-1.5 leading-snug">
-                <span className="text-yellow-400 font-bold shrink-0">💡 Mẹo:</span>
+              <div className="text-[11px] text-emerald-300 bg-emerald-950/60 p-1.5 rounded border border-emerald-800/50 mt-1 flex items-start gap-1">
+                <span>💡</span>
                 <span>{info.tip}</span>
               </div>
             )}
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
           </div>
         )}
       </div>
     );
   };
 
-  const FieldLabel = ({ icon, text, helpKey, customHelpText, minW = "min-w-[220px]" }) => (
-    <div className={`flex items-center gap-1.5 text-[13px] font-semibold text-gray-700 ${minW}`}>
-      {icon && <span className="text-[#a53b3b]">{icon}</span>}
-      <span>{text}:</span>
-      <HelpTooltip helpKey={helpKey} customText={customHelpText} customTitle={text} />
+  const FieldLabel = ({ icon, text, helpKey, customText, minW = "min-w-[170px]" }) => (
+    <div className={`flex items-center text-[13px] text-gray-700 font-semibold ${minW}`}>
+      <span className="mr-1.5">{icon}</span>
+      <span>{text}</span>
+      <HelpTooltip helpKey={helpKey} customText={customText} />
     </div>
   );
 
   return (
-    <div className="flex w-full h-[95vh] bg-[#f0f2f5] font-sans text-gray-800 overflow-hidden">
+    <div className="h-full flex flex-col md:flex-row bg-[#f0f2f5] text-gray-800 text-[13px] overflow-hidden">
       
-      {/* SIDEBAR */}
-      <div className="w-[240px] bg-[#f0f2f5] border-r border-gray-300 flex flex-col h-full">
-        <div className="p-3 border-b border-gray-300">
-          <div className="border border-gray-300 rounded bg-white overflow-hidden shadow-sm h-[calc(95vh-24px)]">
-            <div className="px-3 py-1.5 bg-[#e0e3e8] border-b border-gray-300 text-xs font-semibold text-gray-700 uppercase tracking-wide">
-              Sự kiện có sẵn
-            </div>
-            <div className="overflow-y-auto h-full pb-8">
-              {EVENTS.map(ev => {
-                const Icon = ev.icon;
-                const isSelected = selectedEventId === ev.id;
-                return (
-                  <button
-                    key={ev.id}
-                    onClick={() => setSelectedEventId(ev.id)}
-                    className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm transition-colors cursor-pointer ${isSelected ? 'bg-[#d5e2f2]' : 'hover:bg-gray-100'}`}
-                  >
-                    <Icon size={16} className={`${ev.color}`} />
-                    <span className={`font-medium ${isSelected ? 'text-gray-900' : 'text-gray-700'}`}>{ev.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+      {/* 1. Sidebar Danh Sách Sự Kiện (Bên trái) */}
+      <div className="w-full md:w-64 bg-white border-r border-gray-300 flex flex-col shrink-0">
+        <div className="p-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+          <span className="font-bold text-gray-700 text-sm flex items-center gap-2">
+            <span>⚙️</span> Cài đặt Sự kiện
+          </span>
+          <span className="text-[11px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">
+            {EVENTS.length} Tác vụ
+          </span>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-2 space-y-1">
+          {EVENTS.map((ev) => {
+            const Icon = ev.icon;
+            const isSelected = selectedEventId === ev.id;
+            return (
+              <button
+                key={ev.id}
+                onClick={() => setSelectedEventId(ev.id)}
+                className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                  isSelected 
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20 translate-x-1' 
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-blue-600'
+                }`}
+              >
+                <div className="flex items-center gap-2.5 truncate">
+                  <Icon size={16} className={isSelected ? 'text-white' : ev.color} />
+                  <span className="truncate">{ev.label}</span>
+                </div>
+                {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></div>}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* MAIN CONTENT */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#f0f2f5] p-3">
+      {/* 2. Nội dung Chi tiết Cài đặt Sự Kiện (Bên phải) */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden p-4">
         
-        {/* Header Info Box */}
-        <div className="bg-[#e6f0fa] border border-[#b3d4f5] rounded-md p-3 mb-3">
-          <p className="text-[13px] text-gray-800 mb-2">
-            <span className="font-bold">{selectedEventInfo?.label}: </span>
-            {selectedEventInfo?.desc}
-          </p>
-          <button className="flex items-center gap-1.5 text-[13px] font-bold text-[#14539a] hover:underline cursor-pointer">
-            <Play size={14} fill="currentColor" /> Xem video hướng dẫn cấu hình
-          </button>
+        {/* Header Sự Kiện Hiện Tại */}
+        <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+              {selectedEventInfo && <selectedEventInfo.icon size={22} />}
+            </div>
+            <div>
+              <h2 className="text-base font-black text-gray-900 flex items-center gap-2">
+                {selectedEventInfo?.label}
+              </h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {selectedEventInfo?.desc}
+              </p>
+            </div>
+          </div>
         </div>
 
-        {selectedEventId === 'thanks_heart' && (
-          <div className="bg-[#fdebea] border border-[#f5c2c7] rounded-md p-3 mb-3 text-[13px] text-[#842029]">
-             <span className="font-bold">⚠️ Lưu ý Quan trọng:</span> Tính năng này phụ thuộc vào kết nối ổn định tới TikTok. Do các thay đổi gần đây từ phía TikTok, kết nối có thể không ổn định, khiến tính năng hoạt động không như mong đợi. Hãy cân nhắc kỹ khi sử dụng.
-          </div>
-        )}
+        {/* Scroll Body */}
+        <div className="flex-1 overflow-y-auto pr-1">
 
-        {/* Scrollable Config Area */}
-        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-          
           {/* ========================================================================= */}
           {/* 1. SHOPEE LIVE */}
           {/* ========================================================================= */}
           {selectedEventId === 'shopee_live' ? (
-            <div className="w-full pb-8">
-              <ShopeeLiveConnectModal inline={true} isDarkMode={false} />
-            </div>
+            <ShopeeLiveConnectModal />
           ) : selectedEventId === 'special_gift' ? (
             /* ========================================================================= */
-            /* 2. QUÀ TẶNG ĐẶC BIỆT (MULTI-SLOT KHÔNG GIỚI HẠN - ẢNH 1) */
-            /* ========================================================================= */
-            <>
-              <div className="border border-gray-300 rounded-md bg-white mb-3 shadow-sm px-3 py-4">
-                <fieldset className="border border-gray-300 rounded p-4 pt-4 mt-2 relative">
-                  <legend className="absolute -top-3 left-3 bg-white px-1 text-sm font-semibold text-gray-700">
-                    Cấu hình Logic Chung
-                  </legend>
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center">
-                      <FieldLabel icon="⭐" text="Độ ưu tiên" helpKey="priority" minW="min-w-[150px]" />
-                      <input type="number" name="priority" value={currentConfig.priority} onChange={handleChange} className="w-64 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
-                    </div>
-                    <div className="flex items-center">
-                      <FieldLabel icon="✅" text="Kích hoạt" helpKey="active" minW="min-w-[150px]" />
-                      <input type="checkbox" name="active" checked={currentConfig.active} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer" />
-                    </div>
-                  </div>
-                </fieldset>
-              </div>
-
-              <div className="border border-gray-300 rounded-md bg-white mb-3 shadow-sm px-3 py-4">
-                <fieldset className="border border-gray-300 rounded p-4 pt-4 mt-2 relative">
-                  <legend className="absolute -top-3 left-3 bg-white px-1 text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <span>Phản ứng Quà tặng Đặc biệt ({currentConfig.specialGiftSlots?.length || 0} Slots)</span>
-                  </legend>
-                  
-                  <div className="flex flex-col gap-4">
-                    {currentConfig.specialGiftSlots?.map((slot, sIdx) => (
-                      <div key={slot.id || sIdx} className="border border-gray-300 rounded-xl p-3 bg-[#f8f9fa] shadow-sm relative">
-                        {/* Slot Header with Checkbox, Title & Delete button */}
-                        <div className="flex items-center justify-between mb-3 border-b border-gray-200 pb-2">
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              checked={slot.active !== false} 
-                              onChange={(e) => handleSlotChange(slot.id, 'active', e.target.checked, true)} 
-                              className="w-4 h-4 text-blue-600 rounded cursor-pointer" 
-                            />
-                            <span className="font-black text-gray-800 text-[14px]">Slot {slot.id}</span>
-                            <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full font-bold border border-yellow-300">
-                              {slot.giftName?.split('(')[0] || 'Quà Đặc Biệt'}
-                            </span>
-                          </label>
-
-                          <button 
-                            onClick={() => handleDeleteSpecialGiftSlot(slot.id)}
-                            className="text-xs text-red-500 hover:text-white hover:bg-red-500 border border-red-400 px-2.5 py-1 rounded-lg transition-all font-bold flex items-center gap-1 cursor-pointer"
-                            title="Xóa slot quà đặc biệt này"
-                          >
-                            <Trash2 size={12} /> Xóa Slot
-                          </button>
-                        </div>
-
-                        <div className="grid grid-cols-[170px_1fr] gap-y-3 gap-x-4 items-center">
-                          
-                          <div className="flex items-center gap-1">
-                            <label className="text-[13px] font-semibold text-[#a53b3b]">Tên Quà tặng (TikTok):</label>
-                            <HelpTooltip helpKey="giftName" />
-                          </div>
-                          <select 
-                            value={slot.giftName} 
-                            onChange={(e) => handleSlotChange(slot.id, 'giftName', e.target.value)} 
-                            className="border border-gray-300 rounded px-2.5 py-1.5 text-[13px] font-medium bg-white focus:outline-blue-500 max-w-sm text-gray-800 shadow-sm cursor-pointer"
-                          >
-                            {GIFT_OPTIONS.map(g => (
-                              <option key={g.id} value={g.label}>
-                                {g.label}
-                              </option>
-                            ))}
-                          </select>
-
-                          <div className="flex items-center gap-1">
-                            <label className="text-[13px] font-semibold text-[#a53b3b]">Thư mục Video Chính:</label>
-                            <HelpTooltip helpKey="videoFolder" />
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[13px] font-medium min-w-[150px] text-gray-700 bg-gray-50 px-2 py-1 rounded border border-gray-200 truncate max-w-xs">{slot.videoFolder || 'Chưa chọn thư mục'}</span>
-                            <button onClick={() => selectSlotFolder(slot.id, 'videoFolder')} className="text-[13px] text-blue-600 font-semibold hover:text-blue-800 transition-colors underline decoration-dotted cursor-pointer">Chọn...</button>
-                            <div className="ml-auto flex gap-4 flex-wrap">
-                              <label className="flex items-center gap-1.5 cursor-pointer">
-                                <input type="checkbox" checked={slot.useTTS} onChange={(e) => handleSlotChange(slot.id, 'useTTS', e.target.checked, true)} className="rounded text-blue-600 cursor-pointer" /> 
-                                <span className="text-[13px] font-medium">Dùng TTS</span>
-                                <HelpTooltip helpKey="useTTS" />
-                              </label>
-                              <label className="flex items-center gap-1.5 cursor-pointer">
-                                <input type="checkbox" checked={slot.muteSourceVideo} onChange={(e) => handleSlotChange(slot.id, 'muteSourceVideo', e.target.checked, true)} className="rounded text-blue-600 cursor-pointer" /> 
-                                <span className="text-[13px] font-medium">Tắt âm gốc</span>
-                                <HelpTooltip helpKey="muteSourceVideo" />
-                              </label>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-1">
-                            <label className="text-[13px] font-semibold text-[#1e40af]">🎬 Video Nền Hỗ Trợ:</label>
-                            <HelpTooltip helpKey="videoFolder" />
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[13px] font-medium min-w-[150px] text-gray-700 bg-gray-50 px-2 py-1 rounded border border-gray-200 truncate max-w-xs">{slot.supportVideoFolder || 'Chưa chọn (Dùng video nền mặc định)'}</span>
-                            <button onClick={() => selectSlotFolder(slot.id, 'supportVideoFolder')} className="text-[13px] text-indigo-600 font-semibold hover:text-indigo-800 transition-colors underline decoration-dotted cursor-pointer">Chọn video nền...</button>
-                          </div>
-
-                          <div className="col-span-2 border-t border-gray-300 my-1"></div>
-
-                          {/* Assistant Config */}
-                          <div className="col-span-2">
-                            <div className="flex items-center gap-2 mb-2">
-                              <label className="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" checked={slot.useAssistant} onChange={(e) => handleSlotChange(slot.id, 'useAssistant', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded cursor-pointer" />
-                                <span className="font-bold text-gray-800 text-[13px]">Cấu hình Trợ lý riêng</span>
-                              </label>
-                              <HelpTooltip helpKey="useAssistant" />
-                            </div>
-                            
-                            {slot.useAssistant && (
-                              <div className="pl-6 grid grid-cols-[150px_1fr] gap-y-3 gap-x-4">
-                                <div className="flex items-center gap-1">
-                                  <label className="text-[13px] font-semibold text-gray-700">Câu mẫu của Trợ lý:</label>
-                                  <HelpTooltip helpKey="assistantPrompt" />
-                                </div>
-                                <div className="space-y-2">
-                                  <textarea value={slot.assistantPrompt} onChange={(e) => handleSlotChange(slot.id, 'assistantPrompt', e.target.value)} placeholder="Ví dụ: Ôi đại gia {user} vừa tặng {gift_name}! Cảm ơn đại gia rất nhiều!" className="w-full h-[60px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-white focus:outline-blue-500" />
-                                  <EventVoiceTester 
-                                    text={slot.assistantPrompt || `Ôi đại gia {user} vừa tặng ${slot.giftName || 'quà đặc biệt'}! Cảm ơn đại gia rất nhiều!`}
-                                    defaultVoiceId="free_vi_female2"
-                                    label={`Nghe thử câu thoại Quà đặc biệt (${slot.giftName?.split('(')[0] || 'Slot ' + slot.id})`}
-                                    compact={false}
-                                  />
-                                </div>
-                                
-                                <div className="flex items-center gap-1">
-                                  <label className="text-[13px] font-semibold text-gray-700">Video của Trợ lý:</label>
-                                  <HelpTooltip helpKey="assistantVideoFolder" />
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[13px] font-medium min-w-[150px] truncate max-w-xs">{slot.assistantVideoFolder || 'Chưa chọn'}</span>
-                                  <button onClick={() => selectSlotFolder(slot.id, 'assistantVideoFolder')} className="text-[13px] text-gray-600 font-medium hover:text-gray-900 transition-colors underline decoration-dotted cursor-pointer">Chọn...</button>
-                                </div>
-
-                                <div className="col-span-2 flex justify-center mt-1">
-                                  <label className="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" checked={slot.useMainVoice} onChange={(e) => handleSlotChange(slot.id, 'useMainVoice', e.target.checked, true)} className="cursor-pointer" /> 
-                                    <span className="text-[13px] text-gray-600 font-medium">Dùng giọng của nhân vật chính</span>
-                                    <HelpTooltip helpKey="assistantUseMainVoice" />
-                                  </label>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* Button Thêm Slot Quà Tặng Đặc Biệt */}
-                    <button 
-                      onClick={handleAddSpecialGiftSlot}
-                      className="w-full py-3 bg-gradient-to-r from-yellow-50 to-amber-50 hover:from-yellow-100 hover:to-amber-100 border-2 border-dashed border-amber-400 text-amber-800 rounded-xl font-black text-sm flex justify-center items-center gap-2 transition-all shadow-sm cursor-pointer active:scale-98"
-                    >
-                      <Plus size={18} className="text-amber-600" /> ➕ Thêm Slot Quà Tặng Đặc Biệt Mới
-                    </button>
-                  </div>
-
-                </fieldset>
-              </div>
-            </>
-          ) : selectedEventId === 'gift' ? (
-            /* ========================================================================= */
-            /* 3. QUÀ TẶNG THƯỜNG (MULTI-SLOT QUÀ THƯỜNG - ẢNH 2) */
-            /* ========================================================================= */
-            <>
-              <div className="border border-gray-300 rounded-md bg-white mb-3 shadow-sm px-3 py-4">
-                <fieldset className="border border-gray-300 rounded p-4 pt-4 mt-2 relative">
-                  <legend className="absolute -top-3 left-3 bg-white px-1 text-sm font-semibold text-gray-700">
-                    Cấu hình Logic Chung (Ưu tiên, Cooldown)
-                  </legend>
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center">
-                      <FieldLabel icon="⭐" text="Độ ưu tiên" helpKey="priority" minW="min-w-[180px]" />
-                      <input type="number" name="priority" value={currentConfig.priority} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
-                    </div>
-                    <div className="flex items-center">
-                      <FieldLabel icon="✅" text="Kích hoạt" helpKey="active" minW="min-w-[180px]" />
-                      <input type="checkbox" name="active" checked={currentConfig.active} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer" />
-                    </div>
-                    <div className="flex items-center">
-                      <FieldLabel icon="⏳" text="Chờ giữa các quà tặng (giây)" helpKey="waitBetweenEvents" minW="min-w-[180px]" />
-                      <input type="number" name="waitBetweenEvents" value={currentConfig.waitBetweenEvents} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
-                    </div>
-                  </div>
-                </fieldset>
-              </div>
-
-              {/* Danh sách các Slot Quà Tặng Thường */}
-              <div className="border border-gray-300 rounded-md bg-white mb-3 shadow-sm px-3 py-4">
-                <fieldset className="border border-gray-300 rounded p-4 pt-4 mt-2 relative">
-                  <legend className="absolute -top-3 left-3 bg-white px-1 text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <span>Cấu hình Các Slot Quản Lý Quà Tặng Thường ({currentConfig.giftSlots?.length || 0} Slots)</span>
-                  </legend>
-
-                  <div className="flex flex-col gap-4">
-                    {currentConfig.giftSlots?.map((gSlot, gIdx) => (
-                      <div key={gSlot.id || gIdx} className="border border-gray-300 rounded-xl p-4 bg-[#f8f9fa] shadow-sm relative space-y-3">
-                        {/* Slot Header with Checkbox, Title & Delete button */}
-                        <div className="flex items-center justify-between border-b border-gray-200 pb-2">
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              checked={gSlot.active !== false} 
-                              onChange={(e) => handleGiftSlotChange(gSlot.id, 'active', e.target.checked, true)} 
-                              className="w-4 h-4 text-blue-600 rounded cursor-pointer" 
-                            />
-                            <span className="font-black text-gray-800 text-[14px]">Slot {gSlot.id}:</span>
-                            <input 
-                              type="text" 
-                              value={gSlot.name || ''} 
-                              onChange={(e) => handleGiftSlotChange(gSlot.id, 'name', e.target.value)} 
-                              placeholder="Tên slot quà thường..." 
-                              className="px-2 py-0.5 border border-gray-300 rounded text-xs font-bold bg-white text-gray-800 w-64 focus:outline-blue-500" 
-                            />
-                          </label>
-
-                          <button 
-                            onClick={() => handleDeleteGiftSlot(gSlot.id)}
-                            className="text-xs text-red-500 hover:text-white hover:bg-red-500 border border-red-400 px-2.5 py-1 rounded-lg transition-all font-bold flex items-center gap-1 cursor-pointer"
-                            title="Xóa slot quà thường này"
-                          >
-                            <Trash2 size={12} /> Xóa Slot
-                          </button>
-                        </div>
-
-                        {/* Video Folders Config */}
-                        <div className="grid grid-cols-[180px_1fr] gap-y-3 gap-x-4 items-center">
-                          <div className="flex items-center gap-1">
-                            <label className="text-[13px] font-semibold text-[#a53b3b]">Thư mục video hành động:</label>
-                            <HelpTooltip helpKey="videoFolder" />
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[13px] font-medium min-w-[150px] text-gray-700 bg-gray-50 px-2 py-1 rounded border border-gray-200 truncate max-w-xs">{gSlot.videoFolder || 'Chưa chọn thư mục'}</span>
-                            <button onClick={() => selectGiftSlotFolder(gSlot.id, 'videoFolder')} className="text-[13px] text-blue-600 font-semibold hover:text-blue-800 transition-colors underline decoration-dotted cursor-pointer">Chọn thư mục...</button>
-                          </div>
-
-                          <div className="flex items-center gap-1">
-                            <label className="text-[13px] font-semibold text-[#1e40af]">🎬 Thư mục video nền hỗ trợ:</label>
-                            <HelpTooltip helpKey="videoFolder" />
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[13px] font-medium min-w-[150px] text-gray-700 bg-gray-50 px-2 py-1 rounded border border-gray-200 truncate max-w-xs">{gSlot.supportVideoFolder || 'Chưa chọn (Dùng video nền mặc định)'}</span>
-                            <button onClick={() => selectGiftSlotFolder(gSlot.id, 'supportVideoFolder')} className="text-[13px] text-indigo-600 font-semibold hover:text-indigo-800 transition-colors underline decoration-dotted cursor-pointer">Chọn video nền...</button>
-                          </div>
-
-                          <div className="flex items-start">
-                            <label className="text-[13px] font-semibold text-gray-700 mt-1">📄 Câu trả lời mẫu (mỗi câu 1 dòng):</label>
-                          </div>
-                          <div className="space-y-2">
-                            <textarea 
-                              value={gSlot.sampleAnswers || ''} 
-                              onChange={(e) => handleGiftSlotChange(gSlot.id, 'sampleAnswers', e.target.value)} 
-                              placeholder="Cảm ơn bạn {user} đã gửi tặng {gift_name} nha!&#10;Cảm ơn món quà ngọt ngào của {user}!"
-                              className="w-full h-[80px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-white focus:outline-blue-500" 
-                            />
-                            <EventVoiceTester 
-                              text={gSlot.sampleAnswers || 'Cảm ơn bạn {user} đã gửi tặng {gift_name} nha! Cảm ơn món quà ngọt ngào của {user}!'}
-                              defaultVoiceId="free_vi_female"
-                              label={`Nghe thử câu thoại mẫu (${gSlot.name || 'Slot ' + gSlot.id})`}
-                              compact={false}
-                            />
-                          </div>
-
-                          <div className="flex items-start">
-                            <label className="text-[13px] font-semibold text-gray-700 mt-1">✍️ Kịch bản cho AI:</label>
-                          </div>
-                          <textarea 
-                            value={gSlot.aiPrompt || ''} 
-                            onChange={(e) => handleGiftSlotChange(gSlot.id, 'aiPrompt', e.target.value)} 
-                            placeholder="Bạn là streamer AI. Hãy viết lời cảm ơn sáng tạo tới {user} vì đã tặng 1 {gift_name}."
-                            className="w-full h-[70px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-white focus:outline-blue-500" 
-                          />
-                        </div>
-
-                        {/* Options Checkboxes */}
-                        <div className="flex items-center gap-6 pt-2 border-t border-gray-200 flex-wrap">
-                          <label className="flex items-center gap-1.5 cursor-pointer">
-                            <input type="checkbox" checked={gSlot.useAi} onChange={(e) => handleGiftSlotChange(gSlot.id, 'useAi', e.target.checked, true)} className="rounded text-blue-600 cursor-pointer" /> 
-                            <span className="text-[13px] font-medium">🧠 Dùng AI trả lời</span>
-                          </label>
-                          <label className="flex items-center gap-1.5 cursor-pointer">
-                            <input type="checkbox" checked={gSlot.useVoice} onChange={(e) => handleGiftSlotChange(gSlot.id, 'useVoice', e.target.checked, true)} className="rounded text-blue-600 cursor-pointer" /> 
-                            <span className="text-[13px] font-medium">🗣️ Dùng giọng nói</span>
-                          </label>
-                          <label className="flex items-center gap-1.5 cursor-pointer">
-                            <input type="checkbox" checked={gSlot.useTTS} onChange={(e) => handleGiftSlotChange(gSlot.id, 'useTTS', e.target.checked, true)} className="rounded text-blue-600 cursor-pointer" /> 
-                            <span className="text-[13px] font-medium">🗣️ Dùng TTS</span>
-                          </label>
-                          <label className="flex items-center gap-1.5 cursor-pointer">
-                            <input type="checkbox" checked={gSlot.muteSourceVideo} onChange={(e) => handleGiftSlotChange(gSlot.id, 'muteSourceVideo', e.target.checked, true)} className="rounded text-blue-600 cursor-pointer" /> 
-                            <span className="text-[13px] font-medium">🔇 Tắt âm gốc video</span>
-                          </label>
-                        </div>
-
-                        {/* Assistant for this slot */}
-                        <div className="pt-2 border-t border-gray-200">
-                          <label className="flex items-center gap-2 cursor-pointer mb-2">
-                            <input type="checkbox" checked={gSlot.useAssistant} onChange={(e) => handleGiftSlotChange(gSlot.id, 'useAssistant', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded cursor-pointer" />
-                            <span className="font-bold text-gray-800 text-[13px]">👥 Cài đặt Trợ lý riêng cho slot này</span>
-                          </label>
-
-                          {gSlot.useAssistant && (
-                            <div className="pl-6 grid grid-cols-[150px_1fr] gap-y-2 gap-x-4">
-                              <label className="text-[13px] font-semibold text-gray-700">Câu mẫu Trợ lý:</label>
-                              <div className="space-y-2">
-                                <textarea value={gSlot.assistantPrompt || ''} onChange={(e) => handleGiftSlotChange(gSlot.id, 'assistantPrompt', e.target.value)} placeholder="Ví dụ: Cảm ơn bạn {user} đã ủng hộ quà cho phòng live nhé!" className="w-full h-[50px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-white focus:outline-blue-500" />
-                                <EventVoiceTester 
-                                  text={gSlot.assistantPrompt || 'Cảm ơn bạn {user} đã ủng hộ quà cho phòng live nhé!'}
-                                  defaultVoiceId="free_vi_female2"
-                                  label={`Nghe thử Trợ lý (${gSlot.name || 'Slot ' + gSlot.id})`}
-                                  compact={false}
-                                />
-                              </div>
-                              <label className="text-[13px] font-semibold text-gray-700">Video Trợ lý:</label>
-                              <div className="flex items-center gap-2">
-                                <span className="text-[13px] font-medium min-w-[150px] truncate max-w-xs">{gSlot.assistantVideoFolder || 'Chưa chọn'}</span>
-                                <button onClick={() => selectGiftSlotFolder(gSlot.id, 'assistantVideoFolder')} className="text-[13px] text-blue-600 font-medium hover:underline cursor-pointer">Chọn...</button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* Button Thêm Slot Quà Thường */}
-                    <button 
-                      onClick={handleAddGiftSlot}
-                      className="w-full py-3 bg-gradient-to-r from-yellow-50 to-amber-50 hover:from-yellow-100 hover:to-amber-100 border-2 border-dashed border-yellow-400 text-yellow-800 rounded-xl font-black text-sm flex justify-center items-center gap-2 transition-all shadow-sm cursor-pointer active:scale-98"
-                    >
-                      <Plus size={18} className="text-yellow-600" /> ➕ Thêm Slot Quà Tặng (Thường) Mới
-                    </button>
-                  </div>
-                </fieldset>
-              </div>
-            </>
-          ) : selectedEventId === 'checkout' ? (
-            /* ========================================================================= */
-            /* 4. CHỐT ĐƠN (CHECKOUT & KỊCH BẢN BÁN HÀNG IDOL AI) */
+            /* 2. QUÀ TẶNG ĐẶC BIỆT (SPECIAL GIFT SLOTS) */
             /* ========================================================================= */
             <>
               <div className="border border-gray-300 rounded-2xl bg-white mb-4 shadow-sm px-4 py-5">
-                
-                {/* 1. KHỞI CHẠY & ƯU TIÊN */}
                 <div className="flex items-center gap-6 mb-5 pb-3 border-b border-gray-100 flex-wrap">
                   <div className="flex items-center">
-                    <FieldLabel icon="✅" text="Kích hoạt" helpKey="active" minW="min-w-[120px]" />
+                    <FieldLabel icon="✅" text="Kích hoạt chung" helpKey="active" minW="min-w-[130px]" />
                     <input type="checkbox" name="active" checked={currentConfig.active} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer" />
                   </div>
                   <div className="flex items-center">
@@ -1198,17 +1029,177 @@ Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăn
                   </div>
                 </div>
 
-                {/* ========================================================================= */}
-                {/* 🌟 2. BỘ CHỌN CHẾ ĐỘ PHÁT SÓNG KỊCH BẢN (SCRIPT BROADCAST MODE) */}
-                {/* ========================================================================= */}
+                <fieldset className="border-2 border-yellow-300 rounded-2xl p-4 pt-4 relative bg-yellow-50/20 shadow-xs">
+                  <legend className="absolute -top-3 left-4 bg-white px-2.5 py-0.5 text-xs font-black text-yellow-800 flex items-center gap-1.5 border border-yellow-300 rounded-lg shadow-2xs">
+                    <Sparkles size={14} className="text-yellow-600" /> CÁC SLOT QUÀ TẶNG ĐẶC BIỆT TÙY BIẾN
+                  </legend>
+
+                  <div className="space-y-4 mt-2">
+                    {currentConfig.specialGiftSlots?.map((slot) => (
+                      <fieldset key={slot.id} className="border border-yellow-200 rounded-xl p-3.5 pt-4 relative bg-white shadow-2xs">
+                        <legend className="absolute -top-3 left-3 bg-white px-2 text-xs font-bold text-yellow-900 flex items-center gap-2 border border-yellow-200 rounded-md shadow-2xs">
+                          <input 
+                            type="checkbox" 
+                            checked={slot.active} 
+                            onChange={(e) => handleSlotChange(slot.id, 'active', e.target.checked, true)} 
+                            className="w-3.5 h-3.5 text-yellow-600 rounded cursor-pointer" 
+                          />
+                          <span>Slot #{slot.id}: <b className="text-amber-700">{slot.giftName}</b></span>
+                        </legend>
+                        
+                        <button 
+                          onClick={() => handleDeleteSpecialGiftSlot(slot.id)}
+                          className="absolute top-2 right-2 text-xs text-red-500 hover:text-white hover:bg-red-500 border border-red-300 px-2 py-0.5 rounded-md transition-colors font-semibold cursor-pointer"
+                        >
+                          Xóa
+                        </button>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-1 text-xs">
+                          <div>
+                            <label className="font-bold text-gray-700 block mb-1">🎁 Chọn Quà Tặng:</label>
+                            <select 
+                              value={slot.giftName} 
+                              onChange={(e) => handleSlotChange(slot.id, 'giftName', e.target.value)} 
+                              className="border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs bg-white focus:outline-blue-500 w-full font-medium cursor-pointer"
+                            >
+                              {GIFT_OPTIONS.map(g => (
+                                <option key={g.id} value={g.label}>{g.label}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="font-bold text-gray-700 block mb-1">📁 Thư mục Video Idol Diễn:</label>
+                            <div className="flex items-center gap-2 w-full">
+                              <span className="font-medium text-gray-600 truncate flex-1 bg-gray-50 border border-gray-200 px-2 py-1 rounded-lg">{slot.videoFolder || 'Chưa chọn'}</span>
+                              <button onClick={() => selectSpecialGiftSlotFolder(slot.id, 'videoFolder')} className="text-gray-700 font-bold hover:text-gray-900 transition-colors bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-lg cursor-pointer">Chọn...</button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Checkboxes slot */}
+                        <div className="flex items-center gap-4 mt-3 pt-2 border-t border-gray-100 text-xs">
+                          <label className="flex items-center gap-1.5 cursor-pointer font-medium text-gray-700">
+                            <input type="checkbox" checked={slot.useTTS} onChange={(e) => handleSlotChange(slot.id, 'useTTS', e.target.checked, true)} className="rounded text-blue-600" />
+                            <span>🗣️ Dùng TTS</span>
+                          </label>
+                          <label className="flex items-center gap-1.5 cursor-pointer font-medium text-gray-700">
+                            <input type="checkbox" checked={slot.muteSourceVideo} onChange={(e) => handleSlotChange(slot.id, 'muteSourceVideo', e.target.checked, true)} className="rounded text-blue-600" />
+                            <span>🔇 Tắt âm video gốc</span>
+                          </label>
+                          <label className="flex items-center gap-1.5 cursor-pointer font-medium text-gray-700">
+                            <input type="checkbox" checked={slot.useAssistant} onChange={(e) => handleSlotChange(slot.id, 'useAssistant', e.target.checked, true)} className="rounded text-blue-600" />
+                            <span>👥 Trợ lý phụ họa</span>
+                          </label>
+                        </div>
+                      </fieldset>
+                    ))}
+
+                    <button 
+                      onClick={handleAddSpecialGiftSlot}
+                      className="w-full py-3 bg-gradient-to-r from-yellow-50 to-amber-50 hover:from-yellow-100 hover:to-amber-100 border-2 border-dashed border-yellow-400 text-yellow-800 rounded-xl font-black text-xs flex justify-center items-center gap-2 transition-all shadow-sm cursor-pointer active:scale-98"
+                    >
+                      <Plus size={16} className="text-yellow-600" /> ➕ Thêm Slot Quà Tặng Đặc Biệt Mới
+                    </button>
+                  </div>
+                </fieldset>
+              </div>
+            </>
+          ) : selectedEventId === 'gift' ? (
+            /* ========================================================================= */
+            /* 3. QUÀ TẶNG THƯỜNG (REGULAR GIFT SLOTS) */
+            /* ========================================================================= */
+            <>
+              <div className="border border-gray-300 rounded-2xl bg-white mb-4 shadow-sm px-4 py-5">
+                <div className="flex items-center gap-6 mb-5 pb-3 border-b border-gray-100 flex-wrap">
+                  <div className="flex items-center">
+                    <FieldLabel icon="✅" text="Kích hoạt chung" helpKey="active" minW="min-w-[130px]" />
+                    <input type="checkbox" name="active" checked={currentConfig.active} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer" />
+                  </div>
+                  <div className="flex items-center">
+                    <FieldLabel icon="⭐" text="Độ ưu tiên" helpKey="priority" minW="min-w-[100px]" />
+                    <input type="number" name="priority" value={currentConfig.priority} onChange={handleChange} className="w-28 border border-gray-300 rounded-lg px-2.5 py-1 text-xs bg-gray-50 focus:bg-white focus:outline-blue-500 font-bold" />
+                  </div>
+                </div>
+
+                <fieldset className="border-2 border-yellow-300 rounded-2xl p-4 pt-4 relative bg-yellow-50/20 shadow-xs">
+                  <legend className="absolute -top-3 left-4 bg-white px-2.5 py-0.5 text-xs font-black text-yellow-800 flex items-center gap-1.5 border border-yellow-300 rounded-lg shadow-2xs">
+                    <Gift size={14} className="text-yellow-600" /> CÁC SLOT QUÀ TẶNG THƯỜNG (MULTI-SLOT)
+                  </legend>
+
+                  <div className="space-y-4 mt-2">
+                    {currentConfig.giftSlots?.map((gSlot) => (
+                      <div key={gSlot.id} className="border border-yellow-200 rounded-xl p-3.5 bg-white space-y-3 relative shadow-2xs">
+                        <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                          <div className="flex items-center gap-2">
+                            <input type="checkbox" checked={gSlot.active} onChange={(e) => handleGiftSlotChange(gSlot.id, 'active', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded cursor-pointer" />
+                            <input 
+                              type="text" 
+                              value={gSlot.name} 
+                              onChange={(e) => handleGiftSlotChange(gSlot.id, 'name', e.target.value)} 
+                              className="font-bold text-gray-800 text-xs border border-gray-300 rounded px-2 py-0.5 focus:outline-blue-500 min-w-[220px]" 
+                            />
+                          </div>
+                          <button onClick={() => handleDeleteGiftSlot(gSlot.id)} className="text-xs text-red-500 hover:underline cursor-pointer">Xóa Slot</button>
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-bold text-gray-700 block mb-1">📄 Câu cảm ơn mẫu (Mỗi câu 1 dòng):</label>
+                          <textarea 
+                            value={gSlot.sampleAnswers || ''} 
+                            onChange={(e) => handleGiftSlotChange(gSlot.id, 'sampleAnswers', e.target.value)} 
+                            placeholder="Cảm ơn bạn {user} đã tặng {gift_name} nha!"
+                            className="w-full h-[60px] border border-gray-300 rounded-lg p-2 text-xs resize-none bg-white focus:outline-blue-500" 
+                          />
+                        </div>
+
+                        <EventVoiceTester 
+                          text={gSlot.sampleAnswers || 'Cảm ơn bạn {user} đã tặng quà cho em nha!'}
+                          defaultVoiceId="free_vi_female"
+                          label={`Nghe thử Voice (${gSlot.name || 'Slot ' + gSlot.id})`}
+                          compact={true}
+                        />
+                      </div>
+                    ))}
+
+                    <button 
+                      onClick={handleAddGiftSlot}
+                      className="w-full py-3 bg-gradient-to-r from-yellow-50 to-amber-50 hover:from-yellow-100 hover:to-amber-100 border-2 border-dashed border-yellow-400 text-yellow-800 rounded-xl font-black text-xs flex justify-center items-center gap-2 transition-all shadow-sm cursor-pointer active:scale-98"
+                    >
+                      <Plus size={16} className="text-yellow-600" /> ➕ Thêm Slot Quà Tặng (Thường) Mới
+                    </button>
+                  </div>
+                </fieldset>
+              </div>
+            </>
+          ) : selectedEventId === 'script_broadcast' ? (
+            /* ========================================================================= */
+            /* 4. TAB 1: 📜 KỊCH BẢN IDOL (BÁN HÀNG TUẦN TỰ & BỘ NÃO AI DOANH NGHIỆP) */
+            /* ========================================================================= */
+            <>
+              <div className="border border-gray-300 rounded-2xl bg-white mb-4 shadow-sm px-4 py-5">
+                
+                {/* 1. KHỞI CHẠY & ƯU TIÊN */}
+                <div className="flex items-center gap-6 mb-5 pb-3 border-b border-gray-100 flex-wrap">
+                  <div className="flex items-center">
+                    <FieldLabel icon="✅" text="Kích hoạt phát kịch bản" helpKey="active" minW="min-w-[160px]" />
+                    <input type="checkbox" name="active" checked={currentConfig.active} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer" />
+                  </div>
+                  <div className="flex items-center">
+                    <FieldLabel icon="⭐" text="Độ ưu tiên" helpKey="priority" minW="min-w-[100px]" />
+                    <input type="number" name="priority" value={currentConfig.priority} onChange={handleChange} className="w-28 border border-gray-300 rounded-lg px-2.5 py-1 text-xs bg-gray-50 focus:bg-white focus:outline-blue-500 font-bold" />
+                  </div>
+                </div>
+
+                {/* 🌟 2. BỘ CHỌN CHẾ ĐỘ PHÁT SÓNG (MODE SWITCHER) */}
                 <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-300 mb-6 shadow-xs space-y-3">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                     <div>
                       <h3 className="text-sm font-black text-blue-900 flex items-center gap-2 uppercase tracking-wide">
-                        <Sparkles size={18} className="text-blue-600 animate-pulse" /> CHẾ ĐỘ PHÁT SÓNG KỊCH BẢN BÁN HÀNG IDOL AI
+                        <Sparkles size={18} className="text-blue-600 animate-pulse" /> CHẾ ĐỘ PHÁT SÓNG KỊCH BẢN IDOL AI
                       </h3>
                       <p className="text-xs text-gray-600 mt-0.5">
-                        Chọn cách Idol AI livestream: Đọc đúng 100% kịch bản đã setup từng câu hoặc Trả lời bằng Bộ Não AI & Kho Tri Thức Doanh Nghiệp.
+                        Chọn cách thức Idol vận hành: Phát đúng 100% kịch bản mẫu soạn sẵn hoặc Sử dụng Bộ Não AI & Kho Tri Thức Doanh Nghiệp.
                       </p>
                     </div>
 
@@ -1222,7 +1213,7 @@ Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăn
                             : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700'
                         }`}
                       >
-                        <FileText size={15} /> 1. Kịch Bản Cài Sẵn
+                        <FileText size={15} /> 1. Kịch Bản Bán Hàng Cài Sẵn
                       </button>
                       <button
                         type="button"
@@ -1238,7 +1229,7 @@ Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăn
                     </div>
                   </div>
 
-                  {/* CẤU HÌNH XEN KẼ BÌNH LUẬN (COMMENT INTERRUPTION & SEAMLESS RESUME) */}
+                  {/* CẤU HÌNH TỰ ĐỘNG TẠM DỪNG VÀ TIẾP TỤC */}
                   <div className="p-3 bg-white/95 rounded-xl border border-blue-200 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
                     <div className="flex items-start gap-2.5">
                       <input 
@@ -1253,7 +1244,7 @@ Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăn
                           <span>🔄 Tự động tạm dừng kịch bản khi có bình luận &rarr; Trả lời khách &rarr; Đọc tiếp liền mạch</span>
                         </label>
                         <p className="text-[11px] text-gray-500 mt-0.5">
-                          Khi có bình luận từ khán giả, Idol sẽ tạm dừng câu kịch bản bán hàng, trả lời thắc mắc của khách rồi tự động đọc tiếp câu tiếp theo mà không bị lặp lại từ đầu.
+                          Khi có bình luận từ người xem, Idol sẽ tạm dừng kịch bản bán hàng, trả lời khách rồi tiếp tục câu tiếp theo mà không bị lặp lại từ đầu.
                         </p>
                       </div>
                     </div>
@@ -1273,114 +1264,7 @@ Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăn
                   </div>
                 </div>
 
-                {/* ========================================================================= */}
-                {/* 🛍️ 3. DANH SÁCH SẢN PHẨM / MÃ HÀNG LIVESTREAM (ĐƯỢC ĐƯA LÊN TRÊN ĐẦU) */}
-                {/* ========================================================================= */}
-                <div className="mb-6 p-4 rounded-2xl bg-slate-50 border border-slate-200 shadow-2xs space-y-3">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-200">
-                    <div>
-                      <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                        <ShoppingBag size={15} className="text-blue-600" /> DANH SÁCH SẢN PHẨM / MÃ HÀNG LIVESTREAM
-                      </h4>
-                      <p className="text-[11px] text-gray-500 mt-0.5">
-                        Khai báo các sản phẩm có trong giỏ hàng để AI tự động nhận diện từ khóa và tư vấn chốt đơn cho từng sản phẩm.
-                      </p>
-                    </div>
-
-                    <button 
-                      onClick={handleAddProduct}
-                      className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
-                    >
-                      <Plus size={13} /> Thêm Sản Phẩm Mới
-                    </button>
-                  </div>
-
-                  {(!currentConfig.checkoutProducts || currentConfig.checkoutProducts.length === 0) ? (
-                    <div className="text-center py-4 text-xs text-gray-500 bg-white rounded-xl border border-dashed border-gray-300">
-                      Chưa có sản phẩm nào trong danh sách. Bấm <b>"Thêm Sản Phẩm Mới"</b> để bắt đầu khai báo mã hàng!
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {currentConfig.checkoutProducts.map(prod => (
-                        <fieldset key={prod.id} className="border border-blue-200 rounded-xl p-3.5 pt-4 relative bg-white shadow-2xs">
-                          <legend className="absolute -top-3 left-3 bg-white px-2 text-xs font-bold text-blue-900 flex items-center gap-2 border border-blue-200 rounded-md shadow-2xs">
-                            <input 
-                              type="checkbox" 
-                              checked={prod.active !== false} 
-                              onChange={(e) => handleProductChange(prod.id, 'active', e.target.checked, true)} 
-                              className="w-3.5 h-3.5 text-blue-600 rounded cursor-pointer" 
-                            />
-                            <span>Mã Hàng #{prod.id}: <b className="text-blue-700">{prod.productName || 'Chưa đặt tên'}</b></span>
-                          </legend>
-                          
-                          <button 
-                            onClick={() => handleDeleteProduct(prod.id)}
-                            className="absolute top-2 right-2 text-xs text-red-500 hover:text-white hover:bg-red-500 border border-red-300 px-2 py-0.5 rounded-md transition-colors font-semibold cursor-pointer"
-                          >
-                            Xóa
-                          </button>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-1 text-xs">
-                            <div>
-                              <label className="font-bold text-gray-700 block mb-1">🏷️ Tên sản phẩm:</label>
-                              <input 
-                                type="text" 
-                                value={prod.productName} 
-                                onChange={(e) => handleProductChange(prod.id, 'productName', e.target.value)} 
-                                placeholder="Ví dụ: Serum Tế Bào Gốc Trẻ Hóa Da, Nước Hoa Pháp..."
-                                className="border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs bg-white focus:outline-blue-500 w-full" 
-                              />
-                            </div>
-
-                            <div>
-                              <label className="font-bold text-[#a53b3b] block mb-1">🔑 Từ khóa chốt đơn (cách nhau bởi ;):</label>
-                              <input 
-                                type="text" 
-                                value={prod.keywords} 
-                                onChange={(e) => handleProductChange(prod.id, 'keywords', e.target.value)} 
-                                placeholder="Ví dụ: sp1; mã 01; serum; mua serum; chốt 01"
-                                className="border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs bg-white focus:outline-blue-500 w-full" 
-                              />
-                            </div>
-
-                            <div>
-                              <label className="font-bold text-gray-700 block mb-1">💰 Giá niêm yết & Giá Flash Sale:</label>
-                              <input 
-                                type="text" 
-                                value={prod.priceInfo || ''} 
-                                onChange={(e) => handleProductChange(prod.id, 'priceInfo', e.target.value)} 
-                                placeholder="Ví dụ: Giá gốc 1.850.000đ - Giá live 890.000đ"
-                                className="border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs bg-white focus:outline-blue-500 w-full" 
-                              />
-                            </div>
-
-                            <div>
-                              <label className="font-bold text-gray-700 block mb-1">📁 Thư mục Video Minh Họa:</label>
-                              <div className="flex items-center gap-2 w-full">
-                                <span className="font-medium text-gray-600 truncate flex-1 bg-gray-50 border border-gray-200 px-2 py-1 rounded-lg">{prod.videoFolder || 'Chưa chọn thư mục'}</span>
-                                <button onClick={() => selectProductFolder(prod.id)} className="text-gray-700 font-bold hover:text-gray-900 transition-colors bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-lg cursor-pointer">Chọn...</button>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Bộ Nghe Thử Voice Cho Từng Sản Phẩm */}
-                          <div className="mt-3 pt-2 border-t border-gray-100">
-                            <EventVoiceTester 
-                              text={`Dạ em chào bạn {user}! Sản phẩm ${prod.productName || 'này'} đang có ưu đãi cực sốc trong giỏ hàng góc trái màn hình, bạn bấm vào đặt hàng ngay để nhận quà nhé!`}
-                              defaultVoiceId="free_vi_female"
-                              label={`Nghe thử câu chốt đơn: ${prod.productName || `Mã #${prod.id}`}`}
-                              compact={true}
-                            />
-                          </div>
-                        </fieldset>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* ========================================================================= */}
-                {/* 📜 4. NỘI DUNG CHI TIẾT THEO CHẾ ĐỘ ĐANG CHỌN */}
-                {/* ========================================================================= */}
+                {/* 📜 3. NỘI DUNG THEO CHẾ ĐỘ ĐANG CHỌN */}
                 {(currentConfig.broadcastMode || 'fixed_script') === 'fixed_script' ? (
                   /* ========================================================================= */
                   /* CHẾ ĐỘ 1: KỊCH BẢN BÁN HÀNG CÀI SẴN (FIXED SCRIPT) */
@@ -1392,68 +1276,69 @@ Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăn
                       </legend>
 
                       <div className="flex flex-col gap-3 mt-1">
-                        {/* Thanh nút nạp kịch bản mẫu & tải file */}
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-white rounded-xl border border-blue-100">
-                          <div>
+                        {/* 10 MẪU KỊCH BẢN CHUẨN XỊN 60 PHÚT */}
+                        <div className="p-3.5 bg-white rounded-xl border border-blue-200 space-y-2.5 shadow-2xs">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                             <div className="text-xs font-black text-blue-900 flex items-center gap-1.5">
-                              <Sparkles size={14} className="text-amber-500" /> NẠP KỊCH BẢN MẪU CHUẨN XỊN (30 - 60 PHÚT):
+                              <Sparkles size={15} className="text-amber-500 animate-bounce" /> NẠP NHANH 10 MẪU KỊCH BẢN BÁN HÀNG 60 PHÚT (10 NGÀNH NGHỀ HOT):
                             </div>
-                            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                              <button
-                                type="button"
-                                onClick={() => applyMasterScript('cosmetics')}
-                                className="px-3 py-1 bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-300 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              <input 
+                                type="file" 
+                                id="upload-fixed-script-file"
+                                className="hidden" 
+                                accept=".txt,.md,.docx,.doc,.pdf,.csv,.json,.xlsx,.xls"
+                                onChange={handleLoadUniversalScriptFile}
+                              />
+                              <label 
+                                htmlFor="upload-fixed-script-file"
+                                className="text-xs text-blue-700 cursor-pointer hover:bg-blue-100 flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-300 font-black shadow-2xs transition-all"
                               >
-                                🌸 Mỹ Phẩm & Nước Hoa (Chuẩn 60p)
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => applyMasterScript('fashion')}
-                                className="px-3 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-300 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
-                              >
-                                👗 Thời Trang & Phụ Kiện
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => applyMasterScript('tech')}
-                                className="px-3 py-1 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-300 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
-                              >
-                                💻 Công Nghệ & Khóa Học AI
-                              </button>
+                                <Upload size={14} /> Nạp File (.docx, .pdf, .txt, .json)
+                              </label>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2 shrink-0">
-                            <input 
-                              type="file" 
-                              id="upload-fixed-script-file"
-                              className="hidden" 
-                              accept=".txt,.md,.docx,.doc,.pdf,.csv,.json"
-                              onChange={handleLoadUniversalScriptFile}
-                            />
-                            <label 
-                              htmlFor="upload-fixed-script-file"
-                              className="text-xs text-blue-700 cursor-pointer hover:bg-blue-100 flex items-center gap-1.5 bg-blue-50 px-3 py-2 rounded-xl border border-blue-300 font-black shadow-2xs transition-all"
-                            >
-                              <Upload size={14} /> Nạp File Kịch Bản (.docx, .pdf, .txt, .json)
-                            </label>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 pt-1">
+                            {[
+                              { id: 'cosmetics', label: '🌸 Mỹ Phẩm & Skincare', color: 'bg-pink-50 hover:bg-pink-100 text-pink-700 border-pink-300' },
+                              { id: 'perfume', label: '🌹 Nước Hoa Cao Cấp', color: 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-300' },
+                              { id: 'women_fashion', label: '👗 Thời Trang Nữ', color: 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-300' },
+                              { id: 'men_fashion', label: '👔 Thời Trang Nam', color: 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-300' },
+                              { id: 'tech_ai', label: '💻 Công Nghệ & Khóa Học AI', color: 'bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border-cyan-300' },
+                              { id: 'smart_home', label: '🏠 Gia Dụng Thông Minh', color: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300' },
+                              { id: 'health_wellness', label: '🌿 Thực Phẩm Sức Khỏe', color: 'bg-green-50 hover:bg-green-100 text-green-700 border-green-300' },
+                              { id: 'jewelry_fengshui', label: '🔮 Trang Sức Phong Thủy', color: 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-300' },
+                              { id: 'food_specialty', label: '🍜 Đặc Sản Vùng Miền', color: 'bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-300' },
+                              { id: 'flash_sale', label: '⚡ Flash Sale Xả Kho', color: 'bg-red-50 hover:bg-red-100 text-red-700 border-red-300' },
+                            ].map(item => (
+                              <button
+                                key={item.id}
+                                type="button"
+                                onClick={() => applyMasterScript(item.id)}
+                                className={`p-2 border rounded-xl text-xs font-bold transition-all text-left truncate cursor-pointer shadow-2xs hover:scale-[1.02] active:scale-98 ${item.color}`}
+                              >
+                                {item.label}
+                              </button>
+                            ))}
                           </div>
                         </div>
 
-                        {/* Textarea kịch bản */}
+                        {/* TEXTAREA KỊCH BẢN */}
                         <div className="relative">
                           <textarea 
-                            value={currentConfig.fixedScriptText !== undefined ? currentConfig.fixedScriptText : COSMETICS_MASTER_SCRIPT} 
+                            value={currentConfig.fixedScriptText !== undefined ? currentConfig.fixedScriptText : MASTER_SCRIPTS.cosmetics} 
                             onChange={(e) => handleSimpleChange('fixedScriptText', e.target.value)} 
-                            placeholder="Nhập chuỗi các câu thoại kịch bản (mỗi dòng là một câu). Idol sẽ đọc tuần tự từng câu theo đúng kịch bản đã setup..."
-                            className="w-full h-[220px] border border-gray-300 rounded-xl p-3.5 text-xs resize-y bg-white focus:outline-blue-500 font-sans leading-relaxed shadow-inner" 
+                            placeholder="Nhập chuỗi các câu thoại kịch bản bán hàng (mỗi dòng là một câu thoại). Idol sẽ đọc tuần tự từng câu theo đúng kịch bản..."
+                            className="w-full h-[240px] border border-gray-300 rounded-xl p-3.5 text-xs resize-y bg-white focus:outline-blue-500 font-sans leading-relaxed shadow-inner" 
                           />
-                          <div className="absolute bottom-3 right-3 text-[11px] text-gray-400 bg-white/80 px-2 py-0.5 rounded-md border border-gray-200">
-                            {(currentConfig.fixedScriptText || COSMETICS_MASTER_SCRIPT).split(/\r?\n/).filter(Boolean).length} câu thoại
+                          <div className="absolute bottom-3 right-3 text-[11px] text-gray-500 bg-white/90 px-2 py-0.5 rounded-md border border-gray-200 font-bold shadow-2xs">
+                            {(currentConfig.fixedScriptText || MASTER_SCRIPTS.cosmetics).split(/\r?\n/).filter(Boolean).length} câu thoại
                           </div>
                         </div>
 
-                        {/* Tùy chỉnh phát kịch bản */}
+                        {/* CÀI ĐẶT THỜI GIAN VÀ THỜI LƯỢNG */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 bg-white rounded-xl border border-gray-200 text-xs">
                           <div className="flex items-center justify-between gap-2">
                             <span className="font-bold text-gray-700">⏱️ Thời gian nghỉ giữa câu:</span>
@@ -1479,6 +1364,7 @@ Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăn
                                 className="border border-gray-300 rounded-lg px-2 py-1 text-xs font-bold bg-white cursor-pointer"
                               >
                                 <option value="30">30 phút</option>
+                                <option value="45">45 phút</option>
                                 <option value="60">60 phút (1 tiếng)</option>
                                 <option value="90">90 phút (1.5 tiếng)</option>
                                 <option value="120">120 phút (2 tiếng)</option>
@@ -1501,9 +1387,9 @@ Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăn
                           </div>
                         </div>
 
-                        {/* Bộ Nghe Thử Voice Kịch Bản */}
+                        {/* NGHE THỬ VOICE TOÀN BỘ KỊCH BẢN */}
                         <EventVoiceTester 
-                          text={currentConfig.fixedScriptText || COSMETICS_MASTER_SCRIPT}
+                          text={currentConfig.fixedScriptText || MASTER_SCRIPTS.cosmetics}
                           defaultVoiceId="free_vi_female"
                           label="Nghe thử toàn bộ kịch bản bán hàng cài sẵn (Mọi Giọng Đọc AI)"
                           compact={false}
@@ -1513,7 +1399,7 @@ Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăn
                   </div>
                 ) : (
                   /* ========================================================================= */
-                  /* CHẾ ĐỘ 2: BỘ NÃO AI & KHO TRI THỨC DOANH NGHIỆP / SẢN PHẨM */
+                  /* CHẾ ĐỘ 2: BỘ NÃO AI & KHO TRI THỨC DOANH NGHIỆP (AI BRAIN & KNOWLEDGE) */
                   /* ========================================================================= */
                   <div className="space-y-4 mb-4">
                     <fieldset className="border-2 border-purple-300 rounded-2xl p-4 pt-4 relative bg-purple-50/30 shadow-xs">
@@ -1522,14 +1408,14 @@ Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăn
                       </legend>
 
                       <div className="space-y-4 mt-1">
-                        {/* Thanh nạp file tri thức doanh nghiệp */}
+                        {/* NẠP FILE TÀI LIỆU DOANH NGHIỆP */}
                         <div className="p-3.5 bg-white rounded-xl border border-purple-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                           <div>
                             <div className="text-xs font-black text-purple-900 flex items-center gap-1.5">
-                              <BookOpen size={15} className="text-purple-600" /> TẢI FILE TÀI LIỆU DOANH NGHIỆP / SẢN PHẨM:
+                              <BookOpen size={15} className="text-purple-600" /> TẢI FILE TÀI LIỆU TRI THỨC DOANH NGHIỆP / SẢN PHẨM:
                             </div>
                             <p className="text-[11px] text-gray-500 mt-0.5">
-                              Hỗ trợ tất cả các định dạng: <b>.docx, .doc, .pdf, .txt, .json, .csv, .md, .xlsx, .xls</b>. AI sẽ tự động học thuộc 100% dữ liệu để trả lời khách.
+                              Hỗ trợ tất cả các định dạng: <b>.docx, .doc, .pdf, .txt, .json, .csv, .md, .xlsx, .xls</b>. AI sẽ tự động học thuộc 100% dữ liệu để trả lời khách trực tiếp.
                             </p>
                             {currentConfig.companyKnowledgeFileName && (
                               <div className="mt-1 text-[11px] font-bold text-emerald-600 flex items-center gap-1">
@@ -1555,7 +1441,7 @@ Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăn
                           </div>
                         </div>
 
-                        {/* Form cấu hình Doanh nghiệp & Sản phẩm */}
+                        {/* FORM CẤU HÌNH THÔNG TIN DOANH NGHIỆP */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div>
                             <label className="text-xs font-bold text-gray-700 block mb-1">🏢 Tên Doanh Nghiệp / Thương Hiệu:</label>
@@ -1602,7 +1488,7 @@ Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăn
                           </div>
                         </div>
 
-                        {/* Điểm nổi bật & Bảo hành */}
+                        {/* ĐIỂM NỔI BẬT & BẢO HÀNH */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div>
                             <label className="text-xs font-bold text-gray-700 block mb-1">✨ Tính Năng, Thành Phần & Công Dụng Nổi Bật:</label>
@@ -1625,20 +1511,26 @@ Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăn
                           </div>
                         </div>
 
-                        {/* TÙY CHỈNH PHONG CÁCH LIVE & THỜI LƯỢNG AI */}
-                        <div className="p-3.5 bg-white rounded-xl border border-purple-200 space-y-3">
+                        {/* 10 PHONG CÁCH LIVESTREAM AI & THỜI LƯỢNG */}
+                        <div className="p-3.5 bg-white rounded-xl border border-purple-200 space-y-3 shadow-2xs">
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                              <label className="text-xs font-bold text-purple-900 block mb-1">🎭 Phong Cách Livestream Của AI:</label>
+                              <label className="text-xs font-bold text-purple-900 block mb-1">🎭 10 Phong Cách Livestream Của AI:</label>
                               <select
                                 value={currentConfig.aiLiveStyle || 'sales_fast'}
                                 onChange={(e) => handleSimpleChange('aiLiveStyle', e.target.value)}
                                 className="w-full border border-purple-300 rounded-lg px-2.5 py-1.5 text-xs bg-white font-bold text-purple-900 focus:outline-purple-500 cursor-pointer"
                               >
-                                <option value="sales_fast">🔥 Hào Hứng - Năng Động - Chốt Sale Thần Tốc</option>
-                                <option value="skincare_expert">🌸 Thân Thiện - Dịu Dàng - Chuyên Gia Mỹ Phẩm / Da Liễu</option>
-                                <option value="tiktok_funny">😂 Hài Hước - Duyên Dáng - Bắt Trend TikTok</option>
-                                <option value="luxury_elegant">💎 Sang Trọng - Quyến Rũ - Đẳng Cấp Thương Hiệu</option>
+                                <option value="sales_fast">🔥 1. Hào Hứng - Năng Động - Chốt Sale Thần Tốc</option>
+                                <option value="skincare_expert">🌸 2. Thân Thiện - Dịu Dàng - Chuyên Gia Da Liễu</option>
+                                <option value="tiktok_funny">😂 3. Hài Hước - Duyên Dáng - Bắt Trend TikTok</option>
+                                <option value="luxury_elegant">💎 4. Sang Trọng - Quyến Rũ - Đẳng Cấp Thượng Lưu</option>
+                                <option value="tech_expert">🎓 5. Giáo Dục - Chia Sẻ Giá Trị - Chuyên Gia Công Nghệ</option>
+                                <option value="countdown_urgent">⏳ 6. Giục Giã - Đếm Ngược Khẩn Cấp - Flash Sale</option>
+                                <option value="emotional_story">💖 7. Tâm Sự - Chân Thành - Chia Sẻ Cảm Xúc</option>
+                                <option value="motivational_fire">📢 8. Hùng Biện - Năng Lượng Đỉnh Cao - Truyền Lửa</option>
+                                <option value="gen_z_vibes">🛹 9. Gen Z Năng Động - Trẻ Trung - Phá Cách</option>
+                                <option value="vip_master">👑 10. VIP Master Streamer - Đỉnh Cao Thuyết Phục</option>
                               </select>
                             </div>
 
@@ -1648,9 +1540,10 @@ Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăn
                                 <select
                                   value={currentConfig.aiLiveDuration || 60}
                                   onChange={(e) => handleSimpleChange('aiLiveDuration', Number(e.target.value) || 60)}
-                                  className="border border-purple-300 rounded-lg px-2.5 py-1.5 text-xs bg-white font-bold text-purple-900 focus:outline-purple-500 cursor-pointer flex-1"
+                                  className="flex-1 border border-purple-300 rounded-lg px-2.5 py-1.5 text-xs bg-white font-bold text-purple-900 focus:outline-purple-500 cursor-pointer"
                                 >
                                   <option value="30">30 phút</option>
+                                  <option value="45">45 phút</option>
                                   <option value="60">60 phút (1 tiếng)</option>
                                   <option value="90">90 phút (1.5 tiếng)</option>
                                   <option value="120">120 phút (2 tiếng)</option>
@@ -1660,104 +1553,259 @@ Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăn
                                 <button
                                   type="button"
                                   onClick={handleGenerateAiScript}
-                                  className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm transition-all cursor-pointer shrink-0"
+                                  className="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs rounded-lg shadow-sm flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
                                 >
-                                  <Sparkles size={13} /> AI Tạo Kịch Bản
+                                  <Sparkles size={14} /> Tạo Kịch Bản Bằng AI
                                 </button>
                               </div>
                             </div>
                           </div>
-                        </div>
 
-                        {/* Kho Tri Thức Văn Bản Chi Tiết (Knowledge Base Raw Content) */}
-                        <div>
-                          <label className="text-xs font-bold text-gray-700 block mb-1">📝 Kho Tri Thức Dữ Liệu Doanh Nghiệp & Tài Liệu Chuyên Sâu:</label>
-                          <textarea 
-                            value={currentConfig.companyKnowledgeText || ''} 
-                            onChange={(e) => handleSimpleChange('companyKnowledgeText', e.target.value)} 
-                            placeholder="Dán toàn bộ tài liệu giới thiệu công ty, cẩm nang sản phẩm, bảng giá, hướng dẫn sử dụng, FAQ tại đây..."
-                            className="w-full h-[100px] border border-gray-300 rounded-lg p-2.5 text-xs resize-y bg-white focus:outline-purple-500 font-sans leading-relaxed" 
-                          />
-                        </div>
-
-                        {/* System Prompt Cho Bộ Não AI */}
-                        <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <label className="text-xs font-bold text-gray-700">🤖 Kịch Bản Chi Tiết & Phong Cách Chốt Đơn Của AI (System Prompt):</label>
-                            <label 
-                              htmlFor="upload-ai-prompt-file"
-                              className="text-xs text-purple-700 cursor-pointer hover:underline flex items-center gap-1 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 font-bold"
-                            >
-                              <Upload size={11} /> Tải file kịch bản AI
-                            </label>
-                            <input 
-                              type="file" 
-                              id="upload-ai-prompt-file"
-                              className="hidden" 
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (!file) return;
-                                const reader = new FileReader();
-                                reader.onload = (ev) => {
-                                  const content = ev.target?.result || '';
-                                  handleSimpleChange('aiPrompt', content);
-                                };
-                                reader.readAsText(file);
-                              }} 
+                          {/* Ô NHẬP VĂN BẢN TRI THỨC TỰ DO */}
+                          <div>
+                            <label className="text-xs font-bold text-gray-700 block mb-1">📚 Nội Dung Tri Thức Doanh Nghiệp Tự Do (Tùy chọn):</label>
+                            <textarea 
+                              value={currentConfig.companyKnowledgeText || ''} 
+                              onChange={(e) => handleSimpleChange('companyKnowledgeText', e.target.value)} 
+                              placeholder="Dán thêm thông tin bảng giá, quy định bảo hành, feedback khách hàng vào đây. AI sẽ dùng toàn bộ dữ liệu này để tư vấn chốt đơn cho khách..."
+                              className="w-full h-[90px] border border-gray-300 rounded-lg p-2.5 text-xs resize-y bg-white focus:outline-purple-500 font-sans leading-relaxed" 
                             />
                           </div>
-                          <textarea 
-                            value={currentConfig.aiPrompt || NEW_AI_PROMPT} 
-                            onChange={(e) => handleSimpleChange('aiPrompt', e.target.value)} 
-                            className="w-full h-[120px] border border-gray-300 rounded-lg p-2.5 text-xs resize-y bg-white focus:outline-purple-500 font-mono" 
+
+                          {/* SYSTEM PROMPT CHO AI */}
+                          <div className="pt-2 border-t border-purple-100">
+                            <div className="flex items-center justify-between mb-1">
+                              <label className="text-xs font-bold text-purple-900 flex items-center gap-1">
+                                <span>🧠 System Prompt Kịch Bản Đóng Vai AI:</span>
+                              </label>
+                              <div className="flex items-center gap-2">
+                                <input 
+                                  type="file" 
+                                  id="upload-ai-prompt-file"
+                                  className="hidden" 
+                                  accept=".txt,.md,.json"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    const reader = new FileReader();
+                                    reader.onload = (evt) => {
+                                      const content = evt.target?.result;
+                                      if (content) {
+                                        handleSimpleChange('aiPrompt', content);
+                                      }
+                                    };
+                                    reader.readAsText(file);
+                                    e.target.value = '';
+                                  }}
+                                />
+                                <label 
+                                  htmlFor="upload-ai-prompt-file"
+                                  className="text-[11px] text-purple-700 cursor-pointer hover:underline flex items-center gap-1 font-bold"
+                                >
+                                  <Upload size={12} /> Nạp Prompt (.txt)
+                                </label>
+                              </div>
+                            </div>
+
+                            <textarea 
+                              value={currentConfig.aiPrompt !== undefined ? currentConfig.aiPrompt : NEW_AI_PROMPT} 
+                              onChange={(e) => handleSimpleChange('aiPrompt', e.target.value)} 
+                              placeholder="Prompt chỉ đạo hành vi cho AI khi livestream..."
+                              className="w-full h-[100px] border border-purple-200 rounded-lg p-2 text-[11px] font-mono bg-purple-50/20 focus:bg-white focus:outline-purple-500 resize-y" 
+                            />
+                          </div>
+
+                          {/* NGHE THỬ VOICE BỘ NÃO AI */}
+                          <EventVoiceTester 
+                            text={currentConfig.fixedScriptText || MASTER_SCRIPTS.cosmetics}
+                            defaultVoiceId="free_vi_female"
+                            label="Nghe thử Voice câu thoại AI tạo ra"
+                            compact={false}
                           />
                         </div>
-
-                        {/* Bộ Nghe Thử Voice AI Tri Thức */}
-                        <EventVoiceTester 
-                          text={`Dạ em chào bạn {user}! Sản phẩm ${currentConfig.productName || 'Bộ Đôi Serum & Nước Hoa'} của ${currentConfig.companyName || 'shop em'} đang có giá Flash Sale ${currentConfig.productPrice || 'chỉ 890k'}, bạn bấm ngay vào giỏ hàng góc trái màn hình để sở hữu nhé!`}
-                          defaultVoiceId="free_vi_female"
-                          label="Nghe thử câu tư vấn chốt đơn Bộ Não AI (Mọi Giọng Đọc)"
-                          compact={false}
-                        />
                       </div>
                     </fieldset>
                   </div>
                 )}
+
+              </div>
+            </>
+          ) : selectedEventId === 'checkout' ? (
+            /* ========================================================================= */
+            /* 5. TAB 2: 🛒 CHỐT ĐƠN (GIỎ HÀNG & DANH SÁCH MÃ HÀNG LIVESTREAM) */
+            /* ========================================================================= */
+            <>
+              <div className="border border-gray-300 rounded-2xl bg-white mb-4 shadow-sm px-4 py-5">
+                
+                {/* 1. KHỞI CHẠY & ƯU TIÊN */}
+                <div className="flex items-center gap-6 mb-5 pb-3 border-b border-gray-100 flex-wrap">
+                  <div className="flex items-center">
+                    <FieldLabel icon="✅" text="Kích hoạt chốt đơn" helpKey="active" minW="min-w-[150px]" />
+                    <input type="checkbox" name="active" checked={currentConfig.active} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer" />
+                  </div>
+                  <div className="flex items-center">
+                    <FieldLabel icon="⭐" text="Độ ưu tiên" helpKey="priority" minW="min-w-[100px]" />
+                    <input type="number" name="priority" value={currentConfig.priority} onChange={handleChange} className="w-28 border border-gray-300 rounded-lg px-2.5 py-1 text-xs bg-gray-50 focus:bg-white focus:outline-blue-500 font-bold" />
+                  </div>
+                </div>
+
+                {/* 🛍️ DANH SÁCH SẢN PHẨM / MÃ HÀNG LIVESTREAM */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 shadow-2xs space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+                    <div>
+                      <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                        <ShoppingBag size={16} className="text-blue-600" /> DANH SÁCH SẢN PHẨM / MÃ HÀNG LIVESTREAM
+                      </h4>
+                      <p className="text-[11px] text-gray-500 mt-0.5">
+                        Khai báo các sản phẩm có trong giỏ hàng để AI tự động nhận diện từ khóa, phát video minh họa và tư vấn chốt đơn cho từng sản phẩm.
+                      </p>
+                    </div>
+
+                    <button 
+                      onClick={handleAddProduct}
+                      className="px-3.5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                    >
+                      <Plus size={14} /> Thêm Sản Phẩm Mới
+                    </button>
+                  </div>
+
+                  {(!currentConfig.checkoutProducts || currentConfig.checkoutProducts.length === 0) ? (
+                    <div className="text-center py-6 text-xs text-gray-500 bg-white rounded-xl border border-dashed border-gray-300">
+                      Chưa có sản phẩm nào trong danh sách. Bấm <b>"Thêm Sản Phẩm Mới"</b> để bắt đầu khai báo mã hàng!
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {currentConfig.checkoutProducts.map(prod => (
+                        <fieldset key={prod.id} className="border border-blue-200 rounded-xl p-4 pt-4 relative bg-white shadow-2xs">
+                          <legend className="absolute -top-3 left-3 bg-white px-2.5 py-0.5 text-xs font-bold text-blue-900 flex items-center gap-2 border border-blue-200 rounded-md shadow-2xs">
+                            <input 
+                              type="checkbox" 
+                              checked={prod.active !== false} 
+                              onChange={(e) => handleProductChange(prod.id, 'active', e.target.checked, true)} 
+                              className="w-3.5 h-3.5 text-blue-600 rounded cursor-pointer" 
+                            />
+                            <span>Mã Hàng #{prod.id}: <b className="text-blue-700">{prod.productName || 'Chưa đặt tên'}</b></span>
+                          </legend>
+                          
+                          <button 
+                            onClick={() => handleDeleteProduct(prod.id)}
+                            className="absolute top-2 right-2 text-xs text-red-500 hover:text-white hover:bg-red-500 border border-red-300 px-2 py-0.5 rounded-md transition-colors font-semibold cursor-pointer"
+                          >
+                            Xóa
+                          </button>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mt-1 text-xs">
+                            <div>
+                              <label className="font-bold text-gray-700 block mb-1">🏷️ Tên sản phẩm:</label>
+                              <input 
+                                type="text" 
+                                value={prod.productName} 
+                                onChange={(e) => handleProductChange(prod.id, 'productName', e.target.value)} 
+                                placeholder="Ví dụ: Serum Tế Bào Gốc Trẻ Hóa Da, Nước Hoa Pháp..."
+                                className="border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs bg-white focus:outline-blue-500 w-full font-bold text-blue-900" 
+                              />
+                            </div>
+
+                            <div>
+                              <label className="font-bold text-[#a53b3b] block mb-1">🔑 Từ khóa chốt đơn (cách nhau bởi ;):</label>
+                              <input 
+                                type="text" 
+                                value={prod.keywords} 
+                                onChange={(e) => handleProductChange(prod.id, 'keywords', e.target.value)} 
+                                placeholder="Ví dụ: sp1; mã 01; serum; mua serum; chốt 01; giá"
+                                className="border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs bg-white focus:outline-blue-500 w-full" 
+                              />
+                            </div>
+
+                            <div>
+                              <label className="font-bold text-gray-700 block mb-1">💰 Giá niêm yết & Giá Flash Sale:</label>
+                              <input 
+                                type="text" 
+                                value={prod.priceInfo || ''} 
+                                onChange={(e) => handleProductChange(prod.id, 'priceInfo', e.target.value)} 
+                                placeholder="Ví dụ: Giá gốc 1.850.000đ - Giá live 890.000đ"
+                                className="border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs bg-white focus:outline-blue-500 w-full" 
+                              />
+                            </div>
+
+                            {/* CHỌN THƯ MỤC HOẶC TẢI VIDEO MINH HỌA TRỰC TIẾP */}
+                            <div>
+                              <label className="font-bold text-gray-700 block mb-1">📁 Thư mục Video Minh Họa / Tải Video Lên:</label>
+                              <div className="flex items-center gap-1.5 w-full">
+                                <span className="font-medium text-gray-600 truncate flex-1 bg-gray-50 border border-gray-200 px-2 py-1.5 rounded-lg text-xs">
+                                  {prod.videoFileName ? `🎬 ${prod.videoFileName}` : (prod.videoFolder || 'Chưa chọn thư mục')}
+                                </span>
+                                <button 
+                                  type="button"
+                                  onClick={() => selectProductFolder(prod.id)} 
+                                  className="text-gray-700 font-bold hover:text-gray-900 transition-colors bg-gray-200 hover:bg-gray-300 px-2.5 py-1.5 rounded-lg text-xs cursor-pointer shrink-0"
+                                >
+                                  Chọn...
+                                </button>
+                                
+                                <input 
+                                  type="file" 
+                                  id={`upload-video-${prod.id}`}
+                                  className="hidden" 
+                                  accept="video/mp4,video/webm,video/quicktime"
+                                  onChange={(e) => handleProductVideoUpload(prod.id, e)}
+                                />
+                                <label 
+                                  htmlFor={`upload-video-${prod.id}`}
+                                  title="Tải trực tiếp video clip minh họa cho sản phẩm này"
+                                  className="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-300 px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all flex items-center gap-1 shrink-0"
+                                >
+                                  <Video size={13} /> Tải Clip
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* BỘ NGHE THỬ VOICE CHO TỪNG SẢN PHẨM */}
+                          <div className="mt-3 pt-2.5 border-t border-gray-100">
+                            <EventVoiceTester 
+                              text={`Dạ em chào bạn {user}! Sản phẩm ${prod.productName || 'này'} đang có ưu đãi cực sốc trong giỏ hàng góc trái màn hình, giá chỉ ${prod.priceInfo || 'rất tốt'}, bạn bấm vào đặt hàng ngay để nhận voucher quà tặng nhé!`}
+                              defaultVoiceId="free_vi_female"
+                              label={`Nghe thử câu chốt đơn: ${prod.productName || `Mã #${prod.id}`}`}
+                              compact={true}
+                            />
+                          </div>
+                        </fieldset>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
               </div>
             </>
           ) : (
             /* ========================================================================= */
-            /* 5. BÌNH LUẬN (COMMENTS) & CÁC SỰ KIỆN KHÁC */
+            /* 6. CÁC TAB SỰ KIỆN KHÁC (BÌNH LUẬN, THEO DÕI, QUÀ, CHIA SẺ, TIM, CHÀO...) */
             /* ========================================================================= */
             <>
-              {/* Cấu hình Chung */}
-              <div className="border border-gray-300 rounded-md bg-white mb-3 shadow-sm">
-                <div className="relative px-3 py-4">
-                  <fieldset className="border border-gray-300 rounded p-4 pt-6 mt-2 relative">
+              <div className="border border-gray-300 rounded-md bg-white mb-3 shadow-sm px-3 py-4">
+                <div className="flex flex-col gap-3">
+                  
+                  <fieldset className="border border-gray-300 rounded p-4 pt-4 relative">
                     <legend className="absolute -top-3 left-3 bg-white px-1 text-sm font-semibold text-gray-700 flex items-center gap-1">
-                      Cấu hình Chung - <span className="text-[#a53b3b]"><selectedEventInfo.icon size={14} className={selectedEventInfo.color} /></span> {selectedEventInfo?.label}
+                      <span>⚙️ Cài đặt Sự kiện: {selectedEventInfo?.label}</span>
                     </legend>
                     
                     <div className="flex flex-col gap-3">
                       
-                      {/* BỘ CHỌN CHẾ ĐỘ PHẢN HỒI BÌNH LUẬN (CHỈ DÀNH CHO TAB BÌNH LUẬN) */}
+                      {/* Cấu hình đặc biệt cho Bình luận (Comment Mode & Response Format) */}
                       {selectedEventId === 'comment' && (
-                        <div className="p-4 rounded-xl bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border border-blue-200 mb-2 space-y-3">
-                          <h4 className="text-xs font-black text-blue-900 uppercase tracking-wider flex items-center gap-1.5">
-                            <Sparkles size={14} className="text-blue-600" /> LỰA CHỌN CHẾ ĐỘ & HÌNH THỨC PHẢN HỒI BÌNH LUẬN
-                          </h4>
-
-                          {/* 1. Chế độ phản hồi: AI vs Từ khóa vs Kết hợp */}
+                        <div className="p-3.5 rounded-xl bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 border border-purple-200 mb-2 space-y-3">
                           <div>
-                            <label className="text-xs font-bold text-gray-700 block mb-1.5">
-                              🎯 1. Chế độ xử lý phản hồi bình luận:
+                            <label className="text-xs font-black text-purple-900 flex items-center gap-1.5 mb-1.5">
+                              <Sparkles size={14} className="text-purple-600" />
+                              CHẾ ĐỘ TRẢ LỜI BÌNH LUẬN (COMMENT REPLY MODE):
                             </label>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                               {[
-                                { id: 'keywords_only', label: '1️⃣ Chỉ Dùng Từ Khóa Có Sẵn', desc: 'Chỉ trả lời khi khớp từ khóa cấu hình' },
-                                { id: 'ai_only', label: '2️⃣ Chỉ Dùng AI Gemini', desc: 'AI tự động phân tích và tạo câu trả lời' },
-                                { id: 'hybrid', label: '3️⃣ Kết Hợp Thông Minh (Khuyên Dùng)', desc: 'Ưu tiên từ khóa có sẵn -> Tự động dùng AI nếu không khớp' },
+                                { id: 'keywords_only', label: '1. Chỉ Kịch Bản Từ Khóa', desc: 'Chỉ trả lời khi khớp từ khóa cài sẵn, bỏ qua câu khác' },
+                                { id: 'ai_only', label: '2. Chỉ Bộ Não AI', desc: 'AI Gemini tự động phân tích và trả lời 100% bình luận' },
+                                { id: 'hybrid', label: '3. Kết Hợp Thông Minh', desc: 'Ưu tiên kịch bản từ khóa, nếu không khớp AI sẽ trả lời' },
                               ].map(mode => (
                                 <button
                                   key={mode.id}
@@ -1769,8 +1817,11 @@ Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăn
                                       : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50/50'
                                   }`}
                                 >
-                                  <div className="text-xs font-black">{mode.label}</div>
-                                  <div className={`text-[10.5px] mt-0.5 ${(currentConfig.commentReplyMode || 'hybrid') === mode.id ? 'text-blue-100' : 'text-gray-500'}`}>
+                                  <div className="text-xs font-black flex items-center justify-between">
+                                    <span>{mode.label}</span>
+                                    {(currentConfig.commentReplyMode || 'hybrid') === mode.id && <CheckSquare size={14} />}
+                                  </div>
+                                  <div className={`text-[11px] mt-1 line-clamp-2 ${(currentConfig.commentReplyMode || 'hybrid') === mode.id ? 'text-blue-100' : 'text-gray-500'}`}>
                                     {mode.desc}
                                   </div>
                                 </button>
@@ -1778,15 +1829,15 @@ Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăn
                             </div>
                           </div>
 
-                          {/* 2. Hình thức phản hồi: Voice vs Text vs Cả 2 */}
-                          <div>
-                            <label className="text-xs font-bold text-gray-700 block mb-1.5">
-                              🔊 2. Hình thức phản hồi:
+                          <div className="pt-2 border-t border-purple-200/60">
+                            <label className="text-xs font-black text-purple-900 flex items-center gap-1.5 mb-1.5">
+                              <Volume2 size={14} className="text-purple-600" />
+                              HÌNH THỨC PHẢN HỒI (RESPONSE FORMAT):
                             </label>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                               {[
-                                { id: 'voice_only', label: '🗣️ Giọng Đọc Voice (TTS / Audio)', icon: Volume2 },
-                                { id: 'text_only', label: '💬 Văn Bản Text (Gửi vào ô chat)', icon: MessageSquare },
+                                { id: 'voice_only', label: '🗣️ Chỉ Phát Giọng Đọc Voice', icon: Volume2 },
+                                { id: 'text_only', label: '💬 Chỉ Gửi Tin Nhắn Chat', icon: MessageSquare },
                                 { id: 'both', label: '🔄 Cả Giọng Đọc Voice + Gửi Text', icon: Sparkles },
                               ].map(fmt => (
                                 <button
@@ -1900,7 +1951,7 @@ Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăn
                         </>
                       )}
 
-                      {/* TÍCH HỢP WORKSPACE KEYWORD PANEL CHUẨN ẢNH 3 & ẢNH 4 CHO TAB BÌNH LUẬN */}
+                      {/* TÍCH HỢP WORKSPACE KEYWORD PANEL CHO TAB BÌNH LUẬN */}
                       {selectedEventId === 'comment' && (
                         <div className="mt-4 pt-4 border-t border-gray-200">
                           <WorkspaceKeywordPanel 
@@ -1935,7 +1986,7 @@ Anh chị hãy nhấp ngay vào link hoặc giỏ hàng bên dưới để đăn
                           <div className="ml-0 sm:ml-[220px]">
                             <EventVoiceTester 
                               text={currentConfig.sampleAnswers || 'Xin chào và cảm ơn bạn đã tương tác cùng phiên livestream nhé!'}
-                              defaultVoiceId={selectedEventId === 'checkout' ? 'free_vi_female' : selectedEventId === 'follow' ? 'free_vi_female2' : 'free_vi_female'}
+                              defaultVoiceId={selectedEventId === 'follow' ? 'free_vi_female2' : 'free_vi_female'}
                               label={`Nghe thử câu thoại mẫu (${selectedEventInfo?.label || 'Sự kiện'})`}
                               compact={false}
                             />

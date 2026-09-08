@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.0.5';
+export const APP_VERSION = '2.0.6';
 export const UPDATE_NOTES = [
-  "🛍️ Nâng Cấp Danh Sách Sản Phẩm / Mã Hàng Livestream lên vị trí ưu tiên đầu trang, hỗ trợ cấu hình giá Flash Sale & kịch bản chốt đơn riêng cho từng mã.",
-  "📁 Tích Hợp Nạp File Tri Thức & Kịch Bản Đa Định Dạng (.docx, .doc, .pdf, .txt, .json, .csv, .md, .xlsx, .xls) để AI tự động học thuộc 100% dữ liệu.",
-  "🌸 Bổ Sung Bộ Kịch Bản Mẫu Mỹ Phẩm & Nước Hoa Cao Cấp (Chuẩn 60 Phút) 6 giai đoạn đỉnh cao + Tùy chọn 4 Phong cách Livestream AI (Chốt sale, Da liễu, Bắt trend, Sang trọng)."
+  "📜 Phân Tách 2 Tab Riêng Biệt: Tab '📜 Kịch bản Idol' (Bán hàng Fixed Script & Bộ Não AI Tri Thức) và Tab '🛒 Chốt đơn' (Giỏ hàng & Quản lý Danh Sách Sản Phẩm / Mã Hàng Livestream).",
+  "🌸 Bổ Sung 10 Mẫu Kịch Bản Bán Hàng 60 Phút Chuẩn Xịn (Mỹ phẩm, Nước hoa, Thời trang, Công nghệ AI, Gia dụng, Sức khỏe, Trang sức, Đặc sản...) + 10 Phong Cách Livestream AI.",
+  "🎬 Hỗ Trợ Tải File Video Trực Tiếp (.mp4, .webm, .mov) Cho Từng Mã Hàng & Nghe Thử Voice TOÀN BỘ Kịch Bản Liền Mạch Không Ngắt Quãng."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

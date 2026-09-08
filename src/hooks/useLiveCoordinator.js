@@ -184,8 +184,9 @@ function fillTemplate(template, vars = {}) {
       if (type === 'COMMENT') {
         const commentText = (payload?.text || payload?.comment || '').trim();
         const commentConfig = configs.comment || {};
+        const scriptConfig = configs.script_broadcast || configs.checkout || {};
         const checkoutConfig = configs.checkout || {};
-        const replySource = checkoutConfig.commentReplySource || 'knowledge_base';
+        const replySource = scriptConfig.commentReplySource || checkoutConfig.commentReplySource || 'knowledge_base';
 
         // A. Kiểm tra từ khóa bị cấm (Banned Words)
         if (commentConfig.bannedWords) {
@@ -201,12 +202,12 @@ function fillTemplate(template, vars = {}) {
 
         // B. PHẢN HỒI THEO KHO TRI THỨC DOANH NGHIỆP & SẢN PHẨM (AI KNOWLEDGE BASE)
         if (replySource === 'knowledge_base' || replySource === 'both') {
-          const company = checkoutConfig.companyName || 'Thiên Vua App';
-          const product = checkoutConfig.productName || 'AvaLive VIP PRO';
-          const price = checkoutConfig.productPrice || '3.500.000đ/năm';
-          const promo = checkoutConfig.promotions || 'Ưu đãi giảm giá 50% chỉ có trên livestream';
-          const features = checkoutConfig.keyFeatures || 'Tự động livestream AI 24/7 và trả lời bình luận';
-          const warranty = checkoutConfig.warrantyPolicy || 'Bảo hành 1 đổi 1 trong 12 tháng';
+          const company = scriptConfig.companyName || checkoutConfig.companyName || 'Shop Mỹ Phẩm & Làm Đẹp Cao Cấp';
+          const product = scriptConfig.productName || checkoutConfig.productName || 'Bộ Đôi Serum Tế Bào Gốc & Nước Hoa Pháp';
+          const price = scriptConfig.productPrice || checkoutConfig.productPrice || '1.850.000đ - Flash Sale 890.000đ';
+          const promo = scriptConfig.promotions || checkoutConfig.promotions || 'Tặng kèm kem dưỡng ẩm mini + Freeship toàn quốc';
+          const features = scriptConfig.keyFeatures || checkoutConfig.keyFeatures || 'Dưỡng da căng bóng mịn màng sau 7 ngày, nước hoa lưu hương 12 giờ';
+          const warranty = scriptConfig.warrantyPolicy || checkoutConfig.warrantyPolicy || 'Bảo hành 1 đổi 1 trong 30 ngày, hoàn tiền 200% nếu phát hiện hàng không chuẩn';
 
           if (lowerComment.includes('giá') || lowerComment.includes('bao nhiêu') || lowerComment.includes('tiền') || lowerComment.includes('chi phí')) {
             replyText = `Dạ bạn ${userName} ơi, sản phẩm ${product} của ${company} đang có giá ${price} kèm khuyến mãi: ${promo}. Bạn bấm ngay vào giỏ hàng góc trái màn hình để nhận ưu đãi nha!`;
