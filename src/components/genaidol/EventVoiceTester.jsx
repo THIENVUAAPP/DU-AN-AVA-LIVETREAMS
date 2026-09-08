@@ -21,11 +21,21 @@ export default function EventVoiceTester({
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSentenceIdx, setCurrentSentenceIdx] = useState(0);
   const [totalSentences, setTotalSentences] = useState(0);
-  const [volume, setVolume] = useState(1.0); // 0.1 to 1.0
+  const [volume, setVolume] = useState(1.0); // 0.0 to 1.0
   const [speed, setSpeed] = useState(1.0); // 0.75 to 1.5
 
   const isPlayingRef = useRef(false);
   const queueTimeoutRef = useRef(null);
+  const volumeRef = useRef(1.0);
+  const speedRef = useRef(1.0);
+
+  useEffect(() => {
+    volumeRef.current = volume;
+  }, [volume]);
+
+  useEffect(() => {
+    speedRef.current = speed;
+  }, [speed]);
 
   useEffect(() => {
     if (defaultVoiceId) {
@@ -144,14 +154,14 @@ export default function EventVoiceTester({
         {
           priority: true,
           isTest: true,
-          volume: volume,
-          rate: speed,
+          volume: volumeRef.current,
+          rate: speedRef.current,
           onEnd: () => {
             if (!isPlayingRef.current) return;
-            // Nghỉ ngắn giữa 2 câu (400ms) để nhịp thở tự nhiên
+            // Nghỉ ngắn giữa 2 câu (350ms) để nhịp thở tự nhiên
             queueTimeoutRef.current = setTimeout(() => {
               playSentenceAtIndex(index + 1);
-            }, 400);
+            }, 350);
           }
         }
       );

@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.0.7';
+export const APP_VERSION = '2.0.8';
 export const UPDATE_NOTES = [
-  "⚡ Nạp File Đa Định Dạng (.docx, .doc, .pdf, .txt, .json, .csv, .md, .xlsx, .xls) Cho Tất Cả Các Ô Dữ Liệu: Tri Thức Tự Do, Prompt AI, Tính Năng / Thành Phần (tự động phân số thứ tự 1, 2, 3...) & Chính Sách Bảo Hành.",
-  "🎛️ Nâng Cấp Hệ Thống Nghe Thử Voice: Tích Hợp Thanh Kéo Âm Lượng (0% - 100%) & Tùy Chọn Tốc Độ Đọc (0.75x -> 1.5x) Ngay Cạnh Nút Nghe Thử Trên Mọi Tab.",
-  "🔄 Phát Tuần Tự Trọn Vẹn 100% Kịch Bản Không Giới Hạn Ký Tự, Đồng Bộ Khẩu Hình Miệng 60 FPS Cực Mượt & Hiển Thị Bảng Từ Khóa Ngay Khi Chọn Nguồn Trả Lời Bình Luận."
+  "🖥️ Tối Ưu Hóa Giao Diện Modal Sự Kiện: Mở Rộng Kích Thước Tràn Viền Toàn Màn Hình & Xóa Bỏ Tab Shopee Live Trong Danh Sách (Đã Có Trang Riêng Trên Đầu Ứng Dụng).",
+  "🎛️ Khắc Phục Triệt Để Điều Khiển Âm Lượng (0% - 100%) & Tốc Độ Đọc (0.75x - 1.5x) Có Tác Dụng Ngay Lập Tức Khi Nghe Thử Voice.",
+  "✨ Bổ Sung Icon Trợ Giúp (?) Kèm Hướng Dẫn Chi Tiết Cho Từng Ô Nhập Liệu & Tinh Chỉnh 10 Phong Cách Live AI Kèm Cử Chỉ [Vỗ tay, Cười tươi, Chỉ giỏ hàng, Đếm ngược]."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

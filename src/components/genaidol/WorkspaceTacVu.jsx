@@ -9,11 +9,9 @@ import {
 import { NEW_AI_PROMPT } from '../../utils/defaultAIPrompt';
 import { readUniversalFile } from '../../utils/universalDocumentParser';
 import WorkspaceKeywordPanel from './WorkspaceKeywordPanel';
-import ShopeeLiveConnectModal from './ShopeeLiveConnectModal';
 import EventVoiceTester from './EventVoiceTester';
 
 const EVENTS = [
-  { id: 'shopee_live', label: '🟠 Shopee Live (URL & Key)', icon: ShoppingBag, color: 'text-[#EE4D2D]', desc: 'Cấu hình URL máy chủ RTMP và Khóa Luồng (Stream Key) kết nối với Kênh Người Bán Shopee Live để đồng bộ phiên phát trực tiếp.' },
   { id: 'script_broadcast', label: '📜 Kịch bản Idol', icon: FileText, color: 'text-indigo-600', desc: 'Thiết lập kịch bản bán hàng tuần tự (Fixed Script) hoặc bộ não AI tư vấn từ Kho Tri Thức Doanh Nghiệp.' },
   { id: 'checkout', label: '🛒 Chốt đơn', icon: ShoppingCart, color: 'text-blue-500', desc: 'Khai báo các sản phẩm có trong giỏ hàng để AI tự động nhận diện từ khóa, phát video minh họa và tư vấn chốt đơn cho từng sản phẩm.' },
   { id: 'special_gift', label: 'Quà tặng Đặc biệt', icon: Sparkles, color: 'text-yellow-500', desc: 'Tạo ra các phản ứng độc đáo và ấn tượng cho những món quà giá trị (Sư tử, Du thuyền...) để tri ân những người hâm mộ lớn.' },
@@ -853,79 +851,82 @@ export default function WorkspaceTacVu() {
     
     let generated = '';
     if (style === 'skincare_expert') {
-      generated = `Dạ em xin chào tất cả các chị em đang theo dõi phiên tư vấn chăm sóc da chuyên sâu hôm nay của ${company} ạ!
-Các chị có biết tại sao dù dưỡng kem đắt tiền nhưng da vẫn sạm và khô ráp không ạ? Đó là do lớp biểu bì thiếu ẩm và chưa được phục hồi từ gốc rễ tế bào!
-Và giải pháp vàng hôm nay em mang đến cho cả nhà chính là ${product}!
+      generated = `[Cười tươi dịu dàng, chắp tay chào người xem] Dạ em xin kính chào tất cả các chị em đang theo dõi phiên tư vấn chăm sóc da chuyên sâu hôm nay của ${company} ạ!
+Các chị có biết tại sao dù mình dưỡng kem rất đắt tiền nhưng làn da vẫn bị sạm và khô ráp không ạ? Đó là vì tầng biểu bì thiếu ẩm sâu và chưa được tái sinh từ gốc rễ tế bào!
+[Giơ sản phẩm lên trước camera, ánh mắt chân thành] Và giải pháp phục hồi da chuẩn y khoa hôm nay em mang đến chính là siêu phẩm ${product}!
 Sản phẩm với ưu điểm nổi bật: ${features.split('\n')[0] || features}!
-Hôm nay ${company} trợ giá đặc biệt: ${price}, kèm quà tặng: ${promo}!
-Bên em cam kết chính sách: ${warranty}!
-Các chị hãy bấm vào giỏ hàng góc trái màn hình, chọn mã 01 để làn da được tái sinh ngay hôm nay nhé!`;
+[Nhấn mạnh, hạ giọng chia sẻ bí quyết] Tinh chất thẩm thấu cực nhanh, chỉ sau đúng 7 ngày là các chị sẽ cảm nhận làn da căng bóng mịn màng và mướt mát rõ rệt!
+[Vỗ tay nhẹ, hào hứng giới thiệu ưu đãi] Duy nhất trong phiên live hôm nay, ${company} trợ giá đặc quyền: ${price}, kèm theo phần quà tri ân thượng hạng: ${promo}!
+[Chỉ tay vào góc trái màn hình] Bên em cam kết vàng: ${warranty}!
+Chỉ có 15 suất quà tặng giới hạn, các chị hãy nhanh tay chạm vào Giỏ Hàng góc trái màn hình, chọn mã 01 để làn da được tái sinh ngay hôm nay nhé!`;
     } else if (style === 'tiktok_funny') {
-      generated = `Ú òa! Em chào 500 anh em đang lướt TikTok lọt ngay vào phiên live siêu cấp vũ trụ của ${company} nha!
-Ai mà đi ngang không dừng lại thả tim là tí nữa tiếc hùi hụi luôn á, vì hôm nay có deal sốc chấn động địa cầu!
-Em lên ngay siêu phẩm ${product} đang làm mưa làm gió khắp cõi mạng!
-Giá bình thường tiền triệu, hôm nay trên live chỉ: ${price} thôi cả nhà ơi! Cứ bấm giỏ hàng là có quà: ${promo}!
-Cam kết cực kỳ uy tín: ${warranty}!
-Tay đâu tay đâu, nhấp liền vào giỏ hàng góc trái góc phải để săn deal nào cả nhà ơi!`;
-    } else if (style === 'luxury_elegant') {
-      generated = `Kính chào quý khách hàng thượng lưu đang hiện diện trong không gian livestream độc quyền của thương hiệu ${company}.
-Đẳng cấp và khí chất của người phụ nữ hiện đại luôn được tôn vinh qua diện mạo rạng ngời và mùi hương tinh tế.
-Hôm nay, chúng tôi trân trọng giới thiệu kiệt tác ${product} - sự kết hợp hoàn hảo giữa công nghệ sinh học và nghệ thuật chế tác hương thơm đỉnh cao.
-Ưu đãi độc quyền dành riêng cho khách hàng phiên live: ${price}, cùng bộ quà tặng thượng hạng: ${promo}.
-Cam kết chất lượng chuẩn quốc tế: ${warranty}.
-Kính mời quý khách chạm vào giỏ hàng góc trái màn hình để sở hữu ngay trải nghiệm làm đẹp đẳng cấp này.`;
-    } else if (style === 'tech_expert') {
-      generated = `Chào mừng toàn thể các anh chị em đang theo dõi buổi chia sẻ công nghệ đột phá của ${company}!
-Trong kỷ nguyên số, việc tối ưu hóa hiệu suất và tự động hóa quy trình chính là chìa khóa then chốt để nhân đôi doanh thu!
-Hôm nay ${company} trân trọng giới thiệu siêu phẩm ${product} - giải pháp tiên phong ứng dụng trí tuệ nhân tạo thế hệ mới!
-Tính năng vượt trội: ${features.split('\n')[0] || features}!
-Mức giá đầu tư cực kỳ ưu đãi trên live: ${price}, tặng kèm gói quà tặng đặc quyền: ${promo}!
-Chính sách bảo hành và cam kết chất lượng: ${warranty}!
-Anh chị hãy nhấp vào giỏ hàng bên dưới để trải nghiệm ngay công nghệ tuyệt vời này!`;
-    } else if (style === 'countdown_urgent') {
-      generated = `KHẨN CẤP KHẨN CẤP CẢ NHÀ ƠI! Đồng hồ đếm ngược Flash Sale của ${company} chỉ còn đúng 3 phút cuối cùng!
-Siêu phẩm ${product} đang cháy hàng liên tục trên mọi mặt trận!
-Giá gốc tiền triệu, duy nhất trên live hôm nay giảm sốc: ${price}!
-Chỉ còn đúng 5 suất quà tặng độc quyền: ${promo}!
-Bên em cam kết vàng: ${warranty}!
-Nhanh tay bấm vào Giỏ Hàng góc trái màn hình, chọn ngay mã sản phẩm và bấm Đặt Hàng trước khi hệ thống đóng cổng ưu đãi nhé!`;
-    } else if (style === 'emotional_story') {
-      generated = `Dạ em xin chào mọi người. Hôm nay ngồi lại trên phiên live này, em muốn tâm sự chân thành với cả nhà một chút.
-Là phụ nữ, ai cũng mong muốn bản thân mình được yêu thương, tự tin và rạng rỡ mỗi ngày.
-Và đó cũng chính là tâm huyết mà ${company} gửi gắm vào sản phẩm ${product}.
-Không chỉ là ${features.split('\n')[0] || features}, mà là món quà mang lại sự tự tin cho chính bạn.
-Hôm nay em xin phép tri ân mức giá yêu thương nhất: ${price}, kèm phần quà: ${promo}.
-Cam kết đổi trả và bảo hành chân tình: ${warranty}.
-Hãy yêu thương bản thân bằng cách bấm vào giỏ hàng và mang món quà này về nhà nhé!`;
-    } else if (style === 'motivational_fire') {
-      generated = `CHÀO TẤT CẢ CÁC CHIẾN BINH NĂNG LƯỢNG ĐỈNH CAO CỦA PHIÊN LIVE ${company}!
-Hôm nay chúng ta ở đây để cùng nhau bứt phá giới hạn và chạm tới những đỉnh cao mới!
-Siêu phẩm ${product} chính là vũ khí bí mật giúp bạn nâng tầm vị thế và tỏa sáng rực rỡ!
-Sức mạnh vượt trội: ${features.split('\n')[0] || features}!
-Cơ hội duy nhất trong đời chỉ có tại live hôm nay: ${price}, đi kèm bộ quà tặng đỉnh chóp: ${promo}!
-Cam kết vững chắc như kiềng 3 chân: ${warranty}!
-Hành động ngay, chạm vào giỏ hàng và bứt phá thành công ngay bây giờ nào!`;
-    } else if (style === 'gen_z_vibes') {
-      generated = `Hế lô các keo lì, các đồng boi đang lướt tới live của ${company} nha!
-Hôm nay shop em drop một siêu phẩm đỉnh nóc kịch trần bay phấp phới luôn á!
-Đó chính là em ${product} bao mượt bao cháy phố!
+      generated = `[Mở to mắt ngạc nhiên, vẫy tay cực kỳ hào hứng] Ú òa! Em chào 500 anh chị em đang lướt TikTok lọt ngay vào phiên live siêu cấp vũ trụ của ${company} nha!
+Ai mà đi ngang lướt qua không dừng lại thả tim là tí nữa tiếc hùi hụi đứt ruột luôn á, vì hôm nay có cơn bão deal sốc chấn động địa cầu!
+[Cầm sản phẩm lên lắc nhẹ, cười tươi rạng rỡ] Em lên sàn ngay siêu phẩm ${product} đang làm mưa làm gió khắp cõi mạng đây ạ!
 Công dụng xịn mịn hết nước chấm: ${features.split('\n')[0] || features}!
-Giá rẻ hú hồn chim én: ${price}, lại còn được tặng kèm: ${promo}!
+[Hạ giọng bí mật, ghé sát camera] Bình thường giá tiền triệu ngoài store, duy nhất trên live hôm nay giảm chạm đáy chỉ còn: ${price}! Lại còn được tặng kèm: ${promo}!
+[Vỗ tay giục giã, chỉ tay liên tục vào giỏ hàng] Cam kết uy tín 100 điểm không có nhưng: ${warranty}!
+Tay đâu tay đâu cả nhà ơi! Nhấp liền tay vào Giỏ Hàng góc trái góc phải để săn deal kẻo hết hàng là em không chịu trách nhiệm đâu nha!`;
+    } else if (style === 'luxury_elegant') {
+      generated = `[Nụ cười quý phái, phong thái sang trọng điềm tĩnh] Kính chào quý khách hàng thượng lưu đang hiện diện trong không gian livestream độc quyền của thương hiệu ${company}.
+Đẳng cấp và khí chất của người phụ nữ hiện đại luôn được tôn vinh qua diện mạo rạng ngời và mùi hương tinh tế, quyến rũ.
+[Nâng sản phẩm bằng hai tay trân trọng] Hôm nay, chúng tôi vinh dự giới thiệu kiệt tác nghệ thuật ${product} - sự giao thoa hoàn hảo giữa công nghệ sinh học đỉnh cao và hương sắc quý tộc.
+Giá trị vượt trội: ${features.split('\n')[0] || features}.
+[Ánh mắt tự tin, ngữ điệu truyền cảm] Đặc quyền tri ân dành riêng cho quý khách trong khung giờ vàng hôm nay: ${price}, cùng gói quà tặng cao cấp: ${promo}.
+Chính sách bảo chứng chất lượng hoàng gia: ${warranty}.
+[Đưa tay nhẹ nhàng hướng về giỏ hàng] Kính mời quý khách chạm vào Giỏ Hàng góc trái màn hình để sở hữu ngay trải nghiệm làm đẹp đẳng cấp này.`;
+    } else if (style === 'tech_expert') {
+      generated = `[Phong thái chuyên gia tự tin, ánh mắt quyết đoán] Chào mừng toàn thể các anh chị em doanh chủ và nhà sáng tạo nội dung đang theo dõi buổi chia sẻ công nghệ đột phá của ${company}!
+Trong kỷ nguyên trí tuệ nhân tạo, việc tối ưu hóa quy trình và tự động hóa bán hàng 24/7 chính là chìa khóa then chốt để nhân bản doanh thu vượt bậc!
+[Trình chiếu tính năng sản phẩm] Hôm nay ${company} trân trọng giới thiệu siêu phẩm ${product} - giải pháp tiên phong dẫn đầu thị trường!
+Tính năng công nghệ vượt trội: ${features.split('\n')[0] || features}!
+[Nhấn mạnh hiệu quả đầu tư ROI] Mức chi phí đầu tư cực kỳ ưu đãi chỉ có trên phiên live: ${price}, tặng kèm gói tài nguyên đặc quyền: ${promo}!
+Cam kết đồng hành kỹ thuật và bảo hành trọn đời: ${warranty}!
+[Chỉ tay vào nút đặt hàng] Anh chị hãy nhấp ngay vào Giỏ Hàng bên dưới để nắm bắt công nghệ dẫn đầu ngay hôm nay!`;
+    } else if (style === 'countdown_urgent') {
+      generated = `[Giọng dồn dập, đếm ngược khẩn cấp] KHẨN CẤP KHẨN CẤP CẢ NHÀ ƠI! Đồng hồ đếm ngược Flash Sale của ${company} chỉ còn đúng 3 phút cuối cùng!
+[Giơ sản phẩm lên lắc mạnh, ánh mắt gấp gáp] Siêu phẩm ${product} đang cháy hàng liên tục, hệ thống báo chỉ còn 5 suất cuối cùng!
+Giá gốc tiền triệu ngoài showroom, duy nhất trên live hôm nay giảm kịch sàn chỉ còn: ${price}!
+[Vỗ tay đếm 3 2 1] Tặng ngay bộ quà tặng độc quyền cho ai bấm chốt nhanh nhất: ${promo}!
+Cam kết vàng chính hãng 100%: ${warranty}!
+Nhanh tay các bác ơi, nhìn ngay xuống Giỏ Hàng góc trái màn hình, bấm Chọn Mã và bấm Đặt Hàng trước khi đồng hồ về số 0 và hệ thống đóng cổng ưu đãi nhé!`;
+    } else if (style === 'emotional_story') {
+      generated = `[Ánh mắt ấm áp, giọng nói nhẹ nhàng truyền cảm] Dạ em xin chào mọi người. Hôm nay ngồi lại trên phiên live này, em muốn tâm sự chân thành với cả nhà một chút.
+Là phụ nữ, ai trong chúng ta cũng xứng đáng được yêu thương, tự tin và rạng rỡ mỗi khi bước ra ngoài.
+[Đặt tay lên ngực áo, nhìn vào sản phẩm] Và đó cũng chính là tất cả tâm huyết mà ${company} gửi gắm vào từng sản phẩm ${product}.
+Không chỉ là ${features.split('\n')[0] || features}, mà đây là món quà nuôi dưỡng sự tự tin và hạnh phúc cho chính bạn.
+[Nụ cười ấm áp, hạ giọng yêu thương] Hôm nay em xin phép tri ân mức giá yêu thương nhất: ${price}, cùng món quà chăm sóc: ${promo}.
+Cam kết đổi trả và bảo hành chân tình: ${warranty}.
+Hãy yêu thương và trân quý bản thân mình bằng cách bấm vào Giỏ Hàng và mang món quà này về nhà nhé!`;
+    } else if (style === 'motivational_fire') {
+      generated = `[Nắm chặt tay truyền năng lượng, giọng nói vang dội hùng biện] CHÀO TẤT CẢ CÁC CHIẾN BINH NĂNG LƯỢNG ĐỈNH CAO CỦA PHIÊN LIVE ${company}!
+Hôm nay chúng ta hội tụ ở đây để cùng nhau bứt phá mọi rào cản và chinh phục những đỉnh cao thành công mới!
+[Giơ cao sản phẩm, ánh mắt bừng sáng] Siêu phẩm ${product} chính là vũ khí chiến lược giúp bạn nâng tầm vị thế và tỏa sáng rực rỡ!
+Sức mạnh vượt trội đã được chứng minh: ${features.split('\n')[0] || features}!
+[Vỗ tay mạnh mẽ dứt khoát] Cơ hội duy nhất trong năm được trợ giá kỷ lục: ${price}, đi kèm gói quà tặng đỉnh chóp: ${promo}!
+Cam kết vững chắc như kiềng ba chân: ${warranty}!
+Hành động tạo nên kết quả! Hãy chạm ngay vào Giỏ Hàng và bứt phá thành công ngay bây giờ nào!`;
+    } else if (style === 'gen_z_vibes') {
+      generated = `[Nháy mắt tinh nghịch, tạo dáng vui nhộn] Hế lô các keo lì, các đồng boi đang lướt trúng live của ${company} nha!
+Hôm nay shop em drop một siêu phẩm đỉnh nóc kịch trần bay phấp phới luôn á cả nhà ơi!
+[Cầm sản phẩm tạo dáng cute] Đó chính là em ${product} bao mượt mà bao cháy phố!
+Công dụng xịn mịn hết nước chấm: ${features.split('\n')[0] || features}!
+[Cười tươi, chỉ tay vào giỏ hàng] Giá rẻ hú hồn chim én: ${price}, lại còn được tặng kèm thêm: ${promo}!
 Bảo hành uy tín 100 điểm không có nhưng: ${warranty}!
-Mấy bồ nhấp liền vào giỏ hàng góc trái góc phải để múc liền tay kẻo sold out nha!`;
+Mấy bồ nhấp liền tay vào Giỏ Hàng góc trái góc phải để múc liền tay kẻo sold out là tiếc xỉu up xỉu down nha!`;
     } else if (style === 'vip_master') {
-      generated = `Chào mừng quý khách hàng VIP đã tham gia phiên trình diễn và đấu giá ưu đãi đặc biệt của thương hiệu ${company}.
-Chúng tôi tự hào là đơn vị tiên phong kiến tạo nên chuẩn mực mới với kiệt tác ${product}.
-Sản phẩm hội tụ tinh hoa công nghệ và giá trị thực chứng: ${features.split('\n')[0] || features}.
-Trong khung giờ vàng hôm nay, chúng tôi dành tặng mức trợ giá độc quyền: ${price}, cùng bộ quà tặng cao cấp: ${promo}.
+      generated = `[Tác phong chuyên nghiệp đỉnh cao, giọng điệu cuốn hút đầy thuyết phục] Chào mừng quý khách hàng VIP đã tham gia phiên trình diễn và mở bán đặc quyền của thương hiệu ${company}.
+Chúng tôi tự hào là đơn vị tiên phong kiến tạo nên chuẩn mực hoàn mỹ với siêu phẩm ${product}.
+[Phân tích chuyên sâu từng chi tiết sản phẩm] Sản phẩm hội tụ tinh hoa công nghệ và giá trị thực chứng: ${features.split('\n')[0] || features}.
+Trong khung giờ vàng hôm nay, chúng tôi dành tặng mức trợ giá độc quyền: ${price}, cùng bộ quà tặng thượng lưu: ${promo}.
 Chính sách bảo chứng chất lượng và chăm sóc khách hàng trọn đời: ${warranty}.
-Kính mời quý vị bấm vào Giỏ Hàng để hoàn tất đăng ký đặc quyền ngay hôm nay.`;
+[Nụ cười tự tin, cúi chào lịch thiệp] Kính mời quý vị bấm vào Giỏ Hàng để hoàn tất đăng ký đặc quyền ngay hôm nay.`;
     } else {
-      generated = `Dạ em chào toàn thể các tình yêu đã có mặt trong phiên livestream săn deal cực khủng của ${company} hôm nay nha!
+      generated = `[Cười tươi rạng rỡ, vẫy tay chào người xem] Dạ em chào toàn thể các tình yêu đã có mặt trong phiên livestream săn deal cực khủng của ${company} hôm nay nha!
 Các chị em nhanh tay thả tim và chia sẻ live để em mở bát tung quà tặng siêu to khổng lồ nào!
-Hôm nay em mang đến siêu phẩm vạn người mê: ${product}!
+[Giơ sản phẩm lên trước camera] Hôm nay em mang đến siêu phẩm vạn người mê: ${product}!
 Tính năng và công dụng vượt trội: ${features.split('\n')[0] || features}!
-Giá niêm yết tiền triệu, hôm nay giảm 50% chỉ còn: ${price}! Đặc biệt: ${promo} cho 20 chị chốt nhanh nhất!
+[Nhấn mạnh ưu đãi, vỗ tay hào hứng] Giá niêm yết tiền triệu, hôm nay giảm 50% chỉ còn: ${price}! Đặc biệt tặng kèm: ${promo} cho 20 chị chốt nhanh nhất!
 Chính sách cam kết vàng: ${warranty}!
 Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trái màn hình bấm vào Giỏ Hàng để chốt đơn ngay nhé!`;
     }
@@ -936,6 +937,21 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
   const selectedEventInfo = EVENTS.find(e => e.id === selectedEventId);
 
   const HELP_DATA = {
+    broadcastMode: { title: '🎙️ Chế Độ Phát Sóng Idol AI', desc: 'Lựa chọn phát theo Kịch bản bán hàng cài sẵn (Fixed Script) hoặc để Bộ Não AI tự động điều phối từ Kho Tri Thức.', tip: 'Chế độ 1 đọc chuẩn 100% từng câu có sẵn, Chế độ 2 cho phép AI tự sáng tạo kịch bản linh hoạt.' },
+    fixedScriptText: { title: '📜 Kịch Bản Bán Hàng Tuần Tự (Fixed Script)', desc: 'Chuỗi các câu thoại được Idol đọc lần lượt từ đầu đến cuối theo đúng thời gian và thứ tự.', tip: 'Mỗi dòng là một câu thoại riêng biệt. Idol sẽ tự động ngắt nghỉ câu tự nhiên và đồng bộ khẩu hình 60 FPS.' },
+    presetScript: { title: '🎁 10 Mẫu Kịch Bản Bán Hàng 60 Phút', desc: '10 mẫu kịch bản chuyên sâu cho 10 ngành hàng hot nhất (Mỹ phẩm, Nước hoa, Thời trang, AI, Gia dụng, Sức khỏe, Phong thủy, Đặc sản, Flash Sale).', tip: 'Nhấp 1-Click vào ngành hàng để nạp kịch bản hoàn chỉnh.' },
+    aiLiveStyle: { title: '🎭 10 Phong Cách Livestream Của AI', desc: 'Định hình phong thái, ngữ điệu, tốc độ nói và sắc thái biểu cảm của Idol khi dẫn live.', tip: 'Ví dụ: Hào hứng chốt sale, Chuyên gia Da liễu, Bắt trend TikTok, Sang trọng quý phái, Giục giã đếm ngược...' },
+    aiLiveDuration: { title: '⏳ Thời Lượng Phiên Live AI', desc: 'Thời gian dự kiến cho 1 phiên livestream tự động (từ 30 phút đến 180 phút).', tip: 'AI sẽ tự cân đối độ dài kịch bản và tần suất chốt sale tương ứng.' },
+    generateAiScript: { title: '⚡ Nút Tạo Kịch Bản Bằng AI', desc: 'Bộ não AI tự động tổng hợp tên sản phẩm, giá bán, ưu đãi, tính năng và chính sách để sinh kịch bản bán hàng đỉnh cao.', tip: 'Bấm nút này để AI viết kịch bản phù hợp với phong cách live đã chọn.' },
+    companyKnowledgeText: { title: '📚 Nội Dung Tri Thức Tự Do', desc: 'Nơi lưu trữ bảng giá chi tiết, thông số kỹ thuật, hướng dẫn sử dụng, feedback khách hàng...', tip: 'Có thể gõ trực tiếp hoặc bấm nút "Nạp File" hỗ trợ tất cả định dạng (.docx, .pdf, .txt, .xlsx...).' },
+    keyFeatures: { title: '✨ Tính Năng, Thành Phần & Công Dụng Nổi Bật', desc: 'Các điểm mạnh đắt giá nhất của sản phẩm giúp thuyết phục khách hàng mua ngay.', tip: 'Hỗ trợ nạp file tự động chia tách thành danh sách 1. 2. 3. chuẩn chỉnh.' },
+    warrantyPolicy: { title: '🛡️ Chính Sách Bảo Hành & Đổi Trả', desc: 'Cam kết chất lượng, bảo hành 1 đổi 1, miễn phí ship để gia tăng uy tín và giảm tỉ lệ hủy đơn.', tip: 'AI sẽ viện dẫn chính sách này khi khách hỏi về độ uy tín hoặc cách thức đổi trả.' },
+    interruptOnComment: { title: '🔄 Tự Động Tạm Dừng Khi Có Bình Luận', desc: 'Idol sẽ tạm dừng kịch bản bán hàng đang nói để trả lời thắc mắc của khách, sau đó đọc tiếp câu kế tiếp liền mạch.', tip: 'Giúp phiên live chân thực như người thật đang livestream.' },
+    commentReplySource: { title: '🎯 Nguồn Trả Lời Bình Luận', desc: 'Chọn dữ liệu để AI trả lời khách: từ Kho Tri Thức Doanh Nghiệp, Kịch bản từ khóa cố định, hoặc Kết hợp thông minh cả hai.', tip: 'Chọn "Kịch bản từ khóa" hoặc "Kết hợp thông minh" sẽ mở Bảng Từ Khóa ngay bên dưới.' },
+    companyName: { title: '🏢 Tên Doanh Nghiệp / Thương Hiệu', desc: 'Tên shop hoặc thương hiệu của bạn để AI xưng hô chuyên nghiệp.', tip: 'Ví dụ: Shop Mỹ Phẩm Ngọc Nhi, Thiên Vua App...' },
+    productPrice: { title: '💰 Giá Niêm Yết & Giá Live', desc: 'Giá gốc và mức giá ưu đãi đặc biệt trong phiên livestream.', tip: 'Ví dụ: Giá gốc 1.850.000đ, Flash Sale chỉ còn 890.000đ.' },
+    promotions: { title: '🎁 Quà Tặng Kèm & Khuyến Mãi', desc: 'Các phần quà tri ân và ưu đãi freeship để kích cầu người mua.', tip: 'Ví dụ: Tặng tuýp kem dưỡng ẩm mini + Freeship toàn quốc.' },
+    checkoutProducts: { title: '🛒 Danh Sách Sản Phẩm / Mã Hàng Livestream', desc: 'Khai báo các sản phẩm có trong giỏ hàng (kèm từ khóa, giá bán, kịch bản chốt đơn và video clip minh họa riêng).', tip: 'Bấm "+ Thêm sản phẩm mới" hoặc nạp video clip cho từng mã hàng.' },
     priority: { title: '⭐ Độ ưu tiên', desc: 'Quyết định sự kiện nào được phát trước khi có nhiều sự kiện xảy ra cùng lúc.', tip: 'Số càng lớn ưu tiên càng cao (VD: Quà đặc biệt 999 > Chốt đơn 100 > Quà thường 90 > Comment 50 > Chờ 10).' },
     active: { title: '✅ Kích hoạt', desc: 'Bật hoặc tắt tính năng xử lý sự kiện này trong suốt phiên livestream.', tip: 'Bỏ chọn nếu bạn tạm thời không muốn Idol phản hồi sự kiện này.' },
     videoCategory: { title: '🎥 Danh mục Video', desc: 'Tên phân nhóm video dùng để ghép khớp với kịch bản hành động của Idol.', tip: 'Ví dụ: comment, gift, checkout, follow, idle...' },
@@ -1077,11 +1093,9 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
         <div className="flex-1 overflow-y-auto pr-1">
 
           {/* ========================================================================= */}
-          {/* 1. SHOPEE LIVE */}
+          {/* 1. QUÀ TẶNG ĐẶC BIỆT (SPECIAL GIFT SLOTS) */}
           {/* ========================================================================= */}
-          {selectedEventId === 'shopee_live' ? (
-            <ShopeeLiveConnectModal />
-          ) : selectedEventId === 'special_gift' ? (
+          {selectedEventId === 'special_gift' ? (
             /* ========================================================================= */
             /* 2. QUÀ TẶNG ĐẶC BIỆT (SPECIAL GIFT SLOTS) */
             /* ========================================================================= */
@@ -1359,14 +1373,71 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                     <fieldset className="border-2 border-blue-300 rounded-2xl p-4 pt-4 relative bg-blue-50/30 shadow-xs">
                       <legend className="absolute -top-3 left-4 bg-white px-2.5 py-0.5 text-xs font-black text-blue-900 flex items-center gap-1.5 border border-blue-300 rounded-lg shadow-2xs">
                         <FileText size={14} className="text-blue-600" /> KỊCH BẢN BÁN HÀNG PHÁT THEO THỨ TỰ (FIXED SCRIPT)
+                        <HelpTooltip helpKey="fixedScriptText" />
                       </legend>
 
                       <div className="flex flex-col gap-3 mt-1">
-                        {/* 10 MẪU KỊCH BẢN CHUẨN XỊN 60 PHÚT */}
-                        <div className="p-3.5 bg-white rounded-xl border border-blue-200 space-y-2.5 shadow-2xs">
+                        {/* 10 PHONG CÁCH LIVESTREAM AI & 10 MẪU NGÀNH HÀNG */}
+                        <div className="p-3.5 bg-white rounded-xl border border-blue-200 space-y-3 shadow-2xs">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-2 border-b border-blue-100">
+                            <div>
+                              <div className="flex items-center text-xs font-bold text-blue-900 mb-1">
+                                <span>🎭 10 Phong Cách Livestream Của AI:</span>
+                                <HelpTooltip helpKey="aiLiveStyle" />
+                              </div>
+                              <select
+                                value={currentConfig.aiLiveStyle || 'sales_fast'}
+                                onChange={(e) => handleSimpleChange('aiLiveStyle', e.target.value)}
+                                className="w-full border border-blue-300 rounded-lg px-2.5 py-1.5 text-xs bg-white font-bold text-blue-900 focus:outline-blue-500 cursor-pointer shadow-2xs"
+                              >
+                                <option value="sales_fast">🔥 1. Hào Hứng - Năng Động - Chốt Sale Thần Tốc</option>
+                                <option value="skincare_expert">🌸 2. Thân Thiện - Dịu Dàng - Chuyên Gia Da Liễu</option>
+                                <option value="tiktok_funny">😂 3. Hài Hước - Duyên Dáng - Bắt Trend TikTok</option>
+                                <option value="luxury_elegant">💎 4. Sang Trọng - Quyến Rũ - Đẳng Cấp Thượng Lưu</option>
+                                <option value="tech_expert">🎓 5. Giáo Dục - Chia Sẻ Giá Trị - Chuyên Gia Công Nghệ</option>
+                                <option value="countdown_urgent">⏳ 6. Giục Giã - Đếm Ngược Khẩn Cấp - Flash Sale</option>
+                                <option value="emotional_story">💖 7. Tâm Sự - Chân Thành - Chia Sẻ Cảm Xúc</option>
+                                <option value="motivational_fire">📢 8. Hùng Biện - Năng Lượng Đỉnh Cao - Truyền Lửa</option>
+                                <option value="gen_z_vibes">🛹 9. Gen Z Năng Động - Trẻ Trung - Phá Cách</option>
+                                <option value="vip_master">👑 10. VIP Master Streamer - Đỉnh Cao Thuyết Phục</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <div className="flex items-center text-xs font-bold text-blue-900 mb-1">
+                                <span>⏳ Thời Lượng Phiên Live AI:</span>
+                                <HelpTooltip helpKey="aiLiveDuration" />
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <select
+                                  value={currentConfig.scriptDurationMinutes || 60}
+                                  onChange={(e) => handleSimpleChange('scriptDurationMinutes', Number(e.target.value) || 60)}
+                                  className="flex-1 border border-blue-300 rounded-lg px-2.5 py-1.5 text-xs bg-white font-bold text-blue-900 focus:outline-blue-500 cursor-pointer shadow-2xs"
+                                >
+                                  <option value="30">30 phút</option>
+                                  <option value="45">45 phút</option>
+                                  <option value="60">60 phút (1 tiếng)</option>
+                                  <option value="90">90 phút (1.5 tiếng)</option>
+                                  <option value="120">120 phút (2 tiếng)</option>
+                                  <option value="180">180 phút (3 tiếng)</option>
+                                </select>
+                                <button
+                                  type="button"
+                                  onClick={handleGenerateAiScript}
+                                  className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs rounded-lg shadow-sm flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
+                                  title="AI tự động tạo kịch bản theo phong cách đã chọn"
+                                >
+                                  <Sparkles size={14} /> AI Tạo Kịch Bản
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* 10 MẪU KỊCH BẢN CHUẨN XỊN 60 PHÚT */}
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                             <div className="text-xs font-black text-blue-900 flex items-center gap-1.5">
                               <Sparkles size={15} className="text-amber-500 animate-bounce" /> NẠP NHANH 10 MẪU KỊCH BẢN BÁN HÀNG 60 PHÚT (10 NGÀNH NGHỀ HOT):
+                              <HelpTooltip helpKey="presetScript" />
                             </div>
 
                             <div className="flex items-center gap-2 shrink-0">
@@ -1530,7 +1601,10 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                         {/* FORM CẤU HÌNH THÔNG TIN DOANH NGHIỆP */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div>
-                            <label className="text-xs font-bold text-gray-700 block mb-1">🏢 Tên Doanh Nghiệp / Thương Hiệu:</label>
+                            <div className="flex items-center text-xs font-bold text-gray-700 mb-1">
+                              <span>🏢 Tên Doanh Nghiệp / Thương Hiệu:</span>
+                              <HelpTooltip helpKey="companyName" />
+                            </div>
                             <input 
                               type="text" 
                               value={currentConfig.companyName || 'CÔNG TY PHẦN MỀM THIÊN VUA APP'} 
@@ -1541,7 +1615,10 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                           </div>
 
                           <div>
-                            <label className="text-xs font-bold text-gray-700 block mb-1">📦 Tên Sản Phẩm / Dịch Vụ Chính:</label>
+                            <div className="flex items-center text-xs font-bold text-gray-700 mb-1">
+                              <span>📦 Tên Sản Phẩm / Dịch Vụ Chính:</span>
+                              <HelpTooltip helpKey="productName" />
+                            </div>
                             <input 
                               type="text" 
                               value={currentConfig.productName || 'Bộ Đôi Serum Tế Bào Gốc & Nước Hoa Pháp'} 
@@ -1552,7 +1629,10 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                           </div>
 
                           <div>
-                            <label className="text-xs font-bold text-gray-700 block mb-1">💰 Giá Niêm Yết & Giá Flash Sale Live:</label>
+                            <div className="flex items-center text-xs font-bold text-gray-700 mb-1">
+                              <span>💰 Giá Niêm Yết & Giá Flash Sale Live:</span>
+                              <HelpTooltip helpKey="productPrice" />
+                            </div>
                             <input 
                               type="text" 
                               value={currentConfig.productPrice || '1.850.000đ - Giảm 50% chỉ còn 890.000đ trên live'} 
@@ -1563,7 +1643,10 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                           </div>
 
                           <div>
-                            <label className="text-xs font-bold text-gray-700 block mb-1">🎁 Quà Tặng Kèm & Khuyến Mãi:</label>
+                            <div className="flex items-center text-xs font-bold text-gray-700 mb-1">
+                              <span>🎁 Quà Tặng Kèm & Khuyến Mãi:</span>
+                              <HelpTooltip helpKey="promotions" />
+                            </div>
                             <input 
                               type="text" 
                               value={currentConfig.promotions || 'Tặng kèm tuýp kem dưỡng ẩm mini + Freeship toàn quốc'} 
@@ -1578,7 +1661,10 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div>
                             <div className="flex items-center justify-between mb-1">
-                              <label className="text-xs font-bold text-gray-700">✨ Tính Năng, Thành Phần & Công Dụng Nổi Bật:</label>
+                              <div className="flex items-center text-xs font-bold text-gray-700">
+                                <span>✨ Tính Năng, Thành Phần & Công Dụng Nổi Bật:</span>
+                                <HelpTooltip helpKey="keyFeatures" />
+                              </div>
                               <div className="flex items-center gap-1">
                                 <input 
                                   type="file" 
@@ -1606,7 +1692,10 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
 
                           <div>
                             <div className="flex items-center justify-between mb-1">
-                              <label className="text-xs font-bold text-gray-700">🛡️ Chính Sách Bảo Hành / Đổi Trả / Vận Chuyển:</label>
+                              <div className="flex items-center text-xs font-bold text-gray-700">
+                                <span>🛡️ Chính Sách Bảo Hành / Đổi Trả / Vận Chuyển:</span>
+                                <HelpTooltip helpKey="warrantyPolicy" />
+                              </div>
                               <div className="flex items-center gap-1">
                                 <input 
                                   type="file" 
@@ -1637,7 +1726,10 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                         <div className="p-3.5 bg-white rounded-xl border border-purple-200 space-y-3 shadow-2xs">
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                              <label className="text-xs font-bold text-purple-900 block mb-1">🎭 10 Phong Cách Livestream Của AI:</label>
+                              <div className="flex items-center text-xs font-bold text-purple-900 mb-1">
+                                <span>🎭 10 Phong Cách Livestream Của AI:</span>
+                                <HelpTooltip helpKey="aiLiveStyle" />
+                              </div>
                               <select
                                 value={currentConfig.aiLiveStyle || 'sales_fast'}
                                 onChange={(e) => handleSimpleChange('aiLiveStyle', e.target.value)}
@@ -1657,7 +1749,10 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                             </div>
 
                             <div>
-                              <label className="text-xs font-bold text-purple-900 block mb-1">⏳ Thời Lượng Phiên Live AI:</label>
+                              <div className="flex items-center text-xs font-bold text-purple-900 mb-1">
+                                <span>⏳ Thời Lượng Phiên Live AI:</span>
+                                <HelpTooltip helpKey="aiLiveDuration" />
+                              </div>
                               <div className="flex items-center gap-2">
                                 <select
                                   value={currentConfig.aiLiveDuration || 60}
@@ -1686,7 +1781,10 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                           {/* Ô NHẬP VĂN BẢN TRI THỨC TỰ DO */}
                           <div>
                             <div className="flex items-center justify-between mb-1">
-                              <label className="text-xs font-bold text-gray-700">📚 Nội Dung Tri Thức Doanh Nghiệp Tự Do (Tùy chọn):</label>
+                              <div className="flex items-center text-xs font-bold text-gray-700">
+                                <span>📚 Nội Dung Tri Thức Doanh Nghiệp Tự Do (Tùy chọn):</span>
+                                <HelpTooltip helpKey="companyKnowledgeText" />
+                              </div>
                               <div className="flex items-center gap-1">
                                 <input 
                                   type="file" 
@@ -1715,9 +1813,10 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                           {/* SYSTEM PROMPT CHO AI */}
                           <div className="pt-2 border-t border-purple-100">
                             <div className="flex items-center justify-between mb-1">
-                              <label className="text-xs font-bold text-purple-900 flex items-center gap-1">
+                              <div className="flex items-center text-xs font-bold text-purple-900 gap-1">
                                 <span>🧠 System Prompt Kịch Bản Đóng Vai AI:</span>
-                              </label>
+                                <HelpTooltip helpKey="aiPrompt" />
+                              </div>
                               <div className="flex items-center gap-2">
                                 <input 
                                   type="file" 
@@ -1781,8 +1880,10 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                 <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 shadow-2xs space-y-4">
                   <div className="flex items-center justify-between pb-3 border-b border-slate-200">
                     <div>
-                      <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                        <ShoppingBag size={16} className="text-blue-600" /> DANH SÁCH SẢN PHẨM / MÃ HÀNG LIVESTREAM
+                      <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                        <ShoppingBag size={16} className="text-blue-600" />
+                        <span>DANH SÁCH SẢN PHẨM / MÃ HÀNG LIVESTREAM</span>
+                        <HelpTooltip helpKey="checkoutProducts" />
                       </h4>
                       <p className="text-[11px] text-gray-500 mt-0.5">
                         Khai báo các sản phẩm có trong giỏ hàng để AI tự động nhận diện từ khóa, phát video minh họa và tư vấn chốt đơn cho từng sản phẩm.
@@ -1824,7 +1925,10 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mt-1 text-xs">
                             <div>
-                              <label className="font-bold text-gray-700 block mb-1">🏷️ Tên sản phẩm:</label>
+                              <div className="flex items-center text-xs font-bold text-gray-700 mb-1">
+                                <span>🏷️ Tên sản phẩm:</span>
+                                <HelpTooltip helpKey="productName" />
+                              </div>
                               <input 
                                 type="text" 
                                 value={prod.productName} 
@@ -1835,7 +1939,10 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                             </div>
 
                             <div>
-                              <label className="font-bold text-[#a53b3b] block mb-1">🔑 Từ khóa chốt đơn (cách nhau bởi ;):</label>
+                              <div className="flex items-center text-xs font-bold text-[#a53b3b] mb-1">
+                                <span>🔑 Từ khóa chốt đơn (cách nhau bởi ;):</span>
+                                <HelpTooltip helpKey="keywords" />
+                              </div>
                               <input 
                                 type="text" 
                                 value={prod.keywords} 
@@ -1846,7 +1953,10 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                             </div>
 
                             <div>
-                              <label className="font-bold text-gray-700 block mb-1">💰 Giá niêm yết & Giá Flash Sale:</label>
+                              <div className="flex items-center text-xs font-bold text-gray-700 mb-1">
+                                <span>💰 Giá niêm yết & Giá Flash Sale:</span>
+                                <HelpTooltip helpKey="productPrice" />
+                              </div>
                               <input 
                                 type="text" 
                                 value={prod.priceInfo || ''} 
@@ -1858,7 +1968,10 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
 
                             {/* CHỌN THƯ MỤC HOẶC TẢI VIDEO MINH HỌA TRỰC TIẾP */}
                             <div>
-                              <label className="font-bold text-gray-700 block mb-1">📁 Thư mục Video Minh Họa / Tải Video Lên:</label>
+                              <div className="flex items-center text-xs font-bold text-gray-700 mb-1">
+                                <span>📁 Thư mục Video Minh Họa / Tải Video Lên:</span>
+                                <HelpTooltip helpKey="videoFolder" />
+                              </div>
                               <div className="flex items-center gap-1.5 w-full">
                                 <span className="font-medium text-gray-600 truncate flex-1 bg-gray-50 border border-gray-200 px-2 py-1.5 rounded-lg text-xs">
                                   {prod.videoFileName ? `🎬 ${prod.videoFileName}` : (prod.videoFolder || 'Chưa chọn thư mục')}

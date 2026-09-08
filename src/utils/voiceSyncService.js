@@ -522,7 +522,9 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
         const blob = await res.blob();
         const audioUrl = URL.createObjectURL(blob);
         const audio = new Audio(audioUrl);
-        audio.volume = isTestingMode ? 1.0 : voiceVolume;
+        audio.volume = effectiveVoiceVolume;
+        audio.playbackRate = requestedRate;
+        audio.muted = effectiveVoiceVolume === 0;
         
         // Kết nối Audio vào Avatar Lip Sync Engine khi không phải test
         if (!isTestingMode) {
@@ -567,11 +569,11 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     localStorage.getItem('avalive_overlay_audio_muted') === 'true'
   );
   
-  const requestedVolume = voice?.volume !== undefined ? Number(voice.volume) : 1.0;
-  const requestedRate = voice?.rate !== undefined ? Number(voice.rate) : 1.0;
+  const requestedVolume = voice?.volume !== undefined ? Math.max(0, Math.min(1.0, Number(voice.volume))) : 1.0;
+  const requestedRate = voice?.rate !== undefined ? Math.max(0.5, Math.min(2.0, Number(voice.rate))) : 1.0;
   const effectiveVoiceVolume = isTestingMode 
-    ? Math.max(0.1, Math.min(1.0, requestedVolume)) 
-    : (isLocalSpeakerMuted ? 0 : Math.max(0.1, Math.min(1.0, requestedVolume * (savedGlobalVol || 1.0))));
+    ? requestedVolume 
+    : (isLocalSpeakerMuted ? 0 : Math.max(0, Math.min(1.0, requestedVolume * (savedGlobalVol !== null ? savedGlobalVol : 1.0))));
 
   // Danh sách các endpoints TTS thử nghiệm tuần tự để đảm bảo 100% phát được âm thanh
   const ttsCandidateUrls = [];
@@ -593,7 +595,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
       const streamAudio = new Audio(ttsUrl);
       streamAudio.volume = effectiveVoiceVolume;
       streamAudio.playbackRate = requestedRate;
-      streamAudio.muted = false;
+      streamAudio.muted = effectiveVoiceVolume === 0;
       
       // Không gán MediaElementSource khi đang test để tránh AudioContext bị mute
       if (!isTestingMode) {
@@ -652,9 +654,9 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
         const isFemale = !isMale;
 
         // Tôn trọng 100% tốc độ đọc (rate), cao độ (pitch) và âm lượng (volume) người dùng tùy chỉnh
-        utterance.rate = voice?.rate !== undefined ? Number(voice.rate) : (isFemale ? 1.0 : 1.05);
+        utterance.rate = requestedRate;
         utterance.pitch = voice?.pitch !== undefined ? Number(voice.pitch) : (isFemale ? 1.12 : 0.88);
-        utterance.volume = Math.max(0.8, effectiveVoiceVolume || 1.0);
+        utterance.volume = effectiveVoiceVolume;
 
         let hasEnded = false;
         const finish = (ok) => {

@@ -4728,9 +4728,9 @@ export default function DesktopAppUI() {
 
       {/* Settings Modal (WorkspaceTacVu / Event Manager) */}
       {activeSettingsModal === 'workspace' && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in zoom-in duration-200">
-          <div className={`w-full max-w-6xl h-[95vh] flex flex-col rounded-xl overflow-hidden shadow-2xl border ${isDarkMode ? 'bg-[#141419] border-gray-700' : 'bg-white border-gray-200'}`}>
-            <div className={`flex items-center justify-between px-6 py-4 border-b ${isDarkMode ? 'border-gray-800' : 'border-gray-200'}`}>
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-2 md:p-3 animate-in fade-in zoom-in duration-200">
+          <div className={`w-[98vw] max-w-[1720px] h-[97vh] max-h-[98vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border ${isDarkMode ? 'bg-[#141419] border-gray-700' : 'bg-white border-gray-200'}`}>
+            <div className={`flex items-center justify-between px-6 py-3.5 border-b shrink-0 ${isDarkMode ? 'border-gray-800' : 'border-gray-200'}`}>
               <h2 className="text-xl font-bold flex items-center gap-2">
                 <Settings className="text-blue-500" />
                 Cài đặt Hệ thống Sự kiện Livestream
