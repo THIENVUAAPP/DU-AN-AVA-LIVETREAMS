@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.0.6';
+export const APP_VERSION = '2.0.7';
 export const UPDATE_NOTES = [
-  "📜 Phân Tách 2 Tab Riêng Biệt: Tab '📜 Kịch bản Idol' (Bán hàng Fixed Script & Bộ Não AI Tri Thức) và Tab '🛒 Chốt đơn' (Giỏ hàng & Quản lý Danh Sách Sản Phẩm / Mã Hàng Livestream).",
-  "🌸 Bổ Sung 10 Mẫu Kịch Bản Bán Hàng 60 Phút Chuẩn Xịn (Mỹ phẩm, Nước hoa, Thời trang, Công nghệ AI, Gia dụng, Sức khỏe, Trang sức, Đặc sản...) + 10 Phong Cách Livestream AI.",
-  "🎬 Hỗ Trợ Tải File Video Trực Tiếp (.mp4, .webm, .mov) Cho Từng Mã Hàng & Nghe Thử Voice TOÀN BỘ Kịch Bản Liền Mạch Không Ngắt Quãng."
+  "⚡ Nạp File Đa Định Dạng (.docx, .doc, .pdf, .txt, .json, .csv, .md, .xlsx, .xls) Cho Tất Cả Các Ô Dữ Liệu: Tri Thức Tự Do, Prompt AI, Tính Năng / Thành Phần (tự động phân số thứ tự 1, 2, 3...) & Chính Sách Bảo Hành.",
+  "🎛️ Nâng Cấp Hệ Thống Nghe Thử Voice: Tích Hợp Thanh Kéo Âm Lượng (0% - 100%) & Tùy Chọn Tốc Độ Đọc (0.75x -> 1.5x) Ngay Cạnh Nút Nghe Thử Trên Mọi Tab.",
+  "🔄 Phát Tuần Tự Trọn Vẹn 100% Kịch Bản Không Giới Hạn Ký Tự, Đồng Bộ Khẩu Hình Miệng 60 FPS Cực Mượt & Hiển Thị Bảng Từ Khóa Ngay Khi Chọn Nguồn Trả Lời Bình Luận."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

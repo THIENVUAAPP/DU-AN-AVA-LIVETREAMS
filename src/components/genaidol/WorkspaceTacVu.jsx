@@ -767,6 +767,75 @@ export default function WorkspaceTacVu() {
     event.target.value = '';
   };
 
+  const handleLoadFreeKnowledgeFile = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      const parsed = await readUniversalFile(file);
+      const text = Array.isArray(parsed) ? parsed.join('\n') : (typeof parsed === 'string' ? parsed : JSON.stringify(parsed));
+      if (text) {
+        handleSimpleChange('companyKnowledgeText', text);
+      }
+    } catch (err) {
+      console.error('Error reading free knowledge file:', err);
+      alert('Không thể đọc file tri thức: ' + (err.message || 'Lỗi định dạng'));
+    }
+    event.target.value = '';
+  };
+
+  const handleLoadKeyFeaturesFile = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      const parsed = await readUniversalFile(file);
+      const lines = Array.isArray(parsed) ? parsed : (typeof parsed === 'string' ? parsed.split(/\r?\n/) : []);
+      const validLines = lines.map(l => l.trim()).filter(Boolean);
+      const formatted = validLines.map((l, idx) => {
+        const cleanText = l.replace(/^\d+[\.\/\:\-\)\s\]]+/, '').trim();
+        return `${idx + 1}. ${cleanText}`;
+      }).join('\n');
+      if (formatted) {
+        handleSimpleChange('keyFeatures', formatted);
+      }
+    } catch (err) {
+      console.error('Error reading key features file:', err);
+      alert('Không thể đọc file tính năng: ' + (err.message || 'Lỗi định dạng'));
+    }
+    event.target.value = '';
+  };
+
+  const handleLoadWarrantyPolicyFile = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      const parsed = await readUniversalFile(file);
+      const text = Array.isArray(parsed) ? parsed.join('\n') : (typeof parsed === 'string' ? parsed : JSON.stringify(parsed));
+      if (text) {
+        handleSimpleChange('warrantyPolicy', text);
+      }
+    } catch (err) {
+      console.error('Error reading warranty file:', err);
+      alert('Không thể đọc file chính sách: ' + (err.message || 'Lỗi định dạng'));
+    }
+    event.target.value = '';
+  };
+
+  const handleLoadAiPromptUniversalFile = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      const parsed = await readUniversalFile(file);
+      const text = Array.isArray(parsed) ? parsed.join('\n') : (typeof parsed === 'string' ? parsed : JSON.stringify(parsed));
+      if (text) {
+        handleSimpleChange('aiPrompt', text);
+      }
+    } catch (err) {
+      console.error('Error reading AI prompt file:', err);
+      alert('Không thể đọc file prompt: ' + (err.message || 'Lỗi định dạng'));
+    }
+    event.target.value = '';
+  };
+
   const applyMasterScript = (type) => {
     if (MASTER_SCRIPTS[type]) {
       handleSimpleChange('fixedScriptText', MASTER_SCRIPTS[type]);
@@ -1230,37 +1299,54 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                   </div>
 
                   {/* CẤU HÌNH TỰ ĐỘNG TẠM DỪNG VÀ TIẾP TỤC */}
-                  <div className="p-3 bg-white/95 rounded-xl border border-blue-200 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
-                    <div className="flex items-start gap-2.5">
-                      <input 
-                        type="checkbox" 
-                        id="interruptOnComment"
-                        checked={currentConfig.interruptOnComment !== false} 
-                        onChange={(e) => handleSimpleChange('interruptOnComment', e.target.checked)} 
-                        className="w-4 h-4 text-blue-600 rounded cursor-pointer mt-0.5" 
-                      />
-                      <div>
-                        <label htmlFor="interruptOnComment" className="text-xs font-black text-gray-800 cursor-pointer flex items-center gap-1.5">
-                          <span>🔄 Tự động tạm dừng kịch bản khi có bình luận &rarr; Trả lời khách &rarr; Đọc tiếp liền mạch</span>
-                        </label>
-                        <p className="text-[11px] text-gray-500 mt-0.5">
-                          Khi có bình luận từ người xem, Idol sẽ tạm dừng kịch bản bán hàng, trả lời khách rồi tiếp tục câu tiếp theo mà không bị lặp lại từ đầu.
-                        </p>
+                  <div className="p-3 bg-white/95 rounded-xl border border-blue-200 shadow-2xs space-y-3">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                      <div className="flex items-start gap-2.5">
+                        <input 
+                          type="checkbox" 
+                          id="interruptOnComment"
+                          checked={currentConfig.interruptOnComment !== false} 
+                          onChange={(e) => handleSimpleChange('interruptOnComment', e.target.checked)} 
+                          className="w-4 h-4 text-blue-600 rounded cursor-pointer mt-0.5" 
+                        />
+                        <div>
+                          <label htmlFor="interruptOnComment" className="text-xs font-black text-gray-800 cursor-pointer flex items-center gap-1.5">
+                            <span>🔄 Tự động tạm dừng kịch bản khi có bình luận &rarr; Trả lời khách &rarr; Đọc tiếp liền mạch</span>
+                          </label>
+                          <p className="text-[11px] text-gray-500 mt-0.5">
+                            Khi có bình luận từ người xem, Idol sẽ tạm dừng kịch bản bán hàng, trả lời khách rồi tiếp tục câu tiếp theo mà không bị lặp lại từ đầu.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200 text-xs font-bold text-blue-900">
+                        <span>Nguồn trả lời:</span>
+                        <select
+                          value={currentConfig.commentReplySource || 'knowledge_base'}
+                          onChange={(e) => handleSimpleChange('commentReplySource', e.target.value)}
+                          className="bg-white border border-blue-300 rounded px-2 py-0.5 text-xs text-blue-900 font-bold focus:outline-none cursor-pointer"
+                        >
+                          <option value="knowledge_base">🧠 Kho Tri Thức Doanh Nghiệp</option>
+                          <option value="keywords">💬 Kịch bản từ khóa</option>
+                          <option value="both">🔄 Kết hợp thông minh</option>
+                        </select>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 shrink-0 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200 text-xs font-bold text-blue-900">
-                      <span>Nguồn trả lời:</span>
-                      <select
-                        value={currentConfig.commentReplySource || 'knowledge_base'}
-                        onChange={(e) => handleSimpleChange('commentReplySource', e.target.value)}
-                        className="bg-white border border-blue-300 rounded px-2 py-0.5 text-xs text-blue-900 font-bold focus:outline-none cursor-pointer"
-                      >
-                        <option value="knowledge_base">🧠 Kho Tri Thức Doanh Nghiệp</option>
-                        <option value="keywords">💬 Kịch bản từ khóa</option>
-                        <option value="both">🔄 Kết hợp thông minh</option>
-                      </select>
-                    </div>
+                    {/* BẢNG QUẢN LÝ KỊCH BẢN TỪ KHÓA TRỰC TIẾP KHI CHỌN NGUỒN TỪ KHÓA */}
+                    {(currentConfig.commentReplySource === 'keywords' || currentConfig.commentReplySource === 'both') && (
+                      <div className="pt-3 border-t border-blue-100">
+                        <div className="mb-2 text-xs font-black text-blue-900 flex items-center gap-1.5">
+                          <MessageSquare size={14} className="text-blue-600" /> BẢNG KỊCH BẢN TỪ KHÓA & CÂU TRẢ LỜI MẪU (NẠP FILE ĐA ĐỊNH DẠNG):
+                        </div>
+                        <WorkspaceKeywordPanel 
+                          currentConfig={currentConfig}
+                          onUpdateConfig={(partial) => {
+                            updateEventConfig(selectedEventId, partial);
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -1491,7 +1577,25 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                         {/* ĐIỂM NỔI BẬT & BẢO HÀNH */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div>
-                            <label className="text-xs font-bold text-gray-700 block mb-1">✨ Tính Năng, Thành Phần & Công Dụng Nổi Bật:</label>
+                            <div className="flex items-center justify-between mb-1">
+                              <label className="text-xs font-bold text-gray-700">✨ Tính Năng, Thành Phần & Công Dụng Nổi Bật:</label>
+                              <div className="flex items-center gap-1">
+                                <input 
+                                  type="file" 
+                                  id="upload-key-features-file"
+                                  className="hidden" 
+                                  accept=".txt,.md,.docx,.doc,.pdf,.csv,.json,.xlsx,.xls"
+                                  onChange={handleLoadKeyFeaturesFile}
+                                />
+                                <label 
+                                  htmlFor="upload-key-features-file"
+                                  className="text-[11px] text-purple-700 cursor-pointer hover:underline flex items-center gap-1 font-bold"
+                                  title="Nạp file (.docx, .pdf, .txt...) tự động sắp xếp theo thứ tự 1. 2. 3."
+                                >
+                                  <Upload size={12} /> Nạp File (.docx, .pdf, .txt...)
+                                </label>
+                              </div>
+                            </div>
                             <textarea 
                               value={currentConfig.keyFeatures || `1. Tinh chất Serum tế bào gốc phục hồi làn da căng bóng sau 7 ngày.\n2. Nước hoa Pháp hương thơm ngọt ngào, sang trọng lưu hương suốt 12 tiếng.\n3. Thành phần tự nhiên 100% đạt chuẩn y khoa da liễu, an toàn cho mọi loại da.`} 
                               onChange={(e) => handleSimpleChange('keyFeatures', e.target.value)} 
@@ -1501,7 +1605,25 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                           </div>
 
                           <div>
-                            <label className="text-xs font-bold text-gray-700 block mb-1">🛡️ Chính Sách Bảo Hành / Đổi Trả / Vận Chuyển:</label>
+                            <div className="flex items-center justify-between mb-1">
+                              <label className="text-xs font-bold text-gray-700">🛡️ Chính Sách Bảo Hành / Đổi Trả / Vận Chuyển:</label>
+                              <div className="flex items-center gap-1">
+                                <input 
+                                  type="file" 
+                                  id="upload-warranty-policy-file"
+                                  className="hidden" 
+                                  accept=".txt,.md,.docx,.doc,.pdf,.csv,.json,.xlsx,.xls"
+                                  onChange={handleLoadWarrantyPolicyFile}
+                                />
+                                <label 
+                                  htmlFor="upload-warranty-policy-file"
+                                  className="text-[11px] text-purple-700 cursor-pointer hover:underline flex items-center gap-1 font-bold"
+                                  title="Nạp file chính sách (.docx, .pdf, .txt...)"
+                                >
+                                  <Upload size={12} /> Nạp File (.docx, .pdf, .txt...)
+                                </label>
+                              </div>
+                            </div>
                             <textarea 
                               value={currentConfig.warrantyPolicy || 'Bảo hành 1 đổi 1 trong 30 ngày, hoàn tiền 200% nếu phát hiện hàng giả, miễn phí vận chuyển tận nhà trên toàn quốc'} 
                               onChange={(e) => handleSimpleChange('warrantyPolicy', e.target.value)} 
@@ -1563,7 +1685,25 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
 
                           {/* Ô NHẬP VĂN BẢN TRI THỨC TỰ DO */}
                           <div>
-                            <label className="text-xs font-bold text-gray-700 block mb-1">📚 Nội Dung Tri Thức Doanh Nghiệp Tự Do (Tùy chọn):</label>
+                            <div className="flex items-center justify-between mb-1">
+                              <label className="text-xs font-bold text-gray-700">📚 Nội Dung Tri Thức Doanh Nghiệp Tự Do (Tùy chọn):</label>
+                              <div className="flex items-center gap-1">
+                                <input 
+                                  type="file" 
+                                  id="upload-free-knowledge-file"
+                                  className="hidden" 
+                                  accept=".txt,.md,.docx,.doc,.pdf,.csv,.json,.xlsx,.xls"
+                                  onChange={handleLoadFreeKnowledgeFile}
+                                />
+                                <label 
+                                  htmlFor="upload-free-knowledge-file"
+                                  className="text-[11px] text-purple-700 cursor-pointer hover:underline flex items-center gap-1 font-bold"
+                                  title="Nạp file tri thức tự do (.docx, .pdf, .txt, .json, .xlsx...)"
+                                >
+                                  <Upload size={12} /> Nạp File Tri Thức (.docx, .pdf, .txt...)
+                                </label>
+                              </div>
+                            </div>
                             <textarea 
                               value={currentConfig.companyKnowledgeText || ''} 
                               onChange={(e) => handleSimpleChange('companyKnowledgeText', e.target.value)} 
@@ -1583,26 +1723,14 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                                   type="file" 
                                   id="upload-ai-prompt-file"
                                   className="hidden" 
-                                  accept=".txt,.md,.json"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (!file) return;
-                                    const reader = new FileReader();
-                                    reader.onload = (evt) => {
-                                      const content = evt.target?.result;
-                                      if (content) {
-                                        handleSimpleChange('aiPrompt', content);
-                                      }
-                                    };
-                                    reader.readAsText(file);
-                                    e.target.value = '';
-                                  }}
+                                  accept=".txt,.md,.json,.docx,.doc,.pdf,.csv,.xlsx,.xls"
+                                  onChange={handleLoadAiPromptUniversalFile}
                                 />
                                 <label 
                                   htmlFor="upload-ai-prompt-file"
                                   className="text-[11px] text-purple-700 cursor-pointer hover:underline flex items-center gap-1 font-bold"
                                 >
-                                  <Upload size={12} /> Nạp Prompt (.txt)
+                                  <Upload size={12} /> Nạp Prompt (.docx, .pdf, .txt, .json)
                                 </label>
                               </div>
                             </div>

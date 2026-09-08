@@ -567,29 +567,32 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     localStorage.getItem('avalive_overlay_audio_muted') === 'true'
   );
   
-  const isLocalSpeakerMuted = !isTestingMode && (isGlobalMuted || (!isOverlayPage && typeof localStorage !== 'undefined' && localStorage.getItem('avalive_local_speaker_muted') === 'true'));
-  const savedGlobalVol = typeof localStorage !== 'undefined' ? parseFloat(localStorage.getItem('avalive_video_volume') || localStorage.getItem('avalive_overlay_volume') || '1') : 1;
-  const effectiveVoiceVolume = isTestingMode ? 1.0 : (isLocalSpeakerMuted ? 0 : Math.max(0.3, Math.min(1, (voiceVolume || 1.0) * (savedGlobalVol || 1.0))));
+  const requestedVolume = voice?.volume !== undefined ? Number(voice.volume) : 1.0;
+  const requestedRate = voice?.rate !== undefined ? Number(voice.rate) : 1.0;
+  const effectiveVoiceVolume = isTestingMode 
+    ? Math.max(0.1, Math.min(1.0, requestedVolume)) 
+    : (isLocalSpeakerMuted ? 0 : Math.max(0.1, Math.min(1.0, requestedVolume * (savedGlobalVol || 1.0))));
 
   // Danh sách các endpoints TTS thử nghiệm tuần tự để đảm bảo 100% phát được âm thanh
   const ttsCandidateUrls = [];
   
   // 1. Endpoint /api/tts tương đối (hoạt động trên Vite dev server, Vercel và backend cùng origin)
-  ttsCandidateUrls.push(`/api/tts?text=${encodeURIComponent(textToSpeak.slice(0, 200))}&lang=${encodeURIComponent(shortLang || 'vi')}`);
+  ttsCandidateUrls.push(`/api/tts?text=${encodeURIComponent(textToSpeak)}&lang=${encodeURIComponent(shortLang || 'vi')}`);
   
   // 2. Endpoint backend trực tiếp port 3001
   if (typeof window !== 'undefined' && window.location.hostname) {
-    ttsCandidateUrls.push(`http://${window.location.hostname}:3001/api/tts?text=${encodeURIComponent(textToSpeak.slice(0, 200))}&lang=${encodeURIComponent(shortLang || 'vi')}`);
+    ttsCandidateUrls.push(`http://${window.location.hostname}:3001/api/tts?text=${encodeURIComponent(textToSpeak)}&lang=${encodeURIComponent(shortLang || 'vi')}`);
   }
-  ttsCandidateUrls.push(`http://127.0.0.1:3001/api/tts?text=${encodeURIComponent(textToSpeak.slice(0, 200))}&lang=${encodeURIComponent(shortLang || 'vi')}`);
+  ttsCandidateUrls.push(`http://127.0.0.1:3001/api/tts?text=${encodeURIComponent(textToSpeak)}&lang=${encodeURIComponent(shortLang || 'vi')}`);
   
-  // 3. Google Translate TTS trực tiếp
+  // 3. Google Translate TTS trực tiếp (giới hạn 200 ký tự chuẩn URL Google TTS)
   ttsCandidateUrls.push(`https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(shortLang || 'vi')}&q=${encodeURIComponent(textToSpeak.slice(0, 200))}`);
 
   for (const ttsUrl of ttsCandidateUrls) {
     try {
       const streamAudio = new Audio(ttsUrl);
       streamAudio.volume = effectiveVoiceVolume;
+      streamAudio.playbackRate = requestedRate;
       streamAudio.muted = false;
       
       // Không gán MediaElementSource khi đang test để tránh AudioContext bị mute
