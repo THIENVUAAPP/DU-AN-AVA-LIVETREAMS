@@ -823,4 +823,12 @@ Im lặng bỏ qua 3 câu này = vi phạm Mục 0.7 và Mục 1.
 | **3. Phát Video Liền Mạch 24/24 Không Khựng Giật, Không Lặp Bất Thường** | `src/components/genaidol/CleanLiveOverlay.jsx` | ✅ PASS 100% | - Tối ưu hóa thuộc tính `loop={true}` native của trình duyệt cho video đơn, loại bỏ hoàn toàn tình trạng nhảy câu, đứng hình hoặc giật lag micro-stutter.<br>- Video phát liên tục, mượt mà từ đầu đến cuối 100% đúng như nội dung đang chạy trên phần mềm. |
 | **4. Đóng Gói Bộ Cài Standalone v2.1.2 & Tự Động Phát Hành GitHub Releases** | `package.json`, `UpdateNotificationModal.jsx`, `UniversalMasterOverlayModal.jsx`, `Mo_Ung_Dung_Web.html`, `backend/server.cjs`, `api/download.js`, `CLAUDE.md` | ✅ PASS 100% | Đóng gói tự động bộ cài Standalone ZIP Windows & Mac v2.1.2, tự động upload Release lên GitHub, kích hoạt UpdateNotificationModal cho người dùng và commit push GitHub. |
 
+### 🚀 45. Nhật Ký Bản Cập Nhật v2.1.4 (Official Release - Cập Nhật Trực Tiếp Bộ Cài Standalone Windows & macOS Hoàn Toàn Mới)
+| Hạng Mục Cải Tiến | File Thay Đổi | Trạng Thái | Chi Tiết Kỹ Thuật |
+| :--- | :--- | :---: | :--- |
+| **1. Biên Dịch Lại Toàn Bộ Standalone ZIP Windows & Mac** | `scripts/create_standalone_zip.cjs`, `scripts/auto_release.cjs` | ✅ PASS 100% | - Biên dịch sạch từ đầu toàn bộ Frontend (`npm run build`) và Backend Core mã hóa bảo mật `core.cjs`.<br>- Tự động đóng gói và cập nhật trực tiếp bản cài `AvaLive_VIP_PRO_Windows_v2.1.4.zip` và `AvaLive_VIP_PRO_Mac_v2.1.4.zip`. |
+| **2. Đồng Bộ Tuyệt Đối Link Tải Trực Tiếp Tránh Lỗi Cache Cũ** | `api/download.js`, `backend/server.cjs`, `Mo_Ung_Dung_Web.html` | ✅ PASS 100% | - Đảm bảo khi người dùng tải từ website trực tuyến hoặc local, hệ thống luôn tải về chính xác file ZIP mới nhất v2.1.4 từ GitHub Releases.<br>- Khắc phục tình trạng Windows tải về bản cache cũ chưa cập nhật. |
+| **3. Đóng Gói Bộ Cài Standalone v2.1.4 & Tự Động Phát Hành GitHub Releases** | `package.json`, `UpdateNotificationModal.jsx`, `UniversalMasterOverlayModal.jsx`, `Mo_Ung_Dung_Web.html`, `backend/server.cjs`, `api/download.js`, `CLAUDE.md` | ✅ PASS 100% | Đóng gói tự động bộ cài Standalone ZIP Windows & Mac v2.1.4, tự động upload Release lên GitHub, kích hoạt UpdateNotificationModal cho người dùng và commit push GitHub. |
+
+
 
