@@ -218,20 +218,42 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // C. Nếu không khớp Chốt Đơn, xử lý theo kịch bản Bình Luận (Comment Rules)
+        // C. Nếu không khớp Chốt Đơn, xử lý theo kịch bản Bình Luận (Comment Rules / AI / Keyword)
         if (!isCheckoutMatched && commentConfig.active !== false) {
-          if (commentConfig.sampleAnswers) {
-            const rawSample = getRandomSample(commentConfig.sampleAnswers);
-            replyText = fillTemplate(rawSample, { user: userName, comment: commentText });
-          } else {
-            // Câu trả lời ngữ cảnh thông minh tự nhiên
-            const lowerComment = commentText.toLowerCase();
-            if (lowerComment.includes('giá') || lowerComment.includes('mua') || lowerComment.includes('size') || lowerComment.includes('hàng')) {
-              replyText = `Dạ bạn ${userName} ơi, mẫu này đang có giá cực ưu đãi trong giỏ hàng góc trái màn hình, bạn bấm vào xem chi tiết ngay nhé!`;
-            } else if (lowerComment.includes('xinh') || lowerComment.includes('đẹp') || lowerComment.includes('chào') || lowerComment.includes('dễ thương')) {
-              replyText = `Dạ em cảm ơn bạn ${userName} nhiều nha! Bạn comment làm em có thêm bao nhiêu năng lượng luôn á!`;
+          const replyMode = commentConfig.commentReplyMode || 'hybrid';
+          let isKeywordMatched = false;
+
+          // 1. Kiểm tra bộ quy tắc từ khóa (Keyword Rules) nếu không phải chế độ chỉ dùng AI
+          if (replyMode !== 'ai_only' && Array.isArray(commentConfig.keywordRules) && commentConfig.keywordRules.length > 0) {
+            const lowerC = commentText.toLowerCase();
+            for (const rule of commentConfig.keywordRules) {
+              if (rule.enabled !== false && rule.keywords) {
+                const kwArr = Array.isArray(rule.keywords) ? rule.keywords : String(rule.keywords).split(/[,;]/);
+                const matched = kwArr.some(k => k.trim() && lowerC.includes(k.trim().toLowerCase()));
+                if (matched && rule.replyText) {
+                  replyText = fillTemplate(rule.replyText, { user: userName, comment: commentText });
+                  isKeywordMatched = true;
+                  break;
+                }
+              }
+            }
+          }
+
+          // 2. Nếu chưa khớp từ khóa và được phép dùng AI / Mẫu có sẵn
+          if (!isKeywordMatched && replyMode !== 'keywords_only') {
+            if (commentConfig.sampleAnswers) {
+              const rawSample = getRandomSample(commentConfig.sampleAnswers);
+              replyText = fillTemplate(rawSample, { user: userName, comment: commentText });
             } else {
-              replyText = `Dạ em chào bạn ${userName}, em đã thấy bình luận của bạn rồi nha! Cảm ơn bạn đã tương tác với live ạ!`;
+              // Câu trả lời ngữ cảnh thông minh tự nhiên
+              const lowerComment = commentText.toLowerCase();
+              if (lowerComment.includes('giá') || lowerComment.includes('mua') || lowerComment.includes('size') || lowerComment.includes('hàng')) {
+                replyText = `Dạ bạn ${userName} ơi, mẫu này đang có giá cực ưu đãi trong giỏ hàng góc trái màn hình, bạn bấm vào xem chi tiết ngay nhé!`;
+              } else if (lowerComment.includes('xinh') || lowerComment.includes('đẹp') || lowerComment.includes('chào') || lowerComment.includes('dễ thương')) {
+                replyText = `Dạ em cảm ơn bạn ${userName} nhiều nha! Bạn comment làm em có thêm bao nhiêu năng lượng luôn á!`;
+              } else {
+                replyText = `Dạ em chào bạn ${userName}, em đã thấy bình luận của bạn rồi nha! Cảm ơn bạn đã tương tác với live ạ!`;
+              }
             }
           }
         }
@@ -259,9 +281,19 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
+        // Kiểm tra các slot quà thường
         if (!isSpecialGift && giftConfig.active !== false) {
           shouldAction = 'gift_reaction';
-          if (giftConfig.sampleAnswers) {
+          if (Array.isArray(giftConfig.giftSlots) && giftConfig.giftSlots.length > 0) {
+            const activeGiftSlot = giftConfig.giftSlots.find(gs => gs.active !== false && gs.sampleAnswers);
+            if (activeGiftSlot && activeGiftSlot.sampleAnswers) {
+              replyText = fillTemplate(getRandomSample(activeGiftSlot.sampleAnswers), { user: userName, gift_name: giftName, count });
+            } else if (giftConfig.sampleAnswers) {
+              replyText = fillTemplate(getRandomSample(giftConfig.sampleAnswers), { user: userName, gift_name: giftName, count });
+            } else {
+              replyText = `Ôi em cảm ơn bạn ${userName} đã gửi tặng ${giftName} x${count} cho em nha! Cảm ơn món quà vô cùng ngọt ngào của bạn!`;
+            }
+          } else if (giftConfig.sampleAnswers) {
             replyText = fillTemplate(getRandomSample(giftConfig.sampleAnswers), { user: userName, gift_name: giftName, count });
           } else {
             replyText = `Ôi em cảm ơn bạn ${userName} đã gửi tặng ${giftName} x${count} cho em nha! Cảm ơn món quà vô cùng ngọt ngào của bạn!`;

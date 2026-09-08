@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.9.9';
+export const APP_VERSION = '2.0.0';
 export const UPDATE_NOTES = [
-  "⚡ Tối Ưu Video 60 FPS Siêu Mượt Không Đứng Hình: Loại bỏ hoàn toàn cơ chế giật lag vi mô (micro-seek jitter) trên cả App điều khiển, Window Capture và Đường link Stream TikTok Live Studio/OBS. Video tải lên phát mượt mà 60 FPS liên tục hàng chục giờ.",
-  "🔇 Đồng Bộ Tắt/Bật Âm Thanh Trực Tiếp Từ Phần Mềm: Khi bấm Tắt Tiếng (Mute) hoặc điều chỉnh Âm lượng trên phần mềm, đường link phát trên TikTok Live Studio và OBS sẽ tự động tắt tiếng/bật tiếng/chỉnh âm lượng ngay lập tức mà không cần chỉnh thủ công.",
-  "⏸️ Điều Khiển Tạm Dừng & Tiếp Tục Video Tức Thì: Bấm Tạm Dừng hoặc Tiếp Tục phát video trên giao diện điều khiển sẽ lập tức ra lệnh cho đường link TikTok Live Studio và Window Capture dừng/phát đồng bộ 100%.",
-  "⚡ Nâng Cấp Bộ Đệm Phát Trực Tuyến FastStart MP4: Hỗ trợ truyền dữ liệu từng phần (HTTP Range Streaming) mượt mà tối đa cho tất cả các video tải lên từ máy tính của bạn."
+  "🎁 Quà Tặng Đặc Biệt (Multi-Slot Không Giới Hạn): Bổ sung nút '➕ Thêm Slot Quà Tặng Đặc Biệt' cho phép tạo số lượng slot tùy thích, tích chọn bật/tắt, nút xóa slot và tùy chỉnh đầy đủ quà TikTok, video chính, video nền, TTS, trợ lý riêng.",
+  "🎀 Quà Tặng (Thường) Nâng Cấp Hệ Thống Multi-Slot: Bổ sung chức năng thêm slot quà thường tùy thích với nút tích chọn bật/tắt từng slot, tùy biến kịch bản câu trả lời mẫu, kịch bản AI, video hành động & video nền hỗ trợ.",
+  "💬 Quản Lý Bình Luận Chuyên Nghiệp (Chuẩn Ảnh 4): Bổ sung lựa chọn chế độ trả lời (1️⃣ Chỉ Từ khóa có sẵn / 2️⃣ Chỉ Dùng AI Gemini / 3️⃣ Kết hợp thông minh), lựa chọn hình thức trả lời (Voice / Text / Cả 2).",
+  "📁 Tải File Từ Khóa Đa Định Dạng: Hỗ trợ nạp file kịch bản bất kỳ định dạng nào (.txt, .md, .docx, .doc, .pdf, .csv, .json) tự động phân tích và sắp xếp thứ tự từ khóa và câu phản hồi ngăn nắp.",
+  "🔊 Nghe Thử Giọng Đọc Trực Tiếp & Lựa Chọn Giọng Riêng: Cho phép nghe thử âm thanh trực tiếp từng quy tắc từ khóa (TTS / ElevenLabs / Hệ thống) và chọn giọng đọc riêng biệt (Idol / Trợ Lý / BLV Game / Giọng Quốc Tế)."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
