@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.0.4';
+export const APP_VERSION = '2.0.5';
 export const UPDATE_NOTES = [
-  "🛠️ Khắc phục triệt để lỗi hiển thị Tab Cài Đặt Sự Kiện Idol (Fixed ReferenceError FileText) & Tối ưu hóa 100% các tab tác vụ.",
-  "📜 Đột Phá 2 Chế Độ Kịch Bản Livestream & Chốt Đơn: Hỗ trợ Chế Độ 1 (Kịch bản cài sẵn từng câu, thời lượng tùy biến) và Chế Độ 2 (Bộ Não AI & Kho Tri Thức Doanh Nghiệp / Sản Phẩm học dữ liệu để tư vấn chốt đơn tự động).",
-  "🔄 Cơ Chế Xen Kẽ Trả Lời Bình Luận & Tiếp Tục Kịch Bản Liền Mạch: Khi Idol đang nói theo kịch bản, nếu có bình luận của khách, Idol sẽ tạm dừng -> trả lời theo kho tri thức doanh nghiệp hoặc từ khóa -> tự động đọc tiếp câu kịch bản còn lại mượt mà."
+  "🛍️ Nâng Cấp Danh Sách Sản Phẩm / Mã Hàng Livestream lên vị trí ưu tiên đầu trang, hỗ trợ cấu hình giá Flash Sale & kịch bản chốt đơn riêng cho từng mã.",
+  "📁 Tích Hợp Nạp File Tri Thức & Kịch Bản Đa Định Dạng (.docx, .doc, .pdf, .txt, .json, .csv, .md, .xlsx, .xls) để AI tự động học thuộc 100% dữ liệu.",
+  "🌸 Bổ Sung Bộ Kịch Bản Mẫu Mỹ Phẩm & Nước Hoa Cao Cấp (Chuẩn 60 Phút) 6 giai đoạn đỉnh cao + Tùy chọn 4 Phong cách Livestream AI (Chốt sale, Da liễu, Bắt trend, Sang trọng)."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
