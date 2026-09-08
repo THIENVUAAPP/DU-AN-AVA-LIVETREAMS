@@ -19,8 +19,9 @@ export default async function handler(req, res) {
       isMac = userAgent.includes('mac');
     }
 
-    const prefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
-    const fallbackFileName = isMac ? 'AvaLive_VIP_PRO_Mac.zip' : 'AvaLive_VIP_PRO_Windows.zip';
+    const currentVersion = '2.1.0';
+    const prefix = isMac ? `AvaLive_VIP_PRO_Mac_v${currentVersion}` : `AvaLive_VIP_PRO_Windows_v${currentVersion}`;
+    const fallbackFileName = isMac ? `AvaLive_VIP_PRO_Mac_v${currentVersion}.zip` : `AvaLive_VIP_PRO_Windows_v${currentVersion}.zip`;
     const githubToken = process.env.GITHUB_TOKEN;
 
     const headers = {
@@ -31,32 +32,20 @@ export default async function handler(req, res) {
       headers['Authorization'] = `Bearer ${githubToken}`;
     }
 
-    let downloadUrl = null;
+    let downloadUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${currentVersion}/${fallbackFileName}`;
 
-    // 1. Quét GitHub Releases tìm file ZIP mới nhất
+    // 1. Quét GitHub Releases tag chính xác v2.1.0
     try {
-      const relRes = await fetch('https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases', { headers });
+      const relRes = await fetch(`https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/tags/v${currentVersion}`, { headers });
       if (relRes.ok) {
-        const releases = await relRes.json();
-        if (Array.isArray(releases)) {
-          for (const rel of releases) {
-            const asset = (rel.assets || []).find(a => a.name.startsWith(prefix) && a.name.endsWith('.zip'));
-            if (asset && asset.browser_download_url) {
-              downloadUrl = asset.browser_download_url;
-              break;
-            }
-          }
+        const release = await relRes.json();
+        const asset = (release.assets || []).find(a => a.name.includes(currentVersion) && a.name.startsWith(isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows') && a.name.endsWith('.zip'));
+        if (asset && asset.browser_download_url) {
+          downloadUrl = asset.browser_download_url;
         }
       }
     } catch (e) {
       console.warn('GitHub API query error:', e);
-    }
-
-    // 2. Dự phòng đường link bản phát hành chuẩn nếu API bị giới hạn
-    if (!downloadUrl) {
-      downloadUrl = isMac 
-        ? 'https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v2.1.0/AvaLive_VIP_PRO_Mac_v2.1.0.zip'
-        : 'https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v2.1.0/AvaLive_VIP_PRO_Windows_v2.1.0.zip';
     }
 
     res.setHeader('Location', downloadUrl);

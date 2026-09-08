@@ -882,37 +882,28 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
     return res.sendFile(targetFile);
   }
 
-  // Quét GitHub Releases tìm file ZIP mới nhất
+  // Quét GitHub Releases tìm file ZIP phiên bản chính xác v${ver}
   const githubToken = process.env.GITHUB_TOKEN;
   const headers = { 'User-Agent': 'AvaLive-Download-Agent/1.0', 'Accept': 'application/vnd.github.v3+json' };
   if (githubToken) headers['Authorization'] = `Bearer ${githubToken}`;
 
-  let downloadUrl = null;
+  let downloadUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${ver}/AvaLive_VIP_PRO_Windows_v${ver}.zip`;
   try {
     const fetch = (await import('node-fetch')).default;
-    const relRes = await fetch('https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases', { headers });
+    const relRes = await fetch(`https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/tags/v${ver}`, { headers });
     if (relRes.ok) {
-      const releases = await relRes.json();
-      if (Array.isArray(releases)) {
-        for (const rel of releases) {
-          const asset = (rel.assets || []).find(a => a.name.startsWith('AvaLive_VIP_PRO_Windows') && a.name.endsWith('.zip'));
-          if (asset && asset.browser_download_url) {
-            downloadUrl = asset.browser_download_url;
-            break;
-          }
-        }
+      const release = await relRes.json();
+      const asset = (release.assets || []).find(a => a.name.includes(ver) && a.name.startsWith('AvaLive_VIP_PRO_Windows') && a.name.endsWith('.zip'));
+      if (asset && asset.browser_download_url) {
+        downloadUrl = asset.browser_download_url;
       }
     }
   } catch (err) {
     console.warn('Github download proxy error:', err);
   }
 
-  if (!downloadUrl) {
-    downloadUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${ver}/AvaLive_VIP_PRO_Windows_v${ver}.zip`;
-  }
-
   res.setHeader('Content-Type', 'application/zip');
-  res.setHeader('Content-Disposition', `attachment; filename="AvaLive_VIP_PRO_Windows.zip"`);
+  res.setHeader('Content-Disposition', `attachment; filename="AvaLive_VIP_PRO_Windows_v${ver}.zip"`);
   return res.redirect(downloadUrl);
 });
 
@@ -946,37 +937,28 @@ app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VI
     return res.sendFile(targetFile);
   }
 
-  // Quét GitHub Releases tìm file ZIP mới nhất
+  // Quét GitHub Releases tìm file ZIP phiên bản chính xác v${ver}
   const githubToken = process.env.GITHUB_TOKEN;
   const headers = { 'User-Agent': 'AvaLive-Download-Agent/1.0', 'Accept': 'application/vnd.github.v3+json' };
   if (githubToken) headers['Authorization'] = `Bearer ${githubToken}`;
 
-  let downloadUrl = null;
+  let downloadUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${ver}/AvaLive_VIP_PRO_Mac_v${ver}.zip`;
   try {
     const fetch = (await import('node-fetch')).default;
-    const relRes = await fetch('https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases', { headers });
+    const relRes = await fetch(`https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/tags/v${ver}`, { headers });
     if (relRes.ok) {
-      const releases = await relRes.json();
-      if (Array.isArray(releases)) {
-        for (const rel of releases) {
-          const asset = (rel.assets || []).find(a => a.name.startsWith('AvaLive_VIP_PRO_Mac') && a.name.endsWith('.zip'));
-          if (asset && asset.browser_download_url) {
-            downloadUrl = asset.browser_download_url;
-            break;
-          }
-        }
+      const release = await relRes.json();
+      const asset = (release.assets || []).find(a => a.name.includes(ver) && a.name.startsWith('AvaLive_VIP_PRO_Mac') && a.name.endsWith('.zip'));
+      if (asset && asset.browser_download_url) {
+        downloadUrl = asset.browser_download_url;
       }
     }
   } catch (err) {
     console.warn('Github download proxy error:', err);
   }
 
-  if (!downloadUrl) {
-    downloadUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${ver}/AvaLive_VIP_PRO_Mac_v${ver}.zip`;
-  }
-
   res.setHeader('Content-Type', 'application/zip');
-  res.setHeader('Content-Disposition', `attachment; filename="AvaLive_VIP_PRO_Mac.zip"`);
+  res.setHeader('Content-Disposition', `attachment; filename="AvaLive_VIP_PRO_Mac_v${ver}.zip"`);
   return res.redirect(downloadUrl);
 });
 
