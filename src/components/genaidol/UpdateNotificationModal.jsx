@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.1.4';
+export const APP_VERSION = '2.1.5';
 export const UPDATE_NOTES = [
-  "⚡ Siêu Sắc Nét Ultra HD 4K (60FPS): Bộ lọc phần cứng tăng cường độ nét và tương phản cho Cửa Sổ Live 9:16 Window Capture trên TikTok Live Studio & OBS.",
-  "🎙️ Điều Khiển Âm Lượng Đa Kênh: Bộ Mixer độc lập cho Voice AI (Giọng đọc Trợ lý / Idol TTS) và Video Nền BGM (0% - 100%), đồng bộ tức thì trên TikTok Live Studio.",
-  "🎬 Phát Video Liền Mạch Không Khựng Giật: Nâng cấp luồng phát video liên tục 24/24 xuyên suốt, loại bỏ tình trạng giật lag, nhảy câu hoặc lặp video bất thường."
+  "🎁 Bổ Sung Trọn Bộ Ô Nhập Lời Cảm Ơn & Voice AI Cho Quà Tặng Đặc Biệt: Đầy đủ ô nhập kịch bản mẫu {user}, {gift_name} và thanh điều khiển Voice AI / Tốc độ / Nghe thử trực tiếp trên từng Slot quà đặc biệt.",
+  "⚡ Siêu Sắc Nét Ultra HD 4K (60FPS): Tối ưu hóa bộ lọc tăng cường độ nét và tương phản cho Cửa Sổ Live 9:16 Window Capture trên TikTok Live Studio & OBS.",
+  "🎙️ Điều Khiển Âm Lượng Đa Kênh: Bộ Mixer độc lập cho Voice AI (Giọng đọc Trợ lý / Idol TTS) và Video Nền BGM (0% - 100%), đồng bộ tức thì trên TikTok Live Studio."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

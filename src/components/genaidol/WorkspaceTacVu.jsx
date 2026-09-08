@@ -315,10 +315,70 @@ const getDefaultEventConfigs = () => {
 
       // Special gifts slots (unlimited customizable slots)
       specialGiftSlots: ev.id === 'special_gift' ? [
-        { id: 1, active: true, giftName: '🇻🇳 Cờ Tổ Quốc (1 xu)', videoFolder: '', supportVideoFolder: '', useTTS: false, muteSourceVideo: false, useAssistant: true, assistantPrompt: '', assistantVideoFolder: '', useMainVoice: true },
-        { id: 2, active: true, giftName: '👑 Vương Miện (99 xu)', videoFolder: '', supportVideoFolder: '', useTTS: false, muteSourceVideo: false, useAssistant: false, assistantPrompt: '', assistantVideoFolder: '', useMainVoice: true },
-        { id: 3, active: true, giftName: '🦁 Leon & Sư Tử (34000 xu)', videoFolder: '', supportVideoFolder: '', useTTS: false, muteSourceVideo: false, useAssistant: true, assistantPrompt: '', assistantVideoFolder: '', useMainVoice: true },
-        { id: 4, active: true, giftName: '🪐 TikTok Universe (44999 xu)', videoFolder: '', supportVideoFolder: '', useTTS: false, muteSourceVideo: false, useAssistant: true, assistantPrompt: '', assistantVideoFolder: '', useMainVoice: true }
+        { 
+          id: 1, 
+          active: true, 
+          giftName: '🇻🇳 Cờ Tổ Quốc (1 xu)', 
+          sampleAnswers: 'Cảm ơn bạn {user} đã gửi tặng Cờ Tổ Quốc cho em nha!\nÔi yêu bạn {user} quá, cảm ơn món quà ý nghĩa của bạn!',
+          videoFolder: '', 
+          videoFileName: '',
+          videoUrl: '',
+          supportVideoFolder: '', 
+          useTTS: true, 
+          muteSourceVideo: false, 
+          useAssistant: true, 
+          assistantPrompt: '', 
+          assistantVideoFolder: '', 
+          useMainVoice: true 
+        },
+        { 
+          id: 2, 
+          active: true, 
+          giftName: '👑 Vương Miện (99 xu)', 
+          sampleAnswers: 'Wow, cảm ơn bạn {user} đã tặng Vương Miện siêu lấp lánh cho em!\nĐội vương miện cảm ơn {user} yêu quý nhiều nha!',
+          videoFolder: '', 
+          videoFileName: '',
+          videoUrl: '',
+          supportVideoFolder: '', 
+          useTTS: true, 
+          muteSourceVideo: false, 
+          useAssistant: false, 
+          assistantPrompt: '', 
+          assistantVideoFolder: '', 
+          useMainVoice: true 
+        },
+        { 
+          id: 3, 
+          active: true, 
+          giftName: '🦁 Leon & Sư Tử (34000 xu)', 
+          sampleAnswers: 'Trời ơi đại gia {user} xuất hiện! Em xin gửi ngàn lời cảm ơn tới bạn {user} đã tặng Sư Tử siêu khủng nha!\nQuá đỉnh luôn {user} ơi, cảm ơn anh/chị rất nhiều!',
+          videoFolder: '', 
+          videoFileName: '',
+          videoUrl: '',
+          supportVideoFolder: '', 
+          useTTS: true, 
+          muteSourceVideo: false, 
+          useAssistant: true, 
+          assistantPrompt: '', 
+          assistantVideoFolder: '', 
+          useMainVoice: true 
+        },
+        { 
+          id: 4, 
+          active: true, 
+          giftName: '🪐 TikTok Universe (44999 xu)', 
+          sampleAnswers: 'Tuyệt tác vũ trụ! Em cảm ơn bạn {user} đã kích hoạt TikTok Universe cho phòng live hôm nay nha!\nĐỉnh nóc kịch trần luôn bạn {user} ơi!',
+          videoFolder: '', 
+          videoFileName: '',
+          videoUrl: '',
+          supportVideoFolder: '', 
+          useTTS: true, 
+          muteSourceVideo: false, 
+          useAssistant: true, 
+          assistantPrompt: '', 
+          assistantVideoFolder: '', 
+          useMainVoice: true 
+        }
       ] : [],
 
       // Regular gifts multi-slots (unlimited customizable slots)
@@ -404,7 +464,11 @@ export default function WorkspaceTacVu() {
                 ...defaults[key],
                 ...parsed[key],
                 specialGiftSlots: (Array.isArray(parsed[key]?.specialGiftSlots) && parsed[key].specialGiftSlots.length > 0)
-                  ? parsed[key].specialGiftSlots
+                  ? parsed[key].specialGiftSlots.map((s, idx) => ({
+                      ...s,
+                      sampleAnswers: s.sampleAnswers || defaults[key]?.specialGiftSlots?.[idx]?.sampleAnswers || 'Cảm ơn bạn {user} đã gửi tặng món quà đặc biệt {gift_name} cho em nha!\nÔi yêu bạn {user} quá, cảm ơn món quà của bạn!',
+                      useTTS: s.useTTS !== undefined ? s.useTTS : true,
+                    }))
                   : defaults[key].specialGiftSlots,
                 giftSlots: (Array.isArray(parsed[key]?.giftSlots) && parsed[key].giftSlots.length > 0)
                   ? parsed[key].giftSlots
@@ -526,9 +590,12 @@ export default function WorkspaceTacVu() {
         id: nextId,
         active: true,
         giftName: '🌹 Hoa Hồng (1 xu)',
+        sampleAnswers: 'Cảm ơn bạn {user} đã gửi tặng món quà đặc biệt {gift_name} cho em nha!\nÔi yêu bạn {user} quá, cảm ơn món quà của bạn!',
         videoFolder: '',
+        videoFileName: '',
+        videoUrl: '',
         supportVideoFolder: '',
-        useTTS: false,
+        useTTS: true,
         muteSourceVideo: false,
         useAssistant: false,
         assistantPrompt: '',
@@ -1217,13 +1284,14 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                           Xóa
                         </button>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-1 text-xs">
+                        <div className="space-y-3 mt-1 text-xs">
+                          {/* 1. Chọn Quà Tặng */}
                           <div>
                             <label className="font-bold text-gray-700 block mb-1">🎁 Chọn Quà Tặng:</label>
                             <select 
                               value={slot.giftName} 
                               onChange={(e) => handleSlotChange(slot.id, 'giftName', e.target.value)} 
-                              className="border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs bg-white focus:outline-blue-500 w-full font-medium cursor-pointer"
+                              className="border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs bg-white focus:outline-blue-500 w-full font-bold text-amber-900 cursor-pointer"
                             >
                               {GIFT_OPTIONS.map(g => (
                                 <option key={g.id} value={g.label}>{g.label}</option>
@@ -1231,6 +1299,18 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                             </select>
                           </div>
 
+                          {/* 2. Câu cảm ơn mẫu (Mỗi câu 1 dòng) */}
+                          <div>
+                            <label className="text-xs font-bold text-gray-700 block mb-1">📄 Câu cảm ơn mẫu (Mỗi câu 1 dòng):</label>
+                            <textarea 
+                              value={slot.sampleAnswers || ''} 
+                              onChange={(e) => handleSlotChange(slot.id, 'sampleAnswers', e.target.value)} 
+                              placeholder="Cảm ơn bạn {user} đã tặng món quà đặc biệt {gift_name} cho em nha!"
+                              className="w-full h-[60px] border border-gray-300 rounded-lg p-2 text-xs resize-none bg-white focus:outline-blue-500 font-medium" 
+                            />
+                          </div>
+
+                          {/* 3. Universal Media Picker cho Video Idol */}
                           <div>
                             <UniversalMediaPicker
                               label="Video Idol Diễn / Clip Cảm Ơn Quà"
@@ -1259,22 +1339,30 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                               inputId={`upload-special-gift-${slot.id}`}
                             />
                           </div>
-                        </div>
 
-                        {/* Checkboxes slot */}
-                        <div className="flex items-center gap-4 mt-3 pt-2 border-t border-gray-100 text-xs">
-                          <label className="flex items-center gap-1.5 cursor-pointer font-medium text-gray-700">
-                            <input type="checkbox" checked={slot.useTTS} onChange={(e) => handleSlotChange(slot.id, 'useTTS', e.target.checked, true)} className="rounded text-blue-600" />
-                            <span>🗣️ Dùng TTS</span>
-                          </label>
-                          <label className="flex items-center gap-1.5 cursor-pointer font-medium text-gray-700">
-                            <input type="checkbox" checked={slot.muteSourceVideo} onChange={(e) => handleSlotChange(slot.id, 'muteSourceVideo', e.target.checked, true)} className="rounded text-blue-600" />
-                            <span>🔇 Tắt âm video gốc</span>
-                          </label>
-                          <label className="flex items-center gap-1.5 cursor-pointer font-medium text-gray-700">
-                            <input type="checkbox" checked={slot.useAssistant} onChange={(e) => handleSlotChange(slot.id, 'useAssistant', e.target.checked, true)} className="rounded text-blue-600" />
-                            <span>👥 Trợ lý phụ họa</span>
-                          </label>
+                          {/* 4. Event Voice Tester (Đầy đủ Giọng đọc, Tốc độ, Nút Nghe thử giống Ảnh 2) */}
+                          <EventVoiceTester 
+                            text={slot.sampleAnswers || `Cảm ơn bạn {user} đã tặng ${slot.giftName} cho em nha!`}
+                            defaultVoiceId="free_vi_female"
+                            label={`Nghe thử Voice (${slot.giftName})`}
+                            compact={true}
+                          />
+
+                          {/* 5. Checkboxes slot */}
+                          <div className="flex items-center gap-4 pt-2 border-t border-gray-100 text-xs">
+                            <label className="flex items-center gap-1.5 cursor-pointer font-medium text-gray-700">
+                              <input type="checkbox" checked={slot.useTTS !== false} onChange={(e) => handleSlotChange(slot.id, 'useTTS', e.target.checked, true)} className="rounded text-blue-600" />
+                              <span>🗣️ Dùng TTS</span>
+                            </label>
+                            <label className="flex items-center gap-1.5 cursor-pointer font-medium text-gray-700">
+                              <input type="checkbox" checked={slot.muteSourceVideo} onChange={(e) => handleSlotChange(slot.id, 'muteSourceVideo', e.target.checked, true)} className="rounded text-blue-600" />
+                              <span>🔇 Tắt âm video gốc</span>
+                            </label>
+                            <label className="flex items-center gap-1.5 cursor-pointer font-medium text-gray-700">
+                              <input type="checkbox" checked={slot.useAssistant} onChange={(e) => handleSlotChange(slot.id, 'useAssistant', e.target.checked, true)} className="rounded text-blue-600" />
+                              <span>👥 Trợ lý phụ họa</span>
+                            </label>
+                          </div>
                         </div>
                       </fieldset>
                     ))}

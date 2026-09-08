@@ -830,5 +830,12 @@ Im lặng bỏ qua 3 câu này = vi phạm Mục 0.7 và Mục 1.
 | **2. Đồng Bộ Tuyệt Đối Link Tải Trực Tiếp Tránh Lỗi Cache Cũ** | `api/download.js`, `backend/server.cjs`, `Mo_Ung_Dung_Web.html` | ✅ PASS 100% | - Đảm bảo khi người dùng tải từ website trực tuyến hoặc local, hệ thống luôn tải về chính xác file ZIP mới nhất v2.1.4 từ GitHub Releases.<br>- Khắc phục tình trạng Windows tải về bản cache cũ chưa cập nhật. |
 | **3. Đóng Gói Bộ Cài Standalone v2.1.4 & Tự Động Phát Hành GitHub Releases** | `package.json`, `UpdateNotificationModal.jsx`, `UniversalMasterOverlayModal.jsx`, `Mo_Ung_Dung_Web.html`, `backend/server.cjs`, `api/download.js`, `CLAUDE.md` | ✅ PASS 100% | Đóng gói tự động bộ cài Standalone ZIP Windows & Mac v2.1.4, tự động upload Release lên GitHub, kích hoạt UpdateNotificationModal cho người dùng và commit push GitHub. |
 
+### 🚀 46. Nhật Ký Bản Cập Nhật v2.1.5 (Official Release - Bổ Sung Trọn Bộ Ô Nhập Lời Cảm Ơn Mẫu & Voice AI Cho Từng Slot Quà Tặng Đặc Biệt)
+| Hạng Mục Cải Tiến | File Thay Đổi | Trạng Thái | Chi Tiết Kỹ Thuật |
+| :--- | :--- | :---: | :--- |
+| **1. Bổ Sung Ô Nhập Prompt / Câu Cảm Ơn Mẫu & Voice AI Cho Quà Tặng Đặc Biệt** | `src/components/genaidol/WorkspaceTacVu.jsx` | ✅ PASS 100% | - Bổ sung đầy đủ ô nhập `📝 Câu cảm ơn mẫu (Mỗi câu 1 dòng)` cho từng Slot quà đặc biệt (`special_gift`).<br>- Tích hợp trọn bộ thanh `EventVoiceTester` với bộ chọn Giọng đọc AI (Nữ / Nam chuẩn Việt), Tốc độ phát (0.75x, 1.0x, 1.25x...) và nút `🔊 NGHE THỬ` trực tiếp giống 100% cấu trúc Quà tặng thường.<br>- Tự động nạp kịch bản mẫu `{user}`, `{gift_name}` cho tất cả các slot quà đặc biệt mặc định và slot thêm mới. |
+| **2. Đóng Gói Bộ Cài Standalone v2.1.5 & Tự Động Phát Hành GitHub Releases** | `package.json`, `UpdateNotificationModal.jsx`, `UniversalMasterOverlayModal.jsx`, `Mo_Ung_Dung_Web.html`, `backend/server.cjs`, `api/download.js`, `CLAUDE.md` | ✅ PASS 100% | Đóng gói tự động bộ cài Standalone ZIP Windows & Mac v2.1.5, tự động upload Release lên GitHub, kích hoạt UpdateNotificationModal cho người dùng và commit push GitHub. |
+
+
 
 
