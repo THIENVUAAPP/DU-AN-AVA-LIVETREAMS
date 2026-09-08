@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.1.6';
+export const APP_VERSION = '2.1.7';
 export const UPDATE_NOTES = [
+  "🔘 Sửa & Kích Hoạt 100% Toàn Bộ Nút Tích Chọn Checkbox: Khắc phục triệt để lỗi nút 'Cài đặt Trợ lý' và các nút tích chọn trên mọi tab tác vụ. Cho phép bấm trực tiếp vào cả nút checkbox và nhãn chữ để bật/tắt mượt mà ngay lập tức.",
   "📁 Nạp File Toàn Năng Cho Mọi Ô Nhập & Tác Vụ: Tích hợp nút 'Nạp File' thông minh cho tất cả các ô nhập kịch bản, câu mẫu, từ khóa cấm, từ khóa ưu tiên, câu trợ lý, quà tặng đặc biệt, mã sản phẩm - Hỗ trợ đọc tự động mọi định dạng (.docx, .doc, .pdf, .txt, .json, .csv, .xlsx, .xls, .md).",
-  "🎁 Bổ Sung Trọn Bộ Ô Nhập Lời Cảm Ơn & Voice AI Cho Quà Tặng Đặc Biệt: Đầy đủ ô nhập kịch bản mẫu {user}, {gift_name} và thanh điều khiển Voice AI / Tốc độ / Nghe thử trực tiếp trên từng Slot quà đặc biệt.",
   "⚡ Siêu Sắc Nét Ultra HD 4K (60FPS): Tối ưu hóa bộ lọc tăng cường độ nét và tương phản cho Cửa Sổ Live 9:16 Window Capture trên TikTok Live Studio & OBS."
 ];
 

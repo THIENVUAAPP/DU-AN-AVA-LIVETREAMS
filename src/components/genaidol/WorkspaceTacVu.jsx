@@ -331,6 +331,7 @@ const getDefaultEventConfigs = () => {
       aiPrompt: '',
       sampleAnswers: '',
       assistantPrompt: '',
+      useAssistant: true,
       assistantUseMainVoice: false,
       
       // Comment Mode & Response Format
@@ -1225,12 +1226,12 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
     );
   };
 
-  const FieldLabel = ({ icon, text, helpKey, customText, minW = "min-w-[170px]" }) => (
-    <div className={`flex items-center text-[13px] text-gray-700 font-semibold ${minW}`}>
+  const FieldLabel = ({ icon, text, helpKey, customText, minW = "min-w-[170px]", htmlFor, onClick }) => (
+    <label htmlFor={htmlFor} onClick={onClick} className={`flex items-center text-[13px] text-gray-700 font-semibold cursor-pointer select-none ${minW}`}>
       <span className="mr-1.5">{icon}</span>
       <span>{text}</span>
       <HelpTooltip helpKey={helpKey} customText={customText} />
-    </div>
+    </label>
   );
 
   return (
@@ -1306,8 +1307,8 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
               <div className="border border-gray-300 rounded-2xl bg-white mb-4 shadow-sm px-4 py-5">
                 <div className="flex items-center gap-6 mb-5 pb-3 border-b border-gray-100 flex-wrap">
                   <div className="flex items-center">
-                    <FieldLabel icon="✅" text="Kích hoạt chung" helpKey="active" minW="min-w-[130px]" />
-                    <input type="checkbox" name="active" checked={currentConfig.active} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer" />
+                    <FieldLabel icon="✅" text="Kích hoạt chung" helpKey="active" minW="min-w-[130px]" htmlFor="active-special-gift" />
+                    <input type="checkbox" id="active-special-gift" name="active" checked={currentConfig.active} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" />
                   </div>
                   <div className="flex items-center">
                     <FieldLabel icon="⭐" text="Độ ưu tiên" helpKey="priority" minW="min-w-[100px]" />
@@ -1447,8 +1448,8 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
               <div className="border border-gray-300 rounded-2xl bg-white mb-4 shadow-sm px-4 py-5">
                 <div className="flex items-center gap-6 mb-5 pb-3 border-b border-gray-100 flex-wrap">
                   <div className="flex items-center">
-                    <FieldLabel icon="✅" text="Kích hoạt chung" helpKey="active" minW="min-w-[130px]" />
-                    <input type="checkbox" name="active" checked={currentConfig.active} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer" />
+                    <FieldLabel icon="✅" text="Kích hoạt chung" helpKey="active" minW="min-w-[130px]" htmlFor="active-gift" />
+                    <input type="checkbox" id="active-gift" name="active" checked={currentConfig.active} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" />
                   </div>
                   <div className="flex items-center">
                     <FieldLabel icon="⭐" text="Độ ưu tiên" helpKey="priority" minW="min-w-[100px]" />
@@ -1552,8 +1553,8 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                 {/* 1. KHỞI CHẠY & ƯU TIÊN */}
                 <div className="flex items-center gap-6 mb-5 pb-3 border-b border-gray-100 flex-wrap">
                   <div className="flex items-center">
-                    <FieldLabel icon="✅" text="Kích hoạt phát kịch bản" helpKey="active" minW="min-w-[160px]" />
-                    <input type="checkbox" name="active" checked={currentConfig.active} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer" />
+                    <FieldLabel icon="✅" text="Kích hoạt phát kịch bản" helpKey="active" minW="min-w-[160px]" htmlFor="active-script-broadcast" />
+                    <input type="checkbox" id="active-script-broadcast" name="active" checked={currentConfig.active} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" />
                   </div>
                   <div className="flex items-center">
                     <FieldLabel icon="⭐" text="Độ ưu tiên" helpKey="priority" minW="min-w-[100px]" />
@@ -2098,8 +2099,8 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                 {/* 1. KHỞI CHẠY & ƯU TIÊN */}
                 <div className="flex items-center gap-6 mb-5 pb-3 border-b border-gray-100 flex-wrap">
                   <div className="flex items-center">
-                    <FieldLabel icon="✅" text="Kích hoạt chốt đơn" helpKey="active" minW="min-w-[150px]" />
-                    <input type="checkbox" name="active" checked={currentConfig.active} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer" />
+                    <FieldLabel icon="✅" text="Kích hoạt chốt đơn" helpKey="active" minW="min-w-[150px]" htmlFor="active-checkout" />
+                    <input type="checkbox" id="active-checkout" name="active" checked={currentConfig.active} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" />
                   </div>
                   <div className="flex items-center">
                     <FieldLabel icon="⭐" text="Độ ưu tiên" helpKey="priority" minW="min-w-[100px]" />
@@ -2355,29 +2356,29 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                       
                       {currentConfig.active !== undefined && (
                         <div className="flex items-center">
-                          <FieldLabel icon="✅" text="Kích hoạt" helpKey="active" />
-                          <input type="checkbox" name="active" checked={currentConfig.active} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer" />
+                          <FieldLabel icon="✅" text="Kích hoạt" helpKey="active" htmlFor={`active-${selectedEventId}`} />
+                          <input type="checkbox" id={`active-${selectedEventId}`} name="active" checked={currentConfig.active} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" />
                         </div>
                       )}
 
                       {currentConfig.useVoice !== undefined && selectedEventId !== 'talking' && selectedEventId !== 'idle' && (
                         <div className="flex items-center">
-                          <FieldLabel icon="🗣️" text="Dùng giọng nói" helpKey="useVoice" />
-                          <input type="checkbox" name="useVoice" checked={currentConfig.useVoice} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer" />
+                          <FieldLabel icon="🗣️" text="Dùng giọng nói" helpKey="useVoice" htmlFor={`useVoice-${selectedEventId}`} />
+                          <input type="checkbox" id={`useVoice-${selectedEventId}`} name="useVoice" checked={currentConfig.useVoice} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" />
                         </div>
                       )}
 
                       {currentConfig.muteSourceVideo !== undefined && selectedEventId !== 'talking' && selectedEventId !== 'idle' && (
                         <div className="flex items-center">
-                          <FieldLabel icon="🔇" text="Tắt âm gốc video" helpKey="muteSourceVideo" />
-                          <input type="checkbox" name="muteSourceVideo" checked={currentConfig.muteSourceVideo} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer" />
+                          <FieldLabel icon="🔇" text="Tắt âm gốc video" helpKey="muteSourceVideo" htmlFor={`muteSourceVideo-${selectedEventId}`} />
+                          <input type="checkbox" id={`muteSourceVideo-${selectedEventId}`} name="muteSourceVideo" checked={currentConfig.muteSourceVideo} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" />
                         </div>
                       )}
 
                       {currentConfig.useAi !== undefined && selectedEventId !== 'idle' && selectedEventId !== 'apology' && (
                         <div className="flex items-center">
-                          <FieldLabel icon="🧠" text="Dùng AI trả lời" helpKey="useAi" />
-                          <input type="checkbox" name="useAi" checked={currentConfig.useAi} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer" />
+                          <FieldLabel icon="🧠" text="Dùng AI trả lời" helpKey="useAi" htmlFor={`useAi-${selectedEventId}`} />
+                          <input type="checkbox" id={`useAi-${selectedEventId}`} name="useAi" checked={currentConfig.useAi} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" />
                         </div>
                       )}
                       
@@ -2466,8 +2467,8 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                           </div>
 
                           <div className="flex items-center mt-1">
-                            <FieldLabel icon="🛡️" text="Bật bộ lọc spam thông minh" helpKey="smartSpamFilter" />
-                            <input type="checkbox" name="smartSpamFilter" checked={currentConfig.smartSpamFilter} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer" />
+                            <FieldLabel icon="🛡️" text="Bật bộ lọc spam thông minh" helpKey="smartSpamFilter" htmlFor="smartSpamFilter-comment" />
+                            <input type="checkbox" id="smartSpamFilter-comment" name="smartSpamFilter" checked={currentConfig.smartSpamFilter} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" />
                           </div>
                           <div className="flex items-center">
                             <FieldLabel icon="⏱️" text="Chờ giữa các comment spam (giây)" helpKey="waitBetweenSpam" />
@@ -2534,51 +2535,51 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                             <div className="flex items-center justify-between sm:justify-start sm:min-w-[170px]">
                               <FieldLabel icon="📄" text="Câu trả lời mẫu (mỗi câu 1 dòng)" helpKey="sampleAnswers" />
                               <div className="sm:hidden">
-                                <UniversalFileUploadButton 
-                                  onLoaded={(text) => handleSimpleChange('sampleAnswers', text)} 
-                                  label="Nạp File" 
-                                />
-                              </div>
-                            </div>
-                            <div className="flex-1 flex flex-col gap-1">
-                              <div className="hidden sm:flex justify-end">
-                                <UniversalFileUploadButton 
-                                  onLoaded={(text) => handleSimpleChange('sampleAnswers', text)} 
-                                  label="Nạp File Câu Thoại Mẫu (.docx, .pdf, .txt, .json, .xlsx)" 
-                                />
-                              </div>
-                              <textarea 
-                                name="sampleAnswers" 
-                                value={currentConfig.sampleAnswers} 
-                                onChange={handleChange} 
-                                placeholder="Nhập hoặc nạp file các câu trả lời mẫu (mỗi dòng 1 câu)..."
-                                className="w-full min-h-[90px] border border-gray-300 rounded-lg p-2.5 text-xs resize-y bg-gray-50 focus:bg-white focus:outline-blue-500 font-medium leading-relaxed" 
+                              <UniversalFileUploadButton 
+                                onLoaded={(text) => handleSimpleChange('sampleAnswers', text)} 
+                                label="Nạp File" 
                               />
                             </div>
                           </div>
-                          <div className="ml-0 sm:ml-[170px]">
-                            <EventVoiceTester 
-                              text={currentConfig.sampleAnswers || 'Xin chào và cảm ơn bạn đã tương tác cùng phiên livestream nhé!'}
-                              defaultVoiceId={selectedEventId === 'follow' ? 'free_vi_female2' : 'free_vi_female'}
-                              label={`Nghe thử câu thoại mẫu (${selectedEventInfo?.label || 'Sự kiện'})`}
-                              compact={false}
+                          <div className="flex-1 flex flex-col gap-1">
+                            <div className="hidden sm:flex justify-end">
+                              <UniversalFileUploadButton 
+                                onLoaded={(text) => handleSimpleChange('sampleAnswers', text)} 
+                                label="Nạp File Câu Thoại Mẫu (.docx, .pdf, .txt, .json, .xlsx)" 
+                              />
+                            </div>
+                            <textarea 
+                              name="sampleAnswers" 
+                              value={currentConfig.sampleAnswers} 
+                              onChange={handleChange} 
+                              placeholder="Nhập hoặc nạp file các câu trả lời mẫu (mỗi dòng 1 câu)..."
+                              className="w-full min-h-[90px] border border-gray-300 rounded-lg p-2.5 text-xs resize-y bg-gray-50 focus:bg-white focus:outline-blue-500 font-medium leading-relaxed" 
                             />
                           </div>
                         </div>
-                      )}
-                      
-                      {selectedEventId === 'talking' && (
-                        <>
-                          <div className="flex items-center mt-2">
-                            <FieldLabel icon="🗣️" text="Dùng giọng nói" helpKey="useVoice" />
-                            <input type="checkbox" name="useVoice" checked={currentConfig.useVoice} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer" />
-                          </div>
-                          <div className="flex items-center">
-                            <FieldLabel icon="🔇" text="Tắt âm gốc video" helpKey="muteSourceVideo" />
-                            <input type="checkbox" name="muteSourceVideo" checked={currentConfig.muteSourceVideo} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer" />
-                          </div>
-                        </>
-                      )}
+                        <div className="ml-0 sm:ml-[170px]">
+                          <EventVoiceTester 
+                            text={currentConfig.sampleAnswers || 'Xin chào và cảm ơn bạn đã tương tác cùng phiên livestream nhé!'}
+                            defaultVoiceId={selectedEventId === 'follow' ? 'free_vi_female2' : 'free_vi_female'}
+                            label={`Nghe thử câu thoại mẫu (${selectedEventInfo?.label || 'Sự kiện'})`}
+                            compact={false}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {selectedEventId === 'talking' && (
+                      <>
+                        <div className="flex items-center mt-2">
+                          <FieldLabel icon="🗣️" text="Dùng giọng nói" helpKey="useVoice" htmlFor="useVoice-talking" />
+                          <input type="checkbox" id="useVoice-talking" name="useVoice" checked={currentConfig.useVoice} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" />
+                        </div>
+                        <div className="flex items-center">
+                          <FieldLabel icon="🔇" text="Tắt âm gốc video" helpKey="muteSourceVideo" htmlFor="muteSourceVideo-talking" />
+                          <input type="checkbox" id="muteSourceVideo-talking" name="muteSourceVideo" checked={currentConfig.muteSourceVideo} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" />
+                        </div>
+                      </>
+                    )}
 
                     </div>
                   </fieldset>
@@ -2720,8 +2721,15 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                 <div className="border border-gray-300 rounded-md bg-white shadow-sm px-3 py-4 mb-4">
                   <fieldset className="border border-gray-300 rounded p-4 pt-4 mt-2 relative">
                     <legend className="absolute -top-3 left-3 bg-white px-1 text-sm font-semibold text-gray-700 flex items-center gap-2">
-                      <input type="checkbox" className="w-3.5 h-3.5" checked readOnly />
-                      <span>Cài đặt Trợ lý</span>
+                      <input 
+                        type="checkbox" 
+                        id={`useAssistant-${selectedEventId}`}
+                        name="useAssistant" 
+                        checked={currentConfig.useAssistant !== false} 
+                        onChange={handleChange}
+                        className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" 
+                      />
+                      <label htmlFor={`useAssistant-${selectedEventId}`} className="cursor-pointer select-none">Cài đặt Trợ lý</label>
                       <HelpTooltip helpKey="useAssistant" />
                     </legend>
                     <div className="flex flex-col gap-2">

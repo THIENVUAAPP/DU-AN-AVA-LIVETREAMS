@@ -842,6 +842,13 @@ Im lặng bỏ qua 3 câu này = vi phạm Mục 0.7 và Mục 1.
 | **1. Universal Multi-Format Document Upload Toàn Bộ Ô Nhập Liệu** | `src/components/genaidol/WorkspaceTacVu.jsx` | ✅ PASS 100% | - Tích hợp nút `📁 Nạp File` toàn năng chuẩn hóa, sắp xếp gọn gàng đẹp mắt trên tất cả các ô nhập liệu:<br>  + `Từ khóa cấm` (`bannedWords`), `Từ khóa ưu tiên` (`priorityWords`)<br>  + `Kịch bản cho AI` (`aiPrompt`), `Câu trả lời mẫu` (`sampleAnswers`)<br>  + `Câu mẫu của Trợ lý` (`assistantPrompt`)<br>  + `Kịch bản bán hàng cố định` (`fixedScriptText`)<br>  + `Quà tặng kèm & khuyến mãi` (`promotions`), `Tính năng sản phẩm` (`keyFeatures`), `Chính sách bảo hành` (`warrantyPolicy`)<br>  + `Tri thức doanh nghiệp tự do` (`companyKnowledgeText`)<br>  + Từng Slot Quà tặng đặc biệt (`special_gift`) & Quà tặng thường (`gift`)<br>  + Từng sản phẩm trong giỏ hàng Chốt đơn (`checkoutProducts`)<br>- Hỗ trợ đọc tự động siêu tốc mọi định dạng: Word (`.docx`, `.doc`), PDF (`.pdf`), Excel (`.xlsx`, `.xls`), CSV, TXT, JSON, MD. |
 | **2. Đóng Gói Bộ Cài Standalone v2.1.6 & Tự Động Phát Hành GitHub Releases** | `package.json`, `UpdateNotificationModal.jsx`, `UniversalMasterOverlayModal.jsx`, `Mo_Ung_Dung_Web.html`, `backend/server.cjs`, `api/download.js`, `CLAUDE.md` | ✅ PASS 100% | Đóng gói tự động bộ cài Standalone ZIP Windows & Mac v2.1.6, tự động upload Release lên GitHub, kích hoạt UpdateNotificationModal cho người dùng và commit push GitHub. |
 
+### 🚀 48. Nhật Ký Bản Cập Nhật v2.1.7 (Official Release - Khắc Phục Triệt Để Toàn Bộ Nút Tích Chọn Checkbox Tắt/Mở Trên Toàn Hệ Thống)
+| Hạng Mục Cải Tiến | File Thay Đổi | Trạng Thái | Chi Tiết Kỹ Thuật |
+| :--- | :--- | :---: | :--- |
+| **1. Kích Hoạt & Chuẩn Hóa Tương Tác Tất Cả Checkbox & Nhãn Dán** | `src/components/genaidol/WorkspaceTacVu.jsx` | ✅ PASS 100% | - Khắc phục triệt để lỗi checkbox `Cài đặt Trợ lý` (`useAssistant`) bị khóa thuộc tính `readOnly`, chuyển sang trạng thái toggle động 2 chiều hoàn toàn mượt mà.<br>- Chuẩn hóa component `FieldLabel` hỗ trợ `htmlFor` và `cursor-pointer`, liên kết với `id` của toàn bộ checkbox hệ thống (`Kích hoạt chung`, `Dùng giọng nói`, `Tắt âm gốc video`, `Dùng AI trả lời`, `Bộ lọc spam thông minh`...).<br>- Cho phép người dùng bấm trực tiếp vào cả nút tích chọn hoặc nhãn chữ để bật/tắt tức thì. |
+| **2. Đóng Gói Bộ Cài Standalone v2.1.7 & Tự Động Phát Hành GitHub Releases** | `package.json`, `UpdateNotificationModal.jsx`, `UniversalMasterOverlayModal.jsx`, `Mo_Ung_Dung_Web.html`, `backend/server.cjs`, `api/download.js`, `CLAUDE.md` | ✅ PASS 100% | Đóng gói tự động bộ cài Standalone ZIP Windows & Mac v2.1.7, tự động upload Release lên GitHub, kích hoạt UpdateNotificationModal cho người dùng và commit push GitHub. |
+
+
 
 
 
