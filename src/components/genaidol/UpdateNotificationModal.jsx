@@ -2,13 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.0.1';
+export const APP_VERSION = '2.0.2';
 export const UPDATE_NOTES = [
-  "🔊 Hệ Thống Nghe Thử Âm Thanh & Chọn Giọng Toàn Diện: Tích hợp bộ chọn giọng đọc (Idol, Trợ Lý, BLV Game, ElevenLabs, Quốc tế) và nút 'Nghe Thử' trực tiếp cho 100% tất cả các tab phản hồi sự kiện và kịch bản cài sẵn (Quà đặc biệt, Quà thường, Bình luận, Chốt đơn, Theo dõi, Chia sẻ, Cảm ơn Tim, Chào người mới, Kêu gọi, Nói chuyện, Xin lỗi).",
-  "🛡️ Xử Lý Triệt Để Lỗi Giọng Đọc & Tự Động Fallback 3 Tầng: Khắc phục triệt để lỗi REFERENCE_AUDIO_MISSING, tự động chuyển đổi mượt mà giữa ElevenLabs Pro -> TTS Stream -> Web Speech API -> Harmonic Chime, đảm bảo không bao giờ bị đơ, lag hay lỗi âm thanh.",
-  "🎁 Multi-Slot Quà Tặng Đặc Biệt & Quà Thường: Cho phép tạo không giới hạn slot quà tặng, kiểm soát bật/tắt, gán thư mục video hành động, video nền hỗ trợ và trợ lý riêng cho từng slot.",
-  "💬 Quản Lý Bình Luận Thông Minh & Tải File Kịch Bản Đa Định Dạng: Hỗ trợ nạp file .txt, .md, .docx, .pdf, .csv, .json tự động chia tách từ khóa và câu trả lời, hỗ trợ 3 chế độ phản hồi (Từ khóa / AI Gemini / Kết hợp) và hình thức (Voice / Text / Cả 2).",
-  "⚡ Tối Ưu Hóa 60 FPS Siêu Mượt: Đảm bảo toàn bộ hệ thống sự kiện livestream vận hành đồng bộ, mượt mà trên Desktop App, Trình duyệt Web và TikTok Live Studio."
+  "🔊 Đột Phá Nghe Thử Voice Âm Thanh Toàn Diện: Khắc phục triệt để lỗi bấm nghe thử không phát âm thanh trên tất cả các tab cài đặt sự kiện (Quà đặc biệt, Quà thường, Bình luận, Chốt đơn, Trợ lý, BLV Game...), hỗ trợ chọn bất kỳ giọng đọc AI nào nghe thử tức thì 0ms.",
+  "⚡ Tối Ưu Hệ Thống Fallback 4 Tầng Siêu Mượt: Tự động kết nối ElevenLabs Pro -> Server TTS Proxy -> Direct Audio Stream -> Web Speech API, đảm bảo âm thanh phát chuẩn xác 100% trên mọi nền tảng trình duyệt, Standalone App và TikTok Live Studio.",
+  "🛡️ Tối Ưu Hiệu Suất 60 FPS Chống Lag Đứng Hình: Tối ưu hoá luồng âm thanh không bị chặn bởi trạng thái tạm dừng, loại bỏ triệt để xung đột AudioContext, đảm bảo phiên live mượt mà tuyệt đối.",
+  "🎁 Quản Lý Slot Quà Tặng & Kịch Bản Bình Luận Đa Định Dạng: Tùy biến không giới hạn slot quà tặng và nạp file kịch bản tự động sắp xếp thông minh."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

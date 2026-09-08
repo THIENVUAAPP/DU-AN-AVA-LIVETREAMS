@@ -262,7 +262,7 @@ export function stopVoiceAudio() {
 }
 
 // ==================== GLOBAL SPEECH QUEUE & MUTUAL EXCLUSION LOCK ====================
-// Tuyệt đối không cho 2 giọng nói / bình luận đọc cùng lúc. Mỗi câu đọc xong sẽ nghỉ 1.2s trước khi đọc câu tiếp theo.
+// Tuyệt đối không cho 2 giọng nói / bình luận đọc cùng lúc. Mỗi câu đọc xong sẽ nghỉ 0.6s trước khi đọc câu tiếp theo.
 let isGlobalSpeaking = false;
 const globalSpeechQueue = [];
 let isProcessingGlobalQueue = false;
@@ -339,36 +339,46 @@ export async function previewVoiceAudio(voiceOrId, sampleText = null, optionsOrO
   // Chuẩn hóa callback onEnd và options
   let onEnd = null;
   let priority = false;
+  let isTest = false;
   let customOptions = {};
 
   if (typeof optionsOrOnEnd === 'function') {
     onEnd = optionsOrOnEnd;
-    if (typeof onEndOrPriority === 'boolean') priority = onEndOrPriority;
+    if (typeof onEndOrPriority === 'boolean') {
+      priority = onEndOrPriority;
+      isTest = onEndOrPriority;
+    } else if (typeof onEndOrPriority === 'object' && onEndOrPriority !== null) {
+      priority = !!onEndOrPriority.priority;
+      isTest = !!onEndOrPriority.isTest;
+    }
   } else if (typeof optionsOrOnEnd === 'object' && optionsOrOnEnd !== null) {
     customOptions = optionsOrOnEnd;
     onEnd = typeof onEndOrPriority === 'function' ? onEndOrPriority : optionsOrOnEnd.onEnd;
     priority = !!optionsOrOnEnd.priority;
+    isTest = !!optionsOrOnEnd.isTest;
   } else if (typeof onEndOrPriority === 'function') {
     onEnd = onEndOrPriority;
   }
 
   const mergedVoice = {
     ...voiceObj,
+    isTest: isTest || priority || voiceObj.isTest,
+    priority: priority || voiceObj.priority,
     volume: customOptions.volume !== undefined ? customOptions.volume : (voiceObj.volume !== undefined ? voiceObj.volume : 1.0),
     rate: customOptions.rate !== undefined ? customOptions.rate : (voiceObj.rate !== undefined ? voiceObj.rate : 1.0),
     pitch: customOptions.pitch !== undefined ? customOptions.pitch : (voiceObj.pitch !== undefined ? voiceObj.pitch : 1.0),
     apiKey: customOptions.apiKey || voiceObj.apiKey || getElevenLabsApiKey()
   };
 
-  // Kiểm tra nếu kênh giọng này bị tắt hoặc âm lượng về 0
-  if (mergedVoice?.enabled === false || mergedVoice?.isMuted === true || (mergedVoice?.volume !== undefined && mergedVoice.volume <= 0.001)) {
+  // Kiểm tra nếu kênh giọng này bị tắt hoặc âm lượng về 0 (trừ khi đang nghe thử isTest)
+  if (!mergedVoice.isTest && (mergedVoice?.enabled === false || mergedVoice?.isMuted === true || (mergedVoice?.volume !== undefined && mergedVoice.volume <= 0.001))) {
     if (onEnd) onEnd();
     return true;
   }
 
-  if (priority) {
+  if (priority || isTest) {
     clearGlobalSpeechQueue();
-    return executeSingleSpeech(mergedVoice, sampleText, onEnd);
+    return executeSingleSpeech(mergedVoice, sampleText, onEnd, true);
   }
 
   return new Promise((resolve) => {
@@ -398,7 +408,7 @@ async function processGlobalSpeechQueue() {
 
     try {
       isGlobalSpeaking = true;
-      await executeSingleSpeech(item.voice, item.sampleText, item.onEnd);
+      await executeSingleSpeech(item.voice, item.sampleText, item.onEnd, false);
       if (item.resolve) item.resolve(true);
     } catch (err) {
       console.warn('[voiceSyncService] Queue execution error:', err);
@@ -417,11 +427,13 @@ async function processGlobalSpeechQueue() {
 async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTest = false) {
   stopVoiceAudio();
 
+  const isTestingMode = isTest === true || voice?.isTest === true || voice?.priority === true;
+
   const isUserPaused = typeof localStorage !== 'undefined' && (
     localStorage.getItem('avalive_user_paused') === 'true' || 
     localStorage.getItem('avalive_window_capture_paused') === 'true'
   );
-  if (isUserPaused && !isTest && !voice?.isTest) {
+  if (!isTestingMode && isUserPaused) {
     if (onEnd) onEnd();
     return true;
   }
@@ -510,11 +522,12 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
         const blob = await res.blob();
         const audioUrl = URL.createObjectURL(blob);
         const audio = new Audio(audioUrl);
-        audio.volume = voiceVolume;
-        audio.crossOrigin = 'anonymous'; // Yêu cầu cho Web Audio API
+        audio.volume = isTestingMode ? 1.0 : voiceVolume;
         
-        // Kết nối Audio vào Avatar Lip Sync Engine
-        try { globalLipSyncEngine.connectAudioElement(audio); } catch(e) {}
+        // Kết nối Audio vào Avatar Lip Sync Engine khi không phải test
+        if (!isTestingMode) {
+          try { globalLipSyncEngine.connectAudioElement(audio); } catch(e) {}
+        }
         
         activePreviewAudio = audio;
         return new Promise((resolve) => {
@@ -538,7 +551,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
   }
 
   // =========================================================================
-  // TIER 2: Ultra-Reliable Streaming Audio TTS (Hoạt động 100% trên OBS, TikTok Studio & Trình duyệt)
+  // TIER 2: Ultra-Reliable Streaming Audio TTS (Server / Cloud Proxy / Direct)
   // =========================================================================
   const isOverlayPage = typeof window !== 'undefined' && (
     window.location.search.includes('overlay=') ||
@@ -553,51 +566,65 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     localStorage.getItem('avalive_local_speaker_muted') === 'true' ||
     localStorage.getItem('avalive_overlay_audio_muted') === 'true'
   );
-  // Khi người dùng bấm NGHE THỬ (isTest hoặc priority hoặc xem trước), LUÔN LUÔN mở âm lượng chuẩn để nghe được
-  const isTestingMode = isTest || voice?.isTest || voice?.priority || true;
+  
   const isLocalSpeakerMuted = !isTestingMode && (isGlobalMuted || (!isOverlayPage && typeof localStorage !== 'undefined' && localStorage.getItem('avalive_local_speaker_muted') === 'true'));
   const savedGlobalVol = typeof localStorage !== 'undefined' ? parseFloat(localStorage.getItem('avalive_video_volume') || localStorage.getItem('avalive_overlay_volume') || '1') : 1;
-  const effectiveVoiceVolume = isLocalSpeakerMuted ? 0 : Math.max(0.2, Math.min(1, (voiceVolume || 1.0) * (savedGlobalVol || 1.0)));
+  const effectiveVoiceVolume = isTestingMode ? 1.0 : (isLocalSpeakerMuted ? 0 : Math.max(0.3, Math.min(1, (voiceVolume || 1.0) * (savedGlobalVol || 1.0))));
 
-  const backendBase = typeof window !== 'undefined' && (window.location.port === '5173' || window.location.port === '3000' || window.location.port === '3001') ? `${window.location.protocol}//${window.location.hostname}:3001` : '';
-  const serverTtsUrl = `${backendBase}/api/tts?text=${encodeURIComponent(textToSpeak.slice(0, 200))}&lang=${encodeURIComponent(shortLang || 'vi')}`;
+  // Danh sách các endpoints TTS thử nghiệm tuần tự để đảm bảo 100% phát được âm thanh
+  const ttsCandidateUrls = [];
   
-  try {
-    const streamAudio = new Audio(serverTtsUrl);
-    streamAudio.volume = effectiveVoiceVolume;
-    streamAudio.muted = false;
-    streamAudio.crossOrigin = 'anonymous';
-    
-    // Kết nối Audio vào Avatar Lip Sync Engine
-    try { globalLipSyncEngine.connectAudioElement(streamAudio); } catch(e) {}
-    
-    activePreviewAudio = streamAudio;
+  // 1. Endpoint /api/tts tương đối (hoạt động trên Vite dev server, Vercel và backend cùng origin)
+  ttsCandidateUrls.push(`/api/tts?text=${encodeURIComponent(textToSpeak.slice(0, 200))}&lang=${encodeURIComponent(shortLang || 'vi')}`);
+  
+  // 2. Endpoint backend trực tiếp port 3001
+  if (typeof window !== 'undefined' && window.location.hostname) {
+    ttsCandidateUrls.push(`http://${window.location.hostname}:3001/api/tts?text=${encodeURIComponent(textToSpeak.slice(0, 200))}&lang=${encodeURIComponent(shortLang || 'vi')}`);
+  }
+  ttsCandidateUrls.push(`http://127.0.0.1:3001/api/tts?text=${encodeURIComponent(textToSpeak.slice(0, 200))}&lang=${encodeURIComponent(shortLang || 'vi')}`);
+  
+  // 3. Google Translate TTS trực tiếp
+  ttsCandidateUrls.push(`https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(shortLang || 'vi')}&q=${encodeURIComponent(textToSpeak.slice(0, 200))}`);
 
-    const playPromise = new Promise((resolve) => {
-      let isDone = false;
-      const cleanup = (success) => {
-        if (isDone) return;
-        isDone = true;
-        activePreviewAudio = null;
-        if (success && onEnd) onEnd();
-        resolve(success);
-      };
-
-      streamAudio.onended = () => cleanup(true);
-      streamAudio.onerror = () => cleanup(false);
+  for (const ttsUrl of ttsCandidateUrls) {
+    try {
+      const streamAudio = new Audio(ttsUrl);
+      streamAudio.volume = effectiveVoiceVolume;
+      streamAudio.muted = false;
       
-      const playAttempt = streamAudio.play();
-      if (playAttempt && typeof playAttempt.catch === 'function') {
-        playAttempt.catch(() => {
-          cleanup(false);
-        });
+      // Không gán MediaElementSource khi đang test để tránh AudioContext bị mute
+      if (!isTestingMode) {
+        try { globalLipSyncEngine.connectAudioElement(streamAudio); } catch(e) {}
       }
-    });
+      
+      activePreviewAudio = streamAudio;
 
-    const isSuccess = await playPromise;
-    if (isSuccess) return true;
-  } catch (audioStreamErr) {
-    console.warn('Audio stream TTS fallback to Web Speech:', audioStreamErr);
+      const playPromise = new Promise((resolve) => {
+        let isDone = false;
+        const cleanup = (success) => {
+          if (isDone) return;
+          isDone = true;
+          activePreviewAudio = null;
+          if (success && onEnd) onEnd();
+          resolve(success);
+        };
+
+        streamAudio.onended = () => cleanup(true);
+        streamAudio.onerror = () => cleanup(false);
+        
+        const playAttempt = streamAudio.play();
+        if (playAttempt && typeof playAttempt.catch === 'function') {
+          playAttempt.catch(() => {
+            cleanup(false);
+          });
+        }
+      });
+
+      const isSuccess = await playPromise;
+      if (isSuccess) return true;
+    } catch (audioStreamErr) {
+      // Thử URL tiếp theo
+    }
   }
 
   // =========================================================================
@@ -672,6 +699,10 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
             });
           }
 
+          if (!matched && availableVoices.length > 0) {
+            matched = availableVoices[0];
+          }
+
           if (matched) {
             utterance.voice = matched;
           }
@@ -706,8 +737,6 @@ export function updateActiveVoiceAudio(volume, rate, pitch) {
     try {
       if (volume !== undefined) activePreviewAudio.volume = Math.max(0, Math.min(1, volume));
       if (rate !== undefined) activePreviewAudio.playbackRate = Math.max(0.1, rate);
-      // NOTE: Pitch cannot be easily changed on HTMLAudioElement without Web Audio API trickery, 
-      // so we just update volume and rate.
     } catch (e) {}
   }
 }

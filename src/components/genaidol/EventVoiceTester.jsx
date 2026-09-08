@@ -50,7 +50,8 @@ export default function EventVoiceTester({
     }
 
     // Chuẩn hóa biến đại diện {user}, [user], {gift_name}, {count} thành dữ liệu mẫu nghe thử sinh động
-    const cleanedText = text
+    const rawText = (text && text.trim()) ? text : 'Dạ em chào bạn nha! Chúc bạn xem livestream thật vui vẻ!';
+    const cleanedText = rawText
       .replace(/\[user\]|\{user\}/gi, 'Quốc Thiện')
       .replace(/\{comment\}|\[comment\]/gi, 'Áo này còn size L không shop?')
       .replace(/\{gift_name\}|\[gift_name\]/gi, 'Cờ Tổ Quốc')
@@ -61,7 +62,7 @@ export default function EventVoiceTester({
       .trim();
 
     // Lấy câu đầu tiên nếu có nhiều dòng câu trả lời mẫu
-    const firstSentence = cleanedText.split('\n').filter(Boolean)[0] || cleanedText;
+    const firstSentence = cleanedText.split('\n').filter(Boolean)[0] || cleanedText || 'Xin chào bạn, chúc bạn xem live vui vẻ!';
 
     const voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === selectedVoiceId) || 
       (selectedVoiceId === 'idol' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'idol') :
@@ -72,10 +73,13 @@ export default function EventVoiceTester({
     previewVoiceAudio(
       voiceObj || { id: 'free_vi_female', lang: 'vi-VN', provider: 'system', gender: 'Female' },
       firstSentence,
-      () => {
-        setIsPlaying(false);
-      },
-      true // priority test
+      {
+        priority: true,
+        isTest: true,
+        onEnd: () => {
+          setIsPlaying(false);
+        }
+      }
     );
   };
 
