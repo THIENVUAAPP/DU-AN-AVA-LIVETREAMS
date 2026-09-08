@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   CheckSquare, MessageCircle, Plus, Gift, Clock, Megaphone, 
   Hand, ShoppingCart, Share, Sparkles, Mic, Heart, Play, HelpCircle, ChevronDown,
-  Download, Upload, ShoppingBag, Trash2, Zap, Bot, Volume2, MessageSquare
+  Download, Upload, ShoppingBag, Trash2, Zap, Bot, Volume2, MessageSquare, FileText
 } from 'lucide-react';
 import { NEW_AI_PROMPT } from '../../utils/defaultAIPrompt';
 import WorkspaceKeywordPanel from './WorkspaceKeywordPanel';

@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.0.3';
+export const APP_VERSION = '2.0.4';
 export const UPDATE_NOTES = [
+  "🛠️ Khắc phục triệt để lỗi hiển thị Tab Cài Đặt Sự Kiện Idol (Fixed ReferenceError FileText) & Tối ưu hóa 100% các tab tác vụ.",
   "📜 Đột Phá 2 Chế Độ Kịch Bản Livestream & Chốt Đơn: Hỗ trợ Chế Độ 1 (Kịch bản cài sẵn từng câu, thời lượng tùy biến) và Chế Độ 2 (Bộ Não AI & Kho Tri Thức Doanh Nghiệp / Sản Phẩm học dữ liệu để tư vấn chốt đơn tự động).",
-  "🔄 Cơ Chế Xen Kẽ Trả Lời Bình Luận & Tiếp Tục Kịch Bản Liền Mạch: Khi Idol đang nói theo kịch bản, nếu có bình luận của khách, Idol sẽ tạm dừng -> trả lời theo kho tri thức doanh nghiệp hoặc từ khóa -> tự động đọc tiếp câu kịch bản còn lại mượt mà.",
-  "👄 Đồng Bộ Khẩu Hình Miệng & Cảm Xúc (Lip-Sync 60 FPS): Khẩu hình miệng và cử chỉ video ăn khớp 100% với giọng nói AI, vận hành siêu mượt không lag giật trên mọi nền tảng."
+  "🔄 Cơ Chế Xen Kẽ Trả Lời Bình Luận & Tiếp Tục Kịch Bản Liền Mạch: Khi Idol đang nói theo kịch bản, nếu có bình luận của khách, Idol sẽ tạm dừng -> trả lời theo kho tri thức doanh nghiệp hoặc từ khóa -> tự động đọc tiếp câu kịch bản còn lại mượt mà."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
