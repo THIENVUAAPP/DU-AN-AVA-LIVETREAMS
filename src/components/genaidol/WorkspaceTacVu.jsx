@@ -1093,11 +1093,11 @@ export default function WorkspaceTacVu() {
             </>
           ) : selectedEventId === 'checkout' ? (
             /* ========================================================================= */
-            /* 4. CHỐT ĐƠN (CHECKOUT) */
+            /* 4. CHỐT ĐƠN (CHECKOUT & KỊCH BẢN BÁN HÀNG) */
             /* ========================================================================= */
             <>
               <div className="border border-gray-300 rounded-md bg-white mb-3 shadow-sm px-3 py-4">
-                <div className="flex items-center gap-8 mb-4 ml-4">
+                <div className="flex items-center gap-8 mb-4 ml-4 flex-wrap">
                   <div className="flex items-center">
                     <FieldLabel icon="✅" text="Kích hoạt" helpKey="active" minW="min-w-[120px]" />
                     <input type="checkbox" name="active" checked={currentConfig.active} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer" />
@@ -1108,116 +1108,358 @@ export default function WorkspaceTacVu() {
                   </div>
                 </div>
 
+                {/* ========================================================================= */}
+                {/* 🌟 1. BỘ CHỌN CHẾ ĐỘ PHÁT SÓNG KỊCH BẢN (SCRIPT BROADCAST MODE) */}
+                {/* ========================================================================= */}
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-50/90 via-indigo-50/80 to-purple-50/90 border border-blue-200 mb-5 shadow-xs space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-blue-200/80">
+                    <div>
+                      <h3 className="text-sm font-black text-blue-900 flex items-center gap-2">
+                        <Sparkles size={16} className="text-blue-600" /> CHẾ ĐỘ PHÁT SÓNG KỊCH BẢN BÁN HÀNG IDOL AI
+                      </h3>
+                      <p className="text-xs text-gray-600 mt-0.5">
+                        Lựa chọn cách nhân vật Idol nói trên livestream: Theo kịch bản cài sẵn từng câu hoặc Trả lời bằng Bộ Não AI & Kho Tri Thức Doanh Nghiệp.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 bg-white/90 p-1.5 rounded-xl border border-blue-200 shadow-2xs">
+                      <button
+                        type="button"
+                        onClick={() => handleSimpleChange('broadcastMode', 'fixed_script')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
+                          (currentConfig.broadcastMode || 'fixed_script') === 'fixed_script'
+                            ? 'bg-blue-600 text-white shadow-sm'
+                            : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                      >
+                        <FileText size={13} /> 1. Kịch Bản Cài Sẵn
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSimpleChange('broadcastMode', 'ai_brain')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
+                          currentConfig.broadcastMode === 'ai_brain'
+                            ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm'
+                            : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                      >
+                        <Bot size={13} /> 2. Bộ Não AI & Tri Thức
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* CẤU HÌNH XEN KẼ BÌNH LUẬN (COMMENT INTERRUPTION & SEAMLESS RESUME) */}
+                  <div className="p-3 bg-white/90 rounded-xl border border-blue-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-start gap-2.5">
+                      <input 
+                        type="checkbox" 
+                        id="interruptOnComment"
+                        checked={currentConfig.interruptOnComment !== false} 
+                        onChange={(e) => handleSimpleChange('interruptOnComment', e.target.checked)} 
+                        className="w-4 h-4 text-blue-600 rounded cursor-pointer mt-0.5" 
+                      />
+                      <div>
+                        <label htmlFor="interruptOnComment" className="text-xs font-black text-gray-800 cursor-pointer flex items-center gap-1.5">
+                          <span>🔄 Tự động tạm dừng kịch bản khi có bình luận &rarr; Trả lời khách &rarr; Đọc tiếp liền mạch</span>
+                        </label>
+                        <p className="text-[11px] text-gray-500 mt-0.5">
+                          Khi có bình luận từ khán giả, Idol sẽ tạm dừng câu kịch bản bán hàng, trả lời thắc mắc của khách rồi tự động đọc tiếp câu tiếp theo mà không bị lặp lại từ đầu.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0 bg-blue-50/80 px-2.5 py-1 rounded-lg border border-blue-200 text-xs font-bold text-blue-900">
+                      <span>Nguồn trả lời:</span>
+                      <select
+                        value={currentConfig.commentReplySource || 'knowledge_base'}
+                        onChange={(e) => handleSimpleChange('commentReplySource', e.target.value)}
+                        className="bg-white border border-blue-300 rounded px-2 py-0.5 text-xs text-blue-900 font-bold focus:outline-none cursor-pointer"
+                      >
+                        <option value="knowledge_base">🧠 Kho Tri Thức Doanh Nghiệp</option>
+                        <option value="keywords">💬 Kịch bản từ khóa</option>
+                        <option value="both">🔄 Kết hợp thông minh</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ========================================================================= */}
+                {/* 📜 CHẾ ĐỘ 1: KỊCH BẢN CÀI SẴN (FIXED SCRIPT SEQUENCE) */}
+                {/* ========================================================================= */}
+                {(currentConfig.broadcastMode || 'fixed_script') === 'fixed_script' ? (
+                  <div className="space-y-4 mb-4">
+                    <fieldset className="border border-blue-300 rounded-xl p-4 pt-4 relative bg-blue-50/30 shadow-xs">
+                      <legend className="absolute -top-3 left-3 bg-white px-2 text-xs font-black text-blue-800 flex items-center gap-1.5 border border-blue-200 rounded-md">
+                        <FileText size={13} className="text-blue-600" /> KỊCH BẢN BÁN HÀNG PHÁT THEO THỨ TỰ (FIXED SCRIPT)
+                      </legend>
+
+                      <div className="flex flex-col gap-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div className="text-xs text-gray-600 font-medium">
+                            Nhập chuỗi các câu thoại kịch bản (mỗi dòng là một câu). Idol sẽ đọc tuần tự từng câu theo đúng kịch bản đã setup.
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <input 
+                              type="file" 
+                              id="upload-fixed-script-file"
+                              className="hidden" 
+                              accept=".txt,.md,.docx,.doc,.pdf,.csv,.json"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const reader = new FileReader();
+                                reader.onload = (ev) => {
+                                  const content = ev.target?.result || '';
+                                  handleSimpleChange('fixedScriptText', content);
+                                };
+                                reader.readAsText(file);
+                              }} 
+                            />
+                            <label 
+                              htmlFor="upload-fixed-script-file"
+                              className="text-xs text-blue-700 cursor-pointer hover:bg-blue-100 flex items-center gap-1 bg-white px-2.5 py-1.5 rounded-lg border border-blue-300 font-bold shadow-2xs transition-all"
+                            >
+                              <Upload size={13} /> Tải file kịch bản lên (.txt, .docx, .pdf, .json)
+                            </label>
+                          </div>
+                        </div>
+
+                        <textarea 
+                          value={currentConfig.fixedScriptText !== undefined ? currentConfig.fixedScriptText : `Chào mừng tất cả các bạn đang theo dõi phiên livestream bán hàng ngày hôm nay!\nHôm nay shop em mang đến cho cả nhà ưu đãi cực kỳ sốc chỉ có trên livestream này thôi nha!\nSản phẩm bên em cam kết chính hãng 100%, bảo hành 1 đổi 1 và miễn phí giao hàng toàn quốc!\nCác bạn hãy nhanh tay bấm vào giỏ hàng góc trái màn hình để nhận ngay voucher giảm 50% nhé!\nNếu bạn nào có thắc mắc gì về sản phẩm cứ bình luận bên dưới, em sẽ giải đáp ngay lập tức cho các bạn ạ!`} 
+                          onChange={(e) => handleSimpleChange('fixedScriptText', e.target.value)} 
+                          placeholder="Nhập kịch bản bán hàng theo từng dòng..."
+                          className="w-full h-[180px] border border-gray-300 rounded-xl p-3 text-xs resize-none bg-white focus:outline-blue-500 font-sans leading-relaxed shadow-inner" 
+                        />
+
+                        {/* Tùy chỉnh phát kịch bản */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-white rounded-xl border border-gray-200 text-xs">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-bold text-gray-700">⏱️ Thời gian nghỉ giữa câu:</span>
+                            <div className="flex items-center gap-1">
+                              <input 
+                                type="number" 
+                                min="1" 
+                                max="30"
+                                value={currentConfig.pauseBetweenSentences || 3} 
+                                onChange={(e) => handleSimpleChange('pauseBetweenSentences', Number(e.target.value) || 3)}
+                                className="w-14 border border-gray-300 rounded px-1.5 py-0.5 text-center font-bold" 
+                              />
+                              <span className="text-gray-500">giây</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-bold text-gray-700">⏳ Thời lượng phát kịch bản:</span>
+                            <div className="flex items-center gap-1">
+                              <input 
+                                type="number" 
+                                min="1" 
+                                max="180"
+                                value={currentConfig.scriptDurationMinutes || 30} 
+                                onChange={(e) => handleSimpleChange('scriptDurationMinutes', Number(e.target.value) || 30)}
+                                className="w-14 border border-gray-300 rounded px-1.5 py-0.5 text-center font-bold" 
+                              />
+                              <span className="text-gray-500">phút</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <input 
+                              type="checkbox" 
+                              id="loopScriptCheckbox"
+                              checked={currentConfig.loopScript !== false} 
+                              onChange={(e) => handleSimpleChange('loopScript', e.target.checked)}
+                              className="w-4 h-4 text-blue-600 rounded cursor-pointer" 
+                            />
+                            <label htmlFor="loopScriptCheckbox" className="font-bold text-gray-700 cursor-pointer">
+                              🔁 Tự động lặp lại kịch bản
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Bộ Nghe Thử Voice Kịch Bản */}
+                        <EventVoiceTester 
+                          text={currentConfig.fixedScriptText || 'Chào mừng các bạn đến với livestream! Hôm nay shop có ưu đãi giảm 50% trong giỏ hàng nha!'}
+                          defaultVoiceId="free_vi_female"
+                          label="Nghe thử câu kịch bản bán hàng cài sẵn"
+                          compact={false}
+                        />
+                      </div>
+                    </fieldset>
+                  </div>
+                ) : (
+                  /* ========================================================================= */
+                  /* 🧠 CHẾ ĐỘ 2: BỘ NÃO AI & KHO TRI THỨC DOANH NGHIỆP / SẢN PHẨM */
+                  /* ========================================================================= */
+                  <div className="space-y-4 mb-4">
+                    <fieldset className="border border-purple-300 rounded-xl p-4 pt-4 relative bg-purple-50/30 shadow-xs">
+                      <legend className="absolute -top-3 left-3 bg-white px-2 text-xs font-black text-purple-800 flex items-center gap-1.5 border border-purple-200 rounded-md">
+                        <Bot size={13} className="text-purple-600" /> KHO TRI THỨC DOANH NGHIỆP & SẢN PHẨM (AI KNOWLEDGE BASE)
+                      </legend>
+
+                      <p className="text-xs text-gray-600 mb-3">
+                        Cung cấp thông tin chi tiết về Doanh Nghiệp & Sản Phẩm. AI Gemini sẽ tự động học thuộc 100% dữ liệu này để livestream tư vấn, giục chốt đơn và trả lời mọi câu hỏi của khách hàng chuẩn xác.
+                      </p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                        <div>
+                          <label className="text-xs font-bold text-gray-700 block mb-1">🏢 Tên Doanh Nghiệp / Thương Hiệu:</label>
+                          <input 
+                            type="text" 
+                            value={currentConfig.companyName || 'CÔNG TY PHẦN MỀM THIÊN VUA APP'} 
+                            onChange={(e) => handleSimpleChange('companyName', e.target.value)} 
+                            placeholder="Ví dụ: Shop Thời Trang Ngọc Nhi, Thiên Vua App..."
+                            className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs bg-white focus:outline-purple-500" 
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-bold text-gray-700 block mb-1">📦 Tên Sản Phẩm Chính:</label>
+                          <input 
+                            type="text" 
+                            value={currentConfig.productName || 'Phần Mềm AvaLive VIP PRO'} 
+                            onChange={(e) => handleSimpleChange('productName', e.target.value)} 
+                            placeholder="Ví dụ: Áo Thun Cao Cấp, Phần mềm AvaLive..."
+                            className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs bg-white focus:outline-purple-500" 
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-bold text-gray-700 block mb-1">💰 Giá Niêm Yết & Giá Ưu Đãi Live:</label>
+                          <input 
+                            type="text" 
+                            value={currentConfig.productPrice || '3.500.000đ/năm - Giảm 50% chỉ còn 1.750.000đ trên live'} 
+                            onChange={(e) => handleSimpleChange('productPrice', e.target.value)} 
+                            placeholder="Ví dụ: Giá gốc 500k, giá live 299k..."
+                            className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs bg-white focus:outline-purple-500" 
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-bold text-gray-700 block mb-1">🎁 Quà Tặng Kèm & Khuyến Mãi:</label>
+                          <input 
+                            type="text" 
+                            value={currentConfig.promotions || 'Tặng kèm 100,000 Tokens AI + Khóa học Livestream AI miễn phí'} 
+                            onChange={(e) => handleSimpleChange('promotions', e.target.value)} 
+                            placeholder="Ví dụ: Mua 2 tặng 1, tặng voucher 50k..."
+                            className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs bg-white focus:outline-purple-500" 
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-xs font-bold text-gray-700 block mb-1">✨ Điểm Nổi Bật, Tính Năng & Công Dụng Sản Phẩm:</label>
+                          <textarea 
+                            value={currentConfig.keyFeatures || `1. Tự động Livestream Idol AI 24/7 không cần người ngồi trực tiếp.\n2. Tự động đọc và trả lời bình luận theo thời gian thực.\n3. Tích hợp trò chơi tương tác cắm cờ Bản Đồ Việt Nam và Game Chiến Đấu bùng nổ mắt xem.\n4. Đóng gói bảo mật tuyệt đối, chạy mượt mà trên Windows & macOS.`} 
+                            onChange={(e) => handleSimpleChange('keyFeatures', e.target.value)} 
+                            placeholder="Mô tả các đặc điểm nổi bật để AI tư vấn cho khách..."
+                            className="w-full h-[90px] border border-gray-300 rounded-lg p-2 text-xs resize-none bg-white focus:outline-purple-500" 
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-bold text-gray-700 block mb-1">🛡️ Chính Sách Bảo Hành / Đổi Trả / Vận Chuyển:</label>
+                          <input 
+                            type="text" 
+                            value={currentConfig.warrantyPolicy || 'Bảo hành 1 đổi 1 trong 12 tháng, hỗ trợ cài đặt kỹ thuật 24/7 trực tuyến'} 
+                            onChange={(e) => handleSimpleChange('warrantyPolicy', e.target.value)} 
+                            placeholder="Ví dụ: Đổi trả trong 7 ngày, freeship toàn quốc..."
+                            className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs bg-white focus:outline-purple-500" 
+                          />
+                        </div>
+
+                        {/* Kịch bản chi tiết cho AI */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="text-xs font-bold text-gray-700">🤖 Kịch Bản Chi Tiết & Phong Cách Chốt Đơn Của AI:</label>
+                            <label 
+                              htmlFor="upload-ai-prompt-file"
+                              className="text-xs text-purple-700 cursor-pointer hover:underline flex items-center gap-1 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 font-bold"
+                            >
+                              <Upload size={11} /> Tải file kịch bản AI
+                            </label>
+                            <input 
+                              type="file" 
+                              id="upload-ai-prompt-file"
+                              className="hidden" 
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const reader = new FileReader();
+                                reader.onload = (ev) => {
+                                  const content = ev.target?.result || '';
+                                  handleSimpleChange('aiPrompt', content);
+                                };
+                                reader.readAsText(file);
+                              }} 
+                            />
+                          </div>
+                          <textarea 
+                            value={currentConfig.aiPrompt || NEW_AI_PROMPT} 
+                            onChange={(e) => handleSimpleChange('aiPrompt', e.target.value)} 
+                            className="w-full h-[150px] border border-gray-300 rounded-lg p-2.5 text-xs resize-none bg-white focus:outline-purple-500 font-mono" 
+                          />
+                        </div>
+
+                        {/* Bộ Nghe Thử Voice AI Tri Thức */}
+                        <EventVoiceTester 
+                          text={`Dạ em chào bạn {user}! Sản phẩm ${currentConfig.productName || 'AvaLive VIP PRO'} của bên em đang có giá ưu đãi cực tốt, bạn bấm ngay vào giỏ hàng góc trái màn hình để sở hữu nhé!`}
+                          defaultVoiceId="free_vi_female"
+                          label="Nghe thử câu tư vấn chốt đơn AI"
+                          compact={false}
+                        />
+                      </div>
+                    </fieldset>
+                  </div>
+                )}
+
+                {/* ========================================================================= */}
+                {/* 📦 DANH SÁCH SẢN PHẨM KHÁC NẾU CÓ */}
+                {/* ========================================================================= */}
                 <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between mt-2">
+                    <h4 className="text-xs font-black text-gray-700 uppercase tracking-wider">
+                      🛍️ Danh Sách Sản Phẩm / Mã Hàng Livestream
+                    </h4>
+                    <button 
+                      onClick={handleAddProduct}
+                      className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-300 rounded-lg font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                    >
+                      <Plus size={13} /> Thêm Sản Phẩm Mới
+                    </button>
+                  </div>
+
                   {currentConfig.checkoutProducts?.map(prod => (
-                    <fieldset key={prod.id} className="border border-gray-300 rounded p-4 pt-4 relative bg-[#f8f9fa] shadow-sm">
-                      <legend className="absolute -top-3 left-3 bg-[#f8f9fa] px-1 text-sm font-bold text-gray-700 flex items-center gap-2">
-                        <input type="checkbox" checked={prod.active} onChange={(e) => handleProductChange(prod.id, 'active', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded cursor-pointer" />
-                        Sản phẩm {prod.id}
+                    <fieldset key={prod.id} className="border border-gray-300 rounded-xl p-4 pt-4 relative bg-[#f8f9fa] shadow-2xs">
+                      <legend className="absolute -top-3 left-3 bg-[#f8f9fa] px-2 text-xs font-bold text-gray-700 flex items-center gap-2 border border-gray-200 rounded-md">
+                        <input type="checkbox" checked={prod.active} onChange={(e) => handleProductChange(prod.id, 'active', e.target.checked, true)} className="w-3.5 h-3.5 text-blue-600 rounded cursor-pointer" />
+                        Sản phẩm #{prod.id}: {prod.productName || 'Chưa đặt tên'}
                       </legend>
                       
                       <button 
                         onClick={() => handleDeleteProduct(prod.id)}
-                        className="absolute top-2 right-2 text-xs text-red-500 hover:text-white hover:bg-red-500 border border-red-500 px-2 py-1 rounded transition-colors font-semibold cursor-pointer"
+                        className="absolute top-2 right-2 text-xs text-red-500 hover:text-white hover:bg-red-500 border border-red-400 px-2 py-0.5 rounded transition-colors font-semibold cursor-pointer"
                       >
                         Xóa
                       </button>
 
-                      <div className="grid grid-cols-[200px_1fr] gap-y-3 gap-x-4 items-center">
-                        <div className="flex items-center gap-1">
-                          <label className="text-[13px] font-semibold text-gray-700">Tên sản phẩm:</label>
-                          <HelpTooltip helpKey="productName" />
-                        </div>
-                        <input type="text" value={prod.productName} onChange={(e) => handleProductChange(prod.id, 'productName', e.target.value)} className="border border-gray-300 rounded px-2 py-1.5 text-[13px] bg-white focus:outline-blue-500 w-full" />
+                      <div className="grid grid-cols-[160px_1fr] gap-y-2.5 gap-x-3 items-center mt-1 text-xs">
+                        <label className="font-bold text-gray-700">Tên sản phẩm:</label>
+                        <input type="text" value={prod.productName} onChange={(e) => handleProductChange(prod.id, 'productName', e.target.value)} className="border border-gray-300 rounded-lg px-2.5 py-1 text-xs bg-white focus:outline-blue-500 w-full" />
 
-                        <div className="flex items-center gap-1">
-                          <label className="text-[13px] font-semibold text-[#a53b3b]">Từ khóa <span className="font-normal text-gray-500">(cách nhau bởi ;)</span>:</label>
-                          <HelpTooltip helpKey="keywords" />
-                        </div>
-                        <input type="text" value={prod.keywords} onChange={(e) => handleProductChange(prod.id, 'keywords', e.target.value)} className="border border-gray-300 rounded px-2 py-1.5 text-[13px] bg-white focus:outline-blue-500 w-full" />
+                        <label className="font-bold text-[#a53b3b]">Từ khóa chốt đơn (cách nhau bởi ;):</label>
+                        <input type="text" value={prod.keywords} onChange={(e) => handleProductChange(prod.id, 'keywords', e.target.value)} className="border border-gray-300 rounded-lg px-2.5 py-1 text-xs bg-white focus:outline-blue-500 w-full" />
 
-                        <div className="flex items-center gap-1">
-                          <label className="text-[13px] font-semibold text-gray-700">Thư mục Video:</label>
-                          <HelpTooltip helpKey="videoFolder" />
-                        </div>
+                        <label className="font-bold text-gray-700">Thư mục Video:</label>
                         <div className="flex items-center gap-2 w-full">
-                          <span className="text-[13px] font-medium min-w-[200px] flex-1 truncate">{prod.videoFolder || 'Chưa chọn'}</span>
-                          <button onClick={() => selectProductFolder(prod.id)} className="text-[13px] text-gray-600 font-medium hover:text-gray-900 transition-colors underline decoration-dotted bg-gray-200 px-3 py-1 rounded cursor-pointer">Chọn...</button>
-                        </div>
-
-                        <div className="flex items-center gap-1 mt-2 self-start justify-between w-full">
-                          <div className="flex items-center gap-1">
-                            <label className="text-[13px] font-semibold text-gray-700">Kịch bản cho AI:</label>
-                            <HelpTooltip helpKey="aiPrompt" />
-                          </div>
-                          <div>
-                            <input 
-                              type="file" 
-                              id={`upload-prompt-${prod.id}`}
-                              className="hidden" 
-                              onChange={(e) => handleLoadPromptFile(prod.id, e)} 
-                            />
-                            <label 
-                              htmlFor={`upload-prompt-${prod.id}`}
-                              className="text-[12px] text-blue-600 cursor-pointer hover:underline flex items-center gap-1 bg-blue-50 px-2 py-1 rounded border border-blue-200"
-                            >
-                              <Upload size={12} /> Tải file lên
-                            </label>
-                          </div>
-                        </div>
-                        <div className="flex flex-col gap-2 mt-2">
-                          <textarea value={prod.aiPrompt} onChange={(e) => handleProductChange(prod.id, 'aiPrompt', e.target.value)} className="w-full h-[220px] border border-gray-300 rounded p-2 text-[13px] resize-none bg-white focus:outline-blue-500 font-mono" />
-                          
-                          <EventVoiceTester 
-                            text={`Dạ em chào bạn {user}! Sản phẩm ${prod.productName || 'AVA LIVE'} đang có khuyến mãi cực hot trong giỏ hàng góc trái màn hình, bạn bấm vào đặt hàng ngay nhé!`}
-                            defaultVoiceId="free_vi_female"
-                            label={`Nghe thử kịch bản chốt đơn (${prod.productName || 'Sản phẩm ' + prod.id})`}
-                            compact={false}
-                          />
-
-                          <div className="flex items-center justify-center gap-6 mt-1 flex-wrap">
-                            <label className="flex items-center gap-1.5 cursor-pointer">
-                              <input type="checkbox" checked={prod.useAi} onChange={(e) => handleProductChange(prod.id, 'useAi', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded cursor-pointer"/> 
-                              <span className="text-[13px] font-medium">Dùng AI</span>
-                              <HelpTooltip helpKey="useAi" />
-                            </label>
-                            
-                            <div className="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded border border-gray-300">
-                              <label className="flex items-center gap-1.5 cursor-pointer">
-                                <input type="checkbox" checked={prod.useTTS} onChange={(e) => handleProductChange(prod.id, 'useTTS', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded cursor-pointer"/> 
-                                <span className="text-[13px] font-medium text-blue-700">Dùng Giọng Đọc (TTS)</span>
-                                <HelpTooltip helpKey="useTTS" />
-                              </label>
-                              {prod.useTTS && (
-                                <select 
-                                  value={prod.ttsVoiceRole || 'idol'} 
-                                  onChange={(e) => handleProductChange(prod.id, 'ttsVoiceRole', e.target.value)}
-                                  className="border border-blue-300 rounded px-1.5 py-0.5 text-xs bg-white text-blue-800 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
-                                >
-                                  <option value="idol">🎤 Giọng Idol Chính</option>
-                                  <option value="assistant">💬 Giọng Trợ Lý</option>
-                                  <option value="game">🎮 Giọng BLV Game</option>
-                                </select>
-                              )}
-                            </div>
-
-                            <label className="flex items-center gap-1.5 cursor-pointer">
-                              <input type="checkbox" checked={prod.muteSourceVideo} onChange={(e) => handleProductChange(prod.id, 'muteSourceVideo', e.target.checked, true)} className="w-4 h-4 text-blue-600 rounded cursor-pointer"/> 
-                              <span className="text-[13px] font-medium">Tắt âm gốc video</span>
-                              <HelpTooltip helpKey="muteSourceVideo" />
-                            </label>
-                          </div>
+                          <span className="font-medium text-gray-600 truncate flex-1">{prod.videoFolder || 'Chưa chọn'}</span>
+                          <button onClick={() => selectProductFolder(prod.id)} className="text-gray-700 font-bold hover:text-gray-900 transition-colors bg-gray-200 px-2.5 py-1 rounded-lg cursor-pointer">Chọn...</button>
                         </div>
                       </div>
                     </fieldset>
                   ))}
-                  
-                  <button 
-                    onClick={handleAddProduct}
-                    className="w-full py-2 border-2 border-dashed border-blue-300 text-blue-600 hover:bg-blue-50 hover:border-blue-500 rounded-lg font-bold text-sm flex justify-center items-center gap-2 transition-all cursor-pointer"
-                  >
-                    <Plus size={16} /> Thêm Sản Phẩm Mới Để Bán
-                  </button>
                 </div>
               </div>
             </>

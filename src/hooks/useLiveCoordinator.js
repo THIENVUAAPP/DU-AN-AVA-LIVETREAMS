@@ -185,6 +185,7 @@ function fillTemplate(template, vars = {}) {
         const commentText = (payload?.text || payload?.comment || '').trim();
         const commentConfig = configs.comment || {};
         const checkoutConfig = configs.checkout || {};
+        const replySource = checkoutConfig.commentReplySource || 'knowledge_base';
 
         // A. Kiểm tra từ khóa bị cấm (Banned Words)
         if (commentConfig.bannedWords) {
@@ -195,21 +196,44 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // B. Kiểm tra kịch bản Chốt Đơn (Checkout Products)
-        let isCheckoutMatched = false;
-        if (checkoutConfig.active !== false && Array.isArray(checkoutConfig.checkoutProducts)) {
+        let isHandled = false;
+        const lowerComment = commentText.toLowerCase();
+
+        // B. PHẢN HỒI THEO KHO TRI THỨC DOANH NGHIỆP & SẢN PHẨM (AI KNOWLEDGE BASE)
+        if (replySource === 'knowledge_base' || replySource === 'both') {
+          const company = checkoutConfig.companyName || 'Thiên Vua App';
+          const product = checkoutConfig.productName || 'AvaLive VIP PRO';
+          const price = checkoutConfig.productPrice || '3.500.000đ/năm';
+          const promo = checkoutConfig.promotions || 'Ưu đãi giảm giá 50% chỉ có trên livestream';
+          const features = checkoutConfig.keyFeatures || 'Tự động livestream AI 24/7 và trả lời bình luận';
+          const warranty = checkoutConfig.warrantyPolicy || 'Bảo hành 1 đổi 1 trong 12 tháng';
+
+          if (lowerComment.includes('giá') || lowerComment.includes('bao nhiêu') || lowerComment.includes('tiền') || lowerComment.includes('chi phí')) {
+            replyText = `Dạ bạn ${userName} ơi, sản phẩm ${product} của ${company} đang có giá ${price} kèm khuyến mãi: ${promo}. Bạn bấm ngay vào giỏ hàng góc trái màn hình để nhận ưu đãi nha!`;
+            isHandled = true;
+          } else if (lowerComment.includes('bảo hành') || lowerComment.includes('đổi trả') || lowerComment.includes('ship') || lowerComment.includes('giao hàng')) {
+            replyText = `Dạ bạn ${userName} yên tâm nha, ${company} có chính sách: ${warranty} ạ!`;
+            isHandled = true;
+          } else if (lowerComment.includes('mua') || lowerComment.includes('đặt hàng') || lowerComment.includes('chốt') || lowerComment.includes('lấy') || lowerComment.includes('order')) {
+            replyText = `Dạ em cảm ơn bạn ${userName} đã tin tưởng ${company}! Bạn bấm trực tiếp vào giỏ hàng góc trái màn hình để chốt đơn ${product} nhận ngay mã freeship nha!`;
+            isHandled = true;
+          } else if (lowerComment.includes('dùng') || lowerComment.includes('tính năng') || lowerComment.includes('chức năng') || lowerComment.includes('sao') || lowerComment.includes('như thế nào')) {
+            replyText = `Dạ bạn ${userName} ơi, ${product} nổi bật với tính năng: ${features.split('\n')[0] || features}. Rất dễ sử dụng và hiệu quả cho phiên live ạ!`;
+            isHandled = true;
+          }
+        }
+
+        // C. Kiểm tra kịch bản Chốt Đơn (Checkout Products)
+        if (!isHandled && checkoutConfig.active !== false && Array.isArray(checkoutConfig.checkoutProducts)) {
           for (const prod of checkoutConfig.checkoutProducts) {
             if (prod.active !== false && prod.keywords) {
               const kws = prod.keywords.toLowerCase().split(/[;,]/).map(k => k.trim()).filter(Boolean);
               if (kws.some(k => commentText.toLowerCase().includes(k)) || (prod.productName && commentText.toLowerCase().includes(prod.productName.toLowerCase()))) {
-                isCheckoutMatched = true;
-                // Nếu có câu trả lời mẫu cho sản phẩm
+                isHandled = true;
                 if (prod.sampleAnswers) {
                   replyText = fillTemplate(getRandomSample(prod.sampleAnswers), { user: userName, comment: commentText, product: prod.productName });
-                } else if (prod.aiPrompt) {
-                  replyText = `Dạ bạn ${userName} ơi, sản phẩm ${prod.productName || ''} đang có ưu đãi cực sốc trong giỏ hàng góc trái màn hình, bạn bấm vào xem chi tiết và đặt ngay nhé!`;
                 } else {
-                  replyText = `Dạ em chào bạn ${userName}! Mẫu ${prod.productName || 'này'} đang có sẵn trong giỏ hàng góc trái, bạn bấm vào giỏ hàng để chọn size và nhận mã freeship nha!`;
+                  replyText = `Dạ em chào bạn ${userName}! Sản phẩm ${prod.productName || 'này'} đang có ưu đãi cực sốc trong giỏ hàng góc trái màn hình, bạn bấm vào đặt hàng ngay nhé!`;
                 }
                 shouldAction = 'gift_reaction';
                 break;
@@ -218,42 +242,35 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // C. Nếu không khớp Chốt Đơn, xử lý theo kịch bản Bình Luận (Comment Rules / AI / Keyword)
-        if (!isCheckoutMatched && commentConfig.active !== false) {
+        // D. Kiểm tra bộ quy tắc từ khóa (Keyword Rules)
+        if (!isHandled && commentConfig.active !== false) {
           const replyMode = commentConfig.commentReplyMode || 'hybrid';
           let isKeywordMatched = false;
 
-          // 1. Kiểm tra bộ quy tắc từ khóa (Keyword Rules) nếu không phải chế độ chỉ dùng AI
           if (replyMode !== 'ai_only' && Array.isArray(commentConfig.keywordRules) && commentConfig.keywordRules.length > 0) {
-            const lowerC = commentText.toLowerCase();
             for (const rule of commentConfig.keywordRules) {
               if (rule.enabled !== false && rule.keywords) {
                 const kwArr = Array.isArray(rule.keywords) ? rule.keywords : String(rule.keywords).split(/[,;]/);
-                const matched = kwArr.some(k => k.trim() && lowerC.includes(k.trim().toLowerCase()));
+                const matched = kwArr.some(k => k.trim() && lowerComment.includes(k.trim().toLowerCase()));
                 if (matched && rule.replyText) {
                   replyText = fillTemplate(rule.replyText, { user: userName, comment: commentText });
                   isKeywordMatched = true;
+                  isHandled = true;
                   break;
                 }
               }
             }
           }
 
-          // 2. Nếu chưa khớp từ khóa và được phép dùng AI / Mẫu có sẵn
+          // E. Tự động trả lời tự nhiên thông minh
           if (!isKeywordMatched && replyMode !== 'keywords_only') {
             if (commentConfig.sampleAnswers) {
               const rawSample = getRandomSample(commentConfig.sampleAnswers);
               replyText = fillTemplate(rawSample, { user: userName, comment: commentText });
+            } else if (lowerComment.includes('xinh') || lowerComment.includes('đẹp') || lowerComment.includes('chào') || lowerComment.includes('dễ thương')) {
+              replyText = `Dạ em cảm ơn bạn ${userName} nhiều nha! Chúc bạn xem livestream thật vui và săn được nhiều deal hời cùng shop ạ!`;
             } else {
-              // Câu trả lời ngữ cảnh thông minh tự nhiên
-              const lowerComment = commentText.toLowerCase();
-              if (lowerComment.includes('giá') || lowerComment.includes('mua') || lowerComment.includes('size') || lowerComment.includes('hàng')) {
-                replyText = `Dạ bạn ${userName} ơi, mẫu này đang có giá cực ưu đãi trong giỏ hàng góc trái màn hình, bạn bấm vào xem chi tiết ngay nhé!`;
-              } else if (lowerComment.includes('xinh') || lowerComment.includes('đẹp') || lowerComment.includes('chào') || lowerComment.includes('dễ thương')) {
-                replyText = `Dạ em cảm ơn bạn ${userName} nhiều nha! Bạn comment làm em có thêm bao nhiêu năng lượng luôn á!`;
-              } else {
-                replyText = `Dạ em chào bạn ${userName}, em đã thấy bình luận của bạn rồi nha! Cảm ơn bạn đã tương tác với live ạ!`;
-              }
+              replyText = `Dạ em chào bạn ${userName}, em đã thấy bình luận của bạn rồi nha! Cảm ơn bạn đã tương tác cùng live ạ!`;
             }
           }
         }

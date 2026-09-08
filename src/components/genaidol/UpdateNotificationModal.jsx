@@ -2,12 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.0.2';
+export const APP_VERSION = '2.0.3';
 export const UPDATE_NOTES = [
-  "🔊 Đột Phá Nghe Thử Voice Âm Thanh Toàn Diện: Khắc phục triệt để lỗi bấm nghe thử không phát âm thanh trên tất cả các tab cài đặt sự kiện (Quà đặc biệt, Quà thường, Bình luận, Chốt đơn, Trợ lý, BLV Game...), hỗ trợ chọn bất kỳ giọng đọc AI nào nghe thử tức thì 0ms.",
-  "⚡ Tối Ưu Hệ Thống Fallback 4 Tầng Siêu Mượt: Tự động kết nối ElevenLabs Pro -> Server TTS Proxy -> Direct Audio Stream -> Web Speech API, đảm bảo âm thanh phát chuẩn xác 100% trên mọi nền tảng trình duyệt, Standalone App và TikTok Live Studio.",
-  "🛡️ Tối Ưu Hiệu Suất 60 FPS Chống Lag Đứng Hình: Tối ưu hoá luồng âm thanh không bị chặn bởi trạng thái tạm dừng, loại bỏ triệt để xung đột AudioContext, đảm bảo phiên live mượt mà tuyệt đối.",
-  "🎁 Quản Lý Slot Quà Tặng & Kịch Bản Bình Luận Đa Định Dạng: Tùy biến không giới hạn slot quà tặng và nạp file kịch bản tự động sắp xếp thông minh."
+  "📜 Đột Phá 2 Chế Độ Kịch Bản Livestream & Chốt Đơn: Hỗ trợ Chế Độ 1 (Kịch bản cài sẵn từng câu, thời lượng tùy biến) và Chế Độ 2 (Bộ Não AI & Kho Tri Thức Doanh Nghiệp / Sản Phẩm học dữ liệu để tư vấn chốt đơn tự động).",
+  "🔄 Cơ Chế Xen Kẽ Trả Lời Bình Luận & Tiếp Tục Kịch Bản Liền Mạch: Khi Idol đang nói theo kịch bản, nếu có bình luận của khách, Idol sẽ tạm dừng -> trả lời theo kho tri thức doanh nghiệp hoặc từ khóa -> tự động đọc tiếp câu kịch bản còn lại mượt mà.",
+  "👄 Đồng Bộ Khẩu Hình Miệng & Cảm Xúc (Lip-Sync 60 FPS): Khẩu hình miệng và cử chỉ video ăn khớp 100% với giọng nói AI, vận hành siêu mượt không lag giật trên mọi nền tảng."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
