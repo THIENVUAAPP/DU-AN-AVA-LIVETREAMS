@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.0.8';
+export const APP_VERSION = '2.0.9';
 export const UPDATE_NOTES = [
-  "🖥️ Tối Ưu Hóa Giao Diện Modal Sự Kiện: Mở Rộng Kích Thước Tràn Viền Toàn Màn Hình & Xóa Bỏ Tab Shopee Live Trong Danh Sách (Đã Có Trang Riêng Trên Đầu Ứng Dụng).",
-  "🎛️ Khắc Phục Triệt Để Điều Khiển Âm Lượng (0% - 100%) & Tốc Độ Đọc (0.75x - 1.5x) Có Tác Dụng Ngay Lập Tức Khi Nghe Thử Voice.",
-  "✨ Bổ Sung Icon Trợ Giúp (?) Kèm Hướng Dẫn Chi Tiết Cho Từng Ô Nhập Liệu & Tinh Chỉnh 10 Phong Cách Live AI Kèm Cử Chỉ [Vỗ tay, Cười tươi, Chỉ giỏ hàng, Đếm ngược]."
+  "🧹 Tự Động Lọc Bỏ 100% Tag Cử Chỉ [Vỗ tay], [Cười tươi], [Chỉ giỏ hàng], [Đếm ngược]: Nhân vật AI chỉ đọc đúng câu thoại chính của phiên live, không đọc thừa các chỉ dẫn sân khấu.",
+  "⚡ Tốc Độ & Âm Lượng Tương Tác Tức Thì (0ms Lag): Kéo thanh trượt âm lượng hoặc chuyển tốc độ đọc phản hồi âm thanh ngay lập tức trong thời gian thực.",
+  "📜 Chuẩn Hóa Kịch Bản Cài Sẵn & Phân Bổ Thời Lượng Phiên Live Thông Minh: Tích hợp 10 phong cách livestream, phân chia thời gian phát live chính xác và đồng bộ hàng đợi giọng nói (không bị chồng chéo)."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

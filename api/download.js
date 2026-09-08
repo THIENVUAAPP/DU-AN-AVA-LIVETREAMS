@@ -55,8 +55,8 @@ export default async function handler(req, res) {
     // 2. Dự phòng đường link bản phát hành chuẩn nếu API bị giới hạn
     if (!downloadUrl) {
       downloadUrl = isMac 
-        ? 'https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v1.9.2/AvaLive_VIP_PRO_Mac_v1.9.2.zip'
-        : 'https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v1.9.2/AvaLive_VIP_PRO_Windows_v1.9.2.zip';
+        ? 'https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v2.0.9/AvaLive_VIP_PRO_Mac_v2.0.9.zip'
+        : 'https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v2.0.9/AvaLive_VIP_PRO_Windows_v2.0.9.zip';
     }
 
     res.setHeader('Location', downloadUrl);

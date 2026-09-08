@@ -1408,28 +1408,19 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                                 <span>⏳ Thời Lượng Phiên Live AI:</span>
                                 <HelpTooltip helpKey="aiLiveDuration" />
                               </div>
-                              <div className="flex items-center gap-2">
-                                <select
-                                  value={currentConfig.scriptDurationMinutes || 60}
-                                  onChange={(e) => handleSimpleChange('scriptDurationMinutes', Number(e.target.value) || 60)}
-                                  className="flex-1 border border-blue-300 rounded-lg px-2.5 py-1.5 text-xs bg-white font-bold text-blue-900 focus:outline-blue-500 cursor-pointer shadow-2xs"
-                                >
-                                  <option value="30">30 phút</option>
-                                  <option value="45">45 phút</option>
-                                  <option value="60">60 phút (1 tiếng)</option>
-                                  <option value="90">90 phút (1.5 tiếng)</option>
-                                  <option value="120">120 phút (2 tiếng)</option>
-                                  <option value="180">180 phút (3 tiếng)</option>
-                                </select>
-                                <button
-                                  type="button"
-                                  onClick={handleGenerateAiScript}
-                                  className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs rounded-lg shadow-sm flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
-                                  title="AI tự động tạo kịch bản theo phong cách đã chọn"
-                                >
-                                  <Sparkles size={14} /> AI Tạo Kịch Bản
-                                </button>
-                              </div>
+                              <select
+                                value={currentConfig.scriptDurationMinutes || 60}
+                                onChange={(e) => handleSimpleChange('scriptDurationMinutes', Number(e.target.value) || 60)}
+                                className="w-full border border-blue-300 rounded-lg px-2.5 py-1.5 text-xs bg-white font-bold text-blue-900 focus:outline-blue-500 cursor-pointer shadow-2xs"
+                              >
+                                <option value="15">⏱️ 15 phút (Phiên ngắn)</option>
+                                <option value="30">⏱️ 30 phút</option>
+                                <option value="45">⏱️ 45 phút</option>
+                                <option value="60">⏱️ 60 phút (1 tiếng chuẩn)</option>
+                                <option value="90">⏱️ 90 phút (1.5 tiếng)</option>
+                                <option value="120">⏱️ 120 phút (2 tiếng)</option>
+                                <option value="180">⏱️ 180 phút (3 tiếng)</option>
+                              </select>
                             </div>
                           </div>
 

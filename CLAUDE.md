@@ -800,6 +800,15 @@ Im lặng bỏ qua 3 câu này = vi phạm Mục 0.7 và Mục 1.
 | **3. Bổ Sung Icon Trợ Giúp (?) Cho Mọi Ô & Tinh Chỉnh 10 Phong Cách Live AI** | `src/components/genaidol/WorkspaceTacVu.jsx` | ✅ PASS 100% | - Tích hợp `<HelpTooltip />` bên cạnh tất cả tiêu đề và trường dữ liệu giúp người dùng dễ dàng hiểu rõ cách sử dụng.<br>- Nâng cấp 10 Phong Cách Livestream của AI tích hợp cử chỉ hành động `[Vỗ tay, Cười tươi, Chỉ giỏ hàng, Hạ giọng, Đếm ngược]` tạo kịch bản bán hàng cuốn hút, kịch tính, bùng nổ đơn hàng. |
 | **4. Đồng Bộ Toàn Diện & Đóng Gói Bộ Cài Standalone v2.0.8** | `package.json`, `UpdateNotificationModal.jsx`, `UniversalMasterOverlayModal.jsx`, `Mo_Ung_Dung_Web.html`, `backend/server.cjs`, `CLAUDE.md` | ✅ PASS 100% | Đóng gói tự động bộ cài Standalone ZIP Windows & Mac v2.0.8, kích hoạt UpdateNotificationModal cho người dùng và commit push GitHub. |
 
+### 🚀 41. Nhật Ký Bản Cập Nhật v2.0.9 (Official Release - Lọc Sạch Tag Cử Chỉ Voice + Phản Hồi Âm Lượng/Tốc Độ Tức Thì 0ms + Chuẩn Hóa Kịch Bản)
+| Hạng Mục Cải Tiến | File Thay Đổi | Trạng Thái | Chi Tiết Kỹ Thuật |
+| :--- | :--- | :---: | :--- |
+| **1. Tự Động Lọc Bỏ 100% Tag Cử Chỉ [Vỗ tay], [Cười tươi], [Chỉ giỏ hàng], [Đếm ngược]** | `src/utils/voiceSyncService.js`, `src/components/genaidol/EventVoiceTester.jsx` | ✅ PASS 100% | - Tích hợp hàm `cleanTextForVoiceSpeech` làm sạch hoàn toàn các chỉ dẫn sân khấu trong ngoặc vuông `[...]` và ngoặc đơn `(...)` trước khi đưa vào Voice Engine / TTS.<br>- Nhân vật AI chỉ đọc chuẩn xác nội dung kịch bản phát live, tuyệt đối không đọc thừa các token cử chỉ. |
+| **2. Tương Tác Âm Lượng & Tốc Độ Đọc Tức Thì (0ms Lag)** | `src/utils/voiceSyncService.js`, `src/components/genaidol/EventVoiceTester.jsx` | ✅ PASS 100% | - Thao tác kéo thanh trượt Âm lượng (0% - 100%) hoặc chọn Tốc độ đọc (0.75x - 1.5x) lập tức thay đổi âm thanh đang phát trong thời gian thực mà không cần chờ câu tiếp theo. |
+| **3. Xóa Bỏ Nút "AI Tạo Kịch Bản" & Chuẩn Hóa Phân Bổ Thời Lượng Phiên Live** | `src/components/genaidol/WorkspaceTacVu.jsx` | ✅ PASS 100% | - Chế độ 1 (Fixed Script) tinh gọn, người dùng nạp file kịch bản hoặc chọn 10 mẫu kịch bản có sẵn theo ngành nghề.<br>- Bộ não AI tư vấn tự động (Chế độ 2) và Fixed Script đều phát theo đúng khung thời gian đã chọn (15p, 30p, 60p, 120p, 180p) và quản lý hàng đợi giọng nói đồng bộ, không bao giờ bị nói đè. |
+| **4. Cập Nhật Download ZIP Trực Tiếp & Đóng Gói Bộ Cài Standalone v2.0.9** | `package.json`, `UpdateNotificationModal.jsx`, `UniversalMasterOverlayModal.jsx`, `Mo_Ung_Dung_Web.html`, `backend/server.cjs`, `api/download.js`, `CLAUDE.md` | ✅ PASS 100% | - Nâng cấp đường dẫn và regex download ZIP phục vụ trực tiếp file v2.0.9 mới nhất.<br>- Đóng gói tự động bộ cài Standalone ZIP Windows & Mac v2.0.9, kích hoạt UpdateNotificationModal cho người dùng và commit push GitHub. |
+
+
 
 
 

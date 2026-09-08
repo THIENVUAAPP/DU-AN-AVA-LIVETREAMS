@@ -260,6 +260,84 @@ export function stopVoiceAudio() {
   activeUtterance = null;
   isGlobalSpeaking = false;
 }
+/**
+ * 🧹 Bộ lọc làm sạch văn bản thông minh trước khi đưa vào Voice Engine / TTS:
+ * - Loại bỏ 100% tất cả các thẻ cử chỉ / chỉ dẫn sân khấu trong ngoặc vuông: [Vỗ tay], [Cười tươi], [Chỉ tay vào giỏ hàng], [Đếm ngược 3 2 1], [user], v.v.
+ * - Loại bỏ các ghi chú trong ngoặc đơn: (cười), (cười tươi), (vỗ tay), (nháy mắt), (chỉ giỏ hàng), (hành động...)
+ * - Loại bỏ ký tự Markdown, bullet points, số thứ tự đầu dòng
+ * - Đảm bảo nhân vật AI CHỈ đọc đúng nội dung câu thoại chính của phiên live!
+ */
+export function cleanTextForVoiceSpeech(rawText) {
+  if (!rawText || typeof rawText !== 'string') return '';
+  
+  let cleaned = rawText;
+
+  // 1. Loại bỏ tất cả các chỉ dẫn hành động / ghi chú trong ngoặc vuông
+  cleaned = cleaned.replace(/\[[^\]]*\]/g, ' ');
+
+  // 2. Loại bỏ các chỉ dẫn biểu cảm trong ngoặc đơn
+  cleaned = cleaned.replace(/\((?:cười|cười tươi|vỗ tay|hành động|chỉ tay|nháy mắt|nói to|nói nhỏ|thì thầm|hào hứng|nhấn mạnh|chỉ giỏ hàng|chốt đơn|đếm ngược|action|smile|clap)[^\)]*\)/gi, ' ');
+
+  // 3. Loại bỏ Markdown formatting
+  cleaned = cleaned.replace(/[*_#`~>]/g, ' ');
+  cleaned = cleaned.replace(/^\s*[-*+]\s+/gm, ''); // bullet points
+  cleaned = cleaned.replace(/^\s*\d+[\.\)]\s+/gm, ''); // numbering at start of line: "1. ", "2) "
+
+  // 4. Chuẩn hóa biến đại diện còn sót lại
+  cleaned = cleaned
+    .replace(/\{user\}/gi, 'bạn')
+    .replace(/\{comment\}/gi, 'câu hỏi của bạn')
+    .replace(/\{gift_name\}/gi, 'món quà')
+    .replace(/\{count\}/gi, 'nhiều')
+    .replace(/\{product\}/gi, 'sản phẩm')
+    .replace(/\{item\}/gi, 'sản phẩm');
+
+  // 5. Loại bỏ emoji gây ngắt quãng hoặc đọc mã unicode
+  cleaned = cleaned.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, ' ');
+
+  // 6. Rút gọn khoảng trắng thừa và dấu chấm lặp
+  cleaned = cleaned.replace(/\s+/g, ' ').replace(/\.{2,}/g, '.').trim();
+
+  return cleaned;
+}
+
+/**
+ * ⚡ CẬP NHẬT TỨC THÌ ÂM LƯỢNG (0% - 100%) VÀ TỐC ĐỘ ĐỌC (0.75x - 1.5x) KHI ĐANG PHÁT (REAL-TIME 0ms LAG)
+ * Hỗ trợ cả 2 cách gọi: updateActiveVoiceAudio({ volume, rate }) HOẶC updateActiveVoiceAudio(volume, rate, pitch)
+ */
+export function updateActiveVoiceAudio(param1, param2, param3) {
+  let volume, rate;
+  if (typeof param1 === 'object' && param1 !== null) {
+    volume = param1.volume;
+    rate = param1.rate;
+  } else {
+    volume = param1;
+    rate = param2;
+  }
+
+  if (volume !== undefined) {
+    const clampedVol = Math.max(0, Math.min(1.0, Number(volume)));
+    if (activePreviewAudio) {
+      try {
+        activePreviewAudio.volume = clampedVol;
+        activePreviewAudio.muted = clampedVol === 0;
+      } catch (e) {}
+    }
+    if (activeUtterance) {
+      try {
+        activeUtterance.volume = clampedVol;
+      } catch (e) {}
+    }
+  }
+  if (rate !== undefined) {
+    const clampedRate = Math.max(0.5, Math.min(2.0, Number(rate)));
+    if (activePreviewAudio) {
+      try {
+        activePreviewAudio.playbackRate = clampedRate;
+      } catch (e) {}
+    }
+  }
+}
 
 // ==================== GLOBAL SPEECH QUEUE & MUTUAL EXCLUSION LOCK ====================
 // Tuyệt đối không cho 2 giọng nói / bình luận đọc cùng lúc. Mỗi câu đọc xong sẽ nghỉ 0.6s trước khi đọc câu tiếp theo.
@@ -489,7 +567,8 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     ms: 'Hai semua! Selamat datang ke siaran langsung kami!'
   };
 
-  const textToSpeak = (sampleText || defaultSamples[shortLang] || defaultSamples.vi).trim();
+  const rawCandidate = (sampleText || defaultSamples[shortLang] || defaultSamples.vi).trim();
+  const textToSpeak = cleanTextForVoiceSpeech(rawCandidate) || rawCandidate;
   const apiKey = getElevenLabsApiKey();
   const voiceId = voice?.voiceId || '21m00Tcm4TlvDq8ikWAM';
   const voiceVolume = voice?.volume !== undefined ? Math.max(0, Math.min(1, voice.volume)) : 1.0;
@@ -735,15 +814,6 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
   playFallbackHarmonicChime(voice?.gender);
   if (onEnd) setTimeout(onEnd, 1200);
   return true;
-}
-
-export function updateActiveVoiceAudio(volume, rate, pitch) {
-  if (activePreviewAudio) {
-    try {
-      if (volume !== undefined) activePreviewAudio.volume = Math.max(0, Math.min(1, volume));
-      if (rate !== undefined) activePreviewAudio.playbackRate = Math.max(0.1, rate);
-    } catch (e) {}
-  }
 }
 
 export const speakVoiceAudio = previewVoiceAudio;

@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Volume2, VolumeX, Play, Square, Sparkles, ChevronDown, Check, Gauge, Sliders } from 'lucide-react';
-import { ALL_SYSTEM_VOICES, previewVoiceAudio, stopVoiceAudio } from '../../utils/voiceSyncService';
+import { ALL_SYSTEM_VOICES, previewVoiceAudio, stopVoiceAudio, updateActiveVoiceAudio, cleanTextForVoiceSpeech } from '../../utils/voiceSyncService';
 
 /**
  * Universal Voice Selector & Tester Component
  * - Tích hợp đầy đủ: Chọn giọng, Tăng/Giảm Âm lượng, Tăng/Giảm Tốc độ đọc (Speed Rate)
+ * - Tương tác siêu tốc: Kéo âm lượng hoặc chọn tốc độ là ăn ngay tức thời (0ms lag)
+ * - Tự động lọc sạch 100% các tag cử chỉ [Vỗ tay], [Cười tươi], [Chỉ giỏ hàng], chỉ đọc nội dung chính
  * - Phát ĐẦY ĐỦ 100% toàn bộ kịch bản từ câu đầu đến câu cuối (tuần tự từng câu với tiến trình hiển thị rõ ràng)
  * - Nút Dừng lại ngắt tức thì toàn bộ chuỗi phát âm thanh.
  */
@@ -43,6 +45,22 @@ export default function EventVoiceTester({
     }
   }, [defaultVoiceId]);
 
+  // Cập nhật âm lượng tức thì khi kéo thanh trượt (0ms phản hồi)
+  const handleVolumeChange = (newVol) => {
+    const val = parseFloat(newVol);
+    setVolume(val);
+    volumeRef.current = val;
+    updateActiveVoiceAudio({ volume: val });
+  };
+
+  // Cập nhật tốc độ đọc tức thì khi chọn dropdown (0ms phản hồi)
+  const handleSpeedChange = (newSpeed) => {
+    const rate = Number(newSpeed);
+    setSpeed(rate);
+    speedRef.current = rate;
+    updateActiveVoiceAudio({ rate });
+  };
+
   // Dọn dẹp khi unmount
   useEffect(() => {
     return () => {
@@ -61,12 +79,13 @@ export default function EventVoiceTester({
 
   /**
    * Phân tách kịch bản dài thành các câu thoại hoàn chỉnh chuẩn ngữ nghĩa
+   * Tự động loại bỏ hoàn toàn các chỉ dẫn sân khấu [Vỗ tay], [Cười tươi], [Chỉ giỏ hàng]...
    */
   const splitIntoSentences = (raw) => {
     if (!raw || !raw.trim()) return [];
     
-    // Chuẩn hóa biến đại diện
-    const cleanedText = raw
+    // Làm sạch thẻ cử chỉ & chuẩn hóa biến đại diện
+    const cleanedText = cleanTextForVoiceSpeech(raw)
       .replace(/\[user\]|\{user\}/gi, 'Quốc Thiện')
       .replace(/\{comment\}|\[comment\]/gi, 'Sản phẩm này giá bao nhiêu shop?')
       .replace(/\{gift_name\}|\[gift_name\]/gi, 'Cờ Tổ Quốc')
@@ -213,7 +232,7 @@ export default function EventVoiceTester({
         {/* Speed Selector */}
         <select
           value={speed}
-          onChange={(e) => setSpeed(Number(e.target.value))}
+          onChange={(e) => handleSpeedChange(e.target.value)}
           className={`text-[11px] font-bold rounded-lg px-1.5 py-1 border transition-all cursor-pointer focus:outline-none ${
             isDark ? 'bg-[#1e2230] text-blue-300 border-white/10' : 'bg-white text-blue-700 border-gray-300'
           }`}
@@ -322,7 +341,7 @@ export default function EventVoiceTester({
           <Gauge size={13} className="text-blue-600 shrink-0" />
           <select
             value={speed}
-            onChange={(e) => setSpeed(Number(e.target.value))}
+            onChange={(e) => handleSpeedChange(e.target.value)}
             className="text-xs font-bold bg-transparent text-blue-900 focus:outline-none cursor-pointer"
             title="Tốc độ đọc của AI (Rate)"
           >
@@ -344,7 +363,7 @@ export default function EventVoiceTester({
             max="1" 
             step="0.05"
             value={volume}
-            onChange={(e) => setVolume(parseFloat(e.target.value))}
+            onChange={(e) => handleVolumeChange(e.target.value)}
             className="w-16 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
             title={`Âm lượng giọng đọc: ${Math.round(volume * 100)}%`}
           />
