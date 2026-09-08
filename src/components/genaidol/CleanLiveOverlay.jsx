@@ -985,14 +985,10 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               const isMasterPlaying = !!event.data.isPlaying;
               const v = overlayVideoRef.current;
               if (v && typeof masterTime === 'number' && !isNaN(masterTime)) {
-                // 🎯 ĐỒNG BỘ THỜI GIAN THỰC 100%: NẾU LỆCH > 0.6 GIÂY (DO ẨN TAB/CHUYỂN TAB) HOẶC CÓ CỜ FORCE -> KÉO KHỚP NGAY LẬP TỨC
+                // 🎯 Chỉ tua lại vị trí khi có cờ force rõ ràng từ người dùng tua hoặc lệch quá lớn (> 10s)
                 const cur = v.currentTime || 0;
                 const diff = Math.abs(cur - masterTime);
-                if (isWindowCapture) {
-                  if (event.data.force || diff > 0.6) {
-                    try { v.currentTime = masterTime; } catch (e) {}
-                  }
-                } else if (event.data.force || diff > 1.5) {
+                if (event.data.force || diff > 10.0) {
                   try { v.currentTime = masterTime; } catch (e) {}
                 }
                 if (isMasterPlaying) {

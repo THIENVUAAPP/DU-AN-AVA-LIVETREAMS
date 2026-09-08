@@ -624,9 +624,9 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       const vid = document.getElementById('videoPlayer');
       const badge = document.getElementById('badge');
       let currentSrc = ${JSON.stringify(vParam)};
-      let lastReportedTime = 0;
-      let stallCount = 0;
       let isExplicitlyPaused = false;
+      let targetMuted = ${soundParam ? 'false' : 'true'};
+      let targetVolume = 1.0;
 
       setTimeout(function() { if (badge) badge.style.opacity = '0.2'; }, 6000);
 
@@ -647,8 +647,8 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
         return window.location.origin + '/' + url;
       }
 
-      // 🎬 NẠP VÀ PHÁT VIDEO CHUẨN XÁC 100%
-      function loadAndPlay(url, seekTime = 0) {
+      // 🎬 NẠP VÀ PHÁT VIDEO CHUẨN XÁC 60 FPS KHÔNG GIẬT LAG
+      function loadAndPlay(url, seekTime) {
         if (!url) return;
         const fullUrl = resolveUrl(url);
         if (!fullUrl) return;
@@ -660,12 +660,12 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
           vid.load();
         }
 
-        if (seekTime > 0 && Math.abs(vid.currentTime - seekTime) > 0.5) {
+        if (typeof seekTime === 'number' && seekTime > 0 && Math.abs(vid.currentTime - seekTime) > 2.0) {
           try { vid.currentTime = seekTime; } catch(e) {}
         }
 
-        vid.volume = 1.0;
-        vid.muted = false;
+        vid.muted = targetMuted;
+        vid.volume = targetVolume;
 
         if (!isExplicitlyPaused) {
           const p = vid.play();
@@ -673,42 +673,21 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
             p.catch(function() {
               vid.muted = true;
               vid.play().then(function() {
-                setTimeout(function() { vid.muted = false; }, 300);
+                setTimeout(function() { vid.muted = targetMuted; }, 300);
               }).catch(function() {});
             });
           }
         }
       }
 
-      // ⚡ THUẬT TOÁN CLOCK DRIFT COMPENSATION (BÙ TRÔI ĐỒNG HỒ VI MÔ CHUẨN ĐÀI TRUYỀN HÌNH)
-      // Khắc phục triệt để hiện tượng giật lag / đứng hình khi truyền phát online qua Cloudflare:
-      // - Tuyệt đối không ép seek liên tục gây flush buffer và đơ khung hình
-      // - Tự động tăng/giảm nhẹ tốc độ (playbackRate 1.03x / 0.97x) để đuổi kịp thời gian thực êm như nhung
-      function applyTimeSync(targetTime, force = false) {
-        if (typeof targetTime !== 'number' || isNaN(targetTime)) return;
-        if (isExplicitlyPaused) return;
-
-        const cur = vid.currentTime;
-        const diff = targetTime - cur;
-        const absDiff = Math.abs(diff);
-
-        if (force || absDiff > 3.5) {
-          // Chỉ ép seek khi người dùng chủ động tua khung hình hoặc lệch quá lớn (> 3.5s)
-          try {
-            vid.currentTime = targetTime;
-            vid.playbackRate = 1.0;
-          } catch(e) {}
-        } else if (absDiff > 0.4) {
-          // Điều chỉnh tốc độ vi mô không rớt 1 khung hình nào
-          if (diff > 0) {
-            vid.playbackRate = 1.03;
-          } else {
-            vid.playbackRate = 0.97;
-          }
-        } else {
-          if (vid.playbackRate !== 1.0) {
-            vid.playbackRate = 1.0;
-          }
+      function applyAudioState(isMuted, vol) {
+        if (typeof isMuted === 'boolean') {
+          targetMuted = isMuted;
+          vid.muted = isMuted;
+        }
+        if (typeof vol === 'number' && !isNaN(vol)) {
+          targetVolume = Math.max(0, Math.min(1, vol));
+          vid.volume = targetVolume;
         }
       }
 
@@ -719,8 +698,8 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       }
 
       window.addEventListener('click', function() {
-        vid.muted = false;
-        vid.volume = 1.0;
+        if (!targetMuted) vid.muted = false;
+        vid.volume = targetVolume;
         if (vid.paused && !isExplicitlyPaused) vid.play().catch(function() {});
       });
 
@@ -730,23 +709,6 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
           if (!isExplicitlyPaused) vid.play().catch(function() {});
         } catch (e) {}
       });
-
-      // 🛡️ WATCHDOG 60FPS: Tự động đánh thức nếu có buffer underrun mà không đổi src
-      setInterval(function() {
-        if (!isExplicitlyPaused && !vid.paused && !vid.seeking) {
-          const cur = vid.currentTime;
-          if (Math.abs(cur - lastReportedTime) < 0.01 && vid.readyState >= 2) {
-            stallCount++;
-            if (stallCount >= 3) {
-              vid.play().catch(function() {});
-              stallCount = 0;
-            }
-          } else {
-            stallCount = 0;
-            lastReportedTime = cur;
-          }
-        }
-      }, 1000);
 
       // ⚡ KẾT NỐI WEBSOCKET REALTIME 0MS VỚI AVALIVE STUDIO
       try {
@@ -771,15 +733,27 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
           if (data.mediaUrl && data.mediaUrl !== currentSrc) {
             loadAndPlay(data.mediaUrl, data.videoCurrentTime || 0);
           }
-          if (typeof data.videoCurrentTime === 'number') {
-            applyTimeSync(data.videoCurrentTime, Boolean(data.force));
+          // Điều khiển Âm thanh (Bật/Tắt tiếng & Âm lượng)
+          if (typeof data.isVideoAudioMuted === 'boolean') {
+            applyAudioState(data.isVideoAudioMuted, data.videoVolume);
+          } else if (typeof data.isMuted === 'boolean') {
+            applyAudioState(data.isMuted, data.volume || data.videoVolume);
+          } else if (typeof data.videoVolume === 'number') {
+            applyAudioState(targetMuted, data.videoVolume);
           }
+
+          // Điều khiển Play / Pause
           if (data.isPlaying === false || data.userPaused === true) {
             isExplicitlyPaused = true;
             vid.pause();
-          } else {
+          } else if (data.isPlaying === true) {
             isExplicitlyPaused = false;
             if (vid.paused) vid.play().catch(function() {});
+          }
+
+          // Tua khi có yêu cầu rõ ràng
+          if (data.force && typeof data.videoCurrentTime === 'number') {
+            try { vid.currentTime = data.videoCurrentTime; } catch(e) {}
           }
         });
 
@@ -787,19 +761,28 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
           if (!control) return;
           if (control.mediaUrl && control.mediaUrl !== currentSrc) {
             loadAndPlay(control.mediaUrl, control.currentTime || 0);
-            return;
           }
-          if (control.action === 'pause') {
+          // Điều khiển Dừng / Tiếp Tục
+          if (control.action === 'pause' || control.isPlaying === false) {
             isExplicitlyPaused = true;
             vid.pause();
-            return;
-          } else if (control.action === 'play') {
+          } else if (control.action === 'play' || control.isPlaying === true) {
             isExplicitlyPaused = false;
             if (vid.paused) vid.play().catch(function() {});
           }
-          if (typeof control.currentTime === 'number') {
-            const forceSeek = (control.action === 'seek' || control.force === true);
-            applyTimeSync(control.currentTime, forceSeek);
+
+          // Điều khiển Âm thanh
+          if (typeof control.isMuted === 'boolean') {
+            applyAudioState(control.isMuted, control.volume);
+          } else if (typeof control.volume === 'number') {
+            applyAudioState(targetMuted, control.volume);
+          }
+
+          // Tua khi có seek
+          if (control.action === 'seek' || control.force === true) {
+            if (typeof control.currentTime === 'number') {
+              try { vid.currentTime = control.currentTime; } catch(e) {}
+            }
           }
         });
 
@@ -807,12 +790,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
           const bc = new BroadcastChannel('avalive_master_live_stream');
           bc.onmessage = function(ev) {
             if (!ev.data) return;
-            if (ev.data.type === 'MASTER_TIME_SYNC') {
-              applyTimeSync(ev.data.currentTime, Boolean(ev.data.force));
-              if (ev.data.isPlaying && vid.paused && !isExplicitlyPaused) {
-                vid.play().catch(function() {});
-              }
-            } else if (ev.data.type === 'GLOBAL_MEDIA_CHANGE' && ev.data.mediaUrl) {
+            if (ev.data.type === 'GLOBAL_MEDIA_CHANGE' && ev.data.mediaUrl) {
               loadAndPlay(ev.data.mediaUrl, ev.data.currentTime || 0);
             } else if (ev.data.type === 'GLOBAL_PLAYBACK_CHANGE') {
               if (ev.data.isPlaying) {
@@ -822,6 +800,8 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
                 isExplicitlyPaused = true;
                 vid.pause();
               }
+            } else if (ev.data.type === 'GLOBAL_AUDIO_CHANGE') {
+              applyAudioState(ev.data.isMuted, ev.data.volume);
             }
           };
         }
@@ -873,10 +853,10 @@ app.get('/api/check-update', (req, res) => {
 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
-app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', '/AvaLive_VIP_PRO_Windows_v1.9.8.zip', '/AvaLive_VIP_PRO_Windows_v1.9.7.zip', '/AvaLive_VIP_PRO_Windows_v1.9.6.zip', '/AvaLive_VIP_PRO_Windows_v1.9.5.zip', '/AvaLive_VIP_PRO_Windows_v1.9.4.zip', '/AvaLive_VIP_PRO_Windows_v1.9.3.zip', '/AvaLive_VIP_PRO_Windows_v1.9.2.zip', '/AvaLive_VIP_PRO_Windows_v1.9.1.zip', '/AvaLive_VIP_PRO_Windows_v1.9.0.zip', '/AvaLive_VIP_PRO_Windows_v1.8.9.zip', '/AvaLive_VIP_PRO_Windows_v1.8.8.zip', '/AvaLive_VIP_PRO_Windows_v1.8.7.zip', '/AvaLive_VIP_PRO_Windows_v1.8.6.zip', '/AvaLive_VIP_PRO_Windows_v1.8.5.zip', '/AvaLive_VIP_PRO_Windows_v1.8.4.zip', '/AvaLive_VIP_PRO_Windows_v1.8.3.zip', '/AvaLive_VIP_PRO_Windows_v1.8.2.zip', '/AvaLive_VIP_PRO_Windows_v1.8.1.zip', '/AvaLive_VIP_PRO_Windows_v1.8.0.zip'], async (req, res) => {
+app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', '/AvaLive_VIP_PRO_Windows_v1.9.9.zip', '/AvaLive_VIP_PRO_Windows_v1.9.8.zip', '/AvaLive_VIP_PRO_Windows_v1.9.7.zip', '/AvaLive_VIP_PRO_Windows_v1.9.6.zip', '/AvaLive_VIP_PRO_Windows_v1.9.5.zip', '/AvaLive_VIP_PRO_Windows_v1.9.4.zip', '/AvaLive_VIP_PRO_Windows_v1.9.3.zip', '/AvaLive_VIP_PRO_Windows_v1.9.2.zip', '/AvaLive_VIP_PRO_Windows_v1.9.1.zip', '/AvaLive_VIP_PRO_Windows_v1.9.0.zip', '/AvaLive_VIP_PRO_Windows_v1.8.9.zip', '/AvaLive_VIP_PRO_Windows_v1.8.8.zip', '/AvaLive_VIP_PRO_Windows_v1.8.7.zip', '/AvaLive_VIP_PRO_Windows_v1.8.6.zip', '/AvaLive_VIP_PRO_Windows_v1.8.5.zip', '/AvaLive_VIP_PRO_Windows_v1.8.4.zip', '/AvaLive_VIP_PRO_Windows_v1.8.3.zip', '/AvaLive_VIP_PRO_Windows_v1.8.2.zip', '/AvaLive_VIP_PRO_Windows_v1.8.1.zip', '/AvaLive_VIP_PRO_Windows_v1.8.0.zip'], async (req, res) => {
   const releaseDir = path.join(__dirname, '..', 'release_zips');
   let targetFile = null;
-  let ver = '1.9.8';
+  let ver = '1.9.9';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -937,10 +917,10 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 });
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
-app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', '/AvaLive_VIP_PRO_Mac_v1.9.8.zip', '/AvaLive_VIP_PRO_Mac_v1.9.7.zip', '/AvaLive_VIP_PRO_Mac_v1.9.6.zip', '/AvaLive_VIP_PRO_Mac_v1.9.5.zip', '/AvaLive_VIP_PRO_Mac_v1.9.4.zip', '/AvaLive_VIP_PRO_Mac_v1.9.3.zip', '/AvaLive_VIP_PRO_Mac_v1.9.2.zip', '/AvaLive_VIP_PRO_Mac_v1.9.1.zip', '/AvaLive_VIP_PRO_Mac_v1.9.0.zip', '/AvaLive_VIP_PRO_Mac_v1.8.9.zip', '/AvaLive_VIP_PRO_Mac_v1.8.8.zip', '/AvaLive_VIP_PRO_Mac_v1.8.7.zip', '/AvaLive_VIP_PRO_Mac_v1.8.6.zip', '/AvaLive_VIP_PRO_Mac_v1.8.5.zip', '/AvaLive_VIP_PRO_Mac_v1.8.4.zip', '/AvaLive_VIP_PRO_Mac_v1.8.3.zip', '/AvaLive_VIP_PRO_Mac_v1.8.2.zip', '/AvaLive_VIP_PRO_Mac_v1.8.1.zip', '/AvaLive_VIP_PRO_Mac_v1.8.0.zip'], async (req, res) => {
+app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', '/AvaLive_VIP_PRO_Mac_v1.9.9.zip', '/AvaLive_VIP_PRO_Mac_v1.9.8.zip', '/AvaLive_VIP_PRO_Mac_v1.9.7.zip', '/AvaLive_VIP_PRO_Mac_v1.9.6.zip', '/AvaLive_VIP_PRO_Mac_v1.9.5.zip', '/AvaLive_VIP_PRO_Mac_v1.9.4.zip', '/AvaLive_VIP_PRO_Mac_v1.9.3.zip', '/AvaLive_VIP_PRO_Mac_v1.9.2.zip', '/AvaLive_VIP_PRO_Mac_v1.9.1.zip', '/AvaLive_VIP_PRO_Mac_v1.9.0.zip', '/AvaLive_VIP_PRO_Mac_v1.8.9.zip', '/AvaLive_VIP_PRO_Mac_v1.8.8.zip', '/AvaLive_VIP_PRO_Mac_v1.8.7.zip', '/AvaLive_VIP_PRO_Mac_v1.8.6.zip', '/AvaLive_VIP_PRO_Mac_v1.8.5.zip', '/AvaLive_VIP_PRO_Mac_v1.8.4.zip', '/AvaLive_VIP_PRO_Mac_v1.8.3.zip', '/AvaLive_VIP_PRO_Mac_v1.8.2.zip', '/AvaLive_VIP_PRO_Mac_v1.8.1.zip', '/AvaLive_VIP_PRO_Mac_v1.8.0.zip'], async (req, res) => {
   const releaseDir = path.join(__dirname, '..', 'release_zips');
   let targetFile = null;
-  let ver = '1.9.8';
+  let ver = '1.9.9';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;

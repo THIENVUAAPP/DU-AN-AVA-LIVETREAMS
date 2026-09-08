@@ -2,13 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.9.8';
+export const APP_VERSION = '1.9.9';
 export const UPDATE_NOTES = [
-  "⚡ Tự Động Phục Hồi Dữ Liệu & Khắc Phục Xung Đột Phiên Bản Cũ: Tích hợp cơ chế tự phục hồi thông minh (Auto-Self-Healing) và Safe Storage Sanitizer, loại bỏ 100% các lỗi xung đột cache giữa phiên bản cũ và mới khi mở app.",
-  "⚡ Khắc Phục Lỗi Deploy Vercel: Chuẩn hóa toàn diện hệ thống Serverless Functions và cấu hình vercel.json, loại bỏ hoàn toàn các xung đột routing trên Vercel.",
-  "⚡ Sửa Lỗi Tải File ZIP Trên Web: Đã bổ sung bộ điều hướng Serverless Function chuyên dụng trên Vercel và máy chủ ẩn. Giờ đây khi bấm nút tải bản Mac (.zip) hoặc Windows (.zip), trình duyệt sẽ tải trực tiếp 100% file ZIP chuẩn không nén nhầm file html/index, giải nén chạy mượt mà ngay lập tức.",
-  "⚡ Phát Sóng Video Siêu Mượt Xuyên Suốt Hàng Chục Tiếng Đồng Hồ: Tối ưu hóa triệt để bộ nhớ đệm (Decoded Buffer & Garbage Collection) và kích hoạt bộ tăng tốc phần cứng GPU (Hardware Acceleration 60 FPS), loại bỏ 100% tình trạng giật lag hay đứng hình sau 10-15 phút!",
-  "🔊 Điều Khiển Âm Lượng Trực Tiếp Từ TikTok Live Studio: Thẻ video phát âm thanh tự nhiên tương thích chuẩn Audio Mixer của TikTok Live Studio, cho phép streamer tăng/giảm âm lượng và tắt tiếng trực tiếp trên giao diện TikTok Live Studio."
+  "⚡ Tối Ưu Video 60 FPS Siêu Mượt Không Đứng Hình: Loại bỏ hoàn toàn cơ chế giật lag vi mô (micro-seek jitter) trên cả App điều khiển, Window Capture và Đường link Stream TikTok Live Studio/OBS. Video tải lên phát mượt mà 60 FPS liên tục hàng chục giờ.",
+  "🔇 Đồng Bộ Tắt/Bật Âm Thanh Trực Tiếp Từ Phần Mềm: Khi bấm Tắt Tiếng (Mute) hoặc điều chỉnh Âm lượng trên phần mềm, đường link phát trên TikTok Live Studio và OBS sẽ tự động tắt tiếng/bật tiếng/chỉnh âm lượng ngay lập tức mà không cần chỉnh thủ công.",
+  "⏸️ Điều Khiển Tạm Dừng & Tiếp Tục Video Tức Thì: Bấm Tạm Dừng hoặc Tiếp Tục phát video trên giao diện điều khiển sẽ lập tức ra lệnh cho đường link TikTok Live Studio và Window Capture dừng/phát đồng bộ 100%.",
+  "⚡ Nâng Cấp Bộ Đệm Phát Trực Tuyến FastStart MP4: Hỗ trợ truyền dữ liệu từng phần (HTTP Range Streaming) mượt mà tối đa cho tất cả các video tải lên từ máy tính của bạn."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

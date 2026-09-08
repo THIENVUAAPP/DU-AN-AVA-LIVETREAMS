@@ -1477,6 +1477,14 @@ export default function DesktopAppUI() {
       videoVolume: nextState ? 0 : (liveVolume || 1.0)
     }, socketRef.current);
 
+    sendVideoControl({
+      action: nextState ? 'mute' : 'unmute',
+      isMuted: nextState,
+      isVideoAudioMuted: nextState,
+      volume: nextState ? 0 : (liveVolume || 1.0),
+      timestamp: Date.now()
+    }, socketRef.current);
+
     // Phát sự kiện BroadcastChannel lập tức cho Window Capture
     postMasterBroadcast({
       type: 'GLOBAL_AUDIO_CHANGE',
