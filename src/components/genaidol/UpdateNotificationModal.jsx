@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.2.0';
+export const APP_VERSION = '2.2.1';
 export const UPDATE_NOTES = [
-  "🎙️ Chuẩn Hóa Toàn Diện 100% Giọng Đọc Studio Cao Cấp: Tất cả các giọng đọc (Sarah, Bella, Laura, Alice, Matilda, Jessica, Lily, River, Adam, Callum, Harry, Charlie, George, Liam, Will, Eric, Chris, Brian, Daniel, Bill, Roger...) đều sở hữu âm sắc studio ElevenLabs chính hãng, sắc nét, giàu cảm xúc, đúng chuẩn nam nữ và không còn bị trùng lặp âm thanh.",
-  "🔊 Nâng Cấp Nghe Thử Voice Tức Thì: Bấm vào nghe thử bất kỳ giọng nào là âm thanh phòng thu phát ra ngay lập tức với âm sắc chuẩn xác, chuyên nghiệp và đẳng cấp.",
-  "🇻🇳 Giọng Đọc Miễn Phí Hoài My & Đa Ngôn Ngữ: Tối ưu hóa giọng phát thanh chuẩn tiếng Việt Hoài My cùng hệ thống 28 giọng quốc tế bản xứ phát âm tự nhiên mượt mà."
+  "🎙️ Bổ Sung 40 Giọng Đọc Việt Nam Chuẩn Studio Cao Cấp: Đầy đủ 20 Giọng Nam & 20 Giọng Nữ (Biên tập viên VTV, MC Truyền hình, Giọng đọc thơ, Kể chuyện đêm khuya, Bán hàng TikTok Shop, Quảng cáo TVC, Video Viral, Truyền cảm hứng, Quý ông lịch lãm, Doanh nhân uy quyền, BLV Game PK bùng nổ, v.v.).",
+  "🔊 100% Giọng Đọc Đều Nghe Thử Được Tức Thì: Tích hợp mẫu thu âm Studio chính hãng ElevenLabs độc bản cho từng giọng, đảm bảo độ trễ 0ms, sắc thái sống động, chân thực, không bao giờ trùng lặp.",
+  "🇻🇳 Giọng Đọc Miễn Phí Hoài My & Hệ Thống 28 Giọng Quốc Tế: Tối ưu hoá toàn diện, bảo đảm phát âm chuẩn bản xứ, nhịp điệu mượt mà."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
