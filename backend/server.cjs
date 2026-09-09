@@ -2042,15 +2042,49 @@ app.post('/api/battle-state', (req, res) => {
   res.json({ success: true });
 });
 
-// TTS In-Memory Audio Cache
+// TTS In-Memory Audio Cache & Queue
 const ttsAudioBufferCache = new Map();
-
 let EdgeTTS = null;
 try {
   const edgePkg = require('node-edge-tts');
   EdgeTTS = edgePkg.EdgeTTS || edgePkg;
 } catch (e) {
   console.warn('[server.cjs] node-edge-tts could not be loaded:', e?.message || e);
+}
+
+// Concurrency queue to prevent EdgeTTS WebSocket collisions
+let edgeTtsQueue = Promise.resolve();
+
+function normalizeTtsPitch(p) {
+  if (!p || p === 'default' || p === '+0Hz' || p === '+0%') return '+0Hz';
+  if (typeof p === 'number') {
+    const val = Math.max(-30, Math.min(30, Math.round(p)));
+    return (val >= 0 ? '+' : '') + val + '%';
+  }
+  const str = String(p).trim();
+  if (str.endsWith('%')) {
+    const val = Math.max(-30, Math.min(30, parseInt(str, 10) || 0));
+    return (val >= 0 ? '+' : '') + val + '%';
+  }
+  if (str.endsWith('Hz')) {
+    const val = Math.max(-30, Math.min(30, parseInt(str, 10) || 0));
+    return (val >= 0 ? '+' : '') + val + 'Hz';
+  }
+  return '+0Hz';
+}
+
+function normalizeTtsRate(r) {
+  if (!r || r === 'default' || r === '+0%') return '+0%';
+  if (typeof r === 'number') {
+    const val = Math.max(-40, Math.min(60, Math.round(r)));
+    return (val >= 0 ? '+' : '') + val + '%';
+  }
+  const str = String(r).trim();
+  if (str.endsWith('%')) {
+    const val = Math.max(-40, Math.min(60, parseInt(str, 10) || 0));
+    return (val >= 0 ? '+' : '') + val + '%';
+  }
+  return '+0%';
 }
 
 function resolveNeuralVoice(voice, gender, lang) {
@@ -2078,31 +2112,40 @@ function resolveNeuralVoice(voice, gender, lang) {
 async function synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch = '+0Hz', rate = '+0%' }) {
   if (!EdgeTTS) return null;
   const neuralVoice = resolveNeuralVoice(voice, gender, lang);
+  const safePitch = normalizeTtsPitch(pitch);
+  const safeRate = normalizeTtsRate(rate);
   const tmpFile = path.join(os.tmpdir(), `tts_${Date.now()}_${Math.random().toString(36).slice(2)}.mp3`);
-  try {
-    const tts = new EdgeTTS({
-      voice: neuralVoice,
-      lang: neuralVoice.split('-').slice(0, 2).join('-') || 'vi-VN',
-      pitch: pitch || '+0Hz',
-      rate: rate || '+0%',
-      outputFormat: 'audio-24khz-48kbitrate-mono-mp3'
+
+  return new Promise((resolve) => {
+    edgeTtsQueue = edgeTtsQueue.then(async () => {
+      try {
+        const tts = new EdgeTTS({
+          voice: neuralVoice,
+          lang: neuralVoice.split('-').slice(0, 2).join('-') || 'vi-VN',
+          pitch: safePitch,
+          rate: safeRate,
+          outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
+          timeout: 4500
+        });
+        await tts.ttsPromise(text, tmpFile);
+        if (fs.existsSync(tmpFile)) {
+          const buf = fs.readFileSync(tmpFile);
+          try { fs.unlinkSync(tmpFile); } catch (e) {}
+          resolve(buf);
+          return;
+        }
+      } catch (err) {
+        if (fs.existsSync(tmpFile)) {
+          try { fs.unlinkSync(tmpFile); } catch (e) {}
+        }
+        console.warn('[server.cjs] EdgeTTS synthesis warning:', err?.message || err);
+      }
+      resolve(null);
     });
-    await tts.ttsPromise(text, tmpFile);
-    if (fs.existsSync(tmpFile)) {
-      const buf = fs.readFileSync(tmpFile);
-      try { fs.unlinkSync(tmpFile); } catch (e) {}
-      return buf;
-    }
-  } catch (err) {
-    if (fs.existsSync(tmpFile)) {
-      try { fs.unlinkSync(tmpFile); } catch (e) {}
-    }
-    console.warn('[server.cjs] EdgeTTS synthesis error:', err?.message || err);
-  }
-  return null;
+  });
 }
 
-// TTS Proxy with Ultra-Fast In-Memory Cache & Neural Voice Engine
+// TTS Proxy with Ultra-Fast In-Memory Cache & Multi-Tier Fallback
 app.get('/api/tts', async (req, res) => {
   const text = (req.query.text || '').toString().trim();
   const voice = (req.query.voice || '').toString().trim();
@@ -2120,7 +2163,7 @@ app.get('/api/tts', async (req, res) => {
     return res.send(cached);
   }
 
-  // 1. Tận dụng Microsoft Azure Neural Voice Engine (Nam Minh cho Nam, Hoài My cho Nữ)
+  // 1. Tận dụng Microsoft Azure Neural Voice Engine
   const neuralBuffer = await synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch, rate });
   if (neuralBuffer) {
     if (ttsAudioBufferCache.size > 500) {
@@ -2165,19 +2208,32 @@ app.get('/api/tts', async (req, res) => {
 });
 
 app.post('/api/tts', async (req, res) => {
-  const { text, platform, voice, gender, lang = 'vi', pitch = '+0Hz', rate = '+0%' } = req.body || {};
+  const { text, platform, voice, voiceId, gender, lang = 'vi', pitch = '+0Hz', rate = '+0%' } = req.body || {};
   const txt = (text || '').toString().trim();
   if (!txt) return res.status(400).json({ error: 'Missing text parameter' });
 
+  const activeVoice = voice || voiceId;
+  const cacheKey = `${activeVoice}_${gender}_${pitch}_${rate}_${lang}_${txt}`;
+  if (ttsAudioBufferCache.has(cacheKey)) {
+    const cached = ttsAudioBufferCache.get(cacheKey);
+    return res.json({ success: true, audioBase64: cached.toString('base64') });
+  }
+
   // 1. Edge Neural TTS
-  const neuralBuffer = await synthesizeNeuralTTSBuffer({ text: txt, voice, gender, lang, pitch, rate });
+  const neuralBuffer = await synthesizeNeuralTTSBuffer({ text: txt, voice: activeVoice, gender, lang, pitch, rate });
   if (neuralBuffer) {
+    if (ttsAudioBufferCache.size > 500) {
+      const first = ttsAudioBufferCache.keys().next().value;
+      ttsAudioBufferCache.delete(first);
+    }
+    ttsAudioBufferCache.set(cacheKey, neuralBuffer);
     return res.json({ success: true, audioBase64: neuralBuffer.toString('base64') });
   }
 
   // 2. Fallback Google Translate TTS
   const encodedText = encodeURIComponent(txt.slice(0, 200));
-  const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=vi&client=tw-ob`;
+  const encodedLang = encodeURIComponent((lang || 'vi').toLowerCase().startsWith('vi') ? 'vi' : (lang || 'vi'));
+  const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=${encodedLang}&client=tw-ob`;
 
   https.get(ttsUrl, {
     headers: {

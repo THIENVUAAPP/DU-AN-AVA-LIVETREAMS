@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.3.1';
+export const APP_VERSION = '2.3.2';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🔧 Khắc Phục Lỗi Mở Tab Giọng Bán Hàng & Dịch Vụ',
-    description: 'Sửa dứt điểm lỗi crash component khiến người dùng không mở được Tab Giọng Bán Hàng. Giao diện bảng danh sách 20 giọng bán hàng kèm bộ điều chỉnh Tốc độ (Speed) và Âm lượng (Volume) giờ đây hoạt động mượt mà 100%.'
+    title: '🎙️ Tái Cấu Trúc Toàn Diện Hệ Thống Giọng Đọc AI — Khác Biệt Tuyệt Đối 100%',
+    description: 'Nâng cấp toàn bộ kho giọng đọc với âm sắc, cao độ (Pitch), tốc độ (Speed), EQ Formant và câu thoại đặc trưng riêng biệt 100%. Chuẩn xác Nam ra Nam (trầm hùng, đĩnh đạc, uy lực), Nữ ra Nữ (ngọt ngào, duyên dáng, sang trọng), phân biệt rõ nét từng vùng miền (Bắc, Trung, Nam, Tây, Huế, Đà Nẵng, Nghệ Tĩnh) và từng ngành nghề (Bán Hàng, MC BTV, BLV Game PK, Podcast, TVC).'
   },
   {
-    title: '👑 Kích Hoạt Độc Lập 89 Giọng Nói Vùng Miền — Xóa Bỏ Hoàn Toàn Trùng Lặp',
-    description: 'Sửa lỗi sập kết nối khiến giọng đọc trước đó bị fallback về 1 giọng duy nhất của trình duyệt. Kích hoạt chuẩn xác Microsoft Azure Neural Voice kết hợp hệ thống Parametric EQ Formant DSP riêng cho từng giọng: Miền Tây sông nước ngọt ngào, Xứ Huế e ấp da diết, Sài Gòn KOC bắt trend, Hà Nội BTV chuẩn mực.'
+    title: '⚡ Bộ Xử Lý Edge Neural TTS & Web Audio DSP Chống Trùng Lặp',
+    description: 'Tối ưu hóa hàng đợi kết nối TTS WebSocket, xử lý chuẩn xác cao độ & tốc độ theo từng chất giọng, kết hợp bộ giải mã DSP 4 băng tần (Lowshelf, Mid Clarity, Presence, High Air, Dynamics Compressor) đảm bảo không bao giờ bị rơi về giọng robot mặc định.'
   },
   {
-    title: '⚡ Kết Nối Đa Môi Trường Ổn Định Tuyệt Đối',
-    description: 'Tự động nhận diện Origin và Hostname máy chủ, đảm bảo việc nghe thử và phát giọng AI hoạt động trơn tru trên mọi nền tảng (Web, App, Local LAN, Cloudflare Tunnel).'
+    title: '🎛️ Nâng Cấp VoiceStudio & Bộ Lọc Nhanh 1-Chạm',
+    description: 'VoiceStudio bổ sung thanh tab lọc nhanh theo thể loại (Nữ VN, Nam VN, Bán Hàng, Miền Bắc, Miền Trung, Miền Nam, Miền Tây, Quốc Tế) cùng tính năng nghe thử chuẩn xác câu thoại mẫu và tùy biến 6 thanh trượt cảm xúc phòng thu chuyên nghiệp.'
   }
 ];
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { LIVE_CATEGORIES, addLiveMedia, getAllLiveMedia, deleteLiveMedia } from '../../lib/liveKhoDB';
+import { ALL_SYSTEM_VOICES } from '../../utils/voiceSyncService';
 import { 
   Download, Monitor, ArrowRight, UserSquare2, Cpu, Package, Plus, 
   BookOpen, MessageCircle, Music, ShoppingCart, GraduationCap, Gamepad2,
@@ -195,13 +196,19 @@ export default function LivestreamAISetup() {
     if (!lipsyncScript.trim()) return false;
     setIsGeneratingTTS(true);
     try {
+      const matchedVoice = ALL_SYSTEM_VOICES.find(v => v.id === selectedVoiceId);
       const res = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: lipsyncScript,
           platform: selectedVoicePlatform,
-          voiceId: selectedVoiceId
+          voice: matchedVoice?.neuralVoice || selectedVoiceId,
+          voiceId: selectedVoiceId,
+          gender: matchedVoice?.gender || 'Female',
+          lang: matchedVoice?.lang || 'vi-VN',
+          pitch: matchedVoice?.edgePitch || '+0Hz',
+          rate: matchedVoice?.edgeRate || '+0%'
         })
       });
       const data = await res.json();

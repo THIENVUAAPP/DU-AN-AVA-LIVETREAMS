@@ -33,6 +33,18 @@ const SAMPLE_SCRIPTS = [
   { label: 'Hỏi Đáp & Tư Vấn', text: 'Các bạn có câu hỏi nào về sản phẩm hay cần em tư vấn chiều cao cân nặng để chọn size chuẩn nhất thì cứ bình luận bên dưới nhé!' }
 ];
 
+const CATEGORY_TABS = [
+  { id: 'all', label: 'Tất cả' },
+  { id: 'female', label: 'Nữ VN 👩' },
+  { id: 'male', label: 'Nam VN 👨' },
+  { id: 'sales', label: 'Bán Hàng 🛍️' },
+  { id: 'bac', label: 'Miền Bắc 🏛️' },
+  { id: 'trung', label: 'Miền Trung 🌊' },
+  { id: 'nam', label: 'Miền Nam 🏙️' },
+  { id: 'tay', label: 'Miền Tây 🌾' },
+  { id: 'intl', label: 'Quốc Tế 🌍' },
+];
+
 const VOICE_PRESETS = ALL_SYSTEM_VOICES.map(v => ({
   id: v.id,
   name: v.name,
@@ -41,15 +53,21 @@ const VOICE_PRESETS = ALL_SYSTEM_VOICES.map(v => ({
   speed: v.rate || 1.0,
   tag: v.badge || (v.tier === 'pro' ? '👑 STUDIO VIP' : '💎 AI PRO VOICE'),
   lang: v.lang === 'vi-VN' ? 'Tiếng Việt' : v.lang,
-  previewUrl: v.previewUrl
+  dialect: v.dialect || '',
+  region: v.region || 'vi',
+  styleCategory: v.styleCategory || '',
+  sampleText: v.sampleText || 'Xin chào bạn, tôi là giọng đọc AI chuyên nghiệp.',
+  previewUrl: v.previewUrl,
+  rawVoice: v
 }));
 
 export default function AIVoiceModule() {
   const [selectedVoiceId, setSelectedVoiceId] = useState('el_adam');
   const [searchVoice, setSearchVoice] = useState('');
+  const [activeCategoryTab, setActiveCategoryTab] = useState('all');
   const [selectedEmotion, setSelectedEmotion] = useState('natural');
   
-  // 6 Thanh trượt cảm xúc & thông số (y hệt ảnh)
+  // 6 Thanh trượt cảm xúc & thông số
   const [emotionIntensity, setEmotionIntensity] = useState(80); // Cường độ cảm xúc
   const [stability, setStability] = useState(75); // Độ ổn định
   const [styleExaggeration, setStyleExaggeration] = useState(70); // Khuếch đại phong cách
@@ -66,10 +84,23 @@ export default function AIVoiceModule() {
 
   const selectedVoice = VOICE_PRESETS.find(v => v.id === selectedVoiceId) || VOICE_PRESETS[0];
 
-  const filteredVoices = VOICE_PRESETS.filter(v => 
-    v.name.toLowerCase().includes(searchVoice.toLowerCase()) || 
-    v.lang.toLowerCase().includes(searchVoice.toLowerCase())
-  );
+  const filteredVoices = VOICE_PRESETS.filter(v => {
+    const matchSearch = v.name.toLowerCase().includes(searchVoice.toLowerCase()) || 
+      v.lang.toLowerCase().includes(searchVoice.toLowerCase()) ||
+      v.sampleText.toLowerCase().includes(searchVoice.toLowerCase());
+    
+    if (!matchSearch) return false;
+    if (activeCategoryTab === 'all') return true;
+    if (activeCategoryTab === 'female') return v.gender === 'female' && v.region === 'vi';
+    if (activeCategoryTab === 'male') return v.gender === 'male' && v.region === 'vi';
+    if (activeCategoryTab === 'sales') return v.styleCategory === 'sales_services' || v.rawVoice?.styleCategory === 'banhang' || v.id.startsWith('vn_sale_');
+    if (activeCategoryTab === 'bac') return v.dialect === 'bac' || v.rawVoice?.category?.includes('Bắc');
+    if (activeCategoryTab === 'trung') return v.dialect === 'trung' || v.dialect === 'hue' || v.dialect === 'danang' || v.dialect === 'nghean' || v.rawVoice?.category?.includes('Trung');
+    if (activeCategoryTab === 'nam') return v.dialect === 'nam' || v.rawVoice?.category?.includes('Nam');
+    if (activeCategoryTab === 'tay') return v.dialect === 'tay' || v.rawVoice?.category?.includes('Tây');
+    if (activeCategoryTab === 'intl') return v.region !== 'vi' || v.rawVoice?.category?.includes('Quốc Tế') || v.id.startsWith('intl_') || v.id.startsWith('el_en_') || v.id.startsWith('el_fr_') || v.id.startsWith('el_ja_');
+    return true;
+  });
 
   const handleResetDefaults = () => {
     setSelectedEmotion('natural');
@@ -87,7 +118,19 @@ export default function AIVoiceModule() {
     if (!scriptText || !scriptText.trim()) return;
     setIsPlaying(true);
     try {
-      await previewVoiceAudio(selectedVoice.id, scriptText.trim());
+      const activeFullVoice = ALL_SYSTEM_VOICES.find(v => v.id === selectedVoiceId) || selectedVoice.rawVoice || selectedVoice;
+      await previewVoiceAudio(activeFullVoice, scriptText.trim(), {
+        rate: speed,
+        pitch: pitch,
+        emotion: selectedEmotion,
+        emotionIntensity,
+        stability,
+        styleExaggeration,
+        clarity,
+        warmth,
+        studioAcoustics,
+        isTest: true
+      });
     } catch (e) {
       console.warn('Lỗi phát giọng đọc:', e);
     } finally {
@@ -118,7 +161,7 @@ export default function AIVoiceModule() {
               <span className="text-base font-black tracking-wide text-white">VoiceStudio</span>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-pink-500/20 text-pink-400 border border-pink-500/30">PRO NEURAL</span>
             </div>
-            <p className="text-[11px] text-gray-400">Phòng thu âm thanh & Tùy biến giọng đọc AI đa sắc thái cảm xúc cho Livestream</p>
+            <p className="text-[11px] text-gray-400">Kho 89+ giọng đọc AI đa vùng miền, đa cảm xúc, 100% âm sắc riêng biệt cho Livestream</p>
           </div>
         </div>
 
@@ -139,7 +182,7 @@ export default function AIVoiceModule() {
         {/* ========================================================= */}
         {/* CỘT 1 (BÊN TRÁI): DANH SÁCH GIỌNG NÓI & TÌM KIẾM */}
         {/* ========================================================= */}
-        <div className="w-72 flex-shrink-0 flex flex-col gap-3 h-full">
+        <div className="w-80 flex-shrink-0 flex flex-col gap-3 h-full">
           {/* Card Giọng Đang Dùng */}
           <div className="p-3.5 rounded-xl border border-pink-500/30 bg-[#161622] shadow-lg">
             <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center justify-between">
@@ -148,22 +191,41 @@ export default function AIVoiceModule() {
             </div>
             <div className="font-black text-sm text-white">{selectedVoice.name}</div>
             <div className="text-[11px] text-gray-400 mt-0.5">
-              {selectedVoice.gender}, pitch: {pitch.toFixed(2)}, speed: {speed.toFixed(2)}
+              {selectedVoice.gender === 'male' ? '👨 Nam' : '👩 Nữ'}, pitch: {pitch.toFixed(2)}, speed: {speed.toFixed(2)}
             </div>
-            <button className="w-full mt-2.5 py-1 text-[11px] font-bold text-pink-400 hover:text-pink-300 bg-pink-500/10 hover:bg-pink-500/20 rounded-lg transition-all border border-pink-500/20">
-              + Giọng mới
-            </button>
+            <div className="text-[10px] text-pink-400/80 italic mt-1 line-clamp-2">
+              "{selectedVoice.sampleText}"
+            </div>
           </div>
 
           {/* Danh Sách Giọng Được Thiết Kế */}
           <div className="flex-1 rounded-xl border border-white/10 bg-[#161622] p-3 flex flex-col overflow-hidden">
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">GIỌNG NÓI ĐƯỢC THIẾT KẾ</div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">KHO GIỌNG ĐỌC ({filteredVoices.length})</div>
+            </div>
+
+            {/* Category Filter Tabs */}
+            <div className="flex items-center gap-1 overflow-x-auto pb-2 mb-2 no-scrollbar">
+              {CATEGORY_TABS.map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveCategoryTab(tab.id)}
+                  className={`px-2 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all border ${
+                    activeCategoryTab === tab.id
+                      ? 'bg-pink-500/20 text-pink-300 border-pink-500/50 shadow-sm'
+                      : 'bg-black/30 text-gray-400 border-white/5 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
             
             {/* Ô tìm kiếm */}
             <div className="relative mb-2">
               <input 
                 type="text" 
-                placeholder="🔍 Tìm kiếm..."
+                placeholder="🔍 Tìm kiếm tên, vùng miền, chủ đề..."
                 value={searchVoice}
                 onChange={(e) => setSearchVoice(e.target.value)}
                 className="w-full px-3 py-1.5 text-xs bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-500 outline-none focus:border-pink-500 transition-colors"
@@ -189,22 +251,26 @@ export default function AIVoiceModule() {
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-xs text-white truncate">{v.name}</span>
+                      <span className="font-bold text-xs text-white truncate max-w-[180px]">{v.name}</span>
                       <span className="text-[9px] font-black text-emerald-400 px-1 py-0.2 bg-emerald-500/10 rounded">
                         {v.tag}
                       </span>
                     </div>
+                    <p className="text-[10px] text-gray-400 italic line-clamp-1 mb-1.5">
+                      "{v.sampleText}"
+                    </p>
                     <div className="text-[10px] text-gray-400 flex items-center justify-between">
-                      <span>{v.gender}, pitch: {v.pitch}, speed: {v.speed}</span>
+                      <span>{v.gender === 'male' ? '👨 Nam' : '👩 Nữ'} • {v.lang}</span>
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
-                          previewVoiceAudio(v.id, "Xin chào bạn, tôi là giọng đọc AI chuyên nghiệp.");
+                          previewVoiceAudio(v.rawVoice || v, v.sampleText, { isTest: true });
                         }}
-                        className="p-1 rounded bg-white/10 hover:bg-pink-600 text-white transition-all"
-                        title="Nghe thử giọng này"
+                        className="p-1 px-2 flex items-center gap-1 rounded bg-white/10 hover:bg-pink-600 text-white transition-all text-[10px] font-bold"
+                        title="Nghe thử câu mẫu giọng này"
                       >
                         <Play size={10} />
+                        <span>Thử</span>
                       </button>
                     </div>
                   </div>

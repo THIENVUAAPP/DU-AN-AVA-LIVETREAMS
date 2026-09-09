@@ -57,13 +57,37 @@ export default defineConfig({
       configureServer(server) {
         server.middlewares.use(async (req, res, next) => {
           if (req.url.startsWith('/api/tts')) {
-            const urlObj = new URL(req.url, 'http://localhost');
-            const text = (urlObj.searchParams.get('text') || '').trim();
-            const voice = (urlObj.searchParams.get('voice') || '').trim();
-            const gender = (urlObj.searchParams.get('gender') || '').trim();
-            const lang = (urlObj.searchParams.get('lang') || 'vi').trim();
-            const pitch = (urlObj.searchParams.get('pitch') || '+0Hz').trim();
-            const rate = (urlObj.searchParams.get('rate') || '+0%').trim();
+            let text = '';
+            let voice = '';
+            let gender = '';
+            let lang = 'vi';
+            let pitch = '+0Hz';
+            let rate = '+0%';
+
+            if (req.method === 'POST') {
+              try {
+                const bodyBuf = await new Promise((resolve) => {
+                  const chunks = [];
+                  req.on('data', c => chunks.push(c));
+                  req.on('end', () => resolve(Buffer.concat(chunks)));
+                });
+                const body = JSON.parse(bodyBuf.toString('utf8') || '{}');
+                text = (body.text || '').trim();
+                voice = (body.voice || body.voiceId || '').trim();
+                gender = (body.gender || '').trim();
+                lang = (body.lang || 'vi').trim();
+                pitch = (body.pitch || '+0Hz').trim();
+                rate = (body.rate || '+0%').trim();
+              } catch (e) {}
+            } else {
+              const urlObj = new URL(req.url, 'http://localhost');
+              text = (urlObj.searchParams.get('text') || '').trim();
+              voice = (urlObj.searchParams.get('voice') || '').trim();
+              gender = (urlObj.searchParams.get('gender') || '').trim();
+              lang = (urlObj.searchParams.get('lang') || 'vi').trim();
+              pitch = (urlObj.searchParams.get('pitch') || '+0Hz').trim();
+              rate = (urlObj.searchParams.get('rate') || '+0%').trim();
+            }
 
             if (text && EdgeTTS) {
               let neuralVoice = voice;
@@ -84,24 +108,34 @@ export default defineConfig({
                 else neuralVoice = isMale ? 'vi-VN-NamMinhNeural' : 'vi-VN-HoaiMyNeural';
               }
 
+              const safePitch = pitch && pitch.includes('%') ? pitch : (pitch && pitch.includes('Hz') ? pitch : '+0Hz');
+              const safeRate = rate && rate.includes('%') ? rate : '+0%';
+
               const tmpFile = path.resolve(os.tmpdir(), `tts_vite_${Date.now()}_${Math.random().toString(36).slice(2)}.mp3`);
               try {
                 const tts = new EdgeTTS({
                   voice: neuralVoice,
                   lang: neuralVoice.split('-').slice(0, 2).join('-') || 'vi-VN',
-                  pitch,
-                  rate,
-                  outputFormat: 'audio-24khz-48kbitrate-mono-mp3'
+                  pitch: safePitch,
+                  rate: safeRate,
+                  outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
+                  timeout: 4500
                 });
                 await tts.ttsPromise(text, tmpFile);
                 if (fs.existsSync(tmpFile)) {
                   const buf = fs.readFileSync(tmpFile);
                   try { fs.unlinkSync(tmpFile); } catch (e) {}
                   res.setHeader('Access-Control-Allow-Origin', '*');
-                  res.setHeader('Content-Type', 'audio/mpeg');
-                  res.setHeader('Cache-Control', 'public, max-age=86400');
-                  res.statusCode = 200;
-                  res.end(buf);
+                  if (req.method === 'POST') {
+                    res.setHeader('Content-Type', 'application/json');
+                    res.statusCode = 200;
+                    res.end(JSON.stringify({ success: true, audioBase64: buf.toString('base64') }));
+                  } else {
+                    res.setHeader('Content-Type', 'audio/mpeg');
+                    res.setHeader('Cache-Control', 'public, max-age=86400');
+                    res.statusCode = 200;
+                    res.end(buf);
+                  }
                   return;
                 }
               } catch (e) {
