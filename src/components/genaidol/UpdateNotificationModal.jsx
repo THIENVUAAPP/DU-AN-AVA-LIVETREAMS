@@ -2,17 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.5.7';
+export const APP_VERSION = '2.5.8';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👑 Nâng Cấp Toàn Diện Cao Độ & Âm Sắc 21 Giọng Nữ 4 Vùng Miền Độc Bản',
-    description: 'Tất cả các giọng đọc nữ đều sở hữu cao độ (Pitch), nhịp điệu (Rate) và màu âm DSP riêng biệt hoàn toàn (Hà Nội BTV, Huế ngọt ngào, Cần Thơ đằm thắm, Sài Gòn GenZ, VTuber nhí nhảnh...), tuyệt đối không trùng lặp và cảm xúc chân thật như người thật.'
+    title: '⚡ Chuyển Giọng Đọc Là Phát Ngay Lập Tức 0ms',
+    description: 'Bất cứ khi nào người dùng chọn hoặc chuyển sang bất kỳ giọng đọc nào trong danh sách, kịch bản sẽ tự động phát ngay lập tức (0.000s) với giọng mới mà không cần phải bấm thêm nút nào!'
   },
   {
-    title: '⚡ Phát Ngay Lập Tức 0.000s Khi Bấm Nghe Thử Kịch Bản',
-    description: 'Tự động Pre-warm RAM Cache câu thoại ngay khi soạn thảo hoặc chọn giọng: Khi bấm Phát/Nghe thử kịch bản, âm thanh được giải mã sẵn phát ra NGAY TỨC THÌ 0ms không phải chờ mạng.'
+    title: '👑 Nâng Cấp Toàn Diện Cao Độ & Âm Sắc 21 Giọng Nữ 4 Vùng Miền Độc Bản',
+    description: 'Tất cả các giọng đọc nữ đều sở hữu cao độ (Pitch), nhịp điệu (Rate) và màu âm DSP riêng biệt hoàn toàn (Hà Nội BTV, Huế ngọt ngào, Cần Thơ đằm thắm, Sài Gòn GenZ, VTuber nhí nhảnh...), tuyệt đối không trùng lặp và cảm xúc chân thật như người thật.'
   },
   {
     title: '🎙️ Chuyển Đổi Giọng Đọc Độc Lập & Không Bao Giờ Chồng Chéo',

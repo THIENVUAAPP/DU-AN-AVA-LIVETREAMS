@@ -159,7 +159,7 @@ export default function EventVoiceTester({
     };
   }, []);
 
-  // Đổi giọng: Ngay lập tức lưu và chuyển giọng mượt mà không bị ngắt quãng
+  // Đổi giọng: Ngay lập tức lưu và PHÁT NGAY LẬP TỨC kịch bản với giọng mới được chọn (0ms)
   const handleVoiceSelect = (voiceId) => {
     if (!voiceId) return;
     setSelectedVoiceId(voiceId);
@@ -171,35 +171,32 @@ export default function EventVoiceTester({
 
     const newVoiceObj = ALL_SYSTEM_VOICES.find(v => v.id === voiceId) || { id: voiceId, lang: 'vi-VN', gender: 'Female' };
 
-    if (isPlayingRef.current) {
-      if (queueTimeoutRef.current) {
-        clearTimeout(queueTimeoutRef.current);
-        queueTimeoutRef.current = null;
-      }
-      stopVoiceAudio();
-      
-      const curIdx = currentSentenceIdxRef.current;
-      const sentences = sentencesRef.current;
-      
-      // Lookahead prefetch tức thì cho câu hiện tại và câu kế tiếp với giọng mới
-      if (sentences && sentences[curIdx]) {
-        prefetchTTSAudio(sentences[curIdx], newVoiceObj, { rate: speedRef.current });
-      }
-      if (sentences && sentences[curIdx + 1]) {
-        prefetchTTSAudio(sentences[curIdx + 1], newVoiceObj, { rate: speedRef.current });
-      }
-
-      playSentenceAtIndex(curIdx, newVoiceObj);
-    } else {
-      // Khi không phát: Tự động pre-warm cache câu đầu tiên của giọng mới
-      const sentences = splitIntoSentences(text);
-      if (sentences && sentences.length > 0) {
-        prefetchTTSAudio(sentences[0], newVoiceObj, { rate: speedRef.current });
-        if (sentences.length > 1) {
-          prefetchTTSAudio(sentences[1], newVoiceObj, { rate: speedRef.current });
-        }
-      }
+    // Dừng âm thanh cũ sạch sẽ và hủy mọi timer chờ
+    if (queueTimeoutRef.current) {
+      clearTimeout(queueTimeoutRef.current);
+      queueTimeoutRef.current = null;
     }
+    stopVoiceAudio();
+
+    if (!text || !text.trim()) return;
+
+    const sentences = splitIntoSentences(text);
+    if (!sentences || sentences.length === 0) return;
+
+    sentencesRef.current = sentences;
+    isPlayingRef.current = true;
+    setIsPlaying(true);
+    setTotalSentences(sentences.length);
+    setCurrentSentenceIdx(0);
+    currentSentenceIdxRef.current = 0;
+
+    // Pipeline prefetch toàn bộ các câu trong kịch bản cho giọng mới
+    sentences.forEach((s) => {
+      prefetchTTSAudio(s, newVoiceObj, { rate: speedRef.current });
+    });
+
+    // Phát ngay lập tức 0ms câu đầu tiên với giọng mới
+    playSentenceAtIndex(0, newVoiceObj);
   };
 
   /**
