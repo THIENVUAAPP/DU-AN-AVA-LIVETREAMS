@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Volume2, VolumeX, Play, Square, Sparkles, ChevronDown, Check, Gauge, Sliders, Star } from 'lucide-react';
+import { Volume2, VolumeX, Play, Square, Sparkles, ChevronDown, Check, Gauge, Sliders, Star, Timer, Wand2 } from 'lucide-react';
 import { 
   ALL_SYSTEM_VOICES, 
   VIETNAMESE_HOTTREND_VOICES,
@@ -13,30 +13,51 @@ import {
   cleanTextForVoiceSpeech,
   isVoiceFavorite,
   getFavoriteVoiceIds,
-  getDualVoiceConfig
+  getDualVoiceConfig,
+  polishAndOptimizeScript
 } from '../../utils/voiceSyncService';
 
-const SPEED_OPTIONS = [
+export const SPEED_OPTIONS = [
   { value: 0.75, label: '0.75x' },
+  { value: 0.85, label: '0.85x' },
   { value: 0.90, label: '0.9x' },
   { value: 1.00, label: '1.0x (Chuẩn)' },
   { value: 1.10, label: '1.1x' },
+  { value: 1.15, label: '1.15x' },
+  { value: 1.20, label: '1.2x' },
   { value: 1.25, label: '1.25x' },
-  { value: 1.50, label: '1.5x' }
+  { value: 1.50, label: '1.5x' },
+  { value: 1.75, label: '1.75x' },
+  { value: 2.00, label: '2.0x' }
+];
+
+export const PAUSE_OPTIONS = [
+  { value: 0.00, label: '0.0s (Liền mạch)' },
+  { value: 0.05, label: '0.05s' },
+  { value: 0.10, label: '0.1s (Siêu ngắn)' },
+  { value: 0.15, label: '0.15s' },
+  { value: 0.20, label: '0.2s' },
+  { value: 0.25, label: '0.25s (Chuẩn)' },
+  { value: 0.30, label: '0.3s' },
+  { value: 0.50, label: '0.5s' },
+  { value: 0.75, label: '0.75s' },
+  { value: 1.00, label: '1.0s (Nghỉ 1s)' }
 ];
 
 /**
  * Universal Voice Selector & Tester Component
  * - Đồng bộ 100% toàn bộ hệ thống giọng đọc chuẩn: Giọng Ava Live, Giọng Hot Trend, Giọng Bán Hàng, Giọng Nữ 4 Vùng Miền, Giọng Nam, Giọng Quốc Tế
  * - Ưu tiên hiển thị trên cùng các giọng đọc đã được gắn dấu sao (⭐ Star Favorites)
- * - Tốc độ đọc (Speed Rate 0.75x - 1.5x) chọn ăn ngay 100% tức thì (kể cả 1.0x Chuẩn)
+ * - Tốc độ đọc (Speed Rate 0.75x - 2.0x) chọn ăn ngay 100% tức thì (kể cả 1.15x, 1.25x, 2.0x...)
+ * - Tùy chỉnh khoảng nghỉ giữa các câu từ 0.0s đến 1.0s mượt mà, không khựng
  * - Khi đang nghe thử kịch bản, đổi giọng nào là nhảy qua phát ngay giọng đó tại câu hiện tại
- * - Đọc trọn vẹn 100% kịch bản xuyên suốt từ câu đầu đến câu cuối
+ * - Đọc trọn vẹn 100% kịch bản xuyên suốt từ câu đầu đến câu cuối với cảm xúc nhấn nhá lấy hơi
  */
 export default function EventVoiceTester({
   text = '',
   defaultVoiceId = 'free_vi_female',
   onVoiceChange = null,
+  onScriptOptimized = null,
   label = 'Nghe thử câu thoại',
   theme = 'light', // 'light' | 'dark'
   compact = false,
@@ -53,18 +74,28 @@ export default function EventVoiceTester({
     return defaultVoiceId || 'free_vi_female';
   };
 
+  const getInitialPause = () => {
+    try {
+      const saved = localStorage.getItem('avalive_pause_between_sentences');
+      if (saved !== null && !isNaN(Number(saved))) return Number(saved);
+    } catch (e) {}
+    return 0.10;
+  };
+
   const [selectedVoiceId, setSelectedVoiceId] = useState(getInitialVoice);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSentenceIdx, setCurrentSentenceIdx] = useState(0);
   const [totalSentences, setTotalSentences] = useState(0);
   const [volume, setVolume] = useState(1.0); // 0.0 to 1.0
-  const [speed, setSpeed] = useState(1.0); // 0.75 to 1.5
+  const [speed, setSpeed] = useState(1.0); // 0.75 to 2.0
+  const [pauseDuration, setPauseDuration] = useState(getInitialPause); // 0.0 to 1.0s
   const [favoriteIds, setFavoriteIds] = useState(getFavoriteVoiceIds());
 
   const isPlayingRef = useRef(false);
   const queueTimeoutRef = useRef(null);
   const volumeRef = useRef(1.0);
   const speedRef = useRef(1.0);
+  const pauseDurationRef = useRef(getInitialPause());
   const selectedVoiceRef = useRef(getInitialVoice());
   const currentSentenceIdxRef = useRef(0);
   const sentencesRef = useRef([]);
@@ -76,6 +107,10 @@ export default function EventVoiceTester({
   useEffect(() => {
     speedRef.current = speed;
   }, [speed]);
+
+  useEffect(() => {
+    pauseDurationRef.current = pauseDuration;
+  }, [pauseDuration]);
 
   useEffect(() => {
     if (defaultVoiceId && defaultVoiceId !== 'free_vi_female') {
@@ -234,12 +269,33 @@ export default function EventVoiceTester({
         rate: speedRef.current,
         onEnd: () => {
           if (!isPlayingRef.current) return;
+          const pauseMs = Math.max(0, Math.round((pauseDurationRef.current !== undefined ? pauseDurationRef.current : 0.1) * 1000));
           queueTimeoutRef.current = setTimeout(() => {
             playSentenceAtIndex(index + 1);
-          }, 250);
+          }, pauseMs);
         }
       }
     );
+  };
+
+  const handlePauseChange = (newPause) => {
+    const val = Number(newPause);
+    setPauseDuration(val);
+    pauseDurationRef.current = val;
+    try {
+      localStorage.setItem('avalive_pause_between_sentences', String(val));
+    } catch (e) {}
+  };
+
+  const handleOptimizeClick = () => {
+    if (!text || !text.trim()) {
+      alert('Chưa có nội dung câu thoại hoặc kịch bản để tối ưu!');
+      return;
+    }
+    const optimized = polishAndOptimizeScript(text);
+    if (onScriptOptimized) {
+      onScriptOptimized(optimized);
+    }
   };
 
   const handleTogglePlay = (e) => {
@@ -390,6 +446,20 @@ export default function EventVoiceTester({
           ))}
         </select>
 
+        {/* Pause Duration Selector */}
+        <select
+          value={pauseDuration}
+          onChange={(e) => handlePauseChange(Number(e.target.value))}
+          className={`text-[11px] font-bold rounded-lg px-1.5 py-1 border transition-all cursor-pointer focus:outline-none ${
+            isDark ? 'bg-[#1e2230] text-emerald-300 border-white/10' : 'bg-white text-emerald-700 border-gray-300'
+          }`}
+          title="Thời gian nghỉ giữa các câu thoại"
+        >
+          {PAUSE_OPTIONS.map(opt => (
+            <option key={`opt_pause_${opt.value}`} value={opt.value}>⏳ {opt.label}</option>
+          ))}
+        </select>
+
         {/* Play/Stop Button */}
         <button
           type="button"
@@ -433,13 +503,13 @@ export default function EventVoiceTester({
             )}
           </div>
           <div className={`text-[11px] truncate max-w-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            Đọc trọn vẹn 100% kịch bản từ câu đầu đến câu cuối với ngữ điệu và khẩu hình miệng AI chuẩn xác.
+            Đọc chuẩn cảm xúc, có lấy hơi, nhấn nhá cao trào, mượt mà suôn sẻ không khựng.
           </div>
         </div>
       </div>
 
-      {/* Voice Dropdown + Speed Selector + Volume Slider + Play Button */}
-      <div className="flex items-center gap-2.5 flex-wrap shrink-0 justify-start lg:justify-end">
+      {/* Voice Dropdown + Speed Selector + Pause Duration + Volume Slider + Play Button */}
+      <div className="flex items-center gap-2 flex-wrap shrink-0 justify-start lg:justify-end">
         
         {/* 1. Chọn giọng */}
         <div className="flex items-center gap-1.5">
@@ -449,7 +519,7 @@ export default function EventVoiceTester({
           <select
             value={selectedVoiceId}
             onChange={(e) => handleVoiceSelect(e.target.value)}
-            className={`text-xs font-bold rounded-xl px-2.5 py-1.5 border transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-purple-500 max-w-[280px] truncate ${
+            className={`text-xs font-bold rounded-xl px-2.5 py-1.5 border transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-purple-500 max-w-[240px] truncate ${
               isDark 
                 ? 'bg-[#1e2230] text-amber-300 border-white/10 hover:border-amber-500/50' 
                 : 'bg-white text-gray-800 border-gray-300 hover:border-purple-400 shadow-xs'
@@ -474,7 +544,22 @@ export default function EventVoiceTester({
           </select>
         </div>
 
-        {/* 3. Âm lượng (Volume Slider: 0% - 100%) */}
+        {/* 3. Nghỉ giữa câu (Pause Duration) */}
+        <div className="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-gray-300 shadow-2xs">
+          <Timer size={13} className="text-emerald-600 shrink-0" />
+          <select
+            value={pauseDuration}
+            onChange={(e) => handlePauseChange(Number(e.target.value))}
+            className="text-xs font-bold bg-transparent text-emerald-900 focus:outline-none cursor-pointer"
+            title="Thời gian nghỉ giữa các câu thoại (0s đến 1s)"
+          >
+            {PAUSE_OPTIONS.map(opt => (
+              <option key={`main_pause_${opt.value}`} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* 4. Âm lượng (Volume Slider: 0% - 100%) */}
         <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-gray-300 shadow-2xs">
           {volume === 0 ? <VolumeX size={13} className="text-gray-400 shrink-0" /> : <Volume2 size={13} className="text-purple-600 shrink-0" />}
           <input 
@@ -484,7 +569,7 @@ export default function EventVoiceTester({
             step="0.05"
             value={volume}
             onChange={(e) => handleVolumeChange(e.target.value)}
-            className="w-16 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+            className="w-14 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
             title={`Âm lượng giọng đọc: ${Math.round(volume * 100)}%`}
           />
           <span className="text-[10px] font-bold text-gray-600 min-w-[28px] text-right">
@@ -492,7 +577,20 @@ export default function EventVoiceTester({
           </span>
         </div>
 
-        {/* 4. Nút Nghe Thử Voice / Dừng Lại */}
+        {/* 5. Nút Tối Ưu Kịch Bản (Nếu có callback) */}
+        {onScriptOptimized && (
+          <button
+            type="button"
+            onClick={handleOptimizeClick}
+            className="px-2.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-800 border border-amber-400/50 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shadow-2xs"
+            title="Tự động nâng cấp kịch bản cảm xúc, cuốn hút & chốt đơn đỉnh cao"
+          >
+            <Wand2 size={12} className="text-amber-600" />
+            <span>Tối Ưu Kịch Bản</span>
+          </button>
+        )}
+
+        {/* 6. Nút Nghe Thử Voice / Dừng Lại */}
         {(() => {
           const currentVoiceObj = ALL_SYSTEM_VOICES.find(v => v.id === selectedVoiceId);
           const shortVoiceName = currentVoiceObj?.name?.split('(')[0]?.replace(/ 👑| ⭐| 💎/g, '')?.trim() || 'AI';

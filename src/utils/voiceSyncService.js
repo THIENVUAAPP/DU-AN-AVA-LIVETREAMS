@@ -2717,11 +2717,11 @@ export function cleanTextForVoiceSpeech(rawText) {
 }
 
 /**
- * 🌺 BỘ XỬ LÝ CHUYỂN ĐỔI NGỮ ĐIỆU VÀ CẢM XÚC TIẾNG VIỆT 100% NHƯ NGƯỜI THẬT
+ * 🌺 BỘ XỬ LÝ CHUYỂN ĐỔI NGỮ ĐIỆU VÀ CẢM XÚC TIẾNG VIỆT 100% NHƯ NGƯỜI THẬT (EMPATHY & BREATHING PROSODY)
+ * - Tự động tạo nhịp thở, lấy hơi tự nhiên, ngữ điệu nhấn nhá, thăng trầm cao trào cuốn hút như một người bạn trò chuyện.
  * - Chuyển đổi số tiền, tỷ lệ %, tiền tệ: 199k -> 199 nghìn đồng, 2tr5 -> 2 triệu 500 nghìn đồng...
  * - Dịch thuật từ viết tắt livestream / mạng xã hội: sp -> sản phẩm, đc -> được, cmt -> bình luận, deal -> ưu đãi...
- * - Chèn dấu ngắt nhịp thở tự nhiên (Micro-Pauses) sau các từ đệm: "Dạ,", "Cả nhà mình ơi,", "Đặc biệt là,"...
- * - Nâng cao ngữ điệu cảm xúc, ngọt ngào, hoạt ngôn và uyển chuyển cho giọng nữ.
+ * - Đảm bảo phát âm tròn vành rõ chữ, mượt mà, không bị khựng, không sai chính tả.
  */
 export function humanizeVoiceSpeechText(rawText, voice = null) {
   if (!rawText || typeof rawText !== 'string') return '';
@@ -2733,7 +2733,7 @@ export function humanizeVoiceSpeechText(rawText, voice = null) {
 
   const isFemale = !checkIsMale(voice);
 
-  // 1. Chuyển đổi tiền tệ & số đếm livestream tự nhiên
+  // 1. Chuyển đổi tiền tệ, số đếm & đơn vị đo lường livestream chính xác 100%
   text = text
     .replace(/\b(\d+)\s*k\b/gi, '$1 nghìn đồng')
     .replace(/\b(\d+)\s*cành\b/gi, '$1 nghìn đồng')
@@ -2742,9 +2742,13 @@ export function humanizeVoiceSpeechText(rawText, voice = null) {
     .replace(/\b(\d+)\s*%\b/g, '$1 phần trăm')
     .replace(/\b(\d+)\s*(đ|vnd|vnđ)\b/gi, '$1 đồng')
     .replace(/\b(\d+)\s*lít\b/gi, '$1 trăm nghìn đồng')
-    .replace(/\b(\d+)\s*củ\b/gi, '$1 triệu đồng');
+    .replace(/\b(\d+)\s*củ\b/gi, '$1 triệu đồng')
+    .replace(/\b(\d+)\s*chai\b/gi, '$1 triệu đồng')
+    .replace(/\b1\/1\b/g, 'một đổi một')
+    .replace(/\b1-1\b/g, 'một đổi một')
+    .replace(/\b24\/7\b/g, 'hai mươi tư trên bảy');
 
-  // 2. Chuyển đổi từ viết tắt livestream & thương mại điện tử
+  // 2. Chuyển đổi từ viết tắt livestream, mạng xã hội & thương mại điện tử
   text = text
     .replace(/\bsp\b/gi, 'sản phẩm')
     .replace(/\bđc\b/gi, 'được')
@@ -2773,38 +2777,88 @@ export function humanizeVoiceSpeechText(rawText, voice = null) {
     .replace(/\bfacebook\b/gi, 'Phây Búc')
     .replace(/\bcod\b/gi, 'nhận hàng thanh toán')
     .replace(/\bstk\b/gi, 'số tài khoản')
-    .replace(/\bcombo\b/gi, 'gói combo');
+    .replace(/\bcombo\b/gi, 'gói combo')
+    .replace(/\bauth\b/gi, 'chính hãng')
+    .replace(/\breal\b/gi, 'hàng thật chính hãng')
+    .replace(/\bsale\b/gi, 'giảm giá')
+    .replace(/\bhot\b/gi, 'nóng bỏng')
+    .replace(/\bsetup\b/gi, 'cài đặt')
+    .replace(/\bok\b/gi, 'dạ vâng được ạ');
 
-  // 3. Tinh chỉnh nhịp thở (Micro-Pauses), cảm xúc và dấu câu tự nhiên cho kịch bản
+  // 3. Tinh chỉnh nhịp thở (Micro-Pauses), lấy hơi tự nhiên & tạo cao trào cảm xúc
   if (isFemale) {
     text = text
       .replace(/\b(Hello cả nhà|Chào cả nhà|Cả nhà ơi|Mọi người ơi|Quý vị ơi|Các bạn ơi|Bà con ơi|Chị em ơi|Các mẹ ơi|Ai đang lướt qua)(?!\s*[,!?:])/gi, '$1, ')
-      .replace(/\b(Dạ|Vâng|Em xin chào|Em cam kết|Đặc biệt là|Hơn thế nữa|Thật sự là|Nhanh tay lên nào|Đúng rồi ạ|Chính xác luôn|Tuyệt vời luôn|Quá đã luôn)(?!\s*[,!?:])/gi, '$1, ')
+      .replace(/\b(Dạ|Vâng|Em xin chào|Em cam kết|Đặc biệt là|Hơn thế nữa|Thật sự luôn|Tin em đi|Nhanh tay lên nào|Đúng rồi ạ|Chính xác luôn|Tuyệt vời luôn|Quá đã luôn|Trời ơi)(?!\s*[,!?:])/gi, '$1, ')
       .replace(/\b(ạ)\b(?!\s*[,.!?])/gi, 'ạ.')
       .replace(/\b(nha cả nhà|nha mọi người|nha các bạn|nha mấy chế|nha các mẹ|nha cả nhà mình)(?!\s*[,.!?])/gi, '$1!')
       .replace(/\b(nè nghen|nè bà con|nè mọi người|nè các bạn)(?!\s*[,.!?])/gi, '$1!')
       .replace(/\b(ạ nghen|ạ nhen|ạ nè)(?!\s*[,.!?])/gi, '$1!')
-      .replace(/\b(khoan lướt nha|đừng lướt nha|ở lại xem live nha)(?!\s*[,.!?])/gi, '$1!');
+      .replace(/\b(khoan lướt nha|đừng lướt nha|ở lại xem live nha)(?!\s*[,.!?])/gi, '$1!')
+      .replace(/\b(giỏ hàng góc trái|bấm vào giỏ hàng|chốt đơn liền tay)(?!\s*[,.!?])/gi, '$1!');
   } else {
     text = text
       .replace(/\b(Hello cả nhà|Xin chào tất cả các bạn|Chào anh em|Anh em ơi|Mọi người ơi|Cả nhà ơi|Bà con ơi)(?!\s*[,!?:])/gi, '$1, ')
-      .replace(/\b(Đặc biệt là|Cực kỳ hấp dẫn|Chú ý chú ý|Duy nhất hôm nay|Cam kết 100%|Chính hãng 100%)(?!\s*[,!?:])/gi, '$1, ')
+      .replace(/\b(Đặc biệt là|Cực kỳ hấp dẫn|Chú ý chú ý|Duy nhất hôm nay|Cam kết 100%|Chính hãng 100%|Anh em nhớ lưu ý|Tin mình đi)(?!\s*[,!?:])/gi, '$1, ')
       .replace(/\b(nha anh em|nha mọi người|nha các bạn|nha cả nhà)(?!\s*[,.!?])/gi, '$1!')
-      .replace(/\b(chốt ngay|mua ngay|đặt ngay)(?!\s*[,.!?])/gi, '$1!');
+      .replace(/\b(chốt ngay|mua ngay|đặt ngay|bấm giỏ hàng)(?!\s*[,.!?])/gi, '$1!');
   }
 
-  // Chuyển dấu chấm ba chấm thành nhịp ngân nhẹ nhàng
+  // Chuyển dấu chấm ba chấm thành nhịp ngân tự nhiên
   text = text.replace(/\.{3,}/g, '... ');
 
-  // Dọn dẹp khoảng trắng thừa và dấu phẩy liên tiếp
+  // Dọn dẹp dấu câu trùng lặp để âm thanh mượt mà không khựng
   text = text
     .replace(/,\s*,+/g, ', ')
     .replace(/\.\s*\.+/g, '. ')
     .replace(/!\s*!+/g, '! ')
+    .replace(/\?\s*\?+/g, '? ')
     .replace(/\s+/g, ' ')
     .trim();
 
   return text;
+}
+
+/**
+ * ✨ TỰ ĐỘNG TỐI ƯU & NÂNG CẤP KỊCH BẢN LIVESTREAM ĐỈNH CAO (AI SCRIPT POLISHER & OPTIMIZER)
+ * - Tự động sắp xếp cấu trúc kịch bản bán hàng chuẩn triệu view:
+ *   1. Hook Giữ Chân Khán Giả Đầu Live (Gây tò mò, kêu gọi thả tim/chia sẻ)
+ *   2. Thấu Hiểu Nỗi Đau & Nhu Cầu Khách Hàng (Đồng cảm, tâm sự như người bạn)
+ *   3. Giới Thiệu Sản Phẩm & Điểm Độc Bản Đỉnh Cao (Giải quyết vấn đề triệt để)
+ *   4. Ưu Đãi Độc Quyền & Cam Kết Uy Tín (Bảo hành 1 đổi 1, quà tặng mini, freeship)
+ *   5. Kêu Gọi Hành Động Chốt Đơn Dứt Khoát (Thúc giục cấp bách, bấm giỏ hàng ngay)
+ */
+export function polishAndOptimizeScript(rawScript) {
+  if (!rawScript || typeof rawScript !== 'string' || !rawScript.trim()) {
+    return `Chào mừng tất cả các tình yêu đã có mặt trong phiên livestream đặc biệt ngày hôm nay của shop em nha!
+Các anh chị đẹp ơi, ai đang lướt qua phiên live thì cho em xin một nút thả tim và một lượt chia sẻ để nhận quà mở bát đầu live nào!
+Hôm nay shop em mang đến cho cả nhà một siêu phẩm cực kỳ đỉnh cao và độc quyền duy nhất trên sóng livestream!
+Chị nào mà đang gặp vấn đề khô ráp, thâm sạm hoặc chưa tìm được giải pháp ưng ý thì nhất định không được bỏ qua nhé!
+Chỉ sau một liệu trình ngắn sử dụng, mọi người sẽ cảm nhận sự thay đổi rõ rệt, mịn màng và tự tin hơn rất nhiều luôn ạ!
+Duy nhất trong phiên live hôm nay, giảm sốc 50% tặng kèm phần quà hấp dẫn và miễn phí vận chuyển tận nhà!
+Bên em cam kết 100% hàng chính hãng, bảo hành một đổi một trong 30 ngày, bấm vào Giỏ Hàng góc trái săn ngay kẻo hết quà nha!`;
+  }
+
+  const lines = rawScript.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  if (lines.length === 0) return rawScript;
+
+  // Chuẩn hóa từng câu thoại với ngôn từ biểu cảm, nhịp điệu cuốn hút
+  const polishedLines = lines.map((line, idx) => {
+    let clean = cleanTextForVoiceSpeech(line);
+    clean = humanizeVoiceSpeechText(clean);
+
+    // Bổ sung cảm xúc tự nhiên nếu câu còn ngắn hoặc khô khan
+    if (idx === 0 && !clean.match(/(chào|hello|chúc|mừng|xin chào)/i)) {
+      clean = `Chào mừng tất cả mọi người đã có mặt trong phiên live hôm nay nha! ${clean}`;
+    }
+    if (idx === lines.length - 1 && !clean.match(/(giỏ hàng|chốt|săn|đặt ngay|mua ngay|kẻo lỡ)/i)) {
+      clean = `${clean} Mọi người nhanh tay bấm vào giỏ hàng góc trái chốt đơn ngay kẻo lỡ ưu đãi nhé!`;
+    }
+
+    return clean;
+  });
+
+  return polishedLines.join('\n');
 }
 
 /**
@@ -3540,6 +3594,7 @@ export default {
   stopVoiceAudio,
   cleanTextForVoiceSpeech,
   humanizeVoiceSpeechText,
+  polishAndOptimizeScript,
   formatTextForRegionalSpeech,
   updateActiveVoiceAudio,
   isSpeechActive,

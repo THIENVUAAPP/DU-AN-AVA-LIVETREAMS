@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { NEW_AI_PROMPT } from '../../utils/defaultAIPrompt';
 import { readUniversalFile } from '../../utils/universalDocumentParser';
+import { polishAndOptimizeScript } from '../../utils/voiceSyncService';
 import WorkspaceKeywordPanel from './WorkspaceKeywordPanel';
 import EventVoiceTester from './EventVoiceTester';
 import UniversalMediaPicker, { SAMPLE_IDOL_VIDEOS } from './UniversalMediaPicker';
@@ -1754,12 +1755,28 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
 
                         {/* TEXTAREA KỊCH BẢN */}
                         <div className="flex flex-col gap-1.5">
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between flex-wrap gap-2">
                             <span className="text-xs font-bold text-gray-700">📜 Nội dung kịch bản cố định:</span>
-                            <UniversalFileUploadButton 
-                              onLoaded={(text) => handleSimpleChange('fixedScriptText', text)}
-                              label="Nạp File Kịch Bản (.docx, .pdf, .txt, .json, .xlsx)"
-                            />
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const currentText = currentConfig.fixedScriptText !== undefined ? currentConfig.fixedScriptText : MASTER_SCRIPTS.cosmetics;
+                                  const optimized = polishAndOptimizeScript(currentText);
+                                  handleSimpleChange('fixedScriptText', optimized);
+                                  toast.success('✨ Đã tối ưu kịch bản cảm xúc, nhấn nhá và chốt đơn thành công!');
+                                }}
+                                className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-900 border border-amber-400/50 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                                title="Tự động sắp xếp lại câu từ, lấy hơi, ngữ điệu cảm xúc và tăng sức hút chốt đơn"
+                              >
+                                <Sparkles size={13} className="text-amber-600" />
+                                <span>Tối Ưu Kịch Bản Đỉnh Cao</span>
+                              </button>
+                              <UniversalFileUploadButton 
+                                onLoaded={(text) => handleSimpleChange('fixedScriptText', text)}
+                                label="Nạp File Kịch Bản (.docx, .pdf, .txt, .json, .xlsx)"
+                              />
+                            </div>
                           </div>
                           <div className="relative">
                             <textarea 
@@ -1781,11 +1798,12 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                             <div className="flex items-center gap-1">
                               <input 
                                 type="number" 
-                                min="1" 
+                                min="0" 
                                 max="30"
-                                value={currentConfig.pauseBetweenSentences || 3} 
-                                onChange={(e) => handleSimpleChange('pauseBetweenSentences', Number(e.target.value) || 3)}
-                                className="w-14 border border-gray-300 rounded-lg px-2 py-1 text-center font-bold" 
+                                step="0.1"
+                                value={currentConfig.pauseBetweenSentences !== undefined ? currentConfig.pauseBetweenSentences : 0.1} 
+                                onChange={(e) => handleSimpleChange('pauseBetweenSentences', Number(e.target.value))}
+                                className="w-16 border border-gray-300 rounded-lg px-2 py-1 text-center font-bold" 
                               />
                               <span className="text-gray-500">giây</span>
                             </div>
@@ -1828,6 +1846,10 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                           text={currentConfig.fixedScriptText || MASTER_SCRIPTS.cosmetics}
                           defaultVoiceId={currentConfig.voiceId || "free_vi_female"}
                           onVoiceChange={(vid) => handleSimpleChange('voiceId', vid)}
+                          onScriptOptimized={(optText) => {
+                            handleSimpleChange('fixedScriptText', optText);
+                            toast.success('✨ Đã cập nhật kịch bản tối ưu thành công!');
+                          }}
                           label="Nghe thử toàn bộ kịch bản bán hàng cài sẵn (Mọi Giọng Đọc AI)"
                           compact={false}
                         />

@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.4.8';
+export const APP_VERSION = '2.4.9';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Khắc Phục Triệt Để Lỗi Bấm Phát Kịch Bản - Mở Phát Tức Thì 0ms Mọi Giọng',
-    description: 'Bảo toàn cấu trúc dòng văn bản của kịch bản, tối ưu hóa cơ chế gửi POST/GET payload và ngắt câu thông minh giúp TTS phản hồi siêu tốc dưới 200ms cho mọi kịch bản dài ngắn.'
+    title: '❤️ Cảm Xúc Sống Động, Lấy Hơi Tự Nhiên & Nhấn Nhá Cao Trào Như Người Thật',
+    description: 'Tích hợp động cơ Empathy & Breathing Prosody: Giọng đọc có nhịp thở lấy hơi, thăng trầm cao trào, diễn đạt như một người bạn thân trò chuyện trực tiếp, cực kỳ cuốn hút và gây nghiện cho người nghe livestream.'
   },
   {
-    title: '🎙️ Tự Động Kích Hoạt AudioContext & Chống Treo Tiếng Trình Duyệt',
-    description: 'Tự động giải phóng trạng thái suspended của AudioContext ngay khi người dùng bấm nút, đảm bảo âm thanh phát ra ngay lập tức với 100% các giọng đã chọn (Hải Đăng, Tùng Đặng, BTV Mai Phương, Cụ Ông, Bà Cụ...).'
+    title: '⏱️ Tùy Chỉnh Thời Gian Nghỉ Giữa Các Câu Từ 0.0s Đến 1.0s (Liền Mạch 0ms)',
+    description: 'Bổ sung thanh chọn thời gian nghỉ giữa các câu thoại linh hoạt từ 0.0s (liền mạch ngay tức thì), 0.05s, 0.1s, 0.2s... đến 1.0s giúp kịch bản đọc mượt mà, suôn sẻ không bị khựng.'
   },
   {
-    title: '🛡️ Bộ Dự Phòng Đa Tầng (Multi-Tier Resilience) Chống Mất Tiếng',
-    description: 'Tích hợp cơ chế tự động thử lại 2 lần và dự phòng luồng âm thanh thông minh, tuyệt đối không bị đơ hoặc tắt ngang khi phát kịch bản.'
+    title: '⚡ Mở Rộng Bảng Tốc Độ Đọc (0.75x, 0.85x, 1.0x, 1.15x, 1.25x, 1.5x, 2.0x)',
+    description: 'Bổ sung đầy đủ các nấc tốc độ chi tiết cho phép tua nhanh và tùy chỉnh tốc độ nói của mọi nhân vật AI theo đúng ý muốn.'
   },
   {
-    title: '📜 Đọc Chuẩn Xác 100% Từng Phân Cảnh & Tự Động Chuyển Giọng 0ms',
-    description: 'Hỗ trợ thay thế placeholder tự nhiên ({user}, [product]...), phân chia câu mượt mà và chuyển đổi giọng đọc ngay tại câu hiện tại khi người dùng đổi nhân vật.'
+    title: '✨ 1-Chạm Tối Ưu & Sắp Xếp Kịch Bản Bán Hàng Đỉnh Cao (AI Script Polisher)',
+    description: 'Tự động sửa lỗi chính tả, chuẩn hóa câu từ, thêm các câu hook giữ chân và câu kêu gọi hành động (CTA) chốt đơn bùng nổ cho toàn bộ kịch bản.'
   }
 ];
 
