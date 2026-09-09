@@ -2678,13 +2678,18 @@ function getOrCreateAudioContext() {
 
 export function stopVoiceAudio() {
   if (activeSourceNode) {
-    try { activeSourceNode.stop(); } catch(e) {}
+    try {
+      activeSourceNode.onended = null;
+      activeSourceNode.stop();
+    } catch(e) {}
     try { activeSourceNode.disconnect(); } catch(e) {}
     activeSourceNode = null;
   }
   activeMasterGainNode = null;
   if (activePreviewAudio) {
     try {
+      activePreviewAudio.onended = null;
+      activePreviewAudio.onerror = null;
       activePreviewAudio.pause();
       activePreviewAudio.currentTime = 0;
     } catch (e) {}

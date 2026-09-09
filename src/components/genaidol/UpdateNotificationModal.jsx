@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.5.4';
+export const APP_VERSION = '2.5.5';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🎙️ Tối Ưu Chuyển Đổi Giọng Đọc & Kịch Bản Liền Mạch 100%',
-    description: 'Khắc phục triệt để tình trạng đổi giọng không phát lại: Giờ đây khi chuyển sang bất kỳ giọng đọc nào trong danh sách hoặc đổi kịch bản, hệ thống sẽ nhận diện và phát chuẩn xác ngay lập tức không bị khựng.'
+    title: '🎙️ Tự Động Nhận Diện & Đổi Giọng Phát Ngay Tức Thì 0ms',
+    description: 'Khắc phục triệt để tình trạng đổi giọng bị kẹt lại giọng cũ: Đã tách độc lập bộ nhớ đệm cho từng kịch bản/slot quà/tác vụ, đổi sang bất kỳ giọng đọc nào là hệ thống phát ngay lập tức không bị khựng.'
   },
   {
-    title: '✨ Gọn Gàng Giao Diện Trình Phát Kịch Bản',
-    description: 'Đã lược bỏ nút Tối Ưu Kịch Bản thừa để thanh điều khiển nghe thử giọng đọc trở nên tinh gọn, trực quan và dễ thao tác nhất.'
+    title: '⚡ Hủy Bỏ Audio Cũ Sạch Sẽ (Zero-Race Condition)',
+    description: 'Khi đổi giọng đọc hoặc chuyển câu, âm thanh câu cũ lập tức dừng triệt để mà không kích hoạt chuỗi chuyển câu sai lệch, đảm bảo trải nghiệm nghe thử mượt mà nhất.'
   },
   {
-    title: '⚡ Phát Ngay Lập Tức 0.000s Khi Bấm Nghe Thử Kịch Bản',
-    description: 'Tự động Pre-warm RAM Cache câu thoại ngay khi soạn thảo hoặc chọn giọng: Khi bấm Phát/Nghe thử kịch bản, âm thanh được giải mã sẵn phát ra NGAY TỨC THÌ 0ms không phải chờ mạng.'
+    title: '✨ Giao Diện Nghe Thử Kịch Bản Gọn Gàng & Trực Quan',
+    description: 'Thanh điều khiển giọng đọc, tốc độ và khoảng nghỉ giữa các câu thoại hiển thị chuẩn xác, đẹp mắt và phản hồi tức thì.'
   },
   {
-    title: '🚀 Pipeline Tải Trước Toàn Bộ Kịch Bản & Xóa Sạch Khoảng Lặng Giữa Các Câu',
-    description: 'Toàn bộ kịch bản được nạp trước nền vào RAM Cache và cắt bỏ sạch khoảng lặng đầu/đuôi cho luồng đọc siêu mượt mà.'
+    title: '🚀 Pipeline Pre-fetching Toàn Bộ Kịch Bản Vào RAM Cache',
+    description: 'Tải trước toàn bộ các câu trong kịch bản vào RAM giúp chuỗi livestream hoặc nghe thử không có bất kỳ khoảng lặng chết nào.'
   }
 ];
 

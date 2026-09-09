@@ -1407,7 +1407,8 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                           {/* 4. Event Voice Tester (Đầy đủ Giọng đọc, Tốc độ, Nút Nghe thử giống Ảnh 2) */}
                           <EventVoiceTester 
                             text={slot.sampleAnswers || `Cảm ơn bạn {user} đã tặng ${slot.giftName} cho em nha!`}
-                            defaultVoiceId="free_vi_female"
+                            defaultVoiceId={slot.voiceId || "free_vi_female"}
+                            onVoiceChange={(vid) => handleSlotChange(slot.id, 'voiceId', vid)}
                             label={`Nghe thử Voice (${slot.giftName})`}
                             compact={true}
                           />
@@ -1527,7 +1528,8 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
 
                         <EventVoiceTester 
                           text={gSlot.sampleAnswers || 'Cảm ơn bạn {user} đã tặng quà cho em nha!'}
-                          defaultVoiceId="free_vi_female"
+                          defaultVoiceId={gSlot.voiceId || "free_vi_female"}
+                          onVoiceChange={(vid) => handleGiftSlotChange(gSlot.id, 'voiceId', vid)}
                           label={`Nghe thử Voice (${gSlot.name || 'Slot ' + gSlot.id})`}
                           compact={true}
                         />
@@ -2100,7 +2102,8 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                           {/* NGHE THỬ VOICE BỘ NÃO AI */}
                           <EventVoiceTester 
                             text={currentConfig.fixedScriptText || MASTER_SCRIPTS.cosmetics}
-                            defaultVoiceId="free_vi_female"
+                            defaultVoiceId={currentConfig.voiceId || "free_vi_female"}
+                            onVoiceChange={(vid) => handleSimpleChange('voiceId', vid)}
                             label="Nghe thử Voice câu thoại AI tạo ra"
                             compact={false}
                           />

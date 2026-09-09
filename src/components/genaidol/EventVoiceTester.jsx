@@ -65,17 +65,6 @@ export default function EventVoiceTester({
   compact = false,
   className = ''
 }) {
-  // Tự động khôi phục giọng đọc đã chọn gần nhất từ bộ nhớ máy tính
-  const getInitialVoice = () => {
-    try {
-      const saved = localStorage.getItem('avalive_tester_selected_voice');
-      if (saved && ALL_SYSTEM_VOICES.some(v => v.id === saved)) {
-        return saved;
-      }
-    } catch (e) {}
-    return defaultVoiceId || 'free_vi_female';
-  };
-
   const getInitialPause = () => {
     try {
       const saved = localStorage.getItem('avalive_pause_between_sentences');
@@ -84,7 +73,7 @@ export default function EventVoiceTester({
     return 0.10;
   };
 
-  const [selectedVoiceId, setSelectedVoiceId] = useState(getInitialVoice);
+  const [selectedVoiceId, setSelectedVoiceId] = useState(defaultVoiceId || 'free_vi_female');
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSentenceIdx, setCurrentSentenceIdx] = useState(0);
   const [totalSentences, setTotalSentences] = useState(0);
@@ -98,7 +87,7 @@ export default function EventVoiceTester({
   const volumeRef = useRef(1.0);
   const speedRef = useRef(1.0);
   const pauseDurationRef = useRef(getInitialPause());
-  const selectedVoiceRef = useRef(getInitialVoice());
+  const selectedVoiceRef = useRef(defaultVoiceId || 'free_vi_female');
   const currentSentenceIdxRef = useRef(0);
   const sentencesRef = useRef([]);
 
@@ -118,9 +107,6 @@ export default function EventVoiceTester({
     if (defaultVoiceId) {
       setSelectedVoiceId(defaultVoiceId);
       selectedVoiceRef.current = defaultVoiceId;
-      try {
-        localStorage.setItem('avalive_tester_selected_voice', defaultVoiceId);
-      } catch (e) {}
     }
   }, [defaultVoiceId]);
 
@@ -164,11 +150,9 @@ export default function EventVoiceTester({
 
   // Đổi giọng: Ngay lập tức lưu và chuyển giọng mượt mà không bị ngắt quãng
   const handleVoiceSelect = (voiceId) => {
+    if (!voiceId) return;
     setSelectedVoiceId(voiceId);
     selectedVoiceRef.current = voiceId;
-    try {
-      localStorage.setItem('avalive_tester_selected_voice', voiceId);
-    } catch (e) {}
 
     if (onVoiceChange) {
       onVoiceChange(voiceId);
@@ -177,8 +161,11 @@ export default function EventVoiceTester({
     const newVoiceObj = ALL_SYSTEM_VOICES.find(v => v.id === voiceId) || { id: voiceId, lang: 'vi-VN', gender: 'Female' };
 
     if (isPlayingRef.current) {
+      if (queueTimeoutRef.current) {
+        clearTimeout(queueTimeoutRef.current);
+        queueTimeoutRef.current = null;
+      }
       stopVoiceAudio();
-      if (queueTimeoutRef.current) clearTimeout(queueTimeoutRef.current);
       
       const curIdx = currentSentenceIdxRef.current;
       const sentences = sentencesRef.current;
@@ -191,11 +178,7 @@ export default function EventVoiceTester({
         prefetchTTSAudio(sentences[curIdx + 1], newVoiceObj, { rate: speedRef.current });
       }
 
-      setTimeout(() => {
-        if (isPlayingRef.current) {
-          playSentenceAtIndex(curIdx, newVoiceObj);
-        }
-      }, 50);
+      playSentenceAtIndex(curIdx, newVoiceObj);
     } else {
       // Khi không phát: Tự động pre-warm cache câu đầu tiên của giọng mới
       const sentences = splitIntoSentences(text);
