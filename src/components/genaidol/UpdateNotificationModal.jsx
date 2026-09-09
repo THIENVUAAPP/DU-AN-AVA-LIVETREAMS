@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.3.2';
+export const APP_VERSION = '2.3.3';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [

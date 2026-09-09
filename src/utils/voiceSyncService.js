@@ -924,11 +924,12 @@ dspProfile: { semitones: -6.5, rate: 1.14, lowGain: 6.0, midFreq: 640, midGain: 
   }
 ];
 
-// ==================== 3. 20 GIỌNG CHUYÊN BIỆT BÁN HÀNG SẢN PHẨM & DỊCH VỤ ĐA NGÀNH (BẮC - TRUNG - NAM - TÂY) ====================
+// ==================== 3. 24 GIỌNG CHUYÊN BIỆT BÁN HÀNG SẢN PHẨM & DỊCH VỤ ĐA NGÀNH (BẮC - TRUNG - NAM - TÂY) ====================
 export const VIETNAMESE_SALES_VOICES = [
+  // --- MIỀN NAM (SÀI GÒN) ---
   {
     id: 'vn_sales_mypham_trangda',
-    name: 'Minh Thảo 👑 (Nữ - Mỹ Phẩm, Skincare & Dưỡng Trắng Da [Sài Gòn])',
+    name: 'Minh Thảo 👑 (Nữ - Mỹ Phẩm & Dưỡng Trắng Skincare [Sài Gòn])',
     provider: 'system',
     tier: 'pro',
     badge: '👑 Studio VIP',
@@ -942,62 +943,16 @@ export const VIETNAMESE_SALES_VOICES = [
     pitch: 1.24,
     rate: 1.12,
     recommendedFor: 'both',
-    desc: 'Giọng nữ ngọt ngào, tinh tế, am hiểu chuyên sâu về kem dưỡng, serum, son môi và mỹ phẩm cao cấp.',
-    sampleText: 'Dạ làn da căng bóng mịn màng chuẩn Hàn Quốc chỉ sau 7 ngày! Hôm nay shop có voucher giảm 40% trong giỏ hàng, chị em chốt ngay nhé!',
-        edgePitch: '+18%',
+    desc: 'Giọng nữ Sài Gòn ngọt ngào, quyến rũ, am hiểu chuyên sâu về kem dưỡng, serum, son môi và mỹ phẩm cao cấp.',
+    sampleText: 'Dạ làn da căng bóng mịn màng chuẩn Hàn Quốc chỉ sau 7 ngày! Hôm nay shop em trợ giá voucher giảm 40% trong giỏ hàng, chị em chốt ngay kẻo hết nhé!',
+    edgePitch: '+22%',
     edgeRate: '+12%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-dspProfile: { semitones: 3.5, rate: 1.12, lowGain: -2.0, midFreq: 1420, midGain: 3.2, presenceFreq: 4200, presenceGain: 6.2, highGain: 5.2 }
-  },
-  {
-    id: 'vn_sales_thoitrang_sangtrong',
-    name: 'Khánh Vân 👑 (Nữ - Thời Trang Thiết Kế & Váy Hàng Hiệu [Hà Nội])',
-    provider: 'system',
-    tier: 'pro',
-    badge: '👑 Studio VIP',
-    gender: 'Female',
-    lang: 'vi-VN',
-    region: 'vi',
-    dialect: 'bac',
-    ageGroup: 'young',
-    styleCategory: 'sales_services',
-    category: 'Thời Trang & Hàng Hiệu • Miền Bắc',
-    pitch: 1.16,
-    rate: 1.10,
-    recommendedFor: 'both',
-    desc: 'Giọng nữ sang trọng, quý phái, tư vấn phối đồ, váy đầm thiết kế và túi xách hàng hiệu.',
-    sampleText: 'Mẫu đầm lụa thiết kế cao cấp tôn dáng cực đỉnh, chất liệu mềm mịn thoáng mát, diện đi tiệc hay đi làm đều sang hết nấc luôn ạ!',
-        edgePitch: '+6%',
-    edgeRate: '+4%',
-    neuralVoice: 'vi-VN-HoaiMyNeural',
-dspProfile: { semitones: 2.2, rate: 1.10, lowGain: -0.5, midFreq: 1260, midGain: 2.8, presenceFreq: 3850, presenceGain: 5.0, highGain: 4.0 }
-  },
-  {
-    id: 'vn_sales_giadung_tienich',
-    name: 'Thanh Mai 👑 (Nữ - Đồ Gia Dụng & Bếp Tiện Ích Thông Minh [Hà Nội])',
-    provider: 'system',
-    tier: 'pro',
-    badge: '👑 Studio VIP',
-    gender: 'Female',
-    lang: 'vi-VN',
-    region: 'vi',
-    dialect: 'bac',
-    ageGroup: 'middle',
-    styleCategory: 'sales_services',
-    category: 'Gia Dụng & Nhà Cửa • Miền Bắc',
-    pitch: 1.10,
-    rate: 1.14,
-    recommendedFor: 'manager',
-    desc: 'Giọng nữ nội trợ hiện đại, tư vấn nồi chiên không dầu, máy hút bụi, robot lau nhà cực kỳ uy tín.',
-    sampleText: 'Nồi chiên không dầu dung tích lớn 8 lít, công nghệ nhiệt đối lưu giòn rụm không cần dầu mỡ, bảo hành chính hãng 2 năm đổi mới!',
-        edgePitch: '+12%',
-    edgeRate: '+10%',
-    neuralVoice: 'vi-VN-HoaiMyNeural',
-dspProfile: { semitones: 1.6, rate: 1.14, lowGain: 0.5, midFreq: 1120, midGain: 2.5, presenceFreq: 3450, presenceGain: 4.5, highGain: 3.0 }
+    dspProfile: { semitones: 3.8, rate: 1.12, lowGain: -2.0, midFreq: 1420, midGain: 3.2, presenceFreq: 4200, presenceGain: 6.2, highGain: 5.2 }
   },
   {
     id: 'vn_sales_congnghe_genz',
-    name: 'Hoàng Nam 👑 (Nam - Đồ Công Nghệ, Smartphone & Gaming [Sài Gòn])',
+    name: 'Hoàng Nam 👑 (Nam - Smartphone, Laptop & Gaming Gear [Sài Gòn])',
     provider: 'system',
     tier: 'pro',
     badge: '👑 Studio VIP',
@@ -1008,176 +963,38 @@ dspProfile: { semitones: 1.6, rate: 1.14, lowGain: 0.5, midFreq: 1120, midGain: 
     ageGroup: 'young',
     styleCategory: 'sales_services',
     category: 'Công Nghệ & Smartphone • Miền Nam',
-    pitch: 0.85,
+    pitch: 0.82,
     rate: 1.18,
     recommendedFor: 'both',
-    desc: 'Giọng nam nhạy bén, tốc độ, tư vấn cấu hình gaming, iPhone, laptop, tai nghe chống ồn siêu mượt.',
-    sampleText: 'Màn hình 120Hz siêu mượt, chip xử lý thế hệ mới nhất chiến game max setting không nóng máy, giá sale sốc duy nhất tối nay!',
-        edgePitch: '+14%',
+    desc: 'Giọng nam Sài Gòn trẻ trung, tốc độ, am hiểu sâu về cấu hình gaming, iPhone, laptop, tai nghe chống ồn.',
+    sampleText: 'Màn hình 120Hz siêu mượt, chip xử lý thế hệ mới nhất cân mọi tựa game max setting không nóng máy, giá sale sốc duy nhất trong phiên live tối nay!',
+    edgePitch: '-8%',
     edgeRate: '+18%',
     neuralVoice: 'vi-VN-NamMinhNeural',
-dspProfile: { semitones: -6.0, rate: 1.18, lowGain: 7.0, midFreq: 580, midGain: 3.8, presenceFreq: 2600, presenceGain: 1.0, highGain: -2.0 }
+    dspProfile: { semitones: -6.5, rate: 1.18, lowGain: 7.5, midFreq: 580, midGain: 3.8, presenceFreq: 2600, presenceGain: 1.5, highGain: -1.5 }
   },
   {
-    id: 'vn_sales_batdongsan_thuongluu',
-    name: 'Tuấn Phong 👑 (Nam - Bất Động Sản & Biệt Thự Triệu Đô [Hà Nội])',
+    id: 'vn_sales_chotdeal_livestream_nam',
+    name: 'Quốc Tuấn 👑 (Nam - Chốt Deal TikTok Shop Siêu Tốc [Sài Gòn])',
     provider: 'system',
     tier: 'pro',
     badge: '👑 Studio VIP',
     gender: 'Male',
     lang: 'vi-VN',
     region: 'vi',
-    dialect: 'bac',
-    ageGroup: 'middle',
+    dialect: 'nam',
+    ageGroup: 'young',
     styleCategory: 'sales_services',
-    category: 'Bất Động Sản Cao Cấp • Miền Bắc',
-    pitch: 0.72,
-    rate: 1.06,
+    category: 'Chốt Deal Livestream • Miền Nam',
+    pitch: 0.88,
+    rate: 1.25,
     recommendedFor: 'manager',
-    desc: 'Giọng nam chuyên gia bất động sản thượng lưu, phân tích vị trí vàng, tiềm năng sinh lời triệu đô.',
-    sampleText: 'Khu đô thị sinh thái ven sông đẳng cấp bậc nhất, pháp lý minh bạch sổ đỏ trao tay, chính sách thanh toán ưu đãi 0% lãi suất!',
-        edgePitch: '-16%',
-    edgeRate: '-2%',
+    desc: 'Giọng nam Sài Gòn hối hả giục đơn, năng lượng bùng nổ, thúc đẩy người xem bấm nút mua hàng ngay tức thì.',
+    sampleText: 'Chỉ còn đúng 15 suất quà tặng độc quyền trong giỏ hàng góc trái, anh em bấm vào mua ngay kẻo hệ thống khóa deal giá hời nhé!',
+    edgePitch: '+12%',
+    edgeRate: '+24%',
     neuralVoice: 'vi-VN-NamMinhNeural',
-dspProfile: { semitones: -8.0, rate: 1.06, lowGain: 10.5, midFreq: 420, midGain: 4.5, presenceFreq: 2100, presenceGain: -2.0, highGain: -4.5 }
-  },
-  {
-    id: 'vn_sales_xehoi_uyquyen',
-    name: 'Mạnh Hùng 👑 (Nam - Xe Hơi Ô Tô & Showroom Xe Sang [Hà Nội])',
-    provider: 'system',
-    tier: 'pro',
-    badge: '👑 Studio VIP',
-    gender: 'Male',
-    lang: 'vi-VN',
-    region: 'vi',
-    dialect: 'bac',
-    ageGroup: 'middle',
-    styleCategory: 'sales_services',
-    category: 'Ô Tô & Xe Sang • Miền Bắc',
-    pitch: 0.68,
-    rate: 1.08,
-    recommendedFor: 'manager',
-    desc: 'Giọng nam trầm hùng đầy uy lực, tư vấn SUV, sedan hạng sang và chính sách lăn bánh tối ưu.',
-    sampleText: 'Động cơ tăng áp mạnh mẽ, nội thất bọc da cao cấp cùng hệ thống an toàn đạt chuẩn 5 sao quốc tế, lái thử miễn phí tận nhà!',
-        edgePitch: '-20%',
-    edgeRate: '+2%',
-    neuralVoice: 'vi-VN-NamMinhNeural',
-dspProfile: { semitones: -8.8, rate: 1.08, lowGain: 11.5, midFreq: 380, midGain: 4.5, presenceFreq: 1950, presenceGain: -3.0, highGain: -5.0 }
-  },
-  {
-    id: 'vn_sales_thucpham_suckhoe',
-    name: 'Bác Ba Thành 👑 (Nam - Thuốc Nam & Sức Khỏe Lão Niên [Miền Tây])',
-    provider: 'system',
-    tier: 'pro',
-    badge: '👑 Studio VIP',
-    gender: 'Male',
-    lang: 'vi-VN',
-    region: 'vi',
-    dialect: 'tay',
-    ageGroup: 'mature',
-    styleCategory: 'sales_services',
-    category: 'Sức Khỏe & Thuốc Nam • Miền Tây',
-    pitch: 0.65,
-    rate: 1.04,
-    recommendedFor: 'both',
-    desc: 'Giọng nam cao tuổi mộc mạc, ân cần tư vấn thảo dược đông y, bổ xương khớp, dưỡng tâm an thần.',
-    sampleText: 'Sức khỏe dồi dào, ăn ngon ngủ sâu giấc nhờ công thức thảo dược tự nhiên gia truyền, bà con mình an tâm đặt hàng dùng thử nghen!',
-        edgePitch: '-30%',
-    edgeRate: '-12%',
-    neuralVoice: 'vi-VN-NamMinhNeural',
-dspProfile: { semitones: -9.2, rate: 1.04, lowGain: 12.0, midFreq: 340, midGain: 4.5, presenceFreq: 1800, presenceGain: -4.0, highGain: -6.0 }
-  },
-  {
-    id: 'vn_sales_mientay_nongsan',
-    name: 'Cô Út Vườn 👑 (Nữ - Trái Cây & Nông Sản Miệt Vườn [Miền Tây])',
-    provider: 'system',
-    tier: 'pro',
-    badge: '👑 Studio VIP',
-    gender: 'Female',
-    lang: 'vi-VN',
-    region: 'vi',
-    dialect: 'tay',
-    ageGroup: 'young',
-    styleCategory: 'sales_services',
-    category: 'Nông Sản Miệt Vườn • Miền Tây',
-    pitch: 1.22,
-    rate: 1.12,
-    recommendedFor: 'both',
-    desc: 'Giọng nữ miệt vườn miền Tây xởi lởi, ngọt ngào, chuyên chốt đơn sầu riêng, bưởi da xanh, vú sữa hỏa tốc.',
-    sampleText: 'Dạ sầu riêng cơm vàng hạt lép thơm lừng vườn nhà em mới cắt sáng nay, bao ăn 1 đổi 1 bà con đặt liền tay nghen!',
-        edgePitch: '+26%',
-    edgeRate: '+10%',
-    neuralVoice: 'vi-VN-HoaiMyNeural',
-dspProfile: { semitones: 3.2, rate: 1.12, lowGain: -1.0, midFreq: 1350, midGain: 3.0, presenceFreq: 4000, presenceGain: 5.8, highGain: 4.5 }
-  },
-  {
-    id: 'vn_sales_hue_dacsan',
-    name: 'Mỹ Hạnh 👑 (Nữ - Trà Cung Đình & Đặc Sản Xứ Huế [Miền Trung])',
-    provider: 'system',
-    tier: 'pro',
-    badge: '👑 Studio VIP',
-    gender: 'Female',
-    lang: 'vi-VN',
-    region: 'vi',
-    dialect: 'trung',
-    ageGroup: 'young',
-    styleCategory: 'sales_services',
-    category: 'Đặc Sản Xứ Huế • Miền Trung',
-    pitch: 1.15,
-    rate: 1.05,
-    recommendedFor: 'both',
-    desc: 'Giọng nữ xứ Huế đằm thắm, ngọt ngào, giới thiệu trà cung đình, mắm ruốc, kẹo mè xửng trứ danh.',
-    sampleText: 'Dạ trà cung đình xứ Huế thanh nhiệt giải độc, an thần ngủ ngon, kính mời quý khách đặt hàng thưởng thức vị ngon truyền thống ạ!',
-        edgePitch: '+4%',
-    edgeRate: '-6%',
-    neuralVoice: 'vi-VN-HoaiMyNeural',
-dspProfile: { semitones: 2.2, rate: 1.05, lowGain: 0.8, midFreq: 1180, midGain: 2.6, presenceFreq: 3600, presenceGain: 4.6, highGain: 3.2 }
-  },
-  {
-    id: 'vn_sales_danang_haisan',
-    name: 'Quốc Bảo 👑 (Nam - Hải Sản & Đặc Sản Biển Đà Nẵng [Miền Trung])',
-    provider: 'system',
-    tier: 'pro',
-    badge: '👑 Studio VIP',
-    gender: 'Male',
-    lang: 'vi-VN',
-    region: 'vi',
-    dialect: 'trung',
-    ageGroup: 'young',
-    styleCategory: 'sales_services',
-    category: 'Hải Sản Đà Nẵng • Miền Trung',
-    pitch: 0.78,
-    rate: 1.12,
-    recommendedFor: 'both',
-    desc: 'Giọng nam miền Trung hào sảng, tư vấn mực một nắng, chả bò Đà Nẵng, cá thu một nắng tươi ngon.',
-    sampleText: 'Chả bò Đà Nẵng loại 1 thơm lừng giòn dai, mực một nắng dày thịt nướng lên là nhức nách, anh em đặt nhanh kẻo hết nghe!',
-        edgePitch: '+6%',
-    edgeRate: '+12%',
-    neuralVoice: 'vi-VN-NamMinhNeural',
-dspProfile: { semitones: -7.0, rate: 1.12, lowGain: 8.0, midFreq: 520, midGain: 3.4, presenceFreq: 2400, presenceGain: 1.5, highGain: -2.2 }
-  },
-  {
-    id: 'vn_sales_khoahoc_kinhdoanh',
-    name: 'Thầy Tuấn 👑 (Nam - Khóa Học & Phát Triển Bản Thân [Hà Nội])',
-    provider: 'system',
-    tier: 'pro',
-    badge: '👑 Studio VIP',
-    gender: 'Male',
-    lang: 'vi-VN',
-    region: 'vi',
-    dialect: 'bac',
-    ageGroup: 'middle',
-    styleCategory: 'sales_services',
-    category: 'Khóa Học & Kỹ Năng • Miền Bắc',
-    pitch: 0.76,
-    rate: 1.08,
-    recommendedFor: 'both',
-    desc: 'Giọng nam diễn giả truyền cảm hứng, hướng dẫn tư duy kinh doanh và phát triển bản thân vượt bậc.',
-    sampleText: 'Lộ trình thực chiến từ con số 0 đến tự do tài chính! Tặng ngay bộ bí kíp chốt sale đỉnh cao cho 10 bạn đăng ký đầu tiên trên live!',
-        edgePitch: '-6%',
-    edgeRate: '+12%',
-    neuralVoice: 'vi-VN-NamMinhNeural',
-dspProfile: { semitones: -7.2, rate: 1.08, lowGain: 8.5, midFreq: 480, midGain: 3.8, presenceFreq: 2300, presenceGain: 0.5, highGain: -2.5 }
+    dspProfile: { semitones: -5.0, rate: 1.25, lowGain: 6.0, midFreq: 640, midGain: 4.2, presenceFreq: 2800, presenceGain: 3.0, highGain: 0.0 }
   },
   {
     id: 'vn_sales_mevabe_diudang',
@@ -1195,39 +1012,16 @@ dspProfile: { semitones: -7.2, rate: 1.08, lowGain: 8.5, midFreq: 480, midGain: 
     pitch: 1.18,
     rate: 1.08,
     recommendedFor: 'idol',
-    desc: 'Giọng nữ mẹ bỉm ấm áp, thấu cảm, tư vấn tã bỉm hữu cơ, sữa tăng chiều cao và đồ chơi an toàn cho bé.',
-    sampleText: 'Chất liệu bông hữu cơ mềm mại nâng niu làn da nhạy cảm của bé yêu, thấm hút siêu khô thoáng suốt 12 tiếng mẹ hoàn toàn yên tâm nhé!',
-        edgePitch: '+16%',
-    edgeRate: '-4%',
+    desc: 'Giọng nữ mẹ bỉm Sài Gòn ấm áp, thấu cảm, tư vấn tã bỉm hữu cơ, sữa tăng chiều cao và đồ dùng cho bé.',
+    sampleText: 'Chất liệu bông hữu cơ mềm mại nâng niu làn da nhạy cảm của bé yêu, thấm hút siêu khô thoáng suốt 12 tiếng, mẹ hoàn toàn yên tâm nha!',
+    edgePitch: '+16%',
+    edgeRate: '-2%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-dspProfile: { semitones: 2.8, rate: 1.08, lowGain: -1.2, midFreq: 1280, midGain: 2.8, presenceFreq: 3750, presenceGain: 5.0, highGain: 3.8 }
-  },
-  {
-    id: 'vn_sales_amthuc_dacsan',
-    name: 'Thảo Linh 👑 (Nữ - Ẩm Thực & Đặc Sản Ba Miền [Hà Nội])',
-    provider: 'system',
-    tier: 'pro',
-    badge: '👑 Studio VIP',
-    gender: 'Female',
-    lang: 'vi-VN',
-    region: 'vi',
-    dialect: 'bac',
-    ageGroup: 'young',
-    styleCategory: 'sales_services',
-    category: 'Ẩm Thực & Đặc Sản • Miền Bắc',
-    pitch: 1.22,
-    rate: 1.16,
-    recommendedFor: 'both',
-    desc: 'Giọng nữ giòn giã, xông xáo, vui tươi, kích thích vị giác người xem muốn đặt đồ ăn ngay lập tức.',
-    sampleText: 'Đặc sản chuẩn vị gia truyền thơm ngon đậm đà, đóng gói hút chân không sạch sẽ giao hỏa tốc đến tận bàn ăn của các bác đây ạ!',
-        edgePitch: '+10%',
-    edgeRate: '+8%',
-    neuralVoice: 'vi-VN-HoaiMyNeural',
-dspProfile: { semitones: 3.0, rate: 1.16, lowGain: -0.8, midFreq: 1380, midGain: 3.0, presenceFreq: 4200, presenceGain: 5.8, highGain: 4.2 }
+    dspProfile: { semitones: 2.8, rate: 1.08, lowGain: -1.2, midFreq: 1280, midGain: 2.8, presenceFreq: 3750, presenceGain: 5.0, highGain: 3.8 }
   },
   {
     id: 'vn_sales_spa_thammy',
-    name: 'Bích Ngọc 👑 (Nữ - Spa & Thẩm Mỹ Viện Làm Đẹp VIP [Sài Gòn])',
+    name: 'Bích Ngọc 👑 (Nữ - Spa, Trẻ Hóa Da & Thẩm Mỹ Viện VIP [Sài Gòn])',
     provider: 'system',
     tier: 'pro',
     badge: '👑 Studio VIP',
@@ -1241,16 +1035,16 @@ dspProfile: { semitones: 3.0, rate: 1.16, lowGain: -0.8, midFreq: 1380, midGain:
     pitch: 1.12,
     rate: 1.05,
     recommendedFor: 'manager',
-    desc: 'Giọng nữ quyến rũ, quý phái, ân cần tư vấn liệu trình trẻ hóa da, cấy collagen và nha khoa thẩm mỹ.',
-    sampleText: 'Công nghệ nâng cơ trẻ hóa da không xâm lấn chuẩn Hàn, xóa mờ nếp nhăn tức thì trả lại 10 năm thanh xuân cho phái đẹp!',
-        edgePitch: '+8%',
+    desc: 'Giọng nữ đài các, quý phái, ân cần tư vấn liệu trình trẻ hóa da, cấy collagen và chăm sóc sắc đẹp.',
+    sampleText: 'Công nghệ nâng cơ trẻ hóa da không xâm lấn chuẩn Hàn, xóa mờ nếp nhăn tức thì trả lại 10 năm thanh xuân tươi trẻ cho phái đẹp!',
+    edgePitch: '+8%',
     edgeRate: '+2%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-dspProfile: { semitones: 1.8, rate: 1.05, lowGain: 0.0, midFreq: 1100, midGain: 2.6, presenceFreq: 3400, presenceGain: 4.0, highGain: 3.2 }
+    dspProfile: { semitones: 1.8, rate: 1.05, lowGain: 0.0, midFreq: 1100, midGain: 2.6, presenceFreq: 3400, presenceGain: 4.0, highGain: 3.2 }
   },
   {
     id: 'vn_sales_thethao_fitness',
-    name: 'Cường Kevin 👑 (Nam - Gym Fitness & Thực Phẩm Thể Hình [Sài Gòn])',
+    name: 'Cường Kevin 👑 (Nam - Gym Fitness, Whey Protein & Thể Hình [Sài Gòn])',
     provider: 'system',
     tier: 'pro',
     badge: '👑 Studio VIP',
@@ -1261,12 +1055,12 @@ dspProfile: { semitones: 1.8, rate: 1.05, lowGain: 0.0, midFreq: 1100, midGain: 
     ageGroup: 'young',
     styleCategory: 'sales_services',
     category: 'Thể Thao & Gym Fitness • Miền Nam',
-    pitch: 0.82,
+    pitch: 0.80,
     rate: 1.22,
     recommendedFor: 'both',
-    desc: 'Giọng nam HLV thể hình máu lửa, tràn trề năng lượng, tư vấn whey protein, máy chạy bộ, tạ tay.',
+    desc: 'Giọng nam HLV thể hình Sài Gòn tràn trề cơ bắp và năng lượng, tư vấn whey protein, creatine, máy tập.',
     sampleText: 'Bứt phá giới hạn bản thân, tăng cơ giảm mỡ nhanh chóng với dòng whey protein tinh khiết hấp thu siêu tốc anh em ơi!',
-        edgePitch: '-8%',
+    edgePitch: '-10%',
     edgeRate: '+16%',
     neuralVoice: 'vi-VN-NamMinhNeural',
 dspProfile: { semitones: -6.2, rate: 1.22, lowGain: 8.0, midFreq: 620, midGain: 4.0, presenceFreq: 2450, presenceGain: 1.2, highGain: -2.0 }
@@ -2152,6 +1946,23 @@ export function cleanTextForVoiceSpeech(rawText) {
  * Đảm bảo: Giọng Nam ra đúng 100% Nam (trầm ấm, uy lực, nói nhanh dứt khoát, không bị kéo lê), 
  * Giọng Nữ ra đúng 100% Nữ (trong trẻo, ngọt ngào, nhấn nhá siêu đỉnh).
  */
+export function checkIsMale(voice) {
+  if (!voice) return false;
+  if (voice.neuralVoice) {
+    const nv = String(voice.neuralVoice).toLowerCase();
+    if (nv.includes('namminh') || nv.includes('guy') || nv.includes('keita') || nv.includes('yunxi') || nv.includes('yunjian') || nv.includes('injoon') || nv.includes('henri') || nv.includes('conrad') || nv.includes('alvaro') || nv.includes('dmitry') || nv.includes('diego') || nv.includes('niwat') || nv.includes('hans') || nv.includes('marco') || nv.includes('arthur') || nv.includes('david') || nv.includes('liam') || nv.includes('oliver')) {
+      return true;
+    }
+  }
+  const g = String(voice.gender || '').toLowerCase().trim();
+  const id = String(voice.id || '').toLowerCase();
+  const name = String(voice.name || '').toLowerCase();
+  if (g === 'male' || g === 'nam' || g === 'm') return true;
+  if (id.includes('_nam_') || id.includes('_male_') || id.includes('el_adam') || id.includes('el_josh') || id.includes('el_us_male') || id.includes('el_uk_male') || id.includes('el_ca_male') || id.includes('el_au_male') || id.includes('el_fr_male') || id.includes('el_it_male') || id.includes('el_de_male')) return true;
+  if (name.includes('(nam') || name.includes('nam -') || name.includes('👨') || name.includes('thầy') || name.includes('bác') || name.includes('anh hai')) return true;
+  return false;
+}
+
 /**
  * 🎛️ BỘ XỬ LÝ ÂM THANH MASTERING BROADCAST DSP CHUYÊN NGHIỆP:
  * Xuất tín hiệu chuẩn phòng thu livestream:
@@ -2168,7 +1979,7 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
   source.buffer = audioBuffer;
   activeSourceNode = source;
 
-  const isMale = voice?.gender === 'Male' || voice?.gender === 'Nam';
+  const isMale = checkIsMale(voice);
 
   // Tốc độ phát đã được Edge TTS tổng hợp hoàn hảo bằng neural time-stretch
   // Giữ source.playbackRate = 1.0 để bảo toàn 100% âm sắc tự nhiên không bị méo tiếng
@@ -2179,8 +1990,8 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
   // 1. Low Shelf (Tăng độ ấm ngực cho giọng Nam / Giữ độ trong cho giọng Nữ, theo từng giọng)
   const lowFilter = audioCtx.createBiquadFilter();
   lowFilter.type = 'lowshelf';
-  lowFilter.frequency.value = isMale ? 150 : 260;
-  lowFilter.gain.value = dsp.lowGain !== undefined ? dsp.lowGain : (isMale ? 3.0 : 0.5);
+  lowFilter.frequency.value = isMale ? 145 : 260;
+  lowFilter.gain.value = dsp.lowGain !== undefined ? dsp.lowGain : (isMale ? 4.5 : 0.5);
 
   // 2. Formant F1 / Mid Clarity (Nội lực âm thanh và chất giọng đặc thù)
   const midFilter = audioCtx.createBiquadFilter();
@@ -2252,7 +2063,7 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
  * ⚡ TẢI VÀ GIẢI MÃ ÂM THANH MICROSOFT NEURAL TTS (CÓ BỘ NHỚ ĐỆM TỰ ĐỘNG)
  */
 async function fetchAndDecodeTTSAudio(text, voice = null) {
-  const isMale = voice?.gender === 'Male' || voice?.gender === 'Nam';
+  const isMale = checkIsMale(voice);
   const gender = isMale ? 'male' : 'female';
   const lang = voice?.lang || 'vi-VN';
   const shortLang = lang.split('-')[0].toLowerCase();
@@ -2498,13 +2309,14 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
   const rawLang = voice?.lang || (isVietnameseVoice ? 'vi-VN' : 'en-US');
   const langCode = rawLang || (isVietnameseVoice ? 'vi-VN' : 'en-US');
   const shortLang = langCode.split('-')[0].toLowerCase() || (isVietnameseVoice ? 'vi' : 'en');
+  const isMale = checkIsMale(voice);
 
   // Chuẩn bị câu thoại chuẩn xác (ưu tiên câu thoại đặc trưng riêng biệt của từng giọng)
   let candidateText = sampleText;
   if (!candidateText || !candidateText.trim()) {
     candidateText = voice?.sampleText || (
       isVietnameseVoice 
-        ? ((voice?.gender === 'Male' || voice?.gender === 'Nam') 
+        ? (isMale
             ? 'Chào mừng tất cả các bạn đã đến với phiên livestream hôm nay! Chúc mọi người luôn tràn đầy năng lượng!' 
             : 'Dạ em chào bạn đang theo dõi live nha! Em là Trợ Lý AI của phiên live, chúc bạn xem live thật vui vẻ ạ!')
         : 'Hello everyone! Thank you for joining our livestream today!'
@@ -2601,7 +2413,6 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
 
       utterance.lang = langCode;
 
-      const isMale = voice?.gender === 'Male' || voice?.gender === 'Nam';
       const voiceRate = voice?.rate || 1.05;
       const userRate = requestedRate !== undefined && !isNaN(requestedRate) ? Number(requestedRate) : 1.0;
       utterance.rate = Math.max(0.9, Math.min(1.3, voiceRate * userRate));

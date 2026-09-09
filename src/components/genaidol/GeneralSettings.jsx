@@ -2231,9 +2231,9 @@ IDOL MỈM CƯỜI + GESTURE
                                   setPreviewingVoiceId(v.id);
                                   previewVoiceAudio({ 
                                     ...v, 
-                                    volume: settings.salesVoiceVolume !== undefined ? settings.salesVoiceVolume : 1.0, 
-                                    rate: settings.salesVoiceRate !== undefined ? settings.salesVoiceRate : 1.0, 
-                                    pitch: settings.salesVoicePitch !== undefined ? settings.salesVoicePitch : 1.0, 
+                                    volume: settings.salesVoiceVolume !== undefined ? settings.salesVoiceVolume : (v.volume || 1.0), 
+                                    rate: v.rate || 1.0, 
+                                    pitch: v.pitch || 1.0, 
                                     isTest: true 
                                   }, null, () => {
                                     setPreviewingVoiceId(null);
@@ -2257,11 +2257,13 @@ IDOL MỈM CƯỜI + GESTURE
                                     setSettings(prev => ({ 
                                       ...prev, 
                                       mainVoiceId: v.id,
-                                      mainVoiceVolume: settings.salesVoiceVolume !== undefined ? settings.salesVoiceVolume : 1.0,
-                                      mainVoiceRate: settings.salesVoiceRate !== undefined ? settings.salesVoiceRate : 1.0,
-                                      mainVoicePitch: settings.salesVoicePitch !== undefined ? settings.salesVoicePitch : 1.0
+                                      mainVoiceVolume: settings.salesVoiceVolume !== undefined ? settings.salesVoiceVolume : (v.volume || 1.0),
+                                      mainVoiceRate: v.rate || settings.salesVoiceRate || 1.0,
+                                      mainVoicePitch: v.pitch || settings.salesVoicePitch || 1.0,
+                                      salesVoiceRate: v.rate || settings.salesVoiceRate || 1.0,
+                                      salesVoicePitch: v.pitch || settings.salesVoicePitch || 1.0
                                     }));
-                                    alert(`Đã chọn giọng "${v.name}" làm Giọng Idol Livestream chính kèm cấu hình tốc độ & âm lượng!`);
+                                    alert(`Đã chọn giọng "${v.name}" làm Giọng Idol Livestream chính!`);
                                   }}
                                   className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
                                     isSelectedAsIdol 
