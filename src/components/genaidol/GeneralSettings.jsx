@@ -9,7 +9,7 @@ const MAIN_VOICES = [...ALL_SYSTEM_VOICES];
 const ASSISTANT_VOICES = [...ALL_SYSTEM_VOICES];
 const GAME_VOICES = [...ALL_SYSTEM_VOICES];
 
-export default function GeneralSettings({ onClose }) {
+export default function GeneralSettings({ onClose = () => {} }) {
   const [activeTab, setActiveTab] = useState('prompt');
   const [idleVideoCount, setIdleVideoCount] = useState(0);
   const [previewingVoiceId, setPreviewingVoiceId] = useState(null);
@@ -1857,7 +1857,9 @@ IDOL MỈM CƯỜI + GESTURE
       console.warn("Lỗi lưu cấu hình:", e);
     }
 
-    onClose();
+    if (typeof onClose === 'function') {
+      onClose();
+    }
   };
 
   const handleChange = (e) => {
@@ -2413,19 +2415,31 @@ IDOL MỈM CƯỜI + GESTURE
       </div>
 
       {/* FOOTER ACTIONS */}
-      <div className="flex items-center justify-end gap-3 px-6 py-4 bg-white border-t border-gray-300">
-        <button 
-          onClick={handleSave}
-          className="px-8 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium shadow-sm transition-colors text-sm"
-        >
-          Save
-        </button>
-        <button 
-          onClick={onClose}
-          className="px-6 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded font-medium shadow-sm transition-colors text-sm"
-        >
-          Cancel
-        </button>
+      <div className="flex items-center justify-between px-6 py-3.5 bg-gray-50 border-t border-gray-300 shrink-0">
+        <div className="text-xs text-gray-500 font-medium flex items-center gap-1.5">
+          <CheckCircle2 size={15} className="text-emerald-500" />
+          <span>Tất cả cài đặt sẽ được lưu vĩnh viễn và áp dụng ngay cho phòng Live.</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <button 
+            type="button"
+            onClick={() => {
+              if (typeof onClose === 'function') onClose();
+            }}
+            className="px-6 py-2.5 bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-xl font-bold shadow-xs transition-all text-xs cursor-pointer flex items-center gap-1.5"
+          >
+            <X size={14} />
+            <span>Đóng Cửa Sổ</span>
+          </button>
+          <button 
+            type="button"
+            onClick={handleSave}
+            className="px-8 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-black shadow-md transition-all text-xs cursor-pointer flex items-center gap-1.5"
+          >
+            <Save size={14} />
+            <span>Lưu Cấu Hình & Vào Phần Mềm</span>
+          </button>
+        </div>
       </div>
 
       {/* Ẩn thẻ input file */}

@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.2.2';
+export const APP_VERSION = '2.2.3';
 export const RELEASE_DATE = '09/09/2026';
 
 export const CHANGELOG = [
   {
-    title: '🇻🇳 Bộ Lọc Giọng Việt Nam 41 Giọng Đọc & Giọng Quốc Tế 28 Giọng Chuyên Nghiệp',
-    description: 'Bổ sung đầy đủ 2 Tab chính: Giọng Việt Nam (41 Giọng Đọc) và Giọng Quốc Tế (28 Giọng Quốc Tế). Tách riêng Giọng Nữ (21), Giọng Nam (20), Giọng Trẻ Gen Z, MC & Biên Tập Viên VTV, Bán Hàng & Chốt Đơn TVC, BLV Game PK & Minigame, Doanh Nhân / Quý Bà / Cao Tuổi.'
+    title: '✨ Tối Ưu Toàn Diện Cửa Sổ Cài Đặt & Cấu Hình Giọng Nói',
+    description: 'Thêm nút "Lưu Cấu Hình & Vào Phần Mềm", "Đóng Cửa Sổ" và tính năng bấm ngoài nền tối để đóng ngay tức thì 0ms, không bao giờ bị nghẽn ở màn hình cấu hình.'
   },
   {
-    title: '🔊 100% Giọng Việt Nam Nghe Thử Bằng Tiếng Việt Cảm Xúc',
-    description: 'Tất cả các giọng Việt Nam khi bấm Nghe Thử được phát âm chuẩn xác 100% bằng tiếng Việt với các câu thoại phong cách chuyên nghiệp (BTV, MC, Bán hàng, BLV, Tâm sự), tuyệt đối không đọc tiếng Anh.'
+    title: '🇻🇳 Bộ Lọc 41 Giọng Việt Nam & 28 Giọng Quốc Tế Không Trùng Lặp',
+    description: 'Hỗ trợ phân nhóm chi tiết: Giọng Nữ (21), Giọng Nam (20), Giọng Trẻ Gen Z, MC & Biên Tập Viên VTV, Bán Hàng TikTok Shop, TVC Flash Sale, BLV Game PK & Minigame, Doanh Nhân / Cao Tuổi.'
   },
   {
-    title: '🔍 Thanh Tìm Kiếm Giọng Nhanh & Giao Diện Pro Studio',
-    description: 'Tích hợp ô tìm kiếm tức thì theo tên giọng, phong cách, thể loại kèm các nút gán BLV / Trợ Lý / Idol trực tiếp trên giao diện.'
+    title: '🔊 100% Giọng Việt Nam Test Nghe Thử Bằng Tiếng Việt',
+    description: 'Tất cả các giọng Việt Nam khi bấm Nghe Thử được phát âm chuẩn xác 100% bằng tiếng Việt với các câu thoại phong cách chuyên nghiệp, tuyệt đối không đọc tiếng Anh.'
   }
 ];
 
