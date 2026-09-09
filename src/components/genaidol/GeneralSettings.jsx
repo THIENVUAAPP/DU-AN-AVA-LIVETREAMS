@@ -12,6 +12,8 @@ const GAME_VOICES = [...ALL_SYSTEM_VOICES];
 export default function GeneralSettings({ onClose }) {
   const [activeTab, setActiveTab] = useState('prompt');
   const [idleVideoCount, setIdleVideoCount] = useState(0);
+  const [previewingVoiceId, setPreviewingVoiceId] = useState(null);
+  const [voiceSearchQuery, setVoiceSearchQuery] = useState('');
   const fileInputRef = useRef(null);
   
   // State for all settings
@@ -1595,6 +1597,7 @@ IDOL MỈM CƯỜI + GESTURE
         if (!parsed.apiModel || parsed.apiModel === 'Model AvaLive') {
           parsed.apiModel = 'gemini-1.5-flash';
         }
+
         // Luôn bảo lưu trọn vẹn Bộ Não Tính Cách (System Prompt) mặc định
         if (!parsed.systemPrompt || parsed.systemPrompt.length < 500 || !parsed.systemPrompt.includes('NGỌC NHI — AI SALES HOST CỦA AVA LIVE')) {
           delete parsed.systemPrompt;
@@ -1614,7 +1617,210 @@ IDOL MỈM CƯỜI + GESTURE
     }).catch(console.error);
   }, []);
 
+  // Helper renderers for Tables with Instant Audio Preview
+  const renderVoiceTable = (voices, currentFilter, selectedId, onSelect, roleType) => {
+    const q = voiceSearchQuery.trim().toLowerCase();
+    const filtered = voices.filter(v => {
+      // 1. Keyword search filter
+      if (q) {
+        const matchName = (v.name || '').toLowerCase().includes(q);
+        const matchCategory = (v.category || '').toLowerCase().includes(q);
+        const matchDesc = (v.desc || '').toLowerCase().includes(q);
+        const matchLang = (v.lang || '').toLowerCase().includes(q);
+        if (!matchName && !matchCategory && !matchDesc && !matchLang) return false;
+      }
 
+      // 2. Category / Region / Gender filter
+      if (currentFilter === 'male') return v.gender === 'Male' || v.gender === 'Nam';
+      if (currentFilter === 'female') return v.gender === 'Female' || v.gender === 'Nữ';
+      if (currentFilter === 'vi') return v.region === 'vi' || v.id === 'free_vi_female' || (v.lang && v.lang.startsWith('vi'));
+      if (currentFilter === 'pro') return v.tier === 'pro';
+      if (currentFilter === 'us_uk') return v.region === 'us_uk';
+      if (currentFilter === 'eu') return v.region === 'eu';
+      if (currentFilter === 'latam') return v.region === 'latam';
+      if (currentFilter === 'asia') return v.region === 'asia';
+      return true;
+    });
+
+    return (
+      <div className="border border-gray-300 rounded-xl overflow-hidden shadow-sm bg-white">
+        <div className="overflow-y-auto max-h-[460px]">
+          <table className="w-full text-sm text-left border-collapse">
+            <thead className="bg-gray-100 text-gray-700 font-semibold border-b border-gray-300 text-xs sticky top-0 z-10 shadow-xs">
+              <tr>
+                <th className="px-3 py-2.5 w-12 text-center">#</th>
+                <th className="px-4 py-2.5">Tên Giọng Đọc AI</th>
+                <th className="px-3 py-2.5">Thể Loại / Quốc Gia</th>
+                <th className="px-3 py-2.5 w-24 text-center">Giới Tính</th>
+                <th className="px-3 py-2.5 w-32 text-center">Nền Tảng</th>
+                <th className="px-3 py-2.5 w-28 text-center">Nghe thử</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-8 text-gray-500 italic">
+                    Không tìm thấy giọng đọc phù hợp với bộ lọc.
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((v, i) => {
+                  const isSelected = selectedId === v.id;
+                  const isFree = v.tier === 'free' || v.provider === 'system';
+                  const isMiniMax = v.provider === 'minimax';
+                  const isFemale = v.gender === 'Female' || v.gender === 'Nữ';
+                  const isPlaying = previewingVoiceId === v.id;
+
+                  return (
+                    <tr 
+                      key={v.id || i} 
+                      onClick={() => onSelect(v.id)}
+                      className={`cursor-pointer transition-colors ${
+                        isSelected 
+                          ? 'bg-blue-600 text-white font-medium hover:bg-blue-700' 
+                          : isPlaying
+                            ? 'bg-amber-50 text-gray-800'
+                            : 'bg-white text-gray-800 hover:bg-blue-50/70'
+                      }`}
+                    >
+                      <td className="px-3 py-2.5 text-center text-xs opacity-75 font-mono">{i + 1}</td>
+                      <td className="px-4 py-2.5 font-bold">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span>{v.name}</span>
+                          {isSelected && <CheckCircle2 size={16} className="text-emerald-300 shrink-0 inline ml-1" />}
+                        </div>
+                        {v.desc && (
+                          <div className={`text-[11.5px] font-normal mt-0.5 line-clamp-1 ${isSelected ? 'text-blue-100' : 'text-gray-500'}`}>
+                            {v.desc}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <span className={`inline-block px-2.5 py-0.5 rounded-md text-[11px] font-semibold ${
+                          isSelected 
+                            ? 'bg-white/20 text-white' 
+                            : 'bg-gray-100 text-gray-700 border border-gray-200'
+                        }`}>
+                          {v.category || (isMiniMax ? 'MiniMax AI' : isFree ? 'Chuẩn Tiếng Việt' : 'Pro ElevenLabs')}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2.5 text-center text-xs font-semibold">
+                        <span className={isFemale ? (isSelected ? 'text-pink-200 font-bold' : 'text-pink-600 font-bold') : (isSelected ? 'text-cyan-200 font-bold' : 'text-blue-600 font-bold')}>
+                          {isFemale ? '👩 Nữ' : '👨 Nam'}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2.5 text-center">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                          isSelected
+                            ? 'bg-white/30 text-white'
+                            : isFree
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                              : isMiniMax
+                                ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                                : 'bg-purple-100 text-purple-800 border border-purple-300'
+                        }`}>
+                          {isFree ? '🇻🇳 Miễn Phí' : isMiniMax ? '⚡ MiniMax' : '💎 ElevenLabs'}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2.5 text-center">
+                        <button 
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isPlaying) {
+                              stopVoiceAudio();
+                              setPreviewingVoiceId(null);
+                              return;
+                            }
+
+                            let vol = 1.0, rate = 1.0, pitch = 1.0;
+                            if (roleType === 'idol') {
+                              vol = settings.mainVoiceVolume !== undefined ? settings.mainVoiceVolume : 1.0;
+                              rate = settings.mainVoiceRate !== undefined ? settings.mainVoiceRate : 1.0;
+                              pitch = settings.mainVoicePitch !== undefined ? settings.mainVoicePitch : 1.0;
+                            } else if (roleType === 'manager') {
+                              vol = settings.assistantVoiceVolume !== undefined ? settings.assistantVoiceVolume : 1.0;
+                              rate = settings.assistantVoiceRate !== undefined ? settings.assistantVoiceRate : 1.0;
+                              pitch = settings.assistantVoicePitch !== undefined ? settings.assistantVoicePitch : 1.0;
+                            } else if (roleType === 'game') {
+                              vol = settings.gameVoiceVolume !== undefined ? settings.gameVoiceVolume : 1.0;
+                              rate = settings.gameVoiceRate !== undefined ? settings.gameVoiceRate : 1.0;
+                              pitch = settings.gameVoicePitch !== undefined ? settings.gameVoicePitch : 1.0;
+                            }
+
+                            setPreviewingVoiceId(v.id);
+                            previewVoiceAudio({ ...v, volume: vol, rate, pitch }, null, true, () => {
+                              setPreviewingVoiceId(null);
+                            });
+                          }}
+                          title={isPlaying ? "Dừng nghe thử" : "Bấm để nghe thử giọng này"}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer active:scale-95 transition-all text-xs font-semibold ${
+                            isPlaying
+                              ? 'bg-amber-500 text-white animate-pulse shadow-md ring-2 ring-amber-300'
+                              : isSelected 
+                                ? 'bg-white text-blue-700 hover:bg-gray-100 shadow-sm' 
+                                : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200'
+                          }`}
+                        >
+                          <Volume2 size={15} className={isPlaying ? "animate-spin" : ""} />
+                          <span>{isPlaying ? 'Đang phát...' : 'Nghe thử'}</span>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
+  const renderFilterButtons = (currentFilter, onFilterChange) => {
+    const filters = [
+      { id: 'all', label: 'Tất cả' },
+      { id: 'female', label: '👩 Giọng Nữ' },
+      { id: 'male', label: '👨 Giọng Nam' },
+      { id: 'vi', label: '🇻🇳 Chuẩn VN (Hoài My)' },
+      { id: 'pro', label: '💎 Pro (ElevenLabs & MiniMax)' },
+      { id: 'us_uk', label: '🇺🇸 🇬🇧 Bắc Mỹ & UK' },
+      { id: 'eu', label: '🇪🇺 Châu Âu' },
+      { id: 'latam', label: '🌎 Nam Mỹ' },
+      { id: 'asia', label: '🌏 Châu Á' }
+    ];
+
+    return (
+      <div className="space-y-2.5">
+        <div className="flex flex-wrap items-center gap-2">
+          {filters.map(f => (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => onFilterChange(f.id)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                currentFilter === f.id
+                  ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-300'
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <div className="relative">
+          <Search size={15} className="absolute left-3 top-2.5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="🔍 Tìm nhanh theo tên giọng, quốc gia, thể loại..."
+            value={voiceSearchQuery}
+            onChange={(e) => setVoiceSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-3 py-1.5 text-xs bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 shadow-2xs"
+          />
+        </div>
+      </div>
+    );
+  };
 
   const handleSave = () => {
     try {
@@ -1722,128 +1928,11 @@ IDOL MỈM CƯỜI + GESTURE
     e.target.value = null; // reset
   };
 
-  // Helper renderers for Tables with Instant Audio Preview
-  const renderVoiceTable = (voices, currentFilter, selectedId, onSelect, roleType) => {
-    const filtered = voices.filter(v => {
-      if (currentFilter === 'male') return v.gender === 'Male' || v.gender === 'Nam';
-      if (currentFilter === 'female') return v.gender === 'Female' || v.gender === 'Nữ';
-      return true;
-    });
-
-    return (
-      <div className="border border-gray-300 rounded-xl overflow-hidden shadow-2xs">
-        <table className="w-full text-sm text-left">
-          <thead className="bg-gray-100 text-gray-700 font-semibold border-b border-gray-300 text-xs">
-            <tr>
-              <th className="px-3 py-2.5 w-10 text-center">#</th>
-              <th className="px-3 py-2.5">Tên Giọng Đọc AI</th>
-              <th className="px-3 py-2.5">Thể Loại / Phong Cách</th>
-              <th className="px-3 py-2.5 w-24 text-center">Giới Tính</th>
-              <th className="px-3 py-2.5 w-28 text-center">Nền Tảng</th>
-              <th className="px-3 py-2.5 w-24 text-center">Nghe thử</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {filtered.map((v, i) => {
-              const isSelected = selectedId === v.id;
-              const isFree = v.tier === 'free' || v.provider === 'system';
-              const isMiniMax = v.provider === 'minimax';
-              const isFemale = v.gender === 'Female' || v.gender === 'Nữ';
-
-              return (
-                <tr 
-                  key={v.id || i} 
-                  onClick={() => onSelect(v.id)}
-                  className={`cursor-pointer transition-colors ${
-                    isSelected 
-                      ? 'bg-blue-600 text-white font-medium hover:bg-blue-700' 
-                      : 'bg-white text-gray-800 hover:bg-blue-50/70'
-                  }`}
-                >
-                  <td className="px-3 py-2.5 text-center text-xs opacity-70">{i + 1}</td>
-                  <td className="px-3 py-2.5 font-bold">
-                    <div className="flex items-center gap-1.5">
-                      <span>{v.name}</span>
-                      {isSelected && <CheckCircle2 size={15} className="text-emerald-300 shrink-0 inline ml-1" />}
-                    </div>
-                    {v.desc && (
-                      <div className={`text-[11px] font-normal mt-0.5 line-clamp-1 ${isSelected ? 'text-blue-100' : 'text-gray-500'}`}>
-                        {v.desc}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-3 py-2.5">
-                    <span className={`inline-block px-2 py-0.5 rounded-md text-[11px] font-semibold ${
-                      isSelected 
-                        ? 'bg-white/20 text-white' 
-                        : 'bg-gray-100 text-gray-700 border border-gray-200'
-                    }`}>
-                      {v.category || (isMiniMax ? 'MiniMax AI' : isFree ? 'Chuẩn Tiếng Việt' : 'Pro ElevenLabs')}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2.5 text-center text-xs font-semibold">
-                    <span className={isFemale ? (isSelected ? 'text-pink-200' : 'text-pink-600') : (isSelected ? 'text-cyan-200' : 'text-blue-600')}>
-                      {isFemale ? '👩 Nữ' : '👨 Nam'}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2.5 text-center">
-                    <span className={`px-2 py-0.5 rounded-full text-[10.5px] font-bold ${
-                      isSelected
-                        ? 'bg-white/30 text-white'
-                        : isFree
-                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                          : isMiniMax
-                            ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                            : 'bg-purple-100 text-purple-800 border border-purple-300'
-                    }`}>
-                      {isFree ? '🇻🇳 Miễn Phí' : isMiniMax ? '⚡ MiniMax' : '💎 ElevenLabs'}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2.5 text-center">
-                    <button 
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        let vol = 1.0, rate = 1.0, pitch = 1.0;
-                        if (roleType === 'idol') {
-                          vol = settings.mainVoiceVolume !== undefined ? settings.mainVoiceVolume : 1.0;
-                          rate = settings.mainVoiceRate !== undefined ? settings.mainVoiceRate : 1.0;
-                          pitch = settings.mainVoicePitch !== undefined ? settings.mainVoicePitch : 1.0;
-                        } else if (roleType === 'manager') {
-                          vol = settings.assistantVoiceVolume !== undefined ? settings.assistantVoiceVolume : 1.0;
-                          rate = settings.assistantVoiceRate !== undefined ? settings.assistantVoiceRate : 1.0;
-                          pitch = settings.assistantVoicePitch !== undefined ? settings.assistantVoicePitch : 1.0;
-                        } else if (roleType === 'game') {
-                          vol = settings.gameVoiceVolume !== undefined ? settings.gameVoiceVolume : 1.0;
-                          rate = settings.gameVoiceRate !== undefined ? settings.gameVoiceRate : 1.0;
-                          pitch = settings.gameVoicePitch !== undefined ? settings.gameVoicePitch : 1.0;
-                        }
-                        previewVoiceAudio({ ...v, volume: vol, rate, pitch }, null, true);
-                      }}
-                      title="Nghe thử giọng này"
-                      className={`p-1.5 rounded-xl cursor-pointer active:scale-90 transition-all ${
-                        isSelected 
-                          ? 'bg-white text-blue-700 hover:bg-gray-100 shadow-xs' 
-                          : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200'
-                      }`}
-                    >
-                      <Volume2 size={15} />
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    );
-  };
-
   return (
     <div className="flex flex-col h-full bg-[#f0f2f5] text-[#333] font-sans overflow-hidden">
       
       {/* TABS */}
-      <div className="flex bg-white border-b border-gray-300">
+      <div className="flex bg-white border-b border-gray-300 shrink-0">
         <button 
           onClick={() => setActiveTab('prompt')}
           className={`flex items-center gap-2 px-5 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'prompt' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
@@ -1878,57 +1967,46 @@ IDOL MỈM CƯỜI + GESTURE
 
       {/* CONTENT AREA */}
       <div className="flex-1 overflow-y-auto p-4 bg-[#f8f9fa] scroll-smooth overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
-        <div className="max-w-5xl mx-auto space-y-4 pb-10">
+        <div className="space-y-4 max-w-7xl mx-auto">
           
           {/* TAB 1: BỘ NÃO IDOL */}
           {activeTab === 'prompt' && (
             <>
-              {/* Box 1: Backend Hub URL */}
+              {/* Box 1: API Config */}
               <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
-                <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <Settings2 size={16} className="text-blue-600" /> Máy chủ Kết nối Live (Backend Hub Server)
-                  </span>
-                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">
-                    TikTok Live Engine
-                  </span>
+                <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm">
+                  Cấu hình API TikTok & Server Live
                 </div>
-                <div className="p-4 space-y-3">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-semibold text-gray-700">Đường dẫn Máy chủ Backend Node.js (Socket.io):</label>
+                <div className="p-4 space-y-4">
+                  <div>
+                    <label className="text-sm font-semibold text-[#a53b3b] block mb-1">Server Backend URL (TikTok Live & TTS Proxy):</label>
                     <div className="flex gap-2">
                       <input 
                         type="text" 
-                        placeholder="VD: http://localhost:3001 hoặc https://your-backend.onrender.com"
+                        name="backendUrl" 
                         value={settings.backendUrl || ''} 
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setSettings(prev => ({ ...prev, backendUrl: val }));
-                          try {
-                            localStorage.setItem('aidol_backend_url', val.trim());
-                          } catch (err) {}
-                        }} 
-                        className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500 font-mono text-gray-800"
+                        onChange={handleChange}
+                        placeholder="http://localhost:3001 hoặc https://domain-backend.com"
+                        className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500"
                       />
                       <button 
                         type="button"
                         onClick={() => {
-                          setSettings(prev => ({ ...prev, backendUrl: 'http://localhost:3001' }));
                           try {
-                            if (typeof window !== 'undefined') {
-                              localStorage.setItem('aidol_backend_url', 'http://localhost:3001');
+                            const origin = window.location.origin;
+                            if (origin && !origin.includes('localhost') && !origin.includes('127.0.0.1')) {
+                              setSettings(prev => ({ ...prev, backendUrl: origin }));
+                            } else {
+                              setSettings(prev => ({ ...prev, backendUrl: 'http://localhost:3001' }));
                             }
                           } catch (err) {}
                         }}
                         className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-xs font-semibold border border-gray-300"
                       >
-                        Đặt Localhost (:3001)
+                        Đặt Tự Động
                       </button>
                     </div>
                   </div>
-                  <p className="text-xs text-gray-500 italic">
-                    ⓘ Khi chạy trên Web (Vercel), hệ thống cần kết nối tới Server Node.js (cổng 3001 trên máy tính của bạn hoặc server Cloud) để đọc luồng TikTok Live.
-                  </p>
                 </div>
               </div>
 
@@ -1953,14 +2031,14 @@ IDOL MỈM CƯỜI + GESTURE
                     <label className="text-sm font-semibold text-[#a53b3b]">Tính cách (System Prompt):</label>
                     <textarea 
                       name="systemPrompt" value={settings.systemPrompt} onChange={handleChange}
-                      className="w-full flex-1 min-h-[120px] border border-gray-300 rounded p-3 text-sm focus:outline-none focus:border-blue-500 resize-none"
+                      className="w-full flex-1 min-h-[140px] border border-gray-300 rounded p-3 text-sm focus:outline-none focus:border-blue-500 resize-none"
                     />
                   </div>
                   <div className="flex flex-col gap-1.5 flex-1">
                     <label className="text-sm font-semibold text-[#a53b3b]">Kiến thức nền / Bối cảnh:</label>
                     <textarea 
                       name="backgroundContext" value={settings.backgroundContext} onChange={handleChange}
-                      className="w-full flex-1 min-h-[120px] border border-gray-300 rounded p-3 text-sm focus:outline-none focus:border-blue-500 resize-none"
+                      className="w-full flex-1 min-h-[140px] border border-gray-300 rounded p-3 text-sm focus:outline-none focus:border-blue-500 resize-none"
                     />
                   </div>
                 </div>
@@ -1977,18 +2055,16 @@ IDOL MỈM CƯỜI + GESTURE
                   <span className="flex items-center gap-2">
                     <Brain size={16} className="text-blue-600" /> Thiết lập Bộ Não AI (Gemini Flash Intelligence)
                   </span>
-                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold border border-green-300">
-                    ⚡ Siêu Nhanh & Rẻ Nhất
+                  <span className="text-xs bg-green-100 text-green-700 px-2.5 py-0.5 rounded-full font-bold border border-green-300">
+                    ⚡ Siêu Nhanh &lt; 400ms
                   </span>
                 </div>
-                <div className="p-4 space-y-4">
-                  <p className="text-sm font-semibold text-gray-800">Cấu hình Model AI Google Gemini cho Idol & Trợ lý:</p>
-                  
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-2">
+                <div className="p-4 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                     <label className="text-sm font-semibold text-[#a53b3b] min-w-[130px]">Chọn Model AI:</label>
                     <select 
                       name="apiModel" value={settings.apiModel} onChange={handleChange}
-                      className="flex-1 border border-blue-400 bg-blue-50/40 font-medium rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600 text-gray-800 shadow-sm"
+                      className="flex-1 border border-blue-400 bg-blue-50/40 font-medium rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600 text-gray-800 shadow-xs"
                     >
                       <option value="gemini-1.5-flash">🔥 Gemini 1.5 Flash (Khuyên dùng: Siêu tốc &lt;0.4s | Thông minh nhất | Tiết kiệm nhất)</option>
                       <option value="gemini-2.0-flash">⚡ Gemini 2.0 Flash (Next-Gen Realtime AI — Tốc độ xử lý đỉnh cao)</option>
@@ -1996,68 +2072,36 @@ IDOL MỈM CƯỜI + GESTURE
                       <option value="gpt-4o-mini">🤖 OpenAI GPT-4o Mini (OpenAI Engine)</option>
                     </select>
                   </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-gray-50 p-3 rounded-lg border border-gray-200 text-xs">
-                    <div className="flex items-center gap-1.5 text-gray-700">
-                      <span className="text-green-600 font-bold">✓ Tốc độ phản hồi:</span>
-                      <span className="font-semibold text-blue-600">&lt; 400ms (Real-time)</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-gray-700">
-                      <span className="text-green-600 font-bold">✓ Độ thông minh:</span>
-                      <span className="font-semibold text-purple-600">Hiểu tiếng Việt tự nhiên</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-gray-700">
-                      <span className="text-green-600 font-bold">✓ Chi phí API:</span>
-                      <span className="font-semibold text-emerald-600">~0.5đ - 1.5đ / câu hỏi đáp</span>
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-gray-500 italic flex items-center gap-1">
-                    ⓘ Bộ não Gemini Flash được tối ưu hóa riêng biệt cho Idol Live, Trợ lý chốt đơn và BLV Game.
-                  </p>
                 </div>
               </div>
 
               {/* Bảng Giọng nói */}
-              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden flex flex-col h-[400px]">
-                <div className="px-4 py-3 border-b border-gray-300 bg-white">
-                  <h3 className="font-bold text-gray-800 text-sm mb-2">Chọn Giọng Nói Cho Nhân vật Chính</h3>
-                  <div className="flex items-center gap-6">
-                    <span className="text-sm font-semibold text-[#a53b3b]">Lọc theo:</span>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="radio" checked={settings.mainVoiceFilter === 'all'} onChange={() => handleMainVoiceFilter('all')} className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm font-medium text-gray-700">Tất cả</span>
-                    </label>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="radio" checked={settings.mainVoiceFilter === 'male'} onChange={() => handleMainVoiceFilter('male')} className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm font-medium text-gray-700">Giọng Nam</span>
-                    </label>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="radio" checked={settings.mainVoiceFilter === 'female'} onChange={() => handleMainVoiceFilter('female')} className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm font-medium text-gray-700">Giọng Nữ</span>
-                    </label>
+              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden flex flex-col">
+                <div className="px-4 py-3 border-b border-gray-300 bg-white space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+                      <User size={16} className="text-blue-600" />
+                      Chọn Giọng Nói Cho Idol Livestream Chính
+                    </h3>
+                    <button 
+                      onClick={handleUploadVoiceClick}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 rounded-lg text-xs font-semibold transition-colors"
+                    >
+                      <Upload size={14} /> Tải lên Giọng đọc (Clone)
+                    </button>
                   </div>
-                  <button 
-                    onClick={handleUploadVoiceClick}
-                    className="ml-auto flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 rounded text-sm font-medium transition-colors"
-                  >
-                    <Upload size={16} /> Tải lên Giọng đọc (Clone)
-                  </button>
+                  {renderFilterButtons(settings.mainVoiceFilter, handleMainVoiceFilter)}
                 </div>
                 
-                <div className="flex-1 overflow-auto p-4">
+                <div className="p-4">
                   {renderVoiceTable([...settings.customVoices, ...MAIN_VOICES], settings.mainVoiceFilter, settings.mainVoiceId, (id) => setSettings(prev => ({...prev, mainVoiceId: id})), 'idol')}
-                </div>
-                
-                <div className="px-4 py-2 bg-gray-50 border-t border-gray-300 text-xs text-gray-500 italic">
-                  ⓘ Vui lòng bấm vào nút 'Nghe thử' 🔊 để kiểm tra giọng nói trước khi chọn để tránh lỗi giọng nói từ server.
                 </div>
               </div>
 
               {/* Tùy chỉnh Giọng Nói */}
               <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
                 <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm flex items-center">
-                  <Volume2 size={16} className="text-blue-600 mr-2" /> Tùy chỉnh Giọng Idol Live
+                  <Volume2 size={16} className="text-blue-600 mr-2" /> Tùy chỉnh Âm thanh Giọng Idol Live
                 </div>
                 <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-6">
                   <div className="flex flex-col gap-2">
@@ -2092,7 +2136,7 @@ IDOL MỈM CƯỜI + GESTURE
               {/* Cài đặt chung cho Trợ lý */}
               <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
                 <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm">
-                  Cài đặt chung cho Trợ lý
+                  Cài đặt chung cho Trợ lý / Quản lý
                 </div>
                 <div className="p-4 space-y-4">
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -2101,7 +2145,7 @@ IDOL MỈM CƯỜI + GESTURE
                       checked={settings.assistantEnabled} onChange={handleChange}
                       className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" 
                     />
-                    <span className="text-sm font-bold text-gray-800">Bật Trợ lý</span>
+                    <span className="text-sm font-bold text-gray-800">Bật Kênh Trợ Lý / Quản Lý Hậu Trường</span>
                   </label>
 
                   <div className="border-t border-gray-200 pt-3">
@@ -2145,45 +2189,32 @@ IDOL MỈM CƯỜI + GESTURE
               </div>
 
               {/* Bảng Giọng nói Trợ lý */}
-              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden flex flex-col h-[480px]">
-                <div className="px-4 py-3 border-b border-gray-300 bg-white">
-                  <h3 className="font-bold text-gray-800 text-sm mb-2">Chọn Giọng Nói cho Trợ lý</h3>
-                  <div className="flex items-center gap-6">
-                    <span className="text-sm font-semibold text-gray-700">Lọc theo:</span>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="radio" checked={settings.assistantVoiceFilter === 'all'} onChange={() => handleAssistantVoiceFilter('all')} className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm font-medium text-gray-700">Tất cả</span>
-                    </label>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="radio" checked={settings.assistantVoiceFilter === 'male'} onChange={() => handleAssistantVoiceFilter('male')} className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm font-medium text-gray-700">Giọng Nam</span>
-                    </label>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="radio" checked={settings.assistantVoiceFilter === 'female'} onChange={() => handleAssistantVoiceFilter('female')} className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm font-medium text-gray-700">Giọng Nữ</span>
-                    </label>
+              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden flex flex-col">
+                <div className="px-4 py-3 border-b border-gray-300 bg-white space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+                      <Mic size={16} className="text-red-500" />
+                      Chọn Giọng Nói Cho Quản Lý / Trợ Lý Hậu Trường
+                    </h3>
+                    <button 
+                      onClick={handleUploadVoiceClick}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 rounded-lg text-xs font-semibold transition-colors"
+                    >
+                      <Upload size={14} /> Tải lên Giọng đọc (Clone)
+                    </button>
                   </div>
-                  <button 
-                    onClick={handleUploadVoiceClick}
-                    className="ml-auto flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 rounded text-sm font-medium transition-colors"
-                  >
-                    <Upload size={16} /> Tải lên Giọng đọc (Clone)
-                  </button>
+                  {renderFilterButtons(settings.assistantVoiceFilter, handleAssistantVoiceFilter)}
                 </div>
                 
-                <div className="flex-1 overflow-auto p-4">
+                <div className="p-4">
                   {renderVoiceTable([...settings.customVoices, ...ASSISTANT_VOICES], settings.assistantVoiceFilter, settings.assistantVoiceId, (id) => setSettings(prev => ({...prev, assistantVoiceId: id})), 'manager')}
-                </div>
-
-                <div className="px-4 py-2 bg-gray-50 border-t border-gray-300 text-xs text-gray-500 italic">
-                  ⓘ Vui lòng bấm vào nút 'Nghe thử' 🔊 để kiểm tra giọng nói trước khi chọn để tránh lỗi giọng nói từ server.
                 </div>
               </div>
 
               {/* Tùy chỉnh Giọng Nói Manager */}
               <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
                 <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm flex items-center">
-                  <Volume2 size={16} className="text-red-500 mr-2" /> Tùy chỉnh Giọng Quản Lý / Trợ Lý
+                  <Volume2 size={16} className="text-red-500 mr-2" /> Tùy chỉnh Âm thanh Giọng Quản Lý / Trợ Lý
                 </div>
                 <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-6">
                   <div className="flex flex-col gap-2">

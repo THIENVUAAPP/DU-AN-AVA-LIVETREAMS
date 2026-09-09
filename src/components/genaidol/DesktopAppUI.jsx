@@ -4712,25 +4712,26 @@ export default function DesktopAppUI() {
 
       {/* General Settings Modal */}
       {activeSettingsModal === 'general' && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in zoom-in duration-200">
-          <div className={`w-[900px] h-[700px] flex flex-col rounded-lg overflow-hidden shadow-2xl border bg-[#f0f2f5] border-gray-300`}>
-            <div className={`flex items-center justify-between px-4 py-2 border-b bg-gray-200 border-gray-300`}>
-              <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-                <Settings size={14} className="text-gray-600" />
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-2 md:p-3 animate-in fade-in zoom-in duration-200">
+          <div className="w-[98vw] max-w-[1720px] h-[96vh] max-h-[98vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border bg-[#f8fafc] border-gray-300">
+            <div className="flex items-center justify-between px-6 py-3 border-b bg-gradient-to-r from-gray-100 to-gray-200 border-gray-300 shrink-0">
+              <h2 className="text-base font-bold text-gray-800 flex items-center gap-2">
+                <Settings size={18} className="text-blue-600" />
                 Cấu hình AI, Giọng nói & API
               </h2>
               <button 
                 onClick={() => setActiveSettingsModal(null)}
-                className="hover:bg-gray-300 p-1 rounded transition-colors text-gray-600"
+                className="hover:bg-gray-300/80 p-1.5 rounded-lg transition-colors text-gray-600 hover:text-gray-900"
+                title="Đóng"
               >
-                <X size={16} />
+                <X size={20} />
               </button>
-    </div>
+            </div>
             <div className="flex-1 overflow-hidden">
               <GeneralSettings onClose={() => setActiveSettingsModal(null)} />
-    </div>
-    </div>
-    </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Settings Modal (WorkspaceTacVu / Event Manager) */}

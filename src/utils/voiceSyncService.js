@@ -11,62 +11,91 @@ import { globalLipSyncEngine } from '../lib/avatar-sync/AvatarLipSyncEngine';
 
 export const ELEVENLABS_VOICES = [
   // ==================== 1. 20 GIỌNG NỮ PRO (ElevenLabs & MiniMax AI) ====================
-  { id: 'el_rachel', name: 'Rachel 💎 (Nữ - Idol Ngọt Ngào, Tự Nhiên)', provider: 'elevenlabs', voiceId: '21m00Tcm4TlvDq8ikWAM', gender: 'Female', lang: 'vi-VN', category: 'Idol Live & Giao Lưu', pitch: 1.15, rate: 1.0, recommendedFor: 'idol', desc: 'Giọng nữ trẻ trung, ấm áp, cực kỳ hợp cho Idol Livestream chính.' },
-  { id: 'el_bella', name: 'Bella 💎 (Nữ - Dịu Dàng, Truyền Cảm)', provider: 'elevenlabs', voiceId: 'EXAVITQu4vr4xnSDxMaL', gender: 'Female', lang: 'vi-VN', category: 'Tâm Sự & Kể Chuyện', pitch: 1.08, rate: 0.96, recommendedFor: 'idol', desc: 'Giọng nữ êm dịu, nhẹ nhàng, lắng đọng, phù hợp kể chuyện và tâm sự.' },
-  { id: 'el_domi', name: 'Domi 💎 (Nữ - Năng Động, Hoạt Náo Gen Z)', provider: 'elevenlabs', voiceId: 'AZnzlk1XvdvUeBnXmlld', gender: 'Female', lang: 'vi-VN', category: 'Sự Kiện & Minigame', pitch: 1.22, rate: 1.08, recommendedFor: 'both', desc: 'Giọng nữ hoạt náo, tươi vui, kích thích tương tác và minigame.' },
-  { id: 'el_elli', name: 'Elli 💎 (Nữ - Cảm Xúc Sâu Lắng, Đọc Thơ)', provider: 'elevenlabs', voiceId: 'MF3mGyEYCl7XYWbV9V6O', gender: 'Female', lang: 'vi-VN', category: 'Kể Chuyện & Đọc Thơ', pitch: 1.04, rate: 0.94, recommendedFor: 'idol', desc: 'Giọng nữ giàu cảm xúc nghệ thuật, đọc sách, podcast và tâm tình.' },
-  { id: 'el_emily', name: 'Emily 💎 (Nữ - MC Truyền Hình VTV Sang Trọng)', provider: 'elevenlabs', voiceId: 'LcfcDJNigL5wcJAoLJq7', gender: 'Female', lang: 'vi-VN', category: 'MC Truyền Hình & Sự Kiện', pitch: 1.10, rate: 1.02, recommendedFor: 'both', desc: 'Giọng nữ chuẩn mực, đĩnh đạc, âm sắc chuẩn phát thanh viên truyền hình.' },
-  { id: 'el_charlotte', name: 'Charlotte 💎 (Nữ - Biên Tập Viên Thời Sự)', provider: 'elevenlabs', voiceId: 'XB0fDUnXU5ikFXcvcxZs', gender: 'Female', lang: 'vi-VN', category: 'Biên Tập Viên & Phóng Sự', pitch: 1.06, rate: 1.04, recommendedFor: 'both', desc: 'Giọng nữ nghiêm túc, rõ ràng, dứt khoát chuẩn bản tin thời sự.' },
-  { id: 'el_serena', name: 'Serena 💎 (Nữ - Bán Hàng Chốt Sale Đỉnh Cao)', provider: 'elevenlabs', voiceId: 'pMsXgVXv3BLzUgSXRplE', gender: 'Female', lang: 'vi-VN', category: 'Bán Hàng & Chốt Đơn', pitch: 1.18, rate: 1.10, recommendedFor: 'manager', desc: 'Giọng nữ chốt đơn bán hàng tốc độ, kích thích người mua bấm vào giỏ hàng.' },
-  { id: 'el_nicole', name: 'Nicole 💎 (Nữ - Quảng Cáo TVC & Giục Flash Sale)', provider: 'elevenlabs', voiceId: 'piTKgcLEGmPE4e6mEKli', gender: 'Female', lang: 'vi-VN', category: 'Quảng Cáo & Giục Đơn', pitch: 1.20, rate: 1.12, recommendedFor: 'manager', desc: 'Giọng nữ hào hứng, dồn dập, đẩy mạnh doanh số những phút cuối sale.' },
-  { id: 'el_freya', name: 'Freya 💎 (Nữ - Quý Bà Trung Niên Đĩnh Đạc)', provider: 'elevenlabs', voiceId: 'jsCqWAovK2LkecY7zXl4', gender: 'Female', lang: 'vi-VN', category: 'Trung Niên & Doanh Nhân', pitch: 0.98, rate: 0.96, recommendedFor: 'manager', desc: 'Giọng nữ trung niên uy tín, sang trọng của nữ giám đốc/doanh nhân.' },
-  { id: 'el_gigi', name: 'Gigi 💎 (Nữ - Anime / VTuber Nhí Nhảnh)', provider: 'elevenlabs', voiceId: 'jBpfuIE2acCO8z3wKNLl', gender: 'Female', lang: 'vi-VN', category: 'Anime & VTuber', pitch: 1.35, rate: 1.08, recommendedFor: 'idol', desc: 'Giọng nữ anime nhí nhảnh, đáng yêu chuẩn phong cách idol ảo Nhật Bản.' },
-  { id: 'el_glinda', name: 'Glinda 💎 (Nữ - Nữ Hoàng Quyền Lực BLV)', provider: 'elevenlabs', voiceId: 'z9fAnlkOXvlPwwBMtIwu', gender: 'Female', lang: 'vi-VN', category: 'BLV & Chiến Trận', pitch: 1.05, rate: 1.06, recommendedFor: 'game', desc: 'Giọng nữ tướng quân đanh thép, thông báo sự kiện và chiến thắng game.' },
-  { id: 'el_grace', name: 'Grace 💎 (Nữ - Đọc Sách, Chữa Lành Tâm Hồn)', provider: 'elevenlabs', voiceId: 'oWAxZDx7w5VEj9dCyTzz', gender: 'Female', lang: 'vi-VN', category: 'Đọc Sách & Chữa Lành', pitch: 1.06, rate: 0.92, recommendedFor: 'idol', desc: 'Giọng nữ êm ái như dòng suối, mang lại cảm giác bình yên, thư thái.' },
-  { id: 'el_alice', name: 'Alice 💎 (Nữ - Trợ Lý Thông Minh & Tận Tâm)', provider: 'elevenlabs', voiceId: 'Xb7hH8MSUJpSbSDYk0k2', gender: 'Female', lang: 'vi-VN', category: 'Trợ Lý & CSKH', pitch: 1.12, rate: 1.0, recommendedFor: 'manager', desc: 'Giọng nữ trợ lý AI lịch sự, ân cần giải đáp mọi thắc mắc của khán giả.' },
-  { id: 'el_lily', name: 'Lily 💎 (Nữ - Thân Thiện Gần Gũi KOC)', provider: 'elevenlabs', voiceId: 'pFZP5JQG7iQjIQuC4Bku', gender: 'Female', lang: 'vi-VN', category: 'KOC & Reviewer', pitch: 1.16, rate: 1.02, recommendedFor: 'idol', desc: 'Giọng nữ trẻ review sản phẩm chân thật, tạo độ tin cậy tuyệt đối.' },
-  { id: 'el_jessica', name: 'Jessica 💎 (Nữ - BLV Năng Lượng Đỉnh Nóc)', provider: 'elevenlabs', voiceId: 'cgSgspJ2msm6clMCkdW9', gender: 'Female', lang: 'vi-VN', category: 'BLV Game & Thể Thao', pitch: 1.25, rate: 1.12, recommendedFor: 'game', desc: 'Giọng nữ bình luận viên thể thao/game sôi động, bốc lửa từng pha combat.' },
-  { id: 'el_matilda', name: 'Matilda 💎 (Nữ - Chuyên Gia Y Tế & Sức Khỏe)', provider: 'elevenlabs', voiceId: 'XrExE9yKIg1WjnnlVkGX', gender: 'Female', lang: 'vi-VN', category: 'Chuyên Gia & Y Tế', pitch: 1.02, rate: 0.98, recommendedFor: 'manager', desc: 'Giọng nữ dày dặn kinh nghiệm, tư vấn chuyên môn sâu sắc và tin cậy.' },
-  { id: 'el_hannah', name: 'Hannah 💎 (Nữ - Tâm Sự Đêm Khuya Sâu Lắng)', provider: 'elevenlabs', voiceId: 'ThT5KcBeYPX3keUQqHPh', gender: 'Female', lang: 'vi-VN', category: 'Tâm Sự & Kể Chuyện', pitch: 1.04, rate: 0.93, recommendedFor: 'idol', desc: 'Giọng nữ ấm áp thì thầm, thích hợp livestream acoustic và đêm muộn.' },
-  { id: 'mm_thuha', name: 'Thu Hà ⚡ (Nữ - MiniMax Bán Hàng Tiktok Top 1)', provider: 'minimax', voiceId: 'speech-01-turbo-thuha', gender: 'Female', lang: 'vi-VN', category: 'MiniMax Chốt Đơn Siêu Tốc', pitch: 1.16, rate: 1.08, recommendedFor: 'manager', desc: 'Giọng MiniMax AI chuyên biệt chốt đơn livestream TikTok Shop không góc chết.' },
-  { id: 'mm_lananh', name: 'Lan Anh ⚡ (Nữ - MiniMax MC Thời Sự VTV)', provider: 'minimax', voiceId: 'speech-01-turbo-lananh', gender: 'Female', lang: 'vi-VN', category: 'MiniMax MC & Thời Sự', pitch: 1.08, rate: 1.02, recommendedFor: 'both', desc: 'Giọng MiniMax AI chuẩn biên tập viên truyền hình quốc gia, tròn vành rõ chữ.' },
-  { id: 'mm_anhduong', name: 'Ánh Dương ⚡ (Nữ - MiniMax Kể Chuyện Cảm Xúc)', provider: 'minimax', voiceId: 'speech-01-turbo-anhduong', gender: 'Female', lang: 'vi-VN', category: 'MiniMax Kể Chuyện Cổ Tích', pitch: 1.12, rate: 0.95, recommendedFor: 'idol', desc: 'Giọng MiniMax AI truyền cảm vô tận, đưa người nghe vào câu chuyện lôi cuốn.' },
+  { id: 'el_rachel', name: 'Rachel 💎 (Nữ - Idol Ngọt Ngào, Tự Nhiên)', provider: 'elevenlabs', voiceId: '21m00Tcm4TlvDq8ikWAM', gender: 'Female', lang: 'vi-VN', region: 'vi', category: 'Idol Live & Giao Lưu', pitch: 1.15, rate: 1.0, recommendedFor: 'idol', desc: 'Giọng nữ trẻ trung, ấm áp, cực kỳ hợp cho Idol Livestream chính.' },
+  { id: 'el_bella', name: 'Bella 💎 (Nữ - Dịu Dàng, Truyền Cảm)', provider: 'elevenlabs', voiceId: 'EXAVITQu4vr4xnSDxMaL', gender: 'Female', lang: 'vi-VN', region: 'vi', category: 'Tâm Sự & Kể Chuyện', pitch: 1.08, rate: 0.96, recommendedFor: 'idol', desc: 'Giọng nữ êm dịu, nhẹ nhàng, lắng đọng, phù hợp kể chuyện và tâm sự.' },
+  { id: 'el_domi', name: 'Domi 💎 (Nữ - Năng Động, Hoạt Náo Gen Z)', provider: 'elevenlabs', voiceId: 'AZnzlk1XvdvUeBnXmlld', gender: 'Female', lang: 'vi-VN', region: 'vi', category: 'Sự Kiện & Minigame', pitch: 1.22, rate: 1.08, recommendedFor: 'both', desc: 'Giọng nữ hoạt náo, tươi vui, kích thích tương tác và minigame.' },
+  { id: 'el_elli', name: 'Elli 💎 (Nữ - Cảm Xúc Sâu Lắng, Đọc Thơ)', provider: 'elevenlabs', voiceId: 'MF3mGyEYCl7XYWbV9V6O', gender: 'Female', lang: 'vi-VN', region: 'vi', category: 'Kể Chuyện & Đọc Thơ', pitch: 1.04, rate: 0.94, recommendedFor: 'idol', desc: 'Giọng nữ giàu cảm xúc nghệ thuật, đọc sách, podcast và tâm tình.' },
+  { id: 'el_emily', name: 'Emily 💎 (Nữ - MC Truyền Hình VTV Sang Trọng)', provider: 'elevenlabs', voiceId: 'LcfcDJNigL5wcJAoLJq7', gender: 'Female', lang: 'vi-VN', region: 'vi', category: 'MC Truyền Hình & Sự Kiện', pitch: 1.10, rate: 1.02, recommendedFor: 'both', desc: 'Giọng nữ chuẩn mực, đĩnh đạc, âm sắc chuẩn phát thanh viên truyền hình.' },
+  { id: 'el_charlotte', name: 'Charlotte 💎 (Nữ - Biên Tập Viên Thời Sự)', provider: 'elevenlabs', voiceId: 'XB0fDUnXU5ikFXcvcxZs', gender: 'Female', lang: 'vi-VN', region: 'vi', category: 'Biên Tập Viên & Phóng Sự', pitch: 1.06, rate: 1.04, recommendedFor: 'both', desc: 'Giọng nữ nghiêm túc, rõ ràng, dứt khoát chuẩn bản tin thời sự.' },
+  { id: 'el_serena', name: 'Serena 💎 (Nữ - Bán Hàng Chốt Sale Đỉnh Cao)', provider: 'elevenlabs', voiceId: 'pMsXgVXv3BLzUgSXRplE', gender: 'Female', lang: 'vi-VN', region: 'vi', category: 'Bán Hàng & Chốt Đơn', pitch: 1.18, rate: 1.10, recommendedFor: 'manager', desc: 'Giọng nữ chốt đơn bán hàng tốc độ, kích thích người mua bấm vào giỏ hàng.' },
+  { id: 'el_nicole', name: 'Nicole 💎 (Nữ - Quảng Cáo TVC & Giục Flash Sale)', provider: 'elevenlabs', voiceId: 'piTKgcLEGmPE4e6mEKli', gender: 'Female', lang: 'vi-VN', region: 'vi', category: 'Quảng Cáo & Giục Đơn', pitch: 1.20, rate: 1.12, recommendedFor: 'manager', desc: 'Giọng nữ hào hứng, dồn dập, đẩy mạnh doanh số những phút cuối sale.' },
+  { id: 'el_freya', name: 'Freya 💎 (Nữ - Quý Bà Trung Niên Đĩnh Đạc)', provider: 'elevenlabs', voiceId: 'jsCqWAovK2LkecY7zXl4', gender: 'Female', lang: 'vi-VN', region: 'vi', category: 'Trung Niên & Doanh Nhân', pitch: 0.98, rate: 0.96, recommendedFor: 'manager', desc: 'Giọng nữ trung niên uy tín, sang trọng của nữ giám đốc/doanh nhân.' },
+  { id: 'el_gigi', name: 'Gigi 💎 (Nữ - Anime / VTuber Nhí Nhảnh)', provider: 'elevenlabs', voiceId: 'jBpfuIE2acCO8z3wKNLl', gender: 'Female', lang: 'vi-VN', region: 'vi', category: 'Anime & VTuber', pitch: 1.35, rate: 1.08, recommendedFor: 'idol', desc: 'Giọng nữ anime nhí nhảnh, đáng yêu chuẩn phong cách idol ảo Nhật Bản.' },
+  { id: 'el_glinda', name: 'Glinda 💎 (Nữ - Nữ Hoàng Quyền Lực BLV)', provider: 'elevenlabs', voiceId: 'z9fAnlkOXvlPwwBMtIwu', gender: 'Female', lang: 'vi-VN', region: 'vi', category: 'BLV & Chiến Trận', pitch: 1.05, rate: 1.06, recommendedFor: 'game', desc: 'Giọng nữ tướng quân đanh thép, thông báo sự kiện và chiến thắng game.' },
+  { id: 'el_grace', name: 'Grace 💎 (Nữ - Đọc Sách, Chữa Lành Tâm Hồn)', provider: 'elevenlabs', voiceId: 'oWAxZDx7w5VEj9dCyTzz', gender: 'Female', lang: 'vi-VN', region: 'vi', category: 'Đọc Sách & Chữa Lành', pitch: 1.06, rate: 0.92, recommendedFor: 'idol', desc: 'Giọng nữ êm ái như dòng suối, mang lại cảm giác bình yên, thư thái.' },
+  { id: 'el_alice', name: 'Alice 💎 (Nữ - Trợ Lý Thông Minh & Tận Tâm)', provider: 'elevenlabs', voiceId: 'Xb7hH8MSUJpSbSDYk0k2', gender: 'Female', lang: 'vi-VN', region: 'vi', category: 'Trợ Lý & CSKH', pitch: 1.12, rate: 1.0, recommendedFor: 'manager', desc: 'Giọng nữ trợ lý AI lịch sự, ân cần giải đáp mọi thắc mắc của khán giả.' },
+  { id: 'el_lily', name: 'Lily 💎 (Nữ - Thân Thiện Gần Gũi KOC)', provider: 'elevenlabs', voiceId: 'pFZP5JQG7iQjIQuC4Bku', gender: 'Female', lang: 'vi-VN', region: 'vi', category: 'KOC & Reviewer', pitch: 1.16, rate: 1.02, recommendedFor: 'idol', desc: 'Giọng nữ trẻ review sản phẩm chân thật, tạo độ tin cậy tuyệt đối.' },
+  { id: 'el_jessica', name: 'Jessica 💎 (Nữ - BLV Năng Lượng Đỉnh Nóc)', provider: 'elevenlabs', voiceId: 'cgSgspJ2msm6clMCkdW9', gender: 'Female', lang: 'vi-VN', region: 'vi', category: 'BLV Game & Thể Thao', pitch: 1.25, rate: 1.12, recommendedFor: 'game', desc: 'Giọng nữ bình luận viên thể thao/game sôi động, bốc lửa từng pha combat.' },
+  { id: 'el_matilda', name: 'Matilda 💎 (Nữ - Chuyên Gia Y Tế & Sức Khỏe)', provider: 'elevenlabs', voiceId: 'XrExE9yKIg1WjnnlVkGX', gender: 'Female', lang: 'vi-VN', region: 'vi', category: 'Chuyên Gia & Y Tế', pitch: 1.02, rate: 0.98, recommendedFor: 'manager', desc: 'Giọng nữ dày dặn kinh nghiệm, tư vấn chuyên môn sâu sắc và tin cậy.' },
+  { id: 'el_hannah', name: 'Hannah 💎 (Nữ - Tâm Sự Đêm Khuya Sâu Lắng)', provider: 'elevenlabs', voiceId: 'ThT5KcBeYPX3keUQqHPh', gender: 'Female', lang: 'vi-VN', region: 'vi', category: 'Tâm Sự & Kể Chuyện', pitch: 1.04, rate: 0.93, recommendedFor: 'idol', desc: 'Giọng nữ ấm áp thì thầm, thích hợp livestream acoustic và đêm muộn.' },
+  { id: 'mm_thuha', name: 'Thu Hà ⚡ (Nữ - MiniMax Bán Hàng Tiktok Top 1)', provider: 'minimax', voiceId: 'speech-01-turbo-thuha', gender: 'Female', lang: 'vi-VN', region: 'vi', category: 'MiniMax Chốt Đơn Siêu Tốc', pitch: 1.16, rate: 1.08, recommendedFor: 'manager', desc: 'Giọng MiniMax AI chuyên biệt chốt đơn livestream TikTok Shop không góc chết.' },
+  { id: 'mm_lananh', name: 'Lan Anh ⚡ (Nữ - MiniMax MC Thời Sự VTV)', provider: 'minimax', voiceId: 'speech-01-turbo-lananh', gender: 'Female', lang: 'vi-VN', region: 'vi', category: 'MiniMax MC & Thời Sự', pitch: 1.08, rate: 1.02, recommendedFor: 'both', desc: 'Giọng MiniMax AI chuẩn biên tập viên truyền hình quốc gia, tròn vành rõ chữ.' },
+  { id: 'mm_anhduong', name: 'Ánh Dương ⚡ (Nữ - MiniMax Kể Chuyện Cảm Xúc)', provider: 'minimax', voiceId: 'speech-01-turbo-anhduong', gender: 'Female', lang: 'vi-VN', region: 'vi', category: 'MiniMax Kể Chuyện Cổ Tích', pitch: 1.12, rate: 0.95, recommendedFor: 'idol', desc: 'Giọng MiniMax AI truyền cảm vô tận, đưa người nghe vào câu chuyện lôi cuốn.' },
 
   // ==================== 2. 20 GIỌNG NAM PRO (ElevenLabs & MiniMax AI) ====================
-  { id: 'el_josh', name: 'Josh 💎 (Nam - BLV Game Siêu Tốc, Bùng Nổ)', provider: 'elevenlabs', voiceId: 'TxGEqnHWrfWFTfGW9XjX', gender: 'Male', lang: 'vi-VN', category: 'BLV Game Sôi Động', pitch: 0.95, rate: 1.12, recommendedFor: 'game', desc: 'Giọng BLV game bùng nổ, tốc độ cực nhanh khi combat nghẹt thở.' },
-  { id: 'el_clyde', name: 'Clyde 💎 (Nam - Chiến Binh Hùng Tráng, Hào Sảng)', provider: 'elevenlabs', voiceId: '2EiwWnXFnvU5JabPnv8n', gender: 'Male', lang: 'vi-VN', category: 'Chiến Trận & Hào Hùng', pitch: 0.72, rate: 1.0, recommendedFor: 'game', desc: 'Giọng nam tướng quân uy nghi, hào sảng, vang dội như tiếng sấm.' },
-  { id: 'el_adam', name: 'Adam 💎 (Nam - Giọng Quốc Dân, Điềm Tĩnh Bán Hàng)', provider: 'elevenlabs', voiceId: 'pNInz6obpgDQGcFmaJgB', gender: 'Male', lang: 'vi-VN', category: 'Thương Mại & Bán Hàng', pitch: 0.88, rate: 1.0, recommendedFor: 'both', desc: 'Giọng nam biểu tượng của ElevenLabs, ấm áp, điềm đạm, cực kỳ thuyết phục.' },
-  { id: 'el_callum', name: 'Callum 💎 (Nam - Quản Lý Giục Chốt Đơn Uy Lực)', provider: 'elevenlabs', voiceId: 'N2lVS1w4EtoT3dr4eOWO', gender: 'Male', lang: 'vi-VN', category: 'Giục Đơn & Cảnh Báo', pitch: 0.85, rate: 1.08, recommendedFor: 'manager', desc: 'Giọng quản lý bán hàng uy quyền, thúc giục khán giả đặt hàng ngay.' },
-  { id: 'el_antoni', name: 'Antoni 💎 (Nam - MC Hoạt Náo Sự Kiện Rộn Ràng)', provider: 'elevenlabs', voiceId: 'ErXwobaYiN019PkySvjV', gender: 'Male', lang: 'vi-VN', category: 'MC Sự Kiện & Hội Trường', pitch: 0.92, rate: 1.05, recommendedFor: 'both', desc: 'Giọng MC dẫn chương trình cuốn hút, hoạt náo, kích thích tặng quà.' },
-  { id: 'el_charlie', name: 'Charlie 💎 (Nam - Giọng Trầm Ấm Kể Chuyện Đêm Khuya)', provider: 'elevenlabs', voiceId: 'IKne3meq5aSn9XLyUdCD', gender: 'Male', lang: 'vi-VN', category: 'Kể Chuyện & Tâm Sự', pitch: 0.80, rate: 0.92, recommendedFor: 'idol', desc: 'Giọng nam trầm ấm, truyền cảm, thích hợp đọc sách, podcast tâm sự.' },
-  { id: 'el_george', name: 'George 💎 (Nam - Phóng Sự VTV Đĩnh Đạc)', provider: 'elevenlabs', voiceId: 'JBFqnCBsd6RMkjVDRZzb', gender: 'Male', lang: 'vi-VN', category: 'Phóng Sự & Truyền Hình', pitch: 0.84, rate: 1.0, recommendedFor: 'both', desc: 'Giọng nam chuẩn phóng sự tài liệu, chín chắn và đáng tin cậy.' },
-  { id: 'el_thomas', name: 'Thomas 💎 (Nam - Bản Tin & Thời Sự Quốc Tế)', provider: 'elevenlabs', voiceId: 'GBv7mTt0atIp3Br8iCZE', gender: 'Male', lang: 'vi-VN', category: 'Bản Tin & Thời Sự', pitch: 0.86, rate: 1.02, recommendedFor: 'both', desc: 'Giọng đọc bản tin nhịp nhàng, thông tin rõ ràng, chuẩn phong cách quốc tế.' },
-  { id: 'el_brian', name: 'Brian 💎 (Nam - BLV Thể Thao Đỉnh Cao)', provider: 'elevenlabs', voiceId: 'nPczCjzI2devNBz1zQrb', gender: 'Male', lang: 'vi-VN', category: 'BLV Thể Thao', pitch: 0.90, rate: 1.10, recommendedFor: 'game', desc: 'Giọng bình luận viên bóng đá/eSports hừng hực lửa, truyền lửa người xem.' },
-  { id: 'el_daniel', name: 'Daniel 💎 (Nam - Doanh Nhân Trung Niên Uy Quyền)', provider: 'elevenlabs', voiceId: 'onwK4e9ZLuTAKqWW03F9', gender: 'Male', lang: 'vi-VN', category: 'Trung Niên & Giám Đốc', pitch: 0.78, rate: 0.98, recommendedFor: 'manager', desc: 'Giọng giám đốc điều hành, doanh nhân thành đạt, đĩnh đạc và quyết đoán.' },
-  { id: 'el_liam', name: 'Liam 💎 (Nam - Streamer Gen Z Năng Động)', provider: 'elevenlabs', voiceId: 'TX3LPaxmHKxFdv7VOQHJ', gender: 'Male', lang: 'vi-VN', category: 'Streamer & Gen Z', pitch: 0.98, rate: 1.06, recommendedFor: 'idol', desc: 'Giọng nam trẻ phong cách streamer TikTok, dí dỏm và gần gũi.' },
-  { id: 'el_marcus', name: 'Marcus 💎 (Nam - Bậc Thầy Trí Tuệ Cao Tuổi)', provider: 'elevenlabs', voiceId: 'bIHbv24MWmeRgasZH58o', gender: 'Male', lang: 'vi-VN', category: 'Cao Tuổi & Tri Thức', pitch: 0.74, rate: 0.90, recommendedFor: 'both', desc: 'Giọng nam cao tuổi thông thái, trải đời, đưa ra những lời khuyên sâu sắc.' },
-  { id: 'el_bill', name: 'Bill 💎 (Nam - Thuyết Minh Phim Điện Ảnh)', provider: 'elevenlabs', voiceId: 'pqHfZKP75CvOlQylNhV4', gender: 'Male', lang: 'vi-VN', category: 'Thuyết Minh Điện Ảnh', pitch: 0.82, rate: 0.95, recommendedFor: 'idol', desc: 'Giọng thuyết minh phim bom tấn, điện ảnh Hollywood đầy kịch tính.' },
-  { id: 'el_harry', name: 'Harry 💎 (Nam - Kịch Tính Hồi Hộp Bất Ngờ)', provider: 'elevenlabs', voiceId: 'SOYHLrjzK2X1ezoPC6cr', gender: 'Male', lang: 'vi-VN', category: 'Game Kịch Tính', pitch: 0.87, rate: 1.05, recommendedFor: 'game', desc: 'Giọng tạo không khí hồi hộp, nghẹt thở cho các khoảnh khắc gay cấn.' },
-  { id: 'el_arthur_gentle', name: 'Arthur 💎 (Nam - Quý Ông Lịch Lãm Đẳng Cấp)', provider: 'elevenlabs', voiceId: 'wViXBPUzp2ZZixvn1xQG', gender: 'Male', lang: 'vi-VN', category: 'Sang Trọng & Thương Hiệu', pitch: 0.83, rate: 0.97, recommendedFor: 'idol', desc: 'Giọng nam quý phái, thanh lịch, phù hợp các sản phẩm cao cấp xa xỉ.' },
-  { id: 'el_ryan', name: 'Ryan 💎 (Nam - Chuyên Viên Tư Vấn Tận Tụy)', provider: 'elevenlabs', voiceId: 'wViXBPUzp2ZZixvn1xQG_2', gender: 'Male', lang: 'vi-VN', category: 'Tư Vấn Khách Hàng', pitch: 0.89, rate: 1.0, recommendedFor: 'manager', desc: 'Giọng nam tư vấn nhẹ nhàng, nhiệt tình hỗ trợ giải đáp mọi thắc mắc.' },
-  { id: 'el_paul', name: 'Paul 💎 (Nam - Thầy Giáo Giảng Bài Khoa Học)', provider: 'elevenlabs', voiceId: '5Q0t7uMcjvnagumLfvZi', gender: 'Male', lang: 'vi-VN', category: 'Giảng Dạy & Tri Thức', pitch: 0.86, rate: 0.98, recommendedFor: 'both', desc: 'Giọng giảng viên rõ ràng, mạch lạc, dễ tiếp thu kiến thức.' },
-  { id: 'mm_quocbao', name: 'Quốc Bảo ⚡ (Nam - MiniMax Bán Hàng Flash Sale)', provider: 'minimax', voiceId: 'speech-01-turbo-quocbao', gender: 'Male', lang: 'vi-VN', category: 'MiniMax Bán Hàng & Chốt Đơn', pitch: 0.90, rate: 1.08, recommendedFor: 'manager', desc: 'Giọng MiniMax AI nam bán hàng chốt sale thần tốc, tạo hiệu ứng đám đông.' },
-  { id: 'mm_hainam', name: 'Hải Nam ⚡ (Nam - MiniMax BLV Game PK)', provider: 'minimax', voiceId: 'speech-01-turbo-hainam', gender: 'Male', lang: 'vi-VN', category: 'MiniMax BLV Game & Trận Đấu', pitch: 0.94, rate: 1.10, recommendedFor: 'game', desc: 'Giọng MiniMax AI bình luận trận đấu cuồng nhiệt, hò hét kích thích tặng quà.' },
-  { id: 'mm_minhtuan', name: 'Minh Tuấn ⚡ (Nam - MiniMax MC Thời Sự VTV)', provider: 'minimax', voiceId: 'speech-01-turbo-minhtuan', gender: 'Male', lang: 'vi-VN', category: 'MiniMax MC & Thời Sự', pitch: 0.85, rate: 1.02, recommendedFor: 'both', desc: 'Giọng MiniMax AI nam MC thời sự VTV hào sảng, tròn vành, đẳng cấp quốc gia.' },
+  { id: 'el_josh', name: 'Josh 💎 (Nam - BLV Game Siêu Tốc, Bùng Nổ)', provider: 'elevenlabs', voiceId: 'TxGEqnHWrfWFTfGW9XjX', gender: 'Male', lang: 'vi-VN', region: 'vi', category: 'BLV Game Sôi Động', pitch: 0.95, rate: 1.12, recommendedFor: 'game', desc: 'Giọng BLV game bùng nổ, tốc độ cực nhanh khi combat nghẹt thở.' },
+  { id: 'el_clyde', name: 'Clyde 💎 (Nam - Chiến Binh Hùng Tráng, Hào Sảng)', provider: 'elevenlabs', voiceId: '2EiwWnXFnvU5JabPnv8n', gender: 'Male', lang: 'vi-VN', region: 'vi', category: 'Chiến Trận & Hào Hùng', pitch: 0.72, rate: 1.0, recommendedFor: 'game', desc: 'Giọng nam tướng quân uy nghi, hào sảng, vang dội như tiếng sấm.' },
+  { id: 'el_adam', name: 'Adam 💎 (Nam - Giọng Quốc Dân, Điềm Tĩnh Bán Hàng)', provider: 'elevenlabs', voiceId: 'pNInz6obpgDQGcFmaJgB', gender: 'Male', lang: 'vi-VN', region: 'vi', category: 'Thương Mại & Bán Hàng', pitch: 0.88, rate: 1.0, recommendedFor: 'both', desc: 'Giọng nam biểu tượng của ElevenLabs, ấm áp, điềm đạm, cực kỳ thuyết phục.' },
+  { id: 'el_callum', name: 'Callum 💎 (Nam - Quản Lý Giục Chốt Đơn Uy Lực)', provider: 'elevenlabs', voiceId: 'N2lVS1w4EtoT3dr4eOWO', gender: 'Male', lang: 'vi-VN', region: 'vi', category: 'Giục Đơn & Cảnh Báo', pitch: 0.85, rate: 1.08, recommendedFor: 'manager', desc: 'Giọng quản lý bán hàng uy quyền, thúc giục khán giả đặt hàng ngay.' },
+  { id: 'el_antoni', name: 'Antoni 💎 (Nam - MC Hoạt Náo Sự Kiện Rộn Ràng)', provider: 'elevenlabs', voiceId: 'ErXwobaYiN019PkySvjV', gender: 'Male', lang: 'vi-VN', region: 'vi', category: 'MC Sự Kiện & Hội Trường', pitch: 0.92, rate: 1.05, recommendedFor: 'both', desc: 'Giọng MC dẫn chương trình cuốn hút, hoạt náo, kích thích tặng quà.' },
+  { id: 'el_charlie', name: 'Charlie 💎 (Nam - Giọng Trầm Ấm Kể Chuyện Đêm Khuya)', provider: 'elevenlabs', voiceId: 'IKne3meq5aSn9XLyUdCD', gender: 'Male', lang: 'vi-VN', region: 'vi', category: 'Kể Chuyện & Tâm Sự', pitch: 0.80, rate: 0.92, recommendedFor: 'idol', desc: 'Giọng nam trầm ấm, truyền cảm, thích hợp đọc sách, podcast tâm sự.' },
+  { id: 'el_george', name: 'George 💎 (Nam - Phóng Sự VTV Đĩnh Đạc)', provider: 'elevenlabs', voiceId: 'JBFqnCBsd6RMkjVDRZzb', gender: 'Male', lang: 'vi-VN', region: 'vi', category: 'Phóng Sự & Truyền Hình', pitch: 0.84, rate: 1.0, recommendedFor: 'both', desc: 'Giọng nam chuẩn phóng sự tài liệu, chín chắn và đáng tin cậy.' },
+  { id: 'el_thomas', name: 'Thomas 💎 (Nam - Bản Tin & Thời Sự Quốc Tế)', provider: 'elevenlabs', voiceId: 'GBv7mTt0atIp3Br8iCZE', gender: 'Male', lang: 'vi-VN', region: 'vi', category: 'Bản Tin & Thời Sự', pitch: 0.86, rate: 1.02, recommendedFor: 'both', desc: 'Giọng đọc bản tin nhịp nhàng, thông tin rõ ràng, chuẩn phong cách quốc tế.' },
+  { id: 'el_brian', name: 'Brian 💎 (Nam - BLV Thể Thao Đỉnh Cao)', provider: 'elevenlabs', voiceId: 'nPczCjzI2devNBz1zQrb', gender: 'Male', lang: 'vi-VN', region: 'vi', category: 'BLV Thể Thao', pitch: 0.90, rate: 1.10, recommendedFor: 'game', desc: 'Giọng bình luận viên bóng đá/eSports hừng hực lửa, truyền lửa người xem.' },
+  { id: 'el_daniel', name: 'Daniel 💎 (Nam - Doanh Nhân Trung Niên Uy Quyền)', provider: 'elevenlabs', voiceId: 'onwK4e9ZLuTAKqWW03F9', gender: 'Male', lang: 'vi-VN', region: 'vi', category: 'Trung Niên & Giám Đốc', pitch: 0.78, rate: 0.98, recommendedFor: 'manager', desc: 'Giọng giám đốc điều hành, doanh nhân thành đạt, đĩnh đạc và quyết đoán.' },
+  { id: 'el_liam', name: 'Liam 💎 (Nam - Streamer Gen Z Năng Động)', provider: 'elevenlabs', voiceId: 'TX3LPaxmHKxFdv7VOQHJ', gender: 'Male', lang: 'vi-VN', region: 'vi', category: 'Streamer & Gen Z', pitch: 0.98, rate: 1.06, recommendedFor: 'idol', desc: 'Giọng nam trẻ phong cách streamer TikTok, dí dỏm và gần gũi.' },
+  { id: 'el_marcus', name: 'Marcus 💎 (Nam - Bậc Thầy Trí Tuệ Cao Tuổi)', provider: 'elevenlabs', voiceId: 'bIHbv24MWmeRgasZH58o', gender: 'Male', lang: 'vi-VN', region: 'vi', category: 'Cao Tuổi & Tri Thức', pitch: 0.74, rate: 0.90, recommendedFor: 'both', desc: 'Giọng nam cao tuổi thông thái, trải đời, đưa ra những lời khuyên sâu sắc.' },
+  { id: 'el_bill', name: 'Bill 💎 (Nam - Thuyết Minh Phim Điện Ảnh)', provider: 'elevenlabs', voiceId: 'pqHfZKP75CvOlQylNhV4', gender: 'Male', lang: 'vi-VN', region: 'vi', category: 'Thuyết Minh Điện Ảnh', pitch: 0.82, rate: 0.95, recommendedFor: 'idol', desc: 'Giọng thuyết minh phim bom tấn, điện ảnh Hollywood đầy kịch tính.' },
+  { id: 'el_harry', name: 'Harry 💎 (Nam - Kịch Tính Hồi Hộp Bất Ngờ)', provider: 'elevenlabs', voiceId: 'SOYHLrjzK2X1ezoPC6cr', gender: 'Male', lang: 'vi-VN', region: 'vi', category: 'Game Kịch Tính', pitch: 0.87, rate: 1.05, recommendedFor: 'game', desc: 'Giọng tạo không khí hồi hộp, nghẹt thở cho các khoảnh khắc gay cấn.' },
+  { id: 'el_arthur_gentle', name: 'Arthur 💎 (Nam - Quý Ông Lịch Lãm Đẳng Cấp)', provider: 'elevenlabs', voiceId: 'wViXBPUzp2ZZixvn1xQG', gender: 'Male', lang: 'vi-VN', region: 'vi', category: 'Sang Trọng & Thương Hiệu', pitch: 0.83, rate: 0.97, recommendedFor: 'idol', desc: 'Giọng nam quý phái, thanh lịch, phù hợp các sản phẩm cao cấp xa xỉ.' },
+  { id: 'el_ryan', name: 'Ryan 💎 (Nam - Chuyên Viên Tư Vấn Tận Tụy)', provider: 'elevenlabs', voiceId: 'wViXBPUzp2ZZixvn1xQG_2', gender: 'Male', lang: 'vi-VN', region: 'vi', category: 'Tư Vấn Khách Hàng', pitch: 0.89, rate: 1.0, recommendedFor: 'manager', desc: 'Giọng nam tư vấn nhẹ nhàng, nhiệt tình hỗ trợ giải đáp mọi thắc mắc.' },
+  { id: 'el_paul', name: 'Paul 💎 (Nam - Thầy Giáo Giảng Bài Khoa Học)', provider: 'elevenlabs', voiceId: '5Q0t7uMcjvnagumLfvZi', gender: 'Male', lang: 'vi-VN', region: 'vi', category: 'Giảng Dạy & Tri Thức', pitch: 0.86, rate: 0.98, recommendedFor: 'both', desc: 'Giọng giảng viên rõ ràng, mạch lạc, dễ tiếp thu kiến thức.' },
+  { id: 'mm_quocbao', name: 'Quốc Bảo ⚡ (Nam - MiniMax Bán Hàng Flash Sale)', provider: 'minimax', voiceId: 'speech-01-turbo-quocbao', gender: 'Male', lang: 'vi-VN', region: 'vi', category: 'MiniMax Bán Hàng & Chốt Đơn', pitch: 0.90, rate: 1.08, recommendedFor: 'manager', desc: 'Giọng MiniMax AI nam bán hàng chốt sale thần tốc, tạo hiệu ứng đám đông.' },
+  { id: 'mm_hainam', name: 'Hải Nam ⚡ (Nam - MiniMax BLV Game PK)', provider: 'minimax', voiceId: 'speech-01-turbo-hainam', gender: 'Male', lang: 'vi-VN', region: 'vi', category: 'MiniMax BLV Game & Trận Đấu', pitch: 0.94, rate: 1.10, recommendedFor: 'game', desc: 'Giọng MiniMax AI bình luận trận đấu cuồng nhiệt, hò hét kích thích tặng quà.' },
+  { id: 'mm_minhtuan', name: 'Minh Tuấn ⚡ (Nam - MiniMax MC Thời Sự VTV)', provider: 'minimax', voiceId: 'speech-01-turbo-minhtuan', gender: 'Male', lang: 'vi-VN', region: 'vi', category: 'MiniMax MC & Thời Sự', pitch: 0.85, rate: 1.02, recommendedFor: 'both', desc: 'Giọng MiniMax AI nam MC thời sự VTV hào sảng, tròn vành, đẳng cấp quốc gia.' },
 
-  // ==================== 3. GIỌNG QUỐC TẾ PRO ====================
-  { id: 'el_us_female', name: 'Sarah 🇺🇸 (Nữ - US English Native)', provider: 'elevenlabs', voiceId: 'EXAVITQu4vr4xnSDxMaL', gender: 'Female', lang: 'en-US', category: 'Quốc Tế Song Ngữ', pitch: 1.10, rate: 1.0, recommendedFor: 'idol', desc: 'Giọng nữ bản xứ Mỹ truyền cảm chuẩn quốc tế.' },
-  { id: 'el_uk_male', name: 'Arthur 🇬🇧 (Nam - UK British Gentleman)', provider: 'elevenlabs', voiceId: 'JBFqnCBsd6RMkjVDRZzb', gender: 'Male', lang: 'en-GB', category: 'Quốc Tế Song Ngữ', pitch: 0.85, rate: 1.0, recommendedFor: 'game', desc: 'Giọng nam quý ông Anh Quốc lịch lãm.' },
-  { id: 'el_cn_female', name: 'Mei-Ling 🇨🇳 (Nữ - 中文普通话)', provider: 'elevenlabs', voiceId: 'piTKgcLEGmPE4e6mEKli', gender: 'Female', lang: 'zh-CN', category: 'Quốc Tế Song Ngữ', pitch: 1.12, rate: 1.0, recommendedFor: 'idol', desc: 'Giọng nữ livestream bán hàng thương mại điện tử Trung Quốc.' },
-  { id: 'el_jp_female', name: 'Sakura 🇯🇵 (Nữ - 日本語 Anime Kawaii)', provider: 'elevenlabs', voiceId: 'jBpfuIE2acCO8z3wKNLl', gender: 'Female', lang: 'ja-JP', category: 'Quốc Tế Song Ngữ', pitch: 1.30, rate: 1.05, recommendedFor: 'idol', desc: 'Giọng nữ Nhật Bản ngọt ngào chuẩn Anime VTuber.' },
-  { id: 'el_kr_female', name: 'Min-ji 🇰🇷 (Nữ - 한국어 K-Pop Idol)', provider: 'elevenlabs', voiceId: '21m00Tcm4TlvDq8ikWAM', gender: 'Female', lang: 'ko-KR', category: 'Quốc Tế Song Ngữ', pitch: 1.18, rate: 1.0, recommendedFor: 'idol', desc: 'Giọng nữ idol K-Pop thanh thoát, trẻ trung.' },
-  { id: 'el_th_female', name: 'Premwadee 🇹🇭 (Nữ - ภาษาไทย)', provider: 'elevenlabs', voiceId: 'XrExE9yKIg1WjnnlVkGX', gender: 'Female', lang: 'th-TH', category: 'Quốc Tế Song Ngữ', pitch: 1.15, rate: 1.0, recommendedFor: 'idol', desc: 'Giọng nữ Thái Lan dịu dàng, trong trẻo.' }
+  // ==================== 3. 28 GIỌNG QUỐC TẾ PRO ĐA QUỐC GIA ====================
+  // Bắc Mỹ & Anh Quốc 🇺🇸 🇬🇧 🇨🇦 🇦🇺
+  { id: 'el_us_female', name: 'Sarah 🇺🇸 (Nữ - US English Native)', provider: 'elevenlabs', voiceId: 'EXAVITQu4vr4xnSDxMaL', gender: 'Female', lang: 'en-US', region: 'us_uk', category: 'Bắc Mỹ & Châu Âu', pitch: 1.10, rate: 1.0, recommendedFor: 'idol', desc: 'Giọng nữ bản xứ Mỹ truyền cảm chuẩn quốc tế.' },
+  { id: 'el_us_male', name: 'David 🇺🇸 (Nam - US English Streamer)', provider: 'elevenlabs', voiceId: 'TxGEqnHWrfWFTfGW9XjX', gender: 'Male', lang: 'en-US', region: 'us_uk', category: 'Bắc Mỹ & Châu Âu', pitch: 0.95, rate: 1.05, recommendedFor: 'game', desc: 'Giọng nam tiếng Anh phong cách streamer năng động Mỹ.' },
+  { id: 'el_uk_female', name: 'Victoria 🇬🇧 (Nữ - UK British Royal)', provider: 'elevenlabs', voiceId: 'LcfcDJNigL5wcJAoLJq7', gender: 'Female', lang: 'en-GB', region: 'us_uk', category: 'Bắc Mỹ & Châu Âu', pitch: 1.08, rate: 0.98, recommendedFor: 'idol', desc: 'Giọng nữ quý tộc Anh Quốc sang trọng, chuẩn mực.' },
+  { id: 'el_uk_male', name: 'Arthur 🇬🇧 (Nam - UK British Gentleman)', provider: 'elevenlabs', voiceId: 'JBFqnCBsd6RMkjVDRZzb', gender: 'Male', lang: 'en-GB', region: 'us_uk', category: 'Bắc Mỹ & Châu Âu', pitch: 0.85, rate: 1.0, recommendedFor: 'game', desc: 'Giọng nam quý ông Anh Quốc lịch lãm, đẳng cấp.' },
+  { id: 'el_ca_male', name: 'Liam 🇨🇦 (Nam - Canada English Friendly)', provider: 'elevenlabs', voiceId: 'TX3LPaxmHKxFdv7VOQHJ', gender: 'Male', lang: 'en-CA', region: 'us_uk', category: 'Bắc Mỹ & Châu Âu', pitch: 0.96, rate: 1.02, recommendedFor: 'both', desc: 'Giọng nam Canada thân thiện, giao lưu cởi mở.' },
+  { id: 'el_au_male', name: 'Oliver 🇦🇺 (Nam - Australian English)', provider: 'elevenlabs', voiceId: 'ErXwobaYiN019PkySvjV', gender: 'Male', lang: 'en-AU', region: 'us_uk', category: 'Bắc Mỹ & Châu Âu', pitch: 0.92, rate: 1.04, recommendedFor: 'both', desc: 'Giọng nam bản xứ Úc tự nhiên, phóng khoáng.' },
+
+  // Châu Âu 🇫🇷 🇮🇹 🇩🇪 🇪🇸 🇷🇺
+  { id: 'el_fr_female', name: 'Camille 🇫🇷 (Nữ - Français Paris Chic)', provider: 'elevenlabs', voiceId: 'LcfcDJNigL5wcJAoLJq7', gender: 'Female', lang: 'fr-FR', region: 'eu', category: 'Châu Âu', pitch: 1.12, rate: 1.0, recommendedFor: 'idol', desc: 'Giọng nữ quý phái phong cách Paris lãng mạn.' },
+  { id: 'el_fr_male', name: 'Henri 🇫🇷 (Nam - Français Élégant)', provider: 'elevenlabs', voiceId: '5Q0t7uMcjvnagumLfvZi', gender: 'Male', lang: 'fr-FR', region: 'eu', category: 'Châu Âu', pitch: 0.88, rate: 0.98, recommendedFor: 'both', desc: 'Giọng nam Pháp trầm ấm, lịch thiệp.' },
+  { id: 'el_it_female', name: 'Elsa 🇮🇹 (Nữ - Italiano Dolce)', provider: 'elevenlabs', voiceId: 'MF3mGyEYCl7XYWbV9V6O', gender: 'Female', lang: 'it-IT', region: 'eu', category: 'Châu Âu', pitch: 1.14, rate: 1.02, recommendedFor: 'idol', desc: 'Giọng nữ Ý du dương, ngọt ngào và cuốn hút.' },
+  { id: 'el_it_male', name: 'Marco 🇮🇹 (Nam - Italiano Passione)', provider: 'elevenlabs', voiceId: 'pNInz6obpgDQGcFmaJgB', gender: 'Male', lang: 'it-IT', region: 'eu', category: 'Châu Âu', pitch: 0.86, rate: 1.04, recommendedFor: 'both', desc: 'Giọng nam Ý nồng nhiệt, giàu cảm xúc.' },
+  { id: 'el_de_female', name: 'Katja 🇩🇪 (Nữ - Deutsch Präzise)', provider: 'elevenlabs', voiceId: 'XB0fDUnXU5ikFXcvcxZs', gender: 'Female', lang: 'de-DE', region: 'eu', category: 'Châu Âu', pitch: 1.05, rate: 1.0, recommendedFor: 'idol', desc: 'Giọng nữ Đức chính xác, chuẩn mực.' },
+  { id: 'el_de_male', name: 'Hans 🇩🇪 (Nam - Deutsch Kraftvoll)', provider: 'elevenlabs', voiceId: '2EiwWnXFnvU5JabPnv8n', gender: 'Male', lang: 'de-DE', region: 'eu', category: 'Châu Âu', pitch: 0.78, rate: 1.0, recommendedFor: 'manager', desc: 'Giọng nam Đức dõng dạc, uy lực và đĩnh đạc.' },
+  { id: 'el_es_female', name: 'Lucia 🇪🇸 (Nữ - Español Madrid)', provider: 'elevenlabs', voiceId: 'MF3mGyEYCl7XYWbV9V6O', gender: 'Female', lang: 'es-ES', region: 'eu', category: 'Châu Âu', pitch: 1.15, rate: 1.05, recommendedFor: 'idol', desc: 'Giọng nữ Tây Ban Nha rực rỡ, tràn đầy sức sống.' },
+  { id: 'el_ru_female', name: 'Tatiana 🇷🇺 (Nữ - Русский)', provider: 'elevenlabs', voiceId: 'pMsXgVXv3BLzUgSXRplE', gender: 'Female', lang: 'ru-RU', region: 'eu', category: 'Châu Âu', pitch: 1.06, rate: 0.98, recommendedFor: 'idol', desc: 'Giọng nữ Nga sâu lắng, truyền cảm.' },
+
+  // Nam Mỹ & Mỹ Latin 🇲🇽 🇧🇷
+  { id: 'el_mx_male', name: 'Diego 🇲🇽 (Nam - Español México)', provider: 'elevenlabs', voiceId: 'onwK4e9ZLuTAKqWW03F9', gender: 'Male', lang: 'es-MX', region: 'latam', category: 'Nam Mỹ & Mỹ Latin', pitch: 0.90, rate: 1.06, recommendedFor: 'game', desc: 'Giọng nam Mexico Latin sôi động, nhiệt huyết.' },
+  { id: 'el_br_female', name: 'Francisca 🇧🇷 (Nữ - Português Brasil)', provider: 'elevenlabs', voiceId: 'pFZP5JQG7iQjIQuC4Bku', gender: 'Female', lang: 'pt-BR', region: 'latam', category: 'Nam Mỹ & Mỹ Latin', pitch: 1.16, rate: 1.04, recommendedFor: 'idol', desc: 'Giọng nữ Brazil mượt mà, gợi cảm.' },
+
+  // Châu Á 🇨🇳 🇹🇼 🇯🇵 🇰🇷 🇹🇭 🇮🇩 🇵🇭 🇮🇳 🇸🇦
+  { id: 'el_cn_female', name: 'Mei-Ling 🇨🇳 (Nữ - 中文普通话 带货主播)', provider: 'elevenlabs', voiceId: 'piTKgcLEGmPE4e6mEKli', gender: 'Female', lang: 'zh-CN', region: 'asia', category: 'Châu Á', pitch: 1.16, rate: 1.08, recommendedFor: 'idol', desc: 'Giọng nữ livestream bán hàng thương mại điện tử Trung Quốc.' },
+  { id: 'el_cn_male', name: 'Zhang-Wei 🇨🇳 (Nam - 中文普通话 Caster)', provider: 'elevenlabs', voiceId: 'VR6AewLTigWG4xSOukaG', gender: 'Male', lang: 'zh-CN', region: 'asia', category: 'Châu Á', pitch: 0.88, rate: 1.06, recommendedFor: 'game', desc: 'Giọng nam bình luận viên võ thuật Trung Hoa.' },
+  { id: 'el_tw_female', name: 'Ting-Ting 🇹🇼 (Nữ - 臺灣國語 甜美)', provider: 'elevenlabs', voiceId: '21m00Tcm4TlvDq8ikWAM', gender: 'Female', lang: 'zh-TW', region: 'asia', category: 'Châu Á', pitch: 1.20, rate: 1.02, recommendedFor: 'idol', desc: 'Giọng nữ Đài Loan ngọt ngào, nhẹ nhàng.' },
+  { id: 'el_jp_female', name: 'Sakura 🇯🇵 (Nữ - 日本語 Anime Kawaii)', provider: 'elevenlabs', voiceId: 'jBpfuIE2acCO8z3wKNLl', gender: 'Female', lang: 'ja-JP', region: 'asia', category: 'Châu Á', pitch: 1.32, rate: 1.06, recommendedFor: 'idol', desc: 'Giọng nữ Nhật Bản ngọt ngào chuẩn Anime VTuber.' },
+  { id: 'el_jp_male', name: 'Kenji 🇯🇵 (Nam - 日本語 Samurai Caster)', provider: 'elevenlabs', voiceId: '2EiwWnXFnvU5JabPnv8n', gender: 'Male', lang: 'ja-JP', region: 'asia', category: 'Châu Á', pitch: 0.76, rate: 1.02, recommendedFor: 'game', desc: 'Giọng nam Samurai dũng mãnh chuẩn điện ảnh Nhật Bản.' },
+  { id: 'el_kr_female', name: 'Min-ji 🇰🇷 (Nữ - 한국어 K-Pop Idol)', provider: 'elevenlabs', voiceId: '21m00Tcm4TlvDq8ikWAM', gender: 'Female', lang: 'ko-KR', region: 'asia', category: 'Châu Á', pitch: 1.18, rate: 1.02, recommendedFor: 'idol', desc: 'Giọng nữ idol K-Pop thanh thoát, trẻ trung.' },
+  { id: 'el_kr_male', name: 'Hyun-woo 🇰🇷 (Nam - 한국어 K-Drama)', provider: 'elevenlabs', voiceId: 'TX3LPaxmHKxFdv7VOQHJ', gender: 'Male', lang: 'ko-KR', region: 'asia', category: 'Châu Á', pitch: 0.86, rate: 0.98, recommendedFor: 'both', desc: 'Giọng nam MC truyền hình Hàn Quốc ấm áp.' },
+  { id: 'el_th_female', name: 'Premwadee 🇹🇭 (Nữ - ภาษาไทย)', provider: 'elevenlabs', voiceId: 'XrExE9yKIg1WjnnlVkGX', gender: 'Female', lang: 'th-TH', region: 'asia', category: 'Châu Á', pitch: 1.15, rate: 1.0, recommendedFor: 'idol', desc: 'Giọng nữ Thái Lan dịu dàng, trong trẻo.' },
+  { id: 'el_id_female', name: 'Gadis 🇮🇩 (Nữ - Bahasa Indonesia)', provider: 'elevenlabs', voiceId: 'pFZP5JQG7iQjIQuC4Bku', gender: 'Female', lang: 'id-ID', region: 'asia', category: 'Châu Á', pitch: 1.10, rate: 1.0, recommendedFor: 'idol', desc: 'Giọng nữ tiếng Indonesia tự nhiên.' },
+  { id: 'el_ph_female', name: 'Rosa 🇵🇭 (Nữ - Tagalog Philippines)', provider: 'elevenlabs', voiceId: 'MF3mGyEYCl7XYWbV9V6O', gender: 'Female', lang: 'tl-PH', region: 'asia', category: 'Châu Á', pitch: 1.12, rate: 1.0, recommendedFor: 'idol', desc: 'Giọng nữ tiếng Tagalog Philippines sinh động.' },
+  { id: 'el_in_male', name: 'Aarav 🇮🇳 (Nam - Indian English Host)', provider: 'elevenlabs', voiceId: 'pNInz6obpgDQGcFmaJgB', gender: 'Male', lang: 'en-IN', region: 'asia', category: 'Châu Á', pitch: 0.92, rate: 1.04, recommendedFor: 'both', desc: 'Giọng nam tiếng Anh chuẩn Ấn Độ lưu loát.' },
+  { id: 'el_ar_female', name: 'Amira 🇸🇦 (Nữ - العربية)', provider: 'elevenlabs', voiceId: 'oWAxZDx7w5VEj9dCyTzz', gender: 'Female', lang: 'ar-SA', region: 'asia', category: 'Châu Á', pitch: 1.08, rate: 1.0, recommendedFor: 'idol', desc: 'Giọng nữ tiếng Ả Rập truyền cảm.' }
 ].map(v => ({ ...v, tier: 'pro', icon: v.provider === 'minimax' ? '⚡' : '💎', badge: v.provider === 'minimax' ? '⚡ MiniMax Pro' : '💎 ElevenLabs Pro' }));
 
 // ==================== 4. GIỌNG ĐỌC MIỄN PHÍ VIỆT NAM (DUY NHẤT HOÀI MY) ====================
 export const FREE_VOICES = [
   // Duy nhất Hoài My ở vị trí đầu tiên chuẩn theo yêu cầu
-  { id: 'free_vi_female', name: 'Hoài My 🇻🇳 (Nữ - Chuẩn Tiếng Việt)', provider: 'system', tier: 'free', icon: '🎤', badge: '🇻🇳 Miễn Phí', gender: 'Female', lang: 'vi-VN', category: 'Chuẩn Tiếng Việt', pitch: 1.08, rate: 1.0, recommendedFor: 'idol', desc: 'Giọng nữ chuẩn tiếng Việt truyền cảm, phát âm mượt mà, cảm xúc tự nhiên, miễn phí 100%.' }
+  { id: 'free_vi_female', name: 'Hoài My 🇻🇳 (Nữ - Chuẩn Tiếng Việt)', provider: 'system', tier: 'free', icon: '🎤', badge: '🇻🇳 Miễn Phí', gender: 'Female', lang: 'vi-VN', region: 'vi', category: 'Chuẩn Tiếng Việt', pitch: 1.08, rate: 1.0, recommendedFor: 'idol', desc: 'Giọng nữ chuẩn tiếng Việt truyền cảm, phát âm mượt mà, cảm xúc tự nhiên, miễn phí 100%.' }
 ];
 
 export const ALL_SYSTEM_VOICES = [...FREE_VOICES, ...ELEVENLABS_VOICES];
@@ -387,6 +416,12 @@ export async function previewVoiceAudio(voiceOrId, sampleText = null, optionsOrO
       priority = !!onEndOrPriority.priority;
       isTest = !!onEndOrPriority.isTest;
     }
+  } else if (typeof optionsOrOnEnd === 'boolean') {
+    priority = optionsOrOnEnd;
+    isTest = optionsOrOnEnd;
+    if (typeof onEndOrPriority === 'function') {
+      onEnd = onEndOrPriority;
+    }
   } else if (typeof optionsOrOnEnd === 'object' && optionsOrOnEnd !== null) {
     customOptions = optionsOrOnEnd;
     onEnd = typeof onEndOrPriority === 'function' ? onEndOrPriority : optionsOrOnEnd.onEnd;
@@ -394,6 +429,9 @@ export async function previewVoiceAudio(voiceOrId, sampleText = null, optionsOrO
     isTest = !!optionsOrOnEnd.isTest;
   } else if (typeof onEndOrPriority === 'function') {
     onEnd = onEndOrPriority;
+  } else if (typeof onEndOrPriority === 'boolean') {
+    priority = onEndOrPriority;
+    isTest = onEndOrPriority;
   }
 
   const mergedVoice = {
@@ -412,7 +450,7 @@ export async function previewVoiceAudio(voiceOrId, sampleText = null, optionsOrO
     return true;
   }
 
-  if (priority || isTest) {
+  if (priority || isTest || mergedVoice.isTest) {
     clearGlobalSpeechQueue();
     return executeSingleSpeech(mergedVoice, sampleText, onEnd, true);
   }
@@ -475,14 +513,15 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
   }
 
   const rawLang = voice?.lang || (
-    voice?.id?.includes('_us_') || voice?.id?.includes('_en_') ? 'en-US' :
-    voice?.id?.includes('_zh_') ? 'zh-CN' :
-    voice?.id?.includes('_ja_') ? 'ja-JP' :
-    voice?.id?.includes('_ko_') ? 'ko-KR' :
+    voice?.id?.includes('_us_') || voice?.id?.includes('_en_') || voice?.id?.includes('_uk_') || voice?.id?.includes('_ca_') || voice?.id?.includes('_au_') || voice?.id?.includes('_in_') ? 'en-US' :
+    voice?.id?.includes('_cn_') ? 'zh-CN' :
+    voice?.id?.includes('_tw_') ? 'zh-TW' :
+    voice?.id?.includes('_jp_') ? 'ja-JP' :
+    voice?.id?.includes('_kr_') ? 'ko-KR' :
     voice?.id?.includes('_fr_') ? 'fr-FR' :
-    voice?.id?.includes('_es_') ? 'es-ES' :
+    voice?.id?.includes('_es_') || voice?.id?.includes('_mx_') ? 'es-ES' :
     voice?.id?.includes('_th_') ? 'th-TH' :
-    voice?.id?.includes('_pt_') ? 'pt-BR' :
+    voice?.id?.includes('_pt_') || voice?.id?.includes('_br_') ? 'pt-BR' :
     voice?.id?.includes('_de_') ? 'de-DE' :
     voice?.id?.includes('_it_') ? 'it-IT' :
     voice?.id?.includes('_ru_') ? 'ru-RU' :
@@ -492,7 +531,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     voice?.id?.includes('_tr_') ? 'tr-TR' :
     voice?.id?.includes('_pl_') ? 'pl-PL' :
     voice?.id?.includes('_nl_') ? 'nl-NL' :
-    voice?.id?.includes('_tl_') ? 'tl-PH' :
+    voice?.id?.includes('_tl_') || voice?.id?.includes('_ph_') ? 'tl-PH' :
     voice?.id?.includes('_ms_') ? 'ms-MY' : 'vi-VN'
   );
   const langCode = rawLang || 'vi-VN';
@@ -603,100 +642,63 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
   }
 
   // =========================================================================
-  // TIER 2: Ultra-Reliable Streaming Audio TTS (Server / Cloud Proxy / Direct)
-  // =========================================================================
-  const isOverlayPage = typeof window !== 'undefined' && (
-    window.location.search.includes('overlay=') ||
-    window.location.pathname.includes('/overlay') ||
-    window.location.pathname.includes('/cleanlive') ||
-    window.location.pathname.includes('/idol') ||
-    window.location.pathname.includes('/battle') ||
-    window.location.pathname.includes('/bando')
-  );
-
-  // Danh sách các endpoints TTS thử nghiệm tuần tự để đảm bảo 100% phát được âm thanh
-  const ttsCandidateUrls = [];
-  
-  // 1. Endpoint /api/tts tương đối (hoạt động trên Vite dev server, Vercel và backend cùng origin)
-  ttsCandidateUrls.push(`/api/tts?text=${encodeURIComponent(textToSpeak)}&lang=${encodeURIComponent(shortLang || 'vi')}`);
-  
-  // 2. Endpoint backend trực tiếp port 3001
-  if (typeof window !== 'undefined' && window.location.hostname) {
-    ttsCandidateUrls.push(`http://${window.location.hostname}:3001/api/tts?text=${encodeURIComponent(textToSpeak)}&lang=${encodeURIComponent(shortLang || 'vi')}`);
-  }
-  ttsCandidateUrls.push(`http://127.0.0.1:3001/api/tts?text=${encodeURIComponent(textToSpeak)}&lang=${encodeURIComponent(shortLang || 'vi')}`);
-  
-  // 3. Google Translate TTS trực tiếp (giới hạn 200 ký tự chuẩn URL Google TTS)
-  ttsCandidateUrls.push(`https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(shortLang || 'vi')}&q=${encodeURIComponent(textToSpeak.slice(0, 200))}`);
-
-  for (const ttsUrl of ttsCandidateUrls) {
-    try {
-      const streamAudio = new Audio(ttsUrl);
-      streamAudio.volume = effectiveVoiceVolume;
-      streamAudio.playbackRate = requestedRate;
-      streamAudio.muted = effectiveVoiceVolume === 0;
-      
-      // Không gán MediaElementSource khi đang test để tránh AudioContext bị mute
-      if (!isTestingMode) {
-        try { globalLipSyncEngine.connectAudioElement(streamAudio); } catch(e) {}
-      }
-      
-      activePreviewAudio = streamAudio;
-
-      const playPromise = new Promise((resolve) => {
-        let isDone = false;
-        const cleanup = (success) => {
-          if (isDone) return;
-          isDone = true;
-          activePreviewAudio = null;
-          if (success && onEnd) onEnd();
-          resolve(success);
-        };
-
-        streamAudio.onended = () => cleanup(true);
-        streamAudio.onerror = () => cleanup(false);
-        
-        const playAttempt = streamAudio.play();
-        if (playAttempt && typeof playAttempt.catch === 'function') {
-          playAttempt.catch(() => {
-            cleanup(false);
-          });
-        }
-      });
-
-      const isSuccess = await playPromise;
-      if (isSuccess) return true;
-    } catch (audioStreamErr) {
-      // Thử URL tiếp theo
-    }
-  }
-
-  // =========================================================================
-  // TIER 3: Instant Client Web Speech API (Đồng bộ, tối ưu hoá mọi trình duyệt)
+  // TIER 2: Instant Client Web Speech API (Ưu tiên hàng đầu khi nghe thử hoặc local TTS)
+  // Đảm bảo phản hồi 0ms không phụ thuộc mạng, phát âm cực chuẩn mọi ngôn ngữ
   // =========================================================================
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-    return new Promise((resolve) => {
-      try {
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.resume();
+    try {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.resume();
 
-        const utterance = new SpeechSynthesisUtterance(textToSpeak);
-        activeUtterance = utterance;
-        
-        // Lưu vào Set toàn cục để tránh bị Garbage Collector dọn dẹp giữa chừng
-        window._activeVoiceSet = window._activeVoiceSet || new Set();
-        window._activeVoiceSet.add(utterance);
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      activeUtterance = utterance;
+      
+      // Lưu vào Set toàn cục để tránh bị Garbage Collector dọn dẹp giữa chừng
+      window._activeVoiceSet = window._activeVoiceSet || new Set();
+      window._activeVoiceSet.add(utterance);
 
-        utterance.lang = langCode;
+      utterance.lang = langCode;
 
-        const isMale = voice?.gender === 'Male' || voice?.gender === 'Nam';
-        const isFemale = !isMale;
+      const isMale = voice?.gender === 'Male' || voice?.gender === 'Nam';
+      const isFemale = !isMale;
 
-        // Tôn trọng 100% tốc độ đọc (rate), cao độ (pitch) và âm lượng (volume) người dùng tùy chỉnh
-        utterance.rate = requestedRate;
-        utterance.pitch = voice?.pitch !== undefined ? Number(voice.pitch) : (isFemale ? 1.12 : 0.88);
-        utterance.volume = effectiveVoiceVolume;
+      // Tôn trọng 100% tốc độ đọc (rate), cao độ (pitch) và âm lượng (volume) người dùng tùy chỉnh
+      utterance.rate = requestedRate;
+      utterance.pitch = voice?.pitch !== undefined ? Number(voice.pitch) : (isFemale ? 1.12 : 0.88);
+      utterance.volume = effectiveVoiceVolume;
 
+      // Lấy danh sách giọng từ Web Speech API
+      const availableVoices = (preloadedVoices.length > 0 ? preloadedVoices : window.speechSynthesis.getVoices()) || [];
+      if (availableVoices.length > 0) {
+        // Tìm giọng chuẩn theo ngôn ngữ và giới tính
+        let matched = availableVoices.find(v => {
+          const vLang = (v.lang || '').toLowerCase().replace('_', '-');
+          const matchesLang = vLang.startsWith(shortLang) || vLang.includes(shortLang);
+          const vName = (v.name || '').toLowerCase();
+          if (isMale) {
+            return matchesLang && (vName.includes('male') || vName.includes('nam') || vName.includes('david') || vName.includes('george') || vName.includes('james') || vName.includes('henri') || vName.includes('hans'));
+          } else {
+            return matchesLang && (vName.includes('female') || vName.includes('nữ') || vName.includes('linh') || vName.includes('mai') || vName.includes('zira') || vName.includes('samantha') || vName.includes('camille') || vName.includes('elsa'));
+          }
+        });
+
+        if (!matched) {
+          matched = availableVoices.find(v => {
+            const vLang = (v.lang || '').toLowerCase().replace('_', '-');
+            return vLang.startsWith(shortLang) || vLang.includes(shortLang);
+          });
+        }
+
+        if (!matched && availableVoices.length > 0) {
+          matched = availableVoices[0];
+        }
+
+        if (matched) {
+          utterance.voice = matched;
+        }
+      }
+
+      return new Promise((resolve) => {
         let hasEnded = false;
         const finish = (ok) => {
           if (hasEnded) return;
@@ -717,55 +719,62 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
         };
 
         // Safety watchdog: tự động kết thúc nếu trình duyệt bị đơ
-        const maxDurationMs = Math.max(5000, textToSpeak.length * 160);
+        const maxDurationMs = Math.max(4000, textToSpeak.length * 150);
         const watchdog = setTimeout(() => finish(true), maxDurationMs);
         utterance.addEventListener('end', () => clearTimeout(watchdog));
 
-        // Lấy danh sách giọng từ Web Speech API
-        const availableVoices = (preloadedVoices.length > 0 ? preloadedVoices : window.speechSynthesis.getVoices()) || [];
-        if (availableVoices.length > 0) {
-          // Tìm giọng chuẩn theo ngôn ngữ và giới tính
-          let matched = availableVoices.find(v => {
-            const vLang = (v.lang || '').toLowerCase().replace('_', '-');
-            const matchesLang = vLang.startsWith(shortLang) || vLang.includes(shortLang);
-            const vName = (v.name || '').toLowerCase();
-            if (isMale) {
-              return matchesLang && (vName.includes('male') || vName.includes('nam') || vName.includes('david') || vName.includes('george'));
-            } else {
-              return matchesLang && (vName.includes('female') || vName.includes('nữ') || vName.includes('linh') || vName.includes('mai') || vName.includes('zira') || vName.includes('samantha'));
-            }
-          });
-
-          if (!matched) {
-            matched = availableVoices.find(v => {
-              const vLang = (v.lang || '').toLowerCase().replace('_', '-');
-              return vLang.startsWith(shortLang) || vLang.includes(shortLang);
-            });
-          }
-
-          if (!matched && availableVoices.length > 0) {
-            matched = availableVoices[0];
-          }
-
-          if (matched) {
-            utterance.voice = matched;
-          }
+        try {
+          window.speechSynthesis.speak(utterance);
+        } catch (spkErr) {
+          playFallbackHarmonicChime(voice?.gender);
+          finish(false);
         }
+      });
+    } catch (synthErr) {
+      console.warn('Web Speech API execution catch:', synthErr);
+    }
+  }
 
-        setTimeout(() => {
-          try {
-            window.speechSynthesis.speak(utterance);
-          } catch (spkErr) {
-            finish(false);
-          }
-        }, 15);
-      } catch (synthErr) {
-        console.warn('Web Speech API execution catch:', synthErr);
-        playFallbackHarmonicChime(voice?.gender);
-        if (onEnd) onEnd();
-        resolve(false);
-      }
-    });
+  // =========================================================================
+  // TIER 3: Streaming Audio TTS Fallback (Khi Web Speech không khả dụng)
+  // =========================================================================
+  const ttsCandidateUrls = [
+    `/api/tts?text=${encodeURIComponent(textToSpeak)}&lang=${encodeURIComponent(shortLang || 'vi')}`,
+    `http://127.0.0.1:3001/api/tts?text=${encodeURIComponent(textToSpeak)}&lang=${encodeURIComponent(shortLang || 'vi')}`,
+    `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(shortLang || 'vi')}&q=${encodeURIComponent(textToSpeak.slice(0, 200))}`
+  ];
+
+  for (const ttsUrl of ttsCandidateUrls) {
+    try {
+      const streamAudio = new Audio(ttsUrl);
+      streamAudio.volume = effectiveVoiceVolume;
+      streamAudio.playbackRate = requestedRate;
+      streamAudio.muted = effectiveVoiceVolume === 0;
+      
+      activePreviewAudio = streamAudio;
+
+      const playPromise = new Promise((resolve) => {
+        let isDone = false;
+        const cleanup = (success) => {
+          if (isDone) return;
+          isDone = true;
+          activePreviewAudio = null;
+          if (success && onEnd) onEnd();
+          resolve(success);
+        };
+
+        streamAudio.onended = () => cleanup(true);
+        streamAudio.onerror = () => cleanup(false);
+        
+        const playAttempt = streamAudio.play();
+        if (playAttempt && typeof playAttempt.catch === 'function') {
+          playAttempt.catch(() => cleanup(false));
+        }
+      });
+
+      const isSuccess = await playPromise;
+      if (isSuccess) return true;
+    } catch (audioStreamErr) {}
   }
 
   // =========================================================================

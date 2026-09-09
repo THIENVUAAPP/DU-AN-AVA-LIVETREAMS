@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.1.8';
+export const APP_VERSION = '2.1.9';
 export const UPDATE_NOTES = [
-  "🎙️ Nâng Cấp Toàn Diện Hệ Thống Giọng Đọc TTS Chuẩn Chuyên Nghiệp: Cung cấp đầy đủ 20 Giọng Nữ và 20 Giọng Nam đỉnh cao từ ElevenLabs & MiniMax AI, phân chia chuẩn xác từng vai trò (Giọng Idol Live, Giọng Quản Lý / Trợ Lý Bán Hàng, Giọng BLV Game PK).",
-  "🇻🇳 Giữ Duy Nhất '🎤 Hoài My (Nữ - Chuẩn Tiếng Việt)' ở vị trí đầu tiên trong danh mục Giọng Tiếng Việt Miễn Phí, loại bỏ hoàn toàn các giọng đọc trùng lặp hoặc máy móc.",
-  "✨ Đa Dạng Thể Loại Cảm Xúc & Độ Nhấn Nhá: Bán hàng giục chốt đơn, kể chuyện tâm sự đêm khuya, MC truyền hình VTV, biên tập viên thời sự, BLV game thể thao, doanh nhân trung niên và giọng người cao tuổi tri thức."
+  "🖥️ Nâng Cấp Cửa Sổ Cấu Hình Toàn Màn Hình: Khung Cấu hình AI, Giọng nói & API mở rộng Full Screen rộng rãi, tối ưu trải nghiệm và loại bỏ hoàn toàn các thông tin thừa rườm rà.",
+  "🔊 Khắc Phục Triệt Để Lỗi Nghe Thử Voice: 100% tất cả các giọng đọc (Idol Live, Quản Lý, BLV Game, Quốc Tế) bấm vào là nghe thử tức thì không có độ trễ.",
+  "🌐 Bổ Sung Hơn 20+ Giọng Đọc Quốc Tế Đa Quốc Gia: Đầy đủ các nước Mỹ, Anh, Pháp, Đức, Ý, Nga, Tây Ban Nha, Mexico, Brazil, Trung Quốc, Nhật Bản, Hàn Quốc, Thái Lan, Indonesia, v.v., phân chia theo từng khu vực rõ ràng và hỗ trợ tìm kiếm nhanh."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
