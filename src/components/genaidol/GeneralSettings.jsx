@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Search, CheckCircle2, FolderOpen, Brain, Upload, Star, ShoppingBag, Sparkles, Award, Sliders } from 'lucide-react';
+import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Search, CheckCircle2, FolderOpen, Brain, Upload, Star, ShoppingBag, Sparkles, Award, Sliders, Flame } from 'lucide-react';
 import { getLiveMediaByCategory } from '../../lib/liveKhoDB';
 import { 
   saveDualVoiceConfig, 
   ALL_SYSTEM_VOICES, 
+  VIETNAMESE_HOTTREND_VOICES,
   VIETNAMESE_SALES_VOICES,
   ELEVENLABS_VOICES, 
   previewVoiceAudio, 
@@ -31,6 +32,15 @@ export default function GeneralSettings({ onClose = () => {} }) {
   const [salesFilterAge, setSalesFilterAge] = useState('all');
   const [salesFilterGender, setSalesFilterGender] = useState('all');
   const [salesSearchQuery, setSalesSearchQuery] = useState('');
+  
+  // State Bộ Lọc Giọng Hot Trend
+  const [hotTrendCategory, setHotTrendCategory] = useState('all');
+  const [hotTrendGender, setHotTrendGender] = useState('all');
+  const [hotTrendSearchQuery, setHotTrendSearchQuery] = useState('');
+  const [hotTrendVoiceRate, setHotTrendVoiceRate] = useState(1.0);
+  const [hotTrendVoicePitch, setHotTrendVoicePitch] = useState(1.0);
+  const [hotTrendVoiceVolume, setHotTrendVoiceVolume] = useState(1.0);
+
   const fileInputRef = useRef(null);
   
   // State for all settings
@@ -2012,10 +2022,16 @@ IDOL MỈM CƯỜI + GESTURE
           <Brain size={16} /> BỘ NÃO IDOL
         </button>
         <button 
+          onClick={() => setActiveTab('hottrend-voice')}
+          className={`flex items-center gap-2 px-4 py-3 font-bold text-sm transition-colors whitespace-nowrap border-b-2 ${activeTab === 'hottrend-voice' ? 'border-orange-500 text-orange-600 bg-orange-50/60 shadow-xs' : 'border-transparent text-orange-700 hover:text-orange-600 hover:bg-orange-50/30'}`}
+        >
+          <Flame size={16} className="text-orange-500" /> 🔥 GIỌNG HOT TREND (20)
+        </button>
+        <button 
           onClick={() => setActiveTab('sales-voice')}
           className={`flex items-center gap-2 px-4 py-3 font-bold text-sm transition-colors whitespace-nowrap border-b-2 ${activeTab === 'sales-voice' ? 'border-rose-600 text-rose-600 bg-rose-50/50' : 'border-transparent text-rose-700 hover:text-rose-600 hover:bg-rose-50/30'}`}
         >
-          <ShoppingBag size={16} className="text-rose-600" /> 🛍️ GIỌNG BÁN HÀNG & DỊCH VỤ (20)
+          <ShoppingBag size={16} className="text-rose-600" /> 🛍️ GIỌNG BÁN HÀNG & DỊCH VỤ (30)
         </button>
         <button 
           onClick={() => setActiveTab('main-character')}
@@ -2122,6 +2138,465 @@ IDOL MỈM CƯỜI + GESTURE
                 </div>
               </div>
             </>
+          )}
+
+          {/* TAB ĐẶC BIỆT: GIỌNG HOT TREND (20 GIỌNG SIÊU CAO CẤP TIKTOK / YOUTUBE / CINEMATIC) */}
+          {activeTab === 'hottrend-voice' && (
+            <div className="space-y-4">
+              {/* Banner giới thiệu Tab Hot Trend */}
+              <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-rose-600 rounded-xl p-5 text-white shadow-md relative overflow-hidden">
+                <div className="absolute right-3 -bottom-4 opacity-15 text-8xl font-black pointer-events-none">
+                  🔥
+                </div>
+                <div className="relative z-10 space-y-2">
+                  <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                    <Flame size={14} className="text-yellow-300" /> BỘ SƯU TẬP 20 GIỌNG AI TIẾNG VIỆT HOT TREND SIÊU CAO CẤP
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black">
+                    Bộ 20 Giọng Hot Trend Triệu View: TikTok, Shorts, Livestream, YouTube & Cinema
+                  </h2>
+                  <p className="text-xs sm:text-sm text-orange-100 max-w-3xl leading-relaxed">
+                    Tập hợp đầy đủ 20 chất giọng siêu nổi tiếng hàng đầu mạng xã hội: <span className="font-bold underline">Adam, Brian, Liam, Jessica, Matilda, Sarah, Triệu Dương, Trung Caha, Tùng Đặng, Anika Hoạt Ngôn, Storytelling Cảm Xúc, Villain Cinema</span>. Tự động xử lý Formant và âm vang DSP phòng thu. Bấm <span className="underline font-bold">⭐ Ngôi sao</span> để lưu yêu thích!
+                  </p>
+                </div>
+              </div>
+
+              {/* Danh Sách 20 Giọng Hot Trend */}
+              <div className="bg-white border border-gray-300 rounded-xl shadow-sm overflow-hidden p-4 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200">
+                  <div className="flex items-center gap-2">
+                    <Flame size={20} className="text-orange-600" />
+                    <div>
+                      <h3 className="font-bold text-gray-800 text-sm">Kho 20 Giọng Hot Trend Mạng Xã Hội</h3>
+                      <p className="text-xs text-gray-500">Bấm nút để gán ngay làm Giọng Idol Live, Giọng Trợ Lý hoặc Giọng Game PK</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-lg border border-orange-200">
+                      Đang chọn cho Idol Live: {ALL_SYSTEM_VOICES.find(v => v.id === settings.mainVoiceId)?.name || 'Chưa chọn'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* BỘ LỌC TÌM KIẾM & PHÂN LOẠI HOT TREND */}
+                <div className="bg-gray-50/80 p-3 rounded-xl border border-gray-200 space-y-2.5">
+                  {/* Tìm kiếm từ khóa */}
+                  <div className="flex flex-col sm:flex-row items-center gap-2">
+                    <div className="relative w-full sm:w-80">
+                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input 
+                        type="text" 
+                        placeholder="Tìm theo tên nhân vật, phong cách, câu thoại..." 
+                        value={hotTrendSearchQuery} 
+                        onChange={(e) => setHotTrendSearchQuery(e.target.value)} 
+                        className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-gray-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500" 
+                      />
+                    </div>
+                    {hotTrendSearchQuery && (
+                      <button 
+                        type="button" 
+                        onClick={() => setHotTrendSearchQuery('')} 
+                        className="text-xs text-gray-500 hover:text-gray-800 px-2 py-1 rounded bg-white border border-gray-200"
+                      >
+                        Xóa tìm kiếm
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Filter Pills */}
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    {/* Thể loại */}
+                    <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-gray-200">
+                      <span className="text-[11px] font-bold text-gray-500 px-1.5">Phong Cách:</span>
+                      {[
+                        { key: 'all', label: 'Tất cả (20)' },
+                        { key: 'social', label: 'Creator & Social' },
+                        { key: 'sales', label: 'Bán Hàng & Chốt Deal' },
+                        { key: 'story', label: 'Story & Cinema' },
+                        { key: 'news', label: 'Bản Tin & CSKH' }
+                      ].map(tab => (
+                        <button
+                          key={tab.key}
+                          type="button"
+                          onClick={() => setHotTrendCategory(tab.key)}
+                          className={`px-2 py-1 rounded text-[11px] font-semibold transition-all ${
+                            hotTrendCategory === tab.key 
+                              ? 'bg-orange-600 text-white shadow-xs' 
+                              : 'text-gray-600 hover:bg-gray-100'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Giới tính */}
+                    <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-gray-200">
+                      <span className="text-[11px] font-bold text-gray-500 px-1.5">Giới Tính:</span>
+                      {[
+                        { key: 'all', label: 'Tất cả' },
+                        { key: 'Male', label: '👨 Nam (10)' },
+                        { key: 'Female', label: '👩 Nữ (10)' }
+                      ].map(tab => (
+                        <button
+                          key={tab.key}
+                          type="button"
+                          onClick={() => setHotTrendGender(tab.key)}
+                          className={`px-2 py-1 rounded text-[11px] font-semibold transition-all ${
+                            hotTrendGender === tab.key 
+                              ? 'bg-blue-600 text-white shadow-xs' 
+                              : 'text-gray-600 hover:bg-gray-100'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bảng Giọng Hot Trend với Quick Action Buttons */}
+                <div className="overflow-x-auto max-h-[540px] border border-gray-200 rounded-lg">
+                  <table className="w-full text-sm text-left border-collapse">
+                    <thead className="bg-gray-100 text-gray-700 font-bold border-b border-gray-300 text-xs sticky top-0 z-10 shadow-xs">
+                      <tr>
+                        <th className="px-2 py-2.5 w-10 text-center">⭐</th>
+                        <th className="px-3 py-2.5 w-12 text-center">#</th>
+                        <th className="px-4 py-2.5">Tên Nhân Vật & Câu Thoại Hot Trend</th>
+                        <th className="px-3 py-2.5">Phân Loại Chuyên Biệt</th>
+                        <th className="px-3 py-2.5 text-center">Độ Tuổi & Phong Cách</th>
+                        <th className="px-3 py-2.5 w-20 text-center">Giới Tính</th>
+                        <th className="px-3 py-2.5 w-28 text-center">Nghe Thử</th>
+                        <th className="px-4 py-2.5 text-center">Gán Nhanh Vào Kênh Live</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {VIETNAMESE_HOTTREND_VOICES
+                        .filter(v => {
+                          if (hotTrendGender !== 'all' && v.gender !== hotTrendGender) return false;
+                          if (hotTrendCategory === 'social') {
+                            if (!v.id.includes('brian') && !v.id.includes('liam') && !v.id.includes('jessica') && !v.id.includes('kenh') && !v.id.includes('anika')) return false;
+                          } else if (hotTrendCategory === 'sales') {
+                            if (!v.id.includes('adam') && !v.id.includes('sales') && !v.id.includes('tungdang') && !v.id.includes('beauty')) return false;
+                          } else if (hotTrendCategory === 'story') {
+                            if (!v.id.includes('matilda') && !v.id.includes('trieuduong') && !v.id.includes('storytelling') && !v.id.includes('cinematic') && !v.id.includes('villain')) return false;
+                          } else if (hotTrendCategory === 'news') {
+                            if (!v.id.includes('sarah') && !v.id.includes('trungcaha') && !v.id.includes('huyen') && !v.id.includes('news') && !v.id.includes('tech')) return false;
+                          }
+                          if (hotTrendSearchQuery.trim()) {
+                            const q = hotTrendSearchQuery.toLowerCase();
+                            const matchName = v.name?.toLowerCase().includes(q);
+                            const matchCat = v.category?.toLowerCase().includes(q);
+                            const matchSample = v.sampleText?.toLowerCase().includes(q);
+                            const matchDesc = v.desc?.toLowerCase().includes(q);
+                            if (!matchName && !matchCat && !matchSample && !matchDesc) return false;
+                          }
+                          return true;
+                        })
+                        .map((v, idx) => {
+                          const isSelectedAsIdol = settings.mainVoiceId === v.id;
+                          const isSelectedAsAssistant = settings.assistantVoiceId === v.id;
+                          const isSelectedAsGame = settings.gameVoiceId === v.id;
+                          const isPlaying = previewingVoiceId === v.id;
+                          const isFav = favoriteVoiceIds.includes(v.id);
+                          const isFemale = v.gender === 'Female' || v.gender === 'Nữ';
+
+                          const ageBadgeText = v.ageGroup === 'young' ? 'Trẻ 20-35t' : (v.ageGroup === 'middle' ? 'Trung Niên' : 'Lão Niên 55-70t');
+                          const ageBadgeColor = v.ageGroup === 'young' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : (v.ageGroup === 'middle' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-amber-50 text-amber-700 border-amber-200');
+
+                          return (
+                            <tr 
+                              key={v.id}
+                              className={`transition-colors ${
+                                isSelectedAsIdol 
+                                  ? 'bg-orange-50/80 font-medium' 
+                                  : isPlaying 
+                                    ? 'bg-amber-50' 
+                                    : 'hover:bg-gray-50'
+                              }`}
+                            >
+                              <td className="px-2 py-2.5 text-center">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleFavoriteVoiceId(v.id);
+                                    setFavoriteVoiceIds(getFavoriteVoiceIds());
+                                  }}
+                                  title={isFav ? "Bỏ khỏi kho yêu thích" : "Lưu vào kho yêu thích"}
+                                  className="p-1 rounded-full hover:scale-110 active:scale-95 transition-transform"
+                                >
+                                  <Star size={16} className={isFav ? 'fill-amber-400 text-amber-400' : 'text-gray-300 hover:text-amber-400'} />
+                                </button>
+                              </td>
+                              <td className="px-3 py-2.5 text-center text-xs opacity-75 font-mono">{idx + 1}</td>
+                              <td className="px-4 py-2.5">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="font-bold text-gray-900">{v.name}</span>
+                                  {isFav && <span className="text-[10px] bg-amber-400/20 text-amber-700 px-1.5 py-0.2 rounded font-semibold">⭐ Yêu thích</span>}
+                                  {isSelectedAsIdol && <span className="text-[10px] bg-orange-600 text-white px-1.5 py-0.2 rounded font-bold">🎯 Idol Live Chính</span>}
+                                </div>
+                                <div className="text-[11px] text-gray-500 italic mt-0.5 line-clamp-1">
+                                  💬 "{v.sampleText}"
+                                </div>
+                              </td>
+                              <td className="px-3 py-2.5">
+                                <span className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-orange-50 text-orange-700 border border-orange-200">
+                                  {v.category}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2.5 text-center">
+                                <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${ageBadgeColor}`}>
+                                  {ageBadgeText}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2.5 text-center text-xs font-semibold">
+                                <span className={isFemale ? 'text-pink-600 font-bold' : 'text-blue-600 font-bold'}>
+                                  {isFemale ? '👩 Nữ' : '👨 Nam'}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2.5 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (isPlaying) {
+                                      stopVoiceAudio();
+                                      setPreviewingVoiceId(null);
+                                      return;
+                                    }
+                                    setPreviewingVoiceId(v.id);
+                                    previewVoiceAudio({ 
+                                      ...v, 
+                                      volume: hotTrendVoiceVolume !== undefined ? hotTrendVoiceVolume : (v.volume || 1.0), 
+                                      rate: (v.rate || 1.0) * hotTrendVoiceRate, 
+                                      pitch: (v.pitch || 1.0) * hotTrendVoicePitch, 
+                                      isTest: true 
+                                    }, null, () => {
+                                      setPreviewingVoiceId(null);
+                                    });
+                                  }}
+                                  className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold cursor-pointer active:scale-95 transition-all ${
+                                    isPlaying 
+                                      ? 'bg-amber-500 text-white animate-pulse shadow-md ring-2 ring-amber-300' 
+                                      : 'bg-orange-50 text-orange-600 hover:bg-orange-100 border border-orange-200'
+                                  }`}
+                                >
+                                  <Volume2 size={14} className={isPlaying ? "animate-spin" : ""} />
+                                  <span>{isPlaying ? 'Dừng' : '🔊 Thử giọng'}</span>
+                                </button>
+                              </td>
+                              <td className="px-4 py-2.5 text-center">
+                                <div className="flex items-center justify-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setSettings(prev => ({ 
+                                        ...prev, 
+                                        mainVoiceId: v.id,
+                                        mainVoiceVolume: hotTrendVoiceVolume !== undefined ? hotTrendVoiceVolume : (v.volume || 1.0),
+                                        mainVoiceRate: (v.rate || 1.0) * hotTrendVoiceRate,
+                                        mainVoicePitch: (v.pitch || 1.0) * hotTrendVoicePitch
+                                      }));
+                                      alert(`Đã chọn giọng Hot Trend "${v.name}" làm Giọng Idol Livestream chính!`);
+                                    }}
+                                    className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
+                                      isSelectedAsIdol 
+                                        ? 'bg-orange-600 text-white shadow-xs' 
+                                        : 'bg-gray-100 hover:bg-orange-50 text-gray-700 hover:text-orange-700 border border-gray-300'
+                                    }`}
+                                  >
+                                    🎯 Idol Live
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setSettings(prev => ({ ...prev, assistantVoiceId: v.id, assistantEnabled: true }));
+                                      alert(`Đã chọn giọng Hot Trend "${v.name}" làm Giọng Quản Lý / Trợ Lý!`);
+                                    }}
+                                    className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
+                                      isSelectedAsAssistant 
+                                        ? 'bg-blue-600 text-white shadow-xs' 
+                                        : 'bg-gray-100 hover:bg-blue-50 text-gray-700 hover:text-blue-700 border border-gray-300'
+                                    }`}
+                                  >
+                                    💬 Trợ Lý
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setSettings(prev => ({ ...prev, gameVoiceId: v.id }));
+                                      alert(`Đã chọn giọng Hot Trend "${v.name}" làm Giọng BLV Mini-Game!`);
+                                    }}
+                                    className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
+                                      isSelectedAsGame 
+                                        ? 'bg-purple-600 text-white shadow-xs' 
+                                        : 'bg-gray-100 hover:bg-purple-50 text-gray-700 hover:text-purple-700 border border-gray-300'
+                                    }`}
+                                  >
+                                    🎮 BLV Game
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* BỘ ĐIỀU CHỈNH TỐC ĐỘ, CAO ĐỘ & ÂM LƯỢNG GIỌNG HOT TREND */}
+                <div className="bg-gradient-to-br from-orange-50/80 via-white to-amber-50/60 border border-orange-200 rounded-xl p-4 sm:p-5 shadow-sm space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-orange-200/80 pb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 bg-orange-600 text-white rounded-lg shadow-xs">
+                        <Sliders size={18} />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black text-gray-900 flex items-center gap-1.5">
+                          Tùy Chỉnh Tốc Độ, Cao Độ & Âm Lượng Giọng Hot Trend
+                          <span className="text-[10px] bg-orange-600 text-white font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Live Realtime</span>
+                        </h4>
+                        <p className="text-xs text-gray-600">
+                          Tinh chỉnh linh hoạt nhịp điệu và âm sắc giọng đọc, áp dụng trực tiếp cho toàn bộ 20 giọng Hot Trend.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 self-end sm:self-center">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const targetVoice = VIETNAMESE_HOTTREND_VOICES.find(v => v.id === settings.mainVoiceId) || VIETNAMESE_HOTTREND_VOICES[0];
+                          previewVoiceAudio({
+                            ...targetVoice,
+                            volume: hotTrendVoiceVolume,
+                            rate: (targetVoice.rate || 1.0) * hotTrendVoiceRate,
+                            pitch: (targetVoice.pitch || 1.0) * hotTrendVoicePitch,
+                            isTest: true
+                          });
+                        }}
+                        className="px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 transition-transform"
+                      >
+                        <Volume2 size={14} /> Nghe Thử Âm Thanh
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    {/* Tốc độ (Speed) */}
+                    <div className="bg-white p-3.5 rounded-lg border border-orange-200/70 shadow-2xs space-y-2">
+                      <div className="flex items-center justify-between text-xs font-bold">
+                        <span className="text-gray-700 flex items-center gap-1">⚡ Tốc độ (Speed):</span>
+                        <span className="text-orange-600 bg-orange-50 px-2 py-0.5 rounded border border-orange-200">{hotTrendVoiceRate.toFixed(2)}x</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0.6"
+                        max="1.6"
+                        step="0.05"
+                        value={hotTrendVoiceRate}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          setHotTrendVoiceRate(val);
+                          setRealtimeAudioParams({ rate: val });
+                        }}
+                        className="w-full accent-orange-600 h-1.5 bg-gray-200 rounded-lg cursor-pointer"
+                      />
+                      <div className="flex justify-between gap-1 text-[10px] text-gray-500 font-medium">
+                        {[0.8, 1.0, 1.15, 1.3].map((r) => (
+                          <button
+                            key={r}
+                            type="button"
+                            onClick={() => {
+                              setHotTrendVoiceRate(r);
+                              setRealtimeAudioParams({ rate: r });
+                            }}
+                            className={`px-1.5 py-0.5 rounded border transition-colors ${hotTrendVoiceRate === r ? 'bg-orange-600 text-white border-orange-600' : 'bg-gray-50 hover:bg-gray-100 border-gray-200'}`}
+                          >
+                            {r}x
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Cao độ (Pitch) */}
+                    <div className="bg-white p-3.5 rounded-lg border border-orange-200/70 shadow-2xs space-y-2">
+                      <div className="flex items-center justify-between text-xs font-bold">
+                        <span className="text-gray-700 flex items-center gap-1">🎵 Cao độ (Pitch):</span>
+                        <span className="text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">{hotTrendVoicePitch.toFixed(2)}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0.7"
+                        max="1.4"
+                        step="0.05"
+                        value={hotTrendVoicePitch}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          setHotTrendVoicePitch(val);
+                          setRealtimeAudioParams({ pitch: val });
+                        }}
+                        className="w-full accent-amber-600 h-1.5 bg-gray-200 rounded-lg cursor-pointer"
+                      />
+                      <div className="flex justify-between gap-1 text-[10px] text-gray-500 font-medium">
+                        {[
+                          { label: 'Trầm', val: 0.85 },
+                          { label: 'Chuẩn', val: 1.0 },
+                          { label: 'Bay bổng', val: 1.15 }
+                        ].map((item) => (
+                          <button
+                            key={item.label}
+                            type="button"
+                            onClick={() => {
+                              setHotTrendVoicePitch(item.val);
+                              setRealtimeAudioParams({ pitch: item.val });
+                            }}
+                            className={`px-1.5 py-0.5 rounded border transition-colors ${hotTrendVoicePitch === item.val ? 'bg-amber-600 text-white border-amber-600' : 'bg-gray-50 hover:bg-gray-100 border-gray-200'}`}
+                          >
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Âm lượng (Volume) */}
+                    <div className="bg-white p-3.5 rounded-lg border border-orange-200/70 shadow-2xs space-y-2">
+                      <div className="flex items-center justify-between text-xs font-bold">
+                        <span className="text-gray-700 flex items-center gap-1">🔊 Âm lượng (Volume):</span>
+                        <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">{Math.round(hotTrendVoiceVolume * 100)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0.1"
+                        max="1.5"
+                        step="0.05"
+                        value={hotTrendVoiceVolume}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          setHotTrendVoiceVolume(val);
+                          setRealtimeAudioParams({ volume: val });
+                        }}
+                        className="w-full accent-emerald-600 h-1.5 bg-gray-200 rounded-lg cursor-pointer"
+                      />
+                      <div className="flex justify-between gap-1 text-[10px] text-gray-500 font-medium">
+                        {[0.5, 0.8, 1.0, 1.25].map((v) => (
+                          <button
+                            key={v}
+                            type="button"
+                            onClick={() => {
+                              setHotTrendVoiceVolume(v);
+                              setRealtimeAudioParams({ volume: v });
+                            }}
+                            className={`px-1.5 py-0.5 rounded border transition-colors ${hotTrendVoiceVolume === v ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-gray-50 hover:bg-gray-100 border-gray-200'}`}
+                          >
+                            {Math.round(v * 100)}%
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* TAB ĐẶC BIỆT: GIỌNG BÁN HÀNG & DỊCH VỤ */}

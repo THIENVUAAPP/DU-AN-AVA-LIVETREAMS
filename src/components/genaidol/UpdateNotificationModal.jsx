@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.3.7';
+export const APP_VERSION = '2.3.8';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
+    title: '🔥 Ra Mắt Tab "Giọng Hot Trend" Với Bộ 20 Giọng Đọc AI Siêu Cao Cấp',
+    description: 'Bổ sung tab riêng biệt "Giọng Hot Trend" gồm 20 chất giọng triệu view nổi tiếng nhất mạng xã hội: Adam (Authority Bán Hàng), Brian (Creator YouTube), Liam (TikTok Shorts), Jessica (Mỹ Phẩm & Lifestyle), Matilda (Luxury Story), Sarah (Tâm Sự Sincere), Triệu Dương (Phim & Tài Chính), Trung Caha (Bản Tin), Tùng Đặng (Thương Hiệu), Anika (Livestream Hoạt Ngôn), Storytelling Cảm Xúc, Villain Cinema...'
+  },
+  {
     title: '🎵 Đột Phá Phân Tách 100% Âm Sắc, Độ Vang (Reverb), Độ Trầm (Bass) & Formant Từng Giọng Đọc',
-    description: 'Xóa bỏ hoàn toàn tình trạng rập khuôn hay giống nhau giữa các giọng. Mỗi nhân vật sở hữu một profile âm học độc bản: Formant Timbre Shift riêng biệt (Trẻ trong trẻo, Trung niên đĩnh đạc, Lão niên trầm khàn uy nghi), bộ tái tạo không gian phòng thu Acoustic Space Reverb Convolver đa cấp độ, kết hợp EQ 4 băng tần khắc họa rõ nét từng vùng miền (Nam, Bắc, Trung, Tây).'
+    description: 'Mỗi nhân vật sở hữu một profile âm học độc bản: Formant Timbre Shift riêng biệt, bộ tái tạo không gian phòng thu Acoustic Space Reverb Convolver đa cấp độ, kết hợp EQ 4 băng tần và bộ điều chỉnh tốc độ, cao độ, âm lượng live realtime.'
   },
   {
     title: '🌾 Chuẩn Hóa 100% Phát Âm, Ngữ Điệu & Trợ Từ Bản Xứ 4 Vùng Miền Việt Nam',
-    description: 'Tích hợp bộ xử lý phương ngữ thông minh formatTextForRegionalSpeech: Tự động chuyển đổi trợ từ, ngữ khí, nhịp điệu ngắt nghỉ chân thực cho Miền Tây (sông nước ngọt ngào ấm áp), Miền Trung (đậm đà sâu lắng), Miền Nam (năng động bứt phá), Miền Bắc (thanh lịch chuẩn mực).'
-  },
-  {
-    title: '⚡ Tối Ưu Realtime 100% Bộ Tùy Chỉnh Tốc Độ (Speed), Âm Lượng (Volume) & Cao Độ (Pitch)',
-    description: 'Nâng cấp khả năng phản hồi tức thì khi kéo thả thanh trượt hoặc bấm các nút preset (0.8x, 1.0x, 1.15x, 1.3x; 50%, 80%, 100%, 125%; 0.85 Trầm, 1.0 Cân bằng, 1.15 Trong trẻo).'
+    description: 'Tích hợp bộ xử lý phương ngữ thông minh formatTextForRegionalSpeech: Tự động chuyển đổi trợ từ, ngữ khí, nhịp điệu ngắt nghỉ chân thực cho Miền Tây, Miền Trung, Miền Nam, Miền Bắc.'
   },
   {
     title: '🛍️ Kho 30 Giọng Bán Hàng & Chốt Đơn Đa Ngành, Đa Vùng Miền, Đa Độ Tuổi (20 - 70 Tuổi)',
-    description: 'Hệ sinh thái giọng bán hàng hoàn chỉnh gồm 30 nhân vật độc bản: 8 giọng Miền Nam, 8 giọng Miền Bắc, 6 giọng Miền Trung, 8 giọng Miền Tây với đầy đủ các thế hệ từ Trẻ (20-35t), Trung Niên (40-54t) đến Lão Niên (55-70t).'
+    description: 'Hệ sinh thái giọng bán hàng hoàn chỉnh gồm 30 nhân vật độc bản phủ sóng toàn bộ ngành hàng thương mại điện tử.'
   }
 ];
 
