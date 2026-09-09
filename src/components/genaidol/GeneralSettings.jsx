@@ -1,7 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Search, CheckCircle2, FolderOpen, Brain, Upload } from 'lucide-react';
+import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Search, CheckCircle2, FolderOpen, Brain, Upload, Star, ShoppingBag, Sparkles, Award } from 'lucide-react';
 import { getLiveMediaByCategory } from '../../lib/liveKhoDB';
-import { saveDualVoiceConfig, ALL_SYSTEM_VOICES, ELEVENLABS_VOICES, previewVoiceAudio, updateActiveVoiceAudio } from '../../utils/voiceSyncService';
+import { 
+  saveDualVoiceConfig, 
+  ALL_SYSTEM_VOICES, 
+  VIETNAMESE_SALES_VOICES,
+  ELEVENLABS_VOICES, 
+  previewVoiceAudio, 
+  updateActiveVoiceAudio, 
+  stopVoiceAudio,
+  getFavoriteVoiceIds,
+  toggleFavoriteVoiceId,
+  isVoiceFavorite
+} from '../../utils/voiceSyncService';
 import { DEFAULT_SYSTEM_PROMPT } from '../../utils/defaultSystemPrompt';
 import UniversalMediaPicker from './UniversalMediaPicker';
 
@@ -14,6 +25,7 @@ export default function GeneralSettings({ onClose = () => {} }) {
   const [idleVideoCount, setIdleVideoCount] = useState(0);
   const [previewingVoiceId, setPreviewingVoiceId] = useState(null);
   const [voiceSearchQuery, setVoiceSearchQuery] = useState('');
+  const [favoriteVoiceIds, setFavoriteVoiceIds] = useState(getFavoriteVoiceIds());
   const fileInputRef = useRef(null);
   
   // State for all settings
@@ -1622,6 +1634,8 @@ IDOL MỈM CƯỜI + GESTURE
     const q = voiceSearchQuery.trim().toLowerCase();
     const filtered = voices.filter(v => {
       const isVn = v.region === 'vi' || v.id === 'free_vi_female' || v.id?.startsWith('vn_') || v.id === 'el_adam';
+      const isFav = favoriteVoiceIds.includes(v.id);
+      const isSales = v.category?.includes('Bán Hàng') || v.category?.includes('Chốt Đơn') || v.styleCategory === 'banhang' || v.styleCategory === 'sales_expert' || v.id?.startsWith('vn_sales_');
 
       // 1. Keyword search filter
       if (q) {
@@ -1629,23 +1643,24 @@ IDOL MỈM CƯỜI + GESTURE
         const matchCategory = (v.category || '').toLowerCase().includes(q);
         const matchDesc = (v.desc || '').toLowerCase().includes(q);
         const matchLang = (v.lang || '').toLowerCase().includes(q);
-        if (!matchName && !matchCategory && !matchDesc && !matchLang) return false;
+        const matchIndustry = (v.industry || '').toLowerCase().includes(q);
+        if (!matchName && !matchCategory && !matchDesc && !matchLang && !matchIndustry) return false;
       }
 
-      // 2. Category / Region / Gender filter
+      // 2. Category / Region / Gender / Favorite filter
+      if (currentFilter === 'favorites') return isFav;
+      if (currentFilter === 'sales' || currentFilter === 'vn_sales') return isSales;
       if (currentFilter === 'vn_all') return isVn;
       if (currentFilter === 'vn_female') return isVn && (v.gender === 'Female' || v.gender === 'Nữ');
       if (currentFilter === 'vn_male') return isVn && (v.gender === 'Male' || v.gender === 'Nam');
       if (currentFilter === 'vn_young') return isVn && (v.ageGroup === 'young' || v.styleCategory === 'idol_genz');
       if (currentFilter === 'vn_mc') return isVn && v.styleCategory === 'mc_btv';
-      if (currentFilter === 'vn_sales') return isVn && v.styleCategory === 'banhang';
       if (currentFilter === 'vn_game') return isVn && v.styleCategory === 'blv_game';
-      if (currentFilter === 'vn_mature') return isVn && (v.ageGroup === 'mature' || v.ageGroup === 'middle' || v.styleCategory === 'doanhnhan');
+      if (currentFilter === 'vn_mature') return isVn && (v.ageGroup === 'mature' || v.ageGroup === 'middle' || v.styleCategory === 'doanhnhan' || v.ageGroup === 'elder');
       if (currentFilter === 'female') return v.gender === 'Female' || v.gender === 'Nữ';
       if (currentFilter === 'male') return v.gender === 'Male' || v.gender === 'Nam';
       if (currentFilter === 'vi') return isVn;
       if (currentFilter === 'pro') return v.tier === 'pro';
-      if (currentFilter === 'free') return v.tier === 'free' || v.id === 'free_vi_female';
       if (currentFilter === 'us_uk') return !isVn && v.region === 'us_uk';
       if (currentFilter === 'eu') return !isVn && v.region === 'eu';
       if (currentFilter === 'latam') return !isVn && v.region === 'latam';
@@ -1655,32 +1670,35 @@ IDOL MỈM CƯỜI + GESTURE
 
     return (
       <div className="border border-gray-300 rounded-xl overflow-hidden shadow-sm bg-white">
-        <div className="overflow-y-auto max-h-[460px]">
+        <div className="overflow-y-auto max-h-[480px]">
           <table className="w-full text-sm text-left border-collapse">
             <thead className="bg-gray-100 text-gray-700 font-semibold border-b border-gray-300 text-xs sticky top-0 z-10 shadow-xs">
               <tr>
+                <th className="px-2 py-2.5 w-10 text-center">⭐</th>
                 <th className="px-3 py-2.5 w-12 text-center">#</th>
                 <th className="px-4 py-2.5">Tên Giọng Đọc AI</th>
-                <th className="px-3 py-2.5">Thể Loại / Phong Cách</th>
+                <th className="px-3 py-2.5">Thể Loại / Ngành Hàng</th>
                 <th className="px-3 py-2.5 w-24 text-center">Giới Tính</th>
-                <th className="px-3 py-2.5 w-32 text-center">Nền Tảng</th>
+                <th className="px-3 py-2.5 w-32 text-center">Chuẩn Studio</th>
                 <th className="px-3 py-2.5 w-32 text-center">Nghe Thử</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-8 text-gray-500 italic">
-                    Không tìm thấy giọng đọc phù hợp với bộ lọc.
+                  <td colSpan={7} className="text-center py-8 text-gray-500 italic">
+                    {currentFilter === 'favorites' 
+                      ? '⭐ Bạn chưa đánh dấu yêu thích giọng đọc nào. Hãy bấm vào biểu tượng ngôi sao ⭐ bên cạnh tên giọng đọc để lưu nhanh vào kho yêu thích!'
+                      : 'Không tìm thấy giọng đọc phù hợp với bộ lọc.'}
                   </td>
                 </tr>
               ) : (
                 filtered.map((v, i) => {
                   const isSelected = selectedId === v.id;
-                  const isFree = v.tier === 'free' || v.provider === 'system';
                   const isFemale = v.gender === 'Female' || v.gender === 'Nữ';
                   const isPlaying = previewingVoiceId === v.id;
                   const isVn = v.region === 'vi' || v.id === 'free_vi_female' || v.id?.startsWith('vn_') || v.id === 'el_adam';
+                  const isFav = favoriteVoiceIds.includes(v.id);
 
                   return (
                     <tr 
@@ -1694,11 +1712,29 @@ IDOL MỈM CƯỜI + GESTURE
                             : 'bg-white text-gray-800 hover:bg-blue-50/70'
                       }`}
                     >
+                      <td className="px-2 py-2.5 text-center" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFavoriteVoiceId(v.id);
+                            setFavoriteVoiceIds(getFavoriteVoiceIds());
+                          }}
+                          title={isFav ? "Bỏ khỏi kho yêu thích" : "Lưu vào kho yêu thích để dùng thường xuyên"}
+                          className="p-1 rounded-full hover:scale-110 active:scale-95 transition-transform"
+                        >
+                          <Star 
+                            size={16} 
+                            className={isFav ? 'fill-amber-400 text-amber-400 drop-shadow-xs' : (isSelected ? 'text-white/60 hover:text-amber-300' : 'text-gray-300 hover:text-amber-400')} 
+                          />
+                        </button>
+                      </td>
                       <td className="px-3 py-2.5 text-center text-xs opacity-75 font-mono">{i + 1}</td>
                       <td className="px-4 py-2.5 font-bold">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span>{v.name}</span>
                           {isSelected && <CheckCircle2 size={16} className="text-emerald-300 shrink-0 inline ml-1" />}
+                          {isFav && <span className="text-[10px] bg-amber-400/20 text-amber-600 dark:text-amber-300 px-1.5 py-0.2 rounded font-semibold">⭐ Yêu thích</span>}
                         </div>
                         {v.sampleText && (
                           <div className={`text-[11px] font-normal italic mt-0.5 line-clamp-1 ${isSelected ? 'text-blue-100' : 'text-gray-500'}`}>
@@ -1728,7 +1764,7 @@ IDOL MỈM CƯỜI + GESTURE
                               ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                               : 'bg-blue-100 text-blue-800 border border-blue-300'
                         }`}>
-                          {isVn ? '🇻🇳 AI Miễn Phí' : '🌐 AI Quốc Tế'}
+                          {isVn ? '👑 Studio VIP' : '🌐 AI Quốc Tế'}
                         </span>
                       </td>
                       <td className="px-3 py-2.5 text-center">
@@ -1762,7 +1798,7 @@ IDOL MỈM CƯỜI + GESTURE
                               setPreviewingVoiceId(null);
                             });
                           }}
-                          title={isPlaying ? "Dừng nghe thử" : "Bấm để nghe thử giọng này bằng tiếng Việt chuẩn"}
+                          title={isPlaying ? "Dừng nghe thử" : "Bấm để nghe thử giọng này bằng tiếng Việt chuẩn có cảm xúc & nhấn nhá"}
                           className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer active:scale-95 transition-all text-xs font-semibold ${
                             isPlaying
                               ? 'bg-amber-500 text-white animate-pulse shadow-md ring-2 ring-amber-300'
@@ -1788,16 +1824,16 @@ IDOL MỈM CƯỜI + GESTURE
 
   const renderFilterButtons = (currentFilter, onFilterChange) => {
     const filters = [
-      { id: 'all', label: '🌟 Tất cả (69 Giọng)' },
-      { id: 'vn_all', label: '🇻🇳 Tất Cả VN (41)' },
+      { id: 'all', label: '🌟 Tất Cả (89 Giọng)' },
+      { id: 'favorites', label: `⭐ Yêu Thích (${favoriteVoiceIds.length})` },
+      { id: 'sales', label: '🛍️ Bán Hàng & Dịch Vụ (20)' },
+      { id: 'vn_all', label: '🇻🇳 Tất Cả VN (61)' },
       { id: 'vn_female', label: '👩 Nữ Việt Nam (21)' },
       { id: 'vn_male', label: '👨 Nam Việt Nam (20)' },
       { id: 'vn_young', label: '✨ Giọng Trẻ Gen Z' },
       { id: 'vn_mc', label: '🎙️ MC & BTV VTV' },
-      { id: 'vn_sales', label: '🛍️ Bán Hàng & Chốt Đơn' },
       { id: 'vn_game', label: '🔥 BLV Game & PK' },
-      { id: 'vn_mature', label: '👑 Doanh Nhân / Cao Tuổi' },
-      { id: 'free', label: '🆓 Miễn Phí 100%' },
+      { id: 'vn_mature', label: '👑 Doanh Nhân / Lão Niên' },
       { id: 'us_uk', label: '🇺🇸 🇬🇧 US / UK' },
       { id: 'eu', label: '🇪🇺 Châu Âu' },
       { id: 'asia', label: '🌏 Châu Á (Trung/Nhật/Hàn...)' },
@@ -1826,7 +1862,7 @@ IDOL MỈM CƯỜI + GESTURE
           <Search size={15} className="absolute left-3 top-2.5 text-gray-400" />
           <input
             type="text"
-            placeholder="🔍 Tìm nhanh theo tên giọng đọc, thể loại, phong cách (VD: VTV, Chốt đơn, BLV, Tâm sự, Hoài My...)..."
+            placeholder="🔍 Tìm nhanh theo tên giọng đọc, thể loại, phong cách (VD: Mỹ phẩm, Thời trang, Bất động sản, VTV, Chốt đơn, BLV...)..."
             value={voiceSearchQuery}
             onChange={(e) => setVoiceSearchQuery(e.target.value)}
             className="w-full pl-9 pr-3 py-1.5 text-xs bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 shadow-2xs"
@@ -1948,34 +1984,40 @@ IDOL MỈM CƯỜI + GESTURE
     <div className="flex flex-col h-full bg-[#f0f2f5] text-[#333] font-sans overflow-hidden">
       
       {/* TABS */}
-      <div className="flex bg-white border-b border-gray-300 shrink-0">
+      <div className="flex bg-white border-b border-gray-300 shrink-0 overflow-x-auto">
         <button 
           onClick={() => setActiveTab('prompt')}
-          className={`flex items-center gap-2 px-5 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'prompt' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
+          className={`flex items-center gap-2 px-4 py-3 font-semibold text-sm transition-colors whitespace-nowrap border-b-2 ${activeTab === 'prompt' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
         >
           <Brain size={16} /> BỘ NÃO IDOL
         </button>
         <button 
+          onClick={() => setActiveTab('sales-voice')}
+          className={`flex items-center gap-2 px-4 py-3 font-bold text-sm transition-colors whitespace-nowrap border-b-2 ${activeTab === 'sales-voice' ? 'border-rose-600 text-rose-600 bg-rose-50/50' : 'border-transparent text-rose-700 hover:text-rose-600 hover:bg-rose-50/30'}`}
+        >
+          <ShoppingBag size={16} className="text-rose-600" /> 🛍️ GIỌNG BÁN HÀNG & DỊCH VỤ (20)
+        </button>
+        <button 
           onClick={() => setActiveTab('main-character')}
-          className={`flex items-center gap-2 px-5 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'main-character' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
+          className={`flex items-center gap-2 px-4 py-3 font-semibold text-sm transition-colors whitespace-nowrap border-b-2 ${activeTab === 'main-character' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
         >
           <User size={16} className={activeTab === 'main-character' ? 'text-blue-600' : 'text-blue-500'} /> Giọng Idol Live
         </button>
         <button 
           onClick={() => setActiveTab('assistant')}
-          className={`flex items-center gap-2 px-5 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'assistant' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
+          className={`flex items-center gap-2 px-4 py-3 font-semibold text-sm transition-colors whitespace-nowrap border-b-2 ${activeTab === 'assistant' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
         >
           <Mic size={16} className="text-red-500" /> Giọng Quản Lý / Trợ Lý
         </button>
         <button 
           onClick={() => setActiveTab('game-voice')}
-          className={`flex items-center gap-2 px-5 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'game-voice' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
+          className={`flex items-center gap-2 px-4 py-3 font-semibold text-sm transition-colors whitespace-nowrap border-b-2 ${activeTab === 'game-voice' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
         >
           <Volume2 size={16} className="text-purple-600" /> Giọng BLV Game
         </button>
         <button 
           onClick={() => setActiveTab('quick-config')}
-          className={`flex items-center gap-2 px-5 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'quick-config' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
+          className={`flex items-center gap-2 px-4 py-3 font-semibold text-sm transition-colors whitespace-nowrap border-b-2 ${activeTab === 'quick-config' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
         >
           <Settings2 size={16} className="text-gray-400" /> Cấu hình Nhanh
         </button>
@@ -2060,6 +2102,193 @@ IDOL MỈM CƯỜI + GESTURE
                 </div>
               </div>
             </>
+          )}
+
+          {/* TAB ĐẶC BIỆT: GIỌNG BÁN HÀNG & DỊCH VỤ */}
+          {activeTab === 'sales-voice' && (
+            <div className="space-y-4">
+              {/* Banner giới thiệu Tab Bán Hàng */}
+              <div className="bg-gradient-to-r from-rose-600 via-pink-600 to-amber-600 rounded-xl p-5 text-white shadow-md relative overflow-hidden">
+                <div className="absolute right-3 -bottom-4 opacity-15 text-8xl font-black pointer-events-none">
+                  🛍️
+                </div>
+                <div className="relative z-10 space-y-2">
+                  <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                    <Sparkles size={14} className="text-yellow-300" /> BỘ SƯU TẬP 20 GIỌNG ĐỌC BÁN HÀNG & DỊCH VỤ CHUYÊN BIỆT
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black">
+                    Nâng Tầm Livestream Bán Hàng Với Ngữ Điệu Cực Kỳ Đỉnh Cao & Nhấn Nhá Siêu Cuốn
+                  </h2>
+                  <p className="text-xs sm:text-sm text-rose-100 max-w-3xl leading-relaxed">
+                    20 chất giọng chuyên sâu cho từng ngành hàng: Mỹ phẩm, Thời trang, Bất động sản, Gia dụng, Xe cộ, Khóa học, Sức khỏe lão niên, Spa thẩm mỹ... Phân định rõ ràng Nam trầm ấm dứt khoát - Nữ ngọt ngào chốt deal. Bấm <span className="underline font-bold">⭐ Ngôi sao</span> để lưu vào danh sách yêu thích và áp dụng nhanh cho phiên live!
+                  </p>
+                </div>
+              </div>
+
+              {/* Danh Sách 20 Giọng Bán Hàng Chuyên Biệt */}
+              <div className="bg-white border border-gray-300 rounded-xl shadow-sm overflow-hidden p-4 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200">
+                  <div className="flex items-center gap-2">
+                    <ShoppingBag size={20} className="text-rose-600" />
+                    <div>
+                      <h3 className="font-bold text-gray-800 text-sm">Kho 20 Giọng Bán Hàng & Chốt Đơn Đa Ngành</h3>
+                      <p className="text-xs text-gray-500">Bấm nút để gán ngay làm Giọng Idol, Giọng Trợ Lý hoặc Giọng Game PK</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200">
+                      Đang chọn cho Idol Live: {ALL_SYSTEM_VOICES.find(v => v.id === settings.mainVoiceId)?.name || 'Chưa chọn'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Bảng Giọng Bán Hàng với Quick Action Buttons */}
+                <div className="overflow-x-auto max-h-[540px] border border-gray-200 rounded-lg">
+                  <table className="w-full text-sm text-left border-collapse">
+                    <thead className="bg-gray-100 text-gray-700 font-bold border-b border-gray-300 text-xs sticky top-0 z-10 shadow-xs">
+                      <tr>
+                        <th className="px-2 py-2.5 w-10 text-center">⭐</th>
+                        <th className="px-3 py-2.5 w-12 text-center">#</th>
+                        <th className="px-4 py-2.5">Tên Giọng Đọc & Ngành Hàng</th>
+                        <th className="px-3 py-2.5">Ngành Chuyên Biệt</th>
+                        <th className="px-3 py-2.5 w-24 text-center">Giới Tính</th>
+                        <th className="px-3 py-2.5 w-28 text-center">Nghe Thử</th>
+                        <th className="px-4 py-2.5 text-center">Gán Nhanh Vào Kênh Live</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {VIETNAMESE_SALES_VOICES.map((v, idx) => {
+                        const isSelectedAsIdol = settings.mainVoiceId === v.id;
+                        const isSelectedAsAssistant = settings.assistantVoiceId === v.id;
+                        const isSelectedAsGame = settings.gameVoiceId === v.id;
+                        const isPlaying = previewingVoiceId === v.id;
+                        const isFav = favoriteVoiceIds.includes(v.id);
+                        const isFemale = v.gender === 'Female' || v.gender === 'Nữ';
+
+                        return (
+                          <tr 
+                            key={v.id}
+                            className={`transition-colors ${
+                              isSelectedAsIdol 
+                                ? 'bg-rose-50/80 font-medium' 
+                                : isPlaying 
+                                  ? 'bg-amber-50' 
+                                  : 'hover:bg-gray-50'
+                            }`}
+                          >
+                            <td className="px-2 py-2.5 text-center">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleFavoriteVoiceId(v.id);
+                                  setFavoriteVoiceIds(getFavoriteVoiceIds());
+                                }}
+                                title={isFav ? "Bỏ khỏi kho yêu thích" : "Lưu vào kho yêu thích"}
+                                className="p-1 rounded-full hover:scale-110 active:scale-95 transition-transform"
+                              >
+                                <Star size={16} className={isFav ? 'fill-amber-400 text-amber-400' : 'text-gray-300 hover:text-amber-400'} />
+                              </button>
+                            </td>
+                            <td className="px-3 py-2.5 text-center text-xs opacity-75 font-mono">{idx + 1}</td>
+                            <td className="px-4 py-2.5">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="font-bold text-gray-900">{v.name}</span>
+                                {isFav && <span className="text-[10px] bg-amber-400/20 text-amber-700 px-1.5 py-0.2 rounded font-semibold">⭐ Yêu thích</span>}
+                                {isSelectedAsIdol && <span className="text-[10px] bg-rose-600 text-white px-1.5 py-0.2 rounded font-bold">🎯 Idol Live Chính</span>}
+                              </div>
+                              <div className="text-[11px] text-gray-500 italic mt-0.5 line-clamp-1">
+                                💬 "{v.sampleText}"
+                              </div>
+                            </td>
+                            <td className="px-3 py-2.5">
+                              <span className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                                {v.category}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2.5 text-center text-xs font-semibold">
+                              <span className={isFemale ? 'text-pink-600 font-bold' : 'text-blue-600 font-bold'}>
+                                {isFemale ? '👩 Nữ' : '👨 Nam'}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2.5 text-center">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (isPlaying) {
+                                    stopVoiceAudio();
+                                    setPreviewingVoiceId(null);
+                                    return;
+                                  }
+                                  setPreviewingVoiceId(v.id);
+                                  previewVoiceAudio({ ...v, volume: 1.0, rate: 1.0, pitch: 1.0, isTest: true }, null, () => {
+                                    setPreviewingVoiceId(null);
+                                  });
+                                }}
+                                className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold cursor-pointer active:scale-95 transition-all ${
+                                  isPlaying 
+                                    ? 'bg-amber-500 text-white animate-pulse shadow-md ring-2 ring-amber-300' 
+                                    : 'bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200'
+                                }`}
+                              >
+                                <Volume2 size={14} className={isPlaying ? "animate-spin" : ""} />
+                                <span>{isPlaying ? 'Dừng' : '🔊 Thử giọng'}</span>
+                              </button>
+                            </td>
+                            <td className="px-4 py-2.5 text-center">
+                              <div className="flex items-center justify-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSettings(prev => ({ ...prev, mainVoiceId: v.id }));
+                                    alert(`Đã chọn giọng "${v.name}" làm Giọng Idol Livestream chính!`);
+                                  }}
+                                  className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
+                                    isSelectedAsIdol 
+                                      ? 'bg-rose-600 text-white shadow-xs' 
+                                      : 'bg-gray-100 hover:bg-rose-50 text-gray-700 hover:text-rose-700 border border-gray-300'
+                                  }`}
+                                >
+                                  🎯 Idol Live
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSettings(prev => ({ ...prev, assistantVoiceId: v.id, assistantEnabled: true }));
+                                    alert(`Đã chọn giọng "${v.name}" làm Giọng Quản Lý / Trợ Lý!`);
+                                  }}
+                                  className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
+                                    isSelectedAsAssistant 
+                                      ? 'bg-blue-600 text-white shadow-xs' 
+                                      : 'bg-gray-100 hover:bg-blue-50 text-gray-700 hover:text-blue-700 border border-gray-300'
+                                  }`}
+                                >
+                                  💬 Trợ Lý
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSettings(prev => ({ ...prev, gameVoiceId: v.id }));
+                                    alert(`Đã chọn giọng "${v.name}" làm Giọng BLV Mini-Game!`);
+                                  }}
+                                  className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
+                                    isSelectedAsGame 
+                                      ? 'bg-purple-600 text-white shadow-xs' 
+                                      : 'bg-gray-100 hover:bg-purple-50 text-gray-700 hover:text-purple-700 border border-gray-300'
+                                  }`}
+                                >
+                                  🎮 BLV Game
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* TAB 2: NHÂN VẬT CHÍNH */}

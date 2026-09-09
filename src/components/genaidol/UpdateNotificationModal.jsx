@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.2.5';
+export const APP_VERSION = '2.2.6';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🎙️ Hệ Thống 41 Giọng Việt Nam & 28 Giọng Quốc Tế Khác Biệt Hoàn Toàn',
-    description: 'Tích hợp bộ xử lý âm thanh Acoustic DSP (Pitch-shift, Formant F1/F2, Chest Resonance & Dynamics Compressor) giúp mỗi giọng đọc có một bản sắc, ngữ điệu, âm sắc và cảm xúc riêng biệt 100% không trùng lặp.'
+    title: '🛍️ Bổ Sung 20 Giọng Đọc AI Bán Hàng & Dịch Vụ Đa Ngành Hàng',
+    description: 'Bổ sung 20 chất giọng chuyên sâu (Nam/Nữ/Già/Trẻ) tối ưu hóa ngữ điệu chốt đơn cho từng ngành: Mỹ phẩm, Thời trang, Bất động sản, Gia dụng, Xe cộ, Khóa học, Sức khỏe, Spa thẩm mỹ...'
   },
   {
-    title: '🆓 100% Giọng Miễn Phí Sẵn Sàng Ngay (Không Cần API Key)',
-    description: 'Tất cả 41 giọng đọc Việt Nam (21 Nữ & 20 Nam) và 28 giọng quốc tế đều mở khóa miễn phí 100%, nghe thử và phát sóng trực tiếp mượt mà ngay trên mọi thiết bị.'
+    title: '⭐ Hệ Thống Tích Sao Yêu Thích & Kho Lưu Giọng Đọc 1-Click',
+    description: 'Người dùng dễ dàng đánh dấu ngôi sao ⭐ cho các giọng đọc tâm đắc, lưu trữ trong Tab Yêu Thích để kích hoạt và chuyển đổi nhanh chóng trong các phiên livestream.'
   },
   {
-    title: '💬 Câu Thoại Mẫu Tiếng Việt Chuẩn Xác Theo Từng Nhân Vật',
-    description: 'Mỗi nhân vật (BTV VTV, MC Truyền Hình, Bán Hàng TikTok, TVC Flash Sale, BLV Game PK, Kể chuyện ASMR, Quý bà doanh nhân, Lão niên...) đều có câu thoại chuẩn phong cách.'
+    title: '🎙️ Chuẩn Hóa Phân Biệt Tuyệt Đối Giọng Nam & Nữ + Acoustic DSP Siêu Cảm Xúc',
+    description: 'Tối ưu bộ lọc cộng hưởng thanh quản & ngực: Giọng Nam trầm ấm, uy lực, chuẩn nam 100%; Giọng Nữ trong trẻo, ngọt ngào, nhấn nhá tự nhiên và đầy cảm xúc đỉnh cao.'
   }
 ];
 

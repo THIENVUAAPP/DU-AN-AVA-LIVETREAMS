@@ -19,7 +19,7 @@ export default async function handler(req, res) {
       isMac = userAgent.includes('mac');
     }
 
-    const currentVersion = '2.2.5';
+    const currentVersion = '2.2.6';
     const prefix = isMac ? `AvaLive_VIP_PRO_Mac_v${currentVersion}` : `AvaLive_VIP_PRO_Windows_v${currentVersion}`;
     const fallbackFileName = isMac ? `AvaLive_VIP_PRO_Mac_v${currentVersion}.zip` : `AvaLive_VIP_PRO_Windows_v${currentVersion}.zip`;
     const githubToken = process.env.GITHUB_TOKEN;

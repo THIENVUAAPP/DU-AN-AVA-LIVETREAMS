@@ -1094,7 +1094,8 @@ export default function AIDOLLiveConsole() {
                         <div className="space-y-2 bg-black/30 p-2.5 rounded-xl border border-amber-500/20">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             {[
-                              { id: 'all', label: '🌟 Tất Cả (41)' },
+                              { id: 'all', label: '🌟 Tất Cả (61)' },
+                              { id: 'sales', label: '🛍️ Bán Hàng & Dịch Vụ (20)' },
                               { id: 'female', label: '👩 Giọng Nữ (21)' },
                               { id: 'male', label: '👨 Giọng Nam (20)' },
                               { id: 'young', label: '✨ Giọng Trẻ Gen Z' },
@@ -1102,7 +1103,6 @@ export default function AIDOLLiveConsole() {
                               { id: 'banhang', label: '🛍️ Bán Hàng & Chốt Đơn' },
                               { id: 'blv_game', label: '🔥 BLV Game & PK' },
                               { id: 'mature', label: '👑 Doanh Nhân / Cao Tuổi' },
-                              { id: 'free', label: '🆓 Miễn Phí (Hoài My)' },
                             ].map(sub => (
                               <button
                                 key={sub.id}
@@ -1147,7 +1147,7 @@ export default function AIDOLLiveConsole() {
                       <div className="relative">
                         <input
                           type="text"
-                          placeholder="🔍 Tìm kiếm giọng đọc theo tên, thể loại, phong cách (VD: VTV, Chốt đơn, BLV, Tâm sự, Hoài My...)..."
+                          placeholder="🔍 Tìm kiếm giọng đọc theo tên, thể loại, phong cách (VD: Mỹ phẩm, Thời trang, VTV, Chốt đơn, BLV...)..."
                           value={voiceSearchQuery}
                           onChange={(e) => setVoiceSearchQuery(e.target.value)}
                           className="w-full px-3.5 py-2 bg-black/50 border border-white/10 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-purple-400"
@@ -1167,6 +1167,7 @@ export default function AIDOLLiveConsole() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[44vh] overflow-y-auto custom-scrollbar pr-1">
                       {ALL_SYSTEM_VOICES.filter(v => {
                         const isVn = v.region === 'vi' || v.id === 'free_vi_female' || v.id?.startsWith('vn_') || v.id === 'el_adam';
+                        const isSales = v.category?.includes('Bán Hàng') || v.category?.includes('Chốt Đơn') || v.styleCategory === 'banhang' || v.styleCategory === 'sales_expert' || v.id?.startsWith('vn_sales_');
                         
                         // Tab Filter
                         if (voiceMainTab === 'vn' && !isVn) return false;
@@ -1174,14 +1175,14 @@ export default function AIDOLLiveConsole() {
 
                         // Vietnamese Sub-filters
                         if (voiceMainTab === 'vn') {
+                          if (voiceSubFilter === 'sales' && !isSales) return false;
                           if (voiceSubFilter === 'female' && v.gender !== 'Female') return false;
                           if (voiceSubFilter === 'male' && v.gender !== 'Male') return false;
                           if (voiceSubFilter === 'young' && v.ageGroup !== 'young' && v.styleCategory !== 'idol_genz') return false;
                           if (voiceSubFilter === 'mc_btv' && v.styleCategory !== 'mc_btv') return false;
-                          if (voiceSubFilter === 'banhang' && v.styleCategory !== 'banhang') return false;
+                          if (voiceSubFilter === 'banhang' && !isSales) return false;
                           if (voiceSubFilter === 'blv_game' && v.styleCategory !== 'blv_game') return false;
-                          if (voiceSubFilter === 'mature' && v.ageGroup !== 'mature' && v.ageGroup !== 'middle' && v.styleCategory !== 'doanhnhan') return false;
-                          if (voiceSubFilter === 'free' && v.tier !== 'free') return false;
+                          if (voiceSubFilter === 'mature' && v.ageGroup !== 'mature' && v.ageGroup !== 'middle' && v.styleCategory !== 'doanhnhan' && v.ageGroup !== 'elder') return false;
                         }
 
                         // International Country Filter
@@ -1228,11 +1229,11 @@ export default function AIDOLLiveConsole() {
                                   </span>
                                   {v.tier === 'pro' ? (
                                     <span className="text-[9px] px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black">
-                                      💎 PRO
+                                      👑 STUDIO VIP
                                     </span>
                                   ) : (
                                     <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
-                                      🆓 FREE
+                                      👑 STUDIO VIP
                                     </span>
                                   )}
                                   {v.category && (

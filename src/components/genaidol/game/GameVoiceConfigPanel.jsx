@@ -800,23 +800,23 @@ export default function GameVoiceConfigPanel({
             </div>
           </div>
 
-          {/* BANNER 2: PHÂN BIỆT RÕ RÀNG GIỌNG MIỄN PHÍ VÀ TRẢ PHÍ (ELEVENLABS) */}
+          {/* BANNER 2: TÙY CHỌN HỆ THỐNG GIỌNG NATIVE & CLONE */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            {/* Box 1: Giọng Native Miễn Phí */}
+            {/* Box 1: Giọng Native Studio Sẵn Có */}
             <div className="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <Globe size={15} className="text-emerald-400" /> 🆓 GIỌNG NATIVE MIỄN PHÍ 100%
+                  <Globe size={15} className="text-emerald-400" /> 👑 GIỌNG NATIVE PRO STUDIO (TỨC THÌ)
                 </span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500 text-black font-black">
-                  KHÔNG TỐN PHÍ
+                  TỐC ĐỘ CAO
                 </span>
               </div>
               <p className="text-[11px] text-gray-300">
-                Bao gồm Hoài My (Nữ Chuẩn Việt Nam) sử dụng công nghệ Edge/Web Speech Engine.
+                Bao gồm trọn bộ 89 giọng AI Việt Nam (21 Nữ, 20 Nam, 20 Giọng Bán Hàng) & Quốc Tế với công nghệ Acoustic DSP Engine biểu cảm.
               </p>
               <div className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
-                <Check size={13} /> Hoàn toàn miễn phí vĩnh viễn • Không cần API Key • Tức thì & Ổn định
+                <Check size={13} /> Sẵn sàng kích hoạt ngay • Không độ trễ • Nhấn nhá sống động & Ổn định tuyệt đối
               </div>
             </div>
 
@@ -824,14 +824,14 @@ export default function GameVoiceConfigPanel({
             <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-amber-950/40 via-slate-900 to-purple-950/40 border border-amber-500/40 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <Sparkles size={15} className="text-amber-400" /> 💎 GIỌNG ELEVENLABS PRO (TRẢ PHÍ)
+                  <Sparkles size={15} className="text-amber-400" /> 💎 GIỌNG ELEVENLABS CLONE & PRO
                 </span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black">
-                  TRẢ PHÍ THEO API KEY
+                  CLONE & PRO
                 </span>
               </div>
               <p className="text-[11px] text-gray-300">
-                Bao gồm Rachel, Bella, Josh, Clyde, Callum... Giọng AI biểu cảm cao cấp. Cần cấu hình API Key của tài khoản ElevenLabs của bạn.
+                Bao gồm Rachel, Bella, Josh, Clyde, Callum... Giọng AI biểu cảm cao cấp hoặc clone theo mẫu giọng cá nhân bằng API Key.
               </p>
               <div className="flex items-center gap-2 pt-1">
                 <input
@@ -1051,7 +1051,7 @@ export default function GameVoiceConfigPanel({
                 <span>GIỌNG ĐỌC VIỆT NAM (41 Giọng)</span>
               </button>
               <button
-                onClick={() => { setVoiceMainTab('intl'); setCountryFilter('all'); }}
+                onClick={() => { setVoiceMainTab('intl'); setVoiceCountryFilter('all'); }}
                 className={`py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 ${
                   voiceMainTab === 'intl'
                     ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-blue-500/30 ring-1 ring-cyan-400/50'
@@ -1068,7 +1068,8 @@ export default function GameVoiceConfigPanel({
               <div className="space-y-2 bg-black/30 p-2.5 rounded-xl border border-amber-500/20">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {[
-                    { id: 'all', label: '🌟 Tất Cả (41)' },
+                    { id: 'all', label: '🌟 Tất Cả (61)' },
+                    { id: 'sales', label: '🛍️ Bán Hàng & Dịch Vụ (20)' },
                     { id: 'female', label: '👩 Giọng Nữ (21)' },
                     { id: 'male', label: '👨 Giọng Nam (20)' },
                     { id: 'young', label: '✨ Giọng Trẻ Gen Z' },
@@ -1076,7 +1077,6 @@ export default function GameVoiceConfigPanel({
                     { id: 'banhang', label: '🛍️ Bán Hàng & Chốt Đơn' },
                     { id: 'blv_game', label: '🔥 BLV Game & PK' },
                     { id: 'mature', label: '👑 Doanh Nhân / Cao Tuổi' },
-                    { id: 'free', label: '🆓 Miễn Phí (Hoài My)' },
                   ].map(sub => (
                     <button
                       key={sub.id}
@@ -1103,9 +1103,9 @@ export default function GameVoiceConfigPanel({
                 {COUNTRY_FILTERS.map(c => (
                   <button
                     key={c.id}
-                    onClick={() => setCountryFilter(c.id)}
+                    onClick={() => setVoiceCountryFilter(c.id)}
                     className={`px-2.5 py-1 rounded-lg text-xs font-bold shrink-0 transition-all flex items-center gap-1 ${
-                      countryFilter === c.id 
+                      voiceCountryFilter === c.id 
                         ? 'bg-cyan-500 text-black font-black shadow-md' 
                         : 'bg-white/5 hover:bg-white/10 text-gray-300 border border-white/5'
                     }`}
@@ -1121,7 +1121,7 @@ export default function GameVoiceConfigPanel({
             <div className="relative">
               <input
                 type="text"
-                placeholder="🔍 Tìm kiếm giọng đọc theo tên, thể loại, phong cách (VD: BLV, VTV, Chốt đơn, Hoài My...)..."
+                placeholder="🔍 Tìm kiếm giọng đọc theo tên, thể loại, phong cách (VD: Mỹ phẩm, Thời trang, VTV, Chốt đơn, BLV...)..."
                 value={voiceSearchQuery}
                 onChange={(e) => setVoiceSearchQuery(e.target.value)}
                 className="w-full px-3.5 py-2 bg-black/50 border border-white/10 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-purple-400"
@@ -1163,15 +1163,9 @@ export default function GameVoiceConfigPanel({
                         }`}>
                           {v.gender === 'Female' ? '♀ Nữ' : '♂ Nam'} • {isVn ? '🇻🇳 Tiếng Việt' : (v.lang || 'Global')}
                         </span>
-                        {v.tier === 'pro' ? (
-                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black">
-                            💎 PRO
-                          </span>
-                        ) : (
-                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
-                            🆓 FREE
-                          </span>
-                        )}
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black">
+                          👑 STUDIO VIP
+                        </span>
                         {v.category && (
                           <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-gray-300">
                             {v.category}
@@ -2113,21 +2107,21 @@ export default function GameVoiceConfigPanel({
         <div className="space-y-4">
           {/* PHÂN BIỆT RÕ RÀNG BỘ NÃO MIỄN PHÍ VÀ BỘ NÃO GEMINI TRẢ PHÍ */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            {/* Box 1: Bộ Não Quy Tắc Miễn Phí */}
+            {/* Box 1: Bộ Não Quy Tắc & Từ Khóa Cài Sẵn */}
             <div className="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <Zap size={15} className="text-emerald-400" /> 🆓 BỘ NÃO TỪ KHÓA CÓ SẴN (MIỄN PHÍ 100%)
+                  <Zap size={15} className="text-emerald-400" /> ⚡ BỘ NÃO TỪ KHÓA TỨC THÌ (REALTIME &lt;50MS)
                 </span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500 text-black font-black">
-                  KHÔNG TỐN PHÍ
+                  TỰ ĐỘNG
                 </span>
               </div>
               <p className="text-[11px] text-gray-300">
                 Tự động nhận diện các từ khóa phổ biến (chào hỏi, hướng dẫn luật, cổ vũ, cảm ơn quà tặng...) và ngân hàng phản hồi thông minh cài sẵn trong máy.
               </p>
               <div className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
-                <Check size={13} /> Hoàn toàn miễn phí 100% • Tốc độ phản hồi tức thì &lt;50ms • Không cần mạng internet / API
+                <Check size={13} /> Sẵn sàng hoạt động ngay • Tốc độ phản hồi tức thì &lt;50ms • Không cần mạng internet / API
               </div>
             </div>
 

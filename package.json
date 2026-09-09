@@ -1,7 +1,7 @@
 {
   "name": "ai-livestream-pro",
   "private": true,
-  "version": "2.2.5",
+  "version": "2.2.6",
   "type": "module",
   "main": "electron-main.cjs",
   "build": {
