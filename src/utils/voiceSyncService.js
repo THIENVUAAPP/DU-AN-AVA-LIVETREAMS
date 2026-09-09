@@ -3190,8 +3190,7 @@ async function fetchAndDecodeTTSAudio(text, voice = null) {
     ...(currentOrigin ? [`${currentOrigin}/api/tts?${ttsQuery}`] : []),
     `/api/tts?${ttsQuery}`,
     `http://127.0.0.1:3001/api/tts?${ttsQuery}`,
-    `http://localhost:3001/api/tts?${ttsQuery}`,
-    `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(shortLang)}&q=${encodeURIComponent(text.slice(0, 200))}`
+    `http://localhost:3001/api/tts?${ttsQuery}`
   ];
 
   for (const url of candidateUrls) {

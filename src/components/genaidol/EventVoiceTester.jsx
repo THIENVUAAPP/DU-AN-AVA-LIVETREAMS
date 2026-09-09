@@ -471,21 +471,27 @@ export default function EventVoiceTester({
         </div>
 
         {/* 4. Nút Nghe Thử Voice / Dừng Lại */}
-        <button
-          type="button"
-          onClick={handleTogglePlay}
-          className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95 ${
-            isPlaying
-              ? 'bg-rose-600 text-white animate-pulse shadow-lg ring-2 ring-rose-400'
-              : isDark
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md'
-                : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md'
-          }`}
-          title={isPlaying ? 'Dừng phát âm thanh kịch bản' : 'Nghe thử toàn bộ kịch bản này với giọng đã chọn'}
-        >
-          {isPlaying ? <Square size={13} className="fill-current" /> : <Play size={13} className="fill-current" />}
-          <span>{isPlaying ? `DỪNG LẠI (${currentSentenceIdx + 1}/${totalSentences || 1})` : 'NGHE THỬ VOICE'}</span>
-        </button>
+        {(() => {
+          const currentVoiceObj = ALL_SYSTEM_VOICES.find(v => v.id === selectedVoiceId);
+          const shortVoiceName = currentVoiceObj?.name?.split('(')[0]?.replace(/ 👑| ⭐| 💎/g, '')?.trim() || 'AI';
+          return (
+            <button
+              type="button"
+              onClick={handleTogglePlay}
+              className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95 ${
+                isPlaying
+                  ? 'bg-rose-600 text-white animate-pulse shadow-lg ring-2 ring-rose-400'
+                  : isDark
+                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md'
+                    : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md'
+              }`}
+              title={isPlaying ? 'Dừng phát âm thanh kịch bản' : `Nghe thử toàn bộ kịch bản này với giọng ${shortVoiceName}`}
+            >
+              {isPlaying ? <Square size={13} className="fill-current" /> : <Play size={13} className="fill-current" />}
+              <span>{isPlaying ? `DỪNG (${shortVoiceName} - ${currentSentenceIdx + 1}/${totalSentences || 1})` : `NGHE THỬ (${shortVoiceName})`}</span>
+            </button>
+          );
+        })()}
       </div>
 
     </div>

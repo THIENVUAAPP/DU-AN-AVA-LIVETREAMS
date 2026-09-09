@@ -2,13 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.4.5';
+export const APP_VERSION = '2.4.6';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🎙️ Đột Phá Bộ Biến Đổi Âm Sắc Formant & Pitch Shift Web Audio DSP Độc Bản 100%',
-    description: 'Tích hợp động cơ biến đổi tần số Formant Shaper và Pitch Shift Factor theo từng nhân vật: Giọng Lão Niên (Cụ Ông, Bà Cụ) phát ra trầm ấm, khàn đục 68 tuổi; Giọng Nữ Trẻ (Phương Thảo, Minh Thảo, Jessica) phát ra trong trẻo, tươi sáng, hoạt ngôn; Giọng Nam Quyền Lực (Adam, Quốc Cường) đanh thép uy quyền.'
+    title: '🎙️ Kích Hoạt Độc Bản 100% Từng Giọng Đọc Trong Kịch Bản (Không Lẫn Lộn Giọng Gốc)',
+    description: 'Khắc phục triệt để hiện tượng phát về giọng mặc định. Khi người dùng chọn bất kỳ giọng nào (Hải Đăng, Tùng Đặng, Phương Thảo, Triệu Dương, Cụ Ông Phúc, Bà Cụ Thoa...), hệ thống sẽ ngay lập tức đọc đúng 100% giọng đó với cao độ, âm sắc và thanh quản đặc trưng.'
+  },
+  {
+    title: '🏷️ Hiển Thị Tên Giọng Đọc Trực Quan Trên Nút Nghe Thử Kịch Bản',
+    description: 'Nút nghe thử tự động cập nhật tên nhân vật đang chọn (ví dụ: NGHE THỬ (Hải Đăng), NGHE THỬ (Tùng Đặng)...) và lưu vĩnh viễn vào cấu hình kịch bản bán hàng.'
   },
   {
     title: '📜 Đọc Chuẩn Xác 100% Nội Dung Từng Câu Chữ Trong Kịch Bản Bán Hàng',
@@ -17,10 +21,6 @@ export const UPDATE_NOTES = [
   {
     title: '⚡ Ghi Nhớ Giọng Đã Chọn & Đổi Giọng Ngay Lập Tức (0ms Switch)',
     description: 'Tự động lưu lại giọng đọc đã chọn vào bộ nhớ máy tính. Khi đang nghe thử toàn bộ kịch bản, nếu bạn đổi sang bất kỳ giọng đọc nào trong menu, AI sẽ ngay lập tức đọc lại câu hiện tại bằng giọng mới chọn.'
-  },
-  {
-    title: '🌸 Ngữ Điệu Nhấn Nhá, Lên Xuống & Micro-Pauses Tự Nhiên Theo Kịch Bản',
-    description: 'Tự động tạo nhịp thở, ngắt nghỉ ngữ nghĩa và nhấn mạnh cảm xúc tự nhiên tại các câu chào hỏi, lời mời mua hàng, số tiền, tên sản phẩm và trợ từ cảm thán.'
   }
 ];
 

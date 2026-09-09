@@ -1826,7 +1826,8 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                         {/* NGHE THỬ VOICE TOÀN BỘ KỊCH BẢN */}
                         <EventVoiceTester 
                           text={currentConfig.fixedScriptText || MASTER_SCRIPTS.cosmetics}
-                          defaultVoiceId="free_vi_female"
+                          defaultVoiceId={currentConfig.voiceId || "free_vi_female"}
+                          onVoiceChange={(vid) => handleSimpleChange('voiceId', vid)}
                           label="Nghe thử toàn bộ kịch bản bán hàng cài sẵn (Mọi Giọng Đọc AI)"
                           compact={false}
                         />
