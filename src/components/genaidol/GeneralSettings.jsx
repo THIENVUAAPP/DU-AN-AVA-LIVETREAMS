@@ -41,6 +41,14 @@ export default function GeneralSettings({ onClose = () => {} }) {
   const [hotTrendVoicePitch, setHotTrendVoicePitch] = useState(1.0);
   const [hotTrendVoiceVolume, setHotTrendVoiceVolume] = useState(1.0);
 
+  // State Bộ Lọc Giọng Ava Live (Gộp chung 3 vai trò Idol Live, Trợ Lý, BLV Game)
+  const [avaRoleFilter, setAvaRoleFilter] = useState('all'); // 'all', 'idol', 'manager', 'game'
+  const [avaGroupFilter, setAvaGroupFilter] = useState('all'); // 'all', 'vi_pro', 'hottrend', 'sales', 'us_uk', 'asia', 'game_pk', 'favorites'
+  const [avaRegionFilter, setAvaRegionFilter] = useState('all'); // 'all', 'bac', 'trung', 'nam', 'tay'
+  const [avaGenderFilter, setAvaGenderFilter] = useState('all'); // 'all', 'Female', 'Male'
+  const [avaAgeFilter, setAvaAgeFilter] = useState('all'); // 'all', 'young', 'middle', 'senior'
+  const [avaSearchQuery, setAvaSearchQuery] = useState('');
+
   const fileInputRef = useRef(null);
   
   // State for all settings
@@ -2022,6 +2030,12 @@ IDOL MỈM CƯỜI + GESTURE
           <Brain size={16} /> BỘ NÃO IDOL
         </button>
         <button 
+          onClick={() => setActiveTab('ava-voice')}
+          className={`flex items-center gap-2 px-4 py-3 font-bold text-sm transition-colors whitespace-nowrap border-b-2 ${activeTab === 'ava-voice' ? 'border-blue-600 text-blue-600 bg-blue-50/60 shadow-xs' : 'border-transparent text-gray-700 hover:text-blue-600 hover:bg-blue-50/30'}`}
+        >
+          <Sparkles size={16} className="text-blue-600" /> 🎙️ GIỌNG AVA LIVE
+        </button>
+        <button 
           onClick={() => setActiveTab('hottrend-voice')}
           className={`flex items-center gap-2 px-4 py-3 font-bold text-sm transition-colors whitespace-nowrap border-b-2 ${activeTab === 'hottrend-voice' ? 'border-orange-500 text-orange-600 bg-orange-50/60 shadow-xs' : 'border-transparent text-orange-700 hover:text-orange-600 hover:bg-orange-50/30'}`}
         >
@@ -2032,24 +2046,6 @@ IDOL MỈM CƯỜI + GESTURE
           className={`flex items-center gap-2 px-4 py-3 font-bold text-sm transition-colors whitespace-nowrap border-b-2 ${activeTab === 'sales-voice' ? 'border-rose-600 text-rose-600 bg-rose-50/50' : 'border-transparent text-rose-700 hover:text-rose-600 hover:bg-rose-50/30'}`}
         >
           <ShoppingBag size={16} className="text-rose-600" /> 🛍️ GIỌNG BÁN HÀNG & DỊCH VỤ (30)
-        </button>
-        <button 
-          onClick={() => setActiveTab('main-character')}
-          className={`flex items-center gap-2 px-4 py-3 font-semibold text-sm transition-colors whitespace-nowrap border-b-2 ${activeTab === 'main-character' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
-        >
-          <User size={16} className={activeTab === 'main-character' ? 'text-blue-600' : 'text-blue-500'} /> Giọng Idol Live
-        </button>
-        <button 
-          onClick={() => setActiveTab('assistant')}
-          className={`flex items-center gap-2 px-4 py-3 font-semibold text-sm transition-colors whitespace-nowrap border-b-2 ${activeTab === 'assistant' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
-        >
-          <Mic size={16} className="text-red-500" /> Giọng Quản Lý / Trợ Lý
-        </button>
-        <button 
-          onClick={() => setActiveTab('game-voice')}
-          className={`flex items-center gap-2 px-4 py-3 font-semibold text-sm transition-colors whitespace-nowrap border-b-2 ${activeTab === 'game-voice' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-blue-500'}`}
-        >
-          <Volume2 size={16} className="text-purple-600" /> Giọng BLV Game
         </button>
         <button 
           onClick={() => setActiveTab('quick-config')}
@@ -3155,276 +3151,657 @@ IDOL MỈM CƯỜI + GESTURE
             </div>
           )}
 
-          {/* TAB 2: NHÂN VẬT CHÍNH */}
-          {activeTab === 'main-character' && (
-            <>
-              {/* Thiết lập LLM */}
-              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
-                <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <Brain size={16} className="text-blue-600" /> Thiết lập Bộ Não AI (Gemini Flash Intelligence)
-                  </span>
-                  <span className="text-xs bg-green-100 text-green-700 px-2.5 py-0.5 rounded-full font-bold border border-green-300">
-                    ⚡ Siêu Nhanh &lt; 400ms
-                  </span>
+          {/* TAB ĐẶC BIỆT: GIỌNG AVA LIVE (GỘP CHUNG IDOL LIVE • TRỢ LÝ • BLV GAME) */}
+          {activeTab === 'ava-voice' && (
+            <div className="space-y-4">
+              {/* Banner Giới Thiệu Tổng Kho Giọng Ava Live */}
+              <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-xl p-5 text-white shadow-md relative overflow-hidden">
+                <div className="absolute right-3 -bottom-4 opacity-15 text-8xl font-black pointer-events-none">
+                  🎙️
                 </div>
-                <div className="p-4 space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                    <label className="text-sm font-semibold text-[#a53b3b] min-w-[130px]">Chọn Model AI:</label>
-                    <select 
-                      name="apiModel" value={settings.apiModel} onChange={handleChange}
-                      className="flex-1 border border-blue-400 bg-blue-50/40 font-medium rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-600 text-gray-800 shadow-xs"
-                    >
-                      <option value="gemini-1.5-flash">🔥 Gemini 1.5 Flash (Khuyên dùng: Siêu tốc &lt;0.4s | Thông minh nhất | Tiết kiệm nhất)</option>
-                      <option value="gemini-2.0-flash">⚡ Gemini 2.0 Flash (Next-Gen Realtime AI — Tốc độ xử lý đỉnh cao)</option>
-                      <option value="gemini-1.5-flash-8b">💎 Gemini 1.5 Flash 8B (Tối ưu hóa chi phí cực hạn & Siêu nhẹ)</option>
-                      <option value="gpt-4o-mini">🤖 OpenAI GPT-4o Mini (OpenAI Engine)</option>
-                    </select>
+                <div className="relative z-10 space-y-2">
+                  <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                    <Sparkles size={14} className="text-yellow-300" /> TỔNG KHO GIỌNG ĐỌC AVA LIVE STUDIO (100+ GIỌNG • ĐA VAI TRÒ • ĐA QUỐC GIA)
                   </div>
-                </div>
-              </div>
-
-              {/* Bảng Giọng nói */}
-              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden flex flex-col">
-                <div className="px-4 py-3 border-b border-gray-300 bg-white space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
-                      <User size={16} className="text-blue-600" />
-                      Chọn Giọng Nói Cho Idol Livestream Chính
-                    </h3>
-                    <button 
-                      onClick={handleUploadVoiceClick}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 rounded-lg text-xs font-semibold transition-colors"
-                    >
-                      <Upload size={14} /> Tải lên Giọng đọc (Clone)
-                    </button>
-                  </div>
-                  {renderFilterButtons(settings.mainVoiceFilter, handleMainVoiceFilter)}
-                </div>
-                
-                <div className="p-4">
-                  {renderVoiceTable([...settings.customVoices, ...MAIN_VOICES], settings.mainVoiceFilter, settings.mainVoiceId, (id) => setSettings(prev => ({...prev, mainVoiceId: id})), 'idol')}
-                </div>
-              </div>
-
-              {/* Tùy chỉnh Giọng Nói */}
-              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
-                <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm flex items-center">
-                  <Volume2 size={16} className="text-blue-600 mr-2" /> Tùy chỉnh Âm thanh Giọng Idol Live
-                </div>
-                <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-semibold text-gray-700 flex justify-between">
-                      <span>Âm lượng (Volume)</span>
-                      <span className="text-blue-600 font-bold">{Math.round((settings.mainVoiceVolume !== undefined ? settings.mainVoiceVolume : 1) * 100)}%</span>
-                    </label>
-                    <input type="range" min="0" max="2" step="0.1" name="mainVoiceVolume" value={settings.mainVoiceVolume !== undefined ? settings.mainVoiceVolume : 1} onChange={handleChange} className="w-full accent-blue-600" />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-semibold text-gray-700 flex justify-between">
-                      <span>Tốc độ (Speed)</span>
-                      <span className="text-blue-600 font-bold">{settings.mainVoiceRate !== undefined ? settings.mainVoiceRate : 1}x</span>
-                    </label>
-                    <input type="range" min="0.5" max="2" step="0.1" name="mainVoiceRate" value={settings.mainVoiceRate !== undefined ? settings.mainVoiceRate : 1} onChange={handleChange} className="w-full accent-blue-600" />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-semibold text-gray-700 flex justify-between">
-                      <span>Độ trầm bổng (Pitch)</span>
-                      <span className="text-blue-600 font-bold">{settings.mainVoicePitch !== undefined ? settings.mainVoicePitch : 1}</span>
-                    </label>
-                    <input type="range" min="0.5" max="2" step="0.1" name="mainVoicePitch" value={settings.mainVoicePitch !== undefined ? settings.mainVoicePitch : 1} onChange={handleChange} className="w-full accent-blue-600" />
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* TAB 3: TRỢ LÝ */}
-          {activeTab === 'assistant' && (
-            <>
-              {/* Cài đặt chung cho Trợ lý */}
-              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
-                <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm">
-                  Cài đặt chung cho Trợ lý / Quản lý
-                </div>
-                <div className="p-4 space-y-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input 
-                      type="checkbox" name="assistantEnabled" 
-                      checked={settings.assistantEnabled} onChange={handleChange}
-                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" 
-                    />
-                    <span className="text-sm font-bold text-gray-800">Bật Kênh Trợ Lý / Quản Lý Hậu Trường</span>
-                  </label>
-
-                  <div className="border-t border-gray-200 pt-3">
-                    <UniversalMediaPicker 
-                      label="Thư mục / File Video Trợ Lý (cho trạng thái 'listening'):"
-                      currentPath={settings.assistantVideoFolder || (idleVideoCount === 0 ? '' : `im lặng (${idleVideoCount} video)`)}
-                      videoUrl={settings.assistantVideoUrl || ''}
-                      defaultText="Chưa chọn video / thư mục Trợ Lý"
-                      onSelectFile={(file, objectUrl) => {
-                        setSettings(prev => ({ 
-                          ...prev, 
-                          assistantVideoFolder: file.name,
-                          assistantVideoUrl: objectUrl
-                        }));
-                      }}
-                      onSelectFolder={(folderName) => {
-                        setSettings(prev => ({ 
-                          ...prev, 
-                          assistantVideoFolder: folderName,
-                          assistantVideoUrl: ''
-                        }));
-                      }}
-                      onSelectSample={(sample) => {
-                        setSettings(prev => ({ 
-                          ...prev, 
-                          assistantVideoFolder: sample.name,
-                          assistantVideoUrl: sample.url
-                        }));
-                      }}
-                      onClear={() => {
-                        setSettings(prev => ({ 
-                          ...prev, 
-                          assistantVideoFolder: '',
-                          assistantVideoUrl: ''
-                        }));
-                      }}
-                      inputId="upload-assistant-video-settings"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Bảng Giọng nói Trợ lý */}
-              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden flex flex-col">
-                <div className="px-4 py-3 border-b border-gray-300 bg-white space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
-                      <Mic size={16} className="text-red-500" />
-                      Chọn Giọng Nói Cho Quản Lý / Trợ Lý Hậu Trường
-                    </h3>
-                    <button 
-                      onClick={handleUploadVoiceClick}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 rounded-lg text-xs font-semibold transition-colors"
-                    >
-                      <Upload size={14} /> Tải lên Giọng đọc (Clone)
-                    </button>
-                  </div>
-                  {renderFilterButtons(settings.assistantVoiceFilter, handleAssistantVoiceFilter)}
-                </div>
-                
-                <div className="p-4">
-                  {renderVoiceTable([...settings.customVoices, ...ASSISTANT_VOICES], settings.assistantVoiceFilter, settings.assistantVoiceId, (id) => setSettings(prev => ({...prev, assistantVoiceId: id})), 'manager')}
-                </div>
-              </div>
-
-              {/* Tùy chỉnh Giọng Nói Manager */}
-              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
-                <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm flex items-center">
-                  <Volume2 size={16} className="text-red-500 mr-2" /> Tùy chỉnh Âm thanh Giọng Quản Lý / Trợ Lý
-                </div>
-                <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-semibold text-gray-700 flex justify-between">
-                      <span>Âm lượng (Volume)</span>
-                      <span className="text-red-600 font-bold">{Math.round((settings.assistantVoiceVolume !== undefined ? settings.assistantVoiceVolume : 1) * 100)}%</span>
-                    </label>
-                    <input type="range" min="0" max="2" step="0.1" name="assistantVoiceVolume" value={settings.assistantVoiceVolume !== undefined ? settings.assistantVoiceVolume : 1} onChange={handleChange} className="w-full accent-red-600" />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-semibold text-gray-700 flex justify-between">
-                      <span>Tốc độ (Speed)</span>
-                      <span className="text-red-600 font-bold">{settings.assistantVoiceRate !== undefined ? settings.assistantVoiceRate : 1}x</span>
-                    </label>
-                    <input type="range" min="0.5" max="2" step="0.1" name="assistantVoiceRate" value={settings.assistantVoiceRate !== undefined ? settings.assistantVoiceRate : 1} onChange={handleChange} className="w-full accent-red-600" />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-semibold text-gray-700 flex justify-between">
-                      <span>Độ trầm bổng (Pitch)</span>
-                      <span className="text-red-600 font-bold">{settings.assistantVoicePitch !== undefined ? settings.assistantVoicePitch : 1}</span>
-                    </label>
-                    <input type="range" min="0.5" max="2" step="0.1" name="assistantVoicePitch" value={settings.assistantVoicePitch !== undefined ? settings.assistantVoicePitch : 1} onChange={handleChange} className="w-full accent-red-600" />
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* TAB 4: BÌNH LUẬN VIÊN GAME */}
-          {activeTab === 'game-voice' && (
-            <>
-              {/* Giới thiệu Kênh Giọng BLV Game */}
-              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
-                <div className="bg-purple-50 px-4 py-2.5 border-b border-purple-200 font-bold text-purple-900 text-sm flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <Volume2 size={16} className="text-purple-600" />
-                    Kênh Giọng Đọc Bình Luận Viên Trận Đấu Game Live
-                  </span>
-                  <span className="text-xs bg-purple-200 text-purple-800 px-2.5 py-0.5 rounded font-mono font-bold">
-                    100% ElevenLabs AI
-                  </span>
-                </div>
-                <div className="p-4 space-y-2 text-sm text-gray-700">
-                  <p>
-                    Giọng đọc chuyên biệt cho <b>Game Chiến Đấu / PK Livestream</b>. Tự động hò reo, bình luận trận chiến, cảnh báo máu thấp và xướng tên khán giả tặng quà.
-                  </p>
-                  <p className="text-xs text-gray-500 italic">
-                    💡 Khuyên dùng: <b>Josh</b> (Bùng nổ siêu tốc), <b>Clyde</b> (Trầm hùng chiến binh), <b>Harry</b> (Kịch tính hồi hộp).
+                  <h2 className="text-xl sm:text-2xl font-black">
+                    Kho Giọng Đọc Ava Live: Đa Vai Trò, 20+ Quốc Gia, Đa Vùng Miền & Đa Độ Tuổi
+                  </h2>
+                  <p className="text-xs sm:text-sm text-blue-100 max-w-3xl leading-relaxed">
+                    Hợp nhất toàn bộ hệ sinh thái âm thanh trong một giao diện duy nhất: <span className="font-bold underline">Giọng Idol Live</span>, <span className="font-bold underline">Giọng Quản Lý / Trợ Lý</span> và <span className="font-bold underline">Giọng BLV Game PK</span>. Dễ dàng tìm kiếm theo Quốc gia, Vùng miền (Bắc/Trung/Nam/Tây), Giới tính, Độ tuổi và gán 1-Click cho từng vai trò!
                   </p>
                 </div>
               </div>
 
-              {/* Bảng Giọng nói Game */}
-              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden flex flex-col">
-                <div className="px-4 py-3 border-b border-gray-300 bg-white space-y-3">
-                  <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
-                    <Volume2 size={16} className="text-purple-600" />
-                    Chọn Giọng Cho Bình Luận Viên Game & PK Trận Đấu
-                  </h3>
-                  {renderFilterButtons(settings.gameVoiceFilter, handleGameVoiceFilter)}
-                </div>
-                
-                <div className="p-4">
-                  {renderVoiceTable([...settings.customVoices, ...GAME_VOICES], settings.gameVoiceFilter, settings.gameVoiceId, (id) => setSettings(prev => ({...prev, gameVoiceId: id})), 'game')}
+              {/* Status Pills: Kênh Đang Được Gán */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {/* Idol Status */}
+                <div className="bg-white border-2 border-blue-200 rounded-xl p-3.5 shadow-xs flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                      <User size={18} />
+                    </div>
+                    <div>
+                      <div className="text-[11px] font-bold text-blue-600 uppercase tracking-wide">🎤 Giọng Idol Live Chính</div>
+                      <div className="text-sm font-bold text-gray-900 truncate max-w-[180px]">
+                        {ALL_SYSTEM_VOICES.find(v => v.id === settings.mainVoiceId)?.name || 'Chưa chọn'}
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-mono font-bold border border-blue-200">
+                    {Math.round((settings.mainVoiceVolume !== undefined ? settings.mainVoiceVolume : 1) * 100)}% • {settings.mainVoiceRate || 1}x
+                  </span>
                 </div>
 
-                <div className="px-4 py-2 bg-purple-50 border-t border-gray-300 text-xs text-purple-700 italic flex items-center gap-1">
-                  ⓘ Bấm vào nút 'Nghe thử' 🔊 để nghe âm sắc của bình luận viên ElevenLabs trước khi lưu.
+                {/* Assistant Status */}
+                <div className="bg-white border-2 border-red-200 rounded-xl p-3.5 shadow-xs flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-lg bg-red-100 text-red-600 flex items-center justify-center font-bold">
+                      <Mic size={18} />
+                    </div>
+                    <div>
+                      <div className="text-[11px] font-bold text-red-600 uppercase tracking-wide flex items-center gap-1.5">
+                        💼 Giọng Quản Lý / Trợ Lý
+                        <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold ${settings.assistantEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                          {settings.assistantEnabled ? 'BẬT' : 'TẮT'}
+                        </span>
+                      </div>
+                      <div className="text-sm font-bold text-gray-900 truncate max-w-[180px]">
+                        {ALL_SYSTEM_VOICES.find(v => v.id === settings.assistantVoiceId)?.name || 'Chưa chọn'}
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-50 text-red-700 font-mono font-bold border border-red-200">
+                    {Math.round((settings.assistantVoiceVolume !== undefined ? settings.assistantVoiceVolume : 1) * 100)}% • {settings.assistantVoiceRate || 1}x
+                  </span>
+                </div>
+
+                {/* Game Status */}
+                <div className="bg-white border-2 border-purple-200 rounded-xl p-3.5 shadow-xs flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center font-bold">
+                      <Volume2 size={18} />
+                    </div>
+                    <div>
+                      <div className="text-[11px] font-bold text-purple-600 uppercase tracking-wide">🎮 Giọng BLV Game PK</div>
+                      <div className="text-sm font-bold text-gray-900 truncate max-w-[180px]">
+                        {ALL_SYSTEM_VOICES.find(v => v.id === settings.gameVoiceId)?.name || 'Chưa chọn'}
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 font-mono font-bold border border-purple-200">
+                    {Math.round((settings.gameVoiceVolume !== undefined ? settings.gameVoiceVolume : 1) * 100)}% • {settings.gameVoiceRate || 1}x
+                  </span>
                 </div>
               </div>
 
-              {/* Tùy chỉnh Giọng Nói Game */}
-              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden mt-4">
-                <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm flex items-center">
-                  <Volume2 size={16} className="text-purple-600 mr-2" /> Tùy chỉnh Giọng BLV Game
+              {/* Danh Sách Giọng Ava Live với Bộ Lọc Đa Chiều */}
+              <div className="bg-white border border-gray-300 rounded-xl shadow-sm overflow-hidden p-4 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200">
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={20} className="text-blue-600" />
+                    <div>
+                      <h3 className="font-bold text-gray-800 text-sm">Danh Sách Toàn Bộ Giọng Đọc Ava Live Studio</h3>
+                      <p className="text-xs text-gray-500">Lọc theo Quốc gia, Vùng miền, Giới tính, Độ tuổi và gán 1-Click cho Idol, Trợ lý hoặc Game</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={handleUploadVoiceClick}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 rounded-lg text-xs font-semibold transition-colors self-start sm:self-auto"
+                  >
+                    <Upload size={14} /> Tải lên Giọng đọc (Clone)
+                  </button>
                 </div>
-                <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-semibold text-gray-700 flex justify-between">
-                      <span>Âm lượng (Volume)</span>
-                      <span className="text-purple-600 font-bold">{Math.round((settings.gameVoiceVolume !== undefined ? settings.gameVoiceVolume : 1) * 100)}%</span>
-                    </label>
-                    <input type="range" min="0" max="2" step="0.1" name="gameVoiceVolume" value={settings.gameVoiceVolume !== undefined ? settings.gameVoiceVolume : 1} onChange={handleChange} className="w-full accent-purple-600" />
+
+                {/* BỘ LỌC TÌM KIẾM & PHÂN LOẠI AVA LIVE */}
+                <div className="bg-gray-50/80 p-3 rounded-xl border border-gray-200 space-y-2.5">
+                  {/* Tìm kiếm từ khóa */}
+                  <div className="flex flex-col sm:flex-row items-center gap-2">
+                    <div className="relative w-full sm:w-80">
+                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input 
+                        type="text"
+                        placeholder="Tìm theo tên, quốc gia, phong cách, câu thoại..."
+                        value={avaSearchQuery}
+                        onChange={(e) => setAvaSearchQuery(e.target.value)}
+                        className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-gray-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
+                      />
+                    </div>
+                    {avaSearchQuery && (
+                      <button 
+                        type="button" 
+                        onClick={() => setAvaSearchQuery('')}
+                        className="text-xs text-gray-500 hover:text-gray-800 px-2 py-1 rounded bg-white border border-gray-200"
+                      >
+                        Xóa tìm kiếm
+                      </button>
+                    )}
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-semibold text-gray-700 flex justify-between">
-                      <span>Tốc độ (Speed)</span>
-                      <span className="text-purple-600 font-bold">{settings.gameVoiceRate !== undefined ? settings.gameVoiceRate : 1}x</span>
-                    </label>
-                    <input type="range" min="0.5" max="2" step="0.1" name="gameVoiceRate" value={settings.gameVoiceRate !== undefined ? settings.gameVoiceRate : 1} onChange={handleChange} className="w-full accent-purple-600" />
+
+                  {/* Filter Pills 1: Nhóm Giọng & Quốc Gia */}
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-gray-200 overflow-x-auto">
+                      <span className="text-[11px] font-bold text-gray-500 px-1.5">Bộ Sưu Tập:</span>
+                      {[
+                        { key: 'all', label: 'Tất cả (100+)' },
+                        { key: 'vi_pro', label: '🇻🇳 Việt Nam Pro (41)' },
+                        { key: 'hottrend', label: '🔥 Hot Trend (20)' },
+                        { key: 'sales', label: '🛍️ Bán Hàng (30)' },
+                        { key: 'us_uk', label: '🇺🇸 Bắc Mỹ & Âu (12)' },
+                        { key: 'asia', label: '🌏 Châu Á (16)' },
+                        { key: 'game_pk', label: '🎮 BLV Game PK (8)' },
+                        { key: 'favorites', label: '⭐ Yêu thích' }
+                      ].map(tab => (
+                        <button
+                          key={tab.key}
+                          type="button"
+                          onClick={() => setAvaGroupFilter(tab.key)}
+                          className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all whitespace-nowrap ${
+                            avaGroupFilter === tab.key 
+                              ? 'bg-blue-600 text-white shadow-xs' 
+                              : 'text-gray-600 hover:bg-gray-100'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-semibold text-gray-700 flex justify-between">
-                      <span>Độ trầm bổng (Pitch)</span>
-                      <span className="text-purple-600 font-bold">{settings.gameVoicePitch !== undefined ? settings.gameVoicePitch : 1}</span>
+
+                  {/* Filter Pills 2: Vùng Miền, Giới Tính, Độ Tuổi, Vai Trò Đang Dùng */}
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    {/* Vùng miền */}
+                    <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-gray-200">
+                      <span className="text-[11px] font-bold text-gray-500 px-1.5">Vùng Miền:</span>
+                      {[
+                        { key: 'all', label: 'Tất cả' },
+                        { key: 'bac', label: 'Miền Bắc' },
+                        { key: 'trung', label: 'Miền Trung' },
+                        { key: 'nam', label: 'Miền Nam' },
+                        { key: 'tay', label: 'Miền Tây' }
+                      ].map(tab => (
+                        <button
+                          key={tab.key}
+                          type="button"
+                          onClick={() => setAvaRegionFilter(tab.key)}
+                          className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all ${
+                            avaRegionFilter === tab.key 
+                              ? 'bg-indigo-600 text-white shadow-xs' 
+                              : 'text-gray-600 hover:bg-gray-100'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Giới tính */}
+                    <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-gray-200">
+                      <span className="text-[11px] font-bold text-gray-500 px-1.5">Giới Tính:</span>
+                      {[
+                        { key: 'all', label: 'Tất cả' },
+                        { key: 'Female', label: '👩 Nữ' },
+                        { key: 'Male', label: '👨 Nam' }
+                      ].map(tab => (
+                        <button
+                          key={tab.key}
+                          type="button"
+                          onClick={() => setAvaGenderFilter(tab.key)}
+                          className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all ${
+                            avaGenderFilter === tab.key 
+                              ? 'bg-pink-600 text-white shadow-xs' 
+                              : 'text-gray-600 hover:bg-gray-100'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Độ tuổi */}
+                    <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-gray-200">
+                      <span className="text-[11px] font-bold text-gray-500 px-1.5">Độ Tuổi:</span>
+                      {[
+                        { key: 'all', label: 'Tất cả' },
+                        { key: 'young', label: 'Trẻ 20-35t' },
+                        { key: 'middle', label: 'Trung Niên 40-54t' },
+                        { key: 'senior', label: 'Lão Niên 55-70t' }
+                      ].map(tab => (
+                        <button
+                          key={tab.key}
+                          type="button"
+                          onClick={() => setAvaAgeFilter(tab.key)}
+                          className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all ${
+                            avaAgeFilter === tab.key 
+                              ? 'bg-emerald-600 text-white shadow-xs' 
+                              : 'text-gray-600 hover:bg-gray-100'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Lọc theo Vai Trò */}
+                    <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-gray-200">
+                      <span className="text-[11px] font-bold text-gray-500 px-1.5">Đang Dùng:</span>
+                      {[
+                        { key: 'all', label: 'Tất cả' },
+                        { key: 'idol', label: '🎯 Đang là Idol' },
+                        { key: 'manager', label: '💼 Đang là Trợ lý' },
+                        { key: 'game', label: '🎮 Đang là BLV' }
+                      ].map(tab => (
+                        <button
+                          key={tab.key}
+                          type="button"
+                          onClick={() => setAvaRoleFilter(tab.key)}
+                          className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all ${
+                            avaRoleFilter === tab.key 
+                              ? 'bg-purple-600 text-white shadow-xs' 
+                              : 'text-gray-600 hover:bg-gray-100'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* BẢNG TỔNG HỢP GIỌNG ĐỌC AVA LIVE */}
+                <div className="overflow-x-auto max-h-[520px] border border-gray-200 rounded-lg">
+                  <table className="w-full text-sm text-left border-collapse">
+                    <thead className="bg-gray-100 text-gray-700 font-bold border-b border-gray-300 text-xs sticky top-0 z-10 shadow-xs">
+                      <tr>
+                        <th className="px-2 py-2.5 w-10 text-center">⭐</th>
+                        <th className="px-3 py-2.5 w-12 text-center">#</th>
+                        <th className="px-4 py-2.5">Tên Nhân Vật & Câu Thoại Mẫu</th>
+                        <th className="px-3 py-2.5">Nhóm Giọng / Phân Loại</th>
+                        <th className="px-3 py-2.5 text-center">Độ Tuổi & Phong Cách</th>
+                        <th className="px-3 py-2.5 w-20 text-center">Giới Tính</th>
+                        <th className="px-3 py-2.5 w-28 text-center">Nghe Thử</th>
+                        <th className="px-4 py-2.5 text-center min-w-[280px]">Gán Nhanh Vào Kênh Live</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {[...settings.customVoices, ...ALL_SYSTEM_VOICES]
+                        .filter(v => {
+                          const isFav = favoriteVoiceIds.includes(v.id);
+                          const isVn = v.region === 'vi' || v.id === 'free_vi_female' || v.id?.startsWith('vn_') || v.id === 'el_adam';
+                          const isHotTrend = v.id?.startsWith('hottrend_');
+                          const isSales = v.id?.startsWith('vn_sales_') || v.category?.includes('Bán Hàng') || v.category?.includes('Chốt Đơn') || v.styleCategory === 'banhang';
+                          const isGamePK = v.id?.startsWith('el_') || v.provider === 'elevenlabs' || v.styleCategory === 'blv_game';
+                          const isUsUk = !isVn && (v.region === 'us_uk' || v.region === 'eu' || v.lang?.startsWith('en'));
+                          const isAsia = !isVn && (v.region === 'asia' || v.lang?.startsWith('zh') || v.lang?.startsWith('ja') || v.lang?.startsWith('ko') || v.lang?.startsWith('th'));
+
+                          // 1. Group Filter
+                          if (avaGroupFilter === 'favorites' && !isFav) return false;
+                          if (avaGroupFilter === 'vi_pro' && (!isVn || isHotTrend || isSales)) return false;
+                          if (avaGroupFilter === 'hottrend' && !isHotTrend) return false;
+                          if (avaGroupFilter === 'sales' && !isSales) return false;
+                          if (avaGroupFilter === 'us_uk' && !isUsUk) return false;
+                          if (avaGroupFilter === 'asia' && !isAsia) return false;
+                          if (avaGroupFilter === 'game_pk' && !isGamePK) return false;
+
+                          // 2. Region Filter
+                          if (avaRegionFilter !== 'all') {
+                            if (!isVn) return false;
+                            if (avaRegionFilter === 'bac' && !(v.dialect === 'bac' || v.category?.includes('Bắc') || v.name?.includes('Hà Nội') || v.name?.includes('Bắc'))) return false;
+                            if (avaRegionFilter === 'trung' && !(v.dialect === 'trung' || v.category?.includes('Trung') || v.name?.includes('Huế') || v.name?.includes('Đà Nẵng') || v.name?.includes('Trung'))) return false;
+                            if (avaRegionFilter === 'nam' && !(v.dialect === 'nam' || v.category?.includes('Nam') || v.name?.includes('Sài Gòn') || v.name?.includes('Nam'))) return false;
+                            if (avaRegionFilter === 'tay' && !(v.dialect === 'tay' || v.category?.includes('Tây') || v.name?.includes('Miền Tây') || v.name?.includes('Sông Nước') || v.name?.includes('Cần Thơ') || v.name?.includes('Tây'))) return false;
+                          }
+
+                          // 3. Gender Filter
+                          if (avaGenderFilter !== 'all') {
+                            const isFemale = v.gender === 'Female' || v.gender === 'Nữ';
+                            if (avaGenderFilter === 'Female' && !isFemale) return false;
+                            if (avaGenderFilter === 'Male' && isFemale) return false;
+                          }
+
+                          // 4. Age Filter
+                          if (avaAgeFilter !== 'all') {
+                            if (avaAgeFilter === 'young' && v.ageGroup !== 'young' && v.styleCategory !== 'idol_genz') return false;
+                            if (avaAgeFilter === 'middle' && v.ageGroup !== 'middle' && v.ageGroup !== 'mature' && v.styleCategory !== 'doanhnhan') return false;
+                            if (avaAgeFilter === 'senior' && v.ageGroup !== 'senior' && v.ageGroup !== 'elder') return false;
+                          }
+
+                          // 5. Role Active Filter
+                          if (avaRoleFilter === 'idol' && settings.mainVoiceId !== v.id) return false;
+                          if (avaRoleFilter === 'manager' && settings.assistantVoiceId !== v.id) return false;
+                          if (avaRoleFilter === 'game' && settings.gameVoiceId !== v.id) return false;
+
+                          // 6. Search Query
+                          if (avaSearchQuery.trim()) {
+                            const q = avaSearchQuery.toLowerCase();
+                            const matchName = v.name?.toLowerCase().includes(q);
+                            const matchCat = v.category?.toLowerCase().includes(q);
+                            const matchSample = v.sampleText?.toLowerCase().includes(q);
+                            const matchDesc = v.desc?.toLowerCase().includes(q);
+                            const matchLang = v.lang?.toLowerCase().includes(q);
+                            if (!matchName && !matchCat && !matchSample && !matchDesc && !matchLang) return false;
+                          }
+
+                          return true;
+                        })
+                        .map((v, idx) => {
+                          const isSelectedAsIdol = settings.mainVoiceId === v.id;
+                          const isSelectedAsAssistant = settings.assistantVoiceId === v.id;
+                          const isSelectedAsGame = settings.gameVoiceId === v.id;
+                          const isPlaying = previewingVoiceId === v.id;
+                          const isFav = favoriteVoiceIds.includes(v.id);
+                          const isFemale = v.gender === 'Female' || v.gender === 'Nữ';
+
+                          const ageBadgeText = (v.ageGroup === 'senior' || v.ageGroup === 'elder') ? 'Lão Niên 55-70t' : ((v.ageGroup === 'middle' || v.ageGroup === 'mature') ? 'Trung Niên 40-54t' : 'Trẻ 20-35t');
+                          const ageBadgeColor = (v.ageGroup === 'senior' || v.ageGroup === 'elder') ? 'bg-amber-50 text-amber-700 border-amber-200' : ((v.ageGroup === 'middle' || v.ageGroup === 'mature') ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200');
+
+                          return (
+                            <tr 
+                              key={v.id || idx}
+                              className={`transition-colors ${
+                                isSelectedAsIdol 
+                                  ? 'bg-blue-50/80 font-medium' 
+                                  : isPlaying 
+                                    ? 'bg-amber-50' 
+                                    : 'hover:bg-gray-50'
+                              }`}
+                            >
+                              <td className="px-2 py-2.5 text-center">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleFavoriteVoiceId(v.id);
+                                    setFavoriteVoiceIds(getFavoriteVoiceIds());
+                                  }}
+                                  title={isFav ? "Bỏ khỏi kho yêu thích" : "Lưu vào kho yêu thích"}
+                                  className="p-1 rounded-full hover:scale-110 active:scale-95 transition-transform"
+                                >
+                                  <Star size={16} className={isFav ? 'fill-amber-400 text-amber-400' : 'text-gray-300 hover:text-amber-400'} />
+                                </button>
+                              </td>
+                              <td className="px-3 py-2.5 text-center text-xs opacity-75 font-mono">{idx + 1}</td>
+                              <td className="px-4 py-2.5">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="font-bold text-gray-900">{v.name}</span>
+                                  {isFav && <span className="text-[10px] bg-amber-400/20 text-amber-700 px-1.5 py-0.2 rounded font-semibold">⭐ Yêu thích</span>}
+                                  {isSelectedAsIdol && <span className="text-[10px] bg-blue-600 text-white px-1.5 py-0.2 rounded font-bold">🎯 Idol Live</span>}
+                                  {isSelectedAsAssistant && <span className="text-[10px] bg-red-600 text-white px-1.5 py-0.2 rounded font-bold">💼 Trợ Lý</span>}
+                                  {isSelectedAsGame && <span className="text-[10px] bg-purple-600 text-white px-1.5 py-0.2 rounded font-bold">🎮 BLV Game</span>}
+                                </div>
+                                <div className="text-[11px] text-gray-500 italic mt-0.5 line-clamp-1">
+                                  💬 "{v.sampleText || v.desc}"
+                                </div>
+                              </td>
+                              <td className="px-3 py-2.5">
+                                <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                                  {v.category || v.lang || 'Hệ Thống'}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2.5 text-center">
+                                <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${ageBadgeColor}`}>
+                                  {ageBadgeText}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2.5 text-center text-xs font-semibold">
+                                <span className={isFemale ? 'text-pink-600 font-bold' : 'text-blue-600 font-bold'}>
+                                  {isFemale ? '👩 Nữ' : '👨 Nam'}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2.5 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (isPlaying) {
+                                      stopVoiceAudio();
+                                      setPreviewingVoiceId(null);
+                                      return;
+                                    }
+                                    setPreviewingVoiceId(v.id);
+                                    previewVoiceAudio({ ...v, isTest: true }, null, () => {
+                                      setPreviewingVoiceId(null);
+                                    });
+                                  }}
+                                  className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold cursor-pointer active:scale-95 transition-all ${
+                                    isPlaying 
+                                      ? 'bg-amber-500 text-white animate-pulse shadow-md ring-2 ring-amber-300' 
+                                      : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200'
+                                  }`}
+                                >
+                                  <Volume2 size={14} className={isPlaying ? "animate-spin" : ""} />
+                                  <span>{isPlaying ? 'Dừng' : '🔊 Thử giọng'}</span>
+                                </button>
+                              </td>
+                              <td className="px-4 py-2.5 text-center">
+                                <div className="flex items-center justify-center gap-1.5">
+                                  {/* Gán Idol */}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setSettings(prev => ({ 
+                                        ...prev, 
+                                        mainVoiceId: v.id,
+                                        mainVoiceVolume: v.volume || prev.mainVoiceVolume || 1.0,
+                                        mainVoiceRate: v.rate || prev.mainVoiceRate || 1.0,
+                                        mainVoicePitch: v.pitch || prev.mainVoicePitch || 1.0
+                                      }));
+                                      alert(`Đã gán "${v.name}" làm Giọng Idol Live Chính!`);
+                                    }}
+                                    className={`px-2 py-1 rounded text-xs font-bold transition-all ${
+                                      isSelectedAsIdol 
+                                        ? 'bg-blue-600 text-white shadow-xs ring-1 ring-blue-400' 
+                                        : 'bg-gray-100 hover:bg-blue-50 text-gray-700 hover:text-blue-600 border border-gray-200'
+                                    }`}
+                                  >
+                                    🎤 Gán Idol
+                                  </button>
+
+                                  {/* Gán Trợ Lý */}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setSettings(prev => ({ 
+                                        ...prev, 
+                                        assistantVoiceId: v.id,
+                                        assistantEnabled: true,
+                                        assistantVoiceVolume: v.volume || prev.assistantVoiceVolume || 1.0,
+                                        assistantVoiceRate: v.rate || prev.assistantVoiceRate || 1.0,
+                                        assistantVoicePitch: v.pitch || prev.assistantVoicePitch || 1.0
+                                      }));
+                                      alert(`Đã gán "${v.name}" làm Giọng Quản Lý / Trợ Lý Hậu Trường!`);
+                                    }}
+                                    className={`px-2 py-1 rounded text-xs font-bold transition-all ${
+                                      isSelectedAsAssistant 
+                                        ? 'bg-red-600 text-white shadow-xs ring-1 ring-red-400' 
+                                        : 'bg-gray-100 hover:bg-red-50 text-gray-700 hover:text-red-600 border border-gray-200'
+                                    }`}
+                                  >
+                                    💼 Gán Trợ Lý
+                                  </button>
+
+                                  {/* Gán Game PK */}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setSettings(prev => ({ 
+                                        ...prev, 
+                                        gameVoiceId: v.id,
+                                        gameVoiceVolume: v.volume || prev.gameVoiceVolume || 1.0,
+                                        gameVoiceRate: v.rate || prev.gameVoiceRate || 1.0,
+                                        gameVoicePitch: v.pitch || prev.gameVoicePitch || 1.0
+                                      }));
+                                      alert(`Đã gán "${v.name}" làm Giọng BLV Game PK!`);
+                                    }}
+                                    className={`px-2 py-1 rounded text-xs font-bold transition-all ${
+                                      isSelectedAsGame 
+                                        ? 'bg-purple-600 text-white shadow-xs ring-1 ring-purple-400' 
+                                        : 'bg-gray-100 hover:bg-purple-50 text-gray-700 hover:text-purple-600 border border-gray-200'
+                                    }`}
+                                  >
+                                    🎮 Gán Game
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* KHUNG ĐIỀU CHỈNH ÂM THANH 3 VAI TRÒ & MEDIA TRỢ LÝ */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* 1. Tùy chỉnh Giọng Idol Live Chính */}
+                <div className="bg-white border border-blue-200 rounded-xl shadow-sm overflow-hidden p-4 space-y-4">
+                  <div className="border-b border-gray-200 pb-2 flex items-center justify-between">
+                    <h4 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+                      <User size={16} className="text-blue-600" /> Tùy Chỉnh Giọng Idol Live
+                    </h4>
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-bold">
+                      Kênh Chính
+                    </span>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-semibold text-gray-700 flex justify-between">
+                        <span>Âm lượng (Volume)</span>
+                        <span className="text-blue-600 font-bold">{Math.round((settings.mainVoiceVolume !== undefined ? settings.mainVoiceVolume : 1) * 100)}%</span>
+                      </label>
+                      <input type="range" min="0" max="2" step="0.1" name="mainVoiceVolume" value={settings.mainVoiceVolume !== undefined ? settings.mainVoiceVolume : 1} onChange={handleChange} className="w-full accent-blue-600" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-semibold text-gray-700 flex justify-between">
+                        <span>Tốc độ (Speed)</span>
+                        <span className="text-blue-600 font-bold">{settings.mainVoiceRate !== undefined ? settings.mainVoiceRate : 1}x</span>
+                      </label>
+                      <input type="range" min="0.5" max="2" step="0.1" name="mainVoiceRate" value={settings.mainVoiceRate !== undefined ? settings.mainVoiceRate : 1} onChange={handleChange} className="w-full accent-blue-600" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-semibold text-gray-700 flex justify-between">
+                        <span>Độ trầm bổng (Pitch)</span>
+                        <span className="text-blue-600 font-bold">{settings.mainVoicePitch !== undefined ? settings.mainVoicePitch : 1}</span>
+                      </label>
+                      <input type="range" min="0.5" max="2" step="0.1" name="mainVoicePitch" value={settings.mainVoicePitch !== undefined ? settings.mainVoicePitch : 1} onChange={handleChange} className="w-full accent-blue-600" />
+                    </div>
+                    <div className="pt-2 border-t border-gray-100">
+                      <label className="text-xs font-semibold text-[#a53b3b] block mb-1">Model AI Trả Lời:</label>
+                      <select 
+                        name="apiModel" value={settings.apiModel} onChange={handleChange}
+                        className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-xs focus:outline-none focus:border-blue-500 bg-gray-50"
+                      >
+                        <option value="gemini-1.5-flash">🔥 Gemini 1.5 Flash (Siêu tốc & Khuyên dùng)</option>
+                        <option value="gemini-2.0-flash">⚡ Gemini 2.0 Flash (Realtime Next-Gen)</option>
+                        <option value="gemini-1.5-flash-8b">💎 Gemini 1.5 Flash 8B (Tiết kiệm nhất)</option>
+                        <option value="gpt-4o-mini">🤖 OpenAI GPT-4o Mini</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Tùy chỉnh Giọng Quản Lý / Trợ Lý */}
+                <div className="bg-white border border-red-200 rounded-xl shadow-sm overflow-hidden p-4 space-y-4">
+                  <div className="border-b border-gray-200 pb-2 flex items-center justify-between">
+                    <h4 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+                      <Mic size={16} className="text-red-500" /> Tùy Chỉnh Giọng Trợ Lý
+                    </h4>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input 
+                        type="checkbox" name="assistantEnabled" 
+                        checked={settings.assistantEnabled} onChange={handleChange}
+                        className="w-3.5 h-3.5 text-red-600 rounded focus:ring-red-500" 
+                      />
+                      <span className="text-xs font-bold text-gray-800">Bật Kênh</span>
                     </label>
-                    <input type="range" min="0.5" max="2" step="0.1" name="gameVoicePitch" value={settings.gameVoicePitch !== undefined ? settings.gameVoicePitch : 1} onChange={handleChange} className="w-full accent-purple-600" />
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-semibold text-gray-700 flex justify-between">
+                        <span>Âm lượng (Volume)</span>
+                        <span className="text-red-600 font-bold">{Math.round((settings.assistantVoiceVolume !== undefined ? settings.assistantVoiceVolume : 1) * 100)}%</span>
+                      </label>
+                      <input type="range" min="0" max="2" step="0.1" name="assistantVoiceVolume" value={settings.assistantVoiceVolume !== undefined ? settings.assistantVoiceVolume : 1} onChange={handleChange} className="w-full accent-red-600" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-semibold text-gray-700 flex justify-between">
+                        <span>Tốc độ (Speed)</span>
+                        <span className="text-red-600 font-bold">{settings.assistantVoiceRate !== undefined ? settings.assistantVoiceRate : 1}x</span>
+                      </label>
+                      <input type="range" min="0.5" max="2" step="0.1" name="assistantVoiceRate" value={settings.assistantVoiceRate !== undefined ? settings.assistantVoiceRate : 1} onChange={handleChange} className="w-full accent-red-600" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-semibold text-gray-700 flex justify-between">
+                        <span>Độ trầm bổng (Pitch)</span>
+                        <span className="text-red-600 font-bold">{settings.assistantVoicePitch !== undefined ? settings.assistantVoicePitch : 1}</span>
+                      </label>
+                      <input type="range" min="0.5" max="2" step="0.1" name="assistantVoicePitch" value={settings.assistantVoicePitch !== undefined ? settings.assistantVoicePitch : 1} onChange={handleChange} className="w-full accent-red-600" />
+                    </div>
+
+                    <div className="pt-2 border-t border-gray-100">
+                      <UniversalMediaPicker 
+                        label="Video Trợ Lý (cho trạng thái lắng nghe):"
+                        currentPath={settings.assistantVideoFolder || (idleVideoCount === 0 ? '' : `im lặng (${idleVideoCount} video)`)}
+                        videoUrl={settings.assistantVideoUrl || ''}
+                        defaultText="Chưa chọn video Trợ Lý"
+                        onSelectFile={(file, objectUrl) => {
+                          setSettings(prev => ({ ...prev, assistantVideoFolder: file.name, assistantVideoUrl: objectUrl }));
+                        }}
+                        onSelectFolder={(folderName) => {
+                          setSettings(prev => ({ ...prev, assistantVideoFolder: folderName, assistantVideoUrl: '' }));
+                        }}
+                        onSelectSample={(sample) => {
+                          setSettings(prev => ({ ...prev, assistantVideoFolder: sample.name, assistantVideoUrl: sample.url }));
+                        }}
+                        onClear={() => {
+                          setSettings(prev => ({ ...prev, assistantVideoFolder: '', assistantVideoUrl: '' }));
+                        }}
+                        inputId="upload-assistant-video-settings"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Tùy chỉnh Giọng BLV Game PK */}
+                <div className="bg-white border border-purple-200 rounded-xl shadow-sm overflow-hidden p-4 space-y-4">
+                  <div className="border-b border-gray-200 pb-2 flex items-center justify-between">
+                    <h4 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+                      <Volume2 size={16} className="text-purple-600" /> Tùy Chỉnh Giọng BLV Game
+                    </h4>
+                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded font-bold">
+                      Game Chiến Đấu
+                    </span>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-semibold text-gray-700 flex justify-between">
+                        <span>Âm lượng (Volume)</span>
+                        <span className="text-purple-600 font-bold">{Math.round((settings.gameVoiceVolume !== undefined ? settings.gameVoiceVolume : 1) * 100)}%</span>
+                      </label>
+                      <input type="range" min="0" max="2" step="0.1" name="gameVoiceVolume" value={settings.gameVoiceVolume !== undefined ? settings.gameVoiceVolume : 1} onChange={handleChange} className="w-full accent-purple-600" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-semibold text-gray-700 flex justify-between">
+                        <span>Tốc độ (Speed)</span>
+                        <span className="text-purple-600 font-bold">{settings.gameVoiceRate !== undefined ? settings.gameVoiceRate : 1}x</span>
+                      </label>
+                      <input type="range" min="0.5" max="2" step="0.1" name="gameVoiceRate" value={settings.gameVoiceRate !== undefined ? settings.gameVoiceRate : 1} onChange={handleChange} className="w-full accent-purple-600" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-semibold text-gray-700 flex justify-between">
+                        <span>Độ trầm bổng (Pitch)</span>
+                        <span className="text-purple-600 font-bold">{settings.gameVoicePitch !== undefined ? settings.gameVoicePitch : 1}</span>
+                      </label>
+                      <input type="range" min="0.5" max="2" step="0.1" name="gameVoicePitch" value={settings.gameVoicePitch !== undefined ? settings.gameVoicePitch : 1} onChange={handleChange} className="w-full accent-purple-600" />
+                    </div>
+                    <div className="pt-2 border-t border-gray-100 text-xs text-purple-700 italic">
+                      💡 Tự động hò reo, bình luận trận đấu PK, cảnh báo máu thấp và xướng tên khán giả tặng quà.
+                    </div>
                   </div>
                 </div>
               </div>
-            </>
+            </div>
           )}
 
           {/* TAB 5: CẤU HÌNH NHANH */}
