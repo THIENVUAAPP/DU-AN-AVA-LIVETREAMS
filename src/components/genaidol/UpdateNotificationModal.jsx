@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.2.8';
+export const APP_VERSION = '2.2.9';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🎙️ Đột Phá Voice AI: Tích Hợp Native OS Synthesizer & Đa Dạng Hóa 100%',
-    description: 'Nâng cấp toàn diện cơ chế phát âm Native OS Voice Engine kết hợp Web Audio DSP Pitch Shifter. 89 giọng đọc hoàn toàn khác biệt về âm sắc, cao độ (Pitch), tốc độ (Rate), giới tính và quốc gia.'
+    title: '👑 Nâng Cấp Microsoft Azure Neural TTS — Chuẩn Nam Ra Nam, Nữ Ra Nữ 100%',
+    description: 'Tích hợp trực tiếp công nghệ Microsoft Azure Neural Voice Engine (Nam Minh cho Nam, Hoài My cho Nữ). Giọng Nam trầm ấm, hào sảng, uy lực, tự nhiên như người thật; Giọng Nữ trong trẻo, ngọt ngào, truyền cảm, dứt điểm hoàn toàn tình trạng giọng phèn hay bị chồng chéo.'
   },
   {
-    title: '👑 Phân Hóa Rõ Rệt Nam Chuẩn Nam — Nữ Chuẩn Nữ & 4 Vùng Miền',
-    description: 'Khắc phục triệt để hiện tượng trùng giọng. Tự động nhận diện và ghép đúng giọng đọc bản xứ theo giới tính (Nam/Nữ) và phương ngữ đặc trưng (Bắc - Trung - Nam - Tây).'
+    title: '⚡ 89 Giọng Đọc Độc Bản — Chuẩn Sắc Thái 4 Vùng Miền & Quốc Tế',
+    description: 'Từng phong cách (BLV Game PK, Chốt đơn livestream, BTV Thời sự, Kể chuyện đêm muộn, Lão niên, Gen Z...) đều sở hữu cao độ Hz và nhịp độ Rate riêng biệt, kết hợp chuỗi Broadcast Mastering DSP chuẩn phòng thu.'
   },
   {
-    title: '⚡ Trải Nghiệm Phát Giọng Mượt Mà, Không Độ Trễ',
-    description: 'Preload danh sách voice ngay khi khởi động, tối ưu hóa bộ nhớ đệm TTS và tự động khôi phục ngữ điệu tự nhiên, sống động.'
+    title: '🚀 Tốc Độ Phát Âm Siêu Tốc & Bộ Nhớ Đệm Thông Minh',
+    description: 'Tích hợp bộ nhớ đệm In-Memory Cache tức thì, loại bỏ độ trễ phản hồi, tự động chuyển đổi dự phòng thông minh bảo đảm phát âm liên tục mượt mà.'
   }
 ];
 

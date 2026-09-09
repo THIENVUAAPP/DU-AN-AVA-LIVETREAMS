@@ -853,8 +853,8 @@ app.get('/api/check-update', (req, res) => {
 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
-app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', '/AvaLive_VIP_PRO_Windows_v2.2.8.zip', '/AvaLive_VIP_PRO_Windows_v2.2.7.zip', '/AvaLive_VIP_PRO_Windows_v2.2.6.zip', '/AvaLive_VIP_PRO_Windows_v2.2.5.zip', '/AvaLive_VIP_PRO_Windows_v2.2.4.zip', '/AvaLive_VIP_PRO_Windows_v2.2.3.zip', '/AvaLive_VIP_PRO_Windows_v2.2.2.zip', '/AvaLive_VIP_PRO_Windows_v2.2.1.zip', '/AvaLive_VIP_PRO_Windows_v2.2.0.zip', '/AvaLive_VIP_PRO_Windows_v2.1.9.zip', '/AvaLive_VIP_PRO_Windows_v2.1.8.zip', '/AvaLive_VIP_PRO_Windows_v2.1.7.zip', '/AvaLive_VIP_PRO_Windows_v2.1.6.zip', '/AvaLive_VIP_PRO_Windows_v2.1.5.zip', '/AvaLive_VIP_PRO_Windows_v2.1.4.zip', '/AvaLive_VIP_PRO_Windows_v2.1.3.zip', '/AvaLive_VIP_PRO_Windows_v2.1.2.zip', '/AvaLive_VIP_PRO_Windows_v2.1.1.zip', '/AvaLive_VIP_PRO_Windows_v2.1.0.zip', '/AvaLive_VIP_PRO_Windows_v2.0.9.zip', '/AvaLive_VIP_PRO_Windows_v2.0.8.zip', '/AvaLive_VIP_PRO_Windows_v2.0.7.zip', '/AvaLive_VIP_PRO_Windows_v2.0.6.zip', '/AvaLive_VIP_PRO_Windows_v2.0.5.zip', '/AvaLive_VIP_PRO_Windows_v2.0.4.zip', '/AvaLive_VIP_PRO_Windows_v2.0.3.zip', '/AvaLive_VIP_PRO_Windows_v2.0.2.zip', '/AvaLive_VIP_PRO_Windows_v2.0.1.zip', '/AvaLive_VIP_PRO_Windows_v2.0.0.zip', '/AvaLive_VIP_PRO_Windows_v1.9.9.zip', '/AvaLive_VIP_PRO_Windows_v1.9.8.zip', '/AvaLive_VIP_PRO_Windows_v1.9.7.zip', '/AvaLive_VIP_PRO_Windows_v1.9.6.zip', '/AvaLive_VIP_PRO_Windows_v1.9.5.zip', '/AvaLive_VIP_PRO_Windows_v1.9.4.zip', '/AvaLive_VIP_PRO_Windows_v1.9.3.zip', '/AvaLive_VIP_PRO_Windows_v1.9.2.zip', '/AvaLive_VIP_PRO_Windows_v1.9.1.zip', '/AvaLive_VIP_PRO_Windows_v1.9.0.zip', '/AvaLive_VIP_PRO_Windows_v1.8.9.zip', '/AvaLive_VIP_PRO_Windows_v1.8.8.zip', '/AvaLive_VIP_PRO_Windows_v1.8.7.zip', '/AvaLive_VIP_PRO_Windows_v1.8.6.zip', '/AvaLive_VIP_PRO_Windows_v1.8.5.zip', '/AvaLive_VIP_PRO_Windows_v1.8.4.zip', '/AvaLive_VIP_PRO_Windows_v1.8.3.zip', '/AvaLive_VIP_PRO_Windows_v1.8.2.zip', '/AvaLive_VIP_PRO_Windows_v1.8.1.zip', '/AvaLive_VIP_PRO_Windows_v1.8.0.zip'], async (req, res) => {
-  let ver = '2.2.8';
+app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', '/AvaLive_VIP_PRO_Windows_v2.2.9.zip', '/AvaLive_VIP_PRO_Windows_v2.2.8.zip', '/AvaLive_VIP_PRO_Windows_v2.2.7.zip', '/AvaLive_VIP_PRO_Windows_v2.2.6.zip', '/AvaLive_VIP_PRO_Windows_v2.2.5.zip', '/AvaLive_VIP_PRO_Windows_v2.2.4.zip', '/AvaLive_VIP_PRO_Windows_v2.2.3.zip', '/AvaLive_VIP_PRO_Windows_v2.2.2.zip', '/AvaLive_VIP_PRO_Windows_v2.2.1.zip', '/AvaLive_VIP_PRO_Windows_v2.2.0.zip', '/AvaLive_VIP_PRO_Windows_v2.1.9.zip', '/AvaLive_VIP_PRO_Windows_v2.1.8.zip', '/AvaLive_VIP_PRO_Windows_v2.1.7.zip', '/AvaLive_VIP_PRO_Windows_v2.1.6.zip', '/AvaLive_VIP_PRO_Windows_v2.1.5.zip', '/AvaLive_VIP_PRO_Windows_v2.1.4.zip', '/AvaLive_VIP_PRO_Windows_v2.1.3.zip', '/AvaLive_VIP_PRO_Windows_v2.1.2.zip', '/AvaLive_VIP_PRO_Windows_v2.1.1.zip', '/AvaLive_VIP_PRO_Windows_v2.1.0.zip', '/AvaLive_VIP_PRO_Windows_v2.0.9.zip', '/AvaLive_VIP_PRO_Windows_v2.0.8.zip', '/AvaLive_VIP_PRO_Windows_v2.0.7.zip', '/AvaLive_VIP_PRO_Windows_v2.0.6.zip', '/AvaLive_VIP_PRO_Windows_v2.0.5.zip', '/AvaLive_VIP_PRO_Windows_v2.0.4.zip', '/AvaLive_VIP_PRO_Windows_v2.0.3.zip', '/AvaLive_VIP_PRO_Windows_v2.0.2.zip', '/AvaLive_VIP_PRO_Windows_v2.0.1.zip', '/AvaLive_VIP_PRO_Windows_v2.0.0.zip', '/AvaLive_VIP_PRO_Windows_v1.9.9.zip', '/AvaLive_VIP_PRO_Windows_v1.9.8.zip', '/AvaLive_VIP_PRO_Windows_v1.9.7.zip', '/AvaLive_VIP_PRO_Windows_v1.9.6.zip', '/AvaLive_VIP_PRO_Windows_v1.9.5.zip', '/AvaLive_VIP_PRO_Windows_v1.9.4.zip', '/AvaLive_VIP_PRO_Windows_v1.9.3.zip', '/AvaLive_VIP_PRO_Windows_v1.9.2.zip', '/AvaLive_VIP_PRO_Windows_v1.9.1.zip', '/AvaLive_VIP_PRO_Windows_v1.9.0.zip', '/AvaLive_VIP_PRO_Windows_v1.8.9.zip', '/AvaLive_VIP_PRO_Windows_v1.8.8.zip', '/AvaLive_VIP_PRO_Windows_v1.8.7.zip', '/AvaLive_VIP_PRO_Windows_v1.8.6.zip', '/AvaLive_VIP_PRO_Windows_v1.8.5.zip', '/AvaLive_VIP_PRO_Windows_v1.8.4.zip', '/AvaLive_VIP_PRO_Windows_v1.8.3.zip', '/AvaLive_VIP_PRO_Windows_v1.8.2.zip', '/AvaLive_VIP_PRO_Windows_v1.8.1.zip', '/AvaLive_VIP_PRO_Windows_v1.8.0.zip'], async (req, res) => {
+  let ver = '2.2.9';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -873,8 +873,8 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 });
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
-app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', '/AvaLive_VIP_PRO_Mac_v2.2.8.zip', '/AvaLive_VIP_PRO_Mac_v2.2.7.zip', '/AvaLive_VIP_PRO_Mac_v2.2.6.zip', '/AvaLive_VIP_PRO_Mac_v2.2.5.zip', '/AvaLive_VIP_PRO_Mac_v2.2.4.zip', '/AvaLive_VIP_PRO_Mac_v2.2.3.zip', '/AvaLive_VIP_PRO_Mac_v2.2.2.zip', '/AvaLive_VIP_PRO_Mac_v2.2.1.zip', '/AvaLive_VIP_PRO_Mac_v2.2.0.zip', '/AvaLive_VIP_PRO_Mac_v2.1.9.zip', '/AvaLive_VIP_PRO_Mac_v2.1.8.zip', '/AvaLive_VIP_PRO_Mac_v2.1.7.zip', '/AvaLive_VIP_PRO_Mac_v2.1.6.zip', '/AvaLive_VIP_PRO_Mac_v2.1.5.zip', '/AvaLive_VIP_PRO_Mac_v2.1.4.zip', '/AvaLive_VIP_PRO_Mac_v2.1.3.zip', '/AvaLive_VIP_PRO_Mac_v2.1.2.zip', '/AvaLive_VIP_PRO_Mac_v2.1.1.zip', '/AvaLive_VIP_PRO_Mac_v2.1.0.zip', '/AvaLive_VIP_PRO_Mac_v2.0.9.zip', '/AvaLive_VIP_PRO_Mac_v2.0.8.zip', '/AvaLive_VIP_PRO_Mac_v2.0.7.zip', '/AvaLive_VIP_PRO_Mac_v2.0.6.zip', '/AvaLive_VIP_PRO_Mac_v2.0.5.zip', '/AvaLive_VIP_PRO_Mac_v2.0.4.zip', '/AvaLive_VIP_PRO_Mac_v2.0.3.zip', '/AvaLive_VIP_PRO_Mac_v2.0.2.zip', '/AvaLive_VIP_PRO_Mac_v2.0.1.zip', '/AvaLive_VIP_PRO_Mac_v2.0.0.zip', '/AvaLive_VIP_PRO_Mac_v1.9.9.zip', '/AvaLive_VIP_PRO_Mac_v1.9.8.zip', '/AvaLive_VIP_PRO_Mac_v1.9.7.zip', '/AvaLive_VIP_PRO_Mac_v1.9.6.zip', '/AvaLive_VIP_PRO_Mac_v1.9.5.zip', '/AvaLive_VIP_PRO_Mac_v1.9.4.zip', '/AvaLive_VIP_PRO_Mac_v1.9.3.zip', '/AvaLive_VIP_PRO_Mac_v1.9.2.zip', '/AvaLive_VIP_PRO_Mac_v1.9.1.zip', '/AvaLive_VIP_PRO_Mac_v1.9.0.zip', '/AvaLive_VIP_PRO_Mac_v1.8.9.zip', '/AvaLive_VIP_PRO_Mac_v1.8.8.zip', '/AvaLive_VIP_PRO_Mac_v1.8.7.zip', '/AvaLive_VIP_PRO_Mac_v1.8.6.zip', '/AvaLive_VIP_PRO_Mac_v1.8.5.zip', '/AvaLive_VIP_PRO_Mac_v1.8.4.zip', '/AvaLive_VIP_PRO_Mac_v1.8.3.zip', '/AvaLive_VIP_PRO_Mac_v1.8.2.zip', '/AvaLive_VIP_PRO_Mac_v1.8.1.zip', '/AvaLive_VIP_PRO_Mac_v1.8.0.zip'], async (req, res) => {
-  let ver = '2.2.8';
+app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', '/AvaLive_VIP_PRO_Mac_v2.2.9.zip', '/AvaLive_VIP_PRO_Mac_v2.2.8.zip', '/AvaLive_VIP_PRO_Mac_v2.2.7.zip', '/AvaLive_VIP_PRO_Mac_v2.2.6.zip', '/AvaLive_VIP_PRO_Mac_v2.2.5.zip', '/AvaLive_VIP_PRO_Mac_v2.2.4.zip', '/AvaLive_VIP_PRO_Mac_v2.2.3.zip', '/AvaLive_VIP_PRO_Mac_v2.2.2.zip', '/AvaLive_VIP_PRO_Mac_v2.2.1.zip', '/AvaLive_VIP_PRO_Mac_v2.2.0.zip', '/AvaLive_VIP_PRO_Mac_v2.1.9.zip', '/AvaLive_VIP_PRO_Mac_v2.1.8.zip', '/AvaLive_VIP_PRO_Mac_v2.1.7.zip', '/AvaLive_VIP_PRO_Mac_v2.1.6.zip', '/AvaLive_VIP_PRO_Mac_v2.1.5.zip', '/AvaLive_VIP_PRO_Mac_v2.1.4.zip', '/AvaLive_VIP_PRO_Mac_v2.1.3.zip', '/AvaLive_VIP_PRO_Mac_v2.1.2.zip', '/AvaLive_VIP_PRO_Mac_v2.1.1.zip', '/AvaLive_VIP_PRO_Mac_v2.1.0.zip', '/AvaLive_VIP_PRO_Mac_v2.0.9.zip', '/AvaLive_VIP_PRO_Mac_v2.0.8.zip', '/AvaLive_VIP_PRO_Mac_v2.0.7.zip', '/AvaLive_VIP_PRO_Mac_v2.0.6.zip', '/AvaLive_VIP_PRO_Mac_v2.0.5.zip', '/AvaLive_VIP_PRO_Mac_v2.0.4.zip', '/AvaLive_VIP_PRO_Mac_v2.0.3.zip', '/AvaLive_VIP_PRO_Mac_v2.0.2.zip', '/AvaLive_VIP_PRO_Mac_v2.0.1.zip', '/AvaLive_VIP_PRO_Mac_v2.0.0.zip', '/AvaLive_VIP_PRO_Mac_v1.9.9.zip', '/AvaLive_VIP_PRO_Mac_v1.9.8.zip', '/AvaLive_VIP_PRO_Mac_v1.9.7.zip', '/AvaLive_VIP_PRO_Mac_v1.9.6.zip', '/AvaLive_VIP_PRO_Mac_v1.9.5.zip', '/AvaLive_VIP_PRO_Mac_v1.9.4.zip', '/AvaLive_VIP_PRO_Mac_v1.9.3.zip', '/AvaLive_VIP_PRO_Mac_v1.9.2.zip', '/AvaLive_VIP_PRO_Mac_v1.9.1.zip', '/AvaLive_VIP_PRO_Mac_v1.9.0.zip', '/AvaLive_VIP_PRO_Mac_v1.8.9.zip', '/AvaLive_VIP_PRO_Mac_v1.8.8.zip', '/AvaLive_VIP_PRO_Mac_v1.8.7.zip', '/AvaLive_VIP_PRO_Mac_v1.8.6.zip', '/AvaLive_VIP_PRO_Mac_v1.8.5.zip', '/AvaLive_VIP_PRO_Mac_v1.8.4.zip', '/AvaLive_VIP_PRO_Mac_v1.8.3.zip', '/AvaLive_VIP_PRO_Mac_v1.8.2.zip', '/AvaLive_VIP_PRO_Mac_v1.8.1.zip', '/AvaLive_VIP_PRO_Mac_v1.8.0.zip'], async (req, res) => {
+  let ver = '2.2.9';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -2025,13 +2025,74 @@ app.post('/api/battle-state', (req, res) => {
 // TTS In-Memory Audio Cache
 const ttsAudioBufferCache = new Map();
 
-// TTS Proxy with Ultra-Fast In-Memory Cache
-app.get('/api/tts', (req, res) => {
+let EdgeTTS = null;
+try {
+  const edgePkg = require('node-edge-tts');
+  EdgeTTS = edgePkg.EdgeTTS || edgePkg;
+} catch (e) {
+  console.warn('[server.cjs] node-edge-tts could not be loaded:', e?.message || e);
+}
+
+function resolveNeuralVoice(voice, gender, lang) {
+  if (voice && typeof voice === 'string' && voice.includes('Neural')) {
+    return voice;
+  }
+  const isMale = (gender || '').toLowerCase() === 'male' || (gender || '').toLowerCase() === 'nam';
+  const shortLang = (lang || 'vi').split('-')[0].toLowerCase();
+  
+  if (shortLang === 'vi') return isMale ? 'vi-VN-NamMinhNeural' : 'vi-VN-HoaiMyNeural';
+  if (shortLang === 'en') return isMale ? 'en-US-GuyNeural' : 'en-US-JennyNeural';
+  if (shortLang === 'ja') return isMale ? 'ja-JP-KeitaNeural' : 'ja-JP-NanamiNeural';
+  if (shortLang === 'zh') return isMale ? 'zh-CN-YunxiNeural' : 'zh-CN-XiaoxiaoNeural';
+  if (shortLang === 'ko') return isMale ? 'ko-KR-InJoonNeural' : 'ko-KR-SunHiNeural';
+  if (shortLang === 'fr') return isMale ? 'fr-FR-HenriNeural' : 'fr-FR-DeniseNeural';
+  if (shortLang === 'de') return isMale ? 'de-DE-ConradNeural' : 'de-DE-KatjaNeural';
+  if (shortLang === 'es') return isMale ? 'es-ES-AlvaroNeural' : 'es-ES-ElviraNeural';
+  if (shortLang === 'ru') return isMale ? 'ru-RU-DmitryNeural' : 'ru-RU-SvetlanaNeural';
+  if (shortLang === 'it') return isMale ? 'it-IT-DiegoNeural' : 'it-IT-ElsaNeural';
+  if (shortLang === 'th') return isMale ? 'th-TH-NiwatNeural' : 'th-TH-PremwadeeNeural';
+  
+  return isMale ? 'vi-VN-NamMinhNeural' : 'vi-VN-HoaiMyNeural';
+}
+
+async function synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch = '+0Hz', rate = '+0%' }) {
+  if (!EdgeTTS) return null;
+  const neuralVoice = resolveNeuralVoice(voice, gender, lang);
+  const tmpFile = path.join(os.tmpdir(), `tts_${Date.now()}_${Math.random().toString(36).slice(2)}.mp3`);
+  try {
+    const tts = new EdgeTTS({
+      voice: neuralVoice,
+      lang: neuralVoice.split('-').slice(0, 2).join('-') || 'vi-VN',
+      pitch: pitch || '+0Hz',
+      rate: rate || '+0%',
+      outputFormat: 'audio-24khz-48kbitrate-mono-mp3'
+    });
+    await tts.ttsPromise(text, tmpFile);
+    if (fs.existsSync(tmpFile)) {
+      const buf = fs.readFileSync(tmpFile);
+      try { fs.unlinkSync(tmpFile); } catch (e) {}
+      return buf;
+    }
+  } catch (err) {
+    if (fs.existsSync(tmpFile)) {
+      try { fs.unlinkSync(tmpFile); } catch (e) {}
+    }
+    console.warn('[server.cjs] EdgeTTS synthesis error:', err?.message || err);
+  }
+  return null;
+}
+
+// TTS Proxy with Ultra-Fast In-Memory Cache & Neural Voice Engine
+app.get('/api/tts', async (req, res) => {
   const text = (req.query.text || '').toString().trim();
+  const voice = (req.query.voice || '').toString().trim();
+  const gender = (req.query.gender || '').toString().trim();
   const lang = (req.query.lang || 'vi').toString().trim();
+  const pitch = (req.query.pitch || '+0Hz').toString().trim();
+  const rate = (req.query.rate || '+0%').toString().trim();
   if (!text) return res.status(400).send('Missing text parameter');
 
-  const cacheKey = `${lang}_${text}`;
+  const cacheKey = `${voice}_${gender}_${pitch}_${rate}_${lang}_${text}`;
   if (ttsAudioBufferCache.has(cacheKey)) {
     const cached = ttsAudioBufferCache.get(cacheKey);
     res.setHeader('Content-Type', 'audio/mpeg');
@@ -2039,6 +2100,20 @@ app.get('/api/tts', (req, res) => {
     return res.send(cached);
   }
 
+  // 1. Tận dụng Microsoft Azure Neural Voice Engine (Nam Minh cho Nam, Hoài My cho Nữ)
+  const neuralBuffer = await synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch, rate });
+  if (neuralBuffer) {
+    if (ttsAudioBufferCache.size > 500) {
+      const first = ttsAudioBufferCache.keys().next().value;
+      ttsAudioBufferCache.delete(first);
+    }
+    ttsAudioBufferCache.set(cacheKey, neuralBuffer);
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.send(neuralBuffer);
+  }
+
+  // 2. Dự phòng Google Translate TTS khi mạng ngoại tuyến
   const encodedText = encodeURIComponent(text.slice(0, 200));
   const encodedLang = encodeURIComponent(lang.toLowerCase().startsWith('vi') ? 'vi' : (lang || 'vi'));
   const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=${encodedLang}&client=tw-ob`;
@@ -2054,7 +2129,7 @@ app.get('/api/tts', (req, res) => {
     proxyRes.on('data', chunk => chunks.push(chunk));
     proxyRes.on('end', () => {
       const buffer = Buffer.concat(chunks);
-      if (ttsAudioBufferCache.size > 200) {
+      if (ttsAudioBufferCache.size > 500) {
         const first = ttsAudioBufferCache.keys().next().value;
         ttsAudioBufferCache.delete(first);
       }
@@ -2070,10 +2145,17 @@ app.get('/api/tts', (req, res) => {
 });
 
 app.post('/api/tts', async (req, res) => {
-  const { text, platform, voiceId } = req.body || {};
+  const { text, platform, voice, gender, lang = 'vi', pitch = '+0Hz', rate = '+0%' } = req.body || {};
   const txt = (text || '').toString().trim();
   if (!txt) return res.status(400).json({ error: 'Missing text parameter' });
 
+  // 1. Edge Neural TTS
+  const neuralBuffer = await synthesizeNeuralTTSBuffer({ text: txt, voice, gender, lang, pitch, rate });
+  if (neuralBuffer) {
+    return res.json({ success: true, audioBase64: neuralBuffer.toString('base64') });
+  }
+
+  // 2. Fallback Google Translate TTS
   const encodedText = encodeURIComponent(txt.slice(0, 200));
   const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=vi&client=tw-ob`;
 

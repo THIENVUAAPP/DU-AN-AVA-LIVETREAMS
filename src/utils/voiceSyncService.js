@@ -1990,6 +1990,12 @@ export function cleanTextForVoiceSpeech(rawText) {
  * Đảm bảo: Giọng Nam ra đúng 100% Nam (trầm ấm, uy lực, nói nhanh dứt khoát, không bị kéo lê), 
  * Giọng Nữ ra đúng 100% Nữ (trong trẻo, ngọt ngào, nhấn nhá siêu đỉnh).
  */
+/**
+ * 🎛️ BỘ XỬ LÝ ÂM THANH MASTERING BROADCAST DSP CHUYÊN NGHIỆP:
+ * Xuất tín hiệu chuẩn phòng thu livestream:
+ * - Bảo toàn 100% âm sắc tự nhiên của giọng đọc AI (Không làm méo tiếng, không giả giọng).
+ * - Chuỗi Parametric EQ + Dynamics Compressor tạo độ dầy, ấm, nét và uy lực cho livestream.
+ */
 async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, requestedRate, onEnd, isTestingMode) {
   const audioCtx = getOrCreateAudioContext();
   if (!audioCtx) return false;
@@ -2001,58 +2007,50 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
   activeSourceNode = source;
 
   const isMale = voice?.gender === 'Male' || voice?.gender === 'Nam';
-  const dsp = voice?.dspProfile || {};
 
-  // TÍNH TOÁN CAO ĐỘ (SEMITONES) VÀ TỐC ĐỘ PHÁT TỰ NHIÊN
-  const semitones = dsp.semitones !== undefined ? dsp.semitones : (isMale ? -6.0 : 2.5);
-  const pitchShiftFactor = Math.pow(2, semitones / 12);
-  const voiceRate = voice?.rate || dsp.rate || 1.05;
+  // Tốc độ phát tự nhiên chuẩn phòng thu, không làm méo cao độ
   const userRate = requestedRate !== undefined && !isNaN(requestedRate) ? Number(requestedRate) : 1.0;
-  
-  // Tổng hợp playbackRate chuyển đổi cao độ và nhịp độ
-  const finalPlaybackRate = Math.max(0.65, Math.min(1.85, pitchShiftFactor * voiceRate * userRate));
+  const finalPlaybackRate = Math.max(0.85, Math.min(1.4, userRate));
   source.playbackRate.value = finalPlaybackRate;
 
-  // 1. Low Shelf (Cộng hưởng ngực sâu ấm áp cho giọng Nam / Giảm đục cho giọng Nữ)
+  // 1. Low Shelf (Tăng độ ấm ngực cho giọng Nam / Giữ độ trong cho giọng Nữ)
   const lowFilter = audioCtx.createBiquadFilter();
   lowFilter.type = 'lowshelf';
-  lowFilter.frequency.value = dsp.lowFreq || (isMale ? 140 : 280);
-  lowFilter.gain.value = dsp.lowGain !== undefined ? dsp.lowGain : (isMale ? 9.5 : -2.0);
+  lowFilter.frequency.value = isMale ? 150 : 260;
+  lowFilter.gain.value = isMale ? 3.0 : 0.5;
 
-  // 2. Formant F1 (Peaking Filter - Trọng tâm nội lực giọng nói)
+  // 2. Formant F1 / Mid Clarity (Nội lực âm thanh)
   const midFilter = audioCtx.createBiquadFilter();
   midFilter.type = 'peaking';
-  midFilter.frequency.value = dsp.midFreq || (isMale ? 450 : 1350);
-  midFilter.Q.value = isMale ? 1.6 : 1.2;
-  midFilter.gain.value = dsp.midGain !== undefined ? dsp.midGain : (isMale ? 4.5 : 3.0);
+  midFilter.frequency.value = isMale ? 1100 : 1600;
+  midFilter.Q.value = 1.2;
+  midFilter.gain.value = isMale ? 1.5 : 1.5;
 
-  // 3. Formant F2 / Notch Filter (Khử tần số nữ nếu là nam / Tăng độ sắc sảo nếu là nữ)
+  // 3. Formant F2 / Presence Filter (Độ nét và bắt tai)
   const presenceFilter = audioCtx.createBiquadFilter();
   presenceFilter.type = 'peaking';
-  presenceFilter.frequency.value = dsp.presenceFreq || (isMale ? 2600 : 4200);
-  presenceFilter.Q.value = 1.8;
-  presenceFilter.gain.value = dsp.presenceGain !== undefined ? dsp.presenceGain : (isMale ? -5.5 : 5.5);
+  presenceFilter.frequency.value = isMale ? 3000 : 3800;
+  presenceFilter.Q.value = 1.4;
+  presenceFilter.gain.value = isMale ? 1.5 : 2.5;
 
-  // 4. High Shelf (Khử tiếng the thé cho giọng Nam / Tăng không khí lung linh cho giọng Nữ)
+  // 4. High Shelf (Độ thoáng không gian)
   const highFilter = audioCtx.createBiquadFilter();
   highFilter.type = 'highshelf';
-  highFilter.frequency.value = isMale ? 3800 : 6500;
-  highFilter.gain.value = dsp.highGain !== undefined ? dsp.highGain : (isMale ? -4.5 : 4.0);
+  highFilter.frequency.value = 6500;
+  highFilter.gain.value = isMale ? 0.0 : 1.5;
 
-  // 5. Dynamics Broadcast Compressor (Nén động lực livestream chuyên nghiệp)
+  // 5. Dynamics Broadcast Compressor (Nén động lực livestream chuẩn đài phát thanh)
   const compressor = audioCtx.createDynamicsCompressor();
-  const compCfg = dsp.compressor || {};
-  compressor.threshold.value = compCfg.threshold !== undefined ? compCfg.threshold : (isMale ? -22 : -18);
+  compressor.threshold.value = isMale ? -22 : -18;
   compressor.knee.value = 6;
-  compressor.ratio.value = compCfg.ratio !== undefined ? compCfg.ratio : (isMale ? 5.0 : 3.5);
-  compressor.attack.value = compCfg.attack !== undefined ? compCfg.attack : 0.005;
-  compressor.release.value = compCfg.release !== undefined ? compCfg.release : 0.15;
+  compressor.ratio.value = 3.5;
+  compressor.attack.value = 0.005;
+  compressor.release.value = 0.15;
 
   // 6. Master Gain
   const masterGain = audioCtx.createGain();
   masterGain.gain.value = Math.max(0, Math.min(1.0, requestedVolume));
 
-  // Nối chuỗi âm thanh: Source -> Low -> Mid -> Presence -> High -> Compressor -> MasterGain -> Destination
   source.connect(lowFilter);
   lowFilter.connect(midFilter);
   midFilter.connect(presenceFilter);
@@ -2088,10 +2086,53 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
 }
 
 /**
- * ⚡ TẢI VÀ GIẢI MÃ ÂM THANH TTS (CÓ BỘ NHỚ ĐỆM TỰ ĐỘNG)
+ * ⚡ TẢI VÀ GIẢI MÃ ÂM THANH MICROSOFT NEURAL TTS (CÓ BỘ NHỚ ĐỆM TỰ ĐỘNG)
  */
-async function fetchAndDecodeTTSAudio(text, lang = 'vi') {
-  const cacheKey = `${lang}_${text.trim().slice(0, 100)}`;
+async function fetchAndDecodeTTSAudio(text, voice = null) {
+  const isMale = voice?.gender === 'Male' || voice?.gender === 'Nam';
+  const gender = isMale ? 'male' : 'female';
+  const lang = voice?.lang || 'vi-VN';
+  const shortLang = lang.split('-')[0].toLowerCase();
+
+  // Chọn đúng Neural Voice ID chuẩn xác cho từng giới tính & quốc gia
+  let neuralVoice = voice?.neuralVoice;
+  if (!neuralVoice) {
+    if (shortLang === 'vi') neuralVoice = isMale ? 'vi-VN-NamMinhNeural' : 'vi-VN-HoaiMyNeural';
+    else if (shortLang === 'en') neuralVoice = isMale ? 'en-US-GuyNeural' : 'en-US-JennyNeural';
+    else if (shortLang === 'ja') neuralVoice = isMale ? 'ja-JP-KeitaNeural' : 'ja-JP-NanamiNeural';
+    else if (shortLang === 'zh') neuralVoice = isMale ? 'zh-CN-YunxiNeural' : 'zh-CN-XiaoxiaoNeural';
+    else if (shortLang === 'ko') neuralVoice = isMale ? 'ko-KR-InJoonNeural' : 'ko-KR-SunHiNeural';
+    else if (shortLang === 'fr') neuralVoice = isMale ? 'fr-FR-HenriNeural' : 'fr-FR-DeniseNeural';
+    else if (shortLang === 'de') neuralVoice = isMale ? 'de-DE-ConradNeural' : 'de-DE-KatjaNeural';
+    else if (shortLang === 'es') neuralVoice = isMale ? 'es-ES-AlvaroNeural' : 'es-ES-ElviraNeural';
+    else if (shortLang === 'ru') neuralVoice = isMale ? 'ru-RU-DmitryNeural' : 'ru-RU-SvetlanaNeural';
+    else if (shortLang === 'it') neuralVoice = isMale ? 'it-IT-DiegoNeural' : 'it-IT-ElsaNeural';
+    else if (shortLang === 'th') neuralVoice = isMale ? 'th-TH-NiwatNeural' : 'th-TH-PremwadeeNeural';
+    else neuralVoice = isMale ? 'vi-VN-NamMinhNeural' : 'vi-VN-HoaiMyNeural';
+  }
+
+  // Tùy biến cao độ và tốc độ tự nhiên cho từng phong cách giọng đọc
+  let pitchHz = voice?.edgePitch;
+  if (!pitchHz) {
+    if (voice?.dspProfile?.semitones !== undefined) {
+      const st = voice.dspProfile.semitones;
+      pitchHz = (st >= 0 ? '+' : '') + Math.round(st * 2) + 'Hz';
+    } else if (voice?.pitch !== undefined) {
+      const pDiff = (Number(voice.pitch) - 1.0) * 20;
+      pitchHz = (pDiff >= 0 ? '+' : '') + Math.round(pDiff) + 'Hz';
+    } else {
+      pitchHz = isMale ? '-3Hz' : '+3Hz';
+    }
+  }
+
+  let ratePercent = voice?.edgeRate;
+  if (!ratePercent) {
+    const vRate = Number(voice?.rate || 1.0);
+    const rDiff = Math.round((vRate - 1.0) * 100);
+    ratePercent = (rDiff >= 0 ? '+' : '') + rDiff + '%';
+  }
+
+  const cacheKey = `${neuralVoice}_${pitchHz}_${ratePercent}_${text.trim().slice(0, 100)}`;
   if (audioBufferMemoryCache.has(cacheKey)) {
     return audioBufferMemoryCache.get(cacheKey);
   }
@@ -2100,9 +2141,9 @@ async function fetchAndDecodeTTSAudio(text, lang = 'vi') {
   if (!audioCtx) return null;
 
   const candidateUrls = [
-    `/api/tts?text=${encodeURIComponent(text)}&lang=${encodeURIComponent(lang)}`,
-    `http://127.0.0.1:3001/api/tts?text=${encodeURIComponent(text)}&lang=${encodeURIComponent(lang)}`,
-    `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(lang)}&q=${encodeURIComponent(text.slice(0, 200))}`
+    `/api/tts?text=${encodeURIComponent(text)}&voice=${encodeURIComponent(neuralVoice)}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(pitchHz)}&rate=${encodeURIComponent(ratePercent)}&lang=${encodeURIComponent(shortLang)}`,
+    `http://127.0.0.1:3001/api/tts?text=${encodeURIComponent(text)}&voice=${encodeURIComponent(neuralVoice)}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(pitchHz)}&rate=${encodeURIComponent(ratePercent)}&lang=${encodeURIComponent(shortLang)}`,
+    `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(shortLang)}&q=${encodeURIComponent(text.slice(0, 200))}`
   ];
 
   for (const url of candidateUrls) {
@@ -2113,7 +2154,7 @@ async function fetchAndDecodeTTSAudio(text, lang = 'vi') {
         if (arrayBuf && arrayBuf.byteLength > 100) {
           const audioBuffer = await audioCtx.decodeAudioData(arrayBuf);
           if (audioBuffer) {
-            if (audioBufferMemoryCache.size > 120) {
+            if (audioBufferMemoryCache.size > 250) {
               const firstKey = audioBufferMemoryCache.keys().next().value;
               audioBufferMemoryCache.delete(firstKey);
             }
@@ -2347,12 +2388,25 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
         });
       }
     } catch (e) {
-      console.warn('ElevenLabs fetch error, falling back to Native Voice Synthesizer:', e);
+      console.warn('ElevenLabs fetch error, falling back to Microsoft Neural TTS:', e);
     }
   }
 
   // =========================================================================
-  // TIER 2: NATIVE WEB SPEECH API (GIỌNG NÓI CHUẨN TỪNG QUỐC GIA & GIỚI TÍNH)
+  // TIER 2: MICROSOFT AZURE NEURAL TTS (CHUẨN 100% NAM RA NAM, NỮ RA NỮ)
+  // =========================================================================
+  try {
+    const audioBuffer = await fetchAndDecodeTTSAudio(textToSpeak, voice);
+    if (audioBuffer) {
+      const success = await playAudioBufferWithDSP(audioBuffer, voice, effectiveVoiceVolume, requestedRate, onEnd, isTestingMode);
+      if (success) return true;
+    }
+  } catch (dspErr) {
+    console.warn('[voiceSyncService] Neural Voice synthesis error, fallback to WebSpeech:', dspErr);
+  }
+
+  // =========================================================================
+  // TIER 3: CLIENT WEB SPEECH API (Dự phòng khi hoàn toàn ngoại tuyến)
   // =========================================================================
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
     try {
@@ -2370,18 +2424,12 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
       const isMale = voice?.gender === 'Male' || voice?.gender === 'Nam';
       const voiceRate = voice?.rate || 1.05;
       const userRate = requestedRate !== undefined && !isNaN(requestedRate) ? Number(requestedRate) : 1.0;
-      utterance.rate = Math.max(0.85, Math.min(1.55, voiceRate * userRate));
-      
-      const targetPitch = voice?.pitch !== undefined ? Number(voice.pitch) : (isMale ? 0.72 : 1.18);
-      utterance.pitch = Math.max(0.50, Math.min(1.80, targetPitch));
+      utterance.rate = Math.max(0.9, Math.min(1.3, voiceRate * userRate));
       utterance.volume = effectiveVoiceVolume;
 
       const availableVoices = (preloadedVoices.length > 0 ? preloadedVoices : window.speechSynthesis.getVoices()) || [];
       if (availableVoices.length > 0) {
-        let matched = null;
-
-        // 1. Phân loại chuẩn xác theo mã ngôn ngữ & giới tính Nam/Nữ
-        matched = availableVoices.find(v => {
+        let matched = availableVoices.find(v => {
           const vLang = (v.lang || '').toLowerCase().replace('_', '-');
           const matchesLang = vLang.startsWith(shortLang) || vLang.includes(shortLang) || vLang === langCode.toLowerCase();
           const vName = (v.name || '').toLowerCase();
@@ -2389,24 +2437,17 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
             return matchesLang && (
               vName.includes('namminh') || vName.includes('male') || vName.includes('nam') ||
               vName.includes('david') || vName.includes('george') || vName.includes('james') ||
-              vName.includes('mark') || vName.includes('guy') || vName.includes('alex') ||
-              vName.includes('otoya') || vName.includes('kangkang') || vName.includes('thomas') ||
-              vName.includes('stefan') || vName.includes('jorge') || vName.includes('yuri') ||
-              vName.includes('cosimo') || vName.includes('diego') || vName.includes('enrique')
+              vName.includes('mark') || vName.includes('guy') || vName.includes('alex')
             );
           } else {
             return matchesLang && (
               vName.includes('hoaimy') || vName.includes('female') || vName.includes('nữ') ||
               vName.includes('linh') || vName.includes('mai') || vName.includes('zira') ||
-              vName.includes('samantha') || vName.includes('jenny') || vName.includes('aria') ||
-              vName.includes('kyoko') || vName.includes('tingting') || vName.includes('yuna') ||
-              vName.includes('amelie') || vName.includes('celine') || vName.includes('monica') ||
-              vName.includes('laura') || vName.includes('alice') || vName.includes('kanya')
+              vName.includes('samantha') || vName.includes('jenny')
             );
           }
         });
 
-        // 2. Tìm theo mã ngôn ngữ tương ứng nếu chưa khớp tên riêng giới tính
         if (!matched) {
           matched = availableVoices.find(v => {
             const vLang = (v.lang || '').toLowerCase().replace('_', '-');
@@ -2414,15 +2455,13 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
           });
         }
 
-        // 3. Fallback lấy giọng hệ thống khả dụng
-        if (!matched && availableVoices.length > 0) {
-          matched = availableVoices[0];
-        }
-
         if (matched) {
           utterance.voice = matched;
         }
       }
+
+      // Giữ pitch tự nhiên 1.0 tránh làm méo âm sắc giọng nói
+      utterance.pitch = 1.0;
 
       const playedSuccessfully = await new Promise((resolve) => {
         let hasEnded = false;
@@ -2455,21 +2494,8 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
         return true;
       }
     } catch (synthErr) {
-      console.warn('Native Web Speech API error, falling back to Acoustic DSP:', synthErr);
+      console.warn('Native Web Speech API error:', synthErr);
     }
-  }
-
-  // =========================================================================
-  // TIER 3: ACOUSTIC DSP SYNTHESIZER (Fallback Khi Trình Duyệt Không Có WebSpeech)
-  // =========================================================================
-  try {
-    const audioBuffer = await fetchAndDecodeTTSAudio(textToSpeak, shortLang);
-    if (audioBuffer) {
-      const success = await playAudioBufferWithDSP(audioBuffer, voice, effectiveVoiceVolume, requestedRate, onEnd, isTestingMode);
-      if (success) return true;
-    }
-  } catch (dspErr) {
-    console.warn('Acoustic DSP synthesis error:', dspErr);
   }
 
   if (onEnd) onEnd();

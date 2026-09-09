@@ -2,7 +2,16 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
 import { spawn } from 'child_process';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+let EdgeTTS = null;
+try {
+  const edgePkg = require('node-edge-tts');
+  EdgeTTS = edgePkg.EdgeTTS || edgePkg;
+} catch (e) {}
 
 // Sử dụng HTTP chuẩn cho local (localhost / 127.0.0.1) để TikTok LIVE Studio kết nối trực tiếp mượt mà 100% không bị chặn SSL
 const useHttpsEnv = process.env.VITE_USE_HTTPS === 'true';
@@ -47,6 +56,60 @@ export default defineConfig({
       name: 'local-vercel-api',
       configureServer(server) {
         server.middlewares.use(async (req, res, next) => {
+          if (req.url.startsWith('/api/tts')) {
+            const urlObj = new URL(req.url, 'http://localhost');
+            const text = (urlObj.searchParams.get('text') || '').trim();
+            const voice = (urlObj.searchParams.get('voice') || '').trim();
+            const gender = (urlObj.searchParams.get('gender') || '').trim();
+            const lang = (urlObj.searchParams.get('lang') || 'vi').trim();
+            const pitch = (urlObj.searchParams.get('pitch') || '+0Hz').trim();
+            const rate = (urlObj.searchParams.get('rate') || '+0%').trim();
+
+            if (text && EdgeTTS) {
+              let neuralVoice = voice;
+              if (!neuralVoice || !neuralVoice.includes('Neural')) {
+                const isMale = (gender || '').toLowerCase() === 'male' || (gender || '').toLowerCase() === 'nam';
+                const shortLang = (lang || 'vi').split('-')[0].toLowerCase();
+                if (shortLang === 'vi') neuralVoice = isMale ? 'vi-VN-NamMinhNeural' : 'vi-VN-HoaiMyNeural';
+                else if (shortLang === 'en') neuralVoice = isMale ? 'en-US-GuyNeural' : 'en-US-JennyNeural';
+                else if (shortLang === 'ja') neuralVoice = isMale ? 'ja-JP-KeitaNeural' : 'ja-JP-NanamiNeural';
+                else if (shortLang === 'zh') neuralVoice = isMale ? 'zh-CN-YunxiNeural' : 'zh-CN-XiaoxiaoNeural';
+                else if (shortLang === 'ko') neuralVoice = isMale ? 'ko-KR-InJoonNeural' : 'ko-KR-SunHiNeural';
+                else if (shortLang === 'fr') neuralVoice = isMale ? 'fr-FR-HenriNeural' : 'fr-FR-DeniseNeural';
+                else if (shortLang === 'de') neuralVoice = isMale ? 'de-DE-ConradNeural' : 'de-DE-KatjaNeural';
+                else if (shortLang === 'es') neuralVoice = isMale ? 'es-ES-AlvaroNeural' : 'es-ES-ElviraNeural';
+                else if (shortLang === 'ru') neuralVoice = isMale ? 'ru-RU-DmitryNeural' : 'ru-RU-SvetlanaNeural';
+                else if (shortLang === 'it') neuralVoice = isMale ? 'it-IT-DiegoNeural' : 'it-IT-ElsaNeural';
+                else if (shortLang === 'th') neuralVoice = isMale ? 'th-TH-NiwatNeural' : 'th-TH-PremwadeeNeural';
+                else neuralVoice = isMale ? 'vi-VN-NamMinhNeural' : 'vi-VN-HoaiMyNeural';
+              }
+
+              const tmpFile = path.resolve(os.tmpdir(), `tts_vite_${Date.now()}_${Math.random().toString(36).slice(2)}.mp3`);
+              try {
+                const tts = new EdgeTTS({
+                  voice: neuralVoice,
+                  lang: neuralVoice.split('-').slice(0, 2).join('-') || 'vi-VN',
+                  pitch,
+                  rate,
+                  outputFormat: 'audio-24khz-48kbitrate-mono-mp3'
+                });
+                await tts.ttsPromise(text, tmpFile);
+                if (fs.existsSync(tmpFile)) {
+                  const buf = fs.readFileSync(tmpFile);
+                  try { fs.unlinkSync(tmpFile); } catch (e) {}
+                  res.setHeader('Access-Control-Allow-Origin', '*');
+                  res.setHeader('Content-Type', 'audio/mpeg');
+                  res.setHeader('Cache-Control', 'public, max-age=86400');
+                  res.statusCode = 200;
+                  res.end(buf);
+                  return;
+                }
+              } catch (e) {
+                if (fs.existsSync(tmpFile)) try { fs.unlinkSync(tmpFile); } catch(err) {}
+              }
+            }
+          }
+
           if (req.url.startsWith('/uploads/')) {
             const cleanPath = req.url.split('?')[0];
             const filePath = path.resolve(__dirname, 'backend' + cleanPath);
