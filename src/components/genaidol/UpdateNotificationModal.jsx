@@ -2,11 +2,22 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.2.1';
-export const UPDATE_NOTES = [
-  "🎙️ Bổ Sung 40 Giọng Đọc Việt Nam Chuẩn Studio Cao Cấp: Đầy đủ 20 Giọng Nam & 20 Giọng Nữ (Biên tập viên VTV, MC Truyền hình, Giọng đọc thơ, Kể chuyện đêm khuya, Bán hàng TikTok Shop, Quảng cáo TVC, Video Viral, Truyền cảm hứng, Quý ông lịch lãm, Doanh nhân uy quyền, BLV Game PK bùng nổ, v.v.).",
-  "🔊 100% Giọng Đọc Đều Nghe Thử Được Tức Thì: Tích hợp mẫu thu âm Studio chính hãng ElevenLabs độc bản cho từng giọng, đảm bảo độ trễ 0ms, sắc thái sống động, chân thực, không bao giờ trùng lặp.",
-  "🇻🇳 Giọng Đọc Miễn Phí Hoài My & Hệ Thống 28 Giọng Quốc Tế: Tối ưu hoá toàn diện, bảo đảm phát âm chuẩn bản xứ, nhịp điệu mượt mà."
+export const APP_VERSION = '2.2.2';
+export const RELEASE_DATE = '09/09/2026';
+
+export const CHANGELOG = [
+  {
+    title: '🇻🇳 Bộ Lọc Giọng Việt Nam 41 Giọng Đọc & Giọng Quốc Tế 28 Giọng Chuyên Nghiệp',
+    description: 'Bổ sung đầy đủ 2 Tab chính: Giọng Việt Nam (41 Giọng Đọc) và Giọng Quốc Tế (28 Giọng Quốc Tế). Tách riêng Giọng Nữ (21), Giọng Nam (20), Giọng Trẻ Gen Z, MC & Biên Tập Viên VTV, Bán Hàng & Chốt Đơn TVC, BLV Game PK & Minigame, Doanh Nhân / Quý Bà / Cao Tuổi.'
+  },
+  {
+    title: '🔊 100% Giọng Việt Nam Nghe Thử Bằng Tiếng Việt Cảm Xúc',
+    description: 'Tất cả các giọng Việt Nam khi bấm Nghe Thử được phát âm chuẩn xác 100% bằng tiếng Việt với các câu thoại phong cách chuyên nghiệp (BTV, MC, Bán hàng, BLV, Tâm sự), tuyệt đối không đọc tiếng Anh.'
+  },
+  {
+    title: '🔍 Thanh Tìm Kiếm Giọng Nhanh & Giao Diện Pro Studio',
+    description: 'Tích hợp ô tìm kiếm tức thì theo tên giọng, phong cách, thể loại kèm các nút gán BLV / Trợ Lý / Idol trực tiếp trên giao diện.'
+  }
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

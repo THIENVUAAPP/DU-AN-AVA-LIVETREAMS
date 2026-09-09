@@ -191,28 +191,23 @@ export default function EventVoiceTester({
 
   const isDark = theme === 'dark';
 
-  const femaleProVoices = ELEVENLABS_VOICES.filter(v => v.gender === 'Female' && v.lang === 'vi-VN');
-  const maleProVoices = ELEVENLABS_VOICES.filter(v => v.gender === 'Male' && v.lang === 'vi-VN');
-  const intlVoices = ELEVENLABS_VOICES.filter(v => v.lang !== 'vi-VN');
+  const femaleVnVoices = ALL_SYSTEM_VOICES.filter(v => (v.gender === 'Female' || v.gender === 'Nữ') && (v.region === 'vi' || v.lang === 'vi-VN' || v.id?.startsWith('vn_') || v.id === 'free_vi_female'));
+  const maleVnVoices = ALL_SYSTEM_VOICES.filter(v => (v.gender === 'Male' || v.gender === 'Nam') && (v.region === 'vi' || v.lang === 'vi-VN' || v.id?.startsWith('vn_') || v.id === 'el_adam'));
+  const intlVoices = ALL_SYSTEM_VOICES.filter(v => v.region !== 'vi' && v.lang !== 'vi-VN' && !v.id?.startsWith('vn_') && v.id !== 'free_vi_female' && v.id !== 'el_adam');
 
   const renderVoiceOptions = () => (
     <>
-      <optgroup label="🇻🇳 Giọng Đọc Tiếng Việt">
-        {FREE_VOICES.map(v => (
-          <option key={v.id} value={v.id}>🎤 {v.name.replace(/ 🇻🇳/g, '')}</option>
+      <optgroup label="🇻🇳 Giọng Nữ Việt Nam (21 Giọng)">
+        {femaleVnVoices.map(v => (
+          <option key={v.id} value={v.id}>♀ {v.name.replace(/ 💎| 🇻🇳/g, '')}</option>
         ))}
       </optgroup>
-      <optgroup label="💎 Giọng Nữ Pro (ElevenLabs & MiniMax)">
-        {femaleProVoices.map(v => (
-          <option key={v.id} value={v.id}>{v.icon} {v.name.replace(/ 💎| ⚡/g, '')}</option>
+      <optgroup label="🇻🇳 Giọng Nam Việt Nam (20 Giọng)">
+        {maleVnVoices.map(v => (
+          <option key={v.id} value={v.id}>♂ {v.name.replace(/ 💎| 🇻🇳/g, '')}</option>
         ))}
       </optgroup>
-      <optgroup label="💎 Giọng Nam Pro (ElevenLabs & MiniMax)">
-        {maleProVoices.map(v => (
-          <option key={v.id} value={v.id}>{v.icon} {v.name.replace(/ 💎| ⚡/g, '')}</option>
-        ))}
-      </optgroup>
-      <optgroup label="🌍 Giọng Quốc Tế">
+      <optgroup label="🌐 Giọng Đọc Quốc Tế (28 Giọng)">
         {intlVoices.map(v => (
           <option key={v.id} value={v.id}>{v.name.replace(/ 💎| ⚡/g, '')}</option>
         ))}

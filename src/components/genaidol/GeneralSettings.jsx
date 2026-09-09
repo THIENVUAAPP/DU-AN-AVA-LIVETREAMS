@@ -1621,6 +1621,8 @@ IDOL MỈM CƯỜI + GESTURE
   const renderVoiceTable = (voices, currentFilter, selectedId, onSelect, roleType) => {
     const q = voiceSearchQuery.trim().toLowerCase();
     const filtered = voices.filter(v => {
+      const isVn = v.region === 'vi' || v.id === 'free_vi_female' || v.id?.startsWith('vn_') || v.id === 'el_adam';
+
       // 1. Keyword search filter
       if (q) {
         const matchName = (v.name || '').toLowerCase().includes(q);
@@ -1631,14 +1633,23 @@ IDOL MỈM CƯỜI + GESTURE
       }
 
       // 2. Category / Region / Gender filter
-      if (currentFilter === 'male') return v.gender === 'Male' || v.gender === 'Nam';
+      if (currentFilter === 'vn_all') return isVn;
+      if (currentFilter === 'vn_female') return isVn && (v.gender === 'Female' || v.gender === 'Nữ');
+      if (currentFilter === 'vn_male') return isVn && (v.gender === 'Male' || v.gender === 'Nam');
+      if (currentFilter === 'vn_young') return isVn && (v.ageGroup === 'young' || v.styleCategory === 'idol_genz');
+      if (currentFilter === 'vn_mc') return isVn && v.styleCategory === 'mc_btv';
+      if (currentFilter === 'vn_sales') return isVn && v.styleCategory === 'banhang';
+      if (currentFilter === 'vn_game') return isVn && v.styleCategory === 'blv_game';
+      if (currentFilter === 'vn_mature') return isVn && (v.ageGroup === 'mature' || v.ageGroup === 'middle' || v.styleCategory === 'doanhnhan');
       if (currentFilter === 'female') return v.gender === 'Female' || v.gender === 'Nữ';
-      if (currentFilter === 'vi') return v.region === 'vi' || v.id === 'free_vi_female' || (v.lang && v.lang.startsWith('vi'));
+      if (currentFilter === 'male') return v.gender === 'Male' || v.gender === 'Nam';
+      if (currentFilter === 'vi') return isVn;
       if (currentFilter === 'pro') return v.tier === 'pro';
-      if (currentFilter === 'us_uk') return v.region === 'us_uk';
-      if (currentFilter === 'eu') return v.region === 'eu';
-      if (currentFilter === 'latam') return v.region === 'latam';
-      if (currentFilter === 'asia') return v.region === 'asia';
+      if (currentFilter === 'free') return v.tier === 'free' || v.id === 'free_vi_female';
+      if (currentFilter === 'us_uk') return !isVn && v.region === 'us_uk';
+      if (currentFilter === 'eu') return !isVn && v.region === 'eu';
+      if (currentFilter === 'latam') return !isVn && v.region === 'latam';
+      if (currentFilter === 'asia') return !isVn && v.region === 'asia';
       return true;
     });
 
@@ -1650,10 +1661,10 @@ IDOL MỈM CƯỜI + GESTURE
               <tr>
                 <th className="px-3 py-2.5 w-12 text-center">#</th>
                 <th className="px-4 py-2.5">Tên Giọng Đọc AI</th>
-                <th className="px-3 py-2.5">Thể Loại / Quốc Gia</th>
+                <th className="px-3 py-2.5">Thể Loại / Phong Cách</th>
                 <th className="px-3 py-2.5 w-24 text-center">Giới Tính</th>
                 <th className="px-3 py-2.5 w-32 text-center">Nền Tảng</th>
-                <th className="px-3 py-2.5 w-28 text-center">Nghe thử</th>
+                <th className="px-3 py-2.5 w-32 text-center">Nghe Thử</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -1667,9 +1678,9 @@ IDOL MỈM CƯỜI + GESTURE
                 filtered.map((v, i) => {
                   const isSelected = selectedId === v.id;
                   const isFree = v.tier === 'free' || v.provider === 'system';
-                  const isMiniMax = v.provider === 'minimax';
                   const isFemale = v.gender === 'Female' || v.gender === 'Nữ';
                   const isPlaying = previewingVoiceId === v.id;
+                  const isVn = v.region === 'vi' || v.id === 'free_vi_female' || v.id?.startsWith('vn_') || v.id === 'el_adam';
 
                   return (
                     <tr 
@@ -1689,9 +1700,9 @@ IDOL MỈM CƯỜI + GESTURE
                           <span>{v.name}</span>
                           {isSelected && <CheckCircle2 size={16} className="text-emerald-300 shrink-0 inline ml-1" />}
                         </div>
-                        {v.desc && (
-                          <div className={`text-[11.5px] font-normal mt-0.5 line-clamp-1 ${isSelected ? 'text-blue-100' : 'text-gray-500'}`}>
-                            {v.desc}
+                        {v.sampleText && (
+                          <div className={`text-[11px] font-normal italic mt-0.5 line-clamp-1 ${isSelected ? 'text-blue-100' : 'text-gray-500'}`}>
+                            💬 "{v.sampleText}"
                           </div>
                         )}
                       </td>
@@ -1701,7 +1712,7 @@ IDOL MỈM CƯỜI + GESTURE
                             ? 'bg-white/20 text-white' 
                             : 'bg-gray-100 text-gray-700 border border-gray-200'
                         }`}>
-                          {v.category || (isMiniMax ? 'MiniMax AI' : isFree ? 'Chuẩn Tiếng Việt' : 'Pro ElevenLabs')}
+                          {v.category || (isVn ? 'Chuẩn Tiếng Việt' : 'Pro Global')}
                         </span>
                       </td>
                       <td className="px-3 py-2.5 text-center text-xs font-semibold">
@@ -1715,11 +1726,9 @@ IDOL MỈM CƯỜI + GESTURE
                             ? 'bg-white/30 text-white'
                             : isFree
                               ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                              : isMiniMax
-                                ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                                : 'bg-purple-100 text-purple-800 border border-purple-300'
+                              : 'bg-purple-100 text-purple-800 border border-purple-300'
                         }`}>
-                          {isFree ? '🇻🇳 Miễn Phí' : isMiniMax ? '⚡ MiniMax' : '💎 ElevenLabs'}
+                          {isFree ? '🇻🇳 Miễn Phí' : '💎 ElevenLabs'}
                         </span>
                       </td>
                       <td className="px-3 py-2.5 text-center">
@@ -1749,11 +1758,11 @@ IDOL MỈM CƯỜI + GESTURE
                             }
 
                             setPreviewingVoiceId(v.id);
-                            previewVoiceAudio({ ...v, volume: vol, rate, pitch }, null, true, () => {
+                            previewVoiceAudio({ ...v, volume: vol, rate, pitch, isTest: true }, null, () => {
                               setPreviewingVoiceId(null);
                             });
                           }}
-                          title={isPlaying ? "Dừng nghe thử" : "Bấm để nghe thử giọng này"}
+                          title={isPlaying ? "Dừng nghe thử" : "Bấm để nghe thử giọng này bằng tiếng Việt chuẩn"}
                           className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer active:scale-95 transition-all text-xs font-semibold ${
                             isPlaying
                               ? 'bg-amber-500 text-white animate-pulse shadow-md ring-2 ring-amber-300'
@@ -1763,7 +1772,7 @@ IDOL MỈM CƯỜI + GESTURE
                           }`}
                         >
                           <Volume2 size={15} className={isPlaying ? "animate-spin" : ""} />
-                          <span>{isPlaying ? 'Đang phát...' : 'Nghe thử'}</span>
+                          <span>{isPlaying ? 'Dừng' : (isVn ? '🔊 Thử Tiếng Việt' : '🔊 Nghe thử')}</span>
                         </button>
                       </td>
                     </tr>
@@ -1779,28 +1788,33 @@ IDOL MỈM CƯỜI + GESTURE
 
   const renderFilterButtons = (currentFilter, onFilterChange) => {
     const filters = [
-      { id: 'all', label: 'Tất cả' },
-      { id: 'female', label: '👩 Giọng Nữ' },
-      { id: 'male', label: '👨 Giọng Nam' },
-      { id: 'vi', label: '🇻🇳 Chuẩn VN (Hoài My)' },
-      { id: 'pro', label: '💎 Pro (ElevenLabs & MiniMax)' },
-      { id: 'us_uk', label: '🇺🇸 🇬🇧 Bắc Mỹ & UK' },
+      { id: 'all', label: '🌟 Tất cả (69 Giọng)' },
+      { id: 'vn_all', label: '🇻🇳 Tất Cả VN (41)' },
+      { id: 'vn_female', label: '👩 Nữ Việt Nam (21)' },
+      { id: 'vn_male', label: '👨 Nam Việt Nam (20)' },
+      { id: 'vn_young', label: '✨ Giọng Trẻ Gen Z' },
+      { id: 'vn_mc', label: '🎙️ MC & BTV VTV' },
+      { id: 'vn_sales', label: '🛍️ Bán Hàng & Chốt Đơn' },
+      { id: 'vn_game', label: '🔥 BLV Game & PK' },
+      { id: 'vn_mature', label: '👑 Doanh Nhân / Cao Tuổi' },
+      { id: 'free', label: '🆓 Miễn Phí (Hoài My)' },
+      { id: 'us_uk', label: '🇺🇸 🇬🇧 US / UK' },
       { id: 'eu', label: '🇪🇺 Châu Âu' },
-      { id: 'latam', label: '🌎 Nam Mỹ' },
-      { id: 'asia', label: '🌏 Châu Á' }
+      { id: 'asia', label: '🌏 Châu Á (Trung/Nhật/Hàn...)' },
+      { id: 'latam', label: '🌎 Mỹ Latin' }
     ];
 
     return (
       <div className="space-y-2.5">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           {filters.map(f => (
             <button
               key={f.id}
               type="button"
               onClick={() => onFilterChange(f.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 currentFilter === f.id
-                  ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-300'
+                  ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-300 font-black'
                   : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300'
               }`}
             >
@@ -1812,7 +1826,7 @@ IDOL MỈM CƯỜI + GESTURE
           <Search size={15} className="absolute left-3 top-2.5 text-gray-400" />
           <input
             type="text"
-            placeholder="🔍 Tìm nhanh theo tên giọng, quốc gia, thể loại..."
+            placeholder="🔍 Tìm nhanh theo tên giọng đọc, thể loại, phong cách (VD: VTV, Chốt đơn, BLV, Tâm sự, Hoài My...)..."
             value={voiceSearchQuery}
             onChange={(e) => setVoiceSearchQuery(e.target.value)}
             className="w-full pl-9 pr-3 py-1.5 text-xs bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 shadow-2xs"
@@ -2268,27 +2282,16 @@ IDOL MỈM CƯỜI + GESTURE
               </div>
 
               {/* Bảng Giọng nói Game */}
-              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden flex flex-col h-[400px]">
-                <div className="px-4 py-3 border-b border-gray-300 bg-white">
-                  <h3 className="font-bold text-gray-800 text-sm mb-2">Chọn Giọng ElevenLabs Cho Bình Luận Viên Game</h3>
-                  <div className="flex items-center gap-6">
-                    <span className="text-sm font-semibold text-gray-700">Lọc theo:</span>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="radio" checked={settings.gameVoiceFilter === 'all'} onChange={() => handleGameVoiceFilter('all')} className="w-4 h-4 text-purple-600" />
-                      <span className="text-sm font-medium text-gray-700">Tất cả</span>
-                    </label>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="radio" checked={settings.gameVoiceFilter === 'male'} onChange={() => handleGameVoiceFilter('male')} className="w-4 h-4 text-purple-600" />
-                      <span className="text-sm font-medium text-gray-700">Giọng Nam</span>
-                    </label>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="radio" checked={settings.gameVoiceFilter === 'female'} onChange={() => handleGameVoiceFilter('female')} className="w-4 h-4 text-purple-600" />
-                      <span className="text-sm font-medium text-gray-700">Giọng Nữ</span>
-                    </label>
-                  </div>
+              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden flex flex-col">
+                <div className="px-4 py-3 border-b border-gray-300 bg-white space-y-3">
+                  <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+                    <Volume2 size={16} className="text-purple-600" />
+                    Chọn Giọng Cho Bình Luận Viên Game & PK Trận Đấu
+                  </h3>
+                  {renderFilterButtons(settings.gameVoiceFilter, handleGameVoiceFilter)}
                 </div>
                 
-                <div className="flex-1 overflow-auto p-4">
+                <div className="p-4">
                   {renderVoiceTable([...settings.customVoices, ...GAME_VOICES], settings.gameVoiceFilter, settings.gameVoiceId, (id) => setSettings(prev => ({...prev, gameVoiceId: id})), 'game')}
                 </div>
 
