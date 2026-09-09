@@ -14,7 +14,9 @@ import {
   isVoiceFavorite,
   getFavoriteVoiceIds,
   getDualVoiceConfig,
-  polishAndOptimizeScript
+  polishAndOptimizeScript,
+  formatTextForRegionalSpeech,
+  prefetchTTSAudio
 } from '../../utils/voiceSyncService';
 
 export const SPEED_OPTIONS = [
@@ -177,6 +179,17 @@ export default function EventVoiceTester({
       if (queueTimeoutRef.current) clearTimeout(queueTimeoutRef.current);
       
       const newVoiceObj = ALL_SYSTEM_VOICES.find(v => v.id === voiceId) || { id: voiceId, lang: 'vi-VN', gender: 'Female' };
+      const curIdx = currentSentenceIdxRef.current;
+      const sentences = sentencesRef.current;
+      
+      // Lookahead prefetch tức thì cho câu hiện tại và câu kế tiếp với giọng mới
+      if (sentences && sentences[curIdx]) {
+        prefetchTTSAudio(sentences[curIdx], newVoiceObj, { rate: speedRef.current });
+      }
+      if (sentences && sentences[curIdx + 1]) {
+        prefetchTTSAudio(sentences[curIdx + 1], newVoiceObj, { rate: speedRef.current });
+      }
+
       setTimeout(() => {
         if (isPlayingRef.current) {
           playSentenceAtIndex(currentSentenceIdxRef.current, newVoiceObj);
@@ -259,6 +272,14 @@ export default function EventVoiceTester({
          ALL_SYSTEM_VOICES.find(v => v.id === 'free_vi_female')) || { id: 'free_vi_female', lang: 'vi-VN', provider: 'system', gender: 'Female' };
     }
 
+    // 🚀 LOOKAHEAD PIPELINE: Ngay khi câu hiện tại bắt đầu phát, tải trước & giải mã câu N+1 và N+2 vào RAM
+    if (index + 1 < sentences.length) {
+      prefetchTTSAudio(sentences[index + 1], voiceObj, { rate: speedRef.current });
+    }
+    if (index + 2 < sentences.length) {
+      prefetchTTSAudio(sentences[index + 2], voiceObj, { rate: speedRef.current });
+    }
+
     previewVoiceAudio(
       voiceObj,
       sentenceText,
@@ -269,10 +290,17 @@ export default function EventVoiceTester({
         rate: speedRef.current,
         onEnd: () => {
           if (!isPlayingRef.current) return;
-          const pauseMs = Math.max(0, Math.round((pauseDurationRef.current !== undefined ? pauseDurationRef.current : 0.1) * 1000));
-          queueTimeoutRef.current = setTimeout(() => {
-            playSentenceAtIndex(index + 1);
-          }, pauseMs);
+          const pauseSec = pauseDurationRef.current !== undefined ? Number(pauseDurationRef.current) : 0.1;
+          
+          // Nếu chọn 0.0s (Liền mạch): Phát câu tiếp theo NGAY LẬP TỨC 0ms không qua bất kỳ timer delay nào!
+          if (pauseSec <= 0.02) {
+            playSentenceAtIndex(index + 1, voiceObj);
+          } else {
+            const pauseMs = Math.max(0, Math.round(pauseSec * 1000));
+            queueTimeoutRef.current = setTimeout(() => {
+              playSentenceAtIndex(index + 1, voiceObj);
+            }, pauseMs);
+          }
         }
       }
     );
@@ -324,7 +352,14 @@ export default function EventVoiceTester({
     setCurrentSentenceIdx(0);
     currentSentenceIdxRef.current = 0;
 
-    playSentenceAtIndex(0);
+    const curVoiceId = selectedVoiceRef.current;
+    const voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === curVoiceId) || { id: curVoiceId, lang: 'vi-VN', gender: 'Female' };
+
+    // Tải trước câu 0 và câu 1
+    if (sentences[0]) prefetchTTSAudio(sentences[0], voiceObj, { rate: speedRef.current });
+    if (sentences[1]) prefetchTTSAudio(sentences[1], voiceObj, { rate: speedRef.current });
+
+    playSentenceAtIndex(0, voiceObj);
   };
 
   const isDark = theme === 'dark';

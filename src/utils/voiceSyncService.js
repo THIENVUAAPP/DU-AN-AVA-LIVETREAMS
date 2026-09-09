@@ -29,15 +29,15 @@ export const VIETNAMESE_FEMALE_VOICES = [
     ageGroup: 'middle',
     styleCategory: 'mc_btv',
     category: 'BTV Thời Sự • Miền Bắc',
-    pitch: 1.04,
-    rate: 0.98,
+    pitch: 1.02,
+    rate: 0.99,
     recommendedFor: 'both',
     desc: 'Giọng nữ chuẩn biên tập viên truyền hình quốc gia Hà Nội, đĩnh đạc, phát âm chuẩn mực, sang trọng.',
     sampleText: 'Kính chào quý vị và các bạn! Bản tin thời sự trực tiếp trên sóng livestream xin được phép bắt đầu với những tin tức quan trọng nhất.',
     edgePitch: '+2%',
     edgeRate: '-1%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { lowGain: 1.2, midFreq: 1100, midGain: 2.2, presenceFreq: 3500, presenceGain: 3.8, highGain: 2.0, reverb: 0.05, reverbDecay: 0.35, compressor: { threshold: -20, ratio: 4, attack: 0.008, release: 0.2 } }
+    dspProfile: { lowGain: 1.8, midFreq: 1100, midGain: 2.4, presenceFreq: 3500, presenceGain: 3.8, highGain: 2.2, reverb: 0.05, reverbDecay: 0.35, compressor: { threshold: -20, ratio: 3.8, attack: 0.008, release: 0.2 } }
   },
   {
     id: 'vn_nu_mctruyenhinh',
@@ -52,15 +52,15 @@ export const VIETNAMESE_FEMALE_VOICES = [
     ageGroup: 'young',
     styleCategory: 'mc_btv',
     category: 'MC Sự Kiện • Miền Bắc',
-    pitch: 1.08,
-    rate: 1.02,
+    pitch: 1.03,
+    rate: 1.01,
     recommendedFor: 'both',
     desc: 'Giọng nữ dẫn chương trình truyền hình sang trọng, cuốn hút, phát âm tròn vành rõ chữ.',
     sampleText: 'Chào mừng toàn thể quý khán giả đang theo dõi phiên phát sóng trực tiếp đặc biệt và ngập tràn ưu đãi ngày hôm nay!',
-    edgePitch: '+6%',
-    edgeRate: '+3%',
+    edgePitch: '+3%',
+    edgeRate: '+1%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { lowGain: -0.5, midFreq: 1250, midGain: 2.5, presenceFreq: 3900, presenceGain: 4.5, highGain: 3.2, reverb: 0.06, reverbDecay: 0.38, compressor: { threshold: -18, ratio: 3.5, attack: 0.01, release: 0.25 } }
+    dspProfile: { lowGain: 1.0, midFreq: 1250, midGain: 2.5, presenceFreq: 3700, presenceGain: 4.2, highGain: 2.8, reverb: 0.05, reverbDecay: 0.36, compressor: { threshold: -18, ratio: 3.5, attack: 0.01, release: 0.22 } }
   },
   {
     id: 'vn_nu_kechuyen',
@@ -75,15 +75,15 @@ export const VIETNAMESE_FEMALE_VOICES = [
     ageGroup: 'young',
     styleCategory: 'tam_su',
     category: 'Kể Chuyện & Podcast • Miền Bắc',
-    pitch: 0.96,
-    rate: 0.95,
+    pitch: 0.98,
+    rate: 0.96,
     recommendedFor: 'idol',
     desc: 'Giọng nữ truyền cảm, ấm áp, sâu lắng, thích hợp đọc sách, podcast tâm sự đêm muộn.',
     sampleText: 'Đêm đã về khuya, hãy cùng lắng đọng tâm hồn và thưởng thức những câu chuyện tuyệt vời lắng đọng cảm xúc nhé.',
-    edgePitch: '-6%',
-    edgeRate: '-5%',
+    edgePitch: '-3%',
+    edgeRate: '-3%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { lowGain: 2.8, midFreq: 950, midGain: 2.0, presenceFreq: 3000, presenceGain: 2.5, highGain: 1.0, reverb: 0.08, reverbDecay: 0.45, compressor: { threshold: -14, ratio: 2.5, attack: 0.03, release: 0.4 } }
+    dspProfile: { lowGain: 3.2, midFreq: 980, midGain: 2.4, presenceFreq: 3100, presenceGain: 2.8, highGain: 1.5, reverb: 0.07, reverbDecay: 0.42, compressor: { threshold: -15, ratio: 2.8, attack: 0.025, release: 0.35 } }
   },
   {
     id: 'vn_nu_banhang',
@@ -98,15 +98,15 @@ export const VIETNAMESE_FEMALE_VOICES = [
     ageGroup: 'young',
     styleCategory: 'banhang',
     category: 'Bán Hàng Sắc Bén • Miền Bắc',
-    pitch: 1.14,
-    rate: 1.06,
+    pitch: 1.04,
+    rate: 1.03,
     recommendedFor: 'manager',
     desc: 'Giọng nữ chốt đơn livestream TikTok Shop tốc độ, năng động, thúc đẩy mua hàng dứt khoát.',
     sampleText: 'Duy nhất trong phiên live hôm nay, sản phẩm đang có mã giảm giá 50k trong giỏ hàng, các bạn đặt ngay kẻo lỡ nhé!',
-    edgePitch: '+12%',
-    edgeRate: '+8%',
+    edgePitch: '+4%',
+    edgeRate: '+4%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { lowGain: -1.0, midFreq: 1400, midGain: 2.8, presenceFreq: 4000, presenceGain: 5.5, highGain: 3.5, reverb: 0.03, reverbDecay: 0.25, compressor: { threshold: -22, ratio: 5, attack: 0.004, release: 0.15 } }
+    dspProfile: { lowGain: 0.8, midFreq: 1350, midGain: 2.6, presenceFreq: 3800, presenceGain: 4.8, highGain: 3.0, reverb: 0.03, reverbDecay: 0.25, compressor: { threshold: -21, ratio: 4.5, attack: 0.005, release: 0.16 } }
   },
   {
     id: 'vn_nu_quangcao_tvc',
@@ -121,15 +121,15 @@ export const VIETNAMESE_FEMALE_VOICES = [
     ageGroup: 'young',
     styleCategory: 'banhang',
     category: 'TVC Quảng Cáo • Miền Bắc',
-    pitch: 1.10,
-    rate: 1.04,
+    pitch: 1.03,
+    rate: 1.02,
     recommendedFor: 'manager',
     desc: 'Giọng nữ quảng cáo TVC chuyên nghiệp, cuốn hút, tạo cảm giác cấp bách chốt sale.',
     sampleText: 'Cơ hội săn sale vàng chỉ còn trong ít phút, hãy nhanh tay bấm vào giỏ hàng chốt đơn ngay kẻo hết quà tặng!',
-    edgePitch: '+8%',
-    edgeRate: '+5%',
+    edgePitch: '+3%',
+    edgeRate: '+2%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { lowGain: 0.5, midFreq: 1200, midGain: 2.5, presenceFreq: 4100, presenceGain: 4.8, highGain: 3.0, reverb: 0.05, reverbDecay: 0.32, compressor: { threshold: -20, ratio: 4.5, attack: 0.006, release: 0.18 } }
+    dspProfile: { lowGain: 1.2, midFreq: 1200, midGain: 2.5, presenceFreq: 3900, presenceGain: 4.5, highGain: 2.8, reverb: 0.05, reverbDecay: 0.32, compressor: { threshold: -19, ratio: 4.0, attack: 0.007, release: 0.18 } }
   },
   {
     id: 'vn_nu_hue_diudang',
@@ -144,15 +144,15 @@ export const VIETNAMESE_FEMALE_VOICES = [
     ageGroup: 'young',
     styleCategory: 'tam_su',
     category: 'Giọng Xứ Huế • Miền Trung',
-    pitch: 1.06,
-    rate: 0.96,
+    pitch: 1.02,
+    rate: 0.98,
     recommendedFor: 'both',
     desc: 'Giọng nữ xứ Huế đằm thắm, ngọt ngào, e ấp, âm điệu da diết chạm đến trái tim người nghe.',
     sampleText: 'Dạ em xin kính chào quý anh chị nì! Áo dài lụa thêu tay xứ Huế mười phân vẹn mười đây ạ, mời anh chị ghé xem ủng hộ em hí!',
-    edgePitch: '+4%',
-    edgeRate: '-4%',
+    edgePitch: '+2%',
+    edgeRate: '-2%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { lowGain: 1.0, midFreq: 1180, midGain: 2.6, presenceFreq: 3600, presenceGain: 4.2, highGain: 3.0, reverb: 0.07, reverbDecay: 0.42, compressor: { threshold: -16, ratio: 3.2, attack: 0.015, release: 0.3 } }
+    dspProfile: { lowGain: 2.0, midFreq: 1150, midGain: 2.6, presenceFreq: 3500, presenceGain: 4.0, highGain: 2.6, reverb: 0.06, reverbDecay: 0.38, compressor: { threshold: -16, ratio: 3.0, attack: 0.012, release: 0.28 } }
   },
   {
     id: 'vn_nu_danang_duyendang',
@@ -167,15 +167,15 @@ export const VIETNAMESE_FEMALE_VOICES = [
     ageGroup: 'young',
     styleCategory: 'idol_genz',
     category: 'Giọng Đà Nẵng • Miền Trung',
-    pitch: 1.10,
-    rate: 1.03,
+    pitch: 1.03,
+    rate: 1.01,
     recommendedFor: 'both',
     desc: 'Giọng nữ Đà Nẵng trong sáng, tươi tắn, gần gũi và mến khách.',
     sampleText: 'Dạ em chào mọi người nghe! Hôm nay shop em có chương trình ưu đãi cực khủng cho khách đặt hàng sớm nhất nè!',
-    edgePitch: '+8%',
-    edgeRate: '+4%',
+    edgePitch: '+3%',
+    edgeRate: '+1%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { lowGain: -0.5, midFreq: 1300, midGain: 2.6, presenceFreq: 3800, presenceGain: 4.6, highGain: 3.5, reverb: 0.05, reverbDecay: 0.35, compressor: { threshold: -19, ratio: 3.8, attack: 0.008, release: 0.2 } }
+    dspProfile: { lowGain: 1.0, midFreq: 1250, midGain: 2.5, presenceFreq: 3650, presenceGain: 4.2, highGain: 3.0, reverb: 0.05, reverbDecay: 0.34, compressor: { threshold: -18, ratio: 3.5, attack: 0.009, release: 0.2 } }
   },
   {
     id: 'vn_nu_nghean_damda',
@@ -190,15 +190,15 @@ export const VIETNAMESE_FEMALE_VOICES = [
     ageGroup: 'young',
     styleCategory: 'tam_su',
     category: 'Giọng Nghệ Tĩnh • Miền Trung',
-    pitch: 0.98,
-    rate: 1.01,
+    pitch: 0.99,
+    rate: 1.00,
     recommendedFor: 'both',
     desc: 'Giọng nữ miền Trung Nghệ Tĩnh mộc mạc, chân thành, sâu lắng và giàu nghĩa tình.',
     sampleText: 'Em chào bà con cô bác đang xem live nha, đặc sản quê nhà sạch sẽ tinh tươm gửi trao tận tay mọi người đây ạ!',
-    edgePitch: '-2%',
-    edgeRate: '+2%',
+    edgePitch: '-1%',
+    edgeRate: '+1%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { lowGain: 1.5, midFreq: 1150, midGain: 2.4, presenceFreq: 3500, presenceGain: 3.8, highGain: 2.2, reverb: 0.05, reverbDecay: 0.35, compressor: { threshold: -17, ratio: 3.4, attack: 0.012, release: 0.26 } }
+    dspProfile: { lowGain: 2.2, midFreq: 1100, midGain: 2.5, presenceFreq: 3450, presenceGain: 3.8, highGain: 2.2, reverb: 0.05, reverbDecay: 0.35, compressor: { threshold: -17, ratio: 3.4, attack: 0.012, release: 0.25 } }
   },
   {
     id: 'vn_nu_idol_live',
@@ -213,15 +213,15 @@ export const VIETNAMESE_FEMALE_VOICES = [
     ageGroup: 'young',
     styleCategory: 'idol_genz',
     category: 'Idol Sài Gòn • Miền Nam',
-    pitch: 1.14,
-    rate: 1.04,
+    pitch: 1.04,
+    rate: 1.02,
     recommendedFor: 'idol',
     desc: 'Giọng nữ Idol livestream Sài Gòn ngọt ngào, thời thượng, thu hút mọi ánh nhìn.',
     sampleText: 'Dạ em Ngọc Nhi xin chào cả nhà mình nha! Mọi người thả tim và chấm một cái vào phần bình luận để em thấy tương tác nè!',
-    edgePitch: '+12%',
-    edgeRate: '+5%',
+    edgePitch: '+4%',
+    edgeRate: '+2%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { lowGain: -1.5, midFreq: 1500, midGain: 3.0, presenceFreq: 4200, presenceGain: 5.8, highGain: 4.5, reverb: 0.06, reverbDecay: 0.36, compressor: { threshold: -21, ratio: 4.2, attack: 0.005, release: 0.15 } }
+    dspProfile: { lowGain: 0.6, midFreq: 1400, midGain: 2.8, presenceFreq: 3950, presenceGain: 4.8, highGain: 3.6, reverb: 0.05, reverbDecay: 0.34, compressor: { threshold: -19, ratio: 3.8, attack: 0.006, release: 0.17 } }
   },
   {
     id: 'vn_nu_koc_review',
@@ -236,15 +236,15 @@ export const VIETNAMESE_FEMALE_VOICES = [
     ageGroup: 'young',
     styleCategory: 'idol_genz',
     category: 'KOC Năng Động • Miền Nam',
-    pitch: 1.12,
-    rate: 1.05,
+    pitch: 1.03,
+    rate: 1.02,
     recommendedFor: 'both',
     desc: 'Giọng nữ KOC Sài Gòn bắt trend, nói chuyện có duyên, review sản phẩm cực kỳ chân thật.',
     sampleText: 'Món này cưng xỉu luôn mấy bà ơi! Chất lượng 10 điểm không có nhưng nha, bấm vô giỏ hàng hốt liền kẻo hết deal hời!',
-    edgePitch: '+10%',
-    edgeRate: '+7%',
+    edgePitch: '+3%',
+    edgeRate: '+3%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { lowGain: -0.8, midFreq: 1380, midGain: 2.8, presenceFreq: 3900, presenceGain: 4.8, highGain: 3.5, reverb: 0.04, reverbDecay: 0.30, compressor: { threshold: -20, ratio: 4.0, attack: 0.005, release: 0.16 } }
+    dspProfile: { lowGain: 0.8, midFreq: 1350, midGain: 2.6, presenceFreq: 3850, presenceGain: 4.5, highGain: 3.2, reverb: 0.04, reverbDecay: 0.30, compressor: { threshold: -19, ratio: 3.8, attack: 0.006, release: 0.18 } }
   },
   {
     id: 'vn_nu_mientay_giongia',
@@ -259,15 +259,15 @@ export const VIETNAMESE_FEMALE_VOICES = [
     ageGroup: 'young',
     styleCategory: 'sales_services',
     category: 'Giọng Sông Nước • Miền Tây',
-    pitch: 1.16,
-    rate: 1.05,
+    pitch: 1.04,
+    rate: 1.02,
     recommendedFor: 'both',
     desc: 'Giọng nữ miền Tây sông nước ngọt ngào, chất phác, vui tươi, nghe là thấy mến thương liền.',
     sampleText: 'Dạ em Út Mai chào bà con cô bác mình nghen! Trái cây vườn nhà em hái tươi rói luôn nè, bà con đặt liền tay em gửi hỏa tốc nghen!',
-    edgePitch: '+14%',
-    edgeRate: '+6%',
+    edgePitch: '+4%',
+    edgeRate: '+3%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { lowGain: -0.8, midFreq: 1350, midGain: 2.8, presenceFreq: 4000, presenceGain: 5.2, highGain: 3.8, reverb: 0.05, reverbDecay: 0.32, compressor: { threshold: -19, ratio: 3.8, attack: 0.007, release: 0.2 } }
+    dspProfile: { lowGain: 1.2, midFreq: 1300, midGain: 2.7, presenceFreq: 3800, presenceGain: 4.6, highGain: 3.2, reverb: 0.05, reverbDecay: 0.32, compressor: { threshold: -18, ratio: 3.6, attack: 0.008, release: 0.2 } }
   },
   {
     id: 'vn_nu_mientay_cantho',
@@ -282,15 +282,15 @@ export const VIETNAMESE_FEMALE_VOICES = [
     ageGroup: 'middle',
     styleCategory: 'sales_services',
     category: 'Sông Nước Cần Thơ • Miền Tây',
-    pitch: 1.04,
-    rate: 0.97,
+    pitch: 1.02,
+    rate: 0.98,
     recommendedFor: 'both',
     desc: 'Giọng nữ Cần Thơ đôn hậu, ngọt lịm như mía lùi, chuyên tư vấn đặc sản và nông sản miệt vườn.',
     sampleText: 'Dạ Cô Ba mến chào cả nhà mình nha! Bánh mứt kẹo dừa thơm ngon đặc sản miệt vườn bảo đảm ăn là ghiền nghen!',
-    edgePitch: '+3%',
-    edgeRate: '-3%',
+    edgePitch: '+2%',
+    edgeRate: '-2%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { lowGain: 1.5, midFreq: 1200, midGain: 2.5, presenceFreq: 3600, presenceGain: 4.2, highGain: 2.8, reverb: 0.06, reverbDecay: 0.38, compressor: { threshold: -18, ratio: 3.5, attack: 0.01, release: 0.24 } }
+    dspProfile: { lowGain: 2.0, midFreq: 1180, midGain: 2.5, presenceFreq: 3550, presenceGain: 4.0, highGain: 2.6, reverb: 0.06, reverbDecay: 0.36, compressor: { threshold: -17, ratio: 3.4, attack: 0.01, release: 0.24 } }
   },
   {
     id: 'vn_nu_quyco_doanhnhan',
@@ -305,15 +305,15 @@ export const VIETNAMESE_FEMALE_VOICES = [
     ageGroup: 'mature',
     styleCategory: 'doanhnhan',
     category: 'Quý Bà Doanh Nhân • Miền Bắc',
-    pitch: 0.94,
-    rate: 0.96,
+    pitch: 0.96,
+    rate: 0.97,
     recommendedFor: 'both',
     desc: 'Giọng nữ doanh nhân Hà Nội thành đạt, đĩnh đạc, bản lĩnh và đầy sức hút.',
     sampleText: 'Chất lượng tạo nên đẳng cấp và uy tín bền vững. Chúng tôi luôn cam kết mang lại những giá trị hoàn hảo nhất cho khách hàng.',
-    edgePitch: '-8%',
-    edgeRate: '-4%',
+    edgePitch: '-4%',
+    edgeRate: '-3%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { lowGain: 3.0, midFreq: 1050, midGain: 2.5, presenceFreq: 3300, presenceGain: 3.5, highGain: 1.8, reverb: 0.06, reverbDecay: 0.40, compressor: { threshold: -18, ratio: 3.8, attack: 0.01, release: 0.25 } }
+    dspProfile: { lowGain: 3.2, midFreq: 1050, midGain: 2.6, presenceFreq: 3300, presenceGain: 3.6, highGain: 1.8, reverb: 0.06, reverbDecay: 0.40, compressor: { threshold: -18, ratio: 3.8, attack: 0.01, release: 0.25 } }
   },
   {
     id: 'vn_nu_ngotngao',
@@ -328,15 +328,15 @@ export const VIETNAMESE_FEMALE_VOICES = [
     ageGroup: 'young',
     styleCategory: 'idol_genz',
     category: 'Kẹo Ngọt • Miền Nam',
-    pitch: 1.18,
-    rate: 1.03,
+    pitch: 1.05,
+    rate: 1.02,
     recommendedFor: 'idol',
     desc: 'Giọng nữ trẻ trung ngọt ngào, dịu dàng, giao lưu trò chuyện thân thiết.',
     sampleText: 'Dạ em chào các anh chị em thân yêu đang xem live nha, mọi người thả tim và tương tác cùng em nhé!',
-    edgePitch: '+15%',
-    edgeRate: '+4%',
+    edgePitch: '+5%',
+    edgeRate: '+2%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { lowGain: -2.0, midFreq: 1550, midGain: 3.0, presenceFreq: 4300, presenceGain: 6.0, highGain: 4.8, reverb: 0.06, reverbDecay: 0.36, compressor: { threshold: -20, ratio: 3.8, attack: 0.005, release: 0.16 } }
+    dspProfile: { lowGain: 0.4, midFreq: 1450, midGain: 2.8, presenceFreq: 4050, presenceGain: 5.0, highGain: 3.8, reverb: 0.05, reverbDecay: 0.34, compressor: { threshold: -19, ratio: 3.6, attack: 0.006, release: 0.17 } }
   },
   {
     id: 'vn_nu_asmr_thitham',
@@ -351,15 +351,15 @@ export const VIETNAMESE_FEMALE_VOICES = [
     ageGroup: 'young',
     styleCategory: 'tam_su',
     category: 'ASMR & Thư Giãn • Miền Bắc',
-    pitch: 0.96,
-    rate: 0.92,
+    pitch: 0.98,
+    rate: 0.94,
     recommendedFor: 'idol',
     desc: 'Giọng nữ thì thầm êm ái, mang lại cảm giác thư thái dễ chịu cho giấc ngủ.',
     sampleText: 'Hãy nhắm mắt lại, thả lỏng toàn bộ cơ thể và tận hưởng những phút giây bình yên sâu lắng nhất nhé...',
-    edgePitch: '-4%',
-    edgeRate: '-8%',
+    edgePitch: '-2%',
+    edgeRate: '-6%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { lowGain: 2.5, midFreq: 950, midGain: 1.8, presenceFreq: 3100, presenceGain: 2.2, highGain: 1.5, reverb: 0.09, reverbDecay: 0.48, compressor: { threshold: -12, ratio: 2.0, attack: 0.05, release: 0.5 } }
+    dspProfile: { lowGain: 2.8, midFreq: 960, midGain: 2.0, presenceFreq: 3100, presenceGain: 2.4, highGain: 1.6, reverb: 0.08, reverbDecay: 0.46, compressor: { threshold: -13, ratio: 2.2, attack: 0.04, release: 0.45 } }
   },
   {
     id: 'vn_nu_truyencamhung',
@@ -374,15 +374,15 @@ export const VIETNAMESE_FEMALE_VOICES = [
     ageGroup: 'young',
     styleCategory: 'truyencamhung',
     category: 'Truyền Cảm Hứng • Miền Bắc',
-    pitch: 1.06,
-    rate: 1.03,
+    pitch: 1.03,
+    rate: 1.02,
     recommendedFor: 'both',
     desc: 'Giọng nữ truyền cảm hứng mạnh mẽ, kích thích ý chí vươn lên và năng lượng tích cực.',
     sampleText: 'Mỗi ngày mới là một cơ hội để bạn bứt phá, nỗ lực hết mình và chạm tới đỉnh cao thành công rực rỡ!',
-    edgePitch: '+5%',
-    edgeRate: '+4%',
+    edgePitch: '+3%',
+    edgeRate: '+2%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { lowGain: 1.2, midFreq: 1150, midGain: 2.6, presenceFreq: 3500, presenceGain: 4.0, highGain: 2.5, reverb: 0.05, reverbDecay: 0.35, compressor: { threshold: -18, ratio: 3.5, attack: 0.01, release: 0.22 } }
+    dspProfile: { lowGain: 1.6, midFreq: 1150, midGain: 2.6, presenceFreq: 3500, presenceGain: 4.0, highGain: 2.5, reverb: 0.05, reverbDecay: 0.35, compressor: { threshold: -18, ratio: 3.5, attack: 0.01, release: 0.22 } }
   },
   {
     id: 'vn_nu_video_viral',
@@ -397,15 +397,15 @@ export const VIETNAMESE_FEMALE_VOICES = [
     ageGroup: 'young',
     styleCategory: 'idol_genz',
     category: 'Viral Review • Miền Nam',
-    pitch: 1.10,
-    rate: 1.05,
+    pitch: 1.04,
+    rate: 1.03,
     recommendedFor: 'both',
     desc: 'Giọng nữ review sản phẩm, video viral triệu view trên mạng xã hội.',
     sampleText: 'Review chân thật cho cả nhà đây! Sản phẩm hôm nay cực kỳ đỉnh, mọi người cùng xem ngay nhé!',
-    edgePitch: '+9%',
-    edgeRate: '+6%',
+    edgePitch: '+4%',
+    edgeRate: '+3%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { lowGain: -0.5, midFreq: 1300, midGain: 2.5, presenceFreq: 3600, presenceGain: 4.2, highGain: 3.0, reverb: 0.04, reverbDecay: 0.30, compressor: { threshold: -20, ratio: 4, attack: 0.006, release: 0.18 } }
+    dspProfile: { lowGain: 0.8, midFreq: 1300, midGain: 2.6, presenceFreq: 3700, presenceGain: 4.4, highGain: 3.0, reverb: 0.04, reverbDecay: 0.30, compressor: { threshold: -19, ratio: 3.8, attack: 0.007, release: 0.18 } }
   },
   {
     id: 'vn_nu_phongsu_vtv',
@@ -420,15 +420,15 @@ export const VIETNAMESE_FEMALE_VOICES = [
     ageGroup: 'middle',
     styleCategory: 'mc_btv',
     category: 'Phóng Sự Tài Liệu • Miền Bắc',
-    pitch: 0.98,
-    rate: 0.98,
+    pitch: 0.99,
+    rate: 0.99,
     recommendedFor: 'both',
     desc: 'Giọng nữ thuyết minh phóng sự tài liệu chuyên sâu, sâu sắc và thuyết phục.',
     sampleText: 'Hành trình khám phá văn hóa và con người Việt Nam luôn mang đến những giá trị sâu sắc và bài học vô giá.',
-    edgePitch: '-2%',
-    edgeRate: '-2%',
+    edgePitch: '-1%',
+    edgeRate: '-1%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { lowGain: 2.0, midFreq: 1000, midGain: 2.4, presenceFreq: 3300, presenceGain: 3.5, highGain: 1.5, reverb: 0.06, reverbDecay: 0.38, compressor: { threshold: -19, ratio: 4, attack: 0.01, release: 0.22 } }
+    dspProfile: { lowGain: 2.5, midFreq: 1020, midGain: 2.5, presenceFreq: 3350, presenceGain: 3.6, highGain: 1.8, reverb: 0.06, reverbDecay: 0.38, compressor: { threshold: -19, ratio: 3.8, attack: 0.01, release: 0.22 } }
   },
   {
     id: 'vn_nu_giucdon_tocbien',
@@ -443,15 +443,15 @@ export const VIETNAMESE_FEMALE_VOICES = [
     ageGroup: 'young',
     styleCategory: 'banhang',
     category: 'Giục Đơn Sôi Sục • Miền Nam',
-    pitch: 1.15,
-    rate: 1.08,
+    pitch: 1.05,
+    rate: 1.04,
     recommendedFor: 'manager',
     desc: 'Giọng nữ giục đơn dồn dập, tạo hiệu ứng đám đông mua sắm cuồng nhiệt.',
     sampleText: 'Chỉ còn đúng 5 suất quà tặng độc quyền trong hôm nay, các bác bấm mua ngay góc trái màn hình kẻo hết nhé!',
-    edgePitch: '+14%',
-    edgeRate: '+10%',
+    edgePitch: '+5%',
+    edgeRate: '+5%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { lowGain: -1.5, midFreq: 1450, midGain: 3.0, presenceFreq: 4100, presenceGain: 5.8, highGain: 3.8, reverb: 0.03, reverbDecay: 0.25, compressor: { threshold: -23, ratio: 5.5, attack: 0.003, release: 0.12 } }
+    dspProfile: { lowGain: 0.2, midFreq: 1400, midGain: 2.8, presenceFreq: 3950, presenceGain: 5.0, highGain: 3.4, reverb: 0.03, reverbDecay: 0.25, compressor: { threshold: -21, ratio: 4.5, attack: 0.004, release: 0.14 } }
   },
   {
     id: 'vn_nu_vtuber_nhinhanh',
@@ -466,14 +466,15 @@ export const VIETNAMESE_FEMALE_VOICES = [
     ageGroup: 'young',
     styleCategory: 'idol_genz',
     category: 'Anime VTuber • Miền Nam',
-    pitch: 1.45,
-    rate: 1.14,
+    pitch: 1.25,
+    rate: 1.08,
     recommendedFor: 'idol',
     desc: 'Giọng nữ phong cách VTuber dễ thương, bắt trend giới trẻ.',
     sampleText: 'Cảm ơn các bạn đã ghé xem live của em! Nhớ bấm theo dõi kênh để không bỏ lỡ buổi live tiếp theo nha!',
-        edgePitch: '+38%',
-    edgeRate: '+10%',
-dspProfile: { semitones: 6.8, rate: 1.14, lowGain: -5.0, midFreq: 2100, midGain: 4.2, presenceFreq: 4900, presenceGain: 8.5, highGain: 7.5, compressor: { threshold: -23, ratio: 4.2, attack: 0.003, release: 0.14 } }
+    edgePitch: '+22%',
+    edgeRate: '+6%',
+    neuralVoice: 'vi-VN-HoaiMyNeural',
+    dspProfile: { semitones: 3.5, rate: 1.08, lowGain: -2.0, midFreq: 1800, midGain: 3.2, presenceFreq: 4400, presenceGain: 6.5, highGain: 5.0, compressor: { threshold: -21, ratio: 3.8, attack: 0.004, release: 0.15 } }
   },
   {
     id: 'free_vi_female',
@@ -2864,8 +2865,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành một đổi một trong 
 /**
  * 🌾 CHUẨN HÓA NGỮ ĐIỆU & PHƯƠNG NGỮ 4 VÙNG MIỀN VIỆT NAM THÔNG MINH
  * Tự động chuyển đổi ngữ khí, trợ từ cảm thán và nhịp điệu phát âm bản xứ:
- * - Miền Tây: Mộc mạc, ngọt ngào, ấm áp, nhịp điệu từ tốn sông nước (nghen, nè nghen, hén, thiệt tình á, hết sảy bà con ơi...)
- * - Miền Trung: Đậm đà, sâu lắng, chuẩn vị Huế/Đà Nẵng/Quảng Nam/Nghệ Tĩnh (nì, quý anh chị nì, ngon xuất sắc nì...)
+ * - Miền Tây: Mộc mạc, ngọt ngào, ấm áp, nhịp điệu từ tốn sông nước (nghen bà con, nhen cô chú, hết sảy bà con ơi, mê ly dữ dằn à nghen...)
+ * - Miền Trung: Đậm đà, sâu lắng, chuẩn vị Huế/Đà Nẵng/Quảng Nam/Nghệ Tĩnh (nì cả nhà ơi, quý anh chị nì, ngon xuất sắc nì, sắc sảo lắm nì...)
  * - Miền Nam (Sài Gòn): Năng động, tốc độ, nhiệt huyết chốt đơn (nha mọi người ơi, chốt liền tay nè, xịn sò, quá đã luôn á...)
  * - Miền Bắc (Hà Nội): Chuẩn chỉ, thanh lịch, rành mạch, uy tín (dạ vâng thưa các bác, chuẩn chỉ từng chi tiết, chính hãng nhé các bác...)
  */
@@ -2885,60 +2886,65 @@ export function formatTextForRegionalSpeech(rawText, voice) {
     const vDesc = (voice?.desc || '').toLowerCase();
     const vId = (voice?.id || '').toLowerCase();
 
-    if (vName.includes('miền tây') || vCat.includes('miền tây') || vDesc.includes('miền tây') || vName.includes('sông nước') || vId.includes('_tay_') || vId.includes('_taynambo')) {
+    if (vName.includes('miền tây') || vCat.includes('miền tây') || vDesc.includes('miền tây') || vName.includes('sông nước') || vId.includes('_tay_') || vId.includes('_taynambo') || vName.includes('cần thơ') || vName.includes('út mai')) {
       dialect = 'tay';
-    } else if (vName.includes('miền trung') || vCat.includes('miền trung') || vDesc.includes('miền trung') || vName.includes('huế') || vName.includes('đà nẵng') || vName.includes('nghệ an') || vId.includes('_trung_')) {
+    } else if (vName.includes('miền trung') || vCat.includes('miền trung') || vDesc.includes('miền trung') || vName.includes('huế') || vName.includes('đà nẵng') || vName.includes('nghệ an') || vName.includes('nghệ tĩnh') || vId.includes('_trung_') || vId.includes('hue') || vId.includes('danang') || vId.includes('nghean')) {
       dialect = 'trung';
-    } else if (vName.includes('miền bắc') || vCat.includes('miền bắc') || vDesc.includes('miền bắc') || vName.includes('hà nội') || vId.includes('_bac_')) {
+    } else if (vName.includes('miền bắc') || vCat.includes('miền bắc') || vDesc.includes('miền bắc') || vName.includes('hà nội') || vId.includes('_bac_') || vName.includes('vtv') || vName.includes('thời sự')) {
       dialect = 'bac';
-    } else if (vName.includes('miền nam') || vCat.includes('miền nam') || vDesc.includes('miền nam') || vName.includes('sài gòn') || vId.includes('_nam_')) {
+    } else if (vName.includes('miền nam') || vCat.includes('miền nam') || vDesc.includes('miền nam') || vName.includes('sài gòn') || vId.includes('_nam_') || vId.includes('koc') || vId.includes('idol_live') || vId.includes('giucdon')) {
       dialect = 'nam';
     } else {
       dialect = 'standard';
     }
   }
 
-  // 1. PHƯƠNG NGỮ MIỀN TÂY (Sông Nước Nam Bộ)
+  // 1. PHƯƠNG NGỮ MIỀN TÂY (Sông Nước Nam Bộ - Ngọt ngào, mộc mạc, tha thiết)
   if (dialect === 'tay') {
     text = text
-      .replace(/\b(nhé|nhé bạn|nhé mọi người|nha các bạn|nhé các bạn)\b/gi, 'nghen bà con')
-      .replace(/\b(nha bạn|nha bạn ơi)\b/gi, 'nhen cô chú anh chị')
-      .replace(/\b(rất ngon|quá ngon)\b/gi, 'ngon hết sảy luôn')
-      .replace(/\b(rất đẹp|quá đẹp)\b/gi, 'đẹp mê ly')
+      .replace(/\b(nhé|nhé bạn|nhé mọi người|nha các bạn|nhé các bạn|nhe các bạn)\b/gi, 'nghen bà con cô bác')
+      .replace(/\b(nha bạn|nha bạn ơi|nhé bạn ơi)\b/gi, 'nhen cô chú anh chị')
+      .replace(/\b(rất ngon|quá ngon)\b/gi, 'ngon hết sảy con bà bảy luôn')
+      .replace(/\b(rất đẹp|quá đẹp)\b/gi, 'đẹp mê ly dữ dằn')
       .replace(/\b(rất tốt|tuyệt vời)\b/gi, 'tốt dữ dằn à nghen')
-      .replace(/\b(thật sự|thật đấy)\b/gi, 'thiệt tình á')
-      .replace(/\b(chắc chắn)\b/gi, 'chắc ăn 100% luôn')
-      .replace(/\b(nhiều lắm|rất nhiều)\b/gi, 'quá trời quá đất luôn')
+      .replace(/\b(thật sự|thật đấy|thật mà)\b/gi, 'thiệt tình á bà con')
+      .replace(/\b(chắc chắn)\b/gi, 'chắc ăn một trăm phần trăm luôn')
+      .replace(/\b(nhiều lắm|rất nhiều)\b/gi, 'quá trời quá đất luôn nghen')
       .replace(/\b(không ạ|không bạn)\b/gi, 'hông nè nghen')
-      .replace(/\b(được không)\b/gi, 'được hông nè bà con');
+      .replace(/\b(được không)\b/gi, 'được hông nè bà con')
+      .replace(/\b(mua ngay|đặt ngay)\b/gi, 'chốt liền tay kẻo lỡ nghen');
   } 
-  // 2. PHƯƠNG NGỮ MIỀN TRUNG (Huế, Đà Nẵng, Quảng Nam, Nghệ An)
+  // 2. PHƯƠNG NGỮ MIỀN TRUNG (Huế, Đà Nẵng, Quảng Nam, Nghệ An - Dịu dàng, sâu lắng, đậm tình)
   else if (dialect === 'trung') {
     text = text
-      .replace(/\b(nhé|nhé bạn|nhé mọi người)\b/gi, 'nì cả nhà ơi')
-      .replace(/\b(nha bạn|nha các bạn)\b/gi, 'nè quý anh chị nì')
+      .replace(/\b(nhé|nhé bạn|nhé mọi người|nhé cả nhà)\b/gi, 'nì cả nhà ơi')
+      .replace(/\b(nha bạn|nha các bạn|nha mọi người)\b/gi, 'nè quý anh chị nì')
       .replace(/\b(rất ngon|quá ngon)\b/gi, 'ngon xuất sắc nì')
-      .replace(/\b(rất đẹp|quá đẹp)\b/gi, 'đẹp sắc sảo lắm nì')
-      .replace(/\b(thật sự|thật đấy)\b/gi, 'thiệt luôn nì')
+      .replace(/\b(rất đẹp|quá đẹp)\b/gi, 'đẹp sắc sảo mười phân vẹn mười nì')
+      .replace(/\b(thật sự|thật đấy|thật mà)\b/gi, 'thiệt luôn nì')
       .replace(/\b(tuyệt vời)\b/gi, 'tuyệt cú mèo lắm nì')
-      .replace(/\b(chắc chắn)\b/gi, 'chuẩn chỉ 100% nì');
+      .replace(/\b(chắc chắn)\b/gi, 'chuẩn chỉ một trăm phần trăm nì')
+      .replace(/\b(mua ngay|đặt ngay)\b/gi, 'ủng hộ em liền tay nì')
+      .replace(/\b(xin chào)\b/gi, 'dạ em kính chào');
   } 
-  // 3. PHƯƠNG NGỮ MIỀN NAM (Sài Gòn Phồn Hoa - Năng Động & Chốt Deal)
+  // 3. PHƯƠNG NGỮ MIỀN NAM (Sài Gòn Phồn Hoa - Năng Động & Chốt Deal Cuốn Hút)
   else if (dialect === 'nam') {
     text = text
       .replace(/\b(nhé|nhé bạn)\b/gi, 'nha mọi người ơi')
       .replace(/\b(nhé cả nhà)\b/gi, 'nha cả nhà mình ơi')
       .replace(/\b(rất đẹp|quá đẹp)\b/gi, 'siêu đẹp xịn sò')
       .replace(/\b(rất tốt|tuyệt vời)\b/gi, 'cực kì đỉnh chóp luôn')
-      .replace(/\b(mua ngay)\b/gi, 'chốt liền tay kẻo lỡ nha');
+      .replace(/\b(mua ngay|đặt ngay)\b/gi, 'chốt liền tay kẻo lỡ nha cả nhà')
+      .replace(/\b(không ạ)\b/gi, 'hổng có đâu nè')
+      .replace(/\b(cảm ơn bạn)\b/gi, 'cảm ơn bạn iu nhiều nha');
   } 
-  // 4. PHƯƠNG NGỮ MIỀN BẮC (Hà Nội - Thanh Lịch & Sang Trọng Chuẩn Mực)
+  // 4. PHƯƠNG NGỮ MIỀN BẮC (Hà Nội - Thanh Lịch, Đĩnh Đạc & Sang Trọng Chuẩn Mực)
   else if (dialect === 'bac') {
     text = text
       .replace(/\b(nha bạn|nha cả nhà|nha mọi người)\b/gi, 'nhé các bác và anh chị')
-      .replace(/\b(hông)\b/gi, 'không')
+      .replace(/\b(hông|hổng)\b/gi, 'không')
       .replace(/\b(xịn xò|xịn sò)\b/gi, 'cao cấp chuẩn chỉ')
-      .replace(/\b(chắc ăn)\b/gi, 'chắc chắn 100%')
+      .replace(/\b(chắc ăn)\b/gi, 'chắc chắn một trăm phần trăm')
       .replace(/\b(ngon hết sảy)\b/gi, 'ngon tuyệt đỉnh');
   }
 
@@ -2985,8 +2991,7 @@ function createReverbImpulseBuffer(audioCtx, duration = 0.45, decay = 2.0) {
 
 /**
  * 🎵 TÍNH TOÁN HỆ SỐ BIẾN ĐỔI CAO ĐỘ & FORMANT THANH QUẢN (PITCH SHIFT FACTOR)
- * Giúp từng nhân vật (Bà Cụ, Cụ Ông, Nữ Trẻ Gia Dụng, KOC, Idol, Nam Uy Quyền, BLV...)
- * phát ra âm sắc, cao độ và thanh quản độc bản 100% không ai giống ai.
+ * Đảm bảo giọng Nữ tự nhiên, ấm áp, trong trẻo, mượt mà (không bị nâng cao quá mức gây khựng/the thé).
  */
 export function getVoicePitchShiftFactor(voice, isMale) {
   if (voice?.pitchShiftFactor !== undefined && !isNaN(Number(voice.pitchShiftFactor))) {
@@ -2997,10 +3002,10 @@ export function getVoicePitchShiftFactor(voice, isMale) {
   }
   if (voice?.dspProfile?.semitones !== undefined && !isNaN(Number(voice.dspProfile.semitones))) {
     const st = Number(voice.dspProfile.semitones);
-    return Math.max(0.75, Math.min(1.45, Math.pow(2, st / 12)));
+    return Math.max(0.80, Math.min(1.30, Math.pow(2, st / 12)));
   }
   if (voice?.pitch !== undefined && !isNaN(Number(voice.pitch)) && Number(voice.pitch) !== 1.0) {
-    return Math.max(0.75, Math.min(1.45, Number(voice.pitch)));
+    return Math.max(0.80, Math.min(1.30, Number(voice.pitch)));
   }
   
   const id = (voice?.id || '').toLowerCase();
@@ -3010,35 +3015,35 @@ export function getVoicePitchShiftFactor(voice, isMale) {
 
   // 1. Nhóm Lão Niên / Cụ Ông / Bà Cụ (Trầm khàn, đục ấm cổ điển)
   if (age === 'senior' || age === 'elder' || id.includes('traco') || id.includes('dongy') || id.includes('ongbay') || id.includes('bacu') || id.includes('laonien') || name.includes('cụ') || name.includes('bà bẩy') || name.includes('ông bẩy')) {
-    return isMale ? 0.82 : 0.86;
+    return isMale ? 0.85 : 0.90;
   }
 
   // 2. Nhóm Trẻ Em / Anime / Cute (Trong veo, líu lo)
   if (id.includes('embe') || id.includes('cute') || cat.includes('trẻ em') || name.includes('bé ') || id.includes('bap') || id.includes('bana')) {
-    return 1.28;
+    return 1.18;
   }
 
-  // 3. Nhóm Nữ Trẻ / KOC / Hot Trend / Gia Dụng / Skincare / Mỹ Phẩm (Tươi sáng, ngọt ngào, hoạt ngôn)
+  // 3. Nhóm Nữ Trẻ / KOC / Hot Trend / Gia Dụng / Skincare / Mỹ Phẩm (Tươi sáng, tự nhiên, ngọt ngào)
   if (id.includes('giadung') || id.includes('mypham') || id.includes('koc') || id.includes('genz') || id.includes('idol') || id.includes('tiktok') || id.includes('shorts') || id.includes('jessica') || id.includes('thao') || id.includes('nhi')) {
-    return isMale ? 1.04 : 1.12;
+    return isMale ? 1.01 : 1.01;
   }
 
   // 4. Nhóm Nam Trầm / Uy Quyền / Bất Động Sản / Cinematic / Trailer (Trầm hùng, đanh thép)
   if (id.includes('uyquyen') || id.includes('chotsale') || id.includes('batdongsan') || id.includes('docu') || id.includes('cinema') || id.includes('trailer') || id.includes('adam') || id.includes('trieuduong')) {
-    return isMale ? 0.88 : 0.96;
+    return isMale ? 0.90 : 0.98;
   }
 
   // 5. Nhóm Tâm Sự / Kể Chuyện / Podcast / Luxury / Trầm Hương (Sâu lắng, truyền cảm)
   if (id.includes('tam_su') || id.includes('kechuyen') || id.includes('podcast') || id.includes('luxury') || id.includes('tramhuong') || id.includes('giang') || id.includes('matilda') || id.includes('sarah')) {
-    return isMale ? 0.92 : 0.98;
+    return isMale ? 0.94 : 0.99;
   }
 
   // 6. Nhóm Thể Thao / BLV / Gym / Ô Tô (Bùng nổ, rực lửa)
   if (id.includes('thethao') || id.includes('fitness') || id.includes('blv') || id.includes('oto') || id.includes('hung') || id.includes('kevin')) {
-    return isMale ? 1.06 : 1.08;
+    return isMale ? 1.03 : 1.02;
   }
 
-  return isMale ? 0.94 : 1.06;
+  return isMale ? 0.96 : 1.01;
 }
 
 /**
@@ -3179,7 +3184,7 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
 /**
  * ⚡ TẢI VÀ GIẢI MÃ ÂM THANH MICROSOFT NEURAL TTS (CÓ BỘ NHỚ ĐỆM TỰ ĐỘNG & HỖ TRỢ POST/GET)
  */
-async function fetchAndDecodeTTSAudio(text, voice = null) {
+export async function fetchAndDecodeTTSAudio(text, voice = null) {
   if (!text || !text.trim()) return null;
 
   const isMale = checkIsMale(voice);
@@ -3325,6 +3330,30 @@ async function fetchAndDecodeTTSAudio(text, voice = null) {
   }
 
   return null;
+}
+
+/**
+ * 🚀 LOOKAHEAD PRE-FETCHING & RAM CACHING: Tải trước và giải mã âm thanh ngầm vào RAM Cache
+ * Giúp phát câu tiếp theo NGAY LẬP TỨC 0ms, loại bỏ hoàn toàn khoảng dừng 1-2 giây giữa các câu!
+ */
+export async function prefetchTTSAudio(text, voice = null, options = {}) {
+  if (!text || !text.trim()) return null;
+  try {
+    const isVietnameseVoice = voice?.lang === 'vi-VN' || voice?.region === 'vi' || voice?.id?.startsWith('vn_') || voice?.id === 'free_vi_female' || voice?.id === 'el_adam';
+    const textToSpeak = isVietnameseVoice 
+      ? (formatTextForRegionalSpeech(text, voice) || humanizeVoiceSpeechText(text, voice) || cleanTextForVoiceSpeech(text) || text)
+      : (humanizeVoiceSpeechText(text, voice) || cleanTextForVoiceSpeech(text) || text);
+
+    const mergedVoice = {
+      ...(voice || {}),
+      rate: options.rate !== undefined ? options.rate : voice?.rate,
+      volume: options.volume !== undefined ? options.volume : voice?.volume
+    };
+
+    return await fetchAndDecodeTTSAudio(textToSpeak, mergedVoice);
+  } catch (e) {
+    return null;
+  }
 }
 
 /**
@@ -3490,7 +3519,11 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     );
   }
 
-  const textToSpeak = humanizeVoiceSpeechText(candidateText, voice) || cleanTextForVoiceSpeech(candidateText) || candidateText;
+  // Tự động chuẩn hóa phương ngữ, thán từ và nhịp điệu vùng miền cho mọi câu thoại
+  const textToSpeak = isVietnameseVoice
+    ? (formatTextForRegionalSpeech(candidateText, voice) || humanizeVoiceSpeechText(candidateText, voice) || cleanTextForVoiceSpeech(candidateText) || candidateText)
+    : (humanizeVoiceSpeechText(candidateText, voice) || cleanTextForVoiceSpeech(candidateText) || candidateText);
+
   const apiKey = getElevenLabsApiKey();
   const voiceId = voice?.voiceId || '21m00Tcm4TlvDq8ikWAM';
 
@@ -3592,6 +3625,8 @@ export default {
   previewVoiceAudio,
   speakVoiceAudio,
   stopVoiceAudio,
+  fetchAndDecodeTTSAudio,
+  prefetchTTSAudio,
   cleanTextForVoiceSpeech,
   humanizeVoiceSpeechText,
   polishAndOptimizeScript,
@@ -3603,3 +3638,4 @@ export default {
   toggleFavoriteVoiceId,
   isVoiceFavorite
 };
+

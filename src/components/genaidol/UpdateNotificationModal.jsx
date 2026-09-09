@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.4.9';
+export const APP_VERSION = '2.5.0';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '❤️ Cảm Xúc Sống Động, Lấy Hơi Tự Nhiên & Nhấn Nhá Cao Trào Như Người Thật',
-    description: 'Tích hợp động cơ Empathy & Breathing Prosody: Giọng đọc có nhịp thở lấy hơi, thăng trầm cao trào, diễn đạt như một người bạn thân trò chuyện trực tiếp, cực kỳ cuốn hút và gây nghiện cho người nghe livestream.'
+    title: '👑 Nâng Cấp Toàn Diện Giọng Nữ 4 Vùng Miền (Bắc - Trung - Nam - Tây) Đỉnh Cao',
+    description: 'Nâng cấp toàn bộ hệ thống giọng Nữ (Mai Phương BTV, Mỹ Tâm Huế, Út Mai Miền Tây, Cô Ba Cần Thơ, Ngọc Nhi Sài Gòn, KOC, Idol Live) với âm điệu ngọt ngào, ấm áp, thăng trầm lôi cuốn, phát âm chuẩn xác và có hồn như người thật.'
   },
   {
-    title: '⏱️ Tùy Chỉnh Thời Gian Nghỉ Giữa Các Câu Từ 0.0s Đến 1.0s (Liền Mạch 0ms)',
-    description: 'Bổ sung thanh chọn thời gian nghỉ giữa các câu thoại linh hoạt từ 0.0s (liền mạch ngay tức thì), 0.05s, 0.1s, 0.2s... đến 1.0s giúp kịch bản đọc mượt mà, suôn sẻ không bị khựng.'
+    title: '🚀 Công Nghệ Lookahead Audio Pre-fetching & RAM Caching (Khắc Phục Dứt Điểm Điểm Dừng)',
+    description: 'Tự động tải trước và giải mã âm thanh câu kế tiếp ngay trong lúc câu hiện tại đang đọc. Khi chọn khoảng nghỉ 0.0s (Liền mạch), câu sau sẽ phát NGAY LẬP TỨC 0ms không còn bất kỳ độ trễ hay khựng 1-2s nào.'
   },
   {
-    title: '⚡ Mở Rộng Bảng Tốc Độ Đọc (0.75x, 0.85x, 1.0x, 1.15x, 1.25x, 1.5x, 2.0x)',
-    description: 'Bổ sung đầy đủ các nấc tốc độ chi tiết cho phép tua nhanh và tùy chỉnh tốc độ nói của mọi nhân vật AI theo đúng ý muốn.'
+    title: '🌾 Chuẩn Hóa Phương Ngữ & Thán Từ Cảm Thán Thông Minh Cho Bộ Não AI & Kịch Bản',
+    description: 'Đồng bộ cơ chế chuyển đổi ngữ khí bản xứ (Huế, Đà Nẵng, Nghệ Tĩnh, Sông Nước Nam Bộ, Sài Gòn, Hà Nội) tự nhiên, chân thật giúp buổi livestream sinh động và tạo thiện cảm tuyệt đối với người xem.'
   },
   {
-    title: '✨ 1-Chạm Tối Ưu & Sắp Xếp Kịch Bản Bán Hàng Đỉnh Cao (AI Script Polisher)',
-    description: 'Tự động sửa lỗi chính tả, chuẩn hóa câu từ, thêm các câu hook giữ chân và câu kêu gọi hành động (CTA) chốt đơn bùng nổ cho toàn bộ kịch bản.'
+    title: '⚡ Tối Ưu Hóa Tốc Độ Đọc & Bộ Lọc Âm Thanh Broadcast DSP Chống Vỡ Tiếng',
+    description: 'Bộ EQ đa băng tần tái tạo không gian phòng thu chuẩn Studio, tối ưu hóa Pitch Shift tự nhiên, không bị mỏng/chói hay the thé khi đọc nhanh.'
   }
 ];
 

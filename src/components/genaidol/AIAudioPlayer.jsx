@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Play, Pause, FastForward, Mic, Volume2, Sparkles } from 'lucide-react';
-import { getDualVoiceConfig, previewVoiceAudio, stopVoiceAudio } from '../../utils/voiceSyncService';
+import { getDualVoiceConfig, previewVoiceAudio, stopVoiceAudio, prefetchTTSAudio } from '../../utils/voiceSyncService';
 
 /**
  * AIAudioPlayer - Quản lý hàng đợi phát âm thanh thông minh trong Livestream
@@ -207,6 +207,22 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             reason: `Voice AI (${channel === 'idol' ? 'Idol' : channel === 'comment' ? 'Bình Luận AI' : 'Quản Lý'}): "${(item.text || '').slice(0, 20)}..."`
           }
         }));
+      }
+
+      // Lookahead pre-fetching câu tiếp theo trong kịch bản livestream vào RAM
+      if (isScriptItem) {
+        const nextIdx = currentIndexRef.current + 1;
+        if (queueRef.current && queueRef.current[nextIdx]) {
+          const nextItem = queueRef.current[nextIdx];
+          const nextChannel = nextItem.voiceChannel || (nextItem.type === 'script' ? 'idol' : nextItem.type === 'comment' ? 'comment' : 'manager');
+          const nextVoice = nextChannel === 'idol' ? (voiceConfig.idolVoice || { id: 'free_vi_female', lang: 'vi-VN', gender: 'Female' }) : (nextChannel === 'comment' ? (voiceConfig.commentVoice || voiceConfig.idolVoice) : voiceConfig.managerVoice);
+          prefetchTTSAudio(nextItem.text, nextVoice);
+        }
+      } else if (priorityQueueRef.current.length > 0) {
+        const nextPri = priorityQueueRef.current[0];
+        const nextPriChannel = nextPri.voiceChannel || (nextPri.type === 'script' ? 'idol' : nextPri.type === 'comment' ? 'comment' : 'manager');
+        const nextPriVoice = nextPriChannel === 'idol' ? (voiceConfig.idolVoice || { id: 'free_vi_female', lang: 'vi-VN', gender: 'Female' }) : (nextPriChannel === 'comment' ? (voiceConfig.commentVoice || voiceConfig.idolVoice) : voiceConfig.managerVoice);
+        prefetchTTSAudio(nextPri.text, nextPriVoice);
       }
 
       await previewVoiceAudio(activeVoice, item.text, {
