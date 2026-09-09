@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.1.9';
+export const APP_VERSION = '2.2.0';
 export const UPDATE_NOTES = [
-  "🖥️ Nâng Cấp Cửa Sổ Cấu Hình Toàn Màn Hình: Khung Cấu hình AI, Giọng nói & API mở rộng Full Screen rộng rãi, tối ưu trải nghiệm và loại bỏ hoàn toàn các thông tin thừa rườm rà.",
-  "🔊 Khắc Phục Triệt Để Lỗi Nghe Thử Voice: 100% tất cả các giọng đọc (Idol Live, Quản Lý, BLV Game, Quốc Tế) bấm vào là nghe thử tức thì không có độ trễ.",
-  "🌐 Bổ Sung Hơn 20+ Giọng Đọc Quốc Tế Đa Quốc Gia: Đầy đủ các nước Mỹ, Anh, Pháp, Đức, Ý, Nga, Tây Ban Nha, Mexico, Brazil, Trung Quốc, Nhật Bản, Hàn Quốc, Thái Lan, Indonesia, v.v., phân chia theo từng khu vực rõ ràng và hỗ trợ tìm kiếm nhanh."
+  "🎙️ Chuẩn Hóa Toàn Diện 100% Giọng Đọc Studio Cao Cấp: Tất cả các giọng đọc (Sarah, Bella, Laura, Alice, Matilda, Jessica, Lily, River, Adam, Callum, Harry, Charlie, George, Liam, Will, Eric, Chris, Brian, Daniel, Bill, Roger...) đều sở hữu âm sắc studio ElevenLabs chính hãng, sắc nét, giàu cảm xúc, đúng chuẩn nam nữ và không còn bị trùng lặp âm thanh.",
+  "🔊 Nâng Cấp Nghe Thử Voice Tức Thì: Bấm vào nghe thử bất kỳ giọng nào là âm thanh phòng thu phát ra ngay lập tức với âm sắc chuẩn xác, chuyên nghiệp và đẳng cấp.",
+  "🇻🇳 Giọng Đọc Miễn Phí Hoài My & Đa Ngôn Ngữ: Tối ưu hóa giọng phát thanh chuẩn tiếng Việt Hoài My cùng hệ thống 28 giọng quốc tế bản xứ phát âm tự nhiên mượt mà."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

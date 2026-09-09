@@ -33,16 +33,16 @@ const SAMPLE_SCRIPTS = [
   { label: 'Hỏi Đáp & Tư Vấn', text: 'Các bạn có câu hỏi nào về sản phẩm hay cần em tư vấn chiều cao cân nặng để chọn size chuẩn nhất thì cứ bình luận bên dưới nhé!' }
 ];
 
-const VOICE_PRESETS = [
-  { id: 'el_adam', name: 'Adam (ElevenLabs Pro)', gender: 'male', pitch: 0.72, speed: 0.95, tag: 'THIẾT KẾ', lang: 'Tiếng Việt / Đa ngữ' },
-  { id: 'el_rachel', name: 'Rachel (ElevenLabs Pro)', gender: 'female', pitch: 1.05, speed: 1.00, tag: 'THIẾT KẾ', lang: 'Tiếng Việt / Đa ngữ' },
-  { id: 'el_antoni', name: 'Antoni (ElevenLabs Pro)', gender: 'male', pitch: 1.08, speed: 1.14, tag: 'THIẾT KẾ', lang: 'Tiếng Việt / Đa ngữ' },
-  { id: 'el_bella', name: 'Bella (ElevenLabs Pro)', gender: 'female', pitch: 1.28, speed: 0.92, tag: 'THIẾT KẾ', lang: 'Tiếng Việt / Đa ngữ' },
-  { id: 'el_elli', name: 'Elli (ElevenLabs Cảm Xúc)', gender: 'female', pitch: 1.00, speed: 1.00, tag: 'THIẾT KẾ', lang: 'Tiếng Việt / Đa ngữ' },
-  { id: 'el_josh', name: 'Josh (ElevenLabs Hùng Hồn)', gender: 'male', pitch: 0.90, speed: 1.05, tag: 'THIẾT KẾ', lang: 'Tiếng Việt / Đa ngữ' },
-  { id: 'vi_ngocmai', name: 'Ngọc Mai (MiniMax AI Studio)', gender: 'female', pitch: 1.00, speed: 1.00, tag: 'PRO NEURAL', lang: 'Tiếng Việt' },
-  { id: 'vi_hoangnam', name: 'Hoàng Nam (MiniMax MC Live)', gender: 'male', pitch: 0.95, speed: 1.00, tag: 'PRO NEURAL', lang: 'Tiếng Việt' }
-];
+const VOICE_PRESETS = ALL_SYSTEM_VOICES.map(v => ({
+  id: v.id,
+  name: v.name,
+  gender: (v.gender === 'Male' || v.gender === 'Nam') ? 'male' : 'female',
+  pitch: v.pitch || 1.0,
+  speed: v.rate || 1.0,
+  tag: v.tier === 'pro' ? 'PRO STUDIO' : 'MIỄN PHÍ',
+  lang: v.lang === 'vi-VN' ? 'Tiếng Việt' : v.lang,
+  previewUrl: v.previewUrl
+}));
 
 export default function AIVoiceModule() {
   const [selectedVoiceId, setSelectedVoiceId] = useState('el_adam');
