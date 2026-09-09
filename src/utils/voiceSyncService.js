@@ -2942,7 +2942,7 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
 
   // 1. PLAYBACK RATE (Chuẩn studio tự nhiên, tốc độ do TTS & người dùng điều khiển, tránh méo pitch)
   const userRate = requestedRate !== undefined && !isNaN(requestedRate) ? Number(requestedRate) : 1.0;
-  source.playbackRate.value = Math.max(0.7, Math.min(1.4, userRate));
+  source.playbackRate.value = Math.max(0.5, Math.min(2.0, userRate));
 
   // 2. LOW-SHELF FILTER (Độ trầm, độ dày lồng ngực & âm ấm)
   const lowFilter = audioCtx.createBiquadFilter();
@@ -2982,6 +2982,7 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
   // 7. MASTER GAIN
   const masterGain = audioCtx.createGain();
   masterGain.gain.value = Math.max(0, Math.min(1.0, requestedVolume));
+  activeMasterGainNode = masterGain;
 
   // 8. ACOUSTIC SPACE REVERB CONVOLVER (Tạo độ vang phòng / studio khác biệt)
   const reverbAmount = dsp.reverb !== undefined ? dsp.reverb : (

@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.4.1';
+export const APP_VERSION = '2.4.2';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🌸 Đột Phá Nâng Cấp 100% Giọng Nữ (Female Voices) Sống Động Như Người Thật',
-    description: 'Nâng cấp toàn diện ngữ điệu, biểu cảm, nhịp thở tự nhiên (Micro-Pauses) và độ ngọt ngào quyến rũ cho 21+ giọng nữ. Phân tầng âm sắc EQ 4-band studio và Reverb phòng thu, giúp giọng đọc mềm mại, truyền cảm, cuốn hút và đồng bộ khẩu hình miệng (LipSync) chính xác tuyệt đối.'
+    title: '🎙️ Đồng Bộ 100% Kho Giọng Chuẩn Vào Dropdown Kịch Bản Idol & Sự Kiện',
+    description: 'Đồng bộ toàn diện tất cả các nhóm giọng từ Tab Giọng Ava Live (Ảnh 3) vào Dropdown Kịch Bản Idol (Ảnh 1): Bao gồm Bộ 20 Giọng Hot Trend, 30 Giọng Bán Hàng, 21 Giọng Nữ 4 Vùng Miền, 20 Giọng Nam & 28 Giọng Quốc Tế. Tự động hiển thị nổi bật nhóm ⭐ Giọng Yêu Thích Đã Chọn lên đầu danh sách.'
   },
   {
-    title: '⚡ Bộ Tiền Xử Lý Câu Thoại Thông Minh (Humanized Speech Processor)',
-    description: 'Tự động đọc số tiền, tỷ lệ % (199k -> 199 nghìn đồng, 2tr5 -> 2 triệu 500 nghìn đồng), tự động giải mã từ viết tắt livestream / mạng xã hội (sp, đc, cmt, deal, freeship, voucher, tóp tóp, da-lô...), loại bỏ hoàn toàn cảm giác đọc máy móc thô cứng.'
+    title: '⚡ Tinh Chỉnh Tốc Độ Đọc (Speed Rate) Phản Hồi Tức Thì 0ms (Ăn Ngay)',
+    description: 'Khắc phục triệt để tình trạng chọn tốc độ đọc lúc được lúc không (Ảnh 2). Giờ đây, khi chọn bất kỳ mức tốc độ nào (0.75x, 0.9x, 1.0x, 1.1x, 1.25x, 1.5x), hệ thống áp dụng thay đổi ngay lập tức cả khi đang phát lẫn khi nghe thử.'
   },
   {
-    title: '🛡️ Rà Soát Bảo Mật & Kiểm Tra Toàn Diện Các Luồng Dữ Liệu',
-    description: 'Kiểm tra và tối ưu kết nối Supabase Cloud (đồng bộ Gmail, điểm/tokens, giờ livestream), cổng thanh toán tự động SePay VietQR 3s, luồng dữ liệu Tiếp Thị Liên Kết (Affiliate) và cơ chế đóng gói bộ cài ZIP an toàn tuyệt đối không lộ thông tin.'
+    title: '🧠 Đọc Kịch Bản Thông Minh & Tự Động Tiếp Tục Khi Bị Ngắt Quãng',
+    description: 'Khi Idol đang đọc kịch bản mà phải dừng lại để trả lời bình luận, chào khách vào xem live hoặc cảm ơn quà tặng, bộ não AI sẽ tự động ghi nhớ chính xác câu thoại đang nói và tiếp tục đọc liền mạch câu tiếp theo, phát âm chuẩn xác ngữ nghĩa và từ viết tắt.'
   },
   {
-    title: '🎙️ Tab "Giọng Ava Live" Hợp Nhất & Kho Giọng Độc Bản 4 Vùng Miền',
-    description: 'Hợp nhất 3 vai trò (Idol Live, Quản lý/Trợ lý, BLV Game) vào Tab duy nhất với bộ lọc đa chiều và gán 1-Click nhanh chóng.'
+    title: '🌸 Giọng Nữ Tự Nhiên Như Người Thật & Đồng Bộ Khẩu Hình LipSync 60 FPS',
+    description: 'Tự động giải mã số tiền, tiền tệ, từ ngữ viết tắt livestream (sp, đc, cmt, deal, freeship...) với nhịp thở tự nhiên Micro-Pauses và đồng bộ chuyển động khuôn miệng siêu mượt.'
   }
 ];
 

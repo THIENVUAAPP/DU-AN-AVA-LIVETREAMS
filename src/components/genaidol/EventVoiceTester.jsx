@@ -1,14 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Volume2, VolumeX, Play, Square, Sparkles, ChevronDown, Check, Gauge, Sliders } from 'lucide-react';
-import { ALL_SYSTEM_VOICES, FREE_VOICES, ELEVENLABS_VOICES, previewVoiceAudio, stopVoiceAudio, updateActiveVoiceAudio, cleanTextForVoiceSpeech } from '../../utils/voiceSyncService';
+import { Volume2, VolumeX, Play, Square, Sparkles, ChevronDown, Check, Gauge, Sliders, Star } from 'lucide-react';
+import { 
+  ALL_SYSTEM_VOICES, 
+  VIETNAMESE_HOTTREND_VOICES,
+  VIETNAMESE_SALES_VOICES,
+  VIETNAMESE_FEMALE_VOICES,
+  VIETNAMESE_MALE_VOICES,
+  INTERNATIONAL_VOICES,
+  previewVoiceAudio, 
+  stopVoiceAudio, 
+  setRealtimeAudioParams, 
+  cleanTextForVoiceSpeech,
+  isVoiceFavorite,
+  getFavoriteVoiceIds,
+  getDualVoiceConfig
+} from '../../utils/voiceSyncService';
 
 /**
  * Universal Voice Selector & Tester Component
- * - Tích hợp đầy đủ: Chọn giọng, Tăng/Giảm Âm lượng, Tăng/Giảm Tốc độ đọc (Speed Rate)
- * - Tương tác siêu tốc: Kéo âm lượng hoặc chọn tốc độ là ăn ngay tức thời (0ms lag)
- * - Tự động lọc sạch 100% các tag cử chỉ [Vỗ tay], [Cười tươi], [Chỉ giỏ hàng], chỉ đọc nội dung chính
- * - Phát ĐẦY ĐỦ 100% toàn bộ kịch bản từ câu đầu đến câu cuối (tuần tự từng câu với tiến trình hiển thị rõ ràng)
- * - Nút Dừng lại ngắt tức thì toàn bộ chuỗi phát âm thanh.
+ * - Đồng bộ 100% toàn bộ hệ thống giọng đọc chuẩn: Giọng Ava Live, Giọng Hot Trend, Giọng Bán Hàng, Giọng Nữ 4 Vùng Miền, Giọng Nam, Giọng Quốc Tế
+ * - Ưu tiên hiển thị trên cùng các giọng đọc đã được gắn dấu sao (⭐ Star Favorites)
+ * - Tích hợp đầy đủ: Chọn giọng, Tăng/Giảm Âm lượng, Tăng/Giảm Tốc độ đọc (Speed Rate 0.75x - 1.5x) phản hồi tức thì 0ms
+ * - Phát ĐẦY ĐỦ 100% toàn bộ kịch bản từ câu đầu đến câu cuối với tiến trình rõ ràng
  */
 export default function EventVoiceTester({
   text = '',
@@ -25,6 +38,7 @@ export default function EventVoiceTester({
   const [totalSentences, setTotalSentences] = useState(0);
   const [volume, setVolume] = useState(1.0); // 0.0 to 1.0
   const [speed, setSpeed] = useState(1.0); // 0.75 to 1.5
+  const [favoriteIds, setFavoriteIds] = useState(getFavoriteVoiceIds());
 
   const isPlayingRef = useRef(false);
   const queueTimeoutRef = useRef(null);
@@ -45,20 +59,33 @@ export default function EventVoiceTester({
     }
   }, [defaultVoiceId]);
 
+  // Lắng nghe cập nhật danh sách yêu thích & cấu hình voice
+  useEffect(() => {
+    const handleFavUpdate = () => {
+      setFavoriteIds(getFavoriteVoiceIds());
+    };
+    window.addEventListener('aidol_favorite_voices_updated', handleFavUpdate);
+    window.addEventListener('aidol_voice_sync_updated', handleFavUpdate);
+    return () => {
+      window.removeEventListener('aidol_favorite_voices_updated', handleFavUpdate);
+      window.removeEventListener('aidol_voice_sync_updated', handleFavUpdate);
+    };
+  }, []);
+
   // Cập nhật âm lượng tức thì khi kéo thanh trượt (0ms phản hồi)
   const handleVolumeChange = (newVol) => {
     const val = parseFloat(newVol);
     setVolume(val);
     volumeRef.current = val;
-    updateActiveVoiceAudio({ volume: val });
+    setRealtimeAudioParams({ volume: val });
   };
 
-  // Cập nhật tốc độ đọc tức thì khi chọn dropdown (0ms phản hồi)
+  // Cập nhật tốc độ đọc tức thì khi chọn dropdown (0ms phản hồi ăn ngay)
   const handleSpeedChange = (newSpeed) => {
-    const rate = Number(newSpeed);
+    const rate = parseFloat(newSpeed);
     setSpeed(rate);
     speedRef.current = rate;
-    updateActiveVoiceAudio({ rate });
+    setRealtimeAudioParams({ rate });
   };
 
   // Dọn dẹp khi unmount
@@ -79,12 +106,10 @@ export default function EventVoiceTester({
 
   /**
    * Phân tách kịch bản dài thành các câu thoại hoàn chỉnh chuẩn ngữ nghĩa
-   * Tự động loại bỏ hoàn toàn các chỉ dẫn sân khấu [Vỗ tay], [Cười tươi], [Chỉ giỏ hàng]...
    */
   const splitIntoSentences = (raw) => {
     if (!raw || !raw.trim()) return [];
     
-    // Làm sạch thẻ cử chỉ & chuẩn hóa biến đại diện
     const cleanedText = cleanTextForVoiceSpeech(raw)
       .replace(/\[user\]|\{user\}/gi, 'Quốc Thiện')
       .replace(/\{comment\}|\[comment\]/gi, 'Sản phẩm này giá bao nhiêu shop?')
@@ -95,12 +120,10 @@ export default function EventVoiceTester({
       .replace(/\{product\}|\[product\]/gi, 'Bộ Đôi Serum Tế Bào Gốc')
       .trim();
 
-    // Tách theo dòng hoặc dấu chấm/chấm than/chấm hỏi
     const lines = cleanedText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
     const result = [];
 
     for (const line of lines) {
-      // Nếu dòng quá dài (> 120 ký tự), tiếp tục tách nhỏ theo dấu câu . ! ? ; để đọc biểu cảm
       if (line.length > 120) {
         const subParts = line.split(/(?<=[.!?;\n])\s+/).map(p => p.trim()).filter(Boolean);
         if (subParts.length > 1) {
@@ -154,12 +177,10 @@ export default function EventVoiceTester({
     setTotalSentences(sentences.length);
     setCurrentSentenceIdx(0);
 
-    // Bắt đầu chuỗi phát tuần tự từng câu cho đến hết toàn bộ kịch bản
     const playSentenceAtIndex = (index) => {
       if (!isPlayingRef.current) return;
 
       if (index >= sentences.length) {
-        // Đã hoàn tất phát toàn bộ kịch bản
         handleStop();
         return;
       }
@@ -177,10 +198,9 @@ export default function EventVoiceTester({
           rate: speedRef.current,
           onEnd: () => {
             if (!isPlayingRef.current) return;
-            // Nghỉ ngắn giữa 2 câu (350ms) để nhịp thở tự nhiên
             queueTimeoutRef.current = setTimeout(() => {
               playSentenceAtIndex(index + 1);
-            }, 350);
+            }, 300);
           }
         }
       );
@@ -191,25 +211,87 @@ export default function EventVoiceTester({
 
   const isDark = theme === 'dark';
 
-  const femaleVnVoices = ALL_SYSTEM_VOICES.filter(v => (v.gender === 'Female' || v.gender === 'Nữ') && (v.region === 'vi' || v.lang === 'vi-VN' || v.id?.startsWith('vn_') || v.id === 'free_vi_female'));
-  const maleVnVoices = ALL_SYSTEM_VOICES.filter(v => (v.gender === 'Male' || v.gender === 'Nam') && (v.region === 'vi' || v.lang === 'vi-VN' || v.id?.startsWith('vn_') || v.id === 'el_adam'));
-  const intlVoices = ALL_SYSTEM_VOICES.filter(v => v.region !== 'vi' && v.lang !== 'vi-VN' && !v.id?.startsWith('vn_') && v.id !== 'free_vi_female' && v.id !== 'el_adam');
+  // Lọc các nhóm giọng chuẩn đồng bộ 100% với kho giọng hệ thống
+  const favoriteVoices = ALL_SYSTEM_VOICES.filter(v => (favoriteIds || []).includes(v.id));
+  const dualConfig = getDualVoiceConfig();
+  const currentIdolVoice = ALL_SYSTEM_VOICES.find(v => v.id === dualConfig?.idolVoice?.id);
+  const currentManagerVoice = ALL_SYSTEM_VOICES.find(v => v.id === dualConfig?.managerVoice?.id);
+  const currentGameVoice = ALL_SYSTEM_VOICES.find(v => v.id === dualConfig?.gameBlvVoice?.id);
 
   const renderVoiceOptions = () => (
     <>
-      <optgroup label="🇻🇳 Giọng Nữ Việt Nam (21 Giọng)">
-        {femaleVnVoices.map(v => (
-          <option key={v.id} value={v.id}>♀ {v.name.replace(/ 💎| 🇻🇳/g, '')}</option>
+      {/* 1. GIỌNG ĐỌC YÊU THÍCH ĐÃ CHỌN */}
+      {favoriteVoices.length > 0 && (
+        <optgroup label={`⭐ GIỌNG YÊU THÍCH ĐÃ CHỌN (${favoriteVoices.length} Giọng)`}>
+          {favoriteVoices.map(v => (
+            <option key={`fav_${v.id}`} value={v.id}>
+              ⭐ {v.name.replace(/ 💎| 🇻🇳/g, '')}
+            </option>
+          ))}
+        </optgroup>
+      )}
+
+      {/* 2. CÁC GIỌNG ĐANG GÁN TRỰC TIẾP CHO PHIÊN LIVE */}
+      <optgroup label="🎙️ VAI TRÒ GÁN TRỰC TIẾP TRÊN PHIÊN LIVE">
+        {currentIdolVoice && (
+          <option value={currentIdolVoice.id}>
+            🎤 [Idol Live] {currentIdolVoice.name.replace(/ 💎| 🇻🇳/g, '')}
+          </option>
+        )}
+        {currentManagerVoice && currentManagerVoice.id !== currentIdolVoice?.id && (
+          <option value={currentManagerVoice.id}>
+            💼 [Quản Lý/Trợ Lý] {currentManagerVoice.name.replace(/ 💎| 🇻🇳/g, '')}
+          </option>
+        )}
+        {currentGameVoice && currentGameVoice.id !== currentIdolVoice?.id && currentGameVoice.id !== currentManagerVoice?.id && (
+          <option value={currentGameVoice.id}>
+            🎮 [BLV Game PK] {currentGameVoice.name.replace(/ 💎| 🇻🇳/g, '')}
+          </option>
+        )}
+      </optgroup>
+
+      {/* 3. BỘ 20 GIỌNG HOT TREND TRIỆU VIEW */}
+      <optgroup label="🔥 BỘ 20 GIỌNG HOT TREND TRIỆU VIEW">
+        {VIETNAMESE_HOTTREND_VOICES.map(v => (
+          <option key={`hot_${v.id}`} value={v.id}>
+            {isVoiceFavorite(v.id) ? '⭐ ' : '🔥 '} {v.name.replace(/ 💎| 🇻🇳/g, '')}
+          </option>
         ))}
       </optgroup>
-      <optgroup label="🇻🇳 Giọng Nam Việt Nam (20 Giọng)">
-        {maleVnVoices.map(v => (
-          <option key={v.id} value={v.id}>♂ {v.name.replace(/ 💎| 🇻🇳/g, '')}</option>
+
+      {/* 4. BỘ 30 GIỌNG BÁN HÀNG & DỊCH VỤ ĐA NGÀNH */}
+      <optgroup label="🛍️ BỘ 30 GIỌNG BÁN HÀNG & DỊCH VỤ ĐA NGÀNH">
+        {VIETNAMESE_SALES_VOICES.map(v => (
+          <option key={`sales_${v.id}`} value={v.id}>
+            {isVoiceFavorite(v.id) ? '⭐ ' : '🛍️ '} {v.name.replace(/ 💎| 🇻🇳/g, '')}
+          </option>
         ))}
       </optgroup>
-      <optgroup label="🌐 Giọng Đọc Quốc Tế (28 Giọng)">
-        {intlVoices.map(v => (
-          <option key={v.id} value={v.id}>{v.name.replace(/ 💎| ⚡/g, '')}</option>
+
+      {/* 5. 21 GIỌNG NỮ VIỆT NAM CAO CẤP 4 VÙNG MIỀN */}
+      <optgroup label="👑 21 GIỌNG NỮ VIỆT NAM CAO CẤP (BẮC - TRUNG - NAM - TÂY)">
+        {VIETNAMESE_FEMALE_VOICES.map(v => (
+          <option key={`fem_${v.id}`} value={v.id}>
+            {isVoiceFavorite(v.id) ? '⭐ ' : '♀ '} {v.name.replace(/ 💎| 🇻🇳/g, '')}
+          </option>
+        ))}
+      </optgroup>
+
+      {/* 6. 20 GIỌNG NAM VIỆT NAM HÀO SẢNG & TRẦM HÙNG */}
+      <optgroup label="👑 20 GIỌNG NAM VIỆT NAM HÀO SẢNG & TRẦM HÙNG">
+        {VIETNAMESE_MALE_VOICES.map(v => (
+          <option key={`male_${v.id}`} value={v.id}>
+            {isVoiceFavorite(v.id) ? '⭐ ' : '♂ '} {v.name.replace(/ 💎| 🇻🇳/g, '')}
+          </option>
+        ))}
+      </optgroup>
+
+      {/* 7. 28 GIỌNG ĐỌC QUỐC TẾ ĐA NGÔN NGỮ */}
+      <optgroup label="🌐 28 GIỌNG ĐỌC QUỐC TẾ ĐA NGÔN NGỮ">
+        {INTERNATIONAL_VOICES.map(v => (
+          <option key={`intl_${v.id}`} value={v.id}>
+            {isVoiceFavorite(v.id) ? '⭐ ' : '🌐 '} {v.name.replace(/ 💎| ⚡/g, '')}
+          </option>
         ))}
       </optgroup>
     </>
@@ -308,7 +390,7 @@ export default function EventVoiceTester({
           <select
             value={selectedVoiceId}
             onChange={(e) => handleVoiceSelect(e.target.value)}
-            className={`text-xs font-bold rounded-xl px-2.5 py-1.5 border transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-purple-500 ${
+            className={`text-xs font-bold rounded-xl px-2.5 py-1.5 border transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-purple-500 max-w-[280px] truncate ${
               isDark 
                 ? 'bg-[#1e2230] text-amber-300 border-white/10 hover:border-amber-500/50' 
                 : 'bg-white text-gray-800 border-gray-300 hover:border-purple-400 shadow-xs'
@@ -375,4 +457,3 @@ export default function EventVoiceTester({
     </div>
   );
 }
-
