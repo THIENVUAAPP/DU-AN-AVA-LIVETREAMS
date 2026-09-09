@@ -26,6 +26,10 @@ export default function GeneralSettings({ onClose = () => {} }) {
   const [previewingVoiceId, setPreviewingVoiceId] = useState(null);
   const [voiceSearchQuery, setVoiceSearchQuery] = useState('');
   const [favoriteVoiceIds, setFavoriteVoiceIds] = useState(getFavoriteVoiceIds());
+  const [salesFilterRegion, setSalesFilterRegion] = useState('all');
+  const [salesFilterAge, setSalesFilterAge] = useState('all');
+  const [salesFilterGender, setSalesFilterGender] = useState('all');
+  const [salesSearchQuery, setSalesSearchQuery] = useState('');
   const fileInputRef = useRef(null);
   
   // State for all settings
@@ -2122,24 +2126,24 @@ IDOL MỈM CƯỜI + GESTURE
                 </div>
                 <div className="relative z-10 space-y-2">
                   <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                    <Sparkles size={14} className="text-yellow-300" /> BỘ SƯU TẬP 20 GIỌNG ĐỌC BÁN HÀNG & DỊCH VỤ CHUYÊN BIỆT
+                    <Sparkles size={14} className="text-yellow-300" /> BỘ SƯU TẬP 30 GIỌNG ĐỌC BÁN HÀNG & CHỐT ĐƠN ĐA VÙNG MIỀN, ĐA ĐỘ TUỔI
                   </div>
                   <h2 className="text-xl sm:text-2xl font-black">
-                    Nâng Tầm Livestream Bán Hàng Với Ngữ Điệu Cực Kỳ Đỉnh Cao & Nhấn Nhá Siêu Cuốn
+                    Nâng Tầm Livestream Bán Hàng Với 30 Giọng Đọc Đa Dạng: 4 Vùng Miền & 3 Độ Tuổi (20 - 70 Tuổi)
                   </h2>
                   <p className="text-xs sm:text-sm text-rose-100 max-w-3xl leading-relaxed">
-                    20 chất giọng chuyên sâu cho từng ngành hàng: Mỹ phẩm, Thời trang, Bất động sản, Gia dụng, Xe cộ, Khóa học, Sức khỏe lão niên, Spa thẩm mỹ... Phân định rõ ràng Nam trầm ấm dứt khoát - Nữ ngọt ngào chốt deal. Bấm <span className="underline font-bold">⭐ Ngôi sao</span> để lưu vào danh sách yêu thích và áp dụng nhanh cho phiên live!
+                    30 chất giọng chuyên sâu phân hóa rõ nét theo <span className="font-bold underline">4 Vùng Miền</span> (Miền Nam, Miền Bắc, Miền Trung, Miền Tây) và <span className="font-bold underline">3 Tầng Độ Tuổi</span> (Trẻ 20-35t, Trung Niên 40-54t, Lão Niên 55-70t) với đầy đủ Nam/Nữ chuẩn chất âm thanh từng ngành hàng: Mỹ phẩm, Thời trang, Công nghệ, BĐS, Dược phẩm Y khoa, Trà cổ thụ, Nông sản & Thảo mộc lão niên. Bấm <span className="underline font-bold">⭐ Ngôi sao</span> để lưu yêu thích!
                   </p>
                 </div>
               </div>
 
-              {/* Danh Sách 20 Giọng Bán Hàng Chuyên Biệt */}
+              {/* Danh Sách 30 Giọng Bán Hàng Chuyên Biệt */}
               <div className="bg-white border border-gray-300 rounded-xl shadow-sm overflow-hidden p-4 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200">
                   <div className="flex items-center gap-2">
                     <ShoppingBag size={20} className="text-rose-600" />
                     <div>
-                      <h3 className="font-bold text-gray-800 text-sm">Kho 20 Giọng Bán Hàng & Chốt Đơn Đa Ngành</h3>
+                      <h3 className="font-bold text-gray-800 text-sm">Kho 30 Giọng Bán Hàng & Chốt Đơn Đa Ngành, Đa Độ Tuổi</h3>
                       <p className="text-xs text-gray-500">Bấm nút để gán ngay làm Giọng Idol, Giọng Trợ Lý hoặc Giọng Game PK</p>
                     </div>
                   </div>
@@ -2150,6 +2154,107 @@ IDOL MỈM CƯỜI + GESTURE
                   </div>
                 </div>
 
+                {/* BỘ LỌC TÌM KIẾM & PHÂN LOẠI ĐA CHIỀU */}
+                <div className="bg-gray-50/80 p-3 rounded-xl border border-gray-200 space-y-2.5">
+                  {/* Tìm kiếm từ khóa */}
+                  <div className="flex flex-col sm:flex-row items-center gap-2">
+                    <div className="relative w-full sm:w-80">
+                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input 
+                        type="text"
+                        placeholder="Tìm giọng, ngành hàng, câu thoại..."
+                        value={salesSearchQuery}
+                        onChange={(e) => setSalesSearchQuery(e.target.value)}
+                        className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-gray-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-rose-500/30 focus:border-rose-500"
+                      />
+                    </div>
+                    {salesSearchQuery && (
+                      <button 
+                        type="button" 
+                        onClick={() => setSalesSearchQuery('')}
+                        className="text-xs text-gray-500 hover:text-gray-800 px-2 py-1 rounded bg-white border border-gray-200"
+                      >
+                        Xóa tìm kiếm
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Filter Pills */}
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    {/* Vùng miền */}
+                    <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-gray-200">
+                      <span className="text-[11px] font-bold text-gray-500 px-1.5">Vùng Miền:</span>
+                      {[
+                        { key: 'all', label: 'Tất cả (30)' },
+                        { key: 'nam', label: 'Miền Nam (8)' },
+                        { key: 'bac', label: 'Miền Bắc (8)' },
+                        { key: 'trung', label: 'Miền Trung (6)' },
+                        { key: 'tay', label: 'Miền Tây (8)' }
+                      ].map(tab => (
+                        <button
+                          key={tab.key}
+                          type="button"
+                          onClick={() => setSalesFilterRegion(tab.key)}
+                          className={`px-2 py-1 rounded text-[11px] font-semibold transition-all ${
+                            salesFilterRegion === tab.key 
+                              ? 'bg-rose-600 text-white shadow-xs' 
+                              : 'text-gray-600 hover:bg-gray-100'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Độ tuổi */}
+                    <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-gray-200">
+                      <span className="text-[11px] font-bold text-gray-500 px-1.5">Độ Tuổi:</span>
+                      {[
+                        { key: 'all', label: 'Tất cả' },
+                        { key: 'young', label: 'Trẻ 20-35t (14)' },
+                        { key: 'middle', label: 'Trung Niên 40-54t (10)' },
+                        { key: 'senior', label: 'Lão Niên 55-70t (6)' }
+                      ].map(tab => (
+                        <button
+                          key={tab.key}
+                          type="button"
+                          onClick={() => setSalesFilterAge(tab.key)}
+                          className={`px-2 py-1 rounded text-[11px] font-semibold transition-all ${
+                            salesFilterAge === tab.key 
+                              ? 'bg-amber-600 text-white shadow-xs' 
+                              : 'text-gray-600 hover:bg-gray-100'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Giới tính */}
+                    <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-gray-200">
+                      <span className="text-[11px] font-bold text-gray-500 px-1.5">Giới Tính:</span>
+                      {[
+                        { key: 'all', label: 'Tất cả' },
+                        { key: 'Male', label: '👨 Nam (16)' },
+                        { key: 'Female', label: '👩 Nữ (14)' }
+                      ].map(tab => (
+                        <button
+                          key={tab.key}
+                          type="button"
+                          onClick={() => setSalesFilterGender(tab.key)}
+                          className={`px-2 py-1 rounded text-[11px] font-semibold transition-all ${
+                            salesFilterGender === tab.key 
+                              ? 'bg-blue-600 text-white shadow-xs' 
+                              : 'text-gray-600 hover:bg-gray-100'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
                 {/* Bảng Giọng Bán Hàng với Quick Action Buttons */}
                 <div className="overflow-x-auto max-h-[540px] border border-gray-200 rounded-lg">
                   <table className="w-full text-sm text-left border-collapse">
@@ -2157,21 +2262,40 @@ IDOL MỈM CƯỜI + GESTURE
                       <tr>
                         <th className="px-2 py-2.5 w-10 text-center">⭐</th>
                         <th className="px-3 py-2.5 w-12 text-center">#</th>
-                        <th className="px-4 py-2.5">Tên Giọng Đọc & Ngành Hàng</th>
+                        <th className="px-4 py-2.5">Tên Nhân Vật & Lời Mẫu Bán Hàng</th>
                         <th className="px-3 py-2.5">Ngành Chuyên Biệt</th>
-                        <th className="px-3 py-2.5 w-24 text-center">Giới Tính</th>
+                        <th className="px-3 py-2.5 text-center">Độ Tuổi & Vùng Miền</th>
+                        <th className="px-3 py-2.5 w-20 text-center">Giới Tính</th>
                         <th className="px-3 py-2.5 w-28 text-center">Nghe Thử</th>
                         <th className="px-4 py-2.5 text-center">Gán Nhanh Vào Kênh Live</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {VIETNAMESE_SALES_VOICES.map((v, idx) => {
+                      {VIETNAMESE_SALES_VOICES
+                        .filter(v => {
+                          if (salesFilterRegion !== 'all' && v.dialect !== salesFilterRegion) return false;
+                          if (salesFilterAge !== 'all' && v.ageGroup !== salesFilterAge) return false;
+                          if (salesFilterGender !== 'all' && v.gender !== salesFilterGender) return false;
+                          if (salesSearchQuery.trim()) {
+                            const q = salesSearchQuery.toLowerCase();
+                            const matchName = v.name?.toLowerCase().includes(q);
+                            const matchCat = v.category?.toLowerCase().includes(q);
+                            const matchSample = v.sampleText?.toLowerCase().includes(q);
+                            const matchDesc = v.desc?.toLowerCase().includes(q);
+                            if (!matchName && !matchCat && !matchSample && !matchDesc) return false;
+                          }
+                          return true;
+                        })
+                        .map((v, idx) => {
                         const isSelectedAsIdol = settings.mainVoiceId === v.id;
                         const isSelectedAsAssistant = settings.assistantVoiceId === v.id;
                         const isSelectedAsGame = settings.gameVoiceId === v.id;
                         const isPlaying = previewingVoiceId === v.id;
                         const isFav = favoriteVoiceIds.includes(v.id);
                         const isFemale = v.gender === 'Female' || v.gender === 'Nữ';
+
+                        const ageBadgeText = v.ageGroup === 'young' ? 'Trẻ 20-35t' : (v.ageGroup === 'middle' ? 'Trung Niên' : 'Lão Niên 55-70t');
+                        const ageBadgeColor = v.ageGroup === 'young' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : (v.ageGroup === 'middle' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-amber-50 text-amber-700 border-amber-200');
 
                         return (
                           <tr 
@@ -2212,6 +2336,11 @@ IDOL MỈM CƯỜI + GESTURE
                             <td className="px-3 py-2.5">
                               <span className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
                                 {v.category}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2.5 text-center">
+                              <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${ageBadgeColor}`}>
+                                {ageBadgeText}
                               </span>
                             </td>
                             <td className="px-3 py-2.5 text-center text-xs font-semibold">

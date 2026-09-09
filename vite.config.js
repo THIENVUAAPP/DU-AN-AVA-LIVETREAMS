@@ -13,6 +13,63 @@ try {
   EdgeTTS = edgePkg.EdgeTTS || edgePkg;
 } catch (e) {}
 
+let viteEdgeTtsQueue = Promise.resolve();
+const viteTtsCache = new Map();
+
+function normalizeViteTtsPitch(p) {
+  if (!p || p === 'default' || p === '+0Hz' || p === '+0%') return '+0Hz';
+  if (typeof p === 'number') {
+    const val = Math.max(-30, Math.min(30, Math.round(p)));
+    return (val >= 0 ? '+' : '') + val + '%';
+  }
+  const str = String(p).trim();
+  if (str.endsWith('%')) {
+    const val = Math.max(-30, Math.min(30, parseInt(str, 10) || 0));
+    return (val >= 0 ? '+' : '') + val + '%';
+  }
+  if (str.endsWith('Hz')) {
+    const val = Math.max(-30, Math.min(30, parseInt(str, 10) || 0));
+    return (val >= 0 ? '+' : '') + val + 'Hz';
+  }
+  return '+0Hz';
+}
+
+function normalizeViteTtsRate(r) {
+  if (!r || r === 'default' || r === '+0%') return '+0%';
+  if (typeof r === 'number') {
+    const val = Math.max(-40, Math.min(60, Math.round(r)));
+    return (val >= 0 ? '+' : '') + val + '%';
+  }
+  const str = String(r).trim();
+  if (str.endsWith('%')) {
+    const val = Math.max(-40, Math.min(60, parseInt(str, 10) || 0));
+    return (val >= 0 ? '+' : '') + val + '%';
+  }
+  return '+0%';
+}
+
+function resolveViteNeuralVoice(voice, gender, lang) {
+  if (voice && typeof voice === 'string' && voice.includes('Neural')) {
+    return voice;
+  }
+  const isMale = (gender || '').toLowerCase() === 'male' || (gender || '').toLowerCase() === 'nam' || (typeof voice === 'string' && (voice.includes('nam') || voice.includes('male') || voice.includes('NamMinh')));
+  const shortLang = (lang || 'vi').split('-')[0].toLowerCase();
+  
+  if (shortLang === 'vi') return isMale ? 'vi-VN-NamMinhNeural' : 'vi-VN-HoaiMyNeural';
+  if (shortLang === 'en') return isMale ? 'en-US-GuyNeural' : 'en-US-JennyNeural';
+  if (shortLang === 'ja') return isMale ? 'ja-JP-KeitaNeural' : 'ja-JP-NanamiNeural';
+  if (shortLang === 'zh') return isMale ? 'zh-CN-YunxiNeural' : 'zh-CN-XiaoxiaoNeural';
+  if (shortLang === 'ko') return isMale ? 'ko-KR-InJoonNeural' : 'ko-KR-SunHiNeural';
+  if (shortLang === 'fr') return isMale ? 'fr-FR-HenriNeural' : 'fr-FR-DeniseNeural';
+  if (shortLang === 'de') return isMale ? 'de-DE-ConradNeural' : 'de-DE-KatjaNeural';
+  if (shortLang === 'es') return isMale ? 'es-ES-AlvaroNeural' : 'es-ES-ElviraNeural';
+  if (shortLang === 'ru') return isMale ? 'ru-RU-DmitryNeural' : 'ru-RU-SvetlanaNeural';
+  if (shortLang === 'it') return isMale ? 'it-IT-DiegoNeural' : 'it-IT-ElsaNeural';
+  if (shortLang === 'th') return isMale ? 'th-TH-NiwatNeural' : 'th-TH-PremwadeeNeural';
+  
+  return isMale ? 'vi-VN-NamMinhNeural' : 'vi-VN-HoaiMyNeural';
+}
+
 // Sử dụng HTTP chuẩn cho local (localhost / 127.0.0.1) để TikTok LIVE Studio kết nối trực tiếp mượt mà 100% không bị chặn SSL
 const useHttpsEnv = process.env.VITE_USE_HTTPS === 'true';
 const devCertPath = path.resolve(__dirname, 'certs/dev-cert.pem');
@@ -89,58 +146,83 @@ export default defineConfig({
               rate = (urlObj.searchParams.get('rate') || '+0%').trim();
             }
 
-            if (text && EdgeTTS) {
-              let neuralVoice = voice;
-              if (!neuralVoice || !neuralVoice.includes('Neural')) {
-                const isMale = (gender || '').toLowerCase() === 'male' || (gender || '').toLowerCase() === 'nam';
-                const shortLang = (lang || 'vi').split('-')[0].toLowerCase();
-                if (shortLang === 'vi') neuralVoice = isMale ? 'vi-VN-NamMinhNeural' : 'vi-VN-HoaiMyNeural';
-                else if (shortLang === 'en') neuralVoice = isMale ? 'en-US-GuyNeural' : 'en-US-JennyNeural';
-                else if (shortLang === 'ja') neuralVoice = isMale ? 'ja-JP-KeitaNeural' : 'ja-JP-NanamiNeural';
-                else if (shortLang === 'zh') neuralVoice = isMale ? 'zh-CN-YunxiNeural' : 'zh-CN-XiaoxiaoNeural';
-                else if (shortLang === 'ko') neuralVoice = isMale ? 'ko-KR-InJoonNeural' : 'ko-KR-SunHiNeural';
-                else if (shortLang === 'fr') neuralVoice = isMale ? 'fr-FR-HenriNeural' : 'fr-FR-DeniseNeural';
-                else if (shortLang === 'de') neuralVoice = isMale ? 'de-DE-ConradNeural' : 'de-DE-KatjaNeural';
-                else if (shortLang === 'es') neuralVoice = isMale ? 'es-ES-AlvaroNeural' : 'es-ES-ElviraNeural';
-                else if (shortLang === 'ru') neuralVoice = isMale ? 'ru-RU-DmitryNeural' : 'ru-RU-SvetlanaNeural';
-                else if (shortLang === 'it') neuralVoice = isMale ? 'it-IT-DiegoNeural' : 'it-IT-ElsaNeural';
-                else if (shortLang === 'th') neuralVoice = isMale ? 'th-TH-NiwatNeural' : 'th-TH-PremwadeeNeural';
-                else neuralVoice = isMale ? 'vi-VN-NamMinhNeural' : 'vi-VN-HoaiMyNeural';
+            if (!text) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ error: 'Missing text' }));
+              return;
+            }
+
+            const neuralVoice = resolveViteNeuralVoice(voice, gender, lang);
+            const safePitch = normalizeViteTtsPitch(pitch);
+            const safeRate = normalizeViteTtsRate(rate);
+            const cacheKey = `${neuralVoice}_${safePitch}_${safeRate}_${text}`;
+
+            if (viteTtsCache.has(cacheKey)) {
+              const cached = viteTtsCache.get(cacheKey);
+              res.setHeader('Access-Control-Allow-Origin', '*');
+              if (req.method === 'POST') {
+                res.setHeader('Content-Type', 'application/json');
+                res.statusCode = 200;
+                res.end(JSON.stringify({ success: true, audioBase64: cached.toString('base64') }));
+              } else {
+                res.setHeader('Content-Type', 'audio/mpeg');
+                res.setHeader('Cache-Control', 'public, max-age=86400');
+                res.statusCode = 200;
+                res.end(cached);
               }
+              return;
+            }
 
-              const safePitch = pitch && pitch.includes('%') ? pitch : (pitch && pitch.includes('Hz') ? pitch : '+0Hz');
-              const safeRate = rate && rate.includes('%') ? rate : '+0%';
-
+            if (EdgeTTS) {
               const tmpFile = path.resolve(os.tmpdir(), `tts_vite_${Date.now()}_${Math.random().toString(36).slice(2)}.mp3`);
-              try {
-                const tts = new EdgeTTS({
-                  voice: neuralVoice,
-                  lang: neuralVoice.split('-').slice(0, 2).join('-') || 'vi-VN',
-                  pitch: safePitch,
-                  rate: safeRate,
-                  outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
-                  timeout: 4500
-                });
-                await tts.ttsPromise(text, tmpFile);
-                if (fs.existsSync(tmpFile)) {
-                  const buf = fs.readFileSync(tmpFile);
-                  try { fs.unlinkSync(tmpFile); } catch (e) {}
-                  res.setHeader('Access-Control-Allow-Origin', '*');
-                  if (req.method === 'POST') {
-                    res.setHeader('Content-Type', 'application/json');
-                    res.statusCode = 200;
-                    res.end(JSON.stringify({ success: true, audioBase64: buf.toString('base64') }));
-                  } else {
-                    res.setHeader('Content-Type', 'audio/mpeg');
-                    res.setHeader('Cache-Control', 'public, max-age=86400');
-                    res.statusCode = 200;
-                    res.end(buf);
+              
+              viteEdgeTtsQueue = viteEdgeTtsQueue.then(async () => {
+                try {
+                  const tts = new EdgeTTS({
+                    voice: neuralVoice,
+                    lang: neuralVoice.split('-').slice(0, 2).join('-') || 'vi-VN',
+                    pitch: safePitch,
+                    rate: safeRate,
+                    outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
+                    timeout: 8000
+                  });
+                  await tts.ttsPromise(text, tmpFile);
+                  if (fs.existsSync(tmpFile)) {
+                    const buf = fs.readFileSync(tmpFile);
+                    try { fs.unlinkSync(tmpFile); } catch (e) {}
+
+                    if (viteTtsCache.size > 200) {
+                      const first = viteTtsCache.keys().next().value;
+                      viteTtsCache.delete(first);
+                    }
+                    viteTtsCache.set(cacheKey, buf);
+
+                    res.setHeader('Access-Control-Allow-Origin', '*');
+                    if (req.method === 'POST') {
+                      res.setHeader('Content-Type', 'application/json');
+                      res.statusCode = 200;
+                      res.end(JSON.stringify({ success: true, audioBase64: buf.toString('base64') }));
+                    } else {
+                      res.setHeader('Content-Type', 'audio/mpeg');
+                      res.setHeader('Cache-Control', 'public, max-age=86400');
+                      res.statusCode = 200;
+                      res.end(buf);
+                    }
+                    return;
                   }
-                  return;
+                } catch (e) {
+                  if (fs.existsSync(tmpFile)) try { fs.unlinkSync(tmpFile); } catch(err) {}
+                  console.warn('[vite.config.js] EdgeTTS error:', e?.message || e);
                 }
-              } catch (e) {
-                if (fs.existsSync(tmpFile)) try { fs.unlinkSync(tmpFile); } catch(err) {}
-              }
+
+                res.statusCode = 500;
+                res.end(JSON.stringify({ error: 'EdgeTTS failed' }));
+              });
+              return;
+            } else {
+              res.statusCode = 503;
+              res.end(JSON.stringify({ error: 'EdgeTTS not available' }));
+              return;
             }
           }
 
@@ -391,68 +473,6 @@ export default defineConfig({
             } catch (e) {
                res.setHeader('Content-Type', 'application/json');
                res.end(JSON.stringify({ url: queryUrl }));
-            }
-            return;
-          }
-
-          if (req.url.startsWith('/api/tts')) {
-            if (req.method === 'POST') {
-              let bodyStr = '';
-              req.on('data', chunk => { bodyStr += chunk; });
-              req.on('end', async () => {
-                try {
-                  const body = JSON.parse(bodyStr || '{}');
-                  const text = (body.text || '').toString().trim() || 'Xin chào';
-                  const googleUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=vi&q=${encodeURIComponent(text.slice(0, 200))}`;
-                  const https = await import('https');
-                  https.get(googleUrl, {
-                    headers: {
-                      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                    }
-                  }, (gRes) => {
-                    const chunks = [];
-                    gRes.on('data', c => chunks.push(c));
-                    gRes.on('end', () => {
-                      const buffer = Buffer.concat(chunks);
-                      res.setHeader('Content-Type', 'application/json');
-                      res.end(JSON.stringify({ success: true, audioBase64: buffer.toString('base64') }));
-                    });
-                  }).on('error', (err) => {
-                    res.statusCode = 500;
-                    res.end(JSON.stringify({ error: err.message }));
-                  });
-                } catch (err) {
-                  res.statusCode = 500;
-                  res.end(JSON.stringify({ error: err.message }));
-                }
-              });
-              return;
-            }
-
-            try {
-              const urlObj = new URL(req.url, 'http://localhost');
-              const text = urlObj.searchParams.get('text') || 'Xin chào';
-              const lang = urlObj.searchParams.get('lang') || 'vi';
-              const googleUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(lang)}&q=${encodeURIComponent(text.slice(0, 200))}`;
-              
-              const https = await import('https');
-              const gReq = https.get(googleUrl, {
-                headers: {
-                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                  'Referer': 'https://translate.google.com/'
-                }
-              }, (gRes) => {
-                res.setHeader('Content-Type', 'audio/mpeg');
-                res.setHeader('Cache-Control', 'public, max-age=86400');
-                gRes.pipe(res);
-              });
-              gReq.on('error', (err) => {
-                res.statusCode = 500;
-                res.end(JSON.stringify({ error: err.message }));
-              });
-            } catch (err) {
-              res.statusCode = 500;
-              res.end(JSON.stringify({ error: err.message }));
             }
             return;
           }

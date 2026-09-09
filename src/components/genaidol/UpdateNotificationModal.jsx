@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.3.3';
+export const APP_VERSION = '2.3.4';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🎙️ Tái Cấu Trúc Toàn Diện Hệ Thống Giọng Đọc AI — Khác Biệt Tuyệt Đối 100%',
-    description: 'Nâng cấp toàn bộ kho giọng đọc với âm sắc, cao độ (Pitch), tốc độ (Speed), EQ Formant và câu thoại đặc trưng riêng biệt 100%. Chuẩn xác Nam ra Nam (trầm hùng, đĩnh đạc, uy lực), Nữ ra Nữ (ngọt ngào, duyên dáng, sang trọng), phân biệt rõ nét từng vùng miền (Bắc, Trung, Nam, Tây, Huế, Đà Nẵng, Nghệ Tĩnh) và từng ngành nghề (Bán Hàng, MC BTV, BLV Game PK, Podcast, TVC).'
+    title: '🛍️ Ra Mắt Kho 30 Giọng Bán Hàng & Chốt Đơn Đa Ngành, Đa Vùng Miền, Đa Độ Tuổi (20 - 70 Tuổi)',
+    description: 'Hệ sinh thái giọng bán hàng hoàn chỉnh nhất gồm đúng 30 nhân vật độc bản: 8 giọng Miền Nam, 8 giọng Miền Bắc, 6 giọng Miền Trung, 8 giọng Miền Tây. Đầy đủ các thế hệ từ Nam/Nữ Trẻ (20-35t), Trung Niên (40-54t) đến Lão Niên (55-70t) chuyên biệt cho từng mặt hàng (Mỹ phẩm, BĐS, Ô tô, Y khoa, Trà đạo, Mật ong, Trái cây miệt vườn...).'
   },
   {
-    title: '⚡ Bộ Xử Lý Edge Neural TTS & Web Audio DSP Chống Trùng Lặp',
-    description: 'Tối ưu hóa hàng đợi kết nối TTS WebSocket, xử lý chuẩn xác cao độ & tốc độ theo từng chất giọng, kết hợp bộ giải mã DSP 4 băng tần (Lowshelf, Mid Clarity, Presence, High Air, Dynamics Compressor) đảm bảo không bao giờ bị rơi về giọng robot mặc định.'
+    title: '🎯 Khắc Phục Triệt Để Lỗi Giọng Nam Phát Tiếng Nữ & Trùng Lặp',
+    description: 'Nâng cấp lõi EdgeTTS Neural Voice Engine chuẩn hóa tuyệt đối vi-VN-NamMinhNeural cho Nam và vi-VN-HoaiMyNeural cho Nữ, kết hợp bộ giải mã DSP Formant đa tầng. Loại bỏ hoàn toàn fallback Google Translate đơn âm để mọi giọng đều phát huy 100% âm sắc riêng biệt.'
   },
   {
-    title: '🎛️ Nâng Cấp VoiceStudio & Bộ Lọc Nhanh 1-Chạm',
-    description: 'VoiceStudio bổ sung thanh tab lọc nhanh theo thể loại (Nữ VN, Nam VN, Bán Hàng, Miền Bắc, Miền Trung, Miền Nam, Miền Tây, Quốc Tế) cùng tính năng nghe thử chuẩn xác câu thoại mẫu và tùy biến 6 thanh trượt cảm xúc phòng thu chuyên nghiệp.'
+    title: '🔍 Bộ Lọc Tìm Kiếm Đa Chiều & Gán Nhanh Vào Livestream',
+    description: 'Bổ sung thanh lọc thông minh theo Vùng Miền (Bắc, Trung, Nam, Tây), Tầng Độ Tuổi (Trẻ, Trung Niên, Lão Niên), Giới Tính và Từ Khóa, kèm tính năng 1-chạm gán ngay giọng đọc vào Idol Live, Trợ Lý hoặc BLV Game.'
   }
 ];
 

@@ -93,7 +93,7 @@ export default function AIVoiceModule() {
     if (activeCategoryTab === 'all') return true;
     if (activeCategoryTab === 'female') return v.gender === 'female' && v.region === 'vi';
     if (activeCategoryTab === 'male') return v.gender === 'male' && v.region === 'vi';
-    if (activeCategoryTab === 'sales') return v.styleCategory === 'sales_services' || v.rawVoice?.styleCategory === 'banhang' || v.id.startsWith('vn_sale_');
+    if (activeCategoryTab === 'sales') return v.styleCategory === 'sales_services' || v.rawVoice?.styleCategory === 'banhang' || v.id.startsWith('vn_sales_') || v.id.startsWith('vn_sale_');
     if (activeCategoryTab === 'bac') return v.dialect === 'bac' || v.rawVoice?.category?.includes('Bắc');
     if (activeCategoryTab === 'trung') return v.dialect === 'trung' || v.dialect === 'hue' || v.dialect === 'danang' || v.dialect === 'nghean' || v.rawVoice?.category?.includes('Trung');
     if (activeCategoryTab === 'nam') return v.dialect === 'nam' || v.rawVoice?.category?.includes('Nam');
