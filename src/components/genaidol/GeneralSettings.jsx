@@ -1647,9 +1647,13 @@ IDOL MỈM CƯỜI + GESTURE
         if (!matchName && !matchCategory && !matchDesc && !matchLang && !matchIndustry) return false;
       }
 
-      // 2. Category / Region / Gender / Favorite filter
+      // 2. Category / Region / Gender / Dialect / Favorite filter
       if (currentFilter === 'favorites') return isFav;
       if (currentFilter === 'sales' || currentFilter === 'vn_sales') return isSales;
+      if (currentFilter === 'dialect_bac') return isVn && (v.dialect === 'bac' || v.category?.includes('Bắc') || v.name?.includes('Hà Nội') || v.name?.includes('Bắc'));
+      if (currentFilter === 'dialect_trung') return isVn && (v.dialect === 'trung' || v.category?.includes('Trung') || v.name?.includes('Huế') || v.name?.includes('Đà Nẵng') || v.name?.includes('Trung'));
+      if (currentFilter === 'dialect_nam') return isVn && (v.dialect === 'nam' || v.category?.includes('Nam') || v.name?.includes('Sài Gòn') || v.name?.includes('Nam'));
+      if (currentFilter === 'dialect_tay') return isVn && (v.dialect === 'tay' || v.category?.includes('Tây') || v.name?.includes('Miền Tây') || v.name?.includes('Sông Nước') || v.name?.includes('Cần Thơ') || v.name?.includes('Tây'));
       if (currentFilter === 'vn_all') return isVn;
       if (currentFilter === 'vn_female') return isVn && (v.gender === 'Female' || v.gender === 'Nữ');
       if (currentFilter === 'vn_male') return isVn && (v.gender === 'Male' || v.gender === 'Nam');
@@ -1826,8 +1830,11 @@ IDOL MỈM CƯỜI + GESTURE
     const filters = [
       { id: 'all', label: '🌟 Tất Cả (89 Giọng)' },
       { id: 'favorites', label: `⭐ Yêu Thích (${favoriteVoiceIds.length})` },
+      { id: 'dialect_bac', label: '🏛️ Miền Bắc (Hà Nội, BTV)' },
+      { id: 'dialect_trung', label: '🌊 Miền Trung (Huế, ĐN)' },
+      { id: 'dialect_nam', label: '🌴 Miền Nam (Sài Gòn)' },
+      { id: 'dialect_tay', label: '🌾 Miền Tây (Sông Nước)' },
       { id: 'sales', label: '🛍️ Bán Hàng & Dịch Vụ (20)' },
-      { id: 'vn_all', label: '🇻🇳 Tất Cả VN (61)' },
       { id: 'vn_female', label: '👩 Nữ Việt Nam (21)' },
       { id: 'vn_male', label: '👨 Nam Việt Nam (20)' },
       { id: 'vn_young', label: '✨ Giọng Trẻ Gen Z' },

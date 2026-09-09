@@ -39,7 +39,7 @@ const VOICE_PRESETS = ALL_SYSTEM_VOICES.map(v => ({
   gender: (v.gender === 'Male' || v.gender === 'Nam') ? 'male' : 'female',
   pitch: v.pitch || 1.0,
   speed: v.rate || 1.0,
-  tag: v.tier === 'pro' ? 'PRO STUDIO' : 'MIỄN PHÍ',
+  tag: v.badge || (v.tier === 'pro' ? '👑 STUDIO VIP' : '💎 AI PRO VOICE'),
   lang: v.lang === 'vi-VN' ? 'Tiếng Việt' : v.lang,
   previewUrl: v.previewUrl
 }));

@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.2.6';
+export const APP_VERSION = '2.2.7';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🛍️ Bổ Sung 20 Giọng Đọc AI Bán Hàng & Dịch Vụ Đa Ngành Hàng',
-    description: 'Bổ sung 20 chất giọng chuyên sâu (Nam/Nữ/Già/Trẻ) tối ưu hóa ngữ điệu chốt đơn cho từng ngành: Mỹ phẩm, Thời trang, Bất động sản, Gia dụng, Xe cộ, Khóa học, Sức khỏe, Spa thẩm mỹ...'
+    title: '🏛️ Phân Loại 4 Vùng Miền Việt Nam (Bắc - Trung - Nam - Tây)',
+    description: 'Hệ thống giọng đọc được tối ưu hóa chuẩn sắc thái 4 vùng miền: Miền Bắc (Hà Nội, BTV), Miền Trung (Huế, Đà Nẵng, Nghệ Tĩnh), Miền Nam (Sài Gòn, KOC Gen Z), Miền Tây (Sông Nước, Út Mai, Chú Năm).'
   },
   {
-    title: '⭐ Hệ Thống Tích Sao Yêu Thích & Kho Lưu Giọng Đọc 1-Click',
-    description: 'Người dùng dễ dàng đánh dấu ngôi sao ⭐ cho các giọng đọc tâm đắc, lưu trữ trong Tab Yêu Thích để kích hoạt và chuyển đổi nhanh chóng trong các phiên livestream.'
+    title: '⚡ Khắc Phục Triệt Để Tốc Độ Giọng Nam — Nhanh, Dứt Khoát, Hào Sảng',
+    description: 'Tách biệt cao độ trầm nam và tốc độ phát âm Web Audio DSP. Giọng Nam phát âm mạnh mẽ, chuẩn nam tính 100%, dứt khoát, hào sảng, không còn tình trạng bị đọc chậm hay kéo lê.'
   },
   {
-    title: '🎙️ Chuẩn Hóa Phân Biệt Tuyệt Đối Giọng Nam & Nữ + Acoustic DSP Siêu Cảm Xúc',
-    description: 'Tối ưu bộ lọc cộng hưởng thanh quản & ngực: Giọng Nam trầm ấm, uy lực, chuẩn nam 100%; Giọng Nữ trong trẻo, ngọt ngào, nhấn nhá tự nhiên và đầy cảm xúc đỉnh cao.'
+    title: '💎 Phân Hóa Rõ Rệt 100% Không Trùng Lặp Giữa Toàn Bộ Giọng Đọc',
+    description: 'Đa dạng hóa độ tuổi (Trẻ, Gen Z, Trung niên, Doanh nhân, Lão niên, Em bé), tần số Formant F1/F2, tốc độ và cảm xúc (Vui tươi, Hào sảng, Thư thái, Giục đơn, Sâu lắng).'
   }
 ];
 

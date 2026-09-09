@@ -627,6 +627,11 @@ export default function GameVoiceConfigPanel({
 
     // Vietnamese sub-filters
     if (voiceMainTab === 'vn') {
+      if (voiceSubFilter === 'dialect_bac') return v.dialect === 'bac' || v.category?.includes('Bắc') || v.name?.includes('Hà Nội') || v.name?.includes('Bắc');
+      if (voiceSubFilter === 'dialect_trung') return v.dialect === 'trung' || v.category?.includes('Trung') || v.name?.includes('Huế') || v.name?.includes('Đà Nẵng') || v.name?.includes('Trung');
+      if (voiceSubFilter === 'dialect_nam') return v.dialect === 'nam' || v.category?.includes('Nam') || v.name?.includes('Sài Gòn') || v.name?.includes('Nam');
+      if (voiceSubFilter === 'dialect_tay') return v.dialect === 'tay' || v.category?.includes('Tây') || v.name?.includes('Miền Tây') || v.name?.includes('Sông Nước') || v.name?.includes('Cần Thơ') || v.name?.includes('Tây');
+      if (voiceSubFilter === 'sales') return v.category?.includes('Bán Hàng') || v.category?.includes('Chốt Đơn') || v.styleCategory === 'banhang' || v.styleCategory === 'sales_expert' || v.id?.startsWith('vn_sales_');
       if (voiceSubFilter === 'female' && v.gender !== 'Female') return false;
       if (voiceSubFilter === 'male' && v.gender !== 'Male') return false;
       if (voiceSubFilter === 'young' && v.ageGroup !== 'young' && v.styleCategory !== 'idol_genz') return false;
@@ -634,7 +639,6 @@ export default function GameVoiceConfigPanel({
       if (voiceSubFilter === 'banhang' && v.styleCategory !== 'banhang') return false;
       if (voiceSubFilter === 'blv_game' && v.styleCategory !== 'blv_game') return false;
       if (voiceSubFilter === 'mature' && v.ageGroup !== 'mature' && v.ageGroup !== 'middle' && v.styleCategory !== 'doanhnhan') return false;
-      if (voiceSubFilter === 'free' && v.tier !== 'free') return false;
     }
 
     // International country filter
@@ -1069,14 +1073,17 @@ export default function GameVoiceConfigPanel({
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {[
                     { id: 'all', label: '🌟 Tất Cả (61)' },
-                    { id: 'sales', label: '🛍️ Bán Hàng & Dịch Vụ (20)' },
-                    { id: 'female', label: '👩 Giọng Nữ (21)' },
-                    { id: 'male', label: '👨 Giọng Nam (20)' },
-                    { id: 'young', label: '✨ Giọng Trẻ Gen Z' },
-                    { id: 'mc_btv', label: '🎙️ MC & Biên Tập Viên' },
-                    { id: 'banhang', label: '🛍️ Bán Hàng & Chốt Đơn' },
-                    { id: 'blv_game', label: '🔥 BLV Game & PK' },
-                    { id: 'mature', label: '👑 Doanh Nhân / Cao Tuổi' },
+                    { id: 'dialect_bac', label: '🏛️ Miền Bắc' },
+                    { id: 'dialect_trung', label: '🌊 Miền Trung' },
+                    { id: 'dialect_nam', label: '🌴 Miền Nam' },
+                    { id: 'dialect_tay', label: '🌾 Miền Tây' },
+                    { id: 'sales', label: '🛍️ Bán Hàng (20)' },
+                    { id: 'female', label: '👩 Nữ (21)' },
+                    { id: 'male', label: '👨 Nam (20)' },
+                    { id: 'young', label: '✨ Trẻ Gen Z' },
+                    { id: 'mc_btv', label: '🎙️ MC / BTV' },
+                    { id: 'blv_game', label: '🔥 BLV Game' },
+                    { id: 'mature', label: '👑 Doanh Nhân' },
                   ].map(sub => (
                     <button
                       key={sub.id}
