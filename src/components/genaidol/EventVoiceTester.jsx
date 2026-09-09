@@ -252,6 +252,11 @@ export default function EventVoiceTester({
   const playSentenceAtIndex = (index, customVoice = null) => {
     if (!isPlayingRef.current) return;
 
+    if (queueTimeoutRef.current) {
+      clearTimeout(queueTimeoutRef.current);
+      queueTimeoutRef.current = null;
+    }
+
     const sentences = sentencesRef.current;
     if (!sentences || index >= sentences.length) {
       handleStop();
@@ -290,6 +295,11 @@ export default function EventVoiceTester({
         rate: speedRef.current,
         onEnd: () => {
           if (!isPlayingRef.current) return;
+          if (queueTimeoutRef.current) {
+            clearTimeout(queueTimeoutRef.current);
+            queueTimeoutRef.current = null;
+          }
+
           const pauseSec = pauseDurationRef.current !== undefined ? Number(pauseDurationRef.current) : 0.1;
           
           // Nếu chọn 0.0s (Liền mạch): Phát câu tiếp theo NGAY LẬP TỨC 0ms không qua bất kỳ timer delay nào!

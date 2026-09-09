@@ -3398,8 +3398,19 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
     ? window.location.origin
     : '';
 
+  // Chuẩn hóa văn bản gửi đến TTS engine: Loại bỏ việc Azure TTS tự động chèn khoảng lặng 1-2s sau các dấu !, ?, :, ;, ...
+  let ttsText = text.trim();
+  ttsText = ttsText
+    .replace(/[!?]+/g, ' ')
+    .replace(/[;:]+/g, ', ')
+    .replace(/\.{2,}/g, '. ')
+    .replace(/,\s*,+/g, ', ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  ttsText = ttsText.replace(/[,.]\s*$/, '').trim() || text.trim();
+
   const postPayload = JSON.stringify({
-    text: text.trim(),
+    text: ttsText,
     voice: neuralVoice,
     voiceId: voice?.id || '',
     gender,
@@ -3408,7 +3419,7 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
     lang: shortLang
   });
 
-  const ttsQuery = `text=${encodeURIComponent(text.trim())}&voice=${encodeURIComponent(neuralVoice)}&voiceId=${encodeURIComponent(voice?.id || '')}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(effectivePitch)}&rate=${encodeURIComponent(effectiveRate)}&lang=${encodeURIComponent(shortLang)}`;
+  const ttsQuery = `text=${encodeURIComponent(ttsText)}&voice=${encodeURIComponent(neuralVoice)}&voiceId=${encodeURIComponent(voice?.id || '')}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(effectivePitch)}&rate=${encodeURIComponent(effectiveRate)}&lang=${encodeURIComponent(shortLang)}`;
 
   const endpointCandidates = [
     ...(currentOrigin ? [`${currentOrigin}/api/tts`] : []),

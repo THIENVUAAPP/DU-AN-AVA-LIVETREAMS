@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.5.1';
+export const APP_VERSION = '2.5.2';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Khắc Phục Triệt Để Lỗi Dừng / Khựng Lâu Khi Gặp Dấu (!, ?, ...) Với Bộ Silence Trimmer',
-    description: 'Tích hợp bộ cắt tỉa khoảng lặng Audio Buffer thông minh, loại bỏ 100% khoảng lặng chết (400ms - 1500ms) do TTS sinh ra ở cuối câu. Chuyển câu NGAY TỨC THÌ 0ms khi chọn chế độ nghỉ 0.0s.'
+    title: '⚡ Triệt Tiêu 100% Khoảng Dừng Tại Dấu Câu (!, ?, ...) & Loại Bỏ Hoàn Toàn Tạp Âm Khoảng Lặng',
+    description: 'Chuẩn hóa định dạng văn bản gửi đến TTS Engine và kích hoạt Silence Trimmer tự động: Không còn hiện tượng ngắt khựng giữa chừng hoặc dừng lâu tại các dấu câu (!, ?, :, ;). Mọi câu đọc liền mạch 0ms siêu mượt.'
   },
   {
     title: '🎙️ Chuẩn Hóa 100% Phát Âm Tiếng Anh, Từ Viết Tắt & Đọc Số Tiền Livestream Chính Xác',
