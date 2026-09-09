@@ -4,10 +4,11 @@ import { getDualVoiceConfig, previewVoiceAudio, stopVoiceAudio } from '../../uti
 
 /**
  * AIAudioPlayer - Quản lý hàng đợi phát âm thanh thông minh trong Livestream
- * - Tự động phát tuần tự kịch bản bán hàng (Fixed Script) từ câu đầu đến câu cuối.
- * - Khi có sự kiện ưu tiên (Trả lời comment, Chào viewer mới, Cảm ơn quà tặng):
- *   Tạm dừng câu thoại kịch bản hiện tại, phát câu trả lời ngay lập tức,
- *   sau đó tự động tiếp tục phát đúng câu thoại kịch bản tiếp theo mà không bị lặp hay mất vị trí.
+ * - Tự động phát tuần tự kịch bản bán hàng (Fixed Script) từ câu đầu đến câu cuối xuyên suốt 100%.
+ * - Khi có sự kiện ưu tiên (Trả lời bình luận, Chào viewer mới, Cảm ơn quà tặng):
+ *   Đọc dứt điểm hết câu thoại kịch bản hiện tại (không ngắt ngang giữa chừng),
+ *   sau đó phát câu trả lời/chào hỏi ngay lập tức,
+ *   rồi tự động tiếp tục phát đúng câu thoại kịch bản tiếp theo mà không bị lặp hay mất vị trí.
  * - Tự động lặp lại kịch bản khi đọc hết (nếu cấu hình loopScript = true).
  */
 const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTriggered, currentVideoUrl }, ref) => {
@@ -22,6 +23,7 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
   const isBusyRef = useRef(false);
   const queueRef = useRef([]);
   const currentIndexRef = useRef(0);
+  const priorityQueueRef = useRef([]);
 
   useEffect(() => {
     isPlayingRef.current = isPlaying;
@@ -55,56 +57,76 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
     return audioRef.current;
   };
 
-  // 1. Lấy Job & Kịch bản từ LocalStorage khi Live bắt đầu
+  // 1. Lấy Job & Kịch bản từ Workspace Sự Kiện hoặc LocalStorage khi Live bắt đầu
   useEffect(() => {
     if (isLive) {
       try {
-        const savedJob = localStorage.getItem('aidol_active_job');
-        if (savedJob) {
-          const parsed = JSON.parse(savedJob);
-          setJob(parsed);
-          
-          if (parsed && typeof parsed.scriptContent === 'string' && parsed.scriptContent.trim()) {
-            const rawSentences = parsed.scriptContent
-              .split(/\r?\n/)
-              .map(s => s.trim())
-              .filter(Boolean);
-
-            const expandedSentences = [];
-            for (const line of rawSentences) {
-              if (line.length > 140) {
-                const parts = line.split(/(?<=[.!?;\n])\s+/).map(p => p.trim()).filter(Boolean);
-                if (parts.length > 1) {
-                  expandedSentences.push(...parts);
-                  continue;
-                }
-              }
-              expandedSentences.push(line);
+        let scriptRaw = '';
+        
+        // Ưu tiên 1: Kịch bản người dùng đã cài đặt trong Workspace Cài Đặt Sự Kiện
+        const eventConfigsRaw = localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup');
+        if (eventConfigsRaw) {
+          try {
+            const evConf = JSON.parse(eventConfigsRaw);
+            if (evConf.script_broadcast && evConf.script_broadcast.fixedScriptText) {
+              scriptRaw = evConf.script_broadcast.fixedScriptText;
             }
+          } catch (e) {}
+        }
 
-            const scriptItems = expandedSentences.map((s, idx) => ({
-              id: `script_${idx}`,
-              type: 'script',
-              text: s.trim(),
-              voiceChannel: 'idol',
-              index: idx
-            }));
-
-            setQueue(scriptItems);
-            queueRef.current = scriptItems;
-            setCurrentIndex(0);
-            currentIndexRef.current = 0;
-            setIsPlaying(true);
-            isPlayingRef.current = true;
+        // Ưu tiên 2: Kịch bản trong aidol_active_job
+        if (!scriptRaw) {
+          const savedJob = localStorage.getItem('aidol_active_job');
+          if (savedJob) {
+            const parsed = JSON.parse(savedJob);
+            setJob(parsed);
+            if (parsed && typeof parsed.scriptContent === 'string' && parsed.scriptContent.trim()) {
+              scriptRaw = parsed.scriptContent;
+            }
           }
         }
+
+        // Ưu tiên 3: Kịch bản mẫu mặc định
+        if (!scriptRaw) {
+          scriptRaw = `Chào mừng tất cả các tình yêu đã có mặt trong phiên livestream làm đẹp đặc biệt ngày hôm nay của shop em nha!
+Các chị đẹp ơi, ai đang lướt qua phiên live thì cho em xin một nút thả tim và một lượt chia sẻ để nhận quà mở bát đầu live nào!
+Hôm nay shop em mang đến cho cả nhà một siêu phẩm chăm sóc sắc đẹp và nâng tầm khí chất cực kỳ đỉnh cao luôn ạ!
+Đó chính là Bộ Đôi Tinh Chất Serum Tế Bào Gốc Phục Hồi Da Trẻ Hóa và Nước Hoa Pháp Cao Cấp lưu hương suốt 12 giờ đồng hồ!
+Chị nào mà da đang bị khô ráp, thâm sạm, không đều màu hoặc bắt đầu xuất hiện nếp nhăn lão hóa thì nhất định không được bỏ qua live này nhé!
+Chỉ sau đúng 7 ngày sử dụng, làn da của các chị sẽ căng bóng, mịn màng và mướt như da em bé luôn ạ!
+Duy nhất trong phiên livestream ngày hôm nay, giảm sốc 50% chỉ còn 890.000đ tặng kèm kem dưỡng ẩm mini và freeship toàn quốc!
+Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày, bấm vào Giỏ Hàng góc trái săn ngay nhé!`;
+        }
+
+        // Tách câu theo từng dòng, đọc trọn vẹn xuyên suốt từ câu đầu đến câu cuối
+        const rawSentences = scriptRaw
+          .split(/\r?\n/)
+          .map(s => s.trim())
+          .filter(Boolean);
+
+        const scriptItems = rawSentences.map((s, idx) => ({
+          id: `script_${idx}`,
+          type: 'script',
+          text: s.trim(),
+          voiceChannel: 'idol',
+          index: idx
+        }));
+
+        setQueue(scriptItems);
+        queueRef.current = scriptItems;
+        setCurrentIndex(0);
+        currentIndexRef.current = 0;
+        priorityQueueRef.current = [];
+        setIsPlaying(true);
+        isPlayingRef.current = true;
       } catch (err) {
-        console.warn("AIAudioPlayer failed to parse active job:", err);
+        console.warn("AIAudioPlayer failed to parse script:", err);
       }
     } else {
       setIsPlaying(false);
       isPlayingRef.current = false;
       isBusyRef.current = false;
+      priorityQueueRef.current = [];
       stopVoiceAudio();
       const aud = getAudio();
       if (aud) aud.pause();
@@ -113,14 +135,23 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
 
   // 2. Vòng lặp phát âm thanh
   useEffect(() => {
-    if (!isPlaying || isBusyRef.current || queue.length === 0) {
+    if (!isPlaying || isBusyRef.current) {
       if (!isPlaying && onAudioPlayStateChange) onAudioPlayStateChange(false);
       return;
     }
 
+    // Kiểm tra nếu có sự kiện ưu tiên trong hàng đợi
+    if (priorityQueueRef.current.length > 0) {
+      const priorityItem = priorityQueueRef.current.shift();
+      playItem(priorityItem, false);
+      return;
+    }
+
+    if (queue.length === 0) return;
+
     if (currentIndex >= queue.length) {
       // Đã đọc hết kịch bản: Kiểm tra xem có lặp lại không
-      const savedConfig = localStorage.getItem('aidol_live_event_configs');
+      const savedConfig = localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup');
       let shouldLoop = true;
       try {
         if (savedConfig) {
@@ -143,11 +174,11 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
 
     const currentItem = queue[currentIndex];
     if (currentItem) {
-      playItem(currentItem);
+      playItem(currentItem, true);
     }
   }, [currentIndex, isPlaying, queue]);
 
-  const playItem = async (item) => {
+  const playItem = async (item, isScriptItem = true) => {
     if (isBusyRef.current) return;
     isBusyRef.current = true;
 
@@ -161,7 +192,7 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
       
       if (activeVoice?.enabled === false) {
         isBusyRef.current = false;
-        if (isPlayingRef.current) {
+        if (isScriptItem && isPlayingRef.current) {
           setCurrentIndex(prev => prev + 1);
         }
         return;
@@ -184,15 +215,32 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
         onEnd: () => {
           if (onActionTriggered) onActionTriggered({ type: 'LIPSYNC_ENDED' });
           isBusyRef.current = false;
-          if (isPlayingRef.current) {
+          
+          if (!isPlayingRef.current) return;
+
+          // Nếu có sự kiện ưu tiên đang chờ, phát sự kiện ưu tiên
+          if (priorityQueueRef.current.length > 0) {
+            const nextPriority = priorityQueueRef.current.shift();
+            playItem(nextPriority, false);
+            return;
+          }
+
+          // Tiếp tục đọc câu thoại kịch bản tiếp theo
+          if (isScriptItem) {
             setCurrentIndex(prev => prev + 1);
+          } else {
+            // Sau khi phát xong sự kiện ưu tiên, tiếp tục kịch bản tại vị trí hiện tại
+            const curIdx = currentIndexRef.current;
+            if (curIdx < queueRef.current.length) {
+              playItem(queueRef.current[curIdx], true);
+            }
           }
         }
       });
     } catch (err) {
       console.error('Audio play error:', err);
       isBusyRef.current = false;
-      if (isPlayingRef.current) {
+      if (isPlayingRef.current && isScriptItem) {
         setCurrentIndex(prev => prev + 1);
       }
     }
@@ -204,30 +252,14 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
       const voiceChannel = options?.voiceChannel || (action?.includes('COMMENT') ? 'comment' : action?.includes('IDOL') ? 'idol' : 'manager');
       const newItem = { id: `dyn_${Date.now()}`, type: 'dynamic', text, action, voiceChannel };
       
-      if (isImmediate) {
-        // Ngắt câu hiện tại, chèn vào ngay sau vị trí hiện tại và phát lập tức
-        stopVoiceAudio();
-        const aud = getAudio();
-        if (aud) aud.pause();
-
-        isBusyRef.current = false;
-        setQueue(prev => {
-          const next = [...prev];
-          const insertIdx = currentIndexRef.current;
-          next.splice(insertIdx, 0, newItem);
-          return next;
-        });
-        setIsPlaying(true);
-        isPlayingRef.current = true;
-      } else {
-        setQueue(prev => {
-          const next = [...prev];
-          const insertIdx = currentIndexRef.current + 1;
-          next.splice(insertIdx, 0, newItem);
-          return next;
-        });
-        setIsPlaying(true);
-        isPlayingRef.current = true;
+      // Cho vào hàng đợi ưu tiên: Đợi câu hiện tại đọc xong dứt điểm rồi phát ngay, không ngắt giữa chừng
+      priorityQueueRef.current.push(newItem);
+      
+      if (!isBusyRef.current && isPlayingRef.current) {
+        const nextPriority = priorityQueueRef.current.shift();
+        if (nextPriority) {
+          playItem(nextPriority, false);
+        }
       }
     },
     playDirectAudio: (audioSrc, onEndedCallback) => {
@@ -255,6 +287,7 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
       const aud = getAudio();
       if (aud) aud.pause();
       isBusyRef.current = false;
+      priorityQueueRef.current = [];
       setIsPlaying(false);
       isPlayingRef.current = false;
       if (onAudioPlayStateChange) onAudioPlayStateChange(false);

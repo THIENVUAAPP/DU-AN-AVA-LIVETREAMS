@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.4.2';
+export const APP_VERSION = '2.4.3';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
+    title: '📜 Đọc Kịch Bản Bán Hàng Xuyên Suốt 100% Không Chia Cắt & Không Dừng Ngắt',
+    description: 'Tối ưu hóa bộ phát kịch bản: Đọc trọn vẹn từ câu số 1 đến câu cuối cùng của kịch bản, không bị chia vụn thành các phần nhỏ. Khi có sự kiện bình luận/chào hỏi, AI sẽ đọc dứt điểm trọn vẹn câu thoại hiện tại rồi mới trả lời, sau đó tự động tiếp tục đọc liền mạch câu kịch bản tiếp theo.'
+  },
+  {
+    title: '⚡ Tinh Chỉnh Tốc Độ Đọc 1.0x (Chuẩn) & Chuyển Giọng Tức Thì Khi Đang Test',
+    description: 'Fix hoàn toàn nút chọn tốc độ 1.0x Chuẩn (ăn ngay 100%). Khi đang bấm nghe thử kịch bản, nếu người dùng đổi sang bất kỳ giọng đọc nào trong dropdown, AI sẽ tự động nhảy qua phát ngay giọng mới tại câu hiện tại.'
+  },
+  {
     title: '🎙️ Đồng Bộ 100% Kho Giọng Chuẩn Vào Dropdown Kịch Bản Idol & Sự Kiện',
-    description: 'Đồng bộ toàn diện tất cả các nhóm giọng từ Tab Giọng Ava Live (Ảnh 3) vào Dropdown Kịch Bản Idol (Ảnh 1): Bao gồm Bộ 20 Giọng Hot Trend, 30 Giọng Bán Hàng, 21 Giọng Nữ 4 Vùng Miền, 20 Giọng Nam & 28 Giọng Quốc Tế. Tự động hiển thị nổi bật nhóm ⭐ Giọng Yêu Thích Đã Chọn lên đầu danh sách.'
-  },
-  {
-    title: '⚡ Tinh Chỉnh Tốc Độ Đọc (Speed Rate) Phản Hồi Tức Thì 0ms (Ăn Ngay)',
-    description: 'Khắc phục triệt để tình trạng chọn tốc độ đọc lúc được lúc không (Ảnh 2). Giờ đây, khi chọn bất kỳ mức tốc độ nào (0.75x, 0.9x, 1.0x, 1.1x, 1.25x, 1.5x), hệ thống áp dụng thay đổi ngay lập tức cả khi đang phát lẫn khi nghe thử.'
-  },
-  {
-    title: '🧠 Đọc Kịch Bản Thông Minh & Tự Động Tiếp Tục Khi Bị Ngắt Quãng',
-    description: 'Khi Idol đang đọc kịch bản mà phải dừng lại để trả lời bình luận, chào khách vào xem live hoặc cảm ơn quà tặng, bộ não AI sẽ tự động ghi nhớ chính xác câu thoại đang nói và tiếp tục đọc liền mạch câu tiếp theo, phát âm chuẩn xác ngữ nghĩa và từ viết tắt.'
+    description: 'Hiển thị đầy đủ các nhóm giọng từ Tab Giọng Ava Live: Giọng Yêu Thích ⭐, 20 Giọng Hot Trend, 30 Giọng Bán Hàng, 21 Giọng Nữ 4 Vùng Miền, 20 Giọng Nam & 28 Giọng Quốc Tế.'
   },
   {
     title: '🌸 Giọng Nữ Tự Nhiên Như Người Thật & Đồng Bộ Khẩu Hình LipSync 60 FPS',

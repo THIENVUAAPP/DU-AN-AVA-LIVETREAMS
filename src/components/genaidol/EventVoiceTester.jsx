@@ -16,12 +16,22 @@ import {
   getDualVoiceConfig
 } from '../../utils/voiceSyncService';
 
+const SPEED_OPTIONS = [
+  { value: 0.75, label: '0.75x' },
+  { value: 0.90, label: '0.9x' },
+  { value: 1.00, label: '1.0x (Chuẩn)' },
+  { value: 1.10, label: '1.1x' },
+  { value: 1.25, label: '1.25x' },
+  { value: 1.50, label: '1.5x' }
+];
+
 /**
  * Universal Voice Selector & Tester Component
  * - Đồng bộ 100% toàn bộ hệ thống giọng đọc chuẩn: Giọng Ava Live, Giọng Hot Trend, Giọng Bán Hàng, Giọng Nữ 4 Vùng Miền, Giọng Nam, Giọng Quốc Tế
  * - Ưu tiên hiển thị trên cùng các giọng đọc đã được gắn dấu sao (⭐ Star Favorites)
- * - Tích hợp đầy đủ: Chọn giọng, Tăng/Giảm Âm lượng, Tăng/Giảm Tốc độ đọc (Speed Rate 0.75x - 1.5x) phản hồi tức thì 0ms
- * - Phát ĐẦY ĐỦ 100% toàn bộ kịch bản từ câu đầu đến câu cuối với tiến trình rõ ràng
+ * - Tốc độ đọc (Speed Rate 0.75x - 1.5x) chọn ăn ngay 100% tức thì (kể cả 1.0x Chuẩn)
+ * - Khi đang nghe thử kịch bản, đổi giọng nào là nhảy qua phát ngay giọng đó tại câu hiện tại
+ * - Đọc trọn vẹn 100% kịch bản xuyên suốt từ câu đầu đến câu cuối
  */
 export default function EventVoiceTester({
   text = '',
@@ -44,6 +54,9 @@ export default function EventVoiceTester({
   const queueTimeoutRef = useRef(null);
   const volumeRef = useRef(1.0);
   const speedRef = useRef(1.0);
+  const selectedVoiceRef = useRef(defaultVoiceId);
+  const currentSentenceIdxRef = useRef(0);
+  const sentencesRef = useRef([]);
 
   useEffect(() => {
     volumeRef.current = volume;
@@ -56,6 +69,7 @@ export default function EventVoiceTester({
   useEffect(() => {
     if (defaultVoiceId) {
       setSelectedVoiceId(defaultVoiceId);
+      selectedVoiceRef.current = defaultVoiceId;
     }
   }, [defaultVoiceId]);
 
@@ -82,7 +96,7 @@ export default function EventVoiceTester({
 
   // Cập nhật tốc độ đọc tức thì khi chọn dropdown (0ms phản hồi ăn ngay)
   const handleSpeedChange = (newSpeed) => {
-    const rate = parseFloat(newSpeed);
+    const rate = Number(newSpeed);
     setSpeed(rate);
     speedRef.current = rate;
     setRealtimeAudioParams({ rate });
@@ -97,15 +111,30 @@ export default function EventVoiceTester({
     };
   }, []);
 
+  // Đổi giọng: Nếu đang chạy test thì chuyển ngay lập tức sang giọng mới tại câu hiện tại
   const handleVoiceSelect = (voiceId) => {
     setSelectedVoiceId(voiceId);
+    selectedVoiceRef.current = voiceId;
     if (onVoiceChange) {
       onVoiceChange(voiceId);
+    }
+
+    if (isPlayingRef.current) {
+      stopVoiceAudio();
+      if (queueTimeoutRef.current) clearTimeout(queueTimeoutRef.current);
+      
+      const newVoiceObj = ALL_SYSTEM_VOICES.find(v => v.id === voiceId) || { id: voiceId, lang: 'vi-VN', gender: 'Female' };
+      setTimeout(() => {
+        if (isPlayingRef.current) {
+          playSentenceAtIndex(currentSentenceIdxRef.current, newVoiceObj);
+        }
+      }, 50);
     }
   };
 
   /**
-   * Phân tách kịch bản dài thành các câu thoại hoàn chỉnh chuẩn ngữ nghĩa
+   * Phân tách kịch bản dài thành các câu thoại hoàn chỉnh chuẩn ngữ nghĩa (theo từng dòng)
+   * Giữ trọn vẹn cấu trúc kịch bản từ đầu đến cuối không chia vụn
    */
   const splitIntoSentences = (raw) => {
     if (!raw || !raw.trim()) return [];
@@ -121,20 +150,7 @@ export default function EventVoiceTester({
       .trim();
 
     const lines = cleanedText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-    const result = [];
-
-    for (const line of lines) {
-      if (line.length > 120) {
-        const subParts = line.split(/(?<=[.!?;\n])\s+/).map(p => p.trim()).filter(Boolean);
-        if (subParts.length > 1) {
-          result.push(...subParts);
-          continue;
-        }
-      }
-      result.push(line);
-    }
-
-    return result.length > 0 ? result : [cleanedText];
+    return lines.length > 0 ? lines : [cleanedText];
   };
 
   const handleStop = () => {
@@ -146,6 +162,44 @@ export default function EventVoiceTester({
     stopVoiceAudio();
     setIsPlaying(false);
     setCurrentSentenceIdx(0);
+    currentSentenceIdxRef.current = 0;
+  };
+
+  const playSentenceAtIndex = (index, customVoice = null) => {
+    if (!isPlayingRef.current) return;
+
+    const sentences = sentencesRef.current;
+    if (!sentences || index >= sentences.length) {
+      handleStop();
+      return;
+    }
+
+    setCurrentSentenceIdx(index);
+    currentSentenceIdxRef.current = index;
+    const sentenceText = sentences[index];
+
+    const curVoiceId = customVoice ? customVoice.id : selectedVoiceRef.current;
+    const voiceObj = customVoice || ALL_SYSTEM_VOICES.find(v => v.id === curVoiceId) || 
+      (curVoiceId === 'idol' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'idol') :
+       curVoiceId === 'game' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'game') :
+       ALL_SYSTEM_VOICES.find(v => v.id === 'free_vi_female')) || { id: 'free_vi_female', lang: 'vi-VN', provider: 'system', gender: 'Female' };
+
+    previewVoiceAudio(
+      voiceObj,
+      sentenceText,
+      {
+        priority: true,
+        isTest: true,
+        volume: volumeRef.current,
+        rate: speedRef.current,
+        onEnd: () => {
+          if (!isPlayingRef.current) return;
+          queueTimeoutRef.current = setTimeout(() => {
+            playSentenceAtIndex(index + 1);
+          }, 300);
+        }
+      }
+    );
   };
 
   const handleTogglePlay = (e) => {
@@ -167,44 +221,12 @@ export default function EventVoiceTester({
     const sentences = splitIntoSentences(text);
     if (sentences.length === 0) return;
 
-    const voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === selectedVoiceId) || 
-      (selectedVoiceId === 'idol' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'idol') :
-       selectedVoiceId === 'game' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'game') :
-       ALL_SYSTEM_VOICES.find(v => v.id === 'free_vi_female')) || { id: 'free_vi_female', lang: 'vi-VN', provider: 'system', gender: 'Female' };
-
+    sentencesRef.current = sentences;
     isPlayingRef.current = true;
     setIsPlaying(true);
     setTotalSentences(sentences.length);
     setCurrentSentenceIdx(0);
-
-    const playSentenceAtIndex = (index) => {
-      if (!isPlayingRef.current) return;
-
-      if (index >= sentences.length) {
-        handleStop();
-        return;
-      }
-
-      setCurrentSentenceIdx(index);
-      const sentenceText = sentences[index];
-
-      previewVoiceAudio(
-        voiceObj,
-        sentenceText,
-        {
-          priority: true,
-          isTest: true,
-          volume: volumeRef.current,
-          rate: speedRef.current,
-          onEnd: () => {
-            if (!isPlayingRef.current) return;
-            queueTimeoutRef.current = setTimeout(() => {
-              playSentenceAtIndex(index + 1);
-            }, 300);
-          }
-        }
-      );
-    };
+    currentSentenceIdxRef.current = 0;
 
     playSentenceAtIndex(0);
   };
@@ -317,18 +339,15 @@ export default function EventVoiceTester({
         {/* Speed Selector */}
         <select
           value={speed}
-          onChange={(e) => handleSpeedChange(e.target.value)}
+          onChange={(e) => handleSpeedChange(Number(e.target.value))}
           className={`text-[11px] font-bold rounded-lg px-1.5 py-1 border transition-all cursor-pointer focus:outline-none ${
             isDark ? 'bg-[#1e2230] text-blue-300 border-white/10' : 'bg-white text-blue-700 border-gray-300'
           }`}
           title="Tốc độ đọc của AI"
         >
-          <option value="0.75">⚡ 0.75x (Chậm)</option>
-          <option value="0.9">⚡ 0.9x (Vừa)</option>
-          <option value="1.0">⚡ 1.0x (Chuẩn)</option>
-          <option value="1.1">⚡ 1.1x (Nhanh nhẹ)</option>
-          <option value="1.25">⚡ 1.25x (Nhanh)</option>
-          <option value="1.5">⚡ 1.5x (Rất nhanh)</option>
+          {SPEED_OPTIONS.map(opt => (
+            <option key={`opt_spd_${opt.value}`} value={opt.value}>⚡ {opt.label}</option>
+          ))}
         </select>
 
         {/* Play/Stop Button */}
@@ -405,16 +424,13 @@ export default function EventVoiceTester({
           <Gauge size={13} className="text-blue-600 shrink-0" />
           <select
             value={speed}
-            onChange={(e) => handleSpeedChange(e.target.value)}
+            onChange={(e) => handleSpeedChange(Number(e.target.value))}
             className="text-xs font-bold bg-transparent text-blue-900 focus:outline-none cursor-pointer"
             title="Tốc độ đọc của AI (Rate)"
           >
-            <option value="0.75">0.75x</option>
-            <option value="0.9">0.9x</option>
-            <option value="1.0">1.0x (Chuẩn)</option>
-            <option value="1.1">1.1x</option>
-            <option value="1.25">1.25x</option>
-            <option value="1.5">1.5x</option>
+            {SPEED_OPTIONS.map(opt => (
+              <option key={`main_spd_${opt.value}`} value={opt.value}>{opt.label}</option>
+            ))}
           </select>
         </div>
 
