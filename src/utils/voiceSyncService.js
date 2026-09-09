@@ -2718,11 +2718,99 @@ export function cleanTextForVoiceSpeech(rawText) {
 }
 
 /**
+ * ✂️ BỘ CẮT TỈA KHOẢNG LẶNG ĐẦU & CUỐI AUDIO BUFFER (SILENCE TRIMMER)
+ * Loại bỏ triệt để khoảng lặng chết (400ms - 1500ms) do TTS tự sinh ra sau các dấu !, ?, ...
+ * Giúp âm thanh bắt đầu phát ngay tức thì và kết thúc dứt điểm đúng miligiây, chuyển câu 0ms liền mạch!
+ */
+export function trimAudioBufferSilence(audioBuffer, silenceThreshold = 0.003) {
+  if (!audioBuffer) return audioBuffer;
+  const numChannels = audioBuffer.numberOfChannels;
+  const sampleRate = audioBuffer.sampleRate;
+  const length = audioBuffer.length;
+  
+  if (length <= 1000) return audioBuffer;
+  
+  const channelData = [];
+  for (let c = 0; c < numChannels; c++) {
+    channelData.push(audioBuffer.getChannelData(c));
+  }
+  
+  // 1. Tìm vị trí âm thanh bắt đầu (Trim Leading Silence)
+  let startIdx = 0;
+  const maxLeadingScan = Math.min(length, Math.floor(sampleRate * 0.5)); // scan tối đa 0.5s đầu
+  for (let i = 0; i < maxLeadingScan; i++) {
+    let hasSound = false;
+    for (let c = 0; c < numChannels; c++) {
+      if (Math.abs(channelData[c][i]) > silenceThreshold) {
+        hasSound = true;
+        break;
+      }
+    }
+    if (hasSound) {
+      // Giữ lại 10ms đệm trước âm thanh để tránh bị giật hoặc cụt âm đầu
+      startIdx = Math.max(0, i - Math.floor(sampleRate * 0.01));
+      break;
+    }
+  }
+
+  // 2. Tìm vị trí âm thanh kết thúc (Trim Trailing Silence)
+  let endIdx = length - 1;
+  const maxTrailingScan = Math.min(length, Math.floor(sampleRate * 2.5)); // scan tối đa 2.5s cuối
+  const scanLimit = Math.max(startIdx + 100, length - maxTrailingScan);
+  for (let i = length - 1; i >= scanLimit; i--) {
+    let hasSound = false;
+    for (let c = 0; c < numChannels; c++) {
+      if (Math.abs(channelData[c][i]) > silenceThreshold) {
+        hasSound = true;
+        break;
+      }
+    }
+    if (hasSound) {
+      // Giữ lại 25ms đệm sau âm thanh để dứt câu tự nhiên, không bị khựng
+      endIdx = Math.min(length - 1, i + Math.floor(sampleRate * 0.025));
+      break;
+    }
+  }
+
+  const trimmedLength = endIdx - startIdx + 1;
+  if (trimmedLength <= 100) return audioBuffer;
+
+  // Nếu không có khoảng lặng thừa đáng kể thì giữ nguyên buffer
+  if (startIdx === 0 && endIdx >= length - 100) {
+    return audioBuffer;
+  }
+
+  const audioCtx = getOrCreateAudioContext();
+  if (!audioCtx) return audioBuffer;
+
+  try {
+    const trimmedBuffer = audioCtx.createBuffer(numChannels, trimmedLength, sampleRate);
+    const fadeLen = Math.min(trimmedLength, Math.floor(sampleRate * 0.015)); // 15ms fade out
+
+    for (let c = 0; c < numChannels; c++) {
+      const src = channelData[c];
+      const dest = trimmedBuffer.getChannelData(c);
+      dest.set(src.subarray(startIdx, endIdx + 1));
+
+      // Áp dụng fade-out 15ms siêu êm ở cuối để không bao giờ bị tiếng lách cách (anti-pop)
+      for (let f = 0; f < fadeLen; f++) {
+        const factor = (fadeLen - f) / fadeLen;
+        dest[trimmedLength - 1 - f] *= factor;
+      }
+    }
+    return trimmedBuffer;
+  } catch (e) {
+    return audioBuffer;
+  }
+}
+
+/**
  * 🌺 BỘ XỬ LÝ CHUYỂN ĐỔI NGỮ ĐIỆU VÀ CẢM XÚC TIẾNG VIỆT 100% NHƯ NGƯỜI THẬT (EMPATHY & BREATHING PROSODY)
  * - Tự động tạo nhịp thở, lấy hơi tự nhiên, ngữ điệu nhấn nhá, thăng trầm cao trào cuốn hút như một người bạn trò chuyện.
- * - Chuyển đổi số tiền, tỷ lệ %, tiền tệ: 199k -> 199 nghìn đồng, 2tr5 -> 2 triệu 500 nghìn đồng...
- * - Dịch thuật từ viết tắt livestream / mạng xã hội: sp -> sản phẩm, đc -> được, cmt -> bình luận, deal -> ưu đãi...
- * - Đảm bảo phát âm tròn vành rõ chữ, mượt mà, không bị khựng, không sai chính tả.
+ * - Chuyển đổi chính xác 100% số tiền, số đếm, %, phân số, hotline: 10,000 -> mười nghìn, 890.000đ -> tám trăm chín mươi nghìn đồng, 50k -> năm mươi nghìn đồng...
+ * - Phát âm chuẩn xác các thuật ngữ tiếng Anh & livestream: serum, skincare, deal, flash sale, review, combo, freeship, feedback, order, live, video...
+ * - Dịch thuật từ viết tắt livestream / mạng xã hội: sp -> sản phẩm, đc -> được, cmt -> bình luận, btv -> biên tập viên, mc -> người dẫn chương trình...
+ * - Chuẩn hóa dấu câu (!, ?, ...) không gây ngắt quãng quá lâu, đọc liền mạch dứt khoát.
  */
 export function humanizeVoiceSpeechText(rawText, voice = null) {
   if (!rawText || typeof rawText !== 'string') return '';
@@ -2734,8 +2822,22 @@ export function humanizeVoiceSpeechText(rawText, voice = null) {
 
   const isFemale = !checkIsMale(voice);
 
-  // 1. Chuyển đổi tiền tệ, số đếm & đơn vị đo lường livestream chính xác 100%
+  // 1. CHUYỂN ĐỔI TIỀN TỆ, SỐ ĐẾM, GIÁ BÁN & ĐƠN VỊ ĐO LƯỜNG CHÍNH XÁC 100%
   text = text
+    // Số tiền định dạng hàng triệu có dấu chấm: 1.000.000đ / 1,000,000đ
+    .replace(/\b(\d+)[,\.]000[,\.]000\s*(đ|vnd|vnđ|đồng)?\b/gi, '$1 triệu đồng')
+    .replace(/\b(\d+)[,\.](\d{3})[,\.]000\s*(đ|vnd|vnđ|đồng)?\b/gi, '$1 triệu $2 nghìn đồng')
+    // Số tiền định dạng hàng trăm nghìn có dấu chấm: 890.000đ / 890,000đ / 50.000đ
+    .replace(/\b(\d+)[,\.](\d{3})\s*(đ|vnd|vnđ|đồng)\b/gi, '$1 nghìn $2 đồng')
+    .replace(/\b(\d+)[,\.]000\s*(đ|vnd|vnđ|đồng)?\b/gi, '$1 nghìn đồng')
+    // Số đếm có dấu phẩy/chấm hàng nghìn: 10,000 / 10.000
+    .replace(/\b10[,\.]000\b/g, 'mười nghìn')
+    .replace(/\b20[,\.]000\b/g, 'hai mươi nghìn')
+    .replace(/\b50[,\.]000\b/g, 'năm mươi nghìn')
+    .replace(/\b100[,\.]000\b/g, 'một trăm nghìn')
+    .replace(/\b500[,\.]000\b/g, 'năm trăm nghìn')
+    .replace(/\b1[,\.]000[,\.]000\b/g, 'một triệu')
+    // Đơn vị k, cành, lít, củ, chai
     .replace(/\b(\d+)\s*k\b/gi, '$1 nghìn đồng')
     .replace(/\b(\d+)\s*cành\b/gi, '$1 nghìn đồng')
     .replace(/\b(\d+)[,\.](\d+)\s*(tr|triệu)\b/gi, '$1 triệu $2 trăm nghìn đồng')
@@ -2745,11 +2847,59 @@ export function humanizeVoiceSpeechText(rawText, voice = null) {
     .replace(/\b(\d+)\s*lít\b/gi, '$1 trăm nghìn đồng')
     .replace(/\b(\d+)\s*củ\b/gi, '$1 triệu đồng')
     .replace(/\b(\d+)\s*chai\b/gi, '$1 triệu đồng')
+    .replace(/\b(\d+)\s*(sao|\*)\b/g, '$1 sao')
     .replace(/\b1\/1\b/g, 'một đổi một')
     .replace(/\b1-1\b/g, 'một đổi một')
-    .replace(/\b24\/7\b/g, 'hai mươi tư trên bảy');
+    .replace(/\b24\/7\b/g, 'hai mươi tư trên bảy')
+    .replace(/\b1st\b/gi, 'thứ nhất')
+    .replace(/\b2nd\b/gi, 'thứ hai')
+    .replace(/\b3rd\b/gi, 'thứ ba');
 
-  // 2. Chuyển đổi từ viết tắt livestream, mạng xã hội & thương mại điện tử
+  // 2. PHÁT ÂM TIẾNG ANH & THUẬT NGỮ LIVESTREAM / THƯƠNG MẠI CHUẨN XÁC
+  text = text
+    .replace(/\bserum\b/gi, 'sê-rum')
+    .replace(/\bskincare\b/gi, 'xkin-ke')
+    .replace(/\bbody\b/gi, 'bo-đi')
+    .replace(/\bfeedback\b/gi, 'phít-bách')
+    .replace(/\bflash\s*sale\b/gi, 'flát seo ưu đãi chớp nhoáng')
+    .replace(/\bsale\b/gi, 'seo giảm giá')
+    .replace(/\bdeal\b/gi, 'điu ưu đãi')
+    .replace(/\bhot\s*trend\b/gi, 'hót tren xu hướng')
+    .replace(/\btrend\b/gi, 'tren xu hướng')
+    .replace(/\breview\b/gi, 'ri-viu')
+    .replace(/\bfreeship\b/gi, 'phi-síp miễn phí vận chuyển')
+    .replace(/\bfree\s*ship\b/gi, 'phi-síp miễn phí vận chuyển')
+    .replace(/\bvoucher\b/gi, 'vâu-chờ mã giảm giá')
+    .replace(/\border\b/gi, 'ót-đờ đặt hàng')
+    .replace(/\bcombo\b/gi, 'com-bo')
+    .replace(/\blivestream\b/gi, 'lai-chim phát trực tiếp')
+    .replace(/\blive\s*stream\b/gi, 'lai-chim phát trực tiếp')
+    .replace(/\blive\b/gi, 'lai')
+    .replace(/\bvideo\b/gi, 'vi-đê-ô')
+    .replace(/\baudio\b/gi, 'ô-đi-ô')
+    .replace(/\bviewer\b/gi, 'người xem')
+    .replace(/\bview\b/gi, 'lượt xem')
+    .replace(/\bstream\b/gi, 'chim')
+    .replace(/\bapp\b/gi, 'áp ứng dụng')
+    .replace(/\bgame\b/gi, 'gêm')
+    .replace(/\bpk\b/gi, 'p-k thi đấu')
+    .replace(/\bidol\b/gi, 'ai-đồ thần tượng')
+    .replace(/\bkoc\b/gi, 'k-o-c')
+    .replace(/\bkol\b/gi, 'k-o-l')
+    .replace(/\blink\b/gi, 'đường linh')
+    .replace(/\bpro\b/gi, 'pờ-rô chuyên nghiệp')
+    .replace(/\bvip\b/gi, 'víp cao cấp')
+    .replace(/\bshop\b/gi, 'shop')
+    .replace(/\bgift\b/gi, 'quà tặng')
+    .replace(/\bfollow\b/gi, 'theo dõi')
+    .replace(/\bfl\b/gi, 'theo dõi')
+    .replace(/\btiktok\b/gi, 'Tóp Tóp')
+    .replace(/\btik\s*tok\b/gi, 'Tóp Tóp')
+    .replace(/\bzalo\b/gi, 'Da-lô')
+    .replace(/\bfb\b/gi, 'Phây Búc')
+    .replace(/\bfacebook\b/gi, 'Phây Búc');
+
+  // 3. CHUYỂN ĐỔI TỪ VIẾT TẮT TIẾNG VIỆT CHÍNH XÁC 100%
   text = text
     .replace(/\bsp\b/gi, 'sản phẩm')
     .replace(/\bđc\b/gi, 'được')
@@ -2757,63 +2907,52 @@ export function humanizeVoiceSpeechText(rawText, voice = null) {
     .replace(/\bko\b/gi, 'không')
     .replace(/\bk\b/gi, 'không')
     .replace(/\bkhg\b/gi, 'không')
+    .replace(/\bkh\b/gi, 'không')
     .replace(/\bmn\b/gi, 'mọi người')
     .replace(/\bmng\b/gi, 'mọi người')
     .replace(/\bsz\b/gi, 'size')
+    .replace(/\bstk\b/gi, 'số tài khoản')
+    .replace(/\bcod\b/gi, 'nhận hàng thanh toán')
+    .replace(/\bbtv\b/gi, 'biên tập viên')
+    .replace(/\bmc\b/gi, 'người dẫn chương trình')
+    .replace(/\bvtv\b/gi, 'đài truyền hình')
+    .replace(/\bcta\b/gi, 'kêu gọi hành động')
+    .replace(/\bkm\b/gi, 'khuyến mãi')
+    .replace(/\bkg\b/gi, 'ki-lô-gam')
+    .replace(/\bml\b/gi, 'mi-li-lít')
+    .replace(/\bhsd\b/gi, 'hạn sử dụng')
+    .replace(/\bnsx\b/gi, 'ngày sản xuất')
+    .replace(/\bnv\b/gi, 'nhân viên')
+    .replace(/\blh\b/gi, 'liên hệ')
+    .replace(/\btp\b/gi, 'thành phố')
+    .replace(/\bhcm\b/gi, 'Hồ Chí Minh')
+    .replace(/\bhn\b/gi, 'Hà Nội')
     .replace(/\bib\b/gi, 'nhắn tin')
     .replace(/\binbox\b/gi, 'nhắn tin trực tiếp')
     .replace(/\bcmt\b/gi, 'bình luận')
     .replace(/\bcomment\b/gi, 'bình luận')
-    .replace(/\bdeal\b/gi, 'ưu đãi')
-    .replace(/\bfreeship\b/gi, 'miễn phí giao hàng')
-    .replace(/\bfree ship\b/gi, 'miễn phí giao hàng')
-    .replace(/\bvoucher\b/gi, 'mã giảm giá')
-    .replace(/\bflash\s*sale\b/gi, 'ưu đãi chớp nhoáng')
-    .replace(/\bfollow\b/gi, 'theo dõi')
-    .replace(/\bfl\b/gi, 'theo dõi')
-    .replace(/\btiktok\b/gi, 'Tóp Tóp')
-    .replace(/\btik tok\b/gi, 'Tóp Tóp')
-    .replace(/\bzalo\b/gi, 'Da-lô')
-    .replace(/\bfb\b/gi, 'Phây Búc')
-    .replace(/\bfacebook\b/gi, 'Phây Búc')
-    .replace(/\bcod\b/gi, 'nhận hàng thanh toán')
-    .replace(/\bstk\b/gi, 'số tài khoản')
-    .replace(/\bcombo\b/gi, 'gói combo')
     .replace(/\bauth\b/gi, 'chính hãng')
     .replace(/\breal\b/gi, 'hàng thật chính hãng')
-    .replace(/\bsale\b/gi, 'giảm giá')
-    .replace(/\bhot\b/gi, 'nóng bỏng')
     .replace(/\bsetup\b/gi, 'cài đặt')
     .replace(/\bok\b/gi, 'dạ vâng được ạ');
 
-  // 3. Tinh chỉnh nhịp thở (Micro-Pauses), lấy hơi tự nhiên & tạo cao trào cảm xúc
+  // 4. TINH CHỈNH CẢM XÚC, THĂNG TRẦM & NGẮT NHỊP TỰ NHIÊN
   if (isFemale) {
     text = text
       .replace(/\b(Hello cả nhà|Chào cả nhà|Cả nhà ơi|Mọi người ơi|Quý vị ơi|Các bạn ơi|Bà con ơi|Chị em ơi|Các mẹ ơi|Ai đang lướt qua)(?!\s*[,!?:])/gi, '$1, ')
-      .replace(/\b(Dạ|Vâng|Em xin chào|Em cam kết|Đặc biệt là|Hơn thế nữa|Thật sự luôn|Tin em đi|Nhanh tay lên nào|Đúng rồi ạ|Chính xác luôn|Tuyệt vời luôn|Quá đã luôn|Trời ơi)(?!\s*[,!?:])/gi, '$1, ')
-      .replace(/\b(ạ)\b(?!\s*[,.!?])/gi, 'ạ.')
-      .replace(/\b(nha cả nhà|nha mọi người|nha các bạn|nha mấy chế|nha các mẹ|nha cả nhà mình)(?!\s*[,.!?])/gi, '$1!')
-      .replace(/\b(nè nghen|nè bà con|nè mọi người|nè các bạn)(?!\s*[,.!?])/gi, '$1!')
-      .replace(/\b(ạ nghen|ạ nhen|ạ nè)(?!\s*[,.!?])/gi, '$1!')
-      .replace(/\b(khoan lướt nha|đừng lướt nha|ở lại xem live nha)(?!\s*[,.!?])/gi, '$1!')
-      .replace(/\b(giỏ hàng góc trái|bấm vào giỏ hàng|chốt đơn liền tay)(?!\s*[,.!?])/gi, '$1!');
+      .replace(/\b(Dạ|Vâng|Em xin chào|Em cam kết|Đặc biệt là|Hơn thế nữa|Thật sự luôn|Tin em đi|Nhanh tay lên nào|Đúng rồi ạ|Chính xác luôn|Tuyệt vời luôn|Quá đã luôn|Trời ơi)(?!\s*[,!?:])/gi, '$1, ');
   } else {
     text = text
       .replace(/\b(Hello cả nhà|Xin chào tất cả các bạn|Chào anh em|Anh em ơi|Mọi người ơi|Cả nhà ơi|Bà con ơi)(?!\s*[,!?:])/gi, '$1, ')
-      .replace(/\b(Đặc biệt là|Cực kỳ hấp dẫn|Chú ý chú ý|Duy nhất hôm nay|Cam kết 100%|Chính hãng 100%|Anh em nhớ lưu ý|Tin mình đi)(?!\s*[,!?:])/gi, '$1, ')
-      .replace(/\b(nha anh em|nha mọi người|nha các bạn|nha cả nhà)(?!\s*[,.!?])/gi, '$1!')
-      .replace(/\b(chốt ngay|mua ngay|đặt ngay|bấm giỏ hàng)(?!\s*[,.!?])/gi, '$1!');
+      .replace(/\b(Đặc biệt là|Cực kỳ hấp dẫn|Chú ý chú ý|Duy nhất hôm nay|Cam kết 100%|Chính hãng 100%|Anh em nhớ lưu ý|Tin mình đi)(?!\s*[,!?:])/gi, '$1, ');
   }
 
-  // Chuyển dấu chấm ba chấm thành nhịp ngân tự nhiên
-  text = text.replace(/\.{3,}/g, '... ');
-
-  // Dọn dẹp dấu câu trùng lặp để âm thanh mượt mà không khựng
+  // 5. DỌN DẸP DẤU CÂU TRÙNG LẶP ĐỂ KHÔNG GÂY KHỰNG / TREO KHOẢNG LẶNG
   text = text
+    .replace(/!{2,}/g, '!')
+    .replace(/\?{2,}/g, '?')
+    .replace(/\.{2,}/g, '.')
     .replace(/,\s*,+/g, ', ')
-    .replace(/\.\s*\.+/g, '. ')
-    .replace(/!\s*!+/g, '! ')
-    .replace(/\?\s*\?+/g, '? ')
     .replace(/\s+/g, ' ')
     .trim();
 
@@ -3311,8 +3450,9 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
           }
 
           if (arrayBuf && arrayBuf.byteLength > 100) {
-            const audioBuffer = await audioCtx.decodeAudioData(arrayBuf);
-            if (audioBuffer) {
+            const rawAudioBuffer = await audioCtx.decodeAudioData(arrayBuf);
+            if (rawAudioBuffer) {
+              const audioBuffer = trimAudioBufferSilence(rawAudioBuffer);
               if (audioBufferMemoryCache.size > 250) {
                 const firstKey = audioBufferMemoryCache.keys().next().value;
                 audioBufferMemoryCache.delete(firstKey);
@@ -3631,6 +3771,7 @@ export default {
   humanizeVoiceSpeechText,
   polishAndOptimizeScript,
   formatTextForRegionalSpeech,
+  trimAudioBufferSilence,
   updateActiveVoiceAudio,
   isSpeechActive,
   clearGlobalSpeechQueue,

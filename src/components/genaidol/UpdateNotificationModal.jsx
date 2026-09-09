@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.5.0';
+export const APP_VERSION = '2.5.1';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👑 Nâng Cấp Toàn Diện Giọng Nữ 4 Vùng Miền (Bắc - Trung - Nam - Tây) Đỉnh Cao',
-    description: 'Nâng cấp toàn bộ hệ thống giọng Nữ (Mai Phương BTV, Mỹ Tâm Huế, Út Mai Miền Tây, Cô Ba Cần Thơ, Ngọc Nhi Sài Gòn, KOC, Idol Live) với âm điệu ngọt ngào, ấm áp, thăng trầm lôi cuốn, phát âm chuẩn xác và có hồn như người thật.'
+    title: '⚡ Khắc Phục Triệt Để Lỗi Dừng / Khựng Lâu Khi Gặp Dấu (!, ?, ...) Với Bộ Silence Trimmer',
+    description: 'Tích hợp bộ cắt tỉa khoảng lặng Audio Buffer thông minh, loại bỏ 100% khoảng lặng chết (400ms - 1500ms) do TTS sinh ra ở cuối câu. Chuyển câu NGAY TỨC THÌ 0ms khi chọn chế độ nghỉ 0.0s.'
   },
   {
-    title: '🚀 Công Nghệ Lookahead Audio Pre-fetching & RAM Caching (Khắc Phục Dứt Điểm Điểm Dừng)',
-    description: 'Tự động tải trước và giải mã âm thanh câu kế tiếp ngay trong lúc câu hiện tại đang đọc. Khi chọn khoảng nghỉ 0.0s (Liền mạch), câu sau sẽ phát NGAY LẬP TỨC 0ms không còn bất kỳ độ trễ hay khựng 1-2s nào.'
+    title: '🎙️ Chuẩn Hóa 100% Phát Âm Tiếng Anh, Từ Viết Tắt & Đọc Số Tiền Livestream Chính Xác',
+    description: 'Tự động phiên âm chuẩn xác các thuật ngữ tiếng Anh (serum, skincare, deal, flash sale, review, combo, freeship, order, video, live...), từ viết tắt (sp, đc, ko, cmt, btv, mc, stk, cod...) và số tiền lớn (10,000, 890.000đ, 50k, 2tr5...).'
   },
   {
-    title: '🌾 Chuẩn Hóa Phương Ngữ & Thán Từ Cảm Thán Thông Minh Cho Bộ Não AI & Kịch Bản',
-    description: 'Đồng bộ cơ chế chuyển đổi ngữ khí bản xứ (Huế, Đà Nẵng, Nghệ Tĩnh, Sông Nước Nam Bộ, Sài Gòn, Hà Nội) tự nhiên, chân thật giúp buổi livestream sinh động và tạo thiện cảm tuyệt đối với người xem.'
+    title: '👑 Nâng Cấp Giọng Nữ 4 Vùng Miền Đỉnh Cao & Cảm Xúc Thăng Trầm Tuyệt Đỉnh',
+    description: 'Nâng cấp toàn diện các giọng Nữ (BTV VTV Hà Nội, Huế dịu dàng, Cần Thơ ngọt lịm, Út Mai miền Tây, Idol Sài Gòn, KOC bắt trend) với phong thái tự tin, vui tươi, lôi cuốn và truyền cảm hứng.'
   },
   {
-    title: '⚡ Tối Ưu Hóa Tốc Độ Đọc & Bộ Lọc Âm Thanh Broadcast DSP Chống Vỡ Tiếng',
-    description: 'Bộ EQ đa băng tần tái tạo không gian phòng thu chuẩn Studio, tối ưu hóa Pitch Shift tự nhiên, không bị mỏng/chói hay the thé khi đọc nhanh.'
+    title: '🚀 Lookahead Audio Pre-fetching & RAM Caching 0ms',
+    description: 'Tải trước và giải mã sẵn các câu thoại tiếp theo vào RAM trong lúc câu hiện tại đang phát, đảm bảo kịch bản và bình luận AI phát liền mạch không một giây đứt quãng.'
   }
 ];
 

@@ -217,13 +217,13 @@ export default function EventVoiceTester({
 
     processed = cleanTextForVoiceSpeech(processed);
 
-    // Tách theo dòng trước
+    // Tách theo từng dòng (mỗi dòng là một đoạn/câu thoại hoàn chỉnh)
     const lines = processed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
     
-    // Nếu có dòng nào dài (>180 ký tự), tự động phân tách thêm theo dấu câu để TTS phát ngay lập tức
+    // Nếu có dòng nào quá dài (>250 ký tự), tự động phân tách thêm theo dấu chấm ngắt câu
     const finalSentences = [];
     for (const line of lines) {
-      if (line.length > 180) {
+      if (line.length > 250) {
         const subParts = line.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [line];
         for (const sub of subParts) {
           const s = sub.trim();
