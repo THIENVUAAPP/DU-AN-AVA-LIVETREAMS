@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.1.7';
+export const APP_VERSION = '2.1.8';
 export const UPDATE_NOTES = [
-  "🔘 Sửa & Kích Hoạt 100% Toàn Bộ Nút Tích Chọn Checkbox: Khắc phục triệt để lỗi nút 'Cài đặt Trợ lý' và các nút tích chọn trên mọi tab tác vụ. Cho phép bấm trực tiếp vào cả nút checkbox và nhãn chữ để bật/tắt mượt mà ngay lập tức.",
-  "📁 Nạp File Toàn Năng Cho Mọi Ô Nhập & Tác Vụ: Tích hợp nút 'Nạp File' thông minh cho tất cả các ô nhập kịch bản, câu mẫu, từ khóa cấm, từ khóa ưu tiên, câu trợ lý, quà tặng đặc biệt, mã sản phẩm - Hỗ trợ đọc tự động mọi định dạng (.docx, .doc, .pdf, .txt, .json, .csv, .xlsx, .xls, .md).",
-  "⚡ Siêu Sắc Nét Ultra HD 4K (60FPS): Tối ưu hóa bộ lọc tăng cường độ nét và tương phản cho Cửa Sổ Live 9:16 Window Capture trên TikTok Live Studio & OBS."
+  "🎙️ Nâng Cấp Toàn Diện Hệ Thống Giọng Đọc TTS Chuẩn Chuyên Nghiệp: Cung cấp đầy đủ 20 Giọng Nữ và 20 Giọng Nam đỉnh cao từ ElevenLabs & MiniMax AI, phân chia chuẩn xác từng vai trò (Giọng Idol Live, Giọng Quản Lý / Trợ Lý Bán Hàng, Giọng BLV Game PK).",
+  "🇻🇳 Giữ Duy Nhất '🎤 Hoài My (Nữ - Chuẩn Tiếng Việt)' ở vị trí đầu tiên trong danh mục Giọng Tiếng Việt Miễn Phí, loại bỏ hoàn toàn các giọng đọc trùng lặp hoặc máy móc.",
+  "✨ Đa Dạng Thể Loại Cảm Xúc & Độ Nhấn Nhá: Bán hàng giục chốt đơn, kể chuyện tâm sự đêm khuya, MC truyền hình VTV, biên tập viên thời sự, BLV game thể thao, doanh nhân trung niên và giọng người cao tuổi tri thức."
 ];
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {

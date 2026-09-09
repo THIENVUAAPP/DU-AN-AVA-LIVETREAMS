@@ -784,7 +784,7 @@ export default function GameVoiceConfigPanel({
                 </span>
               </div>
               <p className="text-[11px] text-gray-300">
-                Bao gồm Hoài My (Nữ VN), Nam Minh (Nam VN), Mai Miền Nam, Jenny (US), Xiaoxiao (Trung)... Sử dụng công nghệ Edge/Web Speech Engine.
+                Bao gồm Hoài My (Nữ Chuẩn Việt Nam) sử dụng công nghệ Edge/Web Speech Engine.
               </p>
               <div className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
                 <Check size={13} /> Hoàn toàn miễn phí vĩnh viễn • Không cần API Key • Tức thì & Ổn định

@@ -149,10 +149,10 @@ class BattleCommentaryEngine {
     // GỌI UNIFIED VOICE ENGINE CHO BÌNH LUẬN VIÊN GAME
     try {
       const voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === (customVoiceId || this.selectedVoiceId)) || {
-        id: this.selectedVoiceId || 'free_vi_male',
+        id: this.selectedVoiceId || 'el_josh',
         voiceId: this.selectedElevenLabsVoiceId || 'TxGEqnHWrfWFTfGW9XjX',
-        provider: 'system',
-        tier: 'free',
+        provider: 'elevenlabs',
+        tier: 'pro',
         gender: 'Male',
         role: 'game'
       };

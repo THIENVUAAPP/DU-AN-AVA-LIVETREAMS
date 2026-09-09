@@ -81,28 +81,28 @@ class GameVoiceEngine {
     this.gameType = gameType; // 'map' | 'battle'
     this.storageKey = `GAME_VOICE_CONFIG_${gameType.toUpperCase()}`;
     
-    // Core Voice Role Configurations (Mặc định dùng giọng Việt Nam native 100% miễn phí & tức thì)
+    // Core Voice Role Configurations
     this.gameVoice = { 
-      id: 'free_vi_male', 
-      name: 'Nam Minh 🇻🇳 (Nam - BLV Game)', 
-      voiceId: 'free_vi_male', 
-      provider: 'system', 
-      tier: 'free',
+      id: 'el_josh', 
+      name: 'Josh 💎 (Nam - BLV Game Siêu Tốc, Bùng Nổ)', 
+      voiceId: 'TxGEqnHWrfWFTfGW9XjX', 
+      provider: 'elevenlabs', 
+      tier: 'pro',
       gender: 'Male',
-      rate: 1.08,
-      pitch: 0.9,
+      rate: 1.10,
+      pitch: 0.95,
       volume: 1.0,
       enabled: true
     };
     this.assistantVoice = { 
       id: 'free_vi_female', 
-      name: 'Hoài My 🇻🇳 (Nữ - Ngọt ngào)', 
+      name: 'Hoài My 🇻🇳 (Nữ - Chuẩn Tiếng Việt)', 
       voiceId: 'free_vi_female', 
       provider: 'system', 
       tier: 'free',
       gender: 'Female',
       rate: 1.0,
-      pitch: 1.1,
+      pitch: 1.08,
       volume: 1.0,
       enabled: true
     };
@@ -348,9 +348,9 @@ class GameVoiceEngine {
     if (activeVoice?.enabled === false) return;
 
     const baseVoice = ALL_SYSTEM_VOICES.find(v => v.id === activeVoice?.id || v.voiceId === activeVoice?.voiceId) || activeVoice || {
-      id: effectiveRole === 'assistant' ? 'free_vi_female' : 'free_vi_male',
-      provider: 'system',
-      tier: 'free',
+      id: effectiveRole === 'assistant' ? 'free_vi_female' : 'el_josh',
+      provider: effectiveRole === 'assistant' ? 'system' : 'elevenlabs',
+      tier: effectiveRole === 'assistant' ? 'free' : 'pro',
       gender: effectiveRole === 'assistant' ? 'Female' : 'Male',
       role: effectiveRole
     };

@@ -2560,7 +2560,7 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                         <div className="ml-0 sm:ml-[170px]">
                           <EventVoiceTester 
                             text={currentConfig.sampleAnswers || 'Xin chào và cảm ơn bạn đã tương tác cùng phiên livestream nhé!'}
-                            defaultVoiceId={selectedEventId === 'follow' ? 'free_vi_female2' : 'free_vi_female'}
+                            defaultVoiceId="free_vi_female"
                             label={`Nghe thử câu thoại mẫu (${selectedEventInfo?.label || 'Sự kiện'})`}
                             compact={false}
                           />
@@ -2749,7 +2749,7 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                       />
                       <EventVoiceTester 
                         text={currentConfig.assistantPrompt || 'Dạ vâng, cảm ơn mọi người đã theo dõi live nha!'}
-                        defaultVoiceId="free_vi_female2"
+                        defaultVoiceId="free_vi_female"
                         label={`Nghe thử câu Trợ lý (${selectedEventInfo?.label || 'Sự kiện'})`}
                         compact={false}
                       />

@@ -1725,40 +1725,83 @@ IDOL MỈM CƯỜI + GESTURE
   // Helper renderers for Tables with Instant Audio Preview
   const renderVoiceTable = (voices, currentFilter, selectedId, onSelect, roleType) => {
     const filtered = voices.filter(v => {
-      if (currentFilter === 'male') return v.gender === 'Male';
-      if (currentFilter === 'female') return v.gender === 'Female';
+      if (currentFilter === 'male') return v.gender === 'Male' || v.gender === 'Nam';
+      if (currentFilter === 'female') return v.gender === 'Female' || v.gender === 'Nữ';
       return true;
     });
 
     return (
-      <div className="border border-gray-300 rounded overflow-hidden">
+      <div className="border border-gray-300 rounded-xl overflow-hidden shadow-2xs">
         <table className="w-full text-sm text-left">
-          <thead className="bg-gray-100 text-gray-700 font-semibold border-b border-gray-300">
+          <thead className="bg-gray-100 text-gray-700 font-semibold border-b border-gray-300 text-xs">
             <tr>
-              <th className="px-4 py-2 w-12 text-center">ID</th>
-              <th className="px-4 py-2">Tên Giọng Nói (ElevenLabs)</th>
-              <th className="px-4 py-2">Loại</th>
-              <th className="px-4 py-2">Giới Tính</th>
-              <th className="px-4 py-2">Chi Phí</th>
-              <th className="px-4 py-2 w-24 text-center">Nghe thử</th>
+              <th className="px-3 py-2.5 w-10 text-center">#</th>
+              <th className="px-3 py-2.5">Tên Giọng Đọc AI</th>
+              <th className="px-3 py-2.5">Thể Loại / Phong Cách</th>
+              <th className="px-3 py-2.5 w-24 text-center">Giới Tính</th>
+              <th className="px-3 py-2.5 w-28 text-center">Nền Tảng</th>
+              <th className="px-3 py-2.5 w-24 text-center">Nghe thử</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {filtered.map((v, i) => {
               const isSelected = selectedId === v.id;
+              const isFree = v.tier === 'free' || v.provider === 'system';
+              const isMiniMax = v.provider === 'minimax';
+              const isFemale = v.gender === 'Female' || v.gender === 'Nữ';
+
               return (
                 <tr 
-                  key={v.id} 
+                  key={v.id || i} 
                   onClick={() => onSelect(v.id)}
-                  className={`cursor-pointer hover:bg-green-50 transition-colors ${isSelected ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-white text-gray-800'}`}
+                  className={`cursor-pointer transition-colors ${
+                    isSelected 
+                      ? 'bg-blue-600 text-white font-medium hover:bg-blue-700' 
+                      : 'bg-white text-gray-800 hover:bg-blue-50/70'
+                  }`}
                 >
-                  <td className="px-4 py-2 text-center font-medium">{v.id}</td>
-                  <td className="px-4 py-2 font-medium">{v.name}</td>
-                  <td className={`px-4 py-2 ${isSelected ? 'text-white' : 'text-blue-600'}`}>{v.type || 'ElevenLabs'}</td>
-                  <td className="px-4 py-2">{v.gender === 'Female' ? 'Nữ' : v.gender === 'Male' ? 'Nam' : v.gender}</td>
-                  <td className="px-4 py-2">{v.cost || '1 token/ký tự'}</td>
-                  <td className="px-4 py-2 text-center">
+                  <td className="px-3 py-2.5 text-center text-xs opacity-70">{i + 1}</td>
+                  <td className="px-3 py-2.5 font-bold">
+                    <div className="flex items-center gap-1.5">
+                      <span>{v.name}</span>
+                      {isSelected && <CheckCircle2 size={15} className="text-emerald-300 shrink-0 inline ml-1" />}
+                    </div>
+                    {v.desc && (
+                      <div className={`text-[11px] font-normal mt-0.5 line-clamp-1 ${isSelected ? 'text-blue-100' : 'text-gray-500'}`}>
+                        {v.desc}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <span className={`inline-block px-2 py-0.5 rounded-md text-[11px] font-semibold ${
+                      isSelected 
+                        ? 'bg-white/20 text-white' 
+                        : 'bg-gray-100 text-gray-700 border border-gray-200'
+                    }`}>
+                      {v.category || (isMiniMax ? 'MiniMax AI' : isFree ? 'Chuẩn Tiếng Việt' : 'Pro ElevenLabs')}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2.5 text-center text-xs font-semibold">
+                    <span className={isFemale ? (isSelected ? 'text-pink-200' : 'text-pink-600') : (isSelected ? 'text-cyan-200' : 'text-blue-600')}>
+                      {isFemale ? '👩 Nữ' : '👨 Nam'}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2.5 text-center">
+                    <span className={`px-2 py-0.5 rounded-full text-[10.5px] font-bold ${
+                      isSelected
+                        ? 'bg-white/30 text-white'
+                        : isFree
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                          : isMiniMax
+                            ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                            : 'bg-purple-100 text-purple-800 border border-purple-300'
+                    }`}>
+                      {isFree ? '🇻🇳 Miễn Phí' : isMiniMax ? '⚡ MiniMax' : '💎 ElevenLabs'}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2.5 text-center">
                     <button 
+                      type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         let vol = 1.0, rate = 1.0, pitch = 1.0;
@@ -1775,10 +1818,14 @@ IDOL MỈM CƯỜI + GESTURE
                           rate = settings.gameVoiceRate !== undefined ? settings.gameVoiceRate : 1.0;
                           pitch = settings.gameVoicePitch !== undefined ? settings.gameVoicePitch : 1.0;
                         }
-                        previewVoiceAudio({ ...v, volume: vol, rate, pitch });
+                        previewVoiceAudio({ ...v, volume: vol, rate, pitch }, null, true);
                       }}
                       title="Nghe thử giọng này"
-                      className={`p-1.5 rounded-full ${isSelected ? 'bg-white text-green-700 hover:bg-gray-100 shadow' : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200'} transition-all`}
+                      className={`p-1.5 rounded-xl cursor-pointer active:scale-90 transition-all ${
+                        isSelected 
+                          ? 'bg-white text-blue-700 hover:bg-gray-100 shadow-xs' 
+                          : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200'
+                      }`}
                     >
                       <Volume2 size={15} />
                     </button>

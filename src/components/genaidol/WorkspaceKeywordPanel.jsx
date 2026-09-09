@@ -59,10 +59,7 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
     const role = rule.role || 'assistant';
     
     // Find voice object if assigned
-    const targetVoice = ALL_SYSTEM_VOICES.find(v => v.id === role || v.id === rule.voiceId) || 
-      (role === 'idol' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'idol') : 
-       role === 'game' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'game') : 
-       ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'assistant' || v.id === 'free_vi_female2'));
+    const targetVoice = ALL_SYSTEM_VOICES.find(v => v.id === role || v.id === rule.voiceId) || ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'assistant' || v.id === 'el_callum' || v.id === 'free_vi_female');
 
     previewVoiceAudio(
       targetVoice || { id: 'free_vi_female', lang: 'vi-VN', provider: 'system', gender: 'Female' },

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Volume2, VolumeX, Play, Square, Sparkles, ChevronDown, Check, Gauge, Sliders } from 'lucide-react';
-import { ALL_SYSTEM_VOICES, previewVoiceAudio, stopVoiceAudio, updateActiveVoiceAudio, cleanTextForVoiceSpeech } from '../../utils/voiceSyncService';
+import { ALL_SYSTEM_VOICES, FREE_VOICES, ELEVENLABS_VOICES, previewVoiceAudio, stopVoiceAudio, updateActiveVoiceAudio, cleanTextForVoiceSpeech } from '../../utils/voiceSyncService';
 
 /**
  * Universal Voice Selector & Tester Component
@@ -191,6 +191,35 @@ export default function EventVoiceTester({
 
   const isDark = theme === 'dark';
 
+  const femaleProVoices = ELEVENLABS_VOICES.filter(v => v.gender === 'Female' && v.lang === 'vi-VN');
+  const maleProVoices = ELEVENLABS_VOICES.filter(v => v.gender === 'Male' && v.lang === 'vi-VN');
+  const intlVoices = ELEVENLABS_VOICES.filter(v => v.lang !== 'vi-VN');
+
+  const renderVoiceOptions = () => (
+    <>
+      <optgroup label="🇻🇳 Giọng Đọc Tiếng Việt">
+        {FREE_VOICES.map(v => (
+          <option key={v.id} value={v.id}>🎤 {v.name.replace(/ 🇻🇳/g, '')}</option>
+        ))}
+      </optgroup>
+      <optgroup label="💎 Giọng Nữ Pro (ElevenLabs & MiniMax)">
+        {femaleProVoices.map(v => (
+          <option key={v.id} value={v.id}>{v.icon} {v.name.replace(/ 💎| ⚡/g, '')}</option>
+        ))}
+      </optgroup>
+      <optgroup label="💎 Giọng Nam Pro (ElevenLabs & MiniMax)">
+        {maleProVoices.map(v => (
+          <option key={v.id} value={v.id}>{v.icon} {v.name.replace(/ 💎| ⚡/g, '')}</option>
+        ))}
+      </optgroup>
+      <optgroup label="🌍 Giọng Quốc Tế">
+        {intlVoices.map(v => (
+          <option key={v.id} value={v.id}>{v.name.replace(/ 💎| ⚡/g, '')}</option>
+        ))}
+      </optgroup>
+    </>
+  );
+
   if (compact) {
     return (
       <div className={`inline-flex items-center gap-1.5 flex-wrap ${className}`}>
@@ -205,28 +234,7 @@ export default function EventVoiceTester({
           }`}
           title="Chọn giọng đọc để nghe thử"
         >
-          <optgroup label="🇻🇳 Giọng Đọc Tiếng Việt">
-            <option value="free_vi_female">🎤 Hoài My (Nữ - Chuẩn Tiếng Việt)</option>
-            <option value="free_vi_female2">💬 Mai Miền Nam (Nữ - Ngọt Ngào)</option>
-            <option value="free_vi_male">🎮 Nam Minh (Nam - Hào Sảng BLV)</option>
-          </optgroup>
-          <optgroup label="💎 Giọng Đọc ElevenLabs Pro">
-            <option value="el_rachel">💎 Rachel (Nữ - Ngọt ngào Idol)</option>
-            <option value="el_bella">💎 Bella (Nữ - Nhẹ nhàng)</option>
-            <option value="el_domi">💎 Domi (Nữ - Năng động)</option>
-            <option value="el_josh">💎 Josh (Nam - BLV Game Năng Lượng)</option>
-            <option value="el_clyde">💎 Clyde (Nam - Chiến Binh)</option>
-            <option value="el_adam">💎 Adam (Nam - Điềm Tĩnh Bán Hàng)</option>
-            <option value="el_callum">💎 Callum (Nam - Quản Lý Giục Đơn)</option>
-          </optgroup>
-          <optgroup label="🌍 Giọng Quốc Tế">
-            <option value="el_us_female">Sarah 🇺🇸 (US English)</option>
-            <option value="el_uk_male">Arthur 🇬🇧 (UK English)</option>
-            <option value="el_cn_female">Mei-Ling 🇨🇳 (中文)</option>
-            <option value="el_jp_female">Sakura 🇯🇵 (日本語 Anime)</option>
-            <option value="el_kr_female">Min-ji 🇰🇷 (한국어 K-Pop)</option>
-            <option value="el_th_female">Premwadee 🇹🇭 (ภาษาไทย)</option>
-          </optgroup>
+          {renderVoiceOptions()}
         </select>
 
         {/* Speed Selector */}
@@ -311,28 +319,7 @@ export default function EventVoiceTester({
                 : 'bg-white text-gray-800 border-gray-300 hover:border-purple-400 shadow-xs'
             }`}
           >
-            <optgroup label="🇻🇳 Giọng Đọc Tiếng Việt">
-              <option value="free_vi_female">🎤 Hoài My (Nữ - Chuẩn Tiếng Việt)</option>
-              <option value="free_vi_female2">💬 Mai Miền Nam (Nữ - Ngọt Ngào)</option>
-              <option value="free_vi_male">🎮 Nam Minh (Nam - Hào Sảng BLV)</option>
-            </optgroup>
-            <optgroup label="💎 Giọng Đọc ElevenLabs Pro">
-              <option value="el_rachel">💎 Rachel (Nữ - Ngọt ngào Idol)</option>
-              <option value="el_bella">💎 Bella (Nữ - Nhẹ nhàng)</option>
-              <option value="el_domi">💎 Domi (Nữ - Năng động)</option>
-              <option value="el_josh">💎 Josh (Nam - BLV Game Năng Lượng)</option>
-              <option value="el_clyde">💎 Clyde (Nam - Chiến Binh)</option>
-              <option value="el_adam">💎 Adam (Nam - Điềm Tĩnh Bán Hàng)</option>
-              <option value="el_callum">💎 Callum (Nam - Quản Lý Giục Đơn)</option>
-            </optgroup>
-            <optgroup label="🌍 Giọng Quốc Tế">
-              <option value="el_us_female">Sarah 🇺🇸 (US English)</option>
-              <option value="el_uk_male">Arthur 🇬🇧 (UK English)</option>
-              <option value="el_cn_female">Mei-Ling 🇨🇳 (中文)</option>
-              <option value="el_jp_female">Sakura 🇯🇵 (日本語 Anime)</option>
-              <option value="el_kr_female">Min-ji 🇰🇷 (한국어 K-Pop)</option>
-              <option value="el_th_female">Premwadee 🇹🇭 (ภาษาไทย)</option>
-            </optgroup>
+            {renderVoiceOptions()}
           </select>
         </div>
 
