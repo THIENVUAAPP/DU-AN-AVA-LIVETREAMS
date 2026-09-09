@@ -34,7 +34,9 @@ export const VIETNAMESE_FEMALE_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nữ chuẩn biên tập viên truyền hình quốc gia Hà Nội, đĩnh đạc, phát âm chuẩn mực, sang trọng.',
     sampleText: 'Kính chào quý vị và các bạn! Bản tin thời sự trực tiếp trên sóng livestream xin được phép bắt đầu với những tin tức quan trọng nhất.',
-    dspProfile: { semitones: 1.2, rate: 1.04, lowGain: 0.5, midFreq: 1100, midGain: 2.5, presenceFreq: 3500, presenceGain: 4.0, highGain: 2.5, compressor: { threshold: -20, ratio: 4, attack: 0.008, release: 0.2 } }
+        edgePitch: '+2%',
+    edgeRate: '+4%',
+dspProfile: { semitones: 1.2, rate: 1.04, lowGain: 0.5, midFreq: 1100, midGain: 2.5, presenceFreq: 3500, presenceGain: 4.0, highGain: 2.5, compressor: { threshold: -20, ratio: 4, attack: 0.008, release: 0.2 } }
   },
   {
     id: 'vn_nu_mctruyenhinh',
@@ -54,7 +56,9 @@ export const VIETNAMESE_FEMALE_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nữ dẫn chương trình truyền hình sang trọng, cuốn hút, phát âm tròn vành rõ chữ.',
     sampleText: 'Chào mừng toàn thể quý khán giả đang theo dõi phiên phát sóng trực tiếp đặc biệt và ngập tràn ưu đãi ngày hôm nay!',
-    dspProfile: { semitones: 2.0, rate: 1.06, lowGain: -1.0, midFreq: 1250, midGain: 2.8, presenceFreq: 3900, presenceGain: 5.0, highGain: 3.5, compressor: { threshold: -18, ratio: 3.5, attack: 0.01, release: 0.25 } }
+        edgePitch: '+10%',
+    edgeRate: '+8%',
+dspProfile: { semitones: 2.0, rate: 1.06, lowGain: -1.0, midFreq: 1250, midGain: 2.8, presenceFreq: 3900, presenceGain: 5.0, highGain: 3.5, compressor: { threshold: -18, ratio: 3.5, attack: 0.01, release: 0.25 } }
   },
   {
     id: 'vn_nu_kechuyen',
@@ -74,7 +78,9 @@ export const VIETNAMESE_FEMALE_VOICES = [
     recommendedFor: 'idol',
     desc: 'Giọng nữ truyền cảm, ấm áp, sâu lắng, thích hợp đọc sách, podcast tâm sự đêm muộn.',
     sampleText: 'Đêm đã về khuya, hãy cùng lắng đọng tâm hồn và thưởng thức những câu chuyện tuyệt vời lắng đọng cảm xúc nhé.',
-    dspProfile: { semitones: 0.2, rate: 1.0, lowGain: 3.5, midFreq: 850, midGain: 2.0, presenceFreq: 2800, presenceGain: 1.5, highGain: -0.5, compressor: { threshold: -14, ratio: 2.5, attack: 0.03, release: 0.4 } }
+        edgePitch: '-14%',
+    edgeRate: '-10%',
+dspProfile: { semitones: 0.2, rate: 1.0, lowGain: 3.5, midFreq: 850, midGain: 2.0, presenceFreq: 2800, presenceGain: 1.5, highGain: -0.5, compressor: { threshold: -14, ratio: 2.5, attack: 0.03, release: 0.4 } }
   },
   {
     id: 'vn_nu_banhang',
@@ -94,7 +100,9 @@ export const VIETNAMESE_FEMALE_VOICES = [
     recommendedFor: 'manager',
     desc: 'Giọng nữ chốt đơn livestream TikTok Shop tốc độ, năng động, thúc đẩy mua hàng dứt khoát.',
     sampleText: 'Duy nhất trong phiên live hôm nay, sản phẩm đang có mã giảm giá 50k trong giỏ hàng, các bạn đặt ngay kẻo lỡ nhé!',
-    dspProfile: { semitones: 3.8, rate: 1.15, lowGain: -2.0, midFreq: 1450, midGain: 3.2, presenceFreq: 3700, presenceGain: 6.5, highGain: 4.5, compressor: { threshold: -24, ratio: 6, attack: 0.003, release: 0.12 } }
+        edgePitch: '+24%',
+    edgeRate: '+22%',
+dspProfile: { semitones: 3.8, rate: 1.15, lowGain: -2.0, midFreq: 1450, midGain: 3.2, presenceFreq: 3700, presenceGain: 6.5, highGain: 4.5, compressor: { threshold: -24, ratio: 6, attack: 0.003, release: 0.12 } }
   },
   {
     id: 'vn_nu_quangcao_tvc',
@@ -114,7 +122,9 @@ export const VIETNAMESE_FEMALE_VOICES = [
     recommendedFor: 'manager',
     desc: 'Giọng nữ quảng cáo TVC chuyên nghiệp, cuốn hút, tạo cảm giác cấp bách chốt sale.',
     sampleText: 'Cơ hội săn sale vàng chỉ còn trong ít phút, hãy nhanh tay bấm vào giỏ hàng chốt đơn ngay kẻo hết quà tặng!',
-    dspProfile: { semitones: 3.0, rate: 1.14, lowGain: 0.0, midFreq: 1200, midGain: 2.5, presenceFreq: 4100, presenceGain: 5.5, highGain: 3.8, compressor: { threshold: -22, ratio: 5, attack: 0.004, release: 0.15 } }
+        edgePitch: '+16%',
+    edgeRate: '+18%',
+dspProfile: { semitones: 3.0, rate: 1.14, lowGain: 0.0, midFreq: 1200, midGain: 2.5, presenceFreq: 4100, presenceGain: 5.5, highGain: 3.8, compressor: { threshold: -22, ratio: 5, attack: 0.004, release: 0.15 } }
   },
   {
     id: 'vn_nu_hue_diudang',
@@ -133,8 +143,10 @@ export const VIETNAMESE_FEMALE_VOICES = [
     rate: 1.04,
     recommendedFor: 'both',
     desc: 'Giọng nữ xứ Huế đằm thắm, ngọt ngào, e ấp, âm điệu da diết chạm đến trái tim người nghe.',
-    sampleText: 'Dạ em chào anh chị đang theo dõi live, áo dài lụa thêu tay xứ Huế mười phân vẹn mười đây ạ, mời anh chị ghé xem!',
-    dspProfile: { semitones: 2.2, rate: 1.04, lowGain: 1.0, midFreq: 1180, midGain: 2.6, presenceFreq: 3600, presenceGain: 4.8, highGain: 3.2, compressor: { threshold: -16, ratio: 3.2, attack: 0.015, release: 0.3 } }
+    sampleText: 'Dạ em xin kính chào quý anh chị nì! Áo dài lụa thêu tay xứ Huế mười phân vẹn mười đây ạ, mời anh chị ghé xem ủng hộ em hí!',
+        edgePitch: '+6%',
+    edgeRate: '-5%',
+dspProfile: { semitones: 2.2, rate: 1.04, lowGain: 1.0, midFreq: 1180, midGain: 2.6, presenceFreq: 3600, presenceGain: 4.8, highGain: 3.2, compressor: { threshold: -16, ratio: 3.2, attack: 0.015, release: 0.3 } }
   },
   {
     id: 'vn_nu_danang_duyendang',
@@ -153,8 +165,10 @@ export const VIETNAMESE_FEMALE_VOICES = [
     rate: 1.08,
     recommendedFor: 'both',
     desc: 'Giọng nữ Đà Nẵng trong sáng, tươi tắn, gần gũi và mến khách.',
-    sampleText: 'Dạ em chào mọi người nha! Hôm nay shop em có chương trình ưu đãi cực khủng cho khách đặt hàng sớm nhất nè!',
-    dspProfile: { semitones: 2.8, rate: 1.08, lowGain: -0.5, midFreq: 1300, midGain: 2.8, presenceFreq: 3800, presenceGain: 5.2, highGain: 4.0, compressor: { threshold: -19, ratio: 3.8, attack: 0.008, release: 0.2 } }
+    sampleText: 'Dạ em chào mọi người nghe! Hôm nay shop em có chương trình ưu đãi cực khủng cho khách đặt hàng sớm nhất nè!',
+        edgePitch: '+14%',
+    edgeRate: '+10%',
+dspProfile: { semitones: 2.8, rate: 1.08, lowGain: -0.5, midFreq: 1300, midGain: 2.8, presenceFreq: 3800, presenceGain: 5.2, highGain: 4.0, compressor: { threshold: -19, ratio: 3.8, attack: 0.008, release: 0.2 } }
   },
   {
     id: 'vn_nu_nghean_damda',
@@ -174,7 +188,9 @@ export const VIETNAMESE_FEMALE_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nữ miền Trung Nghệ Tĩnh mộc mạc, chân thành, sâu lắng và giàu nghĩa tình.',
     sampleText: 'Em chào bà con cô bác đang xem live nha, đặc sản quê nhà sạch sẽ tinh tươm gửi trao tận tay mọi người đây ạ!',
-    dspProfile: { semitones: 1.8, rate: 1.05, lowGain: 0.8, midFreq: 1150, midGain: 2.5, presenceFreq: 3500, presenceGain: 4.2, highGain: 2.8, compressor: { threshold: -17, ratio: 3.4, attack: 0.012, release: 0.26 } }
+        edgePitch: '-4%',
+    edgeRate: '+4%',
+dspProfile: { semitones: 1.8, rate: 1.05, lowGain: 0.8, midFreq: 1150, midGain: 2.5, presenceFreq: 3500, presenceGain: 4.2, highGain: 2.8, compressor: { threshold: -17, ratio: 3.4, attack: 0.012, release: 0.26 } }
   },
   {
     id: 'vn_nu_idol_live',
@@ -194,7 +210,9 @@ export const VIETNAMESE_FEMALE_VOICES = [
     recommendedFor: 'idol',
     desc: 'Giọng nữ Idol livestream Sài Gòn ngọt ngào, thời thượng, thu hút mọi ánh nhìn.',
     sampleText: 'Dạ em Ngọc Nhi xin chào cả nhà mình nha! Mọi người thả tim và chấm một cái vào phần bình luận để em thấy tương tác nè!',
-    dspProfile: { semitones: 4.0, rate: 1.12, lowGain: -2.5, midFreq: 1550, midGain: 3.5, presenceFreq: 4200, presenceGain: 6.5, highGain: 5.5, compressor: { threshold: -21, ratio: 4.2, attack: 0.005, release: 0.15 } }
+        edgePitch: '+20%',
+    edgeRate: '+14%',
+dspProfile: { semitones: 4.0, rate: 1.12, lowGain: -2.5, midFreq: 1550, midGain: 3.5, presenceFreq: 4200, presenceGain: 6.5, highGain: 5.5, compressor: { threshold: -21, ratio: 4.2, attack: 0.005, release: 0.15 } }
   },
   {
     id: 'vn_nu_koc_review',
@@ -213,8 +231,10 @@ export const VIETNAMESE_FEMALE_VOICES = [
     rate: 1.15,
     recommendedFor: 'both',
     desc: 'Giọng nữ KOC Sài Gòn bắt trend, nói chuyện có duyên, review sản phẩm cực kỳ chân thật.',
-    sampleText: 'Món này cưng xỉu luôn mấy bà ơi! Chất lượng 10 điểm không có nhưng, link ở góc trái màn hình nha!',
-    dspProfile: { semitones: 3.2, rate: 1.15, lowGain: -1.5, midFreq: 1400, midGain: 3.0, presenceFreq: 3900, presenceGain: 5.5, highGain: 4.2, compressor: { threshold: -22, ratio: 4.8, attack: 0.004, release: 0.14 } }
+    sampleText: 'Món này cưng xỉu luôn mấy bà ơi! Chất lượng 10 điểm không có nhưng nha, bấm vô giỏ hàng hốt liền kẻo hết deal hời!',
+        edgePitch: '+16%',
+    edgeRate: '+16%',
+dspProfile: { semitones: 3.2, rate: 1.15, lowGain: -1.5, midFreq: 1400, midGain: 3.0, presenceFreq: 3900, presenceGain: 5.5, highGain: 4.2, compressor: { threshold: -22, ratio: 4.8, attack: 0.004, release: 0.14 } }
   },
   {
     id: 'vn_nu_mientay_giongia',
@@ -234,7 +254,9 @@ export const VIETNAMESE_FEMALE_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nữ miền Tây sông nước ngọt ngào, chất phác, vui tươi, nghe là thấy mến thương liền.',
     sampleText: 'Dạ em Út Mai chào bà con cô bác mình nghen! Trái cây vườn nhà em hái tươi rói luôn nè, bà con đặt liền tay em gửi hỏa tốc nghen!',
-    dspProfile: { semitones: 3.4, rate: 1.12, lowGain: -1.0, midFreq: 1380, midGain: 3.0, presenceFreq: 4100, presenceGain: 6.0, highGain: 4.8, compressor: { threshold: -20, ratio: 4.0, attack: 0.006, release: 0.18 } }
+        edgePitch: '+26%',
+    edgeRate: '+12%',
+dspProfile: { semitones: 3.4, rate: 1.12, lowGain: -1.0, midFreq: 1380, midGain: 3.0, presenceFreq: 4100, presenceGain: 6.0, highGain: 4.8, compressor: { threshold: -20, ratio: 4.0, attack: 0.006, release: 0.18 } }
   },
   {
     id: 'vn_nu_mientay_cantho',
@@ -253,8 +275,10 @@ export const VIETNAMESE_FEMALE_VOICES = [
     rate: 1.08,
     recommendedFor: 'both',
     desc: 'Giọng nữ Cần Thơ đôn hậu, ngọt lịm như mía lùi, chuyên tư vấn đặc sản và nông sản miệt vườn.',
-    sampleText: 'Dạ Cô Ba mến chào cả nhà mình nha! Bánh mứt kẹo dừa thơm ngon đặc sản bến tre miệt vườn bảo đảm ăn là ghiền nghen!',
-    dspProfile: { semitones: 2.4, rate: 1.08, lowGain: 0.5, midFreq: 1220, midGain: 2.8, presenceFreq: 3700, presenceGain: 5.0, highGain: 3.5, compressor: { threshold: -18, ratio: 3.6, attack: 0.01, release: 0.22 } }
+    sampleText: 'Dạ Cô Ba mến chào cả nhà mình nha! Bánh mứt kẹo dừa thơm ngon đặc sản miệt vườn bảo đảm ăn là ghiền nghen!',
+        edgePitch: '+8%',
+    edgeRate: '-2%',
+dspProfile: { semitones: 2.4, rate: 1.08, lowGain: 0.5, midFreq: 1220, midGain: 2.8, presenceFreq: 3700, presenceGain: 5.0, highGain: 3.5, compressor: { threshold: -18, ratio: 3.6, attack: 0.01, release: 0.22 } }
   },
   {
     id: 'vn_nu_quyco_doanhnhan',
@@ -274,7 +298,9 @@ export const VIETNAMESE_FEMALE_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nữ doanh nhân Hà Nội thành đạt, đĩnh đạc, bản lĩnh và đầy sức hút.',
     sampleText: 'Chất lượng tạo nên đẳng cấp và uy tín bền vững. Chúng tôi luôn cam kết mang lại những giá trị hoàn hảo nhất cho khách hàng.',
-    dspProfile: { semitones: 1.0, rate: 1.02, lowGain: 2.0, midFreq: 1050, midGain: 2.5, presenceFreq: 3300, presenceGain: 3.5, highGain: 2.0, compressor: { threshold: -17, ratio: 3.5, attack: 0.01, release: 0.25 } }
+        edgePitch: '-18%',
+    edgeRate: '-4%',
+dspProfile: { semitones: 1.0, rate: 1.02, lowGain: 2.0, midFreq: 1050, midGain: 2.5, presenceFreq: 3300, presenceGain: 3.5, highGain: 2.0, compressor: { threshold: -17, ratio: 3.5, attack: 0.01, release: 0.25 } }
   },
   {
     id: 'vn_nu_ngotngao',
@@ -294,7 +320,9 @@ export const VIETNAMESE_FEMALE_VOICES = [
     recommendedFor: 'idol',
     desc: 'Giọng nữ trẻ trung ngọt ngào, dịu dàng, giao lưu trò chuyện thân thiết.',
     sampleText: 'Dạ em chào các anh chị em thân yêu đang xem live nha, mọi người thả tim và tương tác cùng em nhé!',
-    dspProfile: { semitones: 4.8, rate: 1.08, lowGain: -3.0, midFreq: 1650, midGain: 3.5, presenceFreq: 4400, presenceGain: 7.0, highGain: 6.0, compressor: { threshold: -20, ratio: 3.8, attack: 0.005, release: 0.16 } }
+        edgePitch: '+22%',
+    edgeRate: '+6%',
+dspProfile: { semitones: 4.8, rate: 1.08, lowGain: -3.0, midFreq: 1650, midGain: 3.5, presenceFreq: 4400, presenceGain: 7.0, highGain: 6.0, compressor: { threshold: -20, ratio: 3.8, attack: 0.005, release: 0.16 } }
   },
   {
     id: 'vn_nu_asmr_thitham',
@@ -314,7 +342,9 @@ export const VIETNAMESE_FEMALE_VOICES = [
     recommendedFor: 'idol',
     desc: 'Giọng nữ thì thầm êm ái, mang lại cảm giác thư thái dễ chịu cho giấc ngủ.',
     sampleText: 'Hãy nhắm mắt lại, thả lỏng toàn bộ cơ thể và tận hưởng những phút giây bình yên sâu lắng nhất nhé...',
-    dspProfile: { semitones: -0.5, rate: 0.98, lowGain: 3.0, midFreq: 900, midGain: 2.0, presenceFreq: 3000, presenceGain: 2.0, highGain: 1.0, compressor: { threshold: -12, ratio: 2.0, attack: 0.05, release: 0.5 } }
+        edgePitch: '-8%',
+    edgeRate: '-14%',
+dspProfile: { semitones: -0.5, rate: 0.98, lowGain: 3.0, midFreq: 900, midGain: 2.0, presenceFreq: 3000, presenceGain: 2.0, highGain: 1.0, compressor: { threshold: -12, ratio: 2.0, attack: 0.05, release: 0.5 } }
   },
   {
     id: 'vn_nu_truyencamhung',
@@ -334,7 +364,9 @@ export const VIETNAMESE_FEMALE_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nữ truyền cảm hứng mạnh mẽ, kích thích ý chí vươn lên và năng lượng tích cực.',
     sampleText: 'Mỗi ngày mới là một cơ hội để bạn bứt phá, nỗ lực hết mình và chạm tới đỉnh cao thành công rực rỡ!',
-    dspProfile: { semitones: 1.8, rate: 1.06, lowGain: 1.2, midFreq: 1080, midGain: 2.8, presenceFreq: 3350, presenceGain: 4.0, highGain: 2.5, compressor: { threshold: -18, ratio: 3.5, attack: 0.01, release: 0.22 } }
+        edgePitch: '+6%',
+    edgeRate: '+8%',
+dspProfile: { semitones: 1.8, rate: 1.06, lowGain: 1.2, midFreq: 1080, midGain: 2.8, presenceFreq: 3350, presenceGain: 4.0, highGain: 2.5, compressor: { threshold: -18, ratio: 3.5, attack: 0.01, release: 0.22 } }
   },
   {
     id: 'vn_nu_video_viral',
@@ -354,7 +386,9 @@ export const VIETNAMESE_FEMALE_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nữ review sản phẩm, video viral triệu view trên mạng xã hội.',
     sampleText: 'Review chân thật cho cả nhà đây! Sản phẩm hôm nay cực kỳ đỉnh, mọi người cùng xem ngay nhé!',
-    dspProfile: { semitones: 2.6, rate: 1.14, lowGain: -1.0, midFreq: 1350, midGain: 2.6, presenceFreq: 3500, presenceGain: 4.5, highGain: 3.5, compressor: { threshold: -20, ratio: 4, attack: 0.006, release: 0.18 } }
+        edgePitch: '+18%',
+    edgeRate: '+15%',
+dspProfile: { semitones: 2.6, rate: 1.14, lowGain: -1.0, midFreq: 1350, midGain: 2.6, presenceFreq: 3500, presenceGain: 4.5, highGain: 3.5, compressor: { threshold: -20, ratio: 4, attack: 0.006, release: 0.18 } }
   },
   {
     id: 'vn_nu_phongsu_vtv',
@@ -374,7 +408,9 @@ export const VIETNAMESE_FEMALE_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nữ thuyết minh phóng sự tài liệu chuyên sâu, sâu sắc và thuyết phục.',
     sampleText: 'Hành trình khám phá văn hóa và con người Việt Nam luôn mang đến những giá trị sâu sắc và bài học vô giá.',
-    dspProfile: { semitones: 0.5, rate: 1.04, lowGain: 2.0, midFreq: 980, midGain: 2.5, presenceFreq: 3250, presenceGain: 3.5, highGain: 1.5, compressor: { threshold: -19, ratio: 4, attack: 0.01, release: 0.22 } }
+        edgePitch: '-6%',
+    edgeRate: '+0%',
+dspProfile: { semitones: 0.5, rate: 1.04, lowGain: 2.0, midFreq: 980, midGain: 2.5, presenceFreq: 3250, presenceGain: 3.5, highGain: 1.5, compressor: { threshold: -19, ratio: 4, attack: 0.01, release: 0.22 } }
   },
   {
     id: 'vn_nu_giucdon_tocbien',
@@ -394,7 +430,9 @@ export const VIETNAMESE_FEMALE_VOICES = [
     recommendedFor: 'manager',
     desc: 'Giọng nữ giục đơn dồn dập, tạo hiệu ứng đám đông mua sắm cuồng nhiệt.',
     sampleText: 'Chỉ còn đúng 5 suất quà tặng độc quyền trong hôm nay, các bác bấm mua ngay góc trái màn hình kẻo hết nhé!',
-    dspProfile: { semitones: 4.5, rate: 1.22, lowGain: -2.5, midFreq: 1520, midGain: 3.6, presenceFreq: 4000, presenceGain: 6.8, highGain: 4.8, compressor: { threshold: -25, ratio: 6.5, attack: 0.002, release: 0.1 } }
+        edgePitch: '+28%',
+    edgeRate: '+25%',
+dspProfile: { semitones: 4.5, rate: 1.22, lowGain: -2.5, midFreq: 1520, midGain: 3.6, presenceFreq: 4000, presenceGain: 6.8, highGain: 4.8, compressor: { threshold: -25, ratio: 6.5, attack: 0.002, release: 0.1 } }
   },
   {
     id: 'vn_nu_vtuber_nhinhanh',
@@ -414,7 +452,9 @@ export const VIETNAMESE_FEMALE_VOICES = [
     recommendedFor: 'idol',
     desc: 'Giọng nữ phong cách VTuber dễ thương, bắt trend giới trẻ.',
     sampleText: 'Cảm ơn các bạn đã ghé xem live của em! Nhớ bấm theo dõi kênh để không bỏ lỡ buổi live tiếp theo nha!',
-    dspProfile: { semitones: 6.8, rate: 1.14, lowGain: -5.0, midFreq: 2100, midGain: 4.2, presenceFreq: 4900, presenceGain: 8.5, highGain: 7.5, compressor: { threshold: -23, ratio: 4.2, attack: 0.003, release: 0.14 } }
+        edgePitch: '+38%',
+    edgeRate: '+10%',
+dspProfile: { semitones: 6.8, rate: 1.14, lowGain: -5.0, midFreq: 2100, midGain: 4.2, presenceFreq: 4900, presenceGain: 8.5, highGain: 7.5, compressor: { threshold: -23, ratio: 4.2, attack: 0.003, release: 0.14 } }
   },
   {
     id: 'free_vi_female',
@@ -434,7 +474,9 @@ export const VIETNAMESE_FEMALE_VOICES = [
     recommendedFor: 'idol',
     desc: 'Giọng nữ chuẩn tiếng Việt truyền cảm, phát âm mượt mà, cảm xúc tự nhiên.',
     sampleText: 'Dạ em chào bạn đang theo dõi livestream nha! Chúc bạn xem live thật vui vẻ và ngập tràn năng lượng tích cực ạ!',
-    dspProfile: { semitones: 1.8, rate: 1.05, lowGain: 0.0, midFreq: 1150, midGain: 2.2, presenceFreq: 3400, presenceGain: 3.8, highGain: 2.8, compressor: { threshold: -18, ratio: 3.5, attack: 0.008, release: 0.2 } }
+        edgePitch: '+2%',
+    edgeRate: '+2%',
+dspProfile: { semitones: 1.8, rate: 1.05, lowGain: 0.0, midFreq: 1150, midGain: 2.2, presenceFreq: 3400, presenceGain: 3.8, highGain: 2.8, compressor: { threshold: -18, ratio: 3.5, attack: 0.008, release: 0.2 } }
   }
 ];
 
@@ -458,7 +500,9 @@ export const VIETNAMESE_MALE_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nam trầm ấm, điềm đạm, phong thái chững chạc cực kỳ thuyết phục.',
     sampleText: 'Chào mừng tất cả các bạn đã đến với buổi phát sóng hôm nay! Chúc mọi người một ngày tràn đầy năng lượng và gặt hái nhiều thành công!',
-    dspProfile: { semitones: -7.5, rate: 1.06, lowGain: 9.0, midFreq: 450, midGain: 3.5, presenceFreq: 2200, presenceGain: -2.0, highGain: -4.0, compressor: { threshold: -18, ratio: 4.5, attack: 0.015, release: 0.3 } }
+        edgePitch: '-4%',
+    edgeRate: '+4%',
+dspProfile: { semitones: -7.5, rate: 1.06, lowGain: 9.0, midFreq: 450, midGain: 3.5, presenceFreq: 2200, presenceGain: -2.0, highGain: -4.0, compressor: { threshold: -18, ratio: 4.5, attack: 0.015, release: 0.3 } }
   },
   {
     id: 'vn_nam_blv_bungno',
@@ -478,7 +522,9 @@ export const VIETNAMESE_MALE_VOICES = [
     recommendedFor: 'game',
     desc: 'Giọng bình luận viên game PK bùng nổ, tốc độ cực nhanh khi combat nghẹt thở.',
     sampleText: 'Pha combat đỉnh cao! Cả hai đội đang tung toàn bộ chiêu thức, hãy cùng bùng nổ năng lượng nào anh em ơi!',
-    dspProfile: { semitones: -6.5, rate: 1.25, lowGain: 7.0, midFreq: 600, midGain: 4.0, presenceFreq: 2600, presenceGain: 3.5, highGain: -1.0, compressor: { threshold: -26, ratio: 8, attack: 0.002, release: 0.08 } }
+        edgePitch: '+22%',
+    edgeRate: '+24%',
+dspProfile: { semitones: -6.5, rate: 1.25, lowGain: 7.0, midFreq: 600, midGain: 4.0, presenceFreq: 2600, presenceGain: 3.5, highGain: -1.0, compressor: { threshold: -26, ratio: 8, attack: 0.002, release: 0.08 } }
   },
   {
     id: 'vn_nam_mc_haosang',
@@ -498,7 +544,9 @@ export const VIETNAMESE_MALE_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng MC dẫn chương trình truyền hình cuốn hút, hoạt náo, tràn đầy năng lượng.',
     sampleText: 'Xin nhiệt liệt chào mừng toàn thể quý vị đại biểu và quý khán giả đã có mặt tại sự kiện trực tiếp ngày hôm nay!',
-    dspProfile: { semitones: -7.2, rate: 1.08, lowGain: 8.5, midFreq: 500, midGain: 3.0, presenceFreq: 2400, presenceGain: 1.0, highGain: -2.0, compressor: { threshold: -20, ratio: 4.5, attack: 0.006, release: 0.2 } }
+        edgePitch: '+6%',
+    edgeRate: '+8%',
+dspProfile: { semitones: -7.2, rate: 1.08, lowGain: 8.5, midFreq: 500, midGain: 3.0, presenceFreq: 2400, presenceGain: 1.0, highGain: -2.0, compressor: { threshold: -20, ratio: 4.5, attack: 0.006, release: 0.2 } }
   },
   {
     id: 'vn_nam_phongsu_vtv',
@@ -518,7 +566,9 @@ export const VIETNAMESE_MALE_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nam chuẩn phóng sự tài liệu, chín chắn, sâu sắc và đáng tin cậy.',
     sampleText: 'Góc nhìn chân thực, thông tin đa chiều và những câu chuyện lay động hàng triệu trái tim người xem truyền hình.',
-    dspProfile: { semitones: -8.5, rate: 1.02, lowGain: 10.5, midFreq: 380, midGain: 3.5, presenceFreq: 1900, presenceGain: -2.5, highGain: -5.0, compressor: { threshold: -18, ratio: 4, attack: 0.012, release: 0.28 } }
+        edgePitch: '-12%',
+    edgeRate: '+0%',
+dspProfile: { semitones: -8.5, rate: 1.02, lowGain: 10.5, midFreq: 380, midGain: 3.5, presenceFreq: 1900, presenceGain: -2.5, highGain: -5.0, compressor: { threshold: -18, ratio: 4, attack: 0.012, release: 0.28 } }
   },
   {
     id: 'vn_nam_chotsale',
@@ -538,7 +588,9 @@ export const VIETNAMESE_MALE_VOICES = [
     recommendedFor: 'manager',
     desc: 'Giọng nam bán hàng chốt đơn livestream dứt khoát, thuyết phục khách mua ngay.',
     sampleText: 'Cơ hội duy nhất trong ngày hôm nay! Giá sốc tận đáy kèm quà tặng khủng, anh em chốt đơn ngay kẻo hết nhé!',
-    dspProfile: { semitones: -7.0, rate: 1.18, lowGain: 7.5, midFreq: 550, midGain: 3.5, presenceFreq: 2500, presenceGain: 2.0, highGain: -2.0, compressor: { threshold: -24, ratio: 6, attack: 0.003, release: 0.12 } }
+        edgePitch: '+12%',
+    edgeRate: '+18%',
+dspProfile: { semitones: -7.0, rate: 1.18, lowGain: 7.5, midFreq: 550, midGain: 3.5, presenceFreq: 2500, presenceGain: 2.0, highGain: -2.0, compressor: { threshold: -24, ratio: 6, attack: 0.003, release: 0.12 } }
   },
   {
     id: 'vn_nam_thuyetminh_dienanh',
@@ -558,7 +610,9 @@ export const VIETNAMESE_MALE_VOICES = [
     recommendedFor: 'idol',
     desc: 'Giọng thuyết minh phim điện ảnh Hollywood đầy kịch tính, trầm hùng vang dội.',
     sampleText: 'Một cuộc chiến định mệnh đã bắt đầu, thay đổi toàn bộ dòng chảy thời gian và vận mệnh của cả vũ trụ!',
-    dspProfile: { semitones: -9.5, rate: 1.02, lowGain: 12.0, midFreq: 320, midGain: 4.5, presenceFreq: 1800, presenceGain: -2.0, highGain: -6.0, compressor: { threshold: -22, ratio: 5.5, attack: 0.015, release: 0.35 } }
+        edgePitch: '-28%',
+    edgeRate: '-6%',
+dspProfile: { semitones: -9.5, rate: 1.02, lowGain: 12.0, midFreq: 320, midGain: 4.5, presenceFreq: 1800, presenceGain: -2.0, highGain: -6.0, compressor: { threshold: -22, ratio: 5.5, attack: 0.015, release: 0.35 } }
   },
   {
     id: 'vn_nam_kechuyen_tramam',
@@ -578,7 +632,9 @@ export const VIETNAMESE_MALE_VOICES = [
     recommendedFor: 'idol',
     desc: 'Giọng nam trầm ấm, truyền cảm, thích hợp đọc truyện đêm khuya, podcast lắng đọng.',
     sampleText: 'Đêm tĩnh lặng, những kỷ niệm xưa lại ùa về mang theo bao nỗi niềm chất chứa trong tâm hồn.',
-    dspProfile: { semitones: -8.8, rate: 1.0, lowGain: 11.0, midFreq: 360, midGain: 3.0, presenceFreq: 1900, presenceGain: -3.0, highGain: -6.5, compressor: { threshold: -14, ratio: 2.8, attack: 0.03, release: 0.45 } }
+        edgePitch: '-20%',
+    edgeRate: '-10%',
+dspProfile: { semitones: -8.8, rate: 1.0, lowGain: 11.0, midFreq: 360, midGain: 3.0, presenceFreq: 1900, presenceGain: -3.0, highGain: -6.5, compressor: { threshold: -14, ratio: 2.8, attack: 0.03, release: 0.45 } }
   },
   {
     id: 'vn_nam_quanly_uyquyen',
@@ -598,7 +654,9 @@ export const VIETNAMESE_MALE_VOICES = [
     recommendedFor: 'manager',
     desc: 'Giọng quản lý bán hàng uy quyền, thúc giục khán giả đặt hàng ngay.',
     sampleText: 'Bộ phận kho thông báo số lượng chỉ còn dưới 10 sản phẩm, quý khách nhanh tay hoàn tất đơn hàng ngay lập tức!',
-    dspProfile: { semitones: -7.8, rate: 1.12, lowGain: 9.0, midFreq: 460, midGain: 3.5, presenceFreq: 2300, presenceGain: 1.0, highGain: -3.0, compressor: { threshold: -22, ratio: 5.5, attack: 0.005, release: 0.16 } }
+        edgePitch: '-14%',
+    edgeRate: '+10%',
+dspProfile: { semitones: -7.8, rate: 1.12, lowGain: 9.0, midFreq: 460, midGain: 3.5, presenceFreq: 2300, presenceGain: 1.0, highGain: -3.0, compressor: { threshold: -22, ratio: 5.5, attack: 0.005, release: 0.16 } }
   },
   {
     id: 'vn_nam_doanhnhan',
@@ -618,7 +676,9 @@ export const VIETNAMESE_MALE_VOICES = [
     recommendedFor: 'manager',
     desc: 'Giọng giám đốc điều hành, doanh nhân thành đạt, đĩnh đạc và quyết đoán.',
     sampleText: 'Chiến lược đúng đắn và sự quyết đoán chính là chìa khóa mở ra cánh cửa thành công vượt bậc trong kinh doanh.',
-    dspProfile: { semitones: -8.2, rate: 1.02, lowGain: 10.0, midFreq: 400, midGain: 3.8, presenceFreq: 2000, presenceGain: -1.0, highGain: -4.5, compressor: { threshold: -19, ratio: 4.2, attack: 0.01, release: 0.3 } }
+        edgePitch: '-16%',
+    edgeRate: '+2%',
+dspProfile: { semitones: -8.2, rate: 1.02, lowGain: 10.0, midFreq: 400, midGain: 3.8, presenceFreq: 2000, presenceGain: -1.0, highGain: -4.5, compressor: { threshold: -19, ratio: 4.2, attack: 0.01, release: 0.3 } }
   },
   {
     id: 'vn_nam_quyong_lichlam',
@@ -638,7 +698,9 @@ export const VIETNAMESE_MALE_VOICES = [
     recommendedFor: 'idol',
     desc: 'Giọng nam quý phái, thanh lịch, phù hợp các sản phẩm cao cấp xa xỉ.',
     sampleText: 'Sự sang trọng tinh tế không nằm ở vẻ hào nhoáng, mà toát ra từ thần thái và đẳng cấp đích thực.',
-    dspProfile: { semitones: -7.6, rate: 1.04, lowGain: 8.5, midFreq: 480, midGain: 2.8, presenceFreq: 2200, presenceGain: 0.0, highGain: -3.5, compressor: { threshold: -17, ratio: 3.5, attack: 0.012, release: 0.25 } }
+        edgePitch: '-8%',
+    edgeRate: '+5%',
+dspProfile: { semitones: -7.6, rate: 1.04, lowGain: 8.5, midFreq: 480, midGain: 2.8, presenceFreq: 2200, presenceGain: 0.0, highGain: -3.5, compressor: { threshold: -17, ratio: 3.5, attack: 0.012, release: 0.25 } }
   },
   {
     id: 'vn_nam_mientay_bacthanh',
@@ -658,7 +720,9 @@ export const VIETNAMESE_MALE_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nam miền Tây mộc mạc, chân chất, ấm áp, đậm đà tình làng nghĩa xóm.',
     sampleText: 'Bà con mình yên tâm nha, hàng vườn nhà tôi tuyển chọn kỹ càng, chuẩn chỉ từng trái bao ăn ngọt lịm nghen!',
-    dspProfile: { semitones: -8.0, rate: 1.06, lowGain: 9.5, midFreq: 440, midGain: 3.6, presenceFreq: 2100, presenceGain: -1.0, highGain: -4.0, compressor: { threshold: -18, ratio: 4.0, attack: 0.012, release: 0.28 } }
+        edgePitch: '-10%',
+    edgeRate: '+6%',
+dspProfile: { semitones: -8.0, rate: 1.06, lowGain: 9.5, midFreq: 440, midGain: 3.6, presenceFreq: 2100, presenceGain: -1.0, highGain: -4.0, compressor: { threshold: -18, ratio: 4.0, attack: 0.012, release: 0.28 } }
   },
   {
     id: 'vn_nam_mientay_giongia',
@@ -678,7 +742,9 @@ export const VIETNAMESE_MALE_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nam miền Tây trẻ trung, hào sảng, vui tươi, bán hàng năng động cực duyên.',
     sampleText: 'Dạ anh Ba chào mấy anh mấy chị nghen! Vô live xem hàng rồi chốt lẹ tay để em gửi quà tặng khủng luôn nè!',
-    dspProfile: { semitones: -7.0, rate: 1.12, lowGain: 8.0, midFreq: 520, midGain: 3.2, presenceFreq: 2400, presenceGain: 1.5, highGain: -2.5, compressor: { threshold: -21, ratio: 4.6, attack: 0.005, release: 0.16 } }
+        edgePitch: '+4%',
+    edgeRate: '+12%',
+dspProfile: { semitones: -7.0, rate: 1.12, lowGain: 8.0, midFreq: 520, midGain: 3.2, presenceFreq: 2400, presenceGain: 1.5, highGain: -2.5, compressor: { threshold: -21, ratio: 4.6, attack: 0.005, release: 0.16 } }
   },
   {
     id: 'vn_nam_danang_nhiethuyet',
@@ -698,7 +764,9 @@ export const VIETNAMESE_MALE_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nam Đà Nẵng năng động, phóng khoáng, giọng điệu thân thiện và mến khách.',
     sampleText: 'Chào cả nhà mình nghe! Hôm nay gian hàng tụi mình có rất nhiều deal cực hot, anh em ghé qua xem liền nghe!',
-    dspProfile: { semitones: -6.8, rate: 1.10, lowGain: 7.8, midFreq: 560, midGain: 3.2, presenceFreq: 2500, presenceGain: 1.8, highGain: -2.0, compressor: { threshold: -20, ratio: 4.2, attack: 0.006, release: 0.18 } }
+        edgePitch: '+8%',
+    edgeRate: '+10%',
+dspProfile: { semitones: -6.8, rate: 1.10, lowGain: 7.8, midFreq: 560, midGain: 3.2, presenceFreq: 2500, presenceGain: 1.8, highGain: -2.0, compressor: { threshold: -20, ratio: 4.2, attack: 0.006, release: 0.18 } }
   },
   {
     id: 'vn_nam_hue_tramlang',
@@ -718,7 +786,9 @@ export const VIETNAMESE_MALE_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nam cố đô Huế từ tốn, uy nghi, sâu lắng, đậm chất văn hóa cổ kính.',
     sampleText: 'Kính thưa quý vị, nét đẹp văn hóa cố đô trầm mặc ngàn năm luôn là niềm tự hào sâu sắc của mỗi người con đất Việt.',
-    dspProfile: { semitones: -8.5, rate: 1.02, lowGain: 10.2, midFreq: 390, midGain: 3.4, presenceFreq: 2000, presenceGain: -1.5, highGain: -4.5, compressor: { threshold: -17, ratio: 3.8, attack: 0.015, release: 0.3 } }
+        edgePitch: '-10%',
+    edgeRate: '-4%',
+dspProfile: { semitones: -8.5, rate: 1.02, lowGain: 10.2, midFreq: 390, midGain: 3.4, presenceFreq: 2000, presenceGain: -1.5, highGain: -4.5, compressor: { threshold: -17, ratio: 3.8, attack: 0.015, release: 0.3 } }
   },
   {
     id: 'vn_nam_chienbinh',
@@ -738,7 +808,9 @@ export const VIETNAMESE_MALE_VOICES = [
     recommendedFor: 'game',
     desc: 'Giọng nam tướng quân uy nghi, hào sảng, vang dội như tiếng sấm.',
     sampleText: 'Vì màu cờ sắc áo, toàn quân ta quyết chí xung trận, giành lấy vinh quang vang dội ngàn thu!',
-    dspProfile: { semitones: -9.8, rate: 1.06, lowGain: 12.5, midFreq: 340, midGain: 4.5, presenceFreq: 2100, presenceGain: 1.5, highGain: -4.0, compressor: { threshold: -25, ratio: 7, attack: 0.003, release: 0.15 } }
+        edgePitch: '-24%',
+    edgeRate: '+8%',
+dspProfile: { semitones: -9.8, rate: 1.06, lowGain: 12.5, midFreq: 340, midGain: 4.5, presenceFreq: 2100, presenceGain: 1.5, highGain: -4.0, compressor: { threshold: -25, ratio: 7, attack: 0.003, release: 0.15 } }
   },
   {
     id: 'vn_nam_thaygiao',
@@ -758,7 +830,9 @@ export const VIETNAMESE_MALE_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng giảng viên rõ ràng, mạch lạc, truyền tải kiến thức dễ hiểu.',
     sampleText: 'Chào các bạn, hôm nay chúng ta sẽ cùng nhau tìm hiểu về những nguyên lý khoa học vô cùng thú vị và bổ ích.',
-    dspProfile: { semitones: -7.2, rate: 1.04, lowGain: 7.5, midFreq: 520, midGain: 2.5, presenceFreq: 2300, presenceGain: 0.5, highGain: -3.0, compressor: { threshold: -18, ratio: 3.5, attack: 0.01, release: 0.22 } }
+        edgePitch: '-2%',
+    edgeRate: '+0%',
+dspProfile: { semitones: -7.2, rate: 1.04, lowGain: 7.5, midFreq: 520, midGain: 2.5, presenceFreq: 2300, presenceGain: 0.5, highGain: -3.0, compressor: { threshold: -18, ratio: 3.5, attack: 0.01, release: 0.22 } }
   },
   {
     id: 'vn_nam_streamer_genz',
@@ -778,7 +852,9 @@ export const VIETNAMESE_MALE_VOICES = [
     recommendedFor: 'idol',
     desc: 'Giọng nam trẻ phong cách streamer TikTok, dí dỏm, hài hước và gần gũi.',
     sampleText: 'Anh em thấy thế nào? Quá đỉnh chóp luôn đúng không? Nhớ thả tim và chia sẻ phiên live cho mình nhé!',
-    dspProfile: { semitones: -6.0, rate: 1.16, lowGain: 5.5, midFreq: 680, midGain: 3.0, presenceFreq: 2700, presenceGain: 2.5, highGain: -1.5, compressor: { threshold: -22, ratio: 5, attack: 0.004, release: 0.14 } }
+        edgePitch: '+16%',
+    edgeRate: '+18%',
+dspProfile: { semitones: -6.0, rate: 1.16, lowGain: 5.5, midFreq: 680, midGain: 3.0, presenceFreq: 2700, presenceGain: 2.5, highGain: -1.5, compressor: { threshold: -22, ratio: 5, attack: 0.004, release: 0.14 } }
   },
   {
     id: 'vn_nam_blv_thethao',
@@ -798,7 +874,9 @@ export const VIETNAMESE_MALE_VOICES = [
     recommendedFor: 'game',
     desc: 'Giọng bình luận viên bóng đá/eSports hừng hực lửa, truyền lửa người xem.',
     sampleText: 'Vào! Một siêu phẩm không thể cản phá! Khán đài đang vỡ òa trong niềm vui sướng tột cùng anh em ơi!',
-    dspProfile: { semitones: -6.8, rate: 1.22, lowGain: 7.0, midFreq: 620, midGain: 3.8, presenceFreq: 2600, presenceGain: 3.8, highGain: -1.0, compressor: { threshold: -25, ratio: 7.5, attack: 0.002, release: 0.09 } }
+        edgePitch: '+18%',
+    edgeRate: '+22%',
+dspProfile: { semitones: -6.8, rate: 1.22, lowGain: 7.0, midFreq: 620, midGain: 3.8, presenceFreq: 2600, presenceGain: 3.8, highGain: -1.0, compressor: { threshold: -25, ratio: 7.5, attack: 0.002, release: 0.09 } }
   },
   {
     id: 'vn_nam_tuvan_khachhang',
@@ -818,7 +896,9 @@ export const VIETNAMESE_MALE_VOICES = [
     recommendedFor: 'manager',
     desc: 'Giọng nam tư vấn nhẹ nhàng, nhiệt tình hỗ trợ giải đáp mọi thắc mắc.',
     sampleText: 'Dạ em chào anh chị ạ! Em rất hân hạnh được đồng hành và hỗ trợ giải đáp mọi thắc mắc của mình hôm nay ạ!',
-    dspProfile: { semitones: -7.2, rate: 1.06, lowGain: 7.0, midFreq: 540, midGain: 2.5, presenceFreq: 2200, presenceGain: -0.5, highGain: -3.0, compressor: { threshold: -17, ratio: 3.2, attack: 0.01, release: 0.2 } }
+        edgePitch: '+2%',
+    edgeRate: '+4%',
+dspProfile: { semitones: -7.2, rate: 1.06, lowGain: 7.0, midFreq: 540, midGain: 2.5, presenceFreq: 2200, presenceGain: -0.5, highGain: -3.0, compressor: { threshold: -17, ratio: 3.2, attack: 0.01, release: 0.2 } }
   },
   {
     id: 'vn_nam_video_viral',
@@ -838,7 +918,9 @@ export const VIETNAMESE_MALE_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nam review công nghệ, sản phẩm hot trend thu hút triệu view.',
     sampleText: 'Review cực kỳ chi tiết cho anh em! Món này thực sự đáng đồng tiền bát gạo, trải nghiệm quá đã luôn!',
-    dspProfile: { semitones: -6.5, rate: 1.14, lowGain: 6.0, midFreq: 640, midGain: 3.0, presenceFreq: 2600, presenceGain: 1.8, highGain: -2.0, compressor: { threshold: -21, ratio: 4.5, attack: 0.005, release: 0.15 } }
+        edgePitch: '+10%',
+    edgeRate: '+15%',
+dspProfile: { semitones: -6.5, rate: 1.14, lowGain: 6.0, midFreq: 640, midGain: 3.0, presenceFreq: 2600, presenceGain: 1.8, highGain: -2.0, compressor: { threshold: -21, ratio: 4.5, attack: 0.005, release: 0.15 } }
   }
 ];
 
@@ -862,7 +944,10 @@ export const VIETNAMESE_SALES_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nữ ngọt ngào, tinh tế, am hiểu chuyên sâu về kem dưỡng, serum, son môi và mỹ phẩm cao cấp.',
     sampleText: 'Dạ làn da căng bóng mịn màng chuẩn Hàn Quốc chỉ sau 7 ngày! Hôm nay shop có voucher giảm 40% trong giỏ hàng, chị em chốt ngay nhé!',
-    dspProfile: { semitones: 3.5, rate: 1.12, lowGain: -2.0, midFreq: 1420, midGain: 3.2, presenceFreq: 4200, presenceGain: 6.2, highGain: 5.2 }
+        edgePitch: '+18%',
+    edgeRate: '+12%',
+    neuralVoice: 'vi-VN-HoaiMyNeural',
+dspProfile: { semitones: 3.5, rate: 1.12, lowGain: -2.0, midFreq: 1420, midGain: 3.2, presenceFreq: 4200, presenceGain: 6.2, highGain: 5.2 }
   },
   {
     id: 'vn_sales_thoitrang_sangtrong',
@@ -882,7 +967,10 @@ export const VIETNAMESE_SALES_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nữ sang trọng, quý phái, tư vấn phối đồ, váy đầm thiết kế và túi xách hàng hiệu.',
     sampleText: 'Mẫu đầm lụa thiết kế cao cấp tôn dáng cực đỉnh, chất liệu mềm mịn thoáng mát, diện đi tiệc hay đi làm đều sang hết nấc luôn ạ!',
-    dspProfile: { semitones: 2.2, rate: 1.10, lowGain: -0.5, midFreq: 1260, midGain: 2.8, presenceFreq: 3850, presenceGain: 5.0, highGain: 4.0 }
+        edgePitch: '+6%',
+    edgeRate: '+4%',
+    neuralVoice: 'vi-VN-HoaiMyNeural',
+dspProfile: { semitones: 2.2, rate: 1.10, lowGain: -0.5, midFreq: 1260, midGain: 2.8, presenceFreq: 3850, presenceGain: 5.0, highGain: 4.0 }
   },
   {
     id: 'vn_sales_giadung_tienich',
@@ -902,7 +990,10 @@ export const VIETNAMESE_SALES_VOICES = [
     recommendedFor: 'manager',
     desc: 'Giọng nữ nội trợ hiện đại, tư vấn nồi chiên không dầu, máy hút bụi, robot lau nhà cực kỳ uy tín.',
     sampleText: 'Nồi chiên không dầu dung tích lớn 8 lít, công nghệ nhiệt đối lưu giòn rụm không cần dầu mỡ, bảo hành chính hãng 2 năm đổi mới!',
-    dspProfile: { semitones: 1.6, rate: 1.14, lowGain: 0.5, midFreq: 1120, midGain: 2.5, presenceFreq: 3450, presenceGain: 4.5, highGain: 3.0 }
+        edgePitch: '+12%',
+    edgeRate: '+10%',
+    neuralVoice: 'vi-VN-HoaiMyNeural',
+dspProfile: { semitones: 1.6, rate: 1.14, lowGain: 0.5, midFreq: 1120, midGain: 2.5, presenceFreq: 3450, presenceGain: 4.5, highGain: 3.0 }
   },
   {
     id: 'vn_sales_congnghe_genz',
@@ -922,7 +1013,10 @@ export const VIETNAMESE_SALES_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nam nhạy bén, tốc độ, tư vấn cấu hình gaming, iPhone, laptop, tai nghe chống ồn siêu mượt.',
     sampleText: 'Màn hình 120Hz siêu mượt, chip xử lý thế hệ mới nhất chiến game max setting không nóng máy, giá sale sốc duy nhất tối nay!',
-    dspProfile: { semitones: -6.0, rate: 1.18, lowGain: 7.0, midFreq: 580, midGain: 3.8, presenceFreq: 2600, presenceGain: 1.0, highGain: -2.0 }
+        edgePitch: '+14%',
+    edgeRate: '+18%',
+    neuralVoice: 'vi-VN-NamMinhNeural',
+dspProfile: { semitones: -6.0, rate: 1.18, lowGain: 7.0, midFreq: 580, midGain: 3.8, presenceFreq: 2600, presenceGain: 1.0, highGain: -2.0 }
   },
   {
     id: 'vn_sales_batdongsan_thuongluu',
@@ -942,7 +1036,10 @@ export const VIETNAMESE_SALES_VOICES = [
     recommendedFor: 'manager',
     desc: 'Giọng nam chuyên gia bất động sản thượng lưu, phân tích vị trí vàng, tiềm năng sinh lời triệu đô.',
     sampleText: 'Khu đô thị sinh thái ven sông đẳng cấp bậc nhất, pháp lý minh bạch sổ đỏ trao tay, chính sách thanh toán ưu đãi 0% lãi suất!',
-    dspProfile: { semitones: -8.0, rate: 1.06, lowGain: 10.5, midFreq: 420, midGain: 4.5, presenceFreq: 2100, presenceGain: -2.0, highGain: -4.5 }
+        edgePitch: '-16%',
+    edgeRate: '-2%',
+    neuralVoice: 'vi-VN-NamMinhNeural',
+dspProfile: { semitones: -8.0, rate: 1.06, lowGain: 10.5, midFreq: 420, midGain: 4.5, presenceFreq: 2100, presenceGain: -2.0, highGain: -4.5 }
   },
   {
     id: 'vn_sales_xehoi_uyquyen',
@@ -962,7 +1059,10 @@ export const VIETNAMESE_SALES_VOICES = [
     recommendedFor: 'manager',
     desc: 'Giọng nam trầm hùng đầy uy lực, tư vấn SUV, sedan hạng sang và chính sách lăn bánh tối ưu.',
     sampleText: 'Động cơ tăng áp mạnh mẽ, nội thất bọc da cao cấp cùng hệ thống an toàn đạt chuẩn 5 sao quốc tế, lái thử miễn phí tận nhà!',
-    dspProfile: { semitones: -8.8, rate: 1.08, lowGain: 11.5, midFreq: 380, midGain: 4.5, presenceFreq: 1950, presenceGain: -3.0, highGain: -5.0 }
+        edgePitch: '-20%',
+    edgeRate: '+2%',
+    neuralVoice: 'vi-VN-NamMinhNeural',
+dspProfile: { semitones: -8.8, rate: 1.08, lowGain: 11.5, midFreq: 380, midGain: 4.5, presenceFreq: 1950, presenceGain: -3.0, highGain: -5.0 }
   },
   {
     id: 'vn_sales_thucpham_suckhoe',
@@ -982,7 +1082,10 @@ export const VIETNAMESE_SALES_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nam cao tuổi mộc mạc, ân cần tư vấn thảo dược đông y, bổ xương khớp, dưỡng tâm an thần.',
     sampleText: 'Sức khỏe dồi dào, ăn ngon ngủ sâu giấc nhờ công thức thảo dược tự nhiên gia truyền, bà con mình an tâm đặt hàng dùng thử nghen!',
-    dspProfile: { semitones: -9.2, rate: 1.04, lowGain: 12.0, midFreq: 340, midGain: 4.5, presenceFreq: 1800, presenceGain: -4.0, highGain: -6.0 }
+        edgePitch: '-30%',
+    edgeRate: '-12%',
+    neuralVoice: 'vi-VN-NamMinhNeural',
+dspProfile: { semitones: -9.2, rate: 1.04, lowGain: 12.0, midFreq: 340, midGain: 4.5, presenceFreq: 1800, presenceGain: -4.0, highGain: -6.0 }
   },
   {
     id: 'vn_sales_mientay_nongsan',
@@ -1002,7 +1105,10 @@ export const VIETNAMESE_SALES_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nữ miệt vườn miền Tây xởi lởi, ngọt ngào, chuyên chốt đơn sầu riêng, bưởi da xanh, vú sữa hỏa tốc.',
     sampleText: 'Dạ sầu riêng cơm vàng hạt lép thơm lừng vườn nhà em mới cắt sáng nay, bao ăn 1 đổi 1 bà con đặt liền tay nghen!',
-    dspProfile: { semitones: 3.2, rate: 1.12, lowGain: -1.0, midFreq: 1350, midGain: 3.0, presenceFreq: 4000, presenceGain: 5.8, highGain: 4.5 }
+        edgePitch: '+26%',
+    edgeRate: '+10%',
+    neuralVoice: 'vi-VN-HoaiMyNeural',
+dspProfile: { semitones: 3.2, rate: 1.12, lowGain: -1.0, midFreq: 1350, midGain: 3.0, presenceFreq: 4000, presenceGain: 5.8, highGain: 4.5 }
   },
   {
     id: 'vn_sales_hue_dacsan',
@@ -1022,7 +1128,10 @@ export const VIETNAMESE_SALES_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nữ xứ Huế đằm thắm, ngọt ngào, giới thiệu trà cung đình, mắm ruốc, kẹo mè xửng trứ danh.',
     sampleText: 'Dạ trà cung đình xứ Huế thanh nhiệt giải độc, an thần ngủ ngon, kính mời quý khách đặt hàng thưởng thức vị ngon truyền thống ạ!',
-    dspProfile: { semitones: 2.2, rate: 1.05, lowGain: 0.8, midFreq: 1180, midGain: 2.6, presenceFreq: 3600, presenceGain: 4.6, highGain: 3.2 }
+        edgePitch: '+4%',
+    edgeRate: '-6%',
+    neuralVoice: 'vi-VN-HoaiMyNeural',
+dspProfile: { semitones: 2.2, rate: 1.05, lowGain: 0.8, midFreq: 1180, midGain: 2.6, presenceFreq: 3600, presenceGain: 4.6, highGain: 3.2 }
   },
   {
     id: 'vn_sales_danang_haisan',
@@ -1042,7 +1151,10 @@ export const VIETNAMESE_SALES_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nam miền Trung hào sảng, tư vấn mực một nắng, chả bò Đà Nẵng, cá thu một nắng tươi ngon.',
     sampleText: 'Chả bò Đà Nẵng loại 1 thơm lừng giòn dai, mực một nắng dày thịt nướng lên là nhức nách, anh em đặt nhanh kẻo hết nghe!',
-    dspProfile: { semitones: -7.0, rate: 1.12, lowGain: 8.0, midFreq: 520, midGain: 3.4, presenceFreq: 2400, presenceGain: 1.5, highGain: -2.2 }
+        edgePitch: '+6%',
+    edgeRate: '+12%',
+    neuralVoice: 'vi-VN-NamMinhNeural',
+dspProfile: { semitones: -7.0, rate: 1.12, lowGain: 8.0, midFreq: 520, midGain: 3.4, presenceFreq: 2400, presenceGain: 1.5, highGain: -2.2 }
   },
   {
     id: 'vn_sales_khoahoc_kinhdoanh',
@@ -1062,7 +1174,10 @@ export const VIETNAMESE_SALES_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nam diễn giả truyền cảm hứng, hướng dẫn tư duy kinh doanh và phát triển bản thân vượt bậc.',
     sampleText: 'Lộ trình thực chiến từ con số 0 đến tự do tài chính! Tặng ngay bộ bí kíp chốt sale đỉnh cao cho 10 bạn đăng ký đầu tiên trên live!',
-    dspProfile: { semitones: -7.2, rate: 1.08, lowGain: 8.5, midFreq: 480, midGain: 3.8, presenceFreq: 2300, presenceGain: 0.5, highGain: -2.5 }
+        edgePitch: '-6%',
+    edgeRate: '+12%',
+    neuralVoice: 'vi-VN-NamMinhNeural',
+dspProfile: { semitones: -7.2, rate: 1.08, lowGain: 8.5, midFreq: 480, midGain: 3.8, presenceFreq: 2300, presenceGain: 0.5, highGain: -2.5 }
   },
   {
     id: 'vn_sales_mevabe_diudang',
@@ -1082,7 +1197,10 @@ export const VIETNAMESE_SALES_VOICES = [
     recommendedFor: 'idol',
     desc: 'Giọng nữ mẹ bỉm ấm áp, thấu cảm, tư vấn tã bỉm hữu cơ, sữa tăng chiều cao và đồ chơi an toàn cho bé.',
     sampleText: 'Chất liệu bông hữu cơ mềm mại nâng niu làn da nhạy cảm của bé yêu, thấm hút siêu khô thoáng suốt 12 tiếng mẹ hoàn toàn yên tâm nhé!',
-    dspProfile: { semitones: 2.8, rate: 1.08, lowGain: -1.2, midFreq: 1280, midGain: 2.8, presenceFreq: 3750, presenceGain: 5.0, highGain: 3.8 }
+        edgePitch: '+16%',
+    edgeRate: '-4%',
+    neuralVoice: 'vi-VN-HoaiMyNeural',
+dspProfile: { semitones: 2.8, rate: 1.08, lowGain: -1.2, midFreq: 1280, midGain: 2.8, presenceFreq: 3750, presenceGain: 5.0, highGain: 3.8 }
   },
   {
     id: 'vn_sales_amthuc_dacsan',
@@ -1102,7 +1220,10 @@ export const VIETNAMESE_SALES_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nữ giòn giã, xông xáo, vui tươi, kích thích vị giác người xem muốn đặt đồ ăn ngay lập tức.',
     sampleText: 'Đặc sản chuẩn vị gia truyền thơm ngon đậm đà, đóng gói hút chân không sạch sẽ giao hỏa tốc đến tận bàn ăn của các bác đây ạ!',
-    dspProfile: { semitones: 3.0, rate: 1.16, lowGain: -0.8, midFreq: 1380, midGain: 3.0, presenceFreq: 4200, presenceGain: 5.8, highGain: 4.2 }
+        edgePitch: '+10%',
+    edgeRate: '+8%',
+    neuralVoice: 'vi-VN-HoaiMyNeural',
+dspProfile: { semitones: 3.0, rate: 1.16, lowGain: -0.8, midFreq: 1380, midGain: 3.0, presenceFreq: 4200, presenceGain: 5.8, highGain: 4.2 }
   },
   {
     id: 'vn_sales_spa_thammy',
@@ -1122,7 +1243,10 @@ export const VIETNAMESE_SALES_VOICES = [
     recommendedFor: 'manager',
     desc: 'Giọng nữ quyến rũ, quý phái, ân cần tư vấn liệu trình trẻ hóa da, cấy collagen và nha khoa thẩm mỹ.',
     sampleText: 'Công nghệ nâng cơ trẻ hóa da không xâm lấn chuẩn Hàn, xóa mờ nếp nhăn tức thì trả lại 10 năm thanh xuân cho phái đẹp!',
-    dspProfile: { semitones: 1.8, rate: 1.05, lowGain: 0.0, midFreq: 1100, midGain: 2.6, presenceFreq: 3400, presenceGain: 4.0, highGain: 3.2 }
+        edgePitch: '+8%',
+    edgeRate: '+2%',
+    neuralVoice: 'vi-VN-HoaiMyNeural',
+dspProfile: { semitones: 1.8, rate: 1.05, lowGain: 0.0, midFreq: 1100, midGain: 2.6, presenceFreq: 3400, presenceGain: 4.0, highGain: 3.2 }
   },
   {
     id: 'vn_sales_thethao_fitness',
@@ -1142,7 +1266,10 @@ export const VIETNAMESE_SALES_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nam HLV thể hình máu lửa, tràn trề năng lượng, tư vấn whey protein, máy chạy bộ, tạ tay.',
     sampleText: 'Bứt phá giới hạn bản thân, tăng cơ giảm mỡ nhanh chóng với dòng whey protein tinh khiết hấp thu siêu tốc anh em ơi!',
-    dspProfile: { semitones: -6.2, rate: 1.22, lowGain: 8.0, midFreq: 620, midGain: 4.0, presenceFreq: 2450, presenceGain: 1.2, highGain: -2.0 }
+        edgePitch: '-8%',
+    edgeRate: '+16%',
+    neuralVoice: 'vi-VN-NamMinhNeural',
+dspProfile: { semitones: -6.2, rate: 1.22, lowGain: 8.0, midFreq: 620, midGain: 4.0, presenceFreq: 2450, presenceGain: 1.2, highGain: -2.0 }
   },
   {
     id: 'vn_sales_dulich_nghiduong',
@@ -1162,7 +1289,10 @@ export const VIETNAMESE_SALES_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nữ hướng dẫn viên tươi vui, năng động, tư vấn combo vé máy bay, resort biển và tour quốc tế.',
     sampleText: 'Combo nghỉ dưỡng 3 ngày 2 đêm tại resort 5 sao view biển cực đẹp, bao gồm vé máy bay khứ hồi và buffet sáng sang chảnh!',
-    dspProfile: { semitones: 2.6, rate: 1.14, lowGain: -1.0, midFreq: 1320, midGain: 2.8, presenceFreq: 3950, presenceGain: 5.2, highGain: 4.0 }
+        edgePitch: '+14%',
+    edgeRate: '+8%',
+    neuralVoice: 'vi-VN-HoaiMyNeural',
+dspProfile: { semitones: 2.6, rate: 1.14, lowGain: -1.0, midFreq: 1320, midGain: 2.8, presenceFreq: 3950, presenceGain: 5.2, highGain: 4.0 }
   },
   {
     id: 'vn_sales_bacsi_duocpham',
@@ -1182,7 +1312,10 @@ export const VIETNAMESE_SALES_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nam bác sĩ chuyên khoa điềm đạm, khoa học, tạo niềm tin tuyệt đối cho người mua hàng.',
     sampleText: 'Sản phẩm đạt chuẩn GMP của Bộ Y Tế, thành phần chiết xuất tự nhiên lành tính giúp tăng cường đề kháng và bảo vệ sức khỏe toàn diện.',
-    dspProfile: { semitones: -7.8, rate: 1.04, lowGain: 9.0, midFreq: 450, midGain: 3.6, presenceFreq: 2200, presenceGain: -1.0, highGain: -3.5 }
+        edgePitch: '-12%',
+    edgeRate: '+0%',
+    neuralVoice: 'vi-VN-NamMinhNeural',
+dspProfile: { semitones: -7.8, rate: 1.04, lowGain: 9.0, midFreq: 450, midGain: 3.6, presenceFreq: 2200, presenceGain: -1.0, highGain: -3.5 }
   },
   {
     id: 'vn_sales_phongthuy_tramhuong',
@@ -1202,7 +1335,10 @@ export const VIETNAMESE_SALES_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nữ đằm thắm, sang trọng, tư vấn vòng tay trầm hương, ngọc bích, vàng bạc chiêu tài hút lộc.',
     sampleText: 'Trầm hương tự nhiên tích tụ tinh hoa đất trời, mang lại vượng khí bình an và may mắn tài lộc cho chủ nhân sở hữu.',
-    dspProfile: { semitones: 1.2, rate: 1.04, lowGain: 0.8, midFreq: 1080, midGain: 2.4, presenceFreq: 3300, presenceGain: 3.8, highGain: 2.5 }
+        edgePitch: '-4%',
+    edgeRate: '-8%',
+    neuralVoice: 'vi-VN-HoaiMyNeural',
+dspProfile: { semitones: 1.2, rate: 1.04, lowGain: 0.8, midFreq: 1080, midGain: 2.4, presenceFreq: 3300, presenceGain: 3.8, highGain: 2.5 }
   },
   {
     id: 'vn_sales_noithat_kientruc',
@@ -1222,7 +1358,10 @@ export const VIETNAMESE_SALES_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nam kiến trúc sư tinh tế, tư vấn bàn ghế sofa da bò Ý, tủ gỗ tự nhiên và thiết kế không gian sống.',
     sampleText: 'Nội thất gỗ tự nhiên nguyên khối gia công tỉ mỉ, đường nét tinh tế kiến tạo không gian sống tiện nghi và đẳng cấp cho tổ ấm.',
-    dspProfile: { semitones: -7.5, rate: 1.06, lowGain: 9.0, midFreq: 460, midGain: 3.5, presenceFreq: 2150, presenceGain: -1.0, highGain: -3.5 }
+        edgePitch: '-14%',
+    edgeRate: '+4%',
+    neuralVoice: 'vi-VN-NamMinhNeural',
+dspProfile: { semitones: -7.5, rate: 1.06, lowGain: 9.0, midFreq: 460, midGain: 3.5, presenceFreq: 2150, presenceGain: -1.0, highGain: -3.5 }
   },
   {
     id: 'vn_sales_dochoi_thongminh',
@@ -1242,7 +1381,10 @@ export const VIETNAMESE_SALES_VOICES = [
     recommendedFor: 'idol',
     desc: 'Giọng nữ hoạt bát, vui nhộn, tư vấn lego xếp hình, bảng vẽ điện tử và đồ chơi phát triển trí tuệ sớm.',
     sampleText: 'Bộ đồ chơi lắp ráp tư duy thông minh giúp bé tránh xa màn hình điện thoại, rèn luyện tính kiên nhẫn và sáng tạo vô hạn!',
-    dspProfile: { semitones: 4.8, rate: 1.10, lowGain: -3.0, midFreq: 1700, midGain: 3.5, presenceFreq: 4400, presenceGain: 7.0, highGain: 6.0 }
+        edgePitch: '+30%',
+    edgeRate: '+10%',
+    neuralVoice: 'vi-VN-HoaiMyNeural',
+dspProfile: { semitones: 4.8, rate: 1.10, lowGain: -3.0, midFreq: 1700, midGain: 3.5, presenceFreq: 4400, presenceGain: 7.0, highGain: 6.0 }
   }
 ];
 
@@ -1756,7 +1898,11 @@ export const DEFAULT_VOICE_CONFIG = {
     pitch: 1.0,
     rate: 1.0,
     volume: 1.0,
-    enabled: true
+    enabled: true,
+    sampleText: 'Dạ em chào bạn đang theo dõi livestream nha! Chúc bạn xem live thật vui vẻ và ngập tràn năng lượng tích cực ạ!',
+    edgePitch: '+2%',
+    edgeRate: '+2%',
+
   },
   managerVoice: {
     id: 'vn_nam_quanly_uyquyen',
@@ -1768,7 +1914,11 @@ export const DEFAULT_VOICE_CONFIG = {
     pitch: 1.0,
     rate: 1.05,
     volume: 1.0,
-    enabled: true
+    enabled: true,
+    sampleText: 'Bộ phận kho thông báo số lượng chỉ còn dưới 10 sản phẩm, quý khách nhanh tay hoàn tất đơn hàng ngay lập tức!',
+    edgePitch: '-14%',
+    edgeRate: '+10%',
+
   },
   commentVoice: {
     id: 'free_vi_female',
@@ -1780,7 +1930,11 @@ export const DEFAULT_VOICE_CONFIG = {
     pitch: 1.05,
     rate: 1.0,
     volume: 1.0,
-    enabled: true
+    enabled: true,
+    sampleText: 'Dạ em chào bạn đang theo dõi livestream nha! Chúc bạn xem live thật vui vẻ và ngập tràn năng lượng tích cực ạ!',
+    edgePitch: '+2%',
+    edgeRate: '+2%',
+
   },
   gameBlvVoice: {
     id: 'vn_nam_blv_bungno',
@@ -1792,7 +1946,11 @@ export const DEFAULT_VOICE_CONFIG = {
     pitch: 1.0,
     rate: 1.1,
     volume: 1.0,
-    enabled: true
+    enabled: true,
+    sampleText: 'Pha combat đỉnh cao! Cả hai đội đang tung toàn bộ chiêu thức, hãy cùng bùng nổ năng lượng nào anh em ơi!',
+    edgePitch: '+22%',
+    edgeRate: '+24%',
+
   },
   generalVoice: {
     id: 'free_vi_female',
@@ -1804,7 +1962,11 @@ export const DEFAULT_VOICE_CONFIG = {
     pitch: 1.0,
     rate: 1.0,
     volume: 1.0,
-    enabled: true
+    enabled: true,
+    sampleText: 'Dạ em chào bạn đang theo dõi livestream nha! Chúc bạn xem live thật vui vẻ và ngập tràn năng lượng tích cực ạ!',
+    edgePitch: '+2%',
+    edgeRate: '+2%',
+
   },
   selectedLanguage: 'vi',
   elevenLabsApiKey: '',
@@ -2008,10 +2170,9 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
 
   const isMale = voice?.gender === 'Male' || voice?.gender === 'Nam';
 
-  // Tốc độ phát tự nhiên chuẩn phòng thu, không làm méo cao độ
-  const userRate = requestedRate !== undefined && !isNaN(requestedRate) ? Number(requestedRate) : 1.0;
-  const finalPlaybackRate = Math.max(0.85, Math.min(1.4, userRate));
-  source.playbackRate.value = finalPlaybackRate;
+  // Tốc độ phát đã được Edge TTS tổng hợp hoàn hảo bằng neural time-stretch
+  // Giữ source.playbackRate = 1.0 để bảo toàn 100% âm sắc tự nhiên không bị méo tiếng
+  source.playbackRate.value = 1.0;
 
   // 1. Low Shelf (Tăng độ ấm ngực cho giọng Nam / Giữ độ trong cho giọng Nữ)
   const lowFilter = audioCtx.createBiquadFilter();
@@ -2111,28 +2272,37 @@ async function fetchAndDecodeTTSAudio(text, voice = null) {
     else neuralVoice = isMale ? 'vi-VN-NamMinhNeural' : 'vi-VN-HoaiMyNeural';
   }
 
-  // Tùy biến cao độ và tốc độ tự nhiên cho từng phong cách giọng đọc
-  let pitchHz = voice?.edgePitch;
-  if (!pitchHz) {
+  // 1. TÍNH TOÁN CAO ĐỘ (PITCH) HOÀN TOÀN KHÁC BIỆT DẠNG %
+  let effectivePitch = voice?.edgePitch;
+  if (!effectivePitch) {
     if (voice?.dspProfile?.semitones !== undefined) {
       const st = voice.dspProfile.semitones;
-      pitchHz = (st >= 0 ? '+' : '') + Math.round(st * 2) + 'Hz';
+      const pct = Math.round(st * 5);
+      effectivePitch = (pct >= 0 ? '+' : '') + pct + '%';
     } else if (voice?.pitch !== undefined) {
-      const pDiff = (Number(voice.pitch) - 1.0) * 20;
-      pitchHz = (pDiff >= 0 ? '+' : '') + Math.round(pDiff) + 'Hz';
+      const pDiff = Math.round((Number(voice.pitch) - 1.0) * 100);
+      effectivePitch = (pDiff >= 0 ? '+' : '') + pDiff + '%';
     } else {
-      pitchHz = isMale ? '-3Hz' : '+3Hz';
+      effectivePitch = isMale ? '-10%' : '+10%';
     }
   }
 
-  let ratePercent = voice?.edgeRate;
-  if (!ratePercent) {
-    const vRate = Number(voice?.rate || 1.0);
-    const rDiff = Math.round((vRate - 1.0) * 100);
-    ratePercent = (rDiff >= 0 ? '+' : '') + rDiff + '%';
+  // 2. TÍNH TOÁN TỐC ĐỘ (RATE) DẠNG % (KẾT HỢP GIỮA TÍNH CÁCH GIỌNG & TÙY CHỈNH TỪ UI)
+  let baseRateNum = 0;
+  if (voice?.edgeRate && voice.edgeRate.includes('%')) {
+    baseRateNum = parseInt(voice.edgeRate.replace('%', ''), 10) || 0;
+  }
+  
+  // Nếu người dùng có thanh trượt tốc độ (voice.rate khác 1.0)
+  let userRateOffset = 0;
+  if (voice?.rate !== undefined && !isNaN(Number(voice.rate))) {
+    userRateOffset = Math.round((Number(voice.rate) - 1.0) * 100);
   }
 
-  const cacheKey = `${neuralVoice}_${pitchHz}_${ratePercent}_${text.trim().slice(0, 100)}`;
+  const finalRateNum = Math.max(-50, Math.min(80, baseRateNum + userRateOffset));
+  const effectiveRate = (finalRateNum >= 0 ? '+' : '') + finalRateNum + '%';
+
+  const cacheKey = `${neuralVoice}_${effectivePitch}_${effectiveRate}_${text.trim().slice(0, 100)}`;
   if (audioBufferMemoryCache.has(cacheKey)) {
     return audioBufferMemoryCache.get(cacheKey);
   }
@@ -2141,6 +2311,8 @@ async function fetchAndDecodeTTSAudio(text, voice = null) {
   if (!audioCtx) return null;
 
   const candidateUrls = [
+    `/api/tts?text=${encodeURIComponent(text)}&voice=${encodeURIComponent(neuralVoice)}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(effectivePitch)}&rate=${encodeURIComponent(effectiveRate)}&lang=${encodeURIComponent(shortLang)}`,
+    `http://127.0.0.1:3001/api/tts?text=${encodeURIComponent(text)}&voice=${encodeURIComponent(neuralVoice)}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(effectivePitch)}&rate=${encodeURIComponent(effectiveRate)}&lang=${encodeURIComponent(shortLang)}`,
     `/api/tts?text=${encodeURIComponent(text)}&voice=${encodeURIComponent(neuralVoice)}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(pitchHz)}&rate=${encodeURIComponent(ratePercent)}&lang=${encodeURIComponent(shortLang)}`,
     `http://127.0.0.1:3001/api/tts?text=${encodeURIComponent(text)}&voice=${encodeURIComponent(neuralVoice)}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(pitchHz)}&rate=${encodeURIComponent(ratePercent)}&lang=${encodeURIComponent(shortLang)}`,
     `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(shortLang)}&q=${encodeURIComponent(text.slice(0, 200))}`

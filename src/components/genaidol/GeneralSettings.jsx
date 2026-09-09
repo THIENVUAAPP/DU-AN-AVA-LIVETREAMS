@@ -1582,6 +1582,7 @@ IDOL MỈM CƯỜI + GESTURE
     mainVoiceVolume: 1.0, mainVoiceRate: 1.0, mainVoicePitch: 1.0,
     assistantVoiceVolume: 1.0, assistantVoiceRate: 1.0, assistantVoicePitch: 1.0,
     gameVoiceVolume: 1.0, gameVoiceRate: 1.0, gameVoicePitch: 1.0,
+    salesVoiceVolume: 1.0, salesVoiceRate: 1.0, salesVoicePitch: 1.0,
     
     // Tab 5: Cấu hình Nhanh
     selectedPreset: 'fast', // 'fast' | 'notification' | 'custom_LanHuong'
@@ -1910,11 +1911,11 @@ IDOL MỈM CƯỜI + GESTURE
     const finalValue = type === 'checkbox' ? checked : value;
     setSettings(prev => {
       // Gọi real-time update cho giọng đọc đang test (nếu có)
-      if (['mainVoiceVolume', 'assistantVoiceVolume', 'gameVoiceVolume'].includes(name)) {
+      if (['mainVoiceVolume', 'assistantVoiceVolume', 'gameVoiceVolume', 'salesVoiceVolume'].includes(name)) {
         updateActiveVoiceAudio(Number(finalValue), undefined, undefined);
-      } else if (['mainVoiceRate', 'assistantVoiceRate', 'gameVoiceRate'].includes(name)) {
+      } else if (['mainVoiceRate', 'assistantVoiceRate', 'gameVoiceRate', 'salesVoiceRate'].includes(name)) {
         updateActiveVoiceAudio(undefined, Number(finalValue), undefined);
-      } else if (['mainVoicePitch', 'assistantVoicePitch', 'gameVoicePitch'].includes(name)) {
+      } else if (['mainVoicePitch', 'assistantVoicePitch', 'gameVoicePitch', 'salesVoicePitch'].includes(name)) {
         updateActiveVoiceAudio(undefined, undefined, Number(finalValue));
       }
       return { ...prev, [name]: finalValue };
@@ -2228,7 +2229,13 @@ IDOL MỈM CƯỜI + GESTURE
                                     return;
                                   }
                                   setPreviewingVoiceId(v.id);
-                                  previewVoiceAudio({ ...v, volume: 1.0, rate: 1.0, pitch: 1.0, isTest: true }, null, () => {
+                                  previewVoiceAudio({ 
+                                    ...v, 
+                                    volume: settings.salesVoiceVolume !== undefined ? settings.salesVoiceVolume : 1.0, 
+                                    rate: settings.salesVoiceRate !== undefined ? settings.salesVoiceRate : 1.0, 
+                                    pitch: settings.salesVoicePitch !== undefined ? settings.salesVoicePitch : 1.0, 
+                                    isTest: true 
+                                  }, null, () => {
                                     setPreviewingVoiceId(null);
                                   });
                                 }}
@@ -2247,8 +2254,14 @@ IDOL MỈM CƯỜI + GESTURE
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    setSettings(prev => ({ ...prev, mainVoiceId: v.id }));
-                                    alert(`Đã chọn giọng "${v.name}" làm Giọng Idol Livestream chính!`);
+                                    setSettings(prev => ({ 
+                                      ...prev, 
+                                      mainVoiceId: v.id,
+                                      mainVoiceVolume: settings.salesVoiceVolume !== undefined ? settings.salesVoiceVolume : 1.0,
+                                      mainVoiceRate: settings.salesVoiceRate !== undefined ? settings.salesVoiceRate : 1.0,
+                                      mainVoicePitch: settings.salesVoicePitch !== undefined ? settings.salesVoicePitch : 1.0
+                                    }));
+                                    alert(`Đã chọn giọng "${v.name}" làm Giọng Idol Livestream chính kèm cấu hình tốc độ & âm lượng!`);
                                   }}
                                   className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
                                     isSelectedAsIdol 
@@ -2293,6 +2306,209 @@ IDOL MỈM CƯỜI + GESTURE
                       })}
                     </tbody>
                   </table>
+                </div>
+
+                {/* BỘ ĐIỀU CHỈNH TỐC ĐỘ & ÂM LƯỢNG GIỌNG BÁN HÀNG CHUYÊN NGHIỆP */}
+                <div className="bg-gradient-to-br from-rose-50/80 via-white to-amber-50/60 border border-rose-200 rounded-xl p-4 sm:p-5 shadow-sm space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-rose-200/80 pb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 bg-rose-600 text-white rounded-lg shadow-xs">
+                        <Sliders size={18} />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black text-gray-900 flex items-center gap-1.5">
+                          Tùy Chỉnh Tốc Độ & Âm Lượng Giọng Bán Hàng / Dịch Vụ
+                          <span className="text-[10px] bg-rose-600 text-white font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Live Realtime</span>
+                        </h4>
+                        <p className="text-xs text-gray-600">
+                          Tự do điều chỉnh tốc độ nói dồn dập giục giã hoặc đĩnh đạc từ tốn, cùng âm lượng vang dội khuấy động phiên live.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 self-end sm:self-center">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSettings(prev => ({
+                            ...prev,
+                            salesVoiceRate: 1.0,
+                            salesVoiceVolume: 1.0,
+                            salesVoicePitch: 1.0
+                          }));
+                        }}
+                        className="text-xs text-gray-600 hover:text-rose-600 px-2.5 py-1 bg-white border border-gray-300 rounded-lg hover:border-rose-300 font-medium transition-colors"
+                      >
+                        🔄 Khôi phục mặc định
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    {/* 1. TỐC ĐỘ GIỌNG NÓI */}
+                    <div className="bg-white border border-gray-200 rounded-lg p-3.5 space-y-2.5 shadow-xs">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                          <span>⚡ Tốc độ giọng nói (Speed)</span>
+                        </label>
+                        <span className="text-sm font-black text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                          {settings.salesVoiceRate !== undefined ? Number(settings.salesVoiceRate).toFixed(2) : '1.00'}x
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0.7"
+                        max="1.5"
+                        step="0.05"
+                        name="salesVoiceRate"
+                        value={settings.salesVoiceRate !== undefined ? settings.salesVoiceRate : 1.0}
+                        onChange={handleChange}
+                        className="w-full accent-rose-600 cursor-pointer"
+                      />
+                      <div className="flex items-center justify-between gap-1 text-[11px] pt-1">
+                        {[
+                          { label: '0.8x Chậm', val: 0.8 },
+                          { label: '1.0x Chuẩn', val: 1.0 },
+                          { label: '1.15x Nhanh', val: 1.15 },
+                          { label: '1.3x Tốc biến', val: 1.3 }
+                        ].map(preset => (
+                          <button
+                            key={preset.val}
+                            type="button"
+                            onClick={() => setSettings(prev => ({ ...prev, salesVoiceRate: preset.val }))}
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border transition-all ${
+                              Math.abs((settings.salesVoiceRate || 1.0) - preset.val) < 0.03
+                                ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
+                                : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-rose-50 hover:text-rose-600'
+                            }`}
+                          >
+                            {preset.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 2. ÂM LƯỢNG GIỌNG NÓI */}
+                    <div className="bg-white border border-gray-200 rounded-lg p-3.5 space-y-2.5 shadow-xs">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                          <Volume2 size={15} className="text-rose-600" />
+                          <span>🔊 Âm lượng giọng nói (Volume)</span>
+                        </label>
+                        <span className="text-sm font-black text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                          {Math.round((settings.salesVoiceVolume !== undefined ? settings.salesVoiceVolume : 1.0) * 100)}%
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0.1"
+                        max="1.5"
+                        step="0.05"
+                        name="salesVoiceVolume"
+                        value={settings.salesVoiceVolume !== undefined ? settings.salesVoiceVolume : 1.0}
+                        onChange={handleChange}
+                        className="w-full accent-rose-600 cursor-pointer"
+                      />
+                      <div className="flex items-center justify-between gap-1 text-[11px] pt-1">
+                        {[
+                          { label: '50% Dịu', val: 0.5 },
+                          { label: '80% Êm', val: 0.8 },
+                          { label: '100% Chuẩn', val: 1.0 },
+                          { label: '125% Vang', val: 1.25 }
+                        ].map(preset => (
+                          <button
+                            key={preset.val}
+                            type="button"
+                            onClick={() => setSettings(prev => ({ ...prev, salesVoiceVolume: preset.val }))}
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border transition-all ${
+                              Math.abs((settings.salesVoiceVolume || 1.0) - preset.val) < 0.03
+                                ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
+                                : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-rose-50 hover:text-rose-600'
+                            }`}
+                          >
+                            {preset.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 3. CAO ĐỘ (PITCH) */}
+                    <div className="bg-white border border-gray-200 rounded-lg p-3.5 space-y-2.5 shadow-xs">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                          <span>🎵 Độ trầm bổng (Pitch)</span>
+                        </label>
+                        <span className="text-sm font-black text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                          {settings.salesVoicePitch !== undefined ? Number(settings.salesVoicePitch).toFixed(2) : '1.00'}
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0.7"
+                        max="1.3"
+                        step="0.05"
+                        name="salesVoicePitch"
+                        value={settings.salesVoicePitch !== undefined ? settings.salesVoicePitch : 1.0}
+                        onChange={handleChange}
+                        className="w-full accent-rose-600 cursor-pointer"
+                      />
+                      <div className="flex items-center justify-between gap-1 text-[11px] pt-1">
+                        {[
+                          { label: '0.85 Trầm', val: 0.85 },
+                          { label: '1.0 Cân bằng', val: 1.0 },
+                          { label: '1.15 Trong trẻo', val: 1.15 }
+                        ].map(preset => (
+                          <button
+                            key={preset.val}
+                            type="button"
+                            onClick={() => setSettings(prev => ({ ...prev, salesVoicePitch: preset.val }))}
+                            className={`px-2 py-0.5 rounded text-[10px] font-semibold border transition-all ${
+                              Math.abs((settings.salesVoicePitch || 1.0) - preset.val) < 0.03
+                                ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
+                                : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-rose-50 hover:text-rose-600'
+                            }`}
+                          >
+                            {preset.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* NÚT THỬ NGAY VỚI THÔNG SỐ VỪA CHỈNH */}
+                  <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 bg-white/80 p-3 rounded-lg border border-rose-200/60">
+                    <div className="text-xs text-gray-700">
+                      💡 <span className="font-semibold">Mẹo chốt đơn:</span> Dùng tốc độ <span className="text-rose-600 font-bold">1.15x - 1.25x</span> cho các dịp Flash Sale xả kho, và dùng tốc độ <span className="text-blue-600 font-bold">0.9x - 1.0x</span> cho tư vấn bất động sản, xe hơi, khóa học cao cấp.
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const targetVoice = VIETNAMESE_SALES_VOICES.find(v => v.id === settings.mainVoiceId) || VIETNAMESE_SALES_VOICES[0];
+                        if (previewingVoiceId === targetVoice.id) {
+                          stopVoiceAudio();
+                          setPreviewingVoiceId(null);
+                          return;
+                        }
+                        setPreviewingVoiceId(targetVoice.id);
+                        previewVoiceAudio({
+                          ...targetVoice,
+                          volume: settings.salesVoiceVolume !== undefined ? settings.salesVoiceVolume : 1.0,
+                          rate: settings.salesVoiceRate !== undefined ? settings.salesVoiceRate : 1.0,
+                          pitch: settings.salesVoicePitch !== undefined ? settings.salesVoicePitch : 1.0,
+                          isTest: true
+                        }, null, () => {
+                          setPreviewingVoiceId(null);
+                        });
+                      }}
+                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold text-white shadow-md transition-all active:scale-95 cursor-pointer ${
+                        previewingVoiceId
+                          ? 'bg-amber-500 ring-2 ring-amber-300 animate-pulse'
+                          : 'bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700'
+                      }`}
+                    >
+                      <Volume2 size={16} className={previewingVoiceId ? 'animate-spin' : ''} />
+                      <span>{previewingVoiceId ? 'Đang phát thử (Bấm để dừng)' : '🔊 Nghe Thử Với Tốc Độ & Âm Lượng Này'}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

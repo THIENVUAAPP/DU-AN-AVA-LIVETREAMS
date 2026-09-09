@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.2.9';
+export const APP_VERSION = '2.3.0';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👑 Nâng Cấp Microsoft Azure Neural TTS — Chuẩn Nam Ra Nam, Nữ Ra Nữ 100%',
-    description: 'Tích hợp trực tiếp công nghệ Microsoft Azure Neural Voice Engine (Nam Minh cho Nam, Hoài My cho Nữ). Giọng Nam trầm ấm, hào sảng, uy lực, tự nhiên như người thật; Giọng Nữ trong trẻo, ngọt ngào, truyền cảm, dứt điểm hoàn toàn tình trạng giọng phèn hay bị chồng chéo.'
+    title: '👑 89 Giọng Đọc Độc Bản — Phân Hóa Triệt Để Tông Giọng (Không Trùng Lặp 100%)',
+    description: 'Xóa bỏ hoàn toàn tình trạng rập khuôn hay lặp lại. Toàn bộ 89 chất giọng (21 Giọng Nữ, 20 Giọng Nam, 20 Giọng Bán Hàng, 28 Giọng Quốc Tế) đều sở hữu cao độ Pitch, nhịp độ Rate, ngữ điệu và câu thoại mẫu đặc trưng riêng biệt theo từng độ tuổi và 4 vùng miền (Bắc, Trung, Nam, Tây).'
   },
   {
-    title: '⚡ 89 Giọng Đọc Độc Bản — Chuẩn Sắc Thái 4 Vùng Miền & Quốc Tế',
-    description: 'Từng phong cách (BLV Game PK, Chốt đơn livestream, BTV Thời sự, Kể chuyện đêm muộn, Lão niên, Gen Z...) đều sở hữu cao độ Hz và nhịp độ Rate riêng biệt, kết hợp chuỗi Broadcast Mastering DSP chuẩn phòng thu.'
+    title: '🎛️ Tùy Chỉnh Âm Lượng & Tốc Độ Giọng Bán Hàng / Dịch Vụ Chuyên Nghiệp',
+    description: 'Thêm bảng điều khiển trực quan ngay dưới danh sách giọng bán hàng: Thanh trượt Tốc độ (Speed 0.7x - 1.5x), Âm lượng (Volume 10% - 150%) và Độ trầm bổng (Pitch) kèm các nút chọn nhanh và nghe thử tức thì theo thời gian thực.'
   },
   {
-    title: '🚀 Tốc Độ Phát Âm Siêu Tốc & Bộ Nhớ Đệm Thông Minh',
-    description: 'Tích hợp bộ nhớ đệm In-Memory Cache tức thì, loại bỏ độ trễ phản hồi, tự động chuyển đổi dự phòng thông minh bảo đảm phát âm liên tục mượt mà.'
+    title: '🚀 Giữ Trọn Âm Sắc Tự Nhiên & Bộ Nhớ Đệm Neural Siêu Tốc',
+    description: 'Bảo toàn 100% âm sắc tự nhiên của giọng nói AI, không làm méo tiếng khi thay đổi tốc độ; tốc độ phản hồi 0ms với bộ nhớ đệm thông minh.'
   }
 ];
 
