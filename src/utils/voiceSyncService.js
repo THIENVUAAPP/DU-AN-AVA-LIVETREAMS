@@ -2678,13 +2678,18 @@ function getOrCreateAudioContext() {
 
 export function stopVoiceAudio() {
   if (activeSourceNode) {
-    try { activeSourceNode.stop(); } catch(e) {}
+    try {
+      activeSourceNode.onended = null;
+      activeSourceNode.stop();
+    } catch(e) {}
     try { activeSourceNode.disconnect(); } catch(e) {}
     activeSourceNode = null;
   }
   activeMasterGainNode = null;
   if (activePreviewAudio) {
     try {
+      activePreviewAudio.onended = null;
+      activePreviewAudio.onerror = null;
       activePreviewAudio.pause();
       activePreviewAudio.currentTime = 0;
     } catch (e) {}
@@ -3320,6 +3325,9 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
   });
 }
 
+// Bộ nhớ đệm các Promise fetch đang chạy ngầm để chống trùng lặp (Deduplication)
+const activeFetchPromises = new Map();
+
 /**
  * ⚡ TẢI VÀ GIẢI MÃ ÂM THANH MICROSOFT NEURAL TTS (CÓ BỘ NHỚ ĐỆM TỰ ĐỘNG & HỖ TRỢ POST/GET)
  */
@@ -3385,6 +3393,10 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
     return audioBufferMemoryCache.get(cacheKey);
   }
 
+  if (activeFetchPromises.has(cacheKey)) {
+    return activeFetchPromises.get(cacheKey);
+  }
+
   const audioCtx = getOrCreateAudioContext();
   if (!audioCtx) return null;
 
@@ -3428,59 +3440,69 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
     `http://localhost:3001/api/tts`
   ];
 
-  for (let attempt = 0; attempt < 2; attempt++) {
-    for (const endpoint of endpointCandidates) {
-      try {
-        let res = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: postPayload
-        }).catch(() => null);
+  const doFetch = async () => {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      for (const endpoint of endpointCandidates) {
+        try {
+          let res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: postPayload
+          }).catch(() => null);
 
-        if (!res || !res.ok) {
-          const getUrl = endpoint.includes('?') ? `${endpoint}&${ttsQuery}` : `${endpoint}?${ttsQuery}`;
-          res = await fetch(getUrl).catch(() => null);
-        }
-
-        if (res && res.ok) {
-          const contentType = res.headers.get('content-type') || '';
-          let arrayBuf = null;
-
-          if (contentType.includes('application/json')) {
-            const data = await res.json();
-            if (data?.audioBase64) {
-              const binaryString = atob(data.audioBase64);
-              const bytes = new Uint8Array(binaryString.length);
-              for (let i = 0; i < binaryString.length; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-              }
-              arrayBuf = bytes.buffer;
-            }
-          } else {
-            arrayBuf = await res.arrayBuffer();
+          if (!res || !res.ok) {
+            const getUrl = endpoint.includes('?') ? `${endpoint}&${ttsQuery}` : `${endpoint}?${ttsQuery}`;
+            res = await fetch(getUrl).catch(() => null);
           }
 
-          if (arrayBuf && arrayBuf.byteLength > 100) {
-            const rawAudioBuffer = await audioCtx.decodeAudioData(arrayBuf);
-            if (rawAudioBuffer) {
-              const audioBuffer = trimAudioBufferSilence(rawAudioBuffer);
-              if (audioBufferMemoryCache.size > 250) {
-                const firstKey = audioBufferMemoryCache.keys().next().value;
-                audioBufferMemoryCache.delete(firstKey);
+          if (res && res.ok) {
+            const contentType = res.headers.get('content-type') || '';
+            let arrayBuf = null;
+
+            if (contentType.includes('application/json')) {
+              const data = await res.json();
+              if (data?.audioBase64) {
+                const binaryString = atob(data.audioBase64);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                  bytes[i] = binaryString.charCodeAt(i);
+                }
+                arrayBuf = bytes.buffer;
               }
-              audioBufferMemoryCache.set(cacheKey, audioBuffer);
-              return audioBuffer;
+            } else {
+              arrayBuf = await res.arrayBuffer();
+            }
+
+            if (arrayBuf && arrayBuf.byteLength > 100) {
+              const rawAudioBuffer = await audioCtx.decodeAudioData(arrayBuf);
+              if (rawAudioBuffer) {
+                const audioBuffer = trimAudioBufferSilence(rawAudioBuffer);
+                if (audioBufferMemoryCache.size > 250) {
+                  const firstKey = audioBufferMemoryCache.keys().next().value;
+                  audioBufferMemoryCache.delete(firstKey);
+                }
+                audioBufferMemoryCache.set(cacheKey, audioBuffer);
+                return audioBuffer;
+              }
             }
           }
-        }
-      } catch (e) {}
+        } catch (e) {}
+      }
+      if (attempt === 0) {
+        await new Promise(r => setTimeout(r, 150));
+      }
     }
-    if (attempt === 0) {
-      await new Promise(r => setTimeout(r, 150));
-    }
+    return null;
+  };
+
+  const fetchPromise = doFetch();
+  activeFetchPromises.set(cacheKey, fetchPromise);
+  try {
+    const result = await fetchPromise;
+    return result;
+  } finally {
+    activeFetchPromises.delete(cacheKey);
   }
-
-  return null;
 }
 
 /**

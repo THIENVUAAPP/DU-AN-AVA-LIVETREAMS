@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.5.6';
+export const APP_VERSION = '2.5.7';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Triệt Tiêu 100% Khoảng Dừng Tại Dấu Câu (!, ?, ...) & Loại Bỏ Hoàn Toàn Tạp Âm Khoảng Lặng',
-    description: 'Chuẩn hóa định dạng văn bản gửi đến TTS Engine và kích hoạt Silence Trimmer tự động: Không còn hiện tượng ngắt khựng giữa chừng hoặc dừng lâu tại các dấu câu (!, ?, :, ;). Mọi câu đọc liền mạch 0ms siêu mượt.'
+    title: '👑 Nâng Cấp Toàn Diện Cao Độ & Âm Sắc 21 Giọng Nữ 4 Vùng Miền Độc Bản',
+    description: 'Tất cả các giọng đọc nữ đều sở hữu cao độ (Pitch), nhịp điệu (Rate) và màu âm DSP riêng biệt hoàn toàn (Hà Nội BTV, Huế ngọt ngào, Cần Thơ đằm thắm, Sài Gòn GenZ, VTuber nhí nhảnh...), tuyệt đối không trùng lặp và cảm xúc chân thật như người thật.'
   },
   {
-    title: '🎙️ Chuẩn Hóa 100% Phát Âm Tiếng Anh, Từ Viết Tắt & Đọc Số Tiền Livestream Chính Xác',
-    description: 'Tự động phiên âm chuẩn xác các thuật ngữ tiếng Anh (serum, skincare, deal, flash sale, review, combo, freeship, order, video, live...), từ viết tắt (sp, đc, ko, cmt, btv, mc, stk, cod...) và số tiền lớn (10,000, 890.000đ, 50k, 2tr5...).'
+    title: '⚡ Phát Ngay Lập Tức 0.000s Khi Bấm Nghe Thử Kịch Bản',
+    description: 'Tự động Pre-warm RAM Cache câu thoại ngay khi soạn thảo hoặc chọn giọng: Khi bấm Phát/Nghe thử kịch bản, âm thanh được giải mã sẵn phát ra NGAY TỨC THÌ 0ms không phải chờ mạng.'
   },
   {
-    title: '👑 Nâng Cấp Giọng Nữ 4 Vùng Miền Đỉnh Cao & Cảm Xúc Thăng Trầm Tuyệt Đỉnh',
-    description: 'Nâng cấp toàn diện các giọng Nữ (BTV VTV Hà Nội, Huế dịu dàng, Cần Thơ ngọt lịm, Út Mai miền Tây, Idol Sài Gòn, KOC bắt trend) với phong thái tự tin, vui tươi, lôi cuốn và truyền cảm hứng.'
+    title: '🎙️ Chuyển Đổi Giọng Đọc Độc Lập & Không Bao Giờ Chồng Chéo',
+    description: 'Hủy bỏ và ngắt sạch hoàn toàn âm thanh cũ khi chuyển giọng hoặc đổi kịch bản, chống chồng chéo giọng đọc và kích hoạt ngay giọng mới chọn.'
   },
   {
-    title: '🚀 Lookahead Audio Pre-fetching & RAM Caching 0ms',
-    description: 'Tải trước và giải mã sẵn các câu thoại tiếp theo vào RAM trong lúc câu hiện tại đang phát, đảm bảo kịch bản và bình luận AI phát liền mạch không một giây đứt quãng.'
+    title: '✨ Tinh Gọn Giao Diện Nghe Thử Kịch Bản',
+    description: 'Đã lược bỏ nút Tối Ưu Kịch Bản để thanh điều khiển nghe thử giọng đọc trở nên tinh gọn, trực quan và dễ thao tác nhất.'
   }
 ];
 
