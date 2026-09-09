@@ -730,7 +730,7 @@ dspProfile: { semitones: -7.6, rate: 1.04, lowGain: 8.5, midFreq: 480, midGain: 
 // ==================== 3. KHO 30 GIỌNG BÁN HÀNG & CHỐT ĐƠN ĐA NGÀNH, ĐA VÙNG MIỀN, ĐA ĐỘ TUỔI (20-70 TUỔI) ====================
 export const VIETNAMESE_SALES_VOICES = [
   // ==========================================
-  // 1. MIỀN NAM (SÀI GÒN) - 8 NHÂN VẬT ĐỈNH CAO
+  // 1. MIỀN NAM (SÀI GÒN PHỒN HOA) - 8 NHÂN VẬT ĐỈNH CAO
   // ==========================================
   {
     id: 'vn_sales_mypham_trangda',
@@ -749,7 +749,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 1.12,
     recommendedFor: 'both',
     desc: 'Giọng nữ Sài Gòn trẻ trung, ngọt ngào, quyến rũ, am hiểu chuyên sâu về kem dưỡng, serum, son môi và mỹ phẩm Hàn Quốc.',
-    sampleText: 'Dạ làn da căng bóng mịn màng chuẩn Hàn Quốc chỉ sau 7 ngày! Hôm nay shop em trợ giá voucher giảm 40% trong giỏ hàng, chị em chốt ngay kẻo hết nhé!',
+    sampleText: 'Dạ nè chị em ơi! Da căng bóng mịn màng chuẩn gái Hàn luôn nha! Hôm nay shop em trợ giá voucher giảm tới 40% lận, mấy chế chốt liền tay trong giỏ hàng góc trái nha!',
     edgePitch: '+22%',
     edgeRate: '+12%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
@@ -772,7 +772,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 1.18,
     recommendedFor: 'both',
     desc: 'Giọng nam Sài Gòn trẻ trung, tốc độ, am hiểu sâu về cấu hình gaming, iPhone, laptop, tai nghe chống ồn.',
-    sampleText: 'Màn hình 120Hz siêu mượt, chip Snapdragon thế hệ mới nhất cân mọi tựa game max setting không nóng máy, giá sale sốc duy nhất trong phiên live tối nay!',
+    sampleText: 'Màn hình 120Hz siêu mượt, quất chip Snapdragon thế hệ mới cân mọi tựa game max setting mát rượi anh em ơi! Giá sale sốc độc quyền duy nhất phiên live tối nay, quẹo lựa quẹo lựa nha!',
     edgePitch: '-8%',
     edgeRate: '+18%',
     neuralVoice: 'vi-VN-NamMinhNeural',
@@ -795,7 +795,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 1.25,
     recommendedFor: 'manager',
     desc: 'Giọng nam Sài Gòn hối hả giục đơn, năng lượng bùng nổ, thúc đẩy người xem bấm nút mua hàng ngay tức thì.',
-    sampleText: 'Chỉ còn đúng 15 suất quà tặng độc quyền trong giỏ hàng góc trái, anh em bấm vào mua ngay kẻo hệ thống khóa deal giá hời nhé!',
+    sampleText: 'Chỉ còn đúng 15 suất quà tặng độc quyền trong giỏ hàng thôi anh em ơi! Bấm vô mua liền tay kẻo hệ thống khóa deal giá hời nha, đếm ngược 3, 2, 1 chốt liền chốt liền!',
     edgePitch: '+8%',
     edgeRate: '+25%',
     neuralVoice: 'vi-VN-NamMinhNeural',
@@ -818,7 +818,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 1.08,
     recommendedFor: 'idol',
     desc: 'Giọng nữ mẹ bỉm Sài Gòn ấm áp, thấu cảm, tư vấn tã bỉm hữu cơ, sữa tăng chiều cao và đồ dùng cho bé.',
-    sampleText: 'Chất liệu bông hữu cơ mềm mại nâng niu làn da nhạy cảm của bé yêu, thấm hút siêu khô thoáng suốt 12 tiếng, mẹ hoàn toàn yên tâm nha!',
+    sampleText: 'Dạ chất liệu bông hữu cơ mềm mại nâng niu làn da non nớt của bé yêu nè mẹ ơi, thấm hút siêu khô thoáng suốt 12 tiếng, mẹ yên tâm tuyệt đối nha!',
     edgePitch: '+16%',
     edgeRate: '-2%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
@@ -841,7 +841,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 1.22,
     recommendedFor: 'both',
     desc: 'Giọng nam HLV thể hình Sài Gòn tràn trề cơ bắp và năng lượng, tư vấn whey protein, creatine, máy tập.',
-    sampleText: 'Bứt phá giới hạn bản thân, tăng cơ giảm mỡ nhanh chóng với dòng whey protein tinh khiết hấp thu siêu tốc anh em ơi!',
+    sampleText: 'Bứt phá giới hạn, siết cơ giảm mỡ cực đỉnh với dòng whey protein tinh khiết hấp thu siêu tốc anh em ơi! Uống vô là tràn trề sinh lực, đặt liền tay có quà nha!',
     edgePitch: '-12%',
     edgeRate: '+16%',
     neuralVoice: 'vi-VN-NamMinhNeural',
@@ -864,7 +864,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 1.02,
     recommendedFor: 'both',
     desc: 'Giọng nam kiến trúc sư trung niên 45 tuổi đĩnh đạc, tư vấn bàn ghế sofa da bò Ý, tủ gỗ óc chó tự nhiên và không gian sống đẳng cấp.',
-    sampleText: 'Nội thất gỗ óc chó tự nhiên nguyên khối gia công tỉ mỉ, đường nét tinh tế kiến tạo không gian sống tiện nghi và đẳng cấp cho tổ ấm của anh chị.',
+    sampleText: 'Dạ nội thất gỗ óc chó tự nhiên nguyên khối gia công tỉ mỉ từng chi tiết, đường nét sang trọng kiến tạo không gian sống đẳng cấp cho tổ ấm của gia đình mình anh chị nha.',
     edgePitch: '-16%',
     edgeRate: '-2%',
     neuralVoice: 'vi-VN-NamMinhNeural',
@@ -887,7 +887,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 0.98,
     recommendedFor: 'idol',
     desc: 'Giọng nữ quý bà thành đạt 48 tuổi đài các, sang trọng, am hiểu trang sức đá quý, kim cương và nước hoa niche cao cấp.',
-    sampleText: 'Mùi hương nước hoa niche quý phái lưu hương trên 12 tiếng, khẳng định thần thái sang trọng, quyến rũ và đẳng cấp riêng của quý cô thành đạt.',
+    sampleText: 'Mùi hương nước hoa niche quý phái lưu hương trên 12 tiếng nè quý cô ơi, toát lên thần thái sang trọng, quyến rũ và đẳng cấp độc bản của người phụ nữ thành đạt nha.',
     edgePitch: '-4%',
     edgeRate: '-4%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
@@ -910,13 +910,16 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 0.92,
     recommendedFor: 'both',
     desc: 'Giọng ông cụ 65 tuổi phúc hậu, từng trải, chân thành chia sẻ bài thuốc xương khớp gia truyền và trà thảo mộc dưỡng sinh.',
-    sampleText: 'Bà con mình đau lưng mỏi gối, đi đứng khó khăn thì uống thảo dược này mỗi tối, khí huyết lưu thông, ngủ ngon giấc tới sáng nghen bà con.',
+    sampleText: 'Bà con mình ai đau lưng mỏi gối, đi đứng khó khăn thì uống thảo dược gia truyền này mỗi tối nghen, khí huyết lưu thông, ngủ một mạch tới sáng khỏe re bà con nha!',
     edgePitch: '-24%',
     edgeRate: '-14%',
     neuralVoice: 'vi-VN-NamMinhNeural',
     dspProfile: { semitones: -9.0, rate: 0.92, lowGain: 10.5, midFreq: 380, midGain: 4.0, presenceFreq: 1800, presenceGain: -2.0, highGain: -5.0 }
   },
-  // 2. MIỀN BẮC (HÀ NỘI & ĐÔNG TÂY BẮC) - 8 NHÂN VẬT ĐỈNH CAO
+
+  // ==========================================
+  // 2. MIỀN BẮC (HÀ NỘI KINH KỲ & ĐÔNG TÂY BẮC) - 8 NHÂN VẬT ĐỈNH CAO
+  // ==========================================
   {
     id: 'vn_sales_thoitrang_congso',
     name: 'Mai Phương 👑 (Nữ Trẻ - Thời Trang Công Sở & Đầm Thiết Kế [Hà Nội])',
@@ -934,7 +937,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 1.10,
     recommendedFor: 'both',
     desc: 'Giọng nữ Hà Nội thanh lịch, chuẩn mực, tư vấn đầm thiết kế cao cấp, váy công sở và phụ kiện thời trang.',
-    sampleText: 'Chất vải lụa tơ tằm cao cấp mềm mát chống nhăn, form dáng tôn eo thanh lịch chuẩn quý cô Hà Thành diện đi làm hay dự tiệc đều sang hết nấc!',
+    sampleText: 'Dạ vâng, chất vải lụa tơ tằm cao cấp mềm mát chống nhăn, form dáng tôn eo thanh lịch chuẩn quý cô Hà Thành diện đi làm hay dự tiệc đều sang hết nấc nhé các chị đẹp ơi!',
     edgePitch: '+18%',
     edgeRate: '+6%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
@@ -957,7 +960,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 1.14,
     recommendedFor: 'both',
     desc: 'Giọng nam Hà Nội tự tin, am hiểu xe hơi, phụ kiện camera hành trình 4K, phim cách nhiệt và đồ chơi xe sang.',
-    sampleText: 'Trang bị camera hành trình 4K ban đêm siêu nét, tích hợp cảnh báo giao thông giọng nói thông minh, bảo vệ hành trình an toàn cho các bác tài!',
+    sampleText: 'Trang bị camera hành trình 4K quay đêm siêu nét, tích hợp cảnh báo giao thông giọng nói thông minh, các bác tài lái xe đường dài cứ gọi là an tâm tuyệt đối nhé!',
     edgePitch: '-6%',
     edgeRate: '+10%',
     neuralVoice: 'vi-VN-NamMinhNeural',
@@ -980,7 +983,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 1.00,
     recommendedFor: 'both',
     desc: 'Giọng nam chuyên gia bất động sản 42 tuổi trầm ấm, uy lực, tạo niềm tin lớn cho các thương vụ biệt thự triệu đô.',
-    sampleText: 'Vị trí kim cương trung tâm đắc địa, pháp lý minh bạch sổ đỏ trao tay, tiềm năng sinh lời và tăng giá vượt trội cho các nhà đầu tư thông thái.',
+    sampleText: 'Vị trí kim cương trung tâm đắc địa, pháp lý minh bạch sổ đỏ trao tay, tiềm năng sinh lời và tăng giá vượt trội cho các nhà đầu tư thông thái thưa quý vị.',
     edgePitch: '-14%',
     edgeRate: '-6%',
     neuralVoice: 'vi-VN-NamMinhNeural',
@@ -1003,7 +1006,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 1.04,
     recommendedFor: 'both',
     desc: 'Giọng nam bác sĩ chuyên khoa điềm đạm, khoa học, tạo niềm tin tuyệt đối cho người mua hàng.',
-    sampleText: 'Sản phẩm đạt chuẩn GMP của Bộ Y Tế, thành phần chiết xuất tự nhiên lành tính giúp tăng cường đề kháng và bảo vệ sức khỏe toàn diện.',
+    sampleText: 'Sản phẩm đạt chuẩn GMP của Bộ Y Tế, thành phần chiết xuất tự nhiên lành tính giúp tăng cường sức đề kháng và bảo vệ sức khỏe toàn diện cho cả gia đình thưa các bác.',
     edgePitch: '-12%',
     edgeRate: '+0%',
     neuralVoice: 'vi-VN-NamMinhNeural',
@@ -1026,7 +1029,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 1.04,
     recommendedFor: 'both',
     desc: 'Giọng nữ đằm thắm, sang trọng, tư vấn vòng tay trầm hương, ngọc bích, vàng bạc chiêu tài hút lộc.',
-    sampleText: 'Trầm hương tự nhiên tích tụ tinh hoa đất trời, mang lại vượng khí bình an và may mắn tài lộc cho chủ nhân sở hữu.',
+    sampleText: 'Trầm hương tự nhiên tích tụ linh khí đất trời, mang lại vượng khí bình an và may mắn tài lộc cho chủ nhân sở hữu, kính mời các anh chị chiêm ngưỡng ạ.',
     edgePitch: '-4%',
     edgeRate: '-8%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
@@ -1049,7 +1052,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 1.12,
     recommendedFor: 'idol',
     desc: 'Giọng nữ Hà Nội tươi tắn, gần gũi, chuyên review nồi chiên không dầu, robot hút bụi và thiết bị gia đình thông minh.',
-    sampleText: 'Nồi chiên không dầu dung tích lớn với công nghệ nhiệt đối lưu 360 độ giúp món ăn chín vàng giòn rụm mà giảm đến 85% lượng dầu mỡ thừa!',
+    sampleText: 'Nồi chiên không dầu dung tích lớn với công nghệ nhiệt đối lưu 360 độ giúp món ăn chín vàng giòn rụm mà giảm đến 85% lượng dầu mỡ thừa nhé các mẹ ơi!',
     edgePitch: '+18%',
     edgeRate: '+8%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
@@ -1072,7 +1075,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 0.90,
     recommendedFor: 'both',
     desc: 'Giọng cụ ông 68 tuổi trầm ấm, đượm nét văn hóa kinh kỳ, am hiểu sâu sắc về nghệ thuật thưởng trà và gốm sứ cổ.',
-    sampleText: 'Búp trà Shan tuyết cổ thụ ngậm sương non trên đỉnh Tây Côn Lĩnh, hương thơm thanh khiết ngọt hậu lắng sâu, mời các bác cùng thưởng thức.',
+    sampleText: 'Búp trà Shan tuyết cổ thụ ngậm sương non trên đỉnh Tây Côn Lĩnh, hương thơm thanh khiết tiền chát hậu ngọt lắng sâu, kính mời các bác cùng đàm đạo thưởng trà ạ.',
     edgePitch: '-26%',
     edgeRate: '-16%',
     neuralVoice: 'vi-VN-NamMinhNeural',
@@ -1095,7 +1098,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 0.92,
     recommendedFor: 'idol',
     desc: 'Giọng bà cụ 66 tuổi phúc hậu, từ tốn, tư vấn bột sắn ướp hoa bưởi, ô mai Hàng Đường gia truyền chuẩn vị phố cổ.',
-    sampleText: 'Bột sắn dây nguyên chất ướp hương hoa bưởi thanh mát, mùa hè khuấy một bát giải nhiệt, thanh lọc cơ thể rất tốt cho sức khỏe cả gia đình.',
+    sampleText: 'Bột sắn dây nguyên chất ướp hương hoa bưởi thanh mát, mùa hè khuấy một bát giải nhiệt, thanh lọc cơ thể rất tốt cho sức khỏe các bác và các cháu nhé.',
     edgePitch: '-10%',
     edgeRate: '-12%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
@@ -1103,7 +1106,7 @@ export const VIETNAMESE_SALES_VOICES = [
   },
 
   // ==========================================
-  // 3. MIỀN TRUNG (ĐÀ NẴNG, HUẾ, NGHỆ AN, QUẢNG NAM) - 6 NHÂN VẬT ĐỈNH CAO
+  // 3. MIỀN TRUNG (HUẾ CỐ ĐÔ, ĐÀ NẴNG, NGHỆ AN, QUẢNG NAM) - 6 NHÂN VẬT ĐỈNH CAO
   // ==========================================
   {
     id: 'vn_sales_dacsanhue_ngocan',
@@ -1122,7 +1125,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 1.02,
     recommendedFor: 'idol',
     desc: 'Giọng nữ Huế dịu dàng, ngọt ngào, say đắm, tư vấn trà Cung Đình Huế, mè xửng giòn rụm và nón bài thơ.',
-    sampleText: 'Dạ mời quý anh chị ghé thăm gian hàng đặc sản Cố Đô Huế, nhâm nhi tách trà Cung Đình thanh ngọt thơm lừng đậm đà tình người xứ Huế.',
+    sampleText: 'Dạ thưa quý anh chị, ghé thăm xứ Huế mộng mơ nì, nhấp một ngụm trà Cung Đình thanh ngọt thơm lừng, đậm đà nghĩa tình miền Trung xứ Huế thương nì!',
     edgePitch: '+12%',
     edgeRate: '-2%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
@@ -1145,7 +1148,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 1.12,
     recommendedFor: 'idol',
     desc: 'Giọng nữ Đà Nẵng năng động, hiếu khách, tư vấn combo du lịch Bà Nà Hills, Hội An, vé máy bay và resort biển.',
-    sampleText: 'Combo nghỉ dưỡng 3 ngày 2 đêm tại resort 5 sao view biển cực đẹp, bao gồm vé máy bay khứ hồi và buffet sáng sang chảnh chỉ với giá siêu ưu đãi!',
+    sampleText: 'Combo nghỉ dưỡng 3 ngày 2 đêm tại resort 5 sao view biển Đà Nẵng cực đẹp nì mọi người ơi, bao trọn vé máy bay khứ hồi và buffet sáng sang chảnh giá hời lắm nì!',
     edgePitch: '+16%',
     edgeRate: '+8%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
@@ -1168,7 +1171,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 1.16,
     recommendedFor: 'both',
     desc: 'Giọng nam Đà Nẵng khỏe khoắn, hào sảng miền biển, tư vấn mực một nắng, chả bò cây nguyên chất và tôm cá tươi.',
-    sampleText: 'Chả bò Đà Nẵng loại đặc biệt nguyên chất 100% không hàn the, thơm lừng mùi tiêu sọ, cắn ngập răng giòn sần sật bao ngon bao chuẩn!',
+    sampleText: 'Chả bò Đà Nẵng loại 1 nguyên chất 100% không hàn the, thơm lừng mùi tiêu sọ, cắn ngập răng giòn sần sật bao ngon bao chuẩn vị miền Trung nì anh em ơi!',
     edgePitch: '-4%',
     edgeRate: '+14%',
     neuralVoice: 'vi-VN-NamMinhNeural',
@@ -1191,7 +1194,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 1.04,
     recommendedFor: 'both',
     desc: 'Giọng nam xứ Nghệ chân tình, mộc mạc, chất phác, tư vấn giò bê Nam Đàn, tương Sa Nam và kẹo cu đơ Hà Tĩnh.',
-    sampleText: 'Giò me Nam Đàn thịt bê tươi mềm ngọt tự nhiên, bì giòn thơm phức tiêu rừng, làm mồi nhậu hay quà biếu tết thì hết nước chấm bà con ơi!',
+    sampleText: 'Giò me Nam Đàn thịt bê tươi mềm ngọt tự nhiên, bì giòn thơm phức tiêu rừng, làm mồi nhậu hay quà biếu tết thì ngon hết ý bà con xứ Nghệ mình ơi!',
     edgePitch: '-10%',
     edgeRate: '+0%',
     neuralVoice: 'vi-VN-NamMinhNeural',
@@ -1214,7 +1217,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 0.94,
     recommendedFor: 'both',
     desc: 'Giọng thầy lang cao tuổi xứ Huế điềm đạm, ấm cúng, tư vấn tinh dầu tràm nguyên chất, cao xoa bóp thảo dược bí truyền.',
-    sampleText: 'Dầu tràm Huế nguyên chất nấu thủ công giữ trọn tinh dầu tràm gió, giữ ấm cho mẹ và bé, xua đuổi côn trùng hiệu quả tuyệt đối.',
+    sampleText: 'Dầu tràm Huế nguyên chất nấu thủ công giữ trọn tinh dầu tràm gió, giữ ấm cho mẹ và bé, xoa bóp đau nhức xương khớp công hiệu vô cùng thưa bà con nì.',
     edgePitch: '-22%',
     edgeRate: '-12%',
     neuralVoice: 'vi-VN-NamMinhNeural',
@@ -1237,7 +1240,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 0.98,
     recommendedFor: 'idol',
     desc: 'Giọng nữ trung niên 52 tuổi ấm áp, phúc hậu xứ Quảng, tư vấn tổ yến tinh chế, yến rút lông nguyên tổ và sâm Ngọc Linh đại bổ.',
-    sampleText: 'Tổ yến đảo thiên nhiên nguyên chất sợi yến dai nở nhiều, hàm lượng protein và axit amin dồi dào bồi bổ sức khỏe cho cha mẹ và cả nhà.',
+    sampleText: 'Tổ yến đảo thiên nhiên nguyên chất sợi yến dai nở nhiều nì, giàu protein và khoáng chất bồi bổ sức khỏe cho cha mẹ, bà con đặt hàng kiểm tra ưng ý mới thanh toán nì.',
     edgePitch: '-2%',
     edgeRate: '-6%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
@@ -1245,7 +1248,7 @@ export const VIETNAMESE_SALES_VOICES = [
   },
 
   // ==========================================
-  // 4. MIỀN TÂY (ĐỒNG BẰNG SÔNG CỬU LONG) - 8 NHÂN VẬT ĐỈNH CAO
+  // 4. MIỀN TÂY (ĐỒNG BẰNG SÔNG CỬU LONG DÂN DÃ) - 8 NHÂN VẬT ĐỈNH CAO
   // ==========================================
   {
     id: 'vn_sales_saurieng_bentre',
@@ -1264,7 +1267,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 1.10,
     recommendedFor: 'both',
     desc: 'Giọng cô Út Bến Tre ngọt lịm như mía lùi, dễ thương, bán sầu riêng Ri6, chôm chôm, bưởi da xanh bao ăn từng múi.',
-    sampleText: 'Dạ sầu riêng Ri6 cơm vàng hạt lép bao ngọt béo ngậy, shop em bao ăn một đổi một nếu sượng, bà con cô bác nhanh tay đặt liền nha!',
+    sampleText: 'Dạ nè bà con cô bác ơi! Sầu riêng Ri6 Bến Tre cơm vàng hạt lép bao ngọt béo ngậy, shop em bao ăn một đổi một nếu sượng, bà con nhanh tay đặt hàng liền nghen!',
     edgePitch: '+20%',
     edgeRate: '+8%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
@@ -1287,7 +1290,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 1.14,
     recommendedFor: 'both',
     desc: 'Giọng nam miền Tây chân chất, rộn ràng tiếng cười, tư vấn khô cá lóc đồng, mắm cá linh, mắm tép xịn xò.',
-    sampleText: 'Khô cá lóc đồng ướp vừa ăn, phơi đủ ba nắng vàng ươm, nướng lên chấm mắm me cay ngọt thì nhức nách luôn anh em ơi!',
+    sampleText: 'Khô cá lóc đồng miền Tây ướp vừa ăn, phơi đủ ba nắng vàng ươm, nướng lên chấm mắm me cay ngọt thì nhức nách luôn á anh em ơi, quẹo lựa nghen!',
     edgePitch: '-8%',
     edgeRate: '+12%',
     neuralVoice: 'vi-VN-NamMinhNeural',
@@ -1310,7 +1313,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 1.08,
     recommendedFor: 'idol',
     desc: 'Giọng nữ Sóc Trăng tươi rói, ngọt ngào duyên dáng, tư vấn bánh pía sầu riêng trứng muối, lạp xưởng Mai Quế Lộ.',
-    sampleText: 'Bánh pía Sóc Trăng vỏ mỏng nhiều lớp ôm trọn nhân sầu riêng tươi béo ngậy và trứng muối đỏ au, ăn một lần là nhớ mãi vị ngọt thơm!',
+    sampleText: 'Bánh pía Sóc Trăng vỏ mỏng nhiều lớp ôm trọn nhân sầu riêng tươi béo ngậy và trứng muối đỏ au nè, ăn vô là nhớ mãi hương vị ngọt ngào quê em nghen!',
     edgePitch: '+22%',
     edgeRate: '+6%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
@@ -1333,7 +1336,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 1.00,
     recommendedFor: 'both',
     desc: 'Giọng bác Ba 54 tuổi mộc mạc đậm chất nông dân Đồng Tháp, tư vấn mật ong hoa tràm nguyên chất, hạt sen tươi sấy giòn.',
-    sampleText: 'Mật ong rừng tràm U Minh nguyên chất vàng sánh, thơm mùi hoa tràm tự nhiên, bồi bổ sức khỏe cho người lớn tuổi và trẻ nhỏ rất tốt bà con nhé.',
+    sampleText: 'Mật ong rừng tràm U Minh nguyên chất vàng sánh, thơm lừng mùi hoa tràm tự nhiên, bồi bổ sức khỏe cho người lớn tuổi và trẻ nhỏ rất tốt nghen bà con cô bác mình.',
     edgePitch: '-16%',
     edgeRate: '-4%',
     neuralVoice: 'vi-VN-NamMinhNeural',
@@ -1356,7 +1359,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 1.02,
     recommendedFor: 'both',
     desc: 'Giọng cô Ba 49 tuổi hào sảng, xởi lởi, nhiệt tình, tư vấn cua gạch Năm Căn chắc nịch, tôm khô đất sinh thái cao cấp.',
-    sampleText: 'Cua Năm Căn chính gốc Cà Mau thịt chắc ngọt lịm gạch son đầy ắp, bao trói dây không trọng lượng, nhận hàng kiểm tra thoải mái nghen!',
+    sampleText: 'Cua gạch Năm Căn chính gốc Cà Mau thịt chắc ngọt lịm gạch son đầy ắp nè, bao trói dây không trọng lượng, nhận hàng mở ra kiểm tra thoải mái nghen bà con!',
     edgePitch: '+0%',
     edgeRate: '+0%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
@@ -1379,7 +1382,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 0.90,
     recommendedFor: 'both',
     desc: 'Giọng lão nông 67 tuổi thật thà, đôn hậu xứ Bảy Núi An Giang, tư vấn gạo ngon nhất thế giới ST25 và mắm cá lóc Châu Đốc.',
-    sampleText: 'Gạo ST25 chính gốc hạt dài trắng trong, cơm dẻo mềm thơm mùi lá dứa tự nhiên, để nguội vẫn dẻo ngon chuẩn vị lúa thơm miền Tây.',
+    sampleText: 'Gạo ST25 chính gốc hạt dài trắng trong, cơm dẻo thơm phức mùi lá dứa tự nhiên, để nguội vẫn mềm ngon chuẩn vị lúa thơm miệt vườn nghen con cháu mình.',
     edgePitch: '-25%',
     edgeRate: '-15%',
     neuralVoice: 'vi-VN-NamMinhNeural',
@@ -1402,7 +1405,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 0.90,
     recommendedFor: 'both',
     desc: 'Giọng bà ngoại 68 tuổi ân cần, ấm áp hiền từ, tư vấn mứt dừa non sên tay lá dứa, kẹo chuối gừng truyền thống đậm đà tình quê.',
-    sampleText: 'Mứt dừa non làm từ cơm dừa dẻo mềm sên đường phèn ít ngọt, nhai mềm dẻo béo ngậy thơm lừng mùi lá dứa thơm mát nha con cháu.',
+    sampleText: 'Mứt dừa non làm từ cơm dừa dẻo mềm sên đường phèn ít ngọt, nhai dẻo béo ngậy thơm lừng mùi lá dứa quê nhà, ăn hoài hổng thấy ngán đâu nghen con cháu.',
     edgePitch: '-8%',
     edgeRate: '-14%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
@@ -1425,7 +1428,7 @@ export const VIETNAMESE_SALES_VOICES = [
     rate: 1.02,
     recommendedFor: 'both',
     desc: 'Giọng chú Sáu 52 tuổi chủ vườn bưởi Vĩnh Long cởi mở, chân chất, cam kết bưởi da xanh múi hồng mọng nước ngọt thanh không hạt.',
-    sampleText: 'Bưởi da xanh hái tận vườn tép bưởi mọng nước ngọt thanh ráo trọi, bao ngọt lịm từng múi, đặt hàng hôm nay nhà vườn em ship tận nhà nghen!',
+    sampleText: 'Bưởi da xanh hái tận vườn tép bưởi mọng nước ngọt thanh ráo trọi, bao ngọt lịm từng múi, đặt hàng hôm nay nhà vườn chú Sáu ship tận nơi nghen bà con cô bác!',
     edgePitch: '-15%',
     edgeRate: '+0%',
     neuralVoice: 'vi-VN-NamMinhNeural',
@@ -2228,6 +2231,92 @@ export function cleanTextForVoiceSpeech(rawText) {
 }
 
 /**
+ * 🌾 CHUẨN HÓA NGỮ ĐIỆU & PHƯƠNG NGỮ 4 VÙNG MIỀN VIỆT NAM THÔNG MINH
+ * Tự động chuyển đổi ngữ khí, trợ từ cảm thán và nhịp điệu phát âm bản xứ:
+ * - Miền Tây: Mộc mạc, ngọt ngào, ấm áp, nhịp điệu từ tốn sông nước (nghen, nè nghen, hén, thiệt tình á, hết sảy bà con ơi...)
+ * - Miền Trung: Đậm đà, sâu lắng, chuẩn vị Huế/Đà Nẵng/Quảng Nam/Nghệ Tĩnh (nì, quý anh chị nì, ngon xuất sắc nì...)
+ * - Miền Nam (Sài Gòn): Năng động, tốc độ, nhiệt huyết chốt đơn (nha mọi người ơi, chốt liền tay nè, xịn sò, quá đã luôn á...)
+ * - Miền Bắc (Hà Nội): Chuẩn chỉ, thanh lịch, rành mạch, uy tín (dạ vâng thưa các bác, chuẩn chỉ từng chi tiết, chính hãng nhé các bác...)
+ */
+export function formatTextForRegionalSpeech(rawText, voice) {
+  if (!rawText || typeof rawText !== 'string') return '';
+  let cleaned = cleanTextForVoiceSpeech(rawText);
+  if (!cleaned) return '';
+
+  const isVietnameseVoice = voice?.lang === 'vi-VN' || voice?.region === 'vi' || voice?.id?.startsWith('vn_') || voice?.id === 'free_vi_female' || voice?.id === 'el_adam';
+  if (!isVietnameseVoice) return cleaned;
+
+  // Xác định phương ngữ (dialect)
+  let dialect = voice?.dialect;
+  if (!dialect) {
+    const vName = (voice?.name || '').toLowerCase();
+    const vCat = (voice?.category || '').toLowerCase();
+    const vDesc = (voice?.desc || '').toLowerCase();
+    const vId = (voice?.id || '').toLowerCase();
+
+    if (vName.includes('miền tây') || vCat.includes('miền tây') || vDesc.includes('miền tây') || vName.includes('sông nước') || vId.includes('_tay_') || vId.includes('_taynambo')) {
+      dialect = 'tay';
+    } else if (vName.includes('miền trung') || vCat.includes('miền trung') || vDesc.includes('miền trung') || vName.includes('huế') || vName.includes('đà nẵng') || vName.includes('nghệ an') || vId.includes('_trung_')) {
+      dialect = 'trung';
+    } else if (vName.includes('miền bắc') || vCat.includes('miền bắc') || vDesc.includes('miền bắc') || vName.includes('hà nội') || vId.includes('_bac_')) {
+      dialect = 'bac';
+    } else if (vName.includes('miền nam') || vCat.includes('miền nam') || vDesc.includes('miền nam') || vName.includes('sài gòn') || vId.includes('_nam_')) {
+      dialect = 'nam';
+    } else {
+      dialect = 'standard';
+    }
+  }
+
+  let text = cleaned;
+
+  // 1. PHƯƠNG NGỮ MIỀN TÂY (Sông Nước Nam Bộ)
+  if (dialect === 'tay') {
+    text = text
+      .replace(/\b(nhé|nhé bạn|nhé mọi người|nha các bạn|nhé các bạn)\b/gi, 'nghen bà con')
+      .replace(/\b(nha bạn|nha bạn ơi)\b/gi, 'nhen cô chú anh chị')
+      .replace(/\b(rất ngon|quá ngon)\b/gi, 'ngon hết sảy luôn')
+      .replace(/\b(rất đẹp|quá đẹp)\b/gi, 'đẹp mê ly')
+      .replace(/\b(rất tốt|tuyệt vời)\b/gi, 'tốt dữ dằn à nghen')
+      .replace(/\b(thật sự|thật đấy)\b/gi, 'thiệt tình á')
+      .replace(/\b(chắc chắn)\b/gi, 'chắc ăn 100% luôn')
+      .replace(/\b(nhiều lắm|rất nhiều)\b/gi, 'quá trời quá đất luôn')
+      .replace(/\b(không ạ|không bạn)\b/gi, 'hông nè nghen')
+      .replace(/\b(được không)\b/gi, 'được hông nè bà con');
+  } 
+  // 2. PHƯƠNG NGỮ MIỀN TRUNG (Huế, Đà Nẵng, Quảng Nam, Nghệ An)
+  else if (dialect === 'trung') {
+    text = text
+      .replace(/\b(nhé|nhé bạn|nhé mọi người)\b/gi, 'nì cả nhà ơi')
+      .replace(/\b(nha bạn|nha các bạn)\b/gi, 'nè quý anh chị nì')
+      .replace(/\b(rất ngon|quá ngon)\b/gi, 'ngon xuất sắc nì')
+      .replace(/\b(rất đẹp|quá đẹp)\b/gi, 'đẹp sắc sảo lắm nì')
+      .replace(/\b(thật sự|thật đấy)\b/gi, 'thiệt luôn nì')
+      .replace(/\b(tuyệt vời)\b/gi, 'tuyệt cú mèo lắm nì')
+      .replace(/\b(chắc chắn)\b/gi, 'chuẩn chỉ 100% nì');
+  } 
+  // 3. PHƯƠNG NGỮ MIỀN NAM (Sài Gòn Phồn Hoa - Năng Động & Chốt Deal)
+  else if (dialect === 'nam') {
+    text = text
+      .replace(/\b(nhé|nhé bạn)\b/gi, 'nha mọi người ơi')
+      .replace(/\b(nhé cả nhà)\b/gi, 'nha cả nhà mình ơi')
+      .replace(/\b(rất đẹp|quá đẹp)\b/gi, 'siêu đẹp xịn sò')
+      .replace(/\b(rất tốt|tuyệt vời)\b/gi, 'cực kì đỉnh chóp luôn')
+      .replace(/\b(mua ngay)\b/gi, 'chốt liền tay kẻo lỡ nha');
+  } 
+  // 4. PHƯƠNG NGỮ MIỀN BẮC (Hà Nội - Thanh Lịch & Sang Trọng Chuẩn Mực)
+  else if (dialect === 'bac') {
+    text = text
+      .replace(/\b(nha bạn|nha cả nhà|nha mọi người)\b/gi, 'nhé các bác và anh chị')
+      .replace(/\b(hông)\b/gi, 'không')
+      .replace(/\b(xịn xò|xịn sò)\b/gi, 'cao cấp chuẩn chỉ')
+      .replace(/\b(chắc ăn)\b/gi, 'chắc chắn 100%')
+      .replace(/\b(ngon hết sảy)\b/gi, 'ngon tuyệt đỉnh');
+  }
+
+  return text;
+}
+
+/**
  * Helper: Xác định chính xác 100% giới tính Nam (Male)
  */
 export function checkIsMale(voice) {
@@ -2607,7 +2696,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     );
   }
 
-  const textToSpeak = cleanTextForVoiceSpeech(candidateText) || candidateText;
+  const textToSpeak = formatTextForRegionalSpeech(candidateText, voice) || cleanTextForVoiceSpeech(candidateText) || candidateText;
   const apiKey = getElevenLabsApiKey();
   const voiceId = voice?.voiceId || '21m00Tcm4TlvDq8ikWAM';
 
@@ -2800,6 +2889,7 @@ export default {
   speakVoiceAudio,
   stopVoiceAudio,
   cleanTextForVoiceSpeech,
+  formatTextForRegionalSpeech,
   updateActiveVoiceAudio,
   isSpeechActive,
   clearGlobalSpeechQueue,

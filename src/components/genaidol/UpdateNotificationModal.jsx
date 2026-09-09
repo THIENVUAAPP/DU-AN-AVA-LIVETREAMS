@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.3.5';
+export const APP_VERSION = '2.3.6';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🌾 Chuẩn Hóa 100% Phát Âm, Ngữ Điệu & Trợ Từ Bản Xứ 4 Vùng Miền Việt Nam',
+    description: 'Tích hợp bộ xử lý phương ngữ thông minh formatTextForRegionalSpeech: Tự động chuyển đổi trợ từ, ngữ khí, nhịp điệu ngắt nghỉ chân thực cho Miền Tây (sông nước ngọt ngào ấm áp), Miền Trung (đậm đà sâu lắng), Miền Nam (năng động bứt phá), Miền Bắc (thanh lịch chuẩn mực).'
+  },
   {
     title: '⚡ Tối Ưu Realtime 100% Bộ Tùy Chỉnh Tốc Độ (Speed), Âm Lượng (Volume) & Cao Độ (Pitch)',
     description: 'Nâng cấp khả năng phản hồi tức thì khi kéo thả thanh trượt hoặc bấm các nút preset (0.8x, 1.0x, 1.15x, 1.3x; 50%, 80%, 100%, 125%; 0.85 Trầm, 1.0 Cân bằng, 1.15 Trong trẻo). Tự động cập nhật trực tiếp vào luồng phát và lưu ngay lập tức vào cấu hình hệ thống.'
