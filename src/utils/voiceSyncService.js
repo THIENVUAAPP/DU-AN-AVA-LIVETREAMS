@@ -2928,6 +2928,64 @@ function createReverbImpulseBuffer(audioCtx, duration = 0.45, decay = 2.0) {
 }
 
 /**
+ * 🎵 TÍNH TOÁN HỆ SỐ BIẾN ĐỔI CAO ĐỘ & FORMANT THANH QUẢN (PITCH SHIFT FACTOR)
+ * Giúp từng nhân vật (Bà Cụ, Cụ Ông, Nữ Trẻ Gia Dụng, KOC, Idol, Nam Uy Quyền, BLV...)
+ * phát ra âm sắc, cao độ và thanh quản độc bản 100% không ai giống ai.
+ */
+export function getVoicePitchShiftFactor(voice, isMale) {
+  if (voice?.pitchShiftFactor !== undefined && !isNaN(Number(voice.pitchShiftFactor))) {
+    return Number(voice.pitchShiftFactor);
+  }
+  if (voice?.dspProfile?.pitchShiftFactor !== undefined && !isNaN(Number(voice.dspProfile.pitchShiftFactor))) {
+    return Number(voice.dspProfile.pitchShiftFactor);
+  }
+  if (voice?.dspProfile?.semitones !== undefined && !isNaN(Number(voice.dspProfile.semitones))) {
+    const st = Number(voice.dspProfile.semitones);
+    return Math.max(0.75, Math.min(1.45, Math.pow(2, st / 12)));
+  }
+  if (voice?.pitch !== undefined && !isNaN(Number(voice.pitch)) && Number(voice.pitch) !== 1.0) {
+    return Math.max(0.75, Math.min(1.45, Number(voice.pitch)));
+  }
+  
+  const id = (voice?.id || '').toLowerCase();
+  const cat = (voice?.category || '').toLowerCase();
+  const name = (voice?.name || '').toLowerCase();
+  const age = voice?.ageGroup;
+
+  // 1. Nhóm Lão Niên / Cụ Ông / Bà Cụ (Trầm khàn, đục ấm cổ điển)
+  if (age === 'senior' || age === 'elder' || id.includes('traco') || id.includes('dongy') || id.includes('ongbay') || id.includes('bacu') || id.includes('laonien') || name.includes('cụ') || name.includes('bà bẩy') || name.includes('ông bẩy')) {
+    return isMale ? 0.82 : 0.86;
+  }
+
+  // 2. Nhóm Trẻ Em / Anime / Cute (Trong veo, líu lo)
+  if (id.includes('embe') || id.includes('cute') || cat.includes('trẻ em') || name.includes('bé ') || id.includes('bap') || id.includes('bana')) {
+    return 1.28;
+  }
+
+  // 3. Nhóm Nữ Trẻ / KOC / Hot Trend / Gia Dụng / Skincare / Mỹ Phẩm (Tươi sáng, ngọt ngào, hoạt ngôn)
+  if (id.includes('giadung') || id.includes('mypham') || id.includes('koc') || id.includes('genz') || id.includes('idol') || id.includes('tiktok') || id.includes('shorts') || id.includes('jessica') || id.includes('thao') || id.includes('nhi')) {
+    return isMale ? 1.04 : 1.12;
+  }
+
+  // 4. Nhóm Nam Trầm / Uy Quyền / Bất Động Sản / Cinematic / Trailer (Trầm hùng, đanh thép)
+  if (id.includes('uyquyen') || id.includes('chotsale') || id.includes('batdongsan') || id.includes('docu') || id.includes('cinema') || id.includes('trailer') || id.includes('adam') || id.includes('trieuduong')) {
+    return isMale ? 0.88 : 0.96;
+  }
+
+  // 5. Nhóm Tâm Sự / Kể Chuyện / Podcast / Luxury / Trầm Hương (Sâu lắng, truyền cảm)
+  if (id.includes('tam_su') || id.includes('kechuyen') || id.includes('podcast') || id.includes('luxury') || id.includes('tramhuong') || id.includes('giang') || id.includes('matilda') || id.includes('sarah')) {
+    return isMale ? 0.92 : 0.98;
+  }
+
+  // 6. Nhóm Thể Thao / BLV / Gym / Ô Tô (Bùng nổ, rực lửa)
+  if (id.includes('thethao') || id.includes('fitness') || id.includes('blv') || id.includes('oto') || id.includes('hung') || id.includes('kevin')) {
+    return isMale ? 1.06 : 1.08;
+  }
+
+  return isMale ? 0.94 : 1.06;
+}
+
+/**
  * 🎛️ BỘ XỬ LÝ ÂM THANH MASTERING BROADCAST DSP ĐA KHÔNG GIAN:
  * Phân tách 100% âm sắc, độ vang, độ trầm, độ sắc và cao độ giữa các giọng đọc:
  * - Chuỗi EQ 4 băng tầng Parametric chuyên sâu theo từng tính cách, vùng miền và độ tuổi.
@@ -2948,9 +3006,10 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
   const isMale = checkIsMale(voice);
   const dsp = voice?.dspProfile || {};
 
-  // 1. PLAYBACK RATE (Chuẩn studio tự nhiên, tốc độ do TTS & người dùng điều khiển, tránh méo pitch)
+  // 1. PLAYBACK RATE & PITCH SHIFT THEO ĐÚNG ĐẶC TÍNH CỦA TỪNG GIỌNG ĐỌC
+  const pitchFactor = getVoicePitchShiftFactor(voice, isMale);
   const userRate = requestedRate !== undefined && !isNaN(requestedRate) ? Number(requestedRate) : 1.0;
-  source.playbackRate.value = Math.max(0.5, Math.min(2.0, userRate));
+  source.playbackRate.value = Math.max(0.5, Math.min(2.0, pitchFactor * userRate));
 
   // 2. LOW-SHELF FILTER (Độ trầm, độ dày lồng ngực & âm ấm)
   const lowFilter = audioCtx.createBiquadFilter();
@@ -3321,7 +3380,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     );
   }
 
-  const textToSpeak = formatTextForRegionalSpeech(candidateText, voice) || cleanTextForVoiceSpeech(candidateText) || candidateText;
+  const textToSpeak = humanizeVoiceSpeechText(candidateText, voice) || cleanTextForVoiceSpeech(candidateText) || candidateText;
   const apiKey = getElevenLabsApiKey();
   const voiceId = voice?.voiceId || '21m00Tcm4TlvDq8ikWAM';
 

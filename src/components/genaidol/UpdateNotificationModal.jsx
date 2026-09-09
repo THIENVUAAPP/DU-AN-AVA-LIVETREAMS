@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.4.4';
+export const APP_VERSION = '2.4.5';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🎙️ Đọc Đúng 100% Giọng Đọc Đã Chọn Trong Kịch Bản & Cảm Xúc Nhấn Nhá',
-    description: 'Khắc phục hoàn toàn hiện tượng kịch bản phát cùng một giọng mặc định. Mỗi giọng đọc (Phương Thảo Gia Dụng, Minh Thảo Mỹ Phẩm, Hoàng Nam Công Nghệ, Cụ Ông Trà Đạo, Bà Cụ Đông Y, MC Truyền Hình...) đều sở hữu âm sắc, cao độ (pitch), tốc độ (rate), EQ dải tần số và phong cách phát âm độc bản 100%.'
+    title: '🎙️ Đột Phá Bộ Biến Đổi Âm Sắc Formant & Pitch Shift Web Audio DSP Độc Bản 100%',
+    description: 'Tích hợp động cơ biến đổi tần số Formant Shaper và Pitch Shift Factor theo từng nhân vật: Giọng Lão Niên (Cụ Ông, Bà Cụ) phát ra trầm ấm, khàn đục 68 tuổi; Giọng Nữ Trẻ (Phương Thảo, Minh Thảo, Jessica) phát ra trong trẻo, tươi sáng, hoạt ngôn; Giọng Nam Quyền Lực (Adam, Quốc Cường) đanh thép uy quyền.'
+  },
+  {
+    title: '📜 Đọc Chuẩn Xác 100% Nội Dung Từng Câu Chữ Trong Kịch Bản Bán Hàng',
+    description: 'Giữ nguyên 100% ngữ nghĩa và văn bản kịch bản gốc của người dùng, tự động dịch số tiền (199k, 2tr) và từ viết tắt livestream (sp, cmt, deal, freeship) một cách mượt mà, chuyên nghiệp và cuốn hút nhất.'
   },
   {
     title: '⚡ Ghi Nhớ Giọng Đã Chọn & Đổi Giọng Ngay Lập Tức (0ms Switch)',
-    description: 'Hệ thống tự động lưu lại giọng đọc đã chọn vào bộ nhớ máy tính. Khi đang nghe thử toàn bộ kịch bản, nếu bạn đổi sang bất kỳ giọng đọc nào trong menu, AI sẽ ngay lập tức đọc lại câu hiện tại bằng giọng mới chọn.'
+    description: 'Tự động lưu lại giọng đọc đã chọn vào bộ nhớ máy tính. Khi đang nghe thử toàn bộ kịch bản, nếu bạn đổi sang bất kỳ giọng đọc nào trong menu, AI sẽ ngay lập tức đọc lại câu hiện tại bằng giọng mới chọn.'
   },
   {
     title: '🌸 Ngữ Điệu Nhấn Nhá, Lên Xuống & Micro-Pauses Tự Nhiên Theo Kịch Bản',
     description: 'Tự động tạo nhịp thở, ngắt nghỉ ngữ nghĩa và nhấn mạnh cảm xúc tự nhiên tại các câu chào hỏi, lời mời mua hàng, số tiền, tên sản phẩm và trợ từ cảm thán.'
-  },
-  {
-    title: '📜 Đọc Kịch Bản Bán Hàng Xuyên Suốt Không Ngắt Quãng',
-    description: 'Đọc trọn vẹn từ câu số 1 đến câu cuối cùng của kịch bản tuần tự, hiển thị trực quan tiến trình Đang đọc: Câu X/Tổng số câu.'
   }
 ];
 
