@@ -42,7 +42,18 @@ export default function EventVoiceTester({
   compact = false,
   className = ''
 }) {
-  const [selectedVoiceId, setSelectedVoiceId] = useState(defaultVoiceId);
+  // Tự động khôi phục giọng đọc đã chọn gần nhất từ bộ nhớ máy tính
+  const getInitialVoice = () => {
+    try {
+      const saved = localStorage.getItem('avalive_tester_selected_voice');
+      if (saved && ALL_SYSTEM_VOICES.some(v => v.id === saved)) {
+        return saved;
+      }
+    } catch (e) {}
+    return defaultVoiceId || 'free_vi_female';
+  };
+
+  const [selectedVoiceId, setSelectedVoiceId] = useState(getInitialVoice);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSentenceIdx, setCurrentSentenceIdx] = useState(0);
   const [totalSentences, setTotalSentences] = useState(0);
@@ -54,7 +65,7 @@ export default function EventVoiceTester({
   const queueTimeoutRef = useRef(null);
   const volumeRef = useRef(1.0);
   const speedRef = useRef(1.0);
-  const selectedVoiceRef = useRef(defaultVoiceId);
+  const selectedVoiceRef = useRef(getInitialVoice());
   const currentSentenceIdxRef = useRef(0);
   const sentencesRef = useRef([]);
 
@@ -67,9 +78,12 @@ export default function EventVoiceTester({
   }, [speed]);
 
   useEffect(() => {
-    if (defaultVoiceId) {
+    if (defaultVoiceId && defaultVoiceId !== 'free_vi_female') {
       setSelectedVoiceId(defaultVoiceId);
       selectedVoiceRef.current = defaultVoiceId;
+      try {
+        localStorage.setItem('avalive_tester_selected_voice', defaultVoiceId);
+      } catch (e) {}
     }
   }, [defaultVoiceId]);
 
@@ -111,10 +125,14 @@ export default function EventVoiceTester({
     };
   }, []);
 
-  // Đổi giọng: Nếu đang chạy test thì chuyển ngay lập tức sang giọng mới tại câu hiện tại
+  // Đổi giọng: Ngay lập tức lưu và nếu đang chạy test thì chuyển ngay sang giọng mới tại câu hiện tại (0ms Switch)
   const handleVoiceSelect = (voiceId) => {
     setSelectedVoiceId(voiceId);
     selectedVoiceRef.current = voiceId;
+    try {
+      localStorage.setItem('avalive_tester_selected_voice', voiceId);
+    } catch (e) {}
+
     if (onVoiceChange) {
       onVoiceChange(voiceId);
     }

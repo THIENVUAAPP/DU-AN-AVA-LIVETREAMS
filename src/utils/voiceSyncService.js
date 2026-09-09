@@ -2773,18 +2773,26 @@ export function humanizeVoiceSpeechText(rawText, voice = null) {
     .replace(/\bstk\b/gi, 'số tài khoản')
     .replace(/\bcombo\b/gi, 'gói combo');
 
-  // 3. Tinh chỉnh nhịp thở (Micro-Pauses) và dấu câu tự nhiên cho giọng Nữ
+  // 3. Tinh chỉnh nhịp thở (Micro-Pauses), cảm xúc và dấu câu tự nhiên cho kịch bản
   if (isFemale) {
     text = text
-      .replace(/\b(Dạ|Vâng|Chào cả nhà|Cả nhà ơi|Mọi người ơi|Quý vị ơi|Các bạn ơi|Bà con ơi|Em xin chào|Em cam kết|Đặc biệt là|Hơn thế nữa|Thật sự là|Nhanh tay lên nào|Đúng rồi ạ|Chính xác luôn)(?!\s*[,!?:])/gi, '$1, ')
+      .replace(/\b(Hello cả nhà|Chào cả nhà|Cả nhà ơi|Mọi người ơi|Quý vị ơi|Các bạn ơi|Bà con ơi|Chị em ơi|Các mẹ ơi|Ai đang lướt qua)(?!\s*[,!?:])/gi, '$1, ')
+      .replace(/\b(Dạ|Vâng|Em xin chào|Em cam kết|Đặc biệt là|Hơn thế nữa|Thật sự là|Nhanh tay lên nào|Đúng rồi ạ|Chính xác luôn|Tuyệt vời luôn|Quá đã luôn)(?!\s*[,!?:])/gi, '$1, ')
       .replace(/\b(ạ)\b(?!\s*[,.!?])/gi, 'ạ.')
-      .replace(/\b(nha cả nhà|nha mọi người|nha các bạn)(?!\s*[,.!?])/gi, '$1!')
-      .replace(/\b(nè nghen|nè bà con)(?!\s*[,.!?])/gi, '$1!')
-      .replace(/\b(ạ nghen|ạ nhen)(?!\s*[,.!?])/gi, '$1!');
+      .replace(/\b(nha cả nhà|nha mọi người|nha các bạn|nha mấy chế|nha các mẹ|nha cả nhà mình)(?!\s*[,.!?])/gi, '$1!')
+      .replace(/\b(nè nghen|nè bà con|nè mọi người|nè các bạn)(?!\s*[,.!?])/gi, '$1!')
+      .replace(/\b(ạ nghen|ạ nhen|ạ nè)(?!\s*[,.!?])/gi, '$1!')
+      .replace(/\b(khoan lướt nha|đừng lướt nha|ở lại xem live nha)(?!\s*[,.!?])/gi, '$1!');
   } else {
     text = text
-      .replace(/\b(Xin chào tất cả các bạn|Chào anh em|Anh em ơi|Mọi người ơi|Đặc biệt là|Cực kỳ hấp dẫn|Chú ý chú ý)(?!\s*[,!?:])/gi, '$1, ');
+      .replace(/\b(Hello cả nhà|Xin chào tất cả các bạn|Chào anh em|Anh em ơi|Mọi người ơi|Cả nhà ơi|Bà con ơi)(?!\s*[,!?:])/gi, '$1, ')
+      .replace(/\b(Đặc biệt là|Cực kỳ hấp dẫn|Chú ý chú ý|Duy nhất hôm nay|Cam kết 100%|Chính hãng 100%)(?!\s*[,!?:])/gi, '$1, ')
+      .replace(/\b(nha anh em|nha mọi người|nha các bạn|nha cả nhà)(?!\s*[,.!?])/gi, '$1!')
+      .replace(/\b(chốt ngay|mua ngay|đặt ngay)(?!\s*[,.!?])/gi, '$1!');
   }
+
+  // Chuyển dấu chấm ba chấm thành nhịp ngân nhẹ nhàng
+  text = text.replace(/\.{3,}/g, '... ');
 
   // Dọn dẹp khoảng trắng thừa và dấu phẩy liên tiếp
   text = text
@@ -3103,7 +3111,9 @@ async function fetchAndDecodeTTSAudio(text, voice = null) {
   const finalRateNum = Math.max(-50, Math.min(80, baseRateNum + userRateOffset));
   const effectiveRate = (finalRateNum >= 0 ? '+' : '') + finalRateNum + '%';
 
-  const cacheKey = `${neuralVoice}_${effectivePitch}_${effectiveRate}_${text.trim().slice(0, 100)}`;
+  // Khóa bộ nhớ đệm độc bản theo từng ID giọng đọc riêng biệt để không bao giờ bị phát nhầm giọng khác
+  const voiceIdKey = voice?.id || neuralVoice;
+  const cacheKey = `${voiceIdKey}_${neuralVoice}_${effectivePitch}_${effectiveRate}_${text.trim()}`;
   if (audioBufferMemoryCache.has(cacheKey)) {
     return audioBufferMemoryCache.get(cacheKey);
   }
@@ -3115,7 +3125,7 @@ async function fetchAndDecodeTTSAudio(text, voice = null) {
     ? window.location.origin
     : '';
 
-  const ttsQuery = `text=${encodeURIComponent(text)}&voice=${encodeURIComponent(neuralVoice)}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(effectivePitch)}&rate=${encodeURIComponent(effectiveRate)}&lang=${encodeURIComponent(shortLang)}`;
+  const ttsQuery = `text=${encodeURIComponent(text)}&voice=${encodeURIComponent(neuralVoice)}&voiceId=${encodeURIComponent(voice?.id || '')}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(effectivePitch)}&rate=${encodeURIComponent(effectiveRate)}&lang=${encodeURIComponent(shortLang)}`;
 
   const candidateUrls = [
     ...(currentOrigin ? [`${currentOrigin}/api/tts?${ttsQuery}`] : []),

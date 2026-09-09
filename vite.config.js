@@ -116,6 +116,7 @@ export default defineConfig({
           if (req.url.startsWith('/api/tts')) {
             let text = '';
             let voice = '';
+            let voiceId = '';
             let gender = '';
             let lang = 'vi';
             let pitch = '+0Hz';
@@ -131,6 +132,7 @@ export default defineConfig({
                 const body = JSON.parse(bodyBuf.toString('utf8') || '{}');
                 text = (body.text || '').trim();
                 voice = (body.voice || body.voiceId || '').trim();
+                voiceId = (body.voiceId || '').trim();
                 gender = (body.gender || '').trim();
                 lang = (body.lang || 'vi').trim();
                 pitch = (body.pitch || '+0Hz').trim();
@@ -140,6 +142,7 @@ export default defineConfig({
               const urlObj = new URL(req.url, 'http://localhost');
               text = (urlObj.searchParams.get('text') || '').trim();
               voice = (urlObj.searchParams.get('voice') || '').trim();
+              voiceId = (urlObj.searchParams.get('voiceId') || '').trim();
               gender = (urlObj.searchParams.get('gender') || '').trim();
               lang = (urlObj.searchParams.get('lang') || 'vi').trim();
               pitch = (urlObj.searchParams.get('pitch') || '+0Hz').trim();
@@ -155,7 +158,7 @@ export default defineConfig({
             const neuralVoice = resolveViteNeuralVoice(voice, gender, lang);
             const safePitch = normalizeViteTtsPitch(pitch);
             const safeRate = normalizeViteTtsRate(rate);
-            const cacheKey = `${neuralVoice}_${safePitch}_${safeRate}_${text}`;
+            const cacheKey = `${voiceId || neuralVoice}_${neuralVoice}_${safePitch}_${safeRate}_${text}`;
 
             if (viteTtsCache.has(cacheKey)) {
               const cached = viteTtsCache.get(cacheKey);

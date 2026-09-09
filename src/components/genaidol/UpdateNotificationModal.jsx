@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.4.3';
+export const APP_VERSION = '2.4.4';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '📜 Đọc Kịch Bản Bán Hàng Xuyên Suốt 100% Không Chia Cắt & Không Dừng Ngắt',
-    description: 'Tối ưu hóa bộ phát kịch bản: Đọc trọn vẹn từ câu số 1 đến câu cuối cùng của kịch bản, không bị chia vụn thành các phần nhỏ. Khi có sự kiện bình luận/chào hỏi, AI sẽ đọc dứt điểm trọn vẹn câu thoại hiện tại rồi mới trả lời, sau đó tự động tiếp tục đọc liền mạch câu kịch bản tiếp theo.'
+    title: '🎙️ Đọc Đúng 100% Giọng Đọc Đã Chọn Trong Kịch Bản & Cảm Xúc Nhấn Nhá',
+    description: 'Khắc phục hoàn toàn hiện tượng kịch bản phát cùng một giọng mặc định. Mỗi giọng đọc (Phương Thảo Gia Dụng, Minh Thảo Mỹ Phẩm, Hoàng Nam Công Nghệ, Cụ Ông Trà Đạo, Bà Cụ Đông Y, MC Truyền Hình...) đều sở hữu âm sắc, cao độ (pitch), tốc độ (rate), EQ dải tần số và phong cách phát âm độc bản 100%.'
   },
   {
-    title: '⚡ Tinh Chỉnh Tốc Độ Đọc 1.0x (Chuẩn) & Chuyển Giọng Tức Thì Khi Đang Test',
-    description: 'Fix hoàn toàn nút chọn tốc độ 1.0x Chuẩn (ăn ngay 100%). Khi đang bấm nghe thử kịch bản, nếu người dùng đổi sang bất kỳ giọng đọc nào trong dropdown, AI sẽ tự động nhảy qua phát ngay giọng mới tại câu hiện tại.'
+    title: '⚡ Ghi Nhớ Giọng Đã Chọn & Đổi Giọng Ngay Lập Tức (0ms Switch)',
+    description: 'Hệ thống tự động lưu lại giọng đọc đã chọn vào bộ nhớ máy tính. Khi đang nghe thử toàn bộ kịch bản, nếu bạn đổi sang bất kỳ giọng đọc nào trong menu, AI sẽ ngay lập tức đọc lại câu hiện tại bằng giọng mới chọn.'
   },
   {
-    title: '🎙️ Đồng Bộ 100% Kho Giọng Chuẩn Vào Dropdown Kịch Bản Idol & Sự Kiện',
-    description: 'Hiển thị đầy đủ các nhóm giọng từ Tab Giọng Ava Live: Giọng Yêu Thích ⭐, 20 Giọng Hot Trend, 30 Giọng Bán Hàng, 21 Giọng Nữ 4 Vùng Miền, 20 Giọng Nam & 28 Giọng Quốc Tế.'
+    title: '🌸 Ngữ Điệu Nhấn Nhá, Lên Xuống & Micro-Pauses Tự Nhiên Theo Kịch Bản',
+    description: 'Tự động tạo nhịp thở, ngắt nghỉ ngữ nghĩa và nhấn mạnh cảm xúc tự nhiên tại các câu chào hỏi, lời mời mua hàng, số tiền, tên sản phẩm và trợ từ cảm thán.'
   },
   {
-    title: '🌸 Giọng Nữ Tự Nhiên Như Người Thật & Đồng Bộ Khẩu Hình LipSync 60 FPS',
-    description: 'Tự động giải mã số tiền, tiền tệ, từ ngữ viết tắt livestream (sp, đc, cmt, deal, freeship...) với nhịp thở tự nhiên Micro-Pauses và đồng bộ chuyển động khuôn miệng siêu mượt.'
+    title: '📜 Đọc Kịch Bản Bán Hàng Xuyên Suốt Không Ngắt Quãng',
+    description: 'Đọc trọn vẹn từ câu số 1 đến câu cuối cùng của kịch bản tuần tự, hiển thị trực quan tiến trình Đang đọc: Câu X/Tổng số câu.'
   }
 ];
 

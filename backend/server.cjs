@@ -2219,13 +2219,14 @@ async function synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch = '+
 app.get('/api/tts', async (req, res) => {
   const text = (req.query.text || '').toString().trim();
   const voice = (req.query.voice || '').toString().trim();
+  const voiceId = (req.query.voiceId || '').toString().trim();
   const gender = (req.query.gender || '').toString().trim();
   const lang = (req.query.lang || 'vi').toString().trim();
   const pitch = (req.query.pitch || '+0Hz').toString().trim();
   const rate = (req.query.rate || '+0%').toString().trim();
   if (!text) return res.status(400).send('Missing text parameter');
 
-  const cacheKey = `${voice}_${gender}_${pitch}_${rate}_${lang}_${text}`;
+  const cacheKey = `${voiceId || voice}_${voice}_${gender}_${pitch}_${rate}_${lang}_${text}`;
   if (ttsAudioBufferCache.has(cacheKey)) {
     const cached = ttsAudioBufferCache.get(cacheKey);
     res.setHeader('Content-Type', 'audio/mpeg');
@@ -2283,7 +2284,7 @@ app.post('/api/tts', async (req, res) => {
   if (!txt) return res.status(400).json({ error: 'Missing text parameter' });
 
   const activeVoice = voice || voiceId;
-  const cacheKey = `${activeVoice}_${gender}_${pitch}_${rate}_${lang}_${txt}`;
+  const cacheKey = `${voiceId || activeVoice}_${activeVoice}_${gender}_${pitch}_${rate}_${lang}_${txt}`;
   if (ttsAudioBufferCache.has(cacheKey)) {
     const cached = ttsAudioBufferCache.get(cacheKey);
     return res.json({ success: true, audioBase64: cached.toString('base64') });
