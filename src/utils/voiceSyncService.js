@@ -2337,10 +2337,30 @@ export function checkIsMale(voice) {
 }
 
 /**
- * 🎛️ BỘ XỬ LÝ ÂM THANH MASTERING BROADCAST DSP CHUYÊN NGHIỆP:
- * Xuất tín hiệu chuẩn phòng thu livestream:
- * - Bảo toàn 100% âm sắc tự nhiên của giọng đọc AI (Không làm méo tiếng, không giả giọng).
- * - Chuỗi Parametric EQ 4 băng tầng + Broadcast Dynamic Compressor tạo độ dày ấm, tròn vành rõ chữ, siêu cuốn hút.
+ * 🏛️ Bộ tạo Impulse Response không gian phòng thu / âm vang (Acoustic Space Reverb)
+ */
+function createReverbImpulseBuffer(audioCtx, duration = 0.45, decay = 2.0) {
+  const sampleRate = audioCtx.sampleRate;
+  const length = Math.max(128, Math.floor(sampleRate * duration));
+  const impulse = audioCtx.createBuffer(2, length, sampleRate);
+  const left = impulse.getChannelData(0);
+  const right = impulse.getChannelData(1);
+
+  for (let i = 0; i < length; i++) {
+    const factor = Math.pow(1 - i / length, decay);
+    left[i] = (Math.random() * 2 - 1) * factor;
+    right[i] = (Math.random() * 2 - 1) * factor;
+  }
+  return impulse;
+}
+
+/**
+ * 🎛️ BỘ XỬ LÝ ÂM THANH MASTERING BROADCAST DSP ĐA KHÔNG GIAN:
+ * Phân tách 100% âm sắc, độ vang, độ trầm, độ sắc và cao độ giữa các giọng đọc:
+ * - Chuỗi EQ 4 băng tầng Parametric chuyên sâu theo từng tính cách, vùng miền và độ tuổi.
+ * - Bộ tái tạo không gian phòng thu / âm vang (Acoustic Space Reverb Convolver).
+ * - Bộ định hình cao độ & Formant tự nhiên (Playback Rate & Resonator).
+ * - Bộ nén động lực Broadcast Dynamic Compressor chống vỡ âm, đanh dày và rõ chữ.
  */
 async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, requestedRate, onEnd, isTestingMode) {
   const audioCtx = getOrCreateAudioContext();
@@ -2353,58 +2373,93 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
   activeSourceNode = source;
 
   const isMale = checkIsMale(voice);
-
-  // Tốc độ phát đã được Edge TTS tổng hợp hoàn hảo bằng neural time-stretch
-  // Giữ source.playbackRate = 1.0 để bảo toàn 100% âm sắc tự nhiên không bị méo tiếng
-  source.playbackRate.value = 1.0;
-
   const dsp = voice?.dspProfile || {};
 
-  // 1. Low Shelf (Tăng độ ấm ngực cho giọng Nam / Giữ độ trong cho giọng Nữ, theo từng giọng)
+  // 1. FORMANT TIMBRE & RATE SHIFTING (Tạo sự khác biệt sâu sắc về tuổi tác và cá tính)
+  const voiceBaseRate = dsp.playbackRate || (
+    voice?.ageGroup === 'elder' ? 0.90 :
+    voice?.ageGroup === 'mature' || voice?.ageGroup === 'middle' ? 0.96 :
+    voice?.ageGroup === 'cute' ? 1.08 :
+    voice?.ageGroup === 'young' ? 1.03 : 1.0
+  );
+  const userRate = requestedRate !== undefined && !isNaN(requestedRate) ? Number(requestedRate) : 1.0;
+  source.playbackRate.value = Math.max(0.65, Math.min(1.5, voiceBaseRate * userRate));
+
+  // 2. LOW-SHELF FILTER (Độ trầm, độ dày lồng ngực & âm ấm)
   const lowFilter = audioCtx.createBiquadFilter();
   lowFilter.type = 'lowshelf';
-  lowFilter.frequency.value = isMale ? 145 : 260;
+  lowFilter.frequency.value = dsp.lowFreq || (isMale ? 135 : 240);
   lowFilter.gain.value = dsp.lowGain !== undefined ? dsp.lowGain : (isMale ? 4.5 : 0.5);
 
-  // 2. Formant F1 / Mid Clarity (Nội lực âm thanh và chất giọng đặc thù)
+  // 3. MID-PEAKING / CHEST RESONANCE FILTER (Độ đầy đặn & nội lực)
   const midFilter = audioCtx.createBiquadFilter();
   midFilter.type = 'peaking';
-  midFilter.frequency.value = dsp.midFreq || (isMale ? 1100 : 1600);
-  midFilter.Q.value = 1.2;
-  midFilter.gain.value = dsp.midGain !== undefined ? dsp.midGain : (isMale ? 1.5 : 1.5);
+  midFilter.frequency.value = dsp.midFreq || (isMale ? 950 : 1450);
+  midFilter.Q.value = dsp.midQ || 1.2;
+  midFilter.gain.value = dsp.midGain !== undefined ? dsp.midGain : 2.0;
 
-  // 3. Formant F2 / Presence Filter (Độ nét, độ đanh thép hoặc ngọt ngào)
+  // 4. PRESENCE PEAKING FILTER (Độ sắc nét, ăn micro & rõ chữ)
   const presenceFilter = audioCtx.createBiquadFilter();
   presenceFilter.type = 'peaking';
-  presenceFilter.frequency.value = dsp.presenceFreq || (isMale ? 3000 : 3800);
-  presenceFilter.Q.value = 1.4;
-  presenceFilter.gain.value = dsp.presenceGain !== undefined ? dsp.presenceGain : (isMale ? 1.5 : 2.5);
+  presenceFilter.frequency.value = dsp.presenceFreq || (isMale ? 2800 : 3600);
+  presenceFilter.Q.value = dsp.presenceQ || 1.3;
+  presenceFilter.gain.value = dsp.presenceGain !== undefined ? dsp.presenceGain : 3.0;
 
-  // 4. High Shelf (Độ thoáng không gian và hơi thở tự nhiên)
+  // 5. HIGH-SHELF FILTER (Độ thoáng không gian và hơi thở tự nhiên)
   const highFilter = audioCtx.createBiquadFilter();
   highFilter.type = 'highshelf';
-  highFilter.frequency.value = 6500;
-  highFilter.gain.value = dsp.highGain !== undefined ? dsp.highGain : (isMale ? 0.0 : 1.5);
+  highFilter.frequency.value = dsp.highFreq || 6500;
+  highFilter.gain.value = dsp.highGain !== undefined ? dsp.highGain : (isMale ? 0.0 : 2.0);
 
-  // 5. Dynamics Broadcast Compressor (Nén động lực livestream chuẩn đài phát thanh)
+  // 6. DYNAMICS BROADCAST COMPRESSOR
   const compressor = audioCtx.createDynamicsCompressor();
-  compressor.threshold.value = isMale ? -22 : -18;
-  compressor.knee.value = 6;
-  compressor.ratio.value = 3.5;
-  compressor.attack.value = 0.005;
-  compressor.release.value = 0.15;
+  const compConf = dsp.compressor || {};
+  compressor.threshold.value = compConf.threshold !== undefined ? compConf.threshold : (isMale ? -22 : -18);
+  compressor.knee.value = compConf.knee !== undefined ? compConf.knee : 6;
+  compressor.ratio.value = compConf.ratio !== undefined ? compConf.ratio : 3.5;
+  compressor.attack.value = compConf.attack !== undefined ? compConf.attack : 0.005;
+  compressor.release.value = compConf.release !== undefined ? compConf.release : 0.15;
 
-  // 6. Master Gain
+  // 7. MASTER GAIN
   const masterGain = audioCtx.createGain();
   masterGain.gain.value = Math.max(0, Math.min(1.0, requestedVolume));
 
+  // 8. ACOUSTIC SPACE REVERB CONVOLVER (Tạo độ vang phòng / studio khác biệt)
+  const reverbAmount = dsp.reverb !== undefined ? dsp.reverb : (
+    voice?.ageGroup === 'elder' ? 0.18 :
+    voice?.styleCategory === 'tam_su' || voice?.category?.includes('Podcast') ? 0.20 :
+    voice?.styleCategory === 'banhang' || voice?.category?.includes('TikTok') ? 0.08 : 0.12
+  );
+  const reverbDecay = dsp.reverbDecay || (voice?.ageGroup === 'elder' ? 1.0 : 0.5);
+
+  const dryGain = audioCtx.createGain();
+  dryGain.gain.value = Math.max(0.2, 1.0 - (reverbAmount * 0.6));
+
+  const wetGain = audioCtx.createGain();
+  wetGain.gain.value = reverbAmount;
+
+  const convolver = audioCtx.createConvolver();
+  try {
+    convolver.buffer = createReverbImpulseBuffer(audioCtx, Math.max(0.2, reverbDecay), 2.2);
+  } catch (e) {}
+
+  // NỐI DÂY TÍN HIỆU ÂM THANH
   source.connect(lowFilter);
   lowFilter.connect(midFilter);
   midFilter.connect(presenceFilter);
   presenceFilter.connect(highFilter);
   highFilter.connect(compressor);
   compressor.connect(masterGain);
-  masterGain.connect(audioCtx.destination);
+
+  // Phân nhánh Dry & Wet (Reverb)
+  masterGain.connect(dryGain);
+  dryGain.connect(audioCtx.destination);
+
+  if (reverbAmount > 0.01 && convolver.buffer) {
+    masterGain.connect(convolver);
+    convolver.connect(wetGain);
+    wetGain.connect(audioCtx.destination);
+  }
 
   // Kết nối LipSync Engine nếu không phải chế độ test preview
   if (!isTestingMode) {

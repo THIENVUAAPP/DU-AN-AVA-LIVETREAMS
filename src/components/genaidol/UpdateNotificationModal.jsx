@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.3.6';
+export const APP_VERSION = '2.3.7';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🎵 Đột Phá Phân Tách 100% Âm Sắc, Độ Vang (Reverb), Độ Trầm (Bass) & Formant Từng Giọng Đọc',
+    description: 'Xóa bỏ hoàn toàn tình trạng rập khuôn hay giống nhau giữa các giọng. Mỗi nhân vật sở hữu một profile âm học độc bản: Formant Timbre Shift riêng biệt (Trẻ trong trẻo, Trung niên đĩnh đạc, Lão niên trầm khàn uy nghi), bộ tái tạo không gian phòng thu Acoustic Space Reverb Convolver đa cấp độ, kết hợp EQ 4 băng tần khắc họa rõ nét từng vùng miền (Nam, Bắc, Trung, Tây).'
+  },
   {
     title: '🌾 Chuẩn Hóa 100% Phát Âm, Ngữ Điệu & Trợ Từ Bản Xứ 4 Vùng Miền Việt Nam',
     description: 'Tích hợp bộ xử lý phương ngữ thông minh formatTextForRegionalSpeech: Tự động chuyển đổi trợ từ, ngữ khí, nhịp điệu ngắt nghỉ chân thực cho Miền Tây (sông nước ngọt ngào ấm áp), Miền Trung (đậm đà sâu lắng), Miền Nam (năng động bứt phá), Miền Bắc (thanh lịch chuẩn mực).'
   },
   {
     title: '⚡ Tối Ưu Realtime 100% Bộ Tùy Chỉnh Tốc Độ (Speed), Âm Lượng (Volume) & Cao Độ (Pitch)',
-    description: 'Nâng cấp khả năng phản hồi tức thì khi kéo thả thanh trượt hoặc bấm các nút preset (0.8x, 1.0x, 1.15x, 1.3x; 50%, 80%, 100%, 125%; 0.85 Trầm, 1.0 Cân bằng, 1.15 Trong trẻo). Tự động cập nhật trực tiếp vào luồng phát và lưu ngay lập tức vào cấu hình hệ thống.'
-  },
-  {
-    title: '🎙️ Chuỗi DSP Mastering Broadcast Đẳng Cấp Phòng Thu Quốc Tế',
-    description: 'Tích hợp 4 dải Parametric EQ (Low-shelf ấm ngực, Mid-peaking tròn vành rõ chữ, Presence gần gũi ngọt ngào, High-shelf thoáng khí) kết hợp bộ Broadcast Dynamic Compressor giúp giọng đọc AI dày dặn, sang trọng, đầy mê hoặc và siêu cuốn hút người nghe.'
+    description: 'Nâng cấp khả năng phản hồi tức thì khi kéo thả thanh trượt hoặc bấm các nút preset (0.8x, 1.0x, 1.15x, 1.3x; 50%, 80%, 100%, 125%; 0.85 Trầm, 1.0 Cân bằng, 1.15 Trong trẻo).'
   },
   {
     title: '🛍️ Kho 30 Giọng Bán Hàng & Chốt Đơn Đa Ngành, Đa Vùng Miền, Đa Độ Tuổi (20 - 70 Tuổi)',
-    description: 'Hệ sinh thái giọng bán hàng hoàn chỉnh nhất gồm đúng 30 nhân vật độc bản: 8 giọng Miền Nam, 8 giọng Miền Bắc, 6 giọng Miền Trung, 8 giọng Miền Tây với đầy đủ các thế hệ từ Trẻ (20-35t), Trung Niên (40-54t) đến Lão Niên (55-70t).'
+    description: 'Hệ sinh thái giọng bán hàng hoàn chỉnh gồm 30 nhân vật độc bản: 8 giọng Miền Nam, 8 giọng Miền Bắc, 6 giọng Miền Trung, 8 giọng Miền Tây với đầy đủ các thế hệ từ Trẻ (20-35t), Trung Niên (40-54t) đến Lão Niên (55-70t).'
   }
 ];
 

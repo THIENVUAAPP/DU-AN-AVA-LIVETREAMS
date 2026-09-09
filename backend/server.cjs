@@ -2058,16 +2058,16 @@ let edgeTtsQueue = Promise.resolve();
 function normalizeTtsPitch(p) {
   if (!p || p === 'default' || p === '+0Hz' || p === '+0%') return '+0Hz';
   if (typeof p === 'number') {
-    const val = Math.max(-30, Math.min(30, Math.round(p)));
+    const val = Math.max(-50, Math.min(50, Math.round(p)));
     return (val >= 0 ? '+' : '') + val + '%';
   }
   const str = String(p).trim();
   if (str.endsWith('%')) {
-    const val = Math.max(-30, Math.min(30, parseInt(str, 10) || 0));
+    const val = Math.max(-50, Math.min(50, parseInt(str, 10) || 0));
     return (val >= 0 ? '+' : '') + val + '%';
   }
   if (str.endsWith('Hz')) {
-    const val = Math.max(-30, Math.min(30, parseInt(str, 10) || 0));
+    const val = Math.max(-50, Math.min(50, parseInt(str, 10) || 0));
     return (val >= 0 ? '+' : '') + val + 'Hz';
   }
   return '+0Hz';
