@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.5.3';
+export const APP_VERSION = '2.5.4';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Phát Ngay Lập Tức 0.000s Khi Bấm Nghe Thử Kịch Bản & Không Cần Chờ Đợi',
+    title: '🎙️ Tối Ưu Chuyển Đổi Giọng Đọc & Kịch Bản Liền Mạch 100%',
+    description: 'Khắc phục triệt để tình trạng đổi giọng không phát lại: Giờ đây khi chuyển sang bất kỳ giọng đọc nào trong danh sách hoặc đổi kịch bản, hệ thống sẽ nhận diện và phát chuẩn xác ngay lập tức không bị khựng.'
+  },
+  {
+    title: '✨ Gọn Gàng Giao Diện Trình Phát Kịch Bản',
+    description: 'Đã lược bỏ nút Tối Ưu Kịch Bản thừa để thanh điều khiển nghe thử giọng đọc trở nên tinh gọn, trực quan và dễ thao tác nhất.'
+  },
+  {
+    title: '⚡ Phát Ngay Lập Tức 0.000s Khi Bấm Nghe Thử Kịch Bản',
     description: 'Tự động Pre-warm RAM Cache câu thoại ngay khi soạn thảo hoặc chọn giọng: Khi bấm Phát/Nghe thử kịch bản, âm thanh được giải mã sẵn phát ra NGAY TỨC THÌ 0ms không phải chờ mạng.'
   },
   {
     title: '🚀 Pipeline Tải Trước Toàn Bộ Kịch Bản & Xóa Sạch Khoảng Lặng Giữa Các Câu',
-    description: 'Khắc phục triệt để tình trạng khựng/dừng 1-2s giữa các câu thoại: Toàn bộ kịch bản được nạp trước nền vào RAM Cache và cắt bỏ sạch khoảng lặng đầu/đuôi cho luồng đọc siêu mượt mà.'
-  },
-  {
-    title: '🎙️ Chuẩn Hóa 100% Phát Âm Tiếng Anh, Từ Viết Tắt & Đọc Số Tiền Livestream Chính Xác',
-    description: 'Tự động phiên âm chuẩn xác các thuật ngữ tiếng Anh (serum, skincare, deal, flash sale, review, combo, freeship, order, video, live...), từ viết tắt (sp, đc, ko, cmt, btv, mc, stk, cod...) và số tiền lớn (10,000, 890.000đ, 50k, 2tr5...).'
-  },
-  {
-    title: '👑 Nâng Cấp Giọng Nữ 4 Vùng Miền Đỉnh Cao & Cảm Xúc Thăng Trầm Tuyệt Đỉnh',
-    description: 'Nâng cấp toàn diện các giọng Nữ (BTV VTV Hà Nội, Huế dịu dàng, Cần Thơ ngọt lịm, Út Mai miền Tây, Idol Sài Gòn, KOC bắt trend) với phong thái tự tin, vui tươi, lôi cuốn và truyền cảm hứng.'
+    description: 'Toàn bộ kịch bản được nạp trước nền vào RAM Cache và cắt bỏ sạch khoảng lặng đầu/đuôi cho luồng đọc siêu mượt mà.'
   }
 ];
 

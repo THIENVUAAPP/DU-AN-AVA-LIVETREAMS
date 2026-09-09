@@ -115,7 +115,7 @@ export default function EventVoiceTester({
   }, [pauseDuration]);
 
   useEffect(() => {
-    if (defaultVoiceId && defaultVoiceId !== 'free_vi_female') {
+    if (defaultVoiceId) {
       setSelectedVoiceId(defaultVoiceId);
       selectedVoiceRef.current = defaultVoiceId;
       try {
@@ -162,7 +162,7 @@ export default function EventVoiceTester({
     };
   }, []);
 
-  // Đổi giọng: Ngay lập tức lưu và nếu đang chạy test thì chuyển ngay sang giọng mới tại câu hiện tại (0ms Switch)
+  // Đổi giọng: Ngay lập tức lưu và chuyển giọng mượt mà không bị ngắt quãng
   const handleVoiceSelect = (voiceId) => {
     setSelectedVoiceId(voiceId);
     selectedVoiceRef.current = voiceId;
@@ -174,11 +174,12 @@ export default function EventVoiceTester({
       onVoiceChange(voiceId);
     }
 
+    const newVoiceObj = ALL_SYSTEM_VOICES.find(v => v.id === voiceId) || { id: voiceId, lang: 'vi-VN', gender: 'Female' };
+
     if (isPlayingRef.current) {
       stopVoiceAudio();
       if (queueTimeoutRef.current) clearTimeout(queueTimeoutRef.current);
       
-      const newVoiceObj = ALL_SYSTEM_VOICES.find(v => v.id === voiceId) || { id: voiceId, lang: 'vi-VN', gender: 'Female' };
       const curIdx = currentSentenceIdxRef.current;
       const sentences = sentencesRef.current;
       
@@ -192,9 +193,18 @@ export default function EventVoiceTester({
 
       setTimeout(() => {
         if (isPlayingRef.current) {
-          playSentenceAtIndex(currentSentenceIdxRef.current, newVoiceObj);
+          playSentenceAtIndex(curIdx, newVoiceObj);
         }
       }, 50);
+    } else {
+      // Khi không phát: Tự động pre-warm cache câu đầu tiên của giọng mới
+      const sentences = splitIntoSentences(text);
+      if (sentences && sentences.length > 0) {
+        prefetchTTSAudio(sentences[0], newVoiceObj, { rate: speedRef.current });
+        if (sentences.length > 1) {
+          prefetchTTSAudio(sentences[1], newVoiceObj, { rate: speedRef.current });
+        }
+      }
     }
   };
 
@@ -304,11 +314,13 @@ export default function EventVoiceTester({
           
           // Nếu chọn 0.0s (Liền mạch): Phát câu tiếp theo NGAY LẬP TỨC 0ms không qua bất kỳ timer delay nào!
           if (pauseSec <= 0.02) {
-            playSentenceAtIndex(index + 1, voiceObj);
+            playSentenceAtIndex(index + 1);
           } else {
             const pauseMs = Math.max(0, Math.round(pauseSec * 1000));
             queueTimeoutRef.current = setTimeout(() => {
-              playSentenceAtIndex(index + 1, voiceObj);
+              if (isPlayingRef.current) {
+                playSentenceAtIndex(index + 1);
+              }
             }, pauseMs);
           }
         }
@@ -645,20 +657,7 @@ export default function EventVoiceTester({
           </span>
         </div>
 
-        {/* 5. Nút Tối Ưu Kịch Bản (Nếu có callback) */}
-        {onScriptOptimized && (
-          <button
-            type="button"
-            onClick={handleOptimizeClick}
-            className="px-2.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-800 border border-amber-400/50 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shadow-2xs"
-            title="Tự động nâng cấp kịch bản cảm xúc, cuốn hút & chốt đơn đỉnh cao"
-          >
-            <Wand2 size={12} className="text-amber-600" />
-            <span>Tối Ưu Kịch Bản</span>
-          </button>
-        )}
-
-        {/* 6. Nút Nghe Thử Voice / Dừng Lại */}
+        {/* 5. Nút Nghe Thử Voice / Dừng Lại */}
         {(() => {
           const currentVoiceObj = ALL_SYSTEM_VOICES.find(v => v.id === selectedVoiceId);
           const shortVoiceName = currentVoiceObj?.name?.split('(')[0]?.replace(/ 👑| ⭐| 💎/g, '')?.trim() || 'AI';
