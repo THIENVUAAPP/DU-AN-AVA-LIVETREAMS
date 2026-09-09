@@ -853,8 +853,8 @@ app.get('/api/check-update', (req, res) => {
 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
-app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', '/AvaLive_VIP_PRO_Windows_v2.2.4.zip', '/AvaLive_VIP_PRO_Windows_v2.2.3.zip', '/AvaLive_VIP_PRO_Windows_v2.2.2.zip', '/AvaLive_VIP_PRO_Windows_v2.2.1.zip', '/AvaLive_VIP_PRO_Windows_v2.2.0.zip', '/AvaLive_VIP_PRO_Windows_v2.1.9.zip', '/AvaLive_VIP_PRO_Windows_v2.1.8.zip', '/AvaLive_VIP_PRO_Windows_v2.1.7.zip', '/AvaLive_VIP_PRO_Windows_v2.1.6.zip', '/AvaLive_VIP_PRO_Windows_v2.1.5.zip', '/AvaLive_VIP_PRO_Windows_v2.1.4.zip', '/AvaLive_VIP_PRO_Windows_v2.1.3.zip', '/AvaLive_VIP_PRO_Windows_v2.1.2.zip', '/AvaLive_VIP_PRO_Windows_v2.1.1.zip', '/AvaLive_VIP_PRO_Windows_v2.1.0.zip', '/AvaLive_VIP_PRO_Windows_v2.0.9.zip', '/AvaLive_VIP_PRO_Windows_v2.0.8.zip', '/AvaLive_VIP_PRO_Windows_v2.0.7.zip', '/AvaLive_VIP_PRO_Windows_v2.0.6.zip', '/AvaLive_VIP_PRO_Windows_v2.0.5.zip', '/AvaLive_VIP_PRO_Windows_v2.0.4.zip', '/AvaLive_VIP_PRO_Windows_v2.0.3.zip', '/AvaLive_VIP_PRO_Windows_v2.0.2.zip', '/AvaLive_VIP_PRO_Windows_v2.0.1.zip', '/AvaLive_VIP_PRO_Windows_v2.0.0.zip', '/AvaLive_VIP_PRO_Windows_v1.9.9.zip', '/AvaLive_VIP_PRO_Windows_v1.9.8.zip', '/AvaLive_VIP_PRO_Windows_v1.9.7.zip', '/AvaLive_VIP_PRO_Windows_v1.9.6.zip', '/AvaLive_VIP_PRO_Windows_v1.9.5.zip', '/AvaLive_VIP_PRO_Windows_v1.9.4.zip', '/AvaLive_VIP_PRO_Windows_v1.9.3.zip', '/AvaLive_VIP_PRO_Windows_v1.9.2.zip', '/AvaLive_VIP_PRO_Windows_v1.9.1.zip', '/AvaLive_VIP_PRO_Windows_v1.9.0.zip', '/AvaLive_VIP_PRO_Windows_v1.8.9.zip', '/AvaLive_VIP_PRO_Windows_v1.8.8.zip', '/AvaLive_VIP_PRO_Windows_v1.8.7.zip', '/AvaLive_VIP_PRO_Windows_v1.8.6.zip', '/AvaLive_VIP_PRO_Windows_v1.8.5.zip', '/AvaLive_VIP_PRO_Windows_v1.8.4.zip', '/AvaLive_VIP_PRO_Windows_v1.8.3.zip', '/AvaLive_VIP_PRO_Windows_v1.8.2.zip', '/AvaLive_VIP_PRO_Windows_v1.8.1.zip', '/AvaLive_VIP_PRO_Windows_v1.8.0.zip'], async (req, res) => {
-  let ver = '2.2.4';
+app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', '/AvaLive_VIP_PRO_Windows_v2.2.5.zip', '/AvaLive_VIP_PRO_Windows_v2.2.4.zip', '/AvaLive_VIP_PRO_Windows_v2.2.3.zip', '/AvaLive_VIP_PRO_Windows_v2.2.2.zip', '/AvaLive_VIP_PRO_Windows_v2.2.1.zip', '/AvaLive_VIP_PRO_Windows_v2.2.0.zip', '/AvaLive_VIP_PRO_Windows_v2.1.9.zip', '/AvaLive_VIP_PRO_Windows_v2.1.8.zip', '/AvaLive_VIP_PRO_Windows_v2.1.7.zip', '/AvaLive_VIP_PRO_Windows_v2.1.6.zip', '/AvaLive_VIP_PRO_Windows_v2.1.5.zip', '/AvaLive_VIP_PRO_Windows_v2.1.4.zip', '/AvaLive_VIP_PRO_Windows_v2.1.3.zip', '/AvaLive_VIP_PRO_Windows_v2.1.2.zip', '/AvaLive_VIP_PRO_Windows_v2.1.1.zip', '/AvaLive_VIP_PRO_Windows_v2.1.0.zip', '/AvaLive_VIP_PRO_Windows_v2.0.9.zip', '/AvaLive_VIP_PRO_Windows_v2.0.8.zip', '/AvaLive_VIP_PRO_Windows_v2.0.7.zip', '/AvaLive_VIP_PRO_Windows_v2.0.6.zip', '/AvaLive_VIP_PRO_Windows_v2.0.5.zip', '/AvaLive_VIP_PRO_Windows_v2.0.4.zip', '/AvaLive_VIP_PRO_Windows_v2.0.3.zip', '/AvaLive_VIP_PRO_Windows_v2.0.2.zip', '/AvaLive_VIP_PRO_Windows_v2.0.1.zip', '/AvaLive_VIP_PRO_Windows_v2.0.0.zip', '/AvaLive_VIP_PRO_Windows_v1.9.9.zip', '/AvaLive_VIP_PRO_Windows_v1.9.8.zip', '/AvaLive_VIP_PRO_Windows_v1.9.7.zip', '/AvaLive_VIP_PRO_Windows_v1.9.6.zip', '/AvaLive_VIP_PRO_Windows_v1.9.5.zip', '/AvaLive_VIP_PRO_Windows_v1.9.4.zip', '/AvaLive_VIP_PRO_Windows_v1.9.3.zip', '/AvaLive_VIP_PRO_Windows_v1.9.2.zip', '/AvaLive_VIP_PRO_Windows_v1.9.1.zip', '/AvaLive_VIP_PRO_Windows_v1.9.0.zip', '/AvaLive_VIP_PRO_Windows_v1.8.9.zip', '/AvaLive_VIP_PRO_Windows_v1.8.8.zip', '/AvaLive_VIP_PRO_Windows_v1.8.7.zip', '/AvaLive_VIP_PRO_Windows_v1.8.6.zip', '/AvaLive_VIP_PRO_Windows_v1.8.5.zip', '/AvaLive_VIP_PRO_Windows_v1.8.4.zip', '/AvaLive_VIP_PRO_Windows_v1.8.3.zip', '/AvaLive_VIP_PRO_Windows_v1.8.2.zip', '/AvaLive_VIP_PRO_Windows_v1.8.1.zip', '/AvaLive_VIP_PRO_Windows_v1.8.0.zip'], async (req, res) => {
+  let ver = '2.2.5';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -873,8 +873,8 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 });
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
-app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', '/AvaLive_VIP_PRO_Mac_v2.2.4.zip', '/AvaLive_VIP_PRO_Mac_v2.2.3.zip', '/AvaLive_VIP_PRO_Mac_v2.2.2.zip', '/AvaLive_VIP_PRO_Mac_v2.2.1.zip', '/AvaLive_VIP_PRO_Mac_v2.2.0.zip', '/AvaLive_VIP_PRO_Mac_v2.1.9.zip', '/AvaLive_VIP_PRO_Mac_v2.1.8.zip', '/AvaLive_VIP_PRO_Mac_v2.1.7.zip', '/AvaLive_VIP_PRO_Mac_v2.1.6.zip', '/AvaLive_VIP_PRO_Mac_v2.1.5.zip', '/AvaLive_VIP_PRO_Mac_v2.1.4.zip', '/AvaLive_VIP_PRO_Mac_v2.1.3.zip', '/AvaLive_VIP_PRO_Mac_v2.1.2.zip', '/AvaLive_VIP_PRO_Mac_v2.1.1.zip', '/AvaLive_VIP_PRO_Mac_v2.1.0.zip', '/AvaLive_VIP_PRO_Mac_v2.0.9.zip', '/AvaLive_VIP_PRO_Mac_v2.0.8.zip', '/AvaLive_VIP_PRO_Mac_v2.0.7.zip', '/AvaLive_VIP_PRO_Mac_v2.0.6.zip', '/AvaLive_VIP_PRO_Mac_v2.0.5.zip', '/AvaLive_VIP_PRO_Mac_v2.0.4.zip', '/AvaLive_VIP_PRO_Mac_v2.0.3.zip', '/AvaLive_VIP_PRO_Mac_v2.0.2.zip', '/AvaLive_VIP_PRO_Mac_v2.0.1.zip', '/AvaLive_VIP_PRO_Mac_v2.0.0.zip', '/AvaLive_VIP_PRO_Mac_v1.9.9.zip', '/AvaLive_VIP_PRO_Mac_v1.9.8.zip', '/AvaLive_VIP_PRO_Mac_v1.9.7.zip', '/AvaLive_VIP_PRO_Mac_v1.9.6.zip', '/AvaLive_VIP_PRO_Mac_v1.9.5.zip', '/AvaLive_VIP_PRO_Mac_v1.9.4.zip', '/AvaLive_VIP_PRO_Mac_v1.9.3.zip', '/AvaLive_VIP_PRO_Mac_v1.9.2.zip', '/AvaLive_VIP_PRO_Mac_v1.9.1.zip', '/AvaLive_VIP_PRO_Mac_v1.9.0.zip', '/AvaLive_VIP_PRO_Mac_v1.8.9.zip', '/AvaLive_VIP_PRO_Mac_v1.8.8.zip', '/AvaLive_VIP_PRO_Mac_v1.8.7.zip', '/AvaLive_VIP_PRO_Mac_v1.8.6.zip', '/AvaLive_VIP_PRO_Mac_v1.8.5.zip', '/AvaLive_VIP_PRO_Mac_v1.8.4.zip', '/AvaLive_VIP_PRO_Mac_v1.8.3.zip', '/AvaLive_VIP_PRO_Mac_v1.8.2.zip', '/AvaLive_VIP_PRO_Mac_v1.8.1.zip', '/AvaLive_VIP_PRO_Mac_v1.8.0.zip'], async (req, res) => {
-  let ver = '2.2.4';
+app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', '/AvaLive_VIP_PRO_Mac_v2.2.5.zip', '/AvaLive_VIP_PRO_Mac_v2.2.4.zip', '/AvaLive_VIP_PRO_Mac_v2.2.3.zip', '/AvaLive_VIP_PRO_Mac_v2.2.2.zip', '/AvaLive_VIP_PRO_Mac_v2.2.1.zip', '/AvaLive_VIP_PRO_Mac_v2.2.0.zip', '/AvaLive_VIP_PRO_Mac_v2.1.9.zip', '/AvaLive_VIP_PRO_Mac_v2.1.8.zip', '/AvaLive_VIP_PRO_Mac_v2.1.7.zip', '/AvaLive_VIP_PRO_Mac_v2.1.6.zip', '/AvaLive_VIP_PRO_Mac_v2.1.5.zip', '/AvaLive_VIP_PRO_Mac_v2.1.4.zip', '/AvaLive_VIP_PRO_Mac_v2.1.3.zip', '/AvaLive_VIP_PRO_Mac_v2.1.2.zip', '/AvaLive_VIP_PRO_Mac_v2.1.1.zip', '/AvaLive_VIP_PRO_Mac_v2.1.0.zip', '/AvaLive_VIP_PRO_Mac_v2.0.9.zip', '/AvaLive_VIP_PRO_Mac_v2.0.8.zip', '/AvaLive_VIP_PRO_Mac_v2.0.7.zip', '/AvaLive_VIP_PRO_Mac_v2.0.6.zip', '/AvaLive_VIP_PRO_Mac_v2.0.5.zip', '/AvaLive_VIP_PRO_Mac_v2.0.4.zip', '/AvaLive_VIP_PRO_Mac_v2.0.3.zip', '/AvaLive_VIP_PRO_Mac_v2.0.2.zip', '/AvaLive_VIP_PRO_Mac_v2.0.1.zip', '/AvaLive_VIP_PRO_Mac_v2.0.0.zip', '/AvaLive_VIP_PRO_Mac_v1.9.9.zip', '/AvaLive_VIP_PRO_Mac_v1.9.8.zip', '/AvaLive_VIP_PRO_Mac_v1.9.7.zip', '/AvaLive_VIP_PRO_Mac_v1.9.6.zip', '/AvaLive_VIP_PRO_Mac_v1.9.5.zip', '/AvaLive_VIP_PRO_Mac_v1.9.4.zip', '/AvaLive_VIP_PRO_Mac_v1.9.3.zip', '/AvaLive_VIP_PRO_Mac_v1.9.2.zip', '/AvaLive_VIP_PRO_Mac_v1.9.1.zip', '/AvaLive_VIP_PRO_Mac_v1.9.0.zip', '/AvaLive_VIP_PRO_Mac_v1.8.9.zip', '/AvaLive_VIP_PRO_Mac_v1.8.8.zip', '/AvaLive_VIP_PRO_Mac_v1.8.7.zip', '/AvaLive_VIP_PRO_Mac_v1.8.6.zip', '/AvaLive_VIP_PRO_Mac_v1.8.5.zip', '/AvaLive_VIP_PRO_Mac_v1.8.4.zip', '/AvaLive_VIP_PRO_Mac_v1.8.3.zip', '/AvaLive_VIP_PRO_Mac_v1.8.2.zip', '/AvaLive_VIP_PRO_Mac_v1.8.1.zip', '/AvaLive_VIP_PRO_Mac_v1.8.0.zip'], async (req, res) => {
+  let ver = '2.2.5';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -2022,11 +2022,22 @@ app.post('/api/battle-state', (req, res) => {
   res.json({ success: true });
 });
 
-// TTS Proxy
+// TTS In-Memory Audio Cache
+const ttsAudioBufferCache = new Map();
+
+// TTS Proxy with Ultra-Fast In-Memory Cache
 app.get('/api/tts', (req, res) => {
   const text = (req.query.text || '').toString().trim();
   const lang = (req.query.lang || 'vi').toString().trim();
   if (!text) return res.status(400).send('Missing text parameter');
+
+  const cacheKey = `${lang}_${text}`;
+  if (ttsAudioBufferCache.has(cacheKey)) {
+    const cached = ttsAudioBufferCache.get(cacheKey);
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.send(cached);
+  }
 
   const encodedText = encodeURIComponent(text.slice(0, 200));
   const encodedLang = encodeURIComponent(lang.toLowerCase().startsWith('vi') ? 'vi' : (lang || 'vi'));
@@ -2039,9 +2050,19 @@ app.get('/api/tts', (req, res) => {
     }
   }, (proxyRes) => {
     if (proxyRes.statusCode !== 200) return res.status(proxyRes.statusCode).send('Failed TTS');
-    res.setHeader('Content-Type', 'audio/mpeg');
-    res.setHeader('Cache-Control', 'public, max-age=86400');
-    proxyRes.pipe(res);
+    const chunks = [];
+    proxyRes.on('data', chunk => chunks.push(chunk));
+    proxyRes.on('end', () => {
+      const buffer = Buffer.concat(chunks);
+      if (ttsAudioBufferCache.size > 200) {
+        const first = ttsAudioBufferCache.keys().next().value;
+        ttsAudioBufferCache.delete(first);
+      }
+      ttsAudioBufferCache.set(cacheKey, buffer);
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.send(buffer);
+    });
   }).on('error', (err) => {
     console.warn('TTS proxy error:', err);
     res.status(500).send('TTS error');

@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.2.4';
+export const APP_VERSION = '2.2.5';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '✨ Tối Ưu Toàn Diện Cửa Sổ Cài Đặt & Cấu Hình Giọng Nói',
-    description: 'Thêm nút "Lưu Cấu Hình & Vào Phần Mềm", "Đóng Cửa Sổ" và tính năng bấm ngoài nền tối để đóng ngay tức thì 0ms, không bao giờ bị nghẽn ở màn hình cấu hình.'
+    title: '🎙️ Hệ Thống 41 Giọng Việt Nam & 28 Giọng Quốc Tế Khác Biệt Hoàn Toàn',
+    description: 'Tích hợp bộ xử lý âm thanh Acoustic DSP (Pitch-shift, Formant F1/F2, Chest Resonance & Dynamics Compressor) giúp mỗi giọng đọc có một bản sắc, ngữ điệu, âm sắc và cảm xúc riêng biệt 100% không trùng lặp.'
   },
   {
-    title: '🇻🇳 Bộ Lọc 41 Giọng Việt Nam & 28 Giọng Quốc Tế Không Trùng Lặp',
-    description: 'Hỗ trợ phân nhóm chi tiết: Giọng Nữ (21), Giọng Nam (20), Giọng Trẻ Gen Z, MC & Biên Tập Viên VTV, Bán Hàng TikTok Shop, TVC Flash Sale, BLV Game PK & Minigame, Doanh Nhân / Cao Tuổi.'
+    title: '🆓 100% Giọng Miễn Phí Sẵn Sàng Ngay (Không Cần API Key)',
+    description: 'Tất cả 41 giọng đọc Việt Nam (21 Nữ & 20 Nam) và 28 giọng quốc tế đều mở khóa miễn phí 100%, nghe thử và phát sóng trực tiếp mượt mà ngay trên mọi thiết bị.'
   },
   {
-    title: '🔊 100% Giọng Việt Nam Test Nghe Thử Bằng Tiếng Việt',
-    description: 'Tất cả các giọng Việt Nam khi bấm Nghe Thử được phát âm chuẩn xác 100% bằng tiếng Việt với các câu thoại phong cách chuyên nghiệp, tuyệt đối không đọc tiếng Anh.'
+    title: '💬 Câu Thoại Mẫu Tiếng Việt Chuẩn Xác Theo Từng Nhân Vật',
+    description: 'Mỗi nhân vật (BTV VTV, MC Truyền Hình, Bán Hàng TikTok, TVC Flash Sale, BLV Game PK, Kể chuyện ASMR, Quý bà doanh nhân, Lão niên...) đều có câu thoại chuẩn phong cách.'
   }
 ];
 

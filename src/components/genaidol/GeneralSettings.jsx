@@ -1724,11 +1724,11 @@ IDOL MỈM CƯỜI + GESTURE
                         <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
                           isSelected
                             ? 'bg-white/30 text-white'
-                            : isFree
+                            : isVn
                               ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                              : 'bg-purple-100 text-purple-800 border border-purple-300'
+                              : 'bg-blue-100 text-blue-800 border border-blue-300'
                         }`}>
-                          {isFree ? '🇻🇳 Miễn Phí' : '💎 ElevenLabs'}
+                          {isVn ? '🇻🇳 AI Miễn Phí' : '🌐 AI Quốc Tế'}
                         </span>
                       </td>
                       <td className="px-3 py-2.5 text-center">
@@ -1797,7 +1797,7 @@ IDOL MỈM CƯỜI + GESTURE
       { id: 'vn_sales', label: '🛍️ Bán Hàng & Chốt Đơn' },
       { id: 'vn_game', label: '🔥 BLV Game & PK' },
       { id: 'vn_mature', label: '👑 Doanh Nhân / Cao Tuổi' },
-      { id: 'free', label: '🆓 Miễn Phí (Hoài My)' },
+      { id: 'free', label: '🆓 Miễn Phí 100%' },
       { id: 'us_uk', label: '🇺🇸 🇬🇧 US / UK' },
       { id: 'eu', label: '🇪🇺 Châu Âu' },
       { id: 'asia', label: '🌏 Châu Á (Trung/Nhật/Hàn...)' },
