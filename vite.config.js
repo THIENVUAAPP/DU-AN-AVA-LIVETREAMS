@@ -179,47 +179,51 @@ export default defineConfig({
             if (EdgeTTS) {
               const tmpFile = path.resolve(os.tmpdir(), `tts_vite_${Date.now()}_${Math.random().toString(36).slice(2)}.mp3`);
               
-              viteEdgeTtsQueue = viteEdgeTtsQueue.then(async () => {
-                try {
-                  const tts = new EdgeTTS({
-                    voice: neuralVoice,
-                    lang: neuralVoice.split('-').slice(0, 2).join('-') || 'vi-VN',
-                    pitch: safePitch,
-                    rate: safeRate,
-                    outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
-                    timeout: 8000
-                  });
-                  await tts.ttsPromise(text, tmpFile);
-                  if (fs.existsSync(tmpFile)) {
-                    const buf = fs.readFileSync(tmpFile);
-                    try { fs.unlinkSync(tmpFile); } catch (e) {}
+              await new Promise((resolveMiddleware) => {
+                viteEdgeTtsQueue = viteEdgeTtsQueue.then(async () => {
+                  try {
+                    const tts = new EdgeTTS({
+                      voice: neuralVoice,
+                      lang: neuralVoice.split('-').slice(0, 2).join('-') || 'vi-VN',
+                      pitch: safePitch,
+                      rate: safeRate,
+                      outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
+                      timeout: 12000
+                    });
+                    await tts.ttsPromise(text, tmpFile);
+                    if (fs.existsSync(tmpFile)) {
+                      const buf = fs.readFileSync(tmpFile);
+                      try { fs.unlinkSync(tmpFile); } catch (e) {}
 
-                    if (viteTtsCache.size > 200) {
-                      const first = viteTtsCache.keys().next().value;
-                      viteTtsCache.delete(first);
-                    }
-                    viteTtsCache.set(cacheKey, buf);
+                      if (viteTtsCache.size > 300) {
+                        const first = viteTtsCache.keys().next().value;
+                        viteTtsCache.delete(first);
+                      }
+                      viteTtsCache.set(cacheKey, buf);
 
-                    res.setHeader('Access-Control-Allow-Origin', '*');
-                    if (req.method === 'POST') {
-                      res.setHeader('Content-Type', 'application/json');
-                      res.statusCode = 200;
-                      res.end(JSON.stringify({ success: true, audioBase64: buf.toString('base64') }));
-                    } else {
-                      res.setHeader('Content-Type', 'audio/mpeg');
-                      res.setHeader('Cache-Control', 'public, max-age=86400');
-                      res.statusCode = 200;
-                      res.end(buf);
+                      res.setHeader('Access-Control-Allow-Origin', '*');
+                      if (req.method === 'POST') {
+                        res.setHeader('Content-Type', 'application/json');
+                        res.statusCode = 200;
+                        res.end(JSON.stringify({ success: true, audioBase64: buf.toString('base64') }));
+                      } else {
+                        res.setHeader('Content-Type', 'audio/mpeg');
+                        res.setHeader('Cache-Control', 'public, max-age=86400');
+                        res.statusCode = 200;
+                        res.end(buf);
+                      }
+                      resolveMiddleware();
+                      return;
                     }
-                    return;
+                  } catch (e) {
+                    if (fs.existsSync(tmpFile)) try { fs.unlinkSync(tmpFile); } catch(err) {}
+                    console.warn('[vite.config.js] EdgeTTS error:', e?.message || e);
                   }
-                } catch (e) {
-                  if (fs.existsSync(tmpFile)) try { fs.unlinkSync(tmpFile); } catch(err) {}
-                  console.warn('[vite.config.js] EdgeTTS error:', e?.message || e);
-                }
 
-                res.statusCode = 500;
-                res.end(JSON.stringify({ error: 'EdgeTTS failed' }));
+                  res.statusCode = 500;
+                  res.end(JSON.stringify({ error: 'EdgeTTS failed' }));
+                  resolveMiddleware();
+                });
               });
               return;
             } else {

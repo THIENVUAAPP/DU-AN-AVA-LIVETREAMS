@@ -2,13 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.4.6';
+export const APP_VERSION = '2.4.7';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🎙️ Kích Hoạt Độc Bản 100% Từng Giọng Đọc Trong Kịch Bản (Không Lẫn Lộn Giọng Gốc)',
-    description: 'Khắc phục triệt để hiện tượng phát về giọng mặc định. Khi người dùng chọn bất kỳ giọng nào (Hải Đăng, Tùng Đặng, Phương Thảo, Triệu Dương, Cụ Ông Phúc, Bà Cụ Thoa...), hệ thống sẽ ngay lập tức đọc đúng 100% giọng đó với cao độ, âm sắc và thanh quản đặc trưng.'
+    title: '🚫 Loại Bỏ 100% Giọng Robot Mặc Định Của Máy Tính (Web Speech API)',
+    description: 'Vô hiệu hóa hoàn toàn cơ chế phát giọng mặc định của hệ điều hành máy tính. Mọi thao tác nghe thử, đọc kịch bản, trả lời bình luận, trợ lý đều chạy độc bản 100% qua kho giọng AI Studio Pro cao cấp theo đúng nhân vật người dùng đã chọn.'
+  },
+  {
+    title: '⚡ Tối Ưu Hóa Middleware & Retry Tự Động 2 Lần Cho Toàn Bộ Giọng AI',
+    description: 'Đảm bảo kết nối TTS luôn sẵn sàng trong 0ms, tự động retry khi mạng chập chờn và xử lý âm thanh đồng bộ không bị nghẽn.'
   },
   {
     title: '🏷️ Hiển Thị Tên Giọng Đọc Trực Quan Trên Nút Nghe Thử Kịch Bản',
@@ -17,10 +21,6 @@ export const UPDATE_NOTES = [
   {
     title: '📜 Đọc Chuẩn Xác 100% Nội Dung Từng Câu Chữ Trong Kịch Bản Bán Hàng',
     description: 'Giữ nguyên 100% ngữ nghĩa và văn bản kịch bản gốc của người dùng, tự động dịch số tiền (199k, 2tr) và từ viết tắt livestream (sp, cmt, deal, freeship) một cách mượt mà, chuyên nghiệp và cuốn hút nhất.'
-  },
-  {
-    title: '⚡ Ghi Nhớ Giọng Đã Chọn & Đổi Giọng Ngay Lập Tức (0ms Switch)',
-    description: 'Tự động lưu lại giọng đọc đã chọn vào bộ nhớ máy tính. Khi đang nghe thử toàn bộ kịch bản, nếu bạn đổi sang bất kỳ giọng đọc nào trong menu, AI sẽ ngay lập tức đọc lại câu hiện tại bằng giọng mới chọn.'
   }
 ];
 

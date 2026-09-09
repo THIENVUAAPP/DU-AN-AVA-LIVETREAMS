@@ -3193,24 +3193,29 @@ async function fetchAndDecodeTTSAudio(text, voice = null) {
     `http://localhost:3001/api/tts?${ttsQuery}`
   ];
 
-  for (const url of candidateUrls) {
-    try {
-      const res = await fetch(url);
-      if (res.ok) {
-        const arrayBuf = await res.arrayBuffer();
-        if (arrayBuf && arrayBuf.byteLength > 100) {
-          const audioBuffer = await audioCtx.decodeAudioData(arrayBuf);
-          if (audioBuffer) {
-            if (audioBufferMemoryCache.size > 250) {
-              const firstKey = audioBufferMemoryCache.keys().next().value;
-              audioBufferMemoryCache.delete(firstKey);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    for (const url of candidateUrls) {
+      try {
+        const res = await fetch(url);
+        if (res.ok) {
+          const arrayBuf = await res.arrayBuffer();
+          if (arrayBuf && arrayBuf.byteLength > 100) {
+            const audioBuffer = await audioCtx.decodeAudioData(arrayBuf);
+            if (audioBuffer) {
+              if (audioBufferMemoryCache.size > 250) {
+                const firstKey = audioBufferMemoryCache.keys().next().value;
+                audioBufferMemoryCache.delete(firstKey);
+              }
+              audioBufferMemoryCache.set(cacheKey, audioBuffer);
+              return audioBuffer;
             }
-            audioBufferMemoryCache.set(cacheKey, audioBuffer);
-            return audioBuffer;
           }
         }
-      }
-    } catch (e) {}
+      } catch (e) {}
+    }
+    if (attempt === 0) {
+      await new Promise(r => setTimeout(r, 200));
+    }
   }
 
   return null;
@@ -3441,7 +3446,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
   }
 
   // =========================================================================
-  // TIER 2: MICROSOFT AZURE NEURAL TTS (CHUẨN 100% NAM RA NAM, NỮ RA NỮ)
+  // TIER 2: MICROSOFT AZURE NEURAL TTS (CHUẨN 100% ĐÚNG GIỌNG NGƯỜI DÙNG CHỌN)
   // =========================================================================
   try {
     const audioBuffer = await fetchAndDecodeTTSAudio(textToSpeak, voice);
@@ -3453,98 +3458,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     console.warn('[voiceSyncService] Neural Voice synthesis error, fallback to WebSpeech:', dspErr);
   }
 
-  // =========================================================================
-  // TIER 3: CLIENT WEB SPEECH API (Dự phòng khi hoàn toàn ngoại tuyến)
-  // =========================================================================
-  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-    try {
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.resume();
-
-      const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      activeUtterance = utterance;
-      
-      window._activeVoiceSet = window._activeVoiceSet || new Set();
-      window._activeVoiceSet.add(utterance);
-
-      utterance.lang = langCode;
-
-      const voiceRate = voice?.rate || 1.05;
-      const userRate = requestedRate !== undefined && !isNaN(requestedRate) ? Number(requestedRate) : 1.0;
-      utterance.rate = Math.max(0.9, Math.min(1.3, voiceRate * userRate));
-      utterance.volume = effectiveVoiceVolume;
-
-      const availableVoices = (preloadedVoices.length > 0 ? preloadedVoices : window.speechSynthesis.getVoices()) || [];
-      if (availableVoices.length > 0) {
-        let matched = availableVoices.find(v => {
-          const vLang = (v.lang || '').toLowerCase().replace('_', '-');
-          const matchesLang = vLang.startsWith(shortLang) || vLang.includes(shortLang) || vLang === langCode.toLowerCase();
-          const vName = (v.name || '').toLowerCase();
-          if (isMale) {
-            return matchesLang && (
-              vName.includes('namminh') || vName.includes('male') || vName.includes('nam') ||
-              vName.includes('david') || vName.includes('george') || vName.includes('james') ||
-              vName.includes('mark') || vName.includes('guy') || vName.includes('alex')
-            );
-          } else {
-            return matchesLang && (
-              vName.includes('hoaimy') || vName.includes('female') || vName.includes('nữ') ||
-              vName.includes('linh') || vName.includes('mai') || vName.includes('zira') ||
-              vName.includes('samantha') || vName.includes('jenny')
-            );
-          }
-        });
-
-        if (!matched) {
-          matched = availableVoices.find(v => {
-            const vLang = (v.lang || '').toLowerCase().replace('_', '-');
-            return vLang.startsWith(shortLang) || vLang.includes(shortLang);
-          });
-        }
-
-        if (matched) {
-          utterance.voice = matched;
-        }
-      }
-
-      // Áp dụng pitch và rate đặc thù của từng giọng đọc
-      utterance.pitch = voice?.pitch !== undefined ? Math.max(0.5, Math.min(1.8, Number(voice.pitch))) : (isMale ? 0.85 : 1.15);
-
-      const playedSuccessfully = await new Promise((resolve) => {
-        let hasEnded = false;
-        const finish = (ok) => {
-          if (hasEnded) return;
-          hasEnded = true;
-          if (window._activeVoiceSet) {
-            window._activeVoiceSet.delete(utterance);
-          }
-          activeUtterance = null;
-          if (onEnd) onEnd();
-          resolve(ok);
-        };
-
-        utterance.onend = () => finish(true);
-        utterance.onerror = () => finish(false);
-
-        const maxDurationMs = Math.max(4500, textToSpeak.length * 160);
-        const watchdog = setTimeout(() => finish(true), maxDurationMs);
-        utterance.addEventListener('end', () => clearTimeout(watchdog));
-
-        try {
-          window.speechSynthesis.speak(utterance);
-        } catch (spkErr) {
-          finish(false);
-        }
-      });
-
-      if (playedSuccessfully) {
-        return true;
-      }
-    } catch (synthErr) {
-      console.warn('Native Web Speech API error:', synthErr);
-    }
-  }
-
+  // Kết thúc an toàn mà TUYỆT ĐỐI KHÔNG BAO GIỜ phát giọng mặc định của máy tính
   if (onEnd) onEnd();
   return true;
 }
