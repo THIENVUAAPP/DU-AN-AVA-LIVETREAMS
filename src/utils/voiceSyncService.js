@@ -2100,7 +2100,41 @@ let activeUtterance = null;
 let preloadedVoices = [];
 let activeAudioContext = null;
 let activeSourceNode = null;
+let activeMasterGainNode = null;
 const audioBufferMemoryCache = new Map();
+
+/**
+ * ⚡ ĐIỀU CHỈNH ÂM LƯỢNG & TỐC ĐỘ REAL-TIME KHI ĐANG PHÁT AUDIO
+ */
+export function setRealtimeAudioParams({ volume, rate, pitch } = {}) {
+  if (volume !== undefined && !isNaN(Number(volume))) {
+    const volNum = Math.max(0, Math.min(2.0, Number(volume)));
+    if (activeMasterGainNode && activeAudioContext) {
+      try {
+        activeMasterGainNode.gain.setValueAtTime(volNum, activeAudioContext.currentTime);
+      } catch (e) {}
+    }
+    if (activePreviewAudio) {
+      try {
+        activePreviewAudio.volume = Math.max(0, Math.min(1.0, volNum));
+      } catch (e) {}
+    }
+  }
+
+  if (rate !== undefined && !isNaN(Number(rate))) {
+    const rateNum = Math.max(0.5, Math.min(2.0, Number(rate)));
+    if (activeSourceNode && activeAudioContext) {
+      try {
+        activeSourceNode.playbackRate.setValueAtTime(rateNum, activeAudioContext.currentTime);
+      } catch (e) {}
+    }
+    if (activePreviewAudio) {
+      try {
+        activePreviewAudio.playbackRate = rateNum;
+      } catch (e) {}
+    }
+  }
+}
 
 // Initialize native browser speech synthesis voices immediately
 function initSpeechVoices() {
@@ -2119,6 +2153,7 @@ function initSpeechVoices() {
     }
   }
 }
+
 if (typeof window !== 'undefined') {
   initSpeechVoices();
   if (document.readyState === 'loading') {
@@ -2159,6 +2194,7 @@ export function stopVoiceAudio() {
     try { activeSourceNode.disconnect(); } catch(e) {}
     activeSourceNode = null;
   }
+  activeMasterGainNode = null;
   if (activePreviewAudio) {
     try {
       activePreviewAudio.pause();
@@ -2192,10 +2228,7 @@ export function cleanTextForVoiceSpeech(rawText) {
 }
 
 /**
- * 🎛️ BỘ XỬ LÝ ÂM THANH ACOUSTIC DSP CHUYÊN NGHIỆP:
- * Biến đổi âm thanh qua đồ thị Web Audio Graph (Parametric EQ + Formant Shift + Multi-Band Dynamics Compressor)
- * Đảm bảo: Giọng Nam ra đúng 100% Nam (trầm ấm, uy lực, nói nhanh dứt khoát, không bị kéo lê), 
- * Giọng Nữ ra đúng 100% Nữ (trong trẻo, ngọt ngào, nhấn nhá siêu đỉnh).
+ * Helper: Xác định chính xác 100% giới tính Nam (Male)
  */
 export function checkIsMale(voice) {
   if (!voice) return false;
@@ -2218,7 +2251,7 @@ export function checkIsMale(voice) {
  * 🎛️ BỘ XỬ LÝ ÂM THANH MASTERING BROADCAST DSP CHUYÊN NGHIỆP:
  * Xuất tín hiệu chuẩn phòng thu livestream:
  * - Bảo toàn 100% âm sắc tự nhiên của giọng đọc AI (Không làm méo tiếng, không giả giọng).
- * - Chuỗi Parametric EQ + Dynamics Compressor tạo độ dầy, ấm, nét và uy lực cho livestream.
+ * - Chuỗi Parametric EQ 4 băng tầng + Broadcast Dynamic Compressor tạo độ dày ấm, tròn vành rõ chữ, siêu cuốn hút.
  */
 async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, requestedRate, onEnd, isTestingMode) {
   const audioCtx = getOrCreateAudioContext();

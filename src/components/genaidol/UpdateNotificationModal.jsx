@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.3.4';
+export const APP_VERSION = '2.3.5';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🛍️ Ra Mắt Kho 30 Giọng Bán Hàng & Chốt Đơn Đa Ngành, Đa Vùng Miền, Đa Độ Tuổi (20 - 70 Tuổi)',
-    description: 'Hệ sinh thái giọng bán hàng hoàn chỉnh nhất gồm đúng 30 nhân vật độc bản: 8 giọng Miền Nam, 8 giọng Miền Bắc, 6 giọng Miền Trung, 8 giọng Miền Tây. Đầy đủ các thế hệ từ Nam/Nữ Trẻ (20-35t), Trung Niên (40-54t) đến Lão Niên (55-70t) chuyên biệt cho từng mặt hàng (Mỹ phẩm, BĐS, Ô tô, Y khoa, Trà đạo, Mật ong, Trái cây miệt vườn...).'
+    title: '⚡ Tối Ưu Realtime 100% Bộ Tùy Chỉnh Tốc Độ (Speed), Âm Lượng (Volume) & Cao Độ (Pitch)',
+    description: 'Nâng cấp khả năng phản hồi tức thì khi kéo thả thanh trượt hoặc bấm các nút preset (0.8x, 1.0x, 1.15x, 1.3x; 50%, 80%, 100%, 125%; 0.85 Trầm, 1.0 Cân bằng, 1.15 Trong trẻo). Tự động cập nhật trực tiếp vào luồng phát và lưu ngay lập tức vào cấu hình hệ thống.'
   },
   {
-    title: '🎯 Khắc Phục Triệt Để Lỗi Giọng Nam Phát Tiếng Nữ & Trùng Lặp',
-    description: 'Nâng cấp lõi EdgeTTS Neural Voice Engine chuẩn hóa tuyệt đối vi-VN-NamMinhNeural cho Nam và vi-VN-HoaiMyNeural cho Nữ, kết hợp bộ giải mã DSP Formant đa tầng. Loại bỏ hoàn toàn fallback Google Translate đơn âm để mọi giọng đều phát huy 100% âm sắc riêng biệt.'
+    title: '🎙️ Chuỗi DSP Mastering Broadcast Đẳng Cấp Phòng Thu Quốc Tế',
+    description: 'Tích hợp 4 dải Parametric EQ (Low-shelf ấm ngực, Mid-peaking tròn vành rõ chữ, Presence gần gũi ngọt ngào, High-shelf thoáng khí) kết hợp bộ Broadcast Dynamic Compressor giúp giọng đọc AI dày dặn, sang trọng, đầy mê hoặc và siêu cuốn hút người nghe.'
   },
   {
-    title: '🔍 Bộ Lọc Tìm Kiếm Đa Chiều & Gán Nhanh Vào Livestream',
-    description: 'Bổ sung thanh lọc thông minh theo Vùng Miền (Bắc, Trung, Nam, Tây), Tầng Độ Tuổi (Trẻ, Trung Niên, Lão Niên), Giới Tính và Từ Khóa, kèm tính năng 1-chạm gán ngay giọng đọc vào Idol Live, Trợ Lý hoặc BLV Game.'
+    title: '🛍️ Kho 30 Giọng Bán Hàng & Chốt Đơn Đa Ngành, Đa Vùng Miền, Đa Độ Tuổi (20 - 70 Tuổi)',
+    description: 'Hệ sinh thái giọng bán hàng hoàn chỉnh nhất gồm đúng 30 nhân vật độc bản: 8 giọng Miền Nam, 8 giọng Miền Bắc, 6 giọng Miền Trung, 8 giọng Miền Tây với đầy đủ các thế hệ từ Trẻ (20-35t), Trung Niên (40-54t) đến Lão Niên (55-70t).'
   }
 ];
 

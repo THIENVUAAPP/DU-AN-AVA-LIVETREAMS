@@ -9,6 +9,7 @@ import {
   previewVoiceAudio, 
   updateActiveVoiceAudio, 
   stopVoiceAudio,
+  setRealtimeAudioParams,
   getFavoriteVoiceIds,
   toggleFavoriteVoiceId,
   isVoiceFavorite
@@ -1914,15 +1915,22 @@ IDOL MỈM CƯỜI + GESTURE
     const { name, value, type, checked } = e.target;
     const finalValue = type === 'checkbox' ? checked : value;
     setSettings(prev => {
-      // Gọi real-time update cho giọng đọc đang test (nếu có)
-      if (['mainVoiceVolume', 'assistantVoiceVolume', 'gameVoiceVolume', 'salesVoiceVolume'].includes(name)) {
-        updateActiveVoiceAudio(Number(finalValue), undefined, undefined);
-      } else if (['mainVoiceRate', 'assistantVoiceRate', 'gameVoiceRate', 'salesVoiceRate'].includes(name)) {
-        updateActiveVoiceAudio(undefined, Number(finalValue), undefined);
-      } else if (['mainVoicePitch', 'assistantVoicePitch', 'gameVoicePitch', 'salesVoicePitch'].includes(name)) {
-        updateActiveVoiceAudio(undefined, undefined, Number(finalValue));
+      const updated = { ...prev, [name]: finalValue };
+
+      // Gọi real-time update cho giọng đọc đang phát/test
+      if (['salesVoiceVolume', 'mainVoiceVolume', 'assistantVoiceVolume', 'gameVoiceVolume'].includes(name)) {
+        setRealtimeAudioParams({ volume: Number(finalValue) });
+      } else if (['salesVoiceRate', 'mainVoiceRate', 'assistantVoiceRate', 'gameVoiceRate'].includes(name)) {
+        setRealtimeAudioParams({ rate: Number(finalValue) });
+      } else if (['salesVoicePitch', 'mainVoicePitch', 'assistantVoicePitch', 'gameVoicePitch'].includes(name)) {
+        setRealtimeAudioParams({ pitch: Number(finalValue) });
       }
-      return { ...prev, [name]: finalValue };
+
+      try {
+        localStorage.setItem('aidol_general_settings', JSON.stringify(updated));
+      } catch (err) {}
+
+      return updated;
     });
   };
 
@@ -2460,14 +2468,19 @@ IDOL MỈM CƯỜI + GESTURE
                       <button
                         type="button"
                         onClick={() => {
-                          setSettings(prev => ({
-                            ...prev,
-                            salesVoiceRate: 1.0,
-                            salesVoiceVolume: 1.0,
-                            salesVoicePitch: 1.0
-                          }));
+                          setRealtimeAudioParams({ volume: 1.0, rate: 1.0, pitch: 1.0 });
+                          setSettings(prev => {
+                            const updated = {
+                              ...prev,
+                              salesVoiceRate: 1.0,
+                              salesVoiceVolume: 1.0,
+                              salesVoicePitch: 1.0
+                            };
+                            try { localStorage.setItem('aidol_general_settings', JSON.stringify(updated)); } catch(e) {}
+                            return updated;
+                          });
                         }}
-                        className="text-xs text-gray-600 hover:text-rose-600 px-2.5 py-1 bg-white border border-gray-300 rounded-lg hover:border-rose-300 font-medium transition-colors"
+                        className="text-xs text-gray-600 hover:text-rose-600 px-2.5 py-1 bg-white border border-gray-300 rounded-lg hover:border-rose-300 font-medium transition-colors cursor-pointer"
                       >
                         🔄 Khôi phục mặc định
                       </button>
@@ -2505,8 +2518,15 @@ IDOL MỈM CƯỜI + GESTURE
                           <button
                             key={preset.val}
                             type="button"
-                            onClick={() => setSettings(prev => ({ ...prev, salesVoiceRate: preset.val }))}
-                            className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border transition-all ${
+                            onClick={() => {
+                              setRealtimeAudioParams({ rate: preset.val });
+                              setSettings(prev => {
+                                const updated = { ...prev, salesVoiceRate: preset.val };
+                                try { localStorage.setItem('aidol_general_settings', JSON.stringify(updated)); } catch(e) {}
+                                return updated;
+                              });
+                            }}
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border transition-all cursor-pointer ${
                               Math.abs((settings.salesVoiceRate || 1.0) - preset.val) < 0.03
                                 ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
                                 : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-rose-50 hover:text-rose-600'
@@ -2549,8 +2569,15 @@ IDOL MỈM CƯỜI + GESTURE
                           <button
                             key={preset.val}
                             type="button"
-                            onClick={() => setSettings(prev => ({ ...prev, salesVoiceVolume: preset.val }))}
-                            className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border transition-all ${
+                            onClick={() => {
+                              setRealtimeAudioParams({ volume: preset.val });
+                              setSettings(prev => {
+                                const updated = { ...prev, salesVoiceVolume: preset.val };
+                                try { localStorage.setItem('aidol_general_settings', JSON.stringify(updated)); } catch(e) {}
+                                return updated;
+                              });
+                            }}
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border transition-all cursor-pointer ${
                               Math.abs((settings.salesVoiceVolume || 1.0) - preset.val) < 0.03
                                 ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
                                 : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-rose-50 hover:text-rose-600'
@@ -2591,8 +2618,15 @@ IDOL MỈM CƯỜI + GESTURE
                           <button
                             key={preset.val}
                             type="button"
-                            onClick={() => setSettings(prev => ({ ...prev, salesVoicePitch: preset.val }))}
-                            className={`px-2 py-0.5 rounded text-[10px] font-semibold border transition-all ${
+                            onClick={() => {
+                              setRealtimeAudioParams({ pitch: preset.val });
+                              setSettings(prev => {
+                                const updated = { ...prev, salesVoicePitch: preset.val };
+                                try { localStorage.setItem('aidol_general_settings', JSON.stringify(updated)); } catch(e) {}
+                                return updated;
+                              });
+                            }}
+                            className={`px-2 py-0.5 rounded text-[10px] font-semibold border transition-all cursor-pointer ${
                               Math.abs((settings.salesVoicePitch || 1.0) - preset.val) < 0.03
                                 ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
                                 : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-rose-50 hover:text-rose-600'
@@ -2614,30 +2648,31 @@ IDOL MỈM CƯỜI + GESTURE
                       type="button"
                       onClick={() => {
                         const targetVoice = VIETNAMESE_SALES_VOICES.find(v => v.id === settings.mainVoiceId) || VIETNAMESE_SALES_VOICES[0];
-                        if (previewingVoiceId === targetVoice.id) {
+                        const testId = 'sales_preview_custom';
+                        if (previewingVoiceId === testId || previewingVoiceId === targetVoice.id) {
                           stopVoiceAudio();
                           setPreviewingVoiceId(null);
                           return;
                         }
-                        setPreviewingVoiceId(targetVoice.id);
+                        setPreviewingVoiceId(testId);
                         previewVoiceAudio({
                           ...targetVoice,
-                          volume: settings.salesVoiceVolume !== undefined ? settings.salesVoiceVolume : 1.0,
-                          rate: settings.salesVoiceRate !== undefined ? settings.salesVoiceRate : 1.0,
-                          pitch: settings.salesVoicePitch !== undefined ? settings.salesVoicePitch : 1.0,
+                          volume: settings.salesVoiceVolume !== undefined ? Number(settings.salesVoiceVolume) : 1.0,
+                          rate: settings.salesVoiceRate !== undefined ? Number(settings.salesVoiceRate) : 1.0,
+                          pitch: settings.salesVoicePitch !== undefined ? Number(settings.salesVoicePitch) : 1.0,
                           isTest: true
-                        }, null, () => {
+                        }, targetVoice.sampleText || null, () => {
                           setPreviewingVoiceId(null);
                         });
                       }}
                       className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold text-white shadow-md transition-all active:scale-95 cursor-pointer ${
-                        previewingVoiceId
+                        previewingVoiceId === 'sales_preview_custom'
                           ? 'bg-amber-500 ring-2 ring-amber-300 animate-pulse'
                           : 'bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700'
                       }`}
                     >
-                      <Volume2 size={16} className={previewingVoiceId ? 'animate-spin' : ''} />
-                      <span>{previewingVoiceId ? 'Đang phát thử (Bấm để dừng)' : '🔊 Nghe Thử Với Tốc Độ & Âm Lượng Này'}</span>
+                      <Volume2 size={16} className={previewingVoiceId === 'sales_preview_custom' ? 'animate-spin' : ''} />
+                      <span>{previewingVoiceId === 'sales_preview_custom' ? 'Đang phát thử (Bấm để dừng)' : '🔊 Nghe Thử Với Tốc Độ & Âm Lượng Này'}</span>
                     </button>
                   </div>
                 </div>
