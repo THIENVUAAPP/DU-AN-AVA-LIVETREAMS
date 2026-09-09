@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.2.3';
+export const APP_VERSION = '2.2.4';
 export const RELEASE_DATE = '09/09/2026';
 
-export const CHANGELOG = [
+export const UPDATE_NOTES = [
   {
     title: '✨ Tối Ưu Toàn Diện Cửa Sổ Cài Đặt & Cấu Hình Giọng Nói',
     description: 'Thêm nút "Lưu Cấu Hình & Vào Phần Mềm", "Đóng Cửa Sổ" và tính năng bấm ngoài nền tối để đóng ngay tức thì 0ms, không bao giờ bị nghẽn ở màn hình cấu hình.'
@@ -19,6 +19,8 @@ export const CHANGELOG = [
     description: 'Tất cả các giọng Việt Nam khi bấm Nghe Thử được phát âm chuẩn xác 100% bằng tiếng Việt với các câu thoại phong cách chuyên nghiệp, tuyệt đối không đọc tiếng Anh.'
   }
 ];
+
+export const CHANGELOG = UPDATE_NOTES;
 
 export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onClose: controlledOnClose }) {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
@@ -109,12 +111,19 @@ export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onCl
           </p>
           
           <ul className="space-y-2.5">
-            {UPDATE_NOTES.map((note, idx) => (
+            {(UPDATE_NOTES || []).map((note, idx) => (
               <li key={idx} className="flex gap-2.5 items-start bg-white/5 p-3 rounded-2xl border border-white/10 hover:border-cyan-500/30 transition-all">
                 <div className="mt-0.5 shrink-0 bg-blue-500/20 text-blue-400 rounded-full p-1">
                   <CheckCircle size={15} />
                 </div>
-                <span className="text-xs text-gray-200 leading-relaxed font-medium text-left">{note}</span>
+                <div className="flex flex-col text-left">
+                  {typeof note === 'object' && note.title && (
+                    <span className="text-xs font-bold text-cyan-300 mb-0.5">{note.title}</span>
+                  )}
+                  <span className="text-xs text-gray-200 leading-relaxed font-medium">
+                    {typeof note === 'object' ? note.description : note}
+                  </span>
+                </div>
               </li>
             ))}
           </ul>

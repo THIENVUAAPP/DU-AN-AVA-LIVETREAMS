@@ -853,113 +853,43 @@ app.get('/api/check-update', (req, res) => {
 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
-app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', '/AvaLive_VIP_PRO_Windows_v2.2.3.zip', '/AvaLive_VIP_PRO_Windows_v2.2.2.zip', '/AvaLive_VIP_PRO_Windows_v2.2.1.zip', '/AvaLive_VIP_PRO_Windows_v2.2.0.zip', '/AvaLive_VIP_PRO_Windows_v2.1.9.zip', '/AvaLive_VIP_PRO_Windows_v2.1.8.zip', '/AvaLive_VIP_PRO_Windows_v2.1.7.zip', '/AvaLive_VIP_PRO_Windows_v2.1.6.zip', '/AvaLive_VIP_PRO_Windows_v2.1.5.zip', '/AvaLive_VIP_PRO_Windows_v2.1.4.zip', '/AvaLive_VIP_PRO_Windows_v2.1.3.zip', '/AvaLive_VIP_PRO_Windows_v2.1.2.zip', '/AvaLive_VIP_PRO_Windows_v2.1.1.zip', '/AvaLive_VIP_PRO_Windows_v2.1.0.zip', '/AvaLive_VIP_PRO_Windows_v2.0.9.zip', '/AvaLive_VIP_PRO_Windows_v2.0.8.zip', '/AvaLive_VIP_PRO_Windows_v2.0.7.zip', '/AvaLive_VIP_PRO_Windows_v2.0.6.zip', '/AvaLive_VIP_PRO_Windows_v2.0.5.zip', '/AvaLive_VIP_PRO_Windows_v2.0.4.zip', '/AvaLive_VIP_PRO_Windows_v2.0.3.zip', '/AvaLive_VIP_PRO_Windows_v2.0.2.zip', '/AvaLive_VIP_PRO_Windows_v2.0.1.zip', '/AvaLive_VIP_PRO_Windows_v2.0.0.zip', '/AvaLive_VIP_PRO_Windows_v1.9.9.zip', '/AvaLive_VIP_PRO_Windows_v1.9.8.zip', '/AvaLive_VIP_PRO_Windows_v1.9.7.zip', '/AvaLive_VIP_PRO_Windows_v1.9.6.zip', '/AvaLive_VIP_PRO_Windows_v1.9.5.zip', '/AvaLive_VIP_PRO_Windows_v1.9.4.zip', '/AvaLive_VIP_PRO_Windows_v1.9.3.zip', '/AvaLive_VIP_PRO_Windows_v1.9.2.zip', '/AvaLive_VIP_PRO_Windows_v1.9.1.zip', '/AvaLive_VIP_PRO_Windows_v1.9.0.zip', '/AvaLive_VIP_PRO_Windows_v1.8.9.zip', '/AvaLive_VIP_PRO_Windows_v1.8.8.zip', '/AvaLive_VIP_PRO_Windows_v1.8.7.zip', '/AvaLive_VIP_PRO_Windows_v1.8.6.zip', '/AvaLive_VIP_PRO_Windows_v1.8.5.zip', '/AvaLive_VIP_PRO_Windows_v1.8.4.zip', '/AvaLive_VIP_PRO_Windows_v1.8.3.zip', '/AvaLive_VIP_PRO_Windows_v1.8.2.zip', '/AvaLive_VIP_PRO_Windows_v1.8.1.zip', '/AvaLive_VIP_PRO_Windows_v1.8.0.zip'], async (req, res) => {
-  const releaseDir = path.join(__dirname, '..', 'release_zips');
-  let targetFile = null;
-  let ver = '2.2.3';
+app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', '/AvaLive_VIP_PRO_Windows_v2.2.4.zip', '/AvaLive_VIP_PRO_Windows_v2.2.3.zip', '/AvaLive_VIP_PRO_Windows_v2.2.2.zip', '/AvaLive_VIP_PRO_Windows_v2.2.1.zip', '/AvaLive_VIP_PRO_Windows_v2.2.0.zip', '/AvaLive_VIP_PRO_Windows_v2.1.9.zip', '/AvaLive_VIP_PRO_Windows_v2.1.8.zip', '/AvaLive_VIP_PRO_Windows_v2.1.7.zip', '/AvaLive_VIP_PRO_Windows_v2.1.6.zip', '/AvaLive_VIP_PRO_Windows_v2.1.5.zip', '/AvaLive_VIP_PRO_Windows_v2.1.4.zip', '/AvaLive_VIP_PRO_Windows_v2.1.3.zip', '/AvaLive_VIP_PRO_Windows_v2.1.2.zip', '/AvaLive_VIP_PRO_Windows_v2.1.1.zip', '/AvaLive_VIP_PRO_Windows_v2.1.0.zip', '/AvaLive_VIP_PRO_Windows_v2.0.9.zip', '/AvaLive_VIP_PRO_Windows_v2.0.8.zip', '/AvaLive_VIP_PRO_Windows_v2.0.7.zip', '/AvaLive_VIP_PRO_Windows_v2.0.6.zip', '/AvaLive_VIP_PRO_Windows_v2.0.5.zip', '/AvaLive_VIP_PRO_Windows_v2.0.4.zip', '/AvaLive_VIP_PRO_Windows_v2.0.3.zip', '/AvaLive_VIP_PRO_Windows_v2.0.2.zip', '/AvaLive_VIP_PRO_Windows_v2.0.1.zip', '/AvaLive_VIP_PRO_Windows_v2.0.0.zip', '/AvaLive_VIP_PRO_Windows_v1.9.9.zip', '/AvaLive_VIP_PRO_Windows_v1.9.8.zip', '/AvaLive_VIP_PRO_Windows_v1.9.7.zip', '/AvaLive_VIP_PRO_Windows_v1.9.6.zip', '/AvaLive_VIP_PRO_Windows_v1.9.5.zip', '/AvaLive_VIP_PRO_Windows_v1.9.4.zip', '/AvaLive_VIP_PRO_Windows_v1.9.3.zip', '/AvaLive_VIP_PRO_Windows_v1.9.2.zip', '/AvaLive_VIP_PRO_Windows_v1.9.1.zip', '/AvaLive_VIP_PRO_Windows_v1.9.0.zip', '/AvaLive_VIP_PRO_Windows_v1.8.9.zip', '/AvaLive_VIP_PRO_Windows_v1.8.8.zip', '/AvaLive_VIP_PRO_Windows_v1.8.7.zip', '/AvaLive_VIP_PRO_Windows_v1.8.6.zip', '/AvaLive_VIP_PRO_Windows_v1.8.5.zip', '/AvaLive_VIP_PRO_Windows_v1.8.4.zip', '/AvaLive_VIP_PRO_Windows_v1.8.3.zip', '/AvaLive_VIP_PRO_Windows_v1.8.2.zip', '/AvaLive_VIP_PRO_Windows_v1.8.1.zip', '/AvaLive_VIP_PRO_Windows_v1.8.0.zip'], async (req, res) => {
+  let ver = '2.2.4';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
   } catch (e) {}
 
-  if (fs.existsSync(releaseDir)) {
-    const exactFile = path.join(releaseDir, `AvaLive_VIP_PRO_Windows_v${ver}.zip`);
-    if (fs.existsSync(exactFile)) {
-      targetFile = exactFile;
-    } else {
-      const files = fs.readdirSync(releaseDir).filter(f => f.startsWith('AvaLive_VIP_PRO_Windows') && f.endsWith('.zip'));
-      if (files.length > 0) {
-        files.sort().reverse();
-        targetFile = path.join(releaseDir, files[0]);
-      }
-    }
+  const rootDir = path.join(__dirname, '..');
+  const primaryFile = path.join(rootDir, 'release_zips', `AvaLive_VIP_PRO_Windows_v${ver}.zip`);
+  const legacyFile = path.join(rootDir, 'release_zips', 'AvaLive_VIP_PRO_Windows.zip');
+
+  if (fs.existsSync(primaryFile)) {
+    return res.download(primaryFile, `AvaLive_VIP_PRO_Windows_v${ver}.zip`);
+  } else if (fs.existsSync(legacyFile)) {
+    return res.download(legacyFile, `AvaLive_VIP_PRO_Windows_v${ver}.zip`);
   }
-
-  if (targetFile && fs.existsSync(targetFile)) {
-    const fileName = path.basename(targetFile);
-    res.setHeader('Content-Type', 'application/zip');
-    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-    return res.sendFile(targetFile);
-  }
-
-  // Quét GitHub Releases tìm file ZIP phiên bản chính xác v${ver}
-  const githubToken = process.env.GITHUB_TOKEN;
-  const headers = { 'User-Agent': 'AvaLive-Download-Agent/1.0', 'Accept': 'application/vnd.github.v3+json' };
-  if (githubToken) headers['Authorization'] = `Bearer ${githubToken}`;
-
-  let downloadUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${ver}/AvaLive_VIP_PRO_Windows_v${ver}.zip`;
-  try {
-    const fetch = (await import('node-fetch')).default;
-    const relRes = await fetch(`https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/tags/v${ver}`, { headers });
-    if (relRes.ok) {
-      const release = await relRes.json();
-      const asset = (release.assets || []).find(a => a.name.includes(ver) && a.name.startsWith('AvaLive_VIP_PRO_Windows') && a.name.endsWith('.zip'));
-      if (asset && asset.browser_download_url) {
-        downloadUrl = asset.browser_download_url;
-      }
-    }
-  } catch (err) {
-    console.warn('Github download proxy error:', err);
-  }
-
-  res.setHeader('Content-Type', 'application/zip');
-  res.setHeader('Content-Disposition', `attachment; filename="AvaLive_VIP_PRO_Windows_v${ver}.zip"`);
-  return res.redirect(downloadUrl);
+  return res.redirect(`https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${ver}/AvaLive_VIP_PRO_Windows_v${ver}.zip`);
 });
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
-app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', '/AvaLive_VIP_PRO_Mac_v2.2.3.zip', '/AvaLive_VIP_PRO_Mac_v2.2.2.zip', '/AvaLive_VIP_PRO_Mac_v2.2.1.zip', '/AvaLive_VIP_PRO_Mac_v2.2.0.zip', '/AvaLive_VIP_PRO_Mac_v2.1.9.zip', '/AvaLive_VIP_PRO_Mac_v2.1.8.zip', '/AvaLive_VIP_PRO_Mac_v2.1.7.zip', '/AvaLive_VIP_PRO_Mac_v2.1.6.zip', '/AvaLive_VIP_PRO_Mac_v2.1.5.zip', '/AvaLive_VIP_PRO_Mac_v2.1.4.zip', '/AvaLive_VIP_PRO_Mac_v2.1.3.zip', '/AvaLive_VIP_PRO_Mac_v2.1.2.zip', '/AvaLive_VIP_PRO_Mac_v2.1.1.zip', '/AvaLive_VIP_PRO_Mac_v2.1.0.zip', '/AvaLive_VIP_PRO_Mac_v2.0.9.zip', '/AvaLive_VIP_PRO_Mac_v2.0.8.zip', '/AvaLive_VIP_PRO_Mac_v2.0.7.zip', '/AvaLive_VIP_PRO_Mac_v2.0.6.zip', '/AvaLive_VIP_PRO_Mac_v2.0.5.zip', '/AvaLive_VIP_PRO_Mac_v2.0.4.zip', '/AvaLive_VIP_PRO_Mac_v2.0.3.zip', '/AvaLive_VIP_PRO_Mac_v2.0.2.zip', '/AvaLive_VIP_PRO_Mac_v2.0.1.zip', '/AvaLive_VIP_PRO_Mac_v2.0.0.zip', '/AvaLive_VIP_PRO_Mac_v1.9.9.zip', '/AvaLive_VIP_PRO_Mac_v1.9.8.zip', '/AvaLive_VIP_PRO_Mac_v1.9.7.zip', '/AvaLive_VIP_PRO_Mac_v1.9.6.zip', '/AvaLive_VIP_PRO_Mac_v1.9.5.zip', '/AvaLive_VIP_PRO_Mac_v1.9.4.zip', '/AvaLive_VIP_PRO_Mac_v1.9.3.zip', '/AvaLive_VIP_PRO_Mac_v1.9.2.zip', '/AvaLive_VIP_PRO_Mac_v1.9.1.zip', '/AvaLive_VIP_PRO_Mac_v1.9.0.zip', '/AvaLive_VIP_PRO_Mac_v1.8.9.zip', '/AvaLive_VIP_PRO_Mac_v1.8.8.zip', '/AvaLive_VIP_PRO_Mac_v1.8.7.zip', '/AvaLive_VIP_PRO_Mac_v1.8.6.zip', '/AvaLive_VIP_PRO_Mac_v1.8.5.zip', '/AvaLive_VIP_PRO_Mac_v1.8.4.zip', '/AvaLive_VIP_PRO_Mac_v1.8.3.zip', '/AvaLive_VIP_PRO_Mac_v1.8.2.zip', '/AvaLive_VIP_PRO_Mac_v1.8.1.zip', '/AvaLive_VIP_PRO_Mac_v1.8.0.zip'], async (req, res) => {
-  const releaseDir = path.join(__dirname, '..', 'release_zips');
-  let targetFile = null;
-  let ver = '2.2.3';
+app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', '/AvaLive_VIP_PRO_Mac_v2.2.4.zip', '/AvaLive_VIP_PRO_Mac_v2.2.3.zip', '/AvaLive_VIP_PRO_Mac_v2.2.2.zip', '/AvaLive_VIP_PRO_Mac_v2.2.1.zip', '/AvaLive_VIP_PRO_Mac_v2.2.0.zip', '/AvaLive_VIP_PRO_Mac_v2.1.9.zip', '/AvaLive_VIP_PRO_Mac_v2.1.8.zip', '/AvaLive_VIP_PRO_Mac_v2.1.7.zip', '/AvaLive_VIP_PRO_Mac_v2.1.6.zip', '/AvaLive_VIP_PRO_Mac_v2.1.5.zip', '/AvaLive_VIP_PRO_Mac_v2.1.4.zip', '/AvaLive_VIP_PRO_Mac_v2.1.3.zip', '/AvaLive_VIP_PRO_Mac_v2.1.2.zip', '/AvaLive_VIP_PRO_Mac_v2.1.1.zip', '/AvaLive_VIP_PRO_Mac_v2.1.0.zip', '/AvaLive_VIP_PRO_Mac_v2.0.9.zip', '/AvaLive_VIP_PRO_Mac_v2.0.8.zip', '/AvaLive_VIP_PRO_Mac_v2.0.7.zip', '/AvaLive_VIP_PRO_Mac_v2.0.6.zip', '/AvaLive_VIP_PRO_Mac_v2.0.5.zip', '/AvaLive_VIP_PRO_Mac_v2.0.4.zip', '/AvaLive_VIP_PRO_Mac_v2.0.3.zip', '/AvaLive_VIP_PRO_Mac_v2.0.2.zip', '/AvaLive_VIP_PRO_Mac_v2.0.1.zip', '/AvaLive_VIP_PRO_Mac_v2.0.0.zip', '/AvaLive_VIP_PRO_Mac_v1.9.9.zip', '/AvaLive_VIP_PRO_Mac_v1.9.8.zip', '/AvaLive_VIP_PRO_Mac_v1.9.7.zip', '/AvaLive_VIP_PRO_Mac_v1.9.6.zip', '/AvaLive_VIP_PRO_Mac_v1.9.5.zip', '/AvaLive_VIP_PRO_Mac_v1.9.4.zip', '/AvaLive_VIP_PRO_Mac_v1.9.3.zip', '/AvaLive_VIP_PRO_Mac_v1.9.2.zip', '/AvaLive_VIP_PRO_Mac_v1.9.1.zip', '/AvaLive_VIP_PRO_Mac_v1.9.0.zip', '/AvaLive_VIP_PRO_Mac_v1.8.9.zip', '/AvaLive_VIP_PRO_Mac_v1.8.8.zip', '/AvaLive_VIP_PRO_Mac_v1.8.7.zip', '/AvaLive_VIP_PRO_Mac_v1.8.6.zip', '/AvaLive_VIP_PRO_Mac_v1.8.5.zip', '/AvaLive_VIP_PRO_Mac_v1.8.4.zip', '/AvaLive_VIP_PRO_Mac_v1.8.3.zip', '/AvaLive_VIP_PRO_Mac_v1.8.2.zip', '/AvaLive_VIP_PRO_Mac_v1.8.1.zip', '/AvaLive_VIP_PRO_Mac_v1.8.0.zip'], async (req, res) => {
+  let ver = '2.2.4';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
   } catch (e) {}
 
-  if (fs.existsSync(releaseDir)) {
-    const exactFile = path.join(releaseDir, `AvaLive_VIP_PRO_Mac_v${ver}.zip`);
-    if (fs.existsSync(exactFile)) {
-      targetFile = exactFile;
-    } else {
-      const files = fs.readdirSync(releaseDir).filter(f => f.startsWith('AvaLive_VIP_PRO_Mac') && f.endsWith('.zip'));
-      if (files.length > 0) {
-        files.sort().reverse();
-        targetFile = path.join(releaseDir, files[0]);
-      }
-    }
+  const rootDir = path.join(__dirname, '..');
+  const primaryFile = path.join(rootDir, 'release_zips', `AvaLive_VIP_PRO_Mac_v${ver}.zip`);
+  const legacyFile = path.join(rootDir, 'release_zips', 'AvaLive_VIP_PRO_Mac.zip');
+
+  if (fs.existsSync(primaryFile)) {
+    return res.download(primaryFile, `AvaLive_VIP_PRO_Mac_v${ver}.zip`);
+  } else if (fs.existsSync(legacyFile)) {
+    return res.download(legacyFile, `AvaLive_VIP_PRO_Mac_v${ver}.zip`);
   }
-
-  if (targetFile && fs.existsSync(targetFile)) {
-    const fileName = path.basename(targetFile);
-    res.setHeader('Content-Type', 'application/zip');
-    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-    return res.sendFile(targetFile);
-  }
-
-  // Quét GitHub Releases tìm file ZIP phiên bản chính xác v${ver}
-  const githubToken = process.env.GITHUB_TOKEN;
-  const headers = { 'User-Agent': 'AvaLive-Download-Agent/1.0', 'Accept': 'application/vnd.github.v3+json' };
-  if (githubToken) headers['Authorization'] = `Bearer ${githubToken}`;
-
-  let downloadUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${ver}/AvaLive_VIP_PRO_Mac_v${ver}.zip`;
-  try {
-    const fetch = (await import('node-fetch')).default;
-    const relRes = await fetch(`https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/tags/v${ver}`, { headers });
-    if (relRes.ok) {
-      const release = await relRes.json();
-      const asset = (release.assets || []).find(a => a.name.includes(ver) && a.name.startsWith('AvaLive_VIP_PRO_Mac') && a.name.endsWith('.zip'));
-      if (asset && asset.browser_download_url) {
-        downloadUrl = asset.browser_download_url;
-      }
-    }
-  } catch (err) {
-    console.warn('Github download proxy error:', err);
-  }
-
-  res.setHeader('Content-Type', 'application/zip');
-  res.setHeader('Content-Disposition', `attachment; filename="AvaLive_VIP_PRO_Mac_v${ver}.zip"`);
-  return res.redirect(downloadUrl);
+  return res.redirect(`https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${ver}/AvaLive_VIP_PRO_Mac_v${ver}.zip`);
 });
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE (Mac & Windows) — Kích hoạt download ngay, không mở trong trình duyệt
