@@ -2188,27 +2188,29 @@ async function synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch = '+
 
   return new Promise((resolve) => {
     edgeTtsQueue = edgeTtsQueue.then(async () => {
-      try {
-        const tts = new EdgeTTS({
-          voice: neuralVoice,
-          lang: neuralVoice.split('-').slice(0, 2).join('-') || 'vi-VN',
-          pitch: safePitch,
-          rate: safeRate,
-          outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
-          timeout: 4500
-        });
-        await tts.ttsPromise(processedText, tmpFile);
-        if (fs.existsSync(tmpFile)) {
-          const buf = fs.readFileSync(tmpFile);
-          try { fs.unlinkSync(tmpFile); } catch (e) {}
-          resolve(buf);
-          return;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const tts = new EdgeTTS({
+            voice: neuralVoice,
+            lang: neuralVoice.split('-').slice(0, 2).join('-') || 'vi-VN',
+            pitch: safePitch,
+            rate: safeRate,
+            outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
+            timeout: 15000
+          });
+          await tts.ttsPromise(processedText, tmpFile);
+          if (fs.existsSync(tmpFile)) {
+            const buf = fs.readFileSync(tmpFile);
+            try { fs.unlinkSync(tmpFile); } catch (e) {}
+            resolve(buf);
+            return;
+          }
+        } catch (err) {
+          if (fs.existsSync(tmpFile)) {
+            try { fs.unlinkSync(tmpFile); } catch (e) {}
+          }
+          if (attempt === 0) await new Promise(r => setTimeout(r, 100));
         }
-      } catch (err) {
-        if (fs.existsSync(tmpFile)) {
-          try { fs.unlinkSync(tmpFile); } catch (e) {}
-        }
-        console.warn('[server.cjs] EdgeTTS synthesis warning:', err?.message || err);
       }
       resolve(null);
     });

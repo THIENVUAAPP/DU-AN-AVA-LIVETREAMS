@@ -129,12 +129,12 @@ export default function AIVoiceModule() {
         clarity,
         warmth,
         studioAcoustics,
-        isTest: true
+        isTest: true,
+        onEnd: () => setIsPlaying(false)
       });
     } catch (e) {
       console.warn('Lỗi phát giọng đọc:', e);
-    } finally {
-      setTimeout(() => setIsPlaying(false), 2000);
+      setIsPlaying(false);
     }
   };
 

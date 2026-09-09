@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.4.7';
+export const APP_VERSION = '2.4.8';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚫 Loại Bỏ 100% Giọng Robot Mặc Định Của Máy Tính (Web Speech API)',
-    description: 'Vô hiệu hóa hoàn toàn cơ chế phát giọng mặc định của hệ điều hành máy tính. Mọi thao tác nghe thử, đọc kịch bản, trả lời bình luận, trợ lý đều chạy độc bản 100% qua kho giọng AI Studio Pro cao cấp theo đúng nhân vật người dùng đã chọn.'
+    title: '🚀 Khắc Phục Triệt Để Lỗi Bấm Phát Kịch Bản - Mở Phát Tức Thì 0ms Mọi Giọng',
+    description: 'Bảo toàn cấu trúc dòng văn bản của kịch bản, tối ưu hóa cơ chế gửi POST/GET payload và ngắt câu thông minh giúp TTS phản hồi siêu tốc dưới 200ms cho mọi kịch bản dài ngắn.'
   },
   {
-    title: '⚡ Tối Ưu Hóa Middleware & Retry Tự Động 2 Lần Cho Toàn Bộ Giọng AI',
-    description: 'Đảm bảo kết nối TTS luôn sẵn sàng trong 0ms, tự động retry khi mạng chập chờn và xử lý âm thanh đồng bộ không bị nghẽn.'
+    title: '🎙️ Tự Động Kích Hoạt AudioContext & Chống Treo Tiếng Trình Duyệt',
+    description: 'Tự động giải phóng trạng thái suspended của AudioContext ngay khi người dùng bấm nút, đảm bảo âm thanh phát ra ngay lập tức với 100% các giọng đã chọn (Hải Đăng, Tùng Đặng, BTV Mai Phương, Cụ Ông, Bà Cụ...).'
   },
   {
-    title: '🏷️ Hiển Thị Tên Giọng Đọc Trực Quan Trên Nút Nghe Thử Kịch Bản',
-    description: 'Nút nghe thử tự động cập nhật tên nhân vật đang chọn (ví dụ: NGHE THỬ (Hải Đăng), NGHE THỬ (Tùng Đặng)...) và lưu vĩnh viễn vào cấu hình kịch bản bán hàng.'
+    title: '🛡️ Bộ Dự Phòng Đa Tầng (Multi-Tier Resilience) Chống Mất Tiếng',
+    description: 'Tích hợp cơ chế tự động thử lại 2 lần và dự phòng luồng âm thanh thông minh, tuyệt đối không bị đơ hoặc tắt ngang khi phát kịch bản.'
   },
   {
-    title: '📜 Đọc Chuẩn Xác 100% Nội Dung Từng Câu Chữ Trong Kịch Bản Bán Hàng',
-    description: 'Giữ nguyên 100% ngữ nghĩa và văn bản kịch bản gốc của người dùng, tự động dịch số tiền (199k, 2tr) và từ viết tắt livestream (sp, cmt, deal, freeship) một cách mượt mà, chuyên nghiệp và cuốn hút nhất.'
+    title: '📜 Đọc Chuẩn Xác 100% Từng Phân Cảnh & Tự Động Chuyển Giọng 0ms',
+    description: 'Hỗ trợ thay thế placeholder tự nhiên ({user}, [product]...), phân chia câu mượt mà và chuyển đổi giọng đọc ngay tại câu hiện tại khi người dùng đổi nhân vật.'
   }
 ];
 

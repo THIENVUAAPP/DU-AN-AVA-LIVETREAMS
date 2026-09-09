@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import UniversalFileUploader from './UniversalFileUploader';
 import { syncMasterLiveState } from '../lib/masterLiveSync';
+import { previewVoiceAudio, stopVoiceAudio, ALL_SYSTEM_VOICES } from '../utils/voiceSyncService';
 
 const DEFAULT_AVATARS = [];
 
@@ -175,19 +176,23 @@ export default function AIAvatarStudio({ isLive, aiAvatarFeatureEnabled }) {
     }
   };
 
-  const handleSpeakScript = () => {
+  const handleSpeakScript = async () => {
     if (!scriptText.trim()) return;
     setIsSpeaking(true);
 
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(scriptText);
-      utterance.lang = 'vi-VN';
-      utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => setIsSpeaking(false);
-      window.speechSynthesis.speak(utterance);
-    } else {
-      setTimeout(() => setIsSpeaking(false), 3000);
+    try {
+      const activeVoice = ALL_SYSTEM_VOICES.find(v => v.id === activeAvatar?.voiceId) || 
+        ALL_SYSTEM_VOICES.find(v => v.id === 'free_vi_female') || 
+        ALL_SYSTEM_VOICES[0];
+
+      await previewVoiceAudio(activeVoice, scriptText.trim(), {
+        priority: true,
+        isTest: true,
+        onEnd: () => setIsSpeaking(false)
+      });
+    } catch (e) {
+      console.warn('Lỗi đọc kịch bản Avatar:', e);
+      setIsSpeaking(false);
     }
   };
 

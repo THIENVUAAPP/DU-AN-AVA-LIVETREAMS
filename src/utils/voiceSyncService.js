@@ -2707,10 +2707,12 @@ export function stopVoiceAudio() {
 export function cleanTextForVoiceSpeech(rawText) {
   if (!rawText || typeof rawText !== 'string') return '';
   let cleaned = rawText;
-  cleaned = cleaned.replace(/\[[^\]]*\]/g, ' ');
+  // Loại bỏ các chỉ dẫn sân khấu trong ngoặc đơn/vuông như (cười), [hành động], v.v. nhưng GIỮ LẠI các placeholder biến số
   cleaned = cleaned.replace(/\((?:cười|cười tươi|vỗ tay|hành động|chỉ tay|nháy mắt|nói to|nói nhỏ|thì thầm|hào hứng|nhấn mạnh|chỉ giỏ hàng|chốt đơn|đếm ngược|action|smile|clap)[^\)]*\)/gi, ' ');
+  cleaned = cleaned.replace(/\[(?:cười|cười tươi|vỗ tay|hành động|chỉ tay|nháy mắt|nói to|nói nhỏ|thì thầm|hào hứng|nhấn mạnh|chỉ giỏ hàng|chốt đơn|đếm ngược|action|smile|clap)[^\]]*\]/gi, ' ');
   cleaned = cleaned.replace(/[#*`_~]/g, '');
-  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+  // Gom khoảng trắng ngang nhưng BẢO TOÀN ký tự xuống dòng \n để phục vụ phân tách kịch bản
+  cleaned = cleaned.replace(/[^\S\r\n]+/g, ' ').trim();
   return cleaned;
 }
 
@@ -2997,6 +2999,12 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
   const audioCtx = getOrCreateAudioContext();
   if (!audioCtx) return false;
 
+  try {
+    if (audioCtx.state === 'suspended') {
+      await audioCtx.resume().catch(() => {});
+    }
+  } catch (e) {}
+
   stopVoiceAudio();
 
   const source = audioCtx.createBufferSource();
@@ -3115,9 +3123,11 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
 }
 
 /**
- * ⚡ TẢI VÀ GIẢI MÃ ÂM THANH MICROSOFT NEURAL TTS (CÓ BỘ NHỚ ĐỆM TỰ ĐỘNG)
+ * ⚡ TẢI VÀ GIẢI MÃ ÂM THANH MICROSOFT NEURAL TTS (CÓ BỘ NHỚ ĐỆM TỰ ĐỘNG & HỖ TRỢ POST/GET)
  */
 async function fetchAndDecodeTTSAudio(text, voice = null) {
+  if (!text || !text.trim()) return null;
+
   const isMale = checkIsMale(voice);
   const gender = isMale ? 'male' : 'female';
   const lang = voice?.lang || 'vi-VN';
@@ -3180,25 +3190,67 @@ async function fetchAndDecodeTTSAudio(text, voice = null) {
   const audioCtx = getOrCreateAudioContext();
   if (!audioCtx) return null;
 
+  try {
+    if (audioCtx.state === 'suspended') {
+      await audioCtx.resume().catch(() => {});
+    }
+  } catch (e) {}
+
   const currentOrigin = typeof window !== 'undefined' && window.location?.origin && !window.location.origin.startsWith('null') && !window.location.origin.startsWith('file:')
     ? window.location.origin
     : '';
 
-  const ttsQuery = `text=${encodeURIComponent(text)}&voice=${encodeURIComponent(neuralVoice)}&voiceId=${encodeURIComponent(voice?.id || '')}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(effectivePitch)}&rate=${encodeURIComponent(effectiveRate)}&lang=${encodeURIComponent(shortLang)}`;
+  const postPayload = JSON.stringify({
+    text: text.trim(),
+    voice: neuralVoice,
+    voiceId: voice?.id || '',
+    gender,
+    pitch: effectivePitch,
+    rate: effectiveRate,
+    lang: shortLang
+  });
 
-  const candidateUrls = [
-    ...(currentOrigin ? [`${currentOrigin}/api/tts?${ttsQuery}`] : []),
-    `/api/tts?${ttsQuery}`,
-    `http://127.0.0.1:3001/api/tts?${ttsQuery}`,
-    `http://localhost:3001/api/tts?${ttsQuery}`
+  const ttsQuery = `text=${encodeURIComponent(text.trim())}&voice=${encodeURIComponent(neuralVoice)}&voiceId=${encodeURIComponent(voice?.id || '')}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(effectivePitch)}&rate=${encodeURIComponent(effectiveRate)}&lang=${encodeURIComponent(shortLang)}`;
+
+  const endpointCandidates = [
+    ...(currentOrigin ? [`${currentOrigin}/api/tts`] : []),
+    `/api/tts`,
+    `http://127.0.0.1:3001/api/tts`,
+    `http://localhost:3001/api/tts`
   ];
 
   for (let attempt = 0; attempt < 2; attempt++) {
-    for (const url of candidateUrls) {
+    for (const endpoint of endpointCandidates) {
       try {
-        const res = await fetch(url);
-        if (res.ok) {
-          const arrayBuf = await res.arrayBuffer();
+        let res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: postPayload
+        }).catch(() => null);
+
+        if (!res || !res.ok) {
+          const getUrl = endpoint.includes('?') ? `${endpoint}&${ttsQuery}` : `${endpoint}?${ttsQuery}`;
+          res = await fetch(getUrl).catch(() => null);
+        }
+
+        if (res && res.ok) {
+          const contentType = res.headers.get('content-type') || '';
+          let arrayBuf = null;
+
+          if (contentType.includes('application/json')) {
+            const data = await res.json();
+            if (data?.audioBase64) {
+              const binaryString = atob(data.audioBase64);
+              const bytes = new Uint8Array(binaryString.length);
+              for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+              }
+              arrayBuf = bytes.buffer;
+            }
+          } else {
+            arrayBuf = await res.arrayBuffer();
+          }
+
           if (arrayBuf && arrayBuf.byteLength > 100) {
             const audioBuffer = await audioCtx.decodeAudioData(arrayBuf);
             if (audioBuffer) {
@@ -3214,7 +3266,7 @@ async function fetchAndDecodeTTSAudio(text, voice = null) {
       } catch (e) {}
     }
     if (attempt === 0) {
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise(r => setTimeout(r, 150));
     }
   }
 

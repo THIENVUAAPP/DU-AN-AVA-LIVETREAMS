@@ -152,12 +152,12 @@ export default function EventVoiceTester({
 
   /**
    * Phân tách kịch bản dài thành các câu thoại hoàn chỉnh chuẩn ngữ nghĩa (theo từng dòng)
-   * Giữ trọn vẹn cấu trúc kịch bản từ đầu đến cuối không chia vụn
+   * Tự động thay thế placeholder và ngắt câu thông minh để TTS phản hồi ngay lập tức
    */
   const splitIntoSentences = (raw) => {
     if (!raw || !raw.trim()) return [];
     
-    const cleanedText = cleanTextForVoiceSpeech(raw)
+    let processed = String(raw)
       .replace(/\[user\]|\{user\}/gi, 'Quốc Thiện')
       .replace(/\{comment\}|\[comment\]/gi, 'Sản phẩm này giá bao nhiêu shop?')
       .replace(/\{gift_name\}|\[gift_name\]/gi, 'Cờ Tổ Quốc')
@@ -165,10 +165,28 @@ export default function EventVoiceTester({
       .replace(/\{milestone\}|\[milestone\]/gi, '10,000')
       .replace(/\{item\}|\[item\]/gi, 'Bộ Đôi Serum Tế Bào Gốc')
       .replace(/\{product\}|\[product\]/gi, 'Bộ Đôi Serum Tế Bào Gốc')
-      .trim();
+      .replace(/\{price\}|\[price\]/gi, '890.000đ');
 
-    const lines = cleanedText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-    return lines.length > 0 ? lines : [cleanedText];
+    processed = cleanTextForVoiceSpeech(processed);
+
+    // Tách theo dòng trước
+    const lines = processed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    
+    // Nếu có dòng nào dài (>180 ký tự), tự động phân tách thêm theo dấu câu để TTS phát ngay lập tức
+    const finalSentences = [];
+    for (const line of lines) {
+      if (line.length > 180) {
+        const subParts = line.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [line];
+        for (const sub of subParts) {
+          const s = sub.trim();
+          if (s) finalSentences.push(s);
+        }
+      } else {
+        finalSentences.push(line);
+      }
+    }
+
+    return finalSentences.length > 0 ? finalSentences : [processed];
   };
 
   const handleStop = () => {
@@ -196,11 +214,15 @@ export default function EventVoiceTester({
     currentSentenceIdxRef.current = index;
     const sentenceText = sentences[index];
 
-    const curVoiceId = customVoice ? customVoice.id : selectedVoiceRef.current;
-    const voiceObj = customVoice || ALL_SYSTEM_VOICES.find(v => v.id === curVoiceId) || 
-      (curVoiceId === 'idol' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'idol') :
-       curVoiceId === 'game' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'game') :
-       ALL_SYSTEM_VOICES.find(v => v.id === 'free_vi_female')) || { id: 'free_vi_female', lang: 'vi-VN', provider: 'system', gender: 'Female' };
+    const curVoiceId = customVoice ? (customVoice.id || customVoice) : selectedVoiceRef.current;
+    let voiceObj = customVoice && typeof customVoice === 'object' ? customVoice : null;
+    if (!voiceObj) {
+      voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === curVoiceId) || 
+        (curVoiceId === 'idol' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'idol') :
+         curVoiceId === 'manager' || curVoiceId === 'assistant' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'manager') :
+         curVoiceId === 'game' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'game') :
+         ALL_SYSTEM_VOICES.find(v => v.id === 'free_vi_female')) || { id: 'free_vi_female', lang: 'vi-VN', provider: 'system', gender: 'Female' };
+    }
 
     previewVoiceAudio(
       voiceObj,
@@ -214,7 +236,7 @@ export default function EventVoiceTester({
           if (!isPlayingRef.current) return;
           queueTimeoutRef.current = setTimeout(() => {
             playSentenceAtIndex(index + 1);
-          }, 300);
+          }, 250);
         }
       }
     );

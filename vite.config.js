@@ -181,26 +181,59 @@ export default defineConfig({
               
               await new Promise((resolveMiddleware) => {
                 viteEdgeTtsQueue = viteEdgeTtsQueue.then(async () => {
-                  try {
-                    const tts = new EdgeTTS({
-                      voice: neuralVoice,
-                      lang: neuralVoice.split('-').slice(0, 2).join('-') || 'vi-VN',
-                      pitch: safePitch,
-                      rate: safeRate,
-                      outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
-                      timeout: 12000
-                    });
-                    await tts.ttsPromise(text, tmpFile);
-                    if (fs.existsSync(tmpFile)) {
-                      const buf = fs.readFileSync(tmpFile);
-                      try { fs.unlinkSync(tmpFile); } catch (e) {}
+                  for (let attempt = 0; attempt < 2; attempt++) {
+                    try {
+                      const tts = new EdgeTTS({
+                        voice: neuralVoice,
+                        lang: neuralVoice.split('-').slice(0, 2).join('-') || 'vi-VN',
+                        pitch: safePitch,
+                        rate: safeRate,
+                        outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
+                        timeout: 15000
+                      });
+                      await tts.ttsPromise(text, tmpFile);
+                      if (fs.existsSync(tmpFile)) {
+                        const buf = fs.readFileSync(tmpFile);
+                        try { fs.unlinkSync(tmpFile); } catch (e) {}
 
-                      if (viteTtsCache.size > 300) {
-                        const first = viteTtsCache.keys().next().value;
-                        viteTtsCache.delete(first);
+                        if (viteTtsCache.size > 300) {
+                          const first = viteTtsCache.keys().next().value;
+                          viteTtsCache.delete(first);
+                        }
+                        viteTtsCache.set(cacheKey, buf);
+
+                        res.setHeader('Access-Control-Allow-Origin', '*');
+                        if (req.method === 'POST') {
+                          res.setHeader('Content-Type', 'application/json');
+                          res.statusCode = 200;
+                          res.end(JSON.stringify({ success: true, audioBase64: buf.toString('base64') }));
+                        } else {
+                          res.setHeader('Content-Type', 'audio/mpeg');
+                          res.setHeader('Cache-Control', 'public, max-age=86400');
+                          res.statusCode = 200;
+                          res.end(buf);
+                        }
+                        resolveMiddleware();
+                        return;
                       }
-                      viteTtsCache.set(cacheKey, buf);
+                    } catch (e) {
+                      if (fs.existsSync(tmpFile)) try { fs.unlinkSync(tmpFile); } catch(err) {}
+                      if (attempt === 0) await new Promise(r => setTimeout(r, 100));
+                    }
+                  }
 
+                  // Fallback Google Translate TTS nếu mạng EdgeTTS gặp sự cố
+                  try {
+                    const fallbackUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(lang)}&q=${encodeURIComponent(text.slice(0, 200))}`;
+                    const fbRes = await fetch(fallbackUrl, {
+                      headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                      }
+                    });
+                    if (fbRes.ok) {
+                      const arrBuf = await fbRes.arrayBuffer();
+                      const buf = Buffer.from(arrBuf);
+                      viteTtsCache.set(cacheKey, buf);
                       res.setHeader('Access-Control-Allow-Origin', '*');
                       if (req.method === 'POST') {
                         res.setHeader('Content-Type', 'application/json');
@@ -208,17 +241,13 @@ export default defineConfig({
                         res.end(JSON.stringify({ success: true, audioBase64: buf.toString('base64') }));
                       } else {
                         res.setHeader('Content-Type', 'audio/mpeg');
-                        res.setHeader('Cache-Control', 'public, max-age=86400');
                         res.statusCode = 200;
                         res.end(buf);
                       }
                       resolveMiddleware();
                       return;
                     }
-                  } catch (e) {
-                    if (fs.existsSync(tmpFile)) try { fs.unlinkSync(tmpFile); } catch(err) {}
-                    console.warn('[vite.config.js] EdgeTTS error:', e?.message || e);
-                  }
+                  } catch (e) {}
 
                   res.statusCode = 500;
                   res.end(JSON.stringify({ error: 'EdgeTTS failed' }));
