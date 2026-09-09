@@ -2107,6 +2107,75 @@ function resolveNeuralVoice(voice, gender, lang) {
   if (shortLang === 'th') return isMale ? 'th-TH-NiwatNeural' : 'th-TH-PremwadeeNeural';
   
   return isMale ? 'vi-VN-NamMinhNeural' : 'vi-VN-HoaiMyNeural';
+function humanizeTextForBackendTTS(rawText, gender, lang) {
+  if (!rawText || typeof rawText !== 'string') return '';
+  let text = rawText
+    .replace(/\[[^\]]*\]/g, ' ')
+    .replace(/\((?:cười|cười tươi|vỗ tay|hành động|chỉ tay|nháy mắt|nói to|nói nhỏ|thì thầm|hào hứng|nhấn mạnh|chỉ giỏ hàng|chốt đơn|đếm ngược|action|smile|clap)[^\)]*\)/gi, ' ')
+    .replace(/[#*`_~]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const isVi = !lang || lang.toLowerCase().startsWith('vi');
+  if (!isVi) return text;
+
+  const isFemale = (gender || '').toLowerCase() !== 'male' && (gender || '').toLowerCase() !== 'nam';
+
+  // Chuyển đổi số đếm & tiền tệ
+  text = text
+    .replace(/\b(\d+)\s*k\b/gi, '$1 nghìn đồng')
+    .replace(/\b(\d+)\s*cành\b/gi, '$1 nghìn đồng')
+    .replace(/\b(\d+)[,\.](\d+)\s*(tr|triệu)\b/gi, '$1 triệu $2 trăm nghìn đồng')
+    .replace(/\b(\d+)\s*(tr|triệu)\b/gi, '$1 triệu đồng')
+    .replace(/\b(\d+)\s*%\b/g, '$1 phần trăm')
+    .replace(/\b(\d+)\s*(đ|vnd|vnđ)\b/gi, '$1 đồng')
+    .replace(/\b(\d+)\s*lít\b/gi, '$1 trăm nghìn đồng')
+    .replace(/\b(\d+)\s*củ\b/gi, '$1 triệu đồng');
+
+  // Viết tắt livestream
+  text = text
+    .replace(/\bsp\b/gi, 'sản phẩm')
+    .replace(/\bđc\b/gi, 'được')
+    .replace(/\bdc\b/gi, 'được')
+    .replace(/\bko\b/gi, 'không')
+    .replace(/\bk\b/gi, 'không')
+    .replace(/\bkhg\b/gi, 'không')
+    .replace(/\bmn\b/gi, 'mọi người')
+    .replace(/\bmng\b/gi, 'mọi người')
+    .replace(/\bsz\b/gi, 'size')
+    .replace(/\bib\b/gi, 'nhắn tin')
+    .replace(/\binbox\b/gi, 'nhắn tin trực tiếp')
+    .replace(/\bcmt\b/gi, 'bình luận')
+    .replace(/\bcomment\b/gi, 'bình luận')
+    .replace(/\bdeal\b/gi, 'ưu đãi')
+    .replace(/\bfreeship\b/gi, 'miễn phí giao hàng')
+    .replace(/\bfree ship\b/gi, 'miễn phí giao hàng')
+    .replace(/\bvoucher\b/gi, 'mã giảm giá')
+    .replace(/\bflash\s*sale\b/gi, 'ưu đãi chớp nhoáng')
+    .replace(/\bfollow\b/gi, 'theo dõi')
+    .replace(/\bfl\b/gi, 'theo dõi')
+    .replace(/\btiktok\b/gi, 'Tóp Tóp')
+    .replace(/\btik tok\b/gi, 'Tóp Tóp')
+    .replace(/\bzalo\b/gi, 'Da-lô')
+    .replace(/\bfb\b/gi, 'Phây Búc')
+    .replace(/\bfacebook\b/gi, 'Phây Búc')
+    .replace(/\bcod\b/gi, 'nhận hàng thanh toán')
+    .replace(/\bstk\b/gi, 'số tài khoản')
+    .replace(/\bcombo\b/gi, 'gói combo');
+
+  if (isFemale) {
+    text = text
+      .replace(/\b(Dạ|Vâng|Chào cả nhà|Cả nhà ơi|Mọi người ơi|Quý vị ơi|Các bạn ơi|Bà con ơi|Em xin chào|Em cam kết|Đặc biệt là|Hơn thế nữa|Thật sự là|Nhanh tay lên nào|Đúng rồi ạ|Chính xác luôn)(?!\s*[,!?:])/gi, '$1, ')
+      .replace(/\b(ạ)\b(?!\s*[,.!?])/gi, 'ạ.')
+      .replace(/\b(nha cả nhà|nha mọi người|nha các bạn)(?!\s*[,.!?])/gi, '$1!')
+      .replace(/\b(nè nghen|nè bà con)(?!\s*[,.!?])/gi, '$1!')
+      .replace(/\b(ạ nghen|ạ nhen)(?!\s*[,.!?])/gi, '$1!');
+  } else {
+    text = text
+      .replace(/\b(Xin chào tất cả các bạn|Chào anh em|Anh em ơi|Mọi người ơi|Đặc biệt là|Cực kỳ hấp dẫn|Chú ý chú ý)(?!\s*[,!?:])/gi, '$1, ');
+  }
+
+  return text.replace(/,\s*,+/g, ', ').replace(/\.\s*\.+/g, '. ').replace(/!\s*!+/g, '! ').replace(/\s+/g, ' ').trim();
 }
 
 async function synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch = '+0Hz', rate = '+0%' }) {
@@ -2114,6 +2183,7 @@ async function synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch = '+
   const neuralVoice = resolveNeuralVoice(voice, gender, lang);
   const safePitch = normalizeTtsPitch(pitch);
   const safeRate = normalizeTtsRate(rate);
+  const processedText = humanizeTextForBackendTTS(text, gender, lang) || text;
   const tmpFile = path.join(os.tmpdir(), `tts_${Date.now()}_${Math.random().toString(36).slice(2)}.mp3`);
 
   return new Promise((resolve) => {
@@ -2127,7 +2197,7 @@ async function synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch = '+
           outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
           timeout: 4500
         });
-        await tts.ttsPromise(text, tmpFile);
+        await tts.ttsPromise(processedText, tmpFile);
         if (fs.existsSync(tmpFile)) {
           const buf = fs.readFileSync(tmpFile);
           try { fs.unlinkSync(tmpFile); } catch (e) {}

@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.4.0';
+export const APP_VERSION = '2.4.1';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🎙️ Hợp Nhất 3 Kênh Live Thành Duy Nhất Tab "Giọng Ava Live" Siêu Đẳng Cấp',
-    description: 'Gộp chung toàn bộ 3 vai trò (Giọng Idol Live, Giọng Quản Lý / Trợ Lý & Giọng BLV Game PK) vào một Tab "Giọng Ava Live" duy nhất. Layout chuẩn Bán Hàng & Dịch Vụ: Bộ lọc đa chiều (Quốc gia, Vùng miền, Giới tính, Độ tuổi), Gán 1-Click trực quan, tùy chỉnh âm thanh độc lập từng vai trò.'
+    title: '🌸 Đột Phá Nâng Cấp 100% Giọng Nữ (Female Voices) Sống Động Như Người Thật',
+    description: 'Nâng cấp toàn diện ngữ điệu, biểu cảm, nhịp thở tự nhiên (Micro-Pauses) và độ ngọt ngào quyến rũ cho 21+ giọng nữ. Phân tầng âm sắc EQ 4-band studio và Reverb phòng thu, giúp giọng đọc mềm mại, truyền cảm, cuốn hút và đồng bộ khẩu hình miệng (LipSync) chính xác tuyệt đối.'
   },
   {
-    title: '✨ Đột Phá Nâng Cấp Toàn Bộ Giọng Nữ (Female Voices) Độc Bản, Mượt Mà & Gây Nghiện',
-    description: 'Tinh chỉnh âm điệu, độ vang (Reverb Convolver), độ ấm và độ sắc nét riêng biệt cho 100% giọng nữ Việt Nam và Quốc Tế. Đảm bảo mỗi giọng nữ có cá tính độc bản hoàn toàn khác biệt, nghe mượt mà, ngọt ngào, quyến rũ và cuốn hút tuyệt đối.'
+    title: '⚡ Bộ Tiền Xử Lý Câu Thoại Thông Minh (Humanized Speech Processor)',
+    description: 'Tự động đọc số tiền, tỷ lệ % (199k -> 199 nghìn đồng, 2tr5 -> 2 triệu 500 nghìn đồng), tự động giải mã từ viết tắt livestream / mạng xã hội (sp, đc, cmt, deal, freeship, voucher, tóp tóp, da-lô...), loại bỏ hoàn toàn cảm giác đọc máy móc thô cứng.'
   },
   {
-    title: '🔥 Bộ 20 Giọng Hot Trend Triệu View & 30 Giọng Bán Hàng Chốt Đơn Đa Ngành',
-    description: 'Đầy đủ hệ sinh thái giọng đọc AI thế hệ mới: Adam, Brian, Liam, Jessica, Matilda, Sarah, Triệu Dương, Trung Caha, Tùng Đặng, Anika... kết hợp 30 giọng bán hàng 4 vùng miền.'
+    title: '🛡️ Rà Soát Bảo Mật & Kiểm Tra Toàn Diện Các Luồng Dữ Liệu',
+    description: 'Kiểm tra và tối ưu kết nối Supabase Cloud (đồng bộ Gmail, điểm/tokens, giờ livestream), cổng thanh toán tự động SePay VietQR 3s, luồng dữ liệu Tiếp Thị Liên Kết (Affiliate) và cơ chế đóng gói bộ cài ZIP an toàn tuyệt đối không lộ thông tin.'
   },
   {
-    title: '🌾 Chuẩn Hóa 100% Phát Âm, Ngữ Điệu & Trợ Từ Bản Xứ 4 Vùng Miền Việt Nam',
-    description: 'Tự động chuyển đổi trợ từ, ngữ khí, nhịp điệu ngắt nghỉ chân thực cho Miền Tây, Miền Trung, Miền Nam, Miền Bắc.'
+    title: '🎙️ Tab "Giọng Ava Live" Hợp Nhất & Kho Giọng Độc Bản 4 Vùng Miền',
+    description: 'Hợp nhất 3 vai trò (Idol Live, Quản lý/Trợ lý, BLV Game) vào Tab duy nhất với bộ lọc đa chiều và gán 1-Click nhanh chóng.'
   }
 ];
 
