@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.3.0';
+export const APP_VERSION = '2.3.1';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👑 89 Giọng Đọc Độc Bản — Phân Hóa Triệt Để Tông Giọng (Không Trùng Lặp 100%)',
-    description: 'Xóa bỏ hoàn toàn tình trạng rập khuôn hay lặp lại. Toàn bộ 89 chất giọng (21 Giọng Nữ, 20 Giọng Nam, 20 Giọng Bán Hàng, 28 Giọng Quốc Tế) đều sở hữu cao độ Pitch, nhịp độ Rate, ngữ điệu và câu thoại mẫu đặc trưng riêng biệt theo từng độ tuổi và 4 vùng miền (Bắc, Trung, Nam, Tây).'
+    title: '🔧 Khắc Phục Lỗi Mở Tab Giọng Bán Hàng & Dịch Vụ',
+    description: 'Sửa dứt điểm lỗi crash component khiến người dùng không mở được Tab Giọng Bán Hàng. Giao diện bảng danh sách 20 giọng bán hàng kèm bộ điều chỉnh Tốc độ (Speed) và Âm lượng (Volume) giờ đây hoạt động mượt mà 100%.'
   },
   {
-    title: '🎛️ Tùy Chỉnh Âm Lượng & Tốc Độ Giọng Bán Hàng / Dịch Vụ Chuyên Nghiệp',
-    description: 'Thêm bảng điều khiển trực quan ngay dưới danh sách giọng bán hàng: Thanh trượt Tốc độ (Speed 0.7x - 1.5x), Âm lượng (Volume 10% - 150%) và Độ trầm bổng (Pitch) kèm các nút chọn nhanh và nghe thử tức thì theo thời gian thực.'
+    title: '👑 Kích Hoạt Độc Lập 89 Giọng Nói Vùng Miền — Xóa Bỏ Hoàn Toàn Trùng Lặp',
+    description: 'Sửa lỗi sập kết nối khiến giọng đọc trước đó bị fallback về 1 giọng duy nhất của trình duyệt. Kích hoạt chuẩn xác Microsoft Azure Neural Voice kết hợp hệ thống Parametric EQ Formant DSP riêng cho từng giọng: Miền Tây sông nước ngọt ngào, Xứ Huế e ấp da diết, Sài Gòn KOC bắt trend, Hà Nội BTV chuẩn mực.'
   },
   {
-    title: '🚀 Giữ Trọn Âm Sắc Tự Nhiên & Bộ Nhớ Đệm Neural Siêu Tốc',
-    description: 'Bảo toàn 100% âm sắc tự nhiên của giọng nói AI, không làm méo tiếng khi thay đổi tốc độ; tốc độ phản hồi 0ms với bộ nhớ đệm thông minh.'
+    title: '⚡ Kết Nối Đa Môi Trường Ổn Định Tuyệt Đối',
+    description: 'Tự động nhận diện Origin và Hostname máy chủ, đảm bảo việc nghe thử và phát giọng AI hoạt động trơn tru trên mọi nền tảng (Web, App, Local LAN, Cloudflare Tunnel).'
   }
 ];
 

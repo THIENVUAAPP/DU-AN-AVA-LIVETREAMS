@@ -2174,31 +2174,33 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
   // Giữ source.playbackRate = 1.0 để bảo toàn 100% âm sắc tự nhiên không bị méo tiếng
   source.playbackRate.value = 1.0;
 
-  // 1. Low Shelf (Tăng độ ấm ngực cho giọng Nam / Giữ độ trong cho giọng Nữ)
+  const dsp = voice?.dspProfile || {};
+
+  // 1. Low Shelf (Tăng độ ấm ngực cho giọng Nam / Giữ độ trong cho giọng Nữ, theo từng giọng)
   const lowFilter = audioCtx.createBiquadFilter();
   lowFilter.type = 'lowshelf';
   lowFilter.frequency.value = isMale ? 150 : 260;
-  lowFilter.gain.value = isMale ? 3.0 : 0.5;
+  lowFilter.gain.value = dsp.lowGain !== undefined ? dsp.lowGain : (isMale ? 3.0 : 0.5);
 
-  // 2. Formant F1 / Mid Clarity (Nội lực âm thanh)
+  // 2. Formant F1 / Mid Clarity (Nội lực âm thanh và chất giọng đặc thù)
   const midFilter = audioCtx.createBiquadFilter();
   midFilter.type = 'peaking';
-  midFilter.frequency.value = isMale ? 1100 : 1600;
+  midFilter.frequency.value = dsp.midFreq || (isMale ? 1100 : 1600);
   midFilter.Q.value = 1.2;
-  midFilter.gain.value = isMale ? 1.5 : 1.5;
+  midFilter.gain.value = dsp.midGain !== undefined ? dsp.midGain : (isMale ? 1.5 : 1.5);
 
-  // 3. Formant F2 / Presence Filter (Độ nét và bắt tai)
+  // 3. Formant F2 / Presence Filter (Độ nét, độ đanh thép hoặc ngọt ngào)
   const presenceFilter = audioCtx.createBiquadFilter();
   presenceFilter.type = 'peaking';
-  presenceFilter.frequency.value = isMale ? 3000 : 3800;
+  presenceFilter.frequency.value = dsp.presenceFreq || (isMale ? 3000 : 3800);
   presenceFilter.Q.value = 1.4;
-  presenceFilter.gain.value = isMale ? 1.5 : 2.5;
+  presenceFilter.gain.value = dsp.presenceGain !== undefined ? dsp.presenceGain : (isMale ? 1.5 : 2.5);
 
-  // 4. High Shelf (Độ thoáng không gian)
+  // 4. High Shelf (Độ thoáng không gian và hơi thở tự nhiên)
   const highFilter = audioCtx.createBiquadFilter();
   highFilter.type = 'highshelf';
   highFilter.frequency.value = 6500;
-  highFilter.gain.value = isMale ? 0.0 : 1.5;
+  highFilter.gain.value = dsp.highGain !== undefined ? dsp.highGain : (isMale ? 0.0 : 1.5);
 
   // 5. Dynamics Broadcast Compressor (Nén động lực livestream chuẩn đài phát thanh)
   const compressor = audioCtx.createDynamicsCompressor();
@@ -2310,11 +2312,17 @@ async function fetchAndDecodeTTSAudio(text, voice = null) {
   const audioCtx = getOrCreateAudioContext();
   if (!audioCtx) return null;
 
+  const currentOrigin = typeof window !== 'undefined' && window.location?.origin && !window.location.origin.startsWith('null') && !window.location.origin.startsWith('file:')
+    ? window.location.origin
+    : '';
+
+  const ttsQuery = `text=${encodeURIComponent(text)}&voice=${encodeURIComponent(neuralVoice)}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(effectivePitch)}&rate=${encodeURIComponent(effectiveRate)}&lang=${encodeURIComponent(shortLang)}`;
+
   const candidateUrls = [
-    `/api/tts?text=${encodeURIComponent(text)}&voice=${encodeURIComponent(neuralVoice)}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(effectivePitch)}&rate=${encodeURIComponent(effectiveRate)}&lang=${encodeURIComponent(shortLang)}`,
-    `http://127.0.0.1:3001/api/tts?text=${encodeURIComponent(text)}&voice=${encodeURIComponent(neuralVoice)}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(effectivePitch)}&rate=${encodeURIComponent(effectiveRate)}&lang=${encodeURIComponent(shortLang)}`,
-    `/api/tts?text=${encodeURIComponent(text)}&voice=${encodeURIComponent(neuralVoice)}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(pitchHz)}&rate=${encodeURIComponent(ratePercent)}&lang=${encodeURIComponent(shortLang)}`,
-    `http://127.0.0.1:3001/api/tts?text=${encodeURIComponent(text)}&voice=${encodeURIComponent(neuralVoice)}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(pitchHz)}&rate=${encodeURIComponent(ratePercent)}&lang=${encodeURIComponent(shortLang)}`,
+    ...(currentOrigin ? [`${currentOrigin}/api/tts?${ttsQuery}`] : []),
+    `/api/tts?${ttsQuery}`,
+    `http://127.0.0.1:3001/api/tts?${ttsQuery}`,
+    `http://localhost:3001/api/tts?${ttsQuery}`,
     `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(shortLang)}&q=${encodeURIComponent(text.slice(0, 200))}`
   ];
 
@@ -2632,8 +2640,8 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
         }
       }
 
-      // Giữ pitch tự nhiên 1.0 tránh làm méo âm sắc giọng nói
-      utterance.pitch = 1.0;
+      // Áp dụng pitch và rate đặc thù của từng giọng đọc
+      utterance.pitch = voice?.pitch !== undefined ? Math.max(0.5, Math.min(1.8, Number(voice.pitch))) : (isMale ? 0.85 : 1.15);
 
       const playedSuccessfully = await new Promise((resolve) => {
         let hasEnded = false;

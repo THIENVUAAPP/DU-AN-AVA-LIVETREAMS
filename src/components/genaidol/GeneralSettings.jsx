@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Search, CheckCircle2, FolderOpen, Brain, Upload, Star, ShoppingBag, Sparkles, Award } from 'lucide-react';
+import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Search, CheckCircle2, FolderOpen, Brain, Upload, Star, ShoppingBag, Sparkles, Award, Sliders } from 'lucide-react';
 import { getLiveMediaByCategory } from '../../lib/liveKhoDB';
 import { 
   saveDualVoiceConfig, 
