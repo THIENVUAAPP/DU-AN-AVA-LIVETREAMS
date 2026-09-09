@@ -2,13 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.5.2';
+export const APP_VERSION = '2.5.3';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Triệt Tiêu 100% Khoảng Dừng Tại Dấu Câu (!, ?, ...) & Loại Bỏ Hoàn Toàn Tạp Âm Khoảng Lặng',
-    description: 'Chuẩn hóa định dạng văn bản gửi đến TTS Engine và kích hoạt Silence Trimmer tự động: Không còn hiện tượng ngắt khựng giữa chừng hoặc dừng lâu tại các dấu câu (!, ?, :, ;). Mọi câu đọc liền mạch 0ms siêu mượt.'
+    title: '⚡ Phát Ngay Lập Tức 0.000s Khi Bấm Nghe Thử Kịch Bản & Không Cần Chờ Đợi',
+    description: 'Tự động Pre-warm RAM Cache câu thoại ngay khi soạn thảo hoặc chọn giọng: Khi bấm Phát/Nghe thử kịch bản, âm thanh được giải mã sẵn phát ra NGAY TỨC THÌ 0ms không phải chờ mạng.'
+  },
+  {
+    title: '🚀 Pipeline Tải Trước Toàn Bộ Kịch Bản & Xóa Sạch Khoảng Lặng Giữa Các Câu',
+    description: 'Khắc phục triệt để tình trạng khựng/dừng 1-2s giữa các câu thoại: Toàn bộ kịch bản được nạp trước nền vào RAM Cache và cắt bỏ sạch khoảng lặng đầu/đuôi cho luồng đọc siêu mượt mà.'
   },
   {
     title: '🎙️ Chuẩn Hóa 100% Phát Âm Tiếng Anh, Từ Viết Tắt & Đọc Số Tiền Livestream Chính Xác',
@@ -17,10 +21,6 @@ export const UPDATE_NOTES = [
   {
     title: '👑 Nâng Cấp Giọng Nữ 4 Vùng Miền Đỉnh Cao & Cảm Xúc Thăng Trầm Tuyệt Đỉnh',
     description: 'Nâng cấp toàn diện các giọng Nữ (BTV VTV Hà Nội, Huế dịu dàng, Cần Thơ ngọt lịm, Út Mai miền Tây, Idol Sài Gòn, KOC bắt trend) với phong thái tự tin, vui tươi, lôi cuốn và truyền cảm hứng.'
-  },
-  {
-    title: '🚀 Lookahead Audio Pre-fetching & RAM Caching 0ms',
-    description: 'Tải trước và giải mã sẵn các câu thoại tiếp theo vào RAM trong lúc câu hiện tại đang phát, đảm bảo kịch bản và bình luận AI phát liền mạch không một giây đứt quãng.'
   }
 ];
 

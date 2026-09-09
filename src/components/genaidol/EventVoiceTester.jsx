@@ -336,6 +336,28 @@ export default function EventVoiceTester({
     }
   };
 
+  // ⚡ TỰ ĐỘNG TẢI TRƯỚC VÀO BỘ NHỚ RAM (PRE-WARM CACHE) NGAY KHI NHẬP TEXT / ĐỔI GIỌNG
+  // Giúp khi bấm Play, âm thanh phát ra NGAY TỨC THÌ 0.000s, không cần đợi tải mạng!
+  useEffect(() => {
+    if (!text || !text.trim()) return;
+    const timer = setTimeout(() => {
+      try {
+        const sentences = splitIntoSentences(text);
+        if (sentences && sentences.length > 0) {
+          const curVoiceId = selectedVoiceRef.current;
+          const voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === curVoiceId) || { id: curVoiceId, lang: 'vi-VN', gender: 'Female' };
+          // Pre-warm câu đầu tiên và câu thứ hai vào RAM Cache
+          prefetchTTSAudio(sentences[0], voiceObj, { rate: speedRef.current });
+          if (sentences.length > 1) {
+            prefetchTTSAudio(sentences[1], voiceObj, { rate: speedRef.current });
+          }
+        }
+      } catch (e) {}
+    }, 150);
+
+    return () => clearTimeout(timer);
+  }, [text, selectedVoiceId, speed]);
+
   const handleTogglePlay = (e) => {
     if (e) {
       e.preventDefault();
@@ -365,9 +387,10 @@ export default function EventVoiceTester({
     const curVoiceId = selectedVoiceRef.current;
     const voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === curVoiceId) || { id: curVoiceId, lang: 'vi-VN', gender: 'Female' };
 
-    // Tải trước câu 0 và câu 1
-    if (sentences[0]) prefetchTTSAudio(sentences[0], voiceObj, { rate: speedRef.current });
-    if (sentences[1]) prefetchTTSAudio(sentences[1], voiceObj, { rate: speedRef.current });
+    // 🚀 PIPELINE PRE-FETCH: Ngay khi bấm Play, nạp trước toàn bộ kịch bản vào RAM cache ở chế độ nền
+    sentences.forEach((s) => {
+      prefetchTTSAudio(s, voiceObj, { rate: speedRef.current });
+    });
 
     playSentenceAtIndex(0, voiceObj);
   };
