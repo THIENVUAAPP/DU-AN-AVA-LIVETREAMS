@@ -1895,6 +1895,30 @@ let activeAudioContext = null;
 let activeSourceNode = null;
 const audioBufferMemoryCache = new Map();
 
+// Initialize native browser speech synthesis voices immediately
+function initSpeechVoices() {
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    const updateVoices = () => {
+      try {
+        const v = window.speechSynthesis.getVoices();
+        if (v && v.length > 0) {
+          preloadedVoices = v;
+        }
+      } catch (e) {}
+    };
+    updateVoices();
+    if (typeof window.speechSynthesis.onvoiceschanged !== 'undefined') {
+      window.speechSynthesis.onvoiceschanged = updateVoices;
+    }
+  }
+}
+if (typeof window !== 'undefined') {
+  initSpeechVoices();
+  if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', initSpeechVoices);
+  }
+}
+
 // Queue management
 const globalSpeechQueue = [];
 let isProcessingGlobalQueue = false;
@@ -1979,11 +2003,14 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
   const isMale = voice?.gender === 'Male' || voice?.gender === 'Nam';
   const dsp = voice?.dspProfile || {};
 
-  // TÍNH TOÁN TỐC ĐỘ PHÁT TỰ NHIÊN (TUYỆT ĐỐI KHÔNG BỊ KÉO LÊ CHẬM CHẠP)
+  // TÍNH TOÁN CAO ĐỘ (SEMITONES) VÀ TỐC ĐỘ PHÁT TỰ NHIÊN
+  const semitones = dsp.semitones !== undefined ? dsp.semitones : (isMale ? -6.0 : 2.5);
+  const pitchShiftFactor = Math.pow(2, semitones / 12);
   const voiceRate = voice?.rate || dsp.rate || 1.05;
   const userRate = requestedRate !== undefined && !isNaN(requestedRate) ? Number(requestedRate) : 1.0;
-  // Giữ tốc độ phát sóng luôn năng động, nhanh nhẹn, cuốn hút (từ 0.98x đến 1.35x)
-  const finalPlaybackRate = Math.max(0.95, Math.min(1.35, voiceRate * userRate));
+  
+  // Tổng hợp playbackRate chuyển đổi cao độ và nhịp độ
+  const finalPlaybackRate = Math.max(0.65, Math.min(1.85, pitchShiftFactor * voiceRate * userRate));
   source.playbackRate.value = finalPlaybackRate;
 
   // 1. Low Shelf (Cộng hưởng ngực sâu ấm áp cho giọng Nam / Giảm đục cho giọng Nữ)
@@ -2251,7 +2278,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
   const langCode = rawLang || (isVietnameseVoice ? 'vi-VN' : 'en-US');
   const shortLang = langCode.split('-')[0].toLowerCase() || (isVietnameseVoice ? 'vi' : 'en');
 
-  // Chuẩn bị câu thoại chuẩn xác (ưu tiên câu tiếng Việt riêng của từng giọng)
+  // Chuẩn bị câu thoại chuẩn xác (ưu tiên câu thoại đặc trưng riêng biệt của từng giọng)
   let candidateText = sampleText;
   if (!candidateText || !candidateText.trim()) {
     candidateText = voice?.sampleText || (
@@ -2320,25 +2347,12 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
         });
       }
     } catch (e) {
-      console.warn('ElevenLabs fetch error, falling back to Acoustic DSP:', e);
+      console.warn('ElevenLabs fetch error, falling back to Native Voice Synthesizer:', e);
     }
   }
 
   // =========================================================================
-  // TIER 2: ACOUSTIC DSP SYNTHESIZER (100% RIÊNG BIỆT & CHUẨN NAM/NỮ ĐỈNH CAO)
-  // =========================================================================
-  try {
-    const audioBuffer = await fetchAndDecodeTTSAudio(textToSpeak, shortLang);
-    if (audioBuffer) {
-      const success = await playAudioBufferWithDSP(audioBuffer, voice, effectiveVoiceVolume, requestedRate, onEnd, isTestingMode);
-      if (success) return true;
-    }
-  } catch (dspErr) {
-    console.warn('Acoustic DSP synthesis error, fallback to WebSpeech:', dspErr);
-  }
-
-  // =========================================================================
-  // TIER 3: Client Web Speech API (Fallback dự phòng)
+  // TIER 2: NATIVE WEB SPEECH API (GIỌNG NÓI CHUẨN TỪNG QUỐC GIA & GIỚI TÍNH)
   // =========================================================================
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
     try {
@@ -2356,25 +2370,43 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
       const isMale = voice?.gender === 'Male' || voice?.gender === 'Nam';
       const voiceRate = voice?.rate || 1.05;
       const userRate = requestedRate !== undefined && !isNaN(requestedRate) ? Number(requestedRate) : 1.0;
-      utterance.rate = Math.max(0.95, Math.min(1.35, voiceRate * userRate));
+      utterance.rate = Math.max(0.85, Math.min(1.55, voiceRate * userRate));
       
-      const targetPitch = voice?.pitch !== undefined ? Number(voice.pitch) : (isMale ? 0.75 : 1.15);
-      utterance.pitch = Math.max(0.55, Math.min(1.45, targetPitch));
+      const targetPitch = voice?.pitch !== undefined ? Number(voice.pitch) : (isMale ? 0.72 : 1.18);
+      utterance.pitch = Math.max(0.50, Math.min(1.80, targetPitch));
       utterance.volume = effectiveVoiceVolume;
 
       const availableVoices = (preloadedVoices.length > 0 ? preloadedVoices : window.speechSynthesis.getVoices()) || [];
       if (availableVoices.length > 0) {
-        let matched = availableVoices.find(v => {
+        let matched = null;
+
+        // 1. Phân loại chuẩn xác theo mã ngôn ngữ & giới tính Nam/Nữ
+        matched = availableVoices.find(v => {
           const vLang = (v.lang || '').toLowerCase().replace('_', '-');
-          const matchesLang = vLang.startsWith(shortLang) || vLang.includes(shortLang);
+          const matchesLang = vLang.startsWith(shortLang) || vLang.includes(shortLang) || vLang === langCode.toLowerCase();
           const vName = (v.name || '').toLowerCase();
           if (isMale) {
-            return matchesLang && (vName.includes('namminh') || vName.includes('male') || vName.includes('nam') || vName.includes('david') || vName.includes('george') || vName.includes('james'));
+            return matchesLang && (
+              vName.includes('namminh') || vName.includes('male') || vName.includes('nam') ||
+              vName.includes('david') || vName.includes('george') || vName.includes('james') ||
+              vName.includes('mark') || vName.includes('guy') || vName.includes('alex') ||
+              vName.includes('otoya') || vName.includes('kangkang') || vName.includes('thomas') ||
+              vName.includes('stefan') || vName.includes('jorge') || vName.includes('yuri') ||
+              vName.includes('cosimo') || vName.includes('diego') || vName.includes('enrique')
+            );
           } else {
-            return matchesLang && (vName.includes('hoaimy') || vName.includes('female') || vName.includes('nữ') || vName.includes('linh') || vName.includes('mai') || vName.includes('zira') || vName.includes('samantha'));
+            return matchesLang && (
+              vName.includes('hoaimy') || vName.includes('female') || vName.includes('nữ') ||
+              vName.includes('linh') || vName.includes('mai') || vName.includes('zira') ||
+              vName.includes('samantha') || vName.includes('jenny') || vName.includes('aria') ||
+              vName.includes('kyoko') || vName.includes('tingting') || vName.includes('yuna') ||
+              vName.includes('amelie') || vName.includes('celine') || vName.includes('monica') ||
+              vName.includes('laura') || vName.includes('alice') || vName.includes('kanya')
+            );
           }
         });
 
+        // 2. Tìm theo mã ngôn ngữ tương ứng nếu chưa khớp tên riêng giới tính
         if (!matched) {
           matched = availableVoices.find(v => {
             const vLang = (v.lang || '').toLowerCase().replace('_', '-');
@@ -2382,6 +2414,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
           });
         }
 
+        // 3. Fallback lấy giọng hệ thống khả dụng
         if (!matched && availableVoices.length > 0) {
           matched = availableVoices[0];
         }
@@ -2391,7 +2424,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
         }
       }
 
-      return new Promise((resolve) => {
+      const playedSuccessfully = await new Promise((resolve) => {
         let hasEnded = false;
         const finish = (ok) => {
           if (hasEnded) return;
@@ -2407,7 +2440,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
         utterance.onend = () => finish(true);
         utterance.onerror = () => finish(false);
 
-        const maxDurationMs = Math.max(4000, textToSpeak.length * 150);
+        const maxDurationMs = Math.max(4500, textToSpeak.length * 160);
         const watchdog = setTimeout(() => finish(true), maxDurationMs);
         utterance.addEventListener('end', () => clearTimeout(watchdog));
 
@@ -2417,7 +2450,26 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
           finish(false);
         }
       });
-    } catch (synthErr) {}
+
+      if (playedSuccessfully) {
+        return true;
+      }
+    } catch (synthErr) {
+      console.warn('Native Web Speech API error, falling back to Acoustic DSP:', synthErr);
+    }
+  }
+
+  // =========================================================================
+  // TIER 3: ACOUSTIC DSP SYNTHESIZER (Fallback Khi Trình Duyệt Không Có WebSpeech)
+  // =========================================================================
+  try {
+    const audioBuffer = await fetchAndDecodeTTSAudio(textToSpeak, shortLang);
+    if (audioBuffer) {
+      const success = await playAudioBufferWithDSP(audioBuffer, voice, effectiveVoiceVolume, requestedRate, onEnd, isTestingMode);
+      if (success) return true;
+    }
+  } catch (dspErr) {
+    console.warn('Acoustic DSP synthesis error:', dspErr);
   }
 
   if (onEnd) onEnd();

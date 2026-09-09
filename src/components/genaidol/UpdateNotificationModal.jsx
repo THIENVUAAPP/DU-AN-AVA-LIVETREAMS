@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.2.7';
+export const APP_VERSION = '2.2.8';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🏛️ Phân Loại 4 Vùng Miền Việt Nam (Bắc - Trung - Nam - Tây)',
-    description: 'Hệ thống giọng đọc được tối ưu hóa chuẩn sắc thái 4 vùng miền: Miền Bắc (Hà Nội, BTV), Miền Trung (Huế, Đà Nẵng, Nghệ Tĩnh), Miền Nam (Sài Gòn, KOC Gen Z), Miền Tây (Sông Nước, Út Mai, Chú Năm).'
+    title: '🎙️ Đột Phá Voice AI: Tích Hợp Native OS Synthesizer & Đa Dạng Hóa 100%',
+    description: 'Nâng cấp toàn diện cơ chế phát âm Native OS Voice Engine kết hợp Web Audio DSP Pitch Shifter. 89 giọng đọc hoàn toàn khác biệt về âm sắc, cao độ (Pitch), tốc độ (Rate), giới tính và quốc gia.'
   },
   {
-    title: '⚡ Khắc Phục Triệt Để Tốc Độ Giọng Nam — Nhanh, Dứt Khoát, Hào Sảng',
-    description: 'Tách biệt cao độ trầm nam và tốc độ phát âm Web Audio DSP. Giọng Nam phát âm mạnh mẽ, chuẩn nam tính 100%, dứt khoát, hào sảng, không còn tình trạng bị đọc chậm hay kéo lê.'
+    title: '👑 Phân Hóa Rõ Rệt Nam Chuẩn Nam — Nữ Chuẩn Nữ & 4 Vùng Miền',
+    description: 'Khắc phục triệt để hiện tượng trùng giọng. Tự động nhận diện và ghép đúng giọng đọc bản xứ theo giới tính (Nam/Nữ) và phương ngữ đặc trưng (Bắc - Trung - Nam - Tây).'
   },
   {
-    title: '💎 Phân Hóa Rõ Rệt 100% Không Trùng Lặp Giữa Toàn Bộ Giọng Đọc',
-    description: 'Đa dạng hóa độ tuổi (Trẻ, Gen Z, Trung niên, Doanh nhân, Lão niên, Em bé), tần số Formant F1/F2, tốc độ và cảm xúc (Vui tươi, Hào sảng, Thư thái, Giục đơn, Sâu lắng).'
+    title: '⚡ Trải Nghiệm Phát Giọng Mượt Mà, Không Độ Trễ',
+    description: 'Preload danh sách voice ngay khi khởi động, tối ưu hóa bộ nhớ đệm TTS và tự động khôi phục ngữ điệu tự nhiên, sống động.'
   }
 ];
 
