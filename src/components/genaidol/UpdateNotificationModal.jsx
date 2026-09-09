@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.5.5';
+export const APP_VERSION = '2.5.6';
 export const RELEASE_DATE = '09/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🎙️ Tự Động Nhận Diện & Đổi Giọng Phát Ngay Tức Thì 0ms',
-    description: 'Khắc phục triệt để tình trạng đổi giọng bị kẹt lại giọng cũ: Đã tách độc lập bộ nhớ đệm cho từng kịch bản/slot quà/tác vụ, đổi sang bất kỳ giọng đọc nào là hệ thống phát ngay lập tức không bị khựng.'
+    title: '⚡ Triệt Tiêu 100% Khoảng Dừng Tại Dấu Câu (!, ?, ...) & Loại Bỏ Hoàn Toàn Tạp Âm Khoảng Lặng',
+    description: 'Chuẩn hóa định dạng văn bản gửi đến TTS Engine và kích hoạt Silence Trimmer tự động: Không còn hiện tượng ngắt khựng giữa chừng hoặc dừng lâu tại các dấu câu (!, ?, :, ;). Mọi câu đọc liền mạch 0ms siêu mượt.'
   },
   {
-    title: '⚡ Hủy Bỏ Audio Cũ Sạch Sẽ (Zero-Race Condition)',
-    description: 'Khi đổi giọng đọc hoặc chuyển câu, âm thanh câu cũ lập tức dừng triệt để mà không kích hoạt chuỗi chuyển câu sai lệch, đảm bảo trải nghiệm nghe thử mượt mà nhất.'
+    title: '🎙️ Chuẩn Hóa 100% Phát Âm Tiếng Anh, Từ Viết Tắt & Đọc Số Tiền Livestream Chính Xác',
+    description: 'Tự động phiên âm chuẩn xác các thuật ngữ tiếng Anh (serum, skincare, deal, flash sale, review, combo, freeship, order, video, live...), từ viết tắt (sp, đc, ko, cmt, btv, mc, stk, cod...) và số tiền lớn (10,000, 890.000đ, 50k, 2tr5...).'
   },
   {
-    title: '✨ Giao Diện Nghe Thử Kịch Bản Gọn Gàng & Trực Quan',
-    description: 'Thanh điều khiển giọng đọc, tốc độ và khoảng nghỉ giữa các câu thoại hiển thị chuẩn xác, đẹp mắt và phản hồi tức thì.'
+    title: '👑 Nâng Cấp Giọng Nữ 4 Vùng Miền Đỉnh Cao & Cảm Xúc Thăng Trầm Tuyệt Đỉnh',
+    description: 'Nâng cấp toàn diện các giọng Nữ (BTV VTV Hà Nội, Huế dịu dàng, Cần Thơ ngọt lịm, Út Mai miền Tây, Idol Sài Gòn, KOC bắt trend) với phong thái tự tin, vui tươi, lôi cuốn và truyền cảm hứng.'
   },
   {
-    title: '🚀 Pipeline Pre-fetching Toàn Bộ Kịch Bản Vào RAM Cache',
-    description: 'Tải trước toàn bộ các câu trong kịch bản vào RAM giúp chuỗi livestream hoặc nghe thử không có bất kỳ khoảng lặng chết nào.'
+    title: '🚀 Lookahead Audio Pre-fetching & RAM Caching 0ms',
+    description: 'Tải trước và giải mã sẵn các câu thoại tiếp theo vào RAM trong lúc câu hiện tại đang phát, đảm bảo kịch bản và bình luận AI phát liền mạch không một giây đứt quãng.'
   }
 ];
 
