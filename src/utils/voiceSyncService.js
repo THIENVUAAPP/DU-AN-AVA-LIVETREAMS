@@ -6843,10 +6843,18 @@ export function parseMultiCharacterScript(text, config = null) {
       const roleOrName = tagMatch[1].trim().toLowerCase();
       cleanText = tagMatch[2].trim();
 
-      matchedAvatar = multiConfig.avatars.find(a => 
+      const activeAvatars = (multiConfig.avatars || []).slice(0, multiConfig.activeCount || 2);
+
+      matchedAvatar = activeAvatars.find(a => 
         a.role.toLowerCase() === roleOrName ||
         a.tag.toLowerCase() === roleOrName ||
         a.name.toLowerCase() === roleOrName ||
+        roleOrName.includes(a.name.toLowerCase()) ||
+        a.name.toLowerCase().includes(roleOrName) ||
+        (roleOrName.includes('1') && a.id === 'avatar_1') ||
+        (roleOrName.includes('2') && a.id === 'avatar_2') ||
+        (roleOrName.includes('3') && a.id === 'avatar_3') ||
+        (roleOrName.includes('4') && a.id === 'avatar_4') ||
         (roleOrName.includes('idol') && a.role === 'idol') ||
         ((roleOrName.includes('trợ lý') || roleOrName.includes('quản lý') || roleOrName.includes('assistant')) && a.role === 'assistant') ||
         ((roleOrName.includes('game') || roleOrName.includes('blv') || roleOrName.includes('pk')) && a.role === 'game') ||
@@ -6855,7 +6863,9 @@ export function parseMultiCharacterScript(text, config = null) {
     }
 
     if (!matchedAvatar) {
-      matchedAvatar = multiConfig.avatars[0];
+      const activeAvatars = (multiConfig.avatars || []).slice(0, multiConfig.activeCount || 2);
+      const activeCount = Math.max(1, activeAvatars.length);
+      matchedAvatar = activeAvatars[idx % activeCount] || multiConfig.avatars[0];
     }
 
     const voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === matchedAvatar.voiceId) || { id: matchedAvatar.voiceId || 'free_vi_female', lang: 'vi-VN', gender: 'Female' };

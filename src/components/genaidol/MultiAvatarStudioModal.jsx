@@ -22,28 +22,54 @@ import UniversalMediaPicker from './UniversalMediaPicker';
 export const SvgChromaFilters = () => (
   <svg width="0" height="0" className="absolute pointer-events-none opacity-0" style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}>
     <defs>
-      {/* 🟢 Tách Nền Xanh Lá 4K */}
+      {/* 🟢 TÁCH NỀN XANH LÁ SIÊU SẠCH 4K (KHỬ SẠCH ÁM XANH TÓC & VIỀN NGƯỜI) */}
       <filter id="avalive-chroma-green" colorInterpolationFilters="sRGB" x="0%" y="0%" width="100%" height="100%">
+        {/* Khử ám xanh (Despill) */}
         <feColorMatrix
+          type="matrix"
+          values="
+            1.00  0.00  0.00  0.00  0.00
+            0.35  0.30  0.35  0.00  0.00
+            0.00  0.00  1.00  0.00  0.00
+            0.00  0.00  0.00  1.00  0.00"
+          result="despilled_green"
+        />
+        {/* Alpha Key Mask (Tách triệt để phông xanh) */}
+        <feColorMatrix
+          in="SourceGraphic"
           type="matrix"
           values="
             1.00  0.00  0.00  0.00  0.00
             0.00  1.00  0.00  0.00  0.00
             0.00  0.00  1.00  0.00  0.00
-            1.60 -2.40  1.60  1.00  0.00"
+            2.60 -3.80  2.60  1.00 -0.10"
+          result="alpha_mask_green"
         />
+        <feComposite in="despilled_green" in2="alpha_mask_green" operator="in" />
       </filter>
 
-      {/* 🔵 Tách Nền Xanh Dương 4K */}
+      {/* 🔵 TÁCH NỀN XANH DƯƠNG SIÊU SẠCH 4K */}
       <filter id="avalive-chroma-blue" colorInterpolationFilters="sRGB" x="0%" y="0%" width="100%" height="100%">
         <feColorMatrix
           type="matrix"
           values="
             1.00  0.00  0.00  0.00  0.00
             0.00  1.00  0.00  0.00  0.00
-            0.00  0.00  1.00  0.00  0.00
-            1.60  1.60 -2.40  1.00  0.00"
+            0.35  0.35  0.30  0.00  0.00
+            0.00  0.00  0.00  1.00  0.00"
+          result="despilled_blue"
         />
+        <feColorMatrix
+          in="SourceGraphic"
+          type="matrix"
+          values="
+            1.00  0.00  0.00  0.00  0.00
+            0.00  1.00  0.00  0.00  0.00
+            0.00  0.00  1.00  0.00  0.00
+            2.60  2.60 -3.80  1.00 -0.10"
+          result="alpha_mask_blue"
+        />
+        <feComposite in="despilled_blue" in2="alpha_mask_blue" operator="in" />
       </filter>
     </defs>
   </svg>
@@ -111,11 +137,37 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
   const [previewingVoiceId, setPreviewingVoiceId] = useState(null);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [canvasAspectRatio, setCanvasAspectRatio] = useState('9:16'); // '9:16' | '16:9'
+  const [customScriptText, setCustomScriptText] = useState('');
+  const [scriptFilterCount, setScriptFilterCount] = useState('all'); // 'all' | 2 | 3 | 4
 
   // Drag & Resize state (Canva / TikTok Live Studio Style)
   const [dragOperation, setDragOperation] = useState(null); // { targetId, mode: 'move' | 'nw' | 'ne' | 'se' | 'sw' | 'n' | 's' | 'w' | 'e' }
   const canvasRef = useRef(null);
   const dragStartPosRef = useRef({ mouseX: 0, mouseY: 0, startX: 0, startY: 0, startW: 50, startH: 50, startScale: 100 });
+
+  const handleScriptFileUpload = (e, templateTarget = null) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (loadEvt) => {
+      const content = loadEvt.target?.result || '';
+      if (content) {
+        if (templateTarget) {
+          if (onApplyScriptTemplate) {
+            onApplyScriptTemplate(content, templateTarget.count || activeCount);
+          }
+          toast.success(`📁 Đã nạp file "${file.name}" và áp dụng kịch bản thành công!`);
+          if (onClose) onClose();
+        } else {
+          setCustomScriptText(content);
+          toast.success(`📁 Đã nạp file "${file.name}" vào trình soạn thảo kịch bản!`);
+        }
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
 
   useEffect(() => {
     const loaded = getMultiAvatarConfig();
@@ -1862,56 +1914,206 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
 
           </div>
         ) : (
-          /* TAB 2: KỊCH BẢN ĐỐI THOẠI MẪU */
-          <div className="space-y-3 p-3">
-            <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-2xl text-xs text-blue-800 dark:text-blue-300 flex items-start gap-2">
-              <Info size={16} className="shrink-0 mt-0.5 text-blue-500" />
-              <span>
-                Chọn kịch bản đối thoại mẫu để áp dụng ngay vào phòng Live. Mỗi nhân vật khi đến lượt nói theo thẻ <code>[Idol]</code>, <code>[Trợ Lý]</code>, <code>[BLV Game]</code> hoặc <code>[Khách Mời]</code> sẽ tự động kích hoạt video khẩu hình và giọng đọc AI tương ứng!
-              </span>
+          /* TAB 2: KỊCH BẢN ĐỐI THOẠI MẪU & TẢI TỆP TOÀN DIỆN */
+          <div className="space-y-4 p-3 sm:p-4 max-w-7xl mx-auto">
+            {/* 1. TOP CONTROLS & FILTER & NẠP FILE TỔNG HỢP */}
+            <div className={`p-4 rounded-3xl border flex flex-wrap items-center justify-between gap-3 shadow-md ${
+              isEmbedded ? 'bg-white border-purple-200' : 'bg-[#151722] border-purple-500/30 text-white'
+            }`}>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-black uppercase text-purple-400 flex items-center gap-1">
+                  <MessageSquare size={15} /> Lọc Kịch Bản:
+                </span>
+                <div className="flex items-center gap-1 bg-slate-100 dark:bg-black/40 p-1 rounded-2xl border border-gray-300 dark:border-gray-700">
+                  {[
+                    { id: 'all', label: '🌟 Tất Cả' },
+                    { id: 2, label: '👥 2 Nhân Vật' },
+                    { id: 3, label: '👨‍👩‍👦 3 Nhân Vật' },
+                    { id: 4, label: '👑 4 Nhân Vật' }
+                  ].map(f => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => setScriptFilterCount(f.id)}
+                      className={`px-3 py-1 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                        scriptFilterCount === f.id
+                          ? 'bg-purple-600 text-white shadow-md scale-102'
+                          : 'text-gray-600 dark:text-gray-400 hover:text-purple-400'
+                      }`}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Nút Tải File Kịch Bản Mọi Định Dạng */}
+              <div className="flex items-center gap-2">
+                <label className="px-4 py-2 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black shadow-lg flex items-center gap-2 cursor-pointer transition-all hover:scale-102">
+                  <Upload size={15} />
+                  <span>📁 Tải Tệp Kịch Bản (.TXT, .DOCX, .PDF, .MD, .JSON)</span>
+                  <input 
+                    type="file" 
+                    accept=".txt,.docx,.doc,.pdf,.md,.json,.csv" 
+                    onChange={(e) => handleScriptFileUpload(e, null)} 
+                    className="hidden" 
+                  />
+                </label>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {SCRIPT_TEMPLATES.map(tmpl => (
-                <div 
-                  key={tmpl.id} 
-                  className={`p-4 rounded-2xl border flex flex-col justify-between space-y-3 shadow-xs transition-all ${
-                    isEmbedded 
-                      ? 'bg-white border-purple-200/80 hover:border-purple-400' 
-                      : 'bg-[#171922] border-gray-800 hover:border-purple-500/50 text-white'
-                  }`}
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-bold text-[10px]">
-                        {tmpl.count} Nhân Vật
-                      </span>
-                    </div>
-                    <h4 className="font-black text-sm text-purple-700 dark:text-purple-400 leading-snug">
-                      {tmpl.title}
-                    </h4>
-                    <p className="text-xs text-gray-500 leading-relaxed">
-                      {tmpl.desc}
-                    </p>
-                    <pre className="p-2.5 rounded-xl bg-slate-100 dark:bg-black/40 text-[11px] text-gray-700 dark:text-gray-300 font-mono whitespace-pre-wrap max-h-36 overflow-y-auto border border-gray-200 dark:border-gray-800">
-                      {tmpl.script}
-                    </pre>
-                  </div>
+            {/* 2. KHUNG SOẠN THẢO & NHẬP KỊCH BẢN TÙY CHỈNH (EXPANDED FULL HEIGHT) */}
+            <div className={`p-4 rounded-3xl border shadow-xl space-y-3 ${
+              isEmbedded ? 'bg-white border-blue-200' : 'bg-[#141620] border-blue-500/30 text-white'
+            }`}>
+              <div className="flex items-center justify-between flex-wrap gap-2 border-b pb-2.5 border-gray-200 dark:border-gray-800">
+                <div className="flex items-center gap-2">
+                  <Sparkles size={16} className="text-cyan-400" />
+                  <h3 className="text-sm font-black text-cyan-400 uppercase tracking-wide">
+                    Trình Soạn Thảo & Tự Do Nhập Kịch Bản Đa Nhân Vật
+                  </h3>
+                </div>
+                
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[11px] font-bold text-gray-400">Thẻ nhân vật:</span>
+                  {activeAvatars.map((av, idx) => (
+                    <button
+                      key={av.id}
+                      type="button"
+                      onClick={() => {
+                        const tag = `[${av.name}]: `;
+                        setCustomScriptText(prev => prev ? `${prev}\n${tag}` : tag);
+                      }}
+                      className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 cursor-pointer"
+                      title={`Thêm câu thoại cho ${av.name}`}
+                    >
+                      +{av.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
+              <textarea
+                value={customScriptText}
+                onChange={(e) => setCustomScriptText(e.target.value)}
+                placeholder={`Nhập hoặc tải file kịch bản phân vai đối thoại tại đây...\nVí dụ:\n[#1 ${safeAvatars[0]?.name || 'Ngọc Nhi'}]: Dạ em xin chào cả nhà đang xem livestream!\n[#2 ${safeAvatars[1]?.name || 'Quốc Cường'}]: Chào mọi người, hôm nay chúng ta có ưu đãi khủng nha!`}
+                className="w-full h-44 sm:h-56 p-3.5 rounded-2xl bg-black/40 text-xs font-mono leading-relaxed text-gray-200 border border-gray-300 dark:border-gray-700 focus:border-cyan-400 focus:outline-none resize-y"
+              />
+
+              {customScriptText && customScriptText.trim() && (
+                <div className="flex items-center justify-between flex-wrap gap-2 pt-1">
+                  <span className="text-xs text-emerald-400 font-bold">
+                    ✓ Đã nhận diện kịch bản ({customScriptText.split('\n').filter(Boolean).length} câu thoại)
+                  </span>
                   <button
                     type="button"
                     onClick={() => {
                       if (onApplyScriptTemplate) {
-                        onApplyScriptTemplate(tmpl.script, tmpl.count);
+                        onApplyScriptTemplate(customScriptText, activeCount);
                       }
+                      toast.success('🚀 Đã áp dụng kịch bản tùy chỉnh vào phòng Live!');
                       if (onClose) onClose();
                     }}
-                    className="w-full py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black shadow-md flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black text-xs shadow-md flex items-center gap-1.5 cursor-pointer hover:scale-102 transition-all"
                   >
-                    <Sparkles size={13} /> Áp Dụng Kịch Bản Này
+                    <Check size={14} /> Áp Dụng Kịch Bản Này Vào Phòng Live Ngay
                   </button>
                 </div>
-              ))}
+              )}
+            </div>
+
+            {/* 3. BỘ SƯU TẬP CÁC MẪU KỊCH BẢN ĐỐI THOẠI (TO RỘNG DÀI XUỐNG DƯỚI) */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-black uppercase text-purple-400 flex items-center gap-1.5">
+                  <Star size={14} /> Mẫu Kịch Bản Chuẩn Đóng Vai Sẵn Có ({
+                    scriptFilterCount === 'all' 
+                      ? SCRIPT_TEMPLATES.length 
+                      : SCRIPT_TEMPLATES.filter(t => t.count === scriptFilterCount).length
+                  } Kịch Bản)
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {SCRIPT_TEMPLATES
+                  .filter(tmpl => scriptFilterCount === 'all' || tmpl.count === scriptFilterCount)
+                  .map(tmpl => (
+                    <div 
+                      key={tmpl.id} 
+                      className={`p-5 rounded-3xl border flex flex-col justify-between space-y-3 shadow-xl transition-all hover:border-purple-400/80 ${
+                        isEmbedded 
+                          ? 'bg-white border-purple-200 hover:shadow-2xl' 
+                          : 'bg-[#151722] border-gray-800 text-white hover:shadow-[0_0_30px_rgba(168,85,247,0.15)]'
+                      }`}
+                    >
+                      <div className="space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="px-2.5 py-1 rounded-xl bg-purple-500/20 text-purple-300 font-black text-xs border border-purple-500/30">
+                            👥 {tmpl.count} Nhân Vật
+                          </span>
+                          <span className="text-[11px] text-gray-400 font-bold">
+                            {tmpl.script.split('\n').filter(Boolean).length} câu thoại
+                          </span>
+                        </div>
+                        
+                        <h4 className="font-black text-sm text-purple-300 leading-snug">
+                          {tmpl.title}
+                        </h4>
+                        
+                        <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">
+                          {tmpl.desc}
+                        </p>
+                        
+                        {/* Khung Script to rộng dài xuống dưới */}
+                        <pre className="p-3.5 rounded-2xl bg-black/60 text-xs text-gray-200 font-mono whitespace-pre-wrap h-64 sm:h-72 overflow-y-auto border border-gray-700/60 shadow-inner">
+                          {tmpl.script}
+                        </pre>
+                      </div>
+
+                      {/* Các nút hành động trên từng thẻ kịch bản */}
+                      <div className="space-y-2 pt-2 border-t border-gray-800">
+                        <div className="flex items-center gap-2">
+                          <label className="flex-1 py-1.5 px-2 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors">
+                            <Upload size={12} />
+                            <span>Tải File Cho Mẫu Này</span>
+                            <input 
+                              type="file" 
+                              accept=".txt,.docx,.doc,.pdf,.md,.json,.csv" 
+                              onChange={(e) => handleScriptFileUpload(e, tmpl)} 
+                              className="hidden" 
+                            />
+                          </label>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(tmpl.script);
+                              toast.success('📋 Đã sao chép kịch bản!');
+                            }}
+                            className="p-1.5 rounded-xl bg-gray-700/60 hover:bg-gray-700 text-gray-300 hover:text-white border border-gray-600 text-[11px] font-bold cursor-pointer"
+                            title="Sao chép kịch bản"
+                          >
+                            📋 Copy
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (onApplyScriptTemplate) {
+                              onApplyScriptTemplate(tmpl.script, tmpl.count);
+                            }
+                            toast.success(`✨ Đã áp dụng "${tmpl.title}" vào phòng Live!`);
+                            if (onClose) onClose();
+                          }}
+                          className="w-full py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black shadow-lg flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-all"
+                        >
+                          <Sparkles size={14} /> Áp Dụng Kịch Bản Này Ngay 🚀
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
             </div>
           </div>
         )}

@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.9.0';
+export const APP_VERSION = '2.9.1';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🟢 Hoàn Thiện Xóa Phông Nền (Chroma Key) Xanh Lá / Dương / Đen / Trắng 4K',
-    description: 'Tối ưu hóa bộ lọc Chroma Key cực sắc nét, loại bỏ hoàn toàn phông xanh/đen/trắng trên cả ảnh và video nhân vật, trong suốt tuyệt đối.'
+    title: '🟢 Tách Nền Xanh Lá Siêu Sạch 4K Khử Triệt Để Ám Xanh (Spill Suppression)',
+    description: 'Nâng cấp bộ lọc đa tầng loại bỏ 100% ám xanh trên tóc, vai và viền người nhân vật, trong suốt sạch sẽ hòa trộn hoàn hảo vào phòng Studio.'
   },
   {
-    title: '⚡ Tải Đồng Loạt Nhiều Ảnh & Video & Tự Do Sắp Xếp Trên Sân Khấu',
-    description: 'Bổ sung nút nạp đồng thời 2-4 tệp ảnh/video cho các nhân vật, hỗ trợ kéo thả, co giãn, đổi ảnh riêng biệt cho từng lớp siêu mượt.'
+    title: '📜 Mở Rộng Tab Kịch Bản Full Chiều Cao & Nạp File Kịch Bản Mọi Định Dạng',
+    description: 'Giao diện kịch bản to rộng dài xuống dưới, tích hợp bộ đọc file (.TXT, .DOCX, .PDF, .MD, .JSON, .CSV) tự động nhận diện cấu trúc đối thoại theo từng nhân vật.'
   },
   {
-    title: '🖥️ Giao Diện Studio To Rộng Full Màn Hình & Nút Đóng Đỏ Nổi Bật Góc Phải',
-    description: 'Mở rộng khung Studio full màn hình sắc nét, chuyển nút ĐÓNG sang góc phải trên cùng trực quan, dễ bấm.'
+    title: '📺 Đồng Bộ Tức Thì 100% Sân Khấu Ra Màn Hình Phần Mềm & Clean Live OBS',
+    description: 'Toàn bộ hình ảnh, video và vị trí sắp xếp của 2–4 nhân vật hiển thị trực tiếp sắc nét trên khung phát chính và luồng phát livestream.'
   }
 ];
 
