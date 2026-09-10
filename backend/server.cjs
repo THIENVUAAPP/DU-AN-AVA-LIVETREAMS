@@ -2452,15 +2452,15 @@ app.get(['/api/tunnel-url', '/api/tunnel-status'], (req, res) => {
     loopbackUrl,
     lanIp,
     projects: {
-      idol:   currentTunnelUrl ? `${currentTunnelUrl}/live-stream`   : null,
+      idol:   currentTunnelUrl ? `${currentTunnelUrl}/idol`   : null,
       bando:  currentTunnelUrl ? `${currentTunnelUrl}/bando`  : null,
       battle: currentTunnelUrl ? `${currentTunnelUrl}/battle` : null,
     },
     localProjects: {
-      idol:   `${localLanUrl}/live-stream`,
+      idol:   `${localLanUrl}/idol`,
       bando:  `${localLanUrl}/bando`,
       battle: `${localLanUrl}/battle`,
-      loopbackIdol: `${loopbackUrl}/live-stream`,
+      loopbackIdol: `${loopbackUrl}/idol`,
     }
   });
 });
@@ -2637,7 +2637,7 @@ async function startCloudflaredTunnel(port) {
               status: 'active',
               tunnelUrl: currentTunnelUrl,
               projects: {
-                idol: `${currentTunnelUrl}/live-stream`,
+                idol: `${currentTunnelUrl}/idol`,
                 bando: `${currentTunnelUrl}/bando`,
                 battle: `${currentTunnelUrl}/battle`
               }
@@ -2677,7 +2677,7 @@ function printTunnelReady(tunnelUrl) {
   console.log('║  🎉 CLOUDFLARE TUNNEL ĐÃ SẴN SÀNG (KHÔNG CẦN IP)!   ║');
   console.log('╠══════════════════════════════════════════════════════╣');
   console.log(`║  🌐 Base URL:  ${tunnelUrl.padEnd(38)}║`);
-  console.log(`║  👑 AI Idol:   ${(tunnelUrl + '/live-stream').padEnd(38)}║`);
+  console.log(`║  👑 AI Idol:   ${(tunnelUrl + '/idol').padEnd(38)}║`);
   console.log(`║  🗺️  Bản Đồ:   ${(tunnelUrl + '/bando').padEnd(38)}║`);
   console.log(`║  ⚔️  Battle:   ${(tunnelUrl + '/battle').padEnd(38)}║`);
   console.log('╠══════════════════════════════════════════════════════╣');

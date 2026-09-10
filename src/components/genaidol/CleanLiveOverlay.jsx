@@ -751,9 +751,22 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         }
       } else if (action === 'time_sync') {
         // 🎯 ĐỒNG BỘ THỜI GIAN THỰC (SIÊU MƯỢT 60 FPS, TUYỆT ĐỐI KHÔNG SEEK THỤ ĐỘNG GÂY GIẬT ĐỨNG HÌNH)
-        // Video chạy liên tục ở tốc độ 1.0x nguyên bản không giật lag. Chỉ seek khi streamer chủ động tua (force).
         if (control.force && typeof targetTime === 'number' && !isNaN(targetTime)) {
           try { vid.currentTime = targetTime; } catch (e) {}
+          vid.playbackRate = 1.0;
+        } else if (typeof targetTime === 'number' && !isNaN(targetTime) && !vid.paused) {
+          const cur = vid.currentTime || 0;
+          const diff = cur - targetTime;
+          if (Math.abs(diff) > 12.0) {
+            try { vid.currentTime = targetTime; } catch (e) {}
+            vid.playbackRate = 1.0;
+          } else if (diff < -0.5) {
+            vid.playbackRate = 1.04;
+          } else if (diff > 0.5) {
+            vid.playbackRate = 0.96;
+          } else {
+            vid.playbackRate = 1.0;
+          }
         }
         // Đảm bảo video tiếp tục phát nếu phần mềm chính đang phát
         if (!isUserPausedRef.current && vid.paused && vid.readyState >= 2) {
@@ -1056,18 +1069,33 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               const isMasterPlaying = !!event.data.isPlaying;
               const v = overlayVideoRef.current;
               if (v && typeof masterTime === 'number' && !isNaN(masterTime)) {
-                // 🎯 Chỉ tua lại vị trí khi có cờ force rõ ràng từ người dùng tua hoặc lệch quá lớn (> 10s)
                 const cur = v.currentTime || 0;
-                const diff = Math.abs(cur - masterTime);
-                if (event.data.force || diff > 10.0) {
+                const diff = cur - masterTime;
+                
+                // 🎯 1. Chỉ hard seek khi có cờ force chủ động (tua, restart) hoặc lệch quá xa (> 12 giây)
+                if (event.data.force || Math.abs(diff) > 12.0) {
                   try { v.currentTime = masterTime; } catch (e) {}
+                  v.playbackRate = 1.0;
+                } else if (isMasterPlaying && !v.paused) {
+                  // 🎯 2. Tinh chỉnh tốc độ mượt mà bù lệch mili-giây mà KHÔNG flush decoder, 60 FPS siêu mượt không khựng
+                  if (diff < -0.5) {
+                    v.playbackRate = 1.04; // Tăng nhẹ để bắt kịp mượt mà
+                  } else if (diff > 0.5) {
+                    v.playbackRate = 0.96; // Giảm nhẹ để khớp lại
+                  } else {
+                    v.playbackRate = 1.0;
+                  }
                 }
+
+                // 🎯 3. Đồng bộ trạng thái Phát / Tạm dừng
                 if (isMasterPlaying) {
                   v.dataset.userPaused = 'false';
-                  if (v.paused && !isUserPausedRef.current) {
+                  isUserPausedRef.current = false;
+                  if (v.paused) {
                     v.play().catch(() => {});
                   }
-                } else if (event.data.userPaused === true) {
+                  setIsPlayingState(true);
+                } else if (event.data.userPaused === true || isMasterPlaying === false) {
                   v.dataset.userPaused = 'true';
                   isUserPausedRef.current = true;
                   if (!v.paused) {
@@ -1959,7 +1987,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v2.9.6
+                v2.9.7
               </span>
             </div>
 

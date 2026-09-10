@@ -2,24 +2,24 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.9.6';
+export const APP_VERSION = '2.9.7';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🖥️ Khôi Phục Hoàn Hảo Cửa Sổ Bắt Màn Hình (Window Capture) OBS & TikTok Live Studio',
-    description: 'Tối ưu độ phân giải gốc 1080p sắc nét 1:1, tự động nạp video và phát tức thì 0ms, không giật lag, không đứng hình, chia sẻ mượt mà lên TikTok Live.'
+    title: '🌐 Khôi Phục Đường Link Phát Live Online HTTPS Cho TikTok Live Studio & OBS',
+    description: 'Tối ưu hóa đường link Online HTTPS trực tiếp (/idol) qua Cloudflare Tunnel & Vercel Cloud 60 FPS, không dùng localhost, phát video tức thì không giật lag, không đứng hình.'
   },
   {
-    title: '🌐 Khôi Phục Đường Link Phát Live Online HTTPS Cho TikTok Live Studio & OBS',
-    description: 'Tuyệt đối loại bỏ các đường link localhost/127.0.0.1 bị TikTok Live Studio chặn. Khôi phục luồng phát Online Cloudflare HTTPS mượt mà 60 FPS, mở là phát video tức thì không giật lag.'
+    title: '🖥️ Đồng Bộ Lockstep & Siêu Sắc Nét 1080p Cho Cửa Sổ Bắt Màn Hình (Window Capture)',
+    description: 'Nâng cấp công nghệ bù trôi xung nhịp thời gian thực không ngắt quãng GPU, phát video mượt mà liên tục từ đầu đến cuối không bị phát lại từ đầu, đồng bộ Tạm dừng/Tiếp tục 100% với phần mềm.'
   },
   {
     title: '⚡ Khắc Phục Triệt Để Lỗi Tải ZIP Trực Tiếp & Tự Động Lưu Về Máy 100%',
     description: 'Xử lý triệt để lỗi chuyển hướng sang giao diện GitHub. Khi bấm "Tải bản Windows" hoặc "Tải bản macOS", trình duyệt sẽ kích hoạt tải thẳng file ZIP về máy ngay lập tức.'
   },
   {
-    title: '📦 Trọn Bộ Gói Cài Standalone ZIP v2.9.4 Cho Windows & macOS',
+    title: '📦 Trọn Bộ Gói Cài Standalone ZIP v2.9.7 Cho Windows & macOS',
     description: 'Đồng bộ hóa phiên bản tải về độc lập (.zip); tích hợp sẵn Node Portable & Cloudflare Tunnel không cần cài đặt môi trường, mở 1-Click là dùng ngay.'
   },
   {
