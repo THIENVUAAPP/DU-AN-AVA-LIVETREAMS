@@ -6507,9 +6507,89 @@ export const DEFAULT_VOICE_CONFIG = {
 };
 
 // ==================== MULTI-AVATAR LIVE STUDIO CONFIG (2 - 4 NHÂN VẬT TƯƠNG TÁC) ====================
+export const STUDIO_BACKGROUND_PRESETS = [
+  { id: 'bg_transparent', name: 'Nền Trong Suốt / Tự Động', url: '', color: '#000000', preview: '🎬' },
+  { id: 'bg_greenscreen', name: 'Phông Xanh Chuẩn (Chroma Key)', url: '', color: '#00B140', preview: '🟩' },
+  { id: 'bg_modern_studio', name: 'Phòng Studio Neon 4K', url: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=1920&auto=format&fit=crop', color: '#0f111a', preview: '🎙️' },
+  { id: 'bg_luxury_sales', name: 'Showroom Bán Hàng Cao Cấp', url: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=1920&auto=format&fit=crop', color: '#161922', preview: '🛍️' },
+  { id: 'bg_talkshow_lounge', name: 'Sân Khấu Talkshow Sang Trọng', url: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?q=80&w=1920&auto=format&fit=crop', color: '#1a1824', preview: '🛋️' },
+  { id: 'bg_cyber_pk', name: 'Đấu Trường PK Thách Đấu LED', url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1920&auto=format&fit=crop', color: '#080a14', preview: '🎮' }
+];
+
+export const STUDIO_STAGE_PRESETS = {
+  custom_canvas: {
+    id: 'custom_canvas',
+    name: '🎨 Tự Do Kéo Thả (Freeform Canvas)',
+    desc: 'Di chuyển, thay đổi kích thước và xếp lớp tự do từng nhân vật theo ý muốn.'
+  },
+  sales_duo: {
+    id: 'sales_duo',
+    name: '🛍️ Bán Hàng Live (Idol Đứng + Trợ Lý Ngồi)',
+    desc: 'Idol đứng chính diện tương tác, Trợ lý ngồi bàn máy tính bên cạnh chốt đơn.',
+    transforms: {
+      avatar_1: { x: 4, y: 8, width: 54, height: 88, zIndex: 10, pose: 'stand', objectFit: 'cover' },
+      avatar_2: { x: 50, y: 28, width: 46, height: 68, zIndex: 5, pose: 'sit', objectFit: 'cover' },
+      avatar_3: { x: 70, y: 5, width: 26, height: 35, zIndex: 2, pose: 'sit', objectFit: 'cover' },
+      avatar_4: { x: 70, y: 45, width: 26, height: 35, zIndex: 2, pose: 'sit', objectFit: 'cover' }
+    }
+  },
+  talkshow: {
+    id: 'talkshow',
+    name: '🎙️ Tọa Đàm Talkshow (MC Đứng/Giữa + Khách Mời Ngồi 2 Bên)',
+    desc: 'Bố cục cân đối trường quay: MC ở trung tâm, khách mời ngồi ghế 2 bên.',
+    transforms: {
+      avatar_1: { x: 26, y: 10, width: 48, height: 85, zIndex: 10, pose: 'stand', objectFit: 'cover' },
+      avatar_2: { x: 2, y: 30, width: 38, height: 65, zIndex: 5, pose: 'sit', objectFit: 'cover' },
+      avatar_3: { x: 60, y: 30, width: 38, height: 65, zIndex: 5, pose: 'sit', objectFit: 'cover' },
+      avatar_4: { x: 76, y: 8, width: 22, height: 35, zIndex: 2, pose: 'sit', objectFit: 'cover' }
+    }
+  },
+  pk_caster: {
+    id: 'pk_caster',
+    name: '🎮 PK Game Đối Kháng (2 Đấu Thủ + BLV Phía Dưới)',
+    desc: '2 Đấu thủ đứng/ngồi 2 bên màn hình, BLV hoạt náo ngồi ở góc dưới.',
+    transforms: {
+      avatar_1: { x: 2, y: 4, width: 47, height: 62, zIndex: 5, pose: 'stand', objectFit: 'cover' },
+      avatar_2: { x: 51, y: 4, width: 47, height: 62, zIndex: 5, pose: 'stand', objectFit: 'cover' },
+      avatar_3: { x: 22, y: 58, width: 56, height: 40, zIndex: 10, pose: 'sit', objectFit: 'cover' },
+      avatar_4: { x: 74, y: 60, width: 24, height: 36, zIndex: 8, pose: 'sit', objectFit: 'cover' }
+    }
+  },
+  grid: {
+    id: 'grid',
+    name: '🔲 Chia Khung Đều (Grid Split)',
+    desc: 'Chia đều các ô màn hình tự động theo 2, 3 hoặc 4 nhân vật.',
+    transforms: {
+      avatar_1: { x: 0, y: 0, width: 50, height: 50, zIndex: 1, pose: 'stand', objectFit: 'cover' },
+      avatar_2: { x: 50, y: 0, width: 50, height: 50, zIndex: 1, pose: 'stand', objectFit: 'cover' },
+      avatar_3: { x: 0, y: 50, width: 50, height: 50, zIndex: 1, pose: 'stand', objectFit: 'cover' },
+      avatar_4: { x: 50, y: 50, width: 50, height: 50, zIndex: 1, pose: 'stand', objectFit: 'cover' }
+    }
+  },
+  pip: {
+    id: 'pip',
+    name: '🖼️ Picture-in-Picture (Idol Toàn Khung + Phụ Nhỏ Góc)',
+    desc: 'Idol chiếm trọn màn hình, các trợ lý/khách mời nằm ở góc nhỏ.',
+    transforms: {
+      avatar_1: { x: 0, y: 0, width: 100, height: 100, zIndex: 1, pose: 'stand', objectFit: 'cover' },
+      avatar_2: { x: 64, y: 64, width: 34, height: 34, zIndex: 10, pose: 'sit', objectFit: 'cover' },
+      avatar_3: { x: 64, y: 28, width: 34, height: 34, zIndex: 10, pose: 'sit', objectFit: 'cover' },
+      avatar_4: { x: 2, y: 64, width: 34, height: 34, zIndex: 10, pose: 'sit', objectFit: 'cover' }
+    }
+  }
+};
+
 export const DEFAULT_MULTI_AVATAR_CONFIG = {
   activeCount: 2, // 2, 3, or 4
-  layout: 'split', // 'split' (Dual 2 nhân vật), 'trio' (3 nhân vật), 'grid' (4 nhân vật), 'pip' (Idol chính + Phụ góc)
+  layoutMode: 'custom_canvas', // 'custom_canvas' | 'sales_duo' | 'talkshow' | 'pk_caster' | 'grid' | 'pip'
+  backgroundUrl: '',
+  backgroundColor: '#0a0c14',
+  chromaKey: {
+    enabled: false,
+    color: '#00ff00',
+    similarity: 0.4,
+    smoothness: 0.1
+  },
   avatars: [
     {
       id: 'avatar_1',
@@ -6522,7 +6602,16 @@ export const DEFAULT_MULTI_AVATAR_CONFIG = {
       talkVideo: '',
       volume: 1.0,
       rate: 1.0,
-      enabled: true
+      enabled: true,
+      transform: {
+        x: 4,
+        y: 8,
+        width: 52,
+        height: 88,
+        zIndex: 10,
+        pose: 'stand', // 'stand' (Đứng), 'sit' (Ngồi), 'half' (Nửa người)
+        objectFit: 'cover'
+      }
     },
     {
       id: 'avatar_2',
@@ -6535,7 +6624,16 @@ export const DEFAULT_MULTI_AVATAR_CONFIG = {
       talkVideo: '',
       volume: 1.0,
       rate: 1.05,
-      enabled: true
+      enabled: true,
+      transform: {
+        x: 48,
+        y: 28,
+        width: 48,
+        height: 68,
+        zIndex: 5,
+        pose: 'sit',
+        objectFit: 'cover'
+      }
     },
     {
       id: 'avatar_3',
@@ -6548,7 +6646,16 @@ export const DEFAULT_MULTI_AVATAR_CONFIG = {
       talkVideo: '',
       volume: 1.0,
       rate: 1.1,
-      enabled: false
+      enabled: false,
+      transform: {
+        x: 22,
+        y: 58,
+        width: 56,
+        height: 40,
+        zIndex: 12,
+        pose: 'sit',
+        objectFit: 'cover'
+      }
     },
     {
       id: 'avatar_4',
@@ -6561,7 +6668,16 @@ export const DEFAULT_MULTI_AVATAR_CONFIG = {
       talkVideo: '',
       volume: 1.0,
       rate: 1.0,
-      enabled: false
+      enabled: false,
+      transform: {
+        x: 68,
+        y: 8,
+        width: 30,
+        height: 45,
+        zIndex: 2,
+        pose: 'sit',
+        objectFit: 'cover'
+      }
     }
   ]
 };
@@ -6577,7 +6693,15 @@ export function getMultiAvatarConfig() {
         ...parsed,
         avatars: DEFAULT_MULTI_AVATAR_CONFIG.avatars.map((defaultAv, idx) => {
           const matched = parsed.avatars?.find(a => a.id === defaultAv.id) || parsed.avatars?.[idx];
-          return matched ? { ...defaultAv, ...matched } : defaultAv;
+          if (!matched) return defaultAv;
+          return {
+            ...defaultAv,
+            ...matched,
+            transform: {
+              ...defaultAv.transform,
+              ...(matched.transform || {})
+            }
+          };
         })
       };
     }
@@ -7951,6 +8075,8 @@ export default {
   toggleFavoriteVoiceId,
   isVoiceFavorite,
   DEFAULT_MULTI_AVATAR_CONFIG,
+  STUDIO_BACKGROUND_PRESETS,
+  STUDIO_STAGE_PRESETS,
   getMultiAvatarConfig,
   saveMultiAvatarConfig,
   parseMultiCharacterScript

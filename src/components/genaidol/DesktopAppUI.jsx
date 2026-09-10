@@ -3056,22 +3056,91 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       );
     }
 
-    // 0.1 MULTI-AVATAR STUDIO (2-4 NHÂN VẬT ĐỒNG THỜI)
+    // 0.1 MULTI-AVATAR STUDIO CANVAS (2-4 CHARACTERS)
     if (multiAvatarConfig?.activeCount >= 2) {
       const activeList = (multiAvatarConfig.avatars || [])
         .filter(a => a.enabled)
         .slice(0, multiAvatarConfig.activeCount);
       const count = activeList.length;
+      const isGridOnly = multiAvatarConfig.layoutMode === 'grid';
 
-      const gridClass = count === 2 
-        ? 'grid grid-cols-2 w-full h-full gap-1 p-1 bg-black'
-        : count === 3 
-        ? 'grid grid-cols-3 w-full h-full gap-1 p-1 bg-black'
-        : 'grid grid-cols-2 grid-rows-2 w-full h-full gap-1 p-1 bg-black';
+      if (isGridOnly) {
+        const gridClass = count === 2 
+          ? 'grid grid-cols-2 w-full h-full gap-1 p-1 bg-black'
+          : count === 3 
+          ? 'grid grid-cols-3 w-full h-full gap-1 p-1 bg-black'
+          : 'grid grid-cols-2 grid-rows-2 w-full h-full gap-1 p-1 bg-black';
 
+        return (
+          <div className={gridClass}>
+            {activeList.map((avatar) => {
+              const isSpeakingNow = isSpeakerActive && (activeSpeakerId === avatar.id || (!activeSpeakerId && avatar.id === 'idol'));
+              const customMatch = (customCharacters && Array.isArray(customCharacters)) 
+                ? customCharacters.find(c => c.id === selectedCharacter && (c.url || c.mediaUrl)) 
+                : null;
+              const fallbackUrl = customMatch?.url || userLockedMediaUrl || '';
+              const vidSrc = (isSpeakingNow && avatar.talkVideo) 
+                ? avatar.talkVideo 
+                : (avatar.idleVideo || fallbackUrl);
+
+              return (
+                <div 
+                  key={avatar.id} 
+                  className={`relative w-full h-full overflow-hidden rounded-lg bg-slate-950 flex items-center justify-center transition-all duration-300 ${
+                    isSpeakingNow ? 'ring-2 ring-amber-400/80 shadow-[0_0_20px_rgba(251,191,36,0.4)] z-10' : 'opacity-95'
+                  }`}
+                >
+                  {vidSrc ? (
+                    <video
+                      key={`${avatar.id}_${isSpeakingNow ? 'talk' : 'idle'}_${vidSrc}`}
+                      src={vidSrc}
+                      autoPlay
+                      loop
+                      muted={liveAudioMuted}
+                      playsInline
+                      controls={false}
+                      className="w-full h-full object-cover bg-black"
+                    />
+                  ) : (
+                    <div className="text-center p-3 text-white/70 text-xs">
+                      <span className="text-lg block mb-1">🎭</span>
+                      <span className="font-bold">{avatar.name}</span>
+                    </div>
+                  )}
+
+                  <div className="absolute bottom-2 left-2 z-20 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-sm border border-white/10 text-[10px] font-bold text-white shadow-sm">
+                    <span className={`w-2 h-2 rounded-full ${isSpeakingNow ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'}`} />
+                    <span className="truncate max-w-[100px]">{avatar.name}</span>
+                    {isSpeakingNow && (
+                      <span className="text-amber-300 text-[9px] font-black uppercase tracking-wider">Đang nói</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      }
+
+      // Freeform Visual Studio Stage Canvas
       return (
-        <div className={gridClass}>
-          {activeList.map((avatar) => {
+        <div 
+          className="relative w-full h-full overflow-hidden bg-cover bg-center"
+          style={{
+            backgroundColor: multiAvatarConfig.backgroundColor || '#0a0c14',
+            backgroundImage: multiAvatarConfig.backgroundUrl ? `url(${multiAvatarConfig.backgroundUrl})` : 'none'
+          }}
+        >
+          {activeList.map((avatar, idx) => {
+            const transform = avatar.transform || { 
+              x: idx === 0 ? 5 : idx === 1 ? 50 : idx === 2 ? 25 : 65, 
+              y: idx === 0 ? 10 : idx === 1 ? 30 : idx === 2 ? 60 : 10, 
+              width: 48, 
+              height: 75, 
+              zIndex: 5, 
+              pose: 'stand', 
+              objectFit: 'cover' 
+            };
             const isSpeakingNow = isSpeakerActive && (activeSpeakerId === avatar.id || (!activeSpeakerId && avatar.id === 'idol'));
             const customMatch = (customCharacters && Array.isArray(customCharacters)) 
               ? customCharacters.find(c => c.id === selectedCharacter && (c.url || c.mediaUrl)) 
@@ -3084,9 +3153,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             return (
               <div 
                 key={avatar.id} 
-                className={`relative w-full h-full overflow-hidden rounded-lg bg-slate-950 flex items-center justify-center transition-all duration-300 ${
-                  isSpeakingNow ? 'ring-2 ring-amber-400/80 shadow-[0_0_15px_rgba(251,191,36,0.4)] z-10' : 'opacity-95'
+                className={`absolute rounded-xl overflow-hidden transition-all duration-300 flex flex-col justify-between ${
+                  isSpeakingNow ? 'ring-2 ring-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.6)] z-20 scale-102' : 'hover:ring-1 hover:ring-white/40'
                 }`}
+                style={{
+                  left: `${transform.x}%`,
+                  top: `${transform.y}%`,
+                  width: `${transform.width}%`,
+                  height: `${transform.height}%`,
+                  zIndex: isSpeakingNow ? (transform.zIndex || 5) + 10 : (transform.zIndex || 5)
+                }}
               >
                 {vidSrc ? (
                   <video
@@ -3097,21 +3173,27 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                     muted={liveAudioMuted}
                     playsInline
                     controls={false}
-                    className="w-full h-full object-cover bg-black"
+                    className="w-full h-full select-none pointer-events-none"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: transform.objectFit || 'cover',
+                      backgroundColor: 'transparent'
+                    }}
                   />
                 ) : (
-                  <div className="text-center p-3 text-white/70 text-xs">
-                    <span className="text-lg block mb-1">🎭</span>
-                    <span className="font-bold">{avatar.name}</span>
+                  <div className="w-full h-full bg-slate-900/80 flex flex-col items-center justify-center p-2 text-center text-white border border-white/10">
+                    <span className="text-xl mb-1">{transform.pose === 'sit' ? '🪑' : '🧍'}</span>
+                    <span className="text-[11px] font-black">{avatar.name}</span>
                   </div>
                 )}
 
                 {/* Speaker Active Tag Pill */}
-                <div className="absolute bottom-2 left-2 z-20 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-sm border border-white/10 text-[10px] font-bold text-white shadow-sm">
-                  <span className={`w-2 h-2 rounded-full ${isSpeakingNow ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'}`} />
-                  <span className="truncate max-w-[100px]">{avatar.name}</span>
+                <div className="absolute bottom-1.5 left-1.5 z-20 flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/75 backdrop-blur-sm border border-white/10 text-[9px] font-black text-white shadow-sm pointer-events-none">
+                  <span className={`w-1.5 h-1.5 rounded-full ${isSpeakingNow ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'}`} />
+                  <span className="truncate max-w-[90px]">{avatar.name}</span>
                   {isSpeakingNow && (
-                    <span className="text-amber-300 text-[9px] font-black uppercase tracking-wider">Đang nói</span>
+                    <span className="text-amber-300 text-[8px] uppercase tracking-wider font-black">Nói</span>
                   )}
                 </div>
               </div>

@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.8.0';
+export const APP_VERSION = '2.8.1';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🛠️ Khắc Phục Triệt Để & Tối Ưu Hóa "Kết Nối Idol"',
-    description: 'Sửa lỗi khởi động và nạp trơn tru bảng điều khiển Kết Nối Idol, khôi phục toàn bộ chức năng tác vụ sự kiện và kịch bản bán hàng.'
+    title: '🎨 Sân Khấu Kéo Thả Trực Quan (Visual Freeform Stage Canvas)',
+    description: 'Tự do di chuyển kéo thả vị trí (X, Y), thu phóng kích thước (W, H) và sắp xếp tư thế Đứng / Ngồi cho từng nhân vật (Idol, Trợ Lý, Khách Mời, BLV) trên cùng 1 sân khấu.'
   },
   {
-    title: '👥 Tích Hợp Trực Tiếp "Studio 2–4 Avatar" Vào "Kết Nối Idol"',
-    description: 'Tab Studio 2–4 Nhân Vật được đưa vào vị trí nổi bật hàng đầu bên trong Kết Nối Idol, kết nối đồng bộ 100% với kịch bản đối thoại, video Idle / Talk khẩu hình và kho giọng đọc AI.'
+    title: '🖼️ Lồng Ghép Phông Nền Phòng Live & Bố Cục Sân Khấu Mẫu',
+    description: 'Tích hợp kho phông nền Studio 4K (Phòng Live Neon, Showroom Bán Hàng, Talkshow, Đấu Trường PK, Phông Xanh Chroma Key) cùng các mẫu bố cục 1-click chuyên nghiệp.'
   },
   {
-    title: '📺 Đồng Bộ Hiển Thị Đa Nhân Vật Cả Trên Ứng Dụng & Luồng OBS / TikTok Studio',
-    description: 'Hỗ trợ phát đa nhân vật mượt mà 60fps qua Window Capture (bắt cửa sổ) hoặc Browser Source (dán link Overlay), tự động chia khung hình Dual / Trio / Squad trên cùng 1 luồng duy nhất.'
+    title: '🎬 Đồng Bộ Hoàn Hảo Ra Luồng TikTok Live Studio & OBS',
+    description: 'Hiển thị chính xác từng vị trí tọa độ và lớp hiển thị trên luồng phát 60fps mượt mà, hỗ trợ cả Window Capture và Browser Source link với cơ chế chuyển khẩu hình nhép miệng thời gian thực 0ms.'
   }
 ];
 
