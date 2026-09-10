@@ -83,6 +83,24 @@ export const SCRIPT_TEMPLATES = [
   }
 ];
 
+const toast = {
+  success: (msg) => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('avalive_toast', { detail: { type: 'success', message: msg } }));
+    }
+  },
+  error: (msg) => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('avalive_toast', { detail: { type: 'error', message: msg } }));
+    }
+  },
+  info: (msg) => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('avalive_toast', { detail: { type: 'info', message: msg } }));
+    }
+  }
+};
+
 export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = false, onClose = null }) {
   const [config, setConfig] = useState(() => getMultiAvatarConfig());
   const [activeTab, setActiveTab] = useState('canvas'); // 'canvas', 'templates'
@@ -110,6 +128,18 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
   const isBgSelected = selectedAvatarId === 'studio_background';
   const selectedAvatar = safeAvatars.find(a => a.id === selectedAvatarId) || safeAvatars[0] || DEFAULT_MULTI_AVATAR_CONFIG.avatars[0];
   const bgTransform = config.backgroundTransform || DEFAULT_MULTI_AVATAR_CONFIG.backgroundTransform;
+
+  const handleToggleEnabled = (forceVal) => {
+    const nextVal = typeof forceVal === 'boolean' ? forceVal : !config.enabled;
+    const updated = { ...config, enabled: nextVal };
+    setConfig(updated);
+    saveMultiAvatarConfig(updated);
+    if (nextVal) {
+      toast.success('✅ Đã BẬT chế độ Studio 2–4 Avatar cho phòng Live!');
+    } else {
+      toast.info('⏹️ Đã TẮT Studio 2–4 Avatar, phòng Live trở về 1 Avatar tiêu chuẩn.');
+    }
+  };
 
   const handleActiveCountChange = (count) => {
     const updated = {
@@ -358,13 +388,26 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     previewVoiceAudio(voiceObj, voiceObj.sampleText || 'Xin chào cả nhà! Đây là giọng đọc mẫu của nhân vật.', { onEnd: () => setPreviewingVoiceId(null) });
   };
 
-  const handleSave = () => {
-    saveMultiAvatarConfig(config);
+  const handleSaveAndApply = () => {
+    const updated = { ...config, enabled: true };
+    setConfig(updated);
+    saveMultiAvatarConfig(updated);
     setSavedSuccess(true);
+    toast.success('✨ Đã lưu và kích hoạt chế độ Studio 2–4 Avatar cho phòng Live!');
     setTimeout(() => {
       setSavedSuccess(false);
       if (onClose) onClose();
-    }, 800);
+    }, 600);
+  };
+
+  const handleSave = () => {
+    saveMultiAvatarConfig(config);
+    setSavedSuccess(true);
+    toast.success('💾 Đã lưu cấu hình Studio 2–4 Avatar!');
+    setTimeout(() => {
+      setSavedSuccess(false);
+      if (onClose) onClose();
+    }, 600);
   };
 
   const handleSelectMedia = (mediaItem) => {
@@ -571,7 +614,34 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
           ? 'bg-white dark:bg-[#161822] border-gray-200 dark:border-gray-800 rounded-2xl shadow-xs mb-2.5' 
           : 'bg-[#171924] border-gray-800'
       }`}>
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Nút BẬT / TẮT Kích Hoạt Studio 2-4 Avatar */}
+          <button
+            type="button"
+            onClick={() => handleToggleEnabled()}
+            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
+              config.enabled
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white ring-2 ring-emerald-400 shadow-emerald-500/20'
+                : 'bg-slate-700/70 hover:bg-slate-700 text-gray-300 border border-gray-600 hover:text-white'
+            }`}
+            title="Bật/Tắt chế độ Studio Đa Nhân Vật khi phát Live"
+          >
+            {config.enabled ? (
+              <>
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-300"></span>
+                </span>
+                <span>✅ BẬT 2-4 AVATAR</span>
+              </>
+            ) : (
+              <>
+                <span className="inline-flex rounded-full h-2 w-2 bg-gray-400"></span>
+                <span>⏹️ TẮT (1 AVATAR CHUẨN)</span>
+              </>
+            )}
+          </button>
+
           <div className="flex items-center gap-1">
             <span className="text-[11px] font-black text-gray-500 uppercase">Nhân vật:</span>
             <div className="flex items-center gap-1 bg-slate-100 dark:bg-black/40 p-0.5 rounded-xl border border-gray-300 dark:border-gray-700">
@@ -604,7 +674,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                     : 'text-gray-600 dark:text-gray-300 hover:text-blue-600'
                 }`}
               >
-                <Smartphone size={13} /> 9:16 (TikTok Dọc)
+                <Smartphone size={13} /> 9:16 (Dọc)
               </button>
               <button
                 type="button"
@@ -615,7 +685,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                     : 'text-gray-600 dark:text-gray-300 hover:text-blue-600'
                 }`}
               >
-                <Monitor size={13} /> 16:9 (OBS Ngang)
+                <Monitor size={13} /> 16:9 (Ngang)
               </button>
             </div>
           </div>
@@ -630,7 +700,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
               activeTab === 'canvas' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-blue-600'
             }`}
           >
-            <Move size={13} /> Sân Khấu Kéo Thả
+            <Move size={13} /> Sân Khấu
           </button>
           <button
             type="button"
@@ -639,7 +709,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
               activeTab === 'templates' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-purple-600'
             }`}
           >
-            <MessageSquare size={13} /> Kịch Bản Đối Thoại
+            <MessageSquare size={13} /> Kịch Bản
           </button>
         </div>
 
@@ -658,19 +728,41 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
             type="button"
             onClick={handleSaveAndApply}
             className="px-3.5 py-1.5 rounded-xl font-black text-xs flex items-center gap-1.5 transition-all cursor-pointer bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-md hover:shadow-lg hover:scale-102"
+            title="Lưu tất cả thay đổi và kích hoạt ngay vào phòng Live"
           >
-            <Check size={14} /> Áp Dụng Ngay
+            <Check size={14} /> {config.enabled ? 'Đã Bật • Áp Dụng' : 'Bật & Áp Dụng Live'}
           </button>
           
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 rounded-xl text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
-          >
-            <X size={18} />
-          </button>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 rounded-xl text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Thông báo trạng thái BẬT/TẮT */}
+      {!config.enabled && (
+        <div className={`mx-2 mb-2 p-2 rounded-xl text-xs flex items-center justify-between gap-2 ${
+          isEmbedded ? 'bg-amber-50 border border-amber-200 text-amber-900' : 'bg-amber-500/15 border border-amber-500/30 text-amber-300'
+        }`}>
+          <div className="flex items-center gap-2">
+            <Info size={15} className="text-amber-500 shrink-0" />
+            <span>Chế độ <strong>Studio 2–4 Avatar hiện đang TẮT</strong>. Phòng Live sẽ chạy <strong>1 Avatar đơn tiêu chuẩn</strong>.</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => handleToggleEnabled(true)}
+            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-black rounded-lg shrink-0 cursor-pointer shadow-xs transition-transform hover:scale-105"
+          >
+            Bật Chế Độ 2–4 Avatar 🚀
+          </button>
+        </div>
+      )}
 
       {/* 2. MAIN WORKSPACE CONTENT */}
       <div className="flex-1 overflow-y-auto">

@@ -2073,7 +2073,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           {currentStage === 'idol' && (
             <div className="w-full h-full absolute inset-0 flex items-center justify-center overflow-hidden bg-black">
             {/* MULTI-AVATAR STUDIO CANVAS (2-4 CHARACTERS) */}
-            {multiAvatarConfig?.activeCount >= 2 ? (() => {
+            {multiAvatarConfig?.enabled && multiAvatarConfig?.activeCount >= 2 ? (() => {
               const activeList = (multiAvatarConfig.avatars || [])
                 .filter(a => a.enabled)
                 .slice(0, multiAvatarConfig.activeCount);

@@ -31,7 +31,7 @@ import bandoAudio from './game/bandoAudioEngine';
 import { mapVoiceEngine, battleVoiceEngine } from './game/gameVoiceEngine';
 import battleCommentary from './game/battleCommentaryEngine';
 import { clearGlobalSpeechQueue, getMultiAvatarConfig, isImageMedia, getChromaStyle } from '../../utils/voiceSyncService';
-import { SvgChromaFilters } from './MultiAvatarStudioModal';
+import MultiAvatarStudioModal, { SvgChromaFilters } from './MultiAvatarStudioModal';
 import AutoCaptchaSolver from '../AutoCaptchaSolver';
 import AIVoiceModule from '../kol-live/AIVoiceModule';
 import AICharacterBeautyModal from './AICharacterBeautyModal';
@@ -439,6 +439,7 @@ export default function DesktopAppUI() {
       return { enabled: false, activeCount: 1, layout: 'auto', avatars: [] };
     }
   });
+  const [showMultiAvatarStudioModal, setShowMultiAvatarStudioModal] = useState(false);
   const [activeSpeakerId, setActiveSpeakerId] = useState(null);
   const [isSpeakerActive, setIsSpeakerActive] = useState(false);
 
@@ -3058,7 +3059,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     }
 
     // 0.1 MULTI-AVATAR STUDIO CANVAS (2-4 CHARACTERS)
-    if (multiAvatarConfig?.activeCount >= 2) {
+    if (multiAvatarConfig?.enabled && multiAvatarConfig?.activeCount >= 2) {
       const activeList = (multiAvatarConfig.avatars || [])
         .filter(a => a.enabled)
         .slice(0, multiAvatarConfig.activeCount);
@@ -4196,6 +4197,23 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             </button>
           )}
 
+          {/* Nút Cấu Hình & Bật Tắt Studio 2-4 Avatar */}
+          <button 
+            className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs cursor-pointer ${
+              multiAvatarConfig?.enabled
+                ? 'bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 text-white border-purple-300 shadow-purple-500/40 ring-1 ring-purple-400/50' 
+                : (isDarkMode ? 'border-purple-500/30 bg-purple-950/30 text-purple-300 hover:bg-purple-900/40' : 'border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100')
+            }`}
+            onClick={() => setShowMultiAvatarStudioModal(true)}
+            title="Mở Studio 2–4 Avatar (Tự do tùy chỉnh, kéo thả, co giãn nhiều nhân vật & kịch bản đối thoại)"
+          >
+            <Users size={10} className={multiAvatarConfig?.enabled ? 'text-yellow-300' : 'text-purple-400'} />
+            <span className="whitespace-nowrap">Studio 2-4 Avatar {multiAvatarConfig?.enabled ? `(${multiAvatarConfig.activeCount || 2})` : ''}</span>
+            {multiAvatarConfig?.enabled && (
+              <span className="w-1 h-1 rounded-full bg-emerald-400 animate-ping"></span>
+            )}
+          </button>
+
           {/* 1 Nút Chuyển Tỷ Lệ Khung Hình Toàn Cục DUY NHẤT CHO TOÀN BỘ HỆ THỐNG: 9:16 (TikTok Dọc) vs 16:9 (OBS Ngang) */}
           <button
             onClick={toggleGlobalAspectRatio}
@@ -5293,6 +5311,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         isOpen={activeSettingsModal === 'shopee_live'}
         onClose={() => setActiveSettingsModal(null)}
         isDarkMode={isDarkMode}
+      />
+
+      {/* 👥 MultiAvatarStudioModal (Studio 2–4 Avatar) */}
+      <MultiAvatarStudioModal
+        isOpen={showMultiAvatarStudioModal}
+        onClose={() => setShowMultiAvatarStudioModal(false)}
       />
 
       {/* Token History Modal */}

@@ -6580,6 +6580,7 @@ export const STUDIO_STAGE_PRESETS = {
 };
 
 export const DEFAULT_MULTI_AVATAR_CONFIG = {
+  enabled: false, // 🛡️ Mặc định TẮT để chạy 1 Avatar tiêu chuẩn; khi BẬT mới kích hoạt sân khấu 2-4 Avatar
   activeCount: 2, // 2, 3, or 4
   layoutMode: 'custom_canvas', // 'custom_canvas' | 'sales_duo' | 'talkshow' | 'pk_caster' | 'grid' | 'pip'
   backgroundUrl: '',
@@ -6762,6 +6763,7 @@ export function getMultiAvatarConfig() {
       return {
         ...DEFAULT_MULTI_AVATAR_CONFIG,
         ...parsed,
+        enabled: typeof parsed.enabled === 'boolean' ? parsed.enabled : false,
         backgroundTransform: {
           ...DEFAULT_MULTI_AVATAR_CONFIG.backgroundTransform,
           ...(parsed.backgroundTransform || {})
@@ -6807,6 +6809,28 @@ export function parseMultiCharacterScript(text, config = null) {
   if (!text || !text.trim()) return [];
   const multiConfig = config || getMultiAvatarConfig();
   const rawLines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+  // 🛡️ NẾU CHẾ ĐỘ MULTI-AVATAR ĐANG TẮT (ENABLED === FALSE): TRẢ VỀ CHẾ ĐỘ 1 AVATAR ĐƠN TIÊU CHUẨN
+  if (!multiConfig.enabled) {
+    const idolAvatar = multiConfig.avatars?.[0] || DEFAULT_MULTI_AVATAR_CONFIG.avatars[0];
+    const voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === idolAvatar.voiceId) || { id: idolAvatar.voiceId || 'free_vi_female', lang: 'vi-VN', gender: 'Female' };
+    return rawLines.map((line, idx) => {
+      let cleanText = line.replace(/^\[([^\]]+)\]\s*:\s*/i, '').replace(/^([a-zA-Z0-9_\u00C0-\u1EF9\s]{2,20})\s*:\s*/i, '').trim();
+      if (!cleanText) cleanText = line;
+      return {
+        index: idx,
+        rawLine: line,
+        text: cleanText,
+        avatarId: idolAvatar.id,
+        avatarName: idolAvatar.name,
+        role: idolAvatar.role,
+        voiceId: idolAvatar.voiceId,
+        voiceObj,
+        volume: idolAvatar.volume ?? 1.0,
+        rate: idolAvatar.rate ?? 1.0
+      };
+    });
+  }
 
   return rawLines.map((line, idx) => {
     let matchedAvatar = null;

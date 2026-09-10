@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.8.8';
+export const APP_VERSION = '2.8.9';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🖼️ Tùy Chỉnh Kéo Thả, Co Giãn, Phóng To Thu Nhỏ Ảnh Nền Studio Siêu Linh Hoạt',
-    description: 'Ảnh nền Studio hiện có đầy đủ 8 điểm neo (8-point handles), kéo thả di chuyển, phóng to/thu nhỏ 50%-300%, chỉnh độ mờ (blur) và độ sáng (brightness) cực mượt như OBS / TikTok Studio.'
+    title: '🔘 Công Tắc Bật / Tắt Kích Hoạt Studio 2–4 Avatar Linh Hoạt',
+    description: 'Thêm công tắc BẬT / TẮT trực quan cho chế độ Studio 2–4 Avatar. Khi TẮT, hệ thống tự động hoàn nguyên về chế độ 1 Avatar & 1 kịch bản tiêu chuẩn như ban đầu.'
   },
   {
-    title: '🎯 Kéo Thả & Co Giãn Video Nhân Vật Siêu Mượt Chuẩn TikTok LIVE Studio',
-    description: 'Tối ưu hóa thao tác kéo thả, co giãn 8 hướng, hỗ trợ phím mũi tên căn chỉnh tinh vi (Arrow ±1%, Shift+Arrow ±5%), đảm bảo không bị giật lag hay lệch vị trí.'
+    title: '⚡ Sửa Triệt Để Lỗi Mở Giao Diện Studio & Tối Ưu Tốc Độ Khởi Động',
+    description: 'Khắc phục hoàn toàn lỗi crash khi bấm mở Studio 2-4 Avatar, bổ sung nút truy cập nhanh từ thanh công cụ Live chính và Settings.'
   },
   {
-    title: '⚡ Đồng Bộ Trực Tiếp Lớp Nền & Video Nhân Vật Ra Màn Hình Live',
-    description: 'Mọi thao tác căn chỉnh ảnh nền và video nhân vật trong Studio được hiển thị tức thì 100% trên màn hình phần mềm và cửa sổ Clean Live OBS.'
+    title: '🖼️ Kéo Thả & Co Giãn Ảnh Nền & Video Nhân Vật Đa Luồng Siêu Mượt',
+    description: 'Hoàn thiện 8 điểm neo co giãn tự do, thanh trượt Zoom 50%-300%, hiệu ứng mờ Blur và độ sáng Brightness mượt mà chuẩn OBS / TikTok Studio.'
   }
 ];
 
