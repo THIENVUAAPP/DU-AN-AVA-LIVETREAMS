@@ -2452,15 +2452,17 @@ app.get(['/api/tunnel-url', '/api/tunnel-status'], (req, res) => {
     loopbackUrl,
     lanIp,
     projects: {
-      idol:   currentTunnelUrl ? `${currentTunnelUrl}/idol`   : null,
+      idol:   currentTunnelUrl ? `${currentTunnelUrl}/live-stream` : null,
+      'live-stream': currentTunnelUrl ? `${currentTunnelUrl}/live-stream` : null,
       bando:  currentTunnelUrl ? `${currentTunnelUrl}/bando`  : null,
       battle: currentTunnelUrl ? `${currentTunnelUrl}/battle` : null,
     },
     localProjects: {
-      idol:   `${localLanUrl}/idol`,
+      idol:   `${localLanUrl}/live-stream`,
+      'live-stream': `${localLanUrl}/live-stream`,
       bando:  `${localLanUrl}/bando`,
       battle: `${localLanUrl}/battle`,
-      loopbackIdol: `${loopbackUrl}/idol`,
+      loopbackIdol: `${loopbackUrl}/live-stream`,
     }
   });
 });
@@ -2637,7 +2639,8 @@ async function startCloudflaredTunnel(port) {
               status: 'active',
               tunnelUrl: currentTunnelUrl,
               projects: {
-                idol: `${currentTunnelUrl}/idol`,
+                idol: `${currentTunnelUrl}/live-stream`,
+                'live-stream': `${currentTunnelUrl}/live-stream`,
                 bando: `${currentTunnelUrl}/bando`,
                 battle: `${currentTunnelUrl}/battle`
               }
@@ -2677,7 +2680,7 @@ function printTunnelReady(tunnelUrl) {
   console.log('║  🎉 CLOUDFLARE TUNNEL ĐÃ SẴN SÀNG (KHÔNG CẦN IP)!   ║');
   console.log('╠══════════════════════════════════════════════════════╣');
   console.log(`║  🌐 Base URL:  ${tunnelUrl.padEnd(38)}║`);
-  console.log(`║  👑 AI Idol:   ${(tunnelUrl + '/idol').padEnd(38)}║`);
+  console.log(`║  👑 AI Idol:   ${(tunnelUrl + '/live-stream').padEnd(38)}║`);
   console.log(`║  🗺️  Bản Đồ:   ${(tunnelUrl + '/bando').padEnd(38)}║`);
   console.log(`║  ⚔️  Battle:   ${(tunnelUrl + '/battle').padEnd(38)}║`);
   console.log('╠══════════════════════════════════════════════════════╣');

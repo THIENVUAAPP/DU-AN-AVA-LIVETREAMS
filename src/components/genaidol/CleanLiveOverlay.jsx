@@ -625,53 +625,18 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   }, []);
 
   // ⚡ ANTI-OCCLUSION & ANTI-FREEZE KEEP-ALIVE ENGINE CHO TIKTOK LIVE STUDIO & OBS WINDOW CAPTURE
-  // Khắc phục triệt để lỗi đứng hình khi cửa sổ bị che khuất hoặc không nằm đè lên trên
+  // Giữ luồng giải mã GPU 60 FPS mượt mà liên tục, không bị ngắt quãng khi che khuất
   useEffect(() => {
-    // 1. Silent Web Audio API Heartbeat: Báo cho Chromium biết cửa sổ đang phát âm thanh ngầm
-    // khiến Chromium KHÔNG BAO GIỜ ngắt / đóng băng tiến trình dù bị che khuất hoặc nằm dưới
-    let audioCtx = null;
-    let osc = null;
-    const startAudioKeepAlive = () => {
-      try {
-        const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
-        if (AudioCtxClass && !audioCtx) {
-          audioCtx = new AudioCtxClass();
-          osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          gain.gain.value = 0.00001; // Âm lượng siêu nhỏ không thể nghe thấy
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc.start();
-        }
-        if (audioCtx && audioCtx.state === 'suspended') {
-          audioCtx.resume().catch(() => {});
-        }
-      } catch (e) {}
-    };
-    startAudioKeepAlive();
-    window.addEventListener('click', startAudioKeepAlive, { once: true });
-    window.addEventListener('focus', startAudioKeepAlive);
-
-    // 2. Spoof Document Visibility: Đánh lừa Chromium để luôn báo cửa sổ đang hiển thị chính
+    // 1. Spoof Document Visibility: Đánh lừa Chromium để luôn báo cửa sổ đang hiển thị chính
     try {
       Object.defineProperty(document, 'hidden', { get: () => false, configurable: true });
       Object.defineProperty(document, 'visibilityState', { get: () => 'visible', configurable: true });
     } catch (e) {}
 
-    // 3. Wake Lock: Chống tắt màn hình / sleep máy
+    // 2. Wake Lock: Chống tắt màn hình / sleep máy
     if ('wakeLock' in navigator) {
       navigator.wakeLock.request('screen').catch(() => {});
     }
-
-    return () => {
-      if (osc) {
-        try { osc.stop(); } catch (e) {}
-      }
-      if (audioCtx) {
-        try { audioCtx.close(); } catch (e) {}
-      }
-      window.removeEventListener('focus', startAudioKeepAlive);
-    };
   }, []);
 
   useEffect(() => {
@@ -750,25 +715,16 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           try { vid.currentTime = targetTime; } catch (e) {}
         }
       } else if (action === 'time_sync') {
-        // 🎯 ĐỒNG BỘ THỜI GIAN THỰC (SIÊU MƯỢT 60 FPS, TUYỆT ĐỐI KHÔNG SEEK THỤ ĐỘNG GÂY GIẬT ĐỨNG HÌNH)
+        // 🎯 ĐỒNG BỘ THỜI GIAN THỰC (SIÊU MƯỢT 60 FPS, KHÓA TỐC ĐỘ 1.0X CHUẨN XÁC, ÂM THANH TRONG TRẺO)
         if (control.force && typeof targetTime === 'number' && !isNaN(targetTime)) {
           try { vid.currentTime = targetTime; } catch (e) {}
-          vid.playbackRate = 1.0;
         } else if (typeof targetTime === 'number' && !isNaN(targetTime) && !vid.paused) {
           const cur = vid.currentTime || 0;
-          const diff = cur - targetTime;
-          if (Math.abs(diff) > 12.0) {
+          const diff = Math.abs(cur - targetTime);
+          if (diff > 20.0) {
             try { vid.currentTime = targetTime; } catch (e) {}
-            vid.playbackRate = 1.0;
-          } else if (diff < -0.5) {
-            vid.playbackRate = 1.04;
-          } else if (diff > 0.5) {
-            vid.playbackRate = 0.96;
-          } else {
-            vid.playbackRate = 1.0;
           }
         }
-        // Đảm bảo video tiếp tục phát nếu phần mềm chính đang phát
         if (!isUserPausedRef.current && vid.paused && vid.readyState >= 2) {
           vid.play().catch(() => {});
         }
@@ -777,13 +733,15 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       // 3. Đồng bộ Mute & Volume tức thì (Đồng bộ trực tiếp từ phần mềm điều khiển sang Window Capture & Khán giả)
       if (typeof control.isMuted === 'boolean') {
         setIsVideoAudioMuted(control.isMuted);
-        if (vid) vid.muted = control.isMuted;
+        if (vid && vid.muted !== control.isMuted) vid.muted = control.isMuted;
         bandoAudio.setLocalSpeakerMute(control.isMuted);
         bandoAudio.setMuted(control.isMuted);
       }
-      if (typeof control.volume === 'number') {
+      if (typeof control.volume === 'number' && !isNaN(control.volume)) {
         setVideoVolume(control.volume);
-        if (vid && !control.isMuted) vid.volume = control.volume;
+        if (vid && !control.isMuted && Math.abs(vid.volume - control.volume) > 0.02) {
+          try { vid.volume = control.volume; } catch (e) {}
+        }
         bandoAudio.setMasterVolume(control.volume);
       }
     };
@@ -1070,24 +1028,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               const v = overlayVideoRef.current;
               if (v && typeof masterTime === 'number' && !isNaN(masterTime)) {
                 const cur = v.currentTime || 0;
-                const diff = cur - masterTime;
+                const diff = Math.abs(cur - masterTime);
                 
-                // 🎯 1. Chỉ hard seek khi có cờ force chủ động (tua, restart) hoặc lệch quá xa (> 12 giây)
-                if (event.data.force || Math.abs(diff) > 12.0) {
+                // 🎯 1. Chỉ hard seek khi có cờ force chủ động (tua, restart) hoặc lệch quá xa (> 20 giây)
+                if (event.data.force || diff > 20.0) {
                   try { v.currentTime = masterTime; } catch (e) {}
-                  v.playbackRate = 1.0;
-                } else if (isMasterPlaying && !v.paused) {
-                  // 🎯 2. Tinh chỉnh tốc độ mượt mà bù lệch mili-giây mà KHÔNG flush decoder, 60 FPS siêu mượt không khựng
-                  if (diff < -0.5) {
-                    v.playbackRate = 1.04; // Tăng nhẹ để bắt kịp mượt mà
-                  } else if (diff > 0.5) {
-                    v.playbackRate = 0.96; // Giảm nhẹ để khớp lại
-                  } else {
-                    v.playbackRate = 1.0;
-                  }
                 }
 
-                // 🎯 3. Đồng bộ trạng thái Phát / Tạm dừng
+                // 🎯 2. Đồng bộ trạng thái Phát / Tạm dừng
                 if (isMasterPlaying) {
                   v.dataset.userPaused = 'false';
                   isUserPausedRef.current = false;
@@ -1106,13 +1054,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               }
               if (typeof event.data.isMuted === 'boolean') {
                 setIsVideoAudioMuted(event.data.isMuted);
-                if (v) v.muted = event.data.isMuted;
+                if (v && v.muted !== event.data.isMuted) v.muted = event.data.isMuted;
                 bandoAudio.setLocalSpeakerMute(event.data.isMuted);
                 bandoAudio.setMuted(event.data.isMuted);
               }
-              if (typeof event.data.volume === 'number') {
+              if (typeof event.data.volume === 'number' && !isNaN(event.data.volume)) {
                 setVideoVolume(event.data.volume);
-                if (v && !event.data.isMuted) {
+                if (v && !event.data.isMuted && Math.abs(v.volume - event.data.volume) > 0.02) {
                   try { v.volume = event.data.volume; } catch (e) {}
                 }
                 bandoAudio.setMasterVolume(event.data.volume);
@@ -1987,7 +1935,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v2.9.7
+                v2.9.8
               </span>
             </div>
 

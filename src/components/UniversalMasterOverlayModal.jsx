@@ -204,7 +204,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
     }
 
     let glue = baseUrl.includes('?') ? '&' : '?';
-    if (finalMedia && typeof finalMedia === 'string' && !finalMedia.startsWith('blob:') && (path === 'idol' || path === 'studio' || path === 'overlay' || path === 'live')) {
+    if (finalMedia && typeof finalMedia === 'string' && !finalMedia.startsWith('blob:') && (path === 'idol' || path === 'live-stream' || path === 'studio' || path === 'overlay' || path === 'live')) {
        if (finalMedia.includes('/uploads/')) {
          finalMedia = finalMedia.substring(finalMedia.indexOf('/uploads/'));
        }
@@ -227,7 +227,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
       icon: MonitorPlay,
       iconColor: "text-pink-400",
       bgColor: "bg-[#1a0f14]/80 border-pink-500/30 hover:border-pink-500/50",
-      path: "idol",
+      path: "live-stream",
     },
     {
       id: "bando",
@@ -283,7 +283,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
               <h2 className="text-base font-black text-white tracking-wide flex items-center gap-2">
                 <span>TRUNG TÂM PHÁT SÓNG TIKTOK LIVE STUDIO & OBS</span>
                 <span className="text-[10px] bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-2 py-0.5 rounded-full font-bold">
-                  v2.9.7 ONLINE
+                  v2.9.8 ONLINE
                 </span>
               </h2>
               <p className="text-xs text-gray-400 font-medium">

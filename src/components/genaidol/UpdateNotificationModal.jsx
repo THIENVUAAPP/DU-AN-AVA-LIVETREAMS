@@ -2,24 +2,24 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.9.7';
+export const APP_VERSION = '2.9.8';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🌐 Khôi Phục Đường Link Phát Live Online HTTPS Cho TikTok Live Studio & OBS',
-    description: 'Tối ưu hóa đường link Online HTTPS trực tiếp (/idol) qua Cloudflare Tunnel & Vercel Cloud 60 FPS, không dùng localhost, phát video tức thì không giật lag, không đứng hình.'
+    title: '🌐 Khôi Phục Đường Link Cloudflare Live-Stream Chuẩn 60 FPS Cho TikTok Live Studio',
+    description: 'Tối ưu hóa đường link phát siêu nhẹ (/live-stream) tải tức thì 0.05s qua Cloudflare Tunnel, mở là nạp video 60 FPS ngay lập tức, không bị xoay tròn load hoài.'
   },
   {
-    title: '🖥️ Đồng Bộ Lockstep & Siêu Sắc Nét 1080p Cho Cửa Sổ Bắt Màn Hình (Window Capture)',
-    description: 'Nâng cấp công nghệ bù trôi xung nhịp thời gian thực không ngắt quãng GPU, phát video mượt mà liên tục từ đầu đến cuối không bị phát lại từ đầu, đồng bộ Tạm dừng/Tiếp tục 100% với phần mềm.'
+    title: '🔊 Khắc Phục Triệt Để Lỗi Âm Thanh Giật / Nhấp Nháy & Tối Ưu Độ Nét Window Capture',
+    description: 'Loại bỏ xung đột âm thanh phần cứng, khóa tốc độ 1.0x nguyên bản trong trẻo, đồng bộ chính xác 100% hình ảnh, cử chỉ, khung hình và âm thanh giữa phần mềm gốc và Window Capture OBS/TikTok Live Studio.'
   },
   {
-    title: '⚡ Khắc Phục Triệt Để Lỗi Tải ZIP Trực Tiếp & Tự Động Lưu Về Máy 100%',
-    description: 'Xử lý triệt để lỗi chuyển hướng sang giao diện GitHub. Khi bấm "Tải bản Windows" hoặc "Tải bản macOS", trình duyệt sẽ kích hoạt tải thẳng file ZIP về máy ngay lập tức.'
+    title: '🖥️ Đồng Bộ Khóa Chặt (Lockstep Sync) 2 Chiều Giữa Phần Mềm Và Cửa Sổ Live',
+    description: 'Khi phần mềm bấm Tạm dừng / Tiếp tục thì bản chia sẻ Window Capture phản hồi ngay lập tức, phát liền mạch từ đầu đến đuôi không bị nhảy về 0:00.'
   },
   {
-    title: '📦 Trọn Bộ Gói Cài Standalone ZIP v2.9.7 Cho Windows & macOS',
+    title: '📦 Trọn Bộ Gói Cài Standalone ZIP v2.9.8 Cho Windows & macOS',
     description: 'Đồng bộ hóa phiên bản tải về độc lập (.zip); tích hợp sẵn Node Portable & Cloudflare Tunnel không cần cài đặt môi trường, mở 1-Click là dùng ngay.'
   },
   {
