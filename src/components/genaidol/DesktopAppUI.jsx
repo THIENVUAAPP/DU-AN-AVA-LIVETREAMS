@@ -507,14 +507,31 @@ export default function DesktopAppUI() {
     };
   }, []);
 
-  const handleToggleScriptLive = () => {
-    const next = !isScriptLiveRunning;
+  const handleToggleScriptLive = (forceState = null) => {
+    const next = forceState !== null ? forceState : !isScriptLiveRunning;
     setIsScriptLiveRunning(next);
     try { localStorage.setItem('aidol_is_script_live_running', String(next)); } catch (e) {}
+    
     if (next) {
-      showToast('▶️ Đã BẬT phát sóng kịch bản bán hàng Live! AI đang đọc tuần tự và đồng bộ khẩu hình.', 'success');
+      const chosen = scriptTabsList.find(t => t.active) || scriptTabsList[0];
+      const scriptText = chosen?.fixedScriptText || '';
+      
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.startScript(scriptText);
+      }
+      
+      window.dispatchEvent(new CustomEvent('aidol_script_updated', {
+        detail: { activeScriptTabId: chosen?.id, scriptTabs: scriptTabsList, fixedScriptText: scriptText, isPlaying: true }
+      }));
+      
+      const count = scriptText.split(/\r?\n/).filter(Boolean).length;
+      showToast(`▶️ Đang phát kịch bản: "${chosen?.name || 'Kịch bản 1'}" (${count} câu thoại)`, 'success');
     } else {
-      showToast('⏹️ Đã tạm dừng phát sóng kịch bản bán hàng.', 'info');
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.stopScript();
+      }
+      stopVoiceAudio();
+      showToast('⏹️ Đã tạm dừng phát kịch bản bán hàng.', 'info');
     }
   };
 
@@ -541,7 +558,12 @@ export default function DesktopAppUI() {
     window.dispatchEvent(new CustomEvent('aidol_script_updated', {
       detail: { activeScriptTabId: tabId, scriptTabs: updated, fixedScriptText: chosen.fixedScriptText, activeTab: chosen }
     }));
-    showToast(`🎯 Đã kích hoạt "${chosen.name}" làm kịch bản phát Live!`, 'success');
+
+    if (isScriptLiveRunning && audioPlayerRef.current) {
+      audioPlayerRef.current.startScript(chosen.fixedScriptText);
+    }
+    const count = (chosen.fixedScriptText || '').split(/\r?\n/).filter(Boolean).length;
+    showToast(`🎯 Đã chuyển sang kịch bản "${chosen.name}" (${count} câu thoại)!`, 'success');
   };
 
   // 🔒 Trạng thái video được khoá bởi người dùng (Bảo vệ không bị mất, không bị đổi ngầm)
@@ -3674,7 +3696,7 @@ export default function DesktopAppUI() {
           </button>
     </div>
         
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5 flex-wrap">
           {/* NÚT BẤM ĐỒNG BỘ: TẮT TẤT CẢ / BẬT TẤT CẢ PHIÊN LIVE & CÁC TÍNH NĂNG */}
           <button 
             onClick={handleToggleMasterLive}
@@ -3699,6 +3721,43 @@ export default function DesktopAppUI() {
               </>
             )}
           </button>
+
+          {/* 📜 NÚT GỘP DUY NHẤT: PHÁT KỊCH BẢN LIVE & DROPDOWN CHỌN KỊCH BẢN (NẰM NGAY CẠNH BẬT TẤT CẢ) */}
+          <div className="relative inline-flex items-center rounded-md shadow-xs border overflow-hidden transition-all bg-gradient-to-r from-blue-900/80 to-indigo-900/80 border-blue-400/50">
+            {/* Nút BẬT / TẮT Phát Kịch Bản */}
+            <button
+              type="button"
+              onClick={() => handleToggleScriptLive()}
+              className={`flex items-center gap-1 px-2 py-0.5 text-[10px] font-black transition-all cursor-pointer active:scale-95 ${
+                isScriptLiveRunning
+                  ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 text-white shadow-emerald-500/40 animate-pulse'
+                  : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white'
+              }`}
+              title={isScriptLiveRunning ? "Kịch bản đang phát trực tiếp — Bấm để Tạm Dừng" : "Bấm để Bắt Đầu phát sóng kịch bản bán hàng tuần tự"}
+            >
+              <Play size={10} fill={isScriptLiveRunning ? "currentColor" : "none"} className={isScriptLiveRunning ? "text-yellow-300 animate-spin" : "text-white"} />
+              <span className="whitespace-nowrap">{isScriptLiveRunning ? '🟢 ĐANG PHÁT KỊCH BẢN' : '▶️ PHÁT KỊCH BẢN'}</span>
+              {isScriptLiveRunning && (
+                <span className="w-1 h-1 rounded-full bg-yellow-300 animate-ping ml-0.5"></span>
+              )}
+            </button>
+
+            {/* Dropdown Chọn Tab Kịch Bản Liền Khối */}
+            {scriptTabsList && scriptTabsList.length > 0 && (
+              <select
+                value={scriptTabsList.find(t => t.active)?.id || scriptTabsList[0]?.id}
+                onChange={(e) => handleQuickSelectScriptTab(e.target.value)}
+                className="text-[10px] font-bold px-1.5 py-0.5 border-l border-white/20 bg-black/40 text-blue-200 hover:bg-black/60 cursor-pointer outline-none transition-all"
+                title="Chọn kịch bản bạn muốn AI phát sóng trực tiếp"
+              >
+                {scriptTabsList.map((tab, idx) => (
+                  <option key={tab.id} value={tab.id} className="bg-slate-900 text-white">
+                    {tab.active ? '⭐ ' : '📜 '}{tab.name || `Kịch bản ${idx + 1}`}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
 
 
 
@@ -4217,43 +4276,6 @@ export default function DesktopAppUI() {
 
         {/* Right Side: Toggles & Stream Window */}
         <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
-          
-          {/* 📜 NÚT GỘP DUY NHẤT: PHÁT KỊCH BẢN LIVE */}
-          <div className="relative inline-flex items-center rounded-xl shadow-md border overflow-hidden transition-all bg-gradient-to-r from-blue-900/60 to-indigo-900/60 border-blue-500/40">
-            {/* Nút BẬT / TẮT Phát Kịch Bản */}
-            <button
-              type="button"
-              onClick={handleToggleScriptLive}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-black transition-all cursor-pointer active:scale-95 ${
-                isScriptLiveRunning
-                  ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 text-white shadow-emerald-500/40 animate-pulse'
-                  : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white'
-              }`}
-              title={isScriptLiveRunning ? "Kịch bản đang phát trực tiếp — Bấm để Dừng" : "Bấm để Bắt đầu phát sóng kịch bản bán hàng"}
-            >
-              <Play size={13} fill={isScriptLiveRunning ? "currentColor" : "none"} className={isScriptLiveRunning ? "text-yellow-300 animate-spin" : "text-white"} />
-              <span>{isScriptLiveRunning ? '🟢 ĐANG PHÁT KỊCH BẢN' : '▶️ PHÁT KỊCH BẢN'}</span>
-              {isScriptLiveRunning && (
-                <span className="w-1.5 h-1.5 rounded-full bg-yellow-300 animate-ping ml-0.5"></span>
-              )}
-            </button>
-
-            {/* Dropdown Chọn Tab Kịch Bản Liền Khối */}
-            {scriptTabsList && scriptTabsList.length > 0 && (
-              <select
-                value={scriptTabsList.find(t => t.active)?.id || scriptTabsList[0]?.id}
-                onChange={(e) => handleQuickSelectScriptTab(e.target.value)}
-                className="text-[11px] font-bold px-2.5 py-1.5 border-l border-white/20 bg-black/40 text-blue-200 hover:bg-black/60 cursor-pointer outline-none transition-all"
-                title="Chọn kịch bản bạn muốn AI phát sóng trực tiếp"
-              >
-                {scriptTabsList.map((tab, idx) => (
-                  <option key={tab.id} value={tab.id} className="bg-slate-900 text-white">
-                    {tab.active ? '⭐ ' : '📜 '}{tab.name || `Kịch bản ${idx + 1}`}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
 
           {/* Nút ⚡ AUTO 24/7 (Chạy Tự Động 24/24 & Tự Giải Captcha AI) */}
           <button 
@@ -4382,7 +4404,8 @@ export default function DesktopAppUI() {
         <div className="hidden">
           <AIAudioPlayer 
             ref={audioPlayerRef} 
-            isLive={isScriptLiveRunning || isConnected || showSimulator} 
+            isLive={isConnected || showSimulator} 
+            isScriptRunning={isScriptLiveRunning}
             currentVideoUrl={(isScriptLiveRunning || isConnected || showSimulator) && activeVideoItem ? activeVideoItem.mediaUrl : null}
             onActionTriggered={(e) => {
               if (e.type === 'LIPSYNC_READY') handleActionVideoReady(e.videoUrl, true);

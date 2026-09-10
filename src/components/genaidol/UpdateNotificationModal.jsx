@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.6.4';
+export const APP_VERSION = '2.6.5';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👑 Nâng Cấp Toàn Diện Giọng Nữ AI Theo 3 Phân Khúc Độ Tuổi (20-28t | 28-40t | 40-70t)',
-    description: 'Tái thiết kế toàn bộ 25 giọng Nữ đỉnh cao, phân định rành mạch 3 độ tuổi: Nhóm Trẻ trung (20-28t: Gen Z, KOC viral, Idol Live sôi động), Nhóm Trưởng thành (28-40t: BTV Thời sự VTV, MC sự kiện, Nữ doanh nhân, Diễn giả truyền cảm hứng) và Nhóm Trung/Lão niên (40-70t: Đọc truyện đêm khuya, ASMR chữa lành, Bác sĩ tâm lý, Má Bảy miệt vườn, Ca dao cổ tích).'
+    title: '▶️ Di Chuyển "PHÁT KỊCH BẢN" Lên Ngay Cạnh Nút "BẬT TẤT CẢ"',
+    description: 'Bố trí lại nút bấm thống nhất "PHÁT KỊCH BẢN" kèm dropdown chọn kịch bản trực tiếp lên thanh điều khiển trên cùng, nằm liền kề nút "BẬT TẤT CẢ" giúp thao tác livestream cực kỳ thuận tiện và trực quan.'
   },
   {
-    title: '🎛️ Âm Sắc 100% Khác Biệt & Độc Bản Riêng Từng Vùng Miền',
-    description: 'Xóa bỏ hoàn toàn tình trạng các giọng bị trùng lặp hoặc na ná nhau. Mỗi giọng đọc sở hữu profile âm học DSP riêng biệt (Pitch, Rate, EQ 4 dải, Reverb không gian, Dynamic Compressor) chuẩn phương ngữ Bắc (Hà Nội thanh lịch), Trung (Huế dịu dàng, Đà Nẵng, Nghệ Tĩnh), Nam (Sài Gòn ngọt ngào, thời thượng) và Tây (Sông nước Cần Thơ, Bến Tre mộc mạc).'
+    title: '⚡ Kích Hoạt Đọc Ngay Lập Tức Kịch Bản Đã Cài Đặt Sẵn',
+    description: 'Khắc phục triệt để luồng phát âm thanh: Khi bấm "PHÁT KỊCH BẢN", AI Idol lập tức đọc tuần tự từng câu thoại trong file kịch bản của tab đang chọn, đồng bộ khẩu hình 60 FPS, không bị kẹt hay chỉ phát sự kiện phụ.'
   },
   {
-    title: '▶️ Tối Ưu Hóa Kịch Bản & Khung Hình Live Đồng Bộ 100%',
-    description: 'Bảo toàn hoàn hảo hệ thống điều phối Live Coordinator, nút bấm kịch bản liền khối và tự động phát video khớp khung hình livestream trên mọi nền tảng.'
+    title: '👑 Hệ Thống 25 Giọng Nữ AI Phân Theo 3 Độ Tuổi (20-28t | 28-40t | 40-70t)',
+    description: 'Âm sắc độc bản 100%, phân hóa rõ nét khắp các vùng miền (Bắc - Trung - Nam - Tây) và phong cách bán hàng, MC, doanh nhân, ASMR, kể chuyện.'
   }
 ];
 

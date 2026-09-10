@@ -11,7 +11,7 @@ import { getDualVoiceConfig, previewVoiceAudio, stopVoiceAudio, prefetchTTSAudio
  *   rồi tự động tiếp tục phát đúng câu thoại kịch bản tiếp theo mà không bị lặp hay mất vị trí.
  * - Tự động lặp lại kịch bản khi đọc hết (nếu cấu hình loopScript = true).
  */
-const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTriggered, currentVideoUrl }, ref) => {
+const AIAudioPlayer = forwardRef(({ isLive, isScriptRunning = false, onAudioPlayStateChange, onActionTriggered, currentVideoUrl }, ref) => {
   const [job, setJob] = useState(null);
   const [queue, setQueue] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -58,21 +58,23 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
   };
 
   // 1. Lấy Job & Kịch bản từ Workspace Sự Kiện hoặc LocalStorage khi Live bắt đầu
-  const loadScriptFromStorage = () => {
-    let scriptRaw = '';
+  const loadScriptFromStorage = (customText = null) => {
+    let scriptRaw = typeof customText === 'string' && customText.trim() ? customText : '';
     
     // Ưu tiên 1: Kịch bản persistent của người dùng
-    const persistentTabsRaw = localStorage.getItem('aidol_user_script_tabs_persistent');
-    if (persistentTabsRaw) {
-      try {
-        const pTabs = JSON.parse(persistentTabsRaw);
-        if (Array.isArray(pTabs) && pTabs.length > 0) {
-          const activeTab = pTabs.find(t => t.active) || pTabs[0];
-          if (activeTab && activeTab.fixedScriptText) {
-            scriptRaw = activeTab.fixedScriptText;
+    if (!scriptRaw) {
+      const persistentTabsRaw = localStorage.getItem('aidol_user_script_tabs_persistent');
+      if (persistentTabsRaw) {
+        try {
+          const pTabs = JSON.parse(persistentTabsRaw);
+          if (Array.isArray(pTabs) && pTabs.length > 0) {
+            const activeTab = pTabs.find(t => t.active) || pTabs[0];
+            if (activeTab && activeTab.fixedScriptText) {
+              scriptRaw = activeTab.fixedScriptText;
+            }
           }
-        }
-      } catch (e) {}
+        } catch (e) {}
+      }
     }
 
     // Ưu tiên 2: Kịch bản trong aidol_event_configs
@@ -138,8 +140,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     }));
   };
 
+  // Khởi động khi isScriptRunning được kích hoạt
   useEffect(() => {
-    if (isLive) {
+    if (isScriptRunning) {
       try {
         const scriptItems = loadScriptFromStorage();
         setQueue(scriptItems);
@@ -149,6 +152,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         priorityQueueRef.current = [];
         setIsPlaying(true);
         isPlayingRef.current = true;
+        isBusyRef.current = false;
+        if (scriptItems.length > 0) {
+          playItem(scriptItems[0], true);
+        }
       } catch (err) {
         console.warn("AIAudioPlayer failed to parse script:", err);
       }
@@ -156,26 +163,28 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       setIsPlaying(false);
       isPlayingRef.current = false;
       isBusyRef.current = false;
-      priorityQueueRef.current = [];
       stopVoiceAudio();
       const aud = getAudio();
       if (aud) aud.pause();
     }
-  }, [isLive]);
+  }, [isScriptRunning]);
 
   // Lắng nghe sự kiện cập nhật / chuyển tab kịch bản từ WorkspaceTacVu hoặc bên ngoài
   useEffect(() => {
     const handleScriptUpdate = (e) => {
       try {
-        const scriptItems = loadScriptFromStorage();
+        const customText = e?.detail?.fixedScriptText || null;
+        const scriptItems = loadScriptFromStorage(customText);
         setQueue(scriptItems);
         queueRef.current = scriptItems;
         setCurrentIndex(0);
         currentIndexRef.current = 0;
         priorityQueueRef.current = [];
-        if (isLive && !isBusyRef.current) {
+        if (isScriptRunning || isPlayingRef.current) {
           setIsPlaying(true);
           isPlayingRef.current = true;
+          isBusyRef.current = false;
+          stopVoiceAudio();
           if (scriptItems.length > 0) {
             playItem(scriptItems[0], true);
           }
@@ -187,7 +196,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
     window.addEventListener('aidol_script_updated', handleScriptUpdate);
     return () => window.removeEventListener('aidol_script_updated', handleScriptUpdate);
-  }, [isLive]);
+  }, [isScriptRunning]);
 
   // 2. Vòng lặp phát âm thanh
   useEffect(() => {
@@ -206,7 +215,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     if (queue.length === 0) return;
 
     if (currentIndex >= queue.length) {
-      // Đã đọc hết kịch bản: Kiểm tra xem có lặp lại không
+      // Đã đọc hết kịch bản: Tự động lặp lại kịch bản
       const savedConfig = localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup');
       let shouldLoop = true;
       try {
@@ -223,6 +232,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         currentIndexRef.current = 0;
       } else {
         setIsPlaying(false);
+        isPlayingRef.current = false;
         if (onAudioPlayStateChange) onAudioPlayStateChange(false);
       }
       return;
@@ -242,9 +252,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       if (onAudioPlayStateChange) onAudioPlayStateChange(true);
       
       const channel = item.voiceChannel || (item.type === 'script' ? 'idol' : item.type === 'comment' ? 'comment' : 'manager');
+      const latestDualVoices = getDualVoiceConfig();
       const activeVoice = channel === 'idol' 
-        ? (voiceConfig.idolVoice || { id: 'free_vi_female', lang: 'vi-VN', gender: 'Female' })
-        : (channel === 'comment' ? (voiceConfig.commentVoice || voiceConfig.idolVoice) : voiceConfig.managerVoice);
+        ? (latestDualVoices.idolVoice || voiceConfig.idolVoice || { id: 'free_vi_female', lang: 'vi-VN', gender: 'Female' })
+        : (channel === 'comment' ? (latestDualVoices.commentVoice || voiceConfig.commentVoice || latestDualVoices.idolVoice) : (latestDualVoices.managerVoice || voiceConfig.managerVoice));
       
       if (activeVoice?.enabled === false) {
         isBusyRef.current = false;
@@ -271,13 +282,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         if (queueRef.current && queueRef.current[nextIdx]) {
           const nextItem = queueRef.current[nextIdx];
           const nextChannel = nextItem.voiceChannel || (nextItem.type === 'script' ? 'idol' : nextItem.type === 'comment' ? 'comment' : 'manager');
-          const nextVoice = nextChannel === 'idol' ? (voiceConfig.idolVoice || { id: 'free_vi_female', lang: 'vi-VN', gender: 'Female' }) : (nextChannel === 'comment' ? (voiceConfig.commentVoice || voiceConfig.idolVoice) : voiceConfig.managerVoice);
+          const nextVoice = nextChannel === 'idol' ? (latestDualVoices.idolVoice || voiceConfig.idolVoice || { id: 'free_vi_female', lang: 'vi-VN', gender: 'Female' }) : (nextChannel === 'comment' ? (latestDualVoices.commentVoice || voiceConfig.commentVoice) : (latestDualVoices.managerVoice || voiceConfig.managerVoice));
           prefetchTTSAudio(nextItem.text, nextVoice);
         }
       } else if (priorityQueueRef.current.length > 0) {
         const nextPri = priorityQueueRef.current[0];
         const nextPriChannel = nextPri.voiceChannel || (nextPri.type === 'script' ? 'idol' : nextPri.type === 'comment' ? 'comment' : 'manager');
-        const nextPriVoice = nextPriChannel === 'idol' ? (voiceConfig.idolVoice || { id: 'free_vi_female', lang: 'vi-VN', gender: 'Female' }) : (nextPriChannel === 'comment' ? (voiceConfig.commentVoice || voiceConfig.idolVoice) : voiceConfig.managerVoice);
+        const nextPriVoice = nextPriChannel === 'idol' ? (latestDualVoices.idolVoice || voiceConfig.idolVoice || { id: 'free_vi_female', lang: 'vi-VN', gender: 'Female' }) : (nextPriChannel === 'comment' ? (latestDualVoices.commentVoice || voiceConfig.commentVoice) : (latestDualVoices.managerVoice || voiceConfig.managerVoice));
         prefetchTTSAudio(nextPri.text, nextPriVoice);
       }
 
@@ -320,6 +331,41 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
   // Expose methods to parent
   useImperativeHandle(ref, () => ({
+    startScript: (customScriptText = null) => {
+      try {
+        stopVoiceAudio();
+        const scriptItems = loadScriptFromStorage(customScriptText);
+        setQueue(scriptItems);
+        queueRef.current = scriptItems;
+        setCurrentIndex(0);
+        currentIndexRef.current = 0;
+        priorityQueueRef.current = [];
+        setIsPlaying(true);
+        isPlayingRef.current = true;
+        isBusyRef.current = false;
+        if (scriptItems.length > 0) {
+          playItem(scriptItems[0], true);
+        }
+      } catch (e) {
+        console.error('startScript error:', e);
+      }
+    },
+    stopScript: () => {
+      stopVoiceAudio();
+      const aud = getAudio();
+      if (aud) aud.pause();
+      isBusyRef.current = false;
+      priorityQueueRef.current = [];
+      setIsPlaying(false);
+      isPlayingRef.current = false;
+      if (onAudioPlayStateChange) onAudioPlayStateChange(false);
+      if (onActionTriggered) onActionTriggered({ type: 'LIPSYNC_ENDED' });
+    },
+    reloadScript: (customScriptText = null) => {
+      const scriptItems = loadScriptFromStorage(customScriptText);
+      setQueue(scriptItems);
+      queueRef.current = scriptItems;
+    },
     enqueueItem: (text, action, isImmediate = false, options = {}) => {
       const voiceChannel = options?.voiceChannel || (action?.includes('COMMENT') ? 'comment' : action?.includes('IDOL') ? 'idol' : 'manager');
       const newItem = { id: `dyn_${Date.now()}`, type: 'dynamic', text, action, voiceChannel };
