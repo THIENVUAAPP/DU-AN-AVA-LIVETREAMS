@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Users, Sparkles, Video, Mic, Volume2, Gauge, HelpCircle, X, Check, Play, Square, 
   Upload, FolderOpen, Layers, ShieldCheck, Info, MessageSquare, Plus, RefreshCw, Eye, BookOpen,
-  Move, Maximize2, Palette, Sliders, Image, Monitor, Smartphone, ChevronRight, LayoutGrid, CheckCircle2,
-  Crop, Wand2, ArrowUp, ArrowDown, ArrowUpToLine, ArrowDownToLine, Scaling, ZoomIn
+  Move, Maximize2, Palette, Sliders, Image as ImageIcon, Monitor, Smartphone, ChevronRight, LayoutGrid, CheckCircle2,
+  Crop, Wand2, ArrowUp, ArrowDown, ArrowUpToLine, ArrowDownToLine, Scaling, ZoomIn, FileVideo, UserCheck
 } from 'lucide-react';
 import { 
   ALL_SYSTEM_VOICES, 
@@ -22,7 +22,6 @@ import UniversalMediaPicker from './UniversalMediaPicker';
 export const SvgChromaFilters = () => (
   <svg width="0" height="0" className="absolute pointer-events-none opacity-0" style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}>
     <defs>
-      {/* 🟢 Tách Nền Xanh Lá 4K (Green Screen Keying Filter) */}
       <filter id="avalive-chroma-green" colorInterpolationFilters="sRGB">
         <feColorMatrix
           type="matrix"
@@ -33,8 +32,6 @@ export const SvgChromaFilters = () => (
             1.80 -2.20  1.80  1.00  0.00"
         />
       </filter>
-
-      {/* 🔵 Tách Nền Xanh Dương 4K (Blue Screen Keying Filter) */}
       <filter id="avalive-chroma-blue" colorInterpolationFilters="sRGB">
         <feColorMatrix
           type="matrix"
@@ -85,17 +82,16 @@ export const SCRIPT_TEMPLATES = [
 
 export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = false, onClose = null }) {
   const [config, setConfig] = useState(getMultiAvatarConfig());
-  const [activeTab, setActiveTab] = useState('canvas'); // 'canvas', 'avatars', 'templates'
+  const [activeTab, setActiveTab] = useState('canvas'); // 'canvas', 'templates'
   const [selectedAvatarId, setSelectedAvatarId] = useState('avatar_1');
-  const [inspectorTab, setInspectorTab] = useState('transform'); // 'transform', 'chroma', 'background'
+  const [inspectorTab, setInspectorTab] = useState('media_transform'); // 'media_transform', 'chroma', 'voice', 'background'
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [mediaPickerTarget, setMediaPickerTarget] = useState(null); // { avatarId, type: 'idle' | 'talk' }
   const [previewingVoiceId, setPreviewingVoiceId] = useState(null);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [canvasAspectRatio, setCanvasAspectRatio] = useState('9:16'); // '9:16' | '16:9'
 
-  // Drag & Resize state (Canva / TikTok Live Studio Style)
-  const [dragOperation, setDragOperation] = useState(null); // { avatarId, mode: 'move' | 'nw' | 'ne' | 'se' | 'sw' | 'n' | 's' | 'w' | 'e' }
+  const [dragOperation, setDragOperation] = useState(null);
   const canvasRef = useRef(null);
   const dragStartPosRef = useRef({ mouseX: 0, mouseY: 0, startX: 0, startY: 0, startW: 50, startH: 50 });
 
@@ -125,50 +121,25 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     saveMultiAvatarConfig(updated);
   };
 
-  const handleAvatarChromaChange = (avatarId, field, value) => {
-    const updated = {
-      ...config,
-      avatars: config.avatars.map(av => {
-        if (av.id === avatarId) {
-          const currentChroma = av.chromaKey || { enabled: false, color: '#00ff00', similarity: 0.45, smoothness: 0.15, spill: 0.15, mode: 'green' };
-          return {
-            ...av,
-            chromaKey: {
-              ...currentChroma,
-              [field]: value
-            }
-          };
-        }
-        return av;
-      })
-    };
-    setConfig(updated);
-    saveMultiAvatarConfig(updated);
+  const handleDirectAvatarFileUpload = (avatarId, field, e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const objectUrl = URL.createObjectURL(file);
+    handleAvatarChange(avatarId, field, objectUrl);
   };
 
-  const handleAvatarTransformChange = (avatarId, field, value) => {
-    const updated = {
-      ...config,
-      layoutMode: 'custom_canvas',
-      avatars: config.avatars.map(av => {
-        if (av.id === avatarId) {
-          return {
-            ...av,
-            transform: {
-              ...(av.transform || { x: 0, y: 0, width: 50, height: 50, zIndex: 1, pose: 'stand', objectFit: 'cover', borderRadius: 16 }),
-              [field]: value
-            }
-          };
-        }
-        return av;
-      })
+  const handleApplyPosePreset = (avatarId, poseType) => {
+    const poseConfigs = {
+      stand: { y: 8, height: 88, width: 50, pose: 'stand' },
+      sit_chair: { y: 22, height: 75, width: 55, pose: 'sit' },
+      sit_table: { y: 32, height: 66, width: 60, pose: 'sit_desk' },
+      half_body: { y: 18, height: 80, width: 62, pose: 'half' },
+      close_up: { y: 5, height: 92, width: 78, pose: 'close_up' }
     };
-    setConfig(updated);
-    saveMultiAvatarConfig(updated);
-  };
 
-  // Quick Action Toolbar Helpers
-  const handleFillScreen = (avatarId) => {
+    const targetPose = poseConfigs[poseType];
+    if (!targetPose) return;
+
     const updated = {
       ...config,
       layoutMode: 'custom_canvas',
@@ -178,15 +149,22 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
             ...av,
             transform: {
               ...(av.transform || {}),
-              x: 0,
-              y: 0,
-              width: 100,
-              height: 100
+              ...targetPose
             }
           };
         }
         return av;
       })
+    };
+    setConfig(updated);
+    saveMultiAvatarConfig(updated);
+  };
+
+  const handleFillScreen = (avatarId) => {
+    const updated = {
+      ...config,
+      layoutMode: 'custom_canvas',
+      avatars: config.avatars.map(av => av.id === avatarId ? { ...av, transform: { ...(av.transform || {}), x: 0, y: 0, width: 100, height: 100 } } : av)
     };
     setConfig(updated);
     saveMultiAvatarConfig(updated);
@@ -199,54 +177,44 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     const updated = {
       ...config,
       layoutMode: 'custom_canvas',
-      avatars: config.avatars.map(a => {
-        if (a.id === avatarId) {
-          return {
-            ...a,
-            transform: {
-              ...(a.transform || {}),
-              x: Math.max(0, Math.round((100 - w) / 2)),
-              y: Math.max(0, Math.round((100 - h) / 2))
-            }
-          };
-        }
-        return a;
-      })
+      avatars: config.avatars.map(a => a.id === avatarId ? { ...a, transform: { ...(a.transform || {}), x: Math.max(0, Math.round((100 - w) / 2)), y: Math.max(0, Math.round((100 - h) / 2)) } } : a)
     };
     setConfig(updated);
     saveMultiAvatarConfig(updated);
   };
 
-  const handleBringToFront = (avatarId) => {
-    handleAvatarTransformChange(avatarId, 'zIndex', 50);
+  const handleBringToFront = (avatarId) => handleAvatarTransformChange(avatarId, 'zIndex', 50);
+  const handleSendToBack = (avatarId) => handleAvatarTransformChange(avatarId, 'zIndex', 1);
+
+  const handleAvatarTransformChange = (avatarId, field, value) => {
+    const updated = {
+      ...config,
+      layoutMode: 'custom_canvas',
+      avatars: config.avatars.map(av => av.id === avatarId ? { ...av, transform: { ...(av.transform || { x: 0, y: 0, width: 50, height: 50, zIndex: 1, pose: 'stand', objectFit: 'cover', borderRadius: 16 }), [field]: value } } : av)
+    };
+    setConfig(updated);
+    saveMultiAvatarConfig(updated);
   };
 
-  const handleSendToBack = (avatarId) => {
-    handleAvatarTransformChange(avatarId, 'zIndex', 1);
+  const handleAvatarChromaChange = (avatarId, field, value) => {
+    const updated = {
+      ...config,
+      avatars: config.avatars.map(av => av.id === avatarId ? { ...av, chromaKey: { ...(av.chromaKey || { enabled: false, color: '#00ff00', similarity: 0.45, smoothness: 0.15, spill: 0.15, mode: 'green' }), [field]: value } } : av)
+    };
+    setConfig(updated);
+    saveMultiAvatarConfig(updated);
   };
 
   const handleApplyPresetLayout = (presetKey) => {
     const preset = STUDIO_STAGE_PRESETS[presetKey];
     if (!preset || !preset.transforms) return;
-
-    const updated = {
-      ...config,
-      layoutMode: presetKey,
-      avatars: config.avatars.map(av => {
-        const trans = preset.transforms[av.id];
-        return trans ? { ...av, transform: { ...(av.transform || {}), ...trans } } : av;
-      })
-    };
+    const updated = { ...config, layoutMode: presetKey, avatars: config.avatars.map(av => ({ ...av, transform: { ...(av.transform || {}), ...(preset.transforms[av.id] || {}) } })) };
     setConfig(updated);
     saveMultiAvatarConfig(updated);
   };
 
   const handleSelectBackground = (preset) => {
-    const updated = {
-      ...config,
-      backgroundUrl: preset.url || '',
-      backgroundColor: preset.color || '#0a0c14'
-    };
+    const updated = { ...config, backgroundUrl: preset.url || '', backgroundColor: preset.color || '#0a0c14' };
     setConfig(updated);
     saveMultiAvatarConfig(updated);
   };
@@ -254,41 +222,21 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
   const handleCustomBackgroundUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const objectUrl = URL.createObjectURL(file);
-    const updated = {
-      ...config,
-      backgroundUrl: objectUrl
-    };
-    setConfig(updated);
-    saveMultiAvatarConfig(updated);
+    setConfig({ ...config, backgroundUrl: URL.createObjectURL(file) });
   };
 
-  const handleVoicePreview = (voiceId, sampleText) => {
-    if (previewingVoiceId === voiceId) {
-      stopVoiceAudio();
-      setPreviewingVoiceId(null);
-      return;
-    }
+  const handleVoicePreview = (voiceId) => {
+    if (previewingVoiceId === voiceId) { stopVoiceAudio(); setPreviewingVoiceId(null); return; }
     const voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === voiceId);
     if (!voiceObj) return;
-
     setPreviewingVoiceId(voiceId);
-    previewVoiceAudio(
-      voiceObj, 
-      sampleText || voiceObj.sampleText || 'Xin chào cả nhà! Đây là giọng đọc mẫu của nhân vật.', 
-      {
-        onEnd: () => setPreviewingVoiceId(null)
-      }
-    );
+    previewVoiceAudio(voiceObj, voiceObj.sampleText || 'Xin chào cả nhà!', { onEnd: () => setPreviewingVoiceId(null) });
   };
 
   const handleSave = () => {
     saveMultiAvatarConfig(config);
     setSavedSuccess(true);
-    setTimeout(() => {
-      setSavedSuccess(false);
-      if (onClose) onClose();
-    }, 800);
+    setTimeout(() => setSavedSuccess(false), 800);
   };
 
   const handleSelectMedia = (mediaItem) => {
@@ -299,494 +247,151 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     setMediaPickerTarget(null);
   };
 
-  // Drag and drop / Resize handlers on visual stage canvas
   const handleMouseDownOnAvatar = (e, avatarId) => {
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
     setSelectedAvatarId(avatarId);
     setDragOperation({ avatarId, mode: 'move' });
-
     const avatar = config.avatars.find(a => a.id === avatarId);
     const tf = avatar?.transform || { x: 0, y: 0, width: 50, height: 50 };
-    dragStartPosRef.current = {
-      mouseX: e.clientX,
-      mouseY: e.clientY,
-      startX: tf.x ?? 0,
-      startY: tf.y ?? 0,
-      startW: tf.width ?? 50,
-      startH: tf.height ?? 50
-    };
+    dragStartPosRef.current = { mouseX: e.clientX, mouseY: e.clientY, startX: tf.x ?? 0, startY: tf.y ?? 0, startW: tf.width ?? 50, startH: tf.height ?? 50 };
   };
 
   const handleMouseDownOnHandle = (e, avatarId, mode) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setSelectedAvatarId(avatarId);
+    e.preventDefault(); e.stopPropagation();
     setDragOperation({ avatarId, mode });
-
     const avatar = config.avatars.find(a => a.id === avatarId);
     const tf = avatar?.transform || { x: 0, y: 0, width: 50, height: 50 };
-    dragStartPosRef.current = {
-      mouseX: e.clientX,
-      mouseY: e.clientY,
-      startX: tf.x ?? 0,
-      startY: tf.y ?? 0,
-      startW: tf.width ?? 50,
-      startH: tf.height ?? 50
-    };
+    dragStartPosRef.current = { mouseX: e.clientX, mouseY: e.clientY, startX: tf.x ?? 0, startY: tf.y ?? 0, startW: tf.width ?? 50, startH: tf.height ?? 50 };
   };
 
   const handleMouseMove = (e) => {
     if (!dragOperation || !canvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
-    if (rect.width <= 0 || rect.height <= 0) return;
-
     const deltaX = ((e.clientX - dragStartPosRef.current.mouseX) / rect.width) * 100;
     const deltaY = ((e.clientY - dragStartPosRef.current.mouseY) / rect.height) * 100;
     const { avatarId, mode } = dragOperation;
     const { startX, startY, startW, startH } = dragStartPosRef.current;
 
     if (mode === 'move') {
-      let newX = Math.round(startX + deltaX);
-      let newY = Math.round(startY + deltaY);
-      newX = Math.max(0, Math.min(100 - (startW || 20), newX));
-      newY = Math.max(0, Math.min(100 - (startH || 20), newY));
-      handleAvatarTransformChange(avatarId, 'x', newX);
-      handleAvatarTransformChange(avatarId, 'y', newY);
-    } else if (mode === 'se') { // bottom-right
-      let newW = Math.round(startW + deltaX);
-      let newH = Math.round(startH + deltaY);
-      newW = Math.max(15, Math.min(100 - startX, newW));
-      newH = Math.max(15, Math.min(100 - startY, newH));
-      handleAvatarTransformChange(avatarId, 'width', newW);
-      handleAvatarTransformChange(avatarId, 'height', newH);
-    } else if (mode === 'sw') { // bottom-left
-      let newX = Math.round(startX + deltaX);
-      let newW = Math.round(startW - deltaX);
-      let newH = Math.round(startH + deltaY);
-      newX = Math.max(0, Math.min(startX + startW - 15, newX));
-      newW = Math.max(15, startW - (newX - startX));
-      newH = Math.max(15, Math.min(100 - startY, newH));
-      handleAvatarTransformChange(avatarId, 'x', newX);
-      handleAvatarTransformChange(avatarId, 'width', newW);
-      handleAvatarTransformChange(avatarId, 'height', newH);
-    } else if (mode === 'ne') { // top-right
-      let newY = Math.round(startY + deltaY);
-      let newW = Math.round(startW + deltaX);
-      let newH = Math.round(startH - deltaY);
-      newY = Math.max(0, Math.min(startY + startH - 15, newY));
-      newW = Math.max(15, Math.min(100 - startX, newW));
-      newH = Math.max(15, startH - (newY - startY));
-      handleAvatarTransformChange(avatarId, 'y', newY);
-      handleAvatarTransformChange(avatarId, 'width', newW);
-      handleAvatarTransformChange(avatarId, 'height', newH);
-    } else if (mode === 'nw') { // top-left
-      let newX = Math.round(startX + deltaX);
-      let newY = Math.round(startY + deltaY);
-      let newW = Math.round(startW - deltaX);
-      let newH = Math.round(startH - deltaY);
-      newX = Math.max(0, Math.min(startX + startW - 15, newX));
-      newY = Math.max(0, Math.min(startY + startH - 15, newY));
-      newW = Math.max(15, startW - (newX - startX));
-      newH = Math.max(15, startH - (newY - startY));
-      handleAvatarTransformChange(avatarId, 'x', newX);
-      handleAvatarTransformChange(avatarId, 'y', newY);
-      handleAvatarTransformChange(avatarId, 'width', newW);
-      handleAvatarTransformChange(avatarId, 'height', newH);
-    } else if (mode === 'e') {
-      let newW = Math.round(startW + deltaX);
-      newW = Math.max(15, Math.min(100 - startX, newW));
-      handleAvatarTransformChange(avatarId, 'width', newW);
-    } else if (mode === 'w') {
-      let newX = Math.round(startX + deltaX);
-      newX = Math.max(0, Math.min(startX + startW - 15, newX));
-      let newW = Math.max(15, startW - (newX - startX));
-      handleAvatarTransformChange(avatarId, 'x', newX);
-      handleAvatarTransformChange(avatarId, 'width', newW);
-    } else if (mode === 's') {
-      let newH = Math.round(startH + deltaY);
-      newH = Math.max(15, Math.min(100 - startY, newH));
-      handleAvatarTransformChange(avatarId, 'height', newH);
-    } else if (mode === 'n') {
-      let newY = Math.round(startY + deltaY);
-      newY = Math.max(0, Math.min(startY + startH - 15, newY));
-      let newH = Math.max(15, startH - (newY - startY));
-      handleAvatarTransformChange(avatarId, 'y', newY);
-      handleAvatarTransformChange(avatarId, 'height', newH);
+      handleAvatarTransformChange(avatarId, 'x', Math.max(0, Math.min(100 - startW, Math.round(startX + deltaX))));
+      handleAvatarTransformChange(avatarId, 'y', Math.max(0, Math.min(100 - startH, Math.round(startY + deltaY))));
+    } else if (mode === 'se') {
+      handleAvatarTransformChange(avatarId, 'width', Math.max(15, Math.min(100 - startX, Math.round(startW + deltaX))));
+      handleAvatarTransformChange(avatarId, 'height', Math.max(15, Math.min(100 - startY, Math.round(startH + deltaY))));
     }
   };
 
-  const handleMouseUp = () => {
-    setDragOperation(null);
-  };
+  const handleMouseUp = () => setDragOperation(null);
 
   useEffect(() => {
     if (dragOperation) {
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('mouseup', handleMouseUp);
-      };
+      return () => { window.removeEventListener('mousemove', handleMouseMove); window.removeEventListener('mouseup', handleMouseUp); };
     }
   }, [dragOperation]);
 
   const activeAvatars = (config.avatars || []).slice(0, config.activeCount);
-  const selectedAvatar = config.avatars.find(a => a.id === selectedAvatarId) || config.avatars[0];
+  const selectedAvatar = config.avatars.find(a => a.id === selectedAvatarId) || config.avatars[0] || {};
 
   return (
     <div className={`flex flex-col h-full ${isEmbedded ? 'bg-transparent text-gray-800' : 'bg-[#11131a] text-white'}`}>
       <SvgChromaFilters />
       
-      {/* 1. TOP HEADER & MAIN CONTROLS (TINH GỌN 1 HÀNG DUY NHẤT) */}
-      <div className={`p-3 border-b flex flex-wrap items-center justify-between gap-2.5 shrink-0 ${
-        isEmbedded 
-          ? 'bg-white dark:bg-[#161822] border-gray-200 dark:border-gray-800 rounded-2xl shadow-xs mb-3' 
-          : 'bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 text-white'
-      }`}>
-        {/* Số Lượng & Tỷ Lệ */}
+      <div className={`p-3 border-b flex flex-wrap items-center justify-between gap-2.5 shrink-0 ${isEmbedded ? 'bg-white rounded-2xl shadow-xs mb-3' : 'bg-[#161822] border-gray-800'}`}>
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-1.5">
             <span className="text-[11px] font-black text-gray-500 uppercase">Nhân vật:</span>
-            <div className="flex items-center bg-slate-100 dark:bg-black/40 p-0.5 rounded-xl border border-gray-300 dark:border-gray-800 gap-0.5">
-              {[
-                { count: 2, label: '2 Người', icon: '👥' },
-                { count: 3, label: '3 Người', icon: '🎭' },
-                { count: 4, label: '4 Người', icon: '🌟' }
-              ].map(item => (
-                <button
-                  key={item.count}
-                  type="button"
-                  onClick={() => handleActiveCountChange(item.count)}
-                  className={`px-2 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 cursor-pointer ${
-                    config.activeCount === item.count
-                      ? 'bg-blue-600 text-white shadow-xs scale-102'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                  }`}
-                >
-                  <span>{item.icon}</span>
-                  <span>{item.label}</span>
-                </button>
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-black/40 p-1 rounded-xl border border-gray-300 dark:border-gray-700">
+              {[2, 3, 4].map(num => (
+                <button key={num} type="button" onClick={() => handleActiveCountChange(num)} className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all ${config.activeCount === num ? 'bg-blue-600 text-white shadow-xs scale-102' : 'text-gray-600 dark:text-gray-300 hover:text-blue-600'}`}>{num === 2 ? '👥 2 Người' : num === 3 ? '👨‍👩‍👦 3 Người' : '🌟 4 Người'}</button>
               ))}
             </div>
           </div>
-
           <div className="flex items-center gap-1.5">
             <span className="text-[11px] font-black text-gray-500 uppercase">Khung hình:</span>
-            <div className="flex items-center bg-slate-100 dark:bg-black/40 p-0.5 rounded-xl border border-gray-300 dark:border-gray-800 text-xs font-bold gap-0.5">
-              <button
-                type="button"
-                onClick={() => setCanvasAspectRatio('9:16')}
-                className={`px-2 py-1 rounded-lg flex items-center gap-1 cursor-pointer ${canvasAspectRatio === '9:16' ? 'bg-blue-600 text-white shadow-xs' : 'text-gray-600 dark:text-gray-400'}`}
-              >
-                <Smartphone size={12} /> 9:16 (TikTok Dọc)
-              </button>
-              <button
-                type="button"
-                onClick={() => setCanvasAspectRatio('16:9')}
-                className={`px-2 py-1 rounded-lg flex items-center gap-1 cursor-pointer ${canvasAspectRatio === '16:9' ? 'bg-blue-600 text-white shadow-xs' : 'text-gray-600 dark:text-gray-400'}`}
-              >
-                <Monitor size={12} /> 16:9 (OBS Ngang)
-              </button>
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-black/40 p-1 rounded-xl border border-gray-300 dark:border-gray-700">
+              <button type="button" onClick={() => setCanvasAspectRatio('9:16')} className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 ${canvasAspectRatio === '9:16' ? 'bg-blue-600 text-white shadow-xs scale-102' : 'text-gray-600 dark:text-gray-300'}`}><Smartphone size={13} /> 9:16</button>
+              <button type="button" onClick={() => setCanvasAspectRatio('16:9')} className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 ${canvasAspectRatio === '16:9' ? 'bg-blue-600 text-white shadow-xs scale-102' : 'text-gray-600 dark:text-gray-300'}`}><Monitor size={13} /> 16:9</button>
             </div>
           </div>
         </div>
 
-        {/* Tabs Điều Khiển */}
-        <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-black/40 p-0.5 rounded-xl border border-gray-300 dark:border-gray-800">
-          <button
-            type="button"
-            onClick={() => setActiveTab('canvas')}
-            className={`px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'canvas' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-blue-600'
-            }`}
-          >
-            <Move size={13} /> Sân Khấu Kéo Thả
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('avatars')}
-            className={`px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'avatars' ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-indigo-600'
-            }`}
-          >
-            <Video size={13} /> Cấu Hình Video & Voice
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('templates')}
-            className={`px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'templates' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-purple-600'
-            }`}
-          >
-            <MessageSquare size={13} /> Kịch Bản Đối Thoại
-          </button>
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-black/40 p-1 rounded-xl border border-gray-300 dark:border-gray-700">
+          <button type="button" onClick={() => setActiveTab('canvas')} className={`px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 ${activeTab === 'canvas' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 dark:text-gray-400'}`}><Move size={13} /> Sân Khấu</button>
+          <button type="button" onClick={() => setActiveTab('templates')} className={`px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 ${activeTab === 'templates' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-600 dark:text-gray-400'}`}><MessageSquare size={13} /> Kịch Bản</button>
         </div>
 
-        {/* Nút Action Lưu & Trợ Giúp */}
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setShowHelpModal(true)}
-            className="px-2.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1 transition-all cursor-pointer bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shadow-2xs"
-            title="Xem hướng dẫn chi tiết cách kết nối TikTok Live Studio / OBS"
-          >
-            <HelpCircle size={14} />
-            <span>(?) Hướng Dẫn</span>
-          </button>
-          
-          <button
-            type="button"
-            onClick={handleSave}
-            className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-md flex items-center gap-1.5 cursor-pointer active:scale-95"
-          >
-            {savedSuccess ? <Check size={14} /> : <Sparkles size={14} />}
-            <span>{savedSuccess ? 'Đã Lưu!' : 'Lưu Sân Khấu'}</span>
-          </button>
+          <button type="button" onClick={() => setShowHelpModal(true)} className="px-2.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300"><HelpCircle size={14} /> (?) HD</button>
+          <button type="button" onClick={handleSave} className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-xs shadow-md flex items-center gap-1.5">{savedSuccess ? <Check size={14} /> : <Sparkles size={14} />} {savedSuccess ? 'Đã Lưu!' : 'Lưu Sân Khấu'}</button>
         </div>
       </div>
 
-      {/* 2. MAIN WORKSPACE CONTENT */}
       <div className="flex-1 overflow-y-auto">
         {activeTab === 'canvas' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-start">
-            
-            {/* CỘT TRÁI: KHUNG SÂN KHẤU LIVE CANVAS TRỰC QUAN (7 CỘT) - ƯU TIÊN TO LỚN, RÕ NÉT 100% */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 p-4 items-start">
             <div className="lg:col-span-7 flex flex-col items-center justify-start p-4 rounded-3xl bg-[#0a0c13] border border-gray-800 shadow-2xl relative select-none">
-              
-              {/* TOP BAR TRONG CANVAS: BỐ CỤC MẪU 1-CLICK */}
               <div className="w-full flex items-center justify-between pb-2.5 mb-2.5 border-b border-gray-800 text-xs flex-wrap gap-1.5">
-                <span className="font-bold text-gray-400 flex items-center gap-1.5">
-                  <Palette size={13} className="text-cyan-400" /> Bố Cục Sân Khấu Sẵn:
-                </span>
+                <span className="font-bold text-gray-400 flex items-center gap-1.5"><Palette size={13} className="text-cyan-400" /> Bố Cục Sẵn:</span>
                 <div className="flex items-center gap-1 flex-wrap">
                   {Object.entries(STUDIO_STAGE_PRESETS).filter(([k]) => k !== 'custom_canvas').map(([key, preset]) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => handleApplyPresetLayout(key)}
-                      className={`px-2 py-1 rounded-lg text-[11px] font-black transition-all cursor-pointer ${
-                        config.layoutMode === key
-                          ? 'bg-cyan-500 text-black shadow-xs font-black scale-102'
-                          : 'bg-white/10 hover:bg-white/20 text-gray-300'
-                      }`}
-                    >
-                      {preset.name.split(' ')[0]} {preset.name.split(' ')[1]}
-                    </button>
+                    <button key={key} type="button" onClick={() => handleApplyPresetLayout(key)} className={`px-2 py-1 rounded-lg text-[11px] font-black ${config.layoutMode === key ? 'bg-cyan-500 text-black shadow-xs' : 'bg-white/10 text-gray-300'}`}>{preset.name.split(' ')[0]}</button>
                   ))}
                 </div>
               </div>
 
-              {/* KHUNG CANVAS STREAMING SỐNG ĐỘNG - TO RÕ RÀNG TRỌN VẸN */}
-              <div 
-                ref={canvasRef}
-                className={`relative overflow-hidden rounded-2xl border-2 border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.25)] transition-all duration-300 bg-cover bg-center my-1`}
-                style={{
-                  width: canvasAspectRatio === '9:16' ? '330px' : '560px',
-                  height: canvasAspectRatio === '9:16' ? '586px' : '315px',
-                  backgroundColor: config.backgroundColor || '#0a0c14',
-                  backgroundImage: config.backgroundUrl ? `url(${config.backgroundUrl})` : 'none'
-                }}
-              >
-                {/* GRID LINES HELPER */}
-                <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none opacity-15">
-                  <div className="border-r border-b border-white/40" />
-                  <div className="border-r border-b border-white/40" />
-                  <div className="border-b border-white/40" />
-                  <div className="border-r border-b border-white/40" />
-                  <div className="border-r border-b border-white/40" />
-                  <div className="border-b border-white/40" />
-                  <div className="border-r border-white/40" />
-                  <div className="border-r border-white/40" />
-                  <div />
-                </div>
-
-                {/* RENDER ACTIVE AVATARS ON CANVAS */}
+              <div ref={canvasRef} className="relative overflow-hidden rounded-2xl border-2 border-cyan-500/50 transition-all bg-cover bg-center my-1" style={{ width: canvasAspectRatio === '9:16' ? '330px' : '560px', height: canvasAspectRatio === '9:16' ? '586px' : '315px', backgroundColor: config.backgroundColor || '#0a0c14', backgroundImage: config.backgroundUrl ? `url(${config.backgroundUrl})` : 'none' }}>
                 {activeAvatars.map((avatar, idx) => {
-                  const transform = avatar.transform || { x: idx * 25, y: 10, width: 45, height: 75, zIndex: 5, pose: 'stand', objectFit: 'cover', borderRadius: 16 };
-                  const isSelected = selectedAvatarId === avatar.id;
-                  const isDragging = dragOperation?.avatarId === avatar.id;
+                  const transform = avatar.transform || { x: idx * 20, y: 10, width: 40, height: 70, zIndex: 5, pose: 'stand', objectFit: 'cover', borderRadius: 16 };
                   const mediaSrc = avatar.talkVideo || avatar.idleVideo;
-                  const isImg = isImageMedia(mediaSrc);
                   const chromaStyle = getChromaStyle(avatar.chromaKey || config.chromaKey);
-
                   return (
-                    <div
-                      key={avatar.id}
-                      onMouseDown={(e) => handleMouseDownOnAvatar(e, avatar.id)}
-                      className={`absolute overflow-visible cursor-move transition-shadow duration-100 flex flex-col justify-between ${
-                        isSelected 
-                          ? 'ring-2 ring-cyan-400 shadow-[0_0_25px_rgba(34,211,238,0.7)]' 
-                          : 'ring-1 ring-white/30 hover:ring-white/60'
-                      }`}
-                      style={{
-                        left: `${transform.x}%`,
-                        top: `${transform.y}%`,
-                        width: `${transform.width}%`,
-                        height: `${transform.height}%`,
-                        zIndex: transform.zIndex || 5,
-                        borderRadius: `${transform.borderRadius ?? 16}px`
-                      }}
-                    >
-                      {/* MEDIA CONTAINER WITH CHROMA KEY FILTER */}
-                      <div 
-                        className="w-full h-full overflow-hidden rounded-[inherit]"
-                        style={chromaStyle}
-                      >
+                    <div key={avatar.id} onMouseDown={(e) => handleMouseDownOnAvatar(e, avatar.id)} className={`absolute cursor-move border ${selectedAvatarId === avatar.id ? 'ring-2 ring-cyan-400' : 'ring-1 ring-white/20'}`} style={{ left: `${transform.x}%`, top: `${transform.y}%`, width: `${transform.width}%`, height: `${transform.height}%`, zIndex: transform.zIndex || 5, borderRadius: `${transform.borderRadius ?? 16}px` }}>
+                      <div className="w-full h-full overflow-hidden rounded-[inherit] relative group" style={chromaStyle}>
                         {mediaSrc ? (
-                          isImg ? (
-                            <img
-                              src={mediaSrc}
-                              alt={avatar.name}
-                              className="w-full h-full pointer-events-none"
-                              style={{ objectFit: transform.objectFit || 'cover' }}
-                            />
-                          ) : (
-                            <video
-                              src={mediaSrc}
-                              autoPlay
-                              loop
-                              muted
-                              playsInline
-                              className="w-full h-full pointer-events-none"
-                              style={{ objectFit: transform.objectFit || 'cover' }}
-                            />
-                          )
+                          <>
+                            {isImageMedia(mediaSrc) ? <img src={mediaSrc} className="w-full h-full" style={{ objectFit: transform.objectFit }} /> : <video src={mediaSrc} autoPlay loop muted className="w-full h-full" style={{ objectFit: transform.objectFit }} />}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1.5 p-1">
+                                <label className="px-2 py-1 rounded bg-blue-600 text-[10px] text-white cursor-pointer"><Upload size={10} /><input type="file" accept="video/*,image/*" onChange={(e) => handleDirectAvatarFileUpload(avatar.id, 'talkVideo', e)} className="hidden" /></label>
+                                <button type="button" onClick={() => setMediaPickerTarget({ avatarId: avatar.id, type: 'talk' })} className="px-2 py-1 rounded bg-purple-600 text-[10px] text-white"><FolderOpen size={10} /></button>
+                            </div>
+                          </>
                         ) : (
-                          <div className="w-full h-full bg-slate-900/90 flex flex-col items-center justify-center p-2 text-center text-white border border-white/10">
-                            <span className="text-2xl mb-1">{transform.pose === 'sit' ? '🪑' : '🧍'}</span>
-                            <span className="text-[11px] font-black">{avatar.name}</span>
-                            <span className="text-[9px] text-cyan-300 font-mono">[{avatar.tag}]</span>
+                          <div className="w-full h-full bg-slate-900/95 flex flex-col items-center justify-center border-2 border-dashed border-cyan-500/40 rounded-[inherit]">
+                            <span className="text-xl">{transform.pose === 'sit' ? '🪑' : '🧍'}</span>
+                            <span className="text-[10px] text-cyan-300 font-black">{avatar.name}</span>
                           </div>
                         )}
                       </div>
-
-                      {/* BADGE TÊN & VAI TRÒ & KÍCH THƯỚC */}
-                      <div className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded bg-black/85 backdrop-blur-sm text-[10px] font-black text-white border border-white/20 flex items-center gap-1 pointer-events-none z-30 shadow-md">
-                        <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-cyan-400 animate-ping' : 'bg-emerald-400'}`} />
-                        <span>#{idx + 1} {avatar.name}</span>
-                        {avatar.chromaKey?.enabled && (
-                          <span className="text-emerald-400 text-[9px] font-bold">🟢 Tách nền</span>
-                        )}
-                      </div>
-
-                      {/* 8-POINT INTERACTIVE RESIZE HANDLES (CANVA / TIKTOK STUDIO) */}
-                      {isSelected && (
-                        <>
-                          {/* Live dimension tooltip */}
-                          <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-cyan-500 text-black text-[10px] font-black shadow-lg pointer-events-none whitespace-nowrap z-50">
-                            W: {transform.width}% × H: {transform.height}% | Lớp #{transform.zIndex || 5}
-                          </div>
-
-                          {/* 4 Corners */}
-                          <div 
-                            onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'nw')}
-                            className="absolute -top-1.5 -left-1.5 w-3.5 h-3.5 bg-cyan-400 border-2 border-black rounded-sm cursor-nwse-resize z-40 hover:scale-125 transition-transform shadow-md" 
-                          />
-                          <div 
-                            onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'ne')}
-                            className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-cyan-400 border-2 border-black rounded-sm cursor-nesw-resize z-40 hover:scale-125 transition-transform shadow-md" 
-                          />
-                          <div 
-                            onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'sw')}
-                            className="absolute -bottom-1.5 -left-1.5 w-3.5 h-3.5 bg-cyan-400 border-2 border-black rounded-sm cursor-nesw-resize z-40 hover:scale-125 transition-transform shadow-md" 
-                          />
-                          <div 
-                            onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'se')}
-                            className="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 bg-cyan-400 border-2 border-black rounded-sm cursor-nwse-resize z-40 hover:scale-125 transition-transform shadow-md" 
-                          />
-
-                          {/* 4 Edges */}
-                          <div 
-                            onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'n')}
-                            className="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-2 bg-cyan-300 border border-black rounded-xs cursor-ns-resize z-40 hover:scale-125" 
-                          />
-                          <div 
-                            onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 's')}
-                            className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-2 bg-cyan-300 border border-black rounded-xs cursor-ns-resize z-40 hover:scale-125" 
-                          />
-                          <div 
-                            onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'w')}
-                            className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-4 bg-cyan-300 border border-black rounded-xs cursor-ew-resize z-40 hover:scale-125" 
-                          />
-                          <div 
-                            onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'e')}
-                            className="absolute top-1/2 -right-1 -translate-y-1/2 w-2 h-4 bg-cyan-300 border border-black rounded-xs cursor-ew-resize z-40 hover:scale-125" 
-                          />
-                        </>
+                      {selectedAvatarId === avatar.id && (
+                        <div onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'se')} className="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 bg-cyan-400 border-2 border-black rounded-sm cursor-nwse-resize z-40" />
                       )}
                     </div>
                   );
                 })}
               </div>
 
-              {/* QUICK ACTION TOOLBAR DƯỚI CANVAS */}
               <div className="flex items-center gap-1.5 mt-2 flex-wrap justify-center text-xs">
-                <button
-                  type="button"
-                  onClick={() => handleFillScreen(selectedAvatar.id)}
-                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-cyan-300 font-bold flex items-center gap-1 cursor-pointer border border-cyan-500/30 shadow-2xs"
-                  title="Phóng to nhân vật chiếm 100% toàn bộ khung hình Live"
-                >
-                  <Maximize2 size={12} /> Full Màn Hình (100%)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleCenterAvatar(selectedAvatar.id)}
-                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-yellow-300 font-bold flex items-center gap-1 cursor-pointer border border-yellow-500/30 shadow-2xs"
-                  title="Căn giữa chính giữa màn hình"
-                >
-                  <Scaling size={12} /> Căn Giữa Sân Khấu
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleBringToFront(selectedAvatar.id)}
-                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold flex items-center gap-1 cursor-pointer border border-white/20 shadow-2xs"
-                  title="Đưa lên trên cùng mọi nhân vật khác"
-                >
-                  <ArrowUpToLine size={12} /> Lên Đầu
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSendToBack(selectedAvatar.id)}
-                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold flex items-center gap-1 cursor-pointer border border-white/20 shadow-2xs"
-                  title="Đưa xuống dưới cùng"
-                >
-                  <ArrowDownToLine size={12} /> Xuống Đáy
-                </button>
+                <button type="button" onClick={() => handleFillScreen(selectedAvatar.id)} className="px-2.5 py-1 rounded-lg bg-white/10 text-cyan-300 font-bold flex items-center gap-1 border border-cyan-500/30"><Maximize2 size={12} /> Full Màn Hình</button>
+                <button type="button" onClick={() => handleCenterAvatar(selectedAvatar.id)} className="px-2.5 py-1 rounded-lg bg-white/10 text-yellow-300 font-bold flex items-center gap-1 border border-yellow-500/30"><Scaling size={12} /> Căn Giữa</button>
+                <button type="button" onClick={() => handleBringToFront(selectedAvatar.id)} className="px-2.5 py-1 rounded-lg bg-white/10 text-white font-bold flex items-center gap-1 border border-white/20"><ArrowUpToLine size={12} /> Lên Đầu</button>
+                <button type="button" onClick={() => handleSendToBack(selectedAvatar.id)} className="px-2.5 py-1 rounded-lg bg-white/10 text-white font-bold flex items-center gap-1 border border-white/20"><ArrowDownToLine size={12} /> Xuống Đáy</button>
               </div>
-
-              <p className="text-[11px] text-gray-500 mt-1 font-mono">
-                💡 Kéo giữa để di chuyển (X, Y) • Kéo 8 góc/cạnh để phóng to thu nhỏ như Canva / TikTok Live
-              </p>
             </div>
 
-            {/* CỘT PHẢI: BẢNG TINH CHỈNH TẬP TRUNG DẠNG TAB GỌN GÀNG (5 CỘT) */}
             <div className="lg:col-span-5 space-y-2.5">
-              
-              {/* 1. CHỌN NHÂN VẬT ĐANG TINH CHỈNH */}
-              <div className={`p-3 rounded-2xl border ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'}`}>
+              <div className={`p-3 rounded-2xl border ${isEmbedded ? 'bg-white' : 'bg-[#171922] border-gray-800'}`}>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-black uppercase text-gray-500 tracking-wider">
-                    Nhân vật đang chọn:
-                  </span>
-                  <span className="text-xs font-black text-cyan-600 dark:text-cyan-400">
-                    {selectedAvatar.name} ({selectedAvatar.role})
-                  </span>
+                  <span className="text-[11px] font-black uppercase text-gray-500">Nhân vật đang chọn:</span>
+                  <div className="flex items-center gap-1.5">
+                    <input type="text" value={selectedAvatar.name || ''} onChange={(e) => handleAvatarChange(selectedAvatar.id, 'name', e.target.value)} className="font-black text-xs text-cyan-400 bg-transparent border-b border-dashed border-gray-400 text-right" />
+                    <span className="text-[10px] text-gray-400">({selectedAvatar.role})</span>
+                  </div>
                 </div>
-
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                   {activeAvatars.map((av, idx) => (
-                    <button
-                      key={av.id}
-                      type="button"
-                      onClick={() => setSelectedAvatarId(av.id)}
-                      className={`p-2 rounded-xl text-xs font-black transition-all text-center cursor-pointer border ${
-                        selectedAvatarId === av.id
-                          ? 'bg-cyan-500 text-black border-cyan-400 shadow-sm scale-102'
-                          : 'bg-slate-100 dark:bg-black/30 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-800'
-                      }`}
-                    >
+                    <button key={av.id} type="button" onClick={() => setSelectedAvatarId(av.id)} className={`p-2 rounded-xl text-xs font-black border ${selectedAvatarId === av.id ? 'bg-cyan-500 text-black' : 'bg-slate-100 dark:bg-black/30 text-gray-300 border-gray-800'}`}>
                       <div>#{idx + 1}</div>
                       <div className="truncate text-[11px]">{av.name}</div>
                     </button>
@@ -794,456 +399,89 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                 </div>
               </div>
 
-              {/* 2. SUB-TAB INSPECTOR SELECTOR (GỌN GÀNG TRONG 1 KHUNG DUY NHẤT) */}
-              <div className="flex items-center gap-1 bg-slate-200/80 dark:bg-black/50 p-1 rounded-xl border border-gray-300 dark:border-gray-800">
+              <div className={`p-3 rounded-2xl border ${isEmbedded ? 'bg-white' : 'bg-[#171922] border-gray-800'}`}>
+                <div className="flex items-center justify-between border-b pb-1.5 border-gray-800">
+                  <h4 className="text-xs font-black uppercase text-cyan-600 flex items-center gap-1.5"><FileVideo size={14} /> Video / Hình Ảnh: {selectedAvatar.name}</h4>
+                </div>
+                <div className="space-y-2 mt-2">
+                  <label className="text-[11px] font-bold text-gray-300">Video/Ảnh Nói (Khẩu Hình):</label>
+                  <div className="flex items-center gap-1.5">
+                    <label className="flex-1 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500/10 border border-amber-500/30 flex items-center justify-center gap-1.5 cursor-pointer"><Upload size={13} /> <span>Tải từ máy</span><input type="file" accept="video/*,image/*" onChange={(e) => handleDirectAvatarFileUpload(selectedAvatar.id, 'talkVideo', e)} className="hidden" /></label>
+                    <button type="button" onClick={() => setMediaPickerTarget({ avatarId: selectedAvatar.id, type: 'talk' })} className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white/10 flex items-center gap-1"><FolderOpen size={13} /> Thư Viện</button>
+                    {selectedAvatar.talkVideo && <button type="button" onClick={() => handleAvatarChange(selectedAvatar.id, 'talkVideo', '')} className="p-1.5 rounded-xl border border-red-900 text-red-500"><X size={13} /></button>}
+                  </div>
+                </div>
+                <div className="space-y-2 mt-3">
+                  <label className="text-[11px] font-bold text-gray-300">Video/Ảnh Nghỉ / Lắng Nghe:</label>
+                  <div className="flex items-center gap-1.5">
+                    <label className="flex-1 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-blue-500/10 border border-blue-500/30 flex items-center justify-center gap-1.5 cursor-pointer"><Upload size={13} /> <span>Tải từ máy</span><input type="file" accept="video/*,image/*" onChange={(e) => handleDirectAvatarFileUpload(selectedAvatar.id, 'idleVideo', e)} className="hidden" /></label>
+                    <button type="button" onClick={() => setMediaPickerTarget({ avatarId: selectedAvatar.id, type: 'idle' })} className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white/10 flex items-center gap-1"><FolderOpen size={13} /> Thư Viện</button>
+                    {selectedAvatar.idleVideo && <button type="button" onClick={() => handleAvatarChange(selectedAvatar.id, 'idleVideo', '')} className="p-1.5 rounded-xl border border-red-900 text-red-500"><X size={13} /></button>}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-gray-800">
                 {[
-                  { id: 'transform', label: '📐 Vị Trí & Tư Thế', color: 'text-blue-600' },
-                  { id: 'chroma', label: '🟢 Xóa Phông', color: 'text-emerald-600' },
-                  { id: 'background', label: '🖼️ Nền Studio', color: 'text-purple-600' }
+                  { id: 'media_transform', label: '📐 Vị Trí' },
+                  { id: 'chroma', label: '🟢 Xóa Phông' },
+                  { id: 'voice', label: '🎙️ Giọng AI' },
+                  { id: 'background', label: '🖼️ Nền' }
                 ].map(tab => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setInspectorTab(tab.id)}
-                    className={`flex-1 py-1.5 text-xs font-black rounded-lg transition-all text-center cursor-pointer ${
-                      inspectorTab === tab.id
-                        ? 'bg-white dark:bg-[#1f222e] text-blue-600 dark:text-cyan-300 shadow-xs border border-gray-200 dark:border-gray-700 scale-102'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
+                  <button key={tab.id} type="button" onClick={() => setInspectorTab(tab.id)} className={`flex-1 py-1.5 text-[11px] font-black rounded-lg ${inspectorTab === tab.id ? 'bg-[#1f222e] text-cyan-300' : 'text-gray-400'}`}>{tab.label}</button>
                 ))}
               </div>
 
-              {/* 3. NỘI DUNG SUB-TAB TƯƠNG ỨNG */}
-              {inspectorTab === 'transform' && (
-                <div className={`p-3.5 rounded-2xl border space-y-2.5 animate-in fade-in duration-150 ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'}`}>
-                  <div className="flex items-center justify-between border-b pb-2 border-gray-200 dark:border-gray-800">
-                    <h4 className="text-xs font-black uppercase text-blue-600 flex items-center gap-1.5">
-                      <Sliders size={14} /> Tọa Độ, Kích Thước & Cắt Xén
-                    </h4>
-                    <span className="text-[11px] font-mono text-gray-500">[{selectedAvatar.tag}]</span>
-                  </div>
-
-                  {/* TƯ THẾ: ĐỨNG / NGỒI / NỬA NGƯỜI */}
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-600 dark:text-gray-300 flex items-center justify-between">
-                      <span>Tư thế trên sân khấu:</span>
-                      <span className="text-cyan-500 font-bold">{selectedAvatar.transform?.pose === 'sit' ? '🪑 Ngồi Ghế / Bàn' : selectedAvatar.transform?.pose === 'half' ? '👤 Nửa Người' : '🧍 Đứng Thẳng'}</span>
-                    </label>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {[
-                        { pose: 'stand', label: '🧍 Đứng', desc: 'Đứng Livestream' },
-                        { pose: 'sit', label: '🪑 Ngồi', desc: 'Ngồi Ghế / Bàn' },
-                        { pose: 'half', label: '👤 Nửa Người', desc: 'Cận Cảnh' }
-                      ].map(p => (
-                        <button
-                          key={p.pose}
-                          type="button"
-                          onClick={() => handleAvatarTransformChange(selectedAvatar.id, 'pose', p.pose)}
-                          className={`py-1.5 px-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                            selectedAvatar.transform?.pose === p.pose
-                              ? 'bg-blue-600 text-white border-blue-500 shadow-xs'
-                              : 'bg-slate-50 dark:bg-black/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800'
-                          }`}
-                        >
-                          <div>{p.label}</div>
-                        </button>
-                      ))}
+              {inspectorTab === 'media_transform' && (
+                <div className={`p-3.5 rounded-2xl border ${isEmbedded ? 'bg-white' : 'bg-[#171922] border-gray-800'}`}>
+                    <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-gray-300">Tư thế sân khấu 1-Click:</label>
+                        <div className="grid grid-cols-5 gap-1">
+                          {['stand', 'sit_chair', 'sit_table', 'half_body', 'close_up'].map(p => (
+                            <button key={p} type="button" onClick={() => handleApplyPosePreset(selectedAvatar.id, p)} className={`py-1.5 px-1 rounded-xl text-[10px] font-bold border ${selectedAvatar.transform?.pose === p ? 'bg-blue-600 text-white' : 'bg-black/30 text-gray-300'}`}>{p.replace('_', ' ')}</button>
+                          ))}
+                        </div>
                     </div>
-                  </div>
-
-                  {/* SLIDERS TỌA ĐỘ VÀ KÍCH THƯỚC */}
-                  <div className="grid grid-cols-2 gap-2.5 text-xs">
-                    <div>
-                      <label className="text-[11px] font-bold text-gray-500 block mb-1">
-                        Kích Thước (Width): {selectedAvatar.transform?.width || 50}%
-                      </label>
-                      <input 
-                        type="range" 
-                        min="15" 
-                        max="100" 
-                        value={selectedAvatar.transform?.width || 50} 
-                        onChange={(e) => handleAvatarTransformChange(selectedAvatar.id, 'width', Number(e.target.value))}
-                        className="w-full accent-blue-600"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[11px] font-bold text-gray-500 block mb-1">
-                        Chiều Cao (Height): {selectedAvatar.transform?.height || 50}%
-                      </label>
-                      <input 
-                        type="range" 
-                        min="15" 
-                        max="100" 
-                        value={selectedAvatar.transform?.height || 50} 
-                        onChange={(e) => handleAvatarTransformChange(selectedAvatar.id, 'height', Number(e.target.value))}
-                        className="w-full accent-blue-600"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[11px] font-bold text-gray-500 block mb-1">
-                        Vị trí Ngang (X): {selectedAvatar.transform?.x || 0}%
-                      </label>
-                      <input 
-                        type="range" 
-                        min="0" 
-                        max="85" 
-                        value={selectedAvatar.transform?.x || 0} 
-                        onChange={(e) => handleAvatarTransformChange(selectedAvatar.id, 'x', Number(e.target.value))}
-                        className="w-full accent-blue-600"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[11px] font-bold text-gray-500 block mb-1">
-                        Vị trí Dọc (Y): {selectedAvatar.transform?.y || 0}%
-                      </label>
-                      <input 
-                        type="range" 
-                        min="0" 
-                        max="85" 
-                        value={selectedAvatar.transform?.y || 0} 
-                        onChange={(e) => handleAvatarTransformChange(selectedAvatar.id, 'y', Number(e.target.value))}
-                        className="w-full accent-blue-600"
-                      />
-                    </div>
-                  </div>
-
-                  {/* THỨ TỰ LỚP (Z-INDEX) & TỶ LỆ CẮT XÉN OBJECT FIT */}
-                  <div className="flex items-center justify-between pt-1 border-t border-gray-100 dark:border-gray-800 text-xs flex-wrap gap-2">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-bold text-gray-500">Lớp:</span>
-                      <button
-                        type="button"
-                        onClick={() => handleAvatarTransformChange(selectedAvatar.id, 'zIndex', (selectedAvatar.transform?.zIndex || 5) + 1)}
-                        className="px-2 py-0.5 rounded bg-slate-100 dark:bg-black/30 border border-gray-300 dark:border-gray-800 text-xs font-bold cursor-pointer"
-                        title="Lên 1 lớp"
-                      >
-                        <ArrowUp size={11} className="inline" /> Lên ({selectedAvatar.transform?.zIndex || 5})
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleAvatarTransformChange(selectedAvatar.id, 'zIndex', Math.max(1, (selectedAvatar.transform?.zIndex || 5) - 1))}
-                        className="px-2 py-0.5 rounded bg-slate-100 dark:bg-black/30 border border-gray-300 dark:border-gray-800 text-xs font-bold cursor-pointer"
-                        title="Xuống 1 lớp"
-                      >
-                        <ArrowDown size={11} className="inline" /> Xuống
-                      </button>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => handleAvatarTransformChange(selectedAvatar.id, 'objectFit', selectedAvatar.transform?.objectFit === 'contain' ? 'cover' : selectedAvatar.transform?.objectFit === 'fill' ? 'contain' : 'fill')}
-                        className="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-600 text-xs font-bold border border-blue-200 dark:border-blue-800 cursor-pointer"
-                        title="Chuyển chế độ cắt xén (Cover, Contain, Fill)"
-                      >
-                        Fit: {selectedAvatar.transform?.objectFit || 'cover'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleAvatarTransformChange(selectedAvatar.id, 'borderRadius', selectedAvatar.transform?.borderRadius === 0 ? 16 : selectedAvatar.transform?.borderRadius === 16 ? 9999 : 0)}
-                        className="px-2 py-0.5 rounded bg-slate-100 dark:bg-black/30 text-gray-700 dark:text-gray-300 text-xs font-bold border border-gray-300 dark:border-gray-800 cursor-pointer"
-                        title="Bo góc viền (Vuông, Bo nhẹ, Tròn)"
-                      >
-                        Góc: {selectedAvatar.transform?.borderRadius === 9999 ? 'Tròn' : selectedAvatar.transform?.borderRadius === 0 ? 'Vuông' : 'Bo 16px'}
-                      </button>
-                    </div>
-                  </div>
                 </div>
               )}
 
               {inspectorTab === 'chroma' && (
-                <div className={`p-3.5 rounded-2xl border space-y-2.5 animate-in fade-in duration-150 ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'}`}>
-                  <div className="flex items-center justify-between border-b pb-2 border-gray-200 dark:border-gray-800">
-                    <div className="flex items-center gap-1.5">
-                      <Wand2 size={14} className="text-emerald-500" />
-                      <h4 className="text-xs font-black uppercase text-emerald-600 dark:text-emerald-400">
-                        Xóa Phông Nền (Chroma Key): {selectedAvatar.name}
-                      </h4>
+                <div className={`p-3.5 rounded-2xl border ${isEmbedded ? 'bg-white' : 'bg-[#171922] border-gray-800'}`}>
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <label className="text-[11px] font-bold text-gray-300">Bật Xóa Phông:</label>
+                            <input type="checkbox" checked={!!selectedAvatar.chromaKey?.enabled} onChange={(e) => handleAvatarChromaChange(selectedAvatar.id, 'enabled', e.target.checked)} />
+                        </div>
+                        <input type="range" min="0.1" max="0.9" step="0.05" value={selectedAvatar.chromaKey?.similarity ?? 0.45} onChange={(e) => handleAvatarChromaChange(selectedAvatar.id, 'similarity', parseFloat(e.target.value))} className="w-full accent-emerald-500" />
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        checked={!!selectedAvatar.chromaKey?.enabled}
-                        onChange={(e) => handleAvatarChromaChange(selectedAvatar.id, 'enabled', e.target.checked)}
-                        className="sr-only peer"
-                      />
-                      <div className="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
-                    </label>
-                  </div>
+                </div>
+              )}
 
-                  <div className="space-y-2.5 text-xs">
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-gray-500">Màu Nền Cần Tách Trong Suốt:</label>
-                      <div className="grid grid-cols-4 gap-1.5">
-                        {[
-                          { mode: 'green', color: '#00ff00', label: '🟢 Xanh Lá' },
-                          { mode: 'blue', color: '#0000ff', label: '🔵 Xanh Dương' },
-                          { mode: 'black', color: '#000000', label: '⚫ Nền Đen' },
-                          { mode: 'white', color: '#ffffff', label: '⚪ Nền Trắng' }
-                        ].map(c => (
-                          <button
-                            key={c.mode}
-                            type="button"
-                            onClick={() => {
-                              handleAvatarChromaChange(selectedAvatar.id, 'mode', c.mode);
-                              handleAvatarChromaChange(selectedAvatar.id, 'color', c.color);
-                            }}
-                            className={`py-1.5 px-1.5 rounded-lg font-bold text-[11px] border transition-all cursor-pointer text-center ${
-                              selectedAvatar.chromaKey?.mode === c.mode || selectedAvatar.chromaKey?.color === c.color
-                                ? 'bg-emerald-600 text-white border-emerald-400 shadow-xs'
-                                : 'bg-slate-50 dark:bg-black/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800'
-                            }`}
-                          >
-                            {c.label}
-                          </button>
-                        ))}
-                      </div>
+              {inspectorTab === 'voice' && (
+                <div className={`p-3.5 rounded-2xl border ${isEmbedded ? 'bg-white' : 'bg-[#171922] border-gray-800'}`}>
+                    <div className="space-y-2">
+                        <select value={selectedAvatar.voiceId} onChange={(e) => handleAvatarChange(selectedAvatar.id, 'voiceId', e.target.value)} className="w-full p-2 text-xs bg-black/40 text-white rounded-xl">
+                          {ALL_SYSTEM_VOICES.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+                        </select>
+                        <div className="flex items-center justify-between text-[11px] font-bold text-gray-500">
+                            <label><Gauge size={12} className="inline"/> Tốc độ:</label>
+                            <input type="range" min="0.8" max="1.5" step="0.05" value={selectedAvatar.rate ?? 1.0} onChange={(e) => handleAvatarChange(selectedAvatar.id, 'rate', parseFloat(e.target.value))} className="w-24 accent-rose-600" />
+                            <span className="w-8 text-right font-mono font-bold">{(selectedAvatar.rate ?? 1.0).toFixed(2)}x</span>
+                        </div>
                     </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="text-[11px] font-bold text-gray-500 block mb-1">
-                          Độ Nhạy Xóa: {Math.round((selectedAvatar.chromaKey?.similarity ?? 0.45) * 100)}%
-                        </label>
-                        <input 
-                          type="range" 
-                          min="0.1" 
-                          max="0.9" 
-                          step="0.05"
-                          value={selectedAvatar.chromaKey?.similarity ?? 0.45} 
-                          onChange={(e) => handleAvatarChromaChange(selectedAvatar.id, 'similarity', parseFloat(e.target.value))}
-                          className="w-full accent-emerald-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[11px] font-bold text-gray-500 block mb-1">
-                          Độ Mịn Viền: {Math.round((selectedAvatar.chromaKey?.smoothness ?? 0.15) * 100)}%
-                        </label>
-                        <input 
-                          type="range" 
-                          min="0.01" 
-                          max="0.4" 
-                          step="0.02"
-                          value={selectedAvatar.chromaKey?.smoothness ?? 0.15} 
-                          onChange={(e) => handleAvatarChromaChange(selectedAvatar.id, 'smoothness', parseFloat(e.target.value))}
-                          className="w-full accent-emerald-500"
-                        />
-                      </div>
-                    </div>
-                  </div>
                 </div>
               )}
 
               {inspectorTab === 'background' && (
-                <div className={`p-3.5 rounded-2xl border space-y-2.5 animate-in fade-in duration-150 ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'}`}>
-                  <div className="flex items-center justify-between border-b pb-2 border-gray-200 dark:border-gray-800">
-                    <h4 className="text-xs font-black uppercase text-purple-600 flex items-center gap-1.5">
-                      <Image size={14} /> Phông Nền Phòng Live Studio 4K
-                    </h4>
-                    <label className="text-[11px] font-bold text-purple-600 hover:underline flex items-center gap-1 cursor-pointer">
-                      <Upload size={12} /> Tải Nền Riêng
-                      <input type="file" accept="image/*,video/*" onChange={handleCustomBackgroundUpload} className="hidden" />
-                    </label>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {STUDIO_BACKGROUND_PRESETS.map(bg => (
-                      <button
-                        key={bg.id}
-                        type="button"
-                        onClick={() => handleSelectBackground(bg)}
-                        className={`p-2 rounded-xl text-xs font-bold border text-left flex items-center gap-2 transition-all cursor-pointer ${
-                          config.backgroundUrl === bg.url && config.backgroundColor === bg.color
-                            ? 'bg-purple-600 text-white border-purple-500 shadow-xs scale-102'
-                            : 'bg-slate-50 dark:bg-black/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800 hover:border-purple-300'
-                        }`}
-                      >
-                        <span className="text-base">{bg.preview}</span>
-                        <span className="truncate text-[11px]">{bg.name}</span>
-                      </button>
-                    ))}
-                  </div>
+                <div className={`p-3.5 rounded-2xl border ${isEmbedded ? 'bg-white' : 'bg-[#171922] border-gray-800'}`}>
+                    <div className="grid grid-cols-2 gap-2">
+                      {STUDIO_BACKGROUND_PRESETS.map(bg => (
+                        <button key={bg.id} type="button" onClick={() => handleSelectBackground(bg)} className={`p-2 rounded-xl text-xs font-bold border text-left ${config.backgroundUrl === bg.url ? 'bg-purple-600' : 'bg-black/30'}`}>{bg.name}</button>
+                      ))}
+                    </div>
                 </div>
               )}
-
             </div>
-
-          </div>
-        ) : activeTab === 'avatars' ? (
-          /* TAB 2: CẤU HÌNH CHI TIẾT VIDEO VÀ VOICE CHO TỪNG NHÂN VẬT */
-          <div className={`grid grid-cols-1 gap-4 ${config.activeCount === 2 ? 'md:grid-cols-2' : config.activeCount === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2 lg:grid-cols-4'}`}>
-            {activeAvatars.map((avatar, idx) => {
-              const isVoicePlaying = previewingVoiceId === avatar.voiceId;
-
-              return (
-                <div 
-                  key={avatar.id} 
-                  className={`border-2 rounded-2xl p-4 flex flex-col justify-between shadow-xs transition-all ${
-                    isEmbedded 
-                      ? 'bg-white border-blue-200/80 hover:border-blue-400' 
-                      : 'bg-[#171922] border-gray-800 hover:border-cyan-500/50 text-white'
-                  }`}
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between border-b pb-2.5 border-gray-200 dark:border-gray-800">
-                      <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-lg bg-blue-600 text-white text-xs font-black flex items-center justify-center">
-                          #{idx + 1}
-                        </span>
-                        <div>
-                          <input 
-                            type="text" 
-                            value={avatar.name} 
-                            onChange={(e) => handleAvatarChange(avatar.id, 'name', e.target.value)}
-                            className="font-black text-sm bg-transparent border-b border-dashed border-gray-400 focus:border-blue-500 focus:outline-none px-1"
-                            title="Bấm để đổi tên hiển thị"
-                          />
-                          <div className="text-[10px] text-gray-500 font-bold uppercase">
-                            Vai trò: {avatar.role}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-mono text-[11px] font-bold border border-indigo-200 dark:border-indigo-800">
-                        {avatar.tag}
-                      </div>
-                    </div>
-
-                    {/* GIỌNG ĐỌC AI */}
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-gray-600 dark:text-gray-300 flex items-center justify-between">
-                        <span className="flex items-center gap-1">
-                          <Mic size={13} className="text-rose-500" /> Giọng Đọc AI:
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleVoicePreview(avatar.voiceId)}
-                          className="text-[11px] font-bold text-blue-600 hover:underline flex items-center gap-1 cursor-pointer"
-                        >
-                          {isVoicePlaying ? <Square size={11} className="text-red-500" /> : <Play size={11} />}
-                          <span>{isVoicePlaying ? 'Dừng' : 'Nghe Thử'}</span>
-                        </button>
-                      </label>
-                      <select
-                        value={avatar.voiceId}
-                        onChange={(e) => handleAvatarChange(avatar.id, 'voiceId', e.target.value)}
-                        className="w-full text-xs font-bold p-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1f222e] text-gray-800 dark:text-white cursor-pointer shadow-inner"
-                      >
-                        {ALL_SYSTEM_VOICES.map(v => (
-                          <option key={v.id} value={v.id}>
-                            {v.name} ({v.gender === 'Female' ? 'Nữ' : 'Nam'} - {v.region || 'Việt Nam'})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* VIDEO LẮNG NGHE (IDLE) */}
-                    <div className="space-y-1.5 pt-1">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold text-gray-600 dark:text-gray-300 flex items-center gap-1">
-                          <Video size={13} className="text-blue-500" /> Video Lắng Nghe (Idle Video):
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => setShowHelpModal(true)}
-                          className="text-[11px] text-blue-500 hover:text-blue-400 font-bold flex items-center gap-0.5 cursor-pointer"
-                          title="Xem giải thích chi tiết về Video Lắng Nghe"
-                        >
-                          <HelpCircle size={12} /> Là gì?
-                        </button>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setMediaPickerTarget({ avatarId: avatar.id, type: 'idle' })}
-                          className="flex-1 px-3 py-2 rounded-xl text-xs font-bold bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 truncate text-left flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                        >
-                          <FolderOpen size={13} />
-                          <span className="truncate">{avatar.idleVideo ? 'Đã gán video nghỉ' : 'Chọn video Idle'}</span>
-                        </button>
-                        {avatar.idleVideo && (
-                          <button
-                            type="button"
-                            onClick={() => handleAvatarChange(avatar.id, 'idleVideo', '')}
-                            className="p-2 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 border border-red-200 dark:border-red-900 cursor-pointer"
-                            title="Xóa video"
-                          >
-                            <X size={13} />
-                          </button>
-                        )}
-                      </div>
-                      <p className="text-[10px] text-gray-400 leading-tight">
-                        Chạy lặp tự nhiên (thở nhẹ, chớp mắt) khi nhân vật đang <strong>nghỉ hoặc lắng nghe</strong> người khác nói.
-                      </p>
-                    </div>
-
-                    {/* VIDEO NÓI / KHẨU HÌNH (TALK) */}
-                    <div className="space-y-1.5 pt-1">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold text-gray-600 dark:text-gray-300 flex items-center gap-1">
-                          <Sparkles size={13} className="text-amber-500" /> Video Khẩu Hình Nói (Talk Video):
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => setShowHelpModal(true)}
-                          className="text-[11px] text-amber-500 hover:text-amber-400 font-bold flex items-center gap-0.5 cursor-pointer"
-                          title="Xem giải thích chi tiết về Video Khẩu Hình Nói"
-                        >
-                          <HelpCircle size={12} /> Là gì?
-                        </button>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setMediaPickerTarget({ avatarId: avatar.id, type: 'talk' })}
-                          className="flex-1 px-3 py-2 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 truncate text-left flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                        >
-                          <FolderOpen size={13} />
-                          <span className="truncate">{avatar.talkVideo ? 'Đã gán video khẩu hình' : 'Chọn video Talk'}</span>
-                        </button>
-                        {avatar.talkVideo && (
-                          <button
-                            type="button"
-                            onClick={() => handleAvatarChange(avatar.id, 'talkVideo', '')}
-                            className="p-2 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 border border-red-200 dark:border-red-900 cursor-pointer"
-                            title="Xóa video"
-                          >
-                            <X size={13} />
-                          </button>
-                        )}
-                      </div>
-                      <p className="text-[10px] text-gray-400 leading-tight">
-                        Tự động kích hoạt nhép miệng khi đến lượt nhân vật này <strong>nói thoại trong kịch bản</strong>.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="pt-3 mt-3 border-t border-gray-200 dark:border-gray-800 space-y-2">
-                    <div className="flex items-center justify-between text-[11px] font-bold text-gray-500">
-                      <span className="flex items-center gap-1"><Gauge size={12} /> Tốc độ đọc:</span>
-                      <div className="flex items-center gap-1">
-                        <input 
-                          type="range" 
-                          min="0.8" 
-                          max="1.5" 
-                          step="0.05" 
-                          value={avatar.rate ?? 1.0}
-                          onChange={(e) => handleAvatarChange(avatar.id, 'rate', parseFloat(e.target.value))}
-                          className="w-16 accent-blue-600"
-                        />
-                        <span className="w-8 text-right">{(avatar.rate ?? 1.0).toFixed(2)}x</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
           </div>
         ) : (
           /* TAB 3: KỊCH BẢN ĐỐI THOẠI MẪU */

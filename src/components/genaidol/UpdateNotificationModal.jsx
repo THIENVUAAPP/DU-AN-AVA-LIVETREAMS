@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.8.4';
+export const APP_VERSION = '2.8.5';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🖥️ Tối Ưu Bố Cục Sân Khấu Studio Rộng Rãi & Trọn Vẹn Tầm Mắt',
-    description: 'Nâng cấp khung phát Live Canvas hiển thị toàn bộ 100% không gian (9:16 TikTok Dọc & 16:9 OBS Ngang), loại bỏ cắt xén và cuộn trang khó nhìn.'
+    title: '🎬 Tải Video & Hình Ảnh Trực Tiếp Trên Từng Ô Nhân Vật Sân Khấu',
+    description: 'Bấm tải trực tiếp video nói (khẩu hình) hoặc video lắng nghe từ máy tính ngay trên khung sân khấu kéo thả hoặc thanh điều khiển bên phải.'
   },
   {
-    title: '🎛️ Bảng Điều Khiển Inspector 3-Subtabs Siêu Tinh Gọn',
-    description: 'Tổ chức cài đặt thành 3 tab chuyên biệt (Vị trí & Tư thế, Tách nền Chroma Key, Phông nền Studio 4K) giúp thao tác nhanh chóng, chuyên nghiệp và trực quan.'
+    title: '🪑 5 Tư Thế Sân Khấu 1-Click (Đứng, Ngồi Ghế, Bàn Sofa, Nửa Người, Cận Cảnh)',
+    description: 'Chuyển đổi tư thế và kích thước nhân vật tự động nhanh chóng chỉ với 1 cú nhấp chuột, kết hợp kéo 8 góc mở rộng linh hoạt.'
   },
   {
-    title: '🟢 Tách Nền / Xóa Phông Xanh Chroma Key Chuẩn 4K Láng Mịn',
-    description: 'Tích hợp bộ lọc Chroma Key cực sạch cho phép xóa phông xanh lá, xanh dương, nền đen, trắng hoặc màu tùy chọn, hòa quyện nhân vật vào không gian phòng live.'
+    title: '✨ Tối Giản Giao Diện Kịch Bản Idol & Bảng Điều Khiển Tinh Gọn',
+    description: 'Loại bỏ các nút bấm dư thừa ở phần soạn thảo kịch bản, gom toàn bộ tính năng vào Studio Sân Khấu đa nhân vật chuyên nghiệp.'
   }
 ];
 

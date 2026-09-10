@@ -2148,15 +2148,6 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                               <div className="flex items-center gap-2 flex-wrap">
                                 <button
                                   type="button"
-                                  onClick={() => setShowMultiAvatarModal(true)}
-                                  className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white border border-indigo-400 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95 animate-pulse"
-                                  title="Mở Studio thiết lập 2, 3 hoặc 4 Avatar (Đa Nhân Vật) đối thoại tương tác trực tiếp"
-                                >
-                                  <Users size={13} className="text-yellow-300" />
-                                  <span>👥 Studio 2–4 Avatar</span>
-                                </button>
-                                <button
-                                  type="button"
                                   onClick={() => {
                                     const currentText = activeEditingTab.fixedScriptText !== undefined ? activeEditingTab.fixedScriptText : MASTER_SCRIPTS.cosmetics;
                                     const optimized = polishAndOptimizeScript(currentText);
