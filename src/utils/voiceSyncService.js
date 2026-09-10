@@ -6584,6 +6584,16 @@ export const DEFAULT_MULTI_AVATAR_CONFIG = {
   layoutMode: 'custom_canvas', // 'custom_canvas' | 'sales_duo' | 'talkshow' | 'pk_caster' | 'grid' | 'pip'
   backgroundUrl: '',
   backgroundColor: '#0a0c14',
+  backgroundTransform: {
+    x: 0,
+    y: 0,
+    width: 100,
+    height: 100,
+    scale: 100,
+    objectFit: 'cover',
+    blur: 0,
+    brightness: 100
+  },
   chromaKey: {
     enabled: false,
     color: '#00ff00',
@@ -6752,6 +6762,10 @@ export function getMultiAvatarConfig() {
       return {
         ...DEFAULT_MULTI_AVATAR_CONFIG,
         ...parsed,
+        backgroundTransform: {
+          ...DEFAULT_MULTI_AVATAR_CONFIG.backgroundTransform,
+          ...(parsed.backgroundTransform || {})
+        },
         avatars: DEFAULT_MULTI_AVATAR_CONFIG.avatars.map((defaultAv, idx) => {
           const matched = parsed.avatars?.find(a => a.id === defaultAv.id) || parsed.avatars?.[idx];
           if (!matched) return defaultAv;

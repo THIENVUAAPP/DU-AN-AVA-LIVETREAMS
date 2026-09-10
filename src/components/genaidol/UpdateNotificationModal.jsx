@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.8.7';
+export const APP_VERSION = '2.8.8';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Đồng Bộ Trực Tiếp Toàn Bộ Video & Vị Trí Sân Khấu Studio Lên Màn Hình Live Chính',
-    description: 'Mọi video nói/lắng nghe, hình ảnh nhân vật, vị trí x/y, kích thước và tỷ lệ đã cấu hình trong Studio 2-4 Avatar được đồng bộ tức thì 100% ra màn hình Live chính.'
+    title: '🖼️ Tùy Chỉnh Kéo Thả, Co Giãn, Phóng To Thu Nhỏ Ảnh Nền Studio Siêu Linh Hoạt',
+    description: 'Ảnh nền Studio hiện có đầy đủ 8 điểm neo (8-point handles), kéo thả di chuyển, phóng to/thu nhỏ 50%-300%, chỉnh độ mờ (blur) và độ sáng (brightness) cực mượt như OBS / TikTok Studio.'
   },
   {
-    title: '🎬 Tự Động Phản Chiếu Video Nói & Video Lắng Nghe Thông Minh',
-    description: 'Khi nạp 1 video/ảnh bất kỳ cho nhân vật, hệ thống tự động gán cho cả trạng thái nói và nghỉ, không bị fallback nhầm sang nhân vật mặc định.'
+    title: '🎯 Kéo Thả & Co Giãn Video Nhân Vật Siêu Mượt Chuẩn TikTok LIVE Studio',
+    description: 'Tối ưu hóa thao tác kéo thả, co giãn 8 hướng, hỗ trợ phím mũi tên căn chỉnh tinh vi (Arrow ±1%, Shift+Arrow ±5%), đảm bảo không bị giật lag hay lệch vị trí.'
   },
   {
-    title: '🎯 Kéo Thả & Phóng To Thu Nhỏ Tọa Độ Nguyên Tử (Atomic Transform)',
-    description: 'Sửa triệt để hiện tượng trôi tọa độ khi kéo thả trên Canvas, cập nhật đồng thời cả X/Y và Width/Height mượt mà.'
+    title: '⚡ Đồng Bộ Trực Tiếp Lớp Nền & Video Nhân Vật Ra Màn Hình Live',
+    description: 'Mọi thao tác căn chỉnh ảnh nền và video nhân vật trong Studio được hiển thị tức thì 100% trên màn hình phần mềm và cửa sổ Clean Live OBS.'
   }
 ];
 

@@ -2164,10 +2164,36 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 <div 
                   className="relative w-full h-full overflow-hidden bg-cover bg-center"
                   style={{
-                    backgroundColor: multiAvatarConfig.backgroundColor || '#0a0c14',
-                    backgroundImage: multiAvatarConfig.backgroundUrl ? `url(${multiAvatarConfig.backgroundUrl})` : 'none'
+                    backgroundColor: multiAvatarConfig.backgroundColor || '#0a0c14'
                   }}
                 >
+                  {/* Studio Transformed Background Layer */}
+                  {multiAvatarConfig.backgroundUrl && (
+                    <div
+                      className="absolute pointer-events-none"
+                      style={{
+                        left: `${multiAvatarConfig.backgroundTransform?.x ?? 0}%`,
+                        top: `${multiAvatarConfig.backgroundTransform?.y ?? 0}%`,
+                        width: `${multiAvatarConfig.backgroundTransform?.width ?? 100}%`,
+                        height: `${multiAvatarConfig.backgroundTransform?.height ?? 100}%`,
+                        transform: (multiAvatarConfig.backgroundTransform?.scale && multiAvatarConfig.backgroundTransform?.scale !== 100)
+                          ? `scale(${multiAvatarConfig.backgroundTransform.scale / 100})`
+                          : 'none',
+                        transformOrigin: 'center center',
+                        zIndex: 0
+                      }}
+                    >
+                      <img 
+                        src={multiAvatarConfig.backgroundUrl}
+                        alt="Studio Background"
+                        className="w-full h-full"
+                        style={{
+                          objectFit: multiAvatarConfig.backgroundTransform?.objectFit || 'cover',
+                          filter: `${multiAvatarConfig.backgroundTransform?.blur ? `blur(${multiAvatarConfig.backgroundTransform.blur}px)` : ''} ${multiAvatarConfig.backgroundTransform?.brightness ? `brightness(${multiAvatarConfig.backgroundTransform.brightness}%)` : ''}`.trim() || 'none'
+                        }}
+                      />
+                    </div>
+                  )}
                   <SvgChromaFilters />
                   {activeList.map((avatar, idx) => {
                     const transform = avatar.transform || { 
