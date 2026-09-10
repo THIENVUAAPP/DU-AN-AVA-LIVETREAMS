@@ -30,7 +30,7 @@ import bandoEngine from './game/bandoGameEngine';
 import bandoAudio from './game/bandoAudioEngine';
 import { mapVoiceEngine, battleVoiceEngine } from './game/gameVoiceEngine';
 import battleCommentary from './game/battleCommentaryEngine';
-import { clearGlobalSpeechQueue } from '../../utils/voiceSyncService';
+import { clearGlobalSpeechQueue, getMultiAvatarConfig } from '../../utils/voiceSyncService';
 import AutoCaptchaSolver from '../AutoCaptchaSolver';
 import AIVoiceModule from '../kol-live/AIVoiceModule';
 import AICharacterBeautyModal from './AICharacterBeautyModal';
@@ -429,6 +429,44 @@ export default function DesktopAppUI() {
   const [autoSimActive, setAutoSimActive] = useState(false);
   const [simTab, setSimTab] = useState('video_live');
   const autoSimTimerRef = useRef(null);
+
+  // 👥 MULTI-AVATAR STUDIO (2–4 NHÂN VẬT) REALTIME SYNC
+  const [multiAvatarConfig, setMultiAvatarConfig] = useState(() => {
+    try {
+      return getMultiAvatarConfig();
+    } catch (e) {
+      return { enabled: false, activeCount: 1, layout: 'auto', avatars: [] };
+    }
+  });
+  const [activeSpeakerId, setActiveSpeakerId] = useState(null);
+  const [isSpeakerActive, setIsSpeakerActive] = useState(false);
+
+  useEffect(() => {
+    const handleMultiAvatarChange = (e) => {
+      if (e.detail) {
+        setMultiAvatarConfig(e.detail);
+      } else {
+        setMultiAvatarConfig(getMultiAvatarConfig());
+      }
+    };
+
+    const handleSpeakerChange = (e) => {
+      const { avatarId, isSpeaking } = e.detail || {};
+      if (isSpeaking) {
+        setActiveSpeakerId(avatarId || 'idol');
+        setIsSpeakerActive(true);
+      } else {
+        setIsSpeakerActive(false);
+      }
+    };
+
+    window.addEventListener('avalive_multi_avatar_changed', handleMultiAvatarChange);
+    window.addEventListener('avalive_active_speaker_changed', handleSpeakerChange);
+    return () => {
+      window.removeEventListener('avalive_multi_avatar_changed', handleMultiAvatarChange);
+      window.removeEventListener('avalive_active_speaker_changed', handleSpeakerChange);
+    };
+  }, []);
 
   // Tỷ Lệ Khung Hình Toàn Cục (9:16 TikTok Dọc vs 16:9 OBS Ngang)
   const [globalAspectRatio, setGlobalAspectRatio] = useState(() => {
@@ -3014,6 +3052,71 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               Dừng phát ✕
             </button>
           </div>
+        </div>
+      );
+    }
+
+    // 0.1 MULTI-AVATAR STUDIO (2-4 NHÂN VẬT ĐỒNG THỜI)
+    if (multiAvatarConfig?.activeCount >= 2) {
+      const activeList = (multiAvatarConfig.avatars || [])
+        .filter(a => a.enabled)
+        .slice(0, multiAvatarConfig.activeCount);
+      const count = activeList.length;
+
+      const gridClass = count === 2 
+        ? 'grid grid-cols-2 w-full h-full gap-1 p-1 bg-black'
+        : count === 3 
+        ? 'grid grid-cols-3 w-full h-full gap-1 p-1 bg-black'
+        : 'grid grid-cols-2 grid-rows-2 w-full h-full gap-1 p-1 bg-black';
+
+      return (
+        <div className={gridClass}>
+          {activeList.map((avatar) => {
+            const isSpeakingNow = isSpeakerActive && (activeSpeakerId === avatar.id || (!activeSpeakerId && avatar.id === 'idol'));
+            const customMatch = (customCharacters && Array.isArray(customCharacters)) 
+              ? customCharacters.find(c => c.id === selectedCharacter && (c.url || c.mediaUrl)) 
+              : null;
+            const fallbackUrl = customMatch?.url || userLockedMediaUrl || '';
+            const vidSrc = (isSpeakingNow && avatar.talkVideo) 
+              ? avatar.talkVideo 
+              : (avatar.idleVideo || fallbackUrl);
+
+            return (
+              <div 
+                key={avatar.id} 
+                className={`relative w-full h-full overflow-hidden rounded-lg bg-slate-950 flex items-center justify-center transition-all duration-300 ${
+                  isSpeakingNow ? 'ring-2 ring-amber-400/80 shadow-[0_0_15px_rgba(251,191,36,0.4)] z-10' : 'opacity-95'
+                }`}
+              >
+                {vidSrc ? (
+                  <video
+                    key={`${avatar.id}_${isSpeakingNow ? 'talk' : 'idle'}_${vidSrc}`}
+                    src={vidSrc}
+                    autoPlay
+                    loop
+                    muted={liveAudioMuted}
+                    playsInline
+                    controls={false}
+                    className="w-full h-full object-cover bg-black"
+                  />
+                ) : (
+                  <div className="text-center p-3 text-white/70 text-xs">
+                    <span className="text-lg block mb-1">🎭</span>
+                    <span className="font-bold">{avatar.name}</span>
+                  </div>
+                )}
+
+                {/* Speaker Active Tag Pill */}
+                <div className="absolute bottom-2 left-2 z-20 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-sm border border-white/10 text-[10px] font-bold text-white shadow-sm">
+                  <span className={`w-2 h-2 rounded-full ${isSpeakingNow ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'}`} />
+                  <span className="truncate max-w-[100px]">{avatar.name}</span>
+                  {isSpeakingNow && (
+                    <span className="text-amber-300 text-[9px] font-black uppercase tracking-wider">Đang nói</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       );
     }

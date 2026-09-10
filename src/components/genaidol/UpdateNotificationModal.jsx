@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.7.9';
+export const APP_VERSION = '2.8.0';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👥 Multi-Avatar Live Studio (2–4 Nhân Vật Cùng Lúc)',
-    description: 'Hỗ trợ chạy đồng thời 2, 3 hoặc 4 nhân vật (Idol, Trợ Lý, BLV Game, Khách Mời) trên cùng 1 phiên livestream với video Idle và Talk (nhép miệng lip-sync) độc lập cho từng người.'
+    title: '🛠️ Khắc Phục Triệt Để & Tối Ưu Hóa "Kết Nối Idol"',
+    description: 'Sửa lỗi khởi động và nạp trơn tru bảng điều khiển Kết Nối Idol, khôi phục toàn bộ chức năng tác vụ sự kiện và kịch bản bán hàng.'
   },
   {
-    title: '🎭 Kịch Bản Đối Thoại Tương Tác Tự Động Nhận Diện Thẻ Vai',
-    description: 'Hệ thống tự động phân tích thẻ kịch bản ([Idol]:, [Trợ Lý]:, [BLV Game]:, [Khách Mời]:), tự động chuyển video sang trạng thái Nói cho nhân vật đang phát biểu trong khi các nhân vật còn lại duy trì trạng thái Lắng nghe.'
+    title: '👥 Tích Hợp Trực Tiếp "Studio 2–4 Avatar" Vào "Kết Nối Idol"',
+    description: 'Tab Studio 2–4 Nhân Vật được đưa vào vị trí nổi bật hàng đầu bên trong Kết Nối Idol, kết nối đồng bộ 100% với kịch bản đối thoại, video Idle / Talk khẩu hình và kho giọng đọc AI.'
   },
   {
-    title: '⚡ Đồng Bộ 0ms Thời Gian Thực Cho TikTok Live Studio & OBS',
-    description: 'Trực tiếp truyền tải mượt mà 60fps qua cửa sổ Overlay Capture hoặc Browser Source, không giật lag, hỗ trợ bảng giải thích và hướng dẫn trực quan tích hợp ngay trong Studio.'
+    title: '📺 Đồng Bộ Hiển Thị Đa Nhân Vật Cả Trên Ứng Dụng & Luồng OBS / TikTok Studio',
+    description: 'Hỗ trợ phát đa nhân vật mượt mà 60fps qua Window Capture (bắt cửa sổ) hoặc Browser Source (dán link Overlay), tự động chia khung hình Dual / Trio / Squad trên cùng 1 luồng duy nhất.'
   }
 ];
 

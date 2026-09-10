@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { 
   CheckSquare, MessageCircle, Plus, Gift, Clock, Megaphone, 
   Hand, ShoppingCart, Share, Sparkles, Mic, Heart, Play, HelpCircle, ChevronDown,
@@ -11,7 +12,7 @@ import { polishAndOptimizeScript } from '../../utils/voiceSyncService';
 import WorkspaceKeywordPanel from './WorkspaceKeywordPanel';
 import EventVoiceTester from './EventVoiceTester';
 import UniversalMediaPicker, { SAMPLE_IDOL_VIDEOS } from './UniversalMediaPicker';
-import MultiAvatarStudioModal from './MultiAvatarStudioModal';
+import MultiAvatarStudioModal, { MultiAvatarStudioPanel } from './MultiAvatarStudioModal';
 
 const toast = {
   success: (message) => {
@@ -83,6 +84,7 @@ function UniversalFileUploadButton({
 }
 
 const EVENTS = [
+  { id: 'multi_avatar_studio', label: '👥 Studio 2–4 Avatar', icon: Users, color: 'text-purple-600', desc: 'Thiết lập phiên livestream tương tác 2, 3 hoặc 4 Nhân Vật AI đồng thời với Giọng Đọc, Video Lắng Nghe và Video Nhép Miệng Lip-sync độc lập.' },
   { id: 'script_broadcast', label: '📜 Kịch bản Idol', icon: FileText, color: 'text-indigo-600', desc: 'Thiết lập kịch bản bán hàng tuần tự (Fixed Script) hoặc bộ não AI tư vấn từ Kho Tri Thức Doanh Nghiệp.' },
   { id: 'checkout', label: '🛒 Chốt đơn', icon: ShoppingCart, color: 'text-blue-500', desc: 'Khai báo các sản phẩm có trong giỏ hàng để AI tự động nhận diện từ khóa, phát video minh họa và tư vấn chốt đơn cho từng sản phẩm.' },
   { id: 'special_gift', label: 'Quà tặng Đặc biệt', icon: Sparkles, color: 'text-yellow-500', desc: 'Tạo ra các phản ứng độc đáo và ấn tượng cho những món quà giá trị (Sư tử, Du thuyền...) để tri ân những người hâm mộ lớn.' },
@@ -1517,9 +1519,20 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
         <div className="flex-1 overflow-y-auto pr-1">
 
           {/* ========================================================================= */}
-          {/* 1. QUÀ TẶNG ĐẶC BIỆT (SPECIAL GIFT SLOTS) */}
+          {/* 0. STUDIO 2–4 AVATAR (MULTI-AVATAR LIVE STUDIO) */}
           {/* ========================================================================= */}
-          {selectedEventId === 'special_gift' ? (
+          {selectedEventId === 'multi_avatar_studio' ? (
+            <div className="h-full flex flex-col pb-4">
+              <MultiAvatarStudioPanel 
+                isEmbedded={true}
+                onApplyScriptTemplate={(scriptText, count) => {
+                  handleUpdateActiveScriptTab('fixedScriptText', scriptText);
+                  setSelectedEventId('script_broadcast');
+                  toast.success(`✨ Đã nạp kịch bản ${count} nhân vật vào tab Kịch Bản!`);
+                }}
+              />
+            </div>
+          ) : selectedEventId === 'special_gift' ? (
             /* ========================================================================= */
             /* 2. QUÀ TẶNG ĐẶC BIỆT (SPECIAL GIFT SLOTS) */
             /* ========================================================================= */
