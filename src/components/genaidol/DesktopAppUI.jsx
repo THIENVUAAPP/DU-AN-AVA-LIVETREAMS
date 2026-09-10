@@ -1101,10 +1101,19 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             finalUrl = '';
           }
         }
+        const isVid = c.type === 'video' || 
+          (c.fileData && c.fileData.type && c.fileData.type.startsWith('video/')) ||
+          (c.mediaUrl && /\.(mp4|webm|mov|mkv|avi|m4v)(\?.*)?$/i.test(c.mediaUrl)) ||
+          (c.url && /\.(mp4|webm|mov|mkv|avi|m4v)(\?.*)?$/i.test(c.url)) ||
+          (c.name && /\.(mp4|webm|mov|mkv|avi|m4v)$/i.test(c.name)) ||
+          (c.name && /video|nhép|lipsync|livestream/i.test(c.name));
+
+        const cleanName = c.name ? (c.name.length > 22 ? c.name.substring(0, 20) + '…' : c.name) : 'AIDOL của tôi';
+
         return {
           id: c.id,
-          name: c.name || 'AIDOL của tôi',
-          type: c.type || 'image',
+          name: cleanName,
+          type: isVid ? 'video' : (c.type || 'image'),
           url: finalUrl,
           fileData: c.fileData
         };
@@ -2691,8 +2700,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      const charName = file.name.replace(/\.[^/.]+$/, "") || "Idol Live AI Pro";
-      const isVideo = file.type.startsWith('video/') || /\.(mp4|webm|mov|mkv|avi)$/i.test(file.name);
+      const rawName = file.name.replace(/\.[^/.]+$/, "") || "Idol Live AI Pro";
+      const charName = rawName.length > 20 ? rawName.substring(0, 18) + "…" : rawName;
+      const isVideo = file.type.startsWith('video/') || 
+        /\.(mp4|webm|mov|mkv|avi|m4v)$/i.test(file.name) ||
+        /video|nhép|lipsync|livestream/i.test(file.name);
       const localUrl = URL.createObjectURL(file);
       const newCharId = `custom_${Date.now()}`;
       
@@ -2703,7 +2715,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           name: charName,
           url: localUrl,
           mediaUrl: localUrl,
-          type: 'video'
+          type: 'video',
+          fileData: file
         };
         setCustomCharacters(prev => [...prev, tempChar]);
         setSelectedCharacter(newCharId);
@@ -3025,11 +3038,22 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       if (selected) {
         const resolvedUrl = selected.url || selected.mediaUrl;
         if (resolvedUrl) {
+          const isExplicitVideo = selected.type === 'video' || 
+            (selected.fileData && selected.fileData.type && selected.fileData.type.startsWith('video/')) ||
+            (typeof resolvedUrl === 'string' && (
+              resolvedUrl.startsWith('blob:') || 
+              resolvedUrl.startsWith('data:video/') || 
+              resolvedUrl.match(/\.(mp4|webm|mov|mkv|avi|m4v)(\?.*)?$/i) || 
+              resolvedUrl.includes('/uploads/video_') || 
+              resolvedUrl.includes('/api/stream')
+            )) || 
+            (selected.name && /video|nhép|lipsync|livestream|mp4/i.test(selected.name));
+
           selected = {
             ...selected,
             url: resolvedUrl,
             mediaUrl: resolvedUrl,
-            type: selected.type || (resolvedUrl.match(/\.(mp4|webm|mov)(\?.*)?$/i) ? 'video' : 'image')
+            type: isExplicitVideo ? 'video' : (selected.type || 'image')
           };
         }
       }
@@ -3683,24 +3707,27 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       
       {/* 1. Fake Window Title Bar (Thu nhỏ ~30% đồng đều tất cả các ô nút bấm) */}
       <div className={`flex items-center justify-between px-2 py-1 ${isDarkMode ? 'bg-[#1c1c23] border-gray-800 text-white' : 'bg-slate-200 border-slate-300 text-slate-800'} select-none z-30 border-b`}>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3.5 h-3.5 rounded bg-blue-500 flex items-center justify-center">
+        <div className="flex items-center gap-1.5 shrink-0 max-w-[40%]">
+          <div className="w-3.5 h-3.5 rounded bg-blue-500 flex items-center justify-center shrink-0">
             <Video size={9} className="text-white" />
-    </div>
-          <span className="text-[11px] font-bold truncate max-w-[220px]">
+          </div>
+          <span 
+            className="text-[11px] font-bold truncate max-w-[130px] sm:max-w-[180px]"
+            title={CHARACTERS[selectedCharacter]?.name || (Object.keys(CHARACTERS).length > 0 ? Object.values(CHARACTERS)[0]?.name : 'Live Idol Pro')}
+          >
             Profile: {CHARACTERS[selectedCharacter]?.name || (Object.keys(CHARACTERS).length > 0 ? Object.values(CHARACTERS)[0]?.name : 'Live Idol Pro (Chưa đặt tên)')}
           </span>
           <button
             onClick={() => setShowUpdateModal(true)}
-            className="text-[9px] bg-gradient-to-r from-blue-600/30 to-indigo-600/30 hover:from-blue-600/50 hover:to-indigo-600/50 text-cyan-300 px-1.5 py-0.5 rounded font-black border border-cyan-500/40 cursor-pointer flex items-center gap-1 transition-all hover:scale-105 shadow-xs"
+            className="text-[9px] bg-gradient-to-r from-blue-600/30 to-indigo-600/30 hover:from-blue-600/50 hover:to-indigo-600/50 text-cyan-300 px-1.5 py-0.5 rounded font-black border border-cyan-500/40 cursor-pointer flex items-center gap-1 transition-all hover:scale-105 shadow-xs shrink-0"
             title="Bấm để xem thông báo cập nhật mới nhất & tải bản cài đặt"
           >
             <Sparkles size={9} className="text-yellow-400 animate-pulse" />
             <span>v{APP_VERSION} Mới Nhất</span>
           </button>
-    </div>
+        </div>
         
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto scrollbar-none shrink-0">
           {/* NÚT BẤM ĐỒNG BỘ: TẮT TẤT CẢ / BẬT TẤT CẢ PHIÊN LIVE & CÁC TÍNH NĂNG */}
           <button 
             onClick={handleToggleMasterLive}
@@ -4214,7 +4241,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                         Live
                       </div>
                     )}
-                    {charItem.type === 'video' || (typeof charItem.url === 'string' && (charItem.url.endsWith('.mp4') || charItem.url.includes('/uploads/'))) ? (
+                    {charItem.type === 'video' || (charItem.fileData?.type?.startsWith('video/')) || (typeof charItem.url === 'string' && (charItem.url.startsWith('blob:') || charItem.url.endsWith('.mp4') || charItem.url.includes('/uploads/') || charItem.url.includes('/api/stream'))) || (charItem.name && /video|nhép|lipsync|livestream/i.test(charItem.name)) ? (
                       <div className="w-full h-full relative bg-gray-800 flex items-center justify-center">
                         <video 
                           src={charItem.url} 
@@ -4223,7 +4250,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                           playsInline 
                           preload="metadata" 
                         />
-                        <div className="absolute bottom-0 inset-x-0 bg-black/60 text-[8px] font-medium text-white truncate px-0.5 text-center leading-tight py-0.5 z-10 pointer-events-none">
+                        <div className="absolute bottom-0 inset-x-0 bg-black/70 text-[8px] font-medium text-white truncate px-0.5 text-center leading-tight py-0.5 z-10 pointer-events-none max-w-[42px]">
                           {charItem.name || 'Video'}
                         </div>
                       </div>
@@ -4279,7 +4306,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         <div className="flex-1"></div>
 
         {/* Right Side: Toggles & Stream Window */}
-        <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+        <div className="flex items-center gap-1.5 shrink-0 flex-nowrap overflow-x-auto scrollbar-none">
 
           {/* Nút ⚡ AUTO 24/7 (Chạy Tự Động 24/24 & Tự Giải Captcha AI) */}
           <button 
