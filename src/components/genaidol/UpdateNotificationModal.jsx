@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.9.4';
+export const APP_VERSION = '2.9.5';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🌐 Khôi Phục Đường Link Phát Live Online HTTPS Cho TikTok Live Studio & OBS',
+    description: 'Tuyệt đối loại bỏ các đường link localhost/127.0.0.1 bị TikTok Live Studio chặn. Khôi phục luồng phát Online Cloudflare HTTPS mượt mà 60 FPS, mở là phát video tức thì không giật lag.'
+  },
   {
     title: '⚡ Khắc Phục Triệt Để Lỗi Tải ZIP Trực Tiếp & Tự Động Lưu Về Máy 100%',
     description: 'Xử lý triệt để lỗi chuyển hướng sang giao diện GitHub. Khi bấm "Tải bản Windows" hoặc "Tải bản macOS", trình duyệt sẽ kích hoạt tải thẳng file ZIP về máy ngay lập tức.'

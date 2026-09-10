@@ -168,29 +168,23 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
   if (!isOpen) return null;
 
-  // 👑 TẠO ĐƯỜNG LINK LIVESTREAM ONLINE HTTPS CHÍNH THỨC 100% (TIKTOK LIVE STUDIO CHẤP THUẬN HOÀN TOÀN)
+  // 👑 TẠO ĐƯỜNG LINK LIVESTREAM ONLINE HTTPS CHÍNH THỨC 100% (TIKTOK LIVE STUDIO & OBS CHẤP THUẬN HOÀN TOÀN)
+  // TUYỆT ĐỐI KHÔNG BAO GIỜ DÙNG LOCALHOST / 127.0.0.1 (TIKTOK LIVE STUDIO CHẶN SANDBOX)
   const getProjectOverlayUrl = (path) => {
     let baseUrl = '';
 
-    if (path === 'idol') {
-      // 🚀 SỬ DỤNG ROUTE /live-stream SIÊU NHẸ 60FPS THUẦN TÚY CHO TIKTOK STUDIO & OBS
-      if (tunnelData?.projects?.idol) {
-        baseUrl = tunnelData.projects.idol.replace(/\/idol$/, '/live-stream');
-      } else if (tunnelData?.tunnelUrl) {
-        baseUrl = `${tunnelData.tunnelUrl.replace(/\/$/, '')}/live-stream`;
-      } else {
-        const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
-        baseUrl = `${currentOrigin || 'http://localhost:3001'}/live-stream`;
-      }
+    // 🌐 Link Đám Mây Cloudflare Tunnel HTTPS hoặc Online Cloud Vercel
+    if (tunnelData?.projects?.[path]) {
+      baseUrl = tunnelData.projects[path];
+    } else if (tunnelData?.tunnelUrl && tunnelData.tunnelUrl.startsWith('https://')) {
+      baseUrl = `${tunnelData.tunnelUrl.replace(/\/$/, '')}/${path}`;
     } else {
-      // 🌐 Link Đám Mây Cloudflare Tunnel HTTPS cho các dự án game khác
-      if (tunnelData?.projects?.[path]) {
-        baseUrl = tunnelData.projects[path];
-      } else if (tunnelData?.tunnelUrl) {
-        baseUrl = `${tunnelData.tunnelUrl.replace(/\/$/, '')}/${path}`;
+      const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+      if (currentOrigin && currentOrigin.startsWith('https://') && !currentOrigin.includes('localhost') && !currentOrigin.includes('127.0.0.1')) {
+        baseUrl = `${currentOrigin}/${path}`;
       } else {
-        const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
-        baseUrl = `${currentOrigin || 'http://localhost:3001'}/${path}`;
+        // Fallback Online Cloud Production chính thức 100% (KHÔNG BAO GIỜ DÙNG LOCALHOST)
+        baseUrl = `https://avalivepro.vercel.app/${path}`;
       }
     }
 
@@ -210,7 +204,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
     }
 
     let glue = baseUrl.includes('?') ? '&' : '?';
-    if (finalMedia && typeof finalMedia === 'string' && !finalMedia.startsWith('blob:') && (path === 'idol' || path === 'studio' || path === 'overlay')) {
+    if (finalMedia && typeof finalMedia === 'string' && !finalMedia.startsWith('blob:') && (path === 'idol' || path === 'studio' || path === 'overlay' || path === 'live')) {
        if (finalMedia.includes('/uploads/')) {
          finalMedia = finalMedia.substring(finalMedia.indexOf('/uploads/'));
        }
@@ -220,7 +214,6 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
     // 📐 TỰ ĐỘNG KHỚP 100% KHUNG HÌNH TIKTOK LIVE STUDIO (1080x1920 DỌC 9:16)
     // fit=contain giữ nguyên 100% độ sắc nét 1:1 không co kéo méo hình, sound=1 mở sẵn âm thanh
-    // TUYỆT ĐỐI KHÔNG gắn tham số ?t= để video luôn phát từ đầu 0:00 đến hết đuôi và lặp lại trọn vẹn
     baseUrl = `${baseUrl}${glue}fit=contain&ratio=9:16&sound=1&autoplay=1`;
     return baseUrl;
   };
@@ -290,7 +283,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
               <h2 className="text-base font-black text-white tracking-wide flex items-center gap-2">
                 <span>TRUNG TÂM PHÁT SÓNG TIKTOK LIVE STUDIO & OBS</span>
                 <span className="text-[10px] bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-2 py-0.5 rounded-full font-bold">
-                  v2.9.4 ONLINE
+                  v2.9.5 ONLINE
                 </span>
               </h2>
               <p className="text-xs text-gray-400 font-medium">
