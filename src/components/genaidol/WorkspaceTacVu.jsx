@@ -702,7 +702,7 @@ export default function WorkspaceTacVu() {
     const newTab = {
       id: newId,
       name: `Kịch bản ${nextNum}: Mới`,
-      active: false,
+      active: true, // Kích hoạt ngay kịch bản mới vừa tạo
       fixedScriptText: '',
       aiLiveStyle: 'sales_fast',
       scriptDurationMinutes: 60,
@@ -710,10 +710,19 @@ export default function WorkspaceTacVu() {
       loopScript: true,
       voiceId: scriptBroadcastConfig.voiceId || 'free_vi_female'
     };
-    const updated = [...currentScriptTabs, newTab];
-    updateEventConfig('script_broadcast', { scriptTabs: updated });
+    const updated = currentScriptTabs.map(t => ({ ...t, active: false })).concat([newTab]);
+    updateEventConfig('script_broadcast', { 
+      scriptTabs: updated,
+      activeScriptTabId: newId,
+      fixedScriptText: '',
+      aiLiveStyle: 'sales_fast'
+    });
+    localStorage.setItem('aidol_user_script_tabs_persistent', JSON.stringify(updated));
     setCurrentEditingScriptTabId(newId);
-    toast.success(`➕ Đã mở thêm Kịch bản ${nextNum}! Bạn có thể dán nội dung hoặc chọn mẫu cho kịch bản này.`);
+    window.dispatchEvent(new CustomEvent('aidol_script_updated', {
+      detail: { activeScriptTabId: newId, scriptTabs: updated, fixedScriptText: '' }
+    }));
+    toast.success(`➕ Đã mở thêm Kịch bản ${nextNum} và kích hoạt phát Live! Hãy nhập nội dung bán hàng.`);
   };
 
   const handleDuplicateScriptTab = (tabId) => {
@@ -724,12 +733,21 @@ export default function WorkspaceTacVu() {
       ...target,
       id: newId,
       name: `${target.name} (Bản sao)`,
-      active: false
+      active: true
     };
-    const updated = [...currentScriptTabs, newTab];
-    updateEventConfig('script_broadcast', { scriptTabs: updated });
+    const updated = currentScriptTabs.map(t => ({ ...t, active: false })).concat([newTab]);
+    updateEventConfig('script_broadcast', { 
+      scriptTabs: updated,
+      activeScriptTabId: newId,
+      fixedScriptText: newTab.fixedScriptText,
+      aiLiveStyle: newTab.aiLiveStyle
+    });
+    localStorage.setItem('aidol_user_script_tabs_persistent', JSON.stringify(updated));
     setCurrentEditingScriptTabId(newId);
-    toast.success(`📋 Đã nhân bản "${target.name}" thành công!`);
+    window.dispatchEvent(new CustomEvent('aidol_script_updated', {
+      detail: { activeScriptTabId: newId, scriptTabs: updated, fixedScriptText: newTab.fixedScriptText }
+    }));
+    toast.success(`📋 Đã nhân bản "${target.name}" và kích hoạt phát Live!`);
   };
 
   const handleDeleteScriptTab = (tabId) => {
@@ -753,9 +771,13 @@ export default function WorkspaceTacVu() {
       pauseBetweenSentences: activeTab.pauseBetweenSentences,
       loopScript: activeTab.loopScript
     });
+    localStorage.setItem('aidol_user_script_tabs_persistent', JSON.stringify(remaining));
     if (currentEditingScriptTabId === tabId) {
       setCurrentEditingScriptTabId(activeTab.id);
     }
+    window.dispatchEvent(new CustomEvent('aidol_script_updated', {
+      detail: { activeScriptTabId: activeTab.id, scriptTabs: remaining, fixedScriptText: activeTab.fixedScriptText }
+    }));
     toast.success('🗑️ Đã xóa kịch bản thành công.');
   };
 
@@ -766,6 +788,7 @@ export default function WorkspaceTacVu() {
     }));
     const chosen = updated.find(t => t.id === tabId);
     if (!chosen) return;
+    setCurrentEditingScriptTabId(tabId);
     updateEventConfig('script_broadcast', {
       scriptTabs: updated,
       activeScriptTabId: tabId,
@@ -775,6 +798,10 @@ export default function WorkspaceTacVu() {
       pauseBetweenSentences: chosen.pauseBetweenSentences,
       loopScript: chosen.loopScript
     });
+    localStorage.setItem('aidol_user_script_tabs_persistent', JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('aidol_script_updated', {
+      detail: { activeScriptTabId: tabId, scriptTabs: updated, fixedScriptText: chosen.fixedScriptText, activeTab: chosen }
+    }));
     toast.success(`🎯 Đã kích hoạt "${chosen.name}" làm kịch bản phát sóng chính khi Live!`);
   };
 
@@ -790,6 +817,10 @@ export default function WorkspaceTacVu() {
       partial[field] = value;
     }
     updateEventConfig('script_broadcast', partial);
+    localStorage.setItem('aidol_user_script_tabs_persistent', JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('aidol_script_updated', {
+      detail: { activeScriptTabId: activeEditingTab.id, scriptTabs: updated, [field]: value }
+    }));
   };
 
   const applyMasterScriptToTab = (type) => {
@@ -1885,33 +1916,33 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                               return (
                                 <div
                                   key={tab.id}
-                                  onClick={() => setCurrentEditingScriptTabId(tab.id)}
-                                  className={`group relative flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border shrink-0 select-none shadow-2xs ${
-                                    isEditing
-                                      ? 'bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-300'
-                                      : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50/50'
+                                  onClick={() => handleSelectActiveScriptForLive(tab.id)}
+                                  className={`group relative flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer border shrink-0 select-none shadow-sm ${
+                                    isLiveActive
+                                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-700 shadow-md ring-2 ring-blue-400 font-black'
+                                      : 'bg-white text-gray-700 border-gray-200 hover:border-blue-400 hover:bg-blue-50/60'
                                   }`}
                                 >
                                   <div className="flex items-center gap-1.5">
-                                    <FileText size={13} className={isEditing ? 'text-blue-200' : 'text-blue-500'} />
-                                    <span className="max-w-[150px] sm:max-w-[200px] truncate font-black">
+                                    <FileText size={14} className={isLiveActive ? 'text-blue-100' : 'text-blue-600'} />
+                                    <span className="max-w-[150px] sm:max-w-[200px] truncate">
                                       {tab.name || `Kịch bản ${idx + 1}`}
                                     </span>
                                   </div>
 
                                   {/* BADGE ACTIVE FOR LIVE */}
-                                  {isLiveActive && (
-                                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-0.5 shadow-2xs ${
-                                      isEditing
-                                        ? 'bg-emerald-400 text-emerald-950'
-                                        : 'bg-emerald-100 text-emerald-700 border border-emerald-300'
-                                    }`}>
-                                      <Check size={10} strokeWidth={3} /> Đang Phát Live
+                                  {isLiveActive ? (
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1 bg-emerald-400 text-emerald-950 shadow-xs animate-pulse">
+                                      <Check size={11} strokeWidth={3.5} /> ĐANG PHÁT LIVE
+                                    </span>
+                                  ) : (
+                                    <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold text-gray-500 bg-gray-100 border border-gray-200 group-hover:border-blue-300 group-hover:text-blue-600">
+                                      Click để Live
                                     </span>
                                   )}
 
                                   <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono ${
-                                    isEditing ? 'bg-blue-700/80 text-blue-100' : 'bg-gray-100 text-gray-500'
+                                    isLiveActive ? 'bg-blue-800/80 text-blue-100' : 'bg-gray-100 text-gray-500'
                                   }`}>
                                     {sentenceCount} câu
                                   </span>

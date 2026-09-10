@@ -461,6 +461,89 @@ export default function DesktopAppUI() {
     }
   });
 
+  // 📜 Quản lý Phát Kịch Bản Bán Hàng Trực Tiếp Ngoài Giao Diện (Script Broadcast Controller)
+  const [isScriptLiveRunning, setIsScriptLiveRunning] = useState(() => {
+    try {
+      return localStorage.getItem('aidol_is_script_live_running') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const [scriptTabsList, setScriptTabsList] = useState(() => {
+    try {
+      const pTabs = localStorage.getItem('aidol_user_script_tabs_persistent');
+      if (pTabs) {
+        const parsed = JSON.parse(pTabs);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+      const evConf = JSON.parse(localStorage.getItem('aidol_event_configs') || '{}');
+      return evConf.script_broadcast?.scriptTabs || [
+        { id: 'tab_1', name: 'Kịch bản 1: Mặc Định', active: true }
+      ];
+    } catch (e) {
+      return [{ id: 'tab_1', name: 'Kịch bản 1: Mặc Định', active: true }];
+    }
+  });
+
+  // Đồng bộ danh sách tab kịch bản khi có cập nhật từ Workspace
+  useEffect(() => {
+    const handleScriptSync = () => {
+      try {
+        const pTabs = localStorage.getItem('aidol_user_script_tabs_persistent');
+        if (pTabs) {
+          const parsed = JSON.parse(pTabs);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setScriptTabsList(parsed);
+          }
+        }
+      } catch (e) {}
+    };
+    window.addEventListener('aidol_script_updated', handleScriptSync);
+    window.addEventListener('aidol_event_configs_updated', handleScriptSync);
+    return () => {
+      window.removeEventListener('aidol_script_updated', handleScriptSync);
+      window.removeEventListener('aidol_event_configs_updated', handleScriptSync);
+    };
+  }, []);
+
+  const handleToggleScriptLive = () => {
+    const next = !isScriptLiveRunning;
+    setIsScriptLiveRunning(next);
+    try { localStorage.setItem('aidol_is_script_live_running', String(next)); } catch (e) {}
+    if (next) {
+      showToast('▶️ Đã BẬT phát sóng kịch bản bán hàng Live! AI đang đọc tuần tự và đồng bộ khẩu hình.', 'success');
+    } else {
+      showToast('⏹️ Đã tạm dừng phát sóng kịch bản bán hàng.', 'info');
+    }
+  };
+
+  const handleQuickSelectScriptTab = (tabId) => {
+    const updated = scriptTabsList.map(t => ({
+      ...t,
+      active: t.id === tabId
+    }));
+    const chosen = updated.find(t => t.id === tabId);
+    if (!chosen) return;
+    setScriptTabsList(updated);
+    try {
+      localStorage.setItem('aidol_user_script_tabs_persistent', JSON.stringify(updated));
+      const evConf = JSON.parse(localStorage.getItem('aidol_event_configs') || '{}');
+      if (evConf.script_broadcast) {
+        evConf.script_broadcast.scriptTabs = updated;
+        evConf.script_broadcast.activeScriptTabId = tabId;
+        evConf.script_broadcast.fixedScriptText = chosen.fixedScriptText;
+        localStorage.setItem('aidol_event_configs', JSON.stringify(evConf));
+        localStorage.setItem('aidol_event_configs_backup', JSON.stringify(evConf));
+      }
+    } catch (e) {}
+    
+    window.dispatchEvent(new CustomEvent('aidol_script_updated', {
+      detail: { activeScriptTabId: tabId, scriptTabs: updated, fixedScriptText: chosen.fixedScriptText, activeTab: chosen }
+    }));
+    showToast(`🎯 Đã kích hoạt "${chosen.name}" làm kịch bản phát Live!`, 'success');
+  };
+
   // 🔒 Trạng thái video được khoá bởi người dùng (Bảo vệ không bị mất, không bị đổi ngầm)
   const [userLockedMediaUrl, setUserLockedMediaUrl] = useState(() => {
     try {
@@ -1103,7 +1186,7 @@ export default function DesktopAppUI() {
     setActiveVideoItem,
     setViewerHistory
   } = useLiveCoordinator({
-    isConnected: isConnected || showSimulator, // Cho phép Simulator chạy độc lập
+    isConnected: isConnected || showSimulator || isScriptLiveRunning, // Cho phép Kịch bản Live / Simulator chạy độc lập nền
     activeBrainPack: 'talk', // mặc định
     onVoiceReply: ({ text, action, baseVideoItem, preRecordedCat }) => {
       // Gọi AIAudioPlayer để phát giọng nói
@@ -4133,8 +4216,49 @@ export default function DesktopAppUI() {
         <div className="flex-1"></div>
 
         {/* Right Side: Toggles & Stream Window */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
           
+          {/* 📜 BẢNG ĐIỀU KHIỂN KỊCH BẢN PHÁT LIVE BÁN HÀNG NGOÀI GIAO DIỆN CHÍNH */}
+          <div className="flex items-center gap-1 p-0.5 rounded-xl border bg-gradient-to-r from-blue-900/40 via-indigo-900/40 to-purple-900/40 border-blue-500/30 shadow-inner">
+            {/* Nút BẬT / TẮT Phát Kịch Bản Live */}
+            <button
+              type="button"
+              onClick={handleToggleScriptLive}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black transition-all border shadow-md active:scale-95 cursor-pointer ${
+                isScriptLiveRunning
+                  ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 text-white border-emerald-300 ring-2 ring-emerald-400 shadow-emerald-500/50 animate-pulse'
+                  : (isDarkMode ? 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/20' : 'bg-white hover:bg-gray-100 text-gray-800 border-gray-300')
+              }`}
+              title={isScriptLiveRunning ? "Kịch bản bán hàng đang phát sóng trực tiếp — Bấm để Dừng" : "Bấm để Bật phát sóng kịch bản bán hàng trực tiếp"}
+            >
+              <Play size={13} fill={isScriptLiveRunning ? "currentColor" : "none"} className={isScriptLiveRunning ? "text-yellow-300 animate-spin" : "text-blue-400"} />
+              <span>{isScriptLiveRunning ? '🟢 ĐANG PHÁT KỊCH BẢN' : '▶️ PHÁT KỊCH BẢN LIVE'}</span>
+              {isScriptLiveRunning && (
+                <span className="w-1.5 h-1.5 rounded-full bg-yellow-300 animate-ping"></span>
+              )}
+            </button>
+
+            {/* Dropdown Chọn Nhanh Tab Kịch Bản Phát Live */}
+            {scriptTabsList && scriptTabsList.length > 0 && (
+              <select
+                value={scriptTabsList.find(t => t.active)?.id || scriptTabsList[0]?.id}
+                onChange={(e) => handleQuickSelectScriptTab(e.target.value)}
+                className={`text-[11px] font-bold rounded-lg px-2 py-1 border transition-all cursor-pointer outline-none ${
+                  isDarkMode 
+                    ? 'bg-[#181924] text-blue-300 border-blue-500/40 hover:border-blue-400' 
+                    : 'bg-white text-blue-900 border-blue-300 hover:border-blue-500'
+                }`}
+                title="Chọn kịch bản bạn muốn AI phát sóng trực tiếp"
+              >
+                {scriptTabsList.map((tab, idx) => (
+                  <option key={tab.id} value={tab.id} className={isDarkMode ? 'bg-[#181924] text-white' : 'bg-white text-gray-900'}>
+                    {tab.active ? '⭐ [ĐANG LIVE] ' : '📜 '} {tab.name || `Kịch bản ${idx + 1}`}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
           {/* Nút ⚡ AUTO 24/7 (Chạy Tự Động 24/24 & Tự Giải Captcha AI) */}
           <button 
             onClick={handleToggleAuto247}
@@ -4262,14 +4386,14 @@ export default function DesktopAppUI() {
         <div className="hidden">
           <AIAudioPlayer 
             ref={audioPlayerRef} 
-            isLive={isConnected || showSimulator} 
-            currentVideoUrl={(isConnected || showSimulator) && activeVideoItem ? activeVideoItem.mediaUrl : null}
+            isLive={isScriptLiveRunning || isConnected || showSimulator} 
+            currentVideoUrl={(isScriptLiveRunning || isConnected || showSimulator) && activeVideoItem ? activeVideoItem.mediaUrl : null}
             onActionTriggered={(e) => {
               if (e.type === 'LIPSYNC_READY') handleActionVideoReady(e.videoUrl, true);
               if (e.type === 'LIPSYNC_ENDED') setLipSyncVideoUrl(null);
             }} 
           />
-    </div>
+        </div>
 
         {/* Cửa sổ nổi hiển thị Webcam từ Studio (Draggable & Resizable) */}
         {isWebcamActive && (

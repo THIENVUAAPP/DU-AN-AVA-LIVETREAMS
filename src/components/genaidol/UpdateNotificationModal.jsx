@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.6.1';
+export const APP_VERSION = '2.6.2';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🧠 Trả Lời Bình Luận Thông Minh 4 Bước & Tự Động Đọc Lại Câu Hỏi',
-    description: 'Khi khách bình luận, AI tự động đọc lại câu hỏi của khách trước khi trả lời, phản hồi cực kỳ thông minh theo hồ sơ tri thức doanh nghiệp hoặc kịch bản cài sẵn, sau đó tự động thêm câu hỏi gợi mở chăm sóc khách hàng (hướng dẫn inbox shop) và tiếp tục phát sóng kịch bản bán hàng.'
+    title: '🎯 Click Chọn Tab Nào Là Tab Đó Phát Live Ngay Lập Tức & Nổi Bật',
+    description: 'Người dùng click vào bất kỳ tab kịch bản nào thì tab đó lập tức được kích hoạt làm kịch bản phát sóng chính khi Live (badge ĐANG PHÁT LIVE sáng rực), không bị cố định mặc định và chuyển đổi mượt mà 0ms.'
   },
   {
-    title: '🛡️ Ô Xử Lý Khéo Léo Khi AI Không Biết / Không Hiểu Câu Hỏi',
-    description: 'Trang bị ô cấu hình xử lý tình huống chuyên nghiệp: Khi gặp câu hỏi nằm ngoài kho tri thức hoặc chưa rõ thông tin, trợ lý AI sẽ tự động trả lời khéo léo thông báo là trợ lý live, sẽ ghi nhận lại hỏi shop và mời khách inbox trực tiếp cho shop để nhận hỗ trợ chu đáo nhất.'
+    title: '🔒 Bảo Tồn Bền Vững 100% Danh Sách Kịch Bản Đã Tạo',
+    description: 'Cơ chế Persistent Storage độc lập: Tất cả các tab kịch bản bán hàng người dùng đã tạo ra được bảo vệ nguyên vẹn vĩnh viễn, không bao giờ bị xóa khi reload trang hoặc chạy lại code (chỉ xóa khi người dùng bấm nút thùng rác).'
   },
   {
-    title: '📜 Quản Lý Nhiều Tab Kịch Bản Bán Hàng Linh Hoạt',
-    description: 'Thêm không giới hạn tab kịch bản bán hàng, tùy chọn phát live kịch bản mong muốn, nhân bản, đổi tên và lưu trữ bền vững vĩnh viễn không lo mất cấu hình.'
+    title: '▶️ Bảng Điều Khiển Phát Live Bán Hàng Trực Tiếp Ngoài Giao Diện & Chạy Nền',
+    description: 'Bổ sung thanh điều khiển phát kịch bản bán hàng trực tiếp trên giao diện chính (DesktopAppUI): Bật/Tắt phát live, chọn nhanh kịch bản, chạy nền (background loop) liên tục đồng bộ cử động khẩu hình miệng (Lip-Sync) và âm thanh.'
   }
 ];
 

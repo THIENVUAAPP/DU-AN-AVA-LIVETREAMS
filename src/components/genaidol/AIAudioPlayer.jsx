@@ -58,47 +58,63 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
   };
 
   // 1. Lấy Job & Kịch bản từ Workspace Sự Kiện hoặc LocalStorage khi Live bắt đầu
-  useEffect(() => {
-    if (isLive) {
+  const loadScriptFromStorage = () => {
+    let scriptRaw = '';
+    
+    // Ưu tiên 1: Kịch bản persistent của người dùng
+    const persistentTabsRaw = localStorage.getItem('aidol_user_script_tabs_persistent');
+    if (persistentTabsRaw) {
       try {
-        let scriptRaw = '';
-        
-        // Ưu tiên 1: Kịch bản người dùng đã cài đặt trong Workspace Cài Đặt Sự Kiện
-        const eventConfigsRaw = localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup');
-        if (eventConfigsRaw) {
-          try {
-            const evConf = JSON.parse(eventConfigsRaw);
-            if (evConf.script_broadcast) {
-              if (Array.isArray(evConf.script_broadcast.scriptTabs) && evConf.script_broadcast.scriptTabs.length > 0) {
-                const activeTab = evConf.script_broadcast.scriptTabs.find(t => t.active) || 
-                  evConf.script_broadcast.scriptTabs.find(t => t.id === evConf.script_broadcast.activeScriptTabId) || 
-                  evConf.script_broadcast.scriptTabs[0];
-                if (activeTab && activeTab.fixedScriptText) {
-                  scriptRaw = activeTab.fixedScriptText;
-                }
-              }
-              if (!scriptRaw && evConf.script_broadcast.fixedScriptText) {
-                scriptRaw = evConf.script_broadcast.fixedScriptText;
-              }
-            }
-          } catch (e) {}
-        }
-
-        // Ưu tiên 2: Kịch bản trong aidol_active_job
-        if (!scriptRaw) {
-          const savedJob = localStorage.getItem('aidol_active_job');
-          if (savedJob) {
-            const parsed = JSON.parse(savedJob);
-            setJob(parsed);
-            if (parsed && typeof parsed.scriptContent === 'string' && parsed.scriptContent.trim()) {
-              scriptRaw = parsed.scriptContent;
-            }
+        const pTabs = JSON.parse(persistentTabsRaw);
+        if (Array.isArray(pTabs) && pTabs.length > 0) {
+          const activeTab = pTabs.find(t => t.active) || pTabs[0];
+          if (activeTab && activeTab.fixedScriptText) {
+            scriptRaw = activeTab.fixedScriptText;
           }
         }
+      } catch (e) {}
+    }
 
-        // Ưu tiên 3: Kịch bản mẫu mặc định
-        if (!scriptRaw) {
-          scriptRaw = `Chào mừng tất cả các tình yêu đã có mặt trong phiên livestream làm đẹp đặc biệt ngày hôm nay của shop em nha!
+    // Ưu tiên 2: Kịch bản trong aidol_event_configs
+    if (!scriptRaw) {
+      const eventConfigsRaw = localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup');
+      if (eventConfigsRaw) {
+        try {
+          const evConf = JSON.parse(eventConfigsRaw);
+          if (evConf.script_broadcast) {
+            if (Array.isArray(evConf.script_broadcast.scriptTabs) && evConf.script_broadcast.scriptTabs.length > 0) {
+              const activeTab = evConf.script_broadcast.scriptTabs.find(t => t.active) || 
+                evConf.script_broadcast.scriptTabs.find(t => t.id === evConf.script_broadcast.activeScriptTabId) || 
+                evConf.script_broadcast.scriptTabs[0];
+              if (activeTab && activeTab.fixedScriptText) {
+                scriptRaw = activeTab.fixedScriptText;
+              }
+            }
+            if (!scriptRaw && evConf.script_broadcast.fixedScriptText) {
+              scriptRaw = evConf.script_broadcast.fixedScriptText;
+            }
+          }
+        } catch (e) {}
+      }
+    }
+
+    // Ưu tiên 3: Kịch bản trong aidol_active_job
+    if (!scriptRaw) {
+      const savedJob = localStorage.getItem('aidol_active_job');
+      if (savedJob) {
+        try {
+          const parsed = JSON.parse(savedJob);
+          setJob(parsed);
+          if (parsed && typeof parsed.scriptContent === 'string' && parsed.scriptContent.trim()) {
+            scriptRaw = parsed.scriptContent;
+          }
+        } catch (e) {}
+      }
+    }
+
+    // Ưu tiên 4: Kịch bản mẫu mặc định
+    if (!scriptRaw) {
+      scriptRaw = `Chào mừng tất cả các tình yêu đã có mặt trong phiên livestream làm đẹp đặc biệt ngày hôm nay của shop em nha!
 Các chị đẹp ơi, ai đang lướt qua phiên live thì cho em xin một nút thả tim và một lượt chia sẻ để nhận quà mở bát đầu live nào!
 Hôm nay shop em mang đến cho cả nhà một siêu phẩm chăm sóc sắc đẹp và nâng tầm khí chất cực kỳ đỉnh cao luôn ạ!
 Đó chính là Bộ Đôi Tinh Chất Serum Tế Bào Gốc Phục Hồi Da Trẻ Hóa và Nước Hoa Pháp Cao Cấp lưu hương suốt 12 giờ đồng hồ!
@@ -106,22 +122,26 @@ Chị nào mà da đang bị khô ráp, thâm sạm, không đều màu hoặc b
 Chỉ sau đúng 7 ngày sử dụng, làn da của các chị sẽ căng bóng, mịn màng và mướt như da em bé luôn ạ!
 Duy nhất trong phiên livestream ngày hôm nay, giảm sốc 50% chỉ còn 890.000đ tặng kèm kem dưỡng ẩm mini và freeship toàn quốc!
 Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày, bấm vào Giỏ Hàng góc trái săn ngay nhé!`;
-        }
+    }
 
-        // Tách câu theo từng dòng, đọc trọn vẹn xuyên suốt từ câu đầu đến câu cuối
-        const rawSentences = scriptRaw
-          .split(/\r?\n/)
-          .map(s => s.trim())
-          .filter(Boolean);
+    const rawSentences = scriptRaw
+      .split(/\r?\n/)
+      .map(s => s.trim())
+      .filter(Boolean);
 
-        const scriptItems = rawSentences.map((s, idx) => ({
-          id: `script_${idx}`,
-          type: 'script',
-          text: s.trim(),
-          voiceChannel: 'idol',
-          index: idx
-        }));
+    return rawSentences.map((s, idx) => ({
+      id: `script_${idx}`,
+      type: 'script',
+      text: s.trim(),
+      voiceChannel: 'idol',
+      index: idx
+    }));
+  };
 
+  useEffect(() => {
+    if (isLive) {
+      try {
+        const scriptItems = loadScriptFromStorage();
         setQueue(scriptItems);
         queueRef.current = scriptItems;
         setCurrentIndex(0);
@@ -141,6 +161,32 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       const aud = getAudio();
       if (aud) aud.pause();
     }
+  }, [isLive]);
+
+  // Lắng nghe sự kiện cập nhật / chuyển tab kịch bản từ WorkspaceTacVu hoặc bên ngoài
+  useEffect(() => {
+    const handleScriptUpdate = (e) => {
+      try {
+        const scriptItems = loadScriptFromStorage();
+        setQueue(scriptItems);
+        queueRef.current = scriptItems;
+        setCurrentIndex(0);
+        currentIndexRef.current = 0;
+        priorityQueueRef.current = [];
+        if (isLive && !isBusyRef.current) {
+          setIsPlaying(true);
+          isPlayingRef.current = true;
+          if (scriptItems.length > 0) {
+            playItem(scriptItems[0], true);
+          }
+        }
+      } catch (err) {
+        console.warn("Lỗi đồng bộ kịch bản mới:", err);
+      }
+    };
+
+    window.addEventListener('aidol_script_updated', handleScriptUpdate);
+    return () => window.removeEventListener('aidol_script_updated', handleScriptUpdate);
   }, [isLive]);
 
   // 2. Vòng lặp phát âm thanh
